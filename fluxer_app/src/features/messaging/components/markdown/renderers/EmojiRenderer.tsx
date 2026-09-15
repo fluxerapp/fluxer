@@ -8,10 +8,8 @@ import {ExpressionInfoBottomSheet} from '@app/features/expressions/components/bo
 import {ExpressionHoverTooltipContent} from '@app/features/expressions/components/ExpressionHoverTooltipContent';
 import {ExpressionInfoCard} from '@app/features/expressions/components/ExpressionInfoCard';
 import {ExpressionInfoPopout} from '@app/features/expressions/components/ExpressionInfoPopout';
-import ExpressionInfoCardRollout from '@app/features/expressions/state/ExpressionInfoCardRollout';
 import {EXPRESSION_TOOLTIP_DELAY_MS} from '@app/features/expressions/utils/ExpressionPreviewConstants';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
-import {EmojiRendererControl} from '@app/features/messaging/components/markdown/renderers/EmojiRendererControl';
 import type {RendererProps} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import {getEmojiRenderData, getEmojiRenderUrl} from '@app/features/messaging/utils/markdown/EmojiDetector';
@@ -40,7 +38,7 @@ interface EmojiBottomSheetState {
 	emoji: {id?: string; name: string; animated?: boolean} | null;
 }
 
-const EmojiRendererTreatment = observer(function EmojiRendererTreatment({
+export const EmojiRenderer = observer(function EmojiRenderer({
 	node,
 	id,
 	options,
@@ -223,7 +221,7 @@ const EmojiRendererTreatment = observer(function EmojiRendererTreatment({
 		<ExpressionHoverTooltipContent
 			displayName={emojiData.name}
 			previewUrl={previewUrl}
-			data-flx="messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment.expression-hover-tooltip-content"
+			data-flx="messaging.markdown.renderers.emoji-renderer.expression-hover-tooltip-content"
 		/>
 	);
 	const renderInfoCard = ({onClose}: {onClose: () => void}) =>
@@ -235,7 +233,7 @@ const EmojiRendererTreatment = observer(function EmojiRendererTreatment({
 				displayName={emojiData.name}
 				previewUrl={previewUrl}
 				onClose={onClose}
-				data-flx="messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment.expression-info-card.custom"
+				data-flx="messaging.markdown.renderers.emoji-renderer.expression-info-card.custom"
 			/>
 		) : (
 			<ExpressionInfoCard
@@ -243,11 +241,11 @@ const EmojiRendererTreatment = observer(function EmojiRendererTreatment({
 				displayName={emojiData.name}
 				previewUrl={previewUrl}
 				onClose={onClose}
-				data-flx="messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment.expression-info-card.default"
+				data-flx="messaging.markdown.renderers.emoji-renderer.expression-info-card.default"
 			/>
 		);
 	if (isPlainEmoji) {
-		return renderEmojiElement(true, 'messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment.emoji.plain');
+		return renderEmojiElement(true, 'messaging.markdown.renderers.emoji-renderer.emoji.plain');
 	}
 	if (isMobile) {
 		return (
@@ -258,16 +256,16 @@ const EmojiRendererTreatment = observer(function EmojiRendererTreatment({
 					onKeyDown={handleKeyDown}
 					role="button"
 					tabIndex={0}
-					data-flx="messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment.button.open-bottom-sheet--2"
+					data-flx="messaging.markdown.renderers.emoji-renderer.button.open-bottom-sheet"
 				>
-					{renderEmojiElement(false, 'messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment.emoji')}
+					{renderEmojiElement(false, 'messaging.markdown.renderers.emoji-renderer.emoji')}
 				</span>
 				<ExpressionInfoBottomSheet
 					kind="emoji"
 					isOpen={bottomSheetState.isOpen}
 					onClose={handleCloseBottomSheet}
 					emoji={bottomSheetState.emoji}
-					data-flx="messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment.expression-info-bottom-sheet--2"
+					data-flx="messaging.markdown.renderers.emoji-renderer.expression-info-bottom-sheet"
 				/>
 			</>
 		);
@@ -278,9 +276,9 @@ const EmojiRendererTreatment = observer(function EmojiRendererTreatment({
 				key={id}
 				text={emojiData.name}
 				delay={EXPRESSION_TOOLTIP_DELAY_MS}
-				data-flx="messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment.tooltip.plain"
+				data-flx="messaging.markdown.renderers.emoji-renderer.tooltip.plain"
 			>
-				{renderEmojiElement(true, 'messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment.emoji.plain')}
+				{renderEmojiElement(true, 'messaging.markdown.renderers.emoji-renderer.emoji.plain')}
 			</Tooltip>
 		);
 	}
@@ -289,34 +287,17 @@ const EmojiRendererTreatment = observer(function EmojiRendererTreatment({
 			key={id}
 			renderTooltip={renderHoverTooltip}
 			renderCard={renderInfoCard}
-			data-flx="messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment.expression-info-popout"
+			data-flx="messaging.markdown.renderers.emoji-renderer.expression-info-popout"
 		>
 			<span
 				role="button"
 				tabIndex={0}
 				aria-label={accessibleName}
 				data-emoji-interactive="true"
-				data-flx="messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment.button.open-info-card"
+				data-flx="messaging.markdown.renderers.emoji-renderer.button.open-info-card"
 			>
-				{renderEmojiElement(
-					true,
-					'messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment.emoji.context-menu',
-				)}
+				{renderEmojiElement(true, 'messaging.markdown.renderers.emoji-renderer.emoji.context-menu')}
 			</span>
 		</ExpressionInfoPopout>
-	);
-});
-
-export const EmojiRenderer = observer(function EmojiRenderer(props: RendererProps<EmojiNode>): React.ReactElement {
-	if (!ExpressionInfoCardRollout.enabled) {
-		return (
-			<EmojiRendererControl {...props} data-flx="messaging.markdown.renderers.emoji-renderer.emoji-renderer-control" />
-		);
-	}
-	return (
-		<EmojiRendererTreatment
-			{...props}
-			data-flx="messaging.markdown.renderers.emoji-renderer.emoji-renderer-treatment"
-		/>
 	);
 });

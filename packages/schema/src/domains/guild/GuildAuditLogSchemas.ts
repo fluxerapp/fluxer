@@ -30,8 +30,6 @@ export const AuditLogChangeSchema = z.object({
 	new_value: AuditLogChangeValueSchema.optional().describe('Value after the change'),
 });
 
-export type AuditLogChange = z.infer<typeof AuditLogChangeSchema>;
-
 const AuditLogOptionsSchema = z.object({
 	channel_id: z.string().optional().describe('Channel ID for relevant actions'),
 	count: z.number().optional().describe('Count of items affected'),

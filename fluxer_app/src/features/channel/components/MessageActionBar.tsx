@@ -34,7 +34,6 @@ import {
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {getEmojiNameWithColons, toReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
-import messageStyles from '@app/features/theme/styles/Message.module.css';
 import {
 	AddReactionIcon,
 	CopyIdIcon,
@@ -251,7 +250,6 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 		const actionBarRef = useRef<HTMLDivElement>(null);
 		const keepOpenOnNextMoreMenuCloseRef = useRef(false);
 		const emojiPickerOpenRef = useRef(false);
-		const contextMenuOpen = useContextMenuHoverState(actionBarRef);
 		const moreMenuOpen = useContextMenuHoverState(moreOptionsButtonRef);
 		const showMessageActionBar = Accessibility.showMessageActionBar;
 		const showQuickReactions = Accessibility.showMessageActionBarQuickReactions;
@@ -439,12 +437,7 @@ export const MessageActionBarCore: React.FC<MessageActionBarCoreProps> = observe
 		return (
 			<div
 				ref={actionBarRef}
-				className={clsx(
-					styles.actionBarContainer,
-					messageStyles.buttons,
-					(emojiPickerOpen || contextMenuOpen) && messageStyles.emojiPickerOpen,
-					(emojiPickerOpen || contextMenuOpen || moreMenuOpen) && styles.actionBarPinned,
-				)}
+				className={styles.actionBarContainer}
 				data-flx="channel.message-action-bar.message-action-bar-core.action-bar-container"
 			>
 				<div className={styles.actionBar} data-flx="channel.message-action-bar.message-action-bar-core.action-bar">

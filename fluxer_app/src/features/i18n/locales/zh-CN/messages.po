@@ -21,14 +21,14 @@ msgstr "…开启紧凑模式。赞！"
 
 #. Button or menu action label in the channel and chat user message. Keep it concise.
 #. Suffix after the message text in the forward modal preview when the forwarded message was edited.
-#: src/features/channel/components/MessageAttachments.tsx:378
+#: src/features/channel/components/MessageAttachments.tsx:375
 #: src/features/channel/components/UserMessage.tsx:62
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx:26
 msgid "(edited)"
 msgstr "（已编辑）"
 
 #: src/features/app/components/pages/YouPage.tsx:189
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:906
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:903
 msgid "(only visible to you)"
 msgstr "（仅自己可见）"
 
@@ -47,21 +47,18 @@ msgid "{0, plural, one {# member} other {# members}}"
 msgstr "{0, plural, other {# 位成员}}"
 
 #. Screen reader announcement in the composer when two people are typing. {a} and {b} are their display names.
-#: src/features/channel/components/LegacyTypingUsers.tsx:41
 #: src/features/typing/rolling/RollingTypingText.tsx:19
 #: src/features/typing/rolling/RollingTypingText.tsx:54
 msgid "{a} and {b} are typing..."
 msgstr "{a} 和 {b} 正在输入…"
 
 #. Screen reader announcement in the composer when one person is typing. {a} is their display name.
-#: src/features/channel/components/LegacyTypingUsers.tsx:37
 #: src/features/typing/rolling/RollingTypingText.tsx:15
 #: src/features/typing/rolling/RollingTypingText.tsx:50
 msgid "{a} is typing..."
 msgstr "{a} 正在输入…"
 
 #. Screen reader announcement in the composer when three people are typing. {a}, {b} and {c} are their display names.
-#: src/features/channel/components/LegacyTypingUsers.tsx:48
 #: src/features/typing/rolling/RollingTypingText.tsx:24
 #: src/features/typing/rolling/RollingTypingText.tsx:60
 msgid "{a}, {b} and {c} are typing..."
@@ -92,14 +89,6 @@ msgstr "{actor} 添加了一个贴纸"
 msgid "{actor} added an emoji"
 msgstr "{actor} 添加了一个表情"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:572
-msgid "{actor} added channel permissions for {targetEntity} in {channelNode}."
-msgstr "{actor} 在 {channelNode} 中为 {targetEntity} 添加了频道权限。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:577
-msgid "{actor} added channel permissions for {targetEntity}."
-msgstr "{actor} 为 {targetEntity} 添加了频道权限。"
-
 #. Activity log summary for a bot that was added to the community. {actor} is the member who added the bot, shown as a clickable user chip, or the word System. {target} is the bot, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:407
 msgid "{actor} added the bot {target}"
@@ -110,27 +99,15 @@ msgstr "{actor} 添加了机器人 {target}"
 msgid "{actor} added the bot {target} as a temporary member"
 msgstr "{actor} 将机器人 {target} 添加为临时成员"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:672
-msgid "{actor} added the bot {targetMember}."
-msgstr "{actor} 添加了机器人 {targetMember}。"
-
 #. Activity log summary for a custom emoji that was uploaded or copied to the community. {actor} is the member who added it, shown as a clickable user chip, or the word System. {emoji} is the emoji, shown as its image when it still exists, followed by its name between colons, for example :blobcat:.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:5
 msgid "{actor} added the emoji {emoji}"
 msgstr "{actor} 添加了表情 {emoji}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:735
-msgid "{actor} added the emoji {namedTarget}."
-msgstr "{actor} 添加了表情 {namedTarget}。"
-
 #. Activity log summary for a sticker that was uploaded or copied to the community. {actor} is the member who added it, shown as a clickable user chip, or the word System. {name} is the sticker name, shown in bold. The app adds the bold, so do not add ** or <b>.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:45
 msgid "{actor} added the sticker {name}"
 msgstr "{actor} 添加了贴纸 {name}"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:753
-msgid "{actor} added the sticker {namedTarget}."
-msgstr "{actor} 添加了贴纸 {namedTarget}。"
 
 #. Activity log summary for a user who was banned from the community with no end date. A ban removes the user from the community and stops them from joining again. It is not the feature that blocks a user. {actor} is the member who made the ban, shown as a clickable user chip, or the word System. {target} is the banned user, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:15
@@ -141,10 +118,6 @@ msgstr "{actor} 封禁了 {target}"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:20
 msgid "{actor} banned {target} for {duration}"
 msgstr "{actor} 将 {target} 封禁 {duration}"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:613
-msgid "{actor} banned {targetMember}."
-msgstr "{actor} 封禁了 {targetMember}。"
 
 #. Activity log summary for a block on a member that was already running and was given a new end. The block stops the member from sending messages, reacting and joining voice, and it lifts on its own at the new end. Spell the effect out the way the English does. Do not name it with a word for a ban, a kick, a mute, a suspension or a waiting period, and do not say that time ran out. Keep the three things that are blocked. This is a past tense record of an action that already happened, never an instruction to the reader. {actor} is the member who moved the end of the block, shown as a clickable user chip, or the word System. {target} is the blocked member, shown as a clickable user chip. {date} is the new end of the block, shown as a formatted date and time.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:95
@@ -226,10 +199,6 @@ msgstr "{actor} 创建了频道 {channel}"
 msgid "{actor} created the channel {channel} in {category}"
 msgstr "{actor} 在 {category} 中创建了频道 {channel}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:553
-msgid "{actor} created the channel {namedTarget}."
-msgstr "{actor} 创建了频道 {namedTarget}。"
-
 #. Activity log summary for a new invite link when its channel was not recorded. {actor} is the member who created the invite, shown as a clickable user chip, or the word System. {code} is the invite code, shown as boxed text.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts:10
 msgid "{actor} created the invite {code}"
@@ -240,11 +209,6 @@ msgstr "{actor} 创建了邀请链接 {code}"
 msgid "{actor} created the invite {code} for {channel}"
 msgstr "{actor} 创建了 {channel} 的邀请链接 {code}"
 
-#. placeholder {0}: channelNode ? <> for {channelNode}</> : null
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:696
-msgid "{actor} created the invite {namedTarget}{0}."
-msgstr "{actor} 创建了邀请 {namedTarget}{0}。"
-
 #. Activity log summary when a link channel was created. A link channel is a channel list entry that opens a web address. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the new channel, shown as a channel chip with its name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:25
 msgid "{actor} created the link channel {channel}"
@@ -254,10 +218,6 @@ msgstr "{actor} 创建了链接频道 {channel}"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:30
 msgid "{actor} created the link channel {channel} in {category}"
 msgstr "{actor} 在 {category} 中创建了链接频道 {channel}"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:678
-msgid "{actor} created the role {namedTarget}."
-msgstr "{actor} 创建了身份组 {namedTarget}。"
 
 #. Activity log summary for a role that was created in the community. {actor} is the member who created it, shown as a clickable user chip, or the word System. {role} is the new role, shown in bold with its name, or deleted-role when its name is unknown. The app adds the bold, so do not add ** or <b>. Use the same word for role as the rest of the app.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:5
@@ -294,16 +254,6 @@ msgstr "{actor} 创建了 Webhook {name}"
 msgid "{actor} created the webhook {name} in {channel}"
 msgstr "{actor} 在 {channel} 中创建了 Webhook {name}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:717
-msgid "{actor} created the webhook {namedTarget}."
-msgstr "{actor} 创建了 Webhook {namedTarget}。"
-
-#. placeholder {0}: renderValueInline(bulkCount, guildId, i18n)
-#. placeholder {1}: channelNode ? <> in {channelNode}</> : null
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:778
-msgid "{actor} deleted {0} {bulkCount, plural, one {message} other {messages}}{1}."
-msgstr "{actor} 删除了 {0} {bulkCount, plural, other {条消息}}{1}。"
-
 #. Activity log summary for several messages that were deleted together when the channel was not recorded. {actor} is the member who deleted them, shown as a clickable user chip, or the word System. {count} is an ICU plural with the number of deleted messages, and # shows that number.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:120
 msgid "{actor} deleted {count, plural, one {# message} other {# messages}}"
@@ -324,11 +274,6 @@ msgstr "{actor} 删除了消息"
 msgid "{actor} deleted a message in {channel}"
 msgstr "{actor} 在 {channel} 中删除了消息"
 
-#. placeholder {0}: channelNode ? <> in {channelNode}</> : null
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:771
-msgid "{actor} deleted a message{0}."
-msgstr "{actor} 删除了消息{0}。"
-
 #. Activity log summary for a sticker that was deleted when its name was not recorded. {actor} is the member who deleted it, shown as a clickable user chip, or the word System.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:95
 msgid "{actor} deleted a sticker"
@@ -343,11 +288,6 @@ msgstr "{actor} 删除了一个 Webhook"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:35
 msgid "{actor} deleted an emoji"
 msgstr "{actor} 删除了一个表情"
-
-#. placeholder {0}: channelNode ? <> in {channelNode}</> : null
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:789
-msgid "{actor} deleted multiple messages{0}."
-msgstr "{actor} 删除了多条消息{0}。"
 
 #. Activity log summary for several messages that were deleted together when neither their number nor the channel was recorded. {actor} is the member who deleted them, shown as a clickable user chip, or the word System.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:130
@@ -369,18 +309,10 @@ msgstr "{actor} 删除了类别 {channel}"
 msgid "{actor} deleted the channel {channel}"
 msgstr "{actor} 删除了频道 {channel}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:565
-msgid "{actor} deleted the channel {namedTarget}."
-msgstr "{actor} 删除了频道 {namedTarget}。"
-
 #. Activity log summary for a custom emoji that was deleted from the community. {actor} is the member who deleted it, shown as a clickable user chip, or the word System. {emoji} is the name of the deleted emoji between colons, for example :blobcat:, shown without an image.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:30
 msgid "{actor} deleted the emoji {emoji}"
 msgstr "{actor} 删除了表情 {emoji}"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:747
-msgid "{actor} deleted the emoji {namedTarget}."
-msgstr "{actor} 删除了表情 {namedTarget}。"
 
 #. Activity log summary for a deleted invite link when its channel was not recorded. {actor} is the member who deleted the invite, shown as a clickable user chip, or the word System. {code} is the invite code, shown as boxed text.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts:50
@@ -392,19 +324,10 @@ msgstr "{actor} 删除了邀请链接 {code}"
 msgid "{actor} deleted the invite {code} for {channel}"
 msgstr "{actor} 删除了 {channel} 的邀请链接 {code}"
 
-#. placeholder {0}: channelNode ? <> for {channelNode}</> : null
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:710
-msgid "{actor} deleted the invite {namedTarget}{0}."
-msgstr "{actor} 删除了邀请 {namedTarget}{0}。"
-
 #. Activity log summary when a link channel was deleted. A link channel is a channel list entry that opens a web address. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the deleted channel, shown as a channel chip with the name it had.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:301
 msgid "{actor} deleted the link channel {channel}"
 msgstr "{actor} 删除了链接频道 {channel}"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:690
-msgid "{actor} deleted the role {namedTarget}."
-msgstr "{actor} 删除了身份组 {namedTarget}。"
 
 #. Activity log summary for a role that was deleted from the community. {actor} is the member who deleted it, shown as a clickable user chip, or the word System. {role} is the deleted role, shown in bold with the name it had when it was deleted, or deleted-role when that name was not recorded. The app adds the bold, so do not add ** or <b>. Use the same word for role as the rest of the app.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:50
@@ -415,10 +338,6 @@ msgstr "{actor} 删除了身份组 {role}"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:90
 msgid "{actor} deleted the sticker {name}"
 msgstr "{actor} 删除了贴纸 {name}"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:765
-msgid "{actor} deleted the sticker {namedTarget}."
-msgstr "{actor} 删除了贴纸 {namedTarget}。"
 
 #. Activity log summary when a text channel was deleted. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the deleted channel, shown as a channel chip with the name it had.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:291
@@ -440,10 +359,6 @@ msgstr "{actor} 删除了 Webhook {name}"
 msgid "{actor} deleted the webhook {name} from {channel}"
 msgstr "{actor} 从 {channel} 中删除了 Webhook {name}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:729
-msgid "{actor} deleted the webhook {namedTarget}."
-msgstr "{actor} 删除了 Webhook {namedTarget}。"
-
 #. Activity log summary for a member who was removed from a voice channel by someone else. {actor} is the member who disconnected them, shown as a clickable user chip, or the word System. {target} is the member who was disconnected, shown as a clickable user chip. {channel} is the voice channel they were in, shown as a channel chip with the channel name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:387
 msgid "{actor} disconnected {target} from {channel}"
@@ -453,10 +368,6 @@ msgstr "{actor} 将 {target} 从 {channel} 断开连接"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:392
 msgid "{actor} disconnected {target} from voice"
 msgstr "{actor} 将 {target} 从语音频道移除了"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:666
-msgid "{actor} disconnected {targetMember} from voice."
-msgstr "{actor} 断开了 {targetMember} 的语音连接。"
 
 #. Activity log summary for a member who removed themselves from a voice channel using moderator tools. {actor} is that member, shown as a clickable user chip. {channel} is the voice channel they left, shown as a channel chip with the channel name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:397
@@ -477,10 +388,6 @@ msgstr "{actor} 将身份组 {role} 授予了 {target}"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:5
 msgid "{actor} kicked {target}"
 msgstr "{actor} 将 {target} 踢出了社区"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:607
-msgid "{actor} kicked {targetMember}."
-msgstr "{actor} 踢出了 {targetMember}。"
 
 #. Activity log summary for a moderator who let a member hear the voice channels of this community again. This is about what the member hears and not about the microphone of the member, so it must read clearly differently from the row where a moderator turns the microphone back on. Describe the effect the way the English does. Do not name the action with a noun such as a community deafen. This is a past tense record of an action that already happened, never an instruction to the reader. {actor} is the member who lifted it, shown as a clickable user chip, or the word System. {target} is the member who can hear others again, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:120
@@ -506,14 +413,6 @@ msgstr "{actor} 将 {target} 移至了 {channel}"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:367
 msgid "{actor} moved {target} to a different voice channel"
 msgstr "{actor} 将 {target} 移至了另一个语音频道"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:655
-msgid "{actor} moved {targetMember} to {channelNode}."
-msgstr "{actor} 将 {targetMember} 移到了 {channelNode}。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:659
-msgid "{actor} moved {targetMember} to another voice channel."
-msgstr "{actor} 将 {targetMember} 移动到其他语音频道。"
 
 #. Activity log summary for a member who moved themselves from one voice channel to another using moderator tools. {actor} is that member, shown as a clickable user chip. {oldChannel} is the voice channel they were in and {newChannel} is the voice channel they moved to, both shown as channel chips with the channel name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:372
@@ -555,10 +454,6 @@ msgstr "{actor} 移至了其他语音频道"
 msgid "{actor} paused invites"
 msgstr "{actor} 暂停了邀请"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:808
-msgid "{actor} performed an audit action on {targetEntity}."
-msgstr "{actor} 对 {targetEntity} 执行了审计操作。"
-
 #. Activity log summary for a message that was pinned when the channel was not recorded. Pinned means the message was added to the pinned messages of its channel. {actor} is the member who pinned it, shown as a clickable user chip, or the word System.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:140
 msgid "{actor} pinned a message"
@@ -569,31 +464,10 @@ msgstr "{actor} 置顶了一条消息"
 msgid "{actor} pinned a message in {channel}"
 msgstr "{actor} 在 {channel} 中置顶了一条消息"
 
-#. placeholder {0}: channelNode ? <> in {channelNode}</> : null
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:796
-msgid "{actor} pinned a message{0}."
-msgstr "{actor} 置顶了一条消息{0}。"
-
 #. Activity log summary for inactive members who were removed from the community in one go. {actor} is the member who started the prune, shown as a clickable user chip, or the word System.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:10
 msgid "{actor} pruned inactive members"
 msgstr "{actor} 清理了不活跃成员"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:649
-msgid "{actor} pruned inactive members."
-msgstr "{actor} 清理了不活跃成员。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:638
-msgid "{actor} pruned members inactive for {pruneDays, plural, one {# day} other {# days}}."
-msgstr "{actor} 清理了 {pruneDays, plural, other {# 天}}未活跃的成员。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:596
-msgid "{actor} removed channel permissions for {targetEntity} in {channelNode}."
-msgstr "{actor} 移除了 {targetEntity} 在 {channelNode} 中的频道权限。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:601
-msgid "{actor} removed channel permissions for {targetEntity}."
-msgstr "{actor} 移除了 {targetEntity} 的频道权限。"
 
 #. Activity log summary for a nickname that someone removed from another member in the community. {actor} is the member who removed the nickname, shown as a clickable user chip, or the word System. {nick} is the nickname that was removed. The app shows it in bold, so do not add ** or <b>. {target} is the member who lost the nickname, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:70
@@ -795,10 +669,6 @@ msgstr "{actor} 在此社区关闭了 {target} 的麦克风"
 msgid "{actor} unbanned {target}"
 msgstr "{actor} 解除了对 {target} 的封禁"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:619
-msgid "{actor} unbanned {targetMember}."
-msgstr "{actor} 解封了 {targetMember}。"
-
 #. Activity log summary for a message that was unpinned when the channel was not recorded. Unpinned means the message was taken off the pinned messages of its channel. It is the opposite of pinned. The message was not deleted. {actor} is the member who unpinned it, shown as a clickable user chip, or the word System.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:150
 msgid "{actor} unpinned a message"
@@ -809,19 +679,10 @@ msgstr "{actor} 取消了消息的置顶"
 msgid "{actor} unpinned a message in {channel}"
 msgstr "{actor} 在 {channel} 中取消了消息的置顶"
 
-#. placeholder {0}: channelNode ? <> in {channelNode}</> : null
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:802
-msgid "{actor} unpinned a message{0}."
-msgstr "{actor} 取消置顶了一条消息{0}。"
-
 #. Activity log summary for a change to a member of the community when several things changed at once, or when the change was not recorded. Each change is listed as a detail line below. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {target} is the member who was changed, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:220
 msgid "{actor} updated {target}"
 msgstr "{actor} 更新了 {target}"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:625
-msgid "{actor} updated {targetMember}."
-msgstr "{actor} 更新了 {targetMember}。"
 
 #. Activity log summary for a sticker that was edited when the sticker name is not known. The changes are listed as detail lines below it. {actor} is the member who edited it, shown as a clickable user chip, or the word System.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:70
@@ -838,18 +699,6 @@ msgstr "{actor} 更新了一个 Webhook"
 msgid "{actor} updated an emoji"
 msgstr "{actor} 更新了一个表情"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:584
-msgid "{actor} updated channel permissions for {targetEntity} in {channelNode}."
-msgstr "{actor} 更新了 {channelNode} 中 {targetEntity} 的频道权限。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:589
-msgid "{actor} updated channel permissions for {targetEntity}."
-msgstr "{actor} 更新了 {targetEntity} 的频道权限。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:631
-msgid "{actor} updated roles for {targetMember}."
-msgstr "{actor} 更新了 {targetMember} 的身份组。"
-
 #. Activity log summary when settings of a channel category were changed. The changes are listed as detail rows below it. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the category, shown as a channel chip with its name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:174
 msgid "{actor} updated the category {channel}"
@@ -860,37 +709,20 @@ msgstr "{actor} 更新了类别 {channel}"
 msgid "{actor} updated the channel {channel}"
 msgstr "{actor} 更新了频道 {channel}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:559
-msgid "{actor} updated the channel {namedTarget}."
-msgstr "{actor} 更新了频道 {namedTarget}。"
-
 #. Activity log summary when a member changed community settings. Each change is listed as a detail line under it. {actor} is the member who made the change, shown as a clickable user chip, or the word System.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:5
 msgid "{actor} updated the community settings"
 msgstr "{actor} 更新了社区设置"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:550
-msgid "{actor} updated the community settings."
-msgstr "{actor} 更新了社区设置。"
 
 #. Activity log summary for a custom emoji that was edited when no change to show was recorded. {actor} is the member who edited it, shown as a clickable user chip, or the word System. {emoji} is the emoji, shown as its image when it still exists, followed by its name between colons, for example :blobcat:.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:20
 msgid "{actor} updated the emoji {emoji}"
 msgstr "{actor} 更新了表情 {emoji}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:741
-msgid "{actor} updated the emoji {namedTarget}."
-msgstr "{actor} 更新了表情 {namedTarget}。"
-
 #. Activity log summary for a change to an invite link. {actor} is the member who changed the invite, shown as a clickable user chip, or the word System. {code} is the invite code, shown as boxed text.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts:40
 msgid "{actor} updated the invite {code}"
 msgstr "{actor} 更新了邀请链接 {code}"
-
-#. placeholder {0}: channelNode ? <> for {channelNode}</> : null
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:703
-msgid "{actor} updated the invite {namedTarget}{0}."
-msgstr "{actor} 更新了邀请 {namedTarget}{0}。"
 
 #. Activity log summary when settings of a link channel were changed. A link channel is a channel list entry that opens a web address. The changes are listed as detail rows below it. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the channel, shown as a channel chip with its name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:169
@@ -912,10 +744,6 @@ msgstr "{actor} 更新了 {channel} 中 @everyone 的权限覆盖设置"
 msgid "{actor} updated the permission override for the role {role} in {channel}"
 msgstr "{actor} 更新了 {channel} 中身份组 {role} 的权限覆盖设置"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:684
-msgid "{actor} updated the role {namedTarget}."
-msgstr "{actor} 更新了身份组 {namedTarget}。"
-
 #. Activity log summary for a role that was edited. The changes are listed below it as detail lines when they are known. {actor} is the member who edited it, shown as a clickable user chip, or the word System. {role} is the role, shown in bold with its name, @everyone for the default role every member has, or deleted-role when its name is unknown. The app adds the bold, so do not add ** or <b>. Use the same word for role as the rest of the app.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:45
 msgid "{actor} updated the role {role}"
@@ -931,10 +759,6 @@ msgstr "{actor} 更新了 {target} 的身份组"
 msgid "{actor} updated the sticker {name}"
 msgstr "{actor} 更新了贴纸 {name}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:759
-msgid "{actor} updated the sticker {namedTarget}."
-msgstr "{actor} 更新了贴纸 {namedTarget}。"
-
 #. Activity log summary when settings of a text channel were changed. The changes are listed as detail rows below it. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the channel, shown as a channel chip with its name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:159
 msgid "{actor} updated the text channel {channel}"
@@ -949,10 +773,6 @@ msgstr "{actor} 更新了语音频道 {channel}"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts:105
 msgid "{actor} updated the webhook {name}"
 msgstr "{actor} 更新了 Webhook {name}"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:723
-msgid "{actor} updated the webhook {namedTarget}."
-msgstr "{actor} 更新了 Webhook {namedTarget}。"
 
 #. Activity log summary for a member who changed several things about their own community profile or membership at once, or when the change was not recorded. A community profile is the profile a member uses only in this community, in place of their global profile. It belongs to the member, not to the community. Each change is listed as a detail line below. "Their" means the same member as {actor}. {actor} is that member, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:215
@@ -1109,7 +929,7 @@ msgid "{count, plural, one {# attachment} other {# attachments}}"
 msgstr "{count, plural, other {# 个附件}}"
 
 #. Label on the collapsed block in the message list that hides messages from blocked users. count is how many messages are hidden; clicking the label reveals them.
-#: src/features/channel/components/BlockedMessageGroups.tsx:31
+#: src/features/channel/components/BlockedMessageGroups.tsx:29
 msgid "{count, plural, one {# blocked message} other {# blocked messages}}"
 msgstr "{count, plural, other {# 条被屏蔽的消息}}"
 
@@ -1143,13 +963,9 @@ msgstr "{count, plural, other {# 份礼物}}"
 msgid "{count, plural, one {# image} other {# images}}"
 msgstr "{count, plural, one {# 张图片} other {# 张图片}}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:181
-msgid "{count, plural, one {# item} other {# items}}"
-msgstr "{count, plural, other {# 项}}"
-
 #: src/features/channel/components/ChannelSourcePreview.tsx:245
-#: src/features/channel/components/direct_message/DMListItem.tsx:438
-#: src/features/channel/components/direct_message/DMListItem.tsx:602
+#: src/features/channel/components/direct_message/DMListItem.tsx:437
+#: src/features/channel/components/direct_message/DMListItem.tsx:601
 #: src/features/guild/components/bottomsheets/GuildHeaderBottomSheet.tsx:118
 #: src/features/user/components/modals/MutualItemsSheet.tsx:159
 #: src/features/user/components/modals/user_profile_modal/MutualGroupItem.tsx:26
@@ -1175,12 +991,12 @@ msgid "{count, plural, one {# participant in call} other {# participants in call
 msgstr "{count, plural, other {# 位参与者正在通话中}}"
 
 #. Label on the collapsed block in the message list that hides suspected spam. count is how many messages are hidden; clicking the label reveals them.
-#: src/features/channel/components/BlockedMessageGroups.tsx:26
+#: src/features/channel/components/BlockedMessageGroups.tsx:24
 msgid "{count, plural, one {# potential spammer message} other {# potential spammer messages}}"
 msgstr "{count, plural, other {# 条疑似垃圾消息}}"
 
 #: src/features/app/components/shared/MessageReactionsContent.tsx:56
-#: src/features/channel/components/MessageReactions.tsx:149
+#: src/features/channel/components/MessageReactions.tsx:146
 msgid "{count, plural, one {# reaction} other {# reactions}}"
 msgstr "{count, plural, other {# 条回应}}"
 
@@ -1246,10 +1062,6 @@ msgstr "{count, plural, other {收起（# 行）}}"
 msgid "{count, plural, one {Collapse (# row)} other {Collapse (# rows)}}"
 msgstr "{count, plural, other {收起（# 行）}}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:294
-msgid "{count, plural, one {Deleted # message.} other {Deleted # messages.}}"
-msgstr "{count, plural, other {删除了 # 条消息。}}"
-
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreviewFooter.tsx:70
 msgid "{count, plural, one {Expand (# line)} other {Expand (# lines)}}"
 msgstr "{count, plural, other {展开（# 行）}}"
@@ -1283,10 +1095,6 @@ msgstr "{count, plural, other {加入视频通话（# 位参与者）}}"
 msgid "{count, plural, one {Keep watching # stream and add this one} other {Keep watching # streams and add this one}}"
 msgstr "{count, plural, other {继续观看 # 个直播并添加此直播}}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:305
-msgid "{count, plural, one {Removed # member.} other {Removed # members.}}"
-msgstr "{count, plural, other {移除了 # 位成员。}}"
-
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:125
 msgid "{count, plural, one {Revoke # app} other {Revoke # apps}}"
 msgstr "撤销 {count, plural, other {# 个应用}}"
@@ -1314,11 +1122,6 @@ msgstr "{count, plural, one {该邀请已使用 # 次} other {该邀请已使用
 #: src/features/emoji/components/modals/EmojiUploadModal.tsx:11
 msgid "{count, plural, one {Uploading # emoji. This may take a little while.} other {Uploading # emojis. This may take a little while.}}"
 msgstr "{count, plural, other {正在上传 # 个表情。这可能需要一点时间。}}"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:710
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:257
-msgid "{count, plural, one {Used # time.} other {Used # times.}}"
-msgstr "{count, plural, other {使用过 # 次。}}"
 
 #: src/features/messaging/components/alerts/TooManyAttachmentsModal.tsx:20
 msgid "{count, plural, one {You can only upload # file at a time. Try again with fewer files.} other {You can only upload # files at a time. Try again with fewer files.}}"
@@ -1377,14 +1180,6 @@ msgstr "{days, plural, other {# 天}}"
 #: src/features/channel/components/modals/GroupInvitesBottomSheet.tsx:55
 msgid "{days, plural, one {Created by {creatorDisplayName}. Expires in # day.} other {Created by {creatorDisplayName}. Expires in # days.}}"
 msgstr "{days, plural, other {由 {creatorDisplayName} 创建。# 天后过期。}}"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:369
-msgid "{days, plural, one {Members inactive for # day will be pruned.} other {Members inactive for # days will be pruned.}}"
-msgstr "{days, plural, other {不活跃达 # 天的成员将被清理。}}"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:327
-msgid "{days, plural, one {This invite expires in # day.} other {This invite expires in # days.}}"
-msgstr "{days, plural, other {此邀请将在 # 天后过期。}}"
 
 #. Text under a generated invite link. {days} is how long the link stays valid, in whole days.
 #: src/features/invite/components/modals/InviteModal.tsx:164
@@ -1469,9 +1264,7 @@ msgid "{eightHours} hours"
 msgstr "{eightHours} 小时"
 
 #. Error message in the messaging emoji renderer.
-#. Error message in the messaging emoji renderer.
-#: src/features/messaging/components/markdown/renderers/EmojiRenderer.tsx:31
-#: src/features/messaging/components/markdown/renderers/EmojiRendererControl.tsx:25
+#: src/features/messaging/components/markdown/renderers/EmojiRenderer.tsx:29
 msgid "{emojiName} (failed to load)"
 msgstr "{emojiName}（加载失败）"
 
@@ -1481,19 +1274,14 @@ msgid "{emojiName}, {reactionCountText}"
 msgstr "{emojiName}，{reactionCountText}"
 
 #. Short label in the channel and chat message reactions. Keep it concise. Preserve {emojiName}, {reactionCountText}; they are inserted by code.
-#: src/features/channel/components/MessageReactions.tsx:52
+#: src/features/channel/components/MessageReactions.tsx:50
 msgid "{emojiName}: {reactionCountText}"
 msgstr "{emojiName}：{reactionCountText}"
 
 #. Short label in the channel and chat message reactions. Keep it concise. Preserve {emojiName}, {reactionCountText}, {actionText}; they are inserted by code.
-#: src/features/channel/components/MessageReactions.tsx:57
+#: src/features/channel/components/MessageReactions.tsx:55
 msgid "{emojiName}: {reactionCountText}, {actionText}"
 msgstr "{emojiName}：{reactionCountText}，{actionText}"
-
-#. Activity log label for the permission or setting related to @everyone mentions. {everyoneMention} is the localized mention tag.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:33
-msgid "{everyoneMention} mentions"
-msgstr "{everyoneMention} 提及"
 
 #. Reason shown in the confirmation before joining a community from an emoji info card. It explains that the emoji the viewer opened belongs to this community. {expressionName} is the emoji name, written with colons around it.
 #: src/features/expressions/components/ExpressionInfoCard.tsx:99
@@ -1590,10 +1378,6 @@ msgstr "{hours, plural, other {# 小时}} {minutes, plural, other {# 分钟}}"
 msgid "{hours, plural, one {# hour} other {# hours}} and {minutes, plural, one {# minute} other {# minutes}}"
 msgstr "{hours, plural, other {# 小时}} {minutes, plural, other {# 分钟}}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:337
-msgid "{hours, plural, one {This invite expires in # hour.} other {This invite expires in # hours.}}"
-msgstr "{hours, plural, other {此邀请将在 # 小时后过期。}}"
-
 #. Text under a generated invite link. {hours} is how long the link stays valid, in whole hours.
 #: src/features/invite/components/modals/InviteModal.tsx:160
 msgid "{hours, plural, one {Your invite link expires in # hour.} other {Your invite link expires in # hours.}}"
@@ -1639,7 +1423,7 @@ msgid "{length, plural, one {# app} other {# apps}}"
 msgstr "{length, plural, other {# 个应用}}"
 
 #. Screen-reader fragment listing multiple attachments on a message. length is the count.
-#: src/features/channel/components/ChannelMessage.tsx:49
+#: src/features/channel/components/ChannelMessage.tsx:48
 msgid "{length, plural, one {# attachment} other {# attachments}}"
 msgstr "{length, plural, other {# 个附件}}"
 
@@ -1649,12 +1433,12 @@ msgid "{length, plural, one {# channel} other {# channels}}"
 msgstr "{length, plural, other {# 个频道}}"
 
 #. Screen-reader fragment listing multiple embeds on a message. length is the count.
-#: src/features/channel/components/ChannelMessage.tsx:67
+#: src/features/channel/components/ChannelMessage.tsx:66
 msgid "{length, plural, one {# embed} other {# embeds}}"
 msgstr "{length, plural, other {# 个嵌入内容}}"
 
 #. Screen-reader fragment listing multiple stickers on a message. length is the count.
-#: src/features/channel/components/ChannelMessage.tsx:58
+#: src/features/channel/components/ChannelMessage.tsx:57
 msgid "{length, plural, one {# sticker} other {# stickers}}"
 msgstr "{length, plural, other {# 个贴纸}}"
 
@@ -1713,14 +1497,6 @@ msgstr "{minutes, plural, other {# 分钟}}"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:61
 msgid "{minutes, plural, one {# minute} other {# minutes}} and {seconds, plural, one {# second} other {# seconds}}"
 msgstr "{minutes, plural, other {# 分钟}} {seconds, plural, other {# 秒}}"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:245
-msgid "{minutes, plural, one {Set the AFK timeout to # minute.} other {Set the AFK timeout to # minutes.}}"
-msgstr "{minutes, plural, other {已将 AFK 超时设为 # 分钟。}}"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:347
-msgid "{minutes, plural, one {This invite expires in # minute.} other {This invite expires in # minutes.}}"
-msgstr "{minutes, plural, other {此邀请将在 # 分钟后过期。}}"
 
 #. Text under a generated invite link. {minutes} is how long the link stays valid, in whole minutes.
 #: src/features/invite/components/modals/InviteModal.tsx:155
@@ -2077,10 +1853,6 @@ msgstr "{resultCount, plural, other {# 条结果}}"
 msgid "{seconds, plural, one {# second} other {# seconds}}"
 msgstr "{seconds, plural, other {# 秒}}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:356
-msgid "{seconds, plural, one {This invite expires in # second.} other {This invite expires in # seconds.}}"
-msgstr "{seconds, plural, other {此邀请将在 # 秒后过期。}}"
-
 #. Text under a generated invite link. {seconds} is how long the link stays valid, in whole seconds.
 #: src/features/invite/components/modals/InviteModal.tsx:150
 msgid "{seconds, plural, one {Your invite link expires in # second.} other {Your invite link expires in # seconds.}}"
@@ -2313,61 +2085,16 @@ msgstr "<0>{targetUserTag}</0> 当前处于禁言状态。你可以更新禁言�
 msgid "<0>{username}</0> is still in the group. Try again in a moment."
 msgstr "<0>{username}</0> 仍在群聊中。请稍后重试。"
 
-#. Activity-log sentence. A moderator deafened a member in voice chat, meaning the member can no longer hear others. Preserve the rich-text tags.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:489
-msgid "<0>Deafened</0> the member."
-msgstr "将成员<0>拒听</0>。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:263
-msgid "<0>Disabled</0> two-factor authentication requirement."
-msgstr "<0>已禁用</0>双重认证要求。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:258
-msgid "<0>Enabled</0> two-factor authentication requirement."
-msgstr "<0>已启用</0>双重认证要求。"
-
 #. Attribution line on a forwarded message, above the forwarded content. sourceInfo is the icon and name of the community and channel the message came from.
 #. Attribution line on a forwarded message, above the forwarded content. sourceInfo is the icon and name of the conversation the message came from.
-#: src/features/channel/components/MessageAttachments.tsx:229
-#: src/features/channel/components/MessageAttachments.tsx:285
+#: src/features/channel/components/MessageAttachments.tsx:226
+#: src/features/channel/components/MessageAttachments.tsx:282
 msgid "<0>Forwarded from</0>{sourceInfo}"
 msgstr "<0>转发自</0>{sourceInfo}"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:725
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:280
-msgid "<0>Grants</0> permanent membership."
-msgstr "<0>授予</0>永久成员资格。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:720
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:273
-msgid "<0>Grants</0> temporary membership."
-msgstr "<0>授予</0>临时成员资格。"
 
 #: src/features/user/components/modals/tabs/appearance_tab/InterfaceTab.tsx:63
 msgid "<0>Kenji</0>, <1>Amara</1> and <2>Mateo</2> are typing..."
 msgstr "<0>Kenji</0>、<1>Amara</1>和<2>Mateo</2>正在输入..."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:499
-msgid "<0>Muted</0> the member."
-msgstr "将成员<0>静音</0>。"
-
-#. placeholder {0}: renderInline(change.oldValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:480
-msgid "<0>Removed</0> nickname {0}."
-msgstr "<0>移除了</0>昵称 {0}。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:333
-msgid "<0>Removed</0> the vanity URL."
-msgstr "<0>移除了</0>自定义邀请链接。"
-
-#. Activity-log sentence. A moderator removed voice deafen from a member, meaning the member can hear others again. Preserve the rich-text tags.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:493
-msgid "<0>Undeafened</0> the member."
-msgstr "为成员<0>解除拒听</0>。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:503
-msgid "<0>Unmuted</0> the member."
-msgstr "为成员<0>解除静音</0>。"
 
 #. Summary chip text in the mobile channel search sheet when exactly one channel is selected as a filter.
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:169
@@ -2485,11 +2212,6 @@ msgstr "12 个月（1 年）"
 msgid "12-hour"
 msgstr "12 小时制"
 
-#. Audit log community feature label for a raised voice channel bitrate ceiling. kbps means kilobits per second.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:154
-msgid "128 kbps voice quality"
-msgstr "128 kbps 语音质量"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:246
 msgid "1440p"
@@ -2539,11 +2261,6 @@ msgstr "24 小时制"
 msgid "25 uses"
 msgstr "25 次使用"
 
-#. Audit log community feature label for a raised voice channel bitrate ceiling. kbps means kilobits per second.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:159
-msgid "256 kbps voice quality"
-msgstr "256 kbps 语音质量"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:40
 msgid "2FA"
@@ -2590,11 +2307,6 @@ msgstr "30 分钟"
 #: src/features/user/components/modals/tabs/component_gallery_tab/IndicatorsTab.tsx:300
 msgid "32px, 2 members"
 msgstr "32px，2 位成员"
-
-#. Audit log community feature label for a raised voice channel bitrate ceiling. kbps means kilobits per second.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:164
-msgid "384 kbps voice quality"
-msgstr "384 kbps 语音质量"
 
 #: src/features/app/components/pages/NotFoundPage.tsx:26
 msgid "404: page not found"
@@ -2818,7 +2530,7 @@ msgstr "关于 {appName}"
 #. Short label in the user profile shared popout. Keep it concise.
 #: src/features/app/components/pages/YouPage.tsx:166
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:26
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:790
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:787
 #: src/features/user/components/popouts/UserProfileShared.tsx:41
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:133
 msgid "About me"
@@ -3108,7 +2820,7 @@ msgid "Activity"
 msgstr "活动状态"
 
 #. Page title of the activity-log tab in community settings (the user-facing name for the audit log).
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:108
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:86
 msgid "Activity log"
 msgstr "活动日志"
 
@@ -3493,19 +3205,6 @@ msgstr "添加自定义网址模式的搜索引擎。使用 <0>{query}</0> 作�
 msgid "Add your own translators with a custom URL pattern. Use <0>{query}</0> as a placeholder for the text to translate."
 msgstr "添加自定义网址模式的翻译器。使用 <0>{query}</0> 作为待翻译文本的占位符。"
 
-#. placeholder {0}: renderInline(joinLabels(addedLabels), i18n)
-#. placeholder {1}: renderInline(joinLabels(removedLabels), i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:520
-msgid "Added {0} and removed {1}."
-msgstr "添加了 {0}，移除了 {1}。"
-
-#. placeholder {0}: renderInline(joinLabels(addedLabels), i18n)
-#. placeholder {0}: renderInline(joinLabels(labels), i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:513
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:543
-msgid "Added {0}."
-msgstr "添加了 {0}。"
-
 #. Toast after adding one or more desktop local file references for theme CSS.
 #: src/features/theme_studio/sections/AssetsSection.tsx:28
 msgid "Added {length, plural, one {# local file reference} other {# local file references}}."
@@ -3545,10 +3244,6 @@ msgstr "添加了头像"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:91
 msgid "Added an invite background"
 msgstr "添加了邀请背景"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:545
-msgid "Added roles."
-msgstr "已添加身份组。"
 
 #. Activity log detail line under a change to a member, for an avatar added to the community profile of the member. A community profile is the profile a member uses only in this community, in place of their global profile. The avatar belongs to the member and not to the community, so keep the member as the owner and never let the phrase read as an avatar of the community itself. It continues the entry summary, so it has no subject. It is a past tense record of an action that already happened, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Added is past tense here.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:285
@@ -3754,7 +3449,7 @@ msgstr "对齐方式控制仅在宽屏设备上可用"
 #. Short label in the discovery category bottom sheet. Keep it concise.
 #. Tab label in the DM friends view showing all friends.
 #. Tab label in the mobile memes (saved media) picker. Shows all saved media regardless of type.
-#: src/features/app/config/AuditLogConstants.ts:163
+#: src/features/app/config/AuditLogConstants.ts:143
 #: src/features/channel/components/direct_message/DMFriendsView.tsx:41
 #: src/features/channel/components/guild_members_page/GuildMembersPageDescriptors.ts:10
 #: src/features/channel/components/MobileMemesPicker.tsx:42
@@ -3783,7 +3478,7 @@ msgid "All <0/>, forever. No billing, no renewals."
 msgstr "永久拥有全部<0/>。不再计费，无需续订。"
 
 #. Default option in the activity log "Filter by action" dropdown. Means no action-type filter is applied. Short standalone label.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:99
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:77
 msgid "All actions"
 msgstr "所有操作"
 
@@ -3844,11 +3539,6 @@ msgstr "所有输入框都可以正常交互，尽情输入吧。"
 msgid "All languages"
 msgstr "所有语言"
 
-#. Short label in the guild audit log tab.renderers. Keep it concise.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:59
-msgid "All members"
-msgstr "所有成员"
-
 #. Activity log value for the default notification setting of a community where members are notified about every message.
 #. Notification level option. Sends a push for every message in the channel or community. Paired with "Only mentions" and "Nothing".
 #. Short label in the default notifications section. Keep it concise.
@@ -3872,7 +3562,7 @@ msgid "All time"
 msgstr "全部时间"
 
 #. Default option in the activity log "Filter by user" dropdown. Means no user filter is applied. Short standalone label.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:94
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:72
 msgid "All users"
 msgstr "所有用户"
 
@@ -4036,17 +3726,6 @@ msgstr "允许好友查看此连接"
 msgid "Allow your friends to see your local time"
 msgstr "允许好友查看你的当地时间"
 
-#. placeholder {0}: renderInline(addedLabels, i18nInstance)
-#. placeholder {1}: renderInline(removedLabels, i18nInstance)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:173
-msgid "Allowed {0} and removed allow for {1}."
-msgstr "已允许 {0}，并移除 {1} 的允许权限。"
-
-#. placeholder {0}: renderInline(addedLabels, i18nInstance)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:168
-msgid "Allowed {0}."
-msgstr "已允许 {0}。"
-
 #. Activity log detail row under an added or updated channel permission override, listing permissions the override now explicitly allows. A permission override is a channel-level exception to the permissions of a role or member. It allows or denies chosen permissions in one channel or category only. Use the same word for override as the channel permissions settings, such as Add override. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {permissions} is a list of permission names joined into one phrase, for example "View channel and Send messages". A long list ends with a count, for example "View channel, Send messages, and 3 more permissions".
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:363
 msgid "Allowed {permissions}"
@@ -4060,10 +3739,6 @@ msgstr "允许所有成员提及此身份组"
 #: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:186
 msgid "Allowed callers"
 msgstr "允许的来电者"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:671
-msgid "Allowed everyone to mention this role."
-msgstr "已允许所有人提及此身份组。"
 
 #. Activity log detail line under a community settings update, shown when the setting that allows flexible text channel names, such as capital letters and spaces, was turned on. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Allowed is the past tense verb here, not an adjective.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:176
@@ -4318,11 +3993,6 @@ msgstr "动态头像不可用"
 msgid "Animated avatars require {premiumProductName}"
 msgstr "动态头像需要 {premiumProductName}"
 
-#. Audit log community feature label for animated banner support.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:82
-msgid "Animated banner"
-msgstr "动态横幅"
-
 #. Description text in the guild banner upload field. Preserve {animatedBannerFeature}; it is inserted by code. Keep the tone plain and specific.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:33
 msgid "Animated banners require the {animatedBannerFeature} community feature."
@@ -4354,11 +4024,6 @@ msgstr "GIF 动图"
 #: src/features/channel/components/embeds/media/EmbedGifv.tsx:63
 msgid "Animated GIF video"
 msgstr "GIF 动图"
-
-#. Audit log community feature label for animated icon support.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:78
-msgid "Animated icon"
-msgstr "动态图标"
 
 #. Title of the error modal shown when an animated group icon is selected.
 #. Title of the error modal shown when an animated group icon is selected.
@@ -4915,7 +4580,7 @@ msgid "Attach files"
 msgstr "附加文件"
 
 #. Screen-reader fragment listing one attachment on a message. Lowercase because it appears inside a longer sentence.
-#: src/features/channel/components/ChannelMessage.tsx:44
+#: src/features/channel/components/ChannelMessage.tsx:43
 msgid "attachment"
 msgstr "附件"
 
@@ -5339,12 +5004,6 @@ msgstr "自动补全建议：{label}，第 {selectedOptionPosition} 项，共 {r
 msgid "Automatic"
 msgstr "自动"
 
-#. Audit log voice region value meaning automatic region selection.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:61
-msgctxt "rtc-region-value"
-msgid "Automatic"
-msgstr "自动"
-
 #. Option label for the screen-share codec select. codec is the automatically selected codec label.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:169
 msgid "Automatic ({codec})"
@@ -5710,11 +5369,6 @@ msgstr "封禁详情"
 msgid "Ban duration"
 msgstr "封禁时长"
 
-#. placeholder {0}: renderInline(formatted, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:608
-msgid "Ban expires at {0}."
-msgstr "封禁将于 {0} 到期。"
-
 #. Moderation action that bans the selected member from the community.
 #. Moderation action that bans the selected member from the community.
 #. Moderation action that bans the selected member from the community.
@@ -5759,11 +5413,6 @@ msgstr "已封禁"
 msgid "Banned {targetUserTag} from the community"
 msgstr "已在社区中封禁 {targetUserTag}"
 
-#. placeholder {0}: renderInline(formatted, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:604
-msgid "Banned at {0}."
-msgstr "于 {0} 封禁。"
-
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:104
 msgid "Banned by"
 msgstr "封禁者"
@@ -5776,12 +5425,10 @@ msgstr "封禁于"
 msgid "Banned users"
 msgstr "已封禁用户"
 
-#. Audit log community feature label for banner image support.
 #. Button or menu action label in the guild banner upload field. Keep it concise. Keep the tone plain and specific.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:28
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:125
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:86
 #: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:280
 #: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:330
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:37
@@ -6130,7 +5777,7 @@ msgid "Bot"
 msgstr "机器人"
 
 #. Audit log entry label. A bot account was added to the community.
-#: src/features/app/config/AuditLogConstants.ts:83
+#: src/features/app/config/AuditLogConstants.ts:67
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthSuccessState.tsx:26
 msgid "Bot added"
 msgstr "机器人已添加"
@@ -6894,12 +6541,6 @@ msgstr "类别"
 msgid "Category"
 msgstr "类别"
 
-#. Audit log channel type label for channel categories.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:48
-msgctxt "audit-log-channel-type"
-msgid "Category"
-msgstr "类别"
-
 #. Title in a modal shown before opening a category with a custom content warning.
 #: src/features/channel/components/MatureContentChannelGate.tsx:187
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:39
@@ -6964,9 +6605,7 @@ msgid "Center"
 msgstr "居中"
 
 #. Audit log value for invite splash alignment: centered image placement.
-#. Audit log value for invite splash alignment: centered image placement.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:40
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:66
 msgid "Centered"
 msgstr "居中"
 
@@ -7184,12 +6823,6 @@ msgstr "更改头像"
 msgid "Change your username"
 msgstr "更改用户名"
 
-#. placeholder {0}: renderInline(change.oldValue, i18n)
-#. placeholder {1}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:474
-msgid "Changed nickname from {0} to {1}."
-msgstr "昵称从 {0} 改为 {1}。"
-
 #. Activity log detail row under an updated channel whose slowmode, the wait between messages from one member, changed. Use the same term for slowmode as the Slowmode channel setting. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {oldDuration} is the wait before the change and {newDuration} the wait after, both shown as formatted durations such as "30 seconds" or "1 hour".
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:250
 msgid "Changed slowmode from {oldDuration} to {newDuration}"
@@ -7214,11 +6847,6 @@ msgstr "将音频质量从 {oldKbps} kbps 更改为 {newKbps} kbps"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts:130
 msgid "Changed the avatar"
 msgstr "更改了头像"
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:462
-msgid "Changed the bitrate to {0}."
-msgstr "比特率已更改为 {0}。"
 
 #. Activity log detail line under a change to a member, for a block that was already running and was given a new end. The block stops the member from sending messages, reacting and joining voice, and it lifts on its own at the new end. Spell the effect out the way the English does. Do not name it with a word for a ban, a kick, a mute, a suspension or a waiting period, and do not say that time ran out. Keep the three things that are blocked. It continues the entry summary, so it has no subject. It is a past tense record of an action that already happened, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {date} is the new end of the block, shown as a formatted date and time.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:255
@@ -7367,11 +6995,6 @@ msgstr "已将验证级别从 {oldLevel} 更改为 {newLevel}"
 msgid "Changed the voice region from {oldRegion} to {newRegion}"
 msgstr "将语音区域从 {oldRegion} 更改为 {newRegion}"
 
-#. placeholder {0}: renderRtcRegionValue(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:235
-msgid "Changed the voice region to {0}."
-msgstr "语音区域已更改为 {0}。"
-
 #: src/features/theme_studio/sections/QuickCssSection.tsx:280
 msgid "Changes apply instantly to the live client."
 msgstr "更改会立即应用于客户端。"
@@ -7389,7 +7012,7 @@ msgstr "频道"
 #. Short label in the channel layout. Keep it concise.
 #. Short label in the channel source preview. Keep it concise.
 #. Slash-command argument type name, spoken by screen readers for an argument that takes a channel.
-#: src/features/app/config/AuditLogConstants.ts:183
+#: src/features/app/config/AuditLogConstants.ts:163
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:24
 #: src/features/channel/components/ChannelLayout.tsx:13
 #: src/features/channel/components/ChannelSourcePreview.tsx:28
@@ -7531,21 +7154,6 @@ msgstr "频道选项"
 msgid "Channel or category"
 msgstr "频道或类别"
 
-#. Audit log entry label. A channel permission override was added for a role or member.
-#: src/features/app/config/AuditLogConstants.ts:39
-msgid "Channel overwrite added"
-msgstr "频道权限覆盖已添加"
-
-#. Audit log entry label. A channel permission override was removed for a role or member.
-#: src/features/app/config/AuditLogConstants.ts:47
-msgid "Channel overwrite removed"
-msgstr "频道权限覆盖已移除"
-
-#. Audit log entry label. A channel permission override was edited for a role or member.
-#: src/features/app/config/AuditLogConstants.ts:43
-msgid "Channel overwrite updated"
-msgstr "频道权限覆盖已更新"
-
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:48
 msgid "Channel permission overrides"
@@ -7585,13 +7193,6 @@ msgstr "频道类型"
 msgid "Channel type selection"
 msgstr "选择频道类型"
 
-#. placeholder {0}: renderValueInline(label, guildId, i18n)
-#. placeholder {0}: renderValueInline(value, guildId, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:238
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:240
-msgid "Channel type: {0}."
-msgstr "频道类型：{0}。"
-
 #. Audit log entry label. Past-tense action describing that a channel was edited.
 #: src/features/app/config/AuditLogConstants.ts:16
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:209
@@ -7602,12 +7203,6 @@ msgstr "频道已更新"
 #: src/features/invite/components/InviteListItem.tsx:186
 msgid "Channel:"
 msgstr "频道："
-
-#. placeholder {0}: renderValueInline(value, guildId, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:243
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:314
-msgid "Channel: {0}."
-msgstr "频道：{0}。"
 
 #. Section header in the message search popout listing matching channels for the in: filter. Title Case.
 #. Section heading in the channel and chat autocomplete for channel suggestions.
@@ -8225,7 +7820,7 @@ msgstr "清除附件模拟数据"
 
 #. Accessible label for the button that clears the slash command being composed in the message box.
 #. Accessible label for the composer button that clears the slash command currently being composed.
-#: src/features/channel/components/LexicalChannelTextareaContent.tsx:136
+#: src/features/channel/components/LexicalChannelTextareaContent.tsx:135
 #: src/features/channel/components/SlashCommandParamBar.tsx:16
 msgid "Clear command"
 msgstr "清除命令"
@@ -8311,37 +7906,6 @@ msgstr "清除受信任的域名"
 msgid "Clear trusted domains ({trustedDomainsCount})"
 msgstr "清除受信任的域名（{trustedDomainsCount}）"
 
-#. placeholder {0}: renderValueInline(change.oldValue, guildId, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:221
-msgid "Cleared {fieldNode} (was {0})."
-msgstr "已清除 {fieldNode}（原为 {0}）。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:571
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:574
-msgid "Cleared the bio."
-msgstr "已清除个人简介。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:400
-msgid "Cleared the message history threshold."
-msgstr "已清除消息历史记录阈值。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:580
-msgid "Cleared the pronouns."
-msgstr "已清除代词。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:655
-msgid "Cleared the role color."
-msgstr "已清除身份组颜色。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:743
-msgid "Cleared the sticker description."
-msgstr "已清除贴纸描述。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:414
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:417
-msgid "Cleared the topic."
-msgstr "已清除话题。"
-
 #. Footer summary description for the text-focused screen-share quality preset.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:245
 msgid "Clearer text"
@@ -8418,7 +7982,7 @@ msgid "Click to open the color picker and choose a new color."
 msgstr "点击打开取色器，选择新颜色。"
 
 #. Tooltip on the add-reaction button in the inline message hover action bar.
-#: src/features/channel/components/MessageActionBar.tsx:70
+#: src/features/channel/components/MessageActionBar.tsx:69
 msgid "Click to react"
 msgstr "点击以回应"
 
@@ -8522,7 +8086,7 @@ msgid "Close account"
 msgstr "注销账号"
 
 #. Accessible label and tooltip for the close-DM button on a DM list row.
-#: src/features/channel/components/direct_message/DMListItem.tsx:84
+#: src/features/channel/components/direct_message/DMListItem.tsx:83
 msgid "Close direct message with {displayName}"
 msgstr "关闭与 {displayName} 的私信"
 
@@ -8884,7 +8448,7 @@ msgstr "成员超过 250 人的社区会被强制设为“仅提及我的消息�
 #. Developer / debug surface — keep terse and technical. Fallback label used in the IAR preview tool when no community context is supplied.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short option type label in the OAuth bot invite destination selector.
-#: src/features/app/config/AuditLogConstants.ts:167
+#: src/features/app/config/AuditLogConstants.ts:147
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthCommunityStep.tsx:48
 #: src/features/moderation/components/report_modal/IARModalPreview.tsx:16
 #: src/features/user/components/settings_utils/GuildSettingsConstants.ts:253
@@ -10859,27 +10423,6 @@ msgstr "由 {creatorDisplayName} 创建。已过期。"
 msgid "Created by {creatorDisplayName}. Never expires."
 msgstr "由 {creatorDisplayName} 创建。永不过期。"
 
-#. placeholder {0}: renderInline(change.newValue, i18n, guildId)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:758
-msgid "Created for channel {0}."
-msgstr "已为频道 {0} 创建。"
-
-#. placeholder {0}: renderInline(formatted, i18n)
-#. placeholder {0}: renderValueInline(formatted, guildId, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:732
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:268
-msgid "Created on {0}."
-msgstr "创建于 {0}。"
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:762
-msgid "Created with name {0}."
-msgstr "已创建，名称为 {0}。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:623
-msgid "Created with name {newLabel}."
-msgstr "已创建，名称为“{newLabel}”。"
-
 #: src/features/invite/components/InviteListItem.tsx:237
 msgid "Created:"
 msgstr "创建时间："
@@ -11083,12 +10626,12 @@ msgid "Custom discriminators are not available on this instance"
 msgstr "此实例不支持自定义识别码"
 
 #. Accessible label for a custom emoji in the message composer. Preserve {emojiName} and {communityName}.
-#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:24
+#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:21
 msgid "Custom emoji {emojiName} from {communityName}"
 msgstr "来自 {communityName} 的自定义表情 {emojiName}"
 
 #. Accessible label for a custom emoji in the message composer when its community name is unavailable. Preserve {emojiName}.
-#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:19
+#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:16
 msgid "Custom emoji {emojiName} from a community"
 msgstr "来自社区的自定义表情 {emojiName}"
 
@@ -11198,7 +10741,7 @@ msgstr "自定义提示音"
 msgid "Custom status"
 msgstr "自定义状态"
 
-#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:567
+#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:465
 msgid "Custom status: "
 msgstr "自定义状态： "
 
@@ -11565,7 +11108,7 @@ msgstr "调试成员"
 #. Developer-mode action that opens the message debug modal.
 #. Developer-mode item in the message action bar overflow menu. Opens the message debug modal.
 #. Developer-mode message context menu item that opens an internal debug view for the message.
-#: src/features/channel/components/MessageActionBar.tsx:82
+#: src/features/channel/components/MessageActionBar.tsx:81
 #: src/features/channel/components/MessageActionMenu.tsx:103
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:66
 msgid "Debug message"
@@ -11630,7 +11173,6 @@ msgstr "默认摄像头"
 
 #. Short label in the channel and chat autocomplete emoji. Keep it concise.
 #: src/features/channel/components/AutocompleteEmoji.tsx:26
-#: src/features/emoji/components/bottomsheets/EmojiInfoBottomSheet.tsx:78
 msgid "Default emoji"
 msgstr "默认表情"
 
@@ -12052,17 +11594,6 @@ msgstr "已删除。"
 msgid "Denied"
 msgstr "已拒绝"
 
-#. placeholder {0}: renderInline(addedLabels, i18nInstance)
-#. placeholder {1}: renderInline(removedLabels, i18nInstance)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:186
-msgid "Denied {0} and removed deny for {1}."
-msgstr "已拒绝 {0}，并移除 {1} 的拒绝设置。"
-
-#. placeholder {0}: renderInline(addedLabels, i18nInstance)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:181
-msgid "Denied {0}."
-msgstr "已拒绝 {0}。"
-
 #. Activity log detail row under an added or updated channel permission override, listing permissions the override now explicitly denies. A permission override is a channel-level exception to the permissions of a role or member. It allows or denies chosen permissions in one channel or category only. Use the same word for override as the channel permissions settings, such as Add override. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {permissions} is a list of permission names joined into one phrase, for example "View channel and Send messages". A long list ends with a count, for example "View channel, Send messages, and 3 more permissions".
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:368
 msgid "Denied {permissions}"
@@ -12269,10 +11800,8 @@ msgstr "目标频道"
 msgid "Destination URL:"
 msgstr "目标网址："
 
-#. Audit log community feature label for detached banner layout support.
 #. Short label in the branding section. Keep it concise. Keep the tone plain and specific.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/BrandingSection.tsx:35
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:106
 msgid "Detached banner"
 msgstr "独立横幅"
 
@@ -12280,11 +11809,6 @@ msgstr "独立横幅"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:152
 msgid "Detail"
 msgstr "细节"
-
-#. Lowercase fallback label in the activity log when a changed field has no friendly name.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:50
-msgid "details"
-msgstr "详情"
 
 #: src/features/moderation/components/report/ReportBreadcrumbs.tsx:30
 msgid "Details"
@@ -12621,10 +12145,8 @@ msgstr "停用双重认证表单"
 msgid "Disable video locally"
 msgstr "本地停用视频"
 
-#. Button or menu action label in the guild audit log tab.renderers. Keep it concise.
 #. Summary value when a setup option is disabled.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:364
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:51
 msgid "Disabled"
 msgstr "已禁用"
 
@@ -12638,31 +12160,10 @@ msgstr "已禁用（已勾选）"
 msgid "Disabled (unchecked)"
 msgstr "已禁用（未勾选）"
 
-#. placeholder {0}: renderInline(joinLabels(removed), i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:378
-msgid "Disabled {0} for the system channel."
-msgstr "已为系统频道禁用 {0}。"
-
-#. placeholder {0}: renderInline(joinLabels(added), i18n)
-#. placeholder {0}: renderInline(joinLabels(removedLabels), i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:353
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:391
-msgid "Disabled {0}."
-msgstr "已禁用 {0}。"
-
-#. placeholder {0}: renderInline(joinLabels(removedLabels), i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:347
-msgid "Disabled features: {0}."
-msgstr "已禁用功能：{0}。"
-
 #. Button or menu action label in the inputs tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:66
 msgid "Disabled input"
 msgstr "已禁用输入"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:430
-msgid "Disabled mature content."
-msgstr "已禁用成人内容。"
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:309
 msgid "Disabled round (checked)"
@@ -12673,17 +12174,9 @@ msgstr "圆形已禁用（已勾选）"
 msgid "Disabled select"
 msgstr "已禁用选择器"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:667
-msgid "Disabled separate display of members with this role."
-msgstr "已禁用单独显示拥有此身份组的成员。"
-
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:446
 msgid "Disabled slider"
 msgstr "滑块已禁用"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:434
-msgid "Disabled slowmode."
-msgstr "已禁用慢速模式。"
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:194
 msgid "Disabled states"
@@ -13591,7 +13084,7 @@ msgstr "编辑此频道中身份组和成员的权限覆盖。"
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:743
 #: src/features/app/components/pages/YouPage.tsx:157
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:685
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:682
 #: src/features/user/components/modals/UserProfileModal.tsx:587
 #: src/features/user/components/popouts/UserProfilePopout.tsx:432
 msgid "Edit profile"
@@ -13783,7 +13276,7 @@ msgid "Email verified successfully"
 msgstr "邮箱验证成功"
 
 #. Screen-reader fragment listing one embed on a message. Lowercase because it appears inside a longer sentence.
-#: src/features/channel/components/ChannelMessage.tsx:62
+#: src/features/channel/components/ChannelMessage.tsx:61
 msgid "embed"
 msgstr "嵌入内容"
 
@@ -13848,7 +13341,7 @@ msgstr "已显示嵌入内容"
 #. Collapsible group heading in the Theme Studio tokens list, for emoji tokens.
 #. Column header for the custom emoji image or glyph.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/config/AuditLogConstants.ts:187
+#: src/features/app/config/AuditLogConstants.ts:167
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:337
 #: src/features/theme_studio/sections/TokenGroups.ts:114
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:162
@@ -13881,23 +13374,13 @@ msgstr "表情自动补全"
 msgid "Emoji button"
 msgstr "表情按钮"
 
-#. Audit log community feature label indicating emoji cloning is disabled.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:90
-msgid "Emoji cloning disabled"
-msgstr "表情克隆已禁用"
-
-#. Audit log community feature label indicating emoji cloning is enabled.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:98
-msgid "Emoji cloning enabled"
-msgstr "表情克隆已启用"
-
 #. Audit log entry label. A custom emoji was added to the community.
-#: src/features/app/config/AuditLogConstants.ts:123
+#: src/features/app/config/AuditLogConstants.ts:103
 msgid "Emoji created"
 msgstr "表情已创建"
 
 #. Audit log entry label. A custom emoji was removed from the community.
-#: src/features/app/config/AuditLogConstants.ts:131
+#: src/features/app/config/AuditLogConstants.ts:111
 msgid "Emoji deleted"
 msgstr "表情已删除"
 
@@ -13941,7 +13424,7 @@ msgid "Emoji slots full"
 msgstr "表情槽位已满"
 
 #. Audit log entry label. A custom emoji was renamed or edited.
-#: src/features/app/config/AuditLogConstants.ts:127
+#: src/features/app/config/AuditLogConstants.ts:107
 msgid "Emoji updated"
 msgstr "表情已更新"
 
@@ -14255,29 +13738,6 @@ msgstr "启用视频进度预览缩略图"
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:66
 msgid "Enabled"
 msgstr "已启用"
-
-#. placeholder {0}: renderInline(joinLabels(added), i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:375
-msgid "Enabled {0} for the system channel."
-msgstr "已为系统频道启用 {0}。"
-
-#. placeholder {0}: renderInline(joinLabels(addedLabels), i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:352
-msgid "Enabled {0}."
-msgstr "已启用 {0}。"
-
-#. placeholder {0}: renderInline(joinLabels(addedLabels), i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:344
-msgid "Enabled features: {0}."
-msgstr "已启用功能：{0}。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:430
-msgid "Enabled mature content."
-msgstr "已启用成人内容。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:665
-msgid "Enabled separate display of members with this role."
-msgstr "已启用单独显示拥有此身份组的成员。"
 
 #. Label for an advanced screen-share select. Refers to hardware or software video encoding.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -15051,11 +14511,6 @@ msgstr "表情自动补全"
 msgid "Expression picker categories"
 msgstr "表情选择器类别"
 
-#. Audit log community feature label for expression purge tooling.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:142
-msgid "Expression purge"
-msgstr "表情清除"
-
 #. Community settings sidebar category grouping the emoji and stickers tabs.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/GuildSettingsConstants.ts:249
@@ -15633,7 +15088,7 @@ msgid "Filter by account creation date"
 msgstr "按账号创建日期筛选"
 
 #. Label of the action-type filter dropdown in the activity log tab.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:120
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:98
 msgid "Filter by action"
 msgstr "按操作筛选"
 
@@ -15671,7 +15126,7 @@ msgstr "按身份组筛选"
 
 #. Label of the user filter dropdown in the activity log tab.
 #. Short label in the search user filter sheet. Keep it concise.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:116
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:94
 #: src/features/search/components/search/UserFilterSheet.tsx:25
 msgid "Filter by user"
 msgstr "按用户筛选"
@@ -15778,11 +15233,6 @@ msgstr "第一个选项"
 #: src/features/expressions/utils/UnicodeEmojis.ts:49
 msgid "Flags"
 msgstr "旗帜"
-
-#. Audit log community feature label for customized text channel naming rules.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:118
-msgid "Flexible text channel names"
-msgstr "灵活的文字频道名称"
 
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:53
@@ -16105,7 +15555,7 @@ msgstr "表单"
 #. Message action label for forwarding the selected message to another channel or DM.
 #. Message context menu item that opens the forward-to-channel picker.
 #. Tooltip on the forward button in the inline message hover action bar.
-#: src/features/channel/components/MessageActionBar.tsx:86
+#: src/features/channel/components/MessageActionBar.tsx:85
 #: src/features/channel/components/MessageActionMenu.tsx:83
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:54
 msgid "Forward"
@@ -16128,7 +15578,7 @@ msgstr "转发媒体"
 msgid "Forward message"
 msgstr "转发消息"
 
-#: src/features/channel/components/MessageAttachments.tsx:348
+#: src/features/channel/components/MessageAttachments.tsx:345
 msgid "Forwarded"
 msgstr "已转发"
 
@@ -16321,11 +15771,6 @@ msgstr "仅限好友通话"
 msgid "From"
 msgstr "发送者"
 
-#. placeholder {0}: guild.name
-#: src/features/emoji/components/bottomsheets/EmojiInfoBottomSheet.tsx:85
-msgid "From {0}"
-msgstr "来自 {0}"
-
 #. Attribution label on a gift, showing the sender FluxerTag.
 #. Sender label on a gift code embed. creatorTag is the FluxerTag of the gift creator.
 #: src/features/channel/components/GiftEmbed.tsx:28
@@ -16342,10 +15787,6 @@ msgstr "从 {start} 开始"
 #: src/features/channel/components/emoji_picker/EmojiPickerInspector.tsx:110
 msgid "from <0>{0}</0>"
 msgstr "来自 <0>{0}</0>"
-
-#: src/features/emoji/components/bottomsheets/EmojiInfoBottomSheet.tsx:91
-msgid "From another community"
-msgstr "来自其他社区"
 
 #. Label for SMTP from email input.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:986
@@ -16987,17 +16428,6 @@ msgstr "授权"
 msgid "Granted"
 msgstr "已授权"
 
-#. placeholder {0}: renderInline(addedLabels, i18n)
-#. placeholder {1}: renderInline(removedLabels, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:638
-msgid "Granted {0} and revoked {1}."
-msgstr "授予了 {0}，撤销了 {1}。"
-
-#. placeholder {0}: renderInline(addedLabels, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:634
-msgid "Granted {0}."
-msgstr "授予了 {0}。"
-
 #. Activity log detail line under a created or edited role, listing the permissions the role now gives its members. The actor in the summary granted them to the role. Do not write it as someone receiving them. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {permissions} is a list of permission names that the app joins with commas and the word for "and" in your language. When the list is long it ends with a count of the permissions not named, such as "3 more permissions".
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:60
 msgid "Granted {permissions}"
@@ -17124,9 +16554,7 @@ msgstr "群图标"
 msgid "Group invites"
 msgstr "群邀请"
 
-#. Audit log channel type label for group DM channels.
 #. Fallback display name for an unnamed group DM in quick switcher results.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:57
 #: src/features/search/state/QuickSwitcherCandidateBuilder.ts:43
 msgid "Group message"
 msgstr "群聊"
@@ -17506,10 +16934,8 @@ msgstr "在社区侧边栏中隐藏你已静音的频道"
 msgid "Hide chat"
 msgstr "隐藏聊天"
 
-#. Audit log community feature label for hiding the owner crown badge.
 #. Label in the owner crown section.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/OwnerCrownSection.tsx:12
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:122
 msgid "Hide community owner crown"
 msgstr "隐藏社区拥有者皇冠"
 
@@ -18657,11 +18083,6 @@ msgstr "正在安装桌面版更新 {version}…"
 msgid "Installing desktop update…"
 msgstr "正在安装桌面版更新…"
 
-#. Audit log operation flag label for invite creation.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:193
-msgid "Instant invites"
-msgstr "即时邀请"
-
 #. Comment of the Linux .desktop entry. One-line app description shown as a tooltip in Linux launchers and software centres. VoIP is voice over IP; keep the term if it is used untranslated in your language.
 #: src/features/platform/utils/DesktopLocaleBridge.ts:294
 msgid "Instant messaging and VoIP"
@@ -18813,7 +18234,7 @@ msgstr "邀请"
 
 #. Audit log target-type filter label. Filters entries that target an invite link.
 #. Join source label on the community members page. Shown when the member joined via an invite link.
-#: src/features/app/config/AuditLogConstants.ts:195
+#: src/features/app/config/AuditLogConstants.ts:175
 #: src/features/channel/components/guild_members_page/MemberTableRow.tsx:43
 msgctxt "invite-noun"
 msgid "Invite"
@@ -18833,18 +18254,13 @@ msgstr "邀请背景"
 msgid "Invite code (optional)"
 msgstr "邀请码（可选）"
 
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:682
-msgid "Invite code is {0}."
-msgstr "邀请码是 {0}。"
-
 #. Audit log entry label. A new invite link was created.
-#: src/features/app/config/AuditLogConstants.ts:99
+#: src/features/app/config/AuditLogConstants.ts:83
 msgid "Invite created"
 msgstr "邀请已创建"
 
 #. Audit log entry label. An invite link was revoked or deleted.
-#: src/features/app/config/AuditLogConstants.ts:107
+#: src/features/app/config/AuditLogConstants.ts:87
 msgid "Invite deleted"
 msgstr "邀请已删除"
 
@@ -18954,11 +18370,6 @@ msgstr "邀请已撤销"
 msgid "Invite sent for {guildName}"
 msgstr "已发送加入 {guildName} 的邀请"
 
-#. Audit log community feature label for invite splash image support.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:110
-msgid "Invite splash"
-msgstr "邀请背景图"
-
 #. Button or menu action label in the guild invite splash upload field. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashUploadField.tsx:33
 msgid "Invite splash preview"
@@ -18974,20 +18385,10 @@ msgstr "邀请加入社区"
 msgid "Invite unavailable"
 msgstr "邀请不可用"
 
-#. Audit log entry label. An existing invite link was edited.
-#: src/features/app/config/AuditLogConstants.ts:103
-msgid "Invite updated"
-msgstr "邀请已更新"
-
 #. Subtitle for a community that can only be joined with an invite.
 #: src/features/expressions/components/ExpressionInfoCard.tsx:80
 msgid "Invite-only community"
 msgstr "仅限受邀加入的社区"
-
-#. placeholder {0}: renderValueInline(value, guildId, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:249
-msgid "Invited by {0}."
-msgstr "由 {0} 邀请。"
 
 #. Tooltip on the community members page crediting the person who invited this member. inviterDisplay holds the inviter's avatar and name.
 #: src/features/channel/components/guild_members_page/MemberTableRow.tsx:173
@@ -19047,10 +18448,8 @@ msgstr "本社区已暂停邀请。"
 msgid "Invites are paused in this community by an admin. While this invite can be created, it cannot be accepted until invites are re-enabled."
 msgstr "此社区的邀请已被管理员暂停。你仍可以创建此邀请，但在重新启用邀请前，它无法被接受。"
 
-#. Audit log community feature label meaning invite creation is disabled.
 #. Status label on a community invite embed when invites are paused or anti-raid mode is active.
 #: src/features/channel/components/InviteEmbed.tsx:75
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:114
 msgid "Invites disabled"
 msgstr "邀请已禁用"
 
@@ -19219,11 +18618,6 @@ msgstr "加入群聊"
 msgid "Join method"
 msgstr "加入方式"
 
-#. Audit log system-channel flag label for member join notification posts.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:205
-msgid "Join notifications"
-msgstr "加入通知"
-
 #. Action label in the DM channel header pill that switches an in-progress call from another device to this device.
 #. CTA button shown when the user is already in the call on another device. Moves the call to this device.
 #: src/features/channel/components/channel_view/dm_channel_view/shared.ts:134
@@ -19350,7 +18744,7 @@ msgid "Jump to page"
 msgstr "跳转到指定页"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:86
+#: src/features/channel/components/ChannelMessages.tsx:85
 msgid "Jump to present"
 msgstr "跳转到最新消息"
 
@@ -19776,9 +19170,7 @@ msgid "Left {keyName}"
 msgstr "左 {keyName}"
 
 #. Audit log value for invite splash alignment: left image placement.
-#. Audit log value for invite splash alignment: left image placement.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:44
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:70
 msgid "Left aligned"
 msgstr "左对齐"
 
@@ -19806,20 +19198,10 @@ msgstr "鼠标左键"
 msgid "Left tooltip"
 msgstr "左侧工具提示"
 
-#. Audit log community feature label for the legacy increased custom emoji capacity feature.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:126
-msgid "Legacy emoji slots"
-msgstr "旧版表情槽位"
-
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:537
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:559
 msgid "Legacy rate"
 msgstr "旧版费率"
-
-#. Audit log community feature label for the legacy increased custom sticker capacity feature.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:130
-msgid "Legacy sticker slots"
-msgstr "旧版贴纸槽位"
 
 #. Description text in the text to speech.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx:45
@@ -19980,11 +19362,6 @@ msgstr "链接（成人内容）"
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:96
 msgid "Link builder"
 msgstr "链接生成器"
-
-#. Audit log channel type label for channels that point to an external URL.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:53
-msgid "Link channel"
-msgstr "链接频道"
 
 #. Generic toast confirming that a link was copied to the system clipboard.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:385
@@ -20644,14 +20021,6 @@ msgstr "Markdown"
 msgid "Marked as read"
 msgstr "已标为已读"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:738
-msgid "Marked emoji as animated."
-msgstr "将表情标记为动态。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:738
-msgid "Marked emoji as static."
-msgstr "将表情标记为静态。"
-
 #. Activity log detail row under a created or updated channel whose Mature content override setting was set to On. The channel is now treated as mature whatever its category or the community is set to. Mature content means content for adults only. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:61
 msgid "Marked the channel as containing mature content"
@@ -20661,14 +20030,6 @@ msgstr "将频道标记为包含成人内容"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:66
 msgid "Marked the channel as not containing mature content"
 msgstr "将频道标记为不包含成人内容"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:600
-msgid "Marked the member as permanent."
-msgstr "将该成员标记为永久成员。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:598
-msgid "Marked the member as temporary."
-msgstr "将该成员标记为临时成员。"
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:415
 msgid "Markers below slider"
@@ -20734,11 +20095,6 @@ msgstr "马萨诸塞州"
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:220
 msgid "Master volume"
 msgstr "主音量"
-
-#. Short label in the guild audit log tab.renderers. Keep it concise.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:47
-msgid "Mature"
-msgstr "成人内容"
 
 #: src/features/channel/components/MatureContentChannelGate.tsx:141
 msgid "Mature category"
@@ -21010,7 +20366,7 @@ msgid "Medium size (default)"
 msgstr "中等大小（默认）"
 
 #. Audit log target-type filter label. Filters entries that target a community member.
-#: src/features/app/config/AuditLogConstants.ts:171
+#: src/features/app/config/AuditLogConstants.ts:151
 msgid "Member"
 msgstr "成员"
 
@@ -21020,17 +20376,17 @@ msgid "Member actions for {displayName}"
 msgstr "{displayName} 的成员操作"
 
 #. Audit log entry label. A member was banned from the community.
-#: src/features/app/config/AuditLogConstants.ts:59
+#: src/features/app/config/AuditLogConstants.ts:43
 msgid "Member banned"
 msgstr "成员已封禁"
 
 #. Audit log entry label. A member was disconnected from a voice channel by a moderator.
-#: src/features/app/config/AuditLogConstants.ts:79
+#: src/features/app/config/AuditLogConstants.ts:63
 msgid "Member disconnected"
 msgstr "成员已断开连接"
 
 #. Audit log entry label. A member was kicked (removed) from the community by a moderator.
-#: src/features/app/config/AuditLogConstants.ts:51
+#: src/features/app/config/AuditLogConstants.ts:39
 msgid "Member kicked"
 msgstr "成员已踢出"
 
@@ -21049,18 +20405,13 @@ msgstr "成员列表不可用"
 msgid "Member list unavailable at this screen width"
 msgstr "当前屏幕宽度无法显示成员列表"
 
-#. Audit log operation flag label.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:201
-msgid "Member list updates"
-msgstr "成员列表更新"
-
 #. Label in the channel and chat member list unavailable fallback.
 #: src/features/channel/components/shared/MemberListUnavailableFallback.tsx:21
 msgid "Member lists are temporarily unavailable in this community"
 msgstr "此社区的成员列表暂时不可用"
 
 #. Audit log entry label. A member was moved between voice channels by a moderator.
-#: src/features/app/config/AuditLogConstants.ts:75
+#: src/features/app/config/AuditLogConstants.ts:59
 msgid "Member moved"
 msgstr "成员已移动"
 
@@ -21070,7 +20421,7 @@ msgid "Member not found"
 msgstr "未找到成员"
 
 #. Audit log entry label. The roles assigned to a member were changed.
-#: src/features/app/config/AuditLogConstants.ts:71
+#: src/features/app/config/AuditLogConstants.ts:55
 msgid "Member roles updated"
 msgstr "成员身份组已更新"
 
@@ -21080,12 +20431,12 @@ msgid "Member since"
 msgstr "加入时间"
 
 #. Audit log entry label. A previously banned member was unbanned.
-#: src/features/app/config/AuditLogConstants.ts:63
+#: src/features/app/config/AuditLogConstants.ts:47
 msgid "Member unbanned"
 msgstr "成员已解除封禁"
 
 #. Audit log entry label. A member profile was edited (nickname, etc).
-#: src/features/app/config/AuditLogConstants.ts:67
+#: src/features/app/config/AuditLogConstants.ts:51
 msgid "Member updated"
 msgstr "成员已更新"
 
@@ -21123,11 +20474,6 @@ msgstr "成员"
 msgid "Members are removed when offline unless given a role."
 msgstr "成员离线时会被移除，除非为其分配了身份组。"
 
-#. Audit log entry label. Inactive members were bulk-removed via the prune tool.
-#: src/features/app/config/AuditLogConstants.ts:55
-msgid "Members pruned"
-msgstr "成员已清除"
-
 #. Channel pins empty-state body shown to community members. Pin permission name is interpolated.
 #: src/features/app/components/shared/ChannelPinsContent.tsx:47
 msgid "Members with \"{pinMessagesPermissionLabel}\" can pin messages for everyone."
@@ -21141,11 +20487,6 @@ msgstr "拥有身份组的成员可以绕过这些检查。对于公共空间，
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:47
 msgid "Members with the \"{mentionEveryonePermissionLabel}\" permission can always mention roles, regardless of this setting."
 msgstr "拥有“{mentionEveryonePermissionLabel}”权限的成员始终可以提及身份组，不受此设置限制。"
-
-#. Short label in the guild audit log tab.renderers. Keep it concise.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:55
-msgid "Members without roles"
-msgstr "无身份组成员"
 
 #. Description text in the message history threshold content. Preserve {readMessageHistoryPermissionLabel}; it is inserted by code. Keep the tone plain and specific.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/MessageHistoryThresholdContent.tsx:45
@@ -21263,13 +20604,13 @@ msgid "Menu shortcuts"
 msgstr "菜单快捷键"
 
 #. Fallback role label used in screen-reader message summaries.
-#: src/features/channel/components/ChannelMessage.tsx:76
+#: src/features/channel/components/ChannelMessage.tsx:75
 msgid "message"
 msgstr "消息"
 
 #. Audit log target-type filter label. Filters entries that target an individual message.
 #. Short label in the inputs tab. Keep it concise.
-#: src/features/app/config/AuditLogConstants.ts:204
+#: src/features/app/config/AuditLogConstants.ts:184
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:86
 msgid "Message"
 msgstr "消息"
@@ -21282,7 +20623,7 @@ msgstr "消息"
 #: src/features/ui/action_menu/items/ActionsSubmenu.tsx:41
 #: src/features/ui/action_menu/items/MessageUserMenuItem.tsx:26
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:78
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:718
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:715
 #: src/features/user/components/modals/UserProfileModal.tsx:562
 #: src/features/user/components/modals/UserProfileModal.tsx:770
 #: src/features/user/components/popouts/UserProfilePopout.tsx:418
@@ -21345,21 +20686,21 @@ msgid "Message composer"
 msgstr "消息输入框"
 
 #. Label in the channel and chat reply preview.
-#: src/features/channel/components/ReplyPreview.tsx:42
+#: src/features/channel/components/ReplyPreview.tsx:41
 msgid "Message contains attached media"
 msgstr "消息包含媒体附件"
 
 #. Title of the developer-mode message debug modal opened from the message action bar.
 #. Title of the developer-mode message debug modal opened from the message context menu.
 #. Title of the developer-mode message debug modal.
-#: src/features/channel/components/MessageActionBar.tsx:74
+#: src/features/channel/components/MessageActionBar.tsx:73
 #: src/features/channel/components/MessageActionMenu.tsx:71
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:62
 msgid "Message debug"
 msgstr "消息调试"
 
 #. Audit log entry label. A single message was deleted by a moderator.
-#: src/features/app/config/AuditLogConstants.ts:147
+#: src/features/app/config/AuditLogConstants.ts:127
 msgid "Message deleted"
 msgstr "消息已删除"
 
@@ -21452,17 +20793,17 @@ msgid "Message link"
 msgstr "消息链接"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:78
+#: src/features/channel/components/ChannelMessages.tsx:77
 msgid "Message list"
 msgstr "消息列表"
 
 #. Label in the channel and chat messages. Preserve {channelName}; it is inserted by code.
-#: src/features/channel/components/ChannelMessages.tsx:74
+#: src/features/channel/components/ChannelMessages.tsx:73
 msgid "Message list for {channelName}"
 msgstr "{channelName} 的消息列表"
 
 #. Audit log entry label. A message was pinned in a channel.
-#: src/features/app/config/AuditLogConstants.ts:155
+#: src/features/app/config/AuditLogConstants.ts:135
 msgid "Message pinned"
 msgstr "消息已置顶"
 
@@ -21521,14 +20862,9 @@ msgid "Message time"
 msgstr "消息时间"
 
 #. Audit log entry label. A message was unpinned from a channel.
-#: src/features/app/config/AuditLogConstants.ts:159
+#: src/features/app/config/AuditLogConstants.ts:139
 msgid "Message unpinned"
 msgstr "消息已取消置顶"
-
-#. placeholder {0}: renderValueInline(value, guildId, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:246
-msgid "Message: {0}."
-msgstr "消息：{0}。"
 
 #. Collapsible group heading in the Theme Studio tokens list, for chat message tokens.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -21560,12 +20896,12 @@ msgid "Messages & media"
 msgstr "消息与媒体"
 
 #. Audit log entry label. Multiple messages were bulk-deleted by a moderator.
-#: src/features/app/config/AuditLogConstants.ts:151
+#: src/features/app/config/AuditLogConstants.ts:131
 msgid "Messages deleted"
 msgstr "消息已删除"
 
 #. Error message in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:90
+#: src/features/channel/components/ChannelMessages.tsx:89
 msgid "Messages failed to load"
 msgstr "消息加载失败"
 
@@ -21859,7 +21195,7 @@ msgid "Moderation"
 msgstr "审核"
 
 #. Empty-state body in the activity log tab when there are no log entries to show.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:132
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:110
 msgid "Moderation actions and community changes will appear here."
 msgstr "管理操作和社区变更将在此处显示。"
 
@@ -21918,7 +21254,7 @@ msgstr "每月礼物"
 #: src/features/auth/components/accounts/AccountRow.tsx:23
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:142
 #: src/features/channel/components/friends/FriendListItem.tsx:63
-#: src/features/channel/components/MessageActionBar.tsx:78
+#: src/features/channel/components/MessageActionBar.tsx:77
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:125
 msgid "More"
 msgstr "更多"
@@ -22095,11 +21431,6 @@ msgstr "将频道从类别 {oldCategory} 移至类别 {newCategory}"
 msgid "Moved the channel into the category {category}"
 msgstr "将频道移至类别 {category}"
 
-#. placeholder {0}: renderInline(change.newValue, i18n, guildId)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:425
-msgid "Moved the channel to category {0}."
-msgstr "将频道移至类别 {0}。"
-
 #. Activity log detail line under an edited role whose group of members was moved lower in the member list. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Use the same word for role as the rest of the app.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:165
 msgid "Moved the role down in the member list"
@@ -22110,11 +21441,6 @@ msgstr "将身份组在成员列表中向下移动"
 msgid "Moved the role down in the role list"
 msgstr "将身份组在身份组列表中向下移动"
 
-#. placeholder {0}: renderInline(value, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:648
-msgid "Moved the role to position {0}."
-msgstr "将身份组移至第 {0} 位。"
-
 #. Activity log detail line under an edited role whose group of members was moved higher in the member list. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Use the same word for role as the rest of the app.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:160
 msgid "Moved the role up in the member list"
@@ -22124,11 +21450,6 @@ msgstr "将身份组在成员列表中向上移动"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:140
 msgid "Moved the role up in the role list"
 msgstr "将身份组在身份组列表中向上移动"
-
-#. placeholder {0}: renderInline(change.newValue, i18n, guildId)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:759
-msgid "Moved to channel {0}."
-msgstr "已移至频道 {0}。"
 
 #. Discovery category dropdown option in the community Discovery settings tab. "TV" is the abbreviation for television.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:105
@@ -22341,7 +21662,7 @@ msgstr "静音直播音频"
 #: src/features/app/components/layout/ChannelItem.tsx:112
 #: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:62
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:39
-#: src/features/channel/components/direct_message/DMListItem.tsx:76
+#: src/features/channel/components/direct_message/DMListItem.tsx:75
 msgid "muted"
 msgstr "已静音"
 
@@ -22417,7 +21738,7 @@ msgstr "共同好友"
 msgid "Mutual friends ({count})"
 msgstr "共同好友（{count}）"
 
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:845
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:842
 msgid "Mutual friends ({mutualFriendsCount})"
 msgstr "共同好友（{mutualFriendsCount}）"
 
@@ -22575,11 +21896,6 @@ msgstr "命名通行密钥"
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:15
 msgid "Name passkey form"
 msgstr "命名通行密钥表单"
-
-#. placeholder {0}: renderValueInline(value, guildId, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:289
-msgid "Name: {0}."
-msgstr "名称：{0}。"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:272
@@ -23239,7 +22555,7 @@ msgid "No local files referenced"
 msgstr "未引用本地文件"
 
 #. Empty-state title in the activity log tab when there are no log entries to show.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:128
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:106
 msgid "No logs yet"
 msgstr "暂无日志"
 
@@ -23339,11 +22655,6 @@ msgstr "尚未注册推送订阅。"
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:79
 msgid "No reason provided"
 msgstr "未提供原因"
-
-#. Fallback text in an expanded activity log entry when the moderator did not supply a reason.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:716
-msgid "No reason was provided."
-msgstr "未提供原因。"
 
 #. Empty-state text in the recent mentions page.
 #: src/features/messaging/components/pages/RecentMentionsPage.tsx:31
@@ -23468,7 +22779,7 @@ msgid "No system channel"
 msgstr "无系统频道"
 
 #. Screen-reader fragment indicating the message has no text body. Lowercase because it appears inside a longer sentence.
-#: src/features/channel/components/ChannelMessage.tsx:71
+#: src/features/channel/components/ChannelMessage.tsx:70
 msgid "no text content"
 msgstr "无文本内容"
 
@@ -23701,18 +23012,13 @@ msgstr "不是真或假"
 #: src/features/messaging/utils/markdown/Plaintext.ts:72
 #: src/features/user/components/modals/user_profile_modal/UserNoteEditor.tsx:19
 #: src/features/user/components/modals/user_profile_modal/UserNoteEditor.tsx:79
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:900
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:897
 msgid "Note"
 msgstr "备注"
 
 #: src/features/user/components/modals/NoteEditSheet.tsx:81
 msgid "Note (only visible to you)"
 msgstr "备注（仅自己可见）"
-
-#. Lowercase fallback label in the activity log for an empty or missing value.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:46
-msgid "nothing"
-msgstr "无"
 
 #. Notification level option. Suppresses all pushes for the channel or community. Paired with "All messages" and "Only mentions".
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:348
@@ -23878,12 +23184,6 @@ msgstr "物品"
 msgid "Off"
 msgstr "关"
 
-#. Audit log value for a disabled boolean setting.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:43
-msgctxt "audit-log-boolean-value"
-msgid "Off"
-msgstr "关"
-
 #. Generic presence-status label indicating the user is offline.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:635
 msgid "Offline"
@@ -23929,12 +23229,6 @@ msgstr "最早优先"
 #: src/features/channel/components/ChannelReplyBar.tsx:58
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:22
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:135
-msgid "On"
-msgstr "开"
-
-#. Audit log value for an enabled boolean setting.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:38
-msgctxt "audit-log-boolean-value"
 msgid "On"
 msgstr "开"
 
@@ -24723,12 +24017,12 @@ msgid "Oregon"
 msgstr "俄勒冈州"
 
 #. Error message in the channel and chat reply preview.
-#: src/features/channel/components/ReplyPreview.tsx:30
+#: src/features/channel/components/ReplyPreview.tsx:29
 msgid "Original message failed to load"
 msgstr "原消息加载失败"
 
 #. Label in the channel and chat reply preview. Keep the tone plain and specific.
-#: src/features/channel/components/ReplyPreview.tsx:26
+#: src/features/channel/components/ReplyPreview.tsx:25
 msgid "Original message was deleted"
 msgstr "原消息已删除"
 
@@ -25561,7 +24855,7 @@ msgid "Ping: {latency}ms"
 msgstr "延迟：{latency}ms"
 
 #. Screen-reader fragment announcing that the DM list row is pinned. Lowercase fragment.
-#: src/features/channel/components/direct_message/DMListItem.tsx:80
+#: src/features/channel/components/direct_message/DMListItem.tsx:79
 msgid "pinned"
 msgstr "已置顶"
 
@@ -25935,12 +25229,12 @@ msgid "Press a shortcut…"
 msgstr "按下快捷键…"
 
 #. Label in the channel and chat message reactions.
-#: src/features/channel/components/MessageReactions.tsx:48
+#: src/features/channel/components/MessageReactions.tsx:46
 msgid "press to add reaction"
 msgstr "轻触以添加表情回应"
 
 #. Label in the channel and chat message reactions. Keep the tone plain and specific.
-#: src/features/channel/components/MessageReactions.tsx:44
+#: src/features/channel/components/MessageReactions.tsx:42
 msgid "press to remove reaction"
 msgstr "轻触以移除表情回应"
 
@@ -26391,10 +25685,6 @@ msgstr "请提供你的完整法定姓名，用于此声明。"
 msgid "Provider"
 msgstr "提供商"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:556
-msgid "Pruned members inactive for <0>{dayCount, plural, one {# day} other {# days}}</0>."
-msgstr "已清理不活跃达 <0>{dayCount, plural, other {# 天}}</0> 的成员。"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:90
 msgid "PTT"
@@ -26505,11 +25795,6 @@ msgstr "已从个人笔记中清除 {deletedCount, plural, other {# 条消息}}"
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:42
 msgid "Push notification inactive timeout"
 msgstr "推送通知不活跃超时"
-
-#. Audit log operation flag label.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:185
-msgid "Push notifications"
-msgstr "推送通知"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:131
@@ -26703,11 +25988,6 @@ msgstr "原始嵌入 JSON"
 msgid "Razor-sharp text at native source resolution, 15 FPS"
 msgstr "原生分辨率、15 FPS 下文字清晰锐利"
 
-#. placeholder {0}: renderInline(joinLabels(removed), i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:393
-msgid "Re-enabled {0}."
-msgstr "已重新启用 {0}。"
-
 #. Button label that discards the current recording and restarts.
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:73
 msgid "Re-record"
@@ -26803,8 +26083,7 @@ msgstr "准备好升级了吗？"
 msgid "Real-time"
 msgstr "实时"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:617
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:1286
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:595
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:74
 msgid "Reason"
 msgstr "原因"
@@ -27486,23 +26765,6 @@ msgstr "移除你的 Visionary ID 徽章"
 msgid "Removed"
 msgstr "已移除"
 
-#. placeholder {0}: renderInline(joinLabels(labels), i18n)
-#. placeholder {0}: renderInline(joinLabels(removedLabels), i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:516
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:533
-msgid "Removed {0}."
-msgstr "移除了 {0}。"
-
-#. placeholder {0}: renderInline(removedLabels, i18nInstance)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:170
-msgid "Removed allow for {0}."
-msgstr "已移除 {0} 的允许权限。"
-
-#. placeholder {0}: renderInline(removedLabels, i18nInstance)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:183
-msgid "Removed deny for {0}."
-msgstr "已移除 {0} 的拒绝权限。"
-
 #. Button or menu action label in the messaging commands. Keep it concise. Keep the tone plain and specific.
 #: src/features/messaging/commands/SavedMessageCommands.tsx:24
 msgid "Removed from bookmarks"
@@ -27528,14 +26790,6 @@ msgstr "已移出群聊"
 msgid "Removed from saved media"
 msgstr "已从已保存媒体中移除"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:626
-msgid "Removed role {oldLabel}."
-msgstr "移除了身份组“{oldLabel}”。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:535
-msgid "Removed roles."
-msgstr "移除了身份组。"
-
 #. Activity log detail line under a community settings update, shown when the community stopped having an AFK channel, the voice channel idle members are moved to. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:166
 msgid "Removed the AFK channel"
@@ -27545,10 +26799,6 @@ msgstr "移除了 AFK 频道"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts:135
 msgid "Removed the avatar"
 msgstr "移除了头像"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:423
-msgid "Removed the channel from its category."
-msgstr "已将频道从其类别中移除。"
 
 #. Activity log detail row under an updated channel that was taken out of its category. The channel was not deleted and was not moved to another category. It now sits outside any category. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {category} is the category it left, shown as a channel chip with its name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:195
@@ -27661,18 +26911,10 @@ msgstr "移除了身份组颜色"
 msgid "Removed the role icon"
 msgstr "移除了身份组图标"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:383
-msgid "Removed the rules channel."
-msgstr "移除了规则频道。"
-
 #. Activity log detail line under a community settings update, shown when the community stopped having a system channel, where the app posts messages such as member joins. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:136
 msgid "Removed the system channel"
 msgstr "移除了系统频道"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:367
-msgid "Removed the system channel."
-msgstr "移除了系统频道。"
 
 #. Activity log detail line under a change to a member, for a timeout that was ended early. A timeout is the moderation action that stops a member from sending messages, reacting and joining voice until it ends. It is not a ban, a kick or a community mute. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:260
@@ -27684,18 +26926,10 @@ msgstr "移除了禁言"
 msgid "Removed the topic {text}"
 msgstr "移除了话题 {text}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:677
-msgid "Removed the Unicode emoji."
-msgstr "移除了 Unicode 表情。"
-
 #. Activity log detail row under an updated voice channel that no longer limits how many people can join at once. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:270
 msgid "Removed the user limit"
 msgstr "已移除用户上限"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:451
-msgid "Removed the user limit."
-msgstr "已移除用户上限。"
 
 #. Activity log detail line under a community settings update, shown when the vanity URL, the custom invite link of the community, was removed. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {code} is the vanity URL code that was removed, shown as boxed text.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:311
@@ -27747,40 +26981,10 @@ msgstr "重命名频道表单"
 msgid "Rename emoji"
 msgstr "重命名表情"
 
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:736
-msgid "Renamed emoji to {0}."
-msgstr "将表情重命名为“{0}”。"
-
-#. placeholder {0}: renderInline(change.oldValue, i18n)
-#. placeholder {1}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:764
-msgid "Renamed from {0} to {1}."
-msgstr "从 {0} 重命名为 {1}。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:617
-msgid "Renamed from {oldLabel} to {newLabel}."
-msgstr "从 {oldLabel} 重命名为 {newLabel}。"
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:741
-msgid "Renamed sticker to {0}."
-msgstr "将贴纸重命名为“{0}”。"
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:412
-msgid "Renamed the channel to {0}."
-msgstr "将频道重命名为“{0}”。"
-
 #. Activity log detail line under a community settings update, shown when the community name changed. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {oldName} is the previous community name and {newName} is the new community name, both shown in bold. The app adds the bold, so do not add ** or <b>.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:46
 msgid "Renamed the community from {oldName} to {newName}"
 msgstr "将社区从 {oldName} 重命名为 {newName}"
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:229
-msgid "Renamed the community to {0}."
-msgstr "将社区重命名为“{0}”。"
 
 #. Developer / debug surface — keep terse and technical. Tooltip / description for the force-unknown-message-type override.
 #: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:27
@@ -27841,12 +27045,12 @@ msgid "Reply"
 msgstr "回复"
 
 #. Error message in the channel and chat reply preview. Keep the tone plain and specific.
-#: src/features/channel/components/ReplyPreview.tsx:34
+#: src/features/channel/components/ReplyPreview.tsx:33
 msgid "Reply hidden because the original author is blocked."
 msgstr "由于原作者已被屏蔽，回复已隐藏。"
 
 #. Description text in the channel and chat reply preview. Keep the tone plain and specific.
-#: src/features/channel/components/ReplyPreview.tsx:38
+#: src/features/channel/components/ReplyPreview.tsx:37
 msgid "Reply hidden because the original author is marked as a spammer."
 msgstr "由于原作者被标记为垃圾信息发送者，回复已隐藏。"
 
@@ -28260,10 +27464,6 @@ msgstr "重置连接"
 msgid "Reset spacing"
 msgstr "重置间距"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:457
-msgid "Reset the connection limit."
-msgstr "已重置连接限制。"
-
 #. Activity log detail line under an edited role that lost its own place in the order of role groups in the member list, so that order follows the role list again. Reset means the position went back to the default. The member list position is where the group of members with this role appears in the member list. It is not a position of the member list itself. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Reset is past tense here. Use the same word for role as the rest of the app.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:155
 msgid "Reset the member list position for the role"
@@ -28537,10 +27737,6 @@ msgstr "恢复账号"
 msgid "Restore window"
 msgstr "恢复窗口"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:673
-msgid "Restricted mentions of this role to members with permission."
-msgstr "已限制为只有具备权限的成员才能提及此身份组。"
-
 #. Billing button for restarting a subscription during the grace period.
 #. Billing button for starting a new subscription after premium expired.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:736
@@ -28736,11 +27932,6 @@ msgstr "撤销邀请"
 msgid "Revoke this invite? Can't be undone."
 msgstr "撤销此邀请？此操作无法撤销。"
 
-#. placeholder {0}: renderInline(removedLabels, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:635
-msgid "Revoked {0}."
-msgstr "已撤销 {0}。"
-
 #. Activity log detail line under an edited role, listing the permissions the role no longer gives its members. The actor in the summary took them away from the role. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {permissions} is a list of permission names that the app joins with commas and the word for "and" in your language. When the list is long it ends with a count of the permissions not named, such as "3 more permissions".
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:65
 msgid "Revoked {permissions}"
@@ -28774,9 +27965,7 @@ msgid "Right {keyName}"
 msgstr "右 {keyName}"
 
 #. Audit log value for invite splash alignment: right image placement.
-#. Audit log value for invite splash alignment: right image placement.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:48
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:74
 msgid "Right aligned"
 msgstr "右对齐"
 
@@ -28826,7 +28015,7 @@ msgstr "来电铃声"
 
 #. Audit log target-type filter label. Filters entries that target a role.
 #. Slash-command argument type name, spoken by screen readers for an argument that takes a role.
-#: src/features/app/config/AuditLogConstants.ts:179
+#: src/features/app/config/AuditLogConstants.ts:159
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts:35
 msgid "Role"
 msgstr "身份组"
@@ -28837,7 +28026,7 @@ msgid "Role color"
 msgstr "身份组颜色"
 
 #. Audit log entry label. A new role was created in the community.
-#: src/features/app/config/AuditLogConstants.ts:87
+#: src/features/app/config/AuditLogConstants.ts:71
 msgid "Role created"
 msgstr "身份组已创建"
 
@@ -28847,7 +28036,7 @@ msgid "Role created successfully"
 msgstr "身份组创建成功"
 
 #. Audit log entry label. A role was deleted from the community.
-#: src/features/app/config/AuditLogConstants.ts:95
+#: src/features/app/config/AuditLogConstants.ts:79
 msgid "Role deleted"
 msgstr "身份组已删除"
 
@@ -28867,14 +28056,9 @@ msgid "Role name is required"
 msgstr "身份组名称为必填项"
 
 #. Audit log entry label. An existing role was edited.
-#: src/features/app/config/AuditLogConstants.ts:91
+#: src/features/app/config/AuditLogConstants.ts:75
 msgid "Role updated"
 msgstr "身份组已更新"
-
-#. placeholder {0}: renderValueInline(value, guildId, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:379
-msgid "Role: {0}."
-msgstr "身份组：{0}。"
 
 #. Generic section, column, or submenu label for community roles.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:422
@@ -28959,11 +28143,6 @@ msgstr "运行时工具"
 #: src/features/user/utils/LocaleUtils.ts:116
 msgid "Russian"
 msgstr "俄语"
-
-#. Short label in the guild audit log tab.renderers. Keep it concise.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:43
-msgid "Safe"
-msgstr "非成人内容"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:172
@@ -29954,7 +29133,7 @@ msgstr "可选文本"
 #: src/features/app/components/layout/ChannelItem.tsx:96
 #: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:54
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:35
-#: src/features/channel/components/direct_message/DMListItem.tsx:68
+#: src/features/channel/components/direct_message/DMListItem.tsx:67
 msgid "selected"
 msgstr "已选"
 
@@ -30106,7 +29285,7 @@ msgstr "按顺序发送文件消息"
 #. Member actions sheet menu item. Sends a friend request to the target user.
 #: src/features/channel/components/direct_message/DMWelcomeSection.tsx:146
 #: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:94
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:112
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:110
 #: src/features/user/components/modals/UserProfileModal.tsx:126
 msgid "Send friend request"
 msgstr "发送好友请求"
@@ -30132,9 +29311,7 @@ msgstr "送礼物"
 msgid "Send message"
 msgstr "发送消息"
 
-#. Audit log operation flag label for message sending.
 #. Permission name: allows sending chat messages.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:197
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:402
 msgid "Send messages"
 msgstr "发送消息"
@@ -30290,7 +29467,7 @@ msgid "Sent"
 msgstr "已发送"
 
 #. DM list row preview text when the most recent message has only attachments.
-#: src/features/channel/components/direct_message/DMListItem.tsx:64
+#: src/features/channel/components/direct_message/DMListItem.tsx:63
 msgid "Sent an attachment"
 msgstr "发送了附件"
 
@@ -30340,18 +29517,13 @@ msgstr "会话已过期。请重新登录。"
 msgid "Sessions"
 msgstr "会话"
 
-#. placeholder {0}: renderValueInline(change.newValue, guildId, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:214
-msgid "Set {fieldNode} to {0}."
-msgstr "将 {fieldNode} 设置为 {0}。"
-
 #. Activity log detail line under a created or edited role that got an uploaded image as the icon shown next to the role name, when it had no uploaded icon before. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Set is past tense here. Use the same word for role as the rest of the app.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:125
 msgid "Set a custom role icon"
 msgstr "设置了自定义身份组图标"
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:601
-#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:355
+#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:253
 msgid "Set a custom status"
 msgstr "设置自定义状态"
 
@@ -30359,11 +29531,6 @@ msgstr "设置自定义状态"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:150
 msgid "Set a member list position for the role"
 msgstr "为该身份组设置了成员列表中的位置"
-
-#. placeholder {0}: renderInline(color, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:586
-msgid "Set accent color to {0} <0/>."
-msgstr "将主题色设为 {0} <0/>。"
 
 #. Short label in the keybinds tab. Keep it concise.
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:28
@@ -30390,33 +29557,10 @@ msgstr "为单个声音设置自定义音量。未单独设置音量的声音将
 msgid "Set deafen shortcut"
 msgstr "设置拒听快捷键"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:309
-msgid "Set default notifications to <0>all messages</0>."
-msgstr "将默认通知设置为<0>所有消息</0>。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:320
-msgid "Set default notifications to <0>only mentions</0>."
-msgstr "将默认通知设置为<0>仅提及</0>。"
-
-#. placeholder {0}: renderInline(label, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:364
-msgid "Set explicit content filter to {0}."
-msgstr "将露骨内容过滤级别设为 {0}。"
-
 #. Badge label in entrance sound settings. The current scope has its own explicitly configured sound instead of inheriting one.
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:108
 msgid "Set here"
 msgstr "已在此设置"
-
-#. placeholder {0}: renderInline(label, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:360
-msgid "Set mature content level to {0}."
-msgstr "将成人内容级别设置为 {0}。"
-
-#. placeholder {0}: renderInline(formatted, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:403
-msgid "Set message history threshold to {0}."
-msgstr "将消息历史记录阈值设为 {0}。"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:187
@@ -30428,38 +29572,14 @@ msgstr "设置静音快捷键"
 msgid "Set new password"
 msgstr "设置新密码"
 
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:478
-msgid "Set nickname to {0}."
-msgstr "将昵称设为 {0}。"
-
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:199
 msgid "Set password"
 msgstr "设置密码"
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:466
-msgid "Set permission overwrite count to {0}."
-msgstr "将权限覆盖数量设为 {0}。"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:170
 msgid "Set push to talk key"
 msgstr "设置按住说话快捷键"
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:550
-msgid "Set reason to {0}."
-msgstr "将原因设为 {0}。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:657
-msgid "Set role color to <0>{hex}</0> <1/>."
-msgstr "已将身份组颜色设为 <0>{hex}</0> <1/>。"
-
-#. placeholder {0}: renderInline(seconds, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:436
-msgid "Set slowmode to {0} {seconds, plural, one {second} other {seconds}}."
-msgstr "将慢速模式设置为 {0} {seconds, plural, other {秒}}。"
 
 #. Activity log detail row under a created or updated channel that now has slowmode, the wait between messages from one member. Use the same term for slowmode as the Slowmode channel setting. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Set is past tense here. {duration} is the wait, shown as a formatted duration such as "30 seconds" or "1 hour".
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:81
@@ -30471,50 +29591,15 @@ msgstr "将慢速模式设置为 {duration}"
 msgid "Set status"
 msgstr "设置状态"
 
-#. placeholder {0}: renderInline(change.newValue, i18n, guildId)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:237
-msgid "Set the AFK channel to {0}."
-msgstr "将 AFK 频道设为 {0}。"
-
 #. Activity log detail line under a community settings update, shown when the community got an AFK channel, the voice channel idle members are moved to, when it had none. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Set is past tense here. {channel} is the new AFK channel, shown as a channel chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:156
 msgid "Set the AFK channel to {channel}"
 msgstr "将 AFK 频道设置为 {channel}"
 
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:242
-msgid "Set the AFK timeout to {0} seconds."
-msgstr "已将 AFK 超时设为 {0} 秒。"
-
 #. Activity log detail row under a created voice channel whose audio bitrate differs from the default. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Set is past tense here. {kbps} is a plain number of kilobits per second, and kbps is the unit abbreviation.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:86
 msgid "Set the audio quality to {kbps} kbps"
 msgstr "将音频质量设置为 {kbps} kbps"
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:461
-msgid "Set the bitrate to {0}."
-msgstr "将比特率设为 {0}。"
-
-#. placeholder {0}: renderInline(change.newValue, i18n, guildId)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:409
-msgid "Set the channel ID to {0}."
-msgstr "将频道 ID 设置为 {0}。"
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:428
-msgid "Set the channel position to {0}."
-msgstr "将频道位置设为 {0}。"
-
-#. placeholder {0}: renderChannelTypeValue(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:411
-msgid "Set the channel type to {0}."
-msgstr "将频道类型设为 {0}。"
-
-#. placeholder {0}: renderInline(limit, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:458
-msgid "Set the connection limit to {0}."
-msgstr "将连接限制设置为 {0}。"
 
 #. Activity log detail row under an updated channel whose content warning got custom text where it had none. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Set is past tense here. {text} is the new warning text, shown as boxed text.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:235
@@ -30530,11 +29615,6 @@ msgstr "将自定义警告文本设置为 {text}"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:55
 msgid "Set the description to {text}"
 msgstr "将描述设置为 {text}"
-
-#. placeholder {0}: renderSplashAlignmentValue(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:254
-msgid "Set the invite splash alignment to {0}."
-msgstr "将邀请背景图对齐方式设为 {0}。"
 
 #. Activity log detail row under a created or updated link channel, saying which web address the channel opens. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Set is past tense here. {url} is the web address, shown as boxed text.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:51
@@ -30581,21 +29661,6 @@ msgstr "将身份组颜色设置为 {color}"
 msgid "Set the role icon to {emoji}"
 msgstr "将身份组图标设置为 {emoji}"
 
-#. placeholder {0}: renderRtcRegionValue(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:464
-msgid "Set the RTC region to {0}."
-msgstr "将 RTC 区域设为 {0}。"
-
-#. placeholder {0}: renderInline(change.newValue, i18n, guildId)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:385
-msgid "Set the rules channel to {0}."
-msgstr "将规则频道设为 {0}。"
-
-#. placeholder {0}: renderInline(change.newValue, i18n, guildId)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:369
-msgid "Set the system channel to {0}."
-msgstr "将系统频道设为 {0}。"
-
 #. Activity log detail line under a community settings update, shown when the community got a system channel, where the app posts messages such as member joins, when it had none. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Set is past tense here. {channel} is the new system channel, shown as a channel chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:126
 msgid "Set the system channel to {channel}"
@@ -30605,21 +29670,6 @@ msgstr "将系统频道设置为 {channel}"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:56
 msgid "Set the topic to {text}"
 msgstr "将话题设置为 {text}"
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:678
-msgid "Set the Unicode emoji to {0}."
-msgstr "将 Unicode 表情设为 {0}。"
-
-#. placeholder {0}: renderInline(limit, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:452
-msgid "Set the user limit to {0}."
-msgstr "将用户上限设为 {0}。"
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:337
-msgid "Set the vanity URL to {0}."
-msgstr "将自定义邀请链接设为 {0}。"
 
 #. Activity log detail line under a community settings update, shown when the community got a vanity URL, its custom invite link, when it had none. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Set is past tense here. {code} is the new vanity URL code, shown as boxed text.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:301
@@ -30663,31 +29713,10 @@ msgstr "设置身份验证器应用"
 msgid "Set up later"
 msgstr "稍后设置"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:296
-msgid "Set verification level to <0>high</0>."
-msgstr "将验证等级设为<0>高</0>。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:279
-msgid "Set verification level to <0>low</0>."
-msgstr "将验证等级设为<0>低</0>。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:286
-msgid "Set verification level to <0>medium</0>."
-msgstr "将验证等级设为<0>中</0>。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:272
-msgid "Set verification level to <0>none</0>."
-msgstr "将验证等级设为<0>无</0>。"
-
 #. Permission name: allows changing the voice service region.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:491
 msgid "Set voice region"
 msgstr "设置语音区域"
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:770
-msgid "Set webhook type to {0}."
-msgstr "将 Webhook 类型设为 {0}。"
 
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:147
 msgid "Set your new password."
@@ -31713,7 +30742,7 @@ msgid "Skip this step"
 msgstr "跳过此步骤"
 
 #. Accessible skip-link label for keyboard users.
-#: src/app/App.tsx:76
+#: src/app/App.tsx:69
 msgid "Skip to content"
 msgstr "跳到内容"
 
@@ -31995,16 +31024,6 @@ msgstr "你尝试上传的部分文件超出大小限制，每个文件不能超
 msgid "Some users can't be added"
 msgstr "部分用户无法添加"
 
-#. Lowercase fallback label in the activity log when the actor or user is unknown.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:42
-msgid "someone"
-msgstr "某人"
-
-#. Lowercase fallback label in the activity log when an entity name is missing.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:34
-msgid "something"
-msgstr "某项内容"
-
 #. Fallback tooltip on the passive badge on your own screen-share tile when the encoder reports no specific limitation.
 #: src/features/voice/components/voice_participant_tile/shared.ts:93
 msgid "Something is limiting this stream, so viewers are getting fewer frames than you asked for."
@@ -32066,7 +31085,7 @@ msgid "Something went wrong while issuing your refund. Contact support if this k
 msgstr "退款时出错了。如果问题持续出现，请联系支持团队。"
 
 #. Generic error shown in the activity log tab when fetching log entries fails.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:104
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:82
 msgid "Something went wrong while loading the activity log."
 msgstr "加载活动日志时出错了。"
 
@@ -32718,7 +31737,7 @@ msgstr "立体声麦克风"
 #. Label for the has:sticker filter option in the mobile channel search sheet.
 #. Screen-reader fragment listing one sticker on a message. Lowercase because it appears inside a longer sentence.
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:120
-#: src/features/channel/components/ChannelMessage.tsx:53
+#: src/features/channel/components/ChannelMessage.tsx:52
 msgid "sticker"
 msgstr "贴纸"
 
@@ -32726,7 +31745,7 @@ msgstr "贴纸"
 #. Generic label for one sticker.
 #. Label for the has:sticker option in the mobile content-type filter sheet.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/config/AuditLogConstants.ts:191
+#: src/features/app/config/AuditLogConstants.ts:171
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:234
 #: src/features/search/components/search/HasFilterSheet.tsx:73
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:133
@@ -32752,28 +31771,18 @@ msgstr "消息中包含贴纸"
 msgid "Sticker autocomplete"
 msgstr "贴纸自动补全"
 
-#. Audit log community feature label indicating sticker cloning is disabled.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:94
-msgid "Sticker cloning disabled"
-msgstr "贴纸克隆已禁用"
-
-#. Audit log community feature label indicating sticker cloning is enabled.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:102
-msgid "Sticker cloning enabled"
-msgstr "贴纸克隆已启用"
-
 #. Title of the error modal shown when a sticker remains too large after automatic resizing and compression.
 #: src/features/expressions/components/modals/AddGuildStickerModal.tsx:43
 msgid "Sticker couldn't be compressed enough"
 msgstr "贴纸压缩后仍然过大"
 
 #. Audit log entry label. A custom sticker was added to the community.
-#: src/features/app/config/AuditLogConstants.ts:135
+#: src/features/app/config/AuditLogConstants.ts:115
 msgid "Sticker created"
 msgstr "贴纸已创建"
 
 #. Audit log entry label. A custom sticker was removed from the community.
-#: src/features/app/config/AuditLogConstants.ts:143
+#: src/features/app/config/AuditLogConstants.ts:123
 msgid "Sticker deleted"
 msgstr "贴纸已删除"
 
@@ -32802,7 +31811,7 @@ msgid "Sticker slots full"
 msgstr "贴纸槽位已满"
 
 #. Audit log entry label. A custom sticker was edited.
-#: src/features/app/config/AuditLogConstants.ts:139
+#: src/features/app/config/AuditLogConstants.ts:119
 msgid "Sticker updated"
 msgstr "贴纸已更新"
 
@@ -34223,14 +33232,6 @@ msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "屏幕共享源已停止发送视频，因此你的屏幕共享已停止。"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:748
-msgid "The sticker was uploaded as animated."
-msgstr "该贴纸以动态形式上传。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:751
-msgid "The sticker was uploaded as static."
-msgstr "该贴纸以静态形式上传。"
-
 #. Activity log detail line under a deleted sticker, shown only when someone other than the person who deleted it had uploaded it. {user} is the user who uploaded the sticker, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:100
 msgid "The sticker was uploaded by {user}"
@@ -34763,19 +33764,6 @@ msgstr "此实例目前支持最高 720p、30 FPS 的屏幕共享。"
 msgid "This instance has no accounts yet. The first account you create automatically becomes the administrator."
 msgstr "此实例尚无任何账号。你创建的第一个账号将自动成为管理员。"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:688
-msgid "This invite expires after {count, plural, one {# use} other {# uses}}."
-msgstr "此邀请在使用 {count, plural, other {# 次}} 后失效。"
-
-#. placeholder {0}: formatMaxAge(change.newValue)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:703
-msgid "This invite expires in {0}."
-msgstr "此邀请将在 {0} 后过期。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:684
-msgid "This invite has unlimited uses."
-msgstr "此邀请可无限次使用。"
-
 #. Helper text shown on an invite embed while streaming privacy is active.
 #: src/features/channel/components/InviteEmbed.tsx:112
 msgid "This invite is hidden while sharing is protected."
@@ -34790,34 +33778,15 @@ msgstr "此邀请链接永不过期。"
 msgid "This invite may have expired or been deleted."
 msgstr "此邀请可能已过期或被删除。"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:701
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:319
-msgid "This invite never expires."
-msgstr "此邀请永不过期。"
-
-#: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:114
-msgid "This is a custom emoji from"
-msgstr "这是一个自定义表情符号，来自"
-
 #. Description of a custom emoji from a community the viewer is not a member of.
-#: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:106
 #: src/features/expressions/components/ExpressionInfoCard.tsx:61
 msgid "This is a custom emoji from a community."
 msgstr "这是来自某个社区的自定义表情。"
-
-#: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:97
-msgid "This is a custom emoji from a community. Ask the author for an invite to use this emoji."
-msgstr "这是来自某个社区的自定义表情。请向作者索取邀请后再使用。"
 
 #. Description of a custom sticker from a community the viewer is not a member of.
 #: src/features/expressions/components/ExpressionInfoCard.tsx:65
 msgid "This is a custom sticker from a community."
 msgstr "这是来自某个社群的自定义表情。"
-
-#. Emoji attribution text for built-in default emoji. productName is the Fluxer product name.
-#: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:18
-msgid "This is a default emoji on {productName}."
-msgstr "这是 {productName} 上的默认表情。"
 
 #. Required-action modal intro text when phone verification is required.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:228
@@ -35352,11 +34321,6 @@ msgstr "已被暂时禁言"
 msgid "Timed out {targetUserTag}"
 msgstr "已将 {targetUserTag} 禁言"
 
-#. placeholder {0}: renderInline(formatted, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:594
-msgid "Timed out until {0}."
-msgstr "禁言至 {0}。"
-
 #. Moderation action label that times a member out (temporary mute) in a community.
 #: src/features/moderation/components/modals/TimeoutMemberModal.tsx:134
 #: src/features/moderation/utils/ModerationMessageDescriptors.ts:21
@@ -35616,7 +34580,7 @@ msgid "TOTP"
 msgstr "TOTP"
 
 #. Subtitle under the activity-log page title.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:112
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:90
 msgid "Track moderator actions across the community."
 msgstr "追踪社区内的管理员操作。"
 
@@ -35655,11 +34619,6 @@ msgstr "将社区所有权转让给了 {user}"
 #: src/features/guild/components/modals/TransferOwnershipModal.tsx:40
 msgid "Transferred ownership to {0}"
 msgstr "已将所有权转让给 {0}"
-
-#. placeholder {0}: renderInline(change.newValue, i18n, guildId)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:233
-msgid "Transferred ownership to {0}."
-msgstr "已将所有权转让给 {0}。"
 
 #. Generic action label that translates a message body.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -36156,11 +35115,6 @@ msgstr "正在输入"
 msgid "Typing avatars"
 msgstr "正在输入提示头像"
 
-#. Audit log operation flag label.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:189
-msgid "Typing events"
-msgstr "输入状态事件"
-
 #. Accessible label for the typing-indicator element.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the channel and chat typing. Keep it concise.
@@ -36214,7 +35168,7 @@ msgid "Ukrainian"
 msgstr "乌克兰语"
 
 #. Error-state title in the activity log tab when fetching log entries failed.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:136
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:114
 msgid "Unable to load activity logs"
 msgstr "无法加载活动日志"
 
@@ -36295,16 +35249,6 @@ msgstr "未分配"
 msgid "Unavailable"
 msgstr "不可用"
 
-#. Audit log community feature label meaning the community is unavailable to all users.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:173
-msgid "Unavailable for everyone"
-msgstr "任何人都无法访问"
-
-#. Audit log community feature label meaning only staff can access the community.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:177
-msgid "Unavailable for everyone but staff"
-msgstr "仅限工作人员可用"
-
 #. Relationship action label for removing a block from this user.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/channel/components/barriers/BarrierComponents.tsx:376
@@ -36330,7 +35274,7 @@ msgstr "请先取消屏蔽，才能发送好友请求。"
 #. Button or menu action label in the user profile modal. Keep it concise. Keep the tone plain and specific.
 #. Title of the confirmation modal for unblocking a previously blocked user. Short command title.
 #: src/features/relationship/utils/RelationshipActionUtils.tsx:95
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:107
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:105
 #: src/features/user/components/modals/UserProfileModal.tsx:118
 msgid "Unblock user"
 msgstr "取消屏蔽用户"
@@ -36542,11 +35486,6 @@ msgstr "未知日期"
 msgid "Unknown device"
 msgstr "未知设备"
 
-#. Lowercase fallback label in the activity log for an entity that cannot be resolved.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:38
-msgid "unknown entity"
-msgstr "未知实体"
-
 #. Fallback diagnostic text on the crash screen when an Error object has no message.
 #. Fallback error text shown when LaTeX rendering fails without an error message.
 #: src/features/app/components/ErrorFallback.tsx:25
@@ -36592,11 +35531,6 @@ msgstr "未知身份组"
 msgid "Unknown role"
 msgstr "未知身份组"
 
-#. Activity log fallback label for a target object that cannot be resolved.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:58
-msgid "Unknown target"
-msgstr "未知目标"
-
 #. TTS substitution token spoken in place of a mention when the user cannot be resolved. Lowercase, mid-sentence.
 #: src/features/voice/utils/TtsTextFormatter.ts:14
 msgid "unknown user"
@@ -36618,7 +35552,7 @@ msgstr "未知用户"
 #: src/features/channel/utils/ChannelUtils.tsx:55
 #: src/features/devtools/utils/CommandUtils.ts:27
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogSentence.tsx:54
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:124
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:102
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts:61
 #: src/features/voice/components/VoiceParticipantAvatarList.tsx:44
 #: src/features/voice/components/VoiceParticipantTile.tsx:174
@@ -36643,16 +35577,6 @@ msgstr "unknown-mention"
 #: src/features/messaging/utils/markdown/Plaintext.ts:76
 msgid "unknown-role"
 msgstr "unknown-role"
-
-#. Audit log community feature label for unlimited custom emoji capacity.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:134
-msgid "Unlimited emoji"
-msgstr "无限表情"
-
-#. Audit log community feature label for unlimited custom sticker capacity.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:138
-msgid "Unlimited stickers"
-msgstr "无限贴纸"
 
 #: src/features/channel/components/EmojiPicker.tsx:176
 #: src/features/channel/components/MobileEmojiPicker.tsx:212
@@ -36880,7 +35804,7 @@ msgstr "已取消置顶群聊"
 #: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:89
 #: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:58
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:27
-#: src/features/channel/components/direct_message/DMListItem.tsx:72
+#: src/features/channel/components/direct_message/DMListItem.tsx:71
 msgid "unread"
 msgstr "未读"
 
@@ -37076,24 +36000,6 @@ msgstr "更新你的昵称。"
 msgid "Update your password"
 msgstr "更新密码"
 
-#. placeholder {0}: renderValueInline(change.oldValue, guildId, i18n)
-#. placeholder {1}: renderValueInline(change.newValue, guildId, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:206
-msgid "Updated {fieldNode} from {0} to {1}."
-msgstr "将 {fieldNode} 从 {0} 更新为 {1}。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:226
-msgid "Updated {fieldNode}."
-msgstr "更新了 {fieldNode}。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:179
-msgid "Updated allowed permissions."
-msgstr "已更新允许的权限。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:192
-msgid "Updated denied permissions."
-msgstr "已更新拒绝的权限。"
-
 #. Modal title shown when the user must accept changed legal policies.
 #: src/features/auth/components/modals/TermsAcceptanceModal.tsx:19
 msgid "Updated policies"
@@ -37103,58 +36009,6 @@ msgstr "政策更新"
 #: src/features/expressions/commands/FavoriteMemeCommands.tsx:23
 msgid "Updated saved media"
 msgstr "已保存媒体已更新"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:548
-msgid "Updated the avatar."
-msgstr "更新了头像。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:549
-msgid "Updated the banner."
-msgstr "更新了横幅。"
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:576
-msgid "Updated the bio to {0}."
-msgstr "将个人简介更新为“{0}”。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:357
-msgid "Updated the community banner."
-msgstr "更新了社区横幅。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:230
-msgid "Updated the community icon."
-msgstr "更新了社区图标。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:398
-msgid "Updated the embed splash."
-msgstr "更新了嵌入式启动页。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:231
-msgid "Updated the invite splash."
-msgstr "更新了邀请背景图。"
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:581
-msgid "Updated the pronouns to {0}."
-msgstr "将代词更新为“{0}”。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:675
-msgid "Updated the role icon."
-msgstr "更新了身份组图标。"
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:744
-msgid "Updated the sticker description to {0}."
-msgstr "将贴纸描述更新为“{0}”。"
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:419
-msgid "Updated the topic to {0}."
-msgstr "将话题更新为“{0}”。"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:769
-msgid "Updated the webhook avatar."
-msgstr "更新了 Webhook 头像。"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:92
@@ -37747,11 +36601,6 @@ msgstr "使用语音活动"
 msgid "Use your operating system's spellchecker when available. Otherwise, use {productName}'s in-app dictionaries."
 msgstr "使用操作系统自带的拼写检查器（如果可用）。否则，使用 {productName} 的应用内词典。"
 
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:708
-msgid "Used {0} times."
-msgstr "已使用 {0} 次。"
-
 #. Description text in the entrance sound section.
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:66
 msgid "Used by default unless a community or DM sound overrides it."
@@ -37790,7 +36639,7 @@ msgstr "仅用于此社区。"
 #. Audit log target-type filter label. Filters entries that target a user account.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Slash-command argument type name, spoken by screen readers for an argument that takes a user.
-#: src/features/app/config/AuditLogConstants.ts:175
+#: src/features/app/config/AuditLogConstants.ts:155
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts:27
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:65
 msgid "User"
@@ -37996,21 +36845,10 @@ msgctxt "us-state"
 msgid "Utah"
 msgstr "犹他州"
 
-#. Lowercase fallback label in the activity log for a generic changed value.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:54
-msgid "value"
-msgstr "值"
-
 #. Short label in the connection add connection modal.
 #: src/features/connection/components/modals/AddConnectionModal.tsx:73
 msgid "Value"
 msgstr "值"
-
-#. placeholder {0}: renderValueInline(fallbackLabel, guildId, i18n)
-#. placeholder {1}: renderValueInline(value, guildId, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:383
-msgid "Value for {0}: {1}."
-msgstr "{0} 的值：{1}。"
 
 #. Accessible label for editing a Theme Studio token value.
 #: src/features/theme_studio/ui/StudioToken.tsx:32
@@ -38027,11 +36865,9 @@ msgstr "已保存值：{newValue}"
 msgid "Values"
 msgstr "值"
 
-#. Audit log community feature label for a custom community invite URL.
 #. Join source label on the community members page. Shown when the member joined via the community vanity URL.
 #: src/features/channel/components/guild_members_page/GuildMembersPageDescriptors.ts:5
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:216
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:146
 msgid "Vanity URL"
 msgstr "自定义邀请链接"
 
@@ -38045,11 +36881,6 @@ msgstr "自定义邀请链接"
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:37
 msgid "Vanity URL can only contain alphanumeric characters and internal hyphens."
 msgstr "自定义邀请链接只能包含字母、数字和中间的连字符。"
-
-#. placeholder {0}: renderValueInline(value, guildId, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:252
-msgid "Vanity URL code: {0}."
-msgstr "自定义邀请链接代码：{0}。"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:144
@@ -38132,12 +36963,8 @@ msgstr "验证失败"
 msgid "Verified & partnered community"
 msgstr "已认证的合作社区"
 
-#. Audit log community feature label for verified communities.
-#. Badge or label indicating the community is verified.
 #. Short label in the community badge. Keep it concise.
-#: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:14
 #: src/features/guild/components/GuildBadge.tsx:21
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:150
 msgid "Verified community"
 msgstr "已认证社区"
 
@@ -38352,7 +37179,7 @@ msgstr "视频"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tooltip on the channel header button that starts a video call in a DM or group DM.
 #: src/features/channel/components/channel_header/shared.ts:43
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:769
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:766
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:33
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:199
 msgid "Video call"
@@ -38701,11 +37528,6 @@ msgstr "暴力或暴力威胁"
 msgid "Violent or graphic content"
 msgstr "暴力或血腥内容"
 
-#. Audit log community feature label for elevated voice capacity/quality.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:169
-msgid "VIP voice"
-msgstr "VIP 语音"
-
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:238
 msgctxt "us-state"
@@ -38717,9 +37539,7 @@ msgstr "弗吉尼亚州"
 msgid "Visibility"
 msgstr "可见性"
 
-#. Audit log community feature label for the Visionary premium feature.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:416
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:181
 msgid "Visionary"
 msgstr "Visionary"
 
@@ -38856,7 +37676,7 @@ msgid "Voice and video shortcuts"
 msgstr "语音和视频快捷键"
 
 #. Short label for a voice call (lobby header, DM action, settings section).
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:747
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:744
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:35
 msgid "Voice call"
 msgstr "语音通话"
@@ -39417,7 +38237,7 @@ msgid "Webcam"
 msgstr "摄像头"
 
 #. Audit log target-type filter label. Filters entries that target a webhook.
-#: src/features/app/config/AuditLogConstants.ts:200
+#: src/features/app/config/AuditLogConstants.ts:180
 msgid "Webhook"
 msgstr "Webhook"
 
@@ -39428,13 +38248,13 @@ msgstr "Webhook {currentName}"
 
 #. Audit log entry label. A new webhook integration was created.
 #. Short label in the channel webhooks tab. Keep it concise.
-#: src/features/app/config/AuditLogConstants.ts:111
+#: src/features/app/config/AuditLogConstants.ts:91
 #: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:32
 msgid "Webhook created"
 msgstr "Webhook 已创建"
 
 #. Audit log entry label. A webhook integration was deleted.
-#: src/features/app/config/AuditLogConstants.ts:119
+#: src/features/app/config/AuditLogConstants.ts:99
 msgid "Webhook deleted"
 msgstr "Webhook 已删除"
 
@@ -39444,7 +38264,7 @@ msgid "Webhook name"
 msgstr "Webhook 名称"
 
 #. Audit log entry label. An existing webhook integration was edited.
-#: src/features/app/config/AuditLogConstants.ts:115
+#: src/features/app/config/AuditLogConstants.ts:95
 msgid "Webhook updated"
 msgstr "Webhook 已更新"
 
@@ -39934,7 +38754,7 @@ msgstr "昨天 {timeString}"
 
 #. First-person prefix used in DM list row preview when the current user is the message author.
 #: src/features/app/components/layout/MobileBottomNav.tsx:153
-#: src/features/channel/components/direct_message/DMListItem.tsx:60
+#: src/features/channel/components/direct_message/DMListItem.tsx:59
 msgid "You"
 msgstr "你"
 
@@ -40708,7 +39528,7 @@ msgid "You're timed out. Messaging, reactions, and voice are paused until the ti
 msgstr "你已被禁言。在禁言结束前，你无法发送消息、使用反应或加入语音。"
 
 #. Label in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:82
+#: src/features/channel/components/ChannelMessages.tsx:81
 msgid "You're viewing older messages"
 msgstr "你正在查看较早的消息"
 

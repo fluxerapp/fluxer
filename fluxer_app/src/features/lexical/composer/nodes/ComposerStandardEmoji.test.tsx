@@ -9,14 +9,8 @@ import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 vi.mock('@app/features/expressions/utils/EmojiUtils', () => ({getEmojiURL: (surrogate: string) => `url:${surrogate}`}));
 
-vi.mock('@app/features/expressions/state/ExpressionInfoCardRollout', () => ({default: {enabled: false}}));
-
 vi.mock('@app/features/ui/tooltip/Tooltip', () => ({
 	Tooltip: ({children}: {children: React.ReactNode}) => children,
-}));
-
-vi.mock('@app/features/ui/emoji_tooltip_content/EmojiWithTooltip', () => ({
-	EmojiWithTooltip: ({children}: {children: React.ReactNode}) => children,
 }));
 
 (globalThis as {IS_REACT_ACT_ENVIRONMENT?: boolean}).IS_REACT_ACT_ENVIRONMENT = true;
@@ -40,9 +34,7 @@ describe('ComposerStandardEmoji', () => {
 
 	function render(url: string | null): HTMLImageElement | null {
 		act(() => {
-			root.render(
-				createElement(ComposerStandardEmoji, {name: 'grinning', surrogate: '😀', url, display: ':grinning:'}),
-			);
+			root.render(createElement(ComposerStandardEmoji, {surrogate: '😀', url, display: ':grinning:'}));
 		});
 		return host.querySelector('img');
 	}

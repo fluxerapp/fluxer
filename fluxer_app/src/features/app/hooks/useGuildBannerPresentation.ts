@@ -9,7 +9,6 @@ import {
 	resolveGuildBannerHeaderGlassOpacity,
 } from '@app/features/app/components/layout/GuildBannerCollapse';
 import {useAnimatedImageUrl} from '@app/features/app/hooks/useAnimatedImageUrl';
-import GuildHeaderCollapseRollout from '@app/features/app/state/GuildHeaderCollapseRollout';
 import {clampWideAssetAspectRatio} from '@app/features/expressions/utils/AssetImageGeometry';
 import type {Guild} from '@app/features/guild/models/Guild';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
@@ -118,8 +117,7 @@ export function useGuildBannerPresentation({
 			aspectRatio,
 		});
 	}, [aspectRatio, measurements, showsIntegratedBanner]);
-	const collapseEnabled = showsIntegratedBanner && GuildHeaderCollapseRollout.collapsesOnScroll;
-	const collapseDistance = collapseEnabled ? geometry.collapseDistance : 0;
+	const collapseDistance = geometry.collapseDistance;
 	const progress = useMotionValue(0);
 	const clipShift = useMotionValue(0);
 	const glassOpacity = useMotionValue(0);

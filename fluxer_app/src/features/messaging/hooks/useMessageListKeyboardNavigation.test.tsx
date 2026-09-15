@@ -8,11 +8,9 @@ import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 const keyboardModeMock = {keyboardModeEnabled: true};
 const messageFocusMock = {focusedMessageId: null as string | null};
-const rolloutMock = {enabled: true};
 
 vi.mock('@app/features/ui/state/KeyboardMode', () => ({default: keyboardModeMock}));
 vi.mock('@app/features/messaging/state/MessageFocus', () => ({default: messageFocusMock}));
-vi.mock('@app/features/messaging/state/MessageKeyboardFocusRollout', () => ({default: rolloutMock}));
 
 const {useMessageListKeyboardNavigation} = await import(
 	'@app/features/messaging/hooks/useMessageListKeyboardNavigation'
@@ -79,7 +77,6 @@ function pressArrow(key: 'ArrowUp' | 'ArrowDown'): void {
 beforeEach(() => {
 	keyboardModeMock.keyboardModeEnabled = true;
 	messageFocusMock.focusedMessageId = null;
-	rolloutMock.enabled = true;
 	viewport = document.createElement('div');
 	document.body.append(viewport);
 	viewport.addEventListener('focusin', (event) => {
@@ -263,62 +260,5 @@ describe('useMessageListKeyboardNavigation past the newest message', () => {
 		pressArrow('ArrowDown');
 		expect(onLoadMoreAfter).toHaveBeenCalledTimes(1);
 		expect(onNavigatePastNewest).not.toHaveBeenCalled();
-	});
-
-	it('stays on the newest message in the control arm', () => {
-		rolloutMock.enabled = false;
-		mountRows([{messageId: '1', idPrefix: CHANNEL_MESSAGE_ID_PREFIX}]);
-		const onNavigatePastNewest = vi.fn();
-		render(focusRow, {onNavigatePastNewest});
-
-		pressArrow('ArrowDown');
-		pressArrow('ArrowDown');
-		expect(onNavigatePastNewest).not.toHaveBeenCalled();
-	});
-});
-
-describe('useMessageListKeyboardNavigation control arm', () => {
-	beforeEach(() => {
-		rolloutMock.enabled = false;
-	});
-
-	it('stops at a row the focus delegate cannot resolve', () => {
-		mountRows([
-			{messageId: '1', idPrefix: CHANNEL_MESSAGE_ID_PREFIX},
-			{messageId: '2', idPrefix: 'blocked-messages'},
-		]);
-		const onFocusMessage = vi.fn<(messageId: string) => void>();
-		render(onFocusMessage);
-
-		pressArrow('ArrowUp');
-		expect(onFocusMessage).toHaveBeenLastCalledWith('2');
-		expect(focusedRowId()).toBeNull();
-	});
-
-	it('never scrolls the target itself when a delegate is supplied', () => {
-		mountRows([{messageId: '1', idPrefix: CHANNEL_MESSAGE_ID_PREFIX}]);
-		const scrollIntoView = vi.fn();
-		vi.spyOn(HTMLElement.prototype, 'scrollIntoView').mockImplementation(scrollIntoView);
-		render(vi.fn());
-
-		pressArrow('ArrowUp');
-		expect(scrollIntoView).not.toHaveBeenCalled();
-	});
-
-	it('treats a focused checkbox as editable and stops navigating', () => {
-		mountRows([
-			{messageId: '1', idPrefix: CHANNEL_MESSAGE_ID_PREFIX},
-			{messageId: '2', idPrefix: CHANNEL_MESSAGE_ID_PREFIX},
-		]);
-		const checkbox = document.createElement('input');
-		checkbox.type = 'checkbox';
-		viewport.append(checkbox);
-		render((messageId) => {
-			findMessageElement(document, viewport, CHANNEL_ID, messageId)?.focus({preventScroll: true});
-		});
-		checkbox.focus();
-
-		pressArrow('ArrowUp');
-		expect(focusedRowId()).toBeNull();
 	});
 });

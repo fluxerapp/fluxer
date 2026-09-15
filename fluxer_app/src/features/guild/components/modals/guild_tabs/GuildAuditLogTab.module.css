@@ -285,11 +285,6 @@
 	white-space: nowrap;
 }
 
-.channelPlain {
-	color: var(--text-primary);
-	font-weight: 600;
-}
-
 .chevron {
 	height: 1.25rem;
 	width: 1.25rem;

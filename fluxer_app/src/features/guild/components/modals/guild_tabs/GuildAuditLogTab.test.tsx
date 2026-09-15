@@ -155,35 +155,11 @@ const i18n = setupI18n({locale: 'en', messages: {en: {}}});
 
 installVoiceMenuTestBootstrap();
 
-const {ExperimentAssignments} = await import('@app/features/experiment/state/ExperimentAssignments');
-const {INERT_EXPERIMENT_ASSIGNMENTS_RESPONSE} = await import('@fluxer/schema/src/domains/experiment/ExperimentSchemas');
-const {runInAction} = await import('mobx');
-const GuildActivityLogTab = (await import('@app/features/guild/components/modals/guild_tabs/GuildAuditLogTab')).default;
+const GuildAuditLogTab = (await import('@app/features/guild/components/modals/guild_tabs/GuildAuditLogTab')).default;
 
 (globalThis as {IS_REACT_ACT_ENVIRONMENT?: boolean}).IS_REACT_ACT_ENVIRONMENT = true;
 
-const LEGACY_ONLY_FILTER_LABEL = 'Members pruned';
-const LEGACY_SUMMARY_TEXT = 'updated the community settings.';
-const NEW_SUMMARY_TEXT = 'renamed the community from Old name to New name';
-
-function setPresentationEnabled(enabled: boolean): void {
-	runInAction(() => {
-		ExperimentAssignments.response = {
-			poll_interval_seconds: 300,
-			poll_jitter_percent: 15,
-			assignments: {
-				guild_activity_log_presentation: {
-					enabled: true,
-					config_version: 1,
-					user_targeted: enabled,
-					source: enabled ? 'user_rule' : null,
-				},
-			},
-		};
-	});
-}
-
-describe('GuildAuditLogTab presentation rollout', () => {
+describe('GuildAuditLogTab', () => {
 	let root: Root | null = null;
 	let container: HTMLDivElement | null = null;
 
@@ -212,18 +188,15 @@ describe('GuildAuditLogTab presentation rollout', () => {
 		container = null;
 		fixtures.users.clear();
 		fixtures.entries = [];
-		runInAction(() => {
-			ExperimentAssignments.response = INERT_EXPERIMENT_ASSIGNMENTS_RESPONSE;
-		});
 	});
 
 	async function render(): Promise<string> {
 		await act(async () => {
 			root?.render(
 				<AppI18nProvider i18n={i18n}>
-					<GuildActivityLogTab
+					<GuildAuditLogTab
 						guildId={GUILD_ID}
-						data-flx="guild.guild-tabs.guild-audit-log-tab-test.guild-activity-log-tab"
+						data-flx="guild.guild-tabs.guild-audit-log-tab-test.guild-audit-log-tab"
 					/>
 				</AppI18nProvider>,
 			);
@@ -231,39 +204,16 @@ describe('GuildAuditLogTab presentation rollout', () => {
 		return container?.textContent ?? '';
 	}
 
-	it('renders the old path, including its own filter list, when the flag is off', async () => {
-		setPresentationEnabled(false);
+	it('renders each entry as its presenter sentence', async () => {
 		const text = await render();
-		expect(text).toContain(LEGACY_SUMMARY_TEXT);
-		expect(text).toContain(LEGACY_ONLY_FILTER_LABEL);
+		expect(text).toContain('renamed the community from Old name to New name');
+		expect(text).not.toContain('updated the community settings.');
 	});
 
-	it('renders the old path when no assignment has arrived at all', async () => {
+	it('lists the presenter action filters', async () => {
 		const text = await render();
-		expect(text).toContain(LEGACY_SUMMARY_TEXT);
-		expect(text).toContain(LEGACY_ONLY_FILTER_LABEL);
-	});
-
-	it('renders the new path, without the old filter list, when the flag is on', async () => {
-		setPresentationEnabled(true);
-		const text = await render();
-		expect(text).toContain(NEW_SUMMARY_TEXT);
-		expect(text).not.toContain(LEGACY_SUMMARY_TEXT);
-		expect(text).not.toContain(LEGACY_ONLY_FILTER_LABEL);
-	});
-
-	it('follows a mid-session assignment change from the old path to the new one', async () => {
-		setPresentationEnabled(false);
-		const before = await render();
-		expect(before).toContain(LEGACY_SUMMARY_TEXT);
-
-		await act(async () => {
-			setPresentationEnabled(true);
-			await Promise.resolve();
-		});
-
-		const after = container?.textContent ?? '';
-		expect(after).toContain(NEW_SUMMARY_TEXT);
-		expect(after).not.toContain(LEGACY_SUMMARY_TEXT);
+		expect(text).toContain('Permission override added');
+		expect(text).not.toContain('Channel overwrite added');
+		expect(text).not.toContain('Members pruned');
 	});
 });

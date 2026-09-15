@@ -9,7 +9,6 @@ import {createRoot, type Root} from 'react-dom/client';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 const matureMedia = vi.hoisted(() => ({blurred: false, canReveal: true, blocked: false}));
-const expressionInfoCardRollout = vi.hoisted(() => ({enabled: true}));
 
 vi.mock('@lingui/core/macro', () => {
 	const descriptor = (value: unknown): unknown => (typeof value === 'string' ? {message: value} : value);
@@ -19,7 +18,6 @@ vi.mock('@lingui/react/macro', () => ({
 	Trans: ({children}: {children?: React.ReactNode}) => <span data-flx="test.trans">{children}</span>,
 	useLingui: () => ({i18n: {_: (descriptor: {message?: string}) => descriptor.message ?? '', locale: 'en'}}),
 }));
-vi.mock('@app/features/expressions/state/ExpressionInfoCardRollout', () => ({default: expressionInfoCardRollout}));
 vi.mock('@app/features/messaging/hooks/useMatureMedia', () => ({
 	useMatureMedia: () => {
 		const [isRevealed, setIsRevealed] = useState(false);
@@ -174,7 +172,6 @@ beforeEach(() => {
 	matureMedia.blurred = false;
 	matureMedia.canReveal = true;
 	matureMedia.blocked = false;
-	expressionInfoCardRollout.enabled = true;
 	host = document.createElement('div');
 	document.body.append(host);
 	root = createRoot(host);
@@ -235,39 +232,5 @@ describe('message stickers', () => {
 		clickSticker();
 		expect(tooltipText()).toContain(STICKER_NAME);
 		expect(tooltipText()).toContain('Click to learn more');
-	});
-});
-
-describe('message stickers on the control arm', () => {
-	beforeEach(() => {
-		expressionInfoCardRollout.enabled = false;
-	});
-
-	it('renders the sticker inside the plain tooltip with no info card trigger', () => {
-		renderMessage();
-		expect(host.querySelector('[data-test-popout]')).toBeNull();
-		expect(stickerButton().getAttribute('aria-label')).toBe(STICKER_NAME);
-		expect(host.querySelector('[data-test-info-card]')).toBeNull();
-	});
-
-	it('opens no info card when the sticker is activated', () => {
-		renderMessage();
-		clickSticker();
-		expect(isCardOpen()).toBe(false);
-		expect(host.querySelector('[data-test-info-card]')).toBeNull();
-	});
-
-	it('still reveals a blurred sticker on activation', () => {
-		matureMedia.blurred = true;
-		renderMessage();
-		expect(isBlurred()).toBe(true);
-		clickSticker();
-		expect(isBlurred()).toBe(false);
-		expect(isCardOpen()).toBe(false);
-	});
-
-	it('keeps the context menu attributes on the trigger', () => {
-		renderMessage();
-		expect(stickerButton().getAttribute('data-message-sticker')).toBe('true');
 	});
 });

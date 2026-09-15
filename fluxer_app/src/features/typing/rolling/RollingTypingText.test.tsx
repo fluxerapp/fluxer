@@ -142,14 +142,12 @@ describe('getRollingTypingAnnouncement', () => {
 });
 
 describe('rolling typing catalogue', () => {
-	it('reuses the head catalogue message for each named form', () => {
+	it('keeps each named form in the source catalogue', () => {
 		const rollingSource = readFileSync(join(APP_SRC, 'features/typing/rolling/RollingTypingText.tsx'), 'utf8');
-		const legacySource = readFileSync(join(APP_SRC, 'features/channel/components/LegacyTypingUsers.tsx'), 'utf8');
 		const namedForms = ['{a} is typing...', '{a} and {b} are typing...', '{a}, {b} and {c} are typing...'];
 		const declaredMessages = [...rollingSource.matchAll(/message: '([^']*)'/g)].map((match) => match[1]);
 
 		expect(transMessages(rollingSource)).toEqual(namedForms);
-		expect(transMessages(legacySource)).toEqual(namedForms);
 		expect(declaredMessages).toEqual([...namedForms, 'Multiple people are typing...']);
 		const sourceCatalogue = catalogueIds('en-US');
 		for (const message of [...namedForms, 'Several people are typing...']) {

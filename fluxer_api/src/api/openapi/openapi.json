@@ -27595,16 +27595,7 @@
 					"assignments": {
 						"type": "object",
 						"properties": {
-							"voice_noise_suppression": {"$ref": "#/components/schemas/VoiceNoiseSuppressionAssignmentResponse"},
-							"message_hover_tracking": {"$ref": "#/components/schemas/MessageHoverTrackingAssignmentResponse"},
-							"message_keyboard_focus": {"$ref": "#/components/schemas/MessageKeyboardFocusAssignmentResponse"},
-							"blocked_message_groups": {"$ref": "#/components/schemas/BlockedMessageGroupsAssignmentResponse"},
-							"guild_activity_log_presentation": {
-								"$ref": "#/components/schemas/GuildActivityLogPresentationAssignmentResponse"
-							},
-							"expression_info_card": {"$ref": "#/components/schemas/ExpressionInfoCardAssignmentResponse"},
-							"guild_header_collapse": {"$ref": "#/components/schemas/GuildHeaderCollapseAssignmentResponse"},
-							"typing_indicator_rework": {"$ref": "#/components/schemas/TypingIndicatorReworkAssignmentResponse"}
+							"voice_noise_suppression": {"$ref": "#/components/schemas/VoiceNoiseSuppressionAssignmentResponse"}
 						},
 						"additionalProperties": false
 					}
@@ -31344,83 +31335,6 @@
 				"additionalProperties": false
 			},
 			"DonationCurrency": {"type": "string", "enum": ["usd", "eur", "brl", "inr", "pln", "try", "sek", "dkk", "nok"]},
-			"TypingIndicatorReworkAssignmentResponse": {
-				"type": "object",
-				"properties": {
-					"enabled": {"type": "boolean"},
-					"config_version": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991},
-					"user_targeted": {"type": "boolean"},
-					"source": {"anyOf": [{"type": "string", "enum": ["user_rule", "canary"]}, {"type": "null"}]}
-				},
-				"required": ["enabled", "config_version", "user_targeted", "source"],
-				"additionalProperties": false
-			},
-			"GuildHeaderCollapseAssignmentResponse": {
-				"type": "object",
-				"properties": {
-					"enabled": {"type": "boolean"},
-					"config_version": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991},
-					"user_targeted": {"type": "boolean"},
-					"source": {"anyOf": [{"type": "string", "enum": ["user_rule", "canary"]}, {"type": "null"}]}
-				},
-				"required": ["enabled", "config_version", "user_targeted", "source"],
-				"additionalProperties": false
-			},
-			"ExpressionInfoCardAssignmentResponse": {
-				"type": "object",
-				"properties": {
-					"enabled": {"type": "boolean"},
-					"config_version": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991},
-					"user_targeted": {"type": "boolean"},
-					"source": {"anyOf": [{"type": "string", "enum": ["user_rule", "canary"]}, {"type": "null"}]}
-				},
-				"required": ["enabled", "config_version", "user_targeted", "source"],
-				"additionalProperties": false
-			},
-			"GuildActivityLogPresentationAssignmentResponse": {
-				"type": "object",
-				"properties": {
-					"enabled": {"type": "boolean"},
-					"config_version": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991},
-					"user_targeted": {"type": "boolean"},
-					"source": {"anyOf": [{"type": "string", "enum": ["user_rule", "canary"]}, {"type": "null"}]}
-				},
-				"required": ["enabled", "config_version", "user_targeted", "source"],
-				"additionalProperties": false
-			},
-			"BlockedMessageGroupsAssignmentResponse": {
-				"type": "object",
-				"properties": {
-					"enabled": {"type": "boolean"},
-					"config_version": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991},
-					"user_targeted": {"type": "boolean"},
-					"source": {"anyOf": [{"type": "string", "enum": ["user_rule", "canary"]}, {"type": "null"}]}
-				},
-				"required": ["enabled", "config_version", "user_targeted", "source"],
-				"additionalProperties": false
-			},
-			"MessageKeyboardFocusAssignmentResponse": {
-				"type": "object",
-				"properties": {
-					"enabled": {"type": "boolean"},
-					"config_version": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991},
-					"user_targeted": {"type": "boolean"},
-					"source": {"anyOf": [{"type": "string", "enum": ["user_rule", "canary"]}, {"type": "null"}]}
-				},
-				"required": ["enabled", "config_version", "user_targeted", "source"],
-				"additionalProperties": false
-			},
-			"MessageHoverTrackingAssignmentResponse": {
-				"type": "object",
-				"properties": {
-					"enabled": {"type": "boolean"},
-					"config_version": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991},
-					"user_targeted": {"type": "boolean"},
-					"source": {"anyOf": [{"type": "string", "enum": ["user_rule", "canary"]}, {"type": "null"}]}
-				},
-				"required": ["enabled", "config_version", "user_targeted", "source"],
-				"additionalProperties": false
-			},
 			"VoiceNoiseSuppressionAssignmentResponse": {
 				"type": "object",
 				"properties": {

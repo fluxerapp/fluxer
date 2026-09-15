@@ -2,14 +2,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {Channel} from '@app/features/channel/models/Channel';
-import type {User} from '@app/features/user/models/User';
-import type {I18n} from '@lingui/core';
-import {act, createElement, Fragment, type ReactNode} from 'react';
+import messageStyles from '@app/features/theme/styles/Message.module.css';
+import {runInAction} from 'mobx';
+import {act, createElement, Fragment, Profiler, type ReactNode} from 'react';
 import {createRoot, type Root} from 'react-dom/client';
-import {renderToStaticMarkup} from 'react-dom/server';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
-const doubles = vi.hoisted(() => ({locale: 'en-US'}));
+const doubles = await vi.hoisted(async () => {
+	const {observable} = await import('mobx');
+	return {
+		auth: observable({currentUserId: 'me' as string | null}),
+		developerOptions: observable({showMyselfTyping: false}),
+		blockedUserIds: observable.set<string>(),
+		users: observable.map<string, {id: string; username: string}>(),
+	};
+});
 
 vi.mock('@lingui/core/macro', () => ({msg: (descriptor: {message: string}) => descriptor}));
 vi.mock('@lingui/react/macro', async () => {
@@ -18,218 +25,353 @@ vi.mock('@lingui/react/macro', async () => {
 		Trans: ({children}: {children?: ReactNode}) => create(ReactFragment, null, children),
 		useLingui: () => ({
 			i18n: {
-				locale: doubles.locale,
+				locale: 'en-US',
 				_: (descriptor: {message: string}, values: Record<string, string> = {}) =>
 					descriptor.message.replace(/\{(\w+)\}/g, (_placeholder, name: string) => values[name] ?? ''),
 			},
 		}),
 	};
 });
-vi.mock('@app/features/platform/utils/AppLogger', () => ({
-	Logger: class {
-		debug = vi.fn();
-		info = vi.fn();
-		warn = vi.fn();
-		error = vi.fn();
-	},
+vi.mock('@app/features/auth/state/Authentication', () => ({default: doubles.auth}));
+vi.mock('@app/features/devtools/state/DeveloperOptions', () => ({default: doubles.developerOptions}));
+vi.mock('@app/features/relationship/state/Relationships', () => ({
+	default: {isBlocked: (userId: string) => doubles.blockedUserIds.has(userId)},
 }));
-vi.mock('@app/features/platform/transport/RestTransport', () => ({
-	http: {get: vi.fn(), post: vi.fn(() => Promise.resolve({ok: true}))},
-}));
-vi.mock('@app/features/auth/state/Authentication', () => ({default: {currentUserId: 'me'}}));
-vi.mock('@app/features/devtools/state/DeveloperOptions', () => ({default: {showMyselfTyping: false}}));
-vi.mock('@app/features/relationship/state/Relationships', () => ({default: {isBlocked: () => false}}));
 vi.mock('@app/features/user/state/Users', () => ({
-	default: {getUser: (userId: string) => ({id: userId, username: userId})},
+	default: {getUser: (userId: string) => doubles.users.get(userId)},
 }));
 vi.mock('@app/features/user/utils/NicknameUtils', () => ({
 	getNickname: (user: {username: string}) => user.username,
 }));
-vi.mock('@app/features/member/state/GuildMembers', () => ({
-	default: {getMember: (_guildId: string, userId: string) => ({getColorString: () => `var(--member-${userId})`})},
-}));
+vi.mock('@app/features/member/state/GuildMembers', () => ({default: {getMember: () => undefined}}));
 vi.mock('@app/features/channel/components/ChannelTyping', async () => {
 	const {createElement: create} = await import('react');
-	return {Typing: ({className}: {className?: string}) => create('svg', {className})};
+	return {Typing: () => create('svg')};
 });
 vi.mock('@app/features/ui/avatars/AvatarStack', async () => {
 	const {createElement: create} = await import('react');
 	return {
-		AvatarStack: ({className, users}: {className?: string; users: ReadonlyArray<{id: string}>}) =>
-			create('div', {className, 'data-avatars': users.map((user) => user.id).join(' ')}),
+		AvatarStack: ({className, users}: {className?: string; users: ReadonlyArray<unknown>}) =>
+			create('div', {className, 'data-avatar-count': users.length}),
 	};
 });
 
-const {TypingAnnouncer, TypingUsers, getTypingText} = await import('@app/features/channel/components/TypingUsers');
-const {TypingUsers: LegacyTypingUsers} = await import('@app/features/channel/components/LegacyTypingUsers');
-const {default: TypingPolicy} = await import('@app/features/typing/state/TypingPolicy');
-const {default: LegacyTypingIndicator} = await import('@app/features/typing/legacy/LegacyTypingIndicator');
+const {TypingAnnouncer, TypingUsers} = await import('@app/features/channel/components/TypingUsers');
 const {default: RollingTypingStore} = await import('@app/features/typing/rolling/RollingTypingStore');
-const {getTypingTierText} = await import('@app/features/typing/utils/TypingTierText');
+
+class StubResizeObserver {
+	static instances: Array<StubResizeObserver> = [];
+	readonly targets: Array<Element> = [];
+	disconnected = false;
+
+	constructor(private readonly callback: () => void) {
+		StubResizeObserver.instances.push(this);
+	}
+
+	observe(target: Element): void {
+		this.targets.push(target);
+	}
+
+	disconnect(): void {
+		this.disconnected = true;
+	}
+
+	trigger(): void {
+		this.callback();
+	}
+}
 
 const CHANNEL = {id: 'channel', guildId: 'guild'} as unknown as Channel;
-const TYPIST_IDS = ['alice', 'bob', 'carol', 'dave', 'erin', 'frank', 'grace'];
+const TYPIST_IDS = ['alice', 'bob', 'carol', 'dave', 'erin'];
 
-let hosts: Array<{host: HTMLDivElement; root: Root}> = [];
+let host: HTMLDivElement;
+let root: Root;
+let overflowContainer: HTMLElement;
+let overflowContainerRef: {current: HTMLElement | null};
 
-function mount(node: ReactNode): HTMLDivElement {
-	const host = document.createElement('div');
-	document.body.append(host);
-	const root = createRoot(host);
-	hosts.push({host, root});
+function setWidth(element: Element, property: 'clientWidth' | 'scrollWidth', width: number): void {
+	Object.defineProperty(element, property, {configurable: true, value: width});
+}
+
+function render(node: ReactNode): void {
 	act(() => {
 		root.render(node);
 	});
-	return host;
 }
 
-function i18nFor(locale: string): I18n {
-	return {locale, _: (descriptor: {message: string}) => `${locale}: ${descriptor.message}`} as unknown as I18n;
-}
-
-function usersFor(count: number): Array<User> {
-	return TYPIST_IDS.slice(0, count).map((id) => ({id, username: id}) as unknown as User);
-}
-
-function manyUsers(count: number): Array<User> {
-	return Array.from(
-		{length: count},
-		(_, index) => ({id: `typist-${index}`, username: `typist-${index}`}) as unknown as User,
+function renderRow(props: {showAvatars?: boolean} = {}): void {
+	render(
+		createElement(
+			Fragment,
+			null,
+			createElement(TypingUsers, {channel: CHANNEL, overflowContainerRef, showAvatars: props.showAvatars}),
+			createElement(TypingAnnouncer, {channel: CHANNEL}),
+		),
 	);
 }
 
-function markupOf(node: ReactNode): string {
-	return renderToStaticMarkup(createElement(Fragment, null, node));
+function startTyping(...userIds: Array<string>): void {
+	act(() => {
+		for (const userId of userIds) {
+			RollingTypingStore.start(CHANNEL.id, userId, userId === 'me' ? 'local' : 'gateway');
+		}
+	});
+}
+
+function query(flx: string): HTMLElement | null {
+	return host.querySelector<HTMLElement>(`[data-flx="${flx}"]`);
+}
+
+function visibleText(): string | null {
+	return query('channel.typing-users.span')?.textContent ?? null;
+}
+
+function announcer(): HTMLElement {
+	return query('channel.typing-users.announcer')!;
+}
+
+function measure(): HTMLElement | null {
+	return query('channel.typing-users.measure');
+}
+
+function activeResizeObservers(): Array<StubResizeObserver> {
+	return StubResizeObserver.instances.filter((instance) => !instance.disconnected);
+}
+
+function remeasure(): void {
+	act(() => {
+		for (const instance of activeResizeObservers()) {
+			instance.trigger();
+		}
+	});
 }
 
 beforeEach(() => {
 	(globalThis as {IS_REACT_ACT_ENVIRONMENT?: boolean}).IS_REACT_ACT_ENVIRONMENT = true;
-	doubles.locale = 'en-US';
-	vi.useFakeTimers();
+	StubResizeObserver.instances = [];
+	vi.stubGlobal('ResizeObserver', StubResizeObserver);
+	host = document.createElement('div');
+	overflowContainer = document.createElement('div');
+	document.body.append(overflowContainer, host);
+	setWidth(overflowContainer, 'clientWidth', 1000);
+	overflowContainerRef = {current: overflowContainer};
+	root = createRoot(host);
+	runInAction(() => {
+		doubles.auth.currentUserId = 'me';
+		doubles.developerOptions.showMyselfTyping = false;
+		doubles.blockedUserIds.clear();
+		doubles.users.clear();
+		for (const id of ['me', ...TYPIST_IDS]) {
+			doubles.users.set(id, {id, username: id});
+		}
+	});
 });
 
 afterEach(() => {
 	act(() => {
-		for (const {root} of hosts) {
-			root.unmount();
-		}
+		root.unmount();
 	});
-	hosts = [];
-	TypingPolicy.applyPolicy('legacy');
-	LegacyTypingIndicator.reset();
 	RollingTypingStore.reset();
 	document.body.replaceChildren();
-	vi.useRealTimers();
+	vi.unstubAllGlobals();
 });
 
-describe('TypingUsers facade', () => {
-	it('renders the same markup as the legacy component under control', () => {
-		for (const count of [1, 2, 3, 4, 7]) {
-			LegacyTypingIndicator.reset();
-			for (const userId of TYPIST_IDS.slice(0, count)) {
-				LegacyTypingIndicator.startRemoteTyping(CHANNEL.id, userId);
-			}
+describe('TypingUsers', () => {
+	it('hides the current user from the typing row', () => {
+		renderRow();
+		startTyping('me', 'alice');
 
-			const facadeHost = mount(createElement(TypingUsers, {channel: CHANNEL, withText: true, showAvatars: true}));
-			const legacyHost = mount(createElement(LegacyTypingUsers, {channel: CHANNEL, withText: true, showAvatars: true}));
-
-			expect(facadeHost.innerHTML).not.toBe('');
-			expect(facadeHost.innerHTML).toBe(legacyHost.innerHTML);
-		}
+		expect(visibleText()).toBe('alice is typing...');
+		expect(host.querySelector('[data-avatar-count]')?.getAttribute('data-avatar-count')).toBe('1');
 	});
 
-	it('renders no announcer under control', () => {
-		LegacyTypingIndicator.startRemoteTyping(CHANNEL.id, 'alice');
+	it('shows the current user when the developer option is on', () => {
+		runInAction(() => {
+			doubles.developerOptions.showMyselfTyping = true;
+		});
+		renderRow();
+		startTyping('me', 'alice');
 
-		const host = mount(createElement(TypingAnnouncer, {channel: CHANNEL}));
-
-		expect(host.innerHTML).toBe('');
-		expect(host.querySelector('[aria-live]')).toBeNull();
+		expect(visibleText()).toBe('me and alice are typing...');
 	});
 
-	it('renders the rolling row under treatment', () => {
-		TypingPolicy.applyPolicy('rolling');
-		RollingTypingStore.start(CHANNEL.id, 'alice', 'gateway');
+	it('hides blocked users from the typing row', () => {
+		runInAction(() => {
+			doubles.blockedUserIds.add('bob');
+		});
+		renderRow();
+		startTyping('bob', 'alice');
 
-		const host = mount(
+		expect(visibleText()).toBe('alice is typing...');
+	});
+
+	it('skips typists missing from the user cache', () => {
+		renderRow();
+		startTyping('stranger', 'alice');
+
+		expect(RollingTypingStore.countTypists(CHANNEL.id)).toBe(2);
+		expect(visibleText()).toBe('alice is typing...');
+	});
+
+	it('renders nothing visible when only self is typing', () => {
+		renderRow();
+		startTyping('me');
+
+		expect(query('channel.typing-users.div')).toBeNull();
+		expect(announcer().textContent).toBe('');
+	});
+
+	it('marks the visible text as hidden from assistive technology', () => {
+		renderRow();
+		startTyping('alice');
+
+		const visible = query('channel.typing-users.span')!;
+		expect(visible.getAttribute('aria-hidden')).toBe('true');
+		expect(visible.hasAttribute('aria-live')).toBe(false);
+		expect(measure()?.getAttribute('aria-hidden')).toBe('true');
+	});
+
+	it('keeps the announcer mounted when nobody is typing', () => {
+		renderRow();
+		const mounted = announcer();
+		expect(mounted.textContent).toBe('');
+
+		startTyping('alice');
+		expect(announcer()).toBe(mounted);
+		expect(mounted.textContent).toBe('alice is typing...');
+
+		act(() => {
+			RollingTypingStore.remove(CHANNEL.id, 'alice');
+		});
+		expect(announcer()).toBe(mounted);
+		expect(mounted.textContent).toBe('');
+	});
+
+	it('announces through a polite atomic live region', () => {
+		renderRow();
+		startTyping('alice', 'bob', 'carol', 'dave');
+
+		expect(announcer().getAttribute('aria-live')).toBe('polite');
+		expect(announcer().getAttribute('aria-atomic')).toBe('true');
+		expect(announcer().textContent).toBe('Several people are typing...');
+	});
+
+	it('swaps to multiple people when the measured text plus 48 px exceeds the available width', () => {
+		setWidth(overflowContainer, 'clientWidth', 300);
+		renderRow({showAvatars: false});
+		startTyping('alice', 'bob');
+		expect(visibleText()).toBe('alice and bob are typing...');
+
+		setWidth(measure()!, 'scrollWidth', 253);
+		remeasure();
+
+		expect(visibleText()).toBe('Multiple people are typing...');
+		expect(measure()?.textContent).toBe('alice and bob are typing...');
+	});
+
+	it('keeps the names when they fit with 48 px to spare', () => {
+		setWidth(overflowContainer, 'clientWidth', 300);
+		renderRow({showAvatars: false});
+		startTyping('alice', 'bob');
+
+		setWidth(measure()!, 'scrollWidth', 252);
+		remeasure();
+
+		expect(visibleText()).toBe('alice and bob are typing...');
+	});
+
+	it('keeps the full string in the announcer while the visible text overflows', () => {
+		setWidth(overflowContainer, 'clientWidth', 300);
+		renderRow({showAvatars: false});
+		startTyping('alice', 'bob', 'carol');
+
+		setWidth(measure()!, 'scrollWidth', 400);
+		remeasure();
+
+		expect(visibleText()).toBe('Multiple people are typing...');
+		expect(announcer().textContent).toBe('alice, bob and carol are typing...');
+	});
+
+	it('restores the names when the container grows again', () => {
+		setWidth(overflowContainer, 'clientWidth', 300);
+		renderRow({showAvatars: false});
+		startTyping('alice');
+		setWidth(measure()!, 'scrollWidth', 280);
+		remeasure();
+		expect(visibleText()).toBe('Multiple people are typing...');
+
+		setWidth(overflowContainer, 'clientWidth', 400);
+		remeasure();
+
+		expect(visibleText()).toBe('alice is typing...');
+	});
+
+	it('does not measure overflow with four or more typists', () => {
+		setWidth(overflowContainer, 'clientWidth', 10);
+		renderRow();
+		startTyping('alice', 'bob', 'carol');
+		expect(visibleText()).toBe('Multiple people are typing...');
+		expect(activeResizeObservers()).toHaveLength(1);
+
+		startTyping('dave');
+
+		expect(visibleText()).toBe('Several people are typing...');
+		expect(measure()).toBeNull();
+		expect(activeResizeObservers()).toHaveLength(0);
+	});
+
+	it('subtracts the avatar stack width from the available width', () => {
+		setWidth(overflowContainer, 'clientWidth', 300);
+		renderRow({showAvatars: true});
+		startTyping('alice');
+		setWidth(measure()!, 'scrollWidth', 200);
+		remeasure();
+		expect(visibleText()).toBe('alice is typing...');
+
+		const avatarStack = host.querySelector(`.${messageStyles.typingAvatarContainer}`)!;
+		avatarStack.getBoundingClientRect = () => ({width: 60}) as DOMRect;
+		remeasure();
+
+		expect(visibleText()).toBe('Multiple people are typing...');
+	});
+
+	it('disconnects the resize observer on unmount', () => {
+		renderRow();
+		startTyping('alice');
+		const [resizeObserver] = activeResizeObservers();
+		expect(resizeObserver?.targets).toEqual([overflowContainer, measure()]);
+
+		act(() => {
+			root.unmount();
+		});
+		root = createRoot(host);
+
+		expect(resizeObserver?.disconnected).toBe(true);
+		expect(activeResizeObservers()).toHaveLength(0);
+	});
+
+	it("does not re-render on the current user's own typing", () => {
+		const onRender = vi.fn();
+		render(
 			createElement(
-				Fragment,
-				null,
-				createElement(TypingUsers, {channel: CHANNEL, withText: true, showAvatars: true}),
-				createElement(TypingAnnouncer, {channel: CHANNEL}),
+				Profiler,
+				{id: 'typing-row', onRender},
+				createElement(TypingUsers, {channel: CHANNEL, overflowContainerRef}),
 			),
 		);
+		startTyping('alice');
+		const commits = onRender.mock.calls.length;
 
-		const visible = host.querySelector('[data-flx="channel.typing-users.span"]');
-		expect(visible?.textContent).toBe('alice is typing...');
-		expect(visible?.getAttribute('aria-hidden')).toBe('true');
-		expect(host.querySelector('[data-flx="channel.rolling-typing-users.measure"]')).not.toBeNull();
-		expect(host.querySelector('[aria-live="polite"]')?.textContent).toBe('alice is typing...');
-	});
-
-	it('switches rows when the policy flips', () => {
-		LegacyTypingIndicator.startRemoteTyping(CHANNEL.id, 'alice');
-		const host = mount(
-			createElement(
-				Fragment,
-				null,
-				createElement(TypingUsers, {channel: CHANNEL}),
-				createElement(TypingAnnouncer, {channel: CHANNEL}),
-			),
-		);
-		expect(host.querySelector('[data-flx="channel.typing-users.span"]')?.getAttribute('aria-live')).toBe('polite');
-		expect(host.querySelector('[data-flx="channel.rolling-typing-users.announcer"]')).toBeNull();
-
+		startTyping('me');
 		act(() => {
-			TypingPolicy.applyPolicy('rolling');
+			RollingTypingStore.start(CHANNEL.id, 'me', 'gateway');
+			RollingTypingStore.start(CHANNEL.id, 'alice', 'gateway');
 		});
-		expect(host.querySelector('[data-flx="channel.typing-users.div"]')).toBeNull();
-		expect(host.querySelector('[data-flx="channel.rolling-typing-users.announcer"]')?.textContent).toBe('');
-
 		act(() => {
-			RollingTypingStore.start(CHANNEL.id, 'bob', 'gateway');
+			RollingTypingStore.remove(CHANNEL.id, 'me');
 		});
-		expect(host.querySelector('[data-flx="channel.typing-users.span"]')?.getAttribute('aria-hidden')).toBe('true');
-		expect(host.querySelector('[data-flx="channel.typing-users.span"]')?.textContent).toBe('bob is typing...');
 
-		act(() => {
-			TypingPolicy.applyPolicy('legacy');
-		});
-		expect(host.querySelector('[data-flx="channel.typing-users.div"]')).toBeNull();
-		expect(host.querySelector('[data-flx="channel.rolling-typing-users.announcer"]')).toBeNull();
-	});
-
-	it('keeps the one, two and three name forms identical in both arms', () => {
-		for (const count of [1, 2, 3]) {
-			const users = usersFor(count);
-			const legacyMarkup = markupOf(getTypingText(i18nFor('en-US'), users, CHANNEL));
-			TypingPolicy.applyPolicy('rolling');
-			const rollingMarkup = markupOf(getTypingText(i18nFor('en-US'), users, CHANNEL));
-			TypingPolicy.applyPolicy('legacy');
-
-			expect(rollingMarkup).toBe(legacyMarkup);
-		}
-		expect(markupOf(getTypingText(i18nFor('en-US'), usersFor(3), CHANNEL)).replace(/<[^>]+>/g, '')).toBe(
-			'alice, bob and carol are typing...',
-		);
-	});
-
-	it('resolves the four or more ladder per locale identically in both arms', () => {
-		for (const locale of ['en-US', 'en-GB', 'de', 'fr', 'ja', 'pt-BR']) {
-			const i18n = i18nFor(locale);
-			for (const count of [4, 5, 9, 10, 14, 15, 19, 20, 31]) {
-				const users = manyUsers(count);
-				const expected = getTypingTierText(i18n, count);
-				const legacyText = getTypingText(i18n, users, CHANNEL);
-				TypingPolicy.applyPolicy('rolling');
-				const rollingText = getTypingText(i18n, users, CHANNEL);
-				TypingPolicy.applyPolicy('legacy');
-
-				expect(legacyText, `${locale} ${count}`).toBe(expected);
-				expect(rollingText, `${locale} ${count}`).toBe(expected);
-			}
-		}
-		expect(getTypingText(i18nFor('en-GB'), manyUsers(12), CHANNEL)).toBe('A symphony of clacking keys is underway...');
-		expect(getTypingText(i18nFor('de'), manyUsers(12), CHANNEL)).toBe('de: Several people are typing...');
+		expect(onRender).toHaveBeenCalledTimes(commits);
+		expect(visibleText()).toBe('alice is typing...');
 	});
 });

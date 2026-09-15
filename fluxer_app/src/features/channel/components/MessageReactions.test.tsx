@@ -7,9 +7,6 @@ import {act} from 'react';
 import {createRoot, type Root} from 'react-dom/client';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
-const expressionInfoCardRollout = vi.hoisted(() => ({enabled: true}));
-
-vi.mock('@app/features/expressions/state/ExpressionInfoCardRollout', () => ({default: expressionInfoCardRollout}));
 vi.mock('@lingui/core/macro', () => {
 	const descriptor = (value: unknown): unknown => (typeof value === 'string' ? {message: value} : value);
 	return {msg: descriptor, plural: () => '', t: descriptor};
@@ -25,11 +22,6 @@ vi.mock('@app/features/app/components/LongPressable', () => ({
 			</button>
 			{children}
 		</div>
-	),
-}));
-vi.mock('@app/features/emoji/components/bottomsheets/EmojiInfoBottomSheet', () => ({
-	EmojiInfoBottomSheet: ({isOpen}: {isOpen: boolean}) => (
-		<span data-test-emoji-sheet={String(isOpen)} data-flx="test.emoji-sheet" />
 	),
 }));
 vi.mock('@app/features/expressions/components/bottomsheets/ExpressionInfoBottomSheet', () => ({
@@ -96,7 +88,6 @@ function longPress(): void {
 
 beforeEach(() => {
 	(globalThis as {IS_REACT_ACT_ENVIRONMENT?: boolean}).IS_REACT_ACT_ENVIRONMENT = true;
-	expressionInfoCardRollout.enabled = true;
 	host = document.createElement('div');
 	document.body.append(host);
 	root = createRoot(host);
@@ -109,38 +100,11 @@ afterEach(() => {
 	host.remove();
 });
 
-describe('reaction long press on the experiment arm', () => {
-	it('opens the expression info sheet and never the old emoji sheet', () => {
+describe('reaction long press', () => {
+	it('opens the expression info sheet', () => {
 		renderReactions();
-		expect(host.querySelector('[data-test-emoji-sheet]')).toBeNull();
+		expect(host.querySelector('[data-test-expression-sheet="true"]')).toBeNull();
 		longPress();
 		expect(host.querySelector('[data-test-expression-sheet="true"]')).not.toBeNull();
-		expect(host.querySelector('[data-test-emoji-sheet]')).toBeNull();
-	});
-});
-
-describe('reaction long press on the control arm', () => {
-	beforeEach(() => {
-		expressionInfoCardRollout.enabled = false;
-	});
-
-	it('opens the emoji info sheet and never the expression sheet', () => {
-		renderReactions();
-		expect(host.querySelector('[data-test-expression-sheet]')).toBeNull();
-		longPress();
-		expect(host.querySelector('[data-test-emoji-sheet="true"]')).not.toBeNull();
-		expect(host.querySelector('[data-test-expression-sheet]')).toBeNull();
-	});
-});
-
-describe('reaction long press when the bucket flips while the sheet is open', () => {
-	it('swaps the open sheet without crashing', () => {
-		renderReactions();
-		longPress();
-		expect(host.querySelector('[data-test-expression-sheet="true"]')).not.toBeNull();
-		expressionInfoCardRollout.enabled = false;
-		renderReactions();
-		expect(host.querySelector('[data-test-emoji-sheet="true"]')).not.toBeNull();
-		expect(host.querySelector('[data-test-expression-sheet]')).toBeNull();
 	});
 });

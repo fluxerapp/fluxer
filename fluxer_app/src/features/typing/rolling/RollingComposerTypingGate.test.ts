@@ -9,7 +9,6 @@ function decide(change: Partial<ComposerTypingChange>): ReturnType<typeof decide
 	return decideComposerTyping({
 		previousValue: 'hell',
 		value: 'hello',
-		isRestoringDraft: false,
 		isEditingMessageInComposer: false,
 		enabled: true,
 		...change,
@@ -44,11 +43,6 @@ describe('decideComposerTyping', () => {
 	it('does nothing when the channel changed since the previous value', () => {
 		expect(decide({previousValue: null, value: ''})).toBe('none');
 		expect(decide({previousValue: null, value: 'draft in the next channel'})).toBe('none');
-	});
-
-	it('does nothing while a draft is being restored', () => {
-		expect(decide({isRestoringDraft: true})).toBe('none');
-		expect(decide({isRestoringDraft: true, value: ''})).toBe('none');
 	});
 
 	it('does nothing while editing a message in the composer', () => {

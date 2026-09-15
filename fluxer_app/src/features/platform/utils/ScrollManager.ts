@@ -4,9 +4,8 @@ import Accessibility from '@app/features/accessibility/state/Accessibility';
 import type {Channel} from '@app/features/channel/models/Channel';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import type {ChannelMessages} from '@app/features/messaging/state/ChannelMessages';
-import MessageKeyboardFocusRollout from '@app/features/messaging/state/MessageKeyboardFocusRollout';
 import Messages from '@app/features/messaging/state/MessagingMessages';
-import {CHANNEL_MESSAGE_ID_PREFIX, findMessageElement} from '@app/features/messaging/utils/MessageNodeSelectors';
+import {findMessageElement} from '@app/features/messaging/utils/MessageNodeSelectors';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import Navigation from '@app/features/navigation/state/Navigation';
 import {evaluateScrollPinning, type ScrollPinResult} from '@app/features/platform/utils/ScrollPosition';
@@ -214,9 +213,6 @@ export class ScrollManager {
 		const doc = this.scrollGetDocument();
 		if (!doc) return null;
 		const {channel} = this.props;
-		if (!MessageKeyboardFocusRollout.enabled) {
-			return doc.getElementById(`${CHANNEL_MESSAGE_ID_PREFIX}-${channel.id}-${messageId}`) as HTMLElement | null;
-		}
 		return findMessageElement(doc, this.ref.current?.getViewportElement(), channel.id, messageId);
 	}
 

@@ -113,7 +113,6 @@ export const GuildHeader = observer(({guild, banner}: {guild: Guild; banner: Gui
 					collapsesOnScroll && styles.headerContainerCollapsing,
 					!showIntegratedBanner && isOpen && styles.headerContainerActive,
 				)}
-				style={showIntegratedBanner && !collapsesOnScroll ? {height: banner.bannerHeight} : undefined}
 				data-flx="app.guild-header.header-container.context-menu"
 			>
 				{showIntegratedBanner && (

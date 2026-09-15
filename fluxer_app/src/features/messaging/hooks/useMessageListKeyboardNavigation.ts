@@ -2,7 +2,6 @@
 
 import {isEditableElement} from '@app/features/app/keybindings/utils/EditableElement';
 import MessageFocus from '@app/features/messaging/state/MessageFocus';
-import MessageKeyboardFocusRollout from '@app/features/messaging/state/MessageKeyboardFocusRollout';
 import {getMessageSelector} from '@app/features/messaging/utils/MessageNodeSelectors';
 import type {ScrollerHandle} from '@app/features/ui/components/Scroller';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
@@ -31,11 +30,6 @@ const getViewportElement = (value: ScrollerHandle | HTMLElement | null | undefin
 		return value;
 	}
 	return null;
-};
-const isEditableTarget = (target: Element | null): boolean => {
-	if (!target) return false;
-	if (target instanceof HTMLTextAreaElement || target instanceof HTMLInputElement) return true;
-	return target instanceof HTMLElement && target.isContentEditable;
 };
 const hasShortcutModifier = (event: KeyboardEvent): boolean =>
 	event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
@@ -72,7 +66,6 @@ export function useMessageListKeyboardNavigation(options: MessageListKeyboardNav
 		allowWhenInactive = false,
 	} = options;
 	const keyboardModeEnabled = KeyboardMode.keyboardModeEnabled;
-	const keyboardNavigationEnabled = MessageKeyboardFocusRollout.enabled;
 	useEffect(() => {
 		if (!keyboardModeEnabled) return;
 		let messageNodesCache: MessageNodesSnapshot = EMPTY_MESSAGE_NODES_SNAPSHOT;
@@ -142,11 +135,11 @@ export function useMessageListKeyboardNavigation(options: MessageListKeyboardNav
 		const focusNode = (node: HTMLElement, messageId: string) => {
 			if (onFocusMessage) {
 				onFocusMessage(messageId);
-				if (!keyboardNavigationEnabled || hasFocusInside(node)) {
+				if (hasFocusInside(node)) {
 					return;
 				}
 			}
-			if (keyboardNavigationEnabled && node.tabIndex < 0) {
+			if (node.tabIndex < 0) {
 				node.tabIndex = -1;
 			}
 			node.focus({preventScroll: true});
@@ -170,7 +163,7 @@ export function useMessageListKeyboardNavigation(options: MessageListKeyboardNav
 			if (nextIdx >= nodes.length) {
 				if (hasMoreAfter && onLoadMoreAfter && !isLoadingMore) {
 					onLoadMoreAfter();
-				} else if (keyboardNavigationEnabled && !hasMoreAfter && onNavigatePastNewest) {
+				} else if (!hasMoreAfter && onNavigatePastNewest) {
 					onNavigatePastNewest();
 				}
 				return;
@@ -203,10 +196,7 @@ export function useMessageListKeyboardNavigation(options: MessageListKeyboardNav
 		};
 		const handleKeyDown = (event: KeyboardEvent) => {
 			if (!keyboardModeEnabled) return;
-			const activeElementIsEditable = keyboardNavigationEnabled
-				? isEditableElement(document.activeElement)
-				: isEditableTarget(document.activeElement);
-			if (activeElementIsEditable) return;
+			if (isEditableElement(document.activeElement)) return;
 			const delta = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0;
 			const isNavigationKey = delta !== 0;
 			if (isNavigationKey && hasShortcutModifier(event)) return;
@@ -235,7 +225,6 @@ export function useMessageListKeyboardNavigation(options: MessageListKeyboardNav
 		};
 	}, [
 		keyboardModeEnabled,
-		keyboardNavigationEnabled,
 		containerRef,
 		channelId,
 		onFocusMessage,

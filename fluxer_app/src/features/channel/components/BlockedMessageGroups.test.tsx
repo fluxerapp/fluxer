@@ -5,7 +5,6 @@ import {act, createElement, type ReactNode} from 'react';
 import {createRoot, type Root} from 'react-dom/client';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
-const rolloutMock = {enabled: true};
 const ChannelStreamType = {
 	MESSAGE: 'MESSAGE',
 	MESSAGE_GROUP_BLOCKED: 'MESSAGE_GROUP_BLOCKED',
@@ -16,7 +15,6 @@ const ChannelStreamType = {
 
 vi.mock('@app/features/messaging/utils/MessageGroupingUtils', () => ({ChannelStreamType}));
 
-vi.mock('@app/features/channel/state/BlockedMessageGroupsRollout', () => ({default: rolloutMock}));
 vi.mock('@lingui/core/macro', () => ({msg: (value: unknown) => value}));
 vi.mock('@lingui/react/macro', () => ({useLingui: () => ({i18n: {_: () => 'blocked messages'}})}));
 vi.mock('@app/features/channel/components/ChannelDivider', () => ({
@@ -42,7 +40,6 @@ function message(id: string): Record<string, unknown> {
 }
 
 beforeEach(() => {
-	rolloutMock.enabled = true;
 	container = document.createElement('div');
 	document.body.append(container);
 	root = createRoot(container);
@@ -81,7 +78,7 @@ const DIVIDER_INSIDE_GROUP = [
 	{type: ChannelStreamType.MESSAGE, content: message('200'), contentKey: '200', groupId: 'g2'},
 ];
 
-describe('BlockedMessageGroups experiment arm', () => {
+describe('BlockedMessageGroups', () => {
 	it('keys an unread divider apart from the message group below it', () => {
 		renderRevealedGroup(DIVIDER_INSIDE_GROUP);
 
@@ -109,21 +106,5 @@ describe('BlockedMessageGroups experiment arm', () => {
 
 		expect(container.querySelectorAll('[data-message-group]')).toHaveLength(3);
 		expect(container.querySelectorAll(SPACER_SELECTOR)).toHaveLength(2);
-	});
-});
-
-describe('BlockedMessageGroups control arm', () => {
-	beforeEach(() => {
-		rolloutMock.enabled = false;
-	});
-
-	it('renders no group spacers', () => {
-		renderRevealedGroup([
-			{type: ChannelStreamType.MESSAGE, content: message('100'), contentKey: '100', groupId: 'g1'},
-			{type: ChannelStreamType.MESSAGE, content: message('200'), contentKey: '200', groupId: 'g2'},
-		]);
-
-		expect(container.querySelectorAll('[data-message-group]')).toHaveLength(2);
-		expect(container.querySelectorAll(SPACER_SELECTOR)).toHaveLength(0);
 	});
 });

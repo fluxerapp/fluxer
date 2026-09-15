@@ -13,7 +13,6 @@ interface UseTextareaDraftAndTypingOptions {
 	draftSegments?: ReadonlyArray<MentionSegment> | null;
 	previousValueRef: React.RefObject<string>;
 	segmentManagerRef?: React.RefObject<TextareaSegmentManager>;
-	isAutocompleteAttached: boolean;
 	enabled: boolean;
 	typingEnabled?: boolean;
 	isEditingMessageInComposer: boolean;
@@ -50,7 +49,6 @@ export const useTextareaDraftAndTyping = ({
 	draftSegments,
 	previousValueRef,
 	segmentManagerRef,
-	isAutocompleteAttached,
 	enabled,
 	typingEnabled = enabled,
 	isEditingMessageInComposer,
@@ -72,11 +70,6 @@ export const useTextareaDraftAndTyping = ({
 	useEffect(() => {
 		isEditingMessageInComposerRef.current = isEditingMessageInComposer;
 	}, [isEditingMessageInComposer]);
-	useEffect(() => {
-		return () => {
-			TypingUtils.releaseComposer(channelId);
-		};
-	}, [channelId]);
 	useEffect(() => {
 		if (enabled) {
 			return;
@@ -176,10 +169,9 @@ export const useTextareaDraftAndTyping = ({
 			channelId,
 			value,
 			previousValue: typingPreviousValue?.channelId === channelId ? typingPreviousValue.value : null,
-			isAutocompleteAttached,
 			enabled,
 			typingEnabled,
 			isEditingMessageInComposer: isEditingMessageInComposerRef.current,
 		});
-	}, [channelId, value, isAutocompleteAttached, enabled, typingEnabled]);
+	}, [channelId, value, enabled, typingEnabled]);
 };

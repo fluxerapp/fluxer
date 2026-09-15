@@ -20,14 +20,12 @@ import {ExpressionInfoBottomSheet} from '@app/features/expressions/components/bo
 import {ExpressionHoverTooltipContent} from '@app/features/expressions/components/ExpressionHoverTooltipContent';
 import {ExpressionInfoCard} from '@app/features/expressions/components/ExpressionInfoCard';
 import {ExpressionInfoPopout} from '@app/features/expressions/components/ExpressionInfoPopout';
-import ExpressionInfoCardRollout from '@app/features/expressions/state/ExpressionInfoCardRollout';
 import {
 	EXPRESSION_INFO_SURFACE_OPEN_IS_INTERACTION,
 	STICKER_PREVIEW_SIZE,
 } from '@app/features/expressions/utils/ExpressionPreviewConstants';
 import * as GiftCodeUtils from '@app/features/gift/utils/GiftCodeUtils';
 import {GuildIcon} from '@app/features/guild/components/popouts/GuildIcon';
-import Guilds from '@app/features/guild/state/Guilds';
 import * as InviteUtils from '@app/features/invite/utils/InviteUtils';
 import {SafeMarkdown} from '@app/features/messaging/components/markdown';
 import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
@@ -49,7 +47,6 @@ import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuComma
 import {Avatar} from '@app/features/ui/components/Avatar';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
-import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import UserSettings from '@app/features/user/state/UserSettings';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
@@ -471,119 +468,7 @@ interface StickerItemProps {
 	handleDelete?: (bypassConfirm?: boolean) => void;
 }
 
-const StickerItemWithTooltip = observer(({sticker, message, sourceChannel, handleDelete}: StickerItemProps) => {
-	const {shouldAnimate, interactionHandlers} = useStickerAnimation({isAnimated: sticker.animated});
-	const stickerUrl = AvatarUtils.getStickerURL({
-		id: sticker.id,
-		animated: shouldAnimate,
-		isAnimatable: sticker.animated,
-		size: 320,
-	});
-	const stickerRecord = Sticker.getStickerById(sticker.id);
-	const guild = stickerRecord?.guildId ? Guilds.getGuild(stickerRecord.guildId) : null;
-	const {shouldBlur, shouldBlock, canReveal, reveal} = useMatureMedia(false, message.channelId);
-	const tooltipContent = () => (
-		<div className={styles.stickerTooltip} data-flx="channel.message-attachments.tooltip-content.sticker-tooltip">
-			<span className={styles.stickerName} data-flx="channel.message-attachments.tooltip-content.sticker-name">
-				{sticker.name}
-			</span>
-			{guild && (
-				<div
-					className={styles.stickerGuildInfo}
-					data-flx="channel.message-attachments.tooltip-content.sticker-guild-info"
-				>
-					<GuildIcon
-						id={guild.id}
-						name={guild.name}
-						icon={guild.icon}
-						className={styles.stickerGuildIcon}
-						sizePx={16}
-						data-flx="channel.message-attachments.tooltip-content.sticker-guild-icon"
-					/>
-					<span
-						className={styles.stickerGuildName}
-						data-flx="channel.message-attachments.tooltip-content.sticker-guild-name"
-					>
-						{guild.name}
-					</span>
-				</div>
-			)}
-		</div>
-	);
-	const handleContextMenu = (e: React.MouseEvent) => {
-		e.preventDefault();
-		e.stopPropagation();
-		const stickerForMenu = stickerRecord ?? {
-			id: sticker.id,
-			guildId: '',
-			name: sticker.name,
-			description: '',
-			tags: [],
-			url: stickerUrl,
-			animated: sticker.animated,
-			user: undefined,
-		};
-		ContextMenuCommands.openFromEvent(e, ({onClose}) => (
-			<MessageContextMenu
-				message={message}
-				sourceChannel={sourceChannel}
-				onClose={onClose}
-				onDelete={handleDelete!}
-				inlineStickerOrEmojiItems={
-					<StickerInlineMenuItems
-						sticker={stickerForMenu}
-						onClose={onClose}
-						data-flx="channel.message-attachments.handle-context-menu.sticker-inline-menu-items"
-					/>
-				}
-				data-flx="channel.message-attachments.handle-context-menu.message-context-menu"
-			/>
-		));
-	};
-	const handleRevealClick = useCallback(
-		(e: React.MouseEvent) => {
-			if (shouldBlur && canReveal) {
-				e.preventDefault();
-				e.stopPropagation();
-				reveal();
-			}
-		},
-		[shouldBlur, canReveal, reveal],
-	);
-	if (shouldBlock) {
-		return null;
-	}
-	const stickerImage = (
-		<img
-			src={stickerUrl}
-			alt={stickerRecord?.description || sticker.name}
-			className={clsx(styles.stickerImage, shouldBlur && matureStyles.matureStickerBlurred)}
-			width="160"
-			height="160"
-			data-flx="channel.message-attachments.sticker-item.sticker-image"
-		/>
-	);
-	return (
-		<Tooltip key={sticker.id} text={tooltipContent} data-flx="channel.message-attachments.sticker-item.tooltip">
-			<FocusRing data-flx="channel.message-attachments.sticker-item.focus-ring">
-				<button
-					type="button"
-					aria-label={stickerRecord?.description || sticker.name}
-					className={styles.stickerWrapper}
-					data-message-sticker="true"
-					onContextMenu={handleContextMenu}
-					onClick={handleRevealClick}
-					data-flx="channel.message-attachments.sticker-item.sticker-wrapper.reveal-click"
-					{...interactionHandlers}
-				>
-					{stickerImage}
-				</button>
-			</FocusRing>
-		</Tooltip>
-	);
-});
-
-const StickerItemWithInfoCard = observer(({sticker, message, sourceChannel, handleDelete}: StickerItemProps) => {
+const StickerItem = observer(({sticker, message, sourceChannel, handleDelete}: StickerItemProps) => {
 	const {shouldAnimate, interactionHandlers} = useStickerAnimation({isAnimated: sticker.animated});
 	const {shouldAnimate: shouldAnimateInfoPreview} = useStickerAnimation({
 		isAnimated: sticker.animated,
@@ -740,12 +625,6 @@ const StickerItemWithInfoCard = observer(({sticker, message, sourceChannel, hand
 			</button>
 		</ExpressionInfoPopout>
 	);
-});
-const StickerItem = observer((props: StickerItemProps) => {
-	if (!ExpressionInfoCardRollout.enabled) {
-		return <StickerItemWithTooltip {...props} data-flx="channel.message-attachments.sticker-item.tooltip-arm" />;
-	}
-	return <StickerItemWithInfoCard {...props} data-flx="channel.message-attachments.sticker-item.info-card-arm" />;
 });
 export const MessageAttachments = observer(() => {
 	const {channel, message, handleDelete, previewContext, onPopoutToggle, suppressMessageActions} =

@@ -402,69 +402,13 @@ fn deserialize_instance_config_response_with_unknown_keys() {
             "excluded_user_ids": [],
             "guild_overrides": [],
             "stereo_enabled": false,
-            "suppression_strength": 80
-        },
-        "guild_activity_log_presentation": {
-            "enabled": true,
-            "config_version": 2,
-            "rollout_basis_points": 5000,
-            "rollout_salt": "guild-activity-log-presentation-v1",
-            "included_user_ids": ["1130650140672000000"],
-            "excluded_user_ids": [],
-            "future_presentation_knob": "verbose"
-        },
-        "experiment_delivery": {"poll_interval_seconds": 300, "poll_jitter_percent": 15},
-        "message_hover_tracking": {
-            "enabled": false,
-            "config_version": 0,
-            "rollout_basis_points": 0,
-            "rollout_salt": "message-hover-tracking-v1",
-            "included_user_ids": [],
-            "excluded_user_ids": []
-        },
-        "message_keyboard_focus": {
-            "enabled": false,
-            "config_version": 0,
-            "rollout_basis_points": 0,
-            "rollout_salt": "message-keyboard-focus-v1",
-            "included_user_ids": [],
-            "excluded_user_ids": []
-        },
-        "blocked_message_groups": {
-            "enabled": false,
-            "config_version": 0,
-            "rollout_basis_points": 0,
-            "rollout_salt": "blocked-message-groups-v1",
-            "included_user_ids": [],
-            "excluded_user_ids": []
-        },
-        "expression_info_card": {
-            "enabled": true,
-            "config_version": 3,
-            "rollout_basis_points": 2500,
-            "rollout_salt": "expression-info-card-v1",
-            "included_user_ids": ["1130650140672000000"],
-            "excluded_user_ids": ["1130958221824557056"],
+            "suppression_strength": 80,
+            "future_presentation_knob": "verbose",
             "future_knob": 7,
             "future_object_knob": {"nested": true},
             "future_list_knob": ["a", "b"]
         },
-        "guild_header_collapse": {
-            "enabled": false,
-            "config_version": 0,
-            "rollout_basis_points": 0,
-            "rollout_salt": "guild-header-collapse-v1",
-            "included_user_ids": [],
-            "excluded_user_ids": []
-        },
-        "typing_indicator_rework": {
-            "enabled": false,
-            "config_version": 0,
-            "rollout_basis_points": 0,
-            "rollout_salt": "typing-indicator-rework-v1",
-            "included_user_ids": [],
-            "excluded_user_ids": []
-        },
+        "experiment_delivery": {"poll_interval_seconds": 300, "poll_jitter_percent": 15},
         "registration": {
             "mode": "open",
             "admin_registration_urls_enabled": false,
@@ -588,28 +532,11 @@ fn deserialize_instance_config_response_with_unknown_keys() {
     );
 
     assert!(!resp.self_hosted);
-    assert!(resp.expression_info_card.enabled);
-    assert_eq!(resp.expression_info_card.config_version, 3);
-    assert_eq!(resp.expression_info_card.rollout_basis_points, 2500);
-    assert_eq!(
-        *resp.expression_info_card.rollout_salt,
-        "expression-info-card-v1"
-    );
-    assert_eq!(resp.expression_info_card.included_user_ids.len(), 1);
-    assert_eq!(
-        *resp.expression_info_card.excluded_user_ids[0],
-        "1130958221824557056"
-    );
-    assert!(resp.guild_activity_log_presentation.enabled);
-    assert_eq!(
-        *resp.guild_activity_log_presentation.rollout_salt,
-        "guild-activity-log-presentation-v1"
-    );
-    assert!(!resp.message_hover_tracking.enabled);
-    assert!(!resp.message_keyboard_focus.enabled);
-    assert!(!resp.blocked_message_groups.enabled);
-    assert!(!resp.guild_header_collapse.enabled);
-    assert!(!resp.typing_indicator_rework.enabled);
+    assert!(resp.voice_noise_suppression.enabled);
+    assert_eq!(resp.voice_noise_suppression.config_version, 4);
+    assert_eq!(resp.voice_noise_suppression.rollout_basis_points, 10000);
+    assert_eq!(*resp.voice_noise_suppression.rollout_salt, "voice-ns-v1");
+    assert_eq!(resp.voice_noise_suppression.enabled_backends.len(), 3);
     assert_eq!(resp.experiment_delivery.poll_interval_seconds, 300);
     assert!(resp.policy.single_community_guild_id.is_none());
     assert_eq!(resp.policy.services.gif_enabled, Some(true));

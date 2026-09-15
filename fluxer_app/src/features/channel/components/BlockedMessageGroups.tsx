@@ -9,9 +9,7 @@ import {
 	type MessageGroupRenderWrapperProps,
 } from '@app/features/channel/components/MessageGroup';
 import type {Channel} from '@app/features/channel/models/Channel';
-import BlockedMessageGroupsRollout from '@app/features/channel/state/BlockedMessageGroupsRollout';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
-import MessageKeyboardFocusRollout from '@app/features/messaging/state/MessageKeyboardFocusRollout';
 import {type ChannelStreamItem, ChannelStreamType} from '@app/features/messaging/utils/MessageGroupingUtils';
 import {getMessageSelector} from '@app/features/messaging/utils/MessageNodeSelectors';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
@@ -102,7 +100,6 @@ export const BlockedMessageGroups = React.memo<BlockedMessageGroupsProps>((props
 		renderMessageWrapper,
 		suppressUnreadIndicator,
 	} = props;
-	const groupRenderingEnabled = BlockedMessageGroupsRollout.enabled;
 	const {i18n} = useLingui();
 	const containerRef = useRef<HTMLDivElement>(null);
 	const toggleRef = useRef<HTMLButtonElement>(null);
@@ -199,7 +196,7 @@ export const BlockedMessageGroups = React.memo<BlockedMessageGroupsProps>((props
 		}
 		const revealedByKeyboard = revealedByKeyboardRef.current;
 		revealedByKeyboardRef.current = false;
-		if (!KeyboardMode.keyboardModeEnabled || !MessageKeyboardFocusRollout.enabled) {
+		if (!KeyboardMode.keyboardModeEnabled) {
 			focusWithinContentRef.current = false;
 			return;
 		}
@@ -237,7 +234,7 @@ export const BlockedMessageGroups = React.memo<BlockedMessageGroupsProps>((props
 		let renderedGroupCount = 0;
 		const flushGroup = () => {
 			if (currentGroupMessages.length > 0) {
-				if (groupRenderingEnabled && renderedGroupCount > 0 && messageGroupSpacing > 0) {
+				if (renderedGroupCount > 0 && messageGroupSpacing > 0) {
 					nodes.push(
 						<div
 							key={`blocked-group-spacer-${currentGroupMessages[0].id}`}
@@ -279,13 +276,7 @@ export const BlockedMessageGroups = React.memo<BlockedMessageGroupsProps>((props
 				flushGroup();
 				nodes.push(
 					<Divider
-						key={
-							groupRenderingEnabled
-								? item.unreadId
-									? `unread-divider-${item.unreadId}`
-									: item.contentKey || `divider-${itemIndex}`
-								: item.unreadId || item.contentKey || `divider-${itemIndex}`
-						}
+						key={item.unreadId ? `unread-divider-${item.unreadId}` : item.contentKey || `divider-${itemIndex}`}
 						spacing={messageGroupSpacing}
 						red={!!item.unreadId}
 						id={item.unreadId ? 'new-messages-bar' : undefined}
@@ -319,7 +310,6 @@ export const BlockedMessageGroups = React.memo<BlockedMessageGroupsProps>((props
 		renderMessageActions,
 		renderMessageWrapper,
 		suppressUnreadIndicator,
-		groupRenderingEnabled,
 	]);
 	const leadingUnreadDivider = messageGroups[0]?.type === ChannelStreamType.DIVIDER && !!messageGroups[0].unreadId;
 	return (

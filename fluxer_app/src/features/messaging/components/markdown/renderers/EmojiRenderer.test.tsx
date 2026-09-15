@@ -59,40 +59,11 @@ vi.mock('@app/features/expressions/components/bottomsheets/ExpressionInfoBottomS
 		<span data-test-bottom-sheet={String(isOpen)} data-flx="test.bottom-sheet" />
 	),
 }));
-vi.mock('@app/features/ui/emoji_tooltip_content/EmojiWithTooltip', () => ({
-	EmojiWithTooltip: ({emojiName, children}: {emojiName: string; children: React.ReactNode}) => (
-		<span data-test-hover-tooltip={emojiName} data-flx="test.emoji-with-tooltip">
-			{children}
-		</span>
-	),
-}));
-vi.mock('@app/features/emoji/components/bottomsheets/EmojiInfoBottomSheet', () => ({
-	EmojiInfoBottomSheet: ({isOpen}: {isOpen: boolean}) => (
-		<span data-test-legacy-sheet={String(isOpen)} data-flx="test.legacy-sheet" />
-	),
-}));
 
 installVoiceMenuTestBootstrap();
 
 const {EmojiRenderer} = await import('@app/features/messaging/components/markdown/renderers/EmojiRenderer');
 const {default: MobileLayout} = await import('@app/features/ui/state/MobileLayout');
-const {default: ExperimentAssignments} = await import('@app/features/experiment/state/ExperimentAssignments');
-
-function setBucket(enabled: boolean): void {
-	runInAction(() => {
-		ExperimentAssignments.response = {
-			poll_interval_seconds: 300,
-			poll_jitter_percent: 15,
-			assignments: {
-				expression_info_card: {enabled, config_version: 1, user_targeted: enabled, source: 'canary'},
-			},
-		};
-	});
-}
-
-function resetBucket(): void {
-	ExperimentAssignments.reset();
-}
 
 const i18n = {
 	locale: 'en',
@@ -143,13 +114,7 @@ function expectNoTabStop(markup: string): void {
 	expect(markup).not.toContain('role="button"');
 }
 
-describe('EmojiRenderer on desktop in the experiment arm', () => {
-	beforeEach(() => {
-		setBucket(true);
-	});
-
-	afterEach(resetBucket);
-
+describe('EmojiRenderer on desktop', () => {
 	it('renders the interactive info card trigger by default', () => {
 		const markup = renderEmoji(CUSTOM_EMOJI);
 		expect(markup).toContain('data-test-popout="true"');
@@ -186,16 +151,14 @@ describe('EmojiRenderer on desktop in the experiment arm', () => {
 	});
 });
 
-describe('EmojiRenderer on mobile in the experiment arm', () => {
+describe('EmojiRenderer on mobile', () => {
 	beforeEach(() => {
-		setBucket(true);
 		runInAction(() => {
 			MobileLayout.enabled = true;
 		});
 	});
 
 	afterEach(() => {
-		resetBucket();
 		runInAction(() => {
 			MobileLayout.enabled = false;
 		});
@@ -226,13 +189,7 @@ describe('EmojiRenderer on mobile in the experiment arm', () => {
 	}
 });
 
-describe('EmojiRenderer accessible name in the experiment arm', () => {
-	beforeEach(() => {
-		setBucket(true);
-	});
-
-	afterEach(resetBucket);
-
+describe('EmojiRenderer accessible name', () => {
 	for (const overrides of [
 		{},
 		{disableEmojiInfoCard: true},
@@ -252,12 +209,11 @@ describe('EmojiRenderer accessible name in the experiment arm', () => {
 	}
 });
 
-describe('EmojiRenderer failed-to-load wording in the experiment arm', () => {
+describe('EmojiRenderer failed-to-load wording', () => {
 	let host: HTMLDivElement;
 	let root: Root;
 
 	beforeEach(() => {
-		setBucket(true);
 		(globalThis as {IS_REACT_ACT_ENVIRONMENT?: boolean}).IS_REACT_ACT_ENVIRONMENT = true;
 		host = document.createElement('div');
 		document.body.append(host);
@@ -269,7 +225,6 @@ describe('EmojiRenderer failed-to-load wording in the experiment arm', () => {
 			root.unmount();
 		});
 		host.remove();
-		resetBucket();
 	});
 
 	for (const overrides of [{}, {disableEmojiInfoCard: true}, {disableInteractions: true}]) {
@@ -294,117 +249,4 @@ describe('EmojiRenderer failed-to-load wording in the experiment arm', () => {
 			expect(host.querySelector('img')?.getAttribute('aria-label')).toBe(':blob: (failed to load)');
 		});
 	}
-});
-
-const ALL_FLAGS = ['disableInteractions', 'disableEmojiInteractions', 'disableEmojiInfoCard'] as const;
-
-describe('EmojiRenderer on desktop in the control arm', () => {
-	afterEach(resetBucket);
-
-	it('renders the hover tooltip and no card by default', () => {
-		const markup = renderEmoji(CUSTOM_EMOJI);
-		expect(markup).toContain('data-test-hover-tooltip=":blob:"');
-		expect(markup).toContain('alt=":blob:"');
-		expectNoCard(markup);
-		expectNoTabStop(markup);
-		expectNoTooltip(markup);
-	});
-
-	for (const flag of ALL_FLAGS) {
-		it(`ignores ${flag}`, () => {
-			expect(renderEmoji(CUSTOM_EMOJI, {[flag]: true})).toBe(renderEmoji(CUSTOM_EMOJI));
-		});
-	}
-
-	it('names the unicode emoji fallback', () => {
-		const markup = renderEmoji(STANDARD_EMOJI);
-		expect(markup).toContain('role="img"');
-		expect(markup).toContain('aria-label=":slight_smile:"');
-	});
-
-	it('is what the inert assignment envelope selects', () => {
-		const inert = renderEmoji(CUSTOM_EMOJI);
-		setBucket(false);
-		expect(renderEmoji(CUSTOM_EMOJI)).toBe(inert);
-	});
-
-	it('follows the store when the bucket flips', () => {
-		const control = renderEmoji(CUSTOM_EMOJI);
-		setBucket(true);
-		const treatment = renderEmoji(CUSTOM_EMOJI);
-		expect(treatment).not.toBe(control);
-		expect(treatment).toContain('data-emoji-interactive="true"');
-		resetBucket();
-		expect(renderEmoji(CUSTOM_EMOJI)).toBe(control);
-	});
-});
-
-describe('EmojiRenderer on mobile in the control arm', () => {
-	beforeEach(() => {
-		runInAction(() => {
-			MobileLayout.enabled = true;
-		});
-	});
-
-	afterEach(() => {
-		resetBucket();
-		runInAction(() => {
-			MobileLayout.enabled = false;
-		});
-	});
-
-	it('opens the legacy info bottom sheet by default', () => {
-		const markup = renderEmoji(CUSTOM_EMOJI);
-		expect(markup).toContain('role="button"');
-		expect(markup).toContain('tabindex="0"');
-		expect(markup).toContain('data-test-legacy-sheet="false"');
-		expect(markup).not.toContain('data-test-bottom-sheet');
-		expect(markup).not.toContain('data-test-popout');
-	});
-
-	for (const flag of ALL_FLAGS) {
-		it(`ignores ${flag}`, () => {
-			expect(renderEmoji(CUSTOM_EMOJI, {[flag]: true})).toBe(renderEmoji(CUSTOM_EMOJI));
-		});
-	}
-});
-
-describe('EmojiRenderer failed-to-load wording in the control arm', () => {
-	let host: HTMLDivElement;
-	let root: Root;
-
-	beforeEach(() => {
-		(globalThis as {IS_REACT_ACT_ENVIRONMENT?: boolean}).IS_REACT_ACT_ENVIRONMENT = true;
-		host = document.createElement('div');
-		document.body.append(host);
-		root = createRoot(host);
-	});
-
-	afterEach(() => {
-		act(() => {
-			root.unmount();
-		});
-		host.remove();
-		resetBucket();
-	});
-
-	it('switches the alt text to the failed wording', () => {
-		act(() => {
-			root.render(
-				<EmojiRenderer
-					node={CUSTOM_EMOJI}
-					id="emoji-key"
-					renderChildren={() => null}
-					options={BASE_OPTIONS}
-					data-flx="test.emoji-renderer.control.failed"
-				/>,
-			);
-		});
-		const image = host.querySelector('img');
-		expect(image?.getAttribute('alt')).toBe(':blob:');
-		act(() => {
-			image?.dispatchEvent(new Event('error'));
-		});
-		expect(host.querySelector('img')?.getAttribute('alt')).toBe(':blob: (failed to load)');
-	});
 });

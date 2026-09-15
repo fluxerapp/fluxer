@@ -33,7 +33,6 @@ import {
 } from '@app/features/messaging/state/ChannelMessagesLoadStateMachine';
 import MessageEdit from '@app/features/messaging/state/MessageEdit';
 import MessageFocus from '@app/features/messaging/state/MessageFocus';
-import MessageKeyboardFocusRollout from '@app/features/messaging/state/MessageKeyboardFocusRollout';
 import MessagesState from '@app/features/messaging/state/MessagingMessages';
 import {
 	type ChannelStreamItem,
@@ -401,9 +400,7 @@ export const Messages = observer(function Messages({
 			const scroller = scrollManager.ref.current?.getViewportElement();
 			const innerElement = scrollerInnerRef.current;
 			if (!scroller || !innerElement) return;
-			const messageElements = innerElement.querySelectorAll<HTMLElement>(
-				MessageKeyboardFocusRollout.enabled ? getMessageSelector(channel.id) : '[data-message-id]',
-			);
+			const messageElements = innerElement.querySelectorAll<HTMLElement>(getMessageSelector(channel.id));
 			if (!messageElements.length) return;
 			const scrollerRect = scroller.getBoundingClientRect();
 			const candidates: Array<MessageFocusCandidate> = [];
@@ -670,17 +667,6 @@ export const Messages = observer(function Messages({
 			/>
 		</>
 	);
-	const keyboardNavigationEnabled = MessageKeyboardFocusRollout.enabled;
-	const messageListContent = (
-		<NearViewportSurfaceContext.Provider value={resolveMessageScrollSurface}>
-			<CollapsedMessageVisibilityProvider
-				value={collapsedMessageVisibility}
-				data-flx="channel.messages.collapsed-message-visibility-provider"
-			>
-				{scrollerInner}
-			</CollapsedMessageVisibilityProvider>
-		</NearViewportSurfaceContext.Provider>
-	);
 	return (
 		<div className={styles.messagesWrapper} style={messagesWrapperStyle} data-flx="channel.messages.messages-wrapper">
 			<UploadManager
@@ -720,13 +706,16 @@ export const Messages = observer(function Messages({
 							aria-busy={safeMessages.loadingMore ? true : undefined}
 							data-flx="channel.messages.scroller-inner"
 						>
-							{keyboardNavigationEnabled ? (
-								<FocusRingScope containerRef={scrollerInnerRef} data-flx="channel.messages.focus-ring-scope">
-									{messageListContent}
-								</FocusRingScope>
-							) : (
-								messageListContent
-							)}
+							<FocusRingScope containerRef={scrollerInnerRef} data-flx="channel.messages.focus-ring-scope">
+								<NearViewportSurfaceContext.Provider value={resolveMessageScrollSurface}>
+									<CollapsedMessageVisibilityProvider
+										value={collapsedMessageVisibility}
+										data-flx="channel.messages.collapsed-message-visibility-provider"
+									>
+										{scrollerInner}
+									</CollapsedMessageVisibilityProvider>
+								</NearViewportSurfaceContext.Provider>
+							</FocusRingScope>
 						</div>
 					</div>
 				</Scroller>

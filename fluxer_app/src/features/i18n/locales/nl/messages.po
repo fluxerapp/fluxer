@@ -21,14 +21,14 @@ msgstr "... compacte modus inschakelen. Mooi!"
 
 #. Button or menu action label in the channel and chat user message. Keep it concise.
 #. Suffix after the message text in the forward modal preview when the forwarded message was edited.
-#: src/features/channel/components/MessageAttachments.tsx:378
+#: src/features/channel/components/MessageAttachments.tsx:375
 #: src/features/channel/components/UserMessage.tsx:62
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx:26
 msgid "(edited)"
 msgstr "(bewerkt)"
 
 #: src/features/app/components/pages/YouPage.tsx:189
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:906
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:903
 msgid "(only visible to you)"
 msgstr "(alleen voor jou zichtbaar)"
 
@@ -47,21 +47,18 @@ msgid "{0, plural, one {# member} other {# members}}"
 msgstr "{0, plural, one {# lid} other {# leden}}"
 
 #. Screen reader announcement in the composer when two people are typing. {a} and {b} are their display names.
-#: src/features/channel/components/LegacyTypingUsers.tsx:41
 #: src/features/typing/rolling/RollingTypingText.tsx:19
 #: src/features/typing/rolling/RollingTypingText.tsx:54
 msgid "{a} and {b} are typing..."
 msgstr "{a} en {b} zijn aan het typen..."
 
 #. Screen reader announcement in the composer when one person is typing. {a} is their display name.
-#: src/features/channel/components/LegacyTypingUsers.tsx:37
 #: src/features/typing/rolling/RollingTypingText.tsx:15
 #: src/features/typing/rolling/RollingTypingText.tsx:50
 msgid "{a} is typing..."
 msgstr "{a} is aan het typen..."
 
 #. Screen reader announcement in the composer when three people are typing. {a}, {b} and {c} are their display names.
-#: src/features/channel/components/LegacyTypingUsers.tsx:48
 #: src/features/typing/rolling/RollingTypingText.tsx:24
 #: src/features/typing/rolling/RollingTypingText.tsx:60
 msgid "{a}, {b} and {c} are typing..."
@@ -92,14 +89,6 @@ msgstr "{actor} heeft een sticker toegevoegd"
 msgid "{actor} added an emoji"
 msgstr "{actor} heeft een emoji toegevoegd"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:572
-msgid "{actor} added channel permissions for {targetEntity} in {channelNode}."
-msgstr "{actor} heeft kanaalrechten toegevoegd voor {targetEntity} in {channelNode}."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:577
-msgid "{actor} added channel permissions for {targetEntity}."
-msgstr "{actor} heeft kanaalrechten toegevoegd voor {targetEntity}."
-
 #. Activity log summary for a bot that was added to the community. {actor} is the member who added the bot, shown as a clickable user chip, or the word System. {target} is the bot, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:407
 msgid "{actor} added the bot {target}"
@@ -110,27 +99,15 @@ msgstr "{actor} heeft de bot {target} toegevoegd"
 msgid "{actor} added the bot {target} as a temporary member"
 msgstr "{actor} heeft de bot {target} als tijdelijk lid toegevoegd"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:672
-msgid "{actor} added the bot {targetMember}."
-msgstr "{actor} heeft de bot {targetMember} toegevoegd."
-
 #. Activity log summary for a custom emoji that was uploaded or copied to the community. {actor} is the member who added it, shown as a clickable user chip, or the word System. {emoji} is the emoji, shown as its image when it still exists, followed by its name between colons, for example :blobcat:.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:5
 msgid "{actor} added the emoji {emoji}"
 msgstr "{actor} heeft de emoji {emoji} toegevoegd"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:735
-msgid "{actor} added the emoji {namedTarget}."
-msgstr "{actor} heeft de emoji {namedTarget} toegevoegd."
-
 #. Activity log summary for a sticker that was uploaded or copied to the community. {actor} is the member who added it, shown as a clickable user chip, or the word System. {name} is the sticker name, shown in bold. The app adds the bold, so do not add ** or <b>.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:45
 msgid "{actor} added the sticker {name}"
 msgstr "{actor} heeft de sticker {name} toegevoegd"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:753
-msgid "{actor} added the sticker {namedTarget}."
-msgstr "{actor} heeft de sticker {namedTarget} toegevoegd."
 
 #. Activity log summary for a user who was banned from the community with no end date. A ban removes the user from the community and stops them from joining again. It is not the feature that blocks a user. {actor} is the member who made the ban, shown as a clickable user chip, or the word System. {target} is the banned user, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:15
@@ -141,10 +118,6 @@ msgstr "{actor} heeft {target} permanent verbannen"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:20
 msgid "{actor} banned {target} for {duration}"
 msgstr "{actor} heeft {target} voor {duration} verbannen"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:613
-msgid "{actor} banned {targetMember}."
-msgstr "{actor} heeft {targetMember} verbannen."
 
 #. Activity log summary for a block on a member that was already running and was given a new end. The block stops the member from sending messages, reacting and joining voice, and it lifts on its own at the new end. Spell the effect out the way the English does. Do not name it with a word for a ban, a kick, a mute, a suspension or a waiting period, and do not say that time ran out. Keep the three things that are blocked. This is a past tense record of an action that already happened, never an instruction to the reader. {actor} is the member who moved the end of the block, shown as a clickable user chip, or the word System. {target} is the blocked member, shown as a clickable user chip. {date} is the new end of the block, shown as a formatted date and time.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:95
@@ -226,10 +199,6 @@ msgstr "{actor} heeft het kanaal {channel} aangemaakt"
 msgid "{actor} created the channel {channel} in {category}"
 msgstr "{actor} heeft het kanaal {channel} aangemaakt in {category}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:553
-msgid "{actor} created the channel {namedTarget}."
-msgstr "{actor} heeft het kanaal {namedTarget} aangemaakt."
-
 #. Activity log summary for a new invite link when its channel was not recorded. {actor} is the member who created the invite, shown as a clickable user chip, or the word System. {code} is the invite code, shown as boxed text.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts:10
 msgid "{actor} created the invite {code}"
@@ -240,11 +209,6 @@ msgstr "{actor} heeft de uitnodiging {code} aangemaakt"
 msgid "{actor} created the invite {code} for {channel}"
 msgstr "{actor} heeft de uitnodiging {code} voor {channel} aangemaakt"
 
-#. placeholder {0}: channelNode ? <> for {channelNode}</> : null
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:696
-msgid "{actor} created the invite {namedTarget}{0}."
-msgstr "{actor} heeft de uitnodiging {namedTarget}{0} aangemaakt."
-
 #. Activity log summary when a link channel was created. A link channel is a channel list entry that opens a web address. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the new channel, shown as a channel chip with its name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:25
 msgid "{actor} created the link channel {channel}"
@@ -254,10 +218,6 @@ msgstr "{actor} heeft het linkkanaal {channel} aangemaakt"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:30
 msgid "{actor} created the link channel {channel} in {category}"
 msgstr "{actor} heeft het linkkanaal {channel} aangemaakt in {category}"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:678
-msgid "{actor} created the role {namedTarget}."
-msgstr "{actor} heeft de rol {namedTarget} aangemaakt."
 
 #. Activity log summary for a role that was created in the community. {actor} is the member who created it, shown as a clickable user chip, or the word System. {role} is the new role, shown in bold with its name, or deleted-role when its name is unknown. The app adds the bold, so do not add ** or <b>. Use the same word for role as the rest of the app.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:5
@@ -294,16 +254,6 @@ msgstr "{actor} heeft de webhook {name} aangemaakt"
 msgid "{actor} created the webhook {name} in {channel}"
 msgstr "{actor} heeft de webhook {name} aangemaakt in {channel}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:717
-msgid "{actor} created the webhook {namedTarget}."
-msgstr "{actor} heeft de webhook {namedTarget} aangemaakt."
-
-#. placeholder {0}: renderValueInline(bulkCount, guildId, i18n)
-#. placeholder {1}: channelNode ? <> in {channelNode}</> : null
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:778
-msgid "{actor} deleted {0} {bulkCount, plural, one {message} other {messages}}{1}."
-msgstr "{actor} heeft {0} {bulkCount, plural, one {bericht} other {berichten}}{1} verwijderd."
-
 #. Activity log summary for several messages that were deleted together when the channel was not recorded. {actor} is the member who deleted them, shown as a clickable user chip, or the word System. {count} is an ICU plural with the number of deleted messages, and # shows that number.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:120
 msgid "{actor} deleted {count, plural, one {# message} other {# messages}}"
@@ -324,11 +274,6 @@ msgstr "{actor} heeft een bericht verwijderd"
 msgid "{actor} deleted a message in {channel}"
 msgstr "{actor} heeft een bericht verwijderd in {channel}"
 
-#. placeholder {0}: channelNode ? <> in {channelNode}</> : null
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:771
-msgid "{actor} deleted a message{0}."
-msgstr "{actor} heeft een bericht verwijderd{0}."
-
 #. Activity log summary for a sticker that was deleted when its name was not recorded. {actor} is the member who deleted it, shown as a clickable user chip, or the word System.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:95
 msgid "{actor} deleted a sticker"
@@ -343,11 +288,6 @@ msgstr "{actor} heeft een webhook verwijderd"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:35
 msgid "{actor} deleted an emoji"
 msgstr "{actor} heeft een emoji verwijderd"
-
-#. placeholder {0}: channelNode ? <> in {channelNode}</> : null
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:789
-msgid "{actor} deleted multiple messages{0}."
-msgstr "{actor} heeft meerdere berichten verwijderd{0}."
 
 #. Activity log summary for several messages that were deleted together when neither their number nor the channel was recorded. {actor} is the member who deleted them, shown as a clickable user chip, or the word System.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:130
@@ -369,18 +309,10 @@ msgstr "{actor} heeft de categorie {channel} verwijderd"
 msgid "{actor} deleted the channel {channel}"
 msgstr "{actor} heeft het kanaal {channel} verwijderd"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:565
-msgid "{actor} deleted the channel {namedTarget}."
-msgstr "{actor} heeft het kanaal {namedTarget} verwijderd."
-
 #. Activity log summary for a custom emoji that was deleted from the community. {actor} is the member who deleted it, shown as a clickable user chip, or the word System. {emoji} is the name of the deleted emoji between colons, for example :blobcat:, shown without an image.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:30
 msgid "{actor} deleted the emoji {emoji}"
 msgstr "{actor} heeft de emoji {emoji} verwijderd"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:747
-msgid "{actor} deleted the emoji {namedTarget}."
-msgstr "{actor} heeft de emoji {namedTarget} verwijderd."
 
 #. Activity log summary for a deleted invite link when its channel was not recorded. {actor} is the member who deleted the invite, shown as a clickable user chip, or the word System. {code} is the invite code, shown as boxed text.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts:50
@@ -392,19 +324,10 @@ msgstr "{actor} heeft de uitnodiging {code} verwijderd"
 msgid "{actor} deleted the invite {code} for {channel}"
 msgstr "{actor} heeft de uitnodiging {code} voor {channel} verwijderd"
 
-#. placeholder {0}: channelNode ? <> for {channelNode}</> : null
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:710
-msgid "{actor} deleted the invite {namedTarget}{0}."
-msgstr "{actor} heeft de uitnodiging {namedTarget}{0} verwijderd."
-
 #. Activity log summary when a link channel was deleted. A link channel is a channel list entry that opens a web address. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the deleted channel, shown as a channel chip with the name it had.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:301
 msgid "{actor} deleted the link channel {channel}"
 msgstr "{actor} heeft het linkkanaal {channel} verwijderd"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:690
-msgid "{actor} deleted the role {namedTarget}."
-msgstr "{actor} heeft de rol {namedTarget} verwijderd."
 
 #. Activity log summary for a role that was deleted from the community. {actor} is the member who deleted it, shown as a clickable user chip, or the word System. {role} is the deleted role, shown in bold with the name it had when it was deleted, or deleted-role when that name was not recorded. The app adds the bold, so do not add ** or <b>. Use the same word for role as the rest of the app.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:50
@@ -415,10 +338,6 @@ msgstr "{actor} heeft de rol {role} verwijderd"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:90
 msgid "{actor} deleted the sticker {name}"
 msgstr "{actor} heeft de sticker {name} verwijderd"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:765
-msgid "{actor} deleted the sticker {namedTarget}."
-msgstr "{actor} heeft de sticker {namedTarget} verwijderd."
 
 #. Activity log summary when a text channel was deleted. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the deleted channel, shown as a channel chip with the name it had.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:291
@@ -440,10 +359,6 @@ msgstr "{actor} heeft de webhook {name} verwijderd"
 msgid "{actor} deleted the webhook {name} from {channel}"
 msgstr "{actor} heeft de webhook {name} uit {channel} verwijderd"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:729
-msgid "{actor} deleted the webhook {namedTarget}."
-msgstr "{actor} heeft de webhook {namedTarget} verwijderd."
-
 #. Activity log summary for a member who was removed from a voice channel by someone else. {actor} is the member who disconnected them, shown as a clickable user chip, or the word System. {target} is the member who was disconnected, shown as a clickable user chip. {channel} is the voice channel they were in, shown as a channel chip with the channel name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:387
 msgid "{actor} disconnected {target} from {channel}"
@@ -453,10 +368,6 @@ msgstr "{actor} heeft de verbinding van {target} met {channel} verbroken"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:392
 msgid "{actor} disconnected {target} from voice"
 msgstr "{actor} heeft de verbinding van {target} met spraakchat verbroken"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:666
-msgid "{actor} disconnected {targetMember} from voice."
-msgstr "{actor} heeft {targetMember} uit het spraakkanaal verwijderd."
 
 #. Activity log summary for a member who removed themselves from a voice channel using moderator tools. {actor} is that member, shown as a clickable user chip. {channel} is the voice channel they left, shown as a channel chip with the channel name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:397
@@ -477,10 +388,6 @@ msgstr "{actor} heeft {target} de rol {role} gegeven"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:5
 msgid "{actor} kicked {target}"
 msgstr "{actor} heeft {target} uit de community verwijderd"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:607
-msgid "{actor} kicked {targetMember}."
-msgstr "{actor} heeft {targetMember} uit de community verwijderd."
 
 #. Activity log summary for a moderator who let a member hear the voice channels of this community again. This is about what the member hears and not about the microphone of the member, so it must read clearly differently from the row where a moderator turns the microphone back on. Describe the effect the way the English does. Do not name the action with a noun such as a community deafen. This is a past tense record of an action that already happened, never an instruction to the reader. {actor} is the member who lifted it, shown as a clickable user chip, or the word System. {target} is the member who can hear others again, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:120
@@ -506,14 +413,6 @@ msgstr "{actor} heeft {target} verplaatst naar {channel}"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:367
 msgid "{actor} moved {target} to a different voice channel"
 msgstr "{actor} heeft {target} naar een ander spraakkanaal verplaatst"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:655
-msgid "{actor} moved {targetMember} to {channelNode}."
-msgstr "{actor} heeft {targetMember} verplaatst naar {channelNode}."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:659
-msgid "{actor} moved {targetMember} to another voice channel."
-msgstr "{actor} heeft {targetMember} naar een ander spraakkanaal verplaatst."
 
 #. Activity log summary for a member who moved themselves from one voice channel to another using moderator tools. {actor} is that member, shown as a clickable user chip. {oldChannel} is the voice channel they were in and {newChannel} is the voice channel they moved to, both shown as channel chips with the channel name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:372
@@ -555,10 +454,6 @@ msgstr "{actor} heeft zichzelf naar een ander spraakkanaal verplaatst"
 msgid "{actor} paused invites"
 msgstr "{actor} heeft uitnodigingen gepauzeerd"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:808
-msgid "{actor} performed an audit action on {targetEntity}."
-msgstr "{actor} heeft een auditactie uitgevoerd op {targetEntity}."
-
 #. Activity log summary for a message that was pinned when the channel was not recorded. Pinned means the message was added to the pinned messages of its channel. {actor} is the member who pinned it, shown as a clickable user chip, or the word System.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:140
 msgid "{actor} pinned a message"
@@ -569,31 +464,10 @@ msgstr "{actor} heeft een bericht vastgezet"
 msgid "{actor} pinned a message in {channel}"
 msgstr "{actor} heeft een bericht vastgezet in {channel}"
 
-#. placeholder {0}: channelNode ? <> in {channelNode}</> : null
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:796
-msgid "{actor} pinned a message{0}."
-msgstr "{actor} heeft een bericht vastgezet{0}."
-
 #. Activity log summary for inactive members who were removed from the community in one go. {actor} is the member who started the prune, shown as a clickable user chip, or the word System.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:10
 msgid "{actor} pruned inactive members"
 msgstr "{actor} heeft inactieve leden verwijderd"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:649
-msgid "{actor} pruned inactive members."
-msgstr "{actor} heeft inactieve leden verwijderd."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:638
-msgid "{actor} pruned members inactive for {pruneDays, plural, one {# day} other {# days}}."
-msgstr "{actor} heeft leden verwijderd die {pruneDays, plural, one {# dag} other {# dagen}} inactief waren."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:596
-msgid "{actor} removed channel permissions for {targetEntity} in {channelNode}."
-msgstr "{actor} heeft kanaalrechten voor {targetEntity} verwijderd in {channelNode}."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:601
-msgid "{actor} removed channel permissions for {targetEntity}."
-msgstr "{actor} heeft kanaalrechten voor {targetEntity} verwijderd."
 
 #. Activity log summary for a nickname that someone removed from another member in the community. {actor} is the member who removed the nickname, shown as a clickable user chip, or the word System. {nick} is the nickname that was removed. The app shows it in bold, so do not add ** or <b>. {target} is the member who lost the nickname, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:70
@@ -795,10 +669,6 @@ msgstr "{actor} heeft de microfoon van {target} in deze community uitgeschakeld"
 msgid "{actor} unbanned {target}"
 msgstr "{actor} heeft de verbanning van {target} opgeheven"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:619
-msgid "{actor} unbanned {targetMember}."
-msgstr "{actor} heeft de verbanning van {targetMember} opgeheven."
-
 #. Activity log summary for a message that was unpinned when the channel was not recorded. Unpinned means the message was taken off the pinned messages of its channel. It is the opposite of pinned. The message was not deleted. {actor} is the member who unpinned it, shown as a clickable user chip, or the word System.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:150
 msgid "{actor} unpinned a message"
@@ -809,19 +679,10 @@ msgstr "{actor} heeft een bericht losgemaakt"
 msgid "{actor} unpinned a message in {channel}"
 msgstr "{actor} heeft een bericht in {channel} losgemaakt"
 
-#. placeholder {0}: channelNode ? <> in {channelNode}</> : null
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:802
-msgid "{actor} unpinned a message{0}."
-msgstr "{actor} heeft een bericht losgemaakt{0}."
-
 #. Activity log summary for a change to a member of the community when several things changed at once, or when the change was not recorded. Each change is listed as a detail line below. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {target} is the member who was changed, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:220
 msgid "{actor} updated {target}"
 msgstr "{actor} heeft {target} bijgewerkt"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:625
-msgid "{actor} updated {targetMember}."
-msgstr "{actor} heeft {targetMember} bijgewerkt."
 
 #. Activity log summary for a sticker that was edited when the sticker name is not known. The changes are listed as detail lines below it. {actor} is the member who edited it, shown as a clickable user chip, or the word System.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:70
@@ -838,18 +699,6 @@ msgstr "{actor} heeft een webhook bijgewerkt"
 msgid "{actor} updated an emoji"
 msgstr "{actor} heeft een emoji bijgewerkt"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:584
-msgid "{actor} updated channel permissions for {targetEntity} in {channelNode}."
-msgstr "{actor} heeft de kanaalrechten voor {targetEntity} in {channelNode} bijgewerkt."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:589
-msgid "{actor} updated channel permissions for {targetEntity}."
-msgstr "{actor} heeft de kanaalrechten voor {targetEntity} bijgewerkt."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:631
-msgid "{actor} updated roles for {targetMember}."
-msgstr "{actor} heeft de rollen van {targetMember} bijgewerkt."
-
 #. Activity log summary when settings of a channel category were changed. The changes are listed as detail rows below it. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the category, shown as a channel chip with its name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:174
 msgid "{actor} updated the category {channel}"
@@ -860,37 +709,20 @@ msgstr "{actor} heeft de categorie {channel} bijgewerkt"
 msgid "{actor} updated the channel {channel}"
 msgstr "{actor} heeft het kanaal {channel} bijgewerkt"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:559
-msgid "{actor} updated the channel {namedTarget}."
-msgstr "{actor} heeft het kanaal {namedTarget} bijgewerkt."
-
 #. Activity log summary when a member changed community settings. Each change is listed as a detail line under it. {actor} is the member who made the change, shown as a clickable user chip, or the word System.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:5
 msgid "{actor} updated the community settings"
 msgstr "{actor} heeft de community-instellingen bijgewerkt"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:550
-msgid "{actor} updated the community settings."
-msgstr "{actor} heeft de community-instellingen bijgewerkt."
 
 #. Activity log summary for a custom emoji that was edited when no change to show was recorded. {actor} is the member who edited it, shown as a clickable user chip, or the word System. {emoji} is the emoji, shown as its image when it still exists, followed by its name between colons, for example :blobcat:.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:20
 msgid "{actor} updated the emoji {emoji}"
 msgstr "{actor} heeft de emoji {emoji} bijgewerkt"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:741
-msgid "{actor} updated the emoji {namedTarget}."
-msgstr "{actor} heeft de emoji {namedTarget} bijgewerkt."
-
 #. Activity log summary for a change to an invite link. {actor} is the member who changed the invite, shown as a clickable user chip, or the word System. {code} is the invite code, shown as boxed text.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts:40
 msgid "{actor} updated the invite {code}"
 msgstr "{actor} heeft de uitnodiging {code} bijgewerkt"
-
-#. placeholder {0}: channelNode ? <> for {channelNode}</> : null
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:703
-msgid "{actor} updated the invite {namedTarget}{0}."
-msgstr "{actor} heeft de uitnodiging {namedTarget}{0} bijgewerkt."
 
 #. Activity log summary when settings of a link channel were changed. A link channel is a channel list entry that opens a web address. The changes are listed as detail rows below it. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the channel, shown as a channel chip with its name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:169
@@ -912,10 +744,6 @@ msgstr "{actor} heeft de aangepaste toegangsrechten voor @everyone in {channel} 
 msgid "{actor} updated the permission override for the role {role} in {channel}"
 msgstr "{actor} heeft de aangepaste toegangsrechten voor de rol {role} in {channel} bijgewerkt"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:684
-msgid "{actor} updated the role {namedTarget}."
-msgstr "{actor} heeft de rol {namedTarget} bijgewerkt."
-
 #. Activity log summary for a role that was edited. The changes are listed below it as detail lines when they are known. {actor} is the member who edited it, shown as a clickable user chip, or the word System. {role} is the role, shown in bold with its name, @everyone for the default role every member has, or deleted-role when its name is unknown. The app adds the bold, so do not add ** or <b>. Use the same word for role as the rest of the app.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:45
 msgid "{actor} updated the role {role}"
@@ -931,10 +759,6 @@ msgstr "{actor} heeft de rollen van {target} bijgewerkt"
 msgid "{actor} updated the sticker {name}"
 msgstr "{actor} heeft de sticker {name} bijgewerkt"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:759
-msgid "{actor} updated the sticker {namedTarget}."
-msgstr "{actor} heeft de sticker {namedTarget} bijgewerkt."
-
 #. Activity log summary when settings of a text channel were changed. The changes are listed as detail rows below it. {actor} is the member who made the change, shown as a clickable user chip, or the word System. {channel} is the channel, shown as a channel chip with its name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:159
 msgid "{actor} updated the text channel {channel}"
@@ -949,10 +773,6 @@ msgstr "{actor} heeft het spraakkanaal {channel} bijgewerkt"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts:105
 msgid "{actor} updated the webhook {name}"
 msgstr "{actor} heeft de webhook {name} bijgewerkt"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:723
-msgid "{actor} updated the webhook {namedTarget}."
-msgstr "{actor} heeft de webhook {namedTarget} bijgewerkt."
 
 #. Activity log summary for a member who changed several things about their own community profile or membership at once, or when the change was not recorded. A community profile is the profile a member uses only in this community, in place of their global profile. It belongs to the member, not to the community. Each change is listed as a detail line below. "Their" means the same member as {actor}. {actor} is that member, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:215
@@ -1109,7 +929,7 @@ msgid "{count, plural, one {# attachment} other {# attachments}}"
 msgstr "{count, plural, one {# bijlage} other {# bijlagen}}"
 
 #. Label on the collapsed block in the message list that hides messages from blocked users. count is how many messages are hidden; clicking the label reveals them.
-#: src/features/channel/components/BlockedMessageGroups.tsx:31
+#: src/features/channel/components/BlockedMessageGroups.tsx:29
 msgid "{count, plural, one {# blocked message} other {# blocked messages}}"
 msgstr "{count, plural, one {# geblokkeerd bericht} other {# geblokkeerde berichten}}"
 
@@ -1143,13 +963,9 @@ msgstr "{count, plural, one {# cadeau} other {# cadeaus}}"
 msgid "{count, plural, one {# image} other {# images}}"
 msgstr "{count, plural, one {# afbeelding} other {# afbeeldingen}}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:181
-msgid "{count, plural, one {# item} other {# items}}"
-msgstr "{count, plural, one {# item} other {# items}}"
-
 #: src/features/channel/components/ChannelSourcePreview.tsx:245
-#: src/features/channel/components/direct_message/DMListItem.tsx:438
-#: src/features/channel/components/direct_message/DMListItem.tsx:602
+#: src/features/channel/components/direct_message/DMListItem.tsx:437
+#: src/features/channel/components/direct_message/DMListItem.tsx:601
 #: src/features/guild/components/bottomsheets/GuildHeaderBottomSheet.tsx:118
 #: src/features/user/components/modals/MutualItemsSheet.tsx:159
 #: src/features/user/components/modals/user_profile_modal/MutualGroupItem.tsx:26
@@ -1175,12 +991,12 @@ msgid "{count, plural, one {# participant in call} other {# participants in call
 msgstr "{count, plural, one {# deelnemer aan gesprek} other {# deelnemers aan gesprek}}"
 
 #. Label on the collapsed block in the message list that hides suspected spam. count is how many messages are hidden; clicking the label reveals them.
-#: src/features/channel/components/BlockedMessageGroups.tsx:26
+#: src/features/channel/components/BlockedMessageGroups.tsx:24
 msgid "{count, plural, one {# potential spammer message} other {# potential spammer messages}}"
 msgstr "{count, plural, one {# bericht van een mogelijke spammer} other {# berichten van mogelijke spammers}}"
 
 #: src/features/app/components/shared/MessageReactionsContent.tsx:56
-#: src/features/channel/components/MessageReactions.tsx:149
+#: src/features/channel/components/MessageReactions.tsx:146
 msgid "{count, plural, one {# reaction} other {# reactions}}"
 msgstr "{count, plural, one {# reactie} other {# reacties}}"
 
@@ -1246,10 +1062,6 @@ msgstr "{count, plural, one {Inklappen (# regel)} other {Inklappen (# regels)}}"
 msgid "{count, plural, one {Collapse (# row)} other {Collapse (# rows)}}"
 msgstr "{count, plural, one {Inklappen (# rij)} other {Inklappen (# rijen)}}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:294
-msgid "{count, plural, one {Deleted # message.} other {Deleted # messages.}}"
-msgstr "{count, plural, one {# bericht verwijderd.} other {# berichten verwijderd.}}"
-
 #: src/features/channel/components/embeds/attachments/TextualAttachmentPreviewFooter.tsx:70
 msgid "{count, plural, one {Expand (# line)} other {Expand (# lines)}}"
 msgstr "{count, plural, one {Uitvouwen (# regel)} other {Uitvouwen (# regels)}}"
@@ -1283,10 +1095,6 @@ msgstr "{count, plural, one {Deelnemen aan videogesprek (# deelnemer)} other {De
 msgid "{count, plural, one {Keep watching # stream and add this one} other {Keep watching # streams and add this one}}"
 msgstr "{count, plural, one {Blijf # stream bekijken en voeg deze toe} other {Blijf # streams bekijken en voeg deze toe}}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:305
-msgid "{count, plural, one {Removed # member.} other {Removed # members.}}"
-msgstr "{count, plural, one {# lid verwijderd.} other {# leden verwijderd.}}"
-
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:125
 msgid "{count, plural, one {Revoke # app} other {Revoke # apps}}"
 msgstr "{count, plural, one {Toegang voor # app intrekken} other {Toegang voor # apps intrekken}}"
@@ -1314,11 +1122,6 @@ msgstr "{count, plural, one {De uitnodiging is # keer gebruikt} other {De uitnod
 #: src/features/emoji/components/modals/EmojiUploadModal.tsx:11
 msgid "{count, plural, one {Uploading # emoji. This may take a little while.} other {Uploading # emojis. This may take a little while.}}"
 msgstr "{count, plural, one {# emoji wordt geüpload. Dit kan even duren.} other {# emoji's worden geüpload. Dit kan even duren.}}"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:710
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:257
-msgid "{count, plural, one {Used # time.} other {Used # times.}}"
-msgstr "{count, plural, one {# keer gebruikt.} other {# keer gebruikt.}}"
 
 #: src/features/messaging/components/alerts/TooManyAttachmentsModal.tsx:20
 msgid "{count, plural, one {You can only upload # file at a time. Try again with fewer files.} other {You can only upload # files at a time. Try again with fewer files.}}"
@@ -1377,14 +1180,6 @@ msgstr "{days, plural, one {# dag} other {# dagen}}"
 #: src/features/channel/components/modals/GroupInvitesBottomSheet.tsx:55
 msgid "{days, plural, one {Created by {creatorDisplayName}. Expires in # day.} other {Created by {creatorDisplayName}. Expires in # days.}}"
 msgstr "{days, plural, one {Gemaakt door {creatorDisplayName}. Verloopt over # dag.} other {Gemaakt door {creatorDisplayName}. Verloopt over # dagen.}}"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:369
-msgid "{days, plural, one {Members inactive for # day will be pruned.} other {Members inactive for # days will be pruned.}}"
-msgstr "{days, plural, one {Leden die # dag inactief zijn, worden verwijderd.} other {Leden die # dagen inactief zijn, worden verwijderd.}}"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:327
-msgid "{days, plural, one {This invite expires in # day.} other {This invite expires in # days.}}"
-msgstr "{days, plural, one {Deze uitnodiging verloopt over # dag.} other {Deze uitnodiging verloopt over # dagen.}}"
 
 #. Text under a generated invite link. {days} is how long the link stays valid, in whole days.
 #: src/features/invite/components/modals/InviteModal.tsx:164
@@ -1469,9 +1264,7 @@ msgid "{eightHours} hours"
 msgstr "{eightHours} uur"
 
 #. Error message in the messaging emoji renderer.
-#. Error message in the messaging emoji renderer.
-#: src/features/messaging/components/markdown/renderers/EmojiRenderer.tsx:31
-#: src/features/messaging/components/markdown/renderers/EmojiRendererControl.tsx:25
+#: src/features/messaging/components/markdown/renderers/EmojiRenderer.tsx:29
 msgid "{emojiName} (failed to load)"
 msgstr "{emojiName} (laden mislukt)"
 
@@ -1481,19 +1274,14 @@ msgid "{emojiName}, {reactionCountText}"
 msgstr "{emojiName}, {reactionCountText}"
 
 #. Short label in the channel and chat message reactions. Keep it concise. Preserve {emojiName}, {reactionCountText}; they are inserted by code.
-#: src/features/channel/components/MessageReactions.tsx:52
+#: src/features/channel/components/MessageReactions.tsx:50
 msgid "{emojiName}: {reactionCountText}"
 msgstr "{emojiName}: {reactionCountText}"
 
 #. Short label in the channel and chat message reactions. Keep it concise. Preserve {emojiName}, {reactionCountText}, {actionText}; they are inserted by code.
-#: src/features/channel/components/MessageReactions.tsx:57
+#: src/features/channel/components/MessageReactions.tsx:55
 msgid "{emojiName}: {reactionCountText}, {actionText}"
 msgstr "{emojiName}: {reactionCountText}, {actionText}"
-
-#. Activity log label for the permission or setting related to @everyone mentions. {everyoneMention} is the localized mention tag.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:33
-msgid "{everyoneMention} mentions"
-msgstr "{everyoneMention}-vermeldingen"
 
 #. Reason shown in the confirmation before joining a community from an emoji info card. It explains that the emoji the viewer opened belongs to this community. {expressionName} is the emoji name, written with colons around it.
 #: src/features/expressions/components/ExpressionInfoCard.tsx:99
@@ -1590,10 +1378,6 @@ msgstr "{hours, plural, one {# uur} other {# uur}} {minutes, plural, one {# minu
 msgid "{hours, plural, one {# hour} other {# hours}} and {minutes, plural, one {# minute} other {# minutes}}"
 msgstr "{hours, plural, one {# uur} other {# uur}} en {minutes, plural, one {# minuut} other {# minuten}}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:337
-msgid "{hours, plural, one {This invite expires in # hour.} other {This invite expires in # hours.}}"
-msgstr "{hours, plural, one {Deze uitnodiging verloopt over # uur.} other {Deze uitnodiging verloopt over # uur.}}"
-
 #. Text under a generated invite link. {hours} is how long the link stays valid, in whole hours.
 #: src/features/invite/components/modals/InviteModal.tsx:160
 msgid "{hours, plural, one {Your invite link expires in # hour.} other {Your invite link expires in # hours.}}"
@@ -1639,7 +1423,7 @@ msgid "{length, plural, one {# app} other {# apps}}"
 msgstr "{length, plural, one {# app} other {# apps}}"
 
 #. Screen-reader fragment listing multiple attachments on a message. length is the count.
-#: src/features/channel/components/ChannelMessage.tsx:49
+#: src/features/channel/components/ChannelMessage.tsx:48
 msgid "{length, plural, one {# attachment} other {# attachments}}"
 msgstr "{length, plural, one {# bijlage} other {# bijlagen}}"
 
@@ -1649,12 +1433,12 @@ msgid "{length, plural, one {# channel} other {# channels}}"
 msgstr "{length, plural, one {# kanaal} other {# kanalen}}"
 
 #. Screen-reader fragment listing multiple embeds on a message. length is the count.
-#: src/features/channel/components/ChannelMessage.tsx:67
+#: src/features/channel/components/ChannelMessage.tsx:66
 msgid "{length, plural, one {# embed} other {# embeds}}"
 msgstr "{length, plural, one {# embed} other {# embeds}}"
 
 #. Screen-reader fragment listing multiple stickers on a message. length is the count.
-#: src/features/channel/components/ChannelMessage.tsx:58
+#: src/features/channel/components/ChannelMessage.tsx:57
 msgid "{length, plural, one {# sticker} other {# stickers}}"
 msgstr "{length, plural, one {# sticker} other {# stickers}}"
 
@@ -1713,14 +1497,6 @@ msgstr "{minutes, plural, one {# minuut} other {# minuten}}"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:61
 msgid "{minutes, plural, one {# minute} other {# minutes}} and {seconds, plural, one {# second} other {# seconds}}"
 msgstr "{minutes, plural, one {# minuut} other {# minuten}} en {seconds, plural, one {# seconde} other {# seconden}}"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:245
-msgid "{minutes, plural, one {Set the AFK timeout to # minute.} other {Set the AFK timeout to # minutes.}}"
-msgstr "{minutes, plural, one {Stelde de AFK-time-out in op # minuut.} other {Stelde de AFK-time-out in op # minuten.}}"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:347
-msgid "{minutes, plural, one {This invite expires in # minute.} other {This invite expires in # minutes.}}"
-msgstr "{minutes, plural, one {Deze uitnodiging verloopt over # minuut.} other {Deze uitnodiging verloopt over # minuten.}}"
 
 #. Text under a generated invite link. {minutes} is how long the link stays valid, in whole minutes.
 #: src/features/invite/components/modals/InviteModal.tsx:155
@@ -2077,10 +1853,6 @@ msgstr "{resultCount, plural, one {# resultaat} other {# resultaten}}"
 msgid "{seconds, plural, one {# second} other {# seconds}}"
 msgstr "{seconds, plural, one {# seconde} other {# seconden}}"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:356
-msgid "{seconds, plural, one {This invite expires in # second.} other {This invite expires in # seconds.}}"
-msgstr "{seconds, plural, one {Deze uitnodiging verloopt over # seconde.} other {Deze uitnodiging verloopt over # seconden.}}"
-
 #. Text under a generated invite link. {seconds} is how long the link stays valid, in whole seconds.
 #: src/features/invite/components/modals/InviteModal.tsx:150
 msgid "{seconds, plural, one {Your invite link expires in # second.} other {Your invite link expires in # seconds.}}"
@@ -2313,61 +2085,16 @@ msgstr "<0>{targetUserTag}</0> heeft momenteel een time-out. Je kunt de duur aan
 msgid "<0>{username}</0> is still in the group. Try again in a moment."
 msgstr "<0>{username}</0> zit nog steeds in de groep. Probeer het zo opnieuw."
 
-#. Activity-log sentence. A moderator deafened a member in voice chat, meaning the member can no longer hear others. Preserve the rich-text tags.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:489
-msgid "<0>Deafened</0> the member."
-msgstr "Heeft het geluid voor het lid <0>uitgeschakeld</0>."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:263
-msgid "<0>Disabled</0> two-factor authentication requirement."
-msgstr "Heeft de verplichting tot tweefactorauthenticatie <0>uitgeschakeld</0>."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:258
-msgid "<0>Enabled</0> two-factor authentication requirement."
-msgstr "Heeft de verplichting tot tweefactorauthenticatie <0>ingeschakeld</0>."
-
 #. Attribution line on a forwarded message, above the forwarded content. sourceInfo is the icon and name of the community and channel the message came from.
 #. Attribution line on a forwarded message, above the forwarded content. sourceInfo is the icon and name of the conversation the message came from.
-#: src/features/channel/components/MessageAttachments.tsx:229
-#: src/features/channel/components/MessageAttachments.tsx:285
+#: src/features/channel/components/MessageAttachments.tsx:226
+#: src/features/channel/components/MessageAttachments.tsx:282
 msgid "<0>Forwarded from</0>{sourceInfo}"
 msgstr "<0>Doorgestuurd vanuit</0>{sourceInfo}"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:725
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:280
-msgid "<0>Grants</0> permanent membership."
-msgstr "<0>Verleent</0> permanent lidmaatschap."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:720
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:273
-msgid "<0>Grants</0> temporary membership."
-msgstr "<0>Verleent</0> tijdelijk lidmaatschap."
 
 #: src/features/user/components/modals/tabs/appearance_tab/InterfaceTab.tsx:63
 msgid "<0>Kenji</0>, <1>Amara</1> and <2>Mateo</2> are typing..."
 msgstr "<0>Kenji</0>, <1>Amara</1> en <2>Mateo</2> zijn aan het typen..."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:499
-msgid "<0>Muted</0> the member."
-msgstr "Heeft de microfoon van het lid <0>gedempt</0>."
-
-#. placeholder {0}: renderInline(change.oldValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:480
-msgid "<0>Removed</0> nickname {0}."
-msgstr "Heeft bijnaam {0} <0>verwijderd</0>."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:333
-msgid "<0>Removed</0> the vanity URL."
-msgstr "Heeft de aangepaste URL <0>verwijderd</0>."
-
-#. Activity-log sentence. A moderator removed voice deafen from a member, meaning the member can hear others again. Preserve the rich-text tags.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:493
-msgid "<0>Undeafened</0> the member."
-msgstr "Heeft het geluid voor het lid <0>ingeschakeld</0>."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:503
-msgid "<0>Unmuted</0> the member."
-msgstr "Heeft de demping van de microfoon van het lid <0>opgeheven</0>."
 
 #. Summary chip text in the mobile channel search sheet when exactly one channel is selected as a filter.
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:169
@@ -2485,11 +2212,6 @@ msgstr "12 maanden (1 jaar)"
 msgid "12-hour"
 msgstr "12-uurs"
 
-#. Audit log community feature label for a raised voice channel bitrate ceiling. kbps means kilobits per second.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:154
-msgid "128 kbps voice quality"
-msgstr "Spraakkwaliteit van 128 kbps"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:246
 msgid "1440p"
@@ -2539,11 +2261,6 @@ msgstr "24-uurs"
 msgid "25 uses"
 msgstr "25 keer"
 
-#. Audit log community feature label for a raised voice channel bitrate ceiling. kbps means kilobits per second.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:159
-msgid "256 kbps voice quality"
-msgstr "Spraakkwaliteit van 256 kbps"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:40
 msgid "2FA"
@@ -2590,11 +2307,6 @@ msgstr "30 minuten"
 #: src/features/user/components/modals/tabs/component_gallery_tab/IndicatorsTab.tsx:300
 msgid "32px, 2 members"
 msgstr "32px, 2 leden"
-
-#. Audit log community feature label for a raised voice channel bitrate ceiling. kbps means kilobits per second.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:164
-msgid "384 kbps voice quality"
-msgstr "Spraakkwaliteit van 384 kbps"
 
 #: src/features/app/components/pages/NotFoundPage.tsx:26
 msgid "404: page not found"
@@ -2818,7 +2530,7 @@ msgstr "Over {appName}"
 #. Short label in the user profile shared popout. Keep it concise.
 #: src/features/app/components/pages/YouPage.tsx:166
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:26
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:790
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:787
 #: src/features/user/components/popouts/UserProfileShared.tsx:41
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:133
 msgid "About me"
@@ -3108,7 +2820,7 @@ msgid "Activity"
 msgstr "Activiteit"
 
 #. Page title of the activity-log tab in community settings (the user-facing name for the audit log).
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:108
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:86
 msgid "Activity log"
 msgstr "Activiteitenlogboek"
 
@@ -3493,19 +3205,6 @@ msgstr "Voeg je eigen zoekmachines toe met een aangepast URL-patroon. Gebruik <0
 msgid "Add your own translators with a custom URL pattern. Use <0>{query}</0> as a placeholder for the text to translate."
 msgstr "Voeg je eigen vertalers toe met een aangepast URL-patroon. Gebruik <0>{query}</0> als tijdelijke aanduiding voor de te vertalen tekst."
 
-#. placeholder {0}: renderInline(joinLabels(addedLabels), i18n)
-#. placeholder {1}: renderInline(joinLabels(removedLabels), i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:520
-msgid "Added {0} and removed {1}."
-msgstr "{0} toegevoegd en {1} verwijderd."
-
-#. placeholder {0}: renderInline(joinLabels(addedLabels), i18n)
-#. placeholder {0}: renderInline(joinLabels(labels), i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:513
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:543
-msgid "Added {0}."
-msgstr "{0} toegevoegd."
-
 #. Toast after adding one or more desktop local file references for theme CSS.
 #: src/features/theme_studio/sections/AssetsSection.tsx:28
 msgid "Added {length, plural, one {# local file reference} other {# local file references}}."
@@ -3545,10 +3244,6 @@ msgstr "Avatar toegevoegd"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:91
 msgid "Added an invite background"
 msgstr "Achtergrond van uitnodiging toegevoegd"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:545
-msgid "Added roles."
-msgstr "Rollen toegevoegd."
 
 #. Activity log detail line under a change to a member, for an avatar added to the community profile of the member. A community profile is the profile a member uses only in this community, in place of their global profile. The avatar belongs to the member and not to the community, so keep the member as the owner and never let the phrase read as an avatar of the community itself. It continues the entry summary, so it has no subject. It is a past tense record of an action that already happened, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Added is past tense here.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:285
@@ -3754,7 +3449,7 @@ msgstr "Uitlijningsopties zijn alleen beschikbaar op bredere schermen"
 #. Short label in the discovery category bottom sheet. Keep it concise.
 #. Tab label in the DM friends view showing all friends.
 #. Tab label in the mobile memes (saved media) picker. Shows all saved media regardless of type.
-#: src/features/app/config/AuditLogConstants.ts:163
+#: src/features/app/config/AuditLogConstants.ts:143
 #: src/features/channel/components/direct_message/DMFriendsView.tsx:41
 #: src/features/channel/components/guild_members_page/GuildMembersPageDescriptors.ts:10
 #: src/features/channel/components/MobileMemesPicker.tsx:42
@@ -3783,7 +3478,7 @@ msgid "All <0/>, forever. No billing, no renewals."
 msgstr "Alle <0/>, voor altijd. Geen facturering, geen verlengingen."
 
 #. Default option in the activity log "Filter by action" dropdown. Means no action-type filter is applied. Short standalone label.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:99
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:77
 msgid "All actions"
 msgstr "Alle acties"
 
@@ -3844,11 +3539,6 @@ msgstr "Alle invoervelden zijn volledig interactief, dus typ er gerust op los."
 msgid "All languages"
 msgstr "Alle talen"
 
-#. Short label in the guild audit log tab.renderers. Keep it concise.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:59
-msgid "All members"
-msgstr "Alle leden"
-
 #. Activity log value for the default notification setting of a community where members are notified about every message.
 #. Notification level option. Sends a push for every message in the channel or community. Paired with "Only mentions" and "Nothing".
 #. Short label in the default notifications section. Keep it concise.
@@ -3872,7 +3562,7 @@ msgid "All time"
 msgstr "Gehele periode"
 
 #. Default option in the activity log "Filter by user" dropdown. Means no user filter is applied. Short standalone label.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:94
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:72
 msgid "All users"
 msgstr "Alle gebruikers"
 
@@ -4036,17 +3726,6 @@ msgstr "Sta je vrienden toe deze verbinding te zien"
 msgid "Allow your friends to see your local time"
 msgstr "Sta je vrienden toe om je lokale tijd te zien"
 
-#. placeholder {0}: renderInline(addedLabels, i18nInstance)
-#. placeholder {1}: renderInline(removedLabels, i18nInstance)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:173
-msgid "Allowed {0} and removed allow for {1}."
-msgstr "Heeft {0} toegestaan en toestemming voor {1} verwijderd."
-
-#. placeholder {0}: renderInline(addedLabels, i18nInstance)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:168
-msgid "Allowed {0}."
-msgstr "{0} toegestaan."
-
 #. Activity log detail row under an added or updated channel permission override, listing permissions the override now explicitly allows. A permission override is a channel-level exception to the permissions of a role or member. It allows or denies chosen permissions in one channel or category only. Use the same word for override as the channel permissions settings, such as Add override. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {permissions} is a list of permission names joined into one phrase, for example "View channel and Send messages". A long list ends with a count, for example "View channel, Send messages, and 3 more permissions".
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:363
 msgid "Allowed {permissions}"
@@ -4060,10 +3739,6 @@ msgstr "Alle leden toegestaan deze rol te vermelden"
 #: src/features/user/components/modals/tabs/privacy_safety_tab/CommunicationTab.tsx:186
 msgid "Allowed callers"
 msgstr "Toegestane bellers"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:671
-msgid "Allowed everyone to mention this role."
-msgstr "Iedereen kreeg toestemming om deze rol te vermelden."
 
 #. Activity log detail line under a community settings update, shown when the setting that allows flexible text channel names, such as capital letters and spaces, was turned on. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Allowed is the past tense verb here, not an adjective.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:176
@@ -4318,11 +3993,6 @@ msgstr "Geanimeerde avatars niet beschikbaar"
 msgid "Animated avatars require {premiumProductName}"
 msgstr "Geanimeerde avatars vereisen {premiumProductName}"
 
-#. Audit log community feature label for animated banner support.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:82
-msgid "Animated banner"
-msgstr "Geanimeerde banner"
-
 #. Description text in the guild banner upload field. Preserve {animatedBannerFeature}; it is inserted by code. Keep the tone plain and specific.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:33
 msgid "Animated banners require the {animatedBannerFeature} community feature."
@@ -4354,11 +4024,6 @@ msgstr "Geanimeerde GIF"
 #: src/features/channel/components/embeds/media/EmbedGifv.tsx:63
 msgid "Animated GIF video"
 msgstr "Geanimeerde GIF-video"
-
-#. Audit log community feature label for animated icon support.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:78
-msgid "Animated icon"
-msgstr "Geanimeerd pictogram"
 
 #. Title of the error modal shown when an animated group icon is selected.
 #. Title of the error modal shown when an animated group icon is selected.
@@ -4915,7 +4580,7 @@ msgid "Attach files"
 msgstr "Bestanden bijvoegen"
 
 #. Screen-reader fragment listing one attachment on a message. Lowercase because it appears inside a longer sentence.
-#: src/features/channel/components/ChannelMessage.tsx:44
+#: src/features/channel/components/ChannelMessage.tsx:43
 msgid "attachment"
 msgstr "bijlage"
 
@@ -5339,12 +5004,6 @@ msgstr "Automatische aanvulling: {label}, {selectedOptionPosition} van {resultCo
 msgid "Automatic"
 msgstr "Automatisch"
 
-#. Audit log voice region value meaning automatic region selection.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:61
-msgctxt "rtc-region-value"
-msgid "Automatic"
-msgstr "Automatisch"
-
 #. Option label for the screen-share codec select. codec is the automatically selected codec label.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:169
 msgid "Automatic ({codec})"
@@ -5710,11 +5369,6 @@ msgstr "Details van verbanning"
 msgid "Ban duration"
 msgstr "Duur van verbanning"
 
-#. placeholder {0}: renderInline(formatted, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:608
-msgid "Ban expires at {0}."
-msgstr "Verbanning verloopt op {0}."
-
 #. Moderation action that bans the selected member from the community.
 #. Moderation action that bans the selected member from the community.
 #. Moderation action that bans the selected member from the community.
@@ -5759,11 +5413,6 @@ msgstr "Verbannen"
 msgid "Banned {targetUserTag} from the community"
 msgstr "{targetUserTag} is verbannen uit de community"
 
-#. placeholder {0}: renderInline(formatted, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:604
-msgid "Banned at {0}."
-msgstr "Verbannen op {0}."
-
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:104
 msgid "Banned by"
 msgstr "Verbannen door"
@@ -5776,12 +5425,10 @@ msgstr "Verbannen op"
 msgid "Banned users"
 msgstr "Verbannen gebruikers"
 
-#. Audit log community feature label for banner image support.
 #. Button or menu action label in the guild banner upload field. Keep it concise. Keep the tone plain and specific.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:28
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:125
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:86
 #: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:280
 #: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:330
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:37
@@ -6130,7 +5777,7 @@ msgid "Bot"
 msgstr "Bot"
 
 #. Audit log entry label. A bot account was added to the community.
-#: src/features/app/config/AuditLogConstants.ts:83
+#: src/features/app/config/AuditLogConstants.ts:67
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthSuccessState.tsx:26
 msgid "Bot added"
 msgstr "Bot toegevoegd"
@@ -6894,12 +6541,6 @@ msgstr "categorie"
 msgid "Category"
 msgstr "Categorie"
 
-#. Audit log channel type label for channel categories.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:48
-msgctxt "audit-log-channel-type"
-msgid "Category"
-msgstr "Categorie"
-
 #. Title in a modal shown before opening a category with a custom content warning.
 #: src/features/channel/components/MatureContentChannelGate.tsx:187
 #: src/features/channel/components/modals/ChannelAccessGateModal.tsx:39
@@ -6964,9 +6605,7 @@ msgid "Center"
 msgstr "Centreren"
 
 #. Audit log value for invite splash alignment: centered image placement.
-#. Audit log value for invite splash alignment: centered image placement.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:40
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:66
 msgid "Centered"
 msgstr "Gecentreerd"
 
@@ -7184,12 +6823,6 @@ msgstr "Je profielfoto wijzigen"
 msgid "Change your username"
 msgstr "Gebruikersnaam wijzigen"
 
-#. placeholder {0}: renderInline(change.oldValue, i18n)
-#. placeholder {1}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:474
-msgid "Changed nickname from {0} to {1}."
-msgstr "Bijnaam gewijzigd van {0} naar {1}."
-
 #. Activity log detail row under an updated channel whose slowmode, the wait between messages from one member, changed. Use the same term for slowmode as the Slowmode channel setting. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {oldDuration} is the wait before the change and {newDuration} the wait after, both shown as formatted durations such as "30 seconds" or "1 hour".
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:250
 msgid "Changed slowmode from {oldDuration} to {newDuration}"
@@ -7214,11 +6847,6 @@ msgstr "De audiokwaliteit gewijzigd van {oldKbps} kbps naar {newKbps} kbps"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts:130
 msgid "Changed the avatar"
 msgstr "Avatar gewijzigd"
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:462
-msgid "Changed the bitrate to {0}."
-msgstr "Bitrate gewijzigd naar {0}."
 
 #. Activity log detail line under a change to a member, for a block that was already running and was given a new end. The block stops the member from sending messages, reacting and joining voice, and it lifts on its own at the new end. Spell the effect out the way the English does. Do not name it with a word for a ban, a kick, a mute, a suspension or a waiting period, and do not say that time ran out. Keep the three things that are blocked. It continues the entry summary, so it has no subject. It is a past tense record of an action that already happened, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {date} is the new end of the block, shown as a formatted date and time.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:255
@@ -7367,11 +6995,6 @@ msgstr "Verificatieniveau gewijzigd van {oldLevel} naar {newLevel}"
 msgid "Changed the voice region from {oldRegion} to {newRegion}"
 msgstr "De spraakregio gewijzigd van {oldRegion} naar {newRegion}"
 
-#. placeholder {0}: renderRtcRegionValue(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:235
-msgid "Changed the voice region to {0}."
-msgstr "Spraakregio gewijzigd naar {0}."
-
 #: src/features/theme_studio/sections/QuickCssSection.tsx:280
 msgid "Changes apply instantly to the live client."
 msgstr "Wijzigingen worden direct toegepast op de live client."
@@ -7389,7 +7012,7 @@ msgstr "kanaal"
 #. Short label in the channel layout. Keep it concise.
 #. Short label in the channel source preview. Keep it concise.
 #. Slash-command argument type name, spoken by screen readers for an argument that takes a channel.
-#: src/features/app/config/AuditLogConstants.ts:183
+#: src/features/app/config/AuditLogConstants.ts:163
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:24
 #: src/features/channel/components/ChannelLayout.tsx:13
 #: src/features/channel/components/ChannelSourcePreview.tsx:28
@@ -7531,21 +7154,6 @@ msgstr "Kanaalopties"
 msgid "Channel or category"
 msgstr "Kanaal of categorie"
 
-#. Audit log entry label. A channel permission override was added for a role or member.
-#: src/features/app/config/AuditLogConstants.ts:39
-msgid "Channel overwrite added"
-msgstr "Aangepaste toegangsrechten voor kanaal toegevoegd"
-
-#. Audit log entry label. A channel permission override was removed for a role or member.
-#: src/features/app/config/AuditLogConstants.ts:47
-msgid "Channel overwrite removed"
-msgstr "Aangepaste toegangsrechten voor kanaal verwijderd"
-
-#. Audit log entry label. A channel permission override was edited for a role or member.
-#: src/features/app/config/AuditLogConstants.ts:43
-msgid "Channel overwrite updated"
-msgstr "Aangepaste toegangsrechten voor kanaal bijgewerkt"
-
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:48
 msgid "Channel permission overrides"
@@ -7585,13 +7193,6 @@ msgstr "Kanaaltype"
 msgid "Channel type selection"
 msgstr "Kanaaltype selecteren"
 
-#. placeholder {0}: renderValueInline(label, guildId, i18n)
-#. placeholder {0}: renderValueInline(value, guildId, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:238
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:240
-msgid "Channel type: {0}."
-msgstr "Kanaaltype: {0}."
-
 #. Audit log entry label. Past-tense action describing that a channel was edited.
 #: src/features/app/config/AuditLogConstants.ts:16
 #: src/features/channel/components/modals/channel_tabs/ChannelOverviewTab.tsx:209
@@ -7602,12 +7203,6 @@ msgstr "Kanaal bijgewerkt"
 #: src/features/invite/components/InviteListItem.tsx:186
 msgid "Channel:"
 msgstr "Kanaal:"
-
-#. placeholder {0}: renderValueInline(value, guildId, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:243
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:314
-msgid "Channel: {0}."
-msgstr "Kanaal: {0}."
 
 #. Section header in the message search popout listing matching channels for the in: filter. Title Case.
 #. Section heading in the channel and chat autocomplete for channel suggestions.
@@ -8225,7 +7820,7 @@ msgstr "Bijlagesimulaties wissen"
 
 #. Accessible label for the button that clears the slash command being composed in the message box.
 #. Accessible label for the composer button that clears the slash command currently being composed.
-#: src/features/channel/components/LexicalChannelTextareaContent.tsx:136
+#: src/features/channel/components/LexicalChannelTextareaContent.tsx:135
 #: src/features/channel/components/SlashCommandParamBar.tsx:16
 msgid "Clear command"
 msgstr "Opdracht wissen"
@@ -8311,37 +7906,6 @@ msgstr "Vertrouwde domeinen wissen"
 msgid "Clear trusted domains ({trustedDomainsCount})"
 msgstr "Vertrouwde domeinen wissen ({trustedDomainsCount})"
 
-#. placeholder {0}: renderValueInline(change.oldValue, guildId, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:221
-msgid "Cleared {fieldNode} (was {0})."
-msgstr "{fieldNode} gewist (was {0})."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:571
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:574
-msgid "Cleared the bio."
-msgstr "Bio gewist."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:400
-msgid "Cleared the message history threshold."
-msgstr "De drempel voor berichtgeschiedenis is gewist."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:580
-msgid "Cleared the pronouns."
-msgstr "Voornaamwoorden gewist."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:655
-msgid "Cleared the role color."
-msgstr "Rolkleur gewist."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:743
-msgid "Cleared the sticker description."
-msgstr "Stickerbeschrijving gewist."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:414
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:417
-msgid "Cleared the topic."
-msgstr "Onderwerp gewist."
-
 #. Footer summary description for the text-focused screen-share quality preset.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:245
 msgid "Clearer text"
@@ -8418,7 +7982,7 @@ msgid "Click to open the color picker and choose a new color."
 msgstr "Klik om de kleurkiezer te openen en een nieuwe kleur te kiezen."
 
 #. Tooltip on the add-reaction button in the inline message hover action bar.
-#: src/features/channel/components/MessageActionBar.tsx:70
+#: src/features/channel/components/MessageActionBar.tsx:69
 msgid "Click to react"
 msgstr "Klik om te reageren"
 
@@ -8522,7 +8086,7 @@ msgid "Close account"
 msgstr "Account sluiten"
 
 #. Accessible label and tooltip for the close-DM button on a DM list row.
-#: src/features/channel/components/direct_message/DMListItem.tsx:84
+#: src/features/channel/components/direct_message/DMListItem.tsx:83
 msgid "Close direct message with {displayName}"
 msgstr "DM-gesprek met {displayName} sluiten"
 
@@ -8884,7 +8448,7 @@ msgstr "Bij communities met meer dan 250 leden wordt de instelling \"Alleen verm
 #. Developer / debug surface — keep terse and technical. Fallback label used in the IAR preview tool when no community context is supplied.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short option type label in the OAuth bot invite destination selector.
-#: src/features/app/config/AuditLogConstants.ts:167
+#: src/features/app/config/AuditLogConstants.ts:147
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthCommunityStep.tsx:48
 #: src/features/moderation/components/report_modal/IARModalPreview.tsx:16
 #: src/features/user/components/settings_utils/GuildSettingsConstants.ts:253
@@ -10859,27 +10423,6 @@ msgstr "Gemaakt door {creatorDisplayName}. Is verlopen."
 msgid "Created by {creatorDisplayName}. Never expires."
 msgstr "Gemaakt door {creatorDisplayName}. Verloopt nooit."
 
-#. placeholder {0}: renderInline(change.newValue, i18n, guildId)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:758
-msgid "Created for channel {0}."
-msgstr "Aangemaakt voor kanaal {0}."
-
-#. placeholder {0}: renderInline(formatted, i18n)
-#. placeholder {0}: renderValueInline(formatted, guildId, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:732
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:268
-msgid "Created on {0}."
-msgstr "Aangemaakt op {0}."
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:762
-msgid "Created with name {0}."
-msgstr "Aangemaakt met naam {0}."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:623
-msgid "Created with name {newLabel}."
-msgstr "Aangemaakt met naam {newLabel}."
-
 #: src/features/invite/components/InviteListItem.tsx:237
 msgid "Created:"
 msgstr "Gemaakt:"
@@ -11083,12 +10626,12 @@ msgid "Custom discriminators are not available on this instance"
 msgstr "Aangepaste discriminators zijn niet beschikbaar op deze instantie"
 
 #. Accessible label for a custom emoji in the message composer. Preserve {emojiName} and {communityName}.
-#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:24
+#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:21
 msgid "Custom emoji {emojiName} from {communityName}"
 msgstr "Aangepaste emoji {emojiName} van {communityName}"
 
 #. Accessible label for a custom emoji in the message composer when its community name is unavailable. Preserve {emojiName}.
-#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:19
+#: src/features/lexical/composer/nodes/ComposerCustomEmoji.tsx:16
 msgid "Custom emoji {emojiName} from a community"
 msgstr "Aangepaste emoji {emojiName} van een community"
 
@@ -11198,7 +10741,7 @@ msgstr "Aangepaste geluiden"
 msgid "Custom status"
 msgstr "Aangepaste status"
 
-#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:567
+#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:465
 msgid "Custom status: "
 msgstr "Aangepaste status: "
 
@@ -11565,7 +11108,7 @@ msgstr "Lid debuggen"
 #. Developer-mode action that opens the message debug modal.
 #. Developer-mode item in the message action bar overflow menu. Opens the message debug modal.
 #. Developer-mode message context menu item that opens an internal debug view for the message.
-#: src/features/channel/components/MessageActionBar.tsx:82
+#: src/features/channel/components/MessageActionBar.tsx:81
 #: src/features/channel/components/MessageActionMenu.tsx:103
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:66
 msgid "Debug message"
@@ -11630,7 +11173,6 @@ msgstr "Standaardcamera"
 
 #. Short label in the channel and chat autocomplete emoji. Keep it concise.
 #: src/features/channel/components/AutocompleteEmoji.tsx:26
-#: src/features/emoji/components/bottomsheets/EmojiInfoBottomSheet.tsx:78
 msgid "Default emoji"
 msgstr "Standaardemoji"
 
@@ -12052,17 +11594,6 @@ msgstr "Verwijderd."
 msgid "Denied"
 msgstr "Geweigerd"
 
-#. placeholder {0}: renderInline(addedLabels, i18nInstance)
-#. placeholder {1}: renderInline(removedLabels, i18nInstance)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:186
-msgid "Denied {0} and removed deny for {1}."
-msgstr "{0} geweigerd en weigering voor {1} verwijderd."
-
-#. placeholder {0}: renderInline(addedLabels, i18nInstance)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:181
-msgid "Denied {0}."
-msgstr "{0} geweigerd."
-
 #. Activity log detail row under an added or updated channel permission override, listing permissions the override now explicitly denies. A permission override is a channel-level exception to the permissions of a role or member. It allows or denies chosen permissions in one channel or category only. Use the same word for override as the channel permissions settings, such as Add override. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {permissions} is a list of permission names joined into one phrase, for example "View channel and Send messages". A long list ends with a count, for example "View channel, Send messages, and 3 more permissions".
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:368
 msgid "Denied {permissions}"
@@ -12269,10 +11800,8 @@ msgstr "Bestemmingskanaal"
 msgid "Destination URL:"
 msgstr "Bestemmings-URL:"
 
-#. Audit log community feature label for detached banner layout support.
 #. Short label in the branding section. Keep it concise. Keep the tone plain and specific.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/BrandingSection.tsx:35
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:106
 msgid "Detached banner"
 msgstr "Losgekoppelde banner"
 
@@ -12280,11 +11809,6 @@ msgstr "Losgekoppelde banner"
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:152
 msgid "Detail"
 msgstr "Detail"
-
-#. Lowercase fallback label in the activity log when a changed field has no friendly name.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:50
-msgid "details"
-msgstr "details"
 
 #: src/features/moderation/components/report/ReportBreadcrumbs.tsx:30
 msgid "Details"
@@ -12621,10 +12145,8 @@ msgstr "Formulier voor het uitschakelen van tweestapsverificatie"
 msgid "Disable video locally"
 msgstr "Video lokaal uitschakelen"
 
-#. Button or menu action label in the guild audit log tab.renderers. Keep it concise.
 #. Summary value when a setup option is disabled.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:364
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:51
 msgid "Disabled"
 msgstr "Uitgeschakeld"
 
@@ -12638,31 +12160,10 @@ msgstr "Uitgeschakeld (aangevinkt)"
 msgid "Disabled (unchecked)"
 msgstr "Uitgeschakeld (uitgevinkt)"
 
-#. placeholder {0}: renderInline(joinLabels(removed), i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:378
-msgid "Disabled {0} for the system channel."
-msgstr "{0} uitgeschakeld voor het systeemkanaal."
-
-#. placeholder {0}: renderInline(joinLabels(added), i18n)
-#. placeholder {0}: renderInline(joinLabels(removedLabels), i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:353
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:391
-msgid "Disabled {0}."
-msgstr "{0} uitgeschakeld."
-
-#. placeholder {0}: renderInline(joinLabels(removedLabels), i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:347
-msgid "Disabled features: {0}."
-msgstr "Uitgeschakelde functies: {0}."
-
 #. Button or menu action label in the inputs tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:66
 msgid "Disabled input"
 msgstr "Invoer uitgeschakeld"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:430
-msgid "Disabled mature content."
-msgstr "Inhoud voor volwassenen uitgeschakeld."
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:309
 msgid "Disabled round (checked)"
@@ -12673,17 +12174,9 @@ msgstr "Uitgeschakeld rond selectievakje (aangevinkt)"
 msgid "Disabled select"
 msgstr "Selectie uitgeschakeld"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:667
-msgid "Disabled separate display of members with this role."
-msgstr "De afzonderlijke weergave van leden met deze rol is uitgeschakeld."
-
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:446
 msgid "Disabled slider"
 msgstr "Schuifregelaar uitgeschakeld"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:434
-msgid "Disabled slowmode."
-msgstr "Slowmodus uitgeschakeld."
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:194
 msgid "Disabled states"
@@ -13591,7 +13084,7 @@ msgstr "Aangepaste toegangsrechten voor rollen en leden in dit kanaal bewerken."
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:743
 #: src/features/app/components/pages/YouPage.tsx:157
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:685
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:682
 #: src/features/user/components/modals/UserProfileModal.tsx:587
 #: src/features/user/components/popouts/UserProfilePopout.tsx:432
 msgid "Edit profile"
@@ -13783,7 +13276,7 @@ msgid "Email verified successfully"
 msgstr "E-mailadres succesvol geverifieerd"
 
 #. Screen-reader fragment listing one embed on a message. Lowercase because it appears inside a longer sentence.
-#: src/features/channel/components/ChannelMessage.tsx:62
+#: src/features/channel/components/ChannelMessage.tsx:61
 msgid "embed"
 msgstr "ingesloten inhoud"
 
@@ -13848,7 +13341,7 @@ msgstr "Ingesloten inhoud weer zichtbaar"
 #. Collapsible group heading in the Theme Studio tokens list, for emoji tokens.
 #. Column header for the custom emoji image or glyph.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/config/AuditLogConstants.ts:187
+#: src/features/app/config/AuditLogConstants.ts:167
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:337
 #: src/features/theme_studio/sections/TokenGroups.ts:114
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:162
@@ -13881,23 +13374,13 @@ msgstr "Emoji-suggesties"
 msgid "Emoji button"
 msgstr "Emojiknop"
 
-#. Audit log community feature label indicating emoji cloning is disabled.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:90
-msgid "Emoji cloning disabled"
-msgstr "Klonen van emoji's uitgeschakeld"
-
-#. Audit log community feature label indicating emoji cloning is enabled.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:98
-msgid "Emoji cloning enabled"
-msgstr "Klonen van emoji's ingeschakeld"
-
 #. Audit log entry label. A custom emoji was added to the community.
-#: src/features/app/config/AuditLogConstants.ts:123
+#: src/features/app/config/AuditLogConstants.ts:103
 msgid "Emoji created"
 msgstr "Emoji aangemaakt"
 
 #. Audit log entry label. A custom emoji was removed from the community.
-#: src/features/app/config/AuditLogConstants.ts:131
+#: src/features/app/config/AuditLogConstants.ts:111
 msgid "Emoji deleted"
 msgstr "Emoji verwijderd"
 
@@ -13941,7 +13424,7 @@ msgid "Emoji slots full"
 msgstr "Alle emojiplaatsen bezet"
 
 #. Audit log entry label. A custom emoji was renamed or edited.
-#: src/features/app/config/AuditLogConstants.ts:127
+#: src/features/app/config/AuditLogConstants.ts:107
 msgid "Emoji updated"
 msgstr "Emoji bijgewerkt"
 
@@ -14255,29 +13738,6 @@ msgstr "Miniatuurvoorbeelden op de videotijdlijn inschakelen"
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:66
 msgid "Enabled"
 msgstr "Ingeschakeld"
-
-#. placeholder {0}: renderInline(joinLabels(added), i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:375
-msgid "Enabled {0} for the system channel."
-msgstr "{0} ingeschakeld voor het systeemkanaal."
-
-#. placeholder {0}: renderInline(joinLabels(addedLabels), i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:352
-msgid "Enabled {0}."
-msgstr "{0} ingeschakeld."
-
-#. placeholder {0}: renderInline(joinLabels(addedLabels), i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:344
-msgid "Enabled features: {0}."
-msgstr "Ingeschakelde functies: {0}."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:430
-msgid "Enabled mature content."
-msgstr "Inhoud voor volwassenen ingeschakeld."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:665
-msgid "Enabled separate display of members with this role."
-msgstr "De afzonderlijke weergave van leden met deze rol is ingeschakeld."
 
 #. Label for an advanced screen-share select. Refers to hardware or software video encoding.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -15051,11 +14511,6 @@ msgstr "Suggesties voor expressies"
 msgid "Expression picker categories"
 msgstr "Categorieën voor expressiekiezer"
 
-#. Audit log community feature label for expression purge tooling.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:142
-msgid "Expression purge"
-msgstr "Expressies wissen"
-
 #. Community settings sidebar category grouping the emoji and stickers tabs.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/GuildSettingsConstants.ts:249
@@ -15633,7 +15088,7 @@ msgid "Filter by account creation date"
 msgstr "Filteren op aanmaakdatum account"
 
 #. Label of the action-type filter dropdown in the activity log tab.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:120
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:98
 msgid "Filter by action"
 msgstr "Filteren op actie"
 
@@ -15671,7 +15126,7 @@ msgstr "Filteren op rollen"
 
 #. Label of the user filter dropdown in the activity log tab.
 #. Short label in the search user filter sheet. Keep it concise.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:116
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:94
 #: src/features/search/components/search/UserFilterSheet.tsx:25
 msgid "Filter by user"
 msgstr "Filteren op gebruiker"
@@ -15778,11 +15233,6 @@ msgstr "Eerste optie"
 #: src/features/expressions/utils/UnicodeEmojis.ts:49
 msgid "Flags"
 msgstr "Vlaggen"
-
-#. Audit log community feature label for customized text channel naming rules.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:118
-msgid "Flexible text channel names"
-msgstr "Flexibele tekstkanaalnamen"
 
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:53
@@ -16105,7 +15555,7 @@ msgstr "Formulieren"
 #. Message action label for forwarding the selected message to another channel or DM.
 #. Message context menu item that opens the forward-to-channel picker.
 #. Tooltip on the forward button in the inline message hover action bar.
-#: src/features/channel/components/MessageActionBar.tsx:86
+#: src/features/channel/components/MessageActionBar.tsx:85
 #: src/features/channel/components/MessageActionMenu.tsx:83
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:54
 msgid "Forward"
@@ -16128,7 +15578,7 @@ msgstr "Media doorsturen"
 msgid "Forward message"
 msgstr "Bericht doorsturen"
 
-#: src/features/channel/components/MessageAttachments.tsx:348
+#: src/features/channel/components/MessageAttachments.tsx:345
 msgid "Forwarded"
 msgstr "Doorgestuurd"
 
@@ -16321,11 +15771,6 @@ msgstr "Alleen vrienden kunnen bellen"
 msgid "From"
 msgstr "Van"
 
-#. placeholder {0}: guild.name
-#: src/features/emoji/components/bottomsheets/EmojiInfoBottomSheet.tsx:85
-msgid "From {0}"
-msgstr "Van {0}"
-
 #. Attribution label on a gift, showing the sender FluxerTag.
 #. Sender label on a gift code embed. creatorTag is the FluxerTag of the gift creator.
 #: src/features/channel/components/GiftEmbed.tsx:28
@@ -16342,10 +15787,6 @@ msgstr "Vanaf {start}"
 #: src/features/channel/components/emoji_picker/EmojiPickerInspector.tsx:110
 msgid "from <0>{0}</0>"
 msgstr "van <0>{0}</0>"
-
-#: src/features/emoji/components/bottomsheets/EmojiInfoBottomSheet.tsx:91
-msgid "From another community"
-msgstr "Uit een andere community"
 
 #. Label for SMTP from email input.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:986
@@ -16987,17 +16428,6 @@ msgstr "Toestaan"
 msgid "Granted"
 msgstr "Toegestaan"
 
-#. placeholder {0}: renderInline(addedLabels, i18n)
-#. placeholder {1}: renderInline(removedLabels, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:638
-msgid "Granted {0} and revoked {1}."
-msgstr "{0} toegekend en {1} ingetrokken."
-
-#. placeholder {0}: renderInline(addedLabels, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:634
-msgid "Granted {0}."
-msgstr "{0} toegekend."
-
 #. Activity log detail line under a created or edited role, listing the permissions the role now gives its members. The actor in the summary granted them to the role. Do not write it as someone receiving them. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {permissions} is a list of permission names that the app joins with commas and the word for "and" in your language. When the list is long it ends with a count of the permissions not named, such as "3 more permissions".
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:60
 msgid "Granted {permissions}"
@@ -17124,9 +16554,7 @@ msgstr "Groepspictogram"
 msgid "Group invites"
 msgstr "Groepsuitnodigingen"
 
-#. Audit log channel type label for group DM channels.
 #. Fallback display name for an unnamed group DM in quick switcher results.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:57
 #: src/features/search/state/QuickSwitcherCandidateBuilder.ts:43
 msgid "Group message"
 msgstr "Groepsbericht"
@@ -17506,10 +16934,8 @@ msgstr "Verberg kanalen die je hebt gedempt in communityzijbalken"
 msgid "Hide chat"
 msgstr "Chat verbergen"
 
-#. Audit log community feature label for hiding the owner crown badge.
 #. Label in the owner crown section.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/OwnerCrownSection.tsx:12
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:122
 msgid "Hide community owner crown"
 msgstr "Kroon van community-eigenaar verbergen"
 
@@ -18657,11 +18083,6 @@ msgstr "Desktopupdate {version} installeren…"
 msgid "Installing desktop update…"
 msgstr "Desktopupdate installeren…"
 
-#. Audit log operation flag label for invite creation.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:193
-msgid "Instant invites"
-msgstr "Directe uitnodigingen"
-
 #. Comment of the Linux .desktop entry. One-line app description shown as a tooltip in Linux launchers and software centres. VoIP is voice over IP; keep the term if it is used untranslated in your language.
 #: src/features/platform/utils/DesktopLocaleBridge.ts:294
 msgid "Instant messaging and VoIP"
@@ -18813,7 +18234,7 @@ msgstr "Uitnodigen"
 
 #. Audit log target-type filter label. Filters entries that target an invite link.
 #. Join source label on the community members page. Shown when the member joined via an invite link.
-#: src/features/app/config/AuditLogConstants.ts:195
+#: src/features/app/config/AuditLogConstants.ts:175
 #: src/features/channel/components/guild_members_page/MemberTableRow.tsx:43
 msgctxt "invite-noun"
 msgid "Invite"
@@ -18833,18 +18254,13 @@ msgstr "Achtergrond van uitnodiging"
 msgid "Invite code (optional)"
 msgstr "Uitnodigingscode (optioneel)"
 
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:682
-msgid "Invite code is {0}."
-msgstr "Uitnodigingscode is {0}."
-
 #. Audit log entry label. A new invite link was created.
-#: src/features/app/config/AuditLogConstants.ts:99
+#: src/features/app/config/AuditLogConstants.ts:83
 msgid "Invite created"
 msgstr "Uitnodiging aangemaakt"
 
 #. Audit log entry label. An invite link was revoked or deleted.
-#: src/features/app/config/AuditLogConstants.ts:107
+#: src/features/app/config/AuditLogConstants.ts:87
 msgid "Invite deleted"
 msgstr "Uitnodiging verwijderd"
 
@@ -18954,11 +18370,6 @@ msgstr "Uitnodiging ingetrokken"
 msgid "Invite sent for {guildName}"
 msgstr "Uitnodiging voor {guildName} verzonden"
 
-#. Audit log community feature label for invite splash image support.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:110
-msgid "Invite splash"
-msgstr "Uitnodigingsachtergrond"
-
 #. Button or menu action label in the guild invite splash upload field. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildInviteSplashUploadField.tsx:33
 msgid "Invite splash preview"
@@ -18974,20 +18385,10 @@ msgstr "Uitnodigen voor community"
 msgid "Invite unavailable"
 msgstr "Uitnodiging niet beschikbaar"
 
-#. Audit log entry label. An existing invite link was edited.
-#: src/features/app/config/AuditLogConstants.ts:103
-msgid "Invite updated"
-msgstr "Uitnodiging bijgewerkt"
-
 #. Subtitle for a community that can only be joined with an invite.
 #: src/features/expressions/components/ExpressionInfoCard.tsx:80
 msgid "Invite-only community"
 msgstr "Gemeenschap met alleen uitnodigingen"
-
-#. placeholder {0}: renderValueInline(value, guildId, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:249
-msgid "Invited by {0}."
-msgstr "Uitgenodigd door {0}."
 
 #. Tooltip on the community members page crediting the person who invited this member. inviterDisplay holds the inviter's avatar and name.
 #: src/features/channel/components/guild_members_page/MemberTableRow.tsx:173
@@ -19047,10 +18448,8 @@ msgstr "Uitnodigingen zijn gepauzeerd voor deze community."
 msgid "Invites are paused in this community by an admin. While this invite can be created, it cannot be accepted until invites are re-enabled."
 msgstr "Uitnodigingen zijn door een beheerder gepauzeerd in deze community. Hoewel deze uitnodiging kan worden aangemaakt, kan deze pas worden geaccepteerd als uitnodigingen opnieuw zijn ingeschakeld."
 
-#. Audit log community feature label meaning invite creation is disabled.
 #. Status label on a community invite embed when invites are paused or anti-raid mode is active.
 #: src/features/channel/components/InviteEmbed.tsx:75
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:114
 msgid "Invites disabled"
 msgstr "Uitnodigingen uitgeschakeld"
 
@@ -19219,11 +18618,6 @@ msgstr "Deelnemen aan groeps-DM"
 msgid "Join method"
 msgstr "Manier van lid worden"
 
-#. Audit log system-channel flag label for member join notification posts.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:205
-msgid "Join notifications"
-msgstr "Meldingen bij lid worden"
-
 #. Action label in the DM channel header pill that switches an in-progress call from another device to this device.
 #. CTA button shown when the user is already in the call on another device. Moves the call to this device.
 #: src/features/channel/components/channel_view/dm_channel_view/shared.ts:134
@@ -19350,7 +18744,7 @@ msgid "Jump to page"
 msgstr "Ga naar pagina"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:86
+#: src/features/channel/components/ChannelMessages.tsx:85
 msgid "Jump to present"
 msgstr "Ga naar meest recente"
 
@@ -19776,9 +19170,7 @@ msgid "Left {keyName}"
 msgstr "{keyName} (links)"
 
 #. Audit log value for invite splash alignment: left image placement.
-#. Audit log value for invite splash alignment: left image placement.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:44
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:70
 msgid "Left aligned"
 msgstr "Links uitgelijnd"
 
@@ -19806,20 +19198,10 @@ msgstr "Linkermuisknop"
 msgid "Left tooltip"
 msgstr "Tooltip links"
 
-#. Audit log community feature label for the legacy increased custom emoji capacity feature.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:126
-msgid "Legacy emoji slots"
-msgstr "Oude emojiplaatsen"
-
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:537
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:559
 msgid "Legacy rate"
 msgstr "Oud tarief"
-
-#. Audit log community feature label for the legacy increased custom sticker capacity feature.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:130
-msgid "Legacy sticker slots"
-msgstr "Oude stickerplaatsen"
 
 #. Description text in the text to speech.
 #: src/features/user/components/modals/tabs/notifications_tab/TextToSpeech.tsx:45
@@ -19980,11 +19362,6 @@ msgstr "Link (voor volwassenen)"
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:96
 msgid "Link builder"
 msgstr "Linkbouwer"
-
-#. Audit log channel type label for channels that point to an external URL.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:53
-msgid "Link channel"
-msgstr "Kanaal koppelen"
 
 #. Generic toast confirming that a link was copied to the system clipboard.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:385
@@ -20644,14 +20021,6 @@ msgstr "Markdown"
 msgid "Marked as read"
 msgstr "Gemarkeerd als gelezen"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:738
-msgid "Marked emoji as animated."
-msgstr "Emoji als geanimeerd gemarkeerd."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:738
-msgid "Marked emoji as static."
-msgstr "Emoji als statisch gemarkeerd."
-
 #. Activity log detail row under a created or updated channel whose Mature content override setting was set to On. The channel is now treated as mature whatever its category or the community is set to. Mature content means content for adults only. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:61
 msgid "Marked the channel as containing mature content"
@@ -20661,14 +20030,6 @@ msgstr "Het kanaal gemarkeerd voor inhoud voor volwassenen"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:66
 msgid "Marked the channel as not containing mature content"
 msgstr "Het kanaal gemarkeerd als vrij van inhoud voor volwassenen"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:600
-msgid "Marked the member as permanent."
-msgstr "Lid gemarkeerd als permanent."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:598
-msgid "Marked the member as temporary."
-msgstr "Lid gemarkeerd als tijdelijk."
 
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:415
 msgid "Markers below slider"
@@ -20734,11 +20095,6 @@ msgstr "Massachusetts"
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:220
 msgid "Master volume"
 msgstr "Hoofdvolume"
-
-#. Short label in the guild audit log tab.renderers. Keep it concise.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:47
-msgid "Mature"
-msgstr "Voor volwassenen"
 
 #: src/features/channel/components/MatureContentChannelGate.tsx:141
 msgid "Mature category"
@@ -21010,7 +20366,7 @@ msgid "Medium size (default)"
 msgstr "Gemiddelde grootte (standaard)"
 
 #. Audit log target-type filter label. Filters entries that target a community member.
-#: src/features/app/config/AuditLogConstants.ts:171
+#: src/features/app/config/AuditLogConstants.ts:151
 msgid "Member"
 msgstr "Lid"
 
@@ -21020,17 +20376,17 @@ msgid "Member actions for {displayName}"
 msgstr "Acties voor {displayName}"
 
 #. Audit log entry label. A member was banned from the community.
-#: src/features/app/config/AuditLogConstants.ts:59
+#: src/features/app/config/AuditLogConstants.ts:43
 msgid "Member banned"
 msgstr "Lid verbannen"
 
 #. Audit log entry label. A member was disconnected from a voice channel by a moderator.
-#: src/features/app/config/AuditLogConstants.ts:79
+#: src/features/app/config/AuditLogConstants.ts:63
 msgid "Member disconnected"
 msgstr "Verbinding van lid verbroken"
 
 #. Audit log entry label. A member was kicked (removed) from the community by a moderator.
-#: src/features/app/config/AuditLogConstants.ts:51
+#: src/features/app/config/AuditLogConstants.ts:39
 msgid "Member kicked"
 msgstr "Lid verwijderd"
 
@@ -21049,18 +20405,13 @@ msgstr "Ledenlijst niet beschikbaar"
 msgid "Member list unavailable at this screen width"
 msgstr "Ledenlijst niet beschikbaar bij deze schermbreedte"
 
-#. Audit log operation flag label.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:201
-msgid "Member list updates"
-msgstr "Updates van de ledenlijst"
-
 #. Label in the channel and chat member list unavailable fallback.
 #: src/features/channel/components/shared/MemberListUnavailableFallback.tsx:21
 msgid "Member lists are temporarily unavailable in this community"
 msgstr "Ledenlijsten zijn tijdelijk niet beschikbaar in deze community"
 
 #. Audit log entry label. A member was moved between voice channels by a moderator.
-#: src/features/app/config/AuditLogConstants.ts:75
+#: src/features/app/config/AuditLogConstants.ts:59
 msgid "Member moved"
 msgstr "Lid verplaatst"
 
@@ -21070,7 +20421,7 @@ msgid "Member not found"
 msgstr "Lid niet gevonden"
 
 #. Audit log entry label. The roles assigned to a member were changed.
-#: src/features/app/config/AuditLogConstants.ts:71
+#: src/features/app/config/AuditLogConstants.ts:55
 msgid "Member roles updated"
 msgstr "Rollen van lid bijgewerkt"
 
@@ -21080,12 +20431,12 @@ msgid "Member since"
 msgstr "Lid sinds"
 
 #. Audit log entry label. A previously banned member was unbanned.
-#: src/features/app/config/AuditLogConstants.ts:63
+#: src/features/app/config/AuditLogConstants.ts:47
 msgid "Member unbanned"
 msgstr "Verbanning van lid opgeheven"
 
 #. Audit log entry label. A member profile was edited (nickname, etc).
-#: src/features/app/config/AuditLogConstants.ts:67
+#: src/features/app/config/AuditLogConstants.ts:51
 msgid "Member updated"
 msgstr "Lid bijgewerkt"
 
@@ -21123,11 +20474,6 @@ msgstr "Leden"
 msgid "Members are removed when offline unless given a role."
 msgstr "Leden worden verwijderd wanneer ze offline zijn, tenzij ze een rol krijgen toegewezen."
 
-#. Audit log entry label. Inactive members were bulk-removed via the prune tool.
-#: src/features/app/config/AuditLogConstants.ts:55
-msgid "Members pruned"
-msgstr "Leden opgeschoond"
-
 #. Channel pins empty-state body shown to community members. Pin permission name is interpolated.
 #: src/features/app/components/shared/ChannelPinsContent.tsx:47
 msgid "Members with \"{pinMessagesPermissionLabel}\" can pin messages for everyone."
@@ -21141,11 +20487,6 @@ msgstr "Leden met rollen kunnen deze controles omzeilen. Voor openbare ruimtes r
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleEditor.tsx:47
 msgid "Members with the \"{mentionEveryonePermissionLabel}\" permission can always mention roles, regardless of this setting."
 msgstr "Leden met de \"{mentionEveryonePermissionLabel}\"-machtiging kunnen altijd rollen vermelden, ongeacht deze instelling."
-
-#. Short label in the guild audit log tab.renderers. Keep it concise.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:55
-msgid "Members without roles"
-msgstr "Leden zonder rollen"
 
 #. Description text in the message history threshold content. Preserve {readMessageHistoryPermissionLabel}; it is inserted by code. Keep the tone plain and specific.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/MessageHistoryThresholdContent.tsx:45
@@ -21263,13 +20604,13 @@ msgid "Menu shortcuts"
 msgstr "Menusneltoetsen"
 
 #. Fallback role label used in screen-reader message summaries.
-#: src/features/channel/components/ChannelMessage.tsx:76
+#: src/features/channel/components/ChannelMessage.tsx:75
 msgid "message"
 msgstr "bericht"
 
 #. Audit log target-type filter label. Filters entries that target an individual message.
 #. Short label in the inputs tab. Keep it concise.
-#: src/features/app/config/AuditLogConstants.ts:204
+#: src/features/app/config/AuditLogConstants.ts:184
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:86
 msgid "Message"
 msgstr "Bericht"
@@ -21282,7 +20623,7 @@ msgstr "Bericht"
 #: src/features/ui/action_menu/items/ActionsSubmenu.tsx:41
 #: src/features/ui/action_menu/items/MessageUserMenuItem.tsx:26
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:78
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:718
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:715
 #: src/features/user/components/modals/UserProfileModal.tsx:562
 #: src/features/user/components/modals/UserProfileModal.tsx:770
 #: src/features/user/components/popouts/UserProfilePopout.tsx:418
@@ -21345,21 +20686,21 @@ msgid "Message composer"
 msgstr "Berichtinvoerveld"
 
 #. Label in the channel and chat reply preview.
-#: src/features/channel/components/ReplyPreview.tsx:42
+#: src/features/channel/components/ReplyPreview.tsx:41
 msgid "Message contains attached media"
 msgstr "Bericht bevat bijgevoegde media"
 
 #. Title of the developer-mode message debug modal opened from the message action bar.
 #. Title of the developer-mode message debug modal opened from the message context menu.
 #. Title of the developer-mode message debug modal.
-#: src/features/channel/components/MessageActionBar.tsx:74
+#: src/features/channel/components/MessageActionBar.tsx:73
 #: src/features/channel/components/MessageActionMenu.tsx:71
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:62
 msgid "Message debug"
 msgstr "Bericht debuggen"
 
 #. Audit log entry label. A single message was deleted by a moderator.
-#: src/features/app/config/AuditLogConstants.ts:147
+#: src/features/app/config/AuditLogConstants.ts:127
 msgid "Message deleted"
 msgstr "Bericht verwijderd"
 
@@ -21452,17 +20793,17 @@ msgid "Message link"
 msgstr "Berichtlink"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:78
+#: src/features/channel/components/ChannelMessages.tsx:77
 msgid "Message list"
 msgstr "Berichtenlijst"
 
 #. Label in the channel and chat messages. Preserve {channelName}; it is inserted by code.
-#: src/features/channel/components/ChannelMessages.tsx:74
+#: src/features/channel/components/ChannelMessages.tsx:73
 msgid "Message list for {channelName}"
 msgstr "Berichtenlijst voor {channelName}"
 
 #. Audit log entry label. A message was pinned in a channel.
-#: src/features/app/config/AuditLogConstants.ts:155
+#: src/features/app/config/AuditLogConstants.ts:135
 msgid "Message pinned"
 msgstr "Bericht vastgezet"
 
@@ -21521,14 +20862,9 @@ msgid "Message time"
 msgstr "Tijdstip van bericht"
 
 #. Audit log entry label. A message was unpinned from a channel.
-#: src/features/app/config/AuditLogConstants.ts:159
+#: src/features/app/config/AuditLogConstants.ts:139
 msgid "Message unpinned"
 msgstr "Bericht niet meer vastgezet"
-
-#. placeholder {0}: renderValueInline(value, guildId, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:246
-msgid "Message: {0}."
-msgstr "Bericht: {0}."
 
 #. Collapsible group heading in the Theme Studio tokens list, for chat message tokens.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -21560,12 +20896,12 @@ msgid "Messages & media"
 msgstr "Berichten en media"
 
 #. Audit log entry label. Multiple messages were bulk-deleted by a moderator.
-#: src/features/app/config/AuditLogConstants.ts:151
+#: src/features/app/config/AuditLogConstants.ts:131
 msgid "Messages deleted"
 msgstr "Berichten verwijderd"
 
 #. Error message in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:90
+#: src/features/channel/components/ChannelMessages.tsx:89
 msgid "Messages failed to load"
 msgstr "Berichten konden niet worden geladen"
 
@@ -21859,7 +21195,7 @@ msgid "Moderation"
 msgstr "Moderatie"
 
 #. Empty-state body in the activity log tab when there are no log entries to show.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:132
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:110
 msgid "Moderation actions and community changes will appear here."
 msgstr "Moderatieacties en communitywijzigingen verschijnen hier."
 
@@ -21918,7 +21254,7 @@ msgstr "Cadeau voor één maand"
 #: src/features/auth/components/accounts/AccountRow.tsx:23
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:142
 #: src/features/channel/components/friends/FriendListItem.tsx:63
-#: src/features/channel/components/MessageActionBar.tsx:78
+#: src/features/channel/components/MessageActionBar.tsx:77
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:125
 msgid "More"
 msgstr "Meer"
@@ -22095,11 +21431,6 @@ msgstr "Het kanaal verplaatst van de categorie {oldCategory} naar de categorie {
 msgid "Moved the channel into the category {category}"
 msgstr "Kanaal verplaatst naar de categorie {category}"
 
-#. placeholder {0}: renderInline(change.newValue, i18n, guildId)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:425
-msgid "Moved the channel to category {0}."
-msgstr "Heeft het kanaal verplaatst naar categorie {0}."
-
 #. Activity log detail line under an edited role whose group of members was moved lower in the member list. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Use the same word for role as the rest of the app.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:165
 msgid "Moved the role down in the member list"
@@ -22110,11 +21441,6 @@ msgstr "De rol lager in de ledenlijst geplaatst"
 msgid "Moved the role down in the role list"
 msgstr "De rol lager geplaatst in de rollenlijst"
 
-#. placeholder {0}: renderInline(value, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:648
-msgid "Moved the role to position {0}."
-msgstr "Rol verplaatst naar positie {0}."
-
 #. Activity log detail line under an edited role whose group of members was moved higher in the member list. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Use the same word for role as the rest of the app.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:160
 msgid "Moved the role up in the member list"
@@ -22124,11 +21450,6 @@ msgstr "De rol hoger geplaatst in de ledenlijst"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:140
 msgid "Moved the role up in the role list"
 msgstr "De rol hoger geplaatst in de rollenlijst"
-
-#. placeholder {0}: renderInline(change.newValue, i18n, guildId)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:759
-msgid "Moved to channel {0}."
-msgstr "Verplaatst naar kanaal {0}."
 
 #. Discovery category dropdown option in the community Discovery settings tab. "TV" is the abbreviation for television.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:105
@@ -22341,7 +21662,7 @@ msgstr "Geluid van stream dempen"
 #: src/features/app/components/layout/ChannelItem.tsx:112
 #: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:62
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:39
-#: src/features/channel/components/direct_message/DMListItem.tsx:76
+#: src/features/channel/components/direct_message/DMListItem.tsx:75
 msgid "muted"
 msgstr "gedempt"
 
@@ -22417,7 +21738,7 @@ msgstr "Gedeelde vrienden"
 msgid "Mutual friends ({count})"
 msgstr "Gedeelde vrienden ({count})"
 
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:845
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:842
 msgid "Mutual friends ({mutualFriendsCount})"
 msgstr "Gedeelde vrienden ({mutualFriendsCount})"
 
@@ -22575,11 +21896,6 @@ msgstr "Passkey een naam geven"
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:15
 msgid "Name passkey form"
 msgstr "Formulier om een passkey een naam te geven"
-
-#. placeholder {0}: renderValueInline(value, guildId, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:289
-msgid "Name: {0}."
-msgstr "Naam: {0}."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:272
@@ -23239,7 +22555,7 @@ msgid "No local files referenced"
 msgstr "Geen lokale bestanden waarnaar wordt verwezen"
 
 #. Empty-state title in the activity log tab when there are no log entries to show.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:128
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:106
 msgid "No logs yet"
 msgstr "Nog geen logboeken"
 
@@ -23339,11 +22655,6 @@ msgstr "Nog geen pushabonnementen geregistreerd."
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:79
 msgid "No reason provided"
 msgstr "Geen reden opgegeven"
-
-#. Fallback text in an expanded activity log entry when the moderator did not supply a reason.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:716
-msgid "No reason was provided."
-msgstr "Geen reden opgegeven."
 
 #. Empty-state text in the recent mentions page.
 #: src/features/messaging/components/pages/RecentMentionsPage.tsx:31
@@ -23468,7 +22779,7 @@ msgid "No system channel"
 msgstr "Geen systeemkanaal"
 
 #. Screen-reader fragment indicating the message has no text body. Lowercase because it appears inside a longer sentence.
-#: src/features/channel/components/ChannelMessage.tsx:71
+#: src/features/channel/components/ChannelMessage.tsx:70
 msgid "no text content"
 msgstr "geen tekstinhoud"
 
@@ -23701,18 +23012,13 @@ msgstr "Niet waar of onwaar"
 #: src/features/messaging/utils/markdown/Plaintext.ts:72
 #: src/features/user/components/modals/user_profile_modal/UserNoteEditor.tsx:19
 #: src/features/user/components/modals/user_profile_modal/UserNoteEditor.tsx:79
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:900
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:897
 msgid "Note"
 msgstr "Notitie"
 
 #: src/features/user/components/modals/NoteEditSheet.tsx:81
 msgid "Note (only visible to you)"
 msgstr "Notitie (alleen voor jou zichtbaar)"
-
-#. Lowercase fallback label in the activity log for an empty or missing value.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:46
-msgid "nothing"
-msgstr "niets"
 
 #. Notification level option. Suppresses all pushes for the channel or community. Paired with "All messages" and "Only mentions".
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:348
@@ -23878,12 +23184,6 @@ msgstr "Objecten"
 msgid "Off"
 msgstr "Uit"
 
-#. Audit log value for a disabled boolean setting.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:43
-msgctxt "audit-log-boolean-value"
-msgid "Off"
-msgstr "Uit"
-
 #. Generic presence-status label indicating the user is offline.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:635
 msgid "Offline"
@@ -23929,12 +23229,6 @@ msgstr "Oudste eerst"
 #: src/features/channel/components/ChannelReplyBar.tsx:58
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:22
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:135
-msgid "On"
-msgstr "Aan"
-
-#. Audit log value for an enabled boolean setting.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:38
-msgctxt "audit-log-boolean-value"
 msgid "On"
 msgstr "Aan"
 
@@ -24723,12 +24017,12 @@ msgid "Oregon"
 msgstr "Oregon"
 
 #. Error message in the channel and chat reply preview.
-#: src/features/channel/components/ReplyPreview.tsx:30
+#: src/features/channel/components/ReplyPreview.tsx:29
 msgid "Original message failed to load"
 msgstr "Oorspronkelijk bericht kon niet worden geladen"
 
 #. Label in the channel and chat reply preview. Keep the tone plain and specific.
-#: src/features/channel/components/ReplyPreview.tsx:26
+#: src/features/channel/components/ReplyPreview.tsx:25
 msgid "Original message was deleted"
 msgstr "Oorspronkelijk bericht is verwijderd"
 
@@ -25561,7 +24855,7 @@ msgid "Ping: {latency}ms"
 msgstr "Ping: {latency} ms"
 
 #. Screen-reader fragment announcing that the DM list row is pinned. Lowercase fragment.
-#: src/features/channel/components/direct_message/DMListItem.tsx:80
+#: src/features/channel/components/direct_message/DMListItem.tsx:79
 msgid "pinned"
 msgstr "vastgezet"
 
@@ -25935,12 +25229,12 @@ msgid "Press a shortcut…"
 msgstr "Druk op een sneltoets…"
 
 #. Label in the channel and chat message reactions.
-#: src/features/channel/components/MessageReactions.tsx:48
+#: src/features/channel/components/MessageReactions.tsx:46
 msgid "press to add reaction"
 msgstr "tik om een reactie toe te voegen"
 
 #. Label in the channel and chat message reactions. Keep the tone plain and specific.
-#: src/features/channel/components/MessageReactions.tsx:44
+#: src/features/channel/components/MessageReactions.tsx:42
 msgid "press to remove reaction"
 msgstr "tik om de reactie te verwijderen"
 
@@ -26391,10 +25685,6 @@ msgstr "Vul je volledige officiële naam in voor de verklaring."
 msgid "Provider"
 msgstr "Provider"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:556
-msgid "Pruned members inactive for <0>{dayCount, plural, one {# day} other {# days}}</0>."
-msgstr "Leden die <0>{dayCount, plural, one {# dag} other {# dagen}}</0> inactief waren, zijn verwijderd."
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:90
 msgid "PTT"
@@ -26505,11 +25795,6 @@ msgstr "{deletedCount, plural, one {# bericht} other {# berichten}} uit persoonl
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:42
 msgid "Push notification inactive timeout"
 msgstr "Time-out voor pushmeldingen (inactief)"
-
-#. Audit log operation flag label.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:185
-msgid "Push notifications"
-msgstr "Pushmeldingen"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:131
@@ -26703,11 +25988,6 @@ msgstr "Ruwe embed-JSON"
 msgid "Razor-sharp text at native source resolution, 15 FPS"
 msgstr "Haarscherpe tekst op de oorspronkelijke bronresolutie, 15 FPS"
 
-#. placeholder {0}: renderInline(joinLabels(removed), i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:393
-msgid "Re-enabled {0}."
-msgstr "{0} opnieuw ingeschakeld."
-
 #. Button label that discards the current recording and restarts.
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:73
 msgid "Re-record"
@@ -26803,8 +26083,7 @@ msgstr "Klaar om te upgraden?"
 msgid "Real-time"
 msgstr "Realtime"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:617
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:1286
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:595
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:74
 msgid "Reason"
 msgstr "Reden"
@@ -27486,23 +26765,6 @@ msgstr "Verwijder je Visionary ID-badge"
 msgid "Removed"
 msgstr "Verwijderd"
 
-#. placeholder {0}: renderInline(joinLabels(labels), i18n)
-#. placeholder {0}: renderInline(joinLabels(removedLabels), i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:516
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:533
-msgid "Removed {0}."
-msgstr "{0} verwijderd."
-
-#. placeholder {0}: renderInline(removedLabels, i18nInstance)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:170
-msgid "Removed allow for {0}."
-msgstr "Toestemming voor {0} verwijderd."
-
-#. placeholder {0}: renderInline(removedLabels, i18nInstance)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:183
-msgid "Removed deny for {0}."
-msgstr "Ontzegging voor {0} verwijderd."
-
 #. Button or menu action label in the messaging commands. Keep it concise. Keep the tone plain and specific.
 #: src/features/messaging/commands/SavedMessageCommands.tsx:24
 msgid "Removed from bookmarks"
@@ -27528,14 +26790,6 @@ msgstr "Uit groep verwijderd"
 msgid "Removed from saved media"
 msgstr "Verwijderd uit opgeslagen media"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:626
-msgid "Removed role {oldLabel}."
-msgstr "Rol {oldLabel} verwijderd."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:535
-msgid "Removed roles."
-msgstr "Rollen verwijderd."
-
 #. Activity log detail line under a community settings update, shown when the community stopped having an AFK channel, the voice channel idle members are moved to. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:166
 msgid "Removed the AFK channel"
@@ -27545,10 +26799,6 @@ msgstr "AFK-kanaal verwijderd"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogInviteWebhookMessages.ts:135
 msgid "Removed the avatar"
 msgstr "Avatar verwijderd"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:423
-msgid "Removed the channel from its category."
-msgstr "Heeft het kanaal uit de categorie verwijderd."
 
 #. Activity log detail row under an updated channel that was taken out of its category. The channel was not deleted and was not moved to another category. It now sits outside any category. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {category} is the category it left, shown as a channel chip with its name.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:195
@@ -27661,18 +26911,10 @@ msgstr "De rolkleur verwijderd"
 msgid "Removed the role icon"
 msgstr "Het rolpictogram verwijderd"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:383
-msgid "Removed the rules channel."
-msgstr "Het regelskanaal verwijderd."
-
 #. Activity log detail line under a community settings update, shown when the community stopped having a system channel, where the app posts messages such as member joins. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:136
 msgid "Removed the system channel"
 msgstr "Systeemkanaal verwijderd"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:367
-msgid "Removed the system channel."
-msgstr "Systeemkanaal verwijderd."
 
 #. Activity log detail line under a change to a member, for a timeout that was ended early. A timeout is the moderation action that stops a member from sending messages, reacting and joining voice until it ends. It is not a ban, a kick or a community mute. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogMemberMessages.ts:260
@@ -27684,18 +26926,10 @@ msgstr "De time-out verwijderd"
 msgid "Removed the topic {text}"
 msgstr "Het onderwerp {text} verwijderd"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:677
-msgid "Removed the Unicode emoji."
-msgstr "De Unicode-emoji verwijderd."
-
 #. Activity log detail row under an updated voice channel that no longer limits how many people can join at once. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:270
 msgid "Removed the user limit"
 msgstr "De gebruikerslimiet is verwijderd"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:451
-msgid "Removed the user limit."
-msgstr "De gebruikerslimiet is verwijderd."
 
 #. Activity log detail line under a community settings update, shown when the vanity URL, the custom invite link of the community, was removed. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {code} is the vanity URL code that was removed, shown as boxed text.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:311
@@ -27747,40 +26981,10 @@ msgstr "Formulier om een kanaalnaam te wijzigen"
 msgid "Rename emoji"
 msgstr "Emoji hernoemen"
 
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:736
-msgid "Renamed emoji to {0}."
-msgstr "Emoji hernoemd naar {0}."
-
-#. placeholder {0}: renderInline(change.oldValue, i18n)
-#. placeholder {1}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:764
-msgid "Renamed from {0} to {1}."
-msgstr "Hernoemd van {0} naar {1}."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:617
-msgid "Renamed from {oldLabel} to {newLabel}."
-msgstr "Hernoemd van {oldLabel} naar {newLabel}."
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:741
-msgid "Renamed sticker to {0}."
-msgstr "Sticker hernoemd naar {0}."
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:412
-msgid "Renamed the channel to {0}."
-msgstr "Heeft het kanaal hernoemd naar {0}."
-
 #. Activity log detail line under a community settings update, shown when the community name changed. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {oldName} is the previous community name and {newName} is the new community name, both shown in bold. The app adds the bold, so do not add ** or <b>.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:46
 msgid "Renamed the community from {oldName} to {newName}"
 msgstr "De community hernoemd van {oldName} naar {newName}"
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:229
-msgid "Renamed the community to {0}."
-msgstr "Heeft de community hernoemd naar {0}."
 
 #. Developer / debug surface — keep terse and technical. Tooltip / description for the force-unknown-message-type override.
 #: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:27
@@ -27841,12 +27045,12 @@ msgid "Reply"
 msgstr "Antwoorden"
 
 #. Error message in the channel and chat reply preview. Keep the tone plain and specific.
-#: src/features/channel/components/ReplyPreview.tsx:34
+#: src/features/channel/components/ReplyPreview.tsx:33
 msgid "Reply hidden because the original author is blocked."
 msgstr "Antwoord verborgen omdat de oorspronkelijke auteur is geblokkeerd."
 
 #. Description text in the channel and chat reply preview. Keep the tone plain and specific.
-#: src/features/channel/components/ReplyPreview.tsx:38
+#: src/features/channel/components/ReplyPreview.tsx:37
 msgid "Reply hidden because the original author is marked as a spammer."
 msgstr "Antwoord verborgen omdat de oorspronkelijke auteur is gemarkeerd als spammer."
 
@@ -28260,10 +27464,6 @@ msgstr "Socket resetten"
 msgid "Reset spacing"
 msgstr "Afstand herstellen"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:457
-msgid "Reset the connection limit."
-msgstr "Verbindingslimiet opnieuw ingesteld."
-
 #. Activity log detail line under an edited role that lost its own place in the order of role groups in the member list, so that order follows the role list again. Reset means the position went back to the default. The member list position is where the group of members with this role appears in the member list. It is not a position of the member list itself. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Reset is past tense here. Use the same word for role as the rest of the app.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:155
 msgid "Reset the member list position for the role"
@@ -28537,10 +27737,6 @@ msgstr "Account herstellen"
 msgid "Restore window"
 msgstr "Venster herstellen"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:673
-msgid "Restricted mentions of this role to members with permission."
-msgstr "Vermeldingen van deze rol zijn beperkt tot leden met de vereiste toestemming."
-
 #. Billing button for restarting a subscription during the grace period.
 #. Billing button for starting a new subscription after premium expired.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:736
@@ -28736,11 +27932,6 @@ msgstr "Uitnodiging intrekken"
 msgid "Revoke this invite? Can't be undone."
 msgstr "Deze uitnodiging intrekken? Kan niet ongedaan worden gemaakt."
 
-#. placeholder {0}: renderInline(removedLabels, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:635
-msgid "Revoked {0}."
-msgstr "{0} ingetrokken."
-
 #. Activity log detail line under an edited role, listing the permissions the role no longer gives its members. The actor in the summary took them away from the role. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {permissions} is a list of permission names that the app joins with commas and the word for "and" in your language. When the list is long it ends with a count of the permissions not named, such as "3 more permissions".
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:65
 msgid "Revoked {permissions}"
@@ -28774,9 +27965,7 @@ msgid "Right {keyName}"
 msgstr "{keyName} (rechts)"
 
 #. Audit log value for invite splash alignment: right image placement.
-#. Audit log value for invite splash alignment: right image placement.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:48
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:74
 msgid "Right aligned"
 msgstr "Rechts uitgelijnd"
 
@@ -28826,7 +28015,7 @@ msgstr "Beltoon"
 
 #. Audit log target-type filter label. Filters entries that target a role.
 #. Slash-command argument type name, spoken by screen readers for an argument that takes a role.
-#: src/features/app/config/AuditLogConstants.ts:179
+#: src/features/app/config/AuditLogConstants.ts:159
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts:35
 msgid "Role"
 msgstr "Rol"
@@ -28837,7 +28026,7 @@ msgid "Role color"
 msgstr "Rolkleur"
 
 #. Audit log entry label. A new role was created in the community.
-#: src/features/app/config/AuditLogConstants.ts:87
+#: src/features/app/config/AuditLogConstants.ts:71
 msgid "Role created"
 msgstr "Rol aangemaakt"
 
@@ -28847,7 +28036,7 @@ msgid "Role created successfully"
 msgstr "Rol succesvol aangemaakt"
 
 #. Audit log entry label. A role was deleted from the community.
-#: src/features/app/config/AuditLogConstants.ts:95
+#: src/features/app/config/AuditLogConstants.ts:79
 msgid "Role deleted"
 msgstr "Rol verwijderd"
 
@@ -28867,14 +28056,9 @@ msgid "Role name is required"
 msgstr "Rolnaam is vereist"
 
 #. Audit log entry label. An existing role was edited.
-#: src/features/app/config/AuditLogConstants.ts:91
+#: src/features/app/config/AuditLogConstants.ts:75
 msgid "Role updated"
 msgstr "Rol bijgewerkt"
-
-#. placeholder {0}: renderValueInline(value, guildId, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:379
-msgid "Role: {0}."
-msgstr "Rol: {0}."
 
 #. Generic section, column, or submenu label for community roles.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:422
@@ -28959,11 +28143,6 @@ msgstr "Runtimehulpprogramma's"
 #: src/features/user/utils/LocaleUtils.ts:116
 msgid "Russian"
 msgstr "Russisch"
-
-#. Short label in the guild audit log tab.renderers. Keep it concise.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:43
-msgid "Safe"
-msgstr "Veilig"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:172
@@ -29954,7 +29133,7 @@ msgstr "Selecteerbare tekst"
 #: src/features/app/components/layout/ChannelItem.tsx:96
 #: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:54
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:35
-#: src/features/channel/components/direct_message/DMListItem.tsx:68
+#: src/features/channel/components/direct_message/DMListItem.tsx:67
 msgid "selected"
 msgstr "geselecteerd"
 
@@ -30106,7 +29285,7 @@ msgstr "Bestanden in volgorde verzenden"
 #. Member actions sheet menu item. Sends a friend request to the target user.
 #: src/features/channel/components/direct_message/DMWelcomeSection.tsx:146
 #: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:94
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:112
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:110
 #: src/features/user/components/modals/UserProfileModal.tsx:126
 msgid "Send friend request"
 msgstr "Vriendschapsverzoek sturen"
@@ -30132,9 +29311,7 @@ msgstr "Cadeau versturen"
 msgid "Send message"
 msgstr "Stuur bericht"
 
-#. Audit log operation flag label for message sending.
 #. Permission name: allows sending chat messages.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:197
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:402
 msgid "Send messages"
 msgstr "Berichten verzenden"
@@ -30290,7 +29467,7 @@ msgid "Sent"
 msgstr "Verzonden"
 
 #. DM list row preview text when the most recent message has only attachments.
-#: src/features/channel/components/direct_message/DMListItem.tsx:64
+#: src/features/channel/components/direct_message/DMListItem.tsx:63
 msgid "Sent an attachment"
 msgstr "Heeft een bijlage verstuurd"
 
@@ -30340,18 +29517,13 @@ msgstr "Sessie verlopen. Meld je opnieuw aan."
 msgid "Sessions"
 msgstr "Sessies"
 
-#. placeholder {0}: renderValueInline(change.newValue, guildId, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:214
-msgid "Set {fieldNode} to {0}."
-msgstr "{fieldNode} ingesteld op {0}."
-
 #. Activity log detail line under a created or edited role that got an uploaded image as the icon shown next to the role name, when it had no uploaded icon before. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Set is past tense here. Use the same word for role as the rest of the app.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:125
 msgid "Set a custom role icon"
 msgstr "Een aangepast rolpictogram ingesteld"
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:601
-#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:355
+#: src/features/app/components/shared/custom_status_display/CustomStatusDisplay.tsx:253
 msgid "Set a custom status"
 msgstr "Aangepaste status instellen"
 
@@ -30359,11 +29531,6 @@ msgstr "Aangepaste status instellen"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:150
 msgid "Set a member list position for the role"
 msgstr "Een positie in de ledenlijst ingesteld voor de rol"
-
-#. placeholder {0}: renderInline(color, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:586
-msgid "Set accent color to {0} <0/>."
-msgstr "Accentkleur ingesteld op {0} <0/>."
 
 #. Short label in the keybinds tab. Keep it concise.
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:28
@@ -30390,33 +29557,10 @@ msgstr "Stel aangepaste volumes in voor individuele geluiden. Geluiden zonder ee
 msgid "Set deafen shortcut"
 msgstr "Sneltoets voor geluid uitschakelen instellen"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:309
-msgid "Set default notifications to <0>all messages</0>."
-msgstr "Stelde standaardmeldingen in op <0>alle berichten</0>."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:320
-msgid "Set default notifications to <0>only mentions</0>."
-msgstr "Stelde standaardmeldingen in op <0>alleen vermeldingen</0>."
-
-#. placeholder {0}: renderInline(label, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:364
-msgid "Set explicit content filter to {0}."
-msgstr "Expliciete-inhoudfilter ingesteld op {0}."
-
 #. Badge label in entrance sound settings. The current scope has its own explicitly configured sound instead of inheriting one.
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:108
 msgid "Set here"
 msgstr "Hier ingesteld"
-
-#. placeholder {0}: renderInline(label, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:360
-msgid "Set mature content level to {0}."
-msgstr "Niveau voor inhoud voor volwassenen ingesteld op {0}."
-
-#. placeholder {0}: renderInline(formatted, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:403
-msgid "Set message history threshold to {0}."
-msgstr "Berichtgeschiedenisdrempel ingesteld op {0}."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:187
@@ -30428,38 +29572,14 @@ msgstr "Sneltoets voor dempen instellen"
 msgid "Set new password"
 msgstr "Nieuw wachtwoord instellen"
 
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:478
-msgid "Set nickname to {0}."
-msgstr "Bijnaam ingesteld op {0}."
-
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:199
 msgid "Set password"
 msgstr "Wachtwoord instellen"
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:466
-msgid "Set permission overwrite count to {0}."
-msgstr "Aantal aangepaste toegangsrechten ingesteld op {0}."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:170
 msgid "Set push to talk key"
 msgstr "Push-to-talk-toets instellen"
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:550
-msgid "Set reason to {0}."
-msgstr "Reden ingesteld op {0}."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:657
-msgid "Set role color to <0>{hex}</0> <1/>."
-msgstr "Rolkleur ingesteld op <0>{hex}</0> <1/>."
-
-#. placeholder {0}: renderInline(seconds, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:436
-msgid "Set slowmode to {0} {seconds, plural, one {second} other {seconds}}."
-msgstr "Slowmodus ingesteld op {0} {seconds, plural, one {seconde} other {seconden}}."
 
 #. Activity log detail row under a created or updated channel that now has slowmode, the wait between messages from one member. Use the same term for slowmode as the Slowmode channel setting. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Set is past tense here. {duration} is the wait, shown as a formatted duration such as "30 seconds" or "1 hour".
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:81
@@ -30471,50 +29591,15 @@ msgstr "Slowmodus ingesteld op {duration}"
 msgid "Set status"
 msgstr "Status instellen"
 
-#. placeholder {0}: renderInline(change.newValue, i18n, guildId)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:237
-msgid "Set the AFK channel to {0}."
-msgstr "AFK-kanaal ingesteld op {0}."
-
 #. Activity log detail line under a community settings update, shown when the community got an AFK channel, the voice channel idle members are moved to, when it had none. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Set is past tense here. {channel} is the new AFK channel, shown as a channel chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:156
 msgid "Set the AFK channel to {channel}"
 msgstr "Het AFK-kanaal ingesteld op {channel}"
 
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:242
-msgid "Set the AFK timeout to {0} seconds."
-msgstr "AFK-time-out in seconden ingesteld op {0}."
-
 #. Activity log detail row under a created voice channel whose audio bitrate differs from the default. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Set is past tense here. {kbps} is a plain number of kilobits per second, and kbps is the unit abbreviation.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:86
 msgid "Set the audio quality to {kbps} kbps"
 msgstr "De audiokwaliteit ingesteld op {kbps} kbps"
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:461
-msgid "Set the bitrate to {0}."
-msgstr "Bitrate ingesteld op {0}."
-
-#. placeholder {0}: renderInline(change.newValue, i18n, guildId)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:409
-msgid "Set the channel ID to {0}."
-msgstr "Kanaal-ID ingesteld op {0}."
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:428
-msgid "Set the channel position to {0}."
-msgstr "Kanaalpositie ingesteld op {0}."
-
-#. placeholder {0}: renderChannelTypeValue(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:411
-msgid "Set the channel type to {0}."
-msgstr "Heeft het kanaaltype ingesteld op {0}."
-
-#. placeholder {0}: renderInline(limit, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:458
-msgid "Set the connection limit to {0}."
-msgstr "Verbindingslimiet ingesteld op {0}."
 
 #. Activity log detail row under an updated channel whose content warning got custom text where it had none. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Set is past tense here. {text} is the new warning text, shown as boxed text.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:235
@@ -30530,11 +29615,6 @@ msgstr "De aangepaste waarschuwingstekst ingesteld op {text}"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:55
 msgid "Set the description to {text}"
 msgstr "De beschrijving ingesteld op {text}"
-
-#. placeholder {0}: renderSplashAlignmentValue(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:254
-msgid "Set the invite splash alignment to {0}."
-msgstr "Uitlijning van uitnodigingsachtergrond ingesteld op {0}."
 
 #. Activity log detail row under a created or updated link channel, saying which web address the channel opens. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Set is past tense here. {url} is the web address, shown as boxed text.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:51
@@ -30581,21 +29661,6 @@ msgstr "De rolkleur ingesteld op {color}"
 msgid "Set the role icon to {emoji}"
 msgstr "Het rolpictogram ingesteld op {emoji}"
 
-#. placeholder {0}: renderRtcRegionValue(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:464
-msgid "Set the RTC region to {0}."
-msgstr "RTC-regio ingesteld op {0}."
-
-#. placeholder {0}: renderInline(change.newValue, i18n, guildId)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:385
-msgid "Set the rules channel to {0}."
-msgstr "Heeft het regelskanaal ingesteld op {0}."
-
-#. placeholder {0}: renderInline(change.newValue, i18n, guildId)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:369
-msgid "Set the system channel to {0}."
-msgstr "Systeemkanaal ingesteld op {0}."
-
 #. Activity log detail line under a community settings update, shown when the community got a system channel, where the app posts messages such as member joins, when it had none. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Set is past tense here. {channel} is the new system channel, shown as a channel chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:126
 msgid "Set the system channel to {channel}"
@@ -30605,21 +29670,6 @@ msgstr "Het systeemkanaal ingesteld op {channel}"
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogChannelMessages.ts:56
 msgid "Set the topic to {text}"
 msgstr "Het onderwerp ingesteld op {text}"
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:678
-msgid "Set the Unicode emoji to {0}."
-msgstr "Unicode-emoji ingesteld op {0}."
-
-#. placeholder {0}: renderInline(limit, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:452
-msgid "Set the user limit to {0}."
-msgstr "Gebruikerslimiet ingesteld op {0}."
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:337
-msgid "Set the vanity URL to {0}."
-msgstr "Aangepaste URL ingesteld op {0}."
 
 #. Activity log detail line under a community settings update, shown when the community got a vanity URL, its custom invite link, when it had none. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. Set is past tense here. {code} is the new vanity URL code, shown as boxed text.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:301
@@ -30663,31 +29713,10 @@ msgstr "Authenticator-app instellen"
 msgid "Set up later"
 msgstr "Later instellen"
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:296
-msgid "Set verification level to <0>high</0>."
-msgstr "Verificatieniveau ingesteld op <0>hoog</0>."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:279
-msgid "Set verification level to <0>low</0>."
-msgstr "Verificatieniveau ingesteld op <0>laag</0>."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:286
-msgid "Set verification level to <0>medium</0>."
-msgstr "Verificatieniveau ingesteld op <0>gemiddeld</0>."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:272
-msgid "Set verification level to <0>none</0>."
-msgstr "Verificatieniveau ingesteld op <0>geen</0>."
-
 #. Permission name: allows changing the voice service region.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:491
 msgid "Set voice region"
 msgstr "Spraakregio instellen"
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:770
-msgid "Set webhook type to {0}."
-msgstr "Webhooktype ingesteld op {0}."
 
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:147
 msgid "Set your new password."
@@ -31713,7 +30742,7 @@ msgid "Skip this step"
 msgstr "Deze stap overslaan"
 
 #. Accessible skip-link label for keyboard users.
-#: src/app/App.tsx:76
+#: src/app/App.tsx:69
 msgid "Skip to content"
 msgstr "Naar inhoud springen"
 
@@ -31995,16 +31024,6 @@ msgstr "Sommige bestanden die je probeert te uploaden, zijn groter dan de maxima
 msgid "Some users can't be added"
 msgstr "Sommige gebruikers kunnen niet worden toegevoegd"
 
-#. Lowercase fallback label in the activity log when the actor or user is unknown.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:42
-msgid "someone"
-msgstr "iemand"
-
-#. Lowercase fallback label in the activity log when an entity name is missing.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:34
-msgid "something"
-msgstr "iets"
-
 #. Fallback tooltip on the passive badge on your own screen-share tile when the encoder reports no specific limitation.
 #: src/features/voice/components/voice_participant_tile/shared.ts:93
 msgid "Something is limiting this stream, so viewers are getting fewer frames than you asked for."
@@ -32066,7 +31085,7 @@ msgid "Something went wrong while issuing your refund. Contact support if this k
 msgstr "Er is iets misgegaan bij het verwerken van je terugbetaling. Neem contact op met de ondersteuning als dit blijft gebeuren."
 
 #. Generic error shown in the activity log tab when fetching log entries fails.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:104
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:82
 msgid "Something went wrong while loading the activity log."
 msgstr "Er is iets misgegaan bij het laden van het activiteitenlogboek."
 
@@ -32718,7 +31737,7 @@ msgstr "Stereomicrofoon"
 #. Label for the has:sticker filter option in the mobile channel search sheet.
 #. Screen-reader fragment listing one sticker on a message. Lowercase because it appears inside a longer sentence.
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:120
-#: src/features/channel/components/ChannelMessage.tsx:53
+#: src/features/channel/components/ChannelMessage.tsx:52
 msgid "sticker"
 msgstr "sticker"
 
@@ -32726,7 +31745,7 @@ msgstr "sticker"
 #. Generic label for one sticker.
 #. Label for the has:sticker option in the mobile content-type filter sheet.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/config/AuditLogConstants.ts:191
+#: src/features/app/config/AuditLogConstants.ts:171
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:234
 #: src/features/search/components/search/HasFilterSheet.tsx:73
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:133
@@ -32752,28 +31771,18 @@ msgstr "Sticker aan het bericht toegevoegd"
 msgid "Sticker autocomplete"
 msgstr "Stickersuggesties"
 
-#. Audit log community feature label indicating sticker cloning is disabled.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:94
-msgid "Sticker cloning disabled"
-msgstr "Stickers klonen uitgeschakeld"
-
-#. Audit log community feature label indicating sticker cloning is enabled.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:102
-msgid "Sticker cloning enabled"
-msgstr "Stickers klonen ingeschakeld"
-
 #. Title of the error modal shown when a sticker remains too large after automatic resizing and compression.
 #: src/features/expressions/components/modals/AddGuildStickerModal.tsx:43
 msgid "Sticker couldn't be compressed enough"
 msgstr "Sticker kon niet voldoende worden gecomprimeerd"
 
 #. Audit log entry label. A custom sticker was added to the community.
-#: src/features/app/config/AuditLogConstants.ts:135
+#: src/features/app/config/AuditLogConstants.ts:115
 msgid "Sticker created"
 msgstr "Sticker gemaakt"
 
 #. Audit log entry label. A custom sticker was removed from the community.
-#: src/features/app/config/AuditLogConstants.ts:143
+#: src/features/app/config/AuditLogConstants.ts:123
 msgid "Sticker deleted"
 msgstr "Sticker verwijderd"
 
@@ -32802,7 +31811,7 @@ msgid "Sticker slots full"
 msgstr "Stickerplaatsen vol"
 
 #. Audit log entry label. A custom sticker was edited.
-#: src/features/app/config/AuditLogConstants.ts:139
+#: src/features/app/config/AuditLogConstants.ts:119
 msgid "Sticker updated"
 msgstr "Sticker bijgewerkt"
 
@@ -34223,14 +33232,6 @@ msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "De bron van het gedeelde scherm verstuurde geen video meer. Daarom is het schermdelen gestopt."
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:748
-msgid "The sticker was uploaded as animated."
-msgstr "De sticker is geüpload als animatie."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:751
-msgid "The sticker was uploaded as static."
-msgstr "De sticker is geüpload als statisch."
-
 #. Activity log detail line under a deleted sticker, shown only when someone other than the person who deleted it had uploaded it. {user} is the user who uploaded the sticker, shown as a clickable user chip.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogExpressionMessageMessages.ts:100
 msgid "The sticker was uploaded by {user}"
@@ -34763,19 +33764,6 @@ msgstr "Deze instantie staat momenteel schermdelen tot 720p met 30 FPS toe."
 msgid "This instance has no accounts yet. The first account you create automatically becomes the administrator."
 msgstr "Deze instantie heeft nog geen accounts. Het eerste account dat je aanmaakt, wordt automatisch de beheerder."
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:688
-msgid "This invite expires after {count, plural, one {# use} other {# uses}}."
-msgstr "Deze uitnodiging verloopt na {count, plural, one {# keer gebruiken} other {# keer gebruiken}}."
-
-#. placeholder {0}: formatMaxAge(change.newValue)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:703
-msgid "This invite expires in {0}."
-msgstr "Deze uitnodiging verloopt over {0}."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:684
-msgid "This invite has unlimited uses."
-msgstr "Deze uitnodiging kan onbeperkt worden gebruikt."
-
 #. Helper text shown on an invite embed while streaming privacy is active.
 #: src/features/channel/components/InviteEmbed.tsx:112
 msgid "This invite is hidden while sharing is protected."
@@ -34790,34 +33778,15 @@ msgstr "Deze uitnodigingslink verloopt nooit."
 msgid "This invite may have expired or been deleted."
 msgstr "Deze uitnodiging is mogelijk verlopen of verwijderd."
 
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:701
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:319
-msgid "This invite never expires."
-msgstr "Deze uitnodiging verloopt nooit."
-
-#: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:114
-msgid "This is a custom emoji from"
-msgstr "Dit is een aangepaste emoji van"
-
 #. Description of a custom emoji from a community the viewer is not a member of.
-#: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:106
 #: src/features/expressions/components/ExpressionInfoCard.tsx:61
 msgid "This is a custom emoji from a community."
 msgstr "Dit is een aangepaste emoji uit een community."
-
-#: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:97
-msgid "This is a custom emoji from a community. Ask the author for an invite to use this emoji."
-msgstr "Dit is een aangepaste emoji uit een community. Vraag de auteur om een uitnodiging om deze emoji te gebruiken."
 
 #. Description of a custom sticker from a community the viewer is not a member of.
 #: src/features/expressions/components/ExpressionInfoCard.tsx:65
 msgid "This is a custom sticker from a community."
 msgstr "Dit is een aangepaste sticker uit een community."
-
-#. Emoji attribution text for built-in default emoji. productName is the Fluxer product name.
-#: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:18
-msgid "This is a default emoji on {productName}."
-msgstr "Dit is een standaardemoji op {productName}."
 
 #. Required-action modal intro text when phone verification is required.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:228
@@ -35352,11 +34321,6 @@ msgstr "Time-out"
 msgid "Timed out {targetUserTag}"
 msgstr "{targetUserTag} een time-out gegeven"
 
-#. placeholder {0}: renderInline(formatted, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:594
-msgid "Timed out until {0}."
-msgstr "Time-out tot {0}."
-
 #. Moderation action label that times a member out (temporary mute) in a community.
 #: src/features/moderation/components/modals/TimeoutMemberModal.tsx:134
 #: src/features/moderation/utils/ModerationMessageDescriptors.ts:21
@@ -35616,7 +34580,7 @@ msgid "TOTP"
 msgstr "TOTP"
 
 #. Subtitle under the activity-log page title.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:112
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:90
 msgid "Track moderator actions across the community."
 msgstr "Houd moderatoracties bij in de hele community."
 
@@ -35655,11 +34619,6 @@ msgstr "Community-eigendom overgedragen aan {user}"
 #: src/features/guild/components/modals/TransferOwnershipModal.tsx:40
 msgid "Transferred ownership to {0}"
 msgstr "Eigendom overgedragen aan {0}"
-
-#. placeholder {0}: renderInline(change.newValue, i18n, guildId)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:233
-msgid "Transferred ownership to {0}."
-msgstr "Eigendom overgedragen aan {0}."
 
 #. Generic action label that translates a message body.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -36156,11 +35115,6 @@ msgstr "Typen"
 msgid "Typing avatars"
 msgstr "Typende avatars"
 
-#. Audit log operation flag label.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:189
-msgid "Typing events"
-msgstr "Typgebeurtenissen"
-
 #. Accessible label for the typing-indicator element.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the channel and chat typing. Keep it concise.
@@ -36214,7 +35168,7 @@ msgid "Ukrainian"
 msgstr "Oekraïens"
 
 #. Error-state title in the activity log tab when fetching log entries failed.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:136
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:114
 msgid "Unable to load activity logs"
 msgstr "Kan activiteitenlogboeken niet laden"
 
@@ -36295,16 +35249,6 @@ msgstr "Niet toegewezen"
 msgid "Unavailable"
 msgstr "Niet beschikbaar"
 
-#. Audit log community feature label meaning the community is unavailable to all users.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:173
-msgid "Unavailable for everyone"
-msgstr "Voor niemand beschikbaar"
-
-#. Audit log community feature label meaning only staff can access the community.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:177
-msgid "Unavailable for everyone but staff"
-msgstr "Alleen beschikbaar voor medewerkers"
-
 #. Relationship action label for removing a block from this user.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/channel/components/barriers/BarrierComponents.tsx:376
@@ -36330,7 +35274,7 @@ msgstr "Deblokkeer diegene eerst om een vriendschapsverzoek te sturen."
 #. Button or menu action label in the user profile modal. Keep it concise. Keep the tone plain and specific.
 #. Title of the confirmation modal for unblocking a previously blocked user. Short command title.
 #: src/features/relationship/utils/RelationshipActionUtils.tsx:95
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:107
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:105
 #: src/features/user/components/modals/UserProfileModal.tsx:118
 msgid "Unblock user"
 msgstr "Deblokkeer gebruiker"
@@ -36542,11 +35486,6 @@ msgstr "Onbekende datum"
 msgid "Unknown device"
 msgstr "Onbekend apparaat"
 
-#. Lowercase fallback label in the activity log for an entity that cannot be resolved.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:38
-msgid "unknown entity"
-msgstr "onbekende entiteit"
-
 #. Fallback diagnostic text on the crash screen when an Error object has no message.
 #. Fallback error text shown when LaTeX rendering fails without an error message.
 #: src/features/app/components/ErrorFallback.tsx:25
@@ -36592,11 +35531,6 @@ msgstr "onbekende rol"
 msgid "Unknown role"
 msgstr "Onbekende rol"
 
-#. Activity log fallback label for a target object that cannot be resolved.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:58
-msgid "Unknown target"
-msgstr "Onbekend doel"
-
 #. TTS substitution token spoken in place of a mention when the user cannot be resolved. Lowercase, mid-sentence.
 #: src/features/voice/utils/TtsTextFormatter.ts:14
 msgid "unknown user"
@@ -36618,7 +35552,7 @@ msgstr "onbekende gebruiker"
 #: src/features/channel/utils/ChannelUtils.tsx:55
 #: src/features/devtools/utils/CommandUtils.ts:27
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogSentence.tsx:54
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:124
+#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:102
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts:61
 #: src/features/voice/components/VoiceParticipantAvatarList.tsx:44
 #: src/features/voice/components/VoiceParticipantTile.tsx:174
@@ -36643,16 +35577,6 @@ msgstr "onbekende-vermelding"
 #: src/features/messaging/utils/markdown/Plaintext.ts:76
 msgid "unknown-role"
 msgstr "onbekende-rol"
-
-#. Audit log community feature label for unlimited custom emoji capacity.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:134
-msgid "Unlimited emoji"
-msgstr "Onbeperkt aantal emoji"
-
-#. Audit log community feature label for unlimited custom sticker capacity.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:138
-msgid "Unlimited stickers"
-msgstr "Onbeperkt aantal stickers"
 
 #: src/features/channel/components/EmojiPicker.tsx:176
 #: src/features/channel/components/MobileEmojiPicker.tsx:212
@@ -36880,7 +35804,7 @@ msgstr "Groeps-DM losgemaakt"
 #: src/features/app/components/layout/sidebar_nav/GuildFolderItem.tsx:89
 #: src/features/app/components/layout/sidebar_nav/GuildListDMItem.tsx:58
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:27
-#: src/features/channel/components/direct_message/DMListItem.tsx:72
+#: src/features/channel/components/direct_message/DMListItem.tsx:71
 msgid "unread"
 msgstr "ongelezen"
 
@@ -37076,24 +36000,6 @@ msgstr "Je eigen bijnaam bijwerken."
 msgid "Update your password"
 msgstr "Wachtwoord bijwerken"
 
-#. placeholder {0}: renderValueInline(change.oldValue, guildId, i18n)
-#. placeholder {1}: renderValueInline(change.newValue, guildId, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:206
-msgid "Updated {fieldNode} from {0} to {1}."
-msgstr "{fieldNode} bijgewerkt van {0} naar {1}."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:226
-msgid "Updated {fieldNode}."
-msgstr "{fieldNode} bijgewerkt."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:179
-msgid "Updated allowed permissions."
-msgstr "Toegestane machtigingen bijgewerkt."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:192
-msgid "Updated denied permissions."
-msgstr "Geweigerde machtigingen bijgewerkt."
-
 #. Modal title shown when the user must accept changed legal policies.
 #: src/features/auth/components/modals/TermsAcceptanceModal.tsx:19
 msgid "Updated policies"
@@ -37103,58 +36009,6 @@ msgstr "Beleid bijgewerkt"
 #: src/features/expressions/commands/FavoriteMemeCommands.tsx:23
 msgid "Updated saved media"
 msgstr "Opgeslagen media bijgewerkt"
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:548
-msgid "Updated the avatar."
-msgstr "Avatar bijgewerkt."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:549
-msgid "Updated the banner."
-msgstr "Banner bijgewerkt."
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:576
-msgid "Updated the bio to {0}."
-msgstr "Bio bijgewerkt naar {0}."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:357
-msgid "Updated the community banner."
-msgstr "De communitybanner is bijgewerkt."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:230
-msgid "Updated the community icon."
-msgstr "Communitypictogram bijgewerkt."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:398
-msgid "Updated the embed splash."
-msgstr "Achtergrond van chat-embed bijgewerkt."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:231
-msgid "Updated the invite splash."
-msgstr "Uitnodigingsachtergrond bijgewerkt."
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:581
-msgid "Updated the pronouns to {0}."
-msgstr "De voornaamwoorden zijn gewijzigd naar {0}."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:675
-msgid "Updated the role icon."
-msgstr "Rolpictogram bijgewerkt."
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:744
-msgid "Updated the sticker description to {0}."
-msgstr "Stickerbeschrijving bijgewerkt naar {0}."
-
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:419
-msgid "Updated the topic to {0}."
-msgstr "Heeft het onderwerp gewijzigd naar {0}."
-
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:769
-msgid "Updated the webhook avatar."
-msgstr "De webhook-avatar is bijgewerkt."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:92
@@ -37747,11 +36601,6 @@ msgstr "Spraakactiviteit gebruiken"
 msgid "Use your operating system's spellchecker when available. Otherwise, use {productName}'s in-app dictionaries."
 msgstr "Gebruik de spellingscontrole van je besturingssysteem indien beschikbaar. Anders gebruik je de ingebouwde woordenboeken van {productName}."
 
-#. placeholder {0}: renderInline(change.newValue, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers.tsx:708
-msgid "Used {0} times."
-msgstr "{0} keer gebruikt."
-
 #. Description text in the entrance sound section.
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:66
 msgid "Used by default unless a community or DM sound overrides it."
@@ -37790,7 +36639,7 @@ msgstr "Alleen in deze community gebruikt."
 #. Audit log target-type filter label. Filters entries that target a user account.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Slash-command argument type name, spoken by screen readers for an argument that takes a user.
-#: src/features/app/config/AuditLogConstants.ts:175
+#: src/features/app/config/AuditLogConstants.ts:155
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts:27
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:65
 msgid "User"
@@ -37996,21 +36845,10 @@ msgctxt "us-state"
 msgid "Utah"
 msgstr "Utah"
 
-#. Lowercase fallback label in the activity log for a generic changed value.
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:54
-msgid "value"
-msgstr "waarde"
-
 #. Short label in the connection add connection modal.
 #: src/features/connection/components/modals/AddConnectionModal.tsx:73
 msgid "Value"
 msgstr "Waarde"
-
-#. placeholder {0}: renderValueInline(fallbackLabel, guildId, i18n)
-#. placeholder {1}: renderValueInline(value, guildId, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:383
-msgid "Value for {0}: {1}."
-msgstr "Waarde voor {0}: {1}."
 
 #. Accessible label for editing a Theme Studio token value.
 #: src/features/theme_studio/ui/StudioToken.tsx:32
@@ -38027,11 +36865,9 @@ msgstr "Waarde opgeslagen: {newValue}"
 msgid "Values"
 msgstr "Waarden"
 
-#. Audit log community feature label for a custom community invite URL.
 #. Join source label on the community members page. Shown when the member joined via the community vanity URL.
 #: src/features/channel/components/guild_members_page/GuildMembersPageDescriptors.ts:5
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:216
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:146
 msgid "Vanity URL"
 msgstr "Aangepaste URL"
 
@@ -38045,11 +36881,6 @@ msgstr "Aangepaste URL"
 #: src/features/guild/components/modals/guild_tabs/GuildVanityURLTab.tsx:37
 msgid "Vanity URL can only contain alphanumeric characters and internal hyphens."
 msgstr "De aangepaste URL mag alleen alfanumerieke tekens en koppeltekens bevatten. Koppeltekens mogen niet aan het begin of einde staan."
-
-#. placeholder {0}: renderValueInline(value, guildId, i18n)
-#: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:252
-msgid "Vanity URL code: {0}."
-msgstr "Code voor aangepaste URL: {0}."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:144
@@ -38132,12 +36963,8 @@ msgstr "Verificatie mislukt"
 msgid "Verified & partnered community"
 msgstr "Geverifieerde en partnercommunity"
 
-#. Audit log community feature label for verified communities.
-#. Badge or label indicating the community is verified.
 #. Short label in the community badge. Keep it concise.
-#: src/features/emoji/components/emojis/EmojiAttributionSubtext.tsx:14
 #: src/features/guild/components/GuildBadge.tsx:21
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:150
 msgid "Verified community"
 msgstr "Geverifieerde community"
 
@@ -38352,7 +37179,7 @@ msgstr "Video"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tooltip on the channel header button that starts a video call in a DM or group DM.
 #: src/features/channel/components/channel_header/shared.ts:43
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:769
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:766
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:33
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:199
 msgid "Video call"
@@ -38701,11 +37528,6 @@ msgstr "Geweld of gewelddadige dreigementen"
 msgid "Violent or graphic content"
 msgstr "Gewelddadige of schokkende inhoud"
 
-#. Audit log community feature label for elevated voice capacity/quality.
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:169
-msgid "VIP voice"
-msgstr "VIP-spraak"
-
 #. US state name, shown next to the country name in the mature content gate.
 #: src/features/user/utils/UserGeo.ts:238
 msgctxt "us-state"
@@ -38717,9 +37539,7 @@ msgstr "Virginia"
 msgid "Visibility"
 msgstr "Zichtbaarheid"
 
-#. Audit log community feature label for the Visionary premium feature.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:416
-#: src/features/guild/utils/guild_tabs/GuildAuditLogTabUtils.ts:181
 msgid "Visionary"
 msgstr "Visionary"
 
@@ -38856,7 +37676,7 @@ msgid "Voice and video shortcuts"
 msgstr "Sneltoetsen voor spraak en video"
 
 #. Short label for a voice call (lobby header, DM action, settings section).
-#: src/features/user/components/modals/UserProfileMobileSheet.tsx:747
+#: src/features/user/components/modals/UserProfileMobileSheet.tsx:744
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:35
 msgid "Voice call"
 msgstr "Spraakoproep"
@@ -39417,7 +38237,7 @@ msgid "Webcam"
 msgstr "Webcam"
 
 #. Audit log target-type filter label. Filters entries that target a webhook.
-#: src/features/app/config/AuditLogConstants.ts:200
+#: src/features/app/config/AuditLogConstants.ts:180
 msgid "Webhook"
 msgstr "Webhook"
 
@@ -39428,13 +38248,13 @@ msgstr "Webhook {currentName}"
 
 #. Audit log entry label. A new webhook integration was created.
 #. Short label in the channel webhooks tab. Keep it concise.
-#: src/features/app/config/AuditLogConstants.ts:111
+#: src/features/app/config/AuditLogConstants.ts:91
 #: src/features/channel/components/modals/channel_tabs/ChannelWebhooksTab.tsx:32
 msgid "Webhook created"
 msgstr "Webhook aangemaakt"
 
 #. Audit log entry label. A webhook integration was deleted.
-#: src/features/app/config/AuditLogConstants.ts:119
+#: src/features/app/config/AuditLogConstants.ts:99
 msgid "Webhook deleted"
 msgstr "Webhook verwijderd"
 
@@ -39444,7 +38264,7 @@ msgid "Webhook name"
 msgstr "Naam webhook"
 
 #. Audit log entry label. An existing webhook integration was edited.
-#: src/features/app/config/AuditLogConstants.ts:115
+#: src/features/app/config/AuditLogConstants.ts:95
 msgid "Webhook updated"
 msgstr "Webhook bijgewerkt"
 
@@ -39934,7 +38754,7 @@ msgstr "Gisteren om {timeString}"
 
 #. First-person prefix used in DM list row preview when the current user is the message author.
 #: src/features/app/components/layout/MobileBottomNav.tsx:153
-#: src/features/channel/components/direct_message/DMListItem.tsx:60
+#: src/features/channel/components/direct_message/DMListItem.tsx:59
 msgid "You"
 msgstr "Jij"
 
@@ -40708,7 +39528,7 @@ msgid "You're timed out. Messaging, reactions, and voice are paused until the ti
 msgstr "Je hebt een time-out. Berichten, reacties en spraak zijn gepauzeerd totdat de time-out verloopt."
 
 #. Label in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:82
+#: src/features/channel/components/ChannelMessages.tsx:81
 msgid "You're viewing older messages"
 msgstr "Je bekijkt oudere berichten"
 

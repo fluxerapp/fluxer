@@ -9,14 +9,7 @@ import type {HonoApp} from '@app/api/types/HonoEnv';
 import {entityTagMatches} from '@app/api/utils/EntityTag';
 import {Headers as HttpHeaders} from '@fluxer/constants/src/Headers';
 import {resolveVoiceNoiseSuppressionAssignment} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
-import {resolveBlockedMessageGroupsAssignment} from '@fluxer/schema/src/domains/experiment/BlockedMessageGroupsSchemas';
 import {ExperimentAssignmentsResponse} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
-import {resolveExpressionInfoCardAssignment} from '@fluxer/schema/src/domains/experiment/ExpressionInfoCardSchemas';
-import {resolveGuildActivityLogPresentationAssignment} from '@fluxer/schema/src/domains/experiment/GuildActivityLogPresentationSchemas';
-import {resolveGuildHeaderCollapseAssignment} from '@fluxer/schema/src/domains/experiment/GuildHeaderCollapseSchemas';
-import {resolveMessageHoverTrackingAssignment} from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
-import {resolveMessageKeyboardFocusAssignment} from '@fluxer/schema/src/domains/experiment/MessageKeyboardFocusSchemas';
-import {resolveTypingIndicatorReworkAssignment} from '@fluxer/schema/src/domains/experiment/TypingIndicatorReworkSchemas';
 
 export function ExperimentController(app: HonoApp) {
 	app.get(
@@ -35,43 +28,15 @@ export function ExperimentController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const instanceConfigRepository = ctx.get('instanceConfigRepository');
-			const [
-				delivery,
-				voiceConfig,
-				messageHoverTrackingConfig,
-				messageKeyboardFocusConfig,
-				blockedMessageGroupsConfig,
-				guildActivityLogPresentationConfig,
-				expressionInfoCardConfig,
-				guildHeaderCollapseConfig,
-				typingIndicatorReworkConfig,
-			] = await Promise.all([
+			const [delivery, voiceConfig] = await Promise.all([
 				instanceConfigRepository.getExperimentDeliveryConfig(),
 				instanceConfigRepository.getVoiceNoiseSuppressionConfig(),
-				instanceConfigRepository.getMessageHoverTrackingConfig(),
-				instanceConfigRepository.getMessageKeyboardFocusConfig(),
-				instanceConfigRepository.getBlockedMessageGroupsConfig(),
-				instanceConfigRepository.getGuildActivityLogPresentationConfig(),
-				instanceConfigRepository.getExpressionInfoCardConfig(),
-				instanceConfigRepository.getGuildHeaderCollapseConfig(),
-				instanceConfigRepository.getTypingIndicatorReworkConfig(),
 			]);
-			const userId = ctx.get('user').id.toString();
 			const body: ExperimentAssignmentsResponse = {
 				poll_interval_seconds: delivery.poll_interval_seconds,
 				poll_jitter_percent: delivery.poll_jitter_percent,
 				assignments: {
-					voice_noise_suppression: resolveVoiceNoiseSuppressionAssignment(voiceConfig, userId),
-					message_hover_tracking: resolveMessageHoverTrackingAssignment(messageHoverTrackingConfig, userId),
-					message_keyboard_focus: resolveMessageKeyboardFocusAssignment(messageKeyboardFocusConfig, userId),
-					blocked_message_groups: resolveBlockedMessageGroupsAssignment(blockedMessageGroupsConfig, userId),
-					guild_activity_log_presentation: resolveGuildActivityLogPresentationAssignment(
-						guildActivityLogPresentationConfig,
-						userId,
-					),
-					expression_info_card: resolveExpressionInfoCardAssignment(expressionInfoCardConfig, userId),
-					guild_header_collapse: resolveGuildHeaderCollapseAssignment(guildHeaderCollapseConfig, userId),
-					typing_indicator_rework: resolveTypingIndicatorReworkAssignment(typingIndicatorReworkConfig, userId),
+					voice_noise_suppression: resolveVoiceNoiseSuppressionAssignment(voiceConfig, ctx.get('user').id.toString()),
 				},
 			};
 			const etag = `"${createHash('sha256').update(JSON.stringify(body)).digest('hex')}"`;

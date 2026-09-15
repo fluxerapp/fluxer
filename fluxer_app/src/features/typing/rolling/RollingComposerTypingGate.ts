@@ -8,7 +8,6 @@ const REACTION_SHORTHAND_REGEX = /^\+(?!\w+):?(?!:)(\w+)?:?$/;
 interface ComposerTypingChange {
 	previousValue: string | null;
 	value: string;
-	isRestoringDraft: boolean;
 	isEditingMessageInComposer: boolean;
 	enabled: boolean;
 }
@@ -16,11 +15,10 @@ interface ComposerTypingChange {
 export function decideComposerTyping({
 	previousValue,
 	value,
-	isRestoringDraft,
 	isEditingMessageInComposer,
 	enabled,
 }: ComposerTypingChange): 'start' | 'stop' | 'none' {
-	if (!enabled || isEditingMessageInComposer || isRestoringDraft || previousValue === null || value === previousValue) {
+	if (!enabled || isEditingMessageInComposer || previousValue === null || value === previousValue) {
 		return 'none';
 	}
 	const content = value.trim();

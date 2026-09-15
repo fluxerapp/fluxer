@@ -4,15 +4,9 @@
 import {GuildHeader} from '@app/features/app/components/layout/GuildHeader';
 import styles from '@app/features/app/components/layout/GuildHeader.module.css';
 import {useGuildBannerPresentation} from '@app/features/app/hooks/useGuildBannerPresentation';
-import ExperimentAssignments from '@app/features/experiment/state/ExperimentAssignments';
 import {Guild} from '@app/features/guild/models/Guild';
 import {WINDOW_FOCUSED_CLASS} from '@app/features/ui/utils/WindowFocusInteractionGuard';
 import UserSettings from '@app/features/user/state/UserSettings';
-import {
-	type ExperimentAssignmentsResponse,
-	INERT_EXPERIMENT_ASSIGNMENTS_RESPONSE,
-} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
-import type {GuildHeaderCollapseAssignmentResponse} from '@fluxer/schema/src/domains/experiment/GuildHeaderCollapseSchemas';
 import type {Guild as WireGuild} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {setupI18n} from '@lingui/core';
 import {useMotionValue} from 'framer-motion';
@@ -79,13 +73,6 @@ const DEFAULT_GIF_AUTOPLAY = UserSettings.gifAutoPlay;
 const HEADER_ROW_HEIGHT = 56;
 const SIXTEEN_BY_NINE_SIDEBAR_BANNER_HEIGHT = 135;
 
-const TARGETED_ASSIGNMENT: GuildHeaderCollapseAssignmentResponse = {
-	enabled: true,
-	config_version: 1,
-	user_targeted: true,
-	source: 'canary',
-};
-
 interface Frame {
 	readonly headerHeight: number;
 	readonly bannerHeight: number;
@@ -99,17 +86,6 @@ const originalOffsetHeight = Object.getOwnPropertyDescriptor(HTMLElement.prototy
 
 let container: HTMLDivElement;
 let root: Root;
-
-function publish(assignment: GuildHeaderCollapseAssignmentResponse | undefined): void {
-	const response: ExperimentAssignmentsResponse = {
-		poll_interval_seconds: 300,
-		poll_jitter_percent: 15,
-		assignments: assignment === undefined ? {} : {guild_header_collapse: assignment},
-	};
-	runInAction(() => {
-		ExperimentAssignments.response = response;
-	});
-}
 
 function createBannerGuild(): Guild {
 	return new Guild({
@@ -200,31 +176,12 @@ afterEach(() => {
 	vi.restoreAllMocks();
 	runInAction(() => {
 		UserSettings.gifAutoPlay = DEFAULT_GIF_AUTOPLAY;
-		ExperimentAssignments.response = INERT_EXPERIMENT_ASSIGNMENTS_RESPONSE;
 	});
 });
 
 describe('GuildHeader banner geometry', () => {
-	it('sizes the control header to the banner with the list below it', () => {
+	it('keeps the header at the row height with the list below the banner', () => {
 		mount(createBannerGuild());
-		expect(lastFrame()).toEqual({
-			headerHeight: SIXTEEN_BY_NINE_SIDEBAR_BANNER_HEIGHT,
-			bannerHeight: SIXTEEN_BY_NINE_SIDEBAR_BANNER_HEIGHT,
-			listTop: SIXTEEN_BY_NINE_SIDEBAR_BANNER_HEIGHT,
-		});
-	});
-
-	it('keeps the list flush with the banner in every frame when the assignment lands after mount', () => {
-		mount(createBannerGuild());
-		const settled = frames.length;
-		act(() => {
-			publish(TARGETED_ASSIGNMENT);
-		});
-		const flipped = frames.slice(settled);
-		expect(flipped.length).toBeGreaterThan(0);
-		for (const frame of flipped) {
-			expect(frame.listTop).toBe(frame.bannerHeight);
-		}
 		expect(lastFrame()).toEqual({
 			headerHeight: HEADER_ROW_HEIGHT,
 			bannerHeight: SIXTEEN_BY_NINE_SIDEBAR_BANNER_HEIGHT,
@@ -232,29 +189,27 @@ describe('GuildHeader banner geometry', () => {
 		});
 	});
 
-	it('keeps the list flush with the banner when the assignment is withdrawn mid-session', () => {
-		publish(TARGETED_ASSIGNMENT);
+	it('shrinks the collapsing banner again when the sidebar narrows', () => {
 		mount(createBannerGuild());
-		const settled = frames.length;
+		layout.sidebarWidth = 160;
 		act(() => {
-			publish(undefined);
+			window.dispatchEvent(new Event('resize'));
 		});
-		for (const frame of frames.slice(settled)) {
-			expect(frame.listTop).toBe(frame.bannerHeight);
-		}
-		expect(lastFrame()).toEqual({
-			headerHeight: SIXTEEN_BY_NINE_SIDEBAR_BANNER_HEIGHT,
-			bannerHeight: SIXTEEN_BY_NINE_SIDEBAR_BANNER_HEIGHT,
-			listTop: SIXTEEN_BY_NINE_SIDEBAR_BANNER_HEIGHT,
-		});
+		expect(lastFrame()).toEqual({headerHeight: HEADER_ROW_HEIGHT, bannerHeight: 90, listTop: 90});
 	});
 
-	it('plays the animated control banner while the header is hovered', async () => {
+	it('plays the animated banner on header hover when the banner is too short to collapse', async () => {
+		layout.sidebarWidth = 80;
 		runInAction(() => {
 			UserSettings.gifAutoPlay = false;
 		});
 		document.documentElement.classList.add(WINDOW_FOCUSED_CLASS);
 		mount(createBannerGuild());
+		expect(lastFrame()).toEqual({
+			headerHeight: HEADER_ROW_HEIGHT,
+			bannerHeight: HEADER_ROW_HEIGHT,
+			listTop: HEADER_ROW_HEIGHT,
+		});
 		const bannerImage = requireElement('[data-flx="app.guild-header.banner-image"]');
 		expect(bannerImage.style.backgroundImage).toContain('b4nn3r.webp');
 		const header = requireElement(`.${styles.headerContainer}`);
@@ -265,24 +220,5 @@ describe('GuildHeader banner geometry', () => {
 			await new Promise((resolve) => setTimeout(resolve, 0));
 		});
 		expect(bannerImage.style.backgroundImage).toContain('b4nn3r.gif');
-	});
-
-	it('shrinks the control banner again when the sidebar narrows', () => {
-		mount(createBannerGuild());
-		layout.sidebarWidth = 160;
-		act(() => {
-			window.dispatchEvent(new Event('resize'));
-		});
-		expect(lastFrame()).toEqual({headerHeight: 90, bannerHeight: 90, listTop: 90});
-	});
-
-	it('shrinks the collapsing banner again when the sidebar narrows', () => {
-		publish(TARGETED_ASSIGNMENT);
-		mount(createBannerGuild());
-		layout.sidebarWidth = 160;
-		act(() => {
-			window.dispatchEvent(new Event('resize'));
-		});
-		expect(lastFrame()).toEqual({headerHeight: HEADER_ROW_HEIGHT, bannerHeight: 90, listTop: 90});
 	});
 });

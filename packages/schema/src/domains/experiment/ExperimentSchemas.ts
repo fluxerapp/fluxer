@@ -4,34 +4,6 @@ import {
 	INERT_VOICE_NOISE_SUPPRESSION_ASSIGNMENT,
 	VoiceNoiseSuppressionAssignmentResponse,
 } from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
-import {
-	BlockedMessageGroupsAssignmentResponse,
-	INERT_BLOCKED_MESSAGE_GROUPS_ASSIGNMENT,
-} from '@fluxer/schema/src/domains/experiment/BlockedMessageGroupsSchemas';
-import {
-	ExpressionInfoCardAssignmentResponse,
-	INERT_EXPRESSION_INFO_CARD_ASSIGNMENT,
-} from '@fluxer/schema/src/domains/experiment/ExpressionInfoCardSchemas';
-import {
-	GuildActivityLogPresentationAssignmentResponse,
-	INERT_GUILD_ACTIVITY_LOG_PRESENTATION_ASSIGNMENT,
-} from '@fluxer/schema/src/domains/experiment/GuildActivityLogPresentationSchemas';
-import {
-	GuildHeaderCollapseAssignmentResponse,
-	INERT_GUILD_HEADER_COLLAPSE_ASSIGNMENT,
-} from '@fluxer/schema/src/domains/experiment/GuildHeaderCollapseSchemas';
-import {
-	INERT_MESSAGE_HOVER_TRACKING_ASSIGNMENT,
-	MessageHoverTrackingAssignmentResponse,
-} from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
-import {
-	INERT_MESSAGE_KEYBOARD_FOCUS_ASSIGNMENT,
-	MessageKeyboardFocusAssignmentResponse,
-} from '@fluxer/schema/src/domains/experiment/MessageKeyboardFocusSchemas';
-import {
-	INERT_TYPING_INDICATOR_REWORK_ASSIGNMENT,
-	TypingIndicatorReworkAssignmentResponse,
-} from '@fluxer/schema/src/domains/experiment/TypingIndicatorReworkSchemas';
 import {z} from 'zod';
 
 export const EXPERIMENT_MIN_POLL_INTERVAL_SECONDS = 60;
@@ -70,13 +42,6 @@ export type ExperimentDeliveryConfigResponse = z.infer<typeof ExperimentDelivery
 
 const ExperimentAssignmentsSchema = z.object({
 	voice_noise_suppression: VoiceNoiseSuppressionAssignmentResponse.optional(),
-	message_hover_tracking: MessageHoverTrackingAssignmentResponse.optional(),
-	message_keyboard_focus: MessageKeyboardFocusAssignmentResponse.optional(),
-	blocked_message_groups: BlockedMessageGroupsAssignmentResponse.optional(),
-	guild_activity_log_presentation: GuildActivityLogPresentationAssignmentResponse.optional(),
-	expression_info_card: ExpressionInfoCardAssignmentResponse.optional(),
-	guild_header_collapse: GuildHeaderCollapseAssignmentResponse.optional(),
-	typing_indicator_rework: TypingIndicatorReworkAssignmentResponse.optional(),
 });
 
 export const ExperimentAssignmentsResponse = z.object({
@@ -97,46 +62,4 @@ export function readVoiceNoiseSuppressionAssignment(
 	response: ExperimentAssignmentsResponse,
 ): VoiceNoiseSuppressionAssignmentResponse {
 	return response.assignments.voice_noise_suppression ?? INERT_VOICE_NOISE_SUPPRESSION_ASSIGNMENT;
-}
-
-export function readMessageHoverTrackingAssignment(
-	response: ExperimentAssignmentsResponse,
-): MessageHoverTrackingAssignmentResponse {
-	return response.assignments.message_hover_tracking ?? INERT_MESSAGE_HOVER_TRACKING_ASSIGNMENT;
-}
-
-export function readMessageKeyboardFocusAssignment(
-	response: ExperimentAssignmentsResponse,
-): MessageKeyboardFocusAssignmentResponse {
-	return response.assignments.message_keyboard_focus ?? INERT_MESSAGE_KEYBOARD_FOCUS_ASSIGNMENT;
-}
-
-export function readBlockedMessageGroupsAssignment(
-	response: ExperimentAssignmentsResponse,
-): BlockedMessageGroupsAssignmentResponse {
-	return response.assignments.blocked_message_groups ?? INERT_BLOCKED_MESSAGE_GROUPS_ASSIGNMENT;
-}
-
-export function readGuildActivityLogPresentationAssignment(
-	response: ExperimentAssignmentsResponse,
-): GuildActivityLogPresentationAssignmentResponse {
-	return response.assignments.guild_activity_log_presentation ?? INERT_GUILD_ACTIVITY_LOG_PRESENTATION_ASSIGNMENT;
-}
-
-export function readExpressionInfoCardAssignment(
-	response: ExperimentAssignmentsResponse,
-): ExpressionInfoCardAssignmentResponse {
-	return response.assignments.expression_info_card ?? INERT_EXPRESSION_INFO_CARD_ASSIGNMENT;
-}
-
-export function readGuildHeaderCollapseAssignment(
-	response: ExperimentAssignmentsResponse,
-): GuildHeaderCollapseAssignmentResponse {
-	return response.assignments.guild_header_collapse ?? INERT_GUILD_HEADER_COLLAPSE_ASSIGNMENT;
-}
-
-export function readTypingIndicatorReworkAssignment(
-	response: ExperimentAssignmentsResponse,
-): TypingIndicatorReworkAssignmentResponse {
-	return response.assignments.typing_indicator_rework ?? INERT_TYPING_INDICATOR_REWORK_ASSIGNMENT;
 }

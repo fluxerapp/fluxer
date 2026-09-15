@@ -31,14 +31,7 @@ import {
 import {GatewayRolloutConfigSchema} from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
 import {VoiceNoiseSuppressionConfigSchema} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
 import {UserIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
-import {BlockedMessageGroupsConfigSchema} from '@fluxer/schema/src/domains/experiment/BlockedMessageGroupsSchemas';
 import {ExperimentDeliveryConfigSchema} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
-import {ExpressionInfoCardConfigSchema} from '@fluxer/schema/src/domains/experiment/ExpressionInfoCardSchemas';
-import {GuildActivityLogPresentationConfigSchema} from '@fluxer/schema/src/domains/experiment/GuildActivityLogPresentationSchemas';
-import {GuildHeaderCollapseConfigSchema} from '@fluxer/schema/src/domains/experiment/GuildHeaderCollapseSchemas';
-import {MessageHoverTrackingConfigSchema} from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
-import {MessageKeyboardFocusConfigSchema} from '@fluxer/schema/src/domains/experiment/MessageKeyboardFocusSchemas';
-import {TypingIndicatorReworkConfigSchema} from '@fluxer/schema/src/domains/experiment/TypingIndicatorReworkSchemas';
 import type {InstanceBranding} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 import {SmtpEmailProvider} from '@pkgs/email/src/SmtpEmailProvider';
 import type {Context} from 'hono';
@@ -64,14 +57,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		ssoConfig,
 		gatewayRollout,
 		voiceNoiseSuppression,
-		guildActivityLogPresentation,
 		experimentDelivery,
-		messageHoverTracking,
-		messageKeyboardFocus,
-		blockedMessageGroups,
-		expressionInfoCard,
-		guildHeaderCollapse,
-		typingIndicatorRework,
 		registrationConfig,
 		registrationUrls,
 		pendingRegistrations,
@@ -79,14 +65,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		instanceConfigRepository.getSsoConfig(),
 		instanceConfigRepository.getGatewayRolloutConfig(),
 		instanceConfigRepository.getVoiceNoiseSuppressionConfig(),
-		instanceConfigRepository.getGuildActivityLogPresentationConfig(),
 		instanceConfigRepository.getExperimentDeliveryConfig(),
-		instanceConfigRepository.getMessageHoverTrackingConfig(),
-		instanceConfigRepository.getMessageKeyboardFocusConfig(),
-		instanceConfigRepository.getBlockedMessageGroupsConfig(),
-		instanceConfigRepository.getExpressionInfoCardConfig(),
-		instanceConfigRepository.getGuildHeaderCollapseConfig(),
-		instanceConfigRepository.getTypingIndicatorReworkConfig(),
 		instanceConfigRepository.getRegistrationConfig(),
 		instanceConfigRepository.getRegistrationUrlsForAdmin(),
 		instanceConfigRepository.getPendingRegistrations(),
@@ -117,14 +96,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		},
 		gateway_rollout: gatewayRollout,
 		voice_noise_suppression: voiceNoiseSuppression,
-		guild_activity_log_presentation: guildActivityLogPresentation,
 		experiment_delivery: experimentDelivery,
-		message_hover_tracking: messageHoverTracking,
-		message_keyboard_focus: messageKeyboardFocus,
-		blocked_message_groups: blockedMessageGroups,
-		expression_info_card: expressionInfoCard,
-		guild_header_collapse: guildHeaderCollapse,
-		typing_indicator_rework: typingIndicatorRework,
 		registration: {
 			...registrationConfig,
 			urls: registrationUrls,
@@ -266,91 +238,6 @@ export function InstanceConfigAdminController(app: HonoApp) {
 						config_version: currentNoiseSuppression.config_version + 1,
 					});
 					await instanceConfigRepository.setVoiceNoiseSuppressionConfig(validated);
-				}
-			}
-			if (data.guild_activity_log_presentation) {
-				const patch = omitUndefinedFields(data.guild_activity_log_presentation);
-				if (Object.keys(patch).length > 0) {
-					const currentGuildActivityLogPresentation =
-						await instanceConfigRepository.getGuildActivityLogPresentationConfig();
-					const validated = GuildActivityLogPresentationConfigSchema.parse({
-						...currentGuildActivityLogPresentation,
-						...patch,
-						config_version: currentGuildActivityLogPresentation.config_version + 1,
-					});
-					await instanceConfigRepository.setGuildActivityLogPresentationConfig(validated);
-				}
-			}
-			if (data.message_hover_tracking) {
-				const patch = omitUndefinedFields(data.message_hover_tracking);
-				if (Object.keys(patch).length > 0) {
-					const currentMessageHoverTracking = await instanceConfigRepository.getMessageHoverTrackingConfig();
-					const validated = MessageHoverTrackingConfigSchema.parse({
-						...currentMessageHoverTracking,
-						...patch,
-						config_version: currentMessageHoverTracking.config_version + 1,
-					});
-					await instanceConfigRepository.setMessageHoverTrackingConfig(validated);
-				}
-			}
-			if (data.message_keyboard_focus) {
-				const patch = omitUndefinedFields(data.message_keyboard_focus);
-				if (Object.keys(patch).length > 0) {
-					const currentMessageKeyboardFocus = await instanceConfigRepository.getMessageKeyboardFocusConfig();
-					const validated = MessageKeyboardFocusConfigSchema.parse({
-						...currentMessageKeyboardFocus,
-						...patch,
-						config_version: currentMessageKeyboardFocus.config_version + 1,
-					});
-					await instanceConfigRepository.setMessageKeyboardFocusConfig(validated);
-				}
-			}
-			if (data.blocked_message_groups) {
-				const patch = omitUndefinedFields(data.blocked_message_groups);
-				if (Object.keys(patch).length > 0) {
-					const currentBlockedMessageGroups = await instanceConfigRepository.getBlockedMessageGroupsConfig();
-					const validated = BlockedMessageGroupsConfigSchema.parse({
-						...currentBlockedMessageGroups,
-						...patch,
-						config_version: currentBlockedMessageGroups.config_version + 1,
-					});
-					await instanceConfigRepository.setBlockedMessageGroupsConfig(validated);
-				}
-			}
-			if (data.expression_info_card) {
-				const patch = omitUndefinedFields(data.expression_info_card);
-				if (Object.keys(patch).length > 0) {
-					const currentExpressionInfoCard = await instanceConfigRepository.getExpressionInfoCardConfig();
-					const validated = ExpressionInfoCardConfigSchema.parse({
-						...currentExpressionInfoCard,
-						...patch,
-						config_version: currentExpressionInfoCard.config_version + 1,
-					});
-					await instanceConfigRepository.setExpressionInfoCardConfig(validated);
-				}
-			}
-			if (data.guild_header_collapse) {
-				const patch = omitUndefinedFields(data.guild_header_collapse);
-				if (Object.keys(patch).length > 0) {
-					const currentGuildHeaderCollapse = await instanceConfigRepository.getGuildHeaderCollapseConfig();
-					const validated = GuildHeaderCollapseConfigSchema.parse({
-						...currentGuildHeaderCollapse,
-						...patch,
-						config_version: currentGuildHeaderCollapse.config_version + 1,
-					});
-					await instanceConfigRepository.setGuildHeaderCollapseConfig(validated);
-				}
-			}
-			if (data.typing_indicator_rework) {
-				const patch = omitUndefinedFields(data.typing_indicator_rework);
-				if (Object.keys(patch).length > 0) {
-					const currentTypingIndicatorRework = await instanceConfigRepository.getTypingIndicatorReworkConfig();
-					const validated = TypingIndicatorReworkConfigSchema.parse({
-						...currentTypingIndicatorRework,
-						...patch,
-						config_version: currentTypingIndicatorRework.config_version + 1,
-					});
-					await instanceConfigRepository.setTypingIndicatorReworkConfig(validated);
 				}
 			}
 			if (data.experiment_delivery) {

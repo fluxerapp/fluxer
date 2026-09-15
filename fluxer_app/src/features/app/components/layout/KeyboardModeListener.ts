@@ -2,7 +2,6 @@
 
 import {Routes} from '@app/app/Routes';
 import {CHANNEL_TEXTAREA_SELECTOR} from '@app/features/app/keybindings/utils/EditableElement';
-import MessageKeyboardFocusRollout from '@app/features/messaging/state/MessageKeyboardFocusRollout';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import FocusRingManager from '@app/features/ui/focus_ring/FocusRingManager';
@@ -87,15 +86,9 @@ export const KeyboardModeListener = observer(() => {
 			window.removeEventListener('pointerdown', handlePointer, true);
 		};
 	}, [isAuthRoute]);
-	const keyboardNavigationEnabled = MessageKeyboardFocusRollout.enabled;
 	useLayoutEffect(() => {
-		if (!keyboardNavigationEnabled) return;
 		FocusRingManager.setRingsEnabled(keyboardModeEnabled);
-	}, [keyboardModeEnabled, keyboardNavigationEnabled]);
-	useEffect(() => {
-		if (keyboardNavigationEnabled) return;
-		FocusRingManager.setRingsEnabled(keyboardModeEnabled);
-	}, [keyboardModeEnabled, keyboardNavigationEnabled]);
+	}, [keyboardModeEnabled]);
 	useEffect(() => {
 		const pendingFrames = new Set<number>();
 		const handlePointerActivation = (event: MouseEvent) => {

@@ -3,7 +3,6 @@
 import Authentication from '@app/features/auth/state/Authentication';
 import {useCollapsedMessageVisibility} from '@app/features/channel/components/CollapsedMessageVisibilityContext';
 import {PreloadableUserPopout} from '@app/features/channel/components/PreloadableUserPopout';
-import ExpressionInfoCardRollout from '@app/features/expressions/state/ExpressionInfoCardRollout';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import {SafeMarkdown} from '@app/features/messaging/components/markdown';
 import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
@@ -252,7 +251,7 @@ export const ReplyPreview = observer(
 										context: MarkdownContext.RESTRICTED_INLINE_REPLY,
 										messageId: referencedMessage.id,
 										channelId,
-										disableInteractions: ExpressionInfoCardRollout.enabled,
+										disableInteractions: true,
 										mentionChannels: referencedMessage.mentionChannels,
 									}}
 									data-flx="channel.reply-preview.safe-markdown"

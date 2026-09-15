@@ -41,29 +41,24 @@ describe('message focus ring contract', () => {
 		expect(messageFocusRing).not.toBe('');
 	});
 
-	it('reads the ring arm from the keyboard navigation rollout', () => {
-		expect(channelMessageSource).toMatch(/const keyboardNavigationEnabled = MessageKeyboardFocusRollout\.enabled;/);
-	});
-
-	it('only enables the ring in keyboard navigation mode in the experiment arm', () => {
-		expect(messageFocusRing).toMatch(/enabled=\{keyboardNavigationEnabled \? keyboardModeEnabled : undefined\}/);
+	it('only enables the ring in keyboard navigation mode', () => {
+		expect(messageFocusRing).toMatch(/enabled=\{keyboardModeEnabled\}/);
 	});
 
 	it('leaves focused descendants their own rings instead of drawing the row ring over them', () => {
 		expect(messageFocusRing).not.toMatch(/\bwithin\b/);
 	});
 
-	it('scopes message list rings inside the scroll content in the experiment arm', () => {
+	it('scopes message list rings inside the scroll content', () => {
 		const scopedList = channelMessagesSource.match(
-			/\{keyboardNavigationEnabled \? \(\s*<FocusRingScope containerRef=\{scrollerInnerRef\}[^>]*>\s*\{messageListContent\}\s*<\/FocusRingScope>\s*\) : \(\s*messageListContent\s*\)\}/,
+			/<FocusRingScope containerRef=\{scrollerInnerRef\}[^>]*>\s*<NearViewportSurfaceContext\.Provider[\s\S]*?\{scrollerInner\}[\s\S]*?<\/FocusRingScope>/,
 		);
 		expect(scopedList).not.toBeNull();
-		expect(channelMessagesSource).toMatch(/const keyboardNavigationEnabled = MessageKeyboardFocusRollout\.enabled;/);
 	});
 
-	it('insets the ring inside the row in the experiment arm and keeps the default geometry in control', () => {
+	it('insets the ring inside the row', () => {
 		expect(focusRingCss).toMatch(/pointer-events:\s*none/);
-		expect(messageFocusRing).toMatch(/offset=\{keyboardNavigationEnabled \? -2 : undefined\}/);
+		expect(messageFocusRing).toMatch(/offset=\{-2\}/);
 	});
 
 	it('stacks the ring below the action bar', () => {
@@ -71,8 +66,8 @@ describe('message focus ring contract', () => {
 		expect(messageFocusRing).not.toMatch(/zIndex=/);
 	});
 
-	it('measures the ring from an anchor inset by the row bleed in the experiment arm', () => {
-		expect(messageFocusRing).toMatch(/ringTarget=\{keyboardNavigationEnabled \? focusRingAnchorRef : undefined\}/);
+	it('measures the ring from an anchor inset by the row bleed', () => {
+		expect(messageFocusRing).toMatch(/ringTarget=\{focusRingAnchorRef\}/);
 		expect(channelMessageSource).toMatch(/className=\{styles\.focusRingAnchor\}/);
 		const anchor = messageRules.find((rule) => rule.selector === '.focusRingAnchor');
 		expect(anchor).toBeDefined();

@@ -26,16 +26,12 @@ vi.mock('@app/features/relationship/state/Relationships', () => ({default: {isBl
 vi.mock('@app/features/user/state/Users', () => ({default: {getUser: () => undefined}}));
 
 const {useTextareaDraftAndTyping} = await import('@app/features/messaging/hooks/useTextareaDraftAndTyping');
-const {default: TypingPolicy} = await import('@app/features/typing/state/TypingPolicy');
-const {TypingUtils: LegacyTypingUtils} = await import('@app/features/typing/legacy/LegacyTypingUtils');
-const {default: LegacyTypingIndicator} = await import('@app/features/typing/legacy/LegacyTypingIndicator');
 const {default: RollingTypingSender} = await import('@app/features/typing/rolling/RollingTypingSender');
 const {default: RollingTypingStore} = await import('@app/features/typing/rolling/RollingTypingStore');
 
 interface ComposerProps {
 	channelId: string;
 	draft?: string | null;
-	isAutocompleteAttached?: boolean;
 	enabled?: boolean;
 	typingEnabled?: boolean;
 	isEditingMessageInComposer?: boolean;
@@ -48,7 +44,6 @@ let setComposerValue: (value: string) => void = () => undefined;
 function Composer({
 	channelId,
 	draft = null,
-	isAutocompleteAttached = false,
 	enabled = true,
 	typingEnabled,
 	isEditingMessageInComposer = false,
@@ -62,7 +57,6 @@ function Composer({
 		setValue,
 		draft,
 		previousValueRef,
-		isAutocompleteAttached,
 		enabled,
 		typingEnabled,
 		isEditingMessageInComposer,
@@ -88,17 +82,6 @@ function advance(ms: number): void {
 	});
 }
 
-function recordLegacyCalls(): Array<[string, string]> {
-	const calls: Array<[string, string]> = [];
-	vi.spyOn(LegacyTypingUtils, 'typing').mockImplementation((channelId) => {
-		calls.push(['typing', channelId]);
-	});
-	vi.spyOn(LegacyTypingUtils, 'clear').mockImplementation((channelId) => {
-		calls.push(['clear', channelId]);
-	});
-	return calls;
-}
-
 beforeEach(() => {
 	(globalThis as {IS_REACT_ACT_ENVIRONMENT?: boolean}).IS_REACT_ACT_ENVIRONMENT = true;
 	vi.useFakeTimers();
@@ -111,9 +94,6 @@ afterEach(() => {
 	act(() => {
 		root.unmount();
 	});
-	vi.restoreAllMocks();
-	TypingPolicy.applyPolicy('legacy');
-	LegacyTypingIndicator.reset();
 	RollingTypingSender.reset();
 	RollingTypingStore.reset();
 	document.body.replaceChildren();
@@ -122,76 +102,7 @@ afterEach(() => {
 });
 
 describe('useTextareaDraftAndTyping', () => {
-	it('calls the legacy composer effect on exactly the head dependency changes under control', () => {
-		const calls = recordLegacyCalls();
-		render({channelId: 'c1'});
-		expect(calls).toEqual([['clear', 'c1']]);
-
-		type('h');
-		render({channelId: 'c1'});
-		render({channelId: 'c1', isAutocompleteAttached: true});
-		render({channelId: 'c1', isAutocompleteAttached: true, typingEnabled: false});
-		render({channelId: 'c1', isAutocompleteAttached: true, typingEnabled: true});
-
-		expect(calls).toEqual([
-			['clear', 'c1'],
-			['typing', 'c1'],
-			['clear', 'c1'],
-			['clear', 'c1'],
-			['clear', 'c1'],
-		]);
-	});
-
-	it('does not rerun the effect when editing mode toggles under control', () => {
-		const calls = recordLegacyCalls();
-		render({channelId: 'c1'});
-		type('hello');
-		calls.length = 0;
-
-		render({channelId: 'c1', isEditingMessageInComposer: true});
-		render({channelId: 'c1', isEditingMessageInComposer: false});
-
-		expect(calls).toEqual([]);
-	});
-
-	it('clears the legacy state on unmount under control', () => {
-		const calls = recordLegacyCalls();
-		render({channelId: 'c1'});
-		type('hello');
-		calls.length = 0;
-
-		act(() => {
-			root.unmount();
-		});
-		root = createRoot(host);
-
-		expect(calls).toEqual([['clear', 'c1']]);
-	});
-
-	it('clears the legacy state when the composer is disabled under control', () => {
-		const calls = recordLegacyCalls();
-		render({channelId: 'c1'});
-		type('hello');
-		calls.length = 0;
-
-		render({channelId: 'c1', enabled: false});
-
-		expect(calls).toEqual([['clear', 'c1']]);
-	});
-
-	it('arms no rolling timer under control', () => {
-		render({channelId: 'c1'});
-		type('hello');
-
-		expect(LegacyTypingIndicator.isLocalTyping('c1', 'me')).toBe(true);
-		expect(RollingTypingStore.countTypists('c1')).toBe(0);
-		advance(1500);
-		expect(doubles.post).toHaveBeenCalledExactlyOnceWith(Endpoints.CHANNEL_TYPING('c1'));
-		expect(RollingTypingStore.countTypists('c1')).toBe(0);
-	});
-
-	it('sends typing once for a burst of keystrokes under treatment', () => {
-		TypingPolicy.applyPolicy('rolling');
+	it('sends typing once for a burst of keystrokes', () => {
 		render({channelId: 'c1'});
 
 		let draft = '';
@@ -205,8 +116,7 @@ describe('useTextareaDraftAndTyping', () => {
 		expect(doubles.post).toHaveBeenCalledExactlyOnceWith(Endpoints.CHANNEL_TYPING('c1'));
 	});
 
-	it('never sends typing when entering mobile edit mode under treatment', () => {
-		TypingPolicy.applyPolicy('rolling');
+	it('never sends typing when entering mobile edit mode', () => {
 		render({channelId: 'c1'});
 
 		act(() => {
@@ -224,32 +134,30 @@ describe('useTextareaDraftAndTyping', () => {
 		expect(RollingTypingStore.isTyping('c1', 'me')).toBe(false);
 	});
 
-	it('sends nothing for a draft present at mount under treatment', () => {
-		TypingPolicy.applyPolicy('rolling');
-
+	it('sends nothing for a draft present at mount', () => {
 		render({channelId: 'c1', draft: 'saved draft'});
 		advance(0);
-		render({channelId: 'c1', draft: 'saved draft', isAutocompleteAttached: true});
+		render({channelId: 'c1', draft: 'saved draft', typingEnabled: false});
+		render({channelId: 'c1', draft: 'saved draft', typingEnabled: true});
 		advance(20000);
 
 		expect(doubles.post).not.toHaveBeenCalled();
 	});
 
-	it('sends nothing for a draft restored after mount under treatment', () => {
-		TypingPolicy.applyPolicy('rolling');
+	it('sends nothing for a draft restored after mount', () => {
 		render({channelId: 'c1'});
 		advance(1000);
 
 		render({channelId: 'c1', draft: 'synced from another device'});
 		advance(0);
-		render({channelId: 'c1', draft: 'synced from another device', isAutocompleteAttached: true});
+		render({channelId: 'c1', draft: 'synced from another device', typingEnabled: false});
+		render({channelId: 'c1', draft: 'synced from another device', typingEnabled: true});
 		advance(20000);
 
 		expect(doubles.post).not.toHaveBeenCalled();
 	});
 
-	it('does not cancel a pending send when the channel changes under treatment', () => {
-		TypingPolicy.applyPolicy('rolling');
+	it('does not cancel a pending send when the channel changes', () => {
 		render({channelId: 'c1'});
 		type('hello');
 		advance(500);
@@ -262,8 +170,7 @@ describe('useTextareaDraftAndTyping', () => {
 		expect(doubles.post).toHaveBeenCalledTimes(1);
 	});
 
-	it('cancels a pending send when the composer becomes disabled under treatment', () => {
-		TypingPolicy.applyPolicy('rolling');
+	it('cancels a pending send when the composer becomes disabled', () => {
 		render({channelId: 'c1'});
 		type('hello');
 		advance(500);
@@ -275,24 +182,7 @@ describe('useTextareaDraftAndTyping', () => {
 		expect(RollingTypingStore.isTyping('c1', 'me')).toBe(false);
 	});
 
-	it('starts no typing merely because the policy flipped on', () => {
-		render({channelId: 'c1'});
-		type('hello');
-		advance(1500);
-		expect(doubles.post).toHaveBeenCalledTimes(1);
-
-		act(() => {
-			TypingPolicy.applyPolicy('rolling');
-		});
-		render({channelId: 'c1'});
-		advance(20000);
-
-		expect(doubles.post).toHaveBeenCalledTimes(1);
-		expect(RollingTypingStore.isTyping('c1', 'me')).toBe(false);
-	});
-
-	it('posts nothing for a spaces-only draft under treatment', () => {
-		TypingPolicy.applyPolicy('rolling');
+	it('posts nothing for a spaces-only draft', () => {
 		render({channelId: 'c1'});
 
 		type(' ');

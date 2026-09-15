@@ -119,38 +119,11 @@
 	background-color: var(--message-reply-bg);
 }
 
-.message.messageNoHover.messageHovered:not(.messageMentioned):not(.messageReplying):not(.messageHighlight),
-.messageCompact.messageNoHover.messageHovered:not(.messageMentioned):not(.messageReplying):not(.messageHighlight) {
-	background-color: transparent;
-}
-
-.message.messageNoHover.messageMentioned.messageHovered,
-.messageCompact.messageNoHover.messageMentioned.messageHovered {
-	background-color: var(--message-mention-bg);
-}
-
 :global([data-blocked-messages]) .message.messageHovered,
 :global([data-blocked-messages]) .messageCompact.messageHovered,
 :global([data-blocked-messages]) .message.contextMenuActive,
 :global([data-blocked-messages]) .messageCompact.contextMenuActive {
 	background-color: transparent !important;
-}
-
-@media (pointer: coarse) {
-	:global(
-			:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard):not(
-				.experiment-message-hover-tracking
-			)
-		)
-		.message:hover,
-	:global(
-			:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard):not(
-				.experiment-message-hover-tracking
-			)
-		)
-		.messageCompact:hover {
-		background-color: transparent;
-	}
 }
 
 .message.mobileLayout:hover,
@@ -604,19 +577,6 @@
 	pointer-events: auto;
 }
 
-@media (pointer: coarse) {
-	:global(
-			:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard):not(
-				.experiment-message-hover-tracking
-			)
-		)
-		.message:hover
-		.messageTimestampHover {
-		opacity: 0;
-		pointer-events: none;
-	}
-}
-
 .messageAuthorInfoCompact {
 	position: relative;
 	display: inline;
@@ -680,19 +640,6 @@
 	pointer-events: auto;
 }
 
-@media (pointer: coarse) {
-	:global(
-			:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard):not(
-				.experiment-message-hover-tracking
-			)
-		)
-		.messageCompact:hover
-		.messageTimestampCompactHover {
-		opacity: 0;
-		pointer-events: none;
-	}
-}
-
 .messageText {
 	position: relative;
 	user-select: text;
@@ -703,106 +650,6 @@
 	white-space: break-spaces;
 	word-break: break-word;
 	min-inline-size: 0;
-}
-
-:global(html:not(.experiment-message-hover-tracking)) .message .buttons,
-:global(html:not(.experiment-message-hover-tracking)) .messageCompact .buttons {
-	opacity: 0;
-	pointer-events: none;
-}
-
-:global(
-		:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard):not(
-			.experiment-message-hover-tracking
-		)
-	)
-	.message.messageHovered
-	.buttons,
-:global(
-		:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard):not(
-			.experiment-message-hover-tracking
-		)
-	)
-	.message
-	.buttons:hover,
-:global(
-		:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard):not(
-			.experiment-message-hover-tracking
-		)
-	)
-	.message
-	.buttons:has(:focus-visible),
-:global(
-		:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard):not(
-			.experiment-message-hover-tracking
-		)
-	)
-	.message.selected
-	.buttons,
-:global(
-		:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard):not(
-			.experiment-message-hover-tracking
-		)
-	)
-	.message
-	.buttons.emojiPickerOpen,
-:global(
-		:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard):not(
-			.experiment-message-hover-tracking
-		)
-	)
-	.messageCompact.messageHovered
-	.buttons,
-:global(
-		:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard):not(
-			.experiment-message-hover-tracking
-		)
-	)
-	.messageCompact
-	.buttons:hover,
-:global(
-		:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard):not(
-			.experiment-message-hover-tracking
-		)
-	)
-	.messageCompact
-	.buttons:has(:focus-visible),
-:global(
-		:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard):not(
-			.experiment-message-hover-tracking
-		)
-	)
-	.messageCompact.selected
-	.buttons,
-:global(
-		:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard):not(
-			.experiment-message-hover-tracking
-		)
-	)
-	.messageCompact
-	.buttons.emojiPickerOpen {
-	opacity: 1;
-	pointer-events: auto;
-}
-
-@media (pointer: coarse) {
-	:global(
-			:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard):not(
-				.experiment-message-hover-tracking
-			)
-		)
-		.message:hover
-		.buttons,
-	:global(
-			:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard):not(
-				.experiment-message-hover-tracking
-			)
-		)
-		.messageCompact:hover
-		.buttons {
-		opacity: 0;
-		pointer-events: none;
-	}
 }
 
 .message .hoverAction,
@@ -839,10 +686,6 @@
 	}
 }
 
-:global(html:not(.window-focused):not(.unfocused-fully-interactive)) .message .buttons,
-:global(html:not(.window-focused):not(.unfocused-fully-interactive)) .messageCompact .buttons,
-:global(.window-focus-activation-guard) .message .buttons,
-:global(.window-focus-activation-guard) .messageCompact .buttons,
 :global(html:not(.window-focused):not(.unfocused-fully-interactive)) .message .hoverAction,
 :global(html:not(.window-focused):not(.unfocused-fully-interactive)) .messageCompact .hoverAction,
 :global(.window-focus-activation-guard) .message .hoverAction,
@@ -1497,23 +1340,13 @@
 	max-inline-size: calc(100% - var(--message-compact-text-start));
 }
 
-:global(html:not(.experiment-message-hover-tracking)) .contextMenuActive,
-:global(html.experiment-message-hover-tracking:where(.window-focused, .unfocused-fully-interactive))
-	.contextMenuActive {
+:global(html:is(.window-focused, .unfocused-fully-interactive)) .contextMenuActive {
 	background-color: var(--background-modifier-hover) !important;
 }
 
-:global(html.reduced-motion:not(.experiment-message-hover-tracking)) .contextMenuActive {
-	background-color: transparent !important;
-}
-
-:global(html.reduced-motion.experiment-message-hover-tracking) .contextMenuActive {
+:global(html.reduced-motion) .message.contextMenuActive,
+:global(html.reduced-motion) .messageCompact.contextMenuActive {
 	background-color: var(--background-modifier-hover) !important;
-}
-
-:global(html:not(.experiment-message-hover-tracking)) .contextMenuActive .buttons {
-	opacity: 1 !important;
-	pointer-events: auto !important;
 }
 
 .contextMenuActive .messageTimestampHover {
@@ -1526,9 +1359,7 @@
 	pointer-events: auto !important;
 }
 
-:global(html:not(.experiment-message-hover-tracking)) .contextMenuActive.messageMentioned,
-:global(html.experiment-message-hover-tracking:where(.window-focused, .unfocused-fully-interactive))
-	.contextMenuActive.messageMentioned {
+:global(html:is(.window-focused, .unfocused-fully-interactive)) .contextMenuActive.messageMentioned {
 	background-color: var(--message-mention-bg-hover) !important;
 }
 
@@ -1536,11 +1367,9 @@
 	background-color: var(--message-mention-bg) !important;
 }
 
-:global(html:not(.experiment-message-hover-tracking)) .contextMenuActive.messageReplying:not(.messageMentioned),
-:global(html:not(.experiment-message-hover-tracking)) .contextMenuActive.messageHighlight:not(.messageMentioned),
-:global(html.experiment-message-hover-tracking:where(.window-focused, .unfocused-fully-interactive))
+:global(html:is(.window-focused, .unfocused-fully-interactive))
 	.contextMenuActive.messageReplying:not(.messageMentioned),
-:global(html.experiment-message-hover-tracking:where(.window-focused, .unfocused-fully-interactive))
+:global(html:is(.window-focused, .unfocused-fully-interactive))
 	.contextMenuActive.messageHighlight:not(.messageMentioned) {
 	background-color: var(--message-reply-bg) !important;
 }
@@ -1550,29 +1379,18 @@
 	background-color: var(--message-reply-bg) !important;
 }
 
-:global(html:not(.experiment-message-hover-tracking)) .keyboardFocused,
-:global(html.experiment-message-hover-tracking:where(.window-focused, .unfocused-fully-interactive)) .keyboardFocused {
+:global(html:is(.window-focused, .unfocused-fully-interactive)) .keyboardFocused {
 	background-color: var(--background-modifier-hover);
 }
 
-:global(html:not(.experiment-message-hover-tracking)) .keyboardFocused.messageMentioned,
-:global(html.experiment-message-hover-tracking:where(.window-focused, .unfocused-fully-interactive))
-	.keyboardFocused.messageMentioned {
+:global(html:is(.window-focused, .unfocused-fully-interactive)) .keyboardFocused.messageMentioned {
 	background-color: var(--message-mention-bg);
 }
 
-:global(html:not(.experiment-message-hover-tracking)) .keyboardFocused.messageReplying:not(.messageMentioned),
-:global(html:not(.experiment-message-hover-tracking)) .keyboardFocused.messageHighlight:not(.messageMentioned),
-:global(html.experiment-message-hover-tracking:where(.window-focused, .unfocused-fully-interactive))
-	.keyboardFocused.messageReplying:not(.messageMentioned),
-:global(html.experiment-message-hover-tracking:where(.window-focused, .unfocused-fully-interactive))
+:global(html:is(.window-focused, .unfocused-fully-interactive)) .keyboardFocused.messageReplying:not(.messageMentioned),
+:global(html:is(.window-focused, .unfocused-fully-interactive))
 	.keyboardFocused.messageHighlight:not(.messageMentioned) {
 	background-color: var(--message-reply-bg);
-}
-
-:global(html:not(.experiment-message-hover-tracking)) .keyboardFocused .buttons {
-	opacity: 1;
-	pointer-events: auto;
 }
 
 .keyboardFocused .hoverAction {

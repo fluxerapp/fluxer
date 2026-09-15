@@ -20,37 +20,9 @@ import {
 	VoiceNoiseSuppressionConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
 import {
-	BlockedMessageGroupsConfigResponse,
-	BlockedMessageGroupsConfigUpdateRequest,
-} from '@fluxer/schema/src/domains/experiment/BlockedMessageGroupsSchemas';
-import {
 	ExperimentDeliveryConfigResponse,
 	ExperimentDeliveryConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
-import {
-	ExpressionInfoCardConfigResponse,
-	ExpressionInfoCardConfigUpdateRequest,
-} from '@fluxer/schema/src/domains/experiment/ExpressionInfoCardSchemas';
-import {
-	GuildActivityLogPresentationConfigResponse,
-	GuildActivityLogPresentationConfigUpdateRequest,
-} from '@fluxer/schema/src/domains/experiment/GuildActivityLogPresentationSchemas';
-import {
-	GuildHeaderCollapseConfigResponse,
-	GuildHeaderCollapseConfigUpdateRequest,
-} from '@fluxer/schema/src/domains/experiment/GuildHeaderCollapseSchemas';
-import {
-	MessageHoverTrackingConfigResponse,
-	MessageHoverTrackingConfigUpdateRequest,
-} from '@fluxer/schema/src/domains/experiment/MessageHoverTrackingSchemas';
-import {
-	MessageKeyboardFocusConfigResponse,
-	MessageKeyboardFocusConfigUpdateRequest,
-} from '@fluxer/schema/src/domains/experiment/MessageKeyboardFocusSchemas';
-import {
-	TypingIndicatorReworkConfigResponse,
-	TypingIndicatorReworkConfigUpdateRequest,
-} from '@fluxer/schema/src/domains/experiment/TypingIndicatorReworkSchemas';
 import {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import {
 	InstanceCaptchaProviderSchema,
@@ -657,14 +629,7 @@ export const InstanceConfigResponse = z.object({
 	sso: SsoConfigResponse,
 	gateway_rollout: GatewayRolloutConfigResponse,
 	voice_noise_suppression: VoiceNoiseSuppressionConfigResponse,
-	guild_activity_log_presentation: GuildActivityLogPresentationConfigResponse,
 	experiment_delivery: ExperimentDeliveryConfigResponse,
-	message_hover_tracking: MessageHoverTrackingConfigResponse,
-	message_keyboard_focus: MessageKeyboardFocusConfigResponse,
-	blocked_message_groups: BlockedMessageGroupsConfigResponse,
-	expression_info_card: ExpressionInfoCardConfigResponse,
-	guild_header_collapse: GuildHeaderCollapseConfigResponse,
-	typing_indicator_rework: TypingIndicatorReworkConfigResponse,
 	registration: InstanceRegistrationResponse,
 	self_hosted: z.boolean(),
 	app_public: AppPublicConfigResponse,
@@ -700,14 +665,7 @@ const InstancePolicyUpdateSchema = z.object({
 export const InstanceConfigUpdateRequest = z.object({
 	gateway_rollout: GatewayRolloutConfigUpdateRequest.nullish(),
 	voice_noise_suppression: VoiceNoiseSuppressionConfigUpdateRequest.nullish(),
-	guild_activity_log_presentation: GuildActivityLogPresentationConfigUpdateRequest.nullish(),
 	experiment_delivery: ExperimentDeliveryConfigUpdateRequest.nullish(),
-	message_hover_tracking: MessageHoverTrackingConfigUpdateRequest.nullish(),
-	message_keyboard_focus: MessageKeyboardFocusConfigUpdateRequest.nullish(),
-	blocked_message_groups: BlockedMessageGroupsConfigUpdateRequest.nullish(),
-	expression_info_card: ExpressionInfoCardConfigUpdateRequest.nullish(),
-	guild_header_collapse: GuildHeaderCollapseConfigUpdateRequest.nullish(),
-	typing_indicator_rework: TypingIndicatorReworkConfigUpdateRequest.nullish(),
 	registration: z
 		.object({
 			mode: InstanceRegistrationModeSchema.optional(),

@@ -12,9 +12,7 @@ import Authentication from '@app/features/auth/state/Authentication';
 import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
 import {GifIndicator} from '@app/features/channel/components/embeds/media/GifIndicator';
 import Channels from '@app/features/channel/state/Channels';
-import {EmojiInfoBottomSheet} from '@app/features/emoji/components/bottomsheets/EmojiInfoBottomSheet';
 import {ExpressionInfoBottomSheet} from '@app/features/expressions/components/bottomsheets/ExpressionInfoBottomSheet';
-import ExpressionInfoCardRollout from '@app/features/expressions/state/ExpressionInfoCardRollout';
 import {
 	BLOCKED_USER_DM_WARNING_DESCRIPTOR,
 	OPEN_DM_DESCRIPTOR,
@@ -246,7 +244,6 @@ const UserProfileMobileSheetContent: React.FC<UserProfileMobileSheetContentProps
 		const [showGlobalProfile, setShowGlobalProfile] = useState(false);
 		const [emojiInfoOpen, setEmojiInfoOpen] = useState(false);
 		const [selectedEmoji, setSelectedEmoji] = useState<EmojiInfoState | null>(null);
-		const expressionInfoCardEnabled = ExpressionInfoCardRollout.enabled;
 		const [mutualSheetView, setMutualSheetView] = useState<'friends' | 'communities_groups' | null>(null);
 		const hidePrivateDetails = StreamerMode.shouldHidePersonalInformation;
 		const isCurrentUser = user.id === Authentication.currentUserId;
@@ -953,22 +950,13 @@ const UserProfileMobileSheetContent: React.FC<UserProfileMobileSheetContentProps
 					guildMember={guildMember}
 					data-flx="user.user-profile-mobile-sheet.user-profile-mobile-sheet-content.user-profile-actions-sheet"
 				/>
-				{expressionInfoCardEnabled ? (
-					<ExpressionInfoBottomSheet
-						kind="emoji"
-						isOpen={emojiInfoOpen}
-						onClose={() => setEmojiInfoOpen(false)}
-						emoji={selectedEmoji}
-						data-flx="user.user-profile-mobile-sheet.user-profile-mobile-sheet-content.expression-info-bottom-sheet"
-					/>
-				) : (
-					<EmojiInfoBottomSheet
-						isOpen={emojiInfoOpen}
-						onClose={() => setEmojiInfoOpen(false)}
-						emoji={selectedEmoji}
-						data-flx="user.user-profile-mobile-sheet.user-profile-mobile-sheet-content.emoji-info-bottom-sheet"
-					/>
-				)}
+				<ExpressionInfoBottomSheet
+					kind="emoji"
+					isOpen={emojiInfoOpen}
+					onClose={() => setEmojiInfoOpen(false)}
+					emoji={selectedEmoji}
+					data-flx="user.user-profile-mobile-sheet.user-profile-mobile-sheet-content.expression-info-bottom-sheet"
+				/>
 				{mutualSheetView != null && (
 					<MutualItemsSheet
 						isOpen={true}
