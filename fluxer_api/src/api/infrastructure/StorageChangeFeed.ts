@@ -21,7 +21,7 @@ export interface StorageChangeSink {
 	close(): Promise<void>;
 }
 
-export interface StorageChangeFeedStats {
+interface StorageChangeFeedStats {
 	queued: number;
 	published: number;
 	dropped: number;
