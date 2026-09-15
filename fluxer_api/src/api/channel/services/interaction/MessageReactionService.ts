@@ -12,7 +12,6 @@ import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
 import type {Channel} from '@app/api/models/Channel';
-import type {Message} from '@app/api/models/Message';
 import type {MessageReaction} from '@app/api/models/MessageReaction';
 import type {User} from '@app/api/models/User';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
@@ -274,7 +273,7 @@ export class MessageReactionService extends MessageInteractionBase {
 		if (!message) return;
 		const isRemovingOwnReaction = targetId === actorId;
 		if (!isRemovingOwnReaction) {
-			await this.assertCanModerateMessageReactions({channel, message, actorId, hasPermission});
+			await this.assertCanModerateMessageReactions({channel, hasPermission});
 		}
 		const emojiId = parsedEmoji.id ? createEmojiID(BigInt(parsedEmoji.id)) : undefined;
 		await this.channelRepository.messageInteractions.removeReaction(
@@ -297,12 +296,10 @@ export class MessageReactionService extends MessageInteractionBase {
 		authChannel,
 		messageId,
 		emoji,
-		actorId,
 	}: {
 		authChannel: AuthenticatedChannel;
 		messageId: MessageID;
 		emoji: string;
-		actorId: UserID;
 	}): Promise<void> {
 		const channel = authChannel.channel;
 		const {guild, hasPermission} = authChannel;
@@ -314,7 +311,7 @@ export class MessageReactionService extends MessageInteractionBase {
 		const parsedEmoji = this.parseEmojiWithoutValidation(emoji);
 		const message = await this.channelRepository.messages.getMessage(channel.id, messageId);
 		if (!message) return;
-		await this.assertCanModerateMessageReactions({channel, message, actorId, hasPermission});
+		await this.assertCanModerateMessageReactions({channel, hasPermission});
 		const emojiId = parsedEmoji.id ? createEmojiID(BigInt(parsedEmoji.id)) : undefined;
 		await this.channelRepository.messageInteractions.removeAllReactionsForEmoji(
 			channel.id,
@@ -332,11 +329,9 @@ export class MessageReactionService extends MessageInteractionBase {
 	async removeAllReactions({
 		authChannel,
 		messageId,
-		actorId,
 	}: {
 		authChannel: AuthenticatedChannel;
 		messageId: MessageID;
-		actorId: UserID;
 	}): Promise<void> {
 		const channel = authChannel.channel;
 		const {guild, hasPermission} = authChannel;
@@ -347,7 +342,7 @@ export class MessageReactionService extends MessageInteractionBase {
 		}
 		const message = await this.channelRepository.messages.getMessage(channel.id, messageId);
 		if (!message) return;
-		await this.assertCanModerateMessageReactions({channel, message, actorId, hasPermission});
+		await this.assertCanModerateMessageReactions({channel, hasPermission});
 		await this.channelRepository.messageInteractions.removeAllReactions(channel.id, messageId);
 		await this.dispatchMessageReactionRemoveAll({channel, messageId});
 	}
@@ -365,18 +360,11 @@ export class MessageReactionService extends MessageInteractionBase {
 
 	private async assertCanModerateMessageReactions({
 		channel,
-		message,
-		actorId,
 		hasPermission,
 	}: {
 		channel: Channel;
-		message: Message;
-		actorId: UserID;
 		hasPermission: (permission: bigint) => Promise<boolean>;
 	}): Promise<void> {
-		if (message.authorId === actorId) {
-			return;
-		}
 		if (!channel.guildId) {
 			throw new MissingPermissionsError();
 		}

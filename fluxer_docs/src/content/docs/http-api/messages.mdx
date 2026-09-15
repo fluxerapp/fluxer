@@ -1920,8 +1920,7 @@ Removes one named user's reaction. Returns 204 with an empty body. Emits a [Mess
 ### Limitations
 
 - The caller must be able to view the text-bearing channel and reach the message under the message history cutoff.
-- The message author may remove any user's reaction from their own message in any channel.
-- Any other caller must be in a guild channel and must hold [MANAGE_MESSAGES](/http-api/permissions/), so a non-author in a private channel is refused with 403 `MISSING_PERMISSIONS`.
+- The caller must be in a guild channel and must hold [MANAGE_MESSAGES](/http-api/permissions/), so a caller in a private channel is refused with 403 `MISSING_PERMISSIONS`.
 - `MANAGE_MESSAGES` is an [elevated permission](/http-api/permissions/#elevated-permissions), so a caller who holds it with no enrolled authenticator receives 400 [`TWO_FACTOR_REQUIRED`](/http-api/errors/) in a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, unless they own the guild.
 
 ### Path parameters
@@ -1949,10 +1948,10 @@ Removes one named user's reaction. Returns 204 with an empty body. Emits a [Mess
 | --- | --- | --- |
 | 204 | empty | Target reaction was absent or removed |
 | 400 | [error response](/http-api/#error-response) | Path, emoji, or session input is invalid, or the channel has no messages and the request returns `CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL` |
-| 403 | [error response](/http-api/#error-response) | Caller is not the message author and lacks `VIEW_CHANNEL` or `MANAGE_MESSAGES`, or is not the author in a private channel, each returning `MISSING_PERMISSIONS`, or reactions are temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
+| 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL` or `MANAGE_MESSAGES`, or the channel is private, each returning `MISSING_PERMISSIONS`, or reactions are temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 404 | [error response](/http-api/#error-response) | Channel does not exist, or the message is outside the caller's message history cutoff |
 
-A message that does not exist returns 204 before the authorship and permission checks. A request naming a target user with no such reaction also returns 204.
+A message that does not exist returns 204 before the `MANAGE_MESSAGES` check. A request naming a target user with no such reaction also returns 204.
 
 ### Side effects
 
@@ -1971,8 +1970,7 @@ Removes every reaction for one emoji. Returns 204 with an empty body. Emits a [M
 ### Limitations
 
 - The caller must be able to view the text-bearing channel and reach the message under the message history cutoff.
-- The message author may clear the emoji on their own message in any channel.
-- Any other caller must be in a guild channel and must hold [MANAGE_MESSAGES](/http-api/permissions/), an [elevated permission](/http-api/permissions/#elevated-permissions).
+- The caller must be in a guild channel and must hold [MANAGE_MESSAGES](/http-api/permissions/), an [elevated permission](/http-api/permissions/#elevated-permissions).
 - A caller who holds `MANAGE_MESSAGES` with no enrolled authenticator receives 400 [`TWO_FACTOR_REQUIRED`](/http-api/errors/) in a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, unless they own the guild.
 
 ### Path parameters
@@ -1989,7 +1987,7 @@ Removes every reaction for one emoji. Returns 204 with an empty body. Emits a [M
 | --- | --- | --- |
 | 204 | empty | Emoji reactions were absent or removed |
 | 400 | [error response](/http-api/#error-response) | Path or emoji is invalid, or the channel has no messages and the request returns `CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL` |
-| 403 | [error response](/http-api/#error-response) | Caller is not the message author and lacks `VIEW_CHANNEL` or `MANAGE_MESSAGES`, or is not the author in a private channel, each returning `MISSING_PERMISSIONS`, or reactions are temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
+| 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL` or `MANAGE_MESSAGES`, or the channel is private, each returning `MISSING_PERMISSIONS`, or reactions are temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 404 | [error response](/http-api/#error-response) | Channel does not exist, or the message is outside the caller's message history cutoff |
 
 ### Side effects
@@ -2009,8 +2007,7 @@ Removes every reaction from a message. Returns 204 with an empty body. Emits a [
 ### Limitations
 
 - The caller must be able to view the text-bearing channel and reach the message under the message history cutoff.
-- The message author may clear their own message in any channel.
-- Any other caller must be in a guild channel and must hold [MANAGE_MESSAGES](/http-api/permissions/), an [elevated permission](/http-api/permissions/#elevated-permissions).
+- The caller must be in a guild channel and must hold [MANAGE_MESSAGES](/http-api/permissions/), an [elevated permission](/http-api/permissions/#elevated-permissions).
 - A caller who holds `MANAGE_MESSAGES` with no enrolled authenticator receives 400 [`TWO_FACTOR_REQUIRED`](/http-api/errors/) in a guild whose [MFA level](/http-api/guilds/#mfa-levels) is elevated, unless they own the guild.
 
 ### Path parameters
@@ -2026,7 +2023,7 @@ Removes every reaction from a message. Returns 204 with an empty body. Emits a [
 | --- | --- | --- |
 | 204 | empty | Reactions were absent or removed |
 | 400 | [error response](/http-api/#error-response) | Path parameters are invalid, or the channel has no messages and the request returns `CANNOT_SEND_MESSAGES_IN_NON_TEXT_CHANNEL` |
-| 403 | [error response](/http-api/#error-response) | Caller is not the message author and lacks `VIEW_CHANNEL` or `MANAGE_MESSAGES`, or is not the author in a private channel, each returning `MISSING_PERMISSIONS`, or reactions are temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
+| 403 | [error response](/http-api/#error-response) | Caller lacks `VIEW_CHANNEL` or `MANAGE_MESSAGES`, or the channel is private, each returning `MISSING_PERMISSIONS`, or reactions are temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 404 | [error response](/http-api/#error-response) | Channel does not exist, or the message is outside the caller's message history cutoff |
 
 ### Side effects

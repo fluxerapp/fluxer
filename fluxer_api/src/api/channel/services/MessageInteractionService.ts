@@ -223,7 +223,7 @@ export class MessageInteractionService {
 		emoji: string;
 	}): Promise<void> {
 		const authChannel = await this.authService.getChannelAuthenticated({userId, channelId});
-		await this.reactionService.removeAllReactionsForEmoji({authChannel, messageId, emoji, actorId: userId});
+		await this.reactionService.removeAllReactionsForEmoji({authChannel, messageId, emoji});
 	}
 
 	async removeAllReactions({
@@ -236,7 +236,7 @@ export class MessageInteractionService {
 		messageId: MessageID;
 	}): Promise<void> {
 		const authChannel = await this.authService.getChannelAuthenticated({userId, channelId});
-		await this.reactionService.removeAllReactions({authChannel, messageId, actorId: userId});
+		await this.reactionService.removeAllReactions({authChannel, messageId});
 	}
 
 	async getMessageReactions({
