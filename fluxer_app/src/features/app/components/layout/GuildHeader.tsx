@@ -59,7 +59,7 @@ export const GuildHeader = observer(({guild, banner}: {guild: Guild; banner: Gui
 	const isOpen = 'guild-header' in popouts;
 	const isMobile = MobileLayout.isMobileLayout();
 	const showIntegratedBanner = banner.imageUrl != null;
-	const collapsesOnScroll = showIntegratedBanner && banner.collapseEnabled;
+	const collapsesOnScroll = showIntegratedBanner && banner.collapsible;
 	const onBanner = showIntegratedBanner && !banner.frosted;
 	const handleContextMenu = useCallback(
 		(event: React.MouseEvent) => {
@@ -73,7 +73,6 @@ export const GuildHeader = observer(({guild, banner}: {guild: Guild; banner: Gui
 		},
 		[guild],
 	);
-	const headerButtonRef = useRef<HTMLDivElement | null>(null);
 	const guildNameRef = useRef<HTMLSpanElement | null>(null);
 	const badgeVisible = resolveGuildBadgeVisible(guild.features);
 	const bannerPlacement = resolveSkeletonBannerPlacement(banner.hasBanner, banner.isDetached);
@@ -106,7 +105,7 @@ export const GuildHeader = observer(({guild, banner}: {guild: Guild; banner: Gui
 				</motion.div>
 			)}
 			<NativeDragRegion
-				ref={banner.headerRef}
+				ref={collapsesOnScroll ? undefined : banner.hoverRef}
 				onContextMenu={handleContextMenu}
 				className={clsx(
 					styles.headerContainer,
@@ -146,7 +145,7 @@ export const GuildHeader = observer(({guild, banner}: {guild: Guild; banner: Gui
 					)}
 					onContextMenu={handleContextMenu}
 					className={styles.headerContent}
-					triggerRef={headerButtonRef}
+					triggerRef={banner.headerRowRef}
 					ariaLabel={i18n._(OPEN_COMMUNITY_MENU_FOR_DESCRIPTOR, {guildName: guild.name})}
 					data-flx="app.guild-header.header-content.context-menu"
 				>

@@ -186,7 +186,7 @@ export const ChannelListContent = observer(({guild, scrollY, banner}: ChannelLis
 	});
 	const [activeDragItem, setActiveDragItem] = useState<DragItem | null>(null);
 	const scrollerRef = useRef<ScrollerHandle>(null);
-	const showIntegratedBanner = banner.imageUrl != null && banner.collapseDistance > 0;
+	const showIntegratedBanner = banner.collapsible;
 	const channelGroupsContainerRef = useRef<HTMLDivElement | null>(null);
 	const stickToBottomRef = useRef(false);
 	const pendingScrollTopRef = useRef<number | null>(null);
