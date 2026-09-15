@@ -16,6 +16,8 @@ export interface InstanceBrandingConfig {
 	wordmark_url?: string;
 	favicon_url?: string;
 	theme_color?: string;
+	status_page_url?: string;
+	status_page_incident_history_url?: string;
 }
 
 export interface MasterConfig {

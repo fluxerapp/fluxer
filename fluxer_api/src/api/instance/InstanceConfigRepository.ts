@@ -354,6 +354,8 @@ function getDefaultAppPublicConfig(): InstanceAppPublicConfig {
 			wordmark_url: normalizeOptionalString(Config.instance.branding.wordmarkUrl),
 			favicon_url: normalizeOptionalString(Config.instance.branding.faviconUrl),
 			theme_color: normalizeOptionalString(Config.instance.branding.themeColor),
+			status_page_url: normalizeOptionalString(Config.instance.branding.statusPageUrl),
+			status_page_incident_history_url: normalizeOptionalString(Config.instance.branding.statusPageIncidentHistoryUrl),
 		},
 		setup: {
 			configured: !Config.instance.selfHosted || Config.instance.setup.configured,
@@ -589,6 +591,11 @@ function buildAppPublicConfig(config: z.infer<typeof StoredInstanceAppPublicSche
 			wordmark_url: normalizeOptionalPublicString(branding.wordmark_url, defaults.branding.wordmark_url),
 			favicon_url: normalizeOptionalPublicString(branding.favicon_url, defaults.branding.favicon_url),
 			theme_color: normalizeOptionalPublicString(branding.theme_color, defaults.branding.theme_color),
+			status_page_url: normalizeOptionalPublicString(branding.status_page_url, defaults.branding.status_page_url),
+			status_page_incident_history_url: normalizeOptionalPublicString(
+				branding.status_page_incident_history_url,
+				defaults.branding.status_page_incident_history_url,
+			),
 		},
 		setup: {
 			configured: setup.configured ?? defaults.setup.configured,

@@ -2,7 +2,6 @@
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {ExternalUrls} from '@fluxer/constants/src/ExternalUrls';
 import {makeAutoObservable, runInAction} from 'mobx';
 
 type IncidentStatus = 'investigating' | 'identified' | 'monitoring' | 'resolved';
@@ -91,6 +90,7 @@ const POLL_AFTER_MAINTENANCE_START_MS = 5 * 1000;
 const POLL_MIN_DELAY_MS = 10 * 1000;
 const POLL_RESUME_STALE_MS = 30 * 1000;
 const STATUS_PAGE_FETCH_TIMEOUT_MS = 10 * 1000;
+const STATUS_PAGE_URL = RuntimeConfig.statusPageUrl;
 
 function statusPageFetchOptions(): RequestInit {
 	return {cache: 'no-store', signal: AbortSignal.timeout(STATUS_PAGE_FETCH_TIMEOUT_MS)};
@@ -196,7 +196,6 @@ export class StatusPage {
 	private checkInFlight: Promise<void> | null = null;
 	private lastCheckedAt = 0;
 	private pollingStarted = false;
-	private readonly isSelfHosted = RuntimeConfig.isSelfHosted();
 
 	constructor() {
 		makeAutoObservable<StatusPage, 'checkInFlight' | 'lastCheckedAt' | 'pollingStarted' | 'pollTimerId'>(
@@ -212,7 +211,7 @@ export class StatusPage {
 	}
 
 	startPolling(): void {
-		if (this.isSelfHosted || this.pollingStarted) {
+		if (!STATUS_PAGE_URL || this.pollingStarted) {
 			return;
 		}
 
@@ -243,7 +242,7 @@ export class StatusPage {
 	}
 
 	async checkIncidents(): Promise<void> {
-		if (this.isSelfHosted) {
+		if (!STATUS_PAGE_URL) {
 			return;
 		}
 		if (this.checkInFlight) {
@@ -260,7 +259,7 @@ export class StatusPage {
 
 	private async fetchIncidents(): Promise<void> {
 		try {
-			const response = await fetch(`${ExternalUrls.SERVICE_STATUS}/summary.json`, statusPageFetchOptions());
+			const response = await fetch(`${STATUS_PAGE_URL}/summary.json`, statusPageFetchOptions());
 			if (!response.ok) {
 				return;
 			}
@@ -301,7 +300,7 @@ export class StatusPage {
 
 	private async fetchComponentMaintenances(): Promise<Array<InstatusMaintenance>> {
 		try {
-			const response = await fetch(`${ExternalUrls.SERVICE_STATUS}/components.json`, statusPageFetchOptions());
+			const response = await fetch(`${STATUS_PAGE_URL}/components.json`, statusPageFetchOptions());
 			if (!response.ok) {
 				return [];
 			}
