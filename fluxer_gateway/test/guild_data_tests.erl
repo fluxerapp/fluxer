@@ -357,6 +357,17 @@ search_guild_members_limits_prefix_matches_without_paginating_all_test() ->
         )
     ).
 
+search_guild_members_matches_username_of_nicknamed_member_test() ->
+    Nicknamed = (member(1, <<"jiralite">>))#{<<"nick">> => <<"Specsaver engineer">>},
+    State = #{data => #{<<"members">> => [Nicknamed, member(2, <<"Bob">>)]}},
+    {reply, Reply, _State} = guild_data:search_guild_members(
+        #{query => <<"jiralite">>, limit => 25}, State
+    ),
+    ?assertEqual(
+        [1],
+        [guild_request_members_search:extract_user_id(M) || M <- maps:get(members, Reply)]
+    ).
+
 get_guild_state_includes_parent_category_when_child_channel_is_visible_test() ->
     GuildId = 50,
     UserId = 300,
