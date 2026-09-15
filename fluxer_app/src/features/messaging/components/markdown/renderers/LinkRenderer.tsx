@@ -23,7 +23,7 @@ import * as InviteCommands from '@app/features/invite/commands/InviteCommands';
 import * as InviteUtils from '@app/features/invite/utils/InviteUtils';
 import jumpLinkStyles from '@app/features/messaging/components/markdown/renderers/MessageJumpLink.module.css';
 import {
-	MarkdownContext,
+	isRestrictedInlineContext,
 	type MarkdownRenderOptions,
 	type RendererProps,
 } from '@app/features/messaging/components/markdown/renderers/RendererTypes';
@@ -647,7 +647,7 @@ export const LinkRenderer = observer(function LinkRenderer({
 	const jumpChannel = jumpTarget ? (Channels.getChannel(jumpTarget.channelId) ?? null) : null;
 	const jumpGuild = jumpChannel?.guildId ? (Guilds.getGuild(jumpChannel.guildId) ?? null) : null;
 	const settingsTarget = isAppProtocolUrl(url) ? parseUserSettingsDeepLink(url) : null;
-	const isInlineReplyContext = options.context === MarkdownContext.RESTRICTED_INLINE_REPLY;
+	const isInlineReplyContext = isRestrictedInlineContext(options.context);
 	const shouldDisableInteractions = options.disableInteractions === true;
 	if (inviteCode && StreamerMode.shouldHideInviteLinks) {
 		return (

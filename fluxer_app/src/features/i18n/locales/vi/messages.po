@@ -20,8 +20,10 @@ msgid "... turn dense mode on. Nice!"
 msgstr "... bật chế độ dày đặc. Tuyệt!"
 
 #. Button or menu action label in the channel and chat user message. Keep it concise.
+#. Suffix after the message text in the forward modal preview when the forwarded message was edited.
 #: src/features/channel/components/MessageAttachments.tsx:378
 #: src/features/channel/components/UserMessage.tsx:62
+#: src/features/messaging/components/modals/ForwardMessagePreview.tsx:26
 msgid "(edited)"
 msgstr "(đã chỉnh sửa)"
 
@@ -1125,11 +1127,21 @@ msgstr "{count, plural, one {# cộng đồng hiện không khả dụng do lỗ
 msgid "{count, plural, one {# connection} other {# connections}}"
 msgstr "{count, plural, one {# kết nối} other {# kết nối}}"
 
+#. Attachment summary in the forward modal message preview when the message has no images or videos. count is the number of attached files.
+#: src/features/messaging/components/modals/ForwardMessagePreview.tsx:40
+msgid "{count, plural, one {# file} other {# files}}"
+msgstr "{count, plural, one {# tệp} other {# tệp}}"
+
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/AccountPremiumMenu.tsx:104
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:40
 msgid "{count, plural, one {# gift} other {# gifts}}"
 msgstr "{count, plural, one {# quà} other {# quà}}"
+
+#. Attachment summary in the forward modal message preview when the message has images and no videos. count is the number of images.
+#: src/features/messaging/components/modals/ForwardMessagePreview.tsx:30
+msgid "{count, plural, one {# image} other {# images}}"
+msgstr "{count, plural, one {# ảnh} other {# ảnh}}"
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:181
 msgid "{count, plural, one {# item} other {# items}}"
@@ -1184,6 +1196,11 @@ msgstr "{count, plural, one {# giây} other {# giây}}"
 #: src/features/channel/components/message_search_bar/MessageSearchBar.tsx:69
 msgid "{count, plural, one {# suggestion available} other {# suggestions available}}"
 msgstr "{count, plural, other {Có # gợi ý}}"
+
+#. Attachment summary in the forward modal message preview when the message has videos and no images. count is the number of videos.
+#: src/features/messaging/components/modals/ForwardMessagePreview.tsx:35
+msgid "{count, plural, one {# video} other {# videos}}"
+msgstr "{count, plural, one {# video} other {# video}}"
 
 #. Compact age label shown beside a list row (DM list, invite list). count is a number of days; the "d" is an abbreviation of "days". Keep it as short as possible; it sits in a narrow column.
 #: src/features/ui/utils/ShortRelativeTimeLabels.ts:26
@@ -1581,6 +1598,11 @@ msgstr "{hours, plural, one {Lời mời này sẽ hết hạn sau # giờ.} oth
 #: src/features/invite/components/modals/InviteModal.tsx:160
 msgid "{hours, plural, one {Your invite link expires in # hour.} other {Your invite link expires in # hours.}}"
 msgstr "{hours, plural, other {Liên kết mời của bạn sẽ hết hạn sau # giờ.}}"
+
+#. Attachment summary in the forward modal message preview when the message has both images and videos. imageCount and videoCount are the number of each.
+#: src/features/messaging/components/modals/ForwardMessagePreview.tsx:45
+msgid "{imageCount, plural, one {# image} other {# images}}, {videoCount, plural, one {# video} other {# videos}}"
+msgstr "{imageCount, plural, one {# ảnh} other {# ảnh}}, {videoCount, plural, one {# video} other {# video}}"
 
 #. Accessible label for a disabled Discovery sidebar navigation item. {itemLabel} is the section name.
 #: src/features/discovery/discovery/DiscoverySidebar.tsx:31
@@ -2233,6 +2255,11 @@ msgstr "@mention"
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:244
 msgid "/tts"
 msgstr "/tts"
+
+#. Badge on the forward modal preview thumbnail. count is the number of other attachments that the thumbnail does not show.
+#: src/features/messaging/components/modals/ForwardMessagePreview.tsx:50
+msgid "+{count}"
+msgstr "+{count}"
 
 #: src/features/channel/components/RecipientAddMessage.tsx:25
 msgid "<0/> added <1/> to the group."
@@ -3134,7 +3161,7 @@ msgid "Add a bot to a community with requested permissions"
 msgstr "Thêm bot vào cộng đồng với các quyền được yêu cầu"
 
 #. Placeholder text in the optional comment field of the forward modal.
-#: src/features/messaging/components/modals/ForwardModal.tsx:91
+#: src/features/messaging/components/modals/ForwardModal.tsx:99
 msgid "Add a comment (optional)"
 msgstr "Thêm bình luận (tùy chọn)"
 
@@ -6687,7 +6714,7 @@ msgstr "Không thể tải tệp lên ở đây"
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:133
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
-#: src/features/messaging/components/modals/ForwardModal.tsx:636
+#: src/features/messaging/components/modals/ForwardModal.tsx:650
 #: src/features/messaging/components/modals/ImageCropModal.tsx:944
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/moderation/components/modals/BanMemberModal.tsx:262
@@ -6926,7 +6953,7 @@ msgstr "Cài đặt danh mục"
 
 #. Markdown alert label for a caution callout when copied as plaintext.
 #. Short label in the messaging block elements. Keep it concise. Keep the tone plain and specific.
-#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:51
+#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:54
 #: src/features/messaging/utils/markdown/Plaintext.ts:68
 msgid "Caution"
 msgstr "Thận trọng"
@@ -7372,8 +7399,8 @@ msgstr "kênh"
 msgid "Channel"
 msgstr "Kênh"
 
-#. Short label in the settings dialog forward channel selection. Preserve {id}; it is inserted by code.
-#: src/features/app/components/dialogs/shared/UseForwardChannelObservations.ts:27
+#. Fallback name for an unnamed channel in the forward modal destination list. Preserve {id}; it is inserted by code.
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:87
 msgid "Channel {id}"
 msgstr "Kênh {id}"
 
@@ -8804,17 +8831,17 @@ msgid "Commands"
 msgstr "Lệnh"
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled when at least one selected target has slowmode active.
-#: src/features/messaging/components/modals/ForwardModal.tsx:64
+#: src/features/messaging/components/modals/ForwardModal.tsx:71
 msgid "Comments are disabled because one or more selected channels have slowmode on. The comment would be blocked by slowmode right after the forward."
 msgstr "Không thể bình luận vì một hoặc nhiều kênh đã chọn đang bật chế độ chậm. Bình luận sẽ bị chặn ngay sau khi chuyển tiếp."
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled for a single selected channel with slowmode.
-#: src/features/messaging/components/modals/ForwardModal.tsx:58
+#: src/features/messaging/components/modals/ForwardModal.tsx:65
 msgid "Comments are disabled because slowmode is on in {forwardChannelDisplayName}. The comment would be blocked by slowmode right after the forward."
 msgstr "Không thể bình luận vì kênh {forwardChannelDisplayName} đang bật chế độ chậm. Bình luận sẽ bị chặn ngay sau khi chuyển tiếp."
 
 #. Tooltip on the disabled comment field in the forward modal when slowmode blocks comments.
-#: src/features/messaging/components/modals/ForwardModal.tsx:87
+#: src/features/messaging/components/modals/ForwardModal.tsx:95
 msgid "Comments are unavailable while slowmode is on."
 msgstr "Không thể bình luận khi đang bật chế độ chậm."
 
@@ -14678,7 +14705,7 @@ msgid "Error rendering content"
 msgstr "Lỗi hiển thị nội dung"
 
 #. Error message in the messaging code elements. Preserve {errorAsErrorMessageI18nMsgUnknownError}; it is inserted by code.
-#: src/features/messaging/components/markdown/renderers/common/CodeElements.tsx:29
+#: src/features/messaging/components/markdown/renderers/common/CodeElements.tsx:32
 msgid "Error rendering LaTeX: {errorAsErrorMessageI18nMsgUnknownError}"
 msgstr "Lỗi khi hiển thị LaTeX: {errorAsErrorMessageI18nMsgUnknownError}"
 
@@ -16097,7 +16124,7 @@ msgstr "Chuyển tiếp phương tiện"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Title of the forward message modal.
 #: src/features/input/state/input_keybind/shared.ts:25
-#: src/features/messaging/components/modals/ForwardModal.tsx:79
+#: src/features/messaging/components/modals/ForwardModal.tsx:86
 msgid "Forward message"
 msgstr "Chuyển tiếp tin nhắn"
 
@@ -18216,7 +18243,7 @@ msgstr "Không thể nhập"
 
 #. Markdown alert label for an important callout when copied as plaintext.
 #. Short label in the messaging block elements. Keep it concise. Keep the tone plain and specific.
-#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:43
+#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:46
 #: src/features/messaging/utils/markdown/Plaintext.ts:60
 msgid "Important"
 msgstr "Quan trọng"
@@ -21355,7 +21382,7 @@ msgstr "Cài đặt hiển thị tin nhắn chỉ có trên máy tính."
 msgid "Message editing"
 msgstr "Chỉnh sửa tin nhắn"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:307
+#: src/features/messaging/components/modals/ForwardModal.tsx:371
 msgid "Message forwarded"
 msgstr "Đã chuyển tiếp tin nhắn"
 
@@ -21404,7 +21431,7 @@ msgstr "Nút nhập tin nhắn"
 
 #. Error modal title in the forward modal when the optional comment exceeds the message length limit.
 #. Form validation error indicating the message exceeds the allowed length.
-#: src/features/messaging/components/modals/ForwardModal.tsx:50
+#: src/features/messaging/components/modals/ForwardModal.tsx:57
 #: src/features/ui/character_counter/CharacterCountMessages.ts:16
 msgid "Message is too long"
 msgstr "Tin nhắn quá dài"
@@ -23059,7 +23086,7 @@ msgstr "Không có thay đổi nào để lưu"
 msgid "No channels available"
 msgstr "Không có kênh nào"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:426
+#: src/features/messaging/components/modals/ForwardModal.tsx:445
 #: src/features/search/components/search/ChannelFilterSheet.tsx:120
 msgid "No channels found"
 msgstr "Không tìm thấy kênh nào"
@@ -23670,7 +23697,7 @@ msgstr "Không phải đúng hoặc sai"
 #. Short label in the messaging block elements. Keep it concise. Keep the tone plain and specific.
 #. Short label in the user profile modal. Keep it concise.
 #: src/features/app/components/pages/YouPage.tsx:186
-#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:35
+#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:38
 #: src/features/messaging/utils/markdown/Plaintext.ts:72
 #: src/features/user/components/modals/user_profile_modal/UserNoteEditor.tsx:19
 #: src/features/user/components/modals/user_profile_modal/UserNoteEditor.tsx:79
@@ -24311,7 +24338,7 @@ msgid "Open emoji in browser"
 msgstr "Mở biểu tượng cảm xúc trong trình duyệt"
 
 #. Accessible label for the emoji picker trigger button in the forward modal comment field.
-#: src/features/messaging/components/modals/ForwardModal.tsx:95
+#: src/features/messaging/components/modals/ForwardModal.tsx:103
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:27
 msgid "Open emoji picker"
 msgstr "Mở bảng chọn biểu tượng cảm xúc"
@@ -29360,6 +29387,7 @@ msgstr "Xem trước khi tua"
 #. Button or menu action label in the theme studio studio search input. Keep it concise.
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Confirm button label in the reverse image search provider picker. Initiates the search.
+#. Placeholder and accessible label of the search input in the forward modal. It finds people, channels and group DMs to forward to.
 #. Quick switcher tab label that searches all entity types.
 #. Title of the mobile channel search bottom sheet.
 #. Tooltip on the channel header search button that opens the message search input.
@@ -29368,6 +29396,7 @@ msgstr "Xem trước khi tua"
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:854
 #: src/features/channel/components/channel_header/shared.ts:47
 #: src/features/channel/components/shared/PickerSearchInput.tsx:21
+#: src/features/messaging/components/modals/ForwardModal.tsx:90
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx:43
 #: src/features/search/utils/QuickSwitcherModalUtils.tsx:45
 #: src/features/theme_studio/ui/StudioSearchInput.tsx:16
@@ -29406,11 +29435,6 @@ msgstr "Tìm theo tên người dùng hoặc ID"
 #: src/features/search/components/search/ChannelFilterSheet.tsx:26
 msgid "Search channels"
 msgstr "Tìm kênh"
-
-#. Placeholder text in the channel picker search input of the forward modal.
-#: src/features/messaging/components/modals/ForwardModal.tsx:83
-msgid "Search channels or DMs"
-msgstr "Tìm kênh hoặc tin nhắn trực tiếp"
 
 #. Accessible label and placeholder for the community search field in the Discovery page.
 #: src/features/discovery/discovery/DiscoveryNavbar.tsx:29
@@ -30004,7 +30028,7 @@ msgid "Send"
 msgstr "Gửi"
 
 #. Primary button label in the forward message modal. selectedCount is the number of selected destinations; selectionLimit is the maximum allowed.
-#: src/features/messaging/components/modals/ForwardModal.tsx:99
+#: src/features/messaging/components/modals/ForwardModal.tsx:107
 msgid "Send ({selectedCount}/{selectionLimit})"
 msgstr "Gửi ({selectedCount}/{selectionLimit})"
 
@@ -30217,8 +30241,8 @@ msgstr "Việc gửi SMS đến số điện thoại này quá tốn kém đối
 msgid "Sending malware or dangerous links"
 msgstr "Gửi phần mềm độc hại hoặc liên kết nguy hiểm"
 
-#. Short label in the settings dialog forward channel selection.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:14
+#. Short label under a destination row in the forward modal, shown when the community has messaging disabled.
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:63
 msgid "Sending messages is disabled in this community"
 msgstr "Đã tắt tính năng gửi tin nhắn trong cộng đồng này"
 
@@ -30923,7 +30947,7 @@ msgid "Shortcuts are paused while recording."
 msgstr "Các phím tắt tạm ngừng hoạt động trong khi ghi lại tổ hợp phím."
 
 #. Body of the error modal shown when the forward modal comment exceeds the message length limit.
-#: src/features/messaging/components/modals/ForwardModal.tsx:54
+#: src/features/messaging/components/modals/ForwardModal.tsx:61
 msgid "Shorten the message and try again."
 msgstr "Rút gọn tin nhắn và thử lại."
 
@@ -31780,8 +31804,8 @@ msgstr "Tải hồ sơ chậm"
 msgid "Slowmode"
 msgstr "Chế độ chậm"
 
-#. Short label in the settings dialog forward channel selection. Preserve {remaining}; it is inserted by code.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:37
+#. Short label under a destination row in the forward modal while slowmode blocks sending. Preserve {remaining}; it is inserted by code.
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:82
 msgid "Slowmode · wait {remaining}"
 msgstr "Chế độ chậm · chờ {remaining}"
 
@@ -34920,6 +34944,11 @@ msgstr "Thành viên này không còn trong cộng đồng. Vui lòng làm mới
 msgid "This member isn't connected to voice anymore."
 msgstr "Thành viên này không còn kết nối với kênh thoại nữa."
 
+#. Forward dialog error shown when the forwarded message contains age-restricted media and the target channel is not age-restricted.
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:77
+msgid "This message can only be forwarded to age-restricted channels"
+msgstr "Tin nhắn này chỉ có thể được chuyển tiếp đến các kênh có giới hạn độ tuổi"
+
 #. IAR modal: tooltip on the delete card when the reported message is already deleted.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:117
 msgid "This message has already been deleted."
@@ -35351,7 +35380,7 @@ msgstr "Dấu thời gian"
 
 #. Markdown alert label for a tip callout when copied as plaintext.
 #. Short label in the messaging block elements. Keep it concise. Keep the tone plain and specific.
-#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:39
+#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:42
 #: src/features/messaging/utils/markdown/Plaintext.ts:56
 msgid "Tip"
 msgstr "Mẹo"
@@ -36521,7 +36550,7 @@ msgstr "thực thể không xác định"
 #. Fallback diagnostic text on the crash screen when an Error object has no message.
 #. Fallback error text shown when LaTeX rendering fails without an error message.
 #: src/features/app/components/ErrorFallback.tsx:25
-#: src/features/messaging/components/markdown/renderers/common/CodeElements.tsx:34
+#: src/features/messaging/components/markdown/renderers/common/CodeElements.tsx:37
 msgid "Unknown error"
 msgstr "Lỗi không xác định"
 
@@ -39056,12 +39085,12 @@ msgid "Waiting for passkey…"
 msgstr "Đang chờ khóa truy cập…"
 
 #. Inline notice in the forward modal when slowmode is active in the selected target channel. forwardChannelDisplayName is the channel name.
-#: src/features/messaging/components/modals/ForwardModal.tsx:70
+#: src/features/messaging/components/modals/ForwardModal.tsx:77
 msgid "Waiting for slowmode in {forwardChannelDisplayName} to expire."
 msgstr "Đang chờ chế độ chậm trong {forwardChannelDisplayName} hết hạn."
 
 #. Inline notice in the forward modal when slowmode is active in one or more selected target channels.
-#: src/features/messaging/components/modals/ForwardModal.tsx:75
+#: src/features/messaging/components/modals/ForwardModal.tsx:82
 msgid "Waiting for slowmode in one or more selected channels to expire."
 msgstr "Đang chờ chế độ chậm trong một hoặc nhiều kênh đã chọn hết hạn."
 
@@ -39077,7 +39106,7 @@ msgstr "Đánh thức"
 
 #. Markdown alert label for a warning callout when copied as plaintext.
 #. Warning text in the messaging block elements. Keep the tone plain and specific.
-#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:47
+#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:50
 #: src/features/messaging/utils/markdown/Plaintext.ts:64
 msgid "Warning"
 msgstr "Cảnh báo"
@@ -40390,12 +40419,12 @@ msgid "You need access to your current email to change it from here. Use phone v
 msgstr "Bạn cần truy cập email hiện tại để thay đổi email từ đây. Hãy dùng xác minh qua điện thoại (nếu có) hoặc liên hệ bộ phận hỗ trợ."
 
 #. Forward dialog error shown when the forwarded message has attachments and the user lacks Attach Files in the target channel.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:32
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:72
 msgid "You need the \"{attachFilesPermissionLabel}\" permission to attach files in this channel"
 msgstr "Bạn cần quyền \"{attachFilesPermissionLabel}\" để đính kèm tệp trong kênh này"
 
 #. Forward dialog error shown when the forwarded message contains embeds and the user lacks Embed Links in the target channel.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:27
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:67
 msgid "You need the \"{embedLinksPermissionLabel}\" permission to embed links in this channel"
 msgstr "Bạn cần quyền \"{embedLinksPermissionLabel}\" để nhúng liên kết vào kênh này"
 
@@ -40431,11 +40460,6 @@ msgstr "Bạn cần có quyền \"{permissionLabel}\" để sử dụng biểu t
 #: src/features/expressions/utils/ExpressionPermissionUtils.ts:32
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "Bạn cần có quyền \"{permissionLabel}\" để sử dụng nhãn dán từ các cộng đồng khác tại đây."
-
-#. Forward dialog error shown when the user lacks the Send Messages permission in the target channel. Permission name is interpolated.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:22
-msgid "You need the \"{sendMessagesPermissionLabel}\" permission to send messages in this channel"
-msgstr "Bạn cần quyền \"{sendMessagesPermissionLabel}\" để gửi tin nhắn trong kênh này"
 
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:208
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:434
@@ -40678,11 +40702,6 @@ msgstr "Bạn đang gửi tin nhắn quá nhanh"
 #: src/features/voice/components/StreamWatchHoverPopout.tsx:43
 msgid "You're streaming!"
 msgstr "Bạn đang phát trực tiếp!"
-
-#. Short label in the settings dialog forward channel selection. Keep the tone plain and specific.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:18
-msgid "You're timed out in this community"
-msgstr "Bạn đang bị tạm dừng trong cộng đồng này"
 
 #: src/features/channel/components/barriers/BarrierComponents.tsx:295
 msgid "You're timed out. Messaging, reactions, and voice are paused until the timeout expires."

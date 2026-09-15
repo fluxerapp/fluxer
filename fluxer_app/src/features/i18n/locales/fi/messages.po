@@ -20,8 +20,10 @@ msgid "... turn dense mode on. Nice!"
 msgstr "...otat tiiviin tilan käyttöön. Hienoa!"
 
 #. Button or menu action label in the channel and chat user message. Keep it concise.
+#. Suffix after the message text in the forward modal preview when the forwarded message was edited.
 #: src/features/channel/components/MessageAttachments.tsx:378
 #: src/features/channel/components/UserMessage.tsx:62
+#: src/features/messaging/components/modals/ForwardMessagePreview.tsx:26
 msgid "(edited)"
 msgstr "(muokattu)"
 
@@ -1125,11 +1127,21 @@ msgstr "{count, plural, one {# yhteisö on tilapäisesti pois käytöstä toimin
 msgid "{count, plural, one {# connection} other {# connections}}"
 msgstr "{count, plural, one {# yhteys} other {# yhteyttä}}"
 
+#. Attachment summary in the forward modal message preview when the message has no images or videos. count is the number of attached files.
+#: src/features/messaging/components/modals/ForwardMessagePreview.tsx:40
+msgid "{count, plural, one {# file} other {# files}}"
+msgstr "{count, plural, one {# tiedosto} other {# tiedostoa}}"
+
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/AccountPremiumMenu.tsx:104
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:40
 msgid "{count, plural, one {# gift} other {# gifts}}"
 msgstr "{count, plural, one {# lahja} other {# lahjaa}}"
+
+#. Attachment summary in the forward modal message preview when the message has images and no videos. count is the number of images.
+#: src/features/messaging/components/modals/ForwardMessagePreview.tsx:30
+msgid "{count, plural, one {# image} other {# images}}"
+msgstr "{count, plural, one {# kuva} other {# kuvaa}}"
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:181
 msgid "{count, plural, one {# item} other {# items}}"
@@ -1184,6 +1196,11 @@ msgstr "{count, plural, one {# sekunti} other {# sekuntia}}"
 #: src/features/channel/components/message_search_bar/MessageSearchBar.tsx:69
 msgid "{count, plural, one {# suggestion available} other {# suggestions available}}"
 msgstr "{count, plural, one {# ehdotus saatavilla} other {# ehdotusta saatavilla}}"
+
+#. Attachment summary in the forward modal message preview when the message has videos and no images. count is the number of videos.
+#: src/features/messaging/components/modals/ForwardMessagePreview.tsx:35
+msgid "{count, plural, one {# video} other {# videos}}"
+msgstr "{count, plural, one {# video} other {# videota}}"
 
 #. Compact age label shown beside a list row (DM list, invite list). count is a number of days; the "d" is an abbreviation of "days". Keep it as short as possible; it sits in a narrow column.
 #: src/features/ui/utils/ShortRelativeTimeLabels.ts:26
@@ -1581,6 +1598,11 @@ msgstr "{hours, plural, one {Tämä kutsu vanhenee # tunnin kuluttua.} other {T�
 #: src/features/invite/components/modals/InviteModal.tsx:160
 msgid "{hours, plural, one {Your invite link expires in # hour.} other {Your invite link expires in # hours.}}"
 msgstr "{hours, plural, one {Kutsulinkkisi vanhenee # tunnin kuluttua.} other {Kutsulinkkisi vanhenee # tunnin kuluttua.}}"
+
+#. Attachment summary in the forward modal message preview when the message has both images and videos. imageCount and videoCount are the number of each.
+#: src/features/messaging/components/modals/ForwardMessagePreview.tsx:45
+msgid "{imageCount, plural, one {# image} other {# images}}, {videoCount, plural, one {# video} other {# videos}}"
+msgstr "{imageCount, plural, one {# kuva} other {# kuvaa}}, {videoCount, plural, one {# video} other {# videota}}"
 
 #. Accessible label for a disabled Discovery sidebar navigation item. {itemLabel} is the section name.
 #: src/features/discovery/discovery/DiscoverySidebar.tsx:31
@@ -2233,6 +2255,11 @@ msgstr "@maininta"
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:244
 msgid "/tts"
 msgstr "/tts"
+
+#. Badge on the forward modal preview thumbnail. count is the number of other attachments that the thumbnail does not show.
+#: src/features/messaging/components/modals/ForwardMessagePreview.tsx:50
+msgid "+{count}"
+msgstr "+{count}"
 
 #: src/features/channel/components/RecipientAddMessage.tsx:25
 msgid "<0/> added <1/> to the group."
@@ -3134,7 +3161,7 @@ msgid "Add a bot to a community with requested permissions"
 msgstr "Lisätä botin yhteisöön pyydetyillä käyttöoikeuksilla"
 
 #. Placeholder text in the optional comment field of the forward modal.
-#: src/features/messaging/components/modals/ForwardModal.tsx:91
+#: src/features/messaging/components/modals/ForwardModal.tsx:99
 msgid "Add a comment (optional)"
 msgstr "Lisää kommentti (valinnainen)"
 
@@ -6687,7 +6714,7 @@ msgstr "Tiedostoja ei voi lähettää tähän"
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:133
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
-#: src/features/messaging/components/modals/ForwardModal.tsx:636
+#: src/features/messaging/components/modals/ForwardModal.tsx:650
 #: src/features/messaging/components/modals/ImageCropModal.tsx:944
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/moderation/components/modals/BanMemberModal.tsx:262
@@ -6926,7 +6953,7 @@ msgstr "Kategorian asetukset"
 
 #. Markdown alert label for a caution callout when copied as plaintext.
 #. Short label in the messaging block elements. Keep it concise. Keep the tone plain and specific.
-#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:51
+#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:54
 #: src/features/messaging/utils/markdown/Plaintext.ts:68
 msgid "Caution"
 msgstr "Huomio"
@@ -7372,8 +7399,8 @@ msgstr "kanava"
 msgid "Channel"
 msgstr "Kanava"
 
-#. Short label in the settings dialog forward channel selection. Preserve {id}; it is inserted by code.
-#: src/features/app/components/dialogs/shared/UseForwardChannelObservations.ts:27
+#. Fallback name for an unnamed channel in the forward modal destination list. Preserve {id}; it is inserted by code.
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:87
 msgid "Channel {id}"
 msgstr "Kanava {id}"
 
@@ -8804,17 +8831,17 @@ msgid "Commands"
 msgstr "Komennot"
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled when at least one selected target has slowmode active.
-#: src/features/messaging/components/modals/ForwardModal.tsx:64
+#: src/features/messaging/components/modals/ForwardModal.tsx:71
 msgid "Comments are disabled because one or more selected channels have slowmode on. The comment would be blocked by slowmode right after the forward."
 msgstr "Kommentointi on poistettu käytöstä, koska yhdellä tai useammalla valitulla kanavalla on hidas tila päällä. Hidas tila estäisi kommentin heti edelleenlähetyksen jälkeen."
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled for a single selected channel with slowmode.
-#: src/features/messaging/components/modals/ForwardModal.tsx:58
+#: src/features/messaging/components/modals/ForwardModal.tsx:65
 msgid "Comments are disabled because slowmode is on in {forwardChannelDisplayName}. The comment would be blocked by slowmode right after the forward."
 msgstr "Kommentointi on poistettu käytöstä, koska kanavalla {forwardChannelDisplayName} on hidas tila päällä. Hidas tila estäisi kommentin heti edelleenlähetyksen jälkeen."
 
 #. Tooltip on the disabled comment field in the forward modal when slowmode blocks comments.
-#: src/features/messaging/components/modals/ForwardModal.tsx:87
+#: src/features/messaging/components/modals/ForwardModal.tsx:95
 msgid "Comments are unavailable while slowmode is on."
 msgstr "Kommentit eivät ole käytettävissä, kun hidas tila on päällä."
 
@@ -14678,7 +14705,7 @@ msgid "Error rendering content"
 msgstr "Virhe sisällön näyttämisessä"
 
 #. Error message in the messaging code elements. Preserve {errorAsErrorMessageI18nMsgUnknownError}; it is inserted by code.
-#: src/features/messaging/components/markdown/renderers/common/CodeElements.tsx:29
+#: src/features/messaging/components/markdown/renderers/common/CodeElements.tsx:32
 msgid "Error rendering LaTeX: {errorAsErrorMessageI18nMsgUnknownError}"
 msgstr "Virhe LaTeXin renderöinnissä: {errorAsErrorMessageI18nMsgUnknownError}"
 
@@ -16097,7 +16124,7 @@ msgstr "Välitä media"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Title of the forward message modal.
 #: src/features/input/state/input_keybind/shared.ts:25
-#: src/features/messaging/components/modals/ForwardModal.tsx:79
+#: src/features/messaging/components/modals/ForwardModal.tsx:86
 msgid "Forward message"
 msgstr "Välitä viesti"
 
@@ -18216,7 +18243,7 @@ msgstr "Tuonti ei ole käytettävissä"
 
 #. Markdown alert label for an important callout when copied as plaintext.
 #. Short label in the messaging block elements. Keep it concise. Keep the tone plain and specific.
-#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:43
+#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:46
 #: src/features/messaging/utils/markdown/Plaintext.ts:60
 msgid "Important"
 msgstr "Tärkeää"
@@ -21355,7 +21382,7 @@ msgstr "Viestien näyttöasetukset ovat käytettävissä vain työpöytäsovellu
 msgid "Message editing"
 msgstr "Viestin muokkaus"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:307
+#: src/features/messaging/components/modals/ForwardModal.tsx:371
 msgid "Message forwarded"
 msgstr "Viesti välitetty"
 
@@ -21404,7 +21431,7 @@ msgstr "Viestinsyötön painikkeet"
 
 #. Error modal title in the forward modal when the optional comment exceeds the message length limit.
 #. Form validation error indicating the message exceeds the allowed length.
-#: src/features/messaging/components/modals/ForwardModal.tsx:50
+#: src/features/messaging/components/modals/ForwardModal.tsx:57
 #: src/features/ui/character_counter/CharacterCountMessages.ts:16
 msgid "Message is too long"
 msgstr "Viesti on liian pitkä"
@@ -23059,7 +23086,7 @@ msgstr "Ei tallennettavia muutoksia"
 msgid "No channels available"
 msgstr "Ei kanavia saatavilla"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:426
+#: src/features/messaging/components/modals/ForwardModal.tsx:445
 #: src/features/search/components/search/ChannelFilterSheet.tsx:120
 msgid "No channels found"
 msgstr "Kanavia ei löytynyt"
@@ -23670,7 +23697,7 @@ msgstr "Ei ole tosi eikä epätosi"
 #. Short label in the messaging block elements. Keep it concise. Keep the tone plain and specific.
 #. Short label in the user profile modal. Keep it concise.
 #: src/features/app/components/pages/YouPage.tsx:186
-#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:35
+#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:38
 #: src/features/messaging/utils/markdown/Plaintext.ts:72
 #: src/features/user/components/modals/user_profile_modal/UserNoteEditor.tsx:19
 #: src/features/user/components/modals/user_profile_modal/UserNoteEditor.tsx:79
@@ -24311,7 +24338,7 @@ msgid "Open emoji in browser"
 msgstr "Avaa emoji selaimessa"
 
 #. Accessible label for the emoji picker trigger button in the forward modal comment field.
-#: src/features/messaging/components/modals/ForwardModal.tsx:95
+#: src/features/messaging/components/modals/ForwardModal.tsx:103
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:27
 msgid "Open emoji picker"
 msgstr "Avaa emojivalitsin"
@@ -29360,6 +29387,7 @@ msgstr "Kelauksen esikatselu"
 #. Button or menu action label in the theme studio studio search input. Keep it concise.
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Confirm button label in the reverse image search provider picker. Initiates the search.
+#. Placeholder and accessible label of the search input in the forward modal. It finds people, channels and group DMs to forward to.
 #. Quick switcher tab label that searches all entity types.
 #. Title of the mobile channel search bottom sheet.
 #. Tooltip on the channel header search button that opens the message search input.
@@ -29368,6 +29396,7 @@ msgstr "Kelauksen esikatselu"
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:854
 #: src/features/channel/components/channel_header/shared.ts:47
 #: src/features/channel/components/shared/PickerSearchInput.tsx:21
+#: src/features/messaging/components/modals/ForwardModal.tsx:90
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx:43
 #: src/features/search/utils/QuickSwitcherModalUtils.tsx:45
 #: src/features/theme_studio/ui/StudioSearchInput.tsx:16
@@ -29406,11 +29435,6 @@ msgstr "Hae käyttäjänimellä tai tunnuksella"
 #: src/features/search/components/search/ChannelFilterSheet.tsx:26
 msgid "Search channels"
 msgstr "Hae kanavia"
-
-#. Placeholder text in the channel picker search input of the forward modal.
-#: src/features/messaging/components/modals/ForwardModal.tsx:83
-msgid "Search channels or DMs"
-msgstr "Hae kanavia tai yksityisviestejä"
 
 #. Accessible label and placeholder for the community search field in the Discovery page.
 #: src/features/discovery/discovery/DiscoveryNavbar.tsx:29
@@ -30004,7 +30028,7 @@ msgid "Send"
 msgstr "Lähetä"
 
 #. Primary button label in the forward message modal. selectedCount is the number of selected destinations; selectionLimit is the maximum allowed.
-#: src/features/messaging/components/modals/ForwardModal.tsx:99
+#: src/features/messaging/components/modals/ForwardModal.tsx:107
 msgid "Send ({selectedCount}/{selectionLimit})"
 msgstr "Lähetä ({selectedCount}/{selectionLimit})"
 
@@ -30217,8 +30241,8 @@ msgstr "Tekstiviestin lähettäminen tähän puhelinnumeroon on liian kallista {
 msgid "Sending malware or dangerous links"
 msgstr "Haittaohjelmien tai vaarallisten linkkien lähettäminen"
 
-#. Short label in the settings dialog forward channel selection.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:14
+#. Short label under a destination row in the forward modal, shown when the community has messaging disabled.
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:63
 msgid "Sending messages is disabled in this community"
 msgstr "Viestien lähettäminen on poistettu käytöstä tässä yhteisössä"
 
@@ -30923,7 +30947,7 @@ msgid "Shortcuts are paused while recording."
 msgstr "Pikanäppäimet eivät ole käytössä näppäinyhdistelmän tallennuksen aikana."
 
 #. Body of the error modal shown when the forward modal comment exceeds the message length limit.
-#: src/features/messaging/components/modals/ForwardModal.tsx:54
+#: src/features/messaging/components/modals/ForwardModal.tsx:61
 msgid "Shorten the message and try again."
 msgstr "Lyhennä viestiä ja yritä uudelleen."
 
@@ -31780,8 +31804,8 @@ msgstr "Hidas profiilin lataus"
 msgid "Slowmode"
 msgstr "Hidas tila"
 
-#. Short label in the settings dialog forward channel selection. Preserve {remaining}; it is inserted by code.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:37
+#. Short label under a destination row in the forward modal while slowmode blocks sending. Preserve {remaining}; it is inserted by code.
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:82
 msgid "Slowmode · wait {remaining}"
 msgstr "Hidas tila · odota {remaining}"
 
@@ -34920,6 +34944,11 @@ msgstr "Tämä jäsen ei ole enää yhteisössä. Päivitä ja yritä uudelleen.
 msgid "This member isn't connected to voice anymore."
 msgstr "Tämä jäsen ei ole enää äänikanavalla."
 
+#. Forward dialog error shown when the forwarded message contains age-restricted media and the target channel is not age-restricted.
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:77
+msgid "This message can only be forwarded to age-restricted channels"
+msgstr "Tämä viesti voidaan välittää vain ikärajoitettuihin kanaviin"
+
 #. IAR modal: tooltip on the delete card when the reported message is already deleted.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:117
 msgid "This message has already been deleted."
@@ -35351,7 +35380,7 @@ msgstr "Aikaleimat"
 
 #. Markdown alert label for a tip callout when copied as plaintext.
 #. Short label in the messaging block elements. Keep it concise. Keep the tone plain and specific.
-#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:39
+#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:42
 #: src/features/messaging/utils/markdown/Plaintext.ts:56
 msgid "Tip"
 msgstr "Vinkki"
@@ -36521,7 +36550,7 @@ msgstr "tuntematon taho"
 #. Fallback diagnostic text on the crash screen when an Error object has no message.
 #. Fallback error text shown when LaTeX rendering fails without an error message.
 #: src/features/app/components/ErrorFallback.tsx:25
-#: src/features/messaging/components/markdown/renderers/common/CodeElements.tsx:34
+#: src/features/messaging/components/markdown/renderers/common/CodeElements.tsx:37
 msgid "Unknown error"
 msgstr "Tuntematon virhe"
 
@@ -39056,12 +39085,12 @@ msgid "Waiting for passkey…"
 msgstr "Odotetaan pääsyavainta…"
 
 #. Inline notice in the forward modal when slowmode is active in the selected target channel. forwardChannelDisplayName is the channel name.
-#: src/features/messaging/components/modals/ForwardModal.tsx:70
+#: src/features/messaging/components/modals/ForwardModal.tsx:77
 msgid "Waiting for slowmode in {forwardChannelDisplayName} to expire."
 msgstr "Odotetaan hitaan tilan päättymistä kanavalla {forwardChannelDisplayName}."
 
 #. Inline notice in the forward modal when slowmode is active in one or more selected target channels.
-#: src/features/messaging/components/modals/ForwardModal.tsx:75
+#: src/features/messaging/components/modals/ForwardModal.tsx:82
 msgid "Waiting for slowmode in one or more selected channels to expire."
 msgstr "Odotetaan hitaan tilan päättymistä yhdessä tai useammassa valitussa kanavassa."
 
@@ -39077,7 +39106,7 @@ msgstr "Herätä"
 
 #. Markdown alert label for a warning callout when copied as plaintext.
 #. Warning text in the messaging block elements. Keep the tone plain and specific.
-#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:47
+#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:50
 #: src/features/messaging/utils/markdown/Plaintext.ts:64
 msgid "Warning"
 msgstr "Varoitus"
@@ -40390,12 +40419,12 @@ msgid "You need access to your current email to change it from here. Use phone v
 msgstr "Jotta voit vaihtaa sähköpostiosoitteesi täältä, tarvitset pääsyn nykyiseen sähköpostiisi. Käytä puhelinvarmennusta, jos se on saatavilla, tai ota yhteyttä tukeen."
 
 #. Forward dialog error shown when the forwarded message has attachments and the user lacks Attach Files in the target channel.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:32
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:72
 msgid "You need the \"{attachFilesPermissionLabel}\" permission to attach files in this channel"
 msgstr "Tarvitset \"{attachFilesPermissionLabel}\" -käyttöoikeuden liittääksesi tiedostoja tällä kanavalla"
 
 #. Forward dialog error shown when the forwarded message contains embeds and the user lacks Embed Links in the target channel.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:27
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:67
 msgid "You need the \"{embedLinksPermissionLabel}\" permission to embed links in this channel"
 msgstr "Tarvitset \"{embedLinksPermissionLabel}\" -käyttöoikeuden upottaaksesi linkkejä tällä kanavalla"
 
@@ -40431,11 +40460,6 @@ msgstr "Tarvitset \"{permissionLabel}\" -käyttöoikeuden käyttääksesi muiden
 #: src/features/expressions/utils/ExpressionPermissionUtils.ts:32
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "Tarvitset \"{permissionLabel}\" -käyttöoikeuden käyttääksesi muiden yhteisöjen tarroja täällä."
-
-#. Forward dialog error shown when the user lacks the Send Messages permission in the target channel. Permission name is interpolated.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:22
-msgid "You need the \"{sendMessagesPermissionLabel}\" permission to send messages in this channel"
-msgstr "Tarvitset \"{sendMessagesPermissionLabel}\" -käyttöoikeuden lähettääksesi viestejä tällä kanavalla"
 
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:208
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:434
@@ -40678,11 +40702,6 @@ msgstr "Lähetät viestejä liian nopeasti"
 #: src/features/voice/components/StreamWatchHoverPopout.tsx:43
 msgid "You're streaming!"
 msgstr "Striimaat!"
-
-#. Short label in the settings dialog forward channel selection. Keep the tone plain and specific.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:18
-msgid "You're timed out in this community"
-msgstr "Sinulla on jäähy tässä yhteisössä"
 
 #: src/features/channel/components/barriers/BarrierComponents.tsx:295
 msgid "You're timed out. Messaging, reactions, and voice are paused until the timeout expires."

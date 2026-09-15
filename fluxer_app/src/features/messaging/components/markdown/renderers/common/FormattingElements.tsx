@@ -2,7 +2,7 @@
 
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import {
-	MarkdownContext,
+	isRestrictedInlineContext,
 	type MarkdownRenderOptions,
 	type RendererProps,
 } from '@app/features/messaging/components/markdown/renderers/RendererTypes';
@@ -95,7 +95,7 @@ export const SpoilerRenderer = observer(function SpoilerRenderer({
 		},
 		[handleClick],
 	);
-	const isBlock = node.isBlock && options.context !== MarkdownContext.RESTRICTED_INLINE_REPLY;
+	const isBlock = node.isBlock && !isRestrictedInlineContext(options.context);
 	const wrapperClass = isBlock ? markupStyles.blockSpoilerWrapper : markupStyles.spoilerWrapper;
 	const spoilerClass = isBlock ? markupStyles.blockSpoiler : markupStyles.spoiler;
 	const shouldReveal = !hidden || autoRevealed;

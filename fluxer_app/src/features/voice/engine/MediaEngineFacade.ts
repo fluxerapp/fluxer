@@ -67,7 +67,10 @@ import {
 	sendVoiceStateDisconnect,
 	syncVoiceStateToServer,
 } from '@app/features/voice/engine/VoiceChannelConnector';
-import type {VoiceConnectionFailureReason} from '@app/features/voice/engine/VoiceConnectionStateMachine';
+import type {
+	VoiceConnectionFailureReason,
+	VoiceConnectionLocalDisconnectReason,
+} from '@app/features/voice/engine/VoiceConnectionStateMachine';
 import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePermissionState';
 import {getEffectiveAudioState} from '@app/features/voice/engine/VoiceEffectiveAudioState';
 import type {NormalizedVoiceState} from '@app/features/voice/engine/VoiceGatewayStateMachine';
@@ -637,6 +640,10 @@ class MediaEngineFacade extends Store {
 
 	get connectFailureReason(): VoiceConnectionFailureReason {
 		return voiceEngineV2AppConnectionHostAdapter.connectFailureReason;
+	}
+
+	get localDisconnectReason(): VoiceConnectionLocalDisconnectReason {
+		return voiceEngineV2AppConnectionHostAdapter.localDisconnectReason;
 	}
 
 	get connectFailedTarget(): {guildId: string | null; channelId: string} | null {

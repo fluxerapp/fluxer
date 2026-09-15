@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import type {ForwardChannelOption} from '@app/features/app/components/dialogs/shared/ForwardChannelIndex';
-import {useForwardChannelSelection} from '@app/features/app/components/dialogs/shared/ForwardChannelSelection';
+import type {ForwardDestination} from '@app/features/app/components/dialogs/shared/ForwardDefaultDestinations';
+import {MAX_FORWARD_DESTINATIONS} from '@app/features/app/components/dialogs/shared/ForwardDestinationSelection';
 import selectorStyles from '@app/features/app/components/dialogs/shared/SelectorModalStyles.module.css';
+import {
+	type ForwardDestinationOption,
+	useForwardDestinations,
+} from '@app/features/app/components/dialogs/shared/UseForwardDestinations';
 import {GroupDMAvatar} from '@app/features/app/components/shared/GroupDMAvatar';
 import {Limits} from '@app/features/app/utils/UserLimits';
 import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
@@ -18,6 +22,7 @@ import {LexicalRichInput, type LexicalRichInputHandle} from '@app/features/lexic
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import {MessageForwardFailedModal} from '@app/features/messaging/components/alerts/MessageForwardFailedModal';
 import {showMessagingErrorModal} from '@app/features/messaging/components/alerts/MessagingErrorModalUtils';
+import {ForwardMessagePreview} from '@app/features/messaging/components/modals/ForwardMessagePreview';
 import modalStyles from '@app/features/messaging/components/modals/ForwardModal.module.css';
 import {shouldNavigateAfterForward} from '@app/features/messaging/components/modals/ForwardModalUtils';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
@@ -25,6 +30,7 @@ import {focusChannelTextareaAfterNavigation} from '@app/features/messaging/utils
 import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {shouldDisableAutofocusOnMobile} from '@app/features/platform/utils/AutofocusUtils';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import {Checkbox} from '@app/features/ui/checkbox/Checkbox';
@@ -38,15 +44,15 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {Popout} from '@app/features/ui/popover/PopoverPopout';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import type {User} from '@app/features/user/models/User';
-import Users from '@app/features/user/state/Users';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {MAX_MESSAGE_LENGTH_PREMIUM} from '@fluxer/constants/src/LimitConstants';
+import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {HashIcon, MagnifyingGlassIcon, NotePencilIcon, SmileyIcon, SpeakerHighIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
-import {type MouseEvent, useCallback, useId, useMemo, useRef, useState} from 'react';
+import {type MouseEvent, useCallback, useEffect, useId, useRef, useState} from 'react';
 
 const MESSAGE_IS_TOO_LONG_DESCRIPTOR = msg({
 	message: 'Message is too long',
@@ -81,9 +87,10 @@ const FORWARD_MESSAGE_DESCRIPTOR = msg({
 	message: 'Forward message',
 	comment: 'Title of the forward message modal.',
 });
-const SEARCH_CHANNELS_OR_DMS_DESCRIPTOR = msg({
-	message: 'Search channels or DMs',
-	comment: 'Placeholder text in the channel picker search input of the forward modal.',
+const SEARCH_DESCRIPTOR = msg({
+	message: 'Search',
+	comment:
+		'Placeholder and accessible label of the search input in the forward modal. It finds people, channels and group DMs to forward to.',
 });
 const COMMENTS_ARE_UNAVAILABLE_WHILE_SLOWMODE_IS_ON_DESCRIPTOR = msg({
 	message: 'Comments are unavailable while slowmode is on.',
@@ -104,6 +111,8 @@ const SEND_SELECTED_COUNT_DESCRIPTOR = msg({
 });
 const logger = new Logger('ForwardModal');
 
+const DESTINATION_ICON_SIZE = 32;
+
 interface ForwardModalProps {
 	message: Message;
 	mediaSelection?: MessageCommands.ForwardMediaSelection;
@@ -115,28 +124,6 @@ interface ForwardModalProps {
 export interface ForwardModalSuccess {
 	forwardedChannelIds: ReadonlyArray<string>;
 	shouldNavigate: boolean;
-}
-
-interface ForwardMediaCapability {
-	hasAttachments: boolean;
-	hasEmbeds: boolean;
-}
-
-function resolveForwardMediaCapability(
-	mediaSelection: MessageCommands.ForwardMediaSelection | undefined,
-): ForwardMediaCapability | undefined {
-	if (mediaSelection === undefined) {
-		return undefined;
-	}
-	let hasAttachments = false;
-	if (mediaSelection.attachmentIds !== undefined) {
-		hasAttachments = mediaSelection.attachmentIds.length > 0;
-	}
-	let hasEmbeds = false;
-	if (mediaSelection.embedIndices !== undefined) {
-		hasEmbeds = mediaSelection.embedIndices.length > 0;
-	}
-	return {hasAttachments, hasEmbeds};
 }
 
 function resolveForwardSourceChannel(
@@ -163,19 +150,46 @@ function resolveForwardReferenceGuildId(channel: Channel | null, message: Messag
 	return null;
 }
 
-async function openForwardChannels(options: ReadonlyArray<ForwardChannelOption>): Promise<Array<string>> {
+async function openForwardDestinations(destinations: ReadonlyArray<ForwardDestination>): Promise<Array<string>> {
 	const channelIds: Array<string> = [];
-	for (const option of options) {
-		if (option.channel != null) {
-			channelIds.push(option.channel.id);
+	for (const destination of destinations) {
+		if (destination.type === 'channel') {
+			channelIds.push(destination.id);
 			continue;
 		}
-		if (option.recipient == null) {
-			throw new Error(`Forward destination ${option.key} has no channel or recipient`);
-		}
-		channelIds.push(await PrivateChannelCommands.ensureDMChannel(option.recipient.id));
+		channelIds.push(await PrivateChannelCommands.ensureDMChannel(destination.id));
 	}
 	return channelIds;
+}
+
+function resolveCommentBlockedNotice(
+	i18n: I18n,
+	slowmodeEnabledOptions: ReadonlyArray<ForwardDestinationOption>,
+): string | null {
+	if (slowmodeEnabledOptions.length === 0) {
+		return null;
+	}
+	if (slowmodeEnabledOptions.length === 1) {
+		return i18n._(COMMENTS_ARE_DISABLED_BECAUSE_SLOWMODE_IS_ON_IN_DESCRIPTOR, {
+			forwardChannelDisplayName: slowmodeEnabledOptions[0].displayName,
+		});
+	}
+	return i18n._(COMMENTS_ARE_DISABLED_BECAUSE_ONE_OR_MORE_SELECTED_DESCRIPTOR);
+}
+
+function resolveSendBlockedNotice(
+	i18n: I18n,
+	slowmodeActiveOptions: ReadonlyArray<ForwardDestinationOption>,
+): string | null {
+	if (slowmodeActiveOptions.length === 0) {
+		return null;
+	}
+	if (slowmodeActiveOptions.length === 1) {
+		return i18n._(WAITING_FOR_SLOWMODE_IN_TO_EXPIRE_DESCRIPTOR, {
+			forwardChannelDisplayName: slowmodeActiveOptions[0].displayName,
+		});
+	}
+	return i18n._(WAITING_FOR_SLOWMODE_IN_ONE_OR_MORE_SELECTED_DESCRIPTOR);
 }
 
 function focusForwardComment(handle: LexicalRichInputHandle | null): void {
@@ -191,32 +205,83 @@ function insertForwardEmoji(handle: LexicalRichInputHandle | null, emoji: FlatEm
 	return handle.insertEmoji(emoji);
 }
 
+function renderForwardDestinationIcon(option: ForwardDestinationOption) {
+	if (option.user != null) {
+		return (
+			<div className={selectorStyles.avatar} data-flx="messaging.forward-modal.get-channel-icon.div">
+				<StatusAwareAvatar
+					user={option.user}
+					size={DESTINATION_ICON_SIZE}
+					data-flx="messaging.forward-modal.get-channel-icon.status-aware-avatar"
+				/>
+			</div>
+		);
+	}
+	const channel = option.channel;
+	if (channel == null) {
+		return null;
+	}
+	if (channel.type === ChannelTypes.DM_PERSONAL_NOTES) {
+		return (
+			<NotePencilIcon
+				className={selectorStyles.itemIcon}
+				weight="fill"
+				size={remFromPx(DESTINATION_ICON_SIZE)}
+				data-flx="messaging.forward-modal.get-channel-icon.note-pencil-icon"
+			/>
+		);
+	}
+	if (channel.type === ChannelTypes.GROUP_DM) {
+		return (
+			<div className={selectorStyles.avatar} data-flx="messaging.forward-modal.get-channel-icon.div--2">
+				<GroupDMAvatar
+					channel={channel}
+					size={DESTINATION_ICON_SIZE}
+					data-flx="messaging.forward-modal.get-channel-icon.group-dm-avatar"
+				/>
+			</div>
+		);
+	}
+	if (channel.type === ChannelTypes.GUILD_VOICE) {
+		return (
+			<SpeakerHighIcon
+				className={selectorStyles.itemIcon}
+				weight="fill"
+				size={remFromPx(DESTINATION_ICON_SIZE)}
+				data-flx="messaging.forward-modal.get-channel-icon.speaker-high-icon"
+			/>
+		);
+	}
+	return (
+		<HashIcon
+			className={selectorStyles.itemIcon}
+			weight="bold"
+			size={remFromPx(DESTINATION_ICON_SIZE)}
+			data-flx="messaging.forward-modal.get-channel-icon.hash-icon"
+		/>
+	);
+}
+
 const EMPTY_FORWARD_COMMENT_SEGMENTS: ReadonlyArray<MentionSegment> = Object.freeze([]);
 
 export const ForwardModal = observer(
 	({message, mediaSelection, onForwardSuccess, sourceChannel, user}: ForwardModalProps) => {
 		const {i18n} = useLingui();
-		const mediaSelectionCapability = useMemo(() => resolveForwardMediaCapability(mediaSelection), [mediaSelection]);
 		const {
-			filteredChannels,
-			handleToggleChannel,
-			isChannelSelectionDisabled,
-			mostRecentlySelectedChannel,
+			composerChannel,
+			options,
 			searchQuery,
-			selectedChannelOptions,
+			selected,
 			selectedKeys,
 			setSearchQuery,
-			maxSelections,
-			slowmodeActiveSelectedChannelOptions,
-			slowmodeEnabledSelectedChannelOptions,
-		} = useForwardChannelSelection({
-			excludedChannelId: message.channelId,
-			message,
-			mediaSelection: mediaSelectionCapability,
-		});
+			slowmodeActiveSelectedOptions,
+			slowmodeEnabledSelectedOptions,
+			toggleDestination,
+		} = useForwardDestinations({message, mediaSelection});
 		const [actualOptionalMessage, setActualOptionalMessage] = useState('');
 		const [isForwarding, setIsForwarding] = useState(false);
 		const [expressionPickerOpen, setExpressionPickerOpen] = useState(false);
+		const searchInputRef = useRef<HTMLInputElement>(null);
 		const containerRef = useRef<HTMLDivElement>(null);
 		const [containerElement, setContainerElement] = useState<HTMLDivElement | null>(null);
 		const setContainerNode = useCallback((node: HTMLDivElement | null) => {
@@ -227,6 +292,13 @@ export const ForwardModal = observer(
 		const commentNoticeId = useId();
 		const premiumMaxLength = Limits.getPremiumValue('max_message_length', MAX_MESSAGE_LENGTH_PREMIUM);
 		const isMobileLayout = MobileLayout.enabled;
+		const shouldFocusSearch = !shouldDisableAutofocusOnMobile();
+		useEffect(() => {
+			if (searchQuery !== '' || shouldDisableAutofocusOnMobile()) {
+				return;
+			}
+			searchInputRef.current?.focus();
+		}, [searchQuery]);
 		const handleOptionalMessageExceedsLimit = useCallback(() => {
 			showMessagingErrorModal({
 				title: i18n._(MESSAGE_IS_TOO_LONG_DESCRIPTOR),
@@ -238,31 +310,13 @@ export const ForwardModal = observer(
 		const handleCommentChange = useCallback((_display: string, _segments: Array<MentionSegment>, wire: string) => {
 			setActualOptionalMessage(dropTrailingEmptyBlockquoteLines(wire));
 		}, []);
+		const isAtSelectionLimit = selected.length >= MAX_FORWARD_DESTINATIONS;
 		const isCommentOverLimit = actualOptionalMessage.length > user.maxMessageLength;
-		const isSendBlockedBySlowmode = slowmodeActiveSelectedChannelOptions.length > 0;
-		const isCommentBlockedBySlowmode = slowmodeEnabledSelectedChannelOptions.length > 0;
+		const isSendBlockedBySlowmode = slowmodeActiveSelectedOptions.length > 0;
+		const isCommentBlockedBySlowmode = slowmodeEnabledSelectedOptions.length > 0;
 		const isCommentComposerDisabled = isCommentBlockedBySlowmode;
-		const commentBlockedNotice = useMemo(() => {
-			if (!isCommentBlockedBySlowmode) {
-				return null;
-			}
-			if (slowmodeEnabledSelectedChannelOptions.length === 1) {
-				return i18n._(COMMENTS_ARE_DISABLED_BECAUSE_SLOWMODE_IS_ON_IN_DESCRIPTOR, {
-					forwardChannelDisplayName: slowmodeEnabledSelectedChannelOptions[0].displayName,
-				});
-			}
-			return i18n._(COMMENTS_ARE_DISABLED_BECAUSE_ONE_OR_MORE_SELECTED_DESCRIPTOR);
-		}, [i18n.locale, isCommentBlockedBySlowmode, slowmodeEnabledSelectedChannelOptions]);
-		const sendBlockedNotice = useMemo(() => {
-			if (!isSendBlockedBySlowmode) return null;
-			if (slowmodeActiveSelectedChannelOptions.length === 1) {
-				return i18n._(WAITING_FOR_SLOWMODE_IN_TO_EXPIRE_DESCRIPTOR, {
-					forwardChannelDisplayName: slowmodeActiveSelectedChannelOptions[0].displayName,
-				});
-			}
-			return i18n._(WAITING_FOR_SLOWMODE_IN_ONE_OR_MORE_SELECTED_DESCRIPTOR);
-		}, [i18n.locale, isSendBlockedBySlowmode, slowmodeActiveSelectedChannelOptions]);
-		let commentNotice = sendBlockedNotice;
+		let commentNotice = resolveSendBlockedNotice(i18n, slowmodeActiveSelectedOptions);
+		const commentBlockedNotice = resolveCommentBlockedNotice(i18n, slowmodeEnabledSelectedOptions);
 		if (commentBlockedNotice != null) {
 			commentNotice = commentBlockedNotice;
 		}
@@ -276,7 +330,7 @@ export const ForwardModal = observer(
 		}
 		const isCommentCounterVisible = actualOptionalMessage.length > user.maxMessageLength * 0.8;
 		const handleForward = async (skipNavigation = false) => {
-			if (selectedChannelOptions.length === 0) return;
+			if (selected.length === 0) return;
 			if (isForwarding) return;
 			if (isSendBlockedBySlowmode) return;
 			if (!isCommentComposerDisabled && isCommentOverLimit) {
@@ -297,7 +351,7 @@ export const ForwardModal = observer(
 					attachmentIds = mediaSelection.attachmentIds;
 					embedIndices = mediaSelection.embedIndices;
 				}
-				const forwardedChannelIds = await openForwardChannels(selectedChannelOptions);
+				const forwardedChannelIds = await openForwardDestinations(selected);
 				const forwarded = await MessageCommands.forward(
 					forwardedChannelIds,
 					{
@@ -345,71 +399,22 @@ export const ForwardModal = observer(
 				setIsForwarding(false);
 			}
 		};
-		const getChannelIcon = (option: ForwardChannelOption) => {
-			const iconSize = 32;
-			const ch = option.channel;
-			if (ch == null || ch.type === ChannelTypes.DM) {
-				const user = ch == null ? option.recipient : Users.getUser(ch.recipientIds[0]);
-				if (!user) return null;
-				return (
-					<div className={selectorStyles.avatar} data-flx="messaging.forward-modal.get-channel-icon.div">
-						<StatusAwareAvatar
-							user={user}
-							size={iconSize}
-							data-flx="messaging.forward-modal.get-channel-icon.status-aware-avatar"
-						/>
-					</div>
-				);
-			}
-			if (ch.type === ChannelTypes.DM_PERSONAL_NOTES) {
-				return (
-					<NotePencilIcon
-						className={selectorStyles.itemIcon}
-						weight="fill"
-						size={remFromPx(iconSize)}
-						data-flx="messaging.forward-modal.get-channel-icon.note-pencil-icon"
-					/>
-				);
-			}
-			if (ch.type === ChannelTypes.GROUP_DM) {
-				return (
-					<div className={selectorStyles.avatar} data-flx="messaging.forward-modal.get-channel-icon.div--2">
-						<GroupDMAvatar
-							channel={ch}
-							size={iconSize}
-							data-flx="messaging.forward-modal.get-channel-icon.group-dm-avatar"
-						/>
-					</div>
-				);
-			}
-			if (ch.type === ChannelTypes.GUILD_VOICE) {
-				return (
-					<SpeakerHighIcon
-						className={selectorStyles.itemIcon}
-						weight="fill"
-						size={remFromPx(iconSize)}
-						data-flx="messaging.forward-modal.get-channel-icon.speaker-high-icon"
-					/>
-				);
-			}
-			return (
-				<HashIcon
-					className={selectorStyles.itemIcon}
-					weight="bold"
-					size={remFromPx(iconSize)}
-					data-flx="messaging.forward-modal.get-channel-icon.hash-icon"
-				/>
-			);
-		};
 		return (
-			<Modal.Root size="small" centered data-flx="messaging.forward-modal.modal-root">
+			<Modal.Root
+				size="small"
+				centered
+				initialFocusRef={shouldFocusSearch ? searchInputRef : undefined}
+				data-flx="messaging.forward-modal.modal-root"
+			>
 				<Modal.Header title={i18n._(FORWARD_MESSAGE_DESCRIPTOR)} data-flx="messaging.forward-modal.modal-header">
 					<div className={selectorStyles.headerSearch} data-flx="messaging.forward-modal.div">
 						<Input
+							ref={searchInputRef}
 							type="text"
 							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
-							placeholder={i18n._(SEARCH_CHANNELS_OR_DMS_DESCRIPTOR)}
+							onChange={(event) => setSearchQuery(event.target.value)}
+							placeholder={i18n._(SEARCH_DESCRIPTOR)}
+							aria-label={i18n._(SEARCH_DESCRIPTOR)}
 							maxLength={100}
 							leftIcon={
 								<MagnifyingGlassIcon
@@ -423,7 +428,11 @@ export const ForwardModal = observer(
 						/>
 					</div>
 				</Modal.Header>
-				<Modal.Content className={selectorStyles.selectorContent} data-flx="messaging.forward-modal.modal-content">
+				<Modal.Content
+					padding="none"
+					className={modalStyles.destinationList}
+					data-flx="messaging.forward-modal.modal-content"
+				>
 					<div className={selectorStyles.listContainer} data-flx="messaging.forward-modal.div--2">
 						<Scroller
 							className={selectorStyles.scroller}
@@ -431,17 +440,16 @@ export const ForwardModal = observer(
 							fade={false}
 							data-flx="messaging.forward-modal.scroller"
 						>
-							{filteredChannels.length === 0 ? (
+							{options.length === 0 ? (
 								<div className={selectorStyles.emptyState} data-flx="messaging.forward-modal.div--3">
 									<Trans>No channels found</Trans>
 								</div>
 							) : (
 								<div className={selectorStyles.itemList} data-flx="messaging.forward-modal.div--4">
-									{filteredChannels.map((option: ForwardChannelOption) => {
+									{options.map((option) => {
 										const isSelected = selectedKeys.has(option.key);
-										const isDisabledForSelection = isChannelSelectionDisabled(option);
-										const isDisabled = isDisabledForSelection && !isSelected;
-										const {categoryName, disableReason, displayName, guildName} = option;
+										const isDisabled = !isSelected && (isAtSelectionLimit || option.disableReason != null);
+										const secondaryText = option.disableReason ?? option.detail;
 										return (
 											<FocusRing
 												key={option.key}
@@ -451,7 +459,7 @@ export const ForwardModal = observer(
 											>
 												<button
 													type="button"
-													onClick={() => !isDisabled && handleToggleChannel(option.key)}
+													onClick={() => toggleDestination(option.destination)}
 													disabled={isDisabled}
 													aria-pressed={isSelected}
 													className={clsx(
@@ -462,27 +470,18 @@ export const ForwardModal = observer(
 													data-flx="messaging.forward-modal.button"
 												>
 													<div className={selectorStyles.itemContent} data-flx="messaging.forward-modal.div--5">
-														{getChannelIcon(option)}
+														{renderForwardDestinationIcon(option)}
 														<div className={selectorStyles.itemInfo} data-flx="messaging.forward-modal.div--6">
 															<span className={selectorStyles.itemName} data-flx="messaging.forward-modal.span">
-																{displayName}
+																{option.displayName}
 															</span>
-															{disableReason ? (
+															{secondaryText != null && (
 																<span
 																	className={selectorStyles.itemSecondary}
 																	data-flx="messaging.forward-modal.span--2"
 																>
-																	{disableReason}
+																	{secondaryText}
 																</span>
-															) : (
-																(guildName || categoryName) && (
-																	<span
-																		className={selectorStyles.itemSecondary}
-																		data-flx="messaging.forward-modal.span--3"
-																	>
-																		{[guildName, categoryName].filter(Boolean).join(' • ')}
-																	</span>
-																)
 															)}
 														</div>
 													</div>
@@ -503,7 +502,13 @@ export const ForwardModal = observer(
 						</Scroller>
 					</div>
 				</Modal.Content>
-				<div className={modalStyles.inputAreaContainer} data-flx="messaging.forward-modal.div--8">
+				<div className={modalStyles.footerSection} data-flx="messaging.forward-modal.div--8">
+					<ForwardMessagePreview
+						message={message}
+						mediaSelection={mediaSelection}
+						embedChannel={composerChannel}
+						data-flx="messaging.forward-modal.forward-message-preview"
+					/>
 					<FocusRing
 						within
 						ringTarget={containerRef}
@@ -526,7 +531,7 @@ export const ForwardModal = observer(
 								initialValue=""
 								initialSegments={EMPTY_FORWARD_COMMENT_SEGMENTS}
 								className={modalStyles.richInput}
-								channel={mostRecentlySelectedChannel}
+								channel={composerChannel}
 								disabled={isCommentComposerDisabled}
 								markdown={true}
 								singleLine={false}
@@ -647,7 +652,7 @@ export const ForwardModal = observer(
 					<Button
 						onClick={(event: MouseEvent<HTMLButtonElement>) => handleForward(event.shiftKey)}
 						disabled={
-							selectedChannelOptions.length === 0 ||
+							selected.length === 0 ||
 							isForwarding ||
 							isSendBlockedBySlowmode ||
 							(!isCommentComposerDisabled && isCommentOverLimit)
@@ -655,8 +660,8 @@ export const ForwardModal = observer(
 						data-flx="messaging.forward-modal.button.forward"
 					>
 						{i18n._(SEND_SELECTED_COUNT_DESCRIPTOR, {
-							selectedCount: selectedKeys.size,
-							selectionLimit: maxSelections,
+							selectedCount: selected.length,
+							selectionLimit: MAX_FORWARD_DESTINATIONS,
 						})}
 					</Button>
 				</Modal.Footer>

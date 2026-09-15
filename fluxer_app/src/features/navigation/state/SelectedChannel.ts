@@ -37,7 +37,6 @@ class SelectedChannel {
 			this,
 			{
 				sortedRecentVisits: computed,
-				recentChannels: computed,
 				recentChannelVisits: computed,
 			},
 			{autoBind: true},
@@ -108,14 +107,6 @@ class SelectedChannel {
 		const sorted = this.recentlyVisitedChannels.slice();
 		sorted.sort((a, b) => b.timestamp - a.timestamp);
 		return sorted;
-	}
-
-	get recentChannels(): ReadonlyArray<string> {
-		const sorted = this.sortedRecentVisits;
-		const limit = Math.min(sorted.length, RECENT_CHANNEL_HISTORY_LIMIT);
-		const result: Array<string> = new Array(limit);
-		for (let i = 0; i < limit; i++) result[i] = sorted[i].channelId;
-		return result;
 	}
 
 	get recentChannelVisits(): ReadonlyArray<{

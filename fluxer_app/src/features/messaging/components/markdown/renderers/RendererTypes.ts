@@ -12,9 +12,14 @@ export const MarkdownContext = {
 	RESTRICTED_USER_BIO: 2,
 	RESTRICTED_EMBED_DESCRIPTION: 3,
 	STANDARD_WITHOUT_JUMBO: 4,
+	RESTRICTED_INLINE_PREVIEW: 5,
 } as const;
 
 export type MarkdownContext = ValueOf<typeof MarkdownContext>;
+
+export function isRestrictedInlineContext(context: MarkdownContext): boolean {
+	return context === MarkdownContext.RESTRICTED_INLINE_REPLY || context === MarkdownContext.RESTRICTED_INLINE_PREVIEW;
+}
 
 export interface MarkdownParseOptions {
 	context: MarkdownContext;

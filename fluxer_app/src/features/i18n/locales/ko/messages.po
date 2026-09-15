@@ -20,8 +20,10 @@ msgid "... turn dense mode on. Nice!"
 msgstr "... 좁게 모드를 켜 보세요. 좋아요!"
 
 #. Button or menu action label in the channel and chat user message. Keep it concise.
+#. Suffix after the message text in the forward modal preview when the forwarded message was edited.
 #: src/features/channel/components/MessageAttachments.tsx:378
 #: src/features/channel/components/UserMessage.tsx:62
+#: src/features/messaging/components/modals/ForwardMessagePreview.tsx:26
 msgid "(edited)"
 msgstr "(수정됨)"
 
@@ -1125,11 +1127,21 @@ msgstr "{count, plural, one {#개 커뮤니티가 플럭스 캐패시터 오작�
 msgid "{count, plural, one {# connection} other {# connections}}"
 msgstr "{count, plural, one {연결 #개} other {연결 #개}}"
 
+#. Attachment summary in the forward modal message preview when the message has no images or videos. count is the number of attached files.
+#: src/features/messaging/components/modals/ForwardMessagePreview.tsx:40
+msgid "{count, plural, one {# file} other {# files}}"
+msgstr "{count, plural, one {#개의 파일} other {#개의 파일}}"
+
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/AccountPremiumMenu.tsx:104
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:40
 msgid "{count, plural, one {# gift} other {# gifts}}"
 msgstr "{count, plural, one {#개 선물} other {#개 선물}}"
+
+#. Attachment summary in the forward modal message preview when the message has images and no videos. count is the number of images.
+#: src/features/messaging/components/modals/ForwardMessagePreview.tsx:30
+msgid "{count, plural, one {# image} other {# images}}"
+msgstr "{count, plural, one {#개의 이미지} other {#개의 이미지}}"
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils.tsx:181
 msgid "{count, plural, one {# item} other {# items}}"
@@ -1184,6 +1196,11 @@ msgstr "{count, plural, one {#초} other {#초}}"
 #: src/features/channel/components/message_search_bar/MessageSearchBar.tsx:69
 msgid "{count, plural, one {# suggestion available} other {# suggestions available}}"
 msgstr "{count, plural, other {추천 검색어 #개 사용 가능}}"
+
+#. Attachment summary in the forward modal message preview when the message has videos and no images. count is the number of videos.
+#: src/features/messaging/components/modals/ForwardMessagePreview.tsx:35
+msgid "{count, plural, one {# video} other {# videos}}"
+msgstr "{count, plural, one {#개의 동영상} other {#개의 동영상}}"
 
 #. Compact age label shown beside a list row (DM list, invite list). count is a number of days; the "d" is an abbreviation of "days". Keep it as short as possible; it sits in a narrow column.
 #: src/features/ui/utils/ShortRelativeTimeLabels.ts:26
@@ -1581,6 +1598,11 @@ msgstr "{hours, plural, one {이 초대 링크는 #시간 후에 만료됩니다
 #: src/features/invite/components/modals/InviteModal.tsx:160
 msgid "{hours, plural, one {Your invite link expires in # hour.} other {Your invite link expires in # hours.}}"
 msgstr "{hours, plural, one {초대 링크는 #시간 후에 만료됩니다.} other {초대 링크는 #시간 후에 만료됩니다.}}"
+
+#. Attachment summary in the forward modal message preview when the message has both images and videos. imageCount and videoCount are the number of each.
+#: src/features/messaging/components/modals/ForwardMessagePreview.tsx:45
+msgid "{imageCount, plural, one {# image} other {# images}}, {videoCount, plural, one {# video} other {# videos}}"
+msgstr "{imageCount, plural, one {#개의 이미지} other {#개의 이미지}}, {videoCount, plural, one {#개의 동영상} other {#개의 동영상}}"
 
 #. Accessible label for a disabled Discovery sidebar navigation item. {itemLabel} is the section name.
 #: src/features/discovery/discovery/DiscoverySidebar.tsx:31
@@ -2233,6 +2255,11 @@ msgstr "@mention"
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:244
 msgid "/tts"
 msgstr "/tts"
+
+#. Badge on the forward modal preview thumbnail. count is the number of other attachments that the thumbnail does not show.
+#: src/features/messaging/components/modals/ForwardMessagePreview.tsx:50
+msgid "+{count}"
+msgstr "+{count}"
 
 #: src/features/channel/components/RecipientAddMessage.tsx:25
 msgid "<0/> added <1/> to the group."
@@ -3134,7 +3161,7 @@ msgid "Add a bot to a community with requested permissions"
 msgstr "요청된 권한으로 봇을 커뮤니티에 추가"
 
 #. Placeholder text in the optional comment field of the forward modal.
-#: src/features/messaging/components/modals/ForwardModal.tsx:91
+#: src/features/messaging/components/modals/ForwardModal.tsx:99
 msgid "Add a comment (optional)"
 msgstr "코멘트 추가 (선택 사항)"
 
@@ -6687,7 +6714,7 @@ msgstr "여기에 파일을 올릴 수 없습니다"
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:133
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
-#: src/features/messaging/components/modals/ForwardModal.tsx:636
+#: src/features/messaging/components/modals/ForwardModal.tsx:650
 #: src/features/messaging/components/modals/ImageCropModal.tsx:944
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/moderation/components/modals/BanMemberModal.tsx:262
@@ -6926,7 +6953,7 @@ msgstr "카테고리 설정"
 
 #. Markdown alert label for a caution callout when copied as plaintext.
 #. Short label in the messaging block elements. Keep it concise. Keep the tone plain and specific.
-#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:51
+#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:54
 #: src/features/messaging/utils/markdown/Plaintext.ts:68
 msgid "Caution"
 msgstr "주의"
@@ -7372,8 +7399,8 @@ msgstr "채널"
 msgid "Channel"
 msgstr "채널"
 
-#. Short label in the settings dialog forward channel selection. Preserve {id}; it is inserted by code.
-#: src/features/app/components/dialogs/shared/UseForwardChannelObservations.ts:27
+#. Fallback name for an unnamed channel in the forward modal destination list. Preserve {id}; it is inserted by code.
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:87
 msgid "Channel {id}"
 msgstr "채널 {id}"
 
@@ -8804,17 +8831,17 @@ msgid "Commands"
 msgstr "명령어"
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled when at least one selected target has slowmode active.
-#: src/features/messaging/components/modals/ForwardModal.tsx:64
+#: src/features/messaging/components/modals/ForwardModal.tsx:71
 msgid "Comments are disabled because one or more selected channels have slowmode on. The comment would be blocked by slowmode right after the forward."
 msgstr "선택한 채널 중 하나 이상에 슬로우 모드가 켜져 있어 댓글을 사용할 수 없습니다. 전달 직후 슬로우 모드에 걸려 댓글이 전송되지 않습니다."
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled for a single selected channel with slowmode.
-#: src/features/messaging/components/modals/ForwardModal.tsx:58
+#: src/features/messaging/components/modals/ForwardModal.tsx:65
 msgid "Comments are disabled because slowmode is on in {forwardChannelDisplayName}. The comment would be blocked by slowmode right after the forward."
 msgstr "{forwardChannelDisplayName} 채널에 슬로우 모드가 켜져 있어 댓글을 사용할 수 없습니다. 전달 직후 슬로우 모드에 걸려 댓글이 전송되지 않습니다."
 
 #. Tooltip on the disabled comment field in the forward modal when slowmode blocks comments.
-#: src/features/messaging/components/modals/ForwardModal.tsx:87
+#: src/features/messaging/components/modals/ForwardModal.tsx:95
 msgid "Comments are unavailable while slowmode is on."
 msgstr "슬로우 모드 중에는 댓글을 사용할 수 없습니다."
 
@@ -14678,7 +14705,7 @@ msgid "Error rendering content"
 msgstr "콘텐츠 렌더링 오류"
 
 #. Error message in the messaging code elements. Preserve {errorAsErrorMessageI18nMsgUnknownError}; it is inserted by code.
-#: src/features/messaging/components/markdown/renderers/common/CodeElements.tsx:29
+#: src/features/messaging/components/markdown/renderers/common/CodeElements.tsx:32
 msgid "Error rendering LaTeX: {errorAsErrorMessageI18nMsgUnknownError}"
 msgstr "LaTeX 렌더링 오류: {errorAsErrorMessageI18nMsgUnknownError}"
 
@@ -16097,7 +16124,7 @@ msgstr "미디어 전달"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Title of the forward message modal.
 #: src/features/input/state/input_keybind/shared.ts:25
-#: src/features/messaging/components/modals/ForwardModal.tsx:79
+#: src/features/messaging/components/modals/ForwardModal.tsx:86
 msgid "Forward message"
 msgstr "메시지 전달"
 
@@ -18216,7 +18243,7 @@ msgstr "가져올 수 없음"
 
 #. Markdown alert label for an important callout when copied as plaintext.
 #. Short label in the messaging block elements. Keep it concise. Keep the tone plain and specific.
-#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:43
+#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:46
 #: src/features/messaging/utils/markdown/Plaintext.ts:60
 msgid "Important"
 msgstr "중요"
@@ -21355,7 +21382,7 @@ msgstr "메시지 표시 설정은 데스크톱에서만 사용할 수 있습니
 msgid "Message editing"
 msgstr "메시지 수정"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:307
+#: src/features/messaging/components/modals/ForwardModal.tsx:371
 msgid "Message forwarded"
 msgstr "메시지 전달됨"
 
@@ -21404,7 +21431,7 @@ msgstr "메시지 입력 버튼"
 
 #. Error modal title in the forward modal when the optional comment exceeds the message length limit.
 #. Form validation error indicating the message exceeds the allowed length.
-#: src/features/messaging/components/modals/ForwardModal.tsx:50
+#: src/features/messaging/components/modals/ForwardModal.tsx:57
 #: src/features/ui/character_counter/CharacterCountMessages.ts:16
 msgid "Message is too long"
 msgstr "메시지가 너무 깁니다"
@@ -23059,7 +23086,7 @@ msgstr "저장할 변경사항 없음"
 msgid "No channels available"
 msgstr "채널을 찾을 수 없습니다"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:426
+#: src/features/messaging/components/modals/ForwardModal.tsx:445
 #: src/features/search/components/search/ChannelFilterSheet.tsx:120
 msgid "No channels found"
 msgstr "채널을 찾을 수 없습니다"
@@ -23670,7 +23697,7 @@ msgstr "참 또는 거짓이 아닙니다"
 #. Short label in the messaging block elements. Keep it concise. Keep the tone plain and specific.
 #. Short label in the user profile modal. Keep it concise.
 #: src/features/app/components/pages/YouPage.tsx:186
-#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:35
+#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:38
 #: src/features/messaging/utils/markdown/Plaintext.ts:72
 #: src/features/user/components/modals/user_profile_modal/UserNoteEditor.tsx:19
 #: src/features/user/components/modals/user_profile_modal/UserNoteEditor.tsx:79
@@ -24311,7 +24338,7 @@ msgid "Open emoji in browser"
 msgstr "브라우저에서 이모티콘 열기"
 
 #. Accessible label for the emoji picker trigger button in the forward modal comment field.
-#: src/features/messaging/components/modals/ForwardModal.tsx:95
+#: src/features/messaging/components/modals/ForwardModal.tsx:103
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:27
 msgid "Open emoji picker"
 msgstr "이모티콘 선택기 열기"
@@ -29360,6 +29387,7 @@ msgstr "스크러빙 미리보기"
 #. Button or menu action label in the theme studio studio search input. Keep it concise.
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Confirm button label in the reverse image search provider picker. Initiates the search.
+#. Placeholder and accessible label of the search input in the forward modal. It finds people, channels and group DMs to forward to.
 #. Quick switcher tab label that searches all entity types.
 #. Title of the mobile channel search bottom sheet.
 #. Tooltip on the channel header search button that opens the message search input.
@@ -29368,6 +29396,7 @@ msgstr "스크러빙 미리보기"
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:854
 #: src/features/channel/components/channel_header/shared.ts:47
 #: src/features/channel/components/shared/PickerSearchInput.tsx:21
+#: src/features/messaging/components/modals/ForwardModal.tsx:90
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx:43
 #: src/features/search/utils/QuickSwitcherModalUtils.tsx:45
 #: src/features/theme_studio/ui/StudioSearchInput.tsx:16
@@ -29406,11 +29435,6 @@ msgstr "사용자 이름 또는 ID로 검색"
 #: src/features/search/components/search/ChannelFilterSheet.tsx:26
 msgid "Search channels"
 msgstr "채널 검색"
-
-#. Placeholder text in the channel picker search input of the forward modal.
-#: src/features/messaging/components/modals/ForwardModal.tsx:83
-msgid "Search channels or DMs"
-msgstr "채널 또는 DM 검색"
 
 #. Accessible label and placeholder for the community search field in the Discovery page.
 #: src/features/discovery/discovery/DiscoveryNavbar.tsx:29
@@ -30004,7 +30028,7 @@ msgid "Send"
 msgstr "보내기"
 
 #. Primary button label in the forward message modal. selectedCount is the number of selected destinations; selectionLimit is the maximum allowed.
-#: src/features/messaging/components/modals/ForwardModal.tsx:99
+#: src/features/messaging/components/modals/ForwardModal.tsx:107
 msgid "Send ({selectedCount}/{selectionLimit})"
 msgstr "보내기 ({selectedCount}/{selectionLimit})"
 
@@ -30217,8 +30241,8 @@ msgstr "{PRODUCT_NAME}에서 이 전화번호로 SMS를 보내는 비용이 너�
 msgid "Sending malware or dangerous links"
 msgstr "악성 코드 또는 위험한 링크 전송"
 
-#. Short label in the settings dialog forward channel selection.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:14
+#. Short label under a destination row in the forward modal, shown when the community has messaging disabled.
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:63
 msgid "Sending messages is disabled in this community"
 msgstr "이 커뮤니티에서는 메시지 전송이 비활성화되어 있습니다"
 
@@ -30923,7 +30947,7 @@ msgid "Shortcuts are paused while recording."
 msgstr "기록하는 동안에는 단축키가 일시 중지됩니다."
 
 #. Body of the error modal shown when the forward modal comment exceeds the message length limit.
-#: src/features/messaging/components/modals/ForwardModal.tsx:54
+#: src/features/messaging/components/modals/ForwardModal.tsx:61
 msgid "Shorten the message and try again."
 msgstr "메시지를 줄여서 다시 시도해 주세요."
 
@@ -31780,8 +31804,8 @@ msgstr "프로필 로드 속도 저하"
 msgid "Slowmode"
 msgstr "슬로우 모드"
 
-#. Short label in the settings dialog forward channel selection. Preserve {remaining}; it is inserted by code.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:37
+#. Short label under a destination row in the forward modal while slowmode blocks sending. Preserve {remaining}; it is inserted by code.
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:82
 msgid "Slowmode · wait {remaining}"
 msgstr "슬로우 모드 · {remaining} 대기"
 
@@ -34920,6 +34944,11 @@ msgstr "이 멤버는 더 이상 커뮤니티에 없습니다. 새로고침 후 
 msgid "This member isn't connected to voice anymore."
 msgstr "이 멤버는 더 이상 음성 채팅에 연결되어 있지 않습니다."
 
+#. Forward dialog error shown when the forwarded message contains age-restricted media and the target channel is not age-restricted.
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:77
+msgid "This message can only be forwarded to age-restricted channels"
+msgstr "이 메시지는 연령 제한 채널로만 전달할 수 있습니다."
+
 #. IAR modal: tooltip on the delete card when the reported message is already deleted.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:117
 msgid "This message has already been deleted."
@@ -35351,7 +35380,7 @@ msgstr "타임스탬프"
 
 #. Markdown alert label for a tip callout when copied as plaintext.
 #. Short label in the messaging block elements. Keep it concise. Keep the tone plain and specific.
-#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:39
+#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:42
 #: src/features/messaging/utils/markdown/Plaintext.ts:56
 msgid "Tip"
 msgstr "팁"
@@ -36521,7 +36550,7 @@ msgstr "알 수 없는 항목"
 #. Fallback diagnostic text on the crash screen when an Error object has no message.
 #. Fallback error text shown when LaTeX rendering fails without an error message.
 #: src/features/app/components/ErrorFallback.tsx:25
-#: src/features/messaging/components/markdown/renderers/common/CodeElements.tsx:34
+#: src/features/messaging/components/markdown/renderers/common/CodeElements.tsx:37
 msgid "Unknown error"
 msgstr "알 수 없는 오류"
 
@@ -39056,12 +39085,12 @@ msgid "Waiting for passkey…"
 msgstr "패스키를 기다리는 중…"
 
 #. Inline notice in the forward modal when slowmode is active in the selected target channel. forwardChannelDisplayName is the channel name.
-#: src/features/messaging/components/modals/ForwardModal.tsx:70
+#: src/features/messaging/components/modals/ForwardModal.tsx:77
 msgid "Waiting for slowmode in {forwardChannelDisplayName} to expire."
 msgstr "{forwardChannelDisplayName} 채널의 슬로우 모드가 만료되기를 기다리는 중입니다."
 
 #. Inline notice in the forward modal when slowmode is active in one or more selected target channels.
-#: src/features/messaging/components/modals/ForwardModal.tsx:75
+#: src/features/messaging/components/modals/ForwardModal.tsx:82
 msgid "Waiting for slowmode in one or more selected channels to expire."
 msgstr "선택한 채널 중 일부 채널의 슬로우 모드 만료를 기다리는 중입니다."
 
@@ -39077,7 +39106,7 @@ msgstr "절전 해제"
 
 #. Markdown alert label for a warning callout when copied as plaintext.
 #. Warning text in the messaging block elements. Keep the tone plain and specific.
-#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:47
+#: src/features/messaging/components/markdown/renderers/common/BlockElements.tsx:50
 #: src/features/messaging/utils/markdown/Plaintext.ts:64
 msgid "Warning"
 msgstr "경고"
@@ -40390,12 +40419,12 @@ msgid "You need access to your current email to change it from here. Use phone v
 msgstr "이메일을 변경하려면 현재 이메일에 액세스해야 합니다. 가능한 경우 전화 인증을 사용하거나 고객지원팀에 문의하세요."
 
 #. Forward dialog error shown when the forwarded message has attachments and the user lacks Attach Files in the target channel.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:32
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:72
 msgid "You need the \"{attachFilesPermissionLabel}\" permission to attach files in this channel"
 msgstr "이 채널에 파일을 첨부하려면 \"{attachFilesPermissionLabel}\" 권한이 필요합니다"
 
 #. Forward dialog error shown when the forwarded message contains embeds and the user lacks Embed Links in the target channel.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:27
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:67
 msgid "You need the \"{embedLinksPermissionLabel}\" permission to embed links in this channel"
 msgstr "이 채널에 링크를 임베드하려면 \"{embedLinksPermissionLabel}\" 권한이 필요합니다"
 
@@ -40431,11 +40460,6 @@ msgstr "여기에서 다른 커뮤니티의 이모티콘을 사용하려면 \"{p
 #: src/features/expressions/utils/ExpressionPermissionUtils.ts:32
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "여기에서 다른 커뮤니티의 스티커를 사용하려면 \"{permissionLabel}\" 권한이 필요합니다."
-
-#. Forward dialog error shown when the user lacks the Send Messages permission in the target channel. Permission name is interpolated.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:22
-msgid "You need the \"{sendMessagesPermissionLabel}\" permission to send messages in this channel"
-msgstr "이 채널에서 메시지를 보내려면 \"{sendMessagesPermissionLabel}\" 권한이 필요합니다"
 
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:208
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:434
@@ -40678,11 +40702,6 @@ msgstr "메시지를 너무 빨리 보내고 있습니다"
 #: src/features/voice/components/StreamWatchHoverPopout.tsx:43
 msgid "You're streaming!"
 msgstr "스트리밍 중입니다!"
-
-#. Short label in the settings dialog forward channel selection. Keep the tone plain and specific.
-#: src/features/app/components/dialogs/shared/ForwardChannelIndex.ts:18
-msgid "You're timed out in this community"
-msgstr "이 커뮤니티에서 타임아웃 상태입니다"
 
 #: src/features/channel/components/barriers/BarrierComponents.tsx:295
 msgid "You're timed out. Messaging, reactions, and voice are paused until the timeout expires."

@@ -24,6 +24,7 @@ import {EmojiRenderer} from '@app/features/messaging/components/markdown/rendere
 import {LinkRenderer} from '@app/features/messaging/components/markdown/renderers/LinkRenderer';
 import {MentionRenderer} from '@app/features/messaging/components/markdown/renderers/MentionRenderer';
 import {
+	isRestrictedInlineContext,
 	MarkdownContext,
 	type MarkdownParseOptions,
 	type MarkdownRenderOptions,
@@ -101,7 +102,7 @@ export function render(nodes: Array<Node>, options: MarkdownParseOptions): React
 }
 
 export function wrapRenderedContent(content: React.ReactNode, context: MarkdownContext): React.ReactNode {
-	if (context === MarkdownContext.RESTRICTED_INLINE_REPLY) {
+	if (isRestrictedInlineContext(context)) {
 		return (
 			<div className={markupStyles.inlineFormat} data-flx="messaging.markdown.renderers.wrap-rendered-content.div">
 				{content}
