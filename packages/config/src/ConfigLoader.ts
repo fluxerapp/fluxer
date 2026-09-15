@@ -122,6 +122,10 @@ function defaultConfig(): MasterConfig {
 				content_moderation: {
 					nsfw_threshold: 0.7,
 				},
+				storage_change_feed: {
+					enabled: false,
+					stream: 'STORAGE_CHANGES',
+				},
 			},
 			nats: {
 				core_url: 'nats://127.0.0.1:4222',
@@ -453,6 +457,18 @@ function validateApiWorkerConfig(config: MasterConfig): void {
 	}
 }
 
+function validateStorageChangeFeedConfig(config: MasterConfig): void {
+	const feed = config.services.api?.storage_change_feed;
+	if (!feed?.enabled) {
+		return;
+	}
+	if (feed.stream === undefined || !/^[A-Za-z0-9_-]+$/u.test(feed.stream)) {
+		throw new Error(
+			'FLUXER_API_STORAGE_CHANGE_FEED_STREAM must be letters, digits, underscores or hyphens when the storage change feed is enabled',
+		);
+	}
+}
+
 function validateCachePurgeConfig(config: MasterConfig): void {
 	const cachePurge = config.integrations.cache_purge;
 	if (cachePurge.adapter !== 'http') {
@@ -541,6 +557,7 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	validatePostgresConfig(config);
 	validateCaptchaConfig(config);
 	validateApiWorkerConfig(config);
+	validateStorageChangeFeedConfig(config);
 	validateCachePurgeConfig(config);
 	assertIntegerInRange(config.services.api.max_inflight_requests, 'FLUXER_API_MAX_INFLIGHT_REQUESTS', 1, 100_000);
 	assertIntegerInRange(config.services.api.headers_timeout_ms, 'FLUXER_API_HEADERS_TIMEOUT_MS', 1_000, 3_600_000);

@@ -237,6 +237,11 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			jetStreamUrl: master.services.nats?.jetstream_url ?? 'nats://127.0.0.1:4223',
 			authToken: master.services.nats?.auth_token ?? '',
 		},
+		storageChangeFeed: {
+			enabled: master.services.api.storage_change_feed?.enabled ?? false,
+			stream: master.services.api.storage_change_feed?.stream ?? 'STORAGE_CHANGES',
+			skipBuckets: master.services.api.storage_change_feed?.skip_buckets ?? [s3Buckets.uploads],
+		},
 		search: {
 			engine: master.integrations.search?.engine ?? 'elasticsearch',
 			url: master.integrations.search?.url ?? 'http://127.0.0.1:9200',

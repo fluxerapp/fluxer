@@ -309,6 +309,34 @@ describe('ConfigLoader', () => {
 		await expect(loadConfig()).rejects.toThrow('FLUXER_API_WORKER_TASK');
 	});
 
+	test('leaves the storage change feed disabled by default', async () => {
+		stubMinimalEnv();
+		const config = await loadConfig();
+		expect(config.services.api.storage_change_feed).toEqual({enabled: false, stream: 'STORAGE_CHANGES'});
+	});
+
+	test('maps the storage change feed environment variables', async () => {
+		stubMinimalEnv({
+			FLUXER_API_STORAGE_CHANGE_FEED_ENABLED: 'true',
+			FLUXER_API_STORAGE_CHANGE_FEED_STREAM: 'BACKUP_CHANGES',
+			FLUXER_API_STORAGE_CHANGE_FEED_SKIP_BUCKETS: 'fluxer-uploads, fluxer-harvests',
+		});
+		const config = await loadConfig();
+		expect(config.services.api.storage_change_feed).toEqual({
+			enabled: true,
+			stream: 'BACKUP_CHANGES',
+			skip_buckets: ['fluxer-uploads', 'fluxer-harvests'],
+		});
+	});
+
+	test('rejects a storage change feed stream name that JetStream cannot use', async () => {
+		stubMinimalEnv({
+			FLUXER_API_STORAGE_CHANGE_FEED_ENABLED: 'true',
+			FLUXER_API_STORAGE_CHANGE_FEED_STREAM: 'storage.changes',
+		});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_API_STORAGE_CHANGE_FEED_STREAM');
+	});
+
 	test('rejects invalid Postgres typed environment values', async () => {
 		stubMinimalEnv({FLUXER_POSTGRES_PORT: 'abc'});
 		await expect(loadConfig()).rejects.toThrow('FLUXER_POSTGRES_PORT');

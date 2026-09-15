@@ -7,6 +7,7 @@ import {hasDatabaseQueryExecutor, setDatabaseQueryExecutor} from '@app/api/datab
 import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from '@app/api/database/PostgresKvQueryExecutor';
 import {GuildDataRepository} from '@app/api/guild/repositories/GuildDataRepository';
 import type {ILogger} from '@app/api/ILogger';
+import {shutdownStorageChangeFeed} from '@app/api/infrastructure/StorageServiceFactory';
 import {JobLedgerRepository} from '@app/api/jobs/JobLedgerRepository';
 import {startAbuseReplicationSubscriber, stopAbuseReplicationSubscriber} from '@app/api/middleware/AbusiveIpAutoBanner';
 import {ipBanCache} from '@app/api/middleware/IpBanMiddleware';
@@ -258,6 +259,7 @@ export function createShutdown(config: APIConfig, logger: ILogger): () => Promis
 				logger.error({error}, 'Error draining JetStream worker connection');
 			}
 		}
+		await shutdownStorageChangeFeed();
 		setInjectedWorkerService(undefined);
 		try {
 			await shutdownSearch();

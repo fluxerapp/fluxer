@@ -127,6 +127,11 @@ export interface MasterConfig {
 					batch?: number;
 				};
 			};
+			storage_change_feed?: {
+				enabled?: boolean;
+				stream?: string;
+				skip_buckets?: Array<string>;
+			};
 		};
 		nats?: {
 			core_url?: string;

@@ -94,6 +94,11 @@ export interface APIConfig {
 		jetStreamUrl: string;
 		authToken: string;
 	};
+	storageChangeFeed: {
+		enabled: boolean;
+		stream: string;
+		skipBuckets: Array<string>;
+	};
 	search: {
 		engine: 'elasticsearch' | 'meilisearch';
 		url: string;

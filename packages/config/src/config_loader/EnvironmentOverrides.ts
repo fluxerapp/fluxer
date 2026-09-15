@@ -112,6 +112,15 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 		path: ['services', 'api', 'worker', 'lane_concurrency_overrides'],
 		parse: parseJsonObject,
 	},
+	FLUXER_API_STORAGE_CHANGE_FEED_ENABLED: {
+		path: ['services', 'api', 'storage_change_feed', 'enabled'],
+		parse: parseBoolean,
+	},
+	FLUXER_API_STORAGE_CHANGE_FEED_STREAM: {path: ['services', 'api', 'storage_change_feed', 'stream']},
+	FLUXER_API_STORAGE_CHANGE_FEED_SKIP_BUCKETS: {
+		path: ['services', 'api', 'storage_change_feed', 'skip_buckets'],
+		parse: parseCsv,
+	},
 	FLUXER_API_UNFURL_IGNORED_HOSTS: {path: ['services', 'api', 'unfurl_ignored_hosts'], parse: parseCsv},
 	FLUXER_API_EMBEDS_OEMBED_HTML_ENABLED: {
 		path: ['services', 'api', 'embeds', 'oembed_html_enabled'],

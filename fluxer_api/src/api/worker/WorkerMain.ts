@@ -4,6 +4,7 @@ import {Config} from '@app/api/Config';
 import {setDatabaseQueryExecutor} from '@app/api/database/CassandraQueryExecution';
 import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from '@app/api/database/PostgresKvQueryExecutor';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import {shutdownStorageChangeFeed} from '@app/api/infrastructure/StorageServiceFactory';
 import type {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
 import {JobLedgerRepository} from '@app/api/jobs/JobLedgerRepository';
 import {Logger} from '@app/api/Logger';
@@ -114,6 +115,7 @@ export async function startWorkerMain(): Promise<void> {
 			);
 		});
 		await voiceShutdown;
+		await cleanupStep('storage change feed', shutdownStorageChangeFeed);
 		await cleanupStep('jetstream', async () => {
 			await jsConnectionManager?.drain();
 			jsConnectionManager = null;
