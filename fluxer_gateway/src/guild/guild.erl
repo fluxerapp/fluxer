@@ -45,8 +45,6 @@ handle_call({session_connect, Request}, {CallerPid, _}, State) ->
     handle_session_connect_call(Request, CallerPid, State);
 handle_call(export_handoff_state, _From, State) ->
     {reply, {ok, guild_handoff:export_handoff_state(State)}, State};
-handle_call({get_cached_voice_state_by_connection, ConnectionId}, _From, State) ->
-    handle_cached_voice_state_call(ConnectionId, State);
 handle_call({get_guild_id}, _From, State) ->
     {reply, maps:get(id, State, undefined), State};
 handle_call({get_voice_guild_state}, _From, State) ->
@@ -238,10 +236,6 @@ session_connect_pid(#{session_pid := Pid}, _CallerPid) ->
     erlang:error({bad_session_pid, Pid});
 session_connect_pid(_Request, CallerPid) ->
     CallerPid.
-
--spec handle_cached_voice_state_call(term(), guild_state()) -> call_reply().
-handle_cached_voice_state_call(ConnectionId, State) when is_binary(ConnectionId) ->
-    guild_voice_lifecycle:reply_cached_voice_state(ConnectionId, State).
 
 -spec handle_reload_call(term(), guild_state()) -> call_reply().
 handle_reload_call(NewData, State) when is_map(NewData) ->

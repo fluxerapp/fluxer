@@ -20,7 +20,6 @@ import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {GuildRoleRepository} from '@app/api/guild/repositories/GuildRoleRepository';
 import {
 	type CallData,
-	type GatewayActiveVoiceRooms,
 	type GatewayChannelMention,
 	type GatewayGuildMemoryStats,
 	type GatewayMentionSources,
@@ -165,25 +164,6 @@ export class NoopGatewayService extends IGatewayService {
 			total_voice_states: 0,
 			regions: [],
 			servers: [],
-		};
-	}
-
-	async getActiveVoiceRooms(): Promise<GatewayActiveVoiceRooms> {
-		return {
-			nodeCount: 1,
-			rooms: Array.from(this.voiceStatesByChannel.entries()).flatMap(([key, voiceStates]) => {
-				if (voiceStates.length === 0) {
-					return [];
-				}
-				const [guildIdText, channelIdText] = key.split(':');
-				return [
-					{
-						guildId: guildIdText === 'dm' ? undefined : (BigInt(guildIdText) as GuildID),
-						channelId: BigInt(channelIdText) as ChannelID,
-						voiceStateCount: voiceStates.length,
-					},
-				];
-			}),
 		};
 	}
 
@@ -877,19 +857,6 @@ export class NoopGatewayService extends IGatewayService {
 		tokenNonce?: string;
 	}): Promise<{
 		success: boolean;
-		error?: string;
-	}> {
-		return {success: false};
-	}
-
-	async repairVoiceStateFromCache(_params: {
-		guildId?: GuildID;
-		channelId: ChannelID;
-		userId: UserID;
-		connectionId: string;
-	}): Promise<{
-		success: boolean;
-		repaired?: boolean;
 		error?: string;
 	}> {
 		return {success: false};

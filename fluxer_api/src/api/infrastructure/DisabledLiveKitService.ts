@@ -1,11 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
-import type {
-	ILiveKitService,
-	ListActiveRoomsResult,
-	ListParticipantsResult,
-} from '@app/api/infrastructure/ILiveKitService';
+import type {ILiveKitService, ListParticipantsResult} from '@app/api/infrastructure/ILiveKitService';
 import type {VoiceRegionMetadata, VoiceServerRecord} from '@app/api/voice/VoiceModel';
 
 interface CreateTokenParams {
@@ -76,10 +72,6 @@ export class DisabledLiveKitService implements ILiveKitService {
 		serverId: string;
 	}): Promise<ListParticipantsResult> {
 		return {status: 'ok', participants: []};
-	}
-
-	async listActiveRooms(): Promise<ListActiveRoomsResult> {
-		return {rooms: [], errors: [], searchedServers: 0, completed: true};
 	}
 
 	getDefaultRegionId(): string | null {

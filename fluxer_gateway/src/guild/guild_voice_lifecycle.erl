@@ -7,7 +7,6 @@
     ensure_voice_server/1,
     handle_voice_server_exit/3,
     reply_voice_server_pid/1,
-    reply_cached_voice_state/2,
     clear_stale_cached_voice_states/2
 ]).
 
@@ -59,15 +58,6 @@ reply_voice_server_pid(State) ->
     case ensure_voice_server(State) of
         {ok, Pid, NewState} -> {reply, {ok, Pid}, NewState};
         {{error, Reason}, NewState} -> {reply, {error, Reason}, NewState}
-    end.
-
--spec reply_cached_voice_state(binary(), guild_state()) ->
-    {reply, {ok, map()} | {error, not_found}, guild_state()}.
-reply_cached_voice_state(ConnectionId, State) ->
-    VoiceStates = maps:get(voice_states, State, #{}),
-    case maps:find(ConnectionId, VoiceStates) of
-        {ok, VoiceState} -> {reply, {ok, VoiceState}, State};
-        error -> {reply, {error, not_found}, State}
     end.
 
 -spec clear_stale_cached_voice_states([binary()], guild_state()) -> guild_state().

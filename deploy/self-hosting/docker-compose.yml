@@ -413,7 +413,6 @@ services:
       NODE_OPTIONS: --enable-source-maps${FLUXER_WORKER_NODE_HEAP_MB:+ --max-old-space-size=$FLUXER_WORKER_NODE_HEAP_MB}
       FLUXER_API_WORKER_MODE: all_lanes
       FLUXER_API_WORKER_ENABLE_CRON_SCHEDULER: "true"
-      FLUXER_API_WORKER_ENABLE_VOICE_RECONCILIATION: "true"
       FLUXER_POSTGRES_MAX_CONNECTIONS: "25"
     healthcheck:
       test: ["CMD", "node", "-e", "const age=Date.now()-require('node:fs').statSync('/tmp/fluxer-worker-heartbeat').mtimeMs;if(age>30000){console.error('worker heartbeat is '+Math.round(age)+'ms old');process.exit(1)}"]

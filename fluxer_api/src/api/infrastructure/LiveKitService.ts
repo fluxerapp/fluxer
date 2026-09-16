@@ -2,11 +2,7 @@
 
 import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
-import type {
-	ListActiveRoomsResult,
-	ListParticipantsResult,
-	LiveKitServerError,
-} from '@app/api/infrastructure/ILiveKitService';
+import type {ListParticipantsResult} from '@app/api/infrastructure/ILiveKitService';
 import {ILiveKitService} from '@app/api/infrastructure/ILiveKitService';
 import {Logger} from '@app/api/Logger';
 import type {VoiceRegionMetadata, VoiceServerRecord} from '@app/api/voice/VoiceModel';
@@ -339,39 +335,6 @@ export class LiveKitService extends ILiveKitService {
 		}
 	}
 
-	async listActiveRooms(): Promise<ListActiveRoomsResult> {
-		const rooms: ListActiveRoomsResult['rooms'] = [];
-		const errors: Array<LiveKitServerError> = [];
-		const servers = this.getActiveServerClients();
-		for (const server of servers) {
-			try {
-				const liveRooms = await server.roomServiceClient.listRooms();
-				for (const room of liveRooms) {
-					if (typeof room.name !== 'string' || room.name.length === 0) {
-						continue;
-					}
-					rooms.push({
-						roomName: room.name,
-						regionId: server.regionId,
-						serverId: server.serverId,
-					});
-				}
-			} catch (error) {
-				Logger.warn(
-					{error, regionId: server.regionId, serverId: server.serverId},
-					'LiveKit listRooms failed during voice reconciliation',
-				);
-				errors.push(this.toServerError(server.regionId, server.serverId, error));
-			}
-		}
-		return {
-			rooms,
-			errors,
-			searchedServers: servers.length,
-			completed: errors.length === 0,
-		};
-	}
-
 	private static isHttp404(error: unknown): boolean {
 		return LiveKitService.getHttpStatus(error) === 404;
 	}
@@ -394,34 +357,6 @@ export class LiveKitService extends ILiveKitService {
 			return null;
 		}
 		return region.get(serverId) ?? null;
-	}
-
-	private getActiveServerClients(): Array<ServerClientConfig & {regionId: string; serverId: string}> {
-		const servers: Array<ServerClientConfig & {regionId: string; serverId: string}> = [];
-		for (const [regionId, region] of this.serverClients.entries()) {
-			for (const [serverId, server] of region.entries()) {
-				if (server.isActive) {
-					servers.push({...server, regionId, serverId});
-				}
-			}
-		}
-		return servers.sort((left, right) => {
-			const regionComparison = left.regionId.localeCompare(right.regionId);
-			if (regionComparison !== 0) {
-				return regionComparison;
-			}
-			return left.serverId.localeCompare(right.serverId);
-		});
-	}
-
-	private toServerError(regionId: string, serverId: string, error: unknown): LiveKitServerError {
-		const status = LiveKitService.getHttpStatus(error);
-		return {
-			regionId,
-			serverId,
-			errorCode: error instanceof Error ? error.message : 'unknown',
-			retryable: status != null && status >= 500,
-		};
 	}
 
 	getDefaultRegionId(): string | null {

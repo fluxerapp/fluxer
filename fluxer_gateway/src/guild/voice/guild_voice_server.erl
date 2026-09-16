@@ -189,13 +189,6 @@ voice_request_handler(_) ->
     error.
 
 -spec handle_call_local(term(), server_state()) -> {reply, term(), server_state()}.
-handle_call_local({repair_voice_state_from_guild_cache, Request}, State) when is_map(Request) ->
-    {Reply, NewState} = guild_voice_server_state:repair_voice_state_from_guild_cache(
-        Request, State
-    ),
-    {reply, Reply, NewState};
-handle_call_local({repair_voice_state_from_guild_cache, _Request}, State) ->
-    {reply, #{success => false, error => voice_invalid_state}, State};
 handle_call_local({store_pending_connection, ConnectionId, Metadata}, State) ->
     Pending = maps:get(pending_voice_connections, State, #{}),
     NewPending = bounded_put(ConnectionId, Metadata, Pending, ?MAX_PENDING_CONNECTIONS),

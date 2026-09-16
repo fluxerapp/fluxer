@@ -61,13 +61,6 @@ interface ListParticipantsParams {
 	serverId: string;
 }
 
-export interface LiveKitServerError {
-	regionId: string;
-	serverId: string;
-	errorCode: string;
-	retryable: boolean;
-}
-
 export interface ListParticipantsSuccess {
 	status: 'ok';
 	participants: Array<{
@@ -84,19 +77,6 @@ export interface ListParticipantsError {
 
 export type ListParticipantsResult = ListParticipantsSuccess | ListParticipantsError;
 
-export interface LiveKitRoomLocation {
-	roomName: string;
-	regionId: string;
-	serverId: string;
-}
-
-export interface ListActiveRoomsResult {
-	rooms: Array<LiveKitRoomLocation>;
-	errors: Array<LiveKitServerError>;
-	searchedServers: number;
-	completed: boolean;
-}
-
 export abstract class ILiveKitService {
 	abstract createToken(params: CreateTokenParams): Promise<{
 		token: string;
@@ -110,8 +90,6 @@ export abstract class ILiveKitService {
 	abstract disconnectParticipant(params: DisconnectParticipantParams): Promise<void>;
 
 	abstract listParticipants(params: ListParticipantsParams): Promise<ListParticipantsResult>;
-
-	abstract listActiveRooms(): Promise<ListActiveRoomsResult>;
 
 	abstract getDefaultRegionId(): string | null;
 

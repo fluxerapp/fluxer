@@ -88,17 +88,6 @@ export interface GatewayVoiceStateCounts {
 	servers: Array<GatewayVoiceStateServerCount>;
 }
 
-export interface GatewayActiveVoiceRoom {
-	guildId?: GuildID;
-	channelId: ChannelID;
-	voiceStateCount: number;
-}
-
-export interface GatewayActiveVoiceRooms {
-	rooms: Array<GatewayActiveVoiceRoom>;
-	nodeCount: number;
-}
-
 export interface GatewayVoiceStateEntry {
 	connectionId: string;
 	userId: string;
@@ -161,8 +150,6 @@ export abstract class IGatewayService {
 	abstract getGuildMemoryStats(limit: number): Promise<GatewayGuildMemoryStats>;
 
 	abstract getVoiceStateCounts(): Promise<GatewayVoiceStateCounts>;
-
-	abstract getActiveVoiceRooms(): Promise<GatewayActiveVoiceRooms>;
 
 	abstract getUsersToMentionByRoles(params: {
 		guildId: GuildID;
@@ -342,17 +329,6 @@ export abstract class IGatewayService {
 		tokenNonce?: string;
 	}): Promise<{
 		success: boolean;
-		error?: string;
-	}>;
-
-	abstract repairVoiceStateFromCache(params: {
-		guildId?: GuildID;
-		channelId: ChannelID;
-		userId: UserID;
-		connectionId: string;
-	}): Promise<{
-		success: boolean;
-		repaired?: boolean;
 		error?: string;
 	}>;
 

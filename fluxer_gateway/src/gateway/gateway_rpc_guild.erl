@@ -75,7 +75,6 @@ route(M, P) ->
     <<"guild.disconnect_voice_user_if_in_channel">> => fun gateway_rpc_guild_voice:handle/2,
     <<"guild.disconnect_all_voice_users_in_channel">> => fun gateway_rpc_guild_voice:handle/2,
     <<"guild.confirm_voice_connection_from_livekit">> => fun gateway_rpc_guild_voice:handle/2,
-    <<"guild.repair_voice_state_from_cache">> => fun gateway_rpc_guild_voice:handle/2,
     <<"guild.get_voice_states_for_channel">> => fun gateway_rpc_guild_voice:handle/2,
     <<"guild.get_pending_joins_for_channel">> => fun gateway_rpc_guild_voice:handle/2,
     <<"guild.move_member">> => fun gateway_rpc_guild_voice:handle/2,

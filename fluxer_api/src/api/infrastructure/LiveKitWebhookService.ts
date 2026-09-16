@@ -92,7 +92,7 @@ export class LiveKitWebhookService {
 						roomName: data.event.room?.name ?? null,
 						eventType: data.event.event,
 					},
-					'LiveKit webhook reports dropped events - reconciliation may be needed',
+					'LiveKit webhook reports dropped events',
 				);
 			}
 			await this.processEvent(data);
@@ -256,7 +256,7 @@ export class LiveKitWebhookService {
 							error: result.error,
 							participantIdentity: participant.identity,
 						},
-						'LiveKit participant_joined did not match gateway state; leaving participant connected for reconciliation',
+						'LiveKit participant_joined did not match gateway state; leaving participant connected',
 					);
 					return;
 				}
