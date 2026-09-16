@@ -6,7 +6,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicI64, AtomicU64, Ordering};
 
 const ORDERING: Ordering = Ordering::Relaxed;
-pub type AdditionalMetricsRenderer = Arc<dyn Fn(&mut String) + Send + Sync>;
+pub(crate) type AdditionalMetricsRenderer = Arc<dyn Fn(&mut String) + Send + Sync>;
 
 const HISTOGRAM_BUCKETS_MS: &[u64] = &[
     1, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 30000,
@@ -92,7 +92,7 @@ impl Default for ServiceMetrics {
 }
 
 impl ServiceMetrics {
-    pub fn with_additional_renderer(renderer: AdditionalMetricsRenderer) -> Self {
+    pub(crate) fn with_additional_renderer(renderer: AdditionalMetricsRenderer) -> Self {
         Self {
             additional_renderer: Some(renderer),
             ..Self::default()

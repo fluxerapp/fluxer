@@ -694,8 +694,6 @@ To rotate the key pair, set both names in `.env`, then run `docker compose up -d
 
 The `Caddyfile` is a bind mount, so the edge reads the copy that sits on disk beside `docker-compose.yml`. Editing it takes `docker compose restart edge`, because `docker compose up -d` leaves a container alone when only a mounted file changed. An upgrade does that restart itself, which [What the script does](/operator/upgrading/#what-the-script-does) covers. A change to any LiveKit value in `.env` needs `docker compose up -d`, because `restart` reuses the existing container with its old environment.
 
-Voice reconciliation has moved from `worker` to the separate recon service. The old `FLUXER_API_WORKER_ENABLE_VOICE_RECONCILIATION` and `FLUXER_API_WORKER_VOICE_RECONCILIATION_*` settings no longer control it. The bundled Compose stack does not start the recon service.
-
 ## Email
 
 Email is off by default, and the conditions below turn it on. The email switch must be on. It is the value saved in the admin dashboard, or `FLUXER_EMAIL_ENABLED` when the dashboard has no saved value. Also, the provider must be `smtp` with a complete SMTP configuration, meaning `FLUXER_EMAIL_FROM_EMAIL`, `FLUXER_EMAIL_SMTP_HOST`, `FLUXER_EMAIL_SMTP_PORT`, `FLUXER_EMAIL_SMTP_USERNAME`, and `FLUXER_EMAIL_SMTP_PASSWORD` are all non-empty. All are optional.
