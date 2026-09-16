@@ -17,7 +17,6 @@ import {LimitConfigAdminController} from '@app/api/admin/controllers/LimitConfig
 import {MessageAdminController} from '@app/api/admin/controllers/MessageAdminController';
 import {ReportAdminController} from '@app/api/admin/controllers/ReportAdminController';
 import {SearchAdminController} from '@app/api/admin/controllers/SearchAdminController';
-import {SystemAdminController} from '@app/api/admin/controllers/SystemAdminController';
 import {SystemDmAdminController} from '@app/api/admin/controllers/SystemDmAdminController';
 import {UserAdminController} from '@app/api/admin/controllers/UserAdminController';
 import {VoiceAdminController} from '@app/api/admin/controllers/VoiceAdminController';
@@ -43,6 +42,5 @@ export function registerAdminControllers(app: HonoApp) {
 	SearchAdminController(app);
 	DiscoveryAdminController(app);
 	SystemDmAdminController(app);
-	SystemAdminController(app);
 	JobsAdminController(app);
 }

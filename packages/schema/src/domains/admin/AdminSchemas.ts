@@ -1489,6 +1489,5 @@ export const LimitConfigGetResponse = z.object({
 export const DeleteApiKeyResponse = z.object({
 	success: z.literal(true),
 });
-export const HeapSnapshotResponse = z.file().describe('V8 heap snapshot file');
 
 export const AdminApiKeyListResponse = z.array(ListAdminApiKeyResponse);

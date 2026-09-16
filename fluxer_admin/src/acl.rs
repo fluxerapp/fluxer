@@ -79,7 +79,6 @@ pub const REPORT_RESOLVE: &str = "report:resolve";
 pub const REPORT_VIEW: &str = "report:view";
 pub const REPORT_VIEW_REPORTER_PII: &str = "report:view:reporter_pii";
 pub const SYSTEM_DM_SEND: &str = "system_dm:send";
-pub const SYSTEM_HEAP_SNAPSHOT: &str = "system:heap_snapshot";
 pub const USER_CANCEL_BULK_MESSAGE_DELETION: &str = "user:cancel:bulk_message_deletion";
 pub const USER_DELETE: &str = "user:delete";
 pub const USER_DISABLE_SUSPICIOUS: &str = "user:disable:suspicious";
@@ -192,7 +191,6 @@ pub const ALL_ACLS: &[&str] = &[
     REPORT_VIEW,
     REPORT_VIEW_REPORTER_PII,
     SYSTEM_DM_SEND,
-    SYSTEM_HEAP_SNAPSHOT,
     USER_CANCEL_BULK_MESSAGE_DELETION,
     USER_DELETE,
     USER_DISABLE_SUSPICIOUS,

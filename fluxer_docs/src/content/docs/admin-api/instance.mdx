@@ -10,13 +10,13 @@ Instance configuration is everything an operator can change at runtime. It cover
 
 Every write is a merge over the stored configuration, and an omitted key leaves the stored value unchanged. The limit configuration write is the one exception and replaces the stored document.
 
-Reading configuration requires the [Admin ACL](/admin-api/#acl-registry) `instance:config:view`, and writing it requires `instance:config:update`. The limit configuration has its own pair, `instance:limit_config:view` and `instance:limit_config:update`. The heap snapshot requires `system:heap_snapshot`.
+Reading configuration requires the [Admin ACL](/admin-api/#acl-registry) `instance:config:view`, and writing it requires `instance:config:update`. The limit configuration has its own pair, `instance:limit_config:view` and `instance:limit_config:update`.
 
 :::note[Initial setup accepts a plain session credential]
 Until setup is marked complete, [Get instance configuration](#get-instance-configuration), [Update instance configuration](#update-instance-configuration), [Create branding asset](#create-branding-asset), and [Create SMTP test](#create-smtp-test) also accept a session credential holding no Admin ACL.
 :::
 
-That relaxation applies only to a session credential, so an Admin API key and a bearer token are evaluated normally even before setup is complete. Completing setup grants the acting session the wildcard ACL. Registration URLs, pending registrations, limit configuration, and the heap snapshot always need their own ACL.
+That relaxation applies only to a session credential, so an Admin API key and a bearer token are evaluated normally even before setup is complete. Completing setup grants the acting session the wildcard ACL. Registration URLs, pending registrations, and limit configuration always need their own ACL.
 
 :::caution[No read returns a stored secret]
 A secret is reported by a companion boolean such as `client_secret_set`. Except for the single sign-on client secret, that boolean is true whether the value is stored here or supplied by deployment configuration.
@@ -24,7 +24,7 @@ A secret is reported by a companion boolean such as `client_secret_set`. Except 
 
 ## Instance configuration object
 
-The complete runtime configuration of the deployment. Every configuration operation here except the limit configuration and the heap snapshot returns it.
+The complete runtime configuration of the deployment. Every configuration operation here except the limit configuration returns it.
 
 Missing settings use the defaults documented below. Invalid stored configuration causes an error rather than silently resetting a policy. Operators can find recovery guidance under [stored instance policy](/operator/configuration/#stored-instance-policy).
 
@@ -840,37 +840,3 @@ The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-obje
 ### Rate limit
 
 100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
-
-## Create heap snapshot
-
-<RouteHeader method="POST" path="/v1/admin/system/heap-snapshots" auditReason />
-
-Writes a V8 heap snapshot of the API process that serves the request and returns the file. Requires `system:heap_snapshot`.
-
-### Response
-
-| Status | Body | Condition |
-| --- | --- | --- |
-| 200<sup>1</sup> | heap snapshot file | The snapshot was written |
-
-<sup>1</sup> The body is the raw `.heapsnapshot` file streamed as an attachment. The filename is `heap-` followed by the Unix time in milliseconds at which the snapshot was taken
-
-The 200 has `Content-Type: application/octet-stream`, `Content-Disposition: attachment`, and `Content-Length`.
-
-A client MUST NOT decode the body as JSON. The published OpenAPI document declares a JSON object of `success`, `filename`, and `size_bytes` here, so a generated client has to be overridden.
-
-:::danger[A snapshot stalls the process and exposes memory]
-Writing a snapshot blocks the serving process until the dump finishes. The file contains whatever that process held in memory, including message content, tokens, and personal data.
-:::
-
-:::caution[Only the serving node is captured]
-A deployment behind a load balancer needs several attempts to reach a particular node, and the file grows with that process heap.
-:::
-
-### Side effects
-
-No configuration is changed. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `create_heap_snapshot`, target type `system`, target ID `0`, and metadata key `size_bytes`, after the snapshot is written and before the file is sent. A snapshot that fails to write records no entry.
-
-### Rate limit
-
-2 requests per five minutes for each authenticated user, on the `admin:system:heap_snapshot` bucket.

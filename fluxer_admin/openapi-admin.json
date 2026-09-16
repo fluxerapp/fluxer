@@ -5443,59 +5443,6 @@
 				}
 			}
 		},
-		"/admin/system/heap-snapshots": {
-			"post": {
-				"operationId": "create_admin_system_heap_snapshot",
-				"summary": "Create a V8 heap snapshot",
-				"tags": ["Admin"],
-				"responses": {
-					"200": {
-						"description": "Success",
-						"content": {"application/octet-stream": {"schema": {"$ref": "#/components/schemas/HeapSnapshotResponse"}}}
-					},
-					"400": {
-						"description": "Bad Request - The request was malformed or contained invalid data",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"401": {
-						"description": "Unauthorized - Authentication is required or the token is invalid",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"403": {
-						"description": "Forbidden - You do not have permission to perform this action",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					},
-					"429": {
-						"description": "Too Many Requests - You are being rate limited",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
-						"headers": {
-							"Retry-After": {
-								"description": "Number of seconds to wait before retrying (only on 429)",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Limit": {
-								"description": "The number of requests that can be made in the current window",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Remaining": {
-								"description": "The number of remaining requests that can be made",
-								"schema": {"type": "integer"}
-							},
-							"X-RateLimit-Reset": {
-								"description": "Unix timestamp when the rate limit resets",
-								"schema": {"type": "integer"}
-							}
-						}
-					},
-					"500": {
-						"description": "Internal Server Error - An unexpected error occurred",
-						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
-					}
-				},
-				"description": "Writes a V8 heap snapshot of the current process and returns the snapshot file. Used for diagnosing memory leaks. Requires SYSTEM_HEAP_SNAPSHOT permission.",
-				"security": [{"adminApiKey": []}]
-			}
-		},
 		"/admin/users": {
 			"get": {
 				"operationId": "list_admin_users",
@@ -9890,7 +9837,7 @@
 				"type": "object",
 				"properties": {
 					"acls": {
-						"maxItems": 112,
+						"maxItems": 111,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"},
 						"description": "List of access control permissions to assign"
@@ -9920,7 +9867,6 @@
 				"required": ["users", "total"],
 				"additionalProperties": false
 			},
-			"HeapSnapshotResponse": {"type": "string", "format": "binary", "description": "V8 heap snapshot file"},
 			"SendSystemDmRequest": {
 				"type": "object",
 				"properties": {
@@ -12759,7 +12705,7 @@
 					},
 					"acls": {
 						"description": "Replacement list of access control permissions for the key",
-						"maxItems": 112,
+						"maxItems": 111,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"}
 					}
@@ -12777,7 +12723,7 @@
 						"type": "string"
 					},
 					"acls": {
-						"maxItems": 112,
+						"maxItems": 111,
 						"type": "array",
 						"items": {"type": "string"},
 						"description": "List of access control permissions for the key"
@@ -12807,7 +12753,7 @@
 						"maximum": 365
 					},
 					"acls": {
-						"maxItems": 112,
+						"maxItems": 111,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"},
 						"description": "List of access control permissions for the key"
@@ -12828,7 +12774,7 @@
 						"type": "string"
 					},
 					"acls": {
-						"maxItems": 112,
+						"maxItems": 111,
 						"type": "array",
 						"items": {"type": "string"},
 						"description": "List of access control permissions for the key"
@@ -12841,7 +12787,7 @@
 				"type": "object",
 				"properties": {
 					"acls": {
-						"maxItems": 112,
+						"maxItems": 111,
 						"type": "array",
 						"items": {"type": "string", "minLength": 1, "maxLength": 64},
 						"description": "Every admin access control permission the admin API recognises"
@@ -12932,7 +12878,6 @@
 					"report:view",
 					"report:view:reporter_pii",
 					"system_dm:send",
-					"system:heap_snapshot",
 					"user:cancel:bulk_message_deletion",
 					"user:delete",
 					"user:disable:suspicious",
@@ -15471,7 +15416,7 @@
 					"pending_bulk_message_deletion_at": {"nullable": true, "type": "string"},
 					"deletion_reason_code": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/Int32Type"}]},
 					"deletion_public_reason": {"nullable": true, "type": "string"},
-					"acls": {"maxItems": 112, "type": "array", "items": {"type": "string"}},
+					"acls": {"maxItems": 111, "type": "array", "items": {"type": "string"}},
 					"traits": {"maxItems": 100, "type": "array", "items": {"type": "string"}},
 					"has_totp": {"type": "boolean"},
 					"authenticator_types": {"maxItems": 10, "type": "array", "items": {"$ref": "#/components/schemas/Int32Type"}},

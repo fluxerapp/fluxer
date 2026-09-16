@@ -48,8 +48,4 @@ export const AdminRateLimitConfigs = {
 		bucket: 'admin:general',
 		config: {limit: 200, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
-	ADMIN_SYSTEM_HEAP_SNAPSHOT: {
-		bucket: 'admin:system:heap_snapshot',
-		config: {limit: 2, windowMs: ms('5 minutes')},
-	} as RouteRateLimitConfig,
 } as const;

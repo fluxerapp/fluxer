@@ -54,12 +54,6 @@ describe('OpenAPI generation from API controllers', () => {
 		expect(operation.responses).toHaveProperty('401');
 	});
 
-	it('publishes the real heap-snapshot media type', () => {
-		expect(document.paths['/admin/system/heap-snapshots'].post.responses['200'].content).toEqual({
-			'application/octet-stream': {schema: {$ref: '#/components/schemas/HeapSnapshotResponse'}},
-		});
-	});
-
 	it('documents full and partial harvest archive downloads as binary ZIP responses', () => {
 		const responses = document.paths['/harvest-downloads/{harvestId}'].get.responses;
 		for (const status of ['200', '206']) {
