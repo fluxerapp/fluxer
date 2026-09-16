@@ -633,6 +633,7 @@ img::before {
 
 .emoji:not(img) {
 	font-size: var(--emoji-size-emoji);
+	font-variant-emoji: emoji;
 	line-height: 1;
 	width: 1em;
 	height: 1em;
