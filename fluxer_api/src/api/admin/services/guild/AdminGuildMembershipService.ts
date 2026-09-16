@@ -1,16 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
-import {BulkCancelledError, type BulkProgressHelpers} from '@app/api/admin/services/BulkProgressHelpers';
 import {createGuildID, createUserID, type UserID} from '@app/api/BrandedTypes';
 import type {GuildService} from '@app/api/guild/services/GuildService';
-import {createRequestCache, type RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {JoinSourceTypes} from '@fluxer/constants/src/GuildConstants';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {
 	BanGuildMemberRequest,
-	BulkAddGuildMembersRequest,
 	ForceAddUserToGuildRequest,
 	KickGuildMemberRequest,
 } from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
@@ -30,11 +28,13 @@ export class AdminGuildMembershipService {
 		requestCache,
 		adminUserId,
 		auditLogReason,
+		sendJoinMessage = true,
 	}: {
 		data: ForceAddUserToGuildRequest;
 		requestCache: RequestCache;
 		adminUserId: UserID;
 		auditLogReason: string | null;
+		sendJoinMessage?: boolean;
 	}): Promise<SuccessResponse> {
 		const {userRepository, guildService, auditService} = this.deps;
 		const userId = createUserID(data.user_id);
@@ -47,7 +47,7 @@ export class AdminGuildMembershipService {
 			skipRiskGate: true,
 			userId,
 			guildId,
-			sendJoinMessage: true,
+			sendJoinMessage,
 			skipBanCheck: true,
 			joinSourceType: JoinSourceTypes.ADMIN_FORCE_ADD,
 			requestCache,
@@ -62,66 +62,6 @@ export class AdminGuildMembershipService {
 			metadata: new Map([['guild_id', String(guildId)]]),
 		});
 		return {success: true};
-	}
-
-	async bulkAddGuildMembers(
-		data: BulkAddGuildMembersRequest,
-		adminUserId: UserID,
-		auditLogReason: string | null,
-		helpers?: BulkProgressHelpers,
-	) {
-		const {guildService, auditService} = this.deps;
-		const successful: Array<string> = [];
-		const failed: Array<{
-			id: string;
-			error: string;
-		}> = [];
-		const guildId = createGuildID(data.guild_id);
-		const total = data.user_ids.length;
-		await helpers?.reportProgress(0, total, `Adding ${total} members to guild ${guildId}`);
-		let processed = 0;
-		for (const userIdBigInt of data.user_ids) {
-			if (helpers && (await helpers.shouldCancel())) throw new BulkCancelledError();
-			try {
-				const userId = createUserID(userIdBigInt);
-				await guildService.members.addUserToGuild({
-					skipRiskGate: true,
-					userId,
-					guildId,
-					sendJoinMessage: false,
-					skipBanCheck: true,
-					joinSourceType: JoinSourceTypes.ADMIN_FORCE_ADD,
-					requestCache: createRequestCache(),
-					initiatorId: adminUserId,
-				});
-				successful.push(userId.toString());
-			} catch (error) {
-				failed.push({
-					id: userIdBigInt.toString(),
-					error: error instanceof Error ? error.message : 'Unknown error',
-				});
-			}
-			processed++;
-			if (helpers && processed % 25 === 0) {
-				await helpers.reportProgress(processed, total, null);
-			}
-		}
-		await helpers?.reportProgress(total, total, `+${successful.length} ok, ${failed.length} failed`);
-		await auditService.createAuditLog({
-			adminUserId,
-			targetType: 'guild',
-			targetId: BigInt(guildId),
-			action: 'bulk_add_guild_members',
-			auditLogReason,
-			metadata: new Map([
-				['guild_id', guildId.toString()],
-				['user_count', data.user_ids.length.toString()],
-			]),
-		});
-		return {
-			successful,
-			failed,
-		};
 	}
 
 	async banMember(data: BanGuildMemberRequest, adminUserId: UserID, auditLogReason: string | null) {

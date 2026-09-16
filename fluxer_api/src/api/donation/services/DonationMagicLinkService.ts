@@ -60,12 +60,15 @@ export class DonationMagicLinkService {
 		if (tokenModel.isUsed()) {
 			throw new DonationMagicLinkUsedError();
 		}
-		await this.donationRepository.markMagicLinkTokenUsed(token, new Date());
 		const donor = await this.donationRepository.findDonorByEmail(tokenModel.donorEmail);
 		Logger.debug({email: tokenModel.donorEmail}, 'Donation magic link validated');
 		return {
 			email: tokenModel.donorEmail,
 			stripeCustomerId: donor?.stripeCustomerId ?? null,
 		};
+	}
+
+	async consumeToken(token: string): Promise<void> {
+		await this.donationRepository.markMagicLinkTokenUsed(token, new Date());
 	}
 }

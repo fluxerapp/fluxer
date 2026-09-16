@@ -12,7 +12,7 @@ Every route requires a session credential. A bot token and an OAuth2 bearer cred
 
 ## Provider availability
 
-`klipy` is the only provider name a deployment binds. [Get instance discovery](/http-api/instance/#get-instance-discovery) publishes it as the [GIF provider](/http-api/instance/#gif-provider-object) object. An instance that has bound no provider key refuses every route on this page with 403 `FEATURE_TEMPORARILY_DISABLED`. That same key drives `gif_enabled` in [service availability](/http-api/instance/#service-availability-object), a flag an operator can also set by hand, so a client that reads `gif_enabled` as true can still receive the 403.
+`klipy` is the only provider name a deployment binds. [Get instance discovery](/http-api/instance/#get-instance-discovery) publishes it as the [GIF provider](/http-api/instance/#gif-provider-object) object. An instance that has bound no provider key refuses every route on this page with 403 `FEATURE_TEMPORARILY_DISABLED`. `gif_enabled` in [service availability](/http-api/instance/#service-availability-object) reports whether that key is bound, unless an operator has set the flag by hand. A client that reads `gif_enabled` as true can therefore still receive the 403.
 
 A provider outage, a request past its deadline, and an unreadable provider payload all return 503 `SERVICE_UNAVAILABLE`. The deadline is 12 seconds everywhere except [Register a GIF share](#register-a-gif-share), which uses 3 seconds. An operator can change both.
 
@@ -36,7 +36,7 @@ Every response under `/gifs`, `/tenor`, and `/klipy` has these headers, includin
 
 ## Result freshness
 
-Results may be cached and can lag behind the provider. Repeating a request does not force a refresh.
+Fluxer caches results, so a result can lag behind the provider. Repeating a request does not force a refresh.
 
 ## GIF object
 
@@ -62,7 +62,7 @@ A GIF object is one media item the active provider owns. Every URL in it resolve
 
 <sup>2</sup> Copied from the `webm` entry of `media` when the provider returned one, and from the first entry it returned otherwise
 
-<sup>3</sup> Empty when no format the provider returned could be proxied. No key is guaranteed, so a client walks a priority list
+<sup>3</sup> Empty when no format the provider returned could be proxied. No key is guaranteed, so a client checks the format names it prefers in order and uses the first one present
 
 <sup>4</sup> The active provider emits none, so the field is absent from every GIF these routes return. [Resolve GIF URLs](/http-api/memes/#resolve-gif-urls) is the operation that produces one
 

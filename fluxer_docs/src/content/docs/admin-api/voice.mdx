@@ -11,7 +11,7 @@ A voice region is a named group of media machines, and a voice server is one mac
 No operation here addresses a live session, a participant, or a track. [Get voice state counts](/admin-api/gateway/#get-voice-state-counts) reports occupancy, and [List RTC regions](/http-api/channels/#list-rtc-regions) is the caller-facing view of the same regions.
 
 :::note[Changes apply to new placements]
-Changes take effect across the instance after a short delay. No write moves or disconnects an existing session.
+Every write publishes a change notification. Each API node reloads the voice configuration when it receives that notification, a short time after the write. Placements after that reload use the new configuration. No write moves or disconnects an existing session.
 :::
 
 :::caution[A failed response can follow a successful change]
@@ -64,7 +64,7 @@ The operator supplies `id` on creation. Channels reference it through `rtc_regio
 | updated_at | ?ISO8601 timestamp | Time the region record last changed, or null when the stored row has none |
 | servers?<sup>4</sup> | array[[Admin voice server](#admin-voice-server-object) object] | The servers registered in the region |
 
-<sup>1</sup> The flag is not exclusive, and setting it on a second region does not clear it on the first. Each node then takes the first flagged region its reload lists as the default, or the first region its reload lists when no region is flagged
+<sup>1</sup> The flag is not exclusive, and setting it on a second region does not clear it on the first. Each API node then uses the first flagged region in the region list it loaded as the default. When no region is flagged, it uses the first region in that list
 
 <sup>2</sup> Setting any of these three makes the region unusable for a private call
 
@@ -93,7 +93,7 @@ The operator supplies `id` on creation. Channels reference it through `rtc_regio
 
 ## Admin voice server object
 
-A server record names one LiveKit deployment, the API key pair the instance authenticates to it with, and its own copy of the eligibility fields. A server is reachable for placement only when its region is also reachable.
+A server record names one LiveKit deployment, the API key pair the instance authenticates to it with, and its own set of eligibility fields. A server is available for placement only when its region also admits the placement.
 
 The `region_id` and `server_id` pair addresses one server, and a server belongs to exactly one region. The same server identifier can exist in two regions. Moving a server between regions means deleting it and recreating it. Both identifiers are operator-chosen strings of 1 to 64 characters, and no operation renames either one.
 
@@ -123,7 +123,7 @@ A server can also have a soft connection limit, described under [soft connection
 
 <sup>2</sup> The two coordinates are set and cleared together, and a server with only one of them cannot be stored
 
-<sup>3</sup> Fluxer skips an inactive server when it resolves a new placement. Server-side moderation of a session already on it keeps working
+<sup>3</sup> Fluxer skips an inactive server when it resolves a new placement. Fluxer can still mute, deafen, change the permissions of, or disconnect a participant already on it
 
 <sup>4</sup> Duplicate entries collapse and the returned order is not the submitted order
 
@@ -256,7 +256,7 @@ Stores a region and returns it. Requires `voice:region:create`.
 | allowed_guild_ids? | array[snowflake] | The guilds admitted without checking the other guild gates (max 1000, default empty) |
 | allowed_user_ids? | array[snowflake] | The accounts allowed to use the region at all (max 1000, default empty) |
 
-<sup>1</sup> The identifier is not checked for collision. Reusing the identifier of an existing region overwrites that record in full, resets its creation time to now, and replaces every one of its collections
+<sup>1</sup> The identifier is not checked for collision. Reusing the identifier of an existing region overwrites that record in full, resets its creation time to now, and replaces its `required_guild_features`, `allowed_guild_ids`, and `allowed_user_ids` arrays
 
 <sup>2</sup> Each item is 1 to 64 characters. A value that is not a real guild feature is stored as supplied and then matches no guild
 
@@ -370,7 +370,7 @@ There is no confirmation step or recovery operation. Save the server configurati
 
 ### Side effects
 
-Operations that need a deleted server fail once the change takes effect. Existing sessions are not disconnected by the deletion itself.
+After each API node reloads its topology, Fluxer can no longer mute, deafen, change the permissions of, or remove a participant on a deleted server. Existing sessions are not disconnected by the deletion itself.
 
 One [Admin audit entry](/admin-api/#admin-audit-entry-object) with the action `delete_voice_region` and the target type `voice_region` records the region identifier and its name in metadata. No `delete_voice_server` entry is written for the servers deleted with the region.
 
@@ -596,7 +596,7 @@ Deletes a voice server. Requires `voice:server:delete`.
 
 ### Side effects
 
-Each node reloads its topology after the removal, and server-side moderation of a session still on that server then fails. Sessions already placed on the server are not disconnected by the deletion itself. The stored credentials are removed with the record and are not recoverable.
+Each node reloads its topology after the removal, and Fluxer can then no longer mute, deafen, change the permissions of, or remove a participant still on that server. Sessions already placed on the server are not disconnected by the deletion itself. The stored credentials are removed with the record and are not recoverable.
 
 One [Admin audit entry](/admin-api/#admin-audit-entry-object) with the action `delete_voice_server` and the target type `voice_server` records the region identifier, the server identifier, and the endpoint the server held in metadata.
 

@@ -99,6 +99,7 @@ export interface MasterConfig {
 			request_timeout_ms: number;
 			max_inflight_requests: number;
 			ip_ban_exempt_ips: Array<string>;
+			donation_proxy_key: string;
 			desktop_github_redirect_countries: Array<string>;
 			presigned_attachment_uploads_enabled: boolean;
 			presigned_downloads_enabled: boolean;
@@ -127,6 +128,11 @@ export interface MasterConfig {
 					lifecycle?: number;
 					batch?: number;
 				};
+			};
+			storage_change_feed?: {
+				enabled?: boolean;
+				stream?: string;
+				skip_buckets?: Array<string>;
 			};
 		};
 		nats?: {

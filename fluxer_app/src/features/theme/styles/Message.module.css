@@ -38,7 +38,8 @@
 	padding-block: var(--message-spacing-y);
 	padding-inline-end: var(--chat-horizontal-padding, var(--chat-horizontal-padding-default));
 	padding-inline-start: 0;
-	margin-inline: calc(-1 * var(--message-mobile-margin));
+	--message-inline-bleed: var(--message-mobile-margin);
+	margin-inline: calc(-1 * var(--message-inline-bleed));
 }
 
 .messagePreviewSpacing {
@@ -53,6 +54,13 @@
 	--message-hovered: 1;
 }
 
+.focusRingAnchor {
+	position: absolute;
+	inset-block: 0;
+	inset-inline: var(--message-inline-bleed, 0px);
+	pointer-events: none;
+}
+
 .message::selection,
 .messageCompact::selection,
 .message *::selection,
@@ -62,7 +70,8 @@
 
 @media (min-width: 768px) {
 	.message {
-		margin-inline: calc(-1 * var(--chat-horizontal-padding, var(--chat-horizontal-padding-default)));
+		--message-inline-bleed: var(--chat-horizontal-padding, var(--chat-horizontal-padding-default));
+		margin-inline: calc(-1 * var(--message-inline-bleed));
 		padding-inline-end: calc(
 			var(--chat-horizontal-padding, var(--chat-horizontal-padding-default)) +
 			var(--message-action-bar-offset)
@@ -70,6 +79,7 @@
 	}
 
 	.messagePreview {
+		--message-inline-bleed: 0px;
 		margin-inline: 0;
 		padding-inline-end: var(--chat-horizontal-padding, var(--chat-horizontal-padding-default));
 	}
@@ -109,30 +119,11 @@
 	background-color: var(--message-reply-bg);
 }
 
-.message.messageNoHover.messageHovered:not(.messageMentioned):not(.messageReplying):not(.messageHighlight),
-.messageCompact.messageNoHover.messageHovered:not(.messageMentioned):not(.messageReplying):not(.messageHighlight) {
-	background-color: transparent;
-}
-
-.message.messageNoHover.messageMentioned.messageHovered,
-.messageCompact.messageNoHover.messageMentioned.messageHovered {
-	background-color: var(--message-mention-bg);
-}
-
 :global([data-blocked-messages]) .message.messageHovered,
 :global([data-blocked-messages]) .messageCompact.messageHovered,
 :global([data-blocked-messages]) .message.contextMenuActive,
 :global([data-blocked-messages]) .messageCompact.contextMenuActive {
 	background-color: transparent !important;
-}
-
-@media (pointer: coarse) {
-	:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-		.message:hover,
-	:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-		.messageCompact:hover {
-		background-color: transparent;
-	}
 }
 
 .message.mobileLayout:hover,
@@ -178,7 +169,8 @@
 	padding-inline-start: 0;
 	padding-inline-end: var(--message-compact-horizontal-padding);
 	text-indent: 0;
-	margin-inline: calc(-1 * var(--chat-horizontal-padding, var(--chat-horizontal-padding-default)));
+	--message-inline-bleed: var(--chat-horizontal-padding, var(--chat-horizontal-padding-default));
+	margin-inline: calc(-1 * var(--message-inline-bleed));
 }
 
 @media (min-width: 768px) {
@@ -585,15 +577,6 @@
 	pointer-events: auto;
 }
 
-@media (pointer: coarse) {
-	:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-		.message:hover
-		.messageTimestampHover {
-		opacity: 0;
-		pointer-events: none;
-	}
-}
-
 .messageAuthorInfoCompact {
 	position: relative;
 	display: inline;
@@ -657,15 +640,6 @@
 	pointer-events: auto;
 }
 
-@media (pointer: coarse) {
-	:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-		.messageCompact:hover
-		.messageTimestampCompactHover {
-		opacity: 0;
-		pointer-events: none;
-	}
-}
-
 .messageText {
 	position: relative;
 	user-select: text;
@@ -676,58 +650,6 @@
 	white-space: break-spaces;
 	word-break: break-word;
 	min-inline-size: 0;
-}
-
-.message .buttons,
-.messageCompact .buttons {
-	opacity: 0;
-	pointer-events: none;
-}
-
-:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-	.message.messageHovered
-	.buttons,
-:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-	.message
-	.buttons:hover,
-:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-	.message
-	.buttons:has(:focus-visible),
-:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-	.message.selected
-	.buttons,
-:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-	.message
-	.buttons.emojiPickerOpen,
-:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-	.messageCompact.messageHovered
-	.buttons,
-:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-	.messageCompact
-	.buttons:hover,
-:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-	.messageCompact
-	.buttons:has(:focus-visible),
-:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-	.messageCompact.selected
-	.buttons,
-:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-	.messageCompact
-	.buttons.emojiPickerOpen {
-	opacity: 1;
-	pointer-events: auto;
-}
-
-@media (pointer: coarse) {
-	:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-		.message:hover
-		.buttons,
-	:global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
-		.messageCompact:hover
-		.buttons {
-		opacity: 0;
-		pointer-events: none;
-	}
 }
 
 .message .hoverAction,
@@ -764,10 +686,6 @@
 	}
 }
 
-:global(html:not(.window-focused):not(.unfocused-fully-interactive)) .message .buttons,
-:global(html:not(.window-focused):not(.unfocused-fully-interactive)) .messageCompact .buttons,
-:global(.window-focus-activation-guard) .message .buttons,
-:global(.window-focus-activation-guard) .messageCompact .buttons,
 :global(html:not(.window-focused):not(.unfocused-fully-interactive)) .message .hoverAction,
 :global(html:not(.window-focused):not(.unfocused-fully-interactive)) .messageCompact .hoverAction,
 :global(.window-focus-activation-guard) .message .hoverAction,
@@ -1422,17 +1340,13 @@
 	max-inline-size: calc(100% - var(--message-compact-text-start));
 }
 
-.contextMenuActive {
+:global(html:is(.window-focused, .unfocused-fully-interactive)) .contextMenuActive {
 	background-color: var(--background-modifier-hover) !important;
 }
 
-:global(html.reduced-motion) .contextMenuActive {
-	background-color: transparent !important;
-}
-
-.contextMenuActive .buttons {
-	opacity: 1 !important;
-	pointer-events: auto !important;
+:global(html.reduced-motion) .message.contextMenuActive,
+:global(html.reduced-motion) .messageCompact.contextMenuActive {
+	background-color: var(--background-modifier-hover) !important;
 }
 
 .contextMenuActive .messageTimestampHover {
@@ -1445,7 +1359,7 @@
 	pointer-events: auto !important;
 }
 
-.contextMenuActive.messageMentioned {
+:global(html:is(.window-focused, .unfocused-fully-interactive)) .contextMenuActive.messageMentioned {
 	background-color: var(--message-mention-bg-hover) !important;
 }
 
@@ -1453,8 +1367,10 @@
 	background-color: var(--message-mention-bg) !important;
 }
 
-.contextMenuActive.messageReplying:not(.messageMentioned),
-.contextMenuActive.messageHighlight:not(.messageMentioned) {
+:global(html:is(.window-focused, .unfocused-fully-interactive))
+	.contextMenuActive.messageReplying:not(.messageMentioned),
+:global(html:is(.window-focused, .unfocused-fully-interactive))
+	.contextMenuActive.messageHighlight:not(.messageMentioned) {
 	background-color: var(--message-reply-bg) !important;
 }
 
@@ -1463,22 +1379,18 @@
 	background-color: var(--message-reply-bg) !important;
 }
 
-.keyboardFocused {
+:global(html:is(.window-focused, .unfocused-fully-interactive)) .keyboardFocused {
 	background-color: var(--background-modifier-hover);
 }
 
-.keyboardFocused.messageMentioned {
+:global(html:is(.window-focused, .unfocused-fully-interactive)) .keyboardFocused.messageMentioned {
 	background-color: var(--message-mention-bg);
 }
 
-.keyboardFocused.messageReplying:not(.messageMentioned),
-.keyboardFocused.messageHighlight:not(.messageMentioned) {
+:global(html:is(.window-focused, .unfocused-fully-interactive)) .keyboardFocused.messageReplying:not(.messageMentioned),
+:global(html:is(.window-focused, .unfocused-fully-interactive))
+	.keyboardFocused.messageHighlight:not(.messageMentioned) {
 	background-color: var(--message-reply-bg);
-}
-
-.keyboardFocused .buttons {
-	opacity: 1;
-	pointer-events: auto;
 }
 
 .keyboardFocused .hoverAction {

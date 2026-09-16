@@ -106,6 +106,9 @@ describe('POST /donations/checkout', () => {
 		DONATION_CURRENCY_VALUES.INR,
 		DONATION_CURRENCY_VALUES.PLN,
 		DONATION_CURRENCY_VALUES.TRY,
+		DONATION_CURRENCY_VALUES.SEK,
+		DONATION_CURRENCY_VALUES.DKK,
+		DONATION_CURRENCY_VALUES.NOK,
 	])('accepts %s currency', async (currency) => {
 		const amount_cents = getDonationAmountConstraints(currency).minimumAmountMinor;
 		const response = await createDonationCheckoutBuilder(harness)

@@ -26,7 +26,7 @@ Every bound below is a fixed constant of the instance, and none is resolved from
 
 <sup>2</sup> Only [Upload entrance sound](#upload-entrance-sound) applies the lower bound
 
-The [instance discovery](/http-api/instance/#limit-keys) document publishes a `feature_voice_entrance_sounds` limit key. That key gates the feature in the client. No route on this page checks it, so a library can be read, written, and played back regardless of its resolved value.
+The [instance discovery](/http-api/instance/#limit-keys) document publishes a `feature_voice_entrance_sounds` limit key. The Fluxer client reads that key to decide whether it opens the clip upload dialog and whether it calls [Play entrance sound](#play-entrance-sound) after it connects to a voice channel. No route on this page checks it, so a library can be read, written, and played back regardless of its resolved value.
 
 ## Supported containers
 
@@ -316,7 +316,7 @@ Fluxer writes or removes the scope's selection. One clip can be selected in any 
 
 <RouteHeader method="POST" path="/v1/voice/channels/{channel_id}/entrance-sound" />
 
-Fans the caller's chosen clip out to everyone else connected to a voice channel and returns 204 with an empty body. The caller must already hold a voice state in that channel and must own the clip. Emits an [ENTRANCE_SOUND_PLAY](/gateway/events/#entrance-sound-play) Gateway event.
+Tells every other account connected to a voice channel to play the caller's chosen clip and returns 204 with an empty body. The caller must already hold a voice state in that channel and must own the clip. Emits an [ENTRANCE_SOUND_PLAY](/gateway/events/#entrance-sound-play) Gateway event.
 
 Recipients fetch and play the clip locally from the URL in the event.
 
@@ -336,7 +336,7 @@ Recipients fetch and play the clip locally from the URL in the event.
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 204 | empty | Fan-out was attempted for every other connected account |
+| 204 | empty | Fluxer attempted a Dispatch to every other connected account |
 | 400 | [error response](/http-api/#error-response) | Caller holds no voice state in the channel, including when the channel does not exist, and the request returns `ENTRANCE_SOUND_INVALID_SCOPE` at the `channel_id` path, or the account owns no such clip and the request returns `ENTRANCE_SOUND_NOT_FOUND` at the `sound_id` path |
 
 :::caution[Connection is the only authorisation]

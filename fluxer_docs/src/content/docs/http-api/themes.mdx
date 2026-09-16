@@ -37,7 +37,7 @@ The UTF-8 encoding of a submitted document cannot exceed 8388608 bytes, and the 
 
 <sup>3</sup> Measured in characters of the submitted string
 
-An account holds no theme quota. The route bucket is the only bound on how many themes an account creates, and no route here checks an [instance limit key](/http-api/instance/#limit-keys).
+An account holds no theme quota. The `theme:share:create` rate limit bucket is the only bound on how many themes an account creates, and no route here checks an [instance limit key](/http-api/instance/#limit-keys).
 
 ## Content screening
 
@@ -91,7 +91,7 @@ The object has the identifier and nothing else.
 
 ### Side effects
 
-Fluxer stores the UTF-8 encoding of the submitted document with the content type `text/css; charset=utf-8`. The identifier addresses the document by the time the caller receives it.
+Fluxer stores the UTF-8 encoding of the submitted document with the content type `text/css; charset=utf-8`. Fluxer finishes storing the document before it returns the identifier.
 
 The [Media Proxy](/media-proxy/overview/) serves the document from `/themes/{id}.css`.
 

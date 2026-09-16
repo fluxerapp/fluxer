@@ -273,6 +273,7 @@ const ResolvedDMListItem = observer(function ResolvedDMListItem({
 								channelId: channel.id,
 								messageId: lastMessage.id,
 								disableAnimatedEmoji: true,
+								disableInteractions: true,
 								mentionChannels: lastMessage.mentionChannels,
 							}}
 							data-flx="channel.direct-message.dm-list-item.get-message-preview.safe-markdown"

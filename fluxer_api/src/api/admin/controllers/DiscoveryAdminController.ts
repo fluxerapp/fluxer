@@ -4,6 +4,7 @@ import {createGuildID} from '@app/api/BrandedTypes';
 import type {GuildDiscoveryRow} from '@app/api/database/types/GuildDiscoveryTypes';
 import {mapGuildFeatures} from '@app/api/guild/GuildFeatureUtils';
 import type {GuildService} from '@app/api/guild/services/GuildService';
+import {Logger} from '@app/api/Logger';
 import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
@@ -280,6 +281,7 @@ export function DiscoveryAdminController(app: HonoApp) {
 		async (ctx) => {
 			const data = ctx.req.valid('json');
 			const adminUserId = ctx.get('adminUserId');
+			const auditLogReason = ctx.get('auditLogReason');
 			const discoveryService = ctx.get('discoveryService');
 			const guildIds = [...new Set(data.guild_ids)];
 			const failed: Array<string> = [];
@@ -292,10 +294,27 @@ export function DiscoveryAdminController(app: HonoApp) {
 						data: {category_type: data.category_type},
 					});
 					updated += 1;
-				} catch {
+				} catch (error) {
+					Logger.warn(
+						{err: error, guildId: rawGuildId.toString(), categoryType: data.category_type},
+						'Failed to move discovery listing to category',
+					);
 					failed.push(rawGuildId.toString());
 				}
 			}
+			await ctx.get('adminService').auditService.createAuditLog({
+				adminUserId,
+				targetType: 'guild',
+				targetId: BigInt(0),
+				action: 'update_discovery_categories',
+				auditLogReason,
+				metadata: new Map([
+					['category_type', data.category_type.toString()],
+					['guild_count', guildIds.length.toString()],
+					['updated', updated.toString()],
+					['failed', failed.length.toString()],
+				]),
+			});
 			return ctx.json({updated, failed_guild_ids: failed});
 		},
 	);

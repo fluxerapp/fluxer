@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 An archive is a snapshot of one user account or one guild, built in the background and downloaded as a file. [Create user archive](/admin-api/users/#create-user-archive) and [Create guild archive](/admin-api/guilds/#create-guild-archive) request one. The operations here read archive state and issue time-limited download URLs.
 
-Assets that no longer exist are omitted. Other read or write failures fail the attempt.
+While Fluxer builds an archive, it leaves out any stored file that is missing from storage. Any other read or write failure fails that build attempt and sets `failed_at`.
 
 Every operation needs an [ACL](/admin-api/#acl-evaluation) covering the subject type it touches.
 
@@ -22,7 +22,7 @@ An archive becomes unavailable through these routes at `expires_at`, 365 days af
 
 ## Archive object
 
-An archive is in one of these lifecycle states. It is building while `completed_at` and `failed_at` are both null, complete once `completed_at` is set, and failed once `failed_at` is set. A retried attempt clears `failed_at` and `error_message` when it starts, so a failed archive reads as building again while the retry runs.
+An archive is in one of these lifecycle states. It is building while `completed_at` and `failed_at` are both null, complete once `completed_at` is set, and failed once `failed_at` is set. When Fluxer starts a new attempt at a failed archive, it clears `failed_at` and `error_message`, so the archive reads as building again while that attempt runs.
 
 ### Structure
 
@@ -121,7 +121,7 @@ Returns [archive](#archive-object) objects matching the supplied filters, newest
 
 <sup>2</sup> `subject_type` also has to name `user` or `guild`
 
-<sup>3</sup> Ignored when `subject_id` is supplied. When it does apply it runs regardless of `subject_type`
+<sup>3</sup> Ignored when `subject_id` is supplied. When `requested_by` applies, Fluxer ignores `subject_type` and returns that account's archives of both subject types
 
 <sup>4</sup> The listing is not paginated and returns no cursor. Only a narrower filter reaches older records
 

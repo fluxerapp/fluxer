@@ -55,7 +55,7 @@ export class StripeWebhookService {
 		cacheService: ICacheService,
 		giftService: StripeGiftService,
 		premiumService: StripePremiumService,
-		donationRepository: IDonationRepository,
+		private donationRepository: IDonationRepository,
 		kvDeletionQueue: KVAccountDeletionQueueService,
 		premiumStateReconciliationQueueService: PremiumStateReconciliationQueueService,
 		private ageVerificationService: AgeVerificationService | null,
@@ -281,6 +281,7 @@ export class StripeWebhookService {
 				const cust = event.data.object as Stripe.Customer | Stripe.DeletedCustomer;
 				await this.safeMirrorUpsert(event, () => this.billingRepository.customers.upsertFromStripe(cust));
 				await this.safeMirrorUpsert(event, () => this.billingRepository.customers.markDeleted(cust.id, new Date()));
+				await this.donationRepository.clearDonorStripeCustomer(cust.id);
 				break;
 			}
 			case 'product.created':

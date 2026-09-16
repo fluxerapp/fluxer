@@ -2,25 +2,17 @@
 
 import styles from '@app/features/app/components/shared/custom_status_display/CustomStatusDisplay.module.css';
 import {useShouldAnimate} from '@app/features/app/hooks/useShouldAnimate';
-import {
-	EmojiAttributionSubtext,
-	getEmojiAttribution,
-} from '@app/features/emoji/components/emojis/EmojiAttributionSubtext';
 import Emoji from '@app/features/emoji/state/Emoji';
 import {buildCustomEmojiURL} from '@app/features/expressions/utils/CustomEmojiImageUrl';
 import {getEmojiURL} from '@app/features/expressions/utils/EmojiUtils';
+import {EXPRESSION_TOOLTIP_DELAY_MS} from '@app/features/expressions/utils/ExpressionPreviewConstants';
 import UnicodeEmojis from '@app/features/expressions/utils/UnicodeEmojis';
-import Guilds from '@app/features/guild/state/Guilds';
 import {usePresenceCustomStatus} from '@app/features/presence/hooks/usePresenceCustomStatus';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
-import {EmojiTooltipContent} from '@app/features/ui/emoji_tooltip_content/EmojiTooltipContent';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {useTextOverflow} from '@app/features/ui/hooks/useTextOverflow';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
-import {HoverFloatingTooltipSurface} from '@app/features/ui/tooltip/HoverFloatingTooltipSurface';
-import {HoverFloatingTooltipTrigger} from '@app/features/ui/tooltip/HoverFloatingTooltipTrigger';
 import {Tooltip, type TooltipPosition} from '@app/features/ui/tooltip/Tooltip';
-import {useHoverFloatingTooltip} from '@app/features/ui/tooltip/useHoverFloatingTooltip';
 import {type CustomStatus, getCustomStatusText, normalizeCustomStatus} from '@app/features/user/state/CustomStatus';
 import {Trans} from '@lingui/react/macro';
 import {PencilIcon, SmileyIcon} from '@phosphor-icons/react';
@@ -68,15 +60,14 @@ const getStatusEmojiAnimatable = (status: CustomStatus): boolean => {
 	return Emoji.getEmojiById(status.emojiId)?.animated ?? status.emojiAnimated ?? false;
 };
 
-const getTooltipEmojiUrl = (status: CustomStatus, animationAllowed: boolean): string | null => {
+const getStatusEmojiDisplayName = (status: CustomStatus): string => {
 	if (status.emojiId) {
-		const isAnimatable = getStatusEmojiAnimatable(status);
-		return buildCustomEmojiURL({id: status.emojiId, animated: animationAllowed && isAnimatable});
+		return `:${status.emojiName}:`;
 	}
 	if (status.emojiName) {
-		return getEmojiURL(status.emojiName);
+		return UnicodeEmojis.nameForSurrogate(status.emojiName, true, status.emojiName);
 	}
-	return null;
+	return '';
 };
 
 interface StatusEmojiWithTooltipProps {
@@ -88,75 +79,23 @@ interface StatusEmojiWithTooltipProps {
 
 const StatusEmojiWithTooltip = observer(
 	({status, children, onClick, isButton = false}: StatusEmojiWithTooltipProps) => {
-		const tooltip = useHoverFloatingTooltip(500);
-		const emoji = status.emojiId ? Emoji.getEmojiById(status.emojiId) : null;
-		const attribution = getEmojiAttribution({
-			emojiId: status.emojiId,
-			guildId: emoji?.guildId ?? null,
-			guild: emoji?.guildId ? Guilds.getGuild(emoji.guildId) : null,
-			emojiName: status.emojiName,
-		});
-		const getEmojiDisplayName = (): string => {
-			if (status.emojiId) {
-				return `:${status.emojiName}:`;
-			}
-			if (status.emojiName) {
-				return UnicodeEmojis.nameForSurrogate(status.emojiName, true, status.emojiName);
-			}
-			return '';
-		};
-		const emojiName = getEmojiDisplayName();
-		const isAnimatable = getStatusEmojiAnimatable(status);
-		const animationAllowed = useShouldAnimate({
-			kind: 'custom_status_emoji',
-			isAnimated: isAnimatable,
-			isHovering: isAnimatable,
-		});
-		const tooltipEmojiUrl = getTooltipEmojiUrl(status, animationAllowed);
 		const TriggerComponent = isButton ? 'button' : 'span';
 		const triggerProps = isButton
 			? {type: 'button' as const, className: styles.emojiPressable, onClick}
 			: {className: styles.emojiTooltipTrigger};
 		return (
-			<>
-				<HoverFloatingTooltipTrigger
-					tooltip={tooltip}
-					data-flx="app.custom-status-display.custom-status-display.status-emoji-with-tooltip.hover-floating-tooltip-trigger"
+			<Tooltip
+				text={getStatusEmojiDisplayName(status)}
+				delay={EXPRESSION_TOOLTIP_DELAY_MS}
+				data-flx="app.custom-status-display.custom-status-display.status-emoji-with-tooltip.tooltip"
+			>
+				<TriggerComponent
+					data-flx="app.custom-status-display.custom-status-display.status-emoji-with-tooltip.trigger-component"
+					{...triggerProps}
 				>
-					<TriggerComponent
-						data-flx="app.custom-status-display.custom-status-display.status-emoji-with-tooltip.trigger-component"
-						{...triggerProps}
-					>
-						{children}
-					</TriggerComponent>
-				</HoverFloatingTooltipTrigger>
-				<HoverFloatingTooltipSurface
-					tooltip={tooltip}
-					portalDataFlx="app.custom-status-display.custom-status-display.status-emoji-with-tooltip.floating-portal"
-					presenceDataFlx="app.custom-status-display.custom-status-display.status-emoji-with-tooltip.animate-presence"
-					data-flx="app.custom-status-display.custom-status-display.status-emoji-with-tooltip.div"
-				>
-					<EmojiTooltipContent
-						emojiUrl={tooltipEmojiUrl}
-						emojiAlt={status.emojiName ?? undefined}
-						primaryContent={emojiName}
-						subtext={
-							<EmojiAttributionSubtext
-								attribution={attribution}
-								classes={{
-									container: styles.emojiTooltipSubtext,
-									guildRow: styles.emojiTooltipGuildRow,
-									guildIcon: styles.emojiTooltipGuildIcon,
-									guildName: styles.emojiTooltipGuildName,
-									verifiedIcon: styles.emojiTooltipVerifiedIcon,
-								}}
-								data-flx="app.custom-status-display.custom-status-display.status-emoji-with-tooltip.emoji-attribution-subtext"
-							/>
-						}
-						data-flx="app.custom-status-display.custom-status-display.status-emoji-with-tooltip.emoji-tooltip-content"
-					/>
-				</HoverFloatingTooltipSurface>
-			</>
+					{children}
+				</TriggerComponent>
+			</Tooltip>
 		);
 	},
 );

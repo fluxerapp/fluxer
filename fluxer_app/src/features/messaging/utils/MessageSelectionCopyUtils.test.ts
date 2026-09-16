@@ -44,7 +44,7 @@ describe('Message selection copy utils', () => {
 		expect(buildMessageSelectionCopyTextForRange({rootElement: root, selectionRange: range})).toBe(tableCopyText);
 	});
 	it('does not duplicate a block message header when a bot badge is selected with the body', () => {
-		const messageContent = '## App Canary Deployed\n\nVersion: `2026.519.3`\nImage: `2026.519.3`';
+		const messageContent = 'App Canary Deployed\n\nVersion: 2026.519.3\nImage: 2026.519.3';
 		document.body.innerHTML = [
 			'<div data-message-selection-root="true">',
 			'<div data-message-id="message-1" data-is-group-start="true">',

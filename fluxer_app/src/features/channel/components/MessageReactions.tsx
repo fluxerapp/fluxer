@@ -9,10 +9,10 @@ import {
 	useMessagePermissions,
 } from '@app/features/channel/components/MessageActionUtils';
 import styles from '@app/features/channel/components/MessageReactions.module.css';
-import {EmojiInfoBottomSheet} from '@app/features/emoji/components/bottomsheets/EmojiInfoBottomSheet';
 import {EmojiPickerPopout} from '@app/features/emoji/components/popouts/EmojiPickerPopout';
 import Emoji from '@app/features/emoji/state/Emoji';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
+import {ExpressionInfoBottomSheet} from '@app/features/expressions/components/bottomsheets/ExpressionInfoBottomSheet';
 import {ExpressionPickerSheet} from '@app/features/expressions/components/modals/ExpressionPickerSheet';
 import {ADD_REACTION_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
@@ -231,11 +231,12 @@ const MessageReactionItem = observer(
 					data-flx="channel.message-reactions.message-reaction-item.long-pressable"
 				>
 					{buttonContent}
-					<EmojiInfoBottomSheet
+					<ExpressionInfoBottomSheet
+						kind="emoji"
 						isOpen={emojiInfoOpen}
 						onClose={handleCloseEmojiInfo}
 						emoji={selectedEmoji}
-						data-flx="channel.message-reactions.message-reaction-item.emoji-info-bottom-sheet"
+						data-flx="channel.message-reactions.message-reaction-item.expression-info-bottom-sheet"
 					/>
 				</LongPressable>
 			);

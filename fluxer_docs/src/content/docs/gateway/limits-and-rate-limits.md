@@ -10,7 +10,7 @@ Every main Gateway connection has limits on what it sends, how long its session 
 
 [Framing](/gateway/overview/#framing) owns the protocol version, the payload bound, and the compression contract. One inbound WebSocket message is limited to 4,096 bytes on the wire and to a further 4,096 bytes after decompression, and either bound closes with `4002` and reason `Payload too large`.
 
-A compressed message that decompresses past 10 MiB closes with `4002` and reason `Decompression failed`, before the 4,096-byte bound is reached.
+A compressed message that decompresses past 10 MiB closes with `4002` and reason `Decompression failed`. That message never closes with `Payload too large`.
 
 ## Session lifecycle
 
@@ -25,7 +25,7 @@ One user credential holds at most 100 live sessions. A further Identify closes w
 Shard counts run from 1 through 16,384. One bot shard covers at most 2,500 guilds. A malformed shard pair closes with `4010` for every credential. A bot assignment above the guild ceiling closes with `4011` and reason `Sharding required`. A user session is never refused for its guild count.
 
 :::note[Session creation can be delayed]
-During maintenance, a rollout or temporary capacity limits, an Identify can remain pending without a response. Continue heartbeating while waiting for Ready.
+An Identify can remain pending with no response while the node drains, while the node is at capacity, while session starts are paused, or while the account is outside the session rollout percentage. Continue heartbeating while waiting for Ready.
 :::
 
 ## Session start limit
@@ -88,7 +88,7 @@ Lazy Request accepts at most 10 member list ranges per channel, each with `end` 
 
 Request Guild Counts accepts at most 100 guild IDs after deduplication. Request Channel Member Counts accepts at most 25 channel IDs after deduplication. Both nonces run from 1 through 64 bytes, and a nonce outside that bound is omitted from the result.
 
-Identify accepts at most 256 `ignored_events` entries. A longer array closes with `4002` and reason `Invalid identify payload`. Every other command payload bound coerces or drops. [Client commands](/gateway/commands/) states the exact coercion or drop rule for each field.
+Identify accepts at most 256 `ignored_events` entries. A longer array closes with `4002` and reason `Invalid identify payload`. Fluxer coerces or drops a value outside any other command payload bound. [Client commands](/gateway/commands/) states the exact coercion or drop rule for each field.
 
 ## Voice admission
 

@@ -177,6 +177,13 @@ export class GuildMemberOperationsService {
 		connectionId: string | null;
 		auditLogReason?: string | null;
 	}): Promise<void> {
+		if (
+			params.previousChannelId !== null &&
+			params.newChannelId !== null &&
+			params.previousChannelId === params.newChannelId.toString()
+		) {
+			return;
+		}
 		const action = params.newChannelId === null ? AuditLogActionType.MEMBER_DISCONNECT : AuditLogActionType.MEMBER_MOVE;
 		const previousSnapshot = params.previousChannelId !== null ? {channel_id: params.previousChannelId} : null;
 		const nextSnapshot = params.newChannelId !== null ? {channel_id: params.newChannelId.toString()} : null;

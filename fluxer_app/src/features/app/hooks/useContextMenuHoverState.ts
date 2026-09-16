@@ -2,12 +2,11 @@
 
 import ContextMenu, {isContextMenuNodeTarget} from '@app/features/ui/state/ContextMenu';
 import {autorun} from 'mobx';
-import {type RefObject, useEffect, useState} from 'react';
+import {type RefObject, useEffect, useRef, useState} from 'react';
 
 interface ContextMenuHoverSubscriber {
 	readonly elementRef: RefObject<HTMLElement | null>;
 	readonly setContextMenuOpen: (contextMenuOpen: boolean) => void;
-	contextMenuOpen: boolean;
 }
 
 const contextMenuHoverSubscribers = new Set<ContextMenuHoverSubscriber>();
@@ -28,10 +27,7 @@ function syncContextMenuHoverSubscribers(): void {
 	const chain = resolveContextMenuTargetChain();
 	for (const subscriber of Array.from(contextMenuHoverSubscribers)) {
 		const element = subscriber.elementRef.current;
-		const contextMenuOpen = chain != null && element != null && chain.has(element);
-		if (subscriber.contextMenuOpen === contextMenuOpen) continue;
-		subscriber.contextMenuOpen = contextMenuOpen;
-		subscriber.setContextMenuOpen(contextMenuOpen);
+		subscriber.setContextMenuOpen(chain != null && element != null && chain.has(element));
 	}
 }
 
@@ -52,12 +48,22 @@ function subscribeContextMenuHover(subscriber: ContextMenuHoverSubscriber): () =
 
 export function useContextMenuHoverState(elementRef: RefObject<HTMLElement | null>, enabled: boolean = true): boolean {
 	const [contextMenuOpen, setContextMenuOpen] = useState(false);
+	const publishedContextMenuOpenRef = useRef(false);
 	useEffect(() => {
+		const publishContextMenuOpen = (nextContextMenuOpen: boolean) => {
+			if (publishedContextMenuOpenRef.current === nextContextMenuOpen) return;
+			publishedContextMenuOpenRef.current = nextContextMenuOpen;
+			setContextMenuOpen(nextContextMenuOpen);
+		};
 		if (!enabled) {
-			setContextMenuOpen(false);
+			publishContextMenuOpen(false);
 			return;
 		}
-		return subscribeContextMenuHover({elementRef, setContextMenuOpen, contextMenuOpen: false});
+		const unsubscribe = subscribeContextMenuHover({elementRef, setContextMenuOpen: publishContextMenuOpen});
+		return () => {
+			unsubscribe();
+			publishContextMenuOpen(false);
+		};
 	}, [elementRef, enabled]);
 	return contextMenuOpen;
 }

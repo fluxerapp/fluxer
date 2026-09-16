@@ -67,7 +67,7 @@ export class OpenAPIGenerator {
 		return result.document;
 	}
 	public async generateWithStats(): Promise<OpenAPIGenerationResult> {
-		const schemaRegistry = new SchemaRegistry(this.settings.schemaTarget);
+		const schemaRegistry = new SchemaRegistry(this.settings.schemaTarget, this.settings.routeScope !== 'admin');
 		const controllerFiles = discoverControllerFiles(`${this.settings.basePath}/fluxer_api`);
 		const routes = this.filterRoutesForScope(extractRoutesFromControllers(controllerFiles));
 		await loadSchemasIntoRegistry(this.settings.basePath, schemaRegistry);

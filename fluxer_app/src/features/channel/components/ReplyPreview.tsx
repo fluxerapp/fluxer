@@ -251,6 +251,7 @@ export const ReplyPreview = observer(
 										context: MarkdownContext.RESTRICTED_INLINE_REPLY,
 										messageId: referencedMessage.id,
 										channelId,
+										disableInteractions: true,
 										mentionChannels: referencedMessage.mentionChannels,
 									}}
 									data-flx="channel.reply-preview.safe-markdown"

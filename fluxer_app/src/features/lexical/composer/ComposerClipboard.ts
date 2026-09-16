@@ -1,12 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {planBlockquotePaste} from '@app/features/lexical/composer/blockquoteLines';
+import type {ComposerHandle} from '@app/features/lexical/composer/ComposerHandle';
 import {resolvePastedLinkInsertion} from '@app/features/lexical/composer/ComposerLinkPaste';
 import {
 	$createComposerSegmentNodes,
 	$projectComposer,
 	isValidComposerSegment,
 } from '@app/features/lexical/composer/ComposerSerialization';
-import {$captureSelectionOffsets, $selectComposerOffset} from '@app/features/lexical/composer/composerOffsets';
+import {
+	$captureSelectionOffsets,
+	$getComposerBlockquoteState,
+	$getComposerContentSelectionRange,
+	$getComposerDisplayText,
+	$replaceComposerRange,
+	$selectComposerOffset,
+} from '@app/features/lexical/composer/composerOffsets';
 import {$isSlashSlotNode, type SlashSlotNode} from '@app/features/lexical/composer/nodes/SlashSlotNode';
 import {COMPOSER_SLASH_SLOT_STATE_MAX_ID_LENGTH} from '@app/features/lexical/composer/SlashSlotPersistence';
 import {ParserFlags} from '@app/features/messaging/utils/markdown/parser/Enums';
@@ -28,6 +37,7 @@ import {
 	COPY_COMMAND,
 	CUT_COMMAND,
 	CUT_TAG,
+	DRAGSTART_COMMAND,
 	type LexicalEditor,
 	type LexicalNode,
 	PASTE_COMMAND,
@@ -50,6 +60,7 @@ const SEGMENT_KEYS = ['type', 'id', 'displayText', 'actualText', 'start', 'end']
 const TRUST_TOKEN_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const trustedPayloads = new Map<string, string>();
 let trustedPayloadLength = 0;
+let trustedDragPayload: string | null = null;
 
 export interface ComposerClipboardSlice {
 	display: string;
@@ -223,7 +234,7 @@ export function $getComposerClipboardSelection(): ComposerClipboardSelection | n
 	return {...validated, textPlain: sliceToWire(validated)};
 }
 
-export function serializeComposerClipboardSlice(slice: ComposerClipboardSlice): string | null {
+function mintTrustedPayload(slice: ComposerClipboardSlice): {token: string; serialized: string} | null {
 	const validated = validateSlice(slice.display, slice.segments);
 	if (validated == null) {
 		return null;
@@ -236,9 +247,15 @@ export function serializeComposerClipboardSlice(slice: ComposerClipboardSlice): 
 		segments: validated.segments,
 	};
 	const serialized = JSON.stringify(payload);
-	if (serialized.length > COMPOSER_CLIPBOARD_MAX_PAYLOAD_LENGTH) {
+	return serialized.length > COMPOSER_CLIPBOARD_MAX_PAYLOAD_LENGTH ? null : {token, serialized};
+}
+
+export function serializeComposerClipboardSlice(slice: ComposerClipboardSlice): string | null {
+	const minted = mintTrustedPayload(slice);
+	if (minted == null) {
 		return null;
 	}
+	const {token, serialized} = minted;
 	trustedPayloads.set(token, serialized);
 	trustedPayloadLength += serialized.length;
 	while (
@@ -253,6 +270,12 @@ export function serializeComposerClipboardSlice(slice: ComposerClipboardSlice): 
 		trustedPayloadLength -= oldest[1].length;
 	}
 	return serialized;
+}
+
+function serializeComposerDragSlice(slice: ComposerClipboardSlice | null): string | null {
+	const minted = slice == null ? null : mintTrustedPayload(slice);
+	trustedDragPayload = minted == null ? null : minted.serialized;
+	return trustedDragPayload;
 }
 
 export function parseComposerClipboardSlice(serialized: string): ComposerClipboardSlice | null {
@@ -274,7 +297,7 @@ export function parseComposerClipboardSlice(serialized: string): ComposerClipboa
 	if (typeof value.token !== 'string' || !TRUST_TOKEN_RE.test(value.token)) {
 		return null;
 	}
-	if (trustedPayloads.get(value.token) !== serialized) {
+	if (trustedPayloads.get(value.token) !== serialized && trustedDragPayload !== serialized) {
 		return null;
 	}
 	const validated = validateSlice(value.display, value.segments);
@@ -374,7 +397,11 @@ function $replaceSlashSlotRange(
 	return true;
 }
 
-export function $insertComposerClipboardSlice(slice: ComposerClipboardSlice, plainText: boolean): boolean {
+export function $insertComposerClipboardSlice(
+	slice: ComposerClipboardSlice,
+	plainText: boolean,
+	parserFlags?: number,
+): boolean {
 	const validated = validateSlice(slice.display, slice.segments);
 	if (validated == null) {
 		return false;
@@ -400,23 +427,61 @@ export function $insertComposerClipboardSlice(slice: ComposerClipboardSlice, pla
 	if (!$isRangeSelection(selection)) {
 		return false;
 	}
-	const offsets = $captureSelectionOffsets();
+	const {scanText, selection: offsets, lines} = $getComposerBlockquoteState();
 	if (offsets == null) {
 		return false;
 	}
 	const start = Math.min(offsets.anchor, offsets.focus);
+	const end = Math.max(offsets.anchor, offsets.focus);
 	const anchorSlot = $findEnclosingSlashSlot(selection.anchor.getNode());
 	const focusSlot = $findEnclosingSlashSlot(selection.focus.getNode());
 	if (anchorSlot != null && focusSlot != null && anchorSlot.is(focusSlot)) {
-		const end = Math.max(offsets.anchor, offsets.focus);
 		return $replaceSlashSlotRange(anchorSlot, start, end, sliceToWire(validated));
 	}
-	selection.insertNodes($createSliceNodes(validated, plainText));
-	$selectComposerOffset(start + validated.display.length);
+	const pasted = planBlockquotePaste(scanText, lines, start, end, validated, parserFlags);
+	const nodes = $createSliceNodes(pasted, plainText);
+	if (nodes.length > 0) {
+		selection.insertNodes(nodes);
+	} else if (start !== end) {
+		selection.removeText();
+	}
+	$selectComposerOffset(start + pasted.display.length);
 	return true;
 }
 
-function getClipboardEvent(event: unknown): ClipboardEvent | null {
+function createPastedSlice(pastedText: string, segments: ReadonlyArray<MentionSegment>): ComposerClipboardSlice {
+	const displayParts: Array<string> = [];
+	const projectedSegments: Array<MentionSegment> = [];
+	let sourceCursor = 0;
+	let displayLength = 0;
+	for (const segment of segments) {
+		const plainText = pastedText.slice(sourceCursor, segment.start);
+		displayParts.push(plainText, segment.displayText);
+		displayLength += plainText.length;
+		projectedSegments.push({
+			...segment,
+			start: displayLength,
+			end: displayLength + segment.displayText.length,
+		});
+		displayLength += segment.displayText.length;
+		sourceCursor = segment.end;
+	}
+	displayParts.push(pastedText.slice(sourceCursor));
+	return {display: displayParts.join(''), segments: projectedSegments};
+}
+
+export function $insertComposerPastedText(
+	pastedText: string,
+	segments: ReadonlyArray<MentionSegment>,
+	plainText: boolean,
+	handle: ComposerHandle | null,
+): boolean {
+	const detected = createPastedSlice(pastedText, segments);
+	const slice = getComposerClipboardTextPlain(detected) == null ? {display: pastedText, segments: []} : detected;
+	return $insertComposerClipboardSlice(slice, plainText, handle == null ? undefined : handle.getMarkdownParserFlags());
+}
+
+export function getClipboardEvent(event: unknown): ClipboardEvent | null {
 	if (
 		typeof event !== 'object' ||
 		event == null ||
@@ -441,6 +506,13 @@ function writeComposerClipboardSelection(event: ClipboardEvent): boolean {
 		event.clipboardData.setData(FLUXER_COMPOSER_CLIPBOARD_MIME, serialized);
 	}
 	return true;
+}
+
+function writeComposerDragSlice(dataTransfer: DataTransfer): void {
+	const serialized = serializeComposerDragSlice($getComposerClipboardSelection());
+	if (serialized != null) {
+		dataTransfer.setData(FLUXER_COMPOSER_CLIPBOARD_MIME, serialized);
+	}
 }
 
 function $deleteComposerClipboardSelection(): boolean {
@@ -474,23 +546,38 @@ export function registerComposerClipboardCommands(
 				if (clipboardEvent == null || clipboardEvent.clipboardData == null) {
 					return false;
 				}
-				const selection = $getSelection();
-				if (!$isRangeSelection(selection) || selection.isCollapsed()) {
+				const range = $getComposerContentSelectionRange();
+				if (range == null || range.start === range.end) {
 					return false;
 				}
 				const replacement = resolvePastedLinkInsertion(
 					clipboardEvent.clipboardData.getData('text/plain'),
-					selection.getTextContent(),
+					$getComposerDisplayText().slice(range.start, range.end),
 				);
 				if (replacement === null) {
 					return false;
 				}
-				selection.insertText(replacement);
+				$replaceComposerRange(
+					range.start,
+					range.end,
+					{kind: 'text', text: replacement},
+					{leading: false, trailing: false},
+				);
 				$addUpdateTag(PASTE_TAG);
 				clipboardEvent.preventDefault();
 				return true;
 			},
 			COMMAND_PRIORITY_CRITICAL,
+		),
+		editor.registerCommand(
+			DRAGSTART_COMMAND,
+			(event) => {
+				if (state.isEditable() && event.dataTransfer != null) {
+					writeComposerDragSlice(event.dataTransfer);
+				}
+				return false;
+			},
+			COMMAND_PRIORITY_NORMAL,
 		),
 		editor.registerCommand(
 			COPY_COMMAND,
@@ -538,7 +625,10 @@ export function registerComposerClipboardCommands(
 					return false;
 				}
 				const slice = parseComposerClipboardSlice(serialized);
-				if (slice == null || !$insertComposerClipboardSlice(slice, state.getPlainText())) {
+				if (
+					slice == null ||
+					!$insertComposerClipboardSlice(slice, state.getPlainText(), state.getMarkdownParserFlags())
+				) {
 					return false;
 				}
 				$addUpdateTag(PASTE_TAG);

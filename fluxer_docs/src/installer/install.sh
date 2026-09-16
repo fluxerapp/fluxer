@@ -207,7 +207,7 @@ Usage: sh install.sh --domain <host> --email <address> [options]
 
 Options:
   --domain <host>          Hostname the instance answers on. Prompted when absent.
-  --email <address>        Address the operator reads. Prompted when absent.
+  --email <address>        Contact email for web push. Prompted when absent.
   --engine <command>       Container engine to drive. Default docker, or podman
                            when docker is absent.
   --dir <path>             Working directory. Default ~/fluxer, or the working
@@ -650,7 +650,7 @@ fluxer_resolve_values() {
 		if [ "$opt_non_interactive" -eq 1 ] || [ "$opt_dry_run" -eq 1 ] || [ ! -t 0 ]; then
 			fluxer_bad_usage '--email is required.'
 		fi
-		fluxer_prompt 'Address you read' || fluxer_fail 1 'No address given.'
+		fluxer_prompt 'Contact email for web push' || fluxer_fail 1 'No address given.'
 		opt_email=$fluxer_prompt_value
 	fi
 	fluxer_valid_domain "$opt_domain" || fluxer_bad_usage "--domain $opt_domain is not a lowercase hostname. Give a bare hostname such as chat.example.com."

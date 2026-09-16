@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {findBlockquoteMarkerEnds} from '@app/features/lexical/composer/blockquoteLines';
+import {findBlockquoteMarkers} from '@app/features/lexical/composer/blockquoteLines';
 import {
 	$rewriteMultilineBlockquoteMarker,
-	$snapCaretOutOfBlockquoteMarker,
+	$snapSelectionOutOfBlockquoteMarker,
 	$splitComposerLines,
 	$syncComposerBlockquoteLines,
 } from '@app/features/lexical/composer/ComposerBlockquote';
@@ -93,6 +93,7 @@ export function registerComposerMarkdownHighlight(
 	editor: LexicalEditor,
 	parserFlags?: number,
 	silentMessagePrefix = false,
+	maxWireLength?: number,
 ): () => void {
 	return editor.registerNodeTransform(RootNode, (root) => {
 		if (editor.isComposing()) {
@@ -100,7 +101,7 @@ export function registerComposerMarkdownHighlight(
 		}
 		for (const child of root.getChildren()) {
 			if (child instanceof ParagraphNode) {
-				$reconcileParagraph(child, parserFlags, silentMessagePrefix && child.is(root.getFirstChild()));
+				$reconcileParagraph(child, parserFlags, silentMessagePrefix && child.is(root.getFirstChild()), maxWireLength);
 			}
 		}
 	});
@@ -123,13 +124,23 @@ export function $reconcileLineOf(node: TextNode, parserFlags?: number): void {
 	$reconcileParagraph(block as ParagraphNode, parserFlags);
 }
 
-function $reconcileParagraph(paragraph: ParagraphNode, parserFlags?: number, silentMessagePrefix = false): void {
+function $reconcileParagraph(
+	paragraph: ParagraphNode,
+	parserFlags?: number,
+	silentMessagePrefix = false,
+	maxWireLength?: number,
+): void {
 	const lines = $splitComposerLines(paragraph);
 	const lineSources = lines.map((line) => line.nodes.map($nodeWireText).join(''));
 	const source = lineSources.join('\n');
 	const markdownSpans = computeMarkdownHighlightSpans(source, parserFlags);
-	const quoteMarkerEnds = findBlockquoteMarkerEnds(source, markdownSpans);
-	if ($rewriteMultilineBlockquoteMarker(lines, lineSources, quoteMarkerEnds)) {
+	const {markerEnds: quoteMarkerEnds, multiline} = findBlockquoteMarkers(
+		source,
+		markdownSpans,
+		parserFlags,
+		maxWireLength,
+	);
+	if ($rewriteMultilineBlockquoteMarker(lines, multiline)) {
 		return;
 	}
 	const spans = silentMessagePrefix ? markSilentMessagePrefix(markdownSpans, source) : markdownSpans;
@@ -155,7 +166,7 @@ function $reconcileParagraph(paragraph: ParagraphNode, parserFlags?: number, sil
 		quoteMarkerEnds.map((end) => end > 0),
 	);
 	if (quoteMarkerEnds.some((end) => end > 0)) {
-		$snapCaretOutOfBlockquoteMarker();
+		$snapSelectionOutOfBlockquoteMarker();
 	}
 }
 

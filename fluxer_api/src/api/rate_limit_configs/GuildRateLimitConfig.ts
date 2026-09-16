@@ -136,6 +136,10 @@ export const GuildRateLimitConfigs = {
 		bucket: 'guild:emoji:metadata::user_id',
 		config: {limit: 60, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
+	GUILD_EMOJI_SOURCE: {
+		bucket: 'guild:emoji:source::user_id',
+		config: {limit: 60, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
 	GUILD_STICKERS_LIST: {
 		bucket: 'guild:sticker:list::guild_id',
 		config: {limit: 60, windowMs: ms('10 seconds')},
@@ -166,6 +170,10 @@ export const GuildRateLimitConfigs = {
 	} as RouteRateLimitConfig,
 	GUILD_STICKER_METADATA: {
 		bucket: 'guild:sticker:metadata::user_id',
+		config: {limit: 60, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	GUILD_STICKER_SOURCE: {
+		bucket: 'guild:sticker:source::user_id',
 		config: {limit: 60, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
 } as const;

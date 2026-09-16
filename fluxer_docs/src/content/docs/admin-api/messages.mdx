@@ -285,7 +285,7 @@ One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with t
 
 Searches the message index of one channel, or resolves one message in that channel by message ID or by attachment identity. Requires `message:lookup`.
 
-The modes return a search body or a lookup body, and the query decides which one arrives.
+A request with `message_id` or `attachment_id` returns the lookup response body. Any other request returns the search response body.
 
 ### Query parameters
 
@@ -433,7 +433,7 @@ Fluxer resolves the attachment from the live message when that message still exi
 
 The attachment is `submitting` while the request runs, then `submitted` with its report ID on success. A failed submission attempts to retract the opened report, marks the attachment `failed` with the raw reason, and returns `NCMEC_SUBMISSION_FAILED`. A failed retraction is logged without changing that recorded state.
 
-When the resolved attachment has an author who has not already been enforced against, Fluxer sets the account's deleted and disabled flags, clears any temporary ban, and records the deletion reason for child sexual content. It then schedules deletion 60 days ahead, deletes every authentication session, propagates the resulting user update, and triggers a user archive for that account.
+When the resolved attachment has an author whose account an earlier NCMEC submission has not already disabled, Fluxer sets the account's deleted and disabled flags, clears any temporary ban, and records the deletion reason for child sexual content. It then schedules deletion 60 days ahead, deletes every authentication session, sends [User Update](/gateway/events/#user-update) to that account, and triggers a user archive for that account. When the account's public user fields change, Fluxer also sends [Guild Member Update](/gateway/events/#guild-member-update) to each guild the account is in.
 
 Message content is deleted only after that archive completes. The archive is re-checked every 15 seconds by default, for at most 240 attempts. Once the archive is complete the reported message is deleted, its attachments are purged, and [Message Delete](/gateway/events/#message-delete) is sent.
 

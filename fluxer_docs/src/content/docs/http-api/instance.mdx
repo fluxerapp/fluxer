@@ -61,7 +61,7 @@ Each value is an absolute URL supplied by the operator. A value can be a bare or
 
 <sup>2</sup> The value is the configured Gateway endpoint and its scheme is `ws` or `wss` as the operator configured it
 
-<sup>3</sup> A deployment that configures a separate static asset domain derives that value over `https` on the configured domain and without the port the other endpoints have
+<sup>3</sup> When a deployment configures a separate static asset domain, the value is `https://` followed by that domain, with no port
 
 Every value is the exact origin the deployment advertises, including its scheme and any explicit port, and a deliberately plain HTTP deployment publishes `http` and `ws` values here.
 
@@ -193,10 +193,10 @@ Whether this deployment runs as one community, and whether direct messages exist
 | Field | Type | Description |
 | --- | --- | --- |
 | single_community | boolean | Whether this deployment runs as one community that every account joins |
-| single_community_guild_id<sup>1</sup> | ?snowflake | The stock community guild ID, or null |
+| single_community_guild_id<sup>1</sup> | ?snowflake | The ID of the guild every account joins in single-community mode, or null |
 | direct_messages_disabled | boolean | Whether direct messages and friend requests are disabled for the whole deployment |
 
-<sup>1</sup> The identifier is published only while `single_community` is true and a stock community has been chosen
+<sup>1</sup> The identifier is published only while `single_community` is true and the deployment has designated a community guild
 
 ## Service availability object
 
@@ -258,10 +258,10 @@ The document lets a client present the correct bounds before it attempts an oper
 :::
 
 :::caution[An unauthenticated reader resolves only the unfiltered outcome]
-The document publishes neither the requesting account's traits nor any guild feature set. A client supplies that context from its own authenticated state.
+The document publishes neither the requesting account's traits nor any guild feature set. A client supplies the account's traits and the guild's feature names itself, from data it received while authenticated.
 :::
 
-Nothing validates a rule's `traits` filter against `traitDefinitions`, so a rule can filter on a name that collection omits. A self-hosted deployment whose premium mode grants every account the stock limits publishes an empty collection and has no rule that filters on `premium`.
+Nothing validates a rule's `traits` filter against `traitDefinitions`, so a rule can filter on a name that collection omits. A self-hosted deployment whose [premium mode](/admin-api/instance/#premium-modes) is `everyone` publishes an empty collection and has no rule that filters on `premium`.
 
 ## Limit rule object
 
@@ -353,7 +353,7 @@ Each key names one limit. A key whose name begins with `feature_` is a feature g
 | max_webhooks_per_guild | Maximum webhooks per guild, in guild scope |
 | sticker_max_size | Maximum file size for sticker uploads in bytes, in guild scope |
 
-<sup>1</sup> Emoji limits are enforced as one shared total against `max_guild_emojis`, and the aliases exist only so an older client reads a plausible value
+<sup>1</sup> Emoji limits are enforced as one shared total against `max_guild_emojis`, and the aliases exist only for older clients. The default of each alias equals the `max_guild_emojis` default
 
 <sup>2</sup> Sticker limits are enforced as one shared total against `max_guild_stickers`
 

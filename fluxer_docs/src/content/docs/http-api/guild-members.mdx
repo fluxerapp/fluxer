@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 A guild member is an account that has joined a guild. The membership has a nickname, avatar, role set, and moderation state that apply in that guild alone. Indexed member queries live on [Guild member search](/http-api/guild-member-search/), and bans on [Guild moderation](/http-api/guild-moderation/).
 
-An unknown guild returns 404 `UNKNOWN_GUILD`, a non-member receives 403 `MISSING_PERMISSIONS`, and a guild marked unavailable returns 403 `MISSING_ACCESS`. [Transfer guild ownership](#transfer-guild-ownership) can also return 403 `ACCESS_DENIED` when the guild cannot be accessed.
+An unknown guild returns 404 `UNKNOWN_GUILD`, a non-member receives 403 `MISSING_PERMISSIONS`, and a guild marked unavailable returns 403 `MISSING_ACCESS`. [Transfer guild ownership](#transfer-guild-ownership) also returns 403 `ACCESS_DENIED` when the guild exists in storage but the Gateway reports it as not found.
 
 The modify operations return the resulting membership, [Transfer guild ownership](#transfer-guild-ownership) returns the updated guild, and every other mutation returns 204 with an empty body.
 
@@ -49,7 +49,7 @@ Every field except `user` describes state that belongs to the membership.
 
 <sup>6</sup> Omitted while the stored value is 0, so absence means no flag is set and, for `mention_flags`, that the account-level preference applies
 
-Guild avatars and banners can be hidden after the account loses its premium entitlement.
+Fluxer marks a membership premium sanitised after its account loses premium, when the membership has a guild avatar, banner, bio, or accent colour. A premium sanitised membership reports `avatar` and `banner` as null.
 
 A client compares `communication_disabled_until` against the current time, because a non-null value can name a moment that has already passed. A [communication timeout](/http-api/permissions/#communication-timeout) does not reduce the member's computed permission mask.
 
@@ -76,7 +76,7 @@ A client compares `communication_disabled_until` against the current time, becau
 
 ## Guild member profile flags
 
-A guild profile asset has these states. A membership with no flag and no stored hash inherits the account-level asset. A stored hash sets a guild-specific asset. The flag below blocks inheritance and renders the default.
+A guild profile asset has these states. A membership with no flag and no stored hash inherits the account-level asset. A stored hash sets a guild-specific asset. Each flag below blocks inheritance, so the client shows the default asset.
 
 | Value | Name | Description |
 | --- | --- | --- |
@@ -121,13 +121,13 @@ The request body shared by [Modify current guild member](#modify-current-guild-m
 
 <sup>6</sup> An ISO 8601 date and time. A blank string is normalised to null
 
-<sup>7</sup> Trimmed, and never published in the audit log response
+<sup>7</sup> Trimmed, and used as the [audit log reason](/http-api/guild-audit-logs/#audit-log-reason) of the member update entry when the request sends no `X-Audit-Log-Reason` header
 
 <sup>8</sup> `channel_id` moves or disconnects, and `connection_id` selects one of the member's voice connections
 
 A `roles` entry that does not resolve to an existing role of the guild is dropped from the replacement, so a request naming only unknown roles clears the member's role set.
 
-An `avatar` or `banner` base64 payload longer than 13981016 characters returns `BASE64_LENGTH_INVALID`, and a malformed one returns `INVALID_BASE64_FORMAT`. Fluxer then checks the decoded bytes against the instance-configured `avatar_max_size` [limit](/http-api/instance/#limit-keys), whose stock value is 10485760. The same limit applies to both fields. The decoded image must also pass the format allowlist and the animation rules of the asset policy for the field it sets. Pixel dimensions are not enforced. A value that is too large returns `IMAGE_SIZE_EXCEEDS_LIMIT`, and one whose format or animation is not allowed returns `INVALID_IMAGE_FORMAT`.
+An `avatar` or `banner` base64 payload longer than 13981016 characters returns `BASE64_LENGTH_INVALID`, and a malformed one returns `INVALID_BASE64_FORMAT`. Fluxer then checks the decoded bytes against the instance-configured `avatar_max_size` [limit](/http-api/instance/#limit-keys), whose stock value is 10485760. The same limit applies to both fields. The decoded image must also be in a format the field accepts, and an animated AVIF is rejected. Pixel dimensions are not enforced. A value that is too large returns `IMAGE_SIZE_EXCEEDS_LIMIT`, and one whose format or animation is not allowed returns `INVALID_IMAGE_FORMAT`.
 
 Null and any `communication_disabled_until` that is not in the future both clear the timeout. A time more than 365.25 days ahead returns `TIMEOUT_CANNOT_EXCEED_365_DAYS`, and a value that passes the schema but is not a real instant returns `INVALID_TIMEOUT_VALUE`. `timeout_reason` has no effect unless `communication_disabled_until` is also supplied.
 
@@ -277,9 +277,9 @@ The body is a [guild member update object](#guild-member-update-object) without 
 
 The operation updates the membership, records a [`MEMBER_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry and emits [Guild Member Update](/gateway/events/#guild-member-update).
 
-The target's own sessions always receive the Dispatch. Other guild sessions receive it subject to [event filtering](/gateway/event-filtering/). The audit entry and Dispatch are produced even when the resulting membership is unchanged, and an entry whose change list is empty is published without a `changes` member.
+The target's own sessions always receive the Dispatch. Other guild sessions receive it subject to [event filtering](/gateway/event-filtering/). The Dispatch is produced even when the resulting membership is unchanged, and an update that changes nothing records no audit entry.
 
-Supplying `channel_id` moves or disconnects every voice connection the member holds, or only the one named by `connection_id`. It records one [`MEMBER_MOVE`](/http-api/guild-audit-logs/#audit-actions) or [`MEMBER_DISCONNECT`](/http-api/guild-audit-logs/#audit-actions) audit entry for the whole request, however many connections it touched. It emits [Voice State Update](/gateway/events/#voice-state-update) to sessions that can view the affected channel. Supplying `mute` or `deaf` updates the membership, records no separate audit entry, and emits the same voice Dispatch once for each live connection.
+Supplying `channel_id` moves or disconnects every voice connection the member holds, or only the one named by `connection_id`. It records one [`MEMBER_MOVE`](/http-api/guild-audit-logs/#audit-actions) or [`MEMBER_DISCONNECT`](/http-api/guild-audit-logs/#audit-actions) audit entry for the whole request, however many connections it touched. A move into the channel the member already occupies records no entry. It emits [Voice State Update](/gateway/events/#voice-state-update) to sessions that can view the affected channel. Supplying `mute` or `deaf` updates the membership, records no separate audit entry, and emits the same voice Dispatch once for each live connection.
 
 Fluxer emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) for every audit entry. A request that fails after uploading a new avatar or banner leaves the previous asset in place.
 
@@ -318,7 +318,7 @@ A caller addressing their own user ID here follows the self-targeted rules of [M
 :::
 
 :::caution[A blocklisted `bio` or `pronouns` returns 403]
-The request fails with `CONTENT_BLOCKED` even though the field is never written.
+A request that supplies a blocked `bio` or `pronouns` for another member fails with `CONTENT_BLOCKED`, even though Fluxer never writes those fields for another member.
 :::
 
 ### Path parameters
@@ -350,7 +350,7 @@ The body is a [guild member update object](#guild-member-update-object).
 
 ### Side effects
 
-The operation has the same effects as [Modify current guild member](#modify-current-guild-member). Applying a non-empty role set also makes a temporary membership permanent.
+The operation has the same effects as [Modify current guild member](#modify-current-guild-member). Applying a non-empty role set also makes a temporary membership permanent. A membership is temporary when the member joined through an [invite](/http-api/invites/#invite-object) whose `temporary` field is true.
 
 ### Rate limit
 
@@ -449,7 +449,7 @@ The operation requires the [sudo verification fields](/http-api/guilds/#sudo-ver
 
 The operation changes only the guild's `owner_id`. The outgoing owner keeps every role, permission overwrite, and membership they held.
 
-It records a [`GUILD_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry naming the previous and new owner in its change list, emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create), and emits [Guild Update](/gateway/events/#guild-update) to every session that can see the guild. The audit log response has no `options` member for this entry.
+It records a [`GUILD_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry naming the previous and new owner in its change list, emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create), and emits [Guild Update](/gateway/events/#guild-update) to every session that can see the guild. A request naming the current owner changes nothing and records no audit entry. The audit log response has no `options` member for this entry.
 
 An account with an enrolled second factor also receives a reissued sudo proof. A bot credential and an account whose only proof was a password receive `X-Fluxer-Sudo-Mode-JWT` only when the request itself has one.
 
@@ -495,9 +495,9 @@ The guild owner receives 404 `UNKNOWN_ROLE` for a role that does not exist in th
 
 ### Side effects
 
-Adding a new role makes a temporary membership permanent. The operation records a [`MEMBER_ROLE_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry and emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) and [Guild Member Update](/gateway/events/#guild-member-update), even if the member already holds the role. An unchanged role set produces an audit entry without `changes`.
+Adding a new role makes a temporary membership permanent. The operation records a [`MEMBER_ROLE_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry and emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) and [Guild Member Update](/gateway/events/#guild-member-update). An unchanged role set still emits [Guild Member Update](/gateway/events/#guild-member-update) and records no audit entry.
 
-The audit log response names the role only through the change list.
+The audit log response names the role with the [`role_name`](/http-api/guild-audit-logs/#audit-log-options-object) option and through the change list.
 
 ### Rate limit
 
@@ -539,7 +539,7 @@ Removes one role from a member and returns 204 with an empty body. Requires memb
 
 ### Side effects
 
-The operation records a [`MEMBER_ROLE_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry and emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) and [Guild Member Update](/gateway/events/#guild-member-update), even if the member did not hold the role. Removing a role does not change whether the membership is temporary.
+The operation records a [`MEMBER_ROLE_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry and emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) and [Guild Member Update](/gateway/events/#guild-member-update). A role the member did not hold still emits [Guild Member Update](/gateway/events/#guild-member-update) and records no audit entry. Removing a role does not change whether the membership is temporary.
 
 ### Rate limit
 

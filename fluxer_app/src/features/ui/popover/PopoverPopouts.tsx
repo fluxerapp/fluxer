@@ -10,6 +10,8 @@ import {PopoutResizePositionContext} from '@app/features/ui/popover/PopoutResize
 import {getPopoutFocusManagerInsideElements} from '@app/features/ui/popover/PopoverFocusManagerUtils';
 import styles from '@app/features/ui/popover/PopoverPopout.module.css';
 import {scheduleFloatingPortalSweep} from '@app/features/ui/popover/PopoverPortalCleanup';
+import {observePopoutKeyboardDismiss, resolvePopoutReturnFocus} from '@app/features/ui/popover/PopoverReturnFocusUtils';
+import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import LayerManager from '@app/features/ui/state/LayerManager';
 import PopoutState from '@app/features/ui/state/Popout';
 import {isScrollbarDragActive} from '@app/features/ui/utils/ScrollbarDragState';
@@ -209,9 +211,11 @@ const PopoutItem: React.FC<PopoutItemProps> = observer(
 		}, [focusRefs, target]);
 		const mergedPopoutRef = useMergeRefs([setFloating, focusRefs.setFloating]);
 		const prefersReducedMotion = Accessibility.useReducedMotion;
+		const isKeyboardModeEnabled = KeyboardMode.keyboardModeEnabled;
 		const [isVisible, setIsVisible] = useState(true);
 		const [targetInDOM, setTargetInDOM] = useState(() => ownerDocument.contains(target));
 		const hasFocusedInitialRef = useRef(false);
+		const keyboardDismissReturnRef = useRef<HTMLElement | null>(null);
 		const closeTimerRef = useRef<number | null>(null);
 		const beginClose = useCallback(() => {
 			if (closeTimerRef.current != null) return;
@@ -290,6 +294,22 @@ const PopoutItem: React.FC<PopoutItemProps> = observer(
 			if (returnFocusRef != null) returnFocusElement = returnFocusRef.current;
 			return getPopoutFocusManagerInsideElements(target, returnFocusElement);
 		}, [target, returnFocusRef]);
+		const resolveKeyboardDismissFocusTarget = useCallback((): HTMLElement | null => {
+			if (!LayerManager.isTopLayer('popout', popoutKey)) {
+				return null;
+			}
+			return returnFocusRef?.current ?? target;
+		}, [popoutKey, returnFocusRef, target]);
+		useEffect(() => {
+			if (ownerWindow == null) {
+				return;
+			}
+			return observePopoutKeyboardDismiss({
+				ownerWindow,
+				keyboardDismissRef: keyboardDismissReturnRef,
+				resolveFocusTarget: resolveKeyboardDismissFocusTarget,
+			});
+		}, [ownerWindow, resolveKeyboardDismissFocusTarget]);
 		useEffect(() => {
 			const el = popoutRef.current;
 			const targetIsConnected = ownerDocument.contains(target);
@@ -378,7 +398,13 @@ const PopoutItem: React.FC<PopoutItemProps> = observer(
 			<FloatingFocusManager
 				context={focusContext}
 				disabled={!isTopmost}
-				returnFocus={returnFocusOnClose ? (returnFocusRef == null ? targetInDOM : returnFocusRef) : false}
+				returnFocus={resolvePopoutReturnFocus({
+					restoreFocusPolicy: returnFocusOnClose,
+					isKeyboardModeEnabled,
+					returnFocusRef,
+					keyboardDismissRef: keyboardDismissReturnRef,
+					isTargetInDOM: targetInDOM,
+				})}
 				initialFocus={focusRefs.floating}
 				getInsideElements={getFocusManagerInsideElements}
 				data-flx="ui.popover.popouts.popout-item.floating-focus-manager"

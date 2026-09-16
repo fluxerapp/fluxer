@@ -50,6 +50,7 @@ message SyncedPreferences {
   ChatInputSettings chat_input = 112;
   optional bool save_camera_uploads_to_device = 113;
   ReactionEmoji double_tap_reaction = 114;
+  ChannelFrecencyState channel_frecency = 115;
 
 }
 
@@ -258,6 +259,15 @@ enum MfaMethod {
   MFA_METHOD_UNSPECIFIED = 0;
   MFA_METHOD_TOTP = 1;
   MFA_METHOD_WEBAUTHN = 3;
+}
+
+message ChannelFrecencyEntry {
+  uint32 total_uses = 1;
+  repeated int64 recent_uses_ms = 2;
+}
+
+message ChannelFrecencyState {
+  map<string, ChannelFrecencyEntry> usage = 1;
 }
 
 message ChatInputSettings {

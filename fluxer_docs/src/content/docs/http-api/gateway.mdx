@@ -22,7 +22,7 @@ Every field is always present.
 | shards | integer | Recommended shard count, always `1` |
 | session_start_limit | [session start limit](#session-start-limit-object) object | Fixed session start values |
 
-Fluxer appends no query string, so a client appends the [connection parameters](/gateway/overview/#connection-parameters) itself. A client MUST NOT upgrade a published `ws` value, because a deliberately plain HTTP deployment advertises one.
+Fluxer appends no query string, so a client appends the [connection parameters](/gateway/overview/#connection-parameters) itself. A client MUST NOT rewrite a published `ws` value to `wss`, because a deployment that deliberately serves plain HTTP advertises a `ws` value.
 
 ### Example
 
@@ -56,7 +56,7 @@ These are fixed compatibility values, not live usage counters.
 
 <sup>1</sup> A bot does not need to pace Identify requests against this value
 
-The limits the Gateway enforces are in [Session lifecycle](/gateway/limits-and-rate-limits/#session-lifecycle). Fluxer budgets Identify per source address and caps a user account at a fixed number of concurrent sessions. Neither bound is reported here.
+The limits the Gateway enforces are in [Session lifecycle](/gateway/limits-and-rate-limits/#session-lifecycle). Fluxer rate limits Identify per source address and limits a user account to a fixed number of concurrent sessions. Neither bound is reported here.
 
 :::caution[A remaining session start does not guarantee admission]
 These values reserve no capacity. [Session admission](/gateway/limits-and-rate-limits/#session-lifecycle) can still hold or reject a connection.
@@ -76,7 +76,7 @@ The route checks the shape of the credential only. A well-formed value naming no
 
 Validate a token with [Identify](/gateway/commands/#identify) or [Get bot application](/http-api/applications/#get-bot-application) instead.
 
-A 200 has the informational [rate limit headers](/topics/rate-limits/#rate-limit-headers) only for the `Bot ` prefix. Fluxer keys the bare form and the `Bearer ` form on the client IP address.
+A 200 has the informational [rate limit headers](/topics/rate-limits/#rate-limit-headers) only for the `Bot ` prefix. For the bare form and the `Bearer ` form, Fluxer keys the rate limit bucket on the client IP address.
 
 ### Response
 

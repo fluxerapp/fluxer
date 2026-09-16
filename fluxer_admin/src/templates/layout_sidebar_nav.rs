@@ -54,6 +54,7 @@ pub const NAV_SECTIONS: &[NavSection] = &[
                 "bulk-actions",
                 [
                     acl::BULK_UPDATE_USER_FLAGS,
+                    acl::BULK_UPDATE_SUSPICIOUS_ACTIVITY,
                     acl::BULK_UPDATE_GUILD_FEATURES,
                     acl::BULK_ADD_GUILD_MEMBERS,
                     acl::BULK_DELETE_USERS,
@@ -264,3 +265,27 @@ pub const NAV_SECTIONS: &[NavSection] = &[
         )],
     },
 ];
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn bulk_actions_nav_covers_every_acl_the_page_renders_a_section_for() {
+        let item = NAV_SECTIONS
+            .iter()
+            .flat_map(|section| section.items)
+            .find(|item| item.active_key == "bulk-actions")
+            .expect("bulk actions nav item");
+        for required in [
+            acl::BULK_UPDATE_USER_FLAGS,
+            acl::BULK_UPDATE_SUSPICIOUS_ACTIVITY,
+            acl::BULK_UPDATE_GUILD_FEATURES,
+            acl::BULK_ADD_GUILD_MEMBERS,
+            acl::BULK_DELETE_USERS,
+            acl::BULK_DELETE_USER_MESSAGES,
+        ] {
+            assert!(item.required_acls.contains(&required), "{required}");
+        }
+    }
+}

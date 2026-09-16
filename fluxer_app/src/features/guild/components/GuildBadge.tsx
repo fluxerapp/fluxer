@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/guild/components/GuildBadge.module.css';
+import {DISCOVERABLE_COMMUNITY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {DiscoverableBadgeIcon} from '@app/features/ui/components/icons/DiscoverableBadgeIcon';
 import {PartneredBadgeIcon} from '@app/features/ui/components/icons/PartneredBadgeIcon';
 import {VerifiedBadgeIcon} from '@app/features/ui/components/icons/VerifiedBadgeIcon';
@@ -19,10 +20,6 @@ const PARTNERED_COMMUNITY_DESCRIPTOR = msg({
 });
 const VERIFIED_COMMUNITY_DESCRIPTOR = msg({
 	message: 'Verified community',
-	comment: 'Short label in the community badge. Keep it concise.',
-});
-const DISCOVERABLE_COMMUNITY_DESCRIPTOR = msg({
-	message: 'Discoverable community',
 	comment: 'Short label in the community badge. Keep it concise.',
 });
 

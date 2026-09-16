@@ -44,7 +44,7 @@ The initial overwrite collection supplied when a channel is created. The stored 
 
 A larger decimal string returns 400 `INVALID_FORM_BODY` with the code `INTEGER_OUT_OF_INT64_RANGE`. A JSON number outside the safe integer range returns `INVALID_INTEGER_FORMAT`, and so does a string that is not all digits.
 
-An undefined bit never fails the authority comparison described by [Create guild channel](#create-guild-channel). It is stored as supplied and echoed back by every later read of the channel.
+A bit that names no defined permission never fails the authority comparison described by [Create guild channel](#create-guild-channel). It is stored as supplied and echoed back by every later read of the channel.
 
 A bit set in both masks resolves to an allow during [permission computation](/http-api/permissions/#permission-computation).
 
@@ -73,7 +73,7 @@ One entry of the bulk hierarchy update. Entries are applied in array order, each
 | preceding_sibling_id?<sup>3</sup> | ?snowflake | Sibling that sits directly before this channel, or null to place it first |
 | lock_permissions?<sup>4</sup> | boolean | Whether to copy the destination category's overwrites onto the moved channel (default false) |
 
-<sup>1</sup> Read only when `preceding_sibling_id` is omitted. Sending `preceding_sibling_id` at all, including as null, makes it inert
+<sup>1</sup> Read only when `preceding_sibling_id` is omitted. When `preceding_sibling_id` is sent, including as null, Fluxer ignores `position`
 
 <sup>2</sup> An omitted field keeps the channel's current parent. A category given any parent is refused with `CATEGORIES_CANNOT_HAVE_PARENTS`
 
@@ -191,7 +191,7 @@ Creates a guild channel and returns its [channel object](/http-api/channels/#cha
 
 A value longer than 10000 characters is rejected with `STRING_LENGTH_INVALID` before normalisation runs. A parent that does not exist in this guild returns `INVALID_PARENT_CHANNEL`, and one that is not a category returns `PARENT_MUST_BE_CATEGORY`.
 
-The guild holds at most the instance-configured `max_guild_channels` [limit](/http-api/instance/#limit-keys), defaulting to 500, and a parent category holds at most `max_channels_per_category`, defaulting to 50. Reaching the guild limit returns 400 `MAX_GUILD_CHANNELS` and reaching the category limit returns 400 `MAX_CATEGORY_CHANNELS`. Each message has the resolved limit. The new channel is created with no RTC region.
+The guild holds at most the instance-configured `max_guild_channels` [limit](/http-api/instance/#limit-keys), defaulting to 500, and a parent category holds at most `max_channels_per_category`, defaulting to 50. Reaching the guild limit returns 400 `MAX_GUILD_CHANNELS` and reaching the category limit returns 400 `MAX_CATEGORY_CHANNELS`. Each error message states the resolved limit. The new channel is created with no RTC region.
 
 The new channel takes a position derived from its siblings. A category, and a channel created with no parent, is placed after the highest position in the guild. A voice channel created inside a category is placed after the last voice sibling, or after the last text or link sibling when the category holds no voice channel. A text or link channel is placed after the last text or link sibling, and a channel with no such sibling is placed directly after the category itself. The rest of the guild is not renumbered, so two channels can hold the same stored position until the next [hierarchy update](#modify-guild-channel-positions) renumbers them.
 
@@ -239,7 +239,7 @@ Applies a guild channel hierarchy update and returns 204 with an empty body. Req
 
 Concurrent hierarchy updates to the same guild can return 423 [`GENERAL_ERROR`](/http-api/errors/) with a `Retry-After` header of two seconds.
 
-An unknown channel, parent or sibling rejects the entire request. Other failures can leave earlier entries applied. Moving a category moves its children with it, and neither the category nor its children count as destination siblings.
+An unknown channel, parent or sibling rejects the entire request. Fluxer applies entries one at a time. When a later entry fails a check after that existence check, including the `lock_permissions` authority check, every earlier entry stays applied. Moving a category moves its children with it, and neither the category nor its children count as destination siblings.
 
 After a move, positions run consecutively from 1 across the guild. Each category is followed by its children, with text and link channels before voice channels.
 
@@ -271,7 +271,7 @@ Channels at the guild root are exempt from this restriction.
 | 400<sup>1</sup><sup>2</sup> | [error response](/http-api/#error-response) | An entry is structurally invalid, the destination category is full, or the caller has no enrolled authenticator in an elevated-MFA guild |
 | 403 | [error response](/http-api/#error-response) | Caller lacks `MANAGE_CHANNELS`, is not a member of the guild, or set `lock_permissions` without sufficient authority in the moved channel, each returning `MISSING_PERMISSIONS` |
 | 404 | [error response](/http-api/#error-response) | Guild does not exist, returning `UNKNOWN_GUILD` |
-| 423 | [error response](/http-api/#error-response) | Another hierarchy update owns this guild, returning `GENERAL_ERROR` |
+| 423 | [error response](/http-api/#error-response) | Another hierarchy update to this guild is in progress, returning `GENERAL_ERROR` |
 
 <sup>1</sup> A structural failure returns `INVALID_FORM_BODY` and names the field with `CHANNEL_NOT_FOUND`, `INVALID_CHANNEL_ID`, `INVALID_PARENT_CHANNEL`, `PARENT_MUST_BE_CATEGORY`, `CATEGORIES_CANNOT_HAVE_PARENTS`, `PRECEDING_CHANNEL_MUST_SHARE_PARENT`, `CANNOT_POSITION_CHANNEL_RELATIVE_TO_ITSELF`, or `VOICE_CHANNELS_CANNOT_BE_ABOVE_TEXT_CHANNELS`. A full destination category returns the top-level `MAX_CATEGORY_CHANNELS`
 
@@ -283,7 +283,7 @@ Each entry that changes the order emits [Channel Update Bulk](/gateway/events/#c
 
 When `lock_permissions` copies the destination category's overwrites, re-read the moved channel to obtain them. The copy has no Gateway event or audit entry.
 
-The caller must hold [MANAGE_ROLES](/http-api/permissions/) in the moved channel and each deny bit the copy removes or allow bit it adds. Insufficient authority returns 403 `MISSING_PERMISSIONS`, but the channel move remains applied.
+The copy requires [MANAGE_ROLES](/http-api/permissions/) in the moved channel. The caller must also hold every allow bit the copy adds and every deny bit the copy removes. Insufficient authority returns 403 `MISSING_PERMISSIONS`, but the channel move remains applied.
 
 ### Rate limit
 

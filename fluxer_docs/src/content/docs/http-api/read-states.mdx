@@ -54,7 +54,7 @@ Only an acknowledgement produces a later Dispatch. A message acknowledgement emi
 
 ## Read state acknowledgement object
 
-One entry in the body of [Acknowledge read states](#acknowledge-read-states). It names the channel whose entry changes, the message the account has read through, and the mention count that survives the read.
+One entry in the body of [Acknowledge read states](#acknowledge-read-states). It names the channel whose entry changes, the message the account has read through, and the mention count to store for the channel.
 
 ### Structure
 
@@ -69,7 +69,7 @@ One entry in the body of [Acknowledge read states](#acknowledge-read-states). It
 
 <sup>2</sup> Fluxer does not resolve the message either. An entry equal to the stored watermark still produces a write, so it resets the stored mention count
 
-<sup>3</sup> Fluxer stores the submitted value verbatim, so an acknowledgement leaving mentions above the watermark must send how many remain
+<sup>3</sup> Fluxer stores the submitted value verbatim, so a client that leaves unread mentions after `message_id` must send the number of those mentions
 
 <sup>4</sup> With `manual` false an entry strictly below the stored watermark is discarded whole
 
@@ -135,13 +135,13 @@ When any entry is manual or has a positive mention count, entries for the same c
 
 ### Side effects
 
-Each entry updates its channel watermark according to `manual` and sets the submitted mention count.
+With `manual` true, an entry sets the channel watermark to `message_id`. With `manual` false, Fluxer discards an entry strictly below the stored watermark and leaves the stored entry unchanged. Every entry that is not discarded sets the watermark to `message_id` and stores the submitted mention count.
 
 One [Message ACK](/gateway/events/#message-ack) goes to the caller's sessions for every submitted entry, including an unchanged one. It reports the resulting `message_id`, `mention_count`, and `version`. It also includes the submitted `manual` value when any entry is manual or has a positive mention count.
 
-A successful acknowledgement can have no corresponding Dispatch. Reconcile from a later read when needed.
+When Fluxer fails to send a Message ACK, the request still succeeds and no Dispatch arrives for that entry. A client reconciles from the entries this route returns or from a new Ready.
 
-Every entry also clears delivered notifications for its channel through the submitted `message_id`, so a discarded or rewound entry clears a different range than the entry stores.
+Every entry also clears delivered push notifications for its channel through the submitted `message_id`. Fluxer uses the submitted value even when it discards the entry and keeps a higher stored watermark.
 
 ### Rate limit
 

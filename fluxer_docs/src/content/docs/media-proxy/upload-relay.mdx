@@ -15,7 +15,7 @@ Paths here are relative to the relay base in the issued upload URL. That base is
 The capability is the complete authorisation. The relay reads no HTTP API `Authorization` header and has no request-count rate limit. Every path below `/v1/relay/` is exempt from the [media access policy](/media-proxy/overview/#access-restrictions). The `PUT` has a [deployment mode](/media-proxy/overview/#deployment-modes) gate and returns 404 outside `upload` mode.
 
 :::note[Some upload URLs address object storage directly]
-An upload URL may point directly to object storage. Use the URL returned by the HTTP API. This page describes relay URLs only.
+An upload URL points directly to object storage when the caller's IP address geolocates to a country the deployment lists in `keep_direct_countries`. Use the URL returned by the HTTP API. This page describes relay URLs only.
 :::
 
 :::caution[The complete URL is authenticated]
@@ -71,7 +71,7 @@ The relay ignores every other request header.
 
 The body is arbitrary bytes.
 
-When `Content-Length` is supplied, send exactly that many bytes. A longer body returns 413 and a shorter body returns 400. The authorised upload size and endpoint body limit apply even without this header. Interrupted uploads return 400, and insufficient relay capacity returns 503.
+When `Content-Length` is supplied, send exactly that many bytes. A longer body returns 413 and a shorter body returns 400. Without this header, a body above the authorised upload size or the endpoint body limit still returns 413. Interrupted uploads return 400, and insufficient relay capacity returns 503.
 
 ### Response
 
@@ -93,7 +93,7 @@ The relay forwards no object storage response body and no arbitrary response hea
 <sup>1</sup> It has no relay CORS headers and no cache policy
 
 :::caution[A message naming the key creates the attachment]
-A successful relay response stores bytes only. [Create message](/http-api/messages/#create-message), [Modify message](/http-api/messages/#modify-message), and [Execute webhook](/http-api/webhooks/#execute-webhook) are the requests that can name the key.
+A successful relay request stores the bytes and creates no attachment. [Create message](/http-api/messages/#create-message), [Modify message](/http-api/messages/#modify-message), and [Execute webhook](/http-api/webhooks/#execute-webhook) are the requests that can name the key.
 :::
 
 [Complete attachment upload](/http-api/messages/#complete-attachment-upload) assembles a multipart upload once every part is stored, and a singlepart upload needs no completion step. A stream preview becomes readable as soon as the stored object is in place, and the [Streams resource](/http-api/streams/) defines that flow.
@@ -117,6 +117,6 @@ A successful request writes the object the capability selects to the uploads buc
 | Endpoint body limit | 500 MiB | 1 byte through 5 GiB |
 | Object storage write deadline | 900,000 ms | 1,000 through 3,600,000 ms |
 
-The effective limit is the smaller of the endpoint body limit and the authorised upload size.
+The largest body the relay accepts is the smaller of the endpoint body limit and the authorised upload size.
 
-For a streamed body the relay extends the object storage write deadline by one second for every 16 KiB of declared length.
+When the request declares `Content-Length`, the relay extends the object storage write deadline by one second for every 16 KiB of declared length.

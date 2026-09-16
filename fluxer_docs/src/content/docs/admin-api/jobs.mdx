@@ -11,7 +11,7 @@ These routes list recorded background jobs and request cancellation. Create jobs
 Reads require `jobs:view` and cancellation requires `jobs:cancel`. Every operation on this page shares the `admin:jobs:view` bucket.
 
 :::note[Job updates vary by task]
-Not all background work appears here, and recorded status, progress and attempts may not reflect every execution. Use the [archive routes](/admin-api/archives/) to track archive progress and failures.
+Mention processing, link previews, and every scheduled task except `syncDisposableEmailDomains`, `syncUrlBlocklists` and `syncFileShaBlocklists` run with no job record and never appear here. A job also runs with no record when Fluxer fails to write that record. When a later write of status, progress or attempts fails, Fluxer logs the failure and the job continues, so the stored values can be behind the real run. Use the [archive routes](/admin-api/archives/) to track archive progress and failures.
 :::
 
 ## Admin job object
@@ -37,14 +37,14 @@ One object describes one recorded job. These routes can only change `cancel_requ
 | jet_stream_lane | ?string | The assigned [processing lane](#processing-lanes), or null |
 | jet_stream_seq | ?string | The recorded queue sequence as a decimal string, or null |
 | attempts | integer | The recorded retry count, not a total of all executions |
-| max_attempts | integer | The recorded attempt limit. Actual retry behaviour may differ |
+| max_attempts | integer | Attempt limit recorded at queue time. Retries stop at the lane's delivery limit, which can differ from this value |
 | run_at | ?ISO8601 timestamp | The earliest permitted run time, or null for an immediate job |
 | cancel_requested | boolean | Whether cancellation has been requested |
 | context_link | ?string | An Admin console path related to the job, or null |
 | payload | ?string | The JSON-encoded job input, or null |
 | result | ?string | The JSON-encoded result, or null |
 
-Progress fields may remain null. The payload can contain identifiers and message content, including in list responses.
+Progress fields stay null until the task reports progress. A task can report progress with no total or no message, which sets `progress_total` or `progress_message` to null. The payload can contain identifiers and message content, including in list responses.
 
 ### Example
 
@@ -103,7 +103,7 @@ Pass all three fields from `next_cursor` back to [List jobs](#list-jobs) using t
 | queued | The job was recorded and no later status has been recorded |
 | running | The job was recorded as started |
 | succeeded | The job was recorded as completed successfully |
-| cancelled | The task honoured a cancellation request |
+| cancelled | The task read the cancellation request and stopped |
 | deadletter | The job was recorded as failed, including a failure to queue it |
 
 `queued` and `running` accept cancellation requests. The other statuses are terminal. A cancellation request does not guarantee that the task will stop.
@@ -170,7 +170,7 @@ Supply all three cursor parameters together or omit all three. An incomplete or 
 
 Returns recorded active jobs as [Admin job](#admin-job-object) objects. Requires `jobs:view`.
 
-This operation has no filters or pagination. Recorded state can lag execution.
+This operation has no filters or pagination. The stored status and progress can be behind the work the task has already done.
 
 ### Response body
 
@@ -247,7 +247,7 @@ Returns false for a missing or terminal job. Repeating a request for a queued or
 
 ### Side effects
 
-Sets `cancel_requested` to true for a queued or running job. Only tasks that support cancellation will stop, and completed work is not undone. A status of `cancelled` confirms that the task honoured the request.
+Sets `cancel_requested` to true for a queued or running job. `sendSystemDm`, `syncDisposableEmailDomains`, `bulkBanFileShas`, `bulkDeleteMessagesForUsers`, and the tasks queued by [Bulk jobs](/admin-api/bulk-jobs/) check for the request while they run and stop at the next check. Other tasks run to the end. Completed work is not undone. A status of `cancelled` means the task stopped because of the request.
 
 ### Rate limit
 

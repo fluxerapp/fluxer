@@ -137,27 +137,14 @@ export class GuildMemberService {
 				void this.searchIndexService.updateMember(updatedMember, targetUser, searchIndexOptions);
 			}
 		}
-		const timeoutMetadata = (() => {
-			if (data.communication_disabled_until === undefined) {
-				return undefined;
-			}
-			const metadata: Record<string, string> = {};
-			if (data.communication_disabled_until !== null) {
-				metadata['communication_disabled_until'] = data.communication_disabled_until;
-			}
-			const trimmedReason = data.timeout_reason?.trim();
-			if (trimmedReason) {
-				metadata['timeout_reason'] = trimmedReason;
-			}
-			return Object.keys(metadata).length > 0 ? metadata : undefined;
-		})();
 		await this.auditService.recordAuditLog({
 			guildId,
 			userId,
 			action: AuditLogActionType.MEMBER_UPDATE,
 			targetId: targetId,
-			auditLogReason: auditLogReason ?? null,
-			metadata: timeoutMetadata,
+			auditLogReason:
+				auditLogReason ??
+				(data.communication_disabled_until !== undefined ? data.timeout_reason?.trim() || null : null),
 			changes: this.guildAuditLogService.computeChanges(
 				previousSnapshot,
 				this.auditService.serializeMemberForAudit(updatedMember),
@@ -180,6 +167,7 @@ export class GuildMemberService {
 		const targetMember = await this.guildRepository.getMember(guildId, targetId);
 		if (!targetMember) throw new UnknownGuildMemberError();
 		const previousSnapshot = this.auditService.serializeMemberForAudit(targetMember);
+		const role = await this.guildRepository.getRole(roleId, guildId);
 		await this.roleService.addMemberRole(params);
 		const updatedMember = await this.guildRepository.getMember(guildId, targetId);
 		if (updatedMember) {
@@ -198,7 +186,7 @@ export class GuildMemberService {
 				action: AuditLogActionType.MEMBER_ROLE_UPDATE,
 				targetId: targetId,
 				auditLogReason: auditLogReason ?? null,
-				metadata: {role_id: roleId.toString(), action: 'add'},
+				metadata: role ? {role_name: role.name} : undefined,
 				changes: this.guildAuditLogService.computeChanges(
 					previousSnapshot,
 					this.auditService.serializeMemberForAudit(updatedMember),
@@ -218,6 +206,7 @@ export class GuildMemberService {
 		const targetMember = await this.guildRepository.getMember(guildId, targetId);
 		if (!targetMember) throw new UnknownGuildMemberError();
 		const previousSnapshot = this.auditService.serializeMemberForAudit(targetMember);
+		const role = await this.guildRepository.getRole(roleId, guildId);
 		await this.roleService.systemAddMemberRole({targetId, guildId, roleId});
 		const updatedMember = await this.guildRepository.getMember(guildId, targetId);
 		if (updatedMember) {
@@ -236,7 +225,7 @@ export class GuildMemberService {
 				action: AuditLogActionType.MEMBER_ROLE_UPDATE,
 				targetId: targetId,
 				auditLogReason: null,
-				metadata: {role_id: roleId.toString(), action: 'add'},
+				metadata: role ? {role_name: role.name} : undefined,
 				changes: this.guildAuditLogService.computeChanges(
 					previousSnapshot,
 					this.auditService.serializeMemberForAudit(updatedMember),
@@ -259,6 +248,7 @@ export class GuildMemberService {
 		const targetMember = await this.guildRepository.getMember(guildId, targetId);
 		if (!targetMember) throw new UnknownGuildMemberError();
 		const previousSnapshot = this.auditService.serializeMemberForAudit(targetMember);
+		const role = await this.guildRepository.getRole(roleId, guildId);
 		await this.roleService.removeMemberRole(params);
 		const updatedMember = await this.guildRepository.getMember(guildId, targetId);
 		if (updatedMember) {
@@ -277,7 +267,7 @@ export class GuildMemberService {
 				action: AuditLogActionType.MEMBER_ROLE_UPDATE,
 				targetId: targetId,
 				auditLogReason: auditLogReason ?? null,
-				metadata: {role_id: roleId.toString(), action: 'remove'},
+				metadata: role ? {role_name: role.name} : undefined,
 				changes: this.guildAuditLogService.computeChanges(
 					previousSnapshot,
 					this.auditService.serializeMemberForAudit(updatedMember),

@@ -85,7 +85,7 @@ The result has no `avatar`, `banner`, `accent_color`, `mute`, `deaf`, `communica
 
 ## Guild member search supplemental object
 
-A guild member search supplemental object has the join source the [guild member object](/http-api/guild-members/#guild-member-object) never exposes. Only a caller that can already manage the guild reads it.
+A guild member search supplemental object has the join source the [guild member object](/http-api/guild-members/#guild-member-object) never exposes. Only a caller holding [MANAGE_GUILD](/http-api/permissions/) receives its values.
 
 ### Structure
 
@@ -210,7 +210,7 @@ An instance using Meilisearch returns an empty page beyond 10000 results. Instan
 
 <sup>1</sup> The [error code](/http-api/errors/) is `MISSING_ACCESS` for an unavailable guild, `CONTENT_BLOCKED` for a blocked body string, and `MISSING_PERMISSIONS` otherwise
 
-When results are being prepared, the response is 200 with an empty page and `indexing` set to true. Retry later. Search unavailability can also produce an empty page with `indexing` false, rather than `FEATURE_TEMPORARILY_DISABLED`.
+When Fluxer is building the guild member index, the response is 200 with an empty page and `indexing` set to true. Retry later. This route has no `FEATURE_TEMPORARILY_DISABLED` response. When the search backend is unavailable, the route returns 200 with an empty page and `indexing` false.
 
 :::note[`indexing` false does not mean zero matches]
 An empty page with `indexing` false can mean no matches or that search is unavailable.
@@ -218,7 +218,7 @@ An empty page with `indexing` false can mean no matches or that search is unavai
 
 ### Side effects
 
-The first search can begin preparing the guild's results. It does not change memberships.
+A search in a guild whose member index needs building queues an indexing job and returns `indexing` true. It does not change memberships.
 
 ### Rate limit
 

@@ -84,7 +84,7 @@ Progress for one queued rebuild. The object shape is selected by `status`.
 
 <sup>1</sup> `total` is the same value as `indexed` while the rebuild runs and becomes the real total on completion. The `discovery` rebuild reports the approved listing count from its first batch onwards
 
-<sup>2</sup> The unit is the document the handler writes. A `channel_messages` rebuild counts the channels it queued
+<sup>2</sup> Each document the rebuild writes counts as one. A `channel_messages` rebuild counts the channels it queued
 
 <sup>3</sup> Rewritten on every progress report, so its value moves forward while the rebuild runs
 
@@ -120,8 +120,8 @@ Every field is optional. Fluxer reads an absent or empty body as an empty object
 
 | Field | Type | Description |
 | --- | --- | --- |
-| guild_id?<sup>1</sup> | snowflake | The ID of the guild whose copy of the index is rebuilt |
-| user_id?<sup>2</sup> | snowflake | The ID of the user whose copy of the index is rebuilt |
+| guild_id?<sup>1</sup> | snowflake | The ID of the guild whose documents in the index are rebuilt |
+| user_id?<sup>2</sup> | snowflake | The ID of the user whose documents in the index are rebuilt |
 
 <sup>1</sup> Required by `channel_messages` and `guild_members`. Every other index name ignores it
 
@@ -168,7 +168,7 @@ Returns the [search index refresh progress](#search-index-refresh-progress-objec
 | --- | --- | --- |
 | job_id<sup>1</sup> | string | The identifier returned by [Refresh search index](#refresh-search-index) |
 
-<sup>1</sup> The value is bounded at 1 to 128 characters after normalisation and need not be a snowflake
+<sup>1</sup> The value is bounded at 1 to 128 characters after Fluxer removes every form feed (U+000C) and right-to-left override (U+202E) character and trims whitespace from both ends. It need not be a snowflake
 
 ### Response
 

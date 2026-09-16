@@ -133,6 +133,7 @@ export interface LexicalComposerInputProps {
 	slotResolvers?: SlashSlotResolvers;
 	markdown?: boolean;
 	markdownParserFlags?: number;
+	maxWireLength?: number;
 	silentMessagePrefix?: boolean;
 	emojiShortcodeResolver?: ComposerEmojiResolver;
 	specialMentionsAllowed: boolean;
@@ -160,7 +161,7 @@ export interface LexicalComposerInputProps {
 	onChange: (display: string, segments: Array<MentionSegment>, wire: string) => void;
 	onCursorMove: () => void;
 	onEnter?: () => void;
-	onArrowUp: () => void;
+	onArrowUp: () => boolean;
 	onKeyDown?: (event: React.KeyboardEvent<HTMLElement>) => void;
 	onFocus?: () => void;
 	onBlur?: () => void;
@@ -242,6 +243,7 @@ const ComposerInner = ({
 	slotResolvers,
 	markdown = true,
 	markdownParserFlags,
+	maxWireLength,
 	silentMessagePrefix = false,
 	emojiShortcodeResolver,
 	specialMentionsAllowed,
@@ -362,6 +364,7 @@ const ComposerInner = ({
 				);
 				return segments;
 			},
+			getMarkdownParserFlags: () => markdownParserFlagsRef.current,
 			getTextUpToCursor: () => {
 				let text = '';
 				editor.getEditorState().read(
@@ -523,8 +526,10 @@ const ComposerInner = ({
 			cleanups.push(registerSlashSlotPlugin(editor, () => slotResolversRef.current, typeaheadActiveState));
 			cleanups.push(registerSlashSlotFocus(editor, () => onSlashCommandStateChangeRef.current));
 			if (markdown) {
-				cleanups.push(registerComposerMarkdownHighlight(editor, markdownParserFlags, silentMessagePrefix));
-				cleanups.push(registerComposerBlockquote(editor));
+				cleanups.push(
+					registerComposerMarkdownHighlight(editor, markdownParserFlags, silentMessagePrefix, maxWireLength),
+				);
+				cleanups.push(registerComposerBlockquote(editor, markdownParserFlags));
 			}
 			cleanups.push(
 				registerComposerEmojiShortcode(editor, (shortcodeName) => {
@@ -558,7 +563,7 @@ const ComposerInner = ({
 			{discrete: true, tag: HISTORY_MERGE_TAG},
 		);
 		return mergeRegister(...cleanups);
-	}, [editor, markdown, markdownParserFlags, plainText, silentMessagePrefix]);
+	}, [editor, markdown, markdownParserFlags, maxWireLength, plainText, silentMessagePrefix]);
 
 	useLayoutEffect(
 		() => registerComposerSpecialMention(editor, specialMentionsAllowed, plainText),
@@ -608,8 +613,9 @@ const ComposerInner = ({
 						return false;
 					}
 					if (event != null && !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
-						if ($isComposerEmpty()) {
-							cb.current.onArrowUp();
+						if ($isComposerEmpty() && cb.current.onArrowUp()) {
+							event.preventDefault();
+							return true;
 						}
 					}
 					return false;

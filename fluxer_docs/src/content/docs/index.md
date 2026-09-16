@@ -16,7 +16,7 @@ Use the HTTP API to read and change resources, and Gateway [events](/gateway/eve
 
 ## Shared contracts
 
-See [Authentication](/authentication/), [Errors](/http-api/errors/), [Rate limits](/topics/rate-limits/) and [Locales](/topics/locales/) for shared behaviour. Most resource identifiers are [snowflakes](/snowflakes/). Each resource documents exceptions.
+See [Authentication](/authentication/), [Errors](/http-api/errors/), [Rate limits](/topics/rate-limits/) and [Locales](/topics/locales/) for shared behaviour. Most resource identifiers are [snowflakes](/snowflakes/). Each resource page states where it differs from this shared behaviour.
 
 ## Field notation
 

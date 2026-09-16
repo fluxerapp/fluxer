@@ -29,7 +29,7 @@ Fluxer copies the reported content when the report is submitted. A message repor
 
 The Digital Services Act routes require no credential. Fluxer still resolves a valid credential presented anyway, so the request draws on that account's rate limit allowance.
 
-Every route bucket is keyed by the authenticated user ID when a credential resolves and by client IP address otherwise. Report creation applies further policy allowances keyed by the reporter.
+Every route bucket is keyed by the authenticated user ID when a credential resolves and by client IP address otherwise. Report creation also limits how many reports one reporter creates each hour. The rate limit section of each route that creates a report lists those limits.
 
 ## Content screening
 
@@ -57,7 +57,7 @@ Fluxer returns this receipt when it records a submission.
 
 <sup>1</sup> Always `pending`
 
-<sup>2</sup> A Digital Services Act notice has its filing time, even when its verification code was issued much earlier
+<sup>2</sup> For a Digital Services Act notice, this is the time the notice was filed, even when its verification code was issued much earlier
 
 ### Example
 
@@ -250,7 +250,7 @@ A reporter without `READ_MESSAGE_HISTORY` can report only a message at or after 
 
 The operation writes one report with a frozen evidence snapshot. The snapshot records the reporter's account ID and email address, the message author's identity and avatar hash, the channel and guild identity, and the guild and channel NSFW and content warning state.
 
-The snapshot also records a conversation window of up to 25 messages before the reported message, the reported message itself, and up to 25 messages after it. Each context message records its author identity, content, timestamps, type, flags, mentions, embeds, and sticker items, and each attachment is copied byte for byte. A context message whose author no longer exists is dropped from the window, and an attachment whose copy fails is dropped without failing the request. A reporter without `READ_MESSAGE_HISTORY` receives a window trimmed to the guild's message history cutoff.
+The snapshot also records a conversation window of up to 25 messages before the reported message, the reported message itself, and up to 25 messages after it. Each context message records its author identity, content, timestamps, type, flags, mentions, embeds, and sticker items, and each attachment is copied byte for byte. A context message whose author no longer exists is dropped from the window, and an attachment whose copy fails is dropped without failing the request. When the reporter lacks `READ_MESSAGE_HISTORY`, the window holds only messages created at or after the guild's message history cutoff, and holds no messages when the guild sets no cutoff.
 
 ### Rate limit
 
@@ -503,7 +503,7 @@ An unknown code returns 404 `UNKNOWN_INVITE`. A code that resolves to an invite 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [report](#report-object) object | The notice was recorded |
-| 400 | [error response](/http-api/#error-response) | The ticket is unknown or expired and the request returns `INVALID_DSA_TICKET`, or the target could not be resolved to the reported subject and the request returns `INVALID_DSA_REPORT_TARGET` |
+| 400 | [error response](/http-api/#error-response) | The ticket is unknown or expired and the request returns `INVALID_DSA_TICKET`, or a supplied Fluxer tag or invite code is malformed or does not match the reported message author, user, or guild and the request returns `INVALID_DSA_REPORT_TARGET` |
 | 403 | [error response](/http-api/#error-response) | A body string is blocked by content moderation and the request returns `CONTENT_BLOCKED` |
 | 404 | [error response](/http-api/#error-response) | The referenced channel, message, user, guild, or invite does not exist |
 

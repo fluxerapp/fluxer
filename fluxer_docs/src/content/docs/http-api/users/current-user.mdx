@@ -31,9 +31,9 @@ Returns the current [user](/http-api/users/#user-object) object.
 ### Limitations
 
 - An OAuth2 bearer credential must hold the `identify` [scope](/http-api/oauth2/#oauth2-scopes), and one without it is rejected with 403 [`MISSING_OAUTH_SCOPE`](/http-api/errors/), whose body has `required_scope`.
-- A bearer receives the neutralised representation, and `email` only when it also holds the `email` scope.
+- A bearer receives the [user object](/http-api/users/#user-object) with the zero values that page lists for a bearer read, and `email` only when it also holds the `email` scope.
 
-This route alone admits an account with an outstanding [required action](/http-api/users/#required-actions), so a client can read and poll the actions it has to complete.
+An account with an outstanding [required action](/http-api/users/#required-actions) can call this route, so a client can read and poll the actions it has to complete.
 
 ### Response
 
@@ -123,7 +123,7 @@ An omitted field leaves its stored value untouched, and an explicit `null` clear
 
 To skip the body proof fields, send the sudo token in the `X-Fluxer-Sudo-Mode-JWT` request header.
 
-A body that has no `email_token` and nothing beyond `mfa_method`, `mfa_code`, `webauthn_response`, and `webauthn_challenge` returns the current account unchanged. That check runs before the required action barrier, so it succeeds even while an action is outstanding. Supplying `password` alone is an update with nothing to change, and it still emits [User Update](/gateway/events/#user-update).
+A body that has no `email_token` and nothing beyond `mfa_method`, `mfa_code`, `webauthn_response`, and `webauthn_challenge` returns the current account unchanged. That check runs before Fluxer checks required actions, so it succeeds even while an action is outstanding. Supplying `password` alone is an update with nothing to change, and it still emits [User Update](/gateway/events/#user-update).
 
 Fluxer rejects an account with an outstanding required action. The one exemption is a body that has `email_token` and nothing beyond the sudo verification fields. Any other defined field removes the exemption.
 
@@ -141,7 +141,7 @@ An animated avatar requires the animated avatar entitlement and is otherwise rej
 
 The username, display name, biography, and pronouns are matched against the instance profile substring blocklist, and a match returns 403 [`CONTENT_BLOCKED`](/http-api/errors/). An account with the `STAFF` flag is exempt. The biography and pronouns are also scanned against the phrase and URL blocklists.
 
-The global content filter applied to every POST, PUT, and PATCH JSON body runs the same pair of blocklists over the whole body before the handler. It reads `username`, `global_name`, `email`, `timezone`, and `discriminator` when supplied as a string, alongside the biography and pronouns. It skips `avatar`, `banner`, `password`, `new_password`, `email_token`, `mfa_code`, `webauthn_response`, `webauthn_challenge`, and every field whose name ends in `_flags`, and it ignores any value shorter than 3 characters. A match returns the same 403 `CONTENT_BLOCKED`, and no flag exempts an account from it.
+The global content filter applied to every POST, PUT, and PATCH JSON body runs the phrase and URL blocklists over the whole body before the handler. It reads `username`, `global_name`, `email`, `timezone`, and `discriminator` when supplied as a string, alongside the biography and pronouns. It skips `avatar`, `banner`, `password`, `new_password`, `email_token`, `mfa_code`, `webauthn_response`, `webauthn_challenge`, and every field whose name ends in `_flags`, and it ignores any value shorter than 3 characters. A match returns the same 403 `CONTENT_BLOCKED`, and no flag exempts an account from it.
 
 ### Secondary controls
 
@@ -172,7 +172,7 @@ Supplying `new_password` on a claimed account deletes every other authentication
 
 ### Side effects
 
-A successful change emits [User Update](/gateway/events/#user-update) to the account. When a [partial user object](/http-api/users/#partial-user-object) field changes, other accounts observe the new value. Changing the username, discriminator, or display name also reindexes the account's guild member records in every guild whose member index exists. A body that takes the early return changes nothing and emits no Dispatch. Any other accepted body emits the Dispatch even when no stored value changed.
+A successful change emits [User Update](/gateway/events/#user-update) to the account. When a [partial user object](/http-api/users/#partial-user-object) field changes, other accounts observe the new value. Changing the username, discriminator, or display name also updates the account in guild member search for every guild whose members are indexed. A body with no `email_token` and no field beyond the sudo verification fields changes nothing and emits no Dispatch. Any other accepted body emits the Dispatch even when no stored value changed.
 
 ### Rate limit
 

@@ -4,6 +4,7 @@ import {Config} from '@app/api/Config';
 import {setDatabaseQueryExecutor} from '@app/api/database/CassandraQueryExecution';
 import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from '@app/api/database/PostgresKvQueryExecutor';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import {shutdownStorageChangeFeed} from '@app/api/infrastructure/StorageServiceFactory';
 import type {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
 import {JobLedgerRepository} from '@app/api/jobs/JobLedgerRepository';
 import {Logger} from '@app/api/Logger';
@@ -31,7 +32,6 @@ import {
 	resolveCronSchedulerEnabled,
 	resolveWorkerLanes,
 	validateLaneCompleteness,
-	type WorkerLaneDefinition,
 } from '@app/api/worker/WorkerLaneConfig';
 import {createWorkerProcessErrorHandler} from '@app/api/worker/WorkerProcessErrorHandler';
 import {WorkerQueueOverflowError} from '@app/api/worker/WorkerQueueOverflowError';
@@ -44,13 +44,6 @@ import {JetStreamConnectionManager} from '@pkgs/nats/src/JetStreamConnectionMana
 import {getDefaultPostgresClient, initPostgres, shutdownPostgres} from '@pkgs/postgres/src/Client';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {ms} from 'itty-time';
-
-const SEARCH_REQUIRED_TASKS = new Set<string>([
-	'indexChannelMessages',
-	'indexGuildMembers',
-	'refreshSearchIndex',
-	'syncDiscoveryIndex',
-]);
 
 function registerCronJobs(cron: CronScheduler): void {
 	cron.upsert('processAssetDeletionQueue', 'processAssetDeletionQueue', {}, '0 */5 * * * *', {ledger: false});
@@ -85,10 +78,6 @@ function registerCronJobs(cron: CronScheduler): void {
 		},
 		'Cron jobs registered successfully',
 	);
-}
-
-function workerLanesRequireSearch(activeWorkerLanes: ReadonlyArray<WorkerLaneDefinition>): boolean {
-	return activeWorkerLanes.some((lane) => lane.taskTypes.some((taskType) => SEARCH_REQUIRED_TASKS.has(taskType)));
 }
 
 export async function startWorkerMain(): Promise<void> {
@@ -126,6 +115,7 @@ export async function startWorkerMain(): Promise<void> {
 			);
 		});
 		await voiceShutdown;
+		await cleanupStep('storage change feed', shutdownStorageChangeFeed);
 		await cleanupStep('jetstream', async () => {
 			await jsConnectionManager?.drain();
 			jsConnectionManager = null;
@@ -240,6 +230,14 @@ export async function startWorkerMain(): Promise<void> {
 		setInjectedWorkerService(workerService);
 		instanceConfigRepository = getInstanceConfigRepository();
 		limitConfigService = getLimitConfigService();
+		try {
+			await initializeSearch(getCacheService());
+			searchInitialized = true;
+			Logger.info('Search initialised for worker backend');
+		} catch (error) {
+			Logger.error({err: error}, 'Search initialisation failed for worker backend');
+			throw error;
+		}
 		dependencies = await initializeWorkerDependencies(snowflakeService);
 		setWorkerDependencies(dependencies);
 		if (Config.blocklistFeeds.enabled) {
@@ -283,18 +281,6 @@ export async function startWorkerMain(): Promise<void> {
 				heartbeat,
 			});
 			runners.push(runner);
-		}
-		if (workerLanesRequireSearch(activeWorkerLanes)) {
-			try {
-				await initializeSearch(getCacheService());
-				searchInitialized = true;
-				Logger.info('Search initialised for worker backend');
-			} catch (error) {
-				Logger.error({err: error}, 'Search initialisation failed for worker backend');
-				throw error;
-			}
-		} else {
-			Logger.info('Search initialisation skipped for worker lanes without search tasks');
 		}
 		if (cronSchedulerEnabled) {
 			cron.start();

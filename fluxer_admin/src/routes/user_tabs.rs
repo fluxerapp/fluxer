@@ -244,7 +244,7 @@ pub async fn render(
                     query: None,
                     admin_user_id: None,
                     target_id: Some(user_id.to_owned()),
-                    target_type: Some("user".to_owned()),
+                    target_type: None,
                     sort_by: Some("created_at".to_owned()),
                     sort_order: Some("desc".to_owned()),
                     limit,

@@ -52,7 +52,7 @@ Filter [List jobs](/admin-api/jobs/#list-jobs) by the `sendSystemDm` task type t
 
 For each recipient the job opens the direct message channel between the system account and that recipient, then sends the message. [Channel Create](/gateway/events/#channel-create) reaches a recipient only when the channel is newly created or was closed on that recipient's side. A recipient who already has the channel open observes only [Message Create](/gateway/events/#message-create).
 
-Recipients need not have interacted with the system account before. Broadcasts bypass normal direct message spam restrictions.
+Recipients need not have interacted with the system account before. Fluxer skips the direct message permission checks for the system account. A block, no friendship, no mutual guild, and the recipient's direct message privacy settings do not stop delivery.
 
 Cancellation stops remaining deliveries and leaves sent messages in place. The [job](/admin-api/jobs/#admin-job-object) then reports `cancelled`.
 

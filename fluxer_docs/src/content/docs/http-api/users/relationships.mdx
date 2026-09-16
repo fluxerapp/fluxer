@@ -11,7 +11,7 @@ A relationship describes a friendship, block, or pending friend request from the
 The routes here are user-only. A bot or OAuth2 bearer credential receives 403 `ACCESS_DENIED`, and an account with an outstanding required action receives 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
 
 :::note[Relationship records are directional]
-A friendship is a FRIEND record on both accounts. A pending request is `OUTGOING_REQUEST` on the sender and `INCOMING_REQUEST` on the recipient. A block exists only on the account that created it, so the blocked account observes nothing.
+A friendship is a FRIEND record on both accounts. A pending request is `OUTGOING_REQUEST` on the sender and `INCOMING_REQUEST` on the recipient. A block exists only on the account that created it, so the block adds no record to the blocked account and sends it no [Relationship Add](/gateway/events/#relationship-add).
 :::
 
 A deleted account has the deleted flag with no pending deletion timestamp, and is not a valid friend request target. An account inside a scheduled deletion window has a timestamp, so it stays a valid target.
@@ -171,13 +171,13 @@ A target the caller has blocked returns 400 `CANNOT_SEND_FRIEND_REQUEST_TO_BLOCK
 <sup>1</sup> The friend source evaluation is skipped when the target has no stored settings, which admits the request as though the target permitted requests from anyone
 
 :::caution[A flagged caller receives an indistinguishable success]
-A caller with the `SPAMMER` [public user flag](/http-api/users/#public-user-flags), or one whose send trips the deployment's direct contact spam policy, gets a one-sided request. Fluxer writes only the caller's `OUTGOING_REQUEST` record. [Relationship Add](/gateway/events/#relationship-add) reaches the caller alone. The response is an ordinary `OUTGOING_REQUEST` object.
+A caller with the `SPAMMER` [public user flag](/http-api/users/#public-user-flags), or one whose send triggers the deployment's direct contact spam policy, gets a one-sided request. Fluxer writes only the caller's `OUTGOING_REQUEST` record. [Relationship Add](/gateway/events/#relationship-add) reaches the caller alone. The response is an ordinary `OUTGOING_REQUEST` object.
 :::
 
-That path also skips the rules that follow it: the target's block of the caller, the target's [friend source flags](/http-api/users/#friend-source-flags), the app store reviewer rule, the [relationship limit](#relationship-limit), and friendly bot auto-acceptance. The caller's own block of the target is still enforced and still returns 400 `CANNOT_SEND_FRIEND_REQUEST_TO_BLOCKED_USER`. The policy path can also set the `SPAMMER` flag on the caller, which makes every later send one-sided.
+The one-sided request path also skips the rules that follow it: the target's block of the caller, the target's [friend source flags](/http-api/users/#friend-source-flags), the app store reviewer rule, the [relationship limit](#relationship-limit), and friendly bot auto-acceptance. The caller's own block of the target is still enforced and still returns 400 `CANNOT_SEND_FRIEND_REQUEST_TO_BLOCKED_USER`. When the direct contact spam policy suppresses a send and its action is `flag_spammer`, Fluxer also sets the `SPAMMER` flag on the caller, which makes every later send one-sided.
 
 :::note[The suppression entries enter at different points]
-A caller that already has the flag enters before the pending request lookup, so it can hold both an `INCOMING_REQUEST` and an `OUTGOING_REQUEST` record for one account. A caller suppressed during the call enters after the lookup and accepts the pending request normally.
+Fluxer checks for the `SPAMMER` flag before it looks for a pending request from the target. A caller that already has the flag gets a one-sided request even when the target has a pending request, so it can hold both an `INCOMING_REQUEST` and an `OUTGOING_REQUEST` record for one account. Fluxer applies the direct contact spam policy after that lookup, so a caller without the flag accepts a pending request from the target normally.
 :::
 
 ### Path parameters
@@ -209,7 +209,7 @@ The body can be omitted, in which case it is treated as an empty object.
 
 A new request writes matching `OUTGOING_REQUEST` and `INCOMING_REQUEST` records and emits [Relationship Add](/gateway/events/#relationship-add) to both accounts. Both records are written with `share_voice_activity` set to true.
 
-When the target has already sent the caller a request, the operation accepts that request. Acceptance replaces both pending records with FRIEND records and emits [Relationship Update](/gateway/events/#relationship-update) to both accounts, each side taking its own sharing default. No acceptance path on this route opens a direct message channel, unlike [Accept request or block user](#accept-request-or-block-user).
+When the target has already sent the caller a request, the operation accepts that request. Acceptance replaces both pending records with FRIEND records and emits [Relationship Update](/gateway/events/#relationship-update) to both accounts, and each FRIEND record has `share_voice_activity` set to its owning account's `default_share_voice_activity`. No acceptance path on this route opens a direct message channel, unlike [Accept request or block user](#accept-request-or-block-user).
 
 A bot target that has `FRIENDLY_BOT` without `FRIENDLY_BOT_MANUAL_APPROVAL` accepts in the same call, so the caller observes [Relationship Add](/gateway/events/#relationship-add) followed by [Relationship Update](/gateway/events/#relationship-update). Both flags are read only on a bot account. The response body of that call is the bot's own record, and its `id` and `user` name the caller and its `share_voice_activity` is the bot's default. The Dispatch the caller receives has the caller's record.
 
@@ -378,7 +378,7 @@ The body can be omitted, in which case it is treated as an empty object and the 
 
 Each matched request removes the caller's `INCOMING_REQUEST` record and the sender's `OUTGOING_REQUEST` record, and emits [Relationship Remove](/gateway/events/#relationship-remove) to the caller and to the sender. A call that matches nothing changes nothing.
 
-A failed request can leave some requests removed without returning a count. Read the relationships again to reconcile.
+A call that fails partway can remove some incoming friend requests and return no count. Call [List relationships](#list-relationships) again to read what remains.
 
 ### Rate limit
 

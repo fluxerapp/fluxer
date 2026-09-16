@@ -10,7 +10,7 @@ OAuth2 is how a user grants an application access to their account. The same con
 
 ## Authorisation code grant
 
-The grant begins at [Authorise application](#authorise-application). That route redirects the browser to the Fluxer consent interface, unless the caller asked for a silent authorisation. [Grant OAuth2 consent](#grant-oauth2-consent) records the decision, issues one authorisation code, and returns the callback URL that has it. The client presents that code to [Exchange OAuth2 token](#exchange-oauth2-token) with its client credentials and receives an access and refresh token pair.
+The grant begins at [Authorise application](#authorise-application). That route redirects the browser to the Fluxer consent interface, unless the request sets `prompt=none`. [Grant OAuth2 consent](#grant-oauth2-consent) records the decision, issues one authorisation code, and returns the callback URL that has it. The client presents that code to [Exchange OAuth2 token](#exchange-oauth2-token) with its client credentials and receives an access and refresh token pair.
 
 Proof Key for Code Exchange, or PKCE, supports the `S256` and `plain` challenge methods, and Fluxer binds the challenge to the code when it issues the code. A `code_challenge` supplied without a `code_challenge_method` is treated as `plain`. An exchange for a code that has a challenge supplies a matching `code_verifier`, and an exchange for a code that has none ignores any verifier it is given.
 
@@ -18,11 +18,11 @@ Proof Key for Code Exchange, or PKCE, supports the `S256` and `plain` challenge 
 
 Treat authorisation codes, client secrets, and tokens as opaque credentials. Retrying an interrupted exchange with the same inputs is rejected as an invalid grant. Restart the grant instead.
 
-An authorisation code expires 10 minutes after it is issued, an access token after 7 days, and a refresh token after 30 days. Every refresh exchange issues a replacement with a new 30 day life, so a grant ends 30 days after its last refresh.
+An authorisation code expires 10 minutes after it is issued, an access token after 7 days, and a refresh token after 30 days. Every refresh exchange issues a new refresh token that expires 30 days after it is issued, so a grant ends 30 days after its last refresh.
 
 ## Route authentication
 
-Every route with a delegated identity is user-only unless the operation says otherwise. Fluxer rejects a bot token and an OAuth2 bearer with 403 `ACCESS_DENIED`, and accepts an account with an outstanding required action. The token, introspection, and revocation routes authenticate the client application instead, so their [rate limit](/topics/rate-limits/) is keyed by client IP address.
+Every route on this page that authenticates a user is user-only unless the operation says otherwise. Fluxer rejects a bot token and an OAuth2 bearer with 403 `ACCESS_DENIED`, and accepts an account with an outstanding required action. The token, introspection, and revocation routes authenticate the client application instead, so their [rate limit](/topics/rate-limits/) is keyed by client IP address.
 
 ## OAuth2 string normalisation
 
@@ -58,7 +58,7 @@ An unrecognised scope value is rejected when the authorisation request is comple
 Scope order has no semantic meaning, so a client MUST compare scopes as a set.
 :::
 
-Fluxer sorts the `scope` string of an [OAuth2 token](#oauth2-token-object) and of an [OAuth2 introspection](#oauth2-introspection-object) into the registry order above. The `scopes` array of a [current OAuth2 authorisation](#current-oauth2-authorisation-object) has the stored scopes in no defined order, with unrecognised values removed. The `scopes` array of an [OAuth2 authorisation](#oauth2-authorisation-object) is in no defined order, and it can hold `bot` and an unrecognised value once more than one refresh token contributes.
+Fluxer sorts the `scope` string of an [OAuth2 token](#oauth2-token-object) and of an [OAuth2 introspection](#oauth2-introspection-object) into the registry order above. The `scopes` array of a [current OAuth2 authorisation](#current-oauth2-authorisation-object) has the stored scopes in no defined order, with unrecognised values removed. The `scopes` array of an [OAuth2 authorisation](#oauth2-authorisation-object) is in no defined order, and it can hold `bot` or an unrecognised value when the user holds more than one live refresh token for the application.
 
 ## OAuth2 error response object
 
@@ -73,7 +73,7 @@ The failure envelope the OAuth2 routes return.
 
 <sup>1</sup> Always present, and some descriptions are a bare API error code identifier
 
-These members are the whole body, so the routine that reads the ordinary [error response](/http-api/#error-response) cannot parse it. Fluxer returns every OAuth2 failure with status 400. A client MUST key on `error` and never on `error_description`.
+These members are the whole body, so the body has none of the `code` and `message` members of the ordinary [error response](/http-api/#error-response). Fluxer returns every OAuth2 failure with status 400. A client MUST key on `error` and never on `error_description`.
 
 The consent, token, introspection, and revocation routes return this object for a grant, client authentication, scope, redirect, response type, or permission mask failure. Every other failure, including request validation, authentication, authorisation, and rate limiting, uses the ordinary [error response](/http-api/#error-response) with an [API error code](/http-api/errors/).
 
@@ -191,7 +191,7 @@ The liveness and scope report Fluxer returns for one presented token.
 
 Apart from `username` and `exp`, every optional field above is present when `active` is true and absent when it is false. An active access token has `exp` and an active refresh token does not.
 
-Fluxer reports an unknown token, an expired token, and a token issued to another application as inactive. An inactive body has only `active` set to false, and names no reason. Introspection never resolves the account behind the token, so an active result reports on the token alone.
+Fluxer reports an unknown token, an expired token, and a token issued to another application as inactive. An inactive body has only `active` set to false, and names no reason. Fluxer does not look up the user account during introspection, so an active result describes the token only and says nothing about the state of that account.
 
 ## Current OAuth2 authorisation object
 
@@ -206,7 +206,7 @@ The application, scopes, and expiry behind the access token the caller presented
 | expires | ISO8601 timestamp | The expiry time of the access token |
 | user?<sup>2</sup> | [OAuth2 authorised user](#oauth2-authorised-user-object) object | The account the access token was issued for |
 
-<sup>1</sup> Emitted in no defined order, and `bot` is retained here even though it grants no delegated read
+<sup>1</sup> Emitted in no defined order, and `bot` stays in the array even though it grants no bearer access
 
 <sup>2</sup> Present only when the token grants `identify` and the account still exists, so a token restricted to `bot` never has one
 
@@ -295,7 +295,7 @@ The application named by an [OAuth2 authorisation](#oauth2-authorisation-object)
 
 <sup>1</sup> Null when the application has no bot account or that account has no avatar. The stored hash is reported unfiltered, so an animated hash retains its `a_` prefix
 
-<sup>2</sup> An application has no independent description
+<sup>2</sup> An application record has no description field, so this value is always null
 
 ## OAuth2 consent response object
 
@@ -309,7 +309,7 @@ The callback URL [Grant OAuth2 consent](#grant-oauth2-consent) returns after it 
 
 <sup>1</sup> The URL has the `code` query parameter, and the normalised caller `state` when one was supplied
 
-Fluxer builds the URL from the registered redirect URI the request resolved to, which is the Fluxer application endpoint when a bot-only authorisation supplied none. The code records the URL serialisation of that resolved URI, and the client later presents that exact serialisation to [Exchange OAuth2 token](#exchange-oauth2-token).
+Fluxer builds the URL from the registered redirect URI the request resolved to, which is the configured Fluxer web app URL when a bot-only authorisation supplied none. The code records the URL serialisation of that resolved URI, and the client later presents that exact serialisation to [Exchange OAuth2 token](#exchange-oauth2-token).
 
 ## Authorise application
 
@@ -336,7 +336,7 @@ Starts an authorisation request. Fluxer returns a redirect for every query that 
 
 <sup>1</sup> The value must parse as an absolute URL with a scheme and a host, and must match a registered redirect URI before a code is issued
 
-<sup>2</sup> Both values are forwarded to the consent interface unchanged, and their mutual exclusion is enforced by [Grant OAuth2 consent](#grant-oauth2-consent)
+<sup>2</sup> Both values are forwarded to the consent interface unchanged, and only [Grant OAuth2 consent](#grant-oauth2-consent) rejects a request that supplies both
 
 <sup>3</sup> The value is forwarded to the consent interface unchanged and is parsed as an integer only by [Grant OAuth2 consent](#grant-oauth2-consent)
 
@@ -360,7 +360,7 @@ An error redirect has `error` and the normalised `state` when the caller supplie
 The error redirect targets the supplied `redirect_uri` only when the named application has registered that exact string, so this route cannot bounce a browser to an arbitrary origin.
 :::
 
-Fluxer compares the two strings byte for byte, so a differing scheme, port, trailing slash, query, or fragment does not match. Every other case redirects to the Fluxer application endpoint. That covers an omitted redirect URI, an unknown application, and an application with no registered URI at all.
+Fluxer compares the two strings byte for byte, so a differing scheme, port, trailing slash, query, or fragment does not match. Every other case redirects to the configured Fluxer web app URL. That covers an omitted redirect URI, an unknown application, and an application with no registered URI at all.
 
 ### Side effects
 
@@ -447,7 +447,7 @@ The request body is `application/x-www-form-urlencoded` or `multipart/form-data`
 A refresh exchange consumes the presented refresh token, so a client that loses the response MUST restart the authorisation code grant.
 :::
 
-Earlier access tokens for the same user and application survive a refresh and expire on their own schedule.
+Access tokens issued earlier for the same user and application stay valid after a refresh. Each one expires 7 days after it is issued.
 
 ### Request headers
 
@@ -619,11 +619,11 @@ Revoking a token deletes every access token and every refresh token its user hol
 | client_id?<sup>2</sup> | snowflake | The client ID, supplied when HTTP Basic is not used |
 | client_secret?<sup>2</sup> | string | The client secret, supplied when HTTP Basic is not used (1-256 UTF-16 code units after [normalisation](#oauth2-string-normalisation)) |
 
-<sup>1</sup> Only `refresh_token` matches the presented value against refresh tokens, and access tokens are still tried when no refresh token matches. An absent hint and an `access_token` hint match access tokens only
+<sup>1</sup> A `refresh_token` hint makes Fluxer look for a matching refresh token first, then for a matching access token when no refresh token matches. An absent hint and an `access_token` hint make Fluxer look for a matching access token only
 
 <sup>2</sup> Supplying either field together with a well-formed HTTP Basic `Authorization` header is rejected as `invalid_request`
 
-A client that presents a refresh token MUST send `token_type_hint=refresh_token`, or the revocation takes no effect.
+A client that presents a refresh token MUST send `token_type_hint=refresh_token`, or Fluxer matches no token and deletes nothing.
 
 ### Response
 

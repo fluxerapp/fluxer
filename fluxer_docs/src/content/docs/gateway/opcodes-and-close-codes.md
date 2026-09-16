@@ -58,7 +58,7 @@ An opcode is the number that names a [Gateway payload](/gateway/overview/#gatewa
 
 <sup>4</sup> Resume is accepted whether or not a session is already attached to the connection
 
-<sup>5</sup> Opcode 7 precedes the close when the Gateway node is draining, when the session is fenced for a cluster handoff, and when a Resume from a new socket displaces this one
+<sup>5</sup> Opcode 7 precedes the close when the Gateway node is draining, when the node transfers the session to another Gateway node, and when a Resume from a new socket displaces this one
 
 <sup>6</sup> After the frame, a socket whose session ended is unauthenticated. After a failed Resume, a socket that already held a session still holds it
 
@@ -80,7 +80,7 @@ A client SHOULD log an unknown opcode and ignore the frame, and MUST NOT close o
 
 | Code | Name | Meaning |
 | --- | --- | --- |
-| 4000 | Unknown error | The Gateway drained the connection, or a session operation could not be completed |
+| 4000 | Unknown error | Drain, an unclassified session creation error, or a Resume whose retained session could not be reached |
 | 4001 | Unknown opcode | The opcode is undefined, is a server opcode, or the payload has no `d` |
 | 4002 | Decode error | The payload size, compression stream, encoding, or command fields are invalid |
 | 4003 | Not authenticated | An authenticated command arrived before Identify or Resume attached a session |
@@ -95,7 +95,7 @@ A client SHOULD log an unknown opcode and ignore the frame, and MUST NOT close o
 
 <sup>1</sup> `shard_count` is an integer from 1 to 16384, and `shard_id` is a non-negative integer below `shard_count`
 
-<sup>2</sup> The count is taken after the shard filter, so a bot clears it by identifying with a `shard_count` large enough to divide its guilds
+<sup>2</sup> The count is taken after the shard filter, so a bot clears it by identifying with a `shard_count` large enough that no shard owns more than 2,500 guilds
 
 Code 4006 is unassigned, and no code above 4012 is defined. [Event filtering](/gateway/event-filtering/) describes how a client bounds the events its session receives.
 
@@ -120,7 +120,7 @@ Code 4006 is unassigned, and no code above 4012 is defined. [Event filtering](/g
 
 <sup>2</sup> A Resume that fails token verification leaves the named session in place for the rest of its retention window, so a later Resume with the owning token still recovers it. An Identify that fails token verification leaves nothing to recover
 
-`Resumable` describes only whether an already established session can still be recovered with [Resume](/gateway/commands/#resume). The 60,000 ms retention window and the bounded replay buffer described in [Limits and rate limits](/gateway/limits-and-rate-limits/#replay-and-backpressure) apply unchanged.
+`Resumable` describes only whether an already established session can still be recovered with [Resume](/gateway/commands/#resume). The 60,000 ms retention window and the bounded replay buffer described in [Limits and rate limits](/gateway/limits-and-rate-limits/#replay-and-backpressure) still limit whether a Resume succeeds and what it replays.
 
 :::caution[Reconnecting unchanged reproduces `4004`, `4010`, and `4012`]
 A client changes the token, the shard pair, or the version before it reconnects.
@@ -176,7 +176,7 @@ The Gateway sends an exact reason string with every application close.
 
 <sup>3</sup> The Gateway holds the Identify and retries it silently after a classified transient failure, so the connection stays open. That covers a paused rollout, a draining node, an ineligible account, an Identify rate limit, a saturated start budget, and a failed session RPC
 
-<sup>4</sup> The Gateway node is draining, the session is being fenced for a cluster handoff, or a Resume from a new socket displaced this one
+<sup>4</sup> The Gateway node is draining, the node is transferring the session to another Gateway node, or a Resume from a new socket displaced this one
 
 Reason strings are stable wire values. A client branches on the code and MAY record the reason for diagnosis.
 

@@ -795,6 +795,10 @@ export class RpcService {
 		requestCache: RequestCache;
 	}): Promise<Array<GuildMemberResponse>> {
 		const {guildId, members, requestCache} = params;
+		await this.userCacheService.getUserPartialResponses(
+			members.map((member) => member.userId),
+			requestCache,
+		);
 		const mappedMembers = await allSettledWithConcurrency(members, RPC_RESPONSE_MAP_CONCURRENCY, (member) =>
 			mapGuildMemberToResponse(member, this.userCacheService, requestCache),
 		);

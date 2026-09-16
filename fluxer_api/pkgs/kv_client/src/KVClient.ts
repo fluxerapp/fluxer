@@ -217,7 +217,7 @@ local refillIntervalMs = tonumber(ARGV[5])
 
 local queueSize = redis.call('SCARD', queueKey)
 if queueSize == 0 then
-	return '{"urls":[],"tokens":0}'
+	return '{"entries":[],"tokens":0}'
 end
 
 local tokens = maxTokens
@@ -237,14 +237,14 @@ end
 local toPop = math.min(maxItems, math.floor(tokens), queueSize)
 if toPop <= 0 then
 	redis.call('SET', bucketKey, cjson.encode({tokens = tokens, lastRefill = lastRefill}), 'EX', 3600)
-	return '{"urls":[],"tokens":0}'
+	return '{"entries":[],"tokens":0}'
 end
 
-local urls = redis.call('SPOP', queueKey, toPop)
-tokens = tokens - #urls
+local entries = redis.call('SPOP', queueKey, toPop)
+tokens = tokens - #entries
 
 redis.call('SET', bucketKey, cjson.encode({tokens = tokens, lastRefill = lastRefill}), 'EX', 3600)
-return cjson.encode({urls = urls, tokens = #urls})
+return cjson.encode({entries = entries, tokens = #entries})
 `;
 const CLAIM_BULK_DELETION_SCRIPT = `
 local score = redis.call('ZSCORE', KEYS[1], ARGV[1])
@@ -902,17 +902,17 @@ function parseRateLimitResult(value: unknown): KVRateLimitResult {
 function parsePurgeBatchResult(value: unknown, maxItems: number): KVPurgeBatchResult {
 	const command = 'dequeuePurgeBatch';
 	if (!isJsonObject(value)) throw createInvalidResponseError(command, 'a purge batch object');
-	const {urls, tokens} = value;
+	const {entries, tokens} = value;
 	if (
-		!Array.isArray(urls) ||
-		!urls.every((url): url is string => typeof url === 'string') ||
+		!Array.isArray(entries) ||
+		!entries.every((entry): entry is string => typeof entry === 'string') ||
 		!isNonNegativeSafeInteger(tokens) ||
-		tokens !== urls.length ||
-		urls.length > maxItems
+		tokens !== entries.length ||
+		entries.length > maxItems
 	) {
 		throw createInvalidResponseError(command, 'a bounded string array and matching token count');
 	}
-	return {urls, tokensConsumed: tokens};
+	return {entries, tokensConsumed: tokens};
 }
 
 function isJsonObject(value: unknown): value is Record<string, unknown> {

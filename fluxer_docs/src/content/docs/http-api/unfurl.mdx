@@ -12,7 +12,7 @@ The route is user-only. Fluxer rejects a bot token and an OAuth2 bearer credenti
 
 ## Site resolvers
 
-Supported sites include the following. Preview availability depends on the site and deployment configuration. Other public URLs can produce previews from their page metadata or media content.
+The table below lists every site resolver. Whether a site produces a preview depends on the site, and the Klipy and YouTube resolvers also require an API key configured on the instance. Other public URLs can produce previews from their page metadata or media content.
 
 | Site | Matched URL |
 | --- | --- |
@@ -62,7 +62,7 @@ A refused or failed fetch does not by itself fail the operation. When Fluxer pro
 
 ## Cache behaviour
 
-This endpoint requests a fresh resolution. Messages may reuse an earlier preview or receive one in a later message update.
+This endpoint reads no cached result and resolves the URL again. A message can show a cached preview for the same URL, or receive its preview later in a message update.
 
 ## Resolve URL embeds
 

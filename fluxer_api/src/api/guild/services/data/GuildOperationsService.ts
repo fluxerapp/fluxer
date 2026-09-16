@@ -122,6 +122,34 @@ const USER_TOGGLEABLE_GUILD_FEATURES: ReadonlySet<string> = new Set([
 	GuildFeatures.HIDE_OWNER_CROWN,
 ]);
 const SUPPORTED_SYSTEM_CHANNEL_FLAGS = SystemChannelFlags.SUPPRESS_JOIN_NOTIFICATIONS;
+const GUILD_SETTINGS_AUDIT_KEYS: ReadonlySet<string> = new Set([
+	'name',
+	'icon_hash',
+	'banner_hash',
+	'banner_width',
+	'banner_height',
+	'splash_hash',
+	'splash_width',
+	'splash_height',
+	'splash_card_alignment',
+	'embed_splash_hash',
+	'embed_splash_width',
+	'embed_splash_height',
+	'features',
+	'verification_level',
+	'mfa_level',
+	'nsfw_level',
+	'nsfw',
+	'content_warning_level',
+	'content_warning_text',
+	'explicit_content_filter',
+	'default_message_notifications',
+	'system_channel_id',
+	'system_channel_flags',
+	'afk_channel_id',
+	'afk_timeout',
+	'message_history_cutoff',
+]);
 
 function setsEqual(a: ReadonlySet<string>, b: ReadonlySet<string>): boolean {
 	if (a === b) return true;
@@ -607,7 +635,7 @@ export class GuildOperationsService {
 				Logger.error({guildId: updatedGuild.id, error}, 'Failed to update guild in search');
 			});
 		}
-		const auditLogChanges = this.helpers.computeGuildChanges(previousSnapshot, updatedGuild);
+		const auditLogChanges = this.helpers.computeGuildChanges(previousSnapshot, updatedGuild, GUILD_SETTINGS_AUDIT_KEYS);
 		if (auditLogChanges.length > 0) {
 			await this.helpers.recordAuditLog({
 				guildId,
@@ -615,7 +643,6 @@ export class GuildOperationsService {
 				action: AuditLogActionType.GUILD_UPDATE,
 				targetId: guildId,
 				auditLogReason: auditLogReason ?? null,
-				metadata: {name: updatedGuild.name},
 				changes: auditLogChanges,
 			});
 		}

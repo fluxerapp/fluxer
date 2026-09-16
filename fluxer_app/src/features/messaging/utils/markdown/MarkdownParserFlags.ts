@@ -32,6 +32,8 @@ const RESTRICTED_INLINE_REPLY_FLAGS =
 		ParserFlags.ALLOW_HEADINGS |
 		ParserFlags.ALLOW_LISTS
 	);
+const RESTRICTED_INLINE_PREVIEW_FLAGS =
+	RESTRICTED_INLINE_REPLY_FLAGS | ParserFlags.ALLOW_HEADINGS | ParserFlags.ALLOW_LISTS;
 const RESTRICTED_USER_BIO_FLAGS =
 	STANDARD_FLAGS &
 	~(
@@ -49,6 +51,8 @@ export function getParserFlagsForContext(context: MarkdownContext): number {
 	switch (context) {
 		case MarkdownContext.RESTRICTED_INLINE_REPLY:
 			return RESTRICTED_INLINE_REPLY_FLAGS;
+		case MarkdownContext.RESTRICTED_INLINE_PREVIEW:
+			return RESTRICTED_INLINE_PREVIEW_FLAGS;
 		case MarkdownContext.RESTRICTED_USER_BIO:
 			return RESTRICTED_USER_BIO_FLAGS;
 		case MarkdownContext.RESTRICTED_EMBED_DESCRIPTION:

@@ -309,6 +309,34 @@ describe('ConfigLoader', () => {
 		await expect(loadConfig()).rejects.toThrow('FLUXER_API_WORKER_TASK');
 	});
 
+	test('leaves the storage change feed disabled by default', async () => {
+		stubMinimalEnv();
+		const config = await loadConfig();
+		expect(config.services.api.storage_change_feed).toEqual({enabled: false, stream: 'STORAGE_CHANGES'});
+	});
+
+	test('maps the storage change feed environment variables', async () => {
+		stubMinimalEnv({
+			FLUXER_API_STORAGE_CHANGE_FEED_ENABLED: 'true',
+			FLUXER_API_STORAGE_CHANGE_FEED_STREAM: 'BACKUP_CHANGES',
+			FLUXER_API_STORAGE_CHANGE_FEED_SKIP_BUCKETS: 'fluxer-uploads, fluxer-harvests',
+		});
+		const config = await loadConfig();
+		expect(config.services.api.storage_change_feed).toEqual({
+			enabled: true,
+			stream: 'BACKUP_CHANGES',
+			skip_buckets: ['fluxer-uploads', 'fluxer-harvests'],
+		});
+	});
+
+	test('rejects a storage change feed stream name that JetStream cannot use', async () => {
+		stubMinimalEnv({
+			FLUXER_API_STORAGE_CHANGE_FEED_ENABLED: 'true',
+			FLUXER_API_STORAGE_CHANGE_FEED_STREAM: 'storage.changes',
+		});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_API_STORAGE_CHANGE_FEED_STREAM');
+	});
+
 	test('rejects invalid Postgres typed environment values', async () => {
 		stubMinimalEnv({FLUXER_POSTGRES_PORT: 'abc'});
 		await expect(loadConfig()).rejects.toThrow('FLUXER_POSTGRES_PORT');
@@ -544,6 +572,14 @@ describe('ConfigLoader', () => {
 		await expect(loadConfig()).rejects.toThrow('FLUXER_CACHE_PURGE_HTTP_ENDPOINT is required');
 	});
 
+	test('rejects the http cache purge adapter without a token', async () => {
+		stubMinimalEnv({
+			FLUXER_CACHE_PURGE_ADAPTER: 'http',
+			FLUXER_CACHE_PURGE_HTTP_ENDPOINT: 'https://purge.internal/purge',
+		});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_CACHE_PURGE_HTTP_TOKEN is required');
+	});
+
 	test('rejects a cache purge endpoint that is not an absolute http URL', async () => {
 		for (const endpoint of ['/purge', 'purge.internal/purge', 'ftp://purge.internal/purge']) {
 			stubMinimalEnv({FLUXER_CACHE_PURGE_ADAPTER: 'http', FLUXER_CACHE_PURGE_HTTP_ENDPOINT: endpoint});
@@ -568,6 +604,7 @@ describe('ConfigLoader', () => {
 			stubMinimalEnv({
 				FLUXER_CACHE_PURGE_ADAPTER: 'http',
 				FLUXER_CACHE_PURGE_HTTP_ENDPOINT: 'https://purge.internal/purge',
+				FLUXER_CACHE_PURGE_HTTP_TOKEN: 'purge-token',
 				FLUXER_CACHE_PURGE_HTTP_TIMEOUT_MS: timeout,
 			});
 			await expect(loadConfig()).rejects.toThrow(

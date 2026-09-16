@@ -5,6 +5,7 @@ import type {Guild} from '@app/api/models/Guild';
 import type {GuildEmoji} from '@app/api/models/GuildEmoji';
 import type {GuildSticker} from '@app/api/models/GuildSticker';
 import {toIdString, toSortedIdArray} from '@app/api/utils/IdUtils';
+import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 
 export function serializeGuildForAudit(guild: Guild): Record<string, unknown> {
 	return {
@@ -49,6 +50,7 @@ export function serializeChannelForAudit(channel: Channel): Record<string, unkno
 		type: channel.type,
 		name: channel.name ?? null,
 		topic: channel.topic ?? null,
+		...(channel.type === ChannelTypes.GUILD_LINK ? {url: channel.url ?? null} : {}),
 		parent_id: toIdString(channel.parentId),
 		position: channel.position,
 		nsfw: channel.nsfwOverride,
@@ -59,7 +61,6 @@ export function serializeChannelForAudit(channel: Channel): Record<string, unkno
 		voice_connection_limit: channel.voiceConnectionLimit,
 		bitrate: channel.bitrate,
 		rtc_region: channel.rtcRegion ?? null,
-		permission_overwrite_count: channel.permissionOverwrites ? channel.permissionOverwrites.size : 0,
 	};
 }
 

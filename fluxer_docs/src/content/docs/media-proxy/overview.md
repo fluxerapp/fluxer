@@ -23,7 +23,7 @@ The Media Proxy serves Fluxer attachments, image assets, themes, entrance sound 
 
 <sup>2</sup> Served by a `static` endpoint alone
 
-[Transformations](/media-proxy/transformations/) defines representation selection for every family that has one. [Responses and limits](/media-proxy/responses-and-limits/) lists statuses, size bounds, deadlines, and cache policies.
+[Transformations](/media-proxy/transformations/) defines the query parameters that select a representation for the families that accept them. [Responses and limits](/media-proxy/responses-and-limits/) lists statuses, size bounds, deadlines, and cache policies.
 
 ## Base URLs
 
@@ -55,7 +55,7 @@ One Media Proxy process serves exactly one mode. The mode is fixed at startup an
 
 The relay `PUT` is the only route with a mode gate, and it returns 404 outside `upload` mode. On a read that requests no transformation, only an `mp` endpoint rasterises SVG, so an `upload` endpoint returns the original SVG bytes. The [operator and internal endpoints](/media-proxy/routes/#operator-and-internal-endpoints) behave the same in every mode.
 
-Which published base URL serves which mode is a deployment choice. The reference self-hosted deployment serves `endpoints.media` from an `upload` mode process.
+The operator chooses which mode serves each published base URL. The reference self-hosted deployment serves `endpoints.media` from an `upload` mode process.
 
 ## Methods
 
@@ -63,7 +63,7 @@ Every read route accepts `GET` and `HEAD`. HEAD returns the same status and repr
 
 The relay path accepts `PUT`. Any other method there returns 405 with an `Allow` header. An unknown path returns 404.
 
-On the [signed external route](/media-proxy/routes/#get-signed-external-media), origin metadata can cause HEAD representation headers to differ from GET.
+On the [signed external route](/media-proxy/routes/#get-signed-external-media), a HEAD request can be answered from the headers of an origin HEAD response, so its representation headers can differ from GET.
 
 ## Request headers
 
@@ -120,7 +120,7 @@ A range on a transformed response selects bytes from the result and returns 206 
 An origin that answers a forwarded range with SVG bytes under another media type can produce a 206 containing raw SVG.
 :::
 
-Disposition follows that declared type, so SVG mislabelled as an image or video media type is served inline.
+Content disposition follows the media type the origin declared, so SVG mislabelled as an image or video media type is served inline.
 
 ## Representation headers
 
@@ -156,7 +156,7 @@ Every successful media representation uses `Cache-Control: public, max-age=31536
 The upload relay is the only route that returns an `ETag`, and it relays the object storage value for the stored object. No read route sends an `ETag` or a `Last-Modified`, so a cache revalidates a representation by fetching it again.
 
 :::note[External media is cached for a year too]
-The signed path is derived from the target URL, so the bytes behind one unchanged target are cached for a year at both layers.
+The signed path is derived from the target URL, so the bytes behind one unchanged target are cached for a year by browsers under `Cache-Control` and by shared caches under `CDN-Cache-Control`.
 :::
 
 A 416 response has `Accept-Ranges`, `Content-Range`, `Access-Control-Allow-Origin`, `Vary`, and `X-Robots-Tag`, with no `Content-Type` and no cache policy. Its body is empty.
@@ -175,4 +175,4 @@ Use the filename from `Content-Disposition` when saving a response. Transformati
 The attachment, image asset, and signed external routes rasterise SVG to WebP, so a browser does not execute the document in the Media Proxy origin.
 :::
 
-On a non-transforming attachment read, an `mp` endpoint rasterises SVG to lossless WebP. A transforming request uses the `format` and `quality` it was given, and an image asset path defaults to `high`. A `static` mode endpoint serves the original bytes.
+On a non-transforming attachment read, an `mp` endpoint rasterises SVG to lossless WebP. A transforming request uses the `format` and `quality` it was given, and an image asset path uses `high` when the request gives no `quality`, except for animated WebP output, which uses `auto`. A `static` mode endpoint serves the original bytes.

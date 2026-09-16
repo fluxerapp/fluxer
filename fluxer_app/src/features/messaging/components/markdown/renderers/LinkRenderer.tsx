@@ -22,7 +22,11 @@ import {
 import * as InviteCommands from '@app/features/invite/commands/InviteCommands';
 import * as InviteUtils from '@app/features/invite/utils/InviteUtils';
 import jumpLinkStyles from '@app/features/messaging/components/markdown/renderers/MessageJumpLink.module.css';
-import {MarkdownContext, type RendererProps} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
+import {
+	isRestrictedInlineContext,
+	type MarkdownRenderOptions,
+	type RendererProps,
+} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
 import {ExternalLinkWarningModal} from '@app/features/messaging/components/modals/ExternalLinkWarningModal';
 import {openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
 import {goToMessage} from '@app/features/messaging/utils/MessageNavigator';
@@ -71,6 +75,8 @@ import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback} from 'react';
+
+const LINK_CONTENT_OPTION_OVERRIDES: Partial<MarkdownRenderOptions> = {disableEmojiInteractions: true};
 
 const MESSAGE_LINK_DESCRIPTOR = msg({
 	message: 'message link',
@@ -631,7 +637,7 @@ export const LinkRenderer = observer(function LinkRenderer({
 }: RendererProps<LinkNode>): React.ReactElement {
 	const i18n = options.i18n!;
 	const {url, text} = node;
-	const content = text ? renderChildren([text]) : url;
+	const content = text ? renderChildren([text], LINK_CONTENT_OPTION_OVERRIDES) : url;
 	const inviteCode = InviteUtils.findInvite(url);
 	const themeCode = ThemeUtils.findTheme(url);
 	const userProfileId = parseUserProfileUrl(url);
@@ -641,7 +647,7 @@ export const LinkRenderer = observer(function LinkRenderer({
 	const jumpChannel = jumpTarget ? (Channels.getChannel(jumpTarget.channelId) ?? null) : null;
 	const jumpGuild = jumpChannel?.guildId ? (Guilds.getGuild(jumpChannel.guildId) ?? null) : null;
 	const settingsTarget = isAppProtocolUrl(url) ? parseUserSettingsDeepLink(url) : null;
-	const isInlineReplyContext = options.context === MarkdownContext.RESTRICTED_INLINE_REPLY;
+	const isInlineReplyContext = isRestrictedInlineContext(options.context);
 	const shouldDisableInteractions = options.disableInteractions === true;
 	if (inviteCode && StreamerMode.shouldHideInviteLinks) {
 		return (

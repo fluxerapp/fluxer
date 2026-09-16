@@ -18,7 +18,10 @@ import {
 	$createComposerPlainSegmentNode,
 	$isComposerPlainSegmentNode,
 } from '@app/features/lexical/composer/nodes/ComposerPlainSegmentNode';
-import {$isComposerStandardEmojiNode} from '@app/features/lexical/composer/nodes/ComposerStandardEmojiNode';
+import {
+	$createComposerStandardEmojiNode,
+	$isComposerStandardEmojiNode,
+} from '@app/features/lexical/composer/nodes/ComposerStandardEmojiNode';
 import {$createSlashSeparatorNode} from '@app/features/lexical/composer/nodes/SlashSeparatorNode';
 import {
 	$createSlashSlotNode,
@@ -53,11 +56,16 @@ export interface ComposerProjection {
 }
 
 const CUSTOM_EMOJI_WIRE_RE = /^<(a)?:([A-Za-z0-9_+~-]+):(\d+)>$/;
+const STANDARD_EMOJI_WIRE_RE = /^(?:[0-9#*]\uFE0F?\u20E3|\P{ASCII})+$/u;
 const SLOT_USER_WIRE_RE = /^<@!?(\d+)>$/;
 const SLOT_ROLE_WIRE_RE = /^<@&(\d+)>$/;
 const SLOT_CHANNEL_WIRE_RE = /^<#(\d+)>$/;
 export const COMPOSER_SLASH_SLOT_SEGMENT_PREFIX = 'slash-slot:';
 const SLASH_SLOT_OPTION_NAME_RE = /^[a-z0-9_-]{1,32}$/;
+
+function isStandardEmojiSegment(segment: MentionSegment): boolean {
+	return segment.type === 'emoji' && STANDARD_EMOJI_WIRE_RE.test(segment.actualText);
+}
 
 function isValidSegmentWire(segment: MentionSegment): boolean {
 	if (parseSlashCommandStateSegment(segment) != null) {
@@ -78,7 +86,7 @@ function isValidSegmentWire(segment: MentionSegment): boolean {
 	switch (segment.type) {
 		case 'emoji': {
 			const match = CUSTOM_EMOJI_WIRE_RE.exec(segment.actualText);
-			return match != null && match[3] === segment.id;
+			return match == null ? isStandardEmojiSegment(segment) : match[3] === segment.id;
 		}
 		case 'user': {
 			const match = SLOT_USER_WIRE_RE.exec(segment.actualText);
@@ -308,8 +316,22 @@ export function $projectComposer(): ComposerProjection {
 					end: display.length,
 				});
 			} else if ($isComposerStandardEmojiNode(child)) {
-				display += child.getTextContent();
-				wire += child.getWireText();
+				const start = display.length;
+				const displayText = child.getTextContent();
+				const actualText = child.getWireText();
+				display += displayText;
+				wire += actualText;
+				const segment: MentionSegment = {
+					type: 'emoji',
+					id: child.getEmojiName(),
+					displayText,
+					actualText,
+					start,
+					end: display.length,
+				};
+				if (isStandardEmojiSegment(segment)) {
+					segments.push(segment);
+				}
 			} else if ($isSlashSlotNode(child)) {
 				const displayText = child.getTextContent();
 				const start = display.length;
@@ -402,6 +424,9 @@ export function $createComposerSegmentNodes(segment: MentionSegment, plainText: 
 		const match = CUSTOM_EMOJI_WIRE_RE.exec(segment.actualText);
 		if (match) {
 			return [$createComposerCustomEmojiNode(match[3]!, Boolean(match[1]), segment.displayText, segment.actualText)];
+		}
+		if (isStandardEmojiSegment(segment)) {
+			return [$createComposerStandardEmojiNode(segment.id, segment.actualText, null, segment.displayText)];
 		}
 		return [$createTextNode(segment.displayText)];
 	}

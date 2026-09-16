@@ -2,6 +2,7 @@
 
 import type {UserRow} from '@app/api/database/types/UserTypes';
 import type {IDonationRepository} from '@app/api/donation/IDonationRepository';
+import type {Donor} from '@app/api/donation/models/Donor';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
@@ -49,6 +50,14 @@ export class StripeDisputeWebhookHandler {
 		}
 		const payment = await this.userRepository.getPaymentByPaymentIntent(paymentIntentId);
 		if (!payment) {
+			const donor = await this.findDonorForDispute(dispute);
+			if (donor) {
+				Logger.info(
+					{paymentIntentId, disputeId: dispute.id, email: donor.email},
+					'Chargeback for donation customer - no premium action required',
+				);
+				return;
+			}
 			Logger.error({paymentIntentId}, 'No payment found for chargeback');
 			throw new StripeError('No payment found for chargeback');
 		}
@@ -73,6 +82,14 @@ export class StripeDisputeWebhookHandler {
 		}
 		const payment = await this.userRepository.getPaymentByPaymentIntent(paymentIntentId);
 		if (!payment) {
+			const donor = await this.findDonorForDispute(dispute);
+			if (donor) {
+				Logger.info(
+					{paymentIntentId, disputeId: dispute.id, email: donor.email},
+					'Chargeback withdrawal for donation customer - no premium action required',
+				);
+				return;
+			}
 			throw new StripeError('No payment found for chargeback withdrawal');
 		}
 		const user = await this.userRepository.findUnique(payment.userId);
@@ -108,6 +125,30 @@ export class StripeDisputeWebhookHandler {
 				'User unsuspended after chargeback withdrawal - 30 day self-serve refund cooldown applied',
 			);
 		}
+	}
+
+	private async resolveDisputeCustomerId(dispute: Stripe.Dispute): Promise<string | null> {
+		const expandedCharge = typeof dispute.charge === 'object' ? dispute.charge : null;
+		if (expandedCharge) {
+			const expandedCustomerId = extractId(expandedCharge.customer);
+			if (expandedCustomerId) {
+				return expandedCustomerId;
+			}
+		}
+		const chargeId = extractId(dispute.charge);
+		if (!chargeId) {
+			return null;
+		}
+		const mirroredCharge = await getBillingRepository().charges.findById(chargeId);
+		return mirroredCharge?.customer_id ?? null;
+	}
+
+	private async findDonorForDispute(dispute: Stripe.Dispute): Promise<Donor | null> {
+		const customerId = await this.resolveDisputeCustomerId(dispute);
+		if (!customerId) {
+			return null;
+		}
+		return await this.donationRepository.findDonorByStripeCustomerId(customerId);
 	}
 
 	async handleRefund(charge: Stripe.Charge): Promise<void> {

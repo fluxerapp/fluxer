@@ -29,6 +29,10 @@ export interface AutocompleteTrigger {
 	matchedText: string;
 }
 
+export function isEmojiReactionShorthand(value: string): boolean {
+	return EMOJI_REACTION_REGEX.test(value);
+}
+
 export function detectAutocompleteTrigger(textUpToCursor: string): AutocompleteTrigger | null {
 	const emojiReactionMatch = textUpToCursor.match(EMOJI_REACTION_REGEX);
 	if (emojiReactionMatch) {

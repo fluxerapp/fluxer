@@ -16,10 +16,10 @@ Fluxer evaluates a guild-scoped Dispatch against these gates in order.
 | --- | --- | --- |
 | 1 | Guild availability | Whether the guild dispatches anything except [Guild Update](/gateway/events/#guild-update) |
 | 2 | Permission and visibility | Which sessions may see the event at all |
-| 3 | Guild subscription state | Whether a passive session in a large guild falls inside the fixed subset that still receives it |
+| 3 | Guild subscription state | Whether a passive session in a guild with more than 250 members still receives it, as [Active and passive guilds](#active-and-passive-guilds) lists |
 | 4 | Session-level filters | Whether the shard filter, and then the `ignored_events` list, drops it inside the session after the guild has already chosen the recipients |
 
-A guild with the `UNAVAILABLE_FOR_EVERYONE` or `UNAVAILABLE_FOR_EVERYONE_BUT_STAFF` feature fails gate 1. `UNAVAILABLE_FOR_EVERYONE_BUT_STAFF` decides whether the guild hands a session its full state or an `unavailable` stub when the session connects. Gate 1 has no staff exemption, so a staff session also receives nothing but Guild Update while the feature is set.
+A guild with the `UNAVAILABLE_FOR_EVERYONE` or `UNAVAILABLE_FOR_EVERYONE_BUT_STAFF` feature fails gate 1. `UNAVAILABLE_FOR_EVERYONE_BUT_STAFF` decides what a session receives when it connects. A staff session receives the guild's full state, and every other session receives an `unavailable` stub. Gate 1 has no staff exemption, so a staff session also receives nothing but Guild Update while the feature is set.
 
 An account-scoped Dispatch skips gates 1 through 3 and is subject only to gate 4. Direct message traffic, relationship changes, and account record changes arrive that way.
 
@@ -41,7 +41,7 @@ Every one of those sets excludes a session that has not yet received the guild's
 
 Channel visibility is `VIEW_CHANNEL` on the channel, plus extensions. A category is visible when at least one of its children is visible. A user with a live voice connection in a channel keeps virtual access to it whenever the channel would otherwise stop being visible. That covers a role or overwrite change removing `VIEW_CHANNEL`, and a move into a channel the user cannot view. Virtual access is keyed by user, so it applies to every session of that user. It is dropped when the user's voice connection to the channel ends.
 
-Message access is `READ_MESSAGE_HISTORY` on the channel. Without that permission a session still receives events for messages newer than the guild's message history cutoff. A guild that sets no cutoff offers no such fallback, so a session without `READ_MESSAGE_HISTORY` receives none of the message-access filtered events there.
+Message access is `READ_MESSAGE_HISTORY` on the channel. Without that permission a session still receives events for messages newer than the guild's [message history cutoff](/http-api/guilds/#guild-object). A guild that sets no cutoff offers no such fallback, so a session without `READ_MESSAGE_HISTORY` receives none of the message-access filtered events there.
 
 [Channel Update Bulk](/gateway/events/#channel-update-bulk) contains only channels the recipient can view. If none are visible, no event is sent.
 
@@ -88,7 +88,7 @@ Every 30 seconds a passive session receives [Passive Updates](/gateway/events/#p
 
 [Typing Start](/gateway/events/#typing-start) never follows the rule above. When the session set `typing` for the guild through [Lazy Request](/gateway/commands/#lazy-request), that value alone decides delivery. Without an override the event follows the active state, so a passive session in a large guild does not receive it.
 
-The override applies to every session, including a bot session. A bot suppresses Typing Start in one guild through that override alone.
+The override applies to every session, including a bot session. The only way for a bot to stop Typing Start in one guild and keep it in other guilds is to set `typing` to false for that guild.
 
 ### Member lists
 
@@ -129,7 +129,7 @@ A session that identified with a `shard` pair whose `shard_id` is not 0 drops ev
 
 Account-level traffic, direct message traffic, relationship changes, and calls therefore never reach a session on a shard other than 0.
 
-Sessions on shard 0, and sessions that identified without a `shard` pair, filter nothing at this gate. Fluxer still applies guild ownership at Identify, as [Sharding](/gateway/overview/#sharding) describes, so a shard 0 session is only ever connected to the guilds its shard owns.
+Sessions on shard 0, and sessions that identified without a `shard` pair, filter nothing at this gate. Fluxer still filters guilds by shard at Identify, as [Sharding](/gateway/overview/#sharding) describes, so a shard 0 session is only ever connected to the guilds its shard owns.
 
 ## What a bot should send
 

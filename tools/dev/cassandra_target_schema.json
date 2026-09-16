@@ -3745,6 +3745,10 @@
 					"type": "timestamp"
 				},
 				{
+					"name": "subscription_status",
+					"type": "text"
+				},
+				{
 					"name": "created_at",
 					"type": "timestamp"
 				},

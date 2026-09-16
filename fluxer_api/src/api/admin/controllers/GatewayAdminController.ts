@@ -93,9 +93,23 @@ export function GatewayAdminController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
+			const adminUserId = ctx.get('adminUserId');
+			const auditLogReason = ctx.get('auditLogReason');
 			const body = ctx.req.valid('json');
 			const guildIds = body.guild_ids.map((id) => createGuildID(id));
-			return ctx.json(await adminService.guildServiceAggregate.managementService.reloadAllGuilds(guildIds));
+			const result = await adminService.guildServiceAggregate.managementService.reloadAllGuilds(guildIds);
+			await adminService.auditService.createAuditLog({
+				adminUserId,
+				targetType: 'guild',
+				targetId: BigInt(0),
+				action: 'reload_guilds',
+				auditLogReason,
+				metadata: new Map([
+					['guild_count', guildIds.length.toString()],
+					['reloaded', result.count.toString()],
+				]),
+			});
+			return ctx.json(result);
 		},
 	);
 }

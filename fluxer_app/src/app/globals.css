@@ -645,6 +645,11 @@ img::before {
 	min-height: 1em;
 }
 
+[data-emoji-interactive='true'] {
+	display: inline-block;
+	cursor: pointer;
+}
+
 @media (prefers-contrast: more) {
 	:root {
 		--text-primary: hsl(0, 0%, 100%);

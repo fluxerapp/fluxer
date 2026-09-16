@@ -293,6 +293,7 @@ export const EditingMessageInput = observer(
 									markdown={true}
 									singleLine={!mobileLayout.enabled}
 									size="chat"
+									maxWireLength={maxMessageLength}
 									className={editingStyles.editor}
 									autocompleteAnchor={containerRef.current}
 									ariaLabel={i18n._(EDIT_MESSAGE_DESCRIPTOR)}

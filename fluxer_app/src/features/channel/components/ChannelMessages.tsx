@@ -39,6 +39,7 @@ import {
 	createChannelStream,
 	getCollapsedMessageGroupKey,
 } from '@app/features/messaging/utils/MessageGroupingUtils';
+import {getMessageSelector} from '@app/features/messaging/utils/MessageNodeSelectors';
 import LocalUserSpamOverride from '@app/features/moderation/state/LocalUserSpamOverride';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import Permission from '@app/features/permissions/state/Permission';
@@ -50,6 +51,7 @@ import {shouldAutoAck} from '@app/features/read_state/utils/AutoAckPredicate';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
 import {Scroller} from '@app/features/ui/components/Scroller';
+import FocusRingScope from '@app/features/ui/focus_ring/FocusRingScope';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import MediaViewer from '@app/features/ui/state/MediaViewer';
 import Modal from '@app/features/ui/state/Modal';
@@ -398,7 +400,7 @@ export const Messages = observer(function Messages({
 			const scroller = scrollManager.ref.current?.getViewportElement();
 			const innerElement = scrollerInnerRef.current;
 			if (!scroller || !innerElement) return;
-			const messageElements = innerElement.querySelectorAll<HTMLElement>('[data-message-id]');
+			const messageElements = innerElement.querySelectorAll<HTMLElement>(getMessageSelector(channel.id));
 			if (!messageElements.length) return;
 			const scrollerRect = scroller.getBoundingClientRect();
 			const candidates: Array<MessageFocusCandidate> = [];
@@ -475,6 +477,9 @@ export const Messages = observer(function Messages({
 			}
 			scrollManager.jumpCancel();
 			ComponentBus.dispatch('FOCUS_TEXTAREA', {channelId: channel.id});
+		},
+		onNavigatePastNewest: () => {
+			ComponentBus.dispatch('FOCUS_TEXTAREA', {channelId: channel.id, enterKeyboardMode: true});
 		},
 		allowWhenInactive: true,
 	});
@@ -701,14 +706,16 @@ export const Messages = observer(function Messages({
 							aria-busy={safeMessages.loadingMore ? true : undefined}
 							data-flx="channel.messages.scroller-inner"
 						>
-							<NearViewportSurfaceContext.Provider value={resolveMessageScrollSurface}>
-								<CollapsedMessageVisibilityProvider
-									value={collapsedMessageVisibility}
-									data-flx="channel.messages.collapsed-message-visibility-provider"
-								>
-									{scrollerInner}
-								</CollapsedMessageVisibilityProvider>
-							</NearViewportSurfaceContext.Provider>
+							<FocusRingScope containerRef={scrollerInnerRef} data-flx="channel.messages.focus-ring-scope">
+								<NearViewportSurfaceContext.Provider value={resolveMessageScrollSurface}>
+									<CollapsedMessageVisibilityProvider
+										value={collapsedMessageVisibility}
+										data-flx="channel.messages.collapsed-message-visibility-provider"
+									>
+										{scrollerInner}
+									</CollapsedMessageVisibilityProvider>
+								</NearViewportSurfaceContext.Provider>
+							</FocusRingScope>
 						</div>
 					</div>
 				</Scroller>

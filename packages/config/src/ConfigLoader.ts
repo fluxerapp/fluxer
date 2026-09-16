@@ -104,6 +104,7 @@ function defaultConfig(): MasterConfig {
 				request_timeout_ms: 120_000,
 				max_inflight_requests: 512,
 				ip_ban_exempt_ips: [],
+				donation_proxy_key: '',
 				desktop_github_redirect_countries: [],
 				presigned_attachment_uploads_enabled: false,
 				presigned_downloads_enabled: false,
@@ -120,6 +121,10 @@ function defaultConfig(): MasterConfig {
 				},
 				content_moderation: {
 					nsfw_threshold: 0.7,
+				},
+				storage_change_feed: {
+					enabled: false,
+					stream: 'STORAGE_CHANGES',
 				},
 			},
 			nats: {
@@ -452,6 +457,18 @@ function validateApiWorkerConfig(config: MasterConfig): void {
 	}
 }
 
+function validateStorageChangeFeedConfig(config: MasterConfig): void {
+	const feed = config.services.api?.storage_change_feed;
+	if (!feed?.enabled) {
+		return;
+	}
+	if (feed.stream === undefined || !/^[A-Za-z0-9_-]+$/u.test(feed.stream)) {
+		throw new Error(
+			'FLUXER_API_STORAGE_CHANGE_FEED_STREAM must be letters, digits, underscores or hyphens when the storage change feed is enabled',
+		);
+	}
+}
+
 function validateCachePurgeConfig(config: MasterConfig): void {
 	const cachePurge = config.integrations.cache_purge;
 	if (cachePurge.adapter !== 'http') {
@@ -467,7 +484,8 @@ function validateCachePurgeConfig(config: MasterConfig): void {
 	) {
 		throw new Error('FLUXER_CACHE_PURGE_HTTP_ENDPOINT must be an absolute http or https URL without credentials');
 	}
-	if (!/^[\x21-\x7e]*$/u.test(cachePurge.http.token)) {
+	requireString(cachePurge.http.token, 'FLUXER_CACHE_PURGE_HTTP_TOKEN');
+	if (!/^[\x21-\x7e]+$/u.test(cachePurge.http.token)) {
 		throw new Error('FLUXER_CACHE_PURGE_HTTP_TOKEN must contain only visible ASCII characters');
 	}
 	assertIntegerInRange(cachePurge.http.timeout_ms, 'FLUXER_CACHE_PURGE_HTTP_TIMEOUT_MS', 1_000, 10_000);
@@ -540,6 +558,7 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	validatePostgresConfig(config);
 	validateCaptchaConfig(config);
 	validateApiWorkerConfig(config);
+	validateStorageChangeFeedConfig(config);
 	validateCachePurgeConfig(config);
 	assertIntegerInRange(config.services.api.max_inflight_requests, 'FLUXER_API_MAX_INFLIGHT_REQUESTS', 1, 100_000);
 	assertIntegerInRange(config.services.api.headers_timeout_ms, 'FLUXER_API_HEADERS_TIMEOUT_MS', 1_000, 3_600_000);

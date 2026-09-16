@@ -13,15 +13,14 @@ import {delay, HttpResponse, http} from 'msw';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 const HELPERS = {logger: new NoopLogger()} as unknown as WorkerTaskHelpers;
-const ENDPOINT = 'https://cache-purge.test/purge';
+const ENDPOINT = 'https://cache-purge.test/__cache/purge';
 const MEDIA = 'https://media.test';
-const EXACT_KEY = 'cache_purge:exact';
-const PREFIX_KEY = 'cache_purge:prefix';
+const QUEUE_KEY = 'cache_purge:queue';
+const BUDGET_KEY = 'cache_purge:budget';
 const REJECTED_KEY = 'cache_purge:rejected';
 
 interface PurgeBody {
-	exact: Array<string>;
-	prefix: Array<string>;
+	prefixes: Array<string>;
 }
 
 interface RecordedRequest {
@@ -52,10 +51,6 @@ function recordPurges(respond: (body: PurgeBody) => Response | Promise<Response>
 	return requests;
 }
 
-function entryCount(body: PurgeBody): number {
-	return body.exact.length + body.prefix.length;
-}
-
 async function members(kvClient: MockKVProvider, key: string): Promise<Array<string>> {
 	return (await kvClient.smembers(key)).sort();
 }
@@ -66,9 +61,12 @@ function sorted(values: Array<string>): Array<string> {
 
 describe('processCachePurgeQueue', () => {
 	let previousCachePurge: APICachePurgeConfig;
+	let previousMedia: string;
 
 	beforeEach(() => {
 		previousCachePurge = {adapter: Config.cachePurge.adapter, http: Config.cachePurge.http};
+		previousMedia = Config.endpoints.media;
+		Config.endpoints.media = MEDIA;
 		Config.cachePurge.adapter = 'http';
 		Config.cachePurge.http = {endpoint: ENDPOINT, token: 'test-token', timeoutMs: 50};
 	});
@@ -76,15 +74,18 @@ describe('processCachePurgeQueue', () => {
 	afterEach(() => {
 		Config.cachePurge.adapter = previousCachePurge.adapter;
 		Config.cachePurge.http = previousCachePurge.http;
+		Config.endpoints.media = previousMedia;
 		clearWorkerDependencies();
 		vi.useRealTimers();
 	});
 
-	it('sends queued exact and prefix entries in one request and drains the queue', async () => {
+	it('sends host qualified prefixes in one request and drains the queue', async () => {
 		const {kvClient, queue} = createHarness();
-		const exact = [`${MEDIA}/avatars/1/a_abc`, `${MEDIA}/emojis/9.webp`, `${MEDIA}/attachments/1/2/ação.png`];
-		const prefix = [`${MEDIA}/some/dir/`];
-		await queue.addUrls([...exact, ...prefix]);
+		await queue.addUrls([
+			`${MEDIA}/avatars/1/a_b35cc3d3`,
+			`${MEDIA}/emojis/9.webp`,
+			`${MEDIA}/attachments/1/2/ação.png`,
+		]);
 		const requests = recordPurges(() => new HttpResponse(null, {status: 204}));
 
 		await processCachePurgeQueue({}, HELPERS);
@@ -92,55 +93,69 @@ describe('processCachePurgeQueue', () => {
 		expect(requests).toHaveLength(1);
 		expect(requests[0]!.authorization).toBe('Bearer test-token');
 		expect(requests[0]!.contentType).toBe('application/json');
-		expect(sorted(requests[0]!.body.exact)).toEqual(sorted(exact));
-		expect(requests[0]!.body.prefix).toEqual(prefix);
-		expect(await members(kvClient, EXACT_KEY)).toEqual([]);
-		expect(await members(kvClient, PREFIX_KEY)).toEqual([]);
+		expect(sorted(requests[0]!.body.prefixes)).toEqual(
+			sorted([
+				'media.test/avatars/1/a_b35cc3d3',
+				'media.test/avatars/1/b35cc3d3',
+				'media.test/emojis/9',
+				'media.test/attachments/1/2/ação',
+			]),
+		);
+		expect(await members(kvClient, QUEUE_KEY)).toEqual([]);
 	});
 
-	it('strips a trailing asterisk from a prefix entry and keeps a trailing slash', async () => {
-		const {kvClient, queue} = createHarness();
-		await queue.addUrls([`${MEDIA}/stickers/1**`, `${MEDIA}/emojis/`]);
-		const requests = recordPurges(() => new HttpResponse(null, {status: 204}));
-
-		await processCachePurgeQueue({}, HELPERS);
-
-		expect(requests).toHaveLength(1);
-		expect(requests[0]!.body.exact).toEqual([]);
-		expect(sorted(requests[0]!.body.prefix)).toEqual([`${MEDIA}/emojis/`, `${MEDIA}/stickers/1*`]);
-		expect(await members(kvClient, PREFIX_KEY)).toEqual([]);
-	});
-
-	it('sends no authorization header when no token is configured', async () => {
-		Config.cachePurge.http.token = '';
+	it('collapses every extension of one asset into a single prefix', async () => {
 		const {queue} = createHarness();
-		await queue.addUrls([`${MEDIA}/avatars/1/abc`]);
+		await queue.addUrls([`${MEDIA}/stickers/7.webp`, `${MEDIA}/stickers/7.gif`, `${MEDIA}/stickers/7.png`]);
 		const requests = recordPurges(() => new HttpResponse(null, {status: 204}));
 
 		await processCachePurgeQueue({}, HELPERS);
 
 		expect(requests).toHaveLength(1);
-		expect(requests[0]!.authorization).toBeNull();
+		expect(requests[0]!.body.prefixes).toEqual(['media.test/stickers/7']);
+	});
+
+	it.each([200, 202, 204])('treats %i as accepted and drops the batch', async (status) => {
+		const {kvClient, queue} = createHarness();
+		await queue.addUrls([`${MEDIA}/attachments/1/2/a.png`]);
+		const requests = recordPurges(() => new HttpResponse(null, {status}));
+
+		await processCachePurgeQueue({}, HELPERS);
+
+		expect(requests).toHaveLength(1);
+		expect(await members(kvClient, QUEUE_KEY)).toEqual([]);
+		expect(await members(kvClient, REJECTED_KEY)).toEqual([]);
+	});
+
+	it('never queues a URL that is not a media CDN object', async () => {
+		const {kvClient, queue} = createHarness();
+		await queue.addUrls(['https://elsewhere.test/avatars/1/b35cc3d3', `${MEDIA}/avatars`, 'not-a-url']);
+		const requests = recordPurges(() => new HttpResponse(null, {status: 204}));
+
+		await processCachePurgeQueue({}, HELPERS);
+
+		expect(requests).toEqual([]);
+		expect(await members(kvClient, QUEUE_KEY)).toEqual([]);
 	});
 
 	it('requeues the whole batch after a server error', async () => {
 		const {kvClient, queue} = createHarness();
-		const exact = [`${MEDIA}/avatars/1/abc`, `${MEDIA}/banners/1/def`];
-		const prefix = [`${MEDIA}/some/dir/`];
-		await queue.addUrls([...exact, ...prefix]);
+		await queue.addUrls([`${MEDIA}/attachments/1/2/a.png`, `${MEDIA}/attachments/1/3/b.png`]);
 		const requests = recordPurges(() => new HttpResponse(null, {status: 503}));
 
 		await processCachePurgeQueue({}, HELPERS);
 
 		expect(requests).toHaveLength(1);
-		expect(await members(kvClient, EXACT_KEY)).toEqual(sorted(exact));
-		expect(await members(kvClient, PREFIX_KEY)).toEqual(prefix);
+		expect(await members(kvClient, QUEUE_KEY)).toEqual([
+			'media.test/attachments/1/2/a',
+			'media.test/attachments/1/3/b',
+		]);
+		expect(await members(kvClient, REJECTED_KEY)).toEqual([]);
 	});
 
 	it('requeues the batch when the endpoint does not answer in time', async () => {
 		const {kvClient, queue} = createHarness();
-		const exact = [`${MEDIA}/avatars/1/abc`, `${MEDIA}/banners/1/def`];
-		await queue.addUrls(exact);
+		await queue.addUrls([`${MEDIA}/attachments/1/2/a.png`]);
 		const requests = recordPurges(async () => {
 			await delay('infinite');
 			return new HttpResponse(null, {status: 204});
@@ -149,25 +164,23 @@ describe('processCachePurgeQueue', () => {
 		await processCachePurgeQueue({}, HELPERS);
 
 		expect(requests).toHaveLength(1);
-		expect(await members(kvClient, EXACT_KEY)).toEqual(sorted(exact));
+		expect(await members(kvClient, QUEUE_KEY)).toEqual(['media.test/attachments/1/2/a']);
 	});
 
 	it('requeues the batch when the endpoint is unreachable', async () => {
 		const {kvClient, queue} = createHarness();
-		const exact = [`${MEDIA}/avatars/1/abc`, `${MEDIA}/banners/1/def`];
-		await queue.addUrls(exact);
+		await queue.addUrls([`${MEDIA}/attachments/1/2/a.png`]);
 		const requests = recordPurges(() => HttpResponse.error());
 
 		await processCachePurgeQueue({}, HELPERS);
 
 		expect(requests).toHaveLength(1);
-		expect(await members(kvClient, EXACT_KEY)).toEqual(sorted(exact));
+		expect(await members(kvClient, QUEUE_KEY)).toEqual(['media.test/attachments/1/2/a']);
 	});
 
 	it('requeues the batch on a redirect without following it', async () => {
 		const {kvClient, queue} = createHarness();
-		const exact = [`${MEDIA}/avatars/1/abc`, `${MEDIA}/banners/1/def`];
-		await queue.addUrls(exact);
+		await queue.addUrls([`${MEDIA}/attachments/1/2/a.png`]);
 		const redirectTarget = 'https://cache-purge.test/elsewhere';
 		const redirectedRequests: Array<string> = [];
 		server.use(
@@ -182,122 +195,51 @@ describe('processCachePurgeQueue', () => {
 
 		expect(requests).toHaveLength(1);
 		expect(redirectedRequests).toEqual([]);
-		expect(await members(kvClient, EXACT_KEY)).toEqual(sorted(exact));
+		expect(await members(kvClient, QUEUE_KEY)).toEqual(['media.test/attachments/1/2/a']);
 	});
 
-	it('requeues the batch on an authorisation failure without splitting it', async () => {
+	it('requeues rather than discards when the bearer token is refused', async () => {
 		const {kvClient, queue} = createHarness();
-		const exact = [`${MEDIA}/avatars/1/abc`, `${MEDIA}/banners/1/def`, `${MEDIA}/emojis/9.webp`];
-		await queue.addUrls(exact);
+		await queue.addUrls([`${MEDIA}/attachments/1/2/a.png`]);
 		const requests = recordPurges(() => new HttpResponse(null, {status: 401}));
 
 		await processCachePurgeQueue({}, HELPERS);
 
 		expect(requests).toHaveLength(1);
-		expect(await members(kvClient, EXACT_KEY)).toEqual(sorted(exact));
+		expect(await members(kvClient, QUEUE_KEY)).toEqual(['media.test/attachments/1/2/a']);
 		expect(await members(kvClient, REJECTED_KEY)).toEqual([]);
 	});
 
-	it('sets aside only the entry the endpoint rejects on its own', async () => {
+	it.each([400, 422])('sets the batch aside when the endpoint answers %i', async (status) => {
 		const {kvClient, queue} = createHarness();
-		const poison = `${MEDIA}/attachments/1/2/poison.png`;
-		await queue.addUrls([`${MEDIA}/avatars/1/abc`, poison, `${MEDIA}/emojis/9.webp`]);
-		const requests = recordPurges((body) =>
-			body.exact.includes(poison) ? new HttpResponse(null, {status: 422}) : new HttpResponse(null, {status: 204}),
-		);
+		await queue.addUrls([`${MEDIA}/attachments/1/2/a.png`, `${MEDIA}/emojis/9.webp`]);
+		const requests = recordPurges(() => new HttpResponse(null, {status}));
 
 		await processCachePurgeQueue({}, HELPERS);
 
-		expect(requests.map((request) => entryCount(request.body))).toEqual([3, 1, 1, 1]);
-		expect(await members(kvClient, REJECTED_KEY)).toEqual([poison]);
-		expect(await members(kvClient, EXACT_KEY)).toEqual([]);
-	});
-
-	it('splits the batch when the endpoint answers 400', async () => {
-		const {kvClient, queue} = createHarness();
-		const poison = `${MEDIA}/attachments/1/2/poison.png`;
-		await queue.addUrls([`${MEDIA}/avatars/1/abc`, poison, `${MEDIA}/emojis/9.webp`]);
-		const requests = recordPurges((body) =>
-			body.exact.includes(poison) ? new HttpResponse(null, {status: 400}) : new HttpResponse(null, {status: 204}),
-		);
-
-		await processCachePurgeQueue({}, HELPERS);
-
-		expect(requests.map((request) => entryCount(request.body))).toEqual([3, 1, 1, 1]);
-		expect(await members(kvClient, REJECTED_KEY)).toEqual([poison]);
-		expect(await members(kvClient, EXACT_KEY)).toEqual([]);
-	});
-
-	it('keeps untried exact and prefix entries queued when a single-entry retry fails', async () => {
-		const {kvClient, queue} = createHarness();
-		const first = `${MEDIA}/avatars/1/abc`;
-		const second = `${MEDIA}/banners/1/def`;
-		const third = `${MEDIA}/emojis/9.webp`;
-		const directory = `${MEDIA}/some/dir/`;
-		await queue.addUrls([first, second, third, directory]);
-		let singleRequests = 0;
-		const requests = recordPurges((body) => {
-			if (entryCount(body) > 1) {
-				return new HttpResponse(null, {status: 422});
-			}
-			singleRequests++;
-			return new HttpResponse(null, {status: singleRequests === 1 ? 204 : 503});
-		});
-
-		await processCachePurgeQueue({}, HELPERS);
-
-		expect(requests.map((request) => request.body.exact)).toEqual([[first, second, third], [first], [second]]);
-		expect(await members(kvClient, EXACT_KEY)).toEqual(sorted([second, third]));
-		expect(await members(kvClient, PREFIX_KEY)).toEqual([directory]);
-		expect(await members(kvClient, REJECTED_KEY)).toEqual([]);
-	});
-
-	it('requeues untried entries when the fallback runs out of time', async () => {
-		vi.useFakeTimers({toFake: ['Date']});
-		vi.setSystemTime(new Date('2026-09-13T00:00:00.000Z'));
-		const {kvClient, queue} = createHarness();
-		const entries = [1, 2, 3, 4, 5].map((index) => `${MEDIA}/avatars/${index}/abc`);
-		await queue.addUrls(entries);
-		const requests = recordPurges((body) => {
-			if (entryCount(body) > 1) {
-				return new HttpResponse(null, {status: 422});
-			}
-			vi.setSystemTime(Date.now() + 4_000);
-			return new HttpResponse(null, {status: 204});
-		});
-
-		await processCachePurgeQueue({}, HELPERS);
-
-		expect(requests.map((request) => request.body.exact)).toEqual([entries, [entries[0]], [entries[1]], [entries[2]]]);
-		expect(await members(kvClient, EXACT_KEY)).toEqual(sorted([entries[3]!, entries[4]!]));
-		expect(await members(kvClient, REJECTED_KEY)).toEqual([]);
+		expect(requests).toHaveLength(1);
+		expect(await members(kvClient, QUEUE_KEY)).toEqual([]);
+		expect(await members(kvClient, REJECTED_KEY)).toEqual(['media.test/attachments/1/2/a', 'media.test/emojis/9']);
 	});
 
 	it('leaves the queue untouched when the adapter is none', async () => {
 		Config.cachePurge.adapter = 'none';
 		const {kvClient, queue} = createHarness();
-		const exact = [`${MEDIA}/avatars/1/abc`];
-		const prefix = [`${MEDIA}/some/dir/`];
-		await queue.addUrls([...exact, ...prefix]);
+		await queue.addUrls([`${MEDIA}/attachments/1/2/a.png`]);
 		const requests = recordPurges(() => new HttpResponse(null, {status: 204}));
 
 		await processCachePurgeQueue({}, HELPERS);
 
 		expect(requests).toEqual([]);
-		expect(await members(kvClient, EXACT_KEY)).toEqual(exact);
-		expect(await members(kvClient, PREFIX_KEY)).toEqual(prefix);
-		expect(await kvClient.get('cache_purge:budget:exact')).toBeNull();
-		expect(await kvClient.get('cache_purge:budget:prefix')).toBeNull();
+		expect(await members(kvClient, QUEUE_KEY)).toEqual(['media.test/attachments/1/2/a']);
+		expect(await kvClient.get(BUDGET_KEY)).toBeNull();
 	});
 
 	it('sends no more than the token bucket allows and refills at the configured rate', async () => {
 		vi.useFakeTimers({toFake: ['Date']});
-		vi.setSystemTime(new Date('2026-09-13T00:00:00.000Z'));
+		vi.setSystemTime(new Date('2026-09-16T00:00:00.000Z'));
 		const {kvClient, queue} = createHarness();
-		await queue.addUrls([
-			...Array.from({length: 200}, (_, index) => `${MEDIA}/avatars/${index}/abc`),
-			...Array.from({length: 30}, (_, index) => `${MEDIA}/dirs/${index}/`),
-		]);
+		await queue.addUrls(Array.from({length: 200}, (_, index) => `${MEDIA}/attachments/1/${index}/a.png`));
 		const requests = recordPurges(() => new HttpResponse(null, {status: 204}));
 
 		await processCachePurgeQueue({}, HELPERS);
@@ -305,11 +247,7 @@ describe('processCachePurgeQueue', () => {
 		vi.setSystemTime(Date.now() + 10_000);
 		await processCachePurgeQueue({}, HELPERS);
 
-		expect(requests.map((request) => [request.body.exact.length, request.body.prefix.length])).toEqual([
-			[120, 20],
-			[50, 5],
-		]);
-		expect(await kvClient.scard(EXACT_KEY)).toBe(30);
-		expect(await kvClient.scard(PREFIX_KEY)).toBe(5);
+		expect(requests.map((request) => request.body.prefixes.length)).toEqual([120, 50]);
+		expect(await kvClient.scard(QUEUE_KEY)).toBe(30);
 	});
 });

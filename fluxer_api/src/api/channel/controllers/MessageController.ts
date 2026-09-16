@@ -364,7 +364,10 @@ export function MessageController(app: HonoApp) {
 			const channelId = createChannelID(channel_id);
 			const messageId = createMessageID(message_id);
 			const requestCache = ctx.get('requestCache');
-			await ctx.get('channelService').messages.deletion.deleteMessage({userId, channelId, messageId, requestCache});
+			const auditLogReason = ctx.get('auditLogReason') ?? null;
+			await ctx
+				.get('channelService')
+				.messages.deletion.deleteMessage({userId, channelId, messageId, requestCache, auditLogReason});
 			return ctx.body(null, 204);
 		},
 	);
@@ -420,7 +423,10 @@ export function MessageController(app: HonoApp) {
 			const userId = ctx.get('user').id;
 			const channelId = createChannelID(ctx.req.valid('param').channel_id);
 			const messageIds = ctx.req.valid('json').message_ids.map(createMessageID);
-			await ctx.get('channelService').messages.deletion.bulkDeleteMessages({userId, channelId, messageIds});
+			const auditLogReason = ctx.get('auditLogReason') ?? null;
+			await ctx
+				.get('channelService')
+				.messages.deletion.bulkDeleteMessages({userId, channelId, messageIds, auditLogReason});
 			return ctx.body(null, 204);
 		},
 	);

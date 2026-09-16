@@ -47,7 +47,7 @@ The compact guild representation returned by [List guilds](#list-guilds) and by 
 
 <sup>3</sup> No operation populates these, so they are absent from every current response
 
-<sup>4</sup> Present only on [List user guilds](/admin-api/users/#list-user-guilds) when that operation is asked for counts
+<sup>4</sup> Present only on [List user guilds](/admin-api/users/#list-user-guilds) when the request sets `with_counts` to true
 
 ### Example
 
@@ -175,7 +175,7 @@ A custom emoji or a sticker of a guild, with a resolvable media URL. The listing
 | creator_id | snowflake | The account that uploaded the expression |
 | media_url<sup>1</sup> | string | The [Media Proxy](/media-proxy/routes/) URL the expression is served from (1-2048 characters) |
 
-<sup>1</sup> Always the WebP representation, at size 160 for an emoji and size 320 for a sticker, and it has the `animated=true` selector only when `animated` is true
+<sup>1</sup> Always the WebP representation, at size 160 for an emoji and size 320 for a sticker, and the URL has the `animated=true` query parameter only when `animated` is true
 
 ### Example
 
@@ -218,7 +218,7 @@ One entry of the `errors` array returned by [Purge guild assets](#purge-guild-as
 | id | string | The asset that could not be purged, as supplied |
 | error<sup>1</sup> | string | The reason the asset could not be purged (1-4000 characters) |
 
-<sup>1</sup> The operation produces `Invalid numeric ID`, `Asset belongs to another guild`, and `Failed to purge asset`. Any other value is the message of the underlying failure
+<sup>1</sup> The operation produces `Invalid numeric ID`, `Asset belongs to another guild`, and `Failed to purge asset`. Any other value is the message of the error Fluxer hit while purging that ID
 
 ## Asset types
 
@@ -226,7 +226,7 @@ One entry of the `errors` array returned by [Purge guild assets](#purge-guild-as
 | --- | --- |
 | emoji | The ID resolved to a custom emoji owned by the requested guild |
 | sticker | The ID resolved to a sticker owned by the requested guild |
-| unknown | The ID matched no emoji and no sticker record, and only associated media was queued for removal |
+| unknown | The ID matched no emoji or sticker, and Fluxer queued removal of any emoji and sticker media stored under that ID |
 
 An ID owned by a different guild appears in `errors` with no asset type.
 
@@ -246,7 +246,7 @@ The index matches `q` against the guild name, the discovery tags, the custom inv
 | limit? | integer | Maximum guilds to return (1-200, default 50) |
 | offset? | integer | Guilds to skip before returning results (0-10000, default 0) |
 
-<sup>1</sup> A `q` of all decimal digits also resolves that value as an exact guild ID, but only while `offset` is 0. A guild the index did not return is prepended to `guilds` and adds one to `total`
+<sup>1</sup> A `q` of all decimal digits also resolves that value as an exact guild ID, but only while `offset` is 0. When the index did not return the guild with that ID, Fluxer prepends it to `guilds` and adds one to `total`
 
 ### Response body
 
@@ -356,7 +356,7 @@ A body with no field at all selects nothing, so an empty patch applies no change
 
 A code already claimed by any invite is rejected with 400 `INVALID_FORM_BODY` and the validation code `THIS_VANITY_URL_IS_ALREADY_TAKEN` against `vanity_url_code`.
 
-The channel references, idle timeout, and message history cutoff of a guild are not Admin-writable. They change through the public [Modify guild](/http-api/guilds/#modify-guild) operation.
+`afk_channel_id`, `system_channel_id`, `afk_timeout`, and `message_history_cutoff` of a guild are not Admin-writable. They change through the public [Modify guild](/http-api/guilds/#modify-guild) operation.
 
 ### Response body
 
@@ -490,7 +490,7 @@ A member query the main Gateway reports as failed returns 502 `BAD_GATEWAY`, an 
 
 Adds a user to a guild without an invite. Requires `guild:force_add_member`. The operation takes no request body.
 
-Only the Admin ACL is evaluated.
+Fluxer checks only the Admin ACL. The acting account needs no membership and no permission in the guild.
 
 ### Path parameters
 
@@ -515,11 +515,11 @@ Only the Admin ACL is evaluated.
 
 ### Side effects
 
-Fluxer creates the membership with the Admin force-add join source and restores a communication timeout still in force from a previous membership. The guild ban list is not checked, so a banned user can be admitted. The suspicious activity phone gate does not run. The per-user guild limit and the guild member limit are still enforced.
+Fluxer creates the membership with the Admin force-add join source and restores a communication timeout still in force from a previous membership. The guild ban list is not checked, so a banned user can be admitted. The [deferred phone gate](/admin-api/instance/#deferred-phone-gate-object) does not run. The per-user guild limit and the guild member limit are still enforced.
 
-[Guild Member Add](/gateway/events/#guild-member-add) fires to the guild, and the user's sessions are joined to the guild on the main Gateway. The member enters guild member search when the guild has an indexed member set. The ordinary join system message is created, and with it a [Message Create](/gateway/events/#message-create) Dispatch, unless the guild sets `SUPPRESS_JOIN_NOTIFICATIONS` or has no usable system channel. A bot target also records a `BOT_ADD` entry in the guild's own [audit log](/http-api/guild-audit-logs/#audit-actions).
+[Guild Member Add](/gateway/events/#guild-member-add) fires to the guild, and the user's sessions are joined to the guild on the main Gateway. When the guild's members are already indexed for search, Fluxer adds the new member to guild member search. The ordinary join system message is created, and with it a [Message Create](/gateway/events/#message-create) Dispatch, unless the guild sets `SUPPRESS_JOIN_NOTIFICATIONS` or has no `system_channel_id`, or its `system_channel_id` names a channel that no longer exists. A bot target also records a `BOT_ADD` entry in the guild's own [audit log](/http-api/guild-audit-logs/#audit-actions).
 
-A user who is already a member keeps their existing membership. No membership is created, no counter moves, and no Dispatch is emitted. The Admin audit entry is still written.
+A user who is already a member keeps their existing membership. No membership is created, `member_count` does not change, and no Dispatch is emitted. The Admin audit entry is still written.
 
 One Admin audit entry is recorded with the action `force_add_to_guild`, the target type `user`, the added user as the target, and the guild ID in the metadata.
 
@@ -557,7 +557,7 @@ The acting account must see the guild, hold [KICK_MEMBERS](/http-api/permissions
 
 ### Side effects
 
-The user loses membership and disappears from guild member search. A later rejoin restores previous membership settings, including any communication timeout still in force.
+The user loses membership and disappears from guild member search. A later rejoin restores a communication timeout that is still in force. The rejoined member starts with no nickname and no roles.
 
 [Guild Member Remove](/gateway/events/#guild-member-remove) fires to the guild. A `MEMBER_KICK` entry is written to the guild's own [audit log](/http-api/guild-audit-logs/#audit-actions). The entry names the acting Admin account and has the audit reason. The write fires [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create) to sessions holding [VIEW_AUDIT_LOG](/http-api/permissions/).
 
@@ -735,7 +735,7 @@ Every ID in `processed` loses its record and its stored media permanently. The o
 
 A record owned by the guild in the path is deleted, and its stored media is queued for removal. The guild then receives one [Guild Emojis Update](/gateway/events/#guild-emojis-update) or [Guild Stickers Update](/gateway/events/#guild-stickers-update) Dispatch with its complete remaining expression set. A request that purges several records emits one such Dispatch per record.
 
-A record owned by a different guild is left untouched and reported in `errors`. An ID with no record queues emoji and sticker media removal for that ID and is reported with the `unknown` asset type, so the operation also clears orphaned media.
+A record owned by a different guild is left untouched and reported in `errors`. An ID with no record queues emoji and sticker media removal for that ID and is reported with the `unknown` asset type, so the operation also removes stored media that has no emoji or sticker record.
 
 Every entry in `processed` records its own Admin audit entry, with the numeric ID as the target. A purged emoji records `purge_guild_emoji_asset` with the target type `guild_emoji`, a purged sticker records `purge_guild_sticker_asset` with `guild_sticker`, and an `unknown` ID records `purge_asset` with `asset`. Entries in `errors` record nothing.
 
@@ -749,7 +749,7 @@ Every entry in `processed` records its own Admin audit entry, with the numeric I
 
 Returns one page of the guild's own in-app audit log, without requiring guild membership or [VIEW_AUDIT_LOG](/http-api/permissions/). Requires `guild:audit_log:view`.
 
-The page has the same shape and semantics as the public [List guild audit logs](/http-api/guild-audit-logs/#list-guild-audit-logs) operation, including its message deletion consolidation.
+The response has the same fields, and its query parameters behave the same way, as in the public [List guild audit logs](/http-api/guild-audit-logs/#list-guild-audit-logs) operation, including its message deletion consolidation.
 
 ### Path parameters
 
@@ -864,7 +864,7 @@ A shutdown the main Gateway reports as failed returns 502 `BAD_GATEWAY`, an unan
 
 ### Side effects
 
-The main Gateway stops the guild process. Every session subscribed to the guild receives a [Guild Delete](/gateway/events/#guild-delete) Dispatch with `unavailable` true and reconnects after one second, which starts the guild again from stored data. Stored guild data is untouched, and [Reload guild](#reload-guild) also starts a stopped guild.
+The main Gateway stops the guild process. Every session subscribed to the guild receives a [Guild Delete](/gateway/events/#guild-delete) Dispatch with `unavailable` true. One second later the main Gateway reconnects each of those sessions to the guild, which starts the guild again from stored data. Stored guild data is untouched, and [Reload guild](#reload-guild) also starts a stopped guild.
 
 One Admin audit entry is recorded with the action `shutdown_guild`, the target type `guild`, and the guild ID in both the target and the metadata.
 

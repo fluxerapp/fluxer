@@ -35,11 +35,24 @@ export function CodesAdminController(app: HonoApp) {
 			if (Config.instance.selfHosted) {
 				throw new FeatureNotAvailableSelfHostedError();
 			}
+			const adminService = ctx.get('adminService');
 			const {count, duration_type, duration_quantity} = ctx.req.valid('json');
-			const codes = await ctx.get('adminService').codeGenerationService.generateGiftCodes({
+			const codes = await adminService.codeGenerationService.generateGiftCodes({
 				count,
 				durationType: duration_type,
 				durationQuantity: duration_quantity,
+			});
+			await adminService.auditService.createAuditLog({
+				adminUserId: ctx.get('adminUserId'),
+				targetType: 'gift_code',
+				targetId: BigInt(0),
+				action: 'generate_gift_codes',
+				auditLogReason: ctx.get('auditLogReason'),
+				metadata: new Map([
+					['count', codes.length.toString()],
+					['duration_type', duration_type],
+					['duration_quantity', duration_quantity.toString()],
+				]),
 			});
 			const baseUrl = trimTrailingSlash(Config.endpoints.gift);
 			return ctx.json({

@@ -21,11 +21,23 @@
 	caret-color: var(--text-chat);
 }
 
-.inputAreaContainer {
+.destinationList {
+	display: flex;
+	flex-direction: column;
+	height: clamp(20rem, 48vh, 23.75rem);
+	min-height: 0;
+	max-height: clamp(20rem, 48vh, 23.75rem);
+}
+
+.footerSection {
 	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
 	width: 100%;
 	flex-shrink: 0;
 	padding: 0.75rem 1rem;
+	border-top: 0.0625rem solid var(--background-modifier-accent);
 }
 
 .messageInputContainer {

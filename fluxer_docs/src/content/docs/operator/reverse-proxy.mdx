@@ -93,7 +93,7 @@ Browsers send it, and the admin dashboard refuses a mutating request with a cros
 
 The instance sends its own policy, and its nonce is what lets the web app boot. Browsers enforce every policy they receive.
 
-Every worked configuration below answers them all.
+Every worked configuration below meets all of these requirements.
 
 ## The public address
 
@@ -408,7 +408,7 @@ Apple and Google require the association files at those fixed paths for saved-pa
 
 `FLUXER_EDGE_TRUSTED_PROXIES` names the peer addresses whose `X-Forwarded-For` the edge believes. It defaults to `private_ranges`, which Caddy expands to `192.168.0.0/16`, `172.16.0.0/12`, `10.0.0.0/8`, `127.0.0.1/8`, `fd00::/8`, and `::1`, so a proxy on the same host or the same Docker network needs no change.
 
-The edge resolves one client address per request and rewrites `X-Forwarded-For` to it on every upstream hop, so no service ever reads what a visitor sent. A peer outside the list becomes the client address, and the edge discards the header it sent. A peer inside the list contributes the rightmost header entry that is not itself trusted, and a proxy that appends still delivers the real caller.
+The edge resolves one client address per request and rewrites `X-Forwarded-For` to it on every upstream hop, so no service ever reads what a visitor sent. A peer outside the list becomes the client address, and the edge discards the header it sent. For a peer inside the list, the edge uses the rightmost header entry that is not itself trusted. A proxy that appends to the header therefore still passes on the real client address.
 
 A proxy that reaches the instance from a public address is not trusted, so the edge discards its header and attributes every request to the proxy itself. That puts all your users in one rate limit bucket and one geolocation. Add the address, and list `private_ranges` too if you still need it:
 

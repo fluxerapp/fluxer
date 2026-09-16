@@ -2,6 +2,7 @@
 
 import styles from '@app/features/channel/components/BlockedMessageGroups.module.css';
 import {Divider} from '@app/features/channel/components/ChannelDivider';
+import streamStyles from '@app/features/channel/components/ChannelMessages.module.css';
 import {
 	MessageGroup,
 	type MessageGroupProps,
@@ -10,11 +11,13 @@ import {
 import type {Channel} from '@app/features/channel/models/Channel';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import {type ChannelStreamItem, ChannelStreamType} from '@app/features/messaging/utils/MessageGroupingUtils';
+import {getMessageSelector} from '@app/features/messaging/utils/MessageNodeSelectors';
+import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import type {MessagePreviewContext} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
-import React, {useCallback, useEffect, useMemo, useRef} from 'react';
+import React, {useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef} from 'react';
 
 const MESSAGE_SCROLLER_SELECTOR = '[data-fluxer-scroll-container="true"]';
 const SCROLLER_BOTTOM_EPSILON = 1;
@@ -99,7 +102,13 @@ export const BlockedMessageGroups = React.memo<BlockedMessageGroupsProps>((props
 	} = props;
 	const {i18n} = useLingui();
 	const containerRef = useRef<HTMLDivElement>(null);
+	const toggleRef = useRef<HTMLButtonElement>(null);
+	const contentRef = useRef<HTMLDivElement>(null);
 	const scrollToBottomFrameRef = useRef<number | null>(null);
+	const wasRevealedRef = useRef(revealed);
+	const revealedByKeyboardRef = useRef(false);
+	const focusWithinContentRef = useRef(false);
+	const contentId = useId();
 	const messageSummary = useMemo(() => {
 		let firstMessageId: string | null = null;
 		let totalMessageCount = 0;
@@ -123,34 +132,93 @@ export const BlockedMessageGroups = React.memo<BlockedMessageGroupsProps>((props
 			scroller.scrollTop = scroller.scrollHeight;
 		});
 	}, []);
-	const handleClick = useCallback(() => {
-		const container = containerRef.current;
-		const scroller = container?.closest(MESSAGE_SCROLLER_SELECTOR) as HTMLElement | null;
-		if (scroller) {
-			const wasAtBottom = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < SCROLLER_BOTTOM_EPSILON;
-			if (revealed) {
-				onReveal(null);
-				if (wasAtBottom) {
-					scheduleScrollToBottom(scroller);
-				}
-			} else {
-				if (messageSummary.firstMessageId) {
-					onReveal(messageSummary.firstMessageId);
+	const handleClick = useCallback(
+		(event: React.MouseEvent<HTMLButtonElement>) => {
+			revealedByKeyboardRef.current = event.detail === 0;
+			const container = containerRef.current;
+			const scroller = container?.closest(MESSAGE_SCROLLER_SELECTOR) as HTMLElement | null;
+			if (scroller) {
+				const wasAtBottom =
+					scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < SCROLLER_BOTTOM_EPSILON;
+				if (revealed) {
+					onReveal(null);
 					if (wasAtBottom) {
 						scheduleScrollToBottom(scroller);
 					}
+				} else {
+					if (messageSummary.firstMessageId) {
+						onReveal(messageSummary.firstMessageId);
+						if (wasAtBottom) {
+							scheduleScrollToBottom(scroller);
+						}
+					}
 				}
-			}
-		} else {
-			if (revealed) {
-				onReveal(null);
 			} else {
-				if (messageSummary.firstMessageId) {
-					onReveal(messageSummary.firstMessageId);
+				if (revealed) {
+					onReveal(null);
+				} else {
+					if (messageSummary.firstMessageId) {
+						onReveal(messageSummary.firstMessageId);
+					}
 				}
 			}
+		},
+		[messageSummary.firstMessageId, onReveal, revealed, scheduleScrollToBottom],
+	);
+	useEffect(() => {
+		const container = containerRef.current;
+		if (container == null) {
+			return;
 		}
-	}, [messageSummary.firstMessageId, onReveal, revealed, scheduleScrollToBottom]);
+		const isInsideContent = (node: EventTarget | null): boolean =>
+			node instanceof Node && contentRef.current?.contains(node) === true;
+		const handleFocusIn = (event: FocusEvent) => {
+			focusWithinContentRef.current = isInsideContent(event.target);
+		};
+		const handleFocusOut = (event: FocusEvent) => {
+			if (isInsideContent(event.relatedTarget)) {
+				return;
+			}
+			focusWithinContentRef.current = false;
+		};
+		container.addEventListener('focusin', handleFocusIn);
+		container.addEventListener('focusout', handleFocusOut);
+		return () => {
+			container.removeEventListener('focusin', handleFocusIn);
+			container.removeEventListener('focusout', handleFocusOut);
+		};
+	}, []);
+	useLayoutEffect(() => {
+		const wasRevealed = wasRevealedRef.current;
+		wasRevealedRef.current = revealed;
+		if (wasRevealed === revealed) {
+			return;
+		}
+		const revealedByKeyboard = revealedByKeyboardRef.current;
+		revealedByKeyboardRef.current = false;
+		if (!KeyboardMode.keyboardModeEnabled) {
+			focusWithinContentRef.current = false;
+			return;
+		}
+		if (revealed) {
+			if (!revealedByKeyboard) {
+				return;
+			}
+			const firstMessage = contentRef.current?.querySelector<HTMLElement>(getMessageSelector(channel.id));
+			if (firstMessage == null) {
+				return;
+			}
+			if (firstMessage.tabIndex < 0) {
+				firstMessage.tabIndex = -1;
+			}
+			firstMessage.focus({preventScroll: true});
+			return;
+		}
+		if (focusWithinContentRef.current) {
+			focusWithinContentRef.current = false;
+			toggleRef.current?.focus({preventScroll: true});
+		}
+	}, [channel.id, revealed]);
 	useEffect(() => {
 		return () => {
 			if (scrollToBottomFrameRef.current != null) {
@@ -163,8 +231,20 @@ export const BlockedMessageGroups = React.memo<BlockedMessageGroupsProps>((props
 		const nodes: Array<React.ReactNode> = [];
 		let currentGroupMessages: Array<Message> = [];
 		let groupId: string | undefined;
+		let renderedGroupCount = 0;
 		const flushGroup = () => {
 			if (currentGroupMessages.length > 0) {
+				if (renderedGroupCount > 0 && messageGroupSpacing > 0) {
+					nodes.push(
+						<div
+							key={`blocked-group-spacer-${currentGroupMessages[0].id}`}
+							className={streamStyles.groupSpacer}
+							aria-hidden="true"
+							data-flx="channel.blocked-message-groups.group-spacer"
+						/>,
+					);
+				}
+				renderedGroupCount += 1;
 				nodes.push(
 					<MessageGroup
 						key={currentGroupMessages[0].id}
@@ -196,7 +276,7 @@ export const BlockedMessageGroups = React.memo<BlockedMessageGroupsProps>((props
 				flushGroup();
 				nodes.push(
 					<Divider
-						key={item.unreadId || item.contentKey || `divider-${itemIndex}`}
+						key={item.unreadId ? `unread-divider-${item.unreadId}` : item.contentKey || `divider-${itemIndex}`}
 						spacing={messageGroupSpacing}
 						red={!!item.unreadId}
 						id={item.unreadId ? 'new-messages-bar' : undefined}
@@ -247,9 +327,12 @@ export const BlockedMessageGroups = React.memo<BlockedMessageGroupsProps>((props
 				/>
 			)}
 			<button
+				ref={toggleRef}
 				type="button"
 				className={styles.toggle}
 				onClick={handleClick}
+				aria-expanded={revealed}
+				aria-controls={contentId}
 				data-flx="channel.blocked-message-groups.toggle.click.button"
 			>
 				{variant === 'spammer'
@@ -257,7 +340,13 @@ export const BlockedMessageGroups = React.memo<BlockedMessageGroupsProps>((props
 					: i18n._(BLOCKED_MESSAGES_DESCRIPTOR, {count: messageSummary.totalMessageCount})}
 			</button>
 			{revealed && (
-				<div className={styles.content} data-blocked-messages data-flx="channel.blocked-message-groups.content">
+				<div
+					ref={contentRef}
+					id={contentId}
+					className={styles.content}
+					data-blocked-messages
+					data-flx="channel.blocked-message-groups.content"
+				>
 					{messageNodes}
 				</div>
 			)}

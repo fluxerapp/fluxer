@@ -12,7 +12,7 @@ The download resource serves the desktop application builds a deployment has sto
 
 Fluxer registers the routes under `/dl`, and the desktop routes under `/dl/desktop`. A client builds the URL against `api_client` from the [instance endpoints object](/http-api/instance/#instance-endpoints-object).
 
-The prefix mounts at the root and at `/v1`, so `/v1/dl/desktop/...` resolves for the routes that name their own segments.
+Fluxer mounts the prefix at the root and at `/v1`. Every desktop route below also answers under `/v1/dl/desktop/...`.
 
 :::caution[The catch-all has no `/v1` form]
 [Download stored object](#download-stored-object) requires the `/dl` prefix. Its `/v1/dl/...` equivalent returns 404.
@@ -173,19 +173,19 @@ A release feed filename is any of these:
 
 The deployment settings below answer a download with 302.
 
-A hosted deployment can redirect downloads from selected countries to GitHub release assets. Responses under this setting have `Cache-Control: private, no-store`.
+A hosted deployment can list countries whose downloads of a file under `desktop/` Fluxer can redirect to GitHub release assets. Once the list is set, every response for such a file has `Cache-Control: private, no-store`, including a response Fluxer serves from storage.
 
 A deployment that issues presigned download URLs answers a `GET` with 302 to a storage URL valid for 900 seconds. That redirect has `Cache-Control: no-store` and `Accept-Ranges: bytes`. The setting is off by default.
 
 :::caution[A 302 has no bytes and no range]
-The client follows `Location` to read the file. Fluxer produces the redirect before it reads any `Range` header, so range handling on a redirected download belongs to the target.
+The client follows `Location` to read the file. Fluxer produces the redirect before it reads any `Range` header, so the server at `Location` answers any `Range` header on a redirected download.
 :::
 
 ## Test builds
 
 Every route accepts the `test` query parameter. `1` or `true`, matched without regard to case, selects test releases. Any other value is false.
 
-On the desktop routes the flag replaces the prefix outright. On [Download stored object](#download-stored-object) it rewrites a key beginning `desktop/` and leaves any other key unchanged, and a path that already names `desktop-test/` resolves there with no flag at all.
+On the desktop routes the flag makes Fluxer resolve every file under `desktop-test/`. On [Download stored object](#download-stored-object) it rewrites a key beginning `desktop/` and leaves any other key unchanged, and a path that already names `desktop-test/` resolves there with no flag at all.
 
 A `url` and a `checksum_url` built for a request that sent the flag repeat `?test=1`, so a client following either one stays on the test prefix.
 
@@ -312,7 +312,7 @@ Streams the newest file at the coordinate for one package format.
 | 404 | `Not Found` | No file resolved for the format at the coordinate |
 | 416 | empty | The requested range is unsatisfiable |
 
-The stored file keeps its own name, so the resolved filename has the release version even though the request named `latest`. A client that follows this route on every check reads a different file once the coordinate publishes a new release.
+The stored file keeps its own name, so the resolved filename has the release version even though the request named `latest`. A client that follows this route on every check reads a different file once a newer release is stored at the coordinate.
 
 ### Response headers
 
@@ -493,7 +493,7 @@ A path outside `desktop/` or `desktop-test/` returns 404.
 
 Fluxer also rejects the key when it is empty, when normalisation leaves it beginning `..` or `/`, or when any segment is `.`, `..`, or contains a NUL character. Each of those returns the same 404, so a caller cannot tell a traversal attempt from a missing object.
 
-Both `desktop/stable/linux-x64/manifest.json` and `desktop/stable/linux/x64/manifest.json` path forms are supported.
+A request can name `desktop/stable/linux-x64/manifest.json` or `desktop/stable/linux/x64/manifest.json`. For the hyphen form, Fluxer returns that object when storage holds it, and otherwise returns the object at the slash form.
 
 ### Response headers
 

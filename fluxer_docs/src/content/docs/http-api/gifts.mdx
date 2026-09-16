@@ -16,7 +16,7 @@ A gift records no recipient, so Fluxer binds the code to whichever eligible acco
 
 ## Gift object
 
-A gift records a duration. Fluxer computes the entitlement window at redemption time from the redeemer's existing state.
+A gift records a duration. Fluxer computes the entitlement window at redemption time. For a positive quantity, the entitlement anchor is the latest of the current time, the redeemer's current premium end and their existing gift extension end.
 
 Both creation paths record a creator. A completed gift checkout records the purchaser. An Admin API gift records the system account with ID `0`, and no field names the administrator that requested it. No operation unredeems a code.
 
@@ -134,7 +134,7 @@ One redemption can be in flight for a code across the whole deployment, and a se
 | X-Captcha-Token?<sup>1</sup> | string | The proof issued by the CAPTCHA provider |
 | X-Captcha-Type?<sup>2</sup> | string | The CAPTCHA provider, either `hcaptcha` or `turnstile` |
 
-<sup>1</sup> A missing proof returns 400 `CAPTCHA_REQUIRED` and a rejected proof returns 400 `INVALID_CAPTCHA`. Verification is skipped when CAPTCHA is disabled, when the account has the exemption flag, or when the caller's contact has the exemption capability, as described by [CAPTCHA handling](/topics/captcha/)
+<sup>1</sup> A missing proof returns 400 `CAPTCHA_REQUIRED` and a rejected proof returns 400 `INVALID_CAPTCHA`. Verification is skipped when CAPTCHA is disabled, when the account has the exemption flag, or when the account's email address has the `captcha_exempt` account policy capability, as described by [CAPTCHA handling](/topics/captcha/)
 
 <sup>2</sup> Any other value, including an omitted header, falls back to the instance's configured provider
 
@@ -143,7 +143,7 @@ One redemption can be in flight for a code across the whole deployment, and a se
 | Status | Body | Condition |
 | --- | --- | --- |
 | 204 | empty | The gift was redeemed and the entitlement was applied |
-| 400 | [error response](/http-api/#error-response) | CAPTCHA failed, the code is redeemed or a redemption is in flight, the account is unclaimed or holds lifetime entitlement, the payment provider rejected the subscription work, or the Visionary guild join for a lifetime gift failed |
+| 400 | [error response](/http-api/#error-response) | CAPTCHA failed, the code is redeemed or a redemption is in flight, the account is unclaimed or holds lifetime entitlement, the payment provider rejected the change to the active subscription, or the Visionary guild join for a lifetime gift failed |
 | 403 | [error response](/http-api/#error-response) | The email address is unverified, or purchases are disabled for the account |
 | 404 | [error response](/http-api/#error-response) | No gift exists for the code, the gift was revoked, the authenticated account record no longer exists, or the configured Visionary guild does not exist |
 
@@ -151,9 +151,9 @@ One redemption can be in flight for a code across the whole deployment, and a se
 
 The gift becomes redeemed, so [Get gift](#get-gift) reports `redeemed` as true and [List current user gifts](/http-api/users/gifts/#list-current-user-gifts) shows the redemption time and the redeemer to the buyer.
 
-A positive quantity extends premium from the latest of the current time, the current premium end and the existing gift extension end. An eligible active subscription also has its trial or billing period extended without proration. A provider failure can return 400 `STRIPE_ERROR` and leave the code unredeemed.
+A positive quantity extends premium from the latest of the current time, the current premium end and the existing gift extension end. When the account has a subscription with the payment provider and its subscription premium has not ended, Fluxer also extends that subscription's trial or billing period without proration. A provider failure can return 400 `STRIPE_ERROR` and leave the code unredeemed.
 
-A quantity of `0` grants lifetime Visionary premium and immediately cancels an active subscription without proration or a final invoice. It can also assign a Visionary sequence and join the [Visionary guild](/http-api/premium/#rejoin-visionary-guild).
+A quantity of `0` grants lifetime Visionary premium and immediately cancels an active subscription without proration or a final invoice. When the gift record has a Visionary sequence number, the redeemer receives that number as their lifetime Visionary sequence and joins the [Visionary guild](/http-api/premium/#rejoin-visionary-guild).
 
 A failed Visionary guild join leaves the gift unredeemed. Guild limits return 400 `MAX_GUILDS` or `MAX_GUILD_MEMBERS`. Any subscription cancellation already completed is not reversed.
 

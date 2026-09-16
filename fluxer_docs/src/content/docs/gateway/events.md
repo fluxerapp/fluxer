@@ -24,11 +24,11 @@ A Dispatch reports a change or command result through the [Gateway](/gateway/ove
 }
 ```
 
-[Ready](#ready) establishes sequence 1. Live Dispatches advance it by one. Replayed Dispatches keep their original sequence and can have gaps. [Resumed](#resumed) has the session's current sequence without advancing it and establishes the new live baseline. The sequence is local to one Gateway session and orders nothing across shards or HTTP operations.
+[Ready](#ready) establishes sequence 1. Live Dispatches advance it by one. Replayed Dispatches keep their original sequence and can have gaps. [Resumed](#resumed) has the session's current sequence without advancing it. The next live Dispatch has that sequence plus one. The sequence is local to one Gateway session and orders nothing across shards or HTTP operations.
 
 ## Dispatch delivery
 
-[Event filtering](/gateway/event-filtering/) defines delivery by guild availability, channel visibility, permissions, and session settings. Account-scoped Dispatches use only the session-level filters.
+[Event filtering](/gateway/event-filtering/) defines delivery by guild availability, channel visibility, permissions, and session settings. Account-scoped Dispatches go through only the session-level filters, which are the shard filter and the `ignored_events` list.
 
 Most guild-scoped Dispatches have a `guild_id` string. [Guild Create](#guild-create) and [Guild Sync](#guild-sync) identify the guild as `id`, and so does every [Guild Delete](#guild-delete) other than the one the guild itself dispatches when the guild is deleted. [Guild Counts Update](#guild-counts-update) and [Channel Member Counts Update](#channel-member-counts-update) have no top-level `guild_id`, and each entry in their `counts` array has its own.
 
@@ -62,15 +62,15 @@ A Dispatch is buffered for [Resume](/gateway/commands/#resume) replay unless it 
 | [Favorite Meme Update](#favorite-meme-update) | One of the current user's memes changes | Current user |
 | [Favorite Meme Delete](#favorite-meme-delete) | The current user deletes a meme | Current user |
 | [Guild Create](#guild-create) | A guild becomes available to the session | Guild connection |
-| [Guild Sync](#guild-sync) | A subscribed session receives a replacement guild snapshot | Guild connection |
+| [Guild Sync](#guild-sync) | A subscribed session receives the guild's full current state again | Guild connection |
 | [Guild Update](#guild-update) | A guild's configuration changes | Guild connection |
 | [Guild Delete](#guild-delete) | A guild leaves the session's visibility or becomes unavailable | Guild connection |
 | [Guild Role Create](#guild-role-create) | A role is created in a guild | Guild connection |
 | [Guild Role Update](#guild-role-update) | Exactly one role record changes | Guild connection |
 | [Guild Role Update Bulk](#guild-role-update-bulk) | One operation changes several role records together | Guild connection |
 | [Guild Role Delete](#guild-role-delete) | A role is deleted from a guild | Guild connection |
-| [Guild Emojis Update](#guild-emojis-update) | A guild's emoji collection is replaced | Guild connection |
-| [Guild Stickers Update](#guild-stickers-update) | A guild's sticker collection is replaced | Guild connection |
+| [Guild Emojis Update](#guild-emojis-update) | A guild's emojis change | Guild connection |
+| [Guild Stickers Update](#guild-stickers-update) | A guild's stickers change | Guild connection |
 | [Channel Create](#channel-create) | A channel becomes visible to the session | Channel visibility |
 | [Channel Update](#channel-update) | A visible channel changes | Channel visibility |
 | [Channel Update Bulk](#channel-update-bulk) | One operation changes several channels together | Channel visibility |
@@ -90,7 +90,7 @@ A Dispatch is buffered for [Resume](/gateway/commands/#resume) replay unless it 
 | [Guild Ban Remove](#guild-ban-remove) | A guild ban is removed | Guild connection |
 | [Presence Update](#presence-update) | One visible presence changes | Presence subscription |
 | [Presence Update Bulk](#presence-update-bulk) | A recovering guild delivers its visible presences together | Guild connection |
-| [Passive Updates](#passive-updates) | Passive channel watermarks and voice states advance for one session | Passive session |
+| [Passive Updates](#passive-updates) | Channel `last_message_id` values or voice states changed for one passive session | Passive session |
 | [Message Create](#message-create) | A visible message is created | Channel visibility |
 | [Message Update](#message-update) | A visible message changes and is republished in full | Message access |
 | [Message Delete](#message-delete) | One visible message is deleted | Message access |
@@ -146,7 +146,7 @@ The initial session state. Sent once after a successful [Identify](/gateway/comm
 | _timings? | object | HTTP-side timing breakdown, present only for a staff account |
 | _timings_gw? | object | Gateway-side timing breakdown, present only for a staff account |
 
-<sup>1</sup> A bot session always receives an empty array here and the guilds arrive as the [Guild Create](#guild-create) burst described below
+<sup>1</sup> On a bot session every entry is an unavailable guild with `id` and `unavailable: true` alone. The burst described below then sends a [Guild Create](#guild-create) with the full state of each available guild, and a [Guild Delete](#guild-delete) for each unavailable one
 
 <sup>2</sup> Each entry has its `user` field removed and the removed accounts appear in `users` instead, so a client resolves a relationship through the entry's `id`
 
@@ -156,7 +156,7 @@ The initial session state. Sent once after a successful [Identify](/gateway/comm
 
 Ready is sent outside the replay buffer, so a [Resume](/gateway/commands/#resume) never replays it.
 
-A bot session receives one [Guild Create](#guild-create) per available guild immediately after Ready, and one [Guild Delete](#guild-delete) per unavailable guild. Those Dispatches are also sent outside the replay buffer.
+A bot session receives one [Guild Create](#guild-create) per available guild immediately after Ready, and one [Guild Delete](#guild-delete) per unavailable guild. Together they resolve the entries of the `guilds` array. Those Dispatches are also sent outside the replay buffer.
 
 Shortly after Ready, every session receives one [Call Create](#call-create) for each of its private channels that has an active call.
 
@@ -170,8 +170,8 @@ The same structure appears in Ready, [Guild Create](#guild-create), and [Guild S
 | properties | [guild](/http-api/guilds/#guild-object) object | Guild record without its roles, channels, emojis, stickers, or members |
 | roles | array[[guild role](/http-api/permissions/#guild-role-object) object] | Every role in the guild |
 | channels | array[[channel](/http-api/channels/#channel-object) object] | Channels the session can view |
-| emojis | array[[guild emoji](/http-api/guild-emojis/#guild-emoji-object) object] | Guild emojis |
-| stickers | array[[guild sticker](/http-api/guild-stickers/#guild-sticker-object) object] | Guild stickers |
+| emojis | array[[guild emoji](/http-api/guild-emojis/#guild-emoji-object) object] | Every emoji in the guild |
+| stickers | array[[guild sticker](/http-api/guild-stickers/#guild-sticker-object) object] | Every sticker in the guild |
 | members<sup>1</sup> | array[[guild member](/http-api/guild-members/#guild-member-object) object] | The members the session needs immediately |
 | member_count | integer | Total member count |
 | online_count<sup>2</sup> | integer | Online member count |
@@ -187,9 +187,9 @@ The same structure appears in Ready, [Guild Create](#guild-create), and [Guild S
 
 <sup>3</sup> Guild presences arrive as separate [Presence Update](#presence-update) and [Presence Update Bulk](#presence-update-bulk) Dispatches
 
-An unavailable guild is reduced to `id` and `unavailable: true`, plus `unavailable_hidden: true` when the guild is hidden. It has none of the other fields.
+An unavailable guild is reduced to `id` and `unavailable: true`, plus `unavailable_hidden: true` when the guild is hidden. It has none of the other fields. Every entry in a bot session's [Ready](#ready) `guilds` array has this form, with `id` and `unavailable: true` alone.
 
-Inside [Ready](#ready), and inside the [Guild Create](#guild-create) burst a bot receives immediately after Ready, each member of this object has its `user` replaced by `{"id": "..."}`. On a user session the removed accounts appear in the Ready payload's `users` array. A bot's `users` array is empty, so a bot pulls those accounts with [Request Guild Members](/gateway/commands/#request-guild-members). A [Guild Create](#guild-create) sent later in the session, and every [Guild Sync](#guild-sync), have the members with `user` intact.
+Inside [Ready](#ready), and inside the [Guild Create](#guild-create) burst a bot receives immediately after Ready, each entry in `members` has its `user` replaced by `{"id": "..."}`. A bot session's Ready has no `members` at all, because each of its guilds is an unavailable guild, so a bot sees the reduced form in the burst alone. On a user session the removed accounts appear in the Ready payload's `users` array. A bot's `users` array is empty, so a bot pulls those accounts with [Request Guild Members](/gateway/commands/#request-guild-members). A [Guild Create](#guild-create) sent later in the session, and every [Guild Sync](#guild-sync), have the members with `user` intact.
 
 #### Session presence object
 
@@ -200,7 +200,7 @@ Inside [Ready](#ready), and inside the [Guild Create](#guild-create) burst a bot
 | afk | boolean | Whether the session is away |
 | mobile | boolean | Whether the session is mobile |
 
-The first entry always has `session_id: "all"` and the account's flattened status.
+The first entry always has `session_id: "all"` and the account's combined status, which is the first of `dnd`, `online`, `idle`, and `invisible` that any of its sessions has, or `offline` when none has one.
 
 #### WebAuthn credential object
 
@@ -229,11 +229,11 @@ Sent after a successful [Resume](/gateway/commands/#resume) has replayed every r
 | --- | --- | --- |
 | _timings_gw? | object | Gateway-side timing breakdown, present only for a staff account |
 
-The payload is otherwise empty. Resumed has the session's current sequence in `s` without advancing it, and that sequence becomes the new live baseline.
+The payload is otherwise empty. Resumed has the session's current sequence in `s` without advancing it, and the next live Dispatch has that sequence plus one.
 
 ### <span id="sessions-replace"></span>SESSIONS_REPLACE
 
-The account's set of live sessions changed. The payload, a bare JSON array of [session presence objects](#session-presence-object), replaces the client's copy in full. [Ready](#ready) sends the initial set as `sessions`.
+The account's set of live sessions changed. The payload is a bare JSON array of [session presence objects](#session-presence-object) and is always the complete set. A client that stores the sessions replaces them with this array. [Ready](#ready) sends the initial set as `sessions`.
 
 ### <span id="auth-session-change"></span>AUTH_SESSION_CHANGE
 
@@ -288,7 +288,7 @@ The current user wrote or cleared a private note.
 
 ### <span id="user-pinned-dms-update"></span>USER_PINNED_DMS_UPDATE
 
-The current user's pinned private channel set changed. The payload is a bare JSON array of channel ID strings in pinned order and replaces the client's copy in full. [Ready](#ready) sends the initial set as `pinned_dms`.
+The current user's pinned private channel set changed. The payload is a bare JSON array of channel ID strings in pinned order and is always the complete set. A client that stores the pinned channels replaces them with this array. [Ready](#ready) sends the initial set as `pinned_dms`.
 
 ### <span id="user-connections-update"></span>USER_CONNECTIONS_UPDATE
 
@@ -298,11 +298,11 @@ The current user's external connection set changed.
 | --- | --- | --- |
 | connections | array[connection object] | Every connection the account holds |
 
-The array replaces the client's copy in full.
+`connections` is always the complete set. A client that stores the connections replaces them with this array.
 
 ### <span id="webauthn-credentials-update"></span>WEBAUTHN_CREDENTIALS_UPDATE
 
-The current user's WebAuthn credential set changed. The payload is a bare JSON array of [WebAuthn credential objects](#webauthn-credential-object) and replaces the client's copy in full. [Ready](#ready) sends the initial set as `webauthn_credentials`.
+The current user's WebAuthn credential set changed. The payload is a bare JSON array of [WebAuthn credential objects](#webauthn-credential-object) and is always the complete set. A client that stores the credentials replaces them with this array. [Ready](#ready) sends the initial set as `webauthn_credentials`.
 
 ### <span id="relationship-add"></span>RELATIONSHIP_ADD
 
@@ -378,15 +378,17 @@ The current user deleted a meme.
 
 A guild became available to the session. The payload is a [guild ready object](#guild-ready-object).
 
-Every collection in the event replaces the client's copy for that guild.
+`roles`, `channels`, `emojis`, `stickers`, and `voice_states` are always complete. A client that stores any of them for the guild replaces its stored list with the new array. `members` is a partial list. A client adds or updates those members and keeps every other member it already stores.
 
-A user session receives Guild Create when a guild becomes available after Ready, for example after joining one or after an unavailable guild recovers. A bot session receives one for every guild in the burst that follows Ready.
+Every session receives Guild Create when a guild becomes available after Ready, for example after joining one or after an unavailable guild recovers. A bot session also receives one for each available guild in the burst that follows Ready.
+
+A bot session's Guild Create has `unavailable: false` unless it is the first Guild Create for a guild the bot joined during the session and [Ready](#ready) did not list. That Dispatch has no `unavailable` field, even when a [Guild Delete](#guild-delete) with `unavailable: true` for the guild came before it. A user session never receives the field on Guild Create.
 
 ### <span id="guild-sync"></span>GUILD_SYNC
 
-A session that asked for a sync through [Lazy Request](/gateway/commands/#lazy-request) receives a replacement snapshot of the guild. The payload is a [guild ready object](#guild-ready-object) and has the same replacement semantics as [Guild Create](#guild-create).
+A session that asked for a sync through [Lazy Request](/gateway/commands/#lazy-request) receives the guild's full current state again. The payload is a [guild ready object](#guild-ready-object), and a client handles it the same way as [Guild Create](#guild-create).
 
-Fluxer sends a sync when the subscription switches the guild between active and passive, and when `sync: true` names a guild the session has not already synced. A second `sync: true` for an already-synced guild sends nothing.
+Fluxer sends a sync when a Lazy Request switches the guild between [active and passive](/gateway/event-filtering/#active-and-passive-guilds), and when `sync: true` names a guild the session has not already synced. A second `sync: true` for an already-synced guild sends nothing.
 
 ### <span id="guild-update"></span>GUILD_UPDATE
 
@@ -407,7 +409,7 @@ A guild left the session's visibility, or became unavailable.
 
 <sup>1</sup> Present only when the guild itself is deleted. The payload has `id` alone when the account leaves a guild or is removed from one, and `id` with `unavailable` in the unavailable form
 
-Without `unavailable`, the account is no longer a member and the client discards the guild. With `unavailable: true`, the guild is retained in a placeholder state and a later [Guild Create](#guild-create) restores it.
+Without `unavailable`, the account is no longer a member, and a client deletes everything it stores for that guild. With `unavailable: true`, the guild is temporarily unreachable. A client keeps the guild as an unavailable entry until a later [Guild Create](#guild-create) sends its full state again.
 
 ### <span id="guild-role-create"></span>GUILD_ROLE_CREATE
 
@@ -447,25 +449,25 @@ A role was deleted from a guild.
 
 ### <span id="guild-emojis-update"></span>GUILD_EMOJIS_UPDATE
 
-A guild's emoji collection changed.
+A guild's emojis changed.
 
 | Field | Type | Description |
 | --- | --- | --- |
 | guild_id | snowflake | Guild the emojis belong to |
-| emojis | array[[guild emoji](/http-api/guild-emojis/#guild-emoji-object) object] | The complete emoji collection |
+| emojis | array[[guild emoji](/http-api/guild-emojis/#guild-emoji-object) object] | Every emoji in the guild |
 
-The array replaces the client's copy for that guild. Fluxer does not send per-emoji create, update, or delete events.
+A client that stores the guild's emojis replaces them with this array. Fluxer does not send per-emoji create, update, or delete events.
 
 ### <span id="guild-stickers-update"></span>GUILD_STICKERS_UPDATE
 
-A guild's sticker collection changed.
+A guild's stickers changed.
 
 | Field | Type | Description |
 | --- | --- | --- |
 | guild_id | snowflake | Guild the stickers belong to |
-| stickers | array[[guild sticker](/http-api/guild-stickers/#guild-sticker-object) object] | The complete sticker collection |
+| stickers | array[[guild sticker](/http-api/guild-stickers/#guild-sticker-object) object] | Every sticker in the guild |
 
-The array replaces the client's copy for that guild. Fluxer does not send per-sticker create, update, or delete events.
+A client that stores the guild's stickers replaces them with this array. Fluxer does not send per-sticker create, update, or delete events.
 
 ### <span id="channel-create"></span>CHANNEL_CREATE
 
@@ -549,7 +551,7 @@ A user became a member of a guild the session is connected to. The payload is th
 
 A member's guild state or public user representation changed. The payload is the complete [guild member object](/http-api/guild-members/#guild-member-object) with `guild_id` added.
 
-In a large guild, a passive session receives this event only when the subject is its own user.
+In a guild with more than 250 members, a [passive](/gateway/event-filtering/#active-and-passive-guilds) session receives this event only when the subject is its own user.
 
 ### <span id="guild-member-remove"></span>GUILD_MEMBER_REMOVE
 
@@ -562,7 +564,7 @@ A user stopped being a member of a guild the session is connected to.
 
 <sup>1</sup> The object has `id` alone. No other account field is sent, so a client MUST resolve the account from state it already holds
 
-In a large guild, a passive session receives this event only when the subject is its own user.
+In a guild with more than 250 members, a [passive](/gateway/event-filtering/#active-and-passive-guilds) session receives this event only when the subject is its own user.
 
 ### <span id="guild-members-chunk"></span>GUILD_MEMBERS_CHUNK
 
@@ -629,7 +631,9 @@ Each item has exactly one of the fields.
 
 ### <span id="guild-audit-log-entry-create"></span>GUILD_AUDIT_LOG_ENTRY_CREATE
 
-An audit log entry was written. The payload has the shape of a [guild audit log entry object](/http-api/guild-audit-logs/#guild-audit-log-entry-object) with `guild_id` added. It always has `id`, `action_type`, `user_id`, and `target_id`. It has `reason` when the request supplied one, `options` when the entry recorded any metadata, and `changes` when at least one change survives scrubbing.
+An audit log entry was written. The payload is the [guild audit log entry object](/http-api/guild-audit-logs/#guild-audit-log-entry-object) that [List guild audit logs](/http-api/guild-audit-logs/#list-guild-audit-logs) returns for the same entry, with `guild_id` added. It always has `id`, `action_type`, `user_id`, and `target_id`. `reason` is resolved as the [audit log reason](/http-api/guild-audit-logs/#audit-log-reason) describes, and `options` has only the published [audit log options](/http-api/guild-audit-logs/#audit-log-options-object) keys, with the same number and boolean types. `changes` is present when at least one change survives scrubbing.
+
+An update that changes nothing records no entry, as the [audit actions](/http-api/guild-audit-logs/#audit-actions) registry states, so it emits no event.
 
 The `ip` change key is stripped from `changes`, so an entry whose only change was `ip` has no `changes` at all. A client MUST treat an absent `options` or `changes` as an empty set.
 
@@ -758,7 +762,7 @@ One visible message was deleted.
 | guild_id? | snowflake | Guild the channel belongs to |
 | member?<sup>2</sup> | [guild member](/http-api/guild-members/#guild-member-object) object | The author's guild member object, present in a guild channel |
 
-<sup>1</sup> Both fields are omitted when the deletion came from moderation tools, and `author_id` is also omitted for a message with no author
+<sup>1</sup> Both fields are omitted when an instance administrator deleted the message through the Admin API, when Fluxer deleted it after a CSAM report, or when Fluxer deleted it because content moderation blocked a link preview in it, and `author_id` is also omitted for a message with no author
 
 <sup>2</sup> The `user` field is removed from it, and the whole field is absent when `author_id` is absent or the author is no longer a member
 
@@ -824,7 +828,7 @@ With the `DEBOUNCE_MESSAGE_REACTIONS` [session flag](/gateway/commands/#session-
 
 <sup>1</sup> Every addition in `reactions` belongs to this message. A window covering several messages produces a separate Dispatch for each
 
-When the window closes holding exactly one addition, the session sends [Message Reaction Add](#message-reaction-add) instead. A session without the flag receives one Message Reaction Add per addition.
+When the window closes holding exactly one addition, Fluxer sends [Message Reaction Add](#message-reaction-add) to the session. A session without the flag receives one Message Reaction Add per addition.
 
 #### Reaction addition object
 
@@ -884,7 +888,7 @@ A visible user began typing in a channel.
 | guild_id? | snowflake | Guild the channel belongs to |
 | member? | [guild member](/http-api/guild-members/#guild-member-object) object | The typing user's guild member object, present in a guild channel |
 
-The `typing` override set through [Lazy Request](/gateway/commands/#lazy-request) decides delivery in a guild. With no override, a session receives the event when it is active in the guild or when the guild has 250 members or fewer, so a passive session in a small guild still receives it. A guild that sets the `TYPING_EVENTS` bit in its [disabled operations](/http-api/guilds/#disabled-guild-operations) produces the event for nobody.
+The `typing` override set through [Lazy Request](/gateway/commands/#lazy-request) decides delivery in a guild. With no override, a session receives the event when it is [active](/gateway/event-filtering/#active-and-passive-guilds) in the guild or when the guild has 250 members or fewer, so a passive session in a small guild still receives it. A guild that sets the `TYPING_EVENTS` bit in its [disabled operations](/http-api/guilds/#disabled-guild-operations) produces the event for nobody.
 
 ### <span id="channel-pins-update"></span>CHANNEL_PINS_UPDATE
 
@@ -911,7 +915,7 @@ The current user acknowledged a channel's pins. Every session of the account rec
 
 A participant's voice state changed. The payload is a [voice state object](#voice-state-object).
 
-Recipients are the sessions that can view the voice channel, passive sessions included. A passive session in a large guild also receives the changed voice states through [Passive Updates](#passive-updates).
+Recipients are the sessions that can view the voice channel, passive sessions included. A passive session in a guild with more than 250 members also receives the changed voice states through [Passive Updates](#passive-updates).
 
 A `channel_id` of null means the participant left.
 
@@ -937,7 +941,7 @@ A `channel_id` of null means the participant left.
 | e2ee_capable | boolean | Whether the participant's client supports end-to-end encrypted voice |
 | version | integer | Monotonic version of this participant's voice state |
 
-<sup>1</sup> Publisher-asserted. In a guild voice channel Fluxer sets it to false when the participant lacks `STREAM`
+<sup>1</sup> The participant's client reports this value. In a guild voice channel Fluxer sets it to false when the participant lacks `STREAM`
 
 The broadcast form has no `region_id`, `server_id`, `latitude`, or `longitude`.
 
@@ -1018,7 +1022,7 @@ A call ended, or became unavailable.
 
 <sup>1</sup> Absent when the call ended
 
-With `unavailable: true`, the client MUST retain a placeholder for the call. If it becomes available again, a fresh [Call Create](#call-create) includes `recipients` and `created_at`. Recovery is not guaranteed.
+With `unavailable: true`, the client MUST keep the call as an unavailable entry. If it becomes available again, a fresh [Call Create](#call-create) includes `recipients` and `created_at`. Recovery is not guaranteed.
 
 ## Count response events
 

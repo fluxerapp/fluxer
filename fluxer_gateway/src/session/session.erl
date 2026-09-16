@@ -66,6 +66,7 @@
     guild_connect_inflight => #{guild_id() => non_neg_integer()},
     guild_connect_workers => #{reference() => {guild_id(), non_neg_integer(), pid()}},
     guild_connect_timers => #{guild_id() => {reference(), reference()}},
+    pending_guild_joins => #{guild_id() => true},
     voice_queue => queue:queue(map()),
     voice_queue_timer => reference() | undefined,
     debounce_reactions => boolean(),
@@ -168,7 +169,7 @@ handle_cast_guild_or_lifecycle({reconnect_drain, SocketPid}, State) when
     session_lifecycle:handle_reconnect_drain(SocketPid, State);
 handle_cast_guild_or_lifecycle({guild_join, GuildId}, State) when is_integer(GuildId) ->
     self() ! {guild_connect, GuildId, 0},
-    {noreply, State};
+    {noreply, session_bot_guilds:track_join(GuildId, State)};
 handle_cast_guild_or_lifecycle({store_guild_subscriptions, Data}, State) when is_map(Data) ->
     {noreply, session_guilds:store_guild_subscriptions(Data, State)};
 handle_cast_guild_or_lifecycle({guild_leave, GuildId, forced_unavailable, true}, State) when

@@ -164,7 +164,6 @@ export class ComposerStandardEmojiNode extends DecoratorNode<JSX.Element> {
 					</span>
 				) : (
 					<ComposerStandardEmoji
-						name={this.__name}
 						surrogate={this.__surrogate}
 						url={this.__url}
 						display={this.__display}

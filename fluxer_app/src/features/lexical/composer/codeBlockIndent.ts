@@ -52,6 +52,7 @@ interface CodeBlockParse {
 
 interface ScanScope {
 	bodies: Array<CodeBlockBody>;
+	quoteContentStarts: Array<number>;
 	end: number;
 	quotes: boolean;
 	multilineQuotes: boolean;
@@ -61,6 +62,7 @@ interface ScanScope {
 interface PhysicalLine {
 	start: number;
 	end: number;
+	contentStart: number;
 	text: string;
 	isCodeContent: boolean;
 }
@@ -255,7 +257,9 @@ function scanQuote(lines: Array<SourceLine>, index: number, scope: ScanScope): n
 		if (!trimmed.startsWith('> ')) {
 			break;
 		}
-		quoted.push({text: trimmed.slice(2), offset: line.offset + line.text.length - trimmed.length + 2});
+		const offset = line.offset + line.text.length - trimmed.length + 2;
+		quoted.push({text: trimmed.slice(2), offset});
+		scope.quoteContentStarts.push(offset);
 		next += 1;
 	}
 	scanBlocks(quoted, {...scope, quotes: false, end: linesEnd(quoted)});
@@ -363,10 +367,21 @@ function scanBlocks(lines: Array<SourceLine>, scope: ScanScope): void {
 	}
 }
 
-export function scanCodeBlocks(text: string): Array<CodeBlockBody> {
-	const scope: ScanScope = {bodies: [], end: text.length, quotes: true, multilineQuotes: true, rendered: true};
+function scanSource(text: string): ScanScope {
+	const scope: ScanScope = {
+		bodies: [],
+		quoteContentStarts: [],
+		end: text.length,
+		quotes: true,
+		multilineQuotes: true,
+		rendered: true,
+	};
 	scanBlocks(splitLines(text), scope);
-	return scope.bodies;
+	return scope;
+}
+
+export function scanCodeBlocks(text: string): Array<CodeBlockBody> {
+	return scanSource(text).bodies;
 }
 
 export function isOffsetInsideCodeBlock(text: string, offset: number): boolean {
@@ -374,15 +389,21 @@ export function isOffsetInsideCodeBlock(text: string, offset: number): boolean {
 }
 
 function scanLines(text: string): Array<PhysicalLine> {
-	const bodies = scanCodeBlocks(text);
+	const {bodies, quoteContentStarts} = scanSource(text);
 	return splitLines(text).map(({text: content, offset: start}) => {
 		const end = start + content.length;
+		const contentStart = quoteContentStarts.reduce(
+			(current, offset) => (current <= offset && offset <= end ? offset : current),
+			start,
+		);
 		return {
 			start,
 			end,
-			text: content,
+			contentStart,
+			text: text.slice(contentStart, end),
 			isCodeContent: bodies.some(
-				(body) => start >= body.start && (end <= body.end || trimStart(text.slice(start, body.end)) !== ''),
+				(body) =>
+					contentStart >= body.start && (end <= body.end || trimStart(text.slice(contentStart, body.end)) !== ''),
 			),
 		};
 	});
@@ -421,6 +442,8 @@ export function analyzeCodeIndent(
 			selectionEnd: selectionStart + INDENT.length,
 		};
 	}
+	const rangeStart = Math.max(selectionStart, lines[startLine]!.contentStart);
+	const rangeEnd = Math.max(rangeStart, selectionEnd);
 	const edits: Array<CodeIndentEdit> = [];
 	let startDelta = 0;
 	let endDelta = 0;
@@ -438,15 +461,15 @@ export function analyzeCodeIndent(
 			if (removed === 0) {
 				continue;
 			}
-			edits.push({start: line.start, end: line.start + removed, text: ''});
-			startDelta -= Math.min(removed, Math.max(0, selectionStart - line.start));
-			endDelta -= Math.min(removed, Math.max(0, selectionEnd - line.start));
+			edits.push({start: line.contentStart, end: line.contentStart + removed, text: ''});
+			startDelta -= Math.min(removed, Math.max(0, rangeStart - line.contentStart));
+			endDelta -= Math.min(removed, Math.max(0, rangeEnd - line.contentStart));
 		} else {
-			edits.push({start: line.start, end: line.start, text: INDENT});
-			if (line.start <= selectionStart) {
+			edits.push({start: line.contentStart, end: line.contentStart, text: INDENT});
+			if (line.contentStart <= rangeStart) {
 				startDelta += INDENT.length;
 			}
-			if (line.start <= selectionEnd) {
+			if (line.contentStart <= rangeEnd) {
 				endDelta += INDENT.length;
 			}
 		}
@@ -456,7 +479,7 @@ export function analyzeCodeIndent(
 	}
 	return {
 		edits,
-		selectionStart: Math.max(0, selectionStart + startDelta),
-		selectionEnd: Math.max(0, selectionEnd + endDelta),
+		selectionStart: Math.max(0, rangeStart + startDelta),
+		selectionEnd: Math.max(0, rangeEnd + endDelta),
 	};
 }

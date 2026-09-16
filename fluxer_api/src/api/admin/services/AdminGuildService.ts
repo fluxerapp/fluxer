@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
-import {AdminGuildBulkService} from '@app/api/admin/services/guild/AdminGuildBulkService';
 import {AdminGuildLookupService} from '@app/api/admin/services/guild/AdminGuildLookupService';
 import {AdminGuildManagementService} from '@app/api/admin/services/guild/AdminGuildManagementService';
 import {AdminGuildMembershipService} from '@app/api/admin/services/guild/AdminGuildMembershipService';
@@ -37,7 +36,6 @@ export class AdminGuildService {
 	readonly updateService: AdminGuildUpdateService;
 	readonly vanityService: AdminGuildVanityService;
 	readonly membershipService: AdminGuildMembershipService;
-	readonly bulkService: AdminGuildBulkService;
 	readonly managementService: AdminGuildManagementService;
 	private readonly updatePropagator: AdminGuildUpdatePropagator;
 	private readonly guildService: GuildService;
@@ -69,10 +67,6 @@ export class AdminGuildService {
 		this.membershipService = new AdminGuildMembershipService({
 			userRepository: deps.userRepository,
 			guildService: deps.guildService,
-			auditService: deps.auditService,
-		});
-		this.bulkService = new AdminGuildBulkService({
-			guildUpdateService: this.updateService,
 			auditService: deps.auditService,
 		});
 		this.managementService = new AdminGuildManagementService({
