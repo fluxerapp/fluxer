@@ -269,60 +269,45 @@ dispatch_to_sessions(Payload, State) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-expiry_timer_not_armed_while_disabled_test() ->
-    application:unset_env(fluxer_gateway, custom_status_expiry_enabled),
-    State = refresh_custom_status_expiry_timer(#{custom_status => future_custom_status()}),
-    ?assertNot(maps:is_key(?CUSTOM_STATUS_EXPIRY_TIMER, State)).
-
 expiry_timer_not_armed_without_expires_at_test() ->
-    with_expiry_enabled(fun() ->
-        ?assertNot(
-            maps:is_key(
-                ?CUSTOM_STATUS_EXPIRY_TIMER,
-                refresh_custom_status_expiry_timer(#{custom_status => null})
-            )
-        ),
-        ?assertNot(
-            maps:is_key(
-                ?CUSTOM_STATUS_EXPIRY_TIMER,
-                refresh_custom_status_expiry_timer(#{
-                    custom_status => #{<<"text">> => <<"hi">>}
-                })
-            )
+    ?assertNot(
+        maps:is_key(
+            ?CUSTOM_STATUS_EXPIRY_TIMER,
+            refresh_custom_status_expiry_timer(#{custom_status => null})
         )
-    end).
+    ),
+    ?assertNot(
+        maps:is_key(
+            ?CUSTOM_STATUS_EXPIRY_TIMER,
+            refresh_custom_status_expiry_timer(#{
+                custom_status => #{<<"text">> => <<"hi">>}
+            })
+        )
+    ).
 
 expiry_timer_armed_for_a_future_expiry_test() ->
-    with_expiry_enabled(fun() ->
-        State = refresh_custom_status_expiry_timer(#{custom_status => future_custom_status()}),
-        ?assert(is_reference(maps:get(?CUSTOM_STATUS_EXPIRY_TIMER, State))),
-        ok = cancel_expiry_timer(maps:get(?CUSTOM_STATUS_EXPIRY_TIMER, State))
-    end).
+    State = refresh_custom_status_expiry_timer(#{custom_status => future_custom_status()}),
+    ?assert(is_reference(maps:get(?CUSTOM_STATUS_EXPIRY_TIMER, State))),
+    ok = cancel_expiry_timer(maps:get(?CUSTOM_STATUS_EXPIRY_TIMER, State)).
 
 expiry_timer_not_armed_for_an_already_expired_status_test() ->
-    with_expiry_enabled(fun() ->
-        Expired = #{<<"expires_at">> => <<"2020-01-01T00:00:00.000Z">>},
-        State = refresh_custom_status_expiry_timer(#{custom_status => Expired}),
-        ?assertNot(maps:is_key(?CUSTOM_STATUS_EXPIRY_TIMER, State))
-    end).
+    Expired = #{<<"expires_at">> => <<"2020-01-01T00:00:00.000Z">>},
+    State = refresh_custom_status_expiry_timer(#{custom_status => Expired}),
+    ?assertNot(maps:is_key(?CUSTOM_STATUS_EXPIRY_TIMER, State)).
 
 expiry_timer_replaces_the_previous_one_test() ->
-    with_expiry_enabled(fun() ->
-        First = refresh_custom_status_expiry_timer(#{custom_status => future_custom_status()}),
-        Second = refresh_custom_status_expiry_timer(First),
-        ?assertNotEqual(
-            maps:get(?CUSTOM_STATUS_EXPIRY_TIMER, First),
-            maps:get(?CUSTOM_STATUS_EXPIRY_TIMER, Second)
-        ),
-        ok = cancel_expiry_timer(maps:get(?CUSTOM_STATUS_EXPIRY_TIMER, Second))
-    end).
+    First = refresh_custom_status_expiry_timer(#{custom_status => future_custom_status()}),
+    Second = refresh_custom_status_expiry_timer(First),
+    ?assertNotEqual(
+        maps:get(?CUSTOM_STATUS_EXPIRY_TIMER, First),
+        maps:get(?CUSTOM_STATUS_EXPIRY_TIMER, Second)
+    ),
+    ok = cancel_expiry_timer(maps:get(?CUSTOM_STATUS_EXPIRY_TIMER, Second)).
 
 expiry_timer_is_dropped_when_the_status_is_cleared_test() ->
-    with_expiry_enabled(fun() ->
-        Armed = refresh_custom_status_expiry_timer(#{custom_status => future_custom_status()}),
-        Cleared = refresh_custom_status_expiry_timer(Armed#{custom_status => null}),
-        ?assertNot(maps:is_key(?CUSTOM_STATUS_EXPIRY_TIMER, Cleared))
-    end).
+    Armed = refresh_custom_status_expiry_timer(#{custom_status => future_custom_status()}),
+    Cleared = refresh_custom_status_expiry_timer(Armed#{custom_status => null}),
+    ?assertNot(maps:is_key(?CUSTOM_STATUS_EXPIRY_TIMER, Cleared)).
 
 expiry_timer_delivers_a_reconcile_cast_test() ->
     State = arm_expiry_timer({ok, 1}, #{}),
@@ -342,20 +327,5 @@ future_custom_status() ->
         erlang:system_time(millisecond) + 3600000, [{unit, millisecond}, {offset, "Z"}]
     ),
     #{<<"text">> => <<"brb">>, <<"expires_at">> => list_to_binary(ExpiresAt)}.
-
-with_expiry_enabled(Fun) ->
-    Key = custom_status_expiry_enabled,
-    Previous = application:get_env(fluxer_gateway, Key),
-    application:set_env(fluxer_gateway, Key, true),
-    try
-        Fun()
-    after
-        restore_expiry_env(Key, Previous)
-    end.
-
-restore_expiry_env(Key, undefined) ->
-    application:unset_env(fluxer_gateway, Key);
-restore_expiry_env(Key, {ok, Value}) ->
-    application:set_env(fluxer_gateway, Key, Value).
 
 -endif.
