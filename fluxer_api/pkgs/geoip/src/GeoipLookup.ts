@@ -285,6 +285,5 @@ export function formatGeoipLocation(result: GeoipResult, locale?: string | null)
 	const localizedCountry = locale && result.countryCode ? countryDisplayName(result.countryCode, locale) : null;
 	const countryLabel = localizedCountry ?? result.countryName ?? result.countryCode;
 	if (countryLabel) parts.push(countryLabel);
-	if (parts.length === 0) return null;
-	return new Intl.ListFormat(locale ?? 'en', {style: 'narrow', type: 'unit'}).format(parts);
+	return parts.length > 0 ? parts.join(', ') : null;
 }
