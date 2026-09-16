@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
+import {recordAdminRead} from '@app/api/admin/AdminAuditRecorder';
 import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
 import {createUserID} from '@app/api/BrandedTypes';
 import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
@@ -72,7 +74,14 @@ export function UserAdminController(app: HonoApp) {
 				'Returns every access control permission the admin API recognises. This is the registry admin accounts and admin API keys draw their permissions from. Requires AUTHENTICATE permission.',
 		}),
 		async (ctx) => {
-			return ctx.json({acls: Object.values(AdminACLs)});
+			const acls = Object.values(AdminACLs);
+			await recordAdminRead(ctx, {
+				targetType: 'admin_acl',
+				targetId: 0n,
+				action: AdminAuditReadActions.LIST_ADMIN_ACLS,
+				metadata: {acl_count: acls.length},
+			});
+			return ctx.json({acls});
 		},
 	);
 	app.get(
@@ -127,25 +136,50 @@ export function UserAdminController(app: HonoApp) {
 					throw inputValidationErrorFromZodIssues(parsed.error.issues);
 				}
 				const {users} = await adminService.userService.lookupService.lookupUser(parsed.data, adminUserAcls);
+				await recordAdminRead(ctx, {
+					targetType: 'user',
+					targetId: 0n,
+					action: AdminAuditReadActions.SEARCH_USERS,
+					metadata: {
+						selector: userIds ? 'user_id' : 'resolve',
+						user_id: userIds?.length === 1 ? userIds[0] : undefined,
+						user_id_count: userIds?.length,
+						result_count: users.length,
+						total: users.length,
+					},
+				});
 				return ctx.json({users, total: users.length});
 			}
-			if (query.email?.trim()) {
+			const selector = query.email?.trim() ? 'email' : query.last_active_ip?.trim() ? 'last_active_ip' : 'search';
+			if (selector === 'email') {
 				requireSelectorACL(adminUserAcls, AdminACLs.USER_VIEW_EMAIL);
-			} else if (query.last_active_ip?.trim()) {
+			} else if (selector === 'last_active_ip') {
 				requireSelectorACL(adminUserAcls, AdminACLs.USER_VIEW_IP);
 			}
-			return ctx.json(
-				await adminService.searchService.searchUsers(
-					{
-						query: query.q,
-						email: query.email,
-						last_active_ip: query.last_active_ip,
-						limit: query.limit,
-						offset: query.offset,
-					},
-					adminUserAcls,
-				),
+			const response = await adminService.searchService.searchUsers(
+				{
+					query: query.q,
+					email: query.email,
+					last_active_ip: query.last_active_ip,
+					limit: query.limit,
+					offset: query.offset,
+				},
+				adminUserAcls,
 			);
+			await recordAdminRead(ctx, {
+				targetType: 'user',
+				targetId: 0n,
+				action: AdminAuditReadActions.SEARCH_USERS,
+				metadata: {
+					selector,
+					has_query: selector === 'search' && query.q?.trim() ? true : undefined,
+					limit: selector === 'email' ? undefined : query.limit,
+					offset: selector === 'email' ? undefined : query.offset,
+					result_count: response.users.length,
+					total: response.total,
+				},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.get(
@@ -167,7 +201,14 @@ export function UserAdminController(app: HonoApp) {
 			const adminService = ctx.get('adminService');
 			const adminUserAcls = ctx.get('adminUserAcls');
 			const {user_id: userId} = ctx.req.valid('param');
-			return ctx.json(await adminService.userService.lookupService.lookupUser({user_ids: [userId]}, adminUserAcls));
+			const response = await adminService.userService.lookupService.lookupUser({user_ids: [userId]}, adminUserAcls);
+			await recordAdminRead(ctx, {
+				targetType: 'user',
+				targetId: userId,
+				action: AdminAuditReadActions.GET_USER,
+				metadata: {found: response.users.length > 0},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.get(
@@ -190,9 +231,23 @@ export function UserAdminController(app: HonoApp) {
 			const adminService = ctx.get('adminService');
 			const {user_id: userId} = ctx.req.valid('param');
 			const query = ctx.req.valid('query');
-			return ctx.json(
-				await adminService.guildServiceAggregate.lookupService.listUserGuilds({user_id: userId, ...query}),
-			);
+			const response = await adminService.guildServiceAggregate.lookupService.listUserGuilds({
+				user_id: userId,
+				...query,
+			});
+			await recordAdminRead(ctx, {
+				targetType: 'user',
+				targetId: userId,
+				action: AdminAuditReadActions.LIST_USER_GUILDS,
+				metadata: {
+					before_guild_id: query.before,
+					after_guild_id: query.after,
+					limit: query.limit,
+					with_counts: query.with_counts,
+					guild_count: response.guilds.length,
+				},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.get(
@@ -216,9 +271,29 @@ export function UserAdminController(app: HonoApp) {
 			const {user_id: userId} = ctx.req.valid('param');
 			const {type, ...pagination} = ctx.req.valid('query');
 			if (type === 'group_dm') {
-				return ctx.json(await adminService.userService.listUserGroupDmChannels({user_id: userId}));
+				const response = await adminService.userService.listUserGroupDmChannels({user_id: userId});
+				await recordAdminRead(ctx, {
+					targetType: 'user',
+					targetId: userId,
+					action: AdminAuditReadActions.LIST_USER_DM_CHANNELS,
+					metadata: {type, channel_count: response.channels.length},
+				});
+				return ctx.json(response);
 			}
-			return ctx.json(await adminService.userService.listUserDmChannels({user_id: userId, ...pagination}));
+			const response = await adminService.userService.listUserDmChannels({user_id: userId, ...pagination});
+			await recordAdminRead(ctx, {
+				targetType: 'user',
+				targetId: userId,
+				action: AdminAuditReadActions.LIST_USER_DM_CHANNELS,
+				metadata: {
+					type,
+					before_channel_id: pagination.before,
+					after_channel_id: pagination.after,
+					limit: pagination.limit,
+					channel_count: response.channels.length,
+				},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.get(
@@ -242,7 +317,18 @@ export function UserAdminController(app: HonoApp) {
 			const adminUserAcls = ctx.get('adminUserAcls');
 			const {user_id: userId} = ctx.req.valid('param');
 			const query = ctx.req.valid('query');
-			return ctx.json(await adminService.userService.listUserChangeLog({user_id: userId, ...query}, adminUserAcls));
+			const response = await adminService.userService.listUserChangeLog({user_id: userId, ...query}, adminUserAcls);
+			await recordAdminRead(ctx, {
+				targetType: 'user',
+				targetId: userId,
+				action: AdminAuditReadActions.LIST_USER_CHANGE_LOG,
+				metadata: {
+					limit: query.limit,
+					has_page_token: query.page_token === undefined ? undefined : true,
+					entry_count: response.entries.length,
+				},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.get(
@@ -263,7 +349,19 @@ export function UserAdminController(app: HonoApp) {
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
 			const {user_id: userId} = ctx.req.valid('param');
-			return ctx.json(await adminService.relationshipService.listRelationships({user_id: userId}));
+			const response = await adminService.relationshipService.listRelationships({user_id: userId});
+			await recordAdminRead(ctx, {
+				targetType: 'user',
+				targetId: userId,
+				action: AdminAuditReadActions.LIST_USER_RELATIONSHIPS,
+				metadata: {
+					friend_count: response.friends.length,
+					incoming_request_count: response.incoming_requests.length,
+					outgoing_request_count: response.outgoing_requests.length,
+					blocked_count: response.blocked.length,
+				},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.delete(

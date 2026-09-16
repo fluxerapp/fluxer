@@ -232,7 +232,7 @@ An ID owned by a different guild appears in `errors` with no asset type.
 
 ## List guilds
 
-<RouteHeader method="GET" path="/v1/admin/guilds" />
+<RouteHeader method="GET" path="/v1/admin/guilds" auditReason />
 
 Searches guilds through the guild search index and returns [Admin guild](#admin-guild-object) objects. Requires `guild:lookup`.
 
@@ -264,13 +264,17 @@ The index matches `q` against the guild name, the discovery tags, the custom inv
 | 200 | response body | Guild page was returned |
 | 403 | [error response](/admin-api/#error-response) | `FEATURE_TEMPORARILY_DISABLED`, because the instance has no search backend configured |
 
+### Side effects
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `search_guilds`, the target type `guild`, and the target ID `0`. Its metadata keys are `limit`, `offset`, `result_count` for the guilds in this page, and `total`. `has_query` is added as `true` when `q` is supplied, and the query text is not recorded. A 403 records nothing.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
 ## Get guild
 
-<RouteHeader method="GET" path="/v1/admin/guilds/{guild_id}" />
+<RouteHeader method="GET" path="/v1/admin/guilds/{guild_id}" auditReason />
 
 Returns one guild with its channels and roles. Requires `guild:lookup`.
 
@@ -294,6 +298,10 @@ Returns one guild with its channels and roles. Requires `guild:lookup`.
 | --- | --- | --- |
 | 200 | response body | A lookup was done, whether or not it resolved |
 
+### Side effects
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `get_guild`, the target type `guild`, and the requested guild ID as the target. Its metadata key `found` is `true` when the guild resolved and `false` when `guild` is null.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
@@ -314,7 +322,7 @@ Fluxer evaluates authorisation in two stages and reads the body between them. Th
 - `vanity_url_code` selects `guild:update:vanity`.
 - `new_owner_id` selects `guild:transfer_ownership`.
 
-A body with no field at all selects nothing, so an empty patch applies no change.
+A body with no field at all selects nothing, so an empty patch applies no change and records one `update_guild` entry.
 
 ### Path parameters
 
@@ -385,7 +393,7 @@ Supplying `add_features` or `remove_features` reconciles an existing discovery a
 
 Every applied group refreshes the guild's entry in the guild search index and fires one [Guild Update](/gateway/events/#guild-update) Dispatch to every session that can see the guild, including when the write changes no value.
 
-Each applied group records one Admin audit entry with the target type `guild` and the guild ID as the target.
+Each applied group records one Admin audit entry with the target type `guild` and the guild ID as the target. A body that applies no group records one entry with action `update_guild` and no metadata instead.
 
 - `clear_fields` records the cleared field names.
 - `update_settings` records each applied setting.
@@ -439,7 +447,7 @@ One Admin audit entry is recorded with the action `delete_guild`, the target typ
 
 ## List guild members
 
-<RouteHeader method="GET" path="/v1/admin/guilds/{guild_id}/members" />
+<RouteHeader method="GET" path="/v1/admin/guilds/{guild_id}/members" auditReason />
 
 Returns one page of [guild member](/http-api/guild-members/#guild-member-object) objects read from the main Gateway, without requiring membership. Requires `guild:list:members`.
 
@@ -479,6 +487,10 @@ A guild the main Gateway cannot load answers 404 `UNKNOWN_GUILD`.
 | 500 | [error response](/admin-api/#error-response) | The API loses its connection to the main Gateway during the call |
 
 A member query the main Gateway reports as failed returns 502 `BAD_GATEWAY`, an unanswered call returns 504 `GATEWAY_TIMEOUT`, and an overloaded cluster returns 503 `SERVICE_UNAVAILABLE`.
+
+### Side effects
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `list_guild_members`, the target type `guild`, and the guild ID as the target. Its metadata keys are `limit` and `offset` as applied, `result_count` for the members in this page, and `total`. An error response records nothing.
 
 ### Rate limit
 
@@ -628,7 +640,7 @@ One Admin audit entry is recorded with the action `ban_member`, the target type 
 
 ## List guild emojis
 
-<RouteHeader method="GET" path="/v1/admin/guilds/{guild_id}/emojis" />
+<RouteHeader method="GET" path="/v1/admin/guilds/{guild_id}/emojis" auditReason />
 
 Returns every custom emoji of a guild as [Admin guild expression](#admin-guild-expression-object) objects. Requires `asset:purge`.
 
@@ -655,13 +667,17 @@ Returns every custom emoji of a guild as [Admin guild expression](#admin-guild-e
 
 The operation does not verify that the guild exists, so an unknown guild ID returns an empty listing.
 
+### Side effects
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `list_guild_emojis`, the target type `guild`, and the guild ID as the target. Its metadata key `result_count` is the number of emojis returned.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
 ## List guild stickers
 
-<RouteHeader method="GET" path="/v1/admin/guilds/{guild_id}/stickers" />
+<RouteHeader method="GET" path="/v1/admin/guilds/{guild_id}/stickers" auditReason />
 
 Returns every sticker of a guild as [Admin guild expression](#admin-guild-expression-object) objects. Requires `asset:purge`.
 
@@ -687,6 +703,10 @@ Returns every sticker of a guild as [Admin guild expression](#admin-guild-expres
 | 200 | response body | Stickers were returned, or the guild owns none |
 
 The operation does not verify that the guild exists, so an unknown guild ID returns an empty listing.
+
+### Side effects
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `list_guild_stickers`, the target type `guild`, and the guild ID as the target. Its metadata key `result_count` is the number of stickers returned.
 
 ### Rate limit
 
@@ -745,7 +765,7 @@ Every entry in `processed` records its own Admin audit entry, with the numeric I
 
 ## List guild audit logs
 
-<RouteHeader method="GET" path="/v1/admin/guilds/{guild_id}/audit-logs" />
+<RouteHeader method="GET" path="/v1/admin/guilds/{guild_id}/audit-logs" auditReason />
 
 Returns one page of the guild's own in-app audit log, without requiring guild membership or [VIEW_AUDIT_LOG](/http-api/permissions/). Requires `guild:audit_log:view`.
 
@@ -790,7 +810,9 @@ The operation does not verify that the guild exists, so an unknown guild ID retu
 
 ### Side effects
 
-The read records no Admin audit entry and appends no ordinary entry to the guild's own audit log. It still changes that log. Runs of consecutive message deletion entries are replaced with one bulk entry, and that replacement emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create), exactly as the public operation does.
+The read appends no ordinary entry to the guild's own audit log. It still changes that log. Runs of consecutive message deletion entries are replaced with one bulk entry, and that replacement emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create), exactly as the public operation does.
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `list_guild_audit_logs`, the target type `guild`, and the guild ID as the target. Its metadata key `result_count` is the number of entries returned. The supplied query parameters add `limit`, `before`, `after`, `filter_user_id` for `user_id`, and `action_type`. A 400 records nothing.
 
 ### Rate limit
 
@@ -874,7 +896,7 @@ One Admin audit entry is recorded with the action `shutdown_guild`, the target t
 
 ## Create guild archive
 
-<RouteHeader method="POST" path="/v1/admin/guilds/{guild_id}/archives" />
+<RouteHeader method="POST" path="/v1/admin/guilds/{guild_id}/archives" auditReason />
 
 Queues an asynchronous archive of the guild's channels, messages, members, roles, and settings, and returns the created [archive](/admin-api/archives/#archive-object) object. Requires `archive:trigger:guild`.
 
@@ -904,7 +926,9 @@ Archive status and downloads are read through [Archives](/admin-api/archives/).
 
 The archive record is created with the acting Admin account as `requested_by`, a `progress_percent` of 0, a `progress_step` of `Queued`, and an `expires_at` that is never extended. The archive is built after the response is returned. A client reads progress through [Get archive](/admin-api/archives/#get-archive).
 
-The operation emits no Gateway Dispatch and records no Admin audit entry.
+The operation emits no Gateway Dispatch.
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `trigger_guild_archive`, the target type `guild`, and the guild ID as the target. Its metadata keys are `archive_id` for the new archive and `include_attachments`, which is `true` or `false`.
 
 ### Rate limit
 

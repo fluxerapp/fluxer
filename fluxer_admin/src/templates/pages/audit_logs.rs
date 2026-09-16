@@ -22,6 +22,7 @@ pub struct AuditLogsParams<'a> {
     pub admin_user_id: &'a str,
     pub target_id: &'a str,
     pub target_type: &'a str,
+    pub access: &'a str,
     pub sort_by: &'a str,
     pub sort_order: &'a str,
     pub limit: u32,
@@ -42,6 +43,11 @@ fn filters_section(base: &str, params: &AuditLogsParams<'_>) -> Markup {
         ("file_sha", "File SHA"),
         ("email", "Email"),
     ];
+    let access_options: &[(&str, &str)] = &[
+        ("", "All entries"),
+        ("write", "Writes only"),
+        ("read", "Reads only"),
+    ];
     let sort_options: &[(&str, &str)] = &[("createdAt", "Created at"), ("relevance", "Relevance")];
     let order_options: &[(&str, &str)] = &[("desc", "Newest first"), ("asc", "Oldest first")];
     let limit_options: &[(&str, &str)] =
@@ -60,6 +66,7 @@ fn filters_section(base: &str, params: &AuditLogsParams<'_>) -> Markup {
                     "Filter by admin user ID..."))
                 (select_input("target_type", "Target type",
                     target_type_options, params.target_type))
+                (select_input("access", "Access", access_options, params.access))
                 (select_input("sort_by", "Sort by", sort_options, params.sort_by))
                 (select_input("sort_order", "Order", order_options, params.sort_order))
                 (select_input("limit", "Page size", limit_options, &limit_str))
@@ -81,6 +88,7 @@ fn build_pagination_url(base: &str, page: u32, params: &AuditLogsParams<'_>) -> 
             ("admin_user_id", params.admin_user_id),
             ("target_id", params.target_id),
             ("target_type", params.target_type),
+            ("access", params.access),
             ("sort_by", params.sort_by),
             ("sort_order", params.sort_order),
         ]
@@ -169,6 +177,7 @@ mod tests {
             admin_user_id: "",
             target_id: "",
             target_type: "bulk_job",
+            access: "",
             sort_by: "createdAt",
             sort_order: "desc",
             limit: 50,
@@ -176,5 +185,28 @@ mod tests {
         };
         let markup = filters_section("/admin", &params).into_string();
         assert!(markup.contains(r#"<option value="bulk_job" selected>Bulk job</option>"#));
+        assert!(markup.contains(r#"<option value="" selected>All entries</option>"#));
+    }
+
+    #[test]
+    fn access_filter_survives_form_and_pagination() {
+        let params = AuditLogsParams {
+            query: "",
+            admin_user_id: "",
+            target_id: "1500000000000000001",
+            target_type: "",
+            access: "read",
+            sort_by: "createdAt",
+            sort_order: "desc",
+            limit: 50,
+            current_page: 0,
+        };
+        let markup = filters_section("/admin", &params).into_string();
+        assert!(markup.contains(r#"<select id="access" name="access""#));
+        assert!(markup.contains(r#"<option value="read" selected>Reads only</option>"#));
+        assert_eq!(
+            build_pagination_url("/admin", 1, &params),
+            "/admin/audit-logs?page=1&target_id=1500000000000000001&access=read&sort_by=createdAt&sort_order=desc&limit=50"
+        );
     }
 }

@@ -94,7 +94,7 @@ Fluxer serves one synthetic application for its own Admin OAuth2 client. The app
 
 ## List applications
 
-<RouteHeader method="GET" path="/v1/admin/applications" />
+<RouteHeader method="GET" path="/v1/admin/applications" auditReason />
 
 Returns the [Admin application](#admin-application-object) objects selected by exactly one of `owner_id` and `guild_id`. Requires `application:lookup` or `application:list:by_owner`.
 
@@ -130,13 +130,17 @@ The route returns the complete selection in one response. There is no cursor, no
 | 200 | response body | The selected applications were returned |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER` when `owner_id` names no account, or `UNKNOWN_GUILD` when `guild_id` names no guild |
 
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with a metadata key `application_count`. An `owner_id` request records action `list_user_applications`, target type `user`, and the owner as target ID. A `guild_id` request records action `list_guild_applications`, target type `guild`, and the guild as target ID. A failed request records nothing.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
 ## Get application
 
-<RouteHeader method="GET" path="/v1/admin/applications/{application_id}" />
+<RouteHeader method="GET" path="/v1/admin/applications/{application_id}" auditReason />
 
 Returns one [Admin application](#admin-application-object) object wrapped in a single-member object. Requires `application:lookup`.
 
@@ -161,6 +165,10 @@ Fluxer answers 200 with `application` set to null when the ID names no applicati
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | response body | The lookup completed, whether or not it resolved an application |
+
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `get_application`, target type `application`, the path `application_id` as target ID, and a metadata key `found`. `found` is `true` when `application` is an object and `false` when it is null. A returned application adds `owner_user_id`, and `bot_user_id` when the application has a bot.
 
 ### Rate limit
 

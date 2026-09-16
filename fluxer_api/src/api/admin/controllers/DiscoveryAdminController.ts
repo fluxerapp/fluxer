@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
+import {recordAdminRead, recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
 import {createGuildID} from '@app/api/BrandedTypes';
 import type {GuildDiscoveryRow} from '@app/api/database/types/GuildDiscoveryTypes';
 import {mapGuildFeatures} from '@app/api/guild/GuildFeatureUtils';
@@ -29,6 +31,8 @@ import {
 	DiscoveryCategoryIdParam,
 	DiscoveryCategoryListResponse,
 } from '@fluxer/schema/src/domains/guild/GuildDiscoverySchemas';
+
+const DISCOVERY_LISTING_FIELDS = ['description', 'category_type', 'primary_language', 'custom_tags'] as const;
 
 function mapRowToApplicationResponse(row: GuildDiscoveryRow) {
 	return {
@@ -149,6 +153,12 @@ export function DiscoveryAdminController(app: HonoApp) {
 			const userRepository = ctx.get('userRepository');
 			const rows = await discoveryService.listByStatus({status: DiscoveryApplicationStatus.PENDING});
 			const enrichment = await enrichGuilds(rows, guildService, userRepository);
+			await recordAdminRead(ctx, {
+				targetType: 'guild',
+				targetId: 0n,
+				action: AdminAuditReadActions.LIST_DISCOVERY_APPLICATIONS,
+				metadata: {result_count: rows.length},
+			});
 			return ctx.json(rows.map((row) => mapPendingResponse(row, enrichment.get(row.guild_id.toString()))));
 		},
 	);
@@ -173,10 +183,16 @@ export function DiscoveryAdminController(app: HonoApp) {
 			const data = ctx.req.valid('json');
 			const adminUserId = ctx.get('adminUserId');
 			const discoveryService = ctx.get('discoveryService');
-			const row =
-				data.status === DiscoveryApplicationStatus.APPROVED
-					? await discoveryService.approve({guildId, adminUserId, reason: data.reason})
-					: await discoveryService.reject({guildId, adminUserId, reason: data.reason});
+			const approved = data.status === DiscoveryApplicationStatus.APPROVED;
+			const row = approved
+				? await discoveryService.approve({guildId, adminUserId, reason: data.reason})
+				: await discoveryService.reject({guildId, adminUserId, reason: data.reason});
+			await recordAdminWrite(ctx, {
+				targetType: 'guild',
+				targetId: guildId,
+				action: approved ? 'approve_discovery_application' : 'reject_discovery_application',
+				metadata: {status: data.status},
+			});
 			return ctx.json(mapRowToApplicationResponse(row));
 		},
 	);
@@ -195,12 +211,17 @@ export function DiscoveryAdminController(app: HonoApp) {
 			tags: 'Admin',
 		}),
 		async (ctx) => {
-			return ctx.json(
-				Object.entries(DiscoveryCategoryLabels).map(([id, name]) => ({
-					id: Number(id),
-					name,
-				})),
-			);
+			const categories = Object.entries(DiscoveryCategoryLabels).map(([id, name]) => ({
+				id: Number(id),
+				name,
+			}));
+			await recordAdminRead(ctx, {
+				targetType: 'discovery_category',
+				targetId: 0n,
+				action: AdminAuditReadActions.LIST_DISCOVERY_CATEGORIES,
+				metadata: {result_count: categories.length},
+			});
+			return ctx.json(categories);
 		},
 	);
 	app.get(
@@ -233,11 +254,20 @@ export function DiscoveryAdminController(app: HonoApp) {
 					(enrichment.get(right.guild_id.toString())?.member_count ?? 0) -
 					(enrichment.get(left.guild_id.toString())?.member_count ?? 0),
 			);
-			return ctx.json(
-				sorted
-					.slice(offset, offset + limit)
-					.map((row) => mapListedResponse(row, enrichment.get(row.guild_id.toString()))),
-			);
+			const page = sorted.slice(offset, offset + limit);
+			await recordAdminRead(ctx, {
+				targetType: 'discovery_category',
+				targetId: 0n,
+				action: AdminAuditReadActions.LIST_DISCOVERY_CATEGORY_LISTINGS,
+				metadata: {
+					category_id,
+					limit,
+					offset,
+					result_count: page.length,
+					total: inCategory.length,
+				},
+			});
+			return ctx.json(page.map((row) => mapListedResponse(row, enrichment.get(row.guild_id.toString()))));
 		},
 	);
 	app.get(
@@ -260,6 +290,12 @@ export function DiscoveryAdminController(app: HonoApp) {
 			const userRepository = ctx.get('userRepository');
 			const rows = await discoveryService.listByStatus({status: DiscoveryApplicationStatus.APPROVED});
 			const enrichment = await enrichGuilds(rows, guildService, userRepository);
+			await recordAdminRead(ctx, {
+				targetType: 'guild',
+				targetId: 0n,
+				action: AdminAuditReadActions.LIST_DISCOVERY_LISTINGS,
+				metadata: {result_count: rows.length},
+			});
 			return ctx.json(rows.map((row) => mapListedResponse(row, enrichment.get(row.guild_id.toString()))));
 		},
 	);
@@ -341,6 +377,18 @@ export function DiscoveryAdminController(app: HonoApp) {
 			const adminUserId = ctx.get('adminUserId');
 			const discoveryService = ctx.get('discoveryService');
 			const row = await discoveryService.editApplication({guildId, userId: adminUserId, data});
+			const fields = DISCOVERY_LISTING_FIELDS.filter((field) => data[field] !== undefined);
+			await recordAdminWrite(ctx, {
+				targetType: 'guild',
+				targetId: guildId,
+				action: 'update_discovery_listing',
+				metadata: {
+					fields: fields.length > 0 ? fields.join(',') : undefined,
+					category_type: data.category_type,
+					primary_language: data.primary_language,
+					status: row.status,
+				},
+			});
 			return ctx.json(mapRowToApplicationResponse(row));
 		},
 	);
@@ -366,6 +414,11 @@ export function DiscoveryAdminController(app: HonoApp) {
 			const adminUserId = ctx.get('adminUserId');
 			const discoveryService = ctx.get('discoveryService');
 			const row = await discoveryService.remove({guildId, adminUserId, reason: data.reason});
+			await recordAdminWrite(ctx, {
+				targetType: 'guild',
+				targetId: guildId,
+				action: 'remove_discovery_listing',
+			});
 			return ctx.json(mapRowToApplicationResponse(row));
 		},
 	);

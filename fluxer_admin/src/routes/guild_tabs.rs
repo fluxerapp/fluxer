@@ -121,6 +121,7 @@ pub async fn render(
                     admin_user_id: None,
                     target_id: Some(guild_id.to_owned()),
                     target_type: Some("guild".to_owned()),
+                    access: Some("write".to_owned()),
                     sort_by: Some("created_at".to_owned()),
                     sort_order: Some("desc".to_owned()),
                     limit: 50,
@@ -134,7 +135,7 @@ pub async fn render(
                     @if let Some(resp) = resp {
                         @if resp.logs.is_empty() {
                             p class="text-sm text-neutral-500" {
-                                "No admin audit log entries for this guild."
+                                "No admin write actions have been recorded for this guild."
                             }
                         } @else {
                             (table_container(table(maud::html! {

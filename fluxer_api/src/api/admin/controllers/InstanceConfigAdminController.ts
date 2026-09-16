@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
+import {recordAdminRead, recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
 import {createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {
@@ -167,16 +169,25 @@ function completesInitialSetup(data: InstanceConfigUpdateRequest, setupConfigure
 	);
 }
 
-async function grantSetupCompleterAdminACL(ctx: Context<HonoEnv>): Promise<void> {
+async function grantSetupCompleterAdminACL(ctx: Context<HonoEnv>): Promise<boolean> {
 	const user = ctx.get('user');
 	if (!user || ctx.get('authTokenType') !== 'session' || hasAdminAuthenticationACL(user.acls)) {
-		return;
+		return false;
 	}
 	const nextACLs = new Set(user.acls);
 	nextACLs.add(AdminACLs.WILDCARD);
 	const updatedUser = await ctx.get('userRepository').patchUpsert(user.id, {acls: nextACLs}, user.toRow());
 	ctx.set('user', updatedUser);
 	ctx.set('adminUserAcls', updatedUser.acls);
+	return true;
+}
+
+function listSuppliedSections(data: InstanceConfigUpdateRequest): string | undefined {
+	const sections = Object.entries(data)
+		.filter(([, value]) => value != null)
+		.map(([key]) => key)
+		.sort();
+	return sections.length > 0 ? sections.join(',') : undefined;
 }
 
 export function InstanceConfigAdminController(app: HonoApp) {
@@ -196,7 +207,17 @@ export function InstanceConfigAdminController(app: HonoApp) {
 			tags: 'Admin',
 		}),
 		async (ctx) => {
-			return ctx.json(await buildInstanceConfigResponse());
+			const response = await buildInstanceConfigResponse();
+			await recordAdminRead(ctx, {
+				targetType: 'instance_config',
+				targetId: 0n,
+				action: AdminAuditReadActions.GET_INSTANCE_CONFIG,
+				metadata: {
+					registration_url_count: response.registration.urls.length,
+					pending_registration_count: response.registration.pending_registrations.length,
+				},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.patch(
@@ -411,10 +432,20 @@ export function InstanceConfigAdminController(app: HonoApp) {
 					}),
 				});
 			}
+			let grantedSetupCompleterAdmin = false;
 			if (shouldGrantSetupCompleterAdmin) {
-				await grantSetupCompleterAdminACL(ctx);
+				grantedSetupCompleterAdmin = await grantSetupCompleterAdminACL(ctx);
 				await instanceConfigRepository.markAdminBootstrapped();
 			}
+			await recordAdminWrite(ctx, {
+				targetType: 'instance_config',
+				targetId: 0n,
+				action: 'update_instance_config',
+				metadata: {
+					sections: listSuppliedSections(data),
+					granted_acls: grantedSetupCompleterAdmin ? AdminACLs.WILDCARD : undefined,
+				},
+			});
 			return ctx.json(await buildInstanceConfigResponse());
 		},
 	);
@@ -445,6 +476,12 @@ export function InstanceConfigAdminController(app: HonoApp) {
 			});
 			const brandingPatch: Partial<InstanceBranding> = {[`${kind}_url`]: prepared.newCdnUrl};
 			await instanceConfigRepository.setAppPublicConfig({branding: brandingPatch});
+			await recordAdminWrite(ctx, {
+				targetType: 'instance_config',
+				targetId: 0n,
+				action: 'upload_branding_asset',
+				metadata: {kind, cleared: prepared.newCdnUrl === null},
+			});
 			return ctx.json(await buildInstanceConfigResponse());
 		},
 	);
@@ -465,6 +502,7 @@ export function InstanceConfigAdminController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const data = ctx.req.valid('json');
+			let result: InstanceEmailSmtpTestResponse;
 			try {
 				const provider = new SmtpEmailProvider({
 					host: data.host,
@@ -477,10 +515,17 @@ export function InstanceConfigAdminController(app: HonoApp) {
 					socketTimeoutMs: 10000,
 				});
 				await provider.verify();
-				return ctx.json({ok: true, error: null});
+				result = {ok: true, error: null};
 			} catch (error) {
-				return ctx.json({ok: false, error: error instanceof Error ? error.message : String(error)});
+				result = {ok: false, error: error instanceof Error ? error.message : String(error)};
 			}
+			await recordAdminWrite(ctx, {
+				targetType: 'instance_config',
+				targetId: 0n,
+				action: 'test_smtp_connection',
+				metadata: {port: data.port, secure: data.secure, ok: result.ok},
+			});
+			return ctx.json(result);
 		},
 	);
 	app.post(
@@ -507,6 +552,12 @@ export function InstanceConfigAdminController(app: HonoApp) {
 				maxUses: data.max_uses ?? null,
 				approvalRequired: data.approval_required,
 			});
+			await recordAdminWrite(ctx, {
+				targetType: 'registration_url',
+				targetId: 0n,
+				action: 'create_registration_url',
+				metadata: {approval_required: data.approval_required, max_uses: data.max_uses},
+			});
 			return ctx.json({
 				registration_url: created.registrationUrl,
 				code: created.code,
@@ -531,6 +582,11 @@ export function InstanceConfigAdminController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			await instanceConfigRepository.revokeRegistrationUrl(ctx.req.valid('param').registration_url_id);
+			await recordAdminWrite(ctx, {
+				targetType: 'registration_url',
+				targetId: 0n,
+				action: 'revoke_registration_url',
+			});
 			return ctx.json(await buildInstanceConfigResponse());
 		},
 	);
@@ -647,6 +703,12 @@ async function updatePendingRegistrationUser(
 	const userRepository = ctx.get('userRepository');
 	const user = await userRepository.findUnique(createUserID(BigInt(userId)));
 	if (!user) {
+		await recordAdminWrite(ctx, {
+			targetType: 'user',
+			targetId: BigInt(userId),
+			action: decision === 'approve' ? 'approve_registration' : 'reject_registration',
+			metadata: {account_found: false},
+		});
 		return;
 	}
 	const traits = new Set(user.traits);

@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
+import {recordAdminRead, recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
+import type {AdminBanManagementService} from '@app/api/admin/services/AdminBanManagementService';
 import {requireAdminACL, requireAnyAdminACL} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
@@ -180,6 +183,18 @@ const BLOCKLIST_TYPE_ACLS: Record<AdminBlocklistListType, {add: string; check: s
 	},
 };
 
+const BLOCKLIST_AUDIT_TARGET_TYPES: Record<AdminBlocklistListType, string> = {
+	ip: 'ip',
+	email: 'email',
+	'email-domain-suspicious': 'email_domain',
+	phrase: 'phrase',
+	url: 'url',
+	'url-domain': 'url_domain',
+	'file-sha': 'file_sha',
+	'avatar-hash': 'avatar_hash',
+	'profile-substring': 'profile_substring',
+};
+
 type BlocklistVerb = 'add' | 'check' | 'remove';
 
 const BLOCKLIST_ACLS_BY_VERB: Record<BlocklistVerb, Array<string>> = {
@@ -229,6 +244,37 @@ async function parseBlocklistBody<T>(schema: ZodType<T>, value: unknown): Promis
 	return result.data;
 }
 
+async function checkBlocklistEntry(
+	bans: AdminBanManagementService,
+	listType: AdminBlocklistListType,
+	entryValue: string,
+	scope: ProfileSubstringScope | undefined,
+): Promise<{banned: boolean}> {
+	switch (listType) {
+		case 'ip':
+			return bans.checkIpBan({ip: entryValue});
+		case 'email':
+			return bans.checkEmailBan({email: entryValue});
+		case 'email-domain-suspicious':
+			return bans.checkSuspiciousEmailDomain({domain: entryValue});
+		case 'phrase':
+			return bans.checkPhraseBan({phrase: entryValue});
+		case 'url':
+			return bans.checkUrlBan({url: entryValue});
+		case 'url-domain':
+			return bans.checkUrlDomainBan({domain: entryValue});
+		case 'file-sha':
+			return bans.checkFileShaBan({sha256_hex: entryValue});
+		case 'avatar-hash':
+			return bans.checkAvatarHashBan({hashes: [entryValue]});
+		case 'profile-substring':
+			return bans.checkProfileSubstringBan({
+				scope: requireProfileSubstringScope(scope),
+				substrings: [entryValue],
+			});
+	}
+}
+
 export function BanAdminController(app: HonoApp) {
 	app.get(
 		'/admin/blocklists',
@@ -245,6 +291,12 @@ export function BanAdminController(app: HonoApp) {
 				'List every blocklist this instance maintains, the request field that carries an entry value, the extra fields its entries accept, and which of the bulk and update operations it supports.',
 		}),
 		async (ctx) => {
+			await recordAdminRead(ctx, {
+				targetType: 'blocklist',
+				targetId: 0n,
+				action: AdminAuditReadActions.LIST_BLOCKLISTS,
+				metadata: {result_count: BLOCKLIST_CATALOG.length},
+			});
 			return ctx.json({items: BLOCKLIST_CATALOG});
 		},
 	);
@@ -270,14 +322,26 @@ export function BanAdminController(app: HonoApp) {
 			requireBlocklistACL(ctx.get('adminUserAcls'), listType, 'check');
 			const {limit, after, scope} = ctx.req.valid('query');
 			assertBlocklistScopeAllowed(listType, scope);
-			return ctx.json(
-				await adminService.banManagementService.listBlocklistEntries({
-					listType,
+			const page = await adminService.banManagementService.listBlocklistEntries({
+				listType,
+				limit,
+				after: after ?? null,
+				scope: listType === 'profile-substring' ? requireProfileSubstringScope(scope) : null,
+			});
+			await recordAdminRead(ctx, {
+				targetType: BLOCKLIST_AUDIT_TARGET_TYPES[listType],
+				targetId: 0n,
+				action: AdminAuditReadActions.LIST_BLOCKLIST_ENTRIES,
+				metadata: {
+					list_type: listType,
+					scope,
 					limit,
-					after: after ?? null,
-					scope: listType === 'profile-substring' ? requireProfileSubstringScope(scope) : null,
-				}),
-			);
+					has_after: after === undefined ? undefined : true,
+					result_count: page.items.length,
+					has_more: page.has_more,
+				},
+			});
+			return ctx.json(page);
 		},
 	);
 	app.post(
@@ -379,6 +443,15 @@ export function BanAdminController(app: HonoApp) {
 				},
 				{requestedByUserId: adminUserId, requireLedger: true, ...(auditLogReason && {auditLogReason})},
 			);
+			await recordAdminWrite(ctx, {
+				targetType: 'bulk_job',
+				targetId: jobId,
+				action: 'queue_bulk_job',
+				metadata: {
+					task: 'ban_file_shas',
+					entity_count: body.sha256_list.length,
+				},
+			});
 			return ctx.json({job_id: jobId.toString()});
 		},
 	);
@@ -449,32 +522,18 @@ export function BanAdminController(app: HonoApp) {
 			requireBlocklistACL(ctx.get('adminUserAcls'), listType, 'check');
 			const {scope} = ctx.req.valid('query');
 			assertBlocklistScopeAllowed(listType, scope);
-			const bans = adminService.banManagementService;
-			switch (listType) {
-				case 'ip':
-					return ctx.json(await bans.checkIpBan({ip: entryValue}));
-				case 'email':
-					return ctx.json(await bans.checkEmailBan({email: entryValue}));
-				case 'email-domain-suspicious':
-					return ctx.json(await bans.checkSuspiciousEmailDomain({domain: entryValue}));
-				case 'phrase':
-					return ctx.json(await bans.checkPhraseBan({phrase: entryValue}));
-				case 'url':
-					return ctx.json(await bans.checkUrlBan({url: entryValue}));
-				case 'url-domain':
-					return ctx.json(await bans.checkUrlDomainBan({domain: entryValue}));
-				case 'file-sha':
-					return ctx.json(await bans.checkFileShaBan({sha256_hex: entryValue}));
-				case 'avatar-hash':
-					return ctx.json(await bans.checkAvatarHashBan({hashes: [entryValue]}));
-				case 'profile-substring':
-					return ctx.json(
-						await bans.checkProfileSubstringBan({
-							scope: requireProfileSubstringScope(scope),
-							substrings: [entryValue],
-						}),
-					);
-			}
+			const result = await checkBlocklistEntry(adminService.banManagementService, listType, entryValue, scope);
+			await recordAdminRead(ctx, {
+				targetType: BLOCKLIST_AUDIT_TARGET_TYPES[listType],
+				targetId: 0n,
+				action: AdminAuditReadActions.CHECK_BLOCKLIST_ENTRY,
+				metadata: {
+					list_type: listType,
+					scope,
+					banned: result.banned,
+				},
+			});
+			return ctx.json(result);
 		},
 	);
 	app.patch(

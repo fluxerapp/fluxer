@@ -93,6 +93,14 @@ const AuditLogSortByEnum = createNamedStringLiteralUnion(
 	],
 	'Field to sort audit logs by',
 );
+const AdminAuditAccessEnum = createNamedStringLiteralUnion(
+	[
+		['read', 'read', 'An entry recorded by an operation that only reads data'],
+		['write', 'write', 'An entry recorded by an operation that changes data or triggers work'],
+	],
+	'Whether the recorded operation read data or changed it',
+);
+export type AdminAuditAccess = z.infer<typeof AdminAuditAccessEnum>;
 const ReportSortByEnum = createNamedStringLiteralUnion(
 	[
 		['createdAt', 'createdAt', 'Sort by creation timestamp'],
@@ -133,6 +141,9 @@ export const ListAdminAuditLogsQuery = z.object({
 	admin_user_id: SnowflakeType.optional().describe('Filter by admin user who performed the action'),
 	target_type: createStringType(1, 64).optional().describe('Filter by target entity type'),
 	target_id: z.string().optional().describe('Filter by target entity ID (user, channel, role, invite code, etc.)'),
+	access: AdminAuditAccessEnum.optional().describe(
+		'Only return entries recorded by reads or only entries recorded by writes',
+	),
 	sort_by: AuditLogSortByEnum.default('createdAt'),
 	sort_order: SortOrderEnum.default('desc'),
 	limit: createQueryIntegerType({defaultValue: 50, minValue: 1, maxValue: 200}).describe(
@@ -1044,6 +1055,7 @@ export const AdminAuditLogResponseSchema = z.object({
 	related_guilds: z.record(SnowflakeStringType, AdminAuditLogGuildSummarySchema),
 	related_channels: z.record(SnowflakeStringType, AdminAuditLogChannelSummarySchema),
 	action: createStringType(1, 256),
+	access: AdminAuditAccessEnum,
 	audit_log_reason: createStringType(1, 4000).nullable(),
 	metadata: z.record(createStringType(1, 256), createStringType(0, 4000)),
 	created_at: z.string(),

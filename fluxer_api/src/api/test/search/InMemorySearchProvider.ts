@@ -581,6 +581,8 @@ function matchesAuditLogFilters(doc: SearchableAuditLog, filters: AuditLogSearch
 	if (filters.targetType !== undefined && doc.targetType !== filters.targetType) return false;
 	if (filters.targetId !== undefined && doc.targetId !== filters.targetId) return false;
 	if (filters.action !== undefined && doc.action !== filters.action) return false;
+	if (filters.actions !== undefined && !filters.actions.includes(doc.action)) return false;
+	if (filters.excludeActions?.includes(doc.action)) return false;
 	return true;
 }
 

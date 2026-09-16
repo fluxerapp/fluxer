@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
 import type {UserID} from '@app/api/BrandedTypes';
 import {requireAnyAdminACL} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
@@ -136,6 +137,16 @@ export function BulkAdminController(app: HonoApp) {
 				throw new MissingACLError(requiredAcl);
 			}
 			const jobId = await queueBulkJob(body, adminUserId, auditLogReason);
+			await recordAdminWrite(ctx, {
+				targetType: 'bulk_job',
+				targetId: jobId,
+				action: 'queue_bulk_job',
+				metadata: {
+					task: body.task,
+					entity_count: 'guild_ids' in body ? body.guild_ids.length : body.user_ids.length,
+					guild_id: body.task === AdminBulkTaskType.ADD_GUILD_MEMBERS ? body.guild_id : undefined,
+				},
+			});
 			return ctx.json({job_id: jobId.toString()});
 		},
 	);

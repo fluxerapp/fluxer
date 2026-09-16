@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 These routes list recorded background jobs and request cancellation. Create jobs through [Queue bulk job](/admin-api/bulk-jobs/#queue-bulk-job), [Create system DM broadcast](/admin-api/system-dms/#create-system-dm-broadcast), [Refresh search index](/admin-api/search-indexes/#refresh-search-index), or an [archive](/admin-api/archives/) request.
 
-Reads require `jobs:view` and cancellation requires `jobs:cancel`. Every operation on this page shares the `admin:jobs:view` bucket.
+Reads require `jobs:view` and cancellation requires `jobs:cancel`. Every operation on this page shares the `admin:jobs:view` bucket. The three reads record no [Admin audit entry](/admin-api/#admin-audit-entry-object), and cancellation records one.
 
 :::note[Job updates vary by task]
 Mention processing, link previews, and every scheduled task except `syncDisposableEmailDomains`, `syncUrlBlocklists` and `syncFileShaBlocklists` run with no job record and never appear here. A job also runs with no record when Fluxer fails to write that record. When a later write of status, progress or attempts fails, Fluxer logs the failure and the job continues, so the stored values can be behind the real run. Use the [archive routes](/admin-api/archives/) to track archive progress and failures.
@@ -160,6 +160,10 @@ Supply all three cursor parameters together or omit all three. An incomplete or 
 | 200 | response body | The job page was returned |
 | 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY` because a query parameter is invalid |
 
+### Side effects
+
+The operation records no [Admin audit entry](/admin-api/#admin-audit-entry-object).
+
 ### Rate limit
 
 600 requests per minute for each authenticated user, on the `admin:jobs:view` bucket.
@@ -183,6 +187,10 @@ This operation has no filters or pagination. The stored status and progress can 
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | response body | The active jobs were returned |
+
+### Side effects
+
+The operation records no [Admin audit entry](/admin-api/#admin-audit-entry-object).
 
 ### Rate limit
 
@@ -215,13 +223,17 @@ Returns one [Admin job](#admin-job-object) object. Requires `jobs:view`.
 
 A 404 response uses this single-field body rather than the standard error response. A missing or expired record does not mean the work never ran.
 
+### Side effects
+
+The operation records no [Admin audit entry](/admin-api/#admin-audit-entry-object).
+
 ### Rate limit
 
 600 requests per minute for each authenticated user, on the `admin:jobs:view` bucket.
 
 ## Cancel job
 
-<RouteHeader method="PUT" path="/v1/admin/jobs/{job_id}/cancellation" />
+<RouteHeader method="PUT" path="/v1/admin/jobs/{job_id}/cancellation" auditReason />
 
 Requests cooperative cancellation of a job and reports whether the request was recorded. Requires `jobs:cancel`.
 
@@ -248,6 +260,8 @@ Returns false for a missing or terminal job. Repeating a request for a queued or
 ### Side effects
 
 Sets `cancel_requested` to true for a queued or running job. `sendSystemDm`, `syncDisposableEmailDomains`, `bulkBanFileShas`, `bulkDeleteMessagesForUsers`, and the tasks queued by [Bulk jobs](/admin-api/bulk-jobs/) check for the request while they run and stop at the next check. Other tasks run to the end. Completed work is not undone. A status of `cancelled` means the task stopped because of the request.
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `cancel_job`, target type `bulk_job`, target ID equal to `job_id`, and metadata key `cancelled`. The entry uses target type `bulk_job` for every task type, and Fluxer records it when `cancelled` is false too.
 
 ### Rate limit
 

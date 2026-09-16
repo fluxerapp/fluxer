@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
+import {recordAdminRead} from '@app/api/admin/AdminAuditRecorder';
 import {createReportID} from '@app/api/BrandedTypes';
 import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
@@ -88,15 +90,39 @@ export function ReportAdminController(app: HonoApp) {
 			const adminService = ctx.get('adminService');
 			const adminUserAcls = ctx.get('adminUserAcls');
 			const query = ctx.req.valid('query');
-			if (query.status === undefined || usesReportSearchIndex(query)) {
-				return ctx.json(
-					await adminService.reportServiceAggregate.searchReports(toSearchReportsRequest(query), adminUserAcls),
-				);
-			}
-			const status = REPORT_STATUS_BY_FILTER[query.status];
-			return ctx.json(
-				await adminService.reportServiceAggregate.listReports(status, adminUserAcls, query.limit, query.offset),
-			);
+			const status = query.status;
+			const searched = status === undefined || usesReportSearchIndex(query);
+			const response = searched
+				? await adminService.reportServiceAggregate.searchReports(toSearchReportsRequest(query), adminUserAcls)
+				: await adminService.reportServiceAggregate.listReports(
+						REPORT_STATUS_BY_FILTER[status],
+						adminUserAcls,
+						query.limit,
+						query.offset,
+					);
+			await recordAdminRead(ctx, {
+				targetType: 'report',
+				targetId: 0n,
+				action: AdminAuditReadActions.SEARCH_REPORTS,
+				metadata: {
+					has_query: query.q === undefined ? undefined : true,
+					status,
+					report_type: query.report_type,
+					reporter_user_id: query.reporter_id,
+					reported_user_id: query.reported_user_id,
+					reported_guild_id: query.reported_guild_id,
+					reported_channel_id: query.reported_channel_id,
+					context_guild_id: query.guild_context_id,
+					resolved_by_admin_user_id: query.resolved_by_admin_id,
+					sort_by: searched ? query.sort_by : undefined,
+					sort_order: searched ? query.sort_order : undefined,
+					limit: query.limit,
+					offset: query.offset,
+					result_count: response.reports.length,
+					total: response.total,
+				},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.get(
@@ -119,6 +145,15 @@ export function ReportAdminController(app: HonoApp) {
 			const adminUserAcls = ctx.get('adminUserAcls');
 			const {report_id} = ctx.req.valid('param');
 			const report = await adminService.reportServiceAggregate.getReport(createReportID(report_id), adminUserAcls);
+			await recordAdminRead(ctx, {
+				targetType: 'report',
+				targetId: report_id,
+				action: AdminAuditReadActions.GET_REPORT,
+				metadata: {
+					report_type: report.report_type,
+					status: report.status,
+				},
+			});
 			return ctx.json(report);
 		},
 	);

@@ -103,7 +103,7 @@ This object uses camelCase field names, unlike every other Admin response body.
 
 ## List archives
 
-<RouteHeader method="GET" path="/v1/admin/archives" />
+<RouteHeader method="GET" path="/v1/admin/archives" auditReason />
 
 Returns [archive](#archive-object) objects matching the supplied filters, newest first. Requires an ACL covering the requested `subject_type`.
 
@@ -145,13 +145,17 @@ Returns [archive](#archive-object) objects matching the supplied filters, newest
 | 400 | [error response](/admin-api/#error-response) | `subject_id` is supplied while `subject_type` is `all`. `INVALID_FORM_BODY` has `INVALID_FORMAT` on `subject_type` |
 | 403 | [error response](/admin-api/#error-response) | `MISSING_ACL` without an ACL covering the requested subject type |
 
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_archives`, target type `archive`, target ID `0`, and metadata keys `subject_type`, `limit`, `include_expired`, and `result_count`. `subject_type` is the value after Fluxer narrows `all` to the account's ACLs. The entry also has `subject_user_id` or `subject_guild_id` when `subject_id` is supplied, and `requested_by_user_id` when `requested_by` is supplied.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
 ## Get archive
 
-<RouteHeader method="GET" path="/v1/admin/archives/{subject_type}/{subject_id}/{archive_id}" />
+<RouteHeader method="GET" path="/v1/admin/archives/{subject_type}/{subject_id}/{archive_id}" auditReason />
 
 Returns one [archive](#archive-object) object. Requires an ACL covering the subject type.
 
@@ -182,13 +186,15 @@ Returns one [archive](#archive-object) object. Requires an ACL covering the subj
 
 The read issues no download grant.
 
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `get_archive`, target type equal to `subject_type`, target ID equal to `subject_id`, and metadata keys `archive_id` and `found`. `found` is `false` when the response has a null archive.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
 ## Create archive download
 
-<RouteHeader method="GET" path="/v1/admin/archives/{subject_type}/{subject_id}/{archive_id}/download" />
+<RouteHeader method="GET" path="/v1/admin/archives/{subject_type}/{subject_id}/{archive_id}/download" auditReason />
 
 Issues a temporary download URL for a completed archive. Returns an [archive download](#archive-download-object) object on success. Requires an ACL covering the subject type.
 
@@ -219,7 +225,9 @@ The URL has its own signature and works for seven days for anyone who holds it. 
 
 ### Side effects
 
-The operation creates a presigned download URL valid for seven days and changes no field of the archive, including `download_url_expires_at`. It records no Admin audit entry.
+The operation creates a presigned download URL valid for seven days and changes no field of the archive, including `download_url_expires_at`.
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `get_archive_download_url`, target type equal to `subject_type`, target ID equal to `subject_id`, and metadata key `archive_id`. The entry has no URL. A request that returns 400 or 404 records no entry.
 
 ### Rate limit
 

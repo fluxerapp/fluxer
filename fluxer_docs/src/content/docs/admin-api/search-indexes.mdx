@@ -183,6 +183,10 @@ Returns the [search index refresh progress](#search-index-refresh-progress-objec
 Each write of the progress record renews a one-hour lifetime, so a completed or failed outcome stays readable for one hour after its final update.
 :::
 
+### Side effects
+
+The operation records no [Admin audit entry](/admin-api/#admin-audit-entry-object).
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.

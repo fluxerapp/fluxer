@@ -29,7 +29,7 @@ The unit and the quantity together define the span a redeemed code grants. At re
 
 ## Create gift codes
 
-<RouteHeader method="POST" path="/v1/admin/gift-codes" />
+<RouteHeader method="POST" path="/v1/admin/gift-codes" auditReason />
 
 Generates the requested number of unredeemed gift codes. Requires `gift_codes:generate`. Returns the complete redemption links on success.
 
@@ -77,7 +77,7 @@ Each code is 32 characters drawn from the uppercase letters, the lowercase lette
 
 A failed request can leave some codes redeemable without returning them. Retrying can therefore create additional codes.
 
-The operation records one `generate_gift_codes` Admin audit entry with the audit reason, the code count, and the requested duration. The codes themselves are not recorded. It emits no Gateway Dispatch.
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `generate_gift_codes`, target type `gift_code`, target ID `0`, and metadata keys `count`, `duration_type`, and `duration_quantity`. The codes are not recorded. It emits no Gateway Dispatch.
 
 ### Rate limit
 

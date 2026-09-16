@@ -72,7 +72,7 @@ pub fn audit_logs_for_target(
     let total_pages = total.div_ceil(u64::from(PAGE_SIZE)).max(1);
     let page_number = u64::from(current_page) + 1;
     let all_logs_href = format!(
-        "{base_path}/audit-logs?target_id={}",
+        "{base_path}/audit-logs?target_id={}&access=write",
         urlencoding::encode(target_id)
     );
 
@@ -94,7 +94,7 @@ pub fn audit_logs_for_target(
                     }
                 }
                 @if entries.is_empty() {
-                    (empty_state("No admin actions have been recorded against this entity."))
+                    (empty_state("No admin write actions have been recorded against this entity."))
                 } @else {
                     (table_container(html! {
                         (table(html! {

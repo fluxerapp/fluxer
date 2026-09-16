@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 An Admin API key is a long-lived credential for the [Admin API](/admin-api/). It authenticates as the account that created it, has its own [ACL](/admin-api/#acl-registry) set, and authenticates only requests to paths below `/v1/admin`.
 
-Every operation on this page requires `admin_api_key:manage`. None records an Admin audit entry or reads the `X-Audit-Log-Reason` header. An operation that addresses one key returns 404 `ADMIN_API_KEY_NOT_FOUND` when any of these holds:
+Every operation on this page requires `admin_api_key:manage`. A successful operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with target type `admin_api_key` and the `X-Audit-Log-Reason` header as its reason. A request that returns an error records no entry. An operation that addresses one key returns 404 `ADMIN_API_KEY_NOT_FOUND` when any of these holds:
 
 - No key has that identifier.
 - Another account created the key.
@@ -104,7 +104,7 @@ The secret cannot be retrieved or rotated later. If it is lost, revoke the key a
 
 ## List Admin API keys
 
-<RouteHeader method="GET" path="/v1/admin/api-keys" />
+<RouteHeader method="GET" path="/v1/admin/api-keys" auditReason />
 
 Returns every [Admin API key](#admin-api-key-object) object the acting account created, as a bare JSON array with no ordering guarantee. Requires `admin_api_key:manage`.
 
@@ -118,13 +118,17 @@ A key past its expiry is never returned.
 
 <sup>1</sup> An account that created no key receives an empty array
 
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_admin_api_keys`, target type `admin_api_key`, target ID `0`, and metadata key `result_count`.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
 ## Create Admin API key
 
-<RouteHeader method="POST" path="/v1/admin/api-keys" />
+<RouteHeader method="POST" path="/v1/admin/api-keys" auditReason />
 
 Creates a key and returns an [Admin API key creation](#admin-api-key-creation-object) object that has the raw credential, with HTTP 200, not 201. Requires `admin_api_key:manage`.
 
@@ -154,13 +158,17 @@ Fluxer rejects the request with 403 `MISSING_ACL` on the first ungrantable value
 | 400 | [error response](/admin-api/#error-response) | Body validation fails, including an `acls` value outside the [ACL registry](/admin-api/#acl-registry), returned as `INVALID_FORM_BODY` |
 | 403 | [error response](/admin-api/#error-response) | Credential type is refused, `admin_api_key:manage` is absent, or `acls` names a value the acting credential does not have |
 
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `create_admin_api_key`, target type `admin_api_key`, target ID equal to the new `key_id`, and metadata keys `acls` and `expires_in_days`. `acls` is the stored ACL set joined with commas. `expires_in_days` is present only when the request supplied it. The entry has no name and no raw credential.
+
 ### Rate limit
 
 30 requests per minute for each authenticated user, on the `admin:code:generation` bucket.
 
 ## Get Admin API key
 
-<RouteHeader method="GET" path="/v1/admin/api-keys/{key_id}" />
+<RouteHeader method="GET" path="/v1/admin/api-keys/{key_id}" auditReason />
 
 Returns one [Admin API key](#admin-api-key-object) object. Requires `admin_api_key:manage`.
 
@@ -179,13 +187,17 @@ This operation never returns the raw credential.
 | 200 | [Admin API key](#admin-api-key-object) object | Key was returned |
 | 404 | [error response](/admin-api/#error-response) | `ADMIN_API_KEY_NOT_FOUND`, which also covers an expired key and a key created by another account |
 
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `get_admin_api_key`, target type `admin_api_key`, target ID equal to `key_id`, and no metadata.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
 ## Update Admin API key
 
-<RouteHeader method="PATCH" path="/v1/admin/api-keys/{key_id}" />
+<RouteHeader method="PATCH" path="/v1/admin/api-keys/{key_id}" auditReason />
 
 Renames a key or replaces its ACL set, and returns the updated [Admin API key](#admin-api-key-object) object. Requires `admin_api_key:manage`.
 
@@ -223,13 +235,17 @@ An update never rotates the credential, and no field on this route changes the e
 
 <sup>1</sup> The ownership check runs before the ACL grant check, so a key belonging to another account returns 404, not 403
 
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `update_admin_api_key`, target type `admin_api_key`, target ID equal to `key_id`, and metadata keys `fields` and `acls`. `fields` lists the supplied field names joined with commas, and is empty for an empty body. `acls` is the stored ACL set joined with commas, present only when the request supplied `acls`. The entry has no name.
+
 ### Rate limit
 
 100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
 
 ## Revoke Admin API key
 
-<RouteHeader method="DELETE" path="/v1/admin/api-keys/{key_id}" />
+<RouteHeader method="DELETE" path="/v1/admin/api-keys/{key_id}" auditReason />
 
 Revokes an Admin API key and returns HTTP 200 with a response body. Requires `admin_api_key:manage`.
 
@@ -257,6 +273,10 @@ Every later request presenting that credential fails authentication, and no oper
 | --- | --- | --- |
 | 200 | response body | Key was revoked |
 | 404 | [error response](/admin-api/#error-response) | `ADMIN_API_KEY_NOT_FOUND`, which also covers an expired key and a key created by another account |
+
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `revoke_admin_api_key`, target type `admin_api_key`, target ID equal to `key_id`, and no metadata.
 
 ### Rate limit
 

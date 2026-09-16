@@ -167,7 +167,7 @@ The limit is read when a channel is first placed and the server is pinned for it
 
 ## List voice regions
 
-<RouteHeader method="GET" path="/v1/admin/voice/regions" />
+<RouteHeader method="GET" path="/v1/admin/voice/regions" auditReason />
 
 Returns every [Admin voice region](#admin-voice-region-object) object in ascending display name order. Requires `voice:region:list`.
 
@@ -191,13 +191,17 @@ Returns every [Admin voice region](#admin-voice-region-object) object in ascendi
 | --- | --- | --- |
 | 200 | response body | The regions were returned |
 
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_voice_regions`, target type `voice_region`, target ID `0`, and metadata keys `include_servers` and `result_count`.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
 ## Get voice region
 
-<RouteHeader method="GET" path="/v1/admin/voice/regions/{region_id}" />
+<RouteHeader method="GET" path="/v1/admin/voice/regions/{region_id}" auditReason />
 
 Returns one [Admin voice region](#admin-voice-region-object) object. Requires `voice:region:list`.
 
@@ -230,6 +234,10 @@ Returns one [Admin voice region](#admin-voice-region-object) object. Requires `v
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | response body | A lookup was done, whether or not it resolved |
+
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `get_voice_region`, target type `voice_region`, target ID `0`, and metadata keys `region_id`, `include_servers`, and `found`. An unknown region records `found` as `false`.
 
 ### Rate limit
 
@@ -380,7 +388,7 @@ One [Admin audit entry](/admin-api/#admin-audit-entry-object) with the action `d
 
 ## List voice servers
 
-<RouteHeader method="GET" path="/v1/admin/voice/regions/{region_id}/servers" />
+<RouteHeader method="GET" path="/v1/admin/voice/regions/{region_id}/servers" auditReason />
 
 Returns every [Admin voice server](#admin-voice-server-object) object registered in one region. Requires `voice:server:list`.
 
@@ -404,13 +412,17 @@ Returns every [Admin voice server](#admin-voice-server-object) object registered
 | --- | --- | --- |
 | 200 | response body | The servers were returned |
 
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_voice_servers`, target type `voice_server`, target ID `0`, and metadata keys `region_id` and `result_count`.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
 ## Get voice server
 
-<RouteHeader method="GET" path="/v1/admin/voice/regions/{region_id}/servers/{server_id}" />
+<RouteHeader method="GET" path="/v1/admin/voice/regions/{region_id}/servers/{server_id}" auditReason />
 
 Returns one [Admin voice server](#admin-voice-server-object) object. Requires `voice:server:list`.
 
@@ -434,6 +446,10 @@ Returns one [Admin voice server](#admin-voice-server-object) object. Requires `v
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | response body | A lookup was done, whether or not it resolved |
+
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `get_voice_server`, target type `voice_server`, target ID `0`, and metadata keys `region_id`, `server_id`, and `found`. A pair that resolves to no server records `found` as `false`.
 
 ### Rate limit
 

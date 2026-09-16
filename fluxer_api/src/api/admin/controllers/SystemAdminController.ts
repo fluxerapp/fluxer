@@ -4,6 +4,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {Readable} from 'node:stream';
 import * as v8 from 'node:v8';
+import {recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
 import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
@@ -28,11 +29,17 @@ export function SystemAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: 'Admin',
 		}),
-		async () => {
+		async (ctx) => {
 			const snapshotPath = path.join('/tmp', `heap-${Date.now()}.heapsnapshot`);
 			try {
 				v8.writeHeapSnapshot(snapshotPath);
 				const stat = fs.statSync(snapshotPath);
+				await recordAdminWrite(ctx, {
+					targetType: 'system',
+					targetId: 0n,
+					action: 'create_heap_snapshot',
+					metadata: {size_bytes: stat.size},
+				});
 				const nodeStream = fs.createReadStream(snapshotPath);
 				const body = Readable.toWeb(nodeStream) as ReadableStream;
 				nodeStream.on('close', () => {

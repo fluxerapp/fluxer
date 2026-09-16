@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
+import {recordAdminRead, recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
 import type {AdminApiKeyView} from '@app/api/admin/services/AdminApiKeyService';
 import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
@@ -62,6 +64,15 @@ export function AdminApiKeyAdminController(app: HonoApp) {
 				expires_at: result.apiKey.expiresAt?.toISOString() ?? null,
 				acls: Array.from(result.apiKey.acls),
 			};
+			await recordAdminWrite(ctx, {
+				targetType: 'admin_api_key',
+				targetId: BigInt(result.apiKey.keyId),
+				action: 'create_admin_api_key',
+				metadata: {
+					acls: response.acls.join(','),
+					expires_in_days: request.expires_in_days,
+				},
+			});
 			return ctx.json(response);
 		},
 	);
@@ -84,6 +95,12 @@ export function AdminApiKeyAdminController(app: HonoApp) {
 			const user = ctx.get('user');
 			const keys = await adminApiKeyService.listKeys(user.id);
 			const response: Array<ListAdminApiKeyResponseType> = keys.map(toApiKeyResponse);
+			await recordAdminRead(ctx, {
+				targetType: 'admin_api_key',
+				targetId: 0n,
+				action: AdminAuditReadActions.LIST_ADMIN_API_KEYS,
+				metadata: {result_count: response.length},
+			});
 			return ctx.json(response);
 		},
 	);
@@ -107,6 +124,11 @@ export function AdminApiKeyAdminController(app: HonoApp) {
 			const user = ctx.get('user');
 			const keyId = ctx.req.valid('param').key_id;
 			const key = await adminApiKeyService.getKey(keyId, user.id);
+			await recordAdminRead(ctx, {
+				targetType: 'admin_api_key',
+				targetId: keyId,
+				action: AdminAuditReadActions.GET_ADMIN_API_KEY,
+			});
 			return ctx.json(toApiKeyResponse(key));
 		},
 	);
@@ -131,8 +153,19 @@ export function AdminApiKeyAdminController(app: HonoApp) {
 			const user = ctx.get('user');
 			const adminUserAcls = ctx.get('adminUserAcls');
 			const keyId = ctx.req.valid('param').key_id;
-			const key = await adminApiKeyService.updateKey(keyId, user.id, ctx.req.valid('json'), adminUserAcls);
-			return ctx.json(toApiKeyResponse(key));
+			const request = ctx.req.valid('json');
+			const key = await adminApiKeyService.updateKey(keyId, user.id, request, adminUserAcls);
+			const response = toApiKeyResponse(key);
+			await recordAdminWrite(ctx, {
+				targetType: 'admin_api_key',
+				targetId: keyId,
+				action: 'update_admin_api_key',
+				metadata: {
+					fields: (['name', 'acls'] as const).filter((field) => request[field] !== undefined).join(','),
+					acls: request.acls !== undefined ? response.acls.join(',') : undefined,
+				},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.delete(
@@ -155,6 +188,11 @@ export function AdminApiKeyAdminController(app: HonoApp) {
 			const user = ctx.get('user');
 			const keyId = ctx.req.valid('param').key_id;
 			await adminApiKeyService.revokeKey(keyId, user.id);
+			await recordAdminWrite(ctx, {
+				targetType: 'admin_api_key',
+				targetId: keyId,
+				action: 'revoke_admin_api_key',
+			});
 			return ctx.json({success: true}, 200);
 		},
 	);

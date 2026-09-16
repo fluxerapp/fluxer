@@ -254,7 +254,7 @@ A report resolution is the reduced view [Update report](#update-report) returns.
 
 ## List reports
 
-<RouteHeader method="GET" path="/v1/admin/reports" />
+<RouteHeader method="GET" path="/v1/admin/reports" auditReason />
 
 Returns a page of [Admin report](#admin-report-object) objects without message context. Requires `report:view`.
 
@@ -313,13 +313,17 @@ An instance with no search backend returns 403 `FEATURE_TEMPORARILY_DISABLED` on
 | 200 | response body | Report page was returned |
 | 403 | [error response](/admin-api/#error-response) | No search backend is configured for the instance and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `search_reports`, target type `report`, and target ID `0` on both branches. The metadata keys are `limit`, `offset`, `result_count` for the reports in this page, and `total`. The search branch adds `sort_by` and `sort_order`. A supplied `q` adds `has_query` with the value `true`, and the query text is not recorded. The supplied filters add `status`, `report_type`, `reported_user_id`, `reported_guild_id`, and `reported_channel_id` under their own names, `reporter_id` as `reporter_user_id`, `guild_context_id` as `context_guild_id`, and `resolved_by_admin_id` as `resolved_by_admin_user_id`. `category` is not recorded. A 403 records nothing.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
 ## Get report
 
-<RouteHeader method="GET" path="/v1/admin/reports/{report_id}" />
+<RouteHeader method="GET" path="/v1/admin/reports/{report_id}" auditReason />
 
 Returns one [Admin report detail](#admin-report-detail-object) object, which adds the captured message context and the live state of those messages. Requires `report:view`.
 
@@ -337,6 +341,10 @@ The operation answers even when the report search index is unavailable. Reporter
 | --- | --- | --- |
 | 200 | [Admin report detail](#admin-report-detail-object) object | Report was returned |
 | 404 | [error response](/admin-api/#error-response) | Report does not exist and the request returns `UNKNOWN_REPORT` |
+
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `get_report`, target type `report`, the report ID as target ID, and metadata keys `report_type` and `status` with the integer values of the report. The attachment download URLs are not recorded. A 404 records nothing.
 
 ### Rate limit
 

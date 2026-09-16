@@ -173,7 +173,7 @@ One entry for each voice server that holds at least one voice state.
 
 ## Get Gateway node statistics
 
-<RouteHeader method="GET" path="/v1/admin/gateway/stats" />
+<RouteHeader method="GET" path="/v1/admin/gateway/stats" auditReason />
 
 Returns the [node statistics](#node-statistics-object) object for the whole Gateway cluster. Requires `gateway:memory_stats`.
 
@@ -183,13 +183,17 @@ Returns the [node statistics](#node-statistics-object) object for the whole Gate
 | --- | --- | --- |
 | 200 | [node statistics](#node-statistics-object) object | Cluster state was returned |
 
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `get_gateway_stats`, target type `gateway`, target ID `0`, and metadata key `node_count`.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
 ## Get guild memory statistics
 
-<RouteHeader method="GET" path="/v1/admin/gateway/memory-stats" />
+<RouteHeader method="GET" path="/v1/admin/gateway/memory-stats" auditReason />
 
 Returns the heaviest live guild processes as [guild memory statistics](#guild-memory-statistics-object) objects. Requires `gateway:memory_stats`.
 
@@ -217,13 +221,15 @@ Returns the heaviest live guild processes as [guild memory statistics](#guild-me
 
 A node that does not answer within 5 seconds contributes no entries, and the request still returns 200.
 
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_guild_memory_stats`, target type `guild`, target ID `0`, and metadata keys `limit` and `result_count` for the entries in this response.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
 ## Get voice state counts
 
-<RouteHeader method="GET" path="/v1/admin/gateway/voice-state-counts" />
+<RouteHeader method="GET" path="/v1/admin/gateway/voice-state-counts" auditReason />
 
 Returns the [voice state count](#voice-state-count-object) object. Requires `gateway:memory_stats`.
 
@@ -237,13 +243,15 @@ Returns the [voice state count](#voice-state-count-object) object. Requires `gat
 
 The counts cover voice states in guild channels and in calls. A node that does not answer within 10 seconds contributes zero, and the request still returns 200.
 
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `get_voice_state_counts`, target type `gateway`, target ID `0`, and metadata keys `total_voice_states`, `region_count`, and `server_count`.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
 ## Reload Gateway guilds
 
-<RouteHeader method="POST" path="/v1/admin/gateway/reloads" />
+<RouteHeader method="POST" path="/v1/admin/gateway/reloads" auditReason />
 
 Fetches the guild data for the supplied guilds from the database again and sends it to each live guild process and returns how many live guild processes were selected. Requires `gateway:reload_all`.
 
@@ -281,7 +289,9 @@ Every reloaded guild process fires one [Guild Update](/gateway/events/#guild-upd
 
 ### Side effects
 
-A guild whose owner node cannot be resolved is not counted. Reloads can still be in progress when the response arrives. No guild data is changed. The operation records one `reload_guilds` Admin audit entry with the audit reason, the requested guild count, and the reloaded count.
+A guild whose owner node cannot be resolved is not counted. Reloads can still be in progress when the response arrives. No guild data is changed.
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `reload_guilds`, target type `guild`, target ID `0`, and metadata keys `guild_count` for the requested guilds and `reloaded` for the returned `count`.
 
 ### Rate limit
 

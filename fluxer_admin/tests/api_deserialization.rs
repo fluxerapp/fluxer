@@ -230,6 +230,7 @@ fn deserialize_audit_logs_response() {
                 "target_type": "user",
                 "target_id": "1130958221824557056",
                 "action": "list_user_sessions",
+                "access": "read",
                 "audit_log_reason": null,
                 "metadata": {"session_count": "3"},
                 "created_at": "2026-05-26T13:21:47.138Z"
@@ -243,6 +244,7 @@ fn deserialize_audit_logs_response() {
     assert_eq!(resp.logs.len(), 1);
     assert_eq!(resp.logs[0].log_id, "1508822460457747580");
     assert_eq!(resp.logs[0].action, "list_user_sessions");
+    assert_eq!(resp.logs[0].access.as_deref(), Some("read"));
     assert_eq!(resp.logs[0].target_type, "user");
     assert!(resp.logs[0].audit_log_reason.is_none());
     assert_eq!(resp.logs[0].metadata.get("session_count").unwrap(), "3");

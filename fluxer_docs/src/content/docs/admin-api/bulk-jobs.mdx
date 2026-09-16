@@ -144,7 +144,7 @@ The `task` discriminator selects one of these structures. Every ID array has an 
 
 ### Side effects
 
-The [job](/admin-api/jobs/) records the acting Admin and audit reason. Queueing writes no Admin audit entry. Failure to create the job returns 500 `INTERNAL_SERVER_ERROR` without starting the operation.
+The [job](/admin-api/jobs/) records the acting Admin and audit reason. Queueing records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `queue_bulk_job`, target type `bulk_job`, target ID equal to the job identifier, and metadata keys `task` and `entity_count`. `entity_count` is the length of `guild_ids` for `update_guild_features` and of `user_ids` for every other task. An `add_guild_members` entry also has `guild_id`. Failure to create the job returns 500 `INTERNAL_SERVER_ERROR` without starting the operation or recording an entry.
 
 Entities are processed in the submitted order. [Cancel job](/admin-api/jobs/#cancel-job) stops the run between entities and sets its status to `cancelled`. Completed changes remain in place. A failed or unknown entity counts as failed without stopping the remaining work.
 

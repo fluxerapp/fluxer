@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 Fluxer has nine blocklists for account access and user content. Each defines its accepted values, matching rules and metadata. Fluxer normalises a value when it adds the value and again when it checks the value.
 
-Each list has its own [Admin ACLs](/admin-api/#acl-registry). A read needs the selected list's `check` permission, an addition or an update needs its `add` permission, and a removal needs its `remove` permission. An account holding `ban:ip:add` writes to the `ip` list and to no other. Every write records the audit reason on the [Admin audit entries](/admin-api/#admin-audit-entry-object) it produces. The reads record nothing.
+Each list has its own [Admin ACLs](/admin-api/#acl-registry). A read needs the selected list's `check` permission, an addition or an update needs its `add` permission, and a removal needs its `remove` permission. An account holding `ban:ip:add` writes to the `ip` list and to no other. Every operation records the audit reason on the [Admin audit entries](/admin-api/#admin-audit-entry-object) it produces, and each read produces one entry. An entry about one list has a target type built from the list name with each hyphen written as an underscore, so `url-domain` entries use `url_domain`. `email-domain-suspicious` is the one exception and uses `email_domain`.
 
 Fluxer builds each permission name from `ban:`, the list name with each hyphen written as an underscore, and the verb, so the `url-domain` list uses `ban:url_domain:check`, `ban:url_domain:add`, and `ban:url_domain:remove`. The `email-domain-suspicious` list is the one exception and uses `suspicious_email_domain:check`, `suspicious_email_domain:add`, and `suspicious_email_domain:remove`.
 
@@ -265,7 +265,7 @@ Each field is a string, except `hashes` and `substrings`, which are `array[strin
 
 ## List blocklists
 
-<RouteHeader method="GET" path="/v1/admin/blocklists" />
+<RouteHeader method="GET" path="/v1/admin/blocklists" auditReason />
 
 Returns one [blocklist](#blocklist-object) object for every blocklist this instance keeps. Requires any one of the `check` permissions.
 
@@ -285,13 +285,17 @@ The response is identical for every Admin.
 | --- | --- | --- |
 | 200 | response body | Catalogue was returned |
 
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_blocklists`, target type `blocklist`, target ID `0`, and metadata key `result_count`.
+
 ### Rate limit
 
 60 requests per minute for each authenticated user, on the `admin:ban:operation` bucket.
 
 ## List blocklist entries
 
-<RouteHeader method="GET" path="/v1/admin/blocklists/{list_type}/entries" />
+<RouteHeader method="GET" path="/v1/admin/blocklists/{list_type}/entries" auditReason />
 
 Returns a value-ordered cursor page of [blocklist entry](#blocklist-entry-object) objects. Requires the selected list's `check` permission.
 
@@ -331,6 +335,10 @@ Returns a value-ordered cursor page of [blocklist entry](#blocklist-entry-object
 | 400 | [error response](/admin-api/#error-response) | `scope` is supplied on an unscoped blocklist or omitted on `profile-substring`, and the request returns `INVALID_FORM_BODY` |
 
 The cost of a page does not fall as the cursor advances, so walk a large list with the largest `limit` the operation accepts.
+
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_blocklist_entries`, the target type of the selected list, target ID `0`, and metadata keys `list_type`, `limit`, `result_count` for the entries in this page, and `has_more`. `profile-substring` adds `scope`, and a supplied `after` adds `has_after`. The cursor value and the entry values are not recorded. A 400 records nothing.
 
 ### Rate limit
 
@@ -422,6 +430,8 @@ Every hash is written with the category `manual`, the severity `2`, and a null c
 
 Each hash is lowercased and replaces any existing entry. Changes become visible across the instance when the job stops, whether it ran to the end or was cancelled, so a cancelled job still enforces the hashes it already wrote. No Gateway Dispatch is emitted.
 
+The request records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `queue_bulk_job`, target type `bulk_job`, the job ID as target ID, and metadata keys `task` and `entity_count`. `task` is `ban_file_shas`, and `entity_count` is the number of submitted hashes.
+
 The job records one [Admin audit entry](/admin-api/#admin-audit-entry-object) per written hash under the action `ban_file_sha`, with that hash in its metadata, exactly as [Add blocklist entry](#add-blocklist-entry) does. It then records one aggregate entry under the action `bulk_ban_file_shas`, with the submitted, processed, successful, and failed counts. A cancelled job records the entries for the hashes it wrote and an aggregate entry marked `cancelled`.
 
 ### Rate limit
@@ -479,7 +489,7 @@ The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-obje
 
 ## Check blocklist entry
 
-<RouteHeader method="GET" path="/v1/admin/blocklists/{list_type}/entries/{entry_value}" />
+<RouteHeader method="GET" path="/v1/admin/blocklists/{list_type}/entries/{entry_value}" auditReason />
 
 Reports whether one value is currently blocked by the selected blocklist and returns a [blocklist check](#blocklist-check-object) object. Requires the selected list's `check` permission.
 
@@ -532,6 +542,10 @@ Reports whether one value is currently blocked by the selected blocklist and ret
 A value with no row and no covering match returns 200 with `banned` false, so this operation never reports whether a specific row exists. Use [List blocklist entries](#list-blocklist-entries) for that.
 
 For every list except `email` and `email-domain-suspicious`, a row written on another node becomes visible here after a short propagation delay.
+
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `check_blocklist_entry`, the target type of the selected list, target ID `0`, and metadata keys `list_type` and `banned`. `profile-substring` adds `scope`. The checked value is not recorded. A 400 records nothing.
 
 ### Rate limit
 

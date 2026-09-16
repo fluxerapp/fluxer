@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
+import {recordAdminRead, recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
 import {createGuildID, createUserID} from '@app/api/BrandedTypes';
 import {requireAdminACL, requireAnyAdminACL} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
@@ -66,11 +68,15 @@ export function ArchiveAdminController(app: HonoApp) {
 		async (ctx) => {
 			const adminArchiveService = ctx.get('adminArchiveService');
 			const adminUserId = ctx.get('adminUserId');
-			const result = await adminArchiveService.triggerUserArchive(
-				createUserID(ctx.req.valid('param').user_id),
-				adminUserId,
-				ctx.req.valid('json').include_attachments,
-			);
+			const userId = createUserID(ctx.req.valid('param').user_id);
+			const includeAttachments = ctx.req.valid('json').include_attachments;
+			const result = await adminArchiveService.triggerUserArchive(userId, adminUserId, includeAttachments);
+			await recordAdminWrite(ctx, {
+				targetType: 'user',
+				targetId: userId,
+				action: 'trigger_user_archive',
+				metadata: {archive_id: result.archive_id, include_attachments: includeAttachments},
+			});
 			return ctx.json(result, 200);
 		},
 	);
@@ -93,11 +99,15 @@ export function ArchiveAdminController(app: HonoApp) {
 		async (ctx) => {
 			const adminArchiveService = ctx.get('adminArchiveService');
 			const adminUserId = ctx.get('adminUserId');
-			const result = await adminArchiveService.triggerGuildArchive(
-				createGuildID(ctx.req.valid('param').guild_id),
-				adminUserId,
-				ctx.req.valid('json').include_attachments,
-			);
+			const guildId = createGuildID(ctx.req.valid('param').guild_id);
+			const includeAttachments = ctx.req.valid('json').include_attachments;
+			const result = await adminArchiveService.triggerGuildArchive(guildId, adminUserId, includeAttachments);
+			await recordAdminWrite(ctx, {
+				targetType: 'guild',
+				targetId: guildId,
+				action: 'trigger_guild_archive',
+				metadata: {archive_id: result.archive_id, include_attachments: includeAttachments},
+			});
 			return ctx.json(result, 200);
 		},
 	);
@@ -120,12 +130,27 @@ export function ArchiveAdminController(app: HonoApp) {
 			const adminArchiveService = ctx.get('adminArchiveService');
 			const adminAcls = ctx.get('adminUserAcls');
 			const query = ctx.req.valid('query');
+			const subjectType = resolveListSubjectType(adminAcls, query.subject_type);
 			const result = await adminArchiveService.listArchives({
-				subjectType: resolveListSubjectType(adminAcls, query.subject_type),
+				subjectType,
 				subjectId: query.subject_id ?? undefined,
 				requestedBy: query.requested_by ?? undefined,
 				limit: query.limit,
 				includeExpired: query.include_expired,
+			});
+			await recordAdminRead(ctx, {
+				targetType: 'archive',
+				targetId: 0n,
+				action: AdminAuditReadActions.LIST_ARCHIVES,
+				metadata: {
+					subject_type: subjectType,
+					subject_user_id: subjectType === 'user' ? query.subject_id : undefined,
+					subject_guild_id: subjectType === 'guild' ? query.subject_id : undefined,
+					requested_by_user_id: query.requested_by,
+					limit: query.limit,
+					include_expired: query.include_expired,
+					result_count: result.length,
+				},
 			});
 			return ctx.json({archives: result}, 200);
 		},
@@ -151,6 +176,12 @@ export function ArchiveAdminController(app: HonoApp) {
 			const params = ctx.req.valid('param');
 			requireArchiveSubjectAccess(adminAcls, params.subject_type);
 			const archive = await adminArchiveService.getArchive(params.subject_type, params.subject_id, params.archive_id);
+			await recordAdminRead(ctx, {
+				targetType: params.subject_type,
+				targetId: params.subject_id,
+				action: AdminAuditReadActions.GET_ARCHIVE,
+				metadata: {archive_id: params.archive_id, found: archive !== null},
+			});
 			return ctx.json({archive}, 200);
 		},
 	);
@@ -179,6 +210,12 @@ export function ArchiveAdminController(app: HonoApp) {
 				params.subject_id,
 				params.archive_id,
 			);
+			await recordAdminRead(ctx, {
+				targetType: params.subject_type,
+				targetId: params.subject_id,
+				action: AdminAuditReadActions.GET_ARCHIVE_DOWNLOAD_URL,
+				metadata: {archive_id: params.archive_id},
+			});
 			return ctx.json(result, 200);
 		},
 	);

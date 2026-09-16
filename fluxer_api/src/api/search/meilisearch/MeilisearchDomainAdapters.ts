@@ -204,6 +204,10 @@ function buildAuditLogFilters(filters: AuditLogSearchFilters): Array<Meilisearch
 	if (filters.targetType) clauses.push(meiliTermFilter('targetType', filters.targetType));
 	if (filters.targetId) clauses.push(meiliTermFilter('targetId', filters.targetId));
 	if (filters.action) clauses.push(meiliTermFilter('action', filters.action));
+	if (filters.actions && filters.actions.length > 0) clauses.push(meiliTermsFilter('action', filters.actions));
+	if (filters.excludeActions && filters.excludeActions.length > 0) {
+		clauses.push(...meiliExcludeAny('action', filters.excludeActions));
+	}
 	return compactMeiliFilters(clauses);
 }
 

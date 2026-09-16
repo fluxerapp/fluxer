@@ -10,7 +10,7 @@ These routes read and edit any account on the instance. An account has more fiel
 
 Each mutable field group has its own route, its own [ACL](/admin-api/#acl-registry), and its own [audit action](/admin-api/#audit-actions), so there is no combined update.
 
-A read records no audit entry and reads no audit reason. [List user sessions](#list-user-sessions) and [List user WebAuthn credentials](#list-user-webauthn-credentials) are the exceptions. `POST /v1/admin/users/{user_id}/avatar-block` addresses a user path but belongs to [Blocklists](/admin-api/blocklists/#block-a-users-current-avatar).
+Every operation on this page records an [Admin audit entry](/admin-api/#admin-audit-entry-object), reads included. [Get current Admin user](#get-current-admin-user) is the exception and records nothing. `POST /v1/admin/users/{user_id}/avatar-block` addresses a user path but belongs to [Blocklists](/admin-api/blocklists/#block-a-users-current-avatar).
 
 :::caution[A missing PII ACL nulls the protected fields]
 A caller without `user:view:email` receives a null `email`. A caller without `user:view:dob` receives a null `date_of_birth`, and a caller without `user:view:ip` receives null `last_active_ip`, `last_active_ip_reverse`, and `last_active_location`. The read still succeeds, so a null field is no evidence that the account has none.
@@ -449,7 +449,7 @@ One recorded change to the account's email address, phone verification state, or
 
 ## List users
 
-<RouteHeader method="GET" path="/v1/admin/users" />
+<RouteHeader method="GET" path="/v1/admin/users" auditReason />
 
 Lists and searches accounts. Requires `user:lookup`, and `user:view:email` or `user:view:ip` for the selectors marked below. The response has an array of [Admin user](#admin-user-object) objects and a total.
 
@@ -502,6 +502,12 @@ A `q` value that is entirely digits also resolves that exact account ID and plac
 
 <sup>1</sup> A selector that matches nothing returns an empty `users` array and a `total` of zero
 
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `search_users`, target type `user`, and target ID `0`. The metadata keys are `selector`, `result_count` for the accounts in `users`, and `total`. `selector` is the honoured selector, one of `user_id`, `resolve`, `email`, `last_active_ip`, or `search` for the indexed search.
+
+The `user_id` selector adds `user_id_count` for the number of IDs supplied, and `user_id` when exactly one ID was supplied. The `last_active_ip` and `search` selectors add `limit` and `offset`. The indexed search adds `has_query` as `true` when `q` is not blank. The `resolve`, `email`, `last_active_ip`, and `q` values are not recorded. A failed request records nothing.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
@@ -527,13 +533,17 @@ Every Admin credential holds `admin:authenticate`, so every account that can rea
 | 200 | response body | Current Admin was returned |
 | 403 | [error response](/admin-api/#error-response) | Credential type is refused, or the account does not hold `admin:authenticate` |
 
+### Side effects
+
+The operation records no [Admin audit entry](/admin-api/#admin-audit-entry-object).
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
 ## Get user
 
-<RouteHeader method="GET" path="/v1/admin/users/{user_id}" />
+<RouteHeader method="GET" path="/v1/admin/users/{user_id}" auditReason />
 
 Returns one account as a single-element array. Requires `user:lookup`.
 
@@ -560,6 +570,10 @@ Returns one account as a single-element array. Requires `user:lookup`.
 <sup>1</sup> This operation does not answer 404. An ID with no matching account returns 200 with an empty `users` array, so a client checks the array length
 
 An account with a pending or completed deletion is still returned, with its lifecycle state visible through `pending_deletion_at`, `deletion_reason_code`, and `deletion_public_reason`.
+
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `get_user`, target type `user`, the path `user_id` as target ID, and a metadata key `found`. `found` is `true` when `users` has the account and `false` when it is empty.
 
 ### Rate limit
 
@@ -1516,7 +1530,7 @@ Fluxer emails the account holder when the account has an email address. The emai
 
 ## List user guilds
 
-<RouteHeader method="GET" path="/v1/admin/users/{user_id}/guilds" />
+<RouteHeader method="GET" path="/v1/admin/users/{user_id}/guilds" auditReason />
 
 Lists the guilds the account is a member of, in ascending guild ID order. Requires `user:list:guilds`. Both cursors apply to the account's own sorted membership list.
 
@@ -1556,13 +1570,17 @@ Lists the guilds the account is a member of, in ascending guild ID order. Requir
 
 The response has no paging state. Derive the next cursor from the last returned guild ID, and treat a short page as the end of the list.
 
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_user_guilds`, target type `user`, the path `user_id` as target ID, and the metadata keys `limit`, `with_counts`, and `guild_count` for the guilds returned. A supplied cursor adds `before_guild_id` or `after_guild_id`. A failed request records nothing.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
 ## List user direct message channels
 
-<RouteHeader method="GET" path="/v1/admin/users/{user_id}/dm-channels" />
+<RouteHeader method="GET" path="/v1/admin/users/{user_id}/dm-channels" auditReason />
 
 Lists the direct message channels the account has taken part in. Requires `user:list:dm_channels`. The read does not open, reopen, or acknowledge a channel for the target account.
 
@@ -1606,13 +1624,17 @@ The group branch ignores `before`, `after`, and `limit`, and returns every group
 
 The response has no paging state. Derive the next cursor from the last returned channel ID.
 
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_user_dm_channels`, target type `user`, the path `user_id` as target ID, and the metadata keys `type` and `channel_count` for the channels returned. A `dm` request also records `limit`, and `before_channel_id` or `after_channel_id` when a cursor is supplied. A 404 records nothing.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
 ## List user applications
 
-<RouteHeader method="GET" path="/v1/admin/users/{user_id}/applications" />
+<RouteHeader method="GET" path="/v1/admin/users/{user_id}/applications" auditReason />
 
 Lists the OAuth2 applications the account owns. Requires `application:lookup` or `application:list:by_owner`, the same pair [List applications](/admin-api/applications/#list-applications) accepts.
 
@@ -1637,13 +1659,17 @@ Lists the OAuth2 applications the account owns. Requires `application:lookup` or
 | 200 | response body | The applications were returned |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
 
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_user_applications`, target type `user`, the path `user_id` as target ID, and a metadata key `application_count`. A 404 records nothing.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
 ## List user relationships
 
-<RouteHeader method="GET" path="/v1/admin/users/{user_id}/relationships" />
+<RouteHeader method="GET" path="/v1/admin/users/{user_id}/relationships" auditReason />
 
 Lists the friends, friend requests, and blocked accounts of the account, split into one array for each [relationship category](#relationship-categories). Requires `user:list:relationships`.
 
@@ -1672,6 +1698,10 @@ The operation accepts no cursor, category filter, or limit, and returns every ca
 | --- | --- | --- |
 | 200 | response body | The relationships were returned |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_user_relationships`, target type `user`, the path `user_id` as target ID, and the metadata keys `friend_count`, `incoming_request_count`, `outgoing_request_count`, and `blocked_count`. A 404 records nothing.
 
 ### Rate limit
 
@@ -1778,8 +1808,8 @@ The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-obje
 
 Lists the account's active and terminated authentication sessions. Requires `user:list:sessions`. IP, reverse DNS and location fields also require `user:view:ip`.
 
-:::caution[Listing sessions writes an audit entry]
-The `X-Audit-Log-Reason` header value is stored on the recorded entry.
+:::caution[Listing sessions records an audit entry]
+The entry stores the `X-Audit-Log-Reason` value whether or not the caller holds `user:view:ip`, so a listing with redacted addresses is recorded too.
 :::
 
 ### Path parameters
@@ -1866,8 +1896,6 @@ The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-obje
 <RouteHeader method="GET" path="/v1/admin/users/{user_id}/webauthn-credentials" auditReason />
 
 Lists the passkeys and security keys registered on the account, as a bare JSON array. Requires `user:update:mfa`, the same ACL as [Disable user MFA](#disable-user-mfa).
-
-Like [List user sessions](#list-user-sessions), this read records an audit entry and stores the `X-Audit-Log-Reason` value on it.
 
 ### Path parameters
 
@@ -2120,7 +2148,7 @@ No [User Update](/gateway/events/#user-update) is emitted, unlike every other mu
 
 ## Create user archive
 
-<RouteHeader method="POST" path="/v1/admin/users/{user_id}/archives" />
+<RouteHeader method="POST" path="/v1/admin/users/{user_id}/archives" auditReason />
 
 Creates an asynchronous archive of the account's data and returns the created [archive](/admin-api/archives/#archive-object) object. Requires `archive:trigger:user`.
 
@@ -2155,13 +2183,15 @@ Fluxer creates the archive record and queues a build job, so the response return
 
 No Gateway Dispatch is emitted.
 
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `trigger_user_archive`, target type `user`, the path `user_id` as target ID, and the metadata keys `archive_id` for the created archive and `include_attachments` as `true` or `false`.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
 ## List user change log
 
-<RouteHeader method="GET" path="/v1/admin/users/{user_id}/change-log" />
+<RouteHeader method="GET" path="/v1/admin/users/{user_id}/change-log" auditReason />
 
 Lists the identity and contact field changes recorded for the account, newest first. Requires `user:view:contact_log`. Email values also require `user:view:email`.
 
@@ -2200,6 +2230,10 @@ Lists the identity and contact field changes recorded for the account, newest fi
 <sup>1</sup> This operation does not resolve the account, so it never answers `UNKNOWN_USER`. An ID with no matching account returns an empty page
 
 Without `user:view:email`, an `email` entry is still returned with both value fields replaced by the literal string `[redacted]`, so the fact and the time of the change stay visible while the addresses do not.
+
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_user_change_log`, target type `user`, the path `user_id` as target ID, and the metadata keys `limit` and `entry_count` for the entries returned. A supplied `page_token` adds `has_page_token` as `true`, and the cursor value is not recorded.
 
 ### Rate limit
 

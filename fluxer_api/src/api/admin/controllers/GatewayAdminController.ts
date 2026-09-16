@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
+import {recordAdminRead} from '@app/api/admin/AdminAuditRecorder';
 import {createGuildID} from '@app/api/BrandedTypes';
 import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
@@ -34,7 +36,14 @@ export function GatewayAdminController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
-			return ctx.json(await adminService.guildServiceAggregate.managementService.getNodeStats());
+			const stats = await adminService.guildServiceAggregate.managementService.getNodeStats();
+			await recordAdminRead(ctx, {
+				targetType: 'gateway',
+				targetId: 0n,
+				action: AdminAuditReadActions.GET_GATEWAY_STATS,
+				metadata: {node_count: stats.node_count},
+			});
+			return ctx.json(stats);
 		},
 	);
 	app.get(
@@ -54,7 +63,14 @@ export function GatewayAdminController(app: HonoApp) {
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
 			const {limit} = ctx.req.valid('query');
-			return ctx.json(await adminService.guildServiceAggregate.managementService.getGuildMemoryStats(limit));
+			const stats = await adminService.guildServiceAggregate.managementService.getGuildMemoryStats(limit);
+			await recordAdminRead(ctx, {
+				targetType: 'guild',
+				targetId: 0n,
+				action: AdminAuditReadActions.LIST_GUILD_MEMORY_STATS,
+				metadata: {limit, result_count: stats.guilds.length},
+			});
+			return ctx.json(stats);
 		},
 	);
 	app.get(
@@ -73,7 +89,18 @@ export function GatewayAdminController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
-			return ctx.json(await adminService.guildServiceAggregate.managementService.getVoiceStateCounts());
+			const counts = await adminService.guildServiceAggregate.managementService.getVoiceStateCounts();
+			await recordAdminRead(ctx, {
+				targetType: 'gateway',
+				targetId: 0n,
+				action: AdminAuditReadActions.GET_VOICE_STATE_COUNTS,
+				metadata: {
+					total_voice_states: counts.total_voice_states,
+					region_count: counts.regions.length,
+					server_count: counts.servers.length,
+				},
+			});
+			return ctx.json(counts);
 		},
 	);
 	app.post(

@@ -494,7 +494,7 @@ Display metadata for one [limit key](/http-api/instance/#limit-keys), which an e
 
 ## Get instance configuration
 
-<RouteHeader method="GET" path="/v1/admin/instance/config" />
+<RouteHeader method="GET" path="/v1/admin/instance/config" auditReason />
 
 Returns the [instance configuration](#instance-configuration-object) object. Requires `instance:config:view`, or a session credential until setup is marked complete.
 
@@ -504,13 +504,17 @@ Returns the [instance configuration](#instance-configuration-object) object. Req
 | --- | --- | --- |
 | 200 | [instance configuration](#instance-configuration-object) object | Configuration was returned |
 
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `get_instance_config`, target type `instance_config`, target ID `0`, and metadata keys `registration_url_count` and `pending_registration_count`. Before setup is complete, a session credential holding no Admin ACL records the entry with its own account as the acting Admin.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
 ## Update instance configuration
 
-<RouteHeader method="PATCH" path="/v1/admin/instance/config" />
+<RouteHeader method="PATCH" path="/v1/admin/instance/config" auditReason />
 
 Applies a merge patch to the stored configuration and returns the resulting [instance configuration](#instance-configuration-object) object. Requires `instance:config:update`, or a session credential until setup is marked complete.
 
@@ -583,7 +587,7 @@ Fluxer publishes a `gateway_rollout` change to the Gateway cluster. Premium mode
 
 Initial setup completes on the first update that sets `app_public.setup.configured` to true from a session credential whose account holds neither `admin:authenticate` nor the wildcard. That update grants the account the wildcard Admin ACL and marks the deployment as bootstrapped.
 
-The operation records no Admin audit entry of its own.
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `update_instance_config`, target type `instance_config`, and target ID `0`. The metadata key `sections` lists the names of the non-null top-level sections in the body, comma-separated in alphabetical order, and is absent when the body supplies none. The update that completes initial setup and grants the wildcard ACL also records `granted_acls` as `*`. No value from the body is recorded. A request that fails part way records no entry.
 
 ### Rate limit
 
@@ -591,7 +595,7 @@ The operation records no Admin audit entry of its own.
 
 ## Create branding asset
 
-<RouteHeader method="POST" path="/v1/admin/instance/config/branding-assets" />
+<RouteHeader method="POST" path="/v1/admin/instance/config/branding-assets" auditReason />
 
 Uploads an image, stores its [Media Proxy](/media-proxy/overview/) URL in the selected branding slot, and returns the resulting [instance configuration](#instance-configuration-object) object. Requires `instance:config:update`, or a session credential until setup is marked complete.
 
@@ -619,13 +623,15 @@ Uploads an image, stores its [Media Proxy](/media-proxy/overview/) URL in the se
 
 The stored image is served through the Media Proxy. Non-JPEG images are re-encoded to strip metadata and JPEG images are re-encoded at quality 100. The previously referenced image is not deleted.
 
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `upload_branding_asset`, target type `instance_config`, target ID `0`, and metadata keys `kind` and `cleared`. `cleared` is `true` when the request cleared the slot.
+
 ### Rate limit
 
 100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
 
 ## Create SMTP test
 
-<RouteHeader method="POST" path="/v1/admin/instance/config/smtp-tests" />
+<RouteHeader method="POST" path="/v1/admin/instance/config/smtp-tests" auditReason />
 
 Opens a connection to the supplied SMTP server, authenticates against it, and reports the outcome as an [SMTP test result](#smtp-test-result-object) object without storing anything. Requires `instance:config:update`, or a session credential until setup is marked complete.
 
@@ -653,13 +659,15 @@ A test that runs to completion answers 200 whether or not the server accepted th
 
 No configuration is written and the supplied credentials are discarded when the request completes. The connection, greeting, and socket each have a ten-second deadline.
 
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `test_smtp_connection`, target type `instance_config`, target ID `0`, and metadata keys `port`, `secure`, and `ok`. The host, username, password, and failure text are not recorded.
+
 ### Rate limit
 
 100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
 
 ## Create registration URL
 
-<RouteHeader method="POST" path="/v1/admin/instance/registration-urls" />
+<RouteHeader method="POST" path="/v1/admin/instance/registration-urls" auditReason />
 
 Issues a registration URL an Admin can hand out while the registration mode is `closed` or `approval`, and returns a [registration URL creation](#registration-url-creation-object) object. Requires `instance:config:update`.
 
@@ -686,7 +694,9 @@ The returned `code` is the same value as `registration_url.id`, and every [Get i
 
 ### Side effects
 
-A newly issued URL has a use count of zero, no revocation time, and the acting Admin as its issuer. It is the first entry of `registration.urls` on the next configuration read. The operation records no Admin audit entry and changes no account.
+A newly issued URL has a use count of zero, no revocation time, and the acting Admin as its issuer. It is the first entry of `registration.urls` on the next configuration read. The operation changes no account.
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `create_registration_url`, target type `registration_url`, target ID `0`, and metadata key `approval_required`, plus `max_uses` when the body sets it. The label is not recorded. The entry has no registration URL identifier, because the identifier is the bearer code.
 
 ### Rate limit
 
@@ -694,7 +704,7 @@ A newly issued URL has a use count of zero, no revocation time, and the acting A
 
 ## Revoke registration URL
 
-<RouteHeader method="DELETE" path="/v1/admin/instance/registration-urls/{registration_url_id}" />
+<RouteHeader method="DELETE" path="/v1/admin/instance/registration-urls/{registration_url_id}" auditReason />
 
 Revokes one registration URL so it can no longer be redeemed and returns the resulting [instance configuration](#instance-configuration-object) object. Requires `instance:config:update`.
 
@@ -718,7 +728,9 @@ An account that registered through the URL keeps its access, membership, and dec
 
 ### Side effects
 
-The URL records its revocation time and stays in the configuration response afterwards. The operation records no Admin audit entry and changes no account.
+The URL records its revocation time and stays in the configuration response afterwards. The operation changes no account.
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `revoke_registration_url`, target type `registration_url`, target ID `0`, and no metadata, including for an identifier that names no registration URL. The entry has no registration URL identifier, because the identifier is the bearer code.
 
 ### Rate limit
 
@@ -748,7 +760,7 @@ Approves or rejects one pending registration and returns the resulting [instance
 | --- | --- | --- |
 | 200<sup>1</sup> | [instance configuration](#instance-configuration-object) object | The decision was applied |
 
-<sup>1</sup> An account that no longer exists still answers 200. The pending registration is removed, no trait is written, and no audit entry is recorded
+<sup>1</sup> An account that no longer exists still answers 200. The pending registration is removed and no trait is written
 
 :::caution[Decisions apply even without a pending entry]
 Both decisions remove the pending registration, but the endpoint does not require the account to be in that list. Rejecting writes the `registration_rejected` trait. A later approval can clear it again. The trait can also be changed through [Set user traits](/admin-api/users/#set-user-traits).
@@ -760,7 +772,7 @@ Approval removes both the `registration_pending_approval` trait and the `registr
 
 When the stored pending registration list fails validation, the request fails before Fluxer changes the account. A failure after Fluxer writes the account traits leaves those traits written and can leave the entry in the pending list. Check the account traits and the pending list before retrying.
 
-One Admin audit entry with the action `approve_registration` or `reject_registration` targets the account, records the audit reason, and has no metadata.
+One Admin audit entry with the action `approve_registration` or `reject_registration` targets the account and records the audit reason. It has no metadata, except for an account that no longer exists, whose entry has the metadata key `account_found` set to `false`.
 
 ### Rate limit
 
@@ -768,7 +780,7 @@ One Admin audit entry with the action `approve_registration` or `reject_registra
 
 ## Get limit configuration
 
-<RouteHeader method="GET" path="/v1/admin/limit-config" />
+<RouteHeader method="GET" path="/v1/admin/limit-config" auditReason />
 
 Returns the [limit configuration response](#limit-configuration-response-object) object. Requires `instance:limit_config:view`.
 
@@ -782,13 +794,15 @@ Returns the [limit configuration response](#limit-configuration-response-object)
 
 The response reflects the configuration in force on the node that serves the request, so two nodes can report different values while a change propagates.
 
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `get_limit_config`, target type `limit_config`, target ID `0`, and metadata key `rule_count`.
+
 ### Rate limit
 
 200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
 
 ## Replace limit configuration
 
-<RouteHeader method="PUT" path="/v1/admin/limit-config" />
+<RouteHeader method="PUT" path="/v1/admin/limit-config" auditReason />
 
 Replaces the stored limit configuration with the supplied document and returns the resulting [limit configuration response](#limit-configuration-response-object) object. Requires `instance:limit_config:update`.
 
@@ -821,7 +835,7 @@ On a self-hosted deployment whose premium mode is `everyone`, Fluxer drops the `
 
 Each rule's `modifiedFields` is then recomputed and the merged document replaces the stored one. Every API node adopts the new configuration. Clients observe it through the published [limit configuration](/http-api/instance/#limit-configuration-object).
 
-The operation records no Admin audit entry.
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `update_limit_config`, target type `limit_config`, target ID `0`, and metadata keys `rule_count`, `changed_rule_count`, and `trait_definition_count`, each taken from the stored document. `changed_rule_count` is the number of rule identifiers added, removed, or stored with different filters or limits, compared with the configuration the serving node held before the write.
 
 ### Rate limit
 
@@ -829,7 +843,7 @@ The operation records no Admin audit entry.
 
 ## Create heap snapshot
 
-<RouteHeader method="POST" path="/v1/admin/system/heap-snapshots" />
+<RouteHeader method="POST" path="/v1/admin/system/heap-snapshots" auditReason />
 
 Writes a V8 heap snapshot of the API process that serves the request and returns the file. Requires `system:heap_snapshot`.
 
@@ -855,7 +869,7 @@ A deployment behind a load balancer needs several attempts to reach a particular
 
 ### Side effects
 
-No configuration is changed and no Admin audit entry is recorded.
+No configuration is changed. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `create_heap_snapshot`, target type `system`, target ID `0`, and metadata key `size_bytes`, after the snapshot is written and before the file is sent. A snapshot that fails to write records no entry.
 
 ### Rate limit
 

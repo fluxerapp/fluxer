@@ -10,7 +10,7 @@ Admin discovery is the review side of the public guild directory. An Admin decid
 
 Every operation except [Remove discovery listing](#remove-discovery-listing) requires `discovery:review`, which covers the reads, [Review discovery application](#review-discovery-application), [Move discovery listings to a category](#move-discovery-listings-to-a-category), and [Update discovery listing](#update-discovery-listing). [Remove discovery listing](#remove-discovery-listing) requires `discovery:remove` instead. Neither implies the other.
 
-[Move discovery listings to a category](#move-discovery-listings-to-a-category) reads `X-Audit-Log-Reason` and records one `update_discovery_categories` Admin audit entry with the audit reason, the category, and the requested, updated, and failed counts. No other operation here reads that header or records an Admin audit entry. An operation that stores a reason takes it in its request body.
+Every operation here records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with the audit reason from `X-Audit-Log-Reason` when it succeeds. An operation that stores a reason on the application takes it in its request body, and that reason is not recorded in the entry.
 
 :::note[Review runs regardless of the discovery setting]
 An operator can disable discovery for the whole instance. Only the public [Discovery](/http-api/discovery/) routes read that state, and they return 400 `DISCOVERY_DISABLED` while it is off, so an application can be reviewed into a directory no account can see.
@@ -145,7 +145,7 @@ Every `category_type` and `category_id` here is an integer of 0 through 8. A val
 
 ## List discovery applications
 
-<RouteHeader method="GET" path="/v1/admin/discovery/applications" />
+<RouteHeader method="GET" path="/v1/admin/discovery/applications" auditReason />
 
 Returns every pending application as an array of [Admin pending application](#admin-pending-application-object) objects. Requires `discovery:review`.
 
@@ -159,13 +159,17 @@ A guild approved automatically on submission never appears here. An application 
 | --- | --- | --- |
 | 200 | array[[Admin pending application](#admin-pending-application-object) object] | Pending applications were returned |
 
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_discovery_applications`, target type `guild`, target ID `0`, and metadata key `result_count`.
+
 ### Rate limit
 
 30 requests per 10 seconds for each authenticated user, on the `discovery:admin:list` bucket.
 
 ## Review discovery application
 
-<RouteHeader method="PATCH" path="/v1/admin/discovery/applications/{guild_id}" />
+<RouteHeader method="PATCH" path="/v1/admin/discovery/applications/{guild_id}" auditReason />
 
 Approves or rejects a pending application and returns the updated [discovery application](#discovery-application-object) object. Requires `discovery:review`.
 
@@ -210,13 +214,15 @@ A rejection moves the application to `rejected` and records the review time, the
 
 An approval whose guild can no longer be resolved still succeeds. Fluxer skips the feature grant and the Dispatch.
 
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `approve_discovery_application` or `reject_discovery_application`, target type `guild`, the guild ID as target ID, and metadata key `status`.
+
 ### Rate limit
 
 20 requests per 10 seconds for each authenticated user, on the `discovery:admin:action` bucket.
 
 ## List discovery categories
 
-<RouteHeader method="GET" path="/v1/admin/discovery/categories" />
+<RouteHeader method="GET" path="/v1/admin/discovery/categories" auditReason />
 
 Returns the fixed [discovery category](/http-api/discovery/#discovery-categories) set as an array of [discovery category](/http-api/discovery/#discovery-category-object) objects, in ascending ID order. Requires `discovery:review`.
 
@@ -228,13 +234,17 @@ It reports the same set on every instance running the same release and has no li
 | --- | --- | --- |
 | 200 | array[[discovery category](/http-api/discovery/#discovery-category-object) object] | Categories were returned |
 
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_discovery_categories`, target type `discovery_category`, target ID `0`, and metadata key `result_count`.
+
 ### Rate limit
 
 30 requests per 10 seconds for each authenticated user, on the `discovery:admin:list` bucket.
 
 ## List guilds in a discovery category
 
-<RouteHeader method="GET" path="/v1/admin/discovery/categories/{category_id}/listings" />
+<RouteHeader method="GET" path="/v1/admin/discovery/categories/{category_id}/listings" auditReason />
 
 Returns an offset page of the approved listings filed under one category, most members first, as an array of [Admin discovery listing](#admin-discovery-listing-object) objects. Requires `discovery:review`.
 
@@ -261,13 +271,17 @@ A rebuild of the discovery search index does not change what this operation answ
 | --- | --- | --- |
 | 200 | array[[Admin discovery listing](#admin-discovery-listing-object) object] | The page was returned |
 
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_discovery_category_listings`, target type `discovery_category`, target ID `0`, and metadata keys `category_id`, `limit`, `offset`, `result_count` for the listings in this page, and `total` for every approved listing in the category.
+
 ### Rate limit
 
 30 requests per 10 seconds for each authenticated user, on the `discovery:admin:list` bucket.
 
 ## List discovery listings
 
-<RouteHeader method="GET" path="/v1/admin/discovery/listings" />
+<RouteHeader method="GET" path="/v1/admin/discovery/listings" auditReason />
 
 Returns every approved listing as an array of [Admin discovery listing](#admin-discovery-listing-object) objects. Requires `discovery:review`.
 
@@ -279,13 +293,17 @@ The response is a bare array with no guaranteed order, cursor or limit. Pending,
 | --- | --- | --- |
 | 200 | array[[Admin discovery listing](#admin-discovery-listing-object) object] | Approved listings were returned |
 
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_discovery_listings`, target type `guild`, target ID `0`, and metadata key `result_count`.
+
 ### Rate limit
 
 30 requests per 10 seconds for each authenticated user, on the `discovery:admin:list` bucket.
 
 ## Move discovery listings to a category
 
-<RouteHeader method="PATCH" path="/v1/admin/discovery/listings" />
+<RouteHeader method="PATCH" path="/v1/admin/discovery/listings" auditReason />
 
 Files every named guild under one [discovery category](/http-api/discovery/#discovery-categories) and reports how many moved. Requires `discovery:review`.
 
@@ -323,13 +341,15 @@ Repeating the request is safe. The operation moves a pending application the sam
 
 A move replaces the application's `category_type` and preserves its description, language, tags, status, and timestamps. A moved listing that is already approved appears under the new category in the next public search. No guild field changes and no Gateway Dispatch is emitted.
 
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `update_discovery_categories`, target type `guild`, target ID `0`, and metadata keys `category_type`, `guild_count`, `updated`, and `failed`. It records the entry when every guild fails as well. The guild IDs are not recorded.
+
 ### Rate limit
 
 20 requests per 10 seconds for each authenticated user, on the `discovery:admin:action` bucket.
 
 ## Update discovery listing
 
-<RouteHeader method="PATCH" path="/v1/admin/discovery/listings/{guild_id}" />
+<RouteHeader method="PATCH" path="/v1/admin/discovery/listings/{guild_id}" auditReason />
 
 Updates the stored listing of one guild and returns the updated [discovery application](#discovery-application-object) object. Requires `discovery:review`.
 
@@ -375,13 +395,15 @@ The supplied members update the application while preserving its status, submiss
 
 No guild field changes, so no [Guild Update](/gateway/events/#guild-update) fires.
 
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `update_discovery_listing`, target type `guild`, the guild ID as target ID, and metadata key `status` with the stored [application status](/http-api/discovery/#discovery-application-statuses). `fields` names the supplied members joined by commas and is absent for an empty body. A supplied `category_type` or `primary_language` adds a key of the same name with its value. The description and tags are not recorded.
+
 ### Rate limit
 
 20 requests per 10 seconds for each authenticated user, on the `discovery:admin:action` bucket.
 
 ## Remove discovery listing
 
-<RouteHeader method="DELETE" path="/v1/admin/discovery/listings/{guild_id}" />
+<RouteHeader method="DELETE" path="/v1/admin/discovery/listings/{guild_id}" auditReason />
 
 Removes an approved listing from discovery, strips the guild's discoverable feature, and returns the updated [discovery application](#discovery-application-object) object. Requires `discovery:remove`.
 
@@ -418,6 +440,8 @@ The application moves to `removed`, and the guild can be listed again only throu
 The application moves to `removed` and records the removal time, the removing Admin, and the required reason. The discoverable feature is removed from the guild, the guild stops appearing in [Search discovery guilds](/http-api/discovery/#search-discovery-guilds), and [Guild Update](/gateway/events/#guild-update) fires to every session that can observe the guild.
 
 A removal whose guild can no longer be resolved still succeeds. Fluxer skips the feature strip and the Dispatch.
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `remove_discovery_listing`, target type `guild`, the guild ID as target ID, and no metadata.
 
 ### Rate limit
 

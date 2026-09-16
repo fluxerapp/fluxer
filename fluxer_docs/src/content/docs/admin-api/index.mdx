@@ -74,11 +74,15 @@ The [ACL registry](#acl-registry) below lists every value the instance recognise
 
 An Admin audit entry records one Admin action against one target.
 
-Not every Admin operation records an entry. Each Admin resource page states, per operation, whether it records one and what that entry stores.
+Every Admin operation records at least one entry, reads included. Five reads are the exception and record nothing. They are [Get current Admin user](/admin-api/users/#get-current-admin-user), [List jobs](/admin-api/jobs/#list-jobs), [List active jobs](/admin-api/jobs/#list-active-jobs), [Get job](/admin-api/jobs/#get-job), and [Get search index refresh](/admin-api/search-indexes/#get-search-index-refresh). Each Admin resource page states, per operation, what its entry stores, and names the requests that change nothing and so record nothing, such as a purge whose every ID fails.
 
-A request refused by authentication, ACL evaluation, rate limiting, or body validation records nothing.
+A read records its entry after the data is loaded and before the response is sent. A read that returns 200 with no match still records one. A read entry stores identifiers, filter values from a fixed set, counts, and whether a free-text query was supplied. It never stores query text, email addresses, IP addresses, blocklist values, or other free-form input.
 
-Fluxer can record more than one entry for one request. [Update guild](/admin-api/guilds/#update-guild) records one entry for each mapped field group it applies. A queued bulk job records one summary entry when it finishes, with the creating Admin and that request's audit reason. The `update_user_flags`, `update_guild_features`, and `schedule_user_deletion` tasks also record one ordinary entry for each account or guild the worker changes, with `audit_log_reason` null.
+An entry is a read entry when its action is one of the [read actions](#read-actions), and a write entry otherwise. The `access` field reports which, and the `access` query parameter of [List audit log entries](#list-audit-log-entries) filters on it.
+
+A request refused by authentication, ACL evaluation, rate limiting, or path, query, or body validation records nothing.
+
+Fluxer can record more than one entry for one request. [Update guild](/admin-api/guilds/#update-guild) records one entry for each mapped field group it applies. A bulk job records a `queue_bulk_job` entry when it is queued and one summary entry when it finishes, both with the creating Admin and that request's audit reason. The `update_user_flags`, `update_guild_features`, and `schedule_user_deletion` tasks also record one ordinary entry for each account or guild the worker changes, with `audit_log_reason` null.
 
 An entry stores an acting Admin, a target type, a target ID, an action name, an optional audit reason, and a string metadata map. Fluxer fills every other field of the entry when the entry is read.
 
@@ -98,13 +102,14 @@ An entry stores an acting Admin, a target type, a target ID, an action name, an 
 | related_guilds<sup>6</sup> | map[snowflake, [Admin guild summary](#admin-guild-summary-object) object] | The guilds the entry references, keyed by ID |
 | related_channels<sup>6</sup> | map[snowflake, [Admin channel summary](#admin-channel-summary-object) object] | The channels the entry references, keyed by ID |
 | action | string | The [audit action](#audit-actions) the service recorded (1-256 characters) |
+| access | string | `read` for an entry recorded by a read, `write` for any other entry |
 | audit_log_reason | ?string | The normalised [audit reason](#audit-reasons) (1-4,000 characters), or null when the request supplied none |
 | metadata<sup>7</sup> | map[string, string] | The additional values the operation recorded |
 | created_at | ISO8601 timestamp | The time the entry was recorded |
 
 <sup>1</sup> Resolved from `admin_user_id` at read time, so an account deleted after the entry was written reports null while `admin_user_id` still has the ID
 
-<sup>2</sup> Serialised as a decimal string, like a [snowflake](/snowflakes/). A blocklist entry, a voice region, and a voice server record `0` here and their textual identity in `metadata`
+<sup>2</sup> Serialised as a decimal string, like a [snowflake](/snowflakes/). A read that is not scoped to one account, guild, channel, or message, a blocklist entry, a voice region, and a voice server record `0` here, and any identity they have is in `metadata`
 
 <sup>3</sup> Resolved only when `target_type` is `user`, `guild_member`, `message_deletion`, or `message_shred`
 
@@ -146,6 +151,7 @@ An entry has no request method, request path, status, duration, IP address, or f
   "related_guilds": {},
   "related_channels": {},
   "action": "change_username",
+  "access": "write",
   "audit_log_reason": "Impersonation report 4821",
   "metadata": {
     "old_username": "subj3ct",
@@ -201,11 +207,25 @@ An entry has no request method, request path, status, duration, IP address, or f
 | message | Message |
 | message_deletion<sup>1</sup> | Bulk deletion of every message one account sent |
 | message_shred<sup>1</sup> | Message shred job for one account |
+| channel | Channel |
 | asset | Stored media asset |
 | application | OAuth2 application |
 | report | User report |
 | search_index | Search index |
 | system_dm | System DM broadcast |
+| gift_code<sup>2</sup> | Batch of generated gift codes |
+| bulk_job | Background job |
+| admin_api_key | Admin API key |
+| audit_log | Admin audit entry |
+| archive<sup>2</sup> | Archive list |
+| admin_acl<sup>2</sup> | Admin ACL registry |
+| blocklist<sup>2</sup> | Blocklist catalogue |
+| discovery_category<sup>2</sup> | Discovery category |
+| instance_config<sup>2</sup> | Instance configuration |
+| limit_config<sup>2</sup> | Limit configuration |
+| registration_url<sup>3</sup> | Admin-issued registration URL |
+| gateway<sup>2</sup> | Gateway cluster |
+| system<sup>2</sup> | API process that served the request |
 | voice_region<sup>2</sup> | Voice region |
 | voice_server<sup>2</sup> | Voice server registration |
 | ip<sup>2</sup> | IP blocklist entry or suspicious IP marker |
@@ -218,28 +238,90 @@ An entry has no request method, request path, status, duration, IP address, or f
 | avatar_hash<sup>2</sup> | Avatar hash blocklist entry |
 | profile_substring<sup>2</sup> | Profile substring blocklist entry |
 
-<sup>1</sup> The target ID is the account the job acts on, and the entry resolves that account into `target_user`
+<sup>1</sup> The target ID is the account the job acts on, and the entry resolves that account into `target_user`. [Get message shred job](/admin-api/messages/#get-message-shred-job) is the exception and records `0`
 
-<sup>2</sup> The target has no snowflake, so `target_id` is `0` and the entry's textual identity is in `metadata`
+<sup>2</sup> The target has no snowflake, so `target_id` is `0`, and any identity the entry has is in `metadata`
+
+<sup>3</sup> The ID of a registration URL is its redeemable code, so `target_id` is `0` and the entry stores no ID
 
 The field is a free-form string, so a client MUST accept a value outside this table.
 
 ### Audit actions
 
-An operation records one of the following actions. The field is a free-form string of 1 to 256 characters, so a client MUST accept a value outside this table.
+An operation records one of the following actions. The field is a free-form string of 1 to 256 characters, so a client MUST accept a value outside these tables.
+
+#### Read actions
+
+An entry with one of these actions has `access` set to `read`.
+
+| Value | Description |
+| --- | --- |
+| check_blocklist_entry | A value was checked against a blocklist |
+| get_admin_api_key | An Admin API key was read |
+| get_application | An application was read |
+| get_archive | An archive was read |
+| get_archive_download_url | A download URL for an archive was issued |
+| get_audit_log | An Admin audit entry was read |
+| get_gateway_stats | Gateway node statistics were read |
+| get_guild | A guild was read |
+| get_instance_config | The instance configuration was read |
+| get_limit_config | The limit configuration was read |
+| get_message | A message and its surrounding messages were read |
+| get_message_shred_status | The state of a message shred job was read |
+| get_report | A report was read |
+| get_user | An account was read |
+| get_voice_region | A voice region was read |
+| get_voice_server | A voice server was read |
+| get_voice_state_counts | Gateway voice state counts were read |
+| list_admin_acls | The Admin ACL registry was read |
+| list_admin_api_keys | The acting Admin's API keys were listed |
+| list_archives | Archives were listed |
+| list_audit_logs | A page of the Admin audit log was read |
+| list_blocklist_entries | A page of blocklist entries was read |
+| list_blocklists | The blocklist catalogue was read |
+| list_channel_messages | The messages of a channel were listed |
+| list_discovery_applications | Pending discovery applications were read |
+| list_discovery_categories | The discovery categories were read |
+| list_discovery_category_listings | A page of the discovery listings in one category was read |
+| list_discovery_listings | Approved discovery listings were read |
+| list_guild_applications | The applications whose bots are members of a guild were read |
+| list_guild_audit_logs | The audit log of a guild was read |
+| list_guild_emojis | The custom emojis of a guild were listed |
+| list_guild_members | The members of a guild were listed |
+| list_guild_memory_stats | Guild memory statistics were listed |
+| list_guild_stickers | The stickers of a guild were listed |
+| list_user_applications | The applications an account owns were read |
+| list_user_change_log | The contact change log of an account was read |
+| list_user_dm_channels | The direct message channels of an account were read |
+| list_user_guilds | The guild memberships of an account were read |
+| list_user_relationships | The relationships of an account were read |
+| list_user_sessions | An account's login sessions were read |
+| list_voice_regions | Voice regions were listed |
+| list_voice_servers | The voice servers of a region were listed |
+| list_webauthn_credentials | An account's WebAuthn credentials were read |
+| search_audit_logs | The Admin audit log was searched |
+| search_guilds | Guilds were listed or searched |
+| search_messages | The messages of a channel were searched, or one message was looked up |
+| search_reports | Reports were listed or searched |
+| search_users | Accounts were listed or searched |
+
+#### Write actions
+
+An entry with any other action has `access` set to `write`.
 
 | Value | Description |
 | --- | --- |
 | NCMEC Report | An attachment was submitted through the NCMEC reporting integration |
 | add_suspicious_email_domain | A domain was added to the suspicious email domain list |
+| approve_discovery_application | A discovery application was approved |
 | approve_registration | A pending registration was approved |
 | auto_resolve_reports_on_deletion | Reports against an account were resolved automatically as part of its deletion |
 | ban_avatar_hash | An avatar hash was added to the avatar blocklist |
 | ban_email | An address was added to the email blocklist |
 | ban_file_sha | A file hash was added to the attachment blocklist |
 | ban_ip | An address was added to the IP blocklist |
-| ban_ip_skipped_exempt | An IP blocklist entry was declined by the instance exemption list |
 | ban_ip_skipped_cgnat | An IP blocklist entry was declined because IP intelligence reports the address as a mobile carrier network |
+| ban_ip_skipped_exempt | An IP blocklist entry was declined by the instance exemption list |
 | ban_member | An account was banned from a guild |
 | ban_phrase | A phrase was added to the message phrase blocklist |
 | ban_profile_substring | A substring was added to the profile substring blocklist |
@@ -247,16 +329,21 @@ An operation records one of the following actions. The field is a free-form stri
 | ban_url_domain | A domain was added to the URL domain blocklist |
 | bulk_add_guild_members | A bulk guild member addition was queued or applied |
 | bulk_ban_file_shas | A queued bulk file hash blocklist job was applied |
+| bulk_delete_user_messages | A queued bulk message deletion job was applied |
 | bulk_schedule_deletion | A bulk account deletion schedule was queued or applied |
 | bulk_update_guild_features | A bulk guild feature change was queued or applied |
 | bulk_update_suspicious_activity_flags | A bulk suspicious activity flag change was queued or applied |
 | bulk_update_user_flags | A bulk account flag change was queued or applied |
 | cancel_bulk_message_deletion | A bulk message deletion an account scheduled for itself was cancelled |
 | cancel_deletion | A scheduled account deletion was cancelled |
+| cancel_job | Cancellation of a job was requested |
 | change_dob | A date of birth was changed |
 | change_email | An email address was changed |
 | change_username | A username or discriminator was changed |
 | clear_fields<sup>1</sup> | Profile fields of an account, or fields of a guild, were cleared |
+| create_admin_api_key | An Admin API key was created |
+| create_heap_snapshot | A heap snapshot of the API process was written |
+| create_registration_url | A registration URL was issued |
 | create_voice_region | A voice region was created |
 | create_voice_server | A voice server was registered |
 | delete_all_user_messages | Deletion of every message an account sent was queued |
@@ -269,26 +356,31 @@ An operation records one of the following actions. The field is a free-form stri
 | disable_mfa | Multi-factor authentication was disabled on an account |
 | disable_suspicious_activity | An account flagged for suspicious activity was disabled |
 | force_add_to_guild | An account was added to a guild while bypassing the ban check |
+| generate_gift_codes | Gift codes were generated |
 | kick_member | A member was removed from a guild |
-| list_user_sessions | An account's login sessions were read |
-| list_webauthn_credentials | An account's WebAuthn credentials were read |
 | mark_suspicious_ip | An IP address was marked as suspicious |
+| mark_suspicious_ip_skipped_high_blast_radius | IP intelligence reports the address as a mobile, anycast, satellite, or education network, so no marker was written |
 | mark_suspicious_ip_skipped_invalid | The address could not be parsed, so no marker was written |
 | mark_suspicious_ip_skipped_ipinfo_unavailable | IP intelligence was unavailable, so no marker was written |
 | mark_suspicious_ip_skipped_trusted_commercial_privacy_provider | The address belongs to a trusted commercial privacy provider, so no marker was written |
-| mark_suspicious_ip_skipped_high_blast_radius | IP intelligence reports the address as a mobile, anycast, satellite, or education network, so no marker was written |
 | purge_asset | A stored media asset was purged |
 | purge_guild_emoji_asset | A guild emoji asset was purged |
 | purge_guild_sticker_asset | A guild sticker asset was purged |
+| queue_bulk_job | A bulk job was queued |
 | queue_message_shred | A message shred job was queued |
 | queue_refresh_index | A search index rebuild was requested |
+| reject_discovery_application | A discovery application was rejected |
 | reject_registration | A pending registration was rejected |
 | reload_guild | One guild was reloaded on the main Gateway |
+| reload_guilds | Many guilds were reloaded on the main Gateway |
+| remove_discovery_listing | A guild was removed from discovery |
 | remove_relationship | One relationship was removed from an account |
 | remove_relationships_by_category | Every relationship in one category was removed from an account |
 | remove_suspicious_email_domain | A domain was removed from the suspicious email domain list |
 | resend_verification_email | An email verification message was requested again for an account |
 | resolve_report | A report was updated or resolved |
+| revoke_admin_api_key | An Admin API key was revoked |
+| revoke_registration_url | A registration URL was revoked |
 | schedule_deletion | Account deletion was scheduled |
 | send_password_reset | A password reset message was requested for an account |
 | set_acls | The Admin ACL set of an account was replaced |
@@ -299,7 +391,9 @@ An operation records one of the following actions. The field is a free-form stri
 | system_dm.send | A system DM broadcast was created |
 | temp_ban | A temporary or permanent account ban was applied |
 | terminate_sessions | Every login session of an account was revoked |
+| test_smtp_connection | An SMTP connection test was run |
 | transfer_ownership<sup>1</sup> | Guild ownership or OAuth2 application ownership was transferred |
+| trigger_guild_archive | A guild archive was created |
 | trigger_user_archive | A user archive was created |
 | unban | An account ban was lifted |
 | unban_avatar_hash | An avatar hash was removed from the avatar blocklist |
@@ -310,9 +404,15 @@ An operation records one of the following actions. The field is a free-form stri
 | unban_profile_substring | A substring was removed from the profile substring blocklist |
 | unban_url | A URL was removed from the URL blocklist |
 | unban_url_domain | A domain was removed from the URL domain blocklist |
+| update_admin_api_key | An Admin API key was renamed or its ACLs were replaced |
+| update_discovery_categories | Guilds were moved to a discovery category |
+| update_discovery_listing | A discovery listing was edited |
 | update_features | Guild features were added or removed |
+| update_guild | A guild update with no field group was sent |
 | update_flags | Account flags were changed |
 | update_has_verified_phone | Verified phone state was changed |
+| update_instance_config | The instance configuration was updated |
+| update_limit_config | The limit configuration was replaced |
 | update_name | A guild name was changed |
 | update_premium_flags | Premium flags were changed |
 | update_settings | General guild settings were changed |
@@ -320,6 +420,7 @@ An operation records one of the following actions. The field is a free-form stri
 | update_vanity | A guild custom invite code was changed |
 | update_voice_region | A voice region was updated |
 | update_voice_server | A registered voice server was updated |
+| upload_branding_asset | An instance branding asset was uploaded or cleared |
 | verify_email | An email address was marked verified |
 
 <sup>1</sup> The same action name is recorded for two different resources, so `target_type` tells them apart
@@ -380,7 +481,7 @@ A successful Admin request from an account that is not a bot has no informationa
 
 ## List ACLs
 
-<RouteHeader method="GET" path="/v1/admin/acls" />
+<RouteHeader method="GET" path="/v1/admin/acls" auditReason />
 
 Returns every Admin permission string the instance recognises, in [ACL registry](#acl-registry) order. Requires `admin:authenticate`.
 
@@ -398,6 +499,10 @@ Returns every Admin permission string the instance recognises, in [ACL registry]
 | --- | --- | --- |
 | 200 | response body | ACL registry was returned |
 | 403 | [error response](#error-response) | Credential type is refused, or the account holds neither `admin:authenticate` nor `*` |
+
+### Side effects
+
+The operation records one [Admin audit entry](#admin-audit-entry-object) with action `list_admin_acls`, target type `admin_acl`, target ID `0`, and metadata key `acl_count`.
 
 ### Rate limit
 
@@ -538,11 +643,9 @@ The registry is returned in this order by [List ACLs](#list-acls). A value outsi
 
 ## List audit log entries
 
-<RouteHeader method="GET" path="/v1/admin/audit-logs" />
+<RouteHeader method="GET" path="/v1/admin/audit-logs" auditReason />
 
 Returns a page of [Admin audit entry](#admin-audit-entry-object) objects with their resolved user, guild, and channel summaries. Requires `audit_log:view`.
-
-Reading the log records no entry of its own.
 
 ### Query parameters
 
@@ -552,6 +655,7 @@ Reading the log records no entry of its own.
 | admin_user_id? | snowflake | Return only entries recorded for this acting Admin |
 | target_type? | string | Return only entries recorded against this [audit target type](#audit-target-types) (1-64 characters) |
 | target_id? | string | Return only entries recorded against this target ID |
+| access? | string | `read` to return only read entries, `write` to return only write entries |
 | sort_by?<sup>2</sup> | string | `createdAt` or `relevance` (default `createdAt`) |
 | sort_order?<sup>2</sup> | string | `asc` or `desc` (default `desc`) |
 | limit? | integer | The maximum number of entries to return (1-200, default 50) |
@@ -581,13 +685,19 @@ Without an index, `q` is ignored, and a filtered page holds only the matches amo
 | 200 | response body | Audit page was returned |
 | 403 | [error response](#error-response) | Credential type is refused, or the account holds neither `audit_log:view` nor `*` |
 
+### Side effects
+
+The operation records one [Admin audit entry](#admin-audit-entry-object) with target type `audit_log` and target ID `0`. Its action is `search_audit_logs` when `q` is supplied and `list_audit_logs` otherwise. The metadata keys are `limit`, `offset`, `result_count` for the entries in this page, and `total`. The supplied filters add `filter_admin_user_id` and `access`, `filter_target_id` when `target_id` is a snowflake, and `filter_target_type` when `target_type` is lowercase letters and underscores. Any other `target_type` value adds `has_target_type_filter` instead. A search also records `sort_by` and `sort_order`. The query text is not recorded.
+
+The entry is written after the page is built, so it is never part of the page that recorded it.
+
 ### Rate limit
 
 100 requests per minute for each authenticated user, on the `admin:audit_log` bucket.
 
 ## Get audit log entry
 
-<RouteHeader method="GET" path="/v1/admin/audit-logs/{log_id}" />
+<RouteHeader method="GET" path="/v1/admin/audit-logs/{log_id}" auditReason />
 
 Returns one [Admin audit entry](#admin-audit-entry-object) object with the same resolved summaries the listing returns. Requires `audit_log:view`.
 
@@ -604,6 +714,10 @@ Returns one [Admin audit entry](#admin-audit-entry-object) object with the same 
 | 200 | [Admin audit entry](#admin-audit-entry-object) object | Audit entry was returned |
 | 403 | [error response](#error-response) | Credential type is refused, or the account holds neither `audit_log:view` nor `*` |
 | 404 | [error response](#error-response) | No entry has that identifier and the request returns `NOT_FOUND` |
+
+### Side effects
+
+The operation records one [Admin audit entry](#admin-audit-entry-object) with action `get_audit_log`, target type `audit_log`, the read entry's ID as target ID, and no metadata. A 404 records nothing.
 
 ### Rate limit
 

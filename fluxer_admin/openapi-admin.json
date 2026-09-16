@@ -934,6 +934,22 @@
 						"description": "Filter by target entity ID (user, channel, role, invite code, etc.)"
 					},
 					{
+						"name": "access",
+						"in": "query",
+						"required": false,
+						"schema": {
+							"description": "Only return entries recorded by reads or only entries recorded by writes",
+							"x-enumNames": ["read", "write"],
+							"x-enumDescriptions": [
+								"An entry recorded by an operation that only reads data",
+								"An entry recorded by an operation that changes data or triggers work"
+							],
+							"enum": ["read", "write"],
+							"type": "string"
+						},
+						"description": "Only return entries recorded by reads or only entries recorded by writes"
+					},
+					{
 						"name": "sort_by",
 						"in": "query",
 						"required": false,
@@ -12627,6 +12643,16 @@
 						}
 					},
 					"action": {"type": "string", "minLength": 1, "maxLength": 256},
+					"access": {
+						"description": "Whether the recorded operation read data or changed it",
+						"x-enumNames": ["read", "write"],
+						"x-enumDescriptions": [
+							"An entry recorded by an operation that only reads data",
+							"An entry recorded by an operation that changes data or triggers work"
+						],
+						"enum": ["read", "write"],
+						"type": "string"
+					},
 					"audit_log_reason": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 4000},
 					"metadata": {"type": "object", "additionalProperties": {"type": "string", "maxLength": 4000}},
 					"created_at": {"type": "string"}
@@ -12644,6 +12670,7 @@
 					"related_guilds",
 					"related_channels",
 					"action",
+					"access",
 					"audit_log_reason",
 					"metadata",
 					"created_at"

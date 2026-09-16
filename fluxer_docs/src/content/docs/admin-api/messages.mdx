@@ -139,7 +139,7 @@ A job identifier that never existed reports `not_found` too, so the two are indi
 
 ## List channel messages
 
-<RouteHeader method="GET" path="/v1/admin/channels/{channel_id}/messages" />
+<RouteHeader method="GET" path="/v1/admin/channels/{channel_id}/messages" auditReason />
 
 Returns one page of [Admin message](#admin-message-object) objects for one channel. Requires `message:lookup`.
 
@@ -187,13 +187,17 @@ The response has no cursor member. Page further by sending the ID of the oldest 
 
 A channel that does not exist returns an empty `messages` array with `has_more` false, so this operation never answers 404.
 
+### Side effects
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `list_channel_messages`, the target type `channel`, and the channel ID as the target. Its metadata keys are `limit`, `result_count` for the messages in this page, and `has_more`. A supplied `before` or `after` cursor is added under the same key.
+
 ### Rate limit
 
 100 requests per minute for each authenticated user, on the shared `admin:message:operation` bucket.
 
 ## Get message
 
-<RouteHeader method="GET" path="/v1/admin/channels/{channel_id}/messages/{message_id}" />
+<RouteHeader method="GET" path="/v1/admin/channels/{channel_id}/messages/{message_id}" auditReason />
 
 Returns the requested message together with the messages surrounding it, as one array of [Admin message](#admin-message-object) objects, oldest first. Requires `message:lookup`.
 
@@ -231,6 +235,10 @@ Returns the requested message together with the messages surrounding it, as one 
 | 200 | response body | Window was returned |
 
 An unknown message returns 200 with the window surrounding the position the missing ID would have occupied, so this operation never returns `UNKNOWN_MESSAGE`. An unknown channel returns 200 with an empty `messages` array.
+
+### Side effects
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `get_message`, the target type `message`, and the message ID as the target. Its metadata keys are `channel_id`, `context_limit`, `result_count` for the messages returned, and `found`, which is `true` when the requested message is in `messages` and `false` otherwise.
 
 ### Rate limit
 
@@ -281,7 +289,7 @@ One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with t
 
 ## Search messages
 
-<RouteHeader method="GET" path="/v1/admin/messages" />
+<RouteHeader method="GET" path="/v1/admin/messages" auditReason />
 
 Searches the message index of one channel, or resolves one message in that channel by message ID or by attachment identity. Requires `message:lookup`.
 
@@ -345,13 +353,23 @@ With no message search service configured the search mode returns an empty `mess
 A hit whose message no longer exists is dropped from the page and excluded from `total`.
 :::
 
+### Side effects
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `search_messages`. Its metadata key `mode` is `message` for a `message_id` lookup, `attachment` for an attachment lookup, and `search` otherwise, and `result_count` is the number of messages returned.
+
+- A `message_id` lookup has the target type `message` and the message ID as the target. It adds `channel_id`, `context_limit`, and `found`, which is `true` when the message is in `messages`.
+- An attachment lookup has the target type `channel` and the channel ID as the target. It adds `attachment_id`, `context_limit`, and `found`, which is `true` when the attachment resolved. A resolved attachment also adds `message_id`.
+- A search has the target type `channel` and the channel ID as the target. It adds `limit` and `total`, and `has_query` as `true` when `q` is supplied.
+
+The query text and the filename are not recorded. A 400 records nothing.
+
 ### Rate limit
 
 100 requests per minute for each authenticated user, on the shared `admin:message:operation` bucket.
 
 ## Get message shred job
 
-<RouteHeader method="GET" path="/v1/admin/messages/shreds/{job_id}" />
+<RouteHeader method="GET" path="/v1/admin/messages/shreds/{job_id}" auditReason />
 
 Returns one [message shred status](#message-shred-status-object) object. Requires `message:shred`.
 
@@ -370,6 +388,10 @@ Shred jobs are created by [Shred user messages](/admin-api/users/#shred-user-mes
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [message shred status](#message-shred-status-object) object | Job state was returned, including `not_found` for an unknown or expired job |
+
+### Side effects
+
+One [Admin audit entry](/admin-api/#admin-audit-entry-object) is recorded with the action `get_message_shred_status`, the target type `message_shred`, and the target ID `0`. Its metadata keys are `job_id` and `status`, which is the returned job state.
 
 ### Rate limit
 

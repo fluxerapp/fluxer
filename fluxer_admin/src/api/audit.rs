@@ -10,6 +10,7 @@ pub struct SearchAuditLogsParams {
     pub admin_user_id: Option<String>,
     pub target_id: Option<String>,
     pub target_type: Option<String>,
+    pub access: Option<String>,
     pub sort_by: Option<String>,
     pub sort_order: Option<String>,
     pub limit: u32,
@@ -21,6 +22,12 @@ impl AdminApiClient {
         &self,
         params: &SearchAuditLogsParams,
     ) -> ApiResult<AuditLogsListResponse> {
+        let access = params
+            .access
+            .as_deref()
+            .map(audit_access)
+            .transpose()?
+            .map(|value| value.to_string());
         let sort_by = params
             .sort_by
             .as_deref()
@@ -46,6 +53,7 @@ impl AdminApiClient {
                 params.target_type.as_deref().unwrap_or_default(),
             ),
             ("target_id", params.target_id.as_deref().unwrap_or_default()),
+            ("access", access.as_deref().unwrap_or_default()),
             ("sort_by", sort_by.as_deref().unwrap_or_default()),
             ("sort_order", sort_order.as_deref().unwrap_or_default()),
             ("limit", limit.as_str()),
@@ -53,6 +61,11 @@ impl AdminApiClient {
         ];
         self.get("/admin/audit-logs", Some(&query_params)).await
     }
+}
+
+fn audit_access(value: &str) -> ApiResult<generated_types::ListAdminAuditLogsAccess> {
+    generated_types::ListAdminAuditLogsAccess::try_from(value)
+        .map_err(|e| ApiError::Parse(e.to_string()))
 }
 
 fn audit_sort_by(value: &str) -> ApiResult<generated_types::ListAdminAuditLogsSortBy> {
@@ -84,6 +97,13 @@ mod tests {
     }
 
     #[test]
+    fn accepts_only_known_access_filters() {
+        assert_eq!(audit_access("read").unwrap().to_string(), "read");
+        assert_eq!(audit_access("write").unwrap().to_string(), "write");
+        assert!(audit_access("all").is_err());
+    }
+
+    #[test]
     fn rejects_lossy_audit_totals() {
         for total in [serde_json::json!(1.5), serde_json::json!(-1)] {
             let response = serde_json::json!({"logs": [], "total": total});
@@ -99,6 +119,7 @@ mod tests {
                 "admin_user_id": "234567890123456789",
                 "admin_user": null,
                 "action": "USER_UPDATE",
+                "access": "write",
                 "target_id": "345678901234567890",
                 "target_type": "user",
                 "target_user": null,
@@ -118,6 +139,26 @@ mod tests {
         assert_eq!(generated.logs[0].action.to_string(), "USER_UPDATE");
 
         let response: AuditLogsListResponse = serde_json::from_value(json.clone()).unwrap();
+        assert_eq!(response.logs[0].access.as_deref(), Some("write"));
         assert_eq!(serde_json::to_value(response).unwrap(), json);
+    }
+
+    #[test]
+    fn deserializes_audit_entries_from_an_api_without_access() {
+        let json = serde_json::json!({
+            "logs": [{
+                "log_id": "123456789012345678",
+                "admin_user_id": "234567890123456789",
+                "action": "USER_UPDATE",
+                "target_id": "345678901234567890",
+                "target_type": "user",
+                "audit_log_reason": null,
+                "metadata": {},
+                "created_at": "2026-09-11T12:00:00.000Z"
+            }],
+            "total": 1
+        });
+        let response: AuditLogsListResponse = serde_json::from_value(json).unwrap();
+        assert_eq!(response.logs[0].access, None);
     }
 }

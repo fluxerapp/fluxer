@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
+import {recordAdminRead, recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
 import {createGuildID} from '@app/api/BrandedTypes';
 import {requireAdminACL, requireAnyAdminACL} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
@@ -107,13 +109,24 @@ export function GuildAdminController(app: HonoApp) {
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
 			const query = ctx.req.valid('query');
-			return ctx.json(
-				await adminService.searchService.searchGuilds({
-					query: query.q,
+			const response = await adminService.searchService.searchGuilds({
+				query: query.q,
+				limit: query.limit,
+				offset: query.offset,
+			});
+			await recordAdminRead(ctx, {
+				targetType: 'guild',
+				targetId: 0n,
+				action: AdminAuditReadActions.SEARCH_GUILDS,
+				metadata: {
+					has_query: query.q === undefined ? undefined : true,
 					limit: query.limit,
 					offset: query.offset,
-				}),
-			);
+					result_count: response.guilds.length,
+					total: response.total,
+				},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.get(
@@ -133,11 +146,15 @@ export function GuildAdminController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
-			return ctx.json(
-				await adminService.guildServiceAggregate.lookupService.lookupGuild({
-					guild_id: ctx.req.valid('param').guild_id,
-				}),
-			);
+			const {guild_id} = ctx.req.valid('param');
+			const response = await adminService.guildServiceAggregate.lookupService.lookupGuild({guild_id});
+			await recordAdminRead(ctx, {
+				targetType: 'guild',
+				targetId: guild_id,
+				action: AdminAuditReadActions.GET_GUILD,
+				metadata: {found: response.guild !== null},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.patch(
@@ -215,6 +232,16 @@ export function GuildAdminController(app: HonoApp) {
 			if (!guild) {
 				throw new UnknownGuildError();
 			}
+			const appliedFieldGroup =
+				body.fields !== undefined ||
+				hasGuildSettingsUpdate(body) ||
+				hasGuildFeatureUpdate(body) ||
+				body.name !== undefined ||
+				body.vanity_url_code !== undefined ||
+				body.new_owner_id !== undefined;
+			if (!appliedFieldGroup) {
+				await recordAdminWrite(ctx, {targetType: 'guild', targetId: guildIdRaw, action: 'update_guild'});
+			}
 			return ctx.json({
 				guild: {
 					id: guild.id,
@@ -275,14 +302,25 @@ export function GuildAdminController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
+			const {guild_id} = ctx.req.valid('param');
 			const query = ctx.req.valid('query');
-			return ctx.json(
-				await adminService.guildServiceAggregate.lookupService.listGuildMembers({
-					guild_id: ctx.req.valid('param').guild_id,
-					limit: query.limit,
-					offset: query.offset,
-				}),
-			);
+			const response = await adminService.guildServiceAggregate.lookupService.listGuildMembers({
+				guild_id,
+				limit: query.limit,
+				offset: query.offset,
+			});
+			await recordAdminRead(ctx, {
+				targetType: 'guild',
+				targetId: guild_id,
+				action: AdminAuditReadActions.LIST_GUILD_MEMBERS,
+				metadata: {
+					limit: response.limit,
+					offset: response.offset,
+					result_count: response.members.length,
+					total: response.total,
+				},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.put(
@@ -391,7 +429,14 @@ export function GuildAdminController(app: HonoApp) {
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
 			const guildId = createGuildID(ctx.req.valid('param').guild_id);
-			return ctx.json(await adminService.guildServiceAggregate.lookupService.listGuildEmojis(guildId));
+			const response = await adminService.guildServiceAggregate.lookupService.listGuildEmojis(guildId);
+			await recordAdminRead(ctx, {
+				targetType: 'guild',
+				targetId: guildId,
+				action: AdminAuditReadActions.LIST_GUILD_EMOJIS,
+				metadata: {result_count: response.emojis.length},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.get(
@@ -412,7 +457,14 @@ export function GuildAdminController(app: HonoApp) {
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
 			const guildId = createGuildID(ctx.req.valid('param').guild_id);
-			return ctx.json(await adminService.guildServiceAggregate.lookupService.listGuildStickers(guildId));
+			const response = await adminService.guildServiceAggregate.lookupService.listGuildStickers(guildId);
+			await recordAdminRead(ctx, {
+				targetType: 'guild',
+				targetId: guildId,
+				action: AdminAuditReadActions.LIST_GUILD_STICKERS,
+				metadata: {result_count: response.stickers.length},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.get(
@@ -433,17 +485,30 @@ export function GuildAdminController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
+			const {guild_id} = ctx.req.valid('param');
 			const query = ctx.req.valid('query');
-			return ctx.json(
-				await adminService.guildServiceAggregate.listGuildAuditLogs({
-					guild_id: ctx.req.valid('param').guild_id,
+			const response = await adminService.guildServiceAggregate.listGuildAuditLogs({
+				guild_id,
+				limit: query.limit,
+				before: query.before,
+				after: query.after,
+				user_id: query.user_id,
+				action_type: query.action_type,
+			});
+			await recordAdminRead(ctx, {
+				targetType: 'guild',
+				targetId: guild_id,
+				action: AdminAuditReadActions.LIST_GUILD_AUDIT_LOGS,
+				metadata: {
 					limit: query.limit,
 					before: query.before,
 					after: query.after,
-					user_id: query.user_id,
+					filter_user_id: query.user_id,
 					action_type: query.action_type,
-				}),
-			);
+					result_count: response.audit_log_entries.length,
+				},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.post(

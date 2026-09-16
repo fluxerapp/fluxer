@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
+import {recordAdminRead} from '@app/api/admin/AdminAuditRecorder';
 import {createAttachmentID, createChannelID, createMessageID, createReportID} from '@app/api/BrandedTypes';
 import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
@@ -57,34 +59,69 @@ export function MessageAdminController(app: HonoApp) {
 			const adminService = ctx.get('adminService');
 			const query = ctx.req.valid('query');
 			if (query.message_id != null) {
-				return ctx.json(
-					await adminService.messageService.lookupMessage({
+				const messageId = query.message_id;
+				const response = await adminService.messageService.lookupMessage({
+					channel_id: query.channel_id,
+					message_id: messageId,
+					context_limit: query.context_limit,
+				});
+				await recordAdminRead(ctx, {
+					targetType: 'message',
+					targetId: messageId,
+					action: AdminAuditReadActions.SEARCH_MESSAGES,
+					metadata: {
+						mode: 'message',
 						channel_id: query.channel_id,
-						message_id: query.message_id,
 						context_limit: query.context_limit,
-					}),
-				);
+						found: response.messages.some((message) => message.id === messageId.toString()),
+						result_count: response.messages.length,
+					},
+				});
+				return ctx.json(response);
 			}
 			if (query.attachment_id != null) {
 				if (query.filename == null) {
 					throw InputValidationError.fromCode('filename', ValidationErrorCodes.INVALID_FORMAT);
 				}
-				return ctx.json(
-					await adminService.messageService.lookupMessageByAttachment({
-						channel_id: query.channel_id,
-						attachment_id: query.attachment_id,
-						filename: query.filename,
-						context_limit: query.context_limit,
-					}),
-				);
-			}
-			return ctx.json(
-				await adminService.messageService.searchChannelMessages({
+				const response = await adminService.messageService.lookupMessageByAttachment({
 					channel_id: query.channel_id,
-					query: query.q ?? '',
+					attachment_id: query.attachment_id,
+					filename: query.filename,
+					context_limit: query.context_limit,
+				});
+				await recordAdminRead(ctx, {
+					targetType: 'channel',
+					targetId: query.channel_id,
+					action: AdminAuditReadActions.SEARCH_MESSAGES,
+					metadata: {
+						mode: 'attachment',
+						attachment_id: query.attachment_id,
+						message_id: response.message_id,
+						context_limit: query.context_limit,
+						found: response.message_id !== null,
+						result_count: response.messages.length,
+					},
+				});
+				return ctx.json(response);
+			}
+			const response = await adminService.messageService.searchChannelMessages({
+				channel_id: query.channel_id,
+				query: query.q ?? '',
+				limit: query.limit,
+			});
+			await recordAdminRead(ctx, {
+				targetType: 'channel',
+				targetId: query.channel_id,
+				action: AdminAuditReadActions.SEARCH_MESSAGES,
+				metadata: {
+					mode: 'search',
+					has_query: query.q === undefined ? undefined : true,
 					limit: query.limit,
-				}),
-			);
+					result_count: response.messages.length,
+					total: response.total,
+				},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.post(
@@ -139,7 +176,14 @@ export function MessageAdminController(app: HonoApp) {
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
 			const {job_id} = ctx.req.valid('param');
-			return ctx.json(await adminService.messageShredService.getMessageShredStatus(job_id.toString()));
+			const response = await adminService.messageShredService.getMessageShredStatus(job_id.toString());
+			await recordAdminRead(ctx, {
+				targetType: 'message_shred',
+				targetId: 0n,
+				action: AdminAuditReadActions.GET_MESSAGE_SHRED_STATUS,
+				metadata: {job_id, status: response.status},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.get(
@@ -162,14 +206,25 @@ export function MessageAdminController(app: HonoApp) {
 			const adminService = ctx.get('adminService');
 			const {channel_id} = ctx.req.valid('param');
 			const {limit, before, after} = ctx.req.valid('query');
-			return ctx.json(
-				await adminService.messageService.browseChannel({
-					channel_id,
+			const response = await adminService.messageService.browseChannel({
+				channel_id,
+				before,
+				after,
+				limit,
+			});
+			await recordAdminRead(ctx, {
+				targetType: 'channel',
+				targetId: channel_id,
+				action: AdminAuditReadActions.LIST_CHANNEL_MESSAGES,
+				metadata: {
+					limit,
 					before,
 					after,
-					limit,
-				}),
-			);
+					result_count: response.messages.length,
+					has_more: response.has_more,
+				},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.get(
@@ -192,13 +247,23 @@ export function MessageAdminController(app: HonoApp) {
 			const adminService = ctx.get('adminService');
 			const {channel_id, message_id} = ctx.req.valid('param');
 			const {context_limit} = ctx.req.valid('query');
-			return ctx.json(
-				await adminService.messageService.lookupMessage({
+			const response = await adminService.messageService.lookupMessage({
+				channel_id,
+				message_id,
+				context_limit,
+			});
+			await recordAdminRead(ctx, {
+				targetType: 'message',
+				targetId: message_id,
+				action: AdminAuditReadActions.GET_MESSAGE,
+				metadata: {
 					channel_id,
-					message_id,
 					context_limit,
-				}),
-			);
+					found: response.messages.some((message) => message.id === message_id.toString()),
+					result_count: response.messages.length,
+				},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.delete(

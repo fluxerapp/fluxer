@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
+import {recordAdminRead} from '@app/api/admin/AdminAuditRecorder';
 import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
@@ -53,7 +55,15 @@ export function VoiceAdminController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
-			return ctx.json(await adminService.voiceService.listVoiceRegions(ctx.req.valid('query')));
+			const query = ctx.req.valid('query');
+			const response = await adminService.voiceService.listVoiceRegions(query);
+			await recordAdminRead(ctx, {
+				targetType: 'voice_region',
+				targetId: 0n,
+				action: AdminAuditReadActions.LIST_VOICE_REGIONS,
+				metadata: {include_servers: query.include_servers, result_count: response.regions.length},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.post(
@@ -98,12 +108,16 @@ export function VoiceAdminController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
-			return ctx.json(
-				await adminService.voiceService.getVoiceRegion({
-					id: ctx.req.valid('param').region_id,
-					include_servers: ctx.req.valid('query').include_servers,
-				}),
-			);
+			const {region_id} = ctx.req.valid('param');
+			const {include_servers} = ctx.req.valid('query');
+			const response = await adminService.voiceService.getVoiceRegion({id: region_id, include_servers});
+			await recordAdminRead(ctx, {
+				targetType: 'voice_region',
+				targetId: 0n,
+				action: AdminAuditReadActions.GET_VOICE_REGION,
+				metadata: {region_id, include_servers, found: response.region !== null},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.patch(
@@ -182,7 +196,15 @@ export function VoiceAdminController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
-			return ctx.json(await adminService.voiceService.listVoiceServers({region_id: ctx.req.valid('param').region_id}));
+			const {region_id} = ctx.req.valid('param');
+			const response = await adminService.voiceService.listVoiceServers({region_id});
+			await recordAdminRead(ctx, {
+				targetType: 'voice_server',
+				targetId: 0n,
+				action: AdminAuditReadActions.LIST_VOICE_SERVERS,
+				metadata: {region_id, result_count: response.servers.length},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.post(
@@ -234,7 +256,14 @@ export function VoiceAdminController(app: HonoApp) {
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
 			const {region_id, server_id} = ctx.req.valid('param');
-			return ctx.json(await adminService.voiceService.getVoiceServer({region_id, server_id}));
+			const response = await adminService.voiceService.getVoiceServer({region_id, server_id});
+			await recordAdminRead(ctx, {
+				targetType: 'voice_server',
+				targetId: 0n,
+				action: AdminAuditReadActions.GET_VOICE_SERVER,
+				metadata: {region_id, server_id, found: response.server !== null},
+			});
+			return ctx.json(response);
 		},
 	);
 	app.patch(
