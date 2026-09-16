@@ -5,18 +5,13 @@ import {createHttpCachePurgeAdapter} from '@app/api/infrastructure/HttpCachePurg
 import {createNoneCachePurgeAdapter} from '@app/api/infrastructure/NoneCachePurgeAdapter';
 import type {CachePurgeAdapterName} from '@fluxer/config/src/MasterConfig';
 
-export interface CachePurgeBatch {
-	readonly exact: ReadonlyArray<string>;
-	readonly prefix: ReadonlyArray<string>;
-}
-
 export type CachePurgeOutcome =
 	| {readonly kind: 'purged'}
-	| {readonly kind: 'invalid_entries'; readonly status: number}
+	| {readonly kind: 'rejected'; readonly status: number}
 	| {readonly kind: 'failed'; readonly status: number | null; readonly error: unknown};
 
 export interface CachePurgeAdapter {
-	purge(batch: CachePurgeBatch): Promise<CachePurgeOutcome>;
+	purge(prefixes: ReadonlyArray<string>): Promise<CachePurgeOutcome>;
 }
 
 const CACHE_PURGE_ADAPTERS = {

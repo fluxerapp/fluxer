@@ -484,7 +484,8 @@ function validateCachePurgeConfig(config: MasterConfig): void {
 	) {
 		throw new Error('FLUXER_CACHE_PURGE_HTTP_ENDPOINT must be an absolute http or https URL without credentials');
 	}
-	if (!/^[\x21-\x7e]*$/u.test(cachePurge.http.token)) {
+	requireString(cachePurge.http.token, 'FLUXER_CACHE_PURGE_HTTP_TOKEN');
+	if (!/^[\x21-\x7e]+$/u.test(cachePurge.http.token)) {
 		throw new Error('FLUXER_CACHE_PURGE_HTTP_TOKEN must contain only visible ASCII characters');
 	}
 	assertIntegerInRange(cachePurge.http.timeout_ms, 'FLUXER_CACHE_PURGE_HTTP_TIMEOUT_MS', 1_000, 10_000);

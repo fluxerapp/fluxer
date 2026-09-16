@@ -29,7 +29,7 @@ export interface IKVSubscription {
 }
 
 export interface KVPurgeBatchResult {
-	urls: Array<string>;
+	entries: Array<string>;
 	tokensConsumed: number;
 }
 

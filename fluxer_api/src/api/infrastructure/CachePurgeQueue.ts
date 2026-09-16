@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {CachePurgeBatch} from '@app/api/infrastructure/CachePurgeAdapter';
+import {canonicalizePurgeUrl} from '@app/api/infrastructure/CachePurgePaths';
 import {Logger} from '@app/api/Logger';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 
@@ -8,112 +8,69 @@ export interface IPurgeQueue {
 	addUrls(urls: Array<string>): Promise<void>;
 }
 
-const EXACT_QUEUE_KEY = 'cache_purge:exact';
-const PREFIX_QUEUE_KEY = 'cache_purge:prefix';
-const EXACT_BUCKET_KEY = 'cache_purge:budget:exact';
-const PREFIX_BUCKET_KEY = 'cache_purge:budget:prefix';
+const QUEUE_KEY = 'cache_purge:queue';
+const BUDGET_KEY = 'cache_purge:budget';
 const REJECTED_KEY = 'cache_purge:rejected';
-const EXACT_MAX_TOKENS = 120;
-const EXACT_REFILL_RATE = 5;
-const EXACT_REFILL_INTERVAL_MS = 1000;
-const PREFIX_MAX_TOKENS = 20;
-const PREFIX_REFILL_RATE = 1;
-const PREFIX_REFILL_INTERVAL_MS = 2000;
-
-function isPrefix(url: string): boolean {
-	return url.endsWith('*') || url.endsWith('/');
-}
+const MAX_TOKENS = 120;
+const REFILL_RATE = 5;
+const REFILL_INTERVAL_MS = 1000;
 
 export class CachePurgeQueue implements IPurgeQueue {
-	private readonly kvClient: IKVProvider;
-
-	constructor(kvClient: IKVProvider) {
-		this.kvClient = kvClient;
-	}
+	constructor(private readonly kvClient: IKVProvider) {}
 
 	async addUrls(urls: Array<string>): Promise<void> {
-		if (urls.length === 0) {
-			return;
-		}
-		const exactUrls: Array<string> = [];
-		const prefixUrls: Array<string> = [];
+		const prefixes = new Set<string>();
 		for (const url of urls) {
-			const trimmed = url.trim();
-			if (trimmed === '') {
+			const canonical = canonicalizePurgeUrl(url);
+			if (canonical.length === 0) {
+				Logger.warn({url}, 'Skipped a cache purge URL that is not a media CDN object');
 				continue;
 			}
-			if (isPrefix(trimmed)) {
-				prefixUrls.push(trimmed);
-			} else {
-				exactUrls.push(trimmed);
+			for (const prefix of canonical) {
+				prefixes.add(prefix);
 			}
 		}
+		if (prefixes.size === 0) {
+			return;
+		}
 		try {
-			await this.addToSets({exact: exactUrls, prefix: prefixUrls});
-			Logger.debug({exact: exactUrls.length, prefix: prefixUrls.length}, 'Added URLs to cache purge queue');
+			await this.kvClient.sadd(QUEUE_KEY, ...prefixes);
+			Logger.debug({prefixes: prefixes.size}, 'Added prefixes to the cache purge queue');
 		} catch (error) {
-			Logger.error(
-				{error, exact: exactUrls.length, prefix: prefixUrls.length},
-				'Failed to add URLs to cache purge queue',
-			);
+			Logger.error({error, prefixes: prefixes.size}, 'Failed to add prefixes to the cache purge queue');
 			throw error;
 		}
 	}
 
-	async dequeueBatch(): Promise<CachePurgeBatch> {
-		const exact = await this.kvClient.dequeuePurgeBatch(
-			EXACT_QUEUE_KEY,
-			EXACT_BUCKET_KEY,
-			EXACT_MAX_TOKENS,
-			EXACT_MAX_TOKENS,
-			EXACT_REFILL_RATE,
-			EXACT_REFILL_INTERVAL_MS,
+	async dequeueBatch(): Promise<Array<string>> {
+		const batch = await this.kvClient.dequeuePurgeBatch(
+			QUEUE_KEY,
+			BUDGET_KEY,
+			MAX_TOKENS,
+			MAX_TOKENS,
+			REFILL_RATE,
+			REFILL_INTERVAL_MS,
 		);
+		return batch.entries;
+	}
+
+	async requeue(prefixes: ReadonlyArray<string>): Promise<void> {
+		if (prefixes.length === 0) {
+			return;
+		}
 		try {
-			const prefix = await this.kvClient.dequeuePurgeBatch(
-				PREFIX_QUEUE_KEY,
-				PREFIX_BUCKET_KEY,
-				PREFIX_MAX_TOKENS,
-				PREFIX_MAX_TOKENS,
-				PREFIX_REFILL_RATE,
-				PREFIX_REFILL_INTERVAL_MS,
-			);
-			return {exact: exact.urls, prefix: prefix.urls};
+			await this.kvClient.sadd(QUEUE_KEY, ...prefixes);
 		} catch (error) {
-			await this.requeue({exact: exact.urls, prefix: []});
+			Logger.error({error, prefixes: prefixes.length}, 'Failed to requeue cache purge prefixes');
 			throw error;
 		}
 	}
 
-	async requeue(batch: CachePurgeBatch): Promise<void> {
-		try {
-			await this.addToSets(batch);
-		} catch (error) {
-			Logger.error(
-				{error, exact: batch.exact.length, prefix: batch.prefix.length},
-				'Failed to requeue cache purge entries',
-			);
-			throw error;
+	async reject(prefixes: ReadonlyArray<string>): Promise<void> {
+		if (prefixes.length === 0) {
+			return;
 		}
-	}
-
-	async reject(batch: CachePurgeBatch): Promise<void> {
-		await this.kvClient.sadd(REJECTED_KEY, ...batch.exact, ...batch.prefix);
-		Logger.error(
-			{exact: batch.exact.length, prefix: batch.prefix.length, key: REJECTED_KEY},
-			'Set aside cache purge entries the endpoint rejected',
-		);
-	}
-
-	private async addToSets(batch: CachePurgeBatch): Promise<void> {
-		const ops: Array<Promise<number>> = [];
-		if (batch.exact.length > 0) {
-			ops.push(this.kvClient.sadd(EXACT_QUEUE_KEY, ...batch.exact));
-		}
-		if (batch.prefix.length > 0) {
-			ops.push(this.kvClient.sadd(PREFIX_QUEUE_KEY, ...batch.prefix));
-		}
-		await Promise.all(ops);
+		await this.kvClient.sadd(REJECTED_KEY, ...prefixes);
 	}
 }
 

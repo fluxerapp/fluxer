@@ -572,6 +572,14 @@ describe('ConfigLoader', () => {
 		await expect(loadConfig()).rejects.toThrow('FLUXER_CACHE_PURGE_HTTP_ENDPOINT is required');
 	});
 
+	test('rejects the http cache purge adapter without a token', async () => {
+		stubMinimalEnv({
+			FLUXER_CACHE_PURGE_ADAPTER: 'http',
+			FLUXER_CACHE_PURGE_HTTP_ENDPOINT: 'https://purge.internal/purge',
+		});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_CACHE_PURGE_HTTP_TOKEN is required');
+	});
+
 	test('rejects a cache purge endpoint that is not an absolute http URL', async () => {
 		for (const endpoint of ['/purge', 'purge.internal/purge', 'ftp://purge.internal/purge']) {
 			stubMinimalEnv({FLUXER_CACHE_PURGE_ADAPTER: 'http', FLUXER_CACHE_PURGE_HTTP_ENDPOINT: endpoint});
@@ -596,6 +604,7 @@ describe('ConfigLoader', () => {
 			stubMinimalEnv({
 				FLUXER_CACHE_PURGE_ADAPTER: 'http',
 				FLUXER_CACHE_PURGE_HTTP_ENDPOINT: 'https://purge.internal/purge',
+				FLUXER_CACHE_PURGE_HTTP_TOKEN: 'purge-token',
 				FLUXER_CACHE_PURGE_HTTP_TIMEOUT_MS: timeout,
 			});
 			await expect(loadConfig()).rejects.toThrow(
