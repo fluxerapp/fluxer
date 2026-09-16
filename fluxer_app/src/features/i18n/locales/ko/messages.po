@@ -8561,7 +8561,7 @@ msgid "Community message notifications"
 msgstr "커뮤니티 메시지 알림"
 
 #. Developer control label for the community MFA requirement banner.
-#: src/features/devtools/components/NagbarControls.ts:71
+#: src/features/devtools/components/NagbarControls.ts:76
 msgid "Community MFA requirement nagbar"
 msgstr "커뮤니티 MFA 필수 알림 표시줄"
 
@@ -8995,7 +8995,7 @@ msgid "Connection ID"
 msgstr "연결 ID"
 
 #. Banner shown while the app is still loading and the connection is taking unusually long. Phrased as a question offering help.
-#: src/features/app/hooks/useConnectionNotice.ts:33
+#: src/features/app/hooks/useConnectionNotice.ts:34
 msgid "Connection issues?"
 msgstr "연결에 문제가 있나요?"
 
@@ -9009,7 +9009,7 @@ msgid "Connection lost"
 msgstr "연결 끊김"
 
 #. Banner shown when the app loses its gateway connection after having loaded. The app stays usable, so keep the tone calm.
-#: src/features/app/hooks/useConnectionNotice.ts:38
+#: src/features/app/hooks/useConnectionNotice.ts:39
 msgid "Connection lost. Reconnecting…"
 msgstr "연결이 끊겼습니다. 다시 연결 중…"
 
@@ -10569,12 +10569,12 @@ msgid "Current uses:"
 msgstr "현재 사용 횟수:"
 
 #. Developer nagbar status: the banner is dismissed in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:104
+#: src/features/devtools/components/NagbarControls.ts:109
 msgid "Currently dismissed"
 msgstr "현재 닫힘"
 
 #. Developer nagbar status: the banner is showing in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:108
+#: src/features/devtools/components/NagbarControls.ts:113
 msgid "Currently showing"
 msgstr "현재 표시 중"
 
@@ -11735,7 +11735,7 @@ msgid "Desktop inactivity before mobile push"
 msgstr "모바일 푸시 알림 전 데스크톱 비활성 시간"
 
 #. Developer control label for the desktop-notification banner.
-#: src/features/devtools/components/NagbarControls.ts:35
+#: src/features/devtools/components/NagbarControls.ts:40
 msgid "Desktop notification nagbar"
 msgstr "데스크톱 알림 표시줄"
 
@@ -13252,7 +13252,7 @@ msgid "Email us and a person will review your account. Tell us you cannot verify
 msgstr "이메일로 문의하시면 담당자가 계정을 검토합니다. SMS 인증이 불가능하다고 알려주시면 저희가 처리하겠습니다. 답장은 이메일로 발송되므로 즉시 확인은 어렵습니다."
 
 #. Developer control label for the email-verification banner.
-#: src/features/devtools/components/NagbarControls.ts:31
+#: src/features/devtools/components/NagbarControls.ts:36
 msgid "Email verification nagbar"
 msgstr "이메일 인증 알림 표시줄"
 
@@ -15421,12 +15421,12 @@ msgid "For your security, please confirm it's you to continue."
 msgstr "안전을 위해 본인 확인 후 계속해 주세요."
 
 #. Developer nagbar override status: the banner is forced to hide.
-#: src/features/devtools/components/NagbarControls.ts:92
+#: src/features/devtools/components/NagbarControls.ts:97
 msgid "Force disabled"
 msgstr "강제 비활성화됨"
 
 #. Developer nagbar override status: the banner is forced to show.
-#: src/features/devtools/components/NagbarControls.ts:88
+#: src/features/devtools/components/NagbarControls.ts:93
 msgid "Force enabled"
 msgstr "강제 활성화됨"
 
@@ -16165,7 +16165,7 @@ msgid "Gift inventory flow"
 msgstr "선물함 플로우"
 
 #. Developer control label for the gift-inventory banner.
-#: src/features/devtools/components/NagbarControls.ts:51
+#: src/features/devtools/components/NagbarControls.ts:56
 msgid "Gift inventory nagbar"
 msgstr "선물함 알림 표시줄"
 
@@ -18454,7 +18454,7 @@ msgid "Invites disabled"
 msgstr "초대 비활성화됨"
 
 #. Developer control label for the invites-disabled banner.
-#: src/features/devtools/components/NagbarControls.ts:67
+#: src/features/devtools/components/NagbarControls.ts:72
 msgid "Invites disabled nagbar"
 msgstr "초대 비활성화 알림 표시줄"
 
@@ -25161,12 +25161,12 @@ msgid "Premium badge"
 msgstr "프리미엄 배지"
 
 #. Developer control label for the premium-expired banner.
-#: src/features/devtools/components/NagbarControls.ts:43
+#: src/features/devtools/components/NagbarControls.ts:48
 msgid "Premium expired nagbar"
 msgstr "프리미엄 만료 알림 표시줄"
 
 #. Developer control label for the premium grace-period banner.
-#: src/features/devtools/components/NagbarControls.ts:39
+#: src/features/devtools/components/NagbarControls.ts:44
 msgid "Premium grace period nagbar"
 msgstr "프리미엄 유예 기간 알림 표시줄"
 
@@ -25176,7 +25176,7 @@ msgid "Premium model"
 msgstr "프리미엄 모델"
 
 #. Developer control label for the premium-onboarding banner.
-#: src/features/devtools/components/NagbarControls.ts:47
+#: src/features/devtools/components/NagbarControls.ts:52
 msgid "Premium onboarding nagbar"
 msgstr "프리미엄 온보딩 알림 표시줄"
 
@@ -29497,6 +29497,11 @@ msgstr "토큰 파일 제공"
 msgid "Service error"
 msgstr "서비스 오류"
 
+#. Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the service incident banner.
+#: src/features/devtools/components/NagbarControls.ts:27
+msgid "Service incident nagbar"
+msgstr "서비스 장애 알림"
+
 #. Section heading in the voice connection status popout for current call/session debug stats.
 #: src/features/voice/components/voice_connection_status/shared.ts:62
 msgid "Session"
@@ -32775,7 +32780,7 @@ msgid "Tennessee"
 msgstr "테네시"
 
 #. Developer control label for the terms-acceptance banner.
-#: src/features/devtools/components/NagbarControls.ts:59
+#: src/features/devtools/components/NagbarControls.ts:64
 msgid "Terms acceptance nagbar"
 msgstr "약관 동의 알림 표시줄"
 
@@ -35293,7 +35298,7 @@ msgid "Unclaimed account"
 msgstr "미등록 계정"
 
 #. Developer control label for the unclaimed-account banner.
-#: src/features/devtools/components/NagbarControls.ts:27
+#: src/features/devtools/components/NagbarControls.ts:32
 msgid "Unclaimed account nagbar"
 msgstr "미등록 계정 알림 표시줄"
 
@@ -36815,27 +36820,27 @@ msgid "Uses:"
 msgstr "사용 횟수:"
 
 #. Developer nagbar status: banner follows real account state.
-#: src/features/devtools/components/NagbarControls.ts:96
+#: src/features/devtools/components/NagbarControls.ts:101
 msgid "Using actual account state"
 msgstr "실제 계정 상태 사용 중"
 
 #. Developer nagbar status: banner follows real gift inventory state.
-#: src/features/devtools/components/NagbarControls.ts:116
+#: src/features/devtools/components/NagbarControls.ts:121
 msgid "Using actual gift inventory state"
 msgstr "실제 선물 재고 상태 사용 중"
 
 #. Developer nagbar status: banner follows real premium subscription state.
-#: src/features/devtools/components/NagbarControls.ts:112
+#: src/features/devtools/components/NagbarControls.ts:117
 msgid "Using actual premium state"
 msgstr "실제 프리미엄 상태 사용 중"
 
 #. Developer nagbar status: banner follows the real app state.
-#: src/features/devtools/components/NagbarControls.ts:120
+#: src/features/devtools/components/NagbarControls.ts:125
 msgid "Using actual state"
 msgstr "실제 상태 사용 중"
 
 #. Developer nagbar status: banner follows real email verification state.
-#: src/features/devtools/components/NagbarControls.ts:100
+#: src/features/devtools/components/NagbarControls.ts:105
 msgid "Using actual verification state"
 msgstr "실제 인증 상태 사용 중"
 
@@ -37422,7 +37427,7 @@ msgid "View help article"
 msgstr "도움말 보기"
 
 #. Button on the connection banner when an incident is ongoing. Opens that incident on the status page.
-#: src/features/app/hooks/useConnectionNotice.ts:47
+#: src/features/app/hooks/useConnectionNotice.ts:48
 msgid "View incident details"
 msgstr "장애 세부 정보 보기"
 
@@ -37432,7 +37437,7 @@ msgid "View incoming call"
 msgstr "수신 전화 보기"
 
 #. Button on the connection banner when maintenance is ongoing. Opens that maintenance on the status page.
-#: src/features/app/hooks/useConnectionNotice.ts:51
+#: src/features/app/hooks/useConnectionNotice.ts:52
 msgid "View maintenance details"
 msgstr "점검 상세 보기"
 
@@ -37474,7 +37479,7 @@ msgid "View reactions"
 msgstr "반응 보기"
 
 #. Button on the connection banner. Opens the external service status page.
-#: src/features/app/hooks/useConnectionNotice.ts:43
+#: src/features/app/hooks/useConnectionNotice.ts:44
 msgid "View status page"
 msgstr "상태 페이지 보기"
 
@@ -37554,7 +37559,7 @@ msgid "Visionary (lifetime {premiumProductName})"
 msgstr "Visionary (평생 {premiumProductName})"
 
 #. Developer control label for the Visionary two-factor-authentication banner.
-#: src/features/devtools/components/NagbarControls.ts:55
+#: src/features/devtools/components/NagbarControls.ts:60
 msgid "Visionary 2FA nagbar"
 msgstr "Visionary 2단계 인증 알림 표시줄"
 
@@ -37812,7 +37817,7 @@ msgid "Voice region"
 msgstr "음성 지역"
 
 #. Developer control label for the voice-session-restore banner.
-#: src/features/devtools/components/NagbarControls.ts:63
+#: src/features/devtools/components/NagbarControls.ts:68
 msgid "Voice session restore nagbar"
 msgstr "음성 세션 복원 알림 표시줄"
 

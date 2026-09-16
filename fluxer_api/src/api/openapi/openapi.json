@@ -29384,6 +29384,14 @@
 					"theme_color": {
 						"anyOf": [{"type": "string"}, {"type": "null"}],
 						"description": "Optional browser theme color"
+					},
+					"status_page_url": {
+						"anyOf": [{"type": "string"}, {"type": "null"}],
+						"description": "Optional public status page URL"
+					},
+					"status_page_incident_history_url": {
+						"anyOf": [{"type": "string"}, {"type": "null"}],
+						"description": "Optional public status page incident history URL"
 					}
 				},
 				"required": [
@@ -29393,7 +29401,9 @@
 					"logo_url",
 					"wordmark_url",
 					"favicon_url",
-					"theme_color"
+					"theme_color",
+					"status_page_url",
+					"status_page_incident_history_url"
 				],
 				"additionalProperties": false,
 				"description": "Branding values safe to expose to clients"

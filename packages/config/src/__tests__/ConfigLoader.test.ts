@@ -460,6 +460,8 @@ describe('ConfigLoader', () => {
 			FLUXER_APP_WORDMARK_URL: 'https://assets.example/wordmark.png',
 			FLUXER_APP_FAVICON_URL: 'https://assets.example/favicon.png',
 			FLUXER_APP_THEME_COLOR: '#123456',
+			FLUXER_APP_STATUS_PAGE_URL: 'https://status.example',
+			FLUXER_APP_STATUS_PAGE_INCIDENT_HISTORY_URL: 'https://status.example/history',
 			FLUXER_INSTANCE_SETUP_CONFIGURED: 'true',
 			FLUXER_ABUSE_INBOUND_PHONE_COUNTRY_CODES: 'AA,BB',
 			FLUXER_ABUSE_PHONE_INBOUND_REQUIRED_PREFIXES: '+101,+202',
@@ -484,6 +486,8 @@ describe('ConfigLoader', () => {
 			wordmark_url: 'https://assets.example/wordmark.png',
 			favicon_url: 'https://assets.example/favicon.png',
 			theme_color: '#123456',
+			status_page_url: 'https://status.example',
+			status_page_incident_history_url: 'https://status.example/history',
 		});
 		expect(config.instance.setup.configured).toBe(true);
 		expect(config.instance.abuse_policy).toEqual({

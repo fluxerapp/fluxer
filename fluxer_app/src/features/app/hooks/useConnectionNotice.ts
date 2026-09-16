@@ -2,9 +2,9 @@
 
 import {canSwitchAccountFromStalledConnection} from '@app/features/app/ConnectionRecovery';
 import {isClientBooting, isClientReconnecting} from '@app/features/app/state/ClientReadiness';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import Nagbar from '@app/features/ui/state/Nagbar';
 import StatusPage from '@app/features/user/state/StatusPage';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {useEffect, useState} from 'react';

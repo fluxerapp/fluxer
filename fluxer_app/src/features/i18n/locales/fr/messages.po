@@ -8561,7 +8561,7 @@ msgid "Community message notifications"
 msgstr "Notifications des messages de communauté"
 
 #. Developer control label for the community MFA requirement banner.
-#: src/features/devtools/components/NagbarControls.ts:71
+#: src/features/devtools/components/NagbarControls.ts:76
 msgid "Community MFA requirement nagbar"
 msgstr "Bannière d’exigence MFA de la communauté"
 
@@ -8995,7 +8995,7 @@ msgid "Connection ID"
 msgstr "ID de connexion"
 
 #. Banner shown while the app is still loading and the connection is taking unusually long. Phrased as a question offering help.
-#: src/features/app/hooks/useConnectionNotice.ts:33
+#: src/features/app/hooks/useConnectionNotice.ts:34
 msgid "Connection issues?"
 msgstr "Problèmes de connexion ?"
 
@@ -9009,7 +9009,7 @@ msgid "Connection lost"
 msgstr "Connexion perdue"
 
 #. Banner shown when the app loses its gateway connection after having loaded. The app stays usable, so keep the tone calm.
-#: src/features/app/hooks/useConnectionNotice.ts:38
+#: src/features/app/hooks/useConnectionNotice.ts:39
 msgid "Connection lost. Reconnecting…"
 msgstr "Connexion perdue. Reconnexion…"
 
@@ -10569,12 +10569,12 @@ msgid "Current uses:"
 msgstr "Utilisations actuelles :"
 
 #. Developer nagbar status: the banner is dismissed in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:104
+#: src/features/devtools/components/NagbarControls.ts:109
 msgid "Currently dismissed"
 msgstr "Actuellement ignoré"
 
 #. Developer nagbar status: the banner is showing in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:108
+#: src/features/devtools/components/NagbarControls.ts:113
 msgid "Currently showing"
 msgstr "Affiché actuellement"
 
@@ -11735,7 +11735,7 @@ msgid "Desktop inactivity before mobile push"
 msgstr "Délai d’inactivité sur ordinateur avant les notifications push sur mobile"
 
 #. Developer control label for the desktop-notification banner.
-#: src/features/devtools/components/NagbarControls.ts:35
+#: src/features/devtools/components/NagbarControls.ts:40
 msgid "Desktop notification nagbar"
 msgstr "Bandeau d’activation des notifications de bureau"
 
@@ -13252,7 +13252,7 @@ msgid "Email us and a person will review your account. Tell us you cannot verify
 msgstr "Envoyez-nous un e-mail et une personne examinera votre compte. Indiquez-nous que vous ne pouvez pas vérifier par SMS et nous nous en chargerons. Les réponses arrivent par e-mail, ce n'est donc pas instantané."
 
 #. Developer control label for the email-verification banner.
-#: src/features/devtools/components/NagbarControls.ts:31
+#: src/features/devtools/components/NagbarControls.ts:36
 msgid "Email verification nagbar"
 msgstr "Bannière de vérification de l'e-mail"
 
@@ -15421,12 +15421,12 @@ msgid "For your security, please confirm it's you to continue."
 msgstr "Pour votre sécurité, veuillez confirmer votre identité pour continuer."
 
 #. Developer nagbar override status: the banner is forced to hide.
-#: src/features/devtools/components/NagbarControls.ts:92
+#: src/features/devtools/components/NagbarControls.ts:97
 msgid "Force disabled"
 msgstr "Désactivé de force"
 
 #. Developer nagbar override status: the banner is forced to show.
-#: src/features/devtools/components/NagbarControls.ts:88
+#: src/features/devtools/components/NagbarControls.ts:93
 msgid "Force enabled"
 msgstr "Activé de force"
 
@@ -16165,7 +16165,7 @@ msgid "Gift inventory flow"
 msgstr "Parcours de l’inventaire des cadeaux"
 
 #. Developer control label for the gift-inventory banner.
-#: src/features/devtools/components/NagbarControls.ts:51
+#: src/features/devtools/components/NagbarControls.ts:56
 msgid "Gift inventory nagbar"
 msgstr "Bannière d'inventaire de cadeaux"
 
@@ -18454,7 +18454,7 @@ msgid "Invites disabled"
 msgstr "Invitations désactivées"
 
 #. Developer control label for the invites-disabled banner.
-#: src/features/devtools/components/NagbarControls.ts:67
+#: src/features/devtools/components/NagbarControls.ts:72
 msgid "Invites disabled nagbar"
 msgstr "Bannière \" Invitations désactivées \""
 
@@ -25161,12 +25161,12 @@ msgid "Premium badge"
 msgstr "Badge Premium"
 
 #. Developer control label for the premium-expired banner.
-#: src/features/devtools/components/NagbarControls.ts:43
+#: src/features/devtools/components/NagbarControls.ts:48
 msgid "Premium expired nagbar"
 msgstr "Bannière d'expiration de l'abonnement Premium"
 
 #. Developer control label for the premium grace-period banner.
-#: src/features/devtools/components/NagbarControls.ts:39
+#: src/features/devtools/components/NagbarControls.ts:44
 msgid "Premium grace period nagbar"
 msgstr "Bannière de période de grâce Premium"
 
@@ -25176,7 +25176,7 @@ msgid "Premium model"
 msgstr "Modèle premium"
 
 #. Developer control label for the premium-onboarding banner.
-#: src/features/devtools/components/NagbarControls.ts:47
+#: src/features/devtools/components/NagbarControls.ts:52
 msgid "Premium onboarding nagbar"
 msgstr "Bannière d'intégration Premium"
 
@@ -29497,6 +29497,11 @@ msgstr "Fournir le fichier de jeton"
 msgid "Service error"
 msgstr "Erreur de service"
 
+#. Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the service incident banner.
+#: src/features/devtools/components/NagbarControls.ts:27
+msgid "Service incident nagbar"
+msgstr "Bannière d'incident de service"
+
 #. Section heading in the voice connection status popout for current call/session debug stats.
 #: src/features/voice/components/voice_connection_status/shared.ts:62
 msgid "Session"
@@ -32775,7 +32780,7 @@ msgid "Tennessee"
 msgstr "Tennessee"
 
 #. Developer control label for the terms-acceptance banner.
-#: src/features/devtools/components/NagbarControls.ts:59
+#: src/features/devtools/components/NagbarControls.ts:64
 msgid "Terms acceptance nagbar"
 msgstr "Bannière d'acceptation des conditions d'utilisation"
 
@@ -35293,7 +35298,7 @@ msgid "Unclaimed account"
 msgstr "Compte non finalisé"
 
 #. Developer control label for the unclaimed-account banner.
-#: src/features/devtools/components/NagbarControls.ts:27
+#: src/features/devtools/components/NagbarControls.ts:32
 msgid "Unclaimed account nagbar"
 msgstr "Bandeau d’inscription incomplète"
 
@@ -36815,27 +36820,27 @@ msgid "Uses:"
 msgstr "Utilisations :"
 
 #. Developer nagbar status: banner follows real account state.
-#: src/features/devtools/components/NagbarControls.ts:96
+#: src/features/devtools/components/NagbarControls.ts:101
 msgid "Using actual account state"
 msgstr "Utilise l'état réel du compte"
 
 #. Developer nagbar status: banner follows real gift inventory state.
-#: src/features/devtools/components/NagbarControls.ts:116
+#: src/features/devtools/components/NagbarControls.ts:121
 msgid "Using actual gift inventory state"
 msgstr "Utilisation de l’état réel de l’inventaire des cadeaux"
 
 #. Developer nagbar status: banner follows real premium subscription state.
-#: src/features/devtools/components/NagbarControls.ts:112
+#: src/features/devtools/components/NagbarControls.ts:117
 msgid "Using actual premium state"
 msgstr "Utilise l'état réel de l'abonnement premium"
 
 #. Developer nagbar status: banner follows the real app state.
-#: src/features/devtools/components/NagbarControls.ts:120
+#: src/features/devtools/components/NagbarControls.ts:125
 msgid "Using actual state"
 msgstr "Utilise l'état réel"
 
 #. Developer nagbar status: banner follows real email verification state.
-#: src/features/devtools/components/NagbarControls.ts:100
+#: src/features/devtools/components/NagbarControls.ts:105
 msgid "Using actual verification state"
 msgstr "Utilisation de l'état de vérification réel"
 
@@ -37422,7 +37427,7 @@ msgid "View help article"
 msgstr "Afficher l'article d'aide"
 
 #. Button on the connection banner when an incident is ongoing. Opens that incident on the status page.
-#: src/features/app/hooks/useConnectionNotice.ts:47
+#: src/features/app/hooks/useConnectionNotice.ts:48
 msgid "View incident details"
 msgstr "Voir les détails de l'incident"
 
@@ -37432,7 +37437,7 @@ msgid "View incoming call"
 msgstr "Voir l'appel entrant"
 
 #. Button on the connection banner when maintenance is ongoing. Opens that maintenance on the status page.
-#: src/features/app/hooks/useConnectionNotice.ts:51
+#: src/features/app/hooks/useConnectionNotice.ts:52
 msgid "View maintenance details"
 msgstr "Voir les détails de la maintenance"
 
@@ -37474,7 +37479,7 @@ msgid "View reactions"
 msgstr "Voir les réactions"
 
 #. Button on the connection banner. Opens the external service status page.
-#: src/features/app/hooks/useConnectionNotice.ts:43
+#: src/features/app/hooks/useConnectionNotice.ts:44
 msgid "View status page"
 msgstr "Voir la page d'état"
 
@@ -37554,7 +37559,7 @@ msgid "Visionary (lifetime {premiumProductName})"
 msgstr "Visionary ({premiumProductName} à vie)"
 
 #. Developer control label for the Visionary two-factor-authentication banner.
-#: src/features/devtools/components/NagbarControls.ts:55
+#: src/features/devtools/components/NagbarControls.ts:60
 msgid "Visionary 2FA nagbar"
 msgstr "Bannière 2FA Visionary"
 
@@ -37812,7 +37817,7 @@ msgid "Voice region"
 msgstr "Région vocale"
 
 #. Developer control label for the voice-session-restore banner.
-#: src/features/devtools/components/NagbarControls.ts:63
+#: src/features/devtools/components/NagbarControls.ts:68
 msgid "Voice session restore nagbar"
 msgstr "Barre de rappel de restauration de session vocale"
 

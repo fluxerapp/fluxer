@@ -8561,7 +8561,7 @@ msgid "Community message notifications"
 msgstr "การแจ้งเตือนข้อความของคอมมูนิตี้"
 
 #. Developer control label for the community MFA requirement banner.
-#: src/features/devtools/components/NagbarControls.ts:71
+#: src/features/devtools/components/NagbarControls.ts:76
 msgid "Community MFA requirement nagbar"
 msgstr "แถบแจ้งเตือนข้อกำหนด MFA ของคอมมูนิตี้"
 
@@ -8995,7 +8995,7 @@ msgid "Connection ID"
 msgstr "ID การเชื่อมต่อ"
 
 #. Banner shown while the app is still loading and the connection is taking unusually long. Phrased as a question offering help.
-#: src/features/app/hooks/useConnectionNotice.ts:33
+#: src/features/app/hooks/useConnectionNotice.ts:34
 msgid "Connection issues?"
 msgstr "มีปัญหาการเชื่อมต่อใช่ไหม"
 
@@ -9009,7 +9009,7 @@ msgid "Connection lost"
 msgstr "การเชื่อมต่อขาดหาย"
 
 #. Banner shown when the app loses its gateway connection after having loaded. The app stays usable, so keep the tone calm.
-#: src/features/app/hooks/useConnectionNotice.ts:38
+#: src/features/app/hooks/useConnectionNotice.ts:39
 msgid "Connection lost. Reconnecting…"
 msgstr "การเชื่อมต่อขาดหาย กำลังเชื่อมต่อใหม่…"
 
@@ -10569,12 +10569,12 @@ msgid "Current uses:"
 msgstr "จำนวนครั้งที่ใช้ไปแล้ว:"
 
 #. Developer nagbar status: the banner is dismissed in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:104
+#: src/features/devtools/components/NagbarControls.ts:109
 msgid "Currently dismissed"
 msgstr "ปิดอยู่"
 
 #. Developer nagbar status: the banner is showing in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:108
+#: src/features/devtools/components/NagbarControls.ts:113
 msgid "Currently showing"
 msgstr "กำลังแสดง"
 
@@ -11735,7 +11735,7 @@ msgid "Desktop inactivity before mobile push"
 msgstr "ระยะเวลาไม่ได้ใช้งานบนเดสก์ท็อปก่อนส่งการแจ้งเตือนไปยังมือถือ"
 
 #. Developer control label for the desktop-notification banner.
-#: src/features/devtools/components/NagbarControls.ts:35
+#: src/features/devtools/components/NagbarControls.ts:40
 msgid "Desktop notification nagbar"
 msgstr "แถบแจ้งเตือนสำหรับการแจ้งเตือนเดสก์ท็อป"
 
@@ -13252,7 +13252,7 @@ msgid "Email us and a person will review your account. Tell us you cannot verify
 msgstr "ส่งอีเมลถึงเรา แล้วจะมีเจ้าหน้าที่มาตรวจสอบบัญชีของคุณ แจ้งเราว่าคุณไม่สามารถยืนยันด้วย SMS ได้ แล้วเราจะดำเนินการต่อ การตอบกลับจะส่งทางอีเมล ดังนั้นจึงไม่ใช่การดำเนินการทันที"
 
 #. Developer control label for the email-verification banner.
-#: src/features/devtools/components/NagbarControls.ts:31
+#: src/features/devtools/components/NagbarControls.ts:36
 msgid "Email verification nagbar"
 msgstr "แถบแจ้งเตือนการยืนยันอีเมล"
 
@@ -15421,12 +15421,12 @@ msgid "For your security, please confirm it's you to continue."
 msgstr "เพื่อความปลอดภัย โปรดยืนยันตัวตนเพื่อดำเนินการต่อ"
 
 #. Developer nagbar override status: the banner is forced to hide.
-#: src/features/devtools/components/NagbarControls.ts:92
+#: src/features/devtools/components/NagbarControls.ts:97
 msgid "Force disabled"
 msgstr "บังคับปิดใช้งาน"
 
 #. Developer nagbar override status: the banner is forced to show.
-#: src/features/devtools/components/NagbarControls.ts:88
+#: src/features/devtools/components/NagbarControls.ts:93
 msgid "Force enabled"
 msgstr "บังคับเปิดใช้งาน"
 
@@ -16165,7 +16165,7 @@ msgid "Gift inventory flow"
 msgstr "ขั้นตอนคลังของขวัญ"
 
 #. Developer control label for the gift-inventory banner.
-#: src/features/devtools/components/NagbarControls.ts:51
+#: src/features/devtools/components/NagbarControls.ts:56
 msgid "Gift inventory nagbar"
 msgstr "แถบแจ้งเตือนคลังของขวัญ"
 
@@ -18454,7 +18454,7 @@ msgid "Invites disabled"
 msgstr "ปิดใช้งานคำเชิญแล้ว"
 
 #. Developer control label for the invites-disabled banner.
-#: src/features/devtools/components/NagbarControls.ts:67
+#: src/features/devtools/components/NagbarControls.ts:72
 msgid "Invites disabled nagbar"
 msgstr "แถบแจ้งเตือนปิดใช้งานคำเชิญ"
 
@@ -25161,12 +25161,12 @@ msgid "Premium badge"
 msgstr "ป้ายพรีเมียม"
 
 #. Developer control label for the premium-expired banner.
-#: src/features/devtools/components/NagbarControls.ts:43
+#: src/features/devtools/components/NagbarControls.ts:48
 msgid "Premium expired nagbar"
 msgstr "แถบแจ้งเตือนพรีเมียมหมดอายุ"
 
 #. Developer control label for the premium grace-period banner.
-#: src/features/devtools/components/NagbarControls.ts:39
+#: src/features/devtools/components/NagbarControls.ts:44
 msgid "Premium grace period nagbar"
 msgstr "แถบแจ้งเตือนช่วงผ่อนผันสำหรับสมาชิกพรีเมียม"
 
@@ -25176,7 +25176,7 @@ msgid "Premium model"
 msgstr "โมเดลพรีเมียม"
 
 #. Developer control label for the premium-onboarding banner.
-#: src/features/devtools/components/NagbarControls.ts:47
+#: src/features/devtools/components/NagbarControls.ts:52
 msgid "Premium onboarding nagbar"
 msgstr "แถบแจ้งเตือนการเริ่มต้นใช้งานพรีเมียม"
 
@@ -29497,6 +29497,11 @@ msgstr "วางไฟล์โทเค็นบนเว็บไซต์"
 msgid "Service error"
 msgstr "ข้อผิดพลาดของบริการ"
 
+#. Developer / debug surface — keep terse and technical. Label in the developer Nagbar controls panel for the service incident banner.
+#: src/features/devtools/components/NagbarControls.ts:27
+msgid "Service incident nagbar"
+msgstr "แถบแจ้งเตือนเหตุขัดข้องของบริการ"
+
 #. Section heading in the voice connection status popout for current call/session debug stats.
 #: src/features/voice/components/voice_connection_status/shared.ts:62
 msgid "Session"
@@ -32775,7 +32780,7 @@ msgid "Tennessee"
 msgstr "เทนเนสซี"
 
 #. Developer control label for the terms-acceptance banner.
-#: src/features/devtools/components/NagbarControls.ts:59
+#: src/features/devtools/components/NagbarControls.ts:64
 msgid "Terms acceptance nagbar"
 msgstr "แถบแจ้งเตือนการยอมรับข้อกำหนด"
 
@@ -35293,7 +35298,7 @@ msgid "Unclaimed account"
 msgstr "บัญชีที่ยังไม่ได้ยืนยัน"
 
 #. Developer control label for the unclaimed-account banner.
-#: src/features/devtools/components/NagbarControls.ts:27
+#: src/features/devtools/components/NagbarControls.ts:32
 msgid "Unclaimed account nagbar"
 msgstr "แถบแจ้งเตือนบัญชีที่ยังไม่ได้ยืนยัน"
 
@@ -36815,27 +36820,27 @@ msgid "Uses:"
 msgstr "จำนวนครั้งที่ใช้:"
 
 #. Developer nagbar status: banner follows real account state.
-#: src/features/devtools/components/NagbarControls.ts:96
+#: src/features/devtools/components/NagbarControls.ts:101
 msgid "Using actual account state"
 msgstr "กำลังใช้สถานะบัญชีจริง"
 
 #. Developer nagbar status: banner follows real gift inventory state.
-#: src/features/devtools/components/NagbarControls.ts:116
+#: src/features/devtools/components/NagbarControls.ts:121
 msgid "Using actual gift inventory state"
 msgstr "กำลังใช้สถานะคลังของขวัญจริง"
 
 #. Developer nagbar status: banner follows real premium subscription state.
-#: src/features/devtools/components/NagbarControls.ts:112
+#: src/features/devtools/components/NagbarControls.ts:117
 msgid "Using actual premium state"
 msgstr "กำลังใช้สถานะพรีเมียมจริง"
 
 #. Developer nagbar status: banner follows the real app state.
-#: src/features/devtools/components/NagbarControls.ts:120
+#: src/features/devtools/components/NagbarControls.ts:125
 msgid "Using actual state"
 msgstr "กำลังใช้สถานะจริง"
 
 #. Developer nagbar status: banner follows real email verification state.
-#: src/features/devtools/components/NagbarControls.ts:100
+#: src/features/devtools/components/NagbarControls.ts:105
 msgid "Using actual verification state"
 msgstr "กำลังใช้สถานะการยืนยันจริง"
 
@@ -37422,7 +37427,7 @@ msgid "View help article"
 msgstr "ดูบทความช่วยเหลือ"
 
 #. Button on the connection banner when an incident is ongoing. Opens that incident on the status page.
-#: src/features/app/hooks/useConnectionNotice.ts:47
+#: src/features/app/hooks/useConnectionNotice.ts:48
 msgid "View incident details"
 msgstr "ดูรายละเอียดเหตุขัดข้อง"
 
@@ -37432,7 +37437,7 @@ msgid "View incoming call"
 msgstr "ดูสายเรียกเข้า"
 
 #. Button on the connection banner when maintenance is ongoing. Opens that maintenance on the status page.
-#: src/features/app/hooks/useConnectionNotice.ts:51
+#: src/features/app/hooks/useConnectionNotice.ts:52
 msgid "View maintenance details"
 msgstr "ดูรายละเอียดการบำรุงรักษา"
 
@@ -37474,7 +37479,7 @@ msgid "View reactions"
 msgstr "ดูรีแอ็กชัน"
 
 #. Button on the connection banner. Opens the external service status page.
-#: src/features/app/hooks/useConnectionNotice.ts:43
+#: src/features/app/hooks/useConnectionNotice.ts:44
 msgid "View status page"
 msgstr "ดูหน้าสถานะ"
 
@@ -37554,7 +37559,7 @@ msgid "Visionary (lifetime {premiumProductName})"
 msgstr "Visionary (ตลอดชีพ {premiumProductName})"
 
 #. Developer control label for the Visionary two-factor-authentication banner.
-#: src/features/devtools/components/NagbarControls.ts:55
+#: src/features/devtools/components/NagbarControls.ts:60
 msgid "Visionary 2FA nagbar"
 msgstr "แถบแจ้งเตือน 2FA สำหรับ Visionary"
 
@@ -37812,7 +37817,7 @@ msgid "Voice region"
 msgstr "ภูมิภาคเสียง"
 
 #. Developer control label for the voice-session-restore banner.
-#: src/features/devtools/components/NagbarControls.ts:63
+#: src/features/devtools/components/NagbarControls.ts:68
 msgid "Voice session restore nagbar"
 msgstr "แถบแจ้งเตือนการกู้คืนเซสชันเสียง"
 

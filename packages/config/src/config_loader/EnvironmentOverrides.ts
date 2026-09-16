@@ -380,6 +380,8 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 	FLUXER_APP_WORDMARK_URL: {path: ['instance', 'branding', 'wordmark_url']},
 	FLUXER_APP_FAVICON_URL: {path: ['instance', 'branding', 'favicon_url']},
 	FLUXER_APP_THEME_COLOR: {path: ['instance', 'branding', 'theme_color']},
+	FLUXER_APP_STATUS_PAGE_URL: {path: ['instance', 'branding', 'status_page_url']},
+	FLUXER_APP_STATUS_PAGE_INCIDENT_HISTORY_URL: {path: ['instance', 'branding', 'status_page_incident_history_url']},
 	FLUXER_INSTANCE_SETUP_CONFIGURED: {path: ['instance', 'setup', 'configured'], parse: parseBoolean},
 	FLUXER_ABUSE_INBOUND_PHONE_COUNTRY_CODES: {
 		path: ['instance', 'abuse_policy', 'inbound_phone_country_codes'],

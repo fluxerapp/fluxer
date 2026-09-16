@@ -1243,6 +1243,14 @@ Default empty. The favicon. Its origin is added to the CSP by `app-proxy`.
 
 Default empty. The theme colour.
 
+#### `FLUXER_APP_STATUS_PAGE_URL`
+
+Default empty. The public status page. The web app links to it when loading stalls, and polls its Instatus `summary.json` and `components.json` for incidents and maintenance. Empty removes the link and stops the polling. `app-proxy` does not add this origin to the CSP, so a status page off `fluxerstatus.com` also needs it in `FLUXER_CSP_EXTRA_CONNECT_SRC`.
+
+#### `FLUXER_APP_STATUS_PAGE_INCIDENT_HISTORY_URL`
+
+Default empty. The incident history page of the status page.
+
 #### `FLUXER_INSTANCE_SETUP_CONFIGURED`
 
 Default `false`. Whether setup is marked complete. The stored `app_public_config` row wins whenever its `setup.configured` is a boolean. This variable supplies the default only while no such row exists, and only on a self-hosted instance. Off a self-hosted instance the state is always true whatever this says.

@@ -374,7 +374,7 @@ Branding, setup state, legal documents, and registration fields a client reads b
 
 ## Public branding object
 
-The instance identity a client renders: its name, its images, and its theme colour. The image URLs customise browser metadata, install metadata, and link previews.
+The instance identity a client renders: its name, its images, its theme colour, and its status page links. The image URLs customise browser metadata, install metadata, and link previews.
 
 ### Structure
 
@@ -387,6 +387,8 @@ The instance identity a client renders: its name, its images, and its theme colo
 | wordmark_url | ?string | Application wordmark URL, or null |
 | favicon_url | ?string | Browser favicon URL, or null |
 | theme_color | ?string | Browser theme colour, or null |
+| status_page_url | ?string | Public status page URL, or null |
+| status_page_incident_history_url | ?string | Status page incident history URL, or null |
 
 ## Public setup state object
 

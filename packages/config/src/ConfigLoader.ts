@@ -670,6 +670,8 @@ function applyPublicPort(config: MasterConfig, endpoints: DerivedEndpoints): Mas
 				logo_url: normalizeOptional(branding.logo_url),
 				wordmark_url: normalizeOptional(branding.wordmark_url),
 				favicon_url: normalizeOptional(branding.favicon_url),
+				status_page_url: normalizeOptional(branding.status_page_url),
+				status_page_incident_history_url: normalizeOptional(branding.status_page_incident_history_url),
 			},
 		},
 	};
