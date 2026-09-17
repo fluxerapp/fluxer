@@ -169,7 +169,7 @@ type RoomWithEngine = Room & {
 };
 
 interface StatsSource {
-	getStats(): Promise<StatsReportMap>;
+	getStats(): Promise<StatsReportMap | undefined>;
 	getTransceivers?(): ReadonlyArray<StatsTransceiver>;
 }
 
@@ -539,6 +539,7 @@ async function collectFromStatsSource(
 	transport: TransportInfo | null;
 }> {
 	const reports = await source.getStats();
+	if (!reports) return {tracks: [], rtt: 0, transport: null};
 	const midToSenderTrackId = new Map<string, string>();
 	for (const transceiver of source.getTransceivers?.() ?? []) {
 		const senderTrackId = transceiver.sender?.track?.id;

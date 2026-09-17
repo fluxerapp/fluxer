@@ -4,8 +4,8 @@ import type {IJobLedgerRepository} from '@app/api/jobs/IJobLedgerRepository';
 import {setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
 import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
 import {WorkerRunner} from '@app/api/worker/WorkerRunner';
+import type {JsMsg} from '@nats-io/jetstream';
 import {JobCancelledError} from '@pkgs/worker/src/contracts/WorkerTask';
-import type {JsMsg} from 'nats';
 import {afterEach, beforeAll, describe, expect, it, vi} from 'vitest';
 
 const LANE_ACK_WAIT_MS = 120000;

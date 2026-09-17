@@ -7,15 +7,15 @@ import {
 	transitionReactionSnapshot,
 } from '@app/features/messaging/state/ReactionStateMachine';
 import type {ReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
-import {bench, describe} from 'vitest';
+import {test} from 'vitest';
 
 const EMOJIS: Array<ReactionEmoji> = Array.from({length: 32}, (_value, index) => ({
 	id: index % 3 === 0 ? `emoji-${index}` : undefined,
 	name: index % 3 === 0 ? `custom_${index}` : ['🔥', '❤️', '👍', '🎉'][index % 4],
 }));
 
-describe('ReactionStateMachine benchmarks', () => {
-	bench('apply 1k reaction add/remove transitions for visible messages', () => {
+test('ReactionStateMachine benchmarks', async ({bench}) => {
+	await bench('apply 1k reaction add/remove transitions for visible messages', () => {
 		let snapshot = createReactionMachineSnapshot(emptyMap(), 'me');
 		for (let index = 0; index < 1_000; index += 1) {
 			const emoji = EMOJIS[index % EMOJIS.length];
@@ -36,9 +36,9 @@ describe('ReactionStateMachine benchmarks', () => {
 			}
 		}
 		mapToReactions(snapshot.context.map);
-	});
+	}).run();
 
-	bench('hydrate 500-message reaction payload shape', () => {
+	await bench('hydrate 500-message reaction payload shape', () => {
 		let snapshot = createReactionMachineSnapshot(emptyMap(), 'me');
 		for (let index = 0; index < 500; index += 1) {
 			snapshot = transitionReactionSnapshot(snapshot, {
@@ -52,5 +52,5 @@ describe('ReactionStateMachine benchmarks', () => {
 			});
 		}
 		mapToReactions(snapshot.context.map);
-	});
+	}).run();
 });

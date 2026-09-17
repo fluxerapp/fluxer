@@ -212,6 +212,7 @@ export default () => {
 		devtool: 'source-map',
 		target: ['web', 'browserslist'],
 		lazyCompilation: false,
+		performance: false,
 		resolve: {
 			alias: {
 				...resolveArboriumWasmAliases(),
@@ -306,11 +307,8 @@ export default () => {
 								parser: {
 									syntax: 'typescript',
 									tsx: true,
-									decorators: true,
 								},
 								transform: {
-									legacyDecorator: true,
-									decoratorMetadata: true,
 									react: {
 										runtime: 'automatic',
 										development: isDevelopment,
@@ -330,7 +328,7 @@ export default () => {
 					test: /\.module\.css$/,
 					use: [{loader: 'postcss-loader'}],
 					type: 'css/module',
-					parser: {namedExports: false},
+					parser: {namedExports: false, dashedIdents: false, grid: false, container: false},
 				},
 				{
 					test: /\.css$/,
@@ -618,6 +616,5 @@ export default () => {
 				watch: false,
 			},
 		},
-		experiments: {css: true},
 	};
 };

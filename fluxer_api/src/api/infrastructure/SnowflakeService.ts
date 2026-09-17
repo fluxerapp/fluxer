@@ -7,7 +7,9 @@ import {requireIntegerInRange} from '@app/api/utils/IntegerOptions';
 import {isJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
-import {StringCodec} from 'nats';
+
+const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
 
 const DEFAULT_REMOTE_SUBJECT = 'svc.snowflakes';
 const DEFAULT_REMOTE_BATCH_SIZE = 128;
@@ -72,7 +74,6 @@ export class SnowflakeService implements ISnowflakeService {
 	private readonly lowWatermark: number;
 	private readonly requestTimeoutMs: number;
 	private readonly maxBufferAgeMs: number;
-	private readonly codec = StringCodec();
 	private phase: 'idle' | 'starting' | 'ready' | 'stopping' | 'stopped' = 'idle';
 	private buffer: Array<bigint> = [];
 	private bufferOffset = 0;
@@ -272,14 +273,14 @@ export class SnowflakeService implements ISnowflakeService {
 		if (routingKey) {
 			request.routing_key = routingKey;
 		}
-		const responseMessage = await connection.request(this.subject, this.codec.encode(JSON.stringify(request)), {
+		const responseMessage = await connection.request(this.subject, textEncoder.encode(JSON.stringify(request)), {
 			timeout: this.requestTimeoutMs,
 		});
 		this.assertActive();
 		if (responseMessage.data.byteLength > MAX_REMOTE_RESPONSE_BYTES) {
 			throw new Error('Snowflake service response exceeds the byte limit');
 		}
-		const response = parseJsonWithGuard(this.codec.decode(responseMessage.data), isRemoteSnowflakeResponse);
+		const response = parseJsonWithGuard(textDecoder.decode(responseMessage.data), isRemoteSnowflakeResponse);
 		if (!response) {
 			throw new Error('Snowflake service returned an invalid response');
 		}

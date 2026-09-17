@@ -7,8 +7,8 @@ import {
 } from '@app/api/channel/services/message/MessageResponseDataService';
 import {Message} from '@app/api/models/Message';
 import {MessageTypes} from '@fluxer/constants/src/ChannelConstants';
+import type {NatsConnection} from '@nats-io/transport-node';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
-import type {NatsConnection} from 'nats';
 import {describe, expect, it} from 'vitest';
 
 const encoder = new TextEncoder();

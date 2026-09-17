@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-module.exports = {
+import {formatter} from '@lingui/format-po';
+
+export default {
 	locales: [
 		'ar',
 		'bg',
@@ -45,6 +47,6 @@ module.exports = {
 			exclude: ['**/node_modules/**', '**/*.d.ts', '**/*.test.*', '**/*.spec.*', '**/testing/**'],
 		},
 	],
-	format: 'po',
+	format: formatter(),
 	compileNamespace: 'es',
 };

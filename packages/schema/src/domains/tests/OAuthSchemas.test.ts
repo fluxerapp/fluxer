@@ -137,14 +137,12 @@ describe('application redirect policies', () => {
 	])('accepts registered URI %s', (uri) => {
 		expect(ApplicationCreateRequest.parse({name: 'Application', redirect_uris: [uri]}).redirect_uris).toEqual([uri]);
 	});
-	it.each([
-		'http://example.com/callback',
-		'https://',
-		'/relative',
-		'ftp://example.com/callback',
-	])('rejects registered URI %s', (uri) => {
-		expect(ApplicationCreateRequest.safeParse({name: 'Application', redirect_uris: [uri]}).success).toBe(false);
-	});
+	it.each(['http://example.com/callback', 'https://', '/relative', 'ftp://example.com/callback'])(
+		'rejects registered URI %s',
+		(uri) => {
+			expect(ApplicationCreateRequest.safeParse({name: 'Application', redirect_uris: [uri]}).success).toBe(false);
+		},
+	);
 	it('defaults missing create URIs but does not clear missing update URIs', () => {
 		expect(ApplicationCreateRequest.parse({name: 'Application'})).toEqual({name: 'Application', redirect_uris: []});
 		expect(ApplicationUpdateRequest.parse({})).toEqual({});

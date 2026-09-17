@@ -50,10 +50,9 @@ it.each([1, 2])('rejects legacy NSFW level %i', (value) => {
 	expect(NSFWLevelSchema.safeParse(value).success).toBe(false);
 });
 
-it.each([
-	MessageNotifications.NULL,
-	MessageNotifications.NO_MESSAGES,
-	MessageNotifications.INHERIT,
-])('rejects channel-only notification setting %i as a guild default', (value) => {
-	expect(DefaultMessageNotificationsSchema.safeParse(value).success).toBe(false);
-});
+it.each([MessageNotifications.NULL, MessageNotifications.NO_MESSAGES, MessageNotifications.INHERIT])(
+	'rejects channel-only notification setting %i as a guild default',
+	(value) => {
+		expect(DefaultMessageNotificationsSchema.safeParse(value).success).toBe(false);
+	},
+);

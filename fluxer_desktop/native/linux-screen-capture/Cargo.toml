@@ -16,26 +16,26 @@ default = []
 wgpu = ["dep:wgpu", "fluxer_gpu_rebuild/wgpu"]
 
 [dependencies]
-napi = {version = "3.9.1", default-features = false, features = ["dyn-symbols", "napi8", "async"]}
-napi-derive = "3.5.6"
+napi = {version = "3.12.6", default-features = false, features = ["dyn-symbols", "napi8", "async"]}
+napi-derive = "3.6.7"
 parking_lot = "0.12"
 fluxer_screen_frame_bus = { path = "../screen-frame-bus" }
 fluxer_gpu_rebuild = { path = "../gpu-rebuild" }
-wgpu = { version = "29", optional = true, default-features = false }
+wgpu = { version = "30", optional = true, default-features = false }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 async-io = "2.6.0"
 dcv-color-primitives = "1.0"
 futures-lite = "2.6.1"
 libc = "0.2"
-pipewire = { version = "0.10.0", features = ["v0_3_33"] }
-zbus = "5.16.0"
+pipewire = { version = "0.10.1", features = ["v0_3_33"] }
+zbus = "5.19.0"
 
 [dev-dependencies]
 criterion = { version = "0.8", default-features = false, features = ["cargo_bench_support"] }
 
 [build-dependencies]
-napi-build = "2.3.2"
+napi-build = "2.4.3"
 
 [[bench]]
 name = "pipewire_callback"

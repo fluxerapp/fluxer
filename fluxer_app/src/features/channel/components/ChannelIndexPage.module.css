@@ -177,26 +177,41 @@
 .channelGrid[data-voice-text-split-view='true'] .compactCallWrapper {
 	flex: 0 0 auto;
 	height: clamp(13rem, 42vh, 28rem);
-	height: clamp(13rem, 42svh, 28rem);
 	max-height: 48vh;
-	max-height: 48svh;
+}
+
+@supports (height: 1svh) {
+	.channelGrid[data-voice-text-split-view='true'] .compactCallWrapper {
+		height: clamp(13rem, 42svh, 28rem);
+		max-height: 48svh;
+	}
 }
 
 @media (min-width: 600px) and (orientation: portrait) {
 	.channelGrid[data-voice-text-split-view='true'] .compactCallWrapper {
 		height: clamp(18rem, 44vh, 34rem);
-		height: clamp(18rem, 44svh, 34rem);
 		max-height: 50vh;
-		max-height: 50svh;
+	}
+
+	@supports (height: 1svh) {
+		.channelGrid[data-voice-text-split-view='true'] .compactCallWrapper {
+			height: clamp(18rem, 44svh, 34rem);
+			max-height: 50svh;
+		}
 	}
 }
 
 @media (max-height: 600px) and (orientation: portrait) {
 	.channelGrid[data-voice-text-split-view='true'] .compactCallWrapper {
 		height: clamp(9rem, 36vh, 13rem);
-		height: clamp(9rem, 36svh, 13rem);
 		max-height: 40vh;
-		max-height: 40svh;
+	}
+
+	@supports (height: 1svh) {
+		.channelGrid[data-voice-text-split-view='true'] .compactCallWrapper {
+			height: clamp(9rem, 36svh, 13rem);
+			max-height: 40svh;
+		}
 	}
 }
 

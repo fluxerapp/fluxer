@@ -31,14 +31,12 @@ describe('voice noise suppression configuration', () => {
 		expect(second).toEqual(DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG);
 	});
 
-	test.each([
-		{},
-		{enabled: false},
-		{enabled: undefined},
-		{suppression_strength: 42},
-	])('keeps partial updates free of configuration defaults: %j', (patch) => {
-		expect(VoiceNoiseSuppressionConfigUpdateRequest.parse(patch)).toEqual(patch);
-	});
+	test.each([{}, {enabled: false}, {enabled: undefined}, {suppression_strength: 42}])(
+		'keeps partial updates free of configuration defaults: %j',
+		(patch) => {
+			expect(VoiceNoiseSuppressionConfigUpdateRequest.parse(patch)).toEqual(patch);
+		},
+	);
 
 	test('does not accept a client-provided configuration version', () => {
 		expect(VoiceNoiseSuppressionConfigUpdateRequest.parse({config_version: 12})).toEqual({});
@@ -371,23 +369,21 @@ describe('resolveVoiceNoiseSuppressionForCall', () => {
 		{allowUserOverride: true, preference: 'gtcrn', expectedBackend: 'rnnoise', expectedSource: 'canary'},
 		{allowUserOverride: false, preference: 'speex', expectedBackend: 'rnnoise', expectedSource: 'canary'},
 		{allowUserOverride: true, preference: null, expectedBackend: 'rnnoise', expectedSource: 'canary'},
-	] as const)('allow_user_override $allowUserOverride with preference $preference resolves to $expectedSource', ({
-		allowUserOverride,
-		preference,
-		expectedBackend,
-		expectedSource,
-	}) => {
-		const assignment = createAssignment({
-			backend: 'rnnoise',
-			source: 'canary',
-			allow_user_override: allowUserOverride,
-			enabled_backends: ['none', 'standard', 'speex', 'rnnoise'],
-		});
-		expect(resolveVoiceNoiseSuppressionForCall(assignment, null, preference)).toMatchObject({
-			backend: expectedBackend,
-			source: expectedSource,
-		});
-	});
+	] as const)(
+		'allow_user_override $allowUserOverride with preference $preference resolves to $expectedSource',
+		({allowUserOverride, preference, expectedBackend, expectedSource}) => {
+			const assignment = createAssignment({
+				backend: 'rnnoise',
+				source: 'canary',
+				allow_user_override: allowUserOverride,
+				enabled_backends: ['none', 'standard', 'speex', 'rnnoise'],
+			});
+			expect(resolveVoiceNoiseSuppressionForCall(assignment, null, preference)).toMatchObject({
+				backend: expectedBackend,
+				source: expectedSource,
+			});
+		},
+	);
 
 	test('a user override also outranks a guild rule', () => {
 		const assignment = createAssignment({

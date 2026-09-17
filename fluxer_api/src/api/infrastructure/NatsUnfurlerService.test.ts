@@ -4,8 +4,8 @@ import {NatsUnfurlerService} from '@app/api/infrastructure/NatsUnfurlerService';
 import {BadGatewayError} from '@fluxer/errors/src/domains/core/BadGatewayError';
 import {GatewayTimeoutError} from '@fluxer/errors/src/domains/core/GatewayTimeoutError';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
+import {type NatsConnection, NoRespondersError, RequestError, TimeoutError} from '@nats-io/transport-node';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
-import {type NatsConnection, StringCodec} from 'nats';
 import {describe, expect, it} from 'vitest';
 
 interface FakeRequest {
@@ -16,12 +16,7 @@ interface FakeRequest {
 
 const RESOLVED_REPLY = JSON.stringify({Resolved: {embeds: [], cache_ttl_seconds: null}});
 
-function natsErrorWithCode(code: string): Error {
-	return Object.assign(new Error('nats request failed'), {code});
-}
-
 class FakeNatsConnectionManager implements INatsConnectionManager {
-	private readonly codec = StringCodec();
 	private closed = true;
 	readonly requests: Array<FakeRequest> = [];
 	connectCalls = 0;
@@ -44,14 +39,14 @@ class FakeNatsConnectionManager implements INatsConnectionManager {
 			request: async (subject: string, data: Uint8Array, options?: {timeout?: number}) => {
 				this.requests.push({
 					subject,
-					body: JSON.parse(this.codec.decode(data)) as Record<string, unknown>,
+					body: JSON.parse(new TextDecoder().decode(data)) as Record<string, unknown>,
 					timeout: options?.timeout,
 				});
 				if (this.requestError) {
 					throw this.requestError;
 				}
 				return {
-					data: this.codec.encode(this.replyText),
+					data: new TextEncoder().encode(this.replyText),
 				};
 			},
 		} as unknown as NatsConnection;
@@ -112,14 +107,17 @@ describe('NatsUnfurlerService', () => {
 	});
 
 	it('rejects with a gateway timeout error when the request times out', async () => {
-		const manager = new FakeNatsConnectionManager(RESOLVED_REPLY, natsErrorWithCode('TIMEOUT'));
+		const manager = new FakeNatsConnectionManager(RESOLVED_REPLY, new TimeoutError());
 		const service = new NatsUnfurlerService(manager);
 
 		await expect(service.unfurlWithCachePolicy('https://example.com')).rejects.toBeInstanceOf(GatewayTimeoutError);
 	});
 
 	it('rejects with a service unavailable error when no responders answer', async () => {
-		const manager = new FakeNatsConnectionManager(RESOLVED_REPLY, natsErrorWithCode('503'));
+		const manager = new FakeNatsConnectionManager(
+			RESOLVED_REPLY,
+			new RequestError("no responders: 'svc.unfurl'", {cause: new NoRespondersError('svc.unfurl')}),
+		);
 		const service = new NatsUnfurlerService(manager);
 
 		await expect(service.unfurlWithCachePolicy('https://example.com')).rejects.toBeInstanceOf(ServiceUnavailableError);

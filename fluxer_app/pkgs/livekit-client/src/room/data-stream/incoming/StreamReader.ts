@@ -4,7 +4,6 @@
 import type {DataStream_Chunk} from '@livekit/protocol';
 import {DataStreamError, DataStreamErrorReason} from '../../errors.ts';
 import type {BaseStreamInfo, ByteStreamInfo, TextStreamInfo} from '../../types.ts';
-import {bigIntToNumber, Future} from '../../utils.ts';
 
 export type BaseStreamReaderReadAllOpts = {
 	signal?: AbortSignal;
@@ -18,8 +17,6 @@ abstract class BaseStreamReader<T extends BaseStreamInfo> {
 	protected _info: T;
 
 	protected bytesReceived: number;
-
-	protected outOfBandFailureRejectingFuture?: Future<never, Error>;
 
 	get info() {
 		return this._info;
@@ -43,27 +40,13 @@ abstract class BaseStreamReader<T extends BaseStreamInfo> {
 		}
 	}
 
-	constructor(
-		info: T,
-		stream: ReadableStream<DataStream_Chunk>,
-		totalByteSize?: number,
-		outOfBandFailureRejectingFuture?: Future<never, Error>,
-	) {
+	constructor(info: T, stream: ReadableStream<DataStream_Chunk>, totalByteSize?: number) {
 		this.reader = stream;
 		this.totalByteSize = totalByteSize;
 		this._info = info;
 		this.bytesReceived = 0;
-		this.outOfBandFailureRejectingFuture = outOfBandFailureRejectingFuture;
 	}
 
-	protected abstract handleChunkReceived(chunk: DataStream_Chunk): void;
-
-	onProgress?: (progress: number | undefined) => void;
-
-	abstract readAll(opts?: BaseStreamReaderReadAllOpts): Promise<string | Array<Uint8Array>>;
-}
-
-export class ByteStreamReader extends BaseStreamReader<ByteStreamInfo> {
 	protected handleChunkReceived(chunk: DataStream_Chunk) {
 		this.bytesReceived += chunk.content.byteLength;
 		this.validateBytesReceived();
@@ -72,47 +55,53 @@ export class ByteStreamReader extends BaseStreamReader<ByteStreamInfo> {
 		this.onProgress?.(currentProgress);
 	}
 
+	onProgress?: (progress: number | undefined) => void;
+
+	abstract readAll(opts?: BaseStreamReaderReadAllOpts): Promise<string | Array<Uint8Array>>;
+}
+
+export class ByteStreamReader extends BaseStreamReader<ByteStreamInfo> {
 	signal?: AbortSignal;
 
-	[Symbol.asyncIterator](): AsyncIterator<Uint8Array, undefined> {
+	[Symbol.asyncIterator]() {
 		const reader = this.reader.getReader();
-
-		const rejectingSignalFuture = new Future<never, Error>();
-		let activeSignal: AbortSignal | null = null;
-		let onAbort: (() => void) | null = null;
-		if (this.signal) {
-			const signal = this.signal;
-			onAbort = () => {
-				rejectingSignalFuture.reject?.(signal.reason);
-			};
-			signal.addEventListener('abort', onAbort);
-			activeSignal = signal;
-		}
+		reader.closed.catch(() => {});
 
 		const cleanup = () => {
 			reader.releaseLock();
-
-			if (activeSignal && onAbort) {
-				activeSignal.removeEventListener('abort', onAbort);
-			}
-
 			this.signal = undefined;
 		};
 
 		return {
-			next: async (): Promise<IteratorResult<Uint8Array, undefined>> => {
+			next: async (): Promise<IteratorResult<Uint8Array>> => {
 				try {
-					const {done, value} = await Promise.race([
-						reader.read(),
-						rejectingSignalFuture.promise,
-						this.outOfBandFailureRejectingFuture?.promise ?? new Promise<never>(() => {}),
-					]);
-					if (done) {
+					const signal = this.signal;
+					if (signal?.aborted) {
+						throw signal.reason;
+					}
+					const result = await new Promise<ReadableStreamReadResult<DataStream_Chunk>>((resolve, reject) => {
+						if (signal) {
+							const onAbort = () => reject(signal.reason);
+							signal.addEventListener('abort', onAbort, {once: true});
+							reader
+								.read()
+								.then(resolve, reject)
+								.finally(() => {
+									signal.removeEventListener('abort', onAbort);
+								});
+						} else {
+							reader.read().then(resolve, reject);
+						}
+					});
+					if (result.done) {
 						this.validateBytesReceived(true);
-						return {done: true, value: undefined};
+						if (typeof this.totalByteSize === 'number') {
+							this.onProgress?.(1);
+						}
+						return {done: true, value: undefined as any};
 					} else {
-						this.handleChunkReceived(value);
-						return {done: false, value: value.content};
+						this.handleChunkReceived(result.value);
+						return {done: false, value: result.value.content};
 					}
 				} catch (err) {
 					cleanup();
@@ -120,7 +109,7 @@ export class ByteStreamReader extends BaseStreamReader<ByteStreamInfo> {
 				}
 			},
 
-			async return(): Promise<IteratorResult<Uint8Array, undefined>> {
+			async return(): Promise<IteratorResult<Uint8Array>> {
 				cleanup();
 				return {done: true, value: undefined};
 			},
@@ -143,81 +132,54 @@ export class ByteStreamReader extends BaseStreamReader<ByteStreamInfo> {
 }
 
 export class TextStreamReader extends BaseStreamReader<TextStreamInfo> {
-	private receivedChunks: Map<number, DataStream_Chunk>;
-
 	signal?: AbortSignal;
-
-	constructor(
-		info: TextStreamInfo,
-		stream: ReadableStream<DataStream_Chunk>,
-		totalChunkCount?: number,
-		outOfBandFailureRejectingFuture?: Future<never, Error>,
-	) {
-		super(info, stream, totalChunkCount, outOfBandFailureRejectingFuture);
-		this.receivedChunks = new Map();
-	}
-
-	protected handleChunkReceived(chunk: DataStream_Chunk) {
-		const index = bigIntToNumber(chunk.chunkIndex);
-		const previousChunkAtIndex = this.receivedChunks.get(index);
-		if (previousChunkAtIndex && previousChunkAtIndex.version > chunk.version) {
-			return;
-		}
-		this.receivedChunks.set(index, chunk);
-
-		this.bytesReceived += chunk.content.byteLength;
-		this.validateBytesReceived();
-
-		const currentProgress = this.totalByteSize ? this.bytesReceived / this.totalByteSize : undefined;
-		this.onProgress?.(currentProgress);
-	}
 
 	[Symbol.asyncIterator]() {
 		const reader = this.reader.getReader();
-		const decoder = new TextDecoder('utf-8', {fatal: true});
-
-		const rejectingSignalFuture = new Future<never, Error>();
-		let activeSignal: AbortSignal | null = null;
-		let onAbort: (() => void) | null = null;
-		if (this.signal) {
-			const signal = this.signal;
-			onAbort = () => {
-				rejectingSignalFuture.reject?.(signal.reason);
-			};
-			signal.addEventListener('abort', onAbort);
-			activeSignal = signal;
-		}
+		reader.closed.catch(() => {});
+		const decoder = new TextDecoder('utf-8');
+		const signal = this.signal;
 
 		const cleanup = () => {
 			reader.releaseLock();
-
-			if (activeSignal && onAbort) {
-				activeSignal.removeEventListener('abort', onAbort);
-			}
-
 			this.signal = undefined;
 		};
 
 		return {
 			next: async (): Promise<IteratorResult<string>> => {
 				try {
-					const {done, value} = await Promise.race([
-						reader.read(),
-						rejectingSignalFuture.promise,
-						this.outOfBandFailureRejectingFuture?.promise ?? new Promise<never>(() => {}),
-					]);
-					if (done) {
+					if (signal?.aborted) {
+						throw signal.reason;
+					}
+					const result = await new Promise<ReadableStreamReadResult<DataStream_Chunk>>((resolve, reject) => {
+						if (signal) {
+							const onAbort = () => reject(signal.reason);
+							signal.addEventListener('abort', onAbort, {once: true});
+							reader
+								.read()
+								.then(resolve, reject)
+								.finally(() => {
+									signal.removeEventListener('abort', onAbort);
+								});
+						} else {
+							reader.read().then(resolve, reject);
+						}
+					});
+					if (result.done) {
 						this.validateBytesReceived(true);
+						if (typeof this.totalByteSize === 'number') {
+							this.onProgress?.(1);
+						}
 						return {done: true, value: undefined};
 					} else {
-						this.handleChunkReceived(value);
+						this.handleChunkReceived(result.value);
 
 						let decodedResult: string;
 						try {
-							decodedResult = decoder.decode(value.content);
+							decodedResult = decoder.decode(result.value.content);
 						} catch (err) {
 							throw new DataStreamError(
-								`Cannot decode datastream chunk ${value.chunkIndex} as text: ${err}`,
+								`Cannot decode datastream chunk ${result.value.chunkIndex} as text: ${err}`,
 								DataStreamErrorReason.DecodeFailed,
 							);
 						}

@@ -343,21 +343,20 @@ describe('collectGuildAuditLogUserIds', () => {
 		expect(userIdStrings(log)).toEqual([ACTOR_ID]);
 	});
 
-	it.each([
-		AuditLogActionType.WEBHOOK_DELETE,
-		AuditLogActionType.EMOJI_DELETE,
-		AuditLogActionType.STICKER_DELETE,
-	])('includes the creator of deleted content for action %i', (actionType) => {
-		const log = makeLog({
-			actionType,
-			targetId: TARGET_ID,
-			changes: [
-				{key: 'name', old_value: 'blob'},
-				{key: 'creator_id', old_value: OTHER_ID},
-			],
-		});
-		expect(userIdStrings(log)).toEqual([ACTOR_ID, OTHER_ID]);
-	});
+	it.each([AuditLogActionType.WEBHOOK_DELETE, AuditLogActionType.EMOJI_DELETE, AuditLogActionType.STICKER_DELETE])(
+		'includes the creator of deleted content for action %i',
+		(actionType) => {
+			const log = makeLog({
+				actionType,
+				targetId: TARGET_ID,
+				changes: [
+					{key: 'name', old_value: 'blob'},
+					{key: 'creator_id', old_value: OTHER_ID},
+				],
+			});
+			expect(userIdStrings(log)).toEqual([ACTOR_ID, OTHER_ID]);
+		},
+	);
 
 	it.each(OVERWRITE_ACTIONS)('includes member overwrite targets for action %i', (actionType) => {
 		const memberLog = makeLog({actionType, targetId: TARGET_ID, options: {type: '1', channel_id: OTHER_ID}});

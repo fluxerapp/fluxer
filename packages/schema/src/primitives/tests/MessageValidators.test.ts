@@ -5,11 +5,12 @@ import {MessageReferenceTypeSchema, MessageTypeSchema} from '@fluxer/schema/src/
 import {describe, expect, it} from 'vitest';
 
 describe('MessageTypeSchema', () => {
-	it.each(
-		Object.values(MessageTypes).filter((value) => value !== MessageTypes.CLIENT_SYSTEM),
-	)('accepts wire message type %i', (value) => {
-		expect(MessageTypeSchema.parse(value)).toBe(value);
-	});
+	it.each(Object.values(MessageTypes).filter((value) => value !== MessageTypes.CLIENT_SYSTEM))(
+		'accepts wire message type %i',
+		(value) => {
+			expect(MessageTypeSchema.parse(value)).toBe(value);
+		},
+	);
 
 	it.each([MessageTypes.CLIENT_SYSTEM, 8, -1, 0.5, '0', null])('rejects non-wire message type %j', (value) => {
 		expect(MessageTypeSchema.safeParse(value).success).toBe(false);

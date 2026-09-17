@@ -25,7 +25,7 @@ export enum CallMode {
 	FULL_SCREEN = 'FULL_SCREEN',
 }
 
-export {CallLayout, type Call, type GatewayCallData};
+export {type Call, CallLayout, type GatewayCallData};
 
 class CallState {
 	calls = observable.map<string, Call>();

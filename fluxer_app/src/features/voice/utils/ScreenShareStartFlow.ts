@@ -126,7 +126,7 @@ function buildLinuxNativeAudioRule(
 export async function reconfigureActiveLinuxScreenShareAudioLink(): Promise<boolean> {
 	const electronApi = getElectronAPI();
 	const virtmicApi = electronApi?.virtmic;
-	if (!electronApi || electronApi.platform !== 'linux') {
+	if (electronApi?.platform !== 'linux') {
 		return false;
 	}
 	const sourceMode = VoiceSettings.getEffectiveScreenShareAudioSourceMode();
@@ -197,7 +197,7 @@ export async function reconfigureActiveLinuxAppShareAudio(
 	requestedWindowAudioScope?: WindowShareAudioScope,
 ): Promise<boolean> {
 	const electronApi = getElectronAPI();
-	if (!electronApi || electronApi.platform !== 'linux') return false;
+	if (electronApi?.platform !== 'linux') return false;
 	if (ActiveScreenShareSource.isOwnWindow()) {
 		logger.warn('Refusing to route audio into a Fluxer-owned window share');
 		await stopActiveLinuxScreenShareAudioLink();
@@ -244,7 +244,7 @@ export async function applyLiveScreenShareAudioSourceChange(
 export async function stopActiveLinuxScreenShareAudioLink(): Promise<boolean> {
 	const electronApi = getElectronAPI();
 	const virtmicApi = electronApi?.virtmic;
-	if (!electronApi || electronApi.platform !== 'linux') {
+	if (electronApi?.platform !== 'linux') {
 		return false;
 	}
 	disarmVirtmic();

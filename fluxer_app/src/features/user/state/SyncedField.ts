@@ -14,7 +14,7 @@ import {
 import type {SyncedPreferences, SyncedPreferencesField} from '@app/features/user/state/SyncedPreferencesEngine';
 import {create, equals, type Message, type MessageInitShape, toBinary} from '@bufbuild/protobuf';
 import type {GenMessage} from '@bufbuild/protobuf/codegenv2';
-import {comparer, reaction, runInAction} from 'mobx';
+import {compareShallow, reaction, runInAction} from 'mobx';
 
 export {verifyRoundtripStability};
 
@@ -251,7 +251,7 @@ export async function makeSyncedField<
 					snapshot,
 				});
 			},
-			{fireImmediately: true, equals: comparer.shallow},
+			{fireImmediately: true, equals: compareShallow},
 		);
 		reaction(
 			() => (isEnabled() ? buildMessageOrSuspend('failed to build the local snapshot for observation') : null),

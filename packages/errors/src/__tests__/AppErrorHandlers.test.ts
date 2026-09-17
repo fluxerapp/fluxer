@@ -51,26 +51,24 @@ describe('AppErrorHandler i18n fallbacks', () => {
 			requestId: undefined,
 			message: 'Internal server error.',
 		},
-	])('$name and logs unexpected errors with request metadata', async ({
-		acceptLanguage,
-		requestLocale,
-		requestId,
-		message,
-	}) => {
-		const errorLogger = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
-		const error = new Error('Private internal failure');
-		const headers = new Headers();
-		if (acceptLanguage !== undefined) {
-			headers.set('accept-language', acceptLanguage);
-		}
-		const response = await createApp(error, requestLocale, requestId).request('/test', {headers});
-		expect(response.status).toBe(500);
-		expect(await response.json()).toEqual({code: APIErrorCodes.INTERNAL_SERVER_ERROR, message});
-		expect(errorLogger).toHaveBeenCalledExactlyOnceWith(
-			{err: error, status: 500, method: 'GET', path: '/test', requestId},
-			'Unhandled error occurred',
-		);
-	});
+	])(
+		'$name and logs unexpected errors with request metadata',
+		async ({acceptLanguage, requestLocale, requestId, message}) => {
+			const errorLogger = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+			const error = new Error('Private internal failure');
+			const headers = new Headers();
+			if (acceptLanguage !== undefined) {
+				headers.set('accept-language', acceptLanguage);
+			}
+			const response = await createApp(error, requestLocale, requestId).request('/test', {headers});
+			expect(response.status).toBe(500);
+			expect(await response.json()).toEqual({code: APIErrorCodes.INTERNAL_SERVER_ERROR, message});
+			expect(errorLogger).toHaveBeenCalledExactlyOnceWith(
+				{err: error, status: 500, method: 'GET', path: '/test', requestId},
+				'Unhandled error occurred',
+			);
+		},
+	);
 
 	it('localizes FluxerError responses without an i18n service and logs them as expected rejections', async () => {
 		const errorLogger = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});

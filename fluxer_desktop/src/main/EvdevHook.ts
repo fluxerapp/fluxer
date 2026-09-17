@@ -78,7 +78,7 @@ class EvdevHook extends EventEmitter {
 	async start(): Promise<boolean> {
 		if (this.started) return true;
 		const nativeModule = getNativeModule();
-		if (!nativeModule || !nativeModule.EvdevHook) {
+		if (!nativeModule?.EvdevHook) {
 			return false;
 		}
 		const Native = nativeModule.EvdevHook;

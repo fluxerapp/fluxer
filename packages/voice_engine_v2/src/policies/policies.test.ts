@@ -98,87 +98,88 @@ interface VoiceTrackClassificationFixture {
 }
 
 describe('voice engine v2 policies', () => {
-	it.each(
-		microphoneFailureFixtures as Array<MicrophoneFailureFixture>,
-	)('replays microphone failure action fixture: $name', ({result, requestedEnabled, context, expected}) => {
-		expect(getVoiceEngineV2MicrophoneOperationFailureAction(result, requestedEnabled, context)).toBe(expected);
-	});
+	it.each(microphoneFailureFixtures as Array<MicrophoneFailureFixture>)(
+		'replays microphone failure action fixture: $name',
+		({result, requestedEnabled, context, expected}) => {
+			expect(getVoiceEngineV2MicrophoneOperationFailureAction(result, requestedEnabled, context)).toBe(expected);
+		},
+	);
 
-	it.each(
-		hardwareEncoderCapabilityFixtures as Array<HardwareEncoderCapabilityFixture>,
-	)('replays hardware encoder capability fixture: $name', ({
-		input,
-		codec,
-		expectedCapabilities,
-		expectedNativeNvenc,
-	}) => {
-		const capabilities = normalizeVoiceEngineV2HardwareEncoderCapabilities(input);
-		expect(capabilities).toMatchObject(expectedCapabilities);
-		expect(hasVoiceEngineV2NativeNvencEncoder(capabilities, codec)).toBe(expectedNativeNvenc);
-	});
+	it.each(hardwareEncoderCapabilityFixtures as Array<HardwareEncoderCapabilityFixture>)(
+		'replays hardware encoder capability fixture: $name',
+		({input, codec, expectedCapabilities, expectedNativeNvenc}) => {
+			const capabilities = normalizeVoiceEngineV2HardwareEncoderCapabilities(input);
+			expect(capabilities).toMatchObject(expectedCapabilities);
+			expect(hasVoiceEngineV2NativeNvencEncoder(capabilities, codec)).toBe(expectedNativeNvenc);
+		},
+	);
 
-	it.each(
-		screenShareEncodingPlanFixtures as Array<ScreenShareEncodingPlanFixture>,
-	)('replays screen-share encoding plan fixture: $name', (fixture) => {
-		const plan = planVoiceEngineV2ScreenEncodingChange(fixture.input);
-		expect(plan.action).toBe(fixture.expectedAction);
-		expect(plan.reason).toBe(fixture.expectedReason);
-		if (fixture.expectedCodec !== undefined) {
-			expect(plan.desired?.codec).toBe(fixture.expectedCodec);
-		}
-		if (fixture.expectedHardwareEncoding !== undefined) {
-			expect(plan.desired?.hardwareEncoding).toBe(fixture.expectedHardwareEncoding);
-		}
-		if (fixture.expectedZeroCopyRequired !== undefined) {
-			expect(plan.desired?.zeroCopyRequired).toBe(fixture.expectedZeroCopyRequired);
-		}
-		if (fixture.expectedErrorCode !== undefined) {
-			expect(plan.error?.code).toBe(fixture.expectedErrorCode);
-		}
-	});
+	it.each(screenShareEncodingPlanFixtures as Array<ScreenShareEncodingPlanFixture>)(
+		'replays screen-share encoding plan fixture: $name',
+		(fixture) => {
+			const plan = planVoiceEngineV2ScreenEncodingChange(fixture.input);
+			expect(plan.action).toBe(fixture.expectedAction);
+			expect(plan.reason).toBe(fixture.expectedReason);
+			if (fixture.expectedCodec !== undefined) {
+				expect(plan.desired?.codec).toBe(fixture.expectedCodec);
+			}
+			if (fixture.expectedHardwareEncoding !== undefined) {
+				expect(plan.desired?.hardwareEncoding).toBe(fixture.expectedHardwareEncoding);
+			}
+			if (fixture.expectedZeroCopyRequired !== undefined) {
+				expect(plan.desired?.zeroCopyRequired).toBe(fixture.expectedZeroCopyRequired);
+			}
+			if (fixture.expectedErrorCode !== undefined) {
+				expect(plan.error?.code).toBe(fixture.expectedErrorCode);
+			}
+		},
+	);
 
-	it.each(
-		cameraShareEncodingPlanFixtures as Array<CameraShareEncodingPlanFixture>,
-	)('replays camera-share encoding plan fixture: $name', (fixture) => {
-		const plan = planVoiceEngineV2CameraEncodingChange(fixture.input);
-		expect(plan.action).toBe(fixture.expectedAction);
-		expect(plan.reason).toBe(fixture.expectedReason);
-		if (fixture.expectedCodec !== undefined) {
-			expect(plan.desired?.codec).toBe(fixture.expectedCodec);
-		}
-		if (fixture.expectedMirror !== undefined) {
-			expect(plan.desired?.mirror).toBe(fixture.expectedMirror);
-		}
-		if (fixture.expectedBackgroundMode !== undefined) {
-			expect(plan.desired?.backgroundMode).toBe(fixture.expectedBackgroundMode);
-		}
-		if (fixture.expectedWidth !== undefined) {
-			expect(plan.desired?.width).toBe(fixture.expectedWidth);
-		}
-		if (fixture.expectedFrameRate !== undefined) {
-			expect(plan.desired?.frameRate).toBe(fixture.expectedFrameRate);
-		}
-		if (fixture.expectedErrorCode !== undefined) {
-			expect(plan.error?.code).toBe(fixture.expectedErrorCode);
-		}
-	});
+	it.each(cameraShareEncodingPlanFixtures as Array<CameraShareEncodingPlanFixture>)(
+		'replays camera-share encoding plan fixture: $name',
+		(fixture) => {
+			const plan = planVoiceEngineV2CameraEncodingChange(fixture.input);
+			expect(plan.action).toBe(fixture.expectedAction);
+			expect(plan.reason).toBe(fixture.expectedReason);
+			if (fixture.expectedCodec !== undefined) {
+				expect(plan.desired?.codec).toBe(fixture.expectedCodec);
+			}
+			if (fixture.expectedMirror !== undefined) {
+				expect(plan.desired?.mirror).toBe(fixture.expectedMirror);
+			}
+			if (fixture.expectedBackgroundMode !== undefined) {
+				expect(plan.desired?.backgroundMode).toBe(fixture.expectedBackgroundMode);
+			}
+			if (fixture.expectedWidth !== undefined) {
+				expect(plan.desired?.width).toBe(fixture.expectedWidth);
+			}
+			if (fixture.expectedFrameRate !== undefined) {
+				expect(plan.desired?.frameRate).toBe(fixture.expectedFrameRate);
+			}
+			if (fixture.expectedErrorCode !== undefined) {
+				expect(plan.error?.code).toBe(fixture.expectedErrorCode);
+			}
+		},
+	);
 
-	it.each(
-		voiceStatsCoercionFixtures as Array<VoiceStatsCoercionFixture>,
-	)('replays voice stats coercion fixture: $name', ({input, expected}) => {
-		expect(coerceVoiceEngineV2Stats(input)).toMatchObject(expected);
-	});
+	it.each(voiceStatsCoercionFixtures as Array<VoiceStatsCoercionFixture>)(
+		'replays voice stats coercion fixture: $name',
+		({input, expected}) => {
+			expect(coerceVoiceEngineV2Stats(input)).toMatchObject(expected);
+		},
+	);
 
-	it.each(voiceStatsSummaryFixtures as Array<VoiceStatsSummaryFixture>)('replays voice stats summary fixture: $name', ({
-		input,
-		expectedSummary,
-	}) => {
-		expect(summarizeVoiceEngineV2Stats(input)).toMatchObject(expectedSummary);
-	});
+	it.each(voiceStatsSummaryFixtures as Array<VoiceStatsSummaryFixture>)(
+		'replays voice stats summary fixture: $name',
+		({input, expectedSummary}) => {
+			expect(summarizeVoiceEngineV2Stats(input)).toMatchObject(expectedSummary);
+		},
+	);
 
-	it.each(
-		voiceTrackClassificationFixtures as Array<VoiceTrackClassificationFixture>,
-	)('replays voice track classification fixture: $name', ({input, expected}) => {
-		expect(classifyVoiceEngineV2TrackStats(input)).toEqual(expected);
-	});
+	it.each(voiceTrackClassificationFixtures as Array<VoiceTrackClassificationFixture>)(
+		'replays voice track classification fixture: $name',
+		({input, expected}) => {
+			expect(classifyVoiceEngineV2TrackStats(input)).toEqual(expected);
+		},
+	);
 });

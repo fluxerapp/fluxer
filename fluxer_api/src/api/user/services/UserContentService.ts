@@ -570,7 +570,7 @@ export class UserContentService {
 		}
 		const harvestRepository = new UserHarvestRepository();
 		const harvest = await harvestRepository.findByUserAndHarvestId(userId, params.harvestId);
-		if (!harvest || !harvest.completedAt || !harvest.storageKey || harvest.failedAt) {
+		if (!harvest?.completedAt || !harvest.storageKey || harvest.failedAt) {
 			return null;
 		}
 		if (harvest.downloadUrlExpiresAt && harvest.downloadUrlExpiresAt < new Date()) {

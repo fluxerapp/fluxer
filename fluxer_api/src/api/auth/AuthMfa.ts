@@ -121,6 +121,7 @@ export async function generateWebAuthnRegistrationOptions(ctx: ApiContext, userI
 		userName: user.username!,
 		userDisplayName: user.username!,
 		attestationType: 'none',
+		supportedAlgorithmIDs: [-8, -7, -257],
 		excludeCredentials: existingCredentials.map((cred) => ({
 			id: cred.credentialId,
 			transports: cred.transports
@@ -174,6 +175,7 @@ export async function verifyWebAuthnRegistration(
 				expectedOrigin,
 				expectedRPID: rpID,
 				requireUserVerification: false,
+				supportedAlgorithmIDs: [-8, -7, -257],
 			});
 		} catch (error) {
 			Logger.error({error, userId, expectedChallenge, rpID, expectedOrigin}, 'WebAuthn verification failed');

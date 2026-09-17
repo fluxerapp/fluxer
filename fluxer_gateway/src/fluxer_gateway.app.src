@@ -15,7 +15,6 @@
         ranch,
         cowboy,
         ezstd,
-        base64url,
         enats
     ]},
     {env, []},

@@ -552,7 +552,7 @@ async function expectedNativeRuntimeArtifactsForAppDir(platform, arch, appDir) {
 			}
 		}
 	} catch (error) {
-		if (!error || error.code !== 'ENOENT') throw error;
+		if (error?.code !== 'ENOENT') throw error;
 	}
 	for (const libraryName of [...linuxWebAuthnRuntimeLibraries].sort()) {
 		artifacts.push({
@@ -812,7 +812,7 @@ async function addLinuxLegacyBinarySymlink(context) {
 	try {
 		await fs.symlink(currentName, linkPath);
 	} catch (error) {
-		if (!error || error.code !== 'EEXIST') throw error;
+		if (error?.code !== 'EEXIST') throw error;
 	}
 }
 

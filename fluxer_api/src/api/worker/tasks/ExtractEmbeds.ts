@@ -428,7 +428,7 @@ const extractEmbeds: WorkerTaskHandler = async (payload, helpers) => {
 		messageId,
 		validated.expectedContentHash,
 	);
-	if (!message || !message.content) {
+	if (!message?.content) {
 		Logger.info({messageId: messageId.toString()}, 'Skipping extractEmbeds: message not found or no content');
 		return;
 	}

@@ -166,7 +166,7 @@ export function useTileContextMenuActive(tileElRef: React.RefObject<HTMLElement 
 			const cm = ContextMenu.contextMenu;
 			const target = cm?.target?.target;
 			const el = tileElRef.current;
-			setOpen(Boolean(cm && target instanceof Node && el && el.contains(target)));
+			setOpen(Boolean(cm && target instanceof Node && el?.contains(target)));
 		});
 		return () => disposer();
 	}, [tileElRef]);

@@ -72,6 +72,7 @@ export class KVSubscription implements IKVSubscription {
 			connectTimeout: this.timeoutMs,
 			commandTimeout: this.timeoutMs,
 			maxRetriesPerRequest: 1,
+			protocol: 2,
 			retryStrategy: createRetryStrategy(),
 		};
 		const connection = this.mode === 'cluster' ? resolveKVClusterConnection(this.url, this.clusterNodes) : null;

@@ -19,19 +19,12 @@ describe('static route expressions', () => {
 		expect(resolveExpression(`paths[${JSON.stringify(index)}]`)).toBe(Number(index) === 0 ? '/first' : '/second');
 	});
 
-	it.each([
-		'1suffix',
-		'1.5',
-		'01',
-		'1e0',
-		' 1',
-		'',
-		'-0',
-		-1,
-		2,
-	])('does not coerce array property %j into a route index', (index) => {
-		expect(resolveExpression(`paths[${JSON.stringify(index)}]`)).toBe(UNRESOLVED);
-	});
+	it.each(['1suffix', '1.5', '01', '1e0', ' 1', '', '-0', -1, 2])(
+		'does not coerce array property %j into a route index',
+		(index) => {
+			expect(resolveExpression(`paths[${JSON.stringify(index)}]`)).toBe(UNRESOLVED);
+		},
+	);
 });
 
 describe('imported route constants', () => {

@@ -262,7 +262,7 @@ function shouldTagOpeningElement(opening, target) {
 }
 
 function getAttributeName(attribute) {
-	if (!attribute || attribute.type !== 'JSXAttribute') return '';
+	if (attribute?.type !== 'JSXAttribute') return '';
 	return getNodeName(attribute.name);
 }
 

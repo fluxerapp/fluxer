@@ -127,10 +127,13 @@ expiring_presence_pids(UserIds) ->
 
 -spec has_expires_at(integer()) -> boolean().
 has_expires_at(UserId) ->
-    case catch presence_cache:get(UserId) of
+    try presence_cache:get(UserId) of
         {ok, Presence} when is_map(Presence) ->
             presence_carries_expiry(Presence);
         _ ->
+            false
+    catch
+        _:_ ->
             false
     end.
 

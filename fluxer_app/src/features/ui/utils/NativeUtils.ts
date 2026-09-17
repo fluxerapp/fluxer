@@ -109,7 +109,7 @@ export async function getNativePlatform(): Promise<NativePlatform> {
 
 export async function isLinuxWaylandDesktopSession(): Promise<boolean> {
 	const electronApi = getElectronAPI();
-	if (!electronApi || electronApi.platform !== 'linux') {
+	if (electronApi?.platform !== 'linux') {
 		return false;
 	}
 	try {

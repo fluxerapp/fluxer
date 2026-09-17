@@ -3,8 +3,8 @@
 import {JetStreamWorkerQueue} from '@app/api/worker/JetStreamWorkerQueue';
 import {WORKER_LANES} from '@app/api/worker/WorkerLaneConfig';
 import {WorkerQueueOverflowError} from '@app/api/worker/WorkerQueueOverflowError';
+import {DiscardPolicy, JetStreamApiError, RetentionPolicy, StorageType, type StreamConfig} from '@nats-io/jetstream';
 import type {JetStreamConnectionManager} from '@pkgs/nats/src/JetStreamConnectionManager';
-import {DiscardPolicy, NatsError, RetentionPolicy, StorageType, type StreamConfig} from 'nats';
 import {describe, expect, it} from 'vitest';
 
 const GIB = 1024 * 1024 * 1024;
@@ -51,29 +51,24 @@ function withStreamDefaults(config: Partial<StreamConfig>): Partial<StreamConfig
 	};
 }
 
-function missingResourceError(resource: 'stream' | 'consumer'): NatsError {
-	const description = `${resource} not found`;
-	const error = new NatsError(description, '404');
-	error.api_error = {code: 404, err_code: resource === 'stream' ? 10059 : 10014, description};
-	return error;
+function missingResourceError(resource: 'stream' | 'consumer'): JetStreamApiError {
+	return new JetStreamApiError({
+		code: 404,
+		err_code: resource === 'stream' ? 10059 : 10014,
+		description: `${resource} not found`,
+	});
 }
 
-function streamLimitError(description: string): NatsError {
-	const error = new NatsError('503', '503');
-	error.api_error = {code: 503, err_code: 10077, description};
-	return error;
+function streamLimitError(description: string): JetStreamApiError {
+	return new JetStreamApiError({code: 503, err_code: 10077, description});
 }
 
-function serverResourceError(): NatsError {
-	const error = new NatsError('503', '503');
-	error.api_error = {code: 503, err_code: 10023, description: 'insufficient resources'};
-	return error;
+function serverResourceError(): JetStreamApiError {
+	return new JetStreamApiError({code: 503, err_code: 10023, description: 'insufficient resources'});
 }
 
-function noStorageError(): NatsError {
-	const error = new NatsError('503', '503');
-	error.api_error = {code: 503, err_code: 10047, description: 'insufficient storage resources available'};
-	return error;
+function noStorageError(): JetStreamApiError {
+	return new JetStreamApiError({code: 503, err_code: 10047, description: 'insufficient storage resources available'});
 }
 
 function storageBudget(budget: number): (config: Partial<StreamConfig>) => Error | null {
@@ -205,7 +200,7 @@ describe('jobs stream limits', () => {
 
 	it('fails the boot when even the smallest jobs stream does not fit', async () => {
 		const {queue, added} = createQueue({existing: null, reject: storageBudget(0)});
-		await expect(queue.ensureStream()).rejects.toBeInstanceOf(NatsError);
+		await expect(queue.ensureStream()).rejects.toBeInstanceOf(JetStreamApiError);
 		expect(added).toHaveLength(8);
 		expect(added[7]?.max_bytes).toBe(64 * MIB);
 	});

@@ -44,11 +44,11 @@ pub fn parse_input_event(bytes: &[u8]) -> Option<InputEvent> {
 }
 
 pub fn parse_input_events(bytes: &[u8]) -> impl Iterator<Item = InputEvent> + '_ {
-    bytes.chunks_exact(InputEvent::BYTE_LEN).map(|chunk| {
-        let mut event = [0_u8; InputEvent::BYTE_LEN];
-        event.copy_from_slice(chunk);
-        InputEvent::from_ne_bytes(event)
-    })
+    bytes
+        .as_chunks::<{ InputEvent::BYTE_LEN }>()
+        .0
+        .iter()
+        .map(|chunk| InputEvent::from_ne_bytes(*chunk))
 }
 
 #[cfg(test)]

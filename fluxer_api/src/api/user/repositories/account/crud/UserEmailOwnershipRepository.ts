@@ -449,7 +449,7 @@ export class UserEmailOwnershipRepository {
 	private async releaseClaimRow(emailLower: string, expectedOwnerId?: UserID): Promise<void> {
 		const ownerRow = await this.fetchOwnerRow(emailLower);
 		const currentOwnerId = parseOptionalUserId(ownerRow?.user_id);
-		if (!ownerRow || ownerRow.claimed !== true || currentOwnerId === null) {
+		if (ownerRow?.claimed !== true || currentOwnerId === null) {
 			return;
 		}
 		if (expectedOwnerId !== undefined && currentOwnerId !== expectedOwnerId) {
@@ -484,7 +484,7 @@ export class UserEmailOwnershipRepository {
 
 	private async findValidClaimedOwnerId(emailLower: string): Promise<UserID | null> {
 		const ownerRow = await this.fetchOwnerRow(emailLower);
-		if (!ownerRow || ownerRow.claimed !== true) {
+		if (ownerRow?.claimed !== true) {
 			return null;
 		}
 		const ownerId = parseOptionalUserId(ownerRow.user_id);

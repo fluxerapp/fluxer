@@ -228,19 +228,22 @@ describe('desktop release readiness', () => {
 	it.each([
 		['descriptor', `${RELEASES_PREFIX}/${V908}.json`],
 		['readiness marker', `${RELEASES_PREFIX}/${V908}.ready.json`],
-	])('offers the manifest version when reading its release %s fails with a storage error', async (_name, failingKey) => {
-		const {service} = createService(incidentObjects(), (key) => {
-			if (key === failingKey) {
-				throw new S3ServiceException({
-					name: 'SlowDown',
-					$fault: 'server',
-					$metadata: {httpStatusCode: 503},
-					message: 'Please reduce your request rate.',
-				});
-			}
-		});
-		await expect(resolveLatest(service)).resolves.toEqual(latestOf(V908));
-	});
+	])(
+		'offers the manifest version when reading its release %s fails with a storage error',
+		async (_name, failingKey) => {
+			const {service} = createService(incidentObjects(), (key) => {
+				if (key === failingKey) {
+					throw new S3ServiceException({
+						name: 'SlowDown',
+						$fault: 'server',
+						$metadata: {httpStatusCode: 503},
+						message: 'Please reduce your request rate.',
+					});
+				}
+			});
+			await expect(resolveLatest(service)).resolves.toEqual(latestOf(V908));
+		},
+	);
 
 	it('still resolves the unpublished version through versioned routes', async () => {
 		const objects: StoredObjects = new Map();

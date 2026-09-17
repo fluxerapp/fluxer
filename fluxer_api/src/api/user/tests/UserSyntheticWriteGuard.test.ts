@@ -32,13 +32,14 @@ describe('users table write guard for synthetic accounts', () => {
 		await expect(repository.updateLastActiveAt({userId, lastActiveAt: new Date(0)})).rejects.toThrow();
 		expect(await repository.listUsers([userId])).toEqual([]);
 	});
-	test.each(
-		SYNTHETIC_USER_IDS,
-	)('findUnique still synthesises user %s after a refused write', async (_label, userId) => {
-		const repository = new UserRepository();
-		await expect(repository.patchUpsert(userId, {bio: 'written by a test'})).rejects.toThrow();
-		const user = await repository.findUnique(userId);
-		expect(user).not.toBeNull();
-		expect(user?.id.toString()).toBe(userId.toString());
-	});
+	test.each(SYNTHETIC_USER_IDS)(
+		'findUnique still synthesises user %s after a refused write',
+		async (_label, userId) => {
+			const repository = new UserRepository();
+			await expect(repository.patchUpsert(userId, {bio: 'written by a test'})).rejects.toThrow();
+			const user = await repository.findUnique(userId);
+			expect(user).not.toBeNull();
+			expect(user?.id.toString()).toBe(userId.toString());
+		},
+	);
 });

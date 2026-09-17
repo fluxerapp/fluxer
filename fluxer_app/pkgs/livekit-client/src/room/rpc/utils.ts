@@ -29,11 +29,17 @@ export class RpcError extends Error {
 
 	data?: string;
 
-	constructor(code: number, message: string, data?: string) {
+	override cause?: unknown;
+
+	constructor(code: number, message: string, data?: string, options?: {cause?: unknown}) {
 		super(message);
 		this.code = code;
 		this.message = truncateBytes(message, RpcError.MAX_MESSAGE_BYTES);
 		this.data = data ? truncateBytes(data, RpcError.MAX_DATA_BYTES) : undefined;
+
+		if (typeof options?.cause !== 'undefined') {
+			this.cause = options?.cause;
+		}
 	}
 
 	static fromProto(proto: RpcError_Proto) {
@@ -78,19 +84,34 @@ export class RpcError extends Error {
 		UNSUPPORTED_VERSION: 'Unsupported RPC version',
 	} as const;
 
-	static builtIn(key: keyof typeof RpcError.ErrorCode, data?: string): RpcError {
-		return new RpcError(RpcError.ErrorCode[key], RpcError.ErrorMessage[key], data);
+	static builtIn(key: keyof typeof RpcError.ErrorCode, data?: string, options?: {cause?: unknown}): RpcError {
+		return new RpcError(RpcError.ErrorCode[key], RpcError.ErrorMessage[key], data, options);
 	}
 }
 
-export const MAX_PAYLOAD_BYTES = 15360;
+export const MAX_V1_PAYLOAD_BYTES = 15360;
+
+export const RPC_REQUEST_DATA_STREAM_TOPIC = 'lk.rpc_request';
+
+export const RPC_RESPONSE_DATA_STREAM_TOPIC = 'lk.rpc_response';
+
+export enum RpcRequestAttrs {
+	RPC_REQUEST_ID = 'lk.rpc_request_id',
+	RPC_REQUEST_METHOD = 'lk.rpc_request_method',
+	RPC_REQUEST_RESPONSE_TIMEOUT_MS = 'lk.rpc_request_response_timeout_ms',
+	RPC_REQUEST_VERSION = 'lk.rpc_request_version',
+}
+
+export const RPC_VERSION_V1 = 1;
+
+export const RPC_VERSION_V2 = 2;
 
 export function byteLength(str: string): number {
 	const encoder = new TextEncoder();
 	return encoder.encode(str).length;
 }
 
-function truncateBytes(str: string, maxBytes: number): string {
+export function truncateBytes(str: string, maxBytes: number): string {
 	if (byteLength(str) <= maxBytes) {
 		return str;
 	}

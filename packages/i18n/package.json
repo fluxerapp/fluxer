@@ -15,7 +15,7 @@
 		"static:sync": "tsx scripts/SyncStaticI18nCatalogs.ts --extract --compile",
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"typecheck": "tsgo --noEmit"
+		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@messageformat/core": "catalog:",
@@ -24,8 +24,8 @@
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",
-		"@typescript/native-preview": "catalog:",
 		"tsx": "catalog:",
+		"typescript": "catalog:ts7",
 		"vitest": "catalog:"
 	}
 }

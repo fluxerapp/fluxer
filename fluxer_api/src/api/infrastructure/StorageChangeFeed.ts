@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/api/Logger';
+import {DiscardPolicy, JetStreamApiError, RetentionPolicy, StorageType} from '@nats-io/jetstream';
+import {nanos} from '@nats-io/transport-node';
 import {JetStreamConnectionManager} from '@pkgs/nats/src/JetStreamConnectionManager';
-import {DiscardPolicy, NatsError, nanos, RetentionPolicy, StorageType} from 'nats';
 
 export type StorageChangeOp = 'put' | 'delete';
 
@@ -68,10 +69,7 @@ function subjectToken(bucket: string): string {
 }
 
 function jsErrorCode(error: unknown): number | null {
-	if (!(error instanceof NatsError)) {
-		return null;
-	}
-	return error.jsError()?.err_code ?? null;
+	return error instanceof JetStreamApiError ? error.code : null;
 }
 
 export class StorageChangeFeed {

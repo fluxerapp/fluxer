@@ -14,7 +14,7 @@ import {
 	type NodeSavedSessionStore,
 	type NodeSavedState,
 	type NodeSavedStateStore,
-} from '@bluesky-social/oauth-client-node';
+} from '@atproto/oauth-client-node';
 import {SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import {z} from 'zod';

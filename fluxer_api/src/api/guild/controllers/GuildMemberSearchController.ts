@@ -99,7 +99,7 @@ export function GuildMemberSearchController(app: HonoApp) {
 				return ctx.json(createEmptySearchResponse(guildIdString, false));
 			}
 			const searchService = getGuildMemberSearchService();
-			if (!searchService || !searchService.isAvailable()) {
+			if (!searchService?.isAvailable()) {
 				return ctx.json(createEmptySearchResponse(guildIdString, false));
 			}
 			const needsIndexing = guildMembersNeedReindexing(guild.membersIndexedAt);

@@ -48,7 +48,7 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true,
+			"preset": "recommended",
 			"complexity": {
 				"noForEach": "off",
 				"noImportantStyles": "off",
@@ -83,6 +83,7 @@
 					}
 				},
 				"useConst": "error",
+				"noDescendingSpecificity": "off",
 				"noNonNullAssertion": "off",
 				"noParameterAssign": "off",
 				"noRestrictedImports": {
@@ -98,7 +99,7 @@
 				}
 			},
 			"a11y": {
-				"recommended": true,
+				"preset": "recommended",
 				"useAriaPropsForRole": "error",
 				"useValidAriaRole": "error",
 				"useValidAriaValues": "error",

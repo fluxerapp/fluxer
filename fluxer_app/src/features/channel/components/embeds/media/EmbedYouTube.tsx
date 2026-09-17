@@ -196,7 +196,7 @@ export const EmbedYouTube: FC<EmbedYouTubeProps> = observer(({embed, width = YOU
 		() => decodeThumbHashDataURL(embed.thumbnail?.placeholder),
 		[embed.thumbnail?.placeholder],
 	);
-	if (!(embed.video && embed.thumbnail && embed.thumbnail.proxy_url)) {
+	if (!(embed.video && embed.thumbnail?.proxy_url)) {
 		return null;
 	}
 	const videoWidth = embed.video.width ?? YOUTUBE_CONFIG.DEFAULT_WIDTH;

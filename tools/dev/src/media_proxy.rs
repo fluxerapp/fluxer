@@ -167,6 +167,7 @@ fn start_dev_seaweedfs() -> Result<()> {
             "mini",
             &data_dir_arg,
             "-admin.ui=false",
+            "-master.telemetry=false",
             "-filer.disableDirListing",
             "-s3.port.iceberg=0",
             "-webdav=false",

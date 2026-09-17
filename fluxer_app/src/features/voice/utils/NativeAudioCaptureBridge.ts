@@ -333,7 +333,7 @@ async function startLinuxNativeAudioCapture(
 ): Promise<NativeAudioStartResult | null> {
 	const electronApi = getElectronAPI();
 	const nativeAudioApi = electronApi?.nativeAudio;
-	if (!electronApi || electronApi.platform !== 'linux' || !nativeAudioApi) {
+	if (electronApi?.platform !== 'linux' || !nativeAudioApi) {
 		setLastArmFailure({
 			platform: electronApi?.platform,
 			reason: !electronApi
@@ -1078,7 +1078,7 @@ export async function armNativeAudioForLinuxRouting(
 ): Promise<boolean> {
 	const electronApi = getElectronAPI();
 	const nativeAudioApi = electronApi?.nativeAudio;
-	if (!electronApi || electronApi.platform !== 'linux' || !nativeAudioApi) {
+	if (electronApi?.platform !== 'linux' || !nativeAudioApi) {
 		setLastArmFailure({
 			platform: electronApi?.platform,
 			reason: !electronApi

@@ -569,7 +569,7 @@ export class MessagePersistenceService {
 		}
 		const updatedSnapshots = message.messageSnapshots.map((snapshot, index) => {
 			const edit = snapshotEdits[index];
-			if (!edit || !edit.attachments || edit.attachments.length === 0) {
+			if (!edit?.attachments || edit.attachments.length === 0) {
 				return snapshot.toMessageSnapshot();
 			}
 			const snapshotRow = snapshot.toMessageSnapshot();

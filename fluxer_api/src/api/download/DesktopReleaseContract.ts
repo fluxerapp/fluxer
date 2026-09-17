@@ -113,8 +113,7 @@ export function parseDesktopReleaseDescriptor(value: unknown): DesktopReleaseDes
 	for (const rawAsset of value.assets) {
 		const asset = parseDesktopReleaseAsset(rawAsset);
 		if (
-			!asset ||
-			!asset.storage_key.startsWith(expectedStoragePrefix) ||
+			!asset?.storage_key.startsWith(expectedStoragePrefix) ||
 			!asset.release_asset.startsWith(expectedReleasePrefix) ||
 			storageKeys.has(asset.storage_key)
 		) {

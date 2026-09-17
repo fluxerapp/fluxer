@@ -321,7 +321,7 @@ function startNativeBackend(): boolean {
 	let module: NativeInputHookModule;
 	try {
 		const loaded = loadNativeInputHookModule();
-		if (!loaded || !loaded.InputHook) return false;
+		if (!loaded?.InputHook) return false;
 		module = loaded;
 	} catch (error) {
 		logger.error('Failed to load native input hook module:', error);

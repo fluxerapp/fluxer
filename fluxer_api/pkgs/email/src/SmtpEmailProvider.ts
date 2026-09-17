@@ -2,7 +2,7 @@
 
 import {createLogger} from '@fluxer/logger/src/Logger';
 import type {EmailMessage, IEmailProvider} from '@pkgs/email/src/EmailProviderTypes';
-import nodemailer from 'nodemailer';
+import nodemailer, {type Transporter} from 'nodemailer';
 
 const logger = createLogger('@pkgs/email/src/SmtpEmailProvider');
 
@@ -18,7 +18,7 @@ interface SmtpEmailConfig {
 }
 
 export class SmtpEmailProvider implements IEmailProvider {
-	private readonly transporter: nodemailer.Transporter;
+	private readonly transporter: Transporter;
 
 	constructor(config: SmtpEmailConfig) {
 		this.transporter = nodemailer.createTransport({

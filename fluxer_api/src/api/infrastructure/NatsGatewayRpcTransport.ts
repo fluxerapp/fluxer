@@ -3,8 +3,11 @@
 import {GatewayRpcMethodError, GatewayRpcMethodErrorCodes} from '@app/api/infrastructure/GatewayRpcError';
 import type {IGatewayRpcTransport} from '@app/api/infrastructure/IGatewayRpcTransport';
 import {Logger} from '@app/api/Logger';
+import {type Msg, RequestError, TimeoutError} from '@nats-io/transport-node';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
-import {type Msg, StringCodec} from 'nats';
+
+const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
 
 const NATS_REQUEST_TIMEOUT_MS = 5000;
 const NATS_SUBJECT_PREFIX = 'rpc.gateway.';
@@ -15,26 +18,11 @@ interface NatsRpcResponse {
 	error?: string;
 }
 
-const NATS_NO_RESPONDERS_CODE = '503';
-const NATS_TIMEOUT_CODE = 'TIMEOUT';
-
-function getErrorCode(error: Error): string | null {
-	if (!('code' in error)) {
-		return null;
-	}
-	const code = error.code;
-	return typeof code === 'string' ? code : null;
-}
-
 function mapNatsRpcTransportError(error: unknown): GatewayRpcMethodError | null {
-	if (!(error instanceof Error)) {
-		return null;
-	}
-	const code = getErrorCode(error);
-	if (code === NATS_NO_RESPONDERS_CODE || error.message === 'NO_RESPONDERS' || error.name === 'NoRespondersError') {
+	if (error instanceof RequestError && error.isNoResponders()) {
 		return new GatewayRpcMethodError(GatewayRpcMethodErrorCodes.NO_RESPONDERS);
 	}
-	if (code === NATS_TIMEOUT_CODE || error.message === 'TIMEOUT' || error.name === 'TimeoutError') {
+	if (error instanceof TimeoutError) {
 		return new GatewayRpcMethodError(GatewayRpcMethodErrorCodes.TIMEOUT);
 	}
 	return null;
@@ -64,7 +52,6 @@ function decodeNatsRpcResponse(responseText: string): NatsRpcResponse {
 
 export class NatsGatewayRpcTransport implements IGatewayRpcTransport {
 	private readonly connectionManager: INatsConnectionManager;
-	private readonly codec = StringCodec();
 
 	constructor(connectionManager: INatsConnectionManager) {
 		this.connectionManager = connectionManager;
@@ -72,7 +59,7 @@ export class NatsGatewayRpcTransport implements IGatewayRpcTransport {
 
 	async call(method: string, params: Record<string, unknown>): Promise<unknown> {
 		const subject = `${NATS_SUBJECT_PREFIX}${method}`;
-		const payload = this.codec.encode(JSON.stringify(params));
+		const payload = textEncoder.encode(JSON.stringify(params));
 		let responseMsg: Msg;
 		try {
 			if (this.connectionManager.isClosed()) {
@@ -90,7 +77,7 @@ export class NatsGatewayRpcTransport implements IGatewayRpcTransport {
 			}
 			throw error;
 		}
-		const responseText = this.codec.decode(responseMsg.data);
+		const responseText = textDecoder.decode(responseMsg.data);
 		const response = decodeNatsRpcResponse(responseText);
 		if (!response.ok) {
 			throw new GatewayRpcMethodError(response.error ?? GatewayRpcMethodErrorCodes.INTERNAL_ERROR);

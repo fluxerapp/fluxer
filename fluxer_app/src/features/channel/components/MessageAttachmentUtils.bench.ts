@@ -2,7 +2,7 @@
 
 import {splitMediaAndFileAttachments} from '@app/features/channel/components/MessageAttachmentUtils';
 import type {MessageAttachment} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {bench, describe} from 'vitest';
+import {test} from 'vitest';
 
 const CONTENT_TYPES = [
 	'image/png',
@@ -30,8 +30,8 @@ const ATTACHMENTS = Array.from({length: 500}, (_value, index): MessageAttachment
 	};
 });
 
-describe('MessageAttachmentUtils benchmarks', () => {
-	bench('split 500 mixed media and file attachments', () => {
+test('MessageAttachmentUtils benchmarks', async ({bench}) => {
+	await bench('split 500 mixed media and file attachments', () => {
 		splitMediaAndFileAttachments(ATTACHMENTS);
-	});
+	}).run();
 });

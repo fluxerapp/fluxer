@@ -107,7 +107,7 @@ export class MessageInteractionRepository extends IMessageInteractionRepository 
 
 	async removeChannelPin(channelId: ChannelID, messageId: MessageID): Promise<void> {
 		const message = await this.messageRepository.getMessage(channelId, messageId);
-		if (!message || !message.pinnedTimestamp) {
+		if (!message?.pinnedTimestamp) {
 			return;
 		}
 		await deleteOneOrMany(

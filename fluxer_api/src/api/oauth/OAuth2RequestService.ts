@@ -246,7 +246,7 @@ export class OAuth2RequestService {
 			try {
 				const applicationId = createApplicationID(BigInt(params.body.client_id));
 				const application = await this.applicationRepository.getApplication(applicationId);
-				if (!application || !application.botUserId) {
+				if (!application?.botUserId) {
 					throw new NotABotApplicationError();
 				}
 				const botUserId = application.botUserId;
@@ -454,7 +454,7 @@ export class OAuth2RequestService {
 				createApplicationID(params.applicationId),
 			);
 			const application = await this.applicationRepository.getApplication(createApplicationID(params.applicationId));
-			if (!application || !application.botUserId) {
+			if (!application?.botUserId) {
 				throw new BotUserNotFoundError();
 			}
 			const botUser = await this.apiContext.services.users.findUnique(application.botUserId);

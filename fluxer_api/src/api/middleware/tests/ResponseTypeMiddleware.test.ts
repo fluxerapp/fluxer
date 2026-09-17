@@ -52,46 +52,44 @@ describe('ResponseTypeMiddleware', () => {
 		expect(await response.json()).toEqual({id: '123456789012345678'});
 	});
 
-	test.each([
-		undefined,
-		'application/json',
-		'application/json; charset=utf-8',
-		'Application/JSON; charset=utf-8',
-	])('rejects mismatching responses while validation is enabled (content type: %s)', async (responseContentType) => {
-		const app = new Hono<HonoEnv>();
-		const middleware =
-			responseContentType === undefined
-				? ResponseType(SnowflakeResponse)
-				: OpenAPI({
-						operationId: 'get_invalid_snowflake_test',
-						summary: 'Get invalid snowflake',
-						description: 'Returns an invalid snowflake to verify JSON response validation.',
-						responseSchema: SnowflakeResponse,
-						responseContentType,
-						tags: ['Tests'],
-					});
-		app.get('/snowflake', middleware, (ctx) => ctx.json({id: 'not-a-snowflake'}));
-		const errorLoggerSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
+	test.each([undefined, 'application/json', 'application/json; charset=utf-8', 'Application/JSON; charset=utf-8'])(
+		'rejects mismatching responses while validation is enabled (content type: %s)',
+		async (responseContentType) => {
+			const app = new Hono<HonoEnv>();
+			const middleware =
+				responseContentType === undefined
+					? ResponseType(SnowflakeResponse)
+					: OpenAPI({
+							operationId: 'get_invalid_snowflake_test',
+							summary: 'Get invalid snowflake',
+							description: 'Returns an invalid snowflake to verify JSON response validation.',
+							responseSchema: SnowflakeResponse,
+							responseContentType,
+							tags: ['Tests'],
+						});
+			app.get('/snowflake', middleware, (ctx) => ctx.json({id: 'not-a-snowflake'}));
+			const errorLoggerSpy = vi.spyOn(Logger.prototype, 'error').mockImplementation(() => {});
 
-		try {
-			const response = await app.request('/snowflake');
+			try {
+				const response = await app.request('/snowflake');
 
-			expect(response.status).toBe(500);
-			expect(errorLoggerSpy).toHaveBeenCalledTimes(1);
-			expect(errorLoggerSpy).toHaveBeenCalledWith(
-				{
-					body: {id: 'not-a-snowflake'},
-					method: 'GET',
-					path: '/snowflake',
-					status: 200,
-					validationErrors: [{message: 'INVALID_SNOWFLAKE_FORMAT', path: 'id'}],
-				},
-				'Response validation failed',
-			);
-		} finally {
-			errorLoggerSpy.mockRestore();
-		}
-	});
+				expect(response.status).toBe(500);
+				expect(errorLoggerSpy).toHaveBeenCalledTimes(1);
+				expect(errorLoggerSpy).toHaveBeenCalledWith(
+					{
+						body: {id: 'not-a-snowflake'},
+						method: 'GET',
+						path: '/snowflake',
+						status: 200,
+						validationErrors: [{message: 'INVALID_SNOWFLAKE_FORMAT', path: 'id'}],
+					},
+					'Response validation failed',
+				);
+			} finally {
+				errorLoggerSpy.mockRestore();
+			}
+		},
+	);
 
 	test('passes the response through untouched while validation is disabled', async () => {
 		Config.dev.validateResponses = false;

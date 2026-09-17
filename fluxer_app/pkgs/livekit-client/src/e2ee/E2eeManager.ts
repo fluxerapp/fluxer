@@ -4,18 +4,24 @@
 import {Encryption_Type, type TrackInfo} from '@livekit/protocol';
 import {EventEmitter} from 'events';
 import type TypedEventEmitter from 'typed-emitter';
-import log, {type LogLevel, workerLogger} from '../logger.ts';
+import type {FrameMetadata} from '../frameMetadata/types.ts';
+import {hasFrameMetadataPublishOptions} from '../frameMetadata/utils.ts';
+import {getLogger, LoggerNames, type LogLevel, onWorkerLogLevelChanged, workerLogger} from '../logger.ts';
 import {DeviceUnsupportedError} from '../room/errors.ts';
 import {EngineEvent, ParticipantEvent, RoomEvent} from '../room/events.ts';
 import type Room from '../room/Room.ts';
 import {ConnectionState} from '../room/Room.ts';
 import type RTCEngine from '../room/RTCEngine.ts';
-import type {VideoCodec} from '../room/track/options.ts';
+import type {TrackPublishOptions, VideoCodec} from '../room/track/options.ts';
 import type RemoteTrack from '../room/track/RemoteTrack.ts';
+import RemoteVideoTrack from '../room/track/RemoteVideoTrack.ts';
 import type {Track} from '../room/track/Track.ts';
+import type {TrackPublication} from '../room/track/TrackPublication.ts';
 import {mimeTypeToVideoCodecString} from '../room/track/utils.ts';
-import {Future, isChromiumBased, isLocalTrack, isSafariBased, isVideoTrack} from '../room/utils.ts';
-import {E2EE_FLAG} from './constants.ts';
+import {Future, isLocalTrack, isSafariBased, isScriptTransformSupportedForWorker, isVideoTrack} from '../room/utils.ts';
+import type {NonSharedUint8Array} from '../type-polyfills/non-shared-typed-arrays.ts';
+import {E2EE_FLAG, E2EE_TRACK_ID} from './constants.ts';
+import {CryptorError, CryptorErrorReason} from './errors.ts';
 import {type E2EEManagerCallbacks, EncryptionEvent, KeyProviderEvent} from './events.ts';
 import type {BaseKeyProvider} from './KeyProvider.ts';
 import type {
@@ -36,9 +42,8 @@ import type {
 	SetKeyMessage,
 	SifTrailerMessage,
 	UpdateCodecMessage,
-	UpdateTrackContextMessage,
 } from './types.ts';
-import {isE2EESupported, isScriptTransformSupported} from './utils.ts';
+import {isE2EESupported} from './utils.ts';
 
 export interface BaseE2EEManager {
 	setup(room: Room): void;
@@ -46,21 +51,17 @@ export interface BaseE2EEManager {
 	isEnabled: boolean;
 	isDataChannelEncryptionEnabled: boolean;
 	setParticipantCryptorEnabled(enabled: boolean, participantIdentity: string): void;
-	setSifTrailer(trailer: Uint8Array): void;
-	encryptData(data: Uint8Array): Promise<EncryptDataResponseMessage['data']>;
+	setSifTrailer(trailer: NonSharedUint8Array): void;
+	encryptData(data: NonSharedUint8Array): Promise<EncryptDataResponseMessage['data']>;
 	handleEncryptedData(
-		payload: Uint8Array,
-		iv: Uint8Array,
+		payload: NonSharedUint8Array,
+		iv: NonSharedUint8Array,
 		participantIdentity: string,
 		keyIndex: number,
 	): Promise<DecryptDataResponseMessage['data']>;
 	on<E extends keyof E2EEManagerCallbacks>(event: E, listener: E2EEManagerCallbacks[E]): this;
+	dispose?(): void;
 }
-
-type E2EETransformState = {
-	participantIdentity: string;
-	trackId: string;
-};
 
 export class E2EEManager
 	extends (EventEmitter as new () => TypedEventEmitter<E2EEManagerCallbacks>)
@@ -79,6 +80,24 @@ export class E2EEManager
 	private encryptDataRequests: Map<string, Future<EncryptDataResponseMessage['data'], Error>> = new Map();
 
 	private dataChannelEncryptionEnabled: boolean;
+
+	private unsubscribeLogLevel?: () => void;
+
+	private log = getLogger(LoggerNames.E2EE, () => this.logContext);
+
+	get logContext() {
+		return {
+			room: this.room?.name,
+			participant: this.room?.localParticipant.identity,
+		};
+	}
+
+	private static disposeRegistry =
+		typeof FinalizationRegistry !== 'undefined' &&
+		typeof WeakRef !== 'undefined' &&
+		new FinalizationRegistry((cleanup: () => void) => {
+			cleanup();
+		});
 
 	constructor(options: E2EEManagerOptions, dcEncryptionEnabled: boolean) {
 		super();
@@ -100,7 +119,7 @@ export class E2EEManager
 		if (!isE2EESupported()) {
 			throw new DeviceUnsupportedError('tried to setup end-to-end encryption on an unsupported browser');
 		}
-		log.info('setting up e2ee');
+		this.log.info('setting up e2ee');
 		if (room !== this.room) {
 			this.room = room;
 			this.setupEventListeners(room, this.keyProvider);
@@ -112,22 +131,69 @@ export class E2EEManager
 				},
 			};
 			if (this.worker) {
-				log.info(`initializing worker`, {worker: this.worker});
+				this.log.info(`initializing worker`, {worker: this.worker});
 				this.worker.onmessage = this.onWorkerMessage;
 				this.worker.onerror = this.onWorkerError;
 				this.worker.postMessage(msg);
+				this.subscribeToLogLevelChanges();
 			}
 		}
 	}
 
+	private subscribeToLogLevelChanges() {
+		this.unsubscribeLogLevel?.();
+
+		let unsub: (() => void) | undefined;
+		if (E2EEManager.disposeRegistry) {
+			const workerRef = new WeakRef(this.worker);
+			unsub = onWorkerLogLevelChanged((level) => {
+				const worker = workerRef.deref();
+				if (!worker) {
+					unsub?.();
+					return;
+				}
+				worker.postMessage({kind: 'setLogLevel', data: {level}});
+			});
+			E2EEManager.disposeRegistry.register(this, unsub, this);
+		} else {
+			const worker = this.worker;
+			unsub = onWorkerLogLevelChanged((level) => {
+				worker.postMessage({kind: 'setLogLevel', data: {level}});
+			});
+		}
+		this.unsubscribeLogLevel = unsub;
+	}
+
+	dispose() {
+		this.unsubscribeLogLevel?.();
+		this.unsubscribeLogLevel = undefined;
+		if (E2EEManager.disposeRegistry) {
+			E2EEManager.disposeRegistry.unregister(this);
+		}
+
+		const disposalError = new CryptorError('E2EEManager disposed', CryptorErrorReason.InternalError);
+		for (const future of [...this.encryptDataRequests.values()]) {
+			future.reject?.(disposalError);
+		}
+		for (const future of [...this.decryptDataRequests.values()]) {
+			future.reject?.(disposalError);
+		}
+
+		if (this.worker) {
+			this.worker.onmessage = null;
+			this.worker.onerror = null;
+		}
+		this.removeAllListeners();
+	}
+
 	setParticipantCryptorEnabled(enabled: boolean, participantIdentity: string) {
-		log.debug(`set e2ee to ${enabled} for participant ${participantIdentity}`);
+		this.log.debug(`set e2ee to ${enabled} for participant ${participantIdentity}`);
 		this.postEnable(enabled, participantIdentity);
 	}
 
-	setSifTrailer(trailer: Uint8Array) {
+	setSifTrailer(trailer: NonSharedUint8Array) {
 		if (!trailer || trailer.length === 0) {
-			log.warn("ignoring server sent trailer as it's empty");
+			this.log.warn("ignoring server sent trailer as it's empty");
 		} else {
 			this.postSifTrailer(trailer);
 		}
@@ -137,8 +203,6 @@ export class E2EEManager
 		const {kind, data} = ev.data;
 		switch (kind) {
 			case 'error':
-				log.error(data.error.message);
-
 				if (data.uuid) {
 					const decryptFuture = this.decryptDataRequests.get(data.uuid);
 					if (decryptFuture?.reject) {
@@ -152,13 +216,13 @@ export class E2EEManager
 						break;
 					}
 				}
-
+				this.log.error(data.error.message);
 				this.emit(EncryptionEvent.EncryptionError, data.error, data.participantIdentity);
 				break;
 			case 'initAck':
 				if (data.enabled) {
 					this.keyProvider.getKeys().forEach((keyInfo) => {
-						this.postKey(keyInfo);
+						this.postKey(keyInfo, false);
 					});
 				}
 				break;
@@ -166,7 +230,7 @@ export class E2EEManager
 			case 'enable':
 				if (data.enabled) {
 					this.keyProvider.getKeys().forEach((keyInfo) => {
-						this.postKey(keyInfo);
+						this.postKey(keyInfo, false);
 					});
 				}
 				if (
@@ -206,15 +270,40 @@ export class E2EEManager
 				}
 				break;
 			}
+			case 'packetTrailerMetadata':
+				this.handleFrameMetadata(data.trackId, data.rtpTimestamp, data.ssrc, data.metadata);
+				break;
+			case 'log':
+				workerLogger[data.level](data.msg, data.context);
+				break;
 			default:
 				break;
 		}
 	};
 
 	private onWorkerError = (ev: ErrorEvent) => {
-		log.error('e2ee worker encountered an error:', {error: ev.error});
+		this.log.error('e2ee worker encountered an error:', {error: ev.error});
 		this.emit(EncryptionEvent.EncryptionError, ev.error, undefined);
 	};
+
+	private handleFrameMetadata(trackId: string, rtpTimestamp: number, ssrc: number, metadata: FrameMetadata) {
+		if (!this.room) {
+			return;
+		}
+		for (const participant of [this.room.localParticipant, ...this.room.remoteParticipants.values()]) {
+			for (const pub of participant.trackPublications.values()) {
+				if (
+					pub.track &&
+					pub.track.mediaStreamID === trackId &&
+					pub.track instanceof RemoteVideoTrack &&
+					pub.track.frameMetadataExtractor
+				) {
+					pub.track.frameMetadataExtractor.storeMetadata(rtpTimestamp, ssrc, metadata);
+					return;
+				}
+			}
+		}
+	}
 
 	public setupEngine(engine: RTCEngine) {
 		engine.on(EngineEvent.RTPVideoMapUpdate, (rtpMap) => {
@@ -222,31 +311,16 @@ export class E2EEManager
 		});
 	}
 
-	private getE2EETransformState(target: RTCRtpReceiver | RTCRtpSender) {
-		const state = (target as RTCRtpReceiver & RTCRtpSender & Record<string, unknown>)[E2EE_FLAG];
-		if (state && typeof state === 'object') {
-			return state as E2EETransformState;
-		}
-		return undefined;
-	}
-
-	private setE2EETransformState(target: RTCRtpReceiver | RTCRtpSender, state: E2EETransformState) {
-		(target as RTCRtpReceiver & RTCRtpSender & Record<string, unknown>)[E2EE_FLAG] = state;
-	}
-
 	private setupEventListeners(room: Room, keyProvider: BaseKeyProvider) {
 		room.on(RoomEvent.TrackPublished, (pub, participant) =>
-			this.setParticipantCryptorEnabled(pub.trackInfo!.encryption !== Encryption_Type.NONE, participant.identity),
+			this.setParticipantCryptorEnabledForPublication(pub, participant.identity),
 		);
 		room
 			.on(RoomEvent.ConnectionStateChanged, (state) => {
 				if (state === ConnectionState.Connected) {
 					room.remoteParticipants.forEach((participant) => {
 						participant.trackPublications.forEach((pub) => {
-							this.setParticipantCryptorEnabled(
-								pub.trackInfo!.encryption !== Encryption_Type.NONE,
-								participant.identity,
-							);
+							this.setParticipantCryptorEnabledForPublication(pub, participant.identity);
 						});
 					});
 				}
@@ -268,8 +342,9 @@ export class E2EEManager
 				if (!this.room) {
 					throw new TypeError(`expected room to be present on signal connect`);
 				}
+				const latestKeyIndex = keyProvider.getLatestManuallySetKeyIndex();
 				keyProvider.getKeys().forEach((keyInfo) => {
-					this.postKey(keyInfo);
+					this.postKey(keyInfo, latestKeyIndex === (keyInfo.keyIndex ?? 0));
 				});
 				this.setParticipantCryptorEnabled(
 					this.room.localParticipant.isE2EEEnabled,
@@ -291,6 +366,7 @@ export class E2EEManager
 					trackId: publication.track!.mediaStreamID,
 					codec: mimeTypeToVideoCodecString(publication.trackInfo!.codecs[0].mimeType),
 					participantIdentity: this.room!.localParticipant.identity,
+					hasPacketTrailer: false,
 				},
 			};
 
@@ -298,13 +374,15 @@ export class E2EEManager
 		});
 
 		keyProvider
-			.on(KeyProviderEvent.SetKey, (keyInfo) => this.postKey(keyInfo))
+			.on(KeyProviderEvent.SetKey, (keyInfo, updateCurrentKeyIndex) =>
+				this.postKey(keyInfo, updateCurrentKeyIndex ?? true),
+			)
 			.on(KeyProviderEvent.RatchetRequest, (participantId, keyIndex) =>
 				this.postRatchetRequest(participantId, keyIndex),
 			);
 	}
 
-	async encryptData(data: Uint8Array): Promise<EncryptDataResponseMessage['data']> {
+	async encryptData(data: NonSharedUint8Array): Promise<EncryptDataResponseMessage['data']> {
 		if (!this.worker) {
 			throw Error('could not encrypt data, worker is missing');
 		}
@@ -326,7 +404,12 @@ export class E2EEManager
 		return future!.promise!;
 	}
 
-	handleEncryptedData(payload: Uint8Array, iv: Uint8Array, participantIdentity: string, keyIndex: number) {
+	handleEncryptedData(
+		payload: NonSharedUint8Array,
+		iv: NonSharedUint8Array,
+		participantIdentity: string,
+		keyIndex: number,
+	) {
 		if (!this.worker) {
 			throw Error('could not handle encrypted data, worker is missing');
 		}
@@ -364,7 +447,7 @@ export class E2EEManager
 		this.worker.postMessage(msg);
 	}
 
-	private postKey({key, participantIdentity, keyIndex}: KeyInfo) {
+	private postKey({key, participantIdentity, keyIndex}: KeyInfo, updateCurrentKeyIndex: boolean) {
 		if (!this.worker) {
 			throw Error('could not set key, worker is missing');
 		}
@@ -375,6 +458,7 @@ export class E2EEManager
 				isPublisher: participantIdentity === this.room?.localParticipant.identity,
 				key,
 				keyIndex,
+				updateCurrentKeyIndex,
 			},
 		};
 		this.worker.postMessage(msg);
@@ -412,7 +496,7 @@ export class E2EEManager
 		this.worker.postMessage(msg);
 	}
 
-	private postSifTrailer(trailer: Uint8Array) {
+	private postSifTrailer(trailer: NonSharedUint8Array) {
 		if (!this.worker) {
 			throw Error('could not post SIF trailer, worker is missing');
 		}
@@ -425,6 +509,16 @@ export class E2EEManager
 		this.worker.postMessage(msg);
 	}
 
+	private setParticipantCryptorEnabledForPublication(pub: TrackPublication, participantIdentity: string) {
+		if (!pub.trackInfo) {
+			this.log.warn('skipping e2ee enabled update for publication without trackInfo', {
+				trackSid: pub.trackSid,
+			});
+			return;
+		}
+		this.setParticipantCryptorEnabled(pub.trackInfo.encryption !== Encryption_Type.NONE, participantIdentity);
+	}
+
 	private setupE2EEReceiver(track: RemoteTrack, remoteId: string, trackInfo?: TrackInfo) {
 		if (!track.receiver) {
 			return;
@@ -432,64 +526,76 @@ export class E2EEManager
 		if (!trackInfo?.mimeType || trackInfo.mimeType === '') {
 			throw new TypeError('MimeType missing from trackInfo, cannot set up E2EE cryptor');
 		}
+		const hasPacketTrailer =
+			track.kind === 'video' && !!trackInfo.packetTrailerFeatures && trackInfo.packetTrailerFeatures.length > 0;
 		this.handleReceiver(
 			track.receiver,
 			track.mediaStreamID,
 			remoteId,
 			track.kind === 'video' ? mimeTypeToVideoCodecString(trackInfo.mimeType) : undefined,
+			hasPacketTrailer,
 		);
 	}
 
 	private setupE2EESender(track: Track, sender: RTCRtpSender, codec?: VideoCodec, trackId?: string) {
 		if (!isLocalTrack(track) || !sender) {
-			if (!sender) log.warn('early return because sender is not ready');
+			if (!sender) this.log.warn('early return because sender is not ready');
 			return;
 		}
 		const resolvedCodec =
 			track.kind === 'video' ? (codec ?? (this.room?.options?.publishDefaults?.videoCodec as VideoCodec)) : undefined;
-		this.handleSender(sender, trackId ?? track.mediaStreamID, resolvedCodec);
+		this.handleSender(
+			sender,
+			trackId ?? track.mediaStreamID,
+			resolvedCodec,
+			isVideoTrack(track) ? (track.publishOptions?.frameMetadata ?? track.publishOptions?.packetTrailer) : undefined,
+		);
 	}
 
 	private async handleReceiver(
 		receiver: RTCRtpReceiver,
 		trackId: string,
 		participantIdentity: string,
-		codec?: VideoCodec,
+		codec: VideoCodec | undefined,
+		hasPacketTrailer: boolean,
 	) {
 		if (!this.worker) {
 			return;
 		}
 
-		if (isScriptTransformSupported() && !isChromiumBased()) {
+		if (isScriptTransformSupportedForWorker()) {
 			const options: ScriptTransformOptions = {
 				kind: 'decode',
 				participantIdentity,
 				trackId,
 				codec,
+				hasPacketTrailer,
 			};
 			receiver.transform = new RTCRtpScriptTransform(this.worker, options);
 		} else {
-			if (E2EE_FLAG in receiver) {
-				const previousState = this.getE2EETransformState(receiver);
-				const msg: UpdateTrackContextMessage = {
-					kind: 'updateTrackContext',
+			if (E2EE_FLAG in receiver && E2EE_TRACK_ID in receiver) {
+				const msg: UpdateCodecMessage = {
+					kind: 'updateCodec',
 					data: {
-						previousParticipantIdentity: previousState?.participantIdentity,
-						previousTrackId: previousState?.trackId,
 						trackId,
-						participantIdentity,
+						previousTrackId: receiver[E2EE_TRACK_ID] as string,
 						codec,
+						participantIdentity,
+						hasPacketTrailer,
 					},
 				};
 				this.worker.postMessage(msg);
-				this.setE2EETransformState(receiver, {trackId, participantIdentity});
+				receiver[E2EE_TRACK_ID] = trackId;
 				return;
 			}
-			let writable: WritableStream | undefined = receiver.writableStream;
-			let readable: ReadableStream | undefined = receiver.readableStream;
+			// @ts-expect-error
+			let writable: WritableStream = receiver.writableStream;
+			// @ts-expect-error
+			let readable: ReadableStream = receiver.readableStream;
 
 			if (!writable || !readable) {
-				const receiverStreams = receiver.createEncodedStreams!();
+				// @ts-expect-error
+				const receiverStreams = receiver.createEncodedStreams();
 				receiver.writableStream = receiverStreams.writable;
 				writable = receiverStreams.writable;
 				receiver.readableStream = receiverStreams.readable;
@@ -504,16 +610,24 @@ export class E2EEManager
 					trackId: trackId,
 					codec,
 					participantIdentity: participantIdentity,
-					isReuse: E2EE_FLAG in receiver,
+					hasPacketTrailer,
 				},
 			};
 			this.worker.postMessage(msg, [readable, writable]);
 		}
 
-		this.setE2EETransformState(receiver, {trackId, participantIdentity});
+		// @ts-expect-error
+		receiver[E2EE_FLAG] = true;
+		// @ts-expect-error
+		receiver[E2EE_TRACK_ID] = trackId;
 	}
 
-	private handleSender(sender: RTCRtpSender, trackId: string, codec?: VideoCodec) {
+	private handleSender(
+		sender: RTCRtpSender,
+		trackId: string,
+		codec?: VideoCodec,
+		frameMetadata?: TrackPublishOptions['frameMetadata'],
+	) {
 		if (!this.worker) {
 			return;
 		}
@@ -521,37 +635,40 @@ export class E2EEManager
 		if (!this.room?.localParticipant.identity || this.room.localParticipant.identity === '') {
 			throw TypeError('local identity needs to be known in order to set up encrypted sender');
 		}
-		const participantIdentity = this.room.localParticipant.identity;
 
 		if (E2EE_FLAG in sender) {
-			const previousState = this.getE2EETransformState(sender);
-			const msg: UpdateTrackContextMessage = {
-				kind: 'updateTrackContext',
-				data: {
-					previousParticipantIdentity: previousState?.participantIdentity,
-					previousTrackId: previousState?.trackId,
-					trackId,
-					participantIdentity,
-					codec,
-				},
-			};
-			this.worker.postMessage(msg);
-			this.setE2EETransformState(sender, {trackId, participantIdentity});
+			if (E2EE_TRACK_ID in sender) {
+				const msg: UpdateCodecMessage = {
+					kind: 'updateCodec',
+					data: {
+						trackId,
+						previousTrackId: sender[E2EE_TRACK_ID] as string,
+						codec,
+						participantIdentity: this.room.localParticipant.identity,
+						hasPacketTrailer: hasFrameMetadataPublishOptions(frameMetadata),
+					},
+				};
+				this.worker.postMessage(msg);
+				sender[E2EE_TRACK_ID] = trackId;
+			}
 			return;
 		}
 
-		if (isScriptTransformSupported() && !isChromiumBased()) {
-			log.info('initialize script transform');
-			const options = {
+		if (isScriptTransformSupportedForWorker()) {
+			this.log.info('initialize script transform');
+			const options: ScriptTransformOptions = {
 				kind: 'encode',
-				participantIdentity,
+				participantIdentity: this.room.localParticipant.identity,
 				trackId,
 				codec,
+				hasPacketTrailer: hasFrameMetadataPublishOptions(frameMetadata),
+				packetTrailer: frameMetadata,
 			};
 			sender.transform = new RTCRtpScriptTransform(this.worker, options);
 		} else {
-			log.info('initialize encoded streams');
-			const senderStreams = sender.createEncodedStreams!();
+			this.log.info('initialize encoded streams');
+			// @ts-expect-error
+			const senderStreams = sender.createEncodedStreams();
 			const msg: EncodeMessage = {
 				kind: 'encode',
 				data: {
@@ -559,13 +676,17 @@ export class E2EEManager
 					writableStream: senderStreams.writable,
 					codec,
 					trackId,
-					participantIdentity,
-					isReuse: false,
+					participantIdentity: this.room.localParticipant.identity,
+					hasPacketTrailer: hasFrameMetadataPublishOptions(frameMetadata),
+					packetTrailer: frameMetadata,
 				},
 			};
 			this.worker.postMessage(msg, [senderStreams.readable, senderStreams.writable]);
 		}
 
-		this.setE2EETransformState(sender, {trackId, participantIdentity});
+		// @ts-expect-error
+		sender[E2EE_FLAG] = true;
+		// @ts-expect-error
+		sender[E2EE_TRACK_ID] = trackId;
 	}
 }

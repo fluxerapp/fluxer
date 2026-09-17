@@ -69,27 +69,23 @@ describe('mapWithConcurrency', () => {
 		).resolves.toEqual([]);
 	});
 
-	it.each([
-		0,
-		-1,
-		1.5,
-		Number.NaN,
-		Number.POSITIVE_INFINITY,
-		Number.MAX_SAFE_INTEGER + 1,
-	])('rejects invalid concurrency %j before scheduling work', async (concurrency) => {
-		let calls = 0;
-		const mapper = async () => {
-			calls++;
-			return 1;
-		};
-		await expect(mapWithConcurrency([1], concurrency, mapper)).rejects.toThrow(
-			'Concurrency must be a positive safe integer',
-		);
-		await expect(mapWithConcurrency([], concurrency, mapper)).rejects.toThrow(
-			'Concurrency must be a positive safe integer',
-		);
-		expect(calls).toBe(0);
-	});
+	it.each([0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY, Number.MAX_SAFE_INTEGER + 1])(
+		'rejects invalid concurrency %j before scheduling work',
+		async (concurrency) => {
+			let calls = 0;
+			const mapper = async () => {
+				calls++;
+				return 1;
+			};
+			await expect(mapWithConcurrency([1], concurrency, mapper)).rejects.toThrow(
+				'Concurrency must be a positive safe integer',
+			);
+			await expect(mapWithConcurrency([], concurrency, mapper)).rejects.toThrow(
+				'Concurrency must be a positive safe integer',
+			);
+			expect(calls).toBe(0);
+		},
+	);
 
 	it('waits for in-flight work before propagating a mapper rejection', async () => {
 		const first = Promise.withResolvers<number>();

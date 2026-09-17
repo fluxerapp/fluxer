@@ -40,24 +40,15 @@ describe('createQueryIntegerType', () => {
 		expect(schema.parse(input)).toBe(expected);
 	});
 
-	it.each([
-		'3.14',
-		'3.0',
-		'42px',
-		'1e2',
-		'0x10',
-		'',
-		'   ',
-		'NaN',
-		'Infinity',
-		'-1',
-		'2147483648',
-	])('rejects %j without truncation or coercion', (input) => {
-		expect(schema.safeParse(input)).toMatchObject({
-			success: false,
-			error: {issues: [{message: ValidationErrorCodes.VALUE_MUST_BE_INTEGER_IN_RANGE}]},
-		});
-	});
+	it.each(['3.14', '3.0', '42px', '1e2', '0x10', '', '   ', 'NaN', 'Infinity', '-1', '2147483648'])(
+		'rejects %j without truncation or coercion',
+		(input) => {
+			expect(schema.safeParse(input)).toMatchObject({
+				success: false,
+				error: {issues: [{message: ValidationErrorCodes.VALUE_MUST_BE_INTEGER_IN_RANGE}]},
+			});
+		},
+	);
 
 	it.each(['-5', '5'])('accepts the configured range boundary %s', (input) => {
 		expect(createQueryIntegerType({minValue: -5, maxValue: 5}).parse(input)).toBe(Number(input));

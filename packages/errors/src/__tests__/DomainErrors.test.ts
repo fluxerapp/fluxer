@@ -53,15 +53,14 @@ describe.each([
 	});
 });
 
-it.each([
-	BadRequestError,
-	ForbiddenError,
-	NotFoundError,
-])('preserves custom messages for client errors', (ErrorClass) => {
-	const error = new ErrorClass({code: APIErrorCodes.INVALID_REQUEST, message: 'Custom error message'});
+it.each([BadRequestError, ForbiddenError, NotFoundError])(
+	'preserves custom messages for client errors',
+	(ErrorClass) => {
+		const error = new ErrorClass({code: APIErrorCodes.INVALID_REQUEST, message: 'Custom error message'});
 
-	expect(error.toJSON()).toEqual({code: APIErrorCodes.INVALID_REQUEST, message: 'Custom error message'});
-});
+		expect(error.toJSON()).toEqual({code: APIErrorCodes.INVALID_REQUEST, message: 'Custom error message'});
+	},
+);
 
 describe.each([
 	[APIErrorCodes.INVALID_PHONE_NUMBER, InvalidPhoneNumberError, BadRequestError, HttpStatus.BAD_REQUEST],

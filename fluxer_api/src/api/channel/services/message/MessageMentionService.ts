@@ -94,7 +94,7 @@ export class MessageMentionService {
 			referencedMessage?.authorId &&
 			referencedMessage.authorId !== message.authorId &&
 			!isDMChannel &&
-			(!allowedMentions || allowedMentions.replied_user !== false);
+			allowedMentions?.replied_user !== false;
 		if (shouldAddReferencedUser) {
 			userMentions.add(referencedMessage!.authorId!);
 		}

@@ -4,7 +4,7 @@ import {
 	calculateAroundPaginationState,
 	getAroundWindowCounts,
 } from '@app/features/messaging/utils/MessagePaginationUtils';
-import {bench, describe} from 'vitest';
+import {test} from 'vitest';
 
 const PAGINATION_INPUTS = Array.from({length: 100_000}, (_value, index) => ({
 	limit: 50 + (index % 25),
@@ -14,19 +14,19 @@ const PAGINATION_INPUTS = Array.from({length: 100_000}, (_value, index) => ({
 	knownLatestMessageId: 'latest',
 }));
 
-describe('MessagePaginationUtils benchmarks', () => {
-	bench('calculate 100k around pagination states', () => {
+test('MessagePaginationUtils benchmarks', async ({bench}) => {
+	await bench('calculate 100k around pagination states', () => {
 		for (const input of PAGINATION_INPUTS) {
 			calculateAroundPaginationState(input);
 		}
-	});
+	}).run();
 
-	bench('calculate 100k around window counts', () => {
+	await bench('calculate 100k around window counts', () => {
 		let total = 0;
 		for (let index = 0; index < 100_000; index += 1) {
 			const {newer, older} = getAroundWindowCounts(index % 100);
 			total += newer + older;
 		}
 		(globalThis as {__messagePaginationBenchSink?: number}).__messagePaginationBenchSink = total;
-	});
+	}).run();
 });

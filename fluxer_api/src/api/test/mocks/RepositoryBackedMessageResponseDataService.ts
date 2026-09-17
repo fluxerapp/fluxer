@@ -41,8 +41,8 @@ import type {
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
+import type {NatsConnection} from '@nats-io/transport-node';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
-import type {NatsConnection} from 'nats';
 
 class NoopNatsConnectionManager implements INatsConnectionManager {
 	async connect(): Promise<void> {}

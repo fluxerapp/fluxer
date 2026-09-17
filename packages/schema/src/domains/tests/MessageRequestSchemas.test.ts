@@ -18,16 +18,12 @@ describe('MessageNonceRequest', () => {
 		expect(MessageNonceRequest.parse(input)).toBe(expected);
 	});
 
-	it.each([
-		-1,
-		0.5,
-		Number.MAX_SAFE_INTEGER + 1,
-		Number.POSITIVE_INFINITY,
-		'',
-		'a'.repeat(33),
-	])('rejects invalid nonce %j', (input) => {
-		expect(MessageNonceRequest.safeParse(input).success).toBe(false);
-	});
+	it.each([-1, 0.5, Number.MAX_SAFE_INTEGER + 1, Number.POSITIVE_INFINITY, '', 'a'.repeat(33)])(
+		'rejects invalid nonce %j',
+		(input) => {
+			expect(MessageNonceRequest.safeParse(input).success).toBe(false);
+		},
+	);
 });
 
 describe('MessageRequestSchema', () => {

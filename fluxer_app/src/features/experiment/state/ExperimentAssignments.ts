@@ -11,7 +11,7 @@ import {
 	ExperimentAssignmentsResponse,
 	INERT_EXPERIMENT_ASSIGNMENTS_RESPONSE,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
-import {makeAutoObservable, observable, runInAction} from 'mobx';
+import {makeAutoObservable, observableRef, runInAction} from 'mobx';
 
 const logger = new Logger('ExperimentAssignments');
 
@@ -82,7 +82,7 @@ class ExperimentAssignmentsStore {
 		makeAutoObservable<this, UnobservedField>(
 			this,
 			{
-				response: observable.ref,
+				response: observableRef,
 				abortController: false,
 				etag: false,
 				failureStreak: false,

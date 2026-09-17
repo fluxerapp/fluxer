@@ -5,19 +5,19 @@
 	"scripts": {
 		"build": "node scripts/build.mjs",
 		"test": "vitest run",
-		"typecheck": "tsgo --noEmit",
+		"typecheck": "tsc --noEmit",
 		"dev": "tsx watch --clear-screen=false src/AppEntrypoint.ts",
 		"start": "tsx src/AppEntrypoint.ts",
 		"start:worker": "tsx src/WorkerEntrypoint.ts"
 	},
 	"dependencies": {
 		"@atproto/api": "catalog:",
+		"@atproto/jwk-jose": "catalog:",
+		"@atproto/oauth-client-node": "catalog:",
 		"@aws-sdk/client-s3": "catalog:",
 		"@aws-sdk/lib-storage": "catalog:",
 		"@aws-sdk/s3-request-presigner": "catalog:",
-		"@bluesky-social/jwk-jose": "catalog:",
-		"@bluesky-social/oauth-client-node": "catalog:",
-		"@bufbuild/protobuf": "^2.12.0",
+		"@bufbuild/protobuf": "^2.15.0",
 		"@elastic/elasticsearch": "catalog:",
 		"@fluxer/config": "workspace:*",
 		"@fluxer/constants": "workspace:*",
@@ -34,6 +34,8 @@
 		"@hono/node-server": "catalog:",
 		"@messageformat/core": "catalog:",
 		"@messageformat/parser": "catalog:",
+		"@nats-io/jetstream": "catalog:",
+		"@nats-io/transport-node": "catalog:",
 		"@pkgs/cache": "workspace:*",
 		"@pkgs/captcha": "workspace:*",
 		"@pkgs/cassandra": "workspace:*",
@@ -71,7 +73,6 @@
 		"lodash": "catalog:",
 		"maxmind": "catalog:",
 		"mime": "catalog:",
-		"nats": "catalog:",
 		"nodemailer": "catalog:",
 		"pg": "catalog:",
 		"pino": "catalog:",
@@ -88,10 +89,10 @@
 	"devDependencies": {
 		"@types/archiver": "catalog:",
 		"@types/lodash": "catalog:",
-		"@typescript/native-preview": "catalog:",
 		"esbuild": "catalog:",
 		"msw": "catalog:",
+		"typescript": "catalog:ts7",
 		"vitest": "catalog:"
 	},
-	"packageManager": "pnpm@10.29.3"
+	"packageManager": "pnpm@12.4.2"
 }

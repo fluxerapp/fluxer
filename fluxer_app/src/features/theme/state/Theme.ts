@@ -155,7 +155,7 @@ class Theme {
 
 	private initLinuxPortalThemeDetection(): void {
 		const electronApi = getElectronAPI();
-		if (!electronApi || electronApi.platform !== 'linux') {
+		if (electronApi?.platform !== 'linux') {
 			return;
 		}
 		if (!electronApi.getLinuxAppearance || !electronApi.onLinuxAppearanceChanged) {

@@ -9,32 +9,32 @@ build = "build.rs"
 [dependencies]
 anyhow = "1.0.104"
 axum = { version = "0.8.9", features = ["macros"] }
-base64 = "0.22.1"
+base64 = "0.23.1"
 chrono = { version = "0.4", default-features = false, features = ["serde"] }
-cookie = "0.18.1"
+cookie = "0.18.2"
 fluxer_common = { path = "../fluxer_common" }
 hmac = "0.13.0"
 maud = { version = "0.27.0", features = ["axum"] }
 rand = "0.10"
-regress = "0.11"
-reqwest = { version = "0.13.4", default-features = false, features = ["json", "rustls"] }
-serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.150"
+regress = "0.12"
+reqwest = { version = "0.13.5", default-features = false, features = ["json", "rustls"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
 sha2 = "0.11.0"
-time = { version = "0.3.47", features = ["formatting", "parsing"] }
-tokio = { version = "1.52.3", features = ["macros", "net", "rt-multi-thread", "signal"] }
+time = { version = "0.3.55", features = ["formatting", "parsing"] }
+tokio = { version = "1.53.1", features = ["macros", "net", "rt-multi-thread", "signal"] }
 tower = { version = "0.5.3", features = ["util"] }
-tower-http = { version = "0.6.11", features = ["compression-gzip", "trace"] }
+tower-http = { version = "0.7.1", features = ["compression-gzip", "trace"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 url = "2.5"
 urlencoding = "2.1.3"
-progenitor-client = { version = "0.14.0", default-features = false }
+progenitor-client = { version = "0.15.0", default-features = false }
 
 [build-dependencies]
 openapiv3 = "2.2.0"
-prettyplease = "0.2"
-progenitor = { version = "0.14.0", default-features = false }
+prettyplease = "0.3"
+progenitor = { version = "0.15.0", default-features = false }
 serde_json = "1"
 sha2 = "0.11.0"
-syn = "2"
+syn = "3"

@@ -441,7 +441,7 @@ export function useTextareaAutocomplete({
 	);
 	const canManageUser = useCallback(
 		(otherUserId: string, permission: bigint) => {
-			if (!channel || !channel.guildId) return false;
+			if (!channel?.guildId) return false;
 			const currentUserId = Authentication.currentUserId;
 			if (otherUserId === currentUserId) return false;
 			const guild = Guilds.getGuild(channel.guildId);
@@ -452,7 +452,7 @@ export function useTextareaAutocomplete({
 	);
 	const canViewChannel = useCallback(
 		(userId: string): boolean => {
-			if (!channel || !channel.guildId) {
+			if (!channel?.guildId) {
 				return true;
 			}
 			return PermissionUtils.can(Permissions.VIEW_CHANNEL, userId as UserId, channel.toJSON());
@@ -491,7 +491,7 @@ export function useTextareaAutocomplete({
 			}
 			case 'mention': {
 				setAutocompleteType('mention');
-				if (!channel || !channel.guildId) {
+				if (!channel?.guildId) {
 					if (!channel) {
 						setAutocompleteOptions([]);
 						return;

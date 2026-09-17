@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-FROM caddy:2.10-alpine
+FROM caddy:2.11-alpine
 
 ARG BUILD_VERSION=""
 ARG SOURCE_SHA=""

@@ -14,8 +14,8 @@ use tokio::time::sleep;
 
 pub const PNPM_INSTALL_ENV: &[(&str, &str)] = &[
     ("CI", "true"),
-    ("npm_config_child_concurrency", "2"),
-    ("npm_config_network_concurrency", "8"),
+    ("pnpm_config_child_concurrency", "2"),
+    ("pnpm_config_network_concurrency", "8"),
 ];
 
 pub fn format_command(args: &[impl AsRef<str>]) -> String {

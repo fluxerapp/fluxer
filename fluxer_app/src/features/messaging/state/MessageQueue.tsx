@@ -602,7 +602,7 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 	private scheduleTextareaAttachmentUploadCleanup(attachmentId: number): void {
 		window.setTimeout(() => {
 			const entry = this.textareaAttachmentUploads.get(attachmentId);
-			if (!entry || !entry.settled) {
+			if (!entry?.settled) {
 				return;
 			}
 			if (Date.now() - entry.startedAt >= TEXTAREA_ATTACHMENT_UPLOAD_CACHE_TTL_MS) {
@@ -980,7 +980,7 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 		});
 		const plans = response.body?.attachments ?? [];
 		for (const entry of plans) {
-			if (!entry || !entry.upload_mode || !entry.upload_filename || !entry.filename) {
+			if (!entry?.upload_mode || !entry.upload_filename || !entry.filename) {
 				throw new Error('Invalid presigned attachment upload response');
 			}
 			if (entry.upload_mode === 'singlepart') {

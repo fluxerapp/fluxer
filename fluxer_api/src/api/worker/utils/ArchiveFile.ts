@@ -3,7 +3,7 @@ import {lstat, opendir, readlink} from 'node:fs/promises';
 import path from 'node:path';
 import type {Readable} from 'node:stream';
 import {finished, pipeline} from 'node:stream/promises';
-import archiver, {type Archiver, type EntryData} from 'archiver';
+import {type Archiver, type EntryData, ZipArchive} from 'archiver';
 
 export interface ArchiveEntryWriter {
 	append(source: Readable | Buffer | string, data: EntryData): Promise<void>;
@@ -27,19 +27,18 @@ export async function writeZipArchive(
 	filePath: string,
 	produce: (archive: ArchiveFileWriter) => void | Promise<void>,
 ): Promise<void> {
-	const archive: Archiver = archiver('zip', {zlib: {level: 6}});
+	const archive: Archiver = new ZipArchive({zlib: {level: 6}});
 	const output = createWriteStream(filePath);
 	const outputClosed = new Promise<void>((resolve) => output.once('close', resolve));
 	const archiveClosed = new Promise<void>((resolve) => archive.once('close', resolve));
 	const inputs = new Map<Readable, Promise<void>>();
-	const entries = new Map<EntryData, PendingArchiveEntry>();
+	const entries: Array<PendingArchiveEntry> = [];
 	let failure: {error: unknown} | undefined;
 
 	function fail(error: unknown): void {
 		if (failure) return;
 		failure = {error};
-		for (const entry of entries.values()) entry.reject(error);
-		entries.clear();
+		for (const entry of entries.splice(0)) entry.reject(error);
 		const streamError = error instanceof Error ? error : new Error('Archive creation failed', {cause: error});
 		for (const source of inputs.keys()) source.destroy(streamError);
 		archive.abort();
@@ -76,7 +75,7 @@ export async function writeZipArchive(
 		}
 		requireWritable();
 		const entry = {...data};
-		const processed = new Promise<void>((resolve, reject) => entries.set(entry, {resolve, reject}));
+		const processed = new Promise<void>((resolve, reject) => entries.push({resolve, reject}));
 		const completed = Promise.all([processed, completion]);
 		try {
 			archive.append(source, entry);
@@ -117,14 +116,13 @@ export async function writeZipArchive(
 
 	archive.on('warning', fail);
 	archive.on('error', fail);
-	archive.on('entry', (entry) => {
+	archive.on('entry', () => {
 		if (failure) return;
-		const pending = entries.get(entry);
+		const pending = entries.shift();
 		if (!pending) {
 			fail(new Error('Archive completed an unknown entry'));
 			return;
 		}
-		entries.delete(entry);
 		pending.resolve();
 	});
 	output.on('error', fail);

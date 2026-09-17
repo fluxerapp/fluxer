@@ -58,14 +58,14 @@ jobs:
       source_sha: ${{ steps.meta.outputs.source_sha }}
     steps:
       - name: Checkout source
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: main
 
       - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
         with:
-          toolchain: "1.93.0"
+          toolchain: "1.98.1"
 
       - name: Create token
         id: create-token
@@ -98,12 +98,12 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
       - name: Checkout source
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
         with:
-          toolchain: "1.93.0"
+          toolchain: "1.98.1"
 
       - name: Build platform matrix
         id: set-matrix
@@ -151,27 +151,27 @@ jobs:
       ELECTRON_ARCH: ${{ matrix.electron_arch }}
     steps:
       - name: Checkout CI helpers
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: ${{ needs.meta.outputs.source_sha }}
           path: _ci
 
       - name: Checkout source
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: ${{ needs.meta.outputs.source_sha }}
           path: source
 
       - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
         with:
-          toolchain: "1.93.0"
+          toolchain: "1.98.1"
 
       - name: Set up Python (Windows)
         if: runner.os == 'Windows'
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
-          python-version: "3.13"
+          python-version: "3.14"
 
       - name: Ensure python3 command (Windows)
         if: runner.os == 'Windows'
@@ -196,14 +196,14 @@ jobs:
           --step set_workdir_unix
 
       - name: Set up Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: 24
+          node-version: 26
 
-      - name: Set up pnpm via corepack
+      - name: Set up pnpm
         run: >-
           cargo run --locked --quiet --manifest-path ${{ github.workspace }}/_ci/tools/ci/Cargo.toml -- build-desktop
-          --step setup_pnpm_corepack
+          --step setup_pnpm
 
       - name: Resolve pnpm store path (Windows)
         if: runner.os == 'Windows'
@@ -247,9 +247,9 @@ jobs:
 
       - name: Set up Rust toolchain (Unix)
         if: matrix.platform != 'windows'
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
         with:
-          toolchain: "1.93.0"
+          toolchain: "1.98.1"
           targets: ${{ matrix.platform == 'macos' && 'aarch64-apple-darwin,x86_64-apple-darwin' || (matrix.arch == 'arm64' && 'aarch64-unknown-linux-gnu' || 'x86_64-unknown-linux-gnu') }}
 
       - name: Install MSVC ARM64 build tools
@@ -260,7 +260,7 @@ jobs:
 
       - name: Set up MSVC env (Windows)
         if: matrix.platform == 'windows'
-        uses: TheMrMilchmann/setup-msvc-dev@79dac248aac9d0059f86eae9d8b5bfab4e95e97c
+        uses: TheMrMilchmann/setup-msvc-dev@368ef7d1ee4d1171b31d4a7f67f4d954f903f5a9
         with:
           arch: ${{ matrix.arch == 'arm64' && 'amd64_arm64' || 'amd64' }}
 
@@ -302,9 +302,9 @@ jobs:
 
       - name: Set up .NET SDK (Windows)
         if: matrix.platform == 'windows'
-        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68
         with:
-          dotnet-version: "8.0.x"
+          dotnet-version: "10.0.x"
 
       - name: Install Velopack CLI
         if: matrix.platform == 'windows'
@@ -363,7 +363,7 @@ jobs:
 
       - name: Azure login for Artifact Signing
         if: matrix.platform == 'windows'
-        uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
@@ -533,14 +533,14 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.DOWNLOADS_AWS_SECRET_ACCESS_KEY || secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
       - name: Checkout source
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: ${{ needs.meta.outputs.source_sha }}
 
       - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
         with:
-          toolchain: "1.93.0"
+          toolchain: "1.98.1"
 
       - name: Download S3 handoff artifacts
         run: >-
@@ -612,14 +612,14 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.DOWNLOADS_AWS_SECRET_ACCESS_KEY || secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
       - name: Checkout source
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: ${{ needs.meta.outputs.source_sha }}
 
       - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
         with:
-          toolchain: "1.93.0"
+          toolchain: "1.98.1"
 
       - name: Download GitHub release assets
         run: >-

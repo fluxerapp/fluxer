@@ -53,17 +53,17 @@ describe('discoverControllerFiles', () => {
 		const route = routes.find((route) => route.path === '/donations/manage');
 		expect(route?.explicitSecurity).toEqual([]);
 	});
-	it.each([
-		'download_latest_desktop_version_checksum',
-		'download_desktop_version_checksum',
-	])('preserves the plain-text checksum response for %s', (operationId) => {
-		const route = routes.find((route) => route.explicitOperationId === operationId);
-		expect(route).toMatchObject({
-			responseSchemaName: 'DownloadChecksumResponse',
-			responseContentType: 'text/plain',
-			explicitStatusCodes: [200],
-		});
-	});
+	it.each(['download_latest_desktop_version_checksum', 'download_desktop_version_checksum'])(
+		'preserves the plain-text checksum response for %s',
+		(operationId) => {
+			const route = routes.find((route) => route.explicitOperationId === operationId);
+			expect(route).toMatchObject({
+				responseSchemaName: 'DownloadChecksumResponse',
+				responseContentType: 'text/plain',
+				explicitStatusCodes: [200],
+			});
+		},
+	);
 	it('rejects a bodyless status that is absent from the route response statuses', () => {
 		const route = routes.find((route) => route.path === '/donations/manage');
 		assert(route);

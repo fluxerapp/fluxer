@@ -13,8 +13,8 @@ import {
 import {WorkerRunner} from '@app/api/worker/WorkerRunner';
 import type {WorkerService} from '@app/api/worker/WorkerService';
 import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
+import type {ConsumerMessages, JsMsg} from '@nats-io/jetstream';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import type {ConsumerMessages, JsMsg} from 'nats';
 import {afterEach, beforeAll, describe, expect, it, vi} from 'vitest';
 
 const HEARTBEAT_PATH = '/tmp/fluxer-worker-heartbeat-test';

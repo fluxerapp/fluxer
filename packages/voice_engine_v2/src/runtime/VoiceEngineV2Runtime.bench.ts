@@ -18,7 +18,7 @@ import type {
 } from '@fluxer/voice_engine_v2/src/protocol/types';
 import {createVoiceEngineV2MemoryEventLogSpillSink} from '@fluxer/voice_engine_v2/src/runtime/eventLogRing';
 import {VoiceEngineV2Runtime} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Runtime';
-import {bench, describe} from 'vitest';
+import {test} from 'vitest';
 
 interface VoiceEngineV2BenchFixture {
 	events: Array<VoiceEngineV2Event>;
@@ -108,24 +108,24 @@ const runtimeForScreen = buildRuntimeWithConnectedSession();
 const runtimeForParticipant = buildRuntimeWithConnectedSession();
 const runtimeForStats = buildRuntimeWithConnectedSession();
 
-describe('voice engine v2 runtime dispatch round-trip', () => {
-	bench('dispatch inboundVideo.frameReceived', () => {
+test('voice engine v2 runtime dispatch round-trip', async ({bench}) => {
+	await bench('dispatch inboundVideo.frameReceived', () => {
 		runtimeForFrames.dispatch(frameEvent);
-	});
+	}).run();
 
-	bench('dispatch microphone.publishRequested', () => {
+	await bench('dispatch microphone.publishRequested', () => {
 		runtimeForMicrophone.dispatch(microphoneEvent);
-	});
+	}).run();
 
-	bench('dispatch screen.publishRequested', () => {
+	await bench('dispatch screen.publishRequested', () => {
 		runtimeForScreen.dispatch(screenEvent);
-	});
+	}).run();
 
-	bench('dispatch room.participantJoined', () => {
+	await bench('dispatch room.participantJoined', () => {
 		runtimeForParticipant.dispatch(participantEvent);
-	});
+	}).run();
 
-	bench('dispatch stats.collected', () => {
+	await bench('dispatch stats.collected', () => {
 		runtimeForStats.dispatch(statsEvent);
-	});
+	}).run();
 });

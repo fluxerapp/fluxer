@@ -333,7 +333,7 @@ export class OAuth2Service {
 
 	async userInfo(accessToken: string) {
 		const token = await this.tokens.getAccessToken(accessToken);
-		if (!token || !token.userId) {
+		if (!token?.userId) {
 			throw new InvalidTokenError();
 		}
 		const application = await this.applications.getApplication(token.applicationId);

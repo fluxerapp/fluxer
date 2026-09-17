@@ -2,7 +2,7 @@
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import type {ToastProps} from '@app/features/ui/toast';
-import {makeAutoObservable, observable} from 'mobx';
+import {makeAutoObservable, observableRef} from 'mobx';
 
 const logger = new Logger('Toast');
 
@@ -18,7 +18,7 @@ class Toast {
 		makeAutoObservable(
 			this,
 			{
-				currentToast: observable.ref,
+				currentToast: observableRef,
 			},
 			{autoBind: true},
 		);

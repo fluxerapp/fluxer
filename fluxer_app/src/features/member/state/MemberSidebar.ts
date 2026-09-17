@@ -30,7 +30,7 @@ import type {StatusType} from '@fluxer/constants/src/StatusConstants';
 import {StatusTypes} from '@fluxer/constants/src/StatusConstants';
 import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {makeAutoObservable, observable} from 'mobx';
+import {makeAutoObservable, observableRef} from 'mobx';
 
 interface MemberListGroup {
 	id: string;
@@ -258,7 +258,7 @@ class MemberSidebar {
 		>(
 			this,
 			{
-				lists: observable.ref,
+				lists: observableRef,
 				wireListChannelIds: false,
 				listSubscribedChannelIds: false,
 				syncedMemberListGuildIds: false,

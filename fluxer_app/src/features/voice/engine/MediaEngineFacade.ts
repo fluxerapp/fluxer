@@ -181,7 +181,7 @@ import type {
 	ScreenShareCaptureOptions,
 	TrackPublishOptions,
 } from 'livekit-client';
-import {makeObservable, observable} from 'mobx';
+import {makeObservable, observableRef} from 'mobx';
 
 const logger = new Logger('MediaEngineFacade');
 
@@ -403,7 +403,7 @@ class MediaEngineFacade extends Store {
 		setNativeAudioCaptureBridgeLifecycleBridge(this.voiceEngineV2SourceLifecycleBridge);
 		this.syncVoiceEngineV2AudioControlsFromAppState();
 		makeObservable<this, 'facadeSnapshot'>(this, {
-			facadeSnapshot: observable.ref,
+			facadeSnapshot: observableRef,
 		});
 		this.initializeEngineStoreSync();
 		this.initializeVoiceEngineV2ConnectionLifecycleSync();

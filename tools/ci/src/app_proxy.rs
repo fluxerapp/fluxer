@@ -671,7 +671,7 @@ mod tests {
     fn dockerfile_guards_the_trim_on_an_absolute_asset_base_url() {
         let dockerfile = include_str!("../../../fluxer_app_proxy/Dockerfile");
         let trim = dockerfile
-            .split("FROM alpine:3.21 AS app-assets")
+            .split("FROM alpine:3.24 AS app-assets")
             .nth(1)
             .expect("app-assets stage");
         assert!(
@@ -1001,7 +1001,7 @@ mod tests {
     fn dockerfile_prepares_the_asset_tree_once_before_the_architecture_stages() {
         let dockerfile = include_str!("../../../fluxer_app_proxy/Dockerfile");
         let canonical = dockerfile
-            .split("FROM alpine:3.21 AS app-assets")
+            .split("FROM alpine:3.24 AS app-assets")
             .nth(1)
             .expect("app-assets stage");
         let (canonical, per_architecture) = canonical

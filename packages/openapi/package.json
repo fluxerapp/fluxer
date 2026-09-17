@@ -9,7 +9,7 @@
 	"scripts": {
 		"generate": "tsx src/scripts/GenerateSpec.ts",
 		"test": "vitest run",
-		"typecheck": "tsgo --noEmit",
+		"typecheck": "tsc --noEmit",
 		"validate": "tsx src/scripts/GenerateSpec.ts --validate-only"
 	},
 	"dependencies": {
@@ -22,8 +22,8 @@
 	"devDependencies": {
 		"@biomejs/biome": "catalog:",
 		"@types/node": "catalog:",
-		"@typescript/native-preview": "catalog:",
 		"tsx": "catalog:",
+		"typescript": "catalog:ts7",
 		"vitest": "catalog:"
 	}
 }

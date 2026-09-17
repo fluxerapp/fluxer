@@ -96,20 +96,17 @@ describe('TemplateChannel permission overwrites', () => {
 		expect(channel.permission_overwrites).toEqual([{id: '2', type: expected, allow: '8', deny: '0'}]);
 	});
 
-	it.each([
-		'invalid',
-		'NaN',
-		'Infinity',
-		Number.NaN,
-		Number.POSITIVE_INFINITY,
-	])('rejects nonfinite overwrite type %j', (type) => {
-		expect(
-			TemplateChannel.safeParse({
-				id: '1',
-				type: 0,
-				position: 0,
-				permission_overwrites: [{id: '2', type, allow: '8', deny: '0'}],
-			}).success,
-		).toBe(false);
-	});
+	it.each(['invalid', 'NaN', 'Infinity', Number.NaN, Number.POSITIVE_INFINITY])(
+		'rejects nonfinite overwrite type %j',
+		(type) => {
+			expect(
+				TemplateChannel.safeParse({
+					id: '1',
+					type: 0,
+					position: 0,
+					permission_overwrites: [{id: '2', type, allow: '8', deny: '0'}],
+				}).success,
+			).toBe(false);
+		},
+	);
 });

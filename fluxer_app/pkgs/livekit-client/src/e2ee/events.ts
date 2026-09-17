@@ -12,7 +12,7 @@ export enum KeyProviderEvent {
 }
 
 export type KeyProviderCallbacks = {
-	[KeyProviderEvent.SetKey]: (keyInfo: KeyInfo) => void;
+	[KeyProviderEvent.SetKey]: (keyInfo: KeyInfo, updateCurrentKeyIndex: boolean) => void;
 	[KeyProviderEvent.RatchetRequest]: (participantIdentity?: string, keyIndex?: number) => void;
 	[KeyProviderEvent.KeyRatcheted]: (
 		ratchetedResult: RatchetResult,

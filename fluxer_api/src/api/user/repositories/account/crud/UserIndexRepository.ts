@@ -16,7 +16,7 @@ import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
 export class UserIndexRepository {
 	async syncIndices(data: UserRow, oldData?: UserRow | null): Promise<void> {
 		const batch = new BatchBuilder();
-		if (!!data.username && data.discriminator != null && data.discriminator !== undefined) {
+		if (data.username && data.discriminator != null && data.discriminator !== undefined) {
 			batch.addPrepared(
 				UserByUsername.upsertAll({
 					username: data.username.toLowerCase(),

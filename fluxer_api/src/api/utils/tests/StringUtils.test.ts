@@ -28,14 +28,12 @@ describe('parseString', () => {
 });
 
 describe('hasVisibleContent', () => {
-	it.each([
-		'',
-		' \t\n',
-		'\u200e \u200b\ufeff',
-		'\u2800\u3164\u{e0100}',
-	])('rejects whitespace or invisible-only input %j', (input) => {
-		expect(hasVisibleContent(input)).toBe(false);
-	});
+	it.each(['', ' \t\n', '\u200e \u200b\ufeff', '\u2800\u3164\u{e0100}'])(
+		'rejects whitespace or invisible-only input %j',
+		(input) => {
+			expect(hasVisibleContent(input)).toBe(false);
+		},
+	);
 
 	it.each(['hello', '\u200e hello', '🙂', '` `'])('accepts visible input %j', (input) => {
 		expect(hasVisibleContent(input)).toBe(true);

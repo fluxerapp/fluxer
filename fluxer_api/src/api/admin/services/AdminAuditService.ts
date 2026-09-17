@@ -84,7 +84,7 @@ export class AdminAuditService {
 	}): Promise<AuditLogsListResponse> {
 		const auditLogSearchService = getAuditLogSearchService();
 		const targetIdBigInt = data.target_id ? BigInt(data.target_id) : undefined;
-		if (!auditLogSearchService || !auditLogSearchService.isAvailable()) {
+		if (!auditLogSearchService?.isAvailable()) {
 			return this.listAuditLogsFromDatabase({
 				adminUserId: data.admin_user_id,
 				targetType: data.target_type,
@@ -129,7 +129,7 @@ export class AdminAuditService {
 	}): Promise<AuditLogsListResponse> {
 		const auditLogSearchService = getAuditLogSearchService();
 		const targetIdBigInt = data.target_id ? BigInt(data.target_id) : undefined;
-		if (!auditLogSearchService || !auditLogSearchService.isAvailable()) {
+		if (!auditLogSearchService?.isAvailable()) {
 			return this.listAuditLogsFromDatabase({
 				adminUserId: data.admin_user_id,
 				targetType: data.target_type,

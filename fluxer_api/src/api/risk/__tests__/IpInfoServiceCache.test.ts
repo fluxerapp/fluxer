@@ -101,7 +101,7 @@ describe('IpInfoService caching', () => {
 
 		expect(result.available).toBe(false);
 		expect(sets[0]?.ttlSeconds).toBe(60);
-		expect((sets[0]?.value as CachedIpInfoFailure).failureOutcome).toBe('request_failed');
+		expect((sets[0]?.value as CachedIpInfoFailure)?.failureOutcome).toBe('request_failed');
 	});
 
 	it('negative-caches a schema mismatch', async () => {
@@ -113,8 +113,8 @@ describe('IpInfoService caching', () => {
 
 		expect(result.available).toBe(false);
 		expect(sets[0]?.ttlSeconds).toBe(600);
-		expect((sets[0]?.value as CachedIpInfoFailure).failureOutcome).toBe('schema_mismatch');
-		expect((sets[0]?.value as CachedIpInfoFailure).failureHttpStatus).toBe(200);
+		expect((sets[0]?.value as CachedIpInfoFailure)?.failureOutcome).toBe('schema_mismatch');
+		expect((sets[0]?.value as CachedIpInfoFailure)?.failureHttpStatus).toBe(200);
 	});
 
 	it('negative-caches a quota rejection for longer', async () => {

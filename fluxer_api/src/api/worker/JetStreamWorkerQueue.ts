@@ -4,22 +4,22 @@ import {randomUUID} from 'node:crypto';
 import {Logger} from '@app/api/Logger';
 import type {WorkerLaneDefinition} from '@app/api/worker/WorkerLaneConfig';
 import {WorkerQueueOverflowError} from '@app/api/worker/WorkerQueueOverflowError';
-import type {JetStreamConnectionManager} from '@pkgs/nats/src/JetStreamConnectionManager';
-import type {WorkerJobPayload} from '@pkgs/worker/src/contracts/WorkerTypes';
 import {
 	AckPolicy,
 	type ConsumerInfo,
 	type ConsumerUpdateConfig,
 	DeliverPolicy,
 	DiscardPolicy,
+	JetStreamApiError,
 	type JetStreamManager,
-	NatsError,
-	nanos,
 	ReplayPolicy,
 	RetentionPolicy,
 	StorageType,
 	type StreamConfig,
-} from 'nats';
+} from '@nats-io/jetstream';
+import {nanos} from '@nats-io/transport-node';
+import type {JetStreamConnectionManager} from '@pkgs/nats/src/JetStreamConnectionManager';
+import type {WorkerJobPayload} from '@pkgs/worker/src/contracts/WorkerTypes';
 
 const STREAM_NAME = 'JOBS';
 const SUBJECT_PREFIX = 'jobs.';
@@ -53,12 +53,6 @@ interface WorkerStreamDefinition {
 	maxMessagesPerSubject: number;
 	discard: DiscardPolicy;
 	discardNewPerSubject: boolean;
-}
-
-interface WorkerStreamConfiguration extends StreamConfig {
-	persist_mode?: string;
-	allow_msg_ttl?: boolean;
-	allow_msg_counter?: boolean;
 }
 
 const JOBS_STREAM: WorkerStreamDefinition = {
@@ -95,21 +89,14 @@ export interface WorkerDeadLetterMetadata {
 }
 
 function jsErrorCode(error: unknown): number | null {
-	if (!(error instanceof NatsError)) {
-		return null;
-	}
-	return error.jsError()?.err_code ?? null;
+	return error instanceof JetStreamApiError ? error.code : null;
 }
 
 function describeStreamRejection(error: unknown): string | null {
-	if (!(error instanceof NatsError)) {
+	if (!(error instanceof JetStreamApiError) || !STREAM_FULL_ERR_CODES.has(error.code)) {
 		return null;
 	}
-	const apiError = error.jsError();
-	if (apiError === null || !STREAM_FULL_ERR_CODES.has(apiError.err_code ?? 0)) {
-		return null;
-	}
-	return apiError.description ?? 'stream rejected the publish';
+	return error.apiError().description || 'stream rejected the publish';
 }
 
 export class JetStreamWorkerQueue {
@@ -155,7 +142,7 @@ export class JetStreamWorkerQueue {
 		}
 	}
 
-	private async applyStreamLimits(jsm: JetStreamManager, existing: WorkerStreamConfiguration): Promise<void> {
+	private async applyStreamLimits(jsm: JetStreamManager, existing: StreamConfig): Promise<void> {
 		const unmanaged = this.unmanagedStreamSettings(existing, JOBS_STREAM);
 		if (unmanaged.length > 0) {
 			Logger.warn(
@@ -205,7 +192,7 @@ export class JetStreamWorkerQueue {
 		}
 	}
 
-	private assertStreamIdentity(config: WorkerStreamConfiguration, stream: WorkerStreamDefinition): void {
+	private assertStreamIdentity(config: StreamConfig, stream: WorkerStreamDefinition): void {
 		const incompatible: Array<string> = [];
 		if (config.name !== stream.name) incompatible.push('name');
 		if (config.subjects?.length !== 1 || config.subjects[0] !== stream.subject) incompatible.push('subjects');
@@ -222,7 +209,7 @@ export class JetStreamWorkerQueue {
 		}
 	}
 
-	private diffStreamLimits(config: WorkerStreamConfiguration, stream: WorkerStreamDefinition): Array<string> {
+	private diffStreamLimits(config: StreamConfig, stream: WorkerStreamDefinition): Array<string> {
 		const drifted: Array<string> = [];
 		if (!Number.isSafeInteger(config.max_bytes) || config.max_bytes < stream.minBytes) drifted.push('max_bytes');
 		if (config.max_msgs !== stream.maxMessages) drifted.push('max_msgs');
@@ -234,7 +221,7 @@ export class JetStreamWorkerQueue {
 		return drifted;
 	}
 
-	private unmanagedStreamSettings(config: WorkerStreamConfiguration, stream: WorkerStreamDefinition): Array<string> {
+	private unmanagedStreamSettings(config: StreamConfig, stream: WorkerStreamDefinition): Array<string> {
 		const unmanaged: Array<string> = [];
 		if (config.max_age !== nanos(stream.maxAgeMs)) unmanaged.push('max_age');
 		if (config.duplicate_window !== nanos(DUPLICATE_WINDOW_MS)) unmanaged.push('duplicate_window');

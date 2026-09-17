@@ -5,7 +5,7 @@ import {
 	resolveReadStateEntryStatus,
 } from '@app/features/read_state/state/read_states/ReadStateEntryStatusMachine';
 import {fromTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
-import {bench, describe} from 'vitest';
+import {test} from 'vitest';
 
 const BASE_TIMESTAMP = Date.UTC(2024, 0, 1);
 const ACK_ID = fromTimestamp(BASE_TIMESTAMP + 1_000);
@@ -79,8 +79,8 @@ const INPUTS = Object.freeze(
 	}),
 );
 
-describe('ReadStateEntryStatusMachine benchmarks', () => {
-	bench('resolves 100k mixed read-state entry statuses', () => {
+test('ReadStateEntryStatusMachine benchmarks', async ({bench}) => {
+	await bench('resolves 100k mixed read-state entry statuses', () => {
 		let unreadOrMentionCount = 0;
 		for (const input of INPUTS) {
 			if (resolveReadStateEntryStatus(input).isUnreadOrMentioned) {
@@ -88,5 +88,5 @@ describe('ReadStateEntryStatusMachine benchmarks', () => {
 			}
 		}
 		(globalThis as {__readStateEntryStatusBenchSink?: number}).__readStateEntryStatusBenchSink = unreadOrMentionCount;
-	});
+	}).run();
 });

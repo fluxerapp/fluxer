@@ -35,7 +35,7 @@ export class BotAuthService {
 		}
 		const {applicationId, secret} = parsed;
 		const application = await this.applicationRepository.getApplication(applicationId);
-		if (!application || !application.hasBotUser() || !application.botTokenHash) {
+		if (!application?.hasBotUser() || !application.botTokenHash) {
 			return null;
 		}
 		try {

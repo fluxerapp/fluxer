@@ -357,7 +357,7 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 
 	async unmuteScreenShareAudioPublicationInternal(participant: LocalParticipant, reason: string): Promise<void> {
 		const publication = participant.getTrackPublication(Track.Source.ScreenShareAudio);
-		if (!publication || !publication.isMuted) {
+		if (!publication?.isMuted) {
 			return;
 		}
 		try {
@@ -771,7 +771,7 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		options: {includeSelfWindowAudio?: boolean; replaceExisting?: boolean} = {},
 	): Promise<boolean> {
 		const participant = room?.localParticipant;
-		if (!participant || !participant.isScreenShareEnabled) return false;
+		if (!participant?.isScreenShareEnabled) return false;
 		if (!linuxRule) return false;
 		if (options.replaceExisting !== true) {
 			const reconfigured = await reconfigureLinuxNativeAudioRouting(linuxRule, options);
@@ -807,7 +807,7 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 
 	async ensureWindowScreenShareAudioPublication(room: Room | null, sourceId: string): Promise<boolean> {
 		const participant = room?.localParticipant;
-		if (!participant || !participant.isScreenShareEnabled) return false;
+		if (!participant?.isScreenShareEnabled) return false;
 		const targetPid = await getElectronAPI()
 			?.nativeAudio?.resolveAudioRootPidForSource(sourceId)
 			.catch((error) => {
@@ -842,7 +842,7 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 
 	async ensureDeviceScreenShareMicPublication(room: Room | null, audioDeviceId: string): Promise<boolean> {
 		const participant = room?.localParticipant;
-		if (!participant || !participant.isScreenShareEnabled) return false;
+		if (!participant?.isScreenShareEnabled) return false;
 		await ensureNativeMicrophonePermissionForDeviceShare('replace');
 		const micTrack = await createLocalAudioTrack({
 			deviceId: audioDeviceId && audioDeviceId !== 'default' ? audioDeviceId : undefined,
@@ -1038,7 +1038,7 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 			return false;
 		}
 		const participant = room?.localParticipant;
-		if (!participant || !participant.isScreenShareEnabled) return false;
+		if (!participant?.isScreenShareEnabled) return false;
 		const screenSharePublication = participant.getTrackPublication(Track.Source.ScreenShare);
 		const screenShareTrack = screenSharePublication?.videoTrack;
 		if (!screenShareTrack) {

@@ -53,21 +53,12 @@ describe('isValidBase64', () => {
 		expect(isValidBase64(input)).toBe(true);
 	});
 
-	it.each([
-		'YQ',
-		'YQ=',
-		'YQ===',
-		'====',
-		'Y=Q=',
-		'YR==',
-		'YWJ=',
-		'YWJ_',
-		'YWJ-',
-		'YW J',
-		'éAAA',
-	])('rejects malformed or noncanonical encoding %j', (input) => {
-		expect(isValidBase64(input)).toBe(false);
-	});
+	it.each(['YQ', 'YQ=', 'YQ===', '====', 'Y=Q=', 'YR==', 'YWJ=', 'YWJ_', 'YWJ-', 'YW J', 'éAAA'])(
+		'rejects malformed or noncanonical encoding %j',
+		(input) => {
+			expect(isValidBase64(input)).toBe(false);
+		},
+	);
 
 	it.each([1, 2, 3, 255, 256])('accepts a byte round trip of length %i', (length) => {
 		const bytes = Buffer.from(Array.from({length}, (_, index) => index % 256));
@@ -137,13 +128,13 @@ describe('base64LengthForBytes', () => {
 		expect(base64LengthForBytes(bytes) % 4).toBe(0);
 	});
 
-	it.each([
-		EMOJI_MAX_SIZE,
-		EMOJI_MAX_SIZE + 1,
-	])('accepts %i encoded bytes; decoded-byte limits remain authoritative', (bytes) => {
-		const schema = createBase64StringType(1, base64LengthForBytes(EMOJI_MAX_SIZE));
-		const encoded = Buffer.alloc(bytes, 1).toString('base64');
-		expect(encoded.length).toBe(base64LengthForBytes(EMOJI_MAX_SIZE));
-		expect(schema.parse(encoded)).toBe(encoded);
-	});
+	it.each([EMOJI_MAX_SIZE, EMOJI_MAX_SIZE + 1])(
+		'accepts %i encoded bytes; decoded-byte limits remain authoritative',
+		(bytes) => {
+			const schema = createBase64StringType(1, base64LengthForBytes(EMOJI_MAX_SIZE));
+			const encoded = Buffer.alloc(bytes, 1).toString('base64');
+			expect(encoded.length).toBe(base64LengthForBytes(EMOJI_MAX_SIZE));
+			expect(schema.parse(encoded)).toBe(encoded);
+		},
+	);
 });

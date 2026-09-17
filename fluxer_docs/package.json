@@ -38,6 +38,6 @@
 		"mdast-util-mdx-jsx": "catalog:",
 		"mdast-util-to-hast": "catalog:",
 		"remark-gfm": "catalog:",
-		"typescript": "6.0.2"
+		"typescript": "catalog:"
 	}
 }

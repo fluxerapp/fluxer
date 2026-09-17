@@ -3,7 +3,7 @@
 import Authentication from '@app/features/auth/state/Authentication';
 import {User} from '@app/features/user/models/User';
 import type {UserPrivate, User as WireUser} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {action, makeAutoObservable, reaction, runInAction} from 'mobx';
+import {makeAutoObservable, reaction, runInAction} from 'mobx';
 
 const CURRENT_USER_PRIVATE_WIRE_KEYS = [
 	'is_staff',
@@ -92,7 +92,6 @@ class Users {
 		return this.usersList;
 	}
 
-	@action
 	handleGatewayReady(currentUser: UserPrivate): void {
 		const userRecord = new User(currentUser);
 		this.users = {
@@ -107,7 +106,6 @@ class Users {
 		}
 	}
 
-	@action
 	handleUserUpdate(
 		user: WireUser,
 		options?: {

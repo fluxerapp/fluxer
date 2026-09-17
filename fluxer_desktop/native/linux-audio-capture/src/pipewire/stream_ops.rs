@@ -278,12 +278,15 @@ fn decode_f32_into_scratch(raw_payload: &[u8], scratch: &mut [f32; MAX_FRAME_SAM
     let sample_count = raw_payload.len() / mem::size_of::<f32>();
     let take = sample_count.min(MAX_FRAME_SAMPLES);
     let mut written = 0usize;
-    let mut iter = raw_payload.chunks_exact(mem::size_of::<f32>());
+    let mut iter = raw_payload
+        .as_chunks::<{ mem::size_of::<f32>() }>()
+        .0
+        .iter();
     for slot in scratch.iter_mut().take(take) {
         let Some(chunk) = iter.next() else {
             break;
         };
-        *slot = f32::from_ne_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]);
+        *slot = f32::from_ne_bytes(*chunk);
         written += 1;
     }
     written

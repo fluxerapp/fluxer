@@ -1,11 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 ARG BUILD_VERSION
 
-FROM node:24-bookworm-slim AS base
+FROM node:26-trixie-slim AS base
 
 WORKDIR /usr/src/app
 
-RUN corepack enable && corepack prepare pnpm@10.29.3 --activate
+RUN npm install -g pnpm@12.4.2
 
 FROM base AS deploy
 
@@ -21,9 +21,9 @@ COPY . .
 
 RUN pnpm install --frozen-lockfile
 RUN pnpm --filter fluxer_docs run build
-RUN pnpm deploy --legacy --filter=fluxer_docs --prod --config.allowUnusedPatches=true /out
+RUN pnpm deploy --legacy --filter=fluxer_docs --prod --config.allow-unused-patches=true /out
 
-FROM node:24-bookworm-slim
+FROM node:26-trixie-slim
 
 ARG BUILD_VERSION=""
 ARG SOURCE_SHA=""
@@ -33,10 +33,10 @@ WORKDIR /usr/src/app/fluxer_docs
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
 		ca-certificates \
-		libvips42 && \
+		libvips42t64 && \
 	rm -rf /var/lib/apt/lists/*
 
-RUN corepack enable && corepack prepare pnpm@10.29.3 --activate
+RUN npm install -g pnpm@12.4.2
 
 LABEL maintainer="Fluxer"
 LABEL org.opencontainers.image.title="fluxer-docs"
@@ -54,11 +54,9 @@ LABEL app.fluxer.build-version="${BUILD_VERSION}"
 COPY --from=deploy /out ./
 COPY --from=deploy /usr/src/app/fluxer_docs/dist ./dist
 
-RUN mkdir -p /usr/src/app/.cache/corepack && \
-	chown -R 65532:65532 /usr/src/app
+RUN chown -R 65532:65532 /usr/src/app
 
 ENV HOME=/usr/src/app
-ENV COREPACK_HOME=/usr/src/app/.cache/corepack
 ENV NODE_ENV=production
 ENV NODE_OPTIONS="--enable-source-maps"
 ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt

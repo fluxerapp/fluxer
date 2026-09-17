@@ -8,20 +8,20 @@ ARG APP_ASSETS_REF=app-assets
 ARG APP_ASSETS_PLATFORM=$BUILDPLATFORM
 
 # ---------- Stage 1: Build the SPA (fluxer_app) ----------
-FROM node:24-bookworm-slim AS app-build
+FROM node:26-trixie-slim AS app-build
 
 ARG BUILD_VERSION
 ARG PUBLIC_ASSET_BASE_URL
 
 WORKDIR /usr/src/app
 
-RUN corepack enable && corepack prepare pnpm@10.29.3 --activate
+RUN npm install -g pnpm@12.4.2
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
 	curl ca-certificates build-essential clang \
 	&& rm -rf /var/lib/apt/lists/*
 
-ARG RUST_VERSION=1.93.0
+ARG RUST_VERSION=1.98.1
 ENV RUSTUP_HOME=/usr/local/rustup \
 	CARGO_HOME=/usr/local/cargo \
 	PATH=/usr/local/cargo/bin:$PATH
@@ -83,10 +83,10 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
 
 # ---------- Stage 2: The one canonical asset tree every architecture serves ----------
 # Stage for CI to extract the full dist (docker bake app-dist target)
-FROM alpine:3.21 AS app-dist
+FROM alpine:3.24 AS app-dist
 COPY --from=app-build /usr/src/app/fluxer_app/dist /dist
 
-FROM alpine:3.21 AS app-assets
+FROM alpine:3.24 AS app-assets
 ARG BUNDLE_LOCAL_ASSETS=true
 ARG PUBLIC_ASSET_BASE_URL=""
 COPY fluxer_app_proxy/scripts/precompress_assets.sh /usr/local/bin/precompress_assets.sh
@@ -109,7 +109,7 @@ RUN --mount=type=bind,from=app-dist,source=/dist,target=/dist \
 FROM --platform=${APP_ASSETS_PLATFORM} ${APP_ASSETS_REF} AS app-static
 
 # ---------- Stage 3: Build the Rust proxy binary ----------
-FROM rust:1-bookworm AS rust-builder
+FROM rust:1-trixie AS rust-builder
 
 ARG FLUXER_APP_PROXY_TIME_FREEZE_ENABLED="true"
 
@@ -146,7 +146,7 @@ RUN if [ "${FLUXER_APP_PROXY_TIME_FREEZE_ENABLED}" = "false" ]; then \
 	&& cp target/release/fluxer_app_proxy /usr/local/bin/fluxer-app-proxy
 
 # ---------- Stage 4: Runtime ----------
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 ARG BUILD_VERSION=""
 ARG SOURCE_SHA=""

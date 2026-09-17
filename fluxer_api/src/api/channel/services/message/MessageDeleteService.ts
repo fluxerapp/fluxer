@@ -115,7 +115,7 @@ export class MessageDeleteService {
 	}): Promise<void> {
 		const channelId = webhook.channelId!;
 		const channel = await this.deps.channelRepository.channelData.findUnique(channelId);
-		if (!channel || !channel.guildId) {
+		if (!channel?.guildId) {
 			throw new CannotExecuteOnDmError();
 		}
 		const message = await this.deps.channelRepository.messages.getMessage(channelId, messageId);

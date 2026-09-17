@@ -99,7 +99,8 @@ collect_found_members(UniqueIds, MembersMap) ->
     [
         M
      || Id <- UniqueIds,
-        (M = maps:get(Id, MembersMap, undefined)) =/= undefined
+        M <- [maps:get(Id, MembersMap, undefined)],
+        M =/= undefined
     ].
 
 -spec resolve_member_limit(binary(), non_neg_integer()) -> pos_integer().

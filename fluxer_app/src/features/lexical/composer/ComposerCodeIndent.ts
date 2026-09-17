@@ -16,7 +16,7 @@ export function registerComposerCodeIndent(
 ): () => void {
 	return editor.registerCommand(
 		KEY_TAB_COMMAND,
-		(event: KeyboardEvent | null) => {
+		(event: KeyboardEvent) => {
 			if (typeaheadActiveRef.current) {
 				return false;
 			}

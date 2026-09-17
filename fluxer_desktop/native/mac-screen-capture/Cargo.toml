@@ -12,8 +12,8 @@ resolver = "2"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-napi = {version = "3.9.1", default-features = false, features = ["dyn-symbols", "napi8", "async"]}
-napi-derive = "3.5.6"
+napi = {version = "3.12.6", default-features = false, features = ["dyn-symbols", "napi8", "async"]}
+napi-derive = "3.6.7"
 fluxer_encoder_ring = {path = "../encoder-ring"}
 parking_lot = "0.12"
 
@@ -21,7 +21,7 @@ parking_lot = "0.12"
 path = "../screen-frame-bus"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-libc = "0.2.186"
+libc = "0.2.189"
 objc2 = "0.6"
 objc2-foundation = {version = "0.3", features = ["NSString", "NSArray", "NSDictionary", "NSError", "NSValue", "NSBundle", "NSProcessInfo"]}
 objc2-screen-capture-kit = {version = "0.3", features = ["SCStream", "SCShareableContent", "objc2-core-graphics", "objc2-core-media", "objc2-core-foundation", "block2", "dispatch2", "libc"]}
@@ -35,7 +35,7 @@ block2 = "0.6"
 dispatch2 = "0.3"
 
 [build-dependencies]
-napi-build = "2.3.2"
+napi-build = "2.4.3"
 
 [dev-dependencies]
 criterion = {version = "0.8", default-features = false, features = ["cargo_bench_support"]}

@@ -29,7 +29,7 @@ async function hasScreenRecordingPermission(requestId: string): Promise<boolean>
 export const useElectronScreenSharePicker = (): void => {
 	useEffect(() => {
 		const electronApi = getElectronAPI();
-		if (!electronApi || !electronApi.onDisplayMediaRequested) {
+		if (!electronApi?.onDisplayMediaRequested) {
 			logger.info('Screen share picker unavailable (missing platform handler)');
 			return;
 		}

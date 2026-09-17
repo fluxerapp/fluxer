@@ -6,7 +6,7 @@ import Guilds from '@app/features/guild/state/Guilds';
 import UserSettings, {type GuildFolder} from '@app/features/user/state/UserSettings';
 import {UNCATEGORIZED_FOLDER_ID} from '@fluxer/constants/src/UserConstants';
 import type {Guild as WireGuild} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import {action, makeAutoObservable} from 'mobx';
+import {makeAutoObservable} from 'mobx';
 
 export type OrganizedItem =
 	| {
@@ -26,7 +26,6 @@ class GuildList {
 		makeAutoObservable(this, {}, {autoBind: true});
 	}
 
-	@action
 	handleGatewayReady(guilds: ReadonlyArray<GuildReadyData>): void {
 		const availableGuilds: Array<Guild> = [];
 		for (const guild of guilds) {
@@ -42,7 +41,6 @@ class GuildList {
 		}
 	}
 
-	@action
 	handleGuild(guild: Guild | GuildReadyData | WireGuild): void {
 		if (guild.unavailable) {
 			return;
@@ -66,7 +64,6 @@ class GuildList {
 		this.guilds = next;
 	}
 
-	@action
 	handleGuildDelete(guildId: string, unavailable?: boolean): void {
 		const index = this.guilds.findIndex((s) => s.id === guildId);
 		if (index === -1) {
@@ -85,7 +82,6 @@ class GuildList {
 		this.guilds = next;
 	}
 
-	@action
 	sortGuilds(): void {
 		const next = this.guilds.slice();
 		this.sortGuildArrayInPlace(next);

@@ -71,7 +71,7 @@ export default class LocalAudioTrack extends LocalTrack<Track.Kind.Audio> {
 				!this.isUserProvided
 			) {
 				this.log.debug('reacquiring mic track', this.logContext);
-				await this.restartTrack();
+				await this.restart(undefined, true);
 			}
 			await super.unmute();
 
@@ -91,9 +91,23 @@ export default class LocalAudioTrack extends LocalTrack<Track.Kind.Audio> {
 		}
 		await this.restart(constraints);
 	}
-
-	protected override async restart(constraints?: MediaTrackConstraints): Promise<typeof this> {
-		const track = await super.restart(constraints);
+	async applyConstraints(
+		constraints: Pick<
+			AudioCaptureOptions,
+			'autoGainControl' | 'noiseSuppression' | 'echoCancellation' | 'voiceIsolation'
+		>,
+	): Promise<void> {
+		const unlock = await this.trackChangeLock.lock();
+		try {
+			const res = await this._mediaStreamTrack.applyConstraints(constraints);
+			this._constraints = {...this._constraints, ...constraints};
+			return res;
+		} finally {
+			unlock();
+		}
+	}
+	protected override async restart(constraints?: MediaTrackConstraints, isUnmuting?: boolean): Promise<typeof this> {
+		const track = await super.restart(constraints, isUnmuting);
 		this.checkForSilence();
 		return track;
 	}
@@ -157,6 +171,7 @@ export default class LocalAudioTrack extends LocalTrack<Track.Kind.Audio> {
 				kind: this.kind,
 				track: this._mediaStreamTrack,
 				audioContext: this.audioContext as AudioContext,
+				localTrack: this,
 			};
 			this.log.debug(`setting up audio processor ${processor.name}`, this.logContext);
 			try {
@@ -244,12 +259,16 @@ export default class LocalAudioTrack extends LocalTrack<Track.Kind.Audio> {
 					type: 'audio',
 					streamId: v.id,
 					packetsSent: v.packetsSent,
-					packetsLost: v.packetsLost,
 					bytesSent: v.bytesSent,
 					timestamp: v.timestamp,
-					roundTripTime: v.roundTripTime,
-					jitter: v.jitter,
 				};
+
+				const remote = stats.get(v.remoteId) as (RTCReceivedRtpStreamStats & {roundTripTime?: number}) | undefined;
+				if (remote) {
+					audioStats.packetsLost = remote.packetsLost;
+					audioStats.jitter = remote.jitter;
+					audioStats.roundTripTime = remote.roundTripTime;
+				}
 			}
 		});
 

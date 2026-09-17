@@ -223,7 +223,7 @@ mod tests {
     #[test]
     fn encode_produces_non_empty_deterministic_output() {
         let mut pixels = [0u8; 16 * 16 * 4];
-        for px in pixels.chunks_exact_mut(4) {
+        for px in pixels.as_chunks_mut::<4>().0 {
             px[0] = 200;
             px[1] = 100;
             px[2] = 50;
@@ -239,10 +239,10 @@ mod tests {
     fn alpha_changes_header_layout() {
         let mut opaque = [0u8; 4 * 4 * 4];
         let mut translucent = [0u8; 4 * 4 * 4];
-        for px in opaque.chunks_exact_mut(4) {
+        for px in opaque.as_chunks_mut::<4>().0 {
             px[3] = 255;
         }
-        for px in translucent.chunks_exact_mut(4) {
+        for px in translucent.as_chunks_mut::<4>().0 {
             px[3] = 64;
         }
         let opaque_out = encode_rgba(&opaque, 4, 4).unwrap();
@@ -255,10 +255,10 @@ mod tests {
     fn aspect_ratio_representability_follows_the_alpha_limit() {
         let mut opaque = [0u8; 4 * 4 * 4];
         let mut translucent = [0u8; 4 * 4 * 4];
-        for px in opaque.chunks_exact_mut(4) {
+        for px in opaque.as_chunks_mut::<4>().0 {
             px[3] = 255;
         }
-        for px in translucent.chunks_exact_mut(4) {
+        for px in translucent.as_chunks_mut::<4>().0 {
             px[3] = 64;
         }
         let opaque_out = encode_rgba(&opaque, 4, 4).unwrap();

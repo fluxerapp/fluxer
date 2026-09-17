@@ -64,14 +64,12 @@ describe('Int64Type', () => {
 		});
 	});
 
-	it.each([
-		Number.MAX_SAFE_INTEGER + 1,
-		Number.NaN,
-		Number.POSITIVE_INFINITY,
-		1.5,
-	])('rejects lossy or noninteger numeric input %j', (input) => {
-		expect(Int64Type.safeParse(input).success).toBe(false);
-	});
+	it.each([Number.MAX_SAFE_INTEGER + 1, Number.NaN, Number.POSITIVE_INFINITY, 1.5])(
+		'rejects lossy or noninteger numeric input %j',
+		(input) => {
+			expect(Int64Type.safeParse(input).success).toBe(false);
+		},
+	);
 });
 
 describe('Int64StringType', () => {
@@ -92,14 +90,12 @@ describe('UnsignedInt64Type', () => {
 		expect(UnsignedInt64Type.parse(input)).toBe(expected);
 	});
 
-	it.each([
-		'-1',
-		'+1',
-		'9223372036854775808',
-		'18446744073709551615',
-	])('rejects %s outside unsigned signed-64-bit storage', (input) => {
-		expect(UnsignedInt64Type.safeParse(input).success).toBe(false);
-	});
+	it.each(['-1', '+1', '9223372036854775808', '18446744073709551615'])(
+		'rejects %s outside unsigned signed-64-bit storage',
+		(input) => {
+			expect(UnsignedInt64Type.safeParse(input).success).toBe(false);
+		},
+	);
 });
 
 describe('SnowflakeType', () => {

@@ -80,7 +80,7 @@ export class MessageProcessingService {
 		requestCache: RequestCache;
 	}): Promise<void> {
 		if (channel.guildId || channel.type !== ChannelTypes.DM) return;
-		if (!channel.recipientIds || channel.recipientIds.size !== 2) return;
+		if (channel.recipientIds?.size !== 2) return;
 		const recipientIds = Array.from(channel.recipientIds);
 		const openStates = await this.batchCheckDmChannelOpen(recipientIds, channelId);
 		const closedRecipients = openStates.filter((state) => !state.isOpen);

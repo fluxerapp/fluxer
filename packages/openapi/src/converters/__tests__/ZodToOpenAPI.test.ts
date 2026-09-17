@@ -24,7 +24,7 @@ describe('native Zod conversion', () => {
 		expect(input.required).toEqual(['note']);
 		expect(output.required).toEqual(['name', 'note']);
 		expect(input.properties?.name).toMatchObject({type: 'string', default: 'guest'});
-		expect(input.properties?.note).toEqual({anyOf: [{type: 'string'}, {type: 'null'}]});
+		expect(input.properties?.note).toEqual({type: ['string', 'null']});
 		expect(input.additionalProperties).toBeUndefined();
 		expect(output.additionalProperties).toBe(false);
 		const document = documentFor(converter);

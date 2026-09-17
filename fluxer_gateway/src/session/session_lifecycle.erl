@@ -55,7 +55,10 @@ handle_terminate_cast(Hashes, #{auth_session_id_hash := AuthHash} = State) ->
 
 -spec any_hash_matches(binary(), [binary()]) -> boolean().
 any_hash_matches(AuthHash, Hashes) ->
-    lists:any(fun(Hash) -> base64url:decode(Hash) =:= AuthHash end, Hashes).
+    lists:any(
+        fun(Hash) -> base64:decode(Hash, #{mode => urlsafe, padding => false}) =:= AuthHash end,
+        Hashes
+    ).
 
 -spec terminate(term(), session_state()) -> ok.
 terminate(_Reason, State) ->

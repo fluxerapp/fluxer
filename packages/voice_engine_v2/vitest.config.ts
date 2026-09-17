@@ -12,7 +12,6 @@ export default defineConfig({
 		benchmark: {
 			include: ['**/*.bench.{ts,tsx}'],
 			exclude: ['node_modules', 'dist'],
-			reporters: ['default'],
 		},
 	},
 });

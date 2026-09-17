@@ -71,13 +71,12 @@ describe.each([
 	{name: 'update body', schema: UpdateVoiceServerRequestBody, required: {}},
 	{name: 'update service request', schema: UpdateVoiceServerRequest, required: {region_id: 'eu', server_id: 'primary'}},
 ])('$name coordinates', ({schema, required}) => {
-	it.each([
-		{},
-		{latitude: 0, longitude: 0},
-		{latitude: null, longitude: null},
-	])('accepts the paired state %j', (coordinates) => {
-		expect(schema.parse({...required, ...coordinates})).toMatchObject(coordinates);
-	});
+	it.each([{}, {latitude: 0, longitude: 0}, {latitude: null, longitude: null}])(
+		'accepts the paired state %j',
+		(coordinates) => {
+			expect(schema.parse({...required, ...coordinates})).toMatchObject(coordinates);
+		},
+	);
 
 	it.each([
 		{latitude: 0},
@@ -163,15 +162,13 @@ describe.each([
 		expect(schema.parse({})).toEqual(bulkDeleteDefaults);
 	});
 
-	it.each([
-		'include_dms',
-		'include_dms_closed',
-		'include_group_dms',
-		'include_guilds',
-	] as const)('accepts %s as the only selected context', (field) => {
-		const selection = {...noSelectedContexts, [field]: true};
-		expect(schema.parse(selection)).toEqual({...bulkDeleteDefaults, ...selection});
-	});
+	it.each(['include_dms', 'include_dms_closed', 'include_group_dms', 'include_guilds'] as const)(
+		'accepts %s as the only selected context',
+		(field) => {
+			const selection = {...noSelectedContexts, [field]: true};
+			expect(schema.parse(selection)).toEqual({...bulkDeleteDefaults, ...selection});
+		},
+	);
 
 	it('does not require selected contexts for inaccessible-only scope', () => {
 		const selection = {...noSelectedContexts, scope: 'inaccessible_only'};

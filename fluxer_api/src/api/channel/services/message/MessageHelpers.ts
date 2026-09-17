@@ -312,7 +312,7 @@ function collectEmbedReferencedAttachmentCdnKeys(message: Message, ownKeys: Read
 	const mediaPrefix = `${Config.endpoints.media}/`;
 	const keys = new Set<string>();
 	const consider = (url: string | null | undefined): void => {
-		if (!url || !url.startsWith(mediaPrefix)) {
+		if (!url?.startsWith(mediaPrefix)) {
 			return;
 		}
 		const key = url.slice(mediaPrefix.length);

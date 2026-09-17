@@ -10,17 +10,14 @@ describe('jobs schemas', () => {
 		expect(JobLedgerEntrySchema.shape.status.safeParse('failed').success).toBe(false);
 	});
 
-	test.each([
-		'queued',
-		'running',
-		'succeeded',
-		'cancelled',
-		'deadletter',
-	])('accepts ledger status %s across query, request, and response', (status) => {
-		expect(ListJobsQuery.parse({status}).status).toBe(status);
-		expect(ListJobsRequest.parse({status}).status).toBe(status);
-		expect(JobLedgerEntrySchema.shape.status.parse(status)).toBe(status);
-	});
+	test.each(['queued', 'running', 'succeeded', 'cancelled', 'deadletter'])(
+		'accepts ledger status %s across query, request, and response',
+		(status) => {
+			expect(ListJobsQuery.parse({status}).status).toBe(status);
+			expect(ListJobsRequest.parse({status}).status).toBe(status);
+			expect(JobLedgerEntrySchema.shape.status.parse(status)).toBe(status);
+		},
+	);
 });
 
 describe('job pagination cursor', () => {
@@ -34,16 +31,15 @@ describe('job pagination cursor', () => {
 		expect(ListJobsQuery.parse(cursor)).toEqual({...cursor, limit: 50, max_lookback_days: 14});
 	});
 
-	test.each([
-		'cursor_bucket_day',
-		'cursor_created_at',
-		'cursor_job_id',
-	] as const)('rejects a cursor missing %s', (field) => {
-		expect(ListJobsQuery.safeParse({...cursor, [field]: undefined})).toMatchObject({
-			success: false,
-			error: {issues: [{path: [field]}]},
-		});
-	});
+	test.each(['cursor_bucket_day', 'cursor_created_at', 'cursor_job_id'] as const)(
+		'rejects a cursor missing %s',
+		(field) => {
+			expect(ListJobsQuery.safeParse({...cursor, [field]: undefined})).toMatchObject({
+				success: false,
+				error: {issues: [{path: [field]}]},
+			});
+		},
+	);
 
 	test.each([
 		{cursor_bucket_day: '2023-02-29'},

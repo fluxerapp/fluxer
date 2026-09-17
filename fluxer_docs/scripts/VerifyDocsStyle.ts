@@ -17,7 +17,7 @@ import {
 } from './DocsTableWidth.ts';
 
 const STYLES_ROOT = fileURLToPath(new URL('../src/styles/', import.meta.url));
-const STARLIGHT_STYLES = fileURLToPath(new URL('../node_modules/@astrojs/starlight/style/', import.meta.url));
+const STARLIGHT_STYLES = fileURLToPath(new URL('../node_modules/@astrojs/starlight/dist/style/', import.meta.url));
 
 const FORBIDDEN_MARKETING_WORDS = [
 	'seamless',

@@ -19,7 +19,7 @@ import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {ChannelFrecencyStateSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
-import {comparer, isObservableMap, makeAutoObservable, observable, reaction} from 'mobx';
+import {compareShallow, isObservableMap, makeAutoObservable, observableShallow, reaction} from 'mobx';
 
 const TRACKABLE_ID_PATTERN = /^\d{17,19}$/;
 const FRECENCY_REFRESH_INTERVAL_MS = 3_600_000;
@@ -49,7 +49,7 @@ class ChannelFrecency {
 	usageHistory = new Map<string, ChannelFrecencyEntry>();
 
 	constructor() {
-		makeAutoObservable(this, {usageHistory: observable.shallow}, {autoBind: true});
+		makeAutoObservable(this, {usageHistory: observableShallow}, {autoBind: true});
 		void this.initPersistence();
 	}
 
@@ -72,7 +72,7 @@ class ChannelFrecency {
 		reaction(
 			() => [Navigation.guildId, Navigation.channelId] as const,
 			([guildId, channelId]) => this.recordSelection(guildId, channelId),
-			{equals: comparer.shallow, fireImmediately: true},
+			{equals: compareShallow, fireImmediately: true},
 		);
 		reaction(
 			() => [MediaEngine.guildId, MediaEngine.channelId] as const,
@@ -80,7 +80,7 @@ class ChannelFrecency {
 				if (channelId === null && MediaEngine.localDisconnectReason === 'channelMove') return;
 				this.recordSelection(guildId, channelId);
 			},
-			{equals: comparer.shallow},
+			{equals: compareShallow},
 		);
 	}
 

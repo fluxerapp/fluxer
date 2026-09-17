@@ -9,7 +9,7 @@
 	"scripts": {
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"typecheck": "tsgo --noEmit"
+		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@fluxer/i18n": "workspace:*",
@@ -19,8 +19,7 @@
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",
-		"@types/nodemailer": "catalog:",
-		"@typescript/native-preview": "catalog:",
+		"typescript": "catalog:ts7",
 		"vitest": "catalog:"
 	}
 }

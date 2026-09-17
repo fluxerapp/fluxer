@@ -55,7 +55,7 @@ import camelCase from 'lodash/camelCase';
 import isEqual from 'lodash/isEqual';
 import isPlainObject from 'lodash/isPlainObject';
 import snakeCase from 'lodash/snakeCase';
-import {action, makeAutoObservable, reaction, runInAction} from 'mobx';
+import {makeAutoObservable, reaction, runInAction} from 'mobx';
 
 function restoreSettingValue<K extends keyof UserSettings>(target: UserSettings, source: UserSettings, key: K): void {
 	target[key] = source[key];
@@ -558,12 +558,10 @@ class UserSettingsState {
 		return this.hydrated;
 	}
 
-	@action
 	markSessionChanging(): void {
 		this.hydrated = false;
 	}
 
-	@action
 	handleAccountTransition(): void {
 		this.accountEpoch += 1;
 		this.hydrated = false;
@@ -590,7 +588,6 @@ class UserSettingsState {
 		}
 	}
 
-	@action
 	setStatus(status: StatusType): void {
 		this.status = status;
 		LocalPresence.updatePresence();

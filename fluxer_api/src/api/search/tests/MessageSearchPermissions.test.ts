@@ -659,35 +659,33 @@ describe('Message Search Permissions', () => {
 			expect(user12Messages.length).toBeGreaterThan(0);
 			expect(user34Messages.length).toBe(0);
 		});
-		test.each([
-			'all_dms',
-			'open_dms',
-			'all',
-			'open_dms_and_all_guilds',
-		] as const)('scope: %s does not trust foreign DM context_channel_id', async (scope) => {
-			const user1 = await createTestAccount(harness);
-			const user2 = await createTestAccount(harness);
-			const attacker = await createTestAccount(harness);
-			await createFriendship(harness, user1, user2);
-			const dmChannel = await createDmChannel(harness, user1.token, user2.userId);
-			const canary = `foreign-dm-context-canary-${Date.now()}-${scope}`;
-			await sendChannelMessage(harness, user1.token, dmChannel.id, canary);
-			await markChannelAsIndexed(harness, dmChannel.id);
-			const result = await createBuilder<MessageSearchResponse>(harness, attacker.token)
-				.post('/search/messages')
-				.body({
-					content: canary,
-					scope,
-					context_channel_id: dmChannel.id,
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			if (!isSearchResult(result)) {
-				expect.fail('Expected search result but got indexing response');
-			}
-			expect(result.messages.some((message) => message.channel_id === dmChannel.id)).toBe(false);
-			expect(result.messages.some((message) => message.content === canary)).toBe(false);
-		});
+		test.each(['all_dms', 'open_dms', 'all', 'open_dms_and_all_guilds'] as const)(
+			'scope: %s does not trust foreign DM context_channel_id',
+			async (scope) => {
+				const user1 = await createTestAccount(harness);
+				const user2 = await createTestAccount(harness);
+				const attacker = await createTestAccount(harness);
+				await createFriendship(harness, user1, user2);
+				const dmChannel = await createDmChannel(harness, user1.token, user2.userId);
+				const canary = `foreign-dm-context-canary-${Date.now()}-${scope}`;
+				await sendChannelMessage(harness, user1.token, dmChannel.id, canary);
+				await markChannelAsIndexed(harness, dmChannel.id);
+				const result = await createBuilder<MessageSearchResponse>(harness, attacker.token)
+					.post('/search/messages')
+					.body({
+						content: canary,
+						scope,
+						context_channel_id: dmChannel.id,
+					})
+					.expect(HTTP_STATUS.OK)
+					.execute();
+				if (!isSearchResult(result)) {
+					expect.fail('Expected search result but got indexing response');
+				}
+				expect(result.messages.some((message) => message.channel_id === dmChannel.id)).toBe(false);
+				expect(result.messages.some((message) => message.content === canary)).toBe(false);
+			},
+		);
 		test('scope: all_dms does not trust a guild context_channel_id', async () => {
 			const owner = await createTestAccount(harness);
 			const attacker = await createTestAccount(harness);

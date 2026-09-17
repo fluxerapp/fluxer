@@ -20719,7 +20719,7 @@
 					"timestamp": {
 						"type": "string",
 						"format": "date-time",
-						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
 						"description": "The ISO 8601 timestamp of when the message was created"
 					},
 					"edited_timestamp": {
@@ -20728,7 +20728,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 							},
 							{"type": "null"}
 						]
@@ -20821,10 +20821,7 @@
 							{"type": "null"}
 						]
 					},
-					"nonce": {
-						"description": "A client-provided value for message deduplication",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"nonce": {"description": "A client-provided value for message deduplication", "type": ["string", "null"]},
 					"call": {
 						"description": "Call information if this message represents a call",
 						"anyOf": [
@@ -20842,7 +20839,7 @@
 											{
 												"type": "string",
 												"format": "date-time",
-												"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+												"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 											},
 											{"type": "null"}
 										]
@@ -20885,7 +20882,7 @@
 									"timestamp": {
 										"type": "string",
 										"format": "date-time",
-										"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+										"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
 										"description": "The ISO 8601 timestamp of when the message was created"
 									},
 									"edited_timestamp": {
@@ -20894,7 +20891,7 @@
 											{
 												"type": "string",
 												"format": "date-time",
-												"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+												"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 											},
 											{"type": "null"}
 										]
@@ -20989,7 +20986,7 @@
 									},
 									"nonce": {
 										"description": "A client-provided value for message deduplication",
-										"anyOf": [{"type": "string"}, {"type": "null"}]
+										"type": ["string", "null"]
 									},
 									"call": {
 										"description": "Call information if this message represents a call",
@@ -21008,7 +21005,7 @@
 															{
 																"type": "string",
 																"format": "date-time",
-																"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+																"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 															},
 															{"type": "null"}
 														]
@@ -21065,8 +21062,8 @@
 							{
 								"type": "object",
 								"properties": {
-									"unsubscribe": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-									"documentation": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+									"unsubscribe": {"type": ["string", "null"]},
+									"documentation": {"type": ["string", "null"]}
 								}
 							},
 							{"type": "null"}
@@ -21077,10 +21074,10 @@
 							{
 								"type": "object",
 								"properties": {
-									"id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-									"status_indicator": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-									"status_description": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-									"url": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+									"id": {"type": ["string", "null"]},
+									"status_indicator": {"type": ["string", "null"]},
+									"status_description": {"type": ["string", "null"]},
+									"url": {"type": ["string", "null"]}
 								}
 							},
 							{"type": "null"}
@@ -21091,14 +21088,14 @@
 							{
 								"type": "object",
 								"properties": {
-									"id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-									"name": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-									"url": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-									"status": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-									"backfilled": {"anyOf": [{"type": "boolean"}, {"type": "null"}]},
-									"created_at": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-									"updated_at": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-									"resolved_at": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"id": {"type": ["string", "null"]},
+									"name": {"type": ["string", "null"]},
+									"url": {"type": ["string", "null"]},
+									"status": {"type": ["string", "null"]},
+									"backfilled": {"type": ["boolean", "null"]},
+									"created_at": {"type": ["string", "null"]},
+									"updated_at": {"type": ["string", "null"]},
+									"resolved_at": {"type": ["string", "null"]},
 									"incident_updates": {
 										"anyOf": [
 											{
@@ -21106,12 +21103,12 @@
 												"items": {
 													"type": "object",
 													"properties": {
-														"id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-														"incident_id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-														"markdown": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-														"status": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-														"created_at": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-														"updated_at": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+														"id": {"type": ["string", "null"]},
+														"incident_id": {"type": ["string", "null"]},
+														"markdown": {"type": ["string", "null"]},
+														"status": {"type": ["string", "null"]},
+														"created_at": {"type": ["string", "null"]},
+														"updated_at": {"type": ["string", "null"]}
 													}
 												}
 											},
@@ -21125,9 +21122,9 @@
 												"items": {
 													"type": "object",
 													"properties": {
-														"id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-														"name": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-														"status": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+														"id": {"type": ["string", "null"]},
+														"name": {"type": ["string", "null"]},
+														"status": {"type": ["string", "null"]}
 													}
 												}
 											},
@@ -21144,16 +21141,16 @@
 							{
 								"type": "object",
 								"properties": {
-									"id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-									"name": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-									"url": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-									"status": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-									"maintenance_start_date": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-									"maintenance_end_date": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-									"backfilled": {"anyOf": [{"type": "boolean"}, {"type": "null"}]},
-									"created_at": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-									"updated_at": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-									"resolved_at": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"id": {"type": ["string", "null"]},
+									"name": {"type": ["string", "null"]},
+									"url": {"type": ["string", "null"]},
+									"status": {"type": ["string", "null"]},
+									"maintenance_start_date": {"type": ["string", "null"]},
+									"maintenance_end_date": {"type": ["string", "null"]},
+									"backfilled": {"type": ["boolean", "null"]},
+									"created_at": {"type": ["string", "null"]},
+									"updated_at": {"type": ["string", "null"]},
+									"resolved_at": {"type": ["string", "null"]},
 									"maintenance_updates": {
 										"anyOf": [
 											{
@@ -21161,11 +21158,11 @@
 												"items": {
 													"type": "object",
 													"properties": {
-														"id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-														"maintenance_id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-														"markdown": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-														"created_at": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-														"updated_at": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+														"id": {"type": ["string", "null"]},
+														"maintenance_id": {"type": ["string", "null"]},
+														"markdown": {"type": ["string", "null"]},
+														"created_at": {"type": ["string", "null"]},
+														"updated_at": {"type": ["string", "null"]}
 													}
 												}
 											},
@@ -21179,9 +21176,9 @@
 												"items": {
 													"type": "object",
 													"properties": {
-														"id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-														"name": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-														"status": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+														"id": {"type": ["string", "null"]},
+														"name": {"type": ["string", "null"]},
+														"status": {"type": ["string", "null"]}
 													}
 												}
 											},
@@ -21198,9 +21195,9 @@
 							{
 								"type": "object",
 								"properties": {
-									"created_at": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-									"new_status": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-									"component_id": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+									"created_at": {"type": ["string", "null"]},
+									"new_status": {"type": ["string", "null"]},
+									"component_id": {"type": ["string", "null"]}
 								}
 							},
 							{"type": "null"}
@@ -21211,10 +21208,10 @@
 							{
 								"type": "object",
 								"properties": {
-									"id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-									"name": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-									"status": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-									"created_at": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+									"id": {"type": ["string", "null"]},
+									"name": {"type": ["string", "null"]},
+									"status": {"type": ["string", "null"]},
+									"created_at": {"type": ["string", "null"]}
 								}
 							},
 							{"type": "null"}
@@ -21225,7 +21222,7 @@
 			"GitHubWebhook": {
 				"type": "object",
 				"properties": {
-					"action": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+					"action": {"type": ["string", "null"]},
 					"answer": {
 						"anyOf": [
 							{
@@ -21243,7 +21240,7 @@
 										},
 										"required": ["id", "login", "html_url", "avatar_url"]
 									},
-									"commit_id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"commit_id": {"type": ["string", "null"]},
 									"body": {"type": "string"}
 								},
 								"required": ["id", "html_url", "user", "body"]
@@ -21256,14 +21253,14 @@
 							{
 								"type": "object",
 								"properties": {
-									"conclusion": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"conclusion": {"type": ["string", "null"]},
 									"name": {"type": "string"},
 									"html_url": {"type": "string"},
 									"check_suite": {
 										"type": "object",
 										"properties": {
-											"conclusion": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-											"head_branch": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+											"conclusion": {"type": ["string", "null"]},
+											"head_branch": {"type": ["string", "null"]},
 											"head_sha": {"type": "string"},
 											"pull_requests": {
 												"anyOf": [
@@ -21282,15 +21279,12 @@
 										},
 										"required": ["head_sha", "app"]
 									},
-									"details_url": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"details_url": {"type": ["string", "null"]},
 									"output": {
 										"anyOf": [
 											{
 												"type": "object",
-												"properties": {
-													"title": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-													"summary": {"anyOf": [{"type": "string"}, {"type": "null"}]}
-												}
+												"properties": {"title": {"type": ["string", "null"]}, "summary": {"type": ["string", "null"]}}
 											},
 											{"type": "null"}
 										]
@@ -21319,8 +21313,8 @@
 							{
 								"type": "object",
 								"properties": {
-									"conclusion": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-									"head_branch": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"conclusion": {"type": ["string", "null"]},
+									"head_branch": {"type": ["string", "null"]},
 									"head_sha": {"type": "string"},
 									"pull_requests": {
 										"anyOf": [
@@ -21359,7 +21353,7 @@
 										},
 										"required": ["id", "login", "html_url", "avatar_url"]
 									},
-									"commit_id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"commit_id": {"type": ["string", "null"]},
 									"body": {"type": "string"}
 								},
 								"required": ["id", "html_url", "user", "body"]
@@ -21379,10 +21373,7 @@
 										"message": {"type": "string"},
 										"author": {
 											"type": "object",
-											"properties": {
-												"username": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-												"name": {"type": "string"}
-											},
+											"properties": {"username": {"type": ["string", "null"]}, "name": {"type": "string"}},
 											"required": ["name"]
 										}
 									},
@@ -21392,7 +21383,7 @@
 							{"type": "null"}
 						]
 					},
-					"compare": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+					"compare": {"type": ["string", "null"]},
 					"discussion": {
 						"anyOf": [
 							{
@@ -21401,8 +21392,8 @@
 									"title": {"type": "string"},
 									"number": {"$ref": "#/components/schemas/Int32Type"},
 									"html_url": {"type": "string"},
-									"answer_html_url": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-									"body": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"answer_html_url": {"type": ["string", "null"]},
+									"body": {"type": ["string", "null"]},
 									"user": {
 										"type": "object",
 										"properties": {
@@ -21419,7 +21410,7 @@
 							{"type": "null"}
 						]
 					},
-					"forced": {"anyOf": [{"type": "boolean"}, {"type": "null"}]},
+					"forced": {"type": ["boolean", "null"]},
 					"forkee": {
 						"anyOf": [
 							{
@@ -21445,10 +21436,7 @@
 									"message": {"type": "string"},
 									"author": {
 										"type": "object",
-										"properties": {
-											"username": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-											"name": {"type": "string"}
-										},
+										"properties": {"username": {"type": ["string", "null"]}, "name": {"type": "string"}},
 										"required": ["name"]
 									}
 								},
@@ -21476,7 +21464,7 @@
 										"required": ["id", "login", "html_url", "avatar_url"]
 									},
 									"title": {"type": "string"},
-									"body": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+									"body": {"type": ["string", "null"]}
 								},
 								"required": ["id", "number", "html_url", "user", "title"]
 							},
@@ -21517,15 +21505,15 @@
 										"required": ["id", "login", "html_url", "avatar_url"]
 									},
 									"title": {"type": "string"},
-									"body": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+									"body": {"type": ["string", "null"]}
 								},
 								"required": ["id", "number", "html_url", "user", "title"]
 							},
 							{"type": "null"}
 						]
 					},
-					"ref_type": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-					"ref": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+					"ref_type": {"type": ["string", "null"]},
+					"ref": {"type": ["string", "null"]},
 					"release": {
 						"anyOf": [
 							{
@@ -21534,7 +21522,7 @@
 									"id": {"$ref": "#/components/schemas/Int32Type"},
 									"tag_name": {"type": "string"},
 									"html_url": {"type": "string"},
-									"body": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+									"body": {"type": ["string", "null"]}
 								},
 								"required": ["id", "tag_name", "html_url"]
 							},
@@ -21571,7 +21559,7 @@
 										},
 										"required": ["id", "login", "html_url", "avatar_url"]
 									},
-									"body": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+									"body": {"type": ["string", "null"]},
 									"html_url": {"type": "string"},
 									"state": {"type": "string"}
 								},
@@ -21626,11 +21614,11 @@
 					"tts": {"description": "Whether this is a text-to-speech message", "type": "boolean"},
 					"username": {
 						"description": "Override the default username of the webhook for this message",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"avatar_url": {
 						"description": "Override the default avatar URL of the webhook for this message",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"attachments": {
 						"description": "Array of multipart attachment metadata objects",
@@ -21711,11 +21699,11 @@
 					"tts": {"description": "Whether this is a text-to-speech message", "type": "boolean"},
 					"username": {
 						"description": "Override the default username of the webhook for this message",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"avatar_url": {
 						"description": "Override the default avatar URL of the webhook for this message",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"attachments": {
 						"description": "Array of attachments uploaded through the presigned upload endpoint",
@@ -21751,10 +21739,7 @@
 						"$ref": "#/components/schemas/SnowflakeStringType"
 					},
 					"name": {"type": "string", "description": "The display name of the webhook"},
-					"avatar": {
-						"description": "The hash of the webhook avatar image",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"avatar": {"description": "The hash of the webhook avatar image", "type": ["string", "null"]},
 					"token": {"type": "string", "description": "The secure token used to execute the webhook"}
 				},
 				"required": ["id", "guild_id", "channel_id", "name", "token"],
@@ -21790,10 +21775,7 @@
 						"$ref": "#/components/schemas/SnowflakeStringType"
 					},
 					"name": {"type": "string", "description": "The display name of the webhook"},
-					"avatar": {
-						"description": "The hash of the webhook avatar image",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"avatar": {"description": "The hash of the webhook avatar image", "type": ["string", "null"]},
 					"token": {"type": "string", "description": "The secure token used to execute the webhook"},
 					"user": {
 						"description": "The user who created the webhook",
@@ -21817,14 +21799,8 @@
 					},
 					"username": {"type": "string", "description": "The username of the user, not unique across the platform"},
 					"discriminator": {"type": "string", "description": "The four-digit discriminator tag of the user"},
-					"global_name": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "The display name of the user, if set"
-					},
-					"avatar": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "The hash of the user avatar image"
-					},
+					"global_name": {"description": "The display name of the user, if set", "type": ["string", "null"]},
+					"avatar": {"description": "The hash of the user avatar image", "type": ["string", "null"]},
 					"avatar_color": {
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
 						"description": "The dominant avatar color of the user as an integer"
@@ -21847,12 +21823,9 @@
 					"user_profile": {
 						"type": "object",
 						"properties": {
-							"bio": {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "User biography text"},
-							"pronouns": {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "User pronouns"},
-							"banner": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "Hash of the profile banner image"
-							},
+							"bio": {"description": "User biography text", "type": ["string", "null"]},
+							"pronouns": {"description": "User pronouns", "type": ["string", "null"]},
+							"banner": {"description": "Hash of the profile banner image", "type": ["string", "null"]},
 							"banner_color": {
 								"description": "Default banner color if no custom banner",
 								"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
@@ -21876,18 +21849,9 @@
 							{
 								"type": "object",
 								"properties": {
-									"bio": {
-										"anyOf": [{"type": "string"}, {"type": "null"}],
-										"description": "Guild-specific biography text"
-									},
-									"pronouns": {
-										"anyOf": [{"type": "string"}, {"type": "null"}],
-										"description": "Guild-specific pronouns"
-									},
-									"banner": {
-										"anyOf": [{"type": "string"}, {"type": "null"}],
-										"description": "Hash of the guild-specific banner image"
-									},
+									"bio": {"description": "Guild-specific biography text", "type": ["string", "null"]},
+									"pronouns": {"description": "Guild-specific pronouns", "type": ["string", "null"]},
+									"banner": {"description": "Hash of the guild-specific banner image", "type": ["string", "null"]},
 									"accent_color": {
 										"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
 										"description": "Guild-specific accent color"
@@ -21920,10 +21884,7 @@
 							"type": "object",
 							"properties": {
 								"id": {"description": "The ID of the mutual guild", "$ref": "#/components/schemas/SnowflakeStringType"},
-								"nick": {
-									"anyOf": [{"type": "string"}, {"type": "null"}],
-									"description": "The nickname of the target user in this guild"
-								}
+								"nick": {"description": "The nickname of the target user in this guild", "type": ["string", "null"]}
 							},
 							"required": ["id", "nick"],
 							"additionalProperties": false
@@ -21946,7 +21907,7 @@
 				"required": ["user", "user_profile", "timezone_offset"],
 				"additionalProperties": false
 			},
-			"DiscriminatorType": {"anyOf": [{"type": "string"}, {"type": "number"}]},
+			"DiscriminatorType": {"type": ["string", "number"]},
 			"UsernameType": {"type": "string"},
 			"UserTagCheckResponse": {
 				"type": "object",
@@ -21982,14 +21943,8 @@
 					},
 					"username": {"type": "string", "description": "The username of the user, not unique across the platform"},
 					"discriminator": {"type": "string", "description": "The four-digit discriminator tag of the user"},
-					"global_name": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "The display name of the user, if set"
-					},
-					"avatar": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "The hash of the user avatar image"
-					},
+					"global_name": {"description": "The display name of the user, if set", "type": ["string", "null"]},
+					"avatar": {"description": "The hash of the user avatar image", "type": ["string", "null"]},
 					"avatar_color": {
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
 						"description": "The dominant avatar color of the user as an integer"
@@ -22012,43 +21967,34 @@
 						"items": {"type": "string"},
 						"description": "Special traits assigned to the user account"
 					},
-					"email": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "The email address associated with the account"
-					},
+					"email": {"description": "The email address associated with the account", "type": ["string", "null"]},
 					"email_bounced": {
 						"description": "Whether the current email address is marked as bounced by the mail provider",
 						"type": "boolean"
 					},
 					"phone": {
 						"description": "Always null. Retained for old-client backward compatibility — phone numbers are no longer stored on the user record.",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"has_verified_phone": {
 						"type": "boolean",
 						"description": "Whether this account has completed phone verification"
 					},
-					"bio": {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "The user biography text"},
-					"pronouns": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "The preferred pronouns of the user"
-					},
+					"bio": {"description": "The user biography text", "type": ["string", "null"]},
+					"pronouns": {"description": "The preferred pronouns of the user", "type": ["string", "null"]},
 					"accent_color": {
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
 						"description": "The user-selected accent color as an integer"
 					},
 					"timezone": {
 						"description": "The IANA timezone identifier saved by the user. Omitted unless the user has staff access.",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"timezone_privacy_flags": {
 						"description": "Bitfield controlling who can see the profile timezone. Omitted unless the user has staff access.",
 						"$ref": "#/components/schemas/ProfileFieldPrivacyFlags"
 					},
-					"banner": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "The hash of the user profile banner image"
-					},
+					"banner": {"description": "The hash of the user profile banner image", "type": ["string", "null"]},
 					"banner_color": {
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
 						"description": "The default banner color if no custom banner is set"
@@ -22067,28 +22013,28 @@
 						]
 					},
 					"premium_since": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "ISO8601 timestamp of when premium was first activated"
+						"description": "ISO8601 timestamp of when premium was first activated",
+						"type": ["string", "null"]
 					},
 					"premium_until": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "ISO8601 timestamp of when premium access ends, including stacked gift time"
+						"description": "ISO8601 timestamp of when premium access ends, including stacked gift time",
+						"type": ["string", "null"]
 					},
 					"premium_will_cancel": {
 						"type": "boolean",
 						"description": "Whether premium is set to cancel at the end of the billing period"
 					},
 					"premium_billing_cycle": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "The billing cycle for the premium subscription"
+						"description": "The billing cycle for the premium subscription",
+						"type": ["string", "null"]
 					},
 					"premium_lifetime_sequence": {
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
 						"description": "The sequence number for lifetime premium subscribers"
 					},
 					"premium_grace_ends_at": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "ISO8601 timestamp at which the post-cancel grace period ends. Set when the subscription is fully canceled in Stripe; perks remain active and the original premium_since is restored on resubscribe until this timestamp passes. Null when not in grace."
+						"description": "ISO8601 timestamp at which the post-cancel grace period ends. Set when the subscription is fully canceled in Stripe; perks remain active and the original premium_since is restored on resubscribe until this timestamp passes. Null when not in grace.",
+						"type": ["string", "null"]
 					},
 					"premium_discriminator": {
 						"type": "boolean",
@@ -22127,12 +22073,12 @@
 						"type": "boolean"
 					},
 					"password_last_changed_at": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "ISO8601 timestamp of the last password change"
+						"description": "ISO8601 timestamp of the last password change",
+						"type": ["string", "null"]
 					},
 					"last_voice_activity_sharing_change_at": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "ISO8601 timestamp of the last bulk voice-activity-sharing change. Drives the 24-hour cooldown for re-toggling the Active Now sharing default."
+						"description": "ISO8601 timestamp of the last bulk voice-activity-sharing change. Drives the 24-hour cooldown for re-toggling the Active Now sharing default.",
+						"type": ["string", "null"]
 					},
 					"required_actions": {
 						"type": "array",
@@ -22183,12 +22129,12 @@
 						"type": "boolean"
 					},
 					"terms_agreed_at": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "ISO8601 timestamp of when the user last agreed to the terms of service"
+						"description": "ISO8601 timestamp of when the user last agreed to the terms of service",
+						"type": ["string", "null"]
 					},
 					"privacy_agreed_at": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "ISO8601 timestamp of when the user last agreed to the privacy policy"
+						"description": "ISO8601 timestamp of when the user last agreed to the privacy policy",
+						"type": ["string", "null"]
 					}
 				},
 				"required": [
@@ -22348,7 +22294,7 @@
 									"maximum": 9007199254740991,
 									"description": "Unique identifier for the folder (-1 for uncategorized)"
 								},
-								"name": {"description": "Display name of the folder", "anyOf": [{"type": "string"}, {"type": "null"}]},
+								"name": {"description": "Display name of the folder", "type": ["string", "null"]},
 								"color": {
 									"default": 0,
 									"description": "Color of the folder as integer",
@@ -22437,14 +22383,14 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 							},
 							{"type": "null"}
 						]
 					},
 					"status_resets_to": {
 						"description": "The status to reset to after the scheduled reset",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"theme": {"type": "string", "description": "The UI theme preference"},
 					"locale": {"$ref": "#/components/schemas/Locale"},
@@ -22496,10 +22442,7 @@
 									"description": "The unique identifier for the folder (-1 for uncategorized)",
 									"anyOf": [{"$ref": "#/components/schemas/SignedInt32Type"}, {"type": "null"}]
 								},
-								"name": {
-									"description": "The display name of the folder",
-									"anyOf": [{"type": "string"}, {"type": "null"}]
-								},
+								"name": {"description": "The display name of the folder", "type": ["string", "null"]},
 								"color": {
 									"description": "The color of the folder as an integer",
 									"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
@@ -22680,8 +22623,8 @@
 				"type": "object",
 				"properties": {
 					"nickname": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Custom nickname for this friend (max 256 characters)"
+						"description": "Custom nickname for this friend (max 256 characters)",
+						"type": ["string", "null"]
 					}
 				},
 				"required": ["nickname"]
@@ -22705,12 +22648,9 @@
 						"description": "ISO8601 timestamp of when the relationship was established",
 						"type": "string",
 						"format": "date-time",
-						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 					},
-					"nickname": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "A custom nickname set for the related user"
-					},
+					"nickname": {"description": "A custom nickname set for the related user", "type": ["string", "null"]},
 					"share_voice_activity": {
 						"type": "boolean",
 						"description": "Whether the current user has chosen to share their voice activity with this friend on the Active Now panel"
@@ -22782,8 +22722,8 @@
 							"properties": {
 								"subscription_id": {"type": "string", "description": "The unique identifier for the push subscription"},
 								"user_agent": {
-									"anyOf": [{"type": "string"}, {"type": "null"}],
-									"description": "The user agent that created this subscription"
+									"description": "The user agent that created this subscription",
+									"type": ["string", "null"]
 								}
 							},
 							"required": ["subscription_id", "user_agent"],
@@ -22931,7 +22871,7 @@
 							"expires_at": {
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
 								"description": "ISO 8601 timestamp when this inbound challenge expires"
 							},
 							"reason": {
@@ -22994,8 +22934,8 @@
 					"ticket": {"type": "string", "description": "Ticket for password change actions"},
 					"code_expires_at": {"type": "string", "description": "ISO8601 timestamp when the verification code expires"},
 					"resend_available_at": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "ISO8601 timestamp when the code can be resent"
+						"description": "ISO8601 timestamp when the code can be resent",
+						"type": ["string", "null"]
 					}
 				},
 				"required": ["ticket", "code_expires_at", "resend_available_at"],
@@ -23029,9 +22969,7 @@
 			},
 			"UserNoteUpdateRequest": {
 				"type": "object",
-				"properties": {
-					"note": {"description": "The note text (max 256 characters)", "anyOf": [{"type": "string"}, {"type": "null"}]}
-				}
+				"properties": {"note": {"description": "The note text (max 256 characters)", "type": ["string", "null"]}}
 			},
 			"UserNoteResponse": {
 				"type": "object",
@@ -23091,17 +23029,14 @@
 								},
 								"platform": {"type": "string", "description": "The mobile push notification platform"},
 								"app_id": {
-									"anyOf": [{"type": "string"}, {"type": "null"}],
-									"description": "Client app channel or bundle mapping identifier for this device"
+									"description": "Client app channel or bundle mapping identifier for this device",
+									"type": ["string", "null"]
 								},
 								"provider_environment": {
-									"anyOf": [{"type": "string"}, {"type": "null"}],
-									"description": "Push provider environment used for this device"
+									"description": "Push provider environment used for this device",
+									"type": ["string", "null"]
 								},
-								"user_agent": {
-									"anyOf": [{"type": "string"}, {"type": "null"}],
-									"description": "The user agent that registered this device"
-								}
+								"user_agent": {"description": "The user agent that registered this device", "type": ["string", "null"]}
 							},
 							"required": ["device_id", "platform", "app_id", "provider_environment", "user_agent"],
 							"additionalProperties": false
@@ -23435,7 +23370,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 							},
 							{"type": "null"}
 						]
@@ -23446,7 +23381,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 							},
 							{"type": "null"}
 						]
@@ -23491,10 +23426,7 @@
 				"type": "object",
 				"properties": {
 					"name": {"description": "Display name for the meme", "type": "string"},
-					"alt_text": {
-						"description": "Alternative text description for accessibility",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"alt_text": {"description": "Alternative text description for accessibility", "type": ["string", "null"]},
 					"tags": {
 						"description": "New tags for categorizing and searching the meme",
 						"anyOf": [{"type": "array", "items": {"type": "string"}}, {"type": "null"}]
@@ -23513,10 +23445,7 @@
 						"$ref": "#/components/schemas/SnowflakeStringType"
 					},
 					"name": {"type": "string", "description": "Display name of the meme"},
-					"alt_text": {
-						"description": "Alternative text description for accessibility",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"alt_text": {"description": "Alternative text description for accessibility", "type": ["string", "null"]},
 					"tags": {
 						"type": "array",
 						"items": {"type": "string"},
@@ -23528,10 +23457,7 @@
 					},
 					"filename": {"type": "string", "description": "Original filename of the meme"},
 					"content_type": {"type": "string", "description": "MIME type of the meme file"},
-					"content_hash": {
-						"description": "Hash of the file content for deduplication",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"content_hash": {"description": "Hash of the file content for deduplication", "type": ["string", "null"]},
 					"size": {"description": "File size in bytes", "$ref": "#/components/schemas/NonNegativeSafeIntegerType"},
 					"width": {
 						"description": "Width of the image or video in pixels",
@@ -23541,10 +23467,7 @@
 						"description": "Height of the image or video in pixels",
 						"anyOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "null"}]
 					},
-					"duration": {
-						"description": "Duration of the video in seconds",
-						"anyOf": [{"type": "number"}, {"type": "null"}]
-					},
+					"duration": {"description": "Duration of the video in seconds", "type": ["number", "null"]},
 					"url": {"type": "string", "description": "CDN URL to access the meme"},
 					"is_gifv": {
 						"default": false,
@@ -23553,11 +23476,11 @@
 					},
 					"gif_slug": {
 						"description": "Provider-issued slug for the GIF this meme was sourced from, if any",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"gif_provider": {
 						"description": "Stable name of the GIF provider that issued gif_slug, if any. Legacy records may contain older provider names.",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"media": {
 						"description": "Provider-issued format-name → media descriptor map for gif-sourced memes (mirrors GifResponse.media). Null on memes uploaded as plain attachments.",
@@ -23572,7 +23495,7 @@
 					},
 					"placeholder": {
 						"description": "Compact thumbhash placeholder produced by the media proxy at favorite-time. Clients render it as a low-res preview while the full media loads. Null when the proxy did not emit one.",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					}
 				},
 				"required": [
@@ -23592,10 +23515,7 @@
 			"CreateFavoriteMemeFromUrlBodySchema": {
 				"type": "object",
 				"properties": {
-					"alt_text": {
-						"description": "Alternative text description for accessibility",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"alt_text": {"description": "Alternative text description for accessibility", "type": ["string", "null"]},
 					"tags": {
 						"description": "Tags for categorizing and searching the meme",
 						"default": [],
@@ -23608,11 +23528,11 @@
 					},
 					"gif_slug": {
 						"description": "Provider-issued slug or slug-id token for the GIF, when sourced from a provider",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"gif_provider": {
 						"description": "Stable name of the GIF provider that issued gif_slug. New provider GIFs are sourced from KLIPY.",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"media": {
 						"description": "Optional provider-issued format-name → media descriptor map captured by the client at favorite-time (mirrors GifResponse.media). Only persisted for gif-sourced memes; ignored otherwise.",
@@ -23625,7 +23545,7 @@
 							{"type": "null"}
 						]
 					},
-					"name": {"description": "Display name for the meme", "anyOf": [{"type": "string"}, {"type": "null"}]}
+					"name": {"description": "Display name for the meme", "type": ["string", "null"]}
 				},
 				"required": ["url"]
 			},
@@ -23654,40 +23574,40 @@
 					"status": {"$ref": "#/components/schemas/HarvestStatus"},
 					"created_at": {"type": "string", "description": "ISO 8601 timestamp when the harvest request was created"},
 					"started_at": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "ISO 8601 timestamp when the harvest started, or null if pending"
+						"description": "ISO 8601 timestamp when the harvest started, or null if pending",
+						"type": ["string", "null"]
 					},
 					"completed_at": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "ISO 8601 timestamp when the harvest completed, or null otherwise"
+						"description": "ISO 8601 timestamp when the harvest completed, or null otherwise",
+						"type": ["string", "null"]
 					},
 					"failed_at": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "ISO 8601 timestamp when the harvest failed, or null otherwise"
+						"description": "ISO 8601 timestamp when the harvest failed, or null otherwise",
+						"type": ["string", "null"]
 					},
 					"file_size": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Final file size of the downloaded data, expressed as a string, or null if not available"
+						"description": "Final file size of the downloaded data, expressed as a string, or null if not available",
+						"type": ["string", "null"]
 					},
 					"progress_percent": {
 						"type": "number",
 						"description": "Harvest progress as a percentage value between 0 and 100"
 					},
 					"progress_step": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Textual description of the current harvest step, if available"
+						"description": "Textual description of the current harvest step, if available",
+						"type": ["string", "null"]
 					},
 					"error_message": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Error message when the harvest fails, or null otherwise"
+						"description": "Error message when the harvest fails, or null otherwise",
+						"type": ["string", "null"]
 					},
 					"download_url_expires_at": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "ISO 8601 timestamp when the download URL expires, or null if unavailable"
+						"description": "ISO 8601 timestamp when the download URL expires, or null if unavailable",
+						"type": ["string", "null"]
 					},
 					"expires_at": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "ISO 8601 timestamp when the harvest download expires, or null if unavailable"
+						"description": "ISO 8601 timestamp when the harvest download expires, or null if unavailable",
+						"type": ["string", "null"]
 					}
 				},
 				"required": [
@@ -23721,40 +23641,40 @@
 								"description": "ISO 8601 timestamp when the harvest request was created"
 							},
 							"started_at": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "ISO 8601 timestamp when the harvest started, or null if pending"
+								"description": "ISO 8601 timestamp when the harvest started, or null if pending",
+								"type": ["string", "null"]
 							},
 							"completed_at": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "ISO 8601 timestamp when the harvest completed, or null otherwise"
+								"description": "ISO 8601 timestamp when the harvest completed, or null otherwise",
+								"type": ["string", "null"]
 							},
 							"failed_at": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "ISO 8601 timestamp when the harvest failed, or null otherwise"
+								"description": "ISO 8601 timestamp when the harvest failed, or null otherwise",
+								"type": ["string", "null"]
 							},
 							"file_size": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "Final file size of the downloaded data, expressed as a string, or null if not available"
+								"description": "Final file size of the downloaded data, expressed as a string, or null if not available",
+								"type": ["string", "null"]
 							},
 							"progress_percent": {
 								"type": "number",
 								"description": "Harvest progress as a percentage value between 0 and 100"
 							},
 							"progress_step": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "Textual description of the current harvest step, if available"
+								"description": "Textual description of the current harvest step, if available",
+								"type": ["string", "null"]
 							},
 							"error_message": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "Error message when the harvest fails, or null otherwise"
+								"description": "Error message when the harvest fails, or null otherwise",
+								"type": ["string", "null"]
 							},
 							"download_url_expires_at": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "ISO 8601 timestamp when the download URL expires, or null if unavailable"
+								"description": "ISO 8601 timestamp when the download URL expires, or null if unavailable",
+								"type": ["string", "null"]
 							},
 							"expires_at": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "ISO 8601 timestamp when the harvest download expires, or null if unavailable"
+								"description": "ISO 8601 timestamp when the harvest download expires, or null if unavailable",
+								"type": ["string", "null"]
 							}
 						},
 						"required": [
@@ -23822,7 +23742,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 							},
 							{"type": "null"}
 						]
@@ -23833,7 +23753,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 							},
 							{"type": "null"}
 						]
@@ -23992,10 +23912,7 @@
 							{
 								"type": "object",
 								"properties": {
-									"end_time": {
-										"anyOf": [{"type": "string"}, {"type": "null"}],
-										"description": "ISO8601 timestamp of when the mute expires"
-									},
+									"end_time": {"description": "ISO8601 timestamp of when the mute expires", "type": ["string", "null"]},
 									"selected_time_window": {
 										"description": "The selected mute duration in seconds",
 										"$ref": "#/components/schemas/Int32Type"
@@ -24035,8 +23952,8 @@
 													"type": "object",
 													"properties": {
 														"end_time": {
-															"anyOf": [{"type": "string"}, {"type": "null"}],
-															"description": "ISO8601 timestamp of when the mute expires"
+															"description": "ISO8601 timestamp of when the mute expires",
+															"type": ["string", "null"]
 														},
 														"selected_time_window": {
 															"description": "The selected mute duration in seconds",
@@ -24147,7 +24064,7 @@
 					"created_at": {
 						"type": "string",
 						"format": "date-time",
-						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 					}
 				},
 				"required": [
@@ -24260,21 +24177,18 @@
 						"type": "boolean",
 						"description": "Whether verification of the original email is required"
 					},
-					"original_email": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "The original email address on record"
-					},
+					"original_email": {"description": "The original email address on record", "type": ["string", "null"]},
 					"original_proof": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Proof token generated when original email verification is not required"
+						"description": "Proof token generated when original email verification is not required",
+						"type": ["string", "null"]
 					},
 					"original_code_expires_at": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "ISO8601 timestamp when the original verification code expires"
+						"description": "ISO8601 timestamp when the original verification code expires",
+						"type": ["string", "null"]
 					},
 					"resend_available_at": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "ISO8601 timestamp when the original verification code can be resent"
+						"description": "ISO8601 timestamp when the original verification code can be resent",
+						"type": ["string", "null"]
 					}
 				},
 				"required": [
@@ -24312,8 +24226,8 @@
 					"new_email": {"type": "string", "description": "The new email address the user wants to verify"},
 					"new_code_expires_at": {"type": "string", "description": "ISO8601 timestamp when the new email code expires"},
 					"resend_available_at": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "ISO8601 timestamp when the new email code can be resent"
+						"description": "ISO8601 timestamp when the new email code can be resent",
+						"type": ["string", "null"]
 					}
 				},
 				"required": ["ticket", "new_email", "new_code_expires_at", "resend_available_at"],
@@ -24508,15 +24422,12 @@
 						"$ref": "#/components/schemas/SnowflakeStringType"
 					},
 					"name": {"description": "The name of the channel", "type": "string"},
-					"topic": {"description": "The topic of the channel", "anyOf": [{"type": "string"}, {"type": "null"}]},
+					"topic": {"description": "The topic of the channel", "type": ["string", "null"]},
 					"url": {
 						"description": "The URL associated with the channel",
 						"anyOf": [{"type": "string", "format": "uri"}, {"type": "null"}]
 					},
-					"icon": {
-						"description": "The icon hash of the channel (for group DMs)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"icon": {"description": "The icon hash of the channel (for group DMs)", "type": ["string", "null"]},
 					"owner_id": {
 						"description": "The ID of the owner of the channel (for group DMs)",
 						"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
@@ -24539,10 +24450,7 @@
 						"description": "The maximum active voice connections allowed per user in the voice channel",
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
 					},
-					"rtc_region": {
-						"description": "The voice region ID for the voice channel",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"rtc_region": {"description": "The voice region ID for the voice channel", "type": ["string", "null"]},
 					"last_message_id": {
 						"description": "The ID of the last message sent in this channel",
 						"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
@@ -24553,7 +24461,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 							},
 							{"type": "null"}
 						]
@@ -24575,7 +24483,7 @@
 					},
 					"nsfw_override": {
 						"description": "Per-channel adult-content override; null means inherit from parent category and then guild. Categories use this same field as their own override.",
-						"anyOf": [{"type": "boolean"}, {"type": "null"}]
+						"type": ["boolean", "null"]
 					},
 					"content_warning_level": {
 						"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
@@ -24618,10 +24526,7 @@
 						"description": "The 4-digit discriminator tag",
 						"$ref": "#/components/schemas/DiscriminatorType"
 					},
-					"global_name": {
-						"description": "The display name shown to other users",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"global_name": {"description": "The display name shown to other users", "type": ["string", "null"]},
 					"email": {"description": "The email address for the account", "$ref": "#/components/schemas/EmailType"},
 					"new_password": {"description": "The new password to set", "$ref": "#/components/schemas/PasswordType"},
 					"password": {
@@ -24636,21 +24541,15 @@
 						"description": "Base64-encoded profile banner image",
 						"anyOf": [{"$ref": "#/components/schemas/Base64ImageType"}, {"type": "null"}]
 					},
-					"bio": {
-						"description": "User biography text (max 320 characters)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
-					"pronouns": {
-						"description": "User pronouns (max 40 characters)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"bio": {"description": "User biography text (max 320 characters)", "type": ["string", "null"]},
+					"pronouns": {"description": "User pronouns (max 40 characters)", "type": ["string", "null"]},
 					"accent_color": {
 						"description": "Profile accent color as integer",
 						"anyOf": [{"$ref": "#/components/schemas/ColorType"}, {"type": "null"}]
 					},
 					"timezone": {
 						"description": "Staff-only IANA timezone identifier saved for profile local time. Ignored for non-staff users.",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"timezone_privacy_flags": {
 						"description": "Staff-only bitfield controlling who can see the profile timezone. Ignored for non-staff users.",
@@ -24820,10 +24719,7 @@
 				"type": "object",
 				"properties": {
 					"id": {"description": "Provider-issued share identifier (slug or slug-id token).", "type": "string"},
-					"q": {
-						"description": "Optional search query that produced the GIF.",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"q": {"description": "Optional search query that produced the GIF.", "type": ["string", "null"]},
 					"locale": {"default": "en-US", "$ref": "#/components/schemas/Locale"}
 				},
 				"required": ["id"]
@@ -24929,7 +24825,7 @@
 					"expires_at": {
 						"type": "string",
 						"format": "date-time",
-						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
 						"description": "ISO timestamp when the upload URL expires"
 					},
 					"expires_in": {
@@ -24967,7 +24863,7 @@
 				"properties": {
 					"id": {"description": "The ID of the source guild", "$ref": "#/components/schemas/SnowflakeStringType"},
 					"name": {"type": "string", "description": "The name of the source guild"},
-					"icon": {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "The hash of the source guild icon"},
+					"icon": {"description": "The hash of the source guild icon", "type": ["string", "null"]},
 					"features": {
 						"type": "array",
 						"items": {"type": "string", "enum": ["VERIFIED", "PARTNERED", "DISCOVERABLE"]},
@@ -25394,12 +25290,12 @@
 								"description": "Actual subscription type before local perk disabling"
 							},
 							"premium_since": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "ISO timestamp when actual premium access first started"
+								"description": "ISO timestamp when actual premium access first started",
+								"type": ["string", "null"]
 							},
 							"premium_until": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "ISO timestamp when actual premium access ends, including stacked gift time"
+								"description": "ISO timestamp when actual premium access ends, including stacked gift time",
+								"type": ["string", "null"]
 							},
 							"premium_will_cancel": {
 								"type": "boolean",
@@ -25417,8 +25313,8 @@
 								"description": "Visionary sequence number, when applicable"
 							},
 							"premium_grace_ends_at": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "ISO timestamp when grace access ends, when applicable"
+								"description": "ISO timestamp when grace access ends, when applicable",
+								"type": ["string", "null"]
 							},
 							"has_active_paid_premium": {
 								"type": "boolean",
@@ -25459,12 +25355,12 @@
 								"description": "Effective premium type used by product gates"
 							},
 							"premium_since": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "Effective premium start timestamp exposed to the client"
+								"description": "Effective premium start timestamp exposed to the client",
+								"type": ["string", "null"]
 							},
 							"premium_until": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "Effective premium end timestamp exposed to the client, including stacked gift time"
+								"description": "Effective premium end timestamp exposed to the client, including stacked gift time",
+								"type": ["string", "null"]
 							},
 							"premium_will_cancel": {
 								"type": "boolean",
@@ -25482,8 +25378,8 @@
 								"description": "Effective Visionary sequence number, when applicable"
 							},
 							"premium_grace_ends_at": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "Effective grace timestamp exposed to the client"
+								"description": "Effective grace timestamp exposed to the client",
+								"type": ["string", "null"]
 							},
 							"premium_enabled_override": {
 								"type": "boolean",
@@ -25526,7 +25422,7 @@
 					"billing": {
 						"type": "object",
 						"properties": {
-							"stripe_customer_id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+							"stripe_customer_id": {"type": ["string", "null"]},
 							"current_subscription_price": {"$ref": "#/components/schemas/CurrentSubscriptionPriceResponse"},
 							"pending_subscription_change": {"$ref": "#/components/schemas/PendingSubscriptionChangeResponse"},
 							"list_price_switch": {"$ref": "#/components/schemas/ListPriceSwitchState"},
@@ -25563,9 +25459,9 @@
 				"type": "object",
 				"properties": {
 					"invoice_id": {"type": "string"},
-					"payment_intent_id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-					"charge_id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-					"refund_id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+					"payment_intent_id": {"type": ["string", "null"]},
+					"charge_id": {"type": ["string", "null"]},
+					"refund_id": {"type": ["string", "null"]},
 					"refunded_amount_cents": {
 						"type": "integer",
 						"minimum": -9007199254740991,
@@ -25575,12 +25471,12 @@
 					"invoice_amount_paid_cents": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991},
 					"currency": {"type": "string"},
 					"subscription_id": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Subscription that was cancelled along with the refund, when applicable"
+						"description": "Subscription that was cancelled along with the refund, when applicable",
+						"type": ["string", "null"]
 					},
 					"status": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Provider status of the refund (e.g. pending, succeeded, failed); money only moved once succeeded"
+						"description": "Provider status of the refund (e.g. pending, succeeded, failed); money only moved once succeeded",
+						"type": ["string", "null"]
 					}
 				},
 				"required": [
@@ -25608,28 +25504,22 @@
 						"description": "Why the user is not eligible, when eligible is false"
 					},
 					"invoice_id": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Latest paid invoice considered for refund eligibility"
+						"description": "Latest paid invoice considered for refund eligibility",
+						"type": ["string", "null"]
 					},
 					"invoice_amount_paid_cents": {
 						"anyOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "null"}],
 						"description": "Amount paid on the latest invoice in the currency minor unit"
 					},
-					"currency": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Currency of the latest paid invoice"
-					},
-					"paid_at": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "ISO timestamp the latest invoice was paid"
-					},
+					"currency": {"description": "Currency of the latest paid invoice", "type": ["string", "null"]},
+					"paid_at": {"description": "ISO timestamp the latest invoice was paid", "type": ["string", "null"]},
 					"refund_window_expires_at": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "ISO timestamp after which the 3-day refund window closes"
+						"description": "ISO timestamp after which the 3-day refund window closes",
+						"type": ["string", "null"]
 					},
 					"cooldown_expires_at": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "ISO timestamp the 30-day cooldown ends, if currently active"
+						"description": "ISO timestamp the 30-day cooldown ends, if currently active",
+						"type": ["string", "null"]
 					},
 					"cancels_subscription": {
 						"type": "boolean",
@@ -25652,22 +25542,10 @@
 			"PriceIdsResponse": {
 				"type": "object",
 				"properties": {
-					"monthly": {
-						"description": "Stripe price ID for the monthly subscription",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
-					"yearly": {
-						"description": "Stripe price ID for the yearly subscription",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
-					"gift_1_month": {
-						"description": "Stripe price ID for the 1 month gift",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
-					"gift_1_year": {
-						"description": "Stripe price ID for the 1 year gift",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"monthly": {"description": "Stripe price ID for the monthly subscription", "type": ["string", "null"]},
+					"yearly": {"description": "Stripe price ID for the yearly subscription", "type": ["string", "null"]},
+					"gift_1_month": {"description": "Stripe price ID for the 1 month gift", "type": ["string", "null"]},
+					"gift_1_year": {"description": "Stripe price ID for the 1 year gift", "type": ["string", "null"]},
 					"monthly_amount_minor": {
 						"description": "Monthly price amount in the currency minor unit",
 						"anyOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "null"}]
@@ -25730,8 +25608,8 @@
 								"description": "The current list price for the same cycle/currency, in the currency minor unit"
 							},
 							"list_price_id": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "The current list Stripe price ID for the same cycle/currency"
+								"description": "The current list Stripe price ID for the same cycle/currency",
+								"type": ["string", "null"]
 							}
 						},
 						"required": [
@@ -25777,16 +25655,10 @@
 					},
 					"username": {"type": "string", "description": "The username of the user"},
 					"discriminator": {"type": "string", "description": "The discriminator of the user"},
-					"global_name": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "The global display name of the user"
-					},
-					"avatar": {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "The avatar hash of the user"},
-					"email": {"description": "The email address of the user", "anyOf": [{"type": "string"}, {"type": "null"}]},
-					"verified": {
-						"description": "Whether the user has verified their email",
-						"anyOf": [{"type": "boolean"}, {"type": "null"}]
-					},
+					"global_name": {"description": "The global display name of the user", "type": ["string", "null"]},
+					"avatar": {"description": "The avatar hash of the user", "type": ["string", "null"]},
+					"email": {"description": "The email address of the user", "type": ["string", "null"]},
+					"verified": {"description": "Whether the user has verified their email", "type": ["boolean", "null"]},
 					"flags": {"$ref": "#/components/schemas/PublicUserFlags", "description": "The user flags"}
 				},
 				"required": ["sub", "id", "username", "discriminator", "global_name", "avatar"],
@@ -25891,11 +25763,8 @@
 						"$ref": "#/components/schemas/SnowflakeStringType"
 					},
 					"name": {"type": "string", "description": "The name of the application"},
-					"icon": {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "The icon hash of the application"},
-					"description": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "The description of the application"
-					},
+					"icon": {"description": "The icon hash of the application", "type": ["string", "null"]},
+					"description": {"description": "The description of the application", "type": ["string", "null"]},
 					"redirect_uris": {
 						"maxItems": 10,
 						"type": "array",
@@ -25920,18 +25789,9 @@
 									},
 									"username": {"type": "string", "description": "The username of the bot"},
 									"discriminator": {"type": "string", "description": "The discriminator of the bot"},
-									"avatar": {
-										"description": "The avatar hash of the bot",
-										"anyOf": [{"type": "string"}, {"type": "null"}]
-									},
-									"banner": {
-										"description": "The banner hash of the bot",
-										"anyOf": [{"type": "string"}, {"type": "null"}]
-									},
-									"bio": {
-										"anyOf": [{"type": "string"}, {"type": "null"}],
-										"description": "The bio or description of the bot"
-									},
+									"avatar": {"description": "The avatar hash of the bot", "type": ["string", "null"]},
+									"banner": {"description": "The banner hash of the bot", "type": ["string", "null"]},
+									"bio": {"description": "The bio or description of the bot", "type": ["string", "null"]},
 									"token": {"description": "The bot token for authentication", "type": "string"},
 									"flags": {"$ref": "#/components/schemas/BotFlags"}
 								},
@@ -25978,12 +25838,9 @@
 							},
 							"username": {"type": "string", "description": "The username of the bot"},
 							"discriminator": {"type": "string", "description": "The discriminator of the bot"},
-							"avatar": {"description": "The avatar hash of the bot", "anyOf": [{"type": "string"}, {"type": "null"}]},
-							"banner": {"description": "The banner hash of the bot", "anyOf": [{"type": "string"}, {"type": "null"}]},
-							"bio": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "The bio or description of the bot"
-							},
+							"avatar": {"description": "The avatar hash of the bot", "type": ["string", "null"]},
+							"banner": {"description": "The banner hash of the bot", "type": ["string", "null"]},
+							"bio": {"description": "The bio or description of the bot", "type": ["string", "null"]},
 							"token": {"description": "The bot token for authentication", "type": "string"},
 							"mfa_enabled": {"description": "Whether the bot has MFA enabled", "type": "boolean"},
 							"authenticator_types": {
@@ -26014,12 +25871,9 @@
 							},
 							"username": {"type": "string", "description": "The username of the bot"},
 							"discriminator": {"type": "string", "description": "The discriminator of the bot"},
-							"avatar": {"description": "The avatar hash of the bot", "anyOf": [{"type": "string"}, {"type": "null"}]},
-							"banner": {"description": "The banner hash of the bot", "anyOf": [{"type": "string"}, {"type": "null"}]},
-							"bio": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "The bio or description of the bot"
-							},
+							"avatar": {"description": "The avatar hash of the bot", "type": ["string", "null"]},
+							"banner": {"description": "The banner hash of the bot", "type": ["string", "null"]},
+							"bio": {"description": "The bio or description of the bot", "type": ["string", "null"]},
 							"token": {"description": "The bot token for authentication", "type": "string"},
 							"mfa_enabled": {"description": "Whether the bot has MFA enabled", "type": "boolean"},
 							"authenticator_types": {
@@ -26054,7 +25908,7 @@
 						"description": "The banner image as base64",
 						"anyOf": [{"$ref": "#/components/schemas/Base64ImageType"}, {"type": "null"}]
 					},
-					"bio": {"description": "The bio or description of the bot", "anyOf": [{"type": "string"}, {"type": "null"}]},
+					"bio": {"description": "The bio or description of the bot", "type": ["string", "null"]},
 					"bot_flags": {"$ref": "#/components/schemas/BotFlags"}
 				}
 			},
@@ -26067,9 +25921,9 @@
 					},
 					"username": {"type": "string", "description": "The username of the bot"},
 					"discriminator": {"type": "string", "description": "The discriminator of the bot"},
-					"avatar": {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "The avatar hash of the bot"},
-					"banner": {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "The banner hash of the bot"},
-					"bio": {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "The bio or description of the bot"},
+					"avatar": {"description": "The avatar hash of the bot", "type": ["string", "null"]},
+					"banner": {"description": "The banner hash of the bot", "type": ["string", "null"]},
+					"bio": {"description": "The bio or description of the bot", "type": ["string", "null"]},
 					"flags": {"$ref": "#/components/schemas/BotFlags"}
 				},
 				"required": ["id", "username", "discriminator", "avatar", "banner", "bio", "flags"],
@@ -26134,14 +25988,8 @@
 								"$ref": "#/components/schemas/SnowflakeStringType"
 							},
 							"name": {"type": "string", "description": "The name of the application"},
-							"icon": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "The icon hash of the application"
-							},
-							"description": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "The description of the application"
-							},
+							"icon": {"description": "The icon hash of the application", "type": ["string", "null"]},
+							"description": {"description": "The description of the application", "type": ["string", "null"]},
 							"bot_public": {"type": "boolean", "description": "Whether the bot can be invited by anyone"},
 							"bot_require_code_grant": {
 								"type": "boolean",
@@ -26170,11 +26018,8 @@
 							},
 							"username": {"type": "string", "description": "The username of the user"},
 							"discriminator": {"type": "string", "description": "The discriminator of the user"},
-							"global_name": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "The global display name of the user"
-							},
-							"avatar": {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "The avatar hash of the user"},
+							"global_name": {"description": "The global display name of the user", "type": ["string", "null"]},
+							"avatar": {"description": "The avatar hash of the user", "type": ["string", "null"]},
 							"avatar_color": {
 								"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
 								"description": "The default avatar color of the user"
@@ -26182,14 +26027,8 @@
 							"bot": {"description": "Whether the user is a bot", "type": "boolean"},
 							"system": {"description": "Whether the user is a system user", "type": "boolean"},
 							"flags": {"$ref": "#/components/schemas/PublicUserFlags", "description": "The user flags"},
-							"email": {
-								"description": "The email address of the user",
-								"anyOf": [{"type": "string"}, {"type": "null"}]
-							},
-							"verified": {
-								"description": "Whether the user has verified their email",
-								"anyOf": [{"type": "boolean"}, {"type": "null"}]
-							}
+							"email": {"description": "The email address of the user", "type": ["string", "null"]},
+							"verified": {"description": "Whether the user has verified their email", "type": ["boolean", "null"]}
 						},
 						"required": ["id", "username", "discriminator", "global_name", "avatar", "avatar_color", "flags"],
 						"additionalProperties": false
@@ -26202,20 +26041,20 @@
 				"type": "object",
 				"properties": {
 					"countryCode": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "ISO 3166-1 alpha-2 country code resolved for the client, or null when it cannot be resolved"
+						"description": "ISO 3166-1 alpha-2 country code resolved for the client, or null when it cannot be resolved",
+						"type": ["string", "null"]
 					},
 					"regionCode": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "ISO 3166-2 subdivision code resolved for the client, or null when it cannot be resolved"
+						"description": "ISO 3166-2 subdivision code resolved for the client, or null when it cannot be resolved",
+						"type": ["string", "null"]
 					},
 					"latitude": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Approximate latitude of the client, or null when it cannot be resolved"
+						"description": "Approximate latitude of the client, or null when it cannot be resolved",
+						"type": ["string", "null"]
 					},
 					"longitude": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Approximate longitude of the client, or null when it cannot be resolved"
+						"description": "Approximate longitude of the client, or null when it cannot be resolved",
+						"type": ["string", "null"]
 					},
 					"ageRestrictedGeos": {
 						"type": "array",
@@ -26249,7 +26088,7 @@
 				"properties": {
 					"code": {
 						"description": "The new vanity URL code (2-32 characters, alphanumeric and hyphens)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					}
 				}
 			},
@@ -26267,7 +26106,7 @@
 			"GuildVanityURLResponse": {
 				"type": "object",
 				"properties": {
-					"code": {"description": "The vanity URL code for the guild", "anyOf": [{"type": "string"}, {"type": "null"}]},
+					"code": {"description": "The vanity URL code for the guild", "type": ["string", "null"]},
 					"uses": {
 						"description": "The number of times this vanity URL has been used",
 						"$ref": "#/components/schemas/Int32Type"
@@ -26314,8 +26153,8 @@
 						"$ref": "#/components/schemas/SnowflakeStringType"
 					},
 					"name": {"type": "string", "description": "The name of the guild"},
-					"icon": {"description": "The hash of the guild icon", "anyOf": [{"type": "string"}, {"type": "null"}]},
-					"banner": {"description": "The hash of the guild banner", "anyOf": [{"type": "string"}, {"type": "null"}]},
+					"icon": {"description": "The hash of the guild icon", "type": ["string", "null"]},
+					"banner": {"description": "The hash of the guild banner", "type": ["string", "null"]},
 					"banner_width": {
 						"description": "The width of the guild banner in pixels",
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
@@ -26324,10 +26163,7 @@
 						"description": "The height of the guild banner in pixels",
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
 					},
-					"splash": {
-						"description": "The hash of the guild splash screen",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"splash": {"description": "The hash of the guild splash screen", "type": ["string", "null"]},
 					"splash_width": {
 						"description": "The width of the guild splash in pixels",
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
@@ -26347,10 +26183,7 @@
 						"enum": [0, 1, 2],
 						"type": "integer"
 					},
-					"embed_splash": {
-						"description": "The hash of the embedded invite splash",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"embed_splash": {"description": "The hash of the embedded invite splash", "type": ["string", "null"]},
 					"embed_splash_width": {
 						"description": "The width of the embedded invite splash in pixels",
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
@@ -26359,10 +26192,7 @@
 						"description": "The height of the embedded invite splash in pixels",
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
 					},
-					"vanity_url_code": {
-						"description": "The vanity URL code for the guild",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"vanity_url_code": {"description": "The vanity URL code for the guild", "type": ["string", "null"]},
 					"owner_id": {"description": "The ID of the guild owner", "$ref": "#/components/schemas/SnowflakeStringType"},
 					"system_channel_id": {
 						"description": "The ID of the channel where system messages are sent",
@@ -26402,7 +26232,7 @@
 					},
 					"content_warning_text": {
 						"description": "Custom guild-wide content warning text; null falls back to a localized default",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"explicit_content_filter": {"$ref": "#/components/schemas/GuildExplicitContentFilter"},
 					"default_message_notifications": {"$ref": "#/components/schemas/DefaultMessageNotifications"},
@@ -26413,7 +26243,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 							},
 							{"type": "null"}
 						]
@@ -26482,10 +26312,7 @@
 				"type": "object",
 				"properties": {
 					"name": {"description": "The name of the sticker (2-30 characters)", "type": "string"},
-					"description": {
-						"description": "Description of the sticker (1-500 characters)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"description": {"description": "Description of the sticker (1-500 characters)", "type": ["string", "null"]},
 					"tags": {
 						"default": [],
 						"description": "Array of autocomplete/suggestion tags (max 10 tags, each 1-30 characters)",
@@ -26580,10 +26407,7 @@
 				"type": "object",
 				"properties": {
 					"name": {"description": "The name of the sticker (2-30 characters)", "type": "string"},
-					"description": {
-						"description": "Description of the sticker (1-500 characters)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"description": {"description": "Description of the sticker (1-500 characters)", "type": ["string", "null"]},
 					"tags": {
 						"default": [],
 						"description": "Array of autocomplete/suggestion tags (max 10 tags, each 1-30 characters)",
@@ -26642,10 +26466,7 @@
 					},
 					"hoist": {"type": "boolean", "description": "Whether this role is displayed separately in the member list"},
 					"mentionable": {"type": "boolean", "description": "Whether this role can be mentioned by anyone"},
-					"unicode_emoji": {
-						"description": "The unicode emoji for this role",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					}
+					"unicode_emoji": {"description": "The unicode emoji for this role", "type": ["string", "null"]}
 				},
 				"required": ["id", "name", "color", "position", "permissions", "hoist", "mentionable"],
 				"additionalProperties": false
@@ -26702,10 +26523,7 @@
 			"GuildMemberUpdateRequest": {
 				"type": "object",
 				"properties": {
-					"nick": {
-						"description": "The nickname to set for the member (1-32 characters)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"nick": {"description": "The nickname to set for the member (1-32 characters)", "type": ["string", "null"]},
 					"roles": {
 						"description": "Array of role IDs to assign to the member (max 250)",
 						"maxItems": 250,
@@ -26720,13 +26538,10 @@
 						"description": "Base64-encoded image data for the member guild banner",
 						"anyOf": [{"$ref": "#/components/schemas/Base64ImageType"}, {"type": "null"}]
 					},
-					"bio": {
-						"description": "The member guild profile bio (1-320 characters)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"bio": {"description": "The member guild profile bio (1-320 characters)", "type": ["string", "null"]},
 					"pronouns": {
 						"description": "The member guild profile pronouns (1-40 characters)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"accent_color": {
 						"description": "The accent color for the member guild profile as an integer",
@@ -26758,25 +26573,21 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 							},
 							{"type": "null"}
 						]
 					},
 					"timeout_reason": {
 						"description": "The reason for timing out the member (1-512 characters)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"channel_id": {
 						"description": "The voice channel ID to move the member to",
 						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
 					},
-					"connection_id": {
-						"description": "The voice connection ID for the member",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					}
-				},
-				"required": ["nick", "communication_disabled_until"]
+					"connection_id": {"description": "The voice connection ID for the member", "type": ["string", "null"]}
+				}
 			},
 			"GuildMemberResponse": {
 				"type": "object",
@@ -26785,18 +26596,9 @@
 						"description": "The user this guild member represents",
 						"$ref": "#/components/schemas/UserPartialResponse"
 					},
-					"nick": {
-						"description": "The nickname of the member in this guild",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
-					"avatar": {
-						"description": "The hash of the member guild-specific avatar",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
-					"banner": {
-						"description": "The hash of the member guild-specific banner",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"nick": {"description": "The nickname of the member in this guild", "type": ["string", "null"]},
+					"avatar": {"description": "The hash of the member guild-specific avatar", "type": ["string", "null"]},
+					"banner": {"description": "The hash of the member guild-specific banner", "type": ["string", "null"]},
 					"accent_color": {
 						"description": "The accent colour of the member guild profile as an integer",
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
@@ -26810,7 +26612,7 @@
 					"joined_at": {
 						"type": "string",
 						"format": "date-time",
-						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
 						"description": "ISO8601 timestamp of when the user joined the guild"
 					},
 					"mute": {"type": "boolean", "description": "Whether the member is muted in voice channels"},
@@ -26821,7 +26623,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 							},
 							{"type": "null"}
 						]
@@ -26843,10 +26645,7 @@
 			"MyGuildMemberUpdateRequest": {
 				"type": "object",
 				"properties": {
-					"nick": {
-						"description": "The nickname to set for the member (1-32 characters)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"nick": {"description": "The nickname to set for the member (1-32 characters)", "type": ["string", "null"]},
 					"avatar": {
 						"description": "Base64-encoded image data for the member guild avatar",
 						"anyOf": [{"$ref": "#/components/schemas/Base64ImageType"}, {"type": "null"}]
@@ -26855,13 +26654,10 @@
 						"description": "Base64-encoded image data for the member guild banner",
 						"anyOf": [{"$ref": "#/components/schemas/Base64ImageType"}, {"type": "null"}]
 					},
-					"bio": {
-						"description": "The member guild profile bio (1-320 characters)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"bio": {"description": "The member guild profile bio (1-320 characters)", "type": ["string", "null"]},
 					"pronouns": {
 						"description": "The member guild profile pronouns (1-40 characters)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"accent_color": {
 						"description": "The accent color for the member guild profile as an integer",
@@ -26893,23 +26689,20 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 							},
 							{"type": "null"}
 						]
 					},
 					"timeout_reason": {
 						"description": "The reason for timing out the member (1-512 characters)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"channel_id": {
 						"description": "The voice channel ID to move the member to",
 						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
 					},
-					"connection_id": {
-						"description": "The voice connection ID for the member",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					}
+					"connection_id": {"description": "The voice connection ID for the member", "type": ["string", "null"]}
 				}
 			},
 			"GuildMemberSearchRequest": {
@@ -27162,19 +26955,13 @@
 					"status": {"type": "string", "description": "Application status"},
 					"description": {"type": "string", "description": "Discovery description"},
 					"category_type": {"type": "number", "description": "Discovery category type"},
-					"primary_language": {
-						"description": "Primary community language",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"primary_language": {"description": "Primary community language", "type": ["string", "null"]},
 					"custom_tags": {"type": "array", "items": {"type": "string"}, "description": "Custom discovery tags"},
 					"applied_at": {"type": "string", "description": "Application timestamp"},
-					"reviewed_at": {"description": "Review timestamp", "anyOf": [{"type": "string"}, {"type": "null"}]},
-					"review_reason": {
-						"description": "Review reason (approval/rejection)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
-					"removed_at": {"description": "Removal timestamp", "anyOf": [{"type": "string"}, {"type": "null"}]},
-					"removal_reason": {"description": "Removal reason", "anyOf": [{"type": "string"}, {"type": "null"}]}
+					"reviewed_at": {"description": "Review timestamp", "type": ["string", "null"]},
+					"review_reason": {"description": "Review reason (approval/rejection)", "type": ["string", "null"]},
+					"removed_at": {"description": "Removal timestamp", "type": ["string", "null"]},
+					"removal_reason": {"description": "Removal reason", "type": ["string", "null"]}
 				},
 				"required": ["guild_id", "status", "description", "category_type", "custom_tags", "applied_at"],
 				"additionalProperties": false
@@ -27273,10 +27060,7 @@
 						"minimum": 0,
 						"maximum": 604800
 					},
-					"reason": {
-						"description": "The reason for the ban (max 512 characters)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"reason": {"description": "The reason for the ban (max 512 characters)", "type": ["string", "null"]},
 					"ban_duration_seconds": {
 						"description": "Duration of the ban in seconds (0 for permanent, or between 60 and 63072000 seconds for a temporary ban)",
 						"type": "integer",
@@ -27475,7 +27259,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 							},
 							{"type": "null"}
 						]
@@ -27631,7 +27415,7 @@
 						"type": "string",
 						"maxLength": 254,
 						"format": "email",
-						"pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+						"pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
 						"description": "Email address to send the magic link to"
 					}
 				},
@@ -27644,7 +27428,7 @@
 						"type": "string",
 						"maxLength": 254,
 						"format": "email",
-						"pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+						"pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
 						"description": "Donor email address"
 					},
 					"amount_cents": {
@@ -27746,7 +27530,7 @@
 					"pub_date": {"type": "string", "description": "ISO 8601 date when this version was published"},
 					"minimum_system_version": {
 						"description": "Minimum operating system version required by this release, when applicable",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"files": {
 						"type": "object",
@@ -27755,13 +27539,10 @@
 							"type": "object",
 							"properties": {
 								"url": {"type": "string", "description": "Download URL for this file"},
-								"sha256": {
-									"anyOf": [{"type": "string"}, {"type": "null"}],
-									"description": "SHA-256 hash of the file for verification"
-								},
+								"sha256": {"description": "SHA-256 hash of the file for verification", "type": ["string", "null"]},
 								"checksum_url": {
-									"anyOf": [{"type": "string"}, {"type": "null"}],
-									"description": "Plain text .sha256 checksum file URL for this file"
+									"description": "Plain text .sha256 checksum file URL for this file",
+									"type": ["string", "null"]
 								}
 							},
 							"required": ["url", "sha256", "checksum_url"],
@@ -27783,17 +27564,11 @@
 							"properties": {
 								"id": {"description": "Guild ID", "$ref": "#/components/schemas/SnowflakeStringType"},
 								"name": {"type": "string", "description": "Guild name"},
-								"icon": {"description": "Guild icon hash", "anyOf": [{"type": "string"}, {"type": "null"}]},
-								"banner": {"description": "Guild banner hash", "anyOf": [{"type": "string"}, {"type": "null"}]},
-								"description": {
-									"description": "Discovery description",
-									"anyOf": [{"type": "string"}, {"type": "null"}]
-								},
+								"icon": {"description": "Guild icon hash", "type": ["string", "null"]},
+								"banner": {"description": "Guild banner hash", "type": ["string", "null"]},
+								"description": {"description": "Discovery description", "type": ["string", "null"]},
 								"category_type": {"type": "number", "description": "Discovery category type"},
-								"primary_language": {
-									"description": "Primary community language",
-									"anyOf": [{"type": "string"}, {"type": "null"}]
-								},
+								"primary_language": {"description": "Primary community language", "type": ["string", "null"]},
 								"custom_tags": {"type": "array", "items": {"type": "string"}, "description": "Custom discovery tags"},
 								"member_count": {"type": "number", "description": "Approximate member count"},
 								"online_count": {"type": "number", "description": "Approximate online member count"},
@@ -27863,7 +27638,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 							},
 							{"type": "null"}
 						],
@@ -27915,10 +27690,7 @@
 				"type": "object",
 				"properties": {
 					"name": {"description": "Display name for the meme", "type": "string"},
-					"alt_text": {
-						"description": "Alternative text description for accessibility",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"alt_text": {"description": "Alternative text description for accessibility", "type": ["string", "null"]},
 					"tags": {
 						"description": "Tags for categorizing and searching the meme",
 						"default": [],
@@ -27991,11 +27763,11 @@
 											},
 											"title": {
 												"description": "A title for the attachment (1-1024 characters)",
-												"anyOf": [{"type": "string"}, {"type": "null"}]
+												"type": ["string", "null"]
 											},
 											"description": {
 												"description": "Alt text description for the attachment (1-4096 characters)",
-												"anyOf": [{"type": "string"}, {"type": "null"}]
+												"type": ["string", "null"]
 											}
 										},
 										"required": ["id"]
@@ -28101,12 +27873,12 @@
 					"unique": {
 						"default": false,
 						"description": "Whether to create a new unique invite or reuse an existing one",
-						"anyOf": [{"type": "boolean"}, {"type": "null"}]
+						"type": ["boolean", "null"]
 					},
 					"temporary": {
 						"default": false,
 						"description": "Whether members that joined via this invite should be kicked after disconnecting",
-						"anyOf": [{"type": "boolean"}, {"type": "null"}]
+						"type": ["boolean", "null"]
 					}
 				}
 			},
@@ -28133,7 +27905,7 @@
 				"properties": {
 					"region": {
 						"description": "The preferred voice region for the call (1-64 characters). Omit or set to null for automatic region selection.",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"latitude": {"description": "Client latitude used for automatic region selection", "type": "string"},
 					"longitude": {"description": "Client longitude used for automatic region selection", "type": "string"}
@@ -28203,11 +27975,8 @@
 					{
 						"type": "object",
 						"properties": {
-							"topic": {
-								"description": "The channel topic (1-1024 characters)",
-								"anyOf": [{"type": "string"}, {"type": "null"}]
-							},
-							"url": {"description": "External URL for link channels", "anyOf": [{"type": "string"}, {"type": "null"}]},
+							"topic": {"description": "The channel topic (1-1024 characters)", "type": ["string", "null"]},
+							"url": {"description": "External URL for link channels", "type": ["string", "null"]},
 							"parent_id": {
 								"description": "ID of the parent category for this channel",
 								"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
@@ -28258,11 +28027,11 @@
 							},
 							"nsfw": {
 								"description": "Legacy: setting true maps to nsfw_override=true; setting false maps to nsfw_override=null (inherit). Prefer nsfw_override.",
-								"anyOf": [{"type": "boolean"}, {"type": "null"}]
+								"type": ["boolean", "null"]
 							},
 							"nsfw_override": {
 								"description": "Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present.",
-								"anyOf": [{"type": "boolean"}, {"type": "null"}]
+								"type": ["boolean", "null"]
 							},
 							"content_warning_level": {
 								"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
@@ -28286,19 +28055,16 @@
 							},
 							"rtc_region": {
 								"description": "Voice region ID for the voice channel (1-64 characters)",
-								"anyOf": [{"type": "string"}, {"type": "null"}]
+								"type": ["string", "null"]
 							},
-							"name": {"description": "The name of the channel", "anyOf": [{"type": "string"}, {"type": "null"}]}
+							"name": {"description": "The name of the channel", "type": ["string", "null"]}
 						}
 					},
 					{
 						"type": "object",
 						"properties": {
-							"topic": {
-								"description": "The channel topic (1-1024 characters)",
-								"anyOf": [{"type": "string"}, {"type": "null"}]
-							},
-							"url": {"description": "External URL for link channels", "anyOf": [{"type": "string"}, {"type": "null"}]},
+							"topic": {"description": "The channel topic (1-1024 characters)", "type": ["string", "null"]},
+							"url": {"description": "External URL for link channels", "type": ["string", "null"]},
 							"parent_id": {
 								"description": "ID of the parent category for this channel",
 								"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
@@ -28349,11 +28115,11 @@
 							},
 							"nsfw": {
 								"description": "Legacy: setting true maps to nsfw_override=true; setting false maps to nsfw_override=null (inherit). Prefer nsfw_override.",
-								"anyOf": [{"type": "boolean"}, {"type": "null"}]
+								"type": ["boolean", "null"]
 							},
 							"nsfw_override": {
 								"description": "Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present.",
-								"anyOf": [{"type": "boolean"}, {"type": "null"}]
+								"type": ["boolean", "null"]
 							},
 							"content_warning_level": {
 								"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
@@ -28377,19 +28143,16 @@
 							},
 							"rtc_region": {
 								"description": "Voice region ID for the voice channel (1-64 characters)",
-								"anyOf": [{"type": "string"}, {"type": "null"}]
+								"type": ["string", "null"]
 							},
-							"name": {"description": "The name of the channel", "anyOf": [{"type": "string"}, {"type": "null"}]}
+							"name": {"description": "The name of the channel", "type": ["string", "null"]}
 						}
 					},
 					{
 						"type": "object",
 						"properties": {
-							"topic": {
-								"description": "The channel topic (1-1024 characters)",
-								"anyOf": [{"type": "string"}, {"type": "null"}]
-							},
-							"url": {"description": "External URL for link channels", "anyOf": [{"type": "string"}, {"type": "null"}]},
+							"topic": {"description": "The channel topic (1-1024 characters)", "type": ["string", "null"]},
+							"url": {"description": "External URL for link channels", "type": ["string", "null"]},
 							"parent_id": {
 								"description": "ID of the parent category for this channel",
 								"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
@@ -28440,11 +28203,11 @@
 							},
 							"nsfw": {
 								"description": "Legacy: setting true maps to nsfw_override=true; setting false maps to nsfw_override=null (inherit). Prefer nsfw_override.",
-								"anyOf": [{"type": "boolean"}, {"type": "null"}]
+								"type": ["boolean", "null"]
 							},
 							"nsfw_override": {
 								"description": "Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present.",
-								"anyOf": [{"type": "boolean"}, {"type": "null"}]
+								"type": ["boolean", "null"]
 							},
 							"content_warning_level": {
 								"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
@@ -28468,19 +28231,16 @@
 							},
 							"rtc_region": {
 								"description": "Voice region ID for the voice channel (1-64 characters)",
-								"anyOf": [{"type": "string"}, {"type": "null"}]
+								"type": ["string", "null"]
 							},
-							"name": {"description": "The name of the category", "anyOf": [{"type": "string"}, {"type": "null"}]}
+							"name": {"description": "The name of the category", "type": ["string", "null"]}
 						}
 					},
 					{
 						"type": "object",
 						"properties": {
-							"topic": {
-								"description": "The channel topic (1-1024 characters)",
-								"anyOf": [{"type": "string"}, {"type": "null"}]
-							},
-							"url": {"description": "External URL for link channels", "anyOf": [{"type": "string"}, {"type": "null"}]},
+							"topic": {"description": "The channel topic (1-1024 characters)", "type": ["string", "null"]},
+							"url": {"description": "External URL for link channels", "type": ["string", "null"]},
 							"parent_id": {
 								"description": "ID of the parent category for this channel",
 								"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
@@ -28531,11 +28291,11 @@
 							},
 							"nsfw": {
 								"description": "Legacy: setting true maps to nsfw_override=true; setting false maps to nsfw_override=null (inherit). Prefer nsfw_override.",
-								"anyOf": [{"type": "boolean"}, {"type": "null"}]
+								"type": ["boolean", "null"]
 							},
 							"nsfw_override": {
 								"description": "Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present.",
-								"anyOf": [{"type": "boolean"}, {"type": "null"}]
+								"type": ["boolean", "null"]
 							},
 							"content_warning_level": {
 								"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
@@ -28559,15 +28319,15 @@
 							},
 							"rtc_region": {
 								"description": "Voice region ID for the voice channel (1-64 characters)",
-								"anyOf": [{"type": "string"}, {"type": "null"}]
+								"type": ["string", "null"]
 							},
-							"name": {"description": "The name of the channel", "anyOf": [{"type": "string"}, {"type": "null"}]}
+							"name": {"description": "The name of the channel", "type": ["string", "null"]}
 						}
 					},
 					{
 						"type": "object",
 						"properties": {
-							"name": {"description": "The name of the group DM", "anyOf": [{"type": "string"}, {"type": "null"}]},
+							"name": {"description": "The name of the group DM", "type": ["string", "null"]},
 							"icon": {
 								"description": "Base64-encoded icon image for the group DM",
 								"anyOf": [{"$ref": "#/components/schemas/Base64ImageType"}, {"type": "null"}]
@@ -28736,10 +28496,7 @@
 				"properties": {
 					"enabled": {"type": "boolean", "description": "Whether SSO is enabled for this instance"},
 					"enforced": {"type": "boolean", "description": "Whether SSO is required for all users"},
-					"display_name": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Display name of the SSO provider"
-					},
+					"display_name": {"description": "Display name of the SSO provider", "type": ["string", "null"]},
 					"redirect_uri": {"type": "string", "description": "OAuth redirect URI for SSO"}
 				},
 				"required": ["enabled", "enforced", "display_name", "redirect_uri"],
@@ -28748,13 +28505,10 @@
 			"SsoStartRequest": {
 				"type": "object",
 				"properties": {
-					"redirect_to": {
-						"description": "URL to redirect to after SSO completion",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"redirect_to": {"description": "URL to redirect to after SSO completion", "type": ["string", "null"]},
 					"redirect_uri": {
 						"description": "OAuth redirect URI to use for the SSO provider callback",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					}
 				}
 			},
@@ -28880,13 +28634,10 @@
 					"password": {"description": "Password for the new account", "$ref": "#/components/schemas/PasswordType"},
 					"date_of_birth": {"description": "Date of birth in YYYY-MM-DD format", "type": "string"},
 					"consent": {"default": false, "description": "Whether user consents to terms of service", "type": "boolean"},
-					"invite_code": {
-						"description": "Guild invite code to join after registration",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"invite_code": {"description": "Guild invite code to join after registration", "type": ["string", "null"]},
 					"registration_url_code": {
 						"description": "Admin-issued registration URL code to use for this registration",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"theme": {
 						"description": "Initial UI theme preference for the new account",
@@ -28960,10 +28711,7 @@
 				"properties": {
 					"email": {"description": "Email address for authentication", "$ref": "#/components/schemas/EmailType"},
 					"password": {"description": "Account password", "$ref": "#/components/schemas/PasswordType"},
-					"invite_code": {
-						"description": "Guild invite code to join after login",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					}
+					"invite_code": {"description": "Guild invite code to join after login", "type": ["string", "null"]}
 				},
 				"required": ["email", "password"]
 			},
@@ -28971,10 +28719,7 @@
 				"type": "object",
 				"properties": {
 					"completed": {"type": "boolean", "description": "Whether the IP authorization has been completed"},
-					"token": {
-						"description": "Authentication token if authorization is complete",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"token": {"description": "Authentication token if authorization is complete", "type": ["string", "null"]},
 					"user_id": {
 						"description": "User ID if authorization is complete",
 						"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
@@ -28998,10 +28743,7 @@
 				"type": "object",
 				"properties": {
 					"status": {"type": "string", "description": "Current status of the handoff (pending, completed, expired)"},
-					"token": {
-						"description": "Authentication token if handoff is complete",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"token": {"description": "Authentication token if handoff is complete", "type": ["string", "null"]},
 					"user_id": {
 						"description": "User ID if handoff is complete",
 						"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
@@ -29024,14 +28766,8 @@
 							{
 								"type": "object",
 								"properties": {
-									"platform": {
-										"description": "The platform of the requesting device",
-										"anyOf": [{"type": "string"}, {"type": "null"}]
-									},
-									"os": {
-										"description": "The operating system of the requesting device",
-										"anyOf": [{"type": "string"}, {"type": "null"}]
-									},
+									"platform": {"description": "The platform of the requesting device", "type": ["string", "null"]},
+									"os": {"description": "The operating system of the requesting device", "type": ["string", "null"]},
 									"device": {
 										"type": "string",
 										"enum": ["mobile", "desktop"],
@@ -29066,7 +28802,7 @@
 					"expires_at": {
 						"type": "string",
 						"format": "date-time",
-						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
 						"description": "ISO 8601 timestamp when the handoff code expires"
 					},
 					"poll_secret": {
@@ -29118,12 +28854,12 @@
 					},
 					"name": {"type": "string", "description": "The name of the application"},
 					"icon": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "The persisted bot avatar hash used as the application icon, if available"
+						"description": "The persisted bot avatar hash used as the application icon, if available",
+						"type": ["string", "null"]
 					},
 					"description": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "The persisted bot profile bio used as the application description"
+						"description": "The persisted bot profile bio used as the application description",
+						"type": ["string", "null"]
 					},
 					"bot_public": {"type": "boolean", "description": "Whether the bot can be invited by anyone"},
 					"bot_require_code_grant": {"type": "boolean", "description": "Whether the bot requires OAuth2 code grant"},
@@ -29142,12 +28878,9 @@
 							},
 							"username": {"type": "string", "description": "The username of the bot"},
 							"discriminator": {"type": "string", "description": "The discriminator of the bot"},
-							"avatar": {"description": "The avatar hash of the bot", "anyOf": [{"type": "string"}, {"type": "null"}]},
-							"banner": {"description": "The banner hash of the bot", "anyOf": [{"type": "string"}, {"type": "null"}]},
-							"bio": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "The bio or description of the bot"
-							},
+							"avatar": {"description": "The avatar hash of the bot", "type": ["string", "null"]},
+							"banner": {"description": "The banner hash of the bot", "type": ["string", "null"]},
+							"bio": {"description": "The bio or description of the bot", "type": ["string", "null"]},
 							"token": {"description": "The bot token for authentication", "type": "string"},
 							"mfa_enabled": {"description": "Whether the bot has MFA enabled", "type": "boolean"},
 							"authenticator_types": {
@@ -29259,12 +28992,12 @@
 								"type": "object",
 								"properties": {
 									"terms_url": {
-										"anyOf": [{"type": "string"}, {"type": "null"}],
-										"description": "Optional public terms of service URL for account registration"
+										"description": "Optional public terms of service URL for account registration",
+										"type": ["string", "null"]
 									},
 									"privacy_url": {
-										"anyOf": [{"type": "string"}, {"type": "null"}],
-										"description": "Optional public privacy policy URL for account registration"
+										"description": "Optional public privacy policy URL for account registration",
+										"type": ["string", "null"]
 									}
 								},
 								"required": ["terms_url", "privacy_url"],
@@ -29313,12 +29046,12 @@
 						"type": "object",
 						"properties": {
 							"terms_url": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "Optional public terms of service URL for account registration"
+								"description": "Optional public terms of service URL for account registration",
+								"type": ["string", "null"]
 							},
 							"privacy_url": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "Optional public privacy policy URL for account registration"
+								"description": "Optional public privacy policy URL for account registration",
+								"type": ["string", "null"]
 							}
 						},
 						"required": ["terms_url", "privacy_url"],
@@ -29348,10 +29081,7 @@
 						"type": "boolean",
 						"description": "Whether the instance administrator has completed initial setup"
 					},
-					"admin_url": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Admin panel URL to continue instance setup"
-					}
+					"admin_url": {"description": "Admin panel URL to continue instance setup", "type": ["string", "null"]}
 				},
 				"required": ["configured", "admin_url"],
 				"additionalProperties": false,
@@ -29361,37 +29091,22 @@
 				"type": "object",
 				"properties": {
 					"product_name": {"type": "string", "description": "Public product name shown by client applications"},
-					"icon_url": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Optional image URL for the full application icon"
-					},
+					"icon_url": {"description": "Optional image URL for the full application icon", "type": ["string", "null"]},
 					"symbol_url": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Optional image URL for the compact application symbol"
+						"description": "Optional image URL for the compact application symbol",
+						"type": ["string", "null"]
 					},
-					"logo_url": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Optional image URL for the application logo"
-					},
+					"logo_url": {"description": "Optional image URL for the application logo", "type": ["string", "null"]},
 					"wordmark_url": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Optional image URL for the application wordmark"
+						"description": "Optional image URL for the application wordmark",
+						"type": ["string", "null"]
 					},
-					"favicon_url": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Optional favicon URL for browser metadata"
-					},
-					"theme_color": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Optional browser theme color"
-					},
-					"status_page_url": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Optional public status page URL"
-					},
+					"favicon_url": {"description": "Optional favicon URL for browser metadata", "type": ["string", "null"]},
+					"theme_color": {"description": "Optional browser theme color", "type": ["string", "null"]},
+					"status_page_url": {"description": "Optional public status page URL", "type": ["string", "null"]},
 					"status_page_incident_history_url": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Optional public status page incident history URL"
+						"description": "Optional public status page incident history URL",
+						"type": ["string", "null"]
 					}
 				},
 				"required": [
@@ -29411,10 +29126,7 @@
 			"InstancePushSchema": {
 				"type": "object",
 				"properties": {
-					"public_vapid_key": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "VAPID public key for web push notifications"
-					}
+					"public_vapid_key": {"description": "VAPID public key for web push notifications", "type": ["string", "null"]}
 				},
 				"required": ["public_vapid_key"],
 				"additionalProperties": false,
@@ -29445,8 +29157,8 @@
 						"description": "Whether this instance runs as a single community that every user automatically joins"
 					},
 					"single_community_guild_id": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "The stock community guild ID when single-community mode is enabled"
+						"description": "The stock community guild ID when single-community mode is enabled",
+						"type": ["string", "null"]
 					},
 					"direct_messages_disabled": {
 						"type": "boolean",
@@ -29478,10 +29190,7 @@
 				"properties": {
 					"enabled": {"type": "boolean", "description": "Whether SSO is enabled for this instance"},
 					"enforced": {"type": "boolean", "description": "Whether SSO is required for all users"},
-					"display_name": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Display name of the SSO provider"
-					},
+					"display_name": {"description": "Display name of the SSO provider", "type": ["string", "null"]},
 					"redirect_uri": {"type": "string", "description": "OAuth redirect URI for SSO"}
 				},
 				"required": ["enabled", "enforced", "display_name", "redirect_uri"],
@@ -29534,13 +29243,10 @@
 						"description": "Captcha provider name (hcaptcha, turnstile, none)",
 						"$ref": "#/components/schemas/InstanceCaptchaProviderSchema"
 					},
-					"hcaptcha_site_key": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "hCaptcha site key if using hCaptcha"
-					},
+					"hcaptcha_site_key": {"description": "hCaptcha site key if using hCaptcha", "type": ["string", "null"]},
 					"turnstile_site_key": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Cloudflare Turnstile site key if using Turnstile"
+						"description": "Cloudflare Turnstile site key if using Turnstile",
+						"type": ["string", "null"]
 					}
 				},
 				"required": ["provider", "hcaptcha_site_key", "turnstile_site_key"],
@@ -29650,18 +29356,9 @@
 			"AuthSessionLocation": {
 				"type": "object",
 				"properties": {
-					"city": {
-						"description": "The city name reported by the client",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
-					"region": {
-						"description": "The region reported by the client",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
-					"country": {
-						"description": "The country reported by the client",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					}
+					"city": {"description": "The city name reported by the client", "type": ["string", "null"]},
+					"region": {"description": "The region reported by the client", "type": ["string", "null"]},
+					"country": {"description": "The country reported by the client", "type": ["string", "null"]}
 				},
 				"additionalProperties": false
 			},
@@ -29722,18 +29419,9 @@
 							{
 								"type": "object",
 								"properties": {
-									"platform": {
-										"description": "The platform reported by the client",
-										"anyOf": [{"type": "string"}, {"type": "null"}]
-									},
-									"os": {
-										"description": "The operating system reported by the client",
-										"anyOf": [{"type": "string"}, {"type": "null"}]
-									},
-									"browser": {
-										"description": "The browser reported by the client",
-										"anyOf": [{"type": "string"}, {"type": "null"}]
-									},
+									"platform": {"description": "The platform reported by the client", "type": ["string", "null"]},
+									"os": {"description": "The operating system reported by the client", "type": ["string", "null"]},
+									"browser": {"description": "The browser reported by the client", "type": ["string", "null"]},
 									"device": {
 										"type": "string",
 										"enum": ["mobile", "desktop"],
@@ -29751,8 +29439,8 @@
 						]
 					},
 					"masked_ip": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Semi-redacted IP address recorded for this session"
+						"description": "Semi-redacted IP address recorded for this session",
+						"type": ["string", "null"]
 					},
 					"approx_last_used_at": {
 						"description": "Approximate timestamp of the last session activity",
@@ -29760,7 +29448,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 							},
 							{"type": "null"}
 						]
@@ -29773,10 +29461,7 @@
 			"ChannelNicknameOverrides": {
 				"type": "object",
 				"propertyNames": {"type": "string", "description": "User ID"},
-				"additionalProperties": {
-					"anyOf": [{"type": "string"}, {"type": "null"}],
-					"description": "Nickname or null to clear"
-				},
+				"additionalProperties": {"description": "Nickname or null to clear", "type": ["string", "null"]},
 				"description": "User nickname overrides (user ID to nickname mapping)"
 			},
 			"Base64ImageType": {"type": "string"},
@@ -29970,7 +29655,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 							},
 							{"type": "null"}
 						]
@@ -29988,7 +29673,7 @@
 					"created_at": {
 						"type": "string",
 						"format": "date-time",
-						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
 						"description": "ISO8601 timestamp of when the invite was created"
 					},
 					"uses": {
@@ -30017,7 +29702,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 							},
 							{"type": "null"}
 						]
@@ -30031,11 +29716,8 @@
 								"$ref": "#/components/schemas/SnowflakeStringType"
 							},
 							"name": {"type": "string", "description": "The name of the guild"},
-							"icon": {"description": "The hash of the guild icon", "anyOf": [{"type": "string"}, {"type": "null"}]},
-							"banner": {
-								"description": "The hash of the guild banner",
-								"anyOf": [{"type": "string"}, {"type": "null"}]
-							},
+							"icon": {"description": "The hash of the guild icon", "type": ["string", "null"]},
+							"banner": {"description": "The hash of the guild banner", "type": ["string", "null"]},
 							"banner_width": {
 								"description": "The width of the guild banner in pixels",
 								"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
@@ -30044,10 +29726,7 @@
 								"description": "The height of the guild banner in pixels",
 								"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
 							},
-							"splash": {
-								"description": "The hash of the guild splash screen",
-								"anyOf": [{"type": "string"}, {"type": "null"}]
-							},
+							"splash": {"description": "The hash of the guild splash screen", "type": ["string", "null"]},
 							"splash_width": {
 								"description": "The width of the guild splash in pixels",
 								"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
@@ -30067,10 +29746,7 @@
 								"enum": [0, 1, 2],
 								"type": "integer"
 							},
-							"embed_splash": {
-								"description": "The hash of the embedded invite splash",
-								"anyOf": [{"type": "string"}, {"type": "null"}]
-							},
+							"embed_splash": {"description": "The hash of the embedded invite splash", "type": ["string", "null"]},
 							"embed_splash_width": {
 								"description": "The width of the embedded invite splash in pixels",
 								"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
@@ -30103,7 +29779,7 @@
 					"created_at": {
 						"type": "string",
 						"format": "date-time",
-						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
 						"description": "ISO8601 timestamp of when the invite was created"
 					},
 					"uses": {
@@ -30141,7 +29817,7 @@
 						"description": "The unique identifier (snowflake) for this channel",
 						"$ref": "#/components/schemas/SnowflakeStringType"
 					},
-					"name": {"description": "The name of the channel", "anyOf": [{"type": "string"}, {"type": "null"}]},
+					"name": {"description": "The name of the channel", "type": ["string", "null"]},
 					"type": {"$ref": "#/components/schemas/ChannelType"},
 					"recipients": {
 						"description": "The recipients of the DM channel",
@@ -30166,8 +29842,8 @@
 						"$ref": "#/components/schemas/SnowflakeStringType"
 					},
 					"name": {"type": "string", "description": "The name of the guild"},
-					"icon": {"description": "The hash of the guild icon", "anyOf": [{"type": "string"}, {"type": "null"}]},
-					"banner": {"description": "The hash of the guild banner", "anyOf": [{"type": "string"}, {"type": "null"}]},
+					"icon": {"description": "The hash of the guild icon", "type": ["string", "null"]},
+					"banner": {"description": "The hash of the guild banner", "type": ["string", "null"]},
 					"banner_width": {
 						"description": "The width of the guild banner in pixels",
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
@@ -30176,10 +29852,7 @@
 						"description": "The height of the guild banner in pixels",
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
 					},
-					"splash": {
-						"description": "The hash of the guild splash screen",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"splash": {"description": "The hash of the guild splash screen", "type": ["string", "null"]},
 					"splash_width": {
 						"description": "The width of the guild splash in pixels",
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
@@ -30199,10 +29872,7 @@
 						"enum": [0, 1, 2],
 						"type": "integer"
 					},
-					"embed_splash": {
-						"description": "The hash of the embedded invite splash",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"embed_splash": {"description": "The hash of the embedded invite splash", "type": ["string", "null"]},
 					"embed_splash_width": {
 						"description": "The width of the embedded invite splash in pixels",
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
@@ -30412,23 +30082,17 @@
 			"ClientAttachmentRequest": {
 				"type": "object",
 				"properties": {
-					"title": {
-						"description": "A title for the attachment (1-1024 characters)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"title": {"description": "A title for the attachment (1-1024 characters)", "type": ["string", "null"]},
 					"description": {
 						"description": "An alt text description of the attachment (1-4096 characters)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"flags": {"$ref": "#/components/schemas/MessageAttachmentFlags", "description": "Attachment flags"},
 					"duration": {
 						"description": "The duration of the audio file in seconds",
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
 					},
-					"waveform": {
-						"description": "Base64 encoded audio waveform data",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"waveform": {"description": "Base64 encoded audio waveform data", "type": ["string", "null"]},
 					"id": {
 						"description": "The client-side identifier for this attachment",
 						"$ref": "#/components/schemas/Int32Type"
@@ -30446,23 +30110,17 @@
 			"ClientUploadedAttachmentRequest": {
 				"type": "object",
 				"properties": {
-					"title": {
-						"description": "A title for the attachment (1-1024 characters)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"title": {"description": "A title for the attachment (1-1024 characters)", "type": ["string", "null"]},
 					"description": {
 						"description": "An alt text description of the attachment (1-4096 characters)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"flags": {"$ref": "#/components/schemas/MessageAttachmentFlags", "description": "Attachment flags"},
 					"duration": {
 						"description": "The duration of the audio file in seconds",
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
 					},
-					"waveform": {
-						"description": "Base64 encoded audio waveform data",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"waveform": {"description": "Base64 encoded audio waveform data", "type": ["string", "null"]},
 					"id": {
 						"description": "The client-side identifier for this attachment",
 						"$ref": "#/components/schemas/Int32Type"
@@ -30488,11 +30146,8 @@
 			"RichEmbedRequest": {
 				"type": "object",
 				"properties": {
-					"url": {"description": "URL of the embed", "anyOf": [{"type": "string"}, {"type": "null"}]},
-					"title": {
-						"description": "Title of the embed (0-256 characters)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"url": {"description": "URL of the embed", "type": ["string", "null"]},
+					"title": {"description": "Title of the embed (0-256 characters)", "type": ["string", "null"]},
 					"color": {
 						"description": "Color code of the embed (hex integer)",
 						"anyOf": [{"$ref": "#/components/schemas/ColorType"}, {"type": "null"}]
@@ -30512,10 +30167,7 @@
 							{"type": "null"}
 						]
 					},
-					"description": {
-						"description": "Description of the embed (1-4096 characters)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"description": {"description": "Description of the embed (1-4096 characters)", "type": ["string", "null"]},
 					"author": {
 						"description": "Author information",
 						"anyOf": [{"$ref": "#/components/schemas/RichEmbedAuthorRequest"}, {"type": "null"}]
@@ -30555,8 +30207,7 @@
 							{"type": "null"}
 						]
 					}
-				},
-				"required": ["description"]
+				}
 			},
 			"MessageContentRequest": {
 				"type": "string",
@@ -30568,7 +30219,7 @@
 						"type": "object",
 						"properties": {
 							"text": {"description": "Footer text (1-2048 characters)", "type": "string"},
-							"icon_url": {"description": "URL of the footer icon", "anyOf": [{"type": "string"}, {"type": "null"}]}
+							"icon_url": {"description": "URL of the footer icon", "type": ["string", "null"]}
 						},
 						"required": ["text"]
 					},
@@ -30581,10 +30232,7 @@
 						"type": "object",
 						"properties": {
 							"url": {"description": "URL of the media (image, video, etc.)", "type": "string"},
-							"description": {
-								"description": "Alt text description of the media",
-								"anyOf": [{"type": "string"}, {"type": "null"}]
-							}
+							"description": {"description": "Alt text description of the media", "type": ["string", "null"]}
 						},
 						"required": ["url"]
 					},
@@ -30597,11 +30245,8 @@
 						"type": "object",
 						"properties": {
 							"name": {"description": "Name of the embed author", "type": "string"},
-							"url": {
-								"description": "URL to link from the author name",
-								"anyOf": [{"type": "string"}, {"type": "null"}]
-							},
-							"icon_url": {"description": "URL of the author icon", "anyOf": [{"type": "string"}, {"type": "null"}]}
+							"url": {"description": "URL to link from the author name", "type": ["string", "null"]},
+							"icon_url": {"description": "URL of the author icon", "type": ["string", "null"]}
 						},
 						"required": ["name"]
 					},
@@ -30666,7 +30311,7 @@
 							"timestamp": {
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
 								"description": "The ISO 8601 timestamp of when the message was created"
 							},
 							"edited_timestamp": {
@@ -30675,7 +30320,7 @@
 									{
 										"type": "string",
 										"format": "date-time",
-										"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+										"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 									},
 									{"type": "null"}
 								]
@@ -30761,10 +30406,7 @@
 									{"type": "null"}
 								]
 							},
-							"nonce": {
-								"description": "A client-provided value for message deduplication",
-								"anyOf": [{"type": "string"}, {"type": "null"}]
-							},
+							"nonce": {"description": "A client-provided value for message deduplication", "type": ["string", "null"]},
 							"call": {
 								"description": "Call information if this message represents a call",
 								"anyOf": [
@@ -30782,7 +30424,7 @@
 													{
 														"type": "string",
 														"format": "date-time",
-														"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+														"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 													},
 													{"type": "null"}
 												]
@@ -30815,7 +30457,7 @@
 					"pinned_at": {
 						"type": "string",
 						"format": "date-time",
-						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
 						"description": "The ISO 8601 timestamp of when the message was pinned"
 					}
 				},
@@ -30825,14 +30467,11 @@
 			"MessageSnapshotResponse": {
 				"type": "object",
 				"properties": {
-					"content": {
-						"description": "The text content of the snapshot",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"content": {"description": "The text content of the snapshot", "type": ["string", "null"]},
 					"timestamp": {
 						"type": "string",
 						"format": "date-time",
-						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
 						"description": "The ISO 8601 timestamp of when the original message was created"
 					},
 					"edited_timestamp": {
@@ -30841,7 +30480,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 							},
 							{"type": "null"}
 						]
@@ -30917,28 +30556,16 @@
 						"$ref": "#/components/schemas/SnowflakeStringType"
 					},
 					"filename": {"type": "string", "description": "The name of the attached file"},
-					"title": {"description": "The title of the attachment", "anyOf": [{"type": "string"}, {"type": "null"}]},
-					"description": {
-						"description": "The description of the attachment",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
-					"content_type": {
-						"description": "The MIME type of the attachment",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
-					"content_hash": {
-						"description": "The hash of the attachment content",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"title": {"description": "The title of the attachment", "type": ["string", "null"]},
+					"description": {"description": "The description of the attachment", "type": ["string", "null"]},
+					"content_type": {"description": "The MIME type of the attachment", "type": ["string", "null"]},
+					"content_hash": {"description": "The hash of the attachment content", "type": ["string", "null"]},
 					"size": {
 						"description": "The size of the attachment in bytes",
 						"$ref": "#/components/schemas/NonNegativeSafeIntegerType"
 					},
-					"url": {"description": "The URL of the attachment", "anyOf": [{"type": "string"}, {"type": "null"}]},
-					"proxy_url": {
-						"description": "The proxied URL of the attachment",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"url": {"description": "The URL of the attachment", "type": ["string", "null"]},
+					"proxy_url": {"description": "The proxied URL of the attachment", "type": ["string", "null"]},
 					"width": {
 						"description": "The width of the attachment in pixels (for images/videos)",
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
@@ -30949,29 +30576,20 @@
 					},
 					"placeholder": {
 						"description": "The base64 encoded placeholder image for lazy loading",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"flags": {"$ref": "#/components/schemas/MessageAttachmentFlags"},
-					"nsfw": {
-						"description": "Whether the attachment is flagged as NSFW",
-						"anyOf": [{"type": "boolean"}, {"type": "null"}]
-					},
+					"nsfw": {"description": "Whether the attachment is flagged as NSFW", "type": ["boolean", "null"]},
 					"duration": {
 						"description": "The duration of the media in seconds",
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
 					},
-					"waveform": {
-						"description": "The base64 encoded audio waveform data",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"waveform": {"description": "The base64 encoded audio waveform data", "type": ["string", "null"]},
 					"expires_at": {
 						"description": "The ISO 8601 timestamp when the attachment URL expires",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
-					"expired": {
-						"description": "Whether the attachment URL has expired",
-						"anyOf": [{"type": "boolean"}, {"type": "null"}]
-					}
+					"expired": {"description": "Whether the attachment URL has expired", "type": ["boolean", "null"]}
 				},
 				"required": ["id", "filename", "size", "flags"],
 				"additionalProperties": false
@@ -30987,7 +30605,7 @@
 						"description": "The URL of the embed",
 						"anyOf": [{"type": "string", "format": "uri"}, {"type": "null"}]
 					},
-					"title": {"description": "The title of the embed", "anyOf": [{"type": "string"}, {"type": "null"}]},
+					"title": {"description": "The title of the embed", "type": ["string", "null"]},
 					"color": {
 						"description": "The color code of the embed sidebar",
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
@@ -30998,15 +30616,12 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 							},
 							{"type": "null"}
 						]
 					},
-					"description": {
-						"description": "The description of the embed",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"description": {"description": "The description of the embed", "type": ["string", "null"]},
 					"author": {
 						"description": "The author information of the embed",
 						"anyOf": [{"$ref": "#/components/schemas/EmbedAuthorResponse"}, {"type": "null"}]
@@ -31041,7 +30656,7 @@
 					},
 					"html": {
 						"description": "Sanitized oEmbed HTML for trusted specialized embed renderers",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"html_width": {
 						"description": "The preferred width of sanitized oEmbed HTML",
@@ -31051,10 +30666,7 @@
 						"description": "The preferred height of sanitized oEmbed HTML",
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
 					},
-					"nsfw": {
-						"description": "Whether the embed is flagged as NSFW",
-						"anyOf": [{"type": "boolean"}, {"type": "null"}]
-					},
+					"nsfw": {"description": "Whether the embed is flagged as NSFW", "type": ["boolean", "null"]},
 					"children": {
 						"description": "Internal nested embeds generated by unfurlers",
 						"anyOf": [
@@ -31115,7 +30727,7 @@
 						"description": "The URL of the embed",
 						"anyOf": [{"type": "string", "format": "uri"}, {"type": "null"}]
 					},
-					"title": {"description": "The title of the embed", "anyOf": [{"type": "string"}, {"type": "null"}]},
+					"title": {"description": "The title of the embed", "type": ["string", "null"]},
 					"color": {
 						"description": "The color code of the embed sidebar",
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
@@ -31126,15 +30738,12 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 							},
 							{"type": "null"}
 						]
 					},
-					"description": {
-						"description": "The description of the embed",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"description": {"description": "The description of the embed", "type": ["string", "null"]},
 					"author": {
 						"description": "The author information of the embed",
 						"anyOf": [{"$ref": "#/components/schemas/EmbedAuthorResponse"}, {"type": "null"}]
@@ -31169,7 +30778,7 @@
 					},
 					"html": {
 						"description": "Sanitized oEmbed HTML for trusted specialized embed renderers",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"html_width": {
 						"description": "The preferred width of sanitized oEmbed HTML",
@@ -31179,10 +30788,7 @@
 						"description": "The preferred height of sanitized oEmbed HTML",
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
 					},
-					"nsfw": {
-						"description": "Whether the embed is flagged as NSFW",
-						"anyOf": [{"type": "boolean"}, {"type": "null"}]
-					}
+					"nsfw": {"description": "Whether the embed is flagged as NSFW", "type": ["boolean", "null"]}
 				},
 				"required": ["type"],
 				"additionalProperties": false
@@ -31195,14 +30801,8 @@
 						"description": "The proxied URL of the media",
 						"anyOf": [{"type": "string", "format": "uri"}, {"type": "null"}]
 					},
-					"content_type": {
-						"description": "The MIME type of the media",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
-					"content_hash": {
-						"description": "The hash of the media content",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"content_type": {"description": "The MIME type of the media", "type": ["string", "null"]},
+					"content_hash": {"description": "The hash of the media content", "type": ["string", "null"]},
 					"width": {
 						"description": "The width of the media in pixels",
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
@@ -31211,13 +30811,10 @@
 						"description": "The height of the media in pixels",
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
 					},
-					"description": {
-						"description": "The description of the media",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"description": {"description": "The description of the media", "type": ["string", "null"]},
 					"placeholder": {
 						"description": "The base64 encoded placeholder image for lazy loading",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"duration": {
 						"description": "The duration of the media in seconds",
@@ -31288,23 +30885,17 @@
 			"ClientAttachmentReferenceRequest": {
 				"type": "object",
 				"properties": {
-					"title": {
-						"description": "A title for the attachment (1-1024 characters)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"title": {"description": "A title for the attachment (1-1024 characters)", "type": ["string", "null"]},
 					"description": {
 						"description": "An alt text description of the attachment (1-4096 characters)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"flags": {"$ref": "#/components/schemas/MessageAttachmentFlags", "description": "Attachment flags"},
 					"duration": {
 						"description": "The duration of the audio file in seconds",
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}]
 					},
-					"waveform": {
-						"description": "Base64 encoded audio waveform data",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"waveform": {"description": "Base64 encoded audio waveform data", "type": ["string", "null"]},
 					"id": {
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"$ref": "#/components/schemas/SnowflakeType"}],
 						"description": "The identifier of the attachment being referenced (snowflake ID or file index)"
@@ -31315,8 +30906,7 @@
 						"minLength": 1,
 						"maxLength": 255
 					}
-				},
-				"required": ["id"]
+				}
 			},
 			"ChannelOverwriteType": {
 				"description": "The type of entity the overwrite applies to",
@@ -31407,10 +30997,7 @@
 				"type": "object",
 				"properties": {
 					"name": {"type": "string", "description": "The name of the template guild"},
-					"description": {
-						"description": "The description of the template guild",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"description": {"description": "The description of the template guild", "type": ["string", "null"]},
 					"verification_level": {"description": "The verification level", "type": "number"},
 					"default_message_notifications": {"description": "The default message notification level", "type": "number"},
 					"explicit_content_filter": {"description": "The explicit content filter level", "type": "number"},
@@ -31447,8 +31034,8 @@
 						"description": "The template-local channel ID"
 					},
 					"type": {"type": "number", "description": "The channel type (0 = text, 2 = voice, 4 = category)"},
-					"name": {"description": "The name of the channel", "anyOf": [{"type": "string"}, {"type": "null"}]},
-					"topic": {"description": "The channel topic", "anyOf": [{"type": "string"}, {"type": "null"}]},
+					"name": {"description": "The name of the channel", "type": ["string", "null"]},
+					"topic": {"description": "The channel topic", "type": ["string", "null"]},
 					"position": {"type": "number", "description": "The position of the channel"},
 					"parent_id": {
 						"description": "The template-local ID of the parent category",
@@ -31460,14 +31047,11 @@
 							{"type": "null"}
 						]
 					},
-					"bitrate": {"description": "The bitrate for voice channels", "anyOf": [{"type": "number"}, {"type": "null"}]},
-					"user_limit": {
-						"description": "The user limit for voice channels",
-						"anyOf": [{"type": "number"}, {"type": "null"}]
-					},
+					"bitrate": {"description": "The bitrate for voice channels", "type": ["number", "null"]},
+					"user_limit": {"description": "The user limit for voice channels", "type": ["number", "null"]},
 					"voice_connection_limit": {
 						"description": "The per-user voice connection limit for voice channels",
-						"anyOf": [{"type": "number"}, {"type": "null"}]
+						"type": ["number", "null"]
 					},
 					"nsfw": {"description": "Whether the channel is NSFW", "type": "boolean"},
 					"rate_limit_per_user": {"description": "Slowmode rate limit in seconds", "type": "number"},
@@ -31483,7 +31067,7 @@
 								},
 								"type": {
 									"description": "The type of overwrite (0/role = role, 1/member = member)",
-									"anyOf": [{"type": "number"}, {"type": "string"}]
+									"type": ["number", "string"]
 								},
 								"allow": {
 									"anyOf": [{"type": "string"}, {"type": "integer", "minimum": 0, "maximum": 9007199254740991}],
@@ -31507,7 +31091,7 @@
 						"anyOf": [{"type": "integer", "minimum": 0, "maximum": 9007199254740991}, {"type": "string"}],
 						"description": "The template-local role ID"
 					},
-					"name": {"description": "The name of the role", "anyOf": [{"type": "string"}, {"type": "null"}]},
+					"name": {"description": "The name of the role", "type": ["string", "null"]},
 					"permissions": {
 						"description": "The permissions bitfield as a string (legacy)",
 						"anyOf": [{"type": "string"}, {"type": "integer", "minimum": 0, "maximum": 9007199254740991}]
@@ -31519,10 +31103,7 @@
 					"color": {"description": "The colour of the role as an integer", "type": "number"},
 					"hoist": {"description": "Whether the role is hoisted", "type": "boolean"},
 					"mentionable": {"description": "Whether the role is mentionable", "type": "boolean"},
-					"unicode_emoji": {
-						"description": "The unicode emoji for the role icon",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					}
+					"unicode_emoji": {"description": "The unicode emoji for the role icon", "type": ["string", "null"]}
 				},
 				"required": ["id"]
 			},
@@ -31617,10 +31198,7 @@
 						"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
 					},
 					"name": {"type": "string", "description": "The name of the webhook"},
-					"avatar_hash": {
-						"description": "The hash of the webhook avatar",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					}
+					"avatar_hash": {"description": "The hash of the webhook avatar", "type": ["string", "null"]}
 				},
 				"required": ["id", "type", "name"],
 				"additionalProperties": false
@@ -31639,7 +31217,7 @@
 					},
 					"target_id": {
 						"description": "The ID of the affected entity (user, channel, role, invite code, etc.)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					},
 					"reason": {
 						"description": "The audit log reason. For bans and timeouts without an X-Audit-Log-Reason header this is the reason sent in the request body",
@@ -31828,7 +31406,7 @@
 				"type": "object",
 				"properties": {
 					"user": {"description": "The banned user", "$ref": "#/components/schemas/UserPartialResponse"},
-					"reason": {"description": "The reason for the ban", "anyOf": [{"type": "string"}, {"type": "null"}]},
+					"reason": {"description": "The reason for the ban", "type": ["string", "null"]},
 					"moderator_id": {
 						"description": "The ID of the moderator who issued the ban",
 						"$ref": "#/components/schemas/SnowflakeStringType"
@@ -31836,7 +31414,7 @@
 					"banned_at": {
 						"type": "string",
 						"format": "date-time",
-						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
 						"description": "ISO8601 timestamp of when the ban was issued"
 					},
 					"expires_at": {
@@ -31845,7 +31423,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 							},
 							{"type": "null"}
 						]
@@ -31857,11 +31435,8 @@
 			"GuildLinkChannelCreateRequest": {
 				"type": "object",
 				"properties": {
-					"topic": {
-						"description": "The channel topic (1-1024 characters)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
-					"url": {"description": "External URL for link channels", "anyOf": [{"type": "string"}, {"type": "null"}]},
+					"topic": {"description": "The channel topic (1-1024 characters)", "type": ["string", "null"]},
+					"url": {"description": "External URL for link channels", "type": ["string", "null"]},
 					"parent_id": {
 						"description": "ID of the parent category for this channel",
 						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
@@ -31913,7 +31488,7 @@
 					"nsfw": {"default": false, "description": "Whether the channel is marked as NSFW", "type": "boolean"},
 					"nsfw_override": {
 						"description": "Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present.",
-						"anyOf": [{"type": "boolean"}, {"type": "null"}]
+						"type": ["boolean", "null"]
 					},
 					"content_warning_level": {
 						"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
@@ -31936,11 +31511,8 @@
 			"GuildCategoryChannelCreateRequest": {
 				"type": "object",
 				"properties": {
-					"topic": {
-						"description": "The channel topic (1-1024 characters)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
-					"url": {"description": "External URL for link channels", "anyOf": [{"type": "string"}, {"type": "null"}]},
+					"topic": {"description": "The channel topic (1-1024 characters)", "type": ["string", "null"]},
+					"url": {"description": "External URL for link channels", "type": ["string", "null"]},
 					"parent_id": {
 						"description": "ID of the parent category for this channel",
 						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
@@ -31992,7 +31564,7 @@
 					"nsfw": {"default": false, "description": "Whether the channel is marked as NSFW", "type": "boolean"},
 					"nsfw_override": {
 						"description": "Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present.",
-						"anyOf": [{"type": "boolean"}, {"type": "null"}]
+						"type": ["boolean", "null"]
 					},
 					"content_warning_level": {
 						"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
@@ -32015,11 +31587,8 @@
 			"GuildVoiceChannelCreateRequest": {
 				"type": "object",
 				"properties": {
-					"topic": {
-						"description": "The channel topic (1-1024 characters)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
-					"url": {"description": "External URL for link channels", "anyOf": [{"type": "string"}, {"type": "null"}]},
+					"topic": {"description": "The channel topic (1-1024 characters)", "type": ["string", "null"]},
+					"url": {"description": "External URL for link channels", "type": ["string", "null"]},
 					"parent_id": {
 						"description": "ID of the parent category for this channel",
 						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
@@ -32071,7 +31640,7 @@
 					"nsfw": {"default": false, "description": "Whether the channel is marked as NSFW", "type": "boolean"},
 					"nsfw_override": {
 						"description": "Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present.",
-						"anyOf": [{"type": "boolean"}, {"type": "null"}]
+						"type": ["boolean", "null"]
 					},
 					"content_warning_level": {
 						"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
@@ -32094,11 +31663,8 @@
 			"GuildTextChannelCreateRequest": {
 				"type": "object",
 				"properties": {
-					"topic": {
-						"description": "The channel topic (1-1024 characters)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
-					"url": {"description": "External URL for link channels", "anyOf": [{"type": "string"}, {"type": "null"}]},
+					"topic": {"description": "The channel topic (1-1024 characters)", "type": ["string", "null"]},
+					"url": {"description": "External URL for link channels", "type": ["string", "null"]},
 					"parent_id": {
 						"description": "ID of the parent category for this channel",
 						"anyOf": [{"$ref": "#/components/schemas/SnowflakeType"}, {"type": "null"}]
@@ -32150,7 +31716,7 @@
 					"nsfw": {"default": false, "description": "Whether the channel is marked as NSFW", "type": "boolean"},
 					"nsfw_override": {
 						"description": "Per-channel adult-content override (true=on, false=off, null=inherit from category then guild). Takes precedence over the legacy `nsfw` field if both are present.",
-						"anyOf": [{"type": "boolean"}, {"type": "null"}]
+						"type": ["boolean", "null"]
 					},
 					"content_warning_level": {
 						"description": "Channel-level content warning override (0=inherit, 1=force-warn)",
@@ -32207,8 +31773,8 @@
 					"user_id": {"type": "string", "description": "User ID"},
 					"username": {"type": "string", "description": "Username"},
 					"discriminator": {"type": "string", "description": "Zero-padded 4-digit discriminator"},
-					"global_name": {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "Global display name"},
-					"nickname": {"anyOf": [{"type": "string"}, {"type": "null"}], "description": "Guild nickname"},
+					"global_name": {"description": "Global display name", "type": ["string", "null"]},
+					"nickname": {"description": "Guild nickname", "type": ["string", "null"]},
 					"role_ids": {"type": "array", "items": {"type": "string"}, "description": "Role IDs"},
 					"joined_at": {"type": "number", "description": "Unix timestamp of when the member joined"},
 					"supplemental": {
@@ -32218,14 +31784,8 @@
 								"description": "How the member joined",
 								"anyOf": [{"$ref": "#/components/schemas/JoinSourceType"}, {"type": "null"}]
 							},
-							"source_invite_code": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "Invite code used to join"
-							},
-							"inviter_id": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "User ID of the member who sent the invite"
-							}
+							"source_invite_code": {"description": "Invite code used to join", "type": ["string", "null"]},
+							"inviter_id": {"description": "User ID of the member who sent the invite", "type": ["string", "null"]}
 						},
 						"required": ["source_invite_code", "inviter_id"],
 						"additionalProperties": false,
@@ -32485,7 +32045,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 							},
 							{"type": "null"}
 						]
@@ -32518,7 +32078,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 							},
 							{"type": "null"}
 						]
@@ -32547,8 +32107,8 @@
 				"properties": {
 					"countryCode": {"type": "string", "description": "ISO 3166-1 alpha-2 country code"},
 					"regionCode": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "ISO 3166-2 subdivision code, or null when the entry covers the whole country"
+						"description": "ISO 3166-2 subdivision code, or null when the entry covers the whole country",
+						"type": ["string", "null"]
 					}
 				},
 				"required": ["countryCode", "regionCode"],
@@ -32573,14 +32133,8 @@
 								"$ref": "#/components/schemas/SnowflakeStringType"
 							},
 							"name": {"type": "string", "description": "The name of the application"},
-							"icon": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "The icon hash of the application"
-							},
-							"description": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "The description of the application"
-							},
+							"icon": {"description": "The icon hash of the application", "type": ["string", "null"]},
+							"description": {"description": "The description of the application", "type": ["string", "null"]},
 							"bot_public": {"type": "boolean", "description": "Whether the bot can be invited by anyone"}
 						},
 						"required": ["id", "name", "icon", "description", "bot_public"],
@@ -32660,9 +32214,9 @@
 				"type": "object",
 				"properties": {
 					"id": {"type": "string"},
-					"type": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-					"card_brand": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-					"card_last4": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+					"type": {"type": ["string", "null"]},
+					"card_brand": {"type": ["string", "null"]},
+					"card_last4": {"type": ["string", "null"]},
 					"card_exp_month": {
 						"anyOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "null"}]
 					},
@@ -32678,17 +32232,17 @@
 				"type": "object",
 				"properties": {
 					"id": {"type": "string"},
-					"number": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+					"number": {"type": ["string", "null"]},
 					"amount_due": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991},
 					"amount_paid": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991},
 					"currency": {"type": "string"},
-					"status": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-					"created_at": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-					"paid_at": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-					"billing_reason": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-					"subscription_id": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-					"hosted_invoice_url": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-					"invoice_pdf": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+					"status": {"type": ["string", "null"]},
+					"created_at": {"type": ["string", "null"]},
+					"paid_at": {"type": ["string", "null"]},
+					"billing_reason": {"type": ["string", "null"]},
+					"subscription_id": {"type": ["string", "null"]},
+					"hosted_invoice_url": {"type": ["string", "null"]},
+					"invoice_pdf": {"type": ["string", "null"]}
 				},
 				"required": [
 					"id",
@@ -32710,18 +32264,18 @@
 				"type": "object",
 				"properties": {
 					"id": {"type": "string"},
-					"status": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-					"current_period_start": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-					"current_period_end": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+					"status": {"type": ["string", "null"]},
+					"current_period_start": {"type": ["string", "null"]},
+					"current_period_end": {"type": ["string", "null"]},
 					"cancel_at_period_end": {"type": "boolean"},
-					"cancel_at": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-					"canceled_at": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-					"plan_interval": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+					"cancel_at": {"type": ["string", "null"]},
+					"canceled_at": {"type": ["string", "null"]},
+					"plan_interval": {"type": ["string", "null"]},
 					"plan_amount_minor": {
 						"anyOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "null"}]
 					},
-					"plan_currency": {"anyOf": [{"type": "string"}, {"type": "null"}]},
-					"default_payment_method_id": {"anyOf": [{"type": "string"}, {"type": "null"}]}
+					"plan_currency": {"type": ["string", "null"]},
+					"default_payment_method_id": {"type": ["string", "null"]}
 				},
 				"required": [
 					"id",
@@ -32754,16 +32308,16 @@
 						"description": "Whether a switch to the current list price is already scheduled"
 					},
 					"current_price_id": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Stripe price ID the subscription is billed against today"
+						"description": "Stripe price ID the subscription is billed against today",
+						"type": ["string", "null"]
 					},
 					"current_amount_minor": {
 						"anyOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "null"}],
 						"description": "Amount the subscription is billed today, in the currency minor unit"
 					},
 					"list_price_id": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "Current list Stripe price ID for the same cycle and currency"
+						"description": "Current list Stripe price ID for the same cycle and currency",
+						"type": ["string", "null"]
 					},
 					"list_amount_minor": {
 						"anyOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "null"}],
@@ -32778,8 +32332,8 @@
 						"description": "Recurring billing cycle the switch applies to"
 					},
 					"effective_at": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "ISO timestamp the switch takes effect, which is the end of the current billing period"
+						"description": "ISO timestamp the switch takes effect, which is the end of the current billing period",
+						"type": ["string", "null"]
 					}
 				},
 				"required": [
@@ -32819,13 +32373,10 @@
 								"description": "Recurring billing cycle that will start later"
 							},
 							"effective_at": {"type": "string", "description": "ISO timestamp when the pending change takes effect"},
-							"current_price_id": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "Current Stripe price ID, when known"
-							},
+							"current_price_id": {"description": "Current Stripe price ID, when known", "type": ["string", "null"]},
 							"target_price_id": {
-								"anyOf": [{"type": "string"}, {"type": "null"}],
-								"description": "Stripe price ID that will be used after the change"
+								"description": "Stripe price ID that will be used after the change",
+								"type": ["string", "null"]
 							},
 							"target_amount_minor": {
 								"anyOf": [
@@ -33015,8 +32566,8 @@
 						"description": "The ID of the last message read"
 					},
 					"last_pin_timestamp": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "ISO8601 timestamp of the last pinned message acknowledged"
+						"description": "ISO8601 timestamp of the last pinned message acknowledged",
+						"type": ["string", "null"]
 					},
 					"version": {
 						"description": "Read-state version for ordering updates as a decimal uint64",
@@ -33537,7 +33088,7 @@
 								"timestamp": {
 									"type": "string",
 									"format": "date-time",
-									"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+									"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
 									"description": "The ISO 8601 timestamp of when the message was created"
 								},
 								"edited_timestamp": {
@@ -33546,7 +33097,7 @@
 										{
 											"type": "string",
 											"format": "date-time",
-											"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+											"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 										},
 										{"type": "null"}
 									]
@@ -33641,7 +33192,7 @@
 								},
 								"nonce": {
 									"description": "A client-provided value for message deduplication",
-									"anyOf": [{"type": "string"}, {"type": "null"}]
+									"type": ["string", "null"]
 								},
 								"call": {
 									"description": "Call information if this message represents a call",
@@ -33660,7 +33211,7 @@
 														{
 															"type": "string",
 															"format": "date-time",
-															"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+															"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 														},
 														{"type": "null"}
 													]
@@ -33728,10 +33279,7 @@
 								"type": "string",
 								"description": "The name of the emoji (or Unicode character for standard emojis)"
 							},
-							"animated": {
-								"description": "Whether the emoji is animated",
-								"anyOf": [{"type": "boolean"}, {"type": "null"}]
-							}
+							"animated": {"description": "Whether the emoji is animated", "type": ["boolean", "null"]}
 						},
 						"required": ["name"],
 						"additionalProperties": false,
@@ -33741,10 +33289,7 @@
 						"description": "The total number of times this reaction has been used",
 						"$ref": "#/components/schemas/Int32Type"
 					},
-					"me": {
-						"description": "Whether the current user has reacted with this emoji",
-						"anyOf": [{"type": "boolean"}, {"type": "null"}]
-					}
+					"me": {"description": "Whether the current user has reacted with this emoji", "type": ["boolean", "null"]}
 				},
 				"required": ["emoji", "count"],
 				"additionalProperties": false
@@ -33945,7 +33490,7 @@
 					},
 					"placeholder": {
 						"description": "Compact thumbhash placeholder produced by the media proxy. Clients render it as a low-res preview while the GIF loads, and persist it on favourites so the picker has a fallback if the source URL later disappears.",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					}
 				},
 				"required": ["id", "slug", "provider", "title", "url", "src", "proxy_src", "width", "height", "media"],
@@ -34046,7 +33591,7 @@
 					},
 					"placeholder": {
 						"description": "Compact thumbhash placeholder produced by the media proxy. Persisted with the favorite so the picker can show a low-res preview while the GIF loads, and a fallback if the source URL later disappears.",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					}
 				},
 				"required": ["url", "proxy_url", "width", "height", "media", "content_type"],
@@ -34073,7 +33618,7 @@
 					"created_at": {
 						"type": "string",
 						"format": "date-time",
-						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
 						"description": "Timestamp when the gift code was created"
 					},
 					"redeemed_at": {
@@ -34082,7 +33627,7 @@
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 							},
 							{"type": "null"}
 						]
@@ -34171,10 +33716,7 @@
 					"id": {"type": "string", "description": "The credential ID"},
 					"name": {"type": "string", "description": "User-assigned name for the credential"},
 					"created_at": {"type": "string", "description": "When the credential was registered"},
-					"last_used_at": {
-						"anyOf": [{"type": "string"}, {"type": "null"}],
-						"description": "When the credential was last used"
-					}
+					"last_used_at": {"description": "When the credential was last used", "type": ["string", "null"]}
 				},
 				"required": ["id", "name", "created_at", "last_used_at"],
 				"additionalProperties": false
@@ -34329,14 +33871,14 @@
 			"CustomStatusResponse": {
 				"type": "object",
 				"properties": {
-					"text": {"description": "The custom status message text", "anyOf": [{"type": "string"}, {"type": "null"}]},
+					"text": {"description": "The custom status message text", "type": ["string", "null"]},
 					"expires_at": {
 						"description": "ISO8601 timestamp of when the custom status expires",
 						"anyOf": [
 							{
 								"type": "string",
 								"format": "date-time",
-								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 							},
 							{"type": "null"}
 						]
@@ -34345,10 +33887,7 @@
 						"description": "The ID of the custom emoji used in the status",
 						"anyOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}, {"type": "null"}]
 					},
-					"emoji_name": {
-						"description": "The name of the emoji used in the status",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"emoji_name": {"description": "The name of the emoji used in the status", "type": ["string", "null"]},
 					"emoji_animated": {"type": "boolean", "description": "Whether the status emoji is animated"}
 				},
 				"required": ["emoji_animated"],
@@ -34523,10 +34062,7 @@
 			"CustomStatusPayload": {
 				"type": "object",
 				"properties": {
-					"text": {
-						"description": "Custom status text (max 128 characters)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
-					},
+					"text": {"description": "Custom status text (max 128 characters)", "type": ["string", "null"]},
 					"expires_at": {
 						"description": "When the custom status expires",
 						"anyOf": [
@@ -34548,7 +34084,7 @@
 					},
 					"emoji_name": {
 						"description": "Unicode emoji to display (ignored when emoji_id is provided)",
-						"anyOf": [{"type": "string"}, {"type": "null"}]
+						"type": ["string", "null"]
 					}
 				}
 			},

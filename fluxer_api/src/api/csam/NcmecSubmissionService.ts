@@ -377,7 +377,7 @@ export class NcmecSubmissionService {
 
 	async finalizeAttachmentReport(attachmentId: AttachmentID, requeueCount = 0): Promise<void> {
 		const submission = await this.deps.ncmecRepository.getAttachmentSubmission(attachmentId);
-		if (!submission || submission.status !== 'submitted' || submission.content_deleted_at) {
+		if (submission?.status !== 'submitted' || submission.content_deleted_at) {
 			return;
 		}
 		if (submission.user_id === null) {
@@ -439,7 +439,7 @@ export class NcmecSubmissionService {
 			submissionUserId,
 			refreshedWorkflow.archive_id,
 		);
-		if (!archive || !archive.completed_at) {
+		if (!archive?.completed_at) {
 			await this.requeueFinalizer(attachmentId, requeueCount + 1);
 			return;
 		}

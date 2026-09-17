@@ -3,8 +3,8 @@
 import {createUserID} from '@app/api/BrandedTypes';
 import {NatsUsersServiceClient} from '@app/api/infrastructure/UsersServiceClient';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
+import type {NatsConnection} from '@nats-io/transport-node';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
-import {type NatsConnection, StringCodec} from 'nats';
 import {describe, expect, it} from 'vitest';
 
 interface FakeRequest {
@@ -14,7 +14,6 @@ interface FakeRequest {
 }
 
 class FakeNatsConnectionManager implements INatsConnectionManager {
-	private readonly codec = StringCodec();
 	private closed = true;
 	private readonly responses: Array<unknown>;
 	readonly requests: Array<FakeRequest> = [];
@@ -38,7 +37,7 @@ class FakeNatsConnectionManager implements INatsConnectionManager {
 			request: async (subject: string, data: Uint8Array, options?: {timeout?: number}) => {
 				this.requests.push({
 					subject,
-					body: JSON.parse(this.codec.decode(data)) as Record<string, unknown>,
+					body: JSON.parse(new TextDecoder().decode(data)) as Record<string, unknown>,
 					timeout: options?.timeout,
 				});
 				const response = this.responses.shift();
@@ -46,7 +45,7 @@ class FakeNatsConnectionManager implements INatsConnectionManager {
 					throw response;
 				}
 				return {
-					data: this.codec.encode(JSON.stringify(response)),
+					data: new TextEncoder().encode(JSON.stringify(response)),
 				};
 			},
 		} as unknown as NatsConnection;

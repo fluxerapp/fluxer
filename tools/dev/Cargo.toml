@@ -9,19 +9,18 @@ publish = false
 fluxer_common = { path = "../../fluxer_common" }
 anyhow = "1.0.104"
 axum = "0.8.9"
-base64 = "0.22.1"
-clap = { version = "4.6.1", features = ["derive", "env"] }
+clap = { version = "4.6.7", features = ["derive", "env"] }
 hmac = "0.13.0"
-hyper = { version = "1.10.1", features = ["http1", "server"] }
+hyper = { version = "1.11.1", features = ["http1", "server"] }
 hyper-util = { version = "0.1.20", features = ["tokio"] }
 image = { version = "0.25.10", default-features = false, features = ["gif", "jpeg", "png", "webp"] }
-libc = "0.2.186"
-regex = "1.12"
-reqwest = { version = "0.13.4", default-features = false, features = ["rustls", "stream"] }
-scylla = { version = "1.6.0", features = ["chrono-04"] }
-serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.150"
+libc = "0.2.189"
+regex = "1.13"
+reqwest = { version = "0.13.5", default-features = false, features = ["rustls", "stream"] }
+scylla = { version = "1.9.0", features = ["chrono-04"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
 sha2 = "0.11.0"
 tempfile = "3.27.0"
-tokio = { version = "1.52.3", features = ["fs", "io-util", "macros", "net", "process", "rt-multi-thread", "signal", "time"] }
+tokio = { version = "1.53.1", features = ["fs", "io-util", "macros", "net", "process", "rt-multi-thread", "signal", "time"] }
 url = "2.5.8"

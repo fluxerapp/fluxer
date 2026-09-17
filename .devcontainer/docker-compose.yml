@@ -9,7 +9,7 @@ services:
     init: true
     environment:
       DOCKER_HOST: unix:///var/run/docker.sock
-      npm_config_store_dir: /home/vscode/.local/share/pnpm/store
+      pnpm_config_store_dir: /home/vscode/.local/share/pnpm/store
       FLUXER_PUBLIC_PORT: "${FLUXER_DEV_PROXY_PORT:-8088}"
       FLUXER_PUBLIC_URL: "http://localhost:${FLUXER_DEV_PROXY_PORT:-8088}"
       FLUXER_API_ENDPOINT: "http://localhost:${FLUXER_DEV_PROXY_PORT:-8088}/api"
@@ -292,13 +292,13 @@ services:
       start_period: 5s
 
   valkey:
-    image: valkey/valkey:8.1.7-alpine
+    image: valkey/valkey:9.1.2-alpine
     command: ["valkey-server", "--save", "", "--appendonly", "no"]
     ports:
       - "127.0.0.1:${FLUXER_DEV_VALKEY_PORT:-6379}:6379"
 
   nats:
-    image: nats:2.14.2-alpine
+    image: nats:2.14.7-alpine
     command: ["-js", "-sd", "/data", "-m", "8222"]
     volumes:
       - nats-data:/data
@@ -321,9 +321,10 @@ services:
       - "127.0.0.1:${FLUXER_DEV_LIVEKIT_UDP_PORT:-7882}:${FLUXER_DEV_LIVEKIT_UDP_PORT:-7882}/udp"
 
   meilisearch:
-    image: getmeili/meilisearch:v1.12
+    image: getmeili/meilisearch:v1.53
     environment:
       MEILI_NO_ANALYTICS: "true"
+      MEILI_UPGRADE_DB: "true"
       MEILI_MASTER_KEY: fluxer-dev-meilisearch
     volumes:
       - meilisearch-data:/meili_data
@@ -337,7 +338,7 @@ services:
       start_period: 5s
 
   mailpit:
-    image: axllent/mailpit:v1.30
+    image: axllent/mailpit:v1.31
     environment:
       MP_DATABASE: /data/mailpit.db
       MP_MAX_MESSAGES: 5000

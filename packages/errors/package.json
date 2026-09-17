@@ -9,7 +9,7 @@
 	"scripts": {
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"typecheck": "tsgo --noEmit"
+		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@fluxer/config": "workspace:*",
@@ -23,7 +23,7 @@
 	"devDependencies": {
 		"@messageformat/parser": "catalog:",
 		"@types/node": "catalog:",
-		"@typescript/native-preview": "catalog:",
+		"typescript": "catalog:ts7",
 		"vitest": "catalog:"
 	}
 }

@@ -4,7 +4,7 @@ import type {IJobLedgerRepository} from '@app/api/jobs/IJobLedgerRepository';
 import {setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
 import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
 import {WorkerRunner} from '@app/api/worker/WorkerRunner';
-import type {ConsumerMessages, JsMsg} from 'nats';
+import type {ConsumerMessages, JsMsg} from '@nats-io/jetstream';
 import {beforeAll, describe, expect, it, vi} from 'vitest';
 
 const TASK_TYPE = 'processInactivityDeletions';

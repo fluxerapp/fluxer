@@ -67,7 +67,7 @@ interface GeoipRuntimePathOptions {
 }
 
 export function parseGeoipSourceConfig(rawValue: string | undefined): GeoipSourceConfig {
-	if (!rawValue || !rawValue.startsWith('s3://')) {
+	if (!rawValue?.startsWith('s3://')) {
 		return createGeoipFilesystemSourceConfig(rawValue);
 	}
 	return parseGeoipS3SourceConfig(rawValue);

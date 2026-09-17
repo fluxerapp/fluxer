@@ -59,7 +59,7 @@ describe('Message Search Referenced Message', () => {
 		try {
 			await createBuilder(harness, token).post('/search/messages').body(body).expect(HTTP_STATUS.OK).execute();
 			const [invocation] = spy.mock.results;
-			if (!invocation || invocation.type !== 'return') {
+			if (invocation?.type !== 'return') {
 				throw new Error('SearchService.searchMessages did not return a result');
 			}
 			return await invocation.value;

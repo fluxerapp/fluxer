@@ -32,177 +32,178 @@ allowBuilds:
 blockExoticSubdeps: true
 
 catalog:
-  '@arborium/arborium': 2.16.0
-  '@astrojs/check': 0.9.9
-  '@astrojs/markdown-remark': 7.2.1
-  '@astrojs/mdx': 7.0.3
-  '@astrojs/node': 11.0.2
-  '@astrojs/starlight': 0.41.4
-  '@atproto/api': 0.19.0
-  '@aws-sdk/client-s3': 3.1121.0
-  '@aws-sdk/lib-storage': 3.1121.0
-  '@aws-sdk/s3-request-presigner': 3.1121.0
-  '@base-ui/react': 1.5.0
-  '@biomejs/biome': 2.4.4
-  '@bluesky-social/jwk-jose': 0.1.11
-  '@bluesky-social/oauth-client-node': 0.3.9
-  '@elastic/elasticsearch': 9.3.2
-  '@floating-ui/react': 0.27.18
-  '@floating-ui/react-dom': 2.1.7
-  '@hcaptcha/react-hcaptcha': 2.0.2
-  '@hono/node-server': 1.19.17
-  '@lexical/history': 0.48.0
-  '@lexical/react': 0.48.0
-  '@lexical/utils': 0.48.0
-  '@lingui/cli': 5.9.2
-  '@lingui/core': 5.9.2
-  '@lingui/react': 5.9.2
-  '@lingui/swc-plugin': 5.11.0
-  '@livekit/components-react': 2.9.20
-  '@marsidev/react-turnstile': 1.4.2
+  '@arborium/arborium': 2.18.2
+  '@astrojs/check': 0.9.10
+  '@astrojs/markdown-remark': 7.3.1
+  '@astrojs/mdx': 8.0.1
+  '@astrojs/node': 11.1.5
+  '@astrojs/starlight': 0.42.1
+  '@atproto/api': 0.20.44
+  '@atproto/jwk-jose': 0.2.4
+  '@atproto/oauth-client-node': 0.5.7
+  '@aws-sdk/client-s3': 3.1133.0
+  '@aws-sdk/lib-storage': 3.1133.0
+  '@aws-sdk/s3-request-presigner': 3.1133.0
+  '@base-ui/react': 1.8.0
+  '@biomejs/biome': 2.5.14
+  '@elastic/elasticsearch': 9.5.1
+  '@floating-ui/react': 0.27.20
+  '@floating-ui/react-dom': 2.1.9
+  '@hcaptcha/react-hcaptcha': 2.2.0
+  '@hono/node-server': 2.1.1
+  '@lexical/history': 0.50.0
+  '@lexical/react': 0.50.0
+  '@lexical/utils': 0.50.0
+  '@lingui/cli': 6.7.0
+  '@lingui/core': 6.7.0
+  '@lingui/format-po': 6.7.0
+  '@lingui/react': 6.7.0
+  '@lingui/swc-plugin': 6.7.0
+  '@livekit/components-react': 2.9.24
+  '@marsidev/react-turnstile': 1.6.1
   '@mdx-js/mdx': 3.1.1
   '@messageformat/core': 3.4.0
   '@messageformat/parser': 5.1.1
+  '@nats-io/jetstream': 3.4.0
+  '@nats-io/transport-node': 3.4.0
   '@phosphor-icons/react': 2.1.10
-  '@radix-ui/react-checkbox': 1.3.3
-  '@radix-ui/react-radio-group': 1.3.8
-  '@radix-ui/react-switch': 1.2.6
-  '@redocly/openapi-core': 2.52.0
-  '@rspack/cli': 1.7.6
-  '@rspack/core': 1.7.6
+  '@radix-ui/react-checkbox': 1.3.11
+  '@radix-ui/react-radio-group': 1.4.7
+  '@radix-ui/react-switch': 1.3.7
+  '@redocly/openapi-core': 2.53.2
+  '@rspack/cli': 2.2.5
+  '@rspack/core': 2.2.5
+  '@rspack/dev-server': 2.2.1
   '@sapphi-red/web-noise-suppressor': 0.4.0
-  '@simplewebauthn/browser': 13.2.2
-  '@simplewebauthn/server': 13.2.3
+  '@simplewebauthn/browser': 14.0.0
+  '@simplewebauthn/server': 14.0.2
   '@svgr/webpack': 8.1.0
-  '@tailwindcss/cli': 4.2.1
-  '@types/archiver': 7.0.0
+  '@tailwindcss/cli': 4.3.3
+  '@types/archiver': 8.0.0
   '@types/combokeys': 2.4.9
   '@types/hast': 3.0.5
-  '@types/lodash': 4.17.24
-  '@types/luxon': 3.7.1
+  '@types/lodash': 4.17.25
+  '@types/luxon': 3.7.5
   '@types/mdast': 4.0.4
-  '@types/node': 25.3.0
-  '@types/nodemailer': 7.0.11
-  '@types/pg': 8.16.0
+  '@types/node': 26.6.1
+  '@types/pg': 8.23.1
   '@types/qrcode': 1.5.6
-  '@types/react': 19.2.14
-  '@types/react-dom': 19.2.3
+  '@types/react': 19.3.0
+  '@types/react-dom': 19.3.0
   '@types/send': 1.2.1
   '@types/validator': 13.15.10
-  '@typescript/native-preview': 7.0.0-dev.20260224.1
-  '@vitest/coverage-v8': 4.1.11
+  '@vitest/coverage-v8': 5.0.1
   '@vvo/tzdb': 6.198.0
   '@webgpu/types': 0.1.72
-  ajv: 8.18.0
-  archiver: 7.0.1
+  ajv: 8.20.0
+  archiver: 8.0.0
   argon2: 0.44.0
-  astro: 7.1.3
-  autoprefixer: 10.4.24
+  astro: 7.3.2
+  autoprefixer: 10.6.1
   bowser: 2.14.1
-  cassandra-driver: 4.8.0
+  cassandra-driver: 4.9.0
   clsx: 2.1.1
-  colorjs.io: 0.6.1
+  colorjs.io: 0.7.1
   combokeys: 3.0.1
-  deepfilternet3-noise-filter: 1.2.1
-  emoji-regex: 10.6.0
+  deepfilternet3-noise-filter: 1.3.0
+  emoji-regex: 11.0.0
   esbuild: 0.28.2
   eslint: 10.10.0
   eslint-plugin-react-google-translate: 1.0.4
   eventemitter3: 5.0.4
   fast-xml-parser: 5.11.1
   favico.js: 0.3.10
-  framer-motion: 12.34.3
+  framer-motion: 13.4.0
   hi-base32: 0.5.1
-  hono: 4.13.5
+  hono: 4.13.8
   html-entities: 2.6.0
-  idna-uts46-hx: 6.1.1
-  ioredis: 5.9.3
+  idna-uts46-hx: 6.2.1
+  ioredis: 6.0.0
   itty-time: 2.0.2
-  jose: 6.1.3
-  katex: 0.16.33
-  knip: 5.88.1
-  lexical: 0.48.0
-  libphonenumber-js: 1.12.41
-  livekit-server-sdk: 2.15.0
+  jose: 6.2.12
+  katex: 0.18.7
+  knip: 6.36.0
+  lexical: 0.50.0
+  libphonenumber-js: 1.13.13
+  livekit-server-sdk: 2.19.0
   lodash: 4.18.1
-  lru-cache: 11.2.6
+  lru-cache: 11.5.2
   luxon: 3.7.2
-  match-sorter: 8.2.0
-  maxmind: 5.0.5
+  match-sorter: 8.3.0
+  maxmind: 5.0.7
   mdast-util-mdx-jsx: 3.2.0
   mdast-util-to-hast: 13.2.1
   mime: 4.1.0
-  mobx: 6.15.0
+  mobx: 7.0.3
   mobx-persist-store: 1.1.8
-  mobx-react-lite: 4.1.1
-  motion: 12.34.3
-  msw: 2.12.10
-  nats: 2.29.3
-  nodemailer: 9.0.6
-  onnxruntime-web: 1.27.0
-  pg: 8.16.3
+  mobx-react-lite: 5.0.3
+  motion: 13.4.0
+  msw: 2.15.0
+  nodemailer: 10.0.10
+  onnxruntime-web: 1.30.0
+  pg: 8.23.0
   pino: 10.3.1
   pino-pretty: 13.1.3
-  postcss: 8.5.26
-  postcss-discard-comments: 7.0.5
+  postcss: 8.5.28
+  postcss-discard-comments: 9.0.2
   postcss-loader: 8.2.1
-  postcss-preset-env: 11.2.0
+  postcss-preset-env: 11.5.3
   qrcode: 1.5.4
-  react: 19.2.4
-  react-aria-components: 1.15.1
-  react-day-picker: 9.13.2
+  react: 19.3.0
+  react-aria-components: 1.21.1
+  react-day-picker: 10.0.1
   react-dnd: 16.0.1
   react-dnd-accessible-backend: 2.1.0
   react-dnd-html5-backend: 16.0.1
   react-dnd-multi-backend: 9.0.0
-  react-dom: 19.2.4
-  react-hook-form: 7.71.2
-  react-hotkeys-hook: 5.2.4
+  react-dom: 19.3.0
+  react-hook-form: 7.88.0
+  react-hotkeys-hook: 5.3.3
   remark-gfm: 4.0.1
   rxjs: 7.8.2
   send: 1.2.1
   sharp: 0.35.4
-  stripe: 22.0.2
-  tailwindcss: 4.2.1
+  stripe: 22.6.2
+  tailwindcss: 4.3.3
   tempy: 3.2.0
   thumbhash: 0.1.1
   tiny-invariant: 1.3.3
   transliteration: 2.6.1
   ts-morph: 28.0.0
-  tsx: 4.21.0
+  tsx: 4.23.13
   typed-css-modules: 0.9.1
-  typescript: 6.0.2
+  typescript: 6.0.3
   typescript-eslint: 8.70.0
   uint8array-extras: 1.5.0
-  undici: 7.29.0
-  undici-types: 7.18.2
+  undici: 8.10.2
   unique-names-generator: 4.7.1
   urlpattern-polyfill: 10.1.0
-  valibot: 1.4.2
-  validator: 13.15.26
-  vite: 7.3.6
-  vitest: 4.1.11
-  yaml: 2.9.0
-  zod: 4.3.6
+  valibot: 1.5.0
+  validator: 13.15.35
+  vite: 8.3.0
+  vitest: 5.0.1
+  yaml: 2.9.1
+  zod: 4.6.5
+
+catalogs:
+  ts7:
+    typescript: 7.0.2
 
 minimumReleaseAge: 1440
 
 overrides:
-  '@astrojs/check@0.9.9>chokidar': 5.0.0
-  '@floating-ui/dom': 1.7.5
+  '@astrojs/check@0.9.10>chokidar': 5.0.0
+  '@floating-ui/dom': 1.8.0
   '@lingui/swc-plugin': 'catalog:'
   '@rspack/cli': 'catalog:'
   '@rspack/core': 'catalog:'
-  '@rspack/dev-server@1.1.5>webpack-dev-server': 5.2.6
-  cassandra-driver@4.8.0>adm-zip: 0.6.0
-  emscripten-wasm-loader@3.0.3>nanoid: 3.3.18
-  hunspell-asm@4.0.2>nanoid: 3.3.18
-  qs@6.14.2: 6.16.0
-  semver: 7.7.4
-  sockjs@0.3.24>uuid: 11.1.1
+  cassandra-driver@4.9.0>adm-zip: 0.6.1
+  emscripten-wasm-loader@3.0.3>nanoid: 3.3.19
+  hunspell-asm@4.0.2>nanoid: 3.3.19
+  semver: 7.8.5
+  typed-css-modules@0.9.1>glob: 13.0.6
 
 patchedDependencies:
-  '@hono/node-server@1.19.17': patches/@hono__node-server@1.19.17.patch
   '@phosphor-icons/react@2.1.10': patches/@phosphor-icons__react@2.1.10.patch
   emscripten-wasm-loader@3.0.3: patches/emscripten-wasm-loader@3.0.3.patch
   eslint-plugin-react-google-translate@1.0.4: patches/eslint-plugin-react-google-translate@1.0.4.patch
@@ -213,7 +214,6 @@ peerDependencyRules:
     react: '*'
   ignoreMissing:
     - webpack
-    - babel-plugin-macros
 
 strictDepBuilds: true
 
@@ -221,3 +221,5 @@ trustPolicy: no-downgrade
 
 trustPolicyExclude:
   - semver
+  - undici-types@6.21.0
+  - postcss-discard-comments@9.0.2

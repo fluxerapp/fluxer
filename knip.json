@@ -1,6 +1,7 @@
 {
-	"$schema": "https://unpkg.com/knip@5/schema.json",
+	"$schema": "https://unpkg.com/knip@6/schema.json",
 	"include": ["files", "exports", "types", "dependencies", "unlisted", "binaries", "catalog"],
+	"ignoreExportsUsedInFile": true,
 	"ignoreDependencies": [
 		"@bufbuild/protoc-gen-es",
 		"@tailwindcss/cli",
@@ -56,8 +57,7 @@
 			]
 		},
 		"fluxer_app": {
-			"entry": ["lingui.config.js", "scripts/build-sw.mjs", "scripts/Generate*.ts"],
-			"ignoreDependencies": ["@sapphi-red/web-noise-suppressor", "@lingui/swc-plugin"]
+			"entry": ["lingui.config.js", "scripts/build-sw.mjs", "scripts/Generate*.ts"]
 		},
 		"fluxer_desktop": {
 			"entry": [
@@ -71,12 +71,12 @@
 				"native/*/test/**/*.mjs"
 			],
 			"project": ["src/**/*.{ts,tsx,mjs,js}", "scripts/**/*.mjs", "native/**/*.{js,mjs,cjs,d.ts}"],
+			"ignoreBinaries": ["bunzip2", "reg.exe", "update-desktop-database"],
 			"ignoreDependencies": ["electron-builder", "electron-builder-squirrel-windows"]
 		},
 		"fluxer_docs": {
 			"entry": ["scripts/*.ts", "src/**/*.astro"],
-			"project": ["src/**/*.{ts,astro}", "scripts/**/*.ts"],
-			"ignoreDependencies": ["sharp"]
+			"project": ["src/**/*.{ts,astro,mdx}", "scripts/**/*.ts"]
 		},
 		"packages/openapi": {
 			"project": ["src/**/*.ts"]

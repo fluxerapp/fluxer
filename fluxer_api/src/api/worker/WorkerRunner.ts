@@ -14,9 +14,9 @@ import {
 	type WorkerHeartbeat,
 	type WorkerHeartbeatSignal,
 } from '@app/api/worker/WorkerHeartbeat';
+import type {ConsumerMessages, FetchOptions, JsMsg} from '@nats-io/jetstream';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import {JobCancelledError, type WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
-import type {ConsumerMessages, FetchOptions, JsMsg} from 'nats';
 
 const MAX_DLQ_PUBLISH_ATTEMPTS = 3;
 const DLQ_RETRY_DELAY_MS = 250;

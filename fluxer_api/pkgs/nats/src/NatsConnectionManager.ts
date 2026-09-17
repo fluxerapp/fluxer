@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {connect, DrainingConnectionError, type NatsConnection} from '@nats-io/transport-node';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
 import type {NatsConnectionOptions} from '@pkgs/nats/src/NatsConnectionOptions';
-import {connect, ErrorCode, type NatsConnection, NatsError} from 'nats';
 
 const DEFAULT_MAX_RECONNECT_ATTEMPTS = -1;
 const DEFAULT_RECONNECT_TIME_WAIT_MS = 500;
@@ -46,7 +46,7 @@ export class NatsConnectionManager implements INatsConnectionManager {
 		});
 		await this.connectPromise;
 		if (generation !== this.drainGeneration) {
-			throw NatsError.errorForCode(ErrorCode.ConnectionDraining);
+			throw new DrainingConnectionError();
 		}
 	}
 
@@ -139,7 +139,7 @@ export class NatsConnectionManager implements INatsConnectionManager {
 
 	private assertNotDraining(): void {
 		if (this.drainPromise !== null) {
-			throw NatsError.errorForCode(ErrorCode.ConnectionDraining);
+			throw new DrainingConnectionError();
 		}
 	}
 

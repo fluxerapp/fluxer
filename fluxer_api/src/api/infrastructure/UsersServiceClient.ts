@@ -10,7 +10,9 @@ import {isJsonRecord, parseJsonRecord, parseJsonWithGuard} from '@app/api/utils/
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
 import {NatsConnectionManager} from '@pkgs/nats/src/NatsConnectionManager';
-import {StringCodec} from 'nats';
+
+const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
 
 const USERS_SERVICE_SUBJECT = process.env.FLUXER_USERS_SERVICE_SUBJECT || 'svc.users';
 const DEFAULT_USERS_SERVICE_TIMEOUT_MS = 6000;
@@ -49,7 +51,6 @@ function isUserPartialsResponse(value: unknown): value is UserPartialsResponse {
 }
 
 export class NatsUsersServiceClient implements IUsersServiceClient {
-	private readonly codec = StringCodec();
 	private readonly inflightPartials = new Map<UserID, PendingUserPartials>();
 
 	constructor(
@@ -160,10 +161,10 @@ export class NatsUsersServiceClient implements IUsersServiceClient {
 				await this.connectionManager.connect();
 			}
 			const connection = this.connectionManager.getConnection();
-			const response = await connection.request(this.subject, this.codec.encode(JSON.stringify(payload)), {
+			const response = await connection.request(this.subject, textEncoder.encode(JSON.stringify(payload)), {
 				timeout: this.requestTimeoutMs,
 			});
-			const decoded = this.codec.decode(response.data);
+			const decoded = textDecoder.decode(response.data);
 			const parsed = parseJsonWithGuard(decoded, responseGuard);
 			if (parsed === null) {
 				throwForSvcErrorReply('users-service', parseJsonRecord(decoded));

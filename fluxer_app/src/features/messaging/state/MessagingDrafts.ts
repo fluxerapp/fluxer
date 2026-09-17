@@ -3,7 +3,7 @@
 import TextareaSelection from '@app/features/messaging/state/TextareaSelection';
 import type {MentionSegment} from '@app/features/messaging/utils/TextareaSegmentManager';
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
-import {action, makeAutoObservable} from 'mobx';
+import {makeAutoObservable} from 'mobx';
 
 const EMPTY_SEGMENTS: ReadonlyArray<MentionSegment> = [];
 
@@ -61,7 +61,6 @@ class Drafts {
 		await makePersistent(this, 'Drafts', ['drafts', 'draftSegments']);
 	}
 
-	@action
 	createDraft(channelId: string, content: string, segments?: ReadonlyArray<MentionSegment> | null): void {
 		if (!content) {
 			this.deleteDraft(channelId);
@@ -80,7 +79,6 @@ class Drafts {
 		}
 	}
 
-	@action
 	deleteDraft(channelId: string): void {
 		if (!(channelId in this.drafts) && !(channelId in this.draftSegments)) {
 			return;
@@ -90,7 +88,6 @@ class Drafts {
 		TextareaSelection.clearChannelSelection(channelId);
 	}
 
-	@action
 	deleteChannelDraft(channelId: string): void {
 		this.deleteDraft(channelId);
 	}
@@ -103,7 +100,6 @@ class Drafts {
 		return this.draftSegments[channelId] ?? EMPTY_SEGMENTS;
 	}
 
-	@action
 	cleanupEmptyDrafts(): void {
 		for (const channelId of Object.keys(this.drafts)) {
 			const content = this.drafts[channelId];

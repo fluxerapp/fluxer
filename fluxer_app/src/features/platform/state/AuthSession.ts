@@ -30,7 +30,7 @@ import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import LocalPresence from '@app/features/presence/state/LocalPresence';
-import {action, makeAutoObservable} from 'mobx';
+import {actionBound, makeAutoObservable} from 'mobx';
 
 export {type Account, SessionState};
 
@@ -149,10 +149,10 @@ export class AuthSessionManager {
 		makeAutoObservable(
 			this,
 			{
-				send: action.bound,
-				setToken: action.bound,
-				setUserId: action.bound,
-				setError: action.bound,
+				send: actionBound,
+				setToken: actionBound,
+				setUserId: actionBound,
+				setError: actionBound,
 			},
 			{autoBind: true},
 		);

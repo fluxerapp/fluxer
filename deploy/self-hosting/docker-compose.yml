@@ -122,7 +122,7 @@ x-fluxer-svc-healthcheck: &fluxer-svc-healthcheck
 
 services:
   edge:
-    image: caddy:2.10-alpine
+    image: caddy:2.11-alpine
     deploy:
       resources:
         limits:
@@ -200,7 +200,7 @@ services:
       retries: 10
 
   valkey:
-    image: valkey/valkey:8.1-alpine
+    image: valkey/valkey:9.1-alpine
     deploy:
       resources:
         limits:
@@ -236,7 +236,7 @@ services:
       retries: 10
 
   meilisearch:
-    image: getmeili/meilisearch:v1.12
+    image: getmeili/meilisearch:v1.53
     deploy:
       resources:
         limits:
@@ -246,6 +246,7 @@ services:
     environment:
       MEILI_ENV: production
       MEILI_NO_ANALYTICS: "true"
+      MEILI_UPGRADE_DB: "true"
       MEILI_MAX_INDEXING_MEMORY: ${FLUXER_MEILISEARCH_MAX_INDEXING_MEMORY:-384mb}
       MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:?set MEILI_MASTER_KEY in .env}
     volumes:
@@ -257,7 +258,7 @@ services:
       retries: 10
 
   seaweedfs:
-    image: chrislusf/seaweedfs:4.34
+    image: chrislusf/seaweedfs:4.47
     deploy:
       resources:
         limits:
@@ -266,7 +267,7 @@ services:
     networks: [fluxer]
     environment:
       GOMEMLIMIT: ${FLUXER_SEAWEEDFS_GOMEMLIMIT:-1536MiB}
-    command: ["server", "-s3", "-dir=/data"]
+    command: ["server", "-s3", "-dir=/data", "-master.telemetry=false"]
     volumes:
       - seaweedfs-data:/data
     healthcheck:
@@ -277,7 +278,7 @@ services:
       start_period: 60s
 
   seaweedfs-init:
-    image: chrislusf/seaweedfs:4.34
+    image: chrislusf/seaweedfs:4.47
     deploy:
       resources:
         limits:

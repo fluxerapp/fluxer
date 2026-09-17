@@ -20,7 +20,7 @@ import type {
 import type {BlueskyOAuthConfig, BlueskyOAuthKeyConfig} from '@app/api/config/APIConfig';
 import {ConnectionCredentialRepository} from '@app/api/connection/ConnectionCredentialRepository';
 import {Agent} from '@atproto/api';
-import {JoseKey} from '@bluesky-social/jwk-jose';
+import {JoseKey} from '@atproto/jwk-jose';
 import {
 	FetchError,
 	NodeOAuthClient,
@@ -28,7 +28,7 @@ import {
 	type OAuthClientMetadataInput,
 	OAuthResponseError,
 	requestLocalLock,
-} from '@bluesky-social/oauth-client-node';
+} from '@atproto/oauth-client-node';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 
 interface BlueskyClientConfiguration {

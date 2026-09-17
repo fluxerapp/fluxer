@@ -57,7 +57,7 @@ import type {
 	TrackPublishOptions,
 } from 'livekit-client';
 import {Room as LiveKitRoom, RoomEvent, Track} from 'livekit-client';
-import {makeObservable, observable} from 'mobx';
+import {makeObservable, observableRef} from 'mobx';
 import type {Subscription} from 'rxjs';
 import {timer} from 'rxjs';
 
@@ -214,8 +214,8 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 	constructor() {
 		super();
 		makeObservable(this, {
-			connectionState: observable.ref,
-			hotSwapState: observable.ref,
+			connectionState: observableRef,
+			hotSwapState: observableRef,
 		});
 		this.throttle.subscribe(() => this.emitChange());
 		this.reconnect.subscribe(() => this.emitChange());

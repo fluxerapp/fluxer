@@ -4,7 +4,7 @@ import ExperimentAssignments from '@app/features/experiment/state/ExperimentAssi
 import SessionManager from '@app/features/platform/state/AuthSession';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
 import type {UserPrivate} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {action, computed, makeAutoObservable} from 'mobx';
+import {computed, makeAutoObservable} from 'mobx';
 
 const LoginState = {
 	Default: 'default',
@@ -67,18 +67,15 @@ class Authentication {
 		return SessionManager.userId;
 	}
 
-	@action
 	setUserId(userId: string | null): void {
 		SessionManager.setUserId(userId);
 	}
 
-	@action
 	handleGatewayReady({user}: {user: UserPrivate}): void {
 		SessionManager.setUserId(user.id);
 		SessionManager.handleConnectionReady();
 	}
 
-	@action
 	handleAuthSessionChange({token}: {token: string}): void {
 		SessionManager.setToken(token || null);
 	}
@@ -90,7 +87,6 @@ class Authentication {
 		}
 	}
 
-	@action
 	handleSessionStart({token}: {token: string | null | undefined}): void {
 		if (token) {
 			SessionManager.setToken(token);
@@ -102,7 +98,6 @@ class Authentication {
 		this.mfaMethods = null;
 	}
 
-	@action
 	handleMfaTicketSet({
 		ticket,
 		totp,
@@ -115,14 +110,12 @@ class Authentication {
 		this.mfaMethods = {totp, webauthn};
 	}
 
-	@action
 	handleMfaTicketClear(): void {
 		this.loginState = LoginState.Default;
 		this.mfaTicket = null;
 		this.mfaMethods = null;
 	}
 
-	@action
 	handleLogout(options?: {skipRedirect?: boolean}): void {
 		ExperimentAssignments.reset();
 		this.loginState = LoginState.Default;

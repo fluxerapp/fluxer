@@ -15,7 +15,9 @@ import {
 } from '@fluxer/schema/src/domains/gif/GifSchemas';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
 import {NatsConnectionManager} from '@pkgs/nats/src/NatsConnectionManager';
-import {StringCodec} from 'nats';
+
+const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
 
 const GIF_SERVICE_SUBJECT = process.env.FLUXER_GIF_SERVICE_SUBJECT || 'svc.gifs';
 const DEFAULT_GIF_SERVICE_TIMEOUT_MS = 12_000;
@@ -137,7 +139,6 @@ function readResolved(value: unknown): GifResponse | null {
 
 class NatsGifProvider implements IGifProvider {
 	readonly meta = GIF_PROVIDER_META;
-	private readonly codec = StringCodec();
 
 	constructor(
 		private readonly connectionManager: INatsConnectionManager,
@@ -256,8 +257,8 @@ class NatsGifProvider implements IGifProvider {
 				await this.connectionManager.connect();
 			}
 			const connection = this.connectionManager.getConnection();
-			const response = await connection.request(this.subject, this.codec.encode(JSON.stringify(payload)), {timeout});
-			const decoded = this.codec.decode(response.data);
+			const response = await connection.request(this.subject, textEncoder.encode(JSON.stringify(payload)), {timeout});
+			const decoded = textDecoder.decode(response.data);
 			const parsed = parseJsonUnknown(decoded);
 			const failedMessage = readFailedMessage(parsed);
 			if (failedMessage) {

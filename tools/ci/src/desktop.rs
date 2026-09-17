@@ -36,8 +36,8 @@ use walkdir::WalkDir;
 use zip::write::SimpleFileOptions;
 
 const PUBLIC_DL_BASE: &str = "https://api.fluxer.app/dl";
-const PNPM_VERSION: &str = "10.29.3";
-const RUST_TOOLCHAIN: &str = "1.93.0";
+const PNPM_VERSION: &str = "12.4.2";
+const RUST_TOOLCHAIN: &str = "1.98.1";
 const DEFAULT_DESKTOP_VARIANT: &str = "default";
 const LINUX_PIPEWIRE_VERSION: &str = "0.3.65";
 const LINUX_PIPEWIRE_SOURCE_SHA256: &str =
@@ -82,7 +82,7 @@ enum DesktopStep {
     WindowsPaths,
     SetWorkdirUnix,
     EnsurePython3Windows,
-    SetupPnpmCorepack,
+    SetupPnpm,
     ResolvePnpmStoreWindows,
     ResolvePnpmStoreUnix,
     InstallSetuptoolsWindowsArm64,
@@ -193,7 +193,7 @@ pub async fn run(args: BuildDesktopArgs) -> Result<()> {
         DesktopStep::WindowsPaths => windows_paths_step().await,
         DesktopStep::SetWorkdirUnix => set_workdir_unix_step(),
         DesktopStep::EnsurePython3Windows => ensure_python3_windows_step(),
-        DesktopStep::SetupPnpmCorepack => setup_pnpm_corepack_step(),
+        DesktopStep::SetupPnpm => setup_pnpm_step(),
         DesktopStep::ResolvePnpmStoreWindows | DesktopStep::ResolvePnpmStoreUnix => {
             resolve_pnpm_store_step()
         }
@@ -526,19 +526,20 @@ async fn windows_paths_step() -> Result<()> {
     let store_dir = PathBuf::from(&github_workspace).join(format!("pnpm-store-{arch}"));
     fs::create_dir_all(&store_dir)
         .with_context(|| format!("Failed to create {}", store_dir.display()))?;
-    fs::write(
-        Path::new(r"W:\.npmrc"),
-        format!("store-dir={}\n", store_dir.display()),
-    )
-    .context("Failed to write W:\\.npmrc")?;
 
     append_github_env(&[
         ("WORKDIR", "W:"),
         ("TEMP", r"C:\t"),
         ("TMP", r"C:\t"),
         ("ELECTRON_BUILDER_CACHE", r"C:\ebcache"),
-        ("NPM_CONFIG_STORE_DIR", store_dir.to_string_lossy().as_ref()),
-        ("npm_config_store_dir", store_dir.to_string_lossy().as_ref()),
+        (
+            "PNPM_CONFIG_STORE_DIR",
+            store_dir.to_string_lossy().as_ref(),
+        ),
+        (
+            "pnpm_config_store_dir",
+            store_dir.to_string_lossy().as_ref(),
+        ),
     ])?;
 
     run_command(CommandSpec::new("git").args(["config", "--global", "core.longpaths", "true"]))?;
@@ -588,11 +589,11 @@ fn set_workdir_unix_step() -> Result<()> {
         fs::create_dir_all(&store_dir)
             .with_context(|| format!("Failed to create {}", store_dir.display()))?;
         env_pairs.push((
-            "NPM_CONFIG_STORE_DIR",
+            "PNPM_CONFIG_STORE_DIR",
             store_dir.to_string_lossy().to_string(),
         ));
         env_pairs.push((
-            "npm_config_store_dir",
+            "pnpm_config_store_dir",
             store_dir.to_string_lossy().to_string(),
         ));
     }
@@ -624,69 +625,31 @@ fn ensure_python3_windows_step() -> Result<()> {
     Ok(())
 }
 
-fn setup_pnpm_corepack_step() -> Result<()> {
-    let corepack = corepack_program()?;
-    run_command(CommandSpec::new(corepack.clone()).arg("enable"))?;
-    run_command(CommandSpec::new(corepack).args([
-        "prepare",
-        &format!("pnpm@{PNPM_VERSION}"),
-        "--activate",
-    ]))?;
-    ensure_pnpm_available()
-}
+fn setup_pnpm_step() -> Result<()> {
+    let npm = npm_program()?;
+    let pnpm_package = format!("pnpm@{PNPM_VERSION}");
+    run_command(CommandSpec::new(npm.clone()).args(["install", "--global", &pnpm_package]))?;
 
-fn corepack_program() -> Result<OsString> {
-    if command_succeeds(CommandSpec::new("corepack").arg("--version")) {
-        return Ok(OsString::from("corepack"));
-    }
+    let npm_prefix = output_text(CommandSpec::new(npm).args(["prefix", "--global"]))
+        .context("Failed to resolve global npm prefix after installing pnpm")?;
+    let npm_bin = if cfg!(windows) {
+        PathBuf::from(npm_prefix)
+    } else {
+        PathBuf::from(npm_prefix).join("bin")
+    };
+    append_github_path(&npm_bin)?;
 
-    if cfg!(windows) {
-        let node_dir =
-            node_executable_dir().context("Failed to locate Node.js while resolving corepack")?;
-
-        for file_name in ["corepack.cmd", "corepack.exe", "corepack"] {
-            let candidate = node_dir.join(file_name);
-            if candidate.exists() {
-                return Ok(candidate.into_os_string());
-            }
-        }
-
-        bail!(
-            "corepack not found on PATH or next to Node.js at {}",
-            node_dir.display()
-        );
-    }
-
-    bail!("corepack not found on PATH")
-}
-
-fn ensure_pnpm_available() -> Result<()> {
-    if let Ok(pnpm) = pnpm_program()
-        && command_succeeds(CommandSpec::new(pnpm).arg("--version"))
-    {
-        return Ok(());
-    }
-
-    if cfg!(windows) {
-        let npm = npm_program()?;
-        let pnpm_package = format!("pnpm@{PNPM_VERSION}");
-        run_command(CommandSpec::new(npm.clone()).args(["install", "--global", &pnpm_package]))?;
-
-        let npm_prefix = output_text(CommandSpec::new(npm).args(["prefix", "--global"]))
-            .context("Failed to resolve global npm prefix after installing pnpm")?;
-        let npm_prefix = PathBuf::from(npm_prefix);
-        append_github_path(&npm_prefix)?;
-
-        for file_name in ["pnpm.cmd", "pnpm.exe", "pnpm"] {
-            let candidate = npm_prefix.join(file_name);
-            if candidate.exists() {
-                return run_command(CommandSpec::new(candidate.into_os_string()).arg("--version"));
-            }
+    for file_name in ["pnpm.cmd", "pnpm.exe", "pnpm"] {
+        let candidate = npm_bin.join(file_name);
+        if candidate.exists() {
+            return run_command(CommandSpec::new(candidate.into_os_string()).arg("--version"));
         }
     }
 
-    run_command(pnpm_command()?.arg("--version"))
-        .context("Failed to verify pnpm after Corepack setup")
+    bail!(
+        "pnpm not found in {} after installing {pnpm_package}",
+        npm_bin.display()
+    )
 }
 
 fn pnpm_command() -> Result<CommandSpec> {
@@ -1450,7 +1413,7 @@ fn install_velopack_cli_step() -> Result<()> {
         tool_dir.to_string_lossy().as_ref(),
         "vpk",
         "--version",
-        "0.0.1298",
+        "1.2.0",
     ]))
 }
 

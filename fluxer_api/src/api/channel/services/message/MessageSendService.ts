@@ -1059,7 +1059,7 @@ export class MessageSendService {
 	}): Promise<Message> {
 		const channelId = webhook.channelId!;
 		const channel = await this.deps.channelRepository.channelData.findUnique(channelId);
-		if (!channel || !channel.guildId) {
+		if (!channel?.guildId) {
 			throw new CannotExecuteOnDmError();
 		}
 		const guild = await this.deps.gatewayService.getGuildData({
@@ -1245,7 +1245,7 @@ export class MessageSendService {
 	}): Promise<Message> {
 		const channelId = webhook.channelId!;
 		const channel = await this.deps.channelRepository.channelData.findUnique(channelId);
-		if (!channel || !channel.guildId) {
+		if (!channel?.guildId) {
 			throw new CannotExecuteOnDmError();
 		}
 		const existingMessage = await this.deps.channelRepository.messages.getMessage(channelId, messageId);

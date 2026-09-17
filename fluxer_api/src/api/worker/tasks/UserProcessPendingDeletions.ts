@@ -43,7 +43,7 @@ const userProcessPendingDeletions: WorkerTaskHandler = async (_payload, helpers)
 			try {
 				const userId = createUserID(deletion.userId);
 				const user = await userRepository.findUnique(userId);
-				if (!user || !user.pendingDeletionAt) {
+				if (!user?.pendingDeletionAt) {
 					Logger.warn({userId}, 'User not found or not pending deletion in Cassandra, removing from KV');
 					await deletionQueueService.removeFromQueue(userId);
 					continue;

@@ -57,7 +57,7 @@ import type {MessageAttachment} from '@fluxer/schema/src/domains/message/Message
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {comparer, computed, type IComputedValue} from 'mobx';
+import {compareStructural, computed, type IComputedValue} from 'mobx';
 import {useEffect, useMemo, useState} from 'react';
 
 const GUILD_MESSAGES_DISABLED_DESCRIPTOR = msg({
@@ -325,7 +325,7 @@ function buildForwardSearchBoostersFromStores(): ForwardSearchBoosters {
 }
 
 function createForwardSearchCandidates(i18n: I18n): IComputedValue<ForwardSearchCandidates> {
-	const options = {equals: comparer.structural};
+	const options = {equals: compareStructural};
 	const users = computed(buildForwardUserCandidates, options);
 	const groupDMs = computed(() => buildForwardGroupDMCandidates(i18n), options);
 	const channels = computed(buildForwardChannelCandidates, options);

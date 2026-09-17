@@ -3,10 +3,11 @@
 // SPDX-License-Identifier: Apache-2.0
 import {Mutex} from '@livekit/mutex';
 import {EventEmitter} from 'events';
-import type {MediaDescription, SessionDescription} from 'sdp-transform';
+import type {MediaAttributes, MediaDescription, SessionDescription} from 'sdp-transform';
 import {parse, write} from 'sdp-transform';
-import {debounce} from 'ts-debounce';
+import type TypedEmitter from 'typed-emitter';
 import log, {getLogger, LoggerNames} from '../logger.ts';
+import {debounce} from './debounce.ts';
 import {NegotiationError, UnexpectedConnectionState} from './errors.ts';
 import type {LoggerOptions} from './types.ts';
 import {ddExtensionURI, isFireFox, isSafari, isSVCCodec} from './utils.ts';
@@ -16,40 +17,68 @@ export interface TrackBitrateInfo {
 	transceiver?: RTCRtpTransceiver;
 	codec: string;
 	maxbr: number;
+	isScreenShare?: boolean;
 	stereo?: boolean;
 }
 
-const startBitrateFraction = 0.7;
+const startBitrateMultiplier = 0.9;
+
+const maxStartBitrateKbps = 1000;
+
+const debounceInterval = 20;
+
 const opusMaxAverageBitrateBps = 510000;
+
 const opusPacketTimeMs = 10;
+
 const requiredOpusFmtpParameters = {
 	minptime: '10',
 	useinbandfec: '1',
 	usedtx: '0',
 };
-const debounceInterval = 20;
-export const PCEvents = {
-	NegotiationStarted: 'negotiationStarted',
-	NegotiationComplete: 'negotiationComplete',
-	RTPVideoPayloadTypes: 'rtpVideoPayloadTypes',
-} as const;
 
-export function appendStartBitrateToFmtp(media: MediaDescription, codecPayload: number, startBitrate: number): void {
-	if (startBitrate <= 0) {
-		return;
+export function applyVideoStartBitrate(
+	media: MediaDescription,
+	cid: string,
+	codec: string,
+	maxbr: number,
+	isScreenShare = false,
+): number | undefined {
+	if (!media.msid?.includes(cid)) {
+		return undefined;
 	}
-	for (const fmtp of media.fmtp) {
-		if (fmtp.payload !== codecPayload) {
-			continue;
-		}
+
+	const codecPayload = media.rtp.find((rtp) => rtp.codec.toUpperCase() === codec.toUpperCase())?.payload ?? 0;
+	if (codecPayload === 0) {
+		return 0;
+	}
+
+	const calculatedStartBitrate = Math.round(maxbr * startBitrateMultiplier);
+	const startBitrate = isScreenShare ? calculatedStartBitrate : Math.min(calculatedStartBitrate, maxStartBitrateKbps);
+
+	const fmtp = media.fmtp.find((entry) => entry.payload === codecPayload);
+	if (fmtp) {
 		if (!fmtp.config.includes('x-google-start-bitrate')) {
 			fmtp.config += `;x-google-start-bitrate=${startBitrate}`;
 		}
-		return;
+	} else {
+		media.fmtp.push({
+			payload: codecPayload,
+			config: `x-google-start-bitrate=${startBitrate}`,
+		});
 	}
+
+	return codecPayload;
 }
 
-export default class PCTransport extends EventEmitter {
+export const PCEvents = {
+	NegotiationStarted: 'negotiationStarted',
+	NegotiationComplete: 'negotiationComplete',
+	OfferAnswered: 'offerAnswered',
+	RTPVideoPayloadTypes: 'rtpVideoPayloadTypes',
+} as const;
+
+export default class PCTransport extends (EventEmitter as new () => TypedEmitter<PCTransportEventCallbacks>) {
 	private _pc: RTCPeerConnection | null;
 
 	private get pc() {
@@ -60,31 +89,58 @@ export default class PCTransport extends EventEmitter {
 	}
 
 	private config?: RTCConfiguration;
+
 	private log = log;
+
+	private iceLog = log;
+
 	private loggerOptions: LoggerOptions;
+
 	private ddExtID = 0;
-	private latestOfferId: number = 0;
+
+	latestOfferId: number = 0;
+
+	latestAcknowledgedOfferId: number = 0;
+
 	private offerLock: Mutex;
+
+	private pendingInitialOffer?: RTCSessionDescriptionInit;
+
 	pendingCandidates: Array<RTCIceCandidateInit> = [];
+
 	restartingIce: boolean = false;
+
 	renegotiate: boolean = false;
+
 	trackBitrates: Array<TrackBitrateInfo> = [];
+
 	remoteStereoMids: Array<string> = [];
+
 	remoteNackMids: Array<string> = [];
+
 	excludedVideoDecoderMimeTypes: Set<string> = new Set();
+
 	onOffer?: (offer: RTCSessionDescriptionInit, offerId: number) => void;
+
 	onIceCandidate?: (candidate: RTCIceCandidate) => void;
+
 	onIceCandidateError?: (ev: Event) => void;
+
 	onConnectionStateChange?: (state: RTCPeerConnectionState) => void;
+
 	onIceConnectionStateChange?: (state: RTCIceConnectionState) => void;
+
 	onSignalingStatechange?: (state: RTCSignalingState) => void;
+
 	onDataChannel?: (ev: RTCDataChannelEvent) => void;
+
 	onTrack?: (ev: RTCTrackEvent) => void;
 
 	constructor(config?: RTCConfiguration, loggerOptions: LoggerOptions = {}) {
 		super();
-		this.log = getLogger(loggerOptions.loggerName ?? LoggerNames.PCTransport);
 		this.loggerOptions = loggerOptions;
+		this.log = getLogger(loggerOptions.loggerName ?? LoggerNames.PCTransport, () => this.logContext);
+		this.iceLog = getLogger(LoggerNames.ICE, () => this.logContext);
 		this.config = config;
 		this._pc = this.createPC();
 		this.offerLock = new Mutex();
@@ -92,23 +148,36 @@ export default class PCTransport extends EventEmitter {
 
 	private createPC() {
 		const pc = new RTCPeerConnection(this.config);
+
 		pc.onicecandidate = (ev) => {
 			if (!ev.candidate) return;
+			this.iceLog.debug('local ICE candidate gathered', {candidate: ev.candidate.candidate});
 			this.onIceCandidate?.(ev.candidate);
 		};
 		pc.onicecandidateerror = (ev) => {
+			this.iceLog.debug('ICE candidate error', {event: ev});
 			this.onIceCandidateError?.(ev);
 		};
+
 		pc.oniceconnectionstatechange = () => {
+			this.iceLog.debug(`ICE connection state: ${pc.iceConnectionState}`);
 			this.onIceConnectionStateChange?.(pc.iceConnectionState);
 		};
+
 		pc.onsignalingstatechange = () => {
+			this.log.debug(`signaling state: ${pc.signalingState}`);
 			this.onSignalingStatechange?.(pc.signalingState);
 		};
+
 		pc.onconnectionstatechange = () => {
+			this.log.debug(`connection state: ${pc.connectionState}`);
 			this.onConnectionStateChange?.(pc.connectionState);
 		};
 		pc.ondatachannel = (ev) => {
+			this.log.debug('data channel opened by peer', {
+				label: ev.channel.label,
+				id: ev.channel.id,
+			});
 			this.onDataChannel?.(ev);
 		};
 		pc.ontrack = (ev) => {
@@ -133,13 +202,15 @@ export default class PCTransport extends EventEmitter {
 		if (this.pc.remoteDescription && !this.restartingIce) {
 			return this.pc.addIceCandidate(candidate);
 		}
+		this.iceLog.debug('queuing remote ICE candidate until remote description applied', {
+			pendingCount: this.pendingCandidates.length + 1,
+		});
 		this.pendingCandidates.push(candidate);
 	}
 
 	async setRemoteDescription(sd: RTCSessionDescriptionInit, offerId: number): Promise<boolean> {
 		if (sd.type === 'answer' && this.latestOfferId > 0 && offerId > 0 && offerId !== this.latestOfferId) {
 			this.log.warn('ignoring answer for old offer', {
-				...this.logContext,
 				offerId,
 				latestOfferId: this.latestOfferId,
 			});
@@ -151,6 +222,16 @@ export default class PCTransport extends EventEmitter {
 			this.remoteStereoMids = stereoMids;
 			this.remoteNackMids = nackMids;
 		} else if (sd.type === 'answer') {
+			if (this.pendingInitialOffer && this._pc) {
+				const initialOffer = this.pendingInitialOffer;
+				this.pendingInitialOffer = undefined;
+				const sdpParsed = parse(initialOffer.sdp ?? '');
+				sdpParsed.media.forEach((media) => {
+					ensureIPAddrMatchVersion(media);
+				});
+				this.log.debug('setting pending initial offer before processing answer');
+				await this.setMungedSDP(initialOffer, write(sdpParsed));
+			}
 			const sdpParsed = parse(sd.sdp ?? '');
 			sdpParsed.media.forEach((media) => {
 				const mid = getMidString(media.mid!);
@@ -169,14 +250,30 @@ export default class PCTransport extends EventEmitter {
 					}
 				}
 			});
+			const placeholderMids = this.getPlaceholderMids();
+			if (placeholderMids.size > 0) {
+				conformBundledCodecFmtp(sdpParsed.media, (media) => placeholderMids.has(getMidString(media.mid!)));
+			}
 			mungedSDP = write(sdpParsed);
 		}
 		await this.setMungedSDP(sd, mungedSDP, true);
+
+		if (this.pendingCandidates.length > 0) {
+			this.iceLog.debug('flushing queued ICE candidates', {
+				count: this.pendingCandidates.length,
+			});
+		}
 		this.pendingCandidates.forEach((candidate) => {
 			this.pc.addIceCandidate(candidate);
 		});
 		this.pendingCandidates = [];
 		this.restartingIce = false;
+
+		if (sd.type === 'answer') {
+			this.latestAcknowledgedOfferId = offerId;
+			this.emit(PCEvents.OfferAnswered, offerId);
+		}
+
 		if (this.renegotiate) {
 			this.renegotiate = false;
 			await this.createAndSendOffer();
@@ -207,35 +304,67 @@ export default class PCTransport extends EventEmitter {
 		}
 	}, debounceInterval);
 
+	async createInitialOffer() {
+		const unlock = await this.offerLock.lock();
+		try {
+			if (this.pc.signalingState !== 'stable') {
+				this.log.warn('signaling state is not stable, cannot create initial offer');
+				return;
+			}
+			const offerId = this.latestOfferId + 1;
+			this.latestOfferId = offerId;
+			this.applyVideoDecoderCodecExclusions();
+			const offer = await this.pc.createOffer();
+			this.pendingInitialOffer = {sdp: offer.sdp, type: offer.type};
+			const sdpParsed = parse(offer.sdp ?? '');
+			sdpParsed.media.forEach((media) => {
+				ensureIPAddrMatchVersion(media);
+			});
+			offer.sdp = write(sdpParsed);
+			return {offer, offerId};
+		} finally {
+			unlock();
+		}
+	}
+
 	async createAndSendOffer(options?: RTCOfferOptions) {
 		const unlock = await this.offerLock.lock();
+
 		try {
 			if (this.onOffer === undefined) {
 				return;
 			}
+
 			if (options?.iceRestart) {
-				this.log.debug('restarting ICE', this.logContext);
+				this.iceLog.debug('restarting ICE');
 				this.restartingIce = true;
 			}
-			if (this._pc && this._pc.signalingState === 'have-local-offer') {
+
+			if (this._pc && (this._pc.signalingState === 'have-local-offer' || this.pendingInitialOffer)) {
 				const currentSD = this._pc.remoteDescription;
 				if (options?.iceRestart && currentSD) {
 					await this._pc.setRemoteDescription(currentSD);
+				} else if (options?.iceRestart) {
+					throw new NegotiationError(
+						'ICE restart requested without a remote description, peer connection must be recreated',
+					);
 				} else {
 					this.renegotiate = true;
-					this.log.debug('requesting renegotiation', {...this.logContext});
+					this.log.debug('requesting renegotiation');
 					return;
 				}
 			} else if (!this._pc || this._pc.signalingState === 'closed') {
-				this.log.warn('could not createOffer with closed peer connection', this.logContext);
+				this.log.warn('could not createOffer with closed peer connection');
 				return;
 			}
-			this.log.debug('starting to negotiate', this.logContext);
+
+			this.log.debug('starting to negotiate');
 			const offerId = this.latestOfferId + 1;
 			this.latestOfferId = offerId;
 			this.applyVideoDecoderCodecExclusions();
 			const offer = await this.pc.createOffer(options);
-			this.log.debug('original offer', {sdp: offer.sdp, ...this.logContext});
+			this.log.debug('original offer', {sdp: offer.sdp});
+
 			const sdpParsed = parse(offer.sdp ?? '');
 			const stereoMids = collectStereoMids(this.trackBitrates, sdpParsed.media);
 			sdpParsed.media.forEach((media) => {
@@ -244,34 +373,35 @@ export default class PCTransport extends EventEmitter {
 					ensureAudioNackAndStereo(media, stereoMids, []);
 				} else if (media.type === 'video') {
 					this.trackBitrates.some((trackbr): boolean => {
-						if (!media.msid || !trackbr.cid || !media.msid.includes(trackbr.cid)) {
+						if (!trackbr.cid) {
 							return false;
 						}
-						let codecPayload = 0;
-						media.rtp.some((rtp): boolean => {
-							if (rtp.codec.toUpperCase() === trackbr.codec.toUpperCase()) {
-								codecPayload = rtp.payload;
-								return true;
-							}
+
+						const codecPayload = applyVideoStartBitrate(
+							media,
+							trackbr.cid,
+							trackbr.codec,
+							trackbr.maxbr,
+							trackbr.isScreenShare,
+						);
+						if (codecPayload === undefined) {
 							return false;
-						});
-						if (codecPayload === 0) {
-							return true;
 						}
-						if (isSVCCodec(trackbr.codec) && !isSafari()) {
-							this.ensureVideoDDExtensionForSVC(media, sdpParsed);
+
+						if (codecPayload > 0 && isSVCCodec(trackbr.codec) && !isSafari()) {
+							this.ddExtID = ensureVideoDDExtension(media, sdpParsed, this.ddExtID);
 						}
-						if (trackbr.maxbr <= 0) {
-							return true;
-						}
-						appendStartBitrateToFmtp(media, codecPayload, Math.round(trackbr.maxbr * startBitrateFraction));
+
 						return true;
 					});
 				}
 			});
+			const placeholderMids = this.getPlaceholderMids();
+			if (placeholderMids.size > 0) {
+				conformBundledCodecFmtp(sdpParsed.media, (media) => placeholderMids.has(getMidString(media.mid!)));
+			}
 			if (this.latestOfferId > offerId) {
 				this.log.warn('latestOfferId mismatch', {
-					...this.logContext,
 					latestOfferId: this.latestOfferId,
 					offerId,
 				});
@@ -316,9 +446,13 @@ export default class PCTransport extends EventEmitter {
 			try {
 				transceiver.setCodecPreferences(allowed);
 			} catch (e) {
-				this.log.warn('failed to set subscriber codec preferences', {...this.logContext, error: e});
+				this.log.warn('failed to set subscriber codec preferences', {error: e});
 			}
 		}
+	}
+
+	private getPlaceholderMids(): Set<string> {
+		return placeholderMidsFromTransceivers(this._pc?.getTransceivers() ?? []);
 	}
 
 	createDataChannel(label: string, dataChannelDict: RTCDataChannelInit) {
@@ -397,7 +531,11 @@ export default class PCTransport extends EventEmitter {
 	}
 
 	getStats() {
-		return this.pc.getStats();
+		return this._pc?.getStats();
+	}
+
+	getMaxMessageSize() {
+		return this._pc?.sctp?.maxMessageSize;
 	}
 
 	async getConnectedAddress(): Promise<string | undefined> {
@@ -425,6 +563,7 @@ export default class PCTransport extends EventEmitter {
 				default:
 			}
 		});
+
 		if (selectedCandidatePairId === '') {
 			return undefined;
 		}
@@ -439,6 +578,8 @@ export default class PCTransport extends EventEmitter {
 		if (!this._pc) {
 			return;
 		}
+		this.log.debug('closing peer connection');
+		this.pendingInitialOffer = undefined;
 		this._pc.close();
 		this._pc.onconnectionstatechange = null;
 		this._pc.oniceconnectionstatechange = null;
@@ -455,11 +596,11 @@ export default class PCTransport extends EventEmitter {
 	};
 
 	private async setMungedSDP(sd: RTCSessionDescriptionInit, munged?: string, remote?: boolean) {
+		const originalSdp = sd.sdp;
 		if (munged) {
-			const originalSdp = sd.sdp;
 			sd.sdp = munged;
 			try {
-				this.log.debug(`setting munged ${remote ? 'remote' : 'local'} description`, this.logContext);
+				this.log.debug(`setting munged ${remote ? 'remote' : 'local'} description`);
 				if (remote) {
 					await this.pc.setRemoteDescription(sd);
 				} else {
@@ -468,18 +609,19 @@ export default class PCTransport extends EventEmitter {
 				return;
 			} catch (e) {
 				this.log.warn(`not able to set ${sd.type}, falling back to unmodified sdp`, {
-					...this.logContext,
 					error: e,
-					sdp: munged,
+					mungedSdp: munged,
+					originalSdp,
 				});
 				sd.sdp = originalSdp;
 			}
 		}
+
 		try {
 			if (remote) {
-				await this.pc.setRemoteDescription(sd);
+				await this._pc?.setRemoteDescription(sd);
 			} else {
-				await this.pc.setLocalDescription(sd);
+				await this._pc?.setLocalDescription(sd);
 			}
 		} catch (e) {
 			let msg = 'unknown error';
@@ -488,58 +630,92 @@ export default class PCTransport extends EventEmitter {
 			} else if (typeof e === 'string') {
 				msg = e;
 			}
+
 			const fields: {
 				error: string;
 				sdp?: string;
+				mungedSdp?: string;
 				remoteSdp?: RTCSessionDescription | null;
 			} = {
 				error: msg,
 				sdp: sd.sdp,
 			};
+			if (munged && munged !== originalSdp) {
+				fields.mungedSdp = munged;
+			}
 			if (!remote && this.pc.remoteDescription) {
 				fields.remoteSdp = this.pc.remoteDescription;
 			}
-			this.log.error(`unable to set ${sd.type}`, {...this.logContext, fields});
+			this.log.error(`unable to set ${sd.type}`, {fields});
 			throw new NegotiationError(msg);
 		}
 	}
+}
 
-	private ensureVideoDDExtensionForSVC(
-		media: {
-			type: string;
-			port: number;
-			protocol: string;
-			payloads?: string | undefined;
-		} & MediaDescription,
-		sdp: SessionDescription,
-	) {
-		const ddFound = media.ext?.some((ext): boolean => {
-			if (ext.uri === ddExtensionURI) {
-				return true;
-			}
-			return false;
+export function ensureVideoDDExtension(
+	media: {
+		type: string;
+		port: number;
+		protocol: string;
+		payloads?: string | undefined;
+	} & MediaDescription,
+	sdp: SessionDescription,
+	ddExtID: number,
+): number {
+	const id = ddExtensionIDFor(sdp, ddExtID);
+	if (id === undefined) {
+		return ddExtID;
+	}
+
+	if (!media.ext?.some((ext) => ext.uri === ddExtensionURI)) {
+		media.ext ??= [];
+		media.ext.push({
+			value: id,
+			uri: ddExtensionURI,
 		});
-		if (!ddFound) {
-			if (this.ddExtID === 0) {
-				let maxID = 0;
-				sdp.media.forEach((m) => {
-					if (m.type !== 'video') {
-						return;
-					}
-					m.ext?.forEach((ext) => {
-						if (ext.value > maxID) {
-							maxID = ext.value;
-						}
-					});
-				});
-				this.ddExtID = maxID + 1;
-			}
-			media.ext?.push({
-				value: this.ddExtID,
-				uri: ddExtensionURI,
-			});
+	}
+	return id;
+}
+
+function ddExtensionIDFor(sdp: SessionDescription, cachedID: number): number | undefined {
+	const mapped = mappedExtensionID(sdp, ddExtensionURI);
+	if (mapped !== undefined) {
+		return usedForOtherURI(sdp, mapped, ddExtensionURI) ? undefined : mapped;
+	}
+	if (cachedID !== 0 && !usedForOtherURI(sdp, cachedID, ddExtensionURI)) {
+		return cachedID;
+	}
+	return unusedExtensionID(sdp);
+}
+
+function mappedExtensionID(sdp: SessionDescription, uri: string): number | undefined {
+	for (const media of sdp.media) {
+		const ext = media.ext?.find((candidate) => candidate.uri === uri);
+		if (ext) {
+			return ext.value;
 		}
 	}
+	return undefined;
+}
+
+function usedForOtherURI(sdp: SessionDescription, id: number, uri: string): boolean {
+	return sdp.media.some((media) => media.ext?.some((ext) => ext.value === id && ext.uri !== uri));
+}
+
+function unusedExtensionID(sdp: SessionDescription): number {
+	let maxID = 0;
+	sdp.media.forEach((media) => {
+		media.ext?.forEach((ext) => {
+			if (ext.value > maxID) {
+				maxID = ext.value;
+			}
+		});
+	});
+	return maxID + 1 === 15 ? 16 : maxID + 1;
+}
+
+export function fmtpConfigHasParam(config: string, param: string): boolean {
+	return config.split(';').some((entry) => entry.trim() === param);
 }
 
 function getCodecPayload(media: MediaDescription, codec: string): number {
@@ -626,6 +802,7 @@ export function ensureAudioNackAndStereo(
 		if (!media.rtcpFb) {
 			media.rtcpFb = [];
 		}
+
 		if (nackMids.includes(mid) && !media.rtcpFb.some((fb) => fb.payload === opusPayload && fb.type === 'nack')) {
 			media.rtcpFb.push({
 				payload: opusPayload,
@@ -661,7 +838,51 @@ export function collectStereoMids(
 	return stereoMids;
 }
 
-function extractStereoAndNackAudioFromOffer(offer: RTCSessionDescriptionInit): {
+export function placeholderMidsFromTransceivers(transceivers: ReadonlyArray<RTCRtpTransceiver>): Set<string> {
+	const mids = new Set<string>();
+	for (const transceiver of transceivers) {
+		if (transceiver.mid && !transceiver.sender.track) {
+			mids.add(transceiver.mid);
+		}
+	}
+	return mids;
+}
+
+export function conformBundledCodecFmtp(
+	media: Array<MediaDescription>,
+	isPlaceholder: (media: MediaDescription) => boolean,
+) {
+	const canonicalByPayload = new Map<number, string>();
+	const fromRealSection = new Set<number>();
+	for (const m of media) {
+		const placeholder = isPlaceholder(m);
+		for (const fmtp of m.fmtp ?? []) {
+			if (!placeholder) {
+				canonicalByPayload.set(fmtp.payload, fmtp.config);
+				fromRealSection.add(fmtp.payload);
+			} else if (!canonicalByPayload.has(fmtp.payload)) {
+				canonicalByPayload.set(fmtp.payload, fmtp.config);
+			}
+		}
+	}
+	if (canonicalByPayload.size === 0) {
+		return;
+	}
+
+	for (const m of media) {
+		if (!isPlaceholder(m)) {
+			continue;
+		}
+		for (const fmtp of m.fmtp ?? []) {
+			const config = canonicalByPayload.get(fmtp.payload);
+			if (config !== undefined && fmtp.config !== config) {
+				fmtp.config = config;
+			}
+		}
+	}
+}
+
+export function extractStereoAndNackAudioFromOffer(offer: RTCSessionDescriptionInit): {
 	stereoMids: Array<string>;
 	nackMids: Array<string>;
 } {
@@ -673,18 +894,20 @@ function extractStereoAndNackAudioFromOffer(offer: RTCSessionDescriptionInit): {
 		const mid = getMidString(media.mid!);
 		if (media.type === 'audio') {
 			media.rtp.some((rtp): boolean => {
-				if (rtp.codec === 'opus') {
+				if (rtp.codec.toLowerCase() === 'opus') {
 					opusPayload = rtp.payload;
 					return true;
 				}
 				return false;
 			});
+
 			if (media.rtcpFb?.some((fb) => fb.payload === opusPayload && fb.type === 'nack')) {
 				nackMids.push(mid);
 			}
+
 			media.fmtp.some((fmtp): boolean => {
 				if (fmtp.payload === opusPayload) {
-					if (fmtp.config.includes('sprop-stereo=1')) {
+					if (fmtpConfigHasParam(fmtp.config, 'sprop-stereo=1')) {
 						stereoMids.push(mid);
 					}
 					return true;
@@ -709,3 +932,10 @@ function ensureIPAddrMatchVersion(media: MediaDescription) {
 function getMidString(mid: string | number) {
 	return typeof mid === 'number' ? mid.toFixed(0) : mid;
 }
+
+type PCTransportEventCallbacks = {
+	negotiationStarted: () => void;
+	negotiationComplete: () => void;
+	offerAnswered: (offerId: number) => void;
+	rtpVideoPayloadTypes: (attributes: MediaAttributes['rtp']) => void;
+};

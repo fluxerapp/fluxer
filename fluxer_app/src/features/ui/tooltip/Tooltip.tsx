@@ -643,7 +643,7 @@ export const Tooltip = observer(
 		useEffect(() => {
 			if (!openOnMountHover || !hasChild || mobileLayout.enabled || isDisabled) return;
 			const target = targetRef.current;
-			if (!target || !target.matches(':hover')) return;
+			if (!target?.matches(':hover')) return;
 			beginVisibilityDriver('hover');
 		}, [beginVisibilityDriver, hasChild, isDisabled, mobileLayout.enabled, openOnMountHover]);
 		useEffect(() => {
@@ -679,7 +679,7 @@ export const Tooltip = observer(
 			let frameId: number | null = null;
 			const verifyTargetHover = () => {
 				const target = targetRef.current;
-				if (!target || !target.matches(':hover')) {
+				if (!target?.matches(':hover')) {
 					endVisibilityDriver('hover');
 					frameId = null;
 					return;

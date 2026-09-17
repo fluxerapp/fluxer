@@ -8,7 +8,7 @@ import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {sendSystemDm} from '@app/api/worker/tasks/SendSystemDm';
 import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
 import {WorkerRunner} from '@app/api/worker/WorkerRunner';
-import type {JsMsg} from 'nats';
+import type {JsMsg} from '@nats-io/jetstream';
 import {afterEach, beforeAll, describe, expect, it, vi} from 'vitest';
 
 const TASK_TYPE = 'sendSystemDm';

@@ -519,7 +519,7 @@ function scoreUserAgent(signals: RiskSignals): Array<ScoreContribution> {
 
 function scoreGeoLocale(signals: RiskSignals): Array<ScoreContribution> {
 	const geo = signals.localeGeoMatch;
-	if (!geo || !geo.mismatchDetected) return [];
+	if (!geo?.mismatchDetected) return [];
 	return [
 		{
 			rule: RULE.geoMismatch,
@@ -606,7 +606,7 @@ function applySharedConnectionDampener(
 
 function scoreTiming(signals: RiskSignals): Array<ScoreContribution> {
 	const timing = signals.registrationTiming;
-	if (!timing || !timing.isSuspiciousHour) return [];
+	if (!timing?.isSuspiciousHour) return [];
 	return [
 		{
 			rule: RULE.suspiciousHour,

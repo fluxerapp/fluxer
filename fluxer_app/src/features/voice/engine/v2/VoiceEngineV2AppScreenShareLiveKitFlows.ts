@@ -689,7 +689,7 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 			return false;
 		}
 		const participant = room?.localParticipant;
-		if (!participant || !participant.isScreenShareEnabled) {
+		if (!room || !participant?.isScreenShareEnabled) {
 			logger.warn('No active screen share to replace');
 			return false;
 		}
@@ -733,7 +733,7 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 			return false;
 		}
 		const participant = room?.localParticipant;
-		if (!participant || !participant.isScreenShareEnabled) {
+		if (!room || !participant?.isScreenShareEnabled) {
 			logger.warn('No active screen share to replace');
 			return false;
 		}
@@ -772,7 +772,7 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 			return false;
 		}
 		const participant = room?.localParticipant;
-		if (!room || !participant || !participant.isScreenShareEnabled) {
+		if (!room || !participant?.isScreenShareEnabled) {
 			logger.warn('No active screen share to republish');
 			return false;
 		}
@@ -892,7 +892,7 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 		const sourceVideoTrack =
 			screenShareTrack.mediaStream?.getVideoTracks()[0] ??
 			(videoHadProcessor ? undefined : screenShareTrack.mediaStreamTrack);
-		if (!sourceVideoTrack || sourceVideoTrack.readyState !== 'live') {
+		if (sourceVideoTrack?.readyState !== 'live') {
 			throw new Error('Active screen share has no live source video track to preserve');
 		}
 		const audioPublications = getLocalScreenShareAudioPublications(participant);

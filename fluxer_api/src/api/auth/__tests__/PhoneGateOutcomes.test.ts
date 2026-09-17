@@ -135,19 +135,14 @@ describe('reject reasons reaching the caller through the real gate', () => {
 			REJECT_REASON_CODES.invalid_number,
 		);
 	});
-	it.each([
-		'landline',
-		'tollFree',
-		'premium',
-		'sharedCost',
-		'uan',
-		'voicemail',
-		'pager',
-	] as const)('line_type_hard_rejected for %s says it is not a mobile', async (lineType) => {
-		expect(await codeFromVerify(MOBILE_US, {lookupResult: lookup({lineType})})).toBe(
-			REJECT_REASON_CODES.line_type_hard_rejected,
-		);
-	});
+	it.each(['landline', 'tollFree', 'premium', 'sharedCost', 'uan', 'voicemail', 'pager'] as const)(
+		'line_type_hard_rejected for %s says it is not a mobile',
+		async (lineType) => {
+			expect(await codeFromVerify(MOBILE_US, {lookupResult: lookup({lineType})})).toBe(
+				REJECT_REASON_CODES.line_type_hard_rejected,
+			);
+		},
+	);
 	it('sms_pumping_risk_high routes to human review', async () => {
 		expect(await codeFromVerify(MOBILE_US, {lookupResult: lookup({smsPumpingRiskScore: 100})})).toBe(
 			REJECT_REASON_CODES.sms_pumping_risk_high,

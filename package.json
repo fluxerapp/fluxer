@@ -57,5 +57,5 @@
 		"typescript-eslint": "catalog:",
 		"vite": "catalog:"
 	},
-	"packageManager": "pnpm@10.29.3"
+	"packageManager": "pnpm@12.4.2"
 }

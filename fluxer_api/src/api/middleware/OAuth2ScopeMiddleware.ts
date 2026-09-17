@@ -18,7 +18,7 @@ function ensureBearerScope(ctx: Context<HonoEnv>, scope: OAuth2Scope, mode: OAut
 		return false;
 	}
 	const oauthScopes = ctx.get('oauthBearerScopes');
-	if (!oauthScopes || !oauthScopes.has(scope)) {
+	if (!oauthScopes?.has(scope)) {
 		throw new MissingOAuthScopeError(scope);
 	}
 	return true;

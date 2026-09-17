@@ -4,7 +4,7 @@ import type {MarkdownParseOptions} from '@app/features/messaging/components/mark
 import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
 import {parseMarkdownContent as parse} from '@app/features/messaging/utils/markdown/MarkdownParseCache';
 import type {Node} from '@app/features/messaging/utils/markdown/parser/Nodes';
-import {bench, describe} from 'vitest';
+import {test} from 'vitest';
 
 const SIMPLE_CONTENT = 'hello **world** with <@1234567890> and https://fluxer.app';
 const RICH_CONTENT = [
@@ -30,25 +30,25 @@ const SIMPLE_AST = parse({content: SIMPLE_CONTENT, context: MarkdownContext.STAN
 const RICH_AST = parse({content: RICH_CONTENT, context: MarkdownContext.STANDARD_WITHOUT_JUMBO}).nodes;
 let missSerial = 0;
 
-describe('Markdown rendering benchmarks', () => {
-	bench('parse cache hit for simple message content', () => {
+test('Markdown rendering benchmarks', async ({bench}) => {
+	await bench('parse cache hit for simple message content', () => {
 		parse({content: SIMPLE_CONTENT, context: MarkdownContext.STANDARD_WITHOUT_JUMBO});
-	});
+	}).run();
 
-	bench('parse cache miss for rich message content', () => {
+	await bench('parse cache miss for rich message content', () => {
 		missSerial += 1;
 		parse({content: `${RICH_CONTENT}\n${missSerial}`, context: MarkdownContext.STANDARD_WITHOUT_JUMBO});
-	});
+	}).run();
 
-	bench('render simple parsed markdown AST to React nodes', () => {
+	await bench('render simple parsed markdown AST to React nodes', () => {
 		let count = 0;
 		for (const node of SIMPLE_AST) {
 			count += node.type.length;
 		}
 		(globalThis as {__markdownRenderBenchSink?: number}).__markdownRenderBenchSink = count + RENDER_OPTIONS.context;
-	});
+	}).run();
 
-	bench('walk rich parsed markdown AST for render preparation', () => {
+	await bench('walk rich parsed markdown AST for render preparation', () => {
 		let count = 0;
 		const stack = [...RICH_AST];
 		while (stack.length > 0) {
@@ -62,5 +62,5 @@ describe('Markdown rendering benchmarks', () => {
 			}
 		}
 		(globalThis as {__markdownRenderBenchSink?: number}).__markdownRenderBenchSink = count + RENDER_OPTIONS.context;
-	});
+	}).run();
 });

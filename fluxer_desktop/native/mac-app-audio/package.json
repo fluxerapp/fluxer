@@ -31,6 +31,6 @@
 		]
 	},
 	"devDependencies": {
-		"vitest": "^2.1.0"
+		"vitest": "catalog:"
 	}
 }

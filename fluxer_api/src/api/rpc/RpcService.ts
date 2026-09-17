@@ -958,7 +958,7 @@ export class RpcService {
 		const loadUserDataStartedAtNs = startRpcTiming();
 		const userData = await this.getUserData({userId, includePrivateChannels: true, timingSteps: loadUserDataSteps});
 		timings.record('load_user_data', loadUserDataStartedAtNs, loadUserDataSteps);
-		if (!userData || !userData.user) {
+		if (!userData?.user) {
 			Logger.warn(
 				{
 					tokenType,

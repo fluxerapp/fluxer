@@ -295,6 +295,7 @@ export class KVClient implements IKVProvider {
 				connectTimeout: this.timeoutMs,
 				commandTimeout: this.timeoutMs,
 				maxRetriesPerRequest: 1,
+				protocol: 2,
 				retryStrategy: createRetryStrategy(),
 			});
 		}
@@ -311,6 +312,7 @@ export class KVClient implements IKVProvider {
 				connectTimeout: clusterConfig.timeoutMs,
 				commandTimeout: clusterConfig.timeoutMs,
 				maxRetriesPerRequest: 1,
+				protocol: 2,
 			},
 			scaleReads: 'master',
 			...(hasNatMap ? {natMap} : {}),

@@ -99,7 +99,7 @@ function createRoomServiceClient(endpoint: string, apiKey: string, apiSecret: st
 	const httpUrl = toHttpUrl(endpoint);
 	const parsed = new URL(httpUrl);
 	const pathPrefix = parsed.pathname.replace(/\/+$/, '');
-	const client = new RoomServiceClient(parsed.origin, apiKey, apiSecret);
+	const client = new RoomServiceClient(parsed.origin, apiKey, apiSecret, {requestTimeout: 60});
 	if (pathPrefix) {
 		const rpc = Reflect.get(client, 'rpc');
 		if (rpc != null && typeof rpc === 'object' && 'prefix' in rpc) {

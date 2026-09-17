@@ -54,9 +54,9 @@ fn generate_admin_api(manifest_dir: &Path, out_dir: &Path) {
         .generate_tokens(&spec)
         .expect("failed to generate admin API client");
 
-    let content = prettyplease::unparse(
+    let content = relax_required_nullable_fields(&prettyplease::unparse(
         &syn::parse2::<syn::File>(tokens).expect("failed to parse generated tokens"),
-    );
+    ));
 
     let output_path = out_dir.join("admin_api_generated.rs");
     fs::write(&output_path, content).expect("failed to write generated API code");
@@ -189,6 +189,16 @@ fn object_schema_mut<'a>(
 }
 
 const MAX_SCHEMA_REFERENCE_DEPTH: usize = 32;
+
+fn relax_required_nullable_fields(generated: &str) -> String {
+    const PRESENCE_CHECK: &str =
+        "#[serde(deserialize_with = \"::std::option::Option::deserialize\")]";
+    generated
+        .lines()
+        .filter(|line| line.trim() != PRESENCE_CHECK)
+        .flat_map(|line| [line, "\n"])
+        .collect()
+}
 
 fn relax_progenitor_schema_strictness(spec: &mut openapiv3::OpenAPI) {
     let registry = spec.components.clone().unwrap_or_default();

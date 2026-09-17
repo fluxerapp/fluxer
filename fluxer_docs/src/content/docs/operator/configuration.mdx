@@ -1723,7 +1723,7 @@ The stack runs its containers on one Docker bridge network, which is private to 
 
 | Service | Image | What it does |
 | --- | --- | --- |
-| edge | caddy:2.10-alpine | TLS and path routing, the only HTTP entry point |
+| edge | caddy:2.11-alpine | TLS and path routing, the only HTTP entry point |
 | app-proxy | fluxer-app-proxy-self-hosted | Serves the web client and builds its CSP header |
 | static-proxy | fluxer-static | Serves the static asset bundle |
 | api | fluxer-api | The HTTP API |
@@ -1737,11 +1737,11 @@ The stack runs its containers on one Docker bridge network, which is private to 
 | gifs, gifs-shard | fluxer-gifs | GIF provider access |
 | unfurl, unfurl-shard | fluxer-unfurl | Link unfurling |
 | postgres | postgres:16-alpine | The database |
-| valkey | valkey/valkey:8.1-alpine | The key-value store and pub/sub bus, and the deletion queues |
+| valkey | valkey/valkey:9.1-alpine | The key-value store and pub/sub bus, and the deletion queues |
 | nats | nats:2.14-alpine | Core messaging, and the JetStream streams holding queued background jobs |
-| meilisearch | getmeili/meilisearch:v1.12 | The search index |
-| seaweedfs | chrislusf/seaweedfs:4.34 | S3-compatible object storage |
-| seaweedfs-init | chrislusf/seaweedfs:4.34 | Creates the buckets and the S3 identity, then exits |
+| meilisearch | getmeili/meilisearch:v1.53 | The search index |
+| seaweedfs | chrislusf/seaweedfs:4.47 | S3-compatible object storage |
+| seaweedfs-init | chrislusf/seaweedfs:4.47 | Creates the buckets and the S3 identity, then exits |
 | livekit | livekit/livekit-server:v1.12.0 | Voice and video |
 
 The edge and LiveKit are the only services that publish ports. The edge publishes 80/tcp, 443/tcp, 443/udp, or one plain-HTTP port under the overlay. LiveKit publishes 7881/tcp and 7882/udp. Everything else is reachable only over the bridge network.

@@ -16,6 +16,7 @@ import {
 } from '@pkgs/http_client/src/HttpClientRequestInternals';
 import type {HttpClientMetrics, HttpClientTelemetry} from '@pkgs/http_client/src/HttpClientTelemetryTypes';
 import type {
+	FetchDispatcher,
 	HttpClient,
 	HttpClientFactoryOptions,
 	HttpMethod,
@@ -26,7 +27,6 @@ import type {
 	StreamResponse,
 } from '@pkgs/http_client/src/HttpClientTypes';
 import {HttpError} from '@pkgs/http_client/src/HttpError';
-import type {Dispatcher} from 'undici-types';
 
 const DEFAULT_SERVICE_NAME = 'unknown';
 
@@ -79,7 +79,7 @@ function createFetchInit(
 	headers: Headers,
 	body: string | undefined,
 	signal: AbortSignal,
-	dispatcher: Dispatcher | undefined,
+	dispatcher: FetchDispatcher | undefined,
 ): RequestInit {
 	return {
 		method,

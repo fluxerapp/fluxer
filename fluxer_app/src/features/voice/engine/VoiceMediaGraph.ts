@@ -824,7 +824,7 @@ function subscribeToVoiceMediaGraphPublication<TFailure extends VoiceMediaGraphF
 	});
 	const commands = observerReplacementCommands(event, existing?.observedElement ?? null, event.observedElement);
 	if (event.hasPublication) {
-		if (!existing || !existing.publicationAvailable) {
+		if (!existing?.publicationAvailable) {
 			commands.push(subscribePublicationCommand(event, nextEntry));
 		} else {
 			const commandTarget = voiceMediaGraphSubscriptionCommandTarget(event);
@@ -993,7 +993,7 @@ function markVoiceMediaGraphSubscriptionPublicationMissing<TFailure extends Voic
 	target: VoiceMediaGraphSubscriptionTarget,
 ): VoiceMediaGraphSnapshot<TFailure> {
 	const entry = selectVoiceMediaGraphSubscriptionEntry(snapshot, target.participantIdentity, target.source);
-	if (!entry || !entry.publicationAvailable) return snapshot;
+	if (!entry?.publicationAvailable) return snapshot;
 	return setVoiceMediaGraphSubscriptionEntry(snapshot, updateSubscriptionAvailability(entry, false));
 }
 

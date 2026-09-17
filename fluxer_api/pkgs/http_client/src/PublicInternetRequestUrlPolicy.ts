@@ -5,10 +5,13 @@ import dns from 'node:dns';
 import type {LookupFunction} from 'node:net';
 import {BlockList, isIP} from 'node:net';
 import {formatUrlForDiagnostics} from '@pkgs/http_client/src/HttpClientDiagnostics';
-import type {RequestUrlPolicy, RequestUrlValidationContext} from '@pkgs/http_client/src/HttpClientTypes';
+import type {
+	FetchDispatcher,
+	RequestUrlPolicy,
+	RequestUrlValidationContext,
+} from '@pkgs/http_client/src/HttpClientTypes';
 import {HttpError} from '@pkgs/http_client/src/HttpError';
-import {Agent} from 'undici';
-import type {Dispatcher} from 'undici-types';
+import {Agent, Dispatcher1Wrapper} from 'undici';
 
 const DEFAULT_DNS_CACHE_TTL_MS = 60000;
 const DNS_CACHE_MAX_ENTRIES = 10000;
@@ -223,7 +226,7 @@ async function defaultLookupHost(hostname: string): Promise<Array<string>> {
 	return addresses.map((addressEntry) => addressEntry.address);
 }
 
-function createBlocklistDispatcher(allowPrivateAddresses: boolean): Dispatcher {
+function createBlocklistDispatcher(allowPrivateAddresses: boolean): FetchDispatcher {
 	const lookup: LookupFunction = (hostname, options, callback) => {
 		dns.lookup(hostname, {...options, all: true, order: options.order ?? 'verbatim'}, (error, addresses) => {
 			if (error) {
@@ -246,15 +249,18 @@ function createBlocklistDispatcher(allowPrivateAddresses: boolean): Dispatcher {
 			callback(null, primary.address, primary.family);
 		});
 	};
-	return new Agent({
-		connect: {
-			lookup,
-		},
-	}) as unknown as Dispatcher;
+	return new Dispatcher1Wrapper(
+		new Agent({
+			allowH2: false,
+			connect: {
+				lookup,
+			},
+		}),
+	) as unknown as FetchDispatcher;
 }
 
 interface PublicInternetRequestUrlPolicy extends RequestUrlPolicy {
-	readonly dispatcher: Dispatcher;
+	readonly dispatcher: FetchDispatcher;
 }
 
 export function createPublicInternetRequestUrlPolicy(

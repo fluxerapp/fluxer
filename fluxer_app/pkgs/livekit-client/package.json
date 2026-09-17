@@ -1,6 +1,6 @@
 {
 	"name": "livekit-client",
-	"version": "2.17.2",
+	"version": "2.22.3",
 	"private": true,
 	"type": "module",
 	"exports": {
@@ -14,18 +14,18 @@
 	},
 	"dependencies": {
 		"@livekit/mutex": "1.1.1",
-		"@livekit/protocol": "1.42.2",
+		"@livekit/protocol": "1.51.0",
 		"events": "^3.3.0",
 		"jose": "^6.1.0",
 		"loglevel": "^1.9.2",
+		"machina": "^7.0.1",
 		"sdp-transform": "^2.15.0",
-		"ts-debounce": "^4.0.0",
 		"typed-emitter": "^2.1.0",
-		"webrtc-adapter": "^9.0.1"
+		"webrtc-adapter": "^9.0.6"
 	},
 	"devDependencies": {
 		"@types/events": "^3.0.0",
-		"@types/sdp-transform": "^2.4.9",
+		"@types/sdp-transform": "^2.15.0",
 		"vitest": "catalog:"
 	}
 }

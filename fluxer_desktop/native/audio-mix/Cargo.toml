@@ -12,7 +12,7 @@ resolver = "2"
 crate-type = ["rlib"]
 
 [dependencies]
-rtrb = "0.3"
+rtrb = "0.4"
 fluxer_rt_thread = {path = "../rt-thread"}
 
 [dev-dependencies]

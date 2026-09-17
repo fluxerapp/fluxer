@@ -608,7 +608,7 @@ const ComposerInner = ({
 			}),
 			editor.registerCommand(
 				KEY_ARROW_UP_COMMAND,
-				(event: KeyboardEvent | null) => {
+				(event: KeyboardEvent) => {
 					if (typeaheadActiveState.current) {
 						return false;
 					}
@@ -662,7 +662,7 @@ const ComposerInner = ({
 			const target = event.target instanceof Element ? event.target : null;
 			const root = editor.getRootElement();
 			const slotHost = target == null ? null : target.closest<HTMLElement>('[data-lexical-composer-slot]');
-			if (slotHost != null && root != null && root.contains(slotHost)) {
+			if (slotHost && root?.contains(slotHost)) {
 				let emptySlot = false;
 				editor.getEditorState().read(
 					() => {

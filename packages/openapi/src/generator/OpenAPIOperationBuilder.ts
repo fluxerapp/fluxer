@@ -142,7 +142,7 @@ export class OpenAPIOperationBuilder {
 			const location = validator.target === 'param' ? 'path' : validator.target;
 			const schemaName = validator.schemaName;
 			const schema = this.schemaRegistry.get(schemaName);
-			if (!schema || schema.type !== 'object' || !schema.properties) {
+			if (schema?.type !== 'object' || !schema.properties) {
 				throw new Error(`Parameter schema must be an object: ${schemaName}`);
 			}
 			const required = new Set(schema.required ?? []);

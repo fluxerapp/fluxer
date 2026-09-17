@@ -10,11 +10,11 @@
 		"test": "vitest run",
 		"test:coverage": "vitest run --coverage",
 		"test:watch": "vitest",
-		"typecheck": "tsgo --noEmit",
+		"typecheck": "tsc --noEmit",
 		"generate": "cd proto && buf generate && ../../../tools/ci/run.sh clean-schema-generated-files --root ../src/gen && cd .. && pnpm exec biome check --write --unsafe --no-errors-on-unmatched src/gen"
 	},
 	"dependencies": {
-		"@bufbuild/protobuf": "^2.12.0",
+		"@bufbuild/protobuf": "^2.15.0",
 		"@fluxer/constants": "workspace:*",
 		"@simplewebauthn/server": "catalog:",
 		"emoji-regex": "catalog:",
@@ -23,11 +23,11 @@
 		"zod": "catalog:"
 	},
 	"devDependencies": {
-		"@bufbuild/buf": "^1.69.0",
-		"@bufbuild/protoc-gen-es": "^2.12.0",
+		"@bufbuild/buf": "^1.73.0",
+		"@bufbuild/protoc-gen-es": "^2.15.0",
 		"@types/node": "catalog:",
 		"@types/validator": "catalog:",
-		"@typescript/native-preview": "catalog:",
+		"typescript": "catalog:ts7",
 		"vitest": "catalog:"
 	}
 }

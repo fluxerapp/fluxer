@@ -95,8 +95,8 @@ impl AdminApiClient {
         remove_flags: &[String],
     ) -> ApiResult<AdminUser> {
         let body = generated_types::AdminUserFlagsUpdateRequest {
-            add_flags: user_flags(add_flags),
-            remove_flags: user_flags(remove_flags),
+            add_flags: user_flags(add_flags)?,
+            remove_flags: user_flags(remove_flags)?,
         };
         let response = self
             .generated()
@@ -567,11 +567,13 @@ fn bool_param(value: bool) -> &'static str {
     if value { "true" } else { "false" }
 }
 
-fn user_flags(values: &[String]) -> Vec<generated_types::UserFlags> {
+fn user_flags(values: &[String]) -> ApiResult<Vec<generated_types::UserFlags>> {
     values
         .iter()
-        .cloned()
-        .map(generated_types::UserFlags::from)
+        .map(|value| {
+            generated_types::UserFlags::try_from(value.as_str())
+                .map_err(|error| ApiError::Parse(error.to_string()))
+        })
         .collect()
 }
 

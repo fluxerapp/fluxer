@@ -74,7 +74,7 @@ function formatTransportSummary(transport: VoiceEngineV2TransportInfo | null): s
 }
 
 export function formatResolution(track: VoiceEngineV2PerTrackStats | null): string {
-	if (!track || !track.frameWidth || !track.frameHeight) return 'n/a';
+	if (!track?.frameWidth || !track.frameHeight) return 'n/a';
 	return `${track.frameWidth}x${track.frameHeight}`;
 }
 

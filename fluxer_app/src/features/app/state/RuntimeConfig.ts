@@ -26,6 +26,8 @@ import type {InstanceConfigResponse} from '@fluxer/schema/src/domains/admin/Admi
 import {makeAutoObservable, reaction, runInAction} from 'mobx';
 
 export type {
+	GifProvider,
+	GifProviderInfo,
 	InstanceCaptcha,
 	InstanceCommunity,
 	InstanceDiscoveryResponse,
@@ -34,7 +36,6 @@ export type {
 	InstanceServices,
 	InstanceSsoConfig,
 };
-export type {GifProvider, GifProviderInfo};
 
 export interface RuntimeConfigSnapshot {
 	apiEndpoint: string;
