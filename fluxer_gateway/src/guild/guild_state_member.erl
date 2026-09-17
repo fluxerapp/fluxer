@@ -132,12 +132,8 @@ cleanup_removed_member_sessions(_UserId, State) ->
 
 -spec maybe_disconnect_removed_member(user_id() | undefined, guild_state()) -> guild_state().
 maybe_disconnect_removed_member(UserId, State) when is_integer(UserId), UserId > 0 ->
-    {reply, _Result, NewState} =
-        guild_voice_disconnect:disconnect_voice_user(
-            #{user_id => UserId, connection_id => null},
-            State
-        ),
-    NewState;
+    ok = guild_voice_lifecycle:cast_disconnect_voice_user(UserId, State),
+    State;
 maybe_disconnect_removed_member(_, State) ->
     State.
 

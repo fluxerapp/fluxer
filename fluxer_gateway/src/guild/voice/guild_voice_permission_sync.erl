@@ -29,7 +29,7 @@
 
 -spec sync_user_voice_permissions(user_id(), guild_state()) -> ok.
 sync_user_voice_permissions(UserId, State) ->
-    VoiceStates = voice_state_utils:voice_states(State),
+    VoiceStates = guild_voice_lifecycle:authoritative_voice_states(State),
     case state_guild_id(State) of
         undefined ->
             ok;
@@ -56,7 +56,7 @@ maybe_sync_user_voice_state(GuildId, UserId, VoiceState, State) ->
 
 -spec sync_all_voice_permissions_for_channel(channel_id(), guild_state()) -> ok.
 sync_all_voice_permissions_for_channel(ChannelId, State) ->
-    VoiceStates = voice_state_utils:voice_states(State),
+    VoiceStates = guild_voice_lifecycle:authoritative_voice_states(State),
     case state_guild_id(State) of
         undefined ->
             ok;
@@ -236,7 +236,7 @@ enforce_voice_permissions_in_livekit(
 
 -spec sync_users_with_role(integer(), guild_state()) -> ok.
 sync_users_with_role(RoleId, State) ->
-    VoiceStates = voice_state_utils:voice_states(State),
+    VoiceStates = guild_voice_lifecycle:authoritative_voice_states(State),
     case state_guild_id(State) of
         undefined ->
             ok;

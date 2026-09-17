@@ -232,6 +232,8 @@ handle_cast({store_pending_connection, ConnId, Meta}, State) ->
     Pending = maps:get(pending_voice_connections, State, #{}),
     NewPending = bounded_put(ConnId, Meta, Pending, ?MAX_PENDING_CONNECTIONS),
     {noreply, State#{pending_voice_connections => NewPending}};
+handle_cast({disconnect_voice_user, Request}, State) when is_map(Request) ->
+    {noreply, delegate_voice_cast(fun guild_voice:disconnect_voice_user/2, Request, State)};
 handle_cast({cleanup_virtual_access_for_user, UserId}, State) when is_integer(UserId) ->
     GS = guild_voice_server_state:build_guild_state(State),
     NewGS = guild_voice_disconnect:cleanup_virtual_channel_access_for_user(UserId, GS),
@@ -294,6 +296,13 @@ safe_lookup(Fun) ->
 -spec safe_lookup_match(term()) -> {ok, pid()} | {error, not_found}.
 safe_lookup_match({ok, Pid}) when is_pid(Pid) -> {ok, Pid};
 safe_lookup_match(_) -> {error, not_found}.
+
+-spec delegate_voice_cast(fun((map(), map()) -> {reply, term(), map()}), map(), server_state()) ->
+    server_state().
+delegate_voice_cast(Fun, Request, State) ->
+    GS = guild_voice_server_state:build_guild_state(State),
+    {reply, _Reply, NewGS} = Fun(Request, GS),
+    guild_voice_server_state:apply_guild_state(NewGS, State).
 
 -spec delegate_voice_call(fun((map(), map()) -> {reply, term(), map()}), map(), server_state()) ->
     {reply, term(), server_state()}.
@@ -432,6 +441,56 @@ enforce_map_cap(Map, MaxSize) ->
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
+
+disconnect_voice_user_cast_removes_the_voice_state_test() ->
+    Self = self(),
+    TestFun = fun(GId, ChId, UId, ConnId) ->
+        Self ! {force_disconnect, GId, ChId, UId, ConnId},
+        {ok, #{success => true}}
+    end,
+    GuildPid = spawn(fun() -> guild_state_reply_loop(TestFun) end),
+    State = #{
+        guild_id => 42,
+        guild_pid => GuildPid,
+        voice_states => #{
+            <<"conn">> => #{
+                <<"user_id">> => <<"5">>,
+                <<"guild_id">> => <<"42">>,
+                <<"channel_id">> => <<"20">>,
+                <<"connection_id">> => <<"conn">>
+            }
+        },
+        pending_voice_connections => #{},
+        recently_disconnected_voice_states => #{},
+        e2ee_room_keys => #{}
+    },
+    try
+        {noreply, NewState} = handle_cast(
+            {disconnect_voice_user, #{user_id => 5, connection_id => null}}, State
+        ),
+        ?assertEqual(#{}, maps:get(voice_states, NewState)),
+        receive
+            {force_disconnect, 42, 20, 5, <<"conn">>} -> ok
+        after 200 -> ?assert(false)
+        end
+    after
+        exit(GuildPid, kill)
+    end.
+
+guild_state_reply_loop(TestFun) ->
+    GuildState = #{
+        id => 42,
+        data => #{<<"guild">> => #{<<"owner_id">> => <<"999">>}},
+        sessions => #{},
+        test_force_disconnect_fun => TestFun
+    },
+    receive
+        {'$gen_call', From, {get_voice_guild_state}} ->
+            gen_server:reply(From, GuildState),
+            guild_state_reply_loop(TestFun);
+        _ ->
+            guild_state_reply_loop(TestFun)
+    end.
 
 apply_guild_state_preserves_e2ee_test() ->
     State = #{
