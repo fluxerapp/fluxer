@@ -86,7 +86,9 @@ export function UserAuthController(app: HonoApp) {
 		async (ctx) => {
 			const body = ctx.req.valid('json');
 			const user = ctx.get('user');
-			const sudoResult = await requireSudoMode(ctx, user, body);
+			const sudoBody =
+				body.mfa_method || !user.totpSecret ? body : {...body, mfa_method: 'totp' as const, mfa_code: body.code};
+			const sudoResult = await requireSudoMode(ctx, user, sudoBody);
 			await ctx.get('userAuthRequestService').disableTotp({user, data: body, sudoContext: sudoResult});
 			return ctx.body(null, 204);
 		},

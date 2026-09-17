@@ -77,6 +77,7 @@ export async function disableMfaTotp(ctx: ApiContext, {user, code, sudoContext}:
 	if (!user.totpSecret) throw new MfaNotEnabledError();
 	assertSudoVerifiedForMfa(user, sudoContext);
 	if (
+		sudoContext.method !== 'mfa' &&
 		!(await AuthMfa.verifyMfaCode(ctx, {
 			userId: user.id,
 			mfaSecret: user.totpSecret,

@@ -488,7 +488,9 @@ TOTP is enabled and 10 backup codes are issued. Any backup code the account alre
 
 <RouteHeader method="POST" path="/v1/users/@me/mfa/totp/disable" mfa />
 
-Disables TOTP for the current account and returns 204 with an empty body. [Sudo mode](#sudo-mode) is required in addition to this route's `code` field. Emits a [User Update](/gateway/events/#user-update) Gateway event.
+Disables TOTP for the current account and returns 204 with an empty body. [Sudo mode](#sudo-mode) is required. Emits a [User Update](/gateway/events/#user-update) Gateway event.
+
+Fluxer checks one authenticator code or backup code for each request. With a valid sudo token, it checks `code`. Without one, the sudo verification fields prove sudo mode when `mfa_method` is set, and Fluxer does not check `code`. Otherwise `code` proves sudo mode as if it were `mfa_code` with `mfa_method` set to `totp`, so the attempt draws on the TOTP allowance described under [sudo mode](#sudo-mode).
 
 TOTP must already be enabled, or the request is refused with 400 `TWO_FACTOR_REQUIRED`. A verified email is not required, so an account whose address later became unverified can still remove its authenticator.
 
@@ -500,7 +502,7 @@ The body extends the [sudo verification object](#sudo-verification-object) with 
 | --- | --- | --- |
 | code<sup>1</sup> | string | Current TOTP code or an unconsumed backup code (1-32 characters) |
 
-<sup>1</sup> A wrong value returns `INVALID_CODE` on the path `code`
+<sup>1</sup> A wrong value returns `INVALID_CODE` on the path `code` with a sudo token, and `INVALID_MFA_CODE` on the path `mfa_code` when `code` proves sudo mode
 
 :::caution[Backup codes do not survive TOTP removal]
 Disabling TOTP invalidates every backup code on the account, including the code that proved this request. An account that keeps a WebAuthn credential is left with none, and needs [List MFA backup codes](#list-mfa-backup-codes) with `regenerate` set to true to issue a new set.

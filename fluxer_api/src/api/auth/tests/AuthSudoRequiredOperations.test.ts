@@ -193,9 +193,9 @@ describe('Auth sudo required operations', () => {
 		await createBuilder(harness, account.token)
 			.post('/users/@me/mfa/totp/disable')
 			.body({
-				code: backupCode,
+				code: 'invalid-code',
 			})
-			.expect(403)
+			.expect(400, 'INVALID_FORM_BODY')
 			.execute();
 		await createBuilder(harness, account.token)
 			.post('/users/@me/mfa/totp/disable')

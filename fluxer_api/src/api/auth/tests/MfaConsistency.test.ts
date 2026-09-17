@@ -449,9 +449,9 @@ describe('MFA Consistency Tests', () => {
 			await createBuilder(harness, loggedIn.token)
 				.post('/users/@me/mfa/totp/disable')
 				.body({
-					code: backupCodes.backup_codes[0]!.code,
+					code: 'invalid-code',
 				})
-				.expect(403)
+				.expect(400, 'INVALID_FORM_BODY')
 				.execute();
 			await createBuilder(harness, loggedIn.token)
 				.post('/users/@me/mfa/totp/disable')
