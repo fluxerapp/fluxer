@@ -81,12 +81,29 @@ sweep_expired_pending_joins(State) ->
     voice_reply().
 handle_with_member(Context, UserId, State) ->
     VoiceStates = voice_state_utils:voice_states(State),
+    case is_targeted_disconnect(Context) of
+        true ->
+            handle_disconnect(Context, VoiceStates, State);
+        false ->
+            handle_member_lookup(Context, UserId, VoiceStates, State)
+    end.
+
+-spec handle_member_lookup(map(), integer(), voice_state_map(), guild_state()) ->
+    voice_reply().
+handle_member_lookup(Context, UserId, VoiceStates, State) ->
     case guild_voice_member:find_member_by_user_id(UserId, State) of
         undefined ->
             {reply, gateway_errors:error(voice_member_not_found), State};
         Member ->
             handle_member_voice(Context, Member, VoiceStates, State)
     end.
+
+-spec is_targeted_disconnect(map()) -> boolean().
+is_targeted_disconnect(Context) ->
+    maps:get(channel_id, Context, undefined) =:= null andalso
+        (maps:get(connection_id, Context, undefined) =/= undefined orelse
+            voice_state_utils:normalize_session_id(maps:get(session_id, Context, undefined)) =/=
+                undefined).
 
 -spec handle_member_voice(map(), map(), voice_state_map(), guild_state()) ->
     voice_reply().

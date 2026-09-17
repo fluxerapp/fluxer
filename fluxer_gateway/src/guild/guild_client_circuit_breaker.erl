@@ -136,8 +136,19 @@ update_circuit_state(GuildPid, Result, PrevState) ->
     end.
 
 -spec is_success_result(guild_client:voice_state_update_result()) -> boolean().
-is_success_result({ok, _}) -> true;
-is_success_result(_) -> false.
+is_success_result({ok, _}) ->
+    true;
+is_success_result({error, Category, _}) when
+    Category =:= validation_error;
+    Category =:= not_found;
+    Category =:= permission_denied;
+    Category =:= voice_error;
+    Category =:= rate_limited;
+    Category =:= auth_failed
+->
+    true;
+is_success_result(_) ->
+    false.
 
 -spec reset_failures(pid()) -> ok.
 reset_failures(GuildPid) ->
@@ -329,6 +340,13 @@ record_failure_recreates_missing_table_test() ->
 is_success_result_test() ->
     ?assertEqual(true, is_success_result({ok, #{success => true}})),
     ?assertEqual(false, is_success_result({error, timeout})),
-    ?assertEqual(false, is_success_result({error, noproc})).
+    ?assertEqual(false, is_success_result({error, noproc})),
+    ?assertEqual(
+        true, is_success_result({error, validation_error, voice_missing_connection_id})
+    ),
+    ?assertEqual(true, is_success_result({error, not_found, voice_member_not_found})),
+    ?assertEqual(true, is_success_result({error, permission_denied, voice_permission_denied})),
+    ?assertEqual(false, is_success_result({error, unknown, internal_error})),
+    ?assertEqual(false, is_success_result({error, timeout, timeout})).
 
 -endif.

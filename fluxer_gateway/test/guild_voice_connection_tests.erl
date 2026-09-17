@@ -71,6 +71,53 @@ voice_state_update_guild_leave_omitted_connection_id_test() ->
         ),
     ?assertEqual(connected_voice_states(<<"10">>), maps:get(voice_states, NewState)).
 
+voice_state_update_session_teardown_removes_that_sessions_states_test() ->
+    State = session_scoped_state(),
+    {reply, #{success := true}, NewState} =
+        guild_voice_connection:voice_state_update(
+            #{
+                user_id => 10,
+                channel_id => null,
+                connection_id => null,
+                session_id => <<"sess-a">>
+            },
+            State
+        ),
+    Remaining = maps:get(voice_states, NewState),
+    ?assertNot(maps:is_key(<<"conn-a">>, Remaining)),
+    ?assert(maps:is_key(<<"conn-b">>, Remaining)),
+    ?assert(maps:is_key(<<"conn-c">>, Remaining)).
+
+voice_state_update_session_teardown_works_for_former_members_test() ->
+    State = maps:put(
+        data,
+        #{<<"channels">> => [base_test_channel(100)], <<"members">> => []},
+        session_scoped_state()
+    ),
+    {reply, #{success := true}, NewState} =
+        guild_voice_connection:voice_state_update(
+            #{
+                user_id => 10,
+                channel_id => null,
+                connection_id => null,
+                session_id => <<"sess-a">>
+            },
+            State
+        ),
+    ?assertNot(maps:is_key(<<"conn-a">>, maps:get(voice_states, NewState))).
+
+voice_state_update_leave_by_connection_works_for_former_members_test() ->
+    State = maps:put(
+        data,
+        #{<<"channels">> => [base_test_channel(100)], <<"members">> => []},
+        session_scoped_state()
+    ),
+    {reply, #{success := true}, NewState} =
+        guild_voice_connection:voice_state_update(
+            #{user_id => 10, channel_id => null, connection_id => <<"conn-b">>}, State
+        ),
+    ?assertNot(maps:is_key(<<"conn-b">>, maps:get(voice_states, NewState))).
+
 voice_state_update_guild_leave_blank_connection_id_test() ->
     State = connected_state(<<"10">>),
     assert_voice_state_update_error(
@@ -337,10 +384,40 @@ camera_state(SharerCount) ->
     ).
 
 connected_voice_states(UserId) ->
-    #{<<"conn-1">> => #{<<"channel_id">> => <<"100">>, <<"user_id">> => UserId}}.
+    #{
+        <<"conn-1">> => #{
+            <<"guild_id">> => <<"999">>, <<"channel_id">> => <<"100">>, <<"user_id">> => UserId
+        }
+    }.
 
 connected_state(UserId) ->
     maps:put(voice_states, connected_voice_states(UserId), base_test_state()).
+
+session_scoped_state() ->
+    VoiceStates = #{
+        <<"conn-a">> => #{
+            <<"guild_id">> => <<"999">>,
+            <<"channel_id">> => <<"100">>,
+            <<"user_id">> => <<"10">>,
+            <<"session_id">> => <<"sess-a">>
+        },
+        <<"conn-b">> => #{
+            <<"guild_id">> => <<"999">>,
+            <<"channel_id">> => <<"100">>,
+            <<"user_id">> => <<"10">>,
+            <<"session_id">> => <<"sess-b">>
+        },
+        <<"conn-c">> => #{
+            <<"guild_id">> => <<"999">>,
+            <<"channel_id">> => <<"100">>,
+            <<"user_id">> => <<"11">>,
+            <<"session_id">> => <<"sess-a">>
+        }
+    },
+    (base_test_state())#{
+        voice_states => VoiceStates,
+        test_force_disconnect_fun => fun(_, _, _, _) -> {ok, #{success => true}} end
+    }.
 
 connected_voice_state(ConnectionId, UserId, ChannelId, ViewerKeys) ->
     #{

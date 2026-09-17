@@ -29,6 +29,8 @@
 -define(PENDING_TTL_MS, 300000).
 -define(RECENT_DISCONNECT_TTL_MS, 120000).
 -define(E2EE_KEY_TTL_MS, 300000).
+-define(SEEDED_SESSION_CHECK_DELAY_MS, 60000).
+-define(SESSION_LOOKUP_TIMEOUT_MS, 5000).
 
 -type voice_state_map() :: #{binary() => map()}.
 -type server_state() :: #{
@@ -144,6 +146,7 @@ init(#{guild_id := GuildId, guild_pid := GuildPid} = Args) ->
         recently_disconnected_voice_states => #{},
         e2ee_room_keys => #{}
     },
+    ok = schedule_seeded_session_check(first, maps:keys(InitialVoiceStates)),
     {ok, State}.
 
 -spec handle_call(term(), gen_server:from(), server_state()) -> {reply, term(), server_state()}.
@@ -255,6 +258,14 @@ handle_info(sweep_pending_joins, State) ->
             NewGuildState = guild_voice_connection:sweep_expired_pending_joins(GuildState),
             {noreply, guild_voice_server_state:apply_guild_state(NewGuildState, State2)}
     end;
+handle_info({check_seeded_sessions, Round, ConnectionIds}, State) ->
+    ok = spawn_seeded_session_check(Round, seeded_sessions(ConnectionIds, State), State),
+    {noreply, State};
+handle_info({seeded_sessions_gone, first, Gone}, State) ->
+    ok = schedule_seeded_session_check(second, maps:keys(Gone)),
+    {noreply, State};
+handle_info({seeded_sessions_gone, second, Gone}, State) ->
+    {noreply, remove_gone_seeded_connections(Gone, State)};
 handle_info({'EXIT', Pid, Reason}, #{guild_pid := GuildPid} = State) when Pid =:= GuildPid ->
     logger:info(
         "Voice server shutting down because guild process exited",
@@ -296,6 +307,104 @@ safe_lookup(Fun) ->
 -spec safe_lookup_match(term()) -> {ok, pid()} | {error, not_found}.
 safe_lookup_match({ok, Pid}) when is_pid(Pid) -> {ok, Pid};
 safe_lookup_match(_) -> {error, not_found}.
+
+-spec schedule_seeded_session_check(first | second, [binary()]) -> ok.
+schedule_seeded_session_check(_Round, []) ->
+    ok;
+schedule_seeded_session_check(Round, ConnectionIds) ->
+    _ = erlang:send_after(
+        ?SEEDED_SESSION_CHECK_DELAY_MS, self(), {check_seeded_sessions, Round, ConnectionIds}
+    ),
+    ok.
+
+-spec seeded_sessions([binary()], server_state()) -> #{binary() => {integer(), binary()}}.
+seeded_sessions(ConnectionIds, State) ->
+    VoiceStates = maps:get(voice_states, State, #{}),
+    maps:from_list([
+        {ConnectionId, {UserId, SessionId}}
+     || ConnectionId <- ConnectionIds,
+        VoiceState <- [maps:get(ConnectionId, VoiceStates, undefined)],
+        is_map(VoiceState),
+        UserId <- [voice_state_utils:voice_state_user_id(VoiceState)],
+        is_integer(UserId),
+        SessionId <- [
+            voice_state_utils:normalize_session_id(
+                maps:get(<<"session_id">>, VoiceState, undefined)
+            )
+        ],
+        is_binary(SessionId)
+    ]).
+
+-spec spawn_seeded_session_check(
+    first | second, #{binary() => {integer(), binary()}}, server_state()
+) -> ok.
+spawn_seeded_session_check(_Round, Seeded, _State) when map_size(Seeded) =:= 0 ->
+    ok;
+spawn_seeded_session_check(Round, Seeded, State) ->
+    Self = self(),
+    IsGone = session_gone_fun(State),
+    _ = spawn(fun() ->
+        SessionIds = lists:usort([SessionId || {_UserId, SessionId} <- maps:values(Seeded)]),
+        GoneSessions = [SessionId || SessionId <- SessionIds, IsGone(SessionId)],
+        Gone = maps:filter(
+            fun(_ConnectionId, {_UserId, SessionId}) ->
+                lists:member(SessionId, GoneSessions)
+            end,
+            Seeded
+        ),
+        Self ! {seeded_sessions_gone, Round, Gone}
+    end),
+    ok.
+
+-spec session_gone_fun(server_state()) -> fun((binary()) -> boolean()).
+session_gone_fun(State) ->
+    case maps:get(test_session_gone_fun, State, undefined) of
+        Fun when is_function(Fun, 1) -> Fun;
+        _ -> fun session_gone/1
+    end.
+
+-spec session_gone(binary()) -> boolean().
+session_gone(SessionId) ->
+    try
+        session_manager_routing:call_owner_manager(
+            SessionId, {lookup, SessionId}, ?SESSION_LOOKUP_TIMEOUT_MS
+        )
+    of
+        {error, not_found} -> true;
+        _ -> false
+    catch
+        _:_ -> false
+    end.
+
+-spec remove_gone_seeded_connections(#{binary() => {integer(), binary()}}, server_state()) ->
+    server_state().
+remove_gone_seeded_connections(Gone, State) ->
+    maps:fold(
+        fun(ConnectionId, {UserId, SessionId}, AccState) ->
+            remove_gone_seeded_connection(ConnectionId, UserId, SessionId, AccState)
+        end,
+        State,
+        Gone
+    ).
+
+-spec remove_gone_seeded_connection(binary(), integer(), binary(), server_state()) ->
+    server_state().
+remove_gone_seeded_connection(ConnectionId, UserId, SessionId, State) ->
+    case seeded_sessions([ConnectionId], State) of
+        #{ConnectionId := {UserId, SessionId}} ->
+            logger:warning(
+                "guild_voice_seeded_state_removed: guild_id=~p connection_id=~p"
+                " user_id=~p session_id=~p",
+                [maps:get(guild_id, State, undefined), ConnectionId, UserId, SessionId]
+            ),
+            delegate_voice_cast(
+                fun guild_voice:disconnect_voice_user/2,
+                #{user_id => UserId, connection_id => ConnectionId},
+                State
+            );
+        _ ->
+            State
+    end.
 
 -spec delegate_voice_cast(fun((map(), map()) -> {reply, term(), map()}), map(), server_state()) ->
     server_state().
@@ -441,6 +550,88 @@ enforce_map_cap(Map, MaxSize) ->
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
+
+seeded_sessions_only_tracks_states_with_a_session_test() ->
+    State = #{
+        voice_states => #{
+            <<"a">> => #{<<"user_id">> => <<"5">>, <<"session_id">> => <<"sess-a">>},
+            <<"b">> => #{<<"user_id">> => <<"6">>},
+            <<"c">> => #{<<"user_id">> => <<"7">>, <<"session_id">> => null}
+        }
+    },
+    ?assertEqual(
+        #{<<"a">> => {5, <<"sess-a">>}},
+        seeded_sessions([<<"a">>, <<"b">>, <<"c">>, <<"missing">>], State)
+    ).
+
+seeded_session_check_reports_only_gone_sessions_test() ->
+    State = #{
+        voice_states => #{
+            <<"a">> => #{<<"user_id">> => <<"5">>, <<"session_id">> => <<"dead">>},
+            <<"b">> => #{<<"user_id">> => <<"6">>, <<"session_id">> => <<"alive">>}
+        },
+        test_session_gone_fun => fun(SessionId) -> SessionId =:= <<"dead">> end
+    },
+    ok = spawn_seeded_session_check(first, seeded_sessions([<<"a">>, <<"b">>], State), State),
+    receive
+        {seeded_sessions_gone, first, Gone} ->
+            ?assertEqual(#{<<"a">> => {5, <<"dead">>}}, Gone)
+    after 1000 -> ?assert(false)
+    end.
+
+gone_seeded_connection_is_removed_test() ->
+    TestFun = fun(_, _, _, _) -> {ok, #{success => true}} end,
+    GuildPid = spawn(fun() -> guild_state_reply_loop(TestFun) end),
+    State = seeded_test_state(GuildPid),
+    try
+        {noreply, NewState} = handle_info(
+            {seeded_sessions_gone, second, #{<<"ghost">> => {5, <<"dead">>}}}, State
+        ),
+        ?assertEqual([<<"live">>], maps:keys(maps:get(voice_states, NewState)))
+    after
+        exit(GuildPid, kill)
+    end.
+
+seeded_connection_that_changed_session_is_kept_test() ->
+    TestFun = fun(_, _, _, _) -> {ok, #{success => true}} end,
+    GuildPid = spawn(fun() -> guild_state_reply_loop(TestFun) end),
+    State = seeded_test_state(GuildPid),
+    try
+        {noreply, NewState} = handle_info(
+            {seeded_sessions_gone, second, #{<<"ghost">> => {5, <<"an-older-session">>}}}, State
+        ),
+        ?assertEqual(
+            lists:sort([<<"ghost">>, <<"live">>]),
+            lists:sort(maps:keys(maps:get(voice_states, NewState)))
+        )
+    after
+        exit(GuildPid, kill)
+    end.
+
+seeded_test_state(GuildPid) ->
+    #{
+        guild_id => 42,
+        guild_pid => GuildPid,
+        voice_states => #{
+            <<"ghost">> => #{
+                <<"user_id">> => <<"5">>,
+                <<"guild_id">> => <<"42">>,
+                <<"channel_id">> => <<"20">>,
+                <<"connection_id">> => <<"ghost">>,
+                <<"session_id">> => <<"dead">>
+            },
+            <<"live">> => #{
+                <<"user_id">> => <<"6">>,
+                <<"guild_id">> => <<"42">>,
+                <<"channel_id">> => <<"20">>,
+                <<"connection_id">> => <<"live">>,
+                <<"session_id">> => <<"alive">>
+            }
+        },
+        pending_voice_connections => #{},
+        recently_disconnected_voice_states => #{},
+        e2ee_room_keys => #{}
+    }.
 
 disconnect_voice_user_cast_removes_the_voice_state_test() ->
     Self = self(),
