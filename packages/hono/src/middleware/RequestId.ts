@@ -12,7 +12,7 @@ export interface RequestIdOptions {
 	setResponseHeader?: boolean;
 }
 
-export const REQUEST_ID_KEY = 'requestId';
+const REQUEST_ID_KEY = 'requestId';
 
 export function requestId(options: RequestIdOptions = {}): MiddlewareHandler {
 	const {headerName = Headers.X_REQUEST_ID, generator = randomUUID, setResponseHeader = true} = options;

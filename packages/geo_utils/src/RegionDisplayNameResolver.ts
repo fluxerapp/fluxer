@@ -44,11 +44,3 @@ export function resolveRegionDisplayName(regionCode: string, locale?: string): s
 	const displayNames = getDisplayNames(locale);
 	return resolveRegionDisplayNameFromFormatter(regionCode, displayNames);
 }
-
-export function resolveRegionDisplayNames(
-	regionCodes: ReadonlyArray<string>,
-	locale?: string,
-): Array<string | undefined> {
-	const displayNames = getDisplayNames(locale);
-	return regionCodes.map((regionCode) => resolveRegionDisplayNameFromFormatter(regionCode, displayNames));
-}

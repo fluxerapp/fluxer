@@ -7,9 +7,9 @@ import {FluxerError} from '@fluxer/errors/src/FluxerError';
 import type {Context, ErrorHandler} from 'hono';
 import {HTTPException} from 'hono/http-exception';
 
-export type ResponseFormat = 'json' | 'xml';
+type ResponseFormat = 'json' | 'xml';
 
-export interface ErrorHandlerOptions {
+interface ErrorHandlerOptions {
 	logError?: (error: Error, context: Context) => void;
 	includeStack?: boolean;
 	responseFormat?: ResponseFormat;

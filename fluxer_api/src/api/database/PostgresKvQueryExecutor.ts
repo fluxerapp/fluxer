@@ -649,7 +649,7 @@ function planFragments(plan: Exclude<CandidatePlan, {kind: 'rangeGroups'}>): Pla
 	}
 }
 
-export function planFragmentGroups(plan: CandidatePlan): Array<PlanFragments> {
+function planFragmentGroups(plan: CandidatePlan): Array<PlanFragments> {
 	if (plan.kind === 'rangeGroups') return plan.groups.map(rangeFragments);
 	return [planFragments(plan)];
 }

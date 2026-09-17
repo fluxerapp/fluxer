@@ -1011,9 +1011,6 @@ importers:
       '@typescript/native-preview':
         specifier: 'catalog:'
         version: 7.0.0-dev.20260224.1
-      vitest:
-        specifier: 'catalog:'
-        version: 4.1.11(@opentelemetry/api@1.9.0)(@types/node@25.3.0)(@vitest/coverage-v8@4.1.11)(happy-dom@20.12.0)(jsdom@28.1.0(@noble/hashes@2.4.0))(msw@2.12.10(@types/node@25.3.0)(typescript@6.0.2))(vite@8.2.2(@types/node@25.3.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))
 
   fluxer_api/pkgs/sms:
     dependencies:
@@ -2045,9 +2042,6 @@ importers:
       '@typescript/native-preview':
         specifier: 'catalog:'
         version: 7.0.0-dev.20260224.1
-      vitest:
-        specifier: 'catalog:'
-        version: 4.1.11(@opentelemetry/api@1.9.0)(@types/node@25.3.0)(@vitest/coverage-v8@4.1.11)(happy-dom@20.12.0)(jsdom@28.1.0(@noble/hashes@2.4.0))(msw@2.12.10(@types/node@25.3.0)(typescript@6.0.2))(vite@8.2.2(@types/node@25.3.0)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.0))
 
   packages/hono:
     dependencies:
