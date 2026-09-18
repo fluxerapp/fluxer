@@ -36,6 +36,7 @@ import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponse
 import {ms} from 'itty-time';
 
 const PUSH_BADGE_COUNT_BATCH_SIZE = 100;
+const USER_PERMISSIONS_BATCH_SIZE = 100;
 
 const GATEWAY_ERROR_TO_DOMAIN_ERROR: Record<string, () => Error> = {
 	[GatewayRpcMethodErrorCodes.GUILD_NOT_FOUND]: () => new UnknownGuildError(),
@@ -1089,19 +1090,29 @@ export class GatewayService {
 		if (guildIds.length === 0) {
 			return permissionsMap;
 		}
-		const result = await this.call<{
-			permissions: Array<{
-				guild_id: string;
-				permissions: string;
-			}>;
-		}>('guild.get_user_permissions_batch', {
-			guild_ids: guildIds.map((id) => id.toString()),
-			user_id: userId.toString(),
-			channel_id: channelId ? channelId.toString() : '0',
-		});
-		for (const item of result.permissions) {
-			const guildId = BigInt(item.guild_id) as GuildID;
-			permissionsMap.set(guildId, BigInt(item.permissions));
+		const batches: Array<Array<GuildID>> = [];
+		for (let index = 0; index < guildIds.length; index += USER_PERMISSIONS_BATCH_SIZE) {
+			batches.push(guildIds.slice(index, index + USER_PERMISSIONS_BATCH_SIZE));
+		}
+		const results = await Promise.all(
+			batches.map((batch) =>
+				this.call<{
+					permissions: Array<{
+						guild_id: string;
+						permissions: string;
+					}>;
+				}>('guild.get_user_permissions_batch', {
+					guild_ids: batch.map((id) => id.toString()),
+					user_id: userId.toString(),
+					channel_id: channelId ? channelId.toString() : '0',
+				}),
+			),
+		);
+		for (const result of results) {
+			for (const item of result.permissions) {
+				const guildId = BigInt(item.guild_id) as GuildID;
+				permissionsMap.set(guildId, BigInt(item.permissions));
+			}
 		}
 		return permissionsMap;
 	}
