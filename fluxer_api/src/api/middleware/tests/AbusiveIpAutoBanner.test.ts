@@ -13,12 +13,18 @@ import {
 } from '@app/api/middleware/AbusiveIpAutoBanner';
 import {ipBanCache} from '@app/api/middleware/IpBanMiddleware';
 import {setInjectedIpInfoService} from '@app/api/middleware/ServiceMiddleware';
+import {resetAutoBanAsnExemptionsForTesting, setInjectedAutoBanAsnLookup} from '@app/api/risk/AutoBanAsnExemptions';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import type {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
+import type {GeoipAsnResult} from '@pkgs/geoip/src/GeoipLookup';
 import type {IpInfoLookupResult} from '@pkgs/geoip/src/IpInfoService';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+
+function asnResult(asn: number | null): GeoipAsnResult {
+	return {normalizedIp: null, asn, asnOrg: null, available: asn !== null};
+}
 
 function ipInfoResult(ip: string, overrides: Partial<IpInfoLookupResult> = {}): IpInfoLookupResult {
 	return {
@@ -96,6 +102,7 @@ describe('AbusiveIpAutoBanner', () => {
 	let harness: ApiTestHarness;
 	let adminRepository: AdminRepository;
 	let lookupCount = 0;
+	let asnLookupCount = 0;
 	beforeAll(async () => {
 		harness = await createApiTestHarness();
 		adminRepository = new AdminRepository();
@@ -104,6 +111,9 @@ describe('AbusiveIpAutoBanner', () => {
 		await harness.reset();
 		resetAbuseTrackingForTests();
 		ipBanCache.resetCaches();
+		delete process.env.FLUXER_ABUSE_EXEMPT_ASNS;
+		resetAutoBanAsnExemptionsForTesting();
+		asnLookupCount = 0;
 		lookupCount = 0;
 		setInjectedIpInfoService({
 			async lookup(ip: string) {
@@ -117,6 +127,8 @@ describe('AbusiveIpAutoBanner', () => {
 	afterAll(async () => {
 		await stopAbuseReplicationSubscriber();
 		setInjectedIpInfoService(undefined);
+		delete process.env.FLUXER_ABUSE_EXEMPT_ASNS;
+		resetAutoBanAsnExemptionsForTesting();
 		await harness.shutdown();
 	});
 	it('temporarily bans an IP that tries many distinct invalid tokens', async () => {
@@ -174,6 +186,49 @@ describe('AbusiveIpAutoBanner', () => {
 		await drainAbuseAutoBanTasksForTests();
 		expect(ipBanCache.isBanned(ip)).toBe(false);
 		await expect(adminRepository.isIpBanned(ip)).resolves.toBe(false);
+	});
+	it('does not auto-ban an IP whose ASN is exempt', async () => {
+		const ip = '9.9.9.9';
+		process.env.FLUXER_ABUSE_EXEMPT_ASNS = '64501, not-an-asn, 64502';
+		resetAutoBanAsnExemptionsForTesting();
+		setInjectedAutoBanAsnLookup(async () => asnResult(64502));
+		for (let i = 0; i < 100; i += 1) {
+			recordAbuseSignal(ip, 'auth_failure:session', {tokenHash: hashAuthToken(`exempt-${i}`)});
+		}
+		await drainAbuseIpClassLookupsForTests();
+		await drainAbuseAutoBanTasksForTests();
+		expect(ipBanCache.isBanned(ip)).toBe(false);
+		await expect(adminRepository.isIpBanned(ip)).resolves.toBe(false);
+		expect(lookupCount).toBe(0);
+	});
+	it('still auto-bans an IP whose ASN is not on the exempt list', async () => {
+		const ip = '9.9.9.10';
+		process.env.FLUXER_ABUSE_EXEMPT_ASNS = '64501';
+		resetAutoBanAsnExemptionsForTesting();
+		setInjectedAutoBanAsnLookup(async () => asnResult(64502));
+		for (let i = 0; i < 10; i += 1) {
+			recordAbuseSignal(ip, 'auth_failure:session', {tokenHash: hashAuthToken(`not-exempt-${i}`)});
+		}
+		await waitForAssertion(() => {
+			expect(ipBanCache.isBanned(ip)).toBe(true);
+		});
+		await drainAbuseAutoBanTasksForTests();
+		await expect(adminRepository.isIpBanned(ip)).resolves.toBe(true);
+	});
+	it('does not resolve an ASN when no exemptions are configured', async () => {
+		const ip = '9.9.9.11';
+		setInjectedAutoBanAsnLookup(async () => {
+			asnLookupCount += 1;
+			return asnResult(64502);
+		});
+		for (let i = 0; i < 10; i += 1) {
+			recordAbuseSignal(ip, 'auth_failure:session', {tokenHash: hashAuthToken(`no-exempt-list-${i}`)});
+		}
+		await waitForAssertion(() => {
+			expect(ipBanCache.isBanned(ip)).toBe(true);
+		});
+		await drainAbuseAutoBanTasksForTests();
+		expect(asnLookupCount).toBe(0);
 	});
 	it('does not auto-ban loopback or private IP addresses', async () => {
 		for (const ip of ['127.0.0.1', '10.0.0.10', '::ffff:127.0.0.1']) {

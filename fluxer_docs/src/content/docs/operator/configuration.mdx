@@ -1011,6 +1011,8 @@ Defaults to the inverse of `FLUXER_SELF_HOSTED`. External blocklist feeds. Off b
 
 A second family, unrelated to the rules above, tunes the IP auto-banner: `FLUXER_ABUSE_WINDOW_MS`, the `FLUXER_ABUSE_THRESHOLD_` names, the `FLUXER_ABUSE_TOKEN_DIVERSITY_` names, `FLUXER_ABUSE_BAN_TTL_SEC`, `FLUXER_ABUSE_BATCH_FLUSH_MS`, `FLUXER_ABUSE_MAX_BATCH_TICKS`, `FLUXER_ABUSE_MAX_NEW_TOKENS_PER_TICK`, `FLUXER_ABUSE_MAX_TRACKED_IPS`, `FLUXER_ABUSE_MAX_TOKEN_HASHES_PER_IP`, `FLUXER_ABUSE_MIN_SCORE_FOR_LOOKUP`, `FLUXER_ABUSE_MIN_TOKENS_FOR_LOOKUP`, and `FLUXER_ABUSE_REQUIRED_SCORE_WINDOWS_FOR_AUTO_BAN`. All are read directly from the environment, none are in `.env.example` or the Compose file, and a non-finite value or one at or below zero falls back to the default.
 
+`FLUXER_ABUSE_EXEMPT_ASNS` takes comma-separated ASN numbers that the auto-banner never bans. Non-numeric entries are dropped. Before it buys a classification the auto-banner resolves the IP against the local MaxMind ASN database, and an IP on a listed ASN is neither classified nor banned. With no MaxMind ASN database the list has no effect. It does not change admin or guild IP bans, and `FLUXER_API_IP_BAN_EXEMPT_IPS` remains the way to exempt single addresses and ranges from every kind of IP ban.
+
 Other names in that family limit how often the auto-banner buys an IP classification from ipinfo. A shared claim lets one replica do the lookup for the others. With the claim off, every API replica looks up the same attacking IP at the same moment, so one IP costs one lookup per replica.
 
 - `FLUXER_ABUSE_IP_CLASS_CLAIM_ENABLED` defaults to `1` and gates the shared claim. It is read as a string, and only `0` turns the claim off.

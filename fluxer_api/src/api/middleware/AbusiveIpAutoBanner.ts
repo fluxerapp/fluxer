@@ -9,6 +9,7 @@ import {ipBanCache} from '@app/api/middleware/IpBanMiddleware';
 import {getIpInfoService} from '@app/api/middleware/ServiceMiddleware';
 import {getKVClient} from '@app/api/middleware/ServiceRegistry';
 import {getCacheService} from '@app/api/middleware/ServiceSingletons';
+import {isAutoBanExemptAsn} from '@app/api/risk/AutoBanAsnExemptions';
 import {isIpBanExempt} from '@app/api/risk/IpBanExemptions';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {parseJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
@@ -18,7 +19,7 @@ import type {IpInfoLookupResult} from '@pkgs/geoip/src/IpInfoService';
 import type {IKVProvider, IKVSubscription} from '@pkgs/kv_client/src/IKVProvider';
 import {createMiddleware} from 'hono/factory';
 
-type IpClass = 'datacenter' | 'anonymous' | 'mobile' | 'residential' | 'unknown';
+type IpClass = 'datacenter' | 'anonymous' | 'mobile' | 'residential' | 'unknown' | 'exempt';
 type TriggerKind = 'score' | 'token_diversity' | 'score_and_token_diversity';
 
 interface AbuseRecord {
@@ -104,7 +105,7 @@ const IP_CLASS_CLAIM_TTL_SECONDS = positiveNumberFromEnv('FLUXER_ABUSE_IP_CLASS_
 const DEFAULT_IP_CLASS_PENDING_TTL_MS = positiveNumberFromEnv('FLUXER_ABUSE_IP_CLASS_PENDING_TTL_MS', 20_000);
 const DEFAULT_IP_CLASS_NEGATIVE_TTL_MS = positiveNumberFromEnv('FLUXER_ABUSE_IP_CLASS_NEGATIVE_TTL_MS', 300_000);
 const DEFAULT_IP_CLASS_HINT_TTL_MS = positiveNumberFromEnv('FLUXER_ABUSE_IP_CLASS_HINT_TTL_MS', 600_000);
-const IP_CLASSES = ['datacenter', 'anonymous', 'mobile', 'residential', 'unknown'] as const;
+const IP_CLASSES = ['datacenter', 'anonymous', 'mobile', 'residential', 'unknown', 'exempt'] as const;
 const POD_ID = process.env.HOSTNAME ?? randomUUID();
 
 type ReplicatedTick = [banKey: string, scoreDelta: number, tokenHashes: Array<string>, lookupIp: string];
@@ -185,6 +186,7 @@ function scoreThresholdFor(ipClass: IpClass): number {
 			return THRESHOLD_MOBILE;
 		case 'residential':
 		case 'unknown':
+		case 'exempt':
 			return THRESHOLD_RESIDENTIAL;
 	}
 }
@@ -199,6 +201,7 @@ function tokenDiversityThresholdFor(ipClass: IpClass): number {
 			return TOKEN_DIVERSITY_MOBILE;
 		case 'residential':
 		case 'unknown':
+		case 'exempt':
 			return TOKEN_DIVERSITY_RESIDENTIAL;
 	}
 }
@@ -390,6 +393,10 @@ async function claimIpClassLookup(key: string): Promise<boolean> {
 
 async function runIpClassLookup(key: string, lookupIp: string): Promise<void> {
 	try {
+		if (await isAutoBanExemptAsn(lookupIp)) {
+			setOwnIpClass(key, lookupIp, 'exempt', false);
+			return;
+		}
 		if (!(await claimIpClassLookup(key))) return;
 		const result = await getIpInfoService().lookup(lookupIp, {source: 'AbusiveIpAutoBanner', reason: 'classify'});
 		setOwnIpClass(key, lookupIp, classifyIpInfo(result), !result.available);
@@ -425,6 +432,14 @@ function maybeFireAutoBan(key: string, rec: AbuseRecord): void {
 	const overTokenDiversity = rec.distinctTokenHashes.size >= tokenThreshold;
 	if (!overScore && !overTokenDiversity) return;
 	if (resolved.blocked) {
+		return;
+	}
+	if (ipClass === 'exempt') {
+		rec.autoBanFired = true;
+		Logger.warn(
+			{ip: key, ipClass, score: rec.score, distinctTokens: rec.distinctTokenHashes.size},
+			'[abuse-auto-ban] Skipping automatic IP ban because the ASN is exempt',
+		);
 		return;
 	}
 	if (shouldSkipAutoBanForIpClass(ipClass)) {

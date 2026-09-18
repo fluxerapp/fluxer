@@ -14,6 +14,7 @@ import {resetServiceSingletonsForTesting} from '@app/api/middleware/ServiceSingl
 import {torExitListCache} from '@app/api/middleware/TorExitListCache';
 import {urlBlocklistCache} from '@app/api/middleware/UrlBlocklistCache';
 import {resetAdminSecretHashForTesting} from '@app/api/oauth/repositories/ApplicationRepository';
+import {resetAutoBanAsnExemptionsForTesting} from '@app/api/risk/AutoBanAsnExemptions';
 import {resetIpBanExemptionsForTesting} from '@app/api/risk/IpBanExemptions';
 import {setThemeCssMaxBytesForTesting} from '@app/api/theme/ThemeService';
 import {resetGeoipReadersForTesting} from '@pkgs/geoip/src/GeoipLookup';
@@ -23,6 +24,7 @@ export async function resetServiceStateForTesting(): Promise<void> {
 	resetServiceSingletonsForTesting();
 	resetServiceMiddlewareForTesting();
 	resetIpBanExemptionsForTesting();
+	resetAutoBanAsnExemptionsForTesting();
 	resetGlobalLimitConfigServiceForTesting();
 	resetSudoModeServiceForTesting();
 	resetSsoRequestUrlPolicyForTesting();
