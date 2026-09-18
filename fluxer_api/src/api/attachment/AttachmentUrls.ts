@@ -51,10 +51,6 @@ export function signDataPackageAttachmentUrl(url: string, nowSecs?: number): str
 	return options === null ? url : signDataPackageWithSecret(url, options);
 }
 
-export function stripAttachmentSignature(url: string): string {
-	return stripSignature(url);
-}
-
 export function stripOwnAttachmentSignature(url: string): string {
 	return attachmentStorageKeyFromUrl(url, Config.endpoints.media) === null ? url : stripSignature(url);
 }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import fs from 'node:fs';
-import {createAttachmentID, createGuildID, createUserID, type UserID} from '@app/api/BrandedTypes';
+import {createAttachmentID, type UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {AttachmentToProcess} from '@app/api/channel/AttachmentDTOs';
 import type {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
@@ -11,7 +11,6 @@ import {
 	makeAttachmentCdnKey,
 	validateAttachmentIds,
 } from '@app/api/channel/services/message/MessageHelpers';
-import {scheduleUploadSegmentSignal} from '@app/api/channel/services/message/UploadSegmentSignal';
 import type {MessageAttachment} from '@app/api/database/types/MessageTypes';
 import {contentModerationService, type ModerationContext} from '@app/api/infrastructure/ContentModerationService';
 import type {
@@ -173,24 +172,6 @@ export class AttachmentProcessingService {
 				};
 			}
 			return result.attachment;
-		});
-		scheduleUploadSegmentSignal({
-			userId: params.uploadUserId,
-			guildId: params.guild ? createGuildID(BigInt(params.guild.id)) : null,
-			guildOwnerId: params.guild ? createUserID(BigInt(params.guild.owner_id)) : null,
-			channelId: params.message.channelId,
-			messageId: params.message.id,
-			attachments: processedAttachments.map((attachment, index) => ({
-				attachmentId: attachment.attachment_id,
-				uploadKey: results[index].copyOperation.sourceKey,
-				filename: attachment.filename,
-				contentType: attachment.content_type,
-				size: attachment.size,
-				duration: attachment.duration ?? null,
-				waveform: attachment.waveform ?? null,
-				sniffedContentType: results[index].sniffedContentType,
-				requestIp: bindingResults[index].bound?.request_ip ?? null,
-			})),
 		});
 		return {attachments: processedAttachments, hasVirusDetected: false};
 	}
