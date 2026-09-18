@@ -9,6 +9,10 @@ import {CsvAttachmentTablePanel} from '@app/features/channel/components/embeds/a
 import {TextualAttachmentCodePanel} from '@app/features/channel/components/embeds/attachments/TextualAttachmentCodePanel';
 import styles from '@app/features/channel/components/embeds/attachments/TextualAttachmentPreview.module.css';
 import {TextualAttachmentPreviewBottomSheet} from '@app/features/channel/components/embeds/attachments/TextualAttachmentPreviewBottomSheet';
+import {
+	fetchTextualPreviewText,
+	PreviewSizeLimitError,
+} from '@app/features/channel/components/embeds/attachments/TextualAttachmentPreviewFetch';
 import {TextualAttachmentPreviewFooter} from '@app/features/channel/components/embeds/attachments/TextualAttachmentPreviewFooter';
 import {TextualAttachmentPreviewModal} from '@app/features/channel/components/embeds/attachments/TextualAttachmentPreviewModal';
 import {
@@ -44,56 +48,6 @@ import {observer} from 'mobx-react-lite';
 import {type MouseEvent, useCallback, useEffect, useMemo, useState} from 'react';
 
 const logger = new Logger('TextualAttachmentPreview');
-
-class PreviewSizeLimitError extends Error {
-	constructor() {
-		super('Attachment preview exceeds the size limit');
-		this.name = 'PreviewSizeLimitError';
-	}
-}
-
-async function readPreviewText(response: Response): Promise<string> {
-	const contentLength = response.headers.get('content-length');
-	if (contentLength !== null) {
-		const parsedContentLength = Number(contentLength);
-		if (Number.isFinite(parsedContentLength) && parsedContentLength > TEXT_PREVIEW_MAX_BYTES) {
-			throw new PreviewSizeLimitError();
-		}
-	}
-	const body = response.body;
-	if (!body) {
-		throw new Error('Attachment preview response has no readable body');
-	}
-	const reader = body.getReader();
-	const chunks: Array<Uint8Array> = [];
-	let totalBytes = 0;
-	try {
-		while (true) {
-			const {done, value} = await reader.read();
-			if (done) {
-				break;
-			}
-			if (!value) {
-				continue;
-			}
-			totalBytes += value.byteLength;
-			if (totalBytes > TEXT_PREVIEW_MAX_BYTES) {
-				await reader.cancel().catch(() => undefined);
-				throw new PreviewSizeLimitError();
-			}
-			chunks.push(value);
-		}
-	} finally {
-		reader.releaseLock();
-	}
-	const bytes = new Uint8Array(totalBytes);
-	let offset = 0;
-	for (const chunk of chunks) {
-		bytes.set(chunk, offset);
-		offset += chunk.byteLength;
-	}
-	return new TextDecoder().decode(bytes);
-}
 
 export const TextualAttachmentPreview = observer(function TextualAttachmentPreview({
 	attachment,
@@ -146,13 +100,7 @@ export const TextualAttachmentPreview = observer(function TextualAttachmentPrevi
 		setStatus('loading');
 		setPreviewError(null);
 		const controller = new AbortController();
-		fetch(attachment.url, {signal: controller.signal})
-			.then((response) => {
-				if (!response.ok) {
-					throw new Error(`Attachment preview request failed: ${response.status} ${response.statusText}`);
-				}
-				return readPreviewText(response);
-			})
+		fetchTextualPreviewText(attachment.url, controller.signal)
 			.then((value) => {
 				if (controller.signal.aborted) {
 					return;

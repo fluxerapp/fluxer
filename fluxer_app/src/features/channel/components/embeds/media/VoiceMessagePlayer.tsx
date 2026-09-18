@@ -6,6 +6,7 @@ import styles from '@app/features/channel/components/embeds/media/VoiceMessagePl
 import {useMaybeMessageViewContext} from '@app/features/channel/components/MessageViewContext';
 import {PAUSE_DESCRIPTOR, PLAY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
+import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
 import {buildMediaProxyURL} from '@app/features/messaging/utils/MediaProxyUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -119,6 +120,7 @@ const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = observer(
 		const {i18n} = useLingui();
 		const messageViewContext = useMaybeMessageViewContext();
 		const effectiveSrc = buildMediaProxyURL(src);
+		const handleMediaError = useAttachmentRefreshOnError(effectiveSrc);
 		const [hasStarted, setHasStarted] = useState(false);
 		const [wantsMetadata, setWantsMetadata] = useState(false);
 		const [prePlayCurrentTime, setPrePlayCurrentTime] = useState(0);
@@ -324,6 +326,7 @@ const VoiceMessagePlayer: React.FC<VoiceMessagePlayerProps> = observer(
 					ref={mediaRef as React.RefObject<HTMLAudioElement>}
 					src={hasStarted || wantsMetadata ? effectiveSrc : undefined}
 					preload={wantsMetadata ? 'metadata' : 'none'}
+					onError={handleMediaError}
 					data-flx="channel.embeds.media.voice-message-player.audio"
 				>
 					<track kind="captions" data-flx="channel.embeds.media.voice-message-player.track" />

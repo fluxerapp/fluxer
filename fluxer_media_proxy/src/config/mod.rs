@@ -6,10 +6,12 @@ mod tests;
 
 use crate::constants;
 use crate::secret::{SecretBytes, SecretString};
+use http::HeaderValue;
 use parse::{
     EnvMap, decode_upload_relay_secret, default_native_transform_concurrency, non_empty,
-    parse_bool, parse_bucket_style, parse_f32, parse_mode_env, parse_storage_backend, parse_u16,
-    parse_u64, parse_usize, validate_read_endpoint,
+    parse_allowed_origins, parse_attachment_url_secrets, parse_bool, parse_bucket_style, parse_f32,
+    parse_mode_env, parse_policy_mode, parse_storage_backend, parse_u16, parse_u64, parse_usize,
+    validate_read_endpoint,
 };
 use std::{env, path::PathBuf};
 
@@ -31,6 +33,52 @@ pub enum DeploymentMode {
     Mp,
     Static,
     Upload,
+    Relay,
+}
+
+impl DeploymentMode {
+    pub fn serves_upload_relay(self) -> bool {
+        matches!(self, Self::Upload | Self::Relay)
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum PolicyMode {
+    Off,
+    Report,
+    Enforce,
+}
+
+impl PolicyMode {
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Off => "off",
+            Self::Report => "report",
+            Self::Enforce => "enforce",
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct CorsConfig {
+    pub mode: PolicyMode,
+    pub allowed_origins: Vec<HeaderValue>,
+}
+
+#[derive(Clone, Debug)]
+pub struct AttachmentSignatureConfig {
+    pub mode: PolicyMode,
+    pub(crate) secrets: Vec<SecretBytes>,
+}
+
+impl AttachmentSignatureConfig {
+    pub(crate) fn secret_count(&self) -> usize {
+        self.secrets.len()
+    }
+
+    pub(crate) fn secrets(&self) -> Vec<&[u8]> {
+        self.secrets.iter().map(SecretBytes::expose).collect()
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -92,6 +140,8 @@ pub struct Config {
     pub storage: StorageConfig,
     pub media: MediaServingConfig,
     pub upload_relay: UploadRelayConfig,
+    pub cors: CorsConfig,
+    pub attachment_signature: AttachmentSignatureConfig,
 }
 
 impl Config {
@@ -167,6 +217,8 @@ impl Config {
             storage: StorageConfig::load(&env)?,
             media: MediaServingConfig::load(&env)?,
             upload_relay: UploadRelayConfig::load(&env, mode)?,
+            cors: CorsConfig::load(&env, mode)?,
+            attachment_signature: AttachmentSignatureConfig::load(&env, mode)?,
         })
     }
 }
@@ -377,6 +429,60 @@ impl UploadRelayConfig {
                 64 * 1024 * 1024,
             )?,
             spool_max_total_bytes,
+        })
+    }
+}
+
+impl CorsConfig {
+    fn load(env: &EnvMap, mode: DeploymentMode) -> anyhow::Result<Self> {
+        if matches!(mode, DeploymentMode::Static | DeploymentMode::Relay) {
+            return Ok(Self {
+                mode: PolicyMode::Off,
+                allowed_origins: Vec::new(),
+            });
+        }
+        let cors_mode = parse_policy_mode(
+            "FLUXER_MEDIA_PROXY_CORS_MODE",
+            env.get("FLUXER_MEDIA_PROXY_CORS_MODE"),
+        )?;
+        let allowed_origins = parse_allowed_origins(
+            "FLUXER_MEDIA_PROXY_CORS_ALLOWED_ORIGINS",
+            env.get("FLUXER_MEDIA_PROXY_CORS_ALLOWED_ORIGINS"),
+        )?;
+        anyhow::ensure!(
+            cors_mode == PolicyMode::Off || !allowed_origins.is_empty(),
+            "FLUXER_MEDIA_PROXY_CORS_ALLOWED_ORIGINS is required when FLUXER_MEDIA_PROXY_CORS_MODE is report or enforce"
+        );
+        Ok(Self {
+            mode: cors_mode,
+            allowed_origins,
+        })
+    }
+}
+
+impl AttachmentSignatureConfig {
+    fn load(env: &EnvMap, mode: DeploymentMode) -> anyhow::Result<Self> {
+        if matches!(mode, DeploymentMode::Static | DeploymentMode::Relay) {
+            return Ok(Self {
+                mode: PolicyMode::Off,
+                secrets: Vec::new(),
+            });
+        }
+        let signature_mode = parse_policy_mode(
+            "FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE",
+            env.get("FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE"),
+        )?;
+        let secrets = parse_attachment_url_secrets(
+            "FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64",
+            env.get("FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64"),
+        )?;
+        anyhow::ensure!(
+            signature_mode == PolicyMode::Off || !secrets.is_empty(),
+            "FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64 is required when FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE is report or enforce"
+        );
+        Ok(Self {
+            mode: signature_mode,
+            secrets,
         })
     }
 }

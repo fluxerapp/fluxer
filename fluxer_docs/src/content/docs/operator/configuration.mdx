@@ -58,7 +58,7 @@ Default `http`. The scheme for internal service URLs. Must be `http` or `https`,
 
 ## Secrets you must generate
 
-Every value below ships as `CHANGE_ME`. Replace them all before the first start. Compose refuses to start when one is unset or empty, and names the variable. Generate each with `openssl rand -hex 32`, except the relay secret and the VAPID pair, whose own entries name the command. The installer in [Get started](/operator/get-started/) generates them all, so come here to rotate one value later or to set them up by hand.
+Every value below ships as `CHANGE_ME`. Replace them all before the first start. Compose refuses to start when one is unset or empty, and names the variable. Generate each with `openssl rand -hex 32`, except the relay secret, the attachment URL secrets, and the VAPID pair, whose own entries name the command. The installer in [Get started](/operator/get-started/) generates them all, so come here to rotate one value later or to set them up by hand.
 
 #### `POSTGRES_PASSWORD`
 
@@ -90,7 +90,21 @@ Media Proxy URLs. Must match across `api`, `worker`, `media-proxy`, `gifs`, and 
 
 #### `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64`
 
-Generate with `openssl rand -base64 32`. [Upload relay](/media-proxy/upload-relay/) capability tokens. Must be standard base64 decoding to at least 32 bytes. Hex fails. Must match on `api`, `worker`, and `media-proxy`. The API and the Media Proxy both check it at boot and refuse to start without it in `upload` mode.
+Generate with `openssl rand -base64 32`. [Upload relay](/media-proxy/upload-relay/) capability tokens. Must be standard base64 decoding to at least 32 bytes. Must match on `api`, `worker`, and `media-proxy`. `api` and `worker` refuse to start without it in every mode. `media-proxy` refuses to start without it when `FLUXER_MEDIA_PROXY_MODE` is `upload` or `relay`.
+
+#### `FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64`
+
+Generate each entry with `openssl rand -base64 32`. Signs the [attachment URLs](/media-proxy/overview/#signed-attachment-urls) Fluxer returns. A comma-separated list, where each entry must be standard base64 decoding to at least 32 bytes. Spaces around an entry and empty entries are ignored. The first entry signs and every entry verifies. Must match on `api`, `worker`, and `media-proxy`, and must differ from `FLUXER_MEDIA_PROXY_SECRET_KEY`. `api` and `worker` refuse to start when an entry is invalid, and with no entry they return unsigned URLs. `media-proxy` reads it only when `FLUXER_MEDIA_PROXY_MODE` is `mp` or `upload`, and then refuses to start with an invalid entry, or with no entry when `FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE` is `report` or `enforce`.
+
+The Compose stack leaves it empty, so a self-hosted instance returns unsigned URLs until an operator sets one. Setting it alone changes nothing on the read side, because `FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE` stays `off` until it is set too.
+
+Rotate it in three steps, and apply each one with `docker compose up -d` before starting the next:
+
+1. Add the new secret as the second entry. Every `media-proxy` then accepts it before any service signs with it.
+2. Move the new secret to the first entry, so it signs.
+3. Remove the old secret no sooner than one day after step 2, because an ordinary URL it signed stays valid for up to a day.
+
+A [data package URL](/http-api/messages/#data-package-attachment-urls) inside a harvest export never expires, so removing a secret ends every data package URL it signed at once, including the links inside exports already delivered, and those exports have to be rebuilt. Step 3 is safe for ordinary URLs alone.
 
 #### `FLUXER_ADMIN_SECRET_KEY_BASE`
 
@@ -1309,7 +1323,7 @@ The Media Proxy takes uploads, transforms images, and serves media back. All are
 
 #### `FLUXER_MEDIA_PROXY_MODE`
 
-Default `mp`. Which routes are served. `mp`, `static`, or `upload`. Anything else is a startup error. Compose sets `upload`.
+Default `mp`. Which routes are served. `mp`, `static`, `upload`, or `relay`. `relay` serves the upload relay and the operator and internal endpoints, and returns 404 for every read. Anything else is a startup error. Also settable with `--mode`. Compose sets `upload`.
 
 #### `FLUXER_MEDIA_PROXY_HOST`
 
@@ -1410,6 +1424,22 @@ Default empty. An external NSFW classifier. No such service ships with the stack
 #### `FLUXER_MEDIA_PROXY_NSFW_THRESHOLD`
 
 Default `0.85`. The media-side NSFW cutoff. Accepts 0.0 to 1.0 and finite. Distinct from the API threshold.
+
+#### `FLUXER_MEDIA_PROXY_CORS_MODE`
+
+Default `off`. The [cross-origin read policy](/media-proxy/overview/#cross-origin-reads). `off`, `report`, or `enforce`. Anything else is a startup error. `report` logs each read whose origin would be refused and changes no response. `enforce` refuses those reads with 403 and sets `Access-Control-Allow-Origin` to the request origin. When `FLUXER_MEDIA_PROXY_MODE` is `static` or `relay`, the Media Proxy ignores it, so a bad value is no startup error. Compose leaves it `off`.
+
+#### `FLUXER_MEDIA_PROXY_CORS_ALLOWED_ORIGINS`
+
+Default empty. Comma-separated origins that may read media through CORS, such as `https://web.fluxer.app`. Spaces around an entry and empty entries are ignored. Each entry is parsed as a URL and must be `http` or `https` with no credentials, query, fragment, or path beyond `/`. Its host must be an IPv4 address, a bracketed IPv6 address, or a domain name whose labels are ASCII letters, digits, and hyphens after parsing. So a wildcard such as `https://*.fluxer.app`, a brace pattern, an underscore, a trailing dot on a domain name, or any non-ASCII character fails. Write an internationalised domain name in its punycode form. Any failing entry makes the process exit. An entry is compared in the form a browser sends. `https://Web.Fluxer.App:443/` matches `https://web.fluxer.app`. Required when `FLUXER_MEDIA_PROXY_CORS_MODE` is `report` or `enforce`. When the policy is `report` or `enforce`, the Media Proxy logs the parsed list once at startup. When `FLUXER_MEDIA_PROXY_MODE` is `static` or `relay`, the Media Proxy ignores it.
+
+Compose sets it to the public origin, built from `FLUXER_PUBLIC_ORIGIN`, or from `FLUXER_PUBLIC_SCHEME`, `FLUXER_DOMAIN`, and `FLUXER_PUBLIC_PORT`. That origin is the only entry, so the web app the instance serves reads its own media. The hosted web client and the desktop app run on `https://web.fluxer.app`. To let them read this instance's media through CORS, set the list in `.env` to the public origin and `https://web.fluxer.app`, such as `https://chat.example.com,https://web.fluxer.app`. A value set in `.env` replaces the Compose value, so it must name the public origin too.
+
+#### `FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE`
+
+Default `off`. The [signed attachment URL policy](/media-proxy/overview/#signed-attachment-urls). `off`, `report`, or `enforce`. Anything else is a startup error, an empty value included. `report` logs each attachment read `enforce` would refuse and serves it. `enforce` refuses those reads with 404. Under both, a read whose signature is valid gets a `Cache-Control` that ends with the signature instead of the usual year. `report` and `enforce` require `FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64`, and the Media Proxy logs the mode and the number of secrets once at startup. When `FLUXER_MEDIA_PROXY_MODE` is `static` or `relay`, the Media Proxy ignores it and the secrets, so a bad value is no startup error. Compose leaves it `off`, so a self-hosted instance signs nothing until an operator turns it on.
+
+This variable is the whole switch, and moving between the three states needs nothing else changed. The Media Proxy reads it once at start, so apply a change with `docker compose up -d media-proxy`, which replaces the container. `docker compose restart media-proxy` reuses the old environment. A cache or proxy in front of the instance has a switch of its own, and [Turning the signature policy on](/operator/reverse-proxy/#turning-the-signature-policy-on) gives the order to move the two in and what each pairing serves.
 
 `media-proxy` range-checks these values at startup and then reads them nowhere: `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_BUFFERED_RETRY_BYTES` and `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_BUFFERED_RETRY_TOTAL_BYTES`. A bad value still fails the boot.
 

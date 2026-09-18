@@ -263,6 +263,9 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 				tokenTtlSecs: uploadRelayConfig.token_ttl_secs,
 				keepDirectCountries: uploadRelayConfig.keep_direct_countries,
 			},
+			attachmentUrls: {
+				secretsBase64: master.services.media_proxy.attachment_urls.secrets_base64,
+			},
 		},
 		geoip: geoipSourceConfig,
 		proxy: {

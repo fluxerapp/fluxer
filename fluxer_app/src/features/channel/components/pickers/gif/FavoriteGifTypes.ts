@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {stripAttachmentSignature} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {inferFormatContentType, PREVIEW_FORMAT_PRIORITY} from '@fluxer/schema/src/domains/gif/GifMediaFormatKeys';
 
 export interface FavoriteGifMediaFormat {
@@ -107,16 +108,36 @@ export function pickCanonicalPreviewFormat(
 
 export const STORED_PREVIEW_DEVICE_PIXEL_RATIO = 2;
 
+export function stripFavoriteGifEntrySignatures(entry: FavoriteGifEntry): FavoriteGifEntry {
+	const url = stripAttachmentSignature(entry.url);
+	const proxyUrl = stripAttachmentSignature(entry.proxy_url);
+	const media: Record<string, FavoriteGifMediaFormat> = {};
+	let mediaChanged = false;
+	for (const [key, format] of Object.entries(entry.media)) {
+		const src = stripAttachmentSignature(format.src);
+		const proxySrc = stripAttachmentSignature(format.proxy_src);
+		if (src === format.src && proxySrc === format.proxy_src) {
+			media[key] = format;
+			continue;
+		}
+		mediaChanged = true;
+		media[key] = {...format, src, proxy_src: proxySrc};
+	}
+	if (url === entry.url && proxyUrl === entry.proxy_url && !mediaChanged) return entry;
+	return {...entry, url, proxy_url: proxyUrl, media};
+}
+
 export function slimFavoriteGifEntry(entry: FavoriteGifEntry): FavoriteGifEntry {
-	const best = pickBestPreviewFormat(entry.media, 'any', {
+	const stripped = stripFavoriteGifEntrySignatures(entry);
+	const best = pickBestPreviewFormat(stripped.media, 'any', {
 		cssWidth: PREVIEW_TILE_CSS_WIDTH,
 		devicePixelRatio: STORED_PREVIEW_DEVICE_PIXEL_RATIO,
 	});
 	if (best == null) {
-		return Object.keys(entry.media).length === 0 ? entry : {...entry, media: {}};
+		return Object.keys(stripped.media).length === 0 ? stripped : {...stripped, media: {}};
 	}
 	return {
-		...entry,
+		...stripped,
 		proxy_url: best.format.proxy_src,
 		width: best.format.width,
 		height: best.format.height,

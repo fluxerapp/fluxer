@@ -118,6 +118,9 @@ export interface APIConfig {
 			tokenTtlSecs: number;
 			keepDirectCountries: Array<string>;
 		};
+		attachmentUrls: {
+			secretsBase64: Array<string>;
+		};
 	};
 	geoip: APIGeoipConfig;
 	proxy: {

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
-    config::DeploymentMode,
     external_path, http_client, http_headers,
     server::{
         relay::body::{
@@ -54,7 +53,7 @@ pub(in crate::server) async fn relay_put(
     headers: HeaderMap,
     request: Request<Body>,
 ) -> Response {
-    if app.cfg.mode != DeploymentMode::Upload {
+    if !app.cfg.mode.serves_upload_relay() {
         return text(StatusCode::NOT_FOUND, "Not Found");
     }
     let key = external_path::percent_decode_string(&key, false);

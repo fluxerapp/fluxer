@@ -4,6 +4,7 @@ import {ME} from '@fluxer/constants/src/AppConstants';
 
 export const Endpoints = {
 	INSTANCE: '/instance',
+	ATTACHMENTS_REFRESH_URLS: '/attachments/refresh-urls',
 	AUTH_LOGIN: '/auth/login',
 	AUTH_LOGIN_MFA_TOTP: '/auth/login/mfa/totp',
 	AUTH_LOGIN_MFA_WEBAUTHN_OPTIONS: '/auth/login/mfa/webauthn/authentication-options',

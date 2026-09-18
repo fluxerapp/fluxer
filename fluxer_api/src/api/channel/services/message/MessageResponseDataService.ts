@@ -107,6 +107,7 @@ export class MessageResponseDataService {
 			can_read_message_history: params.access.canReadMessageHistory,
 			media_endpoint: Config.endpoints.media,
 			media_proxy_secret_key: Config.mediaProxy.secretKey,
+			attachment_url_secret_base64: Config.mediaProxy.attachmentUrls.secretsBase64[0],
 			include_reactions: true,
 		});
 		if (typeof response === 'object' && 'FoundApiMany' in response) {
@@ -147,6 +148,7 @@ export class MessageResponseDataService {
 			can_read_message_history: params.access.canReadMessageHistory,
 			media_endpoint: Config.endpoints.media,
 			media_proxy_secret_key: Config.mediaProxy.secretKey,
+			attachment_url_secret_base64: Config.mediaProxy.attachmentUrls.secretsBase64[0],
 			include_reactions: true,
 			nonce: params.nonce,
 			tts: params.tts,
@@ -177,6 +179,7 @@ export class MessageResponseDataService {
 			can_read_message_history: params.access.canReadMessageHistory,
 			media_endpoint: Config.endpoints.media,
 			media_proxy_secret_key: Config.mediaProxy.secretKey,
+			attachment_url_secret_base64: Config.mediaProxy.attachmentUrls.secretsBase64[0],
 			include_reactions: params.includeReactions ?? true,
 			nonce: params.nonce,
 			tts: params.tts,
@@ -244,6 +247,7 @@ export class MessageResponseDataService {
 				can_read_message_history: params.access.canReadMessageHistory,
 				media_endpoint: Config.endpoints.media,
 				media_proxy_secret_key: Config.mediaProxy.secretKey,
+				attachment_url_secret_base64: Config.mediaProxy.attachmentUrls.secretsBase64[0],
 				include_reactions: params.includeReactions ?? true,
 			});
 			if (typeof response !== 'object' || !('FoundApiMany' in response)) {

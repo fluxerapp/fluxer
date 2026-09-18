@@ -150,8 +150,8 @@ An attachment is one file stored against a message and served from media deliver
 | content_type<sup>1</sup> | string | The media type detected for the attachment |
 | content_hash | ?string | The hash of the attachment's stored bytes, or null when they were never hashed |
 | size | integer | The stored size of the attachment in bytes |
-| url<sup>2</sup> | ?string | Public attachment URL, or null once the attachment has expired |
-| proxy_url<sup>2</sup> | ?string | Media Proxy URL, or null once the attachment has expired |
+| url<sup>2</sup> | ?string | Signed public attachment URL, or null once the attachment has expired |
+| proxy_url<sup>2</sup> | ?string | Signed Media Proxy URL, or null once the attachment has expired |
 | width?<sup>3</sup> | integer | Pixel width for visual media |
 | height?<sup>3</sup> | integer | Pixel height for visual media |
 | placeholder? | string | Encoded media placeholder |
@@ -164,13 +164,46 @@ An attachment is one file stored against a message and served from media deliver
 
 <sup>1</sup> Always present. It falls back to a type guessed from the stored filename when the attachment has no recorded media type, and to `application/octet-stream` when the filename yields no guess
 
-<sup>2</sup> Both fields are the same canonical media endpoint URL, and both become null together once the attachment has expired
+<sup>2</sup> Both fields are the same media endpoint URL with the same [signature](#signed-attachment-urls), and both become null together once the attachment has expired
 
 <sup>3</sup> Omitted for an audio media type even when a stored dimension exists
 
-<sup>4</sup> The key is always present. Its value is the recorded decay deadline, or null when the attachment has none
+<sup>4</sup> The key is always present. Its value is the recorded decay deadline, or null when the attachment has none. It is unrelated to the `ex` time of a signed URL
 
 <sup>5</sup> Present and true only when the attachment has already expired, so an absent key must be read as false
+
+A new attachment starts with the media type derived from the filename given when its upload was requested. For a pre-uploaded attachment that is the `filename` of its [attachment upload request item](#attachment-upload-request-item-object), which can differ from the `filename` the message sends. When the starting type is not a supported image, video, or audio type, Fluxer checks the first 8 KiB of the file for one. For an image, video, or audio file the Media Proxy can read, `content_type` is then the type detected from its bytes. When the starting type is not a media type, SVG bytes keep it. So does a file Fluxer cannot check or the Media Proxy cannot read.
+
+### Signed attachment URLs
+
+An instance configured with attachment URL secrets signs `url` and `proxy_url`. Fluxer adds the signature parameters to the attachment path, before any other parameter. An instance without those secrets returns the URL with none of them.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ex | string | The Unix time in seconds at which the URL expires, as 8 lowercase hexadecimal digits, or `0` on a data package URL |
+| is | string | The Unix time in seconds at which the URL was issued, as 8 lowercase hexadecimal digits |
+| hm | string | The signature over `ex`, `is`, `uc`, and the attachment path, as 64 lowercase hexadecimal digits |
+| uc | string | Present only on a data package URL, where the value is always `dp` |
+
+An ordinary URL has `ex`, `is`, and `hm`, and no `uc`. It is valid for 24 hours from `is`. `is` starts at the attachment's creation time and moves forward in steps of 12 hours, so a URL Fluxer returns has more than 12 and at most 24 hours left. Fluxer signs the URL each time it returns the attachment, so a later read of the message returns a URL for the current step. [Refresh attachment URLs](#refresh-attachment-urls) signs a URL again without reading the message.
+
+A client MUST keep `ex`, `is`, `hm`, and `uc` exactly as issued. It MAY add any other query parameter, such as a [transformation](/media-proxy/transformations/), because the signature covers no other parameter. A client SHOULD refresh a URL whose `ex` is absent or less than one hour away. Once the operator enforces signatures, a read with a missing, altered, or expired signature returns 404 from the Media Proxy, as [Signed attachment URLs](/media-proxy/overview/#signed-attachment-urls) defines.
+
+Fluxer never rewrites message `content` or embed text. An attachment URL pasted into either keeps the parameters it was sent with, and it stops working when its own `ex` passes.
+
+### Data package attachment URLs
+
+A [data harvest](/http-api/users/data-harvest/) archive records a data package URL for each attachment instead of an ordinary one. It has `uc=dp`, and its `ex` is the single character `0`:
+
+```text
+?ex=0&is={issued}&hm={signature}&uc=dp
+```
+
+A data package URL does not expire. The Media Proxy checks its signature against every configured secret and skips the expiry check, so it reads its object for as long as the secret that signed it stays in the instance's secret list. Removing that secret is the only thing that ends it, and it ends every data package URL that secret signed at once.
+
+`is` is set the way it is on an ordinary URL, and the signature covers `uc`, so an ordinary URL relabelled `uc=dp` does not verify, and neither does a data package URL with `uc` removed.
+
+A client treats a data package URL as never expiring and does not refresh it before use. A refused read still triggers the same forced refresh as any other attachment URL, and that returns an ordinary URL.
 
 ### Example
 
@@ -183,8 +216,8 @@ An attachment is one file stored against a message and served from media deliver
   "content_type": "image/png",
   "content_hash": "9f86d081884c7d659a2feaa0c55ad015",
   "size": 18422,
-  "url": "https://media.example.com/attachments/1501314428688998182/1501320000000000001/diagram.png",
-  "proxy_url": "https://media.example.com/attachments/1501314428688998182/1501320000000000001/diagram.png",
+  "url": "https://media.example.com/attachments/1501314428688998182/1501320000000000001/diagram.png?ex=69fba4b5&is=69fa5335&hm=5586be3ae70411fe6582431649e2f28abc6c201e4f12a4f43a3256b72b90d3de",
+  "proxy_url": "https://media.example.com/attachments/1501314428688998182/1501320000000000001/diagram.png?ex=69fba4b5&is=69fa5335&hm=5586be3ae70411fe6582431649e2f28abc6c201e4f12a4f43a3256b72b90d3de",
   "width": 1280,
   "height": 720,
   "flags": 0,
@@ -440,6 +473,10 @@ Every optional field above is omitted entirely.
 
 <sup>1</sup> Always derived from `url`, so every serialised media object has it
 
+When `url` is an attachment URL of this instance, Fluxer signs both fields, so `url` and `proxy_url` are the same URL with the same fresh [signature](#signed-attachment-urls). A rich embed can name such a URL with or without `ex`, `is`, `hm`, and `uc`. Fluxer removes them before it stores the URL, and signs both fields again each time it returns the embed.
+
+Fluxer signs every other embed field that can hold an attachment URL of this instance the same way. That is `url` on the embed itself, `url`, `icon_url`, and `proxy_icon_url` on an [embed author](#embed-author-object), `icon_url` and `proxy_icon_url` on an [embed footer](#embed-footer-object), and `url` on an [embed provider](#embed-provider-object). An icon URL and its proxy twin are then the same signed URL. A field whose URL is not an attachment URL of this instance is returned as it was stored, and a proxy field of an external URL is the [signed external media](/media-proxy/routes/#get-signed-external-media) path instead.
+
 ## Embed footer object
 
 ### Structure
@@ -660,7 +697,7 @@ One declared upload inside a [Request attachment upload URLs](#request-attachmen
 
 <sup>1</sup> A decimal string is converted to the integer
 
-<sup>2</sup> The issued upload URL and the stored attachment both use the media type derived from `filename`
+<sup>2</sup> The issued upload URL uses the media type derived from `filename`. The [message attachment object](#message-attachment-object) states how the stored attachment is typed
 
 ### Singlepart attachment upload object
 
@@ -725,6 +762,28 @@ One planned upload named in a [Complete attachment upload](#complete-attachment-
 | --- | --- | --- |
 | upload_filename | string | Opaque upload key returned when the upload was planned |
 | upload_id | string | Multipart upload identifier returned when the upload was planned |
+
+## Refreshed attachment URL object
+
+One result of [Refresh attachment URLs](#refresh-attachment-urls).
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| original | string | The URL exactly as it was sent |
+| refreshed<sup>1</sup> | string | The URL with a fresh [signature](#signed-attachment-urls), or `original` unchanged |
+
+<sup>1</sup> Equal to `original` when the URL is not an attachment URL of this instance, or when the instance has no attachment URL secrets
+
+A URL is an attachment URL of this instance when all of these hold:
+
+- It parses as an absolute URL whose scheme, host, and port equal those of the media endpoint. The host is compared without regard to case, and a default port equals no port.
+- Its path, as written in the string, starts with the media endpoint path followed by `/attachments/`.
+- The rest of the path, percent-decoded, is valid UTF-8 and a safe storage key with no empty, `.`, or `..` segment.
+- That key is `attachments/{channel_id}/{attachment_id}/{filename}`, where both IDs are decimal digits and the filename is not empty.
+
+To sign a URL, Fluxer removes every `ex`, `is`, `hm`, and `uc` parameter and every empty pair, then places the fresh `ex`, `is`, and `hm` first. Every other parameter follows in its original order and bytes, and a fragment is kept. A [data package URL](#data-package-attachment-urls) loses its `uc` this way, so the result is an ordinary URL valid for 24 hours.
 
 ## Channel pin object
 
@@ -1018,6 +1077,51 @@ The operation makes each completed upload available for a message. It creates no
 ### Rate limit
 
 10 requests per 10 seconds for each authenticated user and channel ID, on the `channel:attachment:upload::channel_id` bucket, which is shared with [Request attachment upload URLs](#request-attachment-upload-urls).
+
+## Refresh attachment URLs
+
+<RouteHeader method="POST" path="/v1/attachments/refresh-urls" bot />
+
+Signs from 1 through 50 attachment URLs again. Returns one [refreshed attachment URL](#refreshed-attachment-url-object) object for each URL sent. A [data package URL](#data-package-attachment-urls) is accepted like any other, and its result is an ordinary URL valid for 24 hours.
+
+### Limitations
+
+- An OAuth2 bearer token is refused with 403 `ACCESS_DENIED`.
+- Fluxer checks no channel membership, no permission, and no attachment existence, and reads no stored data. A URL is signed whether or not its object exists or the caller can see it.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| attachment_urls<sup>1</sup> | array[string] | URLs to sign again (1-50 entries, each at most 2,048 characters) |
+
+<sup>1</sup> Each entry is read exactly as sent, with no trimming or normalisation
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| refreshed_urls<sup>1</sup> | array[[refreshed attachment URL](#refreshed-attachment-url-object) object] | Results in request order |
+
+<sup>1</sup> Contains exactly one entry for each requested URL, in the order the entries were sent, and a duplicated URL therefore produces a duplicated entry
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | Every URL was processed |
+| 400 | [error response](/http-api/#error-response) | Body, URL count, or a URL length is invalid and the request returns `INVALID_FORM_BODY` |
+| 401 | [error response](/http-api/#error-response) | The credential is missing or invalid and the request returns `UNAUTHORIZED` |
+| 403 | [error response](/http-api/#error-response) | Caller presents a bearer credential and the request returns `ACCESS_DENIED` |
+| 403 | [error response](/http-api/#error-response) | The account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+
+:::caution[A refreshed URL is not an access check]
+Anyone who can authenticate can sign any attachment URL of the instance whose path they know. A signature limits how long a copied URL works. It does not decide who can read the file.
+:::
+
+### Rate limit
+
+20 requests per 10 seconds for each authenticated user, on the `attachment:refresh_urls` bucket.
 
 ## Create message
 

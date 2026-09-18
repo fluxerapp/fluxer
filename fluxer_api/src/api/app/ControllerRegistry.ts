@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {registerAdminControllers} from '@app/api/admin/controllers/index';
+import {AttachmentController} from '@app/api/attachment/AttachmentController';
 import {AuthController} from '@app/api/auth/AuthController';
 import {BlueskyOAuthController} from '@app/api/bluesky/BlueskyOAuthController';
 import {Config} from '@app/api/Config';
@@ -45,6 +46,7 @@ export function registerControllers(routes: HonoApp, config: APIConfig): void {
 	GeolocationController(routes);
 	registerAdminControllers(routes);
 	AuthController(routes);
+	AttachmentController(routes);
 	ChannelController(routes);
 	ConnectionController(routes);
 	BlueskyOAuthController(routes);

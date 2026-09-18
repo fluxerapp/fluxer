@@ -91,6 +91,8 @@ pub enum MessageRequest {
         can_read_message_history: bool,
         media_endpoint: String,
         media_proxy_secret_key: String,
+        #[serde(default)]
+        attachment_url_secret_base64: Option<String>,
         include_reactions: Option<bool>,
         nonce: Option<String>,
         tts: Option<bool>,
@@ -103,6 +105,8 @@ pub enum MessageRequest {
         can_read_message_history: bool,
         media_endpoint: String,
         media_proxy_secret_key: String,
+        #[serde(default)]
+        attachment_url_secret_base64: Option<String>,
         include_reactions: Option<bool>,
         nonce: Option<String>,
         tts: Option<bool>,
@@ -115,6 +119,8 @@ pub enum MessageRequest {
         can_read_message_history: bool,
         media_endpoint: String,
         media_proxy_secret_key: String,
+        #[serde(default)]
+        attachment_url_secret_base64: Option<String>,
         include_reactions: Option<bool>,
     },
     ListResponses {
@@ -129,6 +135,8 @@ pub enum MessageRequest {
         can_read_message_history: bool,
         media_endpoint: String,
         media_proxy_secret_key: String,
+        #[serde(default)]
+        attachment_url_secret_base64: Option<String>,
         include_reactions: Option<bool>,
     },
     ExtractMentions {

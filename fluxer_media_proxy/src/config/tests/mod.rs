@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+mod attachment_signature;
+mod cors;
 mod public_endpoint;
 mod s3_read;
 
@@ -10,8 +12,16 @@ fn base_env() -> Vec<(&'static str, &'static str)> {
     vec![("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret")]
 }
 
-fn env_with(extra: &[(&'static str, &'static str)]) -> Vec<(&'static str, &'static str)> {
-    let mut env = base_env();
+fn allowed_origins(cfg: &Config) -> Vec<&str> {
+    cfg.cors
+        .allowed_origins
+        .iter()
+        .map(|origin| origin.to_str().unwrap())
+        .collect()
+}
+
+fn env_with<'a>(extra: &[(&'a str, &'a str)]) -> Vec<(&'a str, &'a str)> {
+    let mut env: Vec<(&'a str, &'a str)> = base_env();
     env.extend_from_slice(extra);
     env
 }
@@ -101,6 +111,27 @@ fn upload_mode_requires_relay_secret() {
 }
 
 #[test]
+fn relay_mode_requires_the_relay_secret() {
+    let err = Config::load_from_iter([
+        ("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret"),
+        ("FLUXER_MEDIA_PROXY_MODE", "relay"),
+    ])
+    .unwrap_err();
+    assert_eq!(
+        "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 is required in upload and relay modes",
+        err.to_string()
+    );
+}
+
+#[test]
+fn serves_upload_relay_is_true_only_for_upload_and_relay() {
+    assert!(!DeploymentMode::Mp.serves_upload_relay());
+    assert!(!DeploymentMode::Static.serves_upload_relay());
+    assert!(DeploymentMode::Upload.serves_upload_relay());
+    assert!(DeploymentMode::Relay.serves_upload_relay());
+}
+
+#[test]
 fn parses_upload_relay_secret() {
     let secret = general_purpose::STANDARD.encode([7u8; 32]);
     let cfg = Config::load_from_iter([
@@ -164,7 +195,10 @@ fn rejects_invalid_mode_env() {
         ("FLUXER_MEDIA_PROXY_MODE", "worker"),
     ])
     .unwrap_err();
-    assert!(err.to_string().contains("FLUXER_MEDIA_PROXY_MODE"));
+    assert_eq!(
+        "FLUXER_MEDIA_PROXY_MODE must be one of: mp, static, upload, relay",
+        err.to_string()
+    );
 }
 
 #[test]
@@ -240,11 +274,21 @@ fn production_media_proxy_release_env_loads() {
         ),
         ("FLUXER_MEDIA_PROXY_TRANSFORM_CACHE_TTL_MS", "1800000"),
         ("FLUXER_MEDIA_PROXY_SOCKET_IO_TIMEOUT_MS", "30000"),
+        ("FLUXER_MEDIA_PROXY_CORS_MODE", "enforce"),
+        (
+            "FLUXER_MEDIA_PROXY_CORS_ALLOWED_ORIGINS",
+            "https://web.fluxer.app,https://web.canary.fluxer.app",
+        ),
     ]))
     .unwrap();
 
     assert_eq!("production", cfg.node_env);
     assert_eq!(DeploymentMode::Mp, cfg.mode);
+    assert_eq!(PolicyMode::Enforce, cfg.cors.mode);
+    assert_eq!(
+        vec!["https://web.fluxer.app", "https://web.canary.fluxer.app"],
+        allowed_origins(&cfg)
+    );
     assert!(cfg.read_only);
     assert_eq!(StorageBackend::S3, cfg.storage.backend);
     assert_eq!("ewr1", cfg.storage.s3_region);
@@ -272,10 +316,17 @@ fn production_static_proxy_release_env_loads() {
         ("FLUXER_MEDIA_PROXY_STORAGE_BACKEND", "s3"),
         ("FLUXER_MEDIA_PROXY_READ_ONLY", "true"),
         ("FLUXER_MEDIA_PROXY_SOCKET_IO_TIMEOUT_MS", "30000"),
+        ("FLUXER_MEDIA_PROXY_CORS_MODE", "enforce"),
+        (
+            "FLUXER_MEDIA_PROXY_CORS_ALLOWED_ORIGINS",
+            "https://web.fluxer.app,https://web.canary.fluxer.app",
+        ),
     ]))
     .unwrap();
 
     assert_eq!(DeploymentMode::Static, cfg.mode);
+    assert_eq!(PolicyMode::Off, cfg.cors.mode);
+    assert!(cfg.cors.allowed_origins.is_empty());
     assert!(cfg.read_only);
     assert_eq!(StorageBackend::S3, cfg.storage.backend);
     assert_eq!("static", cfg.storage.bucket_static);
@@ -288,7 +339,7 @@ fn production_uploads_release_env_loads() {
     let relay_secret = general_purpose::STANDARD.encode([9u8; 48]);
     let cfg = Config::load_from_iter(with_shared_runtime_env(&[
         ("RELEASE_CHANNEL", "stable"),
-        ("FLUXER_MEDIA_PROXY_MODE", "upload"),
+        ("FLUXER_MEDIA_PROXY_MODE", "relay"),
         ("FLUXER_MEDIA_PROXY_STORAGE_BACKEND", "s3"),
         ("FLUXER_MEDIA_PROXY_READ_ONLY", "false"),
         ("FLUXER_MEDIA_PROXY_SOCKET_IO_TIMEOUT_MS", "300000"),
@@ -308,7 +359,7 @@ fn production_uploads_release_env_loads() {
     ]))
     .unwrap();
 
-    assert_eq!(DeploymentMode::Upload, cfg.mode);
+    assert_eq!(DeploymentMode::Relay, cfg.mode);
     assert!(!cfg.read_only);
     assert_eq!(300_000, cfg.socket_io_timeout_ms);
     assert_eq!(900_000, cfg.upload_relay.s3_timeout_ms);
@@ -381,6 +432,8 @@ fn every_deployment_mode_and_storage_backend_variant_parses() {
         ("Static", DeploymentMode::Static),
         ("upload", DeploymentMode::Upload),
         (" UPLOAD ", DeploymentMode::Upload),
+        ("relay", DeploymentMode::Relay),
+        (" RELAY ", DeploymentMode::Relay),
     ] {
         let cfg = Config::load_from_iter([
             ("FLUXER_MEDIA_PROXY_SECRET_KEY", "secret"),

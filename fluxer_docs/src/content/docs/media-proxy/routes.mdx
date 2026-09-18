@@ -20,8 +20,8 @@ Every media read route can produce these statuses in addition to the ones in its
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 403 | Media access denied | The request address is not permitted by the instance media access policy |
-| 404 | Not found | The path is not a media route or the object does not exist |
+| 403 | Forbidden | The [cross-origin read policy](/media-proxy/overview/#cross-origin-reads) refuses the request `Origin` on an `mp` or `upload` endpoint |
+| 404 | Not found | The path is not a media route, the endpoint runs in `relay` mode, or the object does not exist |
 | 405 | Method not allowed | The method is neither `GET` nor `HEAD` |
 | 413 | Payload too large | The stored object exceeds the 500 MiB media bound |
 | 502 | Bad gateway | The object store could not be read |
@@ -30,10 +30,10 @@ Every media read route can produce these statuses in addition to the ones in its
 
 <RouteHeader method="GET" path="/attachments/{path}" unauthenticated />
 
-Returns the attachment identified by the path, optionally transformed. The path comes from the attachment URL the HTTP API returned.
+Returns the attachment identified by the path, optionally transformed. The path and its signature come from the attachment URL the HTTP API returned. Request that URL as issued. A transformation parameter can be added to its query string.
 
 :::caution[An attachment URL is a bearer capability]
-The path has no signature and no expiry, so anyone holding the URL reads the object from any origin for as long as it exists. Leaving the guild does not revoke a URL a member already holds.
+Anyone holding the URL reads the object from any origin the [cross-origin read policy](/media-proxy/overview/#cross-origin-reads) allows. Under the `enforce` [signed attachment URL policy](/media-proxy/overview/#signed-attachment-urls) it works until `ex`, and otherwise for as long as the object exists. A [data package URL](/http-api/messages/#data-package-attachment-urls) has no `ex` and works until the secret that signed it is removed. Leaving the guild does not revoke a URL a member already holds.
 :::
 
 ### Path parameters
@@ -55,8 +55,14 @@ The path has no signature and no expiry, so anyone holding the URL reads the obj
 | animated? | boolean | Whether animated output is requested |
 | effort?<sup>1</sup> | integer | The WebP encoder effort, clamped to 9 |
 | download? | boolean | Whether attachment disposition is requested |
+| ex?<sup>2</sup> | string | The expiry of the signed URL, as 8 lowercase hexadecimal digits of Unix seconds, or `0` on a data package URL |
+| is?<sup>2</sup> | string | The issue time of the signed URL, as 8 lowercase hexadecimal digits of Unix seconds |
+| hm?<sup>2</sup> | string | The signature, as 64 lowercase hexadecimal digits |
+| uc?<sup>2</sup> | string | The data package marker, always `dp` when present |
 
 <sup>1</sup> Read only on this route, and an empty or unparsable value is ignored. Only lossless animated WebP output uses a value above 6
+
+<sup>2</sup> Read under the `report` or `enforce` [signed attachment URL policy](/media-proxy/overview/#signed-attachment-urls), which also defines how they are parsed. `enforce` requires `ex`, `is`, and `hm`, and reads `uc` on every URL, where its presence selects the [data package URL](/http-api/messages/#data-package-attachment-urls) grammar
 
 [When a transformation runs](/media-proxy/transformations/#when-a-transformation-runs) defines the trigger.
 
@@ -73,7 +79,8 @@ A video source requires an explicit image `format`. A video request with `width`
 | 200 | Complete media representation | The object and selected representation are available |
 | 206 | Selected media bytes | One range is satisfiable |
 | 400 | Bad request | The decoded key, a dimension, the format, or the transformation request is invalid, or the transformation failed |
-| 404 | Not found | The attachment object does not exist |
+| 404 | Not found | The attachment object does not exist and the signed attachment URL policy is `off` or `report` |
+| 404 | This content is no longer available. | The signed attachment URL policy refuses the signature, or the object does not exist under `enforce` |
 | 416 | empty | The range is unsatisfiable |
 | 504 | Gateway timeout | Transformation capacity was unavailable or the transformation exceeded its deadline |
 
@@ -93,7 +100,7 @@ Fluxer constructs the signed path and exposes it on these fields:
 - `proxy_url` of a [resolved GIF entry](/http-api/memes/#resolved-gif-entry-object)
 - `proxy_src` of a [GIF media format object](/http-api/memes/#gif-media-format-object)
 
-A field holds a signed path only when its source URL is external. A URL already under the Media Proxy endpoint, and any URL the deployment cannot sign, is returned verbatim, so a client MUST request the value exactly as issued and MUST NOT assume it has the signed shape.
+A field holds a signed external path only when its source URL is external. A URL already under the Media Proxy endpoint keeps that endpoint, and gets an [attachment URL signature](/http-api/messages/#signed-attachment-urls) when it names an attachment of this instance. Any URL the deployment cannot sign is returned verbatim, so a client MUST request the value exactly as issued and MUST NOT assume it has the signed shape.
 
 ### Path parameters
 
@@ -488,14 +495,17 @@ The complete request path is the storage key after percent-decoding. The route a
 
 ## Operator and internal endpoints
 
-These paths are not part of the public API surface. They are exempt from the media access allowlist and are not published by instance discovery. A client MUST NOT depend on them.
+These paths are not part of the public API surface and are not published by instance discovery. A client MUST NOT depend on them.
 
 | Path | Method | Description |
 | --- | --- | --- |
 | `/_health` | GET | Returns 200 while the process is running |
 | `/_metrics` | GET | Returns the Prometheus text exposition of the process. A request from a non-loopback address returns 403 |
 | `/_metadata` | POST | Extracts media metadata, a placeholder, and an optional NSFW verdict for the HTTP API |
+| `/_sniff` | POST | Returns the media type detected in the first 8 KiB of a staged upload for the HTTP API |
 | `/_thumbnail` | POST | Produces a WebP thumbnail of a staged upload for the HTTP API |
 | `/_frames` | POST | Extracts one JPEG video frame for the HTTP API |
 
-`/_metadata`, `/_thumbnail`, and `/_frames` require `Authorization: Bearer {deployment secret key}` and return 401 without it. Their JSON request bodies are bounded, and a body beyond the bound returns 413.
+`/_metadata`, `/_sniff`, `/_thumbnail`, and `/_frames` require `Authorization: Bearer {deployment secret key}` and return 401 without it. Their JSON request bodies are bounded, and a body beyond the bound returns 413.
+
+`/_sniff` returns 200 with a JSON `content_type`. It is the image, video, or audio media type the Media Proxy detects in the upload, or null when the bytes are SVG or a type it cannot process. An upload key that names no object returns 404.

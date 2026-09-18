@@ -12,8 +12,11 @@ use axum::{
 };
 use std::{net::SocketAddr, sync::Arc};
 
-pub(in crate::server) async fn health() -> &'static str {
-    "OK"
+pub(in crate::server) async fn health(State(app): State<Arc<AppState>>) -> String {
+    format!(
+        "OK attachment_signature={}",
+        app.cfg.attachment_signature.mode.label()
+    )
 }
 
 fn is_loopback_peer(peer: &SocketAddr) -> bool {

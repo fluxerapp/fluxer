@@ -4,7 +4,9 @@ import {
 	type FavoriteGifEntry,
 	type FavoriteGifMediaFormat,
 	slimFavoriteGifEntry,
+	stripFavoriteGifEntrySignatures,
 } from '@app/features/channel/components/pickers/gif/FavoriteGifTypes';
+import {stripAttachmentSignature} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import {FAVORITE_GIF_MAX_ENCODED_BYTES} from '@app/features/user/state/SyncedFieldBudget';
 import type {FavoriteGifMediaFormat as FavoriteGifMediaFormatProto} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/pickers_pb';
@@ -91,25 +93,29 @@ class FavoriteGif {
 	}
 
 	hasUrl(url: string): boolean {
-		return this.favoriteGifs.some((entry) => entry.url === url);
+		const target = stripAttachmentSignature(url);
+		return this.favoriteGifs.some((entry) => stripAttachmentSignature(entry.url) === target);
 	}
 
 	findByUrl(url: string): FavoriteGifEntry | null {
-		return this.favoriteGifs.find((entry) => entry.url === url) ?? null;
+		const target = stripAttachmentSignature(url);
+		return this.favoriteGifs.find((entry) => stripAttachmentSignature(entry.url) === target) ?? null;
 	}
 
 	addEntry(entry: FavoriteGifEntry): void {
-		if (this.hasUrl(entry.url)) return;
-		this.favoriteGifs = [...this.favoriteGifs, entry];
+		const stored = stripFavoriteGifEntrySignatures(entry);
+		if (this.hasUrl(stored.url)) return;
+		this.favoriteGifs = [...this.favoriteGifs, stored];
 	}
 
 	removeByUrl(url: string): void {
 		if (!this.hasUrl(url)) return;
-		this.favoriteGifs = this.favoriteGifs.filter((entry) => entry.url !== url);
+		const target = stripAttachmentSignature(url);
+		this.favoriteGifs = this.favoriteGifs.filter((entry) => stripAttachmentSignature(entry.url) !== target);
 	}
 
 	replaceAll(entries: ReadonlyArray<FavoriteGifEntry>): void {
-		this.favoriteGifs = [...entries];
+		this.favoriteGifs = entries.map(stripFavoriteGifEntrySignatures);
 	}
 
 	setSaveGifFavoritesAsSavedMedia(value: boolean): void {

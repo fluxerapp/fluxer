@@ -26,6 +26,7 @@ import Channels from '@app/features/channel/state/Channels';
 import Guilds from '@app/features/guild/state/Guilds';
 import {SUPPRESS_EMBEDS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {getEmbedMediaDimensions} from '@app/features/messaging/utils/MediaDimensionConfig';
 import {buildAnimatedImageProxyURL} from '@app/features/messaging/utils/MediaProxyUtils';
 import {buildMessageEmbedCopyText} from '@app/features/messaging/utils/MessageCopyTextUtils';
@@ -39,6 +40,7 @@ import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {MessageAttachmentFlags, MessageEmbedTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
+import type {EmbedMedia, MessageEmbed} from '@fluxer/schema/src/domains/message/EmbedSchemas';
 import {useLingui} from '@lingui/react/macro';
 import {XIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
@@ -47,7 +49,29 @@ import type React from 'react';
 import {type FC, useCallback, useMemo} from 'react';
 
 const mediaFocusRingClass = messageStyles.mediaFocusRing;
-export const Embed: FC<EmbedProps> = observer(({embed, message, embedIndex, contextualEmbeds, onDelete, isPreview}) => {
+
+function withFreshEmbedMediaUrls(media: EmbedMedia | undefined): EmbedMedia | undefined {
+	if (!media) return media;
+	const url = AttachmentUrlRefresher.fresh(media.url);
+	const proxyUrl = media.proxy_url === undefined ? undefined : AttachmentUrlRefresher.fresh(media.proxy_url);
+	if (url === media.url && proxyUrl === media.proxy_url) return media;
+	return {...media, url, proxy_url: proxyUrl};
+}
+
+function withFreshEmbedUrls(embed: MessageEmbed): MessageEmbed {
+	const image = withFreshEmbedMediaUrls(embed.image);
+	const thumbnail = withFreshEmbedMediaUrls(embed.thumbnail);
+	const video = withFreshEmbedMediaUrls(embed.video);
+	const audio = withFreshEmbedMediaUrls(embed.audio);
+	if (image === embed.image && thumbnail === embed.thumbnail && video === embed.video && audio === embed.audio) {
+		return embed;
+	}
+	return {...embed, image, thumbnail, video, audio};
+}
+
+export const Embed: FC<EmbedProps> = observer((props: EmbedProps) => {
+	const {message, embedIndex, contextualEmbeds, onDelete, isPreview} = props;
+	const embed = withFreshEmbedUrls(props.embed);
 	const {i18n} = useLingui();
 	const {enabled: isMobile} = MobileLayout;
 	const channel = Channels.getChannel(message.channelId);

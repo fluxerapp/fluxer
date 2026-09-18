@@ -46,8 +46,10 @@ pub(in crate::server) fn resolve(app: &AppState, url: &str) -> Option<SelfOrigin
         }
         return Some(SelfOrigin::External { url: target });
     }
-    if path.starts_with("/attachments/") || (path.starts_with("/themes/") && path.ends_with(".css"))
-    {
+    if path.starts_with("/attachments/") {
+        return stored(cdn, decode_storage_key(path).ok()?);
+    }
+    if path.starts_with("/themes/") && path.ends_with(".css") {
         return stored(cdn, decode_storage_key(path).ok()?);
     }
     if let Some(key) = parse_entrance_sound_path(path) {
@@ -306,5 +308,57 @@ mod tests {
             ),
             Some("/a.png")
         );
+    }
+
+    #[test]
+    fn an_enforcing_instance_still_resolves_its_own_attachment_for_internal_reads() {
+        use base64::Engine as _;
+        use fluxer_common::attachment_url_signature::with_signature;
+        use std::time::{SystemTime, UNIX_EPOCH};
+
+        const SECRET: [u8; 32] = [3u8; 32];
+        let app = AppState::for_tests(
+            Config::load_from_iter([
+                (
+                    "FLUXER_MEDIA_PROXY_SECRET_KEY".to_owned(),
+                    "secret".to_owned(),
+                ),
+                (
+                    "FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT".to_owned(),
+                    format!("{ENDPOINT}/"),
+                ),
+                (
+                    "FLUXER_MEDIA_PROXY_STORAGE_BACKEND".to_owned(),
+                    "local".to_owned(),
+                ),
+                (
+                    "FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE".to_owned(),
+                    "enforce".to_owned(),
+                ),
+                (
+                    "FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64".to_owned(),
+                    base64::engine::general_purpose::STANDARD.encode(SECRET),
+                ),
+            ])
+            .expect("self origin signature config"),
+        );
+        let key = "attachments/1544725486800732163/1544971349200470016/cat.gif";
+        let unsigned = format!("{ENDPOINT}/{key}");
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("the clock is after the unix epoch")
+            .as_secs();
+        let signed = with_signature(&unsigned, key, now, now, &SECRET);
+
+        for spelling in [
+            unsigned.clone(),
+            signed.clone(),
+            format!("{signed}&width=64#frame"),
+        ] {
+            match resolve(&app, &spelling) {
+                Some(SelfOrigin::Stored { key: resolved, .. }) => assert_eq!(key, resolved),
+                _ => panic!("an own attachment resolves to a stored object: {spelling}"),
+            }
+        }
     }
 }

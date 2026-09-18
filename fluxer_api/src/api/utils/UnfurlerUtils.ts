@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash} from 'node:crypto';
+import {stripOwnAttachmentSignature} from '@app/api/attachment/AttachmentUrls';
 import {Config} from '@app/api/Config';
 import {Logger} from '@app/api/Logger';
 import * as InviteUtils from '@app/api/utils/InviteUtils';
@@ -103,9 +104,10 @@ export function extractURLs(inputText: string) {
 		if (isFluxerAppExcludedURL(url)) continue;
 		const encoded = idnaEncodeURL(url);
 		if (!encoded) continue;
-		if (!seen.has(encoded)) {
-			seen.add(encoded);
-			result.push(encoded);
+		const canonical = stripOwnAttachmentSignature(encoded);
+		if (!seen.has(canonical)) {
+			seen.add(canonical);
+			result.push(canonical);
 			if (result.length >= 5) break;
 		}
 	}

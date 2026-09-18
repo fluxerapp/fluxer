@@ -12,7 +12,7 @@ The upload relay is where a client sends the bytes of a file. Each upload URL ha
 
 Paths here are relative to the relay base in the issued upload URL. That base is a deployment setting.
 
-The capability is the complete authorisation. The relay reads no HTTP API `Authorization` header and has no request-count rate limit. Every path below `/v1/relay/` is exempt from the [media access policy](/media-proxy/overview/#access-restrictions). The `PUT` has a [deployment mode](/media-proxy/overview/#deployment-modes) gate and returns 404 outside `upload` mode.
+The capability is the complete authorisation. The relay reads no HTTP API `Authorization` header and has no request-count rate limit. The `PUT` has a [deployment mode](/media-proxy/overview/#deployment-modes) gate and returns 404 outside `upload` and `relay` mode.
 
 :::note[Some upload URLs address object storage directly]
 An upload URL points directly to object storage when the caller's IP address geolocates to a country the deployment lists in `keep_direct_countries`. Use the URL returned by the HTTP API. This page describes relay URLs only.

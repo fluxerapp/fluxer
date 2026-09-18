@@ -68,6 +68,10 @@ export const ChannelRateLimitConfigs = {
 		bucket: 'attachment:delete',
 		config: {limit: 40, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
+	ATTACHMENT_URLS_REFRESH: {
+		bucket: 'attachment:refresh_urls',
+		config: {limit: 20, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
 	CHANNEL_TYPING: {
 		bucket: 'channel:typing::channel_id',
 		config: {limit: 20, windowMs: ms('10 seconds')},

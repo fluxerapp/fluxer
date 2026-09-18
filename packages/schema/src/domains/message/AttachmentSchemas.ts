@@ -54,3 +54,30 @@ export const ClientAttachmentReferenceRequest = ClientAttachmentBase.extend({
 });
 
 export type ClientAttachmentReferenceRequest = z.infer<typeof ClientAttachmentReferenceRequest>;
+
+export const RefreshAttachmentUrlsRequest = z.object({
+	attachment_urls: z
+		.array(z.string().max(2048))
+		.min(1)
+		.max(50)
+		.describe('Attachment URLs to refresh (1-50 entries, each at most 2048 characters)'),
+});
+
+export type RefreshAttachmentUrlsRequest = z.infer<typeof RefreshAttachmentUrlsRequest>;
+
+export const RefreshedAttachmentUrl = z.object({
+	original: z.string().describe('The requested URL, echoed back unchanged'),
+	refreshed: z
+		.string()
+		.describe('The same URL carrying a fresh signature, or the original when it is not an attachment URL of ours'),
+});
+
+export type RefreshedAttachmentUrl = z.infer<typeof RefreshedAttachmentUrl>;
+
+export const RefreshAttachmentUrlsResponse = z.object({
+	refreshed_urls: z
+		.array(RefreshedAttachmentUrl)
+		.describe('One entry per requested URL, in the order they were requested'),
+});
+
+export type RefreshAttachmentUrlsResponse = z.infer<typeof RefreshAttachmentUrlsResponse>;

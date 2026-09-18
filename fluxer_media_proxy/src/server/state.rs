@@ -11,6 +11,7 @@ use crate::{
     nsfw::NSFWClient,
     response_body_limit::RESPONSE_BODY_TRANSPORT_CHUNK_BYTES_MAX,
     server::{
+        attachment_signature::WouldDenyLog,
         external::{ExternalHintCache, new_external_hint_cache},
         transform::TransformRuntime,
     },
@@ -23,6 +24,7 @@ pub(in crate::server) struct AppState {
     pub(in crate::server) metrics: Arc<metrics::Metrics>,
     pub(in crate::server) store: Store,
     pub(in crate::server) media: MediaRuntime,
+    pub(in crate::server) signature_log: WouldDenyLog,
 }
 
 pub(in crate::server) struct MediaRuntime {
@@ -54,6 +56,7 @@ impl AppState {
             metrics,
             store,
             media,
+            signature_log: WouldDenyLog::new(),
         })
     }
 
@@ -69,6 +72,7 @@ impl AppState {
             metrics,
             store,
             media,
+            signature_log: WouldDenyLog::new(),
         }
     }
 }

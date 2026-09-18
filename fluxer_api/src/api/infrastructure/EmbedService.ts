@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {stripOwnAttachmentSignature} from '@app/api/attachment/AttachmentUrls';
 import type {ChannelID, MessageID} from '@app/api/BrandedTypes';
 import type {RichEmbedMediaWithMetadata} from '@app/api/channel/EmbedTypes';
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
@@ -51,6 +52,15 @@ interface ProcessedUrlEmbeds {
 interface InitialUrlEmbedResult {
 	embeds: Array<MessageEmbed>;
 	hasUncachedUrls: boolean;
+}
+
+type RichEmbedRequestWithMedia = RichEmbedRequest & {
+	image?: RichEmbedMediaWithMetadata | null;
+	thumbnail?: RichEmbedMediaWithMetadata | null;
+};
+
+function canonicalUrl(url: string | null | undefined): string | null {
+	return url == null ? null : stripOwnAttachmentSignature(url);
 }
 
 export class EmbedService {
@@ -228,20 +238,20 @@ export class EmbedService {
 			type: embed.type ?? null,
 			title: embed.title ?? null,
 			description: embed.description ?? null,
-			url: embed.url ?? null,
+			url: canonicalUrl(embed.url),
 			timestamp: embed.timestamp ? new Date(embed.timestamp) : null,
 			color: embed.color ?? null,
 			author: embed.author
 				? {
 						name: embed.author.name ?? null,
-						url: embed.author.url ?? null,
-						icon_url: embed.author.icon_url ?? null,
+						url: canonicalUrl(embed.author.url),
+						icon_url: canonicalUrl(embed.author.icon_url),
 					}
 				: null,
 			provider: embed.provider
 				? {
 						name: embed.provider.name ?? null,
-						url: embed.provider.url ?? null,
+						url: canonicalUrl(embed.provider.url),
 					}
 				: null,
 			thumbnail: this.mapResponseMedia(embed.thumbnail),
@@ -251,7 +261,7 @@ export class EmbedService {
 			footer: embed.footer
 				? {
 						text: embed.footer.text ?? null,
-						icon_url: embed.footer.icon_url ?? null,
+						icon_url: canonicalUrl(embed.footer.icon_url),
 					}
 				: null,
 			fields:
@@ -272,7 +282,7 @@ export class EmbedService {
 	private mapResponseMedia(media?: MessageEmbedResponse['image']): MessageEmbed['image'] {
 		if (!media) return null;
 		return {
-			url: media.url,
+			url: stripOwnAttachmentSignature(media.url),
 			content_type: media.content_type ?? null,
 			content_hash: media.content_hash ?? null,
 			width: media.width ?? null,
@@ -303,13 +313,7 @@ export class EmbedService {
 		}
 	}
 
-	private async createEmbed(
-		embed: RichEmbedRequest & {
-			image?: RichEmbedMediaWithMetadata | null;
-			thumbnail?: RichEmbedMediaWithMetadata | null;
-		},
-		nsfwMode: MediaProxyNsfwMode,
-	): Promise<Embed> {
+	private async createEmbed(embed: RichEmbedRequestWithMedia, nsfwMode: MediaProxyNsfwMode): Promise<Embed> {
 		const [author, footer, imageResult, thumbnailResult] = await Promise.all([
 			this.processAuthor(embed.author ?? undefined, nsfwMode),
 			this.processFooter(embed.footer ?? undefined, nsfwMode),
@@ -326,7 +330,7 @@ export class EmbedService {
 			type: 'rich',
 			title: embed.title ?? null,
 			description: embed.description ?? null,
-			url: embed.url ?? null,
+			url: canonicalUrl(embed.url),
 			timestamp: embed.timestamp ?? null,
 			color: embed.color ?? 0,
 			footer: footer?.toMessageEmbedFooter() ?? null,
@@ -363,7 +367,7 @@ export class EmbedService {
 		if (attachmentMetadata) {
 			return {
 				media: new EmbedMedia({
-					url: request.url,
+					url: stripOwnAttachmentSignature(request.url),
 					width: attachmentMetadata.width,
 					height: attachmentMetadata.height,
 					description: request.description ?? null,
@@ -376,7 +380,7 @@ export class EmbedService {
 				nsfw: attachmentMetadata.nsfw ?? false,
 			};
 		}
-		const {url, metadata} = await this.resolveExternalMedia(request.url, nsfwMode);
+		const {url, metadata} = await this.resolveExternalMedia(stripOwnAttachmentSignature(request.url), nsfwMode);
 		if (!metadata) {
 			return {
 				media: new EmbedMedia({
@@ -418,13 +422,14 @@ export class EmbedService {
 		url: string;
 		metadata: MediaProxyMetadataResponse | null;
 	}> {
+		const stored = stripOwnAttachmentSignature(url);
 		const directMetadata = await this.mediaService.getMetadata({
 			type: 'external',
 			url,
 			...mediaProxyMetadataPolicy(nsfwMode),
 		});
 		if (this.isRenderableMediaType(directMetadata?.content_type)) {
-			return {url, metadata: directMetadata};
+			return {url: stored, metadata: directMetadata};
 		}
 		const unfurled = await this.unfurlerService.unfurl(url, nsfwMode);
 		for (const embed of unfurled) {
@@ -437,11 +442,11 @@ export class EmbedService {
 					...mediaProxyMetadataPolicy(nsfwMode),
 				});
 				if (this.isRenderableMediaType(candidateMetadata?.content_type)) {
-					return {url: candidate, metadata: candidateMetadata};
+					return {url: stripOwnAttachmentSignature(candidate), metadata: candidateMetadata};
 				}
 			}
 		}
-		return {url, metadata: directMetadata};
+		return {url: stored, metadata: directMetadata};
 	}
 
 	private isRenderableMediaType(contentType: string | null | undefined): boolean {
@@ -461,11 +466,11 @@ export class EmbedService {
 				url: author.icon_url,
 				...mediaProxyMetadataPolicy(nsfwMode),
 			});
-			if (metadata) iconUrl = author.icon_url;
+			if (metadata) iconUrl = stripOwnAttachmentSignature(author.icon_url);
 		}
 		return new EmbedAuthor({
 			name: author.name,
-			url: author.url ?? null,
+			url: canonicalUrl(author.url),
 			icon_url: iconUrl,
 		});
 	}
@@ -482,7 +487,7 @@ export class EmbedService {
 				url: footer.icon_url,
 				...mediaProxyMetadataPolicy(nsfwMode),
 			});
-			if (metadata) iconUrl = footer.icon_url;
+			if (metadata) iconUrl = stripOwnAttachmentSignature(footer.icon_url);
 		}
 		return new EmbedFooter({
 			text: footer.text,

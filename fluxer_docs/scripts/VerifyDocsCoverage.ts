@@ -192,6 +192,7 @@ const MEDIA_PROXY_ROUTES = new Map([
 	['HEAD /_health', '.route("/_health", get(routes::ops::health))'],
 	['GET /_metrics', '.route("/_metrics", get(routes::ops::metrics_handler))'],
 	['POST /_metadata', '.route("/_metadata", post(routes::internal::metadata_handler))'],
+	['POST /_sniff', '.route("/_sniff", post(routes::internal::sniff_handler))'],
 	['POST /_thumbnail', '.route("/_thumbnail", post(routes::internal::thumbnail_handler))'],
 	['POST /_frames', '.route("/_frames", post(routes::internal::frames_handler))'],
 	[
@@ -438,6 +439,25 @@ for (const [route, {documentedIn}] of OUT_OF_BAND_CREDENTIAL) {
 	}
 }
 failures += section('stale anchors (the code moved, update this script)', staleAnchors);
+
+const mediaProxyRouterSource = await readFile(path.join(MEDIA_PROXY_SERVER_DIR, 'runtime.rs'), 'utf8');
+const mediaProxyRegisteredPaths = [...mediaProxyRouterSource.matchAll(/\.route\(\s*"([^"]+)"/gu)].map((match) =>
+	match[1].replace(/\{[^}]*\}/gu, '{}'),
+);
+const mediaProxyListedPaths = new Set([...MEDIA_PROXY_ROUTES.keys()].map((shape) => shape.split(' ')[1]));
+const unlistedMediaProxyPaths = [...new Set(mediaProxyRegisteredPaths)]
+	.filter((routePath) => !mediaProxyListedPaths.has(routePath))
+	.map((routePath) => `${routePath}: build_router registers it and MEDIA_PROXY_ROUTES does not name it`)
+	.sort();
+if (mediaProxyRegisteredPaths.length === 0) {
+	unlistedMediaProxyPaths.push(
+		'fluxer_media_proxy/src/server/runtime.rs registers no route, so this check has gone blind',
+	);
+}
+failures += section('registered by fluxer_media_proxy but absent from this script', unlistedMediaProxyPaths);
+console.log(
+	`  routes registered in fluxer_media_proxy/src/server/runtime.rs: ${mediaProxyRegisteredPaths.length.toString()}`,
+);
 
 const mediaProxyDocumented = documented.filter((route) => route.file.startsWith('media-proxy/'));
 const adminDocumented = documented.filter(

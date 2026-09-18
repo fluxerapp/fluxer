@@ -144,6 +144,9 @@ function defaultConfig(): MasterConfig {
 					token_ttl_secs: 900,
 					keep_direct_countries: [],
 				},
+				attachment_urls: {
+					secrets_base64: [],
+				},
 			},
 			gateway: {
 				port: 8771,
@@ -351,6 +354,28 @@ function validateUploadRelaySecret(value: string, mode: string): void {
 	}
 	if (Buffer.from(trimmed, 'base64').length < 32) {
 		throw new Error('FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 must decode to at least 32 bytes');
+	}
+}
+
+function isCanonicalStandardBase64(value: string): boolean {
+	if (!/^[A-Za-z0-9+/]+={0,2}$/u.test(value)) {
+		return false;
+	}
+	return Buffer.from(value, 'base64').toString('base64') === value;
+}
+
+function validateAttachmentUrlSecrets(values: Array<string>): void {
+	for (const value of values) {
+		const trimmed = value.trim();
+		if (trimmed.length === 0) {
+			continue;
+		}
+		if (!isCanonicalStandardBase64(trimmed)) {
+			throw new Error('FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64 entries must be standard base64');
+		}
+		if (Buffer.from(trimmed, 'base64').length < 32) {
+			throw new Error('FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64 entries must decode to at least 32 bytes');
+		}
 	}
 }
 
@@ -575,6 +600,7 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	requireString(config.s3?.secret_access_key, 'FLUXER_S3_SECRET_ACCESS_KEY');
 	requireString(config.services.media_proxy.secret_key, 'FLUXER_MEDIA_PROXY_SECRET_KEY');
 	validateUploadRelaySecret(config.services.media_proxy.upload_relay.secret_base64, config.services.media_proxy.mode);
+	validateAttachmentUrlSecrets(config.services.media_proxy.attachment_urls.secrets_base64);
 	requireString(config.services.admin.secret_key_base, 'FLUXER_ADMIN_SECRET_KEY_BASE');
 	requireString(config.services.admin.oauth_client_secret, 'FLUXER_ADMIN_OAUTH_CLIENT_SECRET');
 	requireString(config.services.gateway.rpc_auth_token, 'FLUXER_GATEWAY_RPC_AUTH_TOKEN');

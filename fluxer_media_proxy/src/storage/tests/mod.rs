@@ -9,8 +9,8 @@ mod s3_read_endpoint;
 
 use crate::{
     config::{
-        BucketStyle, Config, DeploymentMode, MediaServingConfig, StorageBackend, StorageConfig,
-        UploadRelayConfig,
+        AttachmentSignatureConfig, BucketStyle, Config, CorsConfig, DeploymentMode,
+        MediaServingConfig, PolicyMode, StorageBackend, StorageConfig, UploadRelayConfig,
     },
     constants,
     metrics::{Metrics, http_client::HTTPClientMetrics, storage::StorageMetrics},
@@ -83,6 +83,14 @@ fn test_config(root: &Path) -> Config {
             spool_dir: std::env::temp_dir(),
             spool_chunk_bytes: 64 * 1024,
             spool_max_total_bytes: 1 << 30,
+        },
+        cors: CorsConfig {
+            mode: PolicyMode::Off,
+            allowed_origins: Vec::new(),
+        },
+        attachment_signature: AttachmentSignatureConfig {
+            mode: PolicyMode::Off,
+            secrets: Vec::new(),
         },
     }
 }

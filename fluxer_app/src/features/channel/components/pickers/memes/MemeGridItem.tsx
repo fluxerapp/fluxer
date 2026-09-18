@@ -13,6 +13,7 @@ import * as FavoriteMemeCommands from '@app/features/expressions/commands/Favori
 import {EditFavoriteMemeModal} from '@app/features/expressions/components/modals/EditFavoriteMemeModal';
 import type {FavoriteMeme} from '@app/features/expressions/models/FavoriteMeme';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {buildMediaProxyURL, buildStaticGifPreviewURL} from '@app/features/messaging/utils/MediaProxyUtils';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -113,10 +114,14 @@ export const MemeGridItem = observer(
 			isHovering: isVideoPreviewActive,
 		});
 		const shouldRenderVideoPreview = !isAudio && isVideo && isVideoPreviewActive && shouldAnimateGif;
-		const thumbnailSrc = isGifImage && !shouldAnimateGif ? buildStaticGifPreviewURL(meme.url) : meme.url;
+		const memeUrl = AttachmentUrlRefresher.fresh(meme.url, {refreshUnsigned: true});
+		const thumbnailSrc =
+			isGifImage && !shouldAnimateGif
+				? AttachmentUrlRefresher.fresh(buildStaticGifPreviewURL(meme.url), {refreshUnsigned: true})
+				: memeUrl;
 		const videoPreviewStartTime = meme.duration && meme.duration > 0 ? meme.duration / 2 : null;
 		usePooledVideo({
-			src: shouldRenderVideoPreview ? meme.url : null,
+			src: shouldRenderVideoPreview ? memeUrl : null,
 			containerRef: videoContainerRef,
 			videoPool,
 			autoPlay: shouldRenderVideoPreview,
@@ -219,7 +224,7 @@ export const MemeGridItem = observer(
 							data-flx="channel.pickers.memes.meme-grid-item.div--2"
 						>
 							<VideoPoster
-								src={meme.url}
+								src={memeUrl}
 								placeholder={meme.placeholder}
 								data-flx="channel.pickers.memes.meme-grid-item.video-poster"
 							/>

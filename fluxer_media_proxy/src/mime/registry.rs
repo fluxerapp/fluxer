@@ -4,6 +4,41 @@ use super::Category;
 use crate::media_type::MediaType;
 use http::HeaderValue;
 
+pub const INERT_CONTENT_TYPE: &str = "text/plain; charset=utf-8";
+
+const JAVASCRIPT_ESSENCES: [&str; 16] = [
+    "application/ecmascript",
+    "application/javascript",
+    "application/x-ecmascript",
+    "application/x-javascript",
+    "text/ecmascript",
+    "text/javascript",
+    "text/javascript1.0",
+    "text/javascript1.1",
+    "text/javascript1.2",
+    "text/javascript1.3",
+    "text/javascript1.4",
+    "text/javascript1.5",
+    "text/jscript",
+    "text/livescript",
+    "text/x-ecmascript",
+    "text/x-javascript",
+];
+
+pub fn is_javascript_content_type(content_type: &str) -> bool {
+    content_type.split(',').any(|member| {
+        member
+            .trim_start_matches([' ', '\t'])
+            .split([' ', '\t', ';', '('])
+            .next()
+            .is_some_and(|essence| {
+                JAVASCRIPT_ESSENCES
+                    .iter()
+                    .any(|javascript| essence.eq_ignore_ascii_case(javascript))
+            })
+    })
+}
+
 pub fn normalize(raw: Option<&str>) -> Option<&str> {
     let value = raw?;
     let semi = value.find(';').unwrap_or(value.len());

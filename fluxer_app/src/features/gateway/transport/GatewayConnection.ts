@@ -28,6 +28,7 @@ import {selectGuildActivationTarget} from '@app/features/gateway/transport/Guild
 import GuildMatureContentAgree from '@app/features/guild/state/GuildMatureContentAgree';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import MemberSearch from '@app/features/member/state/MemberSearch';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import Navigation from '@app/features/navigation/state/Navigation';
 import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
@@ -587,6 +588,7 @@ class GatewayConnection {
 		Presence.handleSessionInvalidated();
 		Messages.handleSessionInvalidated();
 		FavoriteMemes.reset();
+		AttachmentUrlRefresher.reset();
 		GuildMatureContentAgree.reset();
 		Initialization.reset();
 		MemberSearch.handleLogout();

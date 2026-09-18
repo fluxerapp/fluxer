@@ -2,9 +2,9 @@
 
 import {AttachmentDecayRepository} from '@app/api/attachment/AttachmentDecayRepository';
 import {AttachmentDecayService} from '@app/api/attachment/AttachmentDecayService';
+import {makeSignedAttachmentCdnUrl, signAttachmentUrl} from '@app/api/attachment/AttachmentUrls';
 import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {createUserID} from '@app/api/BrandedTypes';
-import {Config} from '@app/api/Config';
 import {
 	type MessageResponseAccessContext,
 	MessageResponseDataService,
@@ -56,6 +56,14 @@ class NoopNatsConnectionManager implements INatsConnectionManager {
 	getConnection(): NatsConnection {
 		throw new Error('RepositoryBackedMessageResponseDataService does not use NATS');
 	}
+}
+
+function signOwnUrl(url: string | null | undefined): string | null {
+	return url == null ? null : signAttachmentUrl(url);
+}
+
+function mediaProxyUrl(url: string | null | undefined): string | null {
+	return url?.startsWith('http') ? signAttachmentUrl(url) : null;
 }
 
 export class RepositoryBackedMessageResponseDataService extends MessageResponseDataService {
@@ -343,8 +351,7 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 	}
 
 	private mapAttachmentUrl(message: Message, attachment: Attachment): string {
-		const filename = encodeURIComponent(attachment.filename);
-		return `${Config.endpoints.media}/attachments/${message.channelId.toString()}/${message.id.toString()}/${attachment.id.toString()}/${filename}`;
+		return makeSignedAttachmentCdnUrl(message.channelId, attachment.id, attachment.filename);
 	}
 
 	private async mapAttachments(
@@ -399,7 +406,7 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 	private mapEmbed(embed: Embed, message: Message): MessageEmbedResponse {
 		return {
 			type: embed.type ?? 'rich',
-			url: embed.url,
+			url: signOwnUrl(embed.url),
 			title: embed.title,
 			color: embed.color,
 			timestamp: embed.timestamp?.toISOString() ?? null,
@@ -425,9 +432,9 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 		const iconUrl = 'iconUrl' in author ? author.iconUrl : null;
 		return {
 			name: author.name,
-			url: author.url,
-			icon_url: iconUrl,
-			proxy_icon_url: iconUrl,
+			url: signOwnUrl(author.url),
+			icon_url: signOwnUrl(iconUrl),
+			proxy_icon_url: mediaProxyUrl(iconUrl),
 		};
 	}
 
@@ -435,8 +442,8 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 		if (!footer?.text) return null;
 		return {
 			text: footer.text,
-			icon_url: footer.iconUrl,
-			proxy_icon_url: footer.iconUrl,
+			icon_url: signOwnUrl(footer.iconUrl),
+			proxy_icon_url: mediaProxyUrl(footer.iconUrl),
 		};
 	}
 
@@ -450,10 +457,10 @@ export class RepositoryBackedMessageResponseDataService extends MessageResponseD
 
 	private mapEmbedMedia(media: EmbedMedia | null, message: Message) {
 		if (!media?.url) return null;
-		const url = this.resolveAttachmentUrl(media.url, message);
+		const resolved = this.resolveAttachmentUrl(media.url, message);
 		return {
-			url,
-			proxy_url: url.startsWith('http') ? url : null,
+			url: signAttachmentUrl(resolved),
+			proxy_url: mediaProxyUrl(resolved),
 			content_type: media.contentType,
 			content_hash: media.contentHash,
 			width: media.width,

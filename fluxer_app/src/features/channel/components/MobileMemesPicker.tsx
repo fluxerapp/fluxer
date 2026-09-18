@@ -20,6 +20,7 @@ import FavoriteMemes from '@app/features/expressions/state/FavoriteMemes';
 import {AUDIO_DESCRIPTOR, GIFS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import {useNearViewport} from '@app/features/messaging/hooks/useNearViewport';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {buildStaticGifPreviewURL} from '@app/features/messaging/utils/MediaProxyUtils';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {DeleteIcon, EditIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
@@ -428,7 +429,8 @@ const GridItem = observer(
 		const isAudio = contentType.startsWith('audio/');
 		const isGifImage = !isVideo && contentType.toLowerCase().includes('gif');
 		const shouldAnimateGif = useShouldAnimate({kind: 'gif', isAnimated: !isAudio && (isVideo || isGifImage)});
-		const thumbnailSrc = isGifImage && !shouldAnimateGif ? buildStaticGifPreviewURL(url) : url;
+		const memeUrl = AttachmentUrlRefresher.fresh(url, {refreshUnsigned: true});
+		const thumbnailSrc = isGifImage && !shouldAnimateGif ? buildStaticGifPreviewURL(memeUrl) : memeUrl;
 		const videoPlaybackAllowed = useAnimatedMediaVideoPlayback(videoRef, {
 			enabled: isVisible && !isAudio && isVideo,
 			shouldPlay: shouldAnimateGif,
@@ -471,7 +473,7 @@ const GridItem = observer(
 								disablePictureInPicture={true}
 								disableRemotePlayback={true}
 								preload={shouldAnimateGif ? 'auto' : 'metadata'}
-								src={url}
+								src={memeUrl}
 								data-flx="channel.mobile-memes-picker.grid-item.gif"
 							/>
 						)}

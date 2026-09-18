@@ -54,7 +54,7 @@ One media asset owned by one account. Fluxer resolves every media field at creat
 
 <sup>2</sup> [Save meme from message](#save-meme-from-message) falls back to the selected attachment's own description when the body supplies no non-empty alt text
 
-<sup>3</sup> `url` is the media endpoint followed by `attachments/{user_id}/{attachment_id}/{filename}`
+<sup>3</sup> `url` is the media endpoint followed by `attachments/{user_id}/{attachment_id}/{filename}`, and Fluxer signs it on every read as a [signed attachment URL](/http-api/messages/#signed-attachment-urls)
 
 <sup>4</sup> Set when the source attachment or embed was already animated, and when the Media Proxy reports the stored copy as animated
 

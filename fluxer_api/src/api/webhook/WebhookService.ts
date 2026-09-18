@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import fs from 'node:fs/promises';
+import {stripOwnAttachmentSignature} from '@app/api/attachment/AttachmentUrls';
 import type {ChannelID, GuildID, MessageID, UserID, WebhookID, WebhookToken} from '@app/api/BrandedTypes';
 import {createChannelID, createGuildID, createWebhookID, createWebhookToken} from '@app/api/BrandedTypes';
 import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
@@ -571,12 +572,13 @@ export class WebhookService {
 
 	private async getWebhookAvatar({
 		webhookId,
-		avatarUrl,
+		avatarUrl: requestedAvatarUrl,
 	}: {
 		webhookId: WebhookID;
 		avatarUrl: string | null;
 	}): Promise<string | null> {
-		if (!avatarUrl) return null;
+		if (!requestedAvatarUrl) return null;
+		const avatarUrl = stripOwnAttachmentSignature(requestedAvatarUrl);
 		try {
 			const cacheKey = `webhook:${webhookId}:avatar:${avatarUrl}`;
 			const avatarCache = await this.cacheService.get<string>(cacheKey);

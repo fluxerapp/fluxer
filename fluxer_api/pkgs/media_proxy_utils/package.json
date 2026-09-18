@@ -24,6 +24,10 @@
 			"import": "./src/MediaProxySigner.ts",
 			"types": "./src/MediaProxySigner.ts"
 		},
+		"./src/AttachmentUrlSignature": {
+			"import": "./src/AttachmentUrlSignature.ts",
+			"types": "./src/AttachmentUrlSignature.ts"
+		},
 		"./*": "./*"
 	},
 	"main": "./src/MediaProxyUtils.ts",

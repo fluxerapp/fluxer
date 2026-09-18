@@ -196,20 +196,26 @@ const getSafeExternalUrl = (href: string | null): string | null => {
 	}
 };
 
+async function refreshAttachmentUrl(url: string): Promise<string> {
+	const {default: AttachmentUrlRefresher} = await import('@app/features/messaging/state/AttachmentUrlRefresher');
+	return AttachmentUrlRefresher.refresh(url);
+}
+
 export async function openExternalUrl(url: string, target: string = '_blank') {
 	const safeUrl = getSafeExternalUrl(url);
 	if (!safeUrl) return;
+	const refreshedUrl = await refreshAttachmentUrl(safeUrl);
 	const electronApi = getElectronAPI();
 	if (electronApi) {
 		try {
-			await electronApi.openExternal(safeUrl);
+			await electronApi.openExternal(refreshedUrl);
 			return;
 		} catch (error) {
 			logger.error(' Failed to open external URL via Electron', error);
 			return;
 		}
 	}
-	window.open(safeUrl, target, 'noopener,noreferrer');
+	window.open(refreshedUrl, target, 'noopener,noreferrer');
 }
 
 interface ExternalLinkClickEvent {

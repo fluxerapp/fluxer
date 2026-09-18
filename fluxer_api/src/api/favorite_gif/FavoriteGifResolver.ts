@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {signAttachmentUrl} from '@app/api/attachment/AttachmentUrls';
 import {tryExtractGifProviderSlug} from '@app/api/gif/GifProviderUtils';
 import type {GifService} from '@app/api/gif/GifService';
 import type {IGifProvider} from '@app/api/gif/IGifProvider';
@@ -108,10 +109,11 @@ function favoriteGifEntryFromExternalMedia({
 	mediaService: IMediaService;
 	metadata: MediaProxyMetadataResponse | null;
 }): ResolvedGifEntrySchema {
-	const proxyUrl = mediaService.getExternalMediaProxyURL(url);
-	const media = directMediaFormatFromMetadata({url, proxyUrl, metadata});
+	const signedUrl = signAttachmentUrl(url);
+	const proxyUrl = signAttachmentUrl(mediaService.getExternalMediaProxyURL(url));
+	const media = directMediaFormatFromMetadata({url: signedUrl, proxyUrl, metadata});
 	return {
-		url,
+		url: signedUrl,
 		proxy_url: proxyUrl,
 		width: metadata?.width ?? 0,
 		height: metadata?.height ?? 0,
@@ -153,16 +155,16 @@ function favoriteGifEntryFromEmbedMedia({
 	mediaService: IMediaService;
 	media: EmbedMediaResponse;
 }): ResolvedGifEntrySchema {
-	const proxyUrl = media.proxy_url ?? mediaService.getExternalMediaProxyURL(media.url);
+	const proxyUrl = signAttachmentUrl(media.proxy_url ?? mediaService.getExternalMediaProxyURL(media.url));
 	const width = media.width ?? 0;
 	const height = media.height ?? 0;
 	const contentType = media.content_type ?? '';
 	return {
-		url,
+		url: signAttachmentUrl(url),
 		proxy_url: proxyUrl,
 		width,
 		height,
-		media: directMediaFormatFromDetails({url: media.url, proxyUrl, contentType, width, height}),
+		media: directMediaFormatFromDetails({url: signAttachmentUrl(media.url), proxyUrl, contentType, width, height}),
 		content_type: contentType,
 		placeholder: media.placeholder ?? null,
 	};

@@ -189,7 +189,7 @@ Fluxer prepares the archive in the background. It contains:
 - `account/security.json`
 - the account avatar and banner under `assets/user/` when present
 
-Attachment metadata appears with its message and has the attachment ID, filename, size, content type, CDN URL, and pixel dimensions. The attachment files themselves are never included.
+Attachment metadata appears with its message and has the attachment ID, filename, size, content type, CDN URL, and pixel dimensions. The CDN URL is a [data package URL](/http-api/messages/#data-package-attachment-urls), so it does not expire and still reads its attachment after the archive's own seven day deadline passes. Removing the secret that signed it is the only thing that ends it. The attachment files themselves are never included.
 
 Every authored message is collected, with no ceiling on the count. Messages that no longer exist are omitted. Other read failures fail the attempt. After completion, Fluxer attempts to email a download URL if the account has an email address and the instance has email delivery enabled. That URL expires seven days after it was issued. Email failure does not prevent downloading a completed archive.
 

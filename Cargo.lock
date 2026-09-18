@@ -1870,6 +1870,7 @@ name = "fluxer-messages"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "base64 0.23.1",
  "chrono",
  "criterion",
  "fluxer-svc",
@@ -2038,6 +2039,7 @@ dependencies = [
  "aws-sigv4",
  "axum",
  "base64 0.23.1",
+ "hex",
  "hmac 0.13.0",
  "maxminddb",
  "moka",

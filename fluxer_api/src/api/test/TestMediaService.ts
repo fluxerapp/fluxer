@@ -8,6 +8,7 @@ import {
 	type MediaProxyFrameResponse,
 	type MediaProxyMetadataRequest,
 	type MediaProxyMetadataResponse,
+	type MediaProxySniffResponse,
 } from '@app/api/infrastructure/IMediaService';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 
@@ -85,6 +86,10 @@ export class TestMediaService extends IMediaService {
 
 	async getThumbnail(): Promise<Buffer | null> {
 		return Buffer.alloc(1024);
+	}
+
+	async sniffUpload(_uploadFilename: string): Promise<MediaProxySniffResponse | null> {
+		return {content_type: null};
 	}
 
 	async extractFrames(_request: MediaProxyFrameRequest): Promise<MediaProxyFrameResponse> {

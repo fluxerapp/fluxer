@@ -11,9 +11,10 @@ import {
 	createArchiveTask,
 	throwIfArchiveTerminallyFailed,
 } from '@app/api/archive/ArchiveTask';
+import {makeDataPackageAttachmentCdnUrl} from '@app/api/attachment/AttachmentUrls';
 import {type AttachmentID, type ChannelID, createGuildID, type MessageID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
-import {makeAttachmentCdnKey, makeAttachmentCdnUrl} from '@app/api/channel/services/message/MessageHelpers';
+import {makeAttachmentCdnKey} from '@app/api/channel/services/message/MessageHelpers';
 import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 import {Logger} from '@app/api/Logger';
 import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
@@ -52,6 +53,32 @@ interface PendingAttachmentDownload {
 	channelId: ChannelID;
 	attachmentId: AttachmentID;
 	filename: string;
+}
+
+export interface GuildHarvestAttachment {
+	id: AttachmentID;
+	filename: string;
+	size: bigint;
+	contentType: string;
+	width: number | null;
+	height: number | null;
+}
+
+export function buildGuildHarvestAttachment(
+	channelId: ChannelID,
+	attachment: GuildHarvestAttachment,
+	includeAttachments: boolean,
+): Record<string, unknown> {
+	return {
+		attachment_id: attachment.id.toString(),
+		filename: attachment.filename,
+		size: attachment.size.toString(),
+		content_type: attachment.contentType,
+		archive_path: includeAttachments ? `attachments/${channelId}/${attachment.id}/${attachment.filename}` : null,
+		cdn_url: makeDataPackageAttachmentCdnUrl(channelId, attachment.id, attachment.filename),
+		width: attachment.width,
+		height: attachment.height,
+	};
 }
 
 function cdnBucket(): string {
@@ -182,16 +209,7 @@ const harvestGuildData: ArchiveTaskHandler = async (payload, helpers, attempt) =
 					if (msg.authorId == null) continue;
 					const attachments: Array<object> = [];
 					for (const att of msg.attachments) {
-						attachments.push({
-							attachment_id: att.id.toString(),
-							filename: att.filename,
-							size: att.size.toString(),
-							content_type: att.contentType,
-							archive_path: validated.includeAttachments ? `attachments/${channel.id}/${att.id}/${att.filename}` : null,
-							cdn_url: makeAttachmentCdnUrl(channel.id, att.id, att.filename),
-							width: att.width,
-							height: att.height,
-						});
+						attachments.push(buildGuildHarvestAttachment(channel.id, att, validated.includeAttachments));
 						if (validated.includeAttachments) {
 							channelDownloads.push({
 								channelId: channel.id,

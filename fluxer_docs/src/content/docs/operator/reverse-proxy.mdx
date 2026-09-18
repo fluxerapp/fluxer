@@ -436,6 +436,82 @@ The edge reads the variable at container start, so apply a change with `docker c
 `private_ranges` trusts the whole LAN. With `FLUXER_EDGE_BIND=0.0.0.0:8080`, any host on that network can impersonate any client address. Firewall the port to the proxy host.
 :::
 
+## Caching in front of Fluxer
+
+Media reads are the only traffic worth caching, and the instance expects no cache in front of it. Every rule below is a correctness rule rather than a tuning choice, and a cache that cannot follow one should not store media at all.
+
+#### Leave the signature parameters out of the cache key
+
+`ex`, `is`, `hm`, and `uc` are the [signed attachment URL](/media-proxy/overview/#signed-attachment-urls) parameters. A key that keeps them stores a new entry every time the same object is signed again, which empties the cache of anything useful. Drop all four and keep every other parameter, because the rest select the representation.
+
+Only drop them if your proxy also meets the next two rules. A key without them is the same key for a signed request and an unsigned one, so the signature check is the only thing between an unsigned request and the object.
+
+#### Decode parameter names, and take the last value
+
+Fluxer parses a query string with form URL decoding, so `%73ize` is the name `size` and `+` is a space. When a name repeats, the final value wins. A cache that compares raw bytes, or that keeps the first value, can be handed `%73ize=64` or `size=64&size=4096` and made to store one rendering under the key for another. Match both rules, or refuse to cache a request whose query string you cannot parse that way.
+
+#### Check the signature before the cache lookup
+
+A cache hit never reaches the instance, so the Media Proxy's own signature check never runs on one. Under the `enforce` [signed attachment URL policy](/media-proxy/overview/#signed-attachment-urls), verify the signature in the proxy before it looks in the cache. An nginx `access_by_lua_block` runs in the access phase, which is before the cache lookup. A proxy that cannot do that must leave `/attachments/` uncached, or it will serve an expired or forged URL from a warm entry.
+
+#### Verify the same path the cache key is built from
+
+Running before the cache lookup is not enough on its own. The check and the key must read the same spelling of the path, or a request the check skips still reaches the entry the key names.
+
+In nginx that spelling is `$uri`, which nginx has already percent decoded, merged repeated slashes in, and resolved `.` and `..` out of. `$request_uri` is the raw bytes the client sent. A check that scopes itself on `$request_uri` never sees `//attachments/...`, `/attachments%2F...`, `/attachments/./...`, or `/x/../attachments/...` as an attachment read, while `$uri` and the cache key make all four the same object. Read `$uri` for the prefix test and for the storage key, take the query from `$request_uri`, and refuse a path whose `$uri` is not a usable storage key rather than passing it through.
+
+The signature covers the decoded storage key, which is `$uri` without its leading slash.
+
+#### Do not cache a range request without slice support
+
+nginx removes `Range` from a request it may cache unless the slice module is built in, so a seek into a video pulls the whole object. Set `proxy_cache_max_range_offset 0`. A range request then reaches the instance untouched and is not stored, while an entry that is already warm still answers ranges from cache.
+
+#### Wire up purge, and bound the entry lifetime anyway
+
+Every media 200 is `public, max-age=31536000` with no `ETag` and no `Last-Modified`, so a cache never revalidates and a deleted object stays until its entry goes. Point `FLUXER_CACHE_PURGE_HTTP_ENDPOINT` at a receiver that clears your cache, and read the contract it must meet under [Cache purge](/operator/configuration/#feature-flags-and-development-switches). Give stored media a shorter lifetime of your own as well, because a purge that is lost is never sent again.
+
+## Turning the signature policy on
+
+`FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE` is the instance switch, and a proxy that verifies signatures has one of its own. Both sides name the same three states, `off`, `report`, and `enforce`. Both read their setting once at start, so apply an instance change with `docker compose up -d media-proxy`, which replaces the container. `docker compose restart media-proxy` reuses the old environment and changes nothing.
+
+Turn the policy on in this order, and stop wherever a refusal appears that you did not expect:
+
+1. Give `api`, `worker`, and `media-proxy` the same `FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64`, and give the proxy the same list. Every URL the instance returns is signed from here on, and nothing verifies yet.
+2. Leave it there until the clients holding the unsigned URLs issued before step 1 have replaced them. A client refreshes a URL whose `ex` is absent or under an hour away, and one that has been open since before step 1 keeps its unsigned URLs until it reloads.
+3. Set both sides to `report` and read the logs. Under `report` nothing is refused, and each read `enforce` would refuse is logged with its reason on the side that saw it.
+4. Move the proxy to `enforce` once `report` is quiet.
+5. Move the instance to `enforce`.
+
+The proxy goes first because a cache hit never reaches the instance. Reversing steps 4 and 5 leaves every warm entry readable without a signature for as long as it lives.
+
+From step 3 the instance caps `Cache-Control` on a read whose signature is valid at the time that signature has left, where `off` returns a year. `report` caps it too, so the entries stored during the dry run do not outlive the URLs that made them. A read `report` would refuse still returns a year, because there is no signature to cap it against. Entries stored before step 3 keep the year they were given.
+
+### When the two sides disagree
+
+| Proxy | Instance | What an attachment read gets |
+| --- | --- | --- |
+| `off` | `off` | Served. Neither side reads a signature |
+| `off` | `report` | Served. The instance logs what `enforce` would refuse |
+| `off` | `enforce` | Refused, unless a warm entry answers it without reaching the instance |
+| `report` | `off` | Served. The proxy logs what its own `enforce` would refuse |
+| `report` | `report` | Served. Both sides log |
+| `report` | `enforce` | Refused, unless a warm entry answers it without reaching the instance |
+| `enforce` | `off` | Refused at the proxy, before the cache lookup |
+| `enforce` | `report` | Refused at the proxy. The instance logs nothing, because it is never asked |
+| `enforce` | `enforce` | Refused at the proxy |
+
+The two rows that serve a read the instance would refuse are the ones where the instance enforces alone. The instance is right and the cache is stale, and the entry answers until it goes, so pair an instance-first change with a purge of `/attachments/`.
+
+A change to `FLUXER_MEDIA_PROXY_CORS_MODE` has the same problem and no step order that avoids it. An entry stored while the policy was `off` holds `Access-Control-Allow-Origin: *` and a year of `Cache-Control`, and the proxy replays both on every hit without asking the instance. The proxy's own signature check does not help, because it reads the signature and never reads `Origin`, so a foreign page holding one valid signed URL still reads the bytes cross-origin from a warm entry. Purge `/attachments/` when you move the CORS policy to `enforce`, the same purge step 5 needs.
+
+`enforce` at the proxy alone covers every request that passes through it. Anything that can reach the instance another way is unchecked until the instance enforces too: a second cache, a health probe from outside the proxy, an internal service that reads an attachment URL directly, and a deployment running no proxy at all. Those are what step 5 covers, and what it can break.
+
+Step 4 also ends the instance's own evidence. A read the proxy refuses never reaches the instance, so once the proxy enforces the instance logs nothing under `report` and its stream stays empty whatever it would have refused. Take step 5 on what step 3 showed, while both sides were still in `report`.
+
+Both sides must hold the same secret list. A side missing a key refuses the URLs signed with it, so add a new key to both sides before the instance starts signing with it, and keep a retired key on both until the last URL it signed has expired. An ordinary URL expires within a day. A [data package URL](/http-api/messages/#data-package-attachment-urls) never does, and removing the key that signed it is what ends it.
+
+With no secret list, `api` and `worker` return unsigned URLs, and a side in `enforce` refuses every attachment read. Never move a side to `enforce` before signing is on.
+
 ## Voice media does not use the proxy
 
 LiveKit signalling goes through `/livekit/*` like everything else. WebRTC media does not touch the proxy at all:

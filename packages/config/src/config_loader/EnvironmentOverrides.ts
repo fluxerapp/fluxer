@@ -172,6 +172,10 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 		path: ['services', 'media_proxy', 'upload_relay', 'keep_direct_countries'],
 		parse: parseCsv,
 	},
+	FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64: {
+		path: ['services', 'media_proxy', 'attachment_urls', 'secrets_base64'],
+		parse: parseCsv,
+	},
 	FLUXER_ADMIN_PORT: {path: ['services', 'admin', 'port'], parse: parseInteger},
 	FLUXER_ADMIN_BASE_PATH: {path: ['services', 'admin', 'base_path']},
 	FLUXER_ADMIN_SECRET_KEY_BASE: {path: ['services', 'admin', 'secret_key_base']},

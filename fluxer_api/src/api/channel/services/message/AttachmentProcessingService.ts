@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import fs from 'node:fs';
-import {createAttachmentID, type UserID} from '@app/api/BrandedTypes';
+import {createAttachmentID, createGuildID, createUserID, type UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {AttachmentToProcess} from '@app/api/channel/AttachmentDTOs';
 import type {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
@@ -11,6 +11,7 @@ import {
 	makeAttachmentCdnKey,
 	validateAttachmentIds,
 } from '@app/api/channel/services/message/MessageHelpers';
+import {scheduleUploadSegmentSignal} from '@app/api/channel/services/message/UploadSegmentSignal';
 import type {MessageAttachment} from '@app/api/database/types/MessageTypes';
 import {contentModerationService, type ModerationContext} from '@app/api/infrastructure/ContentModerationService';
 import type {
@@ -65,6 +66,7 @@ interface ProcessedAttachment {
 	hasVirusDetected: boolean;
 	applyFinalObjectMetadata: boolean;
 	sourceLocalPath: string | null;
+	sniffedContentType: string | null;
 }
 
 export class AttachmentProcessingService {
@@ -172,6 +174,24 @@ export class AttachmentProcessingService {
 			}
 			return result.attachment;
 		});
+		scheduleUploadSegmentSignal({
+			userId: params.uploadUserId,
+			guildId: params.guild ? createGuildID(BigInt(params.guild.id)) : null,
+			guildOwnerId: params.guild ? createUserID(BigInt(params.guild.owner_id)) : null,
+			channelId: params.message.channelId,
+			messageId: params.message.id,
+			attachments: processedAttachments.map((attachment, index) => ({
+				attachmentId: attachment.attachment_id,
+				uploadKey: results[index].copyOperation.sourceKey,
+				filename: attachment.filename,
+				contentType: attachment.content_type,
+				size: attachment.size,
+				duration: attachment.duration ?? null,
+				waveform: attachment.waveform ?? null,
+				sniffedContentType: results[index].sniffedContentType,
+				requestIp: bindingResults[index].bound?.request_ip ?? null,
+			})),
+		});
 		return {attachments: processedAttachments, hasVirusDetected: false};
 	}
 
@@ -213,7 +233,31 @@ export class AttachmentProcessingService {
 		let applyFinalObjectMetadata = false;
 		const clientDuration: number | null = attachment.duration ?? null;
 		const waveform: string | null = attachment.waveform ?? null;
-		const isMedia = isMediaFile(contentType);
+		const sniffedContentType = isMediaFile(contentType)
+			? null
+			: await this.sniffAttachmentMediaType({
+					index,
+					uploadFilename: attachment.upload_filename,
+					filename: attachment.filename,
+				});
+		if (sniffedContentType !== null) {
+			Logger.warn(
+				{
+					surface: 'message_attachment',
+					userId: params.uploadUserId.toString(),
+					guildId: params.guild?.id ?? null,
+					channelId: message.channelId.toString(),
+					messageId: message.id.toString(),
+					attachmentId: attachmentId.toString(),
+					uploadKey: attachment.upload_filename,
+					filename: attachment.filename,
+					filenameContentType: contentType,
+					sniffedContentType,
+				},
+				'content_moderation.attachment_type_mismatch',
+			);
+		}
+		const isMedia = isMediaFile(contentType) || sniffedContentType !== null;
 		let metadata: MediaProxyMetadataResponse | null = null;
 		if (isMedia) {
 			metadata = await this.getAttachmentMediaMetadata({
@@ -303,6 +347,7 @@ export class AttachmentProcessingService {
 					hasVirusDetected,
 					applyFinalObjectMetadata,
 					sourceLocalPath: null,
+					sniffedContentType,
 				};
 			}
 			const isAudio = contentType.startsWith('audio/');
@@ -341,6 +386,7 @@ export class AttachmentProcessingService {
 				hasVirusDetected,
 				applyFinalObjectMetadata,
 				sourceLocalPath: retainedLocalPath,
+				sniffedContentType,
 			};
 		} catch (error) {
 			if (sourceLocalPath) {
@@ -348,6 +394,27 @@ export class AttachmentProcessingService {
 			}
 			throw error;
 		}
+	}
+
+	private async sniffAttachmentMediaType(params: {
+		index: number;
+		uploadFilename: string;
+		filename: string;
+	}): Promise<string | null> {
+		const sniff = await this.mediaService.sniffUpload(params.uploadFilename);
+		if (sniff) {
+			return sniff.content_type;
+		}
+		Logger.warn(
+			{
+				context: METADATA_PROBE_DEGRADED_CONTEXT,
+				attachmentIndex: params.index,
+				uploadFilename: params.uploadFilename,
+				filename: params.filename,
+			},
+			'Attachment content sniff unavailable, storing attachment with its filename type',
+		);
+		return null;
 	}
 
 	private async getAttachmentMediaMetadata(params: {

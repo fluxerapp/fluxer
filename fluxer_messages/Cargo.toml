@@ -8,6 +8,7 @@ publish = false
 [dependencies]
 fluxer_common = { path = "../fluxer_common" }
 anyhow = "1.0.104"
+base64 = "0.23"
 chrono = { version = "0.4.45", default-features = false, features = ["serde"] }
 fluxer-svc = { path = "../fluxer_svc" }
 fluxer_markdown_parser = { path = "../packages/markdown_parser/rust" }

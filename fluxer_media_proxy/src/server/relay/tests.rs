@@ -150,6 +150,7 @@ async fn relay_body_stream_waits_out_a_client_stall_inside_the_total_budget() {
 }
 
 fn upload_relay_test_config(
+    mode: &str,
     storage_root: &std::path::Path,
     spool_dir: &std::path::Path,
     relay_secret: &[u8],
@@ -159,7 +160,7 @@ fn upload_relay_test_config(
             "FLUXER_MEDIA_PROXY_SECRET_KEY".to_owned(),
             "secret".to_owned(),
         ),
-        ("FLUXER_MEDIA_PROXY_MODE".to_owned(), "upload".to_owned()),
+        ("FLUXER_MEDIA_PROXY_MODE".to_owned(), mode.to_owned()),
         (
             "FLUXER_MEDIA_PROXY_STORAGE_BACKEND".to_owned(),
             "local".to_owned(),
@@ -222,7 +223,7 @@ async fn relay_put_accepts_unknown_content_length_body() {
     let spool_dir = tmp_root.join("spool");
     tokio::fs::create_dir_all(&spool_dir).await.unwrap();
     let relay_secret = [7u8; 32];
-    let cfg = upload_relay_test_config(&storage_root, &spool_dir, &relay_secret);
+    let cfg = upload_relay_test_config("upload", &storage_root, &spool_dir, &relay_secret);
     let key = "guild/diagnostics.txt";
     let token = encode_token(
         &TokenPayload {
@@ -316,7 +317,7 @@ async fn relay_put_rejects_a_capability_issued_for_another_key() {
     let spool_dir = tmp_root.join("spool");
     tokio::fs::create_dir_all(&spool_dir).await.unwrap();
     let relay_secret = [7u8; 32];
-    let cfg = upload_relay_test_config(&storage_root, &spool_dir, &relay_secret);
+    let cfg = upload_relay_test_config("upload", &storage_root, &spool_dir, &relay_secret);
     let token = relay_test_token("guild/a.bin", &relay_secret);
     let requested_key = "guild/b.bin";
 
@@ -352,7 +353,7 @@ async fn relay_put_answers_500_when_the_spool_write_fails() {
     let storage_root = tmp_root.join("storage");
     let spool_dir = tmp_root.join("missing-spool");
     let relay_secret = [7u8; 32];
-    let cfg = upload_relay_test_config(&storage_root, &spool_dir, &relay_secret);
+    let cfg = upload_relay_test_config("upload", &storage_root, &spool_dir, &relay_secret);
     let key = "guild/unspoolable.bin";
     let token = relay_test_token(key, &relay_secret);
     let request = Request::builder()
@@ -392,7 +393,7 @@ async fn relay_put_streams_known_length_body_without_spooling() {
     let spool_dir = tmp_root.join("spool");
     tokio::fs::create_dir_all(&spool_dir).await.unwrap();
     let relay_secret = [7u8; 32];
-    let cfg = upload_relay_test_config(&storage_root, &spool_dir, &relay_secret);
+    let cfg = upload_relay_test_config("upload", &storage_root, &spool_dir, &relay_secret);
     let key = "guild/streamed.bin";
     let token = relay_test_token(key, &relay_secret);
     let body = Bytes::from_static(b"streamed straight through");
@@ -426,7 +427,7 @@ async fn relay_put_rejects_streaming_body_longer_than_declared() {
     let spool_dir = tmp_root.join("spool");
     tokio::fs::create_dir_all(&spool_dir).await.unwrap();
     let relay_secret = [7u8; 32];
-    let cfg = upload_relay_test_config(&storage_root, &spool_dir, &relay_secret);
+    let cfg = upload_relay_test_config("upload", &storage_root, &spool_dir, &relay_secret);
     let key = "guild/overrun.bin";
     let token = relay_test_token(key, &relay_secret);
 
@@ -459,7 +460,7 @@ async fn relay_put_rejects_streaming_body_shorter_than_declared() {
     let spool_dir = tmp_root.join("spool");
     tokio::fs::create_dir_all(&spool_dir).await.unwrap();
     let relay_secret = [7u8; 32];
-    let cfg = upload_relay_test_config(&storage_root, &spool_dir, &relay_secret);
+    let cfg = upload_relay_test_config("upload", &storage_root, &spool_dir, &relay_secret);
     let key = "guild/short.bin";
     let token = relay_test_token(key, &relay_secret);
 
@@ -580,6 +581,84 @@ async fn relay_put_returns_ok_for_a_malformed_upstream_etag() {
                 .unwrap()
                 .to_str()
                 .unwrap()
+        );
+    }
+}
+
+#[tokio::test]
+async fn relay_put_stores_the_object_in_upload_and_relay_modes() {
+    for mode in ["upload", "relay"] {
+        let tmp = tempfile::tempdir().unwrap();
+        let tmp_root = tmp.path().canonicalize().unwrap();
+        let storage_root = tmp_root.join("storage");
+        let spool_dir = tmp_root.join("spool");
+        tokio::fs::create_dir_all(&spool_dir).await.unwrap();
+        let relay_secret = [7u8; 32];
+        let cfg = upload_relay_test_config(mode, &storage_root, &spool_dir, &relay_secret);
+        let key = "guild/relayed.bin";
+        let token = relay_test_token(key, &relay_secret);
+        let body = Bytes::from_static(b"relayed upload bytes");
+
+        let response = relay_put(
+            State(test_app_state(cfg)),
+            Path(key.to_owned()),
+            Query(HashMap::from([("t".to_owned(), token)])),
+            content_length_headers(body.len() as u64),
+            Request::builder()
+                .method(Method::PUT)
+                .body(Body::from(body.clone()))
+                .unwrap(),
+        )
+        .await;
+
+        assert_eq!(StatusCode::OK, response.status(), "{mode}");
+        let stored = tokio::fs::read(storage_root.join("uploads").join(key))
+            .await
+            .unwrap();
+        assert_eq!(body.as_ref(), stored.as_slice(), "{mode}");
+    }
+}
+
+#[tokio::test]
+async fn relay_put_returns_404_outside_upload_and_relay_modes() {
+    for mode in ["mp", "static"] {
+        let tmp = tempfile::tempdir().unwrap();
+        let tmp_root = tmp.path().canonicalize().unwrap();
+        let storage_root = tmp_root.join("storage");
+        let spool_dir = tmp_root.join("spool");
+        tokio::fs::create_dir_all(&spool_dir).await.unwrap();
+        let relay_secret = [7u8; 32];
+        let cfg = upload_relay_test_config(mode, &storage_root, &spool_dir, &relay_secret);
+        let key = "guild/unserved.bin";
+        let token = relay_test_token(key, &relay_secret);
+        let body = Bytes::from_static(b"no relay in this mode");
+
+        let response = relay_put(
+            State(test_app_state(cfg)),
+            Path(key.to_owned()),
+            Query(HashMap::from([("t".to_owned(), token)])),
+            content_length_headers(body.len() as u64),
+            Request::builder()
+                .method(Method::PUT)
+                .body(Body::from(body))
+                .unwrap(),
+        )
+        .await;
+
+        assert_eq!(StatusCode::NOT_FOUND, response.status(), "{mode}");
+        assert!(
+            !response
+                .headers()
+                .contains_key(header::ACCESS_CONTROL_ALLOW_ORIGIN),
+            "{mode}"
+        );
+        let response_body = to_bytes(response.into_body(), 64).await.unwrap();
+        assert_eq!(b"Not Found", response_body.as_ref(), "{mode}");
+        assert!(
+            !tokio::fs::try_exists(storage_root.join("uploads").join(key))
+                .await
+                .unwrap_or(false),
+            "{mode}"
         );
     }
 }
@@ -712,7 +791,7 @@ async fn relay_put_omits_the_etag_when_the_store_returns_none() {
     let spool_dir = tmp_root.join("spool");
     tokio::fs::create_dir_all(&spool_dir).await.unwrap();
     let relay_secret = [7u8; 32];
-    let cfg = upload_relay_test_config(&storage_root, &spool_dir, &relay_secret);
+    let cfg = upload_relay_test_config("upload", &storage_root, &spool_dir, &relay_secret);
     let key = "guild/no-upstream-etag.bin";
     let token = relay_test_token(key, &relay_secret);
     let body = Bytes::from_static(b"local backend bytes");
