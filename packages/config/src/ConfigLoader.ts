@@ -252,15 +252,12 @@ function defaultConfig(): MasterConfig {
 				},
 			},
 			blocklist_feeds: {},
+			tor_exit_list: {},
+			breached_password_check: {},
 			risk_integration: {
 				enabled: false,
 				ipinfo_api_key: '',
 				account_policy_dsl: undefined,
-				tor: {
-					block_all_relays: false,
-					reverse_dns_heuristic: false,
-					reverse_dns_timeout_ms: 750,
-				},
 			},
 			push: {
 				apns: {

@@ -137,9 +137,11 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 			await initializeRefreshCache(ipBanCache, 'IP ban cache', logger);
 			await startAbuseReplicationSubscriber(kvClient);
 			logger.info('Abusive-IP auto-banner replication started');
-			torExitListCache.setKvClient(kvClient);
-			await torExitListCache.initialize();
-			logger.info('Tor exit list cache initialized');
+			if (config.torExitList.enabled) {
+				torExitListCache.setKvClient(kvClient);
+				await torExitListCache.initialize();
+				logger.info('Tor exit list cache initialized');
+			}
 			const {urlBlocklistCache} = await import('@app/api/middleware/UrlBlocklistCache');
 			urlBlocklistCache.setRefreshSubscriber(kvClient);
 			const {getStorageService} = await import('@app/api/middleware/ServiceSingletons');

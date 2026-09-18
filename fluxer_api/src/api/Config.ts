@@ -348,6 +348,12 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 		blocklistFeeds: {
 			enabled: master.integrations.blocklist_feeds.enabled ?? !master.instance.self_hosted,
 		},
+		torExitList: {
+			enabled: master.integrations.tor_exit_list.enabled ?? !master.instance.self_hosted,
+		},
+		breachedPasswordCheck: {
+			enabled: master.integrations.breached_password_check.enabled ?? !master.instance.self_hosted,
+		},
 		captcha: {
 			enabled: master.integrations.captcha.enabled,
 			provider: master.integrations.captcha.provider,

@@ -965,18 +965,6 @@ Default empty. The ipinfo key. Paired with `FLUXER_RISK_INTEGRATION_ENABLED`.
 
 No default. The account risk policy. JSON. Malformed JSON fails startup, and an unknown key in a well-formed policy surfaces when the policy runs.
 
-#### `FLUXER_RISK_TOR_BLOCK_ALL_RELAYS`
-
-Default `false`. Whether every Tor relay is blocked. Covers entry and middle relays as well as exit nodes.
-
-#### `FLUXER_RISK_TOR_REVERSE_DNS_HEURISTIC`
-
-Default `false`. Reverse DNS Tor detection. Adds a lookup to the request path.
-
-#### `FLUXER_RISK_TOR_REVERSE_DNS_TIMEOUT_MS`
-
-Default `750`. The lookup timeout. Milliseconds.
-
 #### `FLUXER_ABUSE_INBOUND_PHONE_COUNTRY_CODES`
 
 Default empty. Allowed inbound phone countries. Comma separated, passed through unvalidated.
@@ -1008,6 +996,14 @@ Default `flag_spammer`. What happens when it fires. `flag_spammer` or `suppress_
 #### `FLUXER_BLOCKLIST_FEEDS_ENABLED`
 
 Defaults to the inverse of `FLUXER_SELF_HOSTED`. External blocklist feeds. Off by default on a self-hosted instance.
+
+#### `FLUXER_TOR_EXIT_LIST_ENABLED`
+
+Defaults to the inverse of `FLUXER_SELF_HOSTED`. Tor exit blocking. The API fetches the exit relay list from `onionoo.torproject.org` at startup and every 30 minutes. Off by default on a self-hosted instance.
+
+#### `FLUXER_BREACHED_PASSWORD_CHECK_ENABLED`
+
+Defaults to the inverse of `FLUXER_SELF_HOSTED`. Breached password rejection. Sends the first five characters of the password's SHA-1 hash to `api.pwnedpasswords.com`. Off by default on a self-hosted instance.
 
 A second family, unrelated to the rules above, tunes the IP auto-banner: `FLUXER_ABUSE_WINDOW_MS`, the `FLUXER_ABUSE_THRESHOLD_` names, the `FLUXER_ABUSE_TOKEN_DIVERSITY_` names, `FLUXER_ABUSE_BAN_TTL_SEC`, `FLUXER_ABUSE_BATCH_FLUSH_MS`, `FLUXER_ABUSE_MAX_BATCH_TICKS`, `FLUXER_ABUSE_MAX_NEW_TOKENS_PER_TICK`, `FLUXER_ABUSE_MAX_TRACKED_IPS`, `FLUXER_ABUSE_MAX_TOKEN_HASHES_PER_IP`, `FLUXER_ABUSE_MIN_SCORE_FOR_LOOKUP`, `FLUXER_ABUSE_MIN_TOKENS_FOR_LOOKUP`, and `FLUXER_ABUSE_REQUIRED_SCORE_WINDOWS_FOR_AUTO_BAN`. All are read directly from the environment, none are in `.env.example` or the Compose file, and a non-finite value or one at or below zero falls back to the default.
 

@@ -97,7 +97,7 @@ Modifies the current account and returns the resulting [user](/http-api/users/#u
 
 <sup>4</sup> Any string value returns [`EMAIL_MUST_BE_CHANGED_VIA_TOKEN`](/http-api/errors/) on the `email` path, joined by `INVALID_EMAIL_FORMAT` when the string is not an address
 
-<sup>5</sup> A claimed account also supplies `password`, and a body that omits it is rejected with `PASSWORD_NOT_SET`. A breached password is rejected with [`PASSWORD_IS_TOO_COMMON`](/http-api/errors/)
+<sup>5</sup> A claimed account also supplies `password`, and a body that omits it is rejected with `PASSWORD_NOT_SET`. When the instance checks for breached passwords, a breached one is rejected with [`PASSWORD_IS_TOO_COMMON`](/http-api/errors/)
 
 <sup>6</sup> The value may have a `data:...;base64,` prefix. The remaining payload runs 1 to 13981016 characters
 

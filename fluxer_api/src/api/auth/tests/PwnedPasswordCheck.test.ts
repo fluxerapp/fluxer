@@ -3,6 +3,7 @@
 import crypto from 'node:crypto';
 import type {ApiContext} from '@app/api/ApiContext';
 import {isPasswordPwned, resetPwnedPasswordCacheForTesting} from '@app/api/auth/AuthPassword';
+import {getConfig} from '@app/api/Config';
 import {server} from '@app/api/test/msw/server';
 import {delay, HttpResponse, http} from 'msw';
 import {beforeEach, describe, expect, test} from 'vitest';
@@ -67,6 +68,19 @@ describe('isPasswordPwned', () => {
 		await expect(isPasswordPwned(ctx, PWNED_PASSWORD)).resolves.toBe(true);
 		await expect(isPasswordPwned(ctx, SAFE_PASSWORD_SAME_PREFIX)).resolves.toBe(false);
 		expect(requestedPrefixes).toHaveLength(1);
+	});
+	test('makes no upstream call when the check is switched off', async () => {
+		const config = getConfig();
+		const originalEnabled = config.breachedPasswordCheck.enabled;
+		const requestedPrefixes: Array<string> = [];
+		server.use(rangeHandler(requestedPrefixes, [suffixOf(PWNED_PASSWORD)]));
+		try {
+			config.breachedPasswordCheck.enabled = false;
+			await expect(isPasswordPwned(ctx, PWNED_PASSWORD)).resolves.toBe(false);
+			expect(requestedPrefixes).toHaveLength(0);
+		} finally {
+			config.breachedPasswordCheck.enabled = originalEnabled;
+		}
 	});
 	test('fails open on a non-OK response', async () => {
 		server.use(http.get('https://api.pwnedpasswords.com/range/:prefix', () => HttpResponse.text('', {status: 503})));

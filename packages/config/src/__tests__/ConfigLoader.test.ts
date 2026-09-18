@@ -638,6 +638,27 @@ describe('ConfigLoader', () => {
 		expect((await loadConfig()).integrations.cache_purge.adapter).toBe('none');
 	});
 
+	test('leaves the optional outbound lookups unset by default', async () => {
+		stubMinimalEnv();
+
+		const config = await loadConfig();
+
+		expect(config.integrations.tor_exit_list.enabled).toBeUndefined();
+		expect(config.integrations.breached_password_check.enabled).toBeUndefined();
+	});
+
+	test('reads the optional outbound lookup switches from the environment', async () => {
+		stubMinimalEnv({
+			FLUXER_TOR_EXIT_LIST_ENABLED: 'true',
+			FLUXER_BREACHED_PASSWORD_CHECK_ENABLED: 'false',
+		});
+
+		const config = await loadConfig();
+
+		expect(config.integrations.tor_exit_list.enabled).toBe(true);
+		expect(config.integrations.breached_password_check.enabled).toBe(false);
+	});
+
 	test('leaves Bluesky login off with no legal URLs by default', async () => {
 		stubMinimalEnv();
 

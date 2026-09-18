@@ -5,6 +5,7 @@ import type {ApiContext} from '@app/api/ApiContext';
 import * as AuthSession from '@app/api/auth/AuthSession';
 import * as AuthUtility from '@app/api/auth/AuthUtility';
 import {createMfaTicket, createPasswordResetToken} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
 import {Logger} from '@app/api/Logger';
 import type {User} from '@app/api/models/User';
 import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
@@ -116,6 +117,9 @@ export async function verifyPassword(
 }
 
 export async function isPasswordPwned(_ctx: ApiContext, password: string): Promise<boolean> {
+	if (!Config.breachedPasswordCheck.enabled) {
+		return false;
+	}
 	const hashed = crypto.createHash('sha1').update(password).digest('hex').toUpperCase();
 	const hashPrefix = hashed.slice(0, 5);
 	const hashSuffix = hashed.slice(5);

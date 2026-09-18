@@ -207,6 +207,12 @@ export interface APIConfig {
 	blocklistFeeds: {
 		enabled: boolean;
 	};
+	torExitList: {
+		enabled: boolean;
+	};
+	breachedPasswordCheck: {
+		enabled: boolean;
+	};
 	captcha: {
 		enabled: boolean;
 		provider: 'hcaptcha' | 'turnstile' | 'none';
