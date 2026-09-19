@@ -1834,6 +1834,12 @@
         "msgid": "Desktop audio isn't available right now on macOS."
       },
       {
+        "msgid": "Device audio ({deviceLabel})"
+      },
+      {
+        "msgid": "Device audio only"
+      },
+      {
         "msgid": "Device volume"
       },
       {
@@ -2147,6 +2153,9 @@
       },
       {
         "msgid": "No application windows found"
+      },
+      {
+        "msgid": "No audio from this device"
       },
       {
         "msgid": "No displays found"
@@ -2717,6 +2726,9 @@
       },
       {
         "msgid": "Sign-in details"
+      },
+      {
+        "msgid": "Silent when the capture device has no audio input of its own"
       },
       {
         "msgid": "Single community"

@@ -32,7 +32,6 @@ import {
 	type OfferedScreenShareResolution,
 } from '@app/features/voice/components/StreamSettingsMenuContentStateMachine';
 import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
-import ScreenShareDelivery from '@app/features/voice/state/ScreenShareDelivery';
 import type VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import type {CameraResolution} from '@app/features/voice/state/VoiceSettings';
 import {
@@ -43,7 +42,6 @@ import {
 import {buildSettingsDeviceOptions} from '@app/features/voice/utils/SettingsDeviceOptions';
 import {hasHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
 import {resolveEffectiveDeviceId} from '@app/features/voice/utils/VoiceDeviceManager';
-import {formatScreenShareDeliveryStatus} from '@app/features/voice/utils/VoiceMessageDescriptors';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -196,7 +194,6 @@ export const VideoTab: React.FC<VideoTabProps> = observer(
 				value,
 				label: i18n._(FPS_DESCRIPTOR, {frameRate: value}),
 			}));
-		const deliveryStatus = formatScreenShareDeliveryStatus(i18n, ScreenShareDelivery.plan, ScreenShareDelivery.notice);
 		const handleCameraPreview = async () => {
 			const granted = await requestPermission();
 			if (granted) {
@@ -393,16 +390,6 @@ export const VideoTab: React.FC<VideoTabProps> = observer(
 								savedFrameRate: screenShareState.saved.frameRate,
 								savedResolution: getScreenShareResolutionLabel(i18n, screenShareState.saved.resolution),
 							})}
-						</div>
-					)}
-					{deliveryStatus.sending !== null && (
-						<div className={styles.frameRateNote} data-flx="user.video-tab.sending-note">
-							{deliveryStatus.sending}
-						</div>
-					)}
-					{deliveryStatus.notice !== null && (
-						<div className={styles.frameRateNote} data-flx="user.video-tab.delivery-notice">
-							{deliveryStatus.notice}
 						</div>
 					)}
 				</div>

@@ -17,10 +17,6 @@ import {
 	type ExperimentDeliveryConfigResponse,
 	readVoiceNoiseSuppressionAssignment,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
-import {
-	INERT_SCREEN_SHARE_DELIVERY_ASSIGNMENT,
-	ScreenShareDeliveryConfigSchema,
-} from '@fluxer/schema/src/domains/experiment/ScreenShareDeliverySchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 const NOT_MODIFIED = 304;
@@ -55,7 +51,6 @@ describe('GET /experiments', () => {
 			poll_jitter_percent: DEFAULT_EXPERIMENT_POLL_JITTER_PERCENT,
 			assignments: {
 				voice_noise_suppression: INERT_VOICE_NOISE_SUPPRESSION_ASSIGNMENT,
-				screen_share_delivery: INERT_SCREEN_SHARE_DELIVERY_ASSIGNMENT,
 			},
 		});
 	});
@@ -142,92 +137,6 @@ describe('GET /experiments', () => {
 			backend: null,
 			source: null,
 		});
-	});
-
-	it('resolves the screen share delivery caller through its own config', async () => {
-		const targeted = await createTestAccount(harness);
-		const untargeted = await createTestAccount(harness);
-		await getInstanceConfigRepository().setScreenShareDeliveryConfig(
-			ScreenShareDeliveryConfigSchema.parse({
-				enabled: true,
-				config_version: 21,
-				rollout_basis_points: 0,
-				included_user_ids: [targeted.userId],
-			}),
-		);
-
-		const targetedBody = await createBuilder<ExperimentAssignmentsResponse>(harness, targeted.token)
-			.get(ENDPOINT)
-			.execute();
-		expect(targetedBody.assignments.screen_share_delivery).toEqual({
-			enabled: true,
-			config_version: 21,
-			user_targeted: true,
-			source: 'user_rule',
-		});
-
-		const untargetedBody = await createBuilder<ExperimentAssignmentsResponse>(harness, untargeted.token)
-			.get(ENDPOINT)
-			.execute();
-		expect(untargetedBody.assignments.screen_share_delivery).toEqual({
-			enabled: true,
-			config_version: 21,
-			user_targeted: false,
-			source: null,
-		});
-	});
-
-	it('excludes a screen share delivery user the allowlist and the canary both hold', async () => {
-		const account = await createTestAccount(harness);
-		await getInstanceConfigRepository().setScreenShareDeliveryConfig(
-			ScreenShareDeliveryConfigSchema.parse({
-				enabled: true,
-				config_version: 3,
-				rollout_basis_points: 10000,
-				included_user_ids: [account.userId],
-				excluded_user_ids: [account.userId],
-			}),
-		);
-
-		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, account.token).get(ENDPOINT).execute();
-
-		expect(body.assignments.screen_share_delivery).toEqual({
-			enabled: true,
-			config_version: 3,
-			user_targeted: false,
-			source: null,
-		});
-	});
-
-	it('bumps the screen share delivery config version on an admin update and serves it', async () => {
-		const admin = await setUserACLs(harness, await createTestAccount(harness), [
-			AdminACLs.AUTHENTICATE,
-			AdminACLs.INSTANCE_CONFIG_VIEW,
-			AdminACLs.INSTANCE_CONFIG_UPDATE,
-		]);
-
-		const patched = await createBuilder<{
-			screen_share_delivery: {config_version: number; enabled: boolean; rollout_basis_points: number};
-			voice_noise_suppression: {config_version: number};
-		}>(harness, admin.token)
-			.patch('/admin/instance/config')
-			.body({screen_share_delivery: {enabled: true, rollout_basis_points: 10000}})
-			.execute();
-		expect(patched.screen_share_delivery).toMatchObject({
-			config_version: 1,
-			enabled: true,
-			rollout_basis_points: 10000,
-		});
-		expect(patched.voice_noise_suppression.config_version).toBe(0);
-
-		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, admin.token).get(ENDPOINT).execute();
-		expect(body.assignments.screen_share_delivery).toMatchObject({
-			enabled: true,
-			config_version: 1,
-			user_targeted: true,
-			source: 'canary',
-		});
-		expect(body.assignments.voice_noise_suppression).toEqual(INERT_VOICE_NOISE_SUPPRESSION_ASSIGNMENT);
 	});
 
 	it('revalidates with a strong etag and answers 304 when nothing changed', async () => {

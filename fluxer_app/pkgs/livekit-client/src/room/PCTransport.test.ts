@@ -11,6 +11,7 @@ import {
 	ensureAudioNackAndStereo,
 	ensureOpusFmtp,
 	ensureVideoDDExtension,
+	placeholderMidsFromTransceivers,
 	videoSectionCanReceiveAV1,
 } from './PCTransport.ts';
 import {ddExtensionURI} from './utils.ts';
@@ -237,5 +238,27 @@ describe('ensureVideoDDExtension', () => {
 		const sdp = parse(`${singlePcOffer}\na=extmap:3 ${ddExtensionURI}`);
 		expect(ensureVideoDDExtension(sectionOf(sdp, '2'), sdp, 0)).toBe(3);
 		expect(sectionOf(sdp, '2').ext).toHaveLength(2);
+	});
+});
+
+describe('placeholderMidsFromTransceivers', () => {
+	function transceiver(
+		mid: string | null,
+		track: MediaStreamTrack | null,
+		currentDirection: RTCRtpTransceiverDirection | null,
+	): RTCRtpTransceiver {
+		return {mid, currentDirection, sender: {track}} as unknown as RTCRtpTransceiver;
+	}
+
+	it('keeps the trackless recvonly sections that still hold an m-line', () => {
+		const mids = placeholderMidsFromTransceivers([
+			transceiver('3', null, 'recvonly'),
+			transceiver('7', {} as MediaStreamTrack, 'sendonly'),
+		]);
+		expect(mids).toEqual(new Set(['3']));
+	});
+
+	it('drops a transceiver that unpublish stopped so its recycled m-section is not fmtp-conformed', () => {
+		expect(placeholderMidsFromTransceivers([transceiver('7', null, 'stopped')])).toEqual(new Set());
 	});
 });

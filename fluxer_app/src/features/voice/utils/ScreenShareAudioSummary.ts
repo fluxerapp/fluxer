@@ -47,12 +47,59 @@ export const MICROPHONE_WITH_DEVICE_DESCRIPTOR = msg({
 	comment:
 		'Screen-share audio summary on a video device share. {deviceLabel} is the name of the selected audio input device.',
 });
+export const DEVICE_AUDIO_ONLY_DESCRIPTOR = msg({
+	message: 'Device audio only',
+	comment:
+		'Screen-share audio summary on a video device share that publishes only the audio of the capture device itself.',
+});
+export const DEVICE_AUDIO_WITH_DEVICE_DESCRIPTOR = msg({
+	message: 'Device audio ({deviceLabel})',
+	comment:
+		'Screen-share audio summary on a video device share. {deviceLabel} is the name of the audio input paired with the capture device.',
+});
+export const NO_DEVICE_AUDIO_DESCRIPTOR = msg({
+	message: 'No audio from this device',
+	comment: 'Screen-share audio summary on a video device share whose capture device has no audio input of its own.',
+});
+
+export type DeviceShareAudioPairing =
+	| {readonly kind: 'unknown'}
+	| {readonly kind: 'none'}
+	| {readonly kind: 'paired'; readonly label: string};
+
+export function findPairedDeviceShareAudioInput(
+	devices: ReadonlyArray<MediaDeviceInfo>,
+	videoDeviceId: string,
+): MediaDeviceInfo | undefined {
+	if (videoDeviceId === '' || videoDeviceId === 'default') return undefined;
+	const videoDevice = devices.find((device) => device.kind === 'videoinput' && device.deviceId === videoDeviceId);
+	if (!videoDevice?.groupId) return undefined;
+	return devices.find(
+		(device) =>
+			device.kind === 'audioinput' &&
+			device.groupId === videoDevice.groupId &&
+			device.deviceId !== '' &&
+			device.deviceId !== 'default' &&
+			device.deviceId !== 'communications',
+	);
+}
+
+export function resolveDeviceShareAudioPairing(
+	devices: ReadonlyArray<MediaDeviceInfo>,
+	videoDeviceId: string,
+): DeviceShareAudioPairing {
+	if (videoDeviceId === '') return {kind: 'unknown'};
+	const pairedInput = findPairedDeviceShareAudioInput(devices, videoDeviceId);
+	return pairedInput === undefined ? {kind: 'none'} : {kind: 'paired', label: pairedInput.label};
+}
 
 export interface ScreenShareAudioSummaryInput {
 	sourceMode: ScreenShareAudioSourceMode;
 	includeSources: ReadonlyArray<VirtmicNode>;
 	shareContext: StreamSettingsShareContext;
 	microphoneLabel?: string | null;
+	chosenAudioDeviceId?: string;
+	deviceAudioPairing?: DeviceShareAudioPairing;
 	displayShareEnvironment?: DisplayShareEnvironment;
 	windowAudioScope?: WindowShareAudioScope;
 	usesDeviceMicrophone?: boolean;
@@ -81,13 +128,29 @@ function summariseMicrophone(microphoneLabel?: string | null): ScreenShareAudioS
 	return {kind: 'message', descriptor: MICROPHONE_WITH_DEVICE_DESCRIPTOR, values: {deviceLabel: microphoneLabel}};
 }
 
+function publishesTheMicrophone(input: ScreenShareAudioSummaryInput): boolean {
+	const chosenAudioDeviceId = input.chosenAudioDeviceId ?? '';
+	if (chosenAudioDeviceId !== '' && chosenAudioDeviceId !== 'default') return true;
+	return input.usesDeviceMicrophone === true;
+}
+
+function summariseDeviceShareAudio(input: ScreenShareAudioSummaryInput): ScreenShareAudioSummary {
+	if (publishesTheMicrophone(input)) return summariseMicrophone(input.microphoneLabel);
+	const pairing = input.deviceAudioPairing;
+	if (pairing?.kind === 'none') return {kind: 'message', descriptor: NO_DEVICE_AUDIO_DESCRIPTOR};
+	if (pairing?.kind === 'paired' && pairing.label !== '') {
+		return {kind: 'message', descriptor: DEVICE_AUDIO_WITH_DEVICE_DESCRIPTOR, values: {deviceLabel: pairing.label}};
+	}
+	return {kind: 'message', descriptor: DEVICE_AUDIO_ONLY_DESCRIPTOR};
+}
+
 export function resolveScreenShareAudioSummary(input: ScreenShareAudioSummaryInput): ScreenShareAudioSummary {
 	const selected = filterRoutableLinuxAudioSources(input.includeSources);
 	const routesSelectedSources = input.sourceMode === 'specific' && selected.length > 0;
 	if (input.shareContext === 'device') {
 		return routesSelectedSources && input.usesDeviceMicrophone !== true
 			? summariseSelectedSources(selected)
-			: summariseMicrophone(input.microphoneLabel);
+			: summariseDeviceShareAudio(input);
 	}
 	if (supportsWindowShareAudioScope(input)) {
 		const route = selectAppShareAudioRoute({

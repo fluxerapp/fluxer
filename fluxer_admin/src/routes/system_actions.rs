@@ -18,9 +18,9 @@ use crate::{
             InstanceRegistrationConfigUpdateRequest, InstanceServicesUpdateRequest,
             InstanceYoutubeIntegrationUpdateRequest, LimitConfigUpdateRequest, LimitRule,
             LimitRuleFilters, NoiseSuppressionBackend, PremiumMode, RegistrationMode,
-            ScreenShareDeliveryConfigUpdateRequest, SsoConfigUpdateRequest,
-            VOICE_NS_MAX_GUILD_OVERRIDES, VOICE_NS_MAX_TARGETED_USERS, VoiceE2eeScope,
-            VoiceNoiseSuppressionConfigUpdateRequest, VoiceNoiseSuppressionGuildOverride,
+            SsoConfigUpdateRequest, VOICE_NS_MAX_GUILD_OVERRIDES, VOICE_NS_MAX_TARGETED_USERS,
+            VoiceE2eeScope, VoiceNoiseSuppressionConfigUpdateRequest,
+            VoiceNoiseSuppressionGuildOverride,
         },
     },
     config::AdminConfig,
@@ -204,10 +204,6 @@ pub async fn instance_config_post(
             instance_config_result(client.update_instance_config(&update).await)
         }
         "update_voice_noise_suppression" => match build_voice_noise_suppression_update(&form) {
-            Ok(update) => instance_config_result(client.update_instance_config(&update).await),
-            Err(message) => FlashData::error(message),
-        },
-        "update_screen_share_delivery" => match build_screen_share_delivery_update(&form) {
             Ok(update) => instance_config_result(client.update_instance_config(&update).await),
             Err(message) => FlashData::error(message),
         },
@@ -571,38 +567,6 @@ fn parse_voice_noise_suppression_guild_overrides(
         });
     }
     Ok(overrides)
-}
-
-fn build_screen_share_delivery_update(
-    form: &MultiValueForm,
-) -> Result<InstanceConfigUpdateRequest, String> {
-    Ok(InstanceConfigUpdateRequest {
-        screen_share_delivery: Some(ScreenShareDeliveryConfigUpdateRequest {
-            enabled: Some(form.bool_value("screen_share_delivery_enabled")),
-            rollout_basis_points: parse_form_number(
-                form,
-                "screen_share_delivery_rollout_basis_points",
-                "Rollout basis points",
-                0,
-                EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX,
-            )?,
-            rollout_salt: parse_experiment_rollout_salt(
-                form,
-                "screen_share_delivery_rollout_salt",
-            )?,
-            included_user_ids: Some(parse_experiment_user_ids(
-                form.first("screen_share_delivery_included_user_ids")
-                    .unwrap_or_default(),
-                "Included user IDs",
-            )?),
-            excluded_user_ids: Some(parse_experiment_user_ids(
-                form.first("screen_share_delivery_excluded_user_ids")
-                    .unwrap_or_default(),
-                "Excluded user IDs",
-            )?),
-        }),
-        ..Default::default()
-    })
 }
 
 fn build_voice_noise_suppression_update(

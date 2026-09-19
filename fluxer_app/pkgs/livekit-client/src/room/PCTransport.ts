@@ -849,6 +849,9 @@ export function collectStereoMids(
 export function placeholderMidsFromTransceivers(transceivers: ReadonlyArray<RTCRtpTransceiver>): Set<string> {
 	const mids = new Set<string>();
 	for (const transceiver of transceivers) {
+		if (transceiver.currentDirection === 'stopped') {
+			continue;
+		}
 		if (transceiver.mid && !transceiver.sender.track) {
 			mids.add(transceiver.mid);
 		}

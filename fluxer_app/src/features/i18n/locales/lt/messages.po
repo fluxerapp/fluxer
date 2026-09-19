@@ -862,11 +862,6 @@ msgstr "{clientLabel} nori prisijungti"
 msgid "{clientName} will use this account for this authorization."
 msgstr "{clientName} naudos šią paskyrą šiam autorizavimui."
 
-#. Screen share notice shown to the person sharing when they pinned a codec that underperforms. codec is a codec name such as AV1. Automatic and Advanced settings are labels in the same app.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:389
-msgid "{codec} cannot keep up on this device. Set the codec to Automatic in Advanced settings to allow a faster one."
-msgstr "{codec} negali veikti šiame įrenginyje. Nustatykite kodeką į Automatinis\" „Išplėstinių nustatymų“ skiltyje, kad būtų galima naudoti greitesnį."
-
 #. Guild nagbar body shown for staff-only communities. {communityName} is the community name and {productName} is Fluxer.
 #: src/features/app/components/layout/GuildLayout.tsx:83
 msgid "{communityName} is currently only accessible to {productName} staff members"
@@ -877,11 +872,11 @@ msgstr "{communityName} šiuo metu prieinama tik {productName} darbuotojams"
 msgid "{count, plural, =0 {∞ No limit} one {# participant} other {# participants}}"
 msgstr "{count, plural, =0 {∞ Neribota} one {# dalyvis} few {# dalyviai} other {# dalyvių}}"
 
-#: src/features/channel/components/embeds/attachments/TextualAttachmentPreview.tsx:193
+#: src/features/channel/components/embeds/attachments/TextualAttachmentPreview.tsx:141
 msgid "{count, plural, one {... (# line left)} other {... (# lines left)}}"
 msgstr "{count, plural, one {... (liko # eilutė)} few {... (liko # eilutės)} other {... (liko # eilučių)}}"
 
-#: src/features/channel/components/embeds/attachments/TextualAttachmentPreview.tsx:210
+#: src/features/channel/components/embeds/attachments/TextualAttachmentPreview.tsx:158
 msgid "{count, plural, one {... (# row left)} other {... (# rows left)}}"
 msgstr "{count, plural, one {... (liko # eilutė)} few {... (liko # eilutės)} other {... (liko # eilučių)}}"
 
@@ -1075,7 +1070,7 @@ msgstr "{count, plural, one {Išskleisti (# eilutė)} few {Išskleisti (# eilut�
 msgid "{count, plural, one {Expand (# row)} other {Expand (# rows)}}"
 msgstr "{count, plural, one {Išskleisti (# eilutė)} few {Išskleisti (# eilutės)} other {Išskleisti (# eilučių)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:324
+#: src/features/voice/components/VoiceParticipantTile.tsx:315
 msgid "{count, plural, one {Expand # other device} other {Expand # other devices}}"
 msgstr "{count, plural, one {Išskleisti # kitą įrenginį} few {Išskleisti # kitus įrenginius} other {Išskleisti # kitų įrenginių}}"
 
@@ -1096,7 +1091,7 @@ msgstr "{count, plural, one {Skambutyje: #} few {Skambutyje: #} other {Skambutyj
 msgid "{count, plural, one {Join video call (# participant)} other {Join video call (# participants)}}"
 msgstr "{count, plural, one {Prisijungti prie vaizdo skambučio (# dalyvis)} few {Prisijungti prie vaizdo skambučio (# dalyviai)} other {Prisijungti prie vaizdo skambučio (# dalyvių)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:682
+#: src/features/voice/components/VoiceParticipantTile.tsx:671
 msgid "{count, plural, one {Keep watching # stream and add this one} other {Keep watching # streams and add this one}}"
 msgstr "{count, plural, one {Toliau žiūrėti # srautą ir pridėti šį} few {Toliau žiūrėti # srautus ir pridėti šį} other {Toliau žiūrėti # srautų ir pridėti šį}}"
 
@@ -1192,7 +1187,7 @@ msgid "{days, plural, one {Your invite link expires in # day.} other {Your invit
 msgstr "{days, plural, one {Jūsų kvietimo nuoroda baigs galioti po # dienos.} few {Jūsų kvietimo nuoroda baigs galioti po # dienų.} other {Jūsų kvietimo nuoroda baigs galioti po # dienų.}}"
 
 #. Audio device label for a default route with the concrete microphone or speaker endpoint in parentheses. defaultDeviceLabel is already localized, for example "Windows Default".
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:37
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:34
 msgid "{defaultDeviceLabel} ({endpointLabel})"
 msgstr "{defaultDeviceLabel} ({endpointLabel})"
 
@@ -1345,13 +1340,13 @@ msgid "{fourHours} hours"
 msgstr "{fourHours} valandos"
 
 #. Footer summary frame-rate label in the screen share picker. {fps} is the integer frame rate. FPS is a technical token.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:251
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:254
 msgid "{fps} FPS"
 msgstr "{fps} FPS"
 
 #. Frame rate option label in the video tab. FPS is a technical token and frameRate is a whole number.
 #. Frame rate option label in the video tab. FPS is a technical token and frameRate is a whole number.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:55
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:53
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:114
 msgid "{frameRate} FPS"
 msgstr "{frameRate} FPS"
@@ -1561,11 +1556,6 @@ msgstr "{overrideCount, plural, one {# pakeitimas} few {# pakeitimai} other {# p
 msgid "{paymentProviderName} will first verify that your card is eligible for localized pricing, then take you to payment. Return to {productName} once you've completed it."
 msgstr "{paymentProviderName} pirmiausia patikrins, ar jūsų kortelė tinka vietinei kainodarai, tada nukreips jus į mokėjimą. Grįžkite į {productName}, kai baigsite."
 
-#. Screen share notice shown to the person sharing when this device cannot encode the pinned codec. pinnedCodec and codec are codec names such as H.265 (HEVC) or VP9.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:405
-msgid "{pinnedCodec} is not available on this device, so your stream uses {codec}."
-msgstr "Šis įrenginys nepalaiko {pinnedCodec}, todėl jūsų transliacija naudoja {codec}."
-
 #. Badge label with a date in the user profile badges popout. Preserve {premiumProductFullName}, {premiumSinceFormatted}; they are inserted by code. In English, keep "subscriber since" lowercase. Other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx:51
 msgid "{premiumProductFullName} subscriber since {premiumSinceFormatted}"
@@ -1733,7 +1723,7 @@ msgid "{productName} needs access to your microphone. Allow microphone access in
 msgstr "{productName} reikia prieigos prie jūsų mikrofono. Leiskite naudoti mikrofoną operacinės sistemos privatumo nustatymuose ir iš naujo paleiskite programą."
 
 #. Camera settings notice shown when camera permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:63
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:61
 msgid "{productName} needs camera access to list your devices."
 msgstr "{productName} reikia prieigos prie kameros, kad būtų galima parodyti jūsų įrenginius."
 
@@ -1842,7 +1832,7 @@ msgid "{renderedPresenceCount} online"
 msgstr "{renderedPresenceCount} prisijungę"
 
 #. Compact stream info pill label. {resolution} is a technical token such as 1080p or 4K. {fps} is the frame rate. FPS is a technical token.
-#: src/features/voice/components/StreamInfoPill.tsx:12
+#: src/features/voice/components/StreamInfoPill.tsx:14
 msgid "{resolution} {fps} FPS"
 msgstr "{resolution} {fps} FPS"
 
@@ -2510,11 +2500,6 @@ msgstr "URL, įrašytas žinutės tekste"
 msgid "a user"
 msgstr "naudotojas"
 
-#. Screen share notice shown to the person sharing when a watcher cannot decode the pinned codec. pinnedCodec and codec are codec names such as AV1 or VP8.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:400
-msgid "A viewer cannot play {pinnedCodec}, so your stream uses {codec}."
-msgstr "Žiūrintysis negali paleisti {pinnedCodec}, todėl jūsų transliacija naudoja {codec}."
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:55
 msgid "A11y"
@@ -2573,7 +2558,7 @@ msgid "Accept"
 msgstr "Priimti"
 
 #. Button label for accepting an incoming direct call. Means answering a ringing call, not approving a request.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:97
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:94
 msgctxt "incoming-call-action"
 msgid "Accept"
 msgstr "Atsiliepti"
@@ -3178,12 +3163,12 @@ msgstr "Pridėti į grupę"
 #. Action that adds the selected media to saved media.
 #. Action that adds the selected media to saved media.
 #: src/features/expressions/components/modals/AddFavoriteMemeModal.tsx:16
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:177
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:178
 msgid "Add to saved media"
 msgstr "Įtraukti į išsaugotą mediją"
 
 #. Media context menu action that saves a GIF favorite by URL without uploading it.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:169
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:170
 msgid "Add to URL-only GIF favorites"
 msgstr "Pridėti prie mėgstamiausių GIF (tik URL)"
 
@@ -3364,7 +3349,7 @@ msgid "Advanced"
 msgstr "Išplėstiniai"
 
 #. Subsection title in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:116
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:114
 msgid "Advanced video settings"
 msgstr "Išplėstiniai vaizdo nustatymai"
 
@@ -3451,7 +3436,7 @@ msgstr "Lygiavimo valdikliai pasiekiami tik platesniuose ekranuose"
 #: src/features/app/config/AuditLogConstants.ts:143
 #: src/features/channel/components/direct_message/DMFriendsView.tsx:41
 #: src/features/channel/components/guild_members_page/GuildMembersPageDescriptors.ts:10
-#: src/features/channel/components/MobileMemesPicker.tsx:42
+#: src/features/channel/components/MobileMemesPicker.tsx:43
 #: src/features/channel/components/pickers/memes/MemesPickerHeader.tsx:12
 #: src/features/discovery/components/bottomsheets/DiscoveryCategoryBottomSheet.tsx:11
 #: src/features/discovery/discovery/DiscoveryNavbar.tsx:21
@@ -3575,7 +3560,7 @@ msgstr "Leisti"
 msgid "Allow {everyoneMention} and {hereMention}"
 msgstr "Leisti {everyoneMention} ir {hereMention}"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:239
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:236
 msgid "Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 msgstr "Leiskite {PRODUCT_NAME} pasiekti jūsų kamerą: {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 
@@ -3618,7 +3603,7 @@ msgstr "Leisti botų tiesiogines žinutes"
 msgid "Allow bots to send you direct messages?"
 msgstr "Leisti botams siųsti jums tiesiogines žinutes?"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:259
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:256
 msgid "Allow camera"
 msgstr "Leisti naudoti kamerą"
 
@@ -4014,13 +3999,13 @@ msgstr "Animuoti jaustukai, GIF ir lipdukai lieka jūsų valioje animacijos skir
 
 #. Media type chip shown in the media viewer info panel for animated GIFs.
 #. Short label in the channel and chat embed gifv. Keep it concise.
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:67
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:101
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:68
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:102
 msgid "Animated GIF"
 msgstr "Animuotas GIF"
 
 #. Short label in the channel and chat embed gifv. Keep it concise.
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:63
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:64
 msgid "Animated GIF video"
 msgstr "Animuotas GIF vaizdo įrašas"
 
@@ -4049,12 +4034,12 @@ msgid "Animated icons require the {animatedIconFeature} community feature."
 msgstr "Animuotoms piktogramoms reikalinga {animatedIconFeature} bendruomenės funkcija."
 
 #. Media type chip shown in the media viewer info panel for animated images.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:109
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:110
 msgid "Animated image"
 msgstr "Animuotas paveikslėlis"
 
 #. Accessible label for an animated image (APNG/AVIF) shown in the media viewer.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:77
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:78
 msgid "Animated image preview"
 msgstr "Animuoto paveikslėlio peržiūra"
 
@@ -4074,7 +4059,7 @@ msgid "Animated uploads require a {premiumProductName} subscription."
 msgstr "Norint įkelti animuotus failus, reikia {premiumProductName} prenumeratos."
 
 #. Media type chip shown in the media viewer info panel for short looping video clips.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:105
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:106
 msgid "Animated video"
 msgstr "Animuotas vaizdo įrašas"
 
@@ -4268,7 +4253,7 @@ msgid "App state"
 msgstr "Programos būsena"
 
 #. Fallback label for an app window card in the screen-share picker when the OS does not give us a window title.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:139
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:142
 msgid "App window"
 msgstr "Programos langas"
 
@@ -4361,7 +4346,7 @@ msgstr "Programa sėkmingai atnaujinta"
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:29
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:66
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:65
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:182
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:185
 msgid "Applications"
 msgstr "Programos"
 
@@ -4586,7 +4571,7 @@ msgstr "priedas"
 #. Accessible label for a thumbnail in the media viewer. index1 is the 1-based attachment index.
 #. Accessible label for the active attachment in the media viewer. index1 is the 1-based index.
 #: src/features/messaging/components/modals/media_modal/shared.ts:129
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:73
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:74
 msgid "Attachment {index1}"
 msgstr "Priedas {index1}"
 
@@ -4613,12 +4598,12 @@ msgid "Attachment expired"
 msgstr "Priedo galiojimas baigėsi"
 
 #. Toast shown when an attachment URL is no longer accessible.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:133
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:134
 msgid "Attachment has expired or is unavailable"
 msgstr "Priedo galiojimas baigėsi arba jis nepasiekiamas"
 
 #. Developer-mode toast confirming an attachment ID was copied.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:161
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:162
 msgid "Attachment ID copied to clipboard"
 msgstr "Priedo ID nukopijuotas į iškarpinę"
 
@@ -4708,7 +4693,7 @@ msgid "Audio level"
 msgstr "Garso lygis"
 
 #. Footer summary status shown when capture-device audio is disabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:256
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:259
 msgid "Audio muted"
 msgstr "Garsas išjungtas"
 
@@ -4728,12 +4713,12 @@ msgid "Audio packet loss:"
 msgstr "Garso paketų praradimas:"
 
 #. Aria label for the inline audio attachment player container.
-#: src/features/voice/components/media_player/components/InlineAudioPlayer.tsx:34
+#: src/features/voice/components/media_player/components/InlineAudioPlayer.tsx:35
 msgid "Audio player"
 msgstr "Garso grotuvas"
 
 #. Accessible label for an audio clip shown in the media viewer.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:93
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:94
 msgid "Audio preview"
 msgstr "Garso peržiūra"
 
@@ -4768,7 +4753,7 @@ msgid "Audio processing (focused voice)"
 msgstr "Garso apdorojimas (fokusuotas balsas)"
 
 #. Aria label on the playback progress slider in the inline audio attachment player.
-#: src/features/voice/components/media_player/components/InlineAudioPlayer.tsx:38
+#: src/features/voice/components/media_player/components/InlineAudioPlayer.tsx:39
 msgid "Audio progress"
 msgstr "Garso įrašo eiga"
 
@@ -4794,7 +4779,7 @@ msgid "Audio settings"
 msgstr "Garso nustatymai"
 
 #. Toggle / summary row label in the Linux audio source picker. {summaryLabel} is one of the audio-source summary labels.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:43
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:45
 msgid "Audio sources: {summaryLabel}"
 msgstr "Garso šaltiniai: {summaryLabel}"
 
@@ -5011,7 +4996,7 @@ msgstr "Automatinis ({codec})"
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Voice setting label for automatically evening out microphone volume.
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:48
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:218
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:215
 msgid "Automatic gain control"
 msgstr "Automatinis stiprinimo valdymas"
 
@@ -5928,7 +5913,7 @@ msgid "Browser back"
 msgstr "Naršyklė: atgal"
 
 #. Audio device label prefix for the browser-managed default audio device.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:33
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:30
 msgid "Browser default"
 msgstr "Naršyklės numatytasis įrenginys"
 
@@ -6198,20 +6183,20 @@ msgstr "Skambučiai"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:720
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:100
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:98
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:162
 #: src/features/voice/utils/SettingsDeviceOptions.ts:24
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:17
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:14
 msgid "Camera"
 msgstr "Kamera"
 
 #. Title shown in the screen-share Devices tab before camera preview permission is granted.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:154
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:157
 msgid "Camera access is needed for device previews"
 msgstr "Reikalinga prieiga prie kameros, kad būtų galima peržiūrėti įrenginius"
 
 #. Description shown after camera preview permission is denied or unavailable.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:162
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:165
 msgid "Camera access was not granted. Update camera permissions, then try again."
 msgstr "Kameros prieiga nesuteikta. Atnaujinkite kameros leidimus ir bandykite dar kartą."
 
@@ -6276,13 +6261,13 @@ msgstr "Kameros peržiūra"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:104
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:102
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:202
 msgid "Camera quality"
 msgstr "Kameros kokybė"
 
 #. Voice control dropdown label or menu item for camera settings.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:238
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:235
 msgid "Camera settings"
 msgstr "Kameros nustatymai"
 
@@ -6479,19 +6464,19 @@ msgid "Captcha verification failed. Try again."
 msgstr "Nepavyko patvirtinti „Captcha“. Bandykite dar kartą."
 
 #. Section header in the Linux audio source picker. Lists capture-target options (entire system / specific apps).
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:48
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:50
 msgid "Capture"
 msgstr "Įrašyti"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:798
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:810
 msgid "Capture app audio"
 msgstr "Įrašyti programos garsą"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:800
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:812
 msgid "Capture desktop audio"
 msgstr "Įrašyti darbalaukio garsą"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:797
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:809
 msgid "Capture device audio"
 msgstr "Įrašyti įrenginio garsą"
 
@@ -6736,12 +6721,12 @@ msgstr "Pakeitimas suplanuotas"
 #. Action that opens the source picker for the active screen share.
 #. Voice screen share menu action that changes the shared source.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:24
-#: src/features/voice/components/ActiveScreenShareMenu.tsx:34
+#: src/features/voice/components/ActiveScreenShareMenu.tsx:25
 msgid "Change stream"
 msgstr "Pakeisti srautą"
 
 #. Modal title for the screen-share picker when switching an ongoing stream to a new source.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:215
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:218
 msgid "Change stream source"
 msgstr "Keisti srauto šaltinį"
 
@@ -7032,7 +7017,7 @@ msgid "Channel access"
 msgstr "Prieiga prie kanalo"
 
 #. Title of the alert shown when clicking a message link the user does not have permission to view.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:117
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:118
 msgid "Channel access denied"
 msgstr "Prieiga prie kanalo uždrausta"
 
@@ -7097,7 +7082,7 @@ msgstr "Kanalo ID nukopijuotas į iškarpinę"
 
 #. Short label in the messaging mention renderer. Keep it concise.
 #. Type chip suffix in tooltips for inline rendered channel mentions. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:86
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:87
 #: src/features/messaging/components/markdown/renderers/MentionRenderer.tsx:39
 msgid "channel link"
 msgstr "kanalo nuoroda"
@@ -7530,7 +7515,7 @@ msgid "Choose payment method"
 msgstr "Pasirinkite mokėjimo būdą"
 
 #. Modal title for the screen-share picker when starting a new screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:219
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:222
 msgid "Choose something to share"
 msgstr "Pasirinkite, ką bendrinti"
 
@@ -7906,7 +7891,7 @@ msgid "Clear trusted domains ({trustedDomainsCount})"
 msgstr "Išvalyti patikimus domenus ({trustedDomainsCount})"
 
 #. Footer summary description for the text-focused screen-share quality preset.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:243
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:246
 msgid "Clearer text"
 msgstr "Aiškesnis tekstas"
 
@@ -8285,7 +8270,7 @@ msgstr "Sutraukti kanalo temą"
 #. Tooltip / aria label on a voice participant tile button that collapses expanded device tiles for one user.
 #. Voice menu action that collapses expanded device tiles back into a single tile.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:128
-#: src/features/voice/components/VoiceParticipantTile.tsx:185
+#: src/features/voice/components/VoiceParticipantTile.tsx:176
 msgid "Collapse devices"
 msgstr "Sutraukti įrenginius"
 
@@ -8477,7 +8462,7 @@ msgid "Community creator"
 msgstr "Bendruomenės kūrėjas"
 
 #. Moderation voice menu label. Makes a member unable to hear others in this community voice chat. Distinct from community mute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:152
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:149
 msgid "Community deafen"
 msgstr "Išjungti garsą bendruomenėje"
 
@@ -8565,7 +8550,7 @@ msgid "Community MFA requirement nagbar"
 msgstr "Bendruomenės MFA reikalavimo pranešimų juosta"
 
 #. Moderation voice menu label. Mutes a member's microphone in this community voice chat.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:127
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:124
 msgid "Community mute"
 msgstr "Nutildyti bendruomenėje"
 
@@ -8789,7 +8774,7 @@ msgid "Configure now"
 msgstr "Konfigūruoti dabar"
 
 #. Tooltip / aria label on the screen-share control while a share is active. Opens the configure / end menu.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:61
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:58
 msgid "Configure or end screen share"
 msgstr "Konfigūruoti arba baigti ekrano bendrinimą"
 
@@ -8904,7 +8889,7 @@ msgstr "Patvirtinimas arba dvigubas spustelėjimas prisijungiant prie bendruomen
 msgid "Conflicts with {conflictLabel}"
 msgstr "Kertasi su „{conflictLabel}“"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:244
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:241
 msgid "Connect a camera and try again."
 msgstr "Prijunkite kamerą ir bandykite dar kartą."
 
@@ -8913,7 +8898,7 @@ msgstr "Prijunkite kamerą ir bandykite dar kartą."
 msgid "Connect a camera or virtual capture device, then try again."
 msgstr "Prijunkite kamerą arba virtualų fiksavimo įrenginį ir bandykite dar kartą."
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:131
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:134
 msgid "Connect a display, then try again."
 msgstr "Prijunkite ekraną ir bandykite dar kartą."
 
@@ -9048,7 +9033,7 @@ msgid "Connection volume controls"
 msgstr "Ryšio garsumo valdikliai"
 
 #. Developer / debug overlay text on a participant tile. {connectionId} is the voice connection identifier.
-#: src/features/voice/components/voice_participant_tile/shared.ts:96
+#: src/features/voice/components/voice_participant_tile/shared.ts:91
 msgid "Connection: {connectionId}"
 msgstr "Ryšys: {connectionId}"
 
@@ -9277,7 +9262,7 @@ msgstr "Statistikos JSON nukopijuotas į iškarpinę"
 
 #. Generic success toast confirming that content was copied to the clipboard.
 #. Toast shown after copying text to the clipboard succeeds.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:145
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:146
 #: src/features/ui/commands/TextCopyCommands.ts:11
 msgid "Copied to clipboard"
 msgstr "Nukopijuota į iškarpinę"
@@ -9312,12 +9297,12 @@ msgid "Copy attachment ID"
 msgstr "Kopijuoti priedo ID"
 
 #. Media context menu action that copies an audio attachment to the clipboard.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:61
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:62
 msgid "Copy audio"
 msgstr "Kopijuoti garso įrašą"
 
 #. Media context menu action that copies the URL of the audio attachment.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:81
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:82
 msgid "Copy audio link"
 msgstr "Kopijuoti garso įrašo nuorodą"
 
@@ -9405,17 +9390,17 @@ msgid "Copy endpoint"
 msgstr "Kopijuoti galinį tašką"
 
 #. Media context menu action that copies the URL of the file attachment.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:85
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:86
 msgid "Copy file link"
 msgstr "Kopijuoti failo nuorodą"
 
 #. Media context menu action that copies a GIF attachment to the clipboard.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:53
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:54
 msgid "Copy GIF"
 msgstr "Kopijuoti GIF"
 
 #. Media context menu action that copies the URL of the GIF attachment.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:73
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:74
 msgid "Copy GIF link"
 msgstr "Kopijuoti GIF nuorodą"
 
@@ -9440,7 +9425,7 @@ msgid "Copy identifier"
 msgstr "Kopijuoti identifikatorių"
 
 #. Media context menu action that copies an image attachment to the clipboard.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:49
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:50
 msgid "Copy image"
 msgstr "Kopijuoti paveikslėlį"
 
@@ -9448,7 +9433,7 @@ msgstr "Kopijuoti paveikslėlį"
 #. Image context menu action that copies the image URL to the clipboard.
 #. Image context menu action that copies the image URL to the clipboard.
 #: src/features/ui/action_menu/items/EmojiContextMenuItems.tsx:44
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:69
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:70
 #: src/features/ui/action_menu/items/StickerContextMenuItems.tsx:44
 msgid "Copy image link"
 msgstr "Kopijuoti paveikslėlio nuorodą"
@@ -9493,7 +9478,7 @@ msgid "Copy link to section"
 msgstr "Kopijuoti nuorodą į skyrių"
 
 #. Generic media context menu action label when the specific type is unknown.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:65
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:66
 msgid "Copy media"
 msgstr "Kopijuoti mediją"
 
@@ -9600,12 +9585,12 @@ msgid "Copy value"
 msgstr "Kopijuoti reikšmę"
 
 #. Media context menu action that copies a video attachment to the clipboard.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:57
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:58
 msgid "Copy video"
 msgstr "Kopijuoti vaizdo įrašą"
 
 #. Media context menu action that copies the URL of the video attachment.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:77
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:78
 msgid "Copy video link"
 msgstr "Kopijuoti vaizdo įrašo nuorodą"
 
@@ -9624,7 +9609,7 @@ msgid "Copy webhook URL"
 msgstr "Kopijuoti webhooko URL"
 
 #. Progress toast shown while encoding and copying an image to the clipboard.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:153
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:154
 msgid "Copying image..."
 msgstr "Kopijuojamas paveikslėlis..."
 
@@ -10588,7 +10573,7 @@ msgstr "Šiuo metu: {mutedText}"
 #: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabSounds.tsx:186
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:94
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:45
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:235
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:238
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:102
 msgid "Custom"
 msgstr "Pasirinktinis"
@@ -11024,17 +11009,17 @@ msgid "Deactivate"
 msgstr "Deaktyvuoti"
 
 #. Voice action label. Turns off what the user hears in voice chat. Distinct from microphone mute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:85
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:82
 msgid "Deafen"
 msgstr "Išjungti garsą"
 
 #. Voice menu action that deafens every device or session so this user cannot hear voice chat.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:144
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:141
 msgid "Deafen all devices"
 msgstr "Išjungti garsą visuose įrenginiuose"
 
 #. Voice menu action. Deafens one active device or session so it stops hearing voice audio. Distinct from muting its microphone.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:139
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:136
 msgid "Deafen device"
 msgstr "Išjungti garsą įrenginyje"
 
@@ -11054,24 +11039,24 @@ msgid "Deafen other members in voice channels, so they cannot hear or speak."
 msgstr "Išjungti kitų narių garsą balso kanaluose, kad jie negirdėtų ir negalėtų kalbėti."
 
 #. Settings label for the keyboard shortcut that toggles voice deafen. Deafen controls hearing voice chat, not microphone mute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:162
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:159
 msgid "Deafen shortcut"
 msgstr "Garso išjungimo spartusis klavišas"
 
 #. Voice control label. Turns off what the current user hears in voice chat. Distinct from microphone mute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:131
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:128
 msgid "Deafen yourself"
 msgstr "Išjungti garsą sau"
 
 #. Accessible label for the deafened voice badge shown on an avatar.
 #. Voice chat status label. The user cannot hear voice chat. Distinct from muted.
 #: src/features/ui/avatars/AvatarWithPresence.tsx:25
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:73
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:70
 msgid "Deafened"
 msgstr "Garsas išjungtas"
 
 #. Voice chat status label. A moderator deafened the user in this community, so they cannot hear voice chat.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:60
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:57
 msgid "Deafened by moderators"
 msgstr "Garsą išjungė moderatoriai"
 
@@ -11166,7 +11151,7 @@ msgid "Default"
 msgstr "Numatytasis"
 
 #. Fallback label for the system default camera in the screen-share devices tab.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:150
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:153
 msgid "Default camera"
 msgstr "Numatytoji kamera"
 
@@ -11258,8 +11243,8 @@ msgstr "Delaveras"
 #. Tooltip for the custom emoji delete button.
 #: src/features/channel/components/embeds/media/EmbedAudio.tsx:29
 #: src/features/channel/components/embeds/media/MediaContainer.tsx:23
-#: src/features/channel/components/MobileMemesPicker.tsx:88
-#: src/features/channel/components/pickers/memes/MemeGridItem.tsx:39
+#: src/features/channel/components/MobileMemesPicker.tsx:89
+#: src/features/channel/components/pickers/memes/MemeGridItem.tsx:40
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:204
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
@@ -11288,8 +11273,8 @@ msgstr "Ištrinti :{emojiName}:? Šio veiksmo anuliuoti negalima."
 
 #. Body of the destructive delete confirmation alert in the saved media picker. memeName is the user-chosen name. Keep quotation marks.
 #. Error message in the channel and chat mobile memes picker. Preserve {memeName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/channel/components/MobileMemesPicker.tsx:83
-#: src/features/channel/components/pickers/memes/MemeGridItem.tsx:34
+#: src/features/channel/components/MobileMemesPicker.tsx:84
+#: src/features/channel/components/pickers/memes/MemeGridItem.tsx:35
 msgid "Delete \"{memeName}\"? Can't be undone."
 msgstr "Ištrinti „{memeName}“? Šio veiksmo anuliuoti negalima."
 
@@ -11399,7 +11384,7 @@ msgid "Delete invite"
 msgstr "Ištrinti kvietimą"
 
 #. Accessible label for the delete button on a saved media tile in the picker.
-#: src/features/channel/components/pickers/memes/MemeGridItem.tsx:56
+#: src/features/channel/components/pickers/memes/MemeGridItem.tsx:57
 msgid "Delete media"
 msgstr "Ištrinti mediją"
 
@@ -11466,8 +11451,8 @@ msgstr "Ištrinti vaidmenį"
 
 #. Accessible label and tooltip for the delete button on a saved media tile in the mobile memes picker.
 #. Title of the destructive delete confirmation alert in the saved media (memes) picker.
-#: src/features/channel/components/MobileMemesPicker.tsx:79
-#: src/features/channel/components/pickers/memes/MemeGridItem.tsx:30
+#: src/features/channel/components/MobileMemesPicker.tsx:80
+#: src/features/channel/components/pickers/memes/MemeGridItem.tsx:31
 msgid "Delete saved media"
 msgstr "Ištrinti išsaugotą mediją"
 
@@ -11719,7 +11704,7 @@ msgid "Desktop away"
 msgstr "Neaktyvumas kompiuteryje"
 
 #. Aria label on a participant tile icon that indicates the participant is on desktop.
-#: src/features/voice/components/voice_participant_tile/shared.ts:92
+#: src/features/voice/components/voice_participant_tile/shared.ts:87
 msgid "Desktop device"
 msgstr "Kompiuteris"
 
@@ -11849,13 +11834,13 @@ msgstr "Kūrėjo būsena"
 #. Short label in the channel and chat utility buttons. Keep it concise.
 #. Title of the info alert shown when clicking an internal developer-tools deep link.
 #: src/features/channel/components/channel_header_components/UtilityButtons.tsx:20
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:129
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:130
 #: src/features/ui/action_menu/items/StaffDeveloperUserControlsMenuItem.tsx:13
 msgid "Developer tools"
 msgstr "Kūrėjo įrankiai"
 
 #. Body of the developer-tools info alert. Refers to the staff badge button in the channel header.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:133
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:134
 msgid "Developer tools are available from the staff badge in the channel header."
 msgstr "Kūrėjo įrankiai pasiekiami iš personalo ženkliuko kanalo antraštėje."
 
@@ -11879,6 +11864,17 @@ msgstr "Įrenginys"
 msgid "Device alerts"
 msgstr "Įrenginio pranešimai"
 
+#. Screen-share audio summary on a video device share. {deviceLabel} is the name of the audio input paired with the capture device.
+#: src/features/voice/utils/ScreenShareAudioSummary.ts:55
+msgid "Device audio ({deviceLabel})"
+msgstr "Įrenginio garsas ({deviceLabel})"
+
+#. Screen-share audio summary on a video device share that publishes only the audio of the capture device itself.
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:866
+#: src/features/voice/utils/ScreenShareAudioSummary.ts:50
+msgid "Device audio only"
+msgstr "Tik garso įrenginys"
+
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:131
 msgid "Device details"
 msgstr "Įrenginio informacija"
@@ -11888,7 +11884,7 @@ msgstr "Įrenginio informacija"
 msgid "Device revoked"
 msgstr "Įrenginys atšauktas"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:992
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1004
 msgid "Device selection"
 msgstr "Įrenginio pasirinkimas"
 
@@ -11912,7 +11908,7 @@ msgstr "Įrenginys:"
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:57
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:190
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:193
 msgid "Devices"
 msgstr "Įrenginiai"
 
@@ -11953,7 +11949,7 @@ msgid "Dim strikethrough text"
 msgstr "Pritemdyti perbrauktą tekstą"
 
 #. Voice input processing profile with raw microphone audio.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:206
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:203
 msgid "Direct input"
 msgstr "Tiesioginė įvestis"
 
@@ -12020,7 +12016,7 @@ msgstr "Tiesioginis įkėlimas aktyvus"
 #. Short footer action in the screen-share picker that disables screen-share preview frame uploads.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:238
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:138
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:276
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:279
 msgid "Disable"
 msgstr "Išjungti"
 
@@ -12192,7 +12188,7 @@ msgid "Disabled value"
 msgstr "Išjungta reikšmė"
 
 #. Explains what happens after disabling screen-share preview uploads. Refers to already-uploaded preview thumbnails.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:324
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:327
 msgid "Disabling previews stops future preview uploads. Existing preview images may remain visible until the stream ends or the preview refreshes."
 msgstr "Išjungus peržiūras, ateityje nebus įkeliamos naujos peržiūros. Esami peržiūros vaizdai gali likti matomi iki srauto pabaigos arba kol bus atnaujinta peržiūra."
 
@@ -12206,17 +12202,17 @@ msgid "Discard voice message"
 msgstr "Atmesti balso žinutę"
 
 #. Voice action label. Leaves the current voice call or disconnects a user from voice chat.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:93
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:90
 msgid "Disconnect"
 msgstr "Atjungti"
 
 #. Voice menu action that disconnects every active device or session from voice chat.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:115
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:112
 msgid "Disconnect all devices"
 msgstr "Atjungti visus įrenginius"
 
 #. Voice menu action that disconnects one active device or session from voice chat.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:111
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:108
 msgid "Disconnect device"
 msgstr "Atjungti įrenginį"
 
@@ -12341,7 +12337,7 @@ msgid "Display"
 msgstr "Rodymas"
 
 #. Fallback label for a display / monitor card in the screen-share picker when the OS does not give us a display name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:144
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:147
 msgctxt "display-screen"
 msgid "Display"
 msgstr "Ekranas"
@@ -12651,7 +12647,7 @@ msgid "Download <0>fluxer-verification</0> and place it in your <1>.well-known</
 msgstr "Atsisiųskite <0>fluxer-verification</0> ir įdėkite į savo <1>.well-known</1> aplanką, kad galėtume patvirtinti domeną."
 
 #. Media context menu action that downloads an audio attachment.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:121
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:122
 msgid "Download audio"
 msgstr "Atsisiųsti garso įrašą"
 
@@ -12686,7 +12682,7 @@ msgid "Download desktop update {version} ({formatBytes})"
 msgstr "Atsisiųsti darbalaukio naujinimą {version} ({formatBytes})"
 
 #. Media context menu action that downloads a file attachment.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:125
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:126
 msgid "Download file"
 msgstr "Atsisiųsti failą"
 
@@ -12695,12 +12691,12 @@ msgid "Download fluxer-verification"
 msgstr "Atsisiųsti fluxer-verification"
 
 #. Media context menu action that downloads a GIF attachment.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:113
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:114
 msgid "Download GIF"
 msgstr "Atsisiųsti GIF"
 
 #. Image context menu action that downloads the image to disk.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:109
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:110
 msgid "Download image"
 msgstr "Atsisiųsti paveikslėlį"
 
@@ -12714,7 +12710,7 @@ msgstr "Atsisiųsti diegimo programą"
 #. Tooltip on the download button in the media viewer modal.
 #: src/features/channel/components/embeds/media/MediaContainer.tsx:28
 #: src/features/messaging/components/modals/media_modal/shared.ts:73
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:129
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:130
 msgid "Download media"
 msgstr "Atsisiųsti mediją"
 
@@ -12724,7 +12720,7 @@ msgid "Download package"
 msgstr "Atsisiųsti paketą"
 
 #. Media context menu action that downloads a video attachment.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:117
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:118
 msgid "Download video"
 msgstr "Atsisiųsti vaizdo įrašą"
 
@@ -12930,7 +12926,7 @@ msgid "Echo"
 msgstr "Aidas"
 
 #. Voice setting label for preventing speaker audio from feeding into the microphone.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:214
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:211
 msgid "Echo cancellation"
 msgstr "Aido slopinimas"
 
@@ -12963,7 +12959,7 @@ msgstr "Redaguoti prieigą „{0}“"
 #. Accessible label in the edit alt text modal. Keep it concise.
 #. Action that opens the modal for editing an image or video accessibility description.
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:32
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:165
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:166
 msgid "Edit alt text"
 msgstr "Redaguoti alternatyvųjį tekstą"
 
@@ -13053,7 +13049,7 @@ msgid "Edit keyboard shortcut"
 msgstr "Redaguoti spartųjį klavišą"
 
 #. Tooltip on the edit button on a saved media tile in the picker.
-#: src/features/channel/components/pickers/memes/MemeGridItem.tsx:48
+#: src/features/channel/components/pickers/memes/MemeGridItem.tsx:49
 msgid "Edit media"
 msgstr "Redaguoti mediją"
 
@@ -13102,8 +13098,8 @@ msgstr "Redaguoti atvirkštinės vaizdų paieškos variklį"
 #. Accessible label for the edit button on a saved media tile in the picker.
 #. Action that opens the editor for a saved media (favorite meme) entry.
 #. Button or menu action label in the channel and chat mobile memes picker. Keep it concise.
-#: src/features/channel/components/MobileMemesPicker.tsx:93
-#: src/features/channel/components/pickers/memes/MemeGridItem.tsx:52
+#: src/features/channel/components/MobileMemesPicker.tsx:94
+#: src/features/channel/components/pickers/memes/MemeGridItem.tsx:53
 #: src/features/expressions/components/modals/EditFavoriteMemeModal.tsx:18
 msgid "Edit saved media"
 msgstr "Redaguoti išsaugotą mediją"
@@ -13526,7 +13522,7 @@ msgid "Enable browser notifications"
 msgstr "Įjungti naršyklės pranešimus"
 
 #. Description shown before the user explicitly requests camera preview permission.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:158
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:161
 msgid "Enable camera access to preview cameras and capture devices before choosing one to stream."
 msgstr "Įjunkite kameros prieigą, kad galėtumėte peržiūrėti kameras ir įrašymo įrenginius prieš pasirinkdami vieną transliacijai."
 
@@ -13642,7 +13638,7 @@ msgid "Enable or disable built-in translators. Enabled translators appear in the
 msgstr "Įjunkite arba išjunkite integruotus vertėjus. Įjungti vertėjai rodomi žinutės kontekstiniame meniu, kai pažymimas tekstas."
 
 #. Button that explicitly requests camera permission for device previews.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:166
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:169
 msgid "Enable previews"
 msgstr "Įjungti peržiūras"
 
@@ -13794,12 +13790,12 @@ msgid "End screen share"
 msgstr "Baigti ekrano bendrinimą"
 
 #. Pre-join indicator shown beneath the Join button on a DM or group DM call where at least one connected participant (typically an outdated bot) does not support E2EE.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:333
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:330
 msgid "End-to-end encryption is unavailable because an unsupported participant is in this call."
 msgstr "Šifravimas nuo galo iki galo nepasiekiamas, nes šiame skambutyje yra nepalaikomas dalyvis."
 
 #. Pre-join indicator shown beneath the Join button on a voice channel where at least one connected participant (typically an outdated bot) does not support E2EE.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:328
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:325
 msgid "End-to-end encryption is unavailable because an unsupported participant is in this voice channel."
 msgstr "Šifravimas nuo galo iki galo nepasiekiamas, nes šiame balso kanale yra nepalaikomas dalyvis."
 
@@ -14086,7 +14082,7 @@ msgid "Entertainment"
 msgstr "Pramogos"
 
 #. Tab label in the screen-share picker. Lists shareable monitors / displays.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:186
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:189
 msgid "Entire screen"
 msgstr "Visas ekranas"
 
@@ -14095,7 +14091,7 @@ msgstr "Visas ekranas"
 msgid "Entire system"
 msgstr "Visa sistema"
 
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:253
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:260
 msgid "Entire system audio"
 msgstr "Visos sistemos garsas"
 
@@ -14268,7 +14264,7 @@ msgid "exclude a user"
 msgstr "neįtraukti naudotojo"
 
 #. Section header in the Linux audio source picker for apps excluded from the system mix.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:57
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:59
 msgid "Exclude from system"
 msgstr "Neįtraukti į sistemos garsą"
 
@@ -14593,7 +14589,7 @@ msgstr "Nepavyko nukopijuoti kvietimo nuorodos"
 
 #. Error toast shown when copying to the clipboard fails.
 #. Toast shown after copying text to the clipboard fails.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:149
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:150
 #: src/features/ui/commands/TextCopyCommands.ts:15
 msgid "Failed to copy to clipboard"
 msgstr "Nepavyko nukopijuoti į iškarpinę"
@@ -14685,7 +14681,7 @@ msgid "Failed to load invites. Try again."
 msgstr "Nepavyko įkelti kvietimų. Bandykite dar kartą."
 
 #. Error text shown in the screen-share picker when the list of shareable windows/displays fails to load.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:118
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:121
 msgid "Failed to load shareable sources."
 msgstr "Nepavyko įkelti bendrinamų šaltinių."
 
@@ -15286,7 +15282,7 @@ msgid "Focus window"
 msgstr "Perkelti langą į priekį"
 
 #. Voice input processing profile optimized for spoken voice.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:202
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:199
 msgid "Focused voice"
 msgstr "Fokusuotas balsas"
 
@@ -15321,10 +15317,6 @@ msgstr "Aplanko nustatymai"
 #: src/features/app/components/whats_new/WhatsNewModal.tsx:33
 msgid "Follow us on {blueskyProviderName}"
 msgstr "Sekite mus „{blueskyProviderName}“ tinkle"
-
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:854
-msgid "Follow voice input"
-msgstr "Sekti balso įvestį"
 
 #. Label in the sounds, shown on a sound row that has no volume override. Preserve {effectiveValue}; it is inserted by code and already holds the locale-formatted percentage, including the percent sign.
 #: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabSounds.tsx:84
@@ -15551,7 +15543,7 @@ msgid "Forward"
 msgstr "Persiųsti"
 
 #. Tooltip / aria label on the forward / fast-forward button in the standalone audio player. {defaultSeekAmount} is an integer second count.
-#: src/features/voice/components/media_player/components/AudioPlayer.tsx:31
+#: src/features/voice/components/media_player/components/AudioPlayer.tsx:32
 msgid "Forward {defaultSeekAmount} seconds"
 msgstr "Pirmyn {defaultSeekAmount} sekundžių"
 
@@ -15592,14 +15584,14 @@ msgstr "Rėmelis"
 
 #. Section header in the stream settings menu for frame rate options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:344
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:341
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:230
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:132
 msgid "Frame rate"
 msgstr "Kadrų dažnis"
 
 #. Video settings note shown when higher frame rates require premium.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:71
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:69
 msgid "Frame rates above 30 FPS require {premiumProductName}"
 msgstr "Didesniam nei 30 FPS kadrų dažniui reikalingas {premiumProductName}"
 
@@ -15923,7 +15915,7 @@ msgstr "Valdiklio Y / trikampis"
 #. Video settings label for the motion-focused screen share quality preset.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:76
 #: src/features/user/components/modals/tabs/UserVideoTabState.ts:24
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:227
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:230
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:75
 msgid "Gaming"
 msgstr "Žaidimai"
@@ -16065,7 +16057,7 @@ msgid "GIF picker loading"
 msgstr "Įkeliamas GIF parinkiklis"
 
 #. Accessible label for an animated GIF shown in the media viewer.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:85
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:86
 msgid "GIF preview"
 msgstr "GIF peržiūra"
 
@@ -16429,7 +16421,7 @@ msgstr "Suteikta {permissions}"
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "Suteikia visus leidimus ir apeina kanalo apribojimus. Labai jautrus leidimas."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:979
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:991
 msgid "Granular selection"
 msgstr "Detalus pasirinkimas"
 
@@ -16992,7 +16984,7 @@ msgstr "Slėpti slaptažodį"
 msgid "Hide picture-in-picture popout?"
 msgstr "Slėpti iššokantįjį paveikslėlio paveikslėlyje langą?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:756
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:768
 msgid "Hide preview thumbnail"
 msgstr "Slėpti peržiūros miniatiūrą"
 
@@ -17386,7 +17378,7 @@ msgstr "Jei norite, kad šie nariai galėtų pasiekti ankstesnes žinutes, išsi
 #. Button label for silencing an incoming direct call without joining.
 #. Button, menu item, or tooltip for ignoring an incoming friend request.
 #: src/features/relationship/utils/RelationshipMessageDescriptors.ts:21
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:107
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:104
 msgid "Ignore"
 msgstr "Ignoruoti"
 
@@ -17395,11 +17387,11 @@ msgstr "Ignoruoti"
 msgid "Ignore friend request"
 msgstr "Nepaisyti draugystės užklausos"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:969
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:981
 msgid "Ignore hardware devices"
 msgstr "Ignoruoti aparatinius įrenginius"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:945
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:957
 msgid "Ignore input media"
 msgstr "Ignoruoti įvesties mediją"
 
@@ -17430,7 +17422,7 @@ msgstr "Nepaisyti {displayName} draugystės užklausos?"
 msgid "Ignore this channel's slowmode cooldown."
 msgstr "Ignoruoti šio kanalo lėtojo režimo apribojimą."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:956
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:968
 msgid "Ignore virtual"
 msgstr "Ignoruoti virtualius"
 
@@ -17468,7 +17460,7 @@ msgstr "Ilinojus"
 #. Type label for image media.
 #: src/features/channel/components/embeds/media/EmbedImage.tsx:47
 #: src/features/expressions/utils/FavoriteMemeUtils.ts:14
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:113
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:114
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:25
 msgid "Image"
 msgstr "Vaizdas"
@@ -17479,7 +17471,7 @@ msgid "Image assets"
 msgstr "Vaizdiniai elementai"
 
 #. Success toast confirming that an image was copied as a bitmap to the clipboard.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:157
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:158
 msgid "Image copied to clipboard"
 msgstr "Vaizdas nukopijuotas į iškarpinę"
 
@@ -17513,7 +17505,7 @@ msgid "Image options"
 msgstr "Vaizdo parinktys"
 
 #. Accessible label for a static image shown in the media viewer.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:81
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:82
 msgid "Image preview"
 msgstr "Vaizdo peržiūra"
 
@@ -17540,7 +17532,7 @@ msgstr "Vaizdo įkėlimas"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the channel and chat memes picker header. Keep it concise.
 #. Tab label in the mobile memes picker. Filters to saved images.
-#: src/features/channel/components/MobileMemesPicker.tsx:46
+#: src/features/channel/components/MobileMemesPicker.tsx:47
 #: src/features/channel/components/pickers/memes/MemesPickerHeader.tsx:16
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:105
 msgid "Images"
@@ -17721,7 +17713,7 @@ msgid "In voice"
 msgstr "Balso pokalbyje"
 
 #. Short status label shown when the user is currently connected to voice chat.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:182
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:179
 msgid "In voice chat"
 msgstr "Balso pokalbyje"
 
@@ -17786,7 +17778,7 @@ msgid "Include all except selected"
 msgstr "Įtraukti visus, išskyrus pasirinktus"
 
 #. Section header in the Linux audio source picker for the per-app inclusion list.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:53
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:55
 msgid "Include apps"
 msgstr "Įtraukti programas"
 
@@ -17976,7 +17968,7 @@ msgid "Input and output"
 msgstr "Įvestis ir išvestis"
 
 #. Voice settings label for selecting a microphone input device.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:186
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:183
 msgid "Input device"
 msgstr "Įvesties įrenginys"
 
@@ -17998,7 +17990,7 @@ msgid "Input profile: {processingModeLabel}"
 msgstr "Įvesties profilis: {processingModeLabel}"
 
 #. Voice control dropdown label or menu item for microphone input settings.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:230
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:227
 msgid "Input settings"
 msgstr "Įvesties nustatymai"
 
@@ -18007,7 +17999,7 @@ msgid "Input states"
 msgstr "Įvesties būsenos"
 
 #. Voice settings slider label for microphone volume.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:194
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:191
 msgid "Input volume"
 msgstr "Įvesties garsumas"
 
@@ -18265,7 +18257,7 @@ msgid "Invite link is hidden while sharing:"
 msgstr "Kvietimo nuoroda paslėpta, kol bendrinama:"
 
 #. Inline replacement text shown for invite links while streaming privacy is active.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:145
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:146
 msgid "Invite link masked while sharing"
 msgstr "Kvietimo nuoroda paslėpta, kol bendrinama"
 
@@ -18678,7 +18670,7 @@ msgid "Jump to {displayName}"
 msgstr "Pereiti prie {displayName}"
 
 #. Accessible label for an inline channel mention link. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:100
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:101
 msgid "Jump to {labelText}"
 msgstr "Pereiti prie „{labelText}“"
 
@@ -18735,12 +18727,12 @@ msgid "Jump to the current call"
 msgstr "Pereiti prie dabartinio skambučio"
 
 #. Fallback accessible label for an inline channel mention when the target name is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:104
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:105
 msgid "Jump to the linked channel"
 msgstr "Pereiti į susietą kanalą"
 
 #. Fallback accessible label for an inline message link when the target channel is not known.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:96
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:97
 msgid "Jump to the linked message"
 msgstr "Pereiti prie susietos žinutės"
 
@@ -18750,7 +18742,7 @@ msgid "Jump to the message from {authorNickname}"
 msgstr "Pereiti prie {authorNickname} žinutės"
 
 #. Accessible label for an inline message link that jumps to a specific message in a channel. labelText is the channel display name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:91
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:92
 msgid "Jump to the message in {labelText}"
 msgstr "Pereiti prie žinutės iš „{labelText}“"
 
@@ -19055,7 +19047,7 @@ msgid "Layout"
 msgstr "Išdėstymas"
 
 #. Accessible label for the screen-share picker footer info button.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:280
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:283
 msgid "Learn about screen share previews"
 msgstr "Sužinokite apie ekrano bendrinimo peržiūras"
 
@@ -19398,7 +19390,7 @@ msgid "Link styling"
 msgstr "Nuorodų stilius"
 
 #. Title of the alert shown when clicking an internal link that is not available to the current account.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:137
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:138
 msgid "Link unavailable"
 msgstr "Nuoroda nepasiekiama"
 
@@ -19448,7 +19440,7 @@ msgid "Linux app"
 msgstr "„Linux“ programa"
 
 #. Audio device label prefix for the operating system default audio device on Linux.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:29
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:26
 msgid "Linux default"
 msgstr "„Linux“ numatytasis įrenginys"
 
@@ -19551,7 +19543,7 @@ msgid "Loading theme..."
 msgstr "Įkeliama tema..."
 
 #. Generic loading toast or label shown while an operation is in progress.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:141
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:142
 msgid "Loading..."
 msgstr "Įkeliama..."
 
@@ -19686,7 +19678,7 @@ msgid "macOS app"
 msgstr "„macOS“ programa"
 
 #. Audio device label prefix for the operating system default audio device on macOS.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:25
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:22
 msgid "macOS default"
 msgstr "„macOS“ numatytasis įrenginys"
 
@@ -20289,7 +20281,7 @@ msgstr "Kitas kūrinys"
 #. Accessible label for the overflow menu button in the media viewer modal.
 #. Short label in the channel and chat media action bottom sheet. Keep it concise.
 #: src/features/channel/components/MediaActionBottomSheet.tsx:37
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:69
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:70
 msgid "Media options"
 msgstr "Medijos parinktys"
 
@@ -20299,7 +20291,7 @@ msgid "Media play/pause"
 msgstr "Leisti / pristabdyti"
 
 #. Generic accessible label for unknown media in the media viewer.
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:97
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:98
 msgid "Media preview"
 msgstr "Medijos peržiūra"
 
@@ -20754,7 +20746,7 @@ msgid "Message layout"
 msgstr "Žinučių išdėstymas"
 
 #. Type chip suffix in tooltips for inline rendered message links. Lowercase because it follows the channel name.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:81
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:82
 msgid "message link"
 msgstr "nuoroda į žinutę"
 
@@ -20950,7 +20942,7 @@ msgid "Microphone test"
 msgstr "Mikrofono testas"
 
 #. Pre-join indicator shown beneath the Join button on a voice channel where every connected participant supports E2EE.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:318
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:315
 msgid "Microphone, camera, and screen share content are end-to-end encrypted."
 msgstr "Mikrofonas, kamera ir bendrinamas ekrano turinys yra užšifruoti nuo galo iki galo."
 
@@ -21019,7 +21011,7 @@ msgstr "Rizika nepilnamečiams, netinkamoje vietoje esantis suaugusiesiems skirt
 #. Camera settings menu checkbox for flipping the local camera preview horizontally.
 #. Switch label in the camera preview modal for flipping the local camera preview horizontally.
 #. Switch label in the video tab for flipping the local camera preview horizontally.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:108
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:106
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:72
 #: src/features/voice/components/VoiceSettingsMenus.tsx:114
 msgid "Mirror camera"
@@ -21069,7 +21061,7 @@ msgid "Misspelled words"
 msgstr "Rašybos klaidos"
 
 #. Aria label on a participant tile icon that indicates the participant is on mobile.
-#: src/features/voice/components/voice_participant_tile/shared.ts:88
+#: src/features/voice/components/voice_participant_tile/shared.ts:83
 msgid "Mobile device"
 msgstr "Mobilusis įrenginys"
 
@@ -21518,7 +21510,7 @@ msgid "Mute all"
 msgstr "Nutildyti visus"
 
 #. Voice menu action that mutes every device or session's microphone for this user.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:119
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:116
 msgid "Mute all devices"
 msgstr "Nutildyti visus įrenginius"
 
@@ -21653,13 +21645,13 @@ msgstr "Nutildyta"
 #. Status badge on a voice participant tile. The participant's microphone is muted.
 #: src/features/app/components/layout/VoiceStateIcons.tsx:19
 #: src/features/ui/avatars/AvatarWithPresence.tsx:20
-#: src/features/voice/components/voice_participant_tile/shared.ts:83
+#: src/features/voice/components/voice_participant_tile/shared.ts:78
 msgctxt "microphone-state"
 msgid "Muted"
 msgstr "Mikrofonas nutildytas"
 
 #. Voice chat status label. A moderator muted the user in this community, so they cannot speak but can still hear others.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:46
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:43
 msgid "Muted by moderators"
 msgstr "Moderatorių nutildytas"
 
@@ -22243,7 +22235,7 @@ msgid "No {sendMessagesPermission} permission"
 msgstr "Nėra leidimo „{sendMessagesPermission}“"
 
 #. Inline text shown inside a custom message link pill when the linked message cannot be accessed.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:125
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:126
 msgid "No access"
 msgstr "Nėra prieigos"
 
@@ -22282,7 +22274,7 @@ msgstr "Išplėstinių nustatymų nerasta"
 msgid "No AFK channel"
 msgstr "Nėra AFK kanalo"
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:122
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:125
 msgid "No application windows found"
 msgstr "Programų langų nerasta"
 
@@ -22299,6 +22291,11 @@ msgstr "Kol kas nėra išteklių"
 #: src/features/voice/utils/ScreenShareAudioSummary.ts:20
 msgid "No audio"
 msgstr "Garso nėra"
+
+#. Screen-share audio summary on a video device share whose capture device has no audio input of its own.
+#: src/features/voice/utils/ScreenShareAudioSummary.ts:60
+msgid "No audio from this device"
+msgstr "Nėra garso iš šio įrenginio"
 
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:429
 msgid "No authorized applications"
@@ -22341,7 +22338,7 @@ msgstr "Nėra žymių"
 msgid "No bot banner"
 msgstr "Nėra boto reklamjuostės"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:235
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:232
 msgid "No camera found"
 msgstr "Kamera nerasta"
 
@@ -22421,7 +22418,7 @@ msgstr "Aprašo nėra."
 msgid "No desktop update is available."
 msgstr "Nėra galimų darbalaukio naujinimų."
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:128
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:131
 msgid "No displays found"
 msgstr "Ekranų nerasta"
 
@@ -22650,7 +22647,7 @@ msgstr "Negautas atsakymo turinys"
 #. Empty-state text in the channel and chat memes picker view.
 #. Heading shown when the channel search query returned zero matches.
 #: src/features/channel/components/channel_search_results/ChannelSearchResultsShared.tsx:74
-#: src/features/channel/components/MobileMemesPicker.tsx:66
+#: src/features/channel/components/MobileMemesPicker.tsx:67
 #: src/features/channel/components/pickers/memes/MemesPickerView.tsx:32
 msgid "No results"
 msgstr "Nėra rezultatų"
@@ -22679,7 +22676,7 @@ msgstr "Dar nėra vaidmenų. Pridėkite vaidmenų čia: {rolesSettingsPath}"
 
 #. Empty state title in the mobile memes picker when the user has saved nothing yet.
 #. Empty-state text in the channel and chat memes picker view.
-#: src/features/channel/components/MobileMemesPicker.tsx:58
+#: src/features/channel/components/MobileMemesPicker.tsx:59
 #: src/features/channel/components/pickers/memes/MemesPickerView.tsx:24
 msgid "No saved media"
 msgstr "Nėra išsaugotos medijos"
@@ -22851,7 +22848,7 @@ msgid "Noise gate"
 msgstr "Triukšmo slenkstis"
 
 #. Voice setting label for microphone background-noise filtering.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:210
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:207
 msgid "Noise suppression"
 msgstr "Triukšmo slopinimas"
 
@@ -22877,7 +22874,7 @@ msgstr "Non-convert"
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:37
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:146
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:220
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:261
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:268
 msgid "None"
 msgstr "Nėra"
 
@@ -23286,7 +23283,7 @@ msgstr "Taikoma tik plačiuose ekranuose."
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "Priimamos tik kredito kortelės. Debeto ir išankstinio mokėjimo kortelės negali būti naudojamos turinio suaugusiesiems patikrai."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:934
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:946
 msgid "Only default speakers"
 msgstr "Tik numatytieji garsiakalbiai"
 
@@ -23334,7 +23331,7 @@ msgstr "Vykdykite kodą tik tuo atveju, jei tiksliai suprantate, ką jis daro."
 msgid "Only show message previews for DMs with unread messages"
 msgstr "Rodyti žinučių peržiūras tik DM su neskaitytomis žinutėmis"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:924
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:936
 msgid "Only speakers"
 msgstr "Tik garsiakalbiai"
 
@@ -23410,7 +23407,7 @@ msgid "Open {displayName}"
 msgstr "Atidaryti „{displayName}“"
 
 #. Accessible label for an inline settings deep-link pill. labelText is the resolved settings tab and section breadcrumb.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:108
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:109
 msgid "Open {labelText} in settings"
 msgstr "Atidaryti „{labelText}“ nustatymuose"
 
@@ -23440,25 +23437,25 @@ msgid "Open @{displayName}"
 msgstr "Atidaryti @{displayName}"
 
 #. Button label in the video tab that jumps to the advanced settings media section.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:120
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:118
 msgid "Open advanced media settings"
 msgstr "Atidaryti papildomus medijos nustatymus"
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:125
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:128
 msgid "Open an application window, then try again."
 msgstr "Atidarykite programos langą ir bandykite dar kartą."
 
 #. Button or menu action label in the channel and chat attachment grid item. Keep it concise.
 #. Button or menu action label in the channel and chat embed gifv. Keep it concise.
 #: src/features/channel/components/embeds/attachments/AttachmentGridItem.tsx:74
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:55
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:56
 msgid "Open animated GIF in full view"
 msgstr "Atidaryti animuotą GIF viso ekrano režimu"
 
 #. Button or menu action label in the channel and chat attachment grid item. Keep it concise.
 #. Button or menu action label in the channel and chat embed gifv. Keep it concise.
 #: src/features/channel/components/embeds/attachments/AttachmentGridItem.tsx:70
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:51
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:52
 msgid "Open animated GIF video in full view"
 msgstr "Atidaryti animuotą GIF vaizdo įrašą viso ekrano režimu"
 
@@ -23468,7 +23465,7 @@ msgid "Open audio in full view"
 msgstr "Atidaryti garso įrašą viso ekrano režimu"
 
 #. Media context menu action that opens the audio URL in an external browser.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:101
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:102
 msgid "Open audio link"
 msgstr "Atidaryti garso nuorodą"
 
@@ -23507,7 +23504,7 @@ msgid "Open browser"
 msgstr "Atidaryti naršyklę"
 
 #. Primary button in the screen-share picker on web. Hands off to the browser's native getDisplayMedia picker.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:206
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:209
 msgid "Open browser picker"
 msgstr "Atidaryti naršyklės parinkiklį"
 
@@ -23621,12 +23618,12 @@ msgid "Open favorites menu"
 msgstr "Atidaryti mėgstamiausių meniu"
 
 #. Media context menu action that opens the file URL in an external browser.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:105
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:106
 msgid "Open file link"
 msgstr "Atidaryti failo nuorodą"
 
 #. Media context menu action that opens the GIF URL in an external browser.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:93
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:94
 msgid "Open GIF link"
 msgstr "Atidaryti GIF nuorodą"
 
@@ -23651,7 +23648,7 @@ msgstr "Atidaryti paveikslėlį naršyklėje"
 #. Button or menu action label in the channel and chat embed gifv. Keep it concise.
 #. Button or menu action label in the channel and chat embed image. Keep it concise.
 #: src/features/channel/components/embeds/attachments/AttachmentGridItem.tsx:78
-#: src/features/channel/components/embeds/media/EmbedGifv.tsx:59
+#: src/features/channel/components/embeds/media/EmbedGifv.tsx:60
 #: src/features/channel/components/embeds/media/EmbedImage.tsx:43
 msgid "Open image in full view"
 msgstr "Atidaryti paveikslėlį viso ekrano režimu"
@@ -23660,7 +23657,7 @@ msgstr "Atidaryti paveikslėlį viso ekrano režimu"
 #. Image context menu action that opens the image URL in an external browser.
 #. Image context menu action that opens the image URL in an external browser.
 #: src/features/ui/action_menu/items/EmojiContextMenuItems.tsx:48
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:89
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:90
 #: src/features/ui/action_menu/items/StickerContextMenuItems.tsx:48
 msgid "Open image link"
 msgstr "Atidaryti paveikslėlio nuorodą"
@@ -23775,7 +23772,7 @@ msgid "Open system DM"
 msgstr "Atidaryti sistemos DM"
 
 #. Primary button in the screen-share picker on Linux/Wayland. Hands off to the OS xdg-desktop-portal picker.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:211
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:214
 msgid "Open system picker"
 msgstr "Atidaryti sistemos parinkiklį"
 
@@ -23837,7 +23834,7 @@ msgid "Open video in full view"
 msgstr "Atidaryti vaizdo įrašą viso ekrano režimu"
 
 #. Media context menu action that opens the video URL in an external browser.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:97
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:98
 msgid "Open video link"
 msgstr "Atidaryti vaizdo įrašo nuorodą"
 
@@ -23847,7 +23844,7 @@ msgid "Open voice"
 msgstr "Atidaryti balso pokalbį"
 
 #. Accessible button label that opens the user settings tab for microphone, speaker, camera, and call stats.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:258
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:255
 msgid "Open voice & video settings"
 msgstr "Atidaryti balso ir vaizdo nustatymus"
 
@@ -24080,12 +24077,12 @@ msgid "Output"
 msgstr "Išvestis"
 
 #. Voice settings label for selecting a speaker or output device.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:190
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:187
 msgid "Output device"
 msgstr "Išvesties įrenginys"
 
 #. Voice control dropdown label or menu item for speaker/output settings.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:234
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:231
 msgid "Output settings"
 msgstr "Išvesties nustatymai"
 
@@ -24094,7 +24091,7 @@ msgstr "Išvesties nustatymai"
 #. Voice settings slider label for speaker or output volume.
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:90
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:228
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:198
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:195
 msgid "Output volume"
 msgstr "Išvesties garsumas"
 
@@ -24197,7 +24194,7 @@ msgid "Participant limit"
 msgstr "Dalyvių skaičiaus limitas"
 
 #. Aria label for the participant context-menu trigger button. {participantDisplayName} is the participant's display name.
-#: src/features/voice/components/voice_participant_tile/shared.ts:100
+#: src/features/voice/components/voice_participant_tile/shared.ts:95
 msgid "Participant options for {participantDisplayName}"
 msgstr "Dalyvio „{participantDisplayName}“ parinktys"
 
@@ -25260,17 +25257,17 @@ msgid "Preview hidden"
 msgstr "Peržiūra paslėpta"
 
 #. Privacy explanation for screen-share previews in a one-to-one DM call. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:318
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:321
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. Disable previews if you do not want screen-share frames uploaded for thumbnails."
 msgstr "„{productName}“ laikinai saugo peržiūros vaizdus, kad galėtų juos pristatyti, ir jie nėra užšifruoti iš galo į galą. Jei nenorite, kad ekrano bendrinimo kadrai būtų įkeliami miniatiūroms, išjunkite peržiūras."
 
 #. Privacy explanation for screen-share previews in a group DM call. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:312
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:315
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. People in this group DM do not need to be actively watching your stream to see the thumbnail."
 msgstr "„{productName}“ laikinai saugo peržiūros vaizdus, kad galėtų juos pristatyti, ir jie nėra užšifruoti iš galo į galą. Šio grupės DM dalyviams nereikia aktyviai stebėti jūsų srauto, kad pamatytų miniatiūrą."
 
 #. Privacy explanation for screen-share previews in a guild voice channel. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:306
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:309
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. People still need permission to connect, but they do not need to be actively watching your stream."
 msgstr "„{productName}“ laikinai saugo peržiūros vaizdus, kad galėtų juos pristatyti, ir jie nėra užšifruoti iš galo į galą. Žmonėms vis tiek reikia leidimo prisijungti, tačiau jiems nereikia aktyviai stebėti jūsų srauto."
 
@@ -26269,7 +26266,7 @@ msgstr "Nuoroda nukopijuota."
 msgid "Referral parameters"
 msgstr "Rekomendacijų parametrai"
 
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:305
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:312
 msgid "Refresh audio sources"
 msgstr "Atnaujinti garso šaltinius"
 
@@ -26363,7 +26360,7 @@ msgid "Regular button clicked."
 msgstr "Paspaustas įprastas mygtukas."
 
 #. Button label for rejecting an incoming direct call.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:103
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:100
 msgid "Reject"
 msgstr "Atmesti"
 
@@ -26597,7 +26594,7 @@ msgid "Remove from group"
 msgstr "Pašalinti iš grupės"
 
 #. Action that removes the selected media from saved media.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:181
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:182
 msgid "Remove from saved media"
 msgstr "Pašalinti iš išsaugotos medijos"
 
@@ -26609,7 +26606,7 @@ msgid "Remove from top"
 msgstr "Nerodyti viršuje"
 
 #. Media context menu action that removes a GIF favorite saved by URL.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:173
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:174
 msgid "Remove from URL-only GIF favorites"
 msgstr "Pašalinti iš mėgstamiausių GIF (tik URL)"
 
@@ -27902,7 +27899,7 @@ msgid "Revoked ban for {0}"
 msgstr "Panaikintas {0} užblokavimas"
 
 #. Tooltip / aria label on the rewind button in the standalone audio player. {defaultSeekAmount} is an integer second count.
-#: src/features/voice/components/media_player/components/AudioPlayer.tsx:26
+#: src/features/voice/components/media_player/components/AudioPlayer.tsx:27
 msgid "Rewind {defaultSeekAmount} seconds"
 msgstr "Atsukti atgal {defaultSeekAmount} sekundžių"
 
@@ -28202,7 +28199,7 @@ msgstr "Išsaugoti piktogramą"
 
 #. Button or menu action label in the channel and chat memes picker view. Keep it concise.
 #. Empty state body in the mobile memes picker explaining how to save media. Tone can be friendly.
-#: src/features/channel/components/MobileMemesPicker.tsx:62
+#: src/features/channel/components/MobileMemesPicker.tsx:63
 #: src/features/channel/components/pickers/memes/MemesPickerView.tsx:28
 msgid "Save some media from messages to get started!"
 msgstr "Norėdami pradėti, išsaugokite kelis medijos failus iš žinučių!"
@@ -28313,7 +28310,7 @@ msgstr "Reikalingas ekrano įrašymo leidimas"
 #. Video settings label for the text-focused screen share quality preset.
 #: src/features/user/components/modals/tabs/UserVideoTabState.ts:28
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:222
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:231
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:234
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:88
 msgid "Screen share"
 msgstr "Ekrano bendrinimas"
@@ -28329,7 +28326,7 @@ msgid "Screen share audio boost"
 msgstr "Ekrano bendrinimo garso stiprinimas"
 
 #. Error modal title shown when the selected native screen-share audio route cannot start safely.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:174
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:177
 msgid "Screen share audio couldn't start"
 msgstr "Nepavyko pradėti ekrano bendrinimo garso"
 
@@ -28344,7 +28341,7 @@ msgid "Screen share encoder controls"
 msgstr "Ekrano bendrinimo kodavimo valdikliai"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:146
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:119
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "Ekrano bendrinimas baigėsi"
@@ -28370,17 +28367,17 @@ msgid "Screen share preview behavior"
 msgstr "Ekrano bendrinimo peržiūros elgsena"
 
 #. Title of an informational modal explaining screen-share preview frame uploads.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:284
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:287
 msgid "Screen share previews"
 msgstr "Ekrano bendrinimo peržiūros"
 
 #. Compact footer status in the screen-share picker when preview frame uploads are disabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:272
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:275
 msgid "Screen share previews are disabled."
 msgstr "Ekrano bendrinimo peržiūros išjungtos."
 
 #. Compact footer status in the screen-share picker when preview frame uploads are enabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:268
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:271
 msgid "Screen share previews are enabled."
 msgstr "Ekrano bendrinimo peržiūros įjungtos."
 
@@ -28391,13 +28388,13 @@ msgstr "Ekrano bendrinimo privatumas"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:112
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:110
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:214
 msgid "Screen share quality"
 msgstr "Ekrano bendrinimo kokybė"
 
 #. Voice control dropdown label or menu item for screen sharing and stream quality settings.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:242
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:239
 msgid "Screen share settings"
 msgstr "Ekrano bendrinimo nustatymai"
 
@@ -28723,7 +28720,7 @@ msgstr "Ieškoti vaidmenų ar narių…"
 
 #. Button or menu action label in the channel and chat memes picker header. Keep it concise.
 #. Placeholder text in the mobile memes picker search input.
-#: src/features/channel/components/MobileMemesPicker.tsx:54
+#: src/features/channel/components/MobileMemesPicker.tsx:55
 #: src/features/channel/components/pickers/memes/MemesPickerHeader.tsx:24
 msgid "Search saved media"
 msgstr "Ieškoti išsaugotos medijos"
@@ -28942,12 +28939,12 @@ msgstr "Persukimo peržiūra"
 
 #. Hover action on a device card that selects the device without starting the stream.
 #: src/features/app/components/dialogs/components/PricingCard.tsx:65
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:198
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:201
 msgid "Select"
 msgstr "Pasirinkti"
 
 #. Accessible label for a saved media tile in the mobile memes picker. accessibleName is the media filename or alt text.
-#: src/features/channel/components/MobileMemesPicker.tsx:74
+#: src/features/channel/components/MobileMemesPicker.tsx:75
 msgid "Select {accessibleName}"
 msgstr "Pasirinkite „{accessibleName}“"
 
@@ -29307,7 +29304,7 @@ msgid "Send reset link"
 msgstr "Siųsti atkūrimo nuorodą"
 
 #. Accessible label for a saved media tile in the picker. Activating sends it. memeName is the user-chosen name.
-#: src/features/channel/components/pickers/memes/MemeGridItem.tsx:43
+#: src/features/channel/components/pickers/memes/MemeGridItem.tsx:44
 msgid "Send saved media {memeName}"
 msgstr "Siųsti išsaugotą mediją „{memeName}“"
 
@@ -29499,7 +29496,7 @@ msgid "Set a member list position for the role"
 msgstr "Nustatyta vaidmens pozicija narių sąraše"
 
 #. Video settings note shown when a streaming preset decides the screen share resolution and frame rate. preset is the Gaming or Screen share preset label, and Custom is the third preset label.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:89
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:87
 msgid "Set by the {preset} preset. Picking a value here switches to Custom."
 msgstr "Nustatyta pagal {preset} iš anksto nustatytą parinktį. Pasirinkus reikšmę čia, bus pereita prie pasirinktinio nustatymo."
 
@@ -29524,7 +29521,7 @@ msgid "Set custom volumes for individual sounds. Sounds without an override foll
 msgstr "Nustatykite pasirinktinius atskirų garsų lygius. Garsams be individualių nustatymų bus taikomas pagrindinis garso lygis."
 
 #. Settings description for assigning the keyboard shortcut that toggles voice deafen. Deafen controls hearing voice chat, not microphone mute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:167
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:164
 msgid "Set deafen shortcut"
 msgstr "Nustatyti garso išjungimo spartųjį klavišą"
 
@@ -29669,11 +29666,6 @@ msgstr "Atidėti šį patikrinimą"
 msgid "Set this check aside?"
 msgstr "Atidėti šį patikrinimą?"
 
-#. Screen share status row in the stream menu and in video settings, describing the settings the live stream is running at rather than what reaches viewers. resolution is a technical token such as 1080p, frameRate is the whole number of frames a second the stream is set to send and codec is a codec name such as VP9. FPS is a technical token.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:415
-msgid "Set to send {resolution} at {frameRate} FPS with {codec}"
-msgstr "Nustatyta siųsti {resolution} esant {frameRate} FPS su {codec}"
-
 #. Title for the self-host setup wizard modal.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:73
 msgid "Set up {productName}"
@@ -29726,7 +29718,7 @@ msgid "Settings"
 msgstr "Nustatymai"
 
 #. Type chip suffix in tooltips for inline rendered fluxer://settings/user deep links. Lowercase.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:113
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:114
 msgid "settings link"
 msgstr "nustatymų nuoroda"
 
@@ -29781,7 +29773,7 @@ msgid "Share gift"
 msgstr "Bendrinti dovaną"
 
 #. Hover action on an application or display card that starts sharing that source.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:194
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:197
 msgid "Share screen"
 msgstr "Bendrinti ekraną"
 
@@ -29823,11 +29815,11 @@ msgid "Share with community mods."
 msgstr "Bendrinti su bendruomenės moderatoriais."
 
 #. Voice control button or tooltip label for starting screen sharing.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:226
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:223
 msgid "Share your screen"
 msgstr "Bendrinti ekraną"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:328
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:325
 msgid "Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60 FPS."
 msgstr "Bendrinkite ekraną didele raiška (1080p), Quad HD (1440p) arba natūralia šaltinio raiška, iki 60 kadrų per sekundę."
 
@@ -29856,7 +29848,7 @@ msgid "Shared window"
 msgstr "Bendrinamas langas"
 
 #. Capture option in the Linux audio source picker on a window share. Captures only the audio of the window being shared.
-#: src/features/voice/components/AudioSourcePickerLinux.tsx:38
+#: src/features/voice/components/AudioSourcePickerLinux.tsx:40
 msgid "Shared window audio"
 msgstr "Bendrinamo lango garsas"
 
@@ -30624,6 +30616,10 @@ msgstr "Tylūs skambučiai"
 msgid "Silent calls from everyone"
 msgstr "Tylūs skambučiai iš visų"
 
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:872
+msgid "Silent when the capture device has no audio input of its own"
+msgstr "Nebalsinis, kai įrenginys neturi savo garso įvesties"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:390
 msgid "Single click"
@@ -30952,7 +30948,7 @@ msgid "Smooth scrolling"
 msgstr "Sklandus slinkimas"
 
 #. Footer summary description for the gaming screen-share quality preset.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:239
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:242
 msgid "Smoother video"
 msgstr "Sklandesnis vaizdas"
 
@@ -31004,11 +31000,6 @@ msgstr "Kai kurių jaustukų nepavyko pridėti"
 #: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:18
 msgid "Some files you're trying to upload exceed the maximum size limit of {maxSizeFormatted} per file."
 msgstr "Kai kurie failai, kuriuos bandote įkelti, viršija didžiausią leidžiamą {maxSizeFormatted} dydį vienam failui."
-
-#. Screen share notice shown to the person sharing when the app failed to push new settings to a live share.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:410
-msgid "Some stream settings could not be applied to your live stream."
-msgstr "Kai kuriuos srauto nustatymus nepavyko pritaikyti jūsų tiesioginei transliacijai."
 
 #. Title of the unaddable recipients confirmation alert shown when creating a group DM.
 #: src/features/channel/components/modals/UnaddableRecipientsConfirmModal.tsx:27
@@ -31217,12 +31208,12 @@ msgstr "Garsai"
 
 #. Footer summary resolution label for native source resolution.
 #. Resolution option in the stream settings menu meaning the original source resolution (no downscale).
-#. Screen share resolution token in the stream menu status rows, used when the person asked for the original source resolution and the app does not know the source size. Matches the Source option in the stream settings menu.
+#. Screen share resolution token in the stream info pill on the sharing tile, used when the person asked for the original source resolution and the app does not know the source size. Matches the Source option in the stream settings menu.
 #. Short label in the video tab for the native source resolution option. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:85
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:247
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:83
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:250
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:110
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:425
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:336
 msgid "Source"
 msgstr "Šaltinis"
 
@@ -31569,7 +31560,7 @@ msgstr "Pradėti balso skambutį?"
 msgid "Start call"
 msgstr "Pradėti skambutį"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:289
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:286
 msgid "Start camera test and configure effects"
 msgstr "Pradėti kameros testą ir konfigūruoti efektus"
 
@@ -31910,7 +31901,7 @@ msgstr "Nustoti skaityti"
 #. Danger action that stops the active screen share.
 #. Voice screen share menu action that stops the current user stream.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:20
-#: src/features/voice/components/ActiveScreenShareMenu.tsx:30
+#: src/features/voice/components/ActiveScreenShareMenu.tsx:21
 msgid "Stop streaming"
 msgstr "Sustabdyti srautą"
 
@@ -31920,7 +31911,7 @@ msgid "Stop trusting all links?"
 msgstr "Nebepasitikėti visomis nuorodomis?"
 
 #. Voice control action for stopping the currently focused or selected stream.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:246
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:243
 msgid "Stop watching"
 msgstr "Nustoti žiūrėti"
 
@@ -31982,7 +31973,7 @@ msgstr "Neleidžia garsiakalbių garsui grįžti atgal į mikrofoną."
 #. Primary footer action that starts streaming the selected capture device.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:236
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:202
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:205
 msgid "Stream"
 msgstr "Transliuoti"
 
@@ -32001,11 +31992,6 @@ msgstr "Transliacija baigėsi"
 msgid "Stream hidden"
 msgstr "Srautas paslėptas"
 
-#. Accessible label for a passive badge on your own screen-share tile, shown when the encoder stays below the frame rate you asked for.
-#: src/features/voice/components/voice_participant_tile/shared.ts:78
-msgid "Stream is not keeping up"
-msgstr "Srautas nespėja"
-
 #. Aria label for the small thumbnail preview on the screen-share hover card.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the user settings voice activity card. Keep it concise.
@@ -32021,14 +32007,9 @@ msgid "Stream quality"
 msgstr "Srauto kokybė"
 
 #. Toolbar / menu button label in the screen-share picker. Opens the stream quality settings popover.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:223
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:226
 msgid "Stream settings"
 msgstr "Srauto nustatymai"
-
-#. Accessible label for the information badge on the sharing tile, shown when the app changed stream settings without a problem to report.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:440
-msgid "Stream settings were adjusted"
-msgstr "Srauto nustatymai buvo pakoreguoti"
 
 #. Permission name: allows video streaming or screen sharing in voice.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:467
@@ -32526,7 +32507,7 @@ msgstr "Sistemos pranešimai iš „{productName}“ darbuotojų. Čia negalite 
 
 #. Audio device option label meaning the OS default audio input device.
 #. Footer summary fallback for the default capture-device audio input.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:260
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:263
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:140
 msgid "System default"
 msgstr "Numatytasis sistemos įrenginys"
@@ -33036,13 +33017,8 @@ msgstr "Botas pridėtas prie <0>{destinationName}</0>."
 msgid "The bot has been added."
 msgstr "Botas pridėtas."
 
-#. Screen share notice shown to the person sharing when the browser ignores the requested size. deliveredResolution is the size the browser really sends and resolution is the size the app asked it for. Both are technical tokens such as 720p or 2714x762.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:373
-msgid "The browser is sending {deliveredResolution} instead of {resolution}."
-msgstr "Naršyklė siunčia {deliveredResolution} vietoj {resolution}."
-
 #. Status shown when a device preview has not released the camera before the bounded handoff deadline.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:170
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:173
 msgid "The camera preview is still stopping. Try streaming again in a moment."
 msgstr "Kameros peržiūra vis dar stabdoma. Po akimirkos pabandykite transliuoti dar kartą."
 
@@ -33220,7 +33196,7 @@ msgid "The role granted {permissions}"
 msgstr "Šis vaidmuo suteikė {permissions}"
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:151
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:124
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "Ekrano bendrinimo šaltinis nustojo siųsti vaizdą, todėl ekrano bendrinimas buvo sustabdytas."
@@ -33462,7 +33438,7 @@ msgid "This browser console is a developer tool."
 msgstr "Ši naršyklės konsolė yra kūrėjo įrankis."
 
 #. Pre-join indicator shown beneath the Join button on a DM or group DM call where every connected participant supports E2EE.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:323
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:320
 msgid "This call is end-to-end encrypted."
 msgstr "Šis skambutis yra užšifruotas nuo galo iki galo."
 
@@ -33645,11 +33621,6 @@ msgstr "Ši darbalaukio versija negali diegti naujinimų programoje {productName
 msgid "This development build cannot update itself. Download a desktop installer to test the update flow."
 msgstr "Ši kūrimo versija negali atsinaujinti. Atsisiųskite darbalaukio diegimo programą, kad išbandytumėte naujinimo eigą."
 
-#. Screen share notice shown to the person sharing when a remembered result made the stream start below the asked-for settings. targetResolution and targetFrameRate are what the person asked for, resolution and frameRate are the lower settings the stream started at. Resolutions are technical tokens such as 1080p and rates are whole numbers. FPS is a technical token.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:383
-msgid "This device could not keep up with {targetResolution} at {targetFrameRate} FPS last time, so your stream started at {resolution} at {frameRate} FPS."
-msgstr "Šis įrenginys praėjusį kartą nespėjo palaikyti {targetResolution} esant {targetFrameRate} kadrų per sekundę, todėl jūsų transliacija prasidėjo esant {resolution} esant {frameRate} kadrų per sekundę."
-
 #. Modal body shown when the current device/browser cannot show notifications.
 #: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:27
 msgid "This device does not support notifications."
@@ -33753,7 +33724,7 @@ msgid "This install is managed by your system. Update {productName} from your so
 msgstr "Šią programą valdo jūsų sistema. Atnaujinkite „{productName}“ naudodami programų centrą arba paketų tvarkyklę."
 
 #. Neutral video settings note shown when higher screen share quality is disabled by instance limits.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:75
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:73
 msgid "This instance currently allows screen sharing up to 720p at 30 FPS."
 msgstr "Ši instancija šiuo metu leidžia bendrinti ekraną iki 720p raiškos ir 30 kadrų per sekundę."
 
@@ -33866,7 +33837,7 @@ msgid "This link channel is marked for mature content and may open material that
 msgstr "Šis nuorodų kanalas pažymėtas kaip skirtas brandžiam turiniui ir gali atverti medžiagą, kuri kai kuriems naudotojams gali būti netinkama."
 
 #. Body of the link-unavailable alert.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:141
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:142
 msgid "This link is not available for your account."
 msgstr "Ši nuoroda nepasiekiama jūsų paskyrai."
 
@@ -33947,17 +33918,17 @@ msgid "This option is required. Please provide a value."
 msgstr "Ši parinktis privaloma. Įveskite reikšmę."
 
 #. Voice participant status tooltip shown when channel permissions or voice suppression prevent another participant from speaking.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:55
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:52
 msgid "This participant can't speak in this channel"
 msgstr "Šis dalyvis negali kalbėti šiame kanale"
 
 #. Voice participant status tooltip for another user. They cannot hear voice chat. Distinct from muted.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:81
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:78
 msgid "This participant is deafened"
 msgstr "Šiam dalyviui išjungtas garsas"
 
 #. Voice participant status tooltip for another user. A moderator deafened that participant so they cannot hear voice chat.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:68
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:65
 msgid "This participant was deafened by moderators"
 msgstr "Šiam dalyviui garsą išjungė moderatoriai"
 
@@ -33972,7 +33943,7 @@ msgid "This phone number has already been used. Try another number or contact su
 msgstr "Šis telefono numeris jau buvo naudotas. Bandykite kitą numerį arba susisiekite su palaikymo komanda."
 
 #. Empty state in the screen-share picker shown to web users. Explains that this advanced picker requires the desktop app.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:134
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:137
 msgid "This picker is only available in the desktop app."
 msgstr "Šis parinkiklis pasiekiamas tik darbalaukio programoje."
 
@@ -34401,7 +34372,7 @@ msgid "Toggle controls"
 msgstr "Valdiklių perjungimas"
 
 #. Keyboard shortcut label. Toggles voice deafen, which controls whether the user hears voice chat. Distinct from microphone mute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:157
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:154
 msgid "Toggle deafen"
 msgstr "Išjungti / įjungti garsą"
 
@@ -34666,7 +34637,7 @@ msgstr "Dėklo piktogramos pakeitimai „Linux“ sistemoje įsigalioja tik iš 
 
 #. Short label in the channel and chat gif picker grid. Keep it concise.
 #. Short label in the channel and chat gif picker header. Keep it concise.
-#: src/features/channel/components/pickers/gif/GifPickerGrid.tsx:25
+#: src/features/channel/components/pickers/gif/GifPickerGrid.tsx:26
 #: src/features/channel/components/pickers/gif/GifPickerHeader.tsx:18
 msgid "Trending GIFs"
 msgstr "Populiarūs GIF"
@@ -34760,7 +34731,7 @@ msgstr "Pabandykite kitą paieškos užklausą."
 
 #. Empty state body in the mobile memes picker suggesting query changes.
 #. Label in the channel and chat memes picker view.
-#: src/features/channel/components/MobileMemesPicker.tsx:70
+#: src/features/channel/components/MobileMemesPicker.tsx:71
 #: src/features/channel/components/pickers/memes/MemesPickerView.tsx:36
 msgid "Try a different search term or filter"
 msgstr "Pabandykite kitą paieškos terminą arba filtrą"
@@ -34839,11 +34810,6 @@ msgstr "Pabandykite kitus filtrus arba paieškos terminus."
 msgid "Try editing your message again."
 msgstr "Bandyti redaguoti žinutę dar kartą."
 
-#. Screen share action in the stream menu. Forgets what this device measured and restarts the stream at the asked-for settings.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:435
-msgid "Try full quality again"
-msgstr "Bandyti dar kartą su visa kokybe"
-
 #: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:252
 msgid "Try searching for something like \"theme\", \"notifications\", or \"privacy\""
 msgstr "Pabandykite ieškoti ko nors panašaus į „tema“, „pranešimai“ ar „privatumas“"
@@ -34904,7 +34870,7 @@ msgid "Turn off anything you're not comfortable with. Some features may stop wor
 msgstr "Išjunkite tai, kas jums nepriimtina. Kai kurios funkcijos gali nustoti veikti."
 
 #. Error modal body shown after a native screen-share audio route fails to start.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:178
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:181
 msgid "Turn off audio sharing for this source or try again in a moment."
 msgstr "Išjunkite šio šaltinio garso bendrinimą arba pabandykite dar kartą po akimirkos."
 
@@ -34960,7 +34926,7 @@ msgid "Turn on automatically when OBS or XSplit is detected"
 msgstr "Įjungti automatiškai, kai aptinkama OBS arba XSplit"
 
 #. Voice control button or tooltip label for enabling the camera.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:222
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:219
 msgid "Turn on camera"
 msgstr "Įjungti kamerą"
 
@@ -35310,17 +35276,17 @@ msgid "Uncollectible"
 msgstr "Neišieškoma"
 
 #. Voice action label. Restores what the user hears in voice chat. Distinct from microphone unmute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:89
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:86
 msgid "Undeafen"
 msgstr "Įjungti garsą"
 
 #. Voice menu action that restores voice audio on every device or session for this user.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:148
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:145
 msgid "Undeafen all devices"
 msgstr "Įjungti garsą visuose įrenginiuose"
 
 #. Voice control label. Restores what the current user hears in voice chat. Distinct from microphone unmute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:135
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:132
 msgid "Undeafen yourself"
 msgstr "Įjungti garsą sau"
 
@@ -35558,7 +35524,7 @@ msgstr "nežinomas naudotojas"
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:102
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts:61
 #: src/features/voice/components/VoiceParticipantAvatarList.tsx:44
-#: src/features/voice/components/VoiceParticipantTile.tsx:181
+#: src/features/voice/components/VoiceParticipantTile.tsx:172
 #: src/features/webhook/components/WebhookListItem.tsx:31
 msgid "Unknown user"
 msgstr "Nežinomas naudotojas"
@@ -35602,7 +35568,7 @@ msgid "Unlock custom emojis in DMs with {premiumProductName}"
 msgstr "Atrakinkite pasirinktinius jaustukus DM pokalbiuose su „{premiumProductName}“"
 
 #. Premium upsell title in video settings.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:67
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:65
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "Atrakinkite HD ekrano bendrinimą su „{premiumProductName}“"
 
@@ -35659,7 +35625,7 @@ msgid "Unmute {label}"
 msgstr "Įjungti garsą {label}"
 
 #. Voice menu action that unmutes every device or session for this user.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:123
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:120
 msgid "Unmute all devices"
 msgstr "Įjungti garsą visuose įrenginiuose"
 
@@ -35741,7 +35707,7 @@ msgstr "Grupė be pavadinimo"
 
 #. Fallback label for an audio input device whose name is not reported by the OS.
 #. Footer summary fallback for an audio input without a reported name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:264
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:267
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:144
 msgid "Unnamed input"
 msgstr "Įvesties įrenginys be pavadinimo"
@@ -36153,7 +36119,7 @@ msgid "Upload new emoji and stickers, and manage your own creations."
 msgstr "Įkelkite naujų jaustukų ir lipdukų bei tvarkykite savo kūrinius."
 
 #. Description for the screen-share preview toggle in the informational modal.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:330
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:333
 msgid "Upload preview frames for screen shares."
 msgstr "Įkelkite ekrano bendrinimo peržiūros kadrus."
 
@@ -36234,7 +36200,7 @@ msgid "URL"
 msgstr "URL"
 
 #. Success toast confirming that a media URL was copied as text fallback.
-#: src/features/ui/action_menu/items/MediaMenuData.tsx:137
+#: src/features/ui/action_menu/items/MediaMenuData.tsx:138
 msgid "URL copied to clipboard"
 msgstr "URL nukopijuotas į iškarpinę"
 
@@ -36739,7 +36705,7 @@ msgid "User tag (optional)"
 msgstr "Naudotojo žyma (pasirinktinai)"
 
 #. Voice menu slider label for the saved volume of a specific user.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:250
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:247
 msgid "User volume"
 msgstr "Naudotojo garsumas"
 
@@ -37227,7 +37193,7 @@ msgstr "Vaizdo paketų praradimas:"
 #. Accessible label for a video thumbnail in the media viewer thumbnail strip.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/messaging/components/modals/media_modal/shared.ts:133
-#: src/features/messaging/components/modals/MediaViewerModal.tsx:89
+#: src/features/messaging/components/modals/MediaViewerModal.tsx:90
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:182
 msgid "Video preview"
 msgstr "Vaizdo įrašo peržiūra"
@@ -37283,7 +37249,7 @@ msgstr "Vaizdo įrašo įkėlimas"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the channel and chat memes picker header. Keep it concise.
 #. Tab label in the mobile memes picker. Filters to saved videos.
-#: src/features/channel/components/MobileMemesPicker.tsx:50
+#: src/features/channel/components/MobileMemesPicker.tsx:51
 #: src/features/channel/components/pickers/memes/MemesPickerHeader.tsx:20
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:109
 msgid "Videos"
@@ -37633,7 +37599,7 @@ msgid "Voice & video"
 msgstr "Balsas ir vaizdas"
 
 #. Voice menu item that opens the user settings tab for microphone, speaker, camera, and call stats.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:254
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:251
 msgid "Voice & video settings"
 msgstr "Balso ir vaizdo nustatymai"
 
@@ -37685,7 +37651,7 @@ msgstr "Balso ir vaizdo spartieji klavišai"
 
 #. Short label for a voice call (lobby header, DM action, settings section).
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:744
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:42
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:39
 msgid "Voice call"
 msgstr "Balso skambutis"
 
@@ -37753,7 +37719,7 @@ msgid "Voice connection debug"
 msgstr "Balso ryšio derinimas"
 
 #. Notification sound label for the event where the user becomes deafened in voice chat. Distinct from voice mute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:172
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:169
 msgid "Voice deafen"
 msgstr "Garso išjungimas"
 
@@ -37780,7 +37746,7 @@ msgid "Voice message"
 msgstr "Balso žinutė"
 
 #. Short label in the channel and chat voice message player. Keep it concise.
-#: src/features/channel/components/embeds/media/VoiceMessagePlayer.tsx:30
+#: src/features/channel/components/embeds/media/VoiceMessagePlayer.tsx:31
 msgid "Voice message player"
 msgstr "Balso žinutės grotuvas"
 
@@ -37832,7 +37798,7 @@ msgid "Voice settings"
 msgstr "Balso nustatymai"
 
 #. Notification sound label for the event where the user is no longer deafened in voice chat. Distinct from voice unmute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:177
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:174
 msgid "Voice undeafen"
 msgstr "Garso įjungimas"
 
@@ -37904,7 +37870,7 @@ msgid "Wait here"
 msgstr "Palaukite čia"
 
 #. Tooltip explaining that video / screen share controls are gated while the voice connection is not yet ready.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:48
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:45
 msgid "Waiting for connection..."
 msgstr "Laukiama prisijungimo..."
 
@@ -38465,17 +38431,17 @@ msgid "When posted as links in chat"
 msgstr "Kai paskelbta kaip nuorodos pokalbyje"
 
 #. Explanation of screen-share preview uploads in a group DM call. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:294
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:297
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so other people in this group DM can see a thumbnail before they watch."
 msgstr "Įjungus peržiūras, „{productName}“ kartkartėmis įkelia JPEG formato kadrus iš jūsų bendrinamo ekrano, kad kiti šio grupės DM dalyviai galėtų pamatyti miniatiūrą prieš žiūrėdami."
 
 #. Explanation of screen-share preview uploads in a guild voice channel. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:288
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:291
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so people with permission to connect to this voice channel can see a thumbnail before they watch."
 msgstr "Įjungus peržiūras, „{productName}“ kartkartėmis įkelia JPEG formato kadrus iš jūsų bendrinamo ekrano, kad žmonės, turintys leidimą prisijungti prie šio balso kanalo, galėtų pamatyti miniatiūrą prieš žiūrėdami."
 
 #. Explanation of screen-share preview uploads in a one-to-one DM call. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:300
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:303
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so the other person in this DM can see a thumbnail before they watch."
 msgstr "Įjungus peržiūras, „{productName}“ kartkartėmis įkelia JPEG formato kadrus iš jūsų bendrinamo ekrano, kad kitas šio tiesioginio pokalbio dalyvis galėtų pamatyti miniatiūrą prieš žiūrėdamas."
 
@@ -38627,7 +38593,7 @@ msgid "Windows cut off at the top or bottom of the screen, and docked DevTools, 
 msgstr "Langai, nukirsti ekrano viršuje arba apačioje, ir prijungti kūrėjo įrankiai gali rodyti pilką foną, užuot likę skaidrūs."
 
 #. Audio device label prefix for the operating system default audio device on Windows.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:21
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:18
 msgid "Windows default"
 msgstr "Numatytasis Windows įrenginys"
 
@@ -38800,7 +38766,7 @@ msgid "You are banned from this community and cannot join."
 msgstr "Esate užblokuotas šioje bendruomenėje ir negalite prisijungti."
 
 #. Voice participant status tooltip for the current user. They cannot hear voice chat. Distinct from muted.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:77
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:74
 msgid "You are deafened"
 msgstr "Jums išjungtas garsas"
 
@@ -38832,11 +38798,6 @@ msgstr "Naudojate „{productName}“ {releaseChannel} versiją."
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:160
 msgid "You aren't in any communities right now."
 msgstr "Šiuo metu nesate jokioje bendruomenėje."
-
-#. Screen share status row in the stream menu, describing the settings the person chose. resolution is a technical token such as 1440p and frameRate is a whole number. FPS is a technical token.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:420
-msgid "You asked for {resolution} at {frameRate} FPS"
-msgstr "Jūs paprašėte {resolution} esant {frameRate} FPS"
 
 #. Warning shown before opening or composing a DM with a user the current user has blocked. {userName} is the blocked user.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:180
@@ -39022,13 +38983,13 @@ msgstr "Šioje bendruomenėje negalite siųsti žinučių."
 
 #. Tooltip in the voice control bar when the user lacks the Screen Share permission in this channel. Tone stays plain.
 #. Tooltip shown when the user lacks the Screen Share permission in the voice channel. Tone stays plain.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:57
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:54
 #: src/features/voice/components/VoiceControlBar.tsx:137
 msgid "You can't share your screen in this channel"
 msgstr "Negalite bendrinti ekrano šiame kanale"
 
 #. Voice control tooltip shown when channel permissions prevent the current user from speaking.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:51
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:48
 msgid "You can't speak in this channel"
 msgstr "Negalite kalbėti šiame kanale"
 
@@ -39036,7 +38997,7 @@ msgstr "Negalite kalbėti šiame kanale"
 #. Tooltip in the voice control bar when the user lacks the Video permission in this channel. Tone stays plain.
 #. Tooltip shown when the user lacks the Video permission in the voice channel. Tone stays plain.
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:76
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:53
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:50
 #: src/features/voice/components/VoiceControlBar.tsx:127
 msgid "You can't turn on your camera in this channel"
 msgstr "Šiame kanale negalite įjungti kameros"
@@ -39109,7 +39070,7 @@ msgid "You changed your tag while on {PREMIUM_PRODUCT_NAME}. It will reroll rand
 msgstr "Pakeitėte savo žymą, kol naudojatės {PREMIUM_PRODUCT_NAME}. Ji bus atsitiktinai pakeista, kai baigs galioti jūsų {PREMIUM_PRODUCT_NAME}, nebent ji bus atnaujinta."
 
 #. Body of the access-denied alert for clicked message links.
-#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:121
+#: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:122
 msgid "You do not have access to the channel where this message was sent."
 msgstr "Neturite prieigos prie kanalo, kuriame buvo išsiųsta ši žinutė."
 
@@ -39350,7 +39311,7 @@ msgid "You stay in {ownedNames}. Owners cannot leave their own community."
 msgstr "Liekate šiose bendruomenėse: {ownedNames}. Savininkai negali palikti savo bendruomenės."
 
 #. Voice chat status tooltip for the current user. A moderator deafened them so they cannot hear voice chat.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:64
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:61
 msgid "You were deafened by moderators"
 msgstr "Moderatoriai išjungė jūsų garsą"
 
@@ -39699,11 +39660,6 @@ msgstr "Jūsų paraiška laukia peržiūros. Vis dar galite atnaujinti savo įra
 msgid "Your browser requires user interaction before audio can be played. Click the button below to enable voice chat."
 msgstr "Jūsų naršyklė reikalauja naudotojo veiksmo, kad būtų galima paleisti garsą. Spustelėkite žemiau esantį mygtuką, kad įjungtumėte balso pokalbį."
 
-#. Screen share notice shown to the person sharing a capture device, such as a capture card, that ignores the requested size. deliveredResolution is the size the capture device really sends and resolution is the size the app asked it for. Both are technical tokens such as 720p.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:378
-msgid "Your capture device is sending {deliveredResolution} instead of {resolution}."
-msgstr "Jūsų įrenginys siunčia {deliveredResolution} vietoj {resolution}."
-
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:185
 msgid "Your card is being checked for localized pricing. This usually takes a moment."
 msgstr "Tikrinama, ar jūsų kortelei taikoma vietinė kainodara. Tai paprastai užtrunka akimirką."
@@ -39734,35 +39690,10 @@ msgstr "Jūsų bendruomenė įtraukta į Atradimą. Galite atnaujinti savo įra�
 msgid "Your community needs at least {minMemberCount, plural, one {# member} other {# members}} before it can be listed in Discovery."
 msgstr "Jūsų bendruomenėje turi būti bent {minMemberCount, plural, one {# narys} few {# nariai} other {# narių}}, kad ją būtų galima įtraukti į Atradimą."
 
-#. Screen share notice shown to the person sharing when their upload is the limit. frameRate is the whole number of frames a second the stream is set to send and deliveredFrameRate is the smaller whole number that reaches viewers. Keep the two rates in separate clauses so neither can be read as the other. resolution is a technical token such as 720p. FPS is a technical token.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:367
-msgid "Your connection cannot keep up. Your stream is set to {frameRate} FPS at {resolution} and viewers are getting about {deliveredFrameRate} FPS."
-msgstr "Jūsų ryšys nepajėgia palaikyti. Jūsų transliacija nustatyta į {frameRate} FPS, {resolution} raiška, o žiūrovai gauna apie {deliveredFrameRate} FPS."
-
 #. Body copy on the mature content check callback page after a successful check submission.
 #: src/features/auth/components/pages/MatureContentCheckCallbackPage.tsx:14
 msgid "Your credit card has been checked. If the card is valid, mature content will unlock shortly. You can close this tab and return to the app."
 msgstr "Jūsų kredito kortelė patikrinta. Jei kortelė galioja, netrukus bus atrakintas suaugusiesiems skirtas turinys. Galite uždaryti šį skirtuką ir grįžti į programėlę."
-
-#. Screen share notice shown to the person sharing when their device is the limit and nothing lower is available. frameRate is the whole number of frames a second the stream is set to send and deliveredFrameRate is the smaller whole number that reaches viewers. Keep the two rates in separate clauses so neither can be read as the other. resolution is a technical token such as 720p. FPS is a technical token.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:361
-msgid "Your device cannot keep up. Your stream is set to {frameRate} FPS at {resolution} and viewers are getting about {deliveredFrameRate} FPS."
-msgstr "Jūsų įrenginys nespėja. Jūsų srautas nustatytas į {frameRate} FPS, {resolution} raiška, o žiūrovai gauna apie {deliveredFrameRate} FPS."
-
-#. Screen share notice shown to the person sharing after their stream dropped frame rate to protect sharpness. frameRate is a whole number and resolution is a technical token such as 1080p or 2714x762. FPS is a technical token.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:339
-msgid "Your device could not keep up, so your stream now sends {frameRate} FPS to keep {resolution} sharp."
-msgstr "Jūsų įrenginys nespėjo, todėl jūsų transliacija dabar siunčia {frameRate} FPS, kad {resolution} išliktų ryškus."
-
-#. Screen share notice shown to the person sharing after their stream dropped both resolution and frame rate. resolution and frameRate are what the stream sends now, targetResolution and targetFrameRate are what the person asked for. Resolutions are technical tokens such as 480p and rates are whole numbers. FPS is a technical token.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:349
-msgid "Your device could not keep up, so your stream now sends {resolution} at {frameRate} FPS instead of {targetResolution} at {targetFrameRate} FPS."
-msgstr "Jūsų įrenginys negalėjo susidoroti, todėl dabar jūsų transliacija siunčia {resolution} {frameRate} FPS vietoj {targetResolution} {targetFrameRate} FPS."
-
-#. Screen share notice shown to the person sharing after their stream dropped resolution to protect smoothness. resolution is a technical token such as 720p and frameRate is a whole number. FPS is a technical token.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:344
-msgid "Your device could not keep up, so your stream now sends {resolution} to keep {frameRate} FPS smooth."
-msgstr "Jūsų įrenginys negalėjo susidoroti, todėl jūsų transliacija dabar siunčia {resolution}, kad išlaikytų sklandų {frameRate} FPS."
 
 #. Toast confirmation after the email address has been successfully updated.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:124
@@ -39950,30 +39881,20 @@ msgid "Your registration needs an extra anti-spam check before you can continue.
 msgstr "Prieš tęsiant, jūsų registracijai reikalingas papildomas apsaugos nuo brukalų patikrinimas."
 
 #. Video settings note shown when the saved screen share quality is above what this account can send. Resolutions are short labels such as 1440p or Source and rates are whole numbers. FPS is a technical token.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:94
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:92
 msgid "Your saved {savedResolution} at {savedFrameRate} FPS needs {premiumProductName}, so shares use {resolution} at {frameRate} FPS."
 msgstr "Jūsų išsaugotas vaizdo įrašas {savedResolution} su {savedFrameRate} kadrų per sekundę reikalauja {premiumProductName}, todėl bendrinama naudojant {resolution} su {frameRate} kadrų per sekundę."
 
 #. Body of a modal shown when the video codec the browser negotiated for an active screen share is outside the codecs the app allows and no allowed codec could be published, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:157
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:130
 msgctxt "screen-share"
 msgid "Your screen share could not be published with a compatible video codec, so it was stopped. Try sharing again."
 msgstr "Jūsų ekrano bendrinimas negalėjo būti paskelbtas naudojant suderinamą vaizdo kodeką, todėl jis buvo sustabdytas. Pabandykite bendrinti dar kartą."
-
-#. Screen share status row in the stream menu, shown when the captured window or screen itself produces fewer frames than asked for. sourceFrameRate is a whole number. FPS is a technical token.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:430
-msgid "Your source is producing about {sourceFrameRate} FPS"
-msgstr "Jūsų šaltinis generuoja apie {sourceFrameRate} FPS"
 
 #. Subtitle under the preview-paused overlay reassuring the user that the screen share is still live for others.
 #: src/features/voice/components/voice_participant_tile/shared.ts:64
 msgid "Your stream is still live"
 msgstr "Jūsų transliacija vis dar aktyvi"
-
-#. Screen share notice shown to the person sharing after the app replaced the video codec. codec and previousCodec are codec names such as VP9 or H.264.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:355
-msgid "Your stream switched to {codec} because {previousCodec} could not keep up on this device. Viewers may see a short pause."
-msgstr "Jūsų srautas perjungtas į {codec}, nes {previousCodec} negalėjo palaikyti šio įrenginio. Žiūrovai gali trumpam matyti pauzę."
 
 #. Toast error shown when the server refuses to move a Plutonium subscription down to the current price, whatever the reason.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:106
@@ -40064,15 +39985,10 @@ msgid "Your vanity URL has been set to {inviteEndpoint}/{vanitySlug}"
 msgstr "Jūsų pasirinktinis URL nustatytas į {inviteEndpoint}/{vanitySlug}"
 
 #. Body of a modal shown when the local video encoder produces no frames for an active screen share, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:164
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:137
 msgctxt "screen-share"
 msgid "Your video encoder stopped encoding frames, so your screen share was stopped. Try sharing again."
 msgstr "Jūsų vaizdo kodavimo įrenginys nustojo koduoti kadrus, todėl jūsų ekrano bendrinimas buvo sustabdytas. Pabandykite bendrinti dar kartą."
-
-#. Screen share notice shown to the person sharing after the app recovered a stalled encoder on another codec. codec is a codec name such as VP8.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:395
-msgid "Your video encoder stopped, so your stream switched to {codec}."
-msgstr "Jūsų vaizdo įrašų kodavimo įrenginys sustojo, todėl jūsų transliacija persijungė į {codec}."
 
 #. Label for the YouTube enrichment service toggle in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:286

@@ -2,7 +2,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import {describe, expect, it} from 'vitest';
-import {selectPublisherCodecPreferences} from './RTCEngine.ts';
+import type {InternalRoomOptions} from '../options.ts';
+import RTCEngine, {selectPublisherCodecPreferences} from './RTCEngine.ts';
 
 function codec(
 	mimeType: string,
@@ -110,5 +111,44 @@ describe('selectPublisherCodecPreferences', () => {
 
 	it('returns nothing when the sender cannot encode the chosen codec', () => {
 		expect(selectPublisherCodecPreferences('av1', [codec('video/VP8'), codec('video/rtx')])).toEqual([]);
+	});
+});
+
+describe('publisher data channels before negotiation', () => {
+	function engineWithPublisherChannels(hasPublisherChannels: boolean) {
+		const engine = new RTCEngine({} as InternalRoomOptions);
+		const created: Array<string> = [];
+		const internals = engine as unknown as {
+			_isClosed: boolean;
+			pcManager: unknown;
+			dataChannels: {hasPublisherChannels: boolean; createPublisherChannels: () => void};
+		};
+		internals._isClosed = false;
+		internals.dataChannels = {
+			hasPublisherChannels,
+			createPublisherChannels: () => created.push('publisher'),
+		};
+		internals.pcManager = {
+			requirePublisher: () => {},
+			negotiate: async () => {},
+			publisher: {
+				off: () => {},
+				once: () => {},
+				getTransceivers: () => [{} as RTCRtpTransceiver],
+			},
+		};
+		return {engine, created};
+	}
+
+	it('creates them on a renegotiation that already carries transceivers', async () => {
+		const {engine, created} = engineWithPublisherChannels(false);
+		await engine.negotiate();
+		expect(created).toEqual(['publisher']);
+	});
+
+	it('leaves the existing channels alone', async () => {
+		const {engine, created} = engineWithPublisherChannels(true);
+		await engine.negotiate();
+		expect(created).toEqual([]);
 	});
 });

@@ -158,6 +158,25 @@ export function negotiateDependencyDescriptor(transceiver: RTCRtpTransceiver): b
 	}
 }
 
+export function stopTransceiversForSender(
+	transceivers: ReadonlyArray<RTCRtpTransceiver>,
+	sender: RTCRtpSender,
+): boolean {
+	let matched = false;
+	for (const transceiver of transceivers) {
+		if (transceiver.sender !== sender) {
+			continue;
+		}
+		matched = true;
+		if (typeof transceiver.stop === 'function') {
+			transceiver.stop();
+		} else {
+			transceiver.direction = 'inactive';
+		}
+	}
+	return matched;
+}
+
 export function isSVCSimulcast(codec?: string, options?: {simulcast?: boolean; scalabilityMode?: string}): boolean {
 	return isSVCCodec(codec) && !!options?.simulcast && !!options.scalabilityMode?.startsWith('L1T');
 }

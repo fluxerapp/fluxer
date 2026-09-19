@@ -45,6 +45,7 @@ import {
 import {setNoiseSuppressionScopeGuildId} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionSelection';
 import {SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS} from '@app/features/voice/utils/ScreenShareOptions';
 import {
+	clearScreenShareDecodeFailures,
 	getVideoDecoderExclusionsSync,
 	loadVideoDecoderExclusions,
 } from '@app/features/voice/utils/VideoDecoderCapabilities';
@@ -118,22 +119,19 @@ const initialHotSwapState: RegionHotSwapState = {
 const REGION_HOT_SWAP_TIMEOUT_MS = 10000;
 
 async function getRoomVideoDecoderExclusions(): Promise<RoomOptions['subscriberVideoCodecExclusions']> {
-	const cached = getVideoDecoderExclusionsSync();
-	if (cached) return cached.length > 0 ? cached : undefined;
 	let timeoutId: NodeJS.Timeout | undefined;
 	const timeout = new Promise<null>((resolve) => {
 		timeoutId = setTimeout(() => resolve(null), VIDEO_DECODER_EXCLUSION_TIMEOUT_MS);
 	});
 	try {
-		const exclusions = await Promise.race([loadVideoDecoderExclusions(), timeout]);
-		if (exclusions && exclusions.length > 0) return exclusions;
-		const latest = getVideoDecoderExclusionsSync();
-		return latest && latest.length > 0 ? latest : undefined;
+		await Promise.race([loadVideoDecoderExclusions(), timeout]);
 	} finally {
 		if (timeoutId !== undefined) {
 			clearTimeout(timeoutId);
 		}
 	}
+	const exclusions = getVideoDecoderExclusionsSync();
+	return exclusions && exclusions.length > 0 ? exclusions : undefined;
 }
 
 function createWebAudioMixOption(): RoomOptions['webAudioMix'] {
@@ -542,6 +540,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		});
 		this.throttle.setInFlightConnect(true);
 		const e2eeKey = raw.e2ee_key ?? null;
+		clearScreenShareDecodeFailures();
 		const subscriberVideoCodecExclusions = await getRoomVideoDecoderExclusions();
 		if (
 			!this.isLatestConnectionAttempt(attemptId) ||

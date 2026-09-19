@@ -23,10 +23,6 @@ import {
 	ExperimentDeliveryConfigResponse,
 	ExperimentDeliveryConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
-import {
-	ScreenShareDeliveryConfigResponse,
-	ScreenShareDeliveryConfigUpdateRequest,
-} from '@fluxer/schema/src/domains/experiment/ScreenShareDeliverySchemas';
 import {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import {
 	InstanceCaptchaProviderSchema,
@@ -648,7 +644,6 @@ export const InstanceConfigResponse = z.object({
 	sso: SsoConfigResponse,
 	gateway_rollout: GatewayRolloutConfigResponse,
 	voice_noise_suppression: VoiceNoiseSuppressionConfigResponse,
-	screen_share_delivery: ScreenShareDeliveryConfigResponse,
 	experiment_delivery: ExperimentDeliveryConfigResponse,
 	registration: InstanceRegistrationResponse,
 	self_hosted: z.boolean(),
@@ -685,7 +680,6 @@ const InstancePolicyUpdateSchema = z.object({
 export const InstanceConfigUpdateRequest = z.object({
 	gateway_rollout: GatewayRolloutConfigUpdateRequest.nullish(),
 	voice_noise_suppression: VoiceNoiseSuppressionConfigUpdateRequest.nullish(),
-	screen_share_delivery: ScreenShareDeliveryConfigUpdateRequest.nullish(),
 	experiment_delivery: ExperimentDeliveryConfigUpdateRequest.nullish(),
 	registration: z
 		.object({

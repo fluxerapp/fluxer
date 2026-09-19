@@ -2112,10 +2112,6 @@ class MediaEngineFacade extends Store {
 		await voiceEngineV2AppScreenShareExecutionAdapter.startDeviceScreenShare(this.room, options, publishOptions);
 	}
 
-	async resetScreenShareDeliveryToFullQuality(): Promise<void> {
-		await voiceEngineV2AppScreenShareExecutionAdapter.resetScreenShareDeliveryToFullQuality();
-	}
-
 	private createScreenShareControllerGateway(): VoiceEngineV2AppScreenShareControllerGateway {
 		const plannedScreenOperationIds = (commands: ReadonlyArray<VoiceEngineV2Command>): Array<number> => {
 			const operationIds: Array<number> = [];

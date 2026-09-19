@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ScreenShareTarget} from '@app/features/voice/utils/ScreenShareOptions';
 import type {
 	StreamSettingsShareContext,
 	WindowShareAudioScope,
@@ -19,6 +20,8 @@ class ActiveScreenShareSource {
 	windowAudioScope: WindowShareAudioScope = 'window';
 	pendingWindowAudioScope: WindowShareAudioScope | null = null;
 	sourceDimensions: {width: number; height: number} | null = null;
+	target: ScreenShareTarget | null = null;
+	encoding = false;
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
@@ -52,6 +55,19 @@ class ActiveScreenShareSource {
 
 	getSourceDimensions(): {width: number; height: number} | null {
 		return this.sourceDimensions;
+	}
+
+	setTarget(target: ScreenShareTarget | null): void {
+		this.target = target;
+		this.encoding = false;
+	}
+
+	setEncoding(encoding: boolean): void {
+		this.encoding = encoding;
+	}
+
+	getTarget(): ScreenShareTarget | null {
+		return this.target;
 	}
 
 	getWindowAudioScope(): WindowShareAudioScope {
@@ -88,6 +104,8 @@ class ActiveScreenShareSource {
 		this.windowAudioScope = 'window';
 		this.pendingWindowAudioScope = null;
 		this.sourceDimensions = null;
+		this.target = null;
+		this.encoding = false;
 	}
 }
 

@@ -40,7 +40,7 @@ import {usePoppedOutTransition} from '@app/features/voice/components/popout/useP
 import {VoicePopoutScopeContext} from '@app/features/voice/components/popout/VoicePopoutScopeContext';
 import {ScreenShareBufferingFrame} from '@app/features/voice/components/ScreenShareBufferingFrame';
 import {registerStreamAudioPrefsTouch} from '@app/features/voice/components/StreamAudioPrefsTouchScheduler';
-import {StreamInfoPill} from '@app/features/voice/components/StreamInfoPill';
+import {StreamInfoPill, type StreamInfoPillQuality} from '@app/features/voice/components/StreamInfoPill';
 import {getStreamKey} from '@app/features/voice/components/StreamKeys';
 import {StreamSpectatorsPopout} from '@app/features/voice/components/StreamSpectatorsPopout';
 import {StreamWatchHoverCard} from '@app/features/voice/components/StreamWatchHoverCard';
@@ -93,7 +93,6 @@ import {
 	STREAM_BUFFERING_DESCRIPTOR,
 	STREAM_ENDED_DESCRIPTOR,
 	STREAM_HIDDEN_DESCRIPTOR,
-	STREAM_NOT_KEEPING_UP_DESCRIPTOR,
 	TILE_AVATAR_BASE,
 	TILE_AVATAR_MEDIA_SIZE,
 	TILE_AVATAR_STYLE,
@@ -108,11 +107,6 @@ import {
 import {WatchStreamOverlay} from '@app/features/voice/components/voice_participant_tile/WatchStreamOverlay';
 import MediaEngine, {useMediaEngineVersion, useVoiceEngineV2Model} from '@app/features/voice/engine/MediaEngineFacade';
 import ScreenSharePublicationMigration from '@app/features/voice/engine/ScreenSharePublicationMigration';
-import {
-	resolveScreenShareDeliveryNoticeTone,
-	resolveScreenShareDeliverySentInfo,
-	showsScreenShareDeliverySentInfo,
-} from '@app/features/voice/engine/ScreenShareUnderperformance';
 import {useStoreVersion} from '@app/features/voice/engine/Store';
 import {
 	selectVoiceMediaGraphDeferredStopKeys,
@@ -128,10 +122,10 @@ import {
 	VoiceTrackSource,
 } from '@app/features/voice/engine/VoiceTrackSource';
 import {selectVoiceEngineV2AppEffectiveSelfMuteForVoiceStatePayload} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectors';
+import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
 import CallMediaPrefs from '@app/features/voice/state/CallMediaPrefs';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import PopoutWindowManager, {getVoiceTilePopoutKey} from '@app/features/voice/state/PopoutWindowManager';
-import ScreenShareDelivery from '@app/features/voice/state/ScreenShareDelivery';
 import {
 	getScreenShareWatchFailureForPublicationOperation,
 	ScreenShareWatchFailures,
@@ -145,11 +139,9 @@ import {
 } from '@app/features/voice/utils/ScreenShareSubscriptionPolicy';
 import {canViewStreamPreview} from '@app/features/voice/utils/StreamPreviewPermissionUtils';
 import {
-	formatScreenShareDeliveryNotice,
 	getVoiceDeafenedByModeratorsStatusLabel,
 	getVoiceDeafenedStatusLabel,
 	getVoiceNoSpeakPermissionLabel,
-	SCREEN_SHARE_SETTINGS_ADJUSTED_DESCRIPTOR,
 	VOICE_MUTED_BY_MODERATORS_DESCRIPTOR,
 	VOICE_STOP_WATCHING_DESCRIPTOR,
 } from '@app/features/voice/utils/VoiceMessageDescriptors';
@@ -166,12 +158,10 @@ import {
 	DeviceMobileIcon,
 	DotsThreeIcon,
 	EyeIcon,
-	InfoIcon,
 	MicrophoneSlashIcon,
 	PauseIcon,
 	SpeakerSlashIcon,
 	VideoCameraSlashIcon,
-	WarningIcon,
 } from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import type {Participant, RemoteTrackPublication, Track} from 'livekit-client';
@@ -357,9 +347,6 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 	const streamKey = useMemo(() => getStreamKey(guildId, channelId, connectionId), [guildId, channelId, connectionId]);
 	const {viewerIds, viewerUsers, spectatorEntries} = useStreamSpectators(isScreenShare ? streamKey : '', userId);
 	const hasSpectatorDemand = viewerIds.length > 0;
-	const deliveryNotice = isOwnScreenShare && !isFocusedPlaceholderTile ? ScreenShareDelivery.notice : null;
-	const isDeliveryWarning =
-		deliveryNotice !== null && resolveScreenShareDeliveryNoticeTone(deliveryNotice) === 'warning';
 	const isCameraTile = isCameraSource(trackRef.source);
 	const cameraLocallyDisabled = callId !== '' && isCameraTile && CallMediaPrefs.isVideoDisabled(callId, identity);
 	const screenSharePublicationMigrationVersion = ScreenSharePublicationMigration.version;
@@ -552,18 +539,17 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 	const {previewUrl, isPreviewLoading} = useStreamPreview(previewEnabled, streamKey);
 	const isStreamPlaceholder = isScreenShare && !isTrackReference(trackRef);
 	const screenShareTrackSid = publication?.trackSid ?? null;
-	const showsSentDeliveryInfo = showsScreenShareDeliverySentInfo(isOwnScreenShare, ScreenShareDelivery.adaptive);
+	const committedTarget = isOwnScreenShare && ActiveScreenShareSource.encoding ? ActiveScreenShareSource.target : null;
 	const capturedTrackInfo = useStreamTrackInfo(
-		isScreenShare && !showsSentDeliveryInfo && !isFocusPresentationTile ? trackRef : null,
+		isScreenShare && !isOwnScreenShare && !isFocusPresentationTile ? trackRef : null,
 		{
 			nativeSource: isScreenShare ? VoiceTrackSource.ScreenShare : null,
 			nativeTrackSid: screenShareTrackSid,
 			participantIdentity: identity,
 		},
 	);
-	const trackInfo = showsSentDeliveryInfo
-		? resolveScreenShareDeliverySentInfo(ScreenShareDelivery.plan)
-		: capturedTrackInfo;
+	const ownTargetInfo: StreamInfoPillQuality | null = committedTarget === null ? null : {target: committedTarget};
+	const trackInfo = isOwnScreenShare ? ownTargetInfo : capturedTrackInfo;
 	const isPublicationDesired = publication?.isDesired ?? publication?.isSubscribed ?? false;
 	useScreenShareWatchFailure({
 		enabled:
@@ -676,7 +662,6 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 	const showTileSpectatorPill = !isFocusPresentationTile && isScreenShare && viewerUsers.length > 0;
 	const showTileControlPill = shouldShowTileControlPill({
 		isFocusedPlaceholderTile,
-		hasDeliveryNotice: deliveryNotice !== null,
 		showStreamAudioControls,
 		showSpectatorPill: showTileSpectatorPill,
 		showGroupHiddenPill: isGridTile && groupHiddenCount > 0,
@@ -1341,36 +1326,6 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 											{i18n.number(groupHiddenCount)}
 										</div>
 									</FocusRing>
-								</Tooltip>
-							)}
-							{deliveryNotice && (
-								<Tooltip
-									text={formatScreenShareDeliveryNotice(i18n, deliveryNotice)}
-									position="top"
-									data-flx="voice.voice-participant-tile.voice-participant-tile-inner.tooltip"
-								>
-									<div
-										className={clsx(voiceCallStyles.tileControlPillSlot, styles.streamUnderperformanceSlot)}
-										role="img"
-										aria-label={i18n._(
-											isDeliveryWarning ? STREAM_NOT_KEEPING_UP_DESCRIPTOR : SCREEN_SHARE_SETTINGS_ADJUSTED_DESCRIPTOR,
-										)}
-										data-flx="voice.voice-participant-tile.voice-participant-tile-inner.stream-underperformance-slot"
-									>
-										{isDeliveryWarning ? (
-											<WarningIcon
-												weight="fill"
-												className={styles.tilePillIcon}
-												data-flx="voice.voice-participant-tile.voice-participant-tile-inner.tile-pill-icon"
-											/>
-										) : (
-											<InfoIcon
-												weight="fill"
-												className={styles.tilePillIcon}
-												data-flx="voice.voice-participant-tile.voice-participant-tile-inner.tile-pill-info-icon"
-											/>
-										)}
-									</div>
 								</Tooltip>
 							)}
 							{showTileSpectatorPill && (

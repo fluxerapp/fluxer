@@ -7,12 +7,11 @@ import {
 	getScreenShareBackupSenders,
 	logger,
 	resolveActiveScreenShareTarget,
-	type ScreenShareSenderEnforcement,
 } from '@app/features/voice/engine/voice_screen_share_manager/shared';
+import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {prepareHighFidelityScreenShareAudioTrack} from '@app/features/voice/utils/AudioPublishOptions';
 import type {ScreenShareContentSource} from '@app/features/voice/utils/CodecCapabilityDetector';
-import type {ScreenShareLevel} from '@app/features/voice/utils/ScreenShareOptions';
 import {
 	type LocalAudioTrack,
 	type LocalParticipant,
@@ -32,8 +31,6 @@ function isVideoCodecValue(value: unknown): value is VideoCodec {
 
 export interface VoiceEngineV2AppScreenShareTrackPlumbingHost {
 	getActiveContentSource(): ScreenShareContentSource;
-	getActiveLevel(): ScreenShareLevel | null;
-	noteSenderParametersApplied(track: LocalVideoTrack, applied: boolean): void;
 }
 
 export class VoiceEngineV2AppScreenShareTrackPlumbing {
@@ -46,8 +43,6 @@ export class VoiceEngineV2AppScreenShareTrackPlumbing {
 	constructor(host: VoiceEngineV2AppScreenShareTrackPlumbingHost) {
 		assert.ok(host, 'track plumbing host is required');
 		assert.equal(typeof host.getActiveContentSource, 'function', 'host must expose getActiveContentSource');
-		assert.equal(typeof host.getActiveLevel, 'function', 'host must expose getActiveLevel');
-		assert.equal(typeof host.noteSenderParametersApplied, 'function', 'host must expose noteSenderParametersApplied');
 		this.host = host;
 	}
 
@@ -157,35 +152,29 @@ export class VoiceEngineV2AppScreenShareTrackPlumbing {
 			logger.warn('No screen share track found for sender parameter enforcement');
 			return false;
 		}
-		const {applied} = await this.enforceTrackSenderParameters(track, publishedCodec);
+		const applied = await this.enforceTrackSenderParameters(track, publishedCodec);
 		this.bindSenderParameterReapply(participant, track, publishedCodec);
 		return applied;
 	}
 
-	async enforceTrackSenderParameters(
-		track: LocalVideoTrack,
-		publishedCodec: VideoCodec | undefined,
-	): Promise<ScreenShareSenderEnforcement> {
-		const level = this.host.getActiveLevel();
-		if (level === null) return {applied: false, monitoredMaxBitrate: 0, multiLayer: false};
-		const primary = track.sender
-			? await enforceScreenShareSenderParameters(track.sender, level, {publishedCodec})
-			: {applied: false, monitoredMaxBitrate: level.maxBitrate, multiLayer: false};
-		let applied = primary.applied;
+	async enforceTrackSenderParameters(track: LocalVideoTrack, publishedCodec: VideoCodec | undefined): Promise<boolean> {
+		const target = ActiveScreenShareSource.getTarget();
+		if (target === null) return false;
+		let applied = track.sender
+			? (await enforceScreenShareSenderParameters(track.sender, target, {publishedCodec})).applied
+			: false;
 		for (const backup of getScreenShareBackupSenders(track)) {
 			const codecOverride = isVideoCodecValue(backup.codec) ? backup.codec : undefined;
-			const backupApplied = await enforceScreenShareSenderParameters(backup.sender, level, {
+			const backupApplied = await enforceScreenShareSenderParameters(backup.sender, target, {
 				codecOverride,
 				publishedCodec,
 			});
 			applied = applied && backupApplied.applied;
 		}
-		this.host.noteSenderParametersApplied(track, applied);
-		return {applied, monitoredMaxBitrate: primary.monitoredMaxBitrate, multiLayer: primary.multiLayer};
+		return applied;
 	}
 
 	private async enforceBackupSenderParameters(
-		track: LocalVideoTrack,
 		sender: RTCRtpSender,
 		codecOverride: VideoCodec | undefined,
 		publishedCodec: VideoCodec | undefined,
@@ -194,13 +183,9 @@ export class VoiceEngineV2AppScreenShareTrackPlumbing {
 			sender.track ?? undefined,
 			resolveActiveScreenShareTarget(this.host.getActiveContentSource()).contentHint,
 		);
-		const level = this.host.getActiveLevel();
-		if (level === null) return;
-		const {applied} = await enforceScreenShareSenderParameters(sender, level, {
-			codecOverride,
-			publishedCodec,
-		});
-		this.host.noteSenderParametersApplied(track, applied);
+		const target = ActiveScreenShareSource.getTarget();
+		if (target === null) return;
+		await enforceScreenShareSenderParameters(sender, target, {codecOverride, publishedCodec});
 	}
 
 	cleanupSenderParameterReapply(): void {
@@ -221,7 +206,7 @@ export class VoiceEngineV2AppScreenShareTrackPlumbing {
 		};
 		const onLocalSenderCreated = (sender: RTCRtpSender, senderTrack: SdkTrack, codec?: VideoCodec): void => {
 			if (senderTrack !== track || sender === track.sender) return;
-			void this.enforceBackupSenderParameters(track, sender, codec, publishedCodec).catch((error) => {
+			void this.enforceBackupSenderParameters(sender, codec, publishedCodec).catch((error) => {
 				logger.warn('Failed to apply screen share sender parameters to a backup sender', {error, codec});
 			});
 		};

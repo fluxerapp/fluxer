@@ -75,11 +75,6 @@ export const WATCHING_DESCRIPTOR = msg({
 	comment:
 		'Spectator count badge on a screen-share tile. {length} is the integer number of viewers. Consider pluralization on review.',
 });
-export const STREAM_NOT_KEEPING_UP_DESCRIPTOR = msg({
-	message: 'Stream is not keeping up',
-	comment:
-		'Accessible label for a passive badge on your own screen-share tile, shown when the encoder stays below the frame rate you asked for.',
-});
 export const MUTED_DESCRIPTOR = msg({
 	message: 'Muted',
 	context: 'microphone-state',

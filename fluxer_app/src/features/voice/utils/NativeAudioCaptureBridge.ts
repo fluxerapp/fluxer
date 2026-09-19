@@ -176,6 +176,29 @@ function rememberStartedCapture(capture: NativeAudioStartedCaptureDiagnostic): v
 	};
 }
 
+type CapturedDisplayAudioDiagnostic = {
+	readyState: MediaStreamTrackState;
+	label: string;
+	deviceId: string | null;
+	discarded: boolean;
+};
+
+let lastCapturedDisplayAudio: CapturedDisplayAudioDiagnostic | null = null;
+
+export function rememberCapturedDisplayAudioTrack(track: MediaStreamTrack | undefined, discarded: boolean): void {
+	if (!track) {
+		lastCapturedDisplayAudio = null;
+		return;
+	}
+	let deviceId: string | null = null;
+	try {
+		deviceId = track.getSettings().deviceId ?? null;
+	} catch {
+		deviceId = null;
+	}
+	lastCapturedDisplayAudio = {readyState: track.readyState, label: track.label, deviceId, discarded};
+}
+
 export function getNativeAudioCaptureDiagnosticState(): Record<string, unknown> {
 	const started = lastStartedCapture
 		? {
@@ -192,6 +215,7 @@ export function getNativeAudioCaptureDiagnosticState(): Record<string, unknown> 
 		bridgeStats: getNativeAudioBridgeStats(),
 		endedBridgeCaptures: getEndedBridgeCaptures(),
 		lifecycleFaults: lifecycleFaults.map((fault) => ({...fault})),
+		capturedDisplayAudio: lastCapturedDisplayAudio ? {...lastCapturedDisplayAudio} : null,
 	};
 }
 

@@ -157,7 +157,13 @@ export function loadVideoDecoderExclusions(): Promise<Array<VideoCodec>> {
 }
 
 export function getVideoDecoderExclusionsSync(): Array<VideoCodec> | null {
-	return cachedExclusions ?? getPlatformPolicyExclusions();
+	const probed = cachedExclusions ?? getPlatformPolicyExclusions();
+	if (probed === null && screenShareDecodeFailures.size === 0) return null;
+	return [...new Set([...(probed ?? []), ...screenShareDecodeFailures])];
+}
+
+export function isVideoCodecDecodeExcluded(codec: VideoCodec): boolean {
+	return getVideoDecoderExclusionsSync()?.includes(codec) === true;
 }
 
 export function markScreenShareDecodeFailure(codec: VideoCodec, reason: string): boolean {

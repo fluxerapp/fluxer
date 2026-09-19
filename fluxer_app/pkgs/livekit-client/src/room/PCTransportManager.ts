@@ -106,11 +106,6 @@ export class PCTransportManager {
 		this.isPublisherConnectionRequired = mode !== 'subscriber-primary';
 		this.isSubscriberConnectionRequired = mode === 'subscriber-primary';
 		this.publisher = new PCTransport(rtcConfig, loggerOptions);
-		if (subscriberVideoCodecExclusions?.length) {
-			for (const codec of subscriberVideoCodecExclusions) {
-				this.publisher.excludedVideoDecoderMimeTypes.add(`video/${codec}`);
-			}
-		}
 		this._mode = mode;
 		if (mode !== 'publisher-only') {
 			this.subscriber = new PCTransport(rtcConfig, loggerOptions);

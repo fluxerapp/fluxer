@@ -1559,7 +1559,7 @@ export default class RTCEngine extends (EventEmitter as new () => TypedEventEmit
 			}
 
 			this.pcManager.requirePublisher();
-			if (this.pcManager.publisher.getTransceivers().length === 0 && !this.dataChannels.hasPublisherChannels) {
+			if (!this.dataChannels.hasPublisherChannels) {
 				this.createDataChannels();
 			}
 

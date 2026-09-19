@@ -1,8 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ScreenShareDeliveryNotice} from '@app/features/voice/engine/ScreenShareUnderperformance';
-import type {ScreenShareDeliveryPlan} from '@app/features/voice/state/ScreenShareDelivery';
-import {CODEC_DISPLAY_LABEL} from '@app/features/voice/utils/ScreenShareCodecPolicy';
 import {
 	resolveEffectiveScreenShareDimensions,
 	type ScreenShareTarget,
@@ -336,111 +333,10 @@ export const VOICE_CALL_E2EE_BROKEN_DESCRIPTOR = msg({
 		'Pre-join indicator shown beneath the Join button on a DM or group DM call where at least one connected participant (typically an outdated bot) does not support E2EE.',
 });
 
-const SCREEN_SHARE_NOTICE_DEVICE_FRAMERATE_DESCRIPTOR = msg({
-	message: 'Your device could not keep up, so your stream now sends {frameRate} FPS to keep {resolution} sharp.',
-	comment:
-		'Screen share notice shown to the person sharing after their stream dropped frame rate to protect sharpness. frameRate is a whole number and resolution is a technical token such as 1080p or 2714x762. FPS is a technical token.',
-});
-const SCREEN_SHARE_NOTICE_DEVICE_RESOLUTION_DESCRIPTOR = msg({
-	message: 'Your device could not keep up, so your stream now sends {resolution} to keep {frameRate} FPS smooth.',
-	comment:
-		'Screen share notice shown to the person sharing after their stream dropped resolution to protect smoothness. resolution is a technical token such as 720p and frameRate is a whole number. FPS is a technical token.',
-});
-const SCREEN_SHARE_NOTICE_DEVICE_CROSSOVER_DESCRIPTOR = msg({
-	message:
-		'Your device could not keep up, so your stream now sends {resolution} at {frameRate} FPS instead of {targetResolution} at {targetFrameRate} FPS.',
-	comment:
-		'Screen share notice shown to the person sharing after their stream dropped both resolution and frame rate. resolution and frameRate are what the stream sends now, targetResolution and targetFrameRate are what the person asked for. Resolutions are technical tokens such as 480p and rates are whole numbers. FPS is a technical token.',
-});
-const SCREEN_SHARE_NOTICE_CODEC_SWITCHED_DESCRIPTOR = msg({
-	message:
-		'Your stream switched to {codec} because {previousCodec} could not keep up on this device. Viewers may see a short pause.',
-	comment:
-		'Screen share notice shown to the person sharing after the app replaced the video codec. codec and previousCodec are codec names such as VP9 or H.264.',
-});
-const SCREEN_SHARE_NOTICE_DEVICE_SHORT_DESCRIPTOR = msg({
-	message:
-		'Your device cannot keep up. Your stream is set to {frameRate} FPS at {resolution} and viewers are getting about {deliveredFrameRate} FPS.',
-	comment:
-		'Screen share notice shown to the person sharing when their device is the limit and nothing lower is available. frameRate is the whole number of frames a second the stream is set to send and deliveredFrameRate is the smaller whole number that reaches viewers. Keep the two rates in separate clauses so neither can be read as the other. resolution is a technical token such as 720p. FPS is a technical token.',
-});
-const SCREEN_SHARE_NOTICE_CONNECTION_SHORT_DESCRIPTOR = msg({
-	message:
-		'Your connection cannot keep up. Your stream is set to {frameRate} FPS at {resolution} and viewers are getting about {deliveredFrameRate} FPS.',
-	comment:
-		'Screen share notice shown to the person sharing when their upload is the limit. frameRate is the whole number of frames a second the stream is set to send and deliveredFrameRate is the smaller whole number that reaches viewers. Keep the two rates in separate clauses so neither can be read as the other. resolution is a technical token such as 720p. FPS is a technical token.',
-});
-const SCREEN_SHARE_NOTICE_BROWSER_RESOLUTION_DESCRIPTOR = msg({
-	message: 'The browser is sending {deliveredResolution} instead of {resolution}.',
-	comment:
-		'Screen share notice shown to the person sharing when the browser ignores the requested size. deliveredResolution is the size the browser really sends and resolution is the size the app asked it for. Both are technical tokens such as 720p or 2714x762.',
-});
-const SCREEN_SHARE_NOTICE_CAPTURE_RESOLUTION_DESCRIPTOR = msg({
-	message: 'Your capture device is sending {deliveredResolution} instead of {resolution}.',
-	comment:
-		'Screen share notice shown to the person sharing a capture device, such as a capture card, that ignores the requested size. deliveredResolution is the size the capture device really sends and resolution is the size the app asked it for. Both are technical tokens such as 720p.',
-});
-const SCREEN_SHARE_NOTICE_STARTED_LOWER_DESCRIPTOR = msg({
-	message:
-		'This device could not keep up with {targetResolution} at {targetFrameRate} FPS last time, so your stream started at {resolution} at {frameRate} FPS.',
-	comment:
-		'Screen share notice shown to the person sharing when a remembered result made the stream start below the asked-for settings. targetResolution and targetFrameRate are what the person asked for, resolution and frameRate are the lower settings the stream started at. Resolutions are technical tokens such as 1080p and rates are whole numbers. FPS is a technical token.',
-});
-const SCREEN_SHARE_NOTICE_PINNED_CODEC_SHORT_DESCRIPTOR = msg({
-	message:
-		'{codec} cannot keep up on this device. Set the codec to Automatic in Advanced settings to allow a faster one.',
-	comment:
-		'Screen share notice shown to the person sharing when they pinned a codec that underperforms. codec is a codec name such as AV1. Automatic and Advanced settings are labels in the same app.',
-});
-const SCREEN_SHARE_NOTICE_ENCODER_RECOVERED_DESCRIPTOR = msg({
-	message: 'Your video encoder stopped, so your stream switched to {codec}.',
-	comment:
-		'Screen share notice shown to the person sharing after the app recovered a stalled encoder on another codec. codec is a codec name such as VP8.',
-});
-const SCREEN_SHARE_NOTICE_CODEC_VIEWER_DESCRIPTOR = msg({
-	message: 'A viewer cannot play {pinnedCodec}, so your stream uses {codec}.',
-	comment:
-		'Screen share notice shown to the person sharing when a watcher cannot decode the pinned codec. pinnedCodec and codec are codec names such as AV1 or VP8.',
-});
-const SCREEN_SHARE_NOTICE_CODEC_DEVICE_DESCRIPTOR = msg({
-	message: '{pinnedCodec} is not available on this device, so your stream uses {codec}.',
-	comment:
-		'Screen share notice shown to the person sharing when this device cannot encode the pinned codec. pinnedCodec and codec are codec names such as H.265 (HEVC) or VP9.',
-});
-const SCREEN_SHARE_NOTICE_APPLY_FAILED_DESCRIPTOR = msg({
-	message: 'Some stream settings could not be applied to your live stream.',
-	comment: 'Screen share notice shown to the person sharing when the app failed to push new settings to a live share.',
-});
-
-export const SCREEN_SHARE_STATUS_SENDING_DESCRIPTOR = msg({
-	message: 'Set to send {resolution} at {frameRate} FPS with {codec}',
-	comment:
-		'Screen share status row in the stream menu and in video settings, describing the settings the live stream is running at rather than what reaches viewers. resolution is a technical token such as 1080p, frameRate is the whole number of frames a second the stream is set to send and codec is a codec name such as VP9. FPS is a technical token.',
-});
-export const SCREEN_SHARE_STATUS_ASKED_FOR_DESCRIPTOR = msg({
-	message: 'You asked for {resolution} at {frameRate} FPS',
-	comment:
-		'Screen share status row in the stream menu, describing the settings the person chose. resolution is a technical token such as 1440p and frameRate is a whole number. FPS is a technical token.',
-});
 export const SCREEN_SHARE_STATUS_SOURCE_RESOLUTION_DESCRIPTOR = msg({
 	message: 'Source',
 	comment:
-		'Screen share resolution token in the stream menu status rows, used when the person asked for the original source resolution and the app does not know the source size. Matches the Source option in the stream settings menu.',
-});
-export const SCREEN_SHARE_STATUS_SOURCE_RATE_DESCRIPTOR = msg({
-	message: 'Your source is producing about {sourceFrameRate} FPS',
-	comment:
-		'Screen share status row in the stream menu, shown when the captured window or screen itself produces fewer frames than asked for. sourceFrameRate is a whole number. FPS is a technical token.',
-});
-export const SCREEN_SHARE_TRY_FULL_QUALITY_AGAIN_DESCRIPTOR = msg({
-	message: 'Try full quality again',
-	comment:
-		'Screen share action in the stream menu. Forgets what this device measured and restarts the stream at the asked-for settings.',
-});
-export const SCREEN_SHARE_SETTINGS_ADJUSTED_DESCRIPTOR = msg({
-	message: 'Stream settings were adjusted',
-	comment:
-		'Accessible label for the information badge on the sharing tile, shown when the app changed stream settings without a problem to report.',
+		'Screen share resolution token in the stream info pill on the sharing tile, used when the person asked for the original source resolution and the app does not know the source size. Matches the Source option in the stream settings menu.',
 });
 
 const RESOLUTION_LABEL_HEIGHTS = [480, 720, 1080, 1440, 2160];
@@ -455,113 +351,9 @@ export function formatScreenShareResolutionLabel(width: number, height: number):
 	return `${width}×${height}`;
 }
 
-type ScreenShareDeliveryNoticeFormatters = {
-	[Kind in ScreenShareDeliveryNotice['kind']]: (
-		i18n: I18n,
-		notice: Extract<ScreenShareDeliveryNotice, {kind: Kind}>,
-	) => string;
-};
-
-const SCREEN_SHARE_DELIVERY_NOTICE_FORMATTERS = {
-	'device-framerate': (i18n, notice) =>
-		i18n._(SCREEN_SHARE_NOTICE_DEVICE_FRAMERATE_DESCRIPTOR, {
-			frameRate: notice.frameRate,
-			resolution: formatScreenShareResolutionLabel(notice.width, notice.height),
-		}),
-	'device-resolution': (i18n, notice) =>
-		i18n._(SCREEN_SHARE_NOTICE_DEVICE_RESOLUTION_DESCRIPTOR, {
-			frameRate: notice.frameRate,
-			resolution: formatScreenShareResolutionLabel(notice.width, notice.height),
-		}),
-	'device-crossover': (i18n, notice) =>
-		i18n._(SCREEN_SHARE_NOTICE_DEVICE_CROSSOVER_DESCRIPTOR, {
-			frameRate: notice.frameRate,
-			resolution: formatScreenShareResolutionLabel(notice.width, notice.height),
-			targetFrameRate: notice.targetFrameRate,
-			targetResolution: formatScreenShareResolutionLabel(notice.targetWidth, notice.targetHeight),
-		}),
-	'codec-switched': (i18n, notice) =>
-		i18n._(SCREEN_SHARE_NOTICE_CODEC_SWITCHED_DESCRIPTOR, {
-			codec: CODEC_DISPLAY_LABEL[notice.codec],
-			previousCodec: CODEC_DISPLAY_LABEL[notice.previousCodec],
-		}),
-	'device-short': (i18n, notice) =>
-		i18n._(SCREEN_SHARE_NOTICE_DEVICE_SHORT_DESCRIPTOR, {
-			deliveredFrameRate: Math.round(notice.deliveredFrameRate),
-			frameRate: notice.frameRate,
-			resolution: formatScreenShareResolutionLabel(notice.width, notice.height),
-		}),
-	'connection-short': (i18n, notice) =>
-		i18n._(SCREEN_SHARE_NOTICE_CONNECTION_SHORT_DESCRIPTOR, {
-			deliveredFrameRate: Math.round(notice.deliveredFrameRate),
-			frameRate: notice.frameRate,
-			resolution: formatScreenShareResolutionLabel(notice.width, notice.height),
-		}),
-	'browser-resolution': (i18n, notice) =>
-		i18n._(SCREEN_SHARE_NOTICE_BROWSER_RESOLUTION_DESCRIPTOR, {
-			deliveredResolution: formatScreenShareResolutionLabel(notice.deliveredWidth, notice.deliveredHeight),
-			resolution: formatScreenShareResolutionLabel(notice.width, notice.height),
-		}),
-	'capture-resolution': (i18n, notice) =>
-		i18n._(SCREEN_SHARE_NOTICE_CAPTURE_RESOLUTION_DESCRIPTOR, {
-			deliveredResolution: formatScreenShareResolutionLabel(notice.deliveredWidth, notice.deliveredHeight),
-			resolution: formatScreenShareResolutionLabel(notice.width, notice.height),
-		}),
-	'started-lower': (i18n, notice) =>
-		i18n._(SCREEN_SHARE_NOTICE_STARTED_LOWER_DESCRIPTOR, {
-			frameRate: notice.frameRate,
-			resolution: formatScreenShareResolutionLabel(notice.width, notice.height),
-			targetFrameRate: notice.targetFrameRate,
-			targetResolution: formatScreenShareResolutionLabel(notice.targetWidth, notice.targetHeight),
-		}),
-	'pinned-codec-short': (i18n, notice) =>
-		i18n._(SCREEN_SHARE_NOTICE_PINNED_CODEC_SHORT_DESCRIPTOR, {codec: CODEC_DISPLAY_LABEL[notice.codec]}),
-	'encoder-recovered': (i18n, notice) =>
-		i18n._(SCREEN_SHARE_NOTICE_ENCODER_RECOVERED_DESCRIPTOR, {codec: CODEC_DISPLAY_LABEL[notice.codec]}),
-	'codec-viewer': (i18n, notice) =>
-		i18n._(SCREEN_SHARE_NOTICE_CODEC_VIEWER_DESCRIPTOR, {
-			codec: CODEC_DISPLAY_LABEL[notice.codec],
-			pinnedCodec: CODEC_DISPLAY_LABEL[notice.pinnedCodec],
-		}),
-	'codec-device': (i18n, notice) =>
-		i18n._(SCREEN_SHARE_NOTICE_CODEC_DEVICE_DESCRIPTOR, {
-			codec: CODEC_DISPLAY_LABEL[notice.codec],
-			pinnedCodec: CODEC_DISPLAY_LABEL[notice.pinnedCodec],
-		}),
-	'apply-failed': (i18n) => i18n._(SCREEN_SHARE_NOTICE_APPLY_FAILED_DESCRIPTOR),
-} satisfies ScreenShareDeliveryNoticeFormatters;
-
-export function formatScreenShareDeliveryNotice(i18n: I18n, notice: ScreenShareDeliveryNotice): string {
-	const format = SCREEN_SHARE_DELIVERY_NOTICE_FORMATTERS[notice.kind] as (
-		i18n: I18n,
-		notice: ScreenShareDeliveryNotice,
-	) => string;
-	return format(i18n, notice);
-}
-
-const TRY_FULL_QUALITY_BLOCKING_NOTICE_KINDS = new Set<ScreenShareDeliveryNotice['kind']>([
-	'browser-resolution',
-	'capture-resolution',
-	'codec-device',
-	'codec-switched',
-	'codec-viewer',
-	'connection-short',
-	'encoder-recovered',
-	'pinned-codec-short',
-]);
-
-export interface ScreenShareDeliveryStatus {
-	sending: string | null;
-	askedFor: string | null;
-	notice: string | null;
-	sourceRate: string | null;
-	hasRows: boolean;
-	canTryFullQuality: boolean;
-}
-
 const SCREEN_SHARE_SOURCE_BOX = resolveEffectiveScreenShareDimensions('source', null);
 
-function formatScreenShareTargetLabel(i18n: I18n, target: ScreenShareTarget): string {
+export function formatScreenShareTargetLabel(i18n: I18n, target: ScreenShareTarget): string {
 	if (
 		target.resolution === 'source' &&
 		target.width === SCREEN_SHARE_SOURCE_BOX.width &&
@@ -570,45 +362,4 @@ function formatScreenShareTargetLabel(i18n: I18n, target: ScreenShareTarget): st
 		return i18n._(SCREEN_SHARE_STATUS_SOURCE_RESOLUTION_DESCRIPTOR);
 	}
 	return formatScreenShareResolutionLabel(target.width, target.height);
-}
-
-export function formatScreenShareDeliveryStatus(
-	i18n: I18n,
-	plan: ScreenShareDeliveryPlan | null,
-	notice: ScreenShareDeliveryNotice | null,
-): ScreenShareDeliveryStatus {
-	const startedLower = notice?.kind === 'started-lower';
-	const steppedDown = plan !== null && plan.levelIndex > 0;
-	const sending =
-		plan === null
-			? null
-			: i18n._(SCREEN_SHARE_STATUS_SENDING_DESCRIPTOR, {
-					resolution: formatScreenShareResolutionLabel(plan.level.width, plan.level.height),
-					frameRate: plan.level.frameRate,
-					codec: CODEC_DISPLAY_LABEL[plan.codec],
-				});
-	const askedFor =
-		plan !== null &&
-		(plan.level.width !== plan.target.width ||
-			plan.level.height !== plan.target.height ||
-			plan.level.frameRate !== plan.target.frameRate)
-			? i18n._(SCREEN_SHARE_STATUS_ASKED_FOR_DESCRIPTOR, {
-					resolution: formatScreenShareTargetLabel(i18n, plan.target),
-					frameRate: plan.target.frameRate,
-				})
-			: null;
-	const noticeText = notice === null ? null : formatScreenShareDeliveryNotice(i18n, notice);
-	const sourceRate =
-		plan === null || plan.sourceFrameRate === null
-			? null
-			: i18n._(SCREEN_SHARE_STATUS_SOURCE_RATE_DESCRIPTOR, {sourceFrameRate: Math.round(plan.sourceFrameRate)});
-	return {
-		sending,
-		askedFor,
-		notice: noticeText,
-		sourceRate,
-		hasRows: sending !== null || askedFor !== null || noticeText !== null || sourceRate !== null,
-		canTryFullQuality:
-			(steppedDown || startedLower) && (notice === null || !TRY_FULL_QUALITY_BLOCKING_NOTICE_KINDS.has(notice.kind)),
-	};
 }

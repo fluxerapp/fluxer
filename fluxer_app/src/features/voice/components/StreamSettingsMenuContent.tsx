@@ -24,10 +24,9 @@ import {
 import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
 import ScreenShareCodecNegotiation from '@app/features/voice/engine/ScreenShareCodecNegotiation';
 import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
-import {resolveConfiguredScreenShareLadder} from '@app/features/voice/engine/voice_screen_share_manager/shared';
+import {resolveConfiguredScreenShareTarget} from '@app/features/voice/engine/voice_screen_share_manager/shared';
 import {useMediaDevices} from '@app/features/voice/hooks/useMediaDevices';
 import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
-import ScreenShareDelivery from '@app/features/voice/state/ScreenShareDelivery';
 import VoiceSettings, {type StreamingMode} from '@app/features/voice/state/VoiceSettings';
 import {filterRoutableLinuxAudioSources} from '@app/features/voice/utils/LinuxAudioSourceRules';
 import {
@@ -68,7 +67,7 @@ import type {NativeAudioAvailability} from '@app/types/electron.d';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
-import {CrownSimpleIcon, MicrophoneIcon} from '@phosphor-icons/react';
+import {CrownSimpleIcon, MicrophoneIcon, WaveformIcon} from '@phosphor-icons/react';
 import type {Track} from 'livekit-client';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useEffect, useMemo, useState} from 'react';
@@ -218,9 +217,8 @@ async function runActiveStreamSettingsPush(
 	options: PushActiveStreamSettingsOptions,
 ): Promise<boolean> {
 	const sourceDimensions = ActiveScreenShareSource.getSourceDimensions();
-	const ladder = resolveConfiguredScreenShareLadder(shareContext, sourceDimensions);
-	const {target} = ladder;
-	ScreenShareDelivery.retarget(ladder);
+	const target = resolveConfiguredScreenShareTarget(shareContext, sourceDimensions);
+	ActiveScreenShareSource.setTarget(target);
 	const preferredDisplaySurface = getPreferredDisplaySurface(shareContext);
 	const canControlAudio = supportsStreamAudioCapture(shareContext);
 	const includeAudio =
@@ -851,7 +849,7 @@ const StreamSettingsAudioGroup = observer((props: StreamSettingsAudioGroupProps)
 								data-flx="voice.stream-settings-menu-content.audio-group.audio-device-default"
 							>
 								<span className={styles.row} data-flx="voice.stream-settings-menu-content.audio-group.audio-device-row">
-									<MicrophoneIcon
+									<WaveformIcon
 										className={styles.audioDeviceIcon}
 										weight="fill"
 										aria-hidden={true}
@@ -865,13 +863,13 @@ const StreamSettingsAudioGroup = observer((props: StreamSettingsAudioGroupProps)
 											className={styles.audioDeviceName}
 											data-flx="voice.stream-settings-menu-content.audio-group.audio-device-name"
 										>
-											<Trans>Follow voice input</Trans>
+											<Trans>Device audio only</Trans>
 										</span>
 										<span
 											className={styles.audioDeviceSubtext}
 											data-flx="voice.stream-settings-menu-content.audio-group.audio-device-subtext"
 										>
-											{selectedAudioDeviceLabel}
+											<Trans>Silent when the capture device has no audio input of its own</Trans>
 										</span>
 									</span>
 								</span>

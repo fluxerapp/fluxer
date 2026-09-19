@@ -4,6 +4,8 @@ import {LiveBadge} from '@app/features/ui/components/LiveBadge';
 import type {TooltipPosition} from '@app/features/ui/tooltip/Tooltip';
 import styles from '@app/features/voice/components/StreamInfoPill.module.css';
 import type {StreamTrackInfo} from '@app/features/voice/components/useStreamTrackInfo';
+import type {ScreenShareTarget} from '@app/features/voice/utils/ScreenShareOptions';
+import {formatScreenShareTargetLabel} from '@app/features/voice/utils/VoiceMessageDescriptors';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
@@ -19,7 +21,18 @@ type ResolutionHeight = 240 | 480 | 720 | 1080 | 1440 | 2160;
 
 const RESOLUTION_HEIGHTS: Array<ResolutionHeight> = [480, 240, 720, 1080, 1440, 2160];
 
+const RESOLUTION_LABELS: Record<ResolutionHeight, string> = {
+	240: '240p',
+	480: '480p',
+	720: '720p',
+	1080: '1080p',
+	1440: '1440p',
+	2160: '4K',
+};
+
 type StreamInfoPillTone = 'default' | 'voice_tile';
+
+export type StreamInfoPillQuality = StreamTrackInfo | {target: ScreenShareTarget};
 
 function getClosestResolutionHeight(height: number) {
 	let closest: ResolutionHeight = RESOLUTION_HEIGHTS[0];
@@ -35,7 +48,7 @@ function getClosestResolutionHeight(height: number) {
 }
 
 interface StreamInfoPillProps {
-	info: StreamTrackInfo;
+	info: StreamInfoPillQuality;
 	className?: string;
 	showLiveBadge?: boolean;
 	tone?: StreamInfoPillTone;
@@ -50,29 +63,17 @@ export function StreamInfoPill({
 	liveBadgeTooltipPosition,
 }: StreamInfoPillProps) {
 	const {i18n} = useLingui();
-	const resolutionText = useMemo(() => {
-		const targetHeight = getClosestResolutionHeight(info.height);
-		switch (targetHeight) {
-			case 240:
-				return '240p';
-			case 480:
-				return '480p';
-			case 720:
-				return '720p';
-			case 1080:
-				return '1080p';
-			case 1440:
-				return '1440p';
-			case 2160:
-				return '4K';
-			default:
-				return '720p';
-		}
-	}, [info.height]);
 	const labelText = useMemo(() => {
+		if ('target' in info) {
+			return i18n._(RESOLUTION_WITH_FPS_DESCRIPTOR, {
+				resolution: formatScreenShareTargetLabel(i18n, info.target),
+				fps: i18n.number(info.target.frameRate),
+			});
+		}
+		const resolutionText = RESOLUTION_LABELS[getClosestResolutionHeight(info.height)];
 		if (!Number.isFinite(info.fps) || info.fps <= 0) return resolutionText;
 		return i18n._(RESOLUTION_WITH_FPS_DESCRIPTOR, {resolution: resolutionText, fps: i18n.number(info.fps)});
-	}, [info.fps, i18n.locale, resolutionText]);
+	}, [info, i18n.locale]);
 	return (
 		<div
 			className={clsx(styles.container, tone === 'voice_tile' && styles.containerOnTile, className)}

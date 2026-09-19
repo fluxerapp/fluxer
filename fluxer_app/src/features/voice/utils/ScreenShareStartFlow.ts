@@ -4,14 +4,10 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getElectronAPI, supportsDesktopScreenShareAudioCapture} from '@app/features/ui/utils/NativeUtils';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import ScreenShareCodecNegotiation from '@app/features/voice/engine/ScreenShareCodecNegotiation';
-import {
-	beginScreenShareDelivery,
-	resolveConfiguredScreenShareLadder,
-} from '@app/features/voice/engine/voice_screen_share_manager/shared';
+import {resolveConfiguredScreenShareTarget} from '@app/features/voice/engine/voice_screen_share_manager/shared';
 import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
 import {clearDesktopSourceIntent, setDesktopSourceIntent} from '@app/features/voice/state/DesktopSourceIntent';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
-import ScreenShareDelivery, {type ScreenShareDeliverySnapshot} from '@app/features/voice/state/ScreenShareDelivery';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
 	filterRoutableLinuxAudioSources,
@@ -32,6 +28,7 @@ import {
 	type ScreenShareAudioCaptureDebugInfo,
 	ScreenShareAudioCaptureError,
 } from '@app/features/voice/utils/ScreenShareAudioCaptureError';
+import {findPairedDeviceShareAudioInput} from '@app/features/voice/utils/ScreenShareAudioSummary';
 import {
 	type DisplayShareEnvironment,
 	getDisplayShareEnvironment,
@@ -339,6 +336,7 @@ export function buildConfiguredScreenShareOptions(input: ScreenShareOptionsBuild
 	const {captureOptions, publishOptions} = buildScreenShareOptions({
 		resolution: input.target.resolution,
 		frameRate: input.target.frameRate,
+		context: input.target.context,
 		includeAudio: input.includeAudio,
 		contentHint: input.target.contentHint,
 		sourceDimensions: input.sourceDimensions ?? undefined,
@@ -359,10 +357,7 @@ interface ConfiguredScreenShareRequest {
 	includeAudio?: boolean;
 }
 
-function resolveConfiguredScreenShareAudio(request: ConfiguredScreenShareRequest): {
-	includeAudio: boolean;
-	audioDeviceId: string | undefined;
-} {
+function resolveConfiguredScreenShareAudio(request: ConfiguredScreenShareRequest): boolean {
 	const includeAudio =
 		request.includeAudio ??
 		shouldIncludeAudioForShare(
@@ -379,23 +374,16 @@ function resolveConfiguredScreenShareAudio(request: ConfiguredScreenShareRequest
 			shareDesktopAudio: VoiceSettings.getShareDesktopAudio(),
 		});
 	}
-	return {
-		includeAudio,
-		audioDeviceId: includeAudio ? VoiceSettings.getEffectiveScreenShareAudioDeviceId() || undefined : undefined,
-	};
+	return includeAudio;
 }
 
-async function getConfiguredScreenShareOptions(request: ConfiguredScreenShareRequest): Promise<
-	BuiltScreenShareOptions & {
-		includeAudio: boolean;
-		audioDeviceId: string | undefined;
-	}
-> {
-	const {includeAudio, audioDeviceId} = resolveConfiguredScreenShareAudio(request);
+async function getConfiguredScreenShareOptions(
+	request: ConfiguredScreenShareRequest,
+): Promise<BuiltScreenShareOptions & {includeAudio: boolean}> {
+	const includeAudio = resolveConfiguredScreenShareAudio(request);
 	const sourceDimensions = request.sourceDimensions ?? null;
-	const ladder = resolveConfiguredScreenShareLadder(request.shareContext, sourceDimensions);
-	const {target} = ladder;
-	await beginScreenShareDelivery(ladder);
+	const target = resolveConfiguredScreenShareTarget(request.shareContext, sourceDimensions);
+	ActiveScreenShareSource.setTarget(target);
 	await ScreenShareCodecNegotiation.refreshSelection();
 	const {captureOptions, publishOptions} = buildConfiguredScreenShareOptions({
 		target,
@@ -407,7 +395,7 @@ async function getConfiguredScreenShareOptions(request: ConfiguredScreenShareReq
 		preferredDisplaySurface: request.preferredDisplaySurface,
 		useBrowserAudioPicker: request.displayShareEnvironment === 'web',
 	});
-	return {captureOptions, publishOptions, includeAudio, audioDeviceId};
+	return {captureOptions, publishOptions, includeAudio};
 }
 
 export interface ConfiguredDisplayScreenShareOptions {
@@ -755,34 +743,24 @@ async function drainConfiguredScreenShareMutations(
 	configuredScreenShareMutationActive = false;
 }
 
-export function resolveScreenShareDeliveryOutcome(
-	operationSucceeded: boolean,
-	shareIsLive: boolean,
-): 'keep' | 'restore' | 'end' {
-	if (operationSucceeded) return 'keep';
-	return shareIsLive ? 'restore' : 'end';
-}
-
-function applyScreenShareDeliveryOutcome(operationSucceeded: boolean, snapshot: ScreenShareDeliverySnapshot): void {
-	const outcome = resolveScreenShareDeliveryOutcome(operationSucceeded, didScreenShareStart());
-	if (outcome === 'restore') {
-		ScreenShareDelivery.restore(snapshot);
+function restoreCommittedScreenShareTarget(committed: ScreenShareTarget | null): void {
+	if (didScreenShareStart()) {
+		ActiveScreenShareSource.setTarget(committed);
 		return;
 	}
-	if (outcome === 'end') {
-		ScreenShareDelivery.endShare();
-		ActiveScreenShareSource.clear();
-	}
+	ActiveScreenShareSource.clear();
 }
 
 async function runConfiguredScreenShareMutation(execute: () => Promise<boolean>): Promise<boolean> {
-	const snapshot = ScreenShareDelivery.snapshot();
+	const committed = ActiveScreenShareSource.getTarget();
 	try {
 		const operationSucceeded = await execute();
-		applyScreenShareDeliveryOutcome(operationSucceeded, snapshot);
+		if (!operationSucceeded) {
+			restoreCommittedScreenShareTarget(committed);
+		}
 		return operationSucceeded;
 	} catch (error) {
-		applyScreenShareDeliveryOutcome(false, snapshot);
+		restoreCommittedScreenShareTarget(committed);
 		throw error;
 	}
 }
@@ -840,26 +818,20 @@ async function linkManualAudioSourcesForDeviceShare(mode: 'start' | 'switch'): P
 	);
 }
 
-async function resolveDeviceShareAudioDeviceId(
-	videoDeviceId: string,
-	configuredAudioDeviceId: string | undefined,
-): Promise<string | undefined> {
-	if (configuredAudioDeviceId === undefined) return undefined;
-	if (VoiceSettings.getScreenShareAudioDeviceId() !== 'default') return configuredAudioDeviceId;
-	if (!videoDeviceId || videoDeviceId === 'default') return configuredAudioDeviceId;
+async function resolveDeviceShareAudioDeviceId(videoDeviceId: string): Promise<string | undefined> {
+	const chosenAudioDeviceId = VoiceSettings.getScreenShareAudioDeviceId();
+	if (chosenAudioDeviceId && chosenAudioDeviceId !== 'default') return chosenAudioDeviceId;
+	if (VoiceSettings.getScreenShareDeviceAudioUsesMicrophone()) return VoiceSettings.getInputDeviceId() || undefined;
+	if (!videoDeviceId || videoDeviceId === 'default') return undefined;
 	try {
 		const devices = await navigator.mediaDevices.enumerateDevices();
-		const videoDevice = devices.find((device) => device.kind === 'videoinput' && device.deviceId === videoDeviceId);
-		if (!videoDevice?.groupId) return configuredAudioDeviceId;
-		const pairedInput = devices.find(
-			(device) =>
-				device.kind === 'audioinput' &&
-				device.groupId === videoDevice.groupId &&
-				device.deviceId !== '' &&
-				device.deviceId !== 'default' &&
-				device.deviceId !== 'communications',
-		);
-		if (!pairedInput) return configuredAudioDeviceId;
+		const pairedInput = findPairedDeviceShareAudioInput(devices, videoDeviceId);
+		if (!pairedInput) {
+			logger.info('The shared capture device has no audio input of its own, sharing it without audio', {
+				videoDeviceId,
+			});
+			return undefined;
+		}
 		logger.info('Using the capture device own audio input for the device share', {
 			videoDeviceId,
 			audioDeviceId: pairedInput.deviceId,
@@ -867,7 +839,7 @@ async function resolveDeviceShareAudioDeviceId(
 		return pairedInput.deviceId;
 	} catch (error) {
 		logger.warn('Failed to pair an audio input with the shared video device', {videoDeviceId, error});
-		return configuredAudioDeviceId;
+		return undefined;
 	}
 }
 
@@ -877,30 +849,23 @@ export async function reconfigureActiveDeviceShareAudio(): Promise<boolean> {
 		return reconfigureActiveLinuxScreenShareAudioLink();
 	}
 	await stopActiveLinuxScreenShareAudioLink();
-	const configuredAudioDeviceId = VoiceSettings.getEffectiveScreenShareAudioDeviceId();
-	const audioDeviceId = await resolveDeviceShareAudioDeviceId(
-		MediaEngine.getActiveScreenShareVideoDeviceId(),
-		configuredAudioDeviceId,
-	);
-	return MediaEngine.ensureDeviceScreenShareMicPublication(audioDeviceId ?? configuredAudioDeviceId);
+	const audioDeviceId = await resolveDeviceShareAudioDeviceId(MediaEngine.getActiveScreenShareVideoDeviceId());
+	if (audioDeviceId === undefined) {
+		MediaEngine.setScreenShareAudioMuted(true);
+		return true;
+	}
+	return MediaEngine.ensureDeviceScreenShareMicPublication(audioDeviceId);
 }
 
 async function getConfiguredDeviceScreenShareAudio(videoDeviceId: string): Promise<{
 	routeManualAudioSources: boolean;
 	audioDeviceId: string | undefined;
 }> {
-	const {includeAudio, audioDeviceId} = resolveConfiguredScreenShareAudio({
-		shareContext: 'device',
-		displayShareEnvironment: 'desktop-custom',
-	});
-	if (!includeAudio) return {routeManualAudioSources: false, audioDeviceId: undefined};
+	if (!VoiceSettings.getShareDeviceAudio()) return {routeManualAudioSources: false, audioDeviceId: undefined};
 	if (await shouldRouteManualAudioSourcesForShare('device')) {
 		return {routeManualAudioSources: true, audioDeviceId: undefined};
 	}
-	return {
-		routeManualAudioSources: false,
-		audioDeviceId: await resolveDeviceShareAudioDeviceId(videoDeviceId, audioDeviceId),
-	};
+	return {routeManualAudioSources: false, audioDeviceId: await resolveDeviceShareAudioDeviceId(videoDeviceId)};
 }
 
 export async function startConfiguredDeviceScreenShare(videoDeviceId: string): Promise<boolean> {

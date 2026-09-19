@@ -43,7 +43,6 @@ export interface VoiceParticipantTileStreamAudioSignals {
 
 export interface VoiceParticipantTileControlPillSignals {
 	isFocusedPlaceholderTile: boolean;
-	hasDeliveryNotice: boolean;
 	showStreamAudioControls: boolean;
 	showSpectatorPill: boolean;
 	showGroupHiddenPill: boolean;
@@ -176,7 +175,6 @@ export function shouldShowTileStreamAudioControls(signals: VoiceParticipantTileS
 export function shouldShowTileControlPill(signals: VoiceParticipantTileControlPillSignals): boolean {
 	if (signals.isFocusedPlaceholderTile) return false;
 	return (
-		signals.hasDeliveryNotice ||
 		signals.showStreamAudioControls ||
 		signals.showSpectatorPill ||
 		signals.showGroupHiddenPill ||

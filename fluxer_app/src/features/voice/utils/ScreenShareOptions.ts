@@ -22,8 +22,6 @@ const DIMENSIONS: Record<
 	source: {width: 3840, height: 2160},
 };
 export const SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS = 6_000_000;
-export const SCREEN_SHARE_DEGRADATION_PREFERENCE: NonNullable<TrackPublishOptions['degradationPreference']> =
-	'maintain-resolution';
 export const SUPPORTED_SCREEN_SHARE_FRAME_RATES = [15, 30, 60, 90, 120] as const;
 
 export type SupportedScreenShareFrameRate = (typeof SUPPORTED_SCREEN_SHARE_FRAME_RATES)[number];
@@ -67,10 +65,6 @@ function resolveBitrateRungForPixels(pixels: number): ScreenshareResolution {
 	return rung;
 }
 
-function resolveBitrateRungForDimensions(dimensions: {width: number; height: number}): ScreenshareResolution {
-	return resolveBitrateRungForPixels(dimensions.width * dimensions.height);
-}
-
 function resolveBitrateRung(
 	resolution: ScreenshareResolution,
 	sourceDimensions?: {
@@ -90,20 +84,6 @@ export function getScreenShareBitrateBps(
 	} | null,
 ): number {
 	return BITRATE_KBPS[resolveBitrateRung(resolution, sourceDimensions)][frameRate] * 1000;
-}
-
-export function capScreenShareEncodingToDimensions(
-	encoding: VideoEncoding,
-	dimensions: {width?: number; height?: number} | undefined,
-): VideoEncoding {
-	if (typeof encoding.maxBitrate !== 'number') return encoding;
-	const width = dimensions?.width;
-	const height = dimensions?.height;
-	if (!width || !height || width <= 0 || height <= 0) return encoding;
-	const frameRate = resolveScreenShareFrameRate(encoding.maxFramerate ?? 60);
-	const ceiling = BITRATE_KBPS[resolveBitrateRungForDimensions({width, height})][frameRate] * 1000;
-	if (encoding.maxBitrate <= ceiling) return encoding;
-	return {...encoding, maxBitrate: ceiling};
 }
 
 export function getScreenShareEncoding(
@@ -151,6 +131,7 @@ export interface BuiltScreenShareOptions {
 export interface ScreenShareBuildConfig {
 	resolution: ScreenshareResolution;
 	frameRate: number;
+	context: ScreenShareContext;
 	includeAudio: boolean;
 	contentHint?: ScreenShareCaptureOptions['contentHint'];
 	sourceDimensions?: {
@@ -207,16 +188,7 @@ export function resolveEffectiveScreenShareDimensions(
 	};
 }
 
-export function buildScreenShareOptions(config: ScreenShareBuildConfig): BuiltScreenShareOptions;
-export function buildScreenShareOptions(resolution: ScreenshareResolution, frameRate: number): BuiltScreenShareOptions;
-export function buildScreenShareOptions(
-	configOrResolution: ScreenShareBuildConfig | ScreenshareResolution,
-	maybeFrameRate?: number,
-): BuiltScreenShareOptions {
-	const config: ScreenShareBuildConfig =
-		typeof configOrResolution === 'object'
-			? configOrResolution
-			: {resolution: configOrResolution, frameRate: maybeFrameRate ?? 30, includeAudio: true};
+export function buildScreenShareOptions(config: ScreenShareBuildConfig): BuiltScreenShareOptions {
 	const {width, height} = resolveEffectiveScreenShareDimensions(config.resolution, config.sourceDimensions);
 	const resolvedFrameRate = resolveScreenShareFrameRate(config.frameRate);
 	const video: ScreenShareVideoOptions = {
@@ -236,7 +208,7 @@ export function buildScreenShareOptions(
 			video,
 		},
 		publishOptions: {
-			degradationPreference: SCREEN_SHARE_DEGRADATION_PREFERENCE,
+			degradationPreference: resolveScreenShareDegradationPreference(config),
 			screenShareEncoding: getScreenShareEncoding(config.resolution, resolvedFrameRate, config.sourceDimensions),
 		},
 	};
@@ -308,14 +280,7 @@ export function normaliseResolutionForContext(
 }
 
 const PREMIUM_SCREEN_SHARE_RESOLUTIONS: ReadonlyArray<ScreenshareResolution> = ['high', 'ultra', 'source'];
-const KEPT_RESOLUTION_RUNG_FLOOR: ScreenshareResolution = 'medium';
-const KEPT_RESOLUTION_FRAME_RATE_FLOOR: SupportedScreenShareFrameRate = 15;
-const KEPT_FRAME_RATE_RUNG_FLOOR: ScreenshareResolution = 'low_480p';
-const KEPT_FRAME_RATE_FLOOR: SupportedScreenShareFrameRate = 30;
 const SENT_PIXEL_FILL_RATIO = 0.98;
-
-export type ScreenShareKeptAxis = 'resolution' | 'frameRate';
-export type ScreenShareHintClass = 'screen' | 'motion';
 
 export interface ScreenShareQualityInput {
 	mode: StreamingMode;
@@ -334,26 +299,21 @@ export interface ScreenShareTarget {
 	mode: StreamingMode;
 	resolution: ScreenshareResolution;
 	frameRate: SupportedScreenShareFrameRate;
+	context: ScreenShareContext;
 	width: number;
 	height: number;
 	rung: ScreenshareResolution;
 	maxBitrate: number;
 	contentHint: ScreenShareCaptureOptions['contentHint'];
-	keep: ScreenShareKeptAxis;
 	presetOwned: boolean;
 	tierLimited: boolean;
 	deviceMapped: boolean;
-	memoryKey: string;
 }
 
-export interface ScreenShareLevel {
-	index: number;
-	segment: 0 | 1;
-	frameRate: SupportedScreenShareFrameRate;
-	width: number;
-	height: number;
-	rung: ScreenshareResolution;
-	maxBitrate: number;
+export function resolveScreenShareDegradationPreference(target: {
+	context: ScreenShareContext;
+}): NonNullable<TrackPublishOptions['degradationPreference']> {
+	return target.context === 'device' ? 'balanced' : 'maintain-resolution';
 }
 
 function resolveEffectiveScreenShareQuality(input: ScreenShareQualityInput): {
@@ -380,18 +340,16 @@ export function resolveScreenShareTarget(input: ScreenShareTargetInput): ScreenS
 	const effective = resolveEffectiveScreenShareQuality(input);
 	const onDisplay = resolveEffectiveScreenShareQuality({...input, context: 'display'});
 	const fit = resolveEffectiveScreenShareDimensions(effective.resolution, input.sourceDimensions);
-	const contentHint = resolveScreenShareContentHintForMode(effective.mode, input.hintSetting);
-	const hintClass: ScreenShareHintClass = contentHint === 'motion' ? 'motion' : 'screen';
 	return {
 		mode: effective.mode,
 		resolution: effective.resolution,
 		frameRate: effective.frameRate,
+		context: input.context,
 		width: fit.width,
 		height: fit.height,
 		rung: fit.rung,
 		maxBitrate: BITRATE_KBPS[fit.rung][effective.frameRate] * 1000,
-		contentHint,
-		keep: hintClass === 'motion' ? 'frameRate' : 'resolution',
+		contentHint: resolveScreenShareContentHintForMode(effective.mode, input.hintSetting),
 		presetOwned: effective.mode !== 'custom',
 		tierLimited:
 			!input.entitled &&
@@ -402,129 +360,32 @@ export function resolveScreenShareTarget(input: ScreenShareTargetInput): ScreenS
 			effective.mode !== onDisplay.mode ||
 			effective.resolution !== onDisplay.resolution ||
 			effective.frameRate !== onDisplay.frameRate,
-		memoryKey: `${effective.resolution}@${fit.rung}|${effective.frameRate}|${hintClass}`,
 	};
 }
-
-function getFrameRatesBelow(
-	frameRate: SupportedScreenShareFrameRate,
-	floor: SupportedScreenShareFrameRate,
-): Array<SupportedScreenShareFrameRate> {
-	return [...SUPPORTED_SCREEN_SHARE_FRAME_RATES]
-		.reverse()
-		.filter((candidate) => candidate < frameRate && candidate >= floor);
-}
-
-function getRungsBelow(pixels: number, floor: ScreenshareResolution): Array<ScreenshareResolution> {
-	const floorPixels = getScreenShareRungPixels(floor);
-	return [...BITRATE_RUNGS]
-		.reverse()
-		.filter((rung) => getScreenShareRungPixels(rung) < pixels && getScreenShareRungPixels(rung) >= floorPixels);
-}
-
-export function resolveScreenShareLevels(
-	target: ScreenShareTarget,
-	sourceDimensions: {width: number; height: number} | null,
-): Array<ScreenShareLevel> {
-	const levels: Array<Omit<ScreenShareLevel, 'index'>> = [
-		{
-			segment: 0,
-			frameRate: target.frameRate,
-			width: target.width,
-			height: target.height,
-			rung: target.rung,
-			maxBitrate: target.maxBitrate,
-		},
-	];
-	const targetPixels = target.width * target.height;
-	if (target.keep === 'resolution') {
-		for (const frameRate of getFrameRatesBelow(target.frameRate, KEPT_RESOLUTION_FRAME_RATE_FLOOR)) {
-			levels.push({
-				segment: 0,
-				frameRate,
-				width: target.width,
-				height: target.height,
-				rung: target.rung,
-				maxBitrate: BITRATE_KBPS[target.rung][frameRate] * 1000,
-			});
-		}
-		for (const rung of getRungsBelow(targetPixels, KEPT_RESOLUTION_RUNG_FLOOR)) {
-			const fit = resolveEffectiveScreenShareDimensions(rung, sourceDimensions);
-			levels.push({
-				segment: 1,
-				frameRate: KEPT_RESOLUTION_FRAME_RATE_FLOOR,
-				width: fit.width,
-				height: fit.height,
-				rung: fit.rung,
-				maxBitrate: BITRATE_KBPS[fit.rung][KEPT_RESOLUTION_FRAME_RATE_FLOOR] * 1000,
-			});
-		}
-	} else {
-		for (const rung of getRungsBelow(targetPixels, KEPT_FRAME_RATE_RUNG_FLOOR)) {
-			const fit = resolveEffectiveScreenShareDimensions(rung, sourceDimensions);
-			levels.push({
-				segment: 0,
-				frameRate: target.frameRate,
-				width: fit.width,
-				height: fit.height,
-				rung: fit.rung,
-				maxBitrate: BITRATE_KBPS[fit.rung][target.frameRate] * 1000,
-			});
-		}
-		if (target.frameRate > KEPT_FRAME_RATE_FLOOR) {
-			const smallest = levels[levels.length - 1];
-			for (const frameRate of getFrameRatesBelow(target.frameRate, KEPT_FRAME_RATE_FLOOR)) {
-				levels.push({
-					segment: 1,
-					frameRate,
-					width: smallest.width,
-					height: smallest.height,
-					rung: smallest.rung,
-					maxBitrate: BITRATE_KBPS[smallest.rung][frameRate] * 1000,
-				});
-			}
-		}
-	}
-	return levels.map((level, index) => ({...level, index}));
-}
-
-const MULTI_LAYER_SIMULCAST_MAX_PIXELS = DIMENSIONS.medium.width * DIMENSIONS.medium.height;
 
 export interface ScreenShareLayeringInput {
 	codec: VideoCodec | undefined;
 	svcSetting: ScreenShareScalabilityModePreference | undefined;
-	levelPixels: number;
-	multiLayer: boolean;
 }
 
 export interface ScreenShareLayering {
-	multiLayer: boolean;
 	simulcast: boolean;
 	scalabilityMode: TrackPublishOptions['scalabilityMode'];
 }
 
 export function resolveScreenShareLayering(input: ScreenShareLayeringInput): ScreenShareLayering {
-	if (input.codec === 'av1' || input.codec === 'vp9') {
-		if (input.codec === 'av1' && input.multiLayer && (input.svcSetting === undefined || input.svcSetting === 'auto')) {
-			return {multiLayer: true, simulcast: false, scalabilityMode: 'L3T3_KEY'};
-		}
-		return {
-			multiLayer: false,
-			simulcast: false,
-			scalabilityMode: input.svcSetting === 'single_layer' ? 'L1T1' : 'L1T3',
-		};
+	if (input.codec !== 'av1' && input.codec !== 'vp9') {
+		return {simulcast: false, scalabilityMode: undefined};
 	}
-	const simulcast =
-		input.codec === 'h264' &&
-		input.multiLayer &&
-		input.svcSetting !== 'single_layer' &&
-		input.levelPixels <= MULTI_LAYER_SIMULCAST_MAX_PIXELS;
-	return {multiLayer: simulcast, simulcast, scalabilityMode: undefined};
+	return {
+		simulcast: false,
+		scalabilityMode: input.svcSetting === 'single_layer' ? 'L1T1' : 'L1T3',
+	};
 }
 
 export interface ScreenShareSenderParametersInput {
 	encodings: ReadonlyArray<RTCRtpEncodingParameters>;
-	level: ScreenShareLevel;
+	target: ScreenShareTarget;
 	capture: {width: number; height: number} | null;
 	scalabilityMode: TrackPublishOptions['scalabilityMode'];
 }
@@ -532,7 +393,6 @@ export interface ScreenShareSenderParametersInput {
 export interface ScreenShareSenderParameters {
 	degradationPreference: NonNullable<TrackPublishOptions['degradationPreference']>;
 	encodings: Array<RTCRtpEncodingParameters>;
-	monitoredMaxBitrate: number;
 }
 
 function distributeScreenShareBitrate(
@@ -558,44 +418,30 @@ export function resolveScreenShareSenderCodec(
 	return codecOverride ?? negotiatedCodec ?? publishedCodec;
 }
 
-function resolveMonitoredScreenShareEncodingIndex(encodings: ReadonlyArray<RTCRtpEncodingParameters>): number {
-	let monitored = 0;
-	let monitoredScale = Number.POSITIVE_INFINITY;
-	for (const [index, encoding] of encodings.entries()) {
-		if (encoding.active === false) continue;
-		const scale = encoding.scaleResolutionDownBy ?? 1;
-		if (scale >= monitoredScale) continue;
-		monitored = index;
-		monitoredScale = scale;
-	}
-	return monitored;
-}
-
 export function buildScreenShareSenderParameters(input: ScreenShareSenderParametersInput): ScreenShareSenderParameters {
-	const levelPixels = input.level.width * input.level.height;
+	const targetPixels = input.target.width * input.target.height;
 	const capturePixels = input.capture ? input.capture.width * input.capture.height : null;
 	const baseScale = Math.min(...input.encodings.map((encoding) => encoding.scaleResolutionDownBy ?? 1));
-	const levelScale = capturePixels === null ? 1 : Math.max(1, Math.sqrt(capturePixels / levelPixels));
-	const sentPixels = capturePixels === null ? null : capturePixels / (levelScale * levelScale);
+	const targetScale = capturePixels === null ? 1 : Math.max(1, Math.sqrt(capturePixels / targetPixels));
+	const sentPixels = capturePixels === null ? null : capturePixels / (targetScale * targetScale);
 	const maxBitrate =
-		sentPixels !== null && sentPixels < levelPixels * SENT_PIXEL_FILL_RATIO
+		sentPixels !== null && sentPixels < targetPixels * SENT_PIXEL_FILL_RATIO
 			? Math.min(
-					input.level.maxBitrate,
-					BITRATE_KBPS[resolveBitrateRungForPixels(sentPixels)][input.level.frameRate] * 1000,
+					input.target.maxBitrate,
+					BITRATE_KBPS[resolveBitrateRungForPixels(sentPixels)][input.target.frameRate] * 1000,
 				)
-			: input.level.maxBitrate;
+			: input.target.maxBitrate;
 	const bitrates = distributeScreenShareBitrate(input.encodings, maxBitrate);
 	return {
-		degradationPreference: SCREEN_SHARE_DEGRADATION_PREFERENCE,
-		monitoredMaxBitrate: bitrates[resolveMonitoredScreenShareEncodingIndex(input.encodings)],
+		degradationPreference: resolveScreenShareDegradationPreference(input.target),
 		encodings: input.encodings.map((encoding, index) => {
 			const applied: RTCRtpEncodingParameters = {
 				...encoding,
 				maxBitrate: bitrates[index],
-				maxFramerate: input.level.frameRate,
+				maxFramerate: input.target.frameRate,
 				priority: 'high',
 				networkPriority: 'high',
-				scaleResolutionDownBy: ((encoding.scaleResolutionDownBy ?? 1) / baseScale) * levelScale,
+				scaleResolutionDownBy: ((encoding.scaleResolutionDownBy ?? 1) / baseScale) * targetScale,
 			};
 			if (input.scalabilityMode) {
 				applied.scalabilityMode = input.scalabilityMode;

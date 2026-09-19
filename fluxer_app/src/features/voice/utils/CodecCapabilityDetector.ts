@@ -18,6 +18,7 @@ import {
 } from '@app/features/voice/utils/NativeHardwareEncoderCapabilities';
 import {getOpenH264StatusSync, resetOpenH264Status} from '@app/features/voice/utils/OpenH264Status';
 import {
+	LAST_RESORT_VIDEO_CODEC,
 	rankScreenShareCodecs,
 	type ScreenShareCodecBrowser,
 	type ScreenShareCodecProfile,
@@ -25,13 +26,13 @@ import {
 	type ScreenShareCodecRanking,
 } from '@app/features/voice/utils/ScreenShareCodecSelection';
 import {normaliseStreamingModeForContext} from '@app/features/voice/utils/ScreenShareOptions';
+import {isVideoCodecDecodeExcluded} from '@app/features/voice/utils/VideoDecoderCapabilities';
 import type {TrackPublishDefaults, TrackPublishOptions} from 'livekit-client';
 import {BackupCodecPolicy, supportsVideoCodec, type VideoCodec, type VideoEncoding} from 'livekit-client';
 
 const logger = new Logger('CodecCapabilityDetector');
 export const LIVEKIT_SUPPORTED_CODECS: ReadonlyArray<VideoCodec> = ['vp8', 'h264', 'vp9', 'av1', 'h265'];
 const PUBLISH_CODEC_FALLBACK_ORDER: ReadonlyArray<VideoCodec> = ['h264', 'vp9', 'vp8', 'av1', 'h265'];
-const LAST_RESORT_PUBLISH_CODEC: VideoCodec = 'vp8';
 
 export interface CodecCapabilities {
 	vp8: boolean;
@@ -238,11 +239,7 @@ function buildReport(): CodecCapabilityReport {
 		if (hasPublishPathNativeHardwareEncoder(codec)) {
 			return 'hardware';
 		}
-		const gpu = gpuReport ? gpuReport[codec] : 'unknown';
-		if (codec === 'h264') {
-			return gpu === 'hardware' ? 'hardware' : 'software';
-		}
-		return gpu;
+		return gpuReport ? gpuReport[codec] : 'unknown';
 	}
 	type DescribedUnsupported = Omit<CodecSupportInfo, 'hardwareAccelerated'>;
 	function unsupported(codec: keyof CodecCapabilities, info: DescribedUnsupported): CodecSupportInfo {
@@ -433,7 +430,7 @@ function rankAutomaticScreenShareCodecs(
 	profile: ScreenShareCodecProfile,
 	encoderModeSetting: ScreenShareEncoderMode,
 ): ScreenShareCodecRanking {
-	return rankScreenShareCodecs({profile, encoderModeSetting, pin: 'auto', verdicts: {}});
+	return rankScreenShareCodecs({profile, encoderModeSetting, pin: 'auto'});
 }
 
 function describeAutomaticScreenShareCodecReason(
@@ -494,7 +491,7 @@ export function markScreenShareCodecSoftwareEncodeObserved(codec: VideoCodec): b
 	return true;
 }
 
-export type VideoPublishCodecDenial = 'sender-cannot-encode' | 'policy' | 'runtime-failed';
+export type VideoPublishCodecDenial = 'sender-cannot-encode' | 'policy' | 'runtime-failed' | 'decoder-excluded';
 
 export interface VideoPublishCodecPolicy {
 	allowed: ReadonlyArray<VideoCodec>;
@@ -524,6 +521,7 @@ export function getVideoPublishCodecDenial(codec: VideoCodec): VideoPublishCodec
 	if (!supportsVideoCodec(codec)) return 'sender-cannot-encode';
 	if (getScreenShareCodecPolicyUnsupported(codec, buildScreenShareCodecPolicyContext())) return 'policy';
 	if (runtimeEncodeFailureCodecs.has(codec)) return 'runtime-failed';
+	if (isVideoCodecDecodeExcluded(codec)) return 'decoder-excluded';
 	return null;
 }
 
@@ -545,7 +543,7 @@ export function resolveVideoPublishCodecPolicy(requested: VideoCodec): VideoPubl
 	const allowed = getAllowedVideoPublishCodecs();
 	const primary = allowed.includes(requested)
 		? requested
-		: (PUBLISH_CODEC_FALLBACK_ORDER.find((codec) => allowed.includes(codec)) ?? LAST_RESORT_PUBLISH_CODEC);
+		: (PUBLISH_CODEC_FALLBACK_ORDER.find((codec) => allowed.includes(codec)) ?? LAST_RESORT_VIDEO_CODEC);
 	if (primary !== requested) {
 		logger.warn('Requested publish codec is outside the publish policy; substituting', {
 			requested,

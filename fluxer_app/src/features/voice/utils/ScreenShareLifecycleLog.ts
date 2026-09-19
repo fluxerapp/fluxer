@@ -1,17 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {
-	ScreenShareDeliveryDecision,
-	ScreenShareDeliveryNotice,
-	ScreenShareDeliveryShortCause,
-} from '@app/features/voice/engine/ScreenShareUnderperformance';
 import ActiveScreenShareSource, {
 	type PublishedScreenShareSource,
 } from '@app/features/voice/state/ActiveScreenShareSource';
 import type {VideoCodec} from 'livekit-client';
 
 const MAX_RETAINED_SCREEN_SHARES = 8;
-const MAX_RETAINED_DELIVERY_DECISIONS = 16;
 
 export type ScreenShareStopTrigger =
 	| 'user'
@@ -28,16 +22,6 @@ export type ScreenShareEncoderVerification =
 	| 'accept-negotiated'
 	| 'correct-negotiated';
 
-export interface ScreenShareDeliveryDecisionRecord {
-	at: number;
-	codec: VideoCodec;
-	decision: ScreenShareDeliveryDecision['kind'];
-	levelIndex: number;
-	notice: ScreenShareDeliveryNotice['kind'] | null;
-	shortCause: ScreenShareDeliveryShortCause | null;
-	toast: boolean;
-}
-
 export interface ScreenShareLifecycleEntry {
 	startedAt: number;
 	sourceKind: PublishedScreenShareSource | null;
@@ -48,7 +32,6 @@ export interface ScreenShareLifecycleEntry {
 	stoppedAt: number | null;
 	stopTrigger: ScreenShareStopTrigger | null;
 	modalShown: ScreenShareEndedModal | null;
-	deliveryDecisions: ReadonlyArray<ScreenShareDeliveryDecisionRecord>;
 }
 
 let entries: Array<ScreenShareLifecycleEntry> = [];
@@ -70,7 +53,6 @@ export function recordScreenShareStarted(): void {
 		stoppedAt: null,
 		stopTrigger: null,
 		modalShown: null,
-		deliveryDecisions: [],
 	});
 	if (entries.length > MAX_RETAINED_SCREEN_SHARES) {
 		entries = entries.slice(-MAX_RETAINED_SCREEN_SHARES);
@@ -98,14 +80,6 @@ export function recordScreenShareEncoderVerification(
 	if (!entry) return;
 	entry.encoderVerification = verification;
 	entry.negotiatedCodecs = negotiatedCodecs;
-}
-
-export function recordScreenShareDeliveryDecision(record: Omit<ScreenShareDeliveryDecisionRecord, 'at'>): void {
-	const entry = getOpenEntry();
-	if (!entry) return;
-	entry.deliveryDecisions = [...entry.deliveryDecisions, {...record, at: Date.now()}].slice(
-		-MAX_RETAINED_DELIVERY_DECISIONS,
-	);
 }
 
 export function recordScreenShareEndedModal(modal: ScreenShareEndedModal): void {

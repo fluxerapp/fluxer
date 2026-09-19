@@ -4,11 +4,9 @@ import type {CodecPreference, ScreenShareEncoderMode} from '@app/features/voice/
 import type {VideoCodec} from 'livekit-client';
 
 export const CODEC_PREFERENCE: ReadonlyArray<VideoCodec> = ['av1', 'h265', 'h264', 'vp9', 'vp8'];
-export const SOFTWARE_CODEC_PREFERENCE: ReadonlyArray<VideoCodec> = ['av1', 'vp9', 'h264', 'vp8'];
-export const GECKO_SOFTWARE_CODEC_PREFERENCE: ReadonlyArray<VideoCodec> = ['vp8', 'h264'];
-export const NON_CHROMIUM_CODEC_PREFERENCE: ReadonlyArray<VideoCodec> = ['h264', 'vp8'];
-const COMPATIBILITY_FALLBACK_CODEC_PREFERENCE: ReadonlyArray<VideoCodec> = ['h264', 'vp9', 'vp8'];
-const BASELINE_VIDEO_CODEC: VideoCodec = 'vp8';
+const COMPATIBILITY_CODECS: ReadonlySet<VideoCodec> = new Set(['h264', 'vp9', 'vp8']);
+export const LAST_RESORT_VIDEO_CODEC: VideoCodec = 'vp8';
+const BASELINE_BROWSER_CODECS: ReadonlySet<VideoCodec> = new Set(['h264', 'vp8']);
 export const SCREEN_SHARE_CODEC_ADVERTISEMENT_GRACE_MS = 3_000;
 export const VIDEO_CODEC_NAMES: Record<VideoCodec, FluxerVideoCodecName> = {
 	av1: 'AV1',
@@ -50,7 +48,6 @@ export type NegotiationReason =
 	| 'reconnected'
 	| 'manual';
 export type ScreenShareCodecBrowser = 'chromium' | 'firefox' | 'other';
-export type ScreenShareCodecSubstitution = 'device' | 'viewer';
 
 export interface FluxerCodecAdvertisement {
 	name: FluxerCodecName;
@@ -81,16 +78,10 @@ export interface ScreenShareCodecProfile {
 	codecs: Record<VideoCodec, ScreenShareCodecProfileEntry>;
 }
 
-export interface ScreenShareCodecVerdict {
-	short: boolean;
-	ratio: number;
-}
-
 export interface ScreenShareCodecRankingInput {
 	profile: ScreenShareCodecProfile;
 	encoderModeSetting: ScreenShareEncoderMode;
 	pin: CodecPreference;
-	verdicts: Partial<Record<VideoCodec, ScreenShareCodecVerdict>>;
 }
 
 export interface ScreenShareCodecRanking {
@@ -98,59 +89,29 @@ export interface ScreenShareCodecRanking {
 	hardwareUnavailable: boolean;
 }
 
-function resolveBaseScreenShareCodecOrder(
-	input: ScreenShareCodecRankingInput,
-	isHardware: (codec: VideoCodec) => boolean,
-	hardwareAvailable: boolean,
-): Array<VideoCodec> {
-	if (input.profile.browser === 'firefox') return [...GECKO_SOFTWARE_CODEC_PREFERENCE];
-	if (input.profile.browser !== 'chromium' && !input.profile.desktop) return [...NON_CHROMIUM_CODEC_PREFERENCE];
-	if (input.encoderModeSetting === 'software' || !hardwareAvailable) return [...SOFTWARE_CODEC_PREFERENCE];
-	return [
-		...CODEC_PREFERENCE.filter((codec) => isHardware(codec)),
-		...CODEC_PREFERENCE.filter((codec) => !isHardware(codec)),
-	];
-}
-
-function demoteShortScreenShareCodecs(
-	order: Array<VideoCodec>,
-	verdicts: Partial<Record<VideoCodec, ScreenShareCodecVerdict>>,
-): Array<VideoCodec> {
-	const short = order.filter((codec) => verdicts[codec]?.short === true);
-	if (short.length === 0) return order;
-	return [
-		...order.filter((codec) => verdicts[codec]?.short !== true),
-		...short.sort((left, right) => (verdicts[right]?.ratio ?? 0) - (verdicts[left]?.ratio ?? 0)),
-	];
-}
-
 export function rankScreenShareCodecs(input: ScreenShareCodecRankingInput): ScreenShareCodecRanking {
 	const {codecs} = input.profile;
 	const isHardware = (codec: VideoCodec): boolean => codecs[codec].supported && codecs[codec].hardware;
 	const hardwareAvailable = CODEC_PREFERENCE.some((codec) => isHardware(codec));
-	const ranked = demoteShortScreenShareCodecs(
-		resolveBaseScreenShareCodecOrder(input, isHardware, hardwareAvailable),
-		input.verdicts,
-	);
 	const pin = input.pin !== 'auto' && codecs[input.pin].allowed && codecs[input.pin].supported ? input.pin : null;
-	const pinnedFirst = pin ? [pin, ...ranked.filter((codec) => codec !== pin)] : ranked;
-	const order = pinnedFirst.filter(
-		(codec) =>
-			codecs[codec].allowed && codecs[codec].supported && (codec !== 'h265' || isHardware('h265') || pin === 'h265'),
-	);
+	const baselineOnly =
+		input.profile.browser === 'firefox' || (input.profile.browser !== 'chromium' && !input.profile.desktop);
+	const survives = (codec: VideoCodec): boolean => {
+		if (!codecs[codec].allowed || !codecs[codec].supported) return false;
+		if (baselineOnly && !BASELINE_BROWSER_CODECS.has(codec)) return false;
+		if (codec === 'h265') return pin === 'h265' || (input.encoderModeSetting !== 'software' && isHardware('h265'));
+		return true;
+	};
+	const survivors = CODEC_PREFERENCE.filter(survives);
+	const ranked =
+		input.encoderModeSetting === 'software'
+			? survivors
+			: [...survivors.filter(isHardware), ...survivors.filter((codec) => !isHardware(codec))];
+	const ordered = pin === null ? ranked : [pin, ...ranked.filter((codec) => codec !== pin)];
 	return {
-		order: order.length > 0 ? order : [BASELINE_VIDEO_CODEC],
+		order: ordered.length > 0 ? ordered : [LAST_RESORT_VIDEO_CODEC],
 		hardwareUnavailable: input.encoderModeSetting === 'hardware' && !hardwareAvailable,
 	};
-}
-
-export function resolveScreenShareCodecSubstitution(
-	pin: CodecPreference,
-	order: ReadonlyArray<VideoCodec>,
-	negotiated: VideoCodec,
-): ScreenShareCodecSubstitution | null {
-	if (pin === 'auto' || pin === negotiated) return null;
-	return order.includes(pin) ? 'viewer' : 'device';
 }
 
 export function buildScreenShareCodecAdvertisements(
@@ -213,10 +174,11 @@ function selectCompatibilityFallbackCodec(
 	localEncode: ReadonlySet<VideoCodec>,
 	remoteDecode: ReadonlyArray<ReadonlySet<VideoCodec>>,
 ): VideoCodec {
-	for (const codec of COMPATIBILITY_FALLBACK_CODEC_PREFERENCE) {
+	for (const codec of CODEC_PREFERENCE) {
+		if (!COMPATIBILITY_CODECS.has(codec)) continue;
 		if (localEncode.has(codec) && remoteDecode.every((decode) => decode.has(codec))) return codec;
 	}
-	return BASELINE_VIDEO_CODEC;
+	return LAST_RESORT_VIDEO_CODEC;
 }
 
 function negotiateVideoCodec(
@@ -227,7 +189,7 @@ function negotiateVideoCodec(
 ): {codec: VideoCodec; candidates: Array<VideoCodec>} {
 	const candidates = codecPreference.filter((codec) => {
 		if (!localEncode.has(codec)) return false;
-		if (unknownParticipants > 0 && !COMPATIBILITY_FALLBACK_CODEC_PREFERENCE.includes(codec)) return false;
+		if (unknownParticipants > 0 && !COMPATIBILITY_CODECS.has(codec)) return false;
 		return remoteDecode.every((decode) => decode.has(codec));
 	});
 	return {codec: candidates[0] ?? selectCompatibilityFallbackCodec(localEncode, remoteDecode), candidates};
@@ -246,14 +208,4 @@ export function computeNegotiatedVideoCodec(
 		codecPreference,
 	);
 	return {codec, reason: 'manual', candidates, unknownParticipants};
-}
-
-export function resolveScreenShareAlternativeCodec(
-	order: ReadonlyArray<VideoCodec>,
-	current: VideoCodec,
-	remoteDecode: ReadonlyArray<ReadonlySet<VideoCodec>>,
-	unknownParticipants: number,
-): VideoCodec | null {
-	const remaining = order.filter((codec) => codec !== current);
-	return negotiateVideoCodec(new Set(remaining), remoteDecode, unknownParticipants, remaining).candidates[0] ?? null;
 }

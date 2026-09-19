@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {
-	getElectronAPI,
-	getNativePlatformSync,
-	isDesktop,
-	type NativePlatform,
-} from '@app/features/ui/utils/NativeUtils';
+import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import type {GpuDeviceInfo, GpuInfo} from '@app/types/electron.d';
 import type {VideoCodec} from 'livekit-client';
 
@@ -236,13 +231,16 @@ export function reportFromGpuInfo(info: GpuInfo): HardwareEncodeReport {
 	};
 }
 
-export const NEGOTIABLE_H264_PROBE_CONTENT_TYPE =
-	'video/H264;level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f';
+export const H264_PROBE_PROFILE_LEVEL_IDS: ReadonlyArray<string> = ['640028', '4d0028', '420028', '42e028'];
 
-const WEBRTC_ENCODE_PROBE_CONTENT_TYPES: Record<VideoCodec, ReadonlyArray<string>> = {
+export const H264_ENCODE_PROBE_CONTENT_TYPES: ReadonlyArray<string> = H264_PROBE_PROFILE_LEVEL_IDS.map(
+	(profileLevelId) => `video/H264;level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=${profileLevelId}`,
+);
+
+export const WEBRTC_ENCODE_PROBE_CONTENT_TYPES: Record<VideoCodec, ReadonlyArray<string>> = {
 	av1: ['video/AV1'],
 	h265: ['video/H265'],
-	h264: [NEGOTIABLE_H264_PROBE_CONTENT_TYPE],
+	h264: H264_ENCODE_PROBE_CONTENT_TYPES,
 	vp9: ['video/VP9'],
 	vp8: ['video/VP8'],
 };
@@ -314,25 +312,18 @@ export async function probeWebRtcEncodeEfficiency(): Promise<Record<VideoCodec, 
 export function reconcileHardwareEncodeReport(
 	report: HardwareEncodeReport,
 	efficiency: Record<VideoCodec, HardwareEncodeAnswer> | null,
-	platform: NativePlatform,
-	vendorId: number,
 ): HardwareEncodeReport {
-	const isNvidiaReport = vendorId === PCI_VENDOR_NVIDIA || report.gpuFamily?.startsWith('nvidia-') === true;
-	const adjust = (codec: VideoCodec): HardwareEncodeAnswer => {
-		if (report[codec] !== 'hardware') return report[codec];
-		return efficiency?.[codec] === 'hardware' ? 'hardware' : 'software';
+	if (!efficiency) return report;
+	const adjust = (codec: VideoCodec): HardwareEncodeAnswer =>
+		efficiency[codec] === 'unknown' ? report[codec] : efficiency[codec];
+	return {
+		...report,
+		av1: adjust('av1'),
+		h265: adjust('h265'),
+		h264: adjust('h264'),
+		vp9: adjust('vp9'),
+		vp8: adjust('vp8'),
 	};
-	if (platform === 'linux' && isNvidiaReport) {
-		return {
-			...report,
-			av1: adjust('av1'),
-			h265: adjust('h265'),
-			h264: adjust('h264'),
-			vp9: adjust('vp9'),
-			vp8: adjust('vp8'),
-		};
-	}
-	return {...report, h264: adjust('h264')};
 }
 
 let cachedReport: HardwareEncodeReport | null = null;
@@ -350,12 +341,15 @@ function fetchReport(): Promise<HardwareEncodeReport | null> {
 		const info = gpuResult.value;
 		const baseReport = reportFromGpuInfo(info);
 		const efficiency = probeResult.status === 'fulfilled' ? probeResult.value : null;
-		const report = reconcileHardwareEncodeReport(
-			baseReport,
-			efficiency,
-			getNativePlatformSync(),
-			pickPrimaryDevice(info.devices)?.vendorId ?? 0,
-		);
+		const report = reconcileHardwareEncodeReport(baseReport, efficiency);
+		logger.info('Reconciled hardware-encode answers against the WebRTC encode probe', {
+			probe: efficiency,
+			av1: report.av1,
+			h265: report.h265,
+			h264: report.h264,
+			vp9: report.vp9,
+			vp8: report.vp8,
+		});
 		cachedReport = report;
 		return report;
 	});

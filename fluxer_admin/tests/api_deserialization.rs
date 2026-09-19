@@ -410,14 +410,6 @@ fn deserialize_instance_config_response_with_unknown_keys() {
             "future_object_knob": {"nested": true},
             "future_list_knob": ["a", "b"]
         },
-        "screen_share_delivery": {
-            "enabled": false,
-            "config_version": 0,
-            "rollout_basis_points": 0,
-            "rollout_salt": "screen-share-delivery-v1",
-            "included_user_ids": [],
-            "excluded_user_ids": []
-        },
         "experiment_delivery": {"poll_interval_seconds": 300, "poll_jitter_percent": 15},
         "registration": {
             "mode": "open",

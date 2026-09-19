@@ -79,7 +79,10 @@ import VoiceSettings, {
 import {filterRoutableLinuxAudioSources} from '@app/features/voice/utils/LinuxAudioSourceRules';
 import {getNativeAudioAvailabilityCached} from '@app/features/voice/utils/NativeAudioCaptureBridge';
 import {isScreenShareAudioCaptureError} from '@app/features/voice/utils/ScreenShareAudioCaptureError';
-import {formatScreenShareAudioSummary} from '@app/features/voice/utils/ScreenShareAudioSummary';
+import {
+	formatScreenShareAudioSummary,
+	resolveDeviceShareAudioPairing,
+} from '@app/features/voice/utils/ScreenShareAudioSummary';
 import {
 	getDisplayShareEnvironment,
 	shouldShowDesktopDownloadCta,
@@ -1476,6 +1479,11 @@ const ScreenSharePickerModalLoadedContent = observer(
 					includeSources: audioIncludeSources,
 					shareContext,
 					microphoneLabel,
+					chosenAudioDeviceId: VoiceSettings.getScreenShareAudioDeviceId(),
+					deviceAudioPairing: resolveDeviceShareAudioPairing(
+						[...videoDevices, ...inputDevices],
+						selectedDeviceId ?? '',
+					),
 					displayShareEnvironment,
 					windowAudioScope,
 					usesDeviceMicrophone: VoiceSettings.getScreenShareDeviceAudioUsesMicrophone(),

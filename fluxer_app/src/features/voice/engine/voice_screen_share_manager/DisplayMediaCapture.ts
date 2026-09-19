@@ -6,6 +6,7 @@ import {
 	stopMediaTrack,
 	stopUnselectedStreamTracks,
 } from '@app/features/voice/engine/voice_screen_share_manager/shared';
+import {rememberCapturedDisplayAudioTrack} from '@app/features/voice/utils/NativeAudioCaptureBridge';
 import {ScreenShareAudioCaptureError} from '@app/features/voice/utils/ScreenShareAudioCaptureError';
 import type {ScreenShareCaptureOptions} from 'livekit-client';
 
@@ -131,6 +132,7 @@ export async function createDisplayScreenShareTracks(
 			.catch(() => undefined);
 		const capturedAudioTrack = stream.getAudioTracks()[0];
 		const audioTrack = capturedAudioTrack?.readyState === 'live' ? capturedAudioTrack : undefined;
+		rememberCapturedDisplayAudioTrack(capturedAudioTrack, Boolean(capturedAudioTrack) && !audioTrack);
 		if (captureContext?.requireAudio && !audioTrack) {
 			throw new ScreenShareAudioCaptureError({
 				sourceId: captureContext.sourceId,

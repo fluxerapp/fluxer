@@ -2,7 +2,6 @@
 
 import {getDesktopTroubleshootingSettings} from '@app/features/devtools/utils/DesktopTroubleshootingUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import ScreenShareDelivery from '@app/features/voice/state/ScreenShareDelivery';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
 	buildScreenShareCodecProfile,
@@ -32,7 +31,6 @@ import {
 	VIDEO_CODEC_NAMES,
 } from '@app/features/voice/utils/ScreenShareCodecSelection';
 import {
-	clearScreenShareDecodeFailures,
 	getScreenShareDecodeFailures,
 	getVideoDecoderExclusionsSync,
 	loadVideoDecoderExclusions,
@@ -144,7 +142,6 @@ export function getScreenShareCodecPreferenceOrder(
 		profile: buildScreenShareCodecProfile(),
 		encoderModeSetting: VoiceSettings.getScreenShareEncoderMode(),
 		pin: preference,
-		verdicts: ScreenShareDelivery.verdicts,
 	}).order;
 }
 
@@ -525,7 +522,6 @@ class ScreenShareCodecNegotiation {
 		this.answeredIdentities.clear();
 		this.mediaSessionId = createId('media');
 		this.negotiationSnapshot = createScreenShareCodecNegotiationSnapshot();
-		clearScreenShareDecodeFailures();
 	}
 
 	async publishLocalCapabilities(

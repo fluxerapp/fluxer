@@ -274,17 +274,6 @@
 	width: 1.25rem;
 }
 
-.noticeDot {
-	position: absolute;
-	top: 0.25rem;
-	right: 0.25rem;
-	height: 0.4375rem;
-	width: 0.4375rem;
-	border-radius: 50%;
-	background-color: var(--status-warning);
-	pointer-events: none;
-}
-
 .popoutContainer {
 	display: flex;
 	flex-direction: column;

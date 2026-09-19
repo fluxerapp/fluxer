@@ -8,9 +8,10 @@ import {MenuItemRadio} from '@app/features/ui/action_menu/MenuItemRadio';
 import {MenuItemSubmenu} from '@app/features/ui/action_menu/MenuItemSubmenu';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
+import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import {useMediaDevices} from '@app/features/voice/hooks/useMediaDevices';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
-	filterRoutableLinuxAudioSources,
 	type LinuxAudioSourceFilterOptions,
 	type LinuxAudioSourceItem,
 	linuxAudioSourceItemKey,
@@ -21,6 +22,7 @@ import {
 	formatScreenShareAudioSummary,
 	MICROPHONE_DESCRIPTOR,
 	MICROPHONE_WITH_DEVICE_DESCRIPTOR,
+	resolveDeviceShareAudioPairing,
 } from '@app/features/voice/utils/ScreenShareAudioSummary';
 import type {DisplayShareEnvironment} from '@app/features/voice/utils/ScreenShareEnvironment';
 import {
@@ -142,11 +144,11 @@ export const AudioSourcePickerLinuxSubmenu = observer((props: AudioSourcePickerL
 	const includeSources = VoiceSettings.getScreenShareAudioIncludeSources();
 	const excludeSources = VoiceSettings.getScreenShareAudioExcludeSources();
 	const usesDeviceMicrophone = VoiceSettings.getScreenShareDeviceAudioUsesMicrophone();
+	const {inputDevices, videoDevices} = useMediaDevices({autoRefresh: true, requestPermissions: false});
 	const granular = VoiceSettings.getLinuxAudioCaptureGranularSelect();
 	const deviceSelect = VoiceSettings.getLinuxAudioCaptureDeviceSelect();
 	const ignoreVirtual = VoiceSettings.getLinuxAudioCaptureIgnoreVirtual();
 	const [snapshot, setSnapshot] = useState<AudioSourceSnapshot>(EMPTY_SNAPSHOT);
-	const routesSelectedSources = sourceMode === 'specific' && filterRoutableLinuxAudioSources(includeSources).length > 0;
 	const widenedScope = offersWindowScope ? ('system' as const) : undefined;
 	const refresh = useCallback(() => {
 		setSnapshot((prev) => ({...prev, loading: true}));
@@ -218,12 +220,17 @@ export const AudioSourcePickerLinuxSubmenu = observer((props: AudioSourcePickerL
 		includeSources,
 		shareContext,
 		microphoneLabel,
+		chosenAudioDeviceId: VoiceSettings.getScreenShareAudioDeviceId(),
+		deviceAudioPairing: resolveDeviceShareAudioPairing(
+			[...videoDevices, ...inputDevices],
+			MediaEngine.getActiveScreenShareVideoDeviceId(),
+		),
 		displayShareEnvironment,
 		windowAudioScope,
 		usesDeviceMicrophone,
 	});
 	const showsWideSourceLists = !offersWindowScope || resolvedScope === 'system';
-	const wideSourceIsSelected = isDeviceShare ? usesDeviceMicrophone || !routesSelectedSources : sourceMode === 'system';
+	const wideSourceIsSelected = isDeviceShare ? usesDeviceMicrophone : sourceMode === 'system';
 	if (!snapshot.available && !snapshot.loading) {
 		return null;
 	}
