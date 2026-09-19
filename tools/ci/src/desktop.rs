@@ -101,6 +101,7 @@ enum DesktopStep {
     PackageAppWindowsVelopack,
     AnalyseVelopackPaths,
     BuildAppLinux,
+    BuildAppimageUpdateFeed,
     CreatePortableZipWindows,
     VerifyWindowsSignedArtifacts,
     PrepareArtifactsWindows,
@@ -201,6 +202,7 @@ pub async fn run(args: BuildDesktopArgs) -> Result<()> {
         DesktopStep::PackageAppWindowsVelopack => package_app_windows_velopack_step(),
         DesktopStep::AnalyseVelopackPaths => analyse_velopack_paths_step(),
         DesktopStep::BuildAppLinux => build_app_step(DesktopBuildPlatform::Linux),
+        DesktopStep::BuildAppimageUpdateFeed => crate::appimage::build_update_feed_step(),
         DesktopStep::CreatePortableZipWindows => create_portable_zip_windows_step(),
         DesktopStep::VerifyWindowsSignedArtifacts => verify_windows_signed_artifacts_step(),
         DesktopStep::PrepareArtifactsWindows => prepare_artifacts_windows_step(),
@@ -4082,7 +4084,7 @@ fn extension_is(path: &Path, extension: &str) -> bool {
     path.extension().and_then(OsStr::to_str) == Some(extension)
 }
 
-fn file_name_string(path: &Path) -> Result<String> {
+pub(crate) fn file_name_string(path: &Path) -> Result<String> {
     path.file_name()
         .and_then(OsStr::to_str)
         .map(ToOwned::to_owned)

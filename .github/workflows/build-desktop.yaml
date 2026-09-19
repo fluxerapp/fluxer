@@ -461,6 +461,12 @@ jobs:
           cargo run --locked --quiet --manifest-path ${{ github.workspace }}/_ci/tools/ci/Cargo.toml -- build-desktop
           --step prepare_artifacts_unix
 
+      - name: Build AppImage update feed (Linux)
+        if: matrix.platform == 'linux'
+        run: >-
+          cargo run --locked --quiet --manifest-path ${{ github.workspace }}/_ci/tools/ci/Cargo.toml -- build-desktop
+          --step build_appimage_update_feed
+
       - name: Normalize updater YAML (macOS)
         if: matrix.platform == 'macos'
         run: >-
