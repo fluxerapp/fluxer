@@ -4,14 +4,17 @@ import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettin
 import VoiceNoiseSuppressionRollout from '@app/features/voice/state/VoiceNoiseSuppressionRollout';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
-	getNoiseSuppressionBackendDescriptor,
 	isNoiseSuppressionBackendSupported,
 	isVoiceNoiseSuppressionBackend,
 	VOICE_NOISE_SUPPRESSION_BACKENDS,
 	type VoiceNoiseSuppressionBackend,
 } from '@app/features/voice/utils/noise_suppression/NoiseSuppressionBackends';
 import {readEffectiveNoiseSuppression} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionRuntime';
-import {readNoiseSuppressionRuntimeCapabilities} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionSelection';
+import {
+	applyNoiseSuppressionOverride,
+	readNoiseSuppressionRuntimeCapabilities,
+	supportsStereoCapture,
+} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionSelection';
 import {
 	legacyNoiseSuppressionBackend,
 	resolveVoiceProcessingFromState,
@@ -67,13 +70,11 @@ export function setNoiseSuppressionChoice(backend: VoiceNoiseSuppressionBackend)
 }
 
 export function isStereoMicrophoneChoiceAvailable(): boolean {
-	const assignment = VoiceNoiseSuppressionRollout.assignment;
-	if (!assignment.enabled || !assignment.stereo_enabled) return false;
 	const effective = readEffectiveNoiseSuppression(NOISE_SUPPRESSION_UI_SAMPLE_RATE);
-	const backend = effective.backend ?? resolveVoiceProcessingFromState(VoiceSettings).noiseSuppressionBackend;
-	return getNoiseSuppressionBackendDescriptor(backend).preservesInputChannels;
+	const profile = applyNoiseSuppressionOverride(resolveVoiceProcessingFromState(VoiceSettings), effective);
+	return supportsStereoCapture(profile);
 }
 
 export function isStereoMicrophoneEnabled(): boolean {
-	return VoiceSettings.getStereoMicrophone() !== false;
+	return VoiceSettings.getStereoMicrophone() === true;
 }

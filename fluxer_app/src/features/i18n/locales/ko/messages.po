@@ -29383,8 +29383,8 @@ msgstr "이 커뮤니티에서는 메시지 전송이 비활성화되어 있습�
 
 #. Description for the stereo microphone switch in the voice settings.
 #: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:49
-msgid "Sends both channels of a stereo microphone. Works only with no suppression or standard suppression."
-msgstr "스테레오 마이크의 두 채널을 모두 보냅니다. 억제 없음 또는 표준 억제에서만 작동합니다."
+msgid "Sends both channels of a stereo microphone. Needs all processing off and a channel at 128 kbps or higher."
+msgstr "스테레오 마이크의 두 채널을 모두 보냅니다. 모든 처리를 끄고 채널당 128kbps 이상이 필요합니다."
 
 #. Description for the studio / direct-input option in the voice processing settings radio group.
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:38

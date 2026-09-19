@@ -22292,7 +22292,6 @@ msgstr "No assets yet"
 msgid "No audio"
 msgstr "No audio"
 
-# auto-i18n: reviewed unchanged
 #. Screen-share audio summary on a video device share whose capture device has no audio input of its own.
 #: src/features/voice/utils/ScreenShareAudioSummary.ts:60
 msgid "No audio from this device"
@@ -29382,10 +29381,11 @@ msgstr "Sending malware or dangerous links"
 msgid "Sending messages is disabled in this community"
 msgstr "Sending messages is disabled in this community"
 
+# auto-i18n: reviewed unchanged
 #. Description for the stereo microphone switch in the voice settings.
 #: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:49
-msgid "Sends both channels of a stereo microphone. Works only with no suppression or standard suppression."
-msgstr "Sends both channels of a stereo microphone. Works only with no suppression or standard suppression."
+msgid "Sends both channels of a stereo microphone. Needs all processing off and a channel at 128 kbps or higher."
+msgstr "Sends both channels of a stereo microphone. Needs all processing off and a channel at 128 kbps or higher."
 
 #. Description for the studio / direct-input option in the voice processing settings radio group.
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:38
@@ -30617,7 +30617,6 @@ msgstr "Silent calls"
 msgid "Silent calls from everyone"
 msgstr "Silent calls from everyone"
 
-# auto-i18n: reviewed unchanged
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:872
 msgid "Silent when the capture device has no audio input of its own"
 msgstr "Silent when the capture device has no audio input of its own"

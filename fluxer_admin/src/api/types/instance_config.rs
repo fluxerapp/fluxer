@@ -492,7 +492,6 @@ pub struct VoiceNoiseSuppressionConfigResponse {
     pub included_user_ids: Vec<String>,
     pub excluded_user_ids: Vec<String>,
     pub guild_overrides: Vec<VoiceNoiseSuppressionGuildOverride>,
-    pub stereo_enabled: bool,
     pub suppression_strength: u32,
 }
 
@@ -509,7 +508,6 @@ impl Default for VoiceNoiseSuppressionConfigResponse {
             included_user_ids: Vec::new(),
             excluded_user_ids: Vec::new(),
             guild_overrides: Vec::new(),
-            stereo_enabled: false,
             suppression_strength: 80,
         }
     }
@@ -535,8 +533,6 @@ pub struct VoiceNoiseSuppressionConfigUpdateRequest {
     pub excluded_user_ids: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub guild_overrides: Option<Vec<VoiceNoiseSuppressionGuildOverride>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub stereo_enabled: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub suppression_strength: Option<u32>,
 }

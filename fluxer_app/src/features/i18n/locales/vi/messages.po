@@ -29383,8 +29383,8 @@ msgstr "Đã tắt tính năng gửi tin nhắn trong cộng đồng này"
 
 #. Description for the stereo microphone switch in the voice settings.
 #: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:49
-msgid "Sends both channels of a stereo microphone. Works only with no suppression or standard suppression."
-msgstr "Gửi cả hai kênh của micrô stereo. Chỉ hoạt động khi tắt khử tiếng ồn hoặc dùng khử tiếng ồn tiêu chuẩn."
+msgid "Sends both channels of a stereo microphone. Needs all processing off and a channel at 128 kbps or higher."
+msgstr "Gửi cả hai kênh của micrô stereo. Yêu cầu tắt mọi xử lý và kênh có tốc độ 128 kbps trở lên."
 
 #. Description for the studio / direct-input option in the voice processing settings radio group.
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:38

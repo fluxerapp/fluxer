@@ -2554,6 +2554,9 @@
         "msgid": "Sending {resolution} at {frameRate} FPS with {codec}"
       },
       {
+        "msgid": "Sends both channels of a stereo microphone. Needs all processing off and a channel at 128 kbps or higher."
+      },
+      {
         "msgid": "Sends both channels of a stereo microphone. Works only with no suppression or standard suppression."
       },
       {

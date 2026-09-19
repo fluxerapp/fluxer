@@ -304,7 +304,6 @@ describe('InstanceConfigRepository', () => {
 			included_user_ids: ['1400000000000000001'],
 			excluded_user_ids: ['1400000000000000002'],
 			guild_overrides: [{guild_id: '2400000000000000001', backend: 'rnnoise'}],
-			stereo_enabled: true,
 			suppression_strength: 55,
 		};
 		await repository.setVoiceNoiseSuppressionConfig(config);

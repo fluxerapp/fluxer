@@ -29383,8 +29383,8 @@ msgstr "Det går inte att skicka meddelanden i den här communityn"
 
 #. Description for the stereo microphone switch in the voice settings.
 #: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:49
-msgid "Sends both channels of a stereo microphone. Works only with no suppression or standard suppression."
-msgstr "Skickar båda kanalerna från en stereomikrofon. Fungerar endast utan brusreducering eller med standardbrusreducering."
+msgid "Sends both channels of a stereo microphone. Needs all processing off and a channel at 128 kbps or higher."
+msgstr "Skickar båda kanalerna från en stereomikrofon. Kräver att all bearbetning är avstängd och en kanal på 128 kbps eller högre."
 
 #. Description for the studio / direct-input option in the voice processing settings radio group.
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:38

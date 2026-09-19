@@ -15213,7 +15213,6 @@
 							"required": ["guild_id", "backend"]
 						}
 					},
-					"stereo_enabled": {"type": "boolean"},
 					"suppression_strength": {"type": "integer", "minimum": 0, "maximum": 100}
 				}
 			},
@@ -15288,7 +15287,6 @@
 							"additionalProperties": false
 						}
 					},
-					"stereo_enabled": {"default": false, "type": "boolean"},
 					"suppression_strength": {"default": 80, "type": "integer", "minimum": 0, "maximum": 100}
 				},
 				"required": [
@@ -15302,7 +15300,6 @@
 					"included_user_ids",
 					"excluded_user_ids",
 					"guild_overrides",
-					"stereo_enabled",
 					"suppression_strength"
 				],
 				"additionalProperties": false

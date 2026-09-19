@@ -70,7 +70,6 @@ One resolution of the instance noise suppression rollout against one account. Ev
 | guild_overrides | array[[guild override](#noise-suppression-guild-override-object) object] | Per-guild backend replacements that apply to the caller |
 | enabled_backends | array[string] | The [backends](#noise-suppression-backends) the client MAY run |
 | allow_user_override | boolean | Whether the account's own stored choice replaces `backend` |
-| stereo_enabled | boolean | Whether the client publishes a stereo microphone track |
 | suppression_strength | integer | Suppression strength from 0 through 100, which only a backend that reads it applies |
 
 `config_version` identifies the configuration revision. It can change without changing the caller's assignment.
@@ -79,9 +78,9 @@ One resolution of the instance noise suppression rollout against one account. Ev
 
 The outcomes below set `user_targeted` to false, and they differ in what else they report.
 
-1. The rollout is off. `enabled` is false, `enabled_backends` and `guild_overrides` are empty, and `allow_user_override` and `stereo_enabled` are false.
+1. The rollout is off. `enabled` is false, `enabled_backends` and `guild_overrides` are empty, and `allow_user_override` is false.
 2. The operator has excluded the caller. `enabled` is true, and every other field is as in the first outcome.
-3. The caller was not drawn. `enabled` is true, and `enabled_backends`, `guild_overrides`, `allow_user_override`, and `stereo_enabled` all hold their configured values.
+3. The caller was not drawn. `enabled` is true, and `enabled_backends`, `guild_overrides`, and `allow_user_override` all hold their configured values.
 
 A caller is drawn either by the operator's allowlist, which sets `source` to `user_rule`, or by the sampled share of the account population, which sets `source` to `canary`. A caller that is drawn while `backend` is absent from `enabled_backends` is reported as not drawn, with `user_targeted` false and both `backend` and `source` null.
 

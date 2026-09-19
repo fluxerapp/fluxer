@@ -31054,7 +31054,6 @@
 						"items": {"$ref": "#/components/schemas/VoiceNoiseSuppressionBackendSchema"}
 					},
 					"allow_user_override": {"type": "boolean"},
-					"stereo_enabled": {"type": "boolean"},
 					"suppression_strength": {"type": "integer", "minimum": 0, "maximum": 100}
 				},
 				"required": [
@@ -31066,7 +31065,6 @@
 					"guild_overrides",
 					"enabled_backends",
 					"allow_user_override",
-					"stereo_enabled",
 					"suppression_strength"
 				],
 				"additionalProperties": false

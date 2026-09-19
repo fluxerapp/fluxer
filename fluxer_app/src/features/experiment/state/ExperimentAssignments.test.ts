@@ -37,7 +37,6 @@ const CANARY_ASSIGNMENT: VoiceNoiseSuppressionAssignmentResponse = {
 	guild_overrides: [{guild_id: GUILD_ID, backend: 'speex'}],
 	enabled_backends: ['none', 'speex', 'rnnoise', 'gtcrn'],
 	allow_user_override: true,
-	stereo_enabled: false,
 	suppression_strength: 80,
 };
 

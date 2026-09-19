@@ -112,7 +112,6 @@ The instance rollout of client-side noise suppression. [Experiments](/http-api/e
 | included_user_ids | array[snowflake] | Accounts the rollout always selects, up to 1000 entries (default empty) |
 | excluded_user_ids | array[snowflake] | Accounts the rollout never selects, up to 1000 entries (default empty) |
 | guild_overrides | array[[guild override](/http-api/experiments/#noise-suppression-guild-override-object) object] | Per-guild replacements, up to 200 entries (default empty) |
-| stereo_enabled | boolean | Whether a client the rollout selects publishes a stereo microphone track (default false) |
 | suppression_strength | integer | Suppression strength (0-100, default 80) |
 
 Every field is present on read. An absent document or missing field uses the defaults above.

@@ -1157,17 +1157,6 @@ fn voice_noise_suppression_section(
                     }
 
                     h3 class="text-sm font-semibold text-neutral-900" { "Processing" }
-                    (checkbox(
-                        "voice_ns_stereo_enabled",
-                        "true",
-                        "Process stereo input instead of downmixing to mono",
-                        voice_noise_suppression.stereo_enabled,
-                        true,
-                    ))
-                    p class="text-xs text-neutral-500" {
-                        "Costs more CPU on the client. Leave off unless you are testing stereo \
-                         capture."
-                    }
                     div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
                         (number_field(
                             "voice_ns_suppression_strength",

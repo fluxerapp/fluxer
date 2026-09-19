@@ -41,7 +41,6 @@ const voiceConfigFields = {
 	included_user_ids: TargetedUserIdsSchema,
 	excluded_user_ids: TargetedUserIdsSchema,
 	guild_overrides: z.array(VoiceNoiseSuppressionGuildOverrideSchema).max(VOICE_NOISE_SUPPRESSION_MAX_GUILD_OVERRIDES),
-	stereo_enabled: z.boolean(),
 	suppression_strength: z.number().int().min(0).max(100),
 };
 
@@ -56,7 +55,6 @@ export const VoiceNoiseSuppressionConfigSchema = z.object({
 	included_user_ids: voiceConfigFields.included_user_ids.default([]),
 	excluded_user_ids: voiceConfigFields.excluded_user_ids.default([]),
 	guild_overrides: voiceConfigFields.guild_overrides.default([]),
-	stereo_enabled: voiceConfigFields.stereo_enabled.default(false),
 	suppression_strength: voiceConfigFields.suppression_strength.default(80),
 });
 
@@ -89,7 +87,6 @@ export const VoiceNoiseSuppressionAssignmentResponse = z.object({
 	guild_overrides: z.array(VoiceNoiseSuppressionGuildOverrideSchema),
 	enabled_backends: z.array(VoiceNoiseSuppressionBackendSchema),
 	allow_user_override: voiceConfigFields.allow_user_override,
-	stereo_enabled: voiceConfigFields.stereo_enabled,
 	suppression_strength: voiceConfigFields.suppression_strength,
 });
 
@@ -104,7 +101,6 @@ export const INERT_VOICE_NOISE_SUPPRESSION_ASSIGNMENT: VoiceNoiseSuppressionAssi
 	guild_overrides: [],
 	enabled_backends: [],
 	allow_user_override: false,
-	stereo_enabled: false,
 	suppression_strength: DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG.suppression_strength,
 };
 
@@ -123,7 +119,6 @@ export function resolveVoiceNoiseSuppressionAssignment(
 		config_version: config.config_version,
 		enabled_backends: [...config.enabled_backends],
 		allow_user_override: config.allow_user_override,
-		stereo_enabled: config.stereo_enabled,
 		suppression_strength: config.suppression_strength,
 	};
 	if (config.excluded_user_ids.includes(userId)) {
@@ -131,7 +126,6 @@ export function resolveVoiceNoiseSuppressionAssignment(
 			...shared,
 			enabled_backends: [],
 			allow_user_override: false,
-			stereo_enabled: false,
 			user_targeted: false,
 			backend: null,
 			source: null,
@@ -173,7 +167,6 @@ export type VoiceNoiseSuppressionResolutionSource = (typeof VOICE_NOISE_SUPPRESS
 export interface VoiceNoiseSuppressionResolution {
 	backend: VoiceNoiseSuppressionBackend;
 	source: VoiceNoiseSuppressionResolutionSource;
-	stereoEnabled: boolean;
 	suppressionStrength: number;
 	configVersion: number;
 }
@@ -204,7 +197,6 @@ export function resolveVoiceNoiseSuppressionForCall(
 	const targeted = resolveVoiceNoiseSuppressionTarget(assignment, guildId);
 	if (targeted == null) return null;
 	const shared = {
-		stereoEnabled: assignment.stereo_enabled,
 		suppressionStrength: assignment.suppression_strength,
 		configVersion: assignment.config_version,
 	};

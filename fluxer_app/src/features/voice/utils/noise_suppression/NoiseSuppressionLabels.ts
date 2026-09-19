@@ -47,7 +47,7 @@ const STEREO_MICROPHONE_DESCRIPTOR = msg({
 	comment: 'Switch label in the voice settings that sends both channels of a stereo microphone. Keep it concise.',
 });
 const STEREO_MICROPHONE_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Sends both channels of a stereo microphone. Works only with no suppression or standard suppression.',
+	message: 'Sends both channels of a stereo microphone. Needs all processing off and a channel at 128 kbps or higher.',
 	comment: 'Description for the stereo microphone switch in the voice settings.',
 });
 

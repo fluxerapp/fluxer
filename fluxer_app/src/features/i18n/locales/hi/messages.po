@@ -29383,8 +29383,8 @@ msgstr "इस कम्युनिटी में मैसेज भेज�
 
 #. Description for the stereo microphone switch in the voice settings.
 #: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:49
-msgid "Sends both channels of a stereo microphone. Works only with no suppression or standard suppression."
-msgstr "स्टीरियो माइक्रोफ़ोन के दोनों चैनल भेजता है। यह सिर्फ़ तब काम करता है जब कोई सप्रेशन न हो या स्टैंडर्ड सप्रेशन हो।"
+msgid "Sends both channels of a stereo microphone. Needs all processing off and a channel at 128 kbps or higher."
+msgstr "स्टीरियो माइक्रोफ़ोन के दोनों चैनल भेजता है। इसके लिए सभी प्रोसेसिंग बंद और 128 kbps या उससे अधिक का चैनल चाहिए।"
 
 #. Description for the studio / direct-input option in the voice processing settings radio group.
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:38

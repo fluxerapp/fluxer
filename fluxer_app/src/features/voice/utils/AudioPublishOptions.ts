@@ -5,7 +5,7 @@ import type {TrackPublishOptions} from 'livekit-client';
 
 export const OPUS_MAX_AUDIO_BITRATE_BPS = 510000;
 export const VOICE_CHANNEL_MIN_AUDIO_BITRATE_BPS = 8000;
-export const STEREO_VOICE_MIN_AUDIO_BITRATE_BPS = 64000;
+export const STEREO_VOICE_MIN_AUDIO_BITRATE_BPS = 128000;
 
 export function normaliseAudioBitrateBps(value: number | null | undefined): number | undefined {
 	if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return undefined;
@@ -27,7 +27,7 @@ export function buildMicrophonePublishOptions(
 		},
 		dtx: false,
 		red: true,
-		forceStereo: stereoCapture && maxBitrate >= STEREO_VOICE_MIN_AUDIO_BITRATE_BPS,
+		forceStereo: stereoCapture && maxBitrate >= STEREO_VOICE_MIN_AUDIO_BITRATE_BPS ? undefined : false,
 	};
 }
 

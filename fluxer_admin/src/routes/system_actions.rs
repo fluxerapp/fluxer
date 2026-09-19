@@ -617,7 +617,6 @@ fn build_voice_noise_suppression_update(
             guild_overrides: Some(parse_voice_noise_suppression_guild_overrides(
                 form.first("voice_ns_guild_overrides").unwrap_or_default(),
             )?),
-            stereo_enabled: Some(form.bool_value("voice_ns_stereo_enabled")),
             suppression_strength: parse_form_number(
                 form,
                 "voice_ns_suppression_strength",
@@ -1247,7 +1246,6 @@ mod tests {
             .expect("voice noise suppression update");
         assert_eq!(update.enabled, Some(true));
         assert_eq!(update.allow_user_override, Some(true));
-        assert_eq!(update.stereo_enabled, Some(false));
         assert_eq!(
             update.default_backend,
             Some(NoiseSuppressionBackend::Rnnoise)
@@ -1273,7 +1271,6 @@ mod tests {
             serde_json::json!({"voice_noise_suppression": {
                 "enabled": false,
                 "allow_user_override": false,
-                "stereo_enabled": false,
                 "enabled_backends": [],
                 "included_user_ids": [],
                 "excluded_user_ids": [],

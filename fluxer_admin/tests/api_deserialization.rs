@@ -403,7 +403,6 @@ fn deserialize_instance_config_response_with_unknown_keys() {
             "included_user_ids": [],
             "excluded_user_ids": [],
             "guild_overrides": [],
-            "stereo_enabled": false,
             "suppression_strength": 80,
             "future_presentation_knob": "verbose",
             "future_knob": 7,

@@ -1194,7 +1194,6 @@ fn instance_config() -> Value {
             "included_user_ids": [],
             "excluded_user_ids": [],
             "guild_overrides": [],
-            "stereo_enabled": false,
             "suppression_strength": 80
         },
         "experiment_delivery": {

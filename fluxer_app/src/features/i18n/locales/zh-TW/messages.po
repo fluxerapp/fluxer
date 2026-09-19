@@ -29383,8 +29383,8 @@ msgstr "此社群已停用訊息傳送功能"
 
 #. Description for the stereo microphone switch in the voice settings.
 #: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:49
-msgid "Sends both channels of a stereo microphone. Works only with no suppression or standard suppression."
-msgstr "將立體聲麥克風的兩個聲道都傳送出去。僅在未啟用或啟用標準降噪時有效。"
+msgid "Sends both channels of a stereo microphone. Needs all processing off and a channel at 128 kbps or higher."
+msgstr "傳送立體聲麥克風的兩個聲道。需要關閉所有處理，且聲道速率為 128 kbps 或更高。"
 
 #. Description for the studio / direct-input option in the voice processing settings radio group.
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:38

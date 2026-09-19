@@ -29383,8 +29383,8 @@ msgstr "Sending messages is disabled in this community"
 
 #. Description for the stereo microphone switch in the voice settings.
 #: src/features/voice/utils/noise_suppression/NoiseSuppressionLabels.ts:49
-msgid "Sends both channels of a stereo microphone. Works only with no suppression or standard suppression."
-msgstr "Sends both channels of a stereo microphone. Works only with no suppression or standard suppression."
+msgid "Sends both channels of a stereo microphone. Needs all processing off and a channel at 128 kbps or higher."
+msgstr "Sends both channels of a stereo microphone. Needs all processing off and a channel at 128 kbps or higher."
 
 #. Description for the studio / direct-input option in the voice processing settings radio group.
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:38

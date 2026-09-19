@@ -79,7 +79,6 @@ function createAssignment(
 		guild_overrides: [],
 		enabled_backends: [...VOICE_NOISE_SUPPRESSION_BACKENDS],
 		allow_user_override: false,
-		stereo_enabled: false,
 		suppression_strength: 80,
 		...overrides,
 	};
@@ -180,7 +179,6 @@ describe('resolveVoiceNoiseSuppressionAssignment', () => {
 		const config = createConfig({
 			enabled: true,
 			allow_user_override: true,
-			stereo_enabled: true,
 			rollout_basis_points: 10000,
 			excluded_user_ids: [TARGETED_USER_ID],
 			guild_overrides: [{guild_id: GUILD_ID, backend: 'rnnoise'}],
@@ -189,7 +187,6 @@ describe('resolveVoiceNoiseSuppressionAssignment', () => {
 		expect(assignment.guild_overrides).toEqual([]);
 		expect(assignment.enabled_backends).toEqual([]);
 		expect(assignment.allow_user_override).toBe(false);
-		expect(assignment.stereo_enabled).toBe(false);
 	});
 
 	test('allowlist gives source user_rule outside the canary', () => {
@@ -404,14 +401,12 @@ describe('resolveVoiceNoiseSuppressionForCall', () => {
 		const assignment = createAssignment({
 			backend: 'rnnoise',
 			source: 'user_rule',
-			stereo_enabled: true,
 			suppression_strength: 42,
 			config_version: 19,
 		});
 		expect(resolveVoiceNoiseSuppressionForCall(assignment, null, null)).toEqual({
 			backend: 'rnnoise',
 			source: 'user_rule',
-			stereoEnabled: true,
 			suppressionStrength: 42,
 			configVersion: 19,
 		});
