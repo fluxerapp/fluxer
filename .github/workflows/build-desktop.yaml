@@ -11,11 +11,6 @@ on:
           - stable
           - canary
         default: stable
-      test_build:
-        description: Stash artifacts under desktop-test/ instead of desktop/ (API will not pick these up as a release).
-        required: false
-        default: false
-        type: boolean
       build_version:
         description: Explicit Fluxer CalVer build version (YYYY.MDD.MICRO, UTC HHMMSS without leading zeroes) to use instead of automatic UTC clock allocation.
         required: false
@@ -32,13 +27,12 @@ permissions:
   actions: read
 
 concurrency:
-  group: desktop-${{ inputs.channel }}-${{ inputs.test_build && 'test' || 'release' }}
+  group: desktop-${{ inputs.channel }}
   cancel-in-progress: true
 
 env:
   CHANNEL: ${{ inputs.channel }}
   BUILD_CHANNEL: ${{ inputs.channel == 'canary' && 'canary' || 'stable' }}
-  TEST_BUILD: ${{ inputs.test_build && 'true' || 'false' }}
 
 jobs:
   meta:
@@ -53,8 +47,6 @@ jobs:
       pub_date: ${{ steps.meta.outputs.pub_date }}
       channel: ${{ steps.meta.outputs.channel }}
       build_channel: ${{ steps.meta.outputs.build_channel }}
-      test_build: ${{ steps.meta.outputs.test_build }}
-      s3_prefix: ${{ steps.meta.outputs.s3_prefix }}
       source_sha: ${{ steps.meta.outputs.source_sha }}
     steps:
       - name: Checkout source
@@ -85,7 +77,6 @@ jobs:
           cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
           --step set_metadata
           --channel "${{ inputs.channel }}"
-          --test-build "${{ inputs.test_build }}"
 
   matrix:
     name: Resolve build matrix
@@ -113,7 +104,7 @@ jobs:
           --skip-targets "${{ inputs.skip_targets }}"
 
   build:
-    name: Build ${{ matrix.platform }} (${{ matrix.arch }}, ${{ matrix.desktop_variant }})
+    name: Build ${{ matrix.platform }} (${{ matrix.arch }})
     needs:
       - meta
       - matrix
@@ -137,15 +128,8 @@ jobs:
       PUBLIC_BUILD_VERSION: ${{ needs.meta.outputs.version }}
       PUB_DATE: ${{ needs.meta.outputs.pub_date }}
       SOURCE_SHA: ${{ needs.meta.outputs.source_sha }}
-      S3_DESKTOP_PREFIX: ${{ needs.meta.outputs.s3_prefix }}
-      DESKTOP_HANDOFF_PREFIX: _handoff/desktop/${{ needs.meta.outputs.build_channel }}/${{ needs.meta.outputs.version }}/${{ needs.meta.outputs.source_sha }}
-      S3_ENDPOINT: ${{ vars.DOWNLOADS_S3_ENDPOINT }}
-      S3_BUCKET: ${{ vars.DOWNLOADS_S3_BUCKET }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.DOWNLOADS_AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.DOWNLOADS_AWS_SECRET_ACCESS_KEY || secrets.AWS_SECRET_ACCESS_KEY }}
       DESKTOP_PLATFORM: ${{ matrix.platform }}
       DESKTOP_ARCH: ${{ matrix.arch }}
-      DESKTOP_VARIANT: ${{ matrix.desktop_variant }}
       PLATFORM: ${{ matrix.platform }}
       ARCH: ${{ matrix.arch }}
       ELECTRON_ARCH: ${{ matrix.electron_arch }}
@@ -495,13 +479,23 @@ jobs:
           cargo run --locked --quiet --manifest-path ${{ github.workspace }}/_ci/tools/ci/Cargo.toml -- build-desktop
           --step generate_checksums_windows
 
-      - name: Upload artifacts to S3 handoff
+      - name: Stage build artifacts
+        id: handoff
         run: >-
           cargo run --locked --quiet --manifest-path ${{ github.workspace }}/_ci/tools/ci/Cargo.toml -- build-desktop
-          --step upload_handoff
+          --step stage_handoff
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ${{ steps.handoff.outputs.artifact_name }}
+          path: upload_staging
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
 
   upload:
-    name: Upload to S3
+    name: Assemble desktop release assets
     if: ${{ !cancelled() && needs.build.result == 'success' }}
     needs:
       - meta
@@ -520,17 +514,8 @@ jobs:
       BUILD_VERSION: ${{ needs.meta.outputs.version }}
       PUBLIC_BUILD_VERSION: ${{ needs.meta.outputs.version }}
       PUB_DATE: ${{ needs.meta.outputs.pub_date }}
-      TEST_BUILD: ${{ needs.meta.outputs.test_build }}
       SOURCE_SHA: ${{ needs.meta.outputs.source_sha }}
-      S3_DESKTOP_PREFIX: ${{ needs.meta.outputs.s3_prefix }}
-      DESKTOP_HANDOFF_PREFIX: _handoff/desktop/${{ needs.meta.outputs.build_channel }}/${{ needs.meta.outputs.version }}/${{ needs.meta.outputs.source_sha }}
-      DESKTOP_RELEASE_ASSETS_PREFIX: _handoff/desktop-release-assets/${{ needs.meta.outputs.build_channel }}/${{ needs.meta.outputs.version }}/${{ needs.meta.outputs.source_sha }}
-      DESKTOP_METADATA_PREFIX: _handoff/desktop-metadata/${{ needs.meta.outputs.build_channel }}/${{ needs.meta.outputs.version }}/${{ needs.meta.outputs.source_sha }}
-      S3_ENDPOINT: ${{ vars.DOWNLOADS_S3_ENDPOINT }}
-      S3_BUCKET: ${{ vars.DOWNLOADS_S3_BUCKET }}
       PUBLIC_DL_BASE: https://api.fluxer.app/dl
-      AWS_ACCESS_KEY_ID: ${{ secrets.DOWNLOADS_AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.DOWNLOADS_AWS_SECRET_ACCESS_KEY || secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
       - name: Checkout source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -542,12 +527,13 @@ jobs:
         with:
           toolchain: "1.98.1"
 
-      - name: Download S3 handoff artifacts
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
-          --step download_handoff
+      - name: Download build artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          path: artifacts
+          pattern: fluxer-desktop-${{ needs.meta.outputs.build_channel }}-*
 
-      - name: Build S3 payload layout (+ manifest.json)
+      - name: Build payload layout (+ manifest.json)
         env:
           VERSION: ${{ needs.meta.outputs.version }}
           PUB_DATE: ${{ needs.meta.outputs.pub_date }}
@@ -556,42 +542,27 @@ jobs:
           --step build_payload
 
       - name: Prepare GitHub release assets
-        if: needs.meta.outputs.test_build != 'true'
         run: >-
           cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
           --step prepare_release_assets
 
-      - name: Publish GitHub release descriptor
-        if: needs.meta.outputs.test_build != 'true'
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
-          --step publish_release_descriptor
-
-      - name: Upload payload to S3
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
-          --step upload_payload
-
-      - name: Upload GitHub release asset handoff
-        if: needs.meta.outputs.test_build != 'true'
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
-          --step upload_release_assets
+      - name: Upload GitHub release assets
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: fluxer-desktop-release-assets
+          path: release_assets
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
 
       - name: Build summary
         run: >-
           cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
           --step build_summary
 
-      - name: Cleanup S3 handoff
-        if: ${{ success() }}
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
-          --step cleanup_handoff
-
   publish_release:
     name: Publish GitHub desktop release
-    if: ${{ !cancelled() && needs.upload.result == 'success' && needs.meta.outputs.test_build != 'true' }}
+    if: ${{ !cancelled() && needs.upload.result == 'success' }}
     needs:
       - meta
       - upload
@@ -603,13 +574,6 @@ jobs:
     env:
       CHANNEL: ${{ needs.meta.outputs.build_channel }}
       VERSION: ${{ needs.meta.outputs.version }}
-      S3_DESKTOP_PREFIX: ${{ needs.meta.outputs.s3_prefix }}
-      DESKTOP_RELEASE_ASSETS_PREFIX: _handoff/desktop-release-assets/${{ needs.meta.outputs.build_channel }}/${{ needs.meta.outputs.version }}/${{ needs.meta.outputs.source_sha }}
-      DESKTOP_METADATA_PREFIX: _handoff/desktop-metadata/${{ needs.meta.outputs.build_channel }}/${{ needs.meta.outputs.version }}/${{ needs.meta.outputs.source_sha }}
-      S3_ENDPOINT: ${{ vars.DOWNLOADS_S3_ENDPOINT }}
-      S3_BUCKET: ${{ vars.DOWNLOADS_S3_BUCKET }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.DOWNLOADS_AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.DOWNLOADS_AWS_SECRET_ACCESS_KEY || secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
       - name: Checkout source
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -622,9 +586,10 @@ jobs:
           toolchain: "1.98.1"
 
       - name: Download GitHub release assets
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
-          --step download_release_assets
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: fluxer-desktop-release-assets
+          path: release_assets
 
       - name: Create token
         id: create-token
@@ -656,15 +621,3 @@ jobs:
             release_args+=(--prerelease)
           fi
           cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- "${release_args[@]}"
-
-      - name: Publish GitHub release readiness marker
-        env:
-          SOURCE_SHA: ${{ needs.meta.outputs.source_sha }}
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
-          --step publish_release_marker
-
-      - name: Publish payload metadata to S3
-        run: >-
-          cargo run --locked --quiet --manifest-path tools/ci/Cargo.toml -- build-desktop
-          --step publish_payload_metadata

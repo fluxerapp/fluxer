@@ -2,7 +2,7 @@
 
 use crate::common::{CommandSpec, output_text, parse_version_instant, run_command};
 use crate::functions::sha256_reader;
-use anyhow::{Context, Result, bail, ensure};
+use anyhow::{Context, Result, anyhow, bail, ensure};
 use chrono::{DateTime, Utc};
 use clap::{Args, Subcommand};
 use serde::{Deserialize, Serialize};
@@ -15,8 +15,125 @@ use std::time::Duration;
 pub(crate) const RELEASE_REPOSITORY: &str = "fluxerapp/fluxer";
 const RELEASE_COMPARE_URL: &str = "https://github.com/fluxerapp/fluxer/compare";
 pub(crate) const DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION: u8 = 1;
-pub(crate) const DESKTOP_RELEASE_ROUTE_COUNT: usize = 28;
-pub(crate) const DESKTOP_RELEASE_ASSET_COUNT: usize = 24;
+const DESKTOP_RELEASE_ARCHES: [&str; 2] = ["x64", "arm64"];
+
+struct DesktopReleasePlatform {
+    platform: &'static str,
+    shipped_formats: &'static [&'static str],
+    updater_feeds: &'static [&'static str],
+    update_payload_suffix: Option<&'static str>,
+    one_build_serves_every_arch: bool,
+}
+
+const DESKTOP_RELEASE_PLATFORMS: [DesktopReleasePlatform; 3] = [
+    DesktopReleasePlatform {
+        platform: "win32",
+        shipped_formats: &["portable", "setup"],
+        updater_feeds: &["RELEASES", "releases.win.json", "assets.win.json"],
+        update_payload_suffix: Some("-full.nupkg"),
+        one_build_serves_every_arch: false,
+    },
+    DesktopReleasePlatform {
+        platform: "darwin",
+        shipped_formats: &["dmg", "zip"],
+        updater_feeds: &["RELEASES.json", "releases.json"],
+        update_payload_suffix: None,
+        one_build_serves_every_arch: true,
+    },
+    DesktopReleasePlatform {
+        platform: "linux",
+        shipped_formats: &["appimage", "deb", "rpm", "tar_gz"],
+        updater_feeds: &[],
+        update_payload_suffix: None,
+        one_build_serves_every_arch: false,
+    },
+];
+
+fn desktop_release_platform(platform: &str) -> Result<&'static DesktopReleasePlatform> {
+    DESKTOP_RELEASE_PLATFORMS
+        .iter()
+        .find(|entry| entry.platform == platform)
+        .ok_or_else(|| anyhow!("Unsupported desktop release platform {platform:?}"))
+}
+
+pub(crate) fn desktop_release_coordinates() -> Vec<(&'static str, &'static str)> {
+    DESKTOP_RELEASE_PLATFORMS
+        .iter()
+        .flat_map(|entry| {
+            DESKTOP_RELEASE_ARCHES
+                .iter()
+                .map(move |arch| (entry.platform, *arch))
+        })
+        .collect()
+}
+
+pub(crate) fn desktop_release_shipped_formats(platform: &str) -> Result<&'static [&'static str]> {
+    Ok(desktop_release_platform(platform)?.shipped_formats)
+}
+
+pub(crate) fn desktop_release_updater_feeds(platform: &str) -> Result<&'static [&'static str]> {
+    Ok(desktop_release_platform(platform)?.updater_feeds)
+}
+
+pub(crate) fn desktop_release_update_payload_suffix(
+    platform: &str,
+) -> Result<Option<&'static str>> {
+    Ok(desktop_release_platform(platform)?.update_payload_suffix)
+}
+
+fn desktop_release_coordinate_routes(entry: &DesktopReleasePlatform) -> usize {
+    entry.shipped_formats.len()
+        + entry.updater_feeds.len()
+        + usize::from(entry.update_payload_suffix.is_some())
+}
+
+fn desktop_release_route_inventory() -> BTreeMap<String, usize> {
+    DESKTOP_RELEASE_PLATFORMS
+        .iter()
+        .flat_map(|entry| {
+            DESKTOP_RELEASE_ARCHES.iter().map(move |arch| {
+                (
+                    format!("{}/{arch}", entry.platform),
+                    desktop_release_coordinate_routes(entry),
+                )
+            })
+        })
+        .collect()
+}
+
+fn desktop_release_route_count() -> usize {
+    desktop_release_route_inventory().values().sum()
+}
+
+fn desktop_release_asset_count() -> usize {
+    DESKTOP_RELEASE_PLATFORMS
+        .iter()
+        .map(|entry| {
+            let builds = if entry.one_build_serves_every_arch {
+                1
+            } else {
+                DESKTOP_RELEASE_ARCHES.len()
+            };
+            let feeds = entry
+                .updater_feeds
+                .iter()
+                .map(|name| desktop_release_asset_basename(entry.platform, name))
+                .collect::<BTreeSet<_>>()
+                .len();
+            entry.shipped_formats.len() * builds
+                + (feeds + usize::from(entry.update_payload_suffix.is_some()))
+                    * DESKTOP_RELEASE_ARCHES.len()
+        })
+        .sum()
+}
+
+fn desktop_release_asset_basename<'a>(platform: &str, storage_filename: &'a str) -> &'a str {
+    if platform == "darwin" && storage_filename.eq_ignore_ascii_case("releases.json") {
+        "releases.json"
+    } else {
+        storage_filename
+    }
+}
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub(crate) struct DesktopReleaseAsset {
@@ -72,12 +189,7 @@ pub(crate) fn desktop_release_asset_name(
     if storage_filename.starts_with(&release_prefix) {
         return Ok(storage_filename.to_string());
     }
-    let release_filename =
-        if platform == "darwin" && storage_filename.eq_ignore_ascii_case("releases.json") {
-            "releases.json"
-        } else {
-            storage_filename
-        };
+    let release_filename = desktop_release_asset_basename(platform, storage_filename);
     Ok(format!(
         "{release_prefix}{platform_token}-{arch}-{release_filename}"
     ))
@@ -123,9 +235,10 @@ pub(crate) fn validate_desktop_release_descriptor(
     );
     parse_version_instant(version)
         .with_context(|| format!("Invalid desktop release descriptor version {version:?}"))?;
+    let route_count = desktop_release_route_count();
     ensure!(
-        descriptor.assets.len() == DESKTOP_RELEASE_ROUTE_COUNT,
-        "Desktop release descriptor must contain {DESKTOP_RELEASE_ROUTE_COUNT} routes, found {}",
+        descriptor.assets.len() == route_count,
+        "Desktop release descriptor must contain {route_count} routes, found {}",
         descriptor.assets.len()
     );
     let storage_prefix = format!("desktop/{channel}/");
@@ -216,19 +329,13 @@ pub(crate) fn validate_desktop_release_descriptor(
             );
         }
     }
+    let asset_count = desktop_release_asset_count();
     ensure!(
-        release_assets.len() == DESKTOP_RELEASE_ASSET_COUNT,
-        "Desktop release descriptor must contain {DESKTOP_RELEASE_ASSET_COUNT} unique release assets, found {}",
+        release_assets.len() == asset_count,
+        "Desktop release descriptor must contain {asset_count} unique release assets, found {}",
         release_assets.len()
     );
-    let expected_route_counts = BTreeMap::from([
-        ("darwin/arm64".to_string(), 4usize),
-        ("darwin/x64".to_string(), 4usize),
-        ("linux/arm64".to_string(), 4usize),
-        ("linux/x64".to_string(), 4usize),
-        ("win32/arm64".to_string(), 6usize),
-        ("win32/x64".to_string(), 6usize),
-    ]);
+    let expected_route_counts = desktop_release_route_inventory();
     ensure!(
         route_counts == expected_route_counts,
         "Desktop release descriptor route inventory mismatch: expected {expected_route_counts:?}, found {route_counts:?}"
@@ -1026,6 +1133,181 @@ fn desktop_channel(component: &str) -> Option<&str> {
 mod tests {
     use super::*;
     use anyhow::anyhow;
+
+    const SAMPLE_CHANNEL: &str = "canary";
+    const SAMPLE_VERSION: &str = "2026.913.210037";
+    const SAMPLE_SOURCE_SHA: &str = "0123456789abcdef0123456789abcdef01234567";
+
+    fn sample_storage_filenames(platform: &str, arch: &str, product: &str) -> Vec<String> {
+        let prefix = format!("{product}-{SAMPLE_VERSION}");
+        match platform {
+            "win32" => vec![
+                format!("{prefix}-portable-win-{arch}.zip"),
+                format!("{prefix}-win-{arch}.exe"),
+                "RELEASES".to_string(),
+                "releases.win.json".to_string(),
+                "assets.win.json".to_string(),
+                format!("{prefix}-win-{arch}-full.nupkg"),
+            ],
+            "darwin" => vec![
+                format!("{prefix}-mac-universal.dmg"),
+                format!("{prefix}-mac-universal.zip"),
+                "RELEASES.json".to_string(),
+                "releases.json".to_string(),
+            ],
+            "linux" => vec![
+                format!("{prefix}-linux-{arch}.AppImage"),
+                format!("{prefix}-linux-{arch}.deb"),
+                format!("{prefix}-linux-{arch}.rpm"),
+                format!("{prefix}-linux-{arch}.tar.gz"),
+            ],
+            other => panic!("unsupported desktop release platform {other:?}"),
+        }
+    }
+
+    fn sample_descriptor() -> DesktopReleaseDescriptor {
+        let product = desktop_release_product(SAMPLE_CHANNEL).unwrap();
+        let mut contents = BTreeMap::<String, (String, u64)>::new();
+        let mut assets = Vec::new();
+        for (platform, arch) in desktop_release_coordinates() {
+            for filename in sample_storage_filenames(platform, arch, product) {
+                let release_asset = desktop_release_asset_name(
+                    SAMPLE_CHANNEL,
+                    SAMPLE_VERSION,
+                    platform,
+                    arch,
+                    &filename,
+                )
+                .unwrap();
+                let ordinal = contents.len() as u64 + 1;
+                let (sha256, size) = contents
+                    .entry(release_asset.clone())
+                    .or_insert_with(|| (format!("{ordinal:064x}"), ordinal * 1024))
+                    .clone();
+                assets.push(DesktopReleaseAsset {
+                    storage_key: format!("desktop/{SAMPLE_CHANNEL}/{platform}/{arch}/{filename}"),
+                    release_asset,
+                    sha256,
+                    size,
+                });
+            }
+        }
+        DesktopReleaseDescriptor {
+            schema_version: DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION,
+            channel: SAMPLE_CHANNEL.to_string(),
+            version: SAMPLE_VERSION.to_string(),
+            release_tag: format!("fluxer-desktop-{SAMPLE_CHANNEL}@{SAMPLE_VERSION}"),
+            source_sha: SAMPLE_SOURCE_SHA.to_string(),
+            assets,
+        }
+    }
+
+    fn validate_sample(descriptor: &DesktopReleaseDescriptor) -> Result<()> {
+        validate_desktop_release_descriptor(
+            descriptor,
+            SAMPLE_CHANNEL,
+            SAMPLE_VERSION,
+            SAMPLE_SOURCE_SHA,
+        )
+    }
+
+    #[test]
+    fn the_release_inventory_is_the_one_the_publisher_stages() {
+        assert_eq!(
+            desktop_release_route_inventory(),
+            BTreeMap::from([
+                ("darwin/arm64".to_string(), 4usize),
+                ("darwin/x64".to_string(), 4usize),
+                ("linux/arm64".to_string(), 4usize),
+                ("linux/x64".to_string(), 4usize),
+                ("win32/arm64".to_string(), 6usize),
+                ("win32/x64".to_string(), 6usize),
+            ])
+        );
+        assert_eq!(desktop_release_route_count(), 28);
+        assert_eq!(desktop_release_asset_count(), 24);
+    }
+
+    #[test]
+    fn a_complete_desktop_release_validates() {
+        let descriptor = sample_descriptor();
+        assert_eq!(descriptor.assets.len(), desktop_release_route_count());
+        assert_eq!(
+            descriptor
+                .assets
+                .iter()
+                .map(|asset| asset.release_asset.as_str())
+                .collect::<BTreeSet<_>>()
+                .len(),
+            desktop_release_asset_count()
+        );
+        validate_sample(&descriptor).unwrap();
+    }
+
+    #[test]
+    fn the_two_macos_feed_names_and_the_universal_build_share_one_release_asset() {
+        let descriptor = sample_descriptor();
+        let asset_for = |storage_key_suffix: &str| {
+            descriptor
+                .assets
+                .iter()
+                .find(|asset| asset.storage_key.ends_with(storage_key_suffix))
+                .map(|asset| asset.release_asset.clone())
+                .unwrap()
+        };
+        assert_eq!(
+            asset_for("darwin/x64/RELEASES.json"),
+            asset_for("darwin/x64/releases.json")
+        );
+        assert_eq!(
+            asset_for("darwin/x64/Fluxer-Canary-2026.913.210037-mac-universal.dmg"),
+            asset_for("darwin/arm64/Fluxer-Canary-2026.913.210037-mac-universal.dmg")
+        );
+        assert_ne!(
+            asset_for("darwin/x64/RELEASES.json"),
+            asset_for("darwin/arm64/RELEASES.json")
+        );
+    }
+
+    #[test]
+    fn a_release_missing_a_route_is_refused() {
+        let mut descriptor = sample_descriptor();
+        descriptor.assets.pop().unwrap();
+        assert_eq!(
+            validate_sample(&descriptor).unwrap_err().to_string(),
+            "Desktop release descriptor must contain 28 routes, found 27"
+        );
+    }
+
+    #[test]
+    fn a_release_carrying_an_extra_route_is_refused() {
+        let mut descriptor = sample_descriptor();
+        let extra = DesktopReleaseAsset {
+            storage_key: format!("desktop/{SAMPLE_CHANNEL}/linux/x64/latest-linux.yml"),
+            release_asset: format!("Fluxer-Canary-{SAMPLE_VERSION}-linux-x64-latest-linux.yml"),
+            sha256: format!("{:064x}", 99u64),
+            size: 4096,
+        };
+        descriptor.assets.push(extra);
+        assert_eq!(
+            validate_sample(&descriptor).unwrap_err().to_string(),
+            "Desktop release descriptor must contain 28 routes, found 29"
+        );
+    }
+
+    #[test]
+    fn the_release_publishes_no_per_coordinate_manifest() {
+        for (platform, _) in desktop_release_coordinates() {
+            assert!(
+                !desktop_release_updater_feeds(platform)
+                    .unwrap()
+                    .contains(&"manifest.json")
+            );
+        }
+        for asset in sample_descriptor().assets {
+            assert!(!asset.storage_key.ends_with("/manifest.json"));
+        }
+    }
 
     #[test]
     fn retry_publish_retries_until_a_publish_succeeds() {
