@@ -35,7 +35,7 @@ import {
 } from '@aws-sdk/client-s3';
 import {Upload} from '@aws-sdk/lib-storage';
 import {getSignedUrl} from '@aws-sdk/s3-request-presigner';
-import type {S3ProviderSettings} from '@fluxer/config/src/S3DownloadsProvider';
+import type {S3ProviderSettings} from '@fluxer/config/src/S3ProviderSettings';
 import {isSupportedMediaContentType} from '@pkgs/mime_utils/src/ContentTypeUtils';
 import {seconds} from 'itty-time';
 import {temporaryFile} from 'tempy';

@@ -69,18 +69,9 @@ describe('OpenAPI generation from API controllers', () => {
 		expect(responses).not.toHaveProperty('204');
 	});
 
-	it.each([
-		'/dl/desktop/{channel}/{plat}/{arch}/latest/{format}',
-		'/dl/desktop/{channel}/{plat}/{arch}/{version}/{format}',
-	])('distinguishes streamed download bytes from bodyless redirects for %s', (path) => {
-		const responses = document.paths[path].get.responses;
-		for (const status of ['200', '206']) {
-			expect(responses[status].content).toEqual({
-				'*/*': {schema: {$ref: '#/components/schemas/DownloadFileResponse'}},
-			});
-		}
-		expect(responses['302']).toEqual({description: 'Success'});
-		expect(responses).not.toHaveProperty('204');
+	it('keeps every desktop download redirect out of the published document', () => {
+		const published = Object.keys(document.paths).filter((path) => path.startsWith('/dl'));
+		expect(published).toEqual([]);
 	});
 
 	it('publishes stream preview images as binary responses', () => {

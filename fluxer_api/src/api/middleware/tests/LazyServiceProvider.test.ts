@@ -28,7 +28,6 @@ const REQUEST_SERVICE_VARIABLES: ReadonlyArray<keyof HonoEnv['Variables']> = [
 	'contactChangeLogService',
 	'desktopHandoffService',
 	'discoveryService',
-	'downloadService',
 	'emailChangeService',
 	'emailService',
 	'embedService',

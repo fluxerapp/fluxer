@@ -6,7 +6,7 @@ description: Request format, body representations, shared headers, cross-origin 
 
 Use the HTTP API to read and change resources. Discover the base URL through [`/.well-known/fluxer`](/http-api/instance/#get-instance-discovery). Third-party clients use `endpoints.api_public`, and the first-party web application uses `endpoints.api_client`.
 
-Use `/v1`, the only API version. [Download stored object](/http-api/downloads/#download-stored-object) is unversioned and uses its documented root path.
+Use `/v1`, the only API version.
 
 Read resource limits from [instance discovery](/http-api/instance/#limit-keys). Attachment counts, expression counts and profile field lengths can differ between deployments.
 

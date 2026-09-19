@@ -240,7 +240,7 @@ export default defineConfig({
 				},
 				{
 					label: 'Client surfaces',
-					items: ['http-api/experiments', 'http-api/themes', 'http-api/downloads'],
+					items: ['http-api/experiments', 'http-api/themes'],
 				},
 				{
 					label: 'Safety',
@@ -256,6 +256,10 @@ export default defineConfig({
 						'gateway/limits-and-rate-limits',
 						'gateway/opcodes-and-close-codes',
 					],
+				},
+				{
+					label: 'Downloads',
+					items: ['downloads/overview', 'downloads/desktop', 'downloads/linux-repositories'],
 				},
 				{
 					label: 'Media proxy',

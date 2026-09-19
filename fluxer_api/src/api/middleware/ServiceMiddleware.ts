@@ -77,7 +77,6 @@ import {
 	getContactChangeLogService,
 	getDiscriminatorService,
 	getDonationRepository,
-	getDownloadService,
 	getEmailChangeRepository,
 	getEmailDnsValidationService,
 	getEmailService,
@@ -533,10 +532,6 @@ class RequestServices implements RequestScopedServices {
 
 	get contactChangeLogService() {
 		return getContactChangeLogService();
-	}
-
-	get downloadService() {
-		return getDownloadService();
 	}
 
 	get emailService() {

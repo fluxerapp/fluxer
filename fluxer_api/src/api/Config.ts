@@ -3,7 +3,6 @@
 import type {APIConfig, BlueskyOAuthConfig} from '@app/api/config/APIConfig';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import type {MasterConfig} from '@fluxer/config/src/MasterConfig';
-import {resolveDownloadsProvider} from '@fluxer/config/src/S3DownloadsProvider';
 import {parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
 import {parseGeoipSourceConfig, resolveGeoipRuntimeSourceConfig} from '@pkgs/geoip/src/GeoipStartup';
 
@@ -92,18 +91,6 @@ function normalizeIpBanExemptIps(values: Array<string>): Array<string> {
 	return Array.from(normalized);
 }
 
-function normalizeCountryCodes(values: Array<string>, configName: string): ReadonlySet<string> {
-	const normalized = new Set<string>();
-	for (const value of values) {
-		const countryCode = value.trim().toUpperCase();
-		if (!/^[A-Z]{2}$/u.test(countryCode)) {
-			throw new Error(`${configName} contains an invalid ISO 3166-1 alpha-2 country code: ${value}`);
-		}
-		normalized.add(countryCode);
-	}
-	return normalized;
-}
-
 function mapPushProviderApps(
 	apps:
 		| Array<{
@@ -157,7 +144,6 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 	const s3Buckets = s3Config.buckets ?? {
 		cdn: '',
 		uploads: '',
-		downloads: '',
 		reports: '',
 		harvests: '',
 	};
@@ -174,10 +160,6 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 		requestTimeoutMs: master.services.api.request_timeout_ms,
 		maxInflightRequests: master.services.api.max_inflight_requests,
 		ipBanExemptIps: normalizeIpBanExemptIps(master.services.api.ip_ban_exempt_ips),
-		desktopGitHubRedirectCountries: normalizeCountryCodes(
-			master.services.api.desktop_github_redirect_countries,
-			'FLUXER_API_DESKTOP_GITHUB_REDIRECT_COUNTRIES',
-		),
 		cassandra: {
 			hosts: cassandraSource?.hosts.join(',') ?? '',
 			port: cassandraSource?.port ?? 9042,
@@ -304,7 +286,6 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			cacheMinTtlSeconds: master.services.api.embeds.cache_min_ttl_seconds,
 			cacheRespectRemoteTtl: master.services.api.embeds.cache_respect_remote_ttl,
 		},
-		s3Downloads: resolveDownloadsProvider(master),
 		s3: {
 			endpoint: s3Config.endpoint,
 			presignedUrlBase: s3Config.presigned_url_base,
@@ -523,7 +504,6 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			validateResponses: resolveValidateResponses(master),
 		},
 		presignedAttachmentUploadsEnabled: master.services.api.presigned_attachment_uploads_enabled ?? false,
-		presignedDownloadsEnabled: master.services.api.presigned_downloads_enabled ?? false,
 		presignedHarvestDownloadsEnabled: master.services.api.presigned_harvest_downloads_enabled ?? true,
 		attachmentDecayEnabled: master.attachment_decay_enabled,
 		deletionGracePeriodHours: master.dev.test_mode_enabled ? 0.01 : master.deletion_grace_period_hours,

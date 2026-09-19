@@ -497,10 +497,6 @@ Default `fluxer`. Processed assets. `media-proxy` defaults to `cdn`.
 
 Default `fluxer-uploads`. Raw uploads. `media-proxy` defaults to `uploads`, `app-proxy` to `fluxer-uploads`.
 
-#### `FLUXER_S3_BUCKET_DOWNLOADS`
-
-Default `fluxer-downloads`. Desktop build artefacts. Read by `api` and `worker`.
-
 #### `FLUXER_S3_BUCKET_REPORTS`
 
 Default `fluxer-reports`. Abuse report evidence. Read by `api` and `worker`.
@@ -512,8 +508,6 @@ Default `fluxer-harvests`. Data archives. Read by `api` and `worker`.
 #### `FLUXER_S3_BUCKET_STATIC`
 
 Default `static`. Static assets. Read by `media-proxy` only in `static` mode, which the stack does not use. `api` and `worker` never read it, and `seaweedfs-init` does not create this bucket.
-
-A separate downloads provider is available. `FLUXER_S3_DOWNLOADS_ENDPOINT`, `FLUXER_S3_DOWNLOADS_PUBLIC_ENDPOINT`, `FLUXER_S3_DOWNLOADS_FORCE_PATH_STYLE`, `FLUXER_S3_DOWNLOADS_REGION`, `FLUXER_S3_DOWNLOADS_ACCESS_KEY_ID`, and `FLUXER_S3_DOWNLOADS_SECRET_ACCESS_KEY` take effect only when `FLUXER_S3_DOWNLOADS_ENDPOINT` is non-empty, and they then replace the primary configuration for the downloads bucket.
 
 The Media Proxy read path has overrides of its own. All are optional.
 
@@ -1137,10 +1131,6 @@ Default `336`. How long a deleted account is recoverable. Forced to 0.01 hours w
 
 Default `false`. Presigned attachment uploads. Compose sets `true`.
 
-#### `FLUXER_API_PRESIGNED_DOWNLOADS_ENABLED`
-
-Default `false`. Presigned downloads. Applies to the downloads bucket.
-
 #### `FLUXER_API_PRESIGNED_HARVEST_DOWNLOADS_ENABLED`
 
 Default `true`. Presigned harvest downloads. Applies to the harvests bucket.
@@ -1176,10 +1166,6 @@ Default `true`. Whether a remote cache header is honoured. Clamped by `FLUXER_AP
 #### `FLUXER_API_UNFURL_IGNORED_HOSTS`
 
 Default empty. Hosts never unfurled. Comma separated, unvalidated.
-
-#### `FLUXER_API_DESKTOP_GITHUB_REDIRECT_COUNTRIES`
-
-Default empty. Countries redirected to GitHub for desktop downloads. Each entry must be two uppercase letters or the API fails at boot.
 
 #### `FLUXER_TEST_MODE_ENABLED`
 

@@ -30,13 +30,10 @@ const LINUX_MANUAL_ARCH_TOKENS: Record<LinuxManualDownloadFormat, Record<LinuxDo
 	tar_gz: {x64: 'x64', arm64: 'arm64'},
 };
 
-const DEFAULT_API_ENDPOINTS: Record<DesktopDownloadChannel, string> = {
-	stable: 'https://api.fluxer.app',
-	canary: 'https://api.canary.fluxer.app',
-};
+const PACKAGE_ORIGIN_BASE = 'https://pkgs.fluxer.com';
 
 interface ParsedLinuxDownloadUrl {
-	apiEndpoint: string;
+	downloadBase: string;
 	channel: DesktopDownloadChannel;
 	arch: LinuxDownloadArch;
 	search: string;
@@ -47,7 +44,6 @@ export interface LinuxManualUpdateOptionsInput {
 	channel?: string | null;
 	arch?: string | null;
 	version?: string | null;
-	apiEndpoint?: string | null;
 	knownOptions?: ReadonlyArray<UpdaterDownloadOption>;
 }
 
@@ -71,14 +67,6 @@ function normalizeDesktopDownloadChannel(value: string | null | undefined): Desk
 	return value?.trim().toLowerCase() === 'canary' ? 'canary' : 'stable';
 }
 
-function normalizeApiEndpoint(value: string | null | undefined, channel: DesktopDownloadChannel): string {
-	const trimmed = value?.trim();
-	if (trimmed) {
-		return trimmed.replace(/\/+$/u, '');
-	}
-	return DEFAULT_API_ENDPOINTS[channel];
-}
-
 function parseLinuxDownloadUrl(value: string | null | undefined): ParsedLinuxDownloadUrl | null {
 	if (!value) {
 		return null;
@@ -86,22 +74,21 @@ function parseLinuxDownloadUrl(value: string | null | undefined): ParsedLinuxDow
 	try {
 		const parsed = new URL(value);
 		const segments = parsed.pathname.split('/').filter(Boolean);
-		const dlIndex = segments.findIndex((segment, index) => segment === 'dl' && segments[index + 1] === 'desktop');
-		if (dlIndex < 0) {
+		const start = segments.findIndex((segment, index) => segment === 'desktop' && segments[index + 2] === 'linux');
+		if (start < 0) {
 			return null;
 		}
-		const channel = normalizeDesktopDownloadChannel(segments[dlIndex + 2]);
-		const platform = segments[dlIndex + 3];
-		const arch = normalizeLinuxDownloadArch(segments[dlIndex + 4]);
-		const version = segments[dlIndex + 5];
-		const format = segments[dlIndex + 6];
-		if (platform !== 'linux' || !version || !format) {
+		const channel = normalizeDesktopDownloadChannel(segments[start + 1]);
+		const arch = normalizeLinuxDownloadArch(segments[start + 3]);
+		const version = segments[start + 4];
+		const format = segments[start + 5];
+		if (!version || !format) {
 			return null;
 		}
-		const endpointSegments = segments.slice(0, dlIndex);
-		const endpointPath = endpointSegments.length > 0 ? `/${endpointSegments.join('/')}` : '';
+		const prefix = segments.slice(0, start);
+		const prefixPath = prefix.length > 0 ? `/${prefix.join('/')}` : '';
 		return {
-			apiEndpoint: `${parsed.origin}${endpointPath}`,
+			downloadBase: `${parsed.origin}${prefixPath}`,
 			channel,
 			arch,
 			search: parsed.search,
@@ -146,14 +133,14 @@ function getKnownLinuxManualOption(
 }
 
 function buildLinuxDownloadUrl(params: {
-	apiEndpoint: string;
+	downloadBase: string;
 	channel: DesktopDownloadChannel;
 	arch: LinuxDownloadArch;
 	versionToken: string;
 	format: LinuxManualDownloadFormat;
 	search: string;
 }): string {
-	return `${params.apiEndpoint}/dl/desktop/${params.channel}/linux/${params.arch}/${params.versionToken}/${params.format}${params.search}`;
+	return `${params.downloadBase}/desktop/${params.channel}/linux/${params.arch}/${params.versionToken}/${params.format}${params.search}`;
 }
 
 function getModernProductName(channel: DesktopDownloadChannel): string {
@@ -175,7 +162,7 @@ export function buildLinuxManualUpdateOptions(input: LinuxManualUpdateOptionsInp
 	const parsedUrl = parseLinuxDownloadUrl(input.downloadUrl);
 	const channel = parsedUrl?.channel ?? normalizeDesktopDownloadChannel(input.channel);
 	const arch = normalizeLinuxDownloadArchOrNull(input.arch) ?? parsedUrl?.arch ?? 'x64';
-	const apiEndpoint = parsedUrl?.apiEndpoint ?? normalizeApiEndpoint(input.apiEndpoint, channel);
+	const downloadBase = parsedUrl?.downloadBase ?? PACKAGE_ORIGIN_BASE;
 	const search = parsedUrl?.search ?? '';
 	const version = input.version?.trim() ?? '';
 	const hasVersion = /^\d+\.\d+\.\d+$/u.test(version);
@@ -186,7 +173,7 @@ export function buildLinuxManualUpdateOptions(input: LinuxManualUpdateOptionsInp
 		return {
 			format,
 			label: LINUX_MANUAL_FORMAT_LABELS[format],
-			url: buildLinuxDownloadUrl({apiEndpoint, channel, arch, versionToken, format, search}),
+			url: buildLinuxDownloadUrl({downloadBase, channel, arch, versionToken, format, search}),
 			suggestedName: knownOption?.suggestedName ?? getSuggestedName(format, channel, arch, versionToken),
 			sha256: knownOption?.sha256 ?? null,
 		};

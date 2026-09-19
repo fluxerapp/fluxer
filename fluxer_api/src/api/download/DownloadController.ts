@@ -1,370 +1,75 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Readable} from 'node:stream';
-import {Config} from '@app/api/Config';
-import {resolveArtifactRoute} from '@app/api/download/DownloadRouting';
-import type {DesktopChecksumFile, DownloadService, DownloadStreamResult} from '@app/api/download/DownloadService';
-import {
-	DESKTOP_REDIRECT_PREFIX,
-	DOWNLOAD_PREFIX,
-	downloadCacheControlForKey,
-	UnsatisfiableRangeError,
-} from '@app/api/download/DownloadService';
-import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {DESKTOP_REDIRECT_PREFIX, DOWNLOAD_PREFIX, resolveDownloadRedirect} from '@app/api/download/DownloadRedirects';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
 import {
 	DesktopChecksumRedirectParam,
 	DesktopRedirectParam,
-	DesktopTestBuildQuery,
 	DesktopVersionedChecksumRedirectParam,
 	DesktopVersionedRedirectParam,
+	DesktopVersionedZsyncRedirectParam,
 	DesktopVersionsParam,
-	DesktopVersionsQuery,
-	DesktopVersionsResponse,
-	DownloadChecksumResponse,
-	DownloadFileResponse,
-	VersionInfoResponse,
+	DesktopZsyncRedirectParam,
 } from '@fluxer/schema/src/domains/download/DownloadSchemas';
 import type {Context, Hono} from 'hono';
 
-function artifactFilename(key: string, filenameOverride?: string): string {
-	return filenameOverride ?? key.split('/').pop() ?? 'download';
-}
-
-function artifactRedirectResponse(location: string, cacheControl = 'no-store'): Response {
+function redirectToPackageOrigin(ctx: Context<HonoEnv>): Response {
+	const redirect = resolveDownloadRedirect(ctx.req.path);
+	if (!redirect) {
+		return ctx.text('Not Found', 404);
+	}
 	return new Response(null, {
 		status: 302,
 		headers: new Headers({
-			Location: location,
-			'Cache-Control': cacheControl,
+			Location: redirect.location,
+			'Cache-Control': redirect.cacheControl,
 			'Accept-Ranges': 'bytes',
 		}),
 	});
-}
-
-function setCommonArtifactHeaders(
-	headers: Headers,
-	key: string,
-	cacheControl: string,
-	filenameOverride: string | undefined,
-	contentType: string | null | undefined,
-	contentDisposition: string | null | undefined,
-	etag: string | null | undefined,
-	lastModified: Date | null | undefined,
-): void {
-	const filename = artifactFilename(key, filenameOverride);
-	headers.set('Content-Type', contentType ?? 'application/octet-stream');
-	headers.set('Content-Disposition', contentDisposition ?? `attachment; filename="${encodeURIComponent(filename)}"`);
-	headers.set('Accept-Ranges', 'bytes');
-	headers.set('Cache-Control', cacheControl);
-	if (etag) {
-		headers.set('ETag', etag);
-	}
-	if (lastModified) {
-		headers.set('Last-Modified', lastModified.toUTCString());
-	}
-}
-
-async function headArtifactResponse(
-	ctx: Context<HonoEnv>,
-	downloadService: DownloadService,
-	key: string,
-	cacheControl: string,
-	filenameOverride?: string,
-): Promise<Response> {
-	const metadata = await downloadService.getDownloadMetadata({key});
-	if (!metadata) {
-		return ctx.text('Not Found', 404);
-	}
-	const headers = new Headers();
-	setCommonArtifactHeaders(
-		headers,
-		key,
-		cacheControl,
-		filenameOverride,
-		metadata.contentType,
-		undefined,
-		metadata.etag,
-		metadata.lastModified,
-	);
-	headers.set('Content-Length', String(metadata.contentLength));
-	return new Response(null, {status: 200, headers});
-}
-
-const PRESIGNED_DOWNLOAD_TTL_SECONDS = 900;
-
-async function streamArtifactResponse(
-	ctx: Context<HonoEnv>,
-	downloadService: DownloadService,
-	key: string,
-	cacheControl: string,
-	filenameOverride?: string,
-): Promise<Response> {
-	const route = await resolveArtifactRoute({request: ctx.req.raw, downloadService, key, cacheControl});
-	if (route.kind === 'redirect') {
-		return artifactRedirectResponse(route.location, route.cacheControl);
-	}
-	if (ctx.req.method === 'HEAD') {
-		return headArtifactResponse(ctx, downloadService, key, route.cacheControl, filenameOverride);
-	}
-	if (downloadService.isPresignedDownloadEnabled()) {
-		const location = await downloadService.getPresignedDownloadRedirect({
-			key,
-			filename: artifactFilename(key, filenameOverride),
-			expiresIn: PRESIGNED_DOWNLOAD_TTL_SECONDS,
-		});
-		if (!location) {
-			return ctx.text('Not Found', 404);
-		}
-		return artifactRedirectResponse(location);
-	}
-	const range = ctx.req.header('range') ?? undefined;
-	let result: DownloadStreamResult | null;
-	try {
-		result = await downloadService.streamDownload({key, range});
-	} catch (error) {
-		if (error instanceof UnsatisfiableRangeError) {
-			const headers = new Headers();
-			headers.set('Accept-Ranges', 'bytes');
-			headers.set('Content-Range', `bytes */${error.totalSize}`);
-			headers.set('Cache-Control', route.cacheControl);
-			return new Response(null, {status: 416, headers});
-		}
-		throw error;
-	}
-	if (!result) {
-		return ctx.text('Not Found', 404);
-	}
-	const headers = new Headers();
-	setCommonArtifactHeaders(
-		headers,
-		key,
-		route.cacheControl,
-		filenameOverride,
-		result.contentType,
-		result.contentDisposition,
-		result.etag,
-		result.lastModified,
-	);
-	headers.set('Content-Length', String(result.contentLength));
-	if (result.contentRange) {
-		headers.set('Content-Range', result.contentRange);
-	}
-	const body = Readable.toWeb(result.body) as ReadableStream;
-	return new Response(body, {status: result.contentRange ? 206 : 200, headers});
-}
-
-function checksumFileResponse(ctx: Context<HonoEnv>, checksum: DesktopChecksumFile, cacheControl: string): Response {
-	const headers = new Headers();
-	const body = ctx.req.method === 'HEAD' ? null : checksum.body;
-	headers.set('Content-Type', 'text/plain; charset=utf-8');
-	headers.set('Content-Disposition', `attachment; filename="${encodeURIComponent(`${checksum.filename}.sha256`)}"`);
-	headers.set('Cache-Control', cacheControl);
-	headers.set('Content-Length', String(new TextEncoder().encode(checksum.body).byteLength));
-	return new Response(body, {status: 200, headers});
 }
 
 export function DownloadController(routes: Hono<HonoEnv>): void {
 	routes.get(
 		`${DESKTOP_REDIRECT_PREFIX}/:channel/:plat/:arch/latest`,
 		Validator('param', DesktopVersionsParam),
-		Validator('query', DesktopTestBuildQuery),
-		OpenAPI({
-			operationId: 'get_latest_desktop_version',
-			summary: 'Get latest desktop version',
-			responseSchema: VersionInfoResponse,
-			statusCode: 200,
-			security: [],
-			tags: ['Downloads'],
-			description:
-				'Returns metadata for the latest desktop version including download URLs and SHA-256 checksums for all available formats. Pass ?test=1 to resolve against unreleased test builds.',
-		}),
-		async (ctx) => {
-			const {channel, plat, arch} = ctx.req.valid('param');
-			const {test} = ctx.req.valid('query');
-			const result = await ctx.get('downloadService').getLatestDesktopVersion({
-				channel,
-				plat,
-				arch,
-				baseUrl: Config.endpoints.apiClient,
-				test,
-			});
-			if (!result) {
-				return ctx.text('Not Found', 404);
-			}
-			return ctx.json(result, 200, {
-				'Cache-Control': 'public, max-age=300',
-			});
-		},
+		async (ctx) => redirectToPackageOrigin(ctx),
 	);
 	routes.on(
 		['GET', 'HEAD'],
 		`${DESKTOP_REDIRECT_PREFIX}/:channel/:plat/:arch/latest/:format{[a-z_]+\\.sha256}`,
 		Validator('param', DesktopChecksumRedirectParam),
-		Validator('query', DesktopTestBuildQuery),
-		OpenAPI({
-			operationId: 'download_latest_desktop_version_checksum',
-			summary: 'Download latest desktop version checksum',
-			responseSchema: DownloadChecksumResponse,
-			responseContentType: 'text/plain',
-			statusCode: 200,
-			security: [],
-			tags: ['Downloads'],
-			description:
-				'Returns a plain text SHA-256 checksum file for the latest available desktop application version. The format path segment must end in .sha256, for example appimage.sha256.',
-		}),
-		async (ctx) => {
-			const {channel, plat, arch, format} = ctx.req.valid('param');
-			const {test} = ctx.req.valid('query');
-			const checksum = await ctx
-				.get('downloadService')
-				.resolveLatestDesktopChecksumFile({channel, plat, arch, format, test});
-			if (!checksum) {
-				return ctx.text('Not Found', 404);
-			}
-			return checksumFileResponse(ctx, checksum, 'no-store');
-		},
+		async (ctx) => redirectToPackageOrigin(ctx),
+	);
+	routes.on(
+		['GET', 'HEAD'],
+		`${DESKTOP_REDIRECT_PREFIX}/:channel/:plat/:arch/latest/:format{[a-z_]+\\.zsync}`,
+		Validator('param', DesktopZsyncRedirectParam),
+		async (ctx) => redirectToPackageOrigin(ctx),
 	);
 	routes.on(
 		['GET', 'HEAD'],
 		`${DESKTOP_REDIRECT_PREFIX}/:channel/:plat/:arch/latest/:format`,
 		Validator('param', DesktopRedirectParam),
-		Validator('query', DesktopTestBuildQuery),
-		OpenAPI({
-			operationId: 'download_latest_desktop_version',
-			summary: 'Download latest desktop version',
-			responseSchema: DownloadFileResponse,
-			responseContentType: '*/*',
-			statusCode: [200, 206, 302],
-			bodylessStatusCodes: [302],
-			security: [],
-			tags: ['Downloads'],
-			description:
-				'Streams the latest available desktop application version for the specified platform and architecture. Pass ?test=1 to download an unreleased test build.',
-		}),
-		async (ctx) => {
-			const {channel, plat, arch, format} = ctx.req.valid('param');
-			const {test} = ctx.req.valid('query');
-			const downloadService = ctx.get('downloadService');
-			const key = await downloadService.resolveLatestDesktopKey({channel, plat, arch, format, test});
-			if (!key) {
-				return ctx.text('Not Found', 404);
-			}
-			return streamArtifactResponse(ctx, downloadService, key, 'no-store');
-		},
+		async (ctx) => redirectToPackageOrigin(ctx),
 	);
-	routes.get(
-		`${DESKTOP_REDIRECT_PREFIX}/:channel/:plat/:arch/versions`,
-		Validator('param', DesktopVersionsParam),
-		Validator('query', DesktopVersionsQuery),
-		OpenAPI({
-			operationId: 'list_desktop_versions',
-			summary: 'List desktop versions',
-			responseSchema: DesktopVersionsResponse,
-			statusCode: 200,
-			security: [],
-			tags: ['Downloads'],
-			description: 'Lists available desktop versions with pagination for the specified platform and architecture.',
-		}),
-		async (ctx) => {
-			const {channel, plat, arch} = ctx.req.valid('param');
-			const {limit, before, after, test} = ctx.req.valid('query');
-			const {versions, hasMore} = await ctx.get('downloadService').listDesktopVersions({
-				channel,
-				plat,
-				arch,
-				limit,
-				before,
-				after,
-				baseUrl: Config.endpoints.apiClient,
-				test,
-			});
-			return ctx.json({versions, has_more: hasMore}, 200, {
-				'Cache-Control': 'public, max-age=300',
-			});
-		},
+	routes.on(
+		['GET', 'HEAD'],
+		`${DESKTOP_REDIRECT_PREFIX}/:channel/:plat/:arch/:version/:format{[a-z_]+\\.zsync}`,
+		Validator('param', DesktopVersionedZsyncRedirectParam),
+		async (ctx) => redirectToPackageOrigin(ctx),
 	);
 	routes.on(
 		['GET', 'HEAD'],
 		`${DESKTOP_REDIRECT_PREFIX}/:channel/:plat/:arch/:version/:format{[a-z_]+\\.sha256}`,
 		Validator('param', DesktopVersionedChecksumRedirectParam),
-		Validator('query', DesktopTestBuildQuery),
-		OpenAPI({
-			operationId: 'download_desktop_version_checksum',
-			summary: 'Download desktop version checksum',
-			responseSchema: DownloadChecksumResponse,
-			responseContentType: 'text/plain',
-			statusCode: 200,
-			security: [],
-			tags: ['Downloads'],
-			description:
-				'Returns a plain text SHA-256 checksum file for a specific desktop application version. The format path segment must end in .sha256, for example appimage.sha256.',
-		}),
-		async (ctx) => {
-			const {channel, plat, arch, version, format} = ctx.req.valid('param');
-			const {test} = ctx.req.valid('query');
-			const checksum = await ctx
-				.get('downloadService')
-				.resolveVersionedDesktopChecksumFile({channel, plat, arch, version, format, test});
-			if (!checksum) {
-				return ctx.text('Not Found', 404);
-			}
-			return checksumFileResponse(ctx, checksum, downloadCacheControlForKey(checksum.key));
-		},
+		async (ctx) => redirectToPackageOrigin(ctx),
 	);
 	routes.on(
 		['GET', 'HEAD'],
 		`${DESKTOP_REDIRECT_PREFIX}/:channel/:plat/:arch/:version/:format`,
 		Validator('param', DesktopVersionedRedirectParam),
-		Validator('query', DesktopTestBuildQuery),
-		OpenAPI({
-			operationId: 'download_desktop_version',
-			summary: 'Download desktop version',
-			responseSchema: DownloadFileResponse,
-			responseContentType: '*/*',
-			statusCode: [200, 206, 302],
-			bodylessStatusCodes: [302],
-			security: [],
-			tags: ['Downloads'],
-			description:
-				'Streams a specific desktop application version for the given platform and architecture. Pass ?test=1 to download an unreleased test build.',
-		}),
-		async (ctx) => {
-			const {channel, plat, arch, version, format} = ctx.req.valid('param');
-			const {test} = ctx.req.valid('query');
-			const downloadService = ctx.get('downloadService');
-			const key = await downloadService.resolveVersionedDesktopKey({channel, plat, arch, version, format, test});
-			if (!key) {
-				return ctx.text('Not Found', 404);
-			}
-			return streamArtifactResponse(ctx, downloadService, key, downloadCacheControlForKey(key));
-		},
+		async (ctx) => redirectToPackageOrigin(ctx),
 	);
-	routes.on(
-		['GET', 'HEAD'],
-		`${DOWNLOAD_PREFIX}/*`,
-		Validator('query', DesktopTestBuildQuery),
-		OpenAPI({
-			operationId: 'download_file',
-			summary: 'Download file',
-			responseSchema: DownloadFileResponse,
-			responseContentType: '*/*',
-			statusCode: [200, 206, 302],
-			bodylessStatusCodes: [302],
-			security: [],
-			tags: ['Downloads'],
-			description:
-				'Streams the requested file from storage. Pass ?test=1 on a desktop/ path to resolve against the desktop-test/ bucket prefix instead.',
-		}),
-		async (ctx) => {
-			const {test} = ctx.req.valid('query');
-			const downloadService = ctx.get('downloadService');
-			const key = await downloadService.resolveDownloadKey({path: ctx.req.path, test});
-			if (!key) {
-				return ctx.text('Not Found', 404);
-			}
-			return streamArtifactResponse(ctx, downloadService, key, downloadCacheControlForKey(key));
-		},
-	);
+	routes.on(['GET', 'HEAD'], `${DOWNLOAD_PREFIX}/*`, async (ctx) => redirectToPackageOrigin(ctx));
 }

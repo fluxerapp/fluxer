@@ -25,13 +25,6 @@ export function createStorageService(): IStorageService {
 	return withChangeFeed(new StorageService());
 }
 
-export function createDownloadsStorageService(): IStorageService | null {
-	if (!Config.s3Downloads.isOverridden) {
-		return null;
-	}
-	return withChangeFeed(new StorageService(Config.s3Downloads.settings));
-}
-
 export async function shutdownStorageChangeFeed(): Promise<void> {
 	const feed = changeFeed;
 	changeFeed = null;

@@ -19,7 +19,6 @@ import type {ConnectionRequestService} from '@app/api/connection/ConnectionReque
 import type {ConnectionService} from '@app/api/connection/ConnectionService';
 import type {NcmecSubmissionService} from '@app/api/csam/NcmecSubmissionService';
 import type {DonationService} from '@app/api/donation/DonationService';
-import type {DownloadService} from '@app/api/download/DownloadService';
 import type {FavoriteMemeRequestService} from '@app/api/favorite_meme/FavoriteMemeRequestService';
 import type {FavoriteMemeService} from '@app/api/favorite_meme/FavoriteMemeService';
 import type {GatewayRequestService} from '@app/api/gateway/GatewayRequestService';
@@ -128,7 +127,6 @@ export interface HonoEnv {
 		connectionRequestService: ConnectionRequestService;
 		blueskyOAuthService: IBlueskyOAuthService;
 		donationService: DonationService;
-		downloadService: DownloadService;
 		streamPreviewService: StreamPreviewService;
 		streamService: StreamService;
 		emailService: IEmailService;

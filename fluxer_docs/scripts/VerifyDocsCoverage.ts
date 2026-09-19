@@ -75,6 +75,22 @@ const MAIN_SPEC_EXEMPT = new Map<string, {file: string; anchor: string; reason: 
 		},
 	],
 	[
+		'GET /dl/desktop/{}/{}/{}/latest/{}.zsync',
+		{
+			file: DOWNLOAD_CONTROLLER,
+			anchor: '`${DESKTOP_REDIRECT_PREFIX}/:channel/:plat/:arch/latest/:format{[a-z_]+\\\\.zsync}`,',
+			reason: 'the path constrains :format by regex and has no OpenAPI path template',
+		},
+	],
+	[
+		'GET /dl/desktop/{}/{}/{}/{}/{}.zsync',
+		{
+			file: DOWNLOAD_CONTROLLER,
+			anchor: '`${DESKTOP_REDIRECT_PREFIX}/:channel/:plat/:arch/:version/:format{[a-z_]+\\\\.zsync}`,',
+			reason: 'the path constrains :format by regex and has no OpenAPI path template',
+		},
+	],
+	[
 		'GET /dl/{}',
 		{
 			file: DOWNLOAD_CONTROLLER,
@@ -163,6 +179,18 @@ const EXEMPTION_RULES: ReadonlyArray<ExemptionRule> = [
 			{file: 'fluxer_api/src/api/test/TestHarnessController.ts', anchor: 'function ensureHarnessAccess'},
 		],
 		covers: (_shape, routePath) => routePath.startsWith('/test/'),
+	},
+	{
+		name: 'deprecated desktop download redirect',
+		justification:
+			'every /dl route is an undocumented deprecated redirect onto pkgs.fluxer.com, kept only for desktop clients already in the field. Nothing current calls one, so documenting them would advertise a path new callers must not use',
+		anchors: [
+			{
+				file: 'fluxer_api/src/api/download/DownloadController.ts',
+				anchor: 'function redirectToPackageOrigin',
+			},
+		],
+		covers: (_shape, routePath) => routePath === '/dl' || routePath.startsWith('/dl/'),
 	},
 	{
 		name: 'backported separately',
@@ -1637,27 +1665,15 @@ console.log('unthrottled routes and global bucket claims');
 	const problems: Array<string> = [];
 	const uniquePublic = [...new Set(publicUnthrottled)].sort();
 
-	const unthrottledByDesign = new Set([
-		'GET /dl/desktop/{}/{}/{}/latest',
-		'GET /dl/desktop/{}/{}/{}/latest/{}',
-		'GET /dl/desktop/{}/{}/{}/versions',
-		'GET /dl/desktop/{}/{}/{}/{}/{}',
-	]);
-	const unexpected = uniquePublic.filter((shape) => !unthrottledByDesign.has(shape));
-	const nowThrottled = [...unthrottledByDesign].filter((shape) => !uniquePublic.includes(shape)).sort();
+	const unexpected = uniquePublic;
 
 	if (unexpected.length > 0) {
 		problems.push(
-			`rate-limits.md says every HTTP API operation outside the desktop downloads declares a bucket, but ${unexpected.length.toString()} more declare none: ${unexpected.join(', ')}`,
+			`rate-limits.md says every HTTP API operation declares a bucket, but ${unexpected.length.toString()} declare none: ${unexpected.join(', ')}`,
 		);
 	}
-	if (nowThrottled.length > 0) {
-		problems.push(
-			`rate-limits.md names the desktop downloads as the only operations with no bucket, but ${nowThrottled.length.toString()} now declare one: ${nowThrottled.join(', ')}`,
-		);
-	}
-	if (!page.includes('[desktop download](/http-api/downloads/)')) {
-		problems.push('rate-limits.md no longer names the desktop downloads as the operations with no bucket');
+	if (!page.includes('Every HTTP API and Admin API operation declares a bucket')) {
+		problems.push('rate-limits.md no longer states that every operation declares a bucket');
 	}
 	if (adminUnthrottled.length > 0) {
 		const named = adminUnthrottled.map((entry) => `${entry.method} ${entry.route}`).sort();

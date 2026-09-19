@@ -18,7 +18,7 @@ A request also counts against the global bucket, unless its route bucket is decl
 
 These buckets are exempt, and each is the only bucket its route declares: `webhook:execute::webhook_id`, `webhook:message_get::webhook_id`, `webhook:message_edit::webhook_id`, `webhook:message_delete::webhook_id`, `webhook:github::webhook_id`, `webhook:instatus::webhook_id`, and `stripe:webhook`. Those routes draw on no global allowance. The `user:group_dm:create` and `user:group_dm:recipient:add` buckets are exempt as well. Each is a second bucket on a route whose first bucket is not exempt, so both routes still draw on the global allowance.
 
-Every HTTP API and Admin API operation declares a bucket, apart from the [desktop download](/http-api/downloads/) routes, which declare none. A caller that sends no credential on a [Bluesky client document](/http-api/connections/#get-bluesky-client-metadata) is keyed by the client IP address.
+Every HTTP API and Admin API operation declares a bucket. A caller that sends no credential on a [Bluesky client document](/http-api/connections/#get-bluesky-client-metadata) is keyed by the client IP address.
 
 The global window is one second. The default allowance is 50 requests per second, and an account holding the [`HIGH_GLOBAL_RATE_LIMIT`](/admin-api/users/#account-flags) flag receives 1,200 requests per second instead. The [`RATE_LIMIT_BYPASS`](/admin-api/users/#account-flags) flag exempts an account from the global bucket and from every route bucket. A successful response to that account has no rate limit header.
 

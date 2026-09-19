@@ -2,7 +2,6 @@
 
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import type {CachePurgeAdapterName} from '@fluxer/config/src/MasterConfig';
-import type {ResolvedDownloadsProvider} from '@fluxer/config/src/S3DownloadsProvider';
 
 export type APIWorkerMode = 'all_lanes' | 'single_lane' | 'single_task';
 export type APIWorkerLaneName = 'realtime' | 'unfurl' | 'lifecycle' | 'batch';
@@ -48,7 +47,6 @@ export interface APIConfig {
 	requestTimeoutMs: number;
 	maxInflightRequests: number;
 	ipBanExemptIps: Array<string>;
-	desktopGitHubRedirectCountries: ReadonlySet<string>;
 	cassandra: {
 		hosts: string;
 		port: number;
@@ -171,10 +169,8 @@ export interface APIConfig {
 			uploads: string;
 			reports: string;
 			harvests: string;
-			downloads: string;
 		};
 	};
-	s3Downloads: ResolvedDownloadsProvider;
 	email: {
 		enabled: boolean;
 		provider: 'smtp' | 'none';
@@ -368,7 +364,6 @@ export interface APIConfig {
 		validateResponses: boolean;
 	};
 	presignedAttachmentUploadsEnabled: boolean;
-	presignedDownloadsEnabled: boolean;
 	presignedHarvestDownloadsEnabled: boolean;
 	attachmentDecayEnabled: boolean;
 	deletionGracePeriodHours: number;
