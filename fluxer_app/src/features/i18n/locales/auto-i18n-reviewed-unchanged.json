@@ -140,6 +140,9 @@
         "msgid": "user@example.com"
       },
       {
+        "msgid": "{frameRate} FPS"
+      },
+      {
         "msgid": "{kilobits} kbps"
       },
       {
@@ -1165,6 +1168,9 @@
         "msgid": "{fps} FPS"
       },
       {
+        "msgid": "{frameRate} FPS"
+      },
+      {
         "msgid": "{kilobits} kbps"
       },
       {
@@ -1402,6 +1408,9 @@
         "msgid": "A lower price is available. Switching takes effect on <0>{listPriceEffectiveDate}</0> and changes nothing else."
       },
       {
+        "msgid": "A viewer cannot play {pinnedCodec}, so your stream uses {codec}."
+      },
+      {
         "msgid": "AV1"
       },
       {
@@ -1568,6 +1577,9 @@
       },
       {
         "msgid": "Capture card"
+      },
+      {
+        "msgid": "Capture devices use the Gaming preset."
       },
       {
         "msgid": "Capture entire system audio"
@@ -2140,6 +2152,9 @@
         "msgid": "No displays found"
       },
       {
+        "msgid": "No hardware encoder was found on this device, so Prefer hardware works like Automatic."
+      },
+      {
         "msgid": "No optional services are available on this instance. You can skip this step."
       },
       {
@@ -2527,6 +2542,9 @@
         "msgid": "Send messages in this channel."
       },
       {
+        "msgid": "Sending {resolution} at {frameRate} FPS with {codec}"
+      },
+      {
         "msgid": "Sends both channels of a stereo microphone. Works only with no suppression or standard suppression."
       },
       {
@@ -2558,6 +2576,9 @@
       },
       {
         "msgid": "Set a member list position for the role."
+      },
+      {
+        "msgid": "Set by the {preset} preset. Picking a value here switches to Custom."
       },
       {
         "msgid": "Set mature content to follow the community setting."
@@ -2632,6 +2653,9 @@
         "msgid": "Set this check aside?"
       },
       {
+        "msgid": "Set to send {resolution} at {frameRate} FPS with {codec}"
+      },
+      {
         "msgid": "Set up {productName}"
       },
       {
@@ -2651,6 +2675,12 @@
       },
       {
         "msgid": "Shared window audio"
+      },
+      {
+        "msgid": "Sharp text at 720p, up to 30 FPS"
+      },
+      {
+        "msgid": "Sharp text at up to 4K, up to 15 FPS"
       },
       {
         "msgid": "Sharper text at 720p, 30 FPS"
@@ -2710,7 +2740,16 @@
         "msgid": "Slowmode is set to {durationLabel}. Wait before sending another message."
       },
       {
+        "msgid": "Smooth 30 FPS at up to 720p"
+      },
+      {
+        "msgid": "Smooth 60 FPS at up to 1440p"
+      },
+      {
         "msgid": "Smoother video"
+      },
+      {
+        "msgid": "Some stream settings could not be applied to your live stream."
       },
       {
         "msgid": "Something is limiting this stream, so viewers are getting fewer frames than you asked for."
@@ -2776,6 +2815,9 @@
         "msgid": "Stream quality"
       },
       {
+        "msgid": "Stream settings were adjusted"
+      },
+      {
         "msgid": "Strongest neural filter for speech, limits audio to the speech range."
       },
       {
@@ -2813,6 +2855,9 @@
       },
       {
         "msgid": "The ban was set to expire on {date}."
+      },
+      {
+        "msgid": "The browser is sending {deliveredResolution} instead of {resolution}."
       },
       {
         "msgid": "The camera preview is still stopping. Try streaming again in a moment."
@@ -2887,6 +2932,9 @@
         "msgid": "These options change how people use the instance. Some can only be chosen during setup."
       },
       {
+        "msgid": "This device could not keep up with {targetResolution} at {targetFrameRate} FPS last time, so your stream started at {resolution} at {frameRate} FPS."
+      },
+      {
         "msgid": "This emoji is from"
       },
       {
@@ -2939,6 +2987,9 @@
       },
       {
         "msgid": "Transferred community ownership to {user}."
+      },
+      {
+        "msgid": "Try full quality again"
       },
       {
         "msgid": "Turn off audio sharing for this source or try again in a moment."
@@ -3004,6 +3055,9 @@
         "msgid": "Use your operating system's spellchecker when available. Otherwise, use {productName}'s in-app dictionaries."
       },
       {
+        "msgid": "Used in Custom mode. The Gaming and Screen share presets set their own hint."
+      },
+      {
         "msgid": "Virtual microphone"
       },
       {
@@ -3040,6 +3094,9 @@
         "msgid": "Wordmark"
       },
       {
+        "msgid": "You asked for {resolution} at {frameRate} FPS"
+      },
+      {
         "msgid": "You can still email {supportEmail} for a human review at any time."
       },
       {
@@ -3055,10 +3112,37 @@
         "msgid": "Your account works normally again straight away and nothing is removed. We can ask for this check again later."
       },
       {
+        "msgid": "Your capture device is sending {deliveredResolution} instead of {resolution}."
+      },
+      {
         "msgid": "Your carrier says this number isn't in service. Check it and try again, or contact support if it's correct."
       },
       {
+        "msgid": "Your connection cannot keep up. Viewers get about {deliveredFrameRate} of {frameRate} FPS at {resolution}."
+      },
+      {
+        "msgid": "Your connection cannot keep up. Your stream is set to {frameRate} FPS at {resolution} and viewers are getting about {deliveredFrameRate} FPS."
+      },
+      {
+        "msgid": "Your device cannot keep up. Viewers get about {deliveredFrameRate} of {frameRate} FPS at {resolution}."
+      },
+      {
+        "msgid": "Your device cannot keep up. Your stream is set to {frameRate} FPS at {resolution} and viewers are getting about {deliveredFrameRate} FPS."
+      },
+      {
+        "msgid": "Your device could not keep up, so your stream now sends {frameRate} FPS to keep {resolution} sharp."
+      },
+      {
+        "msgid": "Your device could not keep up, so your stream now sends {resolution} to keep {frameRate} FPS smooth."
+      },
+      {
         "msgid": "Your new nickname, or leave blank to reset it."
+      },
+      {
+        "msgid": "Your saved {savedResolution} at {savedFrameRate} FPS needs {premiumProductName}, so shares use {resolution} at {frameRate} FPS."
+      },
+      {
+        "msgid": "Your source is producing about {sourceFrameRate} FPS"
       },
       {
         "msgid": "Your subscription can't move to the new price right now."
@@ -3068,6 +3152,9 @@
       },
       {
         "msgid": "Your subscription still ends on <0>{cancelDate}</0>. The current price is now {listPriceNewLabel}. If you reactivate, you can switch to it from here."
+      },
+      {
+        "msgid": "Your video encoder stopped, so your stream switched to {codec}."
       },
       {
         "msgid": "deleted-category"
@@ -3565,6 +3652,9 @@
         "msgid": "{channelHeading}, {mentionCount, plural, one {# mention} other {# mentions}}"
       },
       {
+        "msgid": "{codec} cannot keep up on this device. Set the codec to Automatic in Advanced settings to allow a faster one."
+      },
+      {
         "msgid": "{count, plural, =0 {∞ No limit} one {# participant} other {# participants}}"
       },
       {
@@ -3595,10 +3685,16 @@
         "msgid": "{expressionName} is a custom sticker from this community. Members can use it here."
       },
       {
+        "msgid": "{frameRate} FPS"
+      },
+      {
         "msgid": "{imageCount, plural, one {# image} other {# images}}, {videoCount, plural, one {# video} other {# videos}}"
       },
       {
         "msgid": "{name} copy"
+      },
+      {
+        "msgid": "{pinnedCodec} is not available on this device, so your stream uses {codec}."
       },
       {
         "msgid": "{premiumProductName} costs less now. Switch from {currentPrice} to {newPrice} a month starting {effectiveDate}, and nothing is charged today."
@@ -3937,6 +4033,9 @@
         "msgid": "{fps} FPS"
       },
       {
+        "msgid": "{frameRate} FPS"
+      },
+      {
         "msgid": "{kilobits} kbps"
       },
       {
@@ -4145,6 +4244,9 @@
         "msgid": "{fps} FPS"
       },
       {
+        "msgid": "{frameRate} FPS"
+      },
+      {
         "msgid": "{kilobits} kbps"
       },
       {
@@ -4313,6 +4415,9 @@
       },
       {
         "msgid": "{fps} FPS"
+      },
+      {
+        "msgid": "{frameRate} FPS"
       },
       {
         "msgid": "{kilobits} kbps"
@@ -4916,6 +5021,9 @@
         "msgid": "user@example.com"
       },
       {
+        "msgid": "{frameRate} FPS"
+      },
+      {
         "msgid": "{messageGroupSpacing}px"
       },
       {
@@ -5164,6 +5272,9 @@
       },
       {
         "msgid": "{fps} FPS"
+      },
+      {
+        "msgid": "{frameRate} FPS"
       },
       {
         "msgid": "{kilobits} kbps"
@@ -5653,6 +5764,9 @@
         "msgid": "{fps} FPS"
       },
       {
+        "msgid": "{frameRate} FPS"
+      },
+      {
         "msgid": "{kilobits} kbps"
       },
       {
@@ -6001,6 +6115,9 @@
         "msgid": "{fps} FPS"
       },
       {
+        "msgid": "{frameRate} FPS"
+      },
+      {
         "msgid": "{kilobits} kbps"
       },
       {
@@ -6159,6 +6276,9 @@
         "msgid": "{fps} FPS"
       },
       {
+        "msgid": "{frameRate} FPS"
+      },
+      {
         "msgid": "{kilobits} kbps"
       },
       {
@@ -6251,6 +6371,9 @@
         "msgid": "{fps} FPS"
       },
       {
+        "msgid": "{frameRate} FPS"
+      },
+      {
         "msgid": "{messageGroupSpacing}px"
       },
       {
@@ -6323,6 +6446,9 @@
       },
       {
         "msgid": "{fps} FPS"
+      },
+      {
+        "msgid": "{frameRate} FPS"
       },
       {
         "msgid": "{kilobits} kbps"
@@ -7605,6 +7731,9 @@
         "msgid": "{fps} FPS"
       },
       {
+        "msgid": "{frameRate} FPS"
+      },
+      {
         "msgid": "{kilobits} kbps"
       },
       {
@@ -7966,6 +8095,9 @@
       },
       {
         "msgid": "{fps} FPS"
+      },
+      {
+        "msgid": "{frameRate} FPS"
       },
       {
         "msgid": "{kilobits} kbps"
@@ -8660,6 +8792,9 @@
         "msgid": "{fps} FPS"
       },
       {
+        "msgid": "{frameRate} FPS"
+      },
+      {
         "msgid": "{kilobits} kbps"
       },
       {
@@ -8954,6 +9089,9 @@
         "msgid": "{fps} FPS"
       },
       {
+        "msgid": "{frameRate} FPS"
+      },
+      {
         "msgid": "{kilobits} kbps"
       },
       {
@@ -9161,6 +9299,9 @@
       },
       {
         "msgid": "{fps} FPS"
+      },
+      {
+        "msgid": "{frameRate} FPS"
       },
       {
         "msgid": "{kilobits} kbps"

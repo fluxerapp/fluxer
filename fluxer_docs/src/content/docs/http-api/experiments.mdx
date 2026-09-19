@@ -1,12 +1,12 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Experiments
-description: The experiment assignments envelope, the revalidation and polling contract, and the noise suppression experiment.
+description: The experiment assignments envelope, the revalidation and polling contract, and the experiments this server defines.
 ---
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-An experiment is an instance-wide rollout that an operator configures. For each account, Fluxer works out from that configuration whether the account is in the rollout and which settings the account receives. The single route on this page resolves every experiment the server defines and returns them in one envelope, together with the polling cadence they share. `voice_noise_suppression` is the only experiment defined today, and [Voice](/voice/) defines the placement protocol its assignment applies to.
+An experiment is an instance-wide rollout that an operator configures. For each account, Fluxer works out from that configuration whether the account is in the rollout and which settings the account receives. The single route on this page resolves every experiment the server defines and returns them in one envelope, together with the polling cadence they share. This server defines `voice_noise_suppression`, whose placement protocol [Voice](/voice/) defines, and `screen_share_delivery`, which selects whether a client adapts its own screen share after it starts.
 
 Every assignment is advice. A client that ignores one behaves as it does with the rollout off, and no route and no Gateway event reports what a client actually ran.
 
@@ -33,10 +33,11 @@ One entry per experiment. The envelope reports this object even when it is empty
 | Field | Type | Description |
 | --- | --- | --- |
 | voice_noise_suppression? | [noise suppression assignment](#noise-suppression-assignment-object) object | The caller's noise suppression assignment |
+| screen_share_delivery? | [screen share delivery assignment](#screen-share-delivery-assignment-object) object | The caller's screen share delivery assignment |
 
 Ignore unknown experiments and treat a missing experiment as off.
 
-This server version writes `voice_noise_suppression` on every response, including while the rollout is disabled. The disabled value is the first [resolution outcome](#resolution-outcomes) below, which reports `enabled` false and the stored `config_version`, so a client that compares `config_version` with the value from its previous response can see that an operator saved the noise suppression configuration, even while the rollout stays disabled, and needs no second request for it.
+This server version writes `voice_noise_suppression` and `screen_share_delivery` on every response, including while a rollout is disabled. The disabled value is the first [resolution outcome](#resolution-outcomes) below, which reports `enabled` false and the stored `config_version`, so a client that compares `config_version` with the value from its previous response can see that an operator saved the configuration, even while the rollout stays disabled, and needs no second request for it.
 
 ## Noise suppression backends
 
@@ -101,6 +102,33 @@ One backend replacement scoped to one guild. While the caller is connected to a 
 | backend | string | The [backend](#noise-suppression-backends) to run in that guild |
 
 An override naming a backend that is absent from `enabled_backends` is dropped before the response is written, so every entry is runnable.
+
+## Screen share delivery assignment object
+
+One resolution of the instance screen share delivery rollout against one account. Every field is present whenever the key is written.
+
+The rollout selects whether a client adapts its own screen share after the share starts. A drawn client measures what its encoder sends, steps the share down a resolution and frame rate ladder while the encoder cannot keep up, probes back up when it can, remembers the rung it settled on for each codec, and reports what is going out to the sharer. A client that is not drawn publishes the target the account's settings ask for and holds it for the life of the share. Both arms recover a screen share whose encoder stalls. Neither arm changes what the API returns, and no route reports which arm a client ran.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | boolean | Whether the rollout is running on this instance |
+| config_version | integer | The revision of the instance configuration this assignment was resolved from |
+| user_targeted | boolean | Whether the caller is inside the rollout |
+| source | ?string | Which rule targeted the caller, one of `user_rule` or `canary`, and null where the caller is not targeted |
+
+### Delivery resolution outcomes
+
+The outcomes below set `user_targeted` to false, and they differ in what else they report.
+
+1. The rollout is off. `enabled` is false and `source` is null.
+2. The operator has excluded the caller. `enabled` is true and `source` is null.
+3. The caller was not drawn. `enabled` is true and `source` is null.
+
+A caller is drawn either by the operator's allowlist, which sets `source` to `user_rule`, or by the sampled share of the account population, which sets `source` to `canary`. The blocklist is read before the allowlist, so an account named in both is not drawn.
+
+`config_version` reports the stored revision in all outcomes, the rollout being off included. A client branches on `user_targeted` alone, and reads the assignment once when a share starts rather than while one is running.
 
 ## Get experiment assignments
 

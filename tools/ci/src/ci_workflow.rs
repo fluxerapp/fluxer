@@ -55,6 +55,11 @@ pub async fn run_ci(args: CiArgs) -> Result<()> {
             run_generators(&root, false)?;
             run_app_test_artifact_generators(&root, AppWasm::ReuseIfPresent)?;
             run_workspace_tests(&root)?;
+            run_command(
+                CommandSpec::new("pnpm")
+                    .args(["--filter", "fluxer_desktop", "test:main"])
+                    .current_dir(&root),
+            )?;
             run_command(with_test_env(
                 CommandSpec::new("pnpm")
                     .args(["--filter", "fluxer_api", "test"])

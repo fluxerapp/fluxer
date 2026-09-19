@@ -24,12 +24,15 @@ import {selectLocalParticipantControlsViewState} from '@app/features/voice/compo
 import {logger} from '@app/features/voice/components/voice_connection_status/shared';
 import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
 import {VOICE_CAMERA_USER_LIMIT_REACHED_DESCRIPTOR} from '@app/features/voice/engine/media_engine_facade/shared';
+import {resolveScreenShareDeliveryNoticeTone} from '@app/features/voice/engine/ScreenShareUnderperformance';
 import type {LivekitParticipantSnapshot} from '@app/features/voice/engine/VoiceParticipantStateMachine';
 import {useCameraUserCapBlocked} from '@app/features/voice/hooks/useCameraUserCapBlocked';
 import {useMediaDevices} from '@app/features/voice/hooks/useMediaDevices';
 import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
+import ScreenShareDelivery from '@app/features/voice/state/ScreenShareDelivery';
 import {resolveDisplayShareEnvironment} from '@app/features/voice/utils/ScreenShareEnvironment';
 import {
+	formatScreenShareDeliveryNotice,
 	VOICE_SHARE_SCREEN_DESCRIPTOR,
 	VOICE_TURN_ON_CAMERA_DESCRIPTOR,
 } from '@app/features/voice/utils/VoiceMessageDescriptors';
@@ -82,12 +85,14 @@ export const LocalParticipantControls = observer(() => {
 	const guildId = MediaEngine.guildId;
 	const canStream = !guildId || !channelId || Permission.can(Permissions.STREAM, {channelId});
 	const isCameraUserCapReached = useCameraUserCapBlocked(isCameraEnabled);
+	const screenShareNotice = ScreenShareDelivery.notice;
 	const controlState = selectLocalParticipantControlsViewState({
 		isConnected,
 		canStream,
 		isCameraEnabled,
 		isCameraUserCapReached,
 		isScreenShareEnabled,
+		screenShareNoticeTone: screenShareNotice === null ? null : resolveScreenShareDeliveryNoticeTone(screenShareNotice),
 	});
 	const cameraControlState = controlState.camera;
 	const screenShareControlState = controlState.screenShare;
@@ -195,6 +200,10 @@ export const LocalParticipantControls = observer(() => {
 				return i18n._(VOICE_SHARE_SCREEN_DESCRIPTOR);
 		}
 	})();
+	const screenShareTooltip =
+		screenShareControlState.showsNotice && screenShareNotice
+			? formatScreenShareDeliveryNotice(i18n, screenShareNotice)
+			: screenShareLabel;
 	return (
 		<>
 			<Tooltip text={cameraLabel} data-flx="voice.voice-connection-status.local-participant-controls.tooltip">
@@ -229,7 +238,7 @@ export const LocalParticipantControls = observer(() => {
 					</button>
 				</FocusRing>
 			</Tooltip>
-			<Tooltip text={screenShareLabel} data-flx="voice.voice-connection-status.local-participant-controls.tooltip--2">
+			<Tooltip text={screenShareTooltip} data-flx="voice.voice-connection-status.local-participant-controls.tooltip--2">
 				<FocusRing
 					offset={-2}
 					enabled={!screenShareControlState.disabled}
@@ -264,6 +273,12 @@ export const LocalParticipantControls = observer(() => {
 							className={styles.mediaIcon}
 							data-flx="voice.voice-connection-status.local-participant-controls.media-icon--3"
 						/>
+						{screenShareControlState.showsNoticeDot && (
+							<span
+								className={styles.noticeDot}
+								data-flx="voice.voice-connection-status.local-participant-controls.notice-dot"
+							/>
+						)}
 					</button>
 				</FocusRing>
 			</Tooltip>

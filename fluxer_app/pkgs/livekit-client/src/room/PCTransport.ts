@@ -10,7 +10,7 @@ import log, {getLogger, LoggerNames} from '../logger.ts';
 import {debounce} from './debounce.ts';
 import {NegotiationError, UnexpectedConnectionState} from './errors.ts';
 import type {LoggerOptions} from './types.ts';
-import {ddExtensionURI, isFireFox, isSafari, isSVCCodec} from './utils.ts';
+import {ddExtensionURI, isChromiumBased, isFireFox, isSafari, isSVCCodec} from './utils.ts';
 
 export interface TrackBitrateInfo {
 	cid?: string;
@@ -372,6 +372,9 @@ export default class PCTransport extends (EventEmitter as new () => TypedEmitter
 				if (media.type === 'audio') {
 					ensureAudioNackAndStereo(media, stereoMids, []);
 				} else if (media.type === 'video') {
+					if (isChromiumBased() && videoSectionCanReceiveAV1(media)) {
+						this.ddExtID = ensureVideoDDExtension(media, sdpParsed, this.ddExtID);
+					}
 					this.trackBitrates.some((trackbr): boolean => {
 						if (!trackbr.cid) {
 							return false;
@@ -675,6 +678,11 @@ export function ensureVideoDDExtension(
 		});
 	}
 	return id;
+}
+
+export function videoSectionCanReceiveAV1(media: MediaDescription): boolean {
+	if (media.direction !== 'recvonly' && media.direction !== 'sendrecv') return false;
+	return media.rtp.some((rtp) => rtp.codec.toLowerCase() === 'av1');
 }
 
 function ddExtensionIDFor(sdp: SessionDescription, cachedID: number): number | undefined {

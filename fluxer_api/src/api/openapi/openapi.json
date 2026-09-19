@@ -27436,7 +27436,8 @@
 					"assignments": {
 						"type": "object",
 						"properties": {
-							"voice_noise_suppression": {"$ref": "#/components/schemas/VoiceNoiseSuppressionAssignmentResponse"}
+							"voice_noise_suppression": {"$ref": "#/components/schemas/VoiceNoiseSuppressionAssignmentResponse"},
+							"screen_share_delivery": {"$ref": "#/components/schemas/ScreenShareDeliveryAssignmentResponse"}
 						},
 						"additionalProperties": false
 					}
@@ -31029,6 +31030,17 @@
 				"additionalProperties": false
 			},
 			"DonationCurrency": {"type": "string", "enum": ["usd", "eur", "brl", "inr", "pln", "try", "sek", "dkk", "nok"]},
+			"ScreenShareDeliveryAssignmentResponse": {
+				"type": "object",
+				"properties": {
+					"enabled": {"type": "boolean"},
+					"config_version": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991},
+					"user_targeted": {"type": "boolean"},
+					"source": {"anyOf": [{"type": "string", "enum": ["user_rule", "canary"]}, {"type": "null"}]}
+				},
+				"required": ["enabled", "config_version", "user_targeted", "source"],
+				"additionalProperties": false
+			},
 			"VoiceNoiseSuppressionAssignmentResponse": {
 				"type": "object",
 				"properties": {

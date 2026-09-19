@@ -130,6 +130,7 @@ import type {VoiceEngineV2AppScreenShareControllerGateway} from '@app/features/v
 import voiceEngineV2AppScreenShareExecutionAdapter, {
 	type DeviceScreenShareCaptureOptions,
 	type ScreenShareReconnectSnapshot,
+	shouldRestoreScreenShareAfterReconnect,
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter';
 import {selectVoiceEngineV2AppIntentSelfMuteForVoiceStatePayload} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectors';
 import {VoiceEngineV2AppSourceLifecycleBridge} from '@app/features/voice/engine/v2/VoiceEngineV2AppSourceLifecycleBridge';
@@ -804,10 +805,7 @@ class MediaEngineFacade extends Store {
 		room: Room | null;
 		restoreCamera: boolean;
 		restoreStream: boolean;
-		restoreStreamFromSnapshot: (() => Promise<boolean>) | null;
-		streamSnapshotFallback: boolean;
-		streamPlaySound: boolean;
-		settleStreamStateWhenNotRestored: boolean;
+		screenShareSnapshot: ScreenShareReconnectSnapshot | null;
 		toastWhenStreamNotRestored: boolean;
 	}): Promise<void> {
 		assert.equal(typeof args.restoreCamera, 'boolean', 'restoreLocalMedia requires a camera flag');
@@ -822,30 +820,20 @@ class MediaEngineFacade extends Store {
 				logger.warn('Failed to restore camera during local media restore', {reason: args.reason, error});
 			}
 		}
-		if (!args.restoreStream) return;
+		if (!shouldRestoreScreenShareAfterReconnect(args.restoreStream, args.screenShareSnapshot)) return;
 		let restored = false;
-		if (args.restoreStreamFromSnapshot) {
-			restored = await args.restoreStreamFromSnapshot();
-			if (!restored && !args.streamSnapshotFallback) {
-				voiceEngineV2AppMediaStateAdapter.applyScreenShareState(false, {sendUpdate: false});
-				return;
-			}
-		}
 		let streamRestoreFailed = false;
-		if (!restored) {
-			try {
-				await voiceEngineV2AppScreenShareExecutionAdapter.setScreenShareEnabled(args.room, true, {
-					sendUpdate: false,
-					...(args.streamPlaySound ? {} : {playSound: false}),
-				});
-				restored = LocalVoiceState.getSelfStream();
-			} catch (error) {
-				streamRestoreFailed = true;
-				logger.warn('Failed to restore screen share during local media restore', {reason: args.reason, error});
-			}
+		try {
+			restored = await voiceEngineV2AppScreenShareExecutionAdapter.restoreScreenShareAfterReconnect(
+				args.room,
+				args.screenShareSnapshot,
+			);
+		} catch (error) {
+			streamRestoreFailed = true;
+			logger.warn('Failed to restore screen share during local media restore', {reason: args.reason, error});
 		}
 		if (restored) return;
-		if (streamRestoreFailed || args.settleStreamStateWhenNotRestored) {
+		if (streamRestoreFailed || args.screenShareSnapshot !== null) {
 			voiceEngineV2AppMediaStateAdapter.applyScreenShareState(false, {sendUpdate: false});
 		}
 		if (args.toastWhenStreamNotRestored && this.i18n) {
@@ -2105,6 +2093,7 @@ class MediaEngineFacade extends Store {
 			playSound?: boolean;
 			restartIfEnabled?: boolean;
 			preserveStreamAudioPreferences?: boolean;
+			keepShareTracking?: boolean;
 		},
 		publishOptions?: TrackPublishOptions,
 	): Promise<void> {
@@ -2121,6 +2110,10 @@ class MediaEngineFacade extends Store {
 		publishOptions?: TrackPublishOptions,
 	): Promise<void> {
 		await voiceEngineV2AppScreenShareExecutionAdapter.startDeviceScreenShare(this.room, options, publishOptions);
+	}
+
+	async resetScreenShareDeliveryToFullQuality(): Promise<void> {
+		await voiceEngineV2AppScreenShareExecutionAdapter.resetScreenShareDeliveryToFullQuality();
 	}
 
 	private createScreenShareControllerGateway(): VoiceEngineV2AppScreenShareControllerGateway {
@@ -2663,20 +2656,12 @@ class MediaEngineFacade extends Store {
 		if (!participant) return;
 		const pendingScreenShareReconnect = this.pendingScreenShareReconnect;
 		this.transitionFacadeState({type: 'screenShareReconnect.consume'});
-		const shouldRestoreScreenShare =
-			(LocalVoiceState.getSelfStream() || pendingScreenShareReconnect !== null) && !participant.isScreenShareEnabled;
 		await this.restoreLocalMedia({
 			reason: 'voice room connected',
 			room,
 			restoreCamera: LocalVoiceState.getSelfVideo() && !participant.isCameraEnabled,
-			restoreStream: shouldRestoreScreenShare,
-			restoreStreamFromSnapshot: pendingScreenShareReconnect
-				? () =>
-						voiceEngineV2AppScreenShareExecutionAdapter.restoreScreenShareReconnect(room, pendingScreenShareReconnect)
-				: null,
-			streamSnapshotFallback: false,
-			streamPlaySound: true,
-			settleStreamStateWhenNotRestored: false,
+			restoreStream: LocalVoiceState.getSelfStream() && !participant.isScreenShareEnabled,
+			screenShareSnapshot: pendingScreenShareReconnect,
 			toastWhenStreamNotRestored: false,
 		});
 	}
@@ -2692,10 +2677,7 @@ class MediaEngineFacade extends Store {
 			room: this.room,
 			restoreCamera: pendingRestore.restoreVideo,
 			restoreStream: pendingRestore.restoreStream,
-			restoreStreamFromSnapshot: null,
-			streamSnapshotFallback: false,
-			streamPlaySound: true,
-			settleStreamStateWhenNotRestored: false,
+			screenShareSnapshot: null,
 			toastWhenStreamNotRestored: true,
 		});
 	}

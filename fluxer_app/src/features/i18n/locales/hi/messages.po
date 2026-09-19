@@ -862,6 +862,11 @@ msgstr "{clientLabel} कनेक्ट करना चाहता है"
 msgid "{clientName} will use this account for this authorization."
 msgstr "{clientName} इस अनुमति के लिए इस अकाउंट का इस्तेमाल करेगा।"
 
+#. Screen share notice shown to the person sharing when they pinned a codec that underperforms. codec is a codec name such as AV1. Automatic and Advanced settings are labels in the same app.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:389
+msgid "{codec} cannot keep up on this device. Set the codec to Automatic in Advanced settings to allow a faster one."
+msgstr "{codec} इस डिवाइस पर ठीक से काम नहीं कर पा रहा है। तेज़ कोडेक की अनुमति देने के लिए एडवांस्ड सेटिंग्स में कोडेक को ऑटोमैटिक पर सेट करें।"
+
 #. Guild nagbar body shown for staff-only communities. {communityName} is the community name and {productName} is Fluxer.
 #: src/features/app/components/layout/GuildLayout.tsx:83
 msgid "{communityName} is currently only accessible to {productName} staff members"
@@ -1070,7 +1075,7 @@ msgstr "{count, plural, one {विस्तार करें (# लाइन)
 msgid "{count, plural, one {Expand (# row)} other {Expand (# rows)}}"
 msgstr "{count, plural, one {विस्तार करें (# पंक्ति)} other {विस्तार करें (# पंक्तियाँ)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:317
+#: src/features/voice/components/VoiceParticipantTile.tsx:324
 msgid "{count, plural, one {Expand # other device} other {Expand # other devices}}"
 msgstr "{count, plural, one {# अन्य डिवाइस दिखाएँ} other {# अन्य डिवाइस दिखाएँ}}"
 
@@ -1091,7 +1096,7 @@ msgstr "{count, plural, one {कॉल पर} other {# लोग कॉल प�
 msgid "{count, plural, one {Join video call (# participant)} other {Join video call (# participants)}}"
 msgstr "{count, plural, one {वीडियो कॉल में शामिल हों (# प्रतिभागी)} other {वीडियो कॉल में शामिल हों (# प्रतिभागी)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:669
+#: src/features/voice/components/VoiceParticipantTile.tsx:682
 msgid "{count, plural, one {Keep watching # stream and add this one} other {Keep watching # streams and add this one}}"
 msgstr "{count, plural, one {# स्ट्रीम देखना जारी रखें और इसे जोड़ें} other {# स्ट्रीम देखना जारी रखें और इसे जोड़ें}}"
 
@@ -1187,7 +1192,7 @@ msgid "{days, plural, one {Your invite link expires in # day.} other {Your invit
 msgstr "{days, plural, one {आपका इनवाइट लिंक # दिन में समाप्त हो जाएगा।} other {आपका इनवाइट लिंक # दिनों में समाप्त हो जाएगा।}}"
 
 #. Audio device label for a default route with the concrete microphone or speaker endpoint in parentheses. defaultDeviceLabel is already localized, for example "Windows Default".
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:30
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:37
 msgid "{defaultDeviceLabel} ({endpointLabel})"
 msgstr "{defaultDeviceLabel} ({endpointLabel})"
 
@@ -1340,9 +1345,16 @@ msgid "{fourHours} hours"
 msgstr "{fourHours} घंटे"
 
 #. Footer summary frame-rate label in the screen share picker. {fps} is the integer frame rate. FPS is a technical token.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:253
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:251
 msgid "{fps} FPS"
 msgstr "{fps} FPS"
+
+#. Frame rate option label in the video tab. FPS is a technical token and frameRate is a whole number.
+#. Frame rate option label in the video tab. FPS is a technical token and frameRate is a whole number.
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:55
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:114
+msgid "{frameRate} FPS"
+msgstr "{frameRate} एफपीएस"
 
 #. Short label in the app layout channel list content. Preserve {guildName}; it is inserted by code.
 #: src/features/app/components/layout/ChannelListContent.tsx:88
@@ -1453,7 +1465,7 @@ msgid "{length, plural, one {# user} other {# users}}"
 msgstr "{length, plural, one {# यूज़र} other {# यूज़र}}"
 
 #. Spectator count badge on a screen-share tile. {length} is the integer number of viewers. Consider pluralization on review.
-#: src/features/voice/components/voice_participant_tile/shared.ts:75
+#: src/features/voice/components/voice_participant_tile/shared.ts:73
 msgid "{length, plural, one {# watching} other {# watching}}"
 msgstr "{length, plural, one {# दर्शक} other {# दर्शक}}"
 
@@ -1548,6 +1560,11 @@ msgstr "{overrideCount, plural, one {# ओवरराइड} other {# ओवर
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:181
 msgid "{paymentProviderName} will first verify that your card is eligible for localized pricing, then take you to payment. Return to {productName} once you've completed it."
 msgstr "{paymentProviderName} पहले यह सत्यापित करेगा कि आपका कार्ड स्थानीयकृत मूल्य निर्धारण के लिए योग्य है, फिर आपको भुगतान के लिए आगे बढ़ाएगा। इसे पूरा करने के बाद {productName} पर वापस आएं।"
+
+#. Screen share notice shown to the person sharing when this device cannot encode the pinned codec. pinnedCodec and codec are codec names such as H.265 (HEVC) or VP9.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:405
+msgid "{pinnedCodec} is not available on this device, so your stream uses {codec}."
+msgstr "{pinnedCodec} इस डिवाइस पर उपलब्ध नहीं है, इसलिए आपकी स्ट्रीम {codec} का उपयोग करती है।"
 
 #. Badge label with a date in the user profile badges popout. Preserve {premiumProductFullName}, {premiumSinceFormatted}; they are inserted by code. In English, keep "subscriber since" lowercase. Other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx:51
@@ -1716,7 +1733,7 @@ msgid "{productName} needs access to your microphone. Allow microphone access in
 msgstr "{productName} को आपके माइक्रोफ़ोन का एक्सेस चाहिए। अपने ऑपरेटिंग सिस्टम की गोपनीयता सेटिंग्स में माइक्रोफ़ोन का एक्सेस दें और ऐप को रीस्टार्ट करें।"
 
 #. Camera settings notice shown when camera permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:49
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:63
 msgid "{productName} needs camera access to list your devices."
 msgstr "{productName} को आपके डिवाइस दिखाने के लिए कैमरे का एक्सेस चाहिए।"
 
@@ -2217,12 +2234,6 @@ msgstr "12 घंटे"
 msgid "1440p"
 msgstr "1440p"
 
-#. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:42
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:109
-msgid "15 FPS"
-msgstr "15 FPS"
-
 #. Short label in the guild overview tab utils helper. Keep it concise.
 #: src/features/guild/utils/guild_tabs/GuildOverviewTabUtils.tsx:31
 msgid "15 minutes"
@@ -2293,12 +2304,6 @@ msgstr "3 सदस्य (टाइप कर रहे हैं)"
 msgid "3 months"
 msgstr "3 महीने"
 
-#. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:43
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:113
-msgid "30 FPS"
-msgstr "30 FPS"
-
 #. Fixed duration label for a 30-minute interval. Used as a standalone label in duration text or option lists.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:10
 msgid "30 minutes"
@@ -2352,12 +2357,6 @@ msgstr "6 महीने"
 #: src/features/auth/flow/MfaScreen.tsx:22
 msgid "6-digit code"
 msgstr "6 अंकों का कोड"
-
-#. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:44
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:117
-msgid "60 FPS"
-msgstr "60 FPS"
 
 #. Timeout duration option for moderating a member.
 #: src/features/moderation/components/modals/TimeoutMemberOptions.ts:12
@@ -2511,6 +2510,11 @@ msgstr "मैसेज टेक्स्ट में टाइप किय�
 msgid "a user"
 msgstr "कोई यूज़र"
 
+#. Screen share notice shown to the person sharing when a watcher cannot decode the pinned codec. pinnedCodec and codec are codec names such as AV1 or VP8.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:400
+msgid "A viewer cannot play {pinnedCodec}, so your stream uses {codec}."
+msgstr "एक दर्शक {pinnedCodec} नहीं चला सकता, इसलिए आपकी स्ट्रीम {codec} का उपयोग करती है।"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:55
 msgid "A11y"
@@ -2569,7 +2573,7 @@ msgid "Accept"
 msgstr "स्वीकार करें"
 
 #. Button label for accepting an incoming direct call. Means answering a ringing call, not approving a request.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:90
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:97
 msgctxt "incoming-call-action"
 msgid "Accept"
 msgstr "जवाब दें"
@@ -3305,11 +3309,6 @@ msgstr "अतिरिक्त वेरिफ़िकेशन ज़रू�
 msgid "Address"
 msgstr "पता"
 
-#. Description for an H.264 backup stream select. Keep H.264, CPU, and GPU literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:124
-msgid "Adds H.264 for mixed clients. Requires more encoding."
-msgstr "मिले-जुले क्लाइंट के लिए H.264 जोड़ता है। इसमें ज़्यादा एन्कोडिंग लगती है।"
-
 #. Description for the custom profile option in the voice tab.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:96
 msgid "Adjust each setting yourself: noise suppression, echo cancellation, and gain."
@@ -3365,7 +3364,7 @@ msgid "Advanced"
 msgstr "एडवांस"
 
 #. Subsection title in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:88
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:116
 msgid "Advanced video settings"
 msgstr "एडवांस वीडियो सेटिंग्स"
 
@@ -3576,7 +3575,7 @@ msgstr "अनुमति दें"
 msgid "Allow {everyoneMention} and {hereMention}"
 msgstr "{everyoneMention} और {hereMention} की अनुमति दें"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:209
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:239
 msgid "Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 msgstr "{PRODUCT_NAME} को {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME} में अपने कैमरे का उपयोग करने की अनुमति दें।"
 
@@ -3604,7 +3603,7 @@ msgstr "जो कोई भी आपकी पूरी प्रोफ़ा�
 
 #. Settings search entry label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
 #. Switch label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:183
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:143
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:88
 msgid "Allow AV1 for screen sharing"
 msgstr "स्क्रीन शेयरिंग के लिए AV1 की अनुमति दें"
@@ -3619,7 +3618,7 @@ msgstr "बॉट से डायरेक्ट मैसेज की अन�
 msgid "Allow bots to send you direct messages?"
 msgstr "क्या बॉट आपको डायरेक्ट मैसेज भेज सकते हैं?"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:229
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:259
 msgid "Allow camera"
 msgstr "कैमरे की अनुमति दें"
 
@@ -3663,7 +3662,7 @@ msgstr "सभी कम्युनिटी के लिए अनुमत�
 
 #. Settings search entry label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
 #. Switch label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:187
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:147
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:92
 msgid "Allow H.265 (HEVC) for screen sharing"
 msgstr "स्क्रीन शेयरिंग के लिए H.265 (HEVC) की अनुमति दें"
@@ -4269,7 +4268,7 @@ msgid "App state"
 msgstr "ऐप की स्थिति"
 
 #. Fallback label for an app window card in the screen-share picker when the OS does not give us a window title.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:141
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:139
 msgid "App window"
 msgstr "ऐप विंडो"
 
@@ -4362,7 +4361,7 @@ msgstr "ऐप्लिकेशन सफलतापूर्वक अपड�
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:29
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:66
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:65
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:184
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:182
 msgid "Applications"
 msgstr "ऐप्लिकेशन"
 
@@ -4689,7 +4688,7 @@ msgid "Audio boost"
 msgstr "ऑडियो बूस्ट"
 
 #. Section header in the stream settings menu. Selects the audio capture device for the share.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:133
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:136
 msgid "Audio device"
 msgstr "ऑडियो डिवाइस"
 
@@ -4709,7 +4708,7 @@ msgid "Audio level"
 msgstr "ऑडियो लेवल"
 
 #. Footer summary status shown when capture-device audio is disabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:258
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:256
 msgid "Audio muted"
 msgstr "ऑडियो म्यूट है"
 
@@ -4784,7 +4783,7 @@ msgid "Audio send:"
 msgstr "ऑडियो सेंड:"
 
 #. Section header in the stream settings menu grouping audio-related toggles.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:145
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:148
 msgid "Audio settings"
 msgstr "ऑडियो सेटिंग्स"
 
@@ -4995,9 +4994,9 @@ msgstr "ऑटो-कम्प्लीट सुझाव: {label}, {resultCoun
 #. Voice region option label in the voice settings menu meaning let Fluxer pick the best region automatically.
 #. Voice region picker option label meaning 'let Fluxer pick the best region automatically'.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx:19
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:64
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:63
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:83
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:104
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:144
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:264
 #: src/features/voice/components/VoiceRegionSelector.tsx:16
 #: src/features/voice/components/VoiceSettingsMenus.tsx:93
@@ -5005,14 +5004,14 @@ msgid "Automatic"
 msgstr "ऑटोमैटिक"
 
 #. Option label for the screen-share codec select. codec is the automatically selected codec label.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:169
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:129
 msgid "Automatic ({codec})"
 msgstr "ऑटोमैटिक ({codec})"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Voice setting label for automatically evening out microphone volume.
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:48
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:211
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:218
 msgid "Automatic gain control"
 msgstr "ऑटोमैटिक गेन कंट्रोल"
 
@@ -5107,7 +5106,7 @@ msgid "AV1"
 msgstr "AV1"
 
 #. Option label for the screen-share codec select while the AV1 opt-in is off and the option is disabled. AV1 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:173
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:133
 msgid "AV1 (requires opt-in)"
 msgstr "AV1 (ऑप्ट-इन आवश्यक)"
 
@@ -5336,11 +5335,6 @@ msgstr "बैकअप कोड फिर से जनरेट किए ग
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:201
 msgid "Badge"
 msgstr "बैज"
-
-#. Option label for a software encoder quality select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:88
-msgid "Balanced"
-msgstr "संतुलित"
 
 #. IAR modal: quick-action card button label for opening the ban dialog.
 #. Short moderation action label. Ban a member from a community by removing them and preventing rejoining.
@@ -5934,7 +5928,7 @@ msgid "Browser back"
 msgstr "ब्राउज़र: पीछे जाएँ"
 
 #. Audio device label prefix for the browser-managed default audio device.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:26
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:33
 msgid "Browser default"
 msgstr "ब्राउज़र डिफ़ॉल्ट"
 
@@ -6204,20 +6198,20 @@ msgstr "कॉल"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:720
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:72
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:100
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:162
 #: src/features/voice/utils/SettingsDeviceOptions.ts:24
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:10
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:17
 msgid "Camera"
 msgstr "कैमरा"
 
 #. Title shown in the screen-share Devices tab before camera preview permission is granted.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:156
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:154
 msgid "Camera access is needed for device previews"
 msgstr "डिवाइस प्रीव्यू के लिए कैमरा एक्सेस की ज़रूरत है"
 
 #. Description shown after camera preview permission is denied or unavailable.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:164
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:162
 msgid "Camera access was not granted. Update camera permissions, then try again."
 msgstr "कैमरा एक्सेस नहीं दिया गया। कैमरा अनुमतियाँ अपडेट करें, फिर से कोशिश करें।"
 
@@ -6238,7 +6232,7 @@ msgid "Camera error"
 msgstr "कैमरा त्रुटि"
 
 #. Overlay text on a participant tile when the local user hid the remote camera feed.
-#: src/features/voice/components/voice_participant_tile/shared.ts:49
+#: src/features/voice/components/voice_participant_tile/shared.ts:47
 msgid "Camera hidden"
 msgstr "कैमरा छिपा हुआ"
 
@@ -6248,7 +6242,7 @@ msgid "Camera limit reached — up to {voiceChannelCameraUserLimit} people can s
 msgstr "कैमरे की सीमा पूरी हो गई — इस चैनल में अधिकतम {voiceChannelCameraUserLimit} लोग वीडियो शेयर कर सकते हैं।"
 
 #. Accessible status label while a voice participant camera feed is starting before video is renderable.
-#: src/features/voice/components/voice_participant_tile/shared.ts:53
+#: src/features/voice/components/voice_participant_tile/shared.ts:51
 msgid "Camera loading"
 msgstr "कैमरा लोड हो रहा है"
 
@@ -6282,13 +6276,13 @@ msgstr "कैमरा प्रीव्यू"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:76
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:104
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:202
 msgid "Camera quality"
 msgstr "कैमरा क्वालिटी"
 
 #. Voice control dropdown label or menu item for camera settings.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:231
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:238
 msgid "Camera settings"
 msgstr "कैमरा सेटिंग्स"
 
@@ -6489,20 +6483,25 @@ msgstr "कैप्चा वेरिफ़िकेशन विफल रह
 msgid "Capture"
 msgstr "कैप्चर करें"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:880
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:798
 msgid "Capture app audio"
 msgstr "ऐप ऑडियो कैप्चर करें"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:882
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:800
 msgid "Capture desktop audio"
 msgstr "डेस्कटॉप ऑडियो कैप्चर करें"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:879
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:797
 msgid "Capture device audio"
 msgstr "डिवाइस ऑडियो कैप्चर करें"
 
+#. Note shown beside the stored Screen share preset in the stream settings menu and the video settings tab of a capture device share, explaining why that preset is not used.
+#: src/features/voice/components/StreamSettingsMenuContentStateMachine.ts:34
+msgid "Capture devices use the Gaming preset."
+msgstr "कैप्चर डिवाइस गेमिंग प्रीसेट का उपयोग करते हैं।"
+
 #. Toggle label in the stream settings menu for a window share whose audio scope the user widened from the shared window to the whole system mix.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:157
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:160
 msgid "Capture entire system audio"
 msgstr "पूरे सिस्टम का ऑडियो कैप्चर करें"
 
@@ -6737,12 +6736,12 @@ msgstr "बदलाव शेड्यूल किया गया है"
 #. Action that opens the source picker for the active screen share.
 #. Voice screen share menu action that changes the shared source.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:24
-#: src/features/voice/components/ActiveScreenShareMenu.tsx:25
+#: src/features/voice/components/ActiveScreenShareMenu.tsx:34
 msgid "Change stream"
 msgstr "स्ट्रीम बदलें"
 
 #. Modal title for the screen-share picker when switching an ongoing stream to a new source.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:217
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:215
 msgid "Change stream source"
 msgstr "स्ट्रीम स्रोत बदलें"
 
@@ -7531,7 +7530,7 @@ msgid "Choose payment method"
 msgstr "भुगतान का तरीका चुनें"
 
 #. Modal title for the screen-share picker when starting a new screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:221
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:219
 msgid "Choose something to share"
 msgstr "शेयर करने के लिए कुछ चुनें"
 
@@ -7907,7 +7906,7 @@ msgid "Clear trusted domains ({trustedDomainsCount})"
 msgstr "भरोसेमंद डोमेन मिटाएँ ({trustedDomainsCount})"
 
 #. Footer summary description for the text-focused screen-share quality preset.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:245
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:243
 msgid "Clearer text"
 msgstr "ज़्यादा स्पष्ट टेक्स्ट"
 
@@ -8286,7 +8285,7 @@ msgstr "चैनल विषय छोटा करें"
 #. Tooltip / aria label on a voice participant tile button that collapses expanded device tiles for one user.
 #. Voice menu action that collapses expanded device tiles back into a single tile.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:128
-#: src/features/voice/components/VoiceParticipantTile.tsx:178
+#: src/features/voice/components/VoiceParticipantTile.tsx:185
 msgid "Collapse devices"
 msgstr "डिवाइसों को छोटा करें"
 
@@ -8478,7 +8477,7 @@ msgid "Community creator"
 msgstr "कम्युनिटी बनाने वाला"
 
 #. Moderation voice menu label. Makes a member unable to hear others in this community voice chat. Distinct from community mute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:145
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:152
 msgid "Community deafen"
 msgstr "कम्युनिटी डीफ़ेन"
 
@@ -8566,7 +8565,7 @@ msgid "Community MFA requirement nagbar"
 msgstr "कम्युनिटी MFA आवश्यकता नागबार"
 
 #. Moderation voice menu label. Mutes a member's microphone in this community voice chat.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:120
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:127
 msgid "Community mute"
 msgstr "कम्युनिटी म्यूट"
 
@@ -8767,7 +8766,7 @@ msgstr "कंपोजर फ़ोकस"
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:164
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:160
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:120
 msgid "Configure"
 msgstr "कॉन्फ़िगर करें"
 
@@ -8790,7 +8789,7 @@ msgid "Configure now"
 msgstr "अभी कॉन्फ़िगर करें"
 
 #. Tooltip / aria label on the screen-share control while a share is active. Opens the configure / end menu.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:58
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:61
 msgid "Configure or end screen share"
 msgstr "स्क्रीन शेयर कॉन्फ़िगर करें या खत्म करें"
 
@@ -8905,7 +8904,7 @@ msgstr "कम्युनिटी वॉइस जॉइन के लिए �
 msgid "Conflicts with {conflictLabel}"
 msgstr "{conflictLabel} से टकराता है"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:214
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:244
 msgid "Connect a camera and try again."
 msgstr "कैमरा कनेक्ट करें और फिर से प्रयास करें।"
 
@@ -8914,7 +8913,7 @@ msgstr "कैमरा कनेक्ट करें और फिर से 
 msgid "Connect a camera or virtual capture device, then try again."
 msgstr "कैमरा या वर्चुअल कैप्चर डिवाइस कनेक्ट करें, फिर दोबारा कोशिश करें।"
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:133
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:131
 msgid "Connect a display, then try again."
 msgstr "एक डिस्प्ले कनेक्ट करें, फिर दोबारा प्रयास करें।"
 
@@ -9049,7 +9048,7 @@ msgid "Connection volume controls"
 msgstr "कनेक्शन वॉल्यूम नियंत्रण"
 
 #. Developer / debug overlay text on a participant tile. {connectionId} is the voice connection identifier.
-#: src/features/voice/components/voice_participant_tile/shared.ts:111
+#: src/features/voice/components/voice_participant_tile/shared.ts:96
 msgid "Connection: {connectionId}"
 msgstr "कनेक्शन: {connectionId}"
 
@@ -9115,7 +9114,7 @@ msgid "Content filtering"
 msgstr "कंटेंट फ़िल्टरिंग"
 
 #. Label for an advanced screen-share select. Refers to the WebRTC MediaStreamTrack contentHint value.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:136
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:95
 msgid "Content hint"
 msgstr "कंटेंट हिंट"
 
@@ -10589,8 +10588,8 @@ msgstr "अभी: {mutedText}"
 #: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabSounds.tsx:186
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:94
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:45
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:237
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:97
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:235
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:102
 msgid "Custom"
 msgstr "कस्टम"
 
@@ -11025,17 +11024,17 @@ msgid "Deactivate"
 msgstr "निष्क्रिय करें"
 
 #. Voice action label. Turns off what the user hears in voice chat. Distinct from microphone mute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:78
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:85
 msgid "Deafen"
 msgstr "डीफ़ेन करें"
 
 #. Voice menu action that deafens every device or session so this user cannot hear voice chat.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:137
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:144
 msgid "Deafen all devices"
 msgstr "सभी डिवाइस को डीफ़ेन करें"
 
 #. Voice menu action. Deafens one active device or session so it stops hearing voice audio. Distinct from muting its microphone.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:132
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:139
 msgid "Deafen device"
 msgstr "डिवाइस को डीफ़ेन करें"
 
@@ -11055,24 +11054,24 @@ msgid "Deafen other members in voice channels, so they cannot hear or speak."
 msgstr "वॉइस चैनल में दूसरे सदस्यों को डीफ़ेन करें, ताकि वे न सुन सकें और न बोल सकें।"
 
 #. Settings label for the keyboard shortcut that toggles voice deafen. Deafen controls hearing voice chat, not microphone mute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:155
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:162
 msgid "Deafen shortcut"
 msgstr "डीफ़ेन शॉर्टकट"
 
 #. Voice control label. Turns off what the current user hears in voice chat. Distinct from microphone mute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:124
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:131
 msgid "Deafen yourself"
 msgstr "खुद को डीफ़ेन करें"
 
 #. Accessible label for the deafened voice badge shown on an avatar.
 #. Voice chat status label. The user cannot hear voice chat. Distinct from muted.
 #: src/features/ui/avatars/AvatarWithPresence.tsx:25
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:66
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:73
 msgid "Deafened"
 msgstr "डीफ़ेन किया गया"
 
 #. Voice chat status label. A moderator deafened the user in this community, so they cannot hear voice chat.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:53
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:60
 msgid "Deafened by moderators"
 msgstr "मॉडरेटर ने डीफ़ेन किया"
 
@@ -11167,7 +11166,7 @@ msgid "Default"
 msgstr "डिफ़ॉल्ट"
 
 #. Fallback label for the system default camera in the screen-share devices tab.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:152
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:150
 msgid "Default camera"
 msgstr "डिफ़ॉल्ट कैमरा"
 
@@ -11720,7 +11719,7 @@ msgid "Desktop away"
 msgstr "डेस्कटॉप से दूर"
 
 #. Aria label on a participant tile icon that indicates the participant is on desktop.
-#: src/features/voice/components/voice_participant_tile/shared.ts:107
+#: src/features/voice/components/voice_participant_tile/shared.ts:92
 msgid "Desktop device"
 msgstr "डेस्कटॉप डिवाइस"
 
@@ -11806,7 +11805,7 @@ msgid "Detached banner"
 msgstr "अलग बैनर"
 
 #. Option label for a WebRTC content hint select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:152
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:112
 msgid "Detail"
 msgstr "डिटेल"
 
@@ -11889,7 +11888,7 @@ msgstr "डिवाइस विवरण"
 msgid "Device revoked"
 msgstr "डिवाइस हटा दिया गया"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1074
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:992
 msgid "Device selection"
 msgstr "डिवाइस चयन"
 
@@ -11913,12 +11912,12 @@ msgstr "डिवाइस:"
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:57
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:192
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:190
 msgid "Devices"
 msgstr "डिवाइस"
 
 #. Description for the Custom streaming preset. Lightly playful prose; keep tone casual.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:101
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:106
 msgid "Dial in your own numbers"
 msgstr "अपने नंबर खुद तय करें"
 
@@ -11954,7 +11953,7 @@ msgid "Dim strikethrough text"
 msgstr "स्ट्राइकथ्रू टेक्स्ट को हल्का करें"
 
 #. Voice input processing profile with raw microphone audio.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:199
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:206
 msgid "Direct input"
 msgstr "सीधा इनपुट"
 
@@ -12021,7 +12020,7 @@ msgstr "सीधा अपलोड चालू है"
 #. Short footer action in the screen-share picker that disables screen-share preview frame uploads.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:238
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:138
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:278
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:276
 msgid "Disable"
 msgstr "बंद करें"
 
@@ -12094,7 +12093,7 @@ msgid "Disable mobile push notifications"
 msgstr "मोबाइल पुश नोटिफ़िकेशन बंद करें"
 
 #. Short label for an advanced screen-share preview preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:48
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:51
 msgid "Disable picture-in-picture popout for screen shares"
 msgstr "स्क्रीन शेयर के लिए पिक्चर-इन-पिक्चर पॉपआउट बंद करें"
 
@@ -12193,7 +12192,7 @@ msgid "Disabled value"
 msgstr "अक्षम किया गया मान"
 
 #. Explains what happens after disabling screen-share preview uploads. Refers to already-uploaded preview thumbnails.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:326
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:324
 msgid "Disabling previews stops future preview uploads. Existing preview images may remain visible until the stream ends or the preview refreshes."
 msgstr "प्रीव्यू बंद करने से आगे प्रीव्यू अपलोड नहीं होंगे। स्ट्रीम समाप्त होने या प्रीव्यू रीफ्रेश होने तक पहले से अपलोड की गई प्रीव्यू इमेज दिखाई देती रह सकती हैं।"
 
@@ -12207,17 +12206,17 @@ msgid "Discard voice message"
 msgstr "वॉइस मैसेज हटाएँ"
 
 #. Voice action label. Leaves the current voice call or disconnects a user from voice chat.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:86
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:93
 msgid "Disconnect"
 msgstr "डिस्कनेक्ट करें"
 
 #. Voice menu action that disconnects every active device or session from voice chat.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:108
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:115
 msgid "Disconnect all devices"
 msgstr "सभी डिवाइस डिस्कनेक्ट करें"
 
 #. Voice menu action that disconnects one active device or session from voice chat.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:104
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:111
 msgid "Disconnect device"
 msgstr "डिवाइस डिस्कनेक्ट करें"
 
@@ -12342,7 +12341,7 @@ msgid "Display"
 msgstr "डिस्प्ले"
 
 #. Fallback label for a display / monitor card in the screen-share picker when the OS does not give us a display name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:146
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:144
 msgctxt "display-screen"
 msgid "Display"
 msgstr "स्क्रीन"
@@ -12931,7 +12930,7 @@ msgid "Echo"
 msgstr "इको"
 
 #. Voice setting label for preventing speaker audio from feeding into the microphone.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:207
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:214
 msgid "Echo cancellation"
 msgstr "इको कैंसलेशन"
 
@@ -13527,7 +13526,7 @@ msgid "Enable browser notifications"
 msgstr "ब्राउज़र नोटिफ़िकेशन चालू करें"
 
 #. Description shown before the user explicitly requests camera preview permission.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:160
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:158
 msgid "Enable camera access to preview cameras and capture devices before choosing one to stream."
 msgstr "स्ट्रीम के लिए कोई एक चुनने से पहले कैमरा और कैप्चर डिवाइस का प्रीव्यू देखने के लिए कैमरा एक्सेस चालू करें।"
 
@@ -13643,7 +13642,7 @@ msgid "Enable or disable built-in translators. Enabled translators appear in the
 msgstr "बिल्ट-इन ट्रांसलेटर चालू या बंद करें। टेक्स्ट चुने जाने पर चालू ट्रांसलेटर मैसेज कॉन्टेक्स्ट मेन्यू में दिखते हैं।"
 
 #. Button that explicitly requests camera permission for device previews.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:168
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:166
 msgid "Enable previews"
 msgstr "प्रीव्यू चालू करें"
 
@@ -13741,20 +13740,20 @@ msgstr "चालू है"
 
 #. Label for an advanced screen-share select. Refers to hardware or software video encoding.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:56
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:59
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:153
 msgid "Encoder path"
 msgstr "एन्कोडर पाथ"
 
 #. Description for the encoder path select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:60
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControlsState.ts:6
 msgid "Encoder preference for new screen shares."
 msgstr "नए स्क्रीन शेयर के लिए एन्कोडर प्राथमिकता।"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:173
-msgid "Encoder, SVC, backup stream, and bitrate presets"
-msgstr "एन्कोडर, SVC, बैकअप स्ट्रीम और बिटरेट प्रीसेट"
+msgid "Encoder, SVC, and bitrate presets"
+msgstr "एनकोडर, एसवीसी और बिटरेट प्रीसेट"
 
 #. IAR modal: rule label.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:349
@@ -13795,12 +13794,12 @@ msgid "End screen share"
 msgstr "स्क्रीन शेयर बंद करें"
 
 #. Pre-join indicator shown beneath the Join button on a DM or group DM call where at least one connected participant (typically an outdated bot) does not support E2EE.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:326
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:333
 msgid "End-to-end encryption is unavailable because an unsupported participant is in this call."
 msgstr "एंड-टू-एंड एन्क्रिप्शन उपलब्ध नहीं है क्योंकि इस कॉल में एक असमर्थित प्रतिभागी है।"
 
 #. Pre-join indicator shown beneath the Join button on a voice channel where at least one connected participant (typically an outdated bot) does not support E2EE.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:321
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:328
 msgid "End-to-end encryption is unavailable because an unsupported participant is in this voice channel."
 msgstr "एंड-टू-एंड एन्क्रिप्शन उपलब्ध नहीं है क्योंकि इस वॉइस चैनल में एक असमर्थित प्रतिभागी है।"
 
@@ -14087,7 +14086,7 @@ msgid "Entertainment"
 msgstr "मनोरंजन"
 
 #. Tab label in the screen-share picker. Lists shareable monitors / displays.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:188
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:186
 msgid "Entire screen"
 msgstr "पूरी स्क्रीन"
 
@@ -14156,7 +14155,7 @@ msgid "Error"
 msgstr "गड़बड़ी"
 
 #. Subtitle on a remote screen-share tile after loading the watched stream failed. {code} is a numeric diagnostic code.
-#: src/features/voice/components/voice_participant_tile/shared.ts:44
+#: src/features/voice/components/voice_participant_tile/shared.ts:42
 msgid "error code {code}"
 msgstr "त्रुटि कोड {code}"
 
@@ -14686,7 +14685,7 @@ msgid "Failed to load invites. Try again."
 msgstr "इनवाइट लोड नहीं हो पाए। फिर से कोशिश करें।"
 
 #. Error text shown in the screen-share picker when the list of shareable windows/displays fails to load.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:120
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:118
 msgid "Failed to load shareable sources."
 msgstr "शेयर करने लायक स्रोत लोड नहीं हो पाए।"
 
@@ -15240,16 +15239,6 @@ msgctxt "us-state"
 msgid "Florida"
 msgstr "फ़्लोरिडा"
 
-#. Description for the high-tier Gaming streaming preset (Plutonium). Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:74
-msgid "Fluid motion at 1440p 60 FPS"
-msgstr "1440p 60 FPS पर स्मूथ मोशन"
-
-#. Description for the free-tier Gaming streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:79
-msgid "Fluid motion at 720p 30 FPS"
-msgstr "720p 30 FPS पर स्मूथ मोशन"
-
 #. Placeholder for the product name input in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:93
 msgid "Fluxer"
@@ -15297,7 +15286,7 @@ msgid "Focus window"
 msgstr "विंडो को फ़ोकस करें"
 
 #. Voice input processing profile optimized for spoken voice.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:195
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:202
 msgid "Focused voice"
 msgstr "फ़ोकस्ड वॉइस"
 
@@ -15333,7 +15322,7 @@ msgstr "फ़ोल्डर सेटिंग्स"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "हमें {blueskyProviderName} पर फ़ॉलो करें"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:936
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:854
 msgid "Follow voice input"
 msgstr "वॉइस इनपुट को फ़ॉलो करें"
 
@@ -15603,14 +15592,14 @@ msgstr "फ़्रेम"
 
 #. Section header in the stream settings menu for frame rate options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:314
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:344
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:230
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:129
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:132
 msgid "Frame rate"
 msgstr "फ़्रेम रेट"
 
 #. Video settings note shown when higher frame rates require premium.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:57
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:71
 msgid "Frame rates above 30 FPS require {premiumProductName}"
 msgstr "30 FPS से ज़्यादा फ़्रेम रेट के लिए {premiumProductName} की ज़रूरत होगी"
 
@@ -15931,9 +15920,11 @@ msgstr "गेमपैड Y / ट्राएंगल"
 #. Discovery category dropdown option in the community Discovery settings tab.
 #. Footer summary label for the gaming screen-share quality preset.
 #. Streaming preset label in the stream settings menu. Higher frame rate, optimized for video games.
+#. Video settings label for the motion-focused screen share quality preset.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:76
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:229
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:70
+#: src/features/user/components/modals/tabs/UserVideoTabState.ts:24
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:227
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:75
 msgid "Gaming"
 msgstr "गेमिंग"
 
@@ -16438,7 +16429,7 @@ msgstr "{permissions} प्रदान किए गए"
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "सभी अनुमतियाँ देता है और चैनल प्रतिबंधों को बायपास करता है। अत्यधिक संवेदनशील।"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1061
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:979
 msgid "Granular selection"
 msgstr "बारीक चयन"
 
@@ -16621,18 +16612,8 @@ msgstr "ग्रुपिंग"
 msgid "H.264"
 msgstr "H.264"
 
-#. Label for an advanced screen-share select. H.264 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:120
-msgid "H.264 backup stream"
-msgstr "H.264 बैकअप स्ट्रीम"
-
-#. Option label for an H.264 backup stream select. H.264 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:132
-msgid "H.264 simulcast backup"
-msgstr "H.264 सिमुलकास्ट बैकअप"
-
 #. Option label for the screen-share codec select while the HEVC opt-in is off and the option is disabled. H.265 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:178
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:138
 msgid "H.265 (requires opt-in)"
 msgstr "H.265 (ऑप्ट-इन ज़रूरी है)"
 
@@ -16828,11 +16809,6 @@ msgstr "सहायता केंद्र"
 msgid "Help translate {PRODUCT_NAME} into your language on <0>{I18N_WEBLATE_DOMAIN}</0>."
 msgstr "<0>{I18N_WEBLATE_DOMAIN}</0> पर {PRODUCT_NAME} का अपनी भाषा में अनुवाद करने में मदद करें।"
 
-#. Description for a WebRTC content hint select. Keep Motion, Detail, and text as plain option concepts.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:140
-msgid "Helps the browser choose motion, detail, or text handling."
-msgstr "ब्राउज़र को गति, विवरण या टेक्स्ट हैंडलिंग चुनने में मदद करता है।"
-
 #. Settings search synonym. Codec name; keep literal. Used to match this term in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:105
 msgid "HEVC"
@@ -16997,7 +16973,7 @@ msgid "Hide muted channels by default?"
 msgstr "म्यूट किए गए चैनल डिफ़ॉल्ट रूप से छिपाएँ?"
 
 #. Short label for an advanced stream privacy preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:52
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:55
 msgid "Hide my stream preview thumbnail"
 msgstr "मेरे स्ट्रीम पूर्वावलोकन थंबनेल को छिपाएँ"
 
@@ -17016,7 +16992,7 @@ msgstr "पासवर्ड छिपाएं"
 msgid "Hide picture-in-picture popout?"
 msgstr "पिक्चर-इन-पिक्चर पॉपआउट छिपाएँ?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:838
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:756
 msgid "Hide preview thumbnail"
 msgstr "पूर्वावलोकन थंबनेल छिपाएँ"
 
@@ -17078,11 +17054,6 @@ msgstr "हाई डायनामिक रेंज"
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabHdrTab.tsx:29
 msgid "High dynamic range display mode"
 msgstr "हाई डायनामिक रेंज डिस्प्ले मोड"
-
-#. Description for a software encoder quality select. Keep AV1 and CPU literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:80
-msgid "Higher quality can increase CPU usage and latency."
-msgstr "ज़्यादा क्वालिटी से CPU इस्तेमाल और लेटेंसी बढ़ सकती है।"
 
 #. Description for the DeepFilterNet3 noise suppression strength slider.
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:71
@@ -17415,7 +17386,7 @@ msgstr "अगर आप चाहते हैं कि ये सदस्य
 #. Button label for silencing an incoming direct call without joining.
 #. Button, menu item, or tooltip for ignoring an incoming friend request.
 #: src/features/relationship/utils/RelationshipMessageDescriptors.ts:21
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:100
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:107
 msgid "Ignore"
 msgstr "अनदेखा करें"
 
@@ -17424,11 +17395,11 @@ msgstr "अनदेखा करें"
 msgid "Ignore friend request"
 msgstr "फ्रेंड रिक्वेस्ट अनदेखा करें"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1051
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:969
 msgid "Ignore hardware devices"
 msgstr "हार्डवेयर डिवाइस को अनदेखा करें"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1027
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:945
 msgid "Ignore input media"
 msgstr "इनपुट मीडिया को अनदेखा करें"
 
@@ -17459,7 +17430,7 @@ msgstr "क्या आप {displayName} की फ्रेंड रिक्
 msgid "Ignore this channel's slowmode cooldown."
 msgstr "इस चैनल के स्लोमोड कूलडाउन को अनदेखा करें।"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1038
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:956
 msgid "Ignore virtual"
 msgstr "वर्चुअल को अनदेखा करें"
 
@@ -17750,7 +17721,7 @@ msgid "In voice"
 msgstr "वॉइस में"
 
 #. Short status label shown when the user is currently connected to voice chat.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:175
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:182
 msgid "In voice chat"
 msgstr "वॉइस चैट में"
 
@@ -18005,7 +17976,7 @@ msgid "Input and output"
 msgstr "इनपुट और आउटपुट"
 
 #. Voice settings label for selecting a microphone input device.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:179
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:186
 msgid "Input device"
 msgstr "इनपुट डिवाइस"
 
@@ -18027,7 +17998,7 @@ msgid "Input profile: {processingModeLabel}"
 msgstr "इनपुट प्रोफ़ाइल: {processingModeLabel}"
 
 #. Voice control dropdown label or menu item for microphone input settings.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:223
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:230
 msgid "Input settings"
 msgstr "इनपुट सेटिंग्स"
 
@@ -18036,7 +18007,7 @@ msgid "Input states"
 msgstr "इनपुट स्थितियाँ"
 
 #. Voice settings slider label for microphone volume.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:187
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:194
 msgid "Input volume"
 msgstr "इनपुट वॉल्यूम"
 
@@ -19074,7 +19045,7 @@ msgid "Layering"
 msgstr "लेयरिंग"
 
 #. Description for an SVC mode select. Keep SVC and AV1 literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:100
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:79
 msgid "Layering for AV1 and VP9 when available."
 msgstr "उपलब्ध होने पर AV1 और VP9 के लिए लेयरिंग।"
 
@@ -19084,7 +19055,7 @@ msgid "Layout"
 msgstr "लेआउट"
 
 #. Accessible label for the screen-share picker footer info button.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:282
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:280
 msgid "Learn about screen share previews"
 msgstr "स्क्रीन शेयर पूर्वावलोकन के बारे में जानें"
 
@@ -19477,7 +19448,7 @@ msgid "Linux app"
 msgstr "लिनक्स ऐप"
 
 #. Audio device label prefix for the operating system default audio device on Linux.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:22
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:29
 msgid "Linux default"
 msgstr "लिनक्स डिफ़ॉल्ट"
 
@@ -19715,7 +19686,7 @@ msgid "macOS app"
 msgstr "macOS ऐप"
 
 #. Audio device label prefix for the operating system default audio device on macOS.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:18
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:25
 msgid "macOS default"
 msgstr "macOS डिफ़ॉल्ट"
 
@@ -20979,7 +20950,7 @@ msgid "Microphone test"
 msgstr "माइक टेस्ट"
 
 #. Pre-join indicator shown beneath the Join button on a voice channel where every connected participant supports E2EE.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:311
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:318
 msgid "Microphone, camera, and screen share content are end-to-end encrypted."
 msgstr "माइक्रोफ़ोन, कैमरा और स्क्रीन शेयर की सामग्री एंड-टू-एंड एन्क्रिप्टेड है।"
 
@@ -21048,7 +21019,7 @@ msgstr "नाबालिगों के लिए जोखिम, गलत 
 #. Camera settings menu checkbox for flipping the local camera preview horizontally.
 #. Switch label in the camera preview modal for flipping the local camera preview horizontally.
 #. Switch label in the video tab for flipping the local camera preview horizontally.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:80
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:108
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:72
 #: src/features/voice/components/VoiceSettingsMenus.tsx:114
 msgid "Mirror camera"
@@ -21098,7 +21069,7 @@ msgid "Misspelled words"
 msgstr "गलत वर्तनी वाले शब्द"
 
 #. Aria label on a participant tile icon that indicates the participant is on mobile.
-#: src/features/voice/components/voice_participant_tile/shared.ts:103
+#: src/features/voice/components/voice_participant_tile/shared.ts:88
 msgid "Mobile device"
 msgstr "मोबाइल डिवाइस"
 
@@ -21325,7 +21296,7 @@ msgstr "सबसे ज़्यादा प्रासंगिक"
 #: src/features/theme_studio/sections/TokenGroups.ts:102
 #: src/features/user/components/modals/tabs/accessibility_tab/AccessibilityTabInline.tsx:31
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:99
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:148
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:108
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:297
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:271
 msgid "Motion"
@@ -21547,7 +21518,7 @@ msgid "Mute all"
 msgstr "सभी को म्यूट करें"
 
 #. Voice menu action that mutes every device or session's microphone for this user.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:112
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:119
 msgid "Mute all devices"
 msgstr "सभी डिवाइस म्यूट करें"
 
@@ -21651,7 +21622,7 @@ msgid "Mute sounds"
 msgstr "ध्वनि म्यूट करें"
 
 #. Tooltip / button label on a voice participant tile that mutes the remote screen-share or camera audio.
-#: src/features/voice/components/voice_participant_tile/shared.ts:24
+#: src/features/voice/components/voice_participant_tile/shared.ts:22
 msgid "Mute stream audio"
 msgstr "स्ट्रीम ऑडियो म्यूट करें"
 
@@ -21682,13 +21653,13 @@ msgstr "म्यूट किया गया"
 #. Status badge on a voice participant tile. The participant's microphone is muted.
 #: src/features/app/components/layout/VoiceStateIcons.tsx:19
 #: src/features/ui/avatars/AvatarWithPresence.tsx:20
-#: src/features/voice/components/voice_participant_tile/shared.ts:98
+#: src/features/voice/components/voice_participant_tile/shared.ts:83
 msgctxt "microphone-state"
 msgid "Muted"
 msgstr "माइक्रोफ़ोन म्यूट है"
 
 #. Voice chat status label. A moderator muted the user in this community, so they cannot speak but can still hear others.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:39
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:46
 msgid "Muted by moderators"
 msgstr "मॉडरेटर ने म्यूट किया"
 
@@ -22311,7 +22282,7 @@ msgstr "कोई एडवांस सेटिंग्स नहीं म�
 msgid "No AFK channel"
 msgstr "कोई AFK चैनल नहीं"
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:124
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:122
 msgid "No application windows found"
 msgstr "कोई ऐप्लिकेशन विंडो नहीं मिली"
 
@@ -22370,7 +22341,7 @@ msgstr "कोई बुकमार्क नहीं"
 msgid "No bot banner"
 msgstr "कोई बॉट बैनर नहीं"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:205
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:235
 msgid "No camera found"
 msgstr "कोई कैमरा नहीं मिला"
 
@@ -22450,7 +22421,7 @@ msgstr "कोई विवरण नहीं।"
 msgid "No desktop update is available."
 msgstr "कोई डेस्कटॉप अपडेट उपलब्ध नहीं है।"
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:130
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:128
 msgid "No displays found"
 msgstr "कोई डिस्प्ले नहीं मिला"
 
@@ -22520,6 +22491,11 @@ msgstr "अभी तक कोई उपहार नहीं"
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthCommunityStep.tsx:35
 msgid "No group DMs or communities where you can grant the requested permissions are available."
 msgstr "ऐसा कोई ग्रुप DM या कम्युनिटी उपलब्ध नहीं है जहाँ आप मांगी गई अनुमतियाँ दे सकें।"
+
+#. Description for the encoder path select, shown when this device has no hardware video encoder. Prefer hardware and Automatic are the option labels of the same select.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControlsState.ts:10
+msgid "No hardware encoder was found on this device, so Prefer hardware works like Automatic."
+msgstr "इस डिवाइस पर कोई हार्डवेयर एन्कोडर नहीं मिला, इसलिए 'हार्डवेयर पसंद करें' 'स्वचालित' की तरह काम करता है।"
 
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:175
 msgid "No hoisted roles. Enable \"Show this role separately\" on a role to see it here."
@@ -22875,7 +22851,7 @@ msgid "Noise gate"
 msgstr "नॉइज़ गेट"
 
 #. Voice setting label for microphone background-noise filtering.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:203
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:210
 msgid "Noise suppression"
 msgstr "शोर दबाना"
 
@@ -23173,14 +23149,12 @@ msgstr "वस्तुएँ"
 #. Mature content option in the community moderation settings tab.
 #. Mature-content option that leaves this channel ungated.
 #. Off state suffix appended to the reply bar mention toggle label.
-#. Option label for an H.264 backup stream select.
 #: src/features/channel/components/ChannelReplyBar.tsx:62
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:26
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:97
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:139
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:73
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:128
 msgid "Off"
 msgstr "बंद"
 
@@ -23312,7 +23286,7 @@ msgstr "केवल चौड़ी स्क्रीन पर लागू �
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "केवल क्रेडिट कार्ड स्वीकार किए जाते हैं। वयस्क सामग्री की जाँच के लिए डेबिट और प्रीपेड कार्ड इस्तेमाल नहीं किए जा सकते।"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1016
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:934
 msgid "Only default speakers"
 msgstr "केवल डिफ़ॉल्ट स्पीकर"
 
@@ -23360,7 +23334,7 @@ msgstr "यहां कोड तभी चलाएं जब आप ठीक
 msgid "Only show message previews for DMs with unread messages"
 msgstr "केवल बिना पढ़े मैसेज वाले DM के लिए मैसेज प्रीव्यू दिखाएं"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1006
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:924
 msgid "Only speakers"
 msgstr "केवल स्पीकर"
 
@@ -23466,11 +23440,11 @@ msgid "Open @{displayName}"
 msgstr "@{displayName} खोलें"
 
 #. Button label in the video tab that jumps to the advanced settings media section.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:92
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:120
 msgid "Open advanced media settings"
 msgstr "एडवांस मीडिया सेटिंग्स खोलें"
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:127
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:125
 msgid "Open an application window, then try again."
 msgstr "कोई ऐप्लिकेशन विंडो खोलें, फिर दोबारा कोशिश करें।"
 
@@ -23533,7 +23507,7 @@ msgid "Open browser"
 msgstr "ब्राउज़र खोलें"
 
 #. Primary button in the screen-share picker on web. Hands off to the browser's native getDisplayMedia picker.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:208
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:206
 msgid "Open browser picker"
 msgstr "ब्राउज़र पिकर खोलें"
 
@@ -23801,7 +23775,7 @@ msgid "Open system DM"
 msgstr "सिस्टम DM खोलें"
 
 #. Primary button in the screen-share picker on Linux/Wayland. Hands off to the OS xdg-desktop-portal picker.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:213
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:211
 msgid "Open system picker"
 msgstr "सिस्टम पिकर खोलें"
 
@@ -23873,7 +23847,7 @@ msgid "Open voice"
 msgstr "वॉइस खोलें"
 
 #. Accessible button label that opens the user settings tab for microphone, speaker, camera, and call stats.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:251
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:258
 msgid "Open voice & video settings"
 msgstr "वॉइस और वीडियो सेटिंग्स खोलें"
 
@@ -23911,7 +23885,7 @@ msgid "OpenH264 video codec"
 msgstr "OpenH264 वीडियो कोडेक"
 
 #. Switch label for the OpenH264 codec toggle. "OpenH264" is a product name and "Cisco Systems, Inc." is a company name; do not translate either.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:39
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:42
 msgid "OpenH264 Video Codec provided by Cisco Systems, Inc."
 msgstr "Cisco Systems, Inc. द्वारा प्रदान किया गया OpenH264 वीडियो कोडेक।"
 
@@ -24106,12 +24080,12 @@ msgid "Output"
 msgstr "आउटपुट"
 
 #. Voice settings label for selecting a speaker or output device.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:183
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:190
 msgid "Output device"
 msgstr "आउटपुट डिवाइस"
 
 #. Voice control dropdown label or menu item for speaker/output settings.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:227
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:234
 msgid "Output settings"
 msgstr "आउटपुट सेटिंग्स"
 
@@ -24120,7 +24094,7 @@ msgstr "आउटपुट सेटिंग्स"
 #. Voice settings slider label for speaker or output volume.
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:90
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:228
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:191
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:198
 msgid "Output volume"
 msgstr "आउटपुट वॉल्यूम"
 
@@ -24223,7 +24197,7 @@ msgid "Participant limit"
 msgstr "प्रतिभागी सीमा"
 
 #. Aria label for the participant context-menu trigger button. {participantDisplayName} is the participant's display name.
-#: src/features/voice/components/voice_participant_tile/shared.ts:115
+#: src/features/voice/components/voice_participant_tile/shared.ts:100
 msgid "Participant options for {participantDisplayName}"
 msgstr "{participantDisplayName} के लिए प्रतिभागी विकल्प"
 
@@ -24410,7 +24384,7 @@ msgid "Pause invites? New users won't be able to join through invite links until
 msgstr "इनवाइट रोकें? जब तक आप इन्हें फिर से चालू नहीं करते, नए यूज़र इनवाइट लिंक के ज़रिए शामिल नहीं हो पाएँगे। मौजूदा सदस्यों पर कोई असर नहीं पड़ेगा।"
 
 #. Short label for an advanced screen-share preview preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:44
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:47
 msgid "Pause my screen share preview in the background"
 msgstr "बैकग्राउंड में मेरा स्क्रीन शेयर प्रीव्यू रोकें"
 
@@ -25107,7 +25081,7 @@ msgid "Prefer @mention"
 msgstr "@मेंशन चाहिए"
 
 #. Option label for an encoder path select. Refers to hardware video encoders.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:68
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:67
 msgid "Prefer hardware"
 msgstr "हार्डवेयर को प्राथमिकता दें"
 
@@ -25119,7 +25093,7 @@ msgid "Prefer no @mention"
 msgstr "@मेंशन नहीं चाहिए"
 
 #. Option label for an encoder path select. Refers to software video encoders.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:72
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:71
 msgid "Prefer software"
 msgstr "सॉफ़्टवेयर को प्राथमिकता दें"
 
@@ -25139,7 +25113,7 @@ msgid "Preferences..."
 msgstr "प्राथमिकताएँ..."
 
 #. Accessible label for the advanced screen-share codec preference select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:165
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:125
 msgid "Preferred screen share codec"
 msgstr "पसंदीदा स्क्रीन शेयर कोडेक"
 
@@ -25286,22 +25260,22 @@ msgid "Preview hidden"
 msgstr "प्रीव्यू छिपा है"
 
 #. Privacy explanation for screen-share previews in a one-to-one DM call. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:320
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:318
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. Disable previews if you do not want screen-share frames uploaded for thumbnails."
 msgstr "प्रीव्यू इमेज को डिलीवरी के लिए {productName} कुछ समय तक स्टोर करता है और ये एंड-टू-एंड एन्क्रिप्टेड नहीं होतीं। अगर आप नहीं चाहते कि थंबनेल के लिए स्क्रीन शेयर फ़्रेम अपलोड हों, तो प्रीव्यू बंद कर दें।"
 
 #. Privacy explanation for screen-share previews in a group DM call. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:314
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:312
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. People in this group DM do not need to be actively watching your stream to see the thumbnail."
 msgstr "प्रीव्यू इमेज को डिलीवरी के लिए {productName} कुछ समय तक स्टोर करता है और ये एंड-टू-एंड एन्क्रिप्टेड नहीं होतीं। इस ग्रुप DM के लोगों को थंबनेल देखने के लिए आपकी स्ट्रीम सक्रिय रूप से देखने की ज़रूरत नहीं है।"
 
 #. Privacy explanation for screen-share previews in a guild voice channel. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:308
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:306
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. People still need permission to connect, but they do not need to be actively watching your stream."
 msgstr "प्रीव्यू इमेज को डिलीवरी के लिए {productName} कुछ समय तक स्टोर करता है और ये एंड-टू-एंड एन्क्रिप्टेड नहीं होतीं। लोगों को कनेक्ट होने के लिए अनुमति फिर भी चाहिए, लेकिन उन्हें आपकी स्ट्रीम सक्रिय रूप से देखने की ज़रूरत नहीं है।"
 
 #. Overlay on the local screen-share preview when playback is paused to reduce CPU / battery use. Local share is still being sent to others.
-#: src/features/voice/components/voice_participant_tile/shared.ts:61
+#: src/features/voice/components/voice_participant_tile/shared.ts:59
 msgid "Preview paused to save resources"
 msgstr "संसाधन बचाने के लिए प्रीव्यू रोका गया"
 
@@ -25876,11 +25850,6 @@ msgstr "पुश-टू-टॉक तभी काम करता है ज�
 msgid "Push-to-talk won't unmute your microphone while you're deafened. Undeafen yourself to talk."
 msgstr "जब तक आप डीफ़ेन हैं, पुश-टू-टॉक आपके माइक्रोफ़ोन को अनम्यूट नहीं करेगा। बात करने के लिए पहले खुद को अनडीफ़ेन करें।"
 
-#. Option label for a software encoder quality select. Means slower/higher-quality.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:92
-msgid "Quality"
-msgstr "क्वालिटी"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the theme studio. Keep it concise.
 #: src/features/theme_studio/ThemeStudio.tsx:52
@@ -25983,11 +25952,6 @@ msgstr "रेट लिमिटेड"
 msgid "Raw embed JSON"
 msgstr "रॉ एम्बेड JSON"
 
-#. Description for the high-tier Screen share streaming preset (Plutonium). Source resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:87
-msgid "Razor-sharp text at native source resolution, 15 FPS"
-msgstr "नेटिव सोर्स रिज़ॉल्यूशन पर एकदम साफ़ टेक्स्ट, 15 FPS"
-
 #. Button label that discards the current recording and restarts.
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:73
 msgid "Re-record"
@@ -26077,11 +26041,6 @@ msgstr "उपहार खरीदने के लिए तैयार ह�
 #: src/features/app/components/dialogs/components/plutonium/BottomCTASection.tsx:50
 msgid "Ready to upgrade?"
 msgstr "अपग्रेड करने के लिए तैयार हैं?"
-
-#. Option label for a software encoder quality select. Means fastest/lower-latency.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:84
-msgid "Real-time"
-msgstr "रीयलटाइम"
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:595
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:74
@@ -26404,7 +26363,7 @@ msgid "Regular button clicked."
 msgstr "सामान्य बटन पर क्लिक किया गया।"
 
 #. Button label for rejecting an incoming direct call.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:96
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:103
 msgid "Reject"
 msgstr "अस्वीकार करें"
 
@@ -27662,7 +27621,7 @@ msgstr "आकार बदलना, विंडो बड़ी करना 
 #. Section header in the stream settings menu for resolution options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:206
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:125
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:128
 msgid "Resolution"
 msgstr "रिज़ॉल्यूशन"
 
@@ -28351,9 +28310,11 @@ msgstr "स्क्रीन रिकॉर्डिंग की अनुम
 #. Footer summary label for the text-focused screen-share quality preset.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Streaming preset label in the stream settings menu. Optimized for sharp text in screen shares.
+#. Video settings label for the text-focused screen share quality preset.
+#: src/features/user/components/modals/tabs/UserVideoTabState.ts:28
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:222
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:233
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:83
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:231
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:88
 msgid "Screen share"
 msgstr "स्क्रीन शेयर"
 
@@ -28368,7 +28329,7 @@ msgid "Screen share audio boost"
 msgstr "स्क्रीन शेयर ऑडियो बूस्ट"
 
 #. Error modal title shown when the selected native screen-share audio route cannot start safely.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:176
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:174
 msgid "Screen share audio couldn't start"
 msgstr "स्क्रीन शेयर ऑडियो शुरू नहीं हो सका"
 
@@ -28383,7 +28344,7 @@ msgid "Screen share encoder controls"
 msgstr "स्क्रीन शेयर एन्कोडर कंट्रोल"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:113
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:146
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "स्क्रीन शेयर समाप्त हो गया"
@@ -28409,17 +28370,17 @@ msgid "Screen share preview behavior"
 msgstr "स्क्रीन शेयर प्रीव्यू का तरीका"
 
 #. Title of an informational modal explaining screen-share preview frame uploads.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:286
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:284
 msgid "Screen share previews"
 msgstr "स्क्रीन शेयर प्रीव्यू"
 
 #. Compact footer status in the screen-share picker when preview frame uploads are disabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:274
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:272
 msgid "Screen share previews are disabled."
 msgstr "स्क्रीन शेयर प्रीव्यू बंद हैं।"
 
 #. Compact footer status in the screen-share picker when preview frame uploads are enabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:270
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:268
 msgid "Screen share previews are enabled."
 msgstr "स्क्रीन शेयर प्रीव्यू चालू हैं।"
 
@@ -28430,13 +28391,13 @@ msgstr "स्क्रीन शेयर गोपनीयता"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:84
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:112
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:214
 msgid "Screen share quality"
 msgstr "स्क्रीन शेयर क्वालिटी"
 
 #. Voice control dropdown label or menu item for screen sharing and stream quality settings.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:235
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:242
 msgid "Screen share settings"
 msgstr "स्क्रीन शेयर सेटिंग्स"
 
@@ -28981,7 +28942,7 @@ msgstr "सीक प्रीव्यू"
 
 #. Hover action on a device card that selects the device without starting the stream.
 #: src/features/app/components/dialogs/components/PricingCard.tsx:65
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:200
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:198
 msgid "Select"
 msgstr "चुनें"
 
@@ -29537,6 +29498,11 @@ msgstr "कस्टम स्टेटस सेट करें"
 msgid "Set a member list position for the role"
 msgstr "रोल के लिए सदस्य सूची में एक स्थान सेट किया गया"
 
+#. Video settings note shown when a streaming preset decides the screen share resolution and frame rate. preset is the Gaming or Screen share preset label, and Custom is the third preset label.
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:89
+msgid "Set by the {preset} preset. Picking a value here switches to Custom."
+msgstr "{preset} प्रीसेट द्वारा सेट किया गया। यहाँ कोई मान चुनने पर कस्टम पर स्विच हो जाएगा।"
+
 #. Short label in the keybinds tab. Keep it concise.
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:28
 msgid "Set custom shortcut"
@@ -29558,7 +29524,7 @@ msgid "Set custom volumes for individual sounds. Sounds without an override foll
 msgstr "अलग-अलग आवाज़ों के लिए कस्टम वॉल्यूम सेट करें। जिन आवाज़ों में ओवरराइड नहीं है, वे मास्टर वॉल्यूम के अनुसार होंगी।"
 
 #. Settings description for assigning the keyboard shortcut that toggles voice deafen. Deafen controls hearing voice chat, not microphone mute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:160
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:167
 msgid "Set deafen shortcut"
 msgstr "डीफ़ेन शॉर्टकट सेट करें"
 
@@ -29703,6 +29669,11 @@ msgstr "इस जाँच को अलग रखें"
 msgid "Set this check aside?"
 msgstr "इस जाँच को अलग रख दें?"
 
+#. Screen share status row in the stream menu and in video settings, describing the settings the live stream is running at rather than what reaches viewers. resolution is a technical token such as 1080p, frameRate is the whole number of frames a second the stream is set to send and codec is a codec name such as VP9. FPS is a technical token.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:415
+msgid "Set to send {resolution} at {frameRate} FPS with {codec}"
+msgstr "{resolution} पर {frameRate} FPS के साथ {codec} पर भेजने के लिए सेट करें"
+
 #. Title for the self-host setup wizard modal.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:73
 msgid "Set up {productName}"
@@ -29810,7 +29781,7 @@ msgid "Share gift"
 msgstr "उपहार शेयर करें"
 
 #. Hover action on an application or display card that starts sharing that source.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:196
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:194
 msgid "Share screen"
 msgstr "स्क्रीन शेयर करें"
 
@@ -29820,7 +29791,7 @@ msgid "Share screens and windows."
 msgstr "स्क्रीन और विंडो शेयर करें।"
 
 #. Toggle label for sharing audio with an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:153
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:156
 msgid "Share stream audio"
 msgstr "स्ट्रीम ऑडियो शेयर करें"
 
@@ -29852,11 +29823,11 @@ msgid "Share with community mods."
 msgstr "कम्युनिटी मॉडरेटर के साथ शेयर करें।"
 
 #. Voice control button or tooltip label for starting screen sharing.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:219
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:226
 msgid "Share your screen"
 msgstr "अपनी स्क्रीन शेयर करें"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:298
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:328
 msgid "Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60 FPS."
 msgstr "अपनी स्क्रीन को हाई डेफ़िनिशन (1080p), क्वाड HD (1440p) या नेटिव सोर्स रिज़ॉल्यूशन में, 60 FPS तक शेयर करें।"
 
@@ -29900,9 +29871,14 @@ msgid "Sharing personal information"
 msgstr "व्यक्तिगत जानकारी शेयर करना"
 
 #. Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:97
+msgid "Sharp text at 720p, up to 30 FPS"
+msgstr "720p पर शार्प टेक्स्ट, 30 FPS तक"
+
+#. Description for the high-tier Screen share streaming preset (Plutonium). Resolution and frame rate are technical tokens.
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:92
-msgid "Sharper text at 720p, 30 FPS"
-msgstr "720p, 30 FPS पर ज़्यादा साफ़ टेक्स्ट"
+msgid "Sharp text at up to 4K, up to 15 FPS"
+msgstr "15 FPS पर 4K तक शार्प टेक्स्ट"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:189
@@ -30055,7 +30031,7 @@ msgid "Show call avatars"
 msgstr "कॉल अवतार दिखाएं"
 
 #. Action label that reveals a previously hidden remote camera feed.
-#: src/features/voice/components/voice_participant_tile/shared.ts:57
+#: src/features/voice/components/voice_participant_tile/shared.ts:55
 msgid "Show camera"
 msgstr "कैमरा दिखाएं"
 
@@ -30671,7 +30647,7 @@ msgid "Single community mode"
 msgstr "सिंगल कम्युनिटी मोड"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:108
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:87
 msgid "Single layer"
 msgstr "सिंगल लेयर"
 
@@ -30956,6 +30932,16 @@ msgstr "स्माइली चेहरा"
 msgid "Smileys"
 msgstr "स्माइली"
 
+#. Description for the free-tier Gaming streaming preset. Resolution and frame rate are technical tokens.
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:84
+msgid "Smooth 30 FPS at up to 720p"
+msgstr "720p तक, स्मूथ 30 FPS"
+
+#. Description for the high-tier Gaming streaming preset (Plutonium). Resolution and frame rate are technical tokens.
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:79
+msgid "Smooth 60 FPS at up to 1440p"
+msgstr "1440p तक स्मूथ 60 FPS"
+
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label for an advanced desktop scrolling toggle.
@@ -30966,7 +30952,7 @@ msgid "Smooth scrolling"
 msgstr "स्मूद स्क्रॉलिंग"
 
 #. Footer summary description for the gaming screen-share quality preset.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:241
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:239
 msgid "Smoother video"
 msgstr "ज़्यादा स्मूद वीडियो"
 
@@ -31004,11 +30990,6 @@ msgstr "सोशल"
 msgid "Software encoder"
 msgstr "सॉफ़्टवेयर एन्कोडर"
 
-#. Label for an advanced screen-share select. Refers to software video encoder quality bias.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:76
-msgid "Software encoder quality"
-msgstr "सॉफ़्टवेयर एन्कोडर क्वालिटी"
-
 #: src/features/app/components/dialogs/components/PricingCard.tsx:64
 #: src/features/app/components/dialogs/components/PricingCard.tsx:92
 msgid "Sold out"
@@ -31024,15 +31005,15 @@ msgstr "कुछ इमोजी जोड़े नहीं जा सके"
 msgid "Some files you're trying to upload exceed the maximum size limit of {maxSizeFormatted} per file."
 msgstr "आप जो फ़ाइलें अपलोड करने की कोशिश कर रहे हैं, उनमें से कुछ प्रति फ़ाइल {maxSizeFormatted} की अधिकतम साइज़ सीमा से बड़ी हैं।"
 
+#. Screen share notice shown to the person sharing when the app failed to push new settings to a live share.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:410
+msgid "Some stream settings could not be applied to your live stream."
+msgstr "आपके लाइव स्ट्रीम पर कुछ स्ट्रीम सेटिंग्स लागू नहीं की जा सकीं।"
+
 #. Title of the unaddable recipients confirmation alert shown when creating a group DM.
 #: src/features/channel/components/modals/UnaddableRecipientsConfirmModal.tsx:27
 msgid "Some users can't be added"
 msgstr "कुछ यूज़र को जोड़ा नहीं जा सकता"
-
-#. Fallback tooltip on the passive badge on your own screen-share tile when the encoder reports no specific limitation.
-#: src/features/voice/components/voice_participant_tile/shared.ts:93
-msgid "Something is limiting this stream, so viewers are getting fewer frames than you asked for."
-msgstr "कोई चीज़ इस स्ट्रीम को सीमित कर रही है, इसलिए दर्शकों को आपके मांगे गए फ़्रेम से कम मिल रहे हैं।"
 
 #. Generic error modal title for an unexpected failure.
 #. Generic error toast title.
@@ -31236,10 +31217,12 @@ msgstr "साउंड"
 
 #. Footer summary resolution label for native source resolution.
 #. Resolution option in the stream settings menu meaning the original source resolution (no downscale).
+#. Screen share resolution token in the stream menu status rows, used when the person asked for the original source resolution and the app does not know the source size. Matches the Source option in the stream settings menu.
 #. Short label in the video tab for the native source resolution option. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:68
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:249
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:105
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:85
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:247
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:110
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:425
 msgid "Source"
 msgstr "सोर्स"
 
@@ -31332,11 +31315,6 @@ msgstr "स्पैनिश (लैटिन अमेरिका)"
 #: src/features/user/utils/LocaleUtils.ts:44
 msgid "Spanish (Spain)"
 msgstr "स्पैनिश (स्पेन)"
-
-#. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:116
-msgid "Spatial and temporal layers"
-msgstr "स्पेशियल और टेम्पोरल लेयर्स"
 
 #. Permission name: allows speaking in voice channels.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:462
@@ -31591,7 +31569,7 @@ msgstr "वॉइस कॉल शुरू करें?"
 msgid "Start call"
 msgstr "कॉल शुरू करें"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:259
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:289
 msgid "Start camera test and configure effects"
 msgstr "कैमरा टेस्ट शुरू करें और इफ़ेक्ट कॉन्फ़िगर करें"
 
@@ -31932,7 +31910,7 @@ msgstr "बोलना बंद करें"
 #. Danger action that stops the active screen share.
 #. Voice screen share menu action that stops the current user stream.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:20
-#: src/features/voice/components/ActiveScreenShareMenu.tsx:21
+#: src/features/voice/components/ActiveScreenShareMenu.tsx:30
 msgid "Stop streaming"
 msgstr "स्ट्रीमिंग बंद करें"
 
@@ -31942,7 +31920,7 @@ msgid "Stop trusting all links?"
 msgstr "सभी लिंक पर भरोसा करना बंद करें?"
 
 #. Voice control action for stopping the currently focused or selected stream.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:239
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:246
 msgid "Stop watching"
 msgstr "देखना बंद करें"
 
@@ -32004,27 +31982,27 @@ msgstr "आपके स्पीकर को आपके माइक मे�
 #. Primary footer action that starts streaming the selected capture device.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:236
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:204
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:202
 msgid "Stream"
 msgstr "स्ट्रीम"
 
 #. Accessible status label for the black buffering frame shown while a screen share codec is renegotiated.
-#: src/features/voice/components/voice_participant_tile/shared.ts:36
+#: src/features/voice/components/voice_participant_tile/shared.ts:34
 msgid "Stream buffering"
 msgstr "स्ट्रीम बफ़र हो रही है"
 
 #. Status overlay on a voice participant tile when the remote screen share has ended.
-#: src/features/voice/components/voice_participant_tile/shared.ts:28
+#: src/features/voice/components/voice_participant_tile/shared.ts:26
 msgid "Stream ended"
 msgstr "स्ट्रीम समाप्त हो गई"
 
 #. Overlay text on a participant tile when the local user hid the remote screen share.
-#: src/features/voice/components/voice_participant_tile/shared.ts:32
+#: src/features/voice/components/voice_participant_tile/shared.ts:30
 msgid "Stream hidden"
 msgstr "स्ट्रीम छिपी हुई है"
 
 #. Accessible label for a passive badge on your own screen-share tile, shown when the encoder stays below the frame rate you asked for.
-#: src/features/voice/components/voice_participant_tile/shared.ts:80
+#: src/features/voice/components/voice_participant_tile/shared.ts:78
 msgid "Stream is not keeping up"
 msgstr "स्ट्रीम तालमेल नहीं बिठा पा रही है"
 
@@ -32038,14 +32016,19 @@ msgid "Stream preview"
 msgstr "स्ट्रीम का प्रीव्यू"
 
 #. Compact submenu label for changing the resolution and frame rate of an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:149
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:152
 msgid "Stream quality"
 msgstr "स्ट्रीम क्वालिटी"
 
 #. Toolbar / menu button label in the screen-share picker. Opens the stream quality settings popover.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:225
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:223
 msgid "Stream settings"
 msgstr "स्ट्रीम सेटिंग्स"
+
+#. Accessible label for the information badge on the sharing tile, shown when the app changed stream settings without a problem to report.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:440
+msgid "Stream settings were adjusted"
+msgstr "स्ट्रीम सेटिंग्स को समायोजित किया गया"
 
 #. Permission name: allows video streaming or screen sharing in voice.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:467
@@ -32064,7 +32047,7 @@ msgid "Streaming"
 msgstr "स्ट्रीमिंग"
 
 #. Section header in the stream settings menu. Picks between Gaming / Screen share / Custom presets.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:121
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:124
 msgid "Streaming mode"
 msgstr "स्ट्रीमिंग मोड"
 
@@ -32270,7 +32253,7 @@ msgid "SVC"
 msgstr "SVC"
 
 #. Label for an advanced screen-share select. SVC is a WebRTC acronym and should stay uppercase.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:96
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:75
 msgid "SVC mode"
 msgstr "SVC मोड"
 
@@ -32543,8 +32526,8 @@ msgstr "{productName} स्टाफ़ की सिस्टम घोषण�
 
 #. Audio device option label meaning the OS default audio input device.
 #. Footer summary fallback for the default capture-device audio input.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:262
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:137
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:260
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:140
 msgid "System default"
 msgstr "सिस्टम डिफ़ॉल्ट"
 
@@ -32745,7 +32728,7 @@ msgid "Template URL"
 msgstr "टेम्पलेट यूआरएल"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:112
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:91
 msgid "Temporal layers"
 msgstr "टेम्पोरल लेयर्स"
 
@@ -32822,7 +32805,7 @@ msgstr "टेक्सास"
 #: src/features/channel/utils/ChannelUtils.tsx:51
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts:23
 #: src/features/theme_studio/sections/TokenGroups.ts:50
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:156
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:116
 msgid "Text"
 msgstr "टेक्स्ट"
 
@@ -33053,8 +33036,13 @@ msgstr "बॉट को <0>{destinationName}</0> में जोड़ दि�
 msgid "The bot has been added."
 msgstr "बॉट जोड़ दिया गया है।"
 
+#. Screen share notice shown to the person sharing when the browser ignores the requested size. deliveredResolution is the size the browser really sends and resolution is the size the app asked it for. Both are technical tokens such as 720p or 2714x762.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:373
+msgid "The browser is sending {deliveredResolution} instead of {resolution}."
+msgstr "ब्राउज़र {deliveredResolution} भेज रहा है, {resolution} के बजाय।"
+
 #. Status shown when a device preview has not released the camera before the bounded handoff deadline.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:172
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:170
 msgid "The camera preview is still stopping. Try streaming again in a moment."
 msgstr "कैमरा प्रीव्यू अभी भी बंद हो रहा है। थोड़ी देर में फिर से स्ट्रीम करने की कोशिश करें।"
 
@@ -33232,7 +33220,7 @@ msgid "The role granted {permissions}"
 msgstr "रोल ने {permissions} प्रदान कीं"
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:118
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:151
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "स्क्रीन शेयर स्रोत ने वीडियो भेजना बंद कर दिया है, इसलिए आपका स्क्रीन शेयर रोक दिया गया।"
@@ -33474,7 +33462,7 @@ msgid "This browser console is a developer tool."
 msgstr "यह ब्राउज़र कंसोल एक डेवलपर टूल है।"
 
 #. Pre-join indicator shown beneath the Join button on a DM or group DM call where every connected participant supports E2EE.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:316
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:323
 msgid "This call is end-to-end encrypted."
 msgstr "यह कॉल एंड-टू-एंड एन्क्रिप्टेड है।"
 
@@ -33657,6 +33645,11 @@ msgstr "यह डेस्कटॉप बिल्ड {productName} के अ
 msgid "This development build cannot update itself. Download a desktop installer to test the update flow."
 msgstr "यह डेवलपमेंट बिल्ड खुद को अपडेट नहीं कर सकता है। अपडेट फ़्लो का परीक्षण करने के लिए डेस्कटॉप इंस्टॉलर डाउनलोड करें।"
 
+#. Screen share notice shown to the person sharing when a remembered result made the stream start below the asked-for settings. targetResolution and targetFrameRate are what the person asked for, resolution and frameRate are the lower settings the stream started at. Resolutions are technical tokens such as 1080p and rates are whole numbers. FPS is a technical token.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:383
+msgid "This device could not keep up with {targetResolution} at {targetFrameRate} FPS last time, so your stream started at {resolution} at {frameRate} FPS."
+msgstr "पिछली बार यह डिवाइस {targetResolution} को {targetFrameRate} FPS पर बनाए नहीं रख सका, इसलिए आपकी स्ट्रीम {resolution} को {frameRate} FPS पर शुरू हुई।"
+
 #. Modal body shown when the current device/browser cannot show notifications.
 #: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:27
 msgid "This device does not support notifications."
@@ -33760,7 +33753,7 @@ msgid "This install is managed by your system. Update {productName} from your so
 msgstr "यह इंस्टॉलेशन आपके सिस्टम द्वारा प्रबंधित किया जाता है। अपने सॉफ़्टवेयर सेंटर या पैकेज मैनेजर से {productName} को अपडेट करें।"
 
 #. Neutral video settings note shown when higher screen share quality is disabled by instance limits.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:61
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:75
 msgid "This instance currently allows screen sharing up to 720p at 30 FPS."
 msgstr "यह इंस्टेंस वर्तमान में 30 FPS पर 720p तक स्क्रीन शेयर की अनुमति देता है।"
 
@@ -33954,17 +33947,17 @@ msgid "This option is required. Please provide a value."
 msgstr "यह विकल्प आवश्यक है। कृपया कोई मान दें।"
 
 #. Voice participant status tooltip shown when channel permissions or voice suppression prevent another participant from speaking.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:48
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:55
 msgid "This participant can't speak in this channel"
 msgstr "यह प्रतिभागी इस चैनल में बोल नहीं सकता"
 
 #. Voice participant status tooltip for another user. They cannot hear voice chat. Distinct from muted.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:74
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:81
 msgid "This participant is deafened"
 msgstr "इस प्रतिभागी को डीफ़ेन किया गया है"
 
 #. Voice participant status tooltip for another user. A moderator deafened that participant so they cannot hear voice chat.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:61
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:68
 msgid "This participant was deafened by moderators"
 msgstr "इस प्रतिभागी को मॉडरेटर ने डीफ़ेन किया है"
 
@@ -33979,7 +33972,7 @@ msgid "This phone number has already been used. Try another number or contact su
 msgstr "यह फ़ोन नंबर पहले ही इस्तेमाल किया जा चुका है। कोई दूसरा नंबर आज़माएँ या सहायता से संपर्क करें।"
 
 #. Empty state in the screen-share picker shown to web users. Explains that this advanced picker requires the desktop app.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:136
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:134
 msgid "This picker is only available in the desktop app."
 msgstr "यह पिकर सिर्फ़ डेस्कटॉप ऐप में उपलब्ध है।"
 
@@ -34408,7 +34401,7 @@ msgid "Toggle controls"
 msgstr "कंट्रोल टॉगल करें"
 
 #. Keyboard shortcut label. Toggles voice deafen, which controls whether the user hears voice chat. Distinct from microphone mute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:150
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:157
 msgid "Toggle deafen"
 msgstr "डीफ़ेन टॉगल करें"
 
@@ -34846,6 +34839,11 @@ msgstr "अलग-अलग फ़िल्टर या सर्च टर्�
 msgid "Try editing your message again."
 msgstr "अपना मैसेज फिर से एडिट करने की कोशिश करें।"
 
+#. Screen share action in the stream menu. Forgets what this device measured and restarts the stream at the asked-for settings.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:435
+msgid "Try full quality again"
+msgstr "पूरी क्वालिटी में फिर से आज़माएँ"
+
 #: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:252
 msgid "Try searching for something like \"theme\", \"notifications\", or \"privacy\""
 msgstr "\"थीम\", \"सूचनाएं\" या \"गोपनीयता\" जैसा कुछ खोजकर देखें"
@@ -34906,7 +34904,7 @@ msgid "Turn off anything you're not comfortable with. Some features may stop wor
 msgstr "जो भी आपको ठीक न लगे, उसे बंद कर दें। कुछ फ़ीचर काम करना बंद कर सकते हैं।"
 
 #. Error modal body shown after a native screen-share audio route fails to start.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:180
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:178
 msgid "Turn off audio sharing for this source or try again in a moment."
 msgstr "इस स्रोत के लिए ऑडियो शेयरिंग बंद करें या थोड़ी देर बाद फिर से प्रयास करें।"
 
@@ -34962,7 +34960,7 @@ msgid "Turn on automatically when OBS or XSplit is detected"
 msgstr "OBS या XSplit का पता चलने पर अपने आप चालू करें"
 
 #. Voice control button or tooltip label for enabling the camera.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:215
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:222
 msgid "Turn on camera"
 msgstr "कैमरा चालू करें"
 
@@ -35312,17 +35310,17 @@ msgid "Uncollectible"
 msgstr "वसूली योग्य नहीं"
 
 #. Voice action label. Restores what the user hears in voice chat. Distinct from microphone unmute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:82
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:89
 msgid "Undeafen"
 msgstr "अनडीफ़ेन करें"
 
 #. Voice menu action that restores voice audio on every device or session for this user.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:141
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:148
 msgid "Undeafen all devices"
 msgstr "सभी डिवाइस अनडीफ़ेन करें"
 
 #. Voice control label. Restores what the current user hears in voice chat. Distinct from microphone unmute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:128
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:135
 msgid "Undeafen yourself"
 msgstr "खुद को अनडीफ़ेन करें"
 
@@ -35560,7 +35558,7 @@ msgstr "अज्ञात यूज़र"
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:102
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts:61
 #: src/features/voice/components/VoiceParticipantAvatarList.tsx:44
-#: src/features/voice/components/VoiceParticipantTile.tsx:174
+#: src/features/voice/components/VoiceParticipantTile.tsx:181
 #: src/features/webhook/components/WebhookListItem.tsx:31
 msgid "Unknown user"
 msgstr "अज्ञात यूज़र"
@@ -35604,7 +35602,7 @@ msgid "Unlock custom emojis in DMs with {premiumProductName}"
 msgstr "{premiumProductName} के साथ DM में कस्टम इमोजी अनलॉक करें"
 
 #. Premium upsell title in video settings.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:53
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:67
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "{premiumProductName} के साथ HD स्क्रीन शेयर अनलॉक करें"
 
@@ -35661,7 +35659,7 @@ msgid "Unmute {label}"
 msgstr "{label} को अनम्यूट करें"
 
 #. Voice menu action that unmutes every device or session for this user.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:116
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:123
 msgid "Unmute all devices"
 msgstr "सभी डिवाइस अनम्यूट करें"
 
@@ -35713,7 +35711,7 @@ msgid "Unmute microphone"
 msgstr "माइक अनम्यूट करें"
 
 #. Tooltip / button label on a voice participant tile that unmutes the remote screen-share or camera audio.
-#: src/features/voice/components/voice_participant_tile/shared.ts:20
+#: src/features/voice/components/voice_participant_tile/shared.ts:18
 msgid "Unmute stream audio"
 msgstr "स्ट्रीम ऑडियो अनम्यूट करें"
 
@@ -35743,8 +35741,8 @@ msgstr "बिना नाम का ग्रुप"
 
 #. Fallback label for an audio input device whose name is not reported by the OS.
 #. Footer summary fallback for an audio input without a reported name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:266
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:141
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:264
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:144
 msgid "Unnamed input"
 msgstr "अनाम इनपुट"
 
@@ -36155,7 +36153,7 @@ msgid "Upload new emoji and stickers, and manage your own creations."
 msgstr "नए इमोजी और स्टिकर अपलोड करें, और अपनी बनाई चीज़ें मैनेज करें।"
 
 #. Description for the screen-share preview toggle in the informational modal.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:332
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:330
 msgid "Upload preview frames for screen shares."
 msgstr "स्क्रीन शेयर के लिए प्रीव्यू फ़्रेम अपलोड करें।"
 
@@ -36626,6 +36624,11 @@ msgstr "उन कम्युनिटी में इस्तेमाल �
 msgid "Used in communities that do not have their own sound."
 msgstr "उन कम्युनिटी में इस्तेमाल किया जाता है जिनका अपना कोई साउंड नहीं है।"
 
+#. Description for a WebRTC content hint select. Custom, Gaming and Screen share are the stream quality preset labels.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:99
+msgid "Used in Custom mode. The Gaming and Screen share presets set their own hint."
+msgstr "कस्टम मोड में इस्तेमाल किया गया। गेमिंग और स्क्रीन शेयर प्रीसेट अपना हिंट सेट करते हैं।"
+
 #. Description text in the entrance sound section.
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:94
 msgid "Used in direct-message calls. If you do not set one, your global sound is used instead."
@@ -36736,7 +36739,7 @@ msgid "User tag (optional)"
 msgstr "यूज़र टैग (वैकल्पिक)"
 
 #. Voice menu slider label for the saved volume of a specific user.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:243
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:250
 msgid "User volume"
 msgstr "यूज़र का वॉल्यूम"
 
@@ -37630,7 +37633,7 @@ msgid "Voice & video"
 msgstr "वॉइस और वीडियो"
 
 #. Voice menu item that opens the user settings tab for microphone, speaker, camera, and call stats.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:247
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:254
 msgid "Voice & video settings"
 msgstr "वॉइस और वीडियो सेटिंग्स"
 
@@ -37682,7 +37685,7 @@ msgstr "वॉइस और वीडियो शॉर्टकट"
 
 #. Short label for a voice call (lobby header, DM action, settings section).
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:744
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:35
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:42
 msgid "Voice call"
 msgstr "वॉइस कॉल"
 
@@ -37750,7 +37753,7 @@ msgid "Voice connection debug"
 msgstr "वॉइस कनेक्शन डीबग करें"
 
 #. Notification sound label for the event where the user becomes deafened in voice chat. Distinct from voice mute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:165
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:172
 msgid "Voice deafen"
 msgstr "वॉइस डीफ़ेन"
 
@@ -37829,7 +37832,7 @@ msgid "Voice settings"
 msgstr "वॉइस सेटिंग्स"
 
 #. Notification sound label for the event where the user is no longer deafened in voice chat. Distinct from voice unmute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:170
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:177
 msgid "Voice undeafen"
 msgstr "वॉइस अनडीफ़ेन"
 
@@ -37901,7 +37904,7 @@ msgid "Wait here"
 msgstr "यहां इंतज़ार करें"
 
 #. Tooltip explaining that video / screen share controls are gated while the voice connection is not yet ready.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:45
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:48
 msgid "Waiting for connection..."
 msgstr "कनेक्शन का इंतज़ार हो रहा है..."
 
@@ -37947,7 +37950,7 @@ msgid "Washington"
 msgstr "वॉशिंगटन"
 
 #. Compact button label on a participant tile. Joins / opens the remote screen share.
-#: src/features/voice/components/voice_participant_tile/shared.ts:71
+#: src/features/voice/components/voice_participant_tile/shared.ts:69
 msgid "Watch"
 msgstr "देखें"
 
@@ -37962,7 +37965,7 @@ msgid "Watching"
 msgstr "देख रहा है"
 
 #. Title on a remote screen-share tile when loading the watched stream failed.
-#: src/features/voice/components/voice_participant_tile/shared.ts:40
+#: src/features/voice/components/voice_participant_tile/shared.ts:38
 msgid "Watching failed :("
 msgstr "स्ट्रीम देखना विफल रहा :("
 
@@ -38462,17 +38465,17 @@ msgid "When posted as links in chat"
 msgstr "जब चैट पर लिंक के तौर पर पोस्ट किया जाए"
 
 #. Explanation of screen-share preview uploads in a group DM call. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:296
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:294
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so other people in this group DM can see a thumbnail before they watch."
 msgstr "जब प्रीव्यू चालू होते हैं, तो {productName} आपके स्क्रीन शेयर से समय-समय पर JPEG फ़्रेम अपलोड करता है, ताकि इस ग्रुप DM में मौजूद दूसरे लोग देखने से पहले थंबनेल देख सकें।"
 
 #. Explanation of screen-share preview uploads in a guild voice channel. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:290
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:288
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so people with permission to connect to this voice channel can see a thumbnail before they watch."
 msgstr "जब प्रीव्यू चालू होते हैं, तो {productName} आपके स्क्रीन शेयर से समय-समय पर JPEG फ़्रेम अपलोड करता है, ताकि इस वॉइस चैनल से कनेक्ट करने की अनुमति रखने वाले लोग देखने से पहले थंबनेल देख सकें।"
 
 #. Explanation of screen-share preview uploads in a one-to-one DM call. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:302
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:300
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so the other person in this DM can see a thumbnail before they watch."
 msgstr "जब प्रीव्यू चालू होते हैं, तो {productName} आपके स्क्रीन शेयर से समय-समय पर JPEG फ़्रेम अपलोड करता है, ताकि इस DM में मौजूद दूसरा व्यक्ति देखने से पहले थंबनेल देख सके।"
 
@@ -38624,7 +38627,7 @@ msgid "Windows cut off at the top or bottom of the screen, and docked DevTools, 
 msgstr "स्क्रीन के ऊपर या नीचे से कटी हुई विंडो और डॉक किए गए DevTools पारदर्शी रहने के बजाय ग्रे बैकग्राउंड दिखा सकते हैं।"
 
 #. Audio device label prefix for the operating system default audio device on Windows.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:14
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:21
 msgid "Windows default"
 msgstr "विंडोज डिफ़ॉल्ट"
 
@@ -38797,7 +38800,7 @@ msgid "You are banned from this community and cannot join."
 msgstr "आपको इस कम्युनिटी से बैन कर दिया गया है और आप इसमें शामिल नहीं हो सकते।"
 
 #. Voice participant status tooltip for the current user. They cannot hear voice chat. Distinct from muted.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:70
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:77
 msgid "You are deafened"
 msgstr "आप डीफ़ेन किए गए हैं"
 
@@ -38829,6 +38832,11 @@ msgstr "आप {productName} का {releaseChannel} बिल्ड इस्�
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:160
 msgid "You aren't in any communities right now."
 msgstr "आप अभी किसी भी कम्युनिटी में नहीं हैं।"
+
+#. Screen share status row in the stream menu, describing the settings the person chose. resolution is a technical token such as 1440p and frameRate is a whole number. FPS is a technical token.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:420
+msgid "You asked for {resolution} at {frameRate} FPS"
+msgstr "आपने {resolution} {frameRate} FPS पर मांगा"
 
 #. Warning shown before opening or composing a DM with a user the current user has blocked. {userName} is the blocked user.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:180
@@ -39014,13 +39022,13 @@ msgstr "आप इस कम्युनिटी में मैसेज न�
 
 #. Tooltip in the voice control bar when the user lacks the Screen Share permission in this channel. Tone stays plain.
 #. Tooltip shown when the user lacks the Screen Share permission in the voice channel. Tone stays plain.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:54
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:57
 #: src/features/voice/components/VoiceControlBar.tsx:137
 msgid "You can't share your screen in this channel"
 msgstr "आप इस चैनल में अपनी स्क्रीन शेयर नहीं कर सकते"
 
 #. Voice control tooltip shown when channel permissions prevent the current user from speaking.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:44
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:51
 msgid "You can't speak in this channel"
 msgstr "आप इस चैनल में बोल नहीं सकते"
 
@@ -39028,7 +39036,7 @@ msgstr "आप इस चैनल में बोल नहीं सकते
 #. Tooltip in the voice control bar when the user lacks the Video permission in this channel. Tone stays plain.
 #. Tooltip shown when the user lacks the Video permission in the voice channel. Tone stays plain.
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:76
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:50
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:53
 #: src/features/voice/components/VoiceControlBar.tsx:127
 msgid "You can't turn on your camera in this channel"
 msgstr "आप इस चैनल में अपना कैमरा चालू नहीं कर सकते"
@@ -39342,7 +39350,7 @@ msgid "You stay in {ownedNames}. Owners cannot leave their own community."
 msgstr "आप {ownedNames} में रहेंगे। मालिक अपनी कम्युनिटी नहीं छोड़ सकते।"
 
 #. Voice chat status tooltip for the current user. A moderator deafened them so they cannot hear voice chat.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:57
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:64
 msgid "You were deafened by moderators"
 msgstr "आपको मॉडरेटर ने डीफ़ेन किया है"
 
@@ -39691,6 +39699,11 @@ msgstr "आपका आवेदन समीक्षा के लिए ल�
 msgid "Your browser requires user interaction before audio can be played. Click the button below to enable voice chat."
 msgstr "ऑडियो चलाने से पहले आपके ब्राउज़र को यूज़र इंटरैक्शन की ज़रूरत है। वॉइस चैट चालू करने के लिए नीचे दिए गए बटन पर क्लिक करें।"
 
+#. Screen share notice shown to the person sharing a capture device, such as a capture card, that ignores the requested size. deliveredResolution is the size the capture device really sends and resolution is the size the app asked it for. Both are technical tokens such as 720p.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:378
+msgid "Your capture device is sending {deliveredResolution} instead of {resolution}."
+msgstr "आपका कैप्चर डिवाइस {resolution} के बजाय {deliveredResolution} भेज रहा है।"
+
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:185
 msgid "Your card is being checked for localized pricing. This usually takes a moment."
 msgstr "स्थानीय मूल्य निर्धारण के लिए आपके कार्ड की जाँच की जा रही है। इसमें आमतौर पर कुछ पल लगते हैं।"
@@ -39721,15 +39734,35 @@ msgstr "आपकी कम्युनिटी डिस्कवरी मे
 msgid "Your community needs at least {minMemberCount, plural, one {# member} other {# members}} before it can be listed in Discovery."
 msgstr "डिस्कवरी में लिस्ट होने के लिए आपकी कम्युनिटी में कम से कम {minMemberCount, plural, one {# सदस्य} other {# सदस्य}} होने चाहिए।"
 
-#. Tooltip on the passive badge on your own screen-share tile when the encoder is limited by CPU.
-#: src/features/voice/components/voice_participant_tile/shared.ts:85
-msgid "Your CPU cannot keep up, so viewers are getting fewer frames than you asked for."
-msgstr "आपका सीपीयू साथ नहीं दे पा रहा, इसलिए आपने जितने फ़्रेम मांगे थे, दर्शकों को उससे कम मिल रहे हैं।"
+#. Screen share notice shown to the person sharing when their upload is the limit. frameRate is the whole number of frames a second the stream is set to send and deliveredFrameRate is the smaller whole number that reaches viewers. Keep the two rates in separate clauses so neither can be read as the other. resolution is a technical token such as 720p. FPS is a technical token.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:367
+msgid "Your connection cannot keep up. Your stream is set to {frameRate} FPS at {resolution} and viewers are getting about {deliveredFrameRate} FPS."
+msgstr "आपका कनेक्शन साथ नहीं दे पा रहा है। आपकी स्ट्रीम {frameRate} FPS पर {resolution} पर सेट है और दर्शकों को लगभग {deliveredFrameRate} FPS मिल रहा है।"
 
 #. Body copy on the mature content check callback page after a successful check submission.
 #: src/features/auth/components/pages/MatureContentCheckCallbackPage.tsx:14
 msgid "Your credit card has been checked. If the card is valid, mature content will unlock shortly. You can close this tab and return to the app."
 msgstr "आपके क्रेडिट कार्ड की जाँच कर ली गई है। अगर कार्ड मान्य है, तो जल्द ही वयस्क सामग्री अनलॉक हो जाएगी। आप इस टैब को बंद करके ऐप पर वापस जा सकते हैं।"
+
+#. Screen share notice shown to the person sharing when their device is the limit and nothing lower is available. frameRate is the whole number of frames a second the stream is set to send and deliveredFrameRate is the smaller whole number that reaches viewers. Keep the two rates in separate clauses so neither can be read as the other. resolution is a technical token such as 720p. FPS is a technical token.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:361
+msgid "Your device cannot keep up. Your stream is set to {frameRate} FPS at {resolution} and viewers are getting about {deliveredFrameRate} FPS."
+msgstr "आपका डिवाइस साथ नहीं दे पा रहा है। आपकी स्ट्रीम {frameRate} FPS पर {resolution} पर सेट है और दर्शकों को लगभग {deliveredFrameRate} FPS मिल रहे हैं।"
+
+#. Screen share notice shown to the person sharing after their stream dropped frame rate to protect sharpness. frameRate is a whole number and resolution is a technical token such as 1080p or 2714x762. FPS is a technical token.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:339
+msgid "Your device could not keep up, so your stream now sends {frameRate} FPS to keep {resolution} sharp."
+msgstr "आपका डिवाइस साथ नहीं दे सका, इसलिए आपकी स्ट्रीम अब {resolution} को शार्प रखने के लिए {frameRate} FPS भेज रही है।"
+
+#. Screen share notice shown to the person sharing after their stream dropped both resolution and frame rate. resolution and frameRate are what the stream sends now, targetResolution and targetFrameRate are what the person asked for. Resolutions are technical tokens such as 480p and rates are whole numbers. FPS is a technical token.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:349
+msgid "Your device could not keep up, so your stream now sends {resolution} at {frameRate} FPS instead of {targetResolution} at {targetFrameRate} FPS."
+msgstr "आपका डिवाइस साथ नहीं दे सका, इसलिए आपकी स्ट्रीम अब {targetResolution} पर {targetFrameRate} FPS के बजाय {resolution} पर {frameRate} FPS भेज रही है।"
+
+#. Screen share notice shown to the person sharing after their stream dropped resolution to protect smoothness. resolution is a technical token such as 720p and frameRate is a whole number. FPS is a technical token.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:344
+msgid "Your device could not keep up, so your stream now sends {resolution} to keep {frameRate} FPS smooth."
+msgstr "आपका डिवाइस तालमेल नहीं बिठा सका, इसलिए आपका स्ट्रीम अब {resolution} भेज रहा है ताकि {frameRate} FPS स्मूथ रहे।"
 
 #. Toast confirmation after the email address has been successfully updated.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:124
@@ -39857,11 +39890,6 @@ msgstr "आपका मैसेज अपडेट नहीं हुआ"
 msgid "Your most recent purchase is no longer within the refund window. Contact support for billing issues."
 msgstr "आपकी हाल की खरीदारी अब रिफ़ंड विंडो के अंदर नहीं है। बिलिंग संबंधी समस्याओं के लिए सहायता से संपर्क करें।"
 
-#. Tooltip on the passive badge on your own screen-share tile when the encoder is limited by bandwidth.
-#: src/features/voice/components/voice_participant_tile/shared.ts:89
-msgid "Your network cannot keep up, so viewers are getting fewer frames than you asked for."
-msgstr "आपका नेटवर्क साथ नहीं दे पा रहा, इसलिए आपने जितने फ़्रेम मांगे थे, दर्शकों को उससे कम मिल रहे हैं।"
-
 #. Placeholder text inside the new email field. Sentence-fragment hint, intentionally lowercase.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:88
 msgid "your new email"
@@ -39921,16 +39949,31 @@ msgstr "आपका क्षेत्र"
 msgid "Your registration needs an extra anti-spam check before you can continue."
 msgstr "जारी रखने से पहले आपके रजिस्ट्रेशन के लिए एक अतिरिक्त एंटी-स्पैम जाँच की ज़रूरत है।"
 
+#. Video settings note shown when the saved screen share quality is above what this account can send. Resolutions are short labels such as 1440p or Source and rates are whole numbers. FPS is a technical token.
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:94
+msgid "Your saved {savedResolution} at {savedFrameRate} FPS needs {premiumProductName}, so shares use {resolution} at {frameRate} FPS."
+msgstr "आपका सहेजा गया {savedResolution} {savedFrameRate} FPS पर {premiumProductName} की आवश्यकता है, इसलिए शेयर {resolution} {frameRate} FPS पर उपयोग करते हैं।"
+
 #. Body of a modal shown when the video codec the browser negotiated for an active screen share is outside the codecs the app allows and no allowed codec could be published, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:124
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:157
 msgctxt "screen-share"
 msgid "Your screen share could not be published with a compatible video codec, so it was stopped. Try sharing again."
 msgstr "आपका स्क्रीन शेयर किसी कम्पैटिबल वीडियो कोडेक के साथ पब्लिश नहीं हो सका, इसलिए इसे रोक दिया गया। फिर से शेयर करने की कोशिश करें।"
 
+#. Screen share status row in the stream menu, shown when the captured window or screen itself produces fewer frames than asked for. sourceFrameRate is a whole number. FPS is a technical token.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:430
+msgid "Your source is producing about {sourceFrameRate} FPS"
+msgstr "आपका स्रोत लगभग {sourceFrameRate} FPS दे रहा है"
+
 #. Subtitle under the preview-paused overlay reassuring the user that the screen share is still live for others.
-#: src/features/voice/components/voice_participant_tile/shared.ts:66
+#: src/features/voice/components/voice_participant_tile/shared.ts:64
 msgid "Your stream is still live"
 msgstr "आपकी स्ट्रीम अभी भी लाइव है"
+
+#. Screen share notice shown to the person sharing after the app replaced the video codec. codec and previousCodec are codec names such as VP9 or H.264.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:355
+msgid "Your stream switched to {codec} because {previousCodec} could not keep up on this device. Viewers may see a short pause."
+msgstr "आपका स्ट्रीम {codec} पर स्विच हो गया क्योंकि इस डिवाइस पर {previousCodec} ठीक से काम नहीं कर पा रहा था। दर्शकों को एक छोटा सा पॉज़ दिख सकता है।"
 
 #. Toast error shown when the server refuses to move a Plutonium subscription down to the current price, whatever the reason.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:106
@@ -40021,10 +40064,15 @@ msgid "Your vanity URL has been set to {inviteEndpoint}/{vanitySlug}"
 msgstr "आपका वैनिटी यूआरएल {inviteEndpoint}/{vanitySlug} पर सेट कर दिया गया है"
 
 #. Body of a modal shown when the local video encoder produces no frames for an active screen share, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:131
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:164
 msgctxt "screen-share"
 msgid "Your video encoder stopped encoding frames, so your screen share was stopped. Try sharing again."
 msgstr "आपके वीडियो एन्कोडर ने फ़्रेम एन्कोड करना बंद कर दिया, इसलिए आपकी स्क्रीन शेयरिंग रोक दी गई। फिर से शेयर करने की कोशिश करें।"
+
+#. Screen share notice shown to the person sharing after the app recovered a stalled encoder on another codec. codec is a codec name such as VP8.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:395
+msgid "Your video encoder stopped, so your stream switched to {codec}."
+msgstr "आपका वीडियो एन्कोडर बंद हो गया, इसलिए आपकी स्ट्रीम {codec} पर स्विच हो गई।"
 
 #. Label for the YouTube enrichment service toggle in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:286

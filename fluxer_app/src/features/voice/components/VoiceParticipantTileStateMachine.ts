@@ -41,6 +41,15 @@ export interface VoiceParticipantTileStreamAudioSignals {
 	presentation: VoiceParticipantTilePresentation;
 }
 
+export interface VoiceParticipantTileControlPillSignals {
+	isFocusedPlaceholderTile: boolean;
+	hasDeliveryNotice: boolean;
+	showStreamAudioControls: boolean;
+	showSpectatorPill: boolean;
+	showGroupHiddenPill: boolean;
+	showDeviceCollapseControl: boolean;
+}
+
 export interface VoiceParticipantTileCameraActiveSignals {
 	isCameraTile: boolean;
 	isOwnContent: boolean;
@@ -162,6 +171,17 @@ export function shouldShowTileStreamAudioControls(signals: VoiceParticipantTileS
 	if (!signals.isWatching) return false;
 	if (!signals.hasScreenShareAudio) return false;
 	return signals.presentation === 'grid' || signals.presentation === 'focus-main';
+}
+
+export function shouldShowTileControlPill(signals: VoiceParticipantTileControlPillSignals): boolean {
+	if (signals.isFocusedPlaceholderTile) return false;
+	return (
+		signals.hasDeliveryNotice ||
+		signals.showStreamAudioControls ||
+		signals.showSpectatorPill ||
+		signals.showGroupHiddenPill ||
+		signals.showDeviceCollapseControl
+	);
 }
 
 export function shouldShowCameraBuffering(signals: VoiceParticipantTileCameraBufferingSignals): boolean {

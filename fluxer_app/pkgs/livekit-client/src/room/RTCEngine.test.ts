@@ -82,10 +82,33 @@ describe('selectPublisherCodecPreferences', () => {
 		expect(preferences).toEqual([constrainedBaselineMode1, constrainedBaselineMode0, highProfile]);
 	});
 
-	it('keeps non-H.264 codecs in browser capability order and appends RTX', () => {
+	it('puts the chosen codec first and keeps every other codec in browser capability order', () => {
 		const vp9 = codec('video/VP9');
 		const vp8 = codec('video/VP8');
 		const rtx = codec('video/rtx');
-		expect(selectPublisherCodecPreferences('vp9', [vp8, rtx, vp9])).toEqual([vp9, rtx]);
+		expect(selectPublisherCodecPreferences('vp9', [vp8, rtx, vp9])).toEqual([vp9, vp8, rtx]);
+	});
+
+	it('keeps the other codecs so a later publication on the same connection can negotiate them', () => {
+		const vp9 = codec('video/VP9');
+		const av1 = codec('video/AV1');
+		const h264 = codec('video/H264', 'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f');
+		const preferences = selectPublisherCodecPreferences('vp9', [av1, h264, vp9]);
+		expect(preferences.map((entry) => entry.mimeType)).toEqual(['video/VP9', 'video/AV1', 'video/H264']);
+	});
+
+	it('ranks the H.264 profiles it leaves behind the chosen codec', () => {
+		const vp8 = codec('video/VP8');
+		const highProfile = codec('video/H264', 'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=640033');
+		const constrainedBaseline = codec(
+			'video/H264',
+			'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f',
+		);
+		const preferences = selectPublisherCodecPreferences('vp8', [vp8, highProfile, constrainedBaseline]);
+		expect(preferences).toEqual([vp8, constrainedBaseline, highProfile]);
+	});
+
+	it('returns nothing when the sender cannot encode the chosen codec', () => {
+		expect(selectPublisherCodecPreferences('av1', [codec('video/VP8'), codec('video/rtx')])).toEqual([]);
 	});
 });

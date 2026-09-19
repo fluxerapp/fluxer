@@ -69,6 +69,30 @@ export function shouldDisableHardwareAccelerationForLaunch(argv: ReadonlyArray<s
 	return hasFlag(argv, DISABLE_HARDWARE_ACCELERATION_ARGS) || isSafeModeLaunch(argv);
 }
 
+export function resolveEffectiveDesktopTroubleshootingSettings(
+	settings: DesktopTroubleshootingSettings,
+	argv: ReadonlyArray<string>,
+	platform: NodeJS.Platform,
+): DesktopTroubleshootingSettings {
+	return {
+		...settings,
+		disableHardwareAcceleration:
+			platform !== 'darwin' &&
+			(settings.disableHardwareAcceleration || shouldDisableHardwareAccelerationForLaunch(argv)),
+	};
+}
+
+let launchTroubleshootingSettings: DesktopTroubleshootingSettings | null = null;
+
+export function getLaunchDesktopTroubleshootingSettings(): DesktopTroubleshootingSettings {
+	launchTroubleshootingSettings ??= resolveEffectiveDesktopTroubleshootingSettings(
+		getDesktopTroubleshootingSettings(),
+		process.argv,
+		process.platform,
+	);
+	return launchTroubleshootingSettings;
+}
+
 export function shouldOpenDevToolsOnLaunch(argv: ReadonlyArray<string>): boolean {
 	return hasFlag(argv, OPEN_DEVTOOLS_ARGS);
 }
@@ -297,7 +321,7 @@ export async function getDesktopDebugInfo(
 		logFilePath: getLogFilePath(),
 		configPath: path.join(userDataPath, 'settings.json'),
 		windowBehavior: getDesktopWindowBehaviorDebugSettings(),
-		troubleshooting: getDesktopTroubleshootingSettings(),
+		troubleshooting: getLaunchDesktopTroubleshootingSettings(),
 		packaged: app.isPackaged,
 		portable: isPortableMode(),
 		pid: process.pid,

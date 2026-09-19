@@ -18,9 +18,9 @@ use crate::{
             InstanceRegistrationConfigUpdateRequest, InstanceServicesUpdateRequest,
             InstanceYoutubeIntegrationUpdateRequest, LimitConfigUpdateRequest, LimitRule,
             LimitRuleFilters, NoiseSuppressionBackend, PremiumMode, RegistrationMode,
-            SsoConfigUpdateRequest, VOICE_NS_MAX_GUILD_OVERRIDES, VOICE_NS_MAX_TARGETED_USERS,
-            VoiceE2eeScope, VoiceNoiseSuppressionConfigUpdateRequest,
-            VoiceNoiseSuppressionGuildOverride,
+            ScreenShareDeliveryConfigUpdateRequest, SsoConfigUpdateRequest,
+            VOICE_NS_MAX_GUILD_OVERRIDES, VOICE_NS_MAX_TARGETED_USERS, VoiceE2eeScope,
+            VoiceNoiseSuppressionConfigUpdateRequest, VoiceNoiseSuppressionGuildOverride,
         },
     },
     config::AdminConfig,
@@ -204,6 +204,10 @@ pub async fn instance_config_post(
             instance_config_result(client.update_instance_config(&update).await)
         }
         "update_voice_noise_suppression" => match build_voice_noise_suppression_update(&form) {
+            Ok(update) => instance_config_result(client.update_instance_config(&update).await),
+            Err(message) => FlashData::error(message),
+        },
+        "update_screen_share_delivery" => match build_screen_share_delivery_update(&form) {
             Ok(update) => instance_config_result(client.update_instance_config(&update).await),
             Err(message) => FlashData::error(message),
         },
@@ -447,10 +451,10 @@ fn build_gateway_rollout_update(form: &MultiValueForm) -> InstanceConfigUpdateRe
     }
 }
 
-const VOICE_NS_ROLLOUT_BASIS_POINTS_MAX: u32 = 10_000;
+const EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX: u32 = 10_000;
 const VOICE_NS_SUPPRESSION_STRENGTH_MAX: u32 = 100;
-const VOICE_NS_MAX_ROLLOUT_SALT_CHARS: usize = 64;
-const VOICE_NS_MAX_SNOWFLAKE_LENGTH: usize = 20;
+const EXPERIMENT_MAX_ROLLOUT_SALT_CHARS: usize = 64;
+const EXPERIMENT_MAX_SNOWFLAKE_LENGTH: usize = 20;
 const EXPERIMENT_MIN_POLL_INTERVAL_SECONDS: u64 = 60;
 const EXPERIMENT_MAX_POLL_INTERVAL_SECONDS: u64 = 86_400;
 const EXPERIMENT_MAX_POLL_JITTER_PERCENT: u32 = 50;
@@ -476,35 +480,36 @@ where
     Ok(Some(value))
 }
 
-fn parse_voice_noise_suppression_rollout_salt(
+fn parse_experiment_rollout_salt(
     form: &MultiValueForm,
+    key: &str,
 ) -> Result<Option<String>, String> {
-    let Some(raw) = form.first("voice_ns_rollout_salt") else {
+    let Some(raw) = form.first(key) else {
         return Ok(None);
     };
     let salt = raw.trim();
-    if salt.is_empty() || salt.encode_utf16().count() > VOICE_NS_MAX_ROLLOUT_SALT_CHARS {
+    if salt.is_empty() || salt.encode_utf16().count() > EXPERIMENT_MAX_ROLLOUT_SALT_CHARS {
         return Err(format!(
-            "Rollout salt must be between 1 and {VOICE_NS_MAX_ROLLOUT_SALT_CHARS} characters"
+            "Rollout salt must be between 1 and {EXPERIMENT_MAX_ROLLOUT_SALT_CHARS} characters"
         ));
     }
     Ok(Some(salt.to_owned()))
 }
 
-fn is_voice_noise_suppression_snowflake(value: &str) -> bool {
+fn is_experiment_snowflake(value: &str) -> bool {
     !value.is_empty()
-        && value.len() <= VOICE_NS_MAX_SNOWFLAKE_LENGTH
+        && value.len() <= EXPERIMENT_MAX_SNOWFLAKE_LENGTH
         && value.bytes().all(|byte| byte.is_ascii_digit())
 }
 
-fn parse_voice_noise_suppression_user_ids(value: &str, label: &str) -> Result<Vec<String>, String> {
+fn parse_experiment_user_ids(value: &str, label: &str) -> Result<Vec<String>, String> {
     let mut ids: Vec<String> = Vec::new();
     for (index, candidate) in value.split([',', '\n', '\r']).enumerate() {
         let candidate = candidate.trim();
         if candidate.is_empty() {
             continue;
         }
-        if !is_voice_noise_suppression_snowflake(candidate) {
+        if !is_experiment_snowflake(candidate) {
             return Err(format!(
                 "{label} entry {} must contain 1 to 20 decimal digits",
                 index + 1
@@ -536,7 +541,7 @@ fn parse_voice_noise_suppression_guild_overrides(
             format!("Guild overrides line {line_number} must use guild_id=backend")
         })?;
         let guild_id = guild_id.trim();
-        if !is_voice_noise_suppression_snowflake(guild_id) {
+        if !is_experiment_snowflake(guild_id) {
             return Err(format!(
                 "Guild overrides line {line_number} must use a guild ID with 1 to 20 decimal digits"
             ));
@@ -566,6 +571,38 @@ fn parse_voice_noise_suppression_guild_overrides(
         });
     }
     Ok(overrides)
+}
+
+fn build_screen_share_delivery_update(
+    form: &MultiValueForm,
+) -> Result<InstanceConfigUpdateRequest, String> {
+    Ok(InstanceConfigUpdateRequest {
+        screen_share_delivery: Some(ScreenShareDeliveryConfigUpdateRequest {
+            enabled: Some(form.bool_value("screen_share_delivery_enabled")),
+            rollout_basis_points: parse_form_number(
+                form,
+                "screen_share_delivery_rollout_basis_points",
+                "Rollout basis points",
+                0,
+                EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX,
+            )?,
+            rollout_salt: parse_experiment_rollout_salt(
+                form,
+                "screen_share_delivery_rollout_salt",
+            )?,
+            included_user_ids: Some(parse_experiment_user_ids(
+                form.first("screen_share_delivery_included_user_ids")
+                    .unwrap_or_default(),
+                "Included user IDs",
+            )?),
+            excluded_user_ids: Some(parse_experiment_user_ids(
+                form.first("screen_share_delivery_excluded_user_ids")
+                    .unwrap_or_default(),
+                "Excluded user IDs",
+            )?),
+        }),
+        ..Default::default()
+    })
 }
 
 fn build_voice_noise_suppression_update(
@@ -602,14 +639,14 @@ fn build_voice_noise_suppression_update(
                 "voice_ns_rollout_basis_points",
                 "Rollout basis points",
                 0,
-                VOICE_NS_ROLLOUT_BASIS_POINTS_MAX,
+                EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX,
             )?,
-            rollout_salt: parse_voice_noise_suppression_rollout_salt(form)?,
-            included_user_ids: Some(parse_voice_noise_suppression_user_ids(
+            rollout_salt: parse_experiment_rollout_salt(form, "voice_ns_rollout_salt")?,
+            included_user_ids: Some(parse_experiment_user_ids(
                 form.first("voice_ns_included_user_ids").unwrap_or_default(),
                 "Included user IDs",
             )?),
-            excluded_user_ids: Some(parse_voice_noise_suppression_user_ids(
+            excluded_user_ids: Some(parse_experiment_user_ids(
                 form.first("voice_ns_excluded_user_ids").unwrap_or_default(),
                 "Excluded user IDs",
             )?),
@@ -1307,9 +1344,9 @@ mod tests {
     }
 
     #[test]
-    fn parse_voice_noise_suppression_user_ids_splits_newlines_and_commas() {
+    fn parse_experiment_user_ids_splits_newlines_and_commas() {
         assert_eq!(
-            parse_voice_noise_suppression_user_ids("  1 ,2\n3\r\n 4 ,, 5 ", "Included user IDs")
+            parse_experiment_user_ids("  1 ,2\n3\r\n 4 ,, 5 ", "Included user IDs")
                 .expect("valid IDs"),
             vec![
                 "1".to_owned(),
@@ -1322,16 +1359,15 @@ mod tests {
     }
 
     #[test]
-    fn parse_voice_noise_suppression_user_ids_dedupes_preserving_order() {
+    fn parse_experiment_user_ids_dedupes_preserving_order() {
         assert_eq!(
-            parse_voice_noise_suppression_user_ids("20,10,20,10,30", "Included user IDs")
-                .expect("valid IDs"),
+            parse_experiment_user_ids("20,10,20,10,30", "Included user IDs").expect("valid IDs"),
             vec!["20".to_owned(), "10".to_owned(), "30".to_owned()]
         );
     }
 
     #[test]
-    fn parse_voice_noise_suppression_user_ids_rejects_non_digit_and_overlong_values() {
+    fn parse_experiment_user_ids_rejects_non_digit_and_overlong_values() {
         for value in [
             "abc",
             "12a",
@@ -1341,11 +1377,8 @@ mod tests {
             "<script>",
         ] {
             assert_eq!(
-                parse_voice_noise_suppression_user_ids(
-                    &format!("123,{value}"),
-                    "Included user IDs"
-                )
-                .expect_err("invalid ID"),
+                parse_experiment_user_ids(&format!("123,{value}"), "Included user IDs")
+                    .expect_err("invalid ID"),
                 "Included user IDs entry 2 must contain 1 to 20 decimal digits",
                 "{value}"
             );
@@ -1353,18 +1386,17 @@ mod tests {
     }
 
     #[test]
-    fn parse_voice_noise_suppression_user_ids_rejects_exceeding_the_cap() {
+    fn parse_experiment_user_ids_rejects_exceeding_the_cap() {
         let value = (0..VOICE_NS_MAX_TARGETED_USERS)
             .map(|index| index.to_string())
             .collect::<Vec<_>>()
             .join("\n");
-        let ids =
-            parse_voice_noise_suppression_user_ids(&format!("{value}\n999"), "Included user IDs")
-                .expect("valid IDs at cap");
+        let ids = parse_experiment_user_ids(&format!("{value}\n999"), "Included user IDs")
+            .expect("valid IDs at cap");
         assert_eq!(ids.len(), VOICE_NS_MAX_TARGETED_USERS);
         assert_eq!(ids.last(), Some(&"999".to_owned()));
         assert_eq!(
-            parse_voice_noise_suppression_user_ids(&format!("{value}\n1000"), "Included user IDs")
+            parse_experiment_user_ids(&format!("{value}\n1000"), "Included user IDs")
                 .expect_err("too many IDs"),
             "Included user IDs must contain at most 1000 unique IDs"
         );

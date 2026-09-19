@@ -1034,7 +1034,13 @@ export default class RTCEngine extends (EventEmitter as new () => TypedEventEmit
 		const capabilities = RTCRtpSender.getCapabilities('video');
 		if (!capabilities) return;
 		const preferences = selectPublisherCodecPreferences(codec, capabilities.codecs);
-		if (preferences.length === 0) return;
+		if (preferences.length === 0) {
+			this.log.warn('sender cannot encode the requested codec, leaving the browser order in place', {
+				...this.logContext,
+				codec,
+			});
+			return;
+		}
 		try {
 			transceiver.setCodecPreferences(preferences);
 		} catch (error) {
@@ -1828,8 +1834,12 @@ export function selectPublisherCodecPreferences(
 	const selected = codecs.filter((entry) => mimeTypes.has(entry.mimeType.toLowerCase()));
 	if (selected.length === 0) return [];
 	const preferred = codec === 'h264' ? preferHardwareH264Codecs(selected) : selected;
-	const rtx = codecs.filter((entry) => entry.mimeType.toLowerCase() === 'video/rtx');
-	return [...preferred, ...rtx];
+	const isH264 = (entry: RtpCodecCapability): boolean => entry.mimeType.toLowerCase() === 'video/h264';
+	const remaining = codecs.filter((entry) => !mimeTypes.has(entry.mimeType.toLowerCase()));
+	const rankedH264 = preferHardwareH264Codecs(remaining.filter(isH264));
+	let nextH264 = 0;
+	const rest = remaining.map((entry) => (isH264(entry) ? rankedH264[nextH264++] : entry));
+	return [...preferred, ...rest];
 }
 
 export type EngineEventCallbacks = {

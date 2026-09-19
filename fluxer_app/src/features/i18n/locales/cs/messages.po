@@ -862,6 +862,11 @@ msgstr "{clientLabel} se chce připojit"
 msgid "{clientName} will use this account for this authorization."
 msgstr "{clientName} použije tento účet pro tuto autorizaci."
 
+#. Screen share notice shown to the person sharing when they pinned a codec that underperforms. codec is a codec name such as AV1. Automatic and Advanced settings are labels in the same app.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:389
+msgid "{codec} cannot keep up on this device. Set the codec to Automatic in Advanced settings to allow a faster one."
+msgstr "{codec} na tomto zařízení nestíhá. V pokročilém nastavení vyberte Automaticky, abyste povolili rychlejší kodek."
+
 #. Guild nagbar body shown for staff-only communities. {communityName} is the community name and {productName} is Fluxer.
 #: src/features/app/components/layout/GuildLayout.tsx:83
 msgid "{communityName} is currently only accessible to {productName} staff members"
@@ -1070,7 +1075,7 @@ msgstr "{count, plural, one {Rozbalit (# řádek)} few {Rozbalit (# řádky)} ma
 msgid "{count, plural, one {Expand (# row)} other {Expand (# rows)}}"
 msgstr "{count, plural, one {Rozbalit (# řádek)} few {Rozbalit (# řádky)} many {Rozbalit (# řádku)} other {Rozbalit (# řádků)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:317
+#: src/features/voice/components/VoiceParticipantTile.tsx:324
 msgid "{count, plural, one {Expand # other device} other {Expand # other devices}}"
 msgstr "{count, plural, one {Rozbalit # další zařízení} few {Rozbalit # další zařízení} many {Rozbalit # dalšího zařízení} other {Rozbalit # dalších zařízení}}"
 
@@ -1091,7 +1096,7 @@ msgstr "{count, plural, one {V hovoru} other {# v hovoru}}"
 msgid "{count, plural, one {Join video call (# participant)} other {Join video call (# participants)}}"
 msgstr "{count, plural, one {Připojit se k videohovoru (# účastník)} few {Připojit se k videohovoru (# účastníci)} many {Připojit se k videohovoru (# účastníka)} other {Připojit se k videohovoru (# účastníků)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:669
+#: src/features/voice/components/VoiceParticipantTile.tsx:682
 msgid "{count, plural, one {Keep watching # stream and add this one} other {Keep watching # streams and add this one}}"
 msgstr "{count, plural, one {Dál sledovat # stream a přidat tento} few {Dál sledovat # streamy a přidat tento} many {Dál sledovat # streamu a přidat tento} other {Dál sledovat # streamů a přidat tento}}"
 
@@ -1187,7 +1192,7 @@ msgid "{days, plural, one {Your invite link expires in # day.} other {Your invit
 msgstr "{days, plural, one {Váš odkaz na pozvánku vyprší za # den.} few {Váš odkaz na pozvánku vyprší za # dny.} many {Váš odkaz na pozvánku vyprší za # dne.} other {Váš odkaz na pozvánku vyprší za # dní.}}"
 
 #. Audio device label for a default route with the concrete microphone or speaker endpoint in parentheses. defaultDeviceLabel is already localized, for example "Windows Default".
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:30
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:37
 msgid "{defaultDeviceLabel} ({endpointLabel})"
 msgstr "{defaultDeviceLabel} ({endpointLabel})"
 
@@ -1340,9 +1345,16 @@ msgid "{fourHours} hours"
 msgstr "{fourHours} hodiny"
 
 #. Footer summary frame-rate label in the screen share picker. {fps} is the integer frame rate. FPS is a technical token.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:253
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:251
 msgid "{fps} FPS"
 msgstr "{fps} FPS"
+
+#. Frame rate option label in the video tab. FPS is a technical token and frameRate is a whole number.
+#. Frame rate option label in the video tab. FPS is a technical token and frameRate is a whole number.
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:55
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:114
+msgid "{frameRate} FPS"
+msgstr "{frameRate} snímků/s"
 
 #. Short label in the app layout channel list content. Preserve {guildName}; it is inserted by code.
 #: src/features/app/components/layout/ChannelListContent.tsx:88
@@ -1453,7 +1465,7 @@ msgid "{length, plural, one {# user} other {# users}}"
 msgstr "{length, plural, one {# uživatel} few {# uživatelé} many {# uživatele} other {# uživatelů}}"
 
 #. Spectator count badge on a screen-share tile. {length} is the integer number of viewers. Consider pluralization on review.
-#: src/features/voice/components/voice_participant_tile/shared.ts:75
+#: src/features/voice/components/voice_participant_tile/shared.ts:73
 msgid "{length, plural, one {# watching} other {# watching}}"
 msgstr "{length, plural, one {# sledující} few {# sledující} many {# sledujícího} other {# sledujících}}"
 
@@ -1548,6 +1560,11 @@ msgstr "{overrideCount, plural, one {# přepsání} other {# přepsání}}"
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:181
 msgid "{paymentProviderName} will first verify that your card is eligible for localized pricing, then take you to payment. Return to {productName} once you've completed it."
 msgstr "{paymentProviderName} nejprve ověří, zda vaše karta splňuje podmínky pro místní ceny, a poté vás přesměruje k platbě. Po dokončení se vraťte do aplikace {productName}."
+
+#. Screen share notice shown to the person sharing when this device cannot encode the pinned codec. pinnedCodec and codec are codec names such as H.265 (HEVC) or VP9.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:405
+msgid "{pinnedCodec} is not available on this device, so your stream uses {codec}."
+msgstr "{pinnedCodec} není na tomto zařízení k dispozici, takže váš stream používá {codec}."
 
 #. Badge label with a date in the user profile badges popout. Preserve {premiumProductFullName}, {premiumSinceFormatted}; they are inserted by code. In English, keep "subscriber since" lowercase. Other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx:51
@@ -1716,7 +1733,7 @@ msgid "{productName} needs access to your microphone. Allow microphone access in
 msgstr "{productName} potřebuje přístup k vašemu mikrofonu. Povolte přístup k mikrofonu v nastavení soukromí operačního systému a restartujte aplikaci."
 
 #. Camera settings notice shown when camera permission has not been granted.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:49
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:63
 msgid "{productName} needs camera access to list your devices."
 msgstr "Aplikace {productName} potřebuje přístup ke kameře, aby mohla zobrazit vaše zařízení."
 
@@ -2217,12 +2234,6 @@ msgstr "12hodinový"
 msgid "1440p"
 msgstr "1440p"
 
-#. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:42
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:109
-msgid "15 FPS"
-msgstr "15 FPS"
-
 #. Short label in the guild overview tab utils helper. Keep it concise.
 #: src/features/guild/utils/guild_tabs/GuildOverviewTabUtils.tsx:31
 msgid "15 minutes"
@@ -2293,12 +2304,6 @@ msgstr "3 členové (píšou)"
 msgid "3 months"
 msgstr "3 měsíce"
 
-#. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:43
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:113
-msgid "30 FPS"
-msgstr "30 FPS"
-
 #. Fixed duration label for a 30-minute interval. Used as a standalone label in duration text or option lists.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:10
 msgid "30 minutes"
@@ -2352,12 +2357,6 @@ msgstr "6 měsíců"
 #: src/features/auth/flow/MfaScreen.tsx:22
 msgid "6-digit code"
 msgstr "6místný kód"
-
-#. Frame rate option label in the stream settings menu. FPS is a technical token.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:44
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:117
-msgid "60 FPS"
-msgstr "60 FPS"
 
 #. Timeout duration option for moderating a member.
 #: src/features/moderation/components/modals/TimeoutMemberOptions.ts:12
@@ -2511,6 +2510,11 @@ msgstr "adresa URL napsaná v textu zprávy"
 msgid "a user"
 msgstr "uživatel"
 
+#. Screen share notice shown to the person sharing when a watcher cannot decode the pinned codec. pinnedCodec and codec are codec names such as AV1 or VP8.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:400
+msgid "A viewer cannot play {pinnedCodec}, so your stream uses {codec}."
+msgstr "Divák nemůže přehrát {pinnedCodec}, takže váš stream používá {codec}."
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:55
 msgid "A11y"
@@ -2569,7 +2573,7 @@ msgid "Accept"
 msgstr "Přijmout"
 
 #. Button label for accepting an incoming direct call. Means answering a ringing call, not approving a request.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:90
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:97
 msgctxt "incoming-call-action"
 msgid "Accept"
 msgstr "Přijmout"
@@ -3305,11 +3309,6 @@ msgstr "Vyžaduje se dodatečné ověření"
 msgid "Address"
 msgstr "Adresa"
 
-#. Description for an H.264 backup stream select. Keep H.264, CPU, and GPU literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:124
-msgid "Adds H.264 for mixed clients. Requires more encoding."
-msgstr "Přidává H.264 pro smíšené klienty. Zvyšuje zátěž při kódování."
-
 #. Description for the custom profile option in the voice tab.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:96
 msgid "Adjust each setting yourself: noise suppression, echo cancellation, and gain."
@@ -3365,7 +3364,7 @@ msgid "Advanced"
 msgstr "Pokročilé"
 
 #. Subsection title in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:88
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:116
 msgid "Advanced video settings"
 msgstr "Pokročilé nastavení videa"
 
@@ -3576,7 +3575,7 @@ msgstr "Povolit"
 msgid "Allow {everyoneMention} and {hereMention}"
 msgstr "Povolit zmínky {everyoneMention} a {hereMention}"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:209
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:239
 msgid "Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 msgstr "Povolte aplikaci {PRODUCT_NAME} přístup k vaší kameře v {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 
@@ -3604,7 +3603,7 @@ msgstr "Povolit všem, kdo si mohou zobrazit váš celý profil, zobrazit také 
 
 #. Settings search entry label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
 #. Switch label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:183
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:143
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:88
 msgid "Allow AV1 for screen sharing"
 msgstr "Povolit AV1 pro sdílení obrazovky"
@@ -3619,7 +3618,7 @@ msgstr "Povolit přímé zprávy od botů"
 msgid "Allow bots to send you direct messages?"
 msgstr "Povolit botům posílat vám přímé zprávy?"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:229
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:259
 msgid "Allow camera"
 msgstr "Povolit kameru"
 
@@ -3663,7 +3662,7 @@ msgstr "Povolit pro všechny komunity"
 
 #. Settings search entry label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
 #. Switch label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:187
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:147
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:92
 msgid "Allow H.265 (HEVC) for screen sharing"
 msgstr "Povolit H.265 (HEVC) pro sdílení obrazovky"
@@ -4269,7 +4268,7 @@ msgid "App state"
 msgstr "Stav aplikace"
 
 #. Fallback label for an app window card in the screen-share picker when the OS does not give us a window title.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:141
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:139
 msgid "App window"
 msgstr "Okno aplikace"
 
@@ -4362,7 +4361,7 @@ msgstr "Aplikace byla úspěšně aktualizována"
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:29
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:66
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:65
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:184
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:182
 msgid "Applications"
 msgstr "Aplikace"
 
@@ -4689,7 +4688,7 @@ msgid "Audio boost"
 msgstr "Zvýšení hlasitosti zvuku"
 
 #. Section header in the stream settings menu. Selects the audio capture device for the share.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:133
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:136
 msgid "Audio device"
 msgstr "Zvukové zařízení"
 
@@ -4709,7 +4708,7 @@ msgid "Audio level"
 msgstr "Úroveň zvuku"
 
 #. Footer summary status shown when capture-device audio is disabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:258
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:256
 msgid "Audio muted"
 msgstr "Zvuk vypnutý"
 
@@ -4784,7 +4783,7 @@ msgid "Audio send:"
 msgstr "Odesílání zvuku:"
 
 #. Section header in the stream settings menu grouping audio-related toggles.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:145
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:148
 msgid "Audio settings"
 msgstr "Nastavení zvuku"
 
@@ -4995,9 +4994,9 @@ msgstr "Návrh automatického doplňování: {label}, {selectedOptionPosition} z
 #. Voice region option label in the voice settings menu meaning let Fluxer pick the best region automatically.
 #. Voice region picker option label meaning 'let Fluxer pick the best region automatically'.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx:19
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:64
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:63
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:83
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:104
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:144
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:264
 #: src/features/voice/components/VoiceRegionSelector.tsx:16
 #: src/features/voice/components/VoiceSettingsMenus.tsx:93
@@ -5005,14 +5004,14 @@ msgid "Automatic"
 msgstr "Automaticky"
 
 #. Option label for the screen-share codec select. codec is the automatically selected codec label.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:169
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:129
 msgid "Automatic ({codec})"
 msgstr "Automaticky ({codec})"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Voice setting label for automatically evening out microphone volume.
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:48
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:211
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:218
 msgid "Automatic gain control"
 msgstr "Automatické řízení zesílení"
 
@@ -5107,7 +5106,7 @@ msgid "AV1"
 msgstr "AV1"
 
 #. Option label for the screen-share codec select while the AV1 opt-in is off and the option is disabled. AV1 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:173
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:133
 msgid "AV1 (requires opt-in)"
 msgstr "AV1 (vyžaduje výslovné zapnutí)"
 
@@ -5336,11 +5335,6 @@ msgstr "Záložní kódy byly vygenerovány znovu"
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:201
 msgid "Badge"
 msgstr "Odznak"
-
-#. Option label for a software encoder quality select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:88
-msgid "Balanced"
-msgstr "Vyvážená"
 
 #. IAR modal: quick-action card button label for opening the ban dialog.
 #. Short moderation action label. Ban a member from a community by removing them and preventing rejoining.
@@ -5934,7 +5928,7 @@ msgid "Browser back"
 msgstr "Prohlížeč: zpět"
 
 #. Audio device label prefix for the browser-managed default audio device.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:26
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:33
 msgid "Browser default"
 msgstr "Výchozí nastavení prohlížeče"
 
@@ -6204,20 +6198,20 @@ msgstr "Hovory"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:720
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:72
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:100
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:162
 #: src/features/voice/utils/SettingsDeviceOptions.ts:24
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:10
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:17
 msgid "Camera"
 msgstr "Kamera"
 
 #. Title shown in the screen-share Devices tab before camera preview permission is granted.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:156
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:154
 msgid "Camera access is needed for device previews"
 msgstr "Přístup ke kameře je potřeba pro náhledy zařízení"
 
 #. Description shown after camera preview permission is denied or unavailable.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:164
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:162
 msgid "Camera access was not granted. Update camera permissions, then try again."
 msgstr "Přístup ke kameře nebyl udělen. Aktualizujte oprávnění ke kameře a zkuste to znovu."
 
@@ -6238,7 +6232,7 @@ msgid "Camera error"
 msgstr "Chyba kamery"
 
 #. Overlay text on a participant tile when the local user hid the remote camera feed.
-#: src/features/voice/components/voice_participant_tile/shared.ts:49
+#: src/features/voice/components/voice_participant_tile/shared.ts:47
 msgid "Camera hidden"
 msgstr "Kamera skryta"
 
@@ -6248,7 +6242,7 @@ msgid "Camera limit reached — up to {voiceChannelCameraUserLimit} people can s
 msgstr "Byl dosažen limit kamer. V tomto kanálu může sdílet video nejvýše {voiceChannelCameraUserLimit, plural, one {# člověk} few {# lidé} many {# člověka} other {# lidí}}."
 
 #. Accessible status label while a voice participant camera feed is starting before video is renderable.
-#: src/features/voice/components/voice_participant_tile/shared.ts:53
+#: src/features/voice/components/voice_participant_tile/shared.ts:51
 msgid "Camera loading"
 msgstr "Kamera se načítá"
 
@@ -6282,13 +6276,13 @@ msgstr "Náhled kamery"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:76
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:104
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:202
 msgid "Camera quality"
 msgstr "Kvalita kamery"
 
 #. Voice control dropdown label or menu item for camera settings.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:231
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:238
 msgid "Camera settings"
 msgstr "Nastavení kamery"
 
@@ -6489,20 +6483,25 @@ msgstr "Ověření CAPTCHA se nezdařilo. Zkuste to znovu."
 msgid "Capture"
 msgstr "Zachytávání"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:880
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:798
 msgid "Capture app audio"
 msgstr "Zachytávat zvuk aplikace"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:882
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:800
 msgid "Capture desktop audio"
 msgstr "Zachytávat zvuk z počítače"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:879
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:797
 msgid "Capture device audio"
 msgstr "Zachytávat zvuk zařízení"
 
+#. Note shown beside the stored Screen share preset in the stream settings menu and the video settings tab of a capture device share, explaining why that preset is not used.
+#: src/features/voice/components/StreamSettingsMenuContentStateMachine.ts:34
+msgid "Capture devices use the Gaming preset."
+msgstr "Zařízení pro snímání používají předvolbu Hraní her."
+
 #. Toggle label in the stream settings menu for a window share whose audio scope the user widened from the shared window to the whole system mix.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:157
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:160
 msgid "Capture entire system audio"
 msgstr "Zachytávat zvuk celého systému"
 
@@ -6737,12 +6736,12 @@ msgstr "Změna naplánována"
 #. Action that opens the source picker for the active screen share.
 #. Voice screen share menu action that changes the shared source.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:24
-#: src/features/voice/components/ActiveScreenShareMenu.tsx:25
+#: src/features/voice/components/ActiveScreenShareMenu.tsx:34
 msgid "Change stream"
 msgstr "Změnit stream"
 
 #. Modal title for the screen-share picker when switching an ongoing stream to a new source.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:217
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:215
 msgid "Change stream source"
 msgstr "Změnit zdroj streamu"
 
@@ -7531,7 +7530,7 @@ msgid "Choose payment method"
 msgstr "Zvolte způsob platby"
 
 #. Modal title for the screen-share picker when starting a new screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:221
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:219
 msgid "Choose something to share"
 msgstr "Vyberte, co chcete sdílet"
 
@@ -7907,7 +7906,7 @@ msgid "Clear trusted domains ({trustedDomainsCount})"
 msgstr "Vymazat důvěryhodné domény ({trustedDomainsCount})"
 
 #. Footer summary description for the text-focused screen-share quality preset.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:245
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:243
 msgid "Clearer text"
 msgstr "Zřetelnější text"
 
@@ -8286,7 +8285,7 @@ msgstr "Sbalit téma kanálu"
 #. Tooltip / aria label on a voice participant tile button that collapses expanded device tiles for one user.
 #. Voice menu action that collapses expanded device tiles back into a single tile.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:128
-#: src/features/voice/components/VoiceParticipantTile.tsx:178
+#: src/features/voice/components/VoiceParticipantTile.tsx:185
 msgid "Collapse devices"
 msgstr "Sbalit zařízení"
 
@@ -8478,7 +8477,7 @@ msgid "Community creator"
 msgstr "Tvůrce komunity"
 
 #. Moderation voice menu label. Makes a member unable to hear others in this community voice chat. Distinct from community mute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:145
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:152
 msgid "Community deafen"
 msgstr "Vypnout zvuk v komunitě"
 
@@ -8566,7 +8565,7 @@ msgid "Community MFA requirement nagbar"
 msgstr "Lišta s požadavkem komunity na vícefaktorové ověřování"
 
 #. Moderation voice menu label. Mutes a member's microphone in this community voice chat.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:120
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:127
 msgid "Community mute"
 msgstr "Ztlumit mikrofon v komunitě"
 
@@ -8767,7 +8766,7 @@ msgstr "Fokus v poli pro psaní zpráv"
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:164
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:160
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:120
 msgid "Configure"
 msgstr "Nastavit"
 
@@ -8790,7 +8789,7 @@ msgid "Configure now"
 msgstr "Nastavit nyní"
 
 #. Tooltip / aria label on the screen-share control while a share is active. Opens the configure / end menu.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:58
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:61
 msgid "Configure or end screen share"
 msgstr "Nastavit nebo ukončit sdílení obrazovky"
 
@@ -8905,7 +8904,7 @@ msgstr "Potvrzení nebo dvojité kliknutí pro připojení k hlasovým kanálům
 msgid "Conflicts with {conflictLabel}"
 msgstr "V konfliktu s {conflictLabel}"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:214
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:244
 msgid "Connect a camera and try again."
 msgstr "Připojte kameru a zkuste to znovu."
 
@@ -8914,7 +8913,7 @@ msgstr "Připojte kameru a zkuste to znovu."
 msgid "Connect a camera or virtual capture device, then try again."
 msgstr "Připojte kameru nebo virtuální záznamové zařízení a zkuste to znovu."
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:133
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:131
 msgid "Connect a display, then try again."
 msgstr "Připojte displej a zkuste to znovu."
 
@@ -9049,7 +9048,7 @@ msgid "Connection volume controls"
 msgstr "Ovládací prvky hlasitosti připojení"
 
 #. Developer / debug overlay text on a participant tile. {connectionId} is the voice connection identifier.
-#: src/features/voice/components/voice_participant_tile/shared.ts:111
+#: src/features/voice/components/voice_participant_tile/shared.ts:96
 msgid "Connection: {connectionId}"
 msgstr "Připojení: {connectionId}"
 
@@ -9115,7 +9114,7 @@ msgid "Content filtering"
 msgstr "Filtrování obsahu"
 
 #. Label for an advanced screen-share select. Refers to the WebRTC MediaStreamTrack contentHint value.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:136
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:95
 msgid "Content hint"
 msgstr "Typ obsahu pro kódování"
 
@@ -10589,8 +10588,8 @@ msgstr "Aktuálně: {mutedText}"
 #: src/features/user/components/modals/tabs/notifications_tab/NotificationsTabSounds.tsx:186
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:94
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:45
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:237
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:97
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:235
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:102
 msgid "Custom"
 msgstr "Vlastní"
 
@@ -11025,17 +11024,17 @@ msgid "Deactivate"
 msgstr "Deaktivovat"
 
 #. Voice action label. Turns off what the user hears in voice chat. Distinct from microphone mute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:78
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:85
 msgid "Deafen"
 msgstr "Vypnout zvuk"
 
 #. Voice menu action that deafens every device or session so this user cannot hear voice chat.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:137
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:144
 msgid "Deafen all devices"
 msgstr "Vypnout zvuk na všech zařízeních"
 
 #. Voice menu action. Deafens one active device or session so it stops hearing voice audio. Distinct from muting its microphone.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:132
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:139
 msgid "Deafen device"
 msgstr "Vypnout zvuk na zařízení"
 
@@ -11055,24 +11054,24 @@ msgid "Deafen other members in voice channels, so they cannot hear or speak."
 msgstr "Vypnout zvuk ostatním členům v hlasových kanálech, takže neuslyší ostatní ani nebudou moci mluvit."
 
 #. Settings label for the keyboard shortcut that toggles voice deafen. Deafen controls hearing voice chat, not microphone mute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:155
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:162
 msgid "Deafen shortcut"
 msgstr "Zkratka pro vypnutí zvuku"
 
 #. Voice control label. Turns off what the current user hears in voice chat. Distinct from microphone mute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:124
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:131
 msgid "Deafen yourself"
 msgstr "Vypnout si zvuk"
 
 #. Accessible label for the deafened voice badge shown on an avatar.
 #. Voice chat status label. The user cannot hear voice chat. Distinct from muted.
 #: src/features/ui/avatars/AvatarWithPresence.tsx:25
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:66
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:73
 msgid "Deafened"
 msgstr "Zvuk vypnutý"
 
 #. Voice chat status label. A moderator deafened the user in this community, so they cannot hear voice chat.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:53
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:60
 msgid "Deafened by moderators"
 msgstr "Zvuk vypnutý moderátory"
 
@@ -11167,7 +11166,7 @@ msgid "Default"
 msgstr "Výchozí"
 
 #. Fallback label for the system default camera in the screen-share devices tab.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:152
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:150
 msgid "Default camera"
 msgstr "Výchozí kamera"
 
@@ -11720,7 +11719,7 @@ msgid "Desktop away"
 msgstr "Mimo počítač"
 
 #. Aria label on a participant tile icon that indicates the participant is on desktop.
-#: src/features/voice/components/voice_participant_tile/shared.ts:107
+#: src/features/voice/components/voice_participant_tile/shared.ts:92
 msgid "Desktop device"
 msgstr "Počítač"
 
@@ -11806,7 +11805,7 @@ msgid "Detached banner"
 msgstr "Odpojený banner"
 
 #. Option label for a WebRTC content hint select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:152
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:112
 msgid "Detail"
 msgstr "Detail"
 
@@ -11889,7 +11888,7 @@ msgstr "Podrobnosti o zařízení"
 msgid "Device revoked"
 msgstr "Zařízení odhlášeno"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1074
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:992
 msgid "Device selection"
 msgstr "Výběr zařízení"
 
@@ -11913,12 +11912,12 @@ msgstr "Zařízení:"
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:57
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:192
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:190
 msgid "Devices"
 msgstr "Zařízení"
 
 #. Description for the Custom streaming preset. Lightly playful prose; keep tone casual.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:101
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:106
 msgid "Dial in your own numbers"
 msgstr "Nastavte si vlastní hodnoty"
 
@@ -11954,7 +11953,7 @@ msgid "Dim strikethrough text"
 msgstr "Snížit výraznost přeškrtnutého textu"
 
 #. Voice input processing profile with raw microphone audio.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:199
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:206
 msgid "Direct input"
 msgstr "Přímý vstup"
 
@@ -12021,7 +12020,7 @@ msgstr "Přímé nahrávání aktivní"
 #. Short footer action in the screen-share picker that disables screen-share preview frame uploads.
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:238
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:138
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:278
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:276
 msgid "Disable"
 msgstr "Vypnout"
 
@@ -12094,7 +12093,7 @@ msgid "Disable mobile push notifications"
 msgstr "Vypnout push oznámení na mobilu"
 
 #. Short label for an advanced screen-share preview preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:48
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:51
 msgid "Disable picture-in-picture popout for screen shares"
 msgstr "Vypnout samostatná okna obrazu v obraze pro sdílení obrazovky"
 
@@ -12193,7 +12192,7 @@ msgid "Disabled value"
 msgstr "Neaktivní hodnota"
 
 #. Explains what happens after disabling screen-share preview uploads. Refers to already-uploaded preview thumbnails.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:326
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:324
 msgid "Disabling previews stops future preview uploads. Existing preview images may remain visible until the stream ends or the preview refreshes."
 msgstr "Vypnutím náhledů se zastaví odesílání nových náhledů. Stávající obrázky náhledů mohou zůstat viditelné, dokud stream neskončí nebo se náhledy neobnoví."
 
@@ -12207,17 +12206,17 @@ msgid "Discard voice message"
 msgstr "Zahodit hlasovou zprávu"
 
 #. Voice action label. Leaves the current voice call or disconnects a user from voice chat.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:86
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:93
 msgid "Disconnect"
 msgstr "Odpojit"
 
 #. Voice menu action that disconnects every active device or session from voice chat.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:108
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:115
 msgid "Disconnect all devices"
 msgstr "Odpojit všechna zařízení"
 
 #. Voice menu action that disconnects one active device or session from voice chat.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:104
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:111
 msgid "Disconnect device"
 msgstr "Odpojit zařízení"
 
@@ -12342,7 +12341,7 @@ msgid "Display"
 msgstr "Zobrazení"
 
 #. Fallback label for a display / monitor card in the screen-share picker when the OS does not give us a display name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:146
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:144
 msgctxt "display-screen"
 msgid "Display"
 msgstr "Obrazovka"
@@ -12931,7 +12930,7 @@ msgid "Echo"
 msgstr "Ozvěna"
 
 #. Voice setting label for preventing speaker audio from feeding into the microphone.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:207
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:214
 msgid "Echo cancellation"
 msgstr "Potlačení ozvěny"
 
@@ -13527,7 +13526,7 @@ msgid "Enable browser notifications"
 msgstr "Povolit oznámení prohlížeče"
 
 #. Description shown before the user explicitly requests camera preview permission.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:160
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:158
 msgid "Enable camera access to preview cameras and capture devices before choosing one to stream."
 msgstr "Povolte přístup ke kameře, abyste si před výběrem zdroje streamu mohli prohlédnout náhled kamer a záznamových zařízení."
 
@@ -13643,7 +13642,7 @@ msgid "Enable or disable built-in translators. Enabled translators appear in the
 msgstr "Zapněte nebo vypněte vestavěné překladače. Zapnuté překladače se zobrazují v kontextové nabídce zprávy po výběru textu."
 
 #. Button that explicitly requests camera permission for device previews.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:168
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:166
 msgid "Enable previews"
 msgstr "Povolit náhledy"
 
@@ -13741,20 +13740,20 @@ msgstr "Zapnuto"
 
 #. Label for an advanced screen-share select. Refers to hardware or software video encoding.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:56
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:59
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:153
 msgid "Encoder path"
 msgstr "Způsob kódování"
 
 #. Description for the encoder path select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:60
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControlsState.ts:6
 msgid "Encoder preference for new screen shares."
 msgstr "Preferovaný enkodér pro nová sdílení obrazovky."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:173
-msgid "Encoder, SVC, backup stream, and bitrate presets"
-msgstr "Předvolby enkodéru, SVC, záložního streamu a přenosové rychlosti"
+msgid "Encoder, SVC, and bitrate presets"
+msgstr "Kodér, SVC a předvolby přenosové rychlosti"
 
 #. IAR modal: rule label.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:349
@@ -13795,12 +13794,12 @@ msgid "End screen share"
 msgstr "Ukončit sdílení obrazovky"
 
 #. Pre-join indicator shown beneath the Join button on a DM or group DM call where at least one connected participant (typically an outdated bot) does not support E2EE.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:326
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:333
 msgid "End-to-end encryption is unavailable because an unsupported participant is in this call."
 msgstr "Koncové šifrování není k dispozici, protože ho některý z účastníků tohoto hovoru nepodporuje."
 
 #. Pre-join indicator shown beneath the Join button on a voice channel where at least one connected participant (typically an outdated bot) does not support E2EE.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:321
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:328
 msgid "End-to-end encryption is unavailable because an unsupported participant is in this voice channel."
 msgstr "Koncové šifrování není k dispozici, protože ho některý z účastníků tohoto hlasového kanálu nepodporuje."
 
@@ -14087,7 +14086,7 @@ msgid "Entertainment"
 msgstr "Zábava"
 
 #. Tab label in the screen-share picker. Lists shareable monitors / displays.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:188
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:186
 msgid "Entire screen"
 msgstr "Celá obrazovka"
 
@@ -14156,7 +14155,7 @@ msgid "Error"
 msgstr "Chyba"
 
 #. Subtitle on a remote screen-share tile after loading the watched stream failed. {code} is a numeric diagnostic code.
-#: src/features/voice/components/voice_participant_tile/shared.ts:44
+#: src/features/voice/components/voice_participant_tile/shared.ts:42
 msgid "error code {code}"
 msgstr "kód chyby {code}"
 
@@ -14686,7 +14685,7 @@ msgid "Failed to load invites. Try again."
 msgstr "Nepodařilo se načíst pozvánky. Zkuste to znovu."
 
 #. Error text shown in the screen-share picker when the list of shareable windows/displays fails to load.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:120
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:118
 msgid "Failed to load shareable sources."
 msgstr "Nepodařilo se načíst dostupné zdroje pro sdílení."
 
@@ -15240,16 +15239,6 @@ msgctxt "us-state"
 msgid "Florida"
 msgstr "Florida"
 
-#. Description for the high-tier Gaming streaming preset (Plutonium). Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:74
-msgid "Fluid motion at 1440p 60 FPS"
-msgstr "Plynulý pohyb při 1440p 60 FPS"
-
-#. Description for the free-tier Gaming streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:79
-msgid "Fluid motion at 720p 30 FPS"
-msgstr "Plynulý pohyb v rozlišení 720p při 30 FPS"
-
 #. Placeholder for the product name input in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:93
 msgid "Fluxer"
@@ -15297,7 +15286,7 @@ msgid "Focus window"
 msgstr "Přesun okna do popředí"
 
 #. Voice input processing profile optimized for spoken voice.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:195
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:202
 msgid "Focused voice"
 msgstr "Hlas v popředí"
 
@@ -15333,7 +15322,7 @@ msgstr "Nastavení složky"
 msgid "Follow us on {blueskyProviderName}"
 msgstr "Sledujte nás na {blueskyProviderName}"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:936
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:854
 msgid "Follow voice input"
 msgstr "Použít vstup pro hlasové hovory"
 
@@ -15603,14 +15592,14 @@ msgstr "Rámeček"
 
 #. Section header in the stream settings menu for frame rate options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:314
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:344
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:230
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:129
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:132
 msgid "Frame rate"
 msgstr "Snímková frekvence"
 
 #. Video settings note shown when higher frame rates require premium.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:57
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:71
 msgid "Frame rates above 30 FPS require {premiumProductName}"
 msgstr "Snímková frekvence nad 30 FPS vyžaduje {premiumProductName}"
 
@@ -15931,9 +15920,11 @@ msgstr "Gamepad Y / Trojúhelník"
 #. Discovery category dropdown option in the community Discovery settings tab.
 #. Footer summary label for the gaming screen-share quality preset.
 #. Streaming preset label in the stream settings menu. Higher frame rate, optimized for video games.
+#. Video settings label for the motion-focused screen share quality preset.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:76
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:229
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:70
+#: src/features/user/components/modals/tabs/UserVideoTabState.ts:24
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:227
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:75
 msgid "Gaming"
 msgstr "Hraní"
 
@@ -16438,7 +16429,7 @@ msgstr "Udělena oprávnění {permissions}"
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "Uděluje všechna oprávnění a obchází omezení kanálů. Jde o vysoce citlivé oprávnění."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1061
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:979
 msgid "Granular selection"
 msgstr "Podrobný výběr"
 
@@ -16621,18 +16612,8 @@ msgstr "Seskupování"
 msgid "H.264"
 msgstr "H.264"
 
-#. Label for an advanced screen-share select. H.264 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:120
-msgid "H.264 backup stream"
-msgstr "Záložní stream H.264"
-
-#. Option label for an H.264 backup stream select. H.264 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:132
-msgid "H.264 simulcast backup"
-msgstr "Záloha H.264 simulcast"
-
 #. Option label for the screen-share codec select while the HEVC opt-in is off and the option is disabled. H.265 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:178
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:138
 msgid "H.265 (requires opt-in)"
 msgstr "H.265 (vyžaduje výslovné zapnutí)"
 
@@ -16828,11 +16809,6 @@ msgstr "Centrum nápovědy"
 msgid "Help translate {PRODUCT_NAME} into your language on <0>{I18N_WEBLATE_DOMAIN}</0>."
 msgstr "Pomozte přeložit {PRODUCT_NAME} do vašeho jazyka na <0>{I18N_WEBLATE_DOMAIN}</0>."
 
-#. Description for a WebRTC content hint select. Keep Motion, Detail, and text as plain option concepts.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:140
-msgid "Helps the browser choose motion, detail, or text handling."
-msgstr "Pomáhá prohlížeči vybrat zpracování pohybu, detailů nebo textu."
-
 #. Settings search synonym. Codec name; keep literal. Used to match this term in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:105
 msgid "HEVC"
@@ -16997,7 +16973,7 @@ msgid "Hide muted channels by default?"
 msgstr "Skrýt ztlumené kanály ve výchozím nastavení?"
 
 #. Short label for an advanced stream privacy preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:52
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:55
 msgid "Hide my stream preview thumbnail"
 msgstr "Skrýt náhled mého streamu"
 
@@ -17016,7 +16992,7 @@ msgstr "Skrýt heslo"
 msgid "Hide picture-in-picture popout?"
 msgstr "Skrýt obraz v obraze?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:838
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:756
 msgid "Hide preview thumbnail"
 msgstr "Skrýt miniaturu náhledu"
 
@@ -17078,11 +17054,6 @@ msgstr "Vysoký dynamický rozsah"
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabHdrTab.tsx:29
 msgid "High dynamic range display mode"
 msgstr "Režim zobrazení s vysokým dynamickým rozsahem"
-
-#. Description for a software encoder quality select. Keep AV1 and CPU literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:80
-msgid "Higher quality can increase CPU usage and latency."
-msgstr "Vyšší kvalita může znamenat vyšší zátěž procesoru a latenci."
 
 #. Description for the DeepFilterNet3 noise suppression strength slider.
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:71
@@ -17415,7 +17386,7 @@ msgstr "Pokud chcete těmto členům umožnit přístup ke starším zprávám o
 #. Button label for silencing an incoming direct call without joining.
 #. Button, menu item, or tooltip for ignoring an incoming friend request.
 #: src/features/relationship/utils/RelationshipMessageDescriptors.ts:21
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:100
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:107
 msgid "Ignore"
 msgstr "Ignorovat"
 
@@ -17424,11 +17395,11 @@ msgstr "Ignorovat"
 msgid "Ignore friend request"
 msgstr "Ignorovat žádost o přátelství"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1051
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:969
 msgid "Ignore hardware devices"
 msgstr "Ignorovat hardwarová zařízení"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1027
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:945
 msgid "Ignore input media"
 msgstr "Ignorovat vstupní média"
 
@@ -17459,7 +17430,7 @@ msgstr "Ignorovat žádost o přátelství od uživatele {displayName}?"
 msgid "Ignore this channel's slowmode cooldown."
 msgstr "Ignorovat čekací dobu pomalého režimu v tomto kanálu."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1038
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:956
 msgid "Ignore virtual"
 msgstr "Ignorovat virtuální"
 
@@ -17750,7 +17721,7 @@ msgid "In voice"
 msgstr "V hovoru"
 
 #. Short status label shown when the user is currently connected to voice chat.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:175
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:182
 msgid "In voice chat"
 msgstr "V hlasovém hovoru"
 
@@ -18005,7 +17976,7 @@ msgid "Input and output"
 msgstr "Vstup a výstup"
 
 #. Voice settings label for selecting a microphone input device.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:179
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:186
 msgid "Input device"
 msgstr "Vstupní zařízení"
 
@@ -18027,7 +17998,7 @@ msgid "Input profile: {processingModeLabel}"
 msgstr "Vstupní profil: {processingModeLabel}"
 
 #. Voice control dropdown label or menu item for microphone input settings.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:223
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:230
 msgid "Input settings"
 msgstr "Nastavení vstupu"
 
@@ -18036,7 +18007,7 @@ msgid "Input states"
 msgstr "Stavy vstupních polí"
 
 #. Voice settings slider label for microphone volume.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:187
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:194
 msgid "Input volume"
 msgstr "Hlasitost vstupu"
 
@@ -19074,7 +19045,7 @@ msgid "Layering"
 msgstr "Vrstvení"
 
 #. Description for an SVC mode select. Keep SVC and AV1 literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:100
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:79
 msgid "Layering for AV1 and VP9 when available."
 msgstr "Vrstvení pro AV1 a VP9, pokud jsou k dispozici."
 
@@ -19084,7 +19055,7 @@ msgid "Layout"
 msgstr "Rozvržení"
 
 #. Accessible label for the screen-share picker footer info button.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:282
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:280
 msgid "Learn about screen share previews"
 msgstr "Zjistěte více o náhledech sdílené obrazovky"
 
@@ -19477,7 +19448,7 @@ msgid "Linux app"
 msgstr "Aplikace pro Linux"
 
 #. Audio device label prefix for the operating system default audio device on Linux.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:22
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:29
 msgid "Linux default"
 msgstr "Výchozí zařízení v systému Linux"
 
@@ -19715,7 +19686,7 @@ msgid "macOS app"
 msgstr "Aplikace pro macOS"
 
 #. Audio device label prefix for the operating system default audio device on macOS.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:18
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:25
 msgid "macOS default"
 msgstr "Výchozí zařízení v macOS"
 
@@ -20979,7 +20950,7 @@ msgid "Microphone test"
 msgstr "Test mikrofonu"
 
 #. Pre-join indicator shown beneath the Join button on a voice channel where every connected participant supports E2EE.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:311
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:318
 msgid "Microphone, camera, and screen share content are end-to-end encrypted."
 msgstr "Zvuk mikrofonu, obraz kamery a sdílená obrazovka jsou chráněny koncovým šifrováním."
 
@@ -21048,7 +21019,7 @@ msgstr "Ohrožení nezletilých, obsah pro dospělé na nevhodném místě nebo 
 #. Camera settings menu checkbox for flipping the local camera preview horizontally.
 #. Switch label in the camera preview modal for flipping the local camera preview horizontally.
 #. Switch label in the video tab for flipping the local camera preview horizontally.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:80
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:108
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:72
 #: src/features/voice/components/VoiceSettingsMenus.tsx:114
 msgid "Mirror camera"
@@ -21098,7 +21069,7 @@ msgid "Misspelled words"
 msgstr "Překlepy"
 
 #. Aria label on a participant tile icon that indicates the participant is on mobile.
-#: src/features/voice/components/voice_participant_tile/shared.ts:103
+#: src/features/voice/components/voice_participant_tile/shared.ts:88
 msgid "Mobile device"
 msgstr "Mobilní zařízení"
 
@@ -21325,7 +21296,7 @@ msgstr "Nejrelevantnější"
 #: src/features/theme_studio/sections/TokenGroups.ts:102
 #: src/features/user/components/modals/tabs/accessibility_tab/AccessibilityTabInline.tsx:31
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:99
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:148
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:108
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:297
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:271
 msgid "Motion"
@@ -21547,7 +21518,7 @@ msgid "Mute all"
 msgstr "Ztlumit vše"
 
 #. Voice menu action that mutes every device or session's microphone for this user.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:112
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:119
 msgid "Mute all devices"
 msgstr "Ztlumit mikrofon na všech zařízeních"
 
@@ -21651,7 +21622,7 @@ msgid "Mute sounds"
 msgstr "Ztlumit zvuky"
 
 #. Tooltip / button label on a voice participant tile that mutes the remote screen-share or camera audio.
-#: src/features/voice/components/voice_participant_tile/shared.ts:24
+#: src/features/voice/components/voice_participant_tile/shared.ts:22
 msgid "Mute stream audio"
 msgstr "Vypnout zvuk streamu"
 
@@ -21682,13 +21653,13 @@ msgstr "Ztlumeno"
 #. Status badge on a voice participant tile. The participant's microphone is muted.
 #: src/features/app/components/layout/VoiceStateIcons.tsx:19
 #: src/features/ui/avatars/AvatarWithPresence.tsx:20
-#: src/features/voice/components/voice_participant_tile/shared.ts:98
+#: src/features/voice/components/voice_participant_tile/shared.ts:83
 msgctxt "microphone-state"
 msgid "Muted"
 msgstr "Mikrofon je ztlumený"
 
 #. Voice chat status label. A moderator muted the user in this community, so they cannot speak but can still hear others.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:39
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:46
 msgid "Muted by moderators"
 msgstr "Mikrofon ztlumený moderátory"
 
@@ -22311,7 +22282,7 @@ msgstr "Nenalezena žádná rozšířená nastavení"
 msgid "No AFK channel"
 msgstr "Žádný AFK kanál"
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:124
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:122
 msgid "No application windows found"
 msgstr "Nebyla nalezena žádná okna aplikací"
 
@@ -22370,7 +22341,7 @@ msgstr "Žádné záložky"
 msgid "No bot banner"
 msgstr "Žádný banner bota"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:205
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:235
 msgid "No camera found"
 msgstr "Nenalezena žádná kamera"
 
@@ -22450,7 +22421,7 @@ msgstr "Bez popisu."
 msgid "No desktop update is available."
 msgstr "Není k dispozici žádná aktualizace desktopové aplikace."
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:130
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:128
 msgid "No displays found"
 msgstr "Nebyly nalezeny žádné obrazovky"
 
@@ -22520,6 +22491,11 @@ msgstr "Zatím žádné dárky"
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthCommunityStep.tsx:35
 msgid "No group DMs or communities where you can grant the requested permissions are available."
 msgstr "Nejsou k dispozici žádné skupinové konverzace ani komunity, ve kterých můžete udělit požadovaná oprávnění."
+
+#. Description for the encoder path select, shown when this device has no hardware video encoder. Prefer hardware and Automatic are the option labels of the same select.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControlsState.ts:10
+msgid "No hardware encoder was found on this device, so Prefer hardware works like Automatic."
+msgstr "Na tomto zařízení nebyl nalezen žádný hardwarový enkodér, takže „Preferovat hardware“ funguje jako „Automaticky“."
 
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:175
 msgid "No hoisted roles. Enable \"Show this role separately\" on a role to see it here."
@@ -22875,7 +22851,7 @@ msgid "Noise gate"
 msgstr "Šumová brána"
 
 #. Voice setting label for microphone background-noise filtering.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:203
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:210
 msgid "Noise suppression"
 msgstr "Potlačení šumu"
 
@@ -23173,14 +23149,12 @@ msgstr "Předměty"
 #. Mature content option in the community moderation settings tab.
 #. Mature-content option that leaves this channel ungated.
 #. Off state suffix appended to the reply bar mention toggle label.
-#. Option label for an H.264 backup stream select.
 #: src/features/channel/components/ChannelReplyBar.tsx:62
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/MatureContentSection.tsx:26
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/SlowmodeControl.tsx:24
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:97
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:139
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:73
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:128
 msgid "Off"
 msgstr "Vypnuto"
 
@@ -23312,7 +23286,7 @@ msgstr "Platí pouze na dostatečně širokých obrazovkách."
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "Přijímány jsou pouze kreditní karty. Debetní a předplacené karty nelze použít k ověření věku pro obsah pro dospělé."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1016
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:934
 msgid "Only default speakers"
 msgstr "Pouze výchozí reproduktory"
 
@@ -23360,7 +23334,7 @@ msgstr "Spouštějte zde kód, pouze pokud přesně rozumíte tomu, co dělá."
 msgid "Only show message previews for DMs with unread messages"
 msgstr "Zobrazovat náhledy zpráv pouze u soukromých konverzací s nepřečtenými zprávami"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1006
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:924
 msgid "Only speakers"
 msgstr "Pouze reproduktory"
 
@@ -23466,11 +23440,11 @@ msgid "Open @{displayName}"
 msgstr "Otevřít @{displayName}"
 
 #. Button label in the video tab that jumps to the advanced settings media section.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:92
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:120
 msgid "Open advanced media settings"
 msgstr "Otevřít rozšířené nastavení médií"
 
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:127
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:125
 msgid "Open an application window, then try again."
 msgstr "Otevřete okno aplikace a zkuste to znovu."
 
@@ -23533,7 +23507,7 @@ msgid "Open browser"
 msgstr "Otevřít prohlížeč"
 
 #. Primary button in the screen-share picker on web. Hands off to the browser's native getDisplayMedia picker.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:208
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:206
 msgid "Open browser picker"
 msgstr "Otevřít výběr prohlížeče"
 
@@ -23801,7 +23775,7 @@ msgid "Open system DM"
 msgstr "Otevřít systémovou soukromou konverzaci"
 
 #. Primary button in the screen-share picker on Linux/Wayland. Hands off to the OS xdg-desktop-portal picker.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:213
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:211
 msgid "Open system picker"
 msgstr "Otevřít systémový výběr"
 
@@ -23873,7 +23847,7 @@ msgid "Open voice"
 msgstr "Otevřít hlasový hovor"
 
 #. Accessible button label that opens the user settings tab for microphone, speaker, camera, and call stats.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:251
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:258
 msgid "Open voice & video settings"
 msgstr "Otevřít nastavení zvuku a videa"
 
@@ -23911,7 +23885,7 @@ msgid "OpenH264 video codec"
 msgstr "Videokodek OpenH264"
 
 #. Switch label for the OpenH264 codec toggle. "OpenH264" is a product name and "Cisco Systems, Inc." is a company name; do not translate either.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:39
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:42
 msgid "OpenH264 Video Codec provided by Cisco Systems, Inc."
 msgstr "Videokodek OpenH264 poskytovaný společností Cisco Systems, Inc."
 
@@ -24106,12 +24080,12 @@ msgid "Output"
 msgstr "Výstup"
 
 #. Voice settings label for selecting a speaker or output device.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:183
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:190
 msgid "Output device"
 msgstr "Výstupní zařízení"
 
 #. Voice control dropdown label or menu item for speaker/output settings.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:227
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:234
 msgid "Output settings"
 msgstr "Nastavení výstupu"
 
@@ -24120,7 +24094,7 @@ msgstr "Nastavení výstupu"
 #. Voice settings slider label for speaker or output volume.
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:90
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:228
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:191
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:198
 msgid "Output volume"
 msgstr "Hlasitost výstupu"
 
@@ -24223,7 +24197,7 @@ msgid "Participant limit"
 msgstr "Limit účastníků"
 
 #. Aria label for the participant context-menu trigger button. {participantDisplayName} is the participant's display name.
-#: src/features/voice/components/voice_participant_tile/shared.ts:115
+#: src/features/voice/components/voice_participant_tile/shared.ts:100
 msgid "Participant options for {participantDisplayName}"
 msgstr "Možnosti účastníka {participantDisplayName}"
 
@@ -24410,7 +24384,7 @@ msgid "Pause invites? New users won't be able to join through invite links until
 msgstr "Pozastavit pozvánky? Noví uživatelé se nebudou moct připojit přes odkazy na pozvánky, dokud je znovu nepovolíte. Stávající členové nebudou ovlivněni."
 
 #. Short label for an advanced screen-share preview preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:44
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:47
 msgid "Pause my screen share preview in the background"
 msgstr "Pozastavit náhled sdílené obrazovky na pozadí"
 
@@ -25107,7 +25081,7 @@ msgid "Prefer @mention"
 msgstr "Preferovat odpovědi s @zmínkou"
 
 #. Option label for an encoder path select. Refers to hardware video encoders.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:68
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:67
 msgid "Prefer hardware"
 msgstr "Preferovat hardware"
 
@@ -25119,7 +25093,7 @@ msgid "Prefer no @mention"
 msgstr "Preferovat odpovědi bez @zmínky"
 
 #. Option label for an encoder path select. Refers to software video encoders.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:72
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:71
 msgid "Prefer software"
 msgstr "Preferovat software"
 
@@ -25139,7 +25113,7 @@ msgid "Preferences..."
 msgstr "Předvolby..."
 
 #. Accessible label for the advanced screen-share codec preference select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:165
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:125
 msgid "Preferred screen share codec"
 msgstr "Preferovaný kodek pro sdílení obrazovky"
 
@@ -25286,22 +25260,22 @@ msgid "Preview hidden"
 msgstr "Náhled skryt"
 
 #. Privacy explanation for screen-share previews in a one-to-one DM call. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:320
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:318
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. Disable previews if you do not want screen-share frames uploaded for thumbnails."
 msgstr "Služba {productName} dočasně ukládá obrázky náhledů kvůli jejich doručení. Náhledy nejsou chráněny koncovým šifrováním. Pokud nechcete, aby se snímky sdílené obrazovky nahrávaly pro vytváření miniatur, vypněte náhledy."
 
 #. Privacy explanation for screen-share previews in a group DM call. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:314
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:312
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. People in this group DM do not need to be actively watching your stream to see the thumbnail."
 msgstr "Služba {productName} dočasně ukládá obrázky náhledů kvůli jejich doručení. Náhledy nejsou chráněny koncovým šifrováním. Lidé v této skupinové konverzaci nemusí aktivně sledovat váš stream, aby viděli miniaturu."
 
 #. Privacy explanation for screen-share previews in a guild voice channel. productName is the app name. Refers to preview thumbnail images generated from a screen share.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:308
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:306
 msgid "Preview images are stored by {productName} temporarily for delivery and are not end-to-end encrypted. People still need permission to connect, but they do not need to be actively watching your stream."
 msgstr "Služba {productName} dočasně ukládá obrázky náhledů kvůli jejich doručení. Náhledy nejsou chráněny koncovým šifrováním. Lidé stále potřebují oprávnění k připojení, ale nemusí aktivně sledovat váš stream."
 
 #. Overlay on the local screen-share preview when playback is paused to reduce CPU / battery use. Local share is still being sent to others.
-#: src/features/voice/components/voice_participant_tile/shared.ts:61
+#: src/features/voice/components/voice_participant_tile/shared.ts:59
 msgid "Preview paused to save resources"
 msgstr "Náhled pozastaven kvůli úspoře zdrojů"
 
@@ -25876,11 +25850,6 @@ msgstr "Režim Stisknutím mluvit funguje pouze při aktivní kartě prohlíže�
 msgid "Push-to-talk won't unmute your microphone while you're deafened. Undeafen yourself to talk."
 msgstr "Režim Stisknutím mluvit nezapne mikrofon, pokud máte vypnutý zvuk. Chcete-li mluvit, nejprve zvuk zapněte."
 
-#. Option label for a software encoder quality select. Means slower/higher-quality.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:92
-msgid "Quality"
-msgstr "Kvalita"
-
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the theme studio. Keep it concise.
 #: src/features/theme_studio/ThemeStudio.tsx:52
@@ -25983,11 +25952,6 @@ msgstr "Překročen limit požadavků"
 msgid "Raw embed JSON"
 msgstr "Nezpracovaný JSON vloženého obsahu"
 
-#. Description for the high-tier Screen share streaming preset (Plutonium). Source resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:87
-msgid "Razor-sharp text at native source resolution, 15 FPS"
-msgstr "Ostrý text v nativním rozlišení, 15 FPS"
-
 #. Button label that discards the current recording and restarts.
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:73
 msgid "Re-record"
@@ -26077,11 +26041,6 @@ msgstr "Chcete koupit dárek?"
 #: src/features/app/components/dialogs/components/plutonium/BottomCTASection.tsx:50
 msgid "Ready to upgrade?"
 msgstr "Chcete upgradovat?"
-
-#. Option label for a software encoder quality select. Means fastest/lower-latency.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:84
-msgid "Real-time"
-msgstr "V reálném čase"
 
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:595
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:74
@@ -26404,7 +26363,7 @@ msgid "Regular button clicked."
 msgstr "Bylo kliknuto na běžné tlačítko."
 
 #. Button label for rejecting an incoming direct call.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:96
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:103
 msgid "Reject"
 msgstr "Odmítnout"
 
@@ -27662,7 +27621,7 @@ msgstr "Změna velikosti, maximalizace a přichytávání oken závisí na kompo
 #. Section header in the stream settings menu for resolution options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:206
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:125
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:128
 msgid "Resolution"
 msgstr "Rozlišení"
 
@@ -28351,9 +28310,11 @@ msgstr "Je potřeba povolit nahrávání obrazovky"
 #. Footer summary label for the text-focused screen-share quality preset.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Streaming preset label in the stream settings menu. Optimized for sharp text in screen shares.
+#. Video settings label for the text-focused screen share quality preset.
+#: src/features/user/components/modals/tabs/UserVideoTabState.ts:28
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:222
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:233
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:83
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:231
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:88
 msgid "Screen share"
 msgstr "Sdílení obrazovky"
 
@@ -28368,7 +28329,7 @@ msgid "Screen share audio boost"
 msgstr "Zvýšení hlasitosti zvuku při sdílení obrazovky"
 
 #. Error modal title shown when the selected native screen-share audio route cannot start safely.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:176
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:174
 msgid "Screen share audio couldn't start"
 msgstr "Zvuk sdílení obrazovky se nespustil"
 
@@ -28383,7 +28344,7 @@ msgid "Screen share encoder controls"
 msgstr "Ovládací prvky enkodéru pro sdílení obrazovky"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:113
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:146
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "Sdílení obrazovky ukončeno"
@@ -28409,17 +28370,17 @@ msgid "Screen share preview behavior"
 msgstr "Chování náhledu sdílení obrazovky"
 
 #. Title of an informational modal explaining screen-share preview frame uploads.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:286
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:284
 msgid "Screen share previews"
 msgstr "Náhledy sdílení obrazovky"
 
 #. Compact footer status in the screen-share picker when preview frame uploads are disabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:274
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:272
 msgid "Screen share previews are disabled."
 msgstr "Náhledy sdílení obrazovky jsou vypnuté."
 
 #. Compact footer status in the screen-share picker when preview frame uploads are enabled.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:270
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:268
 msgid "Screen share previews are enabled."
 msgstr "Náhledy sdílení obrazovky jsou povolené."
 
@@ -28430,13 +28391,13 @@ msgstr "Soukromí sdílení obrazovky"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:84
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:112
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:214
 msgid "Screen share quality"
 msgstr "Kvalita sdílení obrazovky"
 
 #. Voice control dropdown label or menu item for screen sharing and stream quality settings.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:235
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:242
 msgid "Screen share settings"
 msgstr "Nastavení sdílení obrazovky"
 
@@ -28981,7 +28942,7 @@ msgstr "Náhled při přetáčení"
 
 #. Hover action on a device card that selects the device without starting the stream.
 #: src/features/app/components/dialogs/components/PricingCard.tsx:65
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:200
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:198
 msgid "Select"
 msgstr "Vybrat"
 
@@ -29537,6 +29498,11 @@ msgstr "Nastavit vlastní stav"
 msgid "Set a member list position for the role"
 msgstr "Nastavena pozice role v seznamu členů"
 
+#. Video settings note shown when a streaming preset decides the screen share resolution and frame rate. preset is the Gaming or Screen share preset label, and Custom is the third preset label.
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:89
+msgid "Set by the {preset} preset. Picking a value here switches to Custom."
+msgstr "Nastaveno předvolbou {preset}. Výběr hodnoty zde přepne na Vlastní."
+
 #. Short label in the keybinds tab. Keep it concise.
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultShortcutRow.tsx:28
 msgid "Set custom shortcut"
@@ -29558,7 +29524,7 @@ msgid "Set custom volumes for individual sounds. Sounds without an override foll
 msgstr "Nastavte si vlastní hlasitost pro jednotlivé zvuky. Zvuky bez vlastního nastavení se řídí hlavní hlasitostí."
 
 #. Settings description for assigning the keyboard shortcut that toggles voice deafen. Deafen controls hearing voice chat, not microphone mute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:160
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:167
 msgid "Set deafen shortcut"
 msgstr "Nastavit zkratku pro vypnutí zvuku"
 
@@ -29703,6 +29669,11 @@ msgstr "Odložit tuto kontrolu"
 msgid "Set this check aside?"
 msgstr "Odložit tuto kontrolu?"
 
+#. Screen share status row in the stream menu and in video settings, describing the settings the live stream is running at rather than what reaches viewers. resolution is a technical token such as 1080p, frameRate is the whole number of frames a second the stream is set to send and codec is a codec name such as VP9. FPS is a technical token.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:415
+msgid "Set to send {resolution} at {frameRate} FPS with {codec}"
+msgstr "Odesílat v rozlišení {resolution} při {frameRate} snímcích za sekundu s kodekem {codec}"
+
 #. Title for the self-host setup wizard modal.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:73
 msgid "Set up {productName}"
@@ -29810,7 +29781,7 @@ msgid "Share gift"
 msgstr "Sdílet dárek"
 
 #. Hover action on an application or display card that starts sharing that source.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:196
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:194
 msgid "Share screen"
 msgstr "Sdílet obrazovku"
 
@@ -29820,7 +29791,7 @@ msgid "Share screens and windows."
 msgstr "Sdílet obrazovky a okna."
 
 #. Toggle label for sharing audio with an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:153
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:156
 msgid "Share stream audio"
 msgstr "Sdílet zvuk streamu"
 
@@ -29852,11 +29823,11 @@ msgid "Share with community mods."
 msgstr "Sdílet s moderátory komunity."
 
 #. Voice control button or tooltip label for starting screen sharing.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:219
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:226
 msgid "Share your screen"
 msgstr "Sdílet obrazovku"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:298
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:328
 msgid "Share your screen in high definition (1080p), quad HD (1440p), or native source resolution, at up to 60 FPS."
 msgstr "Sdílejte obrazovku ve vysokém rozlišení (1080p), Quad HD (1440p) nebo v nativním rozlišení zdroje, a to až při 60 FPS."
 
@@ -29900,9 +29871,14 @@ msgid "Sharing personal information"
 msgstr "Sdílení osobních údajů"
 
 #. Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:97
+msgid "Sharp text at 720p, up to 30 FPS"
+msgstr "Ostrý text v rozlišení 720p, až 30 snímků za sekundu"
+
+#. Description for the high-tier Screen share streaming preset (Plutonium). Resolution and frame rate are technical tokens.
 #: src/features/voice/components/StreamSettingsMenuContent.tsx:92
-msgid "Sharper text at 720p, 30 FPS"
-msgstr "Ostrý text v rozlišení 720p, 30 snímků za sekundu"
+msgid "Sharp text at up to 4K, up to 15 FPS"
+msgstr "Ostrý text až do 4K, až 15 snímků za sekundu"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:189
@@ -30055,7 +30031,7 @@ msgid "Show call avatars"
 msgstr "Zobrazit avatary hovoru"
 
 #. Action label that reveals a previously hidden remote camera feed.
-#: src/features/voice/components/voice_participant_tile/shared.ts:57
+#: src/features/voice/components/voice_participant_tile/shared.ts:55
 msgid "Show camera"
 msgstr "Zobrazit kameru"
 
@@ -30671,7 +30647,7 @@ msgid "Single community mode"
 msgstr "Režim jedné komunity"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:108
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:87
 msgid "Single layer"
 msgstr "Jedna vrstva"
 
@@ -30956,6 +30932,16 @@ msgstr "Usmívající se obličej"
 msgid "Smileys"
 msgstr "Emotikony"
 
+#. Description for the free-tier Gaming streaming preset. Resolution and frame rate are technical tokens.
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:84
+msgid "Smooth 30 FPS at up to 720p"
+msgstr "Plynulé 30 FPS při rozlišení až 720p"
+
+#. Description for the high-tier Gaming streaming preset (Plutonium). Resolution and frame rate are technical tokens.
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:79
+msgid "Smooth 60 FPS at up to 1440p"
+msgstr "Plynulé 60 FPS až do rozlišení 1440p"
+
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label for an advanced desktop scrolling toggle.
@@ -30966,7 +30952,7 @@ msgid "Smooth scrolling"
 msgstr "Plynulé posouvání"
 
 #. Footer summary description for the gaming screen-share quality preset.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:241
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:239
 msgid "Smoother video"
 msgstr "Plynulejší video"
 
@@ -31004,11 +30990,6 @@ msgstr "Sociální sítě"
 msgid "Software encoder"
 msgstr "Softwarový enkodér"
 
-#. Label for an advanced screen-share select. Refers to software video encoder quality bias.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:76
-msgid "Software encoder quality"
-msgstr "Kvalita softwarového enkodéru"
-
 #: src/features/app/components/dialogs/components/PricingCard.tsx:64
 #: src/features/app/components/dialogs/components/PricingCard.tsx:92
 msgid "Sold out"
@@ -31024,15 +31005,15 @@ msgstr "Některé emoji nebylo možné přidat"
 msgid "Some files you're trying to upload exceed the maximum size limit of {maxSizeFormatted} per file."
 msgstr "Některé soubory, které se snažíte nahrát, překračují maximální limit velikosti {maxSizeFormatted} na soubor."
 
+#. Screen share notice shown to the person sharing when the app failed to push new settings to a live share.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:410
+msgid "Some stream settings could not be applied to your live stream."
+msgstr "Některá nastavení streamu se nepodařilo použít pro váš živý přenos."
+
 #. Title of the unaddable recipients confirmation alert shown when creating a group DM.
 #: src/features/channel/components/modals/UnaddableRecipientsConfirmModal.tsx:27
 msgid "Some users can't be added"
 msgstr "Některé uživatele nelze přidat"
-
-#. Fallback tooltip on the passive badge on your own screen-share tile when the encoder reports no specific limitation.
-#: src/features/voice/components/voice_participant_tile/shared.ts:93
-msgid "Something is limiting this stream, so viewers are getting fewer frames than you asked for."
-msgstr "Něco omezuje tento stream, takže diváci dostávají méně snímků, než jste požadovali."
 
 #. Generic error modal title for an unexpected failure.
 #. Generic error toast title.
@@ -31236,10 +31217,12 @@ msgstr "Zvuky"
 
 #. Footer summary resolution label for native source resolution.
 #. Resolution option in the stream settings menu meaning the original source resolution (no downscale).
+#. Screen share resolution token in the stream menu status rows, used when the person asked for the original source resolution and the app does not know the source size. Matches the Source option in the stream settings menu.
 #. Short label in the video tab for the native source resolution option. Keep it concise.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:68
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:249
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:105
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:85
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:247
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:110
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:425
 msgid "Source"
 msgstr "Zdroj"
 
@@ -31332,11 +31315,6 @@ msgstr "Španělština (Latinská Amerika)"
 #: src/features/user/utils/LocaleUtils.ts:44
 msgid "Spanish (Spain)"
 msgstr "Španělština (Španělsko)"
-
-#. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:116
-msgid "Spatial and temporal layers"
-msgstr "Prostorové a časové vrstvy"
 
 #. Permission name: allows speaking in voice channels.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:462
@@ -31591,7 +31569,7 @@ msgstr "Zahájit hlasový hovor?"
 msgid "Start call"
 msgstr "Zahájit hovor"
 
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:259
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:289
 msgid "Start camera test and configure effects"
 msgstr "Spustit test kamery a konfigurovat efekty"
 
@@ -31932,7 +31910,7 @@ msgstr "Zastavit předčítání"
 #. Danger action that stops the active screen share.
 #. Voice screen share menu action that stops the current user stream.
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:20
-#: src/features/voice/components/ActiveScreenShareMenu.tsx:21
+#: src/features/voice/components/ActiveScreenShareMenu.tsx:30
 msgid "Stop streaming"
 msgstr "Zastavit streamování"
 
@@ -31942,7 +31920,7 @@ msgid "Stop trusting all links?"
 msgstr "Přestat důvěřovat všem odkazům?"
 
 #. Voice control action for stopping the currently focused or selected stream.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:239
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:246
 msgid "Stop watching"
 msgstr "Zastavit sledování"
 
@@ -32004,27 +31982,27 @@ msgstr "Zabrání tomu, aby se zvuk z reproduktorů vracel do mikrofonu."
 #. Primary footer action that starts streaming the selected capture device.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:236
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:204
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:202
 msgid "Stream"
 msgstr "Stream"
 
 #. Accessible status label for the black buffering frame shown while a screen share codec is renegotiated.
-#: src/features/voice/components/voice_participant_tile/shared.ts:36
+#: src/features/voice/components/voice_participant_tile/shared.ts:34
 msgid "Stream buffering"
 msgstr "Stream se načítá"
 
 #. Status overlay on a voice participant tile when the remote screen share has ended.
-#: src/features/voice/components/voice_participant_tile/shared.ts:28
+#: src/features/voice/components/voice_participant_tile/shared.ts:26
 msgid "Stream ended"
 msgstr "Stream skončil"
 
 #. Overlay text on a participant tile when the local user hid the remote screen share.
-#: src/features/voice/components/voice_participant_tile/shared.ts:32
+#: src/features/voice/components/voice_participant_tile/shared.ts:30
 msgid "Stream hidden"
 msgstr "Stream skryt"
 
 #. Accessible label for a passive badge on your own screen-share tile, shown when the encoder stays below the frame rate you asked for.
-#: src/features/voice/components/voice_participant_tile/shared.ts:80
+#: src/features/voice/components/voice_participant_tile/shared.ts:78
 msgid "Stream is not keeping up"
 msgstr "Stream nestíhá"
 
@@ -32038,14 +32016,19 @@ msgid "Stream preview"
 msgstr "Náhled streamu"
 
 #. Compact submenu label for changing the resolution and frame rate of an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:149
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:152
 msgid "Stream quality"
 msgstr "Kvalita streamu"
 
 #. Toolbar / menu button label in the screen-share picker. Opens the stream quality settings popover.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:225
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:223
 msgid "Stream settings"
 msgstr "Nastavení streamu"
+
+#. Accessible label for the information badge on the sharing tile, shown when the app changed stream settings without a problem to report.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:440
+msgid "Stream settings were adjusted"
+msgstr "Nastavení streamu bylo upraveno"
 
 #. Permission name: allows video streaming or screen sharing in voice.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:467
@@ -32064,7 +32047,7 @@ msgid "Streaming"
 msgstr "Streamování"
 
 #. Section header in the stream settings menu. Picks between Gaming / Screen share / Custom presets.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:121
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:124
 msgid "Streaming mode"
 msgstr "Režim streamování"
 
@@ -32270,7 +32253,7 @@ msgid "SVC"
 msgstr "SVC"
 
 #. Label for an advanced screen-share select. SVC is a WebRTC acronym and should stay uppercase.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:96
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:75
 msgid "SVC mode"
 msgstr "Režim SVC"
 
@@ -32543,8 +32526,8 @@ msgstr "Systémová oznámení od zaměstnanců {productName}. Zde nelze odpoví
 
 #. Audio device option label meaning the OS default audio input device.
 #. Footer summary fallback for the default capture-device audio input.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:262
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:137
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:260
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:140
 msgid "System default"
 msgstr "Výchozí systémové"
 
@@ -32745,7 +32728,7 @@ msgid "Template URL"
 msgstr "Adresa URL šablony"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:112
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:91
 msgid "Temporal layers"
 msgstr "Časové vrstvy"
 
@@ -32822,7 +32805,7 @@ msgstr "Texas"
 #: src/features/channel/utils/ChannelUtils.tsx:51
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts:23
 #: src/features/theme_studio/sections/TokenGroups.ts:50
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:156
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:116
 msgid "Text"
 msgstr "Text"
 
@@ -33053,8 +33036,13 @@ msgstr "Bot byl přidán do <0>{destinationName}</0>."
 msgid "The bot has been added."
 msgstr "Bot byl přidán."
 
+#. Screen share notice shown to the person sharing when the browser ignores the requested size. deliveredResolution is the size the browser really sends and resolution is the size the app asked it for. Both are technical tokens such as 720p or 2714x762.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:373
+msgid "The browser is sending {deliveredResolution} instead of {resolution}."
+msgstr "Prohlížeč posílá {deliveredResolution} místo {resolution}."
+
 #. Status shown when a device preview has not released the camera before the bounded handoff deadline.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:172
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:170
 msgid "The camera preview is still stopping. Try streaming again in a moment."
 msgstr "Náhled kamery se stále zastavuje. Zkuste streamovat znovu za chvíli."
 
@@ -33232,7 +33220,7 @@ msgid "The role granted {permissions}"
 msgstr "Role udělila {permissions}"
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:118
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:151
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "Zdroj sdílení obrazovky přestal odesílat video, takže bylo ukončeno sdílení obrazovky."
@@ -33474,7 +33462,7 @@ msgid "This browser console is a developer tool."
 msgstr "Tato konzole prohlížeče je nástroj pro vývojáře."
 
 #. Pre-join indicator shown beneath the Join button on a DM or group DM call where every connected participant supports E2EE.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:316
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:323
 msgid "This call is end-to-end encrypted."
 msgstr "Tento hovor je chráněn koncovým šifrováním."
 
@@ -33657,6 +33645,11 @@ msgstr "Tato verze desktopové aplikace neumožňuje instalovat aktualizace př�
 msgid "This development build cannot update itself. Download a desktop installer to test the update flow."
 msgstr "Tato vývojová verze se nemůže sama aktualizovat. Stáhněte si desktopový instalátor a otestujte proces aktualizace."
 
+#. Screen share notice shown to the person sharing when a remembered result made the stream start below the asked-for settings. targetResolution and targetFrameRate are what the person asked for, resolution and frameRate are the lower settings the stream started at. Resolutions are technical tokens such as 1080p and rates are whole numbers. FPS is a technical token.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:383
+msgid "This device could not keep up with {targetResolution} at {targetFrameRate} FPS last time, so your stream started at {resolution} at {frameRate} FPS."
+msgstr "Toto zařízení to minule nezvládlo při {targetResolution} s {targetFrameRate} snímky/s, takže váš stream začal na {resolution} s {frameRate} snímky/s."
+
 #. Modal body shown when the current device/browser cannot show notifications.
 #: src/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar.tsx:27
 msgid "This device does not support notifications."
@@ -33760,7 +33753,7 @@ msgid "This install is managed by your system. Update {productName} from your so
 msgstr "Tato instalace je spravována vaším systémem. Aktualizujte aplikaci {productName} prostřednictvím vašeho softwarového centra nebo správce balíčků."
 
 #. Neutral video settings note shown when higher screen share quality is disabled by instance limits.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:61
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:75
 msgid "This instance currently allows screen sharing up to 720p at 30 FPS."
 msgstr "Tato instance momentálně umožňuje sdílení obrazovky až do rozlišení 720p při 30 snímcích za sekundu."
 
@@ -33954,17 +33947,17 @@ msgid "This option is required. Please provide a value."
 msgstr "Tato možnost je povinná. Zadejte prosím hodnotu."
 
 #. Voice participant status tooltip shown when channel permissions or voice suppression prevent another participant from speaking.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:48
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:55
 msgid "This participant can't speak in this channel"
 msgstr "Tento účastník nemůže v tomto kanálu mluvit"
 
 #. Voice participant status tooltip for another user. They cannot hear voice chat. Distinct from muted.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:74
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:81
 msgid "This participant is deafened"
 msgstr "Tento účastník má vypnutý zvuk"
 
 #. Voice participant status tooltip for another user. A moderator deafened that participant so they cannot hear voice chat.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:61
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:68
 msgid "This participant was deafened by moderators"
 msgstr "Moderátoři tomuto účastníkovi vypnuli zvuk"
 
@@ -33979,7 +33972,7 @@ msgid "This phone number has already been used. Try another number or contact su
 msgstr "Toto telefonní číslo již bylo použito. Zkuste jiné číslo nebo kontaktujte podporu."
 
 #. Empty state in the screen-share picker shown to web users. Explains that this advanced picker requires the desktop app.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:136
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:134
 msgid "This picker is only available in the desktop app."
 msgstr "Tento panel výběru je dostupný pouze v desktopové aplikaci."
 
@@ -34408,7 +34401,7 @@ msgid "Toggle controls"
 msgstr "Přepnout ovládání"
 
 #. Keyboard shortcut label. Toggles voice deafen, which controls whether the user hears voice chat. Distinct from microphone mute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:150
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:157
 msgid "Toggle deafen"
 msgstr "Vypnout nebo zapnout zvuk"
 
@@ -34846,6 +34839,11 @@ msgstr "Zkuste jiné filtry nebo hledané výrazy."
 msgid "Try editing your message again."
 msgstr "Zkuste zprávu upravit znovu."
 
+#. Screen share action in the stream menu. Forgets what this device measured and restarts the stream at the asked-for settings.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:435
+msgid "Try full quality again"
+msgstr "Zkusit znovu v plné kvalitě"
+
 #: src/features/app/components/dialogs/components/AllSettingsRenderer.tsx:252
 msgid "Try searching for something like \"theme\", \"notifications\", or \"privacy\""
 msgstr "Zkuste hledat něco jako \"motiv\", \"oznámení\" nebo \"soukromí\""
@@ -34906,7 +34904,7 @@ msgid "Turn off anything you're not comfortable with. Some features may stop wor
 msgstr "Vypněte vše, s čím nesouhlasíte. Některé funkce pak nemusí fungovat."
 
 #. Error modal body shown after a native screen-share audio route fails to start.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:180
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:178
 msgid "Turn off audio sharing for this source or try again in a moment."
 msgstr "Vypněte sdílení zvuku pro tento zdroj nebo to zkuste za chvíli znovu."
 
@@ -34962,7 +34960,7 @@ msgid "Turn on automatically when OBS or XSplit is detected"
 msgstr "Zapnout automaticky při detekci OBS nebo XSplit"
 
 #. Voice control button or tooltip label for enabling the camera.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:215
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:222
 msgid "Turn on camera"
 msgstr "Zapnout kameru"
 
@@ -35312,17 +35310,17 @@ msgid "Uncollectible"
 msgstr "Nedobytné"
 
 #. Voice action label. Restores what the user hears in voice chat. Distinct from microphone unmute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:82
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:89
 msgid "Undeafen"
 msgstr "Zapnout zvuk"
 
 #. Voice menu action that restores voice audio on every device or session for this user.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:141
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:148
 msgid "Undeafen all devices"
 msgstr "Zapnout zvuk na všech zařízeních"
 
 #. Voice control label. Restores what the current user hears in voice chat. Distinct from microphone unmute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:128
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:135
 msgid "Undeafen yourself"
 msgstr "Zapnout si zvuk"
 
@@ -35560,7 +35558,7 @@ msgstr "neznámý uživatel"
 #: src/features/guild/components/modals/guild_tabs/GuildAuditLogTab.tsx:102
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts:61
 #: src/features/voice/components/VoiceParticipantAvatarList.tsx:44
-#: src/features/voice/components/VoiceParticipantTile.tsx:174
+#: src/features/voice/components/VoiceParticipantTile.tsx:181
 #: src/features/webhook/components/WebhookListItem.tsx:31
 msgid "Unknown user"
 msgstr "Neznámý uživatel"
@@ -35604,7 +35602,7 @@ msgid "Unlock custom emojis in DMs with {premiumProductName}"
 msgstr "Odemkněte vlastní emoji v soukromých konverzacích s {premiumProductName}"
 
 #. Premium upsell title in video settings.
-#: src/features/user/components/modals/tabs/UserVideoTab.tsx:53
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:67
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "Odemkněte sdílení obrazovky v HD rozlišení s {premiumProductName}"
 
@@ -35661,7 +35659,7 @@ msgid "Unmute {label}"
 msgstr "Zapnout zvuk: {label}"
 
 #. Voice menu action that unmutes every device or session for this user.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:116
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:123
 msgid "Unmute all devices"
 msgstr "Zapnout mikrofony na všech zařízeních"
 
@@ -35713,7 +35711,7 @@ msgid "Unmute microphone"
 msgstr "Zapnout mikrofon"
 
 #. Tooltip / button label on a voice participant tile that unmutes the remote screen-share or camera audio.
-#: src/features/voice/components/voice_participant_tile/shared.ts:20
+#: src/features/voice/components/voice_participant_tile/shared.ts:18
 msgid "Unmute stream audio"
 msgstr "Zapnout zvuk streamu"
 
@@ -35743,8 +35741,8 @@ msgstr "Nepojmenovaná skupina"
 
 #. Fallback label for an audio input device whose name is not reported by the OS.
 #. Footer summary fallback for an audio input without a reported name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:266
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:141
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:264
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:144
 msgid "Unnamed input"
 msgstr "Nepojmenovaný vstup"
 
@@ -36155,7 +36153,7 @@ msgid "Upload new emoji and stickers, and manage your own creations."
 msgstr "Nahrávat nová emoji a samolepky a spravovat vlastní výtvory."
 
 #. Description for the screen-share preview toggle in the informational modal.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:332
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:330
 msgid "Upload preview frames for screen shares."
 msgstr "Nahrávat snímky náhledů sdílených obrazovek."
 
@@ -36626,6 +36624,11 @@ msgstr "Používá se v komunitách, které nemají nastavený vlastní zvuk."
 msgid "Used in communities that do not have their own sound."
 msgstr "Používá se v komunitách, které nemají vlastní zvuk."
 
+#. Description for a WebRTC content hint select. Custom, Gaming and Screen share are the stream quality preset labels.
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:99
+msgid "Used in Custom mode. The Gaming and Screen share presets set their own hint."
+msgstr "Používá se v režimu Vlastní. Předvolby Hraní her a Sdílení obrazovky nastavují vlastní nápovědu."
+
 #. Description text in the entrance sound section.
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:94
 msgid "Used in direct-message calls. If you do not set one, your global sound is used instead."
@@ -36736,7 +36739,7 @@ msgid "User tag (optional)"
 msgstr "Uživatelská značka (volitelné)"
 
 #. Voice menu slider label for the saved volume of a specific user.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:243
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:250
 msgid "User volume"
 msgstr "Hlasitost uživatele"
 
@@ -37630,7 +37633,7 @@ msgid "Voice & video"
 msgstr "Zvuk a video"
 
 #. Voice menu item that opens the user settings tab for microphone, speaker, camera, and call stats.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:247
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:254
 msgid "Voice & video settings"
 msgstr "Nastavení zvuku a videa"
 
@@ -37682,7 +37685,7 @@ msgstr "Zkratky pro hovory a videohovory"
 
 #. Short label for a voice call (lobby header, DM action, settings section).
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:744
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:35
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:42
 msgid "Voice call"
 msgstr "Hlasový hovor"
 
@@ -37750,7 +37753,7 @@ msgid "Voice connection debug"
 msgstr "Ladění hlasového připojení"
 
 #. Notification sound label for the event where the user becomes deafened in voice chat. Distinct from voice mute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:165
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:172
 msgid "Voice deafen"
 msgstr "Vypnutí zvuku hovoru"
 
@@ -37829,7 +37832,7 @@ msgid "Voice settings"
 msgstr "Nastavení hlasu"
 
 #. Notification sound label for the event where the user is no longer deafened in voice chat. Distinct from voice unmute.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:170
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:177
 msgid "Voice undeafen"
 msgstr "Zapnutí zvuku hovoru"
 
@@ -37901,7 +37904,7 @@ msgid "Wait here"
 msgstr "Počkejte zde"
 
 #. Tooltip explaining that video / screen share controls are gated while the voice connection is not yet ready.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:45
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:48
 msgid "Waiting for connection..."
 msgstr "Čekání na připojení..."
 
@@ -37947,7 +37950,7 @@ msgid "Washington"
 msgstr "Washington"
 
 #. Compact button label on a participant tile. Joins / opens the remote screen share.
-#: src/features/voice/components/voice_participant_tile/shared.ts:71
+#: src/features/voice/components/voice_participant_tile/shared.ts:69
 msgid "Watch"
 msgstr "Sledovat"
 
@@ -37962,7 +37965,7 @@ msgid "Watching"
 msgstr "Sleduje"
 
 #. Title on a remote screen-share tile when loading the watched stream failed.
-#: src/features/voice/components/voice_participant_tile/shared.ts:40
+#: src/features/voice/components/voice_participant_tile/shared.ts:38
 msgid "Watching failed :("
 msgstr "Sledování selhalo :("
 
@@ -38462,17 +38465,17 @@ msgid "When posted as links in chat"
 msgstr "Při odeslání jako odkazy do chatu"
 
 #. Explanation of screen-share preview uploads in a group DM call. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:296
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:294
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so other people in this group DM can see a thumbnail before they watch."
 msgstr "Když jsou náhledy zapnuté, {productName} občas nahraje snímek sdílené obrazovky ve formátu JPEG, aby ostatní účastníci této skupinové konverzace viděli miniaturu ještě před zahájením sledování."
 
 #. Explanation of screen-share preview uploads in a guild voice channel. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:290
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:288
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so people with permission to connect to this voice channel can see a thumbnail before they watch."
 msgstr "Když jsou náhledy zapnuté, {productName} občas nahraje snímek sdílené obrazovky ve formátu JPEG, aby lidé s oprávněním připojit se k tomuto hlasovému kanálu viděli miniaturu ještě před zahájením sledování."
 
 #. Explanation of screen-share preview uploads in a one-to-one DM call. productName is the app name; JPEG is an image format name.
-#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:302
+#: src/features/voice/components/modals/ScreenSharePickerModal.tsx:300
 msgid "When previews are enabled, {productName} uploads occasional JPEG frames from your screen share so the other person in this DM can see a thumbnail before they watch."
 msgstr "Když jsou náhledy zapnuté, {productName} občas nahraje snímek sdílené obrazovky ve formátu JPEG, aby druhý účastník této soukromé konverzace viděl miniaturu ještě před zahájením sledování."
 
@@ -38624,7 +38627,7 @@ msgid "Windows cut off at the top or bottom of the screen, and docked DevTools, 
 msgstr "U oken přesahujících horní nebo dolní okraj obrazovky a u ukotvených DevTools se může místo průhledného pozadí vykreslit šedé pozadí."
 
 #. Audio device label prefix for the operating system default audio device on Windows.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:14
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:21
 msgid "Windows default"
 msgstr "Výchozí zařízení systému Windows"
 
@@ -38797,7 +38800,7 @@ msgid "You are banned from this community and cannot join."
 msgstr "V této komunitě máte ban a nemůžete se připojit."
 
 #. Voice participant status tooltip for the current user. They cannot hear voice chat. Distinct from muted.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:70
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:77
 msgid "You are deafened"
 msgstr "Máte vypnutý zvuk"
 
@@ -38829,6 +38832,11 @@ msgstr "Používáte {releaseChannel} sestavení aplikace {productName}."
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:160
 msgid "You aren't in any communities right now."
 msgstr "Momentálně nejste v žádné komunitě."
+
+#. Screen share status row in the stream menu, describing the settings the person chose. resolution is a technical token such as 1440p and frameRate is a whole number. FPS is a technical token.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:420
+msgid "You asked for {resolution} at {frameRate} FPS"
+msgstr "Požadovali jste {resolution} při {frameRate} snímcích za sekundu"
 
 #. Warning shown before opening or composing a DM with a user the current user has blocked. {userName} is the blocked user.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:180
@@ -39014,13 +39022,13 @@ msgstr "V této komunitě nemůžete odesílat zprávy."
 
 #. Tooltip in the voice control bar when the user lacks the Screen Share permission in this channel. Tone stays plain.
 #. Tooltip shown when the user lacks the Screen Share permission in the voice channel. Tone stays plain.
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:54
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:57
 #: src/features/voice/components/VoiceControlBar.tsx:137
 msgid "You can't share your screen in this channel"
 msgstr "V tomto kanálu nemůžete sdílet obrazovku"
 
 #. Voice control tooltip shown when channel permissions prevent the current user from speaking.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:44
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:51
 msgid "You can't speak in this channel"
 msgstr "V tomto kanálu nemůžete mluvit"
 
@@ -39028,7 +39036,7 @@ msgstr "V tomto kanálu nemůžete mluvit"
 #. Tooltip in the voice control bar when the user lacks the Video permission in this channel. Tone stays plain.
 #. Tooltip shown when the user lacks the Video permission in the voice channel. Tone stays plain.
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:76
-#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:50
+#: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:53
 #: src/features/voice/components/VoiceControlBar.tsx:127
 msgid "You can't turn on your camera in this channel"
 msgstr "V tomto kanálu nelze zapnout kameru"
@@ -39342,7 +39350,7 @@ msgid "You stay in {ownedNames}. Owners cannot leave their own community."
 msgstr "Zůstanete v {ownedNames}. Vlastníci nemohou opustit vlastní komunitu."
 
 #. Voice chat status tooltip for the current user. A moderator deafened them so they cannot hear voice chat.
-#: src/features/voice/utils/VoiceMessageDescriptors.ts:57
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:64
 msgid "You were deafened by moderators"
 msgstr "Moderátoři vám vypnuli zvuk"
 
@@ -39691,6 +39699,11 @@ msgstr "Vaše žádost čeká na posouzení. Stále můžete upravovat údaje v 
 msgid "Your browser requires user interaction before audio can be played. Click the button below to enable voice chat."
 msgstr "Váš prohlížeč vyžaduje interakci uživatele, než bude možné přehrát zvuk. Kliknutím na tlačítko níže povolíte hlasový chat."
 
+#. Screen share notice shown to the person sharing a capture device, such as a capture card, that ignores the requested size. deliveredResolution is the size the capture device really sends and resolution is the size the app asked it for. Both are technical tokens such as 720p.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:378
+msgid "Your capture device is sending {deliveredResolution} instead of {resolution}."
+msgstr "Vaše zachytávací zařízení posílá {deliveredResolution} místo {resolution}."
+
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:185
 msgid "Your card is being checked for localized pricing. This usually takes a moment."
 msgstr "Ověřujeme vaši kartu kvůli místním cenám. Obvykle to chvíli trvá."
@@ -39721,15 +39734,35 @@ msgstr "Vaše komunita je uvedena v Objevování. Níže můžete upravit údaje
 msgid "Your community needs at least {minMemberCount, plural, one {# member} other {# members}} before it can be listed in Discovery."
 msgstr "Vaše komunita musí mít alespoň {minMemberCount, plural, one {# člena} few {# členy} many {# člena} other {# členů}}, aby mohla být uvedena v Objevování."
 
-#. Tooltip on the passive badge on your own screen-share tile when the encoder is limited by CPU.
-#: src/features/voice/components/voice_participant_tile/shared.ts:85
-msgid "Your CPU cannot keep up, so viewers are getting fewer frames than you asked for."
-msgstr "Vaše CPU nestíhá, takže diváci dostávají méně snímků, než jste požadovali."
+#. Screen share notice shown to the person sharing when their upload is the limit. frameRate is the whole number of frames a second the stream is set to send and deliveredFrameRate is the smaller whole number that reaches viewers. Keep the two rates in separate clauses so neither can be read as the other. resolution is a technical token such as 720p. FPS is a technical token.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:367
+msgid "Your connection cannot keep up. Your stream is set to {frameRate} FPS at {resolution} and viewers are getting about {deliveredFrameRate} FPS."
+msgstr "Vaše připojení nestíhá. Váš stream je nastaven na {frameRate} FPS při rozlišení {resolution} a diváci dostávají přibližně {deliveredFrameRate} FPS."
 
 #. Body copy on the mature content check callback page after a successful check submission.
 #: src/features/auth/components/pages/MatureContentCheckCallbackPage.tsx:14
 msgid "Your credit card has been checked. If the card is valid, mature content will unlock shortly. You can close this tab and return to the app."
 msgstr "Vaše kreditní karta byla zkontrolována. Pokud je platná, obsah pro dospělé se brzy odemkne. Můžete zavřít tuto kartu prohlížeče a vrátit se do aplikace."
+
+#. Screen share notice shown to the person sharing when their device is the limit and nothing lower is available. frameRate is the whole number of frames a second the stream is set to send and deliveredFrameRate is the smaller whole number that reaches viewers. Keep the two rates in separate clauses so neither can be read as the other. resolution is a technical token such as 720p. FPS is a technical token.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:361
+msgid "Your device cannot keep up. Your stream is set to {frameRate} FPS at {resolution} and viewers are getting about {deliveredFrameRate} FPS."
+msgstr "Vaše zařízení to nezvládá. Váš stream je nastaven na {frameRate} FPS při rozlišení {resolution} a diváci dostávají přibližně {deliveredFrameRate} FPS."
+
+#. Screen share notice shown to the person sharing after their stream dropped frame rate to protect sharpness. frameRate is a whole number and resolution is a technical token such as 1080p or 2714x762. FPS is a technical token.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:339
+msgid "Your device could not keep up, so your stream now sends {frameRate} FPS to keep {resolution} sharp."
+msgstr "Vaše zařízení to nezvládlo, takže váš stream nyní posílá {frameRate} FPS, aby zůstalo {resolution} ostré."
+
+#. Screen share notice shown to the person sharing after their stream dropped both resolution and frame rate. resolution and frameRate are what the stream sends now, targetResolution and targetFrameRate are what the person asked for. Resolutions are technical tokens such as 480p and rates are whole numbers. FPS is a technical token.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:349
+msgid "Your device could not keep up, so your stream now sends {resolution} at {frameRate} FPS instead of {targetResolution} at {targetFrameRate} FPS."
+msgstr "Vaše zařízení to nezvládlo, takže váš stream nyní odesílá {resolution} při {frameRate} FPS místo {targetResolution} při {targetFrameRate} FPS."
+
+#. Screen share notice shown to the person sharing after their stream dropped resolution to protect smoothness. resolution is a technical token such as 720p and frameRate is a whole number. FPS is a technical token.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:344
+msgid "Your device could not keep up, so your stream now sends {resolution} to keep {frameRate} FPS smooth."
+msgstr "Vaše zařízení to nezvládlo, takže váš stream nyní odesílá {resolution}, aby udržel {frameRate} FPS plynulé."
 
 #. Toast confirmation after the email address has been successfully updated.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:124
@@ -39857,11 +39890,6 @@ msgstr "Zprávu se nepodařilo aktualizovat"
 msgid "Your most recent purchase is no longer within the refund window. Contact support for billing issues."
 msgstr "Lhůta pro vrácení peněz za váš poslední nákup již uplynula. S problémy s fakturací se obraťte na podporu."
 
-#. Tooltip on the passive badge on your own screen-share tile when the encoder is limited by bandwidth.
-#: src/features/voice/components/voice_participant_tile/shared.ts:89
-msgid "Your network cannot keep up, so viewers are getting fewer frames than you asked for."
-msgstr "Vaše síť nestíhá, takže diváci dostávají méně snímků, než jste požadovali."
-
 #. Placeholder text inside the new email field. Sentence-fragment hint, intentionally lowercase.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:88
 msgid "your new email"
@@ -39921,16 +39949,31 @@ msgstr "váš region"
 msgid "Your registration needs an extra anti-spam check before you can continue."
 msgstr "Než budete moct pokračovat, je potřeba provést dodatečnou kontrolu proti spamu."
 
+#. Video settings note shown when the saved screen share quality is above what this account can send. Resolutions are short labels such as 1440p or Source and rates are whole numbers. FPS is a technical token.
+#: src/features/user/components/modals/tabs/UserVideoTab.tsx:94
+msgid "Your saved {savedResolution} at {savedFrameRate} FPS needs {premiumProductName}, so shares use {resolution} at {frameRate} FPS."
+msgstr "Vaše uložené rozlišení {savedResolution} s frekvencí {savedFrameRate} snímků za sekundu vyžaduje {premiumProductName}, takže sdílení používá rozlišení {resolution} s frekvencí {frameRate} snímků za sekundu."
+
 #. Body of a modal shown when the video codec the browser negotiated for an active screen share is outside the codecs the app allows and no allowed codec could be published, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:124
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:157
 msgctxt "screen-share"
 msgid "Your screen share could not be published with a compatible video codec, so it was stopped. Try sharing again."
 msgstr "Sdílení obrazovky se nepodařilo publikovat s kompatibilním video kodekem, proto bylo zastaveno. Zkuste sdílet znovu."
 
+#. Screen share status row in the stream menu, shown when the captured window or screen itself produces fewer frames than asked for. sourceFrameRate is a whole number. FPS is a technical token.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:430
+msgid "Your source is producing about {sourceFrameRate} FPS"
+msgstr "Vaše zdrojové zařízení produkuje přibližně {sourceFrameRate} FPS"
+
 #. Subtitle under the preview-paused overlay reassuring the user that the screen share is still live for others.
-#: src/features/voice/components/voice_participant_tile/shared.ts:66
+#: src/features/voice/components/voice_participant_tile/shared.ts:64
 msgid "Your stream is still live"
 msgstr "Váš stream je stále aktivní"
+
+#. Screen share notice shown to the person sharing after the app replaced the video codec. codec and previousCodec are codec names such as VP9 or H.264.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:355
+msgid "Your stream switched to {codec} because {previousCodec} could not keep up on this device. Viewers may see a short pause."
+msgstr "Vaše streamování se přeplo na {codec}, protože {previousCodec} na tomto zařízení nestíhal. Diváci mohou zaznamenat krátkou pauzu."
 
 #. Toast error shown when the server refuses to move a Plutonium subscription down to the current price, whatever the reason.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:106
@@ -40021,10 +40064,15 @@ msgid "Your vanity URL has been set to {inviteEndpoint}/{vanitySlug}"
 msgstr "Váš vlastní odkaz na pozvánku byl nastaven na {inviteEndpoint}/{vanitySlug}"
 
 #. Body of a modal shown when the local video encoder produces no frames for an active screen share, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:131
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:164
 msgctxt "screen-share"
 msgid "Your video encoder stopped encoding frames, so your screen share was stopped. Try sharing again."
 msgstr "Enkodér videa přestal kódovat snímky, takže sdílení obrazovky bylo ukončeno. Zkuste sdílet znovu."
+
+#. Screen share notice shown to the person sharing after the app recovered a stalled encoder on another codec. codec is a codec name such as VP8.
+#: src/features/voice/utils/VoiceMessageDescriptors.ts:395
+msgid "Your video encoder stopped, so your stream switched to {codec}."
+msgstr "Vaše video kódování se zastavilo, takže se váš stream přepnul na {codec}."
 
 #. Label for the YouTube enrichment service toggle in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:286

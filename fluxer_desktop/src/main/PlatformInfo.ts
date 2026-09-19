@@ -212,11 +212,11 @@ function sameDevice(a: GpuDeviceInfo, b: GpuDeviceInfo): boolean {
 }
 
 function mergeGpuDevice(nativeDevice: GpuDeviceInfo, electronDevice: GpuDeviceInfo | undefined): GpuDeviceInfo {
-	if (!electronDevice) return nativeDevice;
+	if (!electronDevice) return {...nativeDevice, active: false};
 	return {
 		...electronDevice,
 		...nativeDevice,
-		active: nativeDevice.active || electronDevice.active,
+		active: electronDevice.active,
 		vendorName: nativeDevice.vendorName ?? electronDevice.vendorName,
 		deviceString: nativeDevice.deviceString ?? electronDevice.deviceString,
 		driverVendor: nativeDevice.driverVendor ?? electronDevice.driverVendor,
@@ -234,9 +234,9 @@ function mergeGpuDevices(
 		const electronIndex = electronDevices.findIndex(
 			(candidate, index) => !usedElectronIndexes.has(index) && sameDevice(nativeDevice, candidate),
 		);
-		if (electronIndex === -1) return nativeDevice;
-		usedElectronIndexes.add(electronIndex);
-		return mergeGpuDevice(nativeDevice, electronDevices[electronIndex]);
+		const electronDevice = electronIndex === -1 ? undefined : electronDevices[electronIndex];
+		if (electronDevice) usedElectronIndexes.add(electronIndex);
+		return mergeGpuDevice(nativeDevice, electronDevice);
 	});
 	for (const [index, electronDevice] of electronDevices.entries()) {
 		if (!usedElectronIndexes.has(index)) merged.push(electronDevice);
@@ -283,7 +283,7 @@ export async function getGpuInfo(): Promise<GpuInfo> {
 			nativeSource: native?.source,
 		};
 	} catch {
-		return {devices: native?.devices ?? [], nativeSource: native?.source};
+		return {devices: mergeGpuDevices(native?.devices ?? [], []), nativeSource: native?.source};
 	}
 }
 

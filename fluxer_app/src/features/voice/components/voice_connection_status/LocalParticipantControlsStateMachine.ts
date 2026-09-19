@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ScreenShareDeliveryNoticeTone} from '@app/features/voice/engine/ScreenShareUnderperformance';
 import {initialTransition, setup, transition} from 'xstate';
 
 export type LocalParticipantMediaControl = 'camera' | 'screenShare';
@@ -28,6 +29,7 @@ export interface LocalParticipantControlSignals {
 	isCameraEnabled: boolean;
 	isCameraUserCapReached: boolean;
 	isScreenShareEnabled: boolean;
+	screenShareNoticeTone: ScreenShareDeliveryNoticeTone | null;
 }
 
 interface LocalParticipantMediaControlEvent {
@@ -50,6 +52,8 @@ export interface LocalParticipantScreenShareControlState {
 	clickAction: LocalParticipantScreenShareClickAction;
 	canOpenMenu: boolean;
 	canPreloadPicker: boolean;
+	showsNotice: boolean;
+	showsNoticeDot: boolean;
 }
 
 export interface LocalParticipantControlsViewState {
@@ -137,6 +141,7 @@ export function selectLocalParticipantControlsViewState(
 	const screenShareValue = selectLocalParticipantMediaControlState('screenShare', signals);
 	const cameraDisabled = isDisabled(cameraValue);
 	const screenShareDisabled = isDisabled(screenShareValue);
+	const noticeTone = screenShareValue === 'active' ? signals.screenShareNoticeTone : null;
 	return {
 		camera: {
 			value: cameraValue,
@@ -151,6 +156,8 @@ export function selectLocalParticipantControlsViewState(
 			clickAction: screenShareValue === 'active' ? 'openMenu' : screenShareValue === 'ready' ? 'openPicker' : 'none',
 			canOpenMenu: screenShareValue === 'active',
 			canPreloadPicker: screenShareValue === 'ready',
+			showsNotice: noticeTone !== null,
+			showsNoticeDot: noticeTone === 'warning',
 		},
 	};
 }

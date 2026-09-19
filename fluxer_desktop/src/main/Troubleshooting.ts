@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {getDesktopTroubleshootingSettings, setDesktopTroubleshootingSettings} from '@electron/common/DesktopConfig';
+import {setDesktopTroubleshootingSettings} from '@electron/common/DesktopConfig';
 import {createChildLogger} from '@electron/common/Logger';
+import {getLaunchDesktopTroubleshootingSettings} from '@electron/main/DesktopDebugInfo';
 import {destroyDesktopTray} from '@electron/main/DesktopTray';
 import {getStableRelaunchOptions} from '@electron/main/LinuxLaunchPath';
 import {t} from '@electron/main/MainI18n';
@@ -22,11 +23,6 @@ export function relaunchAndExit(): void {
 	destroyDesktopTray();
 	app.relaunch(getStableRelaunchOptions());
 	app.exit(0);
-}
-
-function isHardwareAccelerationDisabled(): boolean {
-	if (process.platform === 'darwin') return false;
-	return getDesktopTroubleshootingSettings().disableHardwareAcceleration;
 }
 
 export function setHardwareAccelerationDisabled(disable: boolean): void {
@@ -111,7 +107,7 @@ export async function resetAppDataAndRestart(options?: {confirm?: boolean}): Pro
 }
 
 export function buildTroubleshootingMenuItems(): Array<MenuItemConstructorOptions> {
-	const hwAccelDisabled = isHardwareAccelerationDisabled();
+	const hwAccelDisabled = getLaunchDesktopTroubleshootingSettings().disableHardwareAcceleration;
 	const toggleHwAccelLabel = hwAccelDisabled
 		? t('desktop.troubleshooting.enableHardwareAccelerationAndRestart')
 		: t('desktop.troubleshooting.disableHardwareAccelerationAndRestart');

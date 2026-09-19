@@ -19,9 +19,13 @@ const transformedSource = esbuild.transformSync(source, {
 	target: 'node20',
 }).code;
 
-function loadPlatformInfo(platform = 'win32') {
+function loadPlatformInfo(platform = 'win32', {nativeGpu = null, electronGpu = null, gpuInfoRequests = []} = {}) {
 	const app = {
 		getVersion: () => '0.0.0-test',
+		getGPUInfo: async (infoType) => {
+			gpuInfoRequests.push(infoType);
+			return {gpuDevice: electronGpu ?? []};
+		},
 		commandLine: {
 			getSwitchValue: () => '',
 			hasSwitch: () => true,
@@ -36,6 +40,9 @@ function loadPlatformInfo(platform = 'win32') {
 		if (specifier === 'node:module') {
 			return {
 				createRequire: () => (moduleSpecifier) => {
+					if (moduleSpecifier === '@fluxer/platform-info' && nativeGpu) {
+						return {getGpuInfo: () => ({devices: nativeGpu, source: 'dxgi'}), loadError: null};
+					}
 					throw new Error(`Unexpected native module require: ${moduleSpecifier}`);
 				},
 			};
@@ -81,5 +88,68 @@ describe('PlatformInfo Chromium runtime diagnostics', () => {
 			[],
 		);
 		assert.equal(switches.includes('enable-libopenh264'), true);
+	});
+});
+
+describe('PlatformInfo dual-GPU merge', () => {
+	const NVIDIA = {vendorId: 0x10de, deviceId: 0x2684, deviceString: 'NVIDIA GeForce RTX 4090 Laptop GPU'};
+	const INTEL = {vendorId: 0x8086, deviceId: 0x9bc4, deviceString: 'Intel(R) UHD Graphics'};
+
+	test('keeps the adapter Chromium reports active and drops the native probe active flag', async () => {
+		const gpuInfoRequests = [];
+		const module = loadPlatformInfo('win32', {
+			gpuInfoRequests,
+			nativeGpu: [
+				{...NVIDIA, active: true, dedicatedVideoMemory: 16 * 1024 * 1024 * 1024, source: 'dxgi'},
+				{...INTEL, active: false, dedicatedVideoMemory: 0, source: 'dxgi'},
+			],
+			electronGpu: [
+				{...INTEL, active: true},
+				{...NVIDIA, active: false},
+			],
+		});
+
+		const info = await module.getGpuInfo();
+		const byVendor = new Map(info.devices.map((device) => [device.vendorId, device]));
+
+		assert.deepEqual(gpuInfoRequests, ['complete']);
+		assert.equal(byVendor.get(INTEL.vendorId).active, true);
+		assert.equal(byVendor.get(NVIDIA.vendorId).active, false);
+		assert.equal(byVendor.get(NVIDIA.vendorId).dedicatedVideoMemory, 16 * 1024 * 1024 * 1024);
+	});
+
+	test('leaves a native adapter Chromium never lists inactive', async () => {
+		const module = loadPlatformInfo('win32', {
+			nativeGpu: [
+				{...NVIDIA, active: true, dedicatedVideoMemory: 16 * 1024 * 1024 * 1024, source: 'dxgi'},
+				{...INTEL, active: false, dedicatedVideoMemory: 0, source: 'dxgi'},
+			],
+			electronGpu: [{...INTEL, active: true}],
+		});
+
+		const info = await module.getGpuInfo();
+		const byVendor = new Map(info.devices.map((device) => [device.vendorId, device]));
+
+		assert.equal(byVendor.get(NVIDIA.vendorId).active, false);
+		assert.equal(byVendor.get(INTEL.vendorId).active, true);
+	});
+
+	test('keeps the native details when Electron reports the dedicated adapter active', async () => {
+		const module = loadPlatformInfo('win32', {
+			nativeGpu: [
+				{...NVIDIA, active: true, dedicatedVideoMemory: 16 * 1024 * 1024 * 1024, source: 'dxgi'},
+				{...INTEL, active: false, dedicatedVideoMemory: 0, source: 'dxgi'},
+			],
+			electronGpu: [
+				{...NVIDIA, active: true},
+				{...INTEL, active: false},
+			],
+		});
+
+		const info = await module.getGpuInfo();
+		const byVendor = new Map(info.devices.map((device) => [device.vendorId, device]));
+
+		assert.equal(byVendor.get(NVIDIA.vendorId).active, true);
+		assert.equal(byVendor.get(INTEL.vendorId).active, false);
 	});
 });

@@ -84,12 +84,7 @@ pub fn run_test() -> Result<i32> {
             ..RunOptions::default()
         },
     )?;
-    task_run(&[
-        "cargo",
-        "test",
-        "--manifest-path",
-        "fluxer_desktop/native/rust/Cargo.toml",
-    ])?;
+    task_run(&["pnpm", "--filter", "fluxer_desktop", "test"])?;
     run_command(
         &["pnpm", "--filter", "fluxer_api", "test"],
         RunOptions {

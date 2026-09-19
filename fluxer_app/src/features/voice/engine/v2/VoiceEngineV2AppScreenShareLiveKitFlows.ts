@@ -2,6 +2,7 @@
 
 import assert from 'node:assert/strict';
 import {isDesktop, isNativeMacOS} from '@app/features/ui/utils/NativeUtils';
+import ScreenShareCodecNegotiation from '@app/features/voice/engine/ScreenShareCodecNegotiation';
 import {updateLocalParticipantFromRoom} from '@app/features/voice/engine/VoiceMediaEngineBridge';
 import {
 	enforceLocalMediaPublicationCap,
@@ -13,6 +14,7 @@ import {
 import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
 import type {
 	ScreenShareReconnectSnapshot,
+	ScreenShareSourceSnapshot,
 	VoiceEngineV2AppScreenShareExecutionAdapter,
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter';
 import {
@@ -37,16 +39,16 @@ import {
 	type CapturedScreenShareTracks,
 	type DeviceScreenShareCaptureOptions,
 	type DisplayScreenShareCaptureContext,
+	getNegotiatedSenderVideoCodec,
 	getReplacementScreenShareSettingsOptions,
 	logger,
 	type ScreenShareCaptureCleanupSnapshot,
 	type SimulcastTrackInfoLike,
 	stopMediaTrack,
 } from '@app/features/voice/engine/voice_screen_share_manager/shared';
-import ActiveScreenShareSource, {
-	type PublishedScreenShareSource,
-} from '@app/features/voice/state/ActiveScreenShareSource';
+import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
 import type LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
+import ScreenShareDelivery from '@app/features/voice/state/ScreenShareDelivery';
 import SoftwareEncoderWarning from '@app/features/voice/state/SoftwareEncoderWarning';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
@@ -111,7 +113,7 @@ interface EnforcedScreenSharePublish {
 	track: LocalVideoTrack | undefined;
 }
 
-interface ScreenShareReplacementSnapshot {
+interface ScreenShareReplacementSnapshot extends ScreenShareSourceSnapshot {
 	videoTrack: MediaStreamTrack;
 	videoHadProcessor: boolean;
 	audioPublication?: LocalTrackPublication;
@@ -119,9 +121,6 @@ interface ScreenShareReplacementSnapshot {
 	audioMediaStreamTrack?: MediaStreamTrack;
 	audioMuted: boolean;
 	contentSource: ScreenShareContentSource;
-	publishedSource: PublishedScreenShareSource | null;
-	sourceId: string | null;
-	isOwnWindow: boolean;
 	publishOptions: TrackPublishOptions;
 }
 
@@ -368,6 +367,7 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 				applyState,
 				playSound,
 			);
+			await this.adapter.reconcileScreenShareCodecInternal(room);
 		} catch (error) {
 			await this.handleSetEnabledFailure(room, participant, enabled, stopCleanupSnapshot, applyState, playSound, error);
 		}
@@ -445,9 +445,13 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 			const track = (publication?.videoTrack ?? publication?.track) as LocalVideoTrack | undefined;
 			const requested = effectivePublishOptions?.videoCodec;
 			if (!publication || !track || !requested) return {effectivePublishOptions, track};
-			const violation = findVideoPublishCodecPolicyViolation(requested, publication.options?.videoCodec ?? track.codec);
+			const violation = findVideoPublishCodecPolicyViolation(
+				requested,
+				publication.options?.videoCodec ?? track.codec,
+				getNegotiatedSenderVideoCodec(track.sender),
+			);
 			if (!violation) return {effectivePublishOptions, track};
-			logger.warn('Screen share published a codec outside the publish policy', {...violation, corrections});
+			logger.warn('Screen share published a codec the connection did not negotiate', {...violation, corrections});
 			const mediaStreamTrack = track.mediaStreamTrack;
 			const replaceAlreadyInFlight = this.adapter.isScreenSharePublicationReplaceInFlight();
 			this.adapter.transitionScreenShareLifecycleInternal({type: 'share.publicationReplace.set', inFlight: true});
@@ -624,6 +628,7 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 			);
 		}
 		await this.adapter.applyPendingScreenShareRequestsInternal(room, participant);
+		await this.adapter.reconcileScreenShareCodecInternal(room);
 	}
 
 	private emitReplaceShareResult(
@@ -797,6 +802,8 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 			logger.warn('Screen share source track ended before codec republish', {codec});
 			return false;
 		}
+		const selectedCodecAtEntry = ScreenShareCodecNegotiation.getSelectedCodec();
+		const movedAwayFromSelection = selectedCodecAtEntry !== null && codec !== selectedCodecAtEntry;
 		const previousOptions = ((publication as {options?: TrackPublishOptions}).options ?? {}) as TrackPublishOptions;
 		const nextPublishOptions: TrackPublishOptions = {...previousOptions, videoCodec: codec};
 		delete nextPublishOptions.backupCodec;
@@ -850,6 +857,7 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 					}),
 				},
 			});
+			this.adapter.noteScreenShareCodecRecoveryInternal(previousOptions.videoCodec, codec);
 			logger.info('Republished active screen share with a different codec', {
 				previousCodec: previousOptions.videoCodec,
 				codec,
@@ -880,6 +888,9 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 			});
 		} finally {
 			await this.adapter.applyPendingScreenShareRequestsInternal(room, participant);
+			if (!movedAwayFromSelection) {
+				await this.adapter.reconcileScreenShareCodecInternal(room);
+			}
 		}
 	}
 
@@ -917,18 +928,20 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 			publishedSource: ActiveScreenShareSource.getPublishedSource(),
 			sourceId: ActiveScreenShareSource.getSourceId(),
 			isOwnWindow: ActiveScreenShareSource.isOwnWindow(),
+			sourceDimensions: ActiveScreenShareSource.getSourceDimensions(),
 			publishOptions,
 		};
 	}
 
-	private restorePublishedScreenShareSource(snapshot: ScreenShareReplacementSnapshot): void {
+	private restorePublishedScreenShareSource(snapshot: ScreenShareSourceSnapshot): void {
 		if (snapshot.publishedSource === null) {
 			ActiveScreenShareSource.clear();
-			return;
+		} else {
+			ActiveScreenShareSource.setPublishedSource(snapshot.publishedSource, snapshot.sourceId, {
+				isOwnWindow: snapshot.isOwnWindow,
+			});
 		}
-		ActiveScreenShareSource.setPublishedSource(snapshot.publishedSource, snapshot.sourceId, {
-			isOwnWindow: snapshot.isOwnWindow,
-		});
+		ActiveScreenShareSource.setSourceDimensions(snapshot.sourceDimensions);
 	}
 
 	private async restoreScreenShareReplacement(
@@ -1631,6 +1644,8 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 			actual: participant.isScreenShareEnabled,
 			applyState: (actualNow) => applyScreenShareState(this.adapter, actualNow, false),
 			onInactiveAfterSync: () => {
+				ActiveScreenShareSource.clear();
+				ScreenShareDelivery.endShare();
 				stopMediaTrack(snapshot.videoTrack);
 				stopMediaTrack(snapshot.audioTrack);
 			},
@@ -1646,6 +1661,12 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 		});
 	}
 
+	private restoreReconnectTracking(snapshot: ScreenShareReconnectSnapshot): void {
+		if (ScreenShareDelivery.isSharing) return;
+		this.restorePublishedScreenShareSource(snapshot.source);
+		ScreenShareDelivery.restore(snapshot.delivery);
+	}
+
 	async restoreReconnect(
 		room: Room | null,
 		snapshot: ScreenShareReconnectSnapshot,
@@ -1659,10 +1680,6 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 			logger.warn('No participant');
 			return false;
 		}
-		if (participant.isScreenShareEnabled) {
-			await enforceLocalMediaPublicationCap(participant, VoiceTrackSource.ScreenShare);
-			return this.finalizeReconnectAlreadyEnabled(room, participant);
-		}
 		const pendingVerdict = guardScreenShareEntry({
 			pending: {
 				active: this.adapter.isScreenSharePending,
@@ -1670,7 +1687,13 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 			},
 		});
 		if (pendingVerdict === 'share-pending') {
+			this.restoreReconnectTracking(snapshot);
 			return false;
+		}
+		if (participant.isScreenShareEnabled) {
+			await enforceLocalMediaPublicationCap(participant, VoiceTrackSource.ScreenShare);
+			this.restoreReconnectTracking(snapshot);
+			return this.finalizeReconnectAlreadyEnabled(room, participant);
 		}
 		if (snapshot.videoTrack.readyState === 'ended') {
 			logger.warn('Cannot restore screen share reconnect from ended video track');
@@ -1685,6 +1708,7 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 			if (getLocalScreenSharePublications(participant).length > 0) {
 				await this.adapter.cleanupLingeringScreenShareTracks(participant);
 			}
+			this.restoreReconnectTracking(snapshot);
 			const requestedPublishOptions = await this.adapter.getEffectivePublishOptionsInternal(true, publishOptions);
 			await participant.publishTrack(snapshot.videoTrack, {
 				...requestedPublishOptions,
@@ -1698,6 +1722,9 @@ export class VoiceEngineV2AppScreenShareLiveKitFlows {
 			return true;
 		} catch (error) {
 			return this.handleRestoreReconnectFailure(room, participant, snapshot, videoPublished, error);
+		} finally {
+			await this.adapter.applyPendingScreenShareRequestsInternal(room, participant);
+			await this.adapter.reconcileScreenShareCodecInternal(room);
 		}
 	}
 }

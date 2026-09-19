@@ -18,6 +18,7 @@ class ActiveScreenShareSource {
 	publishedSource: PublishedScreenShareSource | null = null;
 	windowAudioScope: WindowShareAudioScope = 'window';
 	pendingWindowAudioScope: WindowShareAudioScope | null = null;
+	sourceDimensions: {width: number; height: number} | null = null;
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
@@ -43,6 +44,14 @@ class ActiveScreenShareSource {
 
 	getPublishedSource(): PublishedScreenShareSource | null {
 		return this.publishedSource;
+	}
+
+	setSourceDimensions(dimensions: {width: number; height: number} | null): void {
+		this.sourceDimensions = dimensions;
+	}
+
+	getSourceDimensions(): {width: number; height: number} | null {
+		return this.sourceDimensions;
 	}
 
 	getWindowAudioScope(): WindowShareAudioScope {
@@ -78,6 +87,7 @@ class ActiveScreenShareSource {
 		this.publishedSource = null;
 		this.windowAudioScope = 'window';
 		this.pendingWindowAudioScope = null;
+		this.sourceDimensions = null;
 	}
 }
 

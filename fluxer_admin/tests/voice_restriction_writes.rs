@@ -95,6 +95,39 @@ async fn clearing_the_region_restriction_fields_reaches_the_api_as_empty_lists()
     assert_eq!(body["allowed_guild_ids"], json!([]));
 }
 
+#[tokio::test]
+async fn the_screen_share_delivery_form_keeps_the_included_and_excluded_lists_apart() {
+    let app = setup().await;
+    let csrf_token = csrf_token(&app).await;
+    let status = post_form(
+        &app,
+        "/instance-config?action=update_screen_share_delivery",
+        &format!(
+            "_csrf={csrf_token}&screen_share_delivery_enabled=true\
+             &screen_share_delivery_rollout_basis_points=2500\
+             &screen_share_delivery_rollout_salt=screen-share-delivery-v1\
+             &screen_share_delivery_included_user_ids=1500000000000000001\
+             &screen_share_delivery_excluded_user_ids=1500000000000000002"
+        ),
+    )
+    .await;
+    assert_eq!(status, StatusCode::SEE_OTHER);
+
+    let body = captured_body(&app, "PATCH /admin/instance/config");
+    let delivery = &body["screen_share_delivery"];
+    assert_eq!(delivery["enabled"], json!(true));
+    assert_eq!(delivery["rollout_basis_points"], json!(2500));
+    assert_eq!(delivery["rollout_salt"], json!("screen-share-delivery-v1"));
+    assert_eq!(
+        delivery["included_user_ids"],
+        json!(["1500000000000000001"])
+    );
+    assert_eq!(
+        delivery["excluded_user_ids"],
+        json!(["1500000000000000002"])
+    );
+}
+
 struct TestApp {
     router: Router,
     session_cookie: String,

@@ -43,6 +43,7 @@ import {
 	formatDesktopDebugInfo,
 	getDesktopDebugInfo,
 	getLaunchAppUrlOverride,
+	getLaunchDesktopTroubleshootingSettings,
 	getLaunchNetLogPath,
 	hasDesktopDebugInfoArg,
 	logDesktopDebugInfo,
@@ -173,17 +174,13 @@ if (launchConfigurationError) {
 	if (shouldResetWindowStateOnLaunch(process.argv)) {
 		clearSavedWindowBounds();
 	}
-	const disableHardwareAccelerationRequested =
-		shouldDisableHardwareAccelerationForLaunch(process.argv) ||
-		getDesktopTroubleshootingSettings().disableHardwareAcceleration;
-	if (process.platform !== 'darwin' && disableHardwareAccelerationRequested) {
+	const disableHardwareAcceleration = getLaunchDesktopTroubleshootingSettings().disableHardwareAcceleration;
+	if (disableHardwareAcceleration) {
 		app.disableHardwareAcceleration();
 		log.info('Hardware acceleration disabled for this launch', {
 			commandLine: shouldDisableHardwareAccelerationForLaunch(process.argv),
 			persistentSetting: getDesktopTroubleshootingSettings().disableHardwareAcceleration,
 		});
-	} else if (process.platform === 'darwin' && disableHardwareAccelerationRequested) {
-		log.info('Hardware acceleration disable request ignored on macOS');
 	}
 	log.info('Launch diagnostic modes', launchDiagnosticOptions);
 	const CHANNEL_APP_NAME = DESKTOP_APP_NAME;
@@ -264,7 +261,7 @@ if (launchConfigurationError) {
 	}
 	const disabledChromiumFeatures = new Set(BASE_DISABLED_CHROMIUM_FEATURES);
 	const enabledChromiumFeatures = new Set<string>();
-	if (!disableHardwareAccelerationRequested) {
+	if (!disableHardwareAcceleration) {
 		addLinuxHardwareVideoEncodeFeatures(enabledChromiumFeatures);
 		addWindowsHardwareVideoEncodeFeatures(enabledChromiumFeatures);
 	}

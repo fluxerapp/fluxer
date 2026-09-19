@@ -4,6 +4,10 @@ import {
 	INERT_VOICE_NOISE_SUPPRESSION_ASSIGNMENT,
 	VoiceNoiseSuppressionAssignmentResponse,
 } from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
+import {
+	INERT_SCREEN_SHARE_DELIVERY_ASSIGNMENT,
+	ScreenShareDeliveryAssignmentResponse,
+} from '@fluxer/schema/src/domains/experiment/ScreenShareDeliverySchemas';
 import {z} from 'zod';
 
 export const EXPERIMENT_MIN_POLL_INTERVAL_SECONDS = 60;
@@ -42,6 +46,7 @@ export type ExperimentDeliveryConfigResponse = z.infer<typeof ExperimentDelivery
 
 const ExperimentAssignmentsSchema = z.object({
 	voice_noise_suppression: VoiceNoiseSuppressionAssignmentResponse.optional(),
+	screen_share_delivery: ScreenShareDeliveryAssignmentResponse.optional(),
 });
 
 export const ExperimentAssignmentsResponse = z.object({
@@ -62,4 +67,10 @@ export function readVoiceNoiseSuppressionAssignment(
 	response: ExperimentAssignmentsResponse,
 ): VoiceNoiseSuppressionAssignmentResponse {
 	return response.assignments.voice_noise_suppression ?? INERT_VOICE_NOISE_SUPPRESSION_ASSIGNMENT;
+}
+
+export function readScreenShareDeliveryAssignment(
+	response: ExperimentAssignmentsResponse,
+): ScreenShareDeliveryAssignmentResponse {
+	return response.assignments.screen_share_delivery ?? INERT_SCREEN_SHARE_DELIVERY_ASSIGNMENT;
 }

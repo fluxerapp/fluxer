@@ -6,8 +6,8 @@ use crate::{
         InstanceConfigResponse, InstanceIntegrationsResponse, InstanceMediaResponse,
         InstancePolicyResponse, InstanceRegistrationResponse, LimitConfigResponse,
         NoiseSuppressionBackend, PendingRegistrationResponse, RegistrationUrlResponse,
-        SsoConfigResponse, VOICE_NS_MAX_GUILD_OVERRIDES, VOICE_NS_MAX_TARGETED_USERS,
-        VoiceNoiseSuppressionConfigResponse,
+        ScreenShareDeliveryConfigResponse, SsoConfigResponse, VOICE_NS_MAX_GUILD_OVERRIDES,
+        VOICE_NS_MAX_TARGETED_USERS, VoiceNoiseSuppressionConfigResponse,
     },
     config::AdminConfig,
     middleware::auth::AuthContext,
@@ -148,6 +148,7 @@ pub fn instance_config_page(
                     html! {
                         (gateway_rollout_section(base, csrf_token, &instance_config.gateway_rollout))
                         (voice_noise_suppression_section(base, csrf_token, &instance_config.voice_noise_suppression))
+                        (screen_share_delivery_section(base, csrf_token, &instance_config.screen_share_delivery))
                         (experiment_delivery_section(base, csrf_token, &instance_config.experiment_delivery))
                         @if let Some(limit_config) = limit_config {
                             (limit_config_section(base, limit_config))
@@ -1180,6 +1181,112 @@ fn voice_noise_suppression_section(
 
                     (form_actions(html! {
                         (submit_button("Save Voice Noise Suppression Configuration"))
+                    }))
+                }
+            }
+        },
+    )
+}
+
+fn screen_share_delivery_section(
+    base: &str,
+    csrf_token: &str,
+    screen_share_delivery: &ScreenShareDeliveryConfigResponse,
+) -> Markup {
+    let status = if screen_share_delivery.enabled {
+        ("Live", BadgeVariant::Success)
+    } else {
+        ("Inert", BadgeVariant::Default)
+    };
+    let included_user_ids = screen_share_delivery.included_user_ids.join("\n");
+    let excluded_user_ids = screen_share_delivery.excluded_user_ids.join("\n");
+    section_card_with_description(
+        "Screen Share Delivery",
+        "Picks whether a targeted client adapts its own screen share after it starts. A targeted \
+         client measures what the encoder sends, steps the share down a resolution and frame rate \
+         ladder while it cannot keep up, probes back up when it can, remembers the settled rung \
+         per codec, and tells the sharer what is going out. A client that is not targeted \
+         publishes the same target and never changes it. Both arms still get the publish-time \
+         fixes and both arms still recover a stalled encoder. While the master switch below is \
+         off every client publishes and holds, whatever the rest of these fields say.",
+        html! {
+            form method="post" action={(base) "/instance-config?action=update_screen_share_delivery"} {
+                (csrf_input(csrf_token))
+                div class="space-y-6" {
+                    div class="flex flex-wrap items-center gap-2" {
+                        h3 class="text-sm font-semibold text-neutral-900" { "Master switch" }
+                        (badge(status.0, status.1))
+                        span class="text-xs text-neutral-500" {
+                            "Config version " (screen_share_delivery.config_version)
+                        }
+                    }
+                    (checkbox(
+                        "screen_share_delivery_enabled",
+                        "true",
+                        "Serve screen share delivery assignments to clients",
+                        screen_share_delivery.enabled,
+                        true,
+                    ))
+                    p class="text-xs text-neutral-500" {
+                        "Off is the safe state. With this unchecked every client is told the \
+                         rollout is inert and holds its published target for the life of the \
+                         share, so the rollout and targeting fields below have no effect at all."
+                    }
+
+                    h3 class="text-sm font-semibold text-neutral-900" { "Rollout" }
+                    (number_field(
+                        "screen_share_delivery_rollout_basis_points",
+                        "Rollout (basis points)",
+                        &screen_share_delivery.rollout_basis_points.to_string(),
+                        Some(0), Some(10000), "1",
+                        Some("Share of users bucketed into the canary, in basis points: 0 is nobody, 100 is 1%, 10000 is everybody."),
+                    ))
+                    div class="flex flex-col gap-2" {
+                        (text_input(
+                            "screen_share_delivery_rollout_salt",
+                            "Rollout Salt",
+                            &screen_share_delivery.rollout_salt,
+                            "screen-share-delivery-v1",
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Seeds the bucketing hash. Changing it reshuffles which users fall \
+                             inside the percentage above. Leave it alone to keep the current \
+                             cohort stable."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "screen_share_delivery_included_user_ids",
+                            "Always-on User IDs",
+                            "1500000000000000001\n1500000000000000002",
+                            &included_user_ids,
+                            4,
+                            false,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "One snowflake per line, or comma separated. These users are targeted \
+                             regardless of the percentage above. IDs must contain 1 to 20 decimal \
+                             digits. Invalid entries prevent the save; blank entries and duplicate \
+                             IDs are ignored."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "screen_share_delivery_excluded_user_ids",
+                            "Never-on User IDs",
+                            "1500000000000000003\n1500000000000000004",
+                            &excluded_user_ids,
+                            4,
+                            false,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Same format. Exclusion wins over both the always-on list and the \
+                             percentage, so this is the per-user kill switch."
+                        }
+                    }
+
+                    (form_actions(html! {
+                        (submit_button("Save Screen Share Delivery Configuration"))
                     }))
                 }
             }

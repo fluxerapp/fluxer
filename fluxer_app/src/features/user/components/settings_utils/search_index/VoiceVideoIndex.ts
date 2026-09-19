@@ -171,7 +171,7 @@ const BITRATE_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const TUNE_LOW_LEVEL_SCREEN_SHARE_ENCODER_BEHAVIOR_FOR_THE_NEXT_STREAM_DESCRIPTOR = msg({
-	message: 'Encoder, SVC, backup stream, and bitrate presets',
+	message: 'Encoder, SVC, and bitrate presets',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
 

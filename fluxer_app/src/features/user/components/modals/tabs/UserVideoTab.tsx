@@ -21,17 +21,30 @@ import {getAdvancedSettingsCategorySectionId} from '@app/features/user/component
 import {CompactComboboxRow} from '@app/features/user/components/modals/tabs/components/CompactComboboxRow';
 import {useMediaPermission} from '@app/features/user/components/modals/tabs/hooks/useMediaPermission';
 import styles from '@app/features/user/components/modals/tabs/UserVideoTab.module.css';
+import {
+	resolveUserVideoTabScreenShareState,
+	SCREEN_SHARE_PRESET_DESCRIPTORS,
+} from '@app/features/user/components/modals/tabs/UserVideoTabState';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
 import {CameraPreviewModalStandalone} from '@app/features/voice/components/modals/CameraPreviewModal';
-import type VoiceSettings from '@app/features/voice/state/VoiceSettings';
-import type {CameraResolution, ScreenshareResolution} from '@app/features/voice/state/VoiceSettings';
 import {
-	resolveScreenShareFrameRate,
+	CAPTURE_DEVICES_USE_THE_GAMING_PRESET_DESCRIPTOR,
+	type OfferedScreenShareResolution,
+} from '@app/features/voice/components/StreamSettingsMenuContentStateMachine';
+import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
+import ScreenShareDelivery from '@app/features/voice/state/ScreenShareDelivery';
+import type VoiceSettings from '@app/features/voice/state/VoiceSettings';
+import type {CameraResolution} from '@app/features/voice/state/VoiceSettings';
+import {
+	resolveScreenShareQualityPick,
+	type ScreenShareQualityInput,
 	type SupportedScreenShareFrameRate,
 } from '@app/features/voice/utils/ScreenShareOptions';
 import {buildSettingsDeviceOptions} from '@app/features/voice/utils/SettingsDeviceOptions';
 import {hasHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
 import {resolveEffectiveDeviceId} from '@app/features/voice/utils/VoiceDeviceManager';
+import {formatScreenShareDeliveryStatus} from '@app/features/voice/utils/VoiceMessageDescriptors';
+import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {CrownIcon, GearIcon} from '@phosphor-icons/react';
@@ -39,9 +52,10 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useMemo} from 'react';
 
-const FPS_15_DESCRIPTOR = msg({message: '15 FPS'});
-const FPS_30_DESCRIPTOR = msg({message: '30 FPS'});
-const FPS_60_DESCRIPTOR = msg({message: '60 FPS'});
+const FPS_DESCRIPTOR = msg({
+	message: '{frameRate} FPS',
+	comment: 'Frame rate option label in the video tab. FPS is a technical token and frameRate is a whole number.',
+});
 
 const LOW_480P_LABEL = '480p';
 const MEDIUM_720P_LABEL = '720p';
@@ -62,12 +76,26 @@ const SELF_HOSTED_VIDEO_QUALITY_LIMIT_DESCRIPTOR = msg({
 	message: 'This instance currently allows screen sharing up to 720p at 30 FPS.',
 	comment: 'Neutral video settings note shown when higher screen share quality is disabled by instance limits.',
 });
-const STANDARD_720P_LABEL = '720p';
-const HIGH_DEFINITION_1080P_LABEL = '1080p';
-const QUAD_HD_1440P_LABEL = '1440p';
+const SCREEN_SHARE_RESOLUTION_LABELS: Record<Exclude<OfferedScreenShareResolution, 'source'>, string> = {
+	low_480p: '480p',
+	medium: '720p',
+	high: '1080p',
+	ultra: '1440p',
+};
 const SOURCE_DESCRIPTOR = msg({
 	message: 'Source',
 	comment: 'Short label in the video tab for the native source resolution option. Keep it concise.',
+});
+const SCREEN_SHARE_PRESET_OWNED_DESCRIPTOR = msg({
+	message: 'Set by the {preset} preset. Picking a value here switches to Custom.',
+	comment:
+		'Video settings note shown when a streaming preset decides the screen share resolution and frame rate. preset is the Gaming or Screen share preset label, and Custom is the third preset label.',
+});
+const SCREEN_SHARE_TIER_LIMITED_DESCRIPTOR = msg({
+	message:
+		'Your saved {savedResolution} at {savedFrameRate} FPS needs {premiumProductName}, so shares use {resolution} at {frameRate} FPS.',
+	comment:
+		'Video settings note shown when the saved screen share quality is above what this account can send. Resolutions are short labels such as 1440p or Source and rates are whole numbers. FPS is a technical token.',
 });
 const CAMERA_2_DESCRIPTOR = msg({
 	message: 'Camera',
@@ -94,6 +122,10 @@ const OPEN_ADVANCED_MEDIA_SETTINGS_DESCRIPTOR = msg({
 	comment: 'Button label in the video tab that jumps to the advanced settings media section.',
 });
 
+function getScreenShareResolutionLabel(i18n: I18n, resolution: OfferedScreenShareResolution): string {
+	return resolution === 'source' ? i18n._(SOURCE_DESCRIPTOR) : SCREEN_SHARE_RESOLUTION_LABELS[resolution];
+}
+
 interface VideoTabProps {
 	voiceSettings: typeof VoiceSettings;
 	hasPremium: boolean;
@@ -103,7 +135,15 @@ interface VideoTabProps {
 export const VideoTab: React.FC<VideoTabProps> = observer(
 	({voiceSettings, hasPremium: _hasPremium, autoRequestPermission = false}) => {
 		const {i18n} = useLingui();
-		const {videoDeviceId, cameraResolution, mirrorCamera, screenshareResolution, videoFrameRate} = voiceSettings;
+		const {
+			videoDeviceId,
+			cameraResolution,
+			mirrorCamera,
+			screenshareResolution,
+			videoFrameRate,
+			streamingMode,
+			screenShareContentHint,
+		} = voiceSettings;
 		const hasHigherQuality = hasHigherVideoQuality();
 		const isSelfHosted = RuntimeConfig.isSelfHosted();
 		const {
@@ -132,45 +172,31 @@ export const VideoTab: React.FC<VideoTabProps> = observer(
 					]
 				: []),
 		];
-		const screenshareResolutionOptions: ReadonlyArray<ComboboxOption<ScreenshareResolution>> = [
-			{value: 'low_480p', label: LOW_480P_LABEL},
-			{
-				value: 'medium',
-				label: STANDARD_720P_LABEL,
-			},
-			...(hasHigherQuality || !isSelfHosted
-				? [
-						{
-							value: 'high' as const,
-							label: HIGH_DEFINITION_1080P_LABEL,
-							isDisabled: !hasHigherQuality,
-						},
-						{
-							value: 'ultra' as const,
-							label: QUAD_HD_1440P_LABEL,
-							isDisabled: !hasHigherQuality,
-						},
-						{
-							value: 'source' as const,
-							label: i18n._(SOURCE_DESCRIPTOR),
-							isDisabled: !hasHigherQuality,
-						},
-					]
-				: []),
-		];
-		const frameRateOptions: ReadonlyArray<ComboboxOption<SupportedScreenShareFrameRate>> = hasHigherQuality
-			? [
-					{value: 15, label: i18n._(FPS_15_DESCRIPTOR)},
-					{value: 30, label: i18n._(FPS_30_DESCRIPTOR)},
-					{value: 60, label: i18n._(FPS_60_DESCRIPTOR)},
-				]
-			: [
-					{value: 15, label: i18n._(FPS_15_DESCRIPTOR)},
-					{value: 30, label: i18n._(FPS_30_DESCRIPTOR)},
-				];
-		const resolvedVideoFrameRate = resolveScreenShareFrameRate(videoFrameRate);
-		const effectiveVideoFrameRate: SupportedScreenShareFrameRate =
-			!hasHigherQuality && resolvedVideoFrameRate === 60 ? 30 : resolvedVideoFrameRate;
+		const liveShareContext = ActiveScreenShareSource.getShareContext();
+		const screenShareQuality: ScreenShareQualityInput = {
+			mode: streamingMode,
+			storedResolution: screenshareResolution,
+			storedFrameRate: videoFrameRate,
+			entitled: hasHigherQuality,
+			context: liveShareContext ?? 'display',
+		};
+		const screenShareState = resolveUserVideoTabScreenShareState({
+			quality: screenShareQuality,
+			hintSetting: screenShareContentHint,
+			selfHosted: isSelfHosted,
+		});
+		const screenshareResolutionOptions: ReadonlyArray<ComboboxOption<OfferedScreenShareResolution>> =
+			screenShareState.resolutionOptions.map((option) => ({
+				value: option.value,
+				label: getScreenShareResolutionLabel(i18n, option.value),
+				isDisabled: option.isDisabled,
+			}));
+		const frameRateOptions: ReadonlyArray<ComboboxOption<SupportedScreenShareFrameRate>> =
+			screenShareState.frameRateOptions.map((value) => ({
+				value,
+				label: i18n._(FPS_DESCRIPTOR, {frameRate: value}),
+			}));
+		const deliveryStatus = formatScreenShareDeliveryStatus(i18n, ScreenShareDelivery.plan, ScreenShareDelivery.notice);
 		const handleCameraPreview = async () => {
 			const granted = await requestPermission();
 			if (granted) {
@@ -184,12 +210,16 @@ export const VideoTab: React.FC<VideoTabProps> = observer(
 				);
 			}
 		};
-		const handleScreenshareResolutionChange = useCallback((value: ScreenshareResolution) => {
-			VoiceSettingsCommands.update({screenshareResolution: value, streamingMode: 'custom'});
-		}, []);
-		const handleVideoFrameRateChange = useCallback((value: SupportedScreenShareFrameRate) => {
-			VoiceSettingsCommands.update({videoFrameRate: value, streamingMode: 'custom'});
-		}, []);
+		const handleScreenshareResolutionChange = (value: OfferedScreenShareResolution) => {
+			const patch = resolveScreenShareQualityPick(screenShareQuality, {axis: 'resolution', resolution: value});
+			if (patch === null) return;
+			VoiceSettingsCommands.update(patch);
+		};
+		const handleVideoFrameRateChange = (value: SupportedScreenShareFrameRate) => {
+			const patch = resolveScreenShareQualityPick(screenShareQuality, {axis: 'frameRate', frameRate: value});
+			if (patch === null) return;
+			VoiceSettingsCommands.update(patch);
+		};
 		const handleOpenAdvancedVideoSettings = useCallback(() => {
 			ComponentBus.dispatch('USER_SETTINGS_TAB_SELECT', {
 				tab: 'advanced_settings',
@@ -271,10 +301,10 @@ export const VideoTab: React.FC<VideoTabProps> = observer(
 					/>
 				</div>
 				<div className={styles.controlGroup} data-flx="user.video-tab.screen-sharing-group">
-					<CompactComboboxRow<ScreenshareResolution>
+					<CompactComboboxRow<OfferedScreenShareResolution>
 						label={i18n._(SCREEN_SHARE_QUALITY_DESCRIPTOR)}
 						options={screenshareResolutionOptions}
-						value={screenshareResolution}
+						value={screenShareState.resolution}
 						onChange={handleScreenshareResolutionChange}
 						isSearchable={false}
 						controlWidth="small"
@@ -313,7 +343,7 @@ export const VideoTab: React.FC<VideoTabProps> = observer(
 					<CompactComboboxRow<SupportedScreenShareFrameRate>
 						label={<Trans>Frame rate</Trans>}
 						options={frameRateOptions}
-						value={effectiveVideoFrameRate}
+						value={screenShareState.frameRate}
 						onChange={handleVideoFrameRateChange}
 						isSearchable={false}
 						controlWidth="small"
@@ -334,6 +364,45 @@ export const VideoTab: React.FC<VideoTabProps> = observer(
 					{!hasHigherQuality && isSelfHosted && (
 						<div className={styles.frameRateNote} data-flx="user.video-tab.instance-limit-note">
 							{i18n._(SELF_HOSTED_VIDEO_QUALITY_LIMIT_DESCRIPTOR)}
+						</div>
+					)}
+					{screenShareState.preset !== null && (
+						<div className={styles.frameRateNote} data-flx="user.video-tab.preset-note">
+							{i18n._(SCREEN_SHARE_PRESET_OWNED_DESCRIPTOR, {
+								preset: i18n._(SCREEN_SHARE_PRESET_DESCRIPTORS[screenShareState.preset]),
+							})}
+						</div>
+					)}
+					{screenShareState.presetOverriddenByContext && (
+						<div className={styles.frameRateNote} data-flx="user.video-tab.preset-context-note">
+							{i18n._(CAPTURE_DEVICES_USE_THE_GAMING_PRESET_DESCRIPTOR)}
+						</div>
+					)}
+					{screenShareState.saved !== null && (
+						<div className={styles.frameRateNote} data-flx="user.video-tab.tier-limit-note">
+							<CrownIcon
+								weight="fill"
+								size={remFromPx(14)}
+								className={styles.frameRateIcon}
+								data-flx="user.video-tab.tier-limit-icon"
+							/>
+							{i18n._(SCREEN_SHARE_TIER_LIMITED_DESCRIPTOR, {
+								frameRate: screenShareState.frameRate,
+								premiumProductName: PREMIUM_PRODUCT_NAME,
+								resolution: getScreenShareResolutionLabel(i18n, screenShareState.resolution),
+								savedFrameRate: screenShareState.saved.frameRate,
+								savedResolution: getScreenShareResolutionLabel(i18n, screenShareState.saved.resolution),
+							})}
+						</div>
+					)}
+					{deliveryStatus.sending !== null && (
+						<div className={styles.frameRateNote} data-flx="user.video-tab.sending-note">
+							{deliveryStatus.sending}
+						</div>
+					)}
+					{deliveryStatus.notice !== null && (
+						<div className={styles.frameRateNote} data-flx="user.video-tab.delivery-notice">
+							{deliveryStatus.notice}
 						</div>
 					)}
 				</div>

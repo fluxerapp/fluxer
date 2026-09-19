@@ -2,9 +2,18 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 import type {MediaDescription} from 'sdp-transform';
+import {parse} from 'sdp-transform';
 import {describe, expect, it} from 'vitest';
 import type {TrackBitrateInfo} from './PCTransport.ts';
-import {applyVideoStartBitrate, collectStereoMids, ensureAudioNackAndStereo, ensureOpusFmtp} from './PCTransport.ts';
+import {
+	applyVideoStartBitrate,
+	collectStereoMids,
+	ensureAudioNackAndStereo,
+	ensureOpusFmtp,
+	ensureVideoDDExtension,
+	videoSectionCanReceiveAV1,
+} from './PCTransport.ts';
+import {ddExtensionURI} from './utils.ts';
 
 function videoMedia(
 	trackId: string,
@@ -164,5 +173,69 @@ describe('collectStereoMids', () => {
 	it('leaves mono publications out', () => {
 		const media = [offerMedia('0', 'mic-track')];
 		expect(collectStereoMids([audioBitrateInfo(null, 'mic-track', false)], media)).toEqual([]);
+	});
+});
+
+const singlePcOffer = `v=0
+o=- 0 0 IN IP4 127.0.0.1
+s=-
+t=0 0
+a=group:BUNDLE 0 1 2
+m=video 9 UDP/TLS/RTP/SAVPF 96 45
+c=IN IP4 0.0.0.0
+a=mid:0
+a=sendonly
+a=msid:s cam
+a=rtpmap:96 VP8/90000
+a=rtpmap:45 AV1/90000
+a=extmap:2 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
+a=extmap:11 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
+m=video 9 UDP/TLS/RTP/SAVPF 96 45
+c=IN IP4 0.0.0.0
+a=mid:1
+a=recvonly
+a=rtpmap:96 VP8/90000
+a=rtpmap:45 AV1/90000
+a=extmap:2 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time
+m=video 9 UDP/TLS/RTP/SAVPF 96
+c=IN IP4 0.0.0.0
+a=mid:2
+a=recvonly
+a=rtpmap:96 VP8/90000
+a=extmap:2 http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time`;
+
+const sectionOf = (sdp: ReturnType<typeof parse>, mid: string) => sdp.media.find((media) => `${media.mid}` === mid)!;
+const ddOf = (sdp: ReturnType<typeof parse>, mid: string) =>
+	sectionOf(sdp, mid).ext?.find((ext) => ext.uri === ddExtensionURI)?.value;
+
+describe('videoSectionCanReceiveAV1', () => {
+	it('is true for a section we receive on that kept AV1, false otherwise', () => {
+		const sdp = parse(singlePcOffer);
+		expect(videoSectionCanReceiveAV1(sectionOf(sdp, '1'))).toBe(true);
+		expect(videoSectionCanReceiveAV1(sectionOf(sdp, '0'))).toBe(false);
+		expect(videoSectionCanReceiveAV1(sectionOf(sdp, '2'))).toBe(false);
+	});
+});
+
+describe('ensureVideoDDExtension', () => {
+	it('assigns an id above every extension in the bundle and reuses it', () => {
+		const sdp = parse(singlePcOffer);
+		expect(ensureVideoDDExtension(sectionOf(sdp, '1'), sdp, 0)).toBe(12);
+		expect(ddOf(sdp, '1')).toBe(12);
+		expect(ensureVideoDDExtension(sectionOf(sdp, '2'), sdp, 12)).toBe(12);
+		expect(ddOf(sdp, '2')).toBe(12);
+	});
+
+	it('adopts an id the bundle already maps the extension to', () => {
+		const sdp = parse(singlePcOffer);
+		sectionOf(sdp, '0').ext!.push({value: 13, uri: ddExtensionURI});
+		expect(ensureVideoDDExtension(sectionOf(sdp, '1'), sdp, 7)).toBe(13);
+		expect(ddOf(sdp, '1')).toBe(13);
+	});
+
+	it('leaves a section that already carries the extension alone', () => {
+		const sdp = parse(`${singlePcOffer}\na=extmap:3 ${ddExtensionURI}`);
+		expect(ensureVideoDDExtension(sectionOf(sdp, '2'), sdp, 0)).toBe(3);
+		expect(sectionOf(sdp, '2').ext).toHaveLength(2);
 	});
 });

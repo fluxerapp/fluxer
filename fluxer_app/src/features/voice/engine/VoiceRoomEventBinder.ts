@@ -146,6 +146,8 @@ export function bindRoomEvents(
 	let codecNegotiationDisposer: (() => void) | null = null;
 	let screenShareMigrationDisposer: (() => void) | null = null;
 	let screenShareNegotiationBound = false;
+	let roomReconnecting = false;
+	let screenSharePublicationAwaitingReconnect: LocalTrackPublication | null = null;
 	const remoteTrackLifecycleRoleFor = (pub: RemoteTrackPublication): 'remote-screen-share' | 'remote-camera' | null => {
 		if (pub.kind !== Track.Kind.Video) return null;
 		if (pub.source === Track.Source.ScreenShare) return 'remote-screen-share';
@@ -309,6 +311,17 @@ export function bindRoomEvents(
 		participantSpeakingDisposers.get(identity)?.dispose();
 		participantSpeakingDisposers.delete(identity);
 	};
+	const endScreenShareIfPublicationDidNotReturn = (): void => {
+		const publication = screenSharePublicationAwaitingReconnect;
+		screenSharePublicationAwaitingReconnect = null;
+		if (!publication) return;
+		if (dependencies.screenShare.isScreenSharePublicationReplaceInFlight()) return;
+		if (!('localParticipant' in room) || !room.localParticipant) return;
+		if (room.localParticipant.getTrackPublication(Track.Source.ScreenShare)) return;
+		const didChangeLocalState = dependencies.mediaState.handleLocalTrackStateChange(Track.Source.ScreenShare, false);
+		if (!didChangeLocalState) return;
+		dependencies.screenShare.handleLocalScreenShareTrackUnpublished(room, didChangeLocalState, publication);
+	};
 	bindParticipantSpeakingEvents(room.localParticipant);
 	room.remoteParticipants.forEach((participant) => bindParticipantSpeakingEvents(participant));
 	room.on(
@@ -344,6 +357,8 @@ export function bindRoomEvents(
 	room.on(
 		RoomEvent.Disconnected,
 		guard(attemptId, () => {
+			roomReconnecting = false;
+			screenSharePublicationAwaitingReconnect = null;
 			participantSpeakingDisposers.forEach(({dispose}) => dispose());
 			participantSpeakingDisposers.clear();
 			unbindScreenShareNegotiation();
@@ -365,6 +380,7 @@ export function bindRoomEvents(
 	room.on(
 		RoomEvent.Reconnecting,
 		guard(attemptId, () => {
+			roomReconnecting = true;
 			callbacks.onReconnecting();
 			dependencies.connection.markReconnecting();
 		}),
@@ -372,6 +388,7 @@ export function bindRoomEvents(
 	room.on(
 		RoomEvent.Reconnected,
 		guard(attemptId, () => {
+			roomReconnecting = false;
 			dependencies.participants.hydrateFromRoom(room);
 			bindParticipantSpeakingEvents(room.localParticipant);
 			room.remoteParticipants.forEach((participant) => bindParticipantSpeakingEvents(participant));
@@ -381,6 +398,7 @@ export function bindRoomEvents(
 			callbacks.onReconnected();
 			dependencies.media.applyAllLocalAudioPreferences(room);
 			dependencies.subscriptions.reconcileSubscriptions();
+			endScreenShareIfPublicationDidNotReturn();
 		}),
 	);
 	room.on(
@@ -547,12 +565,16 @@ export function bindRoomEvents(
 		RoomEvent.LocalTrackUnpublished,
 		guard(attemptId, (pub, p: Participant) => {
 			if (p.isLocal) {
-				if (
-					pub.source === Track.Source.ScreenShare &&
-					dependencies.screenShare.isScreenSharePublicationReplaceInFlight()
-				) {
-					dependencies.participants.upsertParticipant(p);
-					return;
+				if (pub.source === Track.Source.ScreenShare) {
+					if (dependencies.screenShare.isScreenSharePublicationReplaceInFlight()) {
+						dependencies.participants.upsertParticipant(p);
+						return;
+					}
+					if (roomReconnecting) {
+						screenSharePublicationAwaitingReconnect = pub as LocalTrackPublication;
+						dependencies.participants.upsertParticipant(p);
+						return;
+					}
 				}
 				const didChangeLocalState = dependencies.mediaState.handleLocalTrackStateChange(pub.source, false);
 				if (pub.source === Track.Source.ScreenShare && 'localParticipant' in room && room.localParticipant) {

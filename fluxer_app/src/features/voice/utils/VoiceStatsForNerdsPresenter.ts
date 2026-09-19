@@ -83,9 +83,7 @@ export interface StatsForNerdsData {
 		codecPreferenceOrder: Array<string>;
 		contentHint: string;
 		encoderMode: string;
-		softwareQuality: string;
 		scalabilityMode: string;
-		backupCodecMode: string;
 		maxBitrateMbps: number;
 		audioSourceMode: string;
 		audioIncludeSources: Array<Record<string, string>>;

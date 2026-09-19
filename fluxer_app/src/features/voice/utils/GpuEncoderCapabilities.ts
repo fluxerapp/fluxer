@@ -7,14 +7,6 @@ import {
 	isDesktop,
 	type NativePlatform,
 } from '@app/features/ui/utils/NativeUtils';
-import VoiceSettings from '@app/features/voice/state/VoiceSettings';
-import {
-	getScreenShareBitrateBps,
-	resolveEffectiveScreenShareDimensions,
-	resolveStreamingModeSettings,
-	SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS,
-} from '@app/features/voice/utils/ScreenShareOptions';
-import {hasHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
 import type {GpuDeviceInfo, GpuInfo} from '@app/types/electron.d';
 import type {VideoCodec} from 'livekit-client';
 
@@ -262,33 +254,12 @@ interface EncodeProbeVideoConfig {
 	framerate: number;
 }
 
-const DEFAULT_ENCODE_PROBE_VIDEO_CONFIG: EncodeProbeVideoConfig = {
+export const ENCODE_PROBE_VIDEO_CONFIG: EncodeProbeVideoConfig = {
 	width: 1920,
 	height: 1080,
-	bitrate: SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS,
-	framerate: 60,
+	bitrate: 4_500_000,
+	framerate: 30,
 };
-
-function resolveEncodeProbeVideoConfig(): EncodeProbeVideoConfig {
-	try {
-		const settings = resolveStreamingModeSettings(
-			VoiceSettings.getStreamingMode(),
-			VoiceSettings.getScreenshareResolution(),
-			VoiceSettings.getVideoFrameRate(),
-			hasHigherVideoQuality(),
-		);
-		const {width, height} = resolveEffectiveScreenShareDimensions(settings.resolution);
-		return {
-			width,
-			height,
-			bitrate: getScreenShareBitrateBps(settings.resolution, settings.frameRate),
-			framerate: settings.frameRate,
-		};
-	} catch (error) {
-		logger.debug('Share settings were unavailable, probing at the largest share size instead', {error});
-		return DEFAULT_ENCODE_PROBE_VIDEO_CONFIG;
-	}
-}
 
 interface WebRtcEncodingInfoResult {
 	supported?: boolean;
@@ -324,10 +295,13 @@ export async function probeWebRtcEncodeEfficiency(): Promise<Record<VideoCodec, 
 	const mediaCapabilities = (navigator as Navigator & {mediaCapabilities?: MediaCapabilitiesLike}).mediaCapabilities;
 	if (!mediaCapabilities?.encodingInfo) return null;
 	const codecs: ReadonlyArray<VideoCodec> = ['av1', 'h265', 'h264', 'vp9', 'vp8'];
-	const video = resolveEncodeProbeVideoConfig();
 	const answers = await Promise.all(
 		codecs.map((codec) =>
-			probeCodecEncodeEfficiency(mediaCapabilities, WEBRTC_ENCODE_PROBE_CONTENT_TYPES[codec], video),
+			probeCodecEncodeEfficiency(
+				mediaCapabilities,
+				WEBRTC_ENCODE_PROBE_CONTENT_TYPES[codec],
+				ENCODE_PROBE_VIDEO_CONFIG,
+			),
 		),
 	);
 	const result = {} as Record<VideoCodec, HardwareEncodeAnswer>;

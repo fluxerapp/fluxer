@@ -35,3 +35,30 @@ export function parseStreamKey(streamKey: string): ParsedStreamKey | null {
 	}
 	return null;
 }
+
+interface StreamViewerVoiceState {
+	user_id: string;
+	viewer_stream_keys?: ReadonlyArray<string> | null;
+}
+
+type StreamViewerVoiceStates = Readonly<
+	Record<string, Readonly<Record<string, Readonly<Record<string, StreamViewerVoiceState | undefined>>>>>
+>;
+
+export function countStreamViewers(
+	voiceStates: StreamViewerVoiceStates,
+	streamKey: string,
+	publisherUserId: string | null,
+): number {
+	const viewers = new Set<string>();
+	for (const guildStates of Object.values(voiceStates)) {
+		for (const channelStates of Object.values(guildStates)) {
+			for (const voiceState of Object.values(channelStates)) {
+				if (!voiceState || voiceState.user_id === publisherUserId) continue;
+				if (!voiceState.viewer_stream_keys?.includes(streamKey)) continue;
+				viewers.add(voiceState.user_id);
+			}
+		}
+	}
+	return viewers.size;
+}

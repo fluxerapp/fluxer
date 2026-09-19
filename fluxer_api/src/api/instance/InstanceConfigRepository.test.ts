@@ -17,10 +17,16 @@ import {
 	DEFAULT_EXPERIMENT_DELIVERY_CONFIG,
 	type ExperimentDeliveryConfig,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
+import {
+	type ScreenShareDeliveryConfig,
+	ScreenShareDeliveryConfigSchema,
+} from '@fluxer/schema/src/domains/experiment/ScreenShareDeliverySchemas';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 
 const VOICE_NOISE_SUPPRESSION_CONFIG_KEY = 'voice_noise_suppression_config';
 const EXPERIMENT_DELIVERY_CONFIG_KEY = 'experiment_delivery_config';
+const SCREEN_SHARE_DELIVERY_CONFIG_KEY = 'screen_share_delivery_config';
+const DEFAULT_SCREEN_SHARE_DELIVERY_CONFIG: ScreenShareDeliveryConfig = ScreenShareDeliveryConfigSchema.parse({});
 const APP_PUBLIC_CONFIG_KEY = 'app_public_config';
 const INSTANCE_POLICY_CONFIG_KEY = 'instance_policy_config';
 const INSTANCE_INTEGRATIONS_CONFIG_KEY = 'instance_integrations_config';
@@ -380,6 +386,73 @@ describe('InstanceConfigRepository', () => {
 		await expect(repository.getExperimentDeliveryConfig()).resolves.toEqual({
 			...DEFAULT_EXPERIMENT_DELIVERY_CONFIG,
 			poll_interval_seconds: 3600,
+		});
+	});
+
+	it('returns the default screen share delivery config when the key is absent', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await expect(repository.getScreenShareDeliveryConfig()).resolves.toEqual(DEFAULT_SCREEN_SHARE_DELIVERY_CONFIG);
+	});
+
+	it('reads the screen share delivery config from its own key', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setConfig(
+			SCREEN_SHARE_DELIVERY_CONFIG_KEY,
+			JSON.stringify({enabled: true, config_version: 4, rollout_basis_points: 2500}),
+		);
+		await repository.setVoiceNoiseSuppressionConfig({
+			...DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG,
+			enabled: false,
+			config_version: 77,
+		});
+
+		await expect(repository.getScreenShareDeliveryConfig()).resolves.toEqual({
+			...DEFAULT_SCREEN_SHARE_DELIVERY_CONFIG,
+			enabled: true,
+			config_version: 4,
+			rollout_basis_points: 2500,
+		});
+	});
+
+	it('round-trips a stored screen share delivery config', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		const config: ScreenShareDeliveryConfig = {
+			enabled: true,
+			config_version: 6,
+			rollout_basis_points: 1000,
+			rollout_salt: 'screen-share-delivery-v2',
+			included_user_ids: ['1400000000000000001'],
+			excluded_user_ids: ['1400000000000000002'],
+		};
+		await repository.setScreenShareDeliveryConfig(config);
+
+		await expect(repository.getScreenShareDeliveryConfig()).resolves.toEqual(config);
+		await expect(repository.getConfig(SCREEN_SHARE_DELIVERY_CONFIG_KEY)).resolves.toBe(JSON.stringify(config));
+	});
+
+	it('fills missing screen share delivery fields from the schema defaults', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setConfig(SCREEN_SHARE_DELIVERY_CONFIG_KEY, JSON.stringify({enabled: true}));
+
+		await expect(repository.getScreenShareDeliveryConfig()).resolves.toEqual({
+			...DEFAULT_SCREEN_SHARE_DELIVERY_CONFIG,
+			enabled: true,
 		});
 	});
 

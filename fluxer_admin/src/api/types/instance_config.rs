@@ -23,6 +23,8 @@ pub struct InstanceConfigResponse {
     #[serde(default)]
     pub voice_noise_suppression: VoiceNoiseSuppressionConfigResponse,
     #[serde(default)]
+    pub screen_share_delivery: ScreenShareDeliveryConfigResponse,
+    #[serde(default)]
     pub experiment_delivery: ExperimentDeliveryConfigResponse,
 }
 
@@ -515,6 +517,44 @@ impl Default for VoiceNoiseSuppressionConfigResponse {
     }
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(default)]
+pub struct ScreenShareDeliveryConfigResponse {
+    pub enabled: bool,
+    pub config_version: u64,
+    pub rollout_basis_points: u32,
+    pub rollout_salt: String,
+    pub included_user_ids: Vec<String>,
+    pub excluded_user_ids: Vec<String>,
+}
+
+impl Default for ScreenShareDeliveryConfigResponse {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            config_version: 0,
+            rollout_basis_points: 0,
+            rollout_salt: "screen-share-delivery-v1".to_owned(),
+            included_user_ids: Vec::new(),
+            excluded_user_ids: Vec::new(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct ScreenShareDeliveryConfigUpdateRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enabled: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rollout_basis_points: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rollout_salt: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub included_user_ids: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub excluded_user_ids: Option<Vec<String>>,
+}
+
 #[derive(Clone, Debug, Default, Serialize)]
 pub struct VoiceNoiseSuppressionConfigUpdateRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -656,6 +696,8 @@ pub struct InstanceConfigUpdateRequest {
     pub media: Option<InstanceMediaUpdateRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub voice_noise_suppression: Option<VoiceNoiseSuppressionConfigUpdateRequest>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub screen_share_delivery: Option<ScreenShareDeliveryConfigUpdateRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub experiment_delivery: Option<ExperimentDeliveryConfigUpdateRequest>,
 }

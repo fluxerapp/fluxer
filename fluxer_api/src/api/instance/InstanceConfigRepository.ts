@@ -37,6 +37,10 @@ import {
 	ExperimentDeliveryConfigSchema,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import {
+	type ScreenShareDeliveryConfig,
+	ScreenShareDeliveryConfigSchema,
+} from '@fluxer/schema/src/domains/experiment/ScreenShareDeliverySchemas';
+import {
 	type InstanceAppPublic,
 	InstanceAppPublicSchema,
 	type InstanceBranding,
@@ -54,6 +58,7 @@ import {z} from 'zod';
 
 const GATEWAY_ROLLOUT_CONFIG_KEY = 'gateway_rollout_config';
 const VOICE_NOISE_SUPPRESSION_CONFIG_KEY = 'voice_noise_suppression_config';
+const SCREEN_SHARE_DELIVERY_CONFIG_KEY = 'screen_share_delivery_config';
 const EXPERIMENT_DELIVERY_CONFIG_KEY = 'experiment_delivery_config';
 const REGISTRATION_CONFIG_KEY = 'registration_config';
 const REGISTRATION_URLS_KEY = 'registration_urls';
@@ -339,6 +344,7 @@ type StoredConfigSection =
 	| 'app public'
 	| 'gateway rollout'
 	| 'voice noise suppression'
+	| 'screen share delivery'
 	| 'experiment delivery'
 	| 'instance policy'
 	| 'integrations'
@@ -475,6 +481,10 @@ function parseStoredGatewayRolloutConfig(raw: string | null): GatewayRolloutConf
 
 function parseStoredVoiceNoiseSuppressionConfig(raw: string | null): VoiceNoiseSuppressionConfig {
 	return parseStoredConfigOrDefault(VoiceNoiseSuppressionConfigSchema, raw, 'voice noise suppression');
+}
+
+function parseStoredScreenShareDeliveryConfig(raw: string | null): ScreenShareDeliveryConfig {
+	return parseStoredConfigOrDefault(ScreenShareDeliveryConfigSchema, raw, 'screen share delivery');
 }
 
 function parseStoredExperimentDeliveryConfig(raw: string | null): ExperimentDeliveryConfig {
@@ -1004,6 +1014,7 @@ export class InstanceConfigRepository {
 			parseStoredGatewayRolloutConfig(snapshot.get(GATEWAY_ROLLOUT_CONFIG_KEY) ?? null),
 		);
 		parseStoredVoiceNoiseSuppressionConfig(snapshot.get(VOICE_NOISE_SUPPRESSION_CONFIG_KEY) ?? null);
+		parseStoredScreenShareDeliveryConfig(snapshot.get(SCREEN_SHARE_DELIVERY_CONFIG_KEY) ?? null);
 		parseStoredExperimentDeliveryConfig(snapshot.get(EXPERIMENT_DELIVERY_CONFIG_KEY) ?? null);
 		const policy = parseStoredInstancePolicyConfig(snapshot.get(INSTANCE_POLICY_CONFIG_KEY) ?? null);
 		checkStoredConfig('registration', () =>
@@ -1083,6 +1094,16 @@ export class InstanceConfigRepository {
 	async setVoiceNoiseSuppressionConfig(config: VoiceNoiseSuppressionConfig): Promise<void> {
 		const validated = validateStoredConfig(VoiceNoiseSuppressionConfigSchema, config, 'voice noise suppression');
 		await this.setConfig(VOICE_NOISE_SUPPRESSION_CONFIG_KEY, JSON.stringify(validated));
+	}
+
+	async getScreenShareDeliveryConfig(): Promise<ScreenShareDeliveryConfig> {
+		const raw = await this.getConfig(SCREEN_SHARE_DELIVERY_CONFIG_KEY);
+		return parseStoredScreenShareDeliveryConfig(raw);
+	}
+
+	async setScreenShareDeliveryConfig(config: ScreenShareDeliveryConfig): Promise<void> {
+		const validated = validateStoredConfig(ScreenShareDeliveryConfigSchema, config, 'screen share delivery');
+		await this.setConfig(SCREEN_SHARE_DELIVERY_CONFIG_KEY, JSON.stringify(validated));
 	}
 
 	async getExperimentDeliveryConfig(): Promise<ExperimentDeliveryConfig> {

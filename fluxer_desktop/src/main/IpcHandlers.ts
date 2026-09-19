@@ -3,7 +3,6 @@
 import {
 	type DesktopTroubleshootingSettings,
 	type DesktopWindowBehaviorSettings,
-	getDesktopTroubleshootingSettings,
 	getDesktopWindowBehaviorSettings,
 	setDesktopWindowBehaviorSettings,
 } from '@electron/common/DesktopConfig';
@@ -14,6 +13,7 @@ import type {
 	TrayPresenceStatus,
 } from '@electron/common/Types';
 import {hasEnabledBlinkFeature, MIDDLE_CLICK_AUTOSCROLL_BLINK_FEATURE} from '@electron/main/ChromiumRuntime';
+import {getLaunchDesktopTroubleshootingSettings} from '@electron/main/DesktopDebugInfo';
 import {
 	applyDesktopWindowBehaviorSettings,
 	desktopTrayChangePendingRestart,
@@ -156,10 +156,7 @@ export function registerIpcHandlers(): void {
 		};
 	});
 	ipcMain.handle('desktop-troubleshooting-get', (): DesktopTroubleshootingSettings => {
-		if (process.platform === 'darwin') {
-			return {...getDesktopTroubleshootingSettings(), disableHardwareAcceleration: false};
-		}
-		return getDesktopTroubleshootingSettings();
+		return getLaunchDesktopTroubleshootingSettings();
 	});
 	ipcMain.handle(
 		'desktop-troubleshooting-set-disable-hardware-acceleration',
@@ -176,10 +173,7 @@ export function registerIpcHandlers(): void {
 			} else {
 				setHardwareAccelerationDisabled(disable);
 			}
-			if (process.platform === 'darwin') {
-				return {...getDesktopTroubleshootingSettings(), disableHardwareAcceleration: false};
-			}
-			return getDesktopTroubleshootingSettings();
+			return getLaunchDesktopTroubleshootingSettings();
 		},
 	);
 	ipcMain.handle('desktop-troubleshooting-reload', (): void => {
