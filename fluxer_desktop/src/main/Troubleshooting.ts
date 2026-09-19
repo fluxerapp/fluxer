@@ -4,7 +4,7 @@ import {setDesktopTroubleshootingSettings} from '@electron/common/DesktopConfig'
 import {createChildLogger} from '@electron/common/Logger';
 import {getLaunchDesktopTroubleshootingSettings} from '@electron/main/DesktopDebugInfo';
 import {destroyDesktopTray} from '@electron/main/DesktopTray';
-import {getStableRelaunchOptions} from '@electron/main/LinuxLaunchPath';
+import {relaunchStableLaunchPath} from '@electron/main/LinuxLaunchPath';
 import {t} from '@electron/main/MainI18n';
 import {clearSavedWindowBounds, getMainWindow, setQuitting} from '@electron/main/Window';
 import {app, BrowserWindow, dialog, Menu, type MenuItemConstructorOptions, session} from 'electron';
@@ -21,7 +21,7 @@ export function relaunchAndExit(): void {
 	relaunchRequested = true;
 	setQuitting(true);
 	destroyDesktopTray();
-	app.relaunch(getStableRelaunchOptions());
+	relaunchStableLaunchPath();
 	app.exit(0);
 }
 

@@ -11,7 +11,7 @@ import type {
 	TrayActionPayload,
 	TrayRuntimeStatePayload,
 } from '@electron/common/Types';
-import {getStableRelaunchOptions} from '@electron/main/LinuxLaunchPath';
+import {relaunchStableLaunchPath} from '@electron/main/LinuxLaunchPath';
 import {onLocaleChange, t} from '@electron/main/MainI18n';
 import {app, type BrowserWindow, clipboard, Menu, nativeImage, Tray} from 'electron';
 
@@ -277,7 +277,7 @@ function restartFromTray(): void {
 	trayRestartRequested = true;
 	controller?.setQuitting(true);
 	destroyDesktopTray();
-	app.relaunch(getStableRelaunchOptions());
+	relaunchStableLaunchPath();
 	app.quit();
 	armTrayForcedExit('restart');
 }

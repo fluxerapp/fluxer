@@ -283,6 +283,7 @@ export interface UpdaterDownloadOption {
 export interface DownloadResult {
 	success: boolean;
 	canceled?: boolean;
+	checksumMismatch?: boolean;
 	path?: string;
 	error?: string;
 }
@@ -349,7 +350,7 @@ export interface ElectronAPI {
 	platform: 'darwin' | 'win32' | 'linux' | string;
 	buildChannel: 'stable' | 'canary';
 	openExternal(url: string): Promise<void>;
-	downloadFile(url: string, suggestedName: string): Promise<DownloadResult>;
+	downloadFile(url: string, suggestedName: string, sha256?: string | null): Promise<DownloadResult>;
 	onUpdaterEvent(callback: (event: UpdaterEvent) => void): () => void;
 	updaterCheck(context: 'user' | 'background'): Promise<void>;
 	updaterDownload(context: 'user' | 'background'): Promise<void>;

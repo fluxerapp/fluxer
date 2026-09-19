@@ -17,8 +17,8 @@ function getDesktopDownloadArch(arch: NodeJS.Architecture): DesktopDownloadArch 
 }
 
 const DESKTOP_DOWNLOAD_ARCH = getDesktopDownloadArch(process.arch);
-const UPDATE_API_ENDPOINT = BUILD_CHANNEL === 'canary' ? 'https://api.canary.fluxer.app' : 'https://api.fluxer.app';
-export const UPDATE_BASE_URL = `${UPDATE_API_ENDPOINT}/dl/desktop/${BUILD_CHANNEL}/${process.platform}/${DESKTOP_DOWNLOAD_ARCH}`;
+const PKGS_BASE_URL = 'https://pkgs.fluxer.com';
+export const UPDATE_BASE_URL = `${PKGS_BASE_URL}/desktop/${BUILD_CHANNEL}/${process.platform}/${DESKTOP_DOWNLOAD_ARCH}`;
 export const DOWNLOAD_PAGE_URL =
 	BUILD_CHANNEL === 'canary' ? 'https://canary.fluxer.app/download' : 'https://fluxer.app/download';
 
@@ -72,7 +72,7 @@ function isLinuxManualDesktopFormat(format: ManualDesktopFormat): format is Linu
 	return format === 'appimage' || format === 'deb' || format === 'rpm' || format === 'tar_gz';
 }
 
-function buildManualVersionDownloadUrl(version: string, format: ManualDesktopFormat): string {
+export function buildManualVersionDownloadUrl(version: string, format: ManualDesktopFormat): string {
 	return `${UPDATE_BASE_URL}/${version}/${format}`;
 }
 

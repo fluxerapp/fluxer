@@ -444,8 +444,8 @@ const api: ElectronAPI = {
 		ipcRenderer.invoke('mac-tcc:status', 'screen-recording'),
 	requestScreenRecordingPermission: (): Promise<InputMonitoringPermissionStatus> =>
 		ipcRenderer.invoke('mac-tcc:request', 'screen-recording'),
-	downloadFile: (url: string, defaultPath: string): Promise<DownloadFileResult> =>
-		ipcRenderer.invoke('download-file', {url, defaultPath}),
+	downloadFile: (url: string, defaultPath: string, sha256?: string | null): Promise<DownloadFileResult> =>
+		ipcRenderer.invoke('download-file', {url, defaultPath, sha256}),
 	passkeyIsSupported: (): Promise<boolean> => ipcRenderer.invoke('passkey-is-supported'),
 	passkeyAuthenticate: (
 		options: PublicKeyCredentialRequestOptionsJSON,

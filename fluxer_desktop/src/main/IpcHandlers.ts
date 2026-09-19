@@ -20,7 +20,7 @@ import {
 	hasActiveDesktopTray,
 	updateTrayRuntimeState,
 } from '@electron/main/DesktopTray';
-import {downloadFile} from '@electron/main/FileDownloads';
+import {DownloadChecksumError, downloadFile} from '@electron/main/FileDownloads';
 import {
 	type LinuxAppearanceSnapshot,
 	type LinuxAppearanceSubscription,
@@ -381,6 +381,7 @@ export function registerIpcHandlers(): void {
 			options: {
 				url: string;
 				defaultPath: string;
+				sha256?: string | null;
 			},
 		): Promise<DownloadFileResult> => {
 			requirePrivilegedRendererDocumentSender(event, 'download-file');
@@ -395,9 +396,12 @@ export function registerIpcHandlers(): void {
 				if (result.canceled || !result.filePath) {
 					return {success: false, canceled: true};
 				}
-				await downloadFile(options.url, result.filePath);
+				await downloadFile(options.url, result.filePath, {sha256: options.sha256});
 				return {success: true, path: result.filePath};
 			} catch (error) {
+				if (error instanceof DownloadChecksumError) {
+					return {success: false, checksumMismatch: true, error: error.message};
+				}
 				return {success: false, error: error instanceof Error ? error.message : 'Unknown error'};
 			}
 		},

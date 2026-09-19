@@ -696,10 +696,14 @@ class Updater {
 		} finally {
 			this.transition({type: 'manualDownload.finished'});
 		}
-		await this.downloadManualNativeUpdateOrOpen(currentOption.url, currentOption.suggestedName);
+		await this.downloadManualNativeUpdateOrOpen(currentOption.url, currentOption.suggestedName, currentOption.sha256);
 	}
 
-	private async downloadManualNativeUpdateOrOpen(url: string, suggestedName?: string): Promise<void> {
+	private async downloadManualNativeUpdateOrOpen(
+		url: string,
+		suggestedName?: string,
+		sha256?: string | null,
+	): Promise<void> {
 		if (this.manualNativeDownloadInFlight) {
 			return;
 		}
@@ -708,8 +712,14 @@ class Updater {
 			const outcome = await downloadWithNative({
 				url,
 				suggestedName: suggestedName ?? this.getManualUpdateSuggestedName(url),
+				sha256,
 			});
 			if (outcome === 'success' || outcome === 'canceled') {
+				return;
+			}
+			if (outcome === 'checksum-mismatch') {
+				logger.error('Native manual update download did not match its published checksum', {url});
+				pushDesktopUpdateDownloadFailedModal();
 				return;
 			}
 			logger.warn('Native manual update download unavailable; opening update URL externally', {outcome});

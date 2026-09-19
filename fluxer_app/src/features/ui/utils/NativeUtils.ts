@@ -273,21 +273,27 @@ export function attachExternalLinkInterceptor() {
 	};
 }
 
-export type NativeDownloadOutcome = 'success' | 'canceled' | 'failed' | 'unavailable';
+export type NativeDownloadOutcome = 'success' | 'canceled' | 'checksum-mismatch' | 'failed' | 'unavailable';
 
 export async function downloadWithNative(options: {
 	url: string;
 	suggestedName?: string;
 	title?: string;
+	sha256?: string | null;
 }): Promise<NativeDownloadOutcome> {
 	const electronApi = getElectronAPI();
 	if (!electronApi) {
 		return 'unavailable';
 	}
 	try {
-		const result = await electronApi.downloadFile(options.url, options.suggestedName ?? 'download');
+		const result = await electronApi.downloadFile(
+			options.url,
+			options.suggestedName ?? 'download',
+			options.sha256 ?? null,
+		);
 		if (result.success) return 'success';
 		if (result.canceled) return 'canceled';
+		if (result.checksumMismatch) return 'checksum-mismatch';
 		return 'failed';
 	} catch (error) {
 		logger.error(' Native download failed, falling back to browser', error);
