@@ -47,9 +47,6 @@
             <image type="source" width="1920" height="1080">https://fluxerstatic.com/marketing/screenshots/desktop-1920w.avif</image>
         </screenshot>
     </screenshots>
-    <releases>
-        <release version="0.0.8" date="2026-02-16"/>
-    </releases>
     <url type="bugtracker">https://github.com/fluxerapp/fluxer/issues</url>
     <url type="homepage">https://fluxer.app</url>
     <url type="donation">https://fluxer.app/donate</url>

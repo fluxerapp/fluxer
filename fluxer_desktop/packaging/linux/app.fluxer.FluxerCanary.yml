@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+id: app.fluxer.FluxerCanary
+runtime: org.freedesktop.Platform
+runtime-version: '25.08'
+sdk: org.freedesktop.Sdk
+base: org.electronjs.Electron2.BaseApp
+base-version: '25.08'
+branch: stable
+command: app.fluxer.FluxerCanary
+separate-locales: false
+finish-args:
+  - --share=ipc
+  - --share=network
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --socket=pulseaudio
+  - --device=all
+  - --filesystem=xdg-download
+  - --filesystem=xdg-run/pipewire-0:ro
+  - --filesystem=xdg-run/speech-dispatcher:ro
+  - --talk-name=org.freedesktop.Notifications
+  - --talk-name=org.kde.StatusNotifierWatcher
+  - --talk-name=org.ayatana.indicator.application
+  - --talk-name=com.canonical.indicator.application
+  - --env=ELECTRON_OZONE_PLATFORM_HINT=auto
+  - --env=XCURSOR_PATH=/run/host/user-share/icons:/run/host/share/icons
+build-options:
+  strip: false
+  no-debuginfo: true
+cleanup-commands:
+  - rm -f /app/fluxer/chrome-sandbox
+modules:
+  - name: fluxer
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 app.fluxer.FluxerCanary.sh ${FLATPAK_DEST}/bin/${FLATPAK_ID}
+      - mkdir -p ${FLATPAK_DEST}/fluxer
+      - cp -a app/. ${FLATPAK_DEST}/fluxer/
+      - patch-electron-desktop-filename ${FLATPAK_DEST}/fluxer/resources/app.asar
+      - install -Dm644 app.fluxer.FluxerCanary.desktop ${FLATPAK_DEST}/share/applications/${FLATPAK_ID}.desktop
+      - install -Dm644 app.fluxer.FluxerCanary.metainfo.xml ${FLATPAK_DEST}/share/metainfo/${FLATPAK_ID}.metainfo.xml
+      - install -Dm644 app.fluxer.FluxerCanary.svg ${FLATPAK_DEST}/share/icons/hicolor/scalable/apps/${FLATPAK_ID}.svg
+    sources:
+      - type: file
+        path: app.fluxer.FluxerCanary.sh
+      - type: file
+        path: app.fluxer.FluxerCanary.desktop
+      - type: file
+        path: app.fluxer.FluxerCanary.metainfo.xml
+      - type: file
+        path: app.fluxer.FluxerCanary.svg
