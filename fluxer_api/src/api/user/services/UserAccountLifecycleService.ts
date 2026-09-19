@@ -84,7 +84,7 @@ export class UserAccountLifecycleService {
 		if (updatedUser) {
 			await this.deps.updatePropagator.dispatchUserUpdate(updatedUser);
 			if (hasPartialUserFieldsChanged(user, updatedUser)) {
-				await this.deps.updatePropagator.updateUserCache(updatedUser);
+				await this.deps.updatePropagator.propagatePartialUserChange(updatedUser);
 			}
 		}
 	}
@@ -125,7 +125,7 @@ export class UserAccountLifecycleService {
 		if (updatedUser) {
 			await this.deps.updatePropagator.dispatchUserUpdate(updatedUser);
 			if (hasPartialUserFieldsChanged(user, updatedUser)) {
-				await this.deps.updatePropagator.updateUserCache(updatedUser);
+				await this.deps.updatePropagator.propagatePartialUserChange(updatedUser);
 			}
 		}
 	}

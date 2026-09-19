@@ -46,9 +46,6 @@ const CURRENT_USER_PRIVATE_WIRE_KEYS = [
 ] as const;
 
 function isPublicOnlyCurrentUserPayload(user: WireUser): boolean {
-	if (typeof user.mention_flags === 'number') {
-		return false;
-	}
 	return !CURRENT_USER_PRIVATE_WIRE_KEYS.some((key) => key in user);
 }
 
