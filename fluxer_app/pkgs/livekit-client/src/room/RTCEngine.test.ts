@@ -19,19 +19,41 @@ function codec(
 }
 
 describe('selectPublisherCodecPreferences', () => {
-	it('prefers H.264 profiles that use Chromium external encoders before OpenH264', () => {
-		const openH264 = codec('video/H264', 'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f');
-		const externalBaseline = codec(
+	it('offers the profiles a hardware encoder accepts before Constrained Baseline, which is always software on Windows', () => {
+		const constrainedBaseline = codec(
 			'video/H264',
-			'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42001f',
+			'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f',
 		);
+		const baseline = codec('video/H264', 'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42001f');
 		const highProfile = codec('video/H264', 'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=64001f');
 		const rtx = codec('video/rtx');
-		const preferences = selectPublisherCodecPreferences('h264', [openH264, rtx, externalBaseline, highProfile]);
-		expect(preferences).toEqual([externalBaseline, openH264, highProfile, rtx]);
+		const preferences = selectPublisherCodecPreferences('h264', [constrainedBaseline, rtx, baseline, highProfile]);
+		expect(preferences).toEqual([highProfile, baseline, constrainedBaseline, rtx]);
 	});
 
-	it('ranks Constrained Baseline above Main, High and Constrained High', () => {
+	it('offers High first out of the capabilities Chromium reports, so the only hardware profile this server registers wins', () => {
+		const capabilities = [
+			codec('video/H264', 'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42001f'),
+			codec('video/H264', 'level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=42001f'),
+			codec('video/H264', 'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f'),
+			codec('video/H264', 'level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=42e01f'),
+			codec('video/H264', 'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=4d001f'),
+			codec('video/H264', 'level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=4d001f'),
+			codec('video/H264', 'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=640034'),
+		];
+		const preferences = selectPublisherCodecPreferences('h264', capabilities);
+		expect(preferences.map((entry) => entry.sdpFmtpLine)).toEqual([
+			'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=640034',
+			'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=4d001f',
+			'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42001f',
+			'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f',
+			'level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=4d001f',
+			'level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=42001f',
+			'level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=42e01f',
+		]);
+	});
+
+	it('ranks High, Constrained High, Main and Baseline above Constrained Baseline, whatever level each one carries', () => {
 		const constrainedBaseline = codec(
 			'video/H264',
 			'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f',
@@ -57,15 +79,15 @@ describe('selectPublisherCodecPreferences', () => {
 			constrainedBaseline,
 		]);
 		expect(preferences).toEqual([
-			constrainedBaseline,
-			mainProfile,
 			highProfileLevel31,
 			highProfileLevel51,
 			constrainedHigh,
+			mainProfile,
+			constrainedBaseline,
 		]);
 	});
 
-	it('keeps Constrained Baseline packetization-mode=1 ahead of Constrained Baseline packetization-mode=0 and High', () => {
+	it('ranks packetization-mode=1 above packetization-mode=0, which no hardware encoder takes', () => {
 		const constrainedBaselineMode0 = codec(
 			'video/H264',
 			'level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=42e01f',
@@ -74,13 +96,26 @@ describe('selectPublisherCodecPreferences', () => {
 			'video/H264',
 			'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f',
 		);
-		const highProfile = codec('video/H264', 'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=640033');
+		const highProfileMode0 = codec(
+			'video/H264',
+			'level-asymmetry-allowed=1;packetization-mode=0;profile-level-id=640033',
+		);
+		const highProfileMode1 = codec(
+			'video/H264',
+			'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=640033',
+		);
 		const preferences = selectPublisherCodecPreferences('h264', [
-			highProfile,
+			highProfileMode0,
 			constrainedBaselineMode0,
 			constrainedBaselineMode1,
+			highProfileMode1,
 		]);
-		expect(preferences).toEqual([constrainedBaselineMode1, constrainedBaselineMode0, highProfile]);
+		expect(preferences).toEqual([
+			highProfileMode1,
+			constrainedBaselineMode1,
+			highProfileMode0,
+			constrainedBaselineMode0,
+		]);
 	});
 
 	it('puts the chosen codec first and keeps every other codec in browser capability order', () => {
@@ -106,7 +141,7 @@ describe('selectPublisherCodecPreferences', () => {
 			'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f',
 		);
 		const preferences = selectPublisherCodecPreferences('vp8', [vp8, highProfile, constrainedBaseline]);
-		expect(preferences).toEqual([vp8, constrainedBaseline, highProfile]);
+		expect(preferences).toEqual([vp8, highProfile, constrainedBaseline]);
 	});
 
 	it('returns nothing when the sender cannot encode the chosen codec', () => {
