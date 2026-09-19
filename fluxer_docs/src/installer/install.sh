@@ -64,6 +64,7 @@ FLUXER_MIN_COMPOSE='2.20.2'
 FLUXER_MIN_COMPOSE_OVERLAY='2.24.4'
 FLUXER_READY_TIMEOUT=600
 FLUXER_READY_INTERVAL=5
+FLUXER_READY_REPORT=30
 FLUXER_VAPID_ATTEMPTS=8
 FLUXER_SEC1_HEADER='30770201010420'
 FLUXER_INSPECT_FORMAT='{{index .Config.Labels "com.docker.compose.service"}} {{.State.Status}} {{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}} {{.State.ExitCode}}'
@@ -926,27 +927,38 @@ fluxer_write_env() {
 }
 
 fluxer_stack_ready() {
+	: > "$fluxer_scratch/not-ready"
 	$fluxer_engine compose ps -aq > "$fluxer_scratch/ids" 2>/dev/null || return 1
 	[ -s "$fluxer_scratch/ids" ] || return 1
 	xargs $fluxer_engine inspect --format "$FLUXER_INSPECT_FORMAT" < "$fluxer_scratch/ids" > "$fluxer_scratch/state" 2>/dev/null || return 1
 	fluxer_ready=1
 	fluxer_init_done=0
+	fluxer_ready_count=0
+	fluxer_service_count=0
 	while read -r fluxer_service fluxer_status fluxer_health fluxer_code; do
+		[ -n "$fluxer_service" ] || continue
+		fluxer_service_count=$((fluxer_service_count + 1))
 		case $fluxer_status in
 			running)
 				case $fluxer_health in
-					healthy|none) ;;
-					*) fluxer_ready=0 ;;
+					healthy|none) fluxer_ready_count=$((fluxer_ready_count + 1)) ;;
+					*)
+						printf '%s running (%s)\n' "$fluxer_service" "$fluxer_health" >> "$fluxer_scratch/not-ready"
+						fluxer_ready=0
+						;;
 				esac
 				;;
 			exited)
 				if [ "$fluxer_service" = 'seaweedfs-init' ] && [ "$fluxer_code" = '0' ]; then
 					fluxer_init_done=1
+					fluxer_ready_count=$((fluxer_ready_count + 1))
 				else
+					printf '%s exited (%s)\n' "$fluxer_service" "$fluxer_code" >> "$fluxer_scratch/not-ready"
 					fluxer_ready=0
 				fi
 				;;
 			*)
+				printf '%s %s\n' "$fluxer_service" "$fluxer_status" >> "$fluxer_scratch/not-ready"
 				fluxer_ready=0
 				;;
 		esac
@@ -958,9 +970,19 @@ fluxer_stack_ready() {
 		return 0
 	fi
 	if fluxer_stack_defines_service 'seaweedfs-init'; then
+		printf 'seaweedfs-init has not completed\n' >> "$fluxer_scratch/not-ready"
+		fluxer_service_count=$((fluxer_service_count + 1))
 		return 1
 	fi
 	return 0
+}
+
+fluxer_not_ready_detail() {
+	if [ -s "$fluxer_scratch/not-ready" ]; then
+		printf 'These services are not ready:\n%s' "$(sed 's/^/  /' "$fluxer_scratch/not-ready")"
+	else
+		printf '%s' "$fluxer_engine compose reports no container state for this project."
+	fi
 }
 
 # Readiness comes from Compose state, which is local and authoritative.
@@ -972,12 +994,19 @@ fluxer_stack_ready() {
 # exited (0) because it is a one-shot bucket initialiser.
 fluxer_wait_ready() {
 	fluxer_waited=0
+	fluxer_reported=0
+	fluxer_ready_count=0
+	fluxer_service_count=0
 	while [ "$fluxer_waited" -lt "$FLUXER_READY_TIMEOUT" ]; do
 		if fluxer_stack_ready; then
 			return 0
 		fi
 		sleep "$FLUXER_READY_INTERVAL"
 		fluxer_waited=$((fluxer_waited + FLUXER_READY_INTERVAL))
+		if [ "$((fluxer_waited - fluxer_reported))" -ge "$FLUXER_READY_REPORT" ]; then
+			fluxer_reported=$fluxer_waited
+			fluxer_say "$fluxer_ready_count of $fluxer_service_count services are ready."
+		fi
 	done
 	return 1
 }
@@ -1671,7 +1700,8 @@ fluxer_newest_record() {
 fluxer_verify_stack() {
 	fluxer_say 'Waiting for every service to report ready.'
 	if ! fluxer_wait_ready; then
-		fluxer_fail 6 "The stack is not ready after $FLUXER_READY_TIMEOUT seconds. Read $fluxer_engine compose logs in $opt_dir."
+		fluxer_fail 6 "The stack is not ready after $FLUXER_READY_TIMEOUT seconds. $(fluxer_not_ready_detail)
+Read $fluxer_engine compose logs in $opt_dir."
 	fi
 	fluxer_origin_value=$(fluxer_public_origin)
 	if [ -n "$fluxer_origin_value" ]; then
@@ -2041,7 +2071,8 @@ if ! $fluxer_engine compose up -d; then
 fi
 fluxer_say 'Waiting for every service to report ready. This takes several minutes on the first start, which pulls eighteen images.'
 if ! fluxer_wait_ready; then
-	fluxer_fail 6 "The stack is not ready after $FLUXER_READY_TIMEOUT seconds. Read $fluxer_engine compose logs in $opt_dir."
+	fluxer_fail 6 "The stack is not ready after $FLUXER_READY_TIMEOUT seconds. $(fluxer_not_ready_detail)
+Read $fluxer_engine compose logs in $opt_dir."
 fi
 fluxer_ready_origin=$(fluxer_public_origin)
 if [ -z "$fluxer_ready_origin" ]; then
