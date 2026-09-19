@@ -622,7 +622,7 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		const guild = channel?.guildId ? Guilds.getGuild(channel.guildId) : null;
 		const channelBitrate = resolveVoiceChannelBitrate(channel?.bitrate, guild?.features);
 		const profile = this.resolveActiveMicrophoneProfile();
-		return buildMicrophonePublishOptions(channelBitrate, profile.mode, profile.stereoCapture);
+		return buildMicrophonePublishOptions(channelBitrate, profile.stereoCapture);
 	}
 
 	async refreshMicrophonePublishSettings(room: Room | null, channelId: string | null): Promise<void> {

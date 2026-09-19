@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
-import type {VoiceProcessingMode} from '@app/features/voice/utils/VoiceProcessingProfile';
 import type {TrackPublishOptions} from 'livekit-client';
 
 export const OPUS_MAX_AUDIO_BITRATE_BPS = 510000;
 export const VOICE_CHANNEL_MIN_AUDIO_BITRATE_BPS = 8000;
-export const STEREO_VOICE_MIN_AUDIO_BITRATE_BPS = 128000;
+export const STEREO_VOICE_MIN_AUDIO_BITRATE_BPS = 64000;
 
 export function normaliseAudioBitrateBps(value: number | null | undefined): number | undefined {
 	if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return undefined;
@@ -17,27 +16,18 @@ export function normaliseAudioBitrateBps(value: number | null | undefined): numb
 
 export function buildMicrophonePublishOptions(
 	channelBitrate: number | null | undefined,
-	processingMode: VoiceProcessingMode,
 	stereoCapture = false,
 ): TrackPublishOptions | undefined {
 	const maxBitrate = normaliseAudioBitrateBps(channelBitrate);
 	if (!maxBitrate) return undefined;
-	const studioMode = processingMode === 'studio';
-	const bitrateAllowsStereo = maxBitrate >= STEREO_VOICE_MIN_AUDIO_BITRATE_BPS;
 	return {
 		audioPreset: {
 			maxBitrate,
 			priority: 'high',
 		},
+		dtx: false,
 		red: true,
-		...(studioMode
-			? {
-					dtx: false,
-					forceStereo: bitrateAllowsStereo,
-				}
-			: stereoCapture && !bitrateAllowsStereo
-				? {forceStereo: false}
-				: {}),
+		forceStereo: stereoCapture && maxBitrate >= STEREO_VOICE_MIN_AUDIO_BITRATE_BPS,
 	};
 }
 
