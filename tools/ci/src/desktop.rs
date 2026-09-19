@@ -46,6 +46,7 @@ const LINUX_LIBFIDO2_VERSION: &str = "1.16.0";
 const LINUX_LIBFIDO2_SOURCE_SHA256: &str =
     "8c2b6fb279b5b42e9ac92ade71832e485852647b53607c43baaafbbcecea04e4";
 pub(crate) const MACOS_UNIVERSAL_ARCH: &str = "universal";
+const MACOS_MINIMUM_SYSTEM_VERSION: &str = "13.0";
 const WINDOWS_GAME_CAPTURE_DESKTOP_VARIANT: &str = "windows-game-capture";
 
 #[derive(Debug, Args, Clone)]
@@ -4015,7 +4016,7 @@ fn build_desktop_manifest(dest: &Path, input: &PayloadManifestInput) -> Result<D
         version: input.version.clone(),
         pub_date: input.pub_date.clone(),
         minimum_system_version: if input.platform == "darwin" {
-            Some("12.0".to_string())
+            Some(MACOS_MINIMUM_SYSTEM_VERSION.to_string())
         } else {
             None
         },
@@ -5618,7 +5619,7 @@ export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
             variant: None,
             version: "2026.520.1".to_string(),
             pub_date: "2026-05-20T01:02:03Z".to_string(),
-            minimum_system_version: Some("12.0".to_string()),
+            minimum_system_version: Some(MACOS_MINIMUM_SYSTEM_VERSION.to_string()),
             files: BTreeMap::from([(
                 "zip".to_string(),
                 DesktopManifestFile::Name("Fluxer-2026.520.1-arm64.zip".to_string()),
@@ -5635,6 +5636,76 @@ export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
             "https://api.fluxer.app/dl/desktop-test/canary/darwin/arm64/Fluxer-2026.520.1-arm64.zip"
         );
         assert!(temp.path().join("releases.json").exists());
+    }
+
+    #[test]
+    fn desktop_manifest_publishes_macos_minimum_only_for_darwin() {
+        let temp = tempfile::tempdir().unwrap();
+
+        let darwin_root = temp.path().join("darwin");
+        write_file(&darwin_root.join("Fluxer-2026.520.1-arm64.zip"), "zip");
+        let darwin_manifest = build_desktop_manifest(
+            &darwin_root,
+            &PayloadManifestInput {
+                channel: "stable".to_string(),
+                platform: "darwin".to_string(),
+                arch: "arm64".to_string(),
+                desktop_variant: DEFAULT_DESKTOP_VARIANT.to_string(),
+                version: "2026.520.1".to_string(),
+                pub_date: "2026-05-20T01:02:03Z".to_string(),
+            },
+        )
+        .unwrap();
+        assert_eq!(
+            darwin_manifest.minimum_system_version.as_deref(),
+            Some(MACOS_MINIMUM_SYSTEM_VERSION)
+        );
+
+        let linux_root = temp.path().join("linux");
+        write_file(&linux_root.join("Fluxer-2026.520.1-x64.deb"), "deb");
+        let linux_manifest = build_desktop_manifest(
+            &linux_root,
+            &PayloadManifestInput {
+                channel: "stable".to_string(),
+                platform: "linux".to_string(),
+                arch: "x64".to_string(),
+                desktop_variant: DEFAULT_DESKTOP_VARIANT.to_string(),
+                version: "2026.520.1".to_string(),
+                pub_date: "2026-05-20T01:02:03Z".to_string(),
+            },
+        )
+        .unwrap();
+        assert_eq!(linux_manifest.minimum_system_version, None);
+
+        let windows_root = temp.path().join("win32");
+        write_file(&windows_root.join("Fluxer-Setup-2026.520.1-x64.exe"), "exe");
+        let windows_manifest = build_desktop_manifest(
+            &windows_root,
+            &PayloadManifestInput {
+                channel: "stable".to_string(),
+                platform: "win32".to_string(),
+                arch: "x64".to_string(),
+                desktop_variant: DEFAULT_DESKTOP_VARIANT.to_string(),
+                version: "2026.520.1".to_string(),
+                pub_date: "2026-05-20T01:02:03Z".to_string(),
+            },
+        )
+        .unwrap();
+        assert_eq!(windows_manifest.minimum_system_version, None);
+    }
+
+    #[test]
+    fn desktop_macos_minimum_matches_electron_builder_config() {
+        let config_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fluxer_desktop/electron-builder.config.cjs");
+        let config = fs::read_to_string(&config_path)
+            .expect("the electron-builder config should be readable");
+        let declared = config
+            .split_once("const macOSMinimumSystemVersion = '")
+            .and_then(|(_, rest)| rest.split_once('\''))
+            .map(|(value, _)| value)
+            .expect("the electron-builder config should declare macOSMinimumSystemVersion");
+        assert_eq!(declared, MACOS_MINIMUM_SYSTEM_VERSION);
     }
 
     #[test]
