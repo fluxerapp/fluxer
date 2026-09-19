@@ -331,6 +331,10 @@ function desktopEntryBoolean(value: string | undefined): boolean {
 	return value?.trim().toLowerCase() === 'true';
 }
 
+function desktopEntryDisabled(value: string | undefined): boolean {
+	return value?.trim().toLowerCase() === 'false';
+}
+
 function parseDesktopExecCommand(value: string | undefined): string | null {
 	if (!value) return null;
 	const input = value.trimStart();
@@ -583,7 +587,32 @@ async function isAutostartEnabled(): Promise<boolean> {
 	return false;
 }
 
+async function repairLinuxAutostartEntry(): Promise<void> {
+	if (!isLinux || isFlatpakRuntime() || isPortableMode()) return;
+	let contents: string;
+	try {
+		contents = fs.readFileSync(getLinuxDesktopFilePath(), 'utf8');
+	} catch {
+		return;
+	}
+	const entry = tryParseDesktopEntry(contents);
+	if (entry.get('StartupWMClass')?.trim() !== LINUX_STARTUP_WM_CLASS) return;
+	if (desktopEntryBoolean(entry.get('Hidden'))) return;
+	if (desktopEntryDisabled(entry.get('X-GNOME-Autostart-enabled'))) return;
+	if (linuxDesktopEntryTargetsExistingCommand(entry)) return;
+	if (!commandExists(getStableLinuxLaunchPath())) return;
+	try {
+		await enableLinuxAutostart();
+		log.info('[Autostart] Rewrote a Linux autostart entry whose command no longer exists', {
+			execPath: getStableLinuxLaunchPath(),
+		});
+	} catch (error) {
+		log.warn('[Autostart] Failed to rewrite the stale Linux autostart entry:', error);
+	}
+}
+
 export function registerAutostartHandlers(): void {
+	void repairLinuxAutostartEntry();
 	ipcMain.handle('autostart-enable', async (): Promise<void> => {
 		await enableAutostart();
 	});
