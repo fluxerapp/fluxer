@@ -787,6 +787,7 @@ fluxer_place_stack() {
 		[ -n "$fluxer_file" ] || continue
 		mv "$fluxer_scratch/$fluxer_file.part" "$opt_dir/$(fluxer_placed_name "$fluxer_file")"
 	done < "$fluxer_scratch/files"
+	rm -f "$fluxer_scratch/all-services"
 	fluxer_say "Stack files in $opt_dir are at ref $opt_ref."
 }
 
@@ -950,7 +951,16 @@ fluxer_stack_ready() {
 				;;
 		esac
 	done < "$fluxer_scratch/state"
-	[ "$fluxer_ready" -eq 1 ] && [ "$fluxer_init_done" -eq 1 ]
+	if [ "$fluxer_ready" -eq 0 ]; then
+		return 1
+	fi
+	if [ "$fluxer_init_done" -eq 1 ]; then
+		return 0
+	fi
+	if fluxer_stack_defines_service 'seaweedfs-init'; then
+		return 1
+	fi
+	return 0
 }
 
 # Readiness comes from Compose state, which is local and authoritative.
