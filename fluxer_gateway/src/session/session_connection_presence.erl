@@ -13,6 +13,7 @@
 -export_type([session_state/0, attempt/0]).
 
 -define(MAX_RETRY_ATTEMPTS, 25).
+-define(PRESENCE_MEMBERSHIP_TIMEOUT, 1000).
 
 -type session_state() :: session:session_state().
 -type attempt() :: non_neg_integer().
@@ -173,10 +174,23 @@ repair_presence_connection(State) ->
 presence_attachment_healthy(State) ->
     case maps:get(presence_pid, State, undefined) of
         Pid when is_pid(Pid) ->
-            presence_pid_alive(Pid) andalso presence_owner_matches(State, Pid);
+            presence_pid_alive(Pid) andalso
+                presence_owner_matches(State, Pid) andalso
+                presence_has_session(State, Pid);
         _ ->
             false
     end.
+
+-spec presence_has_session(session_state(), pid()) -> boolean().
+presence_has_session(#{id := SessionId}, Pid) when is_binary(SessionId) ->
+    try gen_server:call(Pid, {has_session, SessionId, self()}, ?PRESENCE_MEMBERSHIP_TIMEOUT) of
+        true -> true;
+        _ -> false
+    catch
+        exit:_Reason -> false
+    end;
+presence_has_session(_State, _Pid) ->
+    true.
 
 -spec presence_pid_alive(pid()) -> boolean().
 presence_pid_alive(Pid) ->
@@ -262,6 +276,35 @@ presence_attachment_healthy_false_when_unattached_test() ->
 presence_attachment_healthy_true_for_live_local_pid_without_user_id_test() ->
     ?assert(presence_attachment_healthy(#{presence_pid => self()})).
 
+presence_attachment_healthy_true_when_session_is_registered_test() ->
+    Pid = start_presence_membership_probe(<<"registered">>, self()),
+    ?assert(
+        presence_attachment_healthy(#{
+            presence_pid => Pid, id => <<"registered">>
+        })
+    ),
+    Pid ! stop.
+
+presence_attachment_healthy_false_when_session_is_missing_test() ->
+    Pid = start_presence_membership_probe(<<"other">>, self()),
+    ?assertNot(
+        presence_attachment_healthy(#{
+            presence_pid => Pid, id => <<"missing">>
+        })
+    ),
+    Pid ! stop.
+
+presence_attachment_healthy_false_when_session_pid_was_replaced_test() ->
+    OtherPid = spawn(fun presence_target_loop/0),
+    Pid = start_presence_membership_probe(<<"registered">>, OtherPid),
+    ?assertNot(
+        presence_attachment_healthy(#{
+            presence_pid => Pid, id => <<"registered">>
+        })
+    ),
+    Pid ! stop,
+    OtherPid ! stop.
+
 presence_attachment_healthy_false_for_dead_local_pid_test() ->
     ?assertNot(presence_attachment_healthy(#{presence_pid => dead_pid()})).
 
@@ -324,6 +367,21 @@ presence_target_loop() ->
     receive
         stop -> ok
     after 5000 -> ok
+    end.
+
+start_presence_membership_probe(SessionId, SessionPid) ->
+    spawn(fun() -> presence_membership_probe_loop(SessionId, SessionPid) end).
+
+presence_membership_probe_loop(SessionId, SessionPid) ->
+    receive
+        {'$gen_call', From, {has_session, RequestedId, RequestedPid}} ->
+            gen_server:reply(
+                From,
+                RequestedId =:= SessionId andalso RequestedPid =:= SessionPid
+            ),
+            presence_membership_probe_loop(SessionId, SessionPid);
+        stop ->
+            ok
     end.
 
 received_presence_connect() ->
