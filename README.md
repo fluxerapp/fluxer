@@ -21,7 +21,7 @@
 Fluxer is a free and open source instant messaging and VoIP chat app built for friends, groups, and communities.
 
 <p align="center">
-  <img src="./fluxer_static/marketing/screenshots/desktop-readme-1920w.png" alt="Fluxer running side by side on a desktop monitor and a phone" width="820">
+  <img src="./fluxer_static/marketing/screenshots/desktop-readme-1920w.png" alt="Fluxer running side by side on a desktop monitor and a phone" width="640">
 </p>
 
 ## Download
@@ -114,7 +114,7 @@ Full setup notes, including the canary channel, live in the [Linux repositories 
 
 ## License
 
-The source is licensed under the [AGPL-3.0-or-later](./LICENSE).
+The source is licensed under the [AGPL-3.0-or-later](./LICENSE) license.
 
 Fluxer branding, icons, default avatars, badge artwork, screenshots and marketing
 imagery are copyright Fluxer and all rights reserved, as set out in
