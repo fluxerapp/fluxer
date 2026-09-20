@@ -5,7 +5,7 @@ FROM node:26-trixie-slim AS base
 
 WORKDIR /usr/src/app
 
-RUN npm install -g pnpm@12.4.2
+RUN npm install -g pnpm@11.27.0
 
 FROM base AS deploy
 
@@ -57,7 +57,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 		libvips42t64 && \
 	rm -rf /var/lib/apt/lists/*
 
-RUN npm install -g pnpm@12.4.2
+RUN npm install -g pnpm@11.27.0
 
 COPY --from=deploy /out ./
 COPY --from=deploy /usr/src/app/fluxer_api/dist ./dist

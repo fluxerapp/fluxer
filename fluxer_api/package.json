@@ -94,5 +94,5 @@
 		"typescript": "catalog:ts7",
 		"vitest": "catalog:"
 	},
-	"packageManager": "pnpm@12.4.2"
+	"packageManager": "pnpm@11.27.0"
 }

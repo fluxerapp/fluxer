@@ -9,7 +9,7 @@ WORKDIR /usr/src/app
 
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends ca-certificates nodejs npm pkg-config \
-	&& npm install -g pnpm@12.4.2 \
+	&& npm install -g pnpm@11.27.0 \
 	&& rm -rf /var/lib/apt/lists/*
 
 RUN npm install --no-audit --no-fund @tailwindcss/cli@4.2.1 tailwindcss@4.2.1
