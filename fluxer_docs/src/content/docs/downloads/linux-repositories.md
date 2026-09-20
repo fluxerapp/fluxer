@@ -39,13 +39,27 @@ The package depends on `libXScrnSaver`, which the EL base repositories do not sh
 
 ## pacman
 
-One repository named `fluxer` holds both channels.
+One repository named `fluxer` holds both channels. It is signed, and pacman verifies both the sync database and every package.
+
+pacman has no per-repository key setting, so the signing key goes into the pacman keyring once:
+
+```
+sudo pacman-key --init
+curl -fsSL -o /tmp/fluxer-archive-keyring.asc \
+  https://pkgs.fluxer.com/keys/fluxer-archive-keyring.asc
+sudo pacman-key --add /tmp/fluxer-archive-keyring.asc
+sudo pacman-key --lsign-key 09D01339EE128925F75E675C855C5BDE34D205D2
+```
+
+`--lsign-key` is the step that makes pacman trust the key. Without it the key sits in the keyring and pacman still refuses the repository with `unknown trust`. The fingerprint above is the one Fluxer uses for apt and dnf as well.
+
+Then add the repository:
 
 ```
 sudo tee -a /etc/pacman.conf >/dev/null <<'REPO'
 
 [fluxer]
-SigLevel = Never
+SigLevel = Required TrustedOnly
 Server = https://pkgs.fluxer.com/arch/$repo/os/$arch
 REPO
 sudo pacman -Syu --noconfirm fluxer
@@ -54,6 +68,8 @@ sudo pacman -Syu --noconfirm fluxer
 Install `fluxer-canary` instead for the canary channel. Both come from this one repository and install alongside each other.
 
 Write `$repo` and `$arch` literally. Both are pacman variables, not shell ones, which is why the heredoc above is quoted. `$repo` expands to the section name, so the `Server` line needs no editing.
+
+`Required TrustedOnly` is pacman's built-in default written out in full. Arch ships `Required DatabaseOptional` in `/etc/pacman.conf` because the official repositories do not sign their databases. Fluxer signs both the database and every package, so leaving the `SigLevel` line out would inherit that weaker default rather than match the line above.
 
 A pacman sync database records one version per package name, so only the current release is installable by name. An older build is still served, and `curl` followed by `pacman -U ./<file>` installs it.
 
@@ -73,4 +89,4 @@ Once the remote exists, either application installs by id:
 flatpak install fluxer app.fluxer.FluxerCanary
 ```
 
-No `--no-gpg-verify` flag is required. The repository is unsigned, and flatpak reads that from the repository metadata itself.
+The reference file names no signing key, so flatpak configures the remote unverified and no flag is required. Adding the remote by URL instead of by reference file does need `--no-gpg-verify`.
