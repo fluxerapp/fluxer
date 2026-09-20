@@ -9,9 +9,6 @@ use crate::state::{
     AppProxyBudgets, AppState, MAX_RENDERED_SPA_INDEX_BYTES, MAX_SPA_INDEX_BYTES,
     read_bounded_text_file,
 };
-use crate::time_freeze::{
-    load_time_freeze_config_for_request, should_serve_frozen, time_freeze_debug_header,
-};
 use axum::{
     body::{Body, Bytes},
     extract::{Request, State},
@@ -142,8 +139,6 @@ async fn serve_static_file(
 }
 
 async fn serve_spa_index(state: &AppState, headers: &HeaderMap) -> Response {
-    let time_freeze = load_time_freeze_config_for_request(&state.config, headers);
-    let debug_header = time_freeze_debug_header(&time_freeze);
     let should_bust_dev_assets = state.config.index_upstream_url.is_some();
 
     let discovery = match refresh_discovery_for_spa(state).await {
@@ -168,13 +163,9 @@ async fn serve_spa_index(state: &AppState, headers: &HeaderMap) -> Response {
     let geoip = build_geoip_response(state.geoip.lookup(headers));
     let script_tag = build_bootstrap_script(&state.config, &discovery, &geoip, &nonce);
 
-    let raw_html = if let Some(snapshot) = should_serve_frozen(&time_freeze) {
-        String::from_utf8_lossy(&snapshot.index_html).into_owned()
-    } else {
-        match load_spa_index_html(state).await {
-            Ok(content) => content,
-            Err(response) => return response,
-        }
+    let raw_html = match load_spa_index_html(state).await {
+        Ok(content) => content,
+        Err(response) => return response,
     };
 
     let dev_buster = should_bust_dev_assets.then(current_dev_asset_cache_buster);
@@ -193,7 +184,7 @@ async fn serve_spa_index(state: &AppState, headers: &HeaderMap) -> Response {
         }
     };
     let html = html.into_boxed_str();
-    build_spa_response(html, csp, debug_header.as_deref(), should_bust_dev_assets)
+    build_spa_response(html, csp, should_bust_dev_assets)
 }
 
 #[derive(Debug)]
@@ -377,12 +368,7 @@ impl AsRef<[u8]> for SpaDocumentBody {
     }
 }
 
-fn build_spa_response(
-    html: Box<str>,
-    csp: HeaderValue,
-    time_freeze_header: Option<&str>,
-    dev_no_store: bool,
-) -> Response {
+fn build_spa_response(html: Box<str>, csp: HeaderValue, dev_no_store: bool) -> Response {
     let body = Bytes::from_owner(SpaDocumentBody { html });
     let mut response = Response::new(Body::from(body));
     let headers = response.headers_mut();
@@ -419,17 +405,6 @@ fn build_spa_response(
         axum::http::HeaderName::from_static("critical-ch"),
         HeaderValue::from_static(CRITICAL_CH_VALUE),
     );
-    #[cfg(feature = "time-freeze")]
-    {
-        if let Some(tf) = time_freeze_header
-            && let Ok(v) = HeaderValue::from_str(tf)
-        {
-            headers.insert(axum::http::HeaderName::from_static("x-time-freeze"), v);
-        }
-    }
-    #[cfg(not(feature = "time-freeze"))]
-    let _ = time_freeze_header;
-
     response
 }
 
@@ -667,40 +642,6 @@ mod tests {
         assert!(!untouched.contains("_=9911"));
     }
 
-    #[cfg(feature = "time-freeze")]
-    #[test]
-    fn the_frozen_shell_is_never_served_with_an_unfilled_nonce_or_a_missing_bootstrap() {
-        let frozen = String::from_utf8_lossy(&crate::frozen_snapshots::STABLE_SNAPSHOT.index_html)
-            .into_owned();
-        assert!(
-            frozen.contains("{{CSP_NONCE_PLACEHOLDER}}"),
-            "the captured shell should still carry the hole this test proves we fill"
-        );
-
-        let served = render_spa_document(
-            &frozen,
-            "frozennonce",
-            "<script>frozenboot</script>",
-            "https://fluxerstatic.com",
-            "",
-            None,
-        )
-        .expect("test SPA document must render within its size limit");
-
-        assert!(
-            !served.contains("{{CSP_NONCE_PLACEHOLDER}}"),
-            "a frozen-served shell shipped a literal nonce placeholder"
-        );
-        assert!(
-            served.contains(r#"nonce="frozennonce""#),
-            "a frozen-served shell lost its per-request nonce"
-        );
-        assert!(
-            served.contains("<script>frozenboot</script>"),
-            "a frozen-served shell shipped without the bootstrap script"
-        );
-    }
-
     const SHELL_WITH_ENDPOINT_HOLES: &str = r#"<!doctype html><html><head><title>Fluxer</title><link rel="preconnect" href="{{STATIC_CDN_ENDPOINT}}">
 <link rel="preconnect" href="{{STATIC_CDN_ENDPOINT}}" crossorigin>
 <link rel="preconnect" href="{{MEDIA_ENDPOINT}}">
@@ -840,7 +781,6 @@ mod tests {
         let discovery_upstream_url = spawn_local_origin(discovery_body, "application/json").await;
         let mut config = AppProxyConfig::from_env();
         config.release_channel = channel;
-        config.time_freeze_enabled = true;
         config.index_upstream_url = index_upstream_url.map(|url| {
             crate::config::HttpUrl::parse("TEST_INDEX_UPSTREAM_URL", &url)
                 .expect("test index upstream URL must be a valid HTTP URL")
@@ -945,158 +885,6 @@ mod tests {
         assert!(
             served.contains(r#"<link rel="preconnect" href="https://media.example.test">"#),
             "the discovered media endpoint never reached the served document"
-        );
-    }
-
-    #[cfg(feature = "time-freeze")]
-    #[tokio::test]
-    async fn the_frozen_document_is_served_with_its_asset_urls_untouched() {
-        let captured =
-            String::from_utf8_lossy(&crate::frozen_snapshots::STABLE_SNAPSHOT.index_html)
-                .into_owned();
-        assert!(
-            captured.contains(
-                r#"<link rel="stylesheet" href="https://fluxerstatic.com/fonts/ibm-plex.css">"#
-            ),
-            "the captured shell no longer carries the asset URL this test proves we leave alone"
-        );
-
-        let state = spa_state_serving(ReleaseChannel::Stable, None).await;
-
-        let response = serve_spa_index(&state, &HeaderMap::new()).await;
-        assert_eq!(response.status(), StatusCode::OK);
-        let served = read_document(response).await;
-
-        assert!(
-            served.contains(
-                r#"<link rel="stylesheet" href="https://fluxerstatic.com/fonts/ibm-plex.css">"#
-            ),
-            "the frozen document's stylesheet URL was rewritten on the primary hosted path"
-        );
-        assert!(
-            served.contains(r#"<link rel="manifest" href="/manifest.json">"#),
-            "the frozen document's manifest URL was rewritten on the primary hosted path"
-        );
-        assert!(
-            !served.contains("?_=") && !served.contains("&_="),
-            "the frozen document was served with a development cache-busting query"
-        );
-    }
-
-    #[cfg(feature = "time-freeze")]
-    #[tokio::test]
-    async fn the_frozen_branch_serves_a_rendered_document_and_not_the_raw_shell() {
-        let captured =
-            String::from_utf8_lossy(&crate::frozen_snapshots::STABLE_SNAPSHOT.index_html)
-                .into_owned();
-        assert!(
-            captured.contains("{{CSP_NONCE_PLACEHOLDER}}"),
-            "the captured shell no longer carries the nonce hole this test proves we fill"
-        );
-        assert!(
-            !captured.contains("window.__FLUXER_BOOTSTRAP__"),
-            "the captured shell already carries a bootstrap, so this test can no longer tell a rendered document from a raw shell"
-        );
-
-        let state = spa_state_serving(ReleaseChannel::Stable, None).await;
-
-        let response = serve_spa_index(&state, &HeaderMap::new()).await;
-        assert_eq!(response.status(), StatusCode::OK);
-        let granted_nonce = nonce_granted_by(&response);
-        let served = read_document(response).await;
-
-        assert!(
-            !served.contains("{{CSP_NONCE_PLACEHOLDER}}"),
-            "the primary hosted path shipped a literal nonce placeholder"
-        );
-        assert_eq!(
-            served
-                .matches(&format!(r#"nonce="{granted_nonce}""#))
-                .count(),
-            served.matches(r#"nonce=""#).count(),
-            "the frozen document carries a nonce its own policy header never granted"
-        );
-        assert!(
-            served.contains(&format!(
-                r#"<script nonce="{granted_nonce}">window.__FLUXER_BOOTSTRAP__"#
-            )),
-            "the primary hosted path shipped without a bootstrap script the browser will run"
-        );
-
-        let second = serve_spa_index(&state, &HeaderMap::new()).await;
-        assert_ne!(
-            nonce_granted_by(&second),
-            granted_nonce,
-            "two frozen requests were granted the same nonce"
-        );
-    }
-
-    #[cfg(feature = "time-freeze")]
-    #[tokio::test]
-    async fn every_branch_announces_which_snapshot_decision_it_took() {
-        let frozen_state = spa_state_serving(ReleaseChannel::Stable, None).await;
-        let frozen = serve_spa_index(&frozen_state, &HeaderMap::new()).await;
-        assert_eq!(
-            frozen
-                .headers()
-                .get("x-time-freeze")
-                .expect("the frozen response announced no snapshot decision")
-                .to_str()
-                .unwrap(),
-            format!(
-                "frozen; sha={}",
-                crate::frozen_snapshots::STABLE_SNAPSHOT.sha
-            ),
-            "the frozen response named the wrong snapshot"
-        );
-
-        let live_state =
-            spa_state_serving(ReleaseChannel::Canary, Some(SHELL_WITH_ENDPOINT_HOLES)).await;
-        let live = serve_spa_index(&live_state, &HeaderMap::new()).await;
-        assert_eq!(
-            live.headers()
-                .get("x-time-freeze")
-                .expect("the live response announced no snapshot decision")
-                .to_str()
-                .unwrap(),
-            "no-snapshot",
-            "a channel with no snapshot claimed one anyway"
-        );
-    }
-
-    #[cfg(feature = "time-freeze")]
-    #[tokio::test]
-    async fn the_frozen_shell_is_never_served_with_the_asset_lifetime() {
-        let state = spa_state_serving(ReleaseChannel::Stable, None).await;
-
-        let response = serve_spa_index(&state, &HeaderMap::new()).await;
-
-        assert_eq!(
-            response
-                .headers()
-                .get("x-time-freeze")
-                .expect("the response announced no snapshot decision")
-                .to_str()
-                .unwrap(),
-            format!(
-                "frozen; sha={}",
-                crate::frozen_snapshots::STABLE_SNAPSHOT.sha
-            ),
-            "this test never reached the frozen branch, so it proves nothing about it"
-        );
-        let cache_control = response
-            .headers()
-            .get(header::CACHE_CONTROL)
-            .expect("the frozen shell was served without a cache policy at all")
-            .to_str()
-            .unwrap();
-        assert_eq!(
-            cache_control, "no-cache",
-            "the frozen document naming the hashed bundle must be revalidated on every load"
-        );
-        assert_ne!(
-            cache_control, LONG_LIVED_ASSET_CACHE_CONTROL,
-            "a frozen shell cached for a year pins every returning visitor to the deployed-over bundle"
         );
     }
 

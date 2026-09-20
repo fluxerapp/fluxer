@@ -3,54 +3,14 @@
 use crate::config::HttpEndpoint;
 use crate::discovery_cache::discovery_endpoint;
 use crate::state::{AppState, MAX_STATIC_TEXT_FILE_BYTES, read_bounded_file};
-use crate::time_freeze::{
-    TimeFreezeConfig, describe_decision, load_time_freeze_config_for_request,
-    time_freeze_debug_header,
-};
 use axum::{
     extract::State,
-    http::{HeaderMap, HeaderValue, StatusCode, header},
+    http::{HeaderValue, StatusCode, header},
     response::{IntoResponse, Response},
 };
 use std::path::Path;
 
-fn serve_frozen_file(
-    config: &TimeFreezeConfig,
-    pick: impl FnOnce(&crate::time_freeze::FrozenSnapshot) -> Option<(&[u8], &str)>,
-) -> (Option<Response>, Option<String>) {
-    let debug = describe_decision(config);
-    let debug_header = time_freeze_debug_header(config);
-
-    if debug.decision != crate::time_freeze::TimeFreezeDecision::Frozen {
-        return (None, debug_header);
-    }
-
-    if let Some(snapshot) = config.snapshot
-        && let Some((bytes, content_type)) = pick(snapshot)
-    {
-        let mut response = bytes.to_vec().into_response();
-        if let Ok(ct) = HeaderValue::from_str(content_type) {
-            response.headers_mut().insert(header::CONTENT_TYPE, ct);
-        }
-        response
-            .headers_mut()
-            .insert(header::CACHE_CONTROL, HeaderValue::from_static("no-cache"));
-        set_time_freeze_header(&mut response, debug_header.as_deref());
-        return (Some(response), None);
-    }
-
-    (None, debug_header)
-}
-
-pub async fn version_json(State(state): State<AppState>, headers: HeaderMap) -> Response {
-    let tf = load_time_freeze_config_for_request(&state.config, &headers);
-    let (frozen, debug_header) = serve_frozen_file(&tf, |snap| {
-        Some((snap.version_json.as_slice(), "application/json"))
-    });
-    if let Some(resp) = frozen {
-        return resp;
-    }
-
+pub async fn version_json(State(state): State<AppState>) -> Response {
     let mut result = serve_static_text_file(&state, "version.json", "application/json").await;
 
     if result.status() == StatusCode::NOT_FOUND && !state.config.build_version.is_empty() {
@@ -61,7 +21,6 @@ pub async fn version_json(State(state): State<AppState>, headers: HeaderMap) -> 
             .insert(header::CACHE_CONTROL, HeaderValue::from_static("no-cache"));
     }
 
-    set_time_freeze_header(&mut result, debug_header.as_deref());
     result
 }
 
@@ -87,41 +46,12 @@ pub async fn browserconfig_xml(State(state): State<AppState>) -> Response {
     .await
 }
 
-pub async fn service_worker(State(state): State<AppState>, headers: HeaderMap) -> Response {
-    let tf = load_time_freeze_config_for_request(&state.config, &headers);
-    let (frozen, debug_header) = serve_frozen_file(&tf, |snap| {
-        Some((
-            snap.sw_js.as_slice(),
-            "application/javascript; charset=utf-8",
-        ))
-    });
-    if let Some(resp) = frozen {
-        return resp;
-    }
-    let mut result =
-        serve_static_text_file(&state, "sw.js", "application/javascript; charset=utf-8").await;
-    set_time_freeze_header(&mut result, debug_header.as_deref());
-    result
+pub async fn service_worker(State(state): State<AppState>) -> Response {
+    serve_static_text_file(&state, "sw.js", "application/javascript; charset=utf-8").await
 }
 
 pub async fn service_worker_map(State(state): State<AppState>) -> Response {
     serve_static_text_file(&state, "sw.js.map", "application/json").await
-}
-
-fn set_time_freeze_header(response: &mut Response, value: Option<&str>) {
-    #[cfg(feature = "time-freeze")]
-    {
-        if let Some(v) = value
-            && let Ok(hv) = HeaderValue::from_str(v)
-        {
-            response
-                .headers_mut()
-                .insert(axum::http::HeaderName::from_static("x-time-freeze"), hv);
-        }
-    }
-
-    #[cfg(not(feature = "time-freeze"))]
-    let _ = (response, value);
 }
 
 async fn runtime_static_cdn_endpoint(state: &AppState) -> Option<HttpEndpoint> {

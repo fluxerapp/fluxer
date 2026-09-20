@@ -1756,16 +1756,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fluxer-content-update-frozen-snapshot"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "base64 0.23.1",
- "sha2 0.11.0",
- "tempfile",
-]
-
-[[package]]
 name = "fluxer-dev"
 version = "0.1.0"
 dependencies = [

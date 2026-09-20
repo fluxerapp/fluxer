@@ -2,7 +2,6 @@
 
 ARG BUILD_VERSION=""
 ARG PUBLIC_ASSET_BASE_URL=""
-ARG FLUXER_APP_PROXY_TIME_FREEZE_ENABLED="true"
 ARG BUNDLE_LOCAL_ASSETS="true"
 ARG APP_ASSETS_REF=app-assets
 ARG APP_ASSETS_PLATFORM=$BUILDPLATFORM
@@ -111,7 +110,6 @@ FROM --platform=${APP_ASSETS_PLATFORM} ${APP_ASSETS_REF} AS app-static
 # ---------- Stage 3: Build the Rust proxy binary ----------
 FROM rust:1-trixie AS rust-builder
 
-ARG FLUXER_APP_PROXY_TIME_FREEZE_ENABLED="true"
 
 WORKDIR /usr/src/app
 
@@ -138,11 +136,7 @@ RUN printf '%s\n' \
 	'strip = "symbols"' \
 	> Cargo.toml
 
-RUN if [ "${FLUXER_APP_PROXY_TIME_FREEZE_ENABLED}" = "false" ]; then \
-		cargo build --release -p fluxer_app_proxy --no-default-features; \
-	else \
-		cargo build --release -p fluxer_app_proxy; \
-	fi \
+RUN cargo build --release -p fluxer_app_proxy \
 	&& cp target/release/fluxer_app_proxy /usr/local/bin/fluxer-app-proxy
 
 # ---------- Stage 4: Runtime ----------

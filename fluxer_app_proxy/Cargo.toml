@@ -23,6 +23,3 @@ tower-http = { version = "0.7.1", features = ["compression-gzip", "trace"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 
-[features]
-default = ["time-freeze"]
-time-freeze = []

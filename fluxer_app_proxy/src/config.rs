@@ -348,7 +348,6 @@ pub struct AppProxyConfig {
     pub discovery_upstream_url: String,
     pub discovery_refresh_interval_ms: u64,
     pub release_channel: ReleaseChannel,
-    pub time_freeze_enabled: bool,
     pub build_version: String,
     pub bootstrap_api_endpoint: String,
     pub bootstrap_api_public_endpoint: Option<String>,
@@ -445,7 +444,6 @@ impl AppProxyConfig {
             &["RELEASE_CHANNEL"],
             "stable",
         ));
-        let time_freeze_enabled = resolve_time_freeze_enabled_from_env();
         let geoip_source = cfg::parse_geoip_source_config(
             &cfg::read_first_env(&["FLUXER_GEOIP_DB_PATH", "MAXMIND_DB_PATH"], ""),
             "app_proxy",
@@ -489,7 +487,6 @@ impl AppProxyConfig {
                 60_000u64,
             ),
             release_channel,
-            time_freeze_enabled,
             build_version: cfg::read_env_preferred(
                 &["BUILD_VERSION", "FLUXER_BUILD_VERSION"],
                 env!("CARGO_PKG_VERSION"),
@@ -522,10 +519,6 @@ fn resolve_discovery_upstream_url_from_env() -> String {
     resolve_discovery_upstream_url(|name| env::var(name).ok())
 }
 
-fn resolve_time_freeze_enabled_from_env() -> bool {
-    resolve_time_freeze_enabled(|name| env::var(name).ok())
-}
-
 fn resolve_bootstrap_api_public_endpoint_from_env() -> Option<String> {
     resolve_bootstrap_api_public_endpoint(|name| env::var(name).ok())
         .unwrap_or_else(|error| panic!("{error}"))
@@ -548,24 +541,6 @@ where
         &base_domain,
         public_port,
     )))
-}
-
-fn resolve_time_freeze_enabled<F>(mut read_var: F) -> bool
-where
-    F: FnMut(&str) -> Option<String>,
-{
-    if let Some(value) = read_var("FLUXER_APP_PROXY_TIME_FREEZE_ENABLED") {
-        return parse_boolish(&value);
-    }
-
-    !read_var("FLUXER_SELF_HOSTED").is_some_and(|value| parse_boolish(&value))
-}
-
-fn parse_boolish(value: &str) -> bool {
-    matches!(
-        value.trim().to_ascii_lowercase().as_str(),
-        "1" | "true" | "yes" | "on"
-    )
 }
 
 fn resolve_discovery_upstream_url<F>(mut read_var: F) -> String
@@ -611,11 +586,6 @@ mod tests {
     fn resolve_discovery_from_pairs(pairs: &[(&str, &str)]) -> String {
         let env: HashMap<&str, &str> = pairs.iter().copied().collect();
         resolve_discovery_upstream_url(|name| env.get(name).map(|value| value.to_string()))
-    }
-
-    fn resolve_time_freeze_from_pairs(pairs: &[(&str, &str)]) -> bool {
-        let env: HashMap<&str, &str> = pairs.iter().copied().collect();
-        resolve_time_freeze_enabled(|name| env.get(name).map(|value| value.to_string()))
     }
 
     fn resolve_bootstrap_endpoint_from_pairs(pairs: &[(&str, &str)]) -> Option<String> {
@@ -816,30 +786,5 @@ mod tests {
             resolve_discovery_from_pairs(&[("PUBLIC_BOOTSTRAP_API_ENDPOINT", "/api")]),
             DEFAULT_DISCOVERY_UPSTREAM_URL
         );
-    }
-
-    #[test]
-    fn time_freeze_enabled_by_default_for_hosted_runtime() {
-        assert!(resolve_time_freeze_from_pairs(&[]));
-    }
-
-    #[test]
-    fn time_freeze_disabled_by_default_for_self_hosted_runtime() {
-        assert!(!resolve_time_freeze_from_pairs(&[(
-            "FLUXER_SELF_HOSTED",
-            "true"
-        )]));
-    }
-
-    #[test]
-    fn explicit_time_freeze_setting_overrides_self_hosted_default() {
-        assert!(resolve_time_freeze_from_pairs(&[
-            ("FLUXER_SELF_HOSTED", "true"),
-            ("FLUXER_APP_PROXY_TIME_FREEZE_ENABLED", "true"),
-        ]));
-        assert!(!resolve_time_freeze_from_pairs(&[
-            ("FLUXER_SELF_HOSTED", "false"),
-            ("FLUXER_APP_PROXY_TIME_FREEZE_ENABLED", "false"),
-        ]));
     }
 }

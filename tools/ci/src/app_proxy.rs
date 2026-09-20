@@ -19,7 +19,6 @@ use std::fs::{self, File};
 use std::path::{Path, PathBuf};
 
 const DEFAULT_PUBLIC_ASSET_BASE_URL: &str = "https://fluxerstatic.com";
-const DEFAULT_APP_PROXY_TIME_FREEZE_ENABLED: &str = "true";
 const DEFAULT_APP_PROXY_BUNDLE_LOCAL_ASSETS: &str = "false";
 const DEFAULT_STATIC_BUCKET: &str = "fluxer-static";
 const DEFAULT_S3_ENDPOINT: &str = "https://ewr1.vultrobjects.com";
@@ -178,11 +177,6 @@ fn bake_command(targets: &[&str]) -> Result<CommandSpec> {
         .env("IMAGE_REPO", image_repo()?)
         .env("BUILD_VERSION", build_version)
         .env("PUBLIC_ASSET_BASE_URL", public_asset_base_url)
-        .env(
-            "FLUXER_APP_PROXY_TIME_FREEZE_ENABLED",
-            env::var("FLUXER_APP_PROXY_TIME_FREEZE_ENABLED")
-                .unwrap_or_else(|_| DEFAULT_APP_PROXY_TIME_FREEZE_ENABLED.to_string()),
-        )
         .env(
             "BUNDLE_LOCAL_ASSETS",
             env::var("BUNDLE_LOCAL_ASSETS")
@@ -636,11 +630,7 @@ mod tests {
             .args(["buildx", "bake", "-f", "fluxer_app_proxy/docker-bake.hcl"])
             .env("IMAGE_REPO", "ghcr.io/example/fluxer-app-proxy")
             .env("BUILD_VERSION", "2026.520.1")
-            .env("PUBLIC_ASSET_BASE_URL", DEFAULT_PUBLIC_ASSET_BASE_URL)
-            .env(
-                "FLUXER_APP_PROXY_TIME_FREEZE_ENABLED",
-                DEFAULT_APP_PROXY_TIME_FREEZE_ENABLED,
-            );
+            .env("PUBLIC_ASSET_BASE_URL", DEFAULT_PUBLIC_ASSET_BASE_URL);
 
         assert_eq!(command.program, OsString::from("docker"));
         assert_eq!(
@@ -655,10 +645,6 @@ mod tests {
         assert!(command.env.contains(&(
             OsString::from("BUILD_VERSION"),
             OsString::from("2026.520.1")
-        )));
-        assert!(command.env.contains(&(
-            OsString::from("FLUXER_APP_PROXY_TIME_FREEZE_ENABLED"),
-            OsString::from(DEFAULT_APP_PROXY_TIME_FREEZE_ENABLED)
         )));
     }
 

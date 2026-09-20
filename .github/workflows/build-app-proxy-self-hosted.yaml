@@ -71,7 +71,6 @@ jobs:
       BUILD_VERSION: ${{ needs.meta.outputs.build_version }}
       PUBLIC_ASSET_BASE_URL: ""
       BUNDLE_LOCAL_ASSETS: "true"
-      FLUXER_APP_PROXY_TIME_FREEZE_ENABLED: "false"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         env:
@@ -155,7 +154,6 @@ jobs:
             BUILD_VERSION=${{ needs.meta.outputs.build_version }}
             SOURCE_SHA=${{ github.sha }}
             SOURCE_DATE=${{ steps.source.outputs.date }}
-            FLUXER_APP_PROXY_TIME_FREEZE_ENABLED=false
             APP_ASSETS_REF=ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy-self-hosted:${{ needs.meta.outputs.build_version }}-assets
             APP_ASSETS_PLATFORM=linux/amd64
           cache-from: type=registry,ref=ghcr.io/${{ env.GHCR_OWNER }}/fluxer-app-proxy-self-hosted:buildcache-${{ matrix.platform }}
