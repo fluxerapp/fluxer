@@ -4,7 +4,7 @@ title: Linux repositories
 description: The apt, dnf, pacman and Flatpak repositories Fluxer publishes, and how a client adds them.
 ---
 
-Fluxer publishes four Linux repositories. The apt, dnf and pacman entrypoints each subscribe to one channel, so the file you install decides whether you track stable or canary. The package name follows from that, `fluxer` for stable and `fluxer-canary` for canary. Flatpak is the exception: one remote serves both, and the application id selects the channel.
+Fluxer publishes four Linux repositories. In every one the package is `fluxer` for stable and `fluxer-canary` for canary. The apt and dnf entrypoints each subscribe to one channel, so the file you install decides which of the two you track. pacman and Flatpak work the other way. One repository serves both channels, and the package name or application id selects it.
 
 ## apt
 
@@ -39,6 +39,8 @@ The package depends on `libXScrnSaver`, which the EL base repositories do not sh
 
 ## pacman
 
+One repository named `fluxer` holds both channels.
+
 ```
 sudo tee -a /etc/pacman.conf >/dev/null <<'REPO'
 
@@ -49,7 +51,9 @@ REPO
 sudo pacman -Syu --noconfirm fluxer
 ```
 
-Write `$repo` and `$arch` literally. Both are pacman variables, not shell ones, which is why the heredoc above is quoted. `$repo` expands to the section name, so the same line works for `fluxer` and `fluxer-canary`.
+Install `fluxer-canary` instead for the canary channel. Both come from this one repository and install alongside each other.
+
+Write `$repo` and `$arch` literally. Both are pacman variables, not shell ones, which is why the heredoc above is quoted. `$repo` expands to the section name, so the `Server` line needs no editing.
 
 A pacman sync database records one version per package name, so only the current release is installable by name. An older build is still served, and `curl` followed by `pacman -U ./<file>` installs it.
 
