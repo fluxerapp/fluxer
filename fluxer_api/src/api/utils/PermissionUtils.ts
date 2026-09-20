@@ -51,3 +51,14 @@ export async function hasPermission(
 ): Promise<boolean> {
 	return await gatewayService.checkPermission(params);
 }
+
+export function overwriteGrantedBits(
+	before: {allow: bigint; deny: bigint} | null | undefined,
+	after: {allow: bigint; deny: bigint} | null | undefined,
+): bigint {
+	const beforeAllow = before?.allow ?? 0n;
+	const beforeDeny = before?.deny ?? 0n;
+	const afterAllow = after?.allow ?? 0n;
+	const afterDeny = after?.deny ?? 0n;
+	return (afterAllow & ~beforeAllow) | (beforeDeny & ~afterDeny);
+}

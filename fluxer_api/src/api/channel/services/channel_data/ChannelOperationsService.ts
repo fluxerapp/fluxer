@@ -24,6 +24,7 @@ import {deleteChannelMessageSearchDocuments} from '@app/api/search/MessageSearch
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {serializeChannelForAudit} from '@app/api/utils/AuditSerializationUtils';
 import {applyProtectedOverwriteBits} from '@app/api/utils/featureUtils';
+import {overwriteGrantedBits} from '@app/api/utils/PermissionUtils';
 import type {VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
 import type {VoiceRegionAvailability} from '@app/api/voice/VoiceModel';
 import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
@@ -208,25 +209,6 @@ export class ChannelOperationsService {
 				userId,
 				channelId: channel.id,
 			});
-			if (!isOwner) {
-				for (const overwrite of data.permission_overwrites ?? []) {
-					const allowPerms = (overwrite.allow ? BigInt(overwrite.allow) : 0n) & ALL_PERMISSIONS;
-					if ((allowPerms & ~channelPermissions) !== 0n) {
-						throw new MissingPermissionsError();
-					}
-				}
-				const nextDeny = new Map<RoleID | UserID, bigint>();
-				for (const overwrite of data.permission_overwrites ?? []) {
-					const targetKey = overwrite.type === 0 ? createRoleID(overwrite.id) : createUserID(overwrite.id);
-					nextDeny.set(targetKey, (overwrite.deny ? BigInt(overwrite.deny) : 0n) & ALL_PERMISSIONS);
-				}
-				for (const [targetId, existing] of previousPermissionOverwrites ?? []) {
-					const removedDeny = existing.deny & ~(nextDeny.get(targetId) ?? 0n);
-					if ((removedDeny & ~channelPermissions) !== 0n) {
-						throw new MissingPermissionsError();
-					}
-				}
-			}
 			permissionOverwrites = new Map();
 			for (const overwrite of data.permission_overwrites ?? []) {
 				const targetId = overwrite.type === 0 ? createRoleID(overwrite.id) : createUserID(overwrite.id);
@@ -250,6 +232,18 @@ export class ChannelOperationsService {
 						deny_: protectedBits.deny,
 					}),
 				);
+			}
+			if (!isOwner) {
+				const targetIds = new Set([...(previousPermissionOverwrites?.keys() ?? []), ...permissionOverwrites.keys()]);
+				for (const targetId of targetIds) {
+					const grantedBits = overwriteGrantedBits(
+						previousPermissionOverwrites?.get(targetId),
+						permissionOverwrites.get(targetId),
+					);
+					if ((grantedBits & ~channelPermissions) !== 0n) {
+						throw new MissingPermissionsError();
+					}
+				}
 			}
 		}
 		const requestedParentId =
@@ -646,9 +640,8 @@ export class ChannelOperationsService {
 		const sanitizedAllow = protectedBits.allow;
 		const sanitizedDeny = protectedBits.deny;
 		const hasAdministrator = (userPermissions & Permissions.ADMINISTRATOR) !== 0n;
-		if (!hasAdministrator && (sanitizedAllow & ~userPermissions) !== 0n) throw new MissingPermissionsError();
-		const removedDeny = (existing?.deny ?? 0n) & ~sanitizedDeny;
-		if (!hasAdministrator && (removedDeny & ~userPermissions) !== 0n) throw new MissingPermissionsError();
+		const grantedBits = overwriteGrantedBits(existing, {allow: sanitizedAllow, deny: sanitizedDeny});
+		if (!hasAdministrator && (grantedBits & ~userPermissions) !== 0n) throw new MissingPermissionsError();
 		const previousPermissionOverwrites = channel.permissionOverwrites;
 		const nextOverwrite = new ChannelPermissionOverwrite({
 			type: params.overwrite.type,
