@@ -17,6 +17,7 @@ export interface MfaChallenge {
 	sms?: boolean;
 	totp: boolean;
 	webauthn: boolean;
+	backupCodes: boolean;
 }
 
 export interface IpAuthorizationChallenge {
@@ -78,6 +79,7 @@ export async function loginWithPassword({
 				sms: (response as {sms?: boolean}).sms ?? false,
 				totp: response.totp,
 				webauthn: response.webauthn,
+				backupCodes: response.backup_codes ?? false,
 			},
 		};
 	}
@@ -267,6 +269,7 @@ export async function resetPassword(token: string, password: string): Promise<Pa
 			sms: (response as {sms?: boolean}).sms ?? false,
 			totp: response.totp,
 			webauthn: response.webauthn,
+			backupCodes: response.backup_codes ?? false,
 		},
 	};
 }

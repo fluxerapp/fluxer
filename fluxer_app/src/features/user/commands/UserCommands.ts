@@ -10,9 +10,11 @@ import Messages from '@app/features/messaging/state/MessagingMessages';
 import SessionManager from '@app/features/platform/state/AuthSession';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import Users from '@app/features/user/state/Users';
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {HarvestStatusResponse} from '@fluxer/schema/src/domains/user/UserHarvestSchemas';
 import type {
+	BackupCode,
 	PasswordChangeCompleteResponse,
 	PhoneGateEscapePreviewResponse,
 	UserPrivate,
@@ -124,6 +126,11 @@ type UserUpdateResponse = UserPrivate & {
 
 interface HarvestRequestResponse {
 	harvest_id: string;
+}
+
+interface WebAuthnTwoFactorResponse {
+	user: UserPrivate;
+	backup_codes: Array<BackupCode> | null;
 }
 
 export type PreloadedDirectMessages = Record<string, WireMessage>;
@@ -581,6 +588,23 @@ export async function registerWebAuthnCredential(
 		Sudo.clearToken();
 	} catch (error) {
 		logger.error('Failed to register WebAuthn credential', error);
+		throw error;
+	}
+}
+
+export async function setWebAuthnTwoFactor(enabled: boolean): Promise<Array<BackupCode> | null> {
+	try {
+		logger.debug('Updating the passkey two-factor preference');
+		const response = await http.put<WebAuthnTwoFactorResponse>(Endpoints.USER_MFA_WEBAUTHN_TWO_FACTOR, {
+			body: {enabled},
+		});
+		const {user, backup_codes: backupCodes} = response.body;
+		Users.handleUserUpdate(user);
+		logger.info('Passkey two-factor preference updated');
+		Sudo.clearToken();
+		return backupCodes ?? null;
+	} catch (error) {
+		logger.error('Failed to update the passkey two-factor preference', error);
 		throw error;
 	}
 }

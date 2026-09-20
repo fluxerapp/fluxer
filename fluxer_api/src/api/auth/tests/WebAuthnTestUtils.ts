@@ -9,6 +9,8 @@ import {
 	generateKeyPairSync,
 	randomBytes,
 } from 'node:crypto';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {decode as base32Decode, encode as base32Encode} from 'hi-base32';
 
 export interface WebAuthnDevice {
@@ -52,6 +54,22 @@ export interface WebAuthnAuthenticationOptions {
 export interface WebAuthnCredentialMetadata {
 	id: string;
 	name: string;
+}
+
+export type SudoVerificationBody = Record<string, unknown>;
+
+export type SudoVerificationBodyFactory = () => SudoVerificationBody;
+
+export interface WebAuthnTwoFactorResult {
+	user: {
+		id: string;
+		mfa_enabled: boolean;
+		authenticator_types: Array<number>;
+	};
+	backup_codes: Array<{
+		code: string;
+		consumed: boolean;
+	}> | null;
 }
 
 interface AuthenticatorAttestationResponse {
@@ -414,4 +432,81 @@ export function createAuthenticationResponseWithoutUV(
 			userHandle: encodeBase64URL(device.userHandle),
 		},
 	};
+}
+
+export async function registerWebAuthnCredential(
+	harness: ApiTestHarness,
+	token: string,
+	device: WebAuthnDevice,
+	createSudoBody: SudoVerificationBodyFactory,
+	name = 'Test Passkey',
+): Promise<void> {
+	const options = await createBuilder<WebAuthnRegistrationOptions>(harness, token)
+		.post('/users/@me/mfa/webauthn/credentials/registration-options')
+		.body(createSudoBody())
+		.execute();
+	if (options.rp.id) {
+		device.rpId = options.rp.id;
+	}
+	await createBuilder(harness, token)
+		.post('/users/@me/mfa/webauthn/credentials')
+		.body({
+			response: createRegistrationResponse(device, options, name),
+			challenge: options.challenge,
+			name,
+			...createSudoBody(),
+		})
+		.expect(204)
+		.execute();
+}
+
+export async function createSudoWebAuthnBody(
+	harness: ApiTestHarness,
+	token: string,
+	device: WebAuthnDevice,
+): Promise<SudoVerificationBody> {
+	const options = await createBuilder<WebAuthnAuthenticationOptions>(harness, token)
+		.post('/users/@me/sudo/webauthn/authentication-options')
+		.body(null)
+		.execute();
+	if (options.rpId) {
+		device.rpId = options.rpId;
+	}
+	return {
+		mfa_method: 'webauthn',
+		webauthn_response: createAuthenticationResponse(device, options),
+		webauthn_challenge: options.challenge,
+	};
+}
+
+export async function setWebAuthnTwoFactor(
+	harness: ApiTestHarness,
+	token: string,
+	enabled: boolean,
+	sudo: SudoVerificationBody,
+): Promise<WebAuthnTwoFactorResult> {
+	return createBuilder<WebAuthnTwoFactorResult>(harness, token)
+		.put('/users/@me/mfa/webauthn/two-factor')
+		.body({enabled, ...sudo})
+		.execute();
+}
+
+export async function loginWithDiscoverablePasskey(harness: ApiTestHarness, device: WebAuthnDevice): Promise<string> {
+	const options = await createBuilderWithoutAuth<WebAuthnAuthenticationOptions>(harness)
+		.post('/auth/webauthn/authentication-options')
+		.body(null)
+		.execute();
+	if (options.rpId) {
+		device.rpId = options.rpId;
+	}
+	const login = await createBuilderWithoutAuth<{
+		token: string;
+	}>(harness)
+		.post('/auth/webauthn/authenticate')
+		.body({
+			response: createAuthenticationResponse(device, options),
+			challenge: options.challenge,
+		})
+		.execute();
+	return login.token;
 }

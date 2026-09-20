@@ -2,12 +2,14 @@
 
 import crypto from 'node:crypto';
 import type {ApiContext} from '@app/api/ApiContext';
+import {createMfaTicketResponse, type LoginMfaResult} from '@app/api/auth/AuthLogin';
 import * as AuthSession from '@app/api/auth/AuthSession';
 import * as AuthUtility from '@app/api/auth/AuthUtility';
-import {createMfaTicket, createPasswordResetToken} from '@app/api/BrandedTypes';
+import {resolveWebAuthnSecondFactor} from '@app/api/auth/services/WebAuthnSecondFactor';
+import {createPasswordResetToken} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
+import type {UserRow} from '@app/api/database/types/UserTypes';
 import {Logger} from '@app/api/Logger';
-import type {User} from '@app/api/models/User';
 import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
 import * as FetchUtils from '@app/api/utils/FetchUtils';
 import {hashPassword as hashPasswordUtil, verifyPassword as verifyPasswordUtil} from '@app/api/utils/PasswordUtils';
@@ -19,7 +21,7 @@ import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidat
 import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
 import type {ForgotPasswordRequest, ResetPasswordRequest} from '@fluxer/schema/src/domains/auth/AuthSchemas';
-import {ms, seconds} from 'itty-time';
+import {ms} from 'itty-time';
 
 const PWNED_PASSWORDS_TIMEOUT_MS = ms('5 seconds');
 const PWNED_PASSWORD_CACHE_MAX_PREFIXES = 128;
@@ -91,13 +93,7 @@ type ResetPasswordResult =
 			user_id: string;
 			token: string;
 	  }
-	| {
-			mfa: true;
-			ticket: string;
-			allowed_methods: Array<string>;
-			totp: boolean;
-			webauthn: boolean;
-	  };
+	| LoginMfaResult;
 
 const pwnedPasswordCache = new PwnedPasswordCache(PWNED_PASSWORD_CACHE_MAX_PREFIXES, ms('1 hour'));
 
@@ -267,54 +263,30 @@ export async function resetPassword(
 	if (await isPasswordPwned(ctx, data.password)) {
 		throw InputValidationError.fromCode('password', ValidationErrorCodes.PASSWORD_IS_TOO_COMMON);
 	}
+	const webauthnIsSecondFactor = await resolveWebAuthnSecondFactor(ctx, user);
+	const hasMfa = user.authenticatorTypes.has(UserAuthenticatorTypes.TOTP) || webauthnIsSecondFactor;
 	const newPasswordHash = await hashPassword(ctx, data.password);
-	const updatedUser = await users.patchUpsert(
-		user.id,
-		{
-			password_hash: newPasswordHash,
-			password_last_changed_at: new Date(),
-		},
-		user.toRow(),
-	);
+	const updates: Partial<UserRow> = {
+		password_hash: newPasswordHash,
+		password_last_changed_at: new Date(),
+	};
+	if (webauthnIsSecondFactor && !user.authenticatorTypes.has(UserAuthenticatorTypes.WEBAUTHN)) {
+		const authenticatorTypes = new Set<number>(user.authenticatorTypes);
+		authenticatorTypes.add(UserAuthenticatorTypes.WEBAUTHN);
+		updates.authenticator_types = authenticatorTypes;
+	}
+	const updatedUser = await users.patchUpsert(user.id, updates, user.toRow());
+	if (updates.authenticator_types) {
+		await ctx.services.botMfaMirror.syncAuthenticatorTypesForOwner(updatedUser);
+	}
 	await AuthSession.terminateAllUserSessions(ctx, user.id);
 	await users.deletePasswordResetToken(data.token);
-	const hasMfa =
-		updatedUser.authenticatorTypes.has(UserAuthenticatorTypes.TOTP) ||
-		updatedUser.authenticatorTypes.has(UserAuthenticatorTypes.WEBAUTHN);
 	if (hasMfa) {
-		return await createMfaTicketResponse(ctx, updatedUser);
+		return await createMfaTicketResponse(ctx, updatedUser, webauthnIsSecondFactor);
 	}
 	const [token] = await AuthSession.createAuthSession(ctx, {
 		user: updatedUser,
 		origin: AuthSession.resolveSessionOrigin(ctx, request),
 	});
 	return {user_id: updatedUser.id.toString(), token};
-}
-
-async function createMfaTicketResponse(
-	ctx: ApiContext,
-	user: User,
-): Promise<{
-	mfa: true;
-	ticket: string;
-	allowed_methods: Array<string>;
-	totp: boolean;
-	webauthn: boolean;
-}> {
-	const {users, cache} = ctx.services;
-	const ticket = createMfaTicket(await AuthUtility.generateSecureToken(ctx));
-	await cache.set(`mfa-ticket:${ticket}`, user.id.toString(), seconds('5 minutes'));
-	const credentials = await users.listWebAuthnCredentials(user.id);
-	const hasWebauthn = credentials.length > 0;
-	const hasTotp = user.authenticatorTypes.has(UserAuthenticatorTypes.TOTP);
-	const allowedMethods: Array<string> = [];
-	if (hasTotp) allowedMethods.push('totp');
-	if (hasWebauthn) allowedMethods.push('webauthn');
-	return {
-		mfa: true,
-		ticket: ticket,
-		allowed_methods: allowedMethods,
-		totp: hasTotp,
-		webauthn: hasWebauthn,
-	};
 }

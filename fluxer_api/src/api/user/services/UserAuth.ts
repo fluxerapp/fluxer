@@ -3,7 +3,7 @@
 import type {ApiContext} from '@app/api/ApiContext';
 import * as AuthMfa from '@app/api/auth/AuthMfa';
 import * as AuthUtility from '@app/api/auth/AuthUtility';
-import {deriveSudoMethods, userHasMfa} from '@app/api/auth/services/SudoMethods';
+import {deriveSudoMethods, userHasMfa, userHasSudoCapability} from '@app/api/auth/services/SudoMethods';
 import type {SudoVerificationResult} from '@app/api/auth/services/SudoVerificationService';
 import type {MfaBackupCode} from '@app/api/models/MfaBackupCode';
 import type {User} from '@app/api/models/User';
@@ -36,12 +36,23 @@ interface GetMfaBackupCodesParams {
 	sudoContext: SudoVerificationResult;
 }
 
-function assertSudoVerifiedForMfa(user: User, sudoContext: SudoVerificationResult): void {
+async function assertSudoVerifiedForMfa(
+	ctx: ApiContext,
+	user: User,
+	sudoContext: SudoVerificationResult,
+): Promise<void> {
 	const identityVerifiedViaSudo = sudoContext.method === 'mfa' || sudoContext.method === 'sudo_token';
 	const identityVerifiedViaPassword = sudoContext.method === 'password';
-	if (!identityVerifiedViaSudo && !identityVerifiedViaPassword) {
-		throw new SudoModeRequiredError(userHasMfa(user), deriveSudoMethods(user));
+	if (identityVerifiedViaSudo || identityVerifiedViaPassword) {
+		return;
 	}
+	const credentials = await ctx.services.users.listWebAuthnCredentials(user.id);
+	const hasPasskeyCredentials = credentials.length > 0;
+	const hasBackupCodes = await AuthMfa.hasUnconsumedBackupCodes(ctx, user.id);
+	throw new SudoModeRequiredError(
+		userHasSudoCapability(user, hasPasskeyCredentials),
+		deriveSudoMethods(user, hasPasskeyCredentials, hasBackupCodes),
+	);
 }
 
 export async function enableMfaTotp(
@@ -49,7 +60,7 @@ export async function enableMfaTotp(
 	{user, secret, code, sudoContext}: EnableMfaTotpParams,
 ): Promise<Array<MfaBackupCode>> {
 	const {users, botMfaMirror} = ctx.services;
-	assertSudoVerifiedForMfa(user, sudoContext);
+	await assertSudoVerifiedForMfa(ctx, user, sudoContext);
 	if (user.totpSecret) throw new MfaNotDisabledError();
 	const userId = user.id;
 	if (!(await AuthMfa.verifyMfaCode(ctx, {userId: user.id, mfaSecret: secret, code}))) {
@@ -75,7 +86,7 @@ export async function enableMfaTotp(
 export async function disableMfaTotp(ctx: ApiContext, {user, code, sudoContext}: DisableMfaTotpParams): Promise<void> {
 	const {users, botMfaMirror} = ctx.services;
 	if (!user.totpSecret) throw new MfaNotEnabledError();
-	assertSudoVerifiedForMfa(user, sudoContext);
+	await assertSudoVerifiedForMfa(ctx, user, sudoContext);
 	if (
 		sudoContext.method !== 'mfa' &&
 		!(await AuthMfa.verifyMfaCode(ctx, {
@@ -102,7 +113,9 @@ export async function disableMfaTotp(ctx: ApiContext, {user, code, sudoContext}:
 		},
 		user.toRow(),
 	);
-	await users.clearMfaBackupCodes(userId);
+	if (!userHasMfa(updatedUser)) {
+		await users.clearMfaBackupCodes(userId);
+	}
 	await dispatchUserUpdate(ctx, updatedUser);
 	await botMfaMirror.syncAuthenticatorTypesForOwner(updatedUser);
 }
@@ -112,7 +125,7 @@ export async function getMfaBackupCodes(
 	{user, regenerate, sudoContext}: GetMfaBackupCodesParams,
 ): Promise<Array<MfaBackupCode>> {
 	const {users} = ctx.services;
-	assertSudoVerifiedForMfa(user, sudoContext);
+	await assertSudoVerifiedForMfa(ctx, user, sudoContext);
 	if (regenerate) {
 		return regenerateMfaBackupCodes(ctx, user);
 	}

@@ -5,6 +5,7 @@ import * as AuthMfa from '@app/api/auth/AuthMfa';
 import * as AuthPassword from '@app/api/auth/AuthPassword';
 import * as AuthSession from '@app/api/auth/AuthSession';
 import * as AuthUtility from '@app/api/auth/AuthUtility';
+import {resolveWebAuthnSecondFactor} from '@app/api/auth/services/WebAuthnSecondFactor';
 import {
 	createInviteCode,
 	createIpAuthorizationTicket,
@@ -30,6 +31,7 @@ import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {IpAuthorizationRequiredError} from '@fluxer/errors/src/domains/auth/IpAuthorizationRequiredError';
 import {IpAuthorizationResendCooldownError} from '@fluxer/errors/src/domains/auth/IpAuthorizationResendCooldownError';
 import {IpAuthorizationResendLimitExceededError} from '@fluxer/errors/src/domains/auth/IpAuthorizationResendLimitExceededError';
+import {MfaNotEnabledError} from '@fluxer/errors/src/domains/auth/MfaNotEnabledError';
 import {RegistrationPendingApprovalError} from '@fluxer/errors/src/domains/auth/RegistrationPendingApprovalError';
 import {RegistrationRejectedError} from '@fluxer/errors/src/domains/auth/RegistrationRejectedError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -72,12 +74,13 @@ interface LoginTokenResult {
 	token: string;
 }
 
-interface LoginMfaResult {
+export interface LoginMfaResult {
 	mfa: true;
 	ticket: string;
 	allowed_methods: Array<string>;
 	totp: boolean;
 	webauthn: boolean;
+	backup_codes: boolean;
 }
 
 type LoginResult = LoginTokenResult | LoginMfaResult;
@@ -323,7 +326,8 @@ export async function login(
 		}
 	}
 	if (hasMfa) {
-		return await createMfaTicketResponse(ctx, currentUser);
+		const webauthnIsSecondFactor = await resolveWebAuthnSecondFactor(ctx, currentUser);
+		return await createMfaTicketResponse(ctx, currentUser, webauthnIsSecondFactor);
 	}
 	if (data.invite_code && inviteService) {
 		try {
@@ -387,13 +391,14 @@ export async function loginMfaTotp(
 		throw new UnknownUserError();
 	}
 	AuthUtility.assertNonBotUser(ctx, user);
-	if (!user.totpSecret || !user.authenticatorTypes?.has(UserAuthenticatorTypes.TOTP)) {
+	const hasTotp = Boolean(user.totpSecret) && user.authenticatorTypes.has(UserAuthenticatorTypes.TOTP);
+	if (!hasTotp && !(await AuthMfa.hasUnconsumedBackupCodes(ctx, user.id))) {
 		throw InputValidationError.fromCode('code', ValidationErrorCodes.TOTP_NOT_ENABLED);
 	}
 	await consumeMfaAttempt(ctx, {userId: user.id.toString(), ticket, field: 'code'});
 	const isValid = await AuthMfa.verifyMfaCode(ctx, {
 		userId: user.id,
-		mfaSecret: user.totpSecret,
+		mfaSecret: hasTotp ? user.totpSecret : null,
 		code,
 		allowBackup: true,
 	});
@@ -424,6 +429,9 @@ export async function loginMfaWebAuthn(
 		throw new UnknownUserError();
 	}
 	AuthUtility.assertNonBotUser(ctx, user);
+	if (!(await resolveWebAuthnSecondFactor(ctx, user))) {
+		throw new MfaNotEnabledError();
+	}
 	await consumeMfaAttempt(ctx, {userId: user.id.toString(), ticket, field: 'ticket'});
 	await AuthMfa.verifyWebAuthnAuthentication(ctx, user.id, response, challenge, 'mfa', ticket);
 	await cache.delete(`mfa-ticket:${ticket}`);
@@ -436,21 +444,26 @@ export async function loginMfaWebAuthn(
 	return {user_id: user.id.toString(), token};
 }
 
-async function createMfaTicketResponse(ctx: ApiContext, user: User): Promise<LoginMfaResult> {
-	const {users, cache} = ctx.services;
+export async function createMfaTicketResponse(
+	ctx: ApiContext,
+	user: User,
+	webauthnIsSecondFactor: boolean,
+): Promise<LoginMfaResult> {
+	const {cache} = ctx.services;
 	const ticket = createMfaTicket(await AuthUtility.generateSecureToken(ctx));
 	await cache.set(`mfa-ticket:${ticket}`, user.id.toString(), seconds('5 minutes'));
-	const credentials = await users.listWebAuthnCredentials(user.id);
-	const hasWebauthn = credentials.length > 0;
 	const hasTotp = user.authenticatorTypes.has(UserAuthenticatorTypes.TOTP);
+	const hasBackupCodes = await AuthMfa.hasUnconsumedBackupCodes(ctx, user.id);
 	const allowedMethods: Array<string> = [];
 	if (hasTotp) allowedMethods.push('totp');
-	if (hasWebauthn) allowedMethods.push('webauthn');
+	if (webauthnIsSecondFactor) allowedMethods.push('webauthn');
+	if (hasBackupCodes) allowedMethods.push('backup_codes');
 	return {
 		mfa: true,
 		ticket,
 		allowed_methods: allowedMethods,
 		totp: hasTotp,
-		webauthn: hasWebauthn,
+		webauthn: webauthnIsSecondFactor,
+		backup_codes: hasBackupCodes,
 	};
 }

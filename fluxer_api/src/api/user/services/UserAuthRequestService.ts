@@ -9,6 +9,7 @@ import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuild
 import type {User} from '@app/api/models/User';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import * as UserAuth from '@app/api/user/services/UserAuth';
+import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {GuildVerificationLevel} from '@fluxer/constants/src/GuildConstants';
 import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
 import {PhoneAddNotEligibleError} from '@fluxer/errors/src/domains/auth/PhoneAddNotEligibleError';
@@ -26,6 +27,8 @@ import type {
 	WebAuthnCredentialListResponse,
 	WebAuthnCredentialUpdateRequest,
 	WebAuthnRegisterRequest,
+	WebAuthnTwoFactorRequest,
+	WebAuthnTwoFactorResponse,
 } from '@fluxer/schema/src/domains/auth/AuthSchemas';
 
 interface UserAuthWithSudoRequest<T> {
@@ -192,6 +195,22 @@ export class UserAuthRequestService {
 
 	async deleteWebAuthnCredential({user, credentialId}: UserAuthWebAuthnDeleteRequest): Promise<void> {
 		await AuthMfa.deleteWebAuthnCredential(this.apiContext, user.id, credentialId);
+	}
+
+	async setWebAuthnTwoFactor({
+		user,
+		data,
+	}: UserAuthRequest<WebAuthnTwoFactorRequest>): Promise<WebAuthnTwoFactorResponse> {
+		if (data.enabled) {
+			requireEmailVerified(user, 'mfa');
+		}
+		const result = await AuthMfa.setWebAuthnTwoFactor(this.apiContext, user.id, data.enabled);
+		return {
+			user: mapUserToPrivateResponse(result.user),
+			backup_codes: result.backupCodes
+				? result.backupCodes.map((backupCode) => ({code: backupCode.code, consumed: backupCode.consumed}))
+				: null,
+		};
 	}
 
 	async listSudoMfaMethods(user: User): Promise<SudoMfaMethodsResponse> {

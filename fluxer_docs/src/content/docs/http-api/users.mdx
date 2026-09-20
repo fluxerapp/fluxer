@@ -165,7 +165,7 @@ The private representation of the current account, returned by [Get current user
 
 <sup>8</sup> The banner hash is not returned at all while the account lacks the animated banner entitlement, which every profile banner requires
 
-<sup>9</sup> `mfa_enabled` is true exactly when at least one authenticator is configured. An account with no authenticator omits `authenticator_types`
+<sup>9</sup> `mfa_enabled` is true exactly when at least one authenticator is configured. An account with no authenticator reports `authenticator_types` as an empty array, and only a bearer read drops the field
 
 <sup>10</sup> The value is forced to `0` and `premium_since` is forced to `null` while premium entitlements are not active
 
@@ -221,6 +221,8 @@ A scheduled deletion of every message the account has sent. The field is this ob
 | 2 | WEBAUTHN | WebAuthn authenticator |
 
 The value `1` is unassigned. Any stored authenticator value outside this registry is excluded from `authenticator_types`.
+
+`WEBAUTHN` is present only while the account chose passkeys as a second factor through [Set WebAuthn two-factor authentication](/http-api/users/mfa/#set-webauthn-two-factor-authentication). Registering a credential does not add it, so an account can hold passkeys without the type.
 
 ## Premium types
 

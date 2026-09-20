@@ -6,7 +6,7 @@ import {
 	WebAuthnAuthenticationResponse,
 	WebAuthnRegistrationResponse,
 } from '@fluxer/schema/src/domains/auth/WebAuthnSchemas';
-import {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
+import {UserPartialResponse, UserPrivateResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {
 	createNamedStringLiteralUnion,
 	createStringType,
@@ -170,6 +170,7 @@ const AuthMfaRequiredResponse = z.object({
 	allowed_methods: z.array(z.string()).max(10).describe('List of allowed MFA methods'),
 	totp: z.boolean().describe('Whether TOTP authenticator MFA is available'),
 	webauthn: z.boolean().describe('Whether WebAuthn security key MFA is available'),
+	backup_codes: z.boolean().describe('Whether the account has at least one unconsumed backup code'),
 });
 
 export const AuthLoginResponse = z.union([AuthTokenWithUserIdResponse, AuthMfaRequiredResponse]);
@@ -500,10 +501,29 @@ export const WebAuthnCredentialUpdateRequest = z
 
 export type WebAuthnCredentialUpdateRequest = z.infer<typeof WebAuthnCredentialUpdateRequest>;
 
+export const WebAuthnTwoFactorRequest = z
+	.object({
+		enabled: z.boolean().describe('Whether registered passkeys count as a second factor when logging in'),
+	})
+	.extend(SudoVerificationSchema.shape);
+
+export type WebAuthnTwoFactorRequest = z.infer<typeof WebAuthnTwoFactorRequest>;
+
+export const WebAuthnTwoFactorResponse = z.object({
+	user: UserPrivateResponse.describe('The updated account'),
+	backup_codes: z
+		.array(MfaBackupCodeResponse)
+		.nullable()
+		.describe('Backup codes minted by this call, or null when none were minted'),
+});
+
+export type WebAuthnTwoFactorResponse = z.infer<typeof WebAuthnTwoFactorResponse>;
+
 export const SudoMfaMethodsResponse = z.object({
 	totp: z.boolean().describe('Whether TOTP is enabled'),
-	webauthn: z.boolean().describe('Whether WebAuthn is enabled'),
-	has_mfa: z.boolean().describe('Whether any MFA method is enabled'),
+	webauthn: z.boolean().describe('Whether the account has at least one registered WebAuthn credential'),
+	backup_codes: z.boolean().describe('Whether the account has at least one unconsumed backup code'),
+	has_mfa: z.boolean().describe('Whether the account can satisfy a sudo mode challenge'),
 });
 
 export type SudoMfaMethodsResponse = z.infer<typeof SudoMfaMethodsResponse>;

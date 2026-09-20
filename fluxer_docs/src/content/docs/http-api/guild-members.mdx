@@ -410,7 +410,7 @@ Transfers guild ownership to another current member and returns the updated [gui
 - The target must be a current member.
 - A bot target returns 400 `CANNOT_TRANSFER_OWNERSHIP_TO_BOT`.
 
-The operation requires the [sudo verification fields](/http-api/guilds/#sudo-verification-fields). A bot credential needs no proof. An account without a usable proof receives 403 `SUDO_MODE_REQUIRED`, whose payload names its available second factors.
+The operation requires the [sudo verification fields](/http-api/guilds/#sudo-verification-fields). A bot credential needs no proof. An account without a usable proof receives 403 `SUDO_MODE_REQUIRED`, whose payload names its available proofs in `methods`, reporting `totp`, `webauthn`, and `backup_codes`.
 
 ### Path parameters
 
@@ -451,7 +451,7 @@ The operation changes only the guild's `owner_id`. The outgoing owner keeps ever
 
 It records a [`GUILD_UPDATE`](/http-api/guild-audit-logs/#audit-actions) audit entry naming the previous and new owner in its change list, emits [Guild Audit Log Entry Create](/gateway/events/#guild-audit-log-entry-create), and emits [Guild Update](/gateway/events/#guild-update) to every session that can see the guild. A request naming the current owner changes nothing and records no audit entry. The audit log response has no `options` member for this entry.
 
-An account with an enrolled second factor also receives a reissued sudo proof. A bot credential and an account whose only proof was a password receive `X-Fluxer-Sudo-Mode-JWT` only when the request itself has one.
+An account holding a TOTP secret or a registered WebAuthn credential also receives a reissued sudo proof. A bot credential and an account whose only proof was a password receive `X-Fluxer-Sudo-Mode-JWT` only when the request itself has one.
 
 ### Rate limit
 

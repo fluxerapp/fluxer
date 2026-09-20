@@ -3,6 +3,7 @@
 import {randomUUID, timingSafeEqual} from 'node:crypto';
 import type {ApiContext} from '@app/api/ApiContext';
 import {requireEmailVerified} from '@app/api/auth/EmailVerificationUtils';
+import {userHasMfa} from '@app/api/auth/services/SudoMethods';
 import type {MfaBackupCode} from '@app/api/models/MfaBackupCode';
 import type {User} from '@app/api/models/User';
 import {regenerateMfaBackupCodes} from '@app/api/user/services/UserAuth';
@@ -11,7 +12,6 @@ import {
 	checkChangeRateLimit,
 	generateChangeVerificationCode,
 } from '@app/api/user/services/UserChangeChallengeUtils';
-import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {MfaNotEnabledError} from '@fluxer/errors/src/domains/auth/MfaNotEnabledError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
@@ -65,7 +65,7 @@ export class MfaBackupCodesChallengeService {
 		if (!user.email) {
 			throw InputValidationError.fromCode('email', ValidationErrorCodes.USER_DOES_NOT_HAVE_AN_EMAIL_ADDRESS);
 		}
-		if (!user.totpSecret || !user.authenticatorTypes.has(UserAuthenticatorTypes.TOTP)) {
+		if (!userHasMfa(user)) {
 			throw new MfaNotEnabledError();
 		}
 		await checkChangeRateLimit(rateLimit, {
@@ -148,7 +148,7 @@ export class MfaBackupCodesChallengeService {
 			maxAttempts: 5,
 			windowMs: ms('15 minutes'),
 		});
-		if (!user.totpSecret || !user.authenticatorTypes.has(UserAuthenticatorTypes.TOTP)) {
+		if (!userHasMfa(user)) {
 			throw new MfaNotEnabledError();
 		}
 		if (!state.verification_proof) {

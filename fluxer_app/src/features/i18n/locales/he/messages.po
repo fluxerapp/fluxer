@@ -2263,6 +2263,8 @@ msgid "25 uses"
 msgstr "25 שימושים"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:150
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:40
 msgid "2FA"
 msgstr "2FA"
@@ -2343,7 +2345,7 @@ msgstr "6 חודשים"
 
 #. Placeholder for the MFA login one-time password field.
 #. Short label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:53
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:58
 #: src/features/auth/flow/MfaScreen.tsx:22
 msgid "6-digit code"
 msgstr "קוד בן 6 ספרות"
@@ -2622,7 +2624,7 @@ msgid "Account & premium overrides"
 msgstr "עקיפות חשבון ופרימיום"
 
 #. Security settings section for third-party app access and signed-in devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:49
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:88
 msgid "Account access"
 msgstr "גישה לחשבון"
 
@@ -2949,7 +2951,7 @@ msgstr "הוסף חשבון כדי להמשיך."
 msgid "Add an email and password to your account first."
 msgstr "הוסף/הוסיפי קודם אימייל וסיסמה לחשבון שלך."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:192
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:296
 msgid "Add an extra layer of security to your account"
 msgstr "הוסף שכבת אבטחה נוספת לחשבונך"
 
@@ -3065,7 +3067,7 @@ msgid "Add override"
 msgstr "הוספת עקיפה"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:335
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:439
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:130
 msgid "Add passkey"
 msgstr "הוספת מפתח גישה"
@@ -3269,11 +3271,11 @@ msgstr "נוסף למועדפים"
 msgid "Added to saved media"
 msgstr "נוסף למדיה השמורה"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:377
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:495
 msgid "Added: {createdDate}"
 msgstr "נוסף: {createdDate}"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:373
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:491
 msgid "Added: {createdDate} • last used: {lastUsedDate}"
 msgstr "נוסף: {createdDate} • שימוש אחרון: {lastUsedDate}"
 
@@ -4453,7 +4455,7 @@ msgid "Are you sure you want to delete the category \"{categoryName}\"? This can
 msgstr "האם למחוק את הקטגוריה \"{categoryName}\"? לא ניתן לבטל פעולה זו."
 
 #. placeholder {0}: passkey.name
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:141
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:227
 msgid "Are you sure you want to delete the passkey <0>{0}</0>?"
 msgstr "האם למחוק את מפתח הגישה <0>{0}</0>?"
 
@@ -4465,7 +4467,7 @@ msgstr "האם למחוק את הקובץ המצורף הזה? לא ניתן ל�
 msgid "Are you sure you want to delete this community? This action cannot be undone. All channels, messages, and settings will be permanently deleted."
 msgstr "האם למחוק את הקהילה הזו? לא ניתן לבטל פעולה זו. כל הערוצים, ההודעות וההגדרות יימחקו לצמיתות."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:150
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:235
 msgid "Are you sure you want to delete this passkey?"
 msgstr "האם למחוק את מפתח הגישה הזה?"
 
@@ -4543,6 +4545,12 @@ msgstr "סמיילי ASCII"
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:49
 msgid "Ask before starting calls"
 msgstr "בקש אישור לפני תחילת שיחות"
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:449
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:154
+msgid "Ask for a passkey after your password when you sign in"
+msgstr "בקשת מפתח גישה לאחר הסיסמה שלך בעת הכניסה"
 
 #. Short label in the theme studio. Keep it concise.
 #: src/features/theme_studio/ThemeStudio.tsx:56
@@ -4812,13 +4820,13 @@ msgstr "אימות"
 msgid "Authenticator"
 msgstr "אימות דו-שלבי"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:204
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:308
 msgid "Authenticator app"
 msgstr "אפליקציית אימות"
 
 #. Label for the MFA login one-time password field from an authenticator app or backup code.
 #. Short label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:49
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:54
 #: src/features/auth/flow/MfaScreen.tsx:18
 msgid "Authenticator code"
 msgstr "קוד אימות"
@@ -4889,7 +4897,7 @@ msgstr "אפליקציות מורשות"
 #. Settings section label for OAuth applications authorized by the user.
 #. User settings tab for OAuth or connected apps authorized by the user.
 #: src/features/user/components/modals/tabs/account_security_tab/AccountManagementModals.tsx:17
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:57
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:96
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:507
 #: src/features/user/components/settings_utils/search_index/AuthorizedAppsIndex.ts:10
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:151
@@ -5301,11 +5309,18 @@ msgstr "אזור בחירת רקע עם תמיכה בגרירה ושחרור"
 msgid "Backspace"
 msgstr "Backspace"
 
+#. Label and placeholder for the MFA login field when the only code the account can use is a backup code.
+#. Label and placeholder for the code field in the authentication sudo verification modal when the only code the account can use is a backup code.
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:62
+#: src/features/auth/flow/MfaScreen.tsx:38
+msgid "Backup code"
+msgstr "קוד גיבוי"
+
 #. Security modal title for one-time account recovery codes.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/auth/components/modals/BackupCodesModal.tsx:18
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:274
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:378
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:74
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:68
 msgid "Backup codes"
@@ -6320,7 +6335,7 @@ msgstr "לא ניתן להעלות קבצים כאן"
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:72
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:80
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:264
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:278
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:140
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:177
@@ -7669,7 +7684,7 @@ msgstr "כדי לשלוח דיווחים, תבע את החשבון שלך ואמ
 msgid "Claim your account by adding an email and password. We will send a verification code to confirm your email before finishing."
 msgstr "תבע את החשבון שלך על ידי הוספת אימייל וסיסמה. נשלח קוד אימות כדי לאשר את האימייל שלך לפני השלמת התהליך."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:173
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:277
 msgid "Claim your account to access security features like two-factor authentication and passkeys."
 msgstr "תבע את החשבון שלך כדי לגשת לתכונות אבטחה כמו אימות דו-שלבי ומפתחות גישה."
 
@@ -8064,7 +8079,7 @@ msgstr "סגירה"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:162
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:182
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:120
 msgid "Close account"
 msgstr "סגירת חשבון"
@@ -9166,7 +9181,7 @@ msgstr "המשך לדווח על הקהילה"
 msgid "Continue to report user"
 msgstr "המשך לדווח על המשתמש"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:231
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:245
 msgid "Continue with passkey"
 msgstr "המשך עם מפתח גישה"
 
@@ -9773,7 +9788,7 @@ msgid "Couldn't delete application"
 msgstr "לא ניתן היה למחוק את האפליקציה"
 
 #. Title of the error modal shown when removing a registered passkey fails.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:36
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:38
 msgid "Couldn't delete passkey"
 msgstr "לא ניתן היה למחוק את מפתח הגישה"
 
@@ -10112,6 +10127,11 @@ msgstr "לא ניתן לעדכן את שכפול האימוג'י"
 #: src/features/ui/action_menu/items/StaffUserControlsMenuItems.tsx:24
 msgid "Couldn't update mention suppression bypass"
 msgstr "לא ניתן היה לעדכן את עקיפת השתקת האזכורים"
+
+#. Title of the error modal shown when the passkey two-factor setting could not be saved.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:84
+msgid "Couldn't update passkey two-factor authentication"
+msgstr "לא ניתן היה לעדכן את האימות הדו-שלבי באמצעות מפתח גישה"
 
 #. Error modal title shown when saving role changes fails.
 #: src/features/moderation/components/alerts/RoleUpdateFailedModal.tsx:9
@@ -11004,7 +11024,7 @@ msgid "Day"
 msgstr "יום"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:142
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:162
 msgid "Deactivate"
 msgstr "השבתה"
 
@@ -11252,11 +11272,11 @@ msgstr "דלאוור"
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:109
 #: src/features/platform/utils/DesktopLocaleBridge.ts:76
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:517
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:117
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:290
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:154
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:174
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:190
 msgid "Delete"
 msgstr "מחק"
@@ -11425,7 +11445,7 @@ msgid "Delete other members' messages. Pinning is controlled separately."
 msgstr "מחיקת הודעות של חברים אחרים. הצמדה נשלטת בנפרד."
 
 #. Security settings: confirmation modal title and primary button for removing a registered passkey. Destructive action; keep plain and direct.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:31
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:33
 msgid "Delete passkey"
 msgstr "מחיקת מפתח גישה"
 
@@ -11512,7 +11532,7 @@ msgid "Delete webhook"
 msgstr "מחיקת webhook"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:166
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:186
 msgid "Delete your account"
 msgstr "מחיקת החשבון שלך"
 
@@ -11903,7 +11923,7 @@ msgstr "מכשיר:"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tab label in the screen-share picker. Lists cameras and virtual capture devices.
 #. User settings tab for managing devices linked to the current account.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:65
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:104
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:530
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
@@ -12014,8 +12034,8 @@ msgstr "העלאה ישירה פעילה"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short footer action in the screen-share picker that disables screen-share preview frame uploads.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:238
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:138
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:342
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:158
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:279
 msgid "Disable"
 msgstr "השבתה"
@@ -13457,7 +13477,7 @@ msgstr "אין מועדפים"
 #: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:32
 #: src/features/app/components/layout/GuildLayout.tsx:54
 #: src/features/invite/components/DisableInvitesButton.tsx:27
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:256
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:360
 #: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:23
 msgid "Enable"
 msgstr "הפעלה"
@@ -13936,6 +13956,16 @@ msgstr "הזן קוד מתנה…"
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:375
 msgid "Enter new email"
 msgstr "הזן אימייל חדש"
+
+#. MFA code entry instructions shown when the account uses passkeys as its second factor.
+#: src/features/auth/flow/MfaScreen.tsx:42
+msgid "Enter one of your backup codes if you can't use your passkey."
+msgstr "הזן אחד מקודי הגיבוי שלך אם אינך יכול להשתמש במפתח הגישה שלך."
+
+#. Body text in the authentication sudo verification modal, shown when the only code the account can enter is a backup code. Keep the tone plain and specific.
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:41
+msgid "Enter one of your backup codes."
+msgstr "הזן אחד מקודי הגיבוי שלך."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:66
@@ -15397,7 +15427,7 @@ msgstr "בשבילי"
 msgid "For this check, you send us a text message instead of receiving one from us."
 msgstr "בבדיקה הזו יש לשלוח לנו הודעת טקסט במקום לקבל הודעה מאיתנו."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:169
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:183
 msgid "For your security, please confirm it's you to continue."
 msgstr "למען אבטחתך, יש לאמת את זהותך כדי להמשיך."
 
@@ -19767,8 +19797,8 @@ msgstr "תוכנה זדונית או קישורים מסוכנים"
 msgid "Malware, credential theft, or harmful files."
 msgstr "תוכנות זדוניות, גניבת פרטי כניסה או קבצים מזיקים."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:443
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:478
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:561
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:596
 msgid "Manage"
 msgstr "נהל"
 
@@ -19778,7 +19808,7 @@ msgid "Manage accounts"
 msgstr "ניהול חשבונות"
 
 #. Security settings section description for account access controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:53
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:92
 msgid "Manage apps and devices with access to your account"
 msgstr "ניהול אפליקציות ומכשירים עם גישה לחשבון שלך"
 
@@ -22813,7 +22843,7 @@ msgstr "לא נמצאו משתמשים"
 msgid "No verification is required."
 msgstr "אין צורך באימות."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:175
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:189
 msgid "No verification methods available"
 msgstr "אין שיטות אימות זמינות"
 
@@ -24232,7 +24262,7 @@ msgstr "שם מפתח גישה"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:305
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:409
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:90
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:88
 msgid "Passkeys"
@@ -26336,7 +26366,7 @@ msgstr "יצירה מחדש תבטל את התוקף של האסימון הנו�
 msgid "Register"
 msgstr "הרשמה"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:318
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:422
 msgid "Registered passkeys"
 msgstr "מפתחות גישה רשומים"
 
@@ -26468,7 +26498,7 @@ msgstr "זכור גודל ומיקום של החלון"
 #: src/features/ui/action_menu/UserContextMenu.tsx:97
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:26
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:55
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:158
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:178
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:194
 #: src/features/webhook/components/WebhookListItem.tsx:277
 msgid "Remove"
@@ -26908,7 +26938,7 @@ msgstr "הסרת הרשאות עלולה להגביל את התכונות של �
 msgid "Removing the timeout will allow <0>{targetUserTag}</0> to send messages, react, and join voice channels again."
 msgstr "הסרת פסק הזמן תאפשר ל-<0>{targetUserTag}</0> לשלוח שוב הודעות, להגיב ולהצטרף לערוצי קול."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:391
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:509
 msgid "Rename"
 msgstr "שנה שם"
 
@@ -27120,7 +27150,7 @@ msgstr "ריפוסטים: <0>{countLabel}</0>"
 msgid "Request a new code first."
 msgstr "יש לבקש קוד חדש תחילה."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:135
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:136
 msgid "Request a new reset link"
 msgstr "בקשת קישור איפוס חדש"
 
@@ -27148,6 +27178,12 @@ msgstr "בקשות"
 msgid "Require 2FA for moderation actions"
 msgstr "דרוש אימות דו-שלבי לפעולות ניהול"
 
+#. Settings search entry label. Also used as a search synonym in the settings search bar.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:448
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:138
+msgid "Require a passkey as your second factor"
+msgstr "דרישת מפתח גישה כשלב האימות השני"
+
 #. Short label for an advanced voice-channel navigation preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:17
 msgid "Require double-click to join voice channels"
@@ -27162,6 +27198,11 @@ msgstr "דרוש אישור ידני לבקשות חברות"
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/ApplicationInfoSection.tsx:44
 msgid "Require OAuth2 code grant"
 msgstr "דרושה הענקת קוד OAuth2"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:146
+msgid "Require passkey"
+msgstr "דרישת מפתח גישה"
 
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:466
 msgid "Require two-factor authentication for moderators before they can ban, kick, time out, or remove messages."
@@ -27381,7 +27422,7 @@ msgstr "איפוס נתונים"
 msgid "Reset font size"
 msgstr "איפוס גודל גופן"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:128
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:129
 msgid "Reset link invalid or expired"
 msgstr "קישור האיפוס שגוי או שפג תוקפו"
 
@@ -27397,7 +27438,7 @@ msgstr "איפוס מיקום המדיה"
 
 #. Short label in the authentication reset password page. Keep the tone plain and specific.
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:19
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:185
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:186
 msgid "Reset password"
 msgstr "איפוס סיסמה"
 
@@ -27791,7 +27832,7 @@ msgid "Review and confirm"
 msgstr "בדיקה ואישור"
 
 #. Security settings row description for authorized apps.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:61
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:100
 msgid "Review apps that can access your account."
 msgstr "בדוק אילו אפליקציות יכולות לגשת לחשבון שלך."
 
@@ -27806,7 +27847,7 @@ msgid "Review past purchases and refund options"
 msgstr "סקירת רכישות קודמות ואפשרויות החזר כספי"
 
 #. Security settings row description for linked devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:69
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:108
 msgid "Review signed-in devices and sign out of sessions you don't recognize."
 msgstr "עיין במכשירים המחוברים והתנתק מהסשנים שאינך מזהה."
 
@@ -28818,6 +28859,11 @@ msgstr "מחפש"
 msgid "Searching for people..."
 msgstr "מחפש אנשים..."
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:142
+msgid "Second factor"
+msgstr "שלב אימות שני"
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:112
 msgid "Second option"
 msgstr "אפשרות שנייה"
@@ -28882,7 +28928,7 @@ msgctxt "security-settings-section"
 msgid "Security"
 msgstr "אבטחה"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:171
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:275
 msgid "Security features"
 msgstr "תכונות אבטחה"
 
@@ -29535,8 +29581,8 @@ msgstr "הוגדר כאן"
 msgid "Set mute shortcut"
 msgstr "הגדר קיצור דרך להשתקת מיקרופון"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:116
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:144
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:117
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:145
 msgid "Set new password"
 msgstr "הגדרת סיסמה חדשה"
 
@@ -29686,7 +29732,7 @@ msgstr "הגדר מאוחר יותר"
 msgid "Set voice region"
 msgstr "הגדרת אזור קולי"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:147
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:148
 msgid "Set your new password."
 msgstr "הגדר את הסיסמה החדשה שלך."
 
@@ -31910,6 +31956,11 @@ msgstr "הפסק שידור"
 msgid "Stop trusting all links?"
 msgstr "להפסיק לבטוח בכל הקישורים?"
 
+#. Security settings: confirmation modal title for turning off passkey-based two-factor authentication.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:64
+msgid "Stop using passkeys for two-factor authentication?"
+msgstr "להפסיק להשתמש במפתחות גישה לאימות דו-שלבי?"
+
 #. Voice control action for stopping the currently focused or selected stream.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:243
 msgid "Stop watching"
@@ -32224,7 +32275,7 @@ msgid "Surfaces"
 msgstr "משטחים"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:146
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:166
 msgid "Suspend"
 msgstr "השעיה"
 
@@ -32714,7 +32765,7 @@ msgid "Temporal layers"
 msgstr "שכבות זמניות"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:150
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:170
 msgid "Temporarily disable your account"
 msgstr "השבתה זמנית של החשבון"
 
@@ -33821,6 +33872,14 @@ msgstr "זהו התיאור של האפשרות השנייה"
 msgid "This is the third option description"
 msgstr "זהו התיאור של האפשרות השלישית"
 
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:248
+msgid "This is your last passkey and passkeys are your second factor. Deleting it turns off two-factor authentication for your account, and your current backup codes will stop working."
+msgstr "זהו מפתח הגישה האחרון שלך, ומפתחות גישה הם שלב האימות השני שלך. מחיקתו תשבית את האימות הדו-שלבי בחשבונך, וקודי הגיבוי הנוכחיים שלך יפסיקו לפעול."
+
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:243
+msgid "This is your last passkey. Once it's gone you won't be able to use a passkey as your second factor."
+msgstr "זהו מפתח הגישה האחרון שלך. לאחר שיימחק, לא תוכל להשתמש במפתח גישה כשלב האימות השני שלך."
+
 #. Required-action form error for landline, toll-free, premium, shared-cost, UAN, voicemail and pager lines. Do not name which line type the provider returned.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:549
 msgid "This isn't a mobile number, so it can't receive our text. Try a mobile number, or contact support if you think that's wrong."
@@ -33989,7 +34048,7 @@ msgstr "פעולה זו תסיר את כל הדומיינים המהימנים. 
 msgid "This removes every custom shortcut and re-enables all built-in shortcuts. This cannot be undone."
 msgstr "פעולה זו תסיר את כל קיצורי הדרך המותאמים אישית ותפעיל מחדש את כל קיצורי הדרך המובנים. לא ניתן לבטל פעולה זו."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:131
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:132
 msgid "This reset link has expired. Reset links last 1 hour. Please request a new one."
 msgstr "תוקף קישור האיפוס הזה פג. קישורי איפוס תקפים למשך שעה אחת. אנא בקש קישור חדש."
 
@@ -34854,7 +34913,9 @@ msgid "Turkish"
 msgstr "טורקית"
 
 #. Button label that turns off streaming privacy.
+#. Security settings: confirm button for turning off passkey-based two-factor authentication.
 #: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx:16
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:80
 msgid "Turn off"
 msgstr "כיבוי"
 
@@ -34909,6 +34970,11 @@ msgstr "כיבוי שידור"
 #: src/features/streamer_mode/components/StreamerModeGate.tsx:19
 msgid "Turn off streaming privacy before viewing login or account security details."
 msgstr "כבה את פרטיות הסטרימינג לפני הצגת פרטי התחברות או אבטחת חשבון."
+
+#. Security settings: confirm button for turning on passkey-based two-factor authentication.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:60
+msgid "Turn on"
+msgstr "הפעלה"
 
 #. Permission description in the channel-scoped permissions editor for the Stream Video permission. Covers both the webcam and screen sharing.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:292
@@ -35049,7 +35115,7 @@ msgstr "אימות דו-שלבי הושבת"
 msgid "Two-factor authentication enabled"
 msgstr "אימות דו-שלבי הופעל"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:211
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:315
 msgid "Two-factor authentication is enabled"
 msgstr "אימות דו-שלבי מופעל"
 
@@ -36293,7 +36359,7 @@ msgstr "השתמש בערך האמיתי"
 msgid "Use alternative method"
 msgstr "שימוש בשיטה חלופית"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:213
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:317
 msgid "Use an authenticator app to generate codes for two-factor authentication"
 msgstr "השתמש באפליקציית אימות כדי ליצור קודים לאימות דו-שלבי"
 
@@ -36464,11 +36530,16 @@ msgstr "השתמש בשורת כותרת מקורית"
 msgid "Use only if it clearly breaks {productName}'s rules and doesn't fit above."
 msgstr "יש להשתמש רק אם זה מפר באופן ברור את הכללים של {productName} ולא מתאים לאף אחת מהאפשרויות שלעיל."
 
+#. Security settings: confirmation modal title for turning on passkey-based two-factor authentication.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:51
+msgid "Use passkeys for two-factor authentication?"
+msgstr "להשתמש במפתחות גישה לאימות דו-שלבי?"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:306
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:410
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:134
-msgid "Use passkeys for passwordless sign-in and two-factor authentication"
-msgstr "השתמש במפתחות גישה לכניסה ללא סיסמה ולאימות דו-שלבי"
+msgid "Use passkeys to sign in without a password"
+msgstr "שימוש במפתחות גישה כדי להיכנס ללא סיסמה"
 
 #. Button in the required-action modal. Selects the phone verification path.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:174
@@ -36926,7 +36997,7 @@ msgstr "נשלחה הודעת אימות. יש לבדוק את תיבת הדוא
 msgid "Verification expired"
 msgstr "האימות פג תוקף"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:57
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:67
 #: src/features/auth/components/pages/VerifyEmailPage.tsx:108
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:241
 msgid "Verification failed"
@@ -36967,12 +37038,12 @@ msgid "Verify email"
 msgstr "אימות אימייל"
 
 #. Accessible form label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:41
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:46
 msgid "Verify identity form"
 msgstr "טופס אימות זהות"
 
 #. Short label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:45
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:50
 msgid "Verify it's you"
 msgstr "אימות זהותך"
 
@@ -37015,12 +37086,12 @@ msgid "Verify your email address to send friend requests."
 msgstr "אמת את כתובת האימייל שלך כדי לשלוח בקשות חברות."
 
 #. Security settings warning shown when an unverified account cannot register a new passkey.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:45
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:47
 msgid "Verify your email before adding a passkey."
 msgstr "יש לאמת את כתובת האימייל שלך לפני הוספת מפתח גישה."
 
 #. Security settings warning shown when an unverified account cannot enable authenticator-app two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:40
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:42
 msgid "Verify your email before adding an authenticator app."
 msgstr "יש לאמת את כתובת האימייל שלך לפני הוספת אפליקציית אימות."
 
@@ -37099,7 +37170,7 @@ msgstr "מאמת את הכרטיס"
 msgid "Verifying code…"
 msgstr "מאמת קוד…"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:119
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:120
 msgid "Verifying your reset link…"
 msgstr "מאמת את קישור האיפוס שלך…"
 
@@ -37312,7 +37383,7 @@ msgstr "הצגה וניהול של משתמשים חסומים."
 msgid "View and manage every webhook configured across your community."
 msgstr "הצגה וניהול של כל ה-webhooks שהוגדרו בקהילה שלך."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:280
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:384
 msgid "View and manage your backup codes for account recovery"
 msgstr "הצגה וניהול של קודי הגיבוי שלך לשחזור החשבון"
 
@@ -37346,7 +37417,7 @@ msgstr "הצגת ערוץ"
 msgid "View channel members"
 msgstr "הצגת חברי ערוץ"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:298
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:402
 msgid "View codes"
 msgstr "הצגת קודים"
 
@@ -37874,7 +37945,7 @@ msgstr "המתן כאן"
 msgid "Waiting for connection..."
 msgstr "ממתין לחיבור..."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:218
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:232
 msgid "Waiting for passkey…"
 msgstr "ממתין למפתח גישה…"
 
@@ -39335,6 +39406,11 @@ msgstr "תעזוב את {guildNames}. שום דבר שפרסמת לא נמחק, 
 msgid "You will still need to finish the email step."
 msgstr "עדיין תצטרך להשלים את שלב האימייל."
 
+#. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when the account also has an authenticator app.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:74
+msgid "You won't be asked for a passkey after your password anymore. Your authenticator app stays as your second factor."
+msgstr "לא תתבקש עוד לספק מפתח גישה לאחר הסיסמה שלך. אפליקציית האימות תישאר שלב האימות השני שלך."
+
 #: src/features/app/components/floating/UserAreaPopout.tsx:92
 #: src/features/user/components/modals/StatusChangeBottomSheet.tsx:40
 msgid "You won't receive notifications on desktop"
@@ -39348,6 +39424,11 @@ msgstr "תופיע במצב לא מקוון"
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:464
 msgid "You'll have to sign back in on all signed-out devices"
 msgstr "יהיה עליך להתחבר מחדש בכל המכשירים שנותקו"
+
+#. Security settings: confirmation modal body for turning on passkey-based two-factor authentication.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:55
+msgid "You'll need one of your passkeys to sign in on a new device. If you lose every passkey you can be locked out of your account. Backup codes will be saved for you so you still have a way in."
+msgstr "תצטרך אחד ממפתחות הגישה שלך כדי להיכנס ממכשיר חדש. אם תאבד את כל מפתחות הגישה שלך, אתה עלול לאבד לצמיתות את הגישה לחשבונך. קודי גיבוי יישמרו עבורך, כך שעדיין תהיה לך דרך להיכנס."
 
 #. Privacy > Active now: confirmation modal body when turning sharing on.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:41
@@ -39637,9 +39718,14 @@ msgstr "החשבון שלך חדש מדי כדי לשלוח הודעות בקה�
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "בקשת החשבון שלך ממתינה לאישור. אפשר להתחבר לאחר שמנהל יאשר אותה."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:181
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:195
 msgid "Your account requires multi-factor authentication, but no supported methods are set up on this device. Sign in on a device with your authenticator app or security key, or contact support."
 msgstr "החשבון שלך דורש אימות רב-שלבי, אך לא הוגדרו שיטות נתמכות במכשיר זה. היכנס באמצעות מכשיר עם אפליקציית האימות או מפתח האבטחה שלך, או פנה לתמיכה."
+
+#. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when passkeys are the only second factor on the account.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:68
+msgid "Your account will no longer be protected by two-factor authentication when you sign in with your password. You'll also lose elevated permissions in servers that require two-factor authentication."
+msgstr "החשבון שלך כבר לא יהיה מוגן באמצעות אימות דו-שלבי בעת כניסה עם הסיסמה שלך. כמו כן, תאבד את ההרשאות המוגברות שלך בקהילות שבהן נדרש אימות דו-שלבי."
 
 #. Hint under the set-aside button in the required-action modal when the user is in no community that triggers the check. This is the common case. Do not phrase it as undoing a join.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:284

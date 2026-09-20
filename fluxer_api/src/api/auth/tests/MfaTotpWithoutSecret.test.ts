@@ -8,9 +8,9 @@ import {
 	seedMfaTicket,
 } from '@app/api/auth/tests/AuthTestUtils';
 import {
-	createRegistrationResponse,
 	createWebAuthnDevice,
-	type WebAuthnRegistrationOptions,
+	registerWebAuthnCredential,
+	setWebAuthnTwoFactor,
 } from '@app/api/auth/tests/WebAuthnTestUtils';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
@@ -41,7 +41,7 @@ describe('Auth MFA TOTP without secret', () => {
 			.execute();
 		expect(login.code).toBe('INVALID_FORM_BODY');
 	});
-	it('rejects TOTP login when only WebAuthn is enabled', async () => {
+	it('rejects TOTP login when passkey two-factor is on and no TOTP secret remains', async () => {
 		const account = await createTestAccount(harness);
 		const device = createWebAuthnDevice();
 		const secret = createTotpSecret();
@@ -53,25 +53,14 @@ describe('Auth MFA TOTP without secret', () => {
 			.post('/users/@me/mfa/totp/enable')
 			.body({secret, code: generateTotpCode(secret), password: account.password})
 			.execute();
-		const regOptions = await createBuilder<WebAuthnRegistrationOptions>(harness, account.token)
-			.post('/users/@me/mfa/webauthn/credentials/registration-options')
-			.body({mfa_method: 'totp', mfa_code: generateTotpCode(secret)})
-			.execute();
-		if (regOptions.rp.id) {
-			device.rpId = regOptions.rp.id;
-		}
-		const registrationResponse = createRegistrationResponse(device, regOptions, 'Test Passkey');
-		await createBuilder(harness, account.token)
-			.post('/users/@me/mfa/webauthn/credentials')
-			.body({
-				response: registrationResponse,
-				challenge: regOptions.challenge,
-				name: 'Test Passkey',
-				mfa_method: 'totp',
-				mfa_code: generateTotpCode(secret),
-			})
-			.expect(204)
-			.execute();
+		await registerWebAuthnCredential(harness, account.token, device, () => ({
+			mfa_method: 'totp',
+			mfa_code: generateTotpCode(secret),
+		}));
+		await setWebAuthnTwoFactor(harness, account.token, true, {
+			mfa_method: 'totp',
+			mfa_code: generateTotpCode(secret),
+		});
 		await createBuilder(harness, account.token)
 			.post('/users/@me/mfa/totp/disable')
 			.body({
@@ -104,5 +93,40 @@ describe('Auth MFA TOTP without secret', () => {
 			.expect(HTTP_STATUS.BAD_REQUEST, 'INVALID_FORM_BODY')
 			.execute();
 		expect(bypassAttempt.code).toBe('INVALID_FORM_BODY');
+	});
+	it('issues a session token when passkey two-factor is off and no TOTP secret remains', async () => {
+		const account = await createTestAccount(harness);
+		const device = createWebAuthnDevice();
+		const secret = createTotpSecret();
+		const totpData = await createBuilder<{
+			backup_codes: Array<{
+				code: string;
+			}>;
+		}>(harness, account.token)
+			.post('/users/@me/mfa/totp/enable')
+			.body({secret, code: generateTotpCode(secret), password: account.password})
+			.execute();
+		await registerWebAuthnCredential(harness, account.token, device, () => ({
+			mfa_method: 'totp',
+			mfa_code: generateTotpCode(secret),
+		}));
+		await createBuilder(harness, account.token)
+			.post('/users/@me/mfa/totp/disable')
+			.body({
+				code: totpData.backup_codes[0]!.code,
+				mfa_method: 'totp',
+				mfa_code: generateTotpCode(secret),
+			})
+			.expect(204)
+			.execute();
+		const login = await createBuilderWithoutAuth<{
+			mfa?: true;
+			token: string;
+		}>(harness)
+			.post('/auth/login')
+			.body({email: account.email, password: account.password})
+			.execute();
+		expect(login.mfa).toBeUndefined();
+		expect(login.token).toBeTruthy();
 	});
 });

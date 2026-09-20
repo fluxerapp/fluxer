@@ -16924,6 +16924,63 @@
 				}
 			}
 		},
+		"/users/@me/mfa/webauthn/two-factor": {
+			"put": {
+				"operationId": "set_webauthn_two_factor",
+				"summary": "Set WebAuthn two-factor authentication",
+				"tags": ["Users"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/WebAuthnTwoFactorResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Choose whether registered passkeys are required as a second factor when signing in with email and password. Enabling requires at least one registered credential and mints backup codes when the account has none. Requires sudo mode verification.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/WebAuthnTwoFactorRequest"}}}
+				}
+			}
+		},
 		"/users/@me/mobile-devices": {
 			"post": {
 				"operationId": "register_mobile_push_device",
@@ -21879,10 +21936,17 @@
 				"type": "object",
 				"properties": {
 					"totp": {"type": "boolean", "description": "Whether TOTP is enabled"},
-					"webauthn": {"type": "boolean", "description": "Whether WebAuthn is enabled"},
-					"has_mfa": {"type": "boolean", "description": "Whether any MFA method is enabled"}
+					"webauthn": {
+						"type": "boolean",
+						"description": "Whether the account has at least one registered WebAuthn credential"
+					},
+					"backup_codes": {
+						"type": "boolean",
+						"description": "Whether the account has at least one unconsumed backup code"
+					},
+					"has_mfa": {"type": "boolean", "description": "Whether the account can satisfy a sudo mode challenge"}
 				},
-				"required": ["totp", "webauthn", "has_mfa"],
+				"required": ["totp", "webauthn", "backup_codes", "has_mfa"],
 				"additionalProperties": false
 			},
 			"VoiceActivitySharingUpdateRequest": {
@@ -22780,6 +22844,62 @@
 					}
 				},
 				"required": ["device_id"],
+				"additionalProperties": false
+			},
+			"WebAuthnTwoFactorRequest": {
+				"type": "object",
+				"properties": {
+					"enabled": {
+						"type": "boolean",
+						"description": "Whether registered passkeys count as a second factor when logging in"
+					},
+					"password": {
+						"description": "Account password for sudo verification",
+						"$ref": "#/components/schemas/PasswordType"
+					},
+					"mfa_method": {
+						"description": "MFA method to use for verification",
+						"x-enumNames": ["TOTP", "WebAuthn"],
+						"x-enumDescriptions": [
+							"Time-based one-time password authentication via authenticator app",
+							"Security key or biometric authentication"
+						],
+						"enum": ["totp", "webauthn"],
+						"type": "string"
+					},
+					"mfa_code": {"description": "MFA verification code from an authenticator app", "type": "string"},
+					"webauthn_response": {
+						"description": "WebAuthn authentication response",
+						"$ref": "#/components/schemas/WebAuthnAuthenticationResponse"
+					},
+					"webauthn_challenge": {"description": "WebAuthn challenge string", "type": "string"}
+				},
+				"required": ["enabled"]
+			},
+			"WebAuthnTwoFactorResponse": {
+				"type": "object",
+				"properties": {
+					"user": {"description": "The updated account", "$ref": "#/components/schemas/UserPrivateResponse"},
+					"backup_codes": {
+						"anyOf": [
+							{
+								"type": "array",
+								"items": {
+									"type": "object",
+									"properties": {
+										"code": {"type": "string", "description": "The backup code"},
+										"consumed": {"type": "boolean", "description": "Whether the code has been used"}
+									},
+									"required": ["code", "consumed"],
+									"additionalProperties": false
+								}
+							},
+							{"type": "null"}
+						],
+						"description": "Backup codes minted by this call, or null when none were minted"
+					}
+				},
+				"required": ["user", "backup_codes"],
 				"additionalProperties": false
 			},
 			"SudoVerificationSchema": {
@@ -28201,9 +28321,13 @@
 								"description": "List of allowed MFA methods"
 							},
 							"totp": {"type": "boolean", "description": "Whether TOTP authenticator MFA is available"},
-							"webauthn": {"type": "boolean", "description": "Whether WebAuthn security key MFA is available"}
+							"webauthn": {"type": "boolean", "description": "Whether WebAuthn security key MFA is available"},
+							"backup_codes": {
+								"type": "boolean",
+								"description": "Whether the account has at least one unconsumed backup code"
+							}
 						},
-						"required": ["mfa", "ticket", "allowed_methods", "totp", "webauthn"],
+						"required": ["mfa", "ticket", "allowed_methods", "totp", "webauthn", "backup_codes"],
 						"additionalProperties": false
 					}
 				]
@@ -28259,9 +28383,13 @@
 								"description": "List of allowed MFA methods"
 							},
 							"totp": {"type": "boolean", "description": "Whether TOTP authenticator MFA is available"},
-							"webauthn": {"type": "boolean", "description": "Whether WebAuthn security key MFA is available"}
+							"webauthn": {"type": "boolean", "description": "Whether WebAuthn security key MFA is available"},
+							"backup_codes": {
+								"type": "boolean",
+								"description": "Whether the account has at least one unconsumed backup code"
+							}
 						},
-						"required": ["mfa", "ticket", "allowed_methods", "totp", "webauthn"],
+						"required": ["mfa", "ticket", "allowed_methods", "totp", "webauthn", "backup_codes"],
 						"additionalProperties": false
 					},
 					{"$ref": "#/components/schemas/AuthRegistrationPendingApprovalResponse"}
@@ -33378,6 +33506,14 @@
 				"required": ["id", "rawId", "type", "clientExtensionResults", "response"],
 				"additionalProperties": {}
 			},
+			"UserAuthenticatorTypes": {
+				"description": "Authenticator type",
+				"type": "integer",
+				"enum": [0, 2],
+				"format": "int32",
+				"x-enumNames": ["TOTP", "WEBAUTHN"],
+				"x-enumDescriptions": ["Time-based one-time password authenticator", "WebAuthn authenticator"]
+			},
 			"HexString32Type": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
 			"PhoneNumberType": {"type": "string"},
 			"RelationshipTypesInput": {
@@ -33761,14 +33897,6 @@
 				],
 				"enum": ["online", "dnd", "idle", "invisible"],
 				"type": "string"
-			},
-			"UserAuthenticatorTypes": {
-				"description": "Authenticator type",
-				"type": "integer",
-				"enum": [0, 2],
-				"format": "int32",
-				"x-enumNames": ["TOTP", "WEBAUTHN"],
-				"x-enumDescriptions": ["Time-based one-time password authenticator", "WebAuthn authenticator"]
 			},
 			"HexString16Type": {"type": "string", "pattern": "^[a-f0-9]{16}$"},
 			"Int64Type": {

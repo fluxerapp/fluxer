@@ -4,16 +4,17 @@ import {
 	createAuthHarness,
 	createTestAccount,
 	type LoginMfaResponse,
+	type LoginSuccessResponse,
 	loginUser,
 } from '@app/api/auth/tests/AuthTestUtils';
 import {
 	createAuthenticationResponse,
-	createRegistrationResponse,
 	createTotpSecret,
 	createWebAuthnDevice,
 	generateTotpCode,
+	registerWebAuthnCredential,
+	setWebAuthnTwoFactor,
 	type WebAuthnAuthenticationOptions,
-	type WebAuthnRegistrationOptions,
 } from '@app/api/auth/tests/WebAuthnTestUtils';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
@@ -30,7 +31,7 @@ describe('WebAuthn MFA login', () => {
 	afterAll(async () => {
 		await harness?.shutdown();
 	});
-	it('validates the WebAuthn MFA login flow', async () => {
+	it('validates the WebAuthn MFA login flow when passkey two-factor is turned on', async () => {
 		const account = await createTestAccount(harness);
 		const device = createWebAuthnDevice();
 		const secret = createTotpSecret();
@@ -38,25 +39,17 @@ describe('WebAuthn MFA login', () => {
 			.post('/users/@me/mfa/totp/enable')
 			.body({secret, code: generateTotpCode(secret), password: account.password})
 			.execute();
-		const regOptions = await createBuilder<WebAuthnRegistrationOptions>(harness, account.token)
-			.post('/users/@me/mfa/webauthn/credentials/registration-options')
-			.body({mfa_method: 'totp', mfa_code: generateTotpCode(secret)})
-			.execute();
-		if (regOptions.rp.id) {
-			device.rpId = regOptions.rp.id;
-		}
-		const registrationResponse = createRegistrationResponse(device, regOptions, 'MFA Passkey');
-		await createBuilder(harness, account.token)
-			.post('/users/@me/mfa/webauthn/credentials')
-			.body({
-				response: registrationResponse,
-				challenge: regOptions.challenge,
-				name: 'MFA Passkey',
-				mfa_method: 'totp',
-				mfa_code: generateTotpCode(secret),
-			})
-			.expect(204)
-			.execute();
+		await registerWebAuthnCredential(
+			harness,
+			account.token,
+			device,
+			() => ({mfa_method: 'totp', mfa_code: generateTotpCode(secret)}),
+			'MFA Passkey',
+		);
+		await setWebAuthnTwoFactor(harness, account.token, true, {
+			mfa_method: 'totp',
+			mfa_code: generateTotpCode(secret),
+		});
 		const loginResp = await loginUser(harness, {email: account.email, password: account.password});
 		expect('mfa' in loginResp && loginResp.mfa).toBe(true);
 		const loginMfaResp = loginResp as LoginMfaResponse;
@@ -83,13 +76,48 @@ describe('WebAuthn MFA login', () => {
 			.body({
 				response: mfaAssertion,
 				challenge: mfaOptions.challenge,
-				ticket: (loginResp as LoginMfaResponse).ticket,
+				ticket: loginMfaResp.ticket,
 			})
 			.execute();
 		expect(webauthnMfaLogin.token).toBeTruthy();
 		const userInfo = await createBuilder<{
 			id: string;
 		}>(harness, webauthnMfaLogin.token)
+			.get('/users/@me')
+			.execute();
+		expect(userInfo.id).toBe(account.userId);
+	});
+	it('issues a session token instead of an MFA ticket when passkey two-factor is left off', async () => {
+		const account = await createTestAccount(harness);
+		const device = createWebAuthnDevice();
+		const secret = createTotpSecret();
+		await createBuilder(harness, account.token)
+			.post('/users/@me/mfa/totp/enable')
+			.body({secret, code: generateTotpCode(secret), password: account.password})
+			.execute();
+		await registerWebAuthnCredential(
+			harness,
+			account.token,
+			device,
+			() => ({mfa_method: 'totp', mfa_code: generateTotpCode(secret)}),
+			'MFA Passkey',
+		);
+		await createBuilder(harness, account.token)
+			.post('/users/@me/mfa/totp/disable')
+			.body({
+				code: generateTotpCode(secret),
+				mfa_method: 'totp',
+				mfa_code: generateTotpCode(secret),
+			})
+			.expect(204)
+			.execute();
+		const loginResp = await loginUser(harness, {email: account.email, password: account.password});
+		expect('mfa' in loginResp).toBe(false);
+		const loginSuccessResp = loginResp as LoginSuccessResponse;
+		expect(loginSuccessResp.token).toBeTruthy();
+		const userInfo = await createBuilder<{
+			id: string;
+		}>(harness, loginSuccessResp.token)
 			.get('/users/@me')
 			.execute();
 		expect(userInfo.id).toBe(account.userId);

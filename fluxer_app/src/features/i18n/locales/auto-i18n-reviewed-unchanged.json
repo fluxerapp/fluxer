@@ -1525,6 +1525,9 @@
         "msgid": "Are you sure you want to kick <0>{targetUserTag}</0> from the community? They will be able to rejoin with a new invite."
       },
       {
+        "msgid": "Ask for a passkey after your password when you sign in"
+      },
+      {
         "msgid": "Attachment {pendingFilename}"
       },
       {
@@ -1535,6 +1538,9 @@
       },
       {
         "msgid": "Automatic ({codec})"
+      },
+      {
+        "msgid": "Backup code"
       },
       {
         "msgid": "Ban members from the community, with the option to delete their recent messages."
@@ -1783,6 +1789,9 @@
         "msgid": "Couldn't duplicate this channel"
       },
       {
+        "msgid": "Couldn't update passkey two-factor authentication"
+      },
+      {
         "msgid": "Create administrator account"
       },
       {
@@ -1898,6 +1907,12 @@
       },
       {
         "msgid": "Enter a product name between 1 and 80 characters."
+      },
+      {
+        "msgid": "Enter one of your backup codes if you can't use your passkey."
+      },
+      {
+        "msgid": "Enter one of your backup codes."
       },
       {
         "msgid": "Enter the PIN for your security key to continue."
@@ -2413,6 +2428,12 @@
         "msgid": "Renamed the community from {oldName} to {newName}."
       },
       {
+        "msgid": "Require a passkey as your second factor"
+      },
+      {
+        "msgid": "Require passkey"
+      },
+      {
         "msgid": "Required 2FA for moderation actions."
       },
       {
@@ -2528,6 +2549,9 @@
       },
       {
         "msgid": "Search for {query}"
+      },
+      {
+        "msgid": "Second factor"
       },
       {
         "msgid": "Security key PIN"
@@ -2794,6 +2818,9 @@
         "msgid": "Stop streaming"
       },
       {
+        "msgid": "Stop using passkeys for two-factor authentication?"
+      },
+      {
         "msgid": "Stopped allowing anyone to mention this role."
       },
       {
@@ -2977,6 +3004,15 @@
         "msgid": "This is off until you turn it on. While it is on, members of other communities can use the in-app one-click \"Clone\" shortcut on your custom stickers. Turning it off does not prevent anyone from saving the image and uploading it themselves."
       },
       {
+        "msgid": "This is your last passkey and passkeys are your second factor. Deleting it turns off two-factor authentication for your account, and your current backup codes will stop working."
+      },
+      {
+        "msgid": "This is your last passkey and passkeys are your second factor. Once it's gone you'll need a backup code to sign in, and you'll lose two-factor authentication on this account."
+      },
+      {
+        "msgid": "This is your last passkey. Once it's gone you won't be able to use a passkey as your second factor."
+      },
+      {
         "msgid": "This message can only be forwarded to age-restricted channels"
       },
       {
@@ -3008,6 +3044,9 @@
       },
       {
         "msgid": "Turn off audio sharing for this source or try again in a moment."
+      },
+      {
+        "msgid": "Turn on"
       },
       {
         "msgid": "Turn on a camera or share a screen in this voice channel."
@@ -3050,6 +3089,12 @@
       },
       {
         "msgid": "Use emoji from other communities in this channel."
+      },
+      {
+        "msgid": "Use passkeys for two-factor authentication?"
+      },
+      {
+        "msgid": "Use passkeys to sign in without a password"
       },
       {
         "msgid": "Use stickers from other communities in this channel."
@@ -3122,6 +3167,9 @@
       },
       {
         "msgid": "Your account is back to normal."
+      },
+      {
+        "msgid": "Your account will no longer be protected by two-factor authentication when you sign in with your password. You'll also lose elevated permissions in servers that require two-factor authentication."
       },
       {
         "msgid": "Your account works normally again straight away and nothing is removed. We can ask for this check again later."

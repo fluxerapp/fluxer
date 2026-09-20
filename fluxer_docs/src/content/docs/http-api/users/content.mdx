@@ -322,7 +322,7 @@ The caller proves sudo mode either with the sudo fields below or with an existin
 
 <sup>4</sup> Supplying both bounds requires `start_date` strictly earlier than `end_date`, and an equal pair fails validation on `end_date`
 
-<sup>5</sup> These fields are the [sudo verification object](/http-api/users/mfa/#sudo-verification-object). Which combination is accepted depends on the account's configured authenticators
+<sup>5</sup> These fields are the [sudo verification object](/http-api/users/mfa/#sudo-verification-object). Which combination is accepted depends on whether the account holds a TOTP secret or a registered WebAuthn credential
 
 The `selected` scope requires at least one of the context toggles to be true, and a request that disables them all fails validation on `include_dms`. The `inaccessible_only` scope ignores the toggles and the guild filter.
 
@@ -341,7 +341,7 @@ Neither scope includes the caller's personal notes channel, so this operation ca
 
 ### Side effects
 
-An account holding an MFA authenticator that proved sudo mode with MFA receives a fresh proof in the response header. A request that already had a valid proof gets that same token echoed back without an extended lifetime.
+An account holding a TOTP secret or a registered WebAuthn credential that proved sudo mode with MFA receives a fresh proof in the response header. A request that already had a valid proof gets that same token echoed back without an extended lifetime.
 
 As deletion progresses, each affected channel emits [Message Delete Bulk](/gateway/events/#message-delete-bulk) in batches of at most 100 message IDs. The deleted messages' attachments are permanently removed.
 

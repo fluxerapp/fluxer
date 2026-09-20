@@ -1592,8 +1592,8 @@ Deletes every message the caller authored in one channel. Returns 202 with an em
 
 - User session and bot credentials are accepted, and a bot credential satisfies the sudo requirement without any proof.
 - The caller must be able to resolve the channel and be in [sudo mode](/http-api/users/mfa/#sudo-mode), established by the `X-Fluxer-Sudo-Mode-JWT` header or by supplying a proof in the body.
-- A caller who satisfies none of those receives 403 `SUDO_MODE_REQUIRED` with `has_mfa` and the available `methods`.
-- An account that holds no verifiable credential at all, meaning it is not a bot, has no enrolled authenticator, and has no stored password, satisfies the sudo requirement with an empty body.
+- A caller who satisfies none of those receives 403 `SUDO_MODE_REQUIRED` with `has_mfa` and the available `methods`, which report `totp`, `webauthn`, and `backup_codes`.
+- An account that holds no verifiable credential at all, meaning it is not a bot, has no TOTP secret, no registered WebAuthn credential, and no stored password, satisfies the sudo requirement with an empty body.
 
 The deletion runs inside the request despite the 202 status, so every matching message is gone by the time the response is returned.
 

@@ -2,6 +2,7 @@
 
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {SettingsTabSection} from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
+import {BackupCodesModal} from '@app/features/auth/components/modals/BackupCodesModal';
 import {BackupCodesViewModal} from '@app/features/auth/components/modals/BackupCodesViewModal';
 import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimAccountModal';
 import {MfaTotpDisableModal} from '@app/features/auth/components/modals/MfaTotpDisableModal';
@@ -16,6 +17,7 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
+import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import * as UserCommands from '@app/features/user/commands/UserCommands';
 import styles from '@app/features/user/components/modals/tabs/account_security_tab/SecurityTab.module.css';
 import type {User} from '@app/features/user/models/User';
@@ -45,6 +47,43 @@ const VERIFY_EMAIL_BEFORE_AUTHENTICATOR_APP_DESCRIPTOR = msg({
 const VERIFY_EMAIL_BEFORE_PASSKEY_DESCRIPTOR = msg({
 	message: 'Verify your email before adding a passkey.',
 	comment: 'Security settings warning shown when an unverified account cannot register a new passkey.',
+});
+const PASSKEY_TWO_FACTOR_ENABLE_TITLE_DESCRIPTOR = msg({
+	message: 'Use passkeys for two-factor authentication?',
+	comment: 'Security settings: confirmation modal title for turning on passkey-based two-factor authentication.',
+});
+const PASSKEY_TWO_FACTOR_ENABLE_DESCRIPTION_DESCRIPTOR = msg({
+	message:
+		"You'll need one of your passkeys to sign in on a new device. If you lose every passkey you can be locked out of your account. Backup codes will be saved for you so you still have a way in.",
+	comment: 'Security settings: confirmation modal body for turning on passkey-based two-factor authentication.',
+});
+const PASSKEY_TWO_FACTOR_ENABLE_CONFIRM_DESCRIPTOR = msg({
+	message: 'Turn on',
+	comment: 'Security settings: confirm button for turning on passkey-based two-factor authentication.',
+});
+const PASSKEY_TWO_FACTOR_DISABLE_TITLE_DESCRIPTOR = msg({
+	message: 'Stop using passkeys for two-factor authentication?',
+	comment: 'Security settings: confirmation modal title for turning off passkey-based two-factor authentication.',
+});
+const PASSKEY_TWO_FACTOR_DISABLE_DESCRIPTION_DESCRIPTOR = msg({
+	message:
+		"Your account will no longer be protected by two-factor authentication when you sign in with your password. You'll also lose elevated permissions in servers that require two-factor authentication.",
+	comment:
+		'Security settings: confirmation modal body for turning off passkey-based two-factor authentication when passkeys are the only second factor on the account.',
+});
+const PASSKEY_TWO_FACTOR_DISABLE_DESCRIPTION_WITH_TOTP_DESCRIPTOR = msg({
+	message:
+		"You won't be asked for a passkey after your password anymore. Your authenticator app stays as your second factor.",
+	comment:
+		'Security settings: confirmation modal body for turning off passkey-based two-factor authentication when the account also has an authenticator app.',
+});
+const PASSKEY_TWO_FACTOR_DISABLE_CONFIRM_DESCRIPTOR = msg({
+	message: 'Turn off',
+	comment: 'Security settings: confirm button for turning off passkey-based two-factor authentication.',
+});
+const COULD_NOT_UPDATE_PASSKEY_TWO_FACTOR_DESCRIPTOR = msg({
+	message: "Couldn't update passkey two-factor authentication",
+	comment: 'Title of the error modal shown when the passkey two-factor setting could not be saved.',
 });
 const ACCOUNT_ACCESS_DESCRIPTOR = msg({
 	message: 'Account access',
@@ -85,6 +124,8 @@ export const SecurityTabContent: React.FC<SecurityTabProps> = observer(
 	({user, isClaimed, passkeys, authorizedAppsSubmitting, onManageAuthorizedApps, onManageLinkedDevices}) => {
 		const {i18n} = useLingui();
 		const hasTotpMfa = user.authenticatorTypes?.includes(UserAuthenticatorTypes.TOTP) ?? false;
+		const hasPasskeyMfa = user.authenticatorTypes?.includes(UserAuthenticatorTypes.WEBAUTHN) ?? false;
+		const hasAnyMfa = hasTotpMfa || hasPasskeyMfa;
 		const needsEmailVerification = user.email != null && user.verified === false;
 		const hasReachedPasskeyLimit = passkeys.length >= 10;
 		const canAddSecurityCredential = !needsEmailVerification;
@@ -129,15 +170,60 @@ export const SecurityTabContent: React.FC<SecurityTabProps> = observer(
 				)),
 			);
 		};
+		const applyPasskeyTwoFactor = async (enabled: boolean) => {
+			try {
+				const backupCodes = await UserCommands.setWebAuthnTwoFactor(enabled);
+				if (backupCodes && backupCodes.length > 0) {
+					ModalCommands.pushWithKey(
+						modal(() => (
+							<BackupCodesModal
+								backupCodes={backupCodes}
+								user={user}
+								data-flx="user.account-security-tab.security-tab.apply-passkey-two-factor.backup-codes-modal"
+							/>
+						)),
+						'backup-codes',
+					);
+				}
+			} catch (error) {
+				logger.error('Failed to update passkey two-factor authentication', error);
+				pushApiErrorModal(i18n, error, i18n._(COULD_NOT_UPDATE_PASSKEY_TWO_FACTOR_DESCRIPTOR));
+			}
+		};
+		const handleTogglePasskeyTwoFactor = (enabled: boolean) => {
+			ModalCommands.push(
+				modal(() => (
+					<ConfirmModal
+						title={i18n._(
+							enabled ? PASSKEY_TWO_FACTOR_ENABLE_TITLE_DESCRIPTOR : PASSKEY_TWO_FACTOR_DISABLE_TITLE_DESCRIPTOR,
+						)}
+						description={i18n._(
+							enabled
+								? PASSKEY_TWO_FACTOR_ENABLE_DESCRIPTION_DESCRIPTOR
+								: hasTotpMfa
+									? PASSKEY_TWO_FACTOR_DISABLE_DESCRIPTION_WITH_TOTP_DESCRIPTOR
+									: PASSKEY_TWO_FACTOR_DISABLE_DESCRIPTION_DESCRIPTOR,
+						)}
+						primaryText={i18n._(
+							enabled ? PASSKEY_TWO_FACTOR_ENABLE_CONFIRM_DESCRIPTOR : PASSKEY_TWO_FACTOR_DISABLE_CONFIRM_DESCRIPTOR,
+						)}
+						primaryVariant={enabled ? 'primary' : 'danger'}
+						onPrimary={() => applyPasskeyTwoFactor(enabled)}
+						data-flx="user.account-security-tab.security-tab.handle-toggle-passkey-two-factor.confirm-modal"
+					/>
+				)),
+			);
+		};
 		const handleDeletePasskey = (credentialId: string) => {
 			const passkey = passkeys.find((p) => p.id === credentialId);
+			const isLastPasskeyWithMfa = hasPasskeyMfa && passkeys.length === 1;
 			ModalCommands.push(
 				modal(() => (
 					<ConfirmModal
 						title={i18n._(DELETE_PASSKEY_DESCRIPTOR)}
 						description={
-							passkey ? (
-								<div data-flx="user.account-security-tab.security-tab.handle-delete-passkey.div">
+							<div data-flx="user.account-security-tab.security-tab.handle-delete-passkey.div">
+								{passkey ? (
 									<Trans>
 										Are you sure you want to delete the passkey{' '}
 										<strong data-flx="user.account-security-tab.security-tab.handle-delete-passkey.strong">
@@ -145,10 +231,28 @@ export const SecurityTabContent: React.FC<SecurityTabProps> = observer(
 										</strong>
 										?
 									</Trans>
-								</div>
-							) : (
-								<Trans>Are you sure you want to delete this passkey?</Trans>
-							)
+								) : (
+									<Trans>Are you sure you want to delete this passkey?</Trans>
+								)}
+								{isLastPasskeyWithMfa && (
+									<div
+										className={styles.warningText}
+										data-flx="user.account-security-tab.security-tab.handle-delete-passkey.warning-text"
+									>
+										{hasTotpMfa ? (
+											<Trans>
+												This is your last passkey. Once it's gone you won't be able to use a passkey as your second
+												factor.
+											</Trans>
+										) : (
+											<Trans>
+												This is your last passkey and passkeys are your second factor. Deleting it turns off two-factor
+												authentication for your account, and your current backup codes will stop working.
+											</Trans>
+										)}
+									</div>
+								)}
+							</div>
 						}
 						primaryText={i18n._(DELETE_PASSKEY_DESCRIPTOR)}
 						primaryVariant="danger"
@@ -257,7 +361,7 @@ export const SecurityTabContent: React.FC<SecurityTabProps> = observer(
 							</Button>
 						)}
 					</div>
-					{hasTotpMfa && (
+					{hasAnyMfa && (
 						<div
 							className={styles.divider}
 							data-flx="user.account-security-tab.security-tab.security-tab-content.divider"
@@ -303,7 +407,7 @@ export const SecurityTabContent: React.FC<SecurityTabProps> = observer(
 				</SettingsTabSection>
 				<SettingsTabSection
 					title={<Trans>Passkeys</Trans>}
-					description={<Trans>Use passkeys for passwordless sign-in and two-factor authentication</Trans>}
+					description={<Trans>Use passkeys to sign in without a password</Trans>}
 					data-flx="user.account-security-tab.security-tab.security-tab-content.settings-tab-section--3"
 				>
 					<div className={styles.row} data-flx="user.account-security-tab.security-tab.security-tab-content.row--3">
@@ -335,6 +439,20 @@ export const SecurityTabContent: React.FC<SecurityTabProps> = observer(
 							<Trans>Add passkey</Trans>
 						</Button>
 					</div>
+					{passkeys.length > 0 && (
+						<div
+							className={styles.divider}
+							data-flx="user.account-security-tab.security-tab.security-tab-content.passkey-two-factor-divider"
+						>
+							<Switch
+								label={<Trans>Require a passkey as your second factor</Trans>}
+								description={<Trans>Ask for a passkey after your password when you sign in</Trans>}
+								value={hasPasskeyMfa}
+								onChange={handleTogglePasskeyTwoFactor}
+								data-flx="user.account-security-tab.security-tab.security-tab-content.switch.passkey-two-factor"
+							/>
+						</div>
+					)}
 					{passkeys.length > 0 && (
 						<div
 							className={styles.divider}

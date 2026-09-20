@@ -16,6 +16,7 @@ export type LoginState = ValueOf<typeof LoginState>;
 export interface MfaMethods {
 	totp: boolean;
 	webauthn: boolean;
+	backupCodes: boolean;
 }
 
 class Authentication {
@@ -102,12 +103,13 @@ class Authentication {
 		ticket,
 		totp,
 		webauthn,
+		backupCodes,
 	}: {
 		ticket: string;
 	} & MfaMethods): void {
 		this.loginState = LoginState.Mfa;
 		this.mfaTicket = ticket;
-		this.mfaMethods = {totp, webauthn};
+		this.mfaMethods = {totp, webauthn, backupCodes};
 	}
 
 	handleMfaTicketClear(): void {

@@ -515,15 +515,15 @@ The body is optional. Fluxer reads it only when `delete_messages` is set and no 
 | --- | --- | --- |
 | password?<sup>1</sup> | string | The account password, offered as the sudo proof |
 | mfa_method?<sup>2</sup> | string | The verification method, either `totp` or `webauthn` |
-| mfa_code? | string | The authenticator code (1-32 characters), supplied with the `totp` method |
+| mfa_code? | string | The authenticator code or an unconsumed backup code (1-32 characters), supplied with the `totp` method |
 | webauthn_response? | [WebAuthn assertion](/http-api/authentication/#webauthn-assertion) object | The WebAuthn assertion for sudo verification |
 | webauthn_challenge? | string | The challenge (1-256 characters) bound to the sudo mode assertion |
 
-<sup>1</sup> Accepted only for an account with no configured second factor. A rejected password returns 400 `INVALID_FORM_BODY` with the code `INVALID_PASSWORD` on the path `password`
+<sup>1</sup> Accepted only for an account holding no TOTP secret and no registered WebAuthn credential. A rejected password returns 400 `INVALID_FORM_BODY` with the code `INVALID_PASSWORD` on the path `password`
 
-<sup>2</sup> Accepted only for an account with a configured second factor. A rejected code or assertion returns 400 `INVALID_FORM_BODY` with the code `INVALID_MFA_CODE` on the path `mfa_code`
+<sup>2</sup> Accepted only for an account holding a TOTP secret or a registered WebAuthn credential. The `totp` method reads `mfa_code` as a backup code alone while the account holds no TOTP secret. A rejected code or assertion returns 400 `INVALID_FORM_BODY` with the code `INVALID_MFA_CODE` on the path `mfa_code`
 
-An account that stores neither a password nor a second factor is verified without any proof.
+An account that stores no password, no TOTP secret, and no registered WebAuthn credential is verified without any proof.
 
 ### Response
 

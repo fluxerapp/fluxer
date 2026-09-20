@@ -470,17 +470,17 @@ These fields prove [sudo mode](/http-api/users/mfa/#sudo-mode) when an operation
 | --- | --- | --- |
 | password?<sup>1</sup> | string | Current account password |
 | mfa_method?<sup>2</sup> | string | MFA method, either `totp` or `webauthn` |
-| mfa_code? | string | Authenticator code when the method is `totp` (1-32 characters) |
+| mfa_code? | string | Authenticator code or unconsumed backup code when the method is `totp` (1-32 characters) |
 | webauthn_response? | [WebAuthn assertion](/http-api/authentication/#webauthn-assertion) object | Assertion when the method is `webauthn` |
 | webauthn_challenge? | string | Challenge bound to the WebAuthn assertion |
 
-<sup>1</sup> The password is accepted only when the account has no second factor, and it returns the field code `INVALID_PASSWORD` when it does not match
+<sup>1</sup> The password is accepted only while the account holds neither a TOTP secret nor a registered WebAuthn credential, and it returns the field code `INVALID_PASSWORD` when it does not match
 
-<sup>2</sup> The MFA proof is accepted only when the account has a second factor, and it returns the field code `INVALID_MFA_CODE` on any failure
+<sup>2</sup> The MFA proof is accepted only while the account holds a TOTP secret or a registered WebAuthn credential, and it returns the field code `INVALID_MFA_CODE` on any failure
 
-A bot credential satisfies sudo mode without any proof, and so does an account with no password or second factor. Every other account that supplies no usable proof receives 403 `SUDO_MODE_REQUIRED`, whose error object has `has_mfa` and a `methods` object reporting whether `totp` and `webauthn` are available.
+A bot credential satisfies sudo mode without any proof, and so does an account with no password, no TOTP secret, and no registered WebAuthn credential. Every other account that supplies no usable proof receives 403 `SUDO_MODE_REQUIRED`, whose error object has `has_mfa` and a `methods` object reporting whether `totp`, `webauthn`, and `backup_codes` are available.
 
-Fluxer issues a newly generated proof in the `X-Fluxer-Sudo-Mode-JWT` header of the success response, and only for an account that has a second factor. A proof supplied on the request is echoed back in that same header.
+Fluxer issues a newly generated proof in the `X-Fluxer-Sudo-Mode-JWT` header of the success response, and only for an account holding a TOTP secret or a registered WebAuthn credential. A proof supplied on the request is echoed back in that same header.
 
 ## Create guild
 

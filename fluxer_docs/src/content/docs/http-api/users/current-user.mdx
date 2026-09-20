@@ -16,11 +16,12 @@ Security-sensitive fields and destructive lifecycle operations on this page requ
 
 | Account state | Accepted proof |
 | --- | --- |
-| No authenticator configured | The current `password` |
-| An authenticator configured | `mfa_method` of `totp` with `mfa_code`, or `mfa_method` of `webauthn` with `webauthn_response` and `webauthn_challenge` |
-| No password credential and no authenticator | None, the requirement is already satisfied |
+| No TOTP secret and no registered WebAuthn credential | The current `password` |
+| A TOTP secret or a registered WebAuthn credential | `mfa_method` of `totp` with `mfa_code`, or `mfa_method` of `webauthn` with `webauthn_response` and `webauthn_challenge` |
+| A registered WebAuthn credential and no TOTP secret | `mfa_method` of `webauthn` as above, or `mfa_method` of `totp` with `mfa_code` holding an unconsumed backup code |
+| No password credential and neither of those | None, the requirement is already satisfied |
 
-Once an account configures an authenticator, its `password` stops working here.
+Once an account holds a TOTP secret or a registered WebAuthn credential, its `password` stops working here. A passkey counts whether or not the account enabled passkeys as a second factor. The `methods` object on a 403 `SUDO_MODE_REQUIRED` reports `backup_codes` so a client knows whether the code input is worth offering.
 
 ## Get current user
 

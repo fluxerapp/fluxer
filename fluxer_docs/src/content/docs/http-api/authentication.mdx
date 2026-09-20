@@ -135,16 +135,19 @@ The ticket and the method list a client needs to finish a login with a second fa
 | --- | --- | --- |
 | mfa | boolean | Always `true` |
 | ticket<sup>1</sup> | string | The ticket consumed by a TOTP or WebAuthn MFA completion |
-| allowed_methods<sup>2</sup> | array[string] | The methods available to this account, drawn from `totp` and `webauthn` (max 10 items) |
+| allowed_methods<sup>2</sup> | array[string] | The methods available to this account, drawn from `totp`, `webauthn`, and `backup_codes` (max 10 items) |
 | totp | boolean | Whether the account holds the time-based one-time password authenticator type |
-| webauthn | boolean | Whether at least one WebAuthn credential is registered |
+| webauthn<sup>3</sup> | boolean | Whether passkeys are enabled as a second factor |
+| backup_codes | boolean | Whether the account holds at least one unconsumed backup code |
 
 <sup>1</sup> The ticket is retained for five minutes, is destroyed after five failed code attempts, and is consumed by the completion that issues the session
 
-<sup>2</sup> The array lists the account's authenticators in the fixed order `totp` then `webauthn`, and it omits either value the account does not hold
+<sup>2</sup> The array lists the account's methods in the fixed order `totp`, `webauthn`, then `backup_codes`, and it omits any value the account cannot use
 
-:::note[TOTP completion accepts an unconsumed backup code]
-There is no backup code completion route and `backup_code` never appears in `allowed_methods`. [Complete login with TOTP](#complete-login-with-totp) reads it from `code`, and only while the account holds the TOTP authenticator type. Fluxer never reports whether one remains.
+<sup>3</sup> The account holds the WebAuthn [authenticator type](/http-api/users/#authenticator-types), which it takes from [Set WebAuthn two-factor authentication](/http-api/users/mfa/#set-webauthn-two-factor-authentication). A registered credential alone does not set it, except on an account with no password credential, where the passkey is the primary credential and always counts
+
+:::note[Backup codes have no completion route of their own]
+[Complete login with TOTP](#complete-login-with-totp) reads a backup code from `code`, which is what `backup_codes` in `allowed_methods` points a client at. An account whose only second factor is passkeys can present one there, so a client offers the code input alongside the passkey prompt.
 :::
 
 <a id="webauthn-authentication-options"></a>
@@ -574,7 +577,7 @@ MFA verification also permits 10 failed attempts per account in 15 minutes and d
 
 <sup>1</sup> A validated authenticator code is claimed for 30 seconds, so the same code cannot be presented twice. A backup code is consumed permanently on the attempt that accepts it
 
-An expired or unknown ticket returns the field code `SESSION_TIMEOUT` on `ticket`. An account with no TOTP enrolment returns the field code `TOTP_NOT_ENABLED` on `code`. Both an incorrect code and any code presented after the per-account or per-ticket attempt allowance is exhausted return the field code `INVALID_CODE` on `code`. A ticket that resolves to a bot account returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED`.
+An expired or unknown ticket returns the field code `SESSION_TIMEOUT` on `ticket`. An account with no TOTP enrolment reads `code` as a backup code, and it returns the field code `TOTP_NOT_ENABLED` on `code` only when it holds no unconsumed backup code either. Both an incorrect code and any code presented after the per-account or per-ticket attempt allowance is exhausted return the field code `INVALID_CODE` on `code`. A ticket that resolves to a bot account returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED`.
 
 ### Response
 
@@ -647,7 +650,7 @@ Consumes the MFA ticket, verifies the WebAuthn assertion against the challenge, 
 
 <sup>1</sup> The challenge is consumed before verification and is accepted only when its bound context, account, and ticket all match this request
 
-An expired or unknown ticket returns the field code `SESSION_TIMEOUT` on `ticket`. A challenge mismatch, an unknown credential, a stored public key that cannot be decoded, a signature counter that the authenticator did not advance, and a failed signature verification all return 401 `PASSKEY_AUTHENTICATION_FAILED`. A verified assertion whose reported signature counter cannot be read returns 500 `INVALID_WEBAUTHN_AUTHENTICATION_COUNTER`.
+An expired or unknown ticket returns the field code `SESSION_TIMEOUT` on `ticket`. A ticket for an account that does not count passkeys as its second factor returns 400 `TWO_FACTOR_REQUIRED`, which is what a TOTP account holding registered credentials without [Set WebAuthn two-factor authentication](/http-api/users/mfa/#set-webauthn-two-factor-authentication) receives. A challenge mismatch, an unknown credential, a stored public key that cannot be decoded, a signature counter that the authenticator did not advance, and a failed signature verification all return 401 `PASSKEY_AUTHENTICATION_FAILED`. A verified assertion whose reported signature counter cannot be read returns 500 `INVALID_WEBAUTHN_AUTHENTICATION_COUNTER`.
 
 This operation shares the MFA attempt allowances of [complete login with TOTP](#complete-login-with-totp). It permits 10 failed attempts per account in 15 minutes and destroys the ticket after 5 failed attempts. An exhausted allowance returns the field code `INVALID_CODE` on `ticket`.
 
@@ -656,7 +659,7 @@ This operation shares the MFA attempt allowances of [complete login with TOTP](#
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [authentication token response](#authentication-token-response) | The ticket and assertion are accepted |
-| 400 | [error response](/http-api/#error-response) | The body or ticket is invalid |
+| 400 | [error response](/http-api/#error-response) | The body or ticket is invalid, or passkeys are not the account's second factor (`TWO_FACTOR_REQUIRED`) |
 | 401 | [error response](/http-api/#error-response) | Challenge or assertion verification fails |
 | 403 | [error response](/http-api/#error-response) | SSO enforcement rejects the operation or the ticket resolves to a bot account |
 | 404 | [error response](/http-api/#error-response) | The ticket resolves to an account that no longer exists |
@@ -929,6 +932,8 @@ A token in the path reaches proxy logs, browser history, and referrer headers. A
 
 Consumes a valid reset token and replaces the account password, then issues a new session or an MFA challenge. Authentication is not required. Returns an [authentication token response](#authentication-token-response) when the account has no second factor, and an [MFA challenge response](#mfa-challenge-response) when it has one.
 
+Fluxer reads the second factor from the account as it stood before the reset. An account that held no password and holds at least one registered WebAuthn credential counts as having one, because the passkey was its primary credential, so it receives an MFA challenge with `webauthn` in `allowed_methods` and MUST prove the passkey before the reset yields a session.
+
 ### JSON body
 
 | Field | Type | Description |
@@ -943,7 +948,7 @@ An unknown or already consumed token, and a token bound to a deleted account, re
 Passwords are checked against a breached-password corpus, as they are during [registration](#register-an-account) and [email reversion](#revert-an-email-change).
 
 :::caution[Resetting a password revokes every existing session]
-A successful reset terminates every authentication session on the account, including the one any other device is holding. It then issues one fresh session. An account with a second factor receives an MFA ticket, and completing MFA with that ticket creates the session.
+A successful reset terminates every authentication session on the account, including the one any other device is holding. It then issues one fresh session. An account with a second factor receives an MFA ticket, and completing MFA with that ticket creates the session. Setting a password on an account that had none does not release it from its passkey, so that account still completes MFA.
 :::
 
 ### Response
@@ -961,7 +966,7 @@ A successful reset terminates every authentication session on the account, inclu
 
 The operation replaces the password, records the change time, clears an expired temporary suspension, terminates every authentication session on the account, and consumes the presented reset token. Every terminated session loses its Gateway session as [shared behaviour](#shared-behaviour) states. Other outstanding reset tokens are not invalidated, so a second recovery link issued earlier still works.
 
-An account with no second factor then receives one new session and its token. An account with a second factor receives a five-minute MFA ticket instead, and the MFA completion creates the session.
+An account with no second factor then receives one new session and its token. An account with a second factor receives a five-minute MFA ticket instead, and the MFA completion creates the session. An account that had no password and holds a registered WebAuthn credential is one of those, and its ticket is completed through [complete login with WebAuthn MFA](#complete-login-with-webauthn-mfa), or through [complete login with TOTP](#complete-login-with-totp) when `allowed_methods` lists `backup_codes`.
 
 ### Rate limit
 
@@ -1053,7 +1058,7 @@ The caller MUST send a valid sudo token in the `X-Fluxer-Sudo-Mode-JWT` header, 
 | Field | Type | Description |
 | --- | --- | --- |
 | session_id_hashes<sup>1</sup> | array[string] | The session digests to delete (max 100 entries) |
-| password?<sup>2</sup> | string | The password proof for an account with no second factor (8-256 characters) |
+| password?<sup>2</sup> | string | The password proof for an account holding no TOTP secret and no registered WebAuthn credential (8-256 characters) |
 | mfa_method?<sup>3</sup> | string | The proof method, either `totp` or `webauthn` |
 | mfa_code? | string | The authenticator code or an unconsumed backup code when the method is `totp` (1-32 characters) |
 | webauthn_response? | [WebAuthn assertion](#webauthn-assertion) object | The assertion when the method is `webauthn` |
@@ -1061,20 +1066,20 @@ The caller MUST send a valid sudo token in the `X-Fluxer-Sudo-Mode-JWT` header, 
 
 <sup>1</sup> Each value is the base64url `id_hash` from [list authentication sessions](#list-authentication-sessions). Fluxer ignores an unknown identifier, and an empty array deletes nothing and still returns 204
 
-<sup>2</sup> The password is accepted only when the account has no second factor, and a value that does not match returns the field code `INVALID_PASSWORD`
+<sup>2</sup> The password is accepted only while the account holds neither a TOTP secret nor a registered WebAuthn credential, and a value that does not match returns the field code `INVALID_PASSWORD`
 
-<sup>3</sup> The MFA proof is accepted only when the account has a second factor. Any failure returns the field code `INVALID_MFA_CODE` on `mfa_code`, and a successful proof issues a fresh sudo token
+<sup>3</sup> The MFA proof is accepted only while the account holds a TOTP secret or a registered WebAuthn credential, which a passkey satisfies whether or not passkeys are enabled as a second factor. Any failure returns the field code `INVALID_MFA_CODE` on `mfa_code`, and a successful proof issues a fresh sudo token
 
-A `totp` method reads `mfa_code` as an authenticator code and accepts an unconsumed backup code in its place. A `webauthn` method reads `webauthn_response` and `webauthn_challenge` together, and it accepts only a challenge that was issued for the sudo context.
+A `totp` method reads `mfa_code` as an authenticator code and accepts an unconsumed backup code in its place, and it reads the value as a backup code alone while the account holds no TOTP secret. A `webauthn` method reads `webauthn_response` and `webauthn_challenge` together, and it accepts only a challenge that was issued for the sudo context.
 
 :::caution[The caller can delete its own session]
 The operation deletes exactly the sessions identified by the supplied `id_hash` values. A client that wants to keep its own session MUST omit the `id_hash` of the entry whose `current` is true. Revoking the calling credential still returns 204.
 :::
 
-Missing or unusable proof returns 403 `SUDO_MODE_REQUIRED`, whose error body has top-level `has_mfa` and `methods` members, and `methods` reports whether `totp` and `webauthn` are available.
+Missing or unusable proof returns 403 `SUDO_MODE_REQUIRED`, whose error body has top-level `has_mfa` and `methods` members, and `methods` reports whether `totp`, `webauthn`, and `backup_codes` are available.
 
 :::note[An unclaimed account needs no proof]
-An account that has neither a password nor a second factor satisfies sudo mode with no body proof and no sudo token, and Fluxer issues none. Every other account MUST present a valid sudo token, a password, or an MFA proof.
+An account that has no password, no TOTP secret, and no registered WebAuthn credential satisfies sudo mode with no body proof and no sudo token, and Fluxer issues none. Every other account MUST present a valid sudo token, a password, or an MFA proof.
 :::
 
 ### Response
@@ -1091,7 +1096,7 @@ An account that has neither a password nor a second factor satisfies sudo mode w
 
 ### Side effects
 
-Each named session is deleted and loses its Gateway session as [shared behaviour](#shared-behaviour) states. A fresh MFA proof issues a new sudo token, while an accepted incoming token is echoed unchanged. Fluxer sets whichever token results in the `X-Fluxer-Sudo-Mode-JWT` response header. A password proof on an account with no second factor issues no token, so the header is not set unless the request already had one. No Gateway Dispatch is emitted.
+Each named session is deleted and loses its Gateway session as [shared behaviour](#shared-behaviour) states. A fresh MFA proof issues a new sudo token, while an accepted incoming token is echoed unchanged. Fluxer sets whichever token results in the `X-Fluxer-Sudo-Mode-JWT` response header. A password proof, which only an account holding neither a TOTP secret nor a registered WebAuthn credential can give, issues no token, so the header is not set unless the request already had one. No Gateway Dispatch is emitted.
 
 ### Rate limit
 

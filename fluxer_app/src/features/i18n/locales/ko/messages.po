@@ -2263,6 +2263,8 @@ msgid "25 uses"
 msgstr "25회 사용"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:150
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:40
 msgid "2FA"
 msgstr "2FA"
@@ -2343,7 +2345,7 @@ msgstr "6개월"
 
 #. Placeholder for the MFA login one-time password field.
 #. Short label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:53
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:58
 #: src/features/auth/flow/MfaScreen.tsx:22
 msgid "6-digit code"
 msgstr "6자리 코드"
@@ -2622,7 +2624,7 @@ msgid "Account & premium overrides"
 msgstr "계정 및 프리미엄 재정의"
 
 #. Security settings section for third-party app access and signed-in devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:49
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:88
 msgid "Account access"
 msgstr "계정 액세스"
 
@@ -2949,7 +2951,7 @@ msgstr "계정을 추가하여 계속하세요."
 msgid "Add an email and password to your account first."
 msgstr "먼저 계정에 이메일과 비밀번호를 추가하세요."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:192
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:296
 msgid "Add an extra layer of security to your account"
 msgstr "계정 보안을 한 단계 더 강화하세요"
 
@@ -3065,7 +3067,7 @@ msgid "Add override"
 msgstr "권한 재정의 추가"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:335
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:439
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:130
 msgid "Add passkey"
 msgstr "패스키 추가"
@@ -3269,11 +3271,11 @@ msgstr "즐겨찾기에 추가됨"
 msgid "Added to saved media"
 msgstr "저장된 미디어에 추가됨"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:377
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:495
 msgid "Added: {createdDate}"
 msgstr "추가일: {createdDate}"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:373
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:491
 msgid "Added: {createdDate} • last used: {lastUsedDate}"
 msgstr "추가일: {createdDate} • 마지막 사용: {lastUsedDate}"
 
@@ -4453,7 +4455,7 @@ msgid "Are you sure you want to delete the category \"{categoryName}\"? This can
 msgstr "카테고리 \"{categoryName}\"을(를) 정말 삭제하시겠어요? 이 작업은 되돌릴 수 없습니다."
 
 #. placeholder {0}: passkey.name
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:141
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:227
 msgid "Are you sure you want to delete the passkey <0>{0}</0>?"
 msgstr "패스키 <0>{0}</0>을(를) 정말 삭제하시겠어요?"
 
@@ -4465,7 +4467,7 @@ msgstr "이 첨부 파일을 삭제하시겠어요? 이 작업은 되돌릴 수 
 msgid "Are you sure you want to delete this community? This action cannot be undone. All channels, messages, and settings will be permanently deleted."
 msgstr "정말 이 커뮤니티를 삭제하시겠어요? 이 작업은 되돌릴 수 없으며, 모든 채널, 메시지, 설정이 영구적으로 삭제됩니다."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:150
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:235
 msgid "Are you sure you want to delete this passkey?"
 msgstr "이 패스키를 삭제하시겠어요?"
 
@@ -4543,6 +4545,12 @@ msgstr "ASCII 이모티콘"
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:49
 msgid "Ask before starting calls"
 msgstr "통화 시작 전에 확인"
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:449
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:154
+msgid "Ask for a passkey after your password when you sign in"
+msgstr "로그인 시 비밀번호 입력 후 패스키를 요청합니다"
 
 #. Short label in the theme studio. Keep it concise.
 #: src/features/theme_studio/ThemeStudio.tsx:56
@@ -4812,13 +4820,13 @@ msgstr "인증"
 msgid "Authenticator"
 msgstr "인증 앱"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:204
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:308
 msgid "Authenticator app"
 msgstr "인증 앱"
 
 #. Label for the MFA login one-time password field from an authenticator app or backup code.
 #. Short label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:49
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:54
 #: src/features/auth/flow/MfaScreen.tsx:18
 msgid "Authenticator code"
 msgstr "인증 코드"
@@ -4889,7 +4897,7 @@ msgstr "연결된 앱"
 #. Settings section label for OAuth applications authorized by the user.
 #. User settings tab for OAuth or connected apps authorized by the user.
 #: src/features/user/components/modals/tabs/account_security_tab/AccountManagementModals.tsx:17
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:57
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:96
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:507
 #: src/features/user/components/settings_utils/search_index/AuthorizedAppsIndex.ts:10
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:151
@@ -5301,11 +5309,18 @@ msgstr "드래그 앤 드롭으로 배경을 선택하는 영역"
 msgid "Backspace"
 msgstr "백스페이스"
 
+#. Label and placeholder for the MFA login field when the only code the account can use is a backup code.
+#. Label and placeholder for the code field in the authentication sudo verification modal when the only code the account can use is a backup code.
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:62
+#: src/features/auth/flow/MfaScreen.tsx:38
+msgid "Backup code"
+msgstr "백업 코드"
+
 #. Security modal title for one-time account recovery codes.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/auth/components/modals/BackupCodesModal.tsx:18
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:274
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:378
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:74
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:68
 msgid "Backup codes"
@@ -6320,7 +6335,7 @@ msgstr "여기에 파일을 올릴 수 없습니다"
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:72
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:80
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:264
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:278
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:140
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:177
@@ -7669,7 +7684,7 @@ msgstr "계정을 등록하고 이메일을 인증해야 신고를 보낼 수 �
 msgid "Claim your account by adding an email and password. We will send a verification code to confirm your email before finishing."
 msgstr "이메일과 비밀번호를 추가하여 계정을 등록하세요. 완료하기 전에 이메일 확인을 위한 인증 코드를 보내드립니다."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:173
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:277
 msgid "Claim your account to access security features like two-factor authentication and passkeys."
 msgstr "계정을 등록하여 2단계 인증 및 패스키와 같은 보안 기능에 액세스하세요."
 
@@ -8064,7 +8079,7 @@ msgstr "닫기"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:162
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:182
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:120
 msgid "Close account"
 msgstr "계정 삭제"
@@ -9166,7 +9181,7 @@ msgstr "커뮤니티 신고 계속하기"
 msgid "Continue to report user"
 msgstr "사용자 신고 계속하기"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:231
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:245
 msgid "Continue with passkey"
 msgstr "패스키로 계속하기"
 
@@ -9773,7 +9788,7 @@ msgid "Couldn't delete application"
 msgstr "애플리케이션을 삭제할 수 없습니다"
 
 #. Title of the error modal shown when removing a registered passkey fails.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:36
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:38
 msgid "Couldn't delete passkey"
 msgstr "패스키를 삭제할 수 없습니다"
 
@@ -10112,6 +10127,11 @@ msgstr "이모티콘 복제 설정을 업데이트할 수 없습니다"
 #: src/features/ui/action_menu/items/StaffUserControlsMenuItems.tsx:24
 msgid "Couldn't update mention suppression bypass"
 msgstr "멘션 알림 끄기 우회 설정을 업데이트할 수 없습니다"
+
+#. Title of the error modal shown when the passkey two-factor setting could not be saved.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:84
+msgid "Couldn't update passkey two-factor authentication"
+msgstr "패스키 2단계 인증을 업데이트할 수 없습니다"
 
 #. Error modal title shown when saving role changes fails.
 #: src/features/moderation/components/alerts/RoleUpdateFailedModal.tsx:9
@@ -11004,7 +11024,7 @@ msgid "Day"
 msgstr "일"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:142
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:162
 msgid "Deactivate"
 msgstr "비활성화"
 
@@ -11252,11 +11272,11 @@ msgstr "델라웨어"
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:109
 #: src/features/platform/utils/DesktopLocaleBridge.ts:76
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:517
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:117
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:290
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:154
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:174
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:190
 msgid "Delete"
 msgstr "삭제"
@@ -11425,7 +11445,7 @@ msgid "Delete other members' messages. Pinning is controlled separately."
 msgstr "다른 멤버의 메시지를 삭제합니다. 고정 권한은 별도로 관리됩니다."
 
 #. Security settings: confirmation modal title and primary button for removing a registered passkey. Destructive action; keep plain and direct.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:31
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:33
 msgid "Delete passkey"
 msgstr "패스키 삭제"
 
@@ -11512,7 +11532,7 @@ msgid "Delete webhook"
 msgstr "웹훅 삭제"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:166
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:186
 msgid "Delete your account"
 msgstr "계정 삭제"
 
@@ -11903,7 +11923,7 @@ msgstr "기기:"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tab label in the screen-share picker. Lists cameras and virtual capture devices.
 #. User settings tab for managing devices linked to the current account.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:65
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:104
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:530
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
@@ -12014,8 +12034,8 @@ msgstr "바로 업로드 활성화됨"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short footer action in the screen-share picker that disables screen-share preview frame uploads.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:238
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:138
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:342
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:158
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:279
 msgid "Disable"
 msgstr "비활성화"
@@ -13457,7 +13477,7 @@ msgstr "즐겨찾기 없음"
 #: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:32
 #: src/features/app/components/layout/GuildLayout.tsx:54
 #: src/features/invite/components/DisableInvitesButton.tsx:27
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:256
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:360
 #: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:23
 msgid "Enable"
 msgstr "활성화"
@@ -13936,6 +13956,16 @@ msgstr "선물 코드 입력…"
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:375
 msgid "Enter new email"
 msgstr "새 이메일 주소 입력"
+
+#. MFA code entry instructions shown when the account uses passkeys as its second factor.
+#: src/features/auth/flow/MfaScreen.tsx:42
+msgid "Enter one of your backup codes if you can't use your passkey."
+msgstr "패스키를 사용할 수 없는 경우 백업 코드 중 하나를 입력하세요."
+
+#. Body text in the authentication sudo verification modal, shown when the only code the account can enter is a backup code. Keep the tone plain and specific.
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:41
+msgid "Enter one of your backup codes."
+msgstr "백업 코드 중 하나를 입력하세요."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:66
@@ -15397,7 +15427,7 @@ msgstr "직접 구매"
 msgid "For this check, you send us a text message instead of receiving one from us."
 msgstr "이 확인 절차에서는 메시지를 받는 대신 저희에게 문자 메시지를 보내주셔야 합니다."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:169
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:183
 msgid "For your security, please confirm it's you to continue."
 msgstr "안전을 위해 본인 확인 후 계속해 주세요."
 
@@ -19767,8 +19797,8 @@ msgstr "악성코드 또는 위험한 링크"
 msgid "Malware, credential theft, or harmful files."
 msgstr "악성코드, 계정 정보 탈취 또는 유해 파일."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:443
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:478
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:561
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:596
 msgid "Manage"
 msgstr "관리"
 
@@ -19778,7 +19808,7 @@ msgid "Manage accounts"
 msgstr "계정 관리"
 
 #. Security settings section description for account access controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:53
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:92
 msgid "Manage apps and devices with access to your account"
 msgstr "계정에 액세스할 수 있는 앱과 장치를 관리합니다"
 
@@ -22813,7 +22843,7 @@ msgstr "사용자를 찾을 수 없습니다"
 msgid "No verification is required."
 msgstr "인증이 필요하지 않습니다."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:175
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:189
 msgid "No verification methods available"
 msgstr "사용 가능한 인증 방법 없음"
 
@@ -24232,7 +24262,7 @@ msgstr "패스키 이름"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:305
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:409
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:90
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:88
 msgid "Passkeys"
@@ -26336,7 +26366,7 @@ msgstr "재생성하면 현재 토큰이 무효화됩니다. 이전 값을 사�
 msgid "Register"
 msgstr "가입하기"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:318
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:422
 msgid "Registered passkeys"
 msgstr "등록된 패스키"
 
@@ -26468,7 +26498,7 @@ msgstr "창 크기 및 위치 기억"
 #: src/features/ui/action_menu/UserContextMenu.tsx:97
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:26
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:55
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:158
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:178
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:194
 #: src/features/webhook/components/WebhookListItem.tsx:277
 msgid "Remove"
@@ -26908,7 +26938,7 @@ msgstr "권한을 삭제하면 봇 기능이 제한될 수 있습니다."
 msgid "Removing the timeout will allow <0>{targetUserTag}</0> to send messages, react, and join voice channels again."
 msgstr "타임아웃을 해제하면 <0>{targetUserTag}</0>님이 메시지를 보내고, 반응하고, 음성 채널에 다시 참여할 수 있습니다."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:391
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:509
 msgid "Rename"
 msgstr "이름 변경"
 
@@ -27120,7 +27150,7 @@ msgstr "재게시: <0>{countLabel}</0>"
 msgid "Request a new code first."
 msgstr "먼저 새 코드를 요청하세요."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:135
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:136
 msgid "Request a new reset link"
 msgstr "새로운 재설정 링크 요청"
 
@@ -27148,6 +27178,12 @@ msgstr "요청"
 msgid "Require 2FA for moderation actions"
 msgstr "모더레이션 작업에 2단계 인증 필수"
 
+#. Settings search entry label. Also used as a search synonym in the settings search bar.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:448
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:138
+msgid "Require a passkey as your second factor"
+msgstr "패스키를 두 번째 인증 수단으로 요구"
+
 #. Short label for an advanced voice-channel navigation preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:17
 msgid "Require double-click to join voice channels"
@@ -27162,6 +27198,11 @@ msgstr "친구 추가 수동 승인 필요"
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/ApplicationInfoSection.tsx:44
 msgid "Require OAuth2 code grant"
 msgstr "OAuth2 코드 그랜트 필요"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:146
+msgid "Require passkey"
+msgstr "패스키 필수"
 
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:466
 msgid "Require two-factor authentication for moderators before they can ban, kick, time out, or remove messages."
@@ -27381,7 +27422,7 @@ msgstr "데이터 초기화"
 msgid "Reset font size"
 msgstr "글꼴 크기 재설정"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:128
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:129
 msgid "Reset link invalid or expired"
 msgstr "재설정 링크가 유효하지 않거나 만료되었습니다"
 
@@ -27397,7 +27438,7 @@ msgstr "미디어 위치 재설정"
 
 #. Short label in the authentication reset password page. Keep the tone plain and specific.
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:19
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:185
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:186
 msgid "Reset password"
 msgstr "비밀번호 재설정"
 
@@ -27791,7 +27832,7 @@ msgid "Review and confirm"
 msgstr "검토 및 확인"
 
 #. Security settings row description for authorized apps.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:61
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:100
 msgid "Review apps that can access your account."
 msgstr "계정에 액세스할 수 있는 앱을 검토하세요."
 
@@ -27806,7 +27847,7 @@ msgid "Review past purchases and refund options"
 msgstr "이전 구매 내역 및 환불 옵션 검토"
 
 #. Security settings row description for linked devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:69
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:108
 msgid "Review signed-in devices and sign out of sessions you don't recognize."
 msgstr "로그인된 기기를 검토하고 알 수 없는 세션을 로그아웃하세요."
 
@@ -28818,6 +28859,11 @@ msgstr "검색 중"
 msgid "Searching for people..."
 msgstr "사람 검색 중..."
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:142
+msgid "Second factor"
+msgstr "두 번째 인증 수단"
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:112
 msgid "Second option"
 msgstr "두 번째 옵션"
@@ -28882,7 +28928,7 @@ msgctxt "security-settings-section"
 msgid "Security"
 msgstr "보안"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:171
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:275
 msgid "Security features"
 msgstr "보안 기능"
 
@@ -29535,8 +29581,8 @@ msgstr "여기서 설정"
 msgid "Set mute shortcut"
 msgstr "음소거 단축키 설정"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:116
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:144
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:117
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:145
 msgid "Set new password"
 msgstr "새 비밀번호 설정"
 
@@ -29686,7 +29732,7 @@ msgstr "나중에 설정"
 msgid "Set voice region"
 msgstr "음성 지역 설정"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:147
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:148
 msgid "Set your new password."
 msgstr "새 비밀번호를 설정하세요."
 
@@ -31910,6 +31956,11 @@ msgstr "스트리밍 중지"
 msgid "Stop trusting all links?"
 msgstr "모든 링크 신뢰를 중단할까요?"
 
+#. Security settings: confirmation modal title for turning off passkey-based two-factor authentication.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:64
+msgid "Stop using passkeys for two-factor authentication?"
+msgstr "2단계 인증에 패스키 사용을 중단하시겠어요?"
+
 #. Voice control action for stopping the currently focused or selected stream.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:243
 msgid "Stop watching"
@@ -32224,7 +32275,7 @@ msgid "Surfaces"
 msgstr "표면"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:146
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:166
 msgid "Suspend"
 msgstr "일시 중단"
 
@@ -32714,7 +32765,7 @@ msgid "Temporal layers"
 msgstr "시간 레이어"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:150
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:170
 msgid "Temporarily disable your account"
 msgstr "계정 일시 비활성화"
 
@@ -33821,6 +33872,14 @@ msgstr "두 번째 옵션에 대한 설명입니다"
 msgid "This is the third option description"
 msgstr "세 번째 옵션 설명입니다"
 
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:248
+msgid "This is your last passkey and passkeys are your second factor. Deleting it turns off two-factor authentication for your account, and your current backup codes will stop working."
+msgstr "이것이 마지막 패스키이며, 패스키가 두 번째 인증 수단입니다. 삭제하면 계정의 2단계 인증이 해제되고 현재 백업 코드도 더 이상 작동하지 않습니다."
+
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:243
+msgid "This is your last passkey. Once it's gone you won't be able to use a passkey as your second factor."
+msgstr "이것이 마지막 패스키입니다. 삭제하고 나면 패스키를 두 번째 인증 수단으로 사용할 수 없습니다."
+
 #. Required-action form error for landline, toll-free, premium, shared-cost, UAN, voicemail and pager lines. Do not name which line type the provider returned.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:549
 msgid "This isn't a mobile number, so it can't receive our text. Try a mobile number, or contact support if you think that's wrong."
@@ -33989,7 +34048,7 @@ msgstr "모든 신뢰하는 도메인이 제거됩니다. 모든 도메인에 �
 msgid "This removes every custom shortcut and re-enables all built-in shortcuts. This cannot be undone."
 msgstr "모든 사용자 지정 단축키를 제거하고 내장 단축키를 다시 활성화합니다. 이 작업은 되돌릴 수 없습니다."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:131
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:132
 msgid "This reset link has expired. Reset links last 1 hour. Please request a new one."
 msgstr "이 비밀번호 재설정 링크는 만료되었습니다. 링크는 1시간 동안 유효합니다. 새 링크를 요청해 주세요."
 
@@ -34854,7 +34913,9 @@ msgid "Turkish"
 msgstr "튀르키예어"
 
 #. Button label that turns off streaming privacy.
+#. Security settings: confirm button for turning off passkey-based two-factor authentication.
 #: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx:16
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:80
 msgid "Turn off"
 msgstr "끄기"
 
@@ -34909,6 +34970,11 @@ msgstr "스트림 끄기"
 #: src/features/streamer_mode/components/StreamerModeGate.tsx:19
 msgid "Turn off streaming privacy before viewing login or account security details."
 msgstr "로그인 또는 계정 보안 세부 정보를 보려면 스트리밍 개인 정보 보호를 끄세요."
+
+#. Security settings: confirm button for turning on passkey-based two-factor authentication.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:60
+msgid "Turn on"
+msgstr "켜기"
 
 #. Permission description in the channel-scoped permissions editor for the Stream Video permission. Covers both the webcam and screen sharing.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:292
@@ -35049,7 +35115,7 @@ msgstr "2단계 인증이 해제되었습니다"
 msgid "Two-factor authentication enabled"
 msgstr "2단계 인증이 설정되었습니다"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:211
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:315
 msgid "Two-factor authentication is enabled"
 msgstr "2단계 인증이 사용 설정되었습니다"
 
@@ -36293,7 +36359,7 @@ msgstr "실제 값 사용"
 msgid "Use alternative method"
 msgstr "다른 방법 사용"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:213
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:317
 msgid "Use an authenticator app to generate codes for two-factor authentication"
 msgstr "인증 앱을 사용하여 2단계 인증 코드를 생성합니다"
 
@@ -36464,11 +36530,16 @@ msgstr "기본 제목 표시줄 사용"
 msgid "Use only if it clearly breaks {productName}'s rules and doesn't fit above."
 msgstr "{productName}의 규칙을 명확히 위반하고 위에 해당하지 않는 경우에만 사용하세요."
 
+#. Security settings: confirmation modal title for turning on passkey-based two-factor authentication.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:51
+msgid "Use passkeys for two-factor authentication?"
+msgstr "패스키를 2단계 인증에 사용하시겠어요?"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:306
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:410
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:134
-msgid "Use passkeys for passwordless sign-in and two-factor authentication"
-msgstr "비밀번호 없는 로그인과 2단계 인증에 패스키 사용"
+msgid "Use passkeys to sign in without a password"
+msgstr "패스키를 사용하여 비밀번호 없이 로그인합니다"
 
 #. Button in the required-action modal. Selects the phone verification path.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:174
@@ -36926,7 +36997,7 @@ msgstr "인증 이메일을 보냈습니다. 받은편지함을 확인해 주세
 msgid "Verification expired"
 msgstr "인증 만료"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:57
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:67
 #: src/features/auth/components/pages/VerifyEmailPage.tsx:108
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:241
 msgid "Verification failed"
@@ -36967,12 +37038,12 @@ msgid "Verify email"
 msgstr "이메일 인증"
 
 #. Accessible form label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:41
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:46
 msgid "Verify identity form"
 msgstr "본인 확인 양식"
 
 #. Short label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:45
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:50
 msgid "Verify it's you"
 msgstr "본인 인증하기"
 
@@ -37015,12 +37086,12 @@ msgid "Verify your email address to send friend requests."
 msgstr "친구 요청을 보내려면 이메일 주소를 인증하세요."
 
 #. Security settings warning shown when an unverified account cannot register a new passkey.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:45
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:47
 msgid "Verify your email before adding a passkey."
 msgstr "패스키를 추가하기 전에 이메일을 인증하세요."
 
 #. Security settings warning shown when an unverified account cannot enable authenticator-app two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:40
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:42
 msgid "Verify your email before adding an authenticator app."
 msgstr "인증 앱을 추가하기 전에 이메일을 인증하세요."
 
@@ -37099,7 +37170,7 @@ msgstr "카드 확인 중"
 msgid "Verifying code…"
 msgstr "코드 확인 중…"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:119
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:120
 msgid "Verifying your reset link…"
 msgstr "재설정 링크 확인 중…"
 
@@ -37312,7 +37383,7 @@ msgstr "차단된 사용자를 확인하고 관리합니다."
 msgid "View and manage every webhook configured across your community."
 msgstr "커뮤니티에 설정된 모든 웹훅을 확인하고 관리합니다."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:280
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:384
 msgid "View and manage your backup codes for account recovery"
 msgstr "계정 복구를 위한 백업 코드 확인 및 관리"
 
@@ -37346,7 +37417,7 @@ msgstr "채널 보기"
 msgid "View channel members"
 msgstr "채널 멤버 보기"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:298
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:402
 msgid "View codes"
 msgstr "코드 보기"
 
@@ -37874,7 +37945,7 @@ msgstr "잠시만 기다려 주세요"
 msgid "Waiting for connection..."
 msgstr "연결 대기 중..."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:218
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:232
 msgid "Waiting for passkey…"
 msgstr "패스키를 기다리는 중…"
 
@@ -39335,6 +39406,11 @@ msgstr "{guildNames}을(를) 나가게 됩니다. 게시한 내용은 삭제되�
 msgid "You will still need to finish the email step."
 msgstr "이메일 단계는 여전히 완료해야 합니다."
 
+#. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when the account also has an authenticator app.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:74
+msgid "You won't be asked for a passkey after your password anymore. Your authenticator app stays as your second factor."
+msgstr "더 이상 로그인 시 비밀번호 입력 후 패스키를 요청하지 않습니다. 인증 앱은 계속해서 두 번째 인증 수단으로 사용됩니다."
+
 #: src/features/app/components/floating/UserAreaPopout.tsx:92
 #: src/features/user/components/modals/StatusChangeBottomSheet.tsx:40
 msgid "You won't receive notifications on desktop"
@@ -39348,6 +39424,11 @@ msgstr "오프라인으로 표시됩니다"
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:464
 msgid "You'll have to sign back in on all signed-out devices"
 msgstr "로그아웃된 모든 기기에서 다시 로그인해야 합니다"
+
+#. Security settings: confirmation modal body for turning on passkey-based two-factor authentication.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:55
+msgid "You'll need one of your passkeys to sign in on a new device. If you lose every passkey you can be locked out of your account. Backup codes will be saved for you so you still have a way in."
+msgstr "새 기기에서 로그인하려면 등록된 패스키 중 하나가 필요합니다. 패스키를 모두 잃어버리면 계정에 영구적으로 접근하지 못할 수 있습니다. 백업 코드가 저장되므로 계정에 들어갈 방법은 남아 있습니다."
 
 #. Privacy > Active now: confirmation modal body when turning sharing on.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:41
@@ -39637,9 +39718,14 @@ msgstr "계정을 만든 지 얼마 되지 않아 이 커뮤니티에서 메시�
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "계정 요청이 승인 대기 중입니다. 관리자가 승인한 후 로그인할 수 있습니다."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:181
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:195
 msgid "Your account requires multi-factor authentication, but no supported methods are set up on this device. Sign in on a device with your authenticator app or security key, or contact support."
 msgstr "계정에 다단계 인증이 필요하지만, 이 기기에는 지원되는 방법이 설정되어 있지 않습니다. 인증 앱 또는 보안 키가 있는 기기에서 로그인하거나 지원팀에 문의하세요."
+
+#. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when passkeys are the only second factor on the account.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:68
+msgid "Your account will no longer be protected by two-factor authentication when you sign in with your password. You'll also lose elevated permissions in servers that require two-factor authentication."
+msgstr "비밀번호로 로그인할 때 더 이상 2단계 인증으로 계정이 보호되지 않습니다. 또한 2단계 인증이 필요한 커뮤니티에서는 상위 권한도 사용할 수 없게 됩니다."
 
 #. Hint under the set-aside button in the required-action modal when the user is in no community that triggers the check. This is the common case. Do not phrase it as undoing a join.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:284

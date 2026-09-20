@@ -8,6 +8,8 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 Multi-factor authentication asks for a second proof of identity after the account password. Fluxer accepts a TOTP authenticator app and WebAuthn credentials such as a passkey. A one-use backup code works instead of a TOTP code, and [sudo mode](#sudo-mode) reuses these factors to protect every security-sensitive operation in the API.
 
+Registering a WebAuthn credential does not make passkeys a second factor. A registered credential answers a [sudo mode](#sudo-mode) challenge and a passwordless login on its own, and only [Set WebAuthn two-factor authentication](#set-webauthn-two-factor-authentication) adds the WebAuthn [authenticator type](/http-api/users/#authenticator-types) that makes a passkey a required second factor at password login.
+
 Every route here requires a non-bot user session. Fluxer rejects an account in suspicious activity state with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`, including on the sudo routes.
 
 :::caution[A challenge is one-use and context-bound]
@@ -28,13 +30,15 @@ Fluxer rejects an accepted code for 30 seconds if it is sent again. The skew kee
 
 Regenerating backup codes deletes the stored set and then issues exactly 10 replacements, so any code the user had already saved stops working.
 
-Enabling TOTP issues 10 codes without deleting anything first. An account that already generated a set through [List MFA backup codes](#list-mfa-backup-codes) while holding no TOTP secret keeps those codes alongside the 10 the enable response returns. Every one stays redeemable. Disabling TOTP deletes every backup code without issuing replacements.
+Enabling TOTP issues 10 codes without deleting anything first. An account that already generated a set through [List MFA backup codes](#list-mfa-backup-codes) while holding no TOTP secret keeps those codes alongside the 10 the enable response returns. Every one stays redeemable. Disabling TOTP deletes every backup code only when the account is left with no second factor, so an account that keeps passkeys as a second factor keeps its whole set.
 
 [List MFA backup codes](#list-mfa-backup-codes) reads the current set back at any time and reports which codes are already consumed. Consuming a code is irreversible. An account that cannot prove [sudo mode](#sudo-mode) reads the same set through the [backup codes challenge](#backup-codes-challenge).
 
 A backup code has only these entry points: the `mfa_code` field of the [sudo verification object](#sudo-verification-object) with `mfa_method` set to `totp`, the `code` field of [Disable TOTP MFA](#disable-totp-mfa), and the `code` field of [complete login with TOTP](/http-api/authentication/#complete-login-with-totp). Every other code field rejects it. All accept a current authenticator code or an unconsumed backup code. [Enable TOTP MFA](#enable-totp-mfa) validates only against the secret being enrolled.
 
-Every entry point requires the account to hold a TOTP secret. An account whose only authenticator is WebAuthn holds no TOTP secret, so none of the entry points accepts a backup code, though the account can still regenerate the set.
+Only the `code` field of [Disable TOTP MFA](#disable-totp-mfa) requires the account to hold a TOTP secret, so an account whose only second factor is passkeys never reaches that one. The other two accept an unconsumed backup code from such an account: the [sudo verification object](#sudo-verification-object) reads `mfa_code` as a backup code whenever the account holds no TOTP secret, and [complete login with TOTP](/http-api/authentication/#complete-login-with-totp) reads `code` the same way. Together they are the recovery path when no passkey is at hand. Any account reads and replaces its set through [List MFA backup codes](#list-mfa-backup-codes) with `regenerate` set to true, whether or not it holds a TOTP secret, because that route needs sudo mode alone.
+
+[Set WebAuthn two-factor authentication](#set-webauthn-two-factor-authentication) mints 10 codes when it turns the toggle on for an account holding none, so an account whose only second factor is passkeys always has a set to fall back on.
 
 :::caution[An uppercase backup code with spaces still matches]
 Fluxer lowercases the submitted value and each stored code, then removes every character outside `a-z` and `0-9`. `abcdefgh` and `AbCd EfGh` both match the issued code `abcd-efgh`.
@@ -77,21 +81,22 @@ Fluxer refuses a resend for 30 seconds after the previous send on the same ticke
 
 Sudo mode is a short-lived proof that the human in front of the session is still the account holder. An operation that requires it accepts a valid `X-Fluxer-Sudo-Mode-JWT` request header or the [sudo verification object](#sudo-verification-object) fields inside the JSON body.
 
-A sudo token lasts five minutes and works only for the account that obtained it, across that account's sessions. Treat it as opaque. A new token is issued only after an MFA proof from an account with an enrolled authenticator.
+A sudo token lasts five minutes and works only for the account that obtained it, across that account's sessions. Treat it as opaque. A new token is issued only after an MFA proof from an account holding a TOTP secret or a registered WebAuthn credential.
 
 :::caution[The echoed header repeats the request value]
 When Fluxer issues no fresh token it echoes the request's `X-Fluxer-Sudo-Mode-JWT` value back unchanged and never re-signs it, so the five-minute window never slides. Fluxer echoes the value even when it fails verification.
 :::
 
-The accepted proof depends on the authenticators the account has configured.
+The accepted proof depends on what the account can present, which is a stored TOTP secret or a registered WebAuthn credential. The [authenticator types](/http-api/users/#authenticator-types) the account advertises do not enter into it, so a passkey proves sudo mode whether or not passkeys are enabled as a second factor.
 
 | Account state | Accepted proof |
 | --- | --- |
-| No authenticator | `password` |
-| Any authenticator | `mfa_method` with its matching fields, because `password` is no longer accepted |
-| Neither an authenticator nor a password credential | Nothing, and eligible sudo operations pass |
+| Neither a TOTP secret nor a registered WebAuthn credential | `password` |
+| A TOTP secret or a registered WebAuthn credential | `mfa_method` with its matching fields, because `password` is no longer accepted |
+| A registered WebAuthn credential and no TOTP secret | The same, and `mfa_method` of `totp` then reads `mfa_code` as an unconsumed backup code |
+| Neither of those and no password credential | Nothing, and eligible sudo operations pass |
 
-The `totp` method reads `mfa_code` as a current authenticator code or an unconsumed backup code and requires the account to hold a TOTP secret. The `webauthn` method reads `webauthn_response` and `webauthn_challenge` together and requires a registered credential.
+The `totp` method reads `mfa_code` as a current authenticator code or an unconsumed backup code. An account holding no TOTP secret is left with the backup code alone, which is how an account whose only second factor is passkeys proves sudo mode with no passkey at hand. The `webauthn` method reads `webauthn_response` and `webauthn_challenge` together and requires a registered credential.
 
 A request that has no accepted proof fails with 403 `SUDO_MODE_REQUIRED`. Its body has the [sudo mode methods object](#sudo-mode-methods-object) members, so a client can tell which proof to ask the user for. A proof that is present but wrong fails instead with 400 `INVALID_FORM_BODY` and a [validation error](/http-api/#validation-error-object) entry. A mismatched password produces path `password` with code `INVALID_PASSWORD`. A rejected TOTP code, backup code, or WebAuthn assertion produces path `mfa_code` with code `INVALID_MFA_CODE`, so a client cannot tell which of the three was rejected.
 
@@ -107,7 +112,7 @@ In a `SUDO_MODE_REQUIRED` error response, `has_mfa` and `methods` are at the top
 
 | Field | Type | Description |
 | --- | --- | --- |
-| has_mfa | boolean | Whether the account has the TOTP or the WebAuthn authenticator type |
+| has_mfa | boolean | Whether the account can satisfy a sudo mode challenge |
 | methods | [sudo mode method availability](#sudo-mode-method-availability-object) object | Authenticators the account can present |
 
 ## Sudo mode method availability object
@@ -117,9 +122,12 @@ In a `SUDO_MODE_REQUIRED` error response, `has_mfa` and `methods` are at the top
 | Field | Type | Description |
 | --- | --- | --- |
 | totp<sup>1</sup> | boolean | Whether the account has a TOTP secret and the TOTP authenticator type |
-| webauthn | boolean | Whether the account has the WebAuthn authenticator type |
+| webauthn | boolean | Whether the account has at least one registered WebAuthn credential |
+| backup_codes<sup>2</sup> | boolean | Whether the account holds at least one unconsumed backup code |
 
 <sup>1</sup> Both conditions are required, so an account holding a stored secret without the [authenticator type](/http-api/users/#authenticator-types) reports `false`
+
+<sup>2</sup> There is no `backup_codes` method. The value tells a client to offer the code input, which a backup code reaches under `mfa_method` of `totp` like any other code, and to label that input as a backup code when `totp` is `false`. It reports the stored codes alone, so a client reads it only while `has_mfa` is true, because an account that cannot answer a sudo challenge proves sudo mode with its `password` however many codes it holds
 
 ## Sudo verification object
 
@@ -135,11 +143,11 @@ Operations that require sudo mode merge these fields into their own JSON body. E
 | webauthn_response?<sup>4</sup> | [WebAuthn assertion](#webauthn-assertion-object) object | Assertion produced for the supplied challenge |
 | webauthn_challenge?<sup>4</sup> | string | Challenge returned by [create sudo WebAuthn authentication options](#create-sudo-webauthn-authentication-options) (1-256 characters) |
 
-<sup>1</sup> Considered only while the account has no MFA authenticator, and ignored once TOTP or a WebAuthn credential exists
+<sup>1</sup> Considered only while the account holds no TOTP secret and no registered WebAuthn credential, and ignored once either exists
 
-<sup>2</sup> Required when the account has any MFA authenticator, unless a valid sudo token is already present
+<sup>2</sup> Required when the account holds a TOTP secret or a registered WebAuthn credential, unless a valid sudo token is already present
 
-<sup>3</sup> Required when `mfa_method` is `totp`, with a current authenticator code or an unconsumed backup code
+<sup>3</sup> Required when `mfa_method` is `totp`, with a current authenticator code or an unconsumed backup code. Fluxer reads it as a backup code alone while the account holds no TOTP secret
 
 <sup>4</sup> Both fields are required together when `mfa_method` is `webauthn`
 
@@ -439,8 +447,22 @@ Fluxer emits no other PublicKeyCredential request options member, so `hints` and
 | Field | Type | Description |
 | --- | --- | --- |
 | totp | boolean | Whether the account has a TOTP secret and the TOTP authenticator type, as in the [sudo mode method availability](#sudo-mode-method-availability-object) object |
-| webauthn | boolean | Whether the account has the WebAuthn authenticator type |
-| has_mfa | boolean | Whether the account has the TOTP or the WebAuthn authenticator type, as in the [sudo mode methods](#sudo-mode-methods-object) object |
+| webauthn | boolean | Whether the account has at least one registered WebAuthn credential |
+| backup_codes | boolean | Whether the account holds at least one unconsumed backup code, as in the [sudo mode method availability](#sudo-mode-method-availability-object) object |
+| has_mfa | boolean | Whether the account can satisfy a sudo mode challenge, as in the [sudo mode methods](#sudo-mode-methods-object) object |
+
+## WebAuthn two-factor object
+
+The account as it stands after [Set WebAuthn two-factor authentication](#set-webauthn-two-factor-authentication), together with any backup codes that operation minted.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user | [user](/http-api/users/#user-object) object | The updated account, with `authenticator_types` reflecting the change |
+| backup_codes<sup>1</sup> | ?array[[MFA backup code](#mfa-backup-code-object) object] | The 10 codes minted by this call, or null when none were minted |
+
+<sup>1</sup> Present with codes only when the call turned the toggle on for an account holding no backup code. A call that turned the toggle off, or that found a set already in place, reports null
 
 ## Enable TOTP MFA
 
@@ -504,8 +526,8 @@ The body extends the [sudo verification object](#sudo-verification-object) with 
 
 <sup>1</sup> A wrong value returns `INVALID_CODE` on the path `code` with a sudo token, and `INVALID_MFA_CODE` on the path `mfa_code` when `code` proves sudo mode
 
-:::caution[Backup codes do not survive TOTP removal]
-Disabling TOTP invalidates every backup code on the account, including the code that proved this request. An account that keeps a WebAuthn credential is left with none, and needs [List MFA backup codes](#list-mfa-backup-codes) with `regenerate` set to true to issue a new set.
+:::caution[Backup codes survive only while a second factor remains]
+Disabling TOTP invalidates every backup code on the account, including the code that proved this request, unless the account keeps passkeys enabled as a second factor. An account that keeps that toggle on keeps its whole set. An account left with no second factor is left with no codes, and needs [List MFA backup codes](#list-mfa-backup-codes) with `regenerate` set to true to issue a new set. A registered WebAuthn credential alone does not preserve the set.
 :::
 
 ### Response
@@ -518,7 +540,7 @@ Disabling TOTP invalidates every backup code on the account, including the code 
 
 ### Side effects
 
-TOTP is disabled and every backup code stops working. Fluxer removes the TOTP authenticator type, along with the unassigned legacy authenticator value `1` when the account still held it. Fluxer also copies the account's authenticator types to every bot account the user owns. [User Update](/gateway/events/#user-update) goes to the user's sessions and each owned bot whose authenticator types changed.
+TOTP is disabled. Every backup code stops working unless the account keeps passkeys enabled as a second factor, in which case the whole set survives. Fluxer removes the TOTP authenticator type, along with the unassigned legacy authenticator value `1` when the account still held it. Fluxer also copies the account's authenticator types to every bot account the user owns. [User Update](/gateway/events/#user-update) goes to the user's sessions and each owned bot whose authenticator types changed.
 
 ### Rate limit
 
@@ -530,7 +552,7 @@ TOTP is disabled and every backup code stops working. Fluxer removes the TOTP au
 
 Returns an [MFA backup codes](#mfa-backup-codes-object) object, replacing the set first when `regenerate` is true. [Sudo mode](#sudo-mode) is required.
 
-Neither a verified email nor an authenticator is required, so an account with no MFA at all can prove sudo mode with its password and use this operation.
+Neither a verified email nor an authenticator is required, so an account with no MFA at all can prove sudo mode with its password and use this operation. An account whose only second factor is passkeys proves sudo mode with a passkey, or with one of these codes as `mfa_code` under `mfa_method` of `totp`, and reads or replaces its set the same way. [Complete login with TOTP](/http-api/authentication/#complete-login-with-totp) redeems one of those codes later.
 
 A backup code sent as `mfa_code` to satisfy sudo mode is consumed. With `regenerate` false it comes back with `consumed` set to true. With `regenerate` true it is deleted with the rest of the previous set and does not appear.
 
@@ -751,7 +773,9 @@ Fluxer issues a registration challenge for the current user. It expires after fi
 
 <RouteHeader method="POST" path="/v1/users/@me/mfa/webauthn/credentials" />
 
-Consumes a registration challenge, adds one WebAuthn credential to the current account, and returns 204 with an empty body. Emits a [WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update) Gateway event, and a [User Update](/gateway/events/#user-update) event when this is the account's first WebAuthn credential.
+Consumes a registration challenge, adds one WebAuthn credential to the current account, and returns 204 with an empty body. Emits a [WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update) Gateway event.
+
+Registration changes no [authenticator type](/http-api/users/#authenticator-types). The credential answers a sudo mode challenge and a passwordless login straight away, and passkeys become a second factor at password login only through [Set WebAuthn two-factor authentication](#set-webauthn-two-factor-authentication).
 
 The account needs a verified email and fewer than 10 registered credentials. This route accepts no sudo verification fields of its own. Fluxer verifies the attestation against the instance relying party identifier and its allowed origins, and does not require user verification.
 
@@ -777,9 +801,9 @@ Fluxer consumes the registration challenge before it re-checks the credential li
 
 ### Side effects
 
-The credential is added to the account. When it is the account's first WebAuthn credential, Fluxer also copies the account's authenticator types, which now include WebAuthn, to every bot account the user owns.
+The credential is added to the account. No authenticator type changes, and no bot account the user owns is touched.
 
-[WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update) reaches the user's sessions with the complete current credential summaries. When the authenticator types changed, [User Update](/gateway/events/#user-update) also reaches the user and each affected owned bot.
+[WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update) reaches the user's sessions with the complete current credential summaries.
 
 ### Rate limit
 
@@ -827,7 +851,7 @@ The credential name is replaced and no authenticator type changes. [WebAuthn Cre
 
 <RouteHeader method="DELETE" path="/v1/users/@me/mfa/webauthn/credentials/{credential_id}" mfa />
 
-Deletes one WebAuthn credential owned by the current account and returns 204 with an empty body. [Sudo mode](#sudo-mode) is required. Emits a [WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update) Gateway event, and a [User Update](/gateway/events/#user-update) event when this was the account's final WebAuthn credential.
+Deletes one WebAuthn credential owned by the current account and returns 204 with an empty body. [Sudo mode](#sudo-mode) is required. Emits a [WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update) Gateway event, and a [User Update](/gateway/events/#user-update) event when this was the account's final WebAuthn credential and passkeys were enabled as a second factor.
 
 A verified email is not required.
 
@@ -842,7 +866,7 @@ A verified email is not required.
 The body is a [sudo verification object](#sudo-verification-object). An existing sudo proof is sent in the `X-Fluxer-Sudo-Mode-JWT` request header.
 
 :::caution[Removing the final credential removes an authenticator]
-Deleting the account's last WebAuthn credential removes the WebAuthn authenticator type. Without TOTP the account then has no MFA authenticator, and sudo mode falls back to the account password.
+Deleting the account's last WebAuthn credential removes the WebAuthn authenticator type from an account that enabled passkeys as a second factor with [Set WebAuthn two-factor authentication](#set-webauthn-two-factor-authentication). Without TOTP the account then has no second factor. Either way it can no longer answer a WebAuthn sudo challenge, and without a TOTP secret sudo mode falls back to the account password.
 :::
 
 ### Response
@@ -855,13 +879,64 @@ Deleting the account's last WebAuthn credential removes the WebAuthn authenticat
 
 ### Side effects
 
-The credential is deleted. When it was the final one, the WebAuthn authenticator type is also removed from every bot account owned by the user.
+The credential is deleted. When it was the final one and the account had passkeys enabled as a second factor, the WebAuthn authenticator type is removed from the account and from every bot account owned by the user.
 
 [WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update) reaches the user's sessions with the remaining credential summaries. When the authenticator types changed, [User Update](/gateway/events/#user-update) also reaches the user and each affected owned bot.
 
 ### Rate limit
 
 10 requests per minute for each authenticated user, on the `mfa:webauthn:delete` bucket.
+
+## Set WebAuthn two-factor authentication
+
+<RouteHeader method="PUT" path="/v1/users/@me/mfa/webauthn/two-factor" mfa />
+
+Turns passkeys on or off as a second factor for the current account and returns a [WebAuthn two-factor](#webauthn-two-factor-object) object. [Sudo mode](#sudo-mode) is required. Emits a [User Update](/gateway/events/#user-update) Gateway event.
+
+Enabling adds the WebAuthn [authenticator type](/http-api/users/#authenticator-types), so password login then asks for a passkey. Disabling removes it and leaves every registered credential in place, still usable for sudo mode and for passwordless login.
+
+### Limitations
+
+- Enabling while the account has no registered WebAuthn credential is refused with 400 `NO_PASSKEYS_REGISTERED`.
+
+### JSON body
+
+The body extends the [sudo verification object](#sudo-verification-object) with `enabled`, and the sudo fields it merges in are repeated below. An existing sudo proof is sent in the `X-Fluxer-Sudo-Mode-JWT` request header.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | boolean | Whether passkeys count as a second factor at password login |
+| password?<sup>1</sup> | string | Account password (8-256 characters) |
+| mfa_method?<sup>2</sup> | string | MFA method, either `totp` or `webauthn` |
+| mfa_code?<sup>3</sup> | string | Authenticator code or unconsumed backup code (1-32 characters) |
+| webauthn_response?<sup>4</sup> | [WebAuthn assertion](#webauthn-assertion-object) object | Assertion produced for the supplied challenge |
+| webauthn_challenge?<sup>4</sup> | string | Challenge returned by [create sudo WebAuthn authentication options](#create-sudo-webauthn-authentication-options) (1-256 characters) |
+
+<sup>1</sup> Considered only while the account holds no TOTP secret and no registered WebAuthn credential, and ignored once either exists
+
+<sup>2</sup> Required when the account holds a TOTP secret or a registered WebAuthn credential, unless a valid sudo token is already present
+
+<sup>3</sup> Required when `mfa_method` is `totp`, with a current authenticator code or an unconsumed backup code. Fluxer reads it as a backup code alone while the account holds no TOTP secret
+
+<sup>4</sup> Both fields are required together when `mfa_method` is `webauthn`
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [WebAuthn two-factor](#webauthn-two-factor-object) object | The authenticator type was set to the requested state |
+| 400 | [error response](/http-api/#error-response) | Enabling was requested with no registered credential and the request returns `NO_PASSKEYS_REGISTERED` |
+| 403 | [error response](/http-api/#error-response) | Sudo mode was not proven and the request returns `SUDO_MODE_REQUIRED` |
+
+### Side effects
+
+The WebAuthn authenticator type is added or removed, and Fluxer copies the account's authenticator types to every bot account the user owns. [User Update](/gateway/events/#user-update) reaches the user's sessions and each owned bot whose authenticator types changed.
+
+Enabling on an account that holds no backup code issues 10, which the response returns. They are the recovery path for an account whose only second factor is passkeys, and [complete login with TOTP](/http-api/authentication/#complete-login-with-totp) redeems one. An account that already holds a set keeps it and the response reports null. A request that asks for the state the account already has changes nothing and issues no code.
+
+### Rate limit
+
+10 requests per minute for each authenticated user, on the `mfa:webauthn:two_factor` bucket.
 
 ## Get sudo MFA methods
 

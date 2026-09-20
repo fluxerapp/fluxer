@@ -2263,6 +2263,8 @@ msgid "25 uses"
 msgstr "25 次使用"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:150
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:40
 msgid "2FA"
 msgstr "2FA"
@@ -2343,7 +2345,7 @@ msgstr "6 个月"
 
 #. Placeholder for the MFA login one-time password field.
 #. Short label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:53
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:58
 #: src/features/auth/flow/MfaScreen.tsx:22
 msgid "6-digit code"
 msgstr "6 位验证码"
@@ -2622,7 +2624,7 @@ msgid "Account & premium overrides"
 msgstr "账号与会员覆盖"
 
 #. Security settings section for third-party app access and signed-in devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:49
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:88
 msgid "Account access"
 msgstr "账号访问权限"
 
@@ -2949,7 +2951,7 @@ msgstr "添加账号以继续。"
 msgid "Add an email and password to your account first."
 msgstr "请先为你的账号添加邮箱和密码。"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:192
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:296
 msgid "Add an extra layer of security to your account"
 msgstr "为你的账号添加额外的安全保护"
 
@@ -3065,7 +3067,7 @@ msgid "Add override"
 msgstr "添加覆盖"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:335
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:439
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:130
 msgid "Add passkey"
 msgstr "添加通行密钥"
@@ -3269,11 +3271,11 @@ msgstr "已添加到收藏夹"
 msgid "Added to saved media"
 msgstr "已添加到已保存媒体"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:377
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:495
 msgid "Added: {createdDate}"
 msgstr "添加日期：{createdDate}"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:373
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:491
 msgid "Added: {createdDate} • last used: {lastUsedDate}"
 msgstr "添加日期：{createdDate} • 最后使用：{lastUsedDate}"
 
@@ -4453,7 +4455,7 @@ msgid "Are you sure you want to delete the category \"{categoryName}\"? This can
 msgstr "确定要删除类别“{categoryName}”吗？此操作无法撤销。"
 
 #. placeholder {0}: passkey.name
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:141
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:227
 msgid "Are you sure you want to delete the passkey <0>{0}</0>?"
 msgstr "确定要删除通行密钥 <0>{0}</0> 吗？"
 
@@ -4465,7 +4467,7 @@ msgstr "确定要删除此附件吗？此操作无法撤销，并将从该消息
 msgid "Are you sure you want to delete this community? This action cannot be undone. All channels, messages, and settings will be permanently deleted."
 msgstr "确定要删除此社区吗？此操作无法撤销。所有频道、消息和设置都将被永久删除。"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:150
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:235
 msgid "Are you sure you want to delete this passkey?"
 msgstr "确定要删除此通行密钥吗？"
 
@@ -4543,6 +4545,12 @@ msgstr "ASCII 表情符号"
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:49
 msgid "Ask before starting calls"
 msgstr "发起通话前先确认"
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:449
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:154
+msgid "Ask for a passkey after your password when you sign in"
+msgstr "登录时在输入密码后还需验证通行密钥"
 
 #. Short label in the theme studio. Keep it concise.
 #: src/features/theme_studio/ThemeStudio.tsx:56
@@ -4812,13 +4820,13 @@ msgstr "身份验证"
 msgid "Authenticator"
 msgstr "身份验证器"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:204
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:308
 msgid "Authenticator app"
 msgstr "身份验证器应用"
 
 #. Label for the MFA login one-time password field from an authenticator app or backup code.
 #. Short label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:49
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:54
 #: src/features/auth/flow/MfaScreen.tsx:18
 msgid "Authenticator code"
 msgstr "身份验证器验证码"
@@ -4889,7 +4897,7 @@ msgstr "已授权应用"
 #. Settings section label for OAuth applications authorized by the user.
 #. User settings tab for OAuth or connected apps authorized by the user.
 #: src/features/user/components/modals/tabs/account_security_tab/AccountManagementModals.tsx:17
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:57
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:96
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:507
 #: src/features/user/components/settings_utils/search_index/AuthorizedAppsIndex.ts:10
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:151
@@ -5301,11 +5309,18 @@ msgstr "可拖放的背景选择区域"
 msgid "Backspace"
 msgstr "退格"
 
+#. Label and placeholder for the MFA login field when the only code the account can use is a backup code.
+#. Label and placeholder for the code field in the authentication sudo verification modal when the only code the account can use is a backup code.
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:62
+#: src/features/auth/flow/MfaScreen.tsx:38
+msgid "Backup code"
+msgstr "备用码"
+
 #. Security modal title for one-time account recovery codes.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/auth/components/modals/BackupCodesModal.tsx:18
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:274
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:378
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:74
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:68
 msgid "Backup codes"
@@ -6320,7 +6335,7 @@ msgstr "无法在此上传文件"
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:72
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:80
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:264
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:278
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:140
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:177
@@ -7669,7 +7684,7 @@ msgstr "请先认领账号并验证邮箱，然后才能提交举报。"
 msgid "Claim your account by adding an email and password. We will send a verification code to confirm your email before finishing."
 msgstr "添加邮箱和密码来认领你的账号。我们会在完成前发送验证码来确认你的邮箱。"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:173
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:277
 msgid "Claim your account to access security features like two-factor authentication and passkeys."
 msgstr "认领你的账号，即可使用双重认证、通行密钥等安全功能。"
 
@@ -8064,7 +8079,7 @@ msgstr "关闭"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:162
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:182
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:120
 msgid "Close account"
 msgstr "注销账号"
@@ -9166,7 +9181,7 @@ msgstr "继续举报社区"
 msgid "Continue to report user"
 msgstr "继续举报此用户"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:231
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:245
 msgid "Continue with passkey"
 msgstr "使用通行密钥继续"
 
@@ -9773,7 +9788,7 @@ msgid "Couldn't delete application"
 msgstr "无法删除应用"
 
 #. Title of the error modal shown when removing a registered passkey fails.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:36
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:38
 msgid "Couldn't delete passkey"
 msgstr "无法删除通行密钥"
 
@@ -10112,6 +10127,11 @@ msgstr "无法更新表情克隆设置"
 #: src/features/ui/action_menu/items/StaffUserControlsMenuItems.tsx:24
 msgid "Couldn't update mention suppression bypass"
 msgstr "无法更新“绕过提及屏蔽”设置"
+
+#. Title of the error modal shown when the passkey two-factor setting could not be saved.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:84
+msgid "Couldn't update passkey two-factor authentication"
+msgstr "无法更新通行密钥双重认证"
 
 #. Error modal title shown when saving role changes fails.
 #: src/features/moderation/components/alerts/RoleUpdateFailedModal.tsx:9
@@ -11004,7 +11024,7 @@ msgid "Day"
 msgstr "日"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:142
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:162
 msgid "Deactivate"
 msgstr "停用"
 
@@ -11252,11 +11272,11 @@ msgstr "特拉华州"
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:109
 #: src/features/platform/utils/DesktopLocaleBridge.ts:76
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:517
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:117
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:290
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:154
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:174
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:190
 msgid "Delete"
 msgstr "删除"
@@ -11425,7 +11445,7 @@ msgid "Delete other members' messages. Pinning is controlled separately."
 msgstr "删除其他成员的消息。置顶消息有单独的权限控制。"
 
 #. Security settings: confirmation modal title and primary button for removing a registered passkey. Destructive action; keep plain and direct.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:31
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:33
 msgid "Delete passkey"
 msgstr "删除通行密钥"
 
@@ -11512,7 +11532,7 @@ msgid "Delete webhook"
 msgstr "删除 Webhook"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:166
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:186
 msgid "Delete your account"
 msgstr "删除你的账号"
 
@@ -11903,7 +11923,7 @@ msgstr "设备："
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tab label in the screen-share picker. Lists cameras and virtual capture devices.
 #. User settings tab for managing devices linked to the current account.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:65
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:104
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:530
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
@@ -12014,8 +12034,8 @@ msgstr "直接上传已启用"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short footer action in the screen-share picker that disables screen-share preview frame uploads.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:238
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:138
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:342
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:158
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:279
 msgid "Disable"
 msgstr "停用"
@@ -13457,7 +13477,7 @@ msgstr "收藏夹为空"
 #: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:32
 #: src/features/app/components/layout/GuildLayout.tsx:54
 #: src/features/invite/components/DisableInvitesButton.tsx:27
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:256
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:360
 #: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:23
 msgid "Enable"
 msgstr "启用"
@@ -13936,6 +13956,16 @@ msgstr "输入礼物码…"
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:375
 msgid "Enter new email"
 msgstr "输入新邮箱"
+
+#. MFA code entry instructions shown when the account uses passkeys as its second factor.
+#: src/features/auth/flow/MfaScreen.tsx:42
+msgid "Enter one of your backup codes if you can't use your passkey."
+msgstr "如果你无法使用通行密钥，请输入其中一个备用码。"
+
+#. Body text in the authentication sudo verification modal, shown when the only code the account can enter is a backup code. Keep the tone plain and specific.
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:41
+msgid "Enter one of your backup codes."
+msgstr "输入其中一个备用码。"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:66
@@ -15397,7 +15427,7 @@ msgstr "为自己"
 msgid "For this check, you send us a text message instead of receiving one from us."
 msgstr "本次验证，你需要向我们发送短信，而不是接收我们发来的短信。"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:169
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:183
 msgid "For your security, please confirm it's you to continue."
 msgstr "为保障你的账号安全，请先验证身份。"
 
@@ -19767,8 +19797,8 @@ msgstr "恶意软件或危险链接"
 msgid "Malware, credential theft, or harmful files."
 msgstr "恶意软件、窃取凭据或有害文件。"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:443
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:478
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:561
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:596
 msgid "Manage"
 msgstr "管理"
 
@@ -19778,7 +19808,7 @@ msgid "Manage accounts"
 msgstr "管理账号"
 
 #. Security settings section description for account access controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:53
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:92
 msgid "Manage apps and devices with access to your account"
 msgstr "管理可访问你账号的应用和设备"
 
@@ -22813,7 +22843,7 @@ msgstr "未找到用户"
 msgid "No verification is required."
 msgstr "无需验证。"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:175
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:189
 msgid "No verification methods available"
 msgstr "没有可用的验证方式"
 
@@ -24232,7 +24262,7 @@ msgstr "通行密钥名称"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:305
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:409
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:90
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:88
 msgid "Passkeys"
@@ -26336,7 +26366,7 @@ msgstr "重新生成会使当前令牌失效。请更新所有使用旧值的代
 msgid "Register"
 msgstr "注册"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:318
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:422
 msgid "Registered passkeys"
 msgstr "已注册通行密钥"
 
@@ -26468,7 +26498,7 @@ msgstr "记住窗口大小和位置"
 #: src/features/ui/action_menu/UserContextMenu.tsx:97
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:26
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:55
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:158
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:178
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:194
 #: src/features/webhook/components/WebhookListItem.tsx:277
 msgid "Remove"
@@ -26908,7 +26938,7 @@ msgstr "移除权限可能会限制机器人功能。"
 msgid "Removing the timeout will allow <0>{targetUserTag}</0> to send messages, react, and join voice channels again."
 msgstr "解除禁言后，<0>{targetUserTag}</0> 将可以再次发送消息、添加反应和加入语音频道。"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:391
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:509
 msgid "Rename"
 msgstr "重命名"
 
@@ -27120,7 +27150,7 @@ msgstr "转发：<0>{countLabel}</0>"
 msgid "Request a new code first."
 msgstr "请先请求新验证码。"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:135
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:136
 msgid "Request a new reset link"
 msgstr "请求新的重置链接"
 
@@ -27148,6 +27178,12 @@ msgstr "请求"
 msgid "Require 2FA for moderation actions"
 msgstr "要求双重认证才能执行管理操作"
 
+#. Settings search entry label. Also used as a search synonym in the settings search bar.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:448
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:138
+msgid "Require a passkey as your second factor"
+msgstr "要求使用通行密钥作为第二重验证"
+
 #. Short label for an advanced voice-channel navigation preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:17
 msgid "Require double-click to join voice channels"
@@ -27162,6 +27198,11 @@ msgstr "需要手动批准好友申请"
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/ApplicationInfoSection.tsx:44
 msgid "Require OAuth2 code grant"
 msgstr "需要 OAuth2 授权码"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:146
+msgid "Require passkey"
+msgstr "要求通行密钥"
 
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:466
 msgid "Require two-factor authentication for moderators before they can ban, kick, time out, or remove messages."
@@ -27381,7 +27422,7 @@ msgstr "重置数据"
 msgid "Reset font size"
 msgstr "重置字体大小"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:128
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:129
 msgid "Reset link invalid or expired"
 msgstr "重置链接无效或已过期"
 
@@ -27397,7 +27438,7 @@ msgstr "重置媒体位置"
 
 #. Short label in the authentication reset password page. Keep the tone plain and specific.
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:19
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:185
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:186
 msgid "Reset password"
 msgstr "重置密码"
 
@@ -27791,7 +27832,7 @@ msgid "Review and confirm"
 msgstr "查看并确认"
 
 #. Security settings row description for authorized apps.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:61
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:100
 msgid "Review apps that can access your account."
 msgstr "查看可以访问你账号的应用。"
 
@@ -27806,7 +27847,7 @@ msgid "Review past purchases and refund options"
 msgstr "查看购买记录和退款选项"
 
 #. Security settings row description for linked devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:69
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:108
 msgid "Review signed-in devices and sign out of sessions you don't recognize."
 msgstr "查看已登录的设备，并退出你不认识的会话。"
 
@@ -28818,6 +28859,11 @@ msgstr "正在搜索"
 msgid "Searching for people..."
 msgstr "正在搜索用户…"
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:142
+msgid "Second factor"
+msgstr "第二重验证"
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:112
 msgid "Second option"
 msgstr "第二个选项"
@@ -28882,7 +28928,7 @@ msgctxt "security-settings-section"
 msgid "Security"
 msgstr "安全"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:171
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:275
 msgid "Security features"
 msgstr "安全功能"
 
@@ -29535,8 +29581,8 @@ msgstr "已在此设置"
 msgid "Set mute shortcut"
 msgstr "设置静音快捷键"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:116
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:144
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:117
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:145
 msgid "Set new password"
 msgstr "设置新密码"
 
@@ -29686,7 +29732,7 @@ msgstr "稍后设置"
 msgid "Set voice region"
 msgstr "设置语音区域"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:147
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:148
 msgid "Set your new password."
 msgstr "设置新密码。"
 
@@ -31910,6 +31956,11 @@ msgstr "停止直播"
 msgid "Stop trusting all links?"
 msgstr "停止信任所有链接？"
 
+#. Security settings: confirmation modal title for turning off passkey-based two-factor authentication.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:64
+msgid "Stop using passkeys for two-factor authentication?"
+msgstr "不再将通行密钥用于双重认证？"
+
 #. Voice control action for stopping the currently focused or selected stream.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:243
 msgid "Stop watching"
@@ -32224,7 +32275,7 @@ msgid "Surfaces"
 msgstr "表面"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:146
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:166
 msgid "Suspend"
 msgstr "冻结"
 
@@ -32714,7 +32765,7 @@ msgid "Temporal layers"
 msgstr "时域分层"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:150
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:170
 msgid "Temporarily disable your account"
 msgstr "暂时停用你的账号"
 
@@ -33821,6 +33872,14 @@ msgstr "这是第二个选项的描述"
 msgid "This is the third option description"
 msgstr "这是第三个选项的描述"
 
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:248
+msgid "This is your last passkey and passkeys are your second factor. Deleting it turns off two-factor authentication for your account, and your current backup codes will stop working."
+msgstr "这是你的最后一个通行密钥，而通行密钥是你的第二重验证。删除后，你账号的双重认证会被关闭，你当前的备用码也会失效。"
+
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:243
+msgid "This is your last passkey. Once it's gone you won't be able to use a passkey as your second factor."
+msgstr "这是你的最后一个通行密钥。删除后，你将无法再使用通行密钥作为第二重验证。"
+
 #. Required-action form error for landline, toll-free, premium, shared-cost, UAN, voicemail and pager lines. Do not name which line type the provider returned.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:549
 msgid "This isn't a mobile number, so it can't receive our text. Try a mobile number, or contact support if you think that's wrong."
@@ -33989,7 +34048,7 @@ msgstr "这会移除所有受信任的域名。你将再次看到所有域名的
 msgid "This removes every custom shortcut and re-enables all built-in shortcuts. This cannot be undone."
 msgstr "这将移除所有自定义快捷键，并重新启用所有内置快捷键。此操作无法撤销。"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:131
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:132
 msgid "This reset link has expired. Reset links last 1 hour. Please request a new one."
 msgstr "此重置链接已过期。重置链接有效期为 1 小时。请重新请求一个。"
 
@@ -34854,7 +34913,9 @@ msgid "Turkish"
 msgstr "土耳其语"
 
 #. Button label that turns off streaming privacy.
+#. Security settings: confirm button for turning off passkey-based two-factor authentication.
 #: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx:16
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:80
 msgid "Turn off"
 msgstr "关闭"
 
@@ -34909,6 +34970,11 @@ msgstr "关闭直播"
 #: src/features/streamer_mode/components/StreamerModeGate.tsx:19
 msgid "Turn off streaming privacy before viewing login or account security details."
 msgstr "请先关闭直播隐私模式，然后才能查看登录或账号安全详情。"
+
+#. Security settings: confirm button for turning on passkey-based two-factor authentication.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:60
+msgid "Turn on"
+msgstr "开启"
 
 #. Permission description in the channel-scoped permissions editor for the Stream Video permission. Covers both the webcam and screen sharing.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:292
@@ -35049,7 +35115,7 @@ msgstr "双重认证已停用"
 msgid "Two-factor authentication enabled"
 msgstr "双重认证已启用"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:211
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:315
 msgid "Two-factor authentication is enabled"
 msgstr "双重认证已开启"
 
@@ -36293,7 +36359,7 @@ msgstr "使用实际值"
 msgid "Use alternative method"
 msgstr "使用其他方式"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:213
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:317
 msgid "Use an authenticator app to generate codes for two-factor authentication"
 msgstr "使用身份验证器应用生成双重认证验证码"
 
@@ -36464,11 +36530,16 @@ msgstr "使用原生标题栏"
 msgid "Use only if it clearly breaks {productName}'s rules and doesn't fit above."
 msgstr "仅当它明确违反 {productName} 规则且不符合上述任何选项时使用。"
 
+#. Security settings: confirmation modal title for turning on passkey-based two-factor authentication.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:51
+msgid "Use passkeys for two-factor authentication?"
+msgstr "将通行密钥用于双重认证？"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:306
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:410
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:134
-msgid "Use passkeys for passwordless sign-in and two-factor authentication"
-msgstr "使用通行密钥进行免密码登录和双重认证"
+msgid "Use passkeys to sign in without a password"
+msgstr "使用通行密钥，无需密码即可登录"
 
 #. Button in the required-action modal. Selects the phone verification path.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:174
@@ -36926,7 +36997,7 @@ msgstr "验证邮件已发送。请检查你的收件箱。"
 msgid "Verification expired"
 msgstr "验证已过期"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:57
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:67
 #: src/features/auth/components/pages/VerifyEmailPage.tsx:108
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:241
 msgid "Verification failed"
@@ -36967,12 +37038,12 @@ msgid "Verify email"
 msgstr "验证邮箱"
 
 #. Accessible form label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:41
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:46
 msgid "Verify identity form"
 msgstr "验证身份表单"
 
 #. Short label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:45
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:50
 msgid "Verify it's you"
 msgstr "验证你的身份"
 
@@ -37015,12 +37086,12 @@ msgid "Verify your email address to send friend requests."
 msgstr "验证邮箱后才能发送好友请求。"
 
 #. Security settings warning shown when an unverified account cannot register a new passkey.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:45
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:47
 msgid "Verify your email before adding a passkey."
 msgstr "请先验证你的邮箱，然后再添加通行密钥。"
 
 #. Security settings warning shown when an unverified account cannot enable authenticator-app two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:40
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:42
 msgid "Verify your email before adding an authenticator app."
 msgstr "请先验证你的邮箱，然后再添加身份验证器应用。"
 
@@ -37099,7 +37170,7 @@ msgstr "正在验证银行卡"
 msgid "Verifying code…"
 msgstr "正在核对验证码…"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:119
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:120
 msgid "Verifying your reset link…"
 msgstr "正在验证你的重置链接…"
 
@@ -37312,7 +37383,7 @@ msgstr "查看和管理被封禁的用户。"
 msgid "View and manage every webhook configured across your community."
 msgstr "查看和管理社区中配置的所有 Webhook。"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:280
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:384
 msgid "View and manage your backup codes for account recovery"
 msgstr "查看和管理用于账号恢复的备用码"
 
@@ -37346,7 +37417,7 @@ msgstr "查看频道"
 msgid "View channel members"
 msgstr "查看频道成员"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:298
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:402
 msgid "View codes"
 msgstr "查看备用码"
 
@@ -37874,7 +37945,7 @@ msgstr "请稍候"
 msgid "Waiting for connection..."
 msgstr "正在等待连接…"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:218
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:232
 msgid "Waiting for passkey…"
 msgstr "正在等待通行密钥…"
 
@@ -39335,6 +39406,11 @@ msgstr "你将离开 {guildNames}。你发布的内容不会被删除，你之�
 msgid "You will still need to finish the email step."
 msgstr "你仍需完成邮箱验证步骤。"
 
+#. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when the account also has an authenticator app.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:74
+msgid "You won't be asked for a passkey after your password anymore. Your authenticator app stays as your second factor."
+msgstr "之后，你在输入密码后将不再需要验证通行密钥。你的身份验证器应用仍将作为你的第二重验证。"
+
 #: src/features/app/components/floating/UserAreaPopout.tsx:92
 #: src/features/user/components/modals/StatusChangeBottomSheet.tsx:40
 msgid "You won't receive notifications on desktop"
@@ -39348,6 +39424,11 @@ msgstr "你将显示为离线状态"
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:464
 msgid "You'll have to sign back in on all signed-out devices"
 msgstr "你需要在所有已退出登录的设备上重新登录"
+
+#. Security settings: confirmation modal body for turning on passkey-based two-factor authentication.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:55
+msgid "You'll need one of your passkeys to sign in on a new device. If you lose every passkey you can be locked out of your account. Backup codes will be saved for you so you still have a way in."
+msgstr "在新设备上登录时，你需要使用其中一个通行密钥。如果所有通行密钥都丢失，你可能再也无法登录自己的账号。我们会为你保存备用码，让你仍有办法登录。"
 
 #. Privacy > Active now: confirmation modal body when turning sharing on.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:41
@@ -39637,9 +39718,14 @@ msgstr "你的账号注册时间太短，无法在此社区中发送消息。"
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "你的账号申请正在等待审核。管理员批准后即可登录。"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:181
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:195
 msgid "Your account requires multi-factor authentication, but no supported methods are set up on this device. Sign in on a device with your authenticator app or security key, or contact support."
 msgstr "你的账号需要多重身份验证，但此设备上未设置任何受支持的方式。请在已设置身份验证器应用或安全密钥的设备上登录，或联系支持团队。"
+
+#. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when passkeys are the only second factor on the account.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:68
+msgid "Your account will no longer be protected by two-factor authentication when you sign in with your password. You'll also lose elevated permissions in servers that require two-factor authentication."
+msgstr "使用密码登录时，你的账号将不再受双重认证保护。你还会失去在要求双重认证的社区中的高级权限。"
 
 #. Hint under the set-aside button in the required-action modal when the user is in no community that triggers the check. This is the common case. Do not phrase it as undoing a join.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:284

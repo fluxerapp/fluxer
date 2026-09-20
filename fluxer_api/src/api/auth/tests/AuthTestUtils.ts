@@ -22,20 +22,10 @@ export interface LoginMfaResponse {
 	allowed_methods: Array<string>;
 	totp: boolean;
 	webauthn: boolean;
+	backup_codes: boolean;
 }
 
-type LoginResponse =
-	| {
-			user_id: string;
-			token: string;
-	  }
-	| {
-			mfa: true;
-			ticket: string;
-			allowed_methods: Array<string>;
-			totp: boolean;
-			webauthn: boolean;
-	  };
+type LoginResponse = LoginSuccessResponse | LoginMfaResponse;
 
 export interface UserMeResponse {
 	id: string;

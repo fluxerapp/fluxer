@@ -417,6 +417,7 @@ export class AuthRequestService {
 			...result,
 			totp: allowedMethods.has('totp'),
 			webauthn: allowedMethods.has('webauthn'),
+			backup_codes: allowedMethods.has('backup_codes'),
 		};
 	}
 }

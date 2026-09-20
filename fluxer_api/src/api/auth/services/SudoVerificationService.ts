@@ -2,7 +2,7 @@
 
 import * as AuthMfa from '@app/api/auth/AuthMfa';
 import * as AuthPassword from '@app/api/auth/AuthPassword';
-import {deriveSudoMethods, userHasMfa} from '@app/api/auth/services/SudoMethods';
+import {deriveSudoMethods, userHasMfa, userHasSudoCapability} from '@app/api/auth/services/SudoMethods';
 import {getSudoModeService} from '@app/api/auth/services/SudoModeService';
 import {SUDO_MODE_HEADER} from '@app/api/middleware/SudoModeMiddleware';
 import type {User} from '@app/api/models/User';
@@ -26,8 +26,9 @@ type SudoVerificationMethod = 'password' | 'mfa' | 'sudo_token';
 export function hasNoVerifiableCredential(
 	user: {passwordHash: string | null; isBot: boolean},
 	hasMfa: boolean,
+	hasPasskeyCredentials: boolean,
 ): boolean {
-	if (user.isBot || hasMfa) {
+	if (user.isBot || hasMfa || hasPasskeyCredentials) {
 		return false;
 	}
 	return user.passwordHash === null;
@@ -52,18 +53,22 @@ async function verifySudoMode(
 	if (user.isBot) {
 		return {verified: true, method: 'sudo_token'};
 	}
+	const apiContext = ctx.get('apiContext');
+	const credentials = await apiContext.services.users.listWebAuthnCredentials(user.id);
+	const hasPasskeyCredentials = credentials.length > 0;
 	const hasMfa = userHasMfa(user);
-	const issueSudoToken = options.issueSudoToken ?? hasMfa;
-	if (hasMfa && ctx.get('sudoModeValid')) {
+	const hasSudoCapability = userHasSudoCapability(user, hasPasskeyCredentials);
+	const issueSudoToken = options.issueSudoToken ?? hasSudoCapability;
+	if (hasSudoCapability && ctx.get('sudoModeValid')) {
 		const sudoToken = ctx.get('sudoModeToken') ?? ctx.req.header(SUDO_MODE_HEADER) ?? undefined;
 		return {verified: true, method: 'sudo_token', sudoToken: issueSudoToken ? sudoToken : undefined};
 	}
 	const incomingToken = ctx.req.header(SUDO_MODE_HEADER);
-	if (!hasMfa && incomingToken && ctx.get('sudoModeValid')) {
+	if (!hasSudoCapability && incomingToken && ctx.get('sudoModeValid')) {
 		return {verified: true, method: 'sudo_token', sudoToken: issueSudoToken ? incomingToken : undefined};
 	}
-	if (hasMfa && body.mfa_method) {
-		const result = await AuthMfa.verifySudoMfa(ctx.get('apiContext'), {
+	if (hasSudoCapability && body.mfa_method) {
+		const result = await AuthMfa.verifySudoMfa(apiContext, {
 			userId: user.id,
 			method: body.mfa_method,
 			code: body.mfa_code,
@@ -77,14 +82,14 @@ async function verifySudoMode(
 		const sudoToken = issueSudoToken ? await sudoModeService.generateSudoToken(user.id) : undefined;
 		return {verified: true, sudoToken, method: 'mfa'};
 	}
-	if (hasNoVerifiableCredential(user, hasMfa)) {
+	if (hasNoVerifiableCredential(user, hasMfa, hasPasskeyCredentials)) {
 		return {verified: true, method: 'password'};
 	}
 	if (body.password && !hasMfa) {
 		if (!user.passwordHash) {
 			throw InputValidationError.fromCode('password', ValidationErrorCodes.PASSWORD_NOT_SET);
 		}
-		const passwordValid = await AuthPassword.verifyPassword(ctx.get('apiContext'), {
+		const passwordValid = await AuthPassword.verifyPassword(apiContext, {
 			password: body.password,
 			passwordHash: user.passwordHash,
 		});
@@ -93,7 +98,8 @@ async function verifySudoMode(
 		}
 		return {verified: true, method: 'password'};
 	}
-	throw new SudoModeRequiredError(hasMfa, deriveSudoMethods(user));
+	const hasBackupCodes = await AuthMfa.hasUnconsumedBackupCodes(apiContext, user.id);
+	throw new SudoModeRequiredError(hasSudoCapability, deriveSudoMethods(user, hasPasskeyCredentials, hasBackupCodes));
 }
 
 function setSudoTokenHeader(

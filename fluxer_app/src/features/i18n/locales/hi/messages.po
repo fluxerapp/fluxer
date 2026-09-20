@@ -2263,6 +2263,8 @@ msgid "25 uses"
 msgstr "25 उपयोग"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:150
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:40
 msgid "2FA"
 msgstr "2FA"
@@ -2343,7 +2345,7 @@ msgstr "6 महीने"
 
 #. Placeholder for the MFA login one-time password field.
 #. Short label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:53
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:58
 #: src/features/auth/flow/MfaScreen.tsx:22
 msgid "6-digit code"
 msgstr "6 अंकों का कोड"
@@ -2622,7 +2624,7 @@ msgid "Account & premium overrides"
 msgstr "अकाउंट और प्रीमियम ओवरराइड"
 
 #. Security settings section for third-party app access and signed-in devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:49
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:88
 msgid "Account access"
 msgstr "अकाउंट एक्सेस"
 
@@ -2949,7 +2951,7 @@ msgstr "जारी रखने के लिए कोई अकाउंट 
 msgid "Add an email and password to your account first."
 msgstr "पहले अपने अकाउंट में ईमेल और पासवर्ड जोड़ें।"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:192
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:296
 msgid "Add an extra layer of security to your account"
 msgstr "अपने अकाउंट में सुरक्षा की एक और लेयर जोड़ें"
 
@@ -3065,7 +3067,7 @@ msgid "Add override"
 msgstr "ओवरराइड जोड़ें"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:335
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:439
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:130
 msgid "Add passkey"
 msgstr "पासकी जोड़ें"
@@ -3269,11 +3271,11 @@ msgstr "पसंदीदा में जोड़ा गया"
 msgid "Added to saved media"
 msgstr "सेव किए गए मीडिया में जोड़ा गया"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:377
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:495
 msgid "Added: {createdDate}"
 msgstr "जोड़ा गया: {createdDate}"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:373
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:491
 msgid "Added: {createdDate} • last used: {lastUsedDate}"
 msgstr "जोड़ा गया: {createdDate} • आखिरी बार इस्तेमाल किया गया: {lastUsedDate}"
 
@@ -4453,7 +4455,7 @@ msgid "Are you sure you want to delete the category \"{categoryName}\"? This can
 msgstr "क्या आप वाकई \"{categoryName}\" श्रेणी को मिटाना चाहते हैं? इसे पहले जैसा नहीं किया जा सकता।"
 
 #. placeholder {0}: passkey.name
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:141
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:227
 msgid "Are you sure you want to delete the passkey <0>{0}</0>?"
 msgstr "क्या आप वाकई पासकी <0>{0}</0> मिटाना चाहते हैं?"
 
@@ -4465,7 +4467,7 @@ msgstr "क्या आप वाकई इस अटैचमेंट को 
 msgid "Are you sure you want to delete this community? This action cannot be undone. All channels, messages, and settings will be permanently deleted."
 msgstr "क्या आप वाकई इस कम्युनिटी को मिटाना चाहते हैं? इस कार्रवाई को पहले जैसा नहीं किया जा सकता। सभी चैनल, मैसेज और सेटिंग्स हमेशा के लिए मिटा दिए जाएंगे।"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:150
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:235
 msgid "Are you sure you want to delete this passkey?"
 msgstr "क्या आप वाकई यह पासकी हटाना चाहते हैं?"
 
@@ -4543,6 +4545,12 @@ msgstr "ASCII स्माइली"
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:49
 msgid "Ask before starting calls"
 msgstr "कॉल शुरू करने से पहले पूछें"
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:449
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:154
+msgid "Ask for a passkey after your password when you sign in"
+msgstr "साइन इन करते समय आपके पासवर्ड के बाद पासकी भी मांगी जाए"
 
 #. Short label in the theme studio. Keep it concise.
 #: src/features/theme_studio/ThemeStudio.tsx:56
@@ -4812,13 +4820,13 @@ msgstr "प्रमाणीकरण"
 msgid "Authenticator"
 msgstr "ऑथेंटिकेटर"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:204
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:308
 msgid "Authenticator app"
 msgstr "ऑथेंटिकेटर ऐप"
 
 #. Label for the MFA login one-time password field from an authenticator app or backup code.
 #. Short label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:49
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:54
 #: src/features/auth/flow/MfaScreen.tsx:18
 msgid "Authenticator code"
 msgstr "ऑथेंटिकेटर कोड"
@@ -4889,7 +4897,7 @@ msgstr "अधिकृत ऐप्लिकेशन"
 #. Settings section label for OAuth applications authorized by the user.
 #. User settings tab for OAuth or connected apps authorized by the user.
 #: src/features/user/components/modals/tabs/account_security_tab/AccountManagementModals.tsx:17
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:57
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:96
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:507
 #: src/features/user/components/settings_utils/search_index/AuthorizedAppsIndex.ts:10
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:151
@@ -5301,11 +5309,18 @@ msgstr "ड्रैग और ड्रॉप सपोर्ट के सा�
 msgid "Backspace"
 msgstr "बैकस्पेस"
 
+#. Label and placeholder for the MFA login field when the only code the account can use is a backup code.
+#. Label and placeholder for the code field in the authentication sudo verification modal when the only code the account can use is a backup code.
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:62
+#: src/features/auth/flow/MfaScreen.tsx:38
+msgid "Backup code"
+msgstr "बैकअप कोड"
+
 #. Security modal title for one-time account recovery codes.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/auth/components/modals/BackupCodesModal.tsx:18
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:274
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:378
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:74
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:68
 msgid "Backup codes"
@@ -6320,7 +6335,7 @@ msgstr "यहां फ़ाइलें अपलोड नहीं की �
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:72
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:80
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:264
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:278
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:140
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:177
@@ -7669,7 +7684,7 @@ msgstr "रिपोर्ट भेजने के लिए अपना अ�
 msgid "Claim your account by adding an email and password. We will send a verification code to confirm your email before finishing."
 msgstr "ईमेल और पासवर्ड जोड़कर अपना अकाउंट क्लेम करें। पूरा करने से पहले हम आपके ईमेल की पुष्टि करने के लिए एक वेरिफ़िकेशन कोड भेजेंगे।"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:173
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:277
 msgid "Claim your account to access security features like two-factor authentication and passkeys."
 msgstr "दो-कारक प्रमाणीकरण और पासकी जैसे सुरक्षा फ़ीचर एक्सेस करने के लिए अपना अकाउंट क्लेम करें।"
 
@@ -8064,7 +8079,7 @@ msgstr "बंद करें"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:162
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:182
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:120
 msgid "Close account"
 msgstr "अकाउंट बंद करें"
@@ -9166,7 +9181,7 @@ msgstr "कम्युनिटी की रिपोर्ट करना �
 msgid "Continue to report user"
 msgstr "यूज़र की रिपोर्ट करना जारी रखें"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:231
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:245
 msgid "Continue with passkey"
 msgstr "पासकी के साथ जारी रखें"
 
@@ -9773,7 +9788,7 @@ msgid "Couldn't delete application"
 msgstr "ऐप्लिकेशन को हटाया नहीं जा सका"
 
 #. Title of the error modal shown when removing a registered passkey fails.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:36
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:38
 msgid "Couldn't delete passkey"
 msgstr "पासकी मिटाई नहीं जा सकी"
 
@@ -10112,6 +10127,11 @@ msgstr "इमोजी क्लोनिंग अपडेट नहीं �
 #: src/features/ui/action_menu/items/StaffUserControlsMenuItems.tsx:24
 msgid "Couldn't update mention suppression bypass"
 msgstr "मेंशन सप्रेशन बायपास अपडेट नहीं किया जा सका"
+
+#. Title of the error modal shown when the passkey two-factor setting could not be saved.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:84
+msgid "Couldn't update passkey two-factor authentication"
+msgstr "पासकी दो-कारक प्रमाणीकरण अपडेट नहीं किया जा सका"
 
 #. Error modal title shown when saving role changes fails.
 #: src/features/moderation/components/alerts/RoleUpdateFailedModal.tsx:9
@@ -11004,7 +11024,7 @@ msgid "Day"
 msgstr "दिन"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:142
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:162
 msgid "Deactivate"
 msgstr "निष्क्रिय करें"
 
@@ -11252,11 +11272,11 @@ msgstr "डेलावेयर"
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:109
 #: src/features/platform/utils/DesktopLocaleBridge.ts:76
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:517
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:117
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:290
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:154
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:174
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:190
 msgid "Delete"
 msgstr "मिटाएँ"
@@ -11425,7 +11445,7 @@ msgid "Delete other members' messages. Pinning is controlled separately."
 msgstr "अन्य सदस्यों के मैसेज मिटाएँ। पिन करना अलग से नियंत्रित होता है।"
 
 #. Security settings: confirmation modal title and primary button for removing a registered passkey. Destructive action; keep plain and direct.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:31
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:33
 msgid "Delete passkey"
 msgstr "पासकी मिटाएँ"
 
@@ -11512,7 +11532,7 @@ msgid "Delete webhook"
 msgstr "वेबहुक मिटाएँ"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:166
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:186
 msgid "Delete your account"
 msgstr "अपना अकाउंट मिटाएँ"
 
@@ -11903,7 +11923,7 @@ msgstr "डिवाइस:"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tab label in the screen-share picker. Lists cameras and virtual capture devices.
 #. User settings tab for managing devices linked to the current account.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:65
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:104
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:530
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
@@ -12014,8 +12034,8 @@ msgstr "सीधा अपलोड चालू है"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short footer action in the screen-share picker that disables screen-share preview frame uploads.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:238
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:138
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:342
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:158
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:279
 msgid "Disable"
 msgstr "बंद करें"
@@ -13457,7 +13477,7 @@ msgstr "पसंदीदा खाली हैं"
 #: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:32
 #: src/features/app/components/layout/GuildLayout.tsx:54
 #: src/features/invite/components/DisableInvitesButton.tsx:27
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:256
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:360
 #: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:23
 msgid "Enable"
 msgstr "चालू करें"
@@ -13936,6 +13956,16 @@ msgstr "उपहार कोड डालें…"
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:375
 msgid "Enter new email"
 msgstr "नया ईमेल डालें"
+
+#. MFA code entry instructions shown when the account uses passkeys as its second factor.
+#: src/features/auth/flow/MfaScreen.tsx:42
+msgid "Enter one of your backup codes if you can't use your passkey."
+msgstr "अगर आप अपनी पासकी का इस्तेमाल नहीं कर सकते, तो अपने बैकअप कोड में से कोई एक डालें।"
+
+#. Body text in the authentication sudo verification modal, shown when the only code the account can enter is a backup code. Keep the tone plain and specific.
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:41
+msgid "Enter one of your backup codes."
+msgstr "अपने बैकअप कोड में से कोई एक डालें।"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:66
@@ -15397,7 +15427,7 @@ msgstr "मेरे लिए"
 msgid "For this check, you send us a text message instead of receiving one from us."
 msgstr "इस जाँच के लिए, आप हमसे मैसेज पाने के बजाय हमें एक टेक्स्ट मैसेज भेजेंगे।"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:169
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:183
 msgid "For your security, please confirm it's you to continue."
 msgstr "आपकी सुरक्षा के लिए, आगे बढ़ने से पहले कृपया पुष्टि करें कि यह आप ही हैं।"
 
@@ -19767,8 +19797,8 @@ msgstr "मैलवेयर या खतरनाक लिंक"
 msgid "Malware, credential theft, or harmful files."
 msgstr "मैलवेयर, क्रेडेंशियल चोरी या नुकसान पहुँचाने वाली फ़ाइलें।"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:443
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:478
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:561
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:596
 msgid "Manage"
 msgstr "प्रबंधित करें"
 
@@ -19778,7 +19808,7 @@ msgid "Manage accounts"
 msgstr "अकाउंट प्रबंधित करें"
 
 #. Security settings section description for account access controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:53
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:92
 msgid "Manage apps and devices with access to your account"
 msgstr "अपने अकाउंट तक एक्सेस रखने वाले ऐप्स और डिवाइस प्रबंधित करें"
 
@@ -22813,7 +22843,7 @@ msgstr "कोई यूज़र नहीं मिला"
 msgid "No verification is required."
 msgstr "किसी वेरिफ़िकेशन की ज़रूरत नहीं है।"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:175
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:189
 msgid "No verification methods available"
 msgstr "कोई वेरिफ़िकेशन तरीका उपलब्ध नहीं है"
 
@@ -24232,7 +24262,7 @@ msgstr "पासकी का नाम"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:305
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:409
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:90
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:88
 msgid "Passkeys"
@@ -26336,7 +26366,7 @@ msgstr "फिर से जनरेट करने से मौजूदा 
 msgid "Register"
 msgstr "रजिस्टर करें"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:318
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:422
 msgid "Registered passkeys"
 msgstr "रजिस्टर्ड पासकी"
 
@@ -26468,7 +26498,7 @@ msgstr "विंडो का साइज़ और पोज़िशन य�
 #: src/features/ui/action_menu/UserContextMenu.tsx:97
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:26
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:55
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:158
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:178
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:194
 #: src/features/webhook/components/WebhookListItem.tsx:277
 msgid "Remove"
@@ -26908,7 +26938,7 @@ msgstr "अनुमतियाँ हटाने से बॉट की स�
 msgid "Removing the timeout will allow <0>{targetUserTag}</0> to send messages, react, and join voice channels again."
 msgstr "टाइमआउट हटाने से <0>{targetUserTag}</0> को फिर से मैसेज भेजने, रिएक्ट करने और वॉइस चैनल में शामिल होने की अनुमति मिल जाएगी।"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:391
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:509
 msgid "Rename"
 msgstr "नाम बदलें"
 
@@ -27120,7 +27150,7 @@ msgstr "रीपोस्ट: <0>{countLabel}</0>"
 msgid "Request a new code first."
 msgstr "पहले नए कोड का अनुरोध करें।"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:135
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:136
 msgid "Request a new reset link"
 msgstr "नए रीसेट लिंक का अनुरोध करें"
 
@@ -27148,6 +27178,12 @@ msgstr "अनुरोध"
 msgid "Require 2FA for moderation actions"
 msgstr "मॉडरेशन ऐक्शन के लिए 2FA ज़रूरी करें"
 
+#. Settings search entry label. Also used as a search synonym in the settings search bar.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:448
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:138
+msgid "Require a passkey as your second factor"
+msgstr "अपने दूसरे कारक के रूप में पासकी ज़रूरी करें"
+
 #. Short label for an advanced voice-channel navigation preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:17
 msgid "Require double-click to join voice channels"
@@ -27162,6 +27198,11 @@ msgstr "दोस्ती के लिए मैन्युअल मंज�
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/ApplicationInfoSection.tsx:44
 msgid "Require OAuth2 code grant"
 msgstr "OAuth2 कोड ग्रांट ज़रूरी है"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:146
+msgid "Require passkey"
+msgstr "पासकी ज़रूरी करें"
 
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:466
 msgid "Require two-factor authentication for moderators before they can ban, kick, time out, or remove messages."
@@ -27381,7 +27422,7 @@ msgstr "डेटा रीसेट करें"
 msgid "Reset font size"
 msgstr "फ़ॉन्ट का आकार रीसेट करें"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:128
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:129
 msgid "Reset link invalid or expired"
 msgstr "रीसेट लिंक अमान्य है या उसकी समय-सीमा समाप्त हो गई है"
 
@@ -27397,7 +27438,7 @@ msgstr "मीडिया की पोज़िशन रीसेट कर�
 
 #. Short label in the authentication reset password page. Keep the tone plain and specific.
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:19
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:185
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:186
 msgid "Reset password"
 msgstr "पासवर्ड रीसेट करें"
 
@@ -27791,7 +27832,7 @@ msgid "Review and confirm"
 msgstr "समीक्षा करें और पुष्टि करें"
 
 #. Security settings row description for authorized apps.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:61
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:100
 msgid "Review apps that can access your account."
 msgstr "उन ऐप्स की समीक्षा करें जिनके पास आपके अकाउंट का एक्सेस है।"
 
@@ -27806,7 +27847,7 @@ msgid "Review past purchases and refund options"
 msgstr "पिछली खरीदारी और रिफ़ंड के विकल्प देखें"
 
 #. Security settings row description for linked devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:69
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:108
 msgid "Review signed-in devices and sign out of sessions you don't recognize."
 msgstr "साइन इन किए गए डिवाइस की समीक्षा करें और जिन सेशन को आप नहीं पहचानते, उनसे साइन आउट करें।"
 
@@ -28818,6 +28859,11 @@ msgstr "खोजा जा रहा है"
 msgid "Searching for people..."
 msgstr "लोगों को खोजा जा रहा है..."
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:142
+msgid "Second factor"
+msgstr "दूसरा कारक"
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:112
 msgid "Second option"
 msgstr "दूसरा विकल्प"
@@ -28882,7 +28928,7 @@ msgctxt "security-settings-section"
 msgid "Security"
 msgstr "सुरक्षा"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:171
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:275
 msgid "Security features"
 msgstr "सुरक्षा सुविधाएं"
 
@@ -29535,8 +29581,8 @@ msgstr "यहां सेट है"
 msgid "Set mute shortcut"
 msgstr "म्यूट शॉर्टकट सेट करें"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:116
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:144
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:117
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:145
 msgid "Set new password"
 msgstr "नया पासवर्ड सेट करें"
 
@@ -29686,7 +29732,7 @@ msgstr "बाद में सेट अप करें"
 msgid "Set voice region"
 msgstr "वॉइस क्षेत्र सेट करें"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:147
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:148
 msgid "Set your new password."
 msgstr "अपना नया पासवर्ड सेट करें।"
 
@@ -31910,6 +31956,11 @@ msgstr "स्ट्रीमिंग बंद करें"
 msgid "Stop trusting all links?"
 msgstr "सभी लिंक पर भरोसा करना बंद करें?"
 
+#. Security settings: confirmation modal title for turning off passkey-based two-factor authentication.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:64
+msgid "Stop using passkeys for two-factor authentication?"
+msgstr "दो-कारक प्रमाणीकरण के लिए पासकी का उपयोग बंद करें?"
+
 #. Voice control action for stopping the currently focused or selected stream.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:243
 msgid "Stop watching"
@@ -32224,7 +32275,7 @@ msgid "Surfaces"
 msgstr "सतहें"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:146
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:166
 msgid "Suspend"
 msgstr "निलंबित करें"
 
@@ -32714,7 +32765,7 @@ msgid "Temporal layers"
 msgstr "टेम्पोरल लेयर्स"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:150
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:170
 msgid "Temporarily disable your account"
 msgstr "अपना अकाउंट अस्थायी रूप से बंद करें"
 
@@ -33821,6 +33872,14 @@ msgstr "यह दूसरा विकल्प विवरण है"
 msgid "This is the third option description"
 msgstr "यह तीसरा विकल्प विवरण है"
 
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:248
+msgid "This is your last passkey and passkeys are your second factor. Deleting it turns off two-factor authentication for your account, and your current backup codes will stop working."
+msgstr "यह आपकी आखिरी पासकी है और पासकी ही आपका दूसरा कारक है। इसे मिटाने से आपके अकाउंट का दो-कारक प्रमाणीकरण बंद हो जाएगा, और आपके मौजूदा बैकअप कोड काम करना बंद कर देंगे।"
+
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:243
+msgid "This is your last passkey. Once it's gone you won't be able to use a passkey as your second factor."
+msgstr "यह आपकी आखिरी पासकी है। इसके मिट जाने के बाद आप पासकी का उपयोग अपने दूसरे कारक के रूप में नहीं कर पाएँगे।"
+
 #. Required-action form error for landline, toll-free, premium, shared-cost, UAN, voicemail and pager lines. Do not name which line type the provider returned.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:549
 msgid "This isn't a mobile number, so it can't receive our text. Try a mobile number, or contact support if you think that's wrong."
@@ -33989,7 +34048,7 @@ msgstr "यह सभी भरोसेमंद डोमेन हटा द�
 msgid "This removes every custom shortcut and re-enables all built-in shortcuts. This cannot be undone."
 msgstr "इससे सभी कस्टम शॉर्टकट हट जाएंगे और सभी बिल्ट-इन शॉर्टकट फिर से चालू हो जाएंगे। इसे पहले जैसा नहीं किया जा सकता।"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:131
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:132
 msgid "This reset link has expired. Reset links last 1 hour. Please request a new one."
 msgstr "यह रीसेट लिंक समाप्त हो गया है। रीसेट लिंक 1 घंटे तक चलते हैं। कृपया नया लिंक मांगें।"
 
@@ -34854,7 +34913,9 @@ msgid "Turkish"
 msgstr "तुर्की"
 
 #. Button label that turns off streaming privacy.
+#. Security settings: confirm button for turning off passkey-based two-factor authentication.
 #: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx:16
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:80
 msgid "Turn off"
 msgstr "बंद करें"
 
@@ -34909,6 +34970,11 @@ msgstr "स्ट्रीम बंद करें"
 #: src/features/streamer_mode/components/StreamerModeGate.tsx:19
 msgid "Turn off streaming privacy before viewing login or account security details."
 msgstr "लॉगिन या अकाउंट सुरक्षा विवरण देखने से पहले स्ट्रीमिंग गोपनीयता बंद करें।"
+
+#. Security settings: confirm button for turning on passkey-based two-factor authentication.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:60
+msgid "Turn on"
+msgstr "चालू करें"
 
 #. Permission description in the channel-scoped permissions editor for the Stream Video permission. Covers both the webcam and screen sharing.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:292
@@ -35049,7 +35115,7 @@ msgstr "दो-कारक प्रमाणीकरण बंद किय�
 msgid "Two-factor authentication enabled"
 msgstr "दो-कारक प्रमाणीकरण चालू किया गया"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:211
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:315
 msgid "Two-factor authentication is enabled"
 msgstr "दो-कारक प्रमाणीकरण चालू है"
 
@@ -36293,7 +36359,7 @@ msgstr "वास्तविक मान का उपयोग करें"
 msgid "Use alternative method"
 msgstr "कोई और तरीका इस्तेमाल करें"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:213
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:317
 msgid "Use an authenticator app to generate codes for two-factor authentication"
 msgstr "दो-कारक प्रमाणीकरण के लिए कोड जनरेट करने के लिए एक ऑथेंटिकेटर ऐप का उपयोग करें"
 
@@ -36464,11 +36530,16 @@ msgstr "नेटिव टाइटल बार का उपयोग कर�
 msgid "Use only if it clearly breaks {productName}'s rules and doesn't fit above."
 msgstr "इसका उपयोग तभी करें जब यह स्पष्ट रूप से {productName} के नियमों का उल्लंघन करता हो और ऊपर दिए गए विकल्पों में फिट न होता हो।"
 
+#. Security settings: confirmation modal title for turning on passkey-based two-factor authentication.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:51
+msgid "Use passkeys for two-factor authentication?"
+msgstr "दो-कारक प्रमाणीकरण के लिए पासकी का उपयोग करें?"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:306
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:410
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:134
-msgid "Use passkeys for passwordless sign-in and two-factor authentication"
-msgstr "पासवर्ड-रहित साइन-इन और दो-कारक प्रमाणीकरण के लिए पासकी का उपयोग करें"
+msgid "Use passkeys to sign in without a password"
+msgstr "पासवर्ड के बिना साइन इन करने के लिए पासकी का उपयोग करें"
 
 #. Button in the required-action modal. Selects the phone verification path.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:174
@@ -36926,7 +36997,7 @@ msgstr "वेरिफ़िकेशन ईमेल भेजा गया �
 msgid "Verification expired"
 msgstr "वेरिफ़िकेशन की समय-सीमा खत्म हो गई है"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:57
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:67
 #: src/features/auth/components/pages/VerifyEmailPage.tsx:108
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:241
 msgid "Verification failed"
@@ -36967,12 +37038,12 @@ msgid "Verify email"
 msgstr "ईमेल वेरिफ़ाई करें"
 
 #. Accessible form label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:41
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:46
 msgid "Verify identity form"
 msgstr "पहचान वेरिफ़ाई करने का फ़ॉर्म"
 
 #. Short label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:45
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:50
 msgid "Verify it's you"
 msgstr "पुष्टि करें कि यह आप ही हैं"
 
@@ -37015,12 +37086,12 @@ msgid "Verify your email address to send friend requests."
 msgstr "फ्रेंड रिक्वेस्ट भेजने के लिए अपना ईमेल पता वेरिफ़ाई करें।"
 
 #. Security settings warning shown when an unverified account cannot register a new passkey.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:45
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:47
 msgid "Verify your email before adding a passkey."
 msgstr "पासकी जोड़ने से पहले अपना ईमेल वेरिफ़ाई करें।"
 
 #. Security settings warning shown when an unverified account cannot enable authenticator-app two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:40
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:42
 msgid "Verify your email before adding an authenticator app."
 msgstr "ऑथेंटिकेटर ऐप जोड़ने से पहले अपना ईमेल वेरिफ़ाई करें।"
 
@@ -37099,7 +37170,7 @@ msgstr "कार्ड वेरिफ़ाई किया जा रहा �
 msgid "Verifying code…"
 msgstr "कोड वेरिफ़ाई किया जा रहा है…"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:119
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:120
 msgid "Verifying your reset link…"
 msgstr "आपका रीसेट लिंक वेरिफ़ाई किया जा रहा है…"
 
@@ -37312,7 +37383,7 @@ msgstr "बैन किए गए यूज़र देखें और प्
 msgid "View and manage every webhook configured across your community."
 msgstr "अपनी कम्युनिटी में कॉन्फ़िगर किए गए सभी वेबहुक देखें और प्रबंधित करें।"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:280
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:384
 msgid "View and manage your backup codes for account recovery"
 msgstr "अकाउंट रिकवरी के लिए अपने बैकअप कोड देखें और प्रबंधित करें"
 
@@ -37346,7 +37417,7 @@ msgstr "चैनल देखें"
 msgid "View channel members"
 msgstr "चैनल के सदस्य देखें"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:298
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:402
 msgid "View codes"
 msgstr "कोड देखें"
 
@@ -37874,7 +37945,7 @@ msgstr "यहां इंतज़ार करें"
 msgid "Waiting for connection..."
 msgstr "कनेक्शन का इंतज़ार हो रहा है..."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:218
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:232
 msgid "Waiting for passkey…"
 msgstr "पासकी का इंतज़ार हो रहा है…"
 
@@ -39335,6 +39406,11 @@ msgstr "आप {guildNames} छोड़ देंगे। आपने जो 
 msgid "You will still need to finish the email step."
 msgstr "आपको अभी भी ईमेल वाला चरण पूरा करना होगा।"
 
+#. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when the account also has an authenticator app.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:74
+msgid "You won't be asked for a passkey after your password anymore. Your authenticator app stays as your second factor."
+msgstr "अब आपसे पासवर्ड के बाद पासकी नहीं मांगी जाएगी। आपका ऑथेंटिकेटर ऐप आपका दूसरा कारक बना रहेगा।"
+
 #: src/features/app/components/floating/UserAreaPopout.tsx:92
 #: src/features/user/components/modals/StatusChangeBottomSheet.tsx:40
 msgid "You won't receive notifications on desktop"
@@ -39348,6 +39424,11 @@ msgstr "आप ऑफ़लाइन दिखेंगे"
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:464
 msgid "You'll have to sign back in on all signed-out devices"
 msgstr "आपको सभी साइन-आउट किए गए डिवाइस पर फिर से साइन इन करना होगा"
+
+#. Security settings: confirmation modal body for turning on passkey-based two-factor authentication.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:55
+msgid "You'll need one of your passkeys to sign in on a new device. If you lose every passkey you can be locked out of your account. Backup codes will be saved for you so you still have a way in."
+msgstr "नए डिवाइस पर साइन इन करने के लिए आपको अपनी पासकी में से कोई एक चाहिए होगी। अगर आप अपनी सभी पासकी खो देते हैं, तो आप अपने अकाउंट से लॉक आउट हो सकते हैं। आपके बैकअप कोड सेव कर दिए जाएँगे, ताकि अंदर आने का एक रास्ता आपके पास बना रहे।"
 
 #. Privacy > Active now: confirmation modal body when turning sharing on.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:41
@@ -39637,9 +39718,14 @@ msgstr "इस कम्युनिटी में मैसेज भेज�
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "आपके अकाउंट का अनुरोध मंज़ूरी के इंतज़ार में है। एडमिन के मंज़ूर करने के बाद आप साइन इन कर सकेंगे।"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:181
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:195
 msgid "Your account requires multi-factor authentication, but no supported methods are set up on this device. Sign in on a device with your authenticator app or security key, or contact support."
 msgstr "आपके अकाउंट के लिए मल्टी-फ़ैक्टर प्रमाणीकरण ज़रूरी है, लेकिन इस डिवाइस पर कोई भी समर्थित तरीका सेट अप नहीं है। अपने ऑथेंटिकेटर ऐप या सुरक्षा कुंजी वाले डिवाइस पर साइन इन करें या सहायता से संपर्क करें।"
+
+#. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when passkeys are the only second factor on the account.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:68
+msgid "Your account will no longer be protected by two-factor authentication when you sign in with your password. You'll also lose elevated permissions in servers that require two-factor authentication."
+msgstr "पासवर्ड से साइन इन करते समय आपके अकाउंट को दो-कारक प्रमाणीकरण की सुरक्षा नहीं मिलेगी। जिन कम्युनिटी में दो-कारक प्रमाणीकरण ज़रूरी है, उनमें आपकी बढ़ी हुई अनुमतियाँ भी चली जाएँगी।"
 
 #. Hint under the set-aside button in the required-action modal when the user is in no community that triggers the check. This is the common case. Do not phrase it as undoing a join.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:284

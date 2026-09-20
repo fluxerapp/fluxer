@@ -81,6 +81,7 @@ const ResetPasswordPage = observer(function ResetPasswordPage() {
 					ticket: response.challenge.ticket,
 					totp: response.challenge.totp,
 					webauthn: response.challenge.webauthn,
+					backupCodes: response.challenge.backupCodes,
 				});
 				RouterUtils.replaceWith('/login');
 				return;

@@ -60,7 +60,7 @@ When the caller lacks `user:view:email`, `user:view:dob`, or `user:view:ip`, Flu
 | acls<sup>8</sup> | array[string] | Effective [Admin ACLs](/admin-api/#acl-registry), with at most 111 entries |
 | traits<sup>9</sup> | array[string] | The free-form operator labels set on the account, with at most 100 entries |
 | has_totp<sup>10</sup> | boolean | Whether a TOTP authenticator is registered |
-| authenticator_types<sup>10</sup> | array[integer] | Registered [authenticator types](/http-api/users/#authenticator-types), with at most 10 entries |
+| authenticator_types<sup>10</sup> <sup>13</sup> | array[integer] | Registered [authenticator types](/http-api/users/#authenticator-types), with at most 10 entries |
 | last_active_at | ?ISO8601 timestamp | The time of the last recorded activity, or null when none is recorded |
 | last_active_ip<sup>11</sup> | ?string | The IP address the account was last active from |
 | last_active_ip_reverse<sup>11</sup> <sup>12</sup> | ?string | The reverse DNS name of that IP address |
@@ -89,6 +89,8 @@ When the caller lacks `user:view:email`, `user:view:dob`, or `user:view:ip`, Flu
 <sup>11</sup> Requires `user:view:ip`, and without it the field is null and no network lookup is attempted
 
 <sup>12</sup> Resolved live from `last_active_ip` for each response, and null when the lookup fails or returns nothing. The reverse DNS result is cached for one day
+
+<sup>13</sup> `WEBAUTHN` is present only while the account chose passkeys as a second factor. A registered credential does not add it, so `has_totp` false with an empty array still describes an account holding passkeys
 
 ### Example
 
@@ -1950,7 +1952,7 @@ The passkey or security key stops authenticating immediately and cannot be resto
 
 ### Side effects
 
-The credential record is deleted. When it was the account's final WebAuthn credential, Fluxer removes the `WEBAUTHN` [authenticator type](/http-api/users/#authenticator-types) from the account, emits [User Update](/gateway/events/#user-update) to the account's own sessions, and copies the account's authenticator types onto the bot user of every application the account owns.
+The credential record is deleted. When it was the account's final WebAuthn credential and the account had enabled passkeys as a second factor, Fluxer removes the `WEBAUTHN` [authenticator type](/http-api/users/#authenticator-types) from the account, emits [User Update](/gateway/events/#user-update) to the account's own sessions, and copies the account's authenticator types onto the bot user of every application the account owns. An account that never enabled passkeys as a second factor holds no `WEBAUTHN` type to remove.
 
 [WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update) is emitted to the target account with its remaining credentials.
 
@@ -1980,7 +1982,7 @@ Clears the account's TOTP authenticator, its registered authenticator type set, 
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
 
 :::caution[Stored WebAuthn credentials survive this operation]
-Clearing the authenticator type set removes `WEBAUTHN` from the advertised authenticators, but the credential records remain and no [WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update) is emitted. Remove those with [Delete user WebAuthn credential](#delete-user-webauthn-credential).
+Clearing the authenticator type set turns passkeys off as a second factor, but the credential records remain and no [WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update) is emitted. They still answer a sudo mode challenge and a passwordless login. Remove those with [Delete user WebAuthn credential](#delete-user-webauthn-credential).
 :::
 
 ### Side effects

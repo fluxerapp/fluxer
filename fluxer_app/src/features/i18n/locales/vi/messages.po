@@ -2263,6 +2263,8 @@ msgid "25 uses"
 msgstr "25 lượt dùng"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:150
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:40
 msgid "2FA"
 msgstr "2FA"
@@ -2343,7 +2345,7 @@ msgstr "6 tháng"
 
 #. Placeholder for the MFA login one-time password field.
 #. Short label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:53
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:58
 #: src/features/auth/flow/MfaScreen.tsx:22
 msgid "6-digit code"
 msgstr "Mã gồm 6 chữ số"
@@ -2622,7 +2624,7 @@ msgid "Account & premium overrides"
 msgstr "Ghi đè tài khoản & premium"
 
 #. Security settings section for third-party app access and signed-in devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:49
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:88
 msgid "Account access"
 msgstr "Quyền truy cập tài khoản"
 
@@ -2949,7 +2951,7 @@ msgstr "Thêm tài khoản để tiếp tục."
 msgid "Add an email and password to your account first."
 msgstr "Trước tiên, hãy thêm email và mật khẩu vào tài khoản của bạn."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:192
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:296
 msgid "Add an extra layer of security to your account"
 msgstr "Thêm một lớp bảo mật cho tài khoản của bạn"
 
@@ -3065,7 +3067,7 @@ msgid "Add override"
 msgstr "Thêm quyền ghi đè"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:335
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:439
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:130
 msgid "Add passkey"
 msgstr "Thêm khóa truy cập"
@@ -3269,11 +3271,11 @@ msgstr "Đã thêm vào mục yêu thích"
 msgid "Added to saved media"
 msgstr "Đã thêm vào media đã lưu"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:377
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:495
 msgid "Added: {createdDate}"
 msgstr "Đã thêm: {createdDate}"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:373
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:491
 msgid "Added: {createdDate} • last used: {lastUsedDate}"
 msgstr "Đã thêm: {createdDate} • dùng lần cuối: {lastUsedDate}"
 
@@ -4453,7 +4455,7 @@ msgid "Are you sure you want to delete the category \"{categoryName}\"? This can
 msgstr "Bạn có chắc chắn muốn xóa danh mục \"{categoryName}\" không? Thao tác này không thể hoàn tác."
 
 #. placeholder {0}: passkey.name
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:141
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:227
 msgid "Are you sure you want to delete the passkey <0>{0}</0>?"
 msgstr "Bạn có chắc chắn muốn xóa khóa truy cập <0>{0}</0> không?"
 
@@ -4465,7 +4467,7 @@ msgstr "Bạn có chắc chắn muốn xóa tệp đính kèm này không? Thao 
 msgid "Are you sure you want to delete this community? This action cannot be undone. All channels, messages, and settings will be permanently deleted."
 msgstr "Bạn có chắc chắn muốn xóa cộng đồng này không? Thao tác này không thể hoàn tác. Tất cả kênh, tin nhắn và cài đặt sẽ bị xóa vĩnh viễn."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:150
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:235
 msgid "Are you sure you want to delete this passkey?"
 msgstr "Bạn có chắc chắn muốn xóa khóa truy cập này không?"
 
@@ -4543,6 +4545,12 @@ msgstr "Biểu tượng cảm xúc ASCII"
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:49
 msgid "Ask before starting calls"
 msgstr "Hỏi trước khi bắt đầu cuộc gọi"
+
+#. Settings search entry description. One-line summary of what the settings search entry controls.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:449
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:154
+msgid "Ask for a passkey after your password when you sign in"
+msgstr "Khi đăng nhập, yêu cầu khóa truy cập sau khi bạn nhập mật khẩu"
 
 #. Short label in the theme studio. Keep it concise.
 #: src/features/theme_studio/ThemeStudio.tsx:56
@@ -4812,13 +4820,13 @@ msgstr "Xác thực"
 msgid "Authenticator"
 msgstr "Trình xác thực"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:204
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:308
 msgid "Authenticator app"
 msgstr "Ứng dụng xác thực"
 
 #. Label for the MFA login one-time password field from an authenticator app or backup code.
 #. Short label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:49
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:54
 #: src/features/auth/flow/MfaScreen.tsx:18
 msgid "Authenticator code"
 msgstr "Mã xác thực"
@@ -4889,7 +4897,7 @@ msgstr "Ứng dụng được cấp quyền"
 #. Settings section label for OAuth applications authorized by the user.
 #. User settings tab for OAuth or connected apps authorized by the user.
 #: src/features/user/components/modals/tabs/account_security_tab/AccountManagementModals.tsx:17
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:57
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:96
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:507
 #: src/features/user/components/settings_utils/search_index/AuthorizedAppsIndex.ts:10
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:151
@@ -5301,11 +5309,18 @@ msgstr "Khu vực chọn ảnh nền có hỗ trợ kéo và thả"
 msgid "Backspace"
 msgstr "Backspace"
 
+#. Label and placeholder for the MFA login field when the only code the account can use is a backup code.
+#. Label and placeholder for the code field in the authentication sudo verification modal when the only code the account can use is a backup code.
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:62
+#: src/features/auth/flow/MfaScreen.tsx:38
+msgid "Backup code"
+msgstr "Mã dự phòng"
+
 #. Security modal title for one-time account recovery codes.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/auth/components/modals/BackupCodesModal.tsx:18
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:274
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:378
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:74
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:68
 msgid "Backup codes"
@@ -6320,7 +6335,7 @@ msgstr "Không thể tải tệp lên ở đây"
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:72
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:80
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:264
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:278
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:140
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:177
@@ -7669,7 +7684,7 @@ msgstr "Xác nhận tài khoản và xác minh email của bạn để gửi bá
 msgid "Claim your account by adding an email and password. We will send a verification code to confirm your email before finishing."
 msgstr "Xác nhận tài khoản của bạn bằng cách thêm email và mật khẩu. Chúng tôi sẽ gửi mã để xác minh email của bạn trước khi hoàn tất."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:173
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:277
 msgid "Claim your account to access security features like two-factor authentication and passkeys."
 msgstr "Xác nhận tài khoản để truy cập các tính năng bảo mật như xác thực hai yếu tố và khóa truy cập."
 
@@ -8064,7 +8079,7 @@ msgstr "Đóng"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:162
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:182
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:120
 msgid "Close account"
 msgstr "Đóng tài khoản"
@@ -9166,7 +9181,7 @@ msgstr "Tiếp tục báo cáo cộng đồng"
 msgid "Continue to report user"
 msgstr "Tiếp tục báo cáo người dùng"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:231
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:245
 msgid "Continue with passkey"
 msgstr "Tiếp tục bằng khóa truy cập"
 
@@ -9773,7 +9788,7 @@ msgid "Couldn't delete application"
 msgstr "Không thể xóa ứng dụng"
 
 #. Title of the error modal shown when removing a registered passkey fails.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:36
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:38
 msgid "Couldn't delete passkey"
 msgstr "Không thể xóa khóa truy cập"
 
@@ -10112,6 +10127,11 @@ msgstr "Không thể cập nhật cài đặt nhân bản biểu tượng cảm 
 #: src/features/ui/action_menu/items/StaffUserControlsMenuItems.tsx:24
 msgid "Couldn't update mention suppression bypass"
 msgstr "Không thể cập nhật tùy chọn bỏ qua chặn nhắc đến"
+
+#. Title of the error modal shown when the passkey two-factor setting could not be saved.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:84
+msgid "Couldn't update passkey two-factor authentication"
+msgstr "Không thể cập nhật xác thực hai yếu tố bằng khóa truy cập"
 
 #. Error modal title shown when saving role changes fails.
 #: src/features/moderation/components/alerts/RoleUpdateFailedModal.tsx:9
@@ -11004,7 +11024,7 @@ msgid "Day"
 msgstr "Ngày"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:142
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:162
 msgid "Deactivate"
 msgstr "Hủy kích hoạt"
 
@@ -11252,11 +11272,11 @@ msgstr "Delaware"
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:109
 #: src/features/platform/utils/DesktopLocaleBridge.ts:76
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:517
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:117
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:290
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:154
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:174
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:190
 msgid "Delete"
 msgstr "Xóa"
@@ -11425,7 +11445,7 @@ msgid "Delete other members' messages. Pinning is controlled separately."
 msgstr "Xóa tin nhắn của thành viên khác. Ghim tin nhắn được kiểm soát riêng."
 
 #. Security settings: confirmation modal title and primary button for removing a registered passkey. Destructive action; keep plain and direct.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:31
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:33
 msgid "Delete passkey"
 msgstr "Xóa khóa truy cập"
 
@@ -11512,7 +11532,7 @@ msgid "Delete webhook"
 msgstr "Xóa webhook"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:166
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:186
 msgid "Delete your account"
 msgstr "Xóa tài khoản của bạn"
 
@@ -11903,7 +11923,7 @@ msgstr "Thiết bị:"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tab label in the screen-share picker. Lists cameras and virtual capture devices.
 #. User settings tab for managing devices linked to the current account.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:65
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:104
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:530
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
@@ -12014,8 +12034,8 @@ msgstr "Tải lên trực tiếp đang bật"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short footer action in the screen-share picker that disables screen-share preview frame uploads.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:238
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:138
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:342
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:158
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:279
 msgid "Disable"
 msgstr "Tắt"
@@ -13457,7 +13477,7 @@ msgstr "Mục yêu thích trống"
 #: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:32
 #: src/features/app/components/layout/GuildLayout.tsx:54
 #: src/features/invite/components/DisableInvitesButton.tsx:27
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:256
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:360
 #: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:23
 msgid "Enable"
 msgstr "Bật"
@@ -13936,6 +13956,16 @@ msgstr "Nhập mã quà tặng…"
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:375
 msgid "Enter new email"
 msgstr "Nhập email mới"
+
+#. MFA code entry instructions shown when the account uses passkeys as its second factor.
+#: src/features/auth/flow/MfaScreen.tsx:42
+msgid "Enter one of your backup codes if you can't use your passkey."
+msgstr "Nhập một trong các mã dự phòng của bạn nếu bạn không thể sử dụng khóa truy cập."
+
+#. Body text in the authentication sudo verification modal, shown when the only code the account can enter is a backup code. Keep the tone plain and specific.
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:41
+msgid "Enter one of your backup codes."
+msgstr "Nhập một trong các mã dự phòng của bạn."
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:66
@@ -15397,7 +15427,7 @@ msgstr "Dành cho tôi"
 msgid "For this check, you send us a text message instead of receiving one from us."
 msgstr "Để thực hiện bước kiểm tra này, bạn sẽ gửi tin nhắn cho chúng tôi thay vì nhận tin nhắn từ chúng tôi."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:169
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:183
 msgid "For your security, please confirm it's you to continue."
 msgstr "Để bảo mật, vui lòng xác nhận danh tính của bạn để tiếp tục."
 
@@ -19767,8 +19797,8 @@ msgstr "Phần mềm độc hại hoặc liên kết nguy hiểm"
 msgid "Malware, credential theft, or harmful files."
 msgstr "Phần mềm độc hại, đánh cắp thông tin đăng nhập hoặc các tệp độc hại."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:443
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:478
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:561
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:596
 msgid "Manage"
 msgstr "Quản lý"
 
@@ -19778,7 +19808,7 @@ msgid "Manage accounts"
 msgstr "Quản lý tài khoản"
 
 #. Security settings section description for account access controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:53
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:92
 msgid "Manage apps and devices with access to your account"
 msgstr "Quản lý ứng dụng và thiết bị có quyền truy cập vào tài khoản của bạn"
 
@@ -22813,7 +22843,7 @@ msgstr "Không tìm thấy người dùng nào"
 msgid "No verification is required."
 msgstr "Không yêu cầu xác minh."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:175
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:189
 msgid "No verification methods available"
 msgstr "Không có phương thức xác minh nào"
 
@@ -24232,7 +24262,7 @@ msgstr "Tên khóa truy cập"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:305
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:409
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:90
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:88
 msgid "Passkeys"
@@ -26336,7 +26366,7 @@ msgstr "Việc tạo lại sẽ làm mất hiệu lực token hiện tại. Hãy
 msgid "Register"
 msgstr "Đăng ký"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:318
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:422
 msgid "Registered passkeys"
 msgstr "Khóa truy cập đã đăng ký"
 
@@ -26468,7 +26498,7 @@ msgstr "Ghi nhớ kích thước và vị trí cửa sổ"
 #: src/features/ui/action_menu/UserContextMenu.tsx:97
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:26
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:55
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:158
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:178
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:194
 #: src/features/webhook/components/WebhookListItem.tsx:277
 msgid "Remove"
@@ -26908,7 +26938,7 @@ msgstr "Việc xóa quyền có thể giới hạn các tính năng của bot."
 msgid "Removing the timeout will allow <0>{targetUserTag}</0> to send messages, react, and join voice channels again."
 msgstr "Gỡ tạm dừng sẽ cho phép <0>{targetUserTag}</0> gửi tin nhắn, bày tỏ cảm xúc và tham gia kênh thoại trở lại."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:391
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:509
 msgid "Rename"
 msgstr "Đổi tên"
 
@@ -27120,7 +27150,7 @@ msgstr "Lượt đăng lại: <0>{countLabel}</0>"
 msgid "Request a new code first."
 msgstr "Yêu cầu mã mới trước."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:135
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:136
 msgid "Request a new reset link"
 msgstr "Yêu cầu liên kết đặt lại mới"
 
@@ -27148,6 +27178,12 @@ msgstr "Yêu cầu"
 msgid "Require 2FA for moderation actions"
 msgstr "Yêu cầu 2FA cho hành động kiểm duyệt"
 
+#. Settings search entry label. Also used as a search synonym in the settings search bar.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:448
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:138
+msgid "Require a passkey as your second factor"
+msgstr "Yêu cầu khóa truy cập làm yếu tố thứ hai"
+
 #. Short label for an advanced voice-channel navigation preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedAppearanceControls.tsx:17
 msgid "Require double-click to join voice channels"
@@ -27162,6 +27198,11 @@ msgstr "Yêu cầu duyệt bạn bè thủ công"
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/ApplicationInfoSection.tsx:44
 msgid "Require OAuth2 code grant"
 msgstr "Yêu cầu cấp quyền OAuth2"
+
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:146
+msgid "Require passkey"
+msgstr "Yêu cầu khóa truy cập"
 
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:466
 msgid "Require two-factor authentication for moderators before they can ban, kick, time out, or remove messages."
@@ -27381,7 +27422,7 @@ msgstr "Đặt lại dữ liệu"
 msgid "Reset font size"
 msgstr "Đặt lại cỡ chữ"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:128
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:129
 msgid "Reset link invalid or expired"
 msgstr "Liên kết đặt lại không hợp lệ hoặc đã hết hạn"
 
@@ -27397,7 +27438,7 @@ msgstr "Đặt lại vị trí phương tiện"
 
 #. Short label in the authentication reset password page. Keep the tone plain and specific.
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:19
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:185
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:186
 msgid "Reset password"
 msgstr "Đặt lại mật khẩu"
 
@@ -27791,7 +27832,7 @@ msgid "Review and confirm"
 msgstr "Xem lại và xác nhận"
 
 #. Security settings row description for authorized apps.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:61
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:100
 msgid "Review apps that can access your account."
 msgstr "Xem xét các ứng dụng có thể truy cập vào tài khoản của bạn."
 
@@ -27806,7 +27847,7 @@ msgid "Review past purchases and refund options"
 msgstr "Xem lại các giao dịch mua trước đây và tùy chọn hoàn tiền"
 
 #. Security settings row description for linked devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:69
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:108
 msgid "Review signed-in devices and sign out of sessions you don't recognize."
 msgstr "Xem xét các thiết bị đã đăng nhập và đăng xuất các phiên mà bạn không nhận ra."
 
@@ -28818,6 +28859,11 @@ msgstr "Đang tìm kiếm"
 msgid "Searching for people..."
 msgstr "Đang tìm người..."
 
+#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:142
+msgid "Second factor"
+msgstr "Yếu tố thứ hai"
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:112
 msgid "Second option"
 msgstr "Tùy chọn thứ hai"
@@ -28882,7 +28928,7 @@ msgctxt "security-settings-section"
 msgid "Security"
 msgstr "Bảo mật"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:171
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:275
 msgid "Security features"
 msgstr "Tính năng bảo mật"
 
@@ -29535,8 +29581,8 @@ msgstr "Đặt tại đây"
 msgid "Set mute shortcut"
 msgstr "Đặt phím tắt tắt micrô"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:116
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:144
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:117
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:145
 msgid "Set new password"
 msgstr "Đặt mật khẩu mới"
 
@@ -29686,7 +29732,7 @@ msgstr "Thiết lập sau"
 msgid "Set voice region"
 msgstr "Đặt vùng thoại"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:147
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:148
 msgid "Set your new password."
 msgstr "Đặt mật khẩu mới của bạn."
 
@@ -31910,6 +31956,11 @@ msgstr "Dừng chia sẻ màn hình"
 msgid "Stop trusting all links?"
 msgstr "Ngừng tin cậy tất cả liên kết?"
 
+#. Security settings: confirmation modal title for turning off passkey-based two-factor authentication.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:64
+msgid "Stop using passkeys for two-factor authentication?"
+msgstr "Ngừng sử dụng khóa truy cập để xác thực hai yếu tố?"
+
 #. Voice control action for stopping the currently focused or selected stream.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:243
 msgid "Stop watching"
@@ -32224,7 +32275,7 @@ msgid "Surfaces"
 msgstr "Bề mặt"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:146
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:166
 msgid "Suspend"
 msgstr "Tạm dừng"
 
@@ -32714,7 +32765,7 @@ msgid "Temporal layers"
 msgstr "Lớp thời gian"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:150
+#: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:170
 msgid "Temporarily disable your account"
 msgstr "Tạm thời vô hiệu hóa tài khoản của bạn"
 
@@ -33821,6 +33872,14 @@ msgstr "Đây là mô tả của lựa chọn thứ hai"
 msgid "This is the third option description"
 msgstr "Đây là mô tả của lựa chọn thứ ba"
 
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:248
+msgid "This is your last passkey and passkeys are your second factor. Deleting it turns off two-factor authentication for your account, and your current backup codes will stop working."
+msgstr "Đây là khóa truy cập cuối cùng của bạn và khóa truy cập là yếu tố thứ hai của bạn. Xóa khóa này sẽ tắt xác thực hai yếu tố cho tài khoản của bạn, và các mã dự phòng hiện tại sẽ ngừng hoạt động."
+
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:243
+msgid "This is your last passkey. Once it's gone you won't be able to use a passkey as your second factor."
+msgstr "Đây là khóa truy cập cuối cùng của bạn. Khi khóa này bị xóa, bạn sẽ không thể sử dụng khóa truy cập làm yếu tố thứ hai nữa."
+
 #. Required-action form error for landline, toll-free, premium, shared-cost, UAN, voicemail and pager lines. Do not name which line type the provider returned.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:549
 msgid "This isn't a mobile number, so it can't receive our text. Try a mobile number, or contact support if you think that's wrong."
@@ -33989,7 +34048,7 @@ msgstr "Thao tác này sẽ xóa tất cả các miền đáng tin cậy. Bạn 
 msgid "This removes every custom shortcut and re-enables all built-in shortcuts. This cannot be undone."
 msgstr "Thao tác này sẽ xóa mọi phím tắt tùy chỉnh và bật lại tất cả phím tắt tích hợp. Không thể hoàn tác thao tác này."
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:131
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:132
 msgid "This reset link has expired. Reset links last 1 hour. Please request a new one."
 msgstr "Liên kết đặt lại này đã hết hạn. Liên kết đặt lại có hiệu lực trong 1 giờ. Vui lòng yêu cầu một liên kết mới."
 
@@ -34854,7 +34913,9 @@ msgid "Turkish"
 msgstr "Tiếng Thổ Nhĩ Kỳ"
 
 #. Button label that turns off streaming privacy.
+#. Security settings: confirm button for turning off passkey-based two-factor authentication.
 #: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx:16
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:80
 msgid "Turn off"
 msgstr "Tắt"
 
@@ -34909,6 +34970,11 @@ msgstr "Tắt luồng trực tiếp"
 #: src/features/streamer_mode/components/StreamerModeGate.tsx:19
 msgid "Turn off streaming privacy before viewing login or account security details."
 msgstr "Tắt quyền riêng tư khi phát trực tuyến trước khi xem thông tin đăng nhập hoặc chi tiết bảo mật tài khoản."
+
+#. Security settings: confirm button for turning on passkey-based two-factor authentication.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:60
+msgid "Turn on"
+msgstr "Bật"
 
 #. Permission description in the channel-scoped permissions editor for the Stream Video permission. Covers both the webcam and screen sharing.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:292
@@ -35049,7 +35115,7 @@ msgstr "Đã tắt xác thực hai yếu tố"
 msgid "Two-factor authentication enabled"
 msgstr "Đã bật xác thực hai yếu tố"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:211
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:315
 msgid "Two-factor authentication is enabled"
 msgstr "Đã bật xác thực hai yếu tố"
 
@@ -36293,7 +36359,7 @@ msgstr "Dùng giá trị thực"
 msgid "Use alternative method"
 msgstr "Dùng phương thức khác"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:213
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:317
 msgid "Use an authenticator app to generate codes for two-factor authentication"
 msgstr "Dùng ứng dụng xác thực để tạo mã cho xác thực hai yếu tố"
 
@@ -36464,11 +36530,16 @@ msgstr "Dùng thanh tiêu đề gốc"
 msgid "Use only if it clearly breaks {productName}'s rules and doesn't fit above."
 msgstr "Chỉ sử dụng tùy chọn này nếu nội dung vi phạm rõ ràng các quy tắc của {productName} và không thuộc các danh mục trên."
 
+#. Security settings: confirmation modal title for turning on passkey-based two-factor authentication.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:51
+msgid "Use passkeys for two-factor authentication?"
+msgstr "Sử dụng khóa truy cập để xác thực hai yếu tố?"
+
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:306
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:410
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:134
-msgid "Use passkeys for passwordless sign-in and two-factor authentication"
-msgstr "Dùng khóa truy cập để đăng nhập không cần mật khẩu và xác thực hai yếu tố"
+msgid "Use passkeys to sign in without a password"
+msgstr "Sử dụng khóa truy cập để đăng nhập không cần mật khẩu"
 
 #. Button in the required-action modal. Selects the phone verification path.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:174
@@ -36926,7 +36997,7 @@ msgstr "Đã gửi email xác minh. Kiểm tra hộp thư đến của bạn."
 msgid "Verification expired"
 msgstr "Xác minh đã hết hạn"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:57
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:67
 #: src/features/auth/components/pages/VerifyEmailPage.tsx:108
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:241
 msgid "Verification failed"
@@ -36967,12 +37038,12 @@ msgid "Verify email"
 msgstr "Xác minh email"
 
 #. Accessible form label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:41
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:46
 msgid "Verify identity form"
 msgstr "Biểu mẫu xác minh danh tính"
 
 #. Short label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:45
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:50
 msgid "Verify it's you"
 msgstr "Xác minh đó là bạn"
 
@@ -37015,12 +37086,12 @@ msgid "Verify your email address to send friend requests."
 msgstr "Xác minh địa chỉ email của bạn để gửi lời mời kết bạn."
 
 #. Security settings warning shown when an unverified account cannot register a new passkey.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:45
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:47
 msgid "Verify your email before adding a passkey."
 msgstr "Xác minh email của bạn trước khi thêm khóa truy cập."
 
 #. Security settings warning shown when an unverified account cannot enable authenticator-app two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:40
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:42
 msgid "Verify your email before adding an authenticator app."
 msgstr "Xác minh email của bạn trước khi thêm ứng dụng xác thực."
 
@@ -37099,7 +37170,7 @@ msgstr "Đang xác minh thẻ"
 msgid "Verifying code…"
 msgstr "Đang xác minh mã…"
 
-#: src/features/auth/components/pages/ResetPasswordPage.tsx:119
+#: src/features/auth/components/pages/ResetPasswordPage.tsx:120
 msgid "Verifying your reset link…"
 msgstr "Đang xác minh liên kết đặt lại của bạn…"
 
@@ -37312,7 +37383,7 @@ msgstr "Xem và quản lý người dùng bị cấm."
 msgid "View and manage every webhook configured across your community."
 msgstr "Xem và quản lý mọi webhook được cấu hình trong cộng đồng của bạn."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:280
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:384
 msgid "View and manage your backup codes for account recovery"
 msgstr "Xem và quản lý mã dự phòng để khôi phục tài khoản"
 
@@ -37346,7 +37417,7 @@ msgstr "Xem kênh"
 msgid "View channel members"
 msgstr "Xem thành viên kênh"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:298
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:402
 msgid "View codes"
 msgstr "Xem mã"
 
@@ -37874,7 +37945,7 @@ msgstr "Đợi ở đây"
 msgid "Waiting for connection..."
 msgstr "Đang chờ kết nối..."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:218
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:232
 msgid "Waiting for passkey…"
 msgstr "Đang chờ khóa truy cập…"
 
@@ -39335,6 +39406,11 @@ msgstr "Bạn sẽ rời khỏi {guildNames}. Không có bài đăng nào của 
 msgid "You will still need to finish the email step."
 msgstr "Bạn vẫn cần hoàn thành bước email."
 
+#. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when the account also has an authenticator app.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:74
+msgid "You won't be asked for a passkey after your password anymore. Your authenticator app stays as your second factor."
+msgstr "Sau khi nhập mật khẩu, bạn sẽ không còn bị yêu cầu dùng khóa truy cập nữa. Ứng dụng xác thực của bạn vẫn là yếu tố thứ hai."
+
 #: src/features/app/components/floating/UserAreaPopout.tsx:92
 #: src/features/user/components/modals/StatusChangeBottomSheet.tsx:40
 msgid "You won't receive notifications on desktop"
@@ -39348,6 +39424,11 @@ msgstr "Bạn sẽ hiện ở trạng thái ngoại tuyến"
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:464
 msgid "You'll have to sign back in on all signed-out devices"
 msgstr "Bạn sẽ phải đăng nhập lại trên tất cả các thiết bị đã đăng xuất"
+
+#. Security settings: confirmation modal body for turning on passkey-based two-factor authentication.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:55
+msgid "You'll need one of your passkeys to sign in on a new device. If you lose every passkey you can be locked out of your account. Backup codes will be saved for you so you still have a way in."
+msgstr "Bạn sẽ cần một trong các khóa truy cập của mình để đăng nhập trên thiết bị mới. Nếu mất tất cả khóa truy cập, bạn có thể vĩnh viễn mất quyền truy cập vào tài khoản của mình. Các mã dự phòng sẽ được lưu cho bạn để bạn vẫn còn cách đăng nhập."
 
 #. Privacy > Active now: confirmation modal body when turning sharing on.
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ActiveNowTab.tsx:41
@@ -39637,9 +39718,14 @@ msgstr "Tài khoản của bạn còn quá mới để gửi tin nhắn trong c�
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "Yêu cầu tài khoản của bạn đang chờ phê duyệt. Bạn có thể đăng nhập sau khi quản trị viên phê duyệt."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:181
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:195
 msgid "Your account requires multi-factor authentication, but no supported methods are set up on this device. Sign in on a device with your authenticator app or security key, or contact support."
 msgstr "Tài khoản của bạn yêu cầu xác thực đa yếu tố, nhưng chưa có phương thức nào được thiết lập trên thiết bị này. Vui lòng đăng nhập trên thiết bị có ứng dụng xác thực hoặc khóa bảo mật của bạn, hoặc liên hệ bộ phận hỗ trợ."
+
+#. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when passkeys are the only second factor on the account.
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:68
+msgid "Your account will no longer be protected by two-factor authentication when you sign in with your password. You'll also lose elevated permissions in servers that require two-factor authentication."
+msgstr "Tài khoản của bạn sẽ không còn được bảo vệ bằng xác thực hai yếu tố khi đăng nhập bằng mật khẩu. Bạn cũng sẽ mất các quyền nâng cao trong các cộng đồng yêu cầu xác thực hai yếu tố."
 
 #. Hint under the set-aside button in the required-action modal when the user is in no community that triggers the check. This is the common case. Do not phrase it as undoing a join.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:284

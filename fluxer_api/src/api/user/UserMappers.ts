@@ -154,7 +154,7 @@ export function mapUserToPrivateResponse(user: User): UserPrivateResponse {
 		banner: stripBannerForUser(user),
 		banner_color: user.bannerColor,
 		mfa_enabled: authenticatorTypes.length > 0,
-		authenticator_types: authenticatorTypes.length > 0 ? authenticatorTypes : undefined,
+		authenticator_types: authenticatorTypes,
 		verified: user.emailVerified,
 		premium_type: isActuallyPremium ? (user.premiumType ?? UserPremiumTypes.NONE) : UserPremiumTypes.NONE,
 		premium_since: isActuallyPremium ? (user.premiumSince?.toISOString() ?? null) : null,
