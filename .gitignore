@@ -10,6 +10,7 @@
 /.direnv/
 /.fluxer/
 /.pnpm-store/
+/.vscode/
 
 **/*.css.d.ts
 **/*.tsbuildinfo
