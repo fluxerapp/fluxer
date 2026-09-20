@@ -8,6 +8,7 @@ import {resolveConfiguredScreenShareTarget} from '@app/features/voice/engine/voi
 import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
 import {clearDesktopSourceIntent, setDesktopSourceIntent} from '@app/features/voice/state/DesktopSourceIntent';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
+import ScreenShareDeliveryRollout from '@app/features/voice/state/ScreenShareDeliveryRollout';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
 	filterRoutableLinuxAudioSources,
@@ -44,7 +45,8 @@ import {
 	isScreenSharePortalUnavailableError,
 	ScreenSharePortalUnavailableError,
 } from '@app/features/voice/utils/ScreenSharePortalUnavailableError';
-import {executeScreenShareOperation} from '@app/features/voice/utils/ScreenShareUtils';
+import {isScreenShareRollbackIncompleteError} from '@app/features/voice/utils/ScreenShareRollbackIncompleteError';
+import {executeScreenShareOperation, handleScreenShareError} from '@app/features/voice/utils/ScreenShareUtils';
 import {
 	type AppShareAudioRoute,
 	resolveWindowShareAudioScope,
@@ -801,6 +803,38 @@ export async function switchConfiguredDisplayScreenShare(
 		});
 		return didSwitch;
 	});
+}
+
+export async function restartActiveScreenShareCapture(): Promise<boolean> {
+	if (!ScreenShareDeliveryRollout.enabled) return false;
+	if (!didScreenShareStart()) return false;
+	const publishedSource = ActiveScreenShareSource.getPublishedSource();
+	const sourceId = ActiveScreenShareSource.getSourceId();
+	if ((publishedSource !== 'app' && publishedSource !== 'display') || sourceId == null) {
+		logger.warn('The live capture cannot take a new geometry, and restarting it would re-open the source picker', {
+			publishedSource,
+		});
+		return false;
+	}
+	logger.info('Restarting the live screen share capture because its geometry did not take', {
+		publishedSource,
+		sourceId,
+	});
+	try {
+		return await runConfiguredDisplayScreenShare(
+			sourceId,
+			{
+				sourceDimensions: ActiveScreenShareSource.getSourceDimensions() ?? undefined,
+				preferredDisplaySurface: publishedSource === 'app' ? 'window' : 'monitor',
+				isOwnWindow: ActiveScreenShareSource.isOwnWindow(),
+			},
+			'switch',
+		);
+	} catch (error) {
+		if (isScreenShareRollbackIncompleteError(error)) handleScreenShareError(error);
+		logger.warn('Failed to restart the live screen share capture for a settings change', error);
+		return false;
+	}
 }
 
 async function linkManualAudioSourcesForDeviceShare(mode: 'start' | 'switch'): Promise<void> {

@@ -72,14 +72,6 @@ export interface GpuInfo {
 
 export type StreamingPriorityDiagnostics = Record<string, unknown>;
 
-export interface OpenH264Status {
-	enabled: boolean;
-	downloaded: boolean;
-	downloading: boolean;
-	version: string | null;
-	error: string | null;
-}
-
 export interface DesktopWindowBehaviorSettings {
 	showTrayIcon: boolean;
 	minimizeToTray: boolean;
@@ -484,8 +476,6 @@ export interface ElectronAPI {
 	passkeyIsSupported?(): Promise<boolean>;
 	passkeyRegister?(options: unknown, requestContext?: {pin?: string}): Promise<RegistrationResponseJSON>;
 	passkeyAuthenticate?(options: unknown, requestContext?: {pin?: string}): Promise<AuthenticationResponseJSON>;
-	getOpenH264Status?(): Promise<OpenH264Status>;
-	setOpenH264Enabled?(enabled: boolean): Promise<OpenH264Status>;
 	virtmic?: VirtmicApi;
 	nativeAudio?: NativeAudioApi;
 	nativeScreenCapture?: NativeScreenCaptureApi;

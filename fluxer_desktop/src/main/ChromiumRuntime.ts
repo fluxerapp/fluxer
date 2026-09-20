@@ -27,15 +27,6 @@ const RUNTIME_CACHE_DIRECTORIES = [
 	'Service Worker/ScriptCache',
 	'Default/Service Worker/ScriptCache',
 ];
-const MACOS_PRE_SEQUOIA_SCREEN_CAPTURE_DISABLED_FEATURES = [
-	'ScreenCaptureKitMac',
-	'ScreenCaptureKitMacWindow',
-	'ScreenCaptureKitMacScreen',
-	'ScreenCaptureKitPickerScreen',
-	'ScreenCaptureKitStreamPickerSonoma',
-	'WarmScreenCaptureSonoma',
-	'UseSCContentSharingPicker',
-];
 const WINDOWS_NVIDIA_HEVC_DECODE_WORKAROUND_DEVICE_IDS = new Set([
 	4928, 4929, 4932, 4934, 4935, 4936, 4937, 4939, 4941, 4942, 4943, 4986, 4987, 4992, 4993, 4994, 5008, 5009, 5010,
 	5011, 5016, 5017, 5018, 5019, 5020, 5021, 5040, 5041, 5042, 5043, 5044, 5046, 5049, 5050, 5051, 5052, 5056, 5058,
@@ -296,15 +287,6 @@ export function appendLinuxChromiumFlagsConfig(channel: 'stable' | 'canary'): vo
 	}
 }
 
-export function addMacosPreSequoiaScreenCaptureDisabledFeatures(features: Set<string>): void {
-	if (process.platform !== 'darwin') return;
-	const majorRelease = Number.parseInt(os.release().split('.')[0] ?? '', 10);
-	if (!Number.isFinite(majorRelease) || majorRelease >= 24) return;
-	for (const feature of MACOS_PRE_SEQUOIA_SCREEN_CAPTURE_DISABLED_FEATURES) {
-		features.add(feature);
-	}
-}
-
 export function addLinuxHardwareVideoEncodeFeatures(features: Set<string>): void {
 	if (process.platform !== 'linux') return;
 	features.add('AcceleratedVideoEncoder');
@@ -314,11 +296,6 @@ export interface ChromiumCommandLine {
 	appendSwitch(name: string, value?: string): void;
 	getSwitchValue(name: string): string;
 	hasSwitch(name: string): boolean;
-}
-
-export function addLinuxScreenCapturePipeWireFeature(features: Set<string>): void {
-	if (process.platform !== 'linux') return;
-	features.add('WebRTCPipeWireCapturer');
 }
 
 export function hasConfiguredOzonePlatformSwitch(commandLine: ChromiumCommandLine = app.commandLine): boolean {

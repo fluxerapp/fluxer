@@ -9,7 +9,6 @@ import {Combobox, type ComboboxOption} from '@app/features/ui/components/form/Fo
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import {SwitchGroup, SwitchGroupItem} from '@app/features/ui/components/SwitchGroup';
 import PiP from '@app/features/ui/state/PiP';
-import {getElectronAPI, isDesktop} from '@app/features/ui/utils/NativeUtils';
 import styles from '@app/features/user/components/modals/tabs/AdvancedSettingsTab.module.css';
 import {selectScreenShareEncoderPathDescription} from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControlsState';
 import {CompactComboboxRow} from '@app/features/user/components/modals/tabs/components/CompactComboboxRow';
@@ -31,7 +30,6 @@ import {
 	type HardwareEncodeReport,
 	loadGpuEncoderReport,
 } from '@app/features/voice/utils/GpuEncoderCapabilities';
-import {setOpenH264Enabled} from '@app/features/voice/utils/OpenH264Status';
 import {CODEC_DISPLAY_LABEL} from '@app/features/voice/utils/ScreenShareCodecPolicy';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -39,11 +37,6 @@ import {GearIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useEffect, useState} from 'react';
 
-const OPENH264_LABEL_DESCRIPTOR = msg({
-	message: 'OpenH264 Video Codec provided by Cisco Systems, Inc.',
-	comment:
-		'Switch label for the OpenH264 codec toggle. "OpenH264" is a product name and "Cisco Systems, Inc." is a company name; do not translate either.',
-});
 const PAUSE_PREVIEW_BACKGROUND_DESCRIPTOR = msg({
 	message: 'Pause my screen share preview in the background',
 	comment: 'Short label for an advanced screen-share preview preference.',
@@ -222,24 +215,6 @@ export const ScreenShareHevcOptInControl = observer(() => {
 			onChange={(value) => VoiceSettingsCommands.update({screenShareHevcOptIn: value})}
 			compact
 			data-flx="user.advanced-settings-tab.switch.screen-share-hevc-opt-in"
-		/>
-	);
-});
-
-export const OpenH264Control = observer(() => {
-	const {i18n} = useLingui();
-	const handleChange = useCallback((value: boolean) => {
-		VoiceSettingsCommands.update({openH264Enabled: value});
-		void setOpenH264Enabled(value);
-	}, []);
-	if (!isDesktop() || getElectronAPI()?.platform !== 'linux') return null;
-	return (
-		<Switch
-			ariaLabel={i18n._(OPENH264_LABEL_DESCRIPTOR)}
-			value={VoiceSettings.openH264Enabled}
-			onChange={handleChange}
-			compact
-			data-flx="user.advanced-settings-tab.switch.openh264"
 		/>
 	);
 });

@@ -8,6 +8,7 @@ const COMPATIBILITY_CODECS: ReadonlySet<VideoCodec> = new Set(['h264', 'vp9', 'v
 export const LAST_RESORT_VIDEO_CODEC: VideoCodec = 'vp8';
 const BASELINE_BROWSER_CODECS: ReadonlySet<VideoCodec> = new Set(['h264', 'vp8']);
 export const SCREEN_SHARE_CODEC_ADVERTISEMENT_GRACE_MS = 3_000;
+export const SCREEN_SHARE_CODEC_CHANGE_SUPPRESSION_MS = 10_000;
 export const VIDEO_CODEC_NAMES: Record<VideoCodec, FluxerVideoCodecName> = {
 	av1: 'AV1',
 	h265: 'H265',
@@ -112,6 +113,17 @@ export function rankScreenShareCodecs(input: ScreenShareCodecRankingInput): Scre
 		order: ordered.length > 0 ? ordered : [LAST_RESORT_VIDEO_CODEC],
 		hardwareUnavailable: input.encoderModeSetting === 'hardware' && !hardwareAvailable,
 	};
+}
+
+export function isScreenShareCodecUpgrade(
+	order: ReadonlyArray<VideoCodec>,
+	publishedCodec: VideoCodec,
+	nextCodec: VideoCodec,
+): boolean {
+	const publishedRank = order.indexOf(publishedCodec);
+	const nextRank = order.indexOf(nextCodec);
+	if (publishedRank < 0 || nextRank < 0) return false;
+	return nextRank < publishedRank;
 }
 
 export function buildScreenShareCodecAdvertisements(

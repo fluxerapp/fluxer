@@ -1,18 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import ScreenShareDeliveryRollout from '@app/features/voice/state/ScreenShareDeliveryRollout';
 import SoftwareEncoderWarning from '@app/features/voice/state/SoftwareEncoderWarning';
-import {
-	classifyVideoDecoderAcceleration,
-	isSoftwareVideoImplementation,
-} from '@app/features/voice/utils/VideoAccelerationClassification';
+import {classifyVideoDecoderAcceleration} from '@app/features/voice/utils/VideoAccelerationClassification';
 import type {VideoCodec} from 'livekit-client';
 
 const logger = new Logger('ScreenShareCodecDiagnostics');
+const DECODE_SAMPLE_INTERVAL_MS = 5000;
 const DECODER_VERIFICATION_DELAY_MS = 5000;
 const UNKNOWN_DECODER_IMPLEMENTATION = 'software decoder';
-
-export {isSoftwareVideoImplementation};
 
 interface CodecStatsEntry {
 	type: string;
@@ -25,10 +22,16 @@ interface InboundVideoStatsEntry {
 	kind?: string;
 	mediaType?: string;
 	codecId?: string;
+	timestamp?: number;
 	packetsReceived?: number;
 	bytesReceived?: number;
 	framesDecoded?: number;
+	keyFramesDecoded?: number;
 	framesReceived?: number;
+	framesDropped?: number;
+	freezeCount?: number;
+	totalInterFrameDelay?: number;
+	totalSquaredInterFrameDelay?: number;
 	decoderImplementation?: string;
 	powerEfficientDecoder?: boolean;
 }
@@ -46,6 +49,38 @@ export interface StalledVideoDecoderInfo {
 	bytesReceived: number;
 	framesDecoded: number;
 	framesReceived: number;
+	framesDropped: number | null;
+}
+
+export interface InboundVideoDecodeSample {
+	codec: VideoCodec | null;
+	mimeType?: string;
+	atMs: number;
+	packetsReceived: number;
+	bytesReceived: number;
+	framesDecoded: number | null;
+	keyFramesDecoded: number | null;
+	framesReceived: number | null;
+	framesDropped: number | null;
+	freezeCount: number | null;
+	totalInterFrameDelay: number | null;
+	totalSquaredInterFrameDelay: number | null;
+	decoderImplementation: string | null;
+	powerEfficientDecoder: boolean | null;
+}
+
+export interface InboundVideoDecodeHealth {
+	codec: VideoCodec | null;
+	intervalMs: number;
+	decodedFps: number | null;
+	framesDecodedDelta: number | null;
+	meanInterFrameDelayMs: number | null;
+	interFrameDelayStdDevMs: number | null;
+	freezes: number | null;
+	freezeCount: number | null;
+	framesDroppedDelta: number | null;
+	framesDecoded: number | null;
+	bytesReceivedDelta: number;
 }
 
 function isSoftwareVideoStats(implementation: string | null, powerEfficient: boolean | null): boolean {
@@ -73,6 +108,17 @@ function finiteNumber(value: unknown): number | null {
 	return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
+function counterDelta(previous: number | null, current: number | null): number | null {
+	if (previous === null || current === null) return null;
+	if (current < previous) return null;
+	return current - previous;
+}
+
+function roundTo(value: number, decimals: number): number {
+	const factor = 10 ** decimals;
+	return Math.round(value * factor) / factor;
+}
+
 function getStatsKind(report: InboundVideoStatsEntry, codecs: Map<string, CodecStatsEntry>): string | undefined {
 	if (report.kind || report.mediaType) return report.kind ?? report.mediaType;
 	if (!report.codecId) return undefined;
@@ -80,7 +126,10 @@ function getStatsKind(report: InboundVideoStatsEntry, codecs: Map<string, CodecS
 	return codec?.mimeType?.startsWith('video/') ? 'video' : undefined;
 }
 
-export function findSoftwareVideoDecoder(stats: RTCStatsReport): SoftwareVideoDecoderInfo | null {
+function collectInboundVideoStats(stats: RTCStatsReport): {
+	codecs: Map<string, CodecStatsEntry>;
+	reports: Array<InboundVideoStatsEntry>;
+} {
 	const codecs = new Map<string, CodecStatsEntry>();
 	const reports: Array<InboundVideoStatsEntry> = [];
 	for (const raw of stats.values()) {
@@ -92,6 +141,11 @@ export function findSoftwareVideoDecoder(stats: RTCStatsReport): SoftwareVideoDe
 			reports.push(report);
 		}
 	}
+	return {codecs, reports};
+}
+
+function findSoftwareVideoDecoderInStats(stats: RTCStatsReport): SoftwareVideoDecoderInfo | null {
+	const {codecs, reports} = collectInboundVideoStats(stats);
 	for (const report of reports) {
 		if (getStatsKind(report, codecs) !== 'video') continue;
 		const implementation =
@@ -110,39 +164,128 @@ export function findSoftwareVideoDecoder(stats: RTCStatsReport): SoftwareVideoDe
 	return null;
 }
 
-export function findStalledVideoDecoder(stats: RTCStatsReport): StalledVideoDecoderInfo | null {
-	const codecs = new Map<string, CodecStatsEntry>();
-	const reports: Array<InboundVideoStatsEntry> = [];
-	for (const raw of stats.values()) {
-		const report = raw as CodecStatsEntry & InboundVideoStatsEntry;
-		if (report.type === 'codec') {
-			codecs.set(report.id, report);
-		}
-		if (report.type === 'inbound-rtp') {
-			reports.push(report);
-		}
-	}
+function findStalledVideoDecoderInStats(stats: RTCStatsReport): StalledVideoDecoderInfo | null {
+	const {codecs, reports} = collectInboundVideoStats(stats);
 	for (const report of reports) {
 		if (getStatsKind(report, codecs) !== 'video') continue;
 		const framesDecoded = finiteNumber(report.framesDecoded);
 		if (framesDecoded === null || framesDecoded > 0) continue;
 		const framesReceived = finiteNumber(report.framesReceived);
 		if (framesReceived === null || framesReceived < 1) continue;
-		const packetsReceived = finiteNumber(report.packetsReceived) ?? 0;
-		const bytesReceived = finiteNumber(report.bytesReceived) ?? 0;
 		const mimeType = report.codecId ? codecs.get(report.codecId)?.mimeType : undefined;
 		const codec = getVideoCodecFromMimeType(mimeType);
 		if (!codec) continue;
 		return {
 			codec,
 			mimeType,
-			packetsReceived,
-			bytesReceived,
+			packetsReceived: finiteNumber(report.packetsReceived) ?? 0,
+			bytesReceived: finiteNumber(report.bytesReceived) ?? 0,
 			framesDecoded,
 			framesReceived,
+			framesDropped: finiteNumber(report.framesDropped),
 		};
 	}
 	return null;
+}
+
+function scheduleScreenShareDecoderVerification(
+	getStats: () => Promise<RTCStatsReport | undefined>,
+	onDecodeFailure?: (failure: StalledVideoDecoderInfo) => void,
+): () => void {
+	let cancelled = false;
+	let timer: ReturnType<typeof setTimeout> | null = null;
+	const scheduleConfirmation = (first: StalledVideoDecoderInfo): void => {
+		timer = setTimeout(async () => {
+			timer = null;
+			try {
+				const stats = await getStats();
+				const confirmed = confirmDecodeStall(first, stats ? findStalledVideoDecoderInStats(stats) : null);
+				if (cancelled || !confirmed) return;
+				logger.warn('Screen share video decode is stalled', confirmed);
+				onDecodeFailure?.(confirmed);
+			} catch (error) {
+				logger.debug('Failed to confirm the screen share decode stall', {error});
+			}
+		}, DECODER_VERIFICATION_DELAY_MS);
+	};
+	timer = setTimeout(async () => {
+		timer = null;
+		let firstStall: StalledVideoDecoderInfo | null = null;
+		try {
+			const stats = await getStats();
+			if (!stats) return;
+			firstStall = findStalledVideoDecoderInStats(stats);
+			const decoder = findSoftwareVideoDecoderInStats(stats);
+			if (!decoder) return;
+			logger.warn('Screen share is using a software decoder', decoder);
+			SoftwareEncoderWarning.triggerDecoderWarning(decoder.codec, decoder.implementation);
+		} catch (error) {
+			logger.debug('Failed to verify screen share decoder', {error});
+		} finally {
+			if (!cancelled && firstStall) {
+				scheduleConfirmation(firstStall);
+			}
+		}
+	}, DECODER_VERIFICATION_DELAY_MS);
+	return () => {
+		cancelled = true;
+		if (!timer) return;
+		clearTimeout(timer);
+		timer = null;
+	};
+}
+
+export function findInboundVideoDecodeSample(stats: RTCStatsReport): InboundVideoDecodeSample | null {
+	const {codecs, reports} = collectInboundVideoStats(stats);
+	for (const report of reports) {
+		if (getStatsKind(report, codecs) !== 'video') continue;
+		const mimeType = report.codecId ? codecs.get(report.codecId)?.mimeType : undefined;
+		return {
+			codec: getVideoCodecFromMimeType(mimeType),
+			mimeType,
+			atMs: finiteNumber(report.timestamp) ?? Date.now(),
+			packetsReceived: finiteNumber(report.packetsReceived) ?? 0,
+			bytesReceived: finiteNumber(report.bytesReceived) ?? 0,
+			framesDecoded: finiteNumber(report.framesDecoded),
+			keyFramesDecoded: finiteNumber(report.keyFramesDecoded),
+			framesReceived: finiteNumber(report.framesReceived),
+			framesDropped: finiteNumber(report.framesDropped),
+			freezeCount: finiteNumber(report.freezeCount),
+			totalInterFrameDelay: finiteNumber(report.totalInterFrameDelay),
+			totalSquaredInterFrameDelay: finiteNumber(report.totalSquaredInterFrameDelay),
+			decoderImplementation:
+				typeof report.decoderImplementation === 'string' && report.decoderImplementation.length > 0
+					? report.decoderImplementation
+					: null,
+			powerEfficientDecoder: typeof report.powerEfficientDecoder === 'boolean' ? report.powerEfficientDecoder : null,
+		};
+	}
+	return null;
+}
+
+export function findSoftwareVideoDecoder(sample: InboundVideoDecodeSample): SoftwareVideoDecoderInfo | null {
+	if (!isSoftwareVideoStats(sample.decoderImplementation, sample.powerEfficientDecoder)) return null;
+	return {
+		codec: getCodecLabel(sample.mimeType),
+		implementation: sample.decoderImplementation ?? UNKNOWN_DECODER_IMPLEMENTATION,
+		powerEfficientDecoder: sample.powerEfficientDecoder,
+	};
+}
+
+export function findStalledVideoDecoder(sample: InboundVideoDecodeSample): StalledVideoDecoderInfo | null {
+	if (sample.codec === null) return null;
+	if (sample.framesDecoded !== 0) return null;
+	if (sample.keyFramesDecoded !== 0) return null;
+	if (sample.framesReceived === null || sample.framesReceived < 1) return null;
+	return {
+		codec: sample.codec,
+		mimeType: sample.mimeType,
+		packetsReceived: sample.packetsReceived,
+		bytesReceived: sample.bytesReceived,
+		framesDecoded: sample.framesDecoded,
+		framesReceived: sample.framesReceived,
+		framesDropped: sample.framesDropped,
+	};
 }
 
 export function confirmDecodeStall(
@@ -156,57 +299,124 @@ export function confirmDecodeStall(
 	return second;
 }
 
-export function scheduleScreenShareDecoderVerification(
+export function computeInboundVideoDecodeHealth(
+	previous: InboundVideoDecodeSample,
+	current: InboundVideoDecodeSample,
+): InboundVideoDecodeHealth | null {
+	const intervalMs = current.atMs - previous.atMs;
+	if (intervalMs <= 0) return null;
+	const framesDecodedDelta = counterDelta(previous.framesDecoded, current.framesDecoded);
+	const interFrameDelayDelta = counterDelta(previous.totalInterFrameDelay, current.totalInterFrameDelay);
+	const squaredInterFrameDelayDelta = counterDelta(
+		previous.totalSquaredInterFrameDelay,
+		current.totalSquaredInterFrameDelay,
+	);
+	const meanInterFrameDelay =
+		framesDecodedDelta === null || framesDecodedDelta === 0 || interFrameDelayDelta === null
+			? null
+			: interFrameDelayDelta / framesDecodedDelta;
+	const variance =
+		meanInterFrameDelay === null || framesDecodedDelta === null || squaredInterFrameDelayDelta === null
+			? null
+			: squaredInterFrameDelayDelta / framesDecodedDelta - meanInterFrameDelay ** 2;
+	return {
+		codec: current.codec,
+		intervalMs: Math.round(intervalMs),
+		decodedFps: framesDecodedDelta === null ? null : roundTo((framesDecodedDelta * 1000) / intervalMs, 1),
+		framesDecodedDelta,
+		meanInterFrameDelayMs: meanInterFrameDelay === null ? null : roundTo(meanInterFrameDelay * 1000, 1),
+		interFrameDelayStdDevMs: variance === null || variance < 0 ? null : roundTo(Math.sqrt(variance) * 1000, 1),
+		freezes: counterDelta(previous.freezeCount, current.freezeCount),
+		freezeCount: current.freezeCount,
+		framesDroppedDelta: counterDelta(previous.framesDropped, current.framesDropped),
+		framesDecoded: current.framesDecoded,
+		bytesReceivedDelta: Math.max(0, current.bytesReceived - previous.bytesReceived),
+	};
+}
+
+export function monitorScreenShareDecodeHealth(
 	getStats: () => Promise<RTCStatsReport | undefined>,
-	onComplete?: () => void,
-	onDecodeFailure?: (failure: StalledVideoDecoderInfo) => void,
+	onDecodeStall?: (failure: StalledVideoDecoderInfo) => void,
 ): () => void {
+	if (!ScreenShareDeliveryRollout.enabled) return scheduleScreenShareDecoderVerification(getStats, onDecodeStall);
 	let cancelled = false;
 	let timer: ReturnType<typeof setTimeout> | null = null;
-	const scheduleConfirmation = (first: StalledVideoDecoderInfo): void => {
-		timer = setTimeout(async () => {
-			timer = null;
-			try {
-				const stats = await getStats();
-				const confirmed = confirmDecodeStall(first, stats ? findStalledVideoDecoder(stats) : null);
-				if (cancelled || !confirmed) return;
-				logger.warn('Screen share video decode is stalled', confirmed);
-				onDecodeFailure?.(confirmed);
-			} catch (error) {
-				logger.debug('Failed to confirm the screen share decode stall', {error});
-			} finally {
-				if (!cancelled) {
-					onComplete?.();
-				}
-			}
-		}, DECODER_VERIFICATION_DELAY_MS);
+	let previousSample: InboundVideoDecodeSample | null = null;
+	let pendingStall: StalledVideoDecoderInfo | null = null;
+	let reportedStall = false;
+	let isSoftwareDecoder = false;
+	let warnedSoftwareDecoder = false;
+	let isFrozen = false;
+
+	const noteSoftwareDecoder = (sample: InboundVideoDecodeSample): void => {
+		const decoder = findSoftwareVideoDecoder(sample);
+		if (!decoder) {
+			isSoftwareDecoder = false;
+			return;
+		}
+		if (isSoftwareDecoder) return;
+		isSoftwareDecoder = true;
+		logger.warn('Screen share is using a software decoder', decoder);
+		if (warnedSoftwareDecoder) return;
+		warnedSoftwareDecoder = true;
+		SoftwareEncoderWarning.triggerDecoderWarning(decoder.codec, decoder.implementation);
 	};
-	timer = setTimeout(async () => {
-		timer = null;
-		let firstStall: StalledVideoDecoderInfo | null = null;
+
+	const noteDecodeStall = (sample: InboundVideoDecodeSample): void => {
+		const stall = findStalledVideoDecoder(sample);
+		const confirmed = confirmDecodeStall(pendingStall, stall);
+		pendingStall = stall;
+		if (!confirmed || reportedStall) return;
+		reportedStall = true;
+		logger.warn('Screen share video decode is stalled', confirmed);
+		onDecodeStall?.(confirmed);
+	};
+
+	const noteDecodeHealth = (sample: InboundVideoDecodeSample): void => {
+		const health = previousSample === null ? null : computeInboundVideoDecodeHealth(previousSample, sample);
+		if (!health) return;
+		if (health.framesDecodedDelta === 0 && health.bytesReceivedDelta > 0) {
+			if (isFrozen) return;
+			isFrozen = true;
+			logger.warn('Screen share video is receiving bytes but decoding no frames', health);
+			return;
+		}
+		if (isFrozen && health.framesDecodedDelta !== null && health.framesDecodedDelta > 0) {
+			isFrozen = false;
+			logger.info('Screen share video decoding resumed', health);
+			return;
+		}
+		logger.debug('Screen share video decode health', health);
+	};
+
+	const sampleOnce = async (): Promise<void> => {
 		try {
 			const stats = await getStats();
-			if (!stats) return;
-			firstStall = findStalledVideoDecoder(stats);
-			const decoder = findSoftwareVideoDecoder(stats);
-			if (!decoder) return;
-			logger.warn('Screen share is using a software decoder', decoder);
-			SoftwareEncoderWarning.triggerDecoderWarning(decoder.codec, decoder.implementation);
+			if (cancelled || !stats) return;
+			const sample = findInboundVideoDecodeSample(stats);
+			if (!sample) return;
+			noteSoftwareDecoder(sample);
+			noteDecodeStall(sample);
+			noteDecodeHealth(sample);
+			previousSample = sample;
 		} catch (error) {
-			logger.debug('Failed to verify screen share decoder', {error});
-		} finally {
-			if (!cancelled) {
-				if (firstStall) {
-					scheduleConfirmation(firstStall);
-				} else {
-					onComplete?.();
-				}
-			}
+			logger.debug('Failed to sample the screen share decoder', {error});
 		}
-	}, DECODER_VERIFICATION_DELAY_MS);
+	};
+
+	const scheduleNextSample = (): void => {
+		timer = setTimeout(async () => {
+			timer = null;
+			await sampleOnce();
+			if (cancelled) return;
+			scheduleNextSample();
+		}, DECODE_SAMPLE_INTERVAL_MS);
+	};
+
+	scheduleNextSample();
 	return () => {
 		cancelled = true;
-		if (!timer) return;
+		if (timer === null) return;
 		clearTimeout(timer);
 		timer = null;
 	};

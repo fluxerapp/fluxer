@@ -42,7 +42,6 @@ import type {
 	NativeScreenCaptureStartResult,
 	NotificationOptions,
 	NotificationResult,
-	OpenH264Status,
 	SetDesktopTroubleshootingDisableHardwareAccelerationOptions,
 	SpellcheckBundledDictionary,
 	SpellcheckResolvedEngineInfo,
@@ -340,9 +339,6 @@ const api: ElectronAPI = {
 	getDesktopInfo: (): Promise<DesktopInfo> => ipcRenderer.invoke('get-desktop-info'),
 	getGpuInfo: (): Promise<GpuInfo> => ipcRenderer.invoke('get-gpu-info'),
 	getAppMetrics: (): Promise<AppMetricsSnapshot> => ipcRenderer.invoke('get-app-metrics'),
-	getOpenH264Status: (): Promise<OpenH264Status> => ipcRenderer.invoke('get-openh264-status'),
-	setOpenH264Enabled: (enabled: boolean): Promise<OpenH264Status> =>
-		ipcRenderer.invoke('set-openh264-enabled', enabled),
 	getSystemIdleTimeMs: (): Promise<number> => ipcRenderer.invoke('system-idle-time-ms'),
 	getDesktopWindowBehaviorSettings: (): Promise<DesktopWindowBehaviorSettings> =>
 		ipcRenderer.invoke('desktop-window-behavior-get'),

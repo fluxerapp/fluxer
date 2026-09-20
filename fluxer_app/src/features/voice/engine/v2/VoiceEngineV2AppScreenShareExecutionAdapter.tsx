@@ -63,6 +63,7 @@ import ActiveScreenShareSource, {
 	type PublishedScreenShareSource,
 } from '@app/features/voice/state/ActiveScreenShareSource';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
+import ScreenShareDeliveryRollout from '@app/features/voice/state/ScreenShareDeliveryRollout';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
 	prepareHighFidelityScreenShareAudioTrack,
@@ -141,10 +142,12 @@ const SCREEN_SHARE_ENCODER_FAILED_DESCRIPTOR = msg({
 	context: 'screen-share',
 });
 
-type ScreenShareVideoConstraints = MediaTrackConstraints & {
-	colorSpace?: string;
-	cursor?: 'always' | 'motion' | 'never';
-};
+type ScreenShareCaptureGeometryUpdate = 'unchanged' | 'applied' | 'failed' | 'needs-capture-restart';
+
+function screenShareSourceHasClonedTracks(track: LocalVideoTrack): boolean {
+	const simulcastCodecs = (track as LocalVideoTrack & {simulcastCodecs?: Map<unknown, unknown>}).simulcastCodecs;
+	return (simulcastCodecs?.size ?? 0) > 0;
+}
 
 export interface ScreenShareSourceSnapshot {
 	publishedSource: PublishedScreenShareSource | null;
@@ -179,6 +182,8 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 	private endedScreenShareStopInFlight: Promise<void> | null = null;
 	encoderVerificationTimer: (() => void) | null = null;
 	private screenShareTrackingHolds = 0;
+	private screenShareCapturePaused = false;
+	private screenShareDeliveryArmed = false;
 	private screenShareTrackingGeneration = 0;
 	private readonly reconciledCodecPairs = new Set<string>();
 	private readonly verifiedCodecCorrectionsByTrack = new WeakMap<MediaStreamTrack, number>();
@@ -207,6 +212,10 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 
 	get streamingPriorityHeld(): boolean {
 		return this.lifecycle.streamingPriorityHeld;
+	}
+
+	get isScreenShareCapturePaused(): boolean {
+		return this.screenShareCapturePaused;
 	}
 
 	getIsScreenSharePending(): boolean {
@@ -437,12 +446,19 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 	cleanupActiveScreenShareEndListenerInternal(): void {
 		this.activeScreenShareEndListener?.();
 		this.activeScreenShareEndListener = null;
+		this.setScreenShareCapturePausedInternal(false);
+	}
+
+	private setScreenShareCapturePausedInternal(paused: boolean): void {
+		if (this.screenShareCapturePaused === paused) return;
+		this.update(() => {
+			this.screenShareCapturePaused = paused;
+		});
 	}
 
 	cancelEncoderVerificationInternal(): void {
 		this.encoderVerificationTimer?.();
 		this.encoderVerificationTimer = null;
-		this.trackPlumbing.cleanupKeyFrameRequests();
 		this.transitionScreenShareLifecycleInternal({type: 'share.encoderVerification.cleared'});
 	}
 
@@ -606,7 +622,6 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 				await this.trackPlumbing.enforceTrackSenderParameters(track, codec);
 			},
 		});
-		this.trackPlumbing.bindKeyFrameRequests(room, participant, track);
 		this.transitionScreenShareLifecycleInternal({type: 'share.encoderVerification.scheduled'});
 	}
 
@@ -664,6 +679,7 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		preferredTrack?: LocalVideoTrack,
 	): void {
 		this.cleanupActiveScreenShareEndListenerInternal();
+		this.screenShareDeliveryArmed = ScreenShareDeliveryRollout.enabled;
 		const publication = preferredTrack ? undefined : participant.getTrackPublication(Track.Source.ScreenShare);
 		const videoTrack = preferredTrack ?? publication?.videoTrack;
 		const mediaStreamTrack = videoTrack?.mediaStreamTrack;
@@ -702,9 +718,29 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 			this.endedScreenShareStopInFlight = stopPromise;
 		};
 		const onEnded = (): void => stopEndedScreenShare('ended-event');
+		const reportCapturePaused = (paused: boolean): void => {
+			if (!isCurrentScreenShareTrack()) return;
+			this.setScreenShareCapturePausedInternal(paused);
+			logger.info(
+				paused
+					? 'Screen share capture stopped delivering frames; the shared surface is static or hidden'
+					: 'Screen share capture started delivering frames again',
+				{readyState: mediaStreamTrack.readyState},
+			);
+		};
+		const onMuted = (): void => reportCapturePaused(true);
+		const onUnmuted = (): void => reportCapturePaused(false);
+		const tracksCapturePauses = this.screenShareDeliveryArmed;
 		mediaStreamTrack.addEventListener('ended', onEnded);
+		if (tracksCapturePauses) {
+			mediaStreamTrack.addEventListener('mute', onMuted);
+			mediaStreamTrack.addEventListener('unmute', onUnmuted);
+		}
 		this.activeScreenShareEndListener = () => {
 			mediaStreamTrack.removeEventListener('ended', onEnded);
+			if (!tracksCapturePauses) return;
+			mediaStreamTrack.removeEventListener('mute', onMuted);
+			mediaStreamTrack.removeEventListener('unmute', onUnmuted);
 		};
 		if (mediaStreamTrack.readyState === 'ended') {
 			queueMicrotask(() => stopEndedScreenShare('already-ended'));
@@ -1104,24 +1140,30 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 	private async applyActiveScreenShareResolutionSetting(
 		screenShareTrack: LocalVideoTrack,
 		resolution: NonNullable<ScreenShareCaptureOptions['resolution']>,
-	): Promise<boolean> {
+	): Promise<ScreenShareCaptureGeometryUpdate> {
 		assert.ok(screenShareTrack);
 		assert.ok(resolution);
 		const mediaStreamTrack = screenShareTrack.mediaStreamTrack;
-		const currentConstraints = mediaStreamTrack.getConstraints() as ScreenShareVideoConstraints;
-		const nextConstraints: ScreenShareVideoConstraints = {...currentConstraints};
+		const currentConstraints = mediaStreamTrack.getConstraints();
+		const nextConstraints: MediaTrackConstraints = {...currentConstraints};
 		if (resolution.width > 0) nextConstraints.width = {ideal: resolution.width};
 		if (resolution.height > 0) nextConstraints.height = {ideal: resolution.height};
 		if (resolution.frameRate !== undefined) {
 			nextConstraints.frameRate = {ideal: resolution.frameRate, max: resolution.frameRate};
 		}
-		if (JSON.stringify(currentConstraints) === JSON.stringify(nextConstraints)) return true;
+		if (JSON.stringify(currentConstraints) === JSON.stringify(nextConstraints)) return 'unchanged';
+		if (this.screenShareDeliveryArmed && screenShareSourceHasClonedTracks(screenShareTrack)) {
+			logger.warn('Screen share capture geometry needs a restart while a backup codec holds a clone of the source', {
+				resolution,
+			});
+			return 'needs-capture-restart';
+		}
 		try {
 			await mediaStreamTrack.applyConstraints(nextConstraints);
-			return true;
+			return 'applied';
 		} catch (error) {
 			logger.warn('Failed to update active screen share constraints', {error, resolution});
-			return false;
+			return 'failed';
 		}
 	}
 
@@ -1146,8 +1188,9 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		if (typeof options?.audio === 'boolean') {
 			await this.applyActiveScreenShareAudioSetting(participant, options.audio);
 		}
+		let geometryUpdate: ScreenShareCaptureGeometryUpdate = 'unchanged';
 		if (options?.resolution) {
-			await this.applyActiveScreenShareResolutionSetting(screenShareTrack, options.resolution);
+			geometryUpdate = await this.applyActiveScreenShareResolutionSetting(screenShareTrack, options.resolution);
 		}
 		if (options && Object.hasOwn(options, 'contentHint')) {
 			screenShareTrack.mediaStreamTrack.contentHint = options.contentHint ?? '';
@@ -1159,7 +1202,8 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		this.ensureScreenShareKeepAliveSinkInternal(participant);
 		updateLocalParticipantFromRoom(room);
 		this.syncLocalScreenShareAudioStateInternal(participant, participant.isScreenShareEnabled);
-		return true;
+		if (!this.screenShareDeliveryArmed) return true;
+		return geometryUpdate !== 'needs-capture-restart' && geometryUpdate !== 'failed';
 	}
 
 	setScreenShareAudioMuted(room: Room | null, muted: boolean): void {
@@ -1181,6 +1225,8 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 	}
 
 	resetStreamTracking(): void {
+		this.screenShareDeliveryArmed = false;
+		this.setScreenShareCapturePausedInternal(false);
 		this.clearScreenShareKeepAliveSinkInternal();
 		this.setStreamingPriorityInternal(false);
 		this.transitionScreenShareLifecycleInternal({type: 'share.reset'});

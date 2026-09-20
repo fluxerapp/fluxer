@@ -57,6 +57,17 @@ function loadChromiumRuntime(platform = 'win32') {
 	return {appendedSwitches, module: module.exports};
 }
 
+function collectChromiumFeatureNames(platform) {
+	const {module} = loadChromiumRuntime(platform);
+	const features = new Set(module.BASE_DISABLED_CHROMIUM_FEATURES);
+	for (const [name, value] of Object.entries(module)) {
+		if (typeof value !== 'function') continue;
+		if (!name.startsWith('add') || !name.endsWith('Features')) continue;
+		value(features);
+	}
+	return [...features];
+}
+
 describe('ChromiumRuntime Windows capture policy', () => {
 	test('leaves the choice of Windows graphics capture to Chromium', () => {
 		const {module} = loadChromiumRuntime('win32');
@@ -70,6 +81,35 @@ describe('ChromiumRuntime Windows capture policy', () => {
 
 		assert.deepEqual(
 			[...features].filter((feature) => feature.includes('Wgc')),
+			[],
+		);
+	});
+});
+
+describe('ChromiumRuntime macOS capture policy', () => {
+	test('leaves the choice of macOS screen capture device to Chromium', () => {
+		assert.deepEqual(
+			collectChromiumFeatureNames('darwin').filter(
+				(feature) => feature.includes('ScreenCaptureKit') || feature.includes('SCContentSharingPicker'),
+			),
+			[],
+		);
+	});
+
+	test('exposes no macOS release-gated screen capture override', () => {
+		const {module} = loadChromiumRuntime('darwin');
+
+		assert.deepEqual(
+			Object.keys(module).filter((name) => name.includes('ScreenCapture')),
+			[],
+		);
+	});
+});
+
+describe('ChromiumRuntime Linux capture policy', () => {
+	test('leaves the choice of PipeWire screen capture to Chromium', () => {
+		assert.deepEqual(
+			collectChromiumFeatureNames('linux').filter((feature) => feature.includes('PipeWire')),
 			[],
 		);
 	});

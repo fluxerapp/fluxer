@@ -87,7 +87,7 @@ describe('PlatformInfo Chromium runtime diagnostics', () => {
 			switches.filter((name) => name.startsWith('enable-h264-mf')),
 			[],
 		);
-		assert.equal(switches.includes('enable-libopenh264'), true);
+		assert.equal(switches.includes('disable_accelerated_h264_encode'), true);
 	});
 });
 

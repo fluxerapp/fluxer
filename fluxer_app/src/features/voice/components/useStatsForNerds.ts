@@ -211,7 +211,6 @@ export function useStatsForNerds({enabled = true}: UseStatsForNerdsOptions = {})
 			shareDesktopAudio: VoiceSettings.getShareDesktopAudio(),
 			shareAppAudio: VoiceSettings.getShareAppAudio(),
 			muteStreamAudio: VoiceSettings.getMuteStreamAudio(),
-			openH264Enabled: VoiceSettings.getOpenH264Enabled(),
 		},
 		screenShareAudioCapture: {
 			nativeCapture: getNativeAudioCaptureDiagnosticState(),

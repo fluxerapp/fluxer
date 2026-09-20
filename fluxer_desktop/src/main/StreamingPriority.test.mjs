@@ -53,7 +53,6 @@ function loadStreamingPriority({
 		clearedIntervals: [],
 		powerStart: [],
 		powerStop: [],
-		guardRetain: 0,
 		guardStop: [],
 		setPriority: [],
 		nativeModuleImports: [],
@@ -84,8 +83,8 @@ function loadStreamingPriority({
 	const osModule = {
 		constants: {priority: {PRIORITY_ABOVE_NORMAL: -7}},
 		getPriority: () => currentPriority,
-		setPriority(priority) {
-			calls.setPriority.push(priority);
+		setPriority(pid, priority) {
+			calls.setPriority.push({processId: pid, priority});
 		},
 	};
 	const log = {
@@ -94,9 +93,6 @@ function loadStreamingPriority({
 		warn: (...args) => calls.logs.warn.push(args),
 	};
 	const guard = {
-		retainWindowsScreenCaptureGuard() {
-			calls.guardRetain += 1;
-		},
 		stopWindowsScreenCaptureGuard(reason) {
 			calls.guardStop.push(reason);
 		},
@@ -167,7 +163,10 @@ describe('StreamingPriority GPU scheduling priority', () => {
 			{processId: 3002, priorityClass: 'high'},
 			{processId: 3003, priorityClass: 'high'},
 		]);
-		assert.deepEqual(calls.setPriority, [-7]);
+		assert.deepEqual(calls.setPriority, [
+			{processId: 1000, priority: -7},
+			{processId: 2001, priority: -7},
+		]);
 		assert.deepEqual(webContents.backgroundThrottlingAllowed, [false]);
 		assert.equal(calls.intervals.length, 1);
 		assert.equal(calls.intervals[0].delay, 20000);
@@ -180,6 +179,10 @@ describe('StreamingPriority GPU scheduling priority', () => {
 				streamingPriority: -7,
 				savedPriority: 0,
 				elevated: true,
+				elevatedProcesses: [
+					{processId: 1000, savedPriority: 0},
+					{processId: 2001, savedPriority: 0},
+				],
 			},
 			gpuScheduling: {
 				supported: true,
@@ -234,7 +237,12 @@ describe('StreamingPriority GPU scheduling priority', () => {
 			{processId: 3002},
 			{processId: 3003},
 		]);
-		assert.deepEqual(calls.setPriority, [-7, 0]);
+		assert.deepEqual(calls.setPriority, [
+			{processId: 1000, priority: -7},
+			{processId: 2001, priority: -7},
+			{processId: 1000, priority: 0},
+			{processId: 2001, priority: 0},
+		]);
 		assert.deepEqual(normalize(module.getStreamingPriorityDiagnostics().gpuScheduling.elevatedProcesses), []);
 		assert.deepEqual(normalize(module.getStreamingPriorityDiagnostics().gpuScheduling.lastRestore), {
 			status: 'succeeded',
@@ -330,6 +338,28 @@ describe('StreamingPriority GPU scheduling priority', () => {
 		assert.deepEqual(calls.restore, [{processId: 1000}]);
 		assert.equal(module.getStreamingPriorityDiagnostics().processPriority.elevated, false);
 		assert.equal(module.getStreamingPriorityDiagnostics().processPriority.savedPriority, null);
+	});
+
+	test('forgets a renderer whose process is gone instead of rewriting a dead pid', () => {
+		const webContents = makeWebContents(2001);
+		const {calls, module} = loadStreamingPriority();
+
+		module.acquireStreamingPriority(webContents);
+
+		assert.deepEqual(calls.setPriority, [
+			{processId: 1000, priority: -7},
+			{processId: 2001, priority: -7},
+		]);
+
+		webContents.emit('render-process-gone');
+		module.releaseStreamingPriority();
+
+		assert.deepEqual(calls.setPriority, [
+			{processId: 1000, priority: -7},
+			{processId: 2001, priority: -7},
+			{processId: 1000, priority: 0},
+		]);
+		assert.deepEqual(calls.restore, [{processId: 1000}]);
 	});
 
 	test('records the real native module load failure detail', () => {

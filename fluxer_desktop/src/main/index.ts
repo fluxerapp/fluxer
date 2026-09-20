@@ -19,8 +19,6 @@ import {configureUserDataPath} from '@electron/common/UserDataPath';
 import {registerAutostartHandlers} from '@electron/main/Autostart';
 import {
 	addLinuxHardwareVideoEncodeFeatures,
-	addLinuxScreenCapturePipeWireFeature,
-	addMacosPreSequoiaScreenCaptureDisabledFeatures,
 	addWindowsHardwareVideoEncodeFeatures,
 	appendConfiguredChromiumSwitches,
 	appendDisabledChromiumFeatures,
@@ -67,7 +65,6 @@ import {
 } from '@electron/main/NativeHardwareEncoder';
 import {runNativeModulePreflight} from '@electron/main/NativeModulePreflight';
 import {cleanupNativeScreenCapture, registerNativeScreenCaptureHandlers} from '@electron/main/NativeScreenCapture';
-import {appendOpenH264Switches} from '@electron/main/OpenH264Manager';
 import {cleanupLinuxChromiumSpellcheckDictionaries} from '@electron/main/Spellcheck';
 import {registerUpdater} from '@electron/main/Updater';
 import {
@@ -265,10 +262,6 @@ if (launchConfigurationError) {
 		addLinuxHardwareVideoEncodeFeatures(enabledChromiumFeatures);
 		addWindowsHardwareVideoEncodeFeatures(enabledChromiumFeatures);
 	}
-	addLinuxScreenCapturePipeWireFeature(enabledChromiumFeatures);
-	if (process.platform === 'darwin') {
-		addMacosPreSequoiaScreenCaptureDisabledFeatures(disabledChromiumFeatures);
-	}
 	appendDisabledChromiumFeatures(disabledChromiumFeatures);
 	if (enabledChromiumFeatures.size > 0) {
 		appendEnabledChromiumFeatures(enabledChromiumFeatures);
@@ -282,7 +275,6 @@ if (launchConfigurationError) {
 		app.setToastActivatorCLSID(WINDOWS_TOAST_ACTIVATOR_CLSID);
 		app.setAppUserModelId(WINDOWS_APP_USER_MODEL_ID);
 	}
-	appendOpenH264Switches();
 	const gotTheLock = app.requestSingleInstanceLock();
 	if (!gotTheLock) {
 		app.quit();
@@ -338,12 +330,6 @@ if (launchConfigurationError) {
 					runStartupPhase('ipc-handlers', registerIpcHandlers);
 				} catch (error) {
 					log.error('[Init] Failed to register IPC handlers:', error);
-				}
-				try {
-					const {initOpenH264} = await import('@electron/main/OpenH264Manager');
-					initOpenH264();
-				} catch (error) {
-					log.warn('[Init] OpenH264 initialization skipped:', error);
 				}
 				try {
 					runStartupPhase('autostart-handlers', registerAutostartHandlers);

@@ -51,6 +51,7 @@ import {
 	reconfigureActiveDeviceShareAudio,
 	reconfigureActiveLinuxAppShareAudio,
 	reconfigureActiveLinuxScreenShareAudioLink,
+	restartActiveScreenShareCapture,
 	scheduleConfiguredScreenShareMutation,
 	stopActiveLinuxScreenShareAudioLink,
 } from '@app/features/voice/utils/ScreenShareStartFlow';
@@ -311,9 +312,10 @@ export async function pushActiveStreamSettings(
 	displayShareEnvironment: DisplayShareEnvironment,
 	options: PushActiveStreamSettingsOptions = {},
 ): Promise<void> {
-	await scheduleConfiguredScreenShareMutation(() =>
-		runActiveStreamSettingsPush(shareContext, displayShareEnvironment, options),
-	);
+	await scheduleConfiguredScreenShareMutation(async () => {
+		if (await runActiveStreamSettingsPush(shareContext, displayShareEnvironment, options)) return true;
+		return restartActiveScreenShareCapture();
+	});
 }
 
 interface StreamSettingsMenuContentProps {

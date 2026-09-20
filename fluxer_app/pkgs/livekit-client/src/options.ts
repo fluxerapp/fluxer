@@ -52,6 +52,8 @@ export interface InternalRoomOptions {
 
 	singlePeerConnection: boolean;
 	subscriberVideoCodecExclusions?: Array<VideoCodec>;
+	screenShareDelivery?: boolean;
+	h264HardwareProfiles?: ReadonlySet<string>;
 	dataStream?: RoomDataStreamOptions;
 }
 export interface RoomDataStreamOptions {

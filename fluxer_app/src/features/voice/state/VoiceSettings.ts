@@ -3,6 +3,7 @@
 import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {makePersistent} from '@app/features/platform/utils/MobXPersistence';
+import ScreenShareDeliveryRollout from '@app/features/voice/state/ScreenShareDeliveryRollout';
 import type {
 	CodecPreference,
 	ScreenShareContentHint,
@@ -118,7 +119,6 @@ type VoiceSettingsUpdate = Partial<{
 	screenShareAudioIncludeSources: Array<Record<string, string>>;
 	screenShareAudioExcludeSources: Array<Record<string, string>>;
 	screenShareDeviceAudioUsesMicrophone: boolean;
-	openH264Enabled: boolean;
 	lastScreenShareSource: LastScreenShareSource | null;
 }>;
 
@@ -259,6 +259,20 @@ function applyStreamingModeDefaultMigrationV1(parsed: Record<string, unknown>): 
 		parsed.streamingMode = 'screenshare';
 	}
 	parsed.streamingModeDefaultMigratedV1 = true;
+	return true;
+}
+
+function applyScreenShareFrameRateFloorMigrationV1(parsed: Record<string, unknown>): boolean {
+	if (!ScreenShareDeliveryRollout.enabled) {
+		return false;
+	}
+	if (parsed.screenShareFrameRateFloorMigratedV1 === true) {
+		return false;
+	}
+	if (parsed.streamingMode === 'custom' && parsed.videoFrameRate === VIDEO_FRAME_RATE_MIN) {
+		parsed.videoFrameRate = VIDEO_FRAME_RATE_DEFAULT;
+	}
+	parsed.screenShareFrameRateFloorMigratedV1 = true;
 	return true;
 }
 
@@ -404,6 +418,7 @@ class VoiceSettings {
 	videoFrameRate = 30;
 	streamingMode: StreamingMode = 'screenshare';
 	streamingModeDefaultMigratedV1 = false;
+	screenShareFrameRateFloorMigratedV1 = false;
 	hideStreamPreview = false;
 	muteStreamAudio = false;
 	shareAppAudio = true;
@@ -453,7 +468,6 @@ class VoiceSettings {
 	screenShareAudioIncludeSources: Array<Record<string, string>> = [];
 	screenShareAudioExcludeSources: Array<Record<string, string>> = [];
 	screenShareDeviceAudioUsesMicrophone = false;
-	openH264Enabled = true;
 	lastScreenShareSource: LastScreenShareSource | null = null;
 	prioritizeSpeakingParticipants = false;
 	private listeners = new Set<() => void>();
@@ -526,7 +540,6 @@ class VoiceSettings {
 				getScreenShareAudioIncludeSources: false,
 				getScreenShareAudioExcludeSources: false,
 				getScreenShareDeviceAudioUsesMicrophone: false,
-				getOpenH264Enabled: false,
 				getLastScreenShareSource: false,
 				getPrioritizeSpeakingParticipants: false,
 				notifyListeners: false,
@@ -550,6 +563,7 @@ class VoiceSettings {
 			changed = applyScreenShareAudioConsentMigrationV1(parsed) || changed;
 			changed = applyScreenShareAudioDefaultOnMigrationV1(parsed) || changed;
 			changed = applyStreamingModeDefaultMigrationV1(parsed) || changed;
+			changed = applyScreenShareFrameRateFloorMigrationV1(parsed) || changed;
 			changed = applyManualAudioSourcesOptOutResetMigrationV1(parsed) || changed;
 			changed = applyScreenShareContentHintDefaultMigrationV1(parsed) || changed;
 			changed = applyOutputVolumeRecalibrationMigrationV1(parsed) || changed;
@@ -595,6 +609,7 @@ class VoiceSettings {
 			'videoFrameRate',
 			'streamingMode',
 			'streamingModeDefaultMigratedV1',
+			'screenShareFrameRateFloorMigratedV1',
 			'hideStreamPreview',
 			'muteStreamAudio',
 			'shareAppAudio',
@@ -643,7 +658,6 @@ class VoiceSettings {
 			'screenShareAudioIncludeSources',
 			'screenShareAudioExcludeSources',
 			'screenShareDeviceAudioUsesMicrophone',
-			'openH264Enabled',
 			'lastScreenShareSource',
 			'prioritizeSpeakingParticipants',
 		]);
@@ -1033,10 +1047,6 @@ class VoiceSettings {
 		return this.getScreenShareAudioExcludeSources();
 	}
 
-	getOpenH264Enabled(): boolean {
-		return this.openH264Enabled;
-	}
-
 	getLastScreenShareSource(): LastScreenShareSource | null {
 		return this.lastScreenShareSource;
 	}
@@ -1137,7 +1147,6 @@ class VoiceSettings {
 			this.screenShareAudioExcludeSources = validated.screenShareAudioExcludeSources;
 		if (validated.screenShareDeviceAudioUsesMicrophone !== undefined)
 			this.screenShareDeviceAudioUsesMicrophone = validated.screenShareDeviceAudioUsesMicrophone;
-		if (validated.openH264Enabled !== undefined) this.openH264Enabled = validated.openH264Enabled;
 		if (validated.lastScreenShareSource !== undefined) this.lastScreenShareSource = validated.lastScreenShareSource;
 		this.notifyListeners();
 	}
@@ -1262,7 +1271,6 @@ class VoiceSettings {
 				validateSourceList(data.screenShareAudioExcludeSources) ?? this.screenShareAudioExcludeSources,
 			screenShareDeviceAudioUsesMicrophone:
 				data.screenShareDeviceAudioUsesMicrophone ?? this.screenShareDeviceAudioUsesMicrophone,
-			openH264Enabled: data.openH264Enabled ?? this.openH264Enabled,
 			lastScreenShareSource:
 				data.lastScreenShareSource === undefined
 					? this.lastScreenShareSource

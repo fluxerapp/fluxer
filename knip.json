@@ -30,6 +30,7 @@
 		"fluxer_desktop/src/main/LinuxDesktopEntry.ts": ["exports"],
 		"fluxer_desktop/src/main/NotificationState.ts": ["exports", "types"],
 		"packages/schema/src/domains/admin/AdminUserSchemas.ts": ["exports"],
+		"packages/schema/src/domains/admin/ScreenShareDeliverySchemas.ts": ["exports"],
 		"packages/schema/src/domains/admin/VoiceNoiseSuppressionSchemas.ts": ["exports"],
 		"packages/schema/src/domains/download/DownloadSchemas.ts": ["exports"],
 		"packages/schema/src/domains/geolocation/GeolocationSchemas.ts": ["exports"],
@@ -72,7 +73,7 @@
 				"native/*/test/**/*.mjs"
 			],
 			"project": ["src/**/*.{ts,tsx,mjs,js}", "scripts/**/*.mjs", "native/**/*.{js,mjs,cjs,d.ts}"],
-			"ignoreBinaries": ["bunzip2", "reg.exe", "update-desktop-database"],
+			"ignoreBinaries": ["reg.exe", "update-desktop-database"],
 			"ignoreDependencies": ["electron-builder", "electron-builder-squirrel-windows"]
 		},
 		"fluxer_docs": {

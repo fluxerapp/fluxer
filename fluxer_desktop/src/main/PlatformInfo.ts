@@ -52,10 +52,8 @@ const CHROMIUM_RUNTIME_SWITCHES = [
 	'disable_metal',
 	'disable-renderer-backgrounding',
 	'disable_nv12_dxgi_video',
-	'enable-libopenh264',
 	'force_high_performance_gpu',
 	'force_low_power_gpu',
-	'openh264-library-path',
 ];
 
 interface DesktopInfoOptions {

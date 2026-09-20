@@ -24,6 +24,7 @@ let stallAction: ScreenShareEncoderVerificationAction = {kind: 'recover-stalled'
 let menuEntitled = true;
 const gpuReport: {gpuLabel: string} | null = null;
 const gpuReportLoad: Promise<unknown> = Promise.resolve(null);
+const h264HardwareProfiles: {profiles: Set<string>} | null = null;
 let displayShareEnvironment: 'web' | 'desktop-custom' | 'desktop-wayland' = 'web';
 const voiceConnectionContext: {guildId: string | null; channelId: string | null; connectionId: string | null} | null =
 	null;
@@ -31,8 +32,14 @@ const voiceStates: Record<string, Record<string, Record<string, unknown>>> = {};
 const settingsUpdate = vi.fn();
 const openPremiumModal = vi.fn();
 
+vi.mock('@app/features/voice/state/ScreenShareDeliveryRollout', () => ({
+	ScreenShareDeliveryRollout: {enabled: true},
+	default: {enabled: true},
+}));
+
 vi.mock('@app/features/voice/utils/GpuEncoderCapabilities', () => ({
 	getGpuEncoderReportSync: () => gpuReport,
+	getH264HardwareProfilesSync: () => h264HardwareProfiles,
 	loadGpuEncoderReport: () => gpuReportLoad,
 }));
 
@@ -725,7 +732,7 @@ describe('the screen share wiring', () => {
 		}
 	});
 
-	it('refuses to publish a codec the decode probe excluded', async () => {
+	it('refuses to publish a codec the decode probe excluded, and keeps publishing one a runtime stall hit', async () => {
 		const decoder = await vi.importActual<typeof import('@app/features/voice/utils/VideoDecoderCapabilities')>(
 			'@app/features/voice/utils/VideoDecoderCapabilities',
 		);
@@ -736,11 +743,19 @@ describe('the screen share wiring', () => {
 		const host = globalThis as Record<string, unknown>;
 		host.RTCRtpSender = {getCapabilities: () => capabilities};
 		host.RTCRtpReceiver = {getCapabilities: () => capabilities};
+		host.VideoDecoder = {isConfigSupported: async () => ({supported: false})};
 		vi.spyOn(VoiceSettings, 'getScreenShareHevcOptIn').mockReturnValue(true);
 		try {
+			decoder.resetVideoDecoderExclusions();
 			detector.resetCachedCodecCapabilities();
 			expect(detector.isVideoCodecAllowedForPublish('h265')).toBe(true);
+
 			expect(decoder.markScreenShareDecodeFailure('h265', 'decode stall')).toBe(true);
+			detector.resetCachedCodecCapabilities();
+			expect(detector.getVideoPublishCodecDenial('h265')).toBeNull();
+			expect(detector.isVideoCodecAllowedForPublish('h265')).toBe(true);
+
+			await decoder.loadVideoDecoderExclusions();
 			detector.resetCachedCodecCapabilities();
 			expect(detector.getVideoPublishCodecDenial('h265')).toBe('decoder-excluded');
 			expect(detector.isVideoCodecAllowedForPublish('h265')).toBe(false);
@@ -752,6 +767,7 @@ describe('the screen share wiring', () => {
 			detector.resetCachedCodecCapabilities();
 			Reflect.deleteProperty(host, 'RTCRtpSender');
 			Reflect.deleteProperty(host, 'RTCRtpReceiver');
+			Reflect.deleteProperty(host, 'VideoDecoder');
 		}
 	});
 });
@@ -936,16 +952,16 @@ describe('the video settings tab', () => {
 			context: 'display',
 		} as const;
 		expect(stateOf(quality)).toEqual({
-			resolution: 'source',
-			frameRate: 15,
+			resolution: 'high',
+			frameRate: 30,
 			resolutionOptions: PREMIUM_RESOLUTION_OPTIONS,
 			frameRateOptions: [15, 30, 60],
 			preset: 'screenshare',
 			presetOverriddenByContext: false,
 			saved: null,
 		});
-		expect(resolveScreenShareQualityPick(quality, {axis: 'resolution', resolution: 'source'})).toBeNull();
-		expect(resolveScreenShareQualityPick(quality, {axis: 'frameRate', frameRate: 15})).toBeNull();
+		expect(resolveScreenShareQualityPick(quality, {axis: 'resolution', resolution: 'high'})).toBeNull();
+		expect(resolveScreenShareQualityPick(quality, {axis: 'frameRate', frameRate: 30})).toBeNull();
 	});
 
 	it('names the preset that owns a free Gaming account and keeps the saved values out of the note', () => {
@@ -1328,7 +1344,7 @@ describe('the in-call stream menu', () => {
 		]);
 	});
 
-	it('offers the 90 FPS a stored preference asks for', async () => {
+	it('lands a stored 90 FPS preference on the fastest rate it can send', async () => {
 		const container = await renderStreamMenu({
 			variant: 'full',
 			shareContext: 'display',
@@ -1340,8 +1356,7 @@ describe('the in-call stream menu', () => {
 		expect(radios(container, 'Frame rate')).toEqual([
 			{label: '15 FPS', selected: false},
 			{label: '30 FPS', selected: false},
-			{label: '60 FPS', selected: false},
-			{label: '90 FPS', selected: true},
+			{label: '60 FPS', selected: true},
 		]);
 	});
 

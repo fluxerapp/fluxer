@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import ScreenShareDeliveryRollout from '@app/features/voice/state/ScreenShareDeliveryRollout';
 import type {VideoCodec} from 'livekit-client';
 
 const logger = new Logger('VideoDecoderCapabilities');
@@ -74,23 +75,8 @@ function hasRtcReceiverCapability(mimeType: string): boolean {
 	});
 }
 
-function shouldExcludeByPlatformPolicy(_codec: VideoCodec): boolean {
-	return false;
-}
-
 function isBaselineWebRtcDecodeCodec(codec: VideoCodec): boolean {
 	return codec === 'h264' || codec === 'vp8';
-}
-
-function getPlatformPolicyExclusions(): Array<VideoCodec> | null {
-	if ((globalThis as Record<string, unknown>).RTCRtpReceiver === undefined) return null;
-	const excluded: Array<VideoCodec> = [];
-	for (const probe of CODEC_PROBES) {
-		if (hasRtcReceiverCapability(`video/${probe.codec}`) && shouldExcludeByPlatformPolicy(probe.codec)) {
-			excluded.push(probe.codec);
-		}
-	}
-	return excluded.length > 0 ? excluded : null;
 }
 
 async function probeCodecDecode(probe: CodecProbe): Promise<boolean> {
@@ -99,9 +85,6 @@ async function probeCodecDecode(probe: CodecProbe): Promise<boolean> {
 	}
 	if (isBaselineWebRtcDecodeCodec(probe.codec)) {
 		return true;
-	}
-	if (shouldExcludeByPlatformPolicy(probe.codec)) {
-		return false;
 	}
 	const api = getVideoDecoderApi();
 	if (!api) {
@@ -156,17 +139,21 @@ export function loadVideoDecoderExclusions(): Promise<Array<VideoCodec>> {
 	return pendingProbe;
 }
 
+export function getProbedVideoDecoderExclusionsSync(): Array<VideoCodec> | null {
+	return cachedExclusions;
+}
+
 export function getVideoDecoderExclusionsSync(): Array<VideoCodec> | null {
-	const probed = cachedExclusions ?? getPlatformPolicyExclusions();
+	const probed = getProbedVideoDecoderExclusionsSync();
 	if (probed === null && screenShareDecodeFailures.size === 0) return null;
 	return [...new Set([...(probed ?? []), ...screenShareDecodeFailures])];
 }
 
-export function isVideoCodecDecodeExcluded(codec: VideoCodec): boolean {
-	return getVideoDecoderExclusionsSync()?.includes(codec) === true;
-}
-
 export function markScreenShareDecodeFailure(codec: VideoCodec, reason: string): boolean {
+	if (ScreenShareDeliveryRollout.enabled && isBaselineWebRtcDecodeCodec(codec)) {
+		logger.warn('Keeping a baseline codec advertised despite a local screen share decode stall', {codec, reason});
+		return false;
+	}
 	if (screenShareDecodeFailures.has(codec)) return false;
 	if (screenShareDecodeFailures.size >= SCREEN_SHARE_DECODE_FAILURES_MAX) return false;
 	screenShareDecodeFailures.add(codec);

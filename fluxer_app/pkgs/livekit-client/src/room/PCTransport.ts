@@ -25,6 +25,12 @@ const startBitrateMultiplier = 0.9;
 
 const maxStartBitrateKbps = 1000;
 
+const maxScreenShareStartBitrateKbps = 1500;
+
+const minScreenShareStartBitrateKbps = 600;
+
+const startBitrateParameter = 'x-google-start-bitrate';
+
 const debounceInterval = 20;
 
 const opusMaxAverageBitrateBps = 510000;
@@ -43,32 +49,49 @@ export function applyVideoStartBitrate(
 	codec: string,
 	maxbr: number,
 	isScreenShare = false,
+	screenShareDelivery = false,
 ): number | undefined {
 	if (!media.msid?.includes(cid)) {
 		return undefined;
 	}
 
-	const codecPayload = media.rtp.find((rtp) => rtp.codec.toUpperCase() === codec.toUpperCase())?.payload ?? 0;
-	if (codecPayload === 0) {
+	const codecPayloads = media.rtp
+		.filter((rtp) => rtp.codec.toUpperCase() === codec.toUpperCase())
+		.map((rtp) => rtp.payload);
+	if (codecPayloads.length === 0 || codecPayloads[0] === 0) {
 		return 0;
 	}
 
 	const calculatedStartBitrate = Math.round(maxbr * startBitrateMultiplier);
-	const startBitrate = isScreenShare ? calculatedStartBitrate : Math.min(calculatedStartBitrate, maxStartBitrateKbps);
-
-	const fmtp = media.fmtp.find((entry) => entry.payload === codecPayload);
-	if (fmtp) {
-		if (!fmtp.config.includes('x-google-start-bitrate')) {
-			fmtp.config += `;x-google-start-bitrate=${startBitrate}`;
-		}
-	} else {
-		media.fmtp.push({
-			payload: codecPayload,
-			config: `x-google-start-bitrate=${startBitrate}`,
-		});
+	let startBitrate = Math.min(calculatedStartBitrate, maxStartBitrateKbps);
+	if (isScreenShare) {
+		startBitrate = screenShareDelivery
+			? Math.max(minScreenShareStartBitrateKbps, Math.min(calculatedStartBitrate, maxScreenShareStartBitrateKbps))
+			: calculatedStartBitrate;
 	}
 
-	return codecPayload;
+	if (!screenShareDelivery) {
+		const codecPayload = codecPayloads[0];
+		const fmtp = media.fmtp.find((entry) => entry.payload === codecPayload);
+		if (fmtp) {
+			if (!fmtp.config.includes(startBitrateParameter)) {
+				fmtp.config += `;${startBitrateParameter}=${startBitrate}`;
+			}
+		} else {
+			media.fmtp.push({
+				payload: codecPayload,
+				config: `${startBitrateParameter}=${startBitrate}`,
+			});
+		}
+		return codecPayload;
+	}
+
+	for (const payload of codecPayloads) {
+		const fmtp = ensureFmtp(media, payload);
+		fmtp.config = setFmtpParameter(fmtp.config, startBitrateParameter, String(startBitrate));
+	}
+
+	return codecPayloads[0];
 }
 
 export const PCEvents = {
@@ -120,6 +143,8 @@ export default class PCTransport extends (EventEmitter as new () => TypedEmitter
 
 	excludedVideoDecoderMimeTypes: Set<string> = new Set();
 
+	private screenShareDelivery: boolean;
+
 	onOffer?: (offer: RTCSessionDescriptionInit, offerId: number) => void;
 
 	onIceCandidate?: (candidate: RTCIceCandidate) => void;
@@ -136,9 +161,10 @@ export default class PCTransport extends (EventEmitter as new () => TypedEmitter
 
 	onTrack?: (ev: RTCTrackEvent) => void;
 
-	constructor(config?: RTCConfiguration, loggerOptions: LoggerOptions = {}) {
+	constructor(config?: RTCConfiguration, loggerOptions: LoggerOptions = {}, screenShareDelivery: boolean = false) {
 		super();
 		this.loggerOptions = loggerOptions;
+		this.screenShareDelivery = screenShareDelivery;
 		this.log = getLogger(loggerOptions.loggerName ?? LoggerNames.PCTransport, () => this.logContext);
 		this.iceLog = getLogger(LoggerNames.ICE, () => this.logContext);
 		this.config = config;
@@ -386,6 +412,7 @@ export default class PCTransport extends (EventEmitter as new () => TypedEmitter
 							trackbr.codec,
 							trackbr.maxbr,
 							trackbr.isScreenShare,
+							this.screenShareDelivery,
 						);
 						if (codecPayload === undefined) {
 							return false;
@@ -444,7 +471,10 @@ export default class PCTransport extends (EventEmitter as new () => TypedEmitter
 		for (const transceiver of this.getTransceivers()) {
 			if (transceiver.receiver.track?.kind !== 'video') continue;
 			if ((transceiver as {stopped?: boolean}).stopped) continue;
-			if (transceiver.direction !== 'recvonly' && transceiver.direction !== 'sendrecv') continue;
+			const receives = this.screenShareDelivery
+				? transceiver.direction === 'recvonly'
+				: transceiver.direction === 'recvonly' || transceiver.direction === 'sendrecv';
+			if (!receives) continue;
 			if (typeof transceiver.setCodecPreferences !== 'function') continue;
 			try {
 				transceiver.setCodecPreferences(allowed);

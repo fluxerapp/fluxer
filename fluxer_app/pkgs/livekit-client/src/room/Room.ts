@@ -63,6 +63,7 @@ import {
 	publishDefaults,
 	roomConnectOptionDefaults,
 	roomOptionDefaults,
+	screenShareDeliveryPublishDefaults,
 	videoDefaults,
 } from './defaults.ts';
 import {ConnectionError, ConnectionErrorReason, UnexpectedConnectionState, UnsupportedServer} from './errors.ts';
@@ -227,7 +228,7 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 			...options?.videoCaptureDefaults,
 		};
 		this.options.publishDefaults = {
-			...publishDefaults,
+			...(this.options.screenShareDelivery ? screenShareDeliveryPublishDefaults : publishDefaults),
 			...options?.publishDefaults,
 		};
 

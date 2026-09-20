@@ -123,6 +123,11 @@ import {
 } from './publishUtils.ts';
 import type RemoteParticipant from './RemoteParticipant.ts';
 
+function hasSingleRidlessEncoding(track: LocalVideoTrack): boolean {
+	const encodings = track.sender?.getParameters().encodings;
+	return encodings?.length === 1 && !encodings[0].rid;
+}
+
 export default class LocalParticipant extends Participant {
 	override audioTrackPublications: Map<string, LocalTrackPublication>;
 
@@ -809,6 +814,7 @@ export default class LocalParticipant extends Participant {
 			...this.roomOptions.publishDefaults,
 			...options,
 		};
+		track.screenShareDelivery = this.roomOptions.screenShareDelivery ?? false;
 		const isStereoInput =
 			('channelCount' in track.mediaStreamTrack.getSettings() &&
 				track.mediaStreamTrack.getSettings().channelCount === 2) ||
@@ -1781,7 +1787,14 @@ export default class LocalParticipant extends Participant {
 		if (!pub.videoTrack) {
 			return;
 		}
-		const newCodecs = await pub.videoTrack.setPublishingCodecs(update.subscribedCodecs);
+		let subscribedCodecs = update.subscribedCodecs;
+		if (this.roomOptions.screenShareDelivery && hasSingleRidlessEncoding(pub.videoTrack)) {
+			subscribedCodecs = subscribedCodecs.filter((codec) => codec.qualities.some((quality) => quality.enabled));
+			if (subscribedCodecs.length === 0) {
+				return;
+			}
+		}
+		const newCodecs = await pub.videoTrack.setPublishingCodecs(subscribedCodecs);
 		for await (const codec of newCodecs) {
 			if (isBackupCodec(codec)) {
 				this.log.debug(`publish ${codec} for ${pub.videoTrack.sid}`, getLogContextFromTrack(pub));

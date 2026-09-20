@@ -44,7 +44,6 @@ import {
 	UnreadBadgeCustomizationControl,
 } from '@app/features/user/components/modals/tabs/advanced_settings_tab/AdvancedExperimentalControls';
 import {
-	OpenH264Control,
 	ScreenShareAv1OptInControl,
 	ScreenShareCodecControl,
 	ScreenShareEncoderControls,
@@ -91,7 +90,6 @@ export const DIRECT_CONTROL_ITEM_IDS = new Set([
 	'voice-video-screen-share-codec',
 	'voice-video-screen-share-av1-opt-in',
 	'voice-video-screen-share-hevc-opt-in',
-	'voice-video-openh264-codec',
 	'voice-video-screen-share-preview-behavior',
 	'voice-video-screen-share-encoder-controls',
 	'advanced-unread-badge-customization',
@@ -129,7 +127,6 @@ export const COMPACT_SWITCH_CONTROL_ITEM_IDS = new Set([
 	'chat-settings-hide-muted-channels',
 	'voice-video-new-device-alerts',
 	'voice-video-connection-volume-controls',
-	'voice-video-openh264-codec',
 	'voice-video-screen-share-av1-opt-in',
 	'voice-video-screen-share-hevc-opt-in',
 	'advanced-unread-badge-customization',
@@ -290,10 +287,6 @@ export const AdvancedSettingControl = observer(({item}: {item: SearchableSetting
 		case 'voice-video-screen-share-hevc-opt-in':
 			return (
 				<ScreenShareHevcOptInControl data-flx="user.advanced-setting-direct-controls.advanced-setting-control.screen-share-hevc-opt-in-control" />
-			);
-		case 'voice-video-openh264-codec':
-			return (
-				<OpenH264Control data-flx="user.advanced-setting-direct-controls.advanced-setting-control.open-h264-control" />
 			);
 		case 'voice-video-screen-share-preview-behavior':
 			return (

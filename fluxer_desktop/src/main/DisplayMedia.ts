@@ -461,7 +461,7 @@ export function registerDisplayMediaHandlers(): void {
 					name: selectedSource.name,
 					withAudio: withAudio === true,
 				});
-				startWindowsScreenCaptureGuardForSource(selectedSource);
+				startWindowsScreenCaptureGuardForSource(selectedSource, event.sender);
 				const _attachAudio = shouldHonorSelectedAudio(pending.audioRequested, withAudio);
 				const streams: Electron.Streams = {
 					video: selectedSource,

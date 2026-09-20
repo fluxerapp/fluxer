@@ -59,6 +59,8 @@ const FIXED_TARGET: ScreenShareTarget = {
 	rung: 'ultra',
 	maxBitrate: 4_000_000,
 	contentHint: 'text',
+	degradationPreference: 'maintain-resolution',
+	softwareEncoderClamped: false,
 	presetOwned: true,
 	tierLimited: false,
 	deviceMapped: false,
@@ -169,9 +171,10 @@ afterEach(() => {
 
 describe('WebRTC hardware encode probe', () => {
 	it('asks H.264 about the profiles a hardware encoder advertises, not only constrained baseline', () => {
-		expect(H264_PROBE_PROFILE_LEVEL_IDS).toEqual(['640028', '4d0028', '420028', '42e028']);
+		expect(H264_PROBE_PROFILE_LEVEL_IDS).toEqual(['640028', '640c28', '4d0028', '420028', '42e028']);
 		expect(H264_ENCODE_PROBE_CONTENT_TYPES.map((contentType) => h264ProfileLevelId(contentType).slice(0, 4))).toEqual([
 			'6400',
+			'640c',
 			'4d00',
 			'4200',
 			'42e0',

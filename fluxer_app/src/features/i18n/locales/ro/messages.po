@@ -1070,7 +1070,7 @@ msgstr "{count, plural, one {Extinde (# linie)} few {Extinde (# linii)} other {E
 msgid "{count, plural, one {Expand (# row)} other {Expand (# rows)}}"
 msgstr "{count, plural, one {Extinde (# rând)} few {Extinde (# rânduri)} other {Extinde (# de rânduri)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:315
+#: src/features/voice/components/VoiceParticipantTile.tsx:320
 msgid "{count, plural, one {Expand # other device} other {Expand # other devices}}"
 msgstr "{count, plural, one {Extinde încă # dispozitiv} few {Extinde încă # dispozitive} other {Extinde încă # de dispozitive}}"
 
@@ -1091,7 +1091,7 @@ msgstr "{count, plural, one {În apel} other {# în apel}}"
 msgid "{count, plural, one {Join video call (# participant)} other {Join video call (# participants)}}"
 msgstr "{count, plural, one {Alătură-te apelului video (# participant)} few {Alătură-te apelului video (# participanți)} other {Alătură-te apelului video (# de participanți)}}"
 
-#: src/features/voice/components/VoiceParticipantTile.tsx:671
+#: src/features/voice/components/VoiceParticipantTile.tsx:676
 msgid "{count, plural, one {Keep watching # stream and add this one} other {Keep watching # streams and add this one}}"
 msgstr "{count, plural, one {Continuă să urmărești # stream și adaugă-l pe acesta} few {Continuă să urmărești # streamuri și adaugă-l pe acesta} other {Continuă să urmărești # de streamuri și adaugă-l pe acesta}}"
 
@@ -1347,7 +1347,7 @@ msgstr "{fps} FPS"
 #. Frame rate option label in the video tab. FPS is a technical token and frameRate is a whole number.
 #. Frame rate option label in the video tab. FPS is a technical token and frameRate is a whole number.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:53
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:114
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:115
 msgid "{frameRate} FPS"
 msgstr "{frameRate} FPS"
 
@@ -3590,8 +3590,8 @@ msgstr "Permite oricui îți poate vedea profilul complet să-ți vadă ora loca
 
 #. Settings search entry label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
 #. Switch label for the AV1 screen-share opt-in. AV1 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:143
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:88
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:136
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:87
 msgid "Allow AV1 for screen sharing"
 msgstr "Permite AV1 pentru partajarea ecranului"
 
@@ -3649,8 +3649,8 @@ msgstr "Permite pentru toate comunitățile"
 
 #. Settings search entry label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
 #. Switch label for the H.265/HEVC screen-share opt-in. H.265 and HEVC are codec names and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:147
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:92
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:140
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:91
 msgid "Allow H.265 (HEVC) for screen sharing"
 msgstr "Permite H.265 (HEVC) pentru partajarea ecranului"
 
@@ -4681,12 +4681,12 @@ msgid "Audio boost"
 msgstr "Amplificare audio"
 
 #. Section header in the stream settings menu. Selects the audio capture device for the share.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:136
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:137
 msgid "Audio device"
 msgstr "Dispozitiv audio"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:16
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:15
 msgid "Audio device alerts"
 msgstr "Alerte dispozitiv audio"
 
@@ -4776,7 +4776,7 @@ msgid "Audio send:"
 msgstr "Trimitere audio:"
 
 #. Section header in the stream settings menu grouping audio-related toggles.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:148
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:149
 msgid "Audio settings"
 msgstr "Setări audio"
 
@@ -4987,9 +4987,9 @@ msgstr "Sugestie de completare automată: {label}, {selectedOptionPosition} din 
 #. Voice region option label in the voice settings menu meaning let Fluxer pick the best region automatically.
 #. Voice region picker option label meaning 'let Fluxer pick the best region automatically'.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/RtcRegionSelect.tsx:19
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:63
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:83
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:104
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:56
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:76
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:97
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:264
 #: src/features/voice/components/VoiceRegionSelector.tsx:16
 #: src/features/voice/components/VoiceSettingsMenus.tsx:93
@@ -4997,13 +4997,13 @@ msgid "Automatic"
 msgstr "Automat"
 
 #. Option label for the screen-share codec select. codec is the automatically selected codec label.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:129
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:122
 msgid "Automatic ({codec})"
 msgstr "Automat ({codec})"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Voice setting label for automatically evening out microphone volume.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:48
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:47
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:215
 msgid "Automatic gain control"
 msgstr "Control automat al amplificării"
@@ -5094,12 +5094,12 @@ msgid "Autoscrolling"
 msgstr "Derulare automată"
 
 #. Settings search synonym. Codec name; keep literal. Used to match this term in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:101
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:100
 msgid "AV1"
 msgstr "AV1"
 
 #. Option label for the screen-share codec select while the AV1 opt-in is off and the option is disabled. AV1 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:133
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:126
 msgid "AV1 (requires opt-in)"
 msgstr "AV1 (necesită activare)"
 
@@ -5558,7 +5558,7 @@ msgid "Biometrics"
 msgstr "Biometrie"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:169
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:152
 msgid "Bitrate"
 msgstr "Bitrate"
 
@@ -5953,7 +5953,7 @@ msgid "Browser locale: {format}"
 msgstr "Formatul orei din browser: {format}"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:64
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:63
 msgid "Browser mic gain for custom processing"
 msgstr "Volumul microfonului în browser pentru procesare personalizată"
 
@@ -6483,15 +6483,15 @@ msgstr "Verificarea Captcha a eșuat. Încearcă din nou."
 msgid "Capture"
 msgstr "Captură"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:810
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:812
 msgid "Capture app audio"
 msgstr "Capturează sunetul aplicației"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:812
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:814
 msgid "Capture desktop audio"
 msgstr "Capturează sunetul de pe desktop"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:809
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:811
 msgid "Capture device audio"
 msgstr "Capturează sunetul dispozitivului"
 
@@ -6501,7 +6501,7 @@ msgid "Capture devices use the Gaming preset."
 msgstr "Dispozitivele de captură folosesc presetarea Gaming."
 
 #. Toggle label in the stream settings menu for a window share whose audio scope the user widened from the shared window to the whole system mix.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:160
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:161
 msgid "Capture entire system audio"
 msgstr "Capturează sunetul întregului sistem"
 
@@ -7637,11 +7637,6 @@ msgstr "Alege-ți limba"
 msgid "Choose your profile accent color"
 msgstr "Alege culoarea de accent a profilului tău"
 
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:117
-msgid "Cisco"
-msgstr "Cisco"
-
 #. Generic account action label that opens or submits the flow to secure an unclaimed account.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:152
 msgid "Claim account"
@@ -8240,7 +8235,7 @@ msgid "Code:"
 msgstr "Cod:"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:76
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:75
 msgid "Codec"
 msgstr "Codec"
 
@@ -8766,7 +8761,7 @@ msgstr "Focalizare pe editor"
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:164
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:120
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:113
 msgid "Configure"
 msgstr "Configurează"
 
@@ -9043,7 +9038,7 @@ msgid "Connection volume"
 msgstr "Volum conexiune"
 
 #. Settings search entry label. Names an advanced voice setting in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:28
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:27
 msgid "Connection volume controls"
 msgstr "Controale pentru volumul conexiunii"
 
@@ -9114,7 +9109,7 @@ msgid "Content filtering"
 msgstr "Filtrarea conținutului"
 
 #. Label for an advanced screen-share select. Refers to the WebRTC MediaStreamTrack contentHint value.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:95
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:88
 msgid "Content hint"
 msgstr "Tipul conținutului"
 
@@ -10594,7 +10589,7 @@ msgstr "Momentan: {mutedText}"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:94
 #: src/features/voice/components/bottomsheets/VoiceSettingsBottomSheets.tsx:45
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:238
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:102
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:103
 msgid "Custom"
 msgstr "Personalizat"
 
@@ -10789,7 +10784,7 @@ msgid "Custom video backgrounds"
 msgstr "Fundaluri video personalizate"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:60
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:59
 msgid "Custom voice processing"
 msgstr "Procesare voce personalizată"
 
@@ -11810,7 +11805,7 @@ msgid "Detached banner"
 msgstr "Banner detașat"
 
 #. Option label for a WebRTC content hint select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:112
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:105
 msgid "Detail"
 msgstr "Detaliu"
 
@@ -11880,7 +11875,7 @@ msgid "Device"
 msgstr "Dispozitiv"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:12
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:11
 msgid "Device alerts"
 msgstr "Alerte dispozitiv"
 
@@ -11890,7 +11885,7 @@ msgid "Device audio ({deviceLabel})"
 msgstr "Audio dispozitiv ({deviceLabel})"
 
 #. Screen-share audio summary on a video device share that publishes only the audio of the capture device itself.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:866
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:868
 #: src/features/voice/utils/ScreenShareAudioSummary.ts:50
 msgid "Device audio only"
 msgstr "Doar audio dispozitiv"
@@ -11904,12 +11899,12 @@ msgstr "Detalii dispozitiv"
 msgid "Device revoked"
 msgstr "Dispozitiv revocat"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:1004
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:1006
 msgid "Device selection"
 msgstr "Selectare dispozitiv"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:36
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:35
 msgid "Device volume"
 msgstr "Volumul dispozitivului"
 
@@ -11933,7 +11928,7 @@ msgid "Devices"
 msgstr "Dispozitive"
 
 #. Description for the Custom streaming preset. Lightly playful prose; keep tone casual.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:106
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:107
 msgid "Dial in your own numbers"
 msgstr "Reglează-ți propriile valori"
 
@@ -12109,7 +12104,7 @@ msgid "Disable mobile push notifications"
 msgstr "Dezactivează notificările push pe mobil"
 
 #. Short label for an advanced screen-share preview preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:51
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:44
 msgid "Disable picture-in-picture popout for screen shares"
 msgstr "Dezactivează ferestrele imagine în imagine pentru partajările de ecran"
 
@@ -12629,7 +12624,7 @@ msgstr "Nu mai sugera {deviceName}"
 #: src/features/moderation/components/report/ReportBreadcrumbs.tsx:31
 #: src/features/search/components/search/ChannelFilterSheet.tsx:165
 #: src/features/search/components/search/HasFilterSheet.tsx:206
-#: src/features/search/components/search/UserFilterSheet.tsx:175
+#: src/features/search/components/search/UserFilterSheet.tsx:186
 msgid "Done"
 msgstr "Gata"
 
@@ -13756,8 +13751,8 @@ msgstr "Activat"
 
 #. Label for an advanced screen-share select. Refers to hardware or software video encoding.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:59
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:153
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:52
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:136
 msgid "Encoder path"
 msgstr "Cale de codificare"
 
@@ -13767,7 +13762,7 @@ msgid "Encoder preference for new screen shares."
 msgstr "Preferința codificatorului pentru noile partajări de ecran."
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:173
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:156
 msgid "Encoder, SVC, and bitrate presets"
 msgstr "Codificator, SVC și presetări de bitrate"
 
@@ -15616,7 +15611,7 @@ msgstr "Ramă"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:341
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:230
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:132
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:133
 msgid "Frame rate"
 msgstr "Rată de cadre"
 
@@ -15840,7 +15835,7 @@ msgid "Fully quit and restart {productName} so macOS applies this permission."
 msgstr "Închide complet și repornește {productName} pentru ca macOS să aplice această permisiune."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:52
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:51
 msgid "Gain control"
 msgstr "Controlul amplificării"
 
@@ -15946,7 +15941,7 @@ msgstr "Controller Y / Triunghi"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:76
 #: src/features/user/components/modals/tabs/UserVideoTabState.ts:24
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:230
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:75
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:76
 msgid "Gaming"
 msgstr "Jocuri"
 
@@ -16451,7 +16446,7 @@ msgstr "Acordat {permissions}"
 msgid "Grants all permissions and bypasses channel restrictions. Highly sensitive."
 msgstr "Acordă toate permisiunile și ocolește restricțiile canalului. Foarte sensibil."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:991
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:993
 msgid "Granular selection"
 msgstr "Selecție granulară"
 
@@ -16629,13 +16624,8 @@ msgstr "Grup actualizat"
 msgid "Grouping"
 msgstr "Grupare"
 
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:113
-msgid "H.264"
-msgstr "H.264"
-
 #. Option label for the screen-share codec select while the HEVC opt-in is off and the option is disabled. H.265 is a codec name and should stay literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:138
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:131
 msgid "H.265 (requires opt-in)"
 msgstr "H.265 (necesită activare)"
 
@@ -16691,7 +16681,7 @@ msgid "Hardware acceleration can cause rendering glitches with transparent windo
 msgstr "Accelerarea hardware poate cauza defecte de randare la ferestrele transparente. Încearcă --disable-gpu dacă observi pâlpâiri sau urme pe imagine."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:161
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:144
 msgid "Hardware encoder"
 msgstr "Codificator hardware"
 
@@ -16832,7 +16822,7 @@ msgid "Help translate {PRODUCT_NAME} into your language on <0>{I18N_WEBLATE_DOMA
 msgstr "Ajută la traducerea {PRODUCT_NAME} în limba ta pe <0>{I18N_WEBLATE_DOMAIN}</0>."
 
 #. Settings search synonym. Codec name; keep literal. Used to match this term in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:105
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:104
 msgid "HEVC"
 msgstr "HEVC"
 
@@ -16995,7 +16985,7 @@ msgid "Hide muted channels by default?"
 msgstr "Ascunzi implicit canalele puse pe silențios?"
 
 #. Short label for an advanced stream privacy preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:55
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:48
 msgid "Hide my stream preview thumbnail"
 msgstr "Ascunde miniatura de previzualizare a streamului meu"
 
@@ -17014,7 +17004,7 @@ msgstr "Ascunde parola"
 msgid "Hide picture-in-picture popout?"
 msgstr "Ascunzi fereastra pop-up imagine în imagine?"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:768
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:770
 msgid "Hide preview thumbnail"
 msgstr "Ascunde miniatura de previzualizare"
 
@@ -17417,11 +17407,11 @@ msgstr "Ignoră"
 msgid "Ignore friend request"
 msgstr "Ignoră cererea de prietenie"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:981
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:983
 msgid "Ignore hardware devices"
 msgstr "Ignoră dispozitivele hardware"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:957
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:959
 msgid "Ignore input media"
 msgstr "Ignoră media de intrare"
 
@@ -17452,7 +17442,7 @@ msgstr "Ignori cererea de prietenie de la {displayName}?"
 msgid "Ignore this channel's slowmode cooldown."
 msgstr "Ignoră pauza impusă de modul lent al acestui canal."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:968
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:970
 msgid "Ignore virtual"
 msgstr "Ignoră dispozitivele virtuale"
 
@@ -19067,7 +19057,7 @@ msgid "Layering"
 msgstr "Suprapunere"
 
 #. Description for an SVC mode select. Keep SVC and AV1 literal.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:79
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:72
 msgid "Layering for AV1 and VP9 when available."
 msgstr "Stratificare pentru AV1 și VP9, dacă sunt disponibile."
 
@@ -20228,7 +20218,7 @@ msgid "Maximum protection for family-friendly spaces"
 msgstr "Protecție maximă pentru spații potrivite familiilor"
 
 #. Settings search entry description for the AV1 and H.265 screen-share opt-in toggles.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:97
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:96
 msgid "May cause compatibility issues for viewers. We’re working on improving this."
 msgstr "Poate cauza probleme de compatibilitate pentru spectatori. Lucrăm la îmbunătățirea acestui aspect."
 
@@ -20957,7 +20947,7 @@ msgid "Microphone access was denied. Enable it in your system settings and try a
 msgstr "Accesul la microfon a fost refuzat. Activează-l din setările sistemului și încearcă din nou."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:56
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:55
 msgid "Microphone gain"
 msgstr "Amplificare microfon"
 
@@ -21318,7 +21308,7 @@ msgstr "Cele mai relevante"
 #: src/features/theme_studio/sections/TokenGroups.ts:102
 #: src/features/user/components/modals/tabs/accessibility_tab/AccessibilityTabInline.tsx:31
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:99
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:108
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:101
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:297
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:271
 msgid "Motion"
@@ -22142,7 +22132,7 @@ msgid "New Mexico"
 msgstr "New Mexico"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:20
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:19
 msgid "New microphone"
 msgstr "Microfon nou"
 
@@ -22830,11 +22820,11 @@ msgstr "Nu s-a găsit niciun utilizator cu acest nume de utilizator."
 msgid "No users are currently banned from this community."
 msgstr "Niciun utilizator nu este banat momentan din această comunitate."
 
-#: src/features/search/components/search/UserFilterSheet.tsx:127
+#: src/features/search/components/search/UserFilterSheet.tsx:138
 msgid "No users available"
 msgstr "Niciun utilizator disponibil"
 
-#: src/features/search/components/search/UserFilterSheet.tsx:127
+#: src/features/search/components/search/UserFilterSheet.tsx:138
 msgid "No users found"
 msgstr "Nu s-au găsit utilizatori"
 
@@ -23313,7 +23303,7 @@ msgstr "Se aplică doar pe ecrane late."
 msgid "Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check."
 msgstr "Sunt acceptate doar cardurile de credit. Cardurile de debit și preplătite nu pot fi utilizate pentru verificarea conținutului matur."
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:946
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:948
 msgid "Only default speakers"
 msgstr "Doar difuzoare implicite"
 
@@ -23361,7 +23351,7 @@ msgstr "Rulează cod aici doar dacă înțelegi exact ce face."
 msgid "Only show message previews for DMs with unread messages"
 msgstr "Afișează previzualizările mesajelor doar pentru DM-urile cu mesaje necitite"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:936
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:938
 msgid "Only speakers"
 msgstr "Doar difuzoare"
 
@@ -23901,21 +23891,6 @@ msgstr "Deschide aplicația de mesagerie de pe telefon și începe un mesaj text
 msgid "Open your settings"
 msgstr "Deschide setările"
 
-#. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:121
-msgid "OpenH264 software codec on Linux"
-msgstr "Codec software OpenH264 pe Linux"
-
-#. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:109
-msgid "OpenH264 video codec"
-msgstr "Codec video OpenH264"
-
-#. Switch label for the OpenH264 codec toggle. "OpenH264" is a product name and "Cisco Systems, Inc." is a company name; do not translate either.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:42
-msgid "OpenH264 Video Codec provided by Cisco Systems, Inc."
-msgstr "Codec video OpenH264 furnizat de Cisco Systems, Inc."
-
 #. Screen-reader-only hint for the Members entry in community settings. The entry receives keyboard focus without automatically opening.
 #: src/features/app/components/dialogs/components/DesktopGuildSettingsView.tsx:66
 msgid "Opens the Members page. Press Space or Enter to open."
@@ -24411,7 +24386,7 @@ msgid "Pause invites? New users won't be able to join through invite links until
 msgstr "Întrerupi invitațiile? Utilizatorii noi nu se vor putea alătura prin linkuri de invitație până când nu le reactivezi. Membrii existenți nu vor fi afectați."
 
 #. Short label for an advanced screen-share preview preference.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:47
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:40
 msgid "Pause my screen share preview in the background"
 msgstr "Întrerupe previzualizarea partajării ecranului în fundal"
 
@@ -24528,7 +24503,7 @@ msgid "Per-community profiles"
 msgstr "Profiluri pentru fiecare comunitate"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:32
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:31
 msgid "Per-device volume"
 msgstr "Volum per dispozitiv"
 
@@ -24776,7 +24751,7 @@ msgid "Picture"
 msgstr "Poză"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:133
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:116
 msgid "Picture-in-picture"
 msgstr "Imagine în imagine"
 
@@ -24906,7 +24881,7 @@ msgid "Pins popout"
 msgstr "Fereastră pop-out cu mesaje fixate"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:137
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:120
 msgid "PiP"
 msgstr "PiP"
 
@@ -25108,7 +25083,7 @@ msgid "Prefer @mention"
 msgstr "Cu @mențiune"
 
 #. Option label for an encoder path select. Refers to hardware video encoders.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:67
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:60
 msgid "Prefer hardware"
 msgstr "Preferă hardware"
 
@@ -25120,7 +25095,7 @@ msgid "Prefer no @mention"
 msgstr "Fără @mențiune"
 
 #. Option label for an encoder path select. Refers to software video encoders.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:71
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:64
 msgid "Prefer software"
 msgstr "Preferă software"
 
@@ -25140,7 +25115,7 @@ msgid "Preferences..."
 msgstr "Preferințe..."
 
 #. Accessible label for the advanced screen-share codec preference select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:125
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:118
 msgid "Preferred screen share codec"
 msgstr "Codec preferat pentru partajarea ecranului"
 
@@ -25314,7 +25289,7 @@ msgid "Preview sound"
 msgstr "Previzualizează sunetul"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:145
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:128
 msgid "Preview, popout, and stream thumbnail behavior"
 msgstr "Comportamentul previzualizării, al ferestrelor separate și al miniaturilor de stream"
 
@@ -25644,7 +25619,7 @@ msgid "Prompt"
 msgstr "Întrebare"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:24
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:23
 msgid "Prompt for new audio devices"
 msgstr "Afișează o alertă când se conectează un dispozitiv audio nou"
 
@@ -27659,7 +27634,7 @@ msgstr "Redimensionarea, maximizarea și fixarea ferestrei depind de compozitor.
 #. Section header in the stream settings menu for resolution options.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:206
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:128
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:129
 msgid "Resolution"
 msgstr "Rezoluție"
 
@@ -28352,7 +28327,7 @@ msgstr "Este necesară permisiunea de înregistrare a ecranului"
 #: src/features/user/components/modals/tabs/UserVideoTabState.ts:28
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:222
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:234
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:88
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:89
 msgid "Screen share"
 msgstr "Partajare ecran"
 
@@ -28372,17 +28347,17 @@ msgid "Screen share audio couldn't start"
 msgstr "Nu s-a putut porni sunetul partajării ecranului"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:68
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:67
 msgid "Screen share codec"
 msgstr "Codec partajare ecran"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:149
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:132
 msgid "Screen share encoder controls"
 msgstr "Controalele codificatorului pentru partajarea ecranului"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:119
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:120
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "Partajarea ecranului s-a încheiat"
@@ -28398,12 +28373,12 @@ msgid "Screen share is using software encoding ({codec}). Quality may be reduced
 msgstr "Partajarea ecranului utilizează codificarea software ({codec}). Calitatea poate fi redusă și utilizarea procesorului poate crește. Este posibil ca GPU-ul tău să nu accepte codificarea hardware pentru acest codec."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:129
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:112
 msgid "Screen share preview"
 msgstr "Previzualizare partajare ecran"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:125
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:108
 msgid "Screen share preview behavior"
 msgstr "Comportamentul previzualizării la partajarea ecranului"
 
@@ -28464,7 +28439,7 @@ msgid "Screen sharing"
 msgstr "Partajare ecran"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:72
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:71
 msgid "Screen sharing codec"
 msgstr "Codec partajare ecran"
 
@@ -29829,7 +29804,7 @@ msgid "Share screens and windows."
 msgstr "Partajează ecrane și ferestre."
 
 #. Toggle label for sharing audio with an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:156
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:157
 msgid "Share stream audio"
 msgstr "Partajează sunetul fluxului"
 
@@ -29909,12 +29884,12 @@ msgid "Sharing personal information"
 msgstr "Partajarea informațiilor personale"
 
 #. Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:97
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:98
 msgid "Sharp text at 720p, up to 30 FPS"
 msgstr "Text clar la 720p, până la 30 FPS"
 
 #. Description for the high-tier Screen share streaming preset (Plutonium). Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:92
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:93
 msgid "Sharp text at up to 4K, up to 15 FPS"
 msgstr "Text clar, până la 4K, până la 15 FPS"
 
@@ -30327,7 +30302,7 @@ msgstr "Afișează Neko"
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced voice device preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVoiceControls.tsx:11
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:8
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:7
 msgid "Show new device alerts"
 msgstr "Afișează alerte pentru dispozitive noi"
 
@@ -30364,7 +30339,7 @@ msgid "Show password"
 msgstr "Afișează parola"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:44
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:43
 msgid "Show per-device participant volume sliders in voice menus"
 msgstr "Afișează glisoare de volum per dispozitiv pentru participanți în meniurile vocale"
 
@@ -30662,7 +30637,7 @@ msgstr "Apeluri silențioase"
 msgid "Silent calls from everyone"
 msgstr "Apeluri silențioase de la toată lumea"
 
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:872
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:874
 msgid "Silent when the capture device has no audio input of its own"
 msgstr "Silenzios când dispozitivul de captură nu are propria intrare audio"
 
@@ -30689,7 +30664,7 @@ msgid "Single community mode"
 msgstr "Modul comunitate unică"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:87
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:80
 msgid "Single layer"
 msgstr "Strat unic"
 
@@ -30975,12 +30950,12 @@ msgid "Smileys"
 msgstr "Smiley-uri"
 
 #. Description for the free-tier Gaming streaming preset. Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:84
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:85
 msgid "Smooth 30 FPS at up to 720p"
 msgstr "Fluid 30 FPS la până la 720p"
 
 #. Description for the high-tier Gaming streaming preset (Plutonium). Resolution and frame rate are technical tokens.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:79
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:80
 msgid "Smooth 60 FPS at up to 1440p"
 msgstr "Fluid 60 FPS la rezoluție de până la 1440p"
 
@@ -31028,7 +31003,7 @@ msgid "Social"
 msgstr "Social"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:157
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:140
 msgid "Software encoder"
 msgstr "Codec software"
 
@@ -31258,7 +31233,7 @@ msgstr "Sunete"
 #. Short label in the video tab for the native source resolution option. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:83
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:250
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:110
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:111
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:336
 msgid "Source"
 msgstr "Sursă"
@@ -32047,13 +32022,13 @@ msgstr "Stream ascuns"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the user settings voice activity card. Keep it concise.
 #: src/features/user/components/profile/VoiceActivityCard.tsx:90
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:141
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:124
 #: src/features/voice/components/StreamWatchHoverCard.tsx:21
 msgid "Stream preview"
 msgstr "Previzualizare stream"
 
 #. Compact submenu label for changing the resolution and frame rate of an active stream.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:152
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:153
 msgid "Stream quality"
 msgstr "Calitatea streamului"
 
@@ -32079,7 +32054,7 @@ msgid "Streaming"
 msgstr "Streaming"
 
 #. Section header in the stream settings menu. Picks between Gaming / Screen share / Custom presets.
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:124
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:125
 msgid "Streaming mode"
 msgstr "Mod de streaming"
 
@@ -32280,12 +32255,12 @@ msgid "Suspend"
 msgstr "Suspendare"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:165
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:148
 msgid "SVC"
 msgstr "SVC"
 
 #. Label for an advanced screen-share select. SVC is a WebRTC acronym and should stay uppercase.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:75
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:68
 msgid "SVC mode"
 msgstr "Mod SVC"
 
@@ -32559,7 +32534,7 @@ msgstr "Anunțuri de sistem de la personalul {productName}. Nu poți răspunde a
 #. Audio device option label meaning the OS default audio input device.
 #. Footer summary fallback for the default capture-device audio input.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:263
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:140
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:141
 msgid "System default"
 msgstr "Implicit din sistem"
 
@@ -32760,7 +32735,7 @@ msgid "Template URL"
 msgstr "URL șablon"
 
 #. Option label for an SVC mode select.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:91
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:84
 msgid "Temporal layers"
 msgstr "Straturi temporale"
 
@@ -32837,7 +32812,7 @@ msgstr "Texas"
 #: src/features/channel/utils/ChannelUtils.tsx:51
 #: src/features/lexical/composer/nodes/SlashSlotNode.ts:23
 #: src/features/theme_studio/sections/TokenGroups.ts:50
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:116
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:109
 msgid "Text"
 msgstr "Text"
 
@@ -33247,7 +33222,7 @@ msgid "The role granted {permissions}"
 msgstr "Rolul a acordat {permissions}"
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:124
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:125
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "Sursa partajării ecranului a încetat să trimită video, astfel încât partajarea ecranului s-a oprit."
@@ -35774,7 +35749,7 @@ msgstr "Grup fără nume"
 #. Fallback label for an audio input device whose name is not reported by the OS.
 #. Footer summary fallback for an audio input without a reported name.
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:267
-#: src/features/voice/components/StreamSettingsMenuContent.tsx:144
+#: src/features/voice/components/StreamSettingsMenuContent.tsx:145
 msgid "Unnamed input"
 msgstr "Intrare fără nume"
 
@@ -36662,7 +36637,7 @@ msgid "Used in communities that do not have their own sound."
 msgstr "Folosit în comunitățile care nu au propriul sunet."
 
 #. Description for a WebRTC content hint select. Custom, Gaming and Screen share are the stream quality preset labels.
-#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:99
+#: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:92
 msgid "Used in Custom mode. The Gaming and Screen share presets set their own hint."
 msgstr "Folosit în modul Personalizat. Presetările Jocuri și Partajare ecran își setează propriul indiciu."
 
@@ -37236,12 +37211,12 @@ msgid "Video call unavailable"
 msgstr "Apelul video nu este disponibil"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:80
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:79
 msgid "Video codec"
 msgstr "Codec video"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:84
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:83
 msgid "Video codec for screen sharing"
 msgstr "Codec video pentru partajarea ecranului"
 
@@ -37912,7 +37887,7 @@ msgid "Volume mute"
 msgstr "Dezactivează sunetul"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:40
+#: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:39
 msgid "Volume sliders"
 msgstr "Glisoare de volum"
 
@@ -38465,6 +38440,11 @@ msgstr "Ce să includem"
 #: src/features/devtools/hooks/useCommands.ts:75
 msgid "What to search for."
 msgstr "Ce să cauți."
+
+#. Informational overlay on your own screen-share tile while the shared screen or window sends no new frames, for example when it is static or minimised. Not an error.
+#: src/features/voice/components/VoiceParticipantTile.tsx:180
+msgid "What you're sharing isn't updating"
+msgstr "Ce partajezi nu se actualizează"
 
 #. Placeholder question in the custom status text field.
 #. Placeholder question in the custom status text field.
@@ -39972,7 +39952,7 @@ msgid "Your saved {savedResolution} at {savedFrameRate} FPS needs {premiumProduc
 msgstr "Calitatea salvată de {savedResolution} la {savedFrameRate} FPS necesită {premiumProductName}, așa că partajările folosesc {resolution} la {frameRate} FPS."
 
 #. Body of a modal shown when the video codec the browser negotiated for an active screen share is outside the codecs the app allows and no allowed codec could be published, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:130
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:131
 msgctxt "screen-share"
 msgid "Your screen share could not be published with a compatible video codec, so it was stopped. Try sharing again."
 msgstr "Partajarea ecranului tău nu a putut fi publicată cu un codec video compatibil, așa că a fost oprită. Încearcă să partajezi din nou."
@@ -40071,7 +40051,7 @@ msgid "Your vanity URL has been set to {inviteEndpoint}/{vanitySlug}"
 msgstr "Adresa URL personalizată a fost setată la {inviteEndpoint}/{vanitySlug}"
 
 #. Body of a modal shown when the local video encoder produces no frames for an active screen share, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:137
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:138
 msgctxt "screen-share"
 msgid "Your video encoder stopped encoding frames, so your screen share was stopped. Try sharing again."
 msgstr "Codificatorul tău video a încetat să codifice cadre, așa că partajarea ecranului a fost oprită. Încearcă să partajezi din nou."

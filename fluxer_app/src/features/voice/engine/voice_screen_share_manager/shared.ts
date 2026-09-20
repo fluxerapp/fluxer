@@ -4,6 +4,7 @@ import {getDesktopTroubleshootingSettings} from '@app/features/devtools/utils/De
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import ScreenShareCodecNegotiation from '@app/features/voice/engine/ScreenShareCodecNegotiation';
 import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
+import ScreenShareDeliveryRollout from '@app/features/voice/state/ScreenShareDeliveryRollout';
 import SoftwareEncoderWarning from '@app/features/voice/state/SoftwareEncoderWarning';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
@@ -17,13 +18,16 @@ import {loadGpuEncoderReport} from '@app/features/voice/utils/GpuEncoderCapabili
 import {loadNativeHardwareEncoderCapabilities} from '@app/features/voice/utils/NativeHardwareEncoderCapabilities';
 import {
 	buildScreenShareSenderParameters,
+	classifyScreenShareLimit,
 	resolveScreenShareDegradationPreference,
 	resolveScreenShareLayering,
 	resolveScreenShareSenderCodec,
 	resolveScreenShareTarget,
+	SCREEN_SHARE_DELIVERY_MAX_VIDEO_BITRATE_BPS,
 	SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS,
 	type ScreenShareContext,
 	type ScreenShareLayering,
+	type ScreenShareLimitClass,
 	type ScreenShareTarget,
 } from '@app/features/voice/utils/ScreenShareOptions';
 import {ScreenShareRollbackIncompleteError} from '@app/features/voice/utils/ScreenShareRollbackIncompleteError';
@@ -191,13 +195,11 @@ export async function releaseScreenShareCaptureCleanup(snapshot: ScreenShareCapt
 	}
 }
 
-function clampScreenShareEncoding(encoding: VideoEncoding): VideoEncoding {
+function clampScreenShareEncoding(encoding: VideoEncoding, delivery: boolean): VideoEncoding {
+	const ceiling = delivery ? SCREEN_SHARE_DELIVERY_MAX_VIDEO_BITRATE_BPS : SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS;
 	return {
 		...encoding,
-		maxBitrate:
-			typeof encoding.maxBitrate === 'number'
-				? Math.min(encoding.maxBitrate, SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS)
-				: encoding.maxBitrate,
+		maxBitrate: typeof encoding.maxBitrate === 'number' ? Math.min(encoding.maxBitrate, ceiling) : encoding.maxBitrate,
 		priority: encoding.priority ?? 'high',
 	};
 }
@@ -206,10 +208,15 @@ export function resolveActiveScreenShareContext(): ScreenShareContext {
 	return ActiveScreenShareSource.getShareContext() ?? 'display';
 }
 
+function resolveScreenShareDeliveryArm(): boolean {
+	return ActiveScreenShareSource.getTarget()?.delivery ?? ScreenShareDeliveryRollout.enabled;
+}
+
 export function resolveConfiguredScreenShareTarget(
 	context: ScreenShareContext,
 	sourceDimensions: {width: number; height: number} | null,
 ): ScreenShareTarget {
+	const delivery = resolveScreenShareDeliveryArm();
 	return resolveScreenShareTarget({
 		mode: VoiceSettings.getStreamingMode(),
 		storedResolution: VoiceSettings.getScreenshareResolution(),
@@ -218,6 +225,13 @@ export function resolveConfiguredScreenShareTarget(
 		context,
 		sourceDimensions,
 		hintSetting: VoiceSettings.getScreenShareContentHint(),
+		delivery,
+		...(delivery
+			? {
+					codec: getPreferredScreenShareCodec(),
+					softwareEncoderClamp: ActiveScreenShareSource.isSoftwareEncoderClamped(),
+				}
+			: {}),
 	});
 }
 
@@ -225,6 +239,15 @@ export function resolveActiveScreenShareTarget(
 	context: ScreenShareContext = resolveActiveScreenShareContext(),
 ): ScreenShareTarget {
 	return resolveConfiguredScreenShareTarget(context, ActiveScreenShareSource.getSourceDimensions());
+}
+
+function recommitClampedScreenShareTarget(committed: ScreenShareTarget): ScreenShareTarget {
+	if (committed.delivery !== true) return committed;
+	if (committed.softwareEncoderClamped) return committed;
+	const resolved = resolveActiveScreenShareTarget(committed.context);
+	if (!resolved.softwareEncoderClamped) return committed;
+	ActiveScreenShareSource.setTarget(resolved);
+	return ActiveScreenShareSource.getTarget() ?? resolved;
 }
 
 export function ensureCommittedScreenShareTarget(): ScreenShareTarget {
@@ -246,7 +269,9 @@ export function getStatsKind(
 }
 
 function resolveScreenShareEncoding(target: ScreenShareTarget, publishOptions?: TrackPublishOptions): VideoEncoding {
-	if (publishOptions?.screenShareEncoding) return clampScreenShareEncoding(publishOptions.screenShareEncoding);
+	if (publishOptions?.screenShareEncoding) {
+		return clampScreenShareEncoding(publishOptions.screenShareEncoding, target.delivery === true);
+	}
 	return {maxBitrate: target.maxBitrate, maxFramerate: target.frameRate, priority: 'high'};
 }
 
@@ -308,14 +333,23 @@ export async function getEffectivePublishOptions(
 	if (!enabled) {
 		return publishOptions;
 	}
-	const target = ensureCommittedScreenShareTarget();
+	const committed = ensureCommittedScreenShareTarget();
 	await waitForGpuEncoderReportForPublish(options);
+	const target = recommitClampedScreenShareTarget(committed);
 	const policy = resolveVideoPublishCodecPolicy(publishOptions?.videoCodec ?? getPreferredScreenShareCodec());
 	const preferredVideoCodec = policy.primary;
 	const backupCodec = resolveBackupCodecWithinPolicy(publishOptions?.backupCodec, policy);
 	const backupCodecPolicy =
 		publishOptions?.backupCodecPolicy ?? (backupCodec ? BackupCodecPolicy.SIMULCAST : undefined);
 	const layering = getScreenShareLayeringForCodec(preferredVideoCodec);
+	if (target.softwareEncoderClamped && VoiceSettings.getScreenShareEncoderMode() !== 'software') {
+		logger.warn('Screen share target clamped to the software H.264 budget', {
+			codec: preferredVideoCodec,
+			resolution: target.resolution,
+			frameRate: target.frameRate,
+		});
+		SoftwareEncoderWarning.triggerWarning(preferredVideoCodec, UNKNOWN_ENCODER_IMPLEMENTATION);
+	}
 	return {
 		...publishOptions,
 		videoCodec: preferredVideoCodec,
@@ -477,6 +511,11 @@ interface OutboundVideoStatsEntry {
 	active?: boolean;
 	framesEncoded?: number;
 	framesSent?: number;
+	bytesSent?: number;
+	headerBytesSent?: number;
+	totalEncodeTime?: number;
+	targetBitrate?: number;
+	qualityLimitationReason?: string;
 	encoderImplementation?: string;
 	powerEfficientEncoder?: boolean;
 }
@@ -652,6 +691,90 @@ export function findMissingExpectedVideoEncoder(
 	};
 }
 
+interface ScreenShareSendSnapshot {
+	timestampMs: number;
+	framesEncoded: number;
+	encodeTimeMs: number;
+	bytesSent: number;
+	targetBitrateBps: number | null;
+	cpuLimited: boolean;
+	sourceFramesPerSecond: number | null;
+}
+
+function collectScreenShareSendSnapshot(stats: RTCStatsReport): ScreenShareSendSnapshot {
+	const reportsById = new Map<string, CodecStatsEntry & VideoSourceStatsEntry>();
+	const reports: Array<OutboundVideoStatsEntry> = [];
+	for (const raw of stats.values()) {
+		const report = raw as CodecStatsEntry & VideoSourceStatsEntry & OutboundVideoStatsEntry;
+		if (typeof report.id === 'string') {
+			reportsById.set(report.id, report);
+		}
+		if (report.type === 'outbound-rtp') {
+			reports.push(report);
+		}
+	}
+	const snapshot: ScreenShareSendSnapshot = {
+		timestampMs: Date.now(),
+		framesEncoded: 0,
+		encodeTimeMs: 0,
+		bytesSent: 0,
+		targetBitrateBps: null,
+		cpuLimited: false,
+		sourceFramesPerSecond: null,
+	};
+	for (const report of reports) {
+		if (getStatsKind(report, reportsById) !== 'video') continue;
+		if (report.active === false) continue;
+		snapshot.framesEncoded += finiteNumber(report.framesEncoded) ?? 0;
+		snapshot.encodeTimeMs += (finiteNumber(report.totalEncodeTime) ?? 0) * 1000;
+		snapshot.bytesSent += (finiteNumber(report.bytesSent) ?? 0) + (finiteNumber(report.headerBytesSent) ?? 0);
+		const targetBitrate = finiteNumber(report.targetBitrate);
+		if (targetBitrate !== null) {
+			snapshot.targetBitrateBps = (snapshot.targetBitrateBps ?? 0) + targetBitrate;
+		}
+		if (report.qualityLimitationReason === 'cpu') {
+			snapshot.cpuLimited = true;
+		}
+		const source = report.mediaSourceId ? reportsById.get(report.mediaSourceId) : undefined;
+		const sourceFramesPerSecond = finiteNumber(source?.framesPerSecond);
+		if (sourceFramesPerSecond !== null) {
+			snapshot.sourceFramesPerSecond = sourceFramesPerSecond;
+		}
+	}
+	return snapshot;
+}
+
+function classifyScreenShareSendLimit(
+	previous: ScreenShareSendSnapshot | null,
+	current: ScreenShareSendSnapshot,
+	cpuLimitedTicks: number,
+): ScreenShareLimitClass | null {
+	const target = ActiveScreenShareSource.getTarget();
+	if (previous === null || target === null) return null;
+	return classifyScreenShareLimit({
+		frameRate: target.frameRate,
+		maxBitrate: target.maxBitrate,
+		elapsedMs: current.timestampMs - previous.timestampMs,
+		framesEncoded: current.framesEncoded - previous.framesEncoded,
+		encodeTimeMs: current.encodeTimeMs - previous.encodeTimeMs,
+		bytesSent: current.bytesSent - previous.bytesSent,
+		targetBitrateBps: current.targetBitrateBps,
+		sourceFramesPerSecond: current.sourceFramesPerSecond,
+		cpuLimitedTicks,
+	});
+}
+
+function syncScreenShareCaptureSize(sender: RTCRtpSender): void {
+	if (ActiveScreenShareSource.getTarget() === null) return;
+	const capture = readScreenShareCaptureSize(sender);
+	if (capture === null) return;
+	const known = ActiveScreenShareSource.getSourceDimensions();
+	if (known !== null && known.width === capture.width && known.height === capture.height) return;
+	ActiveScreenShareSource.setSourceDimensions(capture);
+	ActiveScreenShareSource.setTarget(resolveActiveScreenShareTarget());
+	logger.info('Screen share capture size changed; re-resolved the publish target', capture);
+}
+
 function countEncodedVideoFrames(stats: RTCStatsReport): number | null {
 	const reportsById = new Map<string, CodecStatsEntry>();
 	const reports: Array<OutboundVideoStatsEntry> = [];
@@ -738,13 +861,29 @@ export function startScreenShareEncoderMonitor(options: ScreenShareEncoderMonito
 	let timer: ReturnType<typeof setTimeout> | undefined;
 	let verified = false;
 	let framesEncoded: number | null = null;
+	let sendSnapshot: ScreenShareSendSnapshot | null = null;
+	let cpuLimitedTicks = 0;
+	const delivery = ActiveScreenShareSource.getTarget()?.delivery === true;
 	const tick = async (): Promise<void> => {
 		const sender = options.track.sender;
 		if (!sender) return;
 		const stats = await sender.getStats();
+		if (delivery) {
+			syncScreenShareCaptureSize(sender);
+		}
 		const encoded = countEncodedVideoFrames(stats);
 		ActiveScreenShareSource.setEncoding(encoded !== null && framesEncoded !== null && encoded > framesEncoded);
 		framesEncoded = encoded;
+		if (delivery) {
+			const snapshot = collectScreenShareSendSnapshot(stats);
+			cpuLimitedTicks = snapshot.cpuLimited ? cpuLimitedTicks + 1 : 0;
+			const limit = classifyScreenShareSendLimit(sendSnapshot, snapshot, cpuLimitedTicks);
+			sendSnapshot = snapshot;
+			if (limit !== ActiveScreenShareSource.getLimit()) {
+				logger.info('Screen share send limit changed', {limit, codec: options.codec});
+			}
+			ActiveScreenShareSource.setLimit(limit);
+		}
 		if (!verified) {
 			const verification = verifyScreenShareEncoderStart(stats, options.codec, options.onEncodeFailure);
 			if (verification === 'failed') return;
@@ -768,5 +907,8 @@ export function startScreenShareEncoderMonitor(options: ScreenShareEncoderMonito
 		cancelled = true;
 		clearTimeout(timer);
 		ActiveScreenShareSource.setEncoding(false);
+		if (delivery) {
+			ActiveScreenShareSource.setLimit(null);
+		}
 	};
 }

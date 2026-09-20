@@ -32,7 +32,6 @@ import {setNativeStrings} from '@electron/main/MainI18n';
 import {copyRemoteFileToClipboard, parseClipboardWriteFileOptions} from '@electron/main/MediaClipboard';
 import {registerNotificationIpcHandlers} from '@electron/main/NotificationsIpc';
 import {openExternalDeduped} from '@electron/main/OpenExternal';
-import {getStatus as getOpenH264Status, setEnabled as setOpenH264Enabled} from '@electron/main/OpenH264Manager';
 import {registerPasskeyHandlers} from '@electron/main/Passkeys';
 import {getAppMetricsSnapshot, getDesktopInfo, getGpuInfo} from '@electron/main/PlatformInfo';
 import {requirePrivilegedRendererDocumentSender} from '@electron/main/PrivilegedRendererDocuments';
@@ -140,8 +139,6 @@ export function registerIpcHandlers(): void {
 	ipcMain.handle('get-desktop-info', () => getDesktopInfo());
 	ipcMain.handle('get-gpu-info', () => getGpuInfo());
 	ipcMain.handle('get-app-metrics', () => getAppMetricsSnapshot());
-	ipcMain.handle('get-openh264-status', () => getOpenH264Status());
-	ipcMain.handle('set-openh264-enabled', (_event, enabled: unknown) => setOpenH264Enabled(Boolean(enabled)));
 	ipcMain.handle('streamer-mode:get-capture-app-status', () => getStreamerModeCaptureAppStatus());
 	ipcMain.handle('system-idle-time-ms', (): number => {
 		return Math.max(0, powerMonitor.getSystemIdleTime() * 1000);

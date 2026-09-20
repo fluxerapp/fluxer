@@ -87,7 +87,6 @@ export interface PerTrackStats {
 	maxPushLatencyMs?: number;
 	adaptiveSendTier?: string;
 	adaptiveSendReason?: string;
-	sourceFrames?: number;
 	framesEncoded?: number;
 	framesDecoded?: number;
 	framesDropped?: number;
@@ -456,7 +455,7 @@ function buildPerTrackStat(args: {
 		frameHeight: report.frameHeight,
 		sourceFrameWidth: mediaSource?.frameWidth ?? mediaSource?.width,
 		sourceFrameHeight: mediaSource?.frameHeight ?? mediaSource?.height,
-		sourceFrames: mediaSource?.frames,
+		framesCaptured: mediaSource?.frames,
 		framesEncoded: report.framesEncoded,
 		framesDecoded: report.framesDecoded,
 		framesDropped: report.framesDropped,
@@ -622,6 +621,7 @@ function toVoiceEngineV2OutboundStats(track: PerTrackStats): VoiceEngineV2Outbou
 		...(track.framesDropped !== undefined ? {framesDropped: track.framesDropped} : {}),
 		...(track.framesCoalesced !== undefined ? {framesCoalesced: track.framesCoalesced} : {}),
 		...(track.framesCaptured !== undefined ? {framesCaptured: track.framesCaptured} : {}),
+		...(track.sourceFramesPerSecond !== undefined ? {sourceFps: track.sourceFramesPerSecond} : {}),
 		...(track.captureFailures !== undefined ? {captureFailures: track.captureFailures} : {}),
 		...(track.maxQueueAgeMs !== undefined ? {maxQueueAgeMs: track.maxQueueAgeMs} : {}),
 		...(track.maxPushLatencyMs !== undefined ? {maxPushLatencyMs: track.maxPushLatencyMs} : {}),

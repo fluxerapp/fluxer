@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ScreenShareTarget} from '@app/features/voice/utils/ScreenShareOptions';
+import type {ScreenShareLimitClass, ScreenShareTarget} from '@app/features/voice/utils/ScreenShareOptions';
 import type {
 	StreamSettingsShareContext,
 	WindowShareAudioScope,
 } from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
+import type {TrackPublishOptions} from 'livekit-client';
 import {makeAutoObservable} from 'mobx';
 
 export interface ActiveScreenShareSourceOptions {
@@ -21,6 +22,9 @@ class ActiveScreenShareSource {
 	pendingWindowAudioScope: WindowShareAudioScope | null = null;
 	sourceDimensions: {width: number; height: number} | null = null;
 	target: ScreenShareTarget | null = null;
+	frozenDegradationPreference: NonNullable<TrackPublishOptions['degradationPreference']> | null = null;
+	softwareEncoderClamped = false;
+	limit: ScreenShareLimitClass | null = null;
 	encoding = false;
 
 	constructor() {
@@ -58,12 +62,40 @@ class ActiveScreenShareSource {
 	}
 
 	setTarget(target: ScreenShareTarget | null): void {
-		this.target = target;
+		if (target === null) {
+			this.target = null;
+			this.frozenDegradationPreference = null;
+			this.softwareEncoderClamped = false;
+			this.limit = null;
+			this.encoding = false;
+			return;
+		}
+		if (target.delivery !== true) {
+			this.target = target;
+			this.encoding = false;
+			return;
+		}
+		const degradationPreference = this.frozenDegradationPreference ?? target.degradationPreference;
+		this.frozenDegradationPreference = degradationPreference;
+		this.softwareEncoderClamped = this.softwareEncoderClamped || target.softwareEncoderClamped;
+		this.target = {...target, degradationPreference};
 		this.encoding = false;
 	}
 
 	setEncoding(encoding: boolean): void {
 		this.encoding = encoding;
+	}
+
+	setLimit(limit: ScreenShareLimitClass | null): void {
+		this.limit = limit;
+	}
+
+	getLimit(): ScreenShareLimitClass | null {
+		return this.limit;
+	}
+
+	isSoftwareEncoderClamped(): boolean {
+		return this.softwareEncoderClamped;
 	}
 
 	getTarget(): ScreenShareTarget | null {
@@ -105,6 +137,9 @@ class ActiveScreenShareSource {
 		this.pendingWindowAudioScope = null;
 		this.sourceDimensions = null;
 		this.target = null;
+		this.frozenDegradationPreference = null;
+		this.softwareEncoderClamped = false;
+		this.limit = null;
 		this.encoding = false;
 	}
 }

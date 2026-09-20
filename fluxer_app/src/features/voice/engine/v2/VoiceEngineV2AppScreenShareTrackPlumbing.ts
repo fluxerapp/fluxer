@@ -9,7 +9,6 @@ import {
 	resolveActiveScreenShareTarget,
 } from '@app/features/voice/engine/voice_screen_share_manager/shared';
 import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
-import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {prepareHighFidelityScreenShareAudioTrack} from '@app/features/voice/utils/AudioPublishOptions';
 import type {ScreenShareContentSource} from '@app/features/voice/utils/CodecCapabilityDetector';
 import {
@@ -17,8 +16,6 @@ import {
 	type LocalParticipant,
 	type LocalVideoTrack,
 	ParticipantEvent,
-	type Room,
-	RoomEvent,
 	type Track as SdkTrack,
 	Track,
 	TrackEvent,
@@ -37,7 +34,6 @@ export class VoiceEngineV2AppScreenShareTrackPlumbing {
 	private readonly host: VoiceEngineV2AppScreenShareTrackPlumbingHost;
 	private keepAliveElement: HTMLVideoElement | null = null;
 	private keepAliveTrack: LocalVideoTrack | null = null;
-	private keyFrameRequestDisposer: (() => void) | null = null;
 	private senderParameterDisposer: (() => void) | null = null;
 
 	constructor(host: VoiceEngineV2AppScreenShareTrackPlumbingHost) {
@@ -215,33 +211,6 @@ export class VoiceEngineV2AppScreenShareTrackPlumbing {
 		this.senderParameterDisposer = () => {
 			track.off(TrackEvent.Restarted, reapply);
 			participant.off(ParticipantEvent.LocalSenderCreated, onLocalSenderCreated);
-		};
-	}
-
-	cleanupKeyFrameRequests(): void {
-		this.keyFrameRequestDisposer?.();
-		this.keyFrameRequestDisposer = null;
-	}
-
-	bindKeyFrameRequests(room: Room | null, participant: LocalParticipant, preferredTrack?: LocalVideoTrack): void {
-		this.cleanupKeyFrameRequests();
-		if (!room || VoiceSettings.getStreamingMode() !== 'screenshare') return;
-		const requestKeyFrame = (): void => {
-			const publication = preferredTrack ? undefined : participant.getTrackPublication(Track.Source.ScreenShare);
-			const track = preferredTrack ?? (publication?.videoTrack as LocalVideoTrack | undefined);
-			const sender = track?.sender as
-				| (RTCRtpSender & {
-						generateKeyFrame?: () => Promise<void>;
-				  })
-				| undefined;
-			if (typeof sender?.generateKeyFrame !== 'function') return;
-			void sender.generateKeyFrame().catch((error) => {
-				logger.debug('Failed to generate screen-share keyframe on participant join', {error});
-			});
-		};
-		room.on(RoomEvent.ParticipantConnected, requestKeyFrame);
-		this.keyFrameRequestDisposer = () => {
-			room.off(RoomEvent.ParticipantConnected, requestKeyFrame);
 		};
 	}
 }

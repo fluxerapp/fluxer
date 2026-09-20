@@ -75,7 +75,6 @@ type VoiceSettingsPatch = Partial<{
 	screenShareAudioIncludeSources: Array<Record<string, string>>;
 	screenShareAudioExcludeSources: Array<Record<string, string>>;
 	screenShareDeviceAudioUsesMicrophone: boolean;
-	openH264Enabled: boolean;
 }>;
 
 interface VoiceSettingsUpdateOptions {

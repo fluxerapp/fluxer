@@ -2204,6 +2204,10 @@ class MediaEngineFacade extends Store {
 		return voiceEngineV2AppScreenShareExecutionAdapter.getActiveScreenShareVideoDeviceId(this.room);
 	}
 
+	get isScreenShareCapturePaused(): boolean {
+		return voiceEngineV2AppScreenShareExecutionAdapter.isScreenShareCapturePaused;
+	}
+
 	async ensureDeviceScreenShareMicPublication(audioDeviceId: string): Promise<boolean> {
 		return voiceEngineV2AppScreenShareExecutionAdapter.ensureDeviceScreenShareMicPublication(this.room, audioDeviceId);
 	}

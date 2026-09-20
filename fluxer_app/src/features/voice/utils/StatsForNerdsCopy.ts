@@ -304,7 +304,6 @@ async function collectVoiceSettingsMetadata(): Promise<Record<string, unknown>> 
 		screenShareScalabilityMode: VoiceSettings.getScreenShareScalabilityMode(),
 		screenShareMaxBitrateMbps:
 			getScreenShareBitrateBps(configuredScreenShare.resolution, configuredScreenShare.frameRate) / 1000000,
-		openH264Enabled: VoiceSettings.getOpenH264Enabled(),
 		linuxAudioCapture: {
 			workaround: VoiceSettings.getLinuxAudioCaptureWorkaround(),
 			onlySpeakers: VoiceSettings.getLinuxAudioCaptureOnlySpeakers(),
@@ -524,7 +523,6 @@ export function collectStatsForNerdsSnapshot(): StatsForNerdsData {
 			shareDesktopAudio: VoiceSettings.getShareDesktopAudio(),
 			shareAppAudio: VoiceSettings.getShareAppAudio(),
 			muteStreamAudio: VoiceSettings.getMuteStreamAudio(),
-			openH264Enabled: VoiceSettings.getOpenH264Enabled(),
 		},
 		screenShareAudioCapture: {
 			nativeCapture: getNativeAudioCaptureDiagnosticState(),

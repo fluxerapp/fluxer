@@ -2,17 +2,27 @@
 
 import {getDesktopTroubleshootingSettings} from '@app/features/devtools/utils/DesktopTroubleshootingUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {
+	getVoiceConnectionContextFromMediaEngine,
+	getVoiceStateByConnectionIdFromMediaEngine,
+} from '@app/features/voice/engine/VoiceMediaEngineBridge';
+import {getStreamKeyForParticipantIdentity} from '@app/features/voice/engine/VoiceStreamWatchState';
+import {
+	getLocalScreenShareVideoPublications,
+	isLiveLocalTrackPublication,
+} from '@app/features/voice/engine/VoiceTrackPublicationUtils';
+import ScreenShareDeliveryRollout from '@app/features/voice/state/ScreenShareDeliveryRollout';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
 	buildScreenShareCodecProfile,
 	type CodecPreference,
 	isVideoCodecAllowedForPublish,
+	type ScreenShareEncoderMode,
 	selectNativeScreenCaptureScreenShareCodec,
 	selectOptimalScreenShareCodec,
 } from '@app/features/voice/utils/CodecCapabilityDetector';
 import {loadGpuEncoderReport} from '@app/features/voice/utils/GpuEncoderCapabilities';
 import {loadNativeHardwareEncoderCapabilities} from '@app/features/voice/utils/NativeHardwareEncoderCapabilities';
-import {loadOpenH264Status} from '@app/features/voice/utils/OpenH264Status';
 import {
 	buildScreenShareCodecAdvertisements,
 	CODEC_PREFERENCE,
@@ -25,9 +35,11 @@ import {
 	type FluxerVideoCodecName,
 	getDecodeSet,
 	getEncodeSet,
+	isScreenShareCodecUpgrade,
 	type NegotiationReason,
 	rankScreenShareCodecs,
 	SCREEN_SHARE_CODEC_ADVERTISEMENT_GRACE_MS,
+	SCREEN_SHARE_CODEC_CHANGE_SUPPRESSION_MS,
 	VIDEO_CODEC_NAMES,
 } from '@app/features/voice/utils/ScreenShareCodecSelection';
 import {
@@ -35,7 +47,8 @@ import {
 	getVideoDecoderExclusionsSync,
 	loadVideoDecoderExclusions,
 } from '@app/features/voice/utils/VideoDecoderCapabilities';
-import type {Participant, Room, VideoCodec} from 'livekit-client';
+import {parseVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
+import type {LocalTrackPublication, Participant, Room, VideoCodec} from 'livekit-client';
 import {RoomEvent} from 'livekit-client';
 import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
@@ -91,6 +104,7 @@ type ScreenShareCodecNegotiationMachineEvent =
 			unknownParticipants: number;
 			reason: NegotiationReason;
 			codecPreference: ReadonlyArray<VideoCodec>;
+			publishedCodec: VideoCodec | null;
 	  }
 	| {type: 'negotiation.reset'};
 
@@ -145,20 +159,29 @@ export function getScreenShareCodecPreferenceOrder(
 	}).order;
 }
 
-export function buildLocalCodecAdvertisements(): Array<FluxerCodecAdvertisement> {
-	return buildScreenShareCodecAdvertisements(getScreenShareCodecPreferenceOrder(), getLocalDecodeCapabilities());
+export function buildLocalCodecAdvertisements(
+	order: ReadonlyArray<VideoCodec> = getScreenShareCodecPreferenceOrder(),
+): Array<FluxerCodecAdvertisement> {
+	return buildScreenShareCodecAdvertisements(order, getLocalDecodeCapabilities());
 }
 
 function evaluateScreenShareCodecNegotiation(
 	event: Extract<ScreenShareCodecNegotiationMachineEvent, {type: 'negotiation.evaluate'}>,
 ): CodecNegotiationSelection {
+	const negotiated = computeNegotiatedVideoCodec(
+		event.localCodecs,
+		event.remoteCodecs,
+		event.unknownParticipants,
+		event.codecPreference,
+	);
+	const publishedCodec = event.publishedCodec;
+	const codec =
+		publishedCodec !== null && isScreenShareCodecUpgrade(event.codecPreference, publishedCodec, negotiated.codec)
+			? publishedCodec
+			: negotiated.codec;
 	return {
-		...computeNegotiatedVideoCodec(
-			event.localCodecs,
-			event.remoteCodecs,
-			event.unknownParticipants,
-			event.codecPreference,
-		),
+		...negotiated,
+		codec,
 		reason: event.reason,
 	};
 }
@@ -329,6 +352,15 @@ class ScreenShareCodecNegotiation {
 	private mediaSessionId = createId('media');
 	private negotiationSnapshot = createScreenShareCodecNegotiationSnapshot();
 	private bindingRevision = 0;
+	private frozenCodecPreference: {
+		preference: CodecPreference;
+		encoderMode: ScreenShareEncoderMode;
+		order: ReadonlyArray<VideoCodec>;
+	} | null = null;
+	private frozenDelivery: {trackSid: string; enabled: boolean} | null = null;
+	private lastCodecChangeAt = 0;
+	private suppressionTimer: ReturnType<typeof setTimeout> | null = null;
+	private publishedTrackSid: string | null = null;
 	private onSelectionChanged: ((room: Room, codec: VideoCodec, reason: NegotiationReason) => void) | null = null;
 
 	getSelectedCodec(): VideoCodec | null {
@@ -380,7 +412,7 @@ class ScreenShareCodecNegotiation {
 	}
 
 	private canLocalEncode(codec: VideoCodec): boolean {
-		if (this.localCodecs.length === 0) this.localCodecs = buildLocalCodecAdvertisements();
+		this.ensureLocalCodecAdvertisements();
 		return getEncodeSet(this.localCodecs).has(codec);
 	}
 
@@ -403,16 +435,87 @@ class ScreenShareCodecNegotiation {
 		) {
 			return this.selectedCodec;
 		}
-		if (this.localCodecs.length === 0) this.localCodecs = buildLocalCodecAdvertisements();
+		this.ensureLocalCodecAdvertisements();
 		const {knownRemoteCodecs, unknownParticipants} = this.getRemoteCodecInputs();
 		const negotiated = computeNegotiatedVideoCodec(
 			this.localCodecs,
 			knownRemoteCodecs,
 			unknownParticipants,
-			getScreenShareCodecPreferenceOrder(preference),
+			this.resolveCodecPreferenceOrder(preference),
 		);
 		if (getEncodeSet(this.localCodecs).has(negotiated.codec)) return negotiated.codec;
 		return selector(preference);
+	}
+
+	private ensureLocalCodecAdvertisements(): void {
+		if (this.localCodecs.length > 0) return;
+		this.localCodecs = buildLocalCodecAdvertisements(this.resolveCodecPreferenceOrder());
+	}
+
+	private resolveScreenShareDelivery(room: Room | null = this.room): boolean {
+		const trackSid = this.getLocalScreenSharePublication(room)?.trackSid ?? null;
+		if (trackSid === null) {
+			this.frozenDelivery = null;
+			return ScreenShareDeliveryRollout.enabled;
+		}
+		if (this.frozenDelivery?.trackSid === trackSid) return this.frozenDelivery.enabled;
+		const enabled = ScreenShareDeliveryRollout.enabled;
+		this.frozenDelivery = {trackSid, enabled};
+		return enabled;
+	}
+
+	private resolveCodecPreferenceOrder(
+		preference: CodecPreference = VoiceSettings.getPreferredScreenShareCodec(),
+	): ReadonlyArray<VideoCodec> {
+		if (!this.resolveScreenShareDelivery()) return getScreenShareCodecPreferenceOrder(preference);
+		const encoderMode = VoiceSettings.getScreenShareEncoderMode();
+		const frozen = this.frozenCodecPreference;
+		if (
+			frozen !== null &&
+			frozen.preference === preference &&
+			frozen.encoderMode === encoderMode &&
+			this.getLocalScreenSharePublication() !== null
+		) {
+			return frozen.order;
+		}
+		const order = getScreenShareCodecPreferenceOrder(preference);
+		this.frozenCodecPreference = {preference, encoderMode, order};
+		return order;
+	}
+
+	private getLocalScreenSharePublication(room: Room | null = this.room): LocalTrackPublication | null {
+		const participant = room?.localParticipant;
+		if (!participant) return null;
+		return getLocalScreenShareVideoPublications(participant).find(isLiveLocalTrackPublication) ?? null;
+	}
+
+	private observePublishedScreenShareCodec(room: Room | null = this.room): VideoCodec | null {
+		const publication = this.getLocalScreenSharePublication(room);
+		const trackSid = publication?.trackSid ?? null;
+		if (trackSid !== this.publishedTrackSid) {
+			this.publishedTrackSid = trackSid;
+			if (trackSid !== null) this.armCodecChangeSuppression();
+		}
+		if (!publication) return null;
+		return (publication as {options?: {videoCodec?: VideoCodec}}).options?.videoCodec ?? null;
+	}
+
+	private getScreenShareViewerIdentities(room: Room | null): ReadonlySet<string> | null {
+		const localIdentity = room?.localParticipant?.identity;
+		if (!localIdentity || this.getLocalScreenSharePublication(room) === null) return null;
+		const context = getVoiceConnectionContextFromMediaEngine();
+		if (!context) return null;
+		const streamKey = getStreamKeyForParticipantIdentity(context.guildId, context.channelId, localIdentity);
+		if (!streamKey) return null;
+		const viewers = new Set<string>();
+		for (const participant of room?.remoteParticipants.values() ?? []) {
+			const {connectionId} = parseVoiceParticipantIdentity(participant.identity);
+			const viewerStreamKeys = getVoiceStateByConnectionIdFromMediaEngine(connectionId)?.viewer_stream_keys;
+			if (viewerStreamKeys === undefined || viewerStreamKeys.includes(streamKey)) {
+				viewers.add(participant.identity);
+			}
+		}
+		return viewers;
 	}
 
 	private getRemoteCodecInputs(room: Room | null = this.room): {
@@ -420,11 +523,13 @@ class ScreenShareCodecNegotiation {
 		unknownParticipants: number;
 	} {
 		const now = Date.now();
+		const viewerIdentities = this.resolveScreenShareDelivery(room) ? this.getScreenShareViewerIdentities(room) : null;
 		const knownRemoteCodecs: Array<Array<FluxerCodecAdvertisement>> = [];
 		const participants: Array<{identity: string; firstSeenAt: number}> = [];
 		for (const participant of room?.remoteParticipants.values() ?? []) {
 			const firstSeenAt = this.remoteFirstSeenAt.get(participant.identity) ?? now;
 			this.remoteFirstSeenAt.set(participant.identity, firstSeenAt);
+			if (viewerIdentities !== null && !viewerIdentities.has(participant.identity)) continue;
 			participants.push({identity: participant.identity, firstSeenAt});
 			const codecs = this.remoteCodecsByIdentity.get(participant.identity);
 			if (codecs) knownRemoteCodecs.push(codecs);
@@ -437,6 +542,25 @@ class ScreenShareCodecNegotiation {
 				now,
 			),
 		};
+	}
+
+	private armCodecChangeSuppression(): void {
+		this.lastCodecChangeAt = Date.now();
+	}
+
+	private clearSuppressionTimer(): void {
+		if (this.suppressionTimer === null) return;
+		clearTimeout(this.suppressionTimer);
+		this.suppressionTimer = null;
+	}
+
+	private scheduleSuppressedReevaluation(room: Room, reason: NegotiationReason, bindingRevision: number): void {
+		if (this.suppressionTimer !== null) return;
+		const remaining = Math.max(this.lastCodecChangeAt + SCREEN_SHARE_CODEC_CHANGE_SUPPRESSION_MS - Date.now(), 0);
+		this.suppressionTimer = setTimeout(() => {
+			this.suppressionTimer = null;
+			void this.updateSelection(room, reason, bindingRevision);
+		}, remaining);
 	}
 
 	private scheduleGraceReevaluations(room: Room, bindingRevision: number): void {
@@ -515,6 +639,11 @@ class ScreenShareCodecNegotiation {
 		this.room = null;
 		this.selectedCodec = null;
 		this.localCodecs = [];
+		this.frozenCodecPreference = null;
+		this.frozenDelivery = null;
+		this.lastCodecChangeAt = 0;
+		this.publishedTrackSid = null;
+		this.clearSuppressionTimer();
 		for (const timer of this.graceTimers.values()) clearTimeout(timer);
 		this.graceTimers.clear();
 		this.remoteCodecsByIdentity.clear();
@@ -534,6 +663,7 @@ class ScreenShareCodecNegotiation {
 
 	async refreshSelection(room: Room | null = this.room): Promise<CodecNegotiationSelection | null> {
 		if (!room) return null;
+		this.frozenCodecPreference = null;
 		return await this.updateSelection(room, 'manual', this.bindingRevision);
 	}
 
@@ -548,18 +678,18 @@ class ScreenShareCodecNegotiation {
 			loadGpuEncoderReport(),
 			loadNativeHardwareEncoderCapabilities(),
 			loadVideoDecoderExclusions(),
-			loadOpenH264Status(),
 			getDesktopTroubleshootingSettings(),
 		]);
 		if (!this.isBindingCurrent(room, bindingRevision)) return null;
-		this.localCodecs = buildLocalCodecAdvertisements();
+		if (reason === 'manual') this.frozenCodecPreference = null;
+		this.localCodecs = buildLocalCodecAdvertisements(this.resolveCodecPreferenceOrder());
 		await this.publishSelectProtocol(room);
 		if (!this.isBindingCurrent(room, bindingRevision)) return null;
 		return await this.updateSelection(room, reason, bindingRevision);
 	}
 
 	private async publishSelectProtocol(room: Room): Promise<void> {
-		if (this.localCodecs.length === 0) this.localCodecs = buildLocalCodecAdvertisements();
+		this.ensureLocalCodecAdvertisements();
 		const message: FluxerSelectProtocolMessage = {
 			op: SELECT_PROTOCOL_OP,
 			d: {
@@ -609,7 +739,7 @@ class ScreenShareCodecNegotiation {
 		bindingRevision: number,
 	): Promise<CodecNegotiationSelection | null> {
 		if (!room.localParticipant || !this.isBindingCurrent(room, bindingRevision)) return null;
-		if (this.localCodecs.length === 0) this.localCodecs = buildLocalCodecAdvertisements();
+		this.ensureLocalCodecAdvertisements();
 		if (reason === 'participant-disconnected' && room.remoteParticipants.size === 0 && this.selectedCodec) {
 			logger.debug('Keeping active screen share codec after last viewer disconnected', {
 				codec: this.selectedCodec,
@@ -619,18 +749,37 @@ class ScreenShareCodecNegotiation {
 		const {knownRemoteCodecs, unknownParticipants} = this.getRemoteCodecInputs(room);
 		this.scheduleGraceReevaluations(room, bindingRevision);
 		const previousCodec = this.selectedCodec;
+		const delivery = this.resolveScreenShareDelivery(room);
 		this.negotiationSnapshot = transitionScreenShareCodecNegotiationSnapshot(this.negotiationSnapshot, {
 			type: 'negotiation.evaluate',
 			localCodecs: this.localCodecs,
 			remoteCodecs: knownRemoteCodecs,
 			unknownParticipants,
 			reason,
-			codecPreference: getScreenShareCodecPreferenceOrder(),
+			codecPreference: this.resolveCodecPreferenceOrder(),
+			publishedCodec: delivery ? this.observePublishedScreenShareCodec(room) : null,
 		});
 		const selection = this.negotiationSnapshot.context.selection;
 		if (!selection) return null;
+		if (selection.codec === previousCodec) {
+			this.selectedCodec = selection.codec;
+			return selection;
+		}
+		if (
+			delivery &&
+			previousCodec !== null &&
+			Date.now() - this.lastCodecChangeAt < SCREEN_SHARE_CODEC_CHANGE_SUPPRESSION_MS
+		) {
+			logger.debug('Suppressed a screen share codec change inside the change window', {
+				codec: selection.codec,
+				previousCodec,
+				reason,
+			});
+			this.scheduleSuppressedReevaluation(room, reason, bindingRevision);
+			return selection;
+		}
 		this.selectedCodec = selection.codec;
-		if (selection.codec === previousCodec) return selection;
+		if (delivery) this.armCodecChangeSuppression();
 		this.mediaSessionId = createId('media');
 		logger.info('Selected screen share codec from XState capability intersection', selection);
 		await this.publishSessionUpdate(room, selection);

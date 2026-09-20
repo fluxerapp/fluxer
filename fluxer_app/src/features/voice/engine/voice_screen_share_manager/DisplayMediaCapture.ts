@@ -6,6 +6,7 @@ import {
 	stopMediaTrack,
 	stopUnselectedStreamTracks,
 } from '@app/features/voice/engine/voice_screen_share_manager/shared';
+import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
 import {rememberCapturedDisplayAudioTrack} from '@app/features/voice/utils/NativeAudioCaptureBridge';
 import {ScreenShareAudioCaptureError} from '@app/features/voice/utils/ScreenShareAudioCaptureError';
 import type {ScreenShareCaptureOptions} from 'livekit-client';
@@ -36,7 +37,7 @@ function getRequestedDisplayMediaVideoConstraints(
 	return options.video as DisplayMediaVideoConstraints;
 }
 
-export function resolveCapturedDisplayMediaCursorCapture(
+function resolveCapturedDisplayMediaCursorCapture(
 	track: Pick<MediaStreamTrack, 'getSettings'>,
 	options?: ScreenShareCaptureOptions,
 ): 'always' | 'motion' | 'never' {
@@ -126,10 +127,12 @@ export async function createDisplayScreenShareTracks(
 		if (options?.contentHint) {
 			videoTrack.contentHint = options.contentHint;
 		}
-		const cursor = resolveCapturedDisplayMediaCursorCapture(videoTrack, options);
-		await videoTrack
-			.applyConstraints(buildCapturedDisplayMediaConstraints(displayMediaOptions, cursor))
-			.catch(() => undefined);
+		if (ActiveScreenShareSource.getTarget()?.delivery !== true) {
+			const cursor = resolveCapturedDisplayMediaCursorCapture(videoTrack, options);
+			await videoTrack
+				.applyConstraints(buildCapturedDisplayMediaConstraints(displayMediaOptions, cursor))
+				.catch(() => undefined);
+		}
 		const capturedAudioTrack = stream.getAudioTracks()[0];
 		const audioTrack = capturedAudioTrack?.readyState === 'live' ? capturedAudioTrack : undefined;
 		rememberCapturedDisplayAudioTrack(capturedAudioTrack, Boolean(capturedAudioTrack) && !audioTrack);

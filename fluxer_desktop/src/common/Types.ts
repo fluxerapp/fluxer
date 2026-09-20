@@ -71,14 +71,6 @@ export interface GpuInfo {
 
 export type StreamingPriorityDiagnostics = Record<string, unknown>;
 
-export interface OpenH264Status {
-	enabled: boolean;
-	downloaded: boolean;
-	downloading: boolean;
-	version: string | null;
-	error: string | null;
-}
-
 export interface CpuInfo {
 	model: string;
 	speed: number;
@@ -640,8 +632,6 @@ export interface ElectronAPI {
 	buildChannel: 'stable' | 'canary';
 	getDesktopInfo: () => Promise<DesktopInfo>;
 	getGpuInfo: () => Promise<GpuInfo>;
-	getOpenH264Status: () => Promise<OpenH264Status>;
-	setOpenH264Enabled: (enabled: boolean) => Promise<OpenH264Status>;
 	getDesktopWindowBehaviorSettings: () => Promise<DesktopWindowBehaviorSettings>;
 	setDesktopWindowBehaviorSettings: (
 		settings: Partial<DesktopWindowBehaviorSettings>,

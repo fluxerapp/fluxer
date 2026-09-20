@@ -91,7 +91,6 @@ export interface StatsForNerdsData {
 		shareDesktopAudio: boolean;
 		shareAppAudio: boolean;
 		muteStreamAudio: boolean;
-		openH264Enabled: boolean;
 	};
 	screenShareAudioCapture: {
 		nativeCapture: Record<string, unknown>;

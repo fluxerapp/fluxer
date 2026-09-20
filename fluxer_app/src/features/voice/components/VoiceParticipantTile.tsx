@@ -177,6 +177,11 @@ const COLLAPSE_DEVICES_DESCRIPTOR = msg({
 	message: 'Collapse devices',
 	comment: 'Tooltip / aria label on a voice participant tile button that collapses expanded device tiles for one user.',
 });
+const SHARE_NOT_UPDATING_DESCRIPTOR = msg({
+	message: "What you're sharing isn't updating",
+	comment:
+		'Informational overlay on your own screen-share tile while the shared screen or window sends no new frames, for example when it is static or minimised. Not an error.',
+});
 const SCREEN_SHARE_SOURCE = VoiceTrackSource.ScreenShare as Track.Source;
 
 function getVoiceMediaGraphSnapshotForTile() {
@@ -875,6 +880,14 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 		!isFocusedPlaceholderTile &&
 		isActiveLocalScreenShareConnection &&
 		LocalVoiceState.getSelfStream();
+	const showOwnScreenShareCapturePaused =
+		isOwnScreenShare &&
+		!isFocusedPlaceholderTile &&
+		!isOwnScreenShareHidden &&
+		!isOwnStreamPreviewPaused &&
+		isActiveLocalScreenShareConnection &&
+		LocalVoiceState.getSelfStream() &&
+		MediaEngine.isScreenShareCapturePaused;
 	useScreensharePreviewUploader(
 		shouldUploadOwnScreenSharePreview,
 		streamKey,
@@ -1153,6 +1166,35 @@ const VoiceParticipantTileInner = observer(function VoiceParticipantTileInner({
 								<span
 									className={styles.pausedSubtext}
 									data-flx="voice.voice-participant-tile.voice-participant-tile-inner.paused-subtext"
+								>
+									{i18n._(YOUR_STREAM_IS_STILL_LIVE_DESCRIPTOR)}
+								</span>
+							</div>
+						</div>
+					)}
+					{showOwnScreenShareCapturePaused && (
+						<div
+							className={clsx(styles.selfStreamOverlay, styles.paused)}
+							data-flx="voice.voice-participant-tile.voice-participant-tile-inner.capture-paused-overlay"
+						>
+							<div
+								className={styles.selfStreamPreviewPaused}
+								data-flx="voice.voice-participant-tile.voice-participant-tile-inner.capture-paused-content"
+							>
+								<PauseIcon
+									weight="fill"
+									className={styles.pausedIcon}
+									data-flx="voice.voice-participant-tile.voice-participant-tile-inner.capture-paused-icon"
+								/>
+								<span
+									className={styles.pausedText}
+									data-flx="voice.voice-participant-tile.voice-participant-tile-inner.capture-paused-text"
+								>
+									{i18n._(SHARE_NOT_UPDATING_DESCRIPTOR)}
+								</span>
+								<span
+									className={styles.pausedSubtext}
+									data-flx="voice.voice-participant-tile.voice-participant-tile-inner.capture-paused-subtext"
 								>
 									{i18n._(YOUR_STREAM_IS_STILL_LIVE_DESCRIPTOR)}
 								</span>
