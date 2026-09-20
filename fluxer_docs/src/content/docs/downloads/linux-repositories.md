@@ -28,8 +28,11 @@ One repository serves Fedora and the RHEL family, split by channel and architect
 ```
 sudo curl -fsSL -o /etc/yum.repos.d/fluxer.repo \
   https://pkgs.fluxer.com/rpm/fluxer.repo
+sudo rpm --import https://pkgs.fluxer.com/keys/fluxer-archive-keyring.asc
 sudo dnf install fluxer
 ```
+
+The `.repo` file names the signing key by URL, so dnf fetches it rather than needing the keyring step the apt entry has. Without the `rpm --import` line dnf asks to import twice on a first install, once for the repository metadata and once for the package. With it dnf asks once, for the metadata, which dnf keeps in its own key store. Both prompts print the fingerprint, which reads `09D01339EE128925F75E675C855C5BDE34D205D2`.
 
 Metadata expires after six hours, so a freshly published build becomes visible within that window, or immediately with `dnf --refresh upgrade`.
 
@@ -89,4 +92,4 @@ Once the remote exists, either application installs by id:
 flatpak install fluxer app.fluxer.FluxerCanary
 ```
 
-The reference file names no signing key, so flatpak configures the remote unverified and no flag is required. Adding the remote by URL instead of by reference file does need `--no-gpg-verify`.
+The reference file names the signing key, so flatpak configures the remote verified and imports the key. `fluxer.flatpakrepo` does the same, so `flatpak remote-add` from that URL needs no flag either. Adding the bare repository URL skips both files: flatpak still turns verification on but has no key to check against, so that route needs `--gpg-import` or `--no-gpg-verify`.
