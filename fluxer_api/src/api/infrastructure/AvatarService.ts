@@ -191,6 +191,58 @@ export class AvatarService {
 		return storedHash;
 	}
 
+	async uploadGuildEventImage(params: {
+		guildId: bigint;
+		eventId: bigint;
+		errorPath: string;
+		base64Image: string;
+		previousHash?: string | null;
+	}): Promise<string> {
+		const {guildId, eventId, errorPath, base64Image, previousHash} = params;
+		const base64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
+		const imageBuffer = new Uint8Array(Buffer.from(base64Data, 'base64'));
+		const maxSize = this.resolveSizeLimit('avatar_max_size', AVATAR_MAX_SIZE);
+		if (imageBuffer.length > maxSize) {
+			throw InputValidationError.fromCode(errorPath, ValidationErrorCodes.IMAGE_SIZE_EXCEEDS_LIMIT, {maxSize});
+		}
+		const metadata = this.requireAllowedMetadata({
+			metadata: await this.mediaService.getMetadata({
+				type: 'base64',
+				base64: base64Data,
+				version: 2,
+				nsfw: 'block',
+			}),
+			kind: 'avatar',
+			errorPath,
+		});
+		const imageHash = crypto.createHash('md5').update(Buffer.from(imageBuffer)).digest('hex').slice(0, 16);
+		await this.scanAndBlockBannedSha({imageBuffer, resourceType: 'other'});
+		const uploadBuffer = await this.stripImageMetadata(imageBuffer, metadata.format);
+		const prefix = `guild-events/${guildId}/${eventId}`;
+		await this.storageService.uploadObject({
+			bucket: Config.s3.buckets.cdn,
+			key: `${prefix}/${imageHash}`,
+			body: uploadBuffer,
+			contentType: metadata.content_type,
+		});
+		if (previousHash && previousHash !== imageHash) {
+			await this.storageService.deleteObject(Config.s3.buckets.cdn, `${prefix}/${previousHash}`);
+		}
+		return imageHash;
+	}
+
+	async deleteGuildEventImage(params: {
+		guildId: bigint;
+		eventId: bigint;
+		imageHash: string | null;
+	}): Promise<void> {
+		if (!params.imageHash) return;
+		await this.storageService.deleteObject(
+			Config.s3.buckets.cdn,
+			`guild-events/${params.guildId}/${params.eventId}/${params.imageHash}`,
+		);
+	}
+
 	async processEmoji(params: {errorPath: string; base64Image: string; guildFeatures: Iterable<string>}): Promise<{
 		imageBuffer: Uint8Array;
 		animated: boolean;
