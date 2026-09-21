@@ -1,0 +1,180 @@
+.root {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	padding-bottom: 32px;
+}
+
+.header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+}
+
+.title {
+	margin: 0;
+	font-size: 20px;
+	font-weight: 700;
+}
+
+.subtitle {
+	margin: 6px 0 0;
+	max-width: 680px;
+	opacity: 0.72;
+	line-height: 1.5;
+}
+
+.error {
+	padding: 10px 12px;
+	border: 1px solid var(--status-danger, currentColor);
+	border-radius: 8px;
+}
+
+.editor {
+	display: grid;
+	gap: 14px;
+	padding: 16px;
+	border: 1px solid var(--background-modifier-accent, rgba(255, 255, 255, 0.1));
+	border-radius: 10px;
+}
+
+.editor label {
+	display: grid;
+	gap: 6px;
+	font-size: 13px;
+	font-weight: 600;
+}
+
+.editor input:not([type='checkbox']):not([type='file']),
+.editor textarea {
+	box-sizing: border-box;
+	width: 100%;
+	border: 1px solid var(--background-modifier-accent, rgba(255, 255, 255, 0.12));
+	border-radius: 6px;
+	padding: 9px 10px;
+	background: var(--background-secondary, rgba(0, 0, 0, 0.16));
+	color: inherit;
+	font: inherit;
+}
+
+.editorHeading,
+.actions,
+.imagePicker,
+.removeImage {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.editorHeading {
+	justify-content: space-between;
+}
+
+.twoColumns {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 12px;
+}
+
+.primaryButton,
+.actions button,
+.linkButton {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	border: 0;
+	border-radius: 6px;
+	padding: 8px 11px;
+	cursor: pointer;
+}
+
+.primaryButton {
+	width: fit-content;
+	background: var(--brand-500, #5865f2);
+	color: white;
+	font-weight: 650;
+}
+
+.linkButton,
+.actions button {
+	background: var(--background-modifier-hover, rgba(255, 255, 255, 0.08));
+	color: inherit;
+}
+
+.imagePicker {
+	width: fit-content;
+}
+
+.calendar {
+	display: grid;
+	gap: 12px;
+}
+
+.empty {
+	padding: 30px 12px;
+	text-align: center;
+	opacity: 0.65;
+}
+
+.card {
+	display: grid;
+	grid-template-columns: minmax(0, 180px) 1fr;
+	overflow: hidden;
+	border: 1px solid var(--background-modifier-accent, rgba(255, 255, 255, 0.1));
+	border-radius: 10px;
+}
+
+.image {
+	width: 100%;
+	height: 100%;
+	min-height: 150px;
+	object-fit: cover;
+}
+
+.cardBody {
+	padding: 14px 16px;
+}
+
+.cardBody h3 {
+	margin: 4px 0 8px;
+	font-size: 18px;
+}
+
+.cardBody p {
+	margin: 10px 0 0;
+	white-space: pre-wrap;
+	line-height: 1.45;
+}
+
+.when {
+	font-size: 12px;
+	font-weight: 650;
+	opacity: 0.72;
+}
+
+.location {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	opacity: 0.8;
+}
+
+.actions {
+	margin-top: 14px;
+}
+
+@media (max-width: 680px) {
+	.twoColumns {
+		grid-template-columns: 1fr;
+	}
+
+	.card {
+		grid-template-columns: 1fr;
+	}
+
+	.image {
+		max-height: 220px;
+	}
+}
