@@ -707,7 +707,8 @@ export const LexicalChannelTextareaContent = observer(
 			const stickerBoundaryChanged = isSameChannel && previous.hasPendingSticker !== hasPendingSticker;
 			if (
 				wasAtBottomBeforeComposerBoundaryChange.current &&
-				(stickerBoundaryChanged || (attachmentBoundaryChanged && Messages.getMessages(channel.id).hasMoreAfter))
+				(stickerBoundaryChanged || attachmentBoundaryChanged) &&
+				Messages.getMessages(channel.id).hasMoreAfter
 			) {
 				ComponentBus.dispatch('FORCE_JUMP_TO_PRESENT', {channelId: channel.id});
 			}
