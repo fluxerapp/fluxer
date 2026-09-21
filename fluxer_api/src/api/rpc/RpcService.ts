@@ -864,7 +864,7 @@ export class RpcService {
 				if (!queueAllowed) {
 					return;
 				}
-				await this.workerService.addJob('reconcileUserPayments', {userId: userIdString});
+				await this.workerService.addJob('reconcileUserPayments', {userId: userIdString}, {skipLedger: true});
 			})
 			.catch((error) => {
 				Logger.warn(

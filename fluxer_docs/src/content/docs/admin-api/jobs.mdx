@@ -11,7 +11,7 @@ These routes list recorded background jobs and request cancellation. Create jobs
 Reads require `jobs:view` and cancellation requires `jobs:cancel`. Every operation on this page shares the `admin:jobs:view` bucket. The three reads record no [Admin audit entry](/admin-api/#admin-audit-entry-object), and cancellation records one.
 
 :::note[Job updates vary by task]
-Mention processing, link previews, message delete audit log batching, and every scheduled task except `syncDisposableEmailDomains`, `syncUrlBlocklists` and `syncFileShaBlocklists` run with no job record and never appear here. Fluxer deletes a job record about 90 days after the job was queued. A job also runs with no record when Fluxer fails to write that record. When a later write of status, progress or attempts fails, Fluxer logs the failure and the job continues, so the stored values can be behind the real run. Use the [archive routes](/admin-api/archives/) to track archive progress and failures.
+Mention processing, link previews, message delete audit log batching, payment reconciliation when a user connects, and every scheduled task except `syncDisposableEmailDomains`, `syncUrlBlocklists` and `syncFileShaBlocklists` run with no job record and never appear here. Fluxer deletes a job record about 90 days after the job was queued. A job also runs with no record when Fluxer fails to write that record. When a later write of status, progress or attempts fails, Fluxer logs the failure and the job continues, so the stored values can be behind the real run. Use the [archive routes](/admin-api/archives/) to track archive progress and failures.
 :::
 
 ## Admin job object
