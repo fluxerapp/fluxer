@@ -150,7 +150,7 @@ function serializeGroupDMChannel(channel: Channel): ChannelResponse {
 	return {
 		...serializeBaseChannelFields(channel),
 		...serializeMessageableFields(channel),
-		name: channel.name ?? undefined,
+		name: channel.name ?? null,
 		icon: channel.iconHash ?? null,
 		owner_id: channel.ownerId ? channel.ownerId.toString() : null,
 		nicks: nicknameMap.size > 0 ? nicks : undefined,

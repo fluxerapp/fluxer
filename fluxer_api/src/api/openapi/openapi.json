@@ -24224,7 +24224,7 @@
 						"description": "The ID of the guild this channel belongs to",
 						"$ref": "#/components/schemas/SnowflakeStringType"
 					},
-					"name": {"description": "The name of the channel", "type": "string"},
+					"name": {"description": "The name of the channel", "type": ["string", "null"]},
 					"topic": {"description": "The topic of the channel", "type": ["string", "null"]},
 					"url": {
 						"description": "The URL associated with the channel",

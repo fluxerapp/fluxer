@@ -50,7 +50,7 @@ export type CallEligibilityResponse = z.infer<typeof CallEligibilityResponse>;
 export const ChannelResponse = z.object({
 	id: SnowflakeStringType.describe('The unique identifier (snowflake) for this channel'),
 	guild_id: SnowflakeStringType.optional().describe('The ID of the guild this channel belongs to'),
-	name: z.string().optional().describe('The name of the channel'),
+	name: z.string().nullish().describe('The name of the channel'),
 	topic: z.string().nullish().describe('The topic of the channel'),
 	url: z.url().nullish().describe('The URL associated with the channel'),
 	icon: z.string().nullish().describe('The icon hash of the channel (for group DMs)'),
@@ -141,7 +141,7 @@ export interface ChannelOverwrite {
 export interface Channel {
 	readonly id: string;
 	readonly guild_id?: string;
-	readonly name?: string;
+	readonly name?: string | null;
 	readonly topic?: string | null;
 	readonly url?: string | null;
 	readonly icon?: string | null;
