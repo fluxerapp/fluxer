@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GuildEventID, GuildID} from '@app/api/BrandedTypes';
-import {fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import {deleteOneOrMany, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
 import {buildPatchFromData, executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
 import {GUILD_EVENT_COLUMNS, type GuildEventRow} from '@app/api/database/types/GuildTypes';
 import {GuildEvent} from '@app/api/models/GuildEvent';
@@ -47,6 +47,6 @@ export class GuildEventRepository {
 	}
 
 	async delete(guildId: GuildID, eventId: GuildEventID): Promise<void> {
-		await GuildEvents.deleteByPk({guild_id: guildId, event_id: eventId}).execute();
+		await deleteOneOrMany(GuildEvents.deleteByPk({guild_id: guildId, event_id: eventId}));
 	}
 }
