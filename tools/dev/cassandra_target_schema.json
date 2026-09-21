@@ -5477,6 +5477,57 @@
 			"options": "default_time_to_live = 0"
 		},
 		{
+			"name": "guild_events",
+			"columns": [
+				{
+					"name": "guild_id",
+					"type": "bigint"
+				},
+				{
+					"name": "event_id",
+					"type": "bigint"
+				},
+				{
+					"name": "creator_id",
+					"type": "bigint"
+				},
+				{
+					"name": "name",
+					"type": "text"
+				},
+				{
+					"name": "description",
+					"type": "text"
+				},
+				{
+					"name": "location",
+					"type": "text"
+				},
+				{
+					"name": "starts_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "ends_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "image_hash",
+					"type": "text"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "version",
+					"type": "int"
+				}
+			],
+			"primary_key": "((guild_id), event_id)",
+			"options": ""
+		},
+		{
 			"name": "guild_roles",
 			"columns": [
 				{
