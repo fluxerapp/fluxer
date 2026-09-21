@@ -15,6 +15,8 @@ import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import {ms} from 'itty-time';
 
+const MESSAGE_DELETE_BATCH_DELAY_MS = ms('30 seconds');
+
 interface MessageDeleteBatchGroup {
 	logs: Array<GuildAuditLog>;
 	userId: UserID;
@@ -81,14 +83,15 @@ export class GuildAuditLogService {
 	}
 
 	async scheduleMessageDeleteBatchJob(guildId: GuildID): Promise<void> {
-		const runAt = new Date(Date.now() + ms('30 seconds'));
+		const batchWindow = Math.floor(Date.now() / MESSAGE_DELETE_BATCH_DELAY_MS);
 		await this.workerService.addJob(
 			'batchGuildAuditLogMessageDeletes',
 			{guildId: guildId.toString()},
 			{
-				jobKey: `batch-audit-log-message-deletes:${guildId}`,
-				runAt,
+				jobKey: `batch-audit-log-message-deletes:${guildId}:${batchWindow}`,
+				runAt: new Date((batchWindow + 2) * MESSAGE_DELETE_BATCH_DELAY_MS),
 				maxAttempts: 3,
+				skipLedger: true,
 			},
 		);
 	}

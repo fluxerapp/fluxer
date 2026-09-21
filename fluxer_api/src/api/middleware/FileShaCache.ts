@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {AdminRepository} from '@app/api/admin/AdminRepository';
-import {BANNED_FILE_SHAS_REFRESH_CHANNEL} from '@app/api/constants/ContentModeration';
+import {Config} from '@app/api/Config';
+import {BANNED_FILE_SHAS_REFRESH_CHANNEL, isBlocklistFeedFileSha} from '@app/api/constants/ContentModeration';
 import {Logger} from '@app/api/Logger';
 import {RefreshSubscription} from '@app/api/utils/RefreshSubscription';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
@@ -38,8 +39,11 @@ class FileShaCache {
 	async refresh(): Promise<void> {
 		const rows = await this.adminRepository.loadAllBannedFileShas();
 		const next = new Set<string>();
+		const includeFeedRows = Config.blocklistFeeds.enabled;
 		for (const row of rows) {
-			if (row.sha256_hex) next.add(row.sha256_hex.toLowerCase());
+			if (!row.sha256_hex) continue;
+			if (!includeFeedRows && isBlocklistFeedFileSha(row)) continue;
+			next.add(row.sha256_hex.toLowerCase());
 		}
 		this.banned = next;
 		this.consecutiveFailures = 0;

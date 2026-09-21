@@ -56,6 +56,7 @@ export interface KvTableSpec<Row extends object = Record<string, unknown>> {
 	columns: ReadonlyArray<ColumnName<Row>>;
 	primaryKey: ReadonlyArray<ColumnName<Row>>;
 	partitionKey: ReadonlyArray<ColumnName<Row>>;
+	defaultTtlSeconds?: number;
 }
 
 export interface KvColumnParam<Row extends object = Record<string, unknown>> {
@@ -190,6 +191,7 @@ export interface Table<Row extends object, PK extends ColumnName<Row>, PartKey e
 	columns: ReadonlyArray<ColumnName<Row>>;
 	primaryKey: ReadonlyArray<PK>;
 	partitionKey: ReadonlyArray<PartKey>;
+	defaultTtlSeconds: number | undefined;
 	selectCql(opts?: {
 		columns?: ReadonlyArray<ColumnName<Row>>;
 		where?: WhereExpr<Row> | ReadonlyArray<WhereExpr<Row>>;

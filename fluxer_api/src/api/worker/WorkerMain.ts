@@ -23,8 +23,9 @@ import {
 } from '@app/api/middleware/ServiceSingletons';
 import {initializeSearch, shutdownSearch} from '@app/api/SearchFactory';
 import {awaitAll} from '@app/api/utils/ConcurrencyUtils';
+import {queueBlocklistFeedStartupJobs} from '@app/api/worker/BlocklistFeedStartup';
 import {CronScheduler} from '@app/api/worker/CronScheduler';
-import {JetStreamWorkerQueue} from '@app/api/worker/JetStreamWorkerQueue';
+import {JetStreamWorkerQueue, JOBS_STREAM_MAX_AGE_MS} from '@app/api/worker/JetStreamWorkerQueue';
 import {clearWorkerDependencies, setWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {initializeWorkerDependencies, type WorkerDependencies} from '@app/api/worker/WorkerDependencies';
 import {WorkerHeartbeat} from '@app/api/worker/WorkerHeartbeat';
@@ -34,7 +35,6 @@ import {
 	validateLaneCompleteness,
 } from '@app/api/worker/WorkerLaneConfig';
 import {createWorkerProcessErrorHandler} from '@app/api/worker/WorkerProcessErrorHandler';
-import {WorkerQueueOverflowError} from '@app/api/worker/WorkerQueueOverflowError';
 import {WorkerRunner} from '@app/api/worker/WorkerRunner';
 import {WorkerService} from '@app/api/worker/WorkerService';
 import {workerTasks} from '@app/api/worker/WorkerTaskRegistry';
@@ -43,9 +43,8 @@ import {BACKGROUND_READ_TIMEOUT_MS, initCassandra, shutdownCassandra} from '@pkg
 import {JetStreamConnectionManager} from '@pkgs/nats/src/JetStreamConnectionManager';
 import {getDefaultPostgresClient, initPostgres, shutdownPostgres} from '@pkgs/postgres/src/Client';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
-import {ms} from 'itty-time';
 
-function registerCronJobs(cron: CronScheduler): void {
+function registerCronJobs(cron: CronScheduler, jobsStreamMaxAgeMs: number): void {
 	cron.upsert('processAssetDeletionQueue', 'processAssetDeletionQueue', {}, '0 */5 * * * *', {ledger: false});
 	if (Config.cachePurge.adapter !== 'none') {
 		cron.upsert('processCachePurgeQueue', 'processCachePurgeQueue', {}, '*/10 * * * * *', {ledger: false});
@@ -62,6 +61,14 @@ function registerCronJobs(cron: CronScheduler): void {
 	}
 	cron.upsert('processInactivityDeletions', 'processInactivityDeletions', {}, '0 0 */6 * * *', {ledger: false});
 	cron.upsert('expireAttachments', 'expireAttachments', {}, '0 0 */12 * * *', {ledger: false});
+	if (jobsStreamMaxAgeMs > 0 && jobsStreamMaxAgeMs <= JOBS_STREAM_MAX_AGE_MS) {
+		cron.upsert('expireStaleJobs', 'expireStaleJobs', {}, '0 45 3 * * *', {ledger: false});
+	} else {
+		Logger.warn(
+			{jobsStreamMaxAgeMs},
+			'Jobs stream keeps jobs past 7 days, stale jobs stay active until their ledger rows expire',
+		);
+	}
 	cron.upsert('prunePostgresKvTtl', 'prunePostgresKvTtl', {}, '0 */5 * * * *', {ledger: false});
 	cron.upsert('syncDiscoveryIndex', 'syncDiscoveryIndex', {}, '0 */15 * * * *', {ledger: false});
 	if (Config.blocklistFeeds.enabled) {
@@ -240,26 +247,9 @@ export async function startWorkerMain(): Promise<void> {
 		}
 		dependencies = await initializeWorkerDependencies(snowflakeService);
 		setWorkerDependencies(dependencies);
-		if (Config.blocklistFeeds.enabled) {
-			const didClaimEmailSync = await dependencies.kvClient.setnx(
-				'sync:email_domains:initialized',
-				'1',
-				ms('6 hours') / 1000,
-			);
-			if (didClaimEmailSync) {
-				Logger.info('Triggering initial disposable email domain sync');
-				try {
-					await workerService.addJob('syncDisposableEmailDomains', {});
-				} catch (error) {
-					if (!(error instanceof WorkerQueueOverflowError)) {
-						throw error;
-					}
-					Logger.warn('Dropped initial disposable email domain sync, jobs stream is at its limit');
-				}
-			}
-		}
+		await queueBlocklistFeedStartupJobs(dependencies.kvClient, workerService, Config.blocklistFeeds.enabled);
 		cron = new CronScheduler(workerService, Logger, dependencies.kvClient, heartbeat);
-		registerCronJobs(cron);
+		registerCronJobs(cron, queue.getJobsStreamMaxAgeMs());
 		for (const lane of activeWorkerLanes) {
 			const laneTasks: Record<string, WorkerTaskHandler> = {};
 			for (const taskType of lane.taskTypes) {

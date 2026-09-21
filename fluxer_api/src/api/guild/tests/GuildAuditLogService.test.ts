@@ -60,7 +60,7 @@ function createService(roleNames: Map<string, string> = new Map()) {
 		{addJob} as unknown as IWorkerService<WorkerTaskName>,
 		{dispatchGuild} as unknown as IGatewayService,
 	);
-	return {service, createAuditLog, batchDeleteAndCreateAuditLogs, getRole, dispatchGuild};
+	return {service, createAuditLog, batchDeleteAndCreateAuditLogs, getRole, dispatchGuild, addJob};
 }
 
 function overwrites(
@@ -374,5 +374,28 @@ describe('GuildAuditLogService.recordPermissionOverwriteDiff', () => {
 		expect(getRole).not.toHaveBeenCalled();
 		expect(createAuditLog).not.toHaveBeenCalled();
 		expect(dispatchGuild).not.toHaveBeenCalled();
+	});
+});
+
+describe('GuildAuditLogService.scheduleMessageDeleteBatchJob', () => {
+	it('gives every delete in one 30 second window a single batch job that runs after the window closes, without a ledger row', async () => {
+		vi.useFakeTimers({toFake: ['Date']});
+		try {
+			const {service, addJob} = createService();
+			for (const at of ['2026-09-21T12:00:00.000Z', '2026-09-21T12:00:29.999Z', '2026-09-21T12:00:40.000Z']) {
+				vi.setSystemTime(new Date(at));
+				await service.scheduleMessageDeleteBatchJob(GUILD_ID);
+			}
+			const options = addJob.mock.calls.map((call) => call[2] as {jobKey: string; runAt: Date; skipLedger: boolean});
+			expect(options.every((option) => option.skipLedger)).toBe(true);
+			expect(options[0]!.jobKey).toBe(options[1]!.jobKey);
+			expect(options[2]!.jobKey).not.toBe(options[1]!.jobKey);
+			expect(options[0]!.runAt.getTime()).toBeGreaterThan(new Date('2026-09-21T12:00:29.999Z').getTime());
+			expect(options[1]!.runAt).toEqual(options[0]!.runAt);
+			expect(options[2]!.runAt).toEqual(new Date('2026-09-21T12:01:30.000Z'));
+			expect(options[2]!.runAt.getTime() - options[0]!.runAt.getTime()).toBe(30_000);
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 });

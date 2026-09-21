@@ -29,10 +29,10 @@ export class WorkerService implements IWorkerService<WorkerTaskName> {
 		const skipLedger = options?.skipLedger === true;
 		const requireLedger = options?.requireLedger === true;
 		const payloadRecord = payload as Record<string, unknown>;
-		let ledgerWritten = false;
+		let ledgerCreatedAt: Date | null = null;
 		if (!skipLedger) {
 			try {
-				await this.ledger.createJob({
+				ledgerCreatedAt = await this.ledger.createJob({
 					jobId,
 					taskType,
 					payload: payloadRecord,
@@ -43,29 +43,32 @@ export class WorkerService implements IWorkerService<WorkerTaskName> {
 					jetStreamLane: findLaneForTask(taskType),
 					jetStreamSeq: null,
 				});
-				ledgerWritten = true;
 			} catch (ledgerErr) {
 				Logger.error({err: ledgerErr, jobId: jobId.toString(), taskType}, 'Failed to write ledger row for job');
 				if (requireLedger) throw ledgerErr;
 			}
 		}
-		const enrichedPayload = ledgerWritten ? {...payloadRecord, __jobId: jobId.toString()} : payloadRecord;
+		const enrichedPayload = ledgerCreatedAt !== null ? {...payloadRecord, __jobId: jobId.toString()} : payloadRecord;
 		try {
-			const seq = await this.queue.enqueue(taskType, enrichedPayload, {
+			const {seq, duplicate} = await this.queue.enqueue(taskType, enrichedPayload, {
 				...(options?.runAt !== undefined && {runAt: options.runAt}),
 				...(options?.maxAttempts !== undefined && {maxAttempts: options.maxAttempts}),
 				...(options?.priority !== undefined && {priority: options.priority}),
 				...(options?.jobKey !== undefined && {jobKey: options.jobKey}),
 			});
-			if (ledgerWritten) {
+			if (ledgerCreatedAt !== null && duplicate) {
+				await this.ledger
+					.discardJob(jobId, ledgerCreatedAt)
+					.catch((err) => Logger.warn({err, jobId: jobId.toString()}, 'Ledger discardJob failed'));
+			} else if (ledgerCreatedAt !== null) {
 				await this.ledger
 					.setJetStreamSeq(jobId, seq)
 					.catch((err) => Logger.warn({err, jobId: jobId.toString()}, 'Ledger setJetStreamSeq failed'));
 			}
-			Logger.debug({taskType, jobId: jobId.toString(), seq}, 'Job queued successfully');
+			Logger.debug({taskType, jobId: jobId.toString(), seq, duplicate}, 'Job queued successfully');
 			return jobId;
 		} catch (error) {
-			if (ledgerWritten) {
+			if (ledgerCreatedAt !== null) {
 				await this.ledger
 					.markDeadletter(jobId, error instanceof Error ? error.message : String(error))
 					.catch((err) => Logger.warn({err, jobId: jobId.toString()}, 'Ledger markDeadletter failed'));

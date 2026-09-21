@@ -94,7 +94,7 @@ function createQueue(params: {
 	dlqExists?: boolean;
 	reject?: (config: Partial<StreamConfig>) => Error | null;
 	updateError?: Error;
-	publish?: (subject: string) => {seq: number};
+	publish?: (subject: string, body: string, options: {msgID: string}) => {seq: number; duplicate?: boolean};
 	subjectCounts?: Record<string, number>;
 	subjectCountsError?: Error;
 }): {
@@ -171,9 +171,9 @@ function createQueue(params: {
 				},
 			}),
 		getJetStreamClient: () => ({
-			publish: (subject: string) => {
+			publish: (subject: string, body: string, options: {msgID: string}) => {
 				const publish = params.publish ?? (() => ({seq: 1}));
-				return Promise.resolve(publish(subject));
+				return Promise.resolve(publish(subject, body, options));
 			},
 		}),
 	} as unknown as JetStreamConnectionManager;
@@ -281,6 +281,27 @@ describe('jobs stream limits', () => {
 	});
 });
 
+describe('jobs stream max age', () => {
+	it('reports the max age of a jobs stream it creates', async () => {
+		const {queue, added} = createQueue({existing: null});
+		await queue.ensureStream();
+		expect(queue.getJobsStreamMaxAgeMs()).toBe(7 * 24 * 60 * 60 * 1000);
+		expect(added[0]?.max_age).toBe(queue.getJobsStreamMaxAgeMs() * 1_000_000);
+	});
+
+	it('reports the max age an existing jobs stream really has and never changes it', async () => {
+		for (const [maxAgeNanos, expectedMs] of [
+			[30 * 24 * 60 * 60 * 1_000_000_000, 30 * 24 * 60 * 60 * 1000],
+			[0, 0],
+		] as const) {
+			const {queue, updated} = createQueue({existing: {...LEGACY_CONFIG, max_age: maxAgeNanos} as StreamConfig});
+			await queue.ensureStream();
+			expect(queue.getJobsStreamMaxAgeMs()).toBe(expectedMs);
+			expect(updated.some((config) => 'max_age' in config)).toBe(false);
+		}
+	});
+});
+
 describe('dead-letter stream', () => {
 	it('keeps startup alive when the dead-letter stream does not fit', async () => {
 		const {queue, dlqAdded} = createQueue({dlqExists: false, reject: () => noStorageError()});
@@ -298,16 +319,16 @@ describe('dead-letter stream', () => {
 describe('jobs stream enqueue shedding', () => {
 	it('rejects enqueues once the stream is at its cap', async () => {
 		const {queue} = createQueue({existing: LEGACY_CONFIG, publish: boundedPublisher(2)});
-		await expect(queue.enqueue('extractEmbeds', {})).resolves.toBe('1');
-		await expect(queue.enqueue('extractEmbeds', {})).resolves.toBe('2');
+		await expect(queue.enqueue('extractEmbeds', {})).resolves.toEqual({seq: '1', duplicate: false});
+		await expect(queue.enqueue('extractEmbeds', {})).resolves.toEqual({seq: '2', duplicate: false});
 		await expect(queue.enqueue('extractEmbeds', {})).rejects.toBeInstanceOf(WorkerQueueOverflowError);
 	});
 
 	it('caps each task type independently', async () => {
 		const {queue} = createQueue({existing: LEGACY_CONFIG, publish: boundedPublisher(1)});
-		await expect(queue.enqueue('extractEmbeds', {})).resolves.toBe('1');
+		await expect(queue.enqueue('extractEmbeds', {})).resolves.toEqual({seq: '1', duplicate: false});
 		await expect(queue.enqueue('extractEmbeds', {})).rejects.toBeInstanceOf(WorkerQueueOverflowError);
-		await expect(queue.enqueue('handleMentions', {})).resolves.toBe('2');
+		await expect(queue.enqueue('handleMentions', {})).resolves.toEqual({seq: '2', duplicate: false});
 	});
 
 	it('sheds enqueues the server refuses for lack of resources', async () => {
@@ -318,6 +339,29 @@ describe('jobs stream enqueue shedding', () => {
 			},
 		});
 		await expect(queue.enqueue('handleMentions', {})).rejects.toBeInstanceOf(WorkerQueueOverflowError);
+	});
+
+	it('reports a publish the stream deduplicated under the same job key', async () => {
+		const seen = new Map<string, number>();
+		const {queue} = createQueue({
+			existing: LEGACY_CONFIG,
+			publish: (_subject, _body, options) => {
+				const existing = seen.get(options.msgID);
+				if (existing !== undefined) return {seq: existing, duplicate: true};
+				seen.set(options.msgID, seen.size + 1);
+				return {seq: seen.size, duplicate: false};
+			},
+		});
+		const options = {jobKey: 'batch-audit-log-message-deletes:1'};
+		await expect(queue.enqueue('batchGuildAuditLogMessageDeletes', {}, options)).resolves.toEqual({
+			seq: '1',
+			duplicate: false,
+		});
+		await expect(queue.enqueue('batchGuildAuditLogMessageDeletes', {}, options)).resolves.toEqual({
+			seq: '1',
+			duplicate: true,
+		});
+		await expect(queue.enqueue('batchGuildAuditLogMessageDeletes', {})).resolves.toEqual({seq: '2', duplicate: false});
 	});
 
 	it('rethrows publish failures that are not stream limits', async () => {

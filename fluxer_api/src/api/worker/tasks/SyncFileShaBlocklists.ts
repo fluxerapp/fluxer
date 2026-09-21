@@ -1,16 +1,39 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {BANNED_FILE_SHAS_REFRESH_CHANNEL} from '@app/api/constants/ContentModeration';
+import {Config} from '@app/api/Config';
+import {
+	BANNED_FILE_SHAS_REFRESH_CHANNEL,
+	ContentBlocklistCategory,
+	isBlocklistFeedFileSha,
+} from '@app/api/constants/ContentModeration';
 import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
 import * as FetchUtils from '@app/api/utils/FetchUtils';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
-import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
+import type {WorkerTaskHandler, WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 
 const MALWARE_BAZAAR_SHA256_URL = 'https://bazaar.abuse.ch/export/txt/sha256/recent/';
 const SHA256_RE = /^[0-9a-fA-F]{64}$/;
+
+async function removeFeedFileShas(helpers: WorkerTaskHelpers): Promise<void> {
+	const {adminRepository, kvClient} = getWorkerDependencies();
+	let removed = 0;
+	for (const row of await adminRepository.loadAllBannedFileShas()) {
+		if (!isBlocklistFeedFileSha(row)) continue;
+		if (await adminRepository.unbanFeedFileSha(row.sha256_hex)) removed++;
+	}
+	if (removed > 0) {
+		await kvClient.publish(BANNED_FILE_SHAS_REFRESH_CHANNEL, 'refresh');
+	}
+	helpers.logger.info({removed}, 'Removed file-SHA blocklist feed rows');
+}
+
 const syncFileShaBlocklists: WorkerTaskHandler = async (_payload, helpers) => {
 	helpers.logger.info('Starting file-SHA blocklist sync');
 	await helpers.setContextLink('/file-sha-bans');
+	if (!Config.blocklistFeeds.enabled) {
+		await removeFeedFileShas(helpers);
+		return;
+	}
 	const {adminRepository, kvClient} = getWorkerDependencies();
 	let added = 0;
 	try {
@@ -38,7 +61,7 @@ const syncFileShaBlocklists: WorkerTaskHandler = async (_payload, helpers) => {
 			if (existingSet.has(sha)) continue;
 			await adminRepository.banFileSha({
 				sha256_hex: sha,
-				category: 'malware_bazaar',
+				category: ContentBlocklistCategory.MALWARE_BAZAAR,
 				severity: 2,
 				content_type: null,
 				source_url: MALWARE_BAZAAR_SHA256_URL,

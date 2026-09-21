@@ -182,6 +182,18 @@ When `api` starts, it writes the new address to the existing `default-server-1` 
 
 Voice media is unaffected. It never went through the edge, and `7881/tcp` and `7882/udp` still reach the host directly.
 
+## Short-lived data expires on Postgres
+
+On the Postgres backend, data the schema keeps for a limited time expires the way it does on Cassandra, counted from its last write. After the upgrade, these are the differences most people notice.
+
+- The mentions inbox lists the last 7 days of mentions.
+- A device that has not opened Fluxer in 90 days gets no push notifications until Fluxer is opened on it again.
+- An account's ended sessions in the admin dashboard go back 30 days.
+
+Within minutes of the upgrade, `worker` starts deleting existing data that is past that lifetime. A rollback does not bring it back. [Restore a backup](#restore-a-backup) does. `worker` checks again once a day, so data written while a rollback was in place gets the same treatment after the next upgrade.
+
+Instances on Cassandra already behave this way.
+
 ## What the backup covers
 
 Each upgrade writes one record directory, named `record-` and a UTC stamp, under `backups` or wherever `--backup-dir` points. It holds:

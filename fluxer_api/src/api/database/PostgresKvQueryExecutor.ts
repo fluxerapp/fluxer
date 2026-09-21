@@ -89,6 +89,28 @@ const NUMERIC_ROW_KEY_NUMBER_PATTERN = '^(-?[0-9]+(?:\\.[0-9]+)?(?:[eE][-+]?[0-9
 const EXPIRED_STORED_ROW = 'kv.expires_at IS NOT NULL AND kv.expires_at <= now()';
 const MERGED_ROW_DATA = `CASE WHEN ${EXPIRED_STORED_ROW} THEN EXCLUDED.row_data ELSE kv.row_data || EXCLUDED.row_data END`;
 const KEPT_EXPIRES_AT = `CASE WHEN ${EXPIRED_STORED_ROW} THEN NULL ELSE kv.expires_at END`;
+const NO_EXPIRY = 'infinity';
+
+export async function postgresKvPassIsFresh(
+	client: IPostgresClient,
+	marker: string,
+	maxAgeMs: number,
+): Promise<boolean> {
+	const result = await client.query(
+		`SELECT 1 FROM ${quoteIdentifier(client.kvTable())} WHERE table_name = $1 AND row_key = $2 AND (row_data ->> 'applied_at')::timestamptz > now() - make_interval(secs => $3::double precision)`,
+		[POSTGRES_KV_MIGRATION_TABLE, marker, maxAgeMs / 1000],
+	);
+	return result.rows.length > 0;
+}
+
+export async function recordPostgresKvCleanPass(client: IPostgresClient, marker: string): Promise<void> {
+	await client.query(
+		`INSERT INTO ${quoteIdentifier(client.kvTable())} (table_name, partition_key, row_key, row_data)
+VALUES ($1, $2, $2, jsonb_build_object('applied_at', now()))
+ON CONFLICT (table_name, row_key) DO UPDATE SET row_data = EXCLUDED.row_data, updated_at = now()`,
+		[POSTGRES_KV_MIGRATION_TABLE, marker],
+	);
+}
 
 function numericRowKeyExpr(column: string): string {
 	return `(COALESCE(substring(${column} from '${NUMERIC_ROW_KEY_BIGINT_PATTERN}'), substring(${column} from '${NUMERIC_ROW_KEY_NUMBER_PATTERN}'))::numeric)`;
@@ -333,20 +355,21 @@ function projectRow(row: Row, columns: ReadonlyArray<string> | undefined): Row {
 	return projected;
 }
 
-function rowComparator(meta: KvQueryMeta): (left: Row, right: Row) => number {
-	if (meta.orderBy) {
-		const column = meta.orderBy.col as string;
-		const direction = meta.orderBy.direction === 'DESC' ? -1 : 1;
-		return (left, right) => compareValues(left[column], right[column]) * direction;
+function compareColumns(columns: ReadonlyArray<string>, left: Row, right: Row): number {
+	for (const column of columns) {
+		const cmp = compareValues(left[column], right[column]);
+		if (cmp !== 0) return cmp;
 	}
-	const columns = meta.table.primaryKey as ReadonlyArray<string>;
-	return (left, right) => {
-		for (const column of columns) {
-			const cmp = compareValues(left[column], right[column]);
-			if (cmp !== 0) return cmp;
-		}
-		return 0;
-	};
+	return 0;
+}
+
+function rowComparator(meta: KvQueryMeta): (left: Row, right: Row) => number {
+	const primaryKey = meta.table.primaryKey as ReadonlyArray<string>;
+	if (!meta.orderBy) return (left, right) => compareColumns(primaryKey, left, right);
+	const column = meta.orderBy.col as string;
+	const columns = [column, ...primaryKey.slice(primaryKey.indexOf(column) + 1)];
+	const direction = meta.orderBy.direction === 'DESC' ? -1 : 1;
+	return (left, right) => compareColumns(columns, left, right) * direction;
 }
 
 function sortRows(meta: KvQueryMeta, rows: Array<Row>): Array<Row> {
@@ -679,7 +702,7 @@ function logFullScan(meta: KvQueryMeta): void {
 	logWarn({table: meta.table.name, action: meta.action, where: shape.summary || 'none'}, 'Postgres KV full table scan');
 }
 
-function ttlExpiresAt(meta: KvQueryMeta, params: CassandraParams): Date | null | undefined {
+function ttlExpiresAt(meta: KvQueryMeta, params: CassandraParams): Date | typeof NO_EXPIRY | null | undefined {
 	const ttlParam = meta.ttlParamName;
 	if (!ttlParam) return undefined;
 	const ttlRaw = params[ttlParam];
@@ -687,7 +710,13 @@ function ttlExpiresAt(meta: KvQueryMeta, params: CassandraParams): Date | null |
 		throw new Error(`TTL parameter ${ttlParam} must be a number`);
 	}
 	const ttlSeconds = validateTtlSeconds(ttlRaw);
-	return ttlSeconds === 0 ? null : new Date(Date.now() + ttlSeconds * 1000);
+	if (ttlSeconds === 0) return meta.table.defaultTtlSeconds === undefined ? null : NO_EXPIRY;
+	return new Date(Date.now() + ttlSeconds * 1000);
+}
+
+function defaultExpiresAt(meta: KvQueryMeta): Date | undefined {
+	const ttlSeconds = meta.table.defaultTtlSeconds;
+	return ttlSeconds === undefined ? undefined : new Date(Date.now() + ttlSeconds * 1000);
 }
 
 function encodePageState(pageState: PageState): string {
@@ -1191,7 +1220,8 @@ export class PostgresKvQueryExecutor {
 				'kv_del_expired',
 			);
 		}
-		const expiresAt = ttlExpiresAt(meta, params) ?? null;
+		const explicit = ttlExpiresAt(meta, params);
+		const expiresAt = explicit === undefined ? (defaultExpiresAt(meta) ?? null) : explicit;
 		const result = await db.query(
 			`INSERT INTO ${this.table} AS kv (table_name, partition_key, row_key, row_data, expires_at, updated_at)
 VALUES ($1, $2, $3, $4::jsonb, $5, now())
@@ -1244,10 +1274,14 @@ WHERE NOT $6`,
 			}
 			bindings.push(JSON.stringify(encodeRow(paramsRow(params, meta.patchKeys))));
 			const assignments = [`row_data = kv.row_data || $${bindings.length}::jsonb`, 'updated_at = now()'];
-			const expiresAt = ttlExpiresAt(meta, params);
-			if (expiresAt !== undefined) {
-				bindings.push(expiresAt);
+			const explicit = ttlExpiresAt(meta, params);
+			const fallback = explicit === undefined ? defaultExpiresAt(meta) : undefined;
+			if (explicit !== undefined) {
+				bindings.push(explicit);
 				assignments.push(`expires_at = $${bindings.length}`);
+			} else if (fallback !== undefined) {
+				bindings.push(fallback);
+				assignments.push(`expires_at = GREATEST(kv.expires_at, $${bindings.length}::timestamptz)`);
 			}
 			sql = `UPDATE ${this.table} kv SET ${assignments.join(', ')} WHERE ${where}`;
 		}
@@ -1346,15 +1380,27 @@ WHERE NOT $6`,
 		for (const column of meta.patchKeys ?? []) {
 			incoming[column] = column in params ? params[column] : null;
 		}
-		const ttl = ttlExpiresAt(meta, params);
-		const expiresAtExpr = ttl === undefined ? KEPT_EXPIRES_AT : 'EXCLUDED.expires_at';
+		const explicit = ttlExpiresAt(meta, params);
+		const fallback = explicit === undefined ? defaultExpiresAt(meta) : undefined;
+		const [expiresAtExpr, statementName] =
+			explicit !== undefined
+				? ['EXCLUDED.expires_at', 'kv_patch_set_ttl']
+				: fallback !== undefined
+					? ['GREATEST(kv.expires_at, EXCLUDED.expires_at)', 'kv_patch_default_ttl']
+					: [KEPT_EXPIRES_AT, 'kv_patch_keep_ttl'];
 		await db.query(
 			`INSERT INTO ${this.table} AS kv (table_name, partition_key, row_key, row_data, expires_at, updated_at)
 VALUES ($1, $2, $3, $4::jsonb, $5, now())
 ON CONFLICT (table_name, row_key)
 DO UPDATE SET partition_key = EXCLUDED.partition_key, row_data = ${MERGED_ROW_DATA}, expires_at = ${expiresAtExpr}, updated_at = now()`,
-			[meta.table.name, partitionKey(meta, incoming), key, JSON.stringify(encodeRow(incoming)), ttl ?? null],
-			ttl === undefined ? 'kv_patch_keep_ttl' : 'kv_patch_set_ttl',
+			[
+				meta.table.name,
+				partitionKey(meta, incoming),
+				key,
+				JSON.stringify(encodeRow(incoming)),
+				explicit ?? fallback ?? null,
+			],
+			statementName,
 		);
 	}
 

@@ -32,9 +32,11 @@ export interface ListJobsResult {
 }
 
 export abstract class IJobLedgerRepository {
-	abstract createJob(input: CreateJobInput): Promise<void>;
+	abstract createJob(input: CreateJobInput): Promise<Date>;
 
 	abstract getJob(jobId: bigint): Promise<JobByIdRow | null>;
+
+	abstract discardJob(jobId: bigint, createdAt: Date): Promise<void>;
 
 	abstract markRunning(jobId: bigint, lane: string): Promise<void>;
 

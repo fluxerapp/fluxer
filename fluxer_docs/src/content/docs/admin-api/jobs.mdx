@@ -11,7 +11,7 @@ These routes list recorded background jobs and request cancellation. Create jobs
 Reads require `jobs:view` and cancellation requires `jobs:cancel`. Every operation on this page shares the `admin:jobs:view` bucket. The three reads record no [Admin audit entry](/admin-api/#admin-audit-entry-object), and cancellation records one.
 
 :::note[Job updates vary by task]
-Mention processing, link previews, and every scheduled task except `syncDisposableEmailDomains`, `syncUrlBlocklists` and `syncFileShaBlocklists` run with no job record and never appear here. A job also runs with no record when Fluxer fails to write that record. When a later write of status, progress or attempts fails, Fluxer logs the failure and the job continues, so the stored values can be behind the real run. Use the [archive routes](/admin-api/archives/) to track archive progress and failures.
+Mention processing, link previews, message delete audit log batching, and every scheduled task except `syncDisposableEmailDomains`, `syncUrlBlocklists` and `syncFileShaBlocklists` run with no job record and never appear here. Fluxer deletes a job record about 90 days after the job was queued. A job also runs with no record when Fluxer fails to write that record. When a later write of status, progress or attempts fails, Fluxer logs the failure and the job continues, so the stored values can be behind the real run. Use the [archive routes](/admin-api/archives/) to track archive progress and failures.
 :::
 
 ## Admin job object
@@ -108,6 +108,8 @@ Pass all three fields from `next_cursor` back to [List jobs](#list-jobs) using t
 
 `queued` and `running` accept cancellation requests. The other statuses are terminal. A cancellation request does not guarantee that the task will stop.
 
+The queue drops a job 7 days after it was queued. A job still recorded as `queued` or `running` after 8 days is set to `deadletter` with the error `Expired from the job queue`.
+
 ## Processing lanes
 
 `jet_stream_lane` identifies the job's processing group.
@@ -139,12 +141,12 @@ Returns a page of [Admin job](#admin-job-object) objects, newest first, within t
 | cursor_bucket_day? | string | `next_cursor.bucket_day` as a `YYYY-MM-DD` UTC date |
 | cursor_created_at? | string | `next_cursor.created_at` as an ISO 8601 timestamp (1-64 characters) |
 | cursor_job_id? | snowflake | The job identifier from `next_cursor.job_id` |
-| max_lookback_days? | integer | The number of days before the cursor date or today to include (1-60, default 14) |
+| max_lookback_days? | integer | The number of days before today to include (1-60, default 14) |
 | status? | string | Filter by recorded [job status](#job-statuses) |
 | task_type? | string | Filter by [task type](#background-job-task-types) (1-128 characters) |
 | requested_by_user_id? | snowflake | Filter by recorded requester |
 
-Supply all three cursor parameters together or omit all three. An incomplete or malformed cursor returns 400 `INVALID_FORM_BODY`. An unknown task type returns an empty page.
+Supply all three cursor parameters together or omit all three. An incomplete or malformed cursor returns 400 `INVALID_FORM_BODY`. An unknown task type returns an empty page. A full page always returns `next_cursor`, so the next request can return an empty page.
 
 ### Response body
 

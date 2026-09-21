@@ -47,3 +47,7 @@ export async function readLinesFromS3(storage: IStorageService, key: string): Pr
 		return [];
 	}
 }
+
+export async function deleteRiskS3Object(storage: IStorageService, key: string): Promise<void> {
+	await storage.deleteObject(RISK_S3_BUCKET, key);
+}

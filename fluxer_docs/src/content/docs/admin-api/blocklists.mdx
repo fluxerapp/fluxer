@@ -13,7 +13,7 @@ Each list has its own [Admin ACLs](/admin-api/#acl-registry). A read needs the s
 Fluxer builds each permission name from `ban:`, the list name with each hyphen written as an underscore, and the verb, so the `url-domain` list uses `ban:url_domain:check`, `ban:url_domain:add`, and `ban:url_domain:remove`. The `email-domain-suspicious` list is the one exception and uses `suspicious_email_domain:check`, `suspicious_email_domain:add`, and `suspicious_email_domain:remove`.
 
 :::note[The Admin API exposes no other blocklist]
-Fluxer synchronises disposable email domains from external feeds every six hours. No operation on this page reads or writes them.
+Fluxer synchronises disposable email domains from external feeds every six hours when `FLUXER_BLOCKLIST_FEEDS_ENABLED` is on. No operation on this page reads or writes them.
 :::
 
 ## Blocklist types
@@ -66,6 +66,8 @@ Every `url`, `url-domain`, `file-sha`, and `avatar-hash` row has a category nami
 | ncmec | Imported from an NCMEC hash set |
 | gifct | Imported from a GIFCT hash set |
 | stop_ncii | Imported from a StopNCII hash set |
+
+With blocklist feeds off, Fluxer ignores and removes every `file-sha` row in the `malware_bazaar` category that no Admin added.
 
 The request field is a free string of 1 through 64 characters, so a value outside this registry is accepted and stored verbatim. Tolerate a stored category outside the registry.
 

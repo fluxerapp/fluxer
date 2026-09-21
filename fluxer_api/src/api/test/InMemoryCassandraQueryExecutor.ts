@@ -352,7 +352,16 @@ export class InMemoryCassandraQueryExecutor implements CassandraQueryExecutorFor
 		let rows = [...this.table(meta).values()].filter((row) => matchesWhere(row, meta.where, params));
 		if (meta.orderBy) {
 			const direction = meta.orderBy.direction === 'DESC' ? -1 : 1;
-			rows = rows.sort((a, b) => compareValues(a[meta.orderBy!.col], b[meta.orderBy!.col]) * direction);
+			const column = meta.orderBy.col as string;
+			const primaryKey = meta.table.primaryKey as ReadonlyArray<string>;
+			const columns = [column, ...primaryKey.slice(primaryKey.indexOf(column) + 1)];
+			rows = rows.sort((a, b) => {
+				for (const c of columns) {
+					const cmp = compareValues(a[c], b[c]);
+					if (cmp !== 0) return cmp * direction;
+				}
+				return 0;
+			});
 		}
 		if (typeof meta.limit === 'number') {
 			rows = rows.slice(0, meta.limit);

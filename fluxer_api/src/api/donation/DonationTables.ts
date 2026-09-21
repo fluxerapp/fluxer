@@ -13,6 +13,7 @@ import {
 	type DonorMagicLinkTokenRow,
 	type DonorRow,
 } from '@app/api/database/types/DonationTypes';
+import {seconds} from 'itty-time';
 
 export const Donors = defineTable<DonorRow, 'email'>({
 	name: 'donors',
@@ -43,9 +44,11 @@ export const DonorMagicLinkTokens = defineTable<DonorMagicLinkTokenRow, 'token_'
 	name: 'donor_magic_link_tokens',
 	columns: DONOR_MAGIC_LINK_TOKEN_COLUMNS,
 	primaryKey: ['token_'],
+	defaultTtlSeconds: seconds('15 minutes'),
 });
 export const DonorMagicLinkTokensByEmail = defineTable<DonorMagicLinkTokenByEmailRow, 'donor_email' | 'token_'>({
 	name: 'donor_magic_link_tokens_by_email',
 	columns: DONOR_MAGIC_LINK_TOKEN_BY_EMAIL_COLUMNS,
 	primaryKey: ['donor_email', 'token_'],
+	defaultTtlSeconds: seconds('15 minutes'),
 });

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {domainToASCII} from 'node:url';
+import {Config} from '@app/api/Config';
 import {isAccountPolicyContactDomainReputationExempt} from '@app/api/risk/AccountPolicyService';
 import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
 import * as FetchUtils from '@app/api/utils/FetchUtils';
@@ -131,10 +132,7 @@ async function throwIfCancelled(helpers: WorkerTaskHelpers): Promise<void> {
 	}
 }
 
-const syncDisposableEmailDomains: WorkerTaskHandler = async (_payload, helpers) => {
-	helpers.logger.info('Starting disposable email domain sync');
-	await helpers.setContextLink('/suspicious-email-domains');
-	const {adminRepository} = getWorkerDependencies();
+async function fetchFeedDomains(helpers: WorkerTaskHelpers): Promise<Set<string>> {
 	const freshSet = new Set<string>();
 	const perSourceCounts: Record<string, number> = {};
 	const perSourceRawCounts: Record<string, number> = {};
@@ -164,6 +162,14 @@ const syncDisposableEmailDomains: WorkerTaskHandler = async (_payload, helpers) 
 		},
 		'Fetched disposable email domains from all sources',
 	);
+	return freshSet;
+}
+
+const syncDisposableEmailDomains: WorkerTaskHandler = async (_payload, helpers) => {
+	helpers.logger.info('Starting disposable email domain sync');
+	await helpers.setContextLink('/suspicious-email-domains');
+	const {adminRepository} = getWorkerDependencies();
+	const freshSet = Config.blocklistFeeds.enabled ? await fetchFeedDomains(helpers) : new Set<string>();
 	const currentSet = await loadCurrentDisposableEmailDomains();
 	let addCount = 0;
 	for (const domain of freshSet) {

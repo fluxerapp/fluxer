@@ -989,7 +989,9 @@ Default `flag_spammer`. What happens when it fires. `flag_spammer` or `suppress_
 
 #### `FLUXER_BLOCKLIST_FEEDS_ENABLED`
 
-Defaults to the inverse of `FLUXER_SELF_HOSTED`. External blocklist feeds. Off by default on a self-hosted instance.
+Defaults to the inverse of `FLUXER_SELF_HOSTED`. Off by default on a self-hosted instance. With feeds on, the worker downloads disposable email domains and the URLhaus and PhishTank URL lists every six hours, and MalwareBazaar file hashes every twelve hours. Fluxer checks registrations and email changes against the domains, posted links against the URLs, and uploads against the hashes.
+
+With feeds off, Fluxer checks none of this data. The first worker start with feeds off removes every disposable email domain, the URL feed file, and every `malware_bazaar` file-SHA ban that no Admin added. File-SHA bans added through the Admin API stay. Turning feeds back on downloads the disposable domains at the next worker start, the URLs within six hours, and the hashes within twelve.
 
 #### `FLUXER_TOR_EXIT_LIST_ENABLED`
 
@@ -1776,7 +1778,7 @@ Default `256mb`. The ceiling for `edge`.
 
 #### `FLUXER_POSTGRES_MEMORY_LIMIT`
 
-Default `5gb`. The ceiling for `postgres`. Must be at or above `FLUXER_POSTGRES_MEMORY_RESERVATION` or the container fails to create. The 256mb `shm_size` is charged against it.
+Default `5gb`. The ceiling for `postgres`. Must be at or above `FLUXER_POSTGRES_MEMORY_RESERVATION` or the container fails to create. Shared memory in use under `FLUXER_POSTGRES_SHM_SIZE` is charged against it.
 
 #### `FLUXER_VALKEY_MEMORY_LIMIT`
 
@@ -1932,7 +1934,11 @@ Default `256MB`. The budget for one VACUUM, CREATE INDEX, or ALTER TABLE. One su
 
 Default `128MB`. The budget for each autovacuum worker. Postgres runs three workers by default, so budget three times this value.
 
-The remaining Postgres settings are fixed on the command line, with no variable of their own: `min_wal_size=512MB`, `max_wal_size=2GB`, `wal_buffers=16MB`, and `shm_size: 256mb` on the service itself.
+#### `FLUXER_POSTGRES_SHM_SIZE`
+
+Default `1gb`. The shared memory of the `postgres` container, used by parallel queries and parallel maintenance. Keep it well above `FLUXER_POSTGRES_MAINTENANCE_WORK_MEM`. A manual VACUUM sizes its shared memory from that budget, and fails with `could not resize shared memory segment` when it does not fit.
+
+The WAL settings `min_wal_size=512MB`, `max_wal_size=2GB` and `wal_buffers=16MB` are fixed on the command line, with no variable of their own.
 
 The bundled Valkey uses persistent storage. These settings control its memory limit and behaviour when full.
 

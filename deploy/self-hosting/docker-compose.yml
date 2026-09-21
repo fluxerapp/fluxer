@@ -188,7 +188,7 @@ services:
       -c autovacuum_vacuum_cost_limit=2000
       -c track_io_timing=on
       -c shared_preload_libraries=pg_stat_statements
-    shm_size: 256mb
+    shm_size: ${FLUXER_POSTGRES_SHM_SIZE:-1gb}
     environment:
       POSTGRES_DB: fluxer
       POSTGRES_USER: fluxer

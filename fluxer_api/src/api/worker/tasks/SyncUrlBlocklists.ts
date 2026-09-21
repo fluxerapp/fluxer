@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
 import {BANNED_URLS_REFRESH_CHANNEL} from '@app/api/constants/ContentModeration';
-import {RISK_S3_KEYS, writeLinesToS3} from '@app/api/risk/RiskBlocklistS3';
+import {deleteRiskS3Object, RISK_S3_KEYS, writeLinesToS3} from '@app/api/risk/RiskBlocklistS3';
 import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
 import * as FetchUtils from '@app/api/utils/FetchUtils';
 import {canonicalizeUrl} from '@app/api/utils/UrlNormalizer';
@@ -62,10 +63,23 @@ async function fetchFeed(source: FeedSource): Promise<Array<string>> {
 	return source.parse(text);
 }
 
+const MISSING_FEED_FILE_ERRORS = new Set(['NoSuchBucket', 'NoSuchKey', 'NotFound']);
+
 const syncUrlBlocklists: WorkerTaskHandler = async (_payload, helpers) => {
 	helpers.logger.info('Starting URL blocklist sync');
 	await helpers.setContextLink('/url-domain-bans');
 	const {storageService, kvClient} = getWorkerDependencies();
+	if (!Config.blocklistFeeds.enabled) {
+		try {
+			await deleteRiskS3Object(storageService, RISK_S3_KEYS.feedUrls);
+		} catch (error) {
+			if (!(error instanceof Error && MISSING_FEED_FILE_ERRORS.has(error.name))) {
+				helpers.logger.warn({error}, 'Failed to delete the URL blocklist feed file');
+			}
+		}
+		await kvClient.publish(BANNED_URLS_REFRESH_CHANNEL, 'refresh');
+		return;
+	}
 	const results = await Promise.allSettled(
 		FEED_SOURCES.map(async (source) => ({source, rawUrls: await fetchFeed(source)})),
 	);

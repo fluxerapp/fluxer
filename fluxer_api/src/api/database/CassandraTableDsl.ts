@@ -83,6 +83,7 @@ export function defineTable<Row extends object, PK extends ColumnName<Row>, Part
 	columns: ReadonlyArray<ColumnName<Row>>;
 	primaryKey: ReadonlyArray<PK>;
 	partitionKey?: ReadonlyArray<PartKey>;
+	defaultTtlSeconds?: number;
 }): Table<Row, PK, PartKey> {
 	const columns = [...def.columns];
 	const pk = [...def.primaryKey];
@@ -91,11 +92,15 @@ export function defineTable<Row extends object, PK extends ColumnName<Row>, Part
 	for (const c of columns) assertCqlIdentifier(c as string);
 	for (const k of pk) assertCqlIdentifier(k as string);
 	for (const k of partitionKey) assertCqlIdentifier(k as string);
+	if (def.defaultTtlSeconds !== undefined && validateTtlSeconds(def.defaultTtlSeconds) === 0) {
+		throw new Error(`Table "${def.name}" needs a positive default TTL`);
+	}
 	const tableSpec: KvTableSpec<Row> = {
 		name: def.name,
 		columns,
 		primaryKey: pk as ReadonlyArray<ColumnName<Row>>,
 		partitionKey: partitionKey as ReadonlyArray<ColumnName<Row>>,
+		defaultTtlSeconds: def.defaultTtlSeconds,
 	};
 	registerTableSpec(tableSpec);
 	const nonPkColumns = columns.filter((c) => !pk.includes(c as PK)) as Array<Exclude<ColumnName<Row>, PK>>;
@@ -685,6 +690,7 @@ WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};
 		columns: def.columns,
 		primaryKey: def.primaryKey,
 		partitionKey: partitionKey,
+		defaultTtlSeconds: def.defaultTtlSeconds,
 		selectCql,
 		select,
 		updateAllCql() {

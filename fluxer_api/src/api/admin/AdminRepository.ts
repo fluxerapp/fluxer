@@ -2,7 +2,15 @@
 
 import type {AdminAuditLog, BannedIpEntry, BannedIpKind, IAdminRepository} from '@app/api/admin/IAdminRepository';
 import {createUserID} from '@app/api/BrandedTypes';
-import {deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {Config} from '@app/api/Config';
+import {ContentBlocklistCategory} from '@app/api/constants/ContentModeration';
+import {
+	deleteOneOrMany,
+	executeConditional,
+	fetchMany,
+	fetchOne,
+	upsertOne,
+} from '@app/api/database/CassandraQueryExecution';
 import type {
 	AdminAuditLogRow,
 	BannedAvatarHashRow,
@@ -282,6 +290,7 @@ export class AdminRepository implements IAdminRepository {
 	}
 
 	async isEmailDomainDisposable(domain: string): Promise<boolean> {
+		if (!Config.blocklistFeeds.enabled) return false;
 		const domainLower = domain.toLowerCase();
 		if (isAccountPolicyContactDomainReputationExempt(domainLower)) return false;
 		const result = await fetchOne<{
@@ -393,6 +402,15 @@ export class AdminRepository implements IAdminRepository {
 
 	async unbanFileSha(sha256Hex: string): Promise<void> {
 		await deleteOneOrMany(BannedFileShas.deleteByPk({sha256_hex: sha256Hex.toLowerCase()}));
+	}
+
+	async unbanFeedFileSha(sha256Hex: string): Promise<boolean> {
+		return executeConditional(
+			BannedFileShas.conditionalDeleteByPk(
+				{sha256_hex: sha256Hex.toLowerCase()},
+				{added_by: null, category: ContentBlocklistCategory.MALWARE_BAZAAR},
+			),
+		);
 	}
 
 	async loadAllBannedFileShas(): Promise<Array<BannedFileShaRow>> {

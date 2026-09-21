@@ -52,6 +52,8 @@ const Composite: KvTableSpec<Row> = {
 	partitionKey: ['owner_id'],
 };
 
+const Expiring: KvTableSpec<Row> = {...Composite, name: 'stmt_expiring', defaultTtlSeconds: 600};
+
 const Bucketed: KvTableSpec<Row> = {
 	name: 'stmt_bucketed',
 	columns: ['bucket', 'item_id', 'payload'],
@@ -118,6 +120,7 @@ async function runShapes(): Promise<Array<Statement>> {
 			meta(Composite, 'patch', [eq('owner_id'), eq('item_id')], {patchKeys: ['payload'], ttlParamName: 'ttl_'}),
 			{...OWNER_ITEM, ttl_: 600} as CassandraParams,
 		],
+		[meta(Expiring, 'patch', [eq('owner_id'), eq('item_id')], {patchKeys: ['payload']}), OWNER_ITEM],
 	];
 	for (const [kvMeta, params] of cases) {
 		await executor.executeQuery({cql: `__stmt_${kvMeta.action}`, params, kvMeta: kvMeta as KvQueryMeta});
@@ -142,6 +145,7 @@ describe('PostgresKvQueryExecutor statement names', () => {
 			'kv_del_keys',
 			'kv_del_rowkeys',
 			'kv_get_row',
+			'kv_patch_default_ttl',
 			'kv_patch_keep_ttl',
 			'kv_patch_set_ttl',
 			'kv_sel_range',
@@ -231,6 +235,17 @@ async function exerciseKvShapes(executor: PostgresKvQueryExecutor): Promise<void
 		kvMeta: meta(Composite, 'select', [eq('owner_id'), eq('item_id')]) as KvQueryMeta,
 	});
 	expect(patched.map((row) => row.payload)).toEqual(['patched']);
+	await executor.executeQuery({
+		cql: '__stmt_patch_default_ttl',
+		params: {owner_id: 'o5', item_id: 'i5', payload: 'defaulted'} as CassandraParams,
+		kvMeta: meta(Expiring, 'patch', [eq('owner_id'), eq('item_id')], {patchKeys: ['payload']}) as KvQueryMeta,
+	});
+	const defaulted = await executor.executeQuery<Row>({
+		cql: '__stmt_point',
+		params: {owner_id: 'o5', item_id: 'i5'} as CassandraParams,
+		kvMeta: meta(Expiring, 'select', [eq('owner_id'), eq('item_id')]) as KvQueryMeta,
+	});
+	expect(defaulted.map((row) => row.payload)).toEqual(['defaulted']);
 	await executor.executeQuery({
 		cql: '__stmt_delete',
 		params: {owner_id: 'o0', item_id: 'i0'} as CassandraParams,
@@ -323,6 +338,7 @@ describe.skipIf(!dockerAvailable)('PostgresKvQueryExecutor statement names again
 			'kv_del_expired',
 			'kv_del_rowkeys',
 			'kv_get_row',
+			'kv_patch_default_ttl',
 			'kv_patch_keep_ttl',
 			'kv_patch_set_ttl',
 			'kv_sel_range',

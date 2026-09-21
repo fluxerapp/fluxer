@@ -109,6 +109,8 @@ export abstract class IAdminRepository {
 
 	abstract unbanFileSha(sha256Hex: string): Promise<void>;
 
+	abstract unbanFeedFileSha(sha256Hex: string): Promise<boolean>;
+
 	abstract loadAllBannedFileShas(): Promise<Array<BannedFileShaRow>>;
 
 	abstract isAvatarHashBanned(hashShort: string): Promise<boolean>;

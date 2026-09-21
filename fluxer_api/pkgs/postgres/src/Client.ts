@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import type {Pool, PoolClient, QueryResult, QueryResultRow} from 'pg';
+import type {Pool, PoolClient, PoolConfig, QueryResult, QueryResultRow} from 'pg';
 import pg from 'pg';
 
 const MAX_DIAGNOSTIC_FIELD_LENGTH = 128;
@@ -131,7 +131,7 @@ class PostgresClient implements IPostgresClient {
 	}
 
 	private async openPool(): Promise<void> {
-		const pool = new pg.Pool({
+		const poolConfig: PoolConfig & {scramMaxIterations: number} = {
 			connectionString: this.config.url || undefined,
 			host: this.config.url ? undefined : (this.config.host ?? '127.0.0.1'),
 			port: this.config.url ? undefined : (this.config.port ?? 5432),
@@ -140,7 +140,9 @@ class PostgresClient implements IPostgresClient {
 			password: this.config.url ? undefined : (this.config.password ?? 'fluxer'),
 			ssl: this.config.ssl ? {rejectUnauthorized: true, ca: normalizePem(this.config.sslCa)} : undefined,
 			max: this.config.maxConnections ?? 20,
-		});
+			scramMaxIterations: 0,
+		};
+		const pool = new pg.Pool(poolConfig);
 		this.observePoolConnections(pool);
 		try {
 			const client = await pool.connect();

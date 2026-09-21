@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {getTableMetadata} from '@app/api/database/CassandraMetaRegistry';
 import {defineTable} from '@app/api/database/CassandraTableDsl';
 import {Db, type PreparedQuery} from '@app/api/database/CassandraTypes';
 import {describe, expect, it} from 'vitest';
@@ -74,5 +75,43 @@ describe('CassandraTableDsl select templates', () => {
 		expect(longQuery.params[longLimitParamName]).toBe(20);
 		expect(shortQuery.cql).not.toContain('LIMIT 10');
 		expect(longQuery.cql).not.toContain('LIMIT 20');
+	});
+});
+
+describe('CassandraTableDsl default TTL', () => {
+	it('keeps the CQL of a table with a default TTL free of USING TTL', () => {
+		const DefaultTtlRows = defineTable<TtlHelperTestRow, 'id'>({
+			name: 'default_ttl_dsl_rows',
+			columns: ['id', 'value'],
+			primaryKey: ['id'],
+			defaultTtlSeconds: 600,
+		});
+		expect(DefaultTtlRows.defaultTtlSeconds).toBe(600);
+		const queries = [
+			DefaultTtlRows.insert({id: 'insert', value: 'a'}),
+			DefaultTtlRows.upsertAll({id: 'upsert', value: 'b'}),
+			DefaultTtlRows.patchByPk({id: 'patch'}, {value: Db.set('c')}),
+		];
+		for (const query of queries) {
+			expect(query.cql).not.toContain('USING TTL');
+			expect(query.kvMeta?.table.defaultTtlSeconds).toBe(600);
+		}
+		expect(getTableMetadata('default_ttl_dsl_rows')?.defaultTtlSeconds).toBe(600);
+		expect(TtlHelperTestRows.defaultTtlSeconds).toBeUndefined();
+		expect(getTableMetadata('ttl_helper_test_rows')?.defaultTtlSeconds).toBeUndefined();
+	});
+
+	it('rejects a default TTL of zero, a fraction or past the maximum', () => {
+		for (const defaultTtlSeconds of [0, 1.5, 630_720_001]) {
+			expect(() =>
+				defineTable<TtlHelperTestRow, 'id'>({
+					name: 'default_ttl_dsl_rejected_rows',
+					columns: ['id', 'value'],
+					primaryKey: ['id'],
+					defaultTtlSeconds,
+				}),
+			).toThrow();
+		}
+		expect(getTableMetadata('default_ttl_dsl_rejected_rows')).toBeUndefined();
 	});
 });

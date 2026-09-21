@@ -17,13 +17,13 @@ import {
 	StorageType,
 	type StreamConfig,
 } from '@nats-io/jetstream';
-import {nanos} from '@nats-io/transport-node';
+import {millis, nanos} from '@nats-io/transport-node';
 import type {JetStreamConnectionManager} from '@pkgs/nats/src/JetStreamConnectionManager';
 import type {WorkerJobPayload} from '@pkgs/worker/src/contracts/WorkerTypes';
 
 const STREAM_NAME = 'JOBS';
 const SUBJECT_PREFIX = 'jobs.';
-const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+export const JOBS_STREAM_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const LEGACY_CONSUMER_NAME = 'workers';
 const DLQ_STREAM_NAME = 'JOBS_DLQ';
 const DLQ_SUBJECT_PREFIX = 'dlq.';
@@ -59,7 +59,7 @@ const JOBS_STREAM: WorkerStreamDefinition = {
 	name: STREAM_NAME,
 	subject: `${SUBJECT_PREFIX}>`,
 	retention: RetentionPolicy.Workqueue,
-	maxAgeMs: MAX_AGE_MS,
+	maxAgeMs: JOBS_STREAM_MAX_AGE_MS,
 	minBytes: STREAM_MIN_BYTES,
 	maxMessages: STREAM_MAX_MSGS,
 	maxMessagesPerSubject: STREAM_MAX_MSGS_PER_SUBJECT,
@@ -106,6 +106,7 @@ export class JetStreamWorkerQueue {
 	private consumersReady = false;
 	private streamSetup: Promise<void> | null = null;
 	private dlqStreamSetup: Promise<void> | null = null;
+	private jobsStreamMaxAgeMs = JOBS_STREAM_MAX_AGE_MS;
 
 	constructor(connectionManager: JetStreamConnectionManager) {
 		this.connectionManager = connectionManager;
@@ -125,9 +126,14 @@ export class JetStreamWorkerQueue {
 		if (existingConfig === null) {
 			await this.addStream(jsm);
 		} else {
+			this.jobsStreamMaxAgeMs = millis(existingConfig.max_age);
 			await this.applyStreamLimits(jsm, existingConfig);
 		}
 		this.streamReady = true;
+	}
+
+	getJobsStreamMaxAgeMs(): number {
+		return this.jobsStreamMaxAgeMs;
 	}
 
 	private async oversizedSubjects(jsm: JetStreamManager): Promise<Array<[string, number]> | null> {
@@ -462,7 +468,7 @@ export class JetStreamWorkerQueue {
 			priority?: number;
 			jobKey?: string;
 		},
-	): Promise<string> {
+	): Promise<{seq: string; duplicate: boolean}> {
 		const js = this.connectionManager.getJetStreamClient();
 		const subject = `${SUBJECT_PREFIX}${taskType}`;
 		const body = JSON.stringify({
@@ -477,8 +483,7 @@ export class JetStreamWorkerQueue {
 			const ack = await js.publish(subject, body, {
 				msgID,
 			});
-			const jobId = `${ack.seq}`;
-			return jobId;
+			return {seq: `${ack.seq}`, duplicate: ack.duplicate === true};
 		} catch (error) {
 			const rejection = describeStreamRejection(error);
 			if (rejection === null) {
