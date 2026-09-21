@@ -294,6 +294,48 @@ describe('Channel Permission Overwrites', () => {
 		expect(overwrite?.allow).toBe(Permissions.VIEW_CHANNEL.toString());
 		expect(overwrite?.deny).toBe(Permissions.MANAGE_MESSAGES.toString());
 	});
+	test('should let an editor change an overwrite that already allows a permission they lack', async () => {
+		const {owner, members, guild, systemChannel} = await setupTestGuildWithMembers(harness, 1);
+		const manager = members[0];
+		const managerRole = await createRole(harness, owner.token, guild.id, {
+			name: 'Queue Manager',
+			permissions: Permissions.MANAGE_ROLES.toString(),
+		});
+		const botRole = await createRole(harness, owner.token, guild.id, {name: 'Bot'});
+		await addMemberRole(harness, owner.token, guild.id, manager.userId, managerRole.id);
+		await createPermissionOverwrite(harness, owner.token, systemChannel.id, botRole.id, {
+			type: 0,
+			allow: Permissions.PIN_MESSAGES.toString(),
+			deny: '0',
+		});
+		await createBuilder(harness, manager.token)
+			.put(`/channels/${systemChannel.id}/permissions/${botRole.id}`)
+			.body({
+				type: 0,
+				allow: (Permissions.PIN_MESSAGES | Permissions.SEND_MESSAGES).toString(),
+				deny: '0',
+			})
+			.expect(HTTP_STATUS.NO_CONTENT)
+			.execute();
+		const updated = await getChannel(harness, owner.token, systemChannel.id);
+		const botOverwrite = updated.permission_overwrites?.find((o) => o.id === botRole.id);
+		expect(botOverwrite?.allow).toBe((Permissions.PIN_MESSAGES | Permissions.SEND_MESSAGES).toString());
+	});
+	test('should reject an editor granting a permission they lack', async () => {
+		const {owner, members, guild, systemChannel} = await setupTestGuildWithMembers(harness, 1);
+		const manager = members[0];
+		const managerRole = await createRole(harness, owner.token, guild.id, {
+			name: 'Queue Manager',
+			permissions: Permissions.MANAGE_ROLES.toString(),
+		});
+		const botRole = await createRole(harness, owner.token, guild.id, {name: 'Bot'});
+		await addMemberRole(harness, owner.token, guild.id, manager.userId, managerRole.id);
+		await createBuilder(harness, manager.token)
+			.put(`/channels/${systemChannel.id}/permissions/${botRole.id}`)
+			.body({type: 0, allow: Permissions.PIN_MESSAGES.toString(), deny: '0'})
+			.expect(HTTP_STATUS.FORBIDDEN)
+			.execute();
+	});
 	test('should propagate category permission patches only to children that were synced when the category changed', async () => {
 		const {owner, guild} = await setupTestGuildWithMembers(harness, 0);
 		const targetRole = await createRole(harness, owner.token, guild.id, {name: 'Readers'});
