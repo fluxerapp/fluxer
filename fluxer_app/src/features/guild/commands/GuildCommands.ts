@@ -17,6 +17,7 @@ import type {
 	DiscoveryApplicationResponse,
 	DiscoveryStatusResponse,
 } from '@fluxer/schema/src/domains/guild/GuildDiscoverySchemas';
+import type {GuildEvent, GuildEventCreate, GuildEventUpdate} from '@fluxer/schema/src/domains/guild/GuildEventSchemas';
 import type {GuildVanityURLUpdateResponse} from '@fluxer/schema/src/domains/guild/GuildRequestSchemas';
 import type {Guild, GuildVanityURLResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {GuildRole} from '@fluxer/schema/src/domains/guild/GuildRoleSchemas';
@@ -437,6 +438,29 @@ export async function fetchGuildAuditLogs(
 		logger.error(`Failed to fetch audit logs for guild ${guildId}:`, error);
 		throw error;
 	}
+}
+
+export async function fetchGuildEvents(guildId: string): Promise<Array<GuildEvent>> {
+	const response = await http.get<Array<GuildEvent>>(Endpoints.GUILD_EVENTS(guildId));
+	return response.body;
+}
+
+export async function createGuildEvent(guildId: string, params: GuildEventCreate): Promise<GuildEvent> {
+	const response = await http.post<GuildEvent>(Endpoints.GUILD_EVENTS(guildId), {body: params});
+	return response.body;
+}
+
+export async function updateGuildEvent(
+	guildId: string,
+	eventId: string,
+	params: GuildEventUpdate,
+): Promise<GuildEvent> {
+	const response = await http.patch<GuildEvent>(Endpoints.GUILD_EVENT(guildId, eventId), {body: params});
+	return response.body;
+}
+
+export async function deleteGuildEvent(guildId: string, eventId: string): Promise<void> {
+	await http.delete(Endpoints.GUILD_EVENT(guildId, eventId));
 }
 
 export async function getDiscoveryStatus(guildId: string): Promise<DiscoveryStatusResponse> {
