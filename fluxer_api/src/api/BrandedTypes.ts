@@ -25,6 +25,7 @@ export type EmojiID = Brand<bigint, 'EmojiID'>;
 export type WebhookID = Brand<bigint, 'WebhookID'>;
 export type AttachmentID = Brand<bigint, 'AttachmentID'>;
 export type StickerID = Brand<bigint, 'StickerID'>;
+export type GuildEventID = Brand<bigint, 'GuildEventID'>;
 export type ReportID = Brand<bigint, 'ReportID'>;
 export type MemeID = Brand<bigint, 'MemeID'>;
 export type ApplicationID = Brand<bigint, 'ApplicationID'>;
@@ -74,6 +75,10 @@ export function createAttachmentID<T extends bigint>(id: T extends BrandedValue 
 
 export function createStickerID<T extends bigint>(id: T extends BrandedValue ? never : T): StickerID {
 	return brand<T, 'StickerID'>(id);
+}
+
+export function createGuildEventID<T extends bigint>(id: T extends BrandedValue ? never : T): GuildEventID {
+	return brand<T, 'GuildEventID'>(id);
 }
 
 export function createReportID<T extends bigint>(id: T extends BrandedValue ? never : T): ReportID {
