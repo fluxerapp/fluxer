@@ -18,6 +18,12 @@ import {destroyDesktopTray} from '@electron/main/DesktopTray';
 import {isFlatpakRuntime} from '@electron/main/LinuxSandbox';
 import {relaunchAndExit} from '@electron/main/Troubleshooting';
 import {
+	clearVelopackApplyAttempt,
+	readVelopackApplyAttempt,
+	recordVelopackApplyAttempt,
+	type VelopackApplyAttempt,
+} from '@electron/main/UpdaterApplyState';
+import {
 	buildManualVersionDownloadUrl,
 	DOWNLOAD_PAGE_URL,
 	getManualDownloadOptions,
@@ -149,6 +155,60 @@ function createVelopackUpdateManager() {
 	return new UpdateManager(UPDATE_BASE_URL);
 }
 
+type VelopackUpdateManager = ReturnType<typeof createVelopackUpdateManager>;
+
+function getInstalledVelopackVersion(updateManager: VelopackUpdateManager): string | null {
+	try {
+		const version = updateManager.getCurrentVersion();
+		return typeof version === 'string' && version.length > 0 ? version : null;
+	} catch (error) {
+		log.warn('Failed to read the installed Velopack version', error);
+		return null;
+	}
+}
+
+function resolveFailedVelopackApply(updateManager: VelopackUpdateManager): VelopackApplyAttempt | null {
+	const attempt = readVelopackApplyAttempt();
+	if (!attempt) {
+		return null;
+	}
+	const installedVersion = getInstalledVelopackVersion(updateManager) ?? app.getVersion();
+	if (compareVersions(installedVersion, attempt.version) >= 0) {
+		clearVelopackApplyAttempt();
+		return null;
+	}
+	return attempt;
+}
+
+async function sendVelopackApplyFailure(
+	context: UpdaterContext,
+	getMainWindow: () => BrowserWindow | null,
+	attempt: VelopackApplyAttempt,
+): Promise<void> {
+	log.error('A downloaded update was never applied, so the installer is offered instead.', attempt);
+	send(getMainWindow(), {
+		type: 'error',
+		context,
+		phase: 'install',
+		message: `Fluxer could not finish installing version ${attempt.version}.`,
+	});
+	try {
+		const latest = await fetchManualLatest({forceRefresh: true});
+		sendManualUpdateAvailable(getMainWindow, context, latest);
+		return;
+	} catch (error) {
+		log.warn('Failed to resolve the installer download after a failed update apply', error);
+	}
+	send(getMainWindow(), {
+		type: 'available',
+		context,
+		version: attempt.version,
+		downloadSize: null,
+		downloadStarted: false,
+		downloadUrl: buildManualVersionDownloadUrl(attempt.version, 'setup'),
+	});
+}
+
 async function checkVelopackForUpdates(
 	context: UpdaterContext,
 	getMainWindow: () => BrowserWindow | null,
@@ -160,6 +220,11 @@ async function checkVelopackForUpdates(
 		try {
 			send(getMainWindow(), {type: 'checking', context});
 			const updateManager = createVelopackUpdateManager();
+			const failedApply = resolveFailedVelopackApply(updateManager);
+			if (failedApply) {
+				await sendVelopackApplyFailure(context, getMainWindow, failedApply);
+				return;
+			}
 			const pendingUpdate = updateManager.getUpdatePendingRestart();
 			const update = await updateManager.checkForUpdatesAsync();
 			if (!update) {
@@ -299,6 +364,13 @@ function installVelopackUpdate(): void {
 	const update = pendingVelopackUpdate ?? updateManager.getUpdatePendingRestart();
 	if (!update) {
 		throw new Error('No Velopack update is ready to install.');
+	}
+	if (resolveFailedVelopackApply(updateManager)) {
+		throw new Error('The last update could not be installed. Download the installer to update.');
+	}
+	const updateVersion = getVelopackUpdateVersion(update);
+	if (updateVersion) {
+		recordVelopackApplyAttempt(updateVersion);
 	}
 	velopackInstallStarted = true;
 	setQuitting(true);

@@ -65,6 +65,7 @@ before(async () => {
 					files: {
 						appimage: {url: `${baseUrl}/appimage`, sha256: NEW_SHA256},
 						deb: {url: `${baseUrl}/deb`, sha256: 'deadbeef'},
+						setup: {url: `${baseUrl}/setup`, sha256: 'cafebabe'},
 					},
 				}),
 			);
@@ -106,13 +107,35 @@ function createInstall() {
 	return {applications, installedPath, mount};
 }
 
-function loadUpdater({appImagePath, version = CURRENT_VERSION, appDir, execPath, stagingErrno}) {
+function loadUpdater({
+	appImagePath,
+	version = CURRENT_VERSION,
+	appDir,
+	execPath,
+	stagingErrno,
+	platform = 'linux',
+	arch = 'arm64',
+	velopack,
+	applyAttempt = null,
+}) {
 	const events = [];
 	const handlers = new Map();
 	const appEvents = new Map();
 	const state = {relaunched: false, electronRelaunched: false};
+	const applyState = {attempt: applyAttempt, recorded: [], cleared: 0};
 	const module = {exports: {}};
 	const stubs = {
+		'@electron/main/UpdaterApplyState': {
+			readVelopackApplyAttempt: () => applyState.attempt,
+			recordVelopackApplyAttempt: (recordedVersion) => {
+				applyState.recorded.push(recordedVersion);
+				applyState.attempt = {version: recordedVersion, attemptedAt: 0};
+			},
+			clearVelopackApplyAttempt: () => {
+				applyState.cleared += 1;
+				applyState.attempt = null;
+			},
+		},
 		'@electron/common/BuildChannel': {BUILD_CHANNEL: 'canary'},
 		'@electron/common/UserDataPath': {isPortableMode: () => false},
 		'@electron/main/DesktopTray': {destroyDesktopTray() {}},
@@ -149,8 +172,8 @@ function loadUpdater({appImagePath, version = CURRENT_VERSION, appDir, execPath,
 		Buffer,
 		process: {
 			...process,
-			platform: 'linux',
-			arch: 'arm64',
+			platform,
+			arch,
 			execPath: execPath ?? (appDir ? join(appDir, 'fluxer-canary') : process.execPath),
 			env: {
 				...(appImagePath ? {APPIMAGE: appImagePath} : {}),
@@ -159,11 +182,18 @@ function loadUpdater({appImagePath, version = CURRENT_VERSION, appDir, execPath,
 		},
 		setTimeout,
 		clearTimeout,
+		setImmediate,
 		fetch: (input, init) => {
-			const url = String(input).replace('https://pkgs.fluxer.com/desktop/canary/linux/arm64', baseUrl);
+			const url = String(input).replace(/https:\/\/pkgs\.fluxer\.com\/desktop\/canary\/[^/]+\/[^/]+/, baseUrl);
 			return fetch(url, init);
 		},
 		require: (specifier) => {
+			if (specifier === 'node:module' && velopack) {
+				return {
+					...require('node:module'),
+					createRequire: () => (name) => (name === 'velopack' ? velopack : require(name)),
+				};
+			}
 			if (specifier === 'node:fs/promises' && stagingErrno) {
 				return {
 					...require(specifier),
@@ -200,6 +230,7 @@ function loadUpdater({appImagePath, version = CURRENT_VERSION, appDir, execPath,
 
 	module.exports.registerUpdater(() => ({webContents: {send: (_channel, event) => events.push(event)}}));
 	return {
+		applyState,
 		events,
 		state,
 		check: () => handlers.get('updater-check')({}, 'user'),
@@ -444,5 +475,95 @@ describe('Updater AppImage lifecycle', () => {
 
 		assert.deepEqual(stagingLeftovers(install.applications), []);
 		assert.equal(readFileSync(install.installedPath).equals(OLD_BYTES), true);
+	});
+});
+
+function createVelopackStub({installedVersion, pendingRestart = null, remoteUpdate = null}) {
+	const applied = [];
+	class UpdateManager {
+		getCurrentVersion() {
+			return installedVersion;
+		}
+		getUpdatePendingRestart() {
+			return pendingRestart;
+		}
+		checkForUpdatesAsync() {
+			return Promise.resolve(remoteUpdate);
+		}
+		downloadUpdateAsync() {
+			return Promise.resolve();
+		}
+		waitExitThenApplyUpdate(update) {
+			applied.push(update);
+		}
+	}
+	return {applied, module: {UpdateManager}};
+}
+
+function loadWindowsUpdater({installedVersion, pendingRestart, remoteUpdate, applyAttempt = null}) {
+	const velopack = createVelopackStub({installedVersion, pendingRestart, remoteUpdate});
+	const updater = loadUpdater({
+		platform: 'win32',
+		arch: 'x64',
+		velopack: velopack.module,
+		applyAttempt,
+	});
+	return {...updater, applied: velopack.applied};
+}
+
+describe('Updater Windows apply failures', () => {
+	test('offers the installer when a downloaded update never applied', async () => {
+		const updater = loadWindowsUpdater({
+			installedVersion: CURRENT_VERSION,
+			pendingRestart: {Version: PUBLISHED_VERSION, Size: 100},
+			applyAttempt: {version: PUBLISHED_VERSION, attemptedAt: 0},
+		});
+
+		await updater.check();
+
+		assert.deepEqual(types(updater.events), ['checking', 'error', 'available']);
+		assert.equal(updater.events[1].phase, 'install');
+		assert.ok(updater.events[1].message.includes(PUBLISHED_VERSION));
+		assert.equal(updater.events[2].downloadStarted, false);
+		assert.equal(updater.events[2].downloadUrl, `${baseUrl}/setup`);
+		assert.equal(updater.applyState.attempt.version, PUBLISHED_VERSION);
+	});
+
+	test('resumes normal updates once the installed version catches up', async () => {
+		const updater = loadWindowsUpdater({
+			installedVersion: PUBLISHED_VERSION,
+			applyAttempt: {version: PUBLISHED_VERSION, attemptedAt: 0},
+		});
+
+		await updater.check();
+
+		assert.equal(updater.applyState.cleared, 1);
+		assert.equal(updater.applyState.attempt, null);
+		assert.deepEqual(types(updater.events), ['checking', 'not-available']);
+	});
+
+	test('records the version it hands to the updater before quitting', async () => {
+		const updater = loadWindowsUpdater({
+			installedVersion: CURRENT_VERSION,
+			pendingRestart: {Version: PUBLISHED_VERSION, Size: 100},
+		});
+
+		await updater.install();
+
+		assert.deepEqual(updater.applyState.recorded, [PUBLISHED_VERSION]);
+		assert.deepEqual(updater.applied, [{Version: PUBLISHED_VERSION, Size: 100}]);
+	});
+
+	test('refuses to re-apply a version that already failed to install', async () => {
+		const updater = loadWindowsUpdater({
+			installedVersion: CURRENT_VERSION,
+			pendingRestart: {Version: PUBLISHED_VERSION, Size: 100},
+			applyAttempt: {version: PUBLISHED_VERSION, attemptedAt: 0},
+		});
+
+		await assert.rejects(() => updater.install(), /Download the installer/);
+
+		assert.deepEqual(updater.applied, []);
+		assert.deepEqual(updater.applyState.recorded, []);
 	});
 });
