@@ -2,6 +2,7 @@
 
 import type {UnicodeEmoji} from '@app/features/emoji/types/EmojiTypes';
 import * as EmojiUtils from '@app/features/expressions/utils/EmojiUtils';
+import type {EmojiSurrogateMatch} from '@app/features/messaging/utils/markdown/parser/EmojiParsers';
 import * as RegexUtils from '@app/features/messaging/utils/RegexUtils';
 import emojiData from '@app/media/data/emojis.json';
 import {SKIN_TONE_SURROGATES} from '@fluxer/constants/src/EmojiConstants';
@@ -59,6 +60,15 @@ export const EMOJI_SPRITES = {
 const categories = Object.freeze(Object.keys(emojiData.categories));
 
 const toCanonicalSurrogate = (surrogate: string): string => surrogate.replace(/️/g, '');
+
+const EYE_IN_SPEECH_BUBBLE_FULLY_QUALIFIED = '\u{1F441}\uFE0F\u200D\u{1F5E8}\uFE0F';
+const HAIR_COMPONENT_NAMES: Record<string, string> = {
+	'\u{1F9B0}': 'red_hair',
+	'\u{1F9B1}': 'curly_hair',
+	'\u{1F9B3}': 'white_hair',
+	'\u{1F9B2}': 'bald',
+};
+const REGIONAL_INDICATOR_PAIR_PATTERN = '\\uD83C[\\uDDE6-\\uDDFF]\\uD83C[\\uDDE6-\\uDDFF]';
 
 let defaultSkinTone: string = '';
 
@@ -216,6 +226,11 @@ function buildEmojiIndex(): EmojiIndex {
 				surrogateToName[skinToneEntry.surrogatePair] = skinToneEntry.name;
 				canonicalSurrogateToName[toCanonicalSurrogate(skinToneEntry.surrogatePair)] = skinToneEntry.name;
 			});
+			const skins = (emojiObject as {skins?: ReadonlyArray<{names: ReadonlyArray<string>; surrogates: string}>}).skins;
+			skins?.slice(SKIN_TONE_SURROGATES.length).forEach((skin) => {
+				surrogateToName[skin.surrogates] = skin.names[0];
+				canonicalSurrogateToName[toCanonicalSurrogate(skin.surrogates)] = skin.names[0];
+			});
 			categoryByEmojiName[emoji.uniqueName] = category;
 			emojis.push(emojiJson);
 			return emojiJson;
@@ -227,6 +242,20 @@ function buildEmojiIndex(): EmojiIndex {
 		surrogateToName[surrogatePair] = `skin-tone-${index + 1}`;
 		canonicalSurrogateToName[toCanonicalSurrogate(surrogatePair)] = `skin-tone-${index + 1}`;
 	});
+
+	Object.entries(HAIR_COMPONENT_NAMES).forEach(([surrogate, name]) => {
+		surrogateToName[surrogate] = name;
+		canonicalSurrogateToName[surrogate] = name;
+	});
+
+	Object.keys(surrogateToName)
+		.filter((surrogate) => surrogate.includes('\u20E3'))
+		.map(toCanonicalSurrogate)
+		.concat(EYE_IN_SPEECH_BUBBLE_FULLY_QUALIFIED)
+		.forEach((alias) => {
+			const name = canonicalSurrogateToName[toCanonicalSurrogate(alias)];
+			if (name) surrogateToName[alias] = name;
+		});
 
 	const keywordOwner: Record<string, string> = {};
 	const keywordCount: Record<string, number> = {};
@@ -275,7 +304,7 @@ function buildEmojiIndex(): EmojiIndex {
 		emojis,
 		skinToneSpriteCount,
 		baseSpriteCount,
-		emojiSurrogateRegex: new RegExp(`(${surrogateAlternation})`, 'g'),
+		emojiSurrogateRegex: new RegExp(`(${REGIONAL_INDICATOR_PAIR_PATTERN}|${surrogateAlternation})`, 'g'),
 		emojiShortcutRegex: new RegExp(`^(${shortcutAlternation})`),
 	};
 }
@@ -287,6 +316,50 @@ function getEmojiIndex(): EmojiIndex {
 
 const lookupSurrogateName = (surrogate: string): string | null =>
 	getEmojiIndex().canonicalSurrogateToName[toCanonicalSurrogate(surrogate)] ?? null;
+
+const isRegionalIndicatorAt = (text: string, index: number): boolean => {
+	const lowSurrogate = text.charCodeAt(index + 1);
+	return text.charCodeAt(index) === 0xd83c && lowSurrogate >= 0xdde6 && lowSurrogate <= 0xddff;
+};
+
+const isInsideRegionalIndicatorPair = (text: string, index: number): boolean => {
+	if (!isRegionalIndicatorAt(text, index)) return false;
+	let runStart = index;
+	while (isRegionalIndicatorAt(text, runStart - 2)) runStart -= 2;
+	return (index - runStart) % 4 === 2;
+};
+
+const toEmojiSurrogateMatch = (text: string, start: number, end: number): EmojiSurrogateMatch => ({
+	start,
+	end,
+	name: lookupSurrogateName(text.slice(start, end)),
+});
+
+function* matchEmojiSurrogates(text: string, startIndex = 0): Generator<EmojiSurrogateMatch, void> {
+	const regex = getEmojiIndex().emojiSurrogateRegex;
+	let index = startIndex;
+	if (isInsideRegionalIndicatorPair(text, index)) {
+		yield toEmojiSurrogateMatch(text, index, index + 2);
+		index += 2;
+	}
+	while (true) {
+		regex.lastIndex = index;
+		const match = regex.exec(text);
+		if (match == null) return;
+		index = match.index + match[0].length;
+		const emojiMatch = toEmojiSurrogateMatch(text, match.index, index);
+		const isUnknownRegionalIndicatorPair =
+			emojiMatch.name == null &&
+			isRegionalIndicatorAt(text, match.index) &&
+			isRegionalIndicatorAt(text, match.index + 2);
+		if (isUnknownRegionalIndicatorPair) {
+			yield toEmojiSurrogateMatch(text, match.index, match.index + 2);
+			yield toEmojiSurrogateMatch(text, match.index + 2, index);
+		} else {
+			yield emojiMatch;
+		}
+	}
+}
 
 const EMOJI_SHORTCODE_RE = /^:([^\s:]+(?:::skin-tone-[0-9])?):/;
 const categoryIcons = {
@@ -377,6 +450,8 @@ export default {
 	getSurrogateName: (surrogate: string): string | null => {
 		return lookupSurrogateName(surrogate);
 	},
+	matchEmojiSurrogates,
+	isInsideRegionalIndicatorPair,
 	findEmojiByName: (emojiName: string): UnicodeEmoji | null => {
 		return getEmojiIndex().nameToEmoji[emojiName] || null;
 	},
@@ -399,9 +474,6 @@ export default {
 	EMOJI_SHORTCODE_RE,
 	get EMOTICON_PREFIX_RE(): RegExp {
 		return getEmojiIndex().emojiShortcutRegex;
-	},
-	get EMOJI_SURROGATE_RE(): RegExp {
-		return getEmojiIndex().emojiSurrogateRegex;
 	},
 	EMOJI_SPRITES,
 };

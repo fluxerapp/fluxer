@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {convertToCodePoints} from '@app/features/expressions/utils/EmojiCodepointUtils';
 import {flattenAST} from '@app/features/messaging/utils/markdown/parser/AstUtils';
 import {getEmojiParserConfig} from '@app/features/messaging/utils/markdown/parser/EmojiParsers';
 import {MARKDOWN_PARSER_WASM_BASE64} from '@app/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes';
@@ -202,14 +203,6 @@ class Utf8OffsetTracker {
 	}
 }
 
-function defaultCodepoints(emoji: string): string {
-	const containsZwJ = emoji.includes('‍');
-	const processed = containsZwJ ? emoji : emoji.replace(/️/g, '');
-	return Array.from(processed)
-		.map((char) => char.codePointAt(0)?.toString(16).replace(/^0+/, '') || '')
-		.join('-');
-}
-
 const PLAINTEXT_SYMBOLS = new Set(['™', '™️', '©', '©️', '®', '®️']);
 const SPECIAL_SHORTCODES: Record<string, string> = {
 	tm: '™',
@@ -226,29 +219,23 @@ function buildEmojiContext(input: string): string {
 	const provider = config?.emojiProvider;
 	let context = '';
 	if (!provider) return context;
-	const convertToCodePoints = config.convertToCodePoints || defaultCodepoints;
-	const emojiRegex = config.emojiRegex;
-	if (emojiRegex) {
-		const offsetTracker = new Utf8OffsetTracker();
-		emojiRegex.lastIndex = 0;
-		let match: RegExpExecArray | null;
-		while ((match = emojiRegex.exec(input)) !== null) {
-			const candidate = match[0];
-			if (!candidate || PLAINTEXT_SYMBOLS.has(candidate)) continue;
-			const name = provider.getSurrogateName(candidate);
-			if (!name) continue;
-			const candidateBytes = textEncoder.encode(candidate).byteLength;
-			const byteOffset = offsetTracker.offsetFor(input, match.index);
-			context += appendContextLine([
-				'S',
-				String(byteOffset),
-				String(candidateBytes),
-				candidate,
-				name,
-				convertToCodePoints(candidate),
-			]);
-			offsetTracker.advance(candidate.length, candidateBytes);
-		}
+	const offsetTracker = new Utf8OffsetTracker();
+	for (const match of provider.matchEmojiSurrogates(input)) {
+		const candidate = input.slice(match.start, match.end);
+		if (PLAINTEXT_SYMBOLS.has(candidate)) continue;
+		const name = match.name;
+		if (!name) continue;
+		const candidateBytes = textEncoder.encode(candidate).byteLength;
+		const byteOffset = offsetTracker.offsetFor(input, match.start);
+		context += appendContextLine([
+			'S',
+			String(byteOffset),
+			String(candidateBytes),
+			candidate,
+			name,
+			convertToCodePoints(candidate),
+		]);
+		offsetTracker.advance(candidate.length, candidateBytes);
 	}
 	const shortcodeRegex = /:([\p{L}\p{N}_-]+):/gu;
 	const seen = new Set<string>();

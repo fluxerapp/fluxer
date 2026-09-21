@@ -52,69 +52,13 @@ async function renderSVGToBuffer(svgContent: string, size: number): Promise<Buff
 	return sharp(Buffer.from(fixed)).resize(size, size).png().toBuffer();
 }
 
-function hslToRgb(h: number, s: number, l: number): [number, number, number] {
-	h = ((h % 360) + 360) % 360;
-	h /= 360;
-	let r: number, g: number, b: number;
-	if (s === 0) {
-		r = g = b = l;
-	} else {
-		const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-		const p = 2 * l - q;
-		const hueToRgb = (p: number, q: number, t: number): number => {
-			if (t < 0) t += 1;
-			if (t > 1) t -= 1;
-			if (t < 1 / 6) return p + (q - p) * 6 * t;
-			if (t < 1 / 2) return q;
-			if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-			return p;
-		};
-		r = hueToRgb(p, q, h + 1 / 3);
-		g = hueToRgb(p, q, h);
-		b = hueToRgb(p, q, h - 1 / 3);
-	}
-	return [
-		Math.round(Math.min(1, Math.max(0, r)) * 255),
-		Math.round(Math.min(1, Math.max(0, g)) * 255),
-		Math.round(Math.min(1, Math.max(0, b)) * 255),
-	];
-}
-
-async function createPlaceholder(size: number): Promise<Buffer> {
-	const h = Math.random() * 360;
-	const [r, g, b] = hslToRgb(h, 0.7, 0.6);
-	const radius = Math.floor(size * 0.4);
-	const cx = Math.floor(size / 2);
-	const cy = Math.floor(size / 2);
-	const svg = `<svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="${cx}" cy="${cy}" r="${radius}" fill="rgb(${r},${g},${b})"/>
-  </svg>`;
-	return sharp(Buffer.from(svg)).png().toBuffer();
-}
-
 async function loadEmojiImage(surrogate: string, size: number): Promise<Buffer> {
 	const codepoint = convertToCodePoints(surrogate);
 	const svg = loadLocalTwemojiSVG(codepoint);
-	if (svg) {
-		try {
-			return await renderSVGToBuffer(svg, size);
-		} catch (error) {
-			console.error(`Failed to render SVG for ${codepoint}:`, error);
-		}
+	if (svg == null) {
+		throw new Error(`Missing SVG for ${codepoint} (${surrogate})`);
 	}
-	if (codepoint.includes('-200d-')) {
-		const basePart = codepoint.split('-200d-')[0];
-		const baseSvg = loadLocalTwemojiSVG(basePart);
-		if (baseSvg) {
-			try {
-				return await renderSVGToBuffer(baseSvg, size);
-			} catch (error) {
-				console.error(`Failed to render base SVG for ${basePart}:`, error);
-			}
-		}
-	}
-	console.error(`Missing SVG for ${codepoint} (${surrogate}), using placeholder`);
-	return createPlaceholder(size);
+	return renderSVGToBuffer(svg, size);
 }
 
 async function renderSpriteSheet(
@@ -164,11 +108,11 @@ async function renderSpriteSheet(
 }
 
 async function generateMainSpriteSheet(
-	emojiData: Record<string, Array<EmojiObject>>,
+	categories: Record<string, Array<EmojiObject>>,
 	outputDir: string,
 ): Promise<void> {
 	const base: Array<EmojiEntry> = [];
-	for (const objs of Object.values(emojiData)) {
+	for (const objs of Object.values(categories)) {
 		for (const obj of objs) {
 			base.push({surrogates: obj.surrogates});
 		}
@@ -177,7 +121,7 @@ async function generateMainSpriteSheet(
 }
 
 async function generateSkinToneSpriteSheets(
-	emojiData: Record<string, Array<EmojiObject>>,
+	categories: Record<string, Array<EmojiObject>>,
 	outputDir: string,
 ): Promise<void> {
 	const skinTones = ['\u{1F3FB}', '\u{1F3FC}', '\u{1F3FD}', '\u{1F3FE}', '\u{1F3FF}'];
@@ -185,7 +129,7 @@ async function generateSkinToneSpriteSheets(
 		const skinTone = skinTones[skinIndex];
 		const skinCodepoint = convertToCodePoints(skinTone);
 		const skinEntries: Array<EmojiEntry> = [];
-		for (const objs of Object.values(emojiData)) {
+		for (const objs of Object.values(categories)) {
 			for (const obj of objs) {
 				if (obj.skins && obj.skins.length > skinIndex && obj.skins[skinIndex].surrogates) {
 					skinEntries.push({surrogates: obj.skins[skinIndex].surrogates});
@@ -242,11 +186,11 @@ async function main(): Promise<void> {
 	const outputDir = join(appDir, 'src', 'media', 'images', 'emoji-sprites');
 	mkdirSync(outputDir, {recursive: true});
 	const emojiDataPath = join(appDir, 'src', 'media', 'data', 'emojis.json');
-	const emojiData: Record<string, Array<EmojiObject>> = JSON.parse(readFileSync(emojiDataPath, 'utf-8'));
+	const emojiData: {categories: Record<string, Array<EmojiObject>>} = JSON.parse(readFileSync(emojiDataPath, 'utf-8'));
 	console.log('Generating main sprite sheet...');
-	await generateMainSpriteSheet(emojiData, outputDir);
+	await generateMainSpriteSheet(emojiData.categories, outputDir);
 	console.log('Generating skin tone sprite sheets...');
-	await generateSkinToneSpriteSheets(emojiData, outputDir);
+	await generateSkinToneSpriteSheets(emojiData.categories, outputDir);
 	console.log('Generating picker sprite sheet...');
 	await generatePickerSpriteSheet(outputDir);
 	console.log('Emoji sprites generated successfully.');
