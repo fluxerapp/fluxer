@@ -75,6 +75,7 @@ import {
 	setQuitting,
 	showWindow,
 } from '@electron/main/Window';
+import {removeLegacySquirrelUninstallEntry} from '@electron/main/WindowsLegacyUninstallEntry';
 import {removeFluxerVulkanLayerRegistrations} from '@electron/main/WindowsVulkanLayerCleanup';
 import {app, dialog, netLog} from 'electron';
 import log from 'electron-log';
@@ -360,6 +361,11 @@ if (launchConfigurationError) {
 					runStartupPhase('vulkan-layer-cleanup', removeFluxerVulkanLayerRegistrations);
 				} catch (error: unknown) {
 					log.error('[Init] Failed to remove stale Vulkan layer registrations:', error);
+				}
+				try {
+					runStartupPhase('legacy-uninstall-entry-cleanup', removeLegacySquirrelUninstallEntry);
+				} catch (error: unknown) {
+					log.error('[Init] Failed to remove the legacy Squirrel uninstall entry:', error);
 				}
 				try {
 					runStartupPhase('native-screen-capture-handlers', registerNativeScreenCaptureHandlers);
