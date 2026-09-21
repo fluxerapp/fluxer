@@ -2,6 +2,8 @@
 
 import {createGuildEventID, createGuildID} from '@app/api/BrandedTypes';
 import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimit} from '@app/api/middleware/RateLimitMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
@@ -18,6 +20,7 @@ export function GuildEventController(app: HonoApp) {
 	app.get(
 		'/guilds/:guild_id/events',
 		LoginRequired,
+		RateLimit(RateLimitConfigs.GUILD_EVENTS_LIST),
 		Validator('param', GuildIdParam),
 		OpenAPI({
 			operationId: 'list_guild_events',
@@ -37,6 +40,7 @@ export function GuildEventController(app: HonoApp) {
 	app.post(
 		'/guilds/:guild_id/events',
 		LoginRequired,
+		RateLimit(RateLimitConfigs.GUILD_EVENT_CREATE),
 		Validator('param', GuildIdParam),
 		Validator('json', GuildEventCreateRequest),
 		OpenAPI({
@@ -59,6 +63,7 @@ export function GuildEventController(app: HonoApp) {
 	app.patch(
 		'/guilds/:guild_id/events/:event_id',
 		LoginRequired,
+		RateLimit(RateLimitConfigs.GUILD_EVENT_UPDATE),
 		Validator('param', GuildEventIdParam),
 		Validator('json', GuildEventUpdateRequest),
 		OpenAPI({
@@ -86,6 +91,7 @@ export function GuildEventController(app: HonoApp) {
 	app.delete(
 		'/guilds/:guild_id/events/:event_id',
 		LoginRequired,
+		RateLimit(RateLimitConfigs.GUILD_EVENT_DELETE),
 		Validator('param', GuildEventIdParam),
 		OpenAPI({
 			operationId: 'delete_guild_event',
