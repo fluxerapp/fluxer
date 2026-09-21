@@ -4,6 +4,7 @@ import GuildAuditLogTab from '@app/features/guild/components/modals/guild_tabs/G
 import GuildBansTab from '@app/features/guild/components/modals/guild_tabs/GuildBansTab';
 import GuildDiscoveryTab from '@app/features/guild/components/modals/guild_tabs/GuildDiscoveryTab';
 import GuildEmojiTab from '@app/features/guild/components/modals/guild_tabs/GuildEmojiTab';
+import GuildEventsTab from '@app/features/guild/components/modals/guild_tabs/GuildEventsTab';
 import GuildInvitesTab from '@app/features/guild/components/modals/guild_tabs/GuildInvitesTab';
 import GuildModerationTab from '@app/features/guild/components/modals/guild_tabs/GuildModerationTab';
 import GuildRolesTab from '@app/features/guild/components/modals/guild_tabs/GuildRolesTab';
@@ -17,6 +18,7 @@ import type {I18n, MessageDescriptor} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {
 	BookOpenIcon,
+	CalendarIcon,
 	CompassIcon,
 	GearIcon,
 	HammerIcon,
@@ -73,6 +75,11 @@ const VANITY_URL_DESCRIPTOR = msg({
 	context: 'community-settings-tab',
 	comment: 'Community settings tab for the community vanity/custom invite link.',
 });
+const EVENTS_DESCRIPTOR = msg({
+	message: 'Events',
+	context: 'community-settings-tab',
+	comment: 'Community settings tab for creating and managing community calendar events.',
+});
 const DISCOVERY_DESCRIPTOR = msg({
 	message: 'Discovery',
 	context: 'community-settings-tab',
@@ -104,6 +111,7 @@ export type GuildSettingsTabType =
 	| 'webhooks'
 	| 'vanity_url'
 	| 'discovery'
+	| 'events'
 	| 'members'
 	| 'invites'
 	| 'bans';
@@ -188,6 +196,14 @@ const GUILD_SETTINGS_TABS_DESCRIPTORS: Array<GuildSettingsTabDescriptor> = [
 		icon: StickerIcon,
 		component: GuildStickersTab,
 		permission: [Permissions.CREATE_EXPRESSIONS, Permissions.MANAGE_EXPRESSIONS],
+	},
+	{
+		type: 'events',
+		category: 'community',
+		label: EVENTS_DESCRIPTOR,
+		icon: CalendarIcon,
+		component: GuildEventsTab,
+		permission: [Permissions.CREATE_EVENTS, Permissions.MANAGE_EVENTS],
 	},
 	{
 		type: 'discovery',
