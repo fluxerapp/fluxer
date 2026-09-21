@@ -193,9 +193,11 @@ export const Permissions = {
 	MANAGE_ROLES: 1n << 28n,
 	MANAGE_WEBHOOKS: 1n << 29n,
 	MANAGE_EXPRESSIONS: 1n << 30n,
+	MANAGE_EVENTS: 1n << 33n,
 	USE_EXTERNAL_STICKERS: 1n << 37n,
 	MODERATE_MEMBERS: 1n << 40n,
 	CREATE_EXPRESSIONS: 1n << 43n,
+	CREATE_EVENTS: 1n << 44n,
 	PIN_MESSAGES: 1n << 51n,
 	BYPASS_SLOWMODE: 1n << 52n,
 	UPDATE_RTC_REGION: 1n << 53n,
@@ -232,9 +234,11 @@ export const PermissionsDescriptions: Record<keyof typeof Permissions, string> =
 	MANAGE_ROLES: 'Allows management and editing of roles',
 	MANAGE_WEBHOOKS: 'Allows management and editing of webhooks',
 	MANAGE_EXPRESSIONS: 'Allows management of guild expressions',
+	MANAGE_EVENTS: 'Allows management and editing of community events',
 	USE_EXTERNAL_STICKERS: 'Allows using stickers from other guilds',
 	MODERATE_MEMBERS: 'Allows timing out users',
 	CREATE_EXPRESSIONS: 'Allows creating guild expressions',
+	CREATE_EVENTS: 'Allows creating community events',
 	PIN_MESSAGES: 'Allows pinning messages',
 	BYPASS_SLOWMODE: 'Allows bypassing slowmode',
 	UPDATE_RTC_REGION: 'Allows updating the voice region',
@@ -243,6 +247,7 @@ export const PermissionsDescriptions: Record<keyof typeof Permissions, string> =
 export const ALL_PERMISSIONS = Object.values(Permissions).reduce((acc, p) => acc | p, 0n);
 export const DEFAULT_PERMISSIONS =
 	Permissions.CREATE_INSTANT_INVITE |
+	Permissions.CREATE_EVENTS |
 	Permissions.ADD_REACTIONS |
 	Permissions.STREAM |
 	Permissions.VIEW_CHANNEL |
@@ -267,5 +272,6 @@ export const ElevatedPermissions =
 	Permissions.MANAGE_MESSAGES |
 	Permissions.MANAGE_WEBHOOKS |
 	Permissions.MANAGE_EXPRESSIONS |
+	Permissions.MANAGE_EVENTS |
 	Permissions.MODERATE_MEMBERS;
 export const CHANNEL_REINDEX_AFTER_TIMESTAMP = 1779557400;
