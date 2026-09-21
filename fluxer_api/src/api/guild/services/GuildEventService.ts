@@ -14,8 +14,10 @@ import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService'
 import type {GuildEvent as StoredGuildEvent} from '@app/api/models/GuildEvent';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {NotFoundError} from '@fluxer/errors/src/domains/core/NotFoundError';
 import type {
 	GuildEvent as GuildEventResponse,
@@ -138,7 +140,7 @@ export class GuildEventService {
 					? null
 					: new Date(params.data.ends_at);
 		if (endsAt && endsAt.getTime() <= startsAt.getTime()) {
-			throw new Error('Event end must be after its start');
+			throw InputValidationError.fromCode('ends_at', ValidationErrorCodes.INVALID_FORMAT);
 		}
 		let imageHash = event.imageHash;
 		if (params.data.image !== undefined) {
