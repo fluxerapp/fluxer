@@ -143,8 +143,6 @@ export interface APIConfig {
 		donationProxyKey: string;
 	};
 	hosts: {
-		invite: string;
-		gift: string;
 		marketing: string;
 		unfurlIgnored: Array<string>;
 	};

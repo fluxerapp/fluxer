@@ -272,8 +272,6 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			donationProxyKey,
 		},
 		hosts: {
-			invite: extractHostname(master.endpoints.invite),
-			gift: extractHostname(master.endpoints.gift),
 			marketing: extractHostname(master.endpoints.marketing),
 			unfurlIgnored: master.services.api.unfurl_ignored_hosts,
 		},
