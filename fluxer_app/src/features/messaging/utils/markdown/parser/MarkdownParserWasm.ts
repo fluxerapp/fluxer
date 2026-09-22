@@ -47,11 +47,19 @@ const lenientTextDecoder = new TextDecoder('utf-8', {ignoreBOM: true, fatal: fal
 
 let textDecoder = new TextDecoder('utf-8', {ignoreBOM: true, fatal: true});
 let wasm: WasmExports | null = null;
+let wasmModule: unknown = null;
 let cachedMemory: Uint8Array | null = null;
+let replacingOversizedInstance = false;
+
+interface WasmInstance {
+	exports: Record<string, unknown>;
+}
 
 declare const WebAssembly: {
 	Module: new (bytes: Uint8Array) => unknown;
-	Instance: new (module: unknown, imports?: Record<string, unknown>) => {exports: Record<string, unknown>};
+	Instance: new (module: unknown, imports?: Record<string, unknown>) => WasmInstance;
+	compile(bytes: Uint8Array): Promise<unknown>;
+	instantiate(module: unknown, imports?: Record<string, unknown>): Promise<WasmInstance>;
 };
 
 function getWasmMemory(exports: Record<string, unknown>): WasmExports['memory'] {
@@ -94,22 +102,39 @@ function decodeBase64(value: string): Uint8Array {
 	return bytes;
 }
 
-function getWasm(): WasmExports {
-	if (!wasm) {
-		const module = new WebAssembly.Module(decodeBase64(MARKDOWN_PARSER_WASM_BASE64));
-		const instance = new WebAssembly.Instance(module, {});
-		wasm = createWasmExports(instance.exports);
-		cachedMemory = null;
-	}
+function setWasmInstance(instance: WasmInstance): WasmExports {
+	wasm = createWasmExports(instance.exports);
+	cachedMemory = null;
 	return wasm;
 }
 
+export async function preloadMarkdownParserWasm(): Promise<void> {
+	if (wasm) return;
+	wasmModule ??= await WebAssembly.compile(decodeBase64(MARKDOWN_PARSER_WASM_BASE64));
+	const instance = await WebAssembly.instantiate(wasmModule, {});
+	if (!wasm) setWasmInstance(instance);
+}
+
+function getWasm(): WasmExports {
+	if (wasm) return wasm;
+	wasmModule ??= new WebAssembly.Module(decodeBase64(MARKDOWN_PARSER_WASM_BASE64));
+	return setWasmInstance(new WebAssembly.Instance(wasmModule, {}));
+}
+
 function releaseOversizedWasmMemory(): void {
-	if ((wasm?.memory.buffer.byteLength ?? 0) <= MAX_RETAINED_WASM_MEMORY_BYTES) {
+	if (replacingOversizedInstance || (wasm?.memory.buffer.byteLength ?? 0) <= MAX_RETAINED_WASM_MEMORY_BYTES) {
 		return;
 	}
-	wasm = null;
-	cachedMemory = null;
+	const oversized = wasm;
+	replacingOversizedInstance = true;
+	WebAssembly.instantiate(wasmModule, {})
+		.then((instance) => {
+			if (wasm === oversized) setWasmInstance(instance);
+		})
+		.catch(() => {})
+		.finally(() => {
+			replacingOversizedInstance = false;
+		});
 }
 
 function memoryU8(): Uint8Array {
