@@ -86,7 +86,19 @@ async function logClientInfo(): Promise<void> {
 	}
 }
 
+async function preloadMarkdownParser(): Promise<void> {
+	try {
+		const {preloadMarkdownParserWasm} = await loadLazyModule(
+			() => import('@app/features/messaging/utils/markdown/parser/MarkdownParserWasm'),
+		);
+		await preloadMarkdownParserWasm();
+	} catch (error) {
+		logger.warn('Failed to preload markdown parser:', error);
+	}
+}
+
 async function bootstrapThemeStudio(): Promise<void> {
+	const markdownParserReady = preloadMarkdownParser();
 	const [{ThemeStudioStandaloneApp}, {setupHttp}, {default: AccountManager}] = await Promise.all([
 		loadLazyModule(() => import('@app/features/theme_studio/ThemeStudioStandaloneApp')),
 		loadLazyModule(() => import('@app/app/SetupHttp')),
@@ -94,6 +106,7 @@ async function bootstrapThemeStudio(): Promise<void> {
 	]);
 	await AccountManager.bootstrap();
 	setupHttp();
+	await markdownParserReady;
 	mountRoot(
 		<AppI18nProvider i18n={i18n}>
 			<ThemeStudioStandaloneApp data-flx="index.render-theme-studio.theme-studio-standalone-app" />
@@ -103,6 +116,7 @@ async function bootstrapThemeStudio(): Promise<void> {
 }
 
 async function bootstrapApp(): Promise<void> {
+	const markdownParserReady = preloadMarkdownParser();
 	const [
 		{App},
 		{setupHttp},
@@ -148,6 +162,7 @@ async function bootstrapApp(): Promise<void> {
 	await AccountManager.bootstrap();
 	setupHttp();
 	initializeEmojiParser();
+	await markdownParserReady;
 	mountRoot(<App data-flx="index.bootstrap.app" />, 'index.bootstrap');
 	QuickSwitcher.preloadModal();
 	registerServiceWorker();
