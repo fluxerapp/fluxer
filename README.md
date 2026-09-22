@@ -16,6 +16,11 @@
     <img src="https://img.shields.io/badge/License-AGPLv3-purple" alt="AGPLv3 License" /></a>
 </p>
 
+<p align="center">
+  <a href="https://flathub.org/apps/app.fluxer.Fluxer">
+    <img src="https://dl.flathub.org/assets/badges/flathub-badge-en.svg" alt="Get it on Flathub" height="60" /></a>
+</p>
+
 # Fluxer
 
 Fluxer is a free and open source instant messaging and VoIP chat app built for friends, groups, and communities.
@@ -28,7 +33,7 @@ Fluxer is a free and open source instant messaging and VoIP chat app built for f
 
 | Windows | macOS | Linux | Android | iOS |
 | --- | --- | --- | --- | --- |
-| [Installer (x64)][win-setup-x64] | [Disk image][mac-dmg] | [Flatpak][flatpak-ref] | [APK][android-apk] | [TestFlight][ios-testflight] |
+| [Installer (x64)][win-setup-x64] | [Disk image][mac-dmg] | [Flathub][flathub] | [APK][android-apk] | [TestFlight][ios-testflight] |
 | [Installer (ARM64)][win-setup-arm64] | | [deb (x64)][linux-deb-x64] | [Obtainium][obtainium] | |
 | [Portable (x64)][win-portable-x64] | | [deb (ARM64)][linux-deb-arm64] | | |
 | [Portable (ARM64)][win-portable-arm64] | | [rpm (x64)][linux-rpm-x64] | | |
@@ -48,7 +53,13 @@ All four repositories serve stable and canary. The package is `fluxer` for stabl
 
 ### Flatpak
 
-Opening [this reference file][flatpak-ref] hands the install to your desktop software manager. Some desktops also accept `flatpak+https://pkgs.fluxer.com/flatpak/fluxer.flatpakref` pasted into the address bar.
+Stable is on [Flathub][flathub], which is the easiest route on most desktops:
+
+```sh
+flatpak install flathub app.fluxer.Fluxer
+```
+
+Flathub carries stable only. For canary, or to install from Fluxer's own repository, open [this reference file][flatpak-ref] and your desktop software manager takes over. Some desktops also accept `flatpak+https://pkgs.fluxer.com/flatpak/fluxer.flatpakref` pasted into the address bar.
 
 From a terminal:
 
@@ -139,6 +150,7 @@ endorsement rights.
 [linux-targz-x64]: https://pkgs.fluxer.com/desktop/stable/linux/x64/latest/tar_gz
 [linux-targz-arm64]: https://pkgs.fluxer.com/desktop/stable/linux/arm64/latest/tar_gz
 [flatpak-ref]: https://pkgs.fluxer.com/flatpak/fluxer.flatpakref
+[flathub]: https://flathub.org/apps/app.fluxer.Fluxer
 [android-apk]: https://github.com/fluxerapp/flutter_client/releases
 [obtainium]: https://obtainium.imranr.dev/
 [ios-testflight]: https://testflight.apple.com/join/PKZR6pK9
