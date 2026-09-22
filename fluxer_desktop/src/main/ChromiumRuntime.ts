@@ -292,23 +292,6 @@ export function addLinuxHardwareVideoEncodeFeatures(features: Set<string>): void
 	features.add('AcceleratedVideoEncoder');
 }
 
-export interface ChromiumCommandLine {
-	appendSwitch(name: string, value?: string): void;
-	getSwitchValue(name: string): string;
-	hasSwitch(name: string): boolean;
-}
-
-export function hasConfiguredOzonePlatformSwitch(commandLine: ChromiumCommandLine = app.commandLine): boolean {
-	return commandLine.hasSwitch('ozone-platform') || commandLine.getSwitchValue('ozone-platform').length > 0;
-}
-
-export function appendLinuxOzonePlatformHint(commandLine: ChromiumCommandLine = app.commandLine): void {
-	if (process.platform !== 'linux') return;
-	if (hasConfiguredOzonePlatformSwitch(commandLine)) return;
-	if (commandLine.hasSwitch('ozone-platform-hint')) return;
-	commandLine.appendSwitch('ozone-platform-hint', 'auto');
-}
-
 export function addWindowsHardwareVideoEncodeFeatures(features: Set<string>): void {
 	if (process.platform !== 'win32') return;
 	features.add('WebRtcAV1HWEncode');
