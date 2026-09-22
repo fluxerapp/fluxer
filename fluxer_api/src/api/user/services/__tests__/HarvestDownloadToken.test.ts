@@ -43,7 +43,10 @@ describe('HarvestDownloadToken', () => {
 
 	test('rejects a tampered signature', () => {
 		const token = signHarvestDownloadToken(payload(), SECRET);
-		expect(verifyHarvestDownloadToken(`${token.slice(0, -2)}xy`, SECRET)).toBeNull();
+		const [encoded, signature] = token.split('.');
+		const tampered = Buffer.from(signature as string, 'base64url');
+		tampered[0] = (tampered[0] as number) ^ 0x01;
+		expect(verifyHarvestDownloadToken(`${encoded}.${tampered.toString('base64url')}`, SECRET)).toBeNull();
 	});
 
 	test('rejects malformed input', () => {
