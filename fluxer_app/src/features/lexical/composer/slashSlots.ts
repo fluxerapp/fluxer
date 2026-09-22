@@ -625,7 +625,7 @@ export function registerSlashSlotPlugin(
 		),
 		editor.registerCommand(
 			KEY_ARROW_RIGHT_COMMAND,
-			(event: KeyboardEvent | null) => {
+			(event: KeyboardEvent) => {
 				if (
 					event != null &&
 					(isIMEComposing(event) || event.shiftKey || event.altKey || event.ctrlKey || event.metaKey)
@@ -655,7 +655,7 @@ export function registerSlashSlotPlugin(
 		),
 		editor.registerCommand(
 			KEY_ARROW_LEFT_COMMAND,
-			(event: KeyboardEvent | null) => {
+			(event: KeyboardEvent) => {
 				if (
 					event != null &&
 					(isIMEComposing(event) || event.shiftKey || event.altKey || event.ctrlKey || event.metaKey)

@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createGuildID, createStickerID} from '@app/api/BrandedTypes';
+import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {
 	GuildIdParam,
 	GuildIdStickerIdParam,
@@ -7,6 +14,7 @@ import {
 } from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {PurgeQuery} from '@fluxer/schema/src/domains/common/CommonQuerySchemas';
 import {
+	GuildExpressionSourceGuildResponse,
 	GuildStickerBulkCreateResponse,
 	GuildStickerMetadataResponse,
 	GuildStickerResponse,
@@ -18,13 +26,6 @@ import {
 	GuildStickerCreateRequest,
 	GuildStickerUpdateRequest,
 } from '@fluxer/schema/src/domains/guild/GuildRequestSchemas';
-import {createGuildID, createStickerID} from '../../BrandedTypes';
-import {LoginRequired} from '../../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
 
 export function GuildStickerController(app: HonoApp) {
 	app.post(
@@ -208,6 +209,27 @@ export function GuildStickerController(app: HonoApp) {
 		async (ctx) => {
 			const stickerId = createStickerID(ctx.req.valid('param').sticker_id);
 			return ctx.json(await ctx.get('guildService').getStickerMetadata(stickerId));
+		},
+	);
+
+	app.get(
+		'/stickers/:sticker_id/source',
+		RateLimitMiddleware(RateLimitConfigs.GUILD_STICKER_SOURCE),
+		LoginRequired,
+		Validator('param', StickerIdParam),
+		OpenAPI({
+			operationId: 'get_sticker_source',
+			summary: 'Get sticker source guild',
+			description:
+				'Lookup the public presentation of the guild a custom sticker belongs to. Returned when the guild is discoverable or the caller is a member of it. Returns an unknown guild error when the guild is private and the caller is not a member, or when the guild is unavailable.',
+			responseSchema: GuildExpressionSourceGuildResponse,
+			statusCode: 200,
+			security: ['botToken', 'bearerToken', 'sessionToken'],
+			tags: ['Stickers'],
+		}),
+		async (ctx) => {
+			const stickerId = createStickerID(ctx.req.valid('param').sticker_id);
+			return ctx.json(await ctx.get('guildService').getStickerSource(stickerId, ctx.get('user').id));
 		},
 	);
 }

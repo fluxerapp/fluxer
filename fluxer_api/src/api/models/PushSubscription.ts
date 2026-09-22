@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../BrandedTypes';
-import type {PushSubscriptionPlatform, PushSubscriptionRow} from '../database/types/UserTypes';
+import type {UserID} from '@app/api/BrandedTypes';
+import type {PushSubscriptionPlatform, PushSubscriptionRow} from '@app/api/database/types/UserTypes';
 
 export class PushSubscription {
 	readonly userId: UserID;

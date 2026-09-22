@@ -1,5 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import * as AuthSession from '@app/api/auth/AuthSession';
+import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
+import {createGuildID, createUserID} from '@app/api/BrandedTypes';
+import {DefaultUserOnly, LoginRequired, LoginRequiredAllowSuspicious} from '@app/api/middleware/AuthMiddleware';
+import {requireOAuth2ScopeForBearer} from '@app/api/middleware/OAuth2ScopeMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
+import {
+	mapUserGuildSettingsToResponse,
+	mapUserSettingsToResponse,
+	mapUserToPrivateResponse,
+} from '@app/api/user/UserMappers';
+import {Validator} from '@app/api/Validator';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
@@ -33,6 +50,7 @@ import {
 	UserGuildSettingsUpdateRequest,
 	UserNoteUpdateRequest,
 	UserProfileQueryRequest,
+	UserSettingsUpdateRequest,
 	UserTagCheckQueryRequest,
 	UserUpdateWithVerificationRequest,
 	VoiceActivitySharingUpdateRequest,
@@ -61,21 +79,6 @@ import {
 	UserTagCheckResponse,
 } from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {uint8ArrayToBase64} from 'uint8array-extras';
-import * as AuthSession from '../../auth/AuthSession';
-import {requireSudoMode} from '../../auth/services/SudoVerificationService';
-import {createGuildID, createUserID} from '../../BrandedTypes';
-import {DefaultUserOnly, LoginRequired, LoginRequiredAllowSuspicious} from '../../middleware/AuthMiddleware';
-import {requireOAuth2ScopeForBearer} from '../../middleware/OAuth2ScopeMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {SudoModeMiddleware} from '../../middleware/SudoModeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
-import type {UserUpdateWithVerificationRequestData} from '../services/UserAccountRequestService';
-import {getCachedUserPartialResponse} from '../UserCacheHelpers';
-import {mapUserGuildSettingsToResponse, mapUserSettingsToResponse, mapUserToPrivateResponse} from '../UserMappers';
-import {UserSettingsUpdateRequest} from '../UserModel';
 
 export function UserAccountController(app: HonoApp) {
 	app.get(
@@ -125,7 +128,7 @@ export function UserAccountController(app: HonoApp) {
 		async (ctx) => {
 			const userAccountRequestService = ctx.get('userAccountRequestService');
 			const user = ctx.get('user');
-			const rawBody: UserUpdateWithVerificationRequestData = ctx.req.valid('json');
+			const rawBody: UserUpdateWithVerificationRequest = ctx.req.valid('json');
 			return ctx.json(
 				await userAccountRequestService.updateCurrentUser({
 					ctx,

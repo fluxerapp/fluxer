@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::api::generated::types as generated_types;
+use crate::api::generated::{snowflake, types as generated_types};
 
-use super::client::{AdminApiClient, ApiError, ApiResult};
+use super::client::{AdminApiClient, ApiResult};
 use super::types::{
     GatewayVoiceStateCountsResponse, GuildMemoryStatsResponse, NodeStatsResponse,
     ReloadAllGuildsResponse,
@@ -10,12 +10,10 @@ use super::types::{
 
 impl AdminApiClient {
     pub async fn get_guild_memory_stats(&self, limit: u32) -> ApiResult<GuildMemoryStatsResponse> {
-        let body = generated_types::GetProcessMemoryStatsRequest {
-            limit: Some(i32::try_from(limit).map_err(|e| ApiError::Parse(e.to_string()))?),
-        };
+        let limit = limit.to_string();
         let response = self
             .generated()
-            .get_guild_memory_statistics(&body)
+            .get_admin_gateway_memory_stats(Some(limit.as_str()))
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -26,15 +24,11 @@ impl AdminApiClient {
         guild_ids: &[String],
     ) -> ApiResult<ReloadAllGuildsResponse> {
         let body = generated_types::ReloadGuildsRequest {
-            guild_ids: guild_ids
-                .iter()
-                .cloned()
-                .map(generated_types::SnowflakeType::from)
-                .collect(),
+            guild_ids: guild_ids.iter().map(|id| snowflake(id)).collect(),
         };
         let response = self
             .generated()
-            .reload_all_specified_guilds(&body)
+            .create_admin_gateway_reload(&body)
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -43,7 +37,7 @@ impl AdminApiClient {
     pub async fn get_node_stats(&self) -> ApiResult<NodeStatsResponse> {
         let response = self
             .generated()
-            .get_gateway_node_statistics()
+            .get_admin_gateway_stats()
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -54,7 +48,7 @@ impl AdminApiClient {
     ) -> ApiResult<GatewayVoiceStateCountsResponse> {
         let response = self
             .generated()
-            .get_gateway_voice_state_counts()
+            .get_admin_gateway_voice_state_counts()
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())

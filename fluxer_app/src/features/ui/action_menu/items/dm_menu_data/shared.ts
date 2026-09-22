@@ -2,9 +2,9 @@
 
 import {msg} from '@lingui/core/macro';
 
-export const INVITE_SENT_TO_DESCRIPTOR = msg({
-	message: 'Invite sent to {guildName}',
-	comment: 'Toast confirming an invite was sent to the named community.',
+export const INVITE_SENT_FOR_DESCRIPTOR = msg({
+	message: 'Invite sent for {guildName}',
+	comment: 'Toast confirming a community invite was sent to a DM recipient. guildName is the community name.',
 });
 export const ARE_YOU_SURE_YOU_WANT_TO_CLOSE_YOUR_DESCRIPTOR = msg({
 	message: 'Close your DM with {recipientUsername}? You can reopen it anytime.',

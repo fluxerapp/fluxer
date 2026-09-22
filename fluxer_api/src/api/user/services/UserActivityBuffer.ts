@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import {upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {Db} from '@app/api/database/CassandraTypes';
+import {Logger} from '@app/api/Logger';
+import {AuthSessions} from '@app/api/Tables';
+import {UserAccountRepository} from '@app/api/user/repositories/account/UserAccountRepository';
+import {isJsonRecord, parseJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import {seconds} from 'itty-time';
-import type {UserID} from '../../BrandedTypes';
-import {upsertOne} from '../../database/CassandraQueryExecution';
-import {Db} from '../../database/CassandraTypes';
-import {Logger} from '../../Logger';
-import {AuthSessions} from '../../Tables';
-import {isJsonRecord, parseJsonRecord} from '../../utils/JsonBoundaryUtils';
-import {UserAccountRepository} from '../repositories/account/UserAccountRepository';
 
 const PENDING_HASH_KEY = 'user_activity:pending';
 const PENDING_AUTH_SESSION_HASH_KEY = 'auth_session_activity:pending';
@@ -58,6 +58,29 @@ function parsePendingAuthSessionEntry(json: string): PendingAuthSessionEntry | n
 function isStringRecord(value: unknown): value is Record<string, string> {
 	if (!isJsonRecord(value)) return false;
 	return Object.values(value).every((entry) => typeof entry === 'string');
+}
+
+async function flushActivityEntries<T>(
+	entries: ReadonlyArray<T>,
+	write: (entry: T) => Promise<unknown>,
+	failureMessage: string,
+): Promise<FlushStats> {
+	let written = 0;
+	let skipped = 0;
+	for (let index = 0; index < entries.length; index += WRITE_CONCURRENCY) {
+		const results = await Promise.allSettled(
+			entries.slice(index, index + WRITE_CONCURRENCY).map(async (entry) => write(entry)),
+		);
+		for (const result of results) {
+			if (result.status === 'fulfilled') {
+				written += 1;
+			} else {
+				skipped += 1;
+				Logger.warn({error: result.reason}, failureMessage);
+			}
+		}
+	}
+	return {drained: entries.length, written, skipped};
 }
 
 export class UserActivityBuffer {
@@ -130,81 +153,61 @@ export class UserActivityBuffer {
 
 	private async drainAndFlushUsers(): Promise<FlushStats> {
 		const drained = await this.atomicDrain();
-		if (drained.length === 0) {
-			return {drained: 0, written: 0, skipped: 0};
-		}
-		let written = 0;
-		let skipped = 0;
-		for (let i = 0; i < drained.length; i += WRITE_CONCURRENCY) {
-			const chunk = drained.slice(i, i + WRITE_CONCURRENCY);
-			const results = await Promise.allSettled(
-				chunk.map(({userId, entry}) =>
-					this.accounts.updateLastActiveAt({
-						userId,
-						lastActiveAt: new Date(entry.ts),
-						lastActiveIp: entry.ip ?? undefined,
-					}),
-				),
-			);
-			for (const r of results) {
-				if (r.status === 'fulfilled') {
-					written += 1;
-				} else {
-					skipped += 1;
-					Logger.warn({error: r.reason}, 'Failed to flush a user activity entry');
-				}
-			}
-		}
-		return {drained: drained.length, written, skipped};
+		return flushActivityEntries(
+			drained,
+			({userId, entry}) =>
+				this.accounts.updateLastActiveAt({
+					userId,
+					lastActiveAt: new Date(entry.ts),
+					lastActiveIp: entry.ip ?? undefined,
+				}),
+			'Failed to flush a user activity entry',
+		);
 	}
 
 	private async drainAndFlushAuthSessions(): Promise<FlushStats> {
 		const drained = await this.atomicDrainAuthSessions();
-		if (drained.length === 0) {
-			return {drained: 0, written: 0, skipped: 0};
+		return flushActivityEntries(
+			drained,
+			({sessionIdHash, entry}) =>
+				this.writer(
+					AuthSessions.patchByPk({session_id_hash: sessionIdHash}, {approx_last_used_at: Db.set(new Date(entry.ts))}),
+				),
+			'Failed to flush an auth session activity entry',
+		);
+	}
+
+	private async drainPendingHash(key: string): Promise<Array<[string, string]>> {
+		const result = await this.kv.multi().hgetall(key).del(key).exec();
+		const [readResult, deleteResult] = result;
+		if (result.length !== 2 || !readResult || !deleteResult) {
+			throw new Error(`Failed to drain activity hash ${key}: expected two transaction results`);
 		}
-		let written = 0;
-		let skipped = 0;
-		for (let i = 0; i < drained.length; i += WRITE_CONCURRENCY) {
-			const chunk = drained.slice(i, i + WRITE_CONCURRENCY);
-			const results = await Promise.allSettled(
-				chunk.map(async ({sessionIdHash, entry}) => {
-					const approximateLastUsedAt = new Date(entry.ts);
-					await this.writer(
-						AuthSessions.patchByPk(
-							{session_id_hash: sessionIdHash},
-							{approx_last_used_at: Db.set(approximateLastUsedAt)},
-						),
-					);
-				}),
-			);
-			for (const r of results) {
-				if (r.status === 'fulfilled') {
-					written += 1;
-				} else {
-					skipped += 1;
-					Logger.warn({error: r.reason}, 'Failed to flush an auth session activity entry');
-				}
-			}
+		const [readError, pending] = readResult;
+		const [deleteError, deleted] = deleteResult;
+		if (readError) {
+			throw new Error(`Failed to drain activity hash ${key}: HGETALL failed`, {cause: readError});
 		}
-		return {drained: drained.length, written, skipped};
+		if (deleteError) {
+			throw new Error(`Failed to drain activity hash ${key}: DEL failed`, {cause: deleteError});
+		}
+		if (!isStringRecord(pending)) {
+			throw new Error(`Failed to drain activity hash ${key}: HGETALL returned an invalid hash`);
+		}
+		if (deleted !== 0 && deleted !== 1) {
+			throw new Error(`Failed to drain activity hash ${key}: DEL returned an invalid deletion count`);
+		}
+		const entries = Object.entries(pending);
+		if (entries.length > 0 && deleted !== 1) {
+			throw new Error(`Failed to drain activity hash ${key}: DEL did not remove the non-empty hash`);
+		}
+		return entries;
 	}
 
 	private async atomicDrain(): Promise<Array<{userId: UserID; entry: PendingEntry}>> {
-		const result = await this.kv.multi().hgetall(PENDING_HASH_KEY).del(PENDING_HASH_KEY).exec();
-		if (!result || result.length === 0) {
-			return [];
-		}
-		const hgetallResult = result[0];
-		if (!hgetallResult || hgetallResult[0]) {
-			return [];
-		}
-		const raw = hgetallResult[1];
-		if (!isStringRecord(raw)) {
-			return [];
-		}
+		const entries = await this.drainPendingHash(PENDING_HASH_KEY);
 		const out: Array<{userId: UserID; entry: PendingEntry}> = [];
-		for (const [userIdStr, json] of Object.entries(raw)) {
+		for (const [userIdStr, json] of entries) {
 			let userId: bigint;
 			try {
 				userId = BigInt(userIdStr);
@@ -219,24 +222,9 @@ export class UserActivityBuffer {
 	}
 
 	private async atomicDrainAuthSessions(): Promise<Array<{sessionIdHash: Buffer; entry: PendingAuthSessionEntry}>> {
-		const result = await this.kv
-			.multi()
-			.hgetall(PENDING_AUTH_SESSION_HASH_KEY)
-			.del(PENDING_AUTH_SESSION_HASH_KEY)
-			.exec();
-		if (!result || result.length === 0) {
-			return [];
-		}
-		const hgetallResult = result[0];
-		if (!hgetallResult || hgetallResult[0]) {
-			return [];
-		}
-		const raw = hgetallResult[1];
-		if (!isStringRecord(raw)) {
-			return [];
-		}
+		const entries = await this.drainPendingHash(PENDING_AUTH_SESSION_HASH_KEY);
 		const out: Array<{sessionIdHash: Buffer; entry: PendingAuthSessionEntry}> = [];
-		for (const [encodedSessionIdHash, json] of Object.entries(raw)) {
+		for (const [encodedSessionIdHash, json] of entries) {
 			let sessionIdHash: Buffer;
 			try {
 				sessionIdHash = Buffer.from(encodedSessionIdHash, 'base64url');

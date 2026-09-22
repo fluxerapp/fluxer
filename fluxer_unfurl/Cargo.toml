@@ -7,23 +7,22 @@ publish = false
 
 [dependencies]
 fluxer_common = { path = "../fluxer_common" }
-ammonia = "4.1.4"
+ammonia = "4.2.0"
 anyhow = "1.0.104"
-base64 = "0.22.1"
 chrono = { version = "0.4.45", default-features = false, features = ["std"] }
-encoding_rs = "0.8.35"
+encoding_rs = "0.8.41"
 entities = "1.0.1"
 fluxer-svc = { path = "../fluxer_svc", default-features = false }
 hmac = "0.13.0"
-infer = "0.19.0"
-moka = { version = "0.12.15", features = ["future", "sync"] }
-regex = "1.12"
-reqwest = { version = "0.13.4", default-features = false, features = ["json", "rustls", "stream"] }
+infer = "0.22.0"
+moka = { version = "0.12.16", features = ["future", "sync"] }
+regex = "1.13"
+reqwest = { version = "0.13.5", default-features = false, features = ["json", "rustls", "stream"] }
 scraper = "0.27"
-serde = { version = "1.0.228", features = ["derive", "rc"] }
-serde_json = "1.0.150"
+serde = { version = "1.0.229", features = ["derive", "rc"] }
+serde_json = "1.0.151"
 sha2 = "0.11.0"
-tokio = { version = "1.52.3", features = ["macros", "net", "rt-multi-thread", "signal", "time"] }
+tokio = { version = "1.53.1", features = ["macros", "net", "rt-multi-thread", "signal", "time"] }
 tracing = "0.1.44"
 url = "2.5"
 urlencoding = "2.1"

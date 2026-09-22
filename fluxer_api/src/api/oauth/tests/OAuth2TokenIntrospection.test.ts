@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
 import {
 	authorizeOAuth2,
 	createOAuth2TestSetup,
 	exchangeOAuth2AuthorizationCode,
 	introspectOAuth2Token,
 	revokeOAuth2Token,
-} from './OAuthTestUtils';
+} from '@app/api/oauth/tests/OAuthTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 describe('OAuth2 Token Introspection', () => {
 	let harness: ApiTestHarness;

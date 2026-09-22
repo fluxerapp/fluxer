@@ -7,7 +7,6 @@ import {Endpoints} from '@app/features/app/constants/Endpoints';
 import Authentication from '@app/features/auth/state/Authentication';
 import {GuildAtCapacityModal} from '@app/features/guild/components/alerts/GuildAtCapacityModal';
 import {MaxGuildsModal} from '@app/features/guild/components/alerts/MaxGuildsModal';
-import {NewAccountGuildLimitModal} from '@app/features/guild/components/alerts/NewAccountGuildLimitModal';
 import {InviteAcceptFailedModal} from '@app/features/invite/components/alerts/InviteAcceptFailedModal';
 import {InvitesDisabledModal} from '@app/features/invite/components/alerts/InvitesDisabledModal';
 import {InviteAcceptModal} from '@app/features/invite/components/modals/InviteAcceptModal';
@@ -128,12 +127,6 @@ function showGuildInviteAcceptFailure(
 				)),
 			);
 		}
-	} else if (errorCode === APIErrorCodes.NEW_ACCOUNT_GUILD_JOIN_RATE_LIMITED) {
-		ModalCommands.push(
-			modal(() => (
-				<NewAccountGuildLimitModal data-flx="invite.invite-commands.show-guild-invite-accept-failure.new-account-guild-limit-modal" />
-			)),
-		);
 	} else if (errorCode === APIErrorCodes.TEMPORARY_INVITE_REQUIRES_PRESENCE) {
 		ModalCommands.push(
 			modal(() => (

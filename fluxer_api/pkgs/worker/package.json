@@ -51,7 +51,7 @@
 		"./*": "./*"
 	},
 	"scripts": {
-		"typecheck": "tsgo --noEmit"
+		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@fluxer/constants": "workspace:*",
@@ -60,6 +60,6 @@
 	},
 	"devDependencies": {
 		"@types/node": "catalog:",
-		"@typescript/native-preview": "catalog:"
+		"typescript": "catalog:ts7"
 	}
 }

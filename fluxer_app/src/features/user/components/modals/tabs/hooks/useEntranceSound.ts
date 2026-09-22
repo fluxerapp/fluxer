@@ -4,6 +4,7 @@ import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import {TRY_AGAIN_IN_A_MOMENT_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
+import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {
 	ENTRANCE_SOUND_FILE_PICKER_ACCEPT,
 	type EntranceSoundFileValidationResult,
@@ -74,14 +75,6 @@ const ENTRANCE_SOUNDS_NOT_ENABLED_DESCRIPTOR = msg({
 
 const logger = new Logger('useEntranceSound');
 
-function formatByteLimit(bytes: number): string {
-	if (bytes >= 1024 * 1024) {
-		const mb = bytes / (1024 * 1024);
-		return `${mb % 1 === 0 ? mb.toFixed(0) : mb.toFixed(1)}MB`;
-	}
-	return `${Math.floor(bytes / 1024)}KB`;
-}
-
 export interface UseEntranceSoundReturn {
 	library: Array<EntranceSoundEntry>;
 	libraryFull: boolean;
@@ -123,7 +116,7 @@ function validationErrorMessage(
 	validation: Extract<EntranceSoundFileValidationResult, {valid: false}>,
 ): string {
 	if (validation.reason === 'too_large') {
-		return i18n._(ENTRANCE_SOUND_TOO_LARGE_DESCRIPTOR, {limit: formatByteLimit(ENTRANCE_SOUND_MAX_BYTES)});
+		return i18n._(ENTRANCE_SOUND_TOO_LARGE_DESCRIPTOR, {limit: formatFileSize(i18n.locale, ENTRANCE_SOUND_MAX_BYTES)});
 	}
 	return i18n._(ENTRANCE_SOUND_INVALID_FORMAT_DESCRIPTOR);
 }

@@ -45,8 +45,6 @@ handle_call({session_connect, Request}, {CallerPid, _}, State) ->
     handle_session_connect_call(Request, CallerPid, State);
 handle_call(export_handoff_state, _From, State) ->
     {reply, {ok, guild_handoff:export_handoff_state(State)}, State};
-handle_call({get_cached_voice_state_by_connection, ConnectionId}, _From, State) ->
-    handle_cached_voice_state_call(ConnectionId, State);
 handle_call({get_guild_id}, _From, State) ->
     {reply, maps:get(id, State, undefined), State};
 handle_call({get_voice_guild_state}, _From, State) ->
@@ -172,10 +170,11 @@ route_cast(Tag, Msg, State) ->
     case cast_handler(Tag) of
         voice -> guild_voice_handler:handle_cast(Msg, State);
         subscription -> guild_subscription_handler:handle_cast(Msg, State);
+        dm_partners -> guild_dm_partners:handle_cast(Msg, State);
         undefined -> {noreply, State}
     end.
 
--spec cast_handler(atom()) -> voice | subscription | undefined.
+-spec cast_handler(atom()) -> voice | subscription | dm_partners | undefined.
 cast_handler(relay_voice_state_update) -> voice;
 cast_handler(relay_voice_server_update) -> voice;
 cast_handler(store_pending_connection) -> voice;
@@ -183,6 +182,7 @@ cast_handler(add_virtual_channel_access) -> voice;
 cast_handler(remove_virtual_channel_access) -> voice;
 cast_handler(cleanup_virtual_access_for_user) -> voice;
 cast_handler(update_member_subscriptions) -> subscription;
+cast_handler(update_dm_partners) -> dm_partners;
 cast_handler(_) -> undefined.
 
 -spec handle_info(term(), guild_state()) -> info_reply().
@@ -236,10 +236,6 @@ session_connect_pid(#{session_pid := Pid}, _CallerPid) ->
     erlang:error({bad_session_pid, Pid});
 session_connect_pid(_Request, CallerPid) ->
     CallerPid.
-
--spec handle_cached_voice_state_call(term(), guild_state()) -> call_reply().
-handle_cached_voice_state_call(ConnectionId, State) when is_binary(ConnectionId) ->
-    guild_voice_lifecycle:reply_cached_voice_state(ConnectionId, State).
 
 -spec handle_reload_call(term(), guild_state()) -> call_reply().
 handle_reload_call(NewData, State) when is_map(NewData) ->
@@ -545,7 +541,7 @@ dispatch_event(Event, EventData, State) ->
         Event, NewState
     ),
     ok = maybe_refresh_permission_cache(Event, ParsedEventData, State, StateAfterPrune),
-    StateAfterPrune.
+    guild_dm_partners:maybe_reevaluate(Event, ParsedEventData, State, StateAfterPrune).
 
 -spec parse_event_data(term()) -> map().
 parse_event_data(D) when is_binary(D) -> require_map(json:decode(D));

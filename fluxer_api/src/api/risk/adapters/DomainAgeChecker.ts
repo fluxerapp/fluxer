@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isMajorEmailProvider} from '@app/api/risk/MajorEmailProviders';
+import type {DomainAgeResult} from '@app/api/risk/RiskTypes';
+import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
+import * as FetchUtils from '@app/api/utils/FetchUtils';
+import {isJsonRecord, parseJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
-import {EXTERNAL_RESPONSE_LIMITS} from '../../utils/ExternalResponseLimits';
-import * as FetchUtils from '../../utils/FetchUtils';
-import {isJsonRecord, parseJsonRecord} from '../../utils/JsonBoundaryUtils';
-import {isMajorEmailProvider} from '../MajorEmailProviders';
-import type {DomainAgeResult} from '../RiskTypes';
 
 const RDAP_TIMEOUT_MS = 4000;
 const CACHE_KEY_PREFIX = 'risk:domain_age:';
@@ -85,15 +85,15 @@ export function createDomainAgeChecker(opts: DomainAgeCheckerOptions = {}) {
 }
 
 async function fetchFromRdap(domain: string): Promise<CachedDomainAge> {
+	const controller = new AbortController();
+	const timeout = setTimeout(() => controller.abort(), RDAP_TIMEOUT_MS);
 	try {
-		const controller = new AbortController();
-		const timeout = setTimeout(() => controller.abort(), RDAP_TIMEOUT_MS);
 		const response = await fetch(`https://rdap.org/domain/${encodeURIComponent(domain)}`, {
 			signal: controller.signal,
 			headers: {Accept: 'application/rdap+json'},
 		});
-		clearTimeout(timeout);
 		if (!response.ok) {
+			FetchUtils.discardResponseBody(response.body, response.status);
 			return {
 				domain,
 				available: false,
@@ -130,6 +130,8 @@ async function fetchFromRdap(domain: string): Promise<CachedDomainAge> {
 			creationDate: null,
 			failureNote: `RDAP lookup error: ${message.slice(0, 100)}`,
 		};
+	} finally {
+		clearTimeout(timeout);
 	}
 }
 

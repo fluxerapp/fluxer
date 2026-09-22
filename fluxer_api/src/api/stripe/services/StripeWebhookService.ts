@@ -1,36 +1,36 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AdminRepository} from '@app/api/admin/AdminRepository';
+import {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import type {ISessionTerminator} from '@app/api/auth/ISessionTerminator';
+import type {BillingRepository} from '@app/api/billing/repositories/BillingRepository';
+import {Config} from '@app/api/Config';
+import type {IDonationRepository} from '@app/api/donation/IDonationRepository';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
+import type {PremiumStateReconciliationQueueService} from '@app/api/infrastructure/PremiumStateReconciliationQueueService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {Logger} from '@app/api/Logger';
+import type {ProductRegistry} from '@app/api/stripe/ProductRegistry';
+import type {AgeVerificationService} from '@app/api/stripe/services/AgeVerificationService';
+import type {StripeCheckoutService} from '@app/api/stripe/services/StripeCheckoutService';
+import {StripeCheckoutWebhookHandler} from '@app/api/stripe/services/StripeCheckoutWebhookHandler';
+import {StripeDisputeWebhookHandler} from '@app/api/stripe/services/StripeDisputeWebhookHandler';
+import {StripeGiftReversalHandler} from '@app/api/stripe/services/StripeGiftReversalHandler';
+import type {StripeGiftService} from '@app/api/stripe/services/StripeGiftService';
+import {StripePaymentFraudService} from '@app/api/stripe/services/StripePaymentFraudService';
+import type {StripePremiumService} from '@app/api/stripe/services/StripePremiumService';
+import type {StripeRefundService} from '@app/api/stripe/services/StripeRefundService';
+import {StripeSubscriptionReconciler} from '@app/api/stripe/services/StripeSubscriptionReconciler';
+import {StripeSubscriptionWebhookHandler} from '@app/api/stripe/services/StripeSubscriptionWebhookHandler';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
 import {StripeWebhookNotAvailableError} from '@fluxer/errors/src/domains/payment/StripeWebhookNotAvailableError';
 import {StripeWebhookSignatureInvalidError} from '@fluxer/errors/src/domains/payment/StripeWebhookSignatureInvalidError';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IEmailService} from '@pkgs/email/src/IEmailService';
 import type Stripe from 'stripe';
-import type {AdminRepository} from '../../admin/AdminRepository';
-import {AdminAuditService} from '../../admin/services/AdminAuditService';
-import type {ISessionTerminator} from '../../auth/ISessionTerminator';
-import type {BillingRepository} from '../../billing/repositories/BillingRepository';
-import {Config} from '../../Config';
-import type {IDonationRepository} from '../../donation/IDonationRepository';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {ISnowflakeService} from '../../infrastructure/ISnowflakeService';
-import type {KVAccountDeletionQueueService} from '../../infrastructure/KVAccountDeletionQueueService';
-import type {PremiumStateReconciliationQueueService} from '../../infrastructure/PremiumStateReconciliationQueueService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import {Logger} from '../../Logger';
-import type {IUserRepository} from '../../user/IUserRepository';
-import type {ProductRegistry} from '../ProductRegistry';
-import type {AgeVerificationService} from './AgeVerificationService';
-import type {StripeCheckoutService} from './StripeCheckoutService';
-import {StripeCheckoutWebhookHandler} from './StripeCheckoutWebhookHandler';
-import {StripeDisputeWebhookHandler} from './StripeDisputeWebhookHandler';
-import {StripeGiftReversalHandler} from './StripeGiftReversalHandler';
-import type {StripeGiftService} from './StripeGiftService';
-import {StripePaymentFraudService} from './StripePaymentFraudService';
-import type {StripePremiumService} from './StripePremiumService';
-import type {StripeRefundService} from './StripeRefundService';
-import {StripeSubscriptionReconciler} from './StripeSubscriptionReconciler';
-import {StripeSubscriptionWebhookHandler} from './StripeSubscriptionWebhookHandler';
 
 interface HandleWebhookParams {
 	body: string;
@@ -55,7 +55,7 @@ export class StripeWebhookService {
 		cacheService: ICacheService,
 		giftService: StripeGiftService,
 		premiumService: StripePremiumService,
-		donationRepository: IDonationRepository,
+		private donationRepository: IDonationRepository,
 		kvDeletionQueue: KVAccountDeletionQueueService,
 		premiumStateReconciliationQueueService: PremiumStateReconciliationQueueService,
 		private ageVerificationService: AgeVerificationService | null,
@@ -281,6 +281,7 @@ export class StripeWebhookService {
 				const cust = event.data.object as Stripe.Customer | Stripe.DeletedCustomer;
 				await this.safeMirrorUpsert(event, () => this.billingRepository.customers.upsertFromStripe(cust));
 				await this.safeMirrorUpsert(event, () => this.billingRepository.customers.markDeleted(cust.id, new Date()));
+				await this.donationRepository.clearDonorStripeCustomer(cust.id);
 				break;
 			}
 			case 'product.created':
@@ -307,6 +308,10 @@ export class StripeWebhookService {
 			case 'payment_method.detached': {
 				const pm = event.data.object as Stripe.PaymentMethod;
 				await this.safeMirrorUpsert(event, () => this.billingRepository.paymentMethods.markDetached(pm.id, new Date()));
+				break;
+			}
+			case 'mandate.updated': {
+				await this.handleMandateUpdated(event.data.object as Stripe.Mandate);
 				break;
 			}
 			case 'payment_intent.created':
@@ -367,6 +372,18 @@ export class StripeWebhookService {
 				Logger.debug({eventType: event.type, eventId: event.id}, 'Stripe webhook event type not handled');
 			}
 		}
+	}
+
+	private async handleMandateUpdated(mandate: Stripe.Mandate): Promise<void> {
+		if (mandate.status !== 'inactive') {
+			return;
+		}
+		const paymentMethodId =
+			typeof mandate.payment_method === 'string' ? mandate.payment_method : (mandate.payment_method?.id ?? null);
+		Logger.warn(
+			{mandateId: mandate.id, paymentMethodId, status: mandate.status},
+			'Stripe mandate is no longer active; recurring payments on this payment method will fail',
+		);
 	}
 
 	private async resolveRefundCustomerId(refund: Stripe.Refund): Promise<string | null> {

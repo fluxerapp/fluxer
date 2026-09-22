@@ -310,7 +310,7 @@ class Popout {
 		logger.debug(
 			`Popout.scheduleFocus target=${meta?.target ? meta.target.tagName : 'null'} keyboardMode=${meta?.keyboardModeEnabled ?? false}`,
 		);
-		if (!meta || !meta.restoreFocus || !meta.target) return;
+		if (!meta?.restoreFocus || !meta.target) return;
 		const {target, keyboardModeEnabled} = meta;
 		queueMicrotask(() => {
 			const hasHiddenAncestor = (element: HTMLElement): boolean =>

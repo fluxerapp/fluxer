@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 import {workerLogger} from '../../logger.ts';
 import type {VideoCodec} from '../../room/track/options.ts';
+import type {NonSharedUint8Array} from '../../type-polyfills/non-shared-typed-arrays.ts';
 import {AsyncQueue} from '../../utils/AsyncQueue.ts';
 import {KEY_PROVIDER_DEFAULTS} from '../constants.ts';
 import {CryptorErrorReason} from '../errors.ts';
@@ -18,9 +19,9 @@ import type {
 	RatchetRequestMessage,
 	RatchetResult,
 	ScriptTransformOptions,
-	UpdateTrackContextMessage,
 } from '../types.ts';
 import {DataCryptor} from './DataCryptor.ts';
+import {ErrorRateLimiter} from './ErrorRateLimiter.ts';
 import {encryptionEnabledMap, FrameCryptor} from './FrameCryptor.ts';
 import {ParticipantKeyHandler} from './ParticipantKeyHandler.ts';
 
@@ -33,13 +34,22 @@ const isEncryptionEnabled: boolean = false;
 
 let useSharedKey: boolean = false;
 
-let sifTrailer: Uint8Array | undefined;
+let sifTrailer: NonSharedUint8Array | undefined;
 
 let keyProviderOptions: KeyProviderOptions = KEY_PROVIDER_DEFAULTS;
 
 let rtpMap: Map<number, VideoCodec> = new Map();
 
+const dataDecryptErrorLimiter = new ErrorRateLimiter();
+
 workerLogger.setDefaultLevel('info');
+workerLogger.methodFactory = (methodName) => (msg, context) => {
+	postMessage({
+		kind: 'log',
+		data: {level: methodName, msg, context},
+	});
+};
+workerLogger.setLevel(workerLogger.getLevel());
 
 self.addEventListener('message', (ev) => {
 	messageQueue.run(async () => {
@@ -48,7 +58,7 @@ self.addEventListener('message', (ev) => {
 		switch (kind) {
 			case 'init': {
 				workerLogger.setLevel(data.loglevel);
-				workerLogger.info('worker initialized');
+				workerLogger.info('e2ee worker initialized');
 				keyProviderOptions = data.keyProviderOptions;
 				useSharedKey = !!data.keyProviderOptions.sharedKey;
 				const ackMsg: InitAck = {
@@ -58,6 +68,9 @@ self.addEventListener('message', (ev) => {
 				postMessage(ackMsg);
 				break;
 			}
+			case 'setLogLevel':
+				workerLogger.setLevel(data.level);
+				break;
 			case 'enable':
 				setEncryptionEnabled(data.enabled, data.participantIdentity);
 				workerLogger.info(`updated e2ee enabled status for ${data.participantIdentity} to ${data.enabled}`);
@@ -65,18 +78,20 @@ self.addEventListener('message', (ev) => {
 				break;
 			case 'decode': {
 				const cryptor = getTrackCryptor(data.participantIdentity, data.trackId);
-				cryptor.setupTransform(kind, data.readableStream, data.writableStream, data.trackId, data.isReuse, data.codec);
+				cryptor.setHasFrameMetadata(data.hasPacketTrailer);
+				cryptor.setupTransform(kind, data.readableStream, data.writableStream, data.trackId, data.codec);
 				break;
 			}
 			case 'encode': {
 				const pubCryptor = getTrackCryptor(data.participantIdentity, data.trackId);
+				pubCryptor.setHasFrameMetadata(data.hasPacketTrailer);
 				pubCryptor.setupTransform(
 					kind,
 					data.readableStream,
 					data.writableStream,
 					data.trackId,
-					data.isReuse,
 					data.codec,
+					data.packetTrailer,
 				);
 				break;
 			}
@@ -112,11 +127,17 @@ self.addEventListener('message', (ev) => {
 						data: {payload: decryptedPayload, uuid: data.uuid},
 					} satisfies DecryptDataResponseMessage);
 				} catch (error) {
-					workerLogger.error('DataCryptor decryption failed', {
-						error,
-						participantIdentity: data.participantIdentity,
-						uuid: data.uuid,
+					const errorKey = `${data.participantIdentity}-datadecrypt`;
+					const shouldLog = dataDecryptErrorLimiter.shouldEmit(errorKey, () => {
+						workerLogger.warn(`Suppressing further data decryption errors for ${data.participantIdentity}`, {errorKey});
 					});
+					if (shouldLog) {
+						workerLogger.error('DataCryptor decryption failed', {
+							error,
+							participantIdentity: data.participantIdentity,
+							uuid: data.uuid,
+						});
+					}
 					postMessage({
 						kind: 'error',
 						data: {
@@ -129,10 +150,14 @@ self.addEventListener('message', (ev) => {
 
 			case 'setKey':
 				if (useSharedKey) {
-					await setSharedKey(data.key, data.keyIndex);
+					await setSharedKey(data.key, data.keyIndex, data.updateCurrentKeyIndex);
 				} else if (data.participantIdentity) {
 					workerLogger.info(`set participant sender key ${data.participantIdentity} index ${data.keyIndex}`);
-					await getParticipantKeyHandler(data.participantIdentity).setKey(data.key, data.keyIndex);
+					await getParticipantKeyHandler(data.participantIdentity).setKey(
+						data.key,
+						data.keyIndex,
+						data.updateCurrentKeyIndex,
+					);
 				} else {
 					workerLogger.error('no participant Id was provided and shared key usage is disabled');
 				}
@@ -140,17 +165,28 @@ self.addEventListener('message', (ev) => {
 			case 'removeTransform':
 				unsetCryptorParticipant(data.trackId, data.participantIdentity);
 				break;
-			case 'updateCodec':
-				getTrackCryptor(data.participantIdentity, data.trackId).setVideoCodec(data.codec);
+			case 'updateCodec': {
+				const trackCryptor = getTrackCryptor(data.participantIdentity, data.trackId, data.previousTrackId);
+				if (data.codec) {
+					trackCryptor.setVideoCodec(data.codec);
+				}
+				trackCryptor.setHasFrameMetadata(data.hasPacketTrailer);
 				workerLogger.info('updated codec', {
 					participantIdentity: data.participantIdentity,
 					trackId: data.trackId,
+					previousTrackId: data.previousTrackId,
 					codec: data.codec,
+					hasPacketTrailer: data.hasPacketTrailer,
 				});
+				if (data.previousTrackId !== undefined && !trackCryptor.ensureTransform()) {
+					workerLogger.error('could not re-establish transform for reused sender or receiver', {
+						participantIdentity: data.participantIdentity,
+						trackId: data.trackId,
+						previousTrackId: data.previousTrackId,
+					});
+				}
 				break;
-			case 'updateTrackContext':
-				updateTrackContext(data);
-				break;
+			}
 			case 'setRTPMap':
 				rtpMap = data.map;
 				participantCryptors.forEach((cr) => {
@@ -185,8 +221,22 @@ async function handleRatchetRequest(data: RatchetRequestMessage['data']) {
 	}
 }
 
-function getTrackCryptor(participantIdentity: string, trackId: string) {
-	const cryptors = participantCryptors.filter((c) => c.getTrackId() === trackId);
+function getTrackCryptor(participantIdentity: string, trackId: string, previousTrackId?: string) {
+	let cryptors = participantCryptors.filter((c) => c.getTrackId() === trackId);
+
+	if (cryptors.length === 0 && previousTrackId !== undefined && previousTrackId !== trackId) {
+		const previous = participantCryptors.filter((c) => c.getTrackId() === previousTrackId);
+		if (previous.length > 0) {
+			workerLogger.info('reusing cryptor from previous trackId', {
+				participantIdentity,
+				trackId,
+				previousTrackId,
+			});
+			previous[0].setTrackId(trackId);
+			cryptors = previous;
+		}
+	}
+
 	if (cryptors.length > 1) {
 		const debugInfo = cryptors
 			.map((c) => {
@@ -218,26 +268,6 @@ function getTrackCryptor(participantIdentity: string, trackId: string) {
 	}
 
 	return cryptor;
-}
-
-function updateTrackContext(data: UpdateTrackContextMessage['data']) {
-	const cryptor =
-		participantCryptors.find(
-			(c) => c.getParticipantIdentity() === data.previousParticipantIdentity && c.getTrackId() === data.previousTrackId,
-		) ??
-		participantCryptors.find((c) => c.getTrackId() === data.previousTrackId) ??
-		participantCryptors.find(
-			(c) => c.getParticipantIdentity() === data.participantIdentity && c.getTrackId() === data.trackId,
-		) ??
-		participantCryptors.find((c) => c.getTrackId() === data.trackId);
-	if (!cryptor) {
-		workerLogger.warn('could not update cryptor track context', data);
-		return;
-	}
-	if (cryptor.getParticipantIdentity() !== data.participantIdentity) {
-		cryptor.setParticipant(data.participantIdentity, getParticipantKeyHandler(data.participantIdentity));
-	}
-	cryptor.updateTrackContext(data.trackId, data.codec);
 }
 
 function getParticipantKeyHandler(participantIdentity: string) {
@@ -286,9 +316,9 @@ function setEncryptionEnabled(enable: boolean, participantIdentity: string) {
 	encryptionEnabledMap.set(participantIdentity, enable);
 }
 
-async function setSharedKey(key: CryptoKey, index?: number) {
+async function setSharedKey(key: CryptoKey, index?: number, updateCurrentKeyIndex?: boolean) {
 	workerLogger.info('set shared key', {index});
-	await getSharedKeyHandler().setKey(key, index);
+	await getSharedKeyHandler().setKey(key, index, updateCurrentKeyIndex);
 }
 
 function setupCryptorErrorEvents(cryptor: FrameCryptor) {
@@ -316,22 +346,29 @@ function emitRatchetedKeys(ratchetResult: RatchetResult, participantIdentity: st
 	postMessage(msg);
 }
 
-function handleSifTrailer(trailer: Uint8Array) {
+function handleSifTrailer(trailer: NonSharedUint8Array) {
 	sifTrailer = trailer;
 	participantCryptors.forEach((c) => {
 		c.setSifTrailer(trailer);
 	});
 }
-
 if (self.RTCTransformEvent) {
-	workerLogger.debug('setup transform event');
 	self.onrtctransform = (event: RTCTransformEvent) => {
 		const transformer = event.transformer;
-		workerLogger.debug('transformer', transformer);
-
-		const {kind, participantIdentity, trackId, codec} = transformer.options as ScriptTransformOptions;
-		const cryptor = getTrackCryptor(participantIdentity, trackId);
-		workerLogger.debug('transform', {codec});
-		cryptor.setupTransform(kind, transformer.readable, transformer.writable, trackId, false, codec);
+		const options = transformer.options as ScriptTransformOptions;
+		const {kind, participantIdentity, trackId, codec, hasPacketTrailer} = options;
+		messageQueue.run(async () => {
+			const cryptor = getTrackCryptor(participantIdentity, trackId);
+			cryptor.setHasFrameMetadata(hasPacketTrailer);
+			workerLogger.debug('onrtctransform setup', {participantIdentity, trackId, codec});
+			cryptor.setupTransform(
+				kind,
+				transformer.readable,
+				transformer.writable,
+				trackId,
+				codec,
+				kind === 'encode' ? options.packetTrailer : undefined,
+			);
+		});
 	};
 }

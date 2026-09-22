@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {GuildNSFWLevel} from '@fluxer/constants/src/GuildConstants';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {
 	acceptInvite,
 	addMemberRole,
@@ -22,16 +18,20 @@ import {
 	sendChannelMessage,
 	updateChannel,
 	updateRole,
-} from '../../channel/tests/ChannelTestUtils';
-import {getRoles, updateGuild} from '../../guild/tests/GuildTestUtils';
+} from '@app/api/channel/tests/ChannelTestUtils';
+import {getRoles, updateGuild} from '@app/api/guild/tests/GuildTestUtils';
 import {
 	markChannelAsIndexed,
 	markGuildChannelsAsIndexed,
 	markUserDmChannelsAsIndexed,
-} from '../../message/tests/MessageTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
+} from '@app/api/message/tests/MessageTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {GuildNSFWLevel} from '@fluxer/constants/src/GuildConstants';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 interface MessageSearchResult {
 	channels: Array<{
@@ -344,7 +344,7 @@ describe('Message Search Permissions', () => {
 			}
 			expect(result.messages.length).toBe(0);
 		});
-		test('age-restricted guild requires include_nsfw: true', async () => {
+		test('age-restricted guild is searchable by an adult member without include_nsfw', async () => {
 			const owner = await createTestAccount(harness, {dateOfBirth: '2000-01-01'});
 			const guild = await createGuild(harness, owner.token, 'Age Restricted Search Guild');
 			const systemChannelId = guild.system_channel_id!;
@@ -363,7 +363,7 @@ describe('Message Search Permissions', () => {
 			if (!isSearchResult(excluded)) {
 				expect.fail('Expected search result but got indexing response');
 			}
-			expect(excluded.messages.length).toBe(0);
+			expect(excluded.messages.some((m) => m.channel_id === systemChannelId)).toBe(true);
 			const included = await createBuilder<MessageSearchResponse>(harness, owner.token)
 				.post('/search/messages')
 				.body({
@@ -378,6 +378,30 @@ describe('Message Search Permissions', () => {
 			}
 			expect(included.messages.length).toBeGreaterThan(0);
 			expect(included.messages.some((m) => m.channel_id === systemChannelId)).toBe(true);
+		});
+		test('age-restricted guild is searchable in a channel pinned to nsfw_override: false', async () => {
+			const owner = await createTestAccount(harness, {dateOfBirth: '2000-01-01'});
+			const guild = await createGuild(harness, owner.token, 'Age Restricted Override Guild');
+			const channel = await createBuilder<{id: string; nsfw_override?: boolean | null}>(harness, owner.token)
+				.post(`/guilds/${guild.id}/channels`)
+				.body({name: 'override-channel', type: ChannelTypes.GUILD_TEXT, nsfw: false})
+				.execute();
+			expect(channel.nsfw_override).toBe(false);
+			await sendChannelMessage(harness, owner.token, channel.id, 'age restricted override searchable message');
+			await updateGuild(harness, owner.token, guild.id, {nsfw_level: GuildNSFWLevel.AGE_RESTRICTED});
+			await markGuildChannelsAsIndexed(harness, owner.token, guild.id);
+			const result = await createBuilder<MessageSearchResponse>(harness, owner.token)
+				.post('/search/messages')
+				.body({
+					content: 'age restricted override searchable',
+					context_guild_id: guild.id,
+				})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			if (!isSearchResult(result)) {
+				expect.fail('Expected search result but got indexing response');
+			}
+			expect(result.messages.some((m) => m.channel_id === channel.id)).toBe(true);
 		});
 		test('underage user cannot search messages in an age-restricted guild', async () => {
 			const owner = await createTestAccount(harness, {dateOfBirth: '2000-01-01'});
@@ -635,35 +659,33 @@ describe('Message Search Permissions', () => {
 			expect(user12Messages.length).toBeGreaterThan(0);
 			expect(user34Messages.length).toBe(0);
 		});
-		test.each([
-			'all_dms',
-			'open_dms',
-			'all',
-			'open_dms_and_all_guilds',
-		] as const)('scope: %s does not trust foreign DM context_channel_id', async (scope) => {
-			const user1 = await createTestAccount(harness);
-			const user2 = await createTestAccount(harness);
-			const attacker = await createTestAccount(harness);
-			await createFriendship(harness, user1, user2);
-			const dmChannel = await createDmChannel(harness, user1.token, user2.userId);
-			const canary = `foreign-dm-context-canary-${Date.now()}-${scope}`;
-			await sendChannelMessage(harness, user1.token, dmChannel.id, canary);
-			await markChannelAsIndexed(harness, dmChannel.id);
-			const result = await createBuilder<MessageSearchResponse>(harness, attacker.token)
-				.post('/search/messages')
-				.body({
-					content: canary,
-					scope,
-					context_channel_id: dmChannel.id,
-				})
-				.expect(HTTP_STATUS.OK)
-				.execute();
-			if (!isSearchResult(result)) {
-				expect.fail('Expected search result but got indexing response');
-			}
-			expect(result.messages.some((message) => message.channel_id === dmChannel.id)).toBe(false);
-			expect(result.messages.some((message) => message.content === canary)).toBe(false);
-		});
+		test.each(['all_dms', 'open_dms', 'all', 'open_dms_and_all_guilds'] as const)(
+			'scope: %s does not trust foreign DM context_channel_id',
+			async (scope) => {
+				const user1 = await createTestAccount(harness);
+				const user2 = await createTestAccount(harness);
+				const attacker = await createTestAccount(harness);
+				await createFriendship(harness, user1, user2);
+				const dmChannel = await createDmChannel(harness, user1.token, user2.userId);
+				const canary = `foreign-dm-context-canary-${Date.now()}-${scope}`;
+				await sendChannelMessage(harness, user1.token, dmChannel.id, canary);
+				await markChannelAsIndexed(harness, dmChannel.id);
+				const result = await createBuilder<MessageSearchResponse>(harness, attacker.token)
+					.post('/search/messages')
+					.body({
+						content: canary,
+						scope,
+						context_channel_id: dmChannel.id,
+					})
+					.expect(HTTP_STATUS.OK)
+					.execute();
+				if (!isSearchResult(result)) {
+					expect.fail('Expected search result but got indexing response');
+				}
+				expect(result.messages.some((message) => message.channel_id === dmChannel.id)).toBe(false);
+				expect(result.messages.some((message) => message.content === canary)).toBe(false);
+			},
+		);
 		test('scope: all_dms does not trust a guild context_channel_id', async () => {
 			const owner = await createTestAccount(harness);
 			const attacker = await createTestAccount(harness);

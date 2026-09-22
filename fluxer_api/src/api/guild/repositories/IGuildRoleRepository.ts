@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GuildID, RoleID} from '../../BrandedTypes';
-import type {GuildRoleRow} from '../../database/types/GuildTypes';
-import type {GuildRole} from '../../models/GuildRole';
+import type {GuildID, RoleID} from '@app/api/BrandedTypes';
+import type {GuildRoleRow} from '@app/api/database/types/GuildTypes';
+import type {GuildRole} from '@app/api/models/GuildRole';
 
 export abstract class IGuildRoleRepository {
 	abstract getRole(roleId: RoleID, guildId: GuildID): Promise<GuildRole | null>;

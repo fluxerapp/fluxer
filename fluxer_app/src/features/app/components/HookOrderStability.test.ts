@@ -61,7 +61,7 @@ function isFunctionNode(node: AstNode | null | undefined): boolean {
 const REACT_HOOK_NAMESPACES = new Set(['React']);
 
 function isReactHookNamespace(object: AstNode | null | undefined): boolean {
-	if (!object || object.type !== 'Identifier' || typeof object.name !== 'string') {
+	if (object?.type !== 'Identifier' || typeof object.name !== 'string') {
 		return false;
 	}
 	return REACT_HOOK_NAMESPACES.has(object.name);
@@ -181,7 +181,7 @@ function findHookOrderHazards(): Array<HookOrderFinding> {
 		const source = readFileSync(file, 'utf8');
 		const ast = parse(source, {
 			sourceType: 'module',
-			plugins: ['typescript', 'jsx', 'decorators-legacy'],
+			plugins: file.endsWith('.tsx') ? ['typescript', 'jsx'] : ['typescript'],
 		}) as unknown as AstNode;
 		walk(ast, (node, parent) => {
 			if (!isFunctionNode(node)) {

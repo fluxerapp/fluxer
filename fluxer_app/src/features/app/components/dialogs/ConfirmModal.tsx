@@ -6,7 +6,7 @@ import {useElementOverflow} from '@app/features/app/hooks/useTextOverflow';
 import {Message} from '@app/features/channel/components/ChannelMessage';
 import Channels from '@app/features/channel/state/Channels';
 import {CANCEL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {SHIFT_KEY_LABEL} from '@app/features/input/utils/KeyboardUtils';
+import {SHIFT_KEY_DESCRIPTOR} from '@app/features/input/utils/KeyboardUtils';
 import {Message as MessageModel} from '@app/features/messaging/models/MessagingMessage';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -176,7 +176,9 @@ export const ConfirmModal = observer(
 								<span className={styles.shiftBypassTipLabel} data-flx="app.confirm-modal.shift-bypass-tip.label">
 									{i18n._(PRO_TIP_LABEL_DESCRIPTOR)}
 								</span>{' '}
-								{i18n._(HOLD_SHIFT_TO_SKIP_CONFIRMATION_BODY_DESCRIPTOR, {keyboardShortcut: SHIFT_KEY_LABEL})}
+								{i18n._(HOLD_SHIFT_TO_SKIP_CONFIRMATION_BODY_DESCRIPTOR, {
+									keyboardShortcut: i18n._(SHIFT_KEY_DESCRIPTOR),
+								})}
 							</p>
 						)}
 					</Modal.ContentLayout>

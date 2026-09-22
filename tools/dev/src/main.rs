@@ -39,6 +39,7 @@ enum Command {
     Gateway(GatewayArgs),
     Build,
     Knip,
+    Lint,
     Test,
     Typecheck,
     Proxy(ProxyArgs),
@@ -208,7 +209,7 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
     if !matches!(
         cli.command,
-        Command::Build | Command::Knip | Command::Test | Command::Typecheck
+        Command::Build | Command::Knip | Command::Lint | Command::Test | Command::Typecheck
     ) {
         apply_default_env()?;
     }
@@ -226,6 +227,7 @@ async fn main() -> Result<()> {
         }
         Command::Build => std::process::exit(fluxer_dev::tasks::run_build()?),
         Command::Knip => std::process::exit(fluxer_dev::tasks::run_knip()?),
+        Command::Lint => std::process::exit(fluxer_dev::tasks::run_lint()?),
         Command::Test => std::process::exit(fluxer_dev::tasks::run_test()?),
         Command::Typecheck => std::process::exit(fluxer_dev::tasks::run_typecheck()?),
         Command::Proxy(args) => fluxer_dev::proxy::run_proxy(&args.host, args.port).await?,

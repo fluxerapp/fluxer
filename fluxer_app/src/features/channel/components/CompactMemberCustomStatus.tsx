@@ -9,7 +9,7 @@ import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import type {CustomStatus} from '@app/features/user/state/CustomStatus';
 import {getCustomStatusText, isCustomStatusExpired, normalizeCustomStatus} from '@app/features/user/state/CustomStatus';
 import clsx from 'clsx';
-import {type ReactNode, useEffect, useMemo, useRef, useState} from 'react';
+import {type ReactNode, useEffect, useRef, useState} from 'react';
 
 interface CompactMemberCustomStatusProps {
 	className?: string;
@@ -97,13 +97,7 @@ export function CompactMemberCustomStatus({
 		const timer = window.setTimeout(() => setExpiryTick((tick) => tick + 1), delay);
 		return () => window.clearTimeout(timer);
 	}, [status]);
-	const normalized = useMemo(() => {
-		const nextStatus = normalizeCustomStatus(status);
-		if (!nextStatus || isCustomStatusExpired(nextStatus)) {
-			return null;
-		}
-		return nextStatus;
-	}, [status]);
+	const normalized = normalizeCustomStatus(status);
 	const fullText = normalized ? getCustomStatusText(normalized) : null;
 	const isOverflowing = useTextOverflow(containerRef, {content: fullText, measureTextRange: true});
 	if (!normalized) {

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID, MessageID, RoleID, UserID} from '@app/api/BrandedTypes';
+import type {ChannelRow, PermissionOverwrite} from '@app/api/database/types/ChannelTypes';
+import {ChannelPermissionOverwrite} from '@app/api/models/ChannelPermissionOverwrite';
 import {type ChannelType, ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT} from '@fluxer/constants/src/LimitConstants';
-import type {ChannelID, GuildID, MessageID, RoleID, UserID} from '../BrandedTypes';
-import type {ChannelRow, PermissionOverwrite} from '../database/types/ChannelTypes';
-import {ChannelPermissionOverwrite} from './ChannelPermissionOverwrite';
 
 export class Channel {
 	readonly id: ChannelID;

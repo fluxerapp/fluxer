@@ -1,32 +1,115 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
+import {recordAdminRead} from '@app/api/admin/AdminAuditRecorder';
+import {createApplicationID, createGuildID, createUserID} from '@app/api/BrandedTypes';
+import {requireAdminACL, requireAnyAdminACL} from '@app/api/middleware/AdminMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
+import {MissingACLError} from '@fluxer/errors/src/domains/core/MissingACLError';
 import {
+	AdminApplicationIdParam,
 	ApplicationUpdateResponse,
-	ListGuildApplicationsRequest,
-	ListGuildApplicationsResponse,
-	ListUserApplicationsRequest,
-	ListUserApplicationsResponse,
-	LookupApplicationRequest,
+	ListApplicationsQuery,
+	ListApplicationsResponse,
 	LookupApplicationResponse,
 	TransferApplicationOwnershipRequest,
 } from '@fluxer/schema/src/domains/admin/AdminApplicationSchemas';
-import {requireAdminACL, requireAnyAdminACL} from '../../middleware/AdminMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
+import {UserIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
+
+function requireRequestAdminACL(granted: ReadonlySet<string>, required: string): void {
+	if (!granted.has(required) && !granted.has(AdminACLs.WILDCARD)) {
+		throw new MissingACLError(required);
+	}
+}
 
 export function ApplicationAdminController(app: HonoApp) {
-	app.post(
-		'/admin/applications/lookup',
+	app.get(
+		'/admin/applications',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
+		requireAnyAdminACL([AdminACLs.APPLICATION_LOOKUP, AdminACLs.APPLICATION_LIST_BY_OWNER]),
+		Validator('query', ListApplicationsQuery),
+		OpenAPI({
+			operationId: 'list_admin_applications',
+			summary: 'List applications',
+			description:
+				'Lists OAuth2 applications and bots. Pass owner_id to list the applications a user owns, or guild_id to list the applications whose bot users are members of a guild. Exactly one of the two is required. owner_id requires APPLICATION_LIST_BY_OWNER permission, guild_id requires APPLICATION_LOOKUP permission.',
+			responseSchema: ListApplicationsResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+		}),
+		async (ctx) => {
+			const adminService = ctx.get('adminService');
+			const {owner_id: ownerId, guild_id: guildId} = ctx.req.valid('query');
+			if (guildId != null && ownerId != null) {
+				throw InputValidationError.create('guild_id', 'Only one of owner_id and guild_id may be supplied');
+			}
+			if (guildId != null) {
+				requireRequestAdminACL(ctx.get('adminUserAcls'), AdminACLs.APPLICATION_LOOKUP);
+				const response = await adminService.applicationService.listGuildApplications(createGuildID(guildId));
+				await recordAdminRead(ctx, {
+					targetType: 'guild',
+					targetId: guildId,
+					action: AdminAuditReadActions.LIST_GUILD_APPLICATIONS,
+					metadata: {application_count: response.applications.length},
+				});
+				return ctx.json(response);
+			}
+			if (ownerId != null) {
+				requireRequestAdminACL(ctx.get('adminUserAcls'), AdminACLs.APPLICATION_LIST_BY_OWNER);
+				const response = await adminService.applicationService.listUserApplications(createUserID(ownerId));
+				await recordAdminRead(ctx, {
+					targetType: 'user',
+					targetId: ownerId,
+					action: AdminAuditReadActions.LIST_USER_APPLICATIONS,
+					metadata: {application_count: response.applications.length},
+				});
+				return ctx.json(response);
+			}
+			throw InputValidationError.create('owner_id', 'One of owner_id and guild_id is required');
+		},
+	);
+	app.get(
+		'/admin/users/:user_id/applications',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
+		requireAdminACL(AdminACLs.APPLICATION_LIST_BY_OWNER),
+		Validator('param', UserIdParam),
+		OpenAPI({
+			operationId: 'list_admin_user_applications',
+			summary: 'List user applications',
+			description: 'Lists the OAuth2 applications and bots a user owns. Requires APPLICATION_LIST_BY_OWNER permission.',
+			responseSchema: ListApplicationsResponse,
+			statusCode: 200,
+			security: 'adminApiKey',
+			tags: 'Admin',
+		}),
+		async (ctx) => {
+			const adminService = ctx.get('adminService');
+			const userId = createUserID(ctx.req.valid('param').user_id);
+			const response = await adminService.applicationService.listUserApplications(userId);
+			await recordAdminRead(ctx, {
+				targetType: 'user',
+				targetId: userId,
+				action: AdminAuditReadActions.LIST_USER_APPLICATIONS,
+				metadata: {application_count: response.applications.length},
+			});
+			return ctx.json(response);
+		},
+	);
+	app.get(
+		'/admin/applications/:application_id',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
 		requireAdminACL(AdminACLs.APPLICATION_LOOKUP),
-		Validator('json', LookupApplicationRequest),
+		Validator('param', AdminApplicationIdParam),
 		OpenAPI({
-			operationId: 'lookup_application',
-			summary: 'Look up application',
+			operationId: 'get_admin_application',
+			summary: 'Get application',
 			description:
 				'Retrieves complete application details including ownership, bot user, OAuth2 redirect URIs, and credential status. Requires APPLICATION_LOOKUP permission.',
 			responseSchema: LookupApplicationResponse,
@@ -36,59 +119,32 @@ export function ApplicationAdminController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
-			return ctx.json(await adminService.applicationService.lookupApplication(ctx.req.valid('json')));
+			const applicationId = createApplicationID(ctx.req.valid('param').application_id);
+			const response = await adminService.applicationService.lookupApplication(applicationId);
+			await recordAdminRead(ctx, {
+				targetType: 'application',
+				targetId: applicationId,
+				action: AdminAuditReadActions.GET_APPLICATION,
+				metadata: {
+					found: response.application !== null,
+					owner_user_id: response.application?.owner_user_id,
+					bot_user_id: response.application?.bot_user_id,
+				},
+			});
+			return ctx.json(response);
 		},
 	);
-	app.post(
-		'/admin/applications/list-by-owner',
-		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
-		requireAdminACL(AdminACLs.APPLICATION_LIST_BY_OWNER),
-		Validator('json', ListUserApplicationsRequest),
-		OpenAPI({
-			operationId: 'admin_list_user_applications',
-			summary: 'List applications owned by a user',
-			description:
-				'Lists all applications (OAuth2 clients and bots) owned by a specific user. Requires APPLICATION_LIST_BY_OWNER permission.',
-			responseSchema: ListUserApplicationsResponse,
-			statusCode: 200,
-			security: 'adminApiKey',
-			tags: 'Admin',
-		}),
-		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			return ctx.json(await adminService.applicationService.listUserApplications(ctx.req.valid('json')));
-		},
-	);
-	app.post(
-		'/admin/applications/list-by-guild',
-		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
-		requireAnyAdminACL([AdminACLs.APPLICATION_LOOKUP, AdminACLs.APPLICATION_LIST_BY_OWNER]),
-		Validator('json', ListGuildApplicationsRequest),
-		OpenAPI({
-			operationId: 'admin_list_guild_applications',
-			summary: 'List applications installed in a guild',
-			description:
-				'Lists OAuth2 applications whose bot users are members of a guild. Requires APPLICATION_LOOKUP or APPLICATION_LIST_BY_OWNER permission.',
-			responseSchema: ListGuildApplicationsResponse,
-			statusCode: 200,
-			security: 'adminApiKey',
-			tags: 'Admin',
-		}),
-		async (ctx) => {
-			const adminService = ctx.get('adminService');
-			return ctx.json(await adminService.applicationService.listGuildApplications(ctx.req.valid('json')));
-		},
-	);
-	app.post(
-		'/admin/applications/transfer-ownership',
+	app.patch(
+		'/admin/applications/:application_id',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_GUILD_MODIFY),
 		requireAdminACL(AdminACLs.APPLICATION_TRANSFER_OWNERSHIP),
+		Validator('param', AdminApplicationIdParam),
 		Validator('json', TransferApplicationOwnershipRequest),
 		OpenAPI({
-			operationId: 'transfer_application_ownership',
-			summary: 'Transfer application ownership',
+			operationId: 'update_admin_application',
+			summary: 'Update application',
 			description:
-				'Transfers application ownership to another user. Used when owner is inactive or for administrative recovery. Logged to audit log. Requires APPLICATION_TRANSFER_OWNERSHIP permission.',
+				'Updates an application. Transfers ownership to the user given by new_owner_id, which is used when the owner is inactive or for administrative recovery. Logged to audit log. Requires APPLICATION_TRANSFER_OWNERSHIP permission.',
 			responseSchema: ApplicationUpdateResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
@@ -98,8 +154,10 @@ export function ApplicationAdminController(app: HonoApp) {
 			const adminService = ctx.get('adminService');
 			const adminUserId = ctx.get('adminUserId');
 			const auditLogReason = ctx.get('auditLogReason');
+			const applicationId = createApplicationID(ctx.req.valid('param').application_id);
 			return ctx.json(
 				await adminService.applicationService.transferApplicationOwnership(
+					applicationId,
 					ctx.req.valid('json'),
 					adminUserId,
 					auditLogReason,

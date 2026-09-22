@@ -2,6 +2,10 @@
 
 import {showChannelErrorModal} from '@app/features/channel/components/alerts/ChannelErrorModalUtils';
 import {
+	PREMIUM_TYPE_DESCRIPTOR,
+	UNREAD_GIFT_COUNT_DESCRIPTOR,
+} from '@app/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels';
+import {
 	DeveloperOptionCheckbox,
 	DeveloperOptionRadioItems,
 } from '@app/features/channel/components/channel_header_components/developer_tools/DeveloperToolsMenuComponents';
@@ -9,6 +13,8 @@ import {
 	translateDescriptor,
 	USE_ACTUAL_VALUE_DESCRIPTOR,
 } from '@app/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared';
+import {getPremiumTypeOptions} from '@app/features/channel/components/channel_header_components/developer_tools/OptionPresets';
+import {updateOption} from '@app/features/channel/components/channel_header_components/developer_tools/ResetOptions';
 import {
 	applyPremiumScenarioOption,
 	PREMIUM_SCENARIO_OPTIONS,
@@ -28,9 +34,6 @@ import {msg, plural} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {PREMIUM_TYPE_DESCRIPTOR, UNREAD_GIFT_COUNT_DESCRIPTOR} from './DeveloperOptionLabels';
-import {getPremiumTypeOptions} from './OptionPresets';
-import {updateOption} from './ResetOptions';
 
 const logger = new Logger('DeveloperToolsContextMenu/AccountPremiumMenu');
 const ACCOUNT_STATE_DESCRIPTOR = msg({

@@ -4,11 +4,12 @@
 import {Mutex} from '@livekit/mutex';
 import {
 	type ChatMessage as ChatMessageModel,
+	ClientInfo_Capability,
 	type ConnectionQualityUpdate,
 	type DataPacket,
 	type DataPacket_Kind,
 	DisconnectReason,
-	type Encryption_Type,
+	Encryption_Type,
 	type JoinResponse,
 	LeaveRequest,
 	LeaveRequest_Action,
@@ -39,31 +40,48 @@ import type TypedEmitter from 'typed-emitter';
 import {ensureTrailingSlash} from '../api/utils.ts';
 import {type BaseE2EEManager, E2EEManager} from '../e2ee/E2eeManager.ts';
 import {EncryptionEvent} from '../e2ee/index.ts';
+import {FrameMetadataManager} from '../frameMetadata/FrameMetadataManager.ts';
+import {isFrameMetadataSupported} from '../frameMetadata/utils.ts';
 import log, {getLogger, LoggerNames} from '../logger.ts';
 import type {InternalRoomConnectOptions, InternalRoomOptions, RoomConnectOptions, RoomOptions} from '../options.ts';
+import type {NonSharedUint8Array} from '../type-polyfills/non-shared-typed-arrays.ts';
 import {getBrowser} from '../utils/browserParser.ts';
 import TypedPromise from '../utils/TypedPromise.ts';
+import {CLIENT_PROTOCOL_DEFAULT} from '../version.ts';
 import {BackOffStrategy} from './BackOffStrategy.ts';
 import DeviceManager from './DeviceManager.ts';
 import IncomingDataStreamManager from './data-stream/incoming/IncomingDataStreamManager.ts';
 import type {ByteStreamHandler, TextStreamHandler} from './data-stream/incoming/StreamReader.ts';
 import OutgoingDataStreamManager from './data-stream/outgoing/OutgoingDataStreamManager.ts';
+import IncomingDataTrackManager from './data-track/incoming/IncomingDataTrackManager.ts';
+import type LocalDataTrack from './data-track/LocalDataTrack.ts';
+import OutgoingDataTrackManager from './data-track/outgoing/OutgoingDataTrackManager.ts';
+import type RemoteDataTrack from './data-track/RemoteDataTrack.ts';
+import {DataTrackInfo, type DataTrackSid} from './data-track/types.ts';
 import {
 	audioDefaults,
 	publishDefaults,
 	roomConnectOptionDefaults,
 	roomOptionDefaults,
+	screenShareDeliveryPublishDefaults,
 	videoDefaults,
 } from './defaults.ts';
 import {ConnectionError, ConnectionErrorReason, UnexpectedConnectionState, UnsupportedServer} from './errors.ts';
 import {EngineEvent, ParticipantEvent, RoomEvent, TrackEvent} from './events.ts';
 import LocalParticipant from './participant/LocalParticipant.ts';
-import type Participant from './participant/Participant.ts';
-import {type ConnectionQuality, ParticipantKind} from './participant/Participant.ts';
+import Participant, {type ConnectionQuality, ParticipantKind} from './participant/Participant.ts';
 import RemoteParticipant from './participant/RemoteParticipant.ts';
-import {RegionUrlProvider} from './RegionUrlProvider.ts';
-import RTCEngine from './RTCEngine.ts';
-import {byteLength, MAX_PAYLOAD_BYTES, RpcError, type RpcInvocationData} from './rpc.ts';
+import {DEFAULT_MAX_AGE_MS, RegionUrlProvider} from './RegionUrlProvider.ts';
+import RTCEngine, {DataChannelKind, type RegionStrategy} from './RTCEngine.ts';
+import {
+	RPC_REQUEST_DATA_STREAM_TOPIC,
+	RPC_RESPONSE_DATA_STREAM_TOPIC,
+	RpcClientManager,
+	RpcError,
+	type RpcInvocationData,
+	RpcServerManager,
+} from './rpc/index.ts';
+import {summarizeStatsReport} from './statsSummary.ts';
 import CriticalTimers, {type TimerHandle} from './timers.ts';
 import LocalAudioTrack from './track/LocalAudioTrack.ts';
 import type LocalTrack from './track/LocalTrack.ts';
@@ -79,12 +97,14 @@ import type {ChatMessage, SimulationOptions, SimulationScenario, TranscriptionSe
 import {
 	createDummyVideoStreamTrack,
 	extractChatMessage,
+	extractTrackSid,
 	extractTranscriptionSegments,
 	Future,
 	getDisconnectReasonFromConnectionError,
 	getEmptyAudioStreamTrack,
 	isBrowserSupported,
 	isCloud,
+	isCompressionStreamSupported,
 	isLocalAudioTrack,
 	isLocalParticipant,
 	isReactNative,
@@ -108,15 +128,14 @@ export enum ConnectionState {
 }
 
 const CONNECTION_RECONCILE_FREQUENCY_MS = 4 * 1000;
-
-type RoomEventArguments<E extends keyof RoomEventCallbacks> = RoomEventArgumentMap[E];
-
+type RoomEventArguments<E extends keyof RoomEventCallbacks> = Parameters<RoomEventCallbacks[E]>;
 type BufferedRoomEvent = {
 	[E in keyof RoomEventCallbacks]: {
 		event: E;
 		args: RoomEventArguments<E>;
 	};
 }[keyof RoomEventCallbacks];
+const STATS_LOG_FREQUENCY_MS = 30 * 1000;
 
 class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) {
 	state: ConnectionState = ConnectionState.Disconnected;
@@ -152,8 +171,10 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 	private disconnectLock: Mutex;
 
 	private e2eeManager: BaseE2EEManager | undefined;
-
+	private frameMetadataManager: FrameMetadataManager | undefined;
+	private e2eeStateMutex: Mutex = new Mutex();
 	private connectionReconcileInterval?: TimerHandle;
+	private statsLogInterval?: TimerHandle;
 
 	private regionUrlProvider?: RegionUrlProvider;
 
@@ -162,10 +183,12 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 	private isVideoPlaybackBlocked: boolean = false;
 
 	private log = log;
-
+	private statsLog = log;
 	private bufferedEvents: Array<BufferedRoomEvent> = [];
 
 	private isResuming: boolean = false;
+
+	private pendingTrackAddedCallbacks = new Map<Track.SID, Set<() => void>>();
 
 	private transcriptionReceivedTimes: Map<string, number>;
 
@@ -173,7 +196,13 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 
 	private outgoingDataStreamManager: OutgoingDataStreamManager;
 
-	private rpcHandlers: Map<string, (data: RpcInvocationData) => Promise<string>> = new Map();
+	private incomingDataTrackManager: IncomingDataTrackManager;
+
+	private outgoingDataTrackManager: OutgoingDataTrackManager;
+
+	private rpcClientManager: RpcClientManager;
+
+	private rpcServerManager: RpcServerManager;
 
 	get hasE2EESetup(): boolean {
 		return this.e2eeManager !== undefined;
@@ -186,7 +215,8 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 		this.sidToIdentity = new Map();
 		this.options = {...roomOptionDefaults, ...options};
 
-		this.log = getLogger(this.options.loggerName ?? LoggerNames.Room);
+		this.log = getLogger(this.options.loggerName ?? LoggerNames.Room, () => this.logContext);
+		this.statsLog = getLogger(LoggerNames.Stats, () => this.logContext);
 		this.transcriptionReceivedTimes = new Map();
 
 		this.options.audioCaptureDefaults = {
@@ -198,31 +228,102 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 			...options?.videoCaptureDefaults,
 		};
 		this.options.publishDefaults = {
-			...publishDefaults,
+			...(this.options.screenShareDelivery ? screenShareDeliveryPublishDefaults : publishDefaults),
 			...options?.publishDefaults,
 		};
 
 		this.maybeCreateEngine();
 
-		this.incomingDataStreamManager = new IncomingDataStreamManager();
-		this.outgoingDataStreamManager = new OutgoingDataStreamManager(this.engine, this.log);
+		this.incomingDataStreamManager = new IncomingDataStreamManager(this.options.dataStream?.maxPayloadByteLength);
+		this.outgoingDataStreamManager = new OutgoingDataStreamManager(
+			this.engine,
+			this.log,
+			this.getRemoteParticipantClientProtocol,
+			this.getRemoteParticipantCapabilities,
+			this.getAllRemoteParticipantIdentities,
+		);
+
+		this.incomingDataTrackManager = new IncomingDataTrackManager({e2eeManager: this.e2eeManager});
+		this.incomingDataTrackManager
+			.on('sfuUpdateSubscription', (event) => {
+				this.engine.client.sendUpdateDataSubscription(event.sid, event.subscribe);
+			})
+			.on('trackPublished', (event) => {
+				if (event.track.publisherIdentity === this.localParticipant.identity) {
+					return;
+				}
+				this.emit(RoomEvent.DataTrackPublished, event.track);
+				this.remoteParticipants.get(event.track.publisherIdentity)?.addRemoteDataTrack(event.track);
+			})
+			.on('trackUnpublished', (event) => {
+				if (event.publisherIdentity === this.localParticipant.identity) {
+					return;
+				}
+				this.emit(RoomEvent.DataTrackUnpublished, event.sid);
+				this.remoteParticipants.get(event.publisherIdentity)?.removeRemoteDataTrack(event.sid);
+			});
+
+		this.outgoingDataTrackManager = new OutgoingDataTrackManager({e2eeManager: this.e2eeManager});
+		this.outgoingDataTrackManager
+			.on('sfuPublishRequest', (event) => {
+				this.engine.client.sendPublishDataTrackRequest(event.handle, event.name, event.usesE2ee);
+			})
+			.on('sfuUnpublishRequest', (event) => {
+				this.engine.client.sendUnPublishDataTrackRequest(event.handle);
+			})
+			.on('trackPublished', (event) => {
+				this.emit(RoomEvent.LocalDataTrackPublished, event.track);
+			})
+			.on('trackUnpublished', (event) => {
+				this.emit(RoomEvent.LocalDataTrackUnpublished, event.sid);
+			})
+			.on('packetAvailable', ({handle, bytes}) => {
+				this.engine
+					.sendDataTrackFrame(bytes)
+					.finally(() => this.outgoingDataTrackManager.handlePacketSendComplete(handle));
+			});
+
+		this.registerRpcDataStreamHandler();
+
+		this.rpcClientManager = new RpcClientManager(
+			this.log,
+			this.outgoingDataStreamManager,
+			this.getRemoteParticipantClientProtocol,
+			() => this.engine?.serverVersion,
+		);
+		this.rpcClientManager.on('sendDataPacket', ({packet}) => {
+			this.engine?.sendDataPacket(packet, DataChannelKind.RELIABLE);
+		});
+		this.rpcServerManager = new RpcServerManager(
+			this.log,
+			this.outgoingDataStreamManager,
+			this.getRemoteParticipantClientProtocol,
+		);
+		this.rpcServerManager.on('sendDataPacket', ({packet}) => {
+			this.engine?.sendDataPacket(packet, DataChannelKind.RELIABLE);
+		});
 
 		this.disconnectLock = new Mutex();
-
 		this.localParticipant = new LocalParticipant(
 			'',
 			'',
 			this.engine,
 			this.options,
-			this.rpcHandlers,
 			this.outgoingDataStreamManager,
+			this.outgoingDataTrackManager,
+			this.rpcClientManager,
+			this.rpcServerManager,
 		);
+
+		this.setupFrameMetadata();
 
 		if (this.options.e2ee || this.options.encryption) {
 			this.setupE2EE();
 		}
 
 		this.engine.e2eeManager = this.e2eeManager;
+		this.incomingDataTrackManager.updateE2eeManager(this.e2eeManager ?? null);
+		this.outgoingDataTrackManager.updateE2eeManager(this.e2eeManager ?? null);
 
 		if (this.options.videoCaptureDefaults.deviceId) {
 			this.localParticipant.activeDeviceMap.set(
@@ -238,22 +339,33 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 		}
 		if (this.options.audioOutput?.deviceId) {
 			this.switchActiveDevice('audiooutput', unwrapConstraint(this.options.audioOutput.deviceId)).catch((e) =>
-				this.log.warn(`Could not set audio output: ${e.message}`, this.logContext),
+				this.log.warn(`Could not set audio output: ${e.message}`),
 			);
 		}
 
 		if (isWeb()) {
-			const abortController = new AbortController();
-
-			navigator.mediaDevices?.addEventListener?.('devicechange', this.handleDeviceChange, {
-				signal: abortController.signal,
-			});
+			const cleanupController = new AbortController();
+			let onDeviceChange: () => void;
 
 			if (Room.cleanupRegistry) {
+				const roomRef = new WeakRef(this);
+				onDeviceChange = () => {
+					const self = roomRef.deref();
+					if (!self) {
+						return;
+					}
+					self.handleDeviceChange();
+				};
 				Room.cleanupRegistry.register(this, () => {
-					abortController.abort();
+					cleanupController.abort();
 				});
+			} else {
+				onDeviceChange = this.handleDeviceChange;
 			}
+
+			navigator.mediaDevices?.addEventListener?.('devicechange', onDeviceChange, {
+				signal: cleanupController.signal,
+			});
 		}
 	}
 
@@ -274,26 +386,29 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 	}
 
 	registerRpcMethod(method: string, handler: (data: RpcInvocationData) => Promise<string>) {
-		if (this.rpcHandlers.has(method)) {
-			throw Error(
-				`RPC handler already registered for method ${method}, unregisterRpcMethod before trying to register again`,
-			);
-		}
-		this.rpcHandlers.set(method, handler);
+		this.rpcServerManager.registerRpcMethod(method, handler);
 	}
 
 	unregisterRpcMethod(method: string) {
-		this.rpcHandlers.delete(method);
+		this.rpcServerManager.unregisterRpcMethod(method);
 	}
 
 	async setE2EEEnabled(enabled: boolean) {
-		if (this.e2eeManager) {
-			await Promise.all([this.localParticipant.setE2EEEnabled(enabled)]);
-			if (this.localParticipant.identity !== '') {
-				this.e2eeManager.setParticipantCryptorEnabled(enabled, this.localParticipant.identity);
+		const unlock = await this.e2eeStateMutex.lock();
+		try {
+			if (this.e2eeManager) {
+				if (this.isE2EEEnabled !== enabled) {
+					await this.localParticipant.setE2EEEnabled(enabled);
+
+					if (this.localParticipant.identity !== '') {
+						this.e2eeManager.setParticipantCryptorEnabled(enabled, this.localParticipant.identity);
+					}
+				}
+			} else {
+				throw Error('e2ee not configured, please set e2ee settings within the room options');
 			}
-		} else {
-			throw Error('e2ee not configured, please set e2ee settings within the room options');
+		} finally {
+			unlock();
 		}
 	}
 
@@ -319,15 +434,22 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 				this.emit(RoomEvent.EncryptionError, error, participant);
 			});
 			this.e2eeManager?.setup(this);
+			this.e2eeManager?.setupEngine(this.engine);
 		}
+	}
+
+	private setupFrameMetadata() {
+		const opts = this.options.frameMetadata ?? this.options.packetTrailer;
+		this.frameMetadataManager = new FrameMetadataManager(opts);
+		this.frameMetadataManager.setup(this);
 	}
 
 	private get logContext() {
 		return {
 			room: this.name,
 			roomID: this.roomInfo?.sid,
-			participant: this.localParticipant.identity,
-			pID: this.localParticipant.sid,
+			participant: this.localParticipant?.identity,
+			participantID: this.localParticipant?.sid,
 		};
 	}
 
@@ -374,7 +496,7 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 	}
 
 	private maybeCreateEngine() {
-		if (this.engine && !this.engine.isClosed) {
+		if (this.engine && (this.engine.isNewlyCreated || !this.engine.isClosed)) {
 			return;
 		}
 
@@ -403,7 +525,7 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 			.on(EngineEvent.Resuming, () => {
 				this.clearConnectionReconcile();
 				this.isResuming = true;
-				this.log.info('Resuming signal connection', this.logContext);
+				this.log.debug('Resuming signal connection');
 				if (this.setAndEmitConnectionState(ConnectionState.SignalReconnecting)) {
 					this.emit(RoomEvent.SignalReconnecting);
 				}
@@ -411,20 +533,21 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 			.on(EngineEvent.Resumed, () => {
 				this.registerConnectionReconcile();
 				this.isResuming = false;
-				this.log.info('Resumed signal connection', this.logContext);
+				this.log.debug('Resumed signal connection');
 				this.updateSubscriptions();
-				this.emitBufferedEvents();
 				if (this.setAndEmitConnectionState(ConnectionState.Connected)) {
 					this.emit(RoomEvent.Reconnected);
 				}
+				this.emitBufferedEvents();
 			})
 			.on(EngineEvent.SignalResumed, () => {
-				this.bufferedEvents = [];
 				if (this.state === ConnectionState.Reconnecting || this.isResuming) {
 					this.sendSyncState();
 				}
+				this.emitBufferedEvents();
 			})
 			.on(EngineEvent.Restarting, this.handleRestarting)
+			.on(EngineEvent.Restarted, this.handleRestarted)
 			.on(EngineEvent.SignalRestarted, this.handleSignalRestarted)
 			.on(EngineEvent.Offline, () => {
 				if (this.setAndEmitConnectionState(ConnectionState.Reconnecting)) {
@@ -435,15 +558,7 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 				this.emit(RoomEvent.DCBufferStatusChanged, status, kind);
 			})
 			.on(EngineEvent.LocalTrackSubscribed, (subscribedSid) => {
-				const trackPublication = this.localParticipant
-					.getTrackPublications()
-					.find(({trackSid}) => trackSid === subscribedSid) as LocalTrackPublication | undefined;
-				if (!trackPublication) {
-					this.log.warn('could not find local track subscription for subscribed event', this.logContext);
-					return;
-				}
-				this.localParticipant.emit(ParticipantEvent.LocalTrackSubscribed, trackPublication);
-				this.emitWhenConnected(RoomEvent.LocalTrackSubscribed, trackPublication, this.localParticipant);
+				this.handleLocalTrackSubscribed(subscribedSid);
 			})
 			.on(EngineEvent.RoomMoved, (roomMoved) => {
 				this.log.debug('room moved', roomMoved);
@@ -463,6 +578,60 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 				} else {
 					this.handleParticipantUpdates(roomMoved.otherParticipants);
 				}
+			})
+			.on(EngineEvent.PublishDataTrackResponse, (event) => {
+				if (!event.info) {
+					this.log.warn(`received PublishDataTrackResponse, but event.info was ${event.info}, so skipping.`);
+					return;
+				}
+
+				this.outgoingDataTrackManager.receivedSfuPublishResponse(event.info.pubHandle, {
+					type: 'ok',
+					data: {
+						sid: event.info.sid,
+						pubHandle: event.info.pubHandle,
+						name: event.info.name,
+						usesE2ee: event.info.encryption !== Encryption_Type.NONE,
+					},
+				});
+			})
+			.on(EngineEvent.UnPublishDataTrackResponse, (event) => {
+				if (!event.info) {
+					this.log.warn(`received UnPublishDataTrackResponse, but event.info was ${event.info}, so skipping.`);
+					return;
+				}
+
+				this.outgoingDataTrackManager.receivedSfuUnpublishResponse(event.info.pubHandle);
+			})
+			.on(EngineEvent.DataTrackSubscriberHandles, (event) => {
+				const handleToSidMapping = new Map(
+					Object.entries(event.subHandles).map(([key, value]) => {
+						return [parseInt(key, 10), value.trackSid];
+					}),
+				);
+
+				this.incomingDataTrackManager.receivedSfuSubscriberHandles(handleToSidMapping);
+			})
+			.on(EngineEvent.DataTrackPacketReceived, (packetBytes) => {
+				this.incomingDataTrackManager.packetReceived(packetBytes);
+			})
+			.on(EngineEvent.Joined, (joinResponse) => {
+				const mapped = new Map(
+					joinResponse.otherParticipants.map((participant) => {
+						return [participant.identity, participant.dataTracks.map((info) => DataTrackInfo.from(info))];
+					}),
+				);
+				this.incomingDataTrackManager.receiveSfuPublicationUpdates(mapped);
+			})
+			.on(EngineEvent.TokenRefreshed, (token) => {
+				this.regionUrlProvider?.updateToken(token);
+			})
+			.on(EngineEvent.ServerRegionsReported, (regions) => {
+				this.regionUrlProvider?.setServerReportedRegions({
+					regionSettings: regions,
+					updatedAtInMs: Date.now(),
+					maxAgeInMs: DEFAULT_MAX_AGE_MS,
+				});
 			});
 
 		if (this.localParticipant) {
@@ -476,12 +645,21 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 		}
 	}
 
+	private createRegionStrategy(): RegionStrategy {
+		return {
+			getNextUrl: async (signal?: AbortSignal) =>
+				this.regionUrlProvider ? this.regionUrlProvider.getNextBestRegionUrl(signal) : null,
+			resetAttempts: () => this.regionUrlProvider?.resetAttempts(),
+		};
+	}
+
 	static getLocalDevices(kind?: MediaDeviceKind, requestPermissions: boolean = true): Promise<Array<MediaDeviceInfo>> {
 		return DeviceManager.getInstance().getDevices(kind, requestPermissions);
 	}
 
 	static cleanupRegistry =
 		typeof FinalizationRegistry !== 'undefined' &&
+		typeof WeakRef !== 'undefined' &&
 		new FinalizationRegistry((cleanup: () => void) => {
 			cleanup();
 		});
@@ -490,7 +668,7 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 		if (this.state !== ConnectionState.Disconnected) {
 			return;
 		}
-		this.log.debug(`prepareConnection to ${url}`, this.logContext);
+		this.log.debug(`prepareConnection to ${url}`);
 		try {
 			if (isCloud(new URL(url)) && token) {
 				this.regionUrlProvider = new RegionUrlProvider(url, token);
@@ -498,13 +676,13 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 				if (regionUrl && this.state === ConnectionState.Disconnected) {
 					this.regionUrl = regionUrl;
 					await fetch(toHttpUrl(regionUrl), {method: 'HEAD'});
-					this.log.debug(`prepared connection to ${regionUrl}`, this.logContext);
+					this.log.debug(`prepared connection to ${regionUrl}`);
 				}
 			} else {
 				await fetch(toHttpUrl(url), {method: 'HEAD'});
 			}
 		} catch (e) {
-			this.log.warn('could not prepare connection', {...this.logContext, error: e});
+			this.log.warn('could not prepare connection', {error: e});
 		}
 	}
 
@@ -522,7 +700,7 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 		const unlockDisconnect = await this.disconnectLock.lock();
 
 		if (this.state === ConnectionState.Connected) {
-			this.log.info(`already connected to room ${this.name}`, this.logContext);
+			this.log.info(`already connected to room ${this.name}`);
 			unlockDisconnect();
 			return Promise.resolve();
 		}
@@ -549,7 +727,7 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 					this.regionUrlProvider?.setServerReportedRegions(settings);
 				})
 				.catch((e) => {
-					this.log.warn('could not fetch region settings', {...this.logContext, error: e});
+					this.log.warn('could not fetch region settings', {error: e});
 				});
 		}
 
@@ -605,9 +783,8 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 					if (nextUrl && !this.abortController?.signal.aborted) {
 						this.log.info(
 							`Initial connection failed with ConnectionError: ${error.message}. Retrying with another region: ${nextUrl}`,
-							this.logContext,
 						);
-						this.recreateEngine();
+						this.recreateEngine(true);
 						await connectFn(resolve, reject, nextUrl);
 					} else {
 						this.handleDisconnect(
@@ -649,12 +826,13 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 		roomOptions: InternalRoomOptions,
 		abortController: AbortController,
 	): Promise<JoinResponse> => {
-		const joinResponse = await engine.join(
+		const {joinResponse, serverInfo} = await engine.join(
 			url,
 			token,
 			{
 				autoSubscribe: connectOptions.autoSubscribe,
 				adaptiveStream: typeof roomOptions.adaptiveStream === 'object' ? true : roomOptions.adaptiveStream,
+				clientInfoCapabilities: this.getClientInfoCapabilities(roomOptions),
 				maxRetries: connectOptions.maxRetries,
 				e2eeEnabled: !!this.e2eeManager,
 				websocketTimeout: connectOptions.websocketTimeout,
@@ -663,29 +841,14 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 			!roomOptions.singlePeerConnection,
 		);
 
-		let serverInfo: Partial<ServerInfo> | undefined = joinResponse.serverInfo;
-		if (!serverInfo) {
-			serverInfo = {version: joinResponse.serverVersion, region: joinResponse.serverRegion};
-		}
 		this.serverInfo = serverInfo;
-
-		this.log.debug(
-			`connected to Livekit Server ${Object.entries(serverInfo)
-				.map(([key, value]) => `${key}: ${value}`)
-				.join(', ')}`,
-			{
-				room: joinResponse.room?.name,
-				roomSid: joinResponse.room?.sid,
-				identity: joinResponse.participant?.identity,
-			},
-		);
 
 		if (!serverInfo.version) {
 			throw new UnsupportedServer('unknown server version');
 		}
 
 		if (serverInfo.version === '0.15.1' && this.options.dynacast) {
-			this.log.debug('disabling dynacast due to server version', this.logContext);
+			this.log.debug('disabling dynacast due to server version');
 			roomOptions.dynacast = false;
 		}
 
@@ -701,10 +864,9 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 
 		if (this.e2eeManager) {
 			try {
-				this.e2eeManager.setSifTrailer(joinResponse.sifTrailer);
+				this.e2eeManager.setSifTrailer(joinResponse.sifTrailer as NonSharedUint8Array);
 			} catch (e: unknown) {
 				this.log.error(e instanceof Error ? e.message : 'Could not set SifTrailer', {
-					...this.logContext,
 					error: e,
 				});
 			}
@@ -724,13 +886,13 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 		abortController: AbortController,
 	) => {
 		if (this.state === ConnectionState.Reconnecting || this.isResuming || this.engine?.pendingReconnect) {
-			this.log.info('Reconnection attempt replaced by new connection attempt', this.logContext);
-			this.recreateEngine();
+			this.log.info('Reconnection attempt replaced by new connection attempt');
+			this.recreateEngine(true);
 		} else {
 			this.maybeCreateEngine();
 		}
 		if (this.regionUrlProvider?.isCloud()) {
-			this.engine.setRegionUrlProvider(this.regionUrlProvider);
+			this.engine.setRegionStrategy(this.createRegionStrategy());
 		}
 
 		this.acquireAudioContext();
@@ -773,7 +935,6 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 				resultingError.status = err.status;
 			}
 			this.log.debug(`error trying to establish signal connection`, {
-				...this.logContext,
 				error: err,
 			});
 			throw resultingError;
@@ -814,15 +975,13 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 		const unlock = await this.disconnectLock.lock();
 		try {
 			if (this.state === ConnectionState.Disconnected) {
-				this.log.debug('already disconnected', this.logContext);
+				this.log.debug('already disconnected');
 				return;
 			}
-			this.log.info('disconnect from room', {
-				...this.logContext,
-			});
+			this.log.info('disconnect from room');
 			if (this.state === ConnectionState.Connecting || this.state === ConnectionState.Reconnecting || this.isResuming) {
 				const msg = 'Abort connection attempt due to user initiated disconnect';
-				this.log.warn(msg, this.logContext);
+				this.log.warn(msg);
 				this.abortController?.abort(msg);
 				this.connectFuture?.reject?.(ConnectionError.cancelled('Client initiated disconnect'));
 				this.connectFuture = undefined;
@@ -858,6 +1017,9 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 		switch (scenario) {
 			case 'signal-reconnect':
 				await this.engine.client.handleOnClose('simulate disconnect');
+				break;
+			case 'fail-on-v1-path':
+				this.engine.failNextV1Path();
 				break;
 			case 'speaker':
 				req = new SimulateScenario({
@@ -969,7 +1131,7 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 	}
 
 	private onPageLeave = async () => {
-		this.log.info('Page leave detected, disconnecting', this.logContext);
+		this.log.info('Page leave detected, disconnecting');
 		await this.disconnect();
 	};
 
@@ -994,10 +1156,7 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 					}
 					dummyAudioEl.srcObject = document.hidden ? null : stream;
 					if (!document.hidden) {
-						this.log.debug(
-							'page visible again, triggering startAudio to resume playback and update playback status',
-							this.logContext,
-						);
+						this.log.debug('page visible again, triggering startAudio to resume playback and update playback status');
 						this.startAudio();
 					}
 				});
@@ -1024,7 +1183,9 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 			await Promise.all([
 				this.acquireAudioContext(),
 				...elements.map((e) => {
-					e.muted = false;
+					if (!this.options.webAudioMix) {
+						e.muted = false;
+					}
 					return e.play();
 				}),
 			]);
@@ -1056,7 +1217,6 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 				} else {
 					this.log.warn(
 						'Resuming video playback failed, make sure you call `startVideo` directly in a user gesture handler',
-						this.logContext,
 					);
 				}
 			});
@@ -1162,9 +1322,13 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 			.on(ParticipantEvent.ChatMessage, this.onLocalChatMessageSent)
 			.on(ParticipantEvent.ParticipantPermissionsChanged, this.onLocalParticipantPermissionsChanged);
 	}
-
-	private recreateEngine() {
-		this.engine?.close();
+	private recreateEngine(sendLeave?: boolean) {
+		const oldEngine = this.engine;
+		if (sendLeave && oldEngine && !oldEngine.client.isDisconnected) {
+			oldEngine.client.sendLeave().finally(() => oldEngine.close());
+		} else {
+			oldEngine?.close();
+		}
 		this.engine = undefined!;
 		this.isResuming = false;
 
@@ -1175,42 +1339,54 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 	}
 
 	private onTrackAdded(mediaTrack: MediaStreamTrack, stream: MediaStream, receiver: RTCRtpReceiver) {
-		if (this.state === ConnectionState.Connecting || this.state === ConnectionState.Reconnecting) {
+		if ([ConnectionState.Connecting, ConnectionState.Reconnecting].includes(this.state)) {
+			const pendingTrackSid = extractTrackSid(mediaTrack, stream);
+			this.log.debug('deferring on track for later', {
+				mediaTrackId: mediaTrack.id,
+				mediaStreamId: stream.id,
+				tracksInStream: stream.getTracks().map((track) => track.id),
+			});
 			const reconnectedHandler = () => {
-				this.log.debug('deferring on track for later', {
-					mediaTrackId: mediaTrack.id,
-					mediaStreamId: stream.id,
-					tracksInStream: stream.getTracks().map((track) => track.id),
-				});
-				this.onTrackAdded(mediaTrack, stream, receiver);
 				cleanup();
+				this.onTrackAdded(mediaTrack, stream, receiver);
 			};
 			const cleanup = () => {
 				this.off(RoomEvent.Reconnected, reconnectedHandler);
 				this.off(RoomEvent.Connected, reconnectedHandler);
 				this.off(RoomEvent.Disconnected, cleanup);
+				if (pendingTrackSid) {
+					const pendingCallbacks = this.pendingTrackAddedCallbacks.get(pendingTrackSid);
+					pendingCallbacks?.delete(cleanup);
+					if (pendingCallbacks?.size === 0) {
+						this.pendingTrackAddedCallbacks.delete(pendingTrackSid);
+					}
+				}
 			};
 			this.once(RoomEvent.Reconnected, reconnectedHandler);
 			this.once(RoomEvent.Connected, reconnectedHandler);
 			this.once(RoomEvent.Disconnected, cleanup);
+			if (pendingTrackSid) {
+				const pendingCallbacks = this.pendingTrackAddedCallbacks.get(pendingTrackSid) ?? new Set<() => void>();
+				pendingCallbacks.add(cleanup);
+				this.pendingTrackAddedCallbacks.set(pendingTrackSid, pendingCallbacks);
+			}
 			return;
 		}
 		if (this.state === ConnectionState.Disconnected) {
-			this.log.warn('skipping incoming track after Room disconnected', this.logContext);
+			this.log.warn('skipping incoming track after Room disconnected');
 			return;
 		}
 		if (mediaTrack.readyState === 'ended') {
-			this.log.info('skipping incoming track as it already ended', this.logContext);
+			this.log.debug('skipping incoming track as it already ended');
 			return;
 		}
 		const parts = unpackStreamId(stream.id);
 		const participantSid = parts[0];
 		const streamId = parts[1];
-		let trackId = mediaTrack.id;
-		if (streamId?.startsWith('TR')) trackId = streamId;
+		let trackId = extractTrackSid(mediaTrack, stream) ?? mediaTrack.id;
 
 		if (participantSid === this.localParticipant.sid) {
-			this.log.warn('tried to create RemoteParticipant for local participant', this.logContext);
+			this.log.warn('tried to create RemoteParticipant for local participant');
 			return;
 		}
 
@@ -1219,10 +1395,9 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 			| undefined;
 
 		if (!participant) {
-			this.log.error(
-				`Tried to add a track for a participant, that's not present. Sid: ${participantSid}`,
-				this.logContext,
-			);
+			if (participantSid.startsWith('PA')) {
+				this.log.error(`Tried to add a track for a participant, that's not present. Sid: ${participantSid}`);
+			}
 			return;
 		}
 
@@ -1231,7 +1406,6 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 			if (!id) {
 				this.log.error(
 					`Tried to add a track whose 'sid' could not be found for a participant, that's not present. Sid: ${participantSid}`,
-					this.logContext,
 				);
 				return;
 			}
@@ -1241,7 +1415,7 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 		if (!trackId.startsWith('TR')) {
 			this.log.warn(
 				`Tried to add a track whose 'sid' could not be determined for a participant, that's not present. Sid: ${participantSid}, streamId: ${streamId}, trackId: ${trackId}`,
-				{...this.logContext, rpID: participantSid, streamId, trackId},
+				{remoteParticipantID: participantSid, streamId, trackId},
 			);
 		}
 
@@ -1272,6 +1446,63 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 		}
 	}
 
+	private cancelPendingTrackAdded(trackSid: Track.SID) {
+		this.pendingTrackAddedCallbacks.get(trackSid)?.forEach((cleanup) => cleanup());
+	}
+
+	private handleLocalTrackSubscribed(subscribedSid: string) {
+		const findPublication = () =>
+			this.localParticipant.getTrackPublications().find(({trackSid}) => trackSid === subscribedSid) as
+				| LocalTrackPublication
+				| undefined;
+
+		const trackPublication = findPublication();
+		if (trackPublication) {
+			this.emitLocalTrackSubscribed(trackPublication);
+			return;
+		}
+
+		this.log.debug('deferring LocalTrackSubscribed, publication not yet available', {
+			subscribedSid,
+		});
+
+		const TIMEOUT_MS = 10_000;
+		let timer: ReturnType<typeof setTimeout>;
+
+		const onPublished = (pub: LocalTrackPublication) => {
+			if (pub.trackSid === subscribedSid) {
+				cleanup();
+				this.emitLocalTrackSubscribed(pub);
+			}
+		};
+
+		const cleanup = () => {
+			clearTimeout(timer);
+			this.localParticipant.off(ParticipantEvent.LocalTrackPublished, onPublished);
+			this.off(RoomEvent.Disconnected, cleanup);
+		};
+
+		this.localParticipant.on(ParticipantEvent.LocalTrackPublished, onPublished);
+		this.once(RoomEvent.Disconnected, cleanup);
+
+		timer = setTimeout(() => {
+			cleanup();
+			const pub = findPublication();
+			if (pub) {
+				this.emitLocalTrackSubscribed(pub);
+			} else {
+				this.log.warn('could not find local track publication for LocalTrackSubscribed event after timeout', {
+					subscribedSid,
+				});
+			}
+		}, TIMEOUT_MS);
+	}
+
+	private emitLocalTrackSubscribed(trackPublication: LocalTrackPublication) {
+		this.localParticipant.emit(ParticipantEvent.LocalTrackSubscribed, trackPublication);
+		this.emitWhenConnected(RoomEvent.LocalTrackSubscribed, trackPublication, this.localParticipant);
+	}
+
 	private handleRestarting = () => {
 		this.clearConnectionReconcile();
 		this.isResuming = false;
@@ -1285,9 +1516,13 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 		}
 	};
 
+	private handleRestarted = () => {
+		this.outgoingDataTrackManager.sfuWillRepublishTracks();
+		this.incomingDataTrackManager.resendSubscriptionUpdates();
+	};
+
 	private handleSignalRestarted = async (joinResponse: JoinResponse) => {
 		this.log.debug(`signal reconnected to server, region ${joinResponse.serverRegion}`, {
-			...this.logContext,
 			region: joinResponse.serverRegion,
 		});
 		this.bufferedEvents = [];
@@ -1297,18 +1532,12 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 		try {
 			await this.localParticipant.republishAllTracks(undefined, true);
 		} catch (error) {
-			this.log.error('error trying to re-publish tracks after reconnection', {
-				...this.logContext,
-				error,
-			});
+			this.log.error('error trying to re-publish tracks after reconnection', {error});
 		}
 
 		try {
 			await this.engine.waitForRestarted();
-			this.log.debug(`fully reconnected to server`, {
-				...this.logContext,
-				region: joinResponse.serverRegion,
-			});
+			this.log.debug(`fully reconnected to server`, {region: joinResponse.serverRegion});
 		} catch {
 			return;
 		}
@@ -1324,6 +1553,8 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 		this.bufferedEvents = [];
 		this.transcriptionReceivedTimes.clear();
 		this.incomingDataStreamManager.clearControllers();
+		this.incomingDataTrackManager.reset();
+		this.outgoingDataTrackManager.reset();
 		if (this.state === ConnectionState.Disconnected) {
 			return;
 		}
@@ -1391,40 +1622,58 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 	}
 
 	private handleParticipantUpdates = (participantInfos: Array<ParticipantInfo>) => {
-		participantInfos.forEach((info) => {
+		for (const info of participantInfos) {
 			if (info.identity === this.localParticipant.identity) {
 				this.localParticipant.updateInfo(info);
-				return;
+				continue;
 			}
 
 			if (info.identity === '') {
 				info.identity = this.sidToIdentity.get(info.sid) ?? '';
 			}
 
-			let remoteParticipant = this.remoteParticipants.get(info.identity);
+			const remoteParticipant = this.remoteParticipants.get(info.identity);
 
 			if (info.state === ParticipantInfo_State.DISCONNECTED) {
-				this.handleParticipantDisconnected(info.identity, remoteParticipant);
+				this.handleParticipantDisconnected(
+					info.identity,
+					remoteParticipant,
+					info.disconnectReason === DisconnectReason.UNKNOWN_REASON ? undefined : info.disconnectReason,
+				);
 			} else {
-				remoteParticipant = this.getOrCreateParticipant(info.identity, info);
+				this.getOrCreateParticipant(info.identity, info);
 			}
-		});
+		}
+
+		const mapped = new Map(
+			participantInfos
+				.filter((p) => p.identity !== this.localParticipant.identity)
+				.map((info) => {
+					return [info.identity, info.dataTracks.map((dataTrack) => DataTrackInfo.from(dataTrack))];
+				}),
+		);
+		this.incomingDataTrackManager.receiveSfuPublicationUpdates(mapped);
 	};
 
-	private handleParticipantDisconnected(identity: string, participant?: RemoteParticipant) {
+	private handleParticipantDisconnected(
+		identity: string,
+		participant?: RemoteParticipant,
+		disconnectReason?: DisconnectReason,
+	) {
 		this.remoteParticipants.delete(identity);
 		if (!participant) {
 			return;
 		}
 
 		this.incomingDataStreamManager.validateParticipantHasNoActiveDataStreams(identity);
+		this.incomingDataTrackManager.handleRemoteParticipantDisconnected(identity);
 
 		participant.trackPublications.forEach((publication) => {
 			participant.unpublishTrack(publication.trackSid, true);
 		});
-		this.emit(RoomEvent.ParticipantDisconnected, participant);
+		this.emit(RoomEvent.ParticipantDisconnected, participant, disconnectReason);
 		participant.setDisconnected();
-		this.localParticipant?.handleParticipantDisconnected(participant.identity);
+		this.rpcClientManager.handleParticipantDisconnected(participant.identity);
 	}
 
 	private handleActiveSpeakersUpdate = (speakers: Array<SpeakerInfo>) => {
@@ -1500,12 +1749,13 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 				return;
 			}
 			const pub = participant.getTrackPublicationBySid(streamState.trackSid);
-			if (!pub || !pub.track) {
+			if (!pub?.track) {
 				return;
 			}
 			const newStreamState = Track.streamStateFromProto(streamState.state);
+			const prevStreamState = pub.track.streamState;
 			pub.track.setStreamState(newStreamState);
-			if (newStreamState !== pub.track.streamState) {
+			if (newStreamState !== prevStreamState) {
 				participant.emit(ParticipantEvent.TrackStreamStateChanged, pub, pub.track.streamState);
 				this.emitWhenConnected(RoomEvent.TrackStreamStateChanged, pub, pub.track.streamState, participant);
 			}
@@ -1526,6 +1776,8 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 	};
 
 	private handleSubscriptionError = (update: SubscriptionResponse) => {
+		this.cancelPendingTrackAdded(update.trackSid);
+
 		const participant = Array.from(this.remoteParticipants.values()).find((p) =>
 			p.trackPublications.has(update.trackSid),
 		);
@@ -1560,14 +1812,25 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 			this.handleDataStream(packet, encryptionType);
 		} else if (packet.value.case === 'rpcRequest') {
 			const rpc = packet.value.value;
-			this.handleIncomingRpcRequest(
-				packet.participantIdentity,
-				rpc.id,
-				rpc.method,
-				rpc.payload,
-				rpc.responseTimeoutMs,
-				rpc.version,
-			);
+			this.rpcServerManager.handleIncomingRpcRequest(packet.participantIdentity, rpc);
+		} else if (packet.value.case === 'rpcResponse') {
+			const rpcResponse = packet.value.value;
+			switch (rpcResponse.value.case) {
+				case 'payload':
+					this.rpcClientManager.handleIncomingRpcResponseSuccess(rpcResponse.requestId, rpcResponse.value.value);
+					break;
+				case 'error':
+					this.rpcClientManager.handleIncomingRpcResponseFailure(
+						rpcResponse.requestId,
+						RpcError.fromProto(rpcResponse.value.value),
+					);
+					break;
+				default:
+					this.log.warn(`Unknown rpcResponse.value.case: ${rpcResponse.value.case}`, this.logContext);
+					break;
+			}
+		} else if (packet.value.case === 'rpcAck') {
+			this.rpcClientManager.handleIncomingRpcAck(packet.value.value.requestId);
 		}
 	};
 
@@ -1577,9 +1840,16 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 		kind: DataPacket_Kind,
 		encryptionType: Encryption_Type,
 	) => {
-		this.emit(RoomEvent.DataReceived, userPacket.payload, participant, kind, userPacket.topic, encryptionType);
+		this.emit(
+			RoomEvent.DataReceived,
+			userPacket.payload as NonSharedUint8Array,
+			participant,
+			kind,
+			userPacket.topic,
+			encryptionType,
+		);
 
-		participant?.emit(ParticipantEvent.DataReceived, userPacket.payload, kind, encryptionType);
+		participant?.emit(ParticipantEvent.DataReceived, userPacket.payload as NonSharedUint8Array, kind, encryptionType);
 	};
 
 	private handleSipDtmf = (participant: RemoteParticipant | undefined, dtmf: SipDTMF) => {
@@ -1618,58 +1888,6 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 		this.incomingDataStreamManager.handleDataStreamPacket(packet, encryptionType);
 	};
 
-	private async handleIncomingRpcRequest(
-		callerIdentity: string,
-		requestId: string,
-		method: string,
-		payload: string,
-		responseTimeout: number,
-		version: number,
-	) {
-		await this.engine.publishRpcAck(callerIdentity, requestId);
-
-		if (version !== 1) {
-			await this.engine.publishRpcResponse(callerIdentity, requestId, null, RpcError.builtIn('UNSUPPORTED_VERSION'));
-			return;
-		}
-
-		const handler = this.rpcHandlers.get(method);
-
-		if (!handler) {
-			await this.engine.publishRpcResponse(callerIdentity, requestId, null, RpcError.builtIn('UNSUPPORTED_METHOD'));
-			return;
-		}
-
-		let responseError: RpcError | null = null;
-		let responsePayload: string | null = null;
-
-		try {
-			const response = await handler({
-				requestId,
-				callerIdentity,
-				payload,
-				responseTimeout,
-			});
-			if (byteLength(response) > MAX_PAYLOAD_BYTES) {
-				responseError = RpcError.builtIn('RESPONSE_PAYLOAD_TOO_LARGE');
-				this.log.warn(`RPC Response payload too large for ${method}`);
-			} else {
-				responsePayload = response;
-			}
-		} catch (error) {
-			if (error instanceof RpcError) {
-				responseError = error;
-			} else {
-				this.log.warn(
-					`Uncaught error returned by RPC handler for ${method}. Returning APPLICATION_ERROR instead.`,
-					error,
-				);
-				responseError = RpcError.builtIn('APPLICATION_ERROR');
-			}
-		}
-		await this.engine.publishRpcResponse(callerIdentity, requestId, responsePayload, responseError);
-	}
-
 	bufferedSegments: Map<string, TranscriptionSegmentModel> = new Map();
 
 	private handleAudioPlaybackStarted = () => {
@@ -1679,9 +1897,8 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 		this.audioEnabled = true;
 		this.emit(RoomEvent.AudioPlaybackStatusChanged, true);
 	};
-
 	private handleAudioPlaybackFailed = (e: unknown) => {
-		this.log.warn('could not playback audio', {...this.logContext, error: e});
+		this.log.warn('could not playback audio', {error: e});
 		if (!this.canPlaybackAudio) {
 			return;
 		}
@@ -1801,7 +2018,7 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 			try {
 				await Promise.race([this.audioContext.resume(), sleep(200)]);
 			} catch (e: unknown) {
-				this.log.warn('Could not resume audio context', {...this.logContext, error: e});
+				this.log.warn('Could not resume audio context', {error: e});
 			}
 		}
 
@@ -1815,10 +2032,15 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 	private createParticipant(identity: string, info?: ParticipantInfo): RemoteParticipant {
 		let participant: RemoteParticipant;
 		if (info) {
-			participant = RemoteParticipant.fromParticipantInfo(this.engine.client, info, {
-				loggerContextCb: () => this.logContext,
-				loggerName: this.options.loggerName,
-			});
+			participant = RemoteParticipant.fromParticipantInfo(
+				this.engine.client,
+				info,
+				{
+					loggerContextCb: () => this.logContext,
+					loggerName: this.options.loggerName,
+				},
+				this.incomingDataTrackManager,
+			);
 		} else {
 			participant = new RemoteParticipant(this.engine.client, '', identity, undefined, undefined, undefined, {
 				loggerContextCb: () => this.logContext,
@@ -1831,7 +2053,7 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 		if (this.options.audioOutput?.deviceId) {
 			participant
 				.setAudioOutput(this.options.audioOutput)
-				.catch((e) => this.log.warn(`Could not set audio output: ${e.message}`, this.logContext));
+				.catch((e) => this.log.warn(`Could not set audio output: ${e.message}`));
 		}
 		return participant;
 	}
@@ -1865,9 +2087,10 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 					track.on(TrackEvent.VideoPlaybackFailed, this.handleVideoPlaybackFailed);
 					track.on(TrackEvent.VideoPlaybackStarted, this.handleVideoPlaybackStarted);
 				}
-				this.emit(RoomEvent.TrackSubscribed, track, publication, participant);
+				this.emitWhenConnected(RoomEvent.TrackSubscribed, track, publication, participant);
 			})
 			.on(ParticipantEvent.TrackUnpublished, (publication: RemoteTrackPublication) => {
+				this.cancelPendingTrackAdded(publication.trackSid);
 				this.emit(RoomEvent.TrackUnpublished, publication, participant);
 			})
 			.on(ParticipantEvent.TrackUnsubscribed, (track: RemoteTrack, publication: RemoteTrackPublication) => {
@@ -1925,7 +2148,8 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 			[] as Array<RemoteTrackPublication>,
 		);
 		const localTracks = this.localParticipant.getTrackPublications() as Array<LocalTrackPublication>;
-		this.engine.sendSyncState(remoteTracks, localTracks);
+		const localDataTrackInfos = this.outgoingDataTrackManager.queryPublished();
+		this.engine.sendSyncState(remoteTracks, localTracks, localDataTrackInfos);
 	}
 
 	private updateSubscriptions() {
@@ -1946,6 +2170,82 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 		return undefined;
 	}
 
+	private getClientInfoCapabilities(roomOptions: InternalRoomOptions): Array<ClientInfo_Capability> {
+		const capabilities: Array<ClientInfo_Capability> = [];
+		if (isFrameMetadataSupported(roomOptions.frameMetadata ?? roomOptions.packetTrailer) || this.e2eeManager) {
+			capabilities.push(ClientInfo_Capability.CAP_PACKET_TRAILER);
+		}
+		if (isCompressionStreamSupported()) {
+			capabilities.push(ClientInfo_Capability.CAP_COMPRESSION_DEFLATE_RAW);
+		}
+		return capabilities;
+	}
+
+	private getRemoteParticipantClientProtocol = (identity: Participant['identity']) => {
+		return this.remoteParticipants.get(identity)?.clientProtocol ?? CLIENT_PROTOCOL_DEFAULT;
+	};
+
+	private getRemoteParticipantCapabilities = (identity: Participant['identity']): Array<ClientInfo_Capability> => {
+		return this.remoteParticipants.get(identity)?.capabilities ?? [];
+	};
+
+	private getAllRemoteParticipantIdentities = () => {
+		return Array.from(this.remoteParticipants.keys());
+	};
+
+	private registerRpcDataStreamHandler() {
+		this.incomingDataStreamManager.registerTextStreamHandler(
+			RPC_REQUEST_DATA_STREAM_TOPIC,
+			async (reader, {identity}) => {
+				const attributes = reader.info.attributes ?? {};
+				await this.rpcServerManager.handleIncomingDataStream(reader, identity, attributes);
+			},
+		);
+		this.incomingDataStreamManager.registerTextStreamHandler(
+			RPC_RESPONSE_DATA_STREAM_TOPIC,
+			async (reader, {identity}) => {
+				const attributes = reader.info.attributes ?? {};
+				await this.rpcClientManager.handleIncomingDataStream(reader, identity, attributes);
+			},
+		);
+	}
+
+	private setStatsLogging(enabled: boolean) {
+		if (enabled) {
+			if (!this.statsLogInterval) {
+				this.statsLogInterval = CriticalTimers.setInterval(() => {
+					this.logWebRTCStats();
+				}, STATS_LOG_FREQUENCY_MS);
+			}
+		} else if (this.statsLogInterval) {
+			CriticalTimers.clearInterval(this.statsLogInterval);
+			this.statsLogInterval = undefined;
+		}
+	}
+
+	private logWebRTCStats = async () => {
+		const pcManager = this.engine?.pcManager;
+		if (!pcManager) {
+			return;
+		}
+		try {
+			const [publisher, subscriber] = await Promise.all([
+				pcManager.publisher.getStats(),
+				pcManager.subscriber?.getStats(),
+			]);
+			const publisherStats = publisher && summarizeStatsReport(publisher);
+			const subscriberStats = subscriber && summarizeStatsReport(subscriber);
+			this.statsLog.info(`webrtc stats`, {
+				publisher: publisherStats?.connection,
+				subscriber: subscriberStats?.connection,
+				inbound: [...(publisherStats?.inbound ?? []), ...(subscriberStats?.inbound ?? [])],
+				outbound: publisherStats?.outbound,
+			});
+		} catch (error) {
+			this.statsLog.debug('could not collect webrtc stats', {error});
+		}
+	};
+
 	private registerConnectionReconcile() {
 		this.clearConnectionReconcile();
 		let consecutiveFailures = 0;
@@ -1953,7 +2253,6 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 			if (!this.engine || this.engine.isClosed || !this.engine.verifyTransport()) {
 				consecutiveFailures++;
 				this.log.warn('detected connection state mismatch', {
-					...this.logContext,
 					numFailures: consecutiveFailures,
 					engine: this.engine
 						? {
@@ -1963,8 +2262,14 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 						: undefined,
 				});
 				if (consecutiveFailures >= 3) {
-					this.recreateEngine();
-					this.handleDisconnect(this.options.stopLocalTrackOnUnpublish, DisconnectReason.STATE_MISMATCH);
+					this.clearConnectionReconcile();
+					if (this.engine && !this.engine.isClosed) {
+						this.log.warn('detected connection state mismatch, attempting full reconnect');
+						this.engine.reconnect();
+					} else {
+						this.recreateEngine();
+						this.handleDisconnect(this.options.stopLocalTrackOnUnpublish, DisconnectReason.STATE_MISMATCH);
+					}
 				}
 			} else {
 				consecutiveFailures = 0;
@@ -1982,8 +2287,13 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 		if (state === this.state) {
 			return false;
 		}
+		this.log.info(`connection state changed: ${this.state} -> ${state}`);
 		this.state = state;
+		this.incomingDataStreamManager.setConnected(state === ConnectionState.Connected);
+		this.setStatsLogging(state === ConnectionState.Connected);
+
 		this.emit(RoomEvent.ConnectionStateChanged, this.state);
+
 		return true;
 	}
 
@@ -2065,7 +2375,7 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 		const deviceId = await track.getDeviceId(false);
 		const deviceKind = sourceToKind(track.source);
 		if (deviceKind && deviceId && deviceId !== this.localParticipant.activeDeviceMap.get(deviceKind)) {
-			this.log.debug(`local track restarted, setting ${deviceKind} ${deviceId} active`, this.logContext);
+			this.log.debug(`local track restarted, setting ${deviceKind} ${deviceId} active`);
 			this.localParticipant.activeDeviceMap.set(deviceKind, deviceId);
 			this.emit(RoomEvent.ActiveDeviceChanged, deviceKind, deviceId);
 		}
@@ -2214,13 +2524,9 @@ class Room extends (EventEmitter as new () => TypedEmitter<RoomEventCallbacks>) 
 		if (event !== RoomEvent.ActiveSpeakersChanged && event !== RoomEvent.TranscriptionReceived) {
 			const minimizedArgs = mapArgs(args).filter((arg: unknown) => arg !== undefined);
 			if (event === RoomEvent.TrackSubscribed || event === RoomEvent.TrackUnsubscribed) {
-				this.log.trace(`subscribe trace: ${event}`, {
-					...this.logContext,
-					event,
-					args: minimizedArgs,
-				});
+				this.log.trace(`subscribe trace: ${event}`, {event, args: minimizedArgs});
 			}
-			this.log.debug(`room event ${event}`, {...this.logContext, event, args: minimizedArgs});
+			this.log.debug(`room event ${event}`, {event, args: minimizedArgs});
 		}
 		return EventEmitter.prototype.emit.call(this, event, ...args);
 	}
@@ -2242,84 +2548,83 @@ function mapArgs(args: Array<unknown>): Array<unknown> {
 }
 
 export default Room;
-
-export type RoomEventArgumentMap = {
-	connected: [];
-	reconnecting: [];
-	signalReconnecting: [];
-	reconnected: [];
-	disconnected: [reason?: DisconnectReason];
-	connectionStateChanged: [state: ConnectionState];
-	moved: [name: string];
-	mediaDevicesChanged: [];
-	participantConnected: [participant: RemoteParticipant];
-	participantDisconnected: [participant: RemoteParticipant];
-	trackPublished: [publication: RemoteTrackPublication, participant: RemoteParticipant];
-	trackSubscribed: [track: RemoteTrack, publication: RemoteTrackPublication, participant: RemoteParticipant];
-	trackSubscriptionFailed: [trackSid: string, participant: RemoteParticipant, reason?: SubscriptionError];
-	trackUnpublished: [publication: RemoteTrackPublication, participant: RemoteParticipant];
-	trackUnsubscribed: [track: RemoteTrack, publication: RemoteTrackPublication, participant: RemoteParticipant];
-	trackMuted: [publication: TrackPublication, participant: Participant];
-	trackUnmuted: [publication: TrackPublication, participant: Participant];
-	localTrackPublished: [publication: LocalTrackPublication, participant: LocalParticipant];
-	localTrackUnpublished: [publication: LocalTrackPublication, participant: LocalParticipant];
-	localAudioSilenceDetected: [publication: LocalTrackPublication];
-	participantMetadataChanged: [metadata: string | undefined, participant: RemoteParticipant | LocalParticipant];
-	participantNameChanged: [name: string, participant: RemoteParticipant | LocalParticipant];
-	participantPermissionsChanged: [
+export type RoomEventCallbacks = {
+	connected: () => void;
+	reconnecting: () => void;
+	signalReconnecting: () => void;
+	reconnected: () => void;
+	disconnected: (reason?: DisconnectReason) => void;
+	connectionStateChanged: (state: ConnectionState) => void;
+	moved: (name: string) => void;
+	mediaDevicesChanged: () => void;
+	participantConnected: (participant: RemoteParticipant) => void;
+	participantDisconnected: (participant: RemoteParticipant, disconnectReason?: DisconnectReason) => void;
+	trackPublished: (publication: RemoteTrackPublication, participant: RemoteParticipant) => void;
+	trackSubscribed: (track: RemoteTrack, publication: RemoteTrackPublication, participant: RemoteParticipant) => void;
+	trackSubscriptionFailed: (trackSid: string, participant: RemoteParticipant, reason?: SubscriptionError) => void;
+	trackUnpublished: (publication: RemoteTrackPublication, participant: RemoteParticipant) => void;
+	trackUnsubscribed: (track: RemoteTrack, publication: RemoteTrackPublication, participant: RemoteParticipant) => void;
+	trackMuted: (publication: TrackPublication, participant: Participant) => void;
+	trackUnmuted: (publication: TrackPublication, participant: Participant) => void;
+	localTrackPublished: (publication: LocalTrackPublication, participant: LocalParticipant) => void;
+	localTrackUnpublished: (publication: LocalTrackPublication, participant: LocalParticipant) => void;
+	localAudioSilenceDetected: (publication: LocalTrackPublication) => void;
+	participantMetadataChanged: (metadata: string | undefined, participant: RemoteParticipant | LocalParticipant) => void;
+	participantNameChanged: (name: string, participant: RemoteParticipant | LocalParticipant) => void;
+	participantPermissionsChanged: (
 		prevPermissions: ParticipantPermission | undefined,
 		participant: RemoteParticipant | LocalParticipant,
-	];
-	participantAttributesChanged: [
+	) => void;
+	participantAttributesChanged: (
 		changedAttributes: Record<string, string>,
 		participant: RemoteParticipant | LocalParticipant,
-	];
-	activeSpeakersChanged: [speakers: Array<Participant>];
-	roomMetadataChanged: [metadata: string];
-	dataReceived: [
-		payload: Uint8Array,
+	) => void;
+	activeSpeakersChanged: (speakers: Array<Participant>) => void;
+	roomMetadataChanged: (metadata: string) => void;
+	dataReceived: (
+		payload: NonSharedUint8Array,
 		participant?: RemoteParticipant,
 		kind?: DataPacket_Kind,
 		topic?: string,
 		encryptionType?: Encryption_Type,
-	];
-	sipDTMFReceived: [dtmf: SipDTMF, participant?: RemoteParticipant];
-	transcriptionReceived: [
+	) => void;
+	sipDTMFReceived: (dtmf: SipDTMF, participant?: RemoteParticipant) => void;
+	transcriptionReceived: (
 		transcription: Array<TranscriptionSegment>,
 		participant?: Participant,
 		publication?: TrackPublication,
-	];
-	connectionQualityChanged: [quality: ConnectionQuality, participant: Participant];
-	mediaDevicesError: [error: Error, kind?: MediaDeviceKind];
-	trackStreamStateChanged: [
+	) => void;
+	connectionQualityChanged: (quality: ConnectionQuality, participant: Participant) => void;
+	mediaDevicesError: (error: Error, kind?: MediaDeviceKind) => void;
+	trackStreamStateChanged: (
 		publication: RemoteTrackPublication,
 		streamState: Track.StreamState,
 		participant: RemoteParticipant,
-	];
-	trackSubscriptionPermissionChanged: [
+	) => void;
+	trackSubscriptionPermissionChanged: (
 		publication: RemoteTrackPublication,
 		status: TrackPublication.PermissionStatus,
 		participant: RemoteParticipant,
-	];
-	trackSubscriptionStatusChanged: [
+	) => void;
+	trackSubscriptionStatusChanged: (
 		publication: RemoteTrackPublication,
 		status: TrackPublication.SubscriptionStatus,
 		participant: RemoteParticipant,
-	];
-	audioPlaybackChanged: [playing: boolean];
-	videoPlaybackChanged: [playing: boolean];
-	signalConnected: [];
-	recordingStatusChanged: [recording: boolean];
-	participantEncryptionStatusChanged: [encrypted: boolean, participant?: Participant];
-	encryptionError: [error: Error, participant?: Participant];
-	dcBufferStatusChanged: [isLow: boolean, kind: DataPacket_Kind];
-	activeDeviceChanged: [kind: MediaDeviceKind, deviceId: string];
-	chatMessage: [message: ChatMessage, participant?: RemoteParticipant | LocalParticipant];
-	localTrackSubscribed: [publication: LocalTrackPublication, participant: LocalParticipant];
-	metricsReceived: [metrics: MetricsBatch, participant?: Participant];
-	participantActive: [participant: Participant];
-};
-
-export type RoomEventCallbacks = {
-	[E in keyof RoomEventArgumentMap]: (...args: RoomEventArgumentMap[E]) => void;
+	) => void;
+	audioPlaybackChanged: (playing: boolean) => void;
+	videoPlaybackChanged: (playing: boolean) => void;
+	signalConnected: () => void;
+	recordingStatusChanged: (recording: boolean) => void;
+	participantEncryptionStatusChanged: (encrypted: boolean, participant?: Participant) => void;
+	encryptionError: (error: Error, participant?: Participant) => void;
+	dcBufferStatusChanged: (isLow: boolean, kind: DataChannelKind) => void;
+	activeDeviceChanged: (kind: MediaDeviceKind, deviceId: string) => void;
+	chatMessage: (message: ChatMessage, participant?: RemoteParticipant | LocalParticipant) => void;
+	localTrackSubscribed: (publication: LocalTrackPublication, participant: LocalParticipant) => void;
+	metricsReceived: (metrics: MetricsBatch, participant?: Participant) => void;
+	participantActive: (participant: Participant) => void;
+	dataTrackPublished: (track: RemoteDataTrack) => void;
+	dataTrackUnpublished: (sid: DataTrackSid) => void;
+	localDataTrackPublished: (track: LocalDataTrack) => void;
+	localDataTrackUnpublished: (sid: DataTrackSid) => void;
 };

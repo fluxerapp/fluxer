@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {beforeEach, describe, expect, test} from 'vitest';
-import {createApplicationID} from '../../BrandedTypes';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {generateOAuthTokenSecret} from '../OAuthTokenSecret';
-import {OAuth2TokenRepository} from '../repositories/OAuth2TokenRepository';
+import {createApplicationID} from '@app/api/BrandedTypes';
+import {generateOAuthTokenSecret} from '@app/api/oauth/OAuthTokenSecret';
+import {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
 import {
 	authorizeOAuth2,
 	createOAuth2TestSetup,
@@ -13,7 +10,10 @@ import {
 	getOAuth2UserInfo,
 	introspectOAuth2Token,
 	revokeOAuth2Token,
-} from './OAuthTestUtils';
+} from '@app/api/oauth/tests/OAuthTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {beforeEach, describe, expect, test} from 'vitest';
 
 describe('OAuth2 Token Revocation', () => {
 	let harness: ApiTestHarness;

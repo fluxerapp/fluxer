@@ -20,6 +20,7 @@ import FavoriteMemes from '@app/features/expressions/state/FavoriteMemes';
 import {AUDIO_DESCRIPTOR, GIFS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import {useNearViewport} from '@app/features/messaging/hooks/useNearViewport';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {buildStaticGifPreviewURL} from '@app/features/messaging/utils/MediaProxyUtils';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {DeleteIcon, EditIcon} from '@app/features/ui/action_menu/ContextMenuIcons';
@@ -105,9 +106,9 @@ interface FilterOption {
 	icon?: React.ReactNode;
 }
 
-const formatDuration = (seconds: number | null | undefined): string => {
-	if (!seconds || seconds <= 0) return '0:00';
-	return formatDurationBase(seconds);
+const formatDuration = (seconds: number | null | undefined, locale: string): string => {
+	if (!seconds || seconds <= 0) return formatDurationBase(0, locale);
+	return formatDurationBase(seconds, locale);
 };
 const getFileExtension = (filename: string, contentType: string): string => {
 	const extension = filename.split('.').pop()?.toUpperCase();
@@ -428,7 +429,8 @@ const GridItem = observer(
 		const isAudio = contentType.startsWith('audio/');
 		const isGifImage = !isVideo && contentType.toLowerCase().includes('gif');
 		const shouldAnimateGif = useShouldAnimate({kind: 'gif', isAnimated: !isAudio && (isVideo || isGifImage)});
-		const thumbnailSrc = isGifImage && !shouldAnimateGif ? buildStaticGifPreviewURL(url) : url;
+		const memeUrl = AttachmentUrlRefresher.fresh(url, {refreshUnsigned: true});
+		const thumbnailSrc = isGifImage && !shouldAnimateGif ? buildStaticGifPreviewURL(memeUrl) : memeUrl;
 		const videoPlaybackAllowed = useAnimatedMediaVideoPlayback(videoRef, {
 			enabled: isVisible && !isAudio && isVideo,
 			shouldPlay: shouldAnimateGif,
@@ -471,7 +473,7 @@ const GridItem = observer(
 								disablePictureInPicture={true}
 								disableRemotePlayback={true}
 								preload={shouldAnimateGif ? 'auto' : 'metadata'}
-								src={url}
+								src={memeUrl}
 								data-flx="channel.mobile-memes-picker.grid-item.gif"
 							/>
 						)}
@@ -492,7 +494,7 @@ const GridItem = observer(
 								<div className={memeStyles.audioMeta} data-flx="channel.mobile-memes-picker.grid-item.div--3">
 									{duration && (
 										<div className={memeStyles.audioDuration} data-flx="channel.mobile-memes-picker.grid-item.div--4">
-											{formatDuration(duration)}
+											{formatDuration(duration, i18n.locale)}
 										</div>
 									)}
 									<Tooltip text={filename} data-flx="channel.mobile-memes-picker.grid-item.tooltip">

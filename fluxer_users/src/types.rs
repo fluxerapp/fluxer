@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+#[cfg(test)]
+use fluxer_common::user_flags::{USER_FLAG_PARTNER, USER_FLAG_STAFF_HIDDEN};
+use fluxer_common::user_flags::{USER_FLAG_STAFF, visible_user_flags};
 use serde::{Deserialize, Deserializer, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -134,20 +137,6 @@ pub struct ApiUserPartial {
     pub mention_flags: Option<i32>,
 }
 
-const USER_FLAG_STAFF: i64 = 1 << 0;
-const USER_FLAG_PARTNER: i64 = 1 << 2;
-const USER_FLAG_BUG_HUNTER: i64 = 1 << 3;
-const USER_FLAG_FRIENDLY_BOT: i64 = 1 << 4;
-const USER_FLAG_FRIENDLY_BOT_MANUAL_APPROVAL: i64 = 1 << 5;
-const USER_FLAG_SPAMMER: i64 = 1 << 6;
-const USER_FLAG_STAFF_HIDDEN: i64 = 1 << 57;
-const PUBLIC_USER_FLAGS: i64 = USER_FLAG_STAFF
-    | USER_FLAG_PARTNER
-    | USER_FLAG_BUG_HUNTER
-    | USER_FLAG_FRIENDLY_BOT
-    | USER_FLAG_FRIENDLY_BOT_MANUAL_APPROVAL
-    | USER_FLAG_SPAMMER;
-const PUBLIC_USER_FLAGS_WITHOUT_STAFF: i64 = PUBLIC_USER_FLAGS & !USER_FLAG_STAFF;
 const FLUXER_SYSTEM_USER_ID: i64 = 0;
 const FLUXER_SYSTEM_USERNAME: &str = "Fluxer";
 const FLUXER_SYSTEM_DISCRIMINATOR: &str = "0000";
@@ -170,24 +159,6 @@ impl User {
             mention_flags: self.mention_flags,
         }
     }
-
-    pub fn to_api_partial(&self) -> ApiUserPartial {
-        if self.user_id == FLUXER_SYSTEM_USER_ID {
-            return fluxer_system_user();
-        }
-        ApiUserPartial {
-            id: self.user_id.to_string(),
-            username: self.username.clone(),
-            discriminator: format!("{:04}", self.discriminator),
-            global_name: self.global_name.clone(),
-            avatar: self.avatar_hash.clone(),
-            avatar_color: self.avatar_color,
-            bot: self.bot.filter(|bot| *bot),
-            system: self.system.filter(|system| *system),
-            flags: visible_user_flags(self.flags.unwrap_or_default()),
-            mention_flags: self.mention_flags.filter(|flags| *flags != 0),
-        }
-    }
 }
 
 impl UserPartial {
@@ -208,15 +179,6 @@ impl UserPartial {
             mention_flags: self.mention_flags.filter(|flags| *flags != 0),
         }
     }
-}
-
-fn visible_user_flags(flags: i64) -> i32 {
-    let visible_flags = if (flags & USER_FLAG_STAFF_HIDDEN) != 0 {
-        PUBLIC_USER_FLAGS_WITHOUT_STAFF
-    } else {
-        PUBLIC_USER_FLAGS
-    };
-    (flags & visible_flags) as i32
 }
 
 fn fluxer_system_user() -> ApiUserPartial {
@@ -340,30 +302,10 @@ mod tests {
     }
 
     #[test]
-    fn direct_api_partial_matches_the_two_step_conversion() {
-        for user_id in [123, FLUXER_SYSTEM_USER_ID] {
-            for flags in [
-                0,
-                USER_FLAG_STAFF,
-                USER_FLAG_STAFF | USER_FLAG_STAFF_HIDDEN | USER_FLAG_PARTNER,
-                USER_FLAG_DELETED,
-            ] {
-                let user = user_with_flags(user_id, flags);
-
-                assert_eq!(
-                    serde_json::to_value(user.to_api_partial()).unwrap(),
-                    serde_json::to_value(user.to_partial().to_api_partial()).unwrap(),
-                    "user_id {user_id} flags {flags}"
-                );
-            }
-        }
-    }
-
-    #[test]
-    fn direct_api_partial_ignores_fields_outside_the_partial() {
+    fn api_partial_ignores_fields_outside_the_partial() {
         let mut user = user_with_flags(123, USER_FLAG_STAFF);
         user.mention_flags = Some(0);
-        let api_partial = user.to_api_partial();
+        let api_partial = user.to_partial().to_api_partial();
 
         assert_eq!(api_partial.id, "123");
         assert_eq!(api_partial.username, "Ada");

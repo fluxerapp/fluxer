@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GuildID, UserID} from '../../BrandedTypes';
-import {BatchBuilder, fetchMany, fetchOne} from '../../database/CassandraQueryExecution';
-import {buildPatchFromData, executeVersionedUpdate} from '../../database/CassandraVersionedUpdate';
-import {GUILD_COLUMNS, type GuildMemberByUserIdRow, type GuildRow} from '../../database/types/GuildTypes';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import {Guild} from '../../models/Guild';
-import {GuildMembersByUserId, Guilds} from '../../Tables';
-import {IGuildDataRepository} from './IGuildDataRepository';
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import {BatchBuilder, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import {buildPatchFromData, executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
+import {GUILD_COLUMNS, type GuildMemberByUserIdRow, type GuildRow} from '@app/api/database/types/GuildTypes';
+import {IGuildDataRepository} from '@app/api/guild/repositories/IGuildDataRepository';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {Guild} from '@app/api/models/Guild';
+import {GuildMembersByUserId, Guilds} from '@app/api/Tables';
 
 const FETCH_GUILD_BY_ID_QUERY = Guilds.selectCql({
 	where: Guilds.where.eq('guild_id'),

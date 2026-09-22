@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AttachmentID, ChannelID, GuildID, MemeID, PasswordResetToken, UserID} from './BrandedTypes';
-import {defineTable} from './database/CassandraTableDsl';
+import type {AttachmentID, ChannelID, GuildID, MemeID, PasswordResetToken, UserID} from '@app/api/BrandedTypes';
+import {defineTable} from '@app/api/database/CassandraTableDsl';
 import {
 	ADMIN_ARCHIVE_COLUMNS,
+	ADMIN_ARCHIVE_INDEX_COLUMNS,
 	ADMIN_AUDIT_LOG_COLUMNS,
+	type AdminArchiveIndexRow,
 	type AdminArchiveRow,
 	type AdminAuditLogRow,
 	BANNED_AVATAR_HASH_COLUMNS,
@@ -29,19 +31,19 @@ import {
 	type DisposableEmailDomainRow,
 	SUSPICIOUS_EMAIL_DOMAIN_COLUMNS,
 	type SuspiciousEmailDomainRow,
-} from './database/types/AdminArchiveTypes';
+} from '@app/api/database/types/AdminArchiveTypes';
 import {
 	ADMIN_API_KEY_BY_CREATOR_COLUMNS,
 	ADMIN_API_KEY_COLUMNS,
 	type AdminApiKeyByCreatorRow,
 	type AdminApiKeyRow,
-} from './database/types/AdminAuthTypes';
+} from '@app/api/database/types/AdminAuthTypes';
 import {
 	ATTACHMENT_UPLOAD_TRACE_BY_ATTACHMENT_COLUMNS,
 	ATTACHMENT_UPLOAD_TRACE_BY_KEY_COLUMNS,
 	type AttachmentUploadTraceByAttachmentRow,
 	type AttachmentUploadTraceByKeyRow,
-} from './database/types/AttachmentUploadTypes';
+} from '@app/api/database/types/AttachmentUploadTypes';
 import {
 	AUTH_SESSION_COLUMNS,
 	AUTH_SESSION_TOMBSTONE_COLUMNS,
@@ -75,7 +77,7 @@ import {
 	type UserSsoIdentityRow,
 	WEBAUTHN_CREDENTIAL_COLUMNS,
 	type WebAuthnCredentialRow,
-} from './database/types/AuthTypes';
+} from '@app/api/database/types/AuthTypes';
 import {
 	BILLING_ACTION_INTENT_COLUMNS,
 	BILLING_CHARGE_BY_CUSTOMER_COLUMNS,
@@ -131,7 +133,7 @@ import {
 	type BillingSubscriptionByCustomerRow,
 	type BillingSubscriptionByUserRow,
 	type BillingSubscriptionRow,
-} from './database/types/BillingTypes';
+} from '@app/api/database/types/BillingTypes';
 import {
 	CHANNEL_COLUMNS,
 	CHANNELS_BY_GUILD_COLUMNS,
@@ -145,20 +147,20 @@ import {
 	type PrivateChannelRow,
 	WEBHOOK_COLUMNS,
 	type WebhookRow,
-} from './database/types/ChannelTypes';
-import {USER_CONNECTION_COLUMNS, type UserConnectionRow} from './database/types/ConnectionTypes';
+} from '@app/api/database/types/ChannelTypes';
+import {USER_CONNECTION_STORAGE_COLUMNS, type UserConnectionStorageRow} from '@app/api/database/types/ConnectionTypes';
 import {
 	NCMEC_ATTACHMENT_SUBMISSION_COLUMNS,
 	NCMEC_USER_WORKFLOW_COLUMNS,
 	type NcmecAttachmentSubmissionRow,
 	type NcmecUserWorkflowRow,
-} from './database/types/CsamTypes';
+} from '@app/api/database/types/CsamTypes';
 import {
 	GUILD_DISCOVERY_BY_STATUS_COLUMNS,
 	GUILD_DISCOVERY_COLUMNS,
 	type GuildDiscoveryByStatusRow,
 	type GuildDiscoveryRow,
-} from './database/types/GuildDiscoveryTypes';
+} from '@app/api/database/types/GuildDiscoveryTypes';
 import {
 	GUILD_AUDIT_LOG_COLUMNS,
 	GUILD_BAN_BY_EMAIL_COLUMNS,
@@ -184,8 +186,11 @@ import {
 	type GuildRoleRow,
 	type GuildRow,
 	type GuildStickerRow,
-} from './database/types/GuildTypes';
-import {INSTANCE_CONFIGURATION_COLUMNS, type InstanceConfigurationRow} from './database/types/InstanceConfigTypes';
+} from '@app/api/database/types/GuildTypes';
+import {
+	INSTANCE_CONFIGURATION_COLUMNS,
+	type InstanceConfigurationRow,
+} from '@app/api/database/types/InstanceConfigTypes';
 import {
 	JOB_ACTIVE_COLUMNS,
 	JOB_BY_DAY_BUCKET_COLUMNS,
@@ -193,7 +198,7 @@ import {
 	type JobActiveRow,
 	type JobByDayBucketRow,
 	type JobByIdRow,
-} from './database/types/JobLedgerTypes';
+} from '@app/api/database/types/JobLedgerTypes';
 import {
 	ATTACHMENT_LOOKUP_COLUMNS,
 	type AttachmentLookupRow,
@@ -211,7 +216,7 @@ import {
 	type MessageByAuthorRow,
 	type MessageReactionRow,
 	type MessageRow,
-} from './database/types/MessageTypes';
+} from '@app/api/database/types/MessageTypes';
 import {
 	APPLICATION_COLUMNS,
 	type ApplicationByOwnerRow,
@@ -224,7 +229,7 @@ import {
 	type OAuth2AuthorizationCodeRow,
 	type OAuth2RefreshTokenByUserRow,
 	type OAuth2RefreshTokenRow,
-} from './database/types/OAuth2Types';
+} from '@app/api/database/types/OAuth2Types';
 import {
 	GIFT_CODE_BY_CREATOR_COLUMNS,
 	GIFT_CODE_BY_PAYMENT_INTENT_COLUMNS,
@@ -244,7 +249,7 @@ import {
 	type PaymentRow,
 	VISIONARY_SLOT_COLUMNS,
 	type VisionarySlotRow,
-} from './database/types/PaymentTypes';
+} from '@app/api/database/types/PaymentTypes';
 import {
 	DSA_REPORT_EMAIL_VERIFICATION_COLUMNS,
 	DSA_REPORT_TICKET_COLUMNS,
@@ -254,7 +259,7 @@ import {
 	type IARSubmissionRow,
 	MESSAGE_REPORT_SUBMISSION_BY_REPORTER_COLUMNS,
 	type MessageReportSubmissionByReporterRow,
-} from './database/types/ReportTypes';
+} from '@app/api/database/types/ReportTypes';
 import {
 	INBOUND_SMS_CHALLENGE_BY_USER_COLUMNS,
 	INBOUND_SMS_CHALLENGE_COLUMNS,
@@ -288,7 +293,7 @@ import {
 	type RiskOutcomeBySubnetRow,
 	SUSPICIOUS_IP_COLUMNS,
 	type SuspiciousIpRow,
-} from './database/types/RiskTypes';
+} from '@app/api/database/types/RiskTypes';
 import {
 	FAVORITE_MEME_COLUMNS,
 	type FavoriteMemeRow,
@@ -334,8 +339,9 @@ import {
 	type UserRow,
 	type UserSettingsRow,
 	type UsersPendingDeletionRow,
-} from './database/types/UserTypes';
-import {ATTACHMENT_DECAY_COLUMNS, type AttachmentDecayRow} from './types/AttachmentDecayTypes';
+} from '@app/api/database/types/UserTypes';
+import {ATTACHMENT_DECAY_COLUMNS, type AttachmentDecayRow} from '@app/api/types/AttachmentDecayTypes';
+import {seconds} from 'itty-time';
 
 export const Users = defineTable<UserRow, 'user_id'>({
 	name: 'users',
@@ -427,9 +433,9 @@ export const UserContactChangeLogs = defineTable<UserContactChangeLogRow, 'user_
 	columns: USER_CONTACT_CHANGE_LOG_COLUMNS,
 	primaryKey: ['user_id', 'event_id'],
 });
-export const UserConnections = defineTable<UserConnectionRow, 'user_id' | 'connection_type' | 'connection_id'>({
+export const UserConnections = defineTable<UserConnectionStorageRow, 'user_id' | 'connection_type' | 'connection_id'>({
 	name: 'user_connections',
-	columns: USER_CONNECTION_COLUMNS,
+	columns: USER_CONNECTION_STORAGE_COLUMNS,
 	primaryKey: ['user_id', 'connection_type', 'connection_id'],
 	partitionKey: ['user_id'],
 });
@@ -494,16 +500,19 @@ export const GuildAuditLogs = defineTable<GuildAuditLogRow, 'guild_id' | 'log_id
 	name: 'guild_audit_logs_v2',
 	columns: GUILD_AUDIT_LOG_COLUMNS,
 	primaryKey: ['guild_id', 'log_id'],
+	defaultTtlSeconds: seconds('45 days'),
 });
 export const GuildAuditLogsByUser = defineTable<GuildAuditLogRow, 'guild_id' | 'user_id' | 'log_id'>({
 	name: 'guild_audit_logs_v2_by_user',
 	columns: GUILD_AUDIT_LOG_COLUMNS,
 	primaryKey: ['guild_id', 'user_id', 'log_id'],
+	defaultTtlSeconds: seconds('45 days'),
 });
 export const GuildAuditLogsByAction = defineTable<GuildAuditLogRow, 'guild_id' | 'action_type' | 'log_id'>({
 	name: 'guild_audit_logs_v2_by_action',
 	columns: GUILD_AUDIT_LOG_COLUMNS,
 	primaryKey: ['guild_id', 'action_type', 'log_id'],
+	defaultTtlSeconds: seconds('45 days'),
 });
 export const GuildAuditLogsByUserAction = defineTable<
 	GuildAuditLogRow,
@@ -512,6 +521,7 @@ export const GuildAuditLogsByUserAction = defineTable<
 	name: 'guild_audit_logs_v2_by_user_action',
 	columns: GUILD_AUDIT_LOG_COLUMNS,
 	primaryKey: ['guild_id', 'user_id', 'action_type', 'log_id'],
+	defaultTtlSeconds: seconds('45 days'),
 });
 export const GuildMembershipMetadata = defineTable<GuildMembershipMetadataRow, 'guild_id' | 'user_id'>({
 	name: 'guild_membership_metadata',
@@ -650,6 +660,7 @@ export const RecentMentions = defineTable<RecentMentionRow, 'user_id' | 'message
 	name: 'recent_mentions',
 	columns: RECENT_MENTION_COLUMNS,
 	primaryKey: ['user_id', 'message_id'],
+	defaultTtlSeconds: seconds('7 days'),
 });
 
 interface RecentMentionsByGuildRow {
@@ -673,6 +684,7 @@ export const RecentMentionsByGuild = defineTable<RecentMentionsByGuildRow, 'user
 	name: 'recent_mentions_by_guild',
 	columns: RECENT_MENTIONS_BY_GUILD_COLUMNS,
 	primaryKey: ['user_id', 'guild_id', 'message_id'],
+	defaultTtlSeconds: seconds('7 days'),
 });
 export const SavedMessages = defineTable<SavedMessageRow, 'user_id' | 'message_id'>({
 	name: 'saved_messages',
@@ -683,6 +695,7 @@ export const PushSubscriptions = defineTable<PushSubscriptionRow, 'user_id' | 's
 	name: 'push_subscriptions',
 	columns: PUSH_SUBSCRIPTION_COLUMNS,
 	primaryKey: ['user_id', 'subscription_id'],
+	defaultTtlSeconds: seconds('90 days'),
 });
 export const Payments = defineTable<PaymentRow, 'checkout_session_id'>({
 	name: 'payments',
@@ -739,14 +752,14 @@ export const AdminArchivesBySubject = defineTable<AdminArchiveRow, 'subject_type
 	columns: ADMIN_ARCHIVE_COLUMNS,
 	primaryKey: ['subject_type', 'subject_id', 'archive_id'],
 });
-export const AdminArchivesByRequester = defineTable<AdminArchiveRow, 'requested_by' | 'archive_id'>({
+export const AdminArchivesByRequester = defineTable<AdminArchiveIndexRow, 'requested_by' | 'archive_id'>({
 	name: 'admin_archives_by_requester',
-	columns: ADMIN_ARCHIVE_COLUMNS,
+	columns: ADMIN_ARCHIVE_INDEX_COLUMNS,
 	primaryKey: ['requested_by', 'archive_id'],
 });
-export const AdminArchivesByType = defineTable<AdminArchiveRow, 'subject_type' | 'archive_id'>({
+export const AdminArchivesByType = defineTable<AdminArchiveIndexRow, 'subject_type' | 'archive_id'>({
 	name: 'admin_archives_by_type',
-	columns: ADMIN_ARCHIVE_COLUMNS,
+	columns: ADMIN_ARCHIVE_INDEX_COLUMNS,
 	primaryKey: ['subject_type', 'archive_id'],
 });
 export const AdminAuditLogs = defineTable<AdminAuditLogRow, 'log_id'>({
@@ -849,11 +862,13 @@ export const EmailVerificationTokens = defineTable<EmailVerificationTokenRow, 't
 	name: 'email_verification_tokens',
 	columns: EMAIL_VERIFICATION_TOKEN_COLUMNS,
 	primaryKey: ['token_', 'user_id'],
+	defaultTtlSeconds: seconds('24 hours'),
 });
 export const PasswordResetTokens = defineTable<PasswordResetTokenRow, 'token_' | 'user_id'>({
 	name: 'password_reset_tokens',
 	columns: PASSWORD_RESET_TOKEN_COLUMNS,
 	primaryKey: ['token_', 'user_id'],
+	defaultTtlSeconds: seconds('24 hours'),
 });
 export const PasswordResetTokensByUserId = defineTable<
 	{
@@ -865,16 +880,19 @@ export const PasswordResetTokensByUserId = defineTable<
 	name: 'password_reset_tokens_by_user_id',
 	columns: ['user_id', 'token_'],
 	primaryKey: ['user_id', 'token_'],
+	defaultTtlSeconds: seconds('24 hours'),
 });
 export const EmailRevertTokens = defineTable<EmailRevertTokenRow, 'token_' | 'user_id'>({
 	name: 'email_revert_tokens',
 	columns: EMAIL_REVERT_TOKEN_COLUMNS,
 	primaryKey: ['token_', 'user_id'],
+	defaultTtlSeconds: seconds('48 hours'),
 });
 export const PhoneTokens = defineTable<PhoneTokenRow, 'token_'>({
 	name: 'phone_tokens',
 	columns: PHONE_TOKEN_COLUMNS,
 	primaryKey: ['token_'],
+	defaultTtlSeconds: seconds('30 days'),
 });
 export const AuthSessions = defineTable<AuthSessionRow, 'session_id_hash'>({
 	name: 'auth_sessions',
@@ -896,11 +914,13 @@ export const AuthSessionTombstones = defineTable<AuthSessionTombstoneRow, 'user_
 	name: 'auth_session_tombstones',
 	columns: AUTH_SESSION_TOMBSTONE_COLUMNS,
 	primaryKey: ['user_id', 'session_id_hash'],
+	defaultTtlSeconds: seconds('30 days'),
 });
 export const UserCountryHistory = defineTable<UserCountryHistoryRow, 'user_id' | 'country'>({
 	name: 'user_country_history',
 	columns: USER_COUNTRY_HISTORY_COLUMNS,
 	primaryKey: ['user_id', 'country'],
+	defaultTtlSeconds: seconds('365 days'),
 });
 export const MfaBackupCodes = defineTable<MfaBackupCodeRow, 'user_id' | 'code'>({
 	name: 'mfa_backup_codes',
@@ -927,6 +947,7 @@ export const IpAuthorizationTokens = defineTable<IpAuthorizationTokenRow, 'token
 	name: 'ip_authorization_tokens',
 	columns: IP_AUTHORIZATION_TOKEN_COLUMNS,
 	primaryKey: ['token_', 'user_id'],
+	defaultTtlSeconds: seconds('30 minutes'),
 });
 export const AuthorizedIps = defineTable<AuthorizedIpRow, 'user_id' | 'ip'>({
 	name: 'authorized_ips_v2',
@@ -1052,26 +1073,31 @@ export const OAuth2AuthorizationCodes = defineTable<OAuth2AuthorizationCodeRow, 
 	name: 'oauth2_authorization_codes',
 	columns: OAUTH2_AUTHORIZATION_CODE_COLUMNS,
 	primaryKey: ['code'],
+	defaultTtlSeconds: seconds('10 minutes'),
 });
 export const OAuth2AccessTokens = defineTable<OAuth2AccessTokenRow, 'token_'>({
 	name: 'oauth2_access_tokens',
 	columns: OAUTH2_ACCESS_TOKEN_COLUMNS,
 	primaryKey: ['token_'],
+	defaultTtlSeconds: seconds('7 days'),
 });
 export const OAuth2AccessTokensByUser = defineTable<OAuth2AccessTokenByUserRow, 'user_id' | 'token_'>({
 	name: 'oauth2_access_tokens_by_user',
 	columns: OAUTH2_ACCESS_TOKENS_BY_USER_COLUMNS,
 	primaryKey: ['user_id', 'token_'],
+	defaultTtlSeconds: seconds('7 days'),
 });
 export const OAuth2RefreshTokens = defineTable<OAuth2RefreshTokenRow, 'token_'>({
 	name: 'oauth2_refresh_tokens',
 	columns: OAUTH2_REFRESH_TOKEN_COLUMNS,
 	primaryKey: ['token_'],
+	defaultTtlSeconds: seconds('30 days'),
 });
 export const OAuth2RefreshTokensByUser = defineTable<OAuth2RefreshTokenByUserRow, 'user_id' | 'token_'>({
 	name: 'oauth2_refresh_tokens_by_user',
 	columns: OAUTH2_REFRESH_TOKENS_BY_USER_COLUMNS,
 	primaryKey: ['user_id', 'token_'],
+	defaultTtlSeconds: seconds('30 days'),
 });
 
 interface WebhooksByChannelRow {
@@ -1112,12 +1138,14 @@ export const JobsById = defineTable<JobByIdRow, 'job_id'>({
 	name: 'jobs_by_id',
 	columns: JOB_BY_ID_COLUMNS,
 	primaryKey: ['job_id'],
+	defaultTtlSeconds: seconds('90 days'),
 });
 export const JobsByDayBucket = defineTable<JobByDayBucketRow, 'bucket_day' | 'created_at' | 'job_id'>({
 	name: 'jobs_by_day_bucket',
 	columns: JOB_BY_DAY_BUCKET_COLUMNS,
 	primaryKey: ['bucket_day', 'created_at', 'job_id'],
 	partitionKey: ['bucket_day'],
+	defaultTtlSeconds: seconds('90 days'),
 });
 export const JobsActive = defineTable<JobActiveRow, 'job_id'>({
 	name: 'jobs_active',
@@ -1128,11 +1156,13 @@ export const AttachmentUploadTracesByKey = defineTable<AttachmentUploadTraceByKe
 	name: 'attachment_upload_traces_by_key',
 	columns: ATTACHMENT_UPLOAD_TRACE_BY_KEY_COLUMNS,
 	primaryKey: ['upload_key'],
+	defaultTtlSeconds: seconds('30 days'),
 });
 export const AttachmentUploadTracesByAttachment = defineTable<AttachmentUploadTraceByAttachmentRow, 'attachment_id'>({
 	name: 'attachment_upload_traces_by_attachment',
 	columns: ATTACHMENT_UPLOAD_TRACE_BY_ATTACHMENT_COLUMNS,
 	primaryKey: ['attachment_id'],
+	defaultTtlSeconds: seconds('30 days'),
 });
 export const NcmecAttachmentSubmissions = defineTable<NcmecAttachmentSubmissionRow, 'attachment_id'>({
 	name: 'ncmec_attachment_submissions',
@@ -1149,6 +1179,7 @@ export const RegistrationEventsByIp = defineTable<RegistrationEventByIpRow, 'ip'
 	columns: REGISTRATION_EVENT_BY_IP_COLUMNS,
 	primaryKey: ['ip', 'created_at', 'user_id'],
 	partitionKey: ['ip'],
+	defaultTtlSeconds: seconds('30 days'),
 });
 export const RegistrationEventsBySubnet = defineTable<
 	RegistrationEventBySubnetRow,
@@ -1159,6 +1190,7 @@ export const RegistrationEventsBySubnet = defineTable<
 	columns: REGISTRATION_EVENT_BY_SUBNET_COLUMNS,
 	primaryKey: ['subnet', 'created_at', 'user_id'],
 	partitionKey: ['subnet'],
+	defaultTtlSeconds: seconds('30 days'),
 });
 export const RegistrationEventsByEmailDomain = defineTable<
 	RegistrationEventByEmailDomainRow,
@@ -1169,6 +1201,7 @@ export const RegistrationEventsByEmailDomain = defineTable<
 	columns: REGISTRATION_EVENT_BY_EMAIL_DOMAIN_COLUMNS,
 	primaryKey: ['email_domain', 'created_at', 'user_id'],
 	partitionKey: ['email_domain'],
+	defaultTtlSeconds: seconds('30 days'),
 });
 export const RegistrationEventsByPlusAddressBase = defineTable<
 	RegistrationEventByPlusAddressBaseRow,
@@ -1179,6 +1212,7 @@ export const RegistrationEventsByPlusAddressBase = defineTable<
 	columns: REGISTRATION_EVENT_BY_PLUS_ADDRESS_BASE_COLUMNS,
 	primaryKey: ['plus_address_base', 'created_at', 'user_id'],
 	partitionKey: ['plus_address_base'],
+	defaultTtlSeconds: seconds('30 days'),
 });
 export const LatestRiskContextByUser = defineTable<LatestRiskContextByUserRow, 'user_id'>({
 	name: 'latest_risk_context_by_user',
@@ -1189,6 +1223,7 @@ export const SuspiciousIps = defineTable<SuspiciousIpRow, 'ip'>({
 	name: 'suspicious_ips',
 	columns: SUSPICIOUS_IP_COLUMNS,
 	primaryKey: ['ip'],
+	defaultTtlSeconds: seconds('180 days'),
 });
 export const RiskOutcomesByIp = defineTable<RiskOutcomeByIpRow, 'ip' | 'created_at' | 'user_id' | 'outcome_code', 'ip'>(
 	{
@@ -1196,6 +1231,7 @@ export const RiskOutcomesByIp = defineTable<RiskOutcomeByIpRow, 'ip' | 'created_
 		columns: RISK_OUTCOME_BY_IP_COLUMNS,
 		primaryKey: ['ip', 'created_at', 'user_id', 'outcome_code'],
 		partitionKey: ['ip'],
+		defaultTtlSeconds: seconds('180 days'),
 	},
 );
 export const RiskOutcomesBySubnet = defineTable<
@@ -1207,6 +1243,7 @@ export const RiskOutcomesBySubnet = defineTable<
 	columns: RISK_OUTCOME_BY_SUBNET_COLUMNS,
 	primaryKey: ['subnet', 'created_at', 'user_id', 'outcome_code'],
 	partitionKey: ['subnet'],
+	defaultTtlSeconds: seconds('180 days'),
 });
 export const RiskOutcomesByEmailDomain = defineTable<
 	RiskOutcomeByEmailDomainRow,
@@ -1217,6 +1254,7 @@ export const RiskOutcomesByEmailDomain = defineTable<
 	columns: RISK_OUTCOME_BY_EMAIL_DOMAIN_COLUMNS,
 	primaryKey: ['email_domain', 'created_at', 'user_id', 'outcome_code'],
 	partitionKey: ['email_domain'],
+	defaultTtlSeconds: seconds('180 days'),
 });
 export const RiskOutcomesByAsn = defineTable<
 	RiskOutcomeByAsnRow,
@@ -1227,6 +1265,7 @@ export const RiskOutcomesByAsn = defineTable<
 	columns: RISK_OUTCOME_BY_ASN_COLUMNS,
 	primaryKey: ['asn', 'created_at', 'user_id', 'outcome_code'],
 	partitionKey: ['asn'],
+	defaultTtlSeconds: seconds('180 days'),
 });
 export const RiskAssessments = defineTable<RiskAssessmentRow, 'assessment_id'>({
 	name: 'risk_assessments',
@@ -1243,6 +1282,7 @@ export const InboundSmsChallenges = defineTable<InboundSmsChallengeRow, 'challen
 	name: 'inbound_sms_challenges',
 	columns: INBOUND_SMS_CHALLENGE_COLUMNS,
 	primaryKey: ['challenge_code'],
+	defaultTtlSeconds: seconds('15 minutes'),
 });
 export const InboundSmsChallengesByUser = defineTable<
 	InboundSmsChallengeByUserRow,
@@ -1253,16 +1293,19 @@ export const InboundSmsChallengesByUser = defineTable<
 	columns: INBOUND_SMS_CHALLENGE_BY_USER_COLUMNS,
 	primaryKey: ['user_id', 'created_at'],
 	partitionKey: ['user_id'],
+	defaultTtlSeconds: seconds('15 minutes'),
 });
 export const PhoneLookupCache = defineTable<PhoneLookupCacheRow, 'phone'>({
 	name: 'phone_lookup_cache',
 	columns: PHONE_LOOKUP_CACHE_COLUMNS,
 	primaryKey: ['phone'],
+	defaultTtlSeconds: seconds('7 days'),
 });
 export const PhoneVerificationAttempts = defineTable<PhoneVerificationAttemptRow, 'attempt_id'>({
 	name: 'phone_verification_attempts',
 	columns: PHONE_VERIFICATION_ATTEMPT_COLUMNS,
 	primaryKey: ['attempt_id'],
+	defaultTtlSeconds: seconds('90 days'),
 });
 export const BillingCustomers = defineTable<BillingCustomerRow, 'provider_id'>({
 	name: 'billing_customers',

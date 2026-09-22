@@ -1,5 +1,53 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AttachmentID, ChannelID, GuildID, MessageID, RoleID, UserID} from '@app/api/BrandedTypes';
+import {
+	createAttachmentID,
+	createChannelID,
+	createGuildID,
+	createMessageID,
+	createStickerID,
+	createUserID,
+} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {AttachmentRequestData, AttachmentToProcess} from '@app/api/channel/AttachmentDTOs';
+import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
+import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
+import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
+import type {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
+import type {DmNsfwContext} from '@app/api/channel/services/message/MessageContentService';
+import type {MessageDispatchService} from '@app/api/channel/services/message/MessageDispatchService';
+import type {MessageEmbedAttachmentResolver} from '@app/api/channel/services/message/MessageEmbedAttachmentResolver';
+import {
+	createMessageSnapshotsForForward,
+	type ForwardMediaSelection,
+	isOperationDisabled,
+	isPersonalNotesChannel,
+} from '@app/api/channel/services/message/MessageHelpers';
+import type {MessageMentionService} from '@app/api/channel/services/message/MessageMentionService';
+import type {MessageOperationsHelpers} from '@app/api/channel/services/message/MessageOperationsHelpers';
+import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
+import type {MessageProcessingService} from '@app/api/channel/services/message/MessageProcessingService';
+import type {MessageSearchService} from '@app/api/channel/services/message/MessageSearchService';
+import type {MessageValidationService} from '@app/api/channel/services/message/MessageValidationService';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
+import type {MessageAttachment, MessageReference} from '@app/api/database/types/MessageTypes';
+import type {IFavoriteMemeRepository} from '@app/api/favorite_meme/IFavoriteMemeRepository';
+import type {GatewayChannelMention, IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import {Logger} from '@app/api/Logger';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Channel} from '@app/api/models/Channel';
+import type {Message} from '@app/api/models/Message';
+import type {MessageSnapshot} from '@app/api/models/MessageSnapshot';
+import type {User} from '@app/api/models/User';
+import type {Webhook} from '@app/api/models/Webhook';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {DirectMessageSpamMitigationService} from '@app/api/user/services/DirectMessageSpamMitigationService';
+import {assertGuildMemberCanCommunicate} from '@app/api/utils/GuildCommunicationUtils';
 import {
 	ChannelTypes,
 	MessageFlags,
@@ -9,7 +57,12 @@ import {
 	SENDABLE_MESSAGE_FLAGS,
 } from '@fluxer/constants/src/ChannelConstants';
 import {GuildNSFWLevel, GuildOperations} from '@fluxer/constants/src/GuildConstants';
-import {RelationshipTypes, SensitiveMediaFilterLevel, UserFlags} from '@fluxer/constants/src/UserConstants';
+import {
+	DELETED_USER_ID,
+	RelationshipTypes,
+	SensitiveMediaFilterLevel,
+	UserFlags,
+} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
@@ -23,54 +76,6 @@ import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMe
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
-import type {AttachmentID, ChannelID, GuildID, MessageID, RoleID, UserID} from '../../../BrandedTypes';
-import {
-	createAttachmentID,
-	createChannelID,
-	createGuildID,
-	createMessageID,
-	createStickerID,
-	createUserID,
-} from '../../../BrandedTypes';
-import {Config} from '../../../Config';
-import {SYSTEM_USER_ID} from '../../../constants/Core';
-import type {MessageAttachment, MessageReference} from '../../../database/types/MessageTypes';
-import type {IFavoriteMemeRepository} from '../../../favorite_meme/IFavoriteMemeRepository';
-import type {GatewayChannelMention, IGatewayService} from '../../../infrastructure/IGatewayService';
-import type {ISnowflakeService} from '../../../infrastructure/ISnowflakeService';
-import type {IStorageService} from '../../../infrastructure/IStorageService';
-import {Logger} from '../../../Logger';
-import type {LimitConfigService} from '../../../limits/LimitConfigService';
-import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
-import type {Channel} from '../../../models/Channel';
-import type {Message} from '../../../models/Message';
-import type {MessageSnapshot} from '../../../models/MessageSnapshot';
-import type {User} from '../../../models/User';
-import type {Webhook} from '../../../models/Webhook';
-import type {IUserRepository} from '../../../user/IUserRepository';
-import type {DirectMessageSpamMitigationService} from '../../../user/services/DirectMessageSpamMitigationService';
-import {assertGuildMemberCanCommunicate} from '../../../utils/GuildCommunicationUtils';
-import type {AttachmentRequestData, AttachmentToProcess} from '../../AttachmentDTOs';
-import type {MessageRequest, MessageUpdateRequest} from '../../MessageTypes';
-import type {IChannelRepositoryAggregate} from '../../repositories/IChannelRepositoryAggregate';
-import type {AttachmentUploadTraceRepository} from '../../repositories/message/AttachmentUploadTraceRepository';
-import type {AuthenticatedChannel} from '../AuthenticatedChannel';
-import type {MessageChannelAuthService} from './MessageChannelAuthService';
-import type {DmNsfwContext} from './MessageContentService';
-import type {MessageDispatchService} from './MessageDispatchService';
-import type {MessageEmbedAttachmentResolver} from './MessageEmbedAttachmentResolver';
-import {
-	createMessageSnapshotsForForward,
-	type ForwardMediaSelection,
-	isOperationDisabled,
-	isPersonalNotesChannel,
-} from './MessageHelpers';
-import type {MessageMentionService} from './MessageMentionService';
-import type {MessageOperationsHelpers} from './MessageOperationsHelpers';
-import type {MessagePersistenceService} from './MessagePersistenceService';
-import type {MessageProcessingService} from './MessageProcessingService';
-import type {MessageSearchService} from './MessageSearchService';
-import type {MessageValidationService} from './MessageValidationService';
 
 interface MessageSendServiceDeps {
 	channelRepository: IChannelRepositoryAggregate;
@@ -211,15 +216,18 @@ export class MessageSendService {
 		return processed.length > 0 ? processed : undefined;
 	}
 
-	private resolveWebhookAttachmentUploadUserId(
+	private async resolveWebhookAttachmentUploadUserId(
 		webhook: Webhook,
 		attachments?: Array<AttachmentRequestData>,
-	): UserID | undefined {
-		const uploadUserId = webhook.creatorId ?? undefined;
-		if (uploadUserId === undefined && this.attachmentsToProcess(attachments) !== undefined) {
-			throw InputValidationError.fromCode('attachments', ValidationErrorCodes.INVALID_MESSAGE_DATA);
+	): Promise<UserID | undefined> {
+		if (this.attachmentsToProcess(attachments) === undefined) {
+			return webhook.creatorId ?? undefined;
 		}
-		return uploadUserId;
+		if (!webhook.creatorId) {
+			return createUserID(DELETED_USER_ID);
+		}
+		const creator = await this.deps.userRepository.findUnique(webhook.creatorId);
+		return creator ? webhook.creatorId : createUserID(DELETED_USER_ID);
 	}
 
 	private getOneToOneDmRecipientId(channel: Channel, senderId: UserID): UserID | null {
@@ -980,7 +988,7 @@ export class MessageSendService {
 			await this.settlePostCreateWork(messageId, [
 				{
 					step: 'update_dm_recipients',
-					promise: this.deps.processingService.updateDMRecipients({channel, channelId, requestCache}),
+					promise: this.deps.processingService.updateDMRecipients({channel, channelId, messageId, requestCache}),
 				},
 				{
 					step: 'process_message_after_creation',
@@ -1051,7 +1059,7 @@ export class MessageSendService {
 	}): Promise<Message> {
 		const channelId = webhook.channelId!;
 		const channel = await this.deps.channelRepository.channelData.findUnique(channelId);
-		if (!channel || !channel.guildId) {
+		if (!channel?.guildId) {
 			throw new CannotExecuteOnDmError();
 		}
 		const guild = await this.deps.gatewayService.getGuildData({
@@ -1088,6 +1096,15 @@ export class MessageSendService {
 			embeds: data.embeds,
 			attachments: data.attachments,
 		});
+		const webhookActorId = createUserID(BigInt(webhook.id));
+		const existingMessage = await this.deps.operationsHelpers.findExistingMessage({
+			userId: webhookActorId,
+			nonce: data.nonce,
+			expectedChannelId: channelId,
+		});
+		if (existingMessage) {
+			return existingMessage;
+		}
 		let referencedMessage: Message | null = null;
 		let messageSnapshots: Array<MessageSnapshot> | undefined;
 		if (data.message_reference) {
@@ -1175,7 +1192,7 @@ export class MessageSendService {
 			flags: this.deps.validationService.calculateMessageFlags(data),
 			embeds: data.embeds,
 			attachments: this.attachmentsToProcess(data.attachments),
-			attachmentUploadUserId: this.resolveWebhookAttachmentUploadUserId(webhook, data.attachments),
+			attachmentUploadUserId: await this.resolveWebhookAttachmentUploadUserId(webhook, data.attachments),
 			stickerIds: data.sticker_ids ? data.sticker_ids.flatMap((stickerId) => createStickerID(stickerId)) : undefined,
 			messageReference,
 			messageSnapshots,
@@ -1194,15 +1211,17 @@ export class MessageSendService {
 		await this.deps.mentionService.handleMentionTasks({
 			guildId: channel.guildId,
 			message,
-			authorId: createUserID(BigInt(webhook.id)),
+			authorId: webhookActorId,
 			mentionHere: mentionData?.mentionHere ?? false,
 		});
 		await this.deps.dispatchService.dispatchMessageCreate({
 			channel,
 			message,
 			requestCache,
+			nonce: data.nonce,
 			mentionHere: mentionData?.mentionHere ?? false,
 		});
+		await this.cacheMessageNonceIfPresent({userId: webhookActorId, nonce: data.nonce, channelId, messageId});
 		void enqueueDeferredEmbeds().catch((error) => {
 			Logger.warn({error, messageId: messageId.toString()}, 'Failed to enqueue deferred embed extraction');
 		});
@@ -1226,7 +1245,7 @@ export class MessageSendService {
 	}): Promise<Message> {
 		const channelId = webhook.channelId!;
 		const channel = await this.deps.channelRepository.channelData.findUnique(channelId);
-		if (!channel || !channel.guildId) {
+		if (!channel?.guildId) {
 			throw new CannotExecuteOnDmError();
 		}
 		const existingMessage = await this.deps.channelRepository.messages.getMessage(channelId, messageId);
@@ -1258,7 +1277,7 @@ export class MessageSendService {
 			data,
 			channel,
 			guild,
-			attachmentUploadUserId: this.resolveWebhookAttachmentUploadUserId(webhook, data.attachments),
+			attachmentUploadUserId: await this.resolveWebhookAttachmentUploadUserId(webhook, data.attachments),
 			allowEmbeds: true,
 		});
 		await this.deps.dispatchService.dispatchMessageUpdate({channel, message: updatedMessage, requestCache});
@@ -1336,6 +1355,7 @@ export class MessageSendService {
 			attachments: attachmentsToProcess,
 			attachmentUploadUserId: user.id,
 			processedAttachments: favoriteMemeAttachment ? [favoriteMemeAttachment] : undefined,
+			stickerIds: data.sticker_ids ? data.sticker_ids.flatMap((stickerId) => createStickerID(stickerId)) : undefined,
 			messageReference,
 			messageSnapshots,
 			guildId: null,

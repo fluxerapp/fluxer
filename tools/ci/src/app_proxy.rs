@@ -6,27 +6,19 @@ use crate::common::{
     remove_dir_if_exists, require_env, resolve_calver, run_command, runner_temp, s3_client,
     trim_option, upload_s3_plan_append_only,
 };
+use crate::functions::sha256_reader;
 use anyhow::{Context, Result, anyhow, ensure};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64;
 use chrono::Utc;
 use clap::{Args, ValueEnum};
-use reqwest::Client;
 use serde_json::{Map, Value, json};
-use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, BTreeSet};
 use std::env;
 use std::fs::{self, File};
-use std::io::Read;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
-use std::time::Duration;
-use tokio::sync::Semaphore;
-use tokio::task::JoinSet;
-use tokio::time::sleep;
 
 const DEFAULT_PUBLIC_ASSET_BASE_URL: &str = "https://fluxerstatic.com";
-const DEFAULT_APP_PROXY_TIME_FREEZE_ENABLED: &str = "true";
 const DEFAULT_APP_PROXY_BUNDLE_LOCAL_ASSETS: &str = "false";
 const DEFAULT_STATIC_BUCKET: &str = "fluxer-static";
 const DEFAULT_S3_ENDPOINT: &str = "https://ewr1.vultrobjects.com";
@@ -36,10 +28,6 @@ const CANONICAL_ASSETS_DIR: &str = "/assets";
 const AMD64_PLATFORM: &str = "linux/amd64";
 const ARM64_PLATFORM: &str = "linux/arm64";
 const PARITY_DIFF_LIMIT: usize = 20;
-const ASSET_READ_CONCURRENCY: usize = 16;
-const ASSET_READ_ATTEMPTS: u32 = 3;
-const ASSET_READ_RETRY_DELAY: Duration = Duration::from_secs(2);
-const ASSET_READ_TIMEOUT: Duration = Duration::from_secs(30);
 
 #[derive(Debug, Args, Clone)]
 pub struct BuildAppProxyArgs {
@@ -189,11 +177,6 @@ fn bake_command(targets: &[&str]) -> Result<CommandSpec> {
         .env("IMAGE_REPO", image_repo()?)
         .env("BUILD_VERSION", build_version)
         .env("PUBLIC_ASSET_BASE_URL", public_asset_base_url)
-        .env(
-            "FLUXER_APP_PROXY_TIME_FREEZE_ENABLED",
-            env::var("FLUXER_APP_PROXY_TIME_FREEZE_ENABLED")
-                .unwrap_or_else(|_| DEFAULT_APP_PROXY_TIME_FREEZE_ENABLED.to_string()),
-        )
         .env(
             "BUNDLE_LOCAL_ASSETS",
             env::var("BUNDLE_LOCAL_ASSETS")
@@ -366,10 +349,7 @@ async fn verify_published_assets_step() -> Result<()> {
         unproduced.join(", ")
     );
 
-    match env_string("PUBLIC_ASSET_BASE_URL") {
-        Some(base) => verify_remote_assets(&base, &assets).await,
-        None => verify_local_assets(&dist, &assets),
-    }
+    verify_local_assets(&dist, &assets)
 }
 
 fn verify_local_assets(dist: &Path, assets: &[String]) -> Result<()> {
@@ -390,74 +370,6 @@ fn verify_local_assets(dist: &Path, assets: &[String]) -> Result<()> {
         dist.display()
     );
     Ok(())
-}
-
-async fn verify_remote_assets(base: &str, assets: &[String]) -> Result<()> {
-    let client = Client::builder()
-        .timeout(ASSET_READ_TIMEOUT)
-        .build()
-        .context("Failed to build the asset verification HTTP client")?;
-    let semaphore = Arc::new(Semaphore::new(ASSET_READ_CONCURRENCY));
-    let mut tasks = JoinSet::new();
-    for asset in assets {
-        let permit = semaphore
-            .clone()
-            .acquire_owned()
-            .await
-            .context("Asset verification semaphore closed")?;
-        let client = client.clone();
-        let url = asset_url(base, asset);
-        let asset = asset.clone();
-        tasks.spawn(async move {
-            let _permit = permit;
-            read_published_asset(&client, &url)
-                .await
-                .err()
-                .map(|error| format!("{asset}: {error}"))
-        });
-    }
-
-    let mut failures = Vec::new();
-    while let Some(result) = tasks.join_next().await {
-        if let Some(failure) = result.context("Asset verification task failed")? {
-            failures.push(failure);
-        }
-    }
-    failures.sort();
-    ensure!(
-        failures.is_empty(),
-        "{} of {} published assets are not readable at {base}:\n{}",
-        failures.len(),
-        assets.len(),
-        failures.join("\n")
-    );
-
-    println!(
-        "published asset verification passed - {} assets readable at {base}",
-        assets.len()
-    );
-    Ok(())
-}
-
-async fn read_published_asset(client: &Client, url: &str) -> Result<()> {
-    let mut last_error = None;
-    for attempt in 1..=ASSET_READ_ATTEMPTS {
-        match client.get(url).header("range", "bytes=0-0").send().await {
-            Ok(response) if response.status().is_success() => return Ok(()),
-            Ok(response) => {
-                last_error = Some(anyhow!("{url} responded {}", response.status()));
-            }
-            Err(error) => last_error = Some(anyhow!("{url} request failed: {error}")),
-        }
-        if attempt < ASSET_READ_ATTEMPTS {
-            sleep(ASSET_READ_RETRY_DELAY).await;
-        }
-    }
-    Err(last_error.unwrap_or_else(|| anyhow!("{url} could not be read")))
-}
-
-fn asset_url(base: &str, key: &str) -> String {
-    format!("{}/{}", base.trim_end_matches('/'), key)
 }
 
 fn referenced_assets(source: &str) -> Vec<String> {
@@ -586,20 +498,8 @@ fn asset_tree_digests(root: &Path) -> Result<BTreeMap<String, String>> {
 }
 
 fn sha256_file(path: &Path) -> Result<String> {
-    let mut file =
-        File::open(path).with_context(|| format!("Failed to open {}", path.display()))?;
-    let mut hasher = Sha256::new();
-    let mut buffer = [0u8; 64 * 1024];
-    loop {
-        let read = file
-            .read(&mut buffer)
-            .with_context(|| format!("Failed to read {}", path.display()))?;
-        if read == 0 {
-            break;
-        }
-        hasher.update(&buffer[..read]);
-    }
-    Ok(hex::encode(hasher.finalize()))
+    let file = File::open(path).with_context(|| format!("Failed to open {}", path.display()))?;
+    sha256_reader(file).with_context(|| format!("Failed to read {}", path.display()))
 }
 
 fn tree_differences(
@@ -730,11 +630,7 @@ mod tests {
             .args(["buildx", "bake", "-f", "fluxer_app_proxy/docker-bake.hcl"])
             .env("IMAGE_REPO", "ghcr.io/example/fluxer-app-proxy")
             .env("BUILD_VERSION", "2026.520.1")
-            .env("PUBLIC_ASSET_BASE_URL", DEFAULT_PUBLIC_ASSET_BASE_URL)
-            .env(
-                "FLUXER_APP_PROXY_TIME_FREEZE_ENABLED",
-                DEFAULT_APP_PROXY_TIME_FREEZE_ENABLED,
-            );
+            .env("PUBLIC_ASSET_BASE_URL", DEFAULT_PUBLIC_ASSET_BASE_URL);
 
         assert_eq!(command.program, OsString::from("docker"));
         assert_eq!(
@@ -750,10 +646,6 @@ mod tests {
             OsString::from("BUILD_VERSION"),
             OsString::from("2026.520.1")
         )));
-        assert!(command.env.contains(&(
-            OsString::from("FLUXER_APP_PROXY_TIME_FREEZE_ENABLED"),
-            OsString::from(DEFAULT_APP_PROXY_TIME_FREEZE_ENABLED)
-        )));
     }
 
     #[test]
@@ -765,7 +657,7 @@ mod tests {
     fn dockerfile_guards_the_trim_on_an_absolute_asset_base_url() {
         let dockerfile = include_str!("../../../fluxer_app_proxy/Dockerfile");
         let trim = dockerfile
-            .split("FROM alpine:3.21 AS app-assets")
+            .split("FROM alpine:3.24 AS app-assets")
             .nth(1)
             .expect("app-assets stage");
         assert!(
@@ -1032,18 +924,6 @@ mod tests {
     }
 
     #[test]
-    fn asset_url_joins_the_base_and_key_once() {
-        assert_eq!(
-            asset_url("https://fluxerstatic.com", "assets/a.js"),
-            "https://fluxerstatic.com/assets/a.js"
-        );
-        assert_eq!(
-            asset_url("https://fluxerstatic.com/", "assets/a.js"),
-            "https://fluxerstatic.com/assets/a.js"
-        );
-    }
-
-    #[test]
     fn assets_image_ref_names_the_canonical_image() {
         assert_eq!(
             assets_image_ref("ghcr.io/example/fluxer-app-proxy", "2026.520.1"),
@@ -1107,7 +987,7 @@ mod tests {
     fn dockerfile_prepares_the_asset_tree_once_before_the_architecture_stages() {
         let dockerfile = include_str!("../../../fluxer_app_proxy/Dockerfile");
         let canonical = dockerfile
-            .split("FROM alpine:3.21 AS app-assets")
+            .split("FROM alpine:3.24 AS app-assets")
             .nth(1)
             .expect("app-assets stage");
         let (canonical, per_architecture) = canonical

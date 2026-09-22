@@ -13,7 +13,7 @@ interface UseTextareaEditingOptions {
 	value: string;
 	setValue: React.Dispatch<React.SetStateAction<string>>;
 	textareaRef: React.RefObject<HTMLTextAreaElement | null>;
-	previousValueRef: React.MutableRefObject<string>;
+	previousValueRef: React.RefObject<string>;
 }
 
 export const useTextareaEditing = ({

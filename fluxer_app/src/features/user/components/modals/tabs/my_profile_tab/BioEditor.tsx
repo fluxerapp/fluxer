@@ -25,7 +25,7 @@ import {useCallback, useEffect, useId, useRef, useState} from 'react';
 
 const ABOUT_ME_DESCRIPTOR = msg({message: 'About me'});
 const OPEN_EMOJI_PICKER_DESCRIPTOR = msg({message: 'Open emoji picker'});
-const BIO_MARKDOWN_PARSER_FLAGS = getParserFlagsForContext(MarkdownContext.RESTRICTED_USER_BIO);
+export const BIO_MARKDOWN_PARSER_FLAGS = getParserFlagsForContext(MarkdownContext.RESTRICTED_USER_BIO);
 const ABOUT_ME_IS_TOO_LONG_DESCRIPTOR = msg({
 	message: 'About me is too long',
 	comment: 'Error modal title shown when inserting an emoji into the profile bio would exceed the bio limit.',
@@ -285,7 +285,7 @@ export const BioEditor = observer(
 					</div>
 				</fieldset>
 				<div id={descriptionId} className={styles.description} data-flx="user.my-profile-tab.bio-editor.description">
-					<Trans>You can use links, emoji, and markdown.</Trans>
+					<Trans>You can use links, emoji, and Markdown.</Trans>
 				</div>
 			</div>
 		);

@@ -87,7 +87,7 @@ export class Channel {
 		this.instanceId = options?.instanceId ?? RuntimeConfig.localInstanceDomain;
 		this.id = channel.id;
 		this.guildId = channel.guild_id;
-		this.name = channel.name;
+		this.name = channel.name ?? undefined;
 		noteText(this.name);
 		this.topic = channel.topic ?? null;
 		this.url = channel.url ?? null;
@@ -223,7 +223,7 @@ export class Channel {
 			{
 				id: this.id,
 				guild_id: updates.guild_id ?? this.guildId,
-				name: updates.name ?? this.name,
+				name: updates.name !== undefined ? updates.name : this.name,
 				topic: updates.topic !== undefined ? updates.topic : this.topic,
 				url: updates.url !== undefined ? updates.url : this.url,
 				icon: updates.icon !== undefined ? updates.icon : this.icon,

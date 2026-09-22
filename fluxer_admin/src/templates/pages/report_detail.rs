@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use std::cmp::Ordering;
-
 use crate::{
     acl,
     api::types::ReportEntry,
@@ -13,7 +11,8 @@ use crate::{
             data_field::{data_field, data_field_link_mono, data_field_mono, data_field_text},
             form::csrf_input,
             media::{guild_icon_url, initials, user_avatar_url},
-            message_list::{Attachment, Message, message_deletion_script, message_list},
+            message_data::ordered_messages,
+            message_list::{message_deletion_script, message_list},
             nsfw_indicators::{
                 adult_content_badge, channel_nsfw_state_badge, content_warning_badge,
             },
@@ -26,7 +25,6 @@ use crate::{
     utils::timestamps::format_admin_timestamp,
 };
 use maud::{Markup, html};
-use serde_json::Value;
 
 fn status_badge(status: i32) -> Markup {
     let (label, variant) = match status {
@@ -532,125 +530,5 @@ fn basic_info_section_fragment(config: &AdminConfig, report: &ReportEntry) -> Ma
                 (data_field("Status", status_badge(report.status)))
             }
         }))
-    }
-}
-
-fn ordered_messages(values: &[Value]) -> Vec<Message> {
-    let mut messages: Vec<Message> = values.iter().map(message_from_value).collect();
-    messages.sort_by(compare_message_ids);
-    messages
-}
-
-fn message_from_value(value: &Value) -> Message {
-    let attachments = value
-        .get("attachments")
-        .and_then(Value::as_array)
-        .into_iter()
-        .flatten()
-        .map(attachment_from_value)
-        .collect();
-    Message {
-        id: value.get("id").and_then(value_id).unwrap_or_default(),
-        content: value
-            .get("content")
-            .and_then(Value::as_str)
-            .unwrap_or("")
-            .to_owned(),
-        timestamp: value
-            .get("timestamp")
-            .and_then(Value::as_str)
-            .unwrap_or("")
-            .to_owned(),
-        author_id: value
-            .get("author_id")
-            .and_then(value_id)
-            .unwrap_or_default(),
-        author_username: value
-            .get("author_username")
-            .and_then(Value::as_str)
-            .unwrap_or("Unknown")
-            .to_owned(),
-        author_global_name: value
-            .get("author_global_name")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-        author_discriminator: value
-            .get("author_discriminator")
-            .and_then(value_id)
-            .unwrap_or_else(|| "0000".to_owned()),
-        author_avatar: value
-            .get("author_avatar")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-        channel_id: value
-            .get("channel_id")
-            .and_then(value_id)
-            .unwrap_or_default(),
-        channel_nsfw: value.get("channel_nsfw").and_then(Value::as_bool),
-        channel_content_warning_level: value
-            .get("channel_content_warning_level")
-            .and_then(Value::as_i64)
-            .map(|n| n as i32),
-        channel_content_warning_text: value
-            .get("channel_content_warning_text")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-        guild_nsfw: value.get("guild_nsfw").and_then(Value::as_bool),
-        attachments,
-    }
-}
-
-fn attachment_from_value(value: &Value) -> Attachment {
-    Attachment {
-        id: value.get("id").and_then(value_id).unwrap_or_default(),
-        url: value
-            .get("url")
-            .and_then(Value::as_str)
-            .unwrap_or("")
-            .to_owned(),
-        filename: value
-            .get("filename")
-            .and_then(Value::as_str)
-            .unwrap_or("")
-            .to_owned(),
-        nsfw: value.get("nsfw").and_then(Value::as_bool),
-        content_type: value
-            .get("content_type")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-        width: value.get("width").and_then(Value::as_u64).map(|n| n as u32),
-        height: value
-            .get("height")
-            .and_then(Value::as_u64)
-            .map(|n| n as u32),
-        size: value.get("size").and_then(Value::as_u64),
-        ncmec_status: value
-            .get("ncmec_status")
-            .and_then(Value::as_str)
-            .unwrap_or("not_submitted")
-            .to_owned(),
-        ncmec_report_id: value
-            .get("ncmec_report_id")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-        ncmec_failure_reason: value
-            .get("ncmec_failure_reason")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-    }
-}
-
-fn value_id(value: &Value) -> Option<String> {
-    match value {
-        Value::String(s) => Some(s.clone()),
-        Value::Number(n) => Some(n.to_string()),
-        _ => None,
-    }
-}
-
-fn compare_message_ids(left: &Message, right: &Message) -> Ordering {
-    match (left.id.parse::<u128>(), right.id.parse::<u128>()) {
-        (Ok(l), Ok(r)) => l.cmp(&r),
-        _ => left.id.cmp(&right.id),
     }
 }

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import type {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserUpdatePropagator';
+import * as AuthSession from '@app/api/auth/AuthSession';
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {TempBanUserRequest} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
-import type {ApiContext} from '../../ApiContext';
-import * as AuthSession from '../../auth/AuthSession';
-import {createUserID, type UserID} from '../../BrandedTypes';
-import {mapUserToAdminResponse} from '../models/UserTypes';
-import type {AdminAuditService} from './AdminAuditService';
-import type {AdminUserUpdatePropagator} from './AdminUserUpdatePropagator';
 
 interface AdminUserBanServiceDeps {
 	apiContext: ApiContext;
@@ -100,12 +100,7 @@ export class AdminUserBanService {
 		);
 		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
 		if (user.email) {
-			await emailService.sendUnbanNotification(
-				user.email,
-				user.username,
-				auditLogReason || 'administrative action',
-				user.locale,
-			);
+			await emailService.sendUnbanNotification(user.email, user.username, auditLogReason || null, user.locale);
 		}
 		await auditService.createAuditLog({
 			adminUserId,

@@ -173,9 +173,8 @@ build_final_ready_data(
     SessionId,
     IsBot
 ) ->
-    ReadyData = prepare_ready_base(State, IsBot),
-    AllGuildStates = build_all_guild_states(CollectedGuilds, Guilds),
-    GuildsForReady = guilds_for_ready_payload(IsBot, AllGuildStates),
+    ReadyData = prepare_ready_base(State),
+    GuildsForReady = guilds_for_ready_payload(IsBot, CollectedGuilds, Guilds),
     FinalReadyData = ReadyData#{
         <<"guilds">> => GuildsForReady,
         <<"sessions">> => CollectedSessions,
@@ -186,15 +185,11 @@ build_final_ready_data(
     },
     gateway_sharding:maybe_put_ready_shard(FinalReadyData, maps:get(shard, State, undefined)).
 
--spec prepare_ready_base(session_state(), boolean()) -> map().
-prepare_ready_base(#{ready := undefined}, _IsBot) ->
+-spec prepare_ready_base(session_state()) -> map().
+prepare_ready_base(#{ready := undefined}) ->
     #{<<"guilds">> => []};
-prepare_ready_base(#{ready := Ready}, IsBot) ->
-    Stripped = session_ready_collect:strip_user_from_relationships(Ready),
-    case IsBot of
-        true -> Stripped#{<<"guilds">> => []};
-        false -> Stripped
-    end.
+prepare_ready_base(#{ready := Ready}) ->
+    session_ready_collect:strip_user_from_relationships(Ready).
 
 -spec build_all_guild_states([map()], map()) -> [map()].
 build_all_guild_states(CollectedGuilds, Guilds) ->
@@ -225,8 +220,12 @@ collect_unavailable_placeholder(GuildId, _Value, StrippedGuildIds, Acc) ->
 maybe_add_unavailable_guild(GuildId, ExistingGuildIds, Acc) ->
     case maps:is_key(GuildId, ExistingGuildIds) of
         true -> Acc;
-        false -> [#{<<"id">> => integer_to_binary(GuildId), <<"unavailable">> => true} | Acc]
+        false -> [unavailable_guild_placeholder(GuildId) | Acc]
     end.
+
+-spec unavailable_guild_placeholder(guild_id()) -> map().
+unavailable_guild_placeholder(GuildId) ->
+    #{<<"id">> => integer_to_binary(GuildId), <<"unavailable">> => true}.
 
 -spec collected_guild_id_map([map()]) -> #{guild_id() => true}.
 collected_guild_id_map(GuildStates) ->
@@ -255,22 +254,25 @@ parse_guild_id_binary(GuildIdBin) ->
         error:badarg -> error
     end.
 
--spec guilds_for_ready_payload(boolean(), [map()]) -> [map()].
-guilds_for_ready_payload(true, _AllGuildStates) -> [];
-guilds_for_ready_payload(false, AllGuildStates) -> AllGuildStates.
+-spec guilds_for_ready_payload(boolean(), [map()], map()) -> [map()].
+guilds_for_ready_payload(true, _CollectedGuilds, Guilds) ->
+    [unavailable_guild_placeholder(GuildId) || GuildId <- maps:keys(Guilds)];
+guilds_for_ready_payload(false, CollectedGuilds, Guilds) ->
+    build_all_guild_states(CollectedGuilds, Guilds).
 
 -spec dispatch_bot_guild_creates(boolean(), [map()], map(), session_state()) -> session_state().
 dispatch_bot_guild_creates(false, _CollectedGuilds, _Guilds, State) ->
     State;
-dispatch_bot_guild_creates(true, CollectedGuilds, _Guilds, State) ->
+dispatch_bot_guild_creates(true, CollectedGuilds, Guilds, State) ->
     AllGuildStates = strip_collected_guild_states(CollectedGuilds),
-    lists:foldl(
-        fun(GuildState, AccState) ->
-            dispatch_event(guild_state_event(GuildState), GuildState, AccState)
-        end,
-        State,
-        AllGuildStates
-    ).
+    AnnouncedState = session_bot_guilds:forget_joins(maps:keys(Guilds), State),
+    lists:foldl(fun dispatch_bot_guild_state/2, AnnouncedState, AllGuildStates).
+
+-spec dispatch_bot_guild_state(map(), session_state()) -> session_state().
+dispatch_bot_guild_state(GuildState, State) ->
+    Event = guild_state_event(GuildState),
+    {Data, NextState} = session_bot_guilds:guild_event(Event, GuildState, State),
+    dispatch_event(Event, Data, NextState).
 
 -spec schedule_call_creates(session_state(), binary()) -> ok.
 schedule_call_creates(State, SessionId) ->

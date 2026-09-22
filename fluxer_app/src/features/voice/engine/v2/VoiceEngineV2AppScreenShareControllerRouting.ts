@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import type {VoiceEngineV2AppScreenShareExecutionAdapter} from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter';
 import {logger} from '@app/features/voice/engine/voice_screen_share_manager/shared';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
+import {recordScreenShareStopped} from '@app/features/voice/utils/ScreenShareLifecycleLog';
 import type {VoiceEngineV2ScreenOptions} from '@fluxer/voice_engine_v2';
 import type {Room, ScreenShareCaptureOptions, TrackPublishOptions, VideoCodec} from 'livekit-client';
 
@@ -445,6 +446,7 @@ export class VoiceEngineV2AppScreenShareControllerRouting {
 
 	async unpublishViaLiveKitFlows(roomFromPort: Room | null): Promise<void> {
 		const request = this.takeStopRequest(this.executingScreenOperationId());
+		recordScreenShareStopped(request !== null ? 'user' : 'gateway-echo');
 		const room = request !== null ? request.room : roomFromPort;
 		try {
 			await this.adapter.liveKitFlows.setEnabled(room, false, {

@@ -1,42 +1,47 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {UserAuthenticatorTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
-import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import {IpAuthorizationRequiredError} from '@fluxer/errors/src/domains/auth/IpAuthorizationRequiredError';
-import {IpAuthorizationResendCooldownError} from '@fluxer/errors/src/domains/auth/IpAuthorizationResendCooldownError';
-import {IpAuthorizationResendLimitExceededError} from '@fluxer/errors/src/domains/auth/IpAuthorizationResendLimitExceededError';
-import {RegistrationPendingApprovalError} from '@fluxer/errors/src/domains/auth/RegistrationPendingApprovalError';
-import {RegistrationRejectedError} from '@fluxer/errors/src/domains/auth/RegistrationRejectedError';
-import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
-import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
-import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
-import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
-import type {LoginRequest} from '@fluxer/schema/src/domains/auth/AuthSchemas';
-import {formatGeoipLocation, UNKNOWN_LOCATION} from '@pkgs/geoip/src/GeoipLookup';
-import type {RateLimitResult} from '@pkgs/rate_limit/src/IRateLimitService';
-import type {AuthenticationResponseJSON} from '@simplewebauthn/server';
-import {ms, seconds} from 'itty-time';
-import type {ApiContext} from '../ApiContext';
+import type {ApiContext} from '@app/api/ApiContext';
+import * as AuthMfa from '@app/api/auth/AuthMfa';
+import * as AuthPassword from '@app/api/auth/AuthPassword';
+import * as AuthSession from '@app/api/auth/AuthSession';
+import * as AuthUtility from '@app/api/auth/AuthUtility';
+import {resolveWebAuthnSecondFactor} from '@app/api/auth/services/WebAuthnSecondFactor';
 import {
 	createInviteCode,
 	createIpAuthorizationTicket,
 	createIpAuthorizationToken,
 	createMfaTicket,
 	createUserID,
-} from '../BrandedTypes';
-import type {KVAccountDeletionQueueService} from '../infrastructure/KVAccountDeletionQueueService';
-import {REGISTRATION_PENDING_APPROVAL_TRAIT, REGISTRATION_REJECTED_TRAIT} from '../instance/InstanceConfigRepository';
-import type {InviteService} from '../invite/InviteService';
-import {Logger} from '../Logger';
-import {createRequestCache} from '../middleware/RequestCacheMiddleware';
-import {getInstanceConfigRepository} from '../middleware/ServiceSingletons';
-import type {User} from '../models/User';
-import {lookupGeoip} from '../utils/IpUtils';
-import * as AuthMfa from './AuthMfa';
-import * as AuthPassword from './AuthPassword';
-import * as AuthSession from './AuthSession';
-import * as AuthUtility from './AuthUtility';
+} from '@app/api/BrandedTypes';
+import {getContentMessage} from '@app/api/content_i18n/ContentI18n';
+import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
+import {
+	REGISTRATION_PENDING_APPROVAL_TRAIT,
+	REGISTRATION_REJECTED_TRAIT,
+} from '@app/api/instance/InstanceConfigRepository';
+import type {InviteService} from '@app/api/invite/InviteService';
+import {Logger} from '@app/api/Logger';
+import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import type {User} from '@app/api/models/User';
+import {lookupGeoip} from '@app/api/utils/IpUtils';
+import {createRateLimitError} from '@app/api/utils/RateLimitUtils';
+import {UserAuthenticatorTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import {IpAuthorizationRequiredError} from '@fluxer/errors/src/domains/auth/IpAuthorizationRequiredError';
+import {IpAuthorizationResendCooldownError} from '@fluxer/errors/src/domains/auth/IpAuthorizationResendCooldownError';
+import {IpAuthorizationResendLimitExceededError} from '@fluxer/errors/src/domains/auth/IpAuthorizationResendLimitExceededError';
+import {MfaNotEnabledError} from '@fluxer/errors/src/domains/auth/MfaNotEnabledError';
+import {RegistrationPendingApprovalError} from '@fluxer/errors/src/domains/auth/RegistrationPendingApprovalError';
+import {RegistrationRejectedError} from '@fluxer/errors/src/domains/auth/RegistrationRejectedError';
+import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
+import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
+import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
+import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
+import type {LoginRequest} from '@fluxer/schema/src/domains/auth/AuthSchemas';
+import {formatGeoipLocation} from '@pkgs/geoip/src/GeoipLookup';
+import type {AuthenticationResponseJSON} from '@simplewebauthn/server';
+import {ms, seconds} from 'itty-time';
 
 const DUMMY_ARGON2_HASH =
 	'$argon2id$v=19$m=65536,t=3,p=4$fT6tGpAyxFiz+n1RbkRqWQ$v05UT17QGeqhsgRjcVjIWcGw6gUDYeCcAA8FiZ63MtA';
@@ -69,27 +74,16 @@ interface LoginTokenResult {
 	token: string;
 }
 
-interface LoginMfaResult {
+export interface LoginMfaResult {
 	mfa: true;
 	ticket: string;
 	allowed_methods: Array<string>;
 	totp: boolean;
 	webauthn: boolean;
+	backup_codes: boolean;
 }
 
 type LoginResult = LoginTokenResult | LoginMfaResult;
-
-function getRetryAfterSeconds(result: RateLimitResult): number {
-	return result.retryAfter ?? Math.max(0, Math.ceil((result.resetTime.getTime() - Date.now()) / 1000));
-}
-
-function throwLoginRateLimit(result: RateLimitResult): never {
-	throw new RateLimitError({
-		retryAfter: getRetryAfterSeconds(result),
-		limit: result.limit,
-		resetTime: result.resetTime,
-	});
-}
 
 export interface IpAuthorizationTicketCache {
 	userId: string;
@@ -98,6 +92,7 @@ export interface IpAuthorizationTicketCache {
 	origin: AuthSession.SessionOrigin;
 	authToken: string;
 	clientLocation: string;
+	locale?: string | null;
 	inviteCode?: string | null;
 	resendUsed?: boolean;
 	createdAt: number;
@@ -138,7 +133,7 @@ export async function resendIpAuthorization(
 		payload.authToken,
 		payload.origin.ip,
 		payload.clientLocation,
-		null,
+		payload.locale ?? null,
 	);
 	const ttl = await cache.ttl(cacheKey);
 	await cache.set(
@@ -202,7 +197,7 @@ export async function login(
 		windowMs: ms('15 minutes'),
 	});
 	if (!emailRateLimit.allowed && !skipRateLimits) {
-		throwLoginRateLimit(emailRateLimit);
+		throw createRateLimitError(emailRateLimit);
 	}
 	const clientIp = requireClientIp(request, {
 		trustClientIpHeader: config.proxy.trust_client_ip_header,
@@ -214,7 +209,7 @@ export async function login(
 		windowMs: ms('30 minutes'),
 	});
 	if (!ipRateLimit.allowed && !skipRateLimits) {
-		throwLoginRateLimit(ipRateLimit);
+		throw createRateLimitError(ipRateLimit);
 	}
 	const user = await users.findByEmail(data.email);
 	if (!user) {
@@ -254,22 +249,19 @@ export async function login(
 		Logger.info({userId: currentUser.id}, 'Auto-undisabled user on login');
 	}
 	if ((currentUser.flags & UserFlags.SELF_DELETED) !== 0n) {
-		if (currentUser.pendingDeletionAt) {
-			await users.removePendingDeletion(currentUser.id, currentUser.pendingDeletionAt);
+		const pendingDeletionAt = currentUser.pendingDeletionAt;
+		const updatedFlags = currentUser.flags & ~UserFlags.SELF_DELETED;
+		currentUser = await users.updateDeletionSchedule(currentUser, {
+			flags: updatedFlags,
+			pending_deletion_at: null,
+			deletion_reason_code: null,
+			deletion_public_reason: null,
+			deletion_audit_log_reason: null,
+		});
+		if (pendingDeletionAt) {
+			await users.removePendingDeletion(currentUser.id, pendingDeletionAt);
 		}
 		await kvDeletionQueue.removeFromQueue(currentUser.id);
-		const updatedFlags = currentUser.flags & ~UserFlags.SELF_DELETED;
-		currentUser = await users.patchUpsert(
-			currentUser.id,
-			{
-				flags: updatedFlags,
-				pending_deletion_at: null,
-				deletion_reason_code: null,
-				deletion_public_reason: null,
-				deletion_audit_log_reason: null,
-			},
-			currentUser.toRow(),
-		);
 		Logger.info({userId: currentUser.id}, 'Auto-cancelled deletion on login');
 	}
 	if (currentUser.traits.has(REGISTRATION_PENDING_APPROVAL_TRAIT)) {
@@ -296,7 +288,9 @@ export async function login(
 				const ticket = createIpAuthorizationTicket(await AuthUtility.generateSecureToken(ctx));
 				const authToken = createIpAuthorizationToken(await AuthUtility.generateSecureToken(ctx));
 				const geoipResult = await lookupGeoip(clientIp);
-				const clientLocation = formatGeoipLocation(geoipResult) ?? UNKNOWN_LOCATION;
+				const clientLocation =
+					formatGeoipLocation(geoipResult, currentUser.locale) ??
+					getContentMessage('auth.unknown_location', currentUser.locale);
 				const cachePayload: IpAuthorizationTicketCache = {
 					userId: currentUser.id.toString(),
 					email: currentUser.email!,
@@ -304,6 +298,7 @@ export async function login(
 					origin: AuthSession.resolveSessionOrigin(ctx, request),
 					authToken,
 					clientLocation,
+					locale: currentUser.locale,
 					inviteCode: data.invite_code ?? null,
 					resendUsed: false,
 					createdAt: Date.now(),
@@ -331,7 +326,8 @@ export async function login(
 		}
 	}
 	if (hasMfa) {
-		return await createMfaTicketResponse(ctx, currentUser);
+		const webauthnIsSecondFactor = await resolveWebAuthnSecondFactor(ctx, currentUser);
+		return await createMfaTicketResponse(ctx, currentUser, webauthnIsSecondFactor);
 	}
 	if (data.invite_code && inviteService) {
 		try {
@@ -388,20 +384,21 @@ export async function loginMfaTotp(
 	const {users, cache, rateLimit} = ctx.services;
 	const userId = await cache.get<string>(`mfa-ticket:${ticket}`);
 	if (!userId) {
-		throw InputValidationError.fromCode('code', ValidationErrorCodes.SESSION_TIMEOUT);
+		throw InputValidationError.fromCode('ticket', ValidationErrorCodes.SESSION_TIMEOUT);
 	}
 	const user = await users.findUnique(createUserID(BigInt(userId)));
 	if (!user) {
 		throw new UnknownUserError();
 	}
 	AuthUtility.assertNonBotUser(ctx, user);
-	if (!user.totpSecret || !user.authenticatorTypes?.has(UserAuthenticatorTypes.TOTP)) {
+	const hasTotp = Boolean(user.totpSecret) && user.authenticatorTypes.has(UserAuthenticatorTypes.TOTP);
+	if (!hasTotp && !(await AuthMfa.hasUnconsumedBackupCodes(ctx, user.id))) {
 		throw InputValidationError.fromCode('code', ValidationErrorCodes.TOTP_NOT_ENABLED);
 	}
 	await consumeMfaAttempt(ctx, {userId: user.id.toString(), ticket, field: 'code'});
 	const isValid = await AuthMfa.verifyMfaCode(ctx, {
 		userId: user.id,
-		mfaSecret: user.totpSecret,
+		mfaSecret: hasTotp ? user.totpSecret : null,
 		code,
 		allowBackup: true,
 	});
@@ -432,6 +429,9 @@ export async function loginMfaWebAuthn(
 		throw new UnknownUserError();
 	}
 	AuthUtility.assertNonBotUser(ctx, user);
+	if (!(await resolveWebAuthnSecondFactor(ctx, user))) {
+		throw new MfaNotEnabledError();
+	}
 	await consumeMfaAttempt(ctx, {userId: user.id.toString(), ticket, field: 'ticket'});
 	await AuthMfa.verifyWebAuthnAuthentication(ctx, user.id, response, challenge, 'mfa', ticket);
 	await cache.delete(`mfa-ticket:${ticket}`);
@@ -444,21 +444,26 @@ export async function loginMfaWebAuthn(
 	return {user_id: user.id.toString(), token};
 }
 
-async function createMfaTicketResponse(ctx: ApiContext, user: User): Promise<LoginMfaResult> {
-	const {users, cache} = ctx.services;
+export async function createMfaTicketResponse(
+	ctx: ApiContext,
+	user: User,
+	webauthnIsSecondFactor: boolean,
+): Promise<LoginMfaResult> {
+	const {cache} = ctx.services;
 	const ticket = createMfaTicket(await AuthUtility.generateSecureToken(ctx));
 	await cache.set(`mfa-ticket:${ticket}`, user.id.toString(), seconds('5 minutes'));
-	const credentials = await users.listWebAuthnCredentials(user.id);
-	const hasWebauthn = credentials.length > 0;
 	const hasTotp = user.authenticatorTypes.has(UserAuthenticatorTypes.TOTP);
+	const hasBackupCodes = await AuthMfa.hasUnconsumedBackupCodes(ctx, user.id);
 	const allowedMethods: Array<string> = [];
 	if (hasTotp) allowedMethods.push('totp');
-	if (hasWebauthn) allowedMethods.push('webauthn');
+	if (webauthnIsSecondFactor) allowedMethods.push('webauthn');
+	if (hasBackupCodes) allowedMethods.push('backup_codes');
 	return {
 		mfa: true,
 		ticket,
 		allowed_methods: allowedMethods,
 		totp: hasTotp,
-		webauthn: hasWebauthn,
+		webauthn: webauthnIsSecondFactor,
+		backup_codes: hasBackupCodes,
 	};
 }

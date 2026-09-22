@@ -36,7 +36,6 @@ import {
 	selectMediaEngineGatewayErrorDecision,
 	shouldCancelMediaEngineReconnectForServerVoiceStateRemoval,
 	shouldImmediatelyDisconnectMediaEngineForServerVoiceStateRemoval,
-	shouldNotifyCameraUserLimitRejection,
 	shouldRunMediaEngineDeferredDisconnect,
 	transitionMediaEngineFacadeSnapshot,
 } from '@app/features/voice/engine/MediaEngineFacadeStateMachine';
@@ -47,7 +46,6 @@ import {
 	CLAIM_YOUR_ACCOUNT_TO_START_OR_JOIN_1_DESCRIPTOR,
 	DEFERRED_DISCONNECT_TIMEOUT_MS,
 	RECONNECT_SUCCEEDED_PICK_A_SCREEN_AGAIN_IF_YOU_DESCRIPTOR,
-	VOICE_CAMERA_USER_LIMIT_REACHED_DESCRIPTOR,
 	VOICE_CHANNEL_NO_LONGER_AVAILABLE_DESCRIPTOR,
 	VOICE_CONNECTION_FAILED_DESCRIPTOR,
 	VOICE_CONNECTION_LIMIT_REACHED_DESCRIPTOR,
@@ -69,7 +67,10 @@ import {
 	sendVoiceStateDisconnect,
 	syncVoiceStateToServer,
 } from '@app/features/voice/engine/VoiceChannelConnector';
-import type {VoiceConnectionFailureReason} from '@app/features/voice/engine/VoiceConnectionStateMachine';
+import type {
+	VoiceConnectionFailureReason,
+	VoiceConnectionLocalDisconnectReason,
+} from '@app/features/voice/engine/VoiceConnectionStateMachine';
 import VoiceDevicePermissionState from '@app/features/voice/engine/VoiceDevicePermissionState';
 import {getEffectiveAudioState} from '@app/features/voice/engine/VoiceEffectiveAudioState';
 import type {NormalizedVoiceState} from '@app/features/voice/engine/VoiceGatewayStateMachine';
@@ -129,6 +130,7 @@ import type {VoiceEngineV2AppScreenShareControllerGateway} from '@app/features/v
 import voiceEngineV2AppScreenShareExecutionAdapter, {
 	type DeviceScreenShareCaptureOptions,
 	type ScreenShareReconnectSnapshot,
+	shouldRestoreScreenShareAfterReconnect,
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter';
 import {selectVoiceEngineV2AppIntentSelfMuteForVoiceStatePayload} from '@app/features/voice/engine/v2/VoiceEngineV2AppSelectors';
 import {VoiceEngineV2AppSourceLifecycleBridge} from '@app/features/voice/engine/v2/VoiceEngineV2AppSourceLifecycleBridge';
@@ -136,7 +138,6 @@ import {VoiceEngineV2AppStatsHostAdapter} from '@app/features/voice/engine/v2/Vo
 import VoiceEngineV2AppSubscriptionAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppSubscriptionAdapter';
 import voiceEngineV2AppVoiceStateAdapter from '@app/features/voice/engine/v2/VoiceEngineV2AppVoiceStateAdapter';
 import type {DisplayScreenShareCaptureContext} from '@app/features/voice/engine/voice_screen_share_manager/shared';
-import type {VoiceStateAckPayload} from '@app/features/voice/events/VoiceStateAck';
 import CallMediaPrefs from '@app/features/voice/state/CallMediaPrefs';
 import {type ChannelE2EEStatus, computeChannelE2EEStatus} from '@app/features/voice/state/ChannelE2EEStatus';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
@@ -156,7 +157,6 @@ import {getActiveVoiceProcessingMode} from '@app/features/voice/utils/VoiceProce
 import type {NativeAudioStartOptions} from '@app/types/electron.d';
 import {ME} from '@fluxer/constants/src/AppConstants';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import {VOICE_CHANNEL_CAMERA_USER_LIMIT} from '@fluxer/constants/src/LimitConstants';
 import type {
 	VoiceEngineV2AudioMode,
 	VoiceEngineV2CameraOptions,
@@ -182,7 +182,7 @@ import type {
 	ScreenShareCaptureOptions,
 	TrackPublishOptions,
 } from 'livekit-client';
-import {makeObservable, observable} from 'mobx';
+import {makeObservable, observableRef} from 'mobx';
 
 const logger = new Logger('MediaEngineFacade');
 
@@ -404,7 +404,7 @@ class MediaEngineFacade extends Store {
 		setNativeAudioCaptureBridgeLifecycleBridge(this.voiceEngineV2SourceLifecycleBridge);
 		this.syncVoiceEngineV2AudioControlsFromAppState();
 		makeObservable<this, 'facadeSnapshot'>(this, {
-			facadeSnapshot: observable.ref,
+			facadeSnapshot: observableRef,
 		});
 		this.initializeEngineStoreSync();
 		this.initializeVoiceEngineV2ConnectionLifecycleSync();
@@ -643,6 +643,10 @@ class MediaEngineFacade extends Store {
 		return voiceEngineV2AppConnectionHostAdapter.connectFailureReason;
 	}
 
+	get localDisconnectReason(): VoiceConnectionLocalDisconnectReason {
+		return voiceEngineV2AppConnectionHostAdapter.localDisconnectReason;
+	}
+
 	get connectFailedTarget(): {guildId: string | null; channelId: string} | null {
 		return voiceEngineV2AppConnectionHostAdapter.connectFailedTarget;
 	}
@@ -749,6 +753,16 @@ class MediaEngineFacade extends Store {
 		await voiceEngineV2AppMediaExecutionAdapter.refreshCameraCapture();
 	}
 
+	refreshScreenShareCodecNegotiationFromSettings(): void {
+		void this.refreshScreenShareCodecNegotiationFromCurrentEngine().catch((error) => {
+			logger.warn('Failed to refresh screen share codec negotiation from settings', {error});
+		});
+	}
+
+	private async refreshScreenShareCodecNegotiationFromCurrentEngine(): Promise<void> {
+		await ScreenShareCodecNegotiation.publishLocalCapabilities(this.room, 'manual');
+	}
+
 	private reconcileLocalAudioStateInBackground(reason: string): void {
 		const previous = this.localAudioReconcileCoalescer;
 		const next = transitionVoiceLocalAudioReconcileCoalescerSnapshot(previous, {type: 'run.requested', reason});
@@ -791,10 +805,7 @@ class MediaEngineFacade extends Store {
 		room: Room | null;
 		restoreCamera: boolean;
 		restoreStream: boolean;
-		restoreStreamFromSnapshot: (() => Promise<boolean>) | null;
-		streamSnapshotFallback: boolean;
-		streamPlaySound: boolean;
-		settleStreamStateWhenNotRestored: boolean;
+		screenShareSnapshot: ScreenShareReconnectSnapshot | null;
 		toastWhenStreamNotRestored: boolean;
 	}): Promise<void> {
 		assert.equal(typeof args.restoreCamera, 'boolean', 'restoreLocalMedia requires a camera flag');
@@ -809,30 +820,20 @@ class MediaEngineFacade extends Store {
 				logger.warn('Failed to restore camera during local media restore', {reason: args.reason, error});
 			}
 		}
-		if (!args.restoreStream) return;
+		if (!shouldRestoreScreenShareAfterReconnect(args.restoreStream, args.screenShareSnapshot)) return;
 		let restored = false;
-		if (args.restoreStreamFromSnapshot) {
-			restored = await args.restoreStreamFromSnapshot();
-			if (!restored && !args.streamSnapshotFallback) {
-				voiceEngineV2AppMediaStateAdapter.applyScreenShareState(false, {sendUpdate: false});
-				return;
-			}
-		}
 		let streamRestoreFailed = false;
-		if (!restored) {
-			try {
-				await voiceEngineV2AppScreenShareExecutionAdapter.setScreenShareEnabled(args.room, true, {
-					sendUpdate: false,
-					...(args.streamPlaySound ? {} : {playSound: false}),
-				});
-				restored = LocalVoiceState.getSelfStream();
-			} catch (error) {
-				streamRestoreFailed = true;
-				logger.warn('Failed to restore screen share during local media restore', {reason: args.reason, error});
-			}
+		try {
+			restored = await voiceEngineV2AppScreenShareExecutionAdapter.restoreScreenShareAfterReconnect(
+				args.room,
+				args.screenShareSnapshot,
+			);
+		} catch (error) {
+			streamRestoreFailed = true;
+			logger.warn('Failed to restore screen share during local media restore', {reason: args.reason, error});
 		}
 		if (restored) return;
-		if (streamRestoreFailed || args.settleStreamStateWhenNotRestored) {
+		if (streamRestoreFailed || args.screenShareSnapshot !== null) {
 			voiceEngineV2AppMediaStateAdapter.applyScreenShareState(false, {sendUpdate: false});
 		}
 		if (args.toastWhenStreamNotRestored && this.i18n) {
@@ -1915,41 +1916,6 @@ class MediaEngineFacade extends Store {
 		return voiceEngineV2AppVoiceStateAdapter.getAllVoiceStates();
 	}
 
-	handleGatewayVoiceStateAck(data: VoiceStateAckPayload): void {
-		if (shouldNotifyCameraUserLimitRejection({status: data.status, errorCode: data.error_code})) {
-			this.handleCameraUserLimitRejection();
-		}
-		const canonicalState = data.canonical_state;
-		if (!canonicalState?.channel_id || !canonicalState.connection_id) {
-			logger.debug('Ignoring voice state ack without canonical connection state', {
-				mutationId: data.mutation_id,
-				status: data.status,
-				guildId: data.guild_id,
-				channelId: data.channel_id,
-				connectionId: data.connection_id,
-			});
-			return;
-		}
-		this.applyEngineGatewayEcho(
-			this.toEngineGatewayVoiceState(canonicalState, canonicalState.guild_id ?? data.guild_id ?? null),
-		);
-	}
-
-	private handleCameraUserLimitRejection(): void {
-		logger.warn('Camera enable rejected by the gateway camera user limit', {
-			limit: VOICE_CHANNEL_CAMERA_USER_LIMIT,
-		});
-		void this.setCameraEnabled(false, {sendUpdate: false}).catch((error) => {
-			logger.warn('Failed to turn the camera back off after a camera user limit rejection', {error});
-		});
-		if (!this.i18n) return;
-		this.showVoiceErrorModal(
-			VOICE_CAMERA_USER_LIMIT_REACHED_DESCRIPTOR,
-			'voice.media-engine-facade.camera-user-limit-error-modal',
-			{voiceChannelCameraUserLimit: VOICE_CHANNEL_CAMERA_USER_LIMIT},
-		);
-	}
-
 	private toEngineGatewayVoiceState(
 		source: {
 			guild_id?: string | null;
@@ -2127,6 +2093,7 @@ class MediaEngineFacade extends Store {
 			playSound?: boolean;
 			restartIfEnabled?: boolean;
 			preserveStreamAudioPreferences?: boolean;
+			keepShareTracking?: boolean;
 		},
 		publishOptions?: TrackPublishOptions,
 	): Promise<void> {
@@ -2235,6 +2202,10 @@ class MediaEngineFacade extends Store {
 
 	getActiveScreenShareVideoDeviceId(): string {
 		return voiceEngineV2AppScreenShareExecutionAdapter.getActiveScreenShareVideoDeviceId(this.room);
+	}
+
+	get isScreenShareCapturePaused(): boolean {
+		return voiceEngineV2AppScreenShareExecutionAdapter.isScreenShareCapturePaused;
 	}
 
 	async ensureDeviceScreenShareMicPublication(audioDeviceId: string): Promise<boolean> {
@@ -2685,20 +2656,12 @@ class MediaEngineFacade extends Store {
 		if (!participant) return;
 		const pendingScreenShareReconnect = this.pendingScreenShareReconnect;
 		this.transitionFacadeState({type: 'screenShareReconnect.consume'});
-		const shouldRestoreScreenShare =
-			(LocalVoiceState.getSelfStream() || pendingScreenShareReconnect !== null) && !participant.isScreenShareEnabled;
 		await this.restoreLocalMedia({
 			reason: 'voice room connected',
 			room,
 			restoreCamera: LocalVoiceState.getSelfVideo() && !participant.isCameraEnabled,
-			restoreStream: shouldRestoreScreenShare,
-			restoreStreamFromSnapshot: pendingScreenShareReconnect
-				? () =>
-						voiceEngineV2AppScreenShareExecutionAdapter.restoreScreenShareReconnect(room, pendingScreenShareReconnect)
-				: null,
-			streamSnapshotFallback: false,
-			streamPlaySound: true,
-			settleStreamStateWhenNotRestored: false,
+			restoreStream: LocalVoiceState.getSelfStream() && !participant.isScreenShareEnabled,
+			screenShareSnapshot: pendingScreenShareReconnect,
 			toastWhenStreamNotRestored: false,
 		});
 	}
@@ -2714,10 +2677,7 @@ class MediaEngineFacade extends Store {
 			room: this.room,
 			restoreCamera: pendingRestore.restoreVideo,
 			restoreStream: pendingRestore.restoreStream,
-			restoreStreamFromSnapshot: null,
-			streamSnapshotFallback: false,
-			streamPlaySound: true,
-			settleStreamStateWhenNotRestored: false,
+			screenShareSnapshot: null,
 			toastWhenStreamNotRestored: true,
 		});
 	}

@@ -223,8 +223,7 @@ export const ReplyPreview = observer(
 						data-guild-id={resolvedGuildId}
 						data-flx="channel.reply-preview.replied-username"
 					>
-						{message.mentions.some((mention) => mention.id === referencedMessage.author.id) && '@'}
-						{NicknameUtils.getNickname(referencedMessage.author, resolvedGuildId)}
+						{`${message.mentions.some((mention) => mention.id === referencedMessage.author.id) ? '@' : ''}${NicknameUtils.getNickname(referencedMessage.author, resolvedGuildId)}`}
 					</span>
 				</PreloadableUserPopout>
 				<FocusRing offset={-2} data-flx="channel.reply-preview.focus-ring">
@@ -252,6 +251,7 @@ export const ReplyPreview = observer(
 										context: MarkdownContext.RESTRICTED_INLINE_REPLY,
 										messageId: referencedMessage.id,
 										channelId,
+										disableInteractions: true,
 										mentionChannels: referencedMessage.mentionChannels,
 									}}
 									data-flx="channel.reply-preview.safe-markdown"

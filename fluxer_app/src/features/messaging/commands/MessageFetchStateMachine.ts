@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export type MessageFetchCacheHit = 'jump' | 'before' | 'after';
 
@@ -157,7 +157,7 @@ export type MessageFetchPreflightSnapshot = SnapshotFrom<typeof messageFetchPref
 export type MessageFetchExecutionSnapshot = SnapshotFrom<typeof messageFetchExecutionMachine>;
 
 export function createMessageFetchPreflightSnapshot(input: MessageFetchPreflightInput): MessageFetchPreflightSnapshot {
-	return getInitialSnapshot(messageFetchPreflightMachine, input);
+	return initialTransition(messageFetchPreflightMachine, input)[0];
 }
 
 export function transitionMessageFetchPreflightSnapshot(
@@ -178,7 +178,7 @@ export function resolveMessageFetchPreflightDecision(input: MessageFetchPrefligh
 }
 
 export function createMessageFetchExecutionSnapshot(input: MessageFetchExecutionInput): MessageFetchExecutionSnapshot {
-	return getInitialSnapshot(messageFetchExecutionMachine, input);
+	return initialTransition(messageFetchExecutionMachine, input)[0];
 }
 
 export function transitionMessageFetchExecutionSnapshot(
@@ -196,4 +196,16 @@ export function selectMessageFetchExecutionDecision(
 
 export function resolveMessageFetchExecutionDecision(input: MessageFetchExecutionInput): MessageFetchExecutionDecision {
 	return buildExecutionDecision(input);
+}
+
+export interface MessageFetchWindowTrustInput {
+	connectedAtRequest: boolean;
+	connectedAtResponse: boolean;
+	epochAtRequest: number;
+	epochAtResponse: number;
+}
+
+export function resolveMessageFetchWindowCached(input: MessageFetchWindowTrustInput): boolean {
+	if (!input.connectedAtRequest || !input.connectedAtResponse) return true;
+	return input.epochAtRequest !== input.epochAtResponse;
 }

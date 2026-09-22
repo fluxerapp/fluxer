@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {normalizeMemberListRanges} from '@app/features/member/utils/MemberListRangeUtils';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export interface MemberListViewportMachineInput {
 	hasReceivedInitialPayload?: boolean;
@@ -127,7 +127,7 @@ export const memberListViewportStateMachine = setup({
 export function createMemberListViewportSnapshot(
 	input: MemberListViewportMachineInput = {},
 ): MemberListViewportMachineSnapshot {
-	return getInitialSnapshot(memberListViewportStateMachine, input);
+	return initialTransition(memberListViewportStateMachine, input)[0];
 }
 
 export function transitionMemberListViewportSnapshot(

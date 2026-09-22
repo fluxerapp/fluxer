@@ -1,28 +1,56 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {getDesktopTroubleshootingSettings} from '@app/features/devtools/utils/DesktopTroubleshootingUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {
+	getVoiceConnectionContextFromMediaEngine,
+	getVoiceStateByConnectionIdFromMediaEngine,
+} from '@app/features/voice/engine/VoiceMediaEngineBridge';
+import {getStreamKeyForParticipantIdentity} from '@app/features/voice/engine/VoiceStreamWatchState';
+import {
+	getLocalScreenShareVideoPublications,
+	isLiveLocalTrackPublication,
+} from '@app/features/voice/engine/VoiceTrackPublicationUtils';
+import ScreenShareDeliveryRollout from '@app/features/voice/state/ScreenShareDeliveryRollout';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
-	type CodecCapabilityReport,
+	buildScreenShareCodecProfile,
 	type CodecPreference,
-	type CodecSupportInfo,
-	getCodecCapabilityReport,
 	isVideoCodecAllowedForPublish,
-	resolveEffectiveScreenShareEncoderMode,
 	type ScreenShareEncoderMode,
 	selectNativeScreenCaptureScreenShareCodec,
 	selectOptimalScreenShareCodec,
 } from '@app/features/voice/utils/CodecCapabilityDetector';
 import {loadGpuEncoderReport} from '@app/features/voice/utils/GpuEncoderCapabilities';
 import {loadNativeHardwareEncoderCapabilities} from '@app/features/voice/utils/NativeHardwareEncoderCapabilities';
-import {loadOpenH264Status} from '@app/features/voice/utils/OpenH264Status';
 import {
+	buildScreenShareCodecAdvertisements,
+	CODEC_PREFERENCE,
+	type CodecNegotiationSelection,
+	computeNegotiatedVideoCodec,
+	countUnknownScreenShareParticipants,
+	type FluxerCodecAdvertisement,
+	type FluxerCodecName,
+	type FluxerCodecType,
+	type FluxerVideoCodecName,
+	getDecodeSet,
+	getEncodeSet,
+	isScreenShareCodecUpgrade,
+	type NegotiationReason,
+	rankScreenShareCodecs,
+	SCREEN_SHARE_CODEC_ADVERTISEMENT_GRACE_MS,
+	SCREEN_SHARE_CODEC_CHANGE_SUPPRESSION_MS,
+	VIDEO_CODEC_NAMES,
+} from '@app/features/voice/utils/ScreenShareCodecSelection';
+import {
+	getScreenShareDecodeFailures,
 	getVideoDecoderExclusionsSync,
 	loadVideoDecoderExclusions,
 } from '@app/features/voice/utils/VideoDecoderCapabilities';
-import type {Participant, Room, VideoCodec} from 'livekit-client';
+import {parseVoiceParticipantIdentity} from '@app/features/voice/utils/VoiceParticipantIdentity';
+import type {LocalTrackPublication, Participant, Room, VideoCodec} from 'livekit-client';
 import {RoomEvent} from 'livekit-client';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 const logger = new Logger('ScreenShareCodecNegotiation');
 const PROTOCOL_TOPIC = 'fluxer.rtc.codec-negotiation.v1';
@@ -37,59 +65,6 @@ const EXPERIMENTS_MAX = 16;
 const EXPERIMENT_NAME_CHARS_MAX = 128;
 const RTP_PAYLOAD_TYPE_MAX = 255;
 const CODEC_PRIORITY_MAX = 65_535;
-const CODEC_PREFERENCE: ReadonlyArray<VideoCodec> = ['av1', 'h265', 'h264', 'vp9', 'vp8'];
-const SOFTWARE_CODEC_PREFERENCE: ReadonlyArray<VideoCodec> = ['av1', 'vp9', 'h264', 'vp8', 'h265'];
-const COMPATIBILITY_FALLBACK_CODEC_PREFERENCE: ReadonlyArray<VideoCodec> = ['h264', 'vp9', 'vp8'];
-const BASELINE_VIDEO_CODEC: VideoCodec = 'vp8';
-const VIDEO_CODEC_NAMES: Record<VideoCodec, FluxerVideoCodecName> = {
-	av1: 'AV1',
-	h265: 'H265',
-	h264: 'H264',
-	vp9: 'VP9',
-	vp8: 'VP8',
-};
-const NAME_TO_VIDEO_CODEC: Record<FluxerVideoCodecName, VideoCodec> = {
-	AV1: 'av1',
-	H265: 'h265',
-	H264: 'h264',
-	VP9: 'vp9',
-	VP8: 'vp8',
-};
-const VIDEO_CODEC_PROTOCOL_TABLE: Record<
-	VideoCodec,
-	{
-		payloadType: number;
-		rtxPayloadType: number;
-		priority: number;
-	}
-> = {
-	av1: {payloadType: 101, rtxPayloadType: 102, priority: 5000},
-	h265: {payloadType: 105, rtxPayloadType: 106, priority: 4000},
-	h264: {payloadType: 103, rtxPayloadType: 104, priority: 3000},
-	vp9: {payloadType: 109, rtxPayloadType: 110, priority: 2000},
-	vp8: {payloadType: 107, rtxPayloadType: 108, priority: 1000},
-};
-
-type FluxerVideoCodecName = 'AV1' | 'H265' | 'H264' | 'VP9' | 'VP8';
-type FluxerCodecName = 'opus' | FluxerVideoCodecName;
-type FluxerCodecType = 'audio' | 'video';
-export type NegotiationReason =
-	| 'connected'
-	| 'data'
-	| 'participant-connected'
-	| 'participant-disconnected'
-	| 'reconnected'
-	| 'manual';
-
-export interface FluxerCodecAdvertisement {
-	name: FluxerCodecName;
-	type: FluxerCodecType;
-	payload_type: number;
-	rtx_payload_type?: number;
-	priority: number;
-	encode?: boolean;
-	decode?: boolean;
-}
 
 export interface FluxerSelectProtocolMessage {
 	op: typeof SELECT_PROTOCOL_OP;
@@ -116,13 +91,6 @@ export interface FluxerSessionUpdateMessage {
 
 export type FluxerCodecNegotiationMessage = FluxerSelectProtocolMessage | FluxerSessionUpdateMessage;
 
-interface CodecNegotiationSelection {
-	codec: VideoCodec;
-	reason: NegotiationReason;
-	candidates: Array<VideoCodec>;
-	unknownParticipants: number;
-}
-
 interface ScreenShareCodecNegotiationMachineContext {
 	selectedCodec: VideoCodec | null;
 	selection: CodecNegotiationSelection | null;
@@ -136,6 +104,7 @@ type ScreenShareCodecNegotiationMachineEvent =
 			unknownParticipants: number;
 			reason: NegotiationReason;
 			codecPreference: ReadonlyArray<VideoCodec>;
+			publishedCodec: VideoCodec | null;
 	  }
 	| {type: 'negotiation.reset'};
 
@@ -163,6 +132,9 @@ function hasReceiverCapability(codec: VideoCodec): boolean | null {
 
 function getLocalDecodeCapabilities(): Record<VideoCodec, boolean> {
 	const exclusions = new Set(getVideoDecoderExclusionsSync() ?? []);
+	for (const codec of getScreenShareDecodeFailures()) {
+		exclusions.add(codec);
+	}
 	const result: Record<VideoCodec, boolean> = {
 		av1: false,
 		h265: false,
@@ -172,7 +144,7 @@ function getLocalDecodeCapabilities(): Record<VideoCodec, boolean> {
 	};
 	for (const codec of CODEC_PREFERENCE) {
 		const advertised = hasReceiverCapability(codec);
-		result[codec] = advertised === null ? result[codec] : advertised && !exclusions.has(codec);
+		result[codec] = (advertised === null ? result[codec] : advertised) && !exclusions.has(codec);
 	}
 	return result;
 }
@@ -180,158 +152,36 @@ function getLocalDecodeCapabilities(): Record<VideoCodec, boolean> {
 export function getScreenShareCodecPreferenceOrder(
 	preference: CodecPreference = VoiceSettings.getPreferredScreenShareCodec(),
 ): ReadonlyArray<VideoCodec> {
-	const encoderMode = resolveEffectiveScreenShareEncoderMode(VoiceSettings.getScreenShareEncoderMode());
-	const automaticOrder =
-		encoderMode === 'software' ? SOFTWARE_CODEC_PREFERENCE : getHardwareFirstScreenShareCodecPreferenceOrder();
-	const order =
-		preference !== 'auto' ? [preference, ...automaticOrder.filter((codec) => codec !== preference)] : automaticOrder;
-	return order.filter((codec) => isVideoCodecAllowedForPublish(codec));
+	return rankScreenShareCodecs({
+		profile: buildScreenShareCodecProfile(),
+		encoderModeSetting: VoiceSettings.getScreenShareEncoderMode(),
+		pin: preference,
+	}).order;
 }
 
-function getHardwareFirstScreenShareCodecPreferenceOrder(): ReadonlyArray<VideoCodec> {
-	const report = getCodecCapabilityReport();
-	const hardwareCodecs = CODEC_PREFERENCE.filter(
-		(codec) => report[codec].supported && report[codec].hardwareAccelerated === 'hardware',
-	);
-	if (hardwareCodecs.length === 0) return SOFTWARE_CODEC_PREFERENCE;
-	return [...hardwareCodecs, ...CODEC_PREFERENCE.filter((codec) => !hardwareCodecs.includes(codec))];
-}
-
-function getLocalEncodeCapabilities(): Record<VideoCodec, boolean> {
-	const report = getCodecCapabilityReport();
-	const encoderMode = resolveEffectiveScreenShareEncoderMode(VoiceSettings.getScreenShareEncoderMode());
-	const pinned = VoiceSettings.getPreferredScreenShareCodec();
-	const hardwareEncodeAvailable = CODEC_PREFERENCE.some(
-		(codec) => report[codec].supported && report[codec].hardwareAccelerated === 'hardware',
-	);
-	const advertise = (codec: VideoCodec): boolean =>
-		isVideoCodecAllowedForPublish(codec) &&
-		((pinned === codec && report[codec].supported) ||
-			shouldAdvertiseVideoEncode(codec, report[codec], encoderMode, hardwareEncodeAvailable, report));
-	return {
-		av1: advertise('av1'),
-		h265: advertise('h265'),
-		h264: advertise('h264'),
-		vp9: advertise('vp9'),
-		vp8: report.vp8.supported && isVideoCodecAllowedForPublish('vp8'),
-	};
-}
-
-function shouldAdvertiseVideoEncode(
-	codec: VideoCodec,
-	info: CodecSupportInfo,
-	encoderMode: ScreenShareEncoderMode,
-	hardwareEncodeAvailable: boolean,
-	report: CodecCapabilityReport,
-): boolean {
-	if (!info.supported) return false;
-	if (encoderMode === 'software') {
-		if (codec === 'h265') return false;
-		return true;
-	}
-	if (hardwareEncodeAvailable) {
-		if (codec === 'h264') return true;
-		if (codec === 'vp8') return !report.h264.supported;
-		return info.hardwareAccelerated === 'hardware';
-	}
-	if (codec === 'h265') return false;
-	return true;
-}
-
-function buildVideoCodecAdvertisement(
-	codec: VideoCodec,
-	encodeCaps: Record<VideoCodec, boolean>,
-	decodeCaps: Record<VideoCodec, boolean>,
-): FluxerCodecAdvertisement {
-	const table = VIDEO_CODEC_PROTOCOL_TABLE[codec];
-	return {
-		name: VIDEO_CODEC_NAMES[codec],
-		type: 'video',
-		payload_type: table.payloadType,
-		rtx_payload_type: table.rtxPayloadType,
-		priority: table.priority,
-		encode: encodeCaps[codec],
-		decode: decodeCaps[codec],
-	};
-}
-
-export function buildLocalCodecAdvertisements(): Array<FluxerCodecAdvertisement> {
-	const encodeCaps = getLocalEncodeCapabilities();
-	const decodeCaps = getLocalDecodeCapabilities();
-	return [
-		{
-			name: 'opus',
-			type: 'audio',
-			payload_type: 120,
-			priority: 1000,
-			encode: true,
-			decode: true,
-		},
-		...CODEC_PREFERENCE.map((codec) => buildVideoCodecAdvertisement(codec, encodeCaps, decodeCaps)),
-	];
-}
-
-function getDecodeSet(codecs: ReadonlyArray<FluxerCodecAdvertisement>): Set<VideoCodec> {
-	const result = new Set<VideoCodec>();
-	for (const codec of codecs) {
-		if (codec.type !== 'video' || codec.decode !== true) continue;
-		const mapped = NAME_TO_VIDEO_CODEC[codec.name as FluxerVideoCodecName];
-		if (mapped) result.add(mapped);
-	}
-	return result;
-}
-
-function getEncodeSet(codecs: ReadonlyArray<FluxerCodecAdvertisement>): Set<VideoCodec> {
-	const result = new Set<VideoCodec>();
-	for (const codec of codecs) {
-		if (codec.type !== 'video' || codec.encode !== true) continue;
-		const mapped = NAME_TO_VIDEO_CODEC[codec.name as FluxerVideoCodecName];
-		if (mapped) result.add(mapped);
-	}
-	return result;
-}
-
-function selectCompatibilityFallbackCodec(localEncode: ReadonlySet<VideoCodec>): VideoCodec {
-	for (const codec of COMPATIBILITY_FALLBACK_CODEC_PREFERENCE) {
-		if (localEncode.has(codec)) return codec;
-	}
-	return BASELINE_VIDEO_CODEC;
-}
-
-export function computeNegotiatedVideoCodec(
-	localCodecs: ReadonlyArray<FluxerCodecAdvertisement>,
-	remoteCodecs: ReadonlyArray<ReadonlyArray<FluxerCodecAdvertisement>>,
-	unknownParticipants = 0,
-	codecPreference: ReadonlyArray<VideoCodec> = CODEC_PREFERENCE,
-): CodecNegotiationSelection {
-	const localEncode = getEncodeSet(localCodecs);
-	const candidates = codecPreference.filter((codec) => localEncode.has(codec));
-	const constrainedCandidates = candidates.filter((codec) => {
-		if (unknownParticipants > 0 && !COMPATIBILITY_FALLBACK_CODEC_PREFERENCE.includes(codec)) return false;
-		for (const remote of remoteCodecs) {
-			if (!getDecodeSet(remote).has(codec)) return false;
-		}
-		return true;
-	});
-	const codec = constrainedCandidates[0] ?? selectCompatibilityFallbackCodec(localEncode);
-	return {
-		codec,
-		reason: 'manual',
-		candidates: constrainedCandidates,
-		unknownParticipants,
-	};
+export function buildLocalCodecAdvertisements(
+	order: ReadonlyArray<VideoCodec> = getScreenShareCodecPreferenceOrder(),
+): Array<FluxerCodecAdvertisement> {
+	return buildScreenShareCodecAdvertisements(order, getLocalDecodeCapabilities());
 }
 
 function evaluateScreenShareCodecNegotiation(
 	event: Extract<ScreenShareCodecNegotiationMachineEvent, {type: 'negotiation.evaluate'}>,
 ): CodecNegotiationSelection {
+	const negotiated = computeNegotiatedVideoCodec(
+		event.localCodecs,
+		event.remoteCodecs,
+		event.unknownParticipants,
+		event.codecPreference,
+	);
+	const publishedCodec = event.publishedCodec;
+	const codec =
+		publishedCodec !== null && isScreenShareCodecUpgrade(event.codecPreference, publishedCodec, negotiated.codec)
+			? publishedCodec
+			: negotiated.codec;
 	return {
-		...computeNegotiatedVideoCodec(
-			event.localCodecs,
-			event.remoteCodecs,
-			event.unknownParticipants,
-			event.codecPreference,
-		),
+		...negotiated,
+		codec,
 		reason: event.reason,
 	};
 }
@@ -375,7 +225,7 @@ export const screenShareCodecNegotiationStateMachine = setup({
 export type ScreenShareCodecNegotiationSnapshot = SnapshotFrom<typeof screenShareCodecNegotiationStateMachine>;
 
 export function createScreenShareCodecNegotiationSnapshot(): ScreenShareCodecNegotiationSnapshot {
-	return getInitialSnapshot(screenShareCodecNegotiationStateMachine);
+	return initialTransition(screenShareCodecNegotiationStateMachine)[0];
 }
 
 export function transitionScreenShareCodecNegotiationSnapshot(
@@ -495,14 +345,44 @@ class ScreenShareCodecNegotiation {
 	private selectedCodec: VideoCodec | null = null;
 	private localCodecs: Array<FluxerCodecAdvertisement> = [];
 	private remoteCodecsByIdentity = new Map<string, Array<FluxerCodecAdvertisement>>();
+	private remoteFirstSeenAt = new Map<string, number>();
+	private answeredIdentities = new Set<string>();
+	private graceTimers = new Map<string, ReturnType<typeof setTimeout>>();
 	private rtcConnectionId = createId('rtc');
 	private mediaSessionId = createId('media');
 	private negotiationSnapshot = createScreenShareCodecNegotiationSnapshot();
 	private bindingRevision = 0;
+	private frozenCodecPreference: {
+		preference: CodecPreference;
+		encoderMode: ScreenShareEncoderMode;
+		order: ReadonlyArray<VideoCodec>;
+	} | null = null;
+	private frozenDelivery: {trackSid: string; enabled: boolean} | null = null;
+	private lastCodecChangeAt = 0;
+	private suppressionTimer: ReturnType<typeof setTimeout> | null = null;
+	private publishedTrackSid: string | null = null;
 	private onSelectionChanged: ((room: Room, codec: VideoCodec, reason: NegotiationReason) => void) | null = null;
 
 	getSelectedCodec(): VideoCodec | null {
 		return this.selectedCodec;
+	}
+
+	getLocalCodecAdvertisements(): Array<FluxerCodecAdvertisement> {
+		if (this.localCodecs.length === 0) return buildLocalCodecAdvertisements();
+		return [...this.localCodecs];
+	}
+
+	getRemoteDecodeCodecsByIdentity(): Record<string, Array<VideoCodec>> {
+		const result: Record<string, Array<VideoCodec>> = {};
+		for (const [identity, codecs] of this.remoteCodecsByIdentity) {
+			result[identity] = [...getDecodeSet(codecs)];
+		}
+		return result;
+	}
+
+	getRemoteDecodeInputs(): {knownDecode: Array<Set<VideoCodec>>; unknownParticipants: number} {
+		const {knownRemoteCodecs, unknownParticipants} = this.getRemoteCodecInputs();
+		return {knownDecode: knownRemoteCodecs.map((codecs) => getDecodeSet(codecs)), unknownParticipants};
 	}
 
 	setSelectionChangeListener(
@@ -532,11 +412,12 @@ class ScreenShareCodecNegotiation {
 	}
 
 	private canLocalEncode(codec: VideoCodec): boolean {
-		if (this.localCodecs.length === 0) this.localCodecs = buildLocalCodecAdvertisements();
+		this.ensureLocalCodecAdvertisements();
 		return getEncodeSet(this.localCodecs).has(codec);
 	}
 
 	private canUseSelectedCodecForCurrentParticipants(codec: VideoCodec): boolean {
+		if (!isVideoCodecAllowedForPublish(codec)) return false;
 		if (!this.canLocalEncode(codec)) return false;
 		const {knownRemoteCodecs, unknownParticipants} = this.getRemoteCodecInputs();
 		if (unknownParticipants > 0) return false;
@@ -554,33 +435,163 @@ class ScreenShareCodecNegotiation {
 		) {
 			return this.selectedCodec;
 		}
-		if (this.localCodecs.length === 0) this.localCodecs = buildLocalCodecAdvertisements();
+		this.ensureLocalCodecAdvertisements();
 		const {knownRemoteCodecs, unknownParticipants} = this.getRemoteCodecInputs();
 		const negotiated = computeNegotiatedVideoCodec(
 			this.localCodecs,
 			knownRemoteCodecs,
 			unknownParticipants,
-			getScreenShareCodecPreferenceOrder(preference),
+			this.resolveCodecPreferenceOrder(preference),
 		);
 		if (getEncodeSet(this.localCodecs).has(negotiated.codec)) return negotiated.codec;
 		return selector(preference);
+	}
+
+	private ensureLocalCodecAdvertisements(): void {
+		if (this.localCodecs.length > 0) return;
+		this.localCodecs = buildLocalCodecAdvertisements(this.resolveCodecPreferenceOrder());
+	}
+
+	private resolveScreenShareDelivery(room: Room | null = this.room): boolean {
+		const trackSid = this.getLocalScreenSharePublication(room)?.trackSid ?? null;
+		if (trackSid === null) {
+			this.frozenDelivery = null;
+			return ScreenShareDeliveryRollout.enabled;
+		}
+		if (this.frozenDelivery?.trackSid === trackSid) return this.frozenDelivery.enabled;
+		const enabled = ScreenShareDeliveryRollout.enabled;
+		this.frozenDelivery = {trackSid, enabled};
+		return enabled;
+	}
+
+	private resolveCodecPreferenceOrder(
+		preference: CodecPreference = VoiceSettings.getPreferredScreenShareCodec(),
+	): ReadonlyArray<VideoCodec> {
+		if (!this.resolveScreenShareDelivery()) return getScreenShareCodecPreferenceOrder(preference);
+		const encoderMode = VoiceSettings.getScreenShareEncoderMode();
+		const frozen = this.frozenCodecPreference;
+		if (
+			frozen !== null &&
+			frozen.preference === preference &&
+			frozen.encoderMode === encoderMode &&
+			this.getLocalScreenSharePublication() !== null
+		) {
+			return frozen.order;
+		}
+		const order = getScreenShareCodecPreferenceOrder(preference);
+		this.frozenCodecPreference = {preference, encoderMode, order};
+		return order;
+	}
+
+	private getLocalScreenSharePublication(room: Room | null = this.room): LocalTrackPublication | null {
+		const participant = room?.localParticipant;
+		if (!participant) return null;
+		return getLocalScreenShareVideoPublications(participant).find(isLiveLocalTrackPublication) ?? null;
+	}
+
+	private observePublishedScreenShareCodec(room: Room | null = this.room): VideoCodec | null {
+		const publication = this.getLocalScreenSharePublication(room);
+		const trackSid = publication?.trackSid ?? null;
+		if (trackSid !== this.publishedTrackSid) {
+			this.publishedTrackSid = trackSid;
+			if (trackSid !== null) this.armCodecChangeSuppression();
+		}
+		if (!publication) return null;
+		return (publication as {options?: {videoCodec?: VideoCodec}}).options?.videoCodec ?? null;
+	}
+
+	private getScreenShareViewerIdentities(room: Room | null): ReadonlySet<string> | null {
+		const localIdentity = room?.localParticipant?.identity;
+		if (!localIdentity || this.getLocalScreenSharePublication(room) === null) return null;
+		const context = getVoiceConnectionContextFromMediaEngine();
+		if (!context) return null;
+		const streamKey = getStreamKeyForParticipantIdentity(context.guildId, context.channelId, localIdentity);
+		if (!streamKey) return null;
+		const viewers = new Set<string>();
+		for (const participant of room?.remoteParticipants.values() ?? []) {
+			const {connectionId} = parseVoiceParticipantIdentity(participant.identity);
+			const viewerStreamKeys = getVoiceStateByConnectionIdFromMediaEngine(connectionId)?.viewer_stream_keys;
+			if (viewerStreamKeys === undefined || viewerStreamKeys.includes(streamKey)) {
+				viewers.add(participant.identity);
+			}
+		}
+		return viewers;
 	}
 
 	private getRemoteCodecInputs(room: Room | null = this.room): {
 		knownRemoteCodecs: Array<Array<FluxerCodecAdvertisement>>;
 		unknownParticipants: number;
 	} {
+		const now = Date.now();
+		const viewerIdentities = this.resolveScreenShareDelivery(room) ? this.getScreenShareViewerIdentities(room) : null;
 		const knownRemoteCodecs: Array<Array<FluxerCodecAdvertisement>> = [];
-		let unknownParticipants = 0;
+		const participants: Array<{identity: string; firstSeenAt: number}> = [];
 		for (const participant of room?.remoteParticipants.values() ?? []) {
+			const firstSeenAt = this.remoteFirstSeenAt.get(participant.identity) ?? now;
+			this.remoteFirstSeenAt.set(participant.identity, firstSeenAt);
+			if (viewerIdentities !== null && !viewerIdentities.has(participant.identity)) continue;
+			participants.push({identity: participant.identity, firstSeenAt});
 			const codecs = this.remoteCodecsByIdentity.get(participant.identity);
-			if (codecs) {
-				knownRemoteCodecs.push(codecs);
-			} else {
-				unknownParticipants++;
-			}
+			if (codecs) knownRemoteCodecs.push(codecs);
 		}
-		return {knownRemoteCodecs, unknownParticipants};
+		return {
+			knownRemoteCodecs,
+			unknownParticipants: countUnknownScreenShareParticipants(
+				participants,
+				new Set(this.remoteCodecsByIdentity.keys()),
+				now,
+			),
+		};
+	}
+
+	private armCodecChangeSuppression(): void {
+		this.lastCodecChangeAt = Date.now();
+	}
+
+	private clearSuppressionTimer(): void {
+		if (this.suppressionTimer === null) return;
+		clearTimeout(this.suppressionTimer);
+		this.suppressionTimer = null;
+	}
+
+	private scheduleSuppressedReevaluation(room: Room, reason: NegotiationReason, bindingRevision: number): void {
+		if (this.suppressionTimer !== null) return;
+		const remaining = Math.max(this.lastCodecChangeAt + SCREEN_SHARE_CODEC_CHANGE_SUPPRESSION_MS - Date.now(), 0);
+		this.suppressionTimer = setTimeout(() => {
+			this.suppressionTimer = null;
+			void this.updateSelection(room, reason, bindingRevision);
+		}, remaining);
+	}
+
+	private scheduleGraceReevaluations(room: Room, bindingRevision: number): void {
+		const now = Date.now();
+		for (const participant of room.remoteParticipants.values()) {
+			const {identity} = participant;
+			if (this.remoteCodecsByIdentity.has(identity) || this.graceTimers.has(identity)) continue;
+			const remaining = (this.remoteFirstSeenAt.get(identity) ?? now) + SCREEN_SHARE_CODEC_ADVERTISEMENT_GRACE_MS - now;
+			if (remaining <= 0) continue;
+			this.graceTimers.set(
+				identity,
+				setTimeout(() => {
+					this.graceTimers.delete(identity);
+					void this.updateSelection(room, 'participant-connected', bindingRevision);
+				}, remaining),
+			);
+		}
+	}
+
+	private clearGraceTimer(identity: string): void {
+		const timer = this.graceTimers.get(identity);
+		if (timer === undefined) return;
+		clearTimeout(timer);
+		this.graceTimers.delete(identity);
+	}
+
+	private forgetIdentity(identity: string): void {
+		this.clearGraceTimer(identity);
+		this.remoteCodecsByIdentity.delete(identity);
+		this.remoteFirstSeenAt.delete(identity);
+		this.answeredIdentities.delete(identity);
 	}
 
 	bind(room: Room): () => void {
@@ -601,7 +612,7 @@ class ScreenShareCodecNegotiation {
 		};
 		const onParticipantDisconnected = (participant: Participant): void => {
 			if (!this.isBindingCurrent(room, bindingRevision)) return;
-			this.remoteCodecsByIdentity.delete(participant.identity);
+			this.forgetIdentity(participant.identity);
 			void this.updateSelection(room, 'participant-disconnected', bindingRevision);
 		};
 		const onReconnected = (): void => {
@@ -628,7 +639,16 @@ class ScreenShareCodecNegotiation {
 		this.room = null;
 		this.selectedCodec = null;
 		this.localCodecs = [];
+		this.frozenCodecPreference = null;
+		this.frozenDelivery = null;
+		this.lastCodecChangeAt = 0;
+		this.publishedTrackSid = null;
+		this.clearSuppressionTimer();
+		for (const timer of this.graceTimers.values()) clearTimeout(timer);
+		this.graceTimers.clear();
 		this.remoteCodecsByIdentity.clear();
+		this.remoteFirstSeenAt.clear();
+		this.answeredIdentities.clear();
 		this.mediaSessionId = createId('media');
 		this.negotiationSnapshot = createScreenShareCodecNegotiationSnapshot();
 	}
@@ -639,6 +659,12 @@ class ScreenShareCodecNegotiation {
 	): Promise<CodecNegotiationSelection | null> {
 		if (!room) return null;
 		return await this.publishBoundLocalCapabilities(room, reason, this.bindingRevision);
+	}
+
+	async refreshSelection(room: Room | null = this.room): Promise<CodecNegotiationSelection | null> {
+		if (!room) return null;
+		this.frozenCodecPreference = null;
+		return await this.updateSelection(room, 'manual', this.bindingRevision);
 	}
 
 	private async publishBoundLocalCapabilities(
@@ -652,10 +678,18 @@ class ScreenShareCodecNegotiation {
 			loadGpuEncoderReport(),
 			loadNativeHardwareEncoderCapabilities(),
 			loadVideoDecoderExclusions(),
-			loadOpenH264Status(),
+			getDesktopTroubleshootingSettings(),
 		]);
 		if (!this.isBindingCurrent(room, bindingRevision)) return null;
-		this.localCodecs = buildLocalCodecAdvertisements();
+		if (reason === 'manual') this.frozenCodecPreference = null;
+		this.localCodecs = buildLocalCodecAdvertisements(this.resolveCodecPreferenceOrder());
+		await this.publishSelectProtocol(room);
+		if (!this.isBindingCurrent(room, bindingRevision)) return null;
+		return await this.updateSelection(room, reason, bindingRevision);
+	}
+
+	private async publishSelectProtocol(room: Room): Promise<void> {
+		this.ensureLocalCodecAdvertisements();
 		const message: FluxerSelectProtocolMessage = {
 			op: SELECT_PROTOCOL_OP,
 			d: {
@@ -665,23 +699,19 @@ class ScreenShareCodecNegotiation {
 				},
 				codecs: this.localCodecs,
 				rtc_connection_id: this.rtcConnectionId,
-				experiments: ['fixed_keyframe_interval', 'maintain_framerate', 'opus_red', 'transport_cc', 'loss_based_bwe_v2'],
+				experiments: [],
 			},
 		};
 		await this.publishMessage(room, message);
-		if (!this.isBindingCurrent(room, bindingRevision)) return null;
-		return await this.updateSelection(room, reason, bindingRevision);
 	}
 
 	private handleDataMessage(room: Room, participant: Participant, payload: Uint8Array, bindingRevision: number): void {
 		if (!this.isBindingCurrent(room, bindingRevision)) return;
 		const message = parseMessage(payload);
 		if (!message) return;
-		if (message.op === SELECT_PROTOCOL_OP) {
-			this.remoteCodecsByIdentity.set(participant.identity, message.d.codecs);
-			void this.updateSelection(room, 'data', bindingRevision);
-		} else if (message.op === SESSION_UPDATE_OP) {
-			this.remoteCodecsByIdentity.set(participant.identity, message.d.codecs);
+		this.remoteCodecsByIdentity.set(participant.identity, message.d.codecs);
+		this.clearGraceTimer(participant.identity);
+		if (message.op === SESSION_UPDATE_OP) {
 			logger.debug('Received remote codec session update', {
 				participantIdentity: participant.identity,
 				videoCodec: message.d.video_codec,
@@ -689,7 +719,18 @@ class ScreenShareCodecNegotiation {
 				reason: message.d.reason,
 			});
 			void this.updateSelection(room, 'data', bindingRevision);
+			return;
 		}
+		void this.answerSelectProtocol(room, participant.identity, bindingRevision);
+	}
+
+	private async answerSelectProtocol(room: Room, identity: string, bindingRevision: number): Promise<void> {
+		if (!this.answeredIdentities.has(identity)) {
+			this.answeredIdentities.add(identity);
+			await this.publishSelectProtocol(room);
+			if (!this.isBindingCurrent(room, bindingRevision)) return;
+		}
+		await this.updateSelection(room, 'data', bindingRevision);
 	}
 
 	private async updateSelection(
@@ -698,7 +739,7 @@ class ScreenShareCodecNegotiation {
 		bindingRevision: number,
 	): Promise<CodecNegotiationSelection | null> {
 		if (!room.localParticipant || !this.isBindingCurrent(room, bindingRevision)) return null;
-		if (this.localCodecs.length === 0) this.localCodecs = buildLocalCodecAdvertisements();
+		this.ensureLocalCodecAdvertisements();
 		if (reason === 'participant-disconnected' && room.remoteParticipants.size === 0 && this.selectedCodec) {
 			logger.debug('Keeping active screen share codec after last viewer disconnected', {
 				codec: this.selectedCodec,
@@ -706,19 +747,39 @@ class ScreenShareCodecNegotiation {
 			return null;
 		}
 		const {knownRemoteCodecs, unknownParticipants} = this.getRemoteCodecInputs(room);
+		this.scheduleGraceReevaluations(room, bindingRevision);
 		const previousCodec = this.selectedCodec;
+		const delivery = this.resolveScreenShareDelivery(room);
 		this.negotiationSnapshot = transitionScreenShareCodecNegotiationSnapshot(this.negotiationSnapshot, {
 			type: 'negotiation.evaluate',
 			localCodecs: this.localCodecs,
 			remoteCodecs: knownRemoteCodecs,
 			unknownParticipants,
 			reason,
-			codecPreference: getScreenShareCodecPreferenceOrder(),
+			codecPreference: this.resolveCodecPreferenceOrder(),
+			publishedCodec: delivery ? this.observePublishedScreenShareCodec(room) : null,
 		});
 		const selection = this.negotiationSnapshot.context.selection;
 		if (!selection) return null;
+		if (selection.codec === previousCodec) {
+			this.selectedCodec = selection.codec;
+			return selection;
+		}
+		if (
+			delivery &&
+			previousCodec !== null &&
+			Date.now() - this.lastCodecChangeAt < SCREEN_SHARE_CODEC_CHANGE_SUPPRESSION_MS
+		) {
+			logger.debug('Suppressed a screen share codec change inside the change window', {
+				codec: selection.codec,
+				previousCodec,
+				reason,
+			});
+			this.scheduleSuppressedReevaluation(room, reason, bindingRevision);
+			return selection;
+		}
 		this.selectedCodec = selection.codec;
-		if (selection.codec === previousCodec) return selection;
+		if (delivery) this.armCodecChangeSuppression();
 		this.mediaSessionId = createId('media');
 		logger.info('Selected screen share codec from XState capability intersection', selection);
 		await this.publishSessionUpdate(room, selection);
@@ -756,6 +817,6 @@ class ScreenShareCodecNegotiation {
 	}
 }
 
-export {CODEC_PREFERENCE, PROTOCOL_TOPIC as SCREEN_SHARE_CODEC_NEGOTIATION_TOPIC};
+export {PROTOCOL_TOPIC as SCREEN_SHARE_CODEC_NEGOTIATION_TOPIC};
 
 export default new ScreenShareCodecNegotiation();

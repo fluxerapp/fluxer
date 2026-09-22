@@ -12,6 +12,7 @@ const GEOIP_DOWNLOAD_PATH_QUERY_PARAM = 'download_path';
 const GEOIP_ASN_DOWNLOAD_PATH_QUERY_PARAM = 'asn_download_path';
 const GEOIP_ASN_KEY_QUERY_PARAM = 'asn_key';
 const DEFAULT_GEOIP_TEMPORARY_DIRECTORY = '/tmp/fluxer/geoip';
+const DEFAULT_GEOIP_ASN_DB_BASENAME = 'GeoLite2-ASN.mmdb';
 
 type GeoipSourceMode = 'filesystem' | 's3';
 
@@ -66,7 +67,7 @@ interface GeoipRuntimePathOptions {
 }
 
 export function parseGeoipSourceConfig(rawValue: string | undefined): GeoipSourceConfig {
-	if (!rawValue || !rawValue.startsWith('s3://')) {
+	if (!rawValue?.startsWith('s3://')) {
 		return createGeoipFilesystemSourceConfig(rawValue);
 	}
 	return parseGeoipS3SourceConfig(rawValue);
@@ -167,9 +168,11 @@ async function downloadS3Object(
 }
 
 function createGeoipFilesystemSourceConfig(rawValue: string | undefined): GeoipFilesystemSourceConfig {
+	const maxmindDbPath = rawValue === '' ? undefined : rawValue;
 	return {
 		mode: 'filesystem',
-		maxmindDbPath: rawValue === '' ? undefined : rawValue,
+		maxmindDbPath,
+		maxmindAsnDbPath: maxmindDbPath ? path.join(path.dirname(maxmindDbPath), DEFAULT_GEOIP_ASN_DB_BASENAME) : undefined,
 	};
 }
 

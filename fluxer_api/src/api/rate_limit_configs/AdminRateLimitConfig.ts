@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {RouteRateLimitConfig} from '@app/api/middleware/RateLimitMiddleware';
 import {ms} from 'itty-time';
-import type {RouteRateLimitConfig} from '../middleware/RateLimitMiddleware';
 
 export const AdminRateLimitConfigs = {
 	ADMIN_LOOKUP: {
@@ -47,9 +47,5 @@ export const AdminRateLimitConfigs = {
 	ADMIN_GENERAL: {
 		bucket: 'admin:general',
 		config: {limit: 200, windowMs: ms('1 minute')},
-	} as RouteRateLimitConfig,
-	ADMIN_SYSTEM_HEAP_SNAPSHOT: {
-		bucket: 'admin:system:heap_snapshot',
-		config: {limit: 2, windowMs: ms('5 minutes')},
 	} as RouteRateLimitConfig,
 } as const;

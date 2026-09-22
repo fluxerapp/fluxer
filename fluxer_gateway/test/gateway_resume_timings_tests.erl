@@ -91,6 +91,49 @@ handle_resume_missing_session_sends_invalid_session_without_api_test() ->
         meck:unload(session_manager)
     end.
 
+handle_resume_below_replay_floor_sends_invalid_session_test() ->
+    drain_mailbox(),
+    SessionPid = spawn(fun() -> fake_not_resumable_session_loop(<<"resume-token">>) end),
+    meck:new(session_manager, [passthrough, no_link]),
+    meck:expect(
+        session_manager,
+        lookup_or_rehydrate,
+        fun(<<"evicted-session">>, <<"resume-token">>, SocketPid) when is_pid(SocketPid) ->
+            {ok, SessionPid}
+        end
+    ),
+    try
+        {Frames, _State1} = gateway_handler_identify:handle_resume(
+            #{
+                <<"token">> => <<"resume-token">>,
+                <<"session_id">> => <<"evicted-session">>,
+                <<"seq">> => 7
+            },
+            new_json_state()
+        ),
+        [{text, Payload}] = Frames,
+        Message = json:decode(Payload),
+        ?assertEqual(constants:opcode_to_num(invalid_session), maps:get(<<"op">>, Message)),
+        ?assertEqual(false, maps:get(<<"d">>, Message))
+    after
+        SessionPid ! stop,
+        meck:unload(session_manager)
+    end.
+
+fake_not_resumable_session_loop(Token) ->
+    receive
+        {'$gen_call', From, {token_verify, Candidate}} ->
+            gen_server:reply(From, Candidate =:= Token),
+            fake_not_resumable_session_loop(Token);
+        {'$gen_call', From, {resume, _Seq, SocketPid}} when is_pid(SocketPid) ->
+            gen_server:reply(From, not_resumable),
+            fake_not_resumable_session_loop(Token);
+        stop ->
+            ok
+    after 30000 ->
+        ok
+    end.
+
 assert_resumed_dispatch_without_timings(ExpectedSeq) ->
     receive
         {dispatch, resumed, ResumedData, ExpectedSeq} ->

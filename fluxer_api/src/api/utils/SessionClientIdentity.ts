@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Logger} from '@app/api/Logger';
+import {parseJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
 import Bowser from 'bowser';
-import {Logger} from '../Logger';
-import {parseJsonRecord} from './JsonBoundaryUtils';
 
 export type SessionDeviceClass = 'mobile' | 'desktop';
 

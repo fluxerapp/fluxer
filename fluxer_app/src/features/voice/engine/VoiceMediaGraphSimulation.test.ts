@@ -19,7 +19,12 @@ import {
 	type VoiceMediaGraphStreamTileState,
 } from '@app/features/voice/engine/VoiceMediaGraphTileState';
 import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
-import {describe, expect, it} from 'vitest';
+import {describe, expect, it, vi} from 'vitest';
+
+vi.mock('@app/features/voice/state/ScreenShareDeliveryRollout', () => ({
+	ScreenShareDeliveryRollout: {enabled: false},
+	default: {enabled: false},
+}));
 
 const SIMULATION_SEEDS: ReadonlyArray<number> = Array.from({length: 20}, (_, index) => 1 + index * 7919);
 const SIMULATION_STEP_COUNT = 1000;

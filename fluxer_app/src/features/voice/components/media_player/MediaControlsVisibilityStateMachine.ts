@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export interface MediaControlsVisibilitySignals {
 	disabled: boolean;
@@ -58,7 +58,7 @@ export const mediaControlsVisibilityStateMachine = setup({
 export type MediaControlsVisibilitySnapshot = SnapshotFrom<typeof mediaControlsVisibilityStateMachine>;
 
 export function createMediaControlsVisibilitySnapshot(): MediaControlsVisibilitySnapshot {
-	return getInitialSnapshot(mediaControlsVisibilityStateMachine);
+	return initialTransition(mediaControlsVisibilityStateMachine)[0];
 }
 
 export function transitionMediaControlsVisibilitySnapshot(

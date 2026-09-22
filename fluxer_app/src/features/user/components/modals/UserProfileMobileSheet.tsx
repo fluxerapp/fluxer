@@ -12,7 +12,7 @@ import Authentication from '@app/features/auth/state/Authentication';
 import * as PrivateChannelCommands from '@app/features/channel/commands/PrivateChannelCommands';
 import {GifIndicator} from '@app/features/channel/components/embeds/media/GifIndicator';
 import Channels from '@app/features/channel/state/Channels';
-import {EmojiInfoBottomSheet} from '@app/features/emoji/components/bottomsheets/EmojiInfoBottomSheet';
+import {ExpressionInfoBottomSheet} from '@app/features/expressions/components/bottomsheets/ExpressionInfoBottomSheet';
 import {
 	BLOCKED_USER_DM_WARNING_DESCRIPTOR,
 	OPEN_DM_DESCRIPTOR,
@@ -709,7 +709,11 @@ const UserProfileMobileSheetContent: React.FC<UserProfileMobileSheetContentProps
 																className={styles.actionLabel}
 																data-flx="user.user-profile-mobile-sheet.user-profile-mobile-sheet-content.action-label"
 															>
-																{isBlocked ? i18n._(OPEN_DM_DESCRIPTOR) : <Trans>Message</Trans>}
+																{isBlocked ? (
+																	i18n._(OPEN_DM_DESCRIPTOR)
+																) : (
+																	<Trans context="message-action">Message</Trans>
+																)}
 															</span>
 														</button>
 													)}
@@ -946,11 +950,12 @@ const UserProfileMobileSheetContent: React.FC<UserProfileMobileSheetContentProps
 					guildMember={guildMember}
 					data-flx="user.user-profile-mobile-sheet.user-profile-mobile-sheet-content.user-profile-actions-sheet"
 				/>
-				<EmojiInfoBottomSheet
+				<ExpressionInfoBottomSheet
+					kind="emoji"
 					isOpen={emojiInfoOpen}
 					onClose={() => setEmojiInfoOpen(false)}
 					emoji={selectedEmoji}
-					data-flx="user.user-profile-mobile-sheet.user-profile-mobile-sheet-content.emoji-info-bottom-sheet"
+					data-flx="user.user-profile-mobile-sheet.user-profile-mobile-sheet-content.expression-info-bottom-sheet"
 				/>
 				{mutualSheetView != null && (
 					<MutualItemsSheet

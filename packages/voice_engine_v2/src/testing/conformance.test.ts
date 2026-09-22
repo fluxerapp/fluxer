@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {VoiceEngineV2HostPortImplementation} from '@fluxer/voice_engine_v2/src/implementations';
+import type {VoiceEngineV2HostPorts} from '@fluxer/voice_engine_v2/src/ports';
+import {createVoiceEngineV2MemoryEventLogSpillSink, VoiceEngineV2Runtime} from '@fluxer/voice_engine_v2/src/runtime';
+import type {VoiceEngineV2ConformanceSubject} from '@fluxer/voice_engine_v2/src/testing/conformance';
+import {runVoiceEngineV2ConformanceSuite, waitForRuntime} from '@fluxer/voice_engine_v2/src/testing/conformance';
+import {FakeVoiceEngineV2Driver} from '@fluxer/voice_engine_v2/src/testing/FakeVoiceEngineV2Driver';
+import {VoiceEngineV2TestImplementation} from '@fluxer/voice_engine_v2/src/testing/VoiceEngineV2TestImplementation';
 import {describe, expect, it} from 'vitest';
-import {VoiceEngineV2HostPortImplementation} from '../implementations';
-import type {VoiceEngineV2HostPorts} from '../ports';
-import {createVoiceEngineV2MemoryEventLogSpillSink, VoiceEngineV2Runtime} from '../runtime';
-import type {VoiceEngineV2ConformanceSubject} from './conformance';
-import {runVoiceEngineV2ConformanceSuite, waitForRuntime} from './conformance';
-import {FakeVoiceEngineV2Driver} from './FakeVoiceEngineV2Driver';
-import {VoiceEngineV2TestImplementation} from './VoiceEngineV2TestImplementation';
 
 function createConformanceHostPorts(driver: FakeVoiceEngineV2Driver): VoiceEngineV2HostPorts {
 	return {

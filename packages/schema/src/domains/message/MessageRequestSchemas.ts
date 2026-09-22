@@ -312,7 +312,6 @@ export const MessageNonceRequest = z
 			.number()
 			.int()
 			.nonnegative()
-			.safe()
 			.transform((value) => value.toString()),
 	])
 	.pipe(createStringType(1, 32))
@@ -464,7 +463,7 @@ export const ChannelPinsQuerySchema = z.object({
 		.max(50)
 		.optional()
 		.describe('Maximum number of pinned messages to return (1-50)'),
-	before: z.coerce.date().optional().describe('Get pinned messages before this timestamp'),
+	before: z.string().pipe(z.coerce.date()).optional().describe('Get pinned messages before this timestamp'),
 });
 
 export type ChannelPinsQuerySchema = z.infer<typeof ChannelPinsQuerySchema>;

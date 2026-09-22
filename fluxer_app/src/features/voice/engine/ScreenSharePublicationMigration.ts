@@ -199,7 +199,7 @@ export function parseScreenShareMigrationMessage(payload: Uint8Array): ScreenSha
 	}
 }
 
-export function encodeScreenShareMigrationMessage(message: ScreenShareMigrationMessage): Uint8Array {
+export function encodeScreenShareMigrationMessage(message: ScreenShareMigrationMessage): Uint8Array<ArrayBuffer> {
 	return TEXT_ENCODER.encode(JSON.stringify(message));
 }
 

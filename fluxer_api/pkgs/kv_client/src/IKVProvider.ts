@@ -28,6 +28,11 @@ export interface IKVSubscription {
 	removeAllListeners(event?: 'message' | 'error'): void;
 }
 
+export interface KVPurgeBatchResult {
+	entries: Array<string>;
+	tokensConsumed: number;
+}
+
 export interface KVRateLimitResult {
 	allowed: boolean;
 	limit: number;
@@ -98,10 +103,7 @@ export interface IKVProvider {
 		maxTokens: number,
 		refillRate: number,
 		refillIntervalMs: number,
-	): Promise<{
-		urls: Array<string>;
-		tokensConsumed: number;
-	}>;
+	): Promise<KVPurgeBatchResult>;
 	pipeline(): IKVPipeline;
 	multi(): IKVPipeline;
 	isClustered(): boolean;

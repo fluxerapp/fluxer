@@ -1,0 +1,16 @@
+language js
+
+or {
+	`<$tag $attrs>$children</$tag>`,
+	`<>$children</>`
+} where {
+	$children <: some $text where { $text <: JsxText(), $text <: r"(?s).*\S.*" },
+	or { $children <: some `<$el $elAttrs>$elChildren</$el>`, $children <: some `<$void $voidAttrs />` },
+	$text <: not within or {
+		`<Trans $transAttrs>$transChildren</Trans>`,
+		`<Plural $pluralAttrs>$pluralChildren</Plural>`,
+		`<Select $selectAttrs>$selectChildren</Select>`,
+		`<SelectOrdinal $ordinalAttrs>$ordinalChildren</SelectOrdinal>`
+	} ,
+	register_diagnostic(span=$text, message="Bare JSX text with an element sibling breaks under page translation. Chrome moves the text into a <font> wrapper, and React then inserts before or removes a node that is no longer a direct child, which throws NotFoundError. Collapse the children into a single string child, or wrap this text run in its own element so it is the sole child.", severity="error")
+}

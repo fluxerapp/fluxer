@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ThemeTypes} from '@fluxer/constants/src/UserConstants';
-import {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
+import {
+	WebAuthnAuthenticationOptions,
+	WebAuthnAuthenticationResponse,
+	WebAuthnRegistrationResponse,
+} from '@fluxer/schema/src/domains/auth/WebAuthnSchemas';
+import {UserPartialResponse, UserPrivateResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {
 	createNamedStringLiteralUnion,
 	createStringType,
@@ -14,11 +19,6 @@ import {
 	PhoneNumberType,
 	UsernameType,
 } from '@fluxer/schema/src/primitives/UserValidators';
-import type {
-	AuthenticationResponseJSON,
-	PublicKeyCredentialCreationOptionsJSON,
-	RegistrationResponseJSON,
-} from '@simplewebauthn/server';
 import {z} from 'zod';
 
 const RegisterThemeType = createNamedStringLiteralUnion(
@@ -120,7 +120,7 @@ export const SudoVerificationSchema = z.object({
 		'MFA method to use for verification',
 	).optional(),
 	mfa_code: createStringType(1, 32).optional().describe('MFA verification code from an authenticator app'),
-	webauthn_response: z.custom<AuthenticationResponseJSON>().optional().describe('WebAuthn authentication response'),
+	webauthn_response: WebAuthnAuthenticationResponse.optional().describe('WebAuthn authentication response'),
 	webauthn_challenge: createStringType().optional().describe('WebAuthn challenge string'),
 });
 export const SsoStatusResponse = z.object({
@@ -170,6 +170,7 @@ const AuthMfaRequiredResponse = z.object({
 	allowed_methods: z.array(z.string()).max(10).describe('List of allowed MFA methods'),
 	totp: z.boolean().describe('Whether TOTP authenticator MFA is available'),
 	webauthn: z.boolean().describe('Whether WebAuthn security key MFA is available'),
+	backup_codes: z.boolean().describe('Whether the account has at least one unconsumed backup code'),
 });
 
 export const AuthLoginResponse = z.union([AuthTokenWithUserIdResponse, AuthMfaRequiredResponse]);
@@ -214,7 +215,10 @@ export const AuthSessionsResponse = z.array(AuthSessionResponse);
 
 export type AuthSessionsResponse = z.infer<typeof AuthSessionsResponse>;
 
-export const WebAuthnAuthenticationOptionsResponse = z.custom<PublicKeyCredentialCreationOptionsJSON>();
+export const WebAuthnAuthenticationOptionsResponse = WebAuthnAuthenticationOptions.omit({
+	hints: true,
+	extensions: true,
+});
 
 export type WebAuthnAuthenticationOptionsResponse = z.infer<typeof WebAuthnAuthenticationOptionsResponse>;
 
@@ -304,14 +308,14 @@ export const IpAuthorizationPollResponse = z.object({
 export type IpAuthorizationPollResponse = z.infer<typeof IpAuthorizationPollResponse>;
 
 export const WebAuthnAuthenticateRequest = z.object({
-	response: z.custom<AuthenticationResponseJSON>().describe('WebAuthn authentication response'),
+	response: WebAuthnAuthenticationResponse.describe('WebAuthn authentication response'),
 	challenge: createStringType().describe('The challenge string from authentication options'),
 });
 
 export type WebAuthnAuthenticateRequest = z.infer<typeof WebAuthnAuthenticateRequest>;
 
 export const WebAuthnMfaRequest = z.object({
-	response: z.custom<AuthenticationResponseJSON>().describe('WebAuthn authentication response'),
+	response: WebAuthnAuthenticationResponse.describe('WebAuthn authentication response'),
 	challenge: createStringType().describe('The challenge string from authentication options'),
 	ticket: createStringType().describe('The MFA ticket from the login response'),
 });
@@ -349,7 +353,7 @@ export const EnableMfaTotpRequest = z
 		secret: createStringType(1, 256).describe('The TOTP secret key'),
 		code: createStringType(1, 32).describe('The TOTP verification code'),
 	})
-	.merge(SudoVerificationSchema);
+	.extend(SudoVerificationSchema.shape);
 
 export type EnableMfaTotpRequest = z.infer<typeof EnableMfaTotpRequest>;
 
@@ -358,7 +362,7 @@ export const DisableTotpRequest = z
 		code: createStringType(1, 32).describe('The TOTP code to verify'),
 		password: PasswordType.optional().describe('Account password for verification'),
 	})
-	.merge(SudoVerificationSchema);
+	.extend(SudoVerificationSchema.shape);
 
 export type DisableTotpRequest = z.infer<typeof DisableTotpRequest>;
 
@@ -367,7 +371,7 @@ export const MfaBackupCodesRequest = z
 		regenerate: z.boolean().describe('Whether to regenerate backup codes'),
 		password: PasswordType.optional().describe('Account password for verification'),
 	})
-	.merge(SudoVerificationSchema);
+	.extend(SudoVerificationSchema.shape);
 
 export type MfaBackupCodesRequest = z.infer<typeof MfaBackupCodesRequest>;
 
@@ -475,16 +479,14 @@ export const WebAuthnCredentialListResponse = z.array(WebAuthnCredentialResponse
 
 export type WebAuthnCredentialListResponse = z.infer<typeof WebAuthnCredentialListResponse>;
 
-export const WebAuthnChallengeResponse = z
-	.object({
-		challenge: z.string().describe('The WebAuthn challenge'),
-	})
-	.passthrough();
+export const WebAuthnChallengeResponse = z.looseObject({
+	challenge: z.string().describe('The WebAuthn challenge'),
+});
 
 export type WebAuthnChallengeResponse = z.infer<typeof WebAuthnChallengeResponse>;
 
 export const WebAuthnRegisterRequest = z.object({
-	response: z.custom<RegistrationResponseJSON>().describe('WebAuthn registration response'),
+	response: WebAuthnRegistrationResponse.describe('WebAuthn registration response'),
 	challenge: createStringType(1, 1024).describe('The challenge from registration options'),
 	name: createStringType(1, 100).describe('User-assigned name for the credential'),
 });
@@ -495,14 +497,33 @@ export const WebAuthnCredentialUpdateRequest = z
 	.object({
 		name: createStringType(1, 100).describe('New name for the credential'),
 	})
-	.merge(SudoVerificationSchema);
+	.extend(SudoVerificationSchema.shape);
 
 export type WebAuthnCredentialUpdateRequest = z.infer<typeof WebAuthnCredentialUpdateRequest>;
 
+export const WebAuthnTwoFactorRequest = z
+	.object({
+		enabled: z.boolean().describe('Whether registered passkeys count as a second factor when logging in'),
+	})
+	.extend(SudoVerificationSchema.shape);
+
+export type WebAuthnTwoFactorRequest = z.infer<typeof WebAuthnTwoFactorRequest>;
+
+export const WebAuthnTwoFactorResponse = z.object({
+	user: UserPrivateResponse.describe('The updated account'),
+	backup_codes: z
+		.array(MfaBackupCodeResponse)
+		.nullable()
+		.describe('Backup codes minted by this call, or null when none were minted'),
+});
+
+export type WebAuthnTwoFactorResponse = z.infer<typeof WebAuthnTwoFactorResponse>;
+
 export const SudoMfaMethodsResponse = z.object({
 	totp: z.boolean().describe('Whether TOTP is enabled'),
-	webauthn: z.boolean().describe('Whether WebAuthn is enabled'),
-	has_mfa: z.boolean().describe('Whether any MFA method is enabled'),
+	webauthn: z.boolean().describe('Whether the account has at least one registered WebAuthn credential'),
+	backup_codes: z.boolean().describe('Whether the account has at least one unconsumed backup code'),
+	has_mfa: z.boolean().describe('Whether the account can satisfy a sudo mode challenge'),
 });
 
 export type SudoMfaMethodsResponse = z.infer<typeof SudoMfaMethodsResponse>;
@@ -514,3 +535,5 @@ export const InboundSmsChallengeStartResponse = z.object({
 });
 
 export type InboundSmsChallengeStartResponse = z.infer<typeof InboundSmsChallengeStartResponse>;
+
+export const LogoutAuthSessionsWithVerificationRequest = LogoutAuthSessionsRequest.extend(SudoVerificationSchema.shape);

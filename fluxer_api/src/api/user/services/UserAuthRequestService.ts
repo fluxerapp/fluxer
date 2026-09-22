@@ -1,5 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import * as AuthMfa from '@app/api/auth/AuthMfa';
+import * as AuthPhone from '@app/api/auth/AuthPhone';
+import {requireEmailVerified} from '@app/api/auth/EmailVerificationUtils';
+import type {SudoVerificationResult} from '@app/api/auth/services/SudoVerificationService';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {User} from '@app/api/models/User';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import * as UserAuth from '@app/api/user/services/UserAuth';
+import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {GuildVerificationLevel} from '@fluxer/constants/src/GuildConstants';
 import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
 import {PhoneAddNotEligibleError} from '@fluxer/errors/src/domains/auth/PhoneAddNotEligibleError';
@@ -17,16 +27,9 @@ import type {
 	WebAuthnCredentialListResponse,
 	WebAuthnCredentialUpdateRequest,
 	WebAuthnRegisterRequest,
+	WebAuthnTwoFactorRequest,
+	WebAuthnTwoFactorResponse,
 } from '@fluxer/schema/src/domains/auth/AuthSchemas';
-import type {ApiContext} from '../../ApiContext';
-import * as AuthMfa from '../../auth/AuthMfa';
-import * as AuthPhone from '../../auth/AuthPhone';
-import {requireEmailVerified} from '../../auth/EmailVerificationUtils';
-import type {SudoVerificationResult} from '../../auth/services/SudoVerificationService';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import type {User} from '../../models/User';
-import type {IUserRepository} from '../IUserRepository';
-import * as UserAuth from './UserAuth';
 
 interface UserAuthWithSudoRequest<T> {
 	user: User;
@@ -192,6 +195,22 @@ export class UserAuthRequestService {
 
 	async deleteWebAuthnCredential({user, credentialId}: UserAuthWebAuthnDeleteRequest): Promise<void> {
 		await AuthMfa.deleteWebAuthnCredential(this.apiContext, user.id, credentialId);
+	}
+
+	async setWebAuthnTwoFactor({
+		user,
+		data,
+	}: UserAuthRequest<WebAuthnTwoFactorRequest>): Promise<WebAuthnTwoFactorResponse> {
+		if (data.enabled) {
+			requireEmailVerified(user, 'mfa');
+		}
+		const result = await AuthMfa.setWebAuthnTwoFactor(this.apiContext, user.id, data.enabled);
+		return {
+			user: mapUserToPrivateResponse(result.user),
+			backup_codes: result.backupCodes
+				? result.backupCodes.map((backupCode) => ({code: backupCode.code, consumed: backupCode.consumed}))
+				: null,
+		};
 	}
 
 	async listSudoMfaMethods(user: User): Promise<SudoMfaMethodsResponse> {

@@ -113,7 +113,7 @@ export function SelectionFormattingToolbarPlugin({enabled = true}: {enabled?: bo
 					}
 					const activeElement = root.ownerDocument.activeElement;
 					const toolbar = toolbarRef.current;
-					const toolbarHasFocus = activeElement != null && toolbar != null && toolbar.contains(activeElement);
+					const toolbarHasFocus = activeElement && toolbar?.contains(activeElement);
 					if (!$isRangeSelection(selection) || selection.isCollapsed()) {
 						if (!toolbarHasFocus || savedSelectionRef.current == null) {
 							setRect(null);
@@ -250,7 +250,7 @@ function SelectionToolbarSurface({
 	onFocusRequestHandled: () => void;
 	onDismiss: () => void;
 	toolbarRef: React.RefObject<HTMLElement | null>;
-	savedSelectionRef: React.MutableRefObject<ComposerSelectionOffsets | null>;
+	savedSelectionRef: React.RefObject<ComposerSelectionOffsets | null>;
 }) {
 	const {i18n} = useLingui();
 	const [focusIndex, setFocusIndex] = useState(0);
@@ -271,7 +271,7 @@ function SelectionToolbarSurface({
 		}),
 		[editor],
 	);
-	const {ref, state, style, updatePosition} = useAntiShiftFloating(virtualReference, true, {
+	const {setFloating, state, style, updatePosition} = useAntiShiftFloating(virtualReference, true, {
 		placement: 'top',
 		offsetMainAxis: 8,
 		shouldAutoUpdate: true,
@@ -381,7 +381,7 @@ function SelectionToolbarSurface({
 		>
 			<flx-lexical-selection-formatting-toolbar
 				ref={(element) => {
-					(ref as React.MutableRefObject<HTMLElement | null>).current = element;
+					setFloating(element);
 					toolbarRef.current = element;
 				}}
 				className={flxElementClassName(styles.toolbar)}

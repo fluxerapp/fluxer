@@ -40,6 +40,7 @@ const ACTIONS_DESCRIPTOR = msg({
 });
 const MESSAGE_DESCRIPTOR = msg({
 	message: 'Message',
+	context: 'message-action',
 	comment: 'Action that opens a DM conversation with the selected user.',
 });
 const logger = new Logger('ActionsSubmenu');

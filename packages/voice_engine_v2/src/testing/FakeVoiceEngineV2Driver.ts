@@ -3,8 +3,8 @@
 import type {
 	VoiceEngineV2Driver,
 	VoiceEngineV2ExternalEventListener,
-} from '../implementations/VoiceEngineV2ImplementationBase';
-import type {VoiceEngineV2Event} from '../protocol/events';
+} from '@fluxer/voice_engine_v2/src/implementations/VoiceEngineV2ImplementationBase';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
 import type {
 	VoiceEngineV2CameraEncodingOptions,
 	VoiceEngineV2CameraOptions,
@@ -22,7 +22,7 @@ import type {
 	VoiceEngineV2ScreenEncodingOptions,
 	VoiceEngineV2ScreenOptions,
 	VoiceEngineV2Stats,
-} from '../protocol/types';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 
 export type FakeVoiceEngineV2DriverCall =
 	| {type: 'prewarm'}

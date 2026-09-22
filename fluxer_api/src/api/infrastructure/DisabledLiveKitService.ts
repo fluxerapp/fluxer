@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {TrackSource} from 'livekit-server-sdk';
-import type {ChannelID, GuildID, UserID} from '../BrandedTypes';
-import type {VoiceRegionMetadata, VoiceServerRecord} from '../voice/VoiceModel';
-import type {ILiveKitService, ListActiveRoomsResult, ListParticipantsResult} from './ILiveKitService';
+import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
+import type {ILiveKitService, ListParticipantsResult} from '@app/api/infrastructure/ILiveKitService';
+import type {VoiceRegionMetadata, VoiceServerRecord} from '@app/api/voice/VoiceModel';
 
 interface CreateTokenParams {
 	userId: UserID;
@@ -52,27 +51,6 @@ interface UpdateParticipantPermissionsParams {
 	deaf?: boolean;
 }
 
-interface MuteParticipantTrackParams {
-	userId: UserID;
-	guildId?: GuildID;
-	channelId: ChannelID;
-	connectionId: string;
-	regionId: string;
-	serverId: string;
-	trackSid: string;
-	muted: boolean;
-}
-
-interface RevokeParticipantPublishSourceParams {
-	userId: UserID;
-	guildId?: GuildID;
-	channelId: ChannelID;
-	connectionId: string;
-	regionId: string;
-	serverId: string;
-	source: TrackSource;
-}
-
 export class DisabledLiveKitService implements ILiveKitService {
 	async createToken(_params: CreateTokenParams): Promise<{
 		token: string;
@@ -87,14 +65,6 @@ export class DisabledLiveKitService implements ILiveKitService {
 
 	async disconnectParticipant(_params: DisconnectParticipantParams): Promise<void> {}
 
-	async muteParticipantTrack(_params: MuteParticipantTrackParams): Promise<boolean> {
-		return false;
-	}
-
-	async revokeParticipantPublishSource(_params: RevokeParticipantPublishSourceParams): Promise<boolean> {
-		return false;
-	}
-
 	async listParticipants(_params: {
 		guildId?: GuildID;
 		channelId: ChannelID;
@@ -102,10 +72,6 @@ export class DisabledLiveKitService implements ILiveKitService {
 		serverId: string;
 	}): Promise<ListParticipantsResult> {
 		return {status: 'ok', participants: []};
-	}
-
-	async listActiveRooms(): Promise<ListActiveRoomsResult> {
-		return {rooms: [], errors: [], searchedServers: 0, completed: true};
 	}
 
 	getDefaultRegionId(): string | null {

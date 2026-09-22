@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {LocaleGeoMatchResult} from '../RiskTypes';
+import type {LocaleGeoMatchResult} from '@app/api/risk/RiskTypes';
 
 const LOCALE_TO_COUNTRIES: Record<string, ReadonlyArray<string>> = {
 	'en-us': ['US', 'PR', 'GU', 'VI', 'AS', 'MP'],

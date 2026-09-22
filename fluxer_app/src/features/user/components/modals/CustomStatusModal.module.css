@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
-.modalRoot {
+.modalRoot.modalRoot {
 	--profile-popout-content-width: 18.75rem;
 	--profile-popout-border-width: 0.15625rem;
 	--profile-card-width: calc(
@@ -9,9 +9,16 @@
 		var(--profile-popout-border-width)
 	);
 	--custom-status-modal-padding-inline: 2rem;
+	--custom-status-modal-card-gutter: 3.75rem;
+	--custom-status-modal-width: calc(
+		var(--profile-card-width) +
+		var(--custom-status-modal-padding-inline) +
+		var(--custom-status-modal-card-gutter) +
+		var(--custom-status-modal-card-gutter)
+	);
 
-	width: min(calc(var(--profile-card-width) + var(--custom-status-modal-padding-inline)), 90vw);
-	max-width: calc(var(--profile-card-width) + var(--custom-status-modal-padding-inline));
+	width: min(var(--custom-status-modal-width), 90vw);
+	max-width: var(--custom-status-modal-width);
 }
 
 .previewSection {
@@ -31,8 +38,6 @@
 
 .statusInputWrapper {
 	width: 100%;
-	max-width: var(--profile-card-width);
-	margin-inline: auto;
 	display: flex;
 	flex-direction: column;
 	gap: 0.35rem;

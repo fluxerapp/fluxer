@@ -16,10 +16,10 @@ import type {
 	NativeScreenCaptureStartResult,
 	WindowsHagsState,
 } from '@electron/common/Types';
+import {getTccStatus} from '@electron/main/MacTcc';
+import {isValidStartOptions, normalizeScreenCaptureDimension} from '@electron/main/NativeScreenCaptureValidation';
+import {requirePrivilegedRendererDocumentSender} from '@electron/main/PrivilegedRendererDocuments';
 import {ipcMain} from 'electron';
-import {getTccStatus} from './MacTcc';
-import {isValidStartOptions, normalizeScreenCaptureDimension} from './NativeScreenCaptureValidation';
-import {requirePrivilegedRendererDocumentSender} from './PrivilegedRendererDocuments';
 
 const logger = createChildLogger('NativeScreenCapture');
 const requireModule = createRequire(import.meta.url);

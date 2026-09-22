@@ -1,0 +1,239 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+:root {
+	--sl-font: var(--fluxer-font-stack);
+	--sl-font-mono: var(--fluxer-mono-stack);
+	--saturation-factor: 1;
+
+	--sl-text-2xs: 0.6875rem;
+	--sl-text-xs: 0.75rem;
+	--sl-text-sm: 0.875rem;
+	--sl-text-base: 1rem;
+	--sl-text-lg: 1.125rem;
+	--sl-text-xl: 1.25rem;
+	--sl-text-2xl: 1.5rem;
+	--sl-text-3xl: 1.875rem;
+	--sl-text-4xl: 2.25rem;
+	--sl-text-5xl: 3rem;
+	--sl-text-6xl: 3.75rem;
+
+	--sl-text-body: var(--sl-text-base);
+	--sl-text-body-sm: var(--sl-text-sm);
+	--sl-text-code: var(--sl-text-sm);
+	--sl-text-code-sm: var(--sl-text-sm);
+	--sl-text-h1: var(--sl-text-4xl);
+	--sl-text-h2: var(--sl-text-2xl);
+	--sl-text-h3: var(--sl-text-xl);
+	--sl-text-h4: var(--sl-text-lg);
+	--sl-text-h5: var(--sl-text-base);
+	--sl-text-h6: var(--sl-text-base);
+
+	--sl-line-height: 1.5;
+	--sl-line-height-headings: 1.25;
+
+	--sl-nav-height: 4rem;
+	--sl-nav-pad-x: 1rem;
+	--sl-nav-pad-y: 0.5rem;
+	--sl-mobile-toc-height: 3rem;
+	--sl-sidebar-width: 20rem;
+	--sl-sidebar-pad-x: 1.5rem;
+	--sl-content-width: 72rem;
+	--sl-content-pad-x: 1rem;
+	--sl-content-gap-y: 1rem;
+	--sl-main-pad: 0 0 3vh 0;
+
+	--flx-toc-width: 16rem;
+	--flx-radius: 0.375rem;
+	--flx-radius-lg: 0.5rem;
+	--flx-radius-pill: 999px;
+
+	--flx-brand: hsl(242, calc(70% * var(--saturation-factor)), 55%);
+	--flx-on-brand: hsl(0, 0%, 98%);
+
+	--flx-code-block-font-size: 0.875rem;
+	--flx-code-inline-font-size: 0.9375em;
+}
+
+:root {
+	--flx-background-primary: hsl(258, calc(10% * var(--saturation-factor)), 5%);
+	--flx-background-secondary: hsl(258, calc(10% * var(--saturation-factor)), 10.59%);
+	--flx-background-secondary-lighter: hsl(258, calc(10% * var(--saturation-factor)), 12.44%);
+	--flx-background-secondary-alt: hsl(258, calc(10% * var(--saturation-factor)), 14.15%);
+	--flx-background-tertiary: hsl(258, calc(10% * var(--saturation-factor)), 17.16%);
+
+	--flx-text-primary: hsl(258, calc(10% * var(--saturation-factor)), 96%);
+	--flx-text-secondary: hsl(258, calc(10% * var(--saturation-factor)), 90.36%);
+	--flx-text-tertiary: hsl(258, calc(10% * var(--saturation-factor)), 70.4%);
+	--flx-border-color: hsla(258, calc(10% * var(--saturation-factor)), 50%, 0.2);
+
+	--flx-link: hsl(198, calc(92% * var(--saturation-factor)), 70%);
+	--flx-hover-bg: hsla(258, calc(10% * var(--saturation-factor)), 100%, 0.05);
+	--flx-selected-bg: hsla(258, calc(10% * var(--saturation-factor)), 100%, 0.1);
+
+	--flx-code-bg: hsl(258, calc(10% * var(--saturation-factor)), 14.5%);
+	--flx-code-fg: hsl(258, calc(10% * var(--saturation-factor)), 90.36%);
+	--flx-code-chrome-bg: hsl(258, calc(10% * var(--saturation-factor)), 17.16%);
+	--flx-code-border: hsl(258, calc(10% * var(--saturation-factor)), 24%);
+	--flx-code-dots: hsl(258, calc(10% * var(--saturation-factor)), 34%);
+	--flx-code-selection-bg: hsla(198, calc(92% * var(--saturation-factor)), 70%, 0.22);
+	--flx-code-veil: hsla(258, calc(15% * var(--saturation-factor)), 100%, 0.09);
+	--flx-code-text: hsl(340, calc(28% * var(--saturation-factor)), 86%);
+	--flx-code-link: hsl(198, calc(92% * var(--saturation-factor)), 74%);
+
+	--flx-scrollbar-thumb: color-mix(
+		in srgb,
+		hsl(258, calc(10% * var(--saturation-factor)), 22.05%) 35%,
+		hsl(258, calc(10% * var(--saturation-factor)), 70.4%) 65%
+	);
+	--flx-scrollbar-track: color-mix(in srgb, var(--flx-background-secondary) 80%, transparent);
+
+	--flx-accent-info: hsl(198, calc(92% * var(--saturation-factor)), 70%);
+	--flx-accent-success: hsl(152, calc(72% * var(--saturation-factor)), 40%);
+	--flx-accent-warning: hsl(45, calc(93% * var(--saturation-factor)), 50%);
+	--flx-accent-danger: hsl(0, calc(84% * var(--saturation-factor)), 60%);
+	--flx-accent-method-put: hsl(24, calc(90% * var(--saturation-factor)), 58%);
+	--flx-accent-method-head: hsl(281, calc(78% * var(--saturation-factor)), 68%);
+	--flx-tint-strength: 18%;
+	--flx-tint-base: var(--flx-background-primary);
+}
+
+:root[data-theme='light'] {
+	--flx-background-primary: hsl(220, calc(10% * var(--saturation-factor)), 98.5%);
+	--flx-background-secondary: hsl(220, calc(10% * var(--saturation-factor)), 92.84%);
+	--flx-background-secondary-lighter: hsl(220, calc(10% * var(--saturation-factor)), 94.61%);
+	--flx-background-secondary-alt: hsl(220, calc(10% * var(--saturation-factor)), 90.96%);
+	--flx-background-tertiary: hsl(220, calc(10% * var(--saturation-factor)), 88.2%);
+
+	--flx-text-primary: hsl(220, calc(10% * var(--saturation-factor)), 15%);
+	--flx-text-secondary: hsl(220, calc(10% * var(--saturation-factor)), 33.78%);
+	--flx-text-tertiary: hsl(220, calc(10% * var(--saturation-factor)), 47.76%);
+	--flx-border-color: hsla(220, calc(10% * var(--saturation-factor)), 40%, 0.15);
+
+	--flx-link: hsl(198, calc(92% * var(--saturation-factor)), 45%);
+	--flx-hover-bg: hsla(220, calc(10% * var(--saturation-factor)), 10%, 0.05);
+	--flx-selected-bg: hsla(220, calc(10% * var(--saturation-factor)), 10%, 0.1);
+
+	--flx-code-bg: hsl(220, calc(12% * var(--saturation-factor)), 97%);
+	--flx-code-fg: hsl(220, calc(12% * var(--saturation-factor)), 22%);
+	--flx-code-chrome-bg: hsl(220, calc(10% * var(--saturation-factor)), 92.84%);
+	--flx-code-border: hsl(220, calc(12% * var(--saturation-factor)), 84%);
+	--flx-code-dots: hsl(220, calc(10% * var(--saturation-factor)), 72%);
+	--flx-code-selection-bg: hsla(198, calc(92% * var(--saturation-factor)), 45%, 0.18);
+	--flx-code-veil: hsla(220, calc(20% * var(--saturation-factor)), 18%, 0.07);
+	--flx-code-text: hsl(340, calc(26% * var(--saturation-factor)), 26%);
+	--flx-code-link: hsl(198, calc(92% * var(--saturation-factor)), 27%);
+
+	--flx-scrollbar-thumb: color-mix(
+		in srgb,
+		hsl(220, calc(10% * var(--saturation-factor)), 86.5%) 40%,
+		hsl(220, calc(10% * var(--saturation-factor)), 33.78%) 60%
+	);
+	--flx-scrollbar-track: color-mix(in srgb, var(--flx-background-secondary) 50%, transparent);
+
+	--flx-accent-info: hsl(198, calc(92% * var(--saturation-factor)), 45%);
+	--flx-accent-success: hsl(152, calc(70% * var(--saturation-factor)), 40%);
+	--flx-accent-warning: hsl(45, calc(90% * var(--saturation-factor)), 45%);
+	--flx-accent-danger: hsl(359, calc(70% * var(--saturation-factor)), 50%);
+
+	--flx-aside-note-text: hsl(198, calc(92% * var(--saturation-factor)), 27%);
+	--flx-aside-tip-text: hsl(152, calc(70% * var(--saturation-factor)), 23%);
+	--flx-aside-caution-text: hsl(45, calc(90% * var(--saturation-factor)), 23%);
+	--flx-aside-danger-text: hsl(359, calc(70% * var(--saturation-factor)), 38%);
+	--flx-aside-note-border: var(--flx-aside-note-text);
+	--flx-aside-tip-border: var(--flx-aside-tip-text);
+	--flx-aside-caution-border: var(--flx-aside-caution-text);
+	--flx-aside-danger-border: var(--flx-aside-danger-text);
+	--flx-accent-method-put: hsl(24, calc(85% * var(--saturation-factor)), 42%);
+	--flx-accent-method-head: hsl(281, calc(70% * var(--saturation-factor)), 48%);
+	--flx-tint-strength: 12%;
+	--flx-tint-base: var(--flx-background-primary);
+}
+
+:root {
+	--sl-color-white: var(--flx-text-primary);
+	--sl-color-gray-1: var(--flx-text-primary);
+	--sl-color-gray-2: var(--flx-text-secondary);
+	--sl-color-gray-3: var(--flx-text-tertiary);
+	--sl-color-gray-4: var(--flx-text-tertiary);
+	--sl-color-gray-5: var(--flx-border-color);
+	--sl-color-gray-6: var(--flx-background-secondary);
+	--sl-color-gray-7: var(--flx-background-secondary-lighter);
+	--sl-color-black: var(--flx-background-primary);
+
+	--sl-color-accent-low: var(--flx-selected-bg);
+	--sl-color-accent: var(--flx-brand);
+	--sl-color-accent-high: var(--flx-link);
+
+	--sl-color-text: var(--flx-text-secondary);
+	--sl-color-text-accent: var(--flx-link);
+	--sl-color-text-invert: var(--flx-on-brand);
+	--sl-color-bg: var(--flx-background-primary);
+	--sl-color-bg-nav: var(--flx-background-secondary);
+	--sl-color-bg-sidebar: var(--flx-background-secondary);
+	--sl-color-bg-inline-code: var(--flx-code-bg);
+	--sl-color-bg-accent: var(--flx-brand);
+	--sl-color-hairline-light: var(--flx-border-color);
+	--sl-color-hairline: var(--flx-border-color);
+	--sl-color-hairline-shade: var(--flx-border-color);
+	--sl-color-backdrop-overlay: color-mix(in srgb, var(--flx-background-primary) 66%, transparent);
+
+	--flx-content-heading: var(--flx-text-primary);
+	--flx-content-text: var(--flx-text-secondary);
+
+	--flx-sidebar-text: var(--flx-text-tertiary);
+	--flx-sidebar-heading: var(--flx-text-primary);
+	--flx-sidebar-hover-bg: var(--flx-hover-bg);
+	--flx-sidebar-hover-text: var(--flx-text-primary);
+	--flx-sidebar-field-bg: var(--flx-background-primary);
+	--flx-sidebar-field-border: var(--flx-border-color);
+
+	--flx-inline-code-bg: var(--flx-code-veil);
+	--flx-inline-code-text: var(--flx-code-text);
+	--flx-inline-code-link: var(--flx-code-link);
+
+	--flx-table-head-bg: var(--flx-background-tertiary);
+	--flx-table-head-border: var(--flx-border-color);
+	--flx-table-row-bg: var(--flx-background-secondary);
+	--flx-table-row-alt-bg: var(--flx-background-secondary-lighter);
+	--flx-table-text: var(--flx-text-secondary);
+
+	--flx-badge-bg: var(--flx-background-secondary-alt);
+	--flx-badge-text: var(--flx-text-secondary);
+	--flx-collapsible-bg: var(--flx-background-secondary);
+
+	--flx-aside-note-border: var(--flx-accent-info);
+	--flx-aside-note-bg: color-mix(in srgb, var(--flx-accent-info) var(--flx-tint-strength), var(--flx-tint-base));
+	--flx-aside-note-text: hsl(198, calc(92% * var(--saturation-factor)), 70%);
+	--flx-aside-tip-border: var(--flx-accent-success);
+	--flx-aside-tip-bg: color-mix(in srgb, var(--flx-accent-success) var(--flx-tint-strength), var(--flx-tint-base));
+	--flx-aside-tip-text: hsl(152, calc(72% * var(--saturation-factor)), 42%);
+	--flx-aside-caution-border: var(--flx-accent-warning);
+	--flx-aside-caution-bg: color-mix(in srgb, var(--flx-accent-warning) var(--flx-tint-strength), var(--flx-tint-base));
+	--flx-aside-caution-text: hsl(45, calc(93% * var(--saturation-factor)), 50%);
+	--flx-aside-danger-border: var(--flx-accent-danger);
+	--flx-aside-danger-bg: color-mix(in srgb, var(--flx-accent-danger) var(--flx-tint-strength), var(--flx-tint-base));
+	--flx-aside-danger-text: hsl(0, calc(84% * var(--saturation-factor)), 71%);
+
+	--flx-method-get-border: var(--flx-accent-info);
+	--flx-method-get-bg: color-mix(in srgb, var(--flx-accent-info) var(--flx-tint-strength), var(--flx-tint-base));
+	--flx-method-get-fg: var(--flx-text-primary);
+	--flx-method-post-border: var(--flx-accent-success);
+	--flx-method-post-bg: color-mix(in srgb, var(--flx-accent-success) var(--flx-tint-strength), var(--flx-tint-base));
+	--flx-method-post-fg: var(--flx-text-primary);
+	--flx-method-patch-border: var(--flx-accent-warning);
+	--flx-method-patch-bg: color-mix(in srgb, var(--flx-accent-warning) var(--flx-tint-strength), var(--flx-tint-base));
+	--flx-method-patch-fg: var(--flx-text-primary);
+	--flx-method-put-border: var(--flx-accent-method-put);
+	--flx-method-put-bg: color-mix(in srgb, var(--flx-accent-method-put) var(--flx-tint-strength), var(--flx-tint-base));
+	--flx-method-put-fg: var(--flx-text-primary);
+	--flx-method-delete-border: var(--flx-accent-danger);
+	--flx-method-delete-bg: color-mix(in srgb, var(--flx-accent-danger) var(--flx-tint-strength), var(--flx-tint-base));
+	--flx-method-delete-fg: var(--flx-text-primary);
+	--flx-method-head-border: var(--flx-accent-method-head);
+	--flx-method-head-bg: color-mix(
+		in srgb,
+		var(--flx-accent-method-head) var(--flx-tint-strength),
+		var(--flx-tint-base)
+	);
+	--flx-method-head-fg: var(--flx-text-primary);
+}

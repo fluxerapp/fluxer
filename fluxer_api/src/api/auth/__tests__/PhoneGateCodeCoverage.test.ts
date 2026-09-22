@@ -3,12 +3,12 @@
 import {readFileSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {errorForPhoneRejectReason} from '@app/api/auth/AuthPhone';
+import type {PhoneAttemptRejectReason} from '@app/api/auth/services/PhoneLookupRepository';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {ErrorCodeToI18nKey} from '@fluxer/errors/src/i18n/ErrorCodeMappings';
 import {getErrorMessageUnsafe} from '@fluxer/errors/src/i18n/ErrorI18n';
 import {describe, expect, it} from 'vitest';
-import {errorForPhoneRejectReason} from '../AuthPhone';
-import type {PhoneAttemptRejectReason} from '../services/PhoneLookupRepository';
 
 const ALL_REJECT_REASONS: ReadonlyArray<PhoneAttemptRejectReason> = [
 	'invalid_format',

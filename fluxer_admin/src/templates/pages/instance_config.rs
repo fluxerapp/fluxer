@@ -2,10 +2,13 @@
 
 use crate::{
     api::types::{
-        AppPublicConfigResponse, GatewayRolloutConfigResponse, InstanceConfigResponse,
-        InstanceIntegrationsResponse, InstanceMediaResponse, InstancePolicyResponse,
-        InstanceRegistrationResponse, LimitConfigResponse, PendingRegistrationResponse,
-        RegistrationUrlResponse, SsoConfigResponse,
+        AppPublicConfigResponse, EXPERIMENT_MAX_TARGETED_USERS, ExperimentDeliveryConfigResponse,
+        GatewayRolloutConfigResponse, InstanceConfigResponse, InstanceIntegrationsResponse,
+        InstanceMediaResponse, InstancePolicyResponse, InstanceRegistrationResponse,
+        LimitConfigResponse, NoiseSuppressionBackend, PendingRegistrationResponse,
+        RegistrationUrlResponse, SCREEN_SHARE_DELIVERY_DEFAULT_SALT,
+        ScreenShareDeliveryConfigResponse, SsoConfigResponse, VOICE_NS_MAX_GUILD_OVERRIDES,
+        VoiceNoiseSuppressionConfigResponse,
     },
     config::AdminConfig,
     middleware::auth::AuthContext,
@@ -39,6 +42,17 @@ fn format_decimal(value: f64) -> String {
         format!("{}", value as u64)
     } else {
         value.to_string()
+    }
+}
+
+fn entry_count_hint(count: usize, cap: usize) -> Markup {
+    html! {
+        p class="text-xs text-neutral-500" {
+            (count) " of " (cap) " stored"
+            @if count >= cap {
+                " (at the cap; remove an entry before adding another)"
+            }
+        }
     }
 }
 
@@ -134,6 +148,9 @@ pub fn instance_config_page(
                     "Gateway rollout behavior and the limit rules applied to users and guilds.",
                     html! {
                         (gateway_rollout_section(base, csrf_token, &instance_config.gateway_rollout))
+                        (voice_noise_suppression_section(base, csrf_token, &instance_config.voice_noise_suppression))
+                        (screen_share_delivery_section(base, csrf_token, &instance_config.screen_share_delivery))
+                        (experiment_delivery_section(base, csrf_token, &instance_config.experiment_delivery))
                         @if let Some(limit_config) = limit_config {
                             (limit_config_section(base, limit_config))
                         } @else {
@@ -833,6 +850,18 @@ fn app_public_config_section(
                                 app_public.branding.favicon_url.as_deref().unwrap_or(""),
                                 "https://example.com/favicon.ico",
                             ))
+                            (text_input(
+                                "app_status_page_url",
+                                "Status page URL",
+                                app_public.branding.status_page_url.as_deref().unwrap_or(""),
+                                "https://fluxerstatus.com",
+                            ))
+                            (text_input(
+                                "app_status_page_incident_history_url",
+                                "Status page history URL",
+                                app_public.branding.status_page_incident_history_url.as_deref().unwrap_or(""),
+                                "https://fluxerstatus.com/history",
+                            ))
                         }
                         div class="space-y-2" {
                             (checkbox(
@@ -946,6 +975,354 @@ fn gateway_rollout_section(
 
                     (form_actions(html! {
                         (submit_button("Save Gateway Rollout Configuration"))
+                    }))
+                }
+            }
+        },
+    )
+}
+
+fn voice_noise_suppression_section(
+    base: &str,
+    csrf_token: &str,
+    voice_noise_suppression: &VoiceNoiseSuppressionConfigResponse,
+) -> Markup {
+    let status = if voice_noise_suppression.enabled {
+        ("Live", BadgeVariant::Success)
+    } else {
+        ("Inert", BadgeVariant::Default)
+    };
+    let backend_labels =
+        NoiseSuppressionBackend::ALL.map(|backend| (backend.to_string(), backend.label()));
+    let backend_options = backend_labels
+        .iter()
+        .map(|(value, label)| (value.as_str(), *label))
+        .collect::<Vec<_>>();
+    let included_user_ids = voice_noise_suppression.included_user_ids.join("\n");
+    let excluded_user_ids = voice_noise_suppression.excluded_user_ids.join("\n");
+    let guild_overrides = voice_noise_suppression
+        .guild_overrides
+        .iter()
+        .map(|entry| format!("{}={}", entry.guild_id, entry.backend))
+        .collect::<Vec<_>>()
+        .join("\n");
+    section_card_with_description(
+        "Voice Noise Suppression",
+        "Pick which noise suppression backend targeted clients load in voice calls, and how many \
+         of them are targeted. While the master switch below is off nothing on this form reaches \
+         any client: every user keeps the audio pipeline they have today, whatever the rest of \
+         these fields say.",
+        html! {
+            form method="post" action={(base) "/instance-config?action=update_voice_noise_suppression"} {
+                (csrf_input(csrf_token))
+                div class="space-y-6" {
+                    div class="flex flex-wrap items-center gap-2" {
+                        h3 class="text-sm font-semibold text-neutral-900" { "Master switch" }
+                        (badge(status.0, status.1))
+                        span class="text-xs text-neutral-500" {
+                            "Config version " (voice_noise_suppression.config_version)
+                        }
+                    }
+                    (checkbox(
+                        "voice_ns_enabled",
+                        "true",
+                        "Serve noise suppression assignments to clients",
+                        voice_noise_suppression.enabled,
+                        true,
+                    ))
+                    p class="text-xs text-neutral-500" {
+                        "Off is the safe state. With this unchecked every client is told the \
+                         feature is inert and keeps its current behavior, so the rollout, targeting \
+                         and override fields below have no effect at all."
+                    }
+
+                    h3 class="text-sm font-semibold text-neutral-900" { "Backends" }
+                    (select_input(
+                        "voice_ns_default_backend",
+                        "Default Backend",
+                        &backend_options,
+                        &voice_noise_suppression.default_backend.to_string(),
+                    ))
+                    p class="text-xs text-neutral-500" {
+                        "The backend assigned by always-on user rules and the canary. A default \
+                         that is not ticked below is unavailable, but per-guild overrides can \
+                         still target users."
+                    }
+                    div class="grid grid-cols-1 gap-2 sm:grid-cols-2" {
+                        @for backend in NoiseSuppressionBackend::ALL {
+                            (checkbox(
+                                "voice_ns_enabled_backends[]",
+                                &backend.to_string(),
+                                backend.label(),
+                                voice_noise_suppression.enabled_backends.contains(&backend),
+                                true,
+                            ))
+                        }
+                    }
+                    p class="text-xs text-neutral-500" {
+                        "Backends clients are allowed to load. Unticking one withdraws it from \
+                         every user, including anyone who picked it themselves."
+                    }
+                    (checkbox(
+                        "voice_ns_allow_user_override",
+                        "true",
+                        "Let users pick their own backend from the ticked list",
+                        voice_noise_suppression.allow_user_override,
+                        true,
+                    ))
+                    p class="text-xs text-neutral-500" {
+                        "Applies only to users who are already targeted. It never pulls anyone \
+                         into the rollout."
+                    }
+
+                    h3 class="text-sm font-semibold text-neutral-900" { "Rollout" }
+                    (number_field(
+                        "voice_ns_rollout_basis_points",
+                        "Rollout (basis points)",
+                        &voice_noise_suppression.rollout_basis_points.to_string(),
+                        Some(0), Some(10000), "1",
+                        Some("Share of users bucketed into the canary, in basis points: 0 is nobody, 100 is 1%, 10000 is everybody."),
+                    ))
+                    div class="flex flex-col gap-2" {
+                        (text_input(
+                            "voice_ns_rollout_salt",
+                            "Rollout Salt",
+                            &voice_noise_suppression.rollout_salt,
+                            "voice-ns-v1",
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Seeds the bucketing hash. Changing it reshuffles which users fall \
+                             inside the percentage above. Leave it alone to keep the current \
+                             cohort stable."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "voice_ns_included_user_ids",
+                            "Always-on User IDs",
+                            "1500000000000000001\n1500000000000000002",
+                            &included_user_ids,
+                            4,
+                            false,
+                        ))
+                        (entry_count_hint(
+                            voice_noise_suppression.included_user_ids.len(),
+                            EXPERIMENT_MAX_TARGETED_USERS,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "One snowflake per line, or comma separated. These users are targeted \
+                             regardless of the percentage above. IDs must contain 1 to 20 decimal \
+                             digits. Invalid entries prevent the save; blank entries and duplicate \
+                             IDs are ignored."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "voice_ns_excluded_user_ids",
+                            "Never-on User IDs",
+                            "1500000000000000003\n1500000000000000004",
+                            &excluded_user_ids,
+                            4,
+                            false,
+                        ))
+                        (entry_count_hint(
+                            voice_noise_suppression.excluded_user_ids.len(),
+                            EXPERIMENT_MAX_TARGETED_USERS,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Same format. Exclusion wins over both the always-on list and the \
+                             percentage, so this is the per-user kill switch."
+                        }
+                    }
+
+                    h3 class="text-sm font-semibold text-neutral-900" { "Per-guild overrides" }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "voice_ns_guild_overrides",
+                            "Guild Overrides",
+                            "1600000000000000001=rnnoise\n1600000000000000002=deep_filter",
+                            &guild_overrides,
+                            4,
+                            false,
+                        ))
+                        (entry_count_hint(
+                            voice_noise_suppression.guild_overrides.len(),
+                            VOICE_NS_MAX_GUILD_OVERRIDES,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "One per line as guild_id=backend. A guild \
+                             rule targets callers even outside the canary. Always-on user rules \
+                             take precedence, and excluded users stay off. Invalid lines and \
+                             conflicting rules for the same guild prevent the save. \
+                             Unticked backends stay stored but are inactive."
+                        }
+                    }
+
+                    h3 class="text-sm font-semibold text-neutral-900" { "Processing" }
+                    div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
+                        (number_field(
+                            "voice_ns_suppression_strength",
+                            "Suppression Strength",
+                            &voice_noise_suppression.suppression_strength.to_string(),
+                            Some(0), Some(100), "1",
+                            Some("How aggressively the backend removes noise, 0 to 100. Higher values cut more background but chew more of the voice."),
+                        ))
+                    }
+
+                    (form_actions(html! {
+                        (submit_button("Save Voice Noise Suppression Configuration"))
+                    }))
+                }
+            }
+        },
+    )
+}
+
+fn screen_share_delivery_section(
+    base: &str,
+    csrf_token: &str,
+    screen_share_delivery: &ScreenShareDeliveryConfigResponse,
+) -> Markup {
+    let status = if screen_share_delivery.enabled {
+        ("Live", BadgeVariant::Success)
+    } else {
+        ("Inert", BadgeVariant::Default)
+    };
+    let included_user_ids = screen_share_delivery.included_user_ids.join("\n");
+    let excluded_user_ids = screen_share_delivery.excluded_user_ids.join("\n");
+    section_card_with_description(
+        "Screen Share Delivery",
+        "Pick how many clients publish screen shares through the reworked delivery path. While \
+         the master switch below is off nothing on this form reaches any client: every user \
+         keeps the screen share pipeline they have today, whatever the rest of these fields say. \
+         A client that is already sharing keeps the path it started on until the share ends.",
+        html! {
+            form method="post" action={(base) "/instance-config?action=update_screen_share_delivery"} {
+                (csrf_input(csrf_token))
+                div class="space-y-6" {
+                    div class="flex flex-wrap items-center gap-2" {
+                        h3 class="text-sm font-semibold text-neutral-900" { "Master switch" }
+                        (badge(status.0, status.1))
+                        span class="text-xs text-neutral-500" {
+                            "Config version " (screen_share_delivery.config_version)
+                        }
+                    }
+                    (checkbox(
+                        "screen_share_delivery_enabled",
+                        "true",
+                        "Serve screen share delivery assignments to clients",
+                        screen_share_delivery.enabled,
+                        true,
+                    ))
+                    p class="text-xs text-neutral-500" {
+                        "Off is the safe state. With this unchecked every client is told the \
+                         feature is inert and keeps its current behavior, so the rollout and \
+                         targeting fields below have no effect at all."
+                    }
+
+                    h3 class="text-sm font-semibold text-neutral-900" { "Rollout" }
+                    (number_field(
+                        "screen_share_delivery_rollout_basis_points",
+                        "Rollout (basis points)",
+                        &screen_share_delivery.rollout_basis_points.to_string(),
+                        Some(0), Some(10000), "1",
+                        Some("Share of users bucketed into the canary, in basis points: 0 is nobody, 100 is 1%, 10000 is everybody."),
+                    ))
+                    div class="flex flex-col gap-2" {
+                        (text_input(
+                            "screen_share_delivery_rollout_salt",
+                            "Rollout Salt",
+                            &screen_share_delivery.rollout_salt,
+                            SCREEN_SHARE_DELIVERY_DEFAULT_SALT,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Seeds the bucketing hash. Changing it reshuffles which users fall \
+                             inside the percentage above. Leave it alone to keep the current \
+                             cohort stable."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "screen_share_delivery_included_user_ids",
+                            "Always-on User IDs",
+                            "1500000000000000001\n1500000000000000002",
+                            &included_user_ids,
+                            4,
+                            false,
+                        ))
+                        (entry_count_hint(
+                            screen_share_delivery.included_user_ids.len(),
+                            EXPERIMENT_MAX_TARGETED_USERS,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "One snowflake per line, or comma separated. These users are targeted \
+                             regardless of the percentage above. IDs must contain 1 to 20 decimal \
+                             digits. Invalid entries prevent the save; blank entries and duplicate \
+                             IDs are ignored."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "screen_share_delivery_excluded_user_ids",
+                            "Never-on User IDs",
+                            "1500000000000000003\n1500000000000000004",
+                            &excluded_user_ids,
+                            4,
+                            false,
+                        ))
+                        (entry_count_hint(
+                            screen_share_delivery.excluded_user_ids.len(),
+                            EXPERIMENT_MAX_TARGETED_USERS,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Same format. Exclusion wins over both the always-on list and the \
+                             percentage, so this is the per-user kill switch."
+                        }
+                    }
+
+                    (form_actions(html! {
+                        (submit_button("Save Screen Share Delivery Configuration"))
+                    }))
+                }
+            }
+        },
+    )
+}
+
+fn experiment_delivery_section(
+    base: &str,
+    csrf_token: &str,
+    experiment_delivery: &ExperimentDeliveryConfigResponse,
+) -> Markup {
+    section_card_with_description(
+        "Experiment Delivery",
+        "How often every client revalidates its experiment assignments. This is instance-wide \
+         and covers every experiment, not just the ones above. Raising the interval sheds \
+         request volume and makes a change take longer to reach a client. Raising the jitter \
+         spreads a fleet that has synchronised on one tick back out across the interval.",
+        html! {
+            form method="post" action={(base) "/instance-config?action=update_experiment_delivery"} {
+                (csrf_input(csrf_token))
+                div class="space-y-6" {
+                    div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
+                        (number_field(
+                            "experiment_delivery_poll_interval_seconds",
+                            "Assignment Poll Interval (s)",
+                            &experiment_delivery.poll_interval_seconds.to_string(),
+                            Some(60), Some(86400), "1",
+                            Some("How often a client re-reads its assignments, 60 to 86400 seconds. Lower values pick up changes sooner at the cost of more requests."),
+                        ))
+                        (number_field(
+                            "experiment_delivery_poll_jitter_percent",
+                            "Assignment Poll Jitter (%)",
+                            &experiment_delivery.poll_jitter_percent.to_string(),
+                            Some(0), Some(50), "1",
+                            Some("How far each client spreads its poll around the interval, 0 to 50 percent. Raise it to break up a fleet that polls on the same tick, set it to 0 for an exact interval."),
+                        ))
+                    }
+
+                    (form_actions(html! {
+                        (submit_button("Save Experiment Delivery Configuration"))
                     }))
                 }
             }
@@ -1521,4 +1898,69 @@ fn limit_config_section(base: &str, limit_config: &LimitConfigResponse) -> Marku
             }
         },
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::api::types::VoiceNoiseSuppressionGuildOverride;
+
+    fn rendered_voice_noise_suppression_section(
+        voice_noise_suppression: &VoiceNoiseSuppressionConfigResponse,
+    ) -> String {
+        voice_noise_suppression_section("/admin", "csrf", voice_noise_suppression).into_string()
+    }
+
+    #[test]
+    fn voice_noise_suppression_section_shows_list_counts_and_caps() {
+        let voice_noise_suppression = VoiceNoiseSuppressionConfigResponse {
+            included_user_ids: vec!["1500000000000000001".to_owned()],
+            excluded_user_ids: vec![
+                "1500000000000000002".to_owned(),
+                "1500000000000000003".to_owned(),
+            ],
+            guild_overrides: vec![VoiceNoiseSuppressionGuildOverride {
+                guild_id: "1600000000000000001".to_owned(),
+                backend: NoiseSuppressionBackend::Rnnoise,
+            }],
+            ..VoiceNoiseSuppressionConfigResponse::default()
+        };
+        let markup = rendered_voice_noise_suppression_section(&voice_noise_suppression);
+        assert!(markup.contains("1 of 1000 stored"));
+        assert!(markup.contains("2 of 1000 stored"));
+        assert!(markup.contains("1 of 200 stored"));
+        assert!(!markup.contains("at the cap"));
+    }
+
+    #[test]
+    fn screen_share_delivery_section_shows_list_counts_and_the_master_switch() {
+        let screen_share_delivery = ScreenShareDeliveryConfigResponse {
+            included_user_ids: vec!["1500000000000000001".to_owned()],
+            excluded_user_ids: vec![
+                "1500000000000000002".to_owned(),
+                "1500000000000000003".to_owned(),
+            ],
+            ..ScreenShareDeliveryConfigResponse::default()
+        };
+        let markup =
+            screen_share_delivery_section("/admin", "csrf", &screen_share_delivery).into_string();
+        assert!(markup.contains("action=update_screen_share_delivery"));
+        assert!(markup.contains("screen_share_delivery_enabled"));
+        assert!(markup.contains("1 of 1000 stored"));
+        assert!(markup.contains("2 of 1000 stored"));
+        assert!(!markup.contains("at the cap"));
+    }
+
+    #[test]
+    fn voice_noise_suppression_section_flags_a_list_at_its_cap() {
+        let voice_noise_suppression = VoiceNoiseSuppressionConfigResponse {
+            included_user_ids: (0..EXPERIMENT_MAX_TARGETED_USERS)
+                .map(|index| index.to_string())
+                .collect(),
+            ..VoiceNoiseSuppressionConfigResponse::default()
+        };
+        let markup = rendered_voice_noise_suppression_section(&voice_noise_suppression);
+        assert!(markup.contains("1000 of 1000 stored"));
+        assert!(markup.contains("at the cap"));
+    }
 }

@@ -33,7 +33,9 @@ where
 {
     init_tracing();
     let config = config::ServiceConfig::from_env()?;
-    let transport = transport::NatsTransport::connect(&config.nats_url).await?;
+    let transport =
+        transport::NatsTransport::connect(&config.nats_url, config.nats_auth_token.as_deref())
+            .await?;
     tracing::info!(
         service = config.service_name,
         mode = ?config.mode,

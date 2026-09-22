@@ -1,14 +1,17 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 
 .headerWrapper {
+	position: relative;
 	min-width: 0;
 }
 
 .headerContainer {
 	position: relative;
+	z-index: 2;
 	display: flex;
 	align-items: flex-start;
 	overflow: hidden;
+	height: var(--layout-header-height);
 	min-height: var(--layout-header-height);
 	min-width: 0;
 	border-bottom: 0.0625rem solid var(--user-area-divider-color);
@@ -24,23 +27,52 @@
 	background-color: var(--background-modifier-hover);
 }
 
+.headerContainerBanner {
+	background-color: transparent;
+}
+
+.headerContainerCollapsing {
+	border-bottom-color: transparent;
+}
+
 :global(:where(html.window-focused, html.unfocused-fully-interactive):not(.window-focus-activation-guard))
 	.headerContainerNoBanner:hover {
 	background-color: var(--background-modifier-hover);
 }
 
-.bannerBackground {
+.bannerClip {
 	position: absolute;
-	inset: 0;
+	top: 0;
+	left: 0;
+	right: 0;
+	overflow: hidden;
+	pointer-events: none;
+}
+
+.bannerImage {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
 	background-size: cover;
 	background-position: top center;
 	background-repeat: no-repeat;
 	background-color: var(--background-secondary);
-	pointer-events: none;
 }
 
-.bannerBackgroundCentered {
+.bannerImageCentered {
 	background-position: center;
+}
+
+.headerGlass {
+	position: absolute;
+	inset: 0;
+	box-sizing: border-box;
+	background-color: var(--background-secondary);
+	border-bottom: 0.0625rem solid var(--user-area-divider-color);
+	backdrop-filter: blur(1.25rem);
+	-webkit-backdrop-filter: blur(1.25rem);
+	pointer-events: none;
 }
 
 .bannerGradient {
@@ -78,6 +110,9 @@
 	height: 1rem;
 	width: 1rem;
 	flex-shrink: 0;
+	transition:
+		color var(--transition-normal),
+		filter var(--transition-normal);
 }
 
 .verifiedIconDefault {
@@ -92,6 +127,9 @@
 }
 
 .guildName {
+	transition:
+		color var(--transition-normal),
+		text-shadow var(--transition-normal);
 	flex: 1;
 	min-width: 0;
 	font-weight: 600;
@@ -118,7 +156,10 @@
 	height: 1rem;
 	width: 1rem;
 	flex-shrink: 0;
-	transition: transform var(--transition-fast);
+	transition:
+		transform var(--transition-fast),
+		color var(--transition-normal),
+		filter var(--transition-normal);
 }
 
 .caretIconDefault {
@@ -141,6 +182,9 @@
 	height: 1.5rem;
 	width: 1.5rem;
 	flex-shrink: 0;
+	transition:
+		color var(--transition-normal),
+		filter var(--transition-normal);
 }
 
 .dotsIconDefault {

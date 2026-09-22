@@ -8,20 +8,18 @@ publish = false
 [dependencies]
 anyhow = "1.0.104"
 axum = { version = "0.8.9", features = ["macros"] }
-base64 = "0.22"
+base64 = "0.23"
 fluxer_common = { path = "../fluxer_common" }
+futures-util = { version = "0.3.34", default-features = false, features = ["std"] }
 hex = "0.4"
 rand = "0.10"
-reqwest = { version = "0.13.4", default-features = false, features = ["json", "rustls", "stream", "gzip", "brotli", "deflate"] }
-serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.150"
-tokio = { version = "1.52.3", features = ["macros", "net", "rt-multi-thread", "signal", "time", "fs"] }
-tokio-util = { version = "0.7.18", features = ["io"] }
+reqwest = { version = "0.13.5", default-features = false, features = ["json", "rustls", "stream", "gzip", "brotli", "deflate"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+tokio = { version = "1.53.1", features = ["macros", "net", "rt-multi-thread", "signal", "time", "fs"] }
+tokio-util = { version = "0.7.19", features = ["io"] }
 tower = { version = "0.5.3", features = ["util"] }
-tower-http = { version = "0.6.11", features = ["compression-gzip", "trace"] }
+tower-http = { version = "0.7.1", features = ["compression-gzip", "trace"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 
-[features]
-default = ["time-freeze"]
-time-freeze = []

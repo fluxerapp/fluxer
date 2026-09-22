@@ -1,5 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
+import {createAttachmentID, createChannelID, createMessageID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
+import {normalizeMessageRequestPayload} from '@app/api/channel/services/message/MessageRequestCompatibility';
+import {parseMultipartMessageData} from '@app/api/channel/services/message/MessageRequestParser';
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {parseJsonPreservingLargeIntegers} from '@app/api/utils/LosslessJsonParser';
+import {Validator} from '@app/api/Validator';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
@@ -25,23 +39,10 @@ import {
 } from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import {
 	BulkMessageFetchResponse,
+	MessageListResponse,
+	MessagePurgeResponse,
 	MessageResponseSchema,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {z} from 'zod';
-import {requireSudoMode} from '../../auth/services/SudoVerificationService';
-import {createAttachmentID, createChannelID, createMessageID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {DefaultUserOnly, LoginRequired} from '../../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {SudoModeMiddleware} from '../../middleware/SudoModeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {parseJsonPreservingLargeIntegers} from '../../utils/LosslessJsonParser';
-import {Validator} from '../../Validator';
-import type {MessageRequest, MessageUpdateRequest} from '../MessageTypes';
-import {normalizeMessageRequestPayload} from '../services/message/MessageRequestCompatibility';
-import {parseMultipartMessageData} from '../services/message/MessageRequestParser';
 
 export function MessageController(app: HonoApp) {
 	app.get(
@@ -53,7 +54,7 @@ export function MessageController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'list_messages',
 			summary: 'List messages in a channel',
-			responseSchema: z.array(MessageResponseSchema),
+			responseSchema: MessageListResponse,
 			statusCode: 200,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Channels', 'Messages'],
@@ -363,7 +364,10 @@ export function MessageController(app: HonoApp) {
 			const channelId = createChannelID(channel_id);
 			const messageId = createMessageID(message_id);
 			const requestCache = ctx.get('requestCache');
-			await ctx.get('channelService').messages.deletion.deleteMessage({userId, channelId, messageId, requestCache});
+			const auditLogReason = ctx.get('auditLogReason') ?? null;
+			await ctx
+				.get('channelService')
+				.messages.deletion.deleteMessage({userId, channelId, messageId, requestCache, auditLogReason});
 			return ctx.body(null, 204);
 		},
 	);
@@ -419,21 +423,10 @@ export function MessageController(app: HonoApp) {
 			const userId = ctx.get('user').id;
 			const channelId = createChannelID(ctx.req.valid('param').channel_id);
 			const messageIds = ctx.req.valid('json').message_ids.map(createMessageID);
-			await ctx.get('channelService').messages.deletion.bulkDeleteMessages({userId, channelId, messageIds});
-			return ctx.body(null, 204);
-		},
-	);
-	app.post(
-		'/channels/:channel_id/messages/bulk_delete',
-		RateLimitMiddleware(RateLimitConfigs.CHANNEL_MESSAGE_BULK_DELETE),
-		LoginRequired,
-		Validator('param', ChannelIdParam),
-		Validator('json', BulkDeleteMessagesRequest),
-		async (ctx) => {
-			const userId = ctx.get('user').id;
-			const channelId = createChannelID(ctx.req.valid('param').channel_id);
-			const messageIds = ctx.req.valid('json').message_ids.map(createMessageID);
-			await ctx.get('channelService').messages.deletion.bulkDeleteMessages({userId, channelId, messageIds});
+			const auditLogReason = ctx.get('auditLogReason') ?? null;
+			await ctx
+				.get('channelService')
+				.messages.deletion.bulkDeleteMessages({userId, channelId, messageIds, auditLogReason});
 			return ctx.body(null, 204);
 		},
 	);
@@ -445,7 +438,7 @@ export function MessageController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'purge_personal_notes_messages',
 			summary: 'Purge all messages in personal notes',
-			responseSchema: z.object({deleted_count: z.number().int().nonnegative()}),
+			responseSchema: MessagePurgeResponse,
 			statusCode: 200,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Channels', 'Messages'],

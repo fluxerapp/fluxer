@@ -1,5 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	type ChannelID,
+	createChannelID,
+	createRoleID,
+	createUserID,
+	type GuildID,
+	type RoleID,
+	type UserID,
+} from '@app/api/BrandedTypes';
+import {isOperationDisabled, isPersonalNotesChannel} from '@app/api/channel/services/message/MessageHelpers';
+import type {MessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GatewayChannelMention, IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {Logger} from '@app/api/Logger';
+import type {Channel} from '@app/api/models/Channel';
+import type {Message} from '@app/api/models/Message';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
+import {WorkerQueueOverflowError} from '@app/api/worker/WorkerQueueOverflowError';
 import {ChannelTypes, MessageTypes, SENDABLE_MESSAGE_FLAGS} from '@fluxer/constants/src/ChannelConstants';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
 import {RelationshipTypes, UserFlags} from '@fluxer/constants/src/UserConstants';
@@ -11,25 +30,6 @@ import {
 	type AllowedMentionsRequest,
 } from '@fluxer/schema/src/domains/message/SharedMessageSchemas';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
-import {
-	type ChannelID,
-	createChannelID,
-	createRoleID,
-	createUserID,
-	type GuildID,
-	type RoleID,
-	type UserID,
-} from '../../../BrandedTypes';
-import type {IGuildRepositoryAggregate} from '../../../guild/repositories/IGuildRepositoryAggregate';
-import type {GatewayChannelMention, IGatewayService} from '../../../infrastructure/IGatewayService';
-import {Logger} from '../../../Logger';
-import type {Channel} from '../../../models/Channel';
-import type {Message} from '../../../models/Message';
-import type {IUserRepository} from '../../../user/IUserRepository';
-import type {WorkerTaskName} from '../../../worker/WorkerLaneConfig';
-import {WorkerQueueOverflowError} from '../../../worker/WorkerQueueOverflowError';
-import {isOperationDisabled, isPersonalNotesChannel} from './MessageHelpers';
-import type {MessageResponseDataService} from './MessageResponseDataService';
 
 interface MentionData {
 	userMentions: Set<UserID>;
@@ -94,7 +94,7 @@ export class MessageMentionService {
 			referencedMessage?.authorId &&
 			referencedMessage.authorId !== message.authorId &&
 			!isDMChannel &&
-			(!allowedMentions || allowedMentions.replied_user !== false);
+			allowedMentions?.replied_user !== false;
 		if (shouldAddReferencedUser) {
 			userMentions.add(referencedMessage!.authorId!);
 		}

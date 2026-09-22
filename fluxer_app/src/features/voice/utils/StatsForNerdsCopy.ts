@@ -11,13 +11,14 @@ import {
 	isDesktop,
 	supportsDesktopScreenShareAudioCapture,
 } from '@app/features/ui/utils/NativeUtils';
+import {collectVoiceSubscriptionDebugReport} from '@app/features/voice/diagnostics/VoiceSubscriptionDebugReport';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import ScreenShareCodecNegotiation, {
 	getScreenShareCodecPreferenceOrder,
 } from '@app/features/voice/engine/ScreenShareCodecNegotiation';
-import {getScreenShareAudioPumpDiagnostics} from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareAudioPump';
 import {getNativeEngineAudioTrackPumpStats} from '@app/features/voice/engine/voice_screen_share_manager/NativeEngineAudioTrackPump';
 import {getPublishedScreenShareMaxBitrateBps} from '@app/features/voice/engine/voice_screen_share_manager/shared';
+import {ScreenShareWatchFailures} from '@app/features/voice/state/ScreenShareWatchFailures';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
 	type CodecCapabilityReport,
@@ -32,10 +33,13 @@ import {
 	getNativeAudioCaptureDiagnosticState,
 } from '@app/features/voice/utils/NativeAudioCaptureBridge';
 import {getDisplayShareEnvironment} from '@app/features/voice/utils/ScreenShareEnvironment';
+import {getRecentScreenShares} from '@app/features/voice/utils/ScreenShareLifecycleLog';
 import {getScreenShareBitrateBps, resolveStreamingModeSettings} from '@app/features/voice/utils/ScreenShareOptions';
+import {getScreenShareDecodeFailures} from '@app/features/voice/utils/VideoDecoderCapabilities';
 import {hasHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
 import {
 	buildVoiceStatsForNerdsPresentation,
+	collectScreenShareAudioPublicationDiagnostics,
 	type StatsForNerdsData,
 } from '@app/features/voice/utils/VoiceStatsForNerdsPresenter';
 import type {NativeAudioApplication, VirtmicNode} from '@app/types/electron.d';
@@ -52,6 +56,14 @@ function safeError(error: unknown): Record<string, unknown> {
 		};
 	}
 	return {message: String(error)};
+}
+
+function safeCollect<T>(collect: () => T): T | {error: Record<string, unknown>} {
+	try {
+		return collect();
+	} catch (error) {
+		return {error: safeError(error)};
+	}
 }
 
 async function withTimeout<T>(
@@ -289,12 +301,9 @@ async function collectVoiceSettingsMetadata(): Promise<Record<string, unknown>> 
 		preferredScreenShareCodec: VoiceSettings.getPreferredScreenShareCodec(),
 		screenShareContentHint: VoiceSettings.getScreenShareContentHint(),
 		screenShareEncoderMode: VoiceSettings.getScreenShareEncoderMode(),
-		screenShareSoftwareQuality: VoiceSettings.getScreenShareSoftwareQuality(),
 		screenShareScalabilityMode: VoiceSettings.getScreenShareScalabilityMode(),
-		screenShareBackupCodecMode: VoiceSettings.getScreenShareBackupCodecMode(),
 		screenShareMaxBitrateMbps:
 			getScreenShareBitrateBps(configuredScreenShare.resolution, configuredScreenShare.frameRate) / 1000000,
-		openH264Enabled: VoiceSettings.getOpenH264Enabled(),
 		linuxAudioCapture: {
 			workaround: VoiceSettings.getLinuxAudioCaptureWorkaround(),
 			onlySpeakers: VoiceSettings.getLinuxAudioCaptureOnlySpeakers(),
@@ -503,9 +512,7 @@ export function collectStatsForNerdsSnapshot(): StatsForNerdsData {
 			codecPreferenceOrder: [...getScreenShareCodecPreferenceOrder()],
 			contentHint: VoiceSettings.getScreenShareContentHint(),
 			encoderMode: VoiceSettings.getScreenShareEncoderMode(),
-			softwareQuality: VoiceSettings.getScreenShareSoftwareQuality(),
 			scalabilityMode: VoiceSettings.getScreenShareScalabilityMode(),
-			backupCodecMode: VoiceSettings.getScreenShareBackupCodecMode(),
 			maxBitrateMbps:
 				(getPublishedScreenShareMaxBitrateBps(localParticipant) ??
 					getScreenShareBitrateBps(effectiveScreenShareSettings.resolution, effectiveScreenShareSettings.frameRate)) /
@@ -516,11 +523,10 @@ export function collectStatsForNerdsSnapshot(): StatsForNerdsData {
 			shareDesktopAudio: VoiceSettings.getShareDesktopAudio(),
 			shareAppAudio: VoiceSettings.getShareAppAudio(),
 			muteStreamAudio: VoiceSettings.getMuteStreamAudio(),
-			openH264Enabled: VoiceSettings.getOpenH264Enabled(),
 		},
 		screenShareAudioCapture: {
-			pump: getScreenShareAudioPumpDiagnostics(),
 			nativeCapture: getNativeAudioCaptureDiagnosticState(),
+			publications: collectScreenShareAudioPublicationDiagnostics(localParticipant),
 		},
 		appInfo: {
 			appVersion: Config.PUBLIC_BUILD_VERSION ?? 'dev',
@@ -584,6 +590,15 @@ export async function buildStatsForNerdsCopyPayload(data: StatsForNerdsData): Pr
 		mediaDevices,
 		voiceSettings,
 		voiceSession: summarizeRoom(),
+		recentScreenShares: getRecentScreenShares(),
+		screenShareWatchFailures: safeCollect(() => ScreenShareWatchFailures.getFailureHistory()),
+		screenShareNegotiation: safeCollect(() => ({
+			selectedCodec: ScreenShareCodecNegotiation.getSelectedCodec(),
+			localCodecs: ScreenShareCodecNegotiation.getLocalCodecAdvertisements(),
+			remoteDecodeCodecsByIdentity: ScreenShareCodecNegotiation.getRemoteDecodeCodecsByIdentity(),
+			decodeFailures: [...getScreenShareDecodeFailures()],
+		})),
+		voiceSubscriptionDebug: safeCollect(() => collectVoiceSubscriptionDebugReport()),
 		desktop,
 	};
 }

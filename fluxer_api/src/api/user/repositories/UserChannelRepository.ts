@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import type {ChannelID, MessageID, UserID} from '../../BrandedTypes';
-import {channelRowFromPrivateChannelSnapshot, privateChannelHydrationPatch} from '../../channel/PrivateChannelSnapshot';
+import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {
+	channelRowFromPrivateChannelSnapshot,
+	privateChannelHydrationPatch,
+} from '@app/api/channel/PrivateChannelSnapshot';
 import {
 	BatchBuilder,
 	deleteOneOrMany,
@@ -10,18 +12,19 @@ import {
 	fetchManyInChunks,
 	fetchOne,
 	upsertOne,
-} from '../../database/CassandraQueryExecution';
-import {Db} from '../../database/CassandraTypes';
-import type {ChannelRow, DmStateRow, PrivateChannelRow} from '../../database/types/ChannelTypes';
-import {Logger} from '../../Logger';
-import {Channel} from '../../models/Channel';
-import {Channels, DmStates, PinnedDms, PrivateChannels, ReadStates, UserDmHistory} from '../../Tables';
+} from '@app/api/database/CassandraQueryExecution';
+import {Db} from '@app/api/database/CassandraTypes';
+import type {ChannelRow, DmStateRow, PrivateChannelRow} from '@app/api/database/types/ChannelTypes';
+import {Logger} from '@app/api/Logger';
+import {Channel} from '@app/api/models/Channel';
+import {Channels, DmStates, PinnedDms, PrivateChannels, ReadStates, UserDmHistory} from '@app/api/Tables';
 import type {
 	HistoricalDmChannelSummary,
 	IUserChannelRepository,
 	ListHistoricalDmChannelOptions,
 	PrivateChannelSummary,
-} from './IUserChannelRepository';
+} from '@app/api/user/repositories/IUserChannelRepository';
+import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 
 interface PinnedDmRow {
 	user_id: UserID;

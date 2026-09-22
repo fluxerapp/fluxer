@@ -1,20 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import type {GifService} from '@app/api/gif/GifService';
+import type {IGifProvider} from '@app/api/gif/IGifProvider';
+import {
+	type DiscoveryValidators,
+	isDiscoveryNotModified,
+	nextDiscoveryValidators,
+} from '@app/api/instance/DiscoveryValidators';
+import type {InstanceCaptchaEffectiveConfig} from '@app/api/instance/InstanceConfigRepository';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {API_CODE_VERSION} from '@fluxer/constants/src/AppConstants';
 import {buildDiscoveryResponse, type DiscoveryStaticInput} from '@fluxer/instance_bootstrap/src/BuildDiscovery';
 import type {InstanceAppPublic} from '@fluxer/instance_bootstrap/src/Types';
 import {WellKnownFluxerResponse} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 import type {Hono} from 'hono';
-import {Config} from '../Config';
-import type {GifService} from '../gif/GifService';
-import type {IGifProvider} from '../gif/IGifProvider';
-import type {LimitConfigService} from '../limits/LimitConfigService';
-import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../RateLimitConfig';
-import type {HonoEnv} from '../types/HonoEnv';
-import {type DiscoveryValidators, isDiscoveryNotModified, nextDiscoveryValidators} from './DiscoveryValidators';
-import type {InstanceCaptchaEffectiveConfig} from './InstanceConfigRepository';
 
 let discoveryValidators: DiscoveryValidators | null = null;
 
@@ -57,8 +60,8 @@ function buildDiscoveryStaticInput(
 		},
 		captcha: {
 			provider: runtime.captcha.provider,
-			hcaptcha_site_key: runtime.captcha.hcaptcha_site_key,
-			turnstile_site_key: runtime.captcha.turnstile_site_key,
+			hcaptcha_site_key: runtime.captcha.provider === 'hcaptcha' ? runtime.captcha.hcaptcha_site_key : null,
+			turnstile_site_key: runtime.captcha.provider === 'turnstile' ? runtime.captcha.turnstile_site_key : null,
 		},
 		features: {
 			voice_enabled: Config.voice.enabled,
@@ -96,8 +99,7 @@ export function InstanceController(app: Hono<HonoEnv>) {
 		async (ctx) => {
 			ctx.header('Access-Control-Allow-Origin', '*');
 			const gifService = ctx.get('gifService') as GifService | undefined;
-			const limitConfigService = ctx.get('limitConfigService') as LimitConfigService | undefined;
-			const limits = limitConfigService?.getConfigWireFormat();
+			const limits = ctx.get('limitConfigService').getConfigWireFormat();
 			const sso = await ctx.get('ssoService').getPublicStatus();
 			const instanceConfigRepository = ctx.get('instanceConfigRepository');
 			const [registration, community, services, appPublicConfig, captcha, email] = await Promise.all([
@@ -108,9 +110,6 @@ export function InstanceController(app: Hono<HonoEnv>) {
 				instanceConfigRepository.getEffectiveCaptchaConfig(),
 				instanceConfigRepository.getEffectiveEmailConfig(),
 			]);
-			if (!limits) {
-				throw new Error('limit_config_service is not bound');
-			}
 			const response = buildDiscoveryResponse(
 				buildDiscoveryStaticInput(
 					gifService,

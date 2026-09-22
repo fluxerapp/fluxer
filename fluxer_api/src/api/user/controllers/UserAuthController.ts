@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
+import {Config} from '@app/api/Config';
+import {DefaultUserOnly, LoginRequired, LoginRequiredAllowSuspicious} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import {
 	DisableTotpRequest,
@@ -22,18 +31,11 @@ import {
 	WebAuthnCredentialListResponse,
 	WebAuthnCredentialUpdateRequest,
 	WebAuthnRegisterRequest,
+	WebAuthnTwoFactorRequest,
+	WebAuthnTwoFactorResponse,
 } from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {CredentialIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {EmptyBodyRequest} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
-import {requireSudoMode} from '../../auth/services/SudoVerificationService';
-import {Config} from '../../Config';
-import {DefaultUserOnly, LoginRequired, LoginRequiredAllowSuspicious} from '../../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {SudoModeMiddleware} from '../../middleware/SudoModeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
 
 export function UserAuthController(app: HonoApp) {
 	app.post(
@@ -86,7 +88,9 @@ export function UserAuthController(app: HonoApp) {
 		async (ctx) => {
 			const body = ctx.req.valid('json');
 			const user = ctx.get('user');
-			const sudoResult = await requireSudoMode(ctx, user, body);
+			const sudoBody =
+				body.mfa_method || !user.totpSecret ? body : {...body, mfa_method: 'totp' as const, mfa_code: body.code};
+			const sudoResult = await requireSudoMode(ctx, user, sudoBody);
 			await ctx.get('userAuthRequestService').disableTotp({user, data: body, sudoContext: sudoResult});
 			return ctx.body(null, 204);
 		},
@@ -427,6 +431,30 @@ export function UserAuthController(app: HonoApp) {
 			await requireSudoMode(ctx, user, body);
 			await ctx.get('userAuthRequestService').deleteWebAuthnCredential({user, credentialId: credential_id});
 			return ctx.body(null, 204);
+		},
+	);
+	app.put(
+		'/users/@me/mfa/webauthn/two-factor',
+		RateLimitMiddleware(RateLimitConfigs.MFA_WEBAUTHN_TWO_FACTOR),
+		LoginRequired,
+		DefaultUserOnly,
+		SudoModeMiddleware,
+		Validator('json', WebAuthnTwoFactorRequest),
+		OpenAPI({
+			operationId: 'set_webauthn_two_factor',
+			summary: 'Set WebAuthn two-factor authentication',
+			responseSchema: WebAuthnTwoFactorResponse,
+			statusCode: 200,
+			security: ['bearerToken', 'sessionToken'],
+			tags: ['Users'],
+			description:
+				'Choose whether registered passkeys are required as a second factor when signing in with email and password. Enabling requires at least one registered credential and mints backup codes when the account has none. Requires sudo mode verification.',
+		}),
+		async (ctx) => {
+			const user = ctx.get('user');
+			const body = ctx.req.valid('json');
+			await requireSudoMode(ctx, user, body);
+			return ctx.json(await ctx.get('userAuthRequestService').setWebAuthnTwoFactor({user, data: body}));
 		},
 	);
 	app.get(

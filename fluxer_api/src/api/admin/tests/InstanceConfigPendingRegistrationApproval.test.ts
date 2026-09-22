@@ -1,14 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	createTestAccount,
+	createUniqueEmail,
+	createUniqueUsername,
+	setUserACLs,
+} from '@app/api/auth/tests/AuthTestUtils';
+import {setupTestGuildWithMembers} from '@app/api/guild/tests/GuildTestUtils';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {afterAll, beforeAll, beforeEach, describe, it} from 'vitest';
-import {createTestAccount, createUniqueEmail, createUniqueUsername, setUserACLs} from '../../auth/tests/AuthTestUtils';
-import {setupTestGuildWithMembers} from '../../guild/tests/GuildTestUtils';
-import {getInstanceConfigRepository} from '../../middleware/ServiceSingletons';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 
 interface PendingRegistrationResponse {
 	user_id: string;
@@ -60,8 +65,8 @@ describe('pending registration approval and the stock community', () => {
 			.execute();
 
 		await createBuilder(harness, admin.token)
-			.post('/admin/instance-config/pending-registrations/approve')
-			.body({user_id: pending.user_id})
+			.patch(`/admin/instance/pending-registrations/${pending.user_id}`)
+			.body({status: 'approved'})
 			.expect(HTTP_STATUS.OK)
 			.execute();
 
@@ -84,8 +89,8 @@ describe('pending registration approval and the stock community', () => {
 		});
 
 		await createBuilder(harness, admin.token)
-			.post('/admin/instance-config/pending-registrations/approve')
-			.body({user_id: outsider.userId})
+			.patch(`/admin/instance/pending-registrations/${outsider.userId}`)
+			.body({status: 'approved'})
 			.expect(HTTP_STATUS.OK)
 			.execute();
 

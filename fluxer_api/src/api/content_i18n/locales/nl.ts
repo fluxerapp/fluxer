@@ -3,6 +3,12 @@
 import {defineContentI18nLocaleMessages} from '../ContentI18nMessages';
 
 const CONTENT_I18N_NL_MESSAGES = defineContentI18nLocaleMessages({
+	"auth.unknown_location": "Onbekende locatie",
+	"billing.donation_description_monthly": "Maandelijkse donatie ter ondersteuning van {product_name}",
+	"billing.donation_description_one_time": "Eenmalige donatie ter ondersteuning van {product_name}",
+	"billing.donation_description_yearly": "Jaarlijkse donatie ter ondersteuning van {product_name}",
+	"billing.donation_name_one_time": "Donatie aan {product_name}",
+	"billing.donation_name_recurring": "Terugkerende donatie aan {product_name}",
 	"billing.eu_withdrawal_waiver_checkout": "Als ik een EU/EER-consument ben, geef ik uitdrukkelijk toestemming dat de digitale inhoud van {product_name} {premium_tier_name} onmiddellijk wordt geleverd en erken ik dat ik mijn wettelijke herroepingsrecht verlies zodra toegang wordt verleend. Dit heeft geen invloed op andere dwingende consumentenrechten. Zie de [Servicevoorwaarden]({terms_url}).",
 	"bulk_message_deletion.complete": "We zijn klaar met het verwijderen van je berichten. We hebben {message_count, plural, =0 {0 berichten} one {# bericht} other {# berichten}} verwijderd uit {channel_count, plural, =0 {0 plekken} one {# plek} other {# plekken}}.",
 	"content.virus_detected": "Dit bestand is gemarkeerd als mogelijk onveilig en is verwijderd.",

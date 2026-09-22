@@ -12,7 +12,6 @@
     build_ignored_events_map/1,
     load_private_channels/1,
     load_relationships/1,
-    ensure_bot_ready_map/1,
     build_state/1,
     schedule_timers/1
 ]).
@@ -153,11 +152,6 @@ load_relationships(Ready) when is_map(Ready) ->
 load_relationships(_) ->
     #{}.
 
--spec ensure_bot_ready_map(term()) -> map().
-ensure_bot_ready_map(undefined) -> #{<<"guilds">> => []};
-ensure_bot_ready_map(Ready) when is_map(Ready) -> Ready#{<<"guilds">> => []};
-ensure_bot_ready_map(_) -> #{<<"guilds">> => []}.
-
 -spec build_state(map()) -> session_state().
 build_state(SessionData) ->
     BuildStartedAt = gateway_timings:start(),
@@ -232,6 +226,7 @@ extract_core_fields(
         replay_payload_bytes => replay_payload_bytes(Buffer),
         seq => Seq,
         ack_seq => AckSeq,
+        replay_floor => init_replay_floor(normalize_seq(maps:get(replay_floor, D, 0)), Seq),
         properties => Properties,
         status => Status,
         resume_status => maps:get(resume_status, D, Status),
@@ -306,12 +301,17 @@ extract_is_staff(_) ->
     false.
 
 -spec init_ready(boolean(), map() | undefined) -> map() | undefined.
-init_ready(true, Ready) -> ensure_bot_ready_map(Ready);
+init_ready(true, Ready) when is_map(Ready) -> Ready;
+init_ready(true, _Ready) -> undefined;
 init_ready(false, Ready) -> Ready.
 
 -spec init_ack_seq(seq(), seq()) -> seq().
 init_ack_seq(AckSeq, Seq) when AckSeq =< Seq -> AckSeq;
 init_ack_seq(_AckSeq, Seq) -> Seq.
+
+-spec init_replay_floor(seq(), seq()) -> seq().
+init_replay_floor(Floor, Seq) when Floor =< Seq -> Floor;
+init_replay_floor(_Floor, Seq) -> Seq.
 
 -spec schedule_timers(session_state()) -> ok.
 schedule_timers(#{bot := Bot, guilds := GuildsMap}) ->
@@ -465,6 +465,17 @@ build_state_loads_relationship_ids_from_ready_test() ->
     ?assertEqual(#{300 => 1}, maps:get(relationships, State)),
     ?assert(maps:is_key(700, maps:get(channels, State))).
 
+build_state_restores_replay_floor_test() ->
+    Data = (base_session_data(#{}))#{seq => 20, replay_floor => 7},
+    ?assertEqual(7, maps:get(replay_floor, build_state(Data))).
+
+build_state_clamps_replay_floor_to_seq_test() ->
+    Data = (base_session_data(#{}))#{seq => 3, replay_floor => 99},
+    ?assertEqual(3, maps:get(replay_floor, build_state(Data))).
+
+build_state_defaults_replay_floor_to_zero_test() ->
+    ?assertEqual(0, maps:get(replay_floor, build_state(base_session_data(#{})))).
+
 base_session_data(Ready) ->
     #{
         id => <<"session-init-test">>,
@@ -486,13 +497,15 @@ base_session_data(Ready) ->
         ready => Ready
     }.
 
-ensure_bot_ready_map_test() ->
-    ?assertEqual(#{<<"guilds">> => []}, ensure_bot_ready_map(undefined)),
-    ?assertEqual(
-        #{<<"guilds">> => [], <<"user">> => #{}}, ensure_bot_ready_map(#{<<"user">> => #{}})
-    ),
-    ?assertEqual(#{<<"guilds">> => []}, ensure_bot_ready_map(not_a_map)),
+init_ready_keeps_transferred_bot_ready_undefined_test() ->
+    ?assertEqual(undefined, init_ready(true, undefined)),
+    ?assertEqual(#{<<"user">> => #{}}, init_ready(true, #{<<"user">> => #{}})),
+    ?assertEqual(undefined, init_ready(false, undefined)),
     ok.
+
+build_state_keeps_transferred_bot_ready_undefined_test() ->
+    Data = (base_session_data(undefined))#{bot => true},
+    ?assertEqual(undefined, maps:get(ready, build_state(Data))).
 
 normalize_guild_ids_filters_invalid_values_test() ->
     ?assertEqual([1, 2], normalize_guild_ids([1, 0, -1, 2, <<"3">>])),

@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::ast::{EmojiKind, Node, ParserFlags, ParserResult};
-use crate::constants::{MAX_INLINE_DEPTH, MAX_LINE_LENGTH};
+use crate::constants::{CODE_FENCE_LENGTH, MAX_INLINE_DEPTH, MAX_LINE_LENGTH};
+use crate::emoji::{EmojiContext, StandardEmoji};
 use crate::links;
 use crate::normalize::{
     combine_adjacent_text, compact_empty_text_nodes, flatten_top_level_formatting,
@@ -125,6 +126,14 @@ fn parse_inline_with_context(
                 position += 1 + emoji.len;
                 continue;
             }
+            if next == b'`' {
+                let run = backtick_run_length(text, position + 1);
+                if run >= CODE_FENCE_LENGTH {
+                    accumulated.extend(std::iter::repeat_n(b'`', run));
+                    position += 1 + run;
+                    continue;
+                }
+            }
             if is_escapable_character(next)
                 || is_ordered_list_marker_dot_escape(text, position)
                 || is_word_dot_escape(text, position)
@@ -160,7 +169,13 @@ fn parse_inline_with_context(
 
         if let Some(result) = parse_regional_indicator_flag(remaining) {
             flush_accumulated_text(&mut nodes, &mut accumulated);
-            nodes.push(result.node);
+            push_regional_indicator_pair(
+                &mut nodes,
+                parser.emoji_context(),
+                base_offset + position,
+                &remaining[..result.advance],
+                result.node,
+            );
             position += result.advance;
             continue;
         }
@@ -341,12 +356,63 @@ fn parse_regional_indicator_flag(text: &str) -> Option<ParserResult> {
     })
 }
 
+fn push_regional_indicator_pair(
+    nodes: &mut Vec<Node>,
+    emoji_context: &EmojiContext,
+    offset: usize,
+    pair: &str,
+    flag: Node,
+) {
+    let (first, second) = pair.split_at(pair.len() / 2);
+    match emoji_context.standard_at(offset) {
+        Some(emoji) if emoji.raw == pair => nodes.push(standard_emoji_node(emoji)),
+        Some(emoji) if emoji.raw == first => {
+            nodes.push(standard_emoji_node(emoji));
+            match emoji_context.standard_at(offset + first.len()) {
+                Some(emoji) if emoji.raw == second => nodes.push(standard_emoji_node(emoji)),
+                _ => nodes.extend(regional_indicator_emoji(second)),
+            }
+        }
+        _ => nodes.push(flag),
+    }
+}
+
+fn standard_emoji_node(emoji: &StandardEmoji) -> Node {
+    Node::Emoji {
+        kind: EmojiKind::Standard {
+            raw: emoji.raw.clone(),
+            codepoints: emoji.codepoints.clone(),
+            name: emoji.name.clone(),
+        },
+    }
+}
+
+fn regional_indicator_emoji(text: &str) -> Option<Node> {
+    let ch = text.chars().next()?;
+    let letter = regional_indicator_letter(ch)?;
+    Some(Node::Emoji {
+        kind: EmojiKind::Standard {
+            raw: ch.to_string(),
+            codepoints: format!("{:x}", ch as u32),
+            name: format!("regional_indicator_{letter}"),
+        },
+    })
+}
+
 fn regional_indicator_letter(ch: char) -> Option<char> {
     let codepoint = ch as u32;
     if !(0x1f1e6..=0x1f1ff).contains(&codepoint) {
         return None;
     }
     char::from_u32(u32::from(b'a') + codepoint - 0x1f1e6)
+}
+
+fn backtick_run_length(text: &str, start: usize) -> usize {
+    let mut run = 0usize;
+    while start + run < text.len() && byte_at(text, start + run) == b'`' {
+        run += 1;
+    }
+    run
 }
 
 fn is_ordered_list_marker_dot_escape(text: &str, backslash_position: usize) -> bool {

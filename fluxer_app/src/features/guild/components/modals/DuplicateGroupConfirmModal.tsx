@@ -10,7 +10,7 @@ import {focusChannelTextareaAfterNavigation} from '@app/features/messaging/utils
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
-import {formatShortRelativeTime} from '@fluxer/date_utils/src/DateDuration';
+import {formatShortRelativeTime} from '@app/features/ui/utils/ShortRelativeTimeLabels';
 import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -54,7 +54,10 @@ export const DuplicateGroupConfirmModal = observer(({channels, onConfirm}: Dupli
 					<div className={styles.channelList} data-flx="guild.duplicate-group-confirm-modal.description.channel-list">
 						{channels.map((channel) => {
 							const lastActivitySnowflake = channel.lastMessageId ?? channel.id;
-							const lastActiveText = formatShortRelativeTime(SnowflakeUtils.extractTimestamp(lastActivitySnowflake));
+							const lastActiveText = formatShortRelativeTime(
+								i18n,
+								SnowflakeUtils.extractTimestamp(lastActivitySnowflake),
+							);
 							const lastActiveLabel = lastActiveText || i18n._(NO_ACTIVITY_YET_DESCRIPTOR);
 							return (
 								<FocusRing

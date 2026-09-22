@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import {Logger} from '@app/api/Logger';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import type {AuthSession} from '@app/api/models/AuthSession';
+import {getLocationLabelFromIp} from '@app/api/utils/IpUtils';
+import {resolveSessionClientInfo} from '@app/api/utils/SessionClientIdentity';
 import {maskIpForDisplay} from '@fluxer/ip_utils/src/IpAddress';
 import type {AuthSessionResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {uint8ArrayToBase64} from 'uint8array-extras';
-import {Config} from '../Config';
-import {Logger} from '../Logger';
-import {getInstanceConfigRepository} from '../middleware/ServiceSingletons';
-import type {AuthSession} from '../models/AuthSession';
-import {getLocationLabelFromIp} from '../utils/IpUtils';
-import {resolveSessionClientInfo} from '../utils/SessionClientIdentity';
 
 const DEV_FALLBACK_AUTH_SESSION_LOCATION = 'Stockholm, Stockholm County, Sweden';
 
@@ -28,10 +28,10 @@ async function resolveAuthSessionLocation(session: AuthSession): Promise<string 
 
 export async function mapAuthSessionsToResponse({
 	authSessions,
-	currentSessionId,
+	currentSessionIdHash,
 }: {
 	authSessions: Array<AuthSession>;
-	currentSessionId?: Uint8Array;
+	currentSessionIdHash?: Uint8Array;
 }): Promise<Array<AuthSessionResponse>> {
 	const sortedSessions = authSessions.toSorted((a, b) => {
 		const aTime = a.approximateLastUsedAt?.getTime() || 0;
@@ -51,7 +51,7 @@ export async function mapAuthSessionsToResponse({
 			productName: branding.product_name,
 		});
 		const idHash = uint8ArrayToBase64(authSession.sessionIdHash, {urlSafe: true});
-		const isCurrent = currentSessionId ? Buffer.compare(authSession.sessionIdHash, currentSessionId) === 0 : false;
+		const isCurrent = currentSessionIdHash ? authSession.sessionIdHash.equals(currentSessionIdHash) : false;
 		return {
 			id_hash: idHash,
 			client_info: {

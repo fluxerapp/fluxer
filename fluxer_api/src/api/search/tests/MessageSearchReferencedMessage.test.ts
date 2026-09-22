@@ -1,5 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createGuild} from '@app/api/guild/tests/GuildTestUtils';
+import {markChannelAsIndexed, markGuildChannelsAsIndexed, sendMessage} from '@app/api/message/tests/MessageTestUtils';
+import {SearchService} from '@app/api/search/SearchService';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {MessageReferenceTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {
 	MessageResponse,
@@ -7,13 +14,6 @@ import type {
 	MessageSearchResultsResponse,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {afterEach, beforeEach, describe, expect, test, vi} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createGuild} from '../../guild/tests/GuildTestUtils';
-import {markChannelAsIndexed, markGuildChannelsAsIndexed, sendMessage} from '../../message/tests/MessageTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {SearchService} from '../SearchService';
 
 function isSearchResult(response: MessageSearchResponse): response is MessageSearchResultsResponse {
 	return 'messages' in response;
@@ -59,7 +59,7 @@ describe('Message Search Referenced Message', () => {
 		try {
 			await createBuilder(harness, token).post('/search/messages').body(body).expect(HTTP_STATUS.OK).execute();
 			const [invocation] = spy.mock.results;
-			if (!invocation || invocation.type !== 'return') {
+			if (invocation?.type !== 'return') {
 				throw new Error('SearchService.searchMessages did not return a result');
 			}
 			return await invocation.value;

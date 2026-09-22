@@ -9,6 +9,7 @@ import {Message} from '@app/features/channel/components/ChannelMessage';
 import {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
 import {SCREEN_READER_DESCRIPTOR, TEXT_TO_SPEECH_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {Message as MessageModel} from '@app/features/messaging/models/MessagingMessage';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
@@ -80,7 +81,7 @@ const SPEECH_PLAYBACK_FAILED_TRY_AGAIN_OR_CHECK_THAT_DESCRIPTOR = msg({
 	comment: 'Error message in the accessibility tab.',
 });
 const HEAR_THE_SAMPLE_LINE_SPOKEN_WITH_YOUR_CHOSEN_DESCRIPTOR = msg({
-	message: 'Hear the sample line spoken with your chosen speed.',
+	message: 'Hear the sample line spoken at your chosen speed.',
 	comment: 'Description text in the accessibility tab.',
 });
 const VISUAL_DESCRIPTOR = msg({
@@ -254,10 +255,10 @@ export const AccessibilityTtsTabContent: React.FC = observer(() => {
 	const {i18n} = useLingui();
 	const ttsRate = Accessibility.ttsRate;
 	const selectedTtsRate = getNearestTtsRate(ttsRate);
-	const ttsRateOptions: ReadonlyArray<ComboboxOption<number>> = useMemo(
-		() => TTS_RATE_OPTIONS.map((value) => ({value, label: `x${value.toFixed(1)}`})),
-		[],
-	);
+	const ttsRateOptions: ReadonlyArray<ComboboxOption<number>> = useMemo(() => {
+		const formatter = getCachedNumberFormat(i18n.locale, {minimumFractionDigits: 1, maximumFractionDigits: 1});
+		return TTS_RATE_OPTIONS.map((value) => ({value, label: `x${formatter.format(value)}`}));
+	}, [i18n.locale]);
 	const [isSpeaking, setIsSpeaking] = useState(false);
 	const previewMessage = i18n._(DOC_I_M_FROM_THE_FUTURE_I_CAME_DESCRIPTOR);
 	const synthesisSupported = TtsUtils.isSupported();

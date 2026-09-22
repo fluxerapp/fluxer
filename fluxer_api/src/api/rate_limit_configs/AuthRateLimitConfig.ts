@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {RouteRateLimitConfig} from '@app/api/middleware/RateLimitMiddleware';
 import {ms} from 'itty-time';
-import type {RouteRateLimitConfig} from '../middleware/RateLimitMiddleware';
 
 export const AuthRateLimitConfigs = {
 	AUTH_REGISTER: {
@@ -98,6 +98,10 @@ export const AuthRateLimitConfigs = {
 	} as RouteRateLimitConfig,
 	MFA_WEBAUTHN_DELETE: {
 		bucket: 'mfa:webauthn:delete',
+		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
+	MFA_WEBAUTHN_TWO_FACTOR: {
+		bucket: 'mfa:webauthn:two_factor',
 		config: {limit: 10, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
 	PHONE_SEND_VERIFICATION: {

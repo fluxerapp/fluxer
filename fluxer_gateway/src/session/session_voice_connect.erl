@@ -53,12 +53,6 @@ handle_voice_state_update(Data, State) ->
 
 -spec extract_voice_params(map()) -> map().
 extract_voice_params(Data) ->
-    BaseVersionRaw = maps:get(<<"base_version">>, Data, undefined),
-    BaseVersion =
-        case BaseVersionRaw of
-            V when is_integer(V), V >= 0 -> V;
-            _ -> undefined
-        end,
     #{
         guild_id_raw => maps:get(<<"guild_id">>, Data, null),
         channel_id_raw => maps:get(<<"channel_id">>, Data, null),
@@ -70,10 +64,7 @@ extract_voice_params(Data) ->
         viewer_stream_keys => maps:get(<<"viewer_stream_keys">>, Data, undefined),
         is_mobile => maps:get(<<"is_mobile">>, Data, false),
         latitude => maps:get(<<"latitude">>, Data, null),
-        longitude => maps:get(<<"longitude">>, Data, null),
-        mutation_id => maps:get(<<"mutation_id">>, Data, undefined),
-        runtime_epoch => maps:get(<<"runtime_epoch">>, Data, undefined),
-        base_version => BaseVersion
+        longitude => maps:get(<<"longitude">>, Data, null)
     }.
 
 -spec dispatch_validated(
@@ -510,9 +501,6 @@ build_guild_request(ChId, Params, UserId, SId, E2EE, Bot) ->
         is_mobile => maps:get(is_mobile, Params),
         latitude => maps:get(latitude, Params),
         longitude => maps:get(longitude, Params),
-        mutation_id => maps:get(mutation_id, Params),
-        runtime_epoch => maps:get(runtime_epoch, Params),
-        base_version => maps:get(base_version, Params),
         e2ee_capable => E2EE,
         bot => Bot
     }.

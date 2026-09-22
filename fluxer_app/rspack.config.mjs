@@ -212,6 +212,7 @@ export default () => {
 		devtool: 'source-map',
 		target: ['web', 'browserslist'],
 		lazyCompilation: false,
+		performance: false,
 		resolve: {
 			alias: {
 				...resolveArboriumWasmAliases(),
@@ -285,6 +286,14 @@ export default () => {
 					},
 				},
 				{
+					test: /[\\/]@sapphi-red[\\/]web-noise-suppressor[\\/]dist[\\/][^\\/]+[\\/]workletProcessor\.js$/,
+					type: 'asset/resource',
+					use: [{loader: path.join(ROOT_DIR, 'scripts/build/rspack/noise-suppressor-worklet-loader.cjs')}],
+					generator: {
+						filename: isProduction ? 'assets/[contenthash:16].worklet.js' : 'assets/[name].[hash].worklet.js',
+					},
+				},
+				{
 					test: /\.(tsx|ts|jsx|js)$/,
 					exclude: /node_modules/,
 					type: 'javascript/auto',
@@ -298,11 +307,8 @@ export default () => {
 								parser: {
 									syntax: 'typescript',
 									tsx: true,
-									decorators: true,
 								},
 								transform: {
-									legacyDecorator: true,
-									decoratorMetadata: true,
 									react: {
 										runtime: 'automatic',
 										development: isDevelopment,
@@ -322,7 +328,7 @@ export default () => {
 					test: /\.module\.css$/,
 					use: [{loader: 'postcss-loader'}],
 					type: 'css/module',
-					parser: {namedExports: false},
+					parser: {namedExports: false, dashedIdents: false, grid: false, container: false},
 				},
 				{
 					test: /\.css$/,
@@ -591,6 +597,7 @@ export default () => {
 					compress: true,
 					mangle: true,
 					format: {comments: false},
+					exclude: /\.worklet\.js$/,
 				}),
 				new LightningCssMinimizerRspackPlugin(),
 			],
@@ -609,6 +616,5 @@ export default () => {
 				watch: false,
 			},
 		},
-		experiments: {css: true},
 	};
 };

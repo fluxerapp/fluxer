@@ -1,31 +1,31 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
+import {ChannelService} from '@app/api/channel/services/ChannelService';
+import type {IFavoriteMemeRepository} from '@app/api/favorite_meme/IFavoriteMemeRepository';
+import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import {GuildService} from '@app/api/guild/services/GuildService';
+import type {AvatarService} from '@app/api/infrastructure/AvatarService';
+import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
+import type {EmbedService} from '@app/api/infrastructure/EmbedService';
+import type {EntityAssetService} from '@app/api/infrastructure/EntityAssetService';
+import type {IAssetDeletionQueue} from '@app/api/infrastructure/IAssetDeletionQueue';
+import type {ILiveKitService} from '@app/api/infrastructure/ILiveKitService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import type {IVoiceRoomStore} from '@app/api/infrastructure/IVoiceRoomStore';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {InviteRepository} from '@app/api/invite/InviteRepository';
+import {InviteService} from '@app/api/invite/InviteService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import type {ReadStateService} from '@app/api/read_state/ReadStateService';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
+import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
 import type {IpInfoService} from '@pkgs/geoip/src/IpInfoService';
 import type {IVirusScanService} from '@pkgs/virus_scan/src/IVirusScanService';
-import type {ApiContext} from '../ApiContext';
-import type {IChannelRepository} from '../channel/IChannelRepository';
-import type {AttachmentUploadTraceRepository} from '../channel/repositories/message/AttachmentUploadTraceRepository';
-import {ChannelService} from '../channel/services/ChannelService';
-import type {IFavoriteMemeRepository} from '../favorite_meme/IFavoriteMemeRepository';
-import type {GuildAuditLogService} from '../guild/GuildAuditLogService';
-import type {IGuildRepositoryAggregate} from '../guild/repositories/IGuildRepositoryAggregate';
-import {GuildService} from '../guild/services/GuildService';
-import type {AvatarService} from '../infrastructure/AvatarService';
-import type {IPurgeQueue} from '../infrastructure/BunnyPurgeQueue';
-import type {EmbedService} from '../infrastructure/EmbedService';
-import type {EntityAssetService} from '../infrastructure/EntityAssetService';
-import type {IAssetDeletionQueue} from '../infrastructure/IAssetDeletionQueue';
-import type {ILiveKitService} from '../infrastructure/ILiveKitService';
-import type {IStorageService} from '../infrastructure/IStorageService';
-import type {IVoiceRoomStore} from '../infrastructure/IVoiceRoomStore';
-import type {UserCacheService} from '../infrastructure/UserCacheService';
-import type {InviteRepository} from '../invite/InviteRepository';
-import {InviteService} from '../invite/InviteService';
-import type {LimitConfigService} from '../limits/LimitConfigService';
-import type {ReadStateService} from '../read_state/ReadStateService';
-import type {IUserRepository} from '../user/IUserRepository';
-import type {VoiceAvailabilityService} from '../voice/VoiceAvailabilityService';
-import type {IWebhookRepository} from '../webhook/IWebhookRepository';
 
 interface GuildStackServiceFactoryDependencies {
 	apiContext: ApiContext;

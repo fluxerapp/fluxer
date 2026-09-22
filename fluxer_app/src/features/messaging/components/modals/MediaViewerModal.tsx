@@ -18,6 +18,7 @@ import {getMediaViewerPortalRoot} from '@app/features/messaging/components/modal
 import {useDeleteAttachment} from '@app/features/messaging/hooks/useDeleteAttachment';
 import {useMediaFavorite} from '@app/features/messaging/hooks/useMediaFavorite';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {formatAttachmentDate} from '@app/features/messaging/utils/AttachmentExpiryUtils';
 import {openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
 import {createDownloadHandler} from '@app/features/messaging/utils/FileDownloadUtils';
@@ -273,13 +274,20 @@ const MobileMediaOptionsSheet: FC<MobileMediaOptionsSheetProps> = observer(funct
 		/>
 	);
 });
+function withFreshViewerItemUrls(item: MediaViewerItem): MediaViewerItem {
+	if (!item) return item;
+	const src = AttachmentUrlRefresher.fresh(item.src);
+	const originalSrc = AttachmentUrlRefresher.fresh(item.originalSrc);
+	if (src === item.src && originalSrc === item.originalSrc) return item;
+	return {...item, src, originalSrc};
+}
 const MediaViewerModalComponent: FC = observer(() => {
 	const {i18n} = useLingui();
 	const {isOpen, items, currentIndex, channelId, messageId, message, sourceChannel, allowAttachmentDelete} =
 		MediaViewer;
 	const {enabled: isMobile} = MobileLayout;
 	const [isMediaMenuOpen, setIsMediaMenuOpen] = useState(false);
-	const currentItem = items[currentIndex];
+	const currentItem = withFreshViewerItemUrls(items[currentIndex]);
 	const currentGifvIsActualGif = currentItem != null && isGifvRenderedAsImage(currentItem);
 	useBottomSheetBackHandler(isOpen, MediaViewerCommands.closeMediaViewer);
 	useEffect(() => {
@@ -296,7 +304,10 @@ const MediaViewerModalComponent: FC = observer(() => {
 			count === 2 ? [(currentIndex + 1) % count] : [(currentIndex - 1 + count) % count, (currentIndex + 1) % count];
 		const unpinCallbacks = adjacentIndices.map((index) => {
 			const item = items[index];
-			if (!item || !isViewerImageItem(item) || item.src.startsWith('blob:')) return () => {};
+			if (!item) return () => {};
+			AttachmentUrlRefresher.warm(item.src);
+			AttachmentUrlRefresher.warm(item.originalSrc);
+			if (!isViewerImageItem(item) || item.src.startsWith('blob:')) return () => {};
 			return ImageCacheUtils.pinImage(buildViewerMediaURL(item));
 		});
 		return () => {
@@ -523,7 +534,7 @@ const MediaViewerModalComponent: FC = observer(() => {
 			? `${currentItem.naturalWidth}×${currentItem.naturalHeight}`
 			: undefined;
 	const fileName = currentItem.filename || currentItem.originalSrc.split('/').pop()?.split('?')[0] || 'media';
-	const fileSize = currentItem.fileSize != null ? formatFileSize(currentItem.fileSize) : undefined;
+	const fileSize = currentItem.fileSize != null ? formatFileSize(i18n.locale, currentItem.fileSize) : undefined;
 	const expiryInfo =
 		currentItem.expiresAt && currentItem.expiresAt.length > 0
 			? {

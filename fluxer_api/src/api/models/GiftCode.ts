@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../BrandedTypes';
-import type {GiftCodeDurationType, GiftCodeRow} from '../database/types/PaymentTypes';
-import {addMonthsClamp} from '../stripe/StripeUtils';
+import type {UserID} from '@app/api/BrandedTypes';
+import type {GiftCodeDurationType, GiftCodeRow} from '@app/api/database/types/PaymentTypes';
+import {addMonthsClamp} from '@app/api/stripe/StripeUtils';
 
 interface GiftCodeDuration {
 	durationType: GiftCodeDurationType;

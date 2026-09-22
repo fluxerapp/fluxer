@@ -7,19 +7,17 @@ function isDigit(char: string): boolean {
 	return char >= '0' && char <= '9';
 }
 
-function isValidJsonIntegerToken(token: string): boolean {
-	if (!/^-?\d+$/.test(token)) return false;
-	if (token === '0' || token === '-0') return true;
+function isUnsafeIntegerToken(token: string): boolean {
+	if (!/^-?(?:0|[1-9]\d*)$/.test(token)) return false;
 	const digits = token[0] === '-' ? token.slice(1) : token;
-	return digits.length > 0 && digits[0] !== '0';
+	return digits.length === MAX_SAFE_INTEGER_DECIMAL.length
+		? digits > MAX_SAFE_INTEGER_DECIMAL
+		: digits.length > MAX_SAFE_INTEGER_DECIMAL.length;
 }
 
-function isUnsafeIntegerToken(token: string): boolean {
-	const digits = token[0] === '-' ? token.slice(1) : token;
-	if (digits === '0') return false;
-	if (digits.length < MAX_SAFE_INTEGER_DECIMAL.length) return false;
-	if (digits.length > MAX_SAFE_INTEGER_DECIMAL.length) return true;
-	return digits > MAX_SAFE_INTEGER_DECIMAL;
+function isFollowedByColon(jsonText: string, index: number): boolean {
+	while (index < jsonText.length && ' \t\r\n'.includes(jsonText[index]!)) index++;
+	return jsonText[index] === ':';
 }
 
 export function coerceUnsafeIntegersToStrings(jsonText: string): string {
@@ -58,7 +56,7 @@ export function coerceUnsafeIntegersToStrings(jsonText: string): string {
 				break;
 			}
 			const token = jsonText.slice(start, i);
-			if (isValidJsonIntegerToken(token) && isUnsafeIntegerToken(token)) {
+			if (isUnsafeIntegerToken(token) && !isFollowedByColon(jsonText, i)) {
 				if (!outputParts) {
 					outputParts = [];
 				}

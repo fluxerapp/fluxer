@@ -10,6 +10,7 @@ export type SettingsDeviceKind = 'audioinput' | 'audiooutput' | 'videoinput';
 
 const DEFAULT_DEVICE_DESCRIPTOR = msg({
 	message: 'Default',
+	context: 'device-option',
 	comment: 'Fallback device option shown before a microphone, speaker, or camera label is available.',
 });
 const MICROPHONE_DEVICE_DESCRIPTOR = msg({

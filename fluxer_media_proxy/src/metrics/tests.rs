@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use super::{Metrics, duration_millis, histogram::Histogram, request::RequestKind};
+use super::{
+    Metrics, attachment_signature, duration_millis, histogram::Histogram, request::RequestKind,
+};
+use fluxer_common::attachment_url_signature::Verdict;
 use std::collections::HashSet;
 use std::sync::atomic::Ordering;
 use std::time::Duration;
@@ -72,6 +75,29 @@ const FROZEN_SERIES: &[(&str, &str)] = &[
         "counter",
     ),
     ("fluxer_media_proxy_process_uptime_seconds", "counter"),
+    (
+        "fluxer_media_proxy_attachment_signature_verdicts_total",
+        "counter",
+    ),
+];
+
+const FROZEN_SIGNATURE_VERDICT_LABELS: &[&str] =
+    &["valid", "missing", "malformed", "mismatch", "expired"];
+
+const FROZEN_REQUEST_KIND_LABELS: &[&str] = &[
+    "health",
+    "metadata",
+    "sniff",
+    "thumbnail",
+    "frames",
+    "asset_image",
+    "guild_member_image",
+    "attachment",
+    "external",
+    "static",
+    "themes",
+    "upload",
+    "other",
 ];
 
 const GOLDEN_IMAGE_DURATION_SERIES: &str = r#"# TYPE fluxer_media_proxy_transform_image_duration_ms histogram
@@ -152,6 +178,12 @@ fn request_kind_labels_are_unique() {
 }
 
 #[test]
+fn request_kind_labels_match_the_frozen_label_list() {
+    let labels: Vec<&str> = RequestKind::ALL.iter().map(|kind| kind.label()).collect();
+    assert_eq!(FROZEN_REQUEST_KIND_LABELS, labels.as_slice());
+}
+
+#[test]
 fn render_keeps_every_frozen_series_name_and_shape() {
     let metrics = Metrics::new();
     metrics.transform().observe_image_duration(42);
@@ -166,11 +198,13 @@ fn render_keeps_every_frozen_series_name_and_shape() {
             "missing frozen series {name}"
         );
     }
-    for kind in RequestKind::ALL {
-        assert!(text.contains(&format!(
-            "fluxer_media_proxy_requests_4xx_total{{kind=\"{}\"}} 0\n",
-            kind.label()
-        )));
+    for label in FROZEN_REQUEST_KIND_LABELS {
+        assert!(
+            text.contains(&format!(
+                "fluxer_media_proxy_requests_4xx_total{{kind=\"{label}\"}} 0\n"
+            )),
+            "missing request series for kind {label}"
+        );
     }
     assert!(text.contains(GOLDEN_IMAGE_DURATION_SERIES));
     assert!(text.contains(GOLDEN_ROUTE_DURATION_SERIES));
@@ -183,6 +217,58 @@ fn render_keeps_every_frozen_series_name_and_shape() {
     assert!(text.contains(
         "# HELP fluxer_media_proxy_process_uptime_seconds Seconds since process start\n# TYPE fluxer_media_proxy_process_uptime_seconds counter\nfluxer_media_proxy_process_uptime_seconds 0."
     ));
+}
+
+#[test]
+fn render_carries_a_zero_series_for_every_signature_verdict() {
+    let text = Metrics::new().render();
+    for label in FROZEN_SIGNATURE_VERDICT_LABELS {
+        assert!(
+            text.contains(&format!(
+                "fluxer_media_proxy_attachment_signature_verdicts_total{{verdict=\"{label}\"}} 0\n"
+            )),
+            "missing signature verdict series for {label}"
+        );
+    }
+}
+
+#[test]
+fn every_verdict_indexes_its_own_series() {
+    for verdict in attachment_signature::VERDICTS {
+        assert_eq!(
+            verdict,
+            attachment_signature::VERDICTS[attachment_signature::verdict_index(verdict)]
+        );
+    }
+    let labels: Vec<&str> = attachment_signature::VERDICTS
+        .iter()
+        .map(|verdict| verdict.label())
+        .collect();
+    assert_eq!(FROZEN_SIGNATURE_VERDICT_LABELS, labels.as_slice());
+}
+
+#[test]
+fn recording_a_verdict_moves_only_its_own_series() {
+    let metrics = Metrics::new();
+    let signature = metrics.attachment_signature();
+    signature.record(Verdict::Mismatch);
+    signature.record(Verdict::Mismatch);
+    signature.record(Verdict::Valid);
+    let text = metrics.render();
+    for (label, count) in [
+        ("valid", 1),
+        ("missing", 0),
+        ("malformed", 0),
+        ("mismatch", 2),
+        ("expired", 0),
+    ] {
+        assert!(
+            text.contains(&format!(
+                "fluxer_media_proxy_attachment_signature_verdicts_total{{verdict=\"{label}\"}} {count}\n"
+            )),
+            "{label} must read {count}\n{text}"
+        );
+    }
 }
 
 #[test]

@@ -1,5 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID, MessageID, UserID, WebhookID, WebhookToken} from '@app/api/BrandedTypes';
+import {createUserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {MessageUpdateRequest} from '@app/api/channel/MessageTypes';
+import {createMessageResponseDataService} from '@app/api/channel/services/message/MessageResponseDataService';
+import type {LiveKitWebhookService} from '@app/api/infrastructure/LiveKitWebhookService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Message} from '@app/api/models/Message';
+import type {SweegoWebhookService} from '@app/api/webhook/SweegoWebhookService';
+import {transformSlackWebhookRequest} from '@app/api/webhook/transformers/SlackTransformer';
+import {
+	mapWebhooksToResponse,
+	mapWebhookToResponseWithCache,
+	mapWebhookToTokenResponse,
+} from '@app/api/webhook/WebhookModel';
+import type {WebhookExecuteMessageData, WebhookService} from '@app/api/webhook/WebhookService';
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {GitHubWebhook} from '@fluxer/schema/src/domains/webhook/GitHubWebhookSchemas';
 import type {InstatusWebhook} from '@fluxer/schema/src/domains/webhook/InstatusWebhookSchemas';
@@ -10,20 +28,6 @@ import type {
 	WebhookUpdateRequest,
 } from '@fluxer/schema/src/domains/webhook/WebhookRequestSchemas';
 import type {WebhookResponse, WebhookTokenResponse} from '@fluxer/schema/src/domains/webhook/WebhookSchemas';
-import type {ChannelID, GuildID, MessageID, UserID, WebhookID, WebhookToken} from '../BrandedTypes';
-import {createUserID} from '../BrandedTypes';
-import {Config} from '../Config';
-import type {IChannelRepository} from '../channel/IChannelRepository';
-import type {MessageUpdateRequest} from '../channel/MessageTypes';
-import {createMessageResponseDataService} from '../channel/services/message/MessageResponseDataService';
-import type {LiveKitWebhookService} from '../infrastructure/LiveKitWebhookService';
-import type {UserCacheService} from '../infrastructure/UserCacheService';
-import type {RequestCache} from '../middleware/RequestCacheMiddleware';
-import type {Message} from '../models/Message';
-import type {SweegoWebhookService} from './SweegoWebhookService';
-import {transformSlackWebhookRequest} from './transformers/SlackTransformer';
-import {mapWebhooksToResponse, mapWebhookToResponseWithCache, mapWebhookToTokenResponse} from './WebhookModel';
-import type {WebhookExecuteMessageData, WebhookService} from './WebhookService';
 
 type WebhookExecutionResponse = MessageResponse | null;
 

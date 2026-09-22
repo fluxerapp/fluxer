@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+const DOCS_ENDPOINT = 'https://fluxer.dev';
+
 export interface DomainConfig {
 	base_domain: string;
 	public_scheme: 'http' | 'https';
@@ -11,6 +13,14 @@ export interface DomainConfig {
 	gift_domain?: string;
 }
 
+type PublicOriginScheme = 'http' | 'https';
+
+interface PublicOrigin {
+	public_scheme: PublicOriginScheme;
+	base_domain: string;
+	public_port: number;
+}
+
 export interface DerivedEndpoints {
 	api: string;
 	api_client: string;
@@ -19,6 +29,7 @@ export interface DerivedEndpoints {
 	media: string;
 	static_cdn: string;
 	admin: string;
+	docs: string;
 	marketing: string;
 	invite: string;
 	gift: string;
@@ -33,8 +44,43 @@ function isStandardPort(scheme: string, port: number): boolean {
 	);
 }
 
-function stripTrailingDot(host: string): string {
-	return host.endsWith('.') ? host.slice(0, -1) : host;
+export function canonicalizeDomain(value: string): string {
+	const trimmed = value.trim().toLowerCase();
+	return trimmed.endsWith('.') ? trimmed.slice(0, -1) : trimmed;
+}
+
+function defaultPortForScheme(scheme: PublicOriginScheme): number {
+	return scheme === 'https' ? 443 : 80;
+}
+
+export function parseWebOrigin(origin: string): URL | null {
+	const trimmed = origin.trim();
+	const authority = /^https?:\/\/([^/?#\\\s]+)\/?$/i.exec(trimmed)?.[1];
+	if (!authority || /\p{Cc}/u.test(origin) || authority.includes('@') || authority.endsWith(':')) {
+		return null;
+	}
+	const parsed = URL.parse(trimmed);
+	if (!parsed || parsed.port === '0' || (parsed.protocol !== 'http:' && parsed.protocol !== 'https:')) {
+		return null;
+	}
+	return parsed;
+}
+
+export function parsePublicOrigin(origin: string): PublicOrigin | null {
+	const parsed = parseWebOrigin(origin);
+	if (!parsed) {
+		return null;
+	}
+	const scheme = parsed.protocol === 'https:' ? 'https' : 'http';
+	const base_domain = canonicalizeDomain(parsed.hostname);
+	if (base_domain.length === 0) {
+		return null;
+	}
+	return {
+		public_scheme: scheme,
+		base_domain,
+		public_port: parsed.port.length === 0 ? defaultPortForScheme(scheme) : Number.parseInt(parsed.port, 10),
+	};
 }
 
 export function buildUrl(scheme: string, domain: string, port?: number, path?: string): string {
@@ -44,7 +90,7 @@ export function buildUrl(scheme: string, domain: string, port?: number, path?: s
 }
 
 export function normalizePublicEndpoint(url: string, baseDomain: string, publicPort?: number): string {
-	const domain = stripTrailingDot(baseDomain.trim().toLowerCase());
+	const domain = canonicalizeDomain(baseDomain);
 	if (domain.length === 0 || !publicPort) {
 		return url;
 	}
@@ -54,7 +100,7 @@ export function normalizePublicEndpoint(url: string, baseDomain: string, publicP
 	} catch {
 		return url;
 	}
-	if (stripTrailingDot(parsed.hostname.toLowerCase()) !== domain) {
+	if (canonicalizeDomain(parsed.hostname) !== domain) {
 		return url;
 	}
 	if (isStandardPort(parsed.protocol.slice(0, -1), publicPort)) {
@@ -83,6 +129,7 @@ export function deriveDomain(
 		| 'media'
 		| 'static_cdn'
 		| 'admin'
+		| 'docs'
 		| 'marketing'
 		| 'invite'
 		| 'gift',
@@ -113,6 +160,7 @@ export function deriveEndpointsFromDomain(config: DomainConfig): DerivedEndpoint
 			? buildUrl('https', deriveDomain('static_cdn', config), undefined)
 			: buildUrl(public_scheme, deriveDomain('static_cdn', config), public_port),
 		admin: buildUrl(public_scheme, deriveDomain('admin', config), public_port, '/admin'),
+		docs: DOCS_ENDPOINT,
 		marketing: buildUrl(public_scheme, deriveDomain('marketing', config), public_port, '/marketing'),
 		invite: buildUrl(public_scheme, deriveDomain('invite', config), public_port, '/invite'),
 		gift: buildUrl(public_scheme, deriveDomain('gift', config), public_port, '/gift'),

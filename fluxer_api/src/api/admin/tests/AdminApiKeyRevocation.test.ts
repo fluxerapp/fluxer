@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createAdminApiKeyWithDefaultACLs, listAdminApiKeys} from '@app/api/admin/tests/AdminTestUtils';
+import {createTestAccount, setUserACLs} from '@app/api/auth/tests/AuthTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount, setUserACLs} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {createAdminApiKeyWithDefaultACLs, listAdminApiKeys} from './AdminTestUtils';
 
 async function hasAdminAPIKeyId(harness: ApiTestHarness, token: string, keyId: string): Promise<boolean> {
 	const keys = await listAdminApiKeys(harness, token);
@@ -63,7 +63,7 @@ describe('Admin API Key Revocation', () => {
 			'guild:lookup',
 		]);
 		await createBuilder(harness, `${admin.token}`)
-			.delete('/admin/api-keys/nonexistent-id')
+			.delete('/admin/api-keys/999999999999999999')
 			.body(null)
 			.expect(HTTP_STATUS.NOT_FOUND)
 			.execute();

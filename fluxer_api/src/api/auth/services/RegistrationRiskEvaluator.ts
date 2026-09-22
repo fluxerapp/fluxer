@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Logger} from '../../Logger';
-import type {DeterministicRiskEngine} from '../../risk/DeterministicRiskEngine';
-import {RecommendedAction, RiskConfidence, RiskDecisionMethod, RiskLevel} from '../../risk/RiskTypes';
 import type {
 	IRegistrationRiskEvaluator,
 	RegistrationRiskParams,
 	RegistrationRiskResult,
-} from './IRegistrationRiskEvaluator';
+} from '@app/api/auth/services/IRegistrationRiskEvaluator';
+import {Logger} from '@app/api/Logger';
+import type {DeterministicRiskEngine} from '@app/api/risk/DeterministicRiskEngine';
+import {RecommendedAction, RiskConfidence, RiskDecisionMethod, RiskLevel} from '@app/api/risk/RiskTypes';
 
 export class RegistrationRiskEvaluator implements IRegistrationRiskEvaluator {
 	constructor(private readonly riskEngine: Pick<DeterministicRiskEngine, 'classify'>) {}

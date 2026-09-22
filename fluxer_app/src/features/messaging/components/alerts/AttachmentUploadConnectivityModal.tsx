@@ -15,7 +15,7 @@ const ATTACHMENT_UPLOAD_UNAVAILABLE_DESCRIPTOR = msg({
 });
 export const AttachmentUploadConnectivityModal = observer(() => {
 	const {i18n} = useLingui();
-	const fallbackSizeFormatted = formatFileSize(MULTIPART_ATTACHMENT_FALLBACK_MAX_REQUEST_SIZE);
+	const fallbackSizeFormatted = formatFileSize(i18n.locale, MULTIPART_ATTACHMENT_FALLBACK_MAX_REQUEST_SIZE);
 	return (
 		<GenericErrorModal
 			title={i18n._(ATTACHMENT_UPLOAD_UNAVAILABLE_DESCRIPTOR)}

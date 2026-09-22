@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import type {VoiceEngineV2Event} from '../protocol/events';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
 import type {
 	VoiceEngineV2CameraOptions,
 	VoiceEngineV2ConnectOptions,
@@ -10,7 +10,7 @@ import type {
 	VoiceEngineV2NativeFrameSinkOptions,
 	VoiceEngineV2Participant,
 	VoiceEngineV2ScreenOptions,
-} from '../protocol/types';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 
 const SIMULATOR_WORKLOAD_STEPS_MAX = 512;
 const SIMULATOR_PARTICIPANTS_MAX = 32;

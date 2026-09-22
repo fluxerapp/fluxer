@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {VoiceEngineV2Error, VoiceEngineV2ScreenEncodingOptions, VoiceEngineV2ScreenOptions} from '../protocol';
+import type {
+	VoiceEngineV2Error,
+	VoiceEngineV2ScreenEncodingOptions,
+	VoiceEngineV2ScreenOptions,
+} from '@fluxer/voice_engine_v2/src/protocol';
 
 export type VoiceEngineV2ScreenEncodingPlanAction = 'noop' | 'updateEncoding' | 'republish' | 'reject';
 

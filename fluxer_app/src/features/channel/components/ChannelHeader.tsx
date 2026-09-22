@@ -530,7 +530,7 @@ export const ChannelHeader = observer(
 		if (hasCallableRecipients && !(isDM && isBotDMRecipient)) {
 			desktopLeadingActionCount += 2;
 		}
-		if (showPins && Boolean(channel)) {
+		if (showPins && channel) {
 			desktopLeadingActionCount += 1;
 		}
 		if (hasChannel && isFriendDM && !isGroupDM) {

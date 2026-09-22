@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import type {UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
+import {lookupGeoip} from '@app/api/utils/IpUtils';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import type {ApiContext} from '../../ApiContext';
-import type {UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {UserRow} from '../../database/types/UserTypes';
-import {Logger} from '../../Logger';
-import type {User} from '../../models/User';
-import {lookupGeoip} from '../../utils/IpUtils';
 
 const DIRECT_CONTACT_SPAM_TARGET_KEY_PREFIX = 'direct-contact-spam:distinct-targets:';
 

@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	GatewayRolloutConfigSchema,
+	GatewayRolloutConfigUpdateRequest,
+} from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
 import {describe, expect, test} from 'vitest';
-import {GatewayRolloutConfigSchema, GatewayRolloutConfigUpdateRequest} from '../admin/GatewayRolloutSchemas';
 
 describe('gateway rollout schemas', () => {
 	test('full config applies defaults for omitted values', () => {
@@ -12,19 +15,17 @@ describe('gateway rollout schemas', () => {
 			gateway_dispatch_relay_shards: 32,
 			gateway_dispatch_relay_max_queue: 50000,
 			voice_e2ee_scope: 'guild_feature_only',
-			voice_reconciliation_v3_percentage: 100,
-			voice_reconciliation_v3_interval_ms: 2000,
 		});
 	});
 	test('update request remains partial and does not inject defaults', () => {
 		expect(
 			GatewayRolloutConfigUpdateRequest.parse({
 				rpc_request_timeout_ms: 5000,
-				voice_reconciliation_v3_interval_ms: 1500,
+				gateway_dispatch_relay_shards: 16,
 			}),
 		).toEqual({
 			rpc_request_timeout_ms: 5000,
-			voice_reconciliation_v3_interval_ms: 1500,
+			gateway_dispatch_relay_shards: 16,
 		});
 	});
 	test('voice e2ee scope accepts only known modes', () => {

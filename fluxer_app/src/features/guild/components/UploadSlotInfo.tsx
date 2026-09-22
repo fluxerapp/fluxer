@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/guild/components/UploadSlotInfo.module.css';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
 import {Button} from '@app/features/ui/button/Button';
+import {useLingui} from '@lingui/react';
 import {UploadIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -18,7 +20,9 @@ interface UploadSlotInfoProps {
 
 export const UploadSlotInfo: React.FC<UploadSlotInfoProps> = observer(
 	({title, currentCount, maxCount, description, uploadButtonText, onUploadClick, additionalSlots}) => {
-		const maxSlotCount = maxCount === Number.POSITIVE_INFINITY ? '∞' : maxCount;
+		const {i18n} = useLingui();
+		const numberFormat = getCachedNumberFormat(i18n.locale);
+		const maxSlotCount = maxCount === Number.POSITIVE_INFINITY ? '∞' : numberFormat.format(maxCount);
 		return (
 			<div className={styles.container} data-flx="guild.upload-slot-info.container">
 				<div className={styles.header} data-flx="guild.upload-slot-info.header">
@@ -29,7 +33,7 @@ export const UploadSlotInfo: React.FC<UploadSlotInfoProps> = observer(
 						<div className={styles.stats} data-flx="guild.upload-slot-info.stats">
 							{additionalSlots || (
 								<span data-flx="guild.upload-slot-info.span">
-									{currentCount} / {maxSlotCount}
+									{numberFormat.format(currentCount)} / {maxSlotCount}
 								</span>
 							)}
 						</div>

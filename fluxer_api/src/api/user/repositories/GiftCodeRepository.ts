@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../../BrandedTypes';
-import {BatchBuilder, fetchMany, fetchOne, upsertOne} from '../../database/CassandraQueryExecution';
-import {Db, type DbOp} from '../../database/CassandraTypes';
-import type {GiftCodeRow} from '../../database/types/PaymentTypes';
-import {GiftCode, mapGiftCodeDurationToMonths, mapGiftDurationMonthsToFields} from '../../models/GiftCode';
-import {GiftCodes, GiftCodesByCreator, GiftCodesByPaymentIntent, GiftCodesByRedeemer} from '../../Tables';
+import type {UserID} from '@app/api/BrandedTypes';
+import {BatchBuilder, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {Db, type DbOp} from '@app/api/database/CassandraTypes';
+import type {GiftCodeRow} from '@app/api/database/types/PaymentTypes';
+import {GiftCode, mapGiftCodeDurationToMonths, mapGiftDurationMonthsToFields} from '@app/api/models/GiftCode';
+import {GiftCodes, GiftCodesByCreator, GiftCodesByPaymentIntent, GiftCodesByRedeemer} from '@app/api/Tables';
 
 const FETCH_GIFT_CODES_BY_CREATOR_QUERY = GiftCodesByCreator.selectCql({
 	where: GiftCodesByCreator.where.eq('created_by_user_id'),

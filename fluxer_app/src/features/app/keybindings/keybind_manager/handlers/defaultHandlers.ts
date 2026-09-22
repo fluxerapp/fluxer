@@ -23,6 +23,7 @@ import {KeyboardShortcutsCheatsheetModal} from '@app/features/input/components/m
 import Keybind, {type KeybindCommand} from '@app/features/input/state/InputKeybind';
 import MessageEdit from '@app/features/messaging/state/MessageEdit';
 import SavedMessages from '@app/features/messaging/state/SavedMessages';
+import {focusChannelTextareaFromKeybind} from '@app/features/messaging/utils/ChannelTextareaFocusUtils';
 import {openExternalUrlWithWarning} from '@app/features/messaging/utils/ExternalLinkUtils';
 import {buildChannelLink} from '@app/features/messaging/utils/MessageLinkUtils';
 import {goToMessage} from '@app/features/messaging/utils/MessageNavigator';
@@ -537,7 +538,7 @@ export function registerDefaultKeybindHandlers(host: HandlerHost, i18n: I18n): v
 		if (type !== 'press') return;
 		const channelId = host.currentChannelId;
 		if (!channelId) return;
-		ComponentBus.dispatch('FOCUS_TEXTAREA', {channelId});
+		focusChannelTextareaFromKeybind(channelId);
 	});
 	host.register('chat_upload', ({type}) => {
 		if (type !== 'press') return;

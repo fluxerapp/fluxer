@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {nextVersion} from '../../database/CassandraTypes';
-import type {DonorRow} from '../../database/types/DonationTypes';
+import {nextVersion} from '@app/api/database/CassandraTypes';
+import type {DonorRow} from '@app/api/database/types/DonationTypes';
+
+const ACTIVE_SUBSCRIPTION_STATUSES: ReadonlySet<string> = new Set(['active', 'trialing']);
 
 export class Donor {
 	readonly email: string;
@@ -15,6 +17,7 @@ export class Donor {
 	readonly subscriptionInterval: string | null;
 	readonly subscriptionCurrentPeriodEnd: Date | null;
 	readonly subscriptionCancelAt: Date | null;
+	readonly subscriptionStatus: string | null;
 	readonly createdAt: Date;
 	readonly updatedAt: Date;
 	readonly version: number;
@@ -31,6 +34,7 @@ export class Donor {
 		this.subscriptionInterval = row.subscription_interval ?? null;
 		this.subscriptionCurrentPeriodEnd = row.subscription_current_period_end ?? null;
 		this.subscriptionCancelAt = row.subscription_cancel_at ?? null;
+		this.subscriptionStatus = row.subscription_status ?? null;
 		this.createdAt = row.created_at;
 		this.updatedAt = row.updated_at;
 		this.version = row.version;
@@ -49,6 +53,7 @@ export class Donor {
 			subscription_interval: this.subscriptionInterval,
 			subscription_current_period_end: this.subscriptionCurrentPeriodEnd,
 			subscription_cancel_at: this.subscriptionCancelAt,
+			subscription_status: this.subscriptionStatus,
 			created_at: this.createdAt,
 			updated_at: this.updatedAt,
 			version: this.version,
@@ -60,6 +65,9 @@ export class Donor {
 			return false;
 		}
 		if (this.subscriptionCancelAt !== null) {
+			return false;
+		}
+		if (this.subscriptionStatus !== null && !ACTIVE_SUBSCRIPTION_STATUSES.has(this.subscriptionStatus)) {
 			return false;
 		}
 		return this.subscriptionCurrentPeriodEnd > new Date();
@@ -80,6 +88,7 @@ export class Donor {
 		subscriptionInterval: string | null;
 		subscriptionCurrentPeriodEnd: Date | null;
 		subscriptionCancelAt?: Date | null;
+		subscriptionStatus?: string | null;
 	}): DonorRow {
 		return {
 			email: this.email,
@@ -93,6 +102,7 @@ export class Donor {
 			subscription_interval: data.subscriptionInterval,
 			subscription_current_period_end: data.subscriptionCurrentPeriodEnd,
 			subscription_cancel_at: data.subscriptionCancelAt ?? this.subscriptionCancelAt,
+			subscription_status: data.subscriptionStatus ?? this.subscriptionStatus,
 			created_at: this.createdAt,
 			updated_at: new Date(),
 			version: nextVersion(this.version),

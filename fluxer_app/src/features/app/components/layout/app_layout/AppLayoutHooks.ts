@@ -11,12 +11,15 @@ import Config from '@app/features/app/config/Config';
 import {isClientReconnecting} from '@app/features/app/state/ClientReadiness';
 import Initialization from '@app/features/app/state/Initialization';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import Updater from '@app/features/app/state/Updater';
 import Authentication from '@app/features/auth/state/Authentication';
 import Channels from '@app/features/channel/state/Channels';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
 import * as NotificationUtils from '@app/features/notification/utils/NotificationUtils';
 import NativePermission from '@app/features/permissions/system/state/NativePermission';
+import {resolvePriceAnnouncementCampaign} from '@app/features/premium/config/PriceAnnouncementCampaign';
+import PremiumState from '@app/features/premium/state/PremiumState';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import Nagbar from '@app/features/ui/state/Nagbar';
 import {hasUnavailableElectronNativeContext, isDesktop} from '@app/features/ui/utils/NativeUtils';
@@ -150,6 +153,27 @@ export const useNagbarConditions = (): NagbarConditions => {
 			user?.isPremium() && !user?.hasDismissedPremiumOnboarding && !nagbarState.premiumOnboardingDismissed,
 		);
 	})();
+	const premiumState = PremiumState.loadedForUserId === user?.id ? PremiumState.state : null;
+	const priceAnnouncementCampaign = resolvePriceAnnouncementCampaign(premiumState);
+	const hasPurchaseReadyAccount = Boolean(user?.isClaimed() && (!RuntimeConfig.emailsEnabled || user.verified));
+	const canShowPriceAnnouncement = (() => {
+		if (isSelfHosted) return false;
+		if (!hasPurchaseReadyAccount) return false;
+		if (!premiumState || !priceAnnouncementCampaign) return false;
+		if (premiumState.actual.has_active_paid_premium) return false;
+		return !nagbarState.getPriceAnnouncementDismissed(priceAnnouncementCampaign.campaign.id);
+	})();
+	const canShowLegacyPriceOptIn = (() => {
+		if (isSelfHosted) return false;
+		if (!hasPurchaseReadyAccount) return false;
+		if (!premiumState || !priceAnnouncementCampaign) return false;
+		const listPriceSwitch = premiumState.billing.list_price_switch ?? null;
+		if (!listPriceSwitch?.available || listPriceSwitch.pending) return false;
+		if (listPriceSwitch.currency !== priceAnnouncementCampaign.currency) return false;
+		if (listPriceSwitch.current_amount_minor == null || listPriceSwitch.list_amount_minor == null) return false;
+		if (listPriceSwitch.effective_at == null || listPriceSwitch.billing_cycle == null) return false;
+		return !nagbarState.getLegacyPriceOptInDismissed(priceAnnouncementCampaign.campaign.id);
+	})();
 	const isNativeDesktop = isDesktop();
 	const hasBrokenElectronNativeContext = hasUnavailableElectronNativeContext();
 	const isMobileDevice = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -230,6 +254,7 @@ export const useNagbarConditions = (): NagbarConditions => {
 	const canShowLinuxInputAccess = NativePermission.shouldShowLinuxInputAccessNagbar;
 	const canShowSoftwareEncoder = SoftwareEncoderWarning.showWarning;
 	const canShowStreamerMode = StreamerMode.shouldShowNagbar;
+	const canShowDesktopUpdateReady = Updater.shouldShowUpdateReadyNagbar;
 	const canShowBuildEnvironment =
 		!BUILD_ENVIRONMENT_HIDDEN_RELEASE_CHANNELS.has(Config.PUBLIC_RELEASE_CHANNEL) &&
 		!nagbarState.buildEnvironmentDismissedThisSession;
@@ -279,6 +304,8 @@ export const useNagbarConditions = (): NagbarConditions => {
 		canShowPremiumGracePeriod,
 		canShowPremiumExpired,
 		canShowPremiumOnboarding,
+		canShowPriceAnnouncement,
+		canShowLegacyPriceOptIn,
 		canShowGiftInventory,
 		canShowDesktopDownload,
 		canShowGuildMembershipCta,
@@ -288,6 +315,7 @@ export const useNagbarConditions = (): NagbarConditions => {
 		canShowLinuxInputAccess,
 		canShowSoftwareEncoder,
 		canShowStreamerMode,
+		canShowDesktopUpdateReady,
 	};
 };
 export const useActiveNagbars = (conditions: NagbarConditions): Array<NagbarState> => {
@@ -354,6 +382,12 @@ export const useActiveNagbars = (conditions: NagbarConditions): Array<NagbarStat
 				dismissible: true,
 			},
 			{
+				type: NagbarType.LEGACY_PRICE_OPT_IN,
+				priority: 2,
+				visible: conditions.canShowLegacyPriceOptIn,
+				dismissible: true,
+			},
+			{
 				type: NagbarType.PREMIUM_ONBOARDING,
 				priority: 4,
 				visible: conditions.canShowPremiumOnboarding,
@@ -363,6 +397,12 @@ export const useActiveNagbars = (conditions: NagbarConditions): Array<NagbarStat
 				type: NagbarType.GIFT_INVENTORY,
 				priority: 5,
 				visible: conditions.canShowGiftInventory,
+				dismissible: true,
+			},
+			{
+				type: NagbarType.PRICE_ANNOUNCEMENT,
+				priority: 5.5,
+				visible: conditions.canShowPriceAnnouncement,
 				dismissible: true,
 			},
 			{
@@ -405,6 +445,12 @@ export const useActiveNagbars = (conditions: NagbarConditions): Array<NagbarStat
 				type: NagbarType.STREAMER_MODE,
 				priority: -2.5,
 				visible: conditions.canShowStreamerMode,
+				dismissible: true,
+			},
+			{
+				type: NagbarType.DESKTOP_UPDATE_READY,
+				priority: -1.5,
+				visible: conditions.canShowDesktopUpdateReady,
 				dismissible: true,
 			},
 		];

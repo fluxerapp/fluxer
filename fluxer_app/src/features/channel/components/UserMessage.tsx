@@ -19,6 +19,7 @@ import Emoji from '@app/features/emoji/state/Emoji';
 import {checkEmojiAvailability} from '@app/features/expressions/utils/ExpressionPermissionUtils';
 import Guilds from '@app/features/guild/state/Guilds';
 import {TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {dropTrailingEmptyBlockquoteLines} from '@app/features/lexical/composer/blockquoteLines';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import {SafeMarkdown} from '@app/features/messaging/components/markdown';
@@ -26,9 +27,11 @@ import {parse} from '@app/features/messaging/components/markdown/renderers';
 import {MarkdownContext} from '@app/features/messaging/components/markdown/renderers/RendererTypes';
 import MessageEdit from '@app/features/messaging/state/MessageEdit';
 import {hasStyleableMessageText} from '@app/features/messaging/utils/FailedMessageDisplayUtils';
+import {buildMessageContentCopyText} from '@app/features/messaging/utils/MessageCopyTextUtils';
 import {
 	buildExistingAttachmentEditReferences,
 	canSubmitEmptyMessageEdit,
+	isAttachmentOnlyMessage,
 } from '@app/features/messaging/utils/MessageEditContentUtils';
 import {retryFailedMessage} from '@app/features/messaging/utils/MessageRetryUtils';
 import {NodeType} from '@app/features/messaging/utils/markdown/parser/Enums';
@@ -138,6 +141,16 @@ export const UserMessage = observer(() => {
 		}),
 		[message.id, message.channelId, message.mentionChannels],
 	);
+	const contentCopyText = useMemo(
+		() =>
+			buildMessageContentCopyText(astNodes, {
+				channelId: message.channelId,
+				messageId: message.id,
+				mentionChannels: message.mentionChannels,
+				i18n,
+			}),
+		[astNodes, message.id, message.channelId, message.mentionChannels, i18n.locale],
+	);
 	const shouldHideContent =
 		UserSettings.getRenderEmbeds() &&
 		message.embeds.length > 0 &&
@@ -193,13 +206,13 @@ export const UserMessage = observer(() => {
 			if (message.messageSnapshots) {
 				return;
 			}
-			const content = (actualContent ?? '').trim();
+			const content = dropTrailingEmptyBlockquoteLines(actualContent ?? '').trim();
 			if (!content) {
+				if (isAttachmentOnlyMessage(message)) {
+					finishEditing();
+					return;
+				}
 				if (canSubmitEmptyMessageEdit(message)) {
-					if (message.content.length === 0) {
-						finishEditing();
-						return;
-					}
 					finishEditing();
 					void MessageCommands.edit(
 						channel.id,
@@ -279,7 +292,7 @@ export const UserMessage = observer(() => {
 				className={clsx(markupStyles.markup)}
 				data-search-highlight-scope="message"
 				data-flx="channel.user-message.render-message-content.div"
-				{...messageContentCopyBlockProps(message.content)}
+				{...messageContentCopyBlockProps(contentCopyText)}
 			>
 				<SafeMarkdown
 					content={message.content}
@@ -313,6 +326,7 @@ export const UserMessage = observer(() => {
 		shouldShowEditingInput,
 		shouldHideContent,
 		markdownOptions,
+		contentCopyText,
 		message,
 		message.content,
 		message.id,
@@ -413,7 +427,7 @@ export const UserMessage = observer(() => {
 							className={clsx(markupStyles.markup)}
 							data-search-highlight-scope="message"
 							data-flx="channel.user-message.div"
-							{...messageContentCopyBlockProps(message.content)}
+							{...messageContentCopyBlockProps(contentCopyText)}
 						>
 							<SafeMarkdown
 								content={message.content}

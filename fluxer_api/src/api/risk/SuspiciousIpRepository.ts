@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import {fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import type {SuspiciousIpRow} from '@app/api/database/types/RiskTypes';
+import type {SuspiciousIpResult} from '@app/api/risk/RiskTypes';
+import {SuspiciousIps} from '@app/api/Tables';
 import {getSameIpDecisionKey, normalizeIpString} from '@fluxer/ip_utils/src/IpAddress';
-import type {UserID} from '../BrandedTypes';
-import {fetchOne, upsertOne} from '../database/CassandraQueryExecution';
-import type {SuspiciousIpRow} from '../database/types/RiskTypes';
-import {SuspiciousIps} from '../Tables';
-import type {SuspiciousIpResult} from './RiskTypes';
 
 const SUSPICIOUS_IP_TTL_SECONDS = 180 * 24 * 60 * 60;
 const SELECT_SUSPICIOUS_IP_CQL = SuspiciousIps.selectCql({

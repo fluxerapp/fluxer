@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use super::{BucketStyle, DeploymentMode, StorageBackend};
+use super::{BucketStyle, DeploymentMode, PolicyMode, StorageBackend};
 use crate::secret::SecretBytes;
 use base64::{Engine as _, engine::general_purpose};
-use std::net::IpAddr;
+use http::HeaderValue;
 
 #[derive(Debug, Default)]
 pub(super) struct EnvMap(Vec<(String, String)>);
@@ -34,6 +34,7 @@ fn parse_mode(raw: &str) -> Option<DeploymentMode> {
         "mp" => Some(DeploymentMode::Mp),
         "static" => Some(DeploymentMode::Static),
         "upload" => Some(DeploymentMode::Upload),
+        "relay" => Some(DeploymentMode::Relay),
         _ => None,
     }
 }
@@ -44,8 +45,109 @@ pub(super) fn parse_mode_env(raw: Option<&str>) -> anyhow::Result<Option<Deploym
     };
     let raw = raw.trim();
     parse_mode(raw).map(Some).ok_or_else(|| {
-        anyhow::anyhow!("FLUXER_MEDIA_PROXY_MODE must be one of: mp, static, upload")
+        anyhow::anyhow!("FLUXER_MEDIA_PROXY_MODE must be one of: mp, static, upload, relay")
     })
+}
+
+pub(super) fn parse_policy_mode(var_name: &str, raw: Option<&str>) -> anyhow::Result<PolicyMode> {
+    let Some(raw) = raw else {
+        return Ok(PolicyMode::Off);
+    };
+    match raw.trim().to_ascii_lowercase().as_str() {
+        "off" => Ok(PolicyMode::Off),
+        "report" => Ok(PolicyMode::Report),
+        "enforce" => Ok(PolicyMode::Enforce),
+        _ => Err(anyhow::anyhow!(
+            "{var_name} must be one of: off, report, enforce"
+        )),
+    }
+}
+
+pub(super) fn parse_attachment_url_secrets(
+    var_name: &str,
+    raw: Option<&str>,
+) -> anyhow::Result<Vec<SecretBytes>> {
+    let Some(raw) = raw else {
+        return Ok(Vec::new());
+    };
+    let mut out: Vec<SecretBytes> = Vec::new();
+    for entry in raw.split(',') {
+        let entry = entry.trim();
+        if entry.is_empty() {
+            continue;
+        }
+        let decoded = general_purpose::STANDARD
+            .decode(entry)
+            .map_err(|_| anyhow::anyhow!("{var_name} entries must be standard base64"))?;
+        anyhow::ensure!(
+            decoded.len() >= 32,
+            "{var_name} entries must decode to at least 32 bytes"
+        );
+        let candidate = SecretBytes::new(decoded);
+        if !out
+            .iter()
+            .any(|existing| existing.expose() == candidate.expose())
+        {
+            out.push(candidate);
+        }
+    }
+    Ok(out)
+}
+
+pub(super) fn parse_allowed_origins(
+    var_name: &str,
+    raw: Option<&str>,
+) -> anyhow::Result<Vec<HeaderValue>> {
+    let Some(raw) = raw else {
+        return Ok(Vec::new());
+    };
+    let mut out: Vec<HeaderValue> = Vec::new();
+    for entry in raw.split(',') {
+        let entry = entry.trim();
+        if entry.is_empty() {
+            continue;
+        }
+        let origin = parse_origin(entry)
+            .ok_or_else(|| anyhow::anyhow!("{var_name} contains an invalid origin: {entry}"))?;
+        if !out.contains(&origin) {
+            out.push(origin);
+        }
+    }
+    Ok(out)
+}
+
+fn parse_origin(entry: &str) -> Option<HeaderValue> {
+    if !entry.is_ascii() {
+        return None;
+    }
+    let url = url::Url::parse(entry).ok()?;
+    let bare = matches!(url.scheme(), "http" | "https")
+        && url.host().is_some_and(is_origin_host)
+        && url.username().is_empty()
+        && url.password().is_none()
+        && url.path() == "/"
+        && url.query().is_none()
+        && url.fragment().is_none();
+    if !bare {
+        return None;
+    }
+    let serialised = url.origin().ascii_serialization();
+    if serialised == "null" {
+        return None;
+    }
+    HeaderValue::from_str(&serialised).ok()
+}
+
+fn is_origin_host(host: url::Host<&str>) -> bool {
+    match host {
+        url::Host::Ipv4(_) | url::Host::Ipv6(_) => true,
+        url::Host::Domain(domain) => domain.split('.').all(|label| {
+            !label.is_empty()
+                && label
+                    .bytes()
+                    .all(|byte| byte.is_ascii_alphanumeric() || byte == b'-')
+        }),
+    }
 }
 
 pub(super) fn non_empty(raw: Option<&str>) -> Option<String> {
@@ -110,8 +212,8 @@ pub(super) fn decode_upload_relay_secret(
 ) -> anyhow::Result<SecretBytes> {
     let Some(raw) = raw.map(str::trim).filter(|s| !s.is_empty()) else {
         anyhow::ensure!(
-            mode != DeploymentMode::Upload,
-            "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 is required in upload mode"
+            !mode.serves_upload_relay(),
+            "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 is required in upload and relay modes"
         );
         return Ok(SecretBytes::new(Vec::new()));
     };
@@ -211,24 +313,6 @@ where
         "{var_name} must be between {min_value} and {max_value}"
     );
     Ok(parsed)
-}
-
-pub(super) fn parse_ip_list_env(var_name: &str, raw: Option<&str>) -> anyhow::Result<Vec<IpAddr>> {
-    let Some(raw) = raw.map(str::trim).filter(|s| !s.is_empty()) else {
-        return Ok(Vec::new());
-    };
-    let mut out = Vec::new();
-    for entry in raw.split(',') {
-        let entry = entry.trim();
-        if entry.is_empty() {
-            continue;
-        }
-        let ip = entry
-            .parse::<IpAddr>()
-            .map_err(|_| anyhow::anyhow!("{var_name} contains invalid IP: {entry}"))?;
-        out.push(ip);
-    }
-    Ok(out)
 }
 
 pub(super) fn default_native_transform_concurrency() -> usize {

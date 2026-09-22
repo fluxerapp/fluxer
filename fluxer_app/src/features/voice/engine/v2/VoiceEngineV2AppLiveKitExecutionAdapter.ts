@@ -88,12 +88,11 @@ function buildOperatingError(method: string, reason: string): Error {
 	return error;
 }
 
-function toUint8Array(payload: ArrayBuffer | ArrayBufferView): Uint8Array {
-	if (payload instanceof Uint8Array) return payload;
-	if (ArrayBuffer.isView(payload)) {
-		return new Uint8Array(payload.buffer, payload.byteOffset, payload.byteLength);
-	}
-	return new Uint8Array(payload);
+function toUint8Array(payload: ArrayBuffer | ArrayBufferView): Uint8Array<ArrayBuffer> {
+	if (!ArrayBuffer.isView(payload)) return new Uint8Array(payload);
+	const {buffer, byteOffset, byteLength} = payload;
+	if (buffer instanceof ArrayBuffer) return new Uint8Array(buffer, byteOffset, byteLength);
+	return new Uint8Array(buffer, byteOffset, byteLength).slice();
 }
 
 function isDataPayload(value: unknown): value is ArrayBuffer | ArrayBufferView {

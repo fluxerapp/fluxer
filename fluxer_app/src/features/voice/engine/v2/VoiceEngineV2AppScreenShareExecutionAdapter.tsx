@@ -49,17 +49,21 @@ import {
 	captureScreenSharePublicationCleanup,
 	type DeviceScreenShareCaptureOptions,
 	type DisplayScreenShareCaptureContext,
+	ensureCommittedScreenShareTarget,
 	logger,
 	mergeScreenShareCaptureCleanupSnapshots,
 	releaseScreenShareCaptureCleanup,
 	getEffectivePublishOptions as resolveEffectivePublishOptions,
 	type ScreenShareCaptureCleanupSnapshot,
 	type ScreenShareCodecReadinessStatus,
-	scheduleScreenShareEncoderVerification,
+	startScreenShareEncoderMonitor,
 	stopMediaTrack,
 } from '@app/features/voice/engine/voice_screen_share_manager/shared';
-import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
+import ActiveScreenShareSource, {
+	type PublishedScreenShareSource,
+} from '@app/features/voice/state/ActiveScreenShareSource';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
+import ScreenShareDeliveryRollout from '@app/features/voice/state/ScreenShareDeliveryRollout';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
 	prepareHighFidelityScreenShareAudioTrack,
@@ -78,7 +82,19 @@ import {
 	disarmNativeAudio,
 	reconfigureLinuxNativeAudioRouting,
 } from '@app/features/voice/utils/NativeAudioCaptureBridge';
-import {SCREEN_SHARE_DEGRADATION_PREFERENCE} from '@app/features/voice/utils/ScreenShareOptions';
+import {
+	recordScreenShareEncoderVerification,
+	recordScreenShareEndedModal,
+	recordScreenShareRequestedCodec,
+	recordScreenShareStartError,
+	recordScreenShareStarted,
+	recordScreenShareStopped,
+	type ScreenShareEndedModal,
+} from '@app/features/voice/utils/ScreenShareLifecycleLog';
+import {
+	resolveScreenShareDegradationPreference,
+	type ScreenShareTarget,
+} from '@app/features/voice/utils/ScreenShareOptions';
 import {ScreenShareRollbackIncompleteError} from '@app/features/voice/utils/ScreenShareRollbackIncompleteError';
 import {handleScreenShareError} from '@app/features/voice/utils/ScreenShareUtils';
 import type {NativeAudioStartOptions} from '@app/types/electron.d';
@@ -126,16 +142,34 @@ const SCREEN_SHARE_ENCODER_FAILED_DESCRIPTOR = msg({
 	context: 'screen-share',
 });
 
-type ScreenShareVideoConstraints = MediaTrackConstraints & {
-	colorSpace?: string;
-	cursor?: 'always' | 'motion' | 'never';
-};
+type ScreenShareCaptureGeometryUpdate = 'unchanged' | 'applied' | 'failed' | 'needs-capture-restart';
+
+function screenShareSourceHasClonedTracks(track: LocalVideoTrack): boolean {
+	const simulcastCodecs = (track as LocalVideoTrack & {simulcastCodecs?: Map<unknown, unknown>}).simulcastCodecs;
+	return (simulcastCodecs?.size ?? 0) > 0;
+}
+
+export interface ScreenShareSourceSnapshot {
+	publishedSource: PublishedScreenShareSource | null;
+	sourceId: string | null;
+	isOwnWindow: boolean;
+	sourceDimensions: {width: number; height: number} | null;
+	target: ScreenShareTarget | null;
+}
 
 export interface ScreenShareReconnectSnapshot {
 	videoTrack: MediaStreamTrack;
 	audioTrack?: MediaStreamTrack;
 	audioMuted: boolean;
 	contentSource: ScreenShareContentSource;
+	source: ScreenShareSourceSnapshot;
+}
+
+export function shouldRestoreScreenShareAfterReconnect(
+	restoreStream: boolean,
+	snapshot: ScreenShareReconnectSnapshot | null,
+): boolean {
+	return restoreStream || snapshot !== null;
 }
 
 const selectScreenShareSetEnabledOptions = selectVoiceEngineV2AppScreenShareSetEnabledOptions;
@@ -146,7 +180,12 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 	private readonly trackPlumbing: VoiceEngineV2AppScreenShareTrackPlumbing;
 	private activeScreenShareEndListener: (() => void) | null = null;
 	private endedScreenShareStopInFlight: Promise<void> | null = null;
-	encoderVerificationTimer: NodeJS.Timeout | null = null;
+	encoderVerificationTimer: (() => void) | null = null;
+	private screenShareTrackingHolds = 0;
+	private screenShareCapturePaused = false;
+	private screenShareDeliveryArmed = false;
+	private screenShareTrackingGeneration = 0;
+	private readonly reconciledCodecPairs = new Set<string>();
 	private readonly verifiedCodecCorrectionsByTrack = new WeakMap<MediaStreamTrack, number>();
 	sourceLifecycleBridge: VoiceEngineV2AppSourceLifecycleBridge | null = null;
 
@@ -173,6 +212,10 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 
 	get streamingPriorityHeld(): boolean {
 		return this.lifecycle.streamingPriorityHeld;
+	}
+
+	get isScreenShareCapturePaused(): boolean {
+		return this.screenShareCapturePaused;
 	}
 
 	getIsScreenSharePending(): boolean {
@@ -286,8 +329,8 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 	async enforceScreenShareSenderParametersInternal(
 		participant: LocalParticipant,
 		publishOptions?: TrackPublishOptions,
-	): Promise<void> {
-		await this.trackPlumbing.enforceSenderParameters(participant, publishOptions);
+	): Promise<boolean> {
+		return this.trackPlumbing.enforceSenderParameters(participant, publishOptions?.videoCodec);
 	}
 
 	applyScreenShareAudioContentHintInternal(participant: LocalParticipant): void {
@@ -330,6 +373,13 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 			...(liveAudioTrack ? {audioTrack: liveAudioTrack} : {}),
 			audioMuted: screenShareAudioPublication?.isMuted ?? false,
 			contentSource: this.getActiveScreenShareContentSourceInternal(),
+			source: {
+				publishedSource: ActiveScreenShareSource.getPublishedSource(),
+				sourceId: ActiveScreenShareSource.getSourceId(),
+				isOwnWindow: ActiveScreenShareSource.isOwnWindow(),
+				sourceDimensions: ActiveScreenShareSource.getSourceDimensions(),
+				target: ActiveScreenShareSource.getTarget(),
+			},
 		};
 	}
 
@@ -348,7 +398,7 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 
 	async unmuteScreenShareAudioPublicationInternal(participant: LocalParticipant, reason: string): Promise<void> {
 		const publication = participant.getTrackPublication(Track.Source.ScreenShareAudio);
-		if (!publication || !publication.isMuted) {
+		if (!publication?.isMuted) {
 			return;
 		}
 		try {
@@ -358,9 +408,16 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		}
 	}
 
+	private endScreenShareTracking(): void {
+		ActiveScreenShareSource.clear();
+		this.reconciledCodecPairs.clear();
+	}
+
 	private cleanupScreenShareAudioRoutingState(): void {
 		this.cleanupScreenShareAudioCaptureRouting();
-		ActiveScreenShareSource.clear();
+		if (this.screenShareTrackingHolds === 0) {
+			this.endScreenShareTracking();
+		}
 	}
 
 	private cleanupScreenShareAudioCaptureRouting(): void {
@@ -389,18 +446,24 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 	cleanupActiveScreenShareEndListenerInternal(): void {
 		this.activeScreenShareEndListener?.();
 		this.activeScreenShareEndListener = null;
+		this.setScreenShareCapturePausedInternal(false);
+	}
+
+	private setScreenShareCapturePausedInternal(paused: boolean): void {
+		if (this.screenShareCapturePaused === paused) return;
+		this.update(() => {
+			this.screenShareCapturePaused = paused;
+		});
 	}
 
 	cancelEncoderVerificationInternal(): void {
-		if (this.encoderVerificationTimer != null) {
-			clearTimeout(this.encoderVerificationTimer);
-			this.encoderVerificationTimer = null;
-		}
-		this.trackPlumbing.cleanupKeyFrameRequests();
+		this.encoderVerificationTimer?.();
+		this.encoderVerificationTimer = null;
 		this.transitionScreenShareLifecycleInternal({type: 'share.encoderVerification.cleared'});
 	}
 
-	showScreenShareEndedModalInternal(description: string): void {
+	showScreenShareEndedModalInternal(description: string, modal: ScreenShareEndedModal): void {
+		recordScreenShareEndedModal(modal);
 		ModalCommands.pushWithKey(
 			ModalCommands.modal(() => (
 				<GenericErrorModal
@@ -429,12 +492,32 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 	): Promise<void> {
 		if (!this.isScreenShareTrackPublishedInternal(participant, track)) return;
 		await ScreenShareCodecNegotiation.publishLocalCapabilities(room, 'manual');
+		if (this.isScreenSharePending || !this.isScreenShareTrackPublishedInternal(participant, track)) return;
 		const codec = ScreenShareCodecNegotiation.selectScreenShareCodec(VoiceSettings.getPreferredScreenShareCodec());
-		if (codec !== failedCodec) {
-			const recovered = await this.liveKitFlows.republishActiveShareWithCodec(room, track, codec);
-			if (recovered) return;
-		}
+		if (codec !== failedCodec && (await this.liveKitFlows.republishActiveShareWithCodec(room, track, codec))) return;
 		this.stopScreenShareAfterEncoderFailure(room, participant, track, failedCodec, 'stalled');
+	}
+
+	async reconcileScreenShareCodecInternal(room: Room | null): Promise<void> {
+		const participant = room?.localParticipant;
+		if (!room || !participant) return;
+		if (this.isScreenSharePending || this.isScreenSharePublicationReplaceInFlight()) return;
+		const publication = participant.getTrackPublication(Track.Source.ScreenShare);
+		const track = publication?.videoTrack as LocalVideoTrack | undefined;
+		if (!track || !this.isScreenShareTrackPublishedInternal(participant, track)) return;
+		const published = (publication as {options?: TrackPublishOptions} | undefined)?.options?.videoCodec;
+		const selected = ScreenShareCodecNegotiation.getSelectedCodec();
+		if (!published || !selected || published === selected) return;
+		const pair = `${published}|${selected}`;
+		if (this.reconciledCodecPairs.has(pair)) return;
+		this.reconciledCodecPairs.add(pair);
+		const republished = await this.liveKitFlows.republishActiveShareWithCodec(room, track, selected);
+		if (!republished) {
+			logger.warn('Failed to reconcile the active screen share codec with the negotiated codec', {
+				published,
+				selected,
+			});
+		}
 	}
 
 	async republishActiveScreenShareForNegotiatedCodecInternal(room: Room | null, codec: VideoCodec): Promise<void> {
@@ -487,13 +570,15 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 				codec,
 			});
 		}
+		if (this.endedScreenShareStopInFlight) return;
+		if (!this.isScreenShareTrackPublishedInternal(participant, track)) return;
 		this.showScreenShareEndedModalInternal(
 			i18n._(
 				cause === 'stalled' ? SCREEN_SHARE_ENCODER_FAILED_DESCRIPTOR : SCREEN_SHARE_CODEC_POLICY_FAILED_DESCRIPTOR,
 			),
+			cause === 'stalled' ? 'encoder-failed' : 'codec-policy-failed',
 		);
-		if (this.endedScreenShareStopInFlight) return;
-		if (!this.isScreenShareTrackPublishedInternal(participant, track)) return;
+		recordScreenShareStopped('codec-republish-failed');
 		this.transitionScreenShareLifecycleInternal({type: 'share.endedStop.start'});
 		const stopPromise = this.setScreenShareEnabled(room, false, {sendUpdate: true, playSound: true})
 			.catch((error) => {
@@ -516,59 +601,76 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 	): void {
 		this.cancelEncoderVerificationInternal();
 		if (!codec) return;
+		recordScreenShareRequestedCodec(codec);
 		const publication = preferredTrack ? undefined : participant.getTrackPublication(Track.Source.ScreenShare);
 		const track = preferredTrack ?? (publication?.videoTrack as LocalVideoTrack | undefined);
-		const sender = track?.sender;
-		if (!track || !sender) {
-			logger.warn('No sender found for screen share encoder verification');
+		if (!track?.sender) {
+			logger.warn('No sender found for screen share encoder monitoring');
 			return;
 		}
-		this.encoderVerificationTimer = scheduleScreenShareEncoderVerification(
-			() => sender.getStats(),
+		this.encoderVerificationTimer = startScreenShareEncoderMonitor({
+			track,
 			codec,
-			(failure) => {
-				const action = resolveScreenShareEncoderVerificationAction(failure);
-				switch (action.kind) {
-					case 'ignore-repeated-stall':
-						return;
-					case 'recover-stalled':
-						logger.warn('Screen share encoder verification failed', {
-							codec: action.codec,
-							failureReason: 'screen-share-encode-stalled',
-						});
-						void this.recoverActiveScreenShareAfterEncoderFailure(room, participant, track, action.codec).catch(
-							(error) => {
-								logger.warn('Failed to recover screen share after encoder verification failure', {
-									error,
-									codec: action.codec,
-								});
-							},
-						);
-						return;
-					case 'accept-negotiated':
-						logger.info('Screen share publisher negotiated a different codec inside the publish policy', {
-							requested: action.requested,
-							negotiated: action.negotiated,
-						});
-						return;
-					case 'correct-negotiated':
-						logger.warn('Screen share is sending a codec outside the publish policy', {
-							requested: action.requested,
-							negotiated: action.negotiated,
-							alternative: action.alternative,
-						});
-						void this.correctVerifiedScreenShareCodec(room, participant, track, action).catch((error) => {
-							logger.warn('Failed to correct screen share codec after encoder verification', {
-								error,
-								requested: action.requested,
-							});
-						});
-						return;
-				}
+			onEncodeFailure: (failure) =>
+				this.handleScreenShareEncoderVerificationAction(
+					room,
+					participant,
+					track,
+					resolveScreenShareEncoderVerificationAction(failure),
+				),
+			reEnforce: async () => {
+				await this.trackPlumbing.enforceTrackSenderParameters(track, codec);
 			},
-		);
-		this.trackPlumbing.bindKeyFrameRequests(room, participant, track);
+		});
 		this.transitionScreenShareLifecycleInternal({type: 'share.encoderVerification.scheduled'});
+	}
+
+	private handleScreenShareEncoderVerificationAction(
+		room: Room | null,
+		participant: LocalParticipant,
+		track: LocalVideoTrack,
+		action: ScreenShareEncoderVerificationAction,
+	): void {
+		switch (action.kind) {
+			case 'stop-stalled':
+				recordScreenShareEncoderVerification('stop-stalled', null);
+				this.stopScreenShareAfterEncoderFailure(room, participant, track, action.codec, 'stalled');
+				return;
+			case 'recover-stalled':
+				recordScreenShareEncoderVerification('recover-stalled', null);
+				logger.warn('Screen share encoder verification failed', {
+					codec: action.codec,
+					failureReason: 'screen-share-encode-stalled',
+				});
+				void this.recoverActiveScreenShareAfterEncoderFailure(room, participant, track, action.codec).catch((error) => {
+					logger.warn('Failed to recover screen share after encoder verification failure', {
+						error,
+						codec: action.codec,
+					});
+				});
+				return;
+			case 'accept-negotiated':
+				recordScreenShareEncoderVerification('accept-negotiated', action.negotiated);
+				logger.info('Screen share publisher negotiated a different codec inside the publish policy', {
+					requested: action.requested,
+					negotiated: action.negotiated,
+				});
+				return;
+			case 'correct-negotiated':
+				recordScreenShareEncoderVerification('correct-negotiated', action.negotiated);
+				logger.warn('Screen share is sending a codec outside the publish policy', {
+					requested: action.requested,
+					negotiated: action.negotiated,
+					alternative: action.alternative,
+				});
+				void this.correctVerifiedScreenShareCodec(room, participant, track, action).catch((error) => {
+					logger.warn('Failed to correct screen share codec after encoder verification', {
+						error,
+						requested: action.requested,
+					});
+				});
+				return;
+		}
 	}
 
 	monitorActiveScreenShareEndInternal(
@@ -577,6 +679,7 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		preferredTrack?: LocalVideoTrack,
 	): void {
 		this.cleanupActiveScreenShareEndListenerInternal();
+		this.screenShareDeliveryArmed = ScreenShareDeliveryRollout.enabled;
 		const publication = preferredTrack ? undefined : participant.getTrackPublication(Track.Source.ScreenShare);
 		const videoTrack = preferredTrack ?? publication?.videoTrack;
 		const mediaStreamTrack = videoTrack?.mediaStreamTrack;
@@ -599,7 +702,8 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 				trigger,
 				readyState: mediaStreamTrack.readyState,
 			});
-			this.showScreenShareEndedModalInternal(i18n._(SCREEN_SHARE_SOURCE_STOPPED_DESCRIPTOR));
+			this.showScreenShareEndedModalInternal(i18n._(SCREEN_SHARE_SOURCE_STOPPED_DESCRIPTOR), 'source-stopped');
+			recordScreenShareStopped('media-track-ended');
 			this.transitionScreenShareLifecycleInternal({type: 'share.endedStop.start'});
 			const stopPromise = this.setScreenShareEnabled(room, false, {sendUpdate: true, playSound: true})
 				.catch((error) => {
@@ -614,9 +718,29 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 			this.endedScreenShareStopInFlight = stopPromise;
 		};
 		const onEnded = (): void => stopEndedScreenShare('ended-event');
+		const reportCapturePaused = (paused: boolean): void => {
+			if (!isCurrentScreenShareTrack()) return;
+			this.setScreenShareCapturePausedInternal(paused);
+			logger.info(
+				paused
+					? 'Screen share capture stopped delivering frames; the shared surface is static or hidden'
+					: 'Screen share capture started delivering frames again',
+				{readyState: mediaStreamTrack.readyState},
+			);
+		};
+		const onMuted = (): void => reportCapturePaused(true);
+		const onUnmuted = (): void => reportCapturePaused(false);
+		const tracksCapturePauses = this.screenShareDeliveryArmed;
 		mediaStreamTrack.addEventListener('ended', onEnded);
+		if (tracksCapturePauses) {
+			mediaStreamTrack.addEventListener('mute', onMuted);
+			mediaStreamTrack.addEventListener('unmute', onUnmuted);
+		}
 		this.activeScreenShareEndListener = () => {
 			mediaStreamTrack.removeEventListener('ended', onEnded);
+			if (!tracksCapturePauses) return;
+			mediaStreamTrack.removeEventListener('mute', onMuted);
+			mediaStreamTrack.removeEventListener('unmute', onUnmuted);
 		};
 		if (mediaStreamTrack.readyState === 'ended') {
 			queueMicrotask(() => stopEndedScreenShare('already-ended'));
@@ -629,6 +753,15 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		publishOptions?: TrackPublishOptions,
 	): Promise<boolean> {
 		return this.liveKitFlows.restoreReconnect(room, snapshot, publishOptions);
+	}
+
+	async restoreScreenShareAfterReconnect(
+		room: Room | null,
+		snapshot: ScreenShareReconnectSnapshot | null,
+	): Promise<boolean> {
+		if (snapshot !== null) return this.restoreScreenShareReconnect(room, snapshot);
+		await this.setScreenShareEnabled(room, true, {sendUpdate: false});
+		return LocalVoiceState.getSelfStream();
 	}
 
 	async cleanupLingeringScreenShareTracks(
@@ -663,6 +796,7 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 	}
 
 	handleLocalScreenShareTrackUnpublished(room: Room, playSound: boolean, publication?: LocalTrackPublication): void {
+		recordScreenShareStopped(this.isScreenSharePending ? 'user' : 'server-unpublish');
 		this.clearScreenShareKeepAliveSinkInternal();
 		this.cleanupActiveScreenShareEndListenerInternal();
 		const participant = room.localParticipant;
@@ -752,7 +886,7 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		options: {includeSelfWindowAudio?: boolean; replaceExisting?: boolean} = {},
 	): Promise<boolean> {
 		const participant = room?.localParticipant;
-		if (!participant || !participant.isScreenShareEnabled) return false;
+		if (!participant?.isScreenShareEnabled) return false;
 		if (!linuxRule) return false;
 		if (options.replaceExisting !== true) {
 			const reconfigured = await reconfigureLinuxNativeAudioRouting(linuxRule, options);
@@ -788,7 +922,7 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 
 	async ensureWindowScreenShareAudioPublication(room: Room | null, sourceId: string): Promise<boolean> {
 		const participant = room?.localParticipant;
-		if (!participant || !participant.isScreenShareEnabled) return false;
+		if (!participant?.isScreenShareEnabled) return false;
 		const targetPid = await getElectronAPI()
 			?.nativeAudio?.resolveAudioRootPidForSource(sourceId)
 			.catch((error) => {
@@ -823,7 +957,7 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 
 	async ensureDeviceScreenShareMicPublication(room: Room | null, audioDeviceId: string): Promise<boolean> {
 		const participant = room?.localParticipant;
-		if (!participant || !participant.isScreenShareEnabled) return false;
+		if (!participant?.isScreenShareEnabled) return false;
 		await ensureNativeMicrophonePermissionForDeviceShare('replace');
 		const micTrack = await createLocalAudioTrack({
 			deviceId: audioDeviceId && audioDeviceId !== 'default' ? audioDeviceId : undefined,
@@ -862,11 +996,40 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 			restartIfEnabled?: boolean;
 			reason?: string;
 			preserveStreamAudioPreferences?: boolean;
+			keepShareTracking?: boolean;
 		},
 		publishOptions?: TrackPublishOptions,
 	): Promise<void> {
 		assert.equal(typeof enabled, 'boolean');
-		await this.controllerRouting.setEnabled(room, enabled, options, publishOptions);
+		if (enabled) {
+			recordScreenShareStarted();
+		}
+		const leavesShareRunning = enabled ? options?.restartIfEnabled === true : options?.keepShareTracking === true;
+		const generation = this.screenShareTrackingGeneration;
+		if (leavesShareRunning) {
+			this.screenShareTrackingHolds += 1;
+		}
+		try {
+			await this.controllerRouting.setEnabled(room, enabled, options, publishOptions);
+		} catch (error) {
+			if (enabled) {
+				recordScreenShareStartError(error);
+			}
+			throw error;
+		} finally {
+			if (leavesShareRunning) {
+				this.screenShareTrackingHolds -= 1;
+				assert.ok(this.screenShareTrackingHolds >= 0, 'screen share tracking holds post-condition: never negative');
+				if (
+					enabled &&
+					this.screenShareTrackingHolds === 0 &&
+					generation === this.screenShareTrackingGeneration &&
+					room?.localParticipant?.isScreenShareEnabled !== true
+				) {
+					this.endScreenShareTracking();
+				}
+			}
+		}
 		if (!enabled && options?.preserveStreamAudioPreferences !== true) {
 			VoiceSettingsCommands.update({
 				shareAppAudio: true,
@@ -908,7 +1071,13 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		options?: DeviceScreenShareCaptureOptions,
 		publishOptions?: TrackPublishOptions,
 	): Promise<void> {
-		await this.liveKitFlows.startDeviceScreenShare(room, options, publishOptions);
+		recordScreenShareStarted();
+		try {
+			await this.liveKitFlows.startDeviceScreenShare(room, options, publishOptions);
+		} catch (error) {
+			recordScreenShareStartError(error);
+			throw error;
+		}
 	}
 
 	async replaceActiveDisplayScreenShare(
@@ -971,24 +1140,30 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 	private async applyActiveScreenShareResolutionSetting(
 		screenShareTrack: LocalVideoTrack,
 		resolution: NonNullable<ScreenShareCaptureOptions['resolution']>,
-	): Promise<boolean> {
+	): Promise<ScreenShareCaptureGeometryUpdate> {
 		assert.ok(screenShareTrack);
 		assert.ok(resolution);
 		const mediaStreamTrack = screenShareTrack.mediaStreamTrack;
-		const currentConstraints = mediaStreamTrack.getConstraints() as ScreenShareVideoConstraints;
-		const nextConstraints: ScreenShareVideoConstraints = {...currentConstraints};
+		const currentConstraints = mediaStreamTrack.getConstraints();
+		const nextConstraints: MediaTrackConstraints = {...currentConstraints};
 		if (resolution.width > 0) nextConstraints.width = {ideal: resolution.width};
 		if (resolution.height > 0) nextConstraints.height = {ideal: resolution.height};
 		if (resolution.frameRate !== undefined) {
 			nextConstraints.frameRate = {ideal: resolution.frameRate, max: resolution.frameRate};
 		}
-		if (JSON.stringify(currentConstraints) === JSON.stringify(nextConstraints)) return true;
+		if (JSON.stringify(currentConstraints) === JSON.stringify(nextConstraints)) return 'unchanged';
+		if (this.screenShareDeliveryArmed && screenShareSourceHasClonedTracks(screenShareTrack)) {
+			logger.warn('Screen share capture geometry needs a restart while a backup codec holds a clone of the source', {
+				resolution,
+			});
+			return 'needs-capture-restart';
+		}
 		try {
 			await mediaStreamTrack.applyConstraints(nextConstraints);
-			return true;
+			return 'applied';
 		} catch (error) {
 			logger.warn('Failed to update active screen share constraints', {error, resolution});
-			return false;
+			return 'failed';
 		}
 	}
 
@@ -1003,9 +1178,9 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 			return false;
 		}
 		const participant = room?.localParticipant;
-		if (!participant || !participant.isScreenShareEnabled) return false;
+		if (!participant?.isScreenShareEnabled) return false;
 		const screenSharePublication = participant.getTrackPublication(Track.Source.ScreenShare);
-		const screenShareTrack = screenSharePublication?.videoTrack;
+		const screenShareTrack = screenSharePublication?.videoTrack as LocalVideoTrack | undefined;
 		if (!screenShareTrack) {
 			logger.warn('No active screen share track to update');
 			return false;
@@ -1013,18 +1188,22 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		if (typeof options?.audio === 'boolean') {
 			await this.applyActiveScreenShareAudioSetting(participant, options.audio);
 		}
+		let geometryUpdate: ScreenShareCaptureGeometryUpdate = 'unchanged';
 		if (options?.resolution) {
-			await this.applyActiveScreenShareResolutionSetting(screenShareTrack, options.resolution);
+			geometryUpdate = await this.applyActiveScreenShareResolutionSetting(screenShareTrack, options.resolution);
 		}
 		if (options && Object.hasOwn(options, 'contentHint')) {
 			screenShareTrack.mediaStreamTrack.contentHint = options.contentHint ?? '';
 		}
-		await screenShareTrack.setDegradationPreference(SCREEN_SHARE_DEGRADATION_PREFERENCE);
+		await screenShareTrack.setDegradationPreference(
+			resolveScreenShareDegradationPreference(ensureCommittedScreenShareTarget()),
+		);
 		await this.enforceScreenShareSenderParametersInternal(participant, publishOptions);
 		this.ensureScreenShareKeepAliveSinkInternal(participant);
 		updateLocalParticipantFromRoom(room);
 		this.syncLocalScreenShareAudioStateInternal(participant, participant.isScreenShareEnabled);
-		return true;
+		if (!this.screenShareDeliveryArmed) return true;
+		return geometryUpdate !== 'needs-capture-restart' && geometryUpdate !== 'failed';
 	}
 
 	setScreenShareAudioMuted(room: Room | null, muted: boolean): void {
@@ -1046,13 +1225,17 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 	}
 
 	resetStreamTracking(): void {
+		this.screenShareDeliveryArmed = false;
+		this.setScreenShareCapturePausedInternal(false);
 		this.clearScreenShareKeepAliveSinkInternal();
 		this.setStreamingPriorityInternal(false);
 		this.transitionScreenShareLifecycleInternal({type: 'share.reset'});
 		this.cleanupActiveScreenShareEndListenerInternal();
 		this.cancelEncoderVerificationInternal();
 		this.endedScreenShareStopInFlight = null;
-		this.cleanupScreenShareAudioRoutingState();
+		this.screenShareTrackingGeneration += 1;
+		this.cleanupScreenShareAudioCaptureRouting();
+		this.endScreenShareTracking();
 	}
 }
 

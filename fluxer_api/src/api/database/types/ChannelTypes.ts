@@ -9,7 +9,7 @@ import type {
 	UserID,
 	WebhookID,
 	WebhookToken,
-} from '../../BrandedTypes';
+} from '@app/api/BrandedTypes';
 
 type Nullish<T> = T | null;
 

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Config} from '../Config';
+import {Config} from '@app/api/Config';
 import {
 	type AccountPolicyContactCapability,
 	createAccountPolicyContactContext,
@@ -8,8 +8,8 @@ import {
 	createAccountPolicyEvaluatorFromConfig,
 	type IAccountPolicyEvaluator,
 	isAccountPolicyConfigMissing,
-} from './AccountPolicyEvaluator';
-import type {ReverseDnsClassification} from './RiskTypes';
+} from '@app/api/risk/AccountPolicyEvaluator';
+import type {ReverseDnsClassification} from '@app/api/risk/RiskTypes';
 
 let injectedAccountPolicyEvaluator: IAccountPolicyEvaluator | null = null;
 let configuredAccountPolicyEvaluator: IAccountPolicyEvaluator | null = null;

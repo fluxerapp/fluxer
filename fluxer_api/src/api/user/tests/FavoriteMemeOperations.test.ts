@@ -1,21 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {MessageAttachmentFlags} from '@fluxer/constants/src/ChannelConstants';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {AttachmentDecayRepository} from '../../attachment/AttachmentDecayRepository';
-import {createAttachmentID, createMemeID, createUserID} from '../../BrandedTypes';
+import {AttachmentDecayRepository} from '@app/api/attachment/AttachmentDecayRepository';
+import {createAttachmentID, createMemeID, createUserID} from '@app/api/BrandedTypes';
 import {
 	createTestAccountForAttachmentTests,
 	sendMessageWithAttachments,
 	setupTestGuildAndChannel,
-} from '../../channel/tests/AttachmentTestUtils';
-import {fetchOne} from '../../database/CassandraQueryExecution';
-import {Db} from '../../database/CassandraTypes';
-import {FavoriteMemes} from '../../Tables';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {getExpiryBucket} from '../../utils/AttachmentDecay';
+} from '@app/api/channel/tests/AttachmentTestUtils';
+import {fetchOne} from '@app/api/database/CassandraQueryExecution';
+import {Db} from '@app/api/database/CassandraTypes';
+import {FavoriteMemes} from '@app/api/Tables';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {
 	createFavoriteMemeFromMessage,
 	createMessageWithImageAttachment,
@@ -23,7 +20,10 @@ import {
 	getFavoriteMeme,
 	listFavoriteMemes,
 	updateFavoriteMeme,
-} from './FavoriteMemeTestUtils';
+} from '@app/api/user/tests/FavoriteMemeTestUtils';
+import {getExpiryBucket} from '@app/api/utils/AttachmentDecay';
+import {MessageAttachmentFlags} from '@fluxer/constants/src/ChannelConstants';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 function animatedWebpProbeFixture(): Buffer {
 	const buffer = Buffer.alloc(48);

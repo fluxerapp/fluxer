@@ -8,10 +8,11 @@ import {TooManyReactionsModal} from '@app/features/messaging/components/alerts/T
 import MessageReactions from '@app/features/messaging/state/MessageReactions';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import type {ReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
+import {resolveRetryAfterMs} from '@app/features/messaging/utils/RetryAfterUtils';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {failureCode, failureRetryAfter} from '@app/features/platform/utils/ResponseInspection';
+import {failureCode} from '@app/features/platform/utils/ResponseInspection';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
@@ -23,7 +24,7 @@ import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
 const YOU_CAN_T_ADD_NEW_REACTIONS_WHILE_YOU_DESCRIPTOR = msg({
-	message: "You can't add new reactions while you're on timeout.",
+	message: "You can't add new reactions while you're timed out.",
 	comment: 'Error message in the messaging commands.',
 });
 const logger = new Logger('MessageReactions');
@@ -41,7 +42,7 @@ type ReactionOptimisticType =
 	| 'MESSAGE_REACTION_REMOVE_ALL'
 	| 'MESSAGE_REACTION_REMOVE_EMOJI';
 
-const checkReactionResponse = (i18n: I18n, error: HttpError, retry: () => void): boolean => {
+const checkReactionResponse = (i18n: I18n, error: HttpError): boolean => {
 	const errorCode = failureCode(error);
 	if (error.status === 403) {
 		if (errorCode === APIErrorCodes.FEATURE_TEMPORARILY_DISABLED) {
@@ -61,12 +62,6 @@ const checkReactionResponse = (i18n: I18n, error: HttpError, retry: () => void):
 			});
 			return true;
 		}
-	}
-	if (error.status === 429) {
-		const retryAfter = failureRetryAfter(error) || 1000;
-		logger.debug(`Rate limited, retrying after ${retryAfter}ms`);
-		setTimeout(retry, retryAfter);
-		return false;
 	}
 	if (error.status === 400) {
 		switch (errorCode) {
@@ -220,12 +215,11 @@ async function retryWithExponentialBackoff<T>(func: () => Promise<T>, attempts =
 	try {
 		return await func();
 	} catch (error) {
-		const status = error instanceof HttpError ? error.status : undefined;
-		if (status !== 429) {
+		if (!(error instanceof HttpError) || error.status !== 429) {
 			throw error;
 		}
 		if (attempts < MAX_RETRIES) {
-			const backoffTime = 2 ** attempts * 1000;
+			const backoffTime = Math.max(2 ** attempts * 1000, resolveRetryAfterMs(error) ?? 0);
 			logger.debug(`Rate limited, retrying in ${backoffTime}ms (attempt ${attempts + 1}/${MAX_RETRIES})`);
 			await delay(backoffTime);
 			return retryWithExponentialBackoff(func, attempts + 1);
@@ -246,11 +240,7 @@ const performReactionAction = (
 ): void => {
 	optimisticUpdate(type, channelId, messageId, emoji, userId);
 	retryWithExponentialBackoff(apiFunc).catch((error) => {
-		if (
-			checkReactionResponse(i18n, error, () =>
-				performReactionAction(i18n, type, apiFunc, channelId, messageId, emoji, userId),
-			)
-		) {
+		if (checkReactionResponse(i18n, error)) {
 			logger.debug(`Reverting optimistic update for reaction in message ${messageId}`);
 			optimisticUpdate(
 				type === 'MESSAGE_REACTION_ADD' ? 'MESSAGE_REACTION_REMOVE' : 'MESSAGE_REACTION_ADD',
@@ -329,7 +319,7 @@ export function removeAllReactions(i18n: I18n, channelId: string, messageId: str
 	logger.debug(`Removing all reactions from message ${messageId} in channel ${channelId}`);
 	const apiFunc = () => removeAllReactionsRequest(channelId, messageId);
 	retryWithExponentialBackoff(apiFunc).catch((error) => {
-		checkReactionResponse(i18n, error, () => removeAllReactions(i18n, channelId, messageId));
+		checkReactionResponse(i18n, error);
 	});
 }
 
@@ -338,6 +328,6 @@ export function removeReactionEmoji(i18n: I18n, channelId: string, messageId: st
 	optimisticUpdate('MESSAGE_REACTION_REMOVE_EMOJI', channelId, messageId, emoji);
 	const apiFunc = () => removeReactionEmojiRequest(channelId, messageId, emoji);
 	retryWithExponentialBackoff(apiFunc).catch((error) => {
-		checkReactionResponse(i18n, error, () => removeReactionEmoji(i18n, channelId, messageId, emoji));
+		checkReactionResponse(i18n, error);
 	});
 }

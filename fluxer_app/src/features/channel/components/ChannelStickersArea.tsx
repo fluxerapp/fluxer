@@ -4,7 +4,6 @@ import * as ChannelStickerCommands from '@app/features/channel/commands/ChannelS
 import styles from '@app/features/channel/components/ChannelStickersArea.module.css';
 import ChannelSticker from '@app/features/channel/state/ChannelSticker';
 import {useStickerAnimation} from '@app/features/emoji/hooks/useStickerAnimation';
-import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
 import {StickerContextMenuItems} from '@app/features/ui/action_menu/items/StickerContextMenuItems';
 import * as ContextMenuCommands from '@app/features/ui/commands/ContextMenuCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -16,7 +15,6 @@ import {TrashIcon} from '@phosphor-icons/react';
 import {clsx} from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useEffect, useState} from 'react';
 
 const REMOVE_STICKER_DESCRIPTOR = msg({
 	message: 'Remove sticker',
@@ -33,15 +31,6 @@ export const ChannelStickersArea: React.FC<ChannelStickersAreaProps> = observer(
 	const {i18n} = useLingui();
 	const sticker = ChannelSticker.getPendingSticker(channelId);
 	const {shouldAnimate, interactionHandlers} = useStickerAnimation({isAnimated: sticker?.animated ?? false});
-	const [previousSticker, setPreviousSticker] = useState(sticker);
-	useEffect(() => {
-		if (previousSticker && !sticker) {
-			ComponentBus.dispatch('FORCE_JUMP_TO_PRESENT');
-		} else if (!previousSticker && sticker) {
-			ComponentBus.dispatch('FORCE_JUMP_TO_PRESENT');
-		}
-		setPreviousSticker(sticker);
-	}, [sticker, previousSticker]);
 	if (!sticker) {
 		return null;
 	}

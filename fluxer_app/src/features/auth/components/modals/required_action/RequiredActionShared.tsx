@@ -83,6 +83,7 @@ const EMAIL_VALIDATION_CODES = new Set<string>([
 	ValidationErrorCodes.INVALID_EMAIL_FORMAT,
 	ValidationErrorCodes.INVALID_EMAIL_LOCAL_PART,
 	ValidationErrorCodes.INVALID_EMAIL_ADDRESS,
+	ValidationErrorCodes.EMAIL_DOMAIN_CANNOT_RECEIVE_MAIL,
 ]);
 const CODE_SESSION_VALIDATION_CODES = new Set<string>([
 	ValidationErrorCodes.EMAIL_TOKEN_EXPIRED,

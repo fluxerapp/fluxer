@@ -1,9 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Readable} from 'node:stream';
+import {createChannelID, createMessageID} from '@app/api/BrandedTypes';
+import {StorageObjectRangeNotSatisfiableError} from '@app/api/infrastructure/IStorageService';
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {HarvestIdParam, MessageIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {MessageListResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import {
+	HarvestArchiveResponse,
 	HarvestCreationResponseSchema,
 	HarvestDownloadUrlResponse,
 	HarvestStatusResponseSchema,
@@ -17,14 +26,6 @@ import {
 	UserSavedMessagesQueryRequest,
 } from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 import {SavedMessageEntryListResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {createChannelID, createMessageID} from '../../BrandedTypes';
-import {StorageObjectRangeNotSatisfiableError} from '../../infrastructure/IStorageService';
-import {DefaultUserOnly, LoginRequired} from '../../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
 
 export function UserContentController(app: HonoApp) {
 	app.get(
@@ -123,9 +124,11 @@ export function UserContentController(app: HonoApp) {
 				'Retrieves all messages saved by the current user. Messages are saved privately for easy reference. Returns paginated list of saved messages with metadata.',
 		}),
 		async (ctx) => {
+			const {limit, before} = ctx.req.valid('query');
 			const response = await ctx.get('userContentRequestService').listSavedMessages({
 				userId: ctx.get('user').id,
-				limit: ctx.req.valid('query').limit,
+				limit,
+				before: before ? createMessageID(before) : undefined,
 				requestCache: ctx.get('requestCache'),
 			});
 			return ctx.json(response, 200);
@@ -278,8 +281,9 @@ export function UserContentController(app: HonoApp) {
 		OpenAPI({
 			operationId: 'download_data_harvest_archive',
 			summary: 'Download data harvest archive',
-			responseSchema: null,
-			statusCode: 200,
+			responseSchema: HarvestArchiveResponse,
+			responseContentType: 'application/zip',
+			statusCode: [200, 206],
 			security: [],
 			tags: ['Users'],
 			description:

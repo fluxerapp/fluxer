@@ -26,6 +26,7 @@ export const ChannelTopicModal = observer(({channelId}: ChannelTopicModalProps) 
 							options={{
 								context: MarkdownContext.STANDARD_WITHOUT_JUMBO,
 								channelId,
+								disableEmojiInfoCard: true,
 							}}
 							data-flx="channel.channel-topic-modal.safe-markdown"
 						/>

@@ -1,5 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {phonePrefixBanCache} from '@app/api/auth/PhonePrefixBanCache';
+import {requiresInboundPhoneVerification} from '@app/api/auth/PhoneVerificationPrefixPolicy';
+import {PhoneVerificationReuseStore} from '@app/api/auth/PhoneVerificationReuseStore';
+import type {IssuedChallenge} from '@app/api/auth/services/InboundSmsChallengeService';
+import type {PhoneAttemptInboundReason, PhoneAttemptRejectReason} from '@app/api/auth/services/PhoneLookupRepository';
+import type {UserID} from '@app/api/BrandedTypes';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
+import {mapUserToPartialResponse, mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {PHONE_ADD_CLEARABLE_FLAGS, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {BotUserAuthEndpointAccessDeniedError} from '@fluxer/errors/src/domains/auth/BotUserAuthEndpointAccessDeniedError';
@@ -16,6 +26,7 @@ import {PhoneVerificationRequiredError} from '@fluxer/errors/src/domains/auth/Ph
 import {SmsVerificationUnavailableError} from '@fluxer/errors/src/domains/auth/SmsVerificationUnavailableError';
 import {CaptchaVerificationRequiredError} from '@fluxer/errors/src/domains/core/CaptchaVerificationRequiredError';
 import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
+import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {FluxerError} from '@fluxer/errors/src/FluxerError';
 import {PHONE_E164_REGEX} from '@fluxer/schema/src/primitives/UserValidators';
 import type {RateLimitResult, RateLimitScope} from '@pkgs/rate_limit/src/IRateLimitService';
@@ -28,17 +39,6 @@ import {
 } from '@pkgs/sms/src/PhoneLookupTypes';
 import {SmsVerificationStartError, TwilioVerificationRateLimitError} from '@pkgs/sms/src/providers/TwilioSmsProvider';
 import type {SmsVerificationStartOptions} from '@pkgs/sms/src/SmsVerificationTypes';
-import type {ApiContext} from '../ApiContext';
-import type {UserID} from '../BrandedTypes';
-import {Logger} from '../Logger';
-import type {User} from '../models/User';
-import {getUserSearchService} from '../SearchFactory';
-import {mapUserToPartialResponse, mapUserToPrivateResponse} from '../user/UserMappers';
-import {phonePrefixBanCache} from './PhonePrefixBanCache';
-import {requiresInboundPhoneVerification} from './PhoneVerificationPrefixPolicy';
-import {PhoneVerificationReuseStore} from './PhoneVerificationReuseStore';
-import type {IssuedChallenge} from './services/InboundSmsChallengeService';
-import type {PhoneAttemptInboundReason, PhoneAttemptRejectReason} from './services/PhoneLookupRepository';
 
 const MINUTE_MS = 60_000;
 const HOUR_MS = 60 * MINUTE_MS;
@@ -74,15 +74,16 @@ function reuseStoreFor(ctx: ApiContext): PhoneVerificationReuseStore {
 
 export async function startInboundPhoneChallenge(ctx: ApiContext, userId: UserID): Promise<IssuedChallenge> {
 	const {inboundSmsChallenge, users, config} = ctx.services;
-	if (!inboundSmsChallenge) {
-		throw new Error('Inbound SMS challenge flow is not configured on this instance');
-	}
 	const ourNumber = config.sms.inboundChallengeNumber;
-	if (!ourNumber) {
-		throw new Error('Config.sms.inboundChallengeNumber is required for the inbound SMS challenge flow');
+	if (!inboundSmsChallenge || !ourNumber) {
+		Logger.warn(
+			{userId: String(userId)},
+			'Inbound SMS challenge requested but FLUXER_SMS_INBOUND_CHALLENGE_NUMBER is unset',
+		);
+		throw new SmsVerificationUnavailableError();
 	}
 	const user = await users.findUnique(userId);
-	if (!user) throw new Error('User not found');
+	if (!user) throw new UnknownUserError();
 	assertNonBotUser(user);
 	return inboundSmsChallenge.issueChallenge({userId, ourNumber});
 }
@@ -365,12 +366,6 @@ async function attachVerifiedPhoneToAccount(ctx: ApiContext, userId: UserID, pho
 		reason: 'user_requested',
 		actorUserId: userId,
 	});
-	const userSearchService = getUserSearchService();
-	if (userSearchService && 'updateUser' in userSearchService) {
-		await userSearchService.updateUser(updatedUser).catch((error) => {
-			Logger.error({userId, error}, 'Failed to update user in search index');
-		});
-	}
 	await gateway.dispatchPresence({
 		userId,
 		event: 'USER_UPDATE',

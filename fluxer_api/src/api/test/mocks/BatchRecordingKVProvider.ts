@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import type {IKVPipeline} from '@pkgs/kv_client/src/IKVProvider';
 import {computeHashSlot} from '@pkgs/kv_client/src/KVHashSlots';
-import {MockKVProvider} from './MockKVProvider';
 
 type BatchMode = 'multi' | 'pipeline';
 

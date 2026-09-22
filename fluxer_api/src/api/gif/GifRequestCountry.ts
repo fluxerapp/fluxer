@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {lookupGeoip} from '../utils/IpUtils';
+import {lookupGeoip} from '@app/api/utils/IpUtils';
 
 const KLIPY_DEFAULT_COUNTRY = 'US';
 

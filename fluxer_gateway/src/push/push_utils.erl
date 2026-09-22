@@ -9,6 +9,7 @@
     get_default_avatar_url/1,
     extract_origin/1,
     generate_vapid_token/3,
+    assert_vapid_pair/2,
     generate_jwt_from_pem/3,
     base64url_encode/1,
     base64url_decode/1,
@@ -165,6 +166,31 @@ build_ec_jwk(PrivRaw, PubRaw) ->
 -spec unwrap_jwk(term()) -> term().
 unwrap_jwk({JW, _Fields}) -> JW;
 unwrap_jwk(JW) -> JW.
+
+-spec assert_vapid_pair(binary(), binary()) -> ok.
+assert_vapid_pair(PublicKeyB64Url, PrivateKeyB64Url) ->
+    ensure_crypto_started(),
+    PubRaw = decode_or_error(PublicKeyB64Url, invalid_public_key),
+    PrivRaw = decode_or_error(PrivateKeyB64Url, invalid_private_key),
+    case {PubRaw, PrivRaw} of
+        {<<4, _:64/binary>>, <<_:32/binary>>} ->
+            assert_vapid_scalar_derives_point(PublicKeyB64Url, PubRaw, PrivRaw);
+        _ ->
+            erlang:error({vapid_keys_malformed, byte_size(PubRaw), byte_size(PrivRaw)})
+    end.
+
+-spec assert_vapid_scalar_derives_point(binary(), binary(), binary()) -> ok.
+assert_vapid_scalar_derives_point(PublicKeyB64Url, PubRaw, PrivRaw) ->
+    Derived =
+        try crypto:generate_key(ecdh, prime256v1, PrivRaw) of
+            {Point, _} -> Point
+        catch
+            _:_ -> undefined
+        end,
+    case Derived of
+        PubRaw -> ok;
+        _ -> erlang:error({vapid_keys_mismatched, PublicKeyB64Url})
+    end.
 
 -spec sign_and_compact(term(), map(), map()) -> binary().
 sign_and_compact(JWK, Header, Claims) ->

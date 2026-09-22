@@ -212,6 +212,7 @@ export interface DownloadFileOptions {
 export interface DownloadFileResult {
 	success: boolean;
 	canceled?: boolean;
+	checksumMismatch?: boolean;
 	path?: string;
 	error?: string;
 }
@@ -357,7 +358,7 @@ export interface ElectronAPI {
 	requestInputMonitoringPermission?: () => Promise<InputMonitoringPermissionStatus>;
 	getScreenRecordingPermissionStatus?: () => Promise<InputMonitoringPermissionStatus>;
 	requestScreenRecordingPermission?: () => Promise<InputMonitoringPermissionStatus>;
-	downloadFile: (url: string, defaultPath: string) => Promise<DownloadFileResult>;
+	downloadFile: (url: string, defaultPath: string, sha256?: string | null) => Promise<DownloadFileResult>;
 	toggleDevTools: () => void;
 	showNotification: (options: NotificationOptions) => Promise<NotificationResult>;
 	shouldPlayNotificationSound?: () => Promise<boolean>;

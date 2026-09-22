@@ -46,9 +46,6 @@ fn find_import_start(source: &str) -> Option<usize> {
         }
         offset += line.len();
     }
-    if source[offset..].starts_with("import ") {
-        return Some(offset);
-    }
     None
 }
 

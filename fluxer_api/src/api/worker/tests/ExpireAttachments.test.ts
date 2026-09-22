@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AttachmentDecayRepository} from '@app/api/attachment/AttachmentDecayRepository';
+import {createAttachmentID, createChannelID, createMessageID} from '@app/api/BrandedTypes';
+import type {IAssetDeletionQueue, QueuedAssetDeletion} from '@app/api/infrastructure/IAssetDeletionQueue';
+import type {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
+import {getExpiryBucket} from '@app/api/utils/AttachmentDecay';
+import {processExpiredAttachments} from '@app/api/worker/tasks/ExpireAttachments';
+import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
 import {ms} from 'itty-time';
 import {afterEach, describe, expect, it} from 'vitest';
-import {AttachmentDecayRepository} from '../../attachment/AttachmentDecayRepository';
-import {createAttachmentID, createChannelID, createMessageID} from '../../BrandedTypes';
-import type {IAssetDeletionQueue, QueuedAssetDeletion} from '../../infrastructure/IAssetDeletionQueue';
-import type {InstanceConfigRepository} from '../../instance/InstanceConfigRepository';
-import {getExpiryBucket} from '../../utils/AttachmentDecay';
-import {processExpiredAttachments} from '../tasks/ExpireAttachments';
-import {clearWorkerDependencies, setWorkerDependenciesForTest} from '../WorkerContext';
 
 const ATTACHMENT_ID = createAttachmentID(9001n);
 const CHANNEL_ID = createChannelID(9002n);

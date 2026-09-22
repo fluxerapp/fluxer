@@ -78,9 +78,11 @@ fn report_section(
         }
     };
 
-    let offset = current_page as u64 * limit as u64;
+    let offset = u64::from(current_page) * u64::from(limit);
     let has_previous = current_page > 0;
-    let has_next = offset + (reports.len() as u64) < total;
+    let next_page = current_page
+        .checked_add(1)
+        .filter(|_| (reports.len() as u64) < total.saturating_sub(offset));
 
     let (sent_page, received_page) = if kind == "sent" {
         (current_page, other_page)
@@ -115,7 +117,7 @@ fn report_section(
                     ))
                 }
 
-                @if has_previous || has_next {
+                @if has_previous || next_page.is_some() {
                     div class="flex justify-center gap-2" {
                         @if has_previous {
                             a href={(base) "/users/" (user_id) "?tab=reports&reports_limit=" (limit) "&reports_sent_page=" (if kind == "sent" { current_page - 1 } else { sent_page }) "&reports_received_page=" (if kind == "received" { current_page - 1 } else { received_page })}
@@ -125,8 +127,8 @@ fn report_section(
                                 "Previous"
                             }
                         }
-                        @if has_next {
-                            a href={(base) "/users/" (user_id) "?tab=reports&reports_limit=" (limit) "&reports_sent_page=" (if kind == "sent" { current_page + 1 } else { sent_page }) "&reports_received_page=" (if kind == "received" { current_page + 1 } else { received_page })}
+                        @if let Some(next_page) = next_page {
+                            a href={(base) "/users/" (user_id) "?tab=reports&reports_limit=" (limit) "&reports_sent_page=" (if kind == "sent" { next_page } else { sent_page }) "&reports_received_page=" (if kind == "received" { next_page } else { received_page })}
                                 class="inline-flex items-center rounded-md border \
                                        border-neutral-300 bg-white px-3 py-2 text-sm \
                                        font-medium text-neutral-700 hover:bg-neutral-50" {

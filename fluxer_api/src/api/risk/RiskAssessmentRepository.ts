@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomUUID} from 'node:crypto';
-import type {UserID} from '../BrandedTypes';
-import {BatchBuilder} from '../database/CassandraQueryExecution';
-import {RiskAssessments, RiskAssessmentsByUser} from '../Tables';
-import type {RiskAssessment} from './RiskTypes';
+import type {UserID} from '@app/api/BrandedTypes';
+import {BatchBuilder} from '@app/api/database/CassandraQueryExecution';
+import type {RiskAssessment} from '@app/api/risk/RiskTypes';
+import {RiskAssessments, RiskAssessmentsByUser} from '@app/api/Tables';
 
 export interface IRiskAssessmentRepository {
 	recordAssessment(params: {

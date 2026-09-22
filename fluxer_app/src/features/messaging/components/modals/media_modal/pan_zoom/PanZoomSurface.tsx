@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import styles from '@app/features/messaging/components/modals/media_modal/pan_zoom/PanZoomSurface.module.css';
+import {
+	type PanZoomTransformSnapshot,
+	type UsePanZoomSurfaceOptions,
+	usePanZoomSurface,
+} from '@app/features/messaging/components/modals/media_modal/pan_zoom/usePanZoomSurface';
 import type {ZoomState} from '@app/features/messaging/components/modals/media_modal/shared';
 import {clsx} from 'clsx';
 import {motion} from 'framer-motion';
 import type {CSSProperties, HTMLAttributes, ReactNode} from 'react';
 import {forwardRef, memo, useImperativeHandle} from 'react';
-import styles from './PanZoomSurface.module.css';
-import {type PanZoomTransformSnapshot, type UsePanZoomSurfaceOptions, usePanZoomSurface} from './usePanZoomSurface';
 
 export interface PanZoomSurfaceHandle {
 	reset: () => void;

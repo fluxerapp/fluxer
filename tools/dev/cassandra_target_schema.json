@@ -789,6 +789,10 @@
 					"type": "timestamp"
 				},
 				{
+					"name": "attempt_id",
+					"type": "text"
+				},
+				{
 					"name": "started_at",
 					"type": "timestamp"
 				},
@@ -798,6 +802,10 @@
 				},
 				{
 					"name": "failed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "terminal_failed_at",
 					"type": "timestamp"
 				},
 				{
@@ -3735,6 +3743,10 @@
 				{
 					"name": "subscription_cancel_at",
 					"type": "timestamp"
+				},
+				{
+					"name": "subscription_status",
+					"type": "text"
 				},
 				{
 					"name": "created_at",
@@ -7785,57 +7797,6 @@
 			"options": "CLUSTERING ORDER BY (message_id DESC)"
 		},
 		{
-			"name": "scheduled_messages",
-			"columns": [
-				{
-					"name": "user_id",
-					"type": "bigint"
-				},
-				{
-					"name": "scheduled_message_id",
-					"type": "bigint"
-				},
-				{
-					"name": "channel_id",
-					"type": "bigint"
-				},
-				{
-					"name": "payload",
-					"type": "text"
-				},
-				{
-					"name": "scheduled_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "scheduled_local_at",
-					"type": "text"
-				},
-				{
-					"name": "timezone",
-					"type": "text"
-				},
-				{
-					"name": "status",
-					"type": "text"
-				},
-				{
-					"name": "status_reason",
-					"type": "text"
-				},
-				{
-					"name": "created_at",
-					"type": "timestamp"
-				},
-				{
-					"name": "invalidated_at",
-					"type": "timestamp"
-				}
-			],
-			"primary_key": "((user_id), scheduled_message_id)",
-			"options": "CLUSTERING ORDER BY (scheduled_message_id DESC)"
-		},
-		{
 			"name": "suspicious_email_domains",
 			"columns": [
 				{
@@ -7945,6 +7906,10 @@
 					"type": "text"
 				},
 				{
+					"name": "oauth_grant_id",
+					"type": "text"
+				},
+				{
 					"name": "verified_at",
 					"type": "timestamp"
 				},
@@ -7957,8 +7922,24 @@
 					"type": "timestamp"
 				},
 				{
+					"name": "revision",
+					"type": "text"
+				},
+				{
 					"name": "version",
 					"type": "int"
+				},
+				{
+					"name": "membership",
+					"type": "text"
+				},
+				{
+					"name": "credential_payload",
+					"type": "text"
+				},
+				{
+					"name": "credential_expires_at",
+					"type": "timestamp"
 				}
 			],
 			"primary_key": "((user_id), connection_type, connection_id)",
@@ -8224,6 +8205,10 @@
 					"type": "timestamp"
 				},
 				{
+					"name": "attempt_id",
+					"type": "text"
+				},
+				{
 					"name": "started_at",
 					"type": "timestamp"
 				},
@@ -8233,6 +8218,10 @@
 				},
 				{
 					"name": "failed_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "terminal_failed_at",
 					"type": "timestamp"
 				},
 				{
@@ -8614,6 +8603,10 @@
 					"type": "timestamp"
 				},
 				{
+					"name": "deletion_started_at",
+					"type": "timestamp"
+				},
+				{
 					"name": "pending_bulk_message_deletion_at",
 					"type": "timestamp"
 				},
@@ -8934,6 +8927,10 @@
 				{
 					"name": "longitude",
 					"type": "double"
+				},
+				{
+					"name": "soft_connection_limit",
+					"type": "int"
 				}
 			],
 			"primary_key": "((region_id), server_id)",

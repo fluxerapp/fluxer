@@ -43,6 +43,7 @@ export function useWindowEventListeners({preventDocumentScroll}: WindowEventList
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 		window.addEventListener('mousedown', handleImmediateActivity);
 		window.addEventListener('keydown', handleUserActivity);
+		window.addEventListener('input', handleUserActivity);
 		window.addEventListener('resize', handleResize);
 		window.addEventListener('touchstart', handleImmediateActivity);
 		document.addEventListener('touchstart', preventPinchZoom, {passive: false});
@@ -58,6 +59,7 @@ export function useWindowEventListeners({preventDocumentScroll}: WindowEventList
 			document.removeEventListener('visibilitychange', handleVisibilityChange);
 			window.removeEventListener('mousedown', handleImmediateActivity);
 			window.removeEventListener('keydown', handleUserActivity);
+			window.removeEventListener('input', handleUserActivity);
 			window.removeEventListener('resize', handleResize);
 			window.removeEventListener('touchstart', handleImmediateActivity);
 			document.removeEventListener('touchstart', preventPinchZoom);

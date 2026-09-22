@@ -7,6 +7,7 @@ import {
 	$selectComposerNodeBoundary,
 	$selectComposerRange,
 } from '@app/features/lexical/composer/composerOffsets';
+import {$isComposerBlockquoteLineNode} from '@app/features/lexical/composer/nodes/ComposerBlockquoteLineNode';
 import {$createComposerCustomEmojiNode} from '@app/features/lexical/composer/nodes/ComposerCustomEmojiNode';
 import {
 	$createComposerStandardEmojiNode,
@@ -28,17 +29,19 @@ export function registerComposerEmojiShortcode(editor: LexicalEditor, resolve: C
 }
 
 function findUnicodeEmoji(text: string, startIndex: number): TypedEmojiMatch | null {
-	const pattern = new RegExp(UnicodeEmojis.EMOJI_SURROGATE_RE.source, 'g');
-	pattern.lastIndex = startIndex;
-	const match = pattern.exec(text);
-	if (match == null) {
+	const matches = UnicodeEmojis.matchEmojiSurrogates(text, startIndex);
+	let match = matches.next().value;
+	if (match && UnicodeEmojis.isInsideRegionalIndicatorPair(text, match.end)) {
+		match = matches.next().value;
+	}
+	if (!match) {
 		return null;
 	}
-	const name = UnicodeEmojis.nameForSurrogate(match[0], false);
+	const name = match.name;
 	if (!name) {
 		return null;
 	}
-	return {start: match.index, end: match.index + match[0].length, name};
+	return {start: match.start, end: match.end, name};
 }
 
 interface EmojiToken extends TypedEmojiMatch {
@@ -72,7 +75,7 @@ export function $convertEmojiShortcode(node: TextNode, resolve: ComposerEmojiRes
 		return;
 	}
 	const parent = node.getParent();
-	if (parent == null || parent.getType() !== 'paragraph') {
+	if (parent == null || (parent.getType() !== 'paragraph' && !$isComposerBlockquoteLineNode(parent))) {
 		return;
 	}
 	const text = node.getTextContent();

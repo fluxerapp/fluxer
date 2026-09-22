@@ -56,7 +56,7 @@ export const AccountDeleteModal = observer(() => {
 									<Trans>Once deletion is processed, you cannot recover access to your account</Trans>
 								</li>
 								<li data-flx="auth.account-delete-modal.li--4">
-									<Trans>You will not be able to delete your sent messages after your account is deleted</Trans>
+									<Trans>After your account is deleted, you will not be able to delete the messages you sent</Trans>
 								</li>
 							</ul>
 						</div>

@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {FilenameType} from '@fluxer/schema/src/primitives/FileValidators';
+import {createQueryIntegerType} from '@fluxer/schema/src/primitives/QueryValidators';
 import {Int32Type, SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
+
+const FALSE_QUERY_VALUES = ['false', 'False', '0'];
 
 export const LookupMessageRequest = z.object({
 	channel_id: SnowflakeType,
@@ -59,12 +62,6 @@ export const MessageShredResponse = z.object({
 
 export type MessageShredResponse = z.infer<typeof MessageShredResponse>;
 
-export const MessageShredStatusRequest = z.object({
-	job_id: z.string(),
-});
-
-export type MessageShredStatusRequest = z.infer<typeof MessageShredStatusRequest>;
-
 export const DeleteAllUserMessagesRequest = z.object({
 	user_id: SnowflakeType,
 	dry_run: z.boolean().default(true),
@@ -87,3 +84,34 @@ export const BulkDeleteUserMessagesRequest = z.object({
 });
 
 export type BulkDeleteUserMessagesRequest = z.infer<typeof BulkDeleteUserMessagesRequest>;
+export const AdminMessageDetailQuery = z.object({
+	context_limit: createQueryIntegerType({defaultValue: 50, minValue: 1, maxValue: 100}).describe(
+		'How many messages surrounding the requested message to return as context (1-100, default 50)',
+	),
+});
+
+export type AdminMessageDetailQuery = z.infer<typeof AdminMessageDetailQuery>;
+
+export const AdminUserMessageShredRequest = z.object({
+	entries: z.array(MessageShredEntryType).min(1).max(1000),
+});
+
+export type AdminUserMessageShredRequest = z.infer<typeof AdminUserMessageShredRequest>;
+
+export const AdminUserMessageDeleteQuery = z.object({
+	dry_run: z
+		.string()
+		.trim()
+		.optional()
+		.default('true')
+		.transform((value) => !FALSE_QUERY_VALUES.includes(value))
+		.describe('Count the messages that would be deleted without deleting anything (default true)'),
+});
+
+export type AdminUserMessageDeleteQuery = z.infer<typeof AdminUserMessageDeleteQuery>;
+
+export const MessageShredJobIdParam = z.object({
+	job_id: SnowflakeType.describe('The ID of the message shred job'),
+});
+
+export type MessageShredJobIdParam = z.infer<typeof MessageShredJobIdParam>;

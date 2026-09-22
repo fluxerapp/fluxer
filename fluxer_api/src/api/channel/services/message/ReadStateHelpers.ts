@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, MessageID} from '@app/api/BrandedTypes';
+import type {User} from '@app/api/models/User';
+import type {ReadStateService} from '@app/api/read_state/ReadStateService';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
-import type {ChannelID, MessageID} from '../../../BrandedTypes';
-import type {User} from '../../../models/User';
-import type {ReadStateService} from '../../../read_state/ReadStateService';
-import type {IUserRepository} from '../../../user/IUserRepository';
 
 interface IncrementDmMentionCountsParams {
 	readStateService: ReadStateService;

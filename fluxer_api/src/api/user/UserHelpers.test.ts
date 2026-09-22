@@ -1,5 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {User} from '@app/api/models/User';
+import {setInjectedAccountPolicyEvaluator} from '@app/api/risk/AccountPolicyService';
+import {setCachedDeferredPhoneGateEnabled} from '@app/api/risk/DeferredPhoneGateCache';
+import {
+	createCurrentBehaviorTestAccountPolicyEvaluator,
+	TEST_POLICY_CONTACT_DOMAIN,
+	TEST_POLICY_CONTACT_SUBDOMAIN,
+} from '@app/api/test/AccountPolicyTestEvaluator';
+import {
+	checkIsPremium,
+	getEffectivePremiumUntil,
+	getEffectiveSuspiciousFlags,
+	getRequiredActions,
+} from '@app/api/user/UserHelpers';
 import {
 	DEFERRED_PHONE_ON_COMMUNITY_JOIN,
 	imposePhoneRequirements,
@@ -9,15 +23,6 @@ import {
 	UserPremiumTypes,
 } from '@fluxer/constants/src/UserConstants';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
-import type {User} from '../models/User';
-import {setInjectedAccountPolicyEvaluator} from '../risk/AccountPolicyService';
-import {setCachedDeferredPhoneGateEnabled} from '../risk/DeferredPhoneGateCache';
-import {
-	createCurrentBehaviorTestAccountPolicyEvaluator,
-	TEST_POLICY_CONTACT_DOMAIN,
-	TEST_POLICY_CONTACT_SUBDOMAIN,
-} from '../test/AccountPolicyTestEvaluator';
-import {checkIsPremium, getEffectivePremiumUntil, getEffectiveSuspiciousFlags, getRequiredActions} from './UserHelpers';
 
 function createUser(
 	overrides: Partial<Pick<User, 'email' | 'emailVerified' | 'hasVerifiedPhone' | 'suspiciousActivityFlags'>> = {},

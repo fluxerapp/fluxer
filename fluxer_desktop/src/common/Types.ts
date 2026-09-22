@@ -71,14 +71,6 @@ export interface GpuInfo {
 
 export type StreamingPriorityDiagnostics = Record<string, unknown>;
 
-export interface OpenH264Status {
-	enabled: boolean;
-	downloaded: boolean;
-	downloading: boolean;
-	version: string | null;
-	error: string | null;
-}
-
 export interface CpuInfo {
 	model: string;
 	speed: number;
@@ -246,6 +238,7 @@ export type UpdaterEvent =
 export interface DownloadFileResult {
 	success: boolean;
 	canceled?: boolean;
+	checksumMismatch?: boolean;
 	path?: string;
 	error?: string;
 }
@@ -639,8 +632,6 @@ export interface ElectronAPI {
 	buildChannel: 'stable' | 'canary';
 	getDesktopInfo: () => Promise<DesktopInfo>;
 	getGpuInfo: () => Promise<GpuInfo>;
-	getOpenH264Status: () => Promise<OpenH264Status>;
-	setOpenH264Enabled: (enabled: boolean) => Promise<OpenH264Status>;
 	getDesktopWindowBehaviorSettings: () => Promise<DesktopWindowBehaviorSettings>;
 	setDesktopWindowBehaviorSettings: (
 		settings: Partial<DesktopWindowBehaviorSettings>,
@@ -697,7 +688,7 @@ export interface ElectronAPI {
 	requestInputMonitoringPermission: () => Promise<InputMonitoringPermissionStatus>;
 	getScreenRecordingPermissionStatus: () => Promise<InputMonitoringPermissionStatus>;
 	requestScreenRecordingPermission: () => Promise<InputMonitoringPermissionStatus>;
-	downloadFile: (url: string, defaultPath: string) => Promise<DownloadFileResult>;
+	downloadFile: (url: string, defaultPath: string, sha256?: string | null) => Promise<DownloadFileResult>;
 	toggleDevTools: () => void;
 	showNotification: (options: NotificationOptions) => Promise<NotificationResult>;
 	shouldPlayNotificationSound: () => Promise<boolean>;

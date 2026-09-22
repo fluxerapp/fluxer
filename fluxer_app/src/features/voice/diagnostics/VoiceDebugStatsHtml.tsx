@@ -233,6 +233,10 @@ function TrackTables({data}: TrackTablesProps) {
 	const tracks: Array<[string, VoiceEngineV2PerTrackStats | null]> = [
 		['track:localAudio', data.localAudio],
 		['track:localVideo', data.localVideo],
+		...data.localVideoLayers.map((layer, index): [string, VoiceEngineV2PerTrackStats | null] => [
+			`track:localVideoLayers[${index}]`,
+			layer,
+		]),
 		['track:localScreenShare', data.localScreenShare],
 		['track:localScreenShareAudio', data.localScreenShareAudio],
 		['track:remoteAudio', data.remoteAudio],
@@ -371,11 +375,6 @@ function VoiceDebugStats({data, generatedAtIso}: VoiceDebugStatsProps) {
 				title="screenShareSettings"
 				record={asStatsRecord(data.screenShareSettings)}
 				data-flx="voice.diagnostics.voice-debug-stats-html.voice-debug-stats.stats-table--7"
-			/>
-			<StatsTable
-				title="screenShareAudioCapture (pump)"
-				record={asStatsRecord(data.screenShareAudioCapture.pump)}
-				data-flx="voice.diagnostics.voice-debug-stats-html.voice-debug-stats.stats-table--8"
 			/>
 			<StatsTable
 				title="screenShareAudioCapture (native)"

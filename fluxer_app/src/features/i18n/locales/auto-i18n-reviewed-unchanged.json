@@ -3,6 +3,9 @@
   "locales": {
     "ar": [
       {
+        "msgid": "+{count}"
+      },
+      {
         "msgid": "AV1"
       },
       {
@@ -39,6 +42,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "hCaptcha"
       },
       {
@@ -49,6 +61,9 @@
       }
     ],
     "bg": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "AV1"
       },
@@ -107,6 +122,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "hCaptcha"
       },
       {
@@ -114,6 +138,9 @@
       },
       {
         "msgid": "user@example.com"
+      },
+      {
+        "msgid": "{frameRate} FPS"
       },
       {
         "msgid": "{kilobits} kbps"
@@ -129,6 +156,9 @@
       }
     ],
     "cs": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "15 FPS"
       },
@@ -289,6 +319,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "emoji {emojiName}"
       },
       {
@@ -340,6 +379,9 @@
       }
     ],
     "da": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "15 FPS"
       },
@@ -710,6 +752,15 @@
         "msgid": "Zoom"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "emoji {emojiName}"
       },
       {
@@ -738,6 +789,9 @@
       },
       {
         "msgid": "video"
+      },
+      {
+        "msgid": "{actor} banned {target}."
       },
       {
         "msgid": "{count, plural, one {# emoji} other {# emojis}}"
@@ -807,6 +861,9 @@
       }
     ],
     "de": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "15 FPS"
       },
@@ -1087,6 +1144,15 @@
         "msgid": "YubiKey"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "hCaptcha"
       },
       {
@@ -1100,6 +1166,9 @@
       },
       {
         "msgid": "{fps} FPS"
+      },
+      {
+        "msgid": "{frameRate} FPS"
       },
       {
         "msgid": "{kilobits} kbps"
@@ -1154,6 +1223,9 @@
       }
     ],
     "el": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "15 FPS"
       },
@@ -1257,6 +1329,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "hCaptcha"
       },
       {
@@ -1291,7 +1372,43 @@
     ],
     "en-GB": [
       {
+        "msgid": "+{count}"
+      },
+      {
+        "msgid": "128 kbps voice quality"
+      },
+      {
+        "msgid": "256 kbps voice quality"
+      },
+      {
+        "msgid": "384 kbps voice quality"
+      },
+      {
         "msgid": "<0>{targetUserTag}</0> is currently timed out. You can update their timeout duration or remove the timeout."
+      },
+      {
+        "msgid": "A community that is either invite-only or unavailable."
+      },
+      {
+        "msgid": "A custom emoji from this community. You can use it anywhere on {productName}."
+      },
+      {
+        "msgid": "A custom emoji from this community. You can use it in this community."
+      },
+      {
+        "msgid": "A custom sticker from this community. You can use it anywhere on {productName}."
+      },
+      {
+        "msgid": "A custom sticker from this community. You can use it in this community."
+      },
+      {
+        "msgid": "A default emoji. You can use it anywhere on {productName}."
+      },
+      {
+        "msgid": "A lower price is available. Switching takes effect on <0>{listPriceEffectiveDate}</0> and changes nothing else."
+      },
+      {
+        "msgid": "A viewer cannot play {pinnedCodec}, so your stream uses {codec}."
       },
       {
         "msgid": "AV1"
@@ -1306,6 +1423,39 @@
         "msgid": "Add a Klipy API key to enable GIF search at runtime."
       },
       {
+        "msgid": "Add new reactions to messages in this channel."
+      },
+      {
+        "msgid": "Added a chat embed background."
+      },
+      {
+        "msgid": "Added a community banner."
+      },
+      {
+        "msgid": "Added a community icon."
+      },
+      {
+        "msgid": "Added a content warning with the text {text}."
+      },
+      {
+        "msgid": "Added a content warning."
+      },
+      {
+        "msgid": "Added an avatar."
+      },
+      {
+        "msgid": "Added an invite background."
+      },
+      {
+        "msgid": "Added the member's community profile avatar."
+      },
+      {
+        "msgid": "Added the member's community profile banner."
+      },
+      {
+        "msgid": "Added the role {role}."
+      },
+      {
         "msgid": "Adds a manual audio source picker to the stream settings menu. Without it, a shared window already captures that app and a shared screen captures your desktop."
       },
       {
@@ -1316,6 +1466,27 @@
       },
       {
         "msgid": "Allow H.265 (HEVC) for screen sharing"
+      },
+      {
+        "msgid": "Allowed all members to mention this role."
+      },
+      {
+        "msgid": "Allowed anyone to mention this role."
+      },
+      {
+        "msgid": "Allowed flexible text channel names."
+      },
+      {
+        "msgid": "Allowed others to clone this community's emojis."
+      },
+      {
+        "msgid": "Allowed others to clone this community's stickers."
+      },
+      {
+        "msgid": "Allowed up to {count, plural, one {# connection} other {# connections}} per member."
+      },
+      {
+        "msgid": "Allowed {permissions}."
       },
       {
         "msgid": "Anyone can create an account."
@@ -1336,10 +1507,25 @@
         "msgid": "Application audio for video device shares"
       },
       {
+        "msgid": "Applied a community deafen."
+      },
+      {
+        "msgid": "Applied a community mute."
+      },
+      {
+        "msgid": "Applied a server deafen."
+      },
+      {
+        "msgid": "Applied a server mute."
+      },
+      {
         "msgid": "Approval required"
       },
       {
         "msgid": "Are you sure you want to kick <0>{targetUserTag}</0> from the community? They will be able to rejoin with a new invite."
+      },
+      {
+        "msgid": "Ask for a passkey after your password when you sign in"
       },
       {
         "msgid": "Attachment {pendingFilename}"
@@ -1354,7 +1540,25 @@
         "msgid": "Automatic ({codec})"
       },
       {
+        "msgid": "Backup code"
+      },
+      {
+        "msgid": "Ban members from the community, with the option to delete their recent messages."
+      },
+      {
+        "msgid": "Ban reason"
+      },
+      {
         "msgid": "Banned {targetUserTag} from the community"
+      },
+      {
+        "msgid": "Be heard over other members in this channel while holding the push to talk (priority) keybind."
+      },
+      {
+        "msgid": "Be heard over other members while holding the push to talk (priority) keybind."
+      },
+      {
+        "msgid": "Blocked the member from sending messages, reacting and joining voice until {date}."
       },
       {
         "msgid": "Bluesky connections"
@@ -1366,16 +1570,145 @@
         "msgid": "Branding asset preview"
       },
       {
+        "msgid": "Built-in suppression from your browser or system."
+      },
+      {
         "msgid": "Camera access is needed for device previews"
       },
       {
+        "msgid": "Cancel price change"
+      },
+      {
+        "msgid": "Cancel the scheduled change to move to the current price instead."
+      },
+      {
         "msgid": "Capture card"
+      },
+      {
+        "msgid": "Capture devices use the Gaming preset."
       },
       {
         "msgid": "Capture entire system audio"
       },
       {
         "msgid": "Change stream"
+      },
+      {
+        "msgid": "Change which voice region a voice channel uses."
+      },
+      {
+        "msgid": "Change which voice region this channel uses."
+      },
+      {
+        "msgid": "Changed slowmode from {oldDuration} to {newDuration}."
+      },
+      {
+        "msgid": "Changed the AFK channel from {oldChannel} to {newChannel}."
+      },
+      {
+        "msgid": "Changed the AFK timeout from {oldDuration} to {newDuration}."
+      },
+      {
+        "msgid": "Changed the audio quality from {oldKbps} kbps to {newKbps} kbps."
+      },
+      {
+        "msgid": "Changed the avatar."
+      },
+      {
+        "msgid": "Changed the block on sending messages, reacting and joining voice to end at {date}."
+      },
+      {
+        "msgid": "Changed the chat embed background."
+      },
+      {
+        "msgid": "Changed the community avatar."
+      },
+      {
+        "msgid": "Changed the community banner."
+      },
+      {
+        "msgid": "Changed the community bio to {text}."
+      },
+      {
+        "msgid": "Changed the community icon."
+      },
+      {
+        "msgid": "Changed the community profile avatar."
+      },
+      {
+        "msgid": "Changed the community profile bio to {text}."
+      },
+      {
+        "msgid": "Changed the connections per member from {oldCount} to {newCount}."
+      },
+      {
+        "msgid": "Changed the content warning text from {oldText} to {newText}."
+      },
+      {
+        "msgid": "Changed the custom role icon."
+      },
+      {
+        "msgid": "Changed the custom warning text from {oldText} to {newText}."
+      },
+      {
+        "msgid": "Changed the default notification setting from {oldSetting} to {newSetting}."
+      },
+      {
+        "msgid": "Changed the description from {oldText} to {newText}."
+      },
+      {
+        "msgid": "Changed the explicit content filter from {oldFilter} to {newFilter}."
+      },
+      {
+        "msgid": "Changed the invite background alignment from {oldAlignment} to {newAlignment}."
+      },
+      {
+        "msgid": "Changed the invite background."
+      },
+      {
+        "msgid": "Changed the link from {oldUrl} to {newUrl}."
+      },
+      {
+        "msgid": "Changed the member's community profile avatar."
+      },
+      {
+        "msgid": "Changed the member's community profile bio to {text}."
+      },
+      {
+        "msgid": "Changed the message history threshold from {oldDate} to {newDate}."
+      },
+      {
+        "msgid": "Changed the name from {oldName} to {newName}."
+      },
+      {
+        "msgid": "Changed the nickname from {oldNick} to {newNick}."
+      },
+      {
+        "msgid": "Changed the role icon from {oldEmoji} to {newEmoji}."
+      },
+      {
+        "msgid": "Changed the system channel from {oldChannel} to {newChannel}."
+      },
+      {
+        "msgid": "Changed the timeout end date to {date}."
+      },
+      {
+        "msgid": "Changed the timeout to end on {date}."
+      },
+      {
+        "msgid": "Changed the topic from {oldText} to {newText}."
+      },
+      {
+        "msgid": "Changed the user limit from {oldCount} to {newCount}."
+      },
+      {
+        "msgid": "Changed the vanity URL from {oldCode} to {newCode}."
+      },
+      {
+        "msgid": "Changed the verification level from {oldLevel} to {newLevel}."
+      },
+      {
+        "msgid": "Changed the voice region from {oldRegion} to {newRegion}."
       },
       {
         "msgid": "Choices"
@@ -1390,7 +1723,22 @@
         "msgid": "Clear command"
       },
       {
+        "msgid": "Clear message text"
+      },
+      {
         "msgid": "Clearer text"
+      },
+      {
+        "msgid": "Clearing the text of a message with attachments asks to delete the message unless this is on"
+      },
+      {
+        "msgid": "Click to learn more"
+      },
+      {
+        "msgid": "Clone emoji"
+      },
+      {
+        "msgid": "Clone sticker"
       },
       {
         "msgid": "Closed"
@@ -1423,13 +1771,25 @@
         "msgid": "Connection volume controls"
       },
       {
+        "msgid": "Copy emoji"
+      },
+      {
+        "msgid": "Copy sticker"
+      },
+      {
         "msgid": "Could not load the instance configuration. Try reloading the page."
+      },
+      {
+        "msgid": "Couldn't change your price"
       },
       {
         "msgid": "Couldn't connect to voice. Please try again."
       },
       {
         "msgid": "Couldn't duplicate this channel"
+      },
+      {
+        "msgid": "Couldn't update passkey two-factor authentication"
       },
       {
         "msgid": "Create administrator account"
@@ -1444,13 +1804,34 @@
         "msgid": "Custom emoji {emojiName} from {communityName}"
       },
       {
+        "msgid": "Cuts audio below a loudness threshold, lowest CPU cost."
+      },
+      {
+        "msgid": "Deafen other members in this voice channel, so they cannot hear or speak."
+      },
+      {
         "msgid": "Decide how premium limits apply to people on this instance."
+      },
+      {
+        "msgid": "Delete other members' messages in this channel. Pinning is controlled separately."
+      },
+      {
+        "msgid": "Delete prompt"
       },
       {
         "msgid": "Delete user"
       },
       {
+        "msgid": "Deleted their messages from the last {duration}."
+      },
+      {
+        "msgid": "Deleted {duration} of the member's recent message history."
+      },
+      {
         "msgid": "Denied"
+      },
+      {
+        "msgid": "Denied {permissions}."
       },
       {
         "msgid": "Desktop audio isn't available right now on Linux."
@@ -1462,10 +1843,31 @@
         "msgid": "Desktop audio isn't available right now on macOS."
       },
       {
+        "msgid": "Device audio ({deviceLabel})"
+      },
+      {
+        "msgid": "Device audio only"
+      },
+      {
         "msgid": "Device volume"
       },
       {
         "msgid": "Disable direct messages and friend requests"
+      },
+      {
+        "msgid": "Disable translation DOM guard"
+      },
+      {
+        "msgid": "Displayed members with this role separately."
+      },
+      {
+        "msgid": "Do you want to join {communityName}?"
+      },
+      {
+        "msgid": "Drag members between voice channels they can access, and disconnect them from voice."
+      },
+      {
+        "msgid": "Drag members out of this voice channel into channels they can access, and disconnect them from voice."
       },
       {
         "msgid": "Duplicate role"
@@ -1474,10 +1876,22 @@
         "msgid": "Email us and a person will review your account. Tell us you cannot verify by SMS and we will take it from there. Replies come by email, so this is not instant."
       },
       {
+        "msgid": "Emoji and sticker cloning shortcuts"
+      },
+      {
+        "msgid": "Emoji cloning enabled"
+      },
+      {
+        "msgid": "Empty edit"
+      },
+      {
         "msgid": "Emulate decode codec (testing)"
       },
       {
         "msgid": "Enable camera access to preview cameras and capture devices before choosing one to stream."
+      },
+      {
+        "msgid": "Enable emoji and sticker cloning shortcuts"
       },
       {
         "msgid": "Enable previews"
@@ -1493,6 +1907,12 @@
       },
       {
         "msgid": "Enter a product name between 1 and 80 characters."
+      },
+      {
+        "msgid": "Enter one of your backup codes if you can't use your passkey."
+      },
+      {
+        "msgid": "Enter one of your backup codes."
       },
       {
         "msgid": "Enter the PIN for your security key to continue."
@@ -1540,10 +1960,16 @@
         "msgid": "Global shortcut"
       },
       {
+        "msgid": "Go to {communityName}"
+      },
+      {
         "msgid": "Grant"
       },
       {
         "msgid": "Granted"
+      },
+      {
+        "msgid": "Granted {permissions}."
       },
       {
         "msgid": "H.265 (requires opt-in)"
@@ -1555,10 +1981,19 @@
         "msgid": "Help translate {PRODUCT_NAME} into your language on <0>{I18N_WEBLATE_DOMAIN}</0>."
       },
       {
+        "msgid": "Hid join messages in the system channel."
+      },
+      {
+        "msgid": "Hid the community owner crown."
+      },
+      {
         "msgid": "How much of the member's recent message history to delete."
       },
       {
         "msgid": "If you can't verify by SMS"
+      },
+      {
+        "msgid": "Ignore this channel's slowmode cooldown."
       },
       {
         "msgid": "Image assets"
@@ -1576,10 +2011,28 @@
         "msgid": "Input level"
       },
       {
+        "msgid": "Invite new people to the community with a link to this channel."
+      },
+      {
+        "msgid": "Invite new people to the community with an invite link."
+      },
+      {
         "msgid": "Italic"
       },
       {
+        "msgid": "Join this voice channel and hear others. Denying it along with View channel for {everyoneMention} makes the channel private."
+      },
+      {
+        "msgid": "Join voice channels and hear others."
+      },
+      {
         "msgid": "Keep Neko still"
+      },
+      {
+        "msgid": "Keep attachments"
+      },
+      {
+        "msgid": "Keep attachments when clearing an edit"
       },
       {
         "msgid": "Kicked {targetUserTag} from the community"
@@ -1594,10 +2047,28 @@
         "msgid": "Leave {count, plural, one {# community} other {# communities}} and set this check aside?"
       },
       {
+        "msgid": "Let others clone your emojis"
+      },
+      {
+        "msgid": "Let others clone your stickers"
+      },
+      {
         "msgid": "Let people link their Bluesky account to their profile."
       },
       {
         "msgid": "Let people search and send GIFs powered by Klipy."
+      },
+      {
+        "msgid": "Let the member hear others in this community again."
+      },
+      {
+        "msgid": "Lightweight classic filter, works on any device."
+      },
+      {
+        "msgid": "Limited mentions of this role to members with permission to mention any role."
+      },
+      {
+        "msgid": "Limited the channel to {count, plural, one {# user} other {# users}}."
       },
       {
         "msgid": "Loading instance configuration"
@@ -1606,10 +2077,34 @@
         "msgid": "Logo"
       },
       {
+        "msgid": "Made the channel follow the mature content setting of its category or the community."
+      },
+      {
+        "msgid": "Made the channel inherit its mature content setting."
+      },
+      {
         "msgid": "Make the instance yours"
       },
       {
+        "msgid": "Marked the channel as containing mature content."
+      },
+      {
+        "msgid": "Marked the channel as mature."
+      },
+      {
+        "msgid": "Marked the channel as not containing mature content."
+      },
+      {
+        "msgid": "Marked the channel as not mature."
+      },
+      {
         "msgid": "May cause compatibility issues for viewers. We’re working on improving this."
+      },
+      {
+        "msgid": "Mention everyone or any role in this channel (even if the role isn't set to be mentionable)."
+      },
+      {
+        "msgid": "Message editing"
       },
       {
         "msgid": "Microphone ({deviceLabel})"
@@ -1618,16 +2113,70 @@
         "msgid": "Mirror tiers"
       },
       {
+        "msgid": "Moved from {oldCategory} to {newCategory}."
+      },
+      {
+        "msgid": "Moved from {oldChannel} to {newChannel}."
+      },
+      {
+        "msgid": "Moved into {category}."
+      },
+      {
+        "msgid": "Moved out of {category}."
+      },
+      {
+        "msgid": "Moved the channel from the category {oldCategory} to the category {newCategory}."
+      },
+      {
+        "msgid": "Moved the channel into the category {category}."
+      },
+      {
+        "msgid": "Moved the role down in the member list."
+      },
+      {
+        "msgid": "Moved the role down in the role list."
+      },
+      {
+        "msgid": "Moved the role up in the member list."
+      },
+      {
+        "msgid": "Moved the role up in the role list."
+      },
+      {
+        "msgid": "Mute other members in this voice channel for everyone."
+      },
+      {
+        "msgid": "Mute other members in voice channels for everyone."
+      },
+      {
         "msgid": "My community"
       },
       {
         "msgid": "Neko cat that chases your cursor"
       },
       {
+        "msgid": "Neural filter that removes most background noise."
+      },
+      {
+        "msgid": "Neural filter, full audio bandwidth."
+      },
+      {
+        "msgid": "New price scheduled for <0>{pendingChangeDate}</0>."
+      },
+      {
+        "msgid": "New price scheduled for <0>{pendingChangeDate}</0>. Renewals will be {pendingTargetPriceLabel} from then on."
+      },
+      {
         "msgid": "No application windows found"
       },
       {
+        "msgid": "No audio from this device"
+      },
+      {
         "msgid": "No displays found"
+      },
+      {
+        "msgid": "No hardware encoder was found on this device, so Prefer hardware works like Automatic."
       },
       {
         "msgid": "No optional services are available on this instance. You can skip this step."
@@ -1637,6 +2186,9 @@
       },
       {
         "msgid": "Nothing to search for"
+      },
+      {
+        "msgid": "On <0>{listPriceEffectiveDate}</0> your subscription moves from {listPriceCurrentLabel} to {listPriceNewLabel}. Nothing is charged today, and the rest of your subscription stays exactly as it is."
       },
       {
         "msgid": "Open Settings"
@@ -1660,6 +2212,15 @@
         "msgid": "Ordered upload"
       },
       {
+        "msgid": "Originally banned by {user} on {date}."
+      },
+      {
+        "msgid": "Originally banned by {user}."
+      },
+      {
+        "msgid": "Originally banned on {date}."
+      },
+      {
         "msgid": "Our phone number check is down right now. This is on us, not your number. Wait a few minutes and try the same number again."
       },
       {
@@ -1672,6 +2233,15 @@
         "msgid": "Per-window audio isn't available right now on macOS."
       },
       {
+        "msgid": "Permission override added"
+      },
+      {
+        "msgid": "Permission override removed"
+      },
+      {
+        "msgid": "Permission override updated"
+      },
+      {
         "msgid": "Pick application audio while sharing a video device on Linux"
       },
       {
@@ -1679,6 +2249,12 @@
       },
       {
         "msgid": "Pin Neko to the top-right of the chat input instead of following your cursor"
+      },
+      {
+        "msgid": "Pin or unpin any message in this channel."
+      },
+      {
+        "msgid": "Pin or unpin any message."
       },
       {
         "msgid": "Pop out user"
@@ -1726,16 +2302,142 @@
         "msgid": "Public registration is closed."
       },
       {
+        "msgid": "Read messages sent before they opened a channel. Without it, they only see messages that arrive while it is open."
+      },
+      {
+        "msgid": "Read messages sent in this channel before they opened it. Without it, they only see messages that arrive while it is open."
+      },
+      {
         "msgid": "Reason (optional)."
       },
       {
         "msgid": "Registration"
       },
       {
+        "msgid": "Remove members from the community. They can rejoin with a new invite."
+      },
+      {
+        "msgid": "Removed the AFK channel."
+      },
+      {
+        "msgid": "Removed the avatar."
+      },
+      {
+        "msgid": "Removed the channel from the category {category}."
+      },
+      {
+        "msgid": "Removed the chat embed background."
+      },
+      {
+        "msgid": "Removed the community avatar."
+      },
+      {
+        "msgid": "Removed the community banner."
+      },
+      {
+        "msgid": "Removed the community bio."
+      },
+      {
+        "msgid": "Removed the community deafen."
+      },
+      {
+        "msgid": "Removed the community icon."
+      },
+      {
+        "msgid": "Removed the community mute."
+      },
+      {
+        "msgid": "Removed the community profile avatar."
+      },
+      {
+        "msgid": "Removed the community profile bio."
+      },
+      {
+        "msgid": "Removed the community profile pronouns."
+      },
+      {
+        "msgid": "Removed the community pronouns."
+      },
+      {
+        "msgid": "Removed the content warning text."
+      },
+      {
+        "msgid": "Removed the content warning."
+      },
+      {
+        "msgid": "Removed the custom role icon."
+      },
+      {
+        "msgid": "Removed the custom warning text."
+      },
+      {
+        "msgid": "Removed the description {text}."
+      },
+      {
+        "msgid": "Removed the invite background."
+      },
+      {
+        "msgid": "Removed the link."
+      },
+      {
+        "msgid": "Removed the member's community profile avatar."
+      },
+      {
+        "msgid": "Removed the member's community profile bio."
+      },
+      {
+        "msgid": "Removed the member's community profile pronouns."
+      },
+      {
+        "msgid": "Removed the message history threshold."
+      },
+      {
+        "msgid": "Removed the nickname {nick}."
+      },
+      {
+        "msgid": "Removed the override for {permissions}."
+      },
+      {
+        "msgid": "Removed the role icon."
+      },
+      {
+        "msgid": "Removed the role {role}."
+      },
+      {
+        "msgid": "Removed the server deafen."
+      },
+      {
+        "msgid": "Removed the server mute."
+      },
+      {
+        "msgid": "Removed the timeout."
+      },
+      {
+        "msgid": "Removed the topic {text}."
+      },
+      {
+        "msgid": "Removed the vanity URL {code}."
+      },
+      {
         "msgid": "Removed timeout from {targetUserTag}"
       },
       {
         "msgid": "Removing the timeout will allow <0>{targetUserTag}</0> to send messages, react, and join voice channels again."
+      },
+      {
+        "msgid": "Renamed the community from {oldName} to {newName}."
+      },
+      {
+        "msgid": "Require a passkey as your second factor"
+      },
+      {
+        "msgid": "Require passkey"
+      },
+      {
+        "msgid": "Required 2FA for moderation actions."
+      },
+      {
+        "msgid": "Reset the member list position for the role."
       },
       {
         "msgid": "Resize expression picker from bottom left"
@@ -1810,6 +2512,9 @@
         "msgid": "Resize sidebar"
       },
       {
+        "msgid": "Resumed invites."
+      },
+      {
         "msgid": "Review"
       },
       {
@@ -1820,6 +2525,9 @@
       },
       {
         "msgid": "Review your choices below, then finish. This saves the configuration, opens the instance, and reloads the app."
+      },
+      {
+        "msgid": "Revoked {permissions}."
       },
       {
         "msgid": "Run the instance as one community instead of many. This can only be enabled now, during setup."
@@ -1843,10 +2551,16 @@
         "msgid": "Search for {query}"
       },
       {
+        "msgid": "Second factor"
+      },
+      {
         "msgid": "Security key PIN"
       },
       {
         "msgid": "Security key PIN form"
+      },
+      {
+        "msgid": "See this channel. Denying it for {everyoneMention} makes the channel private."
       },
       {
         "msgid": "Self-host setup"
@@ -1855,16 +2569,127 @@
         "msgid": "Send file messages in order"
       },
       {
+        "msgid": "Send messages in channels."
+      },
+      {
+        "msgid": "Send messages in this channel."
+      },
+      {
+        "msgid": "Sending {resolution} at {frameRate} FPS with {codec}"
+      },
+      {
+        "msgid": "Sends both channels of a stereo microphone. Needs all processing off and a channel at 128 kbps or higher."
+      },
+      {
+        "msgid": "Sends both channels of a stereo microphone. Works only with no suppression or standard suppression."
+      },
+      {
+        "msgid": "Sends your microphone audio with no suppression."
+      },
+      {
         "msgid": "Sequential send"
       },
       {
         "msgid": "Serial send"
       },
       {
+        "msgid": "Service incident nagbar"
+      },
+      {
+        "msgid": "Set a community avatar."
+      },
+      {
+        "msgid": "Set a community banner."
+      },
+      {
+        "msgid": "Set a community profile avatar."
+      },
+      {
+        "msgid": "Set a community profile banner."
+      },
+      {
+        "msgid": "Set a custom role icon."
+      },
+      {
+        "msgid": "Set a member list position for the role."
+      },
+      {
+        "msgid": "Set by the {preset} preset. Picking a value here switches to Custom."
+      },
+      {
+        "msgid": "Set mature content to follow the community setting."
+      },
+      {
+        "msgid": "Set slowmode to {duration}."
+      },
+      {
+        "msgid": "Set the AFK channel to {channel}."
+      },
+      {
+        "msgid": "Set the audio quality to {kbps} kbps."
+      },
+      {
+        "msgid": "Set the community bio to {text}."
+      },
+      {
+        "msgid": "Set the community profile bio to {text}."
+      },
+      {
+        "msgid": "Set the community profile pronouns to {text}."
+      },
+      {
+        "msgid": "Set the community pronouns to {text}."
+      },
+      {
+        "msgid": "Set the content warning text to {text}."
+      },
+      {
+        "msgid": "Set the custom warning text to {text}."
+      },
+      {
+        "msgid": "Set the description to {text}."
+      },
+      {
+        "msgid": "Set the link to {url}."
+      },
+      {
+        "msgid": "Set the member's community profile bio to {text}."
+      },
+      {
+        "msgid": "Set the member's community profile pronouns to {text}."
+      },
+      {
+        "msgid": "Set the message history threshold to {date}."
+      },
+      {
+        "msgid": "Set the nickname to {nick}."
+      },
+      {
+        "msgid": "Set the role icon to {emoji}."
+      },
+      {
+        "msgid": "Set the system channel to {channel}."
+      },
+      {
+        "msgid": "Set the topic to {text}."
+      },
+      {
+        "msgid": "Set the vanity URL to {code}."
+      },
+      {
+        "msgid": "Set the voice region to automatic."
+      },
+      {
+        "msgid": "Set the voice region to {region}."
+      },
+      {
         "msgid": "Set this check aside"
       },
       {
         "msgid": "Set this check aside?"
+      },
+      {
+        "msgid": "Set to send {resolution} at {frameRate} FPS with {codec}"
       },
       {
         "msgid": "Set up {productName}"
@@ -1888,13 +2713,28 @@
         "msgid": "Shared window audio"
       },
       {
+        "msgid": "Sharp text at 720p, up to 30 FPS"
+      },
+      {
+        "msgid": "Sharp text at up to 4K, up to 15 FPS"
+      },
+      {
         "msgid": "Sharper text at 720p, 30 FPS"
       },
       {
         "msgid": "Shorten your about me and try again."
       },
       {
+        "msgid": "Show a one-click shortcut for copying custom emojis and stickers from communities that allow it"
+      },
+      {
         "msgid": "Show connection volume controls"
+      },
+      {
+        "msgid": "Show embedded previews for links they send in this channel."
+      },
+      {
+        "msgid": "Show embedded previews for links they send."
       },
       {
         "msgid": "Show fewer filters"
@@ -1909,7 +2749,13 @@
         "msgid": "Show {count, plural, one {# more filter} other {# more filters}}"
       },
       {
+        "msgid": "Showed members with this role in their own section in the member list."
+      },
+      {
         "msgid": "Sign-in details"
+      },
+      {
+        "msgid": "Silent when the capture device has no audio input of its own"
       },
       {
         "msgid": "Single community"
@@ -1933,13 +2779,34 @@
         "msgid": "Slowmode is set to {durationLabel}. Wait before sending another message."
       },
       {
+        "msgid": "Smooth 30 FPS at up to 720p"
+      },
+      {
+        "msgid": "Smooth 60 FPS at up to 1440p"
+      },
+      {
         "msgid": "Smoother video"
+      },
+      {
+        "msgid": "Some stream settings could not be applied to your live stream."
       },
       {
         "msgid": "Something is limiting this stream, so viewers are getting fewer frames than you asked for."
       },
       {
+        "msgid": "Something went wrong while changing your price. Please try again in a moment."
+      },
+      {
+        "msgid": "Started displaying members with this role separately."
+      },
+      {
         "msgid": "Static Neko"
+      },
+      {
+        "msgid": "Stereo microphone"
+      },
+      {
+        "msgid": "Sticker cloning enabled"
       },
       {
         "msgid": "Still Neko"
@@ -1951,10 +2818,58 @@
         "msgid": "Stop streaming"
       },
       {
+        "msgid": "Stop using passkeys for two-factor authentication?"
+      },
+      {
+        "msgid": "Stopped allowing anyone to mention this role."
+      },
+      {
+        "msgid": "Stopped allowing flexible text channel names."
+      },
+      {
+        "msgid": "Stopped allowing others to clone this community's emojis."
+      },
+      {
+        "msgid": "Stopped allowing others to clone this community's stickers."
+      },
+      {
+        "msgid": "Stopped displaying members with this role separately."
+      },
+      {
+        "msgid": "Stopped hiding join messages in the system channel."
+      },
+      {
+        "msgid": "Stopped hiding the community owner crown."
+      },
+      {
+        "msgid": "Stopped overriding {permissions}."
+      },
+      {
+        "msgid": "Stopped requiring 2FA for moderation actions."
+      },
+      {
+        "msgid": "Stopped the member from hearing others in this community."
+      },
+      {
         "msgid": "Stream is not keeping up"
       },
       {
         "msgid": "Stream quality"
+      },
+      {
+        "msgid": "Stream settings were adjusted"
+      },
+      {
+        "msgid": "Strongest neural filter for speech, limits audio to the speech range."
+      },
+      {
+        "msgid": "Switch price"
+      },
+      {
+        "msgid": "Switch to the new price?"
+      },
+      {
+        "msgid": "Switch to {listPriceNewLabel}"
       },
       {
         "msgid": "Symbol"
@@ -1975,7 +2890,55 @@
         "msgid": "That image could not be used. Try a different file."
       },
       {
+        "msgid": "The ban had already expired on {date}."
+      },
+      {
+        "msgid": "The ban was scheduled to expire on {date}."
+      },
+      {
+        "msgid": "The ban was set to expire on {date}."
+      },
+      {
+        "msgid": "The browser is sending {deliveredResolution} instead of {resolution}."
+      },
+      {
         "msgid": "The camera preview is still stopping. Try streaming again in a moment."
+      },
+      {
+        "msgid": "The emoji was uploaded by {user}."
+      },
+      {
+        "msgid": "The invite was created by {user} on {date}."
+      },
+      {
+        "msgid": "The invite was created by {user}."
+      },
+      {
+        "msgid": "The invite was created on {date}."
+      },
+      {
+        "msgid": "The invite was never used."
+      },
+      {
+        "msgid": "The invite was scheduled to expire on {date}."
+      },
+      {
+        "msgid": "The invite was set to allow unlimited uses."
+      },
+      {
+        "msgid": "The invite was set to expire after {duration}."
+      },
+      {
+        "msgid": "The invite was set to expire on {date}."
+      },
+      {
+        "msgid": "The invite was set to grant temporary membership."
+      },
+      {
+        "msgid": "The invite was set to never expire."
+      },
+      {
+        "msgid": "The member is no longer temporary."
       },
       {
         "msgid": "The member to target."
@@ -1984,7 +2947,37 @@
         "msgid": "The message to send."
       },
       {
+        "msgid": "The new price is already scheduled for {effectiveDate}."
+      },
+      {
+        "msgid": "The override allowed {permissions}."
+      },
+      {
+        "msgid": "The override denied {permissions}."
+      },
+      {
+        "msgid": "The role granted {permissions}."
+      },
+      {
+        "msgid": "The sticker was uploaded by {user}."
+      },
+      {
+        "msgid": "The system gave {target} the role {role}."
+      },
+      {
+        "msgid": "The system removed the role {role} from {target}."
+      },
+      {
+        "msgid": "The webhook was created by {user}."
+      },
+      {
         "msgid": "These options change how people use the instance. Some can only be chosen during setup."
+      },
+      {
+        "msgid": "This device could not keep up with {targetResolution} at {targetFrameRate} FPS last time, so your stream started at {resolution} at {frameRate} FPS."
+      },
+      {
+        "msgid": "This emoji is from"
       },
       {
         "msgid": "This instance currently allows screen share up to 720p at 30 FPS."
@@ -1993,7 +2986,34 @@
         "msgid": "This instance has no accounts yet. The first account you create automatically becomes the administrator. Create it now, then return here to finish setup."
       },
       {
+        "msgid": "This is a custom emoji from"
+      },
+      {
+        "msgid": "This is a custom sticker from a community."
+      },
+      {
+        "msgid": "This is a custom sticker from a community. Ask the author for an invite to use this sticker."
+      },
+      {
         "msgid": "This is not available on your account right now. Email {supportEmail} and a person will review it."
+      },
+      {
+        "msgid": "This is off until you turn it on. While it is on, members of other communities can use the in-app one-click \"Clone\" shortcut on your custom emojis. Turning it off does not prevent anyone from saving the image and uploading it themselves."
+      },
+      {
+        "msgid": "This is off until you turn it on. While it is on, members of other communities can use the in-app one-click \"Clone\" shortcut on your custom stickers. Turning it off does not prevent anyone from saving the image and uploading it themselves."
+      },
+      {
+        "msgid": "This is your last passkey and passkeys are your second factor. Deleting it turns off two-factor authentication for your account, and your current backup codes will stop working."
+      },
+      {
+        "msgid": "This is your last passkey and passkeys are your second factor. Once it's gone you'll need a backup code to sign in, and you'll lose two-factor authentication on this account."
+      },
+      {
+        "msgid": "This is your last passkey. Once it's gone you won't be able to use a passkey as your second factor."
+      },
+      {
+        "msgid": "This message can only be forwarded to age-restricted channels"
       },
       {
         "msgid": "This number is verified by texting us instead. Go back and start phone verification again to get the code and the number to text."
@@ -2005,16 +3025,82 @@
         "msgid": "This reset link has expired. Reset links last 1 hour. Please request a new one."
       },
       {
+        "msgid": "This sticker is from"
+      },
+      {
+        "msgid": "Timed out the member until {date}."
+      },
+      {
+        "msgid": "Timed out until {date}."
+      },
+      {
         "msgid": "Timed out {targetUserTag}"
       },
       {
+        "msgid": "Transferred community ownership to {user}."
+      },
+      {
+        "msgid": "Try full quality again"
+      },
+      {
         "msgid": "Turn off audio sharing for this source or try again in a moment."
+      },
+      {
+        "msgid": "Turn on"
+      },
+      {
+        "msgid": "Turn on a camera or share a screen in this voice channel."
+      },
+      {
+        "msgid": "Turned off mature content."
+      },
+      {
+        "msgid": "Turned off slowmode."
+      },
+      {
+        "msgid": "Turned off the content warning."
+      },
+      {
+        "msgid": "Turned off the detached banner."
+      },
+      {
+        "msgid": "Turned off the member's microphone in this community."
+      },
+      {
+        "msgid": "Turned on mature content."
+      },
+      {
+        "msgid": "Turned on the content warning."
+      },
+      {
+        "msgid": "Turned the member's microphone back on in this community."
       },
       {
         "msgid": "Unable to send verification code"
       },
       {
         "msgid": "Unavailable"
+      },
+      {
+        "msgid": "Upload files and media in messages."
+      },
+      {
+        "msgid": "Upload files and media in this channel."
+      },
+      {
+        "msgid": "Use emoji from other communities in this channel."
+      },
+      {
+        "msgid": "Use passkeys for two-factor authentication?"
+      },
+      {
+        "msgid": "Use passkeys to sign in without a password"
+      },
+      {
+        "msgid": "Use stickers from other communities in this channel."
+      },
+      {
+        "msgid": "Use stickers from other communities."
       },
       {
         "msgid": "Use system-wide push-to-talk and shortcuts."
@@ -2029,6 +3115,9 @@
         "msgid": "Use your operating system's spellchecker when available. Otherwise, use {productName}'s in-app dictionaries."
       },
       {
+        "msgid": "Used in Custom mode. The Gaming and Screen share presets set their own hint."
+      },
+      {
         "msgid": "Virtual microphone"
       },
       {
@@ -2039,6 +3128,9 @@
       },
       {
         "msgid": "We don't send verification texts to this country. Try a mobile number from another country, or contact support."
+      },
+      {
+        "msgid": "We lowered the price of {premiumProductName} in Brazil. It is now {monthlyPrice} a month or {yearlyPrice} a year."
       },
       {
         "msgid": "We'll send a verification code to your email before you can view your backup codes."
@@ -2053,10 +3145,19 @@
         "msgid": "What to search for."
       },
       {
+        "msgid": "What you're sharing isn't updating"
+      },
+      {
         "msgid": "Who can join"
       },
       {
+        "msgid": "Without this permission, push-to-talk is required in this channel."
+      },
+      {
         "msgid": "Wordmark"
+      },
+      {
+        "msgid": "You asked for {resolution} at {frameRate} FPS"
       },
       {
         "msgid": "You can still email {supportEmail} for a human review at any time."
@@ -2071,13 +3172,64 @@
         "msgid": "Your account is back to normal."
       },
       {
+        "msgid": "Your account will no longer be protected by two-factor authentication when you sign in with your password. You'll also lose elevated permissions in servers that require two-factor authentication."
+      },
+      {
         "msgid": "Your account works normally again straight away and nothing is removed. We can ask for this check again later."
+      },
+      {
+        "msgid": "Your capture device is sending {deliveredResolution} instead of {resolution}."
       },
       {
         "msgid": "Your carrier says this number isn't in service. Check it and try again, or contact support if it's correct."
       },
       {
+        "msgid": "Your connection cannot keep up. Viewers get about {deliveredFrameRate} of {frameRate} FPS at {resolution}."
+      },
+      {
+        "msgid": "Your connection cannot keep up. Your stream is set to {frameRate} FPS at {resolution} and viewers are getting about {deliveredFrameRate} FPS."
+      },
+      {
+        "msgid": "Your device cannot keep up. Viewers get about {deliveredFrameRate} of {frameRate} FPS at {resolution}."
+      },
+      {
+        "msgid": "Your device cannot keep up. Your stream is set to {frameRate} FPS at {resolution} and viewers are getting about {deliveredFrameRate} FPS."
+      },
+      {
+        "msgid": "Your device could not keep up, so your stream now sends {frameRate} FPS to keep {resolution} sharp."
+      },
+      {
+        "msgid": "Your device could not keep up, so your stream now sends {resolution} to keep {frameRate} FPS smooth."
+      },
+      {
         "msgid": "Your new nickname, or leave blank to reset it."
+      },
+      {
+        "msgid": "Your saved {savedResolution} at {savedFrameRate} FPS needs {premiumProductName}, so shares use {resolution} at {frameRate} FPS."
+      },
+      {
+        "msgid": "Your source is producing about {sourceFrameRate} FPS"
+      },
+      {
+        "msgid": "Your subscription can't move to the new price right now."
+      },
+      {
+        "msgid": "Your subscription moves to the new price on {effectiveDate}."
+      },
+      {
+        "msgid": "Your subscription still ends on <0>{cancelDate}</0>. The current price is now {listPriceNewLabel}. If you reactivate, you can switch to it from here."
+      },
+      {
+        "msgid": "Your video encoder stopped, so your stream switched to {codec}."
+      },
+      {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
       },
       {
         "msgid": "farewell"
@@ -2104,16 +3256,517 @@
         "msgid": "{PRODUCT_NAME} needs to restart for the title bar change to take effect."
       },
       {
+        "msgid": "{actor} added a permission override for @everyone in {channel}."
+      },
+      {
+        "msgid": "{actor} added a permission override for the role {role} in {channel}."
+      },
+      {
+        "msgid": "{actor} added a permission override for {user} in {channel}."
+      },
+      {
+        "msgid": "{actor} added a sticker."
+      },
+      {
+        "msgid": "{actor} added an emoji."
+      },
+      {
+        "msgid": "{actor} added the bot {target} as a temporary member."
+      },
+      {
+        "msgid": "{actor} added the bot {target}."
+      },
+      {
+        "msgid": "{actor} added the emoji {emoji}."
+      },
+      {
+        "msgid": "{actor} added the sticker {name}."
+      },
+      {
+        "msgid": "{actor} applied a community deafen to {target}."
+      },
+      {
+        "msgid": "{actor} applied a community mute to {target}."
+      },
+      {
+        "msgid": "{actor} banned {target} for {duration}."
+      },
+      {
+        "msgid": "{actor} banned {target}."
+      },
+      {
+        "msgid": "{actor} changed the permission overrides of the category {channel}."
+      },
+      {
+        "msgid": "{actor} changed the permission overrides of the channel {channel}."
+      },
+      {
+        "msgid": "{actor} changed the permission overrides of the link channel {channel}."
+      },
+      {
+        "msgid": "{actor} changed the permission overrides of the text channel {channel}."
+      },
+      {
+        "msgid": "{actor} changed the permission overrides of the voice channel {channel}."
+      },
+      {
+        "msgid": "{actor} changed the timeout end date for {target} to {date}."
+      },
+      {
+        "msgid": "{actor} changed the timeout for {target} to end on {date}."
+      },
+      {
+        "msgid": "{actor} changed the vanity URL from {oldCode} to {newCode}."
+      },
+      {
+        "msgid": "{actor} changed their community avatar."
+      },
+      {
+        "msgid": "{actor} changed their community banner."
+      },
+      {
+        "msgid": "{actor} changed their community bio to {text}."
+      },
+      {
+        "msgid": "{actor} changed their community profile avatar."
+      },
+      {
+        "msgid": "{actor} changed their community profile banner."
+      },
+      {
+        "msgid": "{actor} changed their community profile bio to {text}."
+      },
+      {
+        "msgid": "{actor} changed {target}'s block on sending messages, reacting and joining voice to end at {date}."
+      },
+      {
+        "msgid": "{actor} created a webhook."
+      },
+      {
+        "msgid": "{actor} created the category {channel}."
+      },
+      {
+        "msgid": "{actor} created the channel {channel} in {category}."
+      },
+      {
+        "msgid": "{actor} created the channel {channel}."
+      },
+      {
+        "msgid": "{actor} created the invite {code} for {channel}."
+      },
+      {
+        "msgid": "{actor} created the invite {code}."
+      },
+      {
+        "msgid": "{actor} created the link channel {channel} in {category}."
+      },
+      {
+        "msgid": "{actor} created the link channel {channel}."
+      },
+      {
+        "msgid": "{actor} created the role {role}."
+      },
+      {
+        "msgid": "{actor} created the text channel {channel} in {category}."
+      },
+      {
+        "msgid": "{actor} created the text channel {channel}."
+      },
+      {
+        "msgid": "{actor} created the voice channel {channel} in {category}."
+      },
+      {
+        "msgid": "{actor} created the voice channel {channel}."
+      },
+      {
+        "msgid": "{actor} created the webhook {name} in {channel}."
+      },
+      {
+        "msgid": "{actor} created the webhook {name}."
+      },
+      {
+        "msgid": "{actor} deleted a message in {channel}."
+      },
+      {
+        "msgid": "{actor} deleted a message."
+      },
+      {
+        "msgid": "{actor} deleted a sticker."
+      },
+      {
+        "msgid": "{actor} deleted a webhook."
+      },
+      {
+        "msgid": "{actor} deleted an emoji."
+      },
+      {
+        "msgid": "{actor} deleted some messages in {channel}."
+      },
+      {
+        "msgid": "{actor} deleted some messages."
+      },
+      {
+        "msgid": "{actor} deleted the category {channel}."
+      },
+      {
+        "msgid": "{actor} deleted the channel {channel}."
+      },
+      {
+        "msgid": "{actor} deleted the emoji {emoji}."
+      },
+      {
+        "msgid": "{actor} deleted the invite {code} for {channel}."
+      },
+      {
+        "msgid": "{actor} deleted the invite {code}."
+      },
+      {
+        "msgid": "{actor} deleted the link channel {channel}."
+      },
+      {
+        "msgid": "{actor} deleted the role {role}."
+      },
+      {
+        "msgid": "{actor} deleted the sticker {name}."
+      },
+      {
+        "msgid": "{actor} deleted the text channel {channel}."
+      },
+      {
+        "msgid": "{actor} deleted the voice channel {channel}."
+      },
+      {
+        "msgid": "{actor} deleted the webhook {name}."
+      },
+      {
+        "msgid": "{actor} deleted {count, plural, one {# message} other {# messages}} in {channel}."
+      },
+      {
+        "msgid": "{actor} deleted {count, plural, one {# message} other {# messages}}."
+      },
+      {
+        "msgid": "{actor} disconnected from voice."
+      },
+      {
+        "msgid": "{actor} disconnected from {channel}."
+      },
+      {
+        "msgid": "{actor} disconnected {target} from voice."
+      },
+      {
+        "msgid": "{actor} disconnected {target} from {channel}."
+      },
+      {
+        "msgid": "{actor} gave {target} the role {role}."
+      },
+      {
+        "msgid": "{actor} kicked {target}."
+      },
+      {
+        "msgid": "{actor} let {target} hear others in this community again."
+      },
+      {
+        "msgid": "{actor} made a change that this version of the app cannot show."
+      },
+      {
+        "msgid": "{actor} moved from {oldChannel} to {newChannel}."
+      },
+      {
+        "msgid": "{actor} moved the role {role} down in the member list."
+      },
+      {
+        "msgid": "{actor} moved the role {role} down in the role list."
+      },
+      {
+        "msgid": "{actor} moved the role {role} up in the member list."
+      },
+      {
+        "msgid": "{actor} moved the role {role} up in the role list."
+      },
+      {
+        "msgid": "{actor} moved to a different voice channel."
+      },
+      {
+        "msgid": "{actor} moved to {channel}."
+      },
+      {
+        "msgid": "{actor} moved {target} from {oldChannel} to {newChannel}."
+      },
+      {
+        "msgid": "{actor} moved {target} to a different voice channel."
+      },
+      {
+        "msgid": "{actor} moved {target} to {channel}."
+      },
+      {
+        "msgid": "{actor} paused invites."
+      },
+      {
+        "msgid": "{actor} pinned a message in {channel}."
+      },
+      {
+        "msgid": "{actor} pinned a message."
+      },
+      {
+        "msgid": "{actor} removed the community deafen from {target}."
+      },
+      {
+        "msgid": "{actor} removed the community mute from {target}."
+      },
+      {
+        "msgid": "{actor} removed the nickname {nick} from {target}."
+      },
+      {
+        "msgid": "{actor} removed the permission override for @everyone from {channel}."
+      },
+      {
+        "msgid": "{actor} removed the permission override for the role {role} from {channel}."
+      },
+      {
+        "msgid": "{actor} removed the permission override for {user} from {channel}."
+      },
+      {
+        "msgid": "{actor} removed the role {role} from {target}."
+      },
+      {
+        "msgid": "{actor} removed the server deafen from {target}."
+      },
+      {
+        "msgid": "{actor} removed the server mute from {target}."
+      },
+      {
+        "msgid": "{actor} removed the timeout for {target}."
+      },
+      {
+        "msgid": "{actor} removed the vanity URL {code}."
+      },
+      {
+        "msgid": "{actor} removed their community avatar."
+      },
+      {
+        "msgid": "{actor} removed their community banner."
+      },
+      {
+        "msgid": "{actor} removed their community bio."
+      },
+      {
+        "msgid": "{actor} removed their community profile avatar."
+      },
+      {
+        "msgid": "{actor} removed their community profile banner."
+      },
+      {
+        "msgid": "{actor} removed their community profile bio."
+      },
+      {
+        "msgid": "{actor} removed their community profile pronouns."
+      },
+      {
+        "msgid": "{actor} removed their community pronouns."
+      },
+      {
+        "msgid": "{actor} removed their nickname {nick}."
+      },
+      {
+        "msgid": "{actor} renamed the community from {oldName} to {newName}."
+      },
+      {
+        "msgid": "{actor} renamed the emoji {oldEmoji} to {newEmoji}."
+      },
+      {
+        "msgid": "{actor} renamed the role {oldName} to {newName}."
+      },
+      {
+        "msgid": "{actor} renamed the sticker {oldName} to {newName}."
+      },
+      {
+        "msgid": "{actor} renamed the webhook {oldName} to {newName}."
+      },
+      {
+        "msgid": "{actor} reset the member list position for the role {role}."
+      },
+      {
+        "msgid": "{actor} resumed invites."
+      },
+      {
+        "msgid": "{actor} server deafened {target}."
+      },
+      {
+        "msgid": "{actor} server muted {target}."
+      },
+      {
+        "msgid": "{actor} set a community avatar."
+      },
+      {
+        "msgid": "{actor} set a community banner."
+      },
+      {
+        "msgid": "{actor} set a community profile avatar."
+      },
+      {
+        "msgid": "{actor} set a community profile banner."
+      },
+      {
+        "msgid": "{actor} set a member list position for the role {role}."
+      },
+      {
+        "msgid": "{actor} set the nickname of {target} to {nick}."
+      },
+      {
+        "msgid": "{actor} set the vanity URL to {code}."
+      },
+      {
+        "msgid": "{actor} set their community bio to {text}."
+      },
+      {
+        "msgid": "{actor} set their community profile avatar."
+      },
+      {
+        "msgid": "{actor} set their community profile banner."
+      },
+      {
+        "msgid": "{actor} set their community profile bio to {text}."
+      },
+      {
+        "msgid": "{actor} set their community profile pronouns to {text}."
+      },
+      {
+        "msgid": "{actor} set their community pronouns to {text}."
+      },
+      {
+        "msgid": "{actor} stopped {target} from hearing others in this community."
+      },
+      {
+        "msgid": "{actor} timed out {target} until {date}."
+      },
+      {
+        "msgid": "{actor} transferred community ownership to {user}."
+      },
+      {
+        "msgid": "{actor} turned off {target}'s microphone in this community."
+      },
+      {
+        "msgid": "{actor} turned {target}'s microphone back on in this community."
+      },
+      {
+        "msgid": "{actor} unbanned {target}."
+      },
+      {
+        "msgid": "{actor} unpinned a message in {channel}."
+      },
+      {
+        "msgid": "{actor} unpinned a message."
+      },
+      {
+        "msgid": "{actor} updated a sticker."
+      },
+      {
+        "msgid": "{actor} updated a webhook."
+      },
+      {
+        "msgid": "{actor} updated an emoji."
+      },
+      {
+        "msgid": "{actor} updated the category {channel}."
+      },
+      {
+        "msgid": "{actor} updated the channel {channel}."
+      },
+      {
+        "msgid": "{actor} updated the emoji {emoji}."
+      },
+      {
+        "msgid": "{actor} updated the invite {code}."
+      },
+      {
+        "msgid": "{actor} updated the link channel {channel}."
+      },
+      {
+        "msgid": "{actor} updated the permission override for @everyone in {channel}."
+      },
+      {
+        "msgid": "{actor} updated the permission override for the role {role} in {channel}."
+      },
+      {
+        "msgid": "{actor} updated the permission override for {user} in {channel}."
+      },
+      {
+        "msgid": "{actor} updated the role {role}."
+      },
+      {
+        "msgid": "{actor} updated the roles of {target}."
+      },
+      {
+        "msgid": "{actor} updated the sticker {name}."
+      },
+      {
+        "msgid": "{actor} updated the text channel {channel}."
+      },
+      {
+        "msgid": "{actor} updated the voice channel {channel}."
+      },
+      {
+        "msgid": "{actor} updated the webhook {name}."
+      },
+      {
+        "msgid": "{actor} updated their community profile."
+      },
+      {
+        "msgid": "{actor} updated {target}."
+      },
+      {
         "msgid": "{channelHeading}, {mentionCount, plural, one {# mention} other {# mentions}}"
+      },
+      {
+        "msgid": "{codec} cannot keep up on this device. Set the codec to Automatic in Advanced settings to allow a faster one."
       },
       {
         "msgid": "{count, plural, =0 {∞ No limit} one {# participant} other {# participants}}"
       },
       {
+        "msgid": "{count, plural, one {# file} other {# files}}"
+      },
+      {
+        "msgid": "{count, plural, one {# image} other {# images}}"
+      },
+      {
         "msgid": "{count, plural, one {# minute} other {# minutes}}"
       },
       {
+        "msgid": "{count, plural, one {# more permission} other {# more permissions}}"
+      },
+      {
+        "msgid": "{count, plural, one {# video} other {# videos}}"
+      },
+      {
+        "msgid": "{count, plural, one {The invite was limited to # use.} other {The invite was limited to # uses.}}"
+      },
+      {
+        "msgid": "{count, plural, one {The invite was used # time.} other {The invite was used # times.}}"
+      },
+      {
+        "msgid": "{expressionName} is a custom emoji from this community. Members can use it here."
+      },
+      {
+        "msgid": "{expressionName} is a custom sticker from this community. Members can use it here."
+      },
+      {
+        "msgid": "{frameRate} FPS"
+      },
+      {
+        "msgid": "{imageCount, plural, one {# image} other {# images}}, {videoCount, plural, one {# video} other {# videos}}"
+      },
+      {
         "msgid": "{name} copy"
+      },
+      {
+        "msgid": "{pinnedCodec} is not available on this device, so your stream uses {codec}."
+      },
+      {
+        "msgid": "{premiumProductName} costs less now. Switch from {currentPrice} to {newPrice} a month starting {effectiveDate}, and nothing is charged today."
+      },
+      {
+        "msgid": "{premiumProductName} costs less now. Switch from {currentPrice} to {newPrice} a year starting {effectiveDate}, and nothing is charged today."
       },
       {
         "msgid": "{productName} application logo"
@@ -2132,6 +3785,46 @@
       },
       {
         "msgid": "{remaining, plural, one {+# more} other {+# more}}"
+      },
+      {
+        "msgctxt": "audit-log-member-profile",
+        "msgid": "Changed the community banner."
+      },
+      {
+        "msgctxt": "audit-log-member-profile",
+        "msgid": "Changed the community profile banner."
+      },
+      {
+        "msgctxt": "audit-log-member-profile",
+        "msgid": "Changed the member's community profile banner."
+      },
+      {
+        "msgctxt": "audit-log-member-profile",
+        "msgid": "Removed the community banner."
+      },
+      {
+        "msgctxt": "audit-log-member-profile",
+        "msgid": "Removed the community profile banner."
+      },
+      {
+        "msgctxt": "audit-log-member-profile",
+        "msgid": "Removed the member's community profile banner."
+      },
+      {
+        "msgctxt": "noise-suppression-option",
+        "msgid": "Balanced"
+      },
+      {
+        "msgctxt": "noise-suppression-option",
+        "msgid": "Classic"
+      },
+      {
+        "msgctxt": "noise-suppression-option",
+        "msgid": "Focused"
+      },
+      {
+        "msgctxt": "noise-suppression-option",
+        "msgid": "Noise gate"
       },
       {
         "msgctxt": "screen-share",
@@ -2159,6 +3852,9 @@
       }
     ],
     "es-419": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "15 FPS"
       },
@@ -2364,6 +4060,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "emoji {emojiName}"
       },
       {
@@ -2388,7 +4093,13 @@
         "msgid": "{count, plural, one {# emoji} other {# emojis}}"
       },
       {
+        "msgid": "{count, plural, one {# video} other {# videos}}"
+      },
+      {
         "msgid": "{fps} FPS"
+      },
+      {
+        "msgid": "{frameRate} FPS"
       },
       {
         "msgid": "{kilobits} kbps"
@@ -2433,6 +4144,9 @@
       }
     ],
     "es-ES": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "15 FPS"
       },
@@ -2572,6 +4286,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "emoji {emojiName}"
       },
       {
@@ -2585,6 +4308,9 @@
       },
       {
         "msgid": "{fps} FPS"
+      },
+      {
+        "msgid": "{frameRate} FPS"
       },
       {
         "msgid": "{kilobits} kbps"
@@ -2618,6 +4344,9 @@
       }
     ],
     "fi": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "15 FPS"
       },
@@ -2730,6 +4459,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "emoji {emojiName}"
       },
       {
@@ -2743,6 +4481,9 @@
       },
       {
         "msgid": "{fps} FPS"
+      },
+      {
+        "msgid": "{frameRate} FPS"
       },
       {
         "msgid": "{kilobits} kbps"
@@ -2766,6 +4507,9 @@
       }
     ],
     "fr": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "1 mention"
       },
@@ -3142,6 +4886,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "hCaptcha"
       },
       {
@@ -3161,6 +4914,9 @@
       },
       {
         "msgid": "{channelHeading}, {mentionCount} mentions"
+      },
+      {
+        "msgid": "{count, plural, one {# image} other {# images}}"
       },
       {
         "msgid": "{count, plural, one {# minute} other {# minutes}}"
@@ -3253,6 +5009,9 @@
     ],
     "he": [
       {
+        "msgid": "+{count}"
+      },
+      {
         "msgid": "AV1"
       },
       {
@@ -3307,6 +5066,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "hCaptcha"
       },
       {
@@ -3319,6 +5087,9 @@
         "msgid": "user@example.com"
       },
       {
+        "msgid": "{frameRate} FPS"
+      },
+      {
         "msgid": "{messageGroupSpacing}px"
       },
       {
@@ -3329,6 +5100,9 @@
       }
     ],
     "hi": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "15 FPS"
       },
@@ -3369,6 +5143,15 @@
         "msgid": "YubiKey"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "hCaptcha"
       },
       {
@@ -3397,6 +5180,9 @@
       }
     ],
     "hr": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "15 FPS"
       },
@@ -3530,6 +5316,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "emoji {emojiName}"
       },
       {
@@ -3545,6 +5340,9 @@
         "msgid": "{fps} FPS"
       },
       {
+        "msgid": "{frameRate} FPS"
+      },
+      {
         "msgid": "{kilobits} kbps"
       },
       {
@@ -3558,6 +5356,9 @@
       }
     ],
     "hu": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "15 FPS"
       },
@@ -3688,6 +5489,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "hCaptcha"
       },
       {
@@ -3728,6 +5538,9 @@
       }
     ],
     "id": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "15 FPS"
       },
@@ -3984,6 +5797,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "hCaptcha"
       },
       {
@@ -4006,6 +5828,9 @@
       },
       {
         "msgid": "{fps} FPS"
+      },
+      {
+        "msgid": "{frameRate} FPS"
       },
       {
         "msgid": "{kilobits} kbps"
@@ -4049,6 +5874,9 @@
       }
     ],
     "it": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "15 FPS"
       },
@@ -4317,6 +6145,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "hCaptcha"
       },
       {
@@ -4342,6 +6179,9 @@
       },
       {
         "msgid": "{fps} FPS"
+      },
+      {
+        "msgid": "{frameRate} FPS"
       },
       {
         "msgid": "{kilobits} kbps"
@@ -4387,6 +6227,9 @@
       }
     ],
     "ja": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "15 FPS"
       },
@@ -4478,6 +6321,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "hCaptcha"
       },
       {
@@ -4488,6 +6340,9 @@
       },
       {
         "msgid": "{fps} FPS"
+      },
+      {
+        "msgid": "{frameRate} FPS"
       },
       {
         "msgid": "{kilobits} kbps"
@@ -4506,6 +6361,9 @@
       }
     ],
     "ko": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "15 FPS"
       },
@@ -4555,6 +6413,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "hCaptcha"
       },
       {
@@ -4570,6 +6437,9 @@
         "msgid": "{fps} FPS"
       },
       {
+        "msgid": "{frameRate} FPS"
+      },
+      {
         "msgid": "{messageGroupSpacing}px"
       },
       {
@@ -4577,6 +6447,9 @@
       }
     ],
     "lt": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "60 FPS"
       },
@@ -4629,7 +6502,19 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "{fps} FPS"
+      },
+      {
+        "msgid": "{frameRate} FPS"
       },
       {
         "msgid": "{kilobits} kbps"
@@ -4639,6 +6524,9 @@
       }
     ],
     "nl": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "1 week"
       },
@@ -5057,6 +6945,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "emoji {emojiName}"
       },
       {
@@ -5153,6 +7050,9 @@
     ],
     "no": [
       {
+        "msgid": "+{count}"
+      },
+      {
         "msgid": "15 FPS"
       },
       {
@@ -5172,6 +7072,9 @@
       },
       {
         "msgid": "Alt"
+      },
+      {
+        "msgid": "Ban reason"
       },
       {
         "msgid": "Banner"
@@ -5405,6 +7308,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "emoji {emojiName}"
       },
       {
@@ -5437,6 +7349,9 @@
       }
     ],
     "pl": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "AV1"
       },
@@ -5594,6 +7509,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "hCaptcha"
       },
       {
@@ -5620,6 +7544,9 @@
       }
     ],
     "pt-BR": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "15 FPS"
       },
@@ -5831,6 +7758,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "emoji {emojiName}"
       },
       {
@@ -5859,6 +7795,9 @@
       },
       {
         "msgid": "{fps} FPS"
+      },
+      {
+        "msgid": "{frameRate} FPS"
       },
       {
         "msgid": "{kilobits} kbps"
@@ -5908,6 +7847,9 @@
       }
     ],
     "ro": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "15 FPS"
       },
@@ -6110,6 +8052,12 @@
         "msgid": "Secret"
       },
       {
+        "msgid": "Set the message history threshold to {date}."
+      },
+      {
+        "msgid": "Set the role color to {color}."
+      },
+      {
         "msgid": "Slovenia"
       },
       {
@@ -6173,6 +8121,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "emoji {emojiName}"
       },
       {
@@ -6204,6 +8161,9 @@
       },
       {
         "msgid": "{fps} FPS"
+      },
+      {
+        "msgid": "{frameRate} FPS"
       },
       {
         "msgid": "{kilobits} kbps"
@@ -6251,6 +8211,9 @@
       }
     ],
     "ru": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "AV1"
       },
@@ -6306,6 +8269,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "hCaptcha"
       },
       {
@@ -6331,6 +8303,9 @@
       }
     ],
     "sv-SE": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "15 FPS"
       },
@@ -6551,6 +8526,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "emoji {emojiName}"
       },
       {
@@ -6619,6 +8603,9 @@
       }
     ],
     "th": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "15 FPS"
       },
@@ -6689,6 +8676,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "hCaptcha"
       },
       {
@@ -6714,6 +8710,9 @@
       }
     ],
     "tr": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "15 FPS"
       },
@@ -6838,6 +8837,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "hCaptcha"
       },
       {
@@ -6848,6 +8856,9 @@
       },
       {
         "msgid": "{fps} FPS"
+      },
+      {
+        "msgid": "{frameRate} FPS"
       },
       {
         "msgid": "{kilobits} kbps"
@@ -6871,6 +8882,9 @@
       }
     ],
     "uk": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "AV1"
       },
@@ -6938,6 +8952,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "hCaptcha"
       },
       {
@@ -6957,6 +8980,9 @@
       }
     ],
     "vi": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "15 FPS"
       },
@@ -7105,6 +9131,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "hCaptcha"
       },
       {
@@ -7118,6 +9153,9 @@
       },
       {
         "msgid": "{fps} FPS"
+      },
+      {
+        "msgid": "{frameRate} FPS"
       },
       {
         "msgid": "{kilobits} kbps"
@@ -7137,6 +9175,9 @@
       }
     ],
     "zh-CN": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "AV1"
       },
@@ -7195,6 +9236,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "hCaptcha"
       },
       {
@@ -7220,6 +9270,9 @@
       }
     ],
     "zh-TW": [
+      {
+        "msgid": "+{count}"
+      },
       {
         "msgid": "15 FPS"
       },
@@ -7290,6 +9343,15 @@
         "msgid": "cron"
       },
       {
+        "msgid": "deleted-category"
+      },
+      {
+        "msgid": "deleted-channel"
+      },
+      {
+        "msgid": "deleted-role"
+      },
+      {
         "msgid": "hCaptcha"
       },
       {
@@ -7303,6 +9365,9 @@
       },
       {
         "msgid": "{fps} FPS"
+      },
+      {
+        "msgid": "{frameRate} FPS"
       },
       {
         "msgid": "{kilobits} kbps"

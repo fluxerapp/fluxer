@@ -1,6 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {timingSafeEqual} from 'node:crypto';
+import type {ApiContext} from '@app/api/ApiContext';
+import * as AuthUtility from '@app/api/auth/AuthUtility';
+import {deriveSudoMethods, userHasMfa, userHasSudoCapability} from '@app/api/auth/services/SudoMethods';
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {Logger} from '@app/api/Logger';
+import type {MfaBackupCode} from '@app/api/models/MfaBackupCode';
+import type {User} from '@app/api/models/User';
+import type {WebAuthnCredential} from '@app/api/models/WebAuthnCredential';
+import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {TotpGenerator} from '@app/api/utils/TotpGenerator';
 import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InvalidWebAuthnAuthenticationCounterError} from '@fluxer/errors/src/domains/auth/InvalidWebAuthnAuthenticationCounterError';
@@ -22,14 +32,6 @@ import {
 	verifyRegistrationResponse,
 } from '@simplewebauthn/server';
 import {ms, seconds} from 'itty-time';
-import type {ApiContext} from '../ApiContext';
-import {createUserID, type UserID} from '../BrandedTypes';
-import {Logger} from '../Logger';
-import type {User} from '../models/User';
-import type {WebAuthnCredential} from '../models/WebAuthnCredential';
-import {getUserSearchService} from '../SearchFactory';
-import {mapUserToPrivateResponse} from '../user/UserMappers';
-import {TotpGenerator} from '../utils/TotpGenerator';
 
 type WebAuthnChallengeContext = 'registration' | 'discoverable' | 'mfa' | 'sudo';
 
@@ -48,7 +50,7 @@ interface SudoMfaVerificationResult {
 
 interface VerifyMfaCodeParams {
 	userId: UserID;
-	mfaSecret: string;
+	mfaSecret: string | null;
 	code: string;
 	allowBackup?: boolean;
 }
@@ -56,7 +58,13 @@ interface VerifyMfaCodeParams {
 interface AvailableMfaMethods {
 	totp: boolean;
 	webauthn: boolean;
+	backup_codes: boolean;
 	has_mfa: boolean;
+}
+
+interface SetWebAuthnTwoFactorResult {
+	user: User;
+	backupCodes: Array<MfaBackupCode> | null;
 }
 
 function constantTimeEquals(a: string, b: string): boolean {
@@ -72,24 +80,31 @@ function normalizeBackupCode(code: string): string {
 	return code.toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
+export async function hasUnconsumedBackupCodes(ctx: ApiContext, userId: UserID): Promise<boolean> {
+	const backupCodes = await ctx.services.users.listMfaBackupCodes(userId);
+	return backupCodes.some((backupCode) => !backupCode.consumed);
+}
+
 export async function verifyMfaCode(ctx: ApiContext, params: VerifyMfaCodeParams): Promise<boolean> {
 	const {userId, mfaSecret, code, allowBackup = false} = params;
 	const {users, cache, config} = ctx.services;
-	try {
-		const totp = new TotpGenerator(mfaSecret);
-		const isValidTotp = await totp.validateTotp(code);
-		if (isValidTotp) {
-			if (config.dev.testModeEnabled) {
-				return true;
+	if (mfaSecret !== null) {
+		try {
+			const totp = new TotpGenerator(mfaSecret);
+			const isValidTotp = await totp.validateTotp(code);
+			if (isValidTotp) {
+				if (config.dev.testModeEnabled) {
+					return true;
+				}
+				const reuseKey = `mfa-totp:${userId}:${code}`;
+				const lockToken = await cache.acquireLock(reuseKey, seconds('90 seconds'));
+				if (lockToken) {
+					return true;
+				}
 			}
-			const reuseKey = `mfa-totp:${userId}:${code}`;
-			const lockToken = await cache.acquireLock(reuseKey, seconds('90 seconds'));
-			if (lockToken) {
-				return true;
-			}
+		} catch (error) {
+			Logger.error({userId, code: `${code.slice(0, 3)}***`, error}, 'Failed to validate TOTP code');
 		}
-	} catch (error) {
-		Logger.error({userId, code: `${code.slice(0, 3)}***`, error}, 'Failed to validate TOTP code');
 	}
 	if (allowBackup) {
 		const normalizedCode = normalizeBackupCode(code);
@@ -121,6 +136,7 @@ export async function generateWebAuthnRegistrationOptions(ctx: ApiContext, userI
 		userName: user.username!,
 		userDisplayName: user.username!,
 		attestationType: 'none',
+		supportedAlgorithmIDs: [-8, -7, -257],
 		excludeCredentials: existingCredentials.map((cred) => ({
 			id: cred.credentialId,
 			transports: cred.transports
@@ -144,8 +160,7 @@ export async function verifyWebAuthnRegistration(
 	expectedChallenge: string,
 	name: string,
 ): Promise<void> {
-	const {users, gateway, botMfaMirror, config} = ctx.services;
-	const user = await users.findUniqueAssert(userId);
+	const {users, config} = ctx.services;
 	const existingCredentials = await users.listWebAuthnCredentials(userId);
 	await consumeWebAuthnChallenge(ctx, expectedChallenge, 'registration', {userId});
 	if (existingCredentials.length >= 10) {
@@ -174,6 +189,7 @@ export async function verifyWebAuthnRegistration(
 				expectedOrigin,
 				expectedRPID: rpID,
 				requireUserVerification: false,
+				supportedAlgorithmIDs: [-8, -7, -257],
 			});
 		} catch (error) {
 			Logger.error({error, userId, expectedChallenge, rpID, expectedOrigin}, 'WebAuthn verification failed');
@@ -212,19 +228,6 @@ export async function verifyWebAuthnRegistration(
 			name,
 		);
 	}
-	const authenticatorTypes = user.authenticatorTypes || new Set<number>();
-	if (!authenticatorTypes.has(UserAuthenticatorTypes.WEBAUTHN)) {
-		authenticatorTypes.add(UserAuthenticatorTypes.WEBAUTHN);
-		const updatedUser = await users.patchUpsert(userId, {authenticator_types: authenticatorTypes}, user.toRow());
-		const userSearchService = getUserSearchService();
-		if (userSearchService && 'updateUser' in userSearchService) {
-			await userSearchService.updateUser(updatedUser).catch((error) => {
-				Logger.error({userId, error}, 'Failed to update user in search');
-			});
-		}
-		await gateway.dispatchPresence({userId, event: 'USER_UPDATE', data: mapUserToPrivateResponse(updatedUser)});
-		await botMfaMirror.syncAuthenticatorTypesForOwner(updatedUser);
-	}
 	await dispatchWebAuthnCredentialsUpdate(ctx, userId);
 }
 
@@ -238,19 +241,53 @@ export async function deleteWebAuthnCredential(ctx: ApiContext, userId: UserID, 
 	const remainingCredentials = await users.listWebAuthnCredentials(userId);
 	if (remainingCredentials.length === 0) {
 		const user = await users.findUniqueAssert(userId);
-		const authenticatorTypes = user.authenticatorTypes || new Set<number>();
-		authenticatorTypes.delete(UserAuthenticatorTypes.WEBAUTHN);
-		const updatedUser = await users.patchUpsert(userId, {authenticator_types: authenticatorTypes}, user.toRow());
-		const userSearchService = getUserSearchService();
-		if (userSearchService && 'updateUser' in userSearchService) {
-			await userSearchService.updateUser(updatedUser).catch((error) => {
-				Logger.error({userId, error}, 'Failed to update user in search');
-			});
+		if (user.authenticatorTypes.has(UserAuthenticatorTypes.WEBAUTHN)) {
+			const authenticatorTypes = new Set<number>(user.authenticatorTypes ?? []);
+			authenticatorTypes.delete(UserAuthenticatorTypes.WEBAUTHN);
+			const updatedUser = await users.patchUpsert(userId, {authenticator_types: authenticatorTypes}, user.toRow());
+			if (!userHasMfa(updatedUser)) {
+				await users.clearMfaBackupCodes(userId);
+			}
+			await gateway.dispatchPresence({userId, event: 'USER_UPDATE', data: mapUserToPrivateResponse(updatedUser)});
+			await botMfaMirror.syncAuthenticatorTypesForOwner(updatedUser);
 		}
-		await gateway.dispatchPresence({userId, event: 'USER_UPDATE', data: mapUserToPrivateResponse(updatedUser)});
-		await botMfaMirror.syncAuthenticatorTypesForOwner(updatedUser);
 	}
 	await dispatchWebAuthnCredentialsUpdate(ctx, userId);
+}
+
+export async function setWebAuthnTwoFactor(
+	ctx: ApiContext,
+	userId: UserID,
+	enabled: boolean,
+): Promise<SetWebAuthnTwoFactorResult> {
+	const {users, gateway, botMfaMirror} = ctx.services;
+	const user = await users.findUniqueAssert(userId);
+	const credentials = await users.listWebAuthnCredentials(userId);
+	if (enabled && credentials.length === 0) {
+		throw new NoPasskeysRegisteredError();
+	}
+	const authenticatorTypes = new Set<number>(user.authenticatorTypes ?? []);
+	if (authenticatorTypes.has(UserAuthenticatorTypes.WEBAUTHN) === enabled) {
+		return {user, backupCodes: null};
+	}
+	if (enabled) {
+		authenticatorTypes.add(UserAuthenticatorTypes.WEBAUTHN);
+	} else {
+		authenticatorTypes.delete(UserAuthenticatorTypes.WEBAUTHN);
+	}
+	const updatedUser = await users.patchUpsert(userId, {authenticator_types: authenticatorTypes}, user.toRow());
+	let backupCodes: Array<MfaBackupCode> | null = null;
+	if (enabled) {
+		const existingBackupCodes = await users.listMfaBackupCodes(userId);
+		if (existingBackupCodes.every((backupCode) => backupCode.consumed)) {
+			backupCodes = await users.createMfaBackupCodes(userId, AuthUtility.generateBackupCodes(ctx));
+		}
+	} else if (!userHasMfa(updatedUser)) {
+		await users.clearMfaBackupCodes(userId);
+	}
+	await gateway.dispatchPresence({userId, event: 'USER_UPDATE', data: mapUserToPrivateResponse(updatedUser)});
+	await botMfaMirror.syncAuthenticatorTypesForOwner(updatedUser);
+	return {user: updatedUser, backupCodes};
 }
 
 export async function renameWebAuthnCredential(
@@ -440,16 +477,17 @@ export async function verifySudoMfa(
 	const {users} = ctx.services;
 	const {userId, method, code, webauthnResponse, webauthnChallenge} = params;
 	const user = await users.findUnique(userId);
-	const hasMfa =
-		(user?.authenticatorTypes?.has(UserAuthenticatorTypes.TOTP) ?? false) ||
-		(user?.authenticatorTypes?.has(UserAuthenticatorTypes.WEBAUTHN) ?? false);
-	if (!user || !hasMfa) {
+	if (!user) {
+		return {success: false, error: 'MFA not enabled'};
+	}
+	const credentials = await users.listWebAuthnCredentials(userId);
+	const hasPasskeyCredentials = credentials.length > 0;
+	if (!userHasSudoCapability(user, hasPasskeyCredentials)) {
 		return {success: false, error: 'MFA not enabled'};
 	}
 	switch (method) {
 		case 'totp': {
 			if (!code) return {success: false, error: 'TOTP code is required'};
-			if (!user.totpSecret) return {success: false, error: 'TOTP is not enabled'};
 			await consumeSudoMfaAttempt(ctx, userId);
 			const isValid = await verifyMfaCode(ctx, {userId, mfaSecret: user.totpSecret, code, allowBackup: true});
 			if (isValid) {
@@ -461,7 +499,7 @@ export async function verifySudoMfa(
 			if (!webauthnResponse || !webauthnChallenge) {
 				return {success: false, error: 'WebAuthn response and challenge are required'};
 			}
-			if (!user.authenticatorTypes?.has(UserAuthenticatorTypes.WEBAUTHN)) {
+			if (!hasPasskeyCredentials) {
 				return {success: false, error: 'WebAuthn is not enabled'};
 			}
 			try {
@@ -477,14 +515,19 @@ export async function verifySudoMfa(
 }
 
 export async function getAvailableMfaMethods(ctx: ApiContext, userId: UserID): Promise<AvailableMfaMethods> {
-	const user = await ctx.services.users.findUnique(userId);
+	const {users} = ctx.services;
+	const user = await users.findUnique(userId);
 	if (!user) {
-		return {totp: false, webauthn: false, has_mfa: false};
+		return {totp: false, webauthn: false, backup_codes: false, has_mfa: false};
 	}
+	const credentials = await users.listWebAuthnCredentials(userId);
+	const hasPasskeyCredentials = credentials.length > 0;
+	const methods = deriveSudoMethods(user, hasPasskeyCredentials, await hasUnconsumedBackupCodes(ctx, userId));
 	return {
-		totp: user.totpSecret !== null,
-		webauthn: user.authenticatorTypes?.has(UserAuthenticatorTypes.WEBAUTHN) ?? false,
-		has_mfa: (user.authenticatorTypes?.size ?? 0) > 0,
+		totp: methods.totp,
+		webauthn: methods.webauthn,
+		backup_codes: methods.backup_codes,
+		has_mfa: userHasSudoCapability(user, hasPasskeyCredentials),
 	};
 }
 

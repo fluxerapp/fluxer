@@ -1,9 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID} from '@app/api/BrandedTypes';
+import type {GiftCodeDurationType, GiftCodeRow} from '@app/api/database/types/PaymentTypes';
+import {
+	addGiftCodeDuration,
+	GiftCode,
+	mapGiftCodeDurationToMonths,
+	mapGiftDurationMonthsToFields,
+} from '@app/api/models/GiftCode';
 import {describe, expect, test} from 'vitest';
-import {createUserID} from '../../BrandedTypes';
-import type {GiftCodeDurationType, GiftCodeRow} from '../../database/types/PaymentTypes';
-import {addGiftCodeDuration, GiftCode, mapGiftCodeDurationToMonths, mapGiftDurationMonthsToFields} from '../GiftCode';
 
 const TEST_USER_ID = createUserID(1n);
 const BASE_DATE = new Date('2026-03-01T00:00:00.000Z');

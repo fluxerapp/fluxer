@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export interface CompactVoiceCallPresentationInput {
 	readonly audioOnly?: boolean;
@@ -113,7 +113,7 @@ export type CompactVoiceCallPresentationMachineSnapshot = SnapshotFrom<typeof co
 export function createCompactVoiceCallPresentationSnapshot(
 	input: CompactVoiceCallPresentationInput,
 ): CompactVoiceCallPresentationMachineSnapshot {
-	return getInitialSnapshot(compactVoiceCallPresentationStateMachine, input);
+	return initialTransition(compactVoiceCallPresentationStateMachine, input)[0];
 }
 
 export function transitionCompactVoiceCallPresentationSnapshot(

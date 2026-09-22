@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {translateDescriptor} from '@app/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared';
+import {updateOption} from '@app/features/channel/components/channel_header_components/developer_tools/ResetOptions';
 import {getToggleGroups, type ToggleGroup} from '@app/features/devtools/components/DeveloperOptionsToggleGroups';
 import type {DeveloperOptionsState} from '@app/features/devtools/state/DeveloperOptions';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
@@ -13,7 +14,6 @@ import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {updateOption} from './ResetOptions';
 
 const MENTION_CONTROLS_DESCRIPTOR = msg({
 	message: 'Mention controls',

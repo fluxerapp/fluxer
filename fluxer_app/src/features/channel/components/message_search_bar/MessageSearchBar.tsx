@@ -66,12 +66,8 @@ const SEARCH_SHORTCUTS_HINT_DESCRIPTOR = msg({
 	comment:
 		'Screen-reader-only instructions describing the keyboard shortcuts for the message search autocomplete. Announced when the input is focused. Sentence case.',
 });
-const ONE_SUGGESTION_AVAILABLE_DESCRIPTOR = msg({
-	message: '1 suggestion available',
-	comment: 'Screen-reader live-region announcement when exactly one message search suggestion is available.',
-});
 const SUGGESTIONS_AVAILABLE_DESCRIPTOR = msg({
-	message: '{count} suggestions available',
+	message: '{count, plural, one {# suggestion available} other {# suggestions available}}',
 	comment:
 		'Screen-reader live-region announcement listing the number of message search suggestions. Preserve {count}; it is inserted by code.',
 });
@@ -354,11 +350,9 @@ export const MessageSearchBar = observer(
 		const activeSuggestionStatusId = `${listboxId}-active-status`;
 		const totalOptions = getTotalOptions();
 		const isPopoutOpen = isFocused && autocompleteType !== null && totalOptions > 0;
-		const suggestionsAvailableStatus = !isPopoutOpen
-			? ''
-			: totalOptions === 1
-				? i18n._(ONE_SUGGESTION_AVAILABLE_DESCRIPTOR)
-				: i18n._(SUGGESTIONS_AVAILABLE_DESCRIPTOR, {count: totalOptions});
+		const suggestionsAvailableStatus = isPopoutOpen
+			? i18n._(SUGGESTIONS_AVAILABLE_DESCRIPTOR, {count: totalOptions})
+			: '';
 		const activeSuggestionStatus =
 			isPopoutOpen && keyboardFocusIndex >= 0
 				? i18n._(ACTIVE_SUGGESTION_POSITION_DESCRIPTOR, {position: keyboardFocusIndex + 1, total: totalOptions})

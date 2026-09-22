@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, InviteCode, RoleID, UserID} from '@app/api/BrandedTypes';
+import type {GuildMemberRow} from '@app/api/database/types/GuildTypes';
 import {GuildMemberProfileFlags, type JoinSourceType} from '@fluxer/constants/src/GuildConstants';
 import type {MentionReplyPreference} from '@fluxer/constants/src/UserConstants';
-import type {GuildID, InviteCode, RoleID, UserID} from '../BrandedTypes';
-import type {GuildMemberRow} from '../database/types/GuildTypes';
 
 export class GuildMember {
 	readonly guildId: GuildID;

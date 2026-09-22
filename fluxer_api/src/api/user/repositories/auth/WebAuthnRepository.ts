@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../../../BrandedTypes';
-import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../../../database/CassandraQueryExecution';
-import {Db} from '../../../database/CassandraTypes';
-import type {WebAuthnCredentialRow} from '../../../database/types/AuthTypes';
-import {WebAuthnCredential} from '../../../models/WebAuthnCredential';
-import {WebAuthnCredentialLookup, WebAuthnCredentials} from '../../../Tables';
+import type {UserID} from '@app/api/BrandedTypes';
+import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {Db} from '@app/api/database/CassandraTypes';
+import type {WebAuthnCredentialRow} from '@app/api/database/types/AuthTypes';
+import {WebAuthnCredential} from '@app/api/models/WebAuthnCredential';
+import {WebAuthnCredentialLookup, WebAuthnCredentials} from '@app/api/Tables';
 
 const FETCH_USER_ID_BY_CREDENTIAL_ID_CQL = WebAuthnCredentialLookup.selectCql({
 	where: WebAuthnCredentialLookup.where.eq('credential_id'),

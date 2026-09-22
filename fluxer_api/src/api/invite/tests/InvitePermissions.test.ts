@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {afterAll, beforeAll, beforeEach, describe, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {
 	acceptInvite,
 	createChannelInvite,
 	createGuild,
 	getChannel,
 	updateRole,
-} from '../../channel/tests/ChannelTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {deleteInvite} from './InviteTestUtils';
+} from '@app/api/channel/tests/ChannelTestUtils';
+import {deleteInvite} from '@app/api/invite/tests/InviteTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {afterAll, beforeAll, beforeEach, describe, test} from 'vitest';
 
 const BASIC_PERMISSIONS =
 	Permissions.VIEW_CHANNEL |

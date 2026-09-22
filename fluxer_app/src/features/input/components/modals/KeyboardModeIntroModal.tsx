@@ -3,7 +3,7 @@
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import styles from '@app/features/input/components/modals/KeyboardModeIntroModal.module.css';
-import {SHIFT_KEY_LABEL} from '@app/features/input/utils/KeyboardUtils';
+import {SHIFT_KEY_DESCRIPTOR} from '@app/features/input/utils/KeyboardUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import {isNativeMacOS} from '@app/features/ui/utils/NativeUtils';
@@ -69,7 +69,7 @@ export function KeyboardModeIntroModal() {
 								{i18n._(OR_DESCRIPTOR)}
 							</span>
 							<kbd className={styles.kbd} data-flx="input.keyboard-mode-intro-modal.kbd--2">
-								{SHIFT_KEY_LABEL}
+								{i18n._(SHIFT_KEY_DESCRIPTOR)}
 							</kbd>
 							<span className={styles.separator} data-flx="input.keyboard-mode-intro-modal.separator--2">
 								+

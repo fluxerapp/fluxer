@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createAccountPolicyEvaluator, type IAccountPolicyEvaluator} from '../risk/AccountPolicyEvaluator';
+import {createAccountPolicyEvaluator, type IAccountPolicyEvaluator} from '@app/api/risk/AccountPolicyEvaluator';
 
 export const TEST_POLICY_CONTACT_DOMAIN = 'policy-exempt.example';
 export const TEST_POLICY_CONTACT_SUBDOMAIN = `sub.${TEST_POLICY_CONTACT_DOMAIN}`;

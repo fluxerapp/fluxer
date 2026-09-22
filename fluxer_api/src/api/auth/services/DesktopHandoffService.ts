@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash, randomBytes, timingSafeEqual} from 'node:crypto';
+import type {ApiContext} from '@app/api/ApiContext';
+import type {SessionOrigin} from '@app/api/auth/AuthSession';
 import {HandoffCodeExpiredError} from '@fluxer/errors/src/domains/auth/HandoffCodeExpiredError';
 import {InvalidHandoffCodeError} from '@fluxer/errors/src/domains/auth/InvalidHandoffCodeError';
 import {
@@ -10,8 +12,6 @@ import {
 	parseDesktopHandoffCode,
 } from '@fluxer/schema/src/domains/auth/DesktopHandoffCode';
 import {ms, seconds} from 'itty-time';
-import type {ApiContext} from '../../ApiContext';
-import type {SessionOrigin} from '../AuthSession';
 
 const HANDOFF_CODE_PREFIX = 'desktop-handoff-v2:';
 const HANDOFF_TOKEN_PREFIX = 'desktop-handoff-token:';

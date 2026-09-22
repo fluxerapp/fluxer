@@ -1,10 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import {getEmailTemplate} from '@pkgs/email/src/email_i18n/EmailI18n';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 import {
 	clearTestEmails,
 	createTestAccount,
@@ -13,8 +8,8 @@ import {
 	listTestEmails,
 	setUserACLs,
 	type TestAccount,
-} from '../../auth/tests/AuthTestUtils';
-import {createUserID} from '../../BrandedTypes';
+} from '@app/api/auth/tests/AuthTestUtils';
+import {createUserID} from '@app/api/BrandedTypes';
 import {
 	acceptInvite,
 	createChannel,
@@ -26,13 +21,18 @@ import {
 	getChannel,
 	sendChannelMessage,
 	setupTestGuildWithMembers,
-} from '../../channel/tests/ChannelTestUtils';
-import {ensureSessionStarted} from '../../message/tests/MessageTestUtils';
-import {ReadStateRepository} from '../../read_state/ReadStateRepository';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import {ReportRepository} from '../ReportRepository';
+} from '@app/api/channel/tests/ChannelTestUtils';
+import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
+import {ReadStateRepository} from '@app/api/read_state/ReadStateRepository';
+import {ReportRepository} from '@app/api/report/ReportRepository';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS, TEST_IDS} from '@app/api/test/TestConstants';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
+import {getEmailTemplate} from '@pkgs/email/src/email_i18n/EmailI18n';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 interface ReportResponse {
 	report_id: string;
@@ -129,6 +129,19 @@ describe('Content Reporting', () => {
 				.execute();
 			expect(result.report_id).toBeTruthy();
 		});
+		test('should reject a user report naming an unknown guild', async () => {
+			const reporter = await createTestAccount(harness);
+			const targetUser = await createTestAccount(harness);
+			await createBuilder(harness, reporter.token)
+				.post('/reports/user')
+				.body({
+					user_id: targetUser.userId,
+					category: 'harassment',
+					guild_id: TEST_IDS.NONEXISTENT_GUILD,
+				})
+				.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.UNKNOWN_GUILD)
+				.execute();
+		});
 		test('should reject report with invalid category', async () => {
 			const reporter = await createTestAccount(harness);
 			const targetUser = await createTestAccount(harness);
@@ -216,9 +229,9 @@ describe('Content Reporting', () => {
 				resolved_at: string | null;
 				public_comment: string | null;
 			}>(harness, `${admin.token}`)
-				.post('/admin/reports/resolve')
+				.patch(`/admin/reports/${report.report_id}`)
 				.body({
-					report_id: report.report_id,
+					status: 'resolved',
 					public_comment: publicComment,
 				})
 				.expect(HTTP_STATUS.OK)
@@ -439,6 +452,45 @@ describe('Content Reporting', () => {
 				.expect(429, APIErrorCodes.RATE_LIMITED)
 				.execute();
 			expect(await countReports()).toBe(3);
+		});
+		test('a duplicate message report does not spend the reporter allowance', async () => {
+			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
+			const targetUser = members[0];
+			const channel = await getChannel(harness, owner.token, guild.system_channel_id!);
+			const [firstMessage, secondMessage] = await Promise.all([
+				sendChannelMessage(harness, targetUser.token, channel.id, 'Duplicate allowance target'),
+				sendChannelMessage(harness, targetUser.token, channel.id, 'Duplicate allowance second target'),
+			]);
+			await createBuilder<ReportResponse>(harness, owner.token)
+				.post('/reports/message')
+				.body({
+					channel_id: channel.id,
+					message_id: firstMessage.id,
+					category: 'harassment',
+				})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			for (let attempt = 0; attempt < 5; attempt += 1) {
+				await createBuilder(harness, owner.token)
+					.post('/reports/message')
+					.body({
+						channel_id: channel.id,
+						message_id: firstMessage.id,
+						category: 'spam',
+					})
+					.expect(HTTP_STATUS.CONFLICT, APIErrorCodes.CONFLICT)
+					.execute();
+			}
+			await createBuilder<ReportResponse>(harness, owner.token)
+				.post('/reports/message')
+				.body({
+					channel_id: channel.id,
+					message_id: secondMessage.id,
+					category: 'harassment',
+				})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(await countReports()).toBe(2);
 		});
 	});
 	describe('Report Guild', () => {
@@ -817,6 +869,47 @@ describe('Content Reporting', () => {
 			expect(result.report_id).toBeTruthy();
 			expect(result.status).toBe('pending');
 		});
+		test('a DSA notice that fails target resolution keeps its ticket', async () => {
+			await clearTestEmails(harness);
+			const email = createUniqueEmail('dsa-reporter');
+			const targetUser = await createTestAccount(harness);
+			await createBuilderWithoutAuth(harness).post('/reports/dsa/email/send').body({email}).execute();
+			const emails = await listTestEmails(harness);
+			const dsaEmail = findLastTestEmail(emails, 'dsa_report_verification');
+			const code = dsaEmail!.metadata.code;
+			const verifyResponse = await createBuilder<{
+				ticket: string;
+			}>(harness, '')
+				.post('/reports/dsa/email/verify')
+				.body({email, code})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			await createBuilderWithoutAuth(harness)
+				.post('/reports/dsa')
+				.body({
+					ticket: verifyResponse.ticket,
+					report_type: 'user',
+					category: 'harassment',
+					user_id: TEST_IDS.NONEXISTENT_USER,
+					reporter_full_legal_name: 'John Doe',
+					reporter_country_of_residence: 'DE',
+				})
+				.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.UNKNOWN_USER)
+				.execute();
+			const result = await createBuilder<ReportResponse>(harness, '')
+				.post('/reports/dsa')
+				.body({
+					ticket: verifyResponse.ticket,
+					report_type: 'user',
+					category: 'harassment',
+					user_id: targetUser.userId,
+					reporter_full_legal_name: 'John Doe',
+					reporter_country_of_residence: 'DE',
+				})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(result.report_id).toBeTruthy();
+		});
 		test('should create DSA guild report with valid ticket', async () => {
 			await clearTestEmails(harness);
 			const email = createUniqueEmail('dsa-reporter');
@@ -847,6 +940,60 @@ describe('Content Reporting', () => {
 				.execute();
 			expect(result.report_id).toBeTruthy();
 			expect(result.status).toBe('pending');
+		});
+		test('should reject DSA message report with a non-numeric message link segment', async () => {
+			await clearTestEmails(harness);
+			const email = createUniqueEmail('dsa-reporter');
+			await createBuilderWithoutAuth(harness).post('/reports/dsa/email/send').body({email}).execute();
+			const emails = await listTestEmails(harness);
+			const dsaEmail = findLastTestEmail(emails, 'dsa_report_verification');
+			const code = dsaEmail!.metadata.code;
+			const verifyResponse = await createBuilder<{
+				ticket: string;
+			}>(harness, '')
+				.post('/reports/dsa/email/verify')
+				.body({email, code})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			await createBuilderWithoutAuth(harness)
+				.post('/reports/dsa')
+				.body({
+					ticket: verifyResponse.ticket,
+					report_type: 'message',
+					category: 'harassment',
+					message_link: 'https://fluxer.test/channels/1/abc/def',
+					reporter_full_legal_name: 'John Doe',
+					reporter_country_of_residence: 'DE',
+				})
+				.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.UNKNOWN_MESSAGE)
+				.execute();
+		});
+		test('should reject DSA message report with an out-of-range message link segment', async () => {
+			await clearTestEmails(harness);
+			const email = createUniqueEmail('dsa-reporter');
+			await createBuilderWithoutAuth(harness).post('/reports/dsa/email/send').body({email}).execute();
+			const emails = await listTestEmails(harness);
+			const dsaEmail = findLastTestEmail(emails, 'dsa_report_verification');
+			const code = dsaEmail!.metadata.code;
+			const verifyResponse = await createBuilder<{
+				ticket: string;
+			}>(harness, '')
+				.post('/reports/dsa/email/verify')
+				.body({email, code})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			await createBuilderWithoutAuth(harness)
+				.post('/reports/dsa')
+				.body({
+					ticket: verifyResponse.ticket,
+					report_type: 'message',
+					category: 'harassment',
+					message_link: 'https://fluxer.test/channels/1/99999999999999999999/1',
+					reporter_full_legal_name: 'John Doe',
+					reporter_country_of_residence: 'DE',
+				})
+				.expect(HTTP_STATUS.NOT_FOUND, APIErrorCodes.UNKNOWN_MESSAGE)
+				.execute();
 		});
 		test('should reject DSA report with invalid ticket', async () => {
 			const targetUser = await createTestAccount(harness);

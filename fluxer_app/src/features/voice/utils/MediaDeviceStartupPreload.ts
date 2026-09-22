@@ -12,9 +12,9 @@ export function startMediaDeviceStartupPreload(): () => void {
 	let lastPermissionStateKey: string | null = null;
 	const preloadDevices = () => {
 		if (stopped) return;
-		const requestPermissionTypes: Array<VoiceMediaPermissionType> = [];
-		if (MediaPermission.isMicrophoneGranted()) requestPermissionTypes.push('audio');
-		if (MediaPermission.isCameraGranted()) requestPermissionTypes.push('video');
+		const grantedPermissionTypes: Array<VoiceMediaPermissionType> = [];
+		if (MediaPermission.isMicrophoneGranted()) grantedPermissionTypes.push('audio');
+		if (MediaPermission.isCameraGranted()) grantedPermissionTypes.push('video');
 		const permissionStateKey = [
 			MediaPermission.isInitialized() ? 'initialized' : 'pending',
 			MediaPermission.getMicrophonePermissionState() ?? 'unknown',
@@ -22,16 +22,18 @@ export function startMediaDeviceStartupPreload(): () => void {
 		].join(':');
 		const deviceState = VoiceDevicePermissionState.getState();
 		const forceRefresh = lastPermissionStateKey !== null && lastPermissionStateKey !== permissionStateKey;
-		const requestedPermissionStatesSettled = requestPermissionTypes.every(
+		const grantedPermissionStatesSettled = grantedPermissionTypes.every(
 			(type) => deviceState.permissionStatus[type] !== 'idle',
 		);
-		if (!forceRefresh && lastPermissionStateKey === permissionStateKey && requestedPermissionStatesSettled) {
+		if (!forceRefresh && lastPermissionStateKey === permissionStateKey && grantedPermissionStatesSettled) {
 			return;
 		}
 		lastPermissionStateKey = permissionStateKey;
-		void VoiceDevicePermissionState.ensureDevices({forceRefresh, requestPermissionTypes}).catch((error) => {
-			logger.debug('Failed to preload media devices', {error});
-		});
+		void VoiceDevicePermissionState.ensureDevices({forceRefresh, confirmPermissionTypes: grantedPermissionTypes}).catch(
+			(error) => {
+				logger.debug('Failed to preload media devices', {error});
+			},
+		);
 	};
 	const disposePermissionListener = MediaPermission.addChangeListener(preloadDevices);
 	return () => {

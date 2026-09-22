@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {afterEach, beforeEach, describe, expect, it} from 'vitest';
-import {createCurrentBehaviorTestAccountPolicyEvaluator} from '../../test/AccountPolicyTestEvaluator';
 import {
 	AbuseProneEmailTldRisk,
 	classifyAbuseProneEmailTld,
 	isBlockedRegistrationEmailDomain,
 	isLowRiskEmailTld,
-} from '../AbuseProneEmailTlds';
-import {setInjectedAccountPolicyEvaluator} from '../AccountPolicyService';
+} from '@app/api/risk/AbuseProneEmailTlds';
+import {setInjectedAccountPolicyEvaluator} from '@app/api/risk/AccountPolicyService';
+import {createCurrentBehaviorTestAccountPolicyEvaluator} from '@app/api/test/AccountPolicyTestEvaluator';
+import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
 beforeEach(() => {
 	setInjectedAccountPolicyEvaluator(createCurrentBehaviorTestAccountPolicyEvaluator());

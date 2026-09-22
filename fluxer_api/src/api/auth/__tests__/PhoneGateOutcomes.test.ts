@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {errorForPhoneRejectReason, sendPhoneVerificationCode, verifyPhoneCode} from '@app/api/auth/AuthPhone';
+import {phonePrefixBanCache} from '@app/api/auth/PhonePrefixBanCache';
+import type {PhoneAttemptInboundReason, PhoneAttemptRejectReason} from '@app/api/auth/services/PhoneLookupRepository';
+import type {UserID} from '@app/api/BrandedTypes';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import type {FluxerError} from '@fluxer/errors/src/FluxerError';
 import type {PhoneLineType, PhoneLookupResult} from '@pkgs/sms/src/PhoneLookupTypes';
 import {afterEach, describe, expect, it, vi} from 'vitest';
-import type {ApiContext} from '../../ApiContext';
-import type {UserID} from '../../BrandedTypes';
-import {errorForPhoneRejectReason, sendPhoneVerificationCode, verifyPhoneCode} from '../AuthPhone';
-import {phonePrefixBanCache} from '../PhonePrefixBanCache';
-import type {PhoneAttemptInboundReason, PhoneAttemptRejectReason} from '../services/PhoneLookupRepository';
 
 const USER_ID = 1n as UserID;
 const MOBILE_US = '+15125550123';
@@ -135,19 +135,14 @@ describe('reject reasons reaching the caller through the real gate', () => {
 			REJECT_REASON_CODES.invalid_number,
 		);
 	});
-	it.each([
-		'landline',
-		'tollFree',
-		'premium',
-		'sharedCost',
-		'uan',
-		'voicemail',
-		'pager',
-	] as const)('line_type_hard_rejected for %s says it is not a mobile', async (lineType) => {
-		expect(await codeFromVerify(MOBILE_US, {lookupResult: lookup({lineType})})).toBe(
-			REJECT_REASON_CODES.line_type_hard_rejected,
-		);
-	});
+	it.each(['landline', 'tollFree', 'premium', 'sharedCost', 'uan', 'voicemail', 'pager'] as const)(
+		'line_type_hard_rejected for %s says it is not a mobile',
+		async (lineType) => {
+			expect(await codeFromVerify(MOBILE_US, {lookupResult: lookup({lineType})})).toBe(
+				REJECT_REASON_CODES.line_type_hard_rejected,
+			);
+		},
+	);
 	it('sms_pumping_risk_high routes to human review', async () => {
 		expect(await codeFromVerify(MOBILE_US, {lookupResult: lookup({smsPumpingRiskScore: 100})})).toBe(
 			REJECT_REASON_CODES.sms_pumping_risk_high,

@@ -1,10 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {setInjectedRegistrationRiskEvaluator} from '../../middleware/ServiceMiddleware';
-import {RecommendedAction, RiskConfidence, RiskDecisionMethod, RiskLevel} from '../../risk/RiskTypes';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 import {
 	clearTestEmails,
 	createAuthHarness,
@@ -15,7 +10,12 @@ import {
 	listTestEmails,
 	loginUser,
 	type TestAccount,
-} from './AuthTestUtils';
+} from '@app/api/auth/tests/AuthTestUtils';
+import {setInjectedRegistrationRiskEvaluator} from '@app/api/middleware/ServiceMiddleware';
+import {RecommendedAction, RiskConfidence, RiskDecisionMethod, RiskLevel} from '@app/api/risk/RiskTypes';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 interface EmailChangeStartResponse {
 	ticket: string;
@@ -627,6 +627,7 @@ describe('Email change flow', () => {
 			methods?: {
 				totp?: boolean;
 				webauthn?: boolean;
+				backup_codes?: boolean;
 			};
 		}>(harness, mfaAccount.token)
 			.patch('/users/@me')
@@ -634,13 +635,14 @@ describe('Email change flow', () => {
 			.expect(403, 'SUDO_MODE_REQUIRED')
 			.execute();
 		expect(noSudoResp.has_mfa).toBe(true);
-		expect(noSudoResp.methods).toEqual({totp: true, webauthn: false});
+		expect(noSudoResp.methods).toEqual({totp: true, webauthn: false, backup_codes: true});
 		const passwordOnlyResp = await createBuilder<{
 			code: string;
 			has_mfa?: boolean;
 			methods?: {
 				totp?: boolean;
 				webauthn?: boolean;
+				backup_codes?: boolean;
 			};
 		}>(harness, mfaAccount.token)
 			.patch('/users/@me')
@@ -648,7 +650,7 @@ describe('Email change flow', () => {
 			.expect(403, 'SUDO_MODE_REQUIRED')
 			.execute();
 		expect(passwordOnlyResp.has_mfa).toBe(true);
-		expect(passwordOnlyResp.methods).toEqual({totp: true, webauthn: false});
+		expect(passwordOnlyResp.methods).toEqual({totp: true, webauthn: false, backup_codes: true});
 		const updated = await createBuilder<UserPrivateResponse>(harness, mfaAccount.token)
 			.patch('/users/@me')
 			.body({
@@ -712,6 +714,7 @@ describe('Email change flow', () => {
 			methods?: {
 				totp?: boolean;
 				webauthn?: boolean;
+				backup_codes?: boolean;
 			};
 		}>(harness, mfaAccount.token)
 			.post('/users/@me/email-change/apply')
@@ -719,13 +722,14 @@ describe('Email change flow', () => {
 			.expect(403, 'SUDO_MODE_REQUIRED')
 			.execute();
 		expect(noSudoResp.has_mfa).toBe(true);
-		expect(noSudoResp.methods).toEqual({totp: true, webauthn: false});
+		expect(noSudoResp.methods).toEqual({totp: true, webauthn: false, backup_codes: true});
 		const passwordOnlyResp = await createBuilder<{
 			code: string;
 			has_mfa?: boolean;
 			methods?: {
 				totp?: boolean;
 				webauthn?: boolean;
+				backup_codes?: boolean;
 			};
 		}>(harness, mfaAccount.token)
 			.post('/users/@me/email-change/apply')
@@ -733,7 +737,7 @@ describe('Email change flow', () => {
 			.expect(403, 'SUDO_MODE_REQUIRED')
 			.execute();
 		expect(passwordOnlyResp.has_mfa).toBe(true);
-		expect(passwordOnlyResp.methods).toEqual({totp: true, webauthn: false});
+		expect(passwordOnlyResp.methods).toEqual({totp: true, webauthn: false, backup_codes: true});
 		const updated = await createBuilder<UserPrivateResponse>(harness, mfaAccount.token)
 			.post('/users/@me/email-change/apply')
 			.body({
@@ -776,6 +780,7 @@ describe('Email change flow', () => {
 			methods?: {
 				totp?: boolean;
 				webauthn?: boolean;
+				backup_codes?: boolean;
 			};
 		}>(harness, account.token)
 			.post('/users/@me/email-change/apply')
@@ -783,7 +788,7 @@ describe('Email change flow', () => {
 			.expect(403, 'SUDO_MODE_REQUIRED')
 			.execute();
 		expect(noSudoResp.has_mfa).toBe(false);
-		expect(noSudoResp.methods).toEqual({totp: false, webauthn: false});
+		expect(noSudoResp.methods).toEqual({totp: false, webauthn: false, backup_codes: false});
 		const updated = await createBuilder<UserPrivateResponse>(harness, account.token)
 			.post('/users/@me/email-change/apply')
 			.body({email_token: emailToken, password: account.password})
@@ -887,6 +892,7 @@ describe('Email change flow', () => {
 			methods?: {
 				totp?: boolean;
 				webauthn?: boolean;
+				backup_codes?: boolean;
 			};
 		}>(harness, mfaAccount.token)
 			.post('/users/@me/email-change/apply')
@@ -894,7 +900,7 @@ describe('Email change flow', () => {
 			.expect(403, 'SUDO_MODE_REQUIRED')
 			.execute();
 		expect(discovery.has_mfa).toBe(true);
-		expect(discovery.methods).toEqual({totp: true, webauthn: false});
+		expect(discovery.methods).toEqual({totp: true, webauthn: false, backup_codes: true});
 		const applied = await createBuilder<UserPrivateResponse>(harness, mfaAccount.token)
 			.post('/users/@me/email-change/apply')
 			.body({

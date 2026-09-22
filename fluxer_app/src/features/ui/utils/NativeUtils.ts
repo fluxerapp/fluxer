@@ -109,7 +109,7 @@ export async function getNativePlatform(): Promise<NativePlatform> {
 
 export async function isLinuxWaylandDesktopSession(): Promise<boolean> {
 	const electronApi = getElectronAPI();
-	if (!electronApi || electronApi.platform !== 'linux') {
+	if (electronApi?.platform !== 'linux') {
 		return false;
 	}
 	try {
@@ -196,20 +196,26 @@ const getSafeExternalUrl = (href: string | null): string | null => {
 	}
 };
 
+async function refreshAttachmentUrl(url: string): Promise<string> {
+	const {default: AttachmentUrlRefresher} = await import('@app/features/messaging/state/AttachmentUrlRefresher');
+	return AttachmentUrlRefresher.refresh(url);
+}
+
 export async function openExternalUrl(url: string, target: string = '_blank') {
 	const safeUrl = getSafeExternalUrl(url);
 	if (!safeUrl) return;
+	const refreshedUrl = await refreshAttachmentUrl(safeUrl);
 	const electronApi = getElectronAPI();
 	if (electronApi) {
 		try {
-			await electronApi.openExternal(safeUrl);
+			await electronApi.openExternal(refreshedUrl);
 			return;
 		} catch (error) {
 			logger.error(' Failed to open external URL via Electron', error);
 			return;
 		}
 	}
-	window.open(safeUrl, target, 'noopener,noreferrer');
+	window.open(refreshedUrl, target, 'noopener,noreferrer');
 }
 
 interface ExternalLinkClickEvent {
@@ -267,21 +273,27 @@ export function attachExternalLinkInterceptor() {
 	};
 }
 
-export type NativeDownloadOutcome = 'success' | 'canceled' | 'failed' | 'unavailable';
+export type NativeDownloadOutcome = 'success' | 'canceled' | 'checksum-mismatch' | 'failed' | 'unavailable';
 
 export async function downloadWithNative(options: {
 	url: string;
 	suggestedName?: string;
 	title?: string;
+	sha256?: string | null;
 }): Promise<NativeDownloadOutcome> {
 	const electronApi = getElectronAPI();
 	if (!electronApi) {
 		return 'unavailable';
 	}
 	try {
-		const result = await electronApi.downloadFile(options.url, options.suggestedName ?? 'download');
+		const result = await electronApi.downloadFile(
+			options.url,
+			options.suggestedName ?? 'download',
+			options.sha256 ?? null,
+		);
 		if (result.success) return 'success';
 		if (result.canceled) return 'canceled';
+		if (result.checksumMismatch) return 'checksum-mismatch';
 		return 'failed';
 	} catch (error) {
 		logger.error(' Native download failed, falling back to browser', error);

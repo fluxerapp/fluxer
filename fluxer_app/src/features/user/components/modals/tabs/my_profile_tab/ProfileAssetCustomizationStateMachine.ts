@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {TransientUploadFieldValue} from '@app/lib/forms/TransientUploadFields';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export type ProfileAssetMode = 'inherit' | 'custom' | 'unset';
 
@@ -244,7 +244,7 @@ export const profileAssetCustomizationStateMachine = setup({
 export type ProfileAssetCustomizationSnapshot = SnapshotFrom<typeof profileAssetCustomizationStateMachine>;
 
 export function createProfileAssetCustomizationSnapshot(): ProfileAssetCustomizationSnapshot {
-	return getInitialSnapshot(profileAssetCustomizationStateMachine);
+	return initialTransition(profileAssetCustomizationStateMachine)[0];
 }
 
 export function transitionProfileAssetCustomizationSnapshot(

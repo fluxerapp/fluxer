@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {APIWorkerLaneName, APIWorkerMode} from '../config/APIConfig';
+import type {APIWorkerLaneName, APIWorkerMode} from '@app/api/config/APIConfig';
 
 interface LaneSettings {
 	readonly consumerName: string;
@@ -49,7 +49,6 @@ const LANE_CONFIG = {
 			'harvestUserData',
 			'batchGuildAuditLogMessageDeletes',
 			'reconcileUserPayments',
-			'revalidateUserConnections',
 			'bulkUpdateUserFlags',
 			'bulkUpdateSuspiciousActivityFlags',
 			'bulkScheduleUserDeletion',
@@ -68,10 +67,11 @@ const LANE_CONFIG = {
 		consumerName: 'workers_batch',
 		tasks: [
 			'expireAttachments',
+			'expireStaleJobs',
 			'indexChannelMessages',
 			'indexGuildMembers',
 			'processAssetDeletionQueue',
-			'processBunnyPurgeQueue',
+			'processCachePurgeQueue',
 			'processExpiredPremiumSweep',
 			'processInactivityDeletions',
 			'processPendingBulkMessageDeletions',

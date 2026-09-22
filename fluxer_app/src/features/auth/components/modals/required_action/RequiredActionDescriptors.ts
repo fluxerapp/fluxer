@@ -289,7 +289,7 @@ export const ESCAPE_HINT_NO_GUILDS_DESCRIPTOR = msg({
 });
 export const ESCAPE_HINT_WITH_GUILDS_DESCRIPTOR = msg({
 	message:
-		'You will leave {count, plural, one {# community} other {# communities}} that this check applies to, and your account works normally again.',
+		'You will leave {count, plural, one {# community} other {# communities}} that this check applies to, and your account will work normally again.',
 	comment:
 		'Hint under the set-aside button in the required-action modal when the user is in communities that trigger the check. count is inserted by code.',
 });
@@ -369,7 +369,7 @@ export const ADD_WORKING_EMAIL_TITLE_DESCRIPTOR = msg({
 	comment: 'Required-action modal carousel step title for replacing a bounced email address.',
 });
 export const ADD_WORKING_EMAIL_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Enter an email you can open. We will send a code there.',
+	message: 'Enter an email address you can access. We will send a code there.',
 	comment: 'Required-action modal body for entering a replacement email address.',
 });
 export const ENTER_NEW_EMAIL_TITLE_DESCRIPTOR = msg({
@@ -377,7 +377,7 @@ export const ENTER_NEW_EMAIL_TITLE_DESCRIPTOR = msg({
 	comment: 'Required-action modal carousel step title for changing to a new email address.',
 });
 export const ENTER_NEW_EMAIL_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Use an email you can open. We will send a code there.',
+	message: 'Use an email address you can access. We will send a code there.',
 	comment: 'Required-action modal body for entering a new email address.',
 });
 export const ENTER_EMAIL_CODE_TITLE_DESCRIPTOR = msg({
@@ -431,7 +431,7 @@ export const INBOUND_PHONE_PREPARE_TITLE_DESCRIPTOR = msg({
 	comment: 'Required-action modal carousel step title for the first inbound phone verification instruction.',
 });
 export const INBOUND_PHONE_PREPARE_DESCRIPTION_DESCRIPTOR = msg({
-	message: 'Open your phone messaging app and start a new text message.',
+	message: "Open your phone's messaging app and start a new text message.",
 	comment: 'Required-action modal body for the first inbound phone verification instruction.',
 });
 export const INBOUND_PHONE_SEND_TITLE_DESCRIPTOR = msg({

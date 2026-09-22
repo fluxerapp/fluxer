@@ -9,6 +9,7 @@ import Emoji from '@app/features/emoji/state/Emoji';
 import {checkEmojiAvailabilityWithGuildFallback} from '@app/features/expressions/utils/ExpressionPermissionUtils';
 import ChannelMemberCount from '@app/features/guild/state/ChannelMemberCount';
 import Guilds from '@app/features/guild/state/Guilds';
+import {dropTrailingEmptyBlockquoteLines} from '@app/features/lexical/composer/blockquoteLines';
 import type {ComposerHandle} from '@app/features/lexical/composer/ComposerHandle';
 import {
 	type LexicalMessageCommandResolution,
@@ -25,8 +26,9 @@ import Messages from '@app/features/messaging/state/MessagingMessages';
 import {
 	buildExistingAttachmentEditReferences,
 	canSubmitEmptyMessageEdit,
+	isAttachmentOnlyMessage,
 } from '@app/features/messaging/utils/MessageEditContentUtils';
-import {hasVisibleMessageContent} from '@app/features/messaging/utils/MessageRequestUtils';
+import {canSubmitMessage, hasVisibleMessageContent} from '@app/features/messaging/utils/MessageRequestUtils';
 import * as ReplaceCommandUtils from '@app/features/messaging/utils/ReplaceCommandUtils';
 import {resolveTypedEmojiShortcodes} from '@app/features/messaging/utils/TypedEmojiShortcodeUtils';
 import Permission from '@app/features/permissions/state/Permission';
@@ -446,7 +448,7 @@ export const useTextareaSubmit = ({
 		let actualContent = displayToActual(value).trim();
 		if (composerHandle !== null) {
 			lexicalCommand = LexicalMessageCommandResolver.resolve(composerHandle);
-			actualContent = composerHandle.getWireValue().trim();
+			actualContent = dropTrailingEmptyBlockquoteLines(composerHandle.getWireValue()).trim();
 		}
 		const resolvedContent = resolveTypedEmojiContent(actualContent);
 		let parsedCommand: CommandUtils.ParsedCommand | null = null;
@@ -476,11 +478,11 @@ export const useTextareaSubmit = ({
 				clearSegments();
 			};
 			if (!hasVisibleMessageContent(resolvedContent)) {
+				if (isAttachmentOnlyMessage(editingMessage)) {
+					finishMobileEdit();
+					return;
+				}
 				if (canSubmitEmptyMessageEdit(editingMessage)) {
-					if (editingMessage.content.length === 0) {
-						finishMobileEdit();
-						return;
-					}
 					finishMobileEdit();
 					void MessageCommands.edit(
 						channelId,
@@ -513,7 +515,7 @@ export const useTextareaSubmit = ({
 			);
 			return;
 		}
-		if (!hasVisibleMessageContent(resolvedContent) && uploadAttachmentsLength === 0 && !hasPendingSticker) {
+		if (!canSubmitMessage(resolvedContent, uploadAttachmentsLength > 0 || hasPendingSticker)) {
 			return;
 		}
 		if (replaceCommand) {

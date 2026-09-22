@@ -5,6 +5,15 @@
 	overflow-anchor: none;
 }
 
+.channelListScrollerOverBanner {
+	background-color: transparent;
+}
+
+.bannerSpacer {
+	flex: 0 0 auto;
+	width: 100%;
+}
+
 .channelListScrollerWrapper {
 	--floating-unread-indicator-bottom-inset: calc(
 		var(--layout-user-area-overlay-height, var(--layout-user-area-reserved-height, 0px)) +

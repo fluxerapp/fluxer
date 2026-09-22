@@ -11,14 +11,12 @@ import {ScreenSharePresets, VideoPreset, VideoPresets, VideoPresets43} from '../
 import {Track} from '../track/Track.ts';
 import type {LoggerOptions} from '../types.ts';
 import {
-	compareVersions,
 	getReactNativeOs,
-	isFireFox,
 	isReactNative,
-	isSafariBased,
 	isSafariSvcApi,
 	isSVCCodec,
-	unwrapConstraint,
+	isSVCSimulcast,
+	usesLegacySVCEncodings,
 } from '../utils.ts';
 
 export function mediaTrackToLocalTrack(
@@ -83,6 +81,7 @@ export function computeVideoEncodings(
 	const useSimulcast = options?.simulcast;
 	const scalabilityMode = options?.scalabilityMode;
 	const videoCodec = options?.videoCodec;
+	const useSVCSimulcast = isSVCSimulcast(videoCodec, options);
 
 	if ((!videoEncoding && !useSimulcast && !scalabilityMode) || !width || !height) {
 		return [{}];
@@ -103,7 +102,7 @@ export function computeVideoEncodings(
 		videoEncoding.priority,
 	);
 
-	if (scalabilityMode && isSVCCodec(videoCodec)) {
+	if (scalabilityMode && isSVCCodec(videoCodec) && !useSVCSimulcast) {
 		const sm = new ScalabilityMode(scalabilityMode);
 
 		const encodings: Array<RTCRtpEncodingParameters> = [];
@@ -112,11 +111,7 @@ export function computeVideoEncodings(
 			throw new Error(`unsupported scalabilityMode: ${scalabilityMode}`);
 		}
 		const browser = getBrowser();
-		if (
-			isSafariBased() ||
-			isReactNative() ||
-			(browser?.name === 'Chrome' && compareVersions(browser?.version, '113') < 0)
-		) {
+		if (usesLegacySVCEncodings()) {
 			const bitratesRatio = sm.suffix === 'h' ? 2 : 3;
 			const requireScale = isSafariSvcApi(browser);
 			for (let i = 0; i < sm.spatial; i += 1) {
@@ -149,7 +144,16 @@ export function computeVideoEncodings(
 		return [videoEncoding];
 	}
 
-	let presets: Array<VideoPreset> = [];
+	const applySVCSimulcastMode = (encodings: Array<RTCRtpEncodingParameters>) => {
+		if (useSVCSimulcast) {
+			encodings.forEach((encoding) => {
+				encoding.scalabilityMode = scalabilityMode;
+			});
+		}
+		return encodings;
+	};
+
+	let presets: Array<VideoPreset>;
 	if (isScreenShare) {
 		presets = sortPresets(options?.screenShareSimulcastLayers) ?? defaultSimulcastLayers(isScreenShare, original);
 	} else {
@@ -164,13 +168,26 @@ export function computeVideoEncodings(
 
 		const size = Math.max(width, height);
 		if (size >= 960 && midPreset) {
-			return encodingsFromPresets(width, height, [lowPreset, midPreset, original], sourceFramerate);
+			return applySVCSimulcastMode(
+				encodingsFromPresets(width, height, [lowPreset, midPreset, original], sourceFramerate),
+			);
 		}
 		if (size >= 480) {
-			return encodingsFromPresets(width, height, [lowPreset, original], sourceFramerate);
+			return applySVCSimulcastMode(encodingsFromPresets(width, height, [lowPreset, original], sourceFramerate));
 		}
 	}
-	return encodingsFromPresets(width, height, [original]);
+	return applySVCSimulcastMode(encodingsFromPresets(width, height, [original]));
+}
+
+export function computeStartTargetBitrate(
+	codec: string,
+	options: TrackPublishOptions | undefined,
+	encodings: Array<RTCRtpEncodingParameters>,
+): number {
+	if (isSVCCodec(codec) && !isSVCSimulcast(codec, options)) {
+		return encodings[0]?.maxBitrate ?? 0;
+	}
+	return encodings.reduce((sum, enc) => sum + (enc.maxBitrate ?? 0), 0);
 }
 
 export function computeTrackBackupEncodings(
@@ -289,7 +306,8 @@ function encodingsFromPresets(
 		if (maxFramerate) {
 			encoding.maxFramerate = maxFramerate;
 		}
-		const canSetPriority = isFireFox() || idx === 0;
+		const browser = getBrowser();
+		const canSetPriority = (browser?.name === 'Firefox' && browser.os !== 'iOS') || idx === 0;
 		if (preset.encoding.priority && canSetPriority) {
 			encoding.priority = preset.encoding.priority;
 			encoding.networkPriority = preset.encoding.priority;
@@ -325,7 +343,7 @@ function encodingsFromPresets(
 
 export function sortPresets(presets: Array<VideoPreset> | undefined) {
 	if (!presets) return;
-	return presets.sort((a, b) => {
+	return presets.slice().sort((a, b) => {
 		const {encoding: aEnc} = a;
 		const {encoding: bEnc} = b;
 
@@ -369,22 +387,13 @@ export class ScalabilityMode {
 		return `L${this.spatial}T${this.temporal}${this.suffix ?? ''}`;
 	}
 }
-
-export function maxEncodingBitrate(encodings: Array<RTCRtpEncodingParameters> | undefined): number {
-	if (!encodings) {
-		return 0;
-	}
-	let maxBitrate = 0;
-	for (const encoding of encodings) {
-		if (typeof encoding.maxBitrate === 'number' && encoding.maxBitrate > maxBitrate) {
-			maxBitrate = encoding.maxBitrate;
-		}
-	}
-	return maxBitrate;
-}
-
 export function getDefaultDegradationPreference(track: LocalVideoTrack): RTCDegradationPreference {
-	if (track.source === Track.Source.ScreenShare) return 'maintain-resolution';
-	if (track.constraints.height && unwrapConstraint(track.constraints.height) >= 1080) return 'maintain-resolution';
-	return 'balanced';
+	switch (track.source) {
+		case Track.Source.Camera:
+			return 'maintain-framerate';
+		case Track.Source.ScreenShare:
+			return 'maintain-resolution';
+		default:
+			return 'balanced';
+	}
 }

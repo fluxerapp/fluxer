@@ -3,7 +3,7 @@
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import {shouldRestoreFocusToTarget} from '@app/features/ui/utils/PointerActivationFocus';
-import {makeAutoObservable, observable} from 'mobx';
+import {makeAutoObservable, observableRef} from 'mobx';
 import type React from 'react';
 
 const logger = new Logger('ContextMenu');
@@ -74,7 +74,7 @@ class ContextMenuState {
 	private currentEntry: StackEntry | null = null;
 
 	constructor() {
-		makeAutoObservable<this, 'currentEntry'>(this, {currentEntry: observable.ref}, {autoBind: true});
+		makeAutoObservable<this, 'currentEntry'>(this, {currentEntry: observableRef}, {autoBind: true});
 	}
 
 	get contextMenu(): ContextMenu | null {

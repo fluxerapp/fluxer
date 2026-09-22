@@ -54,8 +54,8 @@ export const DisablePiPConfirmModal = observer(() => {
 				<Modal.ContentLayout data-flx="voice.disable-pi-p-confirm-modal.modal-content-layout">
 					<Modal.Description data-flx="voice.disable-pi-p-confirm-modal.description">
 						<Trans>
-							If you don't remember this preference, we'll only hide the popout for this session. You can change this
-							any time in {audioVideoSettingsPath}.
+							If you don't save this preference, we'll only hide the popout for this session. You can change this any
+							time in {audioVideoSettingsPath}.
 						</Trans>
 					</Modal.Description>
 					<div className={styles.checkboxContainer} data-flx="voice.disable-pi-p-confirm-modal.checkbox-container">

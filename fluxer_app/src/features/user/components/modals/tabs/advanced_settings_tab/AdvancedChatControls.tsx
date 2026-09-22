@@ -16,7 +16,10 @@ import {SwitchGroup, SwitchGroupItem} from '@app/features/ui/components/SwitchGr
 import * as UserGuildSettingsCommands from '@app/features/user/commands/UserGuildSettingsCommands';
 import * as UserSettingsCommands from '@app/features/user/commands/UserSettingsCommands';
 import type {SearchEngineMode} from '@app/features/user/components/modals/tabs/chat_settings_tab/AddCustomSearchEngineModal';
-import {ConvertEmoticonsControl} from '@app/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInputTab';
+import {
+	ConvertEmoticonsControl,
+	KeepAttachmentsOnEmptyEditControl,
+} from '@app/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInputTab';
 import {
 	StripTrackingParametersControl,
 	TrustAllExternalLinksControl,
@@ -47,7 +50,7 @@ const SHOW_MESSAGE_ACTION_BAR_DESCRIPTOR = msg({
 	comment: 'Short label for an advanced message action bar preference.',
 });
 const SHOW_ONLY_MORE_BUTTON_DESCRIPTOR = msg({
-	message: 'Show only more button',
+	message: 'Show only the more button',
 	comment: 'Short label for an advanced message action bar preference.',
 });
 const SHOW_QUICK_REACTIONS_DESCRIPTOR = msg({
@@ -63,7 +66,7 @@ const SHOW_GIF_INDICATOR_DESCRIPTOR = msg({
 	comment: 'Short label for an advanced media button preference.',
 });
 const SHOW_ATTACHMENT_EXPIRY_INDICATOR_DESCRIPTOR = msg({
-	message: 'Show attachment expiry indicator',
+	message: 'Show attachment expiration indicator',
 	comment: 'Short label for an advanced media button preference.',
 });
 const SHOW_DELETE_BUTTON_DESCRIPTOR = msg({
@@ -278,6 +281,13 @@ export const TrustAllDomainsControl = observer(() => (
 
 export const ConvertEmoticonsAdvancedControl = observer(() => (
 	<ConvertEmoticonsControl compact data-flx="user.advanced-settings-tab.convert-emoticons-control" />
+));
+
+export const KeepAttachmentsOnEmptyEditAdvancedControl = observer(() => (
+	<KeepAttachmentsOnEmptyEditControl
+		compact
+		data-flx="user.advanced-settings-tab.keep-attachments-on-empty-edit-control"
+	/>
 ));
 
 interface SearchProviderSettingsModalProps {

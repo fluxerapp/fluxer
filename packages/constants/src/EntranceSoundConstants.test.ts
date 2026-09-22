@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	entranceSoundExtensionFromFormat,
+	entranceSoundExtensionFromMime,
+} from '@fluxer/constants/src/EntranceSoundConstants';
 import {describe, expect, test} from 'vitest';
-import {entranceSoundExtensionFromFormat, entranceSoundExtensionFromMime} from './EntranceSoundConstants';
 
 describe('entrance sound format detection', () => {
 	test('accepts wav metadata produced by the in-app trimmer', () => {

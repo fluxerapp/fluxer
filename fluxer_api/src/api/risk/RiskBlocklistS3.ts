@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {IStorageService} from '../infrastructure/IStorageService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
 
 const RISK_S3_BUCKET = 'fluxer-geoip';
 export const RISK_S3_KEYS = {
@@ -46,4 +46,8 @@ export async function readLinesFromS3(storage: IStorageService, key: string): Pr
 	} catch {
 		return [];
 	}
+}
+
+export async function deleteRiskS3Object(storage: IStorageService, key: string): Promise<void> {
+	await storage.deleteObject(RISK_S3_BUCKET, key);
 }

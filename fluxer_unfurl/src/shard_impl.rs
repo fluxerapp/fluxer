@@ -333,7 +333,7 @@ mod tests {
 
     static ENV_LOCK: Mutex<()> = Mutex::new(());
 
-    const PUBLIC_ENDPOINT_ENV: [&str; 7] = [
+    const PUBLIC_ENDPOINT_ENV: [&str; 8] = [
         "FLUXER_MEDIA_PROXY_ENDPOINT",
         "FLUXER_MEDIA_PROXY_SECRET_KEY",
         "FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT",
@@ -341,6 +341,7 @@ mod tests {
         "FLUXER_STATIC_CDN_ENDPOINT",
         "FLUXER_BASE_DOMAIN",
         "FLUXER_PUBLIC_PORT",
+        "FLUXER_PUBLIC_ORIGIN",
     ];
 
     fn shard_from_env(vars: &[(&str, &str)]) -> UnfurlShard {

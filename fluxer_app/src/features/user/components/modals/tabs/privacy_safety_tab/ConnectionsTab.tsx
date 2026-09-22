@@ -46,7 +46,7 @@ const DO_YOU_ALSO_WANT_TO_ALLOW_DIRECT_MESSAGES_DESCRIPTOR = msg({
 	comment: 'Confirmation prompt in the connections tab.',
 });
 const DO_YOU_ALSO_WANT_TO_BLOCK_BOTS_FROM_DESCRIPTOR = msg({
-	message: 'Do you also want to block bots from your existing communities?',
+	message: 'Do you also want to block direct messages from bots in your existing communities?',
 	comment: 'Confirmation prompt in the connections tab. Keep the tone plain and specific.',
 });
 const DO_YOU_ALSO_WANT_TO_BLOCK_DIRECT_MESSAGES_DESCRIPTOR = msg({

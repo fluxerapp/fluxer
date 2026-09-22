@@ -4,14 +4,17 @@
 import {
 	type ChatMessage as ChatMessageModel,
 	ClientInfo,
+	type ClientInfo_Capability,
 	ClientInfo_SDK,
 	DisconnectReason,
 	type Transcription as TranscriptionModel,
 } from '@livekit/protocol';
+import type {NonSharedUint8Array} from '../type-polyfills/non-shared-typed-arrays.ts';
 import type {BrowserDetails} from '../utils/browserParser.ts';
 import {getBrowser} from '../utils/browserParser.ts';
 import TypedPromise from '../utils/TypedPromise.ts';
-import {protocolVersion, version} from '../version.ts';
+import type {Throws} from '../utils/throws.ts';
+import {clientProtocol, protocolVersion, version} from '../version.ts';
 import {type ConnectionError, ConnectionErrorReason} from './errors.ts';
 import type LocalParticipant from './participant/LocalParticipant.ts';
 import type Participant from './participant/Participant.ts';
@@ -121,6 +124,7 @@ function hasSenderMimeType(mimeType: string): boolean {
 	if (!hasSenderCapabilitiesApi()) {
 		return false;
 	}
+
 	const capabilities = RTCRtpSender.getCapabilities('video');
 	if (!capabilities) {
 		return false;
@@ -131,6 +135,66 @@ function hasSenderMimeType(mimeType: string): boolean {
 
 export function isSVCCodec(codec?: string): boolean {
 	return codec === 'av1' || codec === 'vp9';
+}
+
+export function negotiateDependencyDescriptor(transceiver: RTCRtpTransceiver): boolean {
+	const extensions = transceiver.getHeaderExtensionsToNegotiate?.();
+	if (!extensions || !transceiver.setHeaderExtensionsToNegotiate) {
+		return false;
+	}
+	const dd = extensions.find((ext) => ext.uri === ddExtensionURI);
+	if (!dd) {
+		return false;
+	}
+	if (dd.direction !== 'stopped') {
+		return true;
+	}
+	dd.direction = 'sendrecv';
+	try {
+		transceiver.setHeaderExtensionsToNegotiate(extensions);
+		return true;
+	} catch (_e) {
+		return false;
+	}
+}
+
+export function stopTransceiversForSender(
+	transceivers: ReadonlyArray<RTCRtpTransceiver>,
+	sender: RTCRtpSender,
+): boolean {
+	let matched = false;
+	for (const transceiver of transceivers) {
+		if (transceiver.sender !== sender) {
+			continue;
+		}
+		matched = true;
+		if (typeof transceiver.stop === 'function') {
+			transceiver.stop();
+		} else {
+			transceiver.direction = 'inactive';
+		}
+	}
+	return matched;
+}
+
+export function isSVCSimulcast(codec?: string, options?: {simulcast?: boolean; scalabilityMode?: string}): boolean {
+	return isSVCCodec(codec) && !!options?.simulcast && !!options.scalabilityMode?.startsWith('L1T');
+}
+
+export function usesLegacySVCEncodings(): boolean {
+	const browser = getBrowser();
+	return (
+		isSafariBased() || isReactNative() || (browser?.name === 'Chrome' && compareVersions(browser.version, '113') < 0)
+	);
+}
+
+const svcSimulcastMinServerVersion = '1.13.6';
+
+export function isSVCSimulcastSupportedByServer(serverVersion?: string): boolean {
+	if (!serverVersion) {
+		return false;
+	}
+	return compareVersions(serverVersion, svcSimulcastMinServerVersion) > 0;
 }
 
 export function supportsSetSinkId(elm?: HTMLMediaElement): boolean {
@@ -161,6 +225,10 @@ export function isFireFox(): boolean {
 export function isChromiumBased(): boolean {
 	const browser = getBrowser();
 	return !!browser && browser.name === 'Chrome' && browser.os !== 'iOS';
+}
+
+export function isScriptTransformSupportedForWorker(): boolean {
+	return typeof window !== 'undefined' && typeof window.RTCRtpScriptTransform !== 'undefined' && !isChromiumBased();
 }
 
 export function isSafari(): boolean {
@@ -326,10 +394,12 @@ export interface ObservableMediaElement extends HTMLMediaElement {
 	handleVisibilityChanged: (entry: IntersectionObserverEntry) => void;
 }
 
-export function getClientInfo(): ClientInfo {
+export function getClientInfo(capabilities?: Array<ClientInfo_Capability>): ClientInfo {
 	const info = new ClientInfo({
+		capabilities,
 		sdk: ClientInfo_SDK.JS,
 		protocol: protocolVersion,
+		clientProtocol,
 		version,
 	});
 
@@ -398,7 +468,7 @@ export function getEmptyAudioStreamTrack() {
 }
 
 export class Future<T, E extends Error> {
-	promise: Promise<T>;
+	promise: Promise<Throws<T, E>>;
 
 	resolve?: (arg: T) => void;
 
@@ -427,7 +497,7 @@ export class Future<T, E extends Error> {
 		}).finally(() => {
 			this._isResolved = true;
 			this.onFinally?.();
-		});
+		}) as Promise<Throws<T, E>>;
 	}
 }
 
@@ -630,11 +700,11 @@ export function isRemoteParticipant(p: Participant): p is RemoteParticipant {
 	return !p.isLocal;
 }
 
-export function splitUtf8(s: string, n: number): Array<Uint8Array> {
+export function splitUtf8(s: string, n: number): Array<NonSharedUint8Array> {
 	if (n < 4) {
 		throw new Error('n must be at least 4 due to utf8 encoding rules');
 	}
-	const result: Array<Uint8Array> = [];
+	const result: Array<NonSharedUint8Array> = [];
 	let encoded = new TextEncoder().encode(s);
 	while (encoded.length > n) {
 		let k = n;
@@ -654,6 +724,64 @@ export function splitUtf8(s: string, n: number): Array<Uint8Array> {
 	return result;
 }
 
+export function readableFromBytes(bytes: NonSharedUint8Array): ReadableStream<NonSharedUint8Array> {
+	return new ReadableStream<NonSharedUint8Array>({
+		start(controller) {
+			controller.enqueue(bytes);
+			controller.close();
+		},
+	});
+}
+
+export async function* readBytesInChunks(
+	source: ReadableStream<NonSharedUint8Array>,
+	chunkSize: number,
+): AsyncGenerator<NonSharedUint8Array> {
+	const reader = source.getReader();
+	let buffer = new Uint8Array(0);
+	try {
+		while (true) {
+			const {done, value} = await reader.read();
+			if (done) {
+				break;
+			}
+			if (value.byteLength === 0) {
+				continue;
+			}
+			const merged = new Uint8Array(buffer.byteLength + value.byteLength);
+			merged.set(buffer);
+			merged.set(value, buffer.byteLength);
+			buffer = merged;
+			while (buffer.byteLength >= chunkSize) {
+				yield buffer.slice(0, chunkSize);
+				buffer = buffer.slice(chunkSize);
+			}
+		}
+		if (buffer.byteLength > 0) {
+			yield buffer;
+		}
+	} finally {
+		reader.releaseLock();
+	}
+}
+
+export function encodeBase64(bytes: Uint8Array): string {
+	let binary = '';
+	for (let i = 0; i < bytes.byteLength; i++) {
+		binary += String.fromCharCode(bytes[i]!);
+	}
+	return btoa(binary);
+}
+
+export function decodeBase64(base64: string): Uint8Array {
+	const binary = atob(base64);
+	const bytes = new Uint8Array(binary.length);
+	for (let i = 0; i < binary.length; i++) {
+		bytes[i] = binary.charCodeAt(i);
+	}
+	return bytes;
+}
+
 export function extractMaxAgeFromRequestHeaders(headers: Headers): number | undefined {
 	const cacheControl = headers.get('Cache-Control');
 	if (cacheControl) {
@@ -661,6 +789,25 @@ export function extractMaxAgeFromRequestHeaders(headers: Headers): number | unde
 		if (maxAge) {
 			return parseInt(maxAge, 10);
 		}
+	}
+	return undefined;
+}
+
+export function isCompressionStreamSupported() {
+	return typeof CompressionStream !== 'undefined';
+}
+
+export function isPublisherOfferWithJoinSupported() {
+	return isCompressionStreamSupported() && !isFireFox();
+}
+
+export function extractTrackSid(mediaTrack: MediaStreamTrack, stream: MediaStream): Track.SID | undefined {
+	const [, streamId] = unpackStreamId(stream.id);
+	if (streamId?.startsWith('TR')) {
+		return streamId;
+	}
+	if (mediaTrack.id.startsWith('TR')) {
+		return mediaTrack.id;
 	}
 	return undefined;
 }

@@ -101,13 +101,20 @@ export class ParticipantKeyHandler extends (EventEmitter as new () => TypedEvent
 		return ratchetPromise;
 	}
 
-	async setKey(material: CryptoKey, keyIndex = 0) {
-		await this.setKeyFromMaterial(material, keyIndex);
-		this.resetKeyStatus(keyIndex);
+	async setKey(material: CryptoKey, keyIndex = 0, updateCurrentKeyIndex = true) {
+		await this.setKeyFromMaterial(material, keyIndex, null, updateCurrentKeyIndex);
+		if (updateCurrentKeyIndex) {
+			this.resetKeyStatus(keyIndex);
+		}
 	}
 
-	async setKeyFromMaterial(material: CryptoKey, keyIndex: number, ratchetedResult: RatchetResult | null = null) {
-		const keySet = await deriveKeys(material, this.keyProviderOptions.ratchetSalt);
+	async setKeyFromMaterial(
+		material: CryptoKey,
+		keyIndex: number,
+		ratchetedResult: RatchetResult | null = null,
+		updateCurrentKeyIndex = true,
+	) {
+		const keySet = await deriveKeys(material, this.keyProviderOptions);
 		const newIndex = keyIndex >= 0 ? keyIndex % this.cryptoKeyRing.length : this.currentKeyIndex;
 		workerLogger.debug(`setting new key with index ${keyIndex}`, {
 			usage: material.usages,
@@ -115,7 +122,7 @@ export class ParticipantKeyHandler extends (EventEmitter as new () => TypedEvent
 			ratchetSalt: this.keyProviderOptions.ratchetSalt,
 		});
 		this.setKeySet(keySet, newIndex, ratchetedResult);
-		if (newIndex >= 0) this.currentKeyIndex = newIndex;
+		if (newIndex >= 0 && updateCurrentKeyIndex) this.currentKeyIndex = newIndex;
 	}
 
 	setKeySet(keySet: KeySet, keyIndex: number, ratchetedResult: RatchetResult | null = null) {

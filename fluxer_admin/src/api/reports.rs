@@ -1,11 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::api::generated::types as generated_types;
+use crate::api::generated::snowflake;
 
 use super::client::{AdminApiClient, ApiError, ApiResult};
 use super::types::{
     ListReportsResponse, ReportEntry, ResolveReportResponse, SearchReportsResponse,
 };
+
+#[derive(Default)]
+pub struct SearchReportsParams<'a> {
+    pub query: Option<&'a str>,
+    pub status: Option<i32>,
+    pub report_type: Option<i32>,
+    pub category: Option<&'a str>,
+    pub reporter_id: Option<&'a str>,
+    pub reported_user_id: Option<&'a str>,
+    pub reported_guild_id: Option<&'a str>,
+    pub reported_channel_id: Option<&'a str>,
+    pub guild_context_id: Option<&'a str>,
+    pub resolved_by_admin_id: Option<&'a str>,
+    pub sort_by: Option<&'a str>,
+    pub sort_order: Option<&'a str>,
+    pub limit: u32,
+    pub offset: u64,
+}
 
 impl AdminApiClient {
     pub async fn list_reports(
@@ -14,28 +32,21 @@ impl AdminApiClient {
         limit: u32,
         offset: Option<u32>,
     ) -> ApiResult<ListReportsResponse> {
-        let body = generated_types::ListReportsRequest {
-            limit: Some(
-                crate::api::generated::nonzero_u32(limit, "limit").map_err(ApiError::Parse)?,
-            ),
-            offset: offset.map(i64::from),
-            status: status
-                .map(generated_types::ReportStatus::try_from)
-                .transpose()
-                .map_err(|e| ApiError::Parse(e.to_string()))?,
-        };
-        let response = self
-            .generated()
-            .list_reports(&body)
-            .await
-            .map_err(|e| self.generated_error(e))?;
-        self.generated_value(response.into_inner())
+        let status = status.map(report_status).transpose()?.unwrap_or_default();
+        let limit = limit.to_string();
+        let offset = offset.map(|value| value.to_string()).unwrap_or_default();
+        let query_params = [
+            ("status", status),
+            ("limit", limit.as_str()),
+            ("offset", offset.as_str()),
+        ];
+        self.get("/admin/reports", Some(&query_params)).await
     }
 
     pub async fn get_report(&self, report_id: &str) -> ApiResult<ReportEntry> {
         let response = self
             .generated()
-            .get_report(report_id)
+            .get_admin_report(&snowflake(report_id))
             .await
             .map_err(|e| self.generated_error(e))?;
         self.generated_value(response.into_inner())
@@ -47,98 +58,85 @@ impl AdminApiClient {
         public_comment: Option<&str>,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<ResolveReportResponse> {
-        let body = generated_types::ResolveReportRequest {
-            public_comment: public_comment.map(std::borrow::ToOwned::to_owned),
-            report_id: generated_types::SnowflakeType::from(report_id.to_owned()),
-        };
-        self.post_typed_with_reason("/admin/reports/resolve", &body, audit_log_reason)
-            .await
+        let mut body = serde_json::json!({"status": "resolved"});
+        if let Some(public_comment) = public_comment {
+            body["public_comment"] = serde_json::Value::from(public_comment);
+        }
+        self.patch_with_reason(
+            &format!("/admin/reports/{}", urlencoding::encode(report_id)),
+            Some(&body),
+            audit_log_reason,
+        )
+        .await
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub async fn search_reports(
         &self,
-        query: Option<&str>,
-        status: Option<i32>,
-        report_type: Option<i32>,
-        category: Option<&str>,
-        reporter_id: Option<&str>,
-        reported_user_id: Option<&str>,
-        reported_guild_id: Option<&str>,
-        reported_channel_id: Option<&str>,
-        guild_context_id: Option<&str>,
-        resolved_by_admin_id: Option<&str>,
-        sort_by: Option<&str>,
-        sort_order: Option<&str>,
-        limit: u32,
-        offset: u32,
+        params: &SearchReportsParams<'_>,
     ) -> ApiResult<SearchReportsResponse> {
-        let body = generated_types::SearchReportsRequest {
-            category: nonempty_string(category),
-            guild_context_id: nonempty_snowflake(guild_context_id),
-            limit: Some(
-                crate::api::generated::nonzero_u32(limit, "limit").map_err(ApiError::Parse)?,
+        let status = params
+            .status
+            .map(report_status)
+            .transpose()?
+            .unwrap_or_default();
+        let report_type = params
+            .report_type
+            .map(report_type_name)
+            .transpose()?
+            .unwrap_or_default();
+        let sort_by = params
+            .sort_by
+            .map(report_sort_by)
+            .transpose()?
+            .unwrap_or_default();
+        let limit = params.limit.to_string();
+        let offset = params.offset.to_string();
+        let query_params = [
+            ("q", params.query.unwrap_or_default()),
+            ("status", status),
+            ("report_type", report_type),
+            ("category", params.category.unwrap_or_default()),
+            ("reporter_id", params.reporter_id.unwrap_or_default()),
+            (
+                "reported_user_id",
+                params.reported_user_id.unwrap_or_default(),
             ),
-            offset: Some(i64::from(offset)),
-            query: nonempty_string(query),
-            report_type: report_type
-                .map(generated_types::ReportType::try_from)
-                .transpose()
-                .map_err(|e| ApiError::Parse(e.to_string()))?,
-            reported_channel_id: nonempty_snowflake(reported_channel_id),
-            reported_guild_id: nonempty_snowflake(reported_guild_id),
-            reported_user_id: nonempty_snowflake(reported_user_id),
-            reporter_id: nonempty_snowflake(reporter_id),
-            resolved_by_admin_id: nonempty_snowflake(resolved_by_admin_id),
-            sort_by: sort_by
-                .map(generated_types::SearchReportsRequestSortBy::try_from)
-                .transpose()
-                .map_err(|e| ApiError::Parse(e.to_string()))?,
-            sort_order: sort_order
-                .map(generated_types::SearchReportsRequestSortOrder::try_from)
-                .transpose()
-                .map_err(|e| ApiError::Parse(e.to_string()))?,
-            status: status
-                .map(generated_types::ReportStatus::try_from)
-                .transpose()
-                .map_err(|e| ApiError::Parse(e.to_string()))?,
-        };
-        let response = self
-            .generated()
-            .search_reports(&body)
-            .await
-            .map_err(|e| self.generated_error(e))?;
-        let response = response.into_inner();
-        Ok(SearchReportsResponse {
-            reports: self.generated_value(response.reports)?,
-            total: response.total as u64,
-            offset: response.offset as u64,
-            limit: response.limit as u64,
-        })
+            (
+                "reported_guild_id",
+                params.reported_guild_id.unwrap_or_default(),
+            ),
+            (
+                "reported_channel_id",
+                params.reported_channel_id.unwrap_or_default(),
+            ),
+            (
+                "guild_context_id",
+                params.guild_context_id.unwrap_or_default(),
+            ),
+            (
+                "resolved_by_admin_id",
+                params.resolved_by_admin_id.unwrap_or_default(),
+            ),
+            ("sort_by", sort_by),
+            ("sort_order", params.sort_order.unwrap_or_default()),
+            ("limit", limit.as_str()),
+            ("offset", offset.as_str()),
+        ];
+        self.get("/admin/reports", Some(&query_params)).await
     }
 
     pub async fn search_reports_by_reporter(
         &self,
         reporter_id: &str,
         limit: u32,
-        offset: u32,
+        offset: u64,
     ) -> ApiResult<SearchReportsResponse> {
-        self.search_reports(
-            None,
-            None,
-            None,
-            None,
-            Some(reporter_id),
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
+        self.search_reports(&SearchReportsParams {
+            reporter_id: Some(reporter_id),
             limit,
             offset,
-        )
+            ..Default::default()
+        })
         .await
     }
 
@@ -146,34 +144,100 @@ impl AdminApiClient {
         &self,
         reported_user_id: &str,
         limit: u32,
-        offset: u32,
+        offset: u64,
     ) -> ApiResult<SearchReportsResponse> {
-        self.search_reports(
-            None,
-            None,
-            None,
-            None,
-            None,
-            Some(reported_user_id),
-            None,
-            None,
-            None,
-            None,
-            None,
-            None,
+        self.search_reports(&SearchReportsParams {
+            reported_user_id: Some(reported_user_id),
             limit,
             offset,
-        )
+            ..Default::default()
+        })
         .await
     }
 }
 
-fn nonempty_string(value: Option<&str>) -> Option<String> {
-    value
-        .filter(|value| !value.is_empty())
-        .map(std::borrow::ToOwned::to_owned)
+fn report_status(value: i32) -> ApiResult<&'static str> {
+    match value {
+        0 => Ok("pending"),
+        1 => Ok("resolved"),
+        other => Err(ApiError::Parse(format!("unknown report status: {other}"))),
+    }
 }
 
-fn nonempty_snowflake(value: Option<&str>) -> Option<generated_types::SnowflakeType> {
-    nonempty_string(value).map(generated_types::SnowflakeType::from)
+fn report_type_name(value: i32) -> ApiResult<&'static str> {
+    match value {
+        0 => Ok("message"),
+        1 => Ok("user"),
+        2 => Ok("guild"),
+        other => Err(ApiError::Parse(format!("unknown report type: {other}"))),
+    }
+}
+
+fn report_sort_by(value: &str) -> ApiResult<&'static str> {
+    match value {
+        "created_at" | "createdAt" => Ok("created_at"),
+        "reported_at" | "reportedAt" => Ok("reported_at"),
+        "resolved_at" | "resolvedAt" => Ok("resolved_at"),
+        other => Err(ApiError::Parse(format!(
+            "unknown report sort field: {other}"
+        ))),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn report_statuses_preserve_the_closed_wire_mapping() {
+        for (value, expected) in [(0, "pending"), (1, "resolved")] {
+            assert_eq!(report_status(value).expect("supported status"), expected);
+        }
+        for value in [-1, 2] {
+            assert_eq!(
+                report_status(value)
+                    .expect_err("unknown status")
+                    .to_string(),
+                format!("parse error: unknown report status: {value}")
+            );
+        }
+    }
+
+    #[test]
+    fn report_types_preserve_the_closed_wire_mapping() {
+        for (value, expected) in [(0, "message"), (1, "user"), (2, "guild")] {
+            assert_eq!(report_type_name(value).expect("supported type"), expected);
+        }
+        for value in [-1, 3] {
+            assert_eq!(
+                report_type_name(value)
+                    .expect_err("unknown type")
+                    .to_string(),
+                format!("parse error: unknown report type: {value}")
+            );
+        }
+    }
+
+    #[test]
+    fn report_sort_fields_accept_only_the_existing_aliases() {
+        for (field, expected) in [
+            ("createdAt", "created_at"),
+            ("created_at", "created_at"),
+            ("reportedAt", "reported_at"),
+            ("reported_at", "reported_at"),
+            ("resolvedAt", "resolved_at"),
+            ("resolved_at", "resolved_at"),
+        ] {
+            assert_eq!(
+                report_sort_by(field).expect("supported sort field"),
+                expected
+            );
+        }
+        assert_eq!(
+            report_sort_by("unknown")
+                .expect_err("unknown sort field")
+                .to_string(),
+            "parse error: unknown report sort field: unknown"
+        );
+    }
 }

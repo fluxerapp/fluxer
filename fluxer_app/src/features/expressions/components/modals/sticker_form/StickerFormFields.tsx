@@ -22,7 +22,7 @@ const NAME_MUST_BE_AT_LEAST_2_CHARACTERS_DESCRIPTOR = msg({
 	comment: 'Form validation error for a name that is too short.',
 });
 const NAME_MUST_BE_30_CHARACTERS_OR_LESS_DESCRIPTOR = msg({
-	message: 'Name must be 30 characters or less',
+	message: 'Name must be 30 characters or fewer',
 	comment: 'Form validation error for a name that exceeds 30 characters.',
 });
 const NAME_DESCRIPTOR = msg({
@@ -34,7 +34,7 @@ const MY_AWESOME_STICKER_DESCRIPTOR = msg({
 	comment: 'Form placeholder example for a sticker name input.',
 });
 const DESCRIPTION_MUST_BE_500_CHARACTERS_OR_LESS_DESCRIPTOR = msg({
-	message: 'Description must be 500 characters or less',
+	message: 'Description must be 500 characters or fewer',
 	comment: 'Form validation error for a description that is too long.',
 });
 const DESCRIBE_THE_STICKER_DESCRIPTOR = msg({

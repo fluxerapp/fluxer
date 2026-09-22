@@ -11,6 +11,8 @@ interface PostgresIpInfoOptions {
 }
 
 const VALUE_SEPARATOR = '\u001f';
+export const IPINFO_CACHE_TTL_SECONDS = 14 * 24 * 60 * 60;
+export const IPINFO_REQUEST_AUDIT_TTL_SECONDS = 90 * 24 * 60 * 60;
 
 function getClient(options: PostgresIpInfoOptions): IPostgresClient | null {
 	return options.client ?? options.getClient?.() ?? null;
@@ -34,12 +36,9 @@ async function upsertKvRow(
 	partitionKey: string,
 	key: string,
 	row: Record<string, unknown>,
-	ttlSeconds?: number,
+	ttlSeconds: number,
 ): Promise<void> {
-	const expiresAt =
-		ttlSeconds != null && Number.isFinite(ttlSeconds) && ttlSeconds > 0
-			? new Date(Date.now() + ttlSeconds * 1000)
-			: null;
+	const expiresAt = new Date(Date.now() + ttlSeconds * 1000);
 	await client.query(
 		`INSERT INTO ${table(client)} (table_name, partition_key, row_key, row_data, expires_at, updated_at)
 VALUES ($1, $2, $3, $4::jsonb, $5, now())
@@ -77,7 +76,14 @@ export function createPostgresIpInfoCache(options: PostgresIpInfoOptions): IpInf
 			try {
 				const client = getClient(options);
 				if (!client) return;
-				await upsertKvRow(client, 'ipinfo_cache', rowKey([key]), rowKey([key]), {cache_key: key, payload}, ttlSeconds);
+				await upsertKvRow(
+					client,
+					'ipinfo_cache',
+					rowKey([key]),
+					rowKey([key]),
+					{cache_key: key, payload},
+					ttlSeconds != null && Number.isFinite(ttlSeconds) && ttlSeconds > 0 ? ttlSeconds : IPINFO_CACHE_TTL_SECONDS,
+				);
 			} catch (error) {
 				options.onError?.(error, 'ipinfo_cache_set');
 			}
@@ -124,6 +130,7 @@ export function createPostgresIpInfoRequestAuditLogger(options: PostgresIpInfoOp
 						is_residential_proxy: event.isResidentialProxy,
 						metadata_json: serializeMetadata(event.metadata),
 					},
+					IPINFO_REQUEST_AUDIT_TTL_SECONDS,
 				);
 			} catch (error) {
 				options.onError?.(error, 'ipinfo_request_audit_record');

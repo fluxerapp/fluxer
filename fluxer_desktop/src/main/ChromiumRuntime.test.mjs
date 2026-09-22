@@ -19,14 +19,6 @@ const transformedSource = esbuild.transformSync(source, {
 	target: 'node20',
 }).code;
 
-const WGC_DISABLED_FEATURES = [
-	'AllowWgcScreenCapturer',
-	'AllowWgcWindowCapturer',
-	'AllowWgcScreenZeroHz',
-	'AllowWgcWindowZeroHz',
-	'WebRtcWgcRequireBorder',
-];
-
 function loadChromiumRuntime(platform = 'win32') {
 	const appendedSwitches = [];
 	const app = {
@@ -65,26 +57,61 @@ function loadChromiumRuntime(platform = 'win32') {
 	return {appendedSwitches, module: module.exports};
 }
 
+function collectChromiumFeatureNames(platform) {
+	const {module} = loadChromiumRuntime(platform);
+	const features = new Set(module.BASE_DISABLED_CHROMIUM_FEATURES);
+	for (const [name, value] of Object.entries(module)) {
+		if (typeof value !== 'function') continue;
+		if (!name.startsWith('add') || !name.endsWith('Features')) continue;
+		value(features);
+	}
+	return [...features];
+}
+
 describe('ChromiumRuntime Windows capture policy', () => {
-	test('adds all known WebRTC WGC capturer features to the Windows disable set', () => {
+	test('leaves the choice of Windows graphics capture to Chromium', () => {
 		const {module} = loadChromiumRuntime('win32');
-		const features = new Set(['ExistingFeature']);
+		const features = new Set(module.BASE_DISABLED_CHROMIUM_FEATURES);
 
-		module.addWindowsWebRtcWgcDisabledFeatures(features);
-
-		for (const feature of WGC_DISABLED_FEATURES) {
-			assert.equal(features.has(feature), true);
+		for (const [name, value] of Object.entries(module)) {
+			if (typeof value === 'function' && name.startsWith('addWindows') && name.endsWith('Features')) {
+				value(features);
+			}
 		}
-		assert.equal(features.has('ExistingFeature'), true);
+
+		assert.deepEqual(
+			[...features].filter((feature) => feature.includes('Wgc')),
+			[],
+		);
+	});
+});
+
+describe('ChromiumRuntime macOS capture policy', () => {
+	test('leaves the choice of macOS screen capture device to Chromium', () => {
+		assert.deepEqual(
+			collectChromiumFeatureNames('darwin').filter(
+				(feature) => feature.includes('ScreenCaptureKit') || feature.includes('SCContentSharingPicker'),
+			),
+			[],
+		);
 	});
 
-	test('does not add WGC feature switches on non-Windows platforms', () => {
-		const {module} = loadChromiumRuntime('linux');
-		const features = new Set(['ExistingFeature']);
+	test('exposes no macOS release-gated screen capture override', () => {
+		const {module} = loadChromiumRuntime('darwin');
 
-		module.addWindowsWebRtcWgcDisabledFeatures(features);
+		assert.deepEqual(
+			Object.keys(module).filter((name) => name.includes('ScreenCapture')),
+			[],
+		);
+	});
+});
 
-		assert.deepEqual([...features], ['ExistingFeature']);
+describe('ChromiumRuntime Linux capture policy', () => {
+	test('leaves the choice of PipeWire screen capture to Chromium', () => {
+		assert.deepEqual(
+			collectChromiumFeatureNames('linux').filter((feature) => feature.includes('PipeWire')),
+			[],
+		);
 	});
 });
 

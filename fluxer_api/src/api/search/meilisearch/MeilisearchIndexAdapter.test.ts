@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {MeilisearchClient, MeilisearchTask} from '@app/api/search/meilisearch/MeilisearchClient';
+import {MeilisearchMessageAdapter} from '@app/api/search/meilisearch/MeilisearchDomainAdapters';
+import {MEILISEARCH_MAX_TRACKED_BULK_TASKS} from '@app/api/search/meilisearch/MeilisearchIndexAdapter';
 import type {SearchableMessage} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
 import {describe, expect, it} from 'vitest';
-import type {MeilisearchClient, MeilisearchTask} from './MeilisearchClient';
-import {MeilisearchMessageAdapter} from './MeilisearchDomainAdapters';
-import {MEILISEARCH_MAX_TRACKED_BULK_TASKS} from './MeilisearchIndexAdapter';
 
 interface RecordedMeilisearchRequest {
 	method: string;

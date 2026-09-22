@@ -81,7 +81,7 @@ async fn admin_api_keys_post(
         "create" => {
             let name = form.clean("name").unwrap_or_default();
             let acls = form.list_values_any(&["acls[]", "acls"]);
-            return match client.create_api_key(&name, &acls).await {
+            match client.create_api_key(&name, &acls).await {
                 Ok(created) => {
                     let keys = client
                         .list_api_keys()
@@ -107,29 +107,38 @@ async fn admin_api_keys_post(
                         is_htmx,
                     )
                 }
-            };
-        }
-        "revoke" => {
-            if let Some(key_id) = form.clean("key_id") {
-                let result = client.revoke_api_key(&key_id).await;
-                let flash = match result.log_error("revoke API key") {
-                    Some(_) => FlashData::success("API key revoked."),
-                    None => FlashData::error("Failed to revoke API key"),
-                };
-                return flash::redirect_with_flash(
-                    &format!("{base}/admin-api-keys"),
-                    flash,
-                    config.is_production(),
-                );
             }
         }
-        _ => {}
+        "revoke" => {
+            let Some(key_id) = form.clean("key_id") else {
+                return admin_api_key_flash_response(
+                    config,
+                    FlashData::error("API key ID is required"),
+                    is_htmx,
+                );
+            };
+            let result = client.revoke_api_key(&key_id).await;
+            let flash = match result.log_error("revoke API key") {
+                Some(_) => FlashData::success("API key revoked."),
+                None => FlashData::error("Failed to revoke API key"),
+            };
+            flash::redirect_with_flash(
+                &format!("{base}/admin-api-keys"),
+                flash,
+                config.secure_cookies(),
+            )
+        }
+        "" => admin_api_key_flash_response(
+            config,
+            FlashData::error("API key action is required"),
+            is_htmx,
+        ),
+        _ => admin_api_key_flash_response(
+            config,
+            FlashData::error("Unknown API key action"),
+            is_htmx,
+        ),
     }
-    flash::redirect_with_flash(
-        &format!("{base}/admin-api-keys"),
-        FlashData::success(format!("API key action '{action}' completed.")),
-        config.is_production(),
-    )
 }
 
 fn admin_api_key_flash_response(
@@ -143,7 +152,7 @@ fn admin_api_key_flash_response(
         flash::redirect_with_flash(
             &format!("{}/admin-api-keys", config.base_path),
             flash_data,
-            config.is_production(),
+            config.secure_cookies(),
         )
     }
 }

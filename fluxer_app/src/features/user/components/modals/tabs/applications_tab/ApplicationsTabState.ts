@@ -5,7 +5,7 @@ import type {DeveloperApplicationWire} from '@app/features/devtools/models/Devel
 import {DeveloperApplication} from '@app/features/devtools/models/DeveloperApplication';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {action, makeAutoObservable, runInAction} from 'mobx';
+import {makeAutoObservable, runInAction} from 'mobx';
 
 const logger = new Logger('ApplicationsTabState');
 
@@ -196,7 +196,6 @@ class ApplicationsTabState {
 		}
 	}
 
-	@action
 	clearError(): void {
 		this.error = null;
 		if (this.navigationState === NavigationState.ERROR) {

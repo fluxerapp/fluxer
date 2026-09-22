@@ -1,34 +1,34 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, UserID} from '@app/api/BrandedTypes';
+import {createUserID} from '@app/api/BrandedTypes';
+import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import {ChannelAuthService} from '@app/api/channel/services/channel_data/ChannelAuthService';
+import type {ChannelUpdateData} from '@app/api/channel/services/channel_data/ChannelOperationsService';
+import {ChannelOperationsService} from '@app/api/channel/services/channel_data/ChannelOperationsService';
+import {ChannelUtilsService} from '@app/api/channel/services/channel_data/ChannelUtilsService';
+import {GroupDmUpdateService} from '@app/api/channel/services/channel_data/GroupDmUpdateService';
+import type {MessagePersistenceService} from '@app/api/channel/services/message/MessagePersistenceService';
+import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {AvatarService} from '@app/api/infrastructure/AvatarService';
+import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ILiveKitService} from '@app/api/infrastructure/ILiveKitService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import type {IVoiceRoomStore} from '@app/api/infrastructure/IVoiceRoomStore';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {IInviteRepository} from '@app/api/invite/IInviteRepository';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Channel} from '@app/api/models/Channel';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
+import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {ChannelUpdateRequest} from '@fluxer/schema/src/domains/channel/ChannelRequestSchemas';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
-import type {ChannelID, UserID} from '../../BrandedTypes';
-import {createUserID} from '../../BrandedTypes';
-import type {GuildAuditLogService} from '../../guild/GuildAuditLogService';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import type {AvatarService} from '../../infrastructure/AvatarService';
-import type {IPurgeQueue} from '../../infrastructure/BunnyPurgeQueue';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {ILiveKitService} from '../../infrastructure/ILiveKitService';
-import type {ISnowflakeService} from '../../infrastructure/ISnowflakeService';
-import type {IStorageService} from '../../infrastructure/IStorageService';
-import type {IVoiceRoomStore} from '../../infrastructure/IVoiceRoomStore';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import type {IInviteRepository} from '../../invite/IInviteRepository';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {Channel} from '../../models/Channel';
-import type {IUserRepository} from '../../user/IUserRepository';
-import type {VoiceAvailabilityService} from '../../voice/VoiceAvailabilityService';
-import type {IWebhookRepository} from '../../webhook/IWebhookRepository';
-import type {IChannelRepositoryAggregate} from '../repositories/IChannelRepositoryAggregate';
-import {ChannelAuthService} from './channel_data/ChannelAuthService';
-import type {ChannelUpdateData} from './channel_data/ChannelOperationsService';
-import {ChannelOperationsService} from './channel_data/ChannelOperationsService';
-import {ChannelUtilsService} from './channel_data/ChannelUtilsService';
-import {GroupDmUpdateService} from './channel_data/GroupDmUpdateService';
-import type {MessagePersistenceService} from './message/MessagePersistenceService';
 
 type GuildChannelUpdateRequest = Exclude<
 	ChannelUpdateRequest,
@@ -104,14 +104,16 @@ export class ChannelDataService {
 		data,
 		clientFeatures,
 		requestCache,
+		auditLogReason,
 	}: {
 		userId: UserID;
 		channelId: ChannelID;
 		data: Omit<ChannelUpdateRequest, 'type'>;
 		clientFeatures: ReadonlySet<string>;
 		requestCache: RequestCache;
+		auditLogReason: string | null;
 	}): Promise<Channel> {
-		const {channel} = await this.auth.getChannelAuthenticated({userId, channelId});
+		const {channel} = await this.auth.getChannelAuthenticated({userId, channelId, skipNsfwValidation: true});
 		if (channel.type === ChannelTypes.GROUP_DM) {
 			return await this.groupDmUpdate.updateGroupDmChannel({
 				userId,
@@ -182,6 +184,7 @@ export class ChannelDataService {
 			data: channelUpdateData,
 			clientFeatures,
 			requestCache,
+			auditLogReason,
 		});
 	}
 }

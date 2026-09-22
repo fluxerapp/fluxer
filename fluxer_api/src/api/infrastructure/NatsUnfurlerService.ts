@@ -1,13 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {MediaProxyNsfwMode} from '@app/api/infrastructure/IMediaService';
+import {IUnfurlerService, type UnfurlOptions, type UnfurlResult} from '@app/api/infrastructure/IUnfurlerService';
+import {throwForSvcErrorReply} from '@app/api/infrastructure/SvcErrorReply';
+import {Logger} from '@app/api/Logger';
+import {isJsonRecord, parseJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
+import {BadGatewayError} from '@fluxer/errors/src/domains/core/BadGatewayError';
+import {GatewayTimeoutError} from '@fluxer/errors/src/domains/core/GatewayTimeoutError';
+import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
+import {FluxerError} from '@fluxer/errors/src/FluxerError';
 import type {MessageEmbedResponse} from '@fluxer/schema/src/domains/message/EmbedSchemas';
+import {RequestError, TimeoutError} from '@nats-io/transport-node';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
-import {StringCodec} from 'nats';
-import {Logger} from '../Logger';
-import {isJsonRecord, parseJsonRecord, parseJsonWithGuard} from '../utils/JsonBoundaryUtils';
-import type {MediaProxyNsfwMode} from './IMediaService';
-import {IUnfurlerService, type UnfurlOptions, type UnfurlResult} from './IUnfurlerService';
-import {throwForSvcErrorReply} from './SvcErrorReply';
+
+const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
 
 const NATS_UNFURL_SUBJECT = 'svc.unfurl';
 const NATS_UNFURL_TIMEOUT_MS = 12000;
@@ -54,9 +61,21 @@ function isNatsUnfurlResponse(value: unknown): value is NatsUnfurlResponse {
 	return false;
 }
 
+function mapUnfurlTransportError(error: unknown): Error {
+	if (error instanceof FluxerError) {
+		return error;
+	}
+	if (error instanceof RequestError && error.isNoResponders()) {
+		return new ServiceUnavailableError({message: '[nats-unfurl] no unfurl service is answering'});
+	}
+	if (error instanceof TimeoutError) {
+		return new GatewayTimeoutError({message: '[nats-unfurl] unfurl service did not answer in time'});
+	}
+	return new BadGatewayError({message: '[nats-unfurl] request failed'});
+}
+
 export class NatsUnfurlerService extends IUnfurlerService {
 	private readonly connectionManager: INatsConnectionManager;
-	private readonly codec = StringCodec();
 
 	constructor(
 		connectionManager: INatsConnectionManager,
@@ -86,15 +105,15 @@ export class NatsUnfurlerService extends IUnfurlerService {
 				await this.connectionManager.connect();
 			}
 			const connection = this.connectionManager.getConnection();
-			const payload = this.codec.encode(JSON.stringify(request));
+			const payload = textEncoder.encode(JSON.stringify(request));
 			const responseMsg = await connection.request(NATS_UNFURL_SUBJECT, payload, {
 				timeout: options.cacheOnly === true ? NATS_UNFURL_CACHE_ONLY_TIMEOUT_MS : NATS_UNFURL_TIMEOUT_MS,
 			});
-			const responseText = this.codec.decode(responseMsg.data);
+			const responseText = textDecoder.decode(responseMsg.data);
 			const response = parseJsonWithGuard(responseText, isNatsUnfurlResponse);
 			if (!response) {
 				throwForSvcErrorReply('nats-unfurl', parseJsonRecord(responseText));
-				throw new Error(`[nats-unfurl] invalid response payload: ${responseText}`);
+				throw new BadGatewayError({message: '[nats-unfurl] invalid response payload'});
 			}
 			if ('Resolved' in response) {
 				return {
@@ -103,16 +122,16 @@ export class NatsUnfurlerService extends IUnfurlerService {
 				};
 			}
 			if ('Failed' in response) {
-				throw new Error(`[nats-unfurl] service error: ${response.Failed.message}`);
+				throw new BadGatewayError({message: `[nats-unfurl] service error: ${response.Failed.message}`});
 			}
-			throw new Error(`[nats-unfurl] unexpected response variant: ${responseText}`);
+			throw new BadGatewayError({message: '[nats-unfurl] unexpected response variant'});
 		} catch (error) {
 			if (options.signal?.aborted) {
 				Logger.warn({url}, '[nats-unfurl] request aborted');
 			} else {
 				Logger.error({error, url}, '[nats-unfurl] failed to unfurl URL');
 			}
-			throw error;
+			throw mapUnfurlTransportError(error);
 		}
 	}
 }

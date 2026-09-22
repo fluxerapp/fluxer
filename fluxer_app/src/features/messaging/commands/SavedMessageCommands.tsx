@@ -13,6 +13,7 @@ import {modal} from '@app/features/ui/commands/ModalCommands';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import Users from '@app/features/user/state/Users';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {SAVED_MESSAGES_PAGE_SIZE} from '@fluxer/constants/src/LimitConstants';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 
@@ -31,8 +32,14 @@ interface SaveMessageRequest {
 	message_id: string;
 }
 
-async function requestSavedMessages(): Promise<Array<SavedMessageEntryWire>> {
-	const response = await http.get<Array<SavedMessageEntryWire>>(Endpoints.USER_SAVED_MESSAGES);
+interface SavedMessagesFetchOptions {
+	before?: string;
+}
+
+async function requestSavedMessages(options: SavedMessagesFetchOptions = {}): Promise<Array<SavedMessageEntryWire>> {
+	const response = await http.get<Array<SavedMessageEntryWire>>(Endpoints.USER_SAVED_MESSAGES, {
+		query: {limit: SAVED_MESSAGES_PAGE_SIZE, ...options},
+	});
 	return response.body ?? [];
 }
 
@@ -78,18 +85,35 @@ function showMaxBookmarksModal(): boolean {
 	return true;
 }
 
-export async function fetch(): Promise<Array<SavedMessageEntry>> {
+async function runSavedMessagesFetch(
+	label: string,
+	append: boolean,
+	options: SavedMessagesFetchOptions = {},
+): Promise<Array<SavedMessageEntry>> {
+	const requestId = SavedMessages.handleFetchPending();
 	try {
-		logger.debug('Fetching saved messages');
-		const entries = savedMessageEntries(await requestSavedMessages());
-		SavedMessages.fetchSuccess(entries);
+		logger.debug(label);
+		const entries = savedMessageEntries(await requestSavedMessages(options));
+		SavedMessages.fetchSuccess(requestId, entries, append);
 		logger.debug(`Successfully fetched ${entries.length} saved messages`);
 		return entries;
 	} catch (error) {
-		SavedMessages.fetchError();
-		logger.error('Failed to fetch saved messages:', error);
+		SavedMessages.fetchError(requestId, append);
+		logger.error(`${label} failed:`, error);
 		throw error;
 	}
+}
+
+export async function fetch(): Promise<Array<SavedMessageEntry>> {
+	return runSavedMessagesFetch('Fetching saved messages', false);
+}
+
+export async function loadMore(): Promise<Array<SavedMessageEntry>> {
+	const before = SavedMessages.getCursor();
+	if (!before || !SavedMessages.getHasMore() || SavedMessages.getIsLoadingMore()) {
+		return [];
+	}
+	return runSavedMessagesFetch(`Loading more saved messages before ${before}`, true, {before});
 }
 
 export async function create(i18n: I18n, channelId: string, messageId: string): Promise<void> {

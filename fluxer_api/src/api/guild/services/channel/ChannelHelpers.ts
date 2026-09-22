@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID} from '@app/api/BrandedTypes';
+import type {Channel} from '@app/api/models/Channel';
+import {serializeChannelForAudit as serializeChannelForAuditUtil} from '@app/api/utils/AuditSerializationUtils';
+import {toIdString} from '@app/api/utils/IdUtils';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import type {ChannelID} from '../../../BrandedTypes';
-import type {Channel} from '../../../models/Channel';
-import {serializeChannelForAudit as serializeChannelForAuditUtil} from '../../../utils/AuditSerializationUtils';
-import {toIdString} from '../../../utils/IdUtils';
 
 export interface ChannelReorderOperation {
 	channelId: ChannelID;

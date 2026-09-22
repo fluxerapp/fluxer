@@ -72,14 +72,6 @@ export interface GpuInfo {
 
 export type StreamingPriorityDiagnostics = Record<string, unknown>;
 
-export interface OpenH264Status {
-	enabled: boolean;
-	downloaded: boolean;
-	downloading: boolean;
-	version: string | null;
-	error: string | null;
-}
-
 export interface DesktopWindowBehaviorSettings {
 	showTrayIcon: boolean;
 	minimizeToTray: boolean;
@@ -283,6 +275,7 @@ export interface UpdaterDownloadOption {
 export interface DownloadResult {
 	success: boolean;
 	canceled?: boolean;
+	checksumMismatch?: boolean;
 	path?: string;
 	error?: string;
 }
@@ -349,7 +342,7 @@ export interface ElectronAPI {
 	platform: 'darwin' | 'win32' | 'linux' | string;
 	buildChannel: 'stable' | 'canary';
 	openExternal(url: string): Promise<void>;
-	downloadFile(url: string, suggestedName: string): Promise<DownloadResult>;
+	downloadFile(url: string, suggestedName: string, sha256?: string | null): Promise<DownloadResult>;
 	onUpdaterEvent(callback: (event: UpdaterEvent) => void): () => void;
 	updaterCheck(context: 'user' | 'background'): Promise<void>;
 	updaterDownload(context: 'user' | 'background'): Promise<void>;
@@ -483,8 +476,6 @@ export interface ElectronAPI {
 	passkeyIsSupported?(): Promise<boolean>;
 	passkeyRegister?(options: unknown, requestContext?: {pin?: string}): Promise<RegistrationResponseJSON>;
 	passkeyAuthenticate?(options: unknown, requestContext?: {pin?: string}): Promise<AuthenticationResponseJSON>;
-	getOpenH264Status?(): Promise<OpenH264Status>;
-	setOpenH264Enabled?(enabled: boolean): Promise<OpenH264Status>;
 	virtmic?: VirtmicApi;
 	nativeAudio?: NativeAudioApi;
 	nativeScreenCapture?: NativeScreenCaptureApi;

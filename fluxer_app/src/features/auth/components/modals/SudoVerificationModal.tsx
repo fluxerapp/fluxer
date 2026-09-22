@@ -38,6 +38,11 @@ const ENTER_THE_CODE_FROM_YOUR_AUTHENTICATOR_APP_DESCRIPTOR = msg({
 	message: 'Enter the code from your authenticator app.',
 	comment: 'Body text in the authentication sudo verification modal. Keep the tone plain and specific.',
 });
+const ENTER_ONE_OF_YOUR_BACKUP_CODES_DESCRIPTOR = msg({
+	message: 'Enter one of your backup codes.',
+	comment:
+		'Body text in the authentication sudo verification modal, shown when the only code the account can enter is a backup code. Keep the tone plain and specific.',
+});
 const VERIFY_IDENTITY_FORM_DESCRIPTOR = msg({
 	message: 'Verify identity form',
 	comment: 'Accessible form label in the authentication sudo verification modal. Keep the tone plain and specific.',
@@ -54,6 +59,12 @@ const MESSAGE_6_DIGIT_CODE_DESCRIPTOR = msg({
 	message: '6-digit code',
 	comment: 'Short label in the authentication sudo verification modal. Keep the tone plain and specific.',
 });
+const BACKUP_CODE_DESCRIPTOR = msg({
+	message: 'Backup code',
+	comment:
+		'Label and placeholder for the code field in the authentication sudo verification modal when the only code the account can use is a backup code.',
+});
+const VERIFICATION_FAILED_DESCRIPTOR = msg({message: 'Verification failed'});
 const logger = new Logger('SudoVerificationModal');
 
 interface FormInputs {
@@ -67,15 +78,17 @@ const isMacAppIdentifierError = (error: unknown): boolean => {
 };
 const SudoVerificationModal: React.FC = observer(() => {
 	const {i18n} = useLingui();
-	const {availableMethods, isVerifying, verificationError, rawError, lastUsedMfaMethod} = SudoPrompt;
+	const {availableMethods, isVerifying, verificationFailed, rawError, lastUsedMfaMethod} = SudoPrompt;
 	const form = useForm<FormInputs>({defaultValues: {password: '', totp: ''}});
 	const [webAuthnInFlight, setWebAuthnInFlight] = useState(false);
 	const [webAuthnError, setWebAuthnError] = useState<string | null>(null);
 	const autoTriggeredRef = useRef(false);
 	const showPasskey = availableMethods.webauthn;
 	const showTotp = availableMethods.totp;
+	const backupCodeOnly = !showTotp && availableMethods.backupCodes;
+	const showCode = showTotp || availableMethods.backupCodes;
 	const showPassword = availableMethods.password;
-	const noMethodsAvailable = !showPasskey && !showTotp && !showPassword;
+	const noMethodsAvailable = !showPasskey && !showCode && !showPassword;
 	useEffect(() => {
 		form.reset({password: '', totp: ''});
 		setWebAuthnError(null);
@@ -83,15 +96,15 @@ const SudoVerificationModal: React.FC = observer(() => {
 		autoTriggeredRef.current = false;
 	}, [form]);
 	useEffect(() => {
-		if (!verificationError && !rawError) return;
-		const fallback: keyof FormInputs = showTotp ? 'totp' : showPassword ? 'password' : 'password';
+		if (!verificationFailed && !rawError) return;
+		const fallback: keyof FormInputs = showCode ? 'totp' : 'password';
 		if (rawError) {
 			FormUtils.handleError(i18n, form, rawError, fallback);
-		} else if (verificationError) {
-			form.setError(fallback, {type: 'server', message: verificationError});
+		} else if (verificationFailed) {
+			form.setError(fallback, {type: 'server', message: i18n._(VERIFICATION_FAILED_DESCRIPTOR)});
 		}
 		setWebAuthnInFlight(false);
-	}, [form, verificationError, rawError, i18n, showPassword, showTotp]);
+	}, [form, verificationFailed, rawError, i18n, i18n.locale, showPassword, showCode]);
 	const handleWebAuthn = async () => {
 		if (webAuthnInFlight || isVerifying) return;
 		setWebAuthnError(null);
@@ -118,17 +131,17 @@ const SudoVerificationModal: React.FC = observer(() => {
 	};
 	useEffect(() => {
 		if (autoTriggeredRef.current) return;
-		if (!showPasskey || showPassword || showTotp) return;
+		if (!showPasskey || showPassword || showCode) return;
 		if (lastUsedMfaMethod && lastUsedMfaMethod !== 'webauthn') return;
 		autoTriggeredRef.current = true;
 		void handleWebAuthn();
-	}, [showPasskey, showPassword, showTotp]);
+	}, [showPasskey, showPassword, showCode]);
 	const handleClose = () => {
 		SudoPrompt.reject(new DOMException('User cancelled verification', 'AbortError'));
 	};
 	const onSubmit = (values: FormInputs) => {
 		form.clearErrors();
-		if (showTotp && values.totp) {
+		if (showCode && values.totp) {
 			SudoPrompt.submit({mfa_method: SudoVerificationMethod.TOTP, mfa_code: values.totp});
 			return;
 		}
@@ -136,17 +149,19 @@ const SudoVerificationModal: React.FC = observer(() => {
 			SudoPrompt.submit({password: values.password});
 			return;
 		}
-		if (showPasskey && !showTotp && !showPassword) {
+		if (showPasskey && !showCode && !showPassword) {
 			void handleWebAuthn();
 			return;
 		}
-		const target: keyof FormInputs = showTotp ? 'totp' : 'password';
+		const target: keyof FormInputs = showCode ? 'totp' : 'password';
 		form.setError(target, {
 			type: 'manual',
 			message:
 				target === 'password'
 					? i18n._(ENTER_YOUR_PASSWORD_DESCRIPTOR)
-					: i18n._(ENTER_THE_CODE_FROM_YOUR_AUTHENTICATOR_APP_DESCRIPTOR),
+					: backupCodeOnly
+						? i18n._(ENTER_ONE_OF_YOUR_BACKUP_CODES_DESCRIPTOR)
+						: i18n._(ENTER_THE_CODE_FROM_YOUR_AUTHENTICATOR_APP_DESCRIPTOR),
 		});
 	};
 	return (
@@ -185,19 +200,19 @@ const SudoVerificationModal: React.FC = observer(() => {
 							</div>
 						) : (
 							<>
-								{showTotp && (
+								{showCode && (
 									<Input
 										id="totp"
 										data-flx="auth.sudo-verification-modal.input"
 										{...form.register('totp')}
-										label={i18n._(AUTHENTICATOR_CODE_DESCRIPTOR)}
-										placeholder={i18n._(MESSAGE_6_DIGIT_CODE_DESCRIPTOR)}
+										label={i18n._(backupCodeOnly ? BACKUP_CODE_DESCRIPTOR : AUTHENTICATOR_CODE_DESCRIPTOR)}
+										placeholder={i18n._(backupCodeOnly ? BACKUP_CODE_DESCRIPTOR : MESSAGE_6_DIGIT_CODE_DESCRIPTOR)}
 										type="text"
 										autoComplete="one-time-code"
 										autoCapitalize="none"
 										autoCorrect="off"
 										enterKeyHint="done"
-										inputMode="numeric"
+										inputMode={backupCodeOnly ? 'text' : 'numeric'}
 										spellCheck={false}
 										autoFocus
 										error={form.formState.errors.totp?.message}
@@ -223,8 +238,8 @@ const SudoVerificationModal: React.FC = observer(() => {
 												onClick={handleWebAuthn}
 												disabled={isVerifying}
 												fitContainer
-												autoFocus={!showTotp && !showPassword}
-												variant={showTotp || showPassword ? 'secondary' : 'primary'}
+												autoFocus={!showCode && !showPassword}
+												variant={showCode || showPassword ? 'secondary' : 'primary'}
 												data-flx="auth.sudo-verification-modal.button.web-authn"
 											>
 												<Trans>Continue with passkey</Trans>
@@ -244,7 +259,7 @@ const SudoVerificationModal: React.FC = observer(() => {
 										{...form.register('password')}
 										label={i18n._(PASSWORD_DESCRIPTOR)}
 										type="password"
-										autoFocus={!showPasskey && !showTotp}
+										autoFocus={!showPasskey && !showCode}
 										error={form.formState.errors.password?.message}
 									/>
 								)}
@@ -262,7 +277,7 @@ const SudoVerificationModal: React.FC = observer(() => {
 					>
 						<Trans>Cancel</Trans>
 					</Button>
-					{!noMethodsAvailable && (showTotp || showPassword) && (
+					{!noMethodsAvailable && (showCode || showPassword) && (
 						<Button
 							type="submit"
 							submitting={isVerifying}

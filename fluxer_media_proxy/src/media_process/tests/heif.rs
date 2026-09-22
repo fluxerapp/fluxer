@@ -44,7 +44,7 @@ fn animated_heic_sequence_decodes_every_frame_and_encodes_an_animation() {
 
     let mut heif = heic.clone();
     let ftyp_len = u32::from_be_bytes(heif[0..4].try_into().expect("ftyp length")) as usize;
-    for brand in heif[8..ftyp_len].chunks_exact_mut(4) {
+    for brand in heif[8..ftyp_len].as_chunks_mut::<4>().0 {
         if brand == b"heic" || brand == b"hevc" {
             brand.copy_from_slice(b"msf1");
         }
@@ -185,7 +185,7 @@ fn hdr_pq_avif_tone_maps_to_sdr_pixels() {
         "a PQ mid grey read as plain sRGB would land near 128, got {}",
         rgba[centre]
     );
-    for pixel in rgba.chunks_exact(4) {
+    for pixel in rgba.as_chunks::<4>().0 {
         assert_eq!(255, pixel[3], "tone mapped output must stay opaque");
         for channel in 0..3 {
             assert!(

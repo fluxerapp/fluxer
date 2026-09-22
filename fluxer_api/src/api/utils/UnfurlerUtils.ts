@@ -1,29 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash} from 'node:crypto';
+import {stripOwnAttachmentSignature} from '@app/api/attachment/AttachmentUrls';
+import {Config} from '@app/api/Config';
+import {Logger} from '@app/api/Logger';
+import * as InviteUtils from '@app/api/utils/InviteUtils';
 import {URL_REGEX} from '@fluxer/constants/src/Core';
 import * as idna from 'idna-uts46-hx';
-import {Config} from '../Config';
-import {Logger} from '../Logger';
-import * as InviteUtils from './InviteUtils';
 
-const MARKETING_PATH_PREFIXES = ['/channels/', '/theme/'];
+const CLIENT_ROUTE_PATH_PREFIXES = ['/channels/', '/theme/'];
+
+interface ExcludedLinkBase {
+	hostname: string;
+	pathPrefix: string;
+}
 
 function normalizeHostname(hostname: string | undefined) {
 	return hostname?.trim().toLowerCase() || '';
 }
-
-let _marketingHostname: string | null = null;
-
-function getMarketingHostname() {
-	if (!_marketingHostname) {
-		_marketingHostname = normalizeHostname(Config.hosts.marketing);
-	}
-	return _marketingHostname;
-}
-
-const isMarketingPath = (hostname: string, pathname: string) =>
-	hostname === getMarketingHostname() && MARKETING_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
 function getWebAppHostname() {
 	try {
@@ -33,23 +27,32 @@ function getWebAppHostname() {
 	}
 }
 
-let _excludedHostnames: Set<string> | null = null;
-
-function getExcludedHostnames(): Set<string> {
-	if (!_excludedHostnames) {
-		_excludedHostnames = new Set<string>();
-		const addHostname = (hostname: string | undefined) => {
-			const normalized = normalizeHostname(hostname);
-			if (normalized) {
-				_excludedHostnames!.add(normalized);
-			}
-		};
-		addHostname(Config.hosts.invite);
-		addHostname(Config.hosts.gift);
-		Config.hosts.unfurlIgnored.forEach(addHostname);
-		addHostname(getWebAppHostname());
+function endpointLinkBase(endpoint: string): ExcludedLinkBase | null {
+	try {
+		const url = new URL(endpoint);
+		return {hostname: normalizeHostname(url.hostname), pathPrefix: `${url.pathname.replace(/\/+$/, '')}/`};
+	} catch {
+		return null;
 	}
-	return _excludedHostnames;
+}
+
+let _excludedLinkBases: Array<ExcludedLinkBase> | null = null;
+
+function getExcludedLinkBases(): Array<ExcludedLinkBase> {
+	if (!_excludedLinkBases) {
+		const bases: Array<ExcludedLinkBase | null> = [
+			...Config.hosts.unfurlIgnored.map((hostname) => ({hostname: normalizeHostname(hostname), pathPrefix: '/'})),
+			endpointLinkBase(Config.endpoints.invite),
+			endpointLinkBase(Config.endpoints.gift),
+		];
+		for (const hostname of [getWebAppHostname(), Config.hosts.marketing]) {
+			for (const pathPrefix of CLIENT_ROUTE_PATH_PREFIXES) {
+				bases.push({hostname: normalizeHostname(hostname), pathPrefix});
+			}
+		}
+		_excludedLinkBases = bases.filter((base): base is ExcludedLinkBase => base !== null && base.hostname !== '');
+	}
+	return _excludedLinkBases;
 }
 
 function idnaEncodeURL(url: string) {
@@ -79,8 +82,9 @@ function isFluxerAppExcludedURL(url: string) {
 	try {
 		const parsedUrl = new URL(url);
 		const hostname = normalizeHostname(parsedUrl.hostname);
-		const isMarketingPathMatch = isMarketingPath(hostname, parsedUrl.pathname);
-		return isMarketingPathMatch || getExcludedHostnames().has(hostname);
+		return getExcludedLinkBases().some(
+			(base) => base.hostname === hostname && parsedUrl.pathname.startsWith(base.pathPrefix),
+		);
 	} catch {
 		return false;
 	}
@@ -103,9 +107,10 @@ export function extractURLs(inputText: string) {
 		if (isFluxerAppExcludedURL(url)) continue;
 		const encoded = idnaEncodeURL(url);
 		if (!encoded) continue;
-		if (!seen.has(encoded)) {
-			seen.add(encoded);
-			result.push(encoded);
+		const canonical = stripOwnAttachmentSignature(encoded);
+		if (!seen.has(canonical)) {
+			seen.add(canonical);
+			result.push(canonical);
 			if (result.length >= 5) break;
 		}
 	}

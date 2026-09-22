@@ -103,8 +103,33 @@ pub fn electron_args(args: &[String]) -> Vec<String> {
     {
         runtime_args.push("--no-sandbox".to_owned());
     }
+    if linux_wayland_session() && !args.iter().any(|arg| arg.starts_with("--ozone-platform")) {
+        runtime_args.push("--ozone-platform=wayland".to_owned());
+    }
     runtime_args.extend(args.iter().cloned());
     runtime_args
+}
+
+fn linux_wayland_session() -> bool {
+    if !cfg!(target_os = "linux") {
+        return false;
+    }
+    let Some(display) = env::var_os("WAYLAND_DISPLAY") else {
+        return false;
+    };
+    if display.is_empty() {
+        return false;
+    }
+    let display_path = PathBuf::from(&display);
+    let socket = if display_path.is_absolute() {
+        display_path
+    } else {
+        let Some(runtime_dir) = env::var_os("XDG_RUNTIME_DIR") else {
+            return false;
+        };
+        Path::new(&runtime_dir).join(display_path)
+    };
+    socket.exists()
 }
 
 pub fn electron_command(args: &[String]) -> Vec<String> {

@@ -11,6 +11,8 @@
 ]).
 
 -define(MAX_BULK_ENCODE_GROUPS, 1024).
+-define(BROADCASTER_CLAIM_DEADLINE_MS, 250).
+-define(BROADCASTER_CLAIM_BACKOFF_MS, 1).
 
 -type event() :: atom().
 -type event_data() :: map().
@@ -240,11 +242,40 @@ check_eligible_pid(SessionData, Event, FinalData, GuildId, State) ->
 dispatch_to_pids([], _Event, _EncodedData, _GuildId, _State) ->
     ok;
 dispatch_to_pids(Pids, Event, EncodedData, GuildId, State) ->
-    BroadcasterPid = maps:get(broadcaster_pid, State, undefined),
-    case guild_broadcaster:cast_event(BroadcasterPid, Event, EncodedData, Pids) of
-        true -> ok;
-        false -> gateway_dispatch_relay:dispatch_many(Pids, Event, EncodedData, GuildId)
+    case maps:get(broadcaster_pid, State, undefined) of
+        BroadcasterPid when is_pid(BroadcasterPid) ->
+            claim_broadcaster(BroadcasterPid, Pids, Event, EncodedData, claim_deadline());
+        _ ->
+            gateway_dispatch_relay:dispatch_many(Pids, Event, EncodedData, GuildId)
     end.
+
+-spec claim_broadcaster(pid(), [pid()], event(), term(), integer()) -> ok.
+claim_broadcaster(BroadcasterPid, Pids, Event, EncodedData, Deadline) ->
+    case guild_broadcaster:cast_event(BroadcasterPid, Event, EncodedData, Pids) of
+        true ->
+            ok;
+        false ->
+            claim_broadcaster_after_wait(
+                BroadcasterPid,
+                Pids,
+                Event,
+                EncodedData,
+                Deadline,
+                gateway_retry_timer:wait_until(?BROADCASTER_CLAIM_BACKOFF_MS, Deadline)
+            )
+    end.
+
+-spec claim_broadcaster_after_wait(
+    pid(), [pid()], event(), term(), integer(), term()
+) -> ok.
+claim_broadcaster_after_wait(BroadcasterPid, Pids, Event, EncodedData, Deadline, ok) ->
+    claim_broadcaster(BroadcasterPid, Pids, Event, EncodedData, Deadline);
+claim_broadcaster_after_wait(BroadcasterPid, Pids, Event, EncodedData, _Deadline, _Expired) ->
+    gen_server:cast(BroadcasterPid, {event_broadcast, Event, EncodedData, Pids}).
+
+-spec claim_deadline() -> integer().
+claim_deadline() ->
+    erlang:monotonic_time(millisecond) + ?BROADCASTER_CLAIM_DEADLINE_MS.
 
 -spec normalize_success(non_neg_integer()) -> non_neg_integer().
 normalize_success(Count) when Count > 0 -> 1;

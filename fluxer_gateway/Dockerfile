@@ -2,7 +2,7 @@
 FROM erlang:28-slim AS build
 
 ARG LOGGER_LEVEL=info
-ARG RUST_TOOLCHAIN=1.93.0
+ARG RUST_TOOLCHAIN=1.98.1
 
 ENV PATH="/root/.cargo/bin:${PATH}"
 
@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 	ca-certificates \
 	&& rm -rf /var/lib/apt/lists/*
 
-RUN curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL https://github.com/erlang/rebar3/releases/download/3.24.0/rebar3 -o /usr/local/bin/rebar3 && \
+RUN curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL https://github.com/erlang/rebar3/releases/download/3.27.0/rebar3 -o /usr/local/bin/rebar3 && \
 	chmod +x /usr/local/bin/rebar3
 
 RUN curl --retry 5 --retry-delay 2 --retry-all-errors --proto '=https' --tlsv1.2 -fsSL https://sh.rustup.rs | \

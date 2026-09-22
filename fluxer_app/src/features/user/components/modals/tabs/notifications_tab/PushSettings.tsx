@@ -23,7 +23,7 @@ const ONE_MINUTE_DESCRIPTOR = msg({
 	comment: 'Push notification inactive timeout option. The value is a duration in minutes.',
 });
 const MINUTES_DESCRIPTOR = msg({
-	message: '{minutes} minutes',
+	message: '{minutes, plural, one {# minute} other {# minutes}}',
 	comment: 'Push notification inactive timeout option. The value is a duration in minutes.',
 });
 

@@ -2,14 +2,19 @@
 
 import type {GuildReadyData} from '@app/features/gateway/types/GatewayGuildTypes';
 import type {VoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
-import {describe, expect, it} from 'vitest';
 import {
 	createVoiceGatewayStateSnapshot,
 	transitionVoiceGatewayStateSnapshot,
 	type VoiceGatewayStateContext,
 	type VoiceGatewayStateEvent,
 	type VoiceGatewayStateSnapshot,
-} from './VoiceGatewayStateMachine';
+} from '@app/features/voice/engine/VoiceGatewayStateMachine';
+import {describe, expect, it, vi} from 'vitest';
+
+vi.mock('@app/features/voice/state/ScreenShareDeliveryRollout', () => ({
+	ScreenShareDeliveryRollout: {enabled: false},
+	default: {enabled: false},
+}));
 
 function voiceState(overrides: Partial<VoiceState> = {}): VoiceState {
 	return {

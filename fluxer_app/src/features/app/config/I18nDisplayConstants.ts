@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Config from '@app/features/app/config/Config';
+import {PREMIUM_PRODUCT_FULL_NAME, PREMIUM_PRODUCT_NAME, PRODUCT_NAME} from '@app/features/app/config/ProductConstants';
 import {formatAssetUploadExtensions, formatKnownAnimatedAssetExtensions} from '@fluxer/constants/src/AssetFormatPolicy';
 import {THE_OTHER_PLATFORM} from '@fluxer/constants/src/ExternalPlatformConstants';
-import {PREMIUM_PRODUCT_FULL_NAME, PREMIUM_PRODUCT_NAME, PRODUCT_NAME} from './ProductConstants';
 
 export {PREMIUM_PRODUCT_FULL_NAME, PREMIUM_PRODUCT_NAME, PRODUCT_NAME};
 export const PRODUCT_API_NAME = `${PRODUCT_NAME} API`;
@@ -23,7 +23,6 @@ export const MACOS_SCREEN_RECORDING_PERMISSION_NAME = 'Screen Recording';
 export const PIX_PAYMENT_METHOD = 'Pix';
 export const UPI_PAYMENT_METHOD = 'UPI';
 export const BLIK_PAYMENT_METHOD = 'BLIK';
-export const MB_WAY_PAYMENT_METHOD = 'MB WAY';
 export const SUPPORT_EMAIL = 'support@fluxer.app';
 export const SUPPORT_EMAIL_MAILTO = `mailto:${SUPPORT_EMAIL}`;
 export const I18N_EMAIL = 'i18n@fluxer.app';
@@ -80,9 +79,9 @@ export const BACKGROUND_MEDIA_FORMATS = 'JPG, PNG, GIF, WebP, MP4, WebM';
 export const ANIMATED_AVATAR_FORMATS = formatKnownAnimatedAssetExtensions('avatar');
 export const AVIF_FORMAT_LABEL = 'AVIF';
 export const CUSTOM_SOUND_FORMATS = 'MP3, WAV, OGG, M4A, AAC, FLAC, Opus, WebM';
-export const IMAGE_MAX_SIZE_LABEL = '10MB';
-export const BACKGROUND_MEDIA_MAX_SIZE_LABEL = '10MB';
-export const CUSTOM_SOUND_MAX_SIZE_LABEL = '2MB';
+export const IMAGE_MAX_SIZE_BYTES = 10 * 1024 * 1024;
+export const BACKGROUND_MEDIA_MAX_SIZE_BYTES = 10 * 1024 * 1024;
+export const CUSTOM_SOUND_MAX_SIZE_BYTES = 2 * 1024 * 1024;
 export const CUSTOM_SOUND_MAX_DURATION_LABEL = '5.2 seconds';
 export const AVATAR_RECOMMENDED_SIZE_LABEL = '512×512px';
 export const BANNER_MINIMUM_SIZE_LABEL = '680×240px';

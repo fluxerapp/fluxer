@@ -11,7 +11,7 @@ import type {
 	TrayActionPayload,
 	TrayRuntimeStatePayload,
 } from '@electron/common/Types';
-import {getStableRelaunchOptions} from '@electron/main/LinuxLaunchPath';
+import {relaunchStableLaunchPath} from '@electron/main/LinuxLaunchPath';
 import {onLocaleChange, t} from '@electron/main/MainI18n';
 import {app, type BrowserWindow, clipboard, Menu, nativeImage, Tray} from 'electron';
 
@@ -42,6 +42,8 @@ let trayActionBridgeWebContentsId: number | null = null;
 let trayForcedExitTimer: NodeJS.Timeout | null = null;
 let pendingTrayActions: Array<TrayActionPayload> = [];
 
+const BIDI_FIRST_STRONG_ISOLATE = '\u2068';
+const BIDI_POP_DIRECTIONAL_ISOLATE = '\u2069';
 const MAX_PENDING_TRAY_ACTIONS = 16;
 const LINUX_TRAY_MENU_ACTION_DELAY_MS = 25;
 const TRAY_FORCED_EXIT_DELAY_MS = 5000;
@@ -275,7 +277,7 @@ function restartFromTray(): void {
 	trayRestartRequested = true;
 	controller?.setQuitting(true);
 	destroyDesktopTray();
-	app.relaunch(getStableRelaunchOptions());
+	relaunchStableLaunchPath();
 	app.quit();
 	armTrayForcedExit('restart');
 }
@@ -294,6 +296,10 @@ function runTrayMenuAction(action: () => void): void {
 	}
 	const timeout = setTimeout(run, LINUX_TRAY_MENU_ACTION_DELAY_MS);
 	timeout.unref?.();
+}
+
+function isolateUserText(value: string): string {
+	return `${BIDI_FIRST_STRONG_ISOLATE}${value}${BIDI_POP_DIRECTIONAL_ISOLATE}`;
 }
 
 function buildTrayMenu(): Menu {
@@ -368,7 +374,7 @@ function buildTrayMenu(): Menu {
 		});
 		menuTemplate.push({
 			label: trayState.voiceChannelLabel
-				? t('desktop.tray.disconnectFrom', {channel: trayState.voiceChannelLabel})
+				? t('desktop.tray.disconnectFrom', {channel: isolateUserText(trayState.voiceChannelLabel)})
 				: t('desktop.tray.disconnectVoice'),
 			click: () => runTrayMenuAction(() => dispatchTrayAction({action: 'disconnect-voice'})),
 		});

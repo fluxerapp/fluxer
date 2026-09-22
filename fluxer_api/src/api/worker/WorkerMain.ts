@@ -1,52 +1,53 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import {setDatabaseQueryExecutor} from '@app/api/database/CassandraQueryExecution';
+import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from '@app/api/database/PostgresKvQueryExecutor';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import {shutdownStorageChangeFeed} from '@app/api/infrastructure/StorageServiceFactory';
+import type {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
+import {JobLedgerRepository} from '@app/api/jobs/JobLedgerRepository';
+import {Logger} from '@app/api/Logger';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {
+	closeOwnedKVClient,
+	createSnowflakeService,
+	setInjectedSnowflakeService,
+	setInjectedWorkerService,
+	shutdownVoiceResources,
+} from '@app/api/middleware/ServiceRegistry';
+import {
+	getCacheService,
+	getInstanceConfigRepository,
+	getLimitConfigService,
+} from '@app/api/middleware/ServiceSingletons';
+import {initializeSearch, shutdownSearch} from '@app/api/SearchFactory';
+import {awaitAll} from '@app/api/utils/ConcurrencyUtils';
+import {queueBlocklistFeedStartupJobs} from '@app/api/worker/BlocklistFeedStartup';
+import {CronScheduler} from '@app/api/worker/CronScheduler';
+import {JetStreamWorkerQueue, JOBS_STREAM_MAX_AGE_MS} from '@app/api/worker/JetStreamWorkerQueue';
+import {clearWorkerDependencies, setWorkerDependencies} from '@app/api/worker/WorkerContext';
+import {initializeWorkerDependencies, type WorkerDependencies} from '@app/api/worker/WorkerDependencies';
+import {WorkerHeartbeat} from '@app/api/worker/WorkerHeartbeat';
+import {
+	resolveCronSchedulerEnabled,
+	resolveWorkerLanes,
+	validateLaneCompleteness,
+} from '@app/api/worker/WorkerLaneConfig';
+import {createWorkerProcessErrorHandler} from '@app/api/worker/WorkerProcessErrorHandler';
+import {WorkerRunner} from '@app/api/worker/WorkerRunner';
+import {WorkerService} from '@app/api/worker/WorkerService';
+import {workerTasks} from '@app/api/worker/WorkerTaskRegistry';
 import {setupGracefulShutdown} from '@fluxer/hono/src/Server';
 import {BACKGROUND_READ_TIMEOUT_MS, initCassandra, shutdownCassandra} from '@pkgs/cassandra/src/Client';
 import {JetStreamConnectionManager} from '@pkgs/nats/src/JetStreamConnectionManager';
 import {getDefaultPostgresClient, initPostgres, shutdownPostgres} from '@pkgs/postgres/src/Client';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
-import {ms} from 'itty-time';
-import {Config} from '../Config';
-import {setDatabaseQueryExecutor} from '../database/CassandraQueryExecution';
-import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from '../database/PostgresKvQueryExecutor';
-import type {ISnowflakeService} from '../infrastructure/ISnowflakeService';
-import {JobLedgerRepository} from '../jobs/JobLedgerRepository';
-import {Logger} from '../Logger';
-import {
-	createSnowflakeService,
-	setInjectedSnowflakeService,
-	setInjectedWorkerService,
-} from '../middleware/ServiceRegistry';
-import {getCacheService} from '../middleware/ServiceSingletons';
-import {initializeSearch, shutdownSearch} from '../SearchFactory';
-import {CronScheduler} from './CronScheduler';
-import {JetStreamWorkerQueue} from './JetStreamWorkerQueue';
-import {clearWorkerDependencies, setWorkerDependencies} from './WorkerContext';
-import {initializeWorkerDependencies, shutdownWorkerDependencies, type WorkerDependencies} from './WorkerDependencies';
-import {WorkerHeartbeat} from './WorkerHeartbeat';
-import {
-	resolveCronSchedulerEnabled,
-	resolveWorkerLanes,
-	validateLaneCompleteness,
-	type WorkerLaneDefinition,
-} from './WorkerLaneConfig';
-import {createWorkerProcessErrorHandler} from './WorkerProcessErrorHandler';
-import {WorkerQueueOverflowError} from './WorkerQueueOverflowError';
-import {WorkerRunner} from './WorkerRunner';
-import {WorkerService} from './WorkerService';
-import {workerTasks} from './WorkerTaskRegistry';
 
-const SEARCH_REQUIRED_TASKS = new Set<string>([
-	'indexChannelMessages',
-	'indexGuildMembers',
-	'refreshSearchIndex',
-	'syncDiscoveryIndex',
-]);
-
-function registerCronJobs(cron: CronScheduler): void {
+function registerCronJobs(cron: CronScheduler, jobsStreamMaxAgeMs: number): void {
 	cron.upsert('processAssetDeletionQueue', 'processAssetDeletionQueue', {}, '0 */5 * * * *', {ledger: false});
-	if (Config.bunny.purgeEnabled) {
-		cron.upsert('processBunnyPurgeQueue', 'processBunnyPurgeQueue', {}, '*/10 * * * * *', {ledger: false});
+	if (Config.cachePurge.adapter !== 'none') {
+		cron.upsert('processCachePurgeQueue', 'processCachePurgeQueue', {}, '*/10 * * * * *', {ledger: false});
 	}
 	cron.upsert('processPendingBulkMessageDeletions', 'processPendingBulkMessageDeletions', {}, '0 */10 * * * *', {
 		ledger: false,
@@ -60,6 +61,14 @@ function registerCronJobs(cron: CronScheduler): void {
 	}
 	cron.upsert('processInactivityDeletions', 'processInactivityDeletions', {}, '0 0 */6 * * *', {ledger: false});
 	cron.upsert('expireAttachments', 'expireAttachments', {}, '0 0 */12 * * *', {ledger: false});
+	if (jobsStreamMaxAgeMs > 0 && jobsStreamMaxAgeMs <= JOBS_STREAM_MAX_AGE_MS) {
+		cron.upsert('expireStaleJobs', 'expireStaleJobs', {}, '0 45 3 * * *', {ledger: false});
+	} else {
+		Logger.warn(
+			{jobsStreamMaxAgeMs},
+			'Jobs stream keeps jobs past 7 days, stale jobs stay active until their ledger rows expire',
+		);
+	}
 	cron.upsert('prunePostgresKvTtl', 'prunePostgresKvTtl', {}, '0 */5 * * * *', {ledger: false});
 	cron.upsert('syncDiscoveryIndex', 'syncDiscoveryIndex', {}, '0 */15 * * * *', {ledger: false});
 	if (Config.blocklistFeeds.enabled) {
@@ -71,15 +80,11 @@ function registerCronJobs(cron: CronScheduler): void {
 	Logger.info(
 		{
 			blocklistFeeds: Config.blocklistFeeds.enabled,
-			bunnyPurge: Config.bunny.purgeEnabled,
+			cachePurgeAdapter: Config.cachePurge.adapter,
 			selfHosted: Config.instance.selfHosted,
 		},
 		'Cron jobs registered successfully',
 	);
-}
-
-function workerLanesRequireSearch(activeWorkerLanes: ReadonlyArray<WorkerLaneDefinition>): boolean {
-	return activeWorkerLanes.some((lane) => lane.taskTypes.some((taskType) => SEARCH_REQUIRED_TASKS.has(taskType)));
 }
 
 export async function startWorkerMain(): Promise<void> {
@@ -88,12 +93,14 @@ export async function startWorkerMain(): Promise<void> {
 	let postgresInitialized = false;
 	let jsConnectionManager: JetStreamConnectionManager | null = null;
 	let snowflakeService: ISnowflakeService | null = null;
+	let limitConfigService: LimitConfigService | null = null;
+	let instanceConfigRepository: InstanceConfigRepository | null = null;
 	let dependencies: WorkerDependencies | null = null;
 	let cron: CronScheduler | null = null;
 	const heartbeat = new WorkerHeartbeat({logger: Logger});
 	const runners: Array<WorkerRunner> = [];
 	let searchInitialized = false;
-	let shuttingDown = false;
+	let shutdownPromise: Promise<void> | null = null;
 
 	const cleanupStep = async (label: string, fn: () => Promise<void> | void): Promise<void> => {
 		try {
@@ -103,28 +110,39 @@ export async function startWorkerMain(): Promise<void> {
 		}
 	};
 
-	const shutdown = async (): Promise<void> => {
-		if (shuttingDown) {
-			return;
-		}
-		shuttingDown = true;
+	const performShutdown = async (): Promise<void> => {
 		Logger.info('Shutting down worker backend...');
+		const voiceShutdown = cleanupStep('voice resources', shutdownVoiceResources);
 		await cleanupStep('heartbeat', () => heartbeat.stop());
 		await cleanupStep('cron', () => cron?.stop());
 		await cleanupStep('runners', async () => {
-			await Promise.all(runners.map((runner) => runner.stop()));
+			await awaitAll(
+				runners.map((runner) => runner.stop()),
+				'Failed to stop worker runners',
+			);
 		});
+		await voiceShutdown;
+		await cleanupStep('storage change feed', shutdownStorageChangeFeed);
 		await cleanupStep('jetstream', async () => {
 			await jsConnectionManager?.drain();
 			jsConnectionManager = null;
 		});
-		await cleanupStep('worker dependencies', async () => {
-			if (dependencies) {
-				await shutdownWorkerDependencies(dependencies);
-				dependencies = null;
-			}
+		await cleanupStep('worker dependencies', () => {
+			dependencies = null;
 			clearWorkerDependencies();
 			setInjectedWorkerService(undefined);
+		});
+		await cleanupStep('limit config', async () => {
+			if (limitConfigService) {
+				await limitConfigService.shutdown();
+				limitConfigService = null;
+			}
+		});
+		await cleanupStep('instance config repository', async () => {
+			if (instanceConfigRepository) {
+				await instanceConfigRepository.shutdown();
+				instanceConfigRepository = null;
+			}
 		});
 		await cleanupStep('search', async () => {
 			if (searchInitialized) {
@@ -152,15 +170,20 @@ export async function startWorkerMain(): Promise<void> {
 			}
 			setInjectedSnowflakeService(undefined);
 		});
+		await cleanupStep('key-value client', closeOwnedKVClient);
+	};
+	const shutdown = (): Promise<void> => {
+		shutdownPromise ??= Promise.resolve().then(performShutdown);
+		return shutdownPromise;
 	};
 
 	try {
 		if (Config.database.backend === 'postgres') {
-			await initPostgres(Config.postgres);
+			await initPostgres(Config.postgres, (diagnostic) => Logger.error(diagnostic, 'Postgres connection error'));
+			postgresInitialized = true;
 			const postgres = getDefaultPostgresClient();
 			await ensurePostgresKvSchema(postgres);
 			setDatabaseQueryExecutor(new PostgresKvQueryExecutor(postgres));
-			postgresInitialized = true;
 			Logger.info('Postgres KV client initialised for worker backend');
 		}
 		if (Config.database.backend === 'cassandra') {
@@ -212,28 +235,21 @@ export async function startWorkerMain(): Promise<void> {
 		const jobLedger = new JobLedgerRepository();
 		const workerService = new WorkerService(queue, snowflakeService, jobLedger);
 		setInjectedWorkerService(workerService);
+		instanceConfigRepository = getInstanceConfigRepository();
+		limitConfigService = getLimitConfigService();
+		try {
+			await initializeSearch(getCacheService());
+			searchInitialized = true;
+			Logger.info('Search initialised for worker backend');
+		} catch (error) {
+			Logger.error({err: error}, 'Search initialisation failed for worker backend');
+			throw error;
+		}
 		dependencies = await initializeWorkerDependencies(snowflakeService);
 		setWorkerDependencies(dependencies);
-		if (Config.blocklistFeeds.enabled) {
-			const didClaimEmailSync = await dependencies.kvClient.setnx(
-				'sync:email_domains:initialized',
-				'1',
-				ms('6 hours') / 1000,
-			);
-			if (didClaimEmailSync) {
-				Logger.info('Triggering initial disposable email domain sync');
-				try {
-					await workerService.addJob('syncDisposableEmailDomains', {});
-				} catch (error) {
-					if (!(error instanceof WorkerQueueOverflowError)) {
-						throw error;
-					}
-					Logger.warn('Dropped initial disposable email domain sync, jobs stream is at its limit');
-				}
-			}
-		}
+		await queueBlocklistFeedStartupJobs(dependencies.kvClient, workerService, Config.blocklistFeeds.enabled);
 		cron = new CronScheduler(workerService, Logger, dependencies.kvClient, heartbeat);
-		registerCronJobs(cron);
+		registerCronJobs(cron, queue.getJobsStreamMaxAgeMs());
 		for (const lane of activeWorkerLanes) {
 			const laneTasks: Record<string, WorkerTaskHandler> = {};
 			for (const taskType of lane.taskTypes) {
@@ -255,22 +271,6 @@ export async function startWorkerMain(): Promise<void> {
 				heartbeat,
 			});
 			runners.push(runner);
-		}
-		if (workerLanesRequireSearch(activeWorkerLanes)) {
-			try {
-				await initializeSearch(getCacheService());
-				searchInitialized = true;
-				Logger.info('Search initialised for worker backend');
-			} catch (error) {
-				Logger.error({err: error}, 'Search initialisation failed for worker backend');
-				throw error;
-			}
-		} else {
-			Logger.info('Search initialisation skipped for worker lanes without search tasks');
-		}
-		if (dependencies.voiceReconciliationWorker !== null) {
-			dependencies.voiceReconciliationWorker.start();
-			Logger.info('VoiceReconciliationWorker started');
 		}
 		if (cronSchedulerEnabled) {
 			cron.start();

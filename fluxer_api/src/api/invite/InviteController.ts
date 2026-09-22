@@ -1,19 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createChannelID, createGuildID, createInviteCode} from '@app/api/BrandedTypes';
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {ChannelIdParam, GuildIdParam, InviteCodeParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {
 	ChannelInviteCreateRequest,
+	InviteMetadataListResponse,
 	InviteMetadataResponseSchema,
 	InviteResponseSchema,
 } from '@fluxer/schema/src/domains/invite/InviteSchemas';
-import {z} from 'zod';
-import {createChannelID, createGuildID, createInviteCode} from '../BrandedTypes';
-import {DefaultUserOnly, LoginRequired} from '../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../RateLimitConfig';
-import type {HonoApp} from '../types/HonoEnv';
-import {Validator} from '../Validator';
 
 export function InviteController(app: HonoApp) {
 	app.get(
@@ -129,7 +129,7 @@ export function InviteController(app: HonoApp) {
 			summary: 'List channel invites',
 			description:
 				'Retrieves all currently active invites for the specified channel, including invite codes, creators, expiration times, and usage statistics. The authenticated user must have permission to manage invites for the channel. Returns an array of invite metadata objects.',
-			responseSchema: z.array(InviteMetadataResponseSchema),
+			responseSchema: InviteMetadataListResponse,
 			statusCode: 200,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Invites'],
@@ -152,7 +152,7 @@ export function InviteController(app: HonoApp) {
 			summary: 'List guild invites',
 			description:
 				'Retrieves all currently active invites across all channels in the specified guild, including invite codes, creators, expiration times, and usage statistics. The authenticated user must have permission to manage invites for the guild. Returns an array of invite metadata objects.',
-			responseSchema: z.array(InviteMetadataResponseSchema),
+			responseSchema: InviteMetadataListResponse,
 			statusCode: 200,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Invites'],

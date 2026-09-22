@@ -5,7 +5,7 @@ import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {ExternalLink} from '@app/features/app/components/shared/ExternalLink';
 import {
 	AVATAR_RECOMMENDED_SIZE_LABEL,
-	IMAGE_MAX_SIZE_LABEL,
+	IMAGE_MAX_SIZE_BYTES,
 	PRODUCT_NAME,
 	STATIC_IMAGE_FORMATS,
 } from '@app/features/app/config/I18nDisplayConstants';
@@ -37,6 +37,7 @@ import {
 	VERIFY_EMAIL_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
+import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
 import {Button} from '@app/features/ui/button/Button';
@@ -98,7 +99,7 @@ export const GuildCreateForm = observer(() => {
 			if (file.size > 10 * 1024 * 1024) {
 				showIconUploadErrorModal(
 					i18n._(ICON_FILE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
-						imageMaxSizeLabel: IMAGE_MAX_SIZE_LABEL,
+						imageMaxSizeLabel: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
 					}),
 				);
 				return;
@@ -184,7 +185,7 @@ export const GuildCreateForm = observer(() => {
 			title: i18n._(CHANGE_ICON_DESCRIPTOR),
 			uploadHint: formatImageUploadRecommendedHint(i18n, {
 				formats: STATIC_IMAGE_FORMATS,
-				maxSize: IMAGE_MAX_SIZE_LABEL,
+				maxSize: formatFileSize(i18n.locale, IMAGE_MAX_SIZE_BYTES),
 				recommendedSize: AVATAR_RECOMMENDED_SIZE_LABEL,
 			}),
 			onPickUpload: handleIconUpload,

@@ -6,11 +6,11 @@ import type {SudoVerificationPayload} from '@app/features/auth/types/AuthSudoTyp
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import type {HttpMethod} from '@app/features/platform/types/TransportTypes';
-import {failureMessage} from '@app/features/platform/utils/ResponseInspection';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import {makeSyncedField} from '@app/features/user/state/SyncedField';
 import Users from '@app/features/user/state/Users';
+import WebAuthnCredentials from '@app/features/user/state/WebAuthnCredentials';
 import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
 import {MfaMethod, SudoPromptStateSchema} from '@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb';
 import {makeAutoObservable, runInAction} from 'mobx';
@@ -20,6 +20,7 @@ interface SudoErrorPayload {
 	methods?: {
 		totp?: boolean;
 		webauthn?: boolean;
+		backup_codes?: boolean;
 	};
 }
 
@@ -57,6 +58,7 @@ export interface AvailableMethods {
 	password: boolean;
 	totp: boolean;
 	webauthn: boolean;
+	backupCodes: boolean;
 	hasMfa: boolean;
 }
 
@@ -75,6 +77,7 @@ const EMPTY_METHODS: AvailableMethods = {
 	password: false,
 	totp: false,
 	webauthn: false,
+	backupCodes: false,
 	hasMfa: false,
 };
 
@@ -83,12 +86,14 @@ function deriveMethodsFromCurrentUser(): AvailableMethods {
 	if (!user) return {...EMPTY_METHODS};
 	const types = user.authenticatorTypes;
 	const totp = types?.includes(UserAuthenticatorTypes.TOTP) ?? false;
-	const webauthn = types?.includes(UserAuthenticatorTypes.WEBAUTHN) ?? false;
-	const hasMfa = user.mfaEnabled ?? (totp || webauthn);
+	const webauthnIsSecondFactor = types?.includes(UserAuthenticatorTypes.WEBAUTHN) ?? false;
+	const webauthn = WebAuthnCredentials.credentials.length > 0;
+	const hasMfa = user.mfaEnabled ?? (totp || webauthnIsSecondFactor);
 	return {
-		password: !hasMfa,
+		password: !(totp || webauthnIsSecondFactor),
 		totp,
 		webauthn,
+		backupCodes: false,
 		hasMfa,
 	};
 }
@@ -96,7 +101,7 @@ function deriveMethodsFromCurrentUser(): AvailableMethods {
 class SudoPrompt {
 	isOpen = false;
 	isVerifying = false;
-	verificationError: string | null = null;
+	verificationFailed = false;
 	rawError: HttpError | null = null;
 	currentRequest: SudoRequestContext | null = null;
 	availableMethods: AvailableMethods = {...EMPTY_METHODS};
@@ -174,7 +179,7 @@ class SudoPrompt {
 
 	private resetPromptState(): void {
 		this.availableMethods = {...EMPTY_METHODS};
-		this.verificationError = null;
+		this.verificationFailed = false;
 		this.rawError = null;
 	}
 
@@ -186,10 +191,12 @@ class SudoPrompt {
 		const methods = payload.methods ?? {};
 		const totp = methods.totp === true || (methods.totp === undefined && baseline.totp);
 		const webauthn = methods.webauthn === true || (methods.webauthn === undefined && baseline.webauthn);
+		const backupCodes = methods.backup_codes === true || (methods.backup_codes === undefined && baseline.backupCodes);
 		this.availableMethods = {
-			password: !hasMfa,
+			password: baseline.password,
 			totp,
 			webauthn,
+			backupCodes,
 			hasMfa,
 		};
 	}
@@ -225,7 +232,7 @@ class SudoPrompt {
 		const resolver = this.resolver;
 		if (resolver) {
 			this.isVerifying = true;
-			this.verificationError = null;
+			this.verificationFailed = false;
 			this.rawError = null;
 			this.resolver = null;
 			this.rejecter = null;
@@ -257,14 +264,14 @@ class SudoPrompt {
 			const responseErr = error instanceof HttpError ? error : null;
 			this.rawError = responseErr;
 			this.mergeFromError(error);
-			this.verificationError = failureMessage(error) ?? 'Verification failed';
+			this.verificationFailed = true;
 		});
 	};
 
 	private cleanup(): void {
 		this.isOpen = false;
 		this.isVerifying = false;
-		this.verificationError = null;
+		this.verificationFailed = false;
 		this.rawError = null;
 		this.currentRequest = null;
 		this.resolver = null;

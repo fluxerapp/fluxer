@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
-import type {VoiceProcessingMode} from '@app/features/voice/utils/VoiceProcessingProfile';
+import ScreenShareDeliveryRollout from '@app/features/voice/state/ScreenShareDeliveryRollout';
 import type {TrackPublishOptions} from 'livekit-client';
 
 export const OPUS_MAX_AUDIO_BITRATE_BPS = 510000;
 export const VOICE_CHANNEL_MIN_AUDIO_BITRATE_BPS = 8000;
 export const STEREO_VOICE_MIN_AUDIO_BITRATE_BPS = 128000;
+export const SCREEN_SHARE_AUDIO_BITRATE_BPS = 128000;
 
 export function normaliseAudioBitrateBps(value: number | null | undefined): number | undefined {
 	if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return undefined;
@@ -17,29 +18,26 @@ export function normaliseAudioBitrateBps(value: number | null | undefined): numb
 
 export function buildMicrophonePublishOptions(
 	channelBitrate: number | null | undefined,
-	processingMode: VoiceProcessingMode,
+	stereoCapture = false,
 ): TrackPublishOptions | undefined {
 	const maxBitrate = normaliseAudioBitrateBps(channelBitrate);
 	if (!maxBitrate) return undefined;
-	const studioMode = processingMode === 'studio';
 	return {
 		audioPreset: {
 			maxBitrate,
 			priority: 'high',
 		},
+		dtx: false,
 		red: true,
-		...(studioMode
-			? {
-					dtx: false,
-					forceStereo: maxBitrate >= STEREO_VOICE_MIN_AUDIO_BITRATE_BPS,
-				}
-			: {}),
+		forceStereo: stereoCapture && maxBitrate >= STEREO_VOICE_MIN_AUDIO_BITRATE_BPS ? undefined : false,
 	};
 }
 
 export const SCREEN_SHARE_AUDIO_PUBLISH_OPTIONS: TrackPublishOptions = {
 	audioPreset: {
-		maxBitrate: OPUS_MAX_AUDIO_BITRATE_BPS,
+		get maxBitrate(): number {
+			return ScreenShareDeliveryRollout.enabled ? SCREEN_SHARE_AUDIO_BITRATE_BPS : OPUS_MAX_AUDIO_BITRATE_BPS;
+		},
 		priority: 'high',
 	},
 	dtx: false,

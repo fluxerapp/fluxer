@@ -9,6 +9,13 @@ import type {IEmailService} from '@pkgs/email/src/IEmailService';
 import {ms} from 'itty-time';
 
 const logger = createLogger('email-service');
+const DEFAULT_LOCALE = 'en-US';
+
+function formatMinorUnitAmount(amountMinor: number, currency: string, locale: string | null): string {
+	const formatter = new Intl.NumberFormat(locale || DEFAULT_LOCALE, {style: 'currency', currency});
+	const fractionDigits = formatter.resolvedOptions().maximumFractionDigits ?? 2;
+	return formatter.format(amountMinor / 10 ** fractionDigits);
+}
 
 export class EmailService implements IEmailService {
 	private readonly config: EmailConfig;
@@ -127,7 +134,7 @@ export class EmailService implements IEmailService {
 	async sendUnbanNotification(
 		email: string,
 		username: string,
-		reason: string,
+		reason: string | null,
 		locale: string | null = null,
 	): Promise<boolean> {
 		return this.sendTemplatedEmail(email, 'unban_notification', locale, {username, reason});
@@ -301,7 +308,7 @@ export class EmailService implements IEmailService {
 		locale: string | null = null,
 	): Promise<boolean> {
 		return this.sendTemplatedEmail(email, 'donation_confirmation', locale, {
-			amount: (amountCents / 100).toFixed(2),
+			amount: formatMinorUnitAmount(amountCents, currency, locale),
 			currency: currency.toUpperCase(),
 			interval,
 			manageUrl,

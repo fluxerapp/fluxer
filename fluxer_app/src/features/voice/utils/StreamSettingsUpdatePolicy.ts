@@ -20,6 +20,7 @@ export interface ManualAudioSourceSelectionInput {
 	nativeAudioAvailability?: NativeAudioAvailability | null;
 	audioSourceMode?: ScreenShareAudioSourceMode;
 	selectedSourceCount?: number;
+	usesDeviceMicrophone?: boolean;
 }
 
 export interface WindowShareAudioScopeInput {
@@ -74,6 +75,7 @@ export function canSelectManualAudioSources(
 }
 
 export function routesManualAudioSources(input: ManualAudioSourceSelectionInput): boolean {
+	if (input.shareContext === 'device' && input.usesDeviceMicrophone === true) return false;
 	return (
 		canSelectManualAudioSources(input) && input.audioSourceMode === 'specific' && (input.selectedSourceCount ?? 0) > 0
 	);

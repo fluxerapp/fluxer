@@ -1,11 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {
+	createChannel,
+	createGuild,
+	loadFixture,
+	sendMessageWithAttachments,
+} from '@app/api/channel/tests/AttachmentTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {MessageAttachmentFlags} from '@fluxer/constants/src/ChannelConstants';
 import {beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {createChannel, createGuild, loadFixture, sendMessageWithAttachments} from './AttachmentTestUtils';
 
 describe('Embed Attachment URL Resolution', () => {
 	let harness: ApiTestHarness;
@@ -506,6 +511,34 @@ describe('Embed Attachment URL Resolution', () => {
 			expect(response.status).toBe(200);
 			expect(json.embeds).toHaveLength(1);
 			expect(json.embeds![0].image?.url).not.toContain('attachment://');
+		});
+		it('should accept image and video attachments beyond the legacy image extensions', async () => {
+			const account = await createTestAccount(harness);
+			const guild = await createGuild(harness, account.token, 'Media Type Guild');
+			const channel = await createChannel(harness, account.token, guild.id, 'test-channel');
+			const channelId = guild.system_channel_id ?? channel.id;
+			const payload = {
+				content: 'Test with jxl and mp4 embed media',
+				attachments: [
+					{id: 0, filename: 'photo.jxl'},
+					{id: 1, filename: 'clip.mp4'},
+				],
+				embeds: [
+					{
+						title: 'Media Embed',
+						image: {url: 'attachment://clip.mp4'},
+						thumbnail: {url: 'attachment://photo.jxl'},
+					},
+				],
+			};
+			const {response, json} = await sendMessageWithAttachments(harness, account.token, channelId, payload, [
+				{index: 0, filename: 'photo.jxl', data: Buffer.from('jxl bytes')},
+				{index: 1, filename: 'clip.mp4', data: Buffer.from('mp4 bytes')},
+			]);
+			expect(response.status).toBe(200);
+			expect(json.embeds).toHaveLength(1);
+			expect(json.embeds![0].image?.url).not.toContain('attachment://');
+			expect(json.embeds![0].thumbnail?.url).not.toContain('attachment://');
 		});
 	});
 	describe('Multiple Embeds and Files', () => {

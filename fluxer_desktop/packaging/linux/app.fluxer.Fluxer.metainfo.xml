@@ -7,7 +7,7 @@
     <developer id="app.fluxer">
         <name>Fluxer</name>
     </developer>
-    <summary>Instant messaging and VoIP</summary>
+    <summary>A chat app that puts you first</summary>
     <metadata_license>CC0-1.0</metadata_license>
     <project_license>AGPL-3.0-or-later</project_license>
     <icon type="stock">app.fluxer.Fluxer</icon>
@@ -42,17 +42,16 @@
         <color type="primary">#4641D9</color>
     </branding>
     <screenshots>
-        <screenshot type="default">
+        <screenshot type="default" xml:lang="en">
             <caption>The main Fluxer window.</caption>
-            <image type="source" width="1920" height="1080">https://fluxerstatic.com/marketing/screenshots/desktop-1920w.avif</image>
+            <image type="source" width="1920" height="1080">https://raw.githubusercontent.com/fluxerapp/fluxer/refs/heads/main/fluxer_static/marketing/screenshots/desktop-2560w.avif</image>
         </screenshot>
     </screenshots>
-    <releases>
-        <release version="0.0.8" date="2026-02-16"/>
-    </releases>
     <url type="bugtracker">https://github.com/fluxerapp/fluxer/issues</url>
     <url type="homepage">https://fluxer.app</url>
     <url type="donation">https://fluxer.app/donate</url>
+    <url type="contact">https://fluxer.app/company-information#contact</url>
+    <url type="translate">https://weblate.fluxer.tools/</url>
     <url type="vcs-browser">https://github.com/fluxerapp/fluxer.git</url>
     <update_contact>fen@unix.dog</update_contact>
     <provides>
@@ -72,4 +71,14 @@
         <control>keyboard</control>
         <control>pointing</control>
     </supports>
+    <releases>
+        <release version="2026.920.144558" date="2026-09-20">
+            <url type="details">https://github.com/fluxerapp/fluxer/compare/5d85e88532a6b2bc8fa95cd951c9f82d63841de1..c157ab5752084ba424b80b66f7b3b6ca4abba1e3</url>
+            <description>
+                <p>
+                    Release following the synchronization of stable with canary
+                </p>
+            </description>
+        </release>
+    </releases>
 </component>

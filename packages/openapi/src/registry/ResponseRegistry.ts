@@ -1,25 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import type {OpenAPIResponse, OpenAPISchema} from '@fluxer/openapi/src/Types';
-export const ERROR_SCHEMA: OpenAPISchema = {
-	type: 'object',
-	properties: {
-		code: {
-			$ref: '#/components/schemas/APIErrorCode',
-		},
-		message: {
-			type: 'string',
-			description: 'Human-readable error message',
-		},
-		errors: {
-			type: 'array',
-			description: 'Field-specific validation errors',
-			items: {
-				$ref: '#/components/schemas/ValidationErrorItem',
-			},
-		},
-	},
-	required: ['code', 'message'],
-};
+import type {OpenAPIResponse, OpenAPISchema} from '@fluxer/openapi/src/OpenAPITypes';
+import {ErrorResponse, ThrottledErrorResponse} from '@fluxer/schema/src/domains/common/ErrorSchemas';
+import {z} from 'zod';
+
+function toErrorSchema(schema: z.ZodType): OpenAPISchema {
+	const jsonSchema = z.toJSONSchema(schema, {io: 'output', target: 'openapi-3.0'});
+	delete jsonSchema.$schema;
+	return jsonSchema;
+}
+
+export const ERROR_SCHEMA = toErrorSchema(ErrorResponse);
+export const THROTTLED_ERROR_SCHEMA = toErrorSchema(ThrottledErrorResponse);
 const RATE_LIMIT_HEADERS: Record<
 	string,
 	{
@@ -81,16 +72,7 @@ const COMMON_RESPONSES: Record<string, OpenAPIResponse> = {
 		description: 'Too Many Requests - You are being rate limited',
 		content: {
 			'application/json': {
-				schema: {
-					type: 'object',
-					properties: {
-						code: {type: 'string', enum: ['RATE_LIMITED']},
-						message: {type: 'string'},
-						retry_after: {type: 'number', description: 'Seconds to wait before retrying'},
-						global: {type: 'boolean', description: 'Whether this is a global rate limit'},
-					},
-					required: ['code', 'message', 'retry_after'],
-				},
+				schema: {$ref: '#/components/schemas/ThrottledError'},
 			},
 		},
 		headers: {
@@ -120,9 +102,4 @@ export function getErrorResponses(requiresAuth: boolean): Record<string, OpenAPI
 		responses['403'] = COMMON_RESPONSES['403'];
 	}
 	return responses;
-}
-export function getNoContentResponse(): OpenAPIResponse {
-	return {
-		description: 'No Content',
-	};
 }

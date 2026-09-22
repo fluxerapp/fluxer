@@ -1,23 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {PremiumFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
-import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
-import type Stripe from 'stripe';
-import type {UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {UserRow} from '../../database/types/UserTypes';
-import {Logger} from '../../Logger';
-import {getBillingRepository} from '../../middleware/ServiceRegistry';
-import type {User} from '../../models/User';
-import {canProvisionPremiumFromSubscriptionStatus} from '../../stripe/StripeSubscriptionAccessPolicy';
+import type {UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import {Logger} from '@app/api/Logger';
+import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
+import type {User} from '@app/api/models/User';
+import {canProvisionPremiumFromSubscriptionStatus} from '@app/api/stripe/StripeSubscriptionAccessPolicy';
 import {
+	getInvoiceLatestLinePeriodEnd,
 	getPrimarySubscriptionItem,
 	getSubscriptionPremiumPeriodEnd,
 	getSubscriptionStartDate,
-} from '../../stripe/StripeSubscriptionPeriod';
-import {createPremiumClearPatch, getEffectivePremiumUntil} from '../../user/UserHelpers';
-import {mapUserToPrivateResponse} from '../../user/UserMappers';
-import {getWorkerDependencies} from '../WorkerContext';
+} from '@app/api/stripe/StripeSubscriptionPeriod';
+import {createPremiumClearPatch, getEffectivePremiumUntil} from '@app/api/user/UserHelpers';
+import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
+import {PremiumFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
+import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
+import type Stripe from 'stripe';
 
 interface ReconcileResult {
 	status: 'patched' | 'no_change' | 'skipped' | 'no_active_subscription' | 'stripped_no_subscription' | 'missing_user';
@@ -142,6 +143,39 @@ function trackMostRecentTerminalSubscription(
 	return current;
 }
 
+const PAID_INVOICE_LOOKUP_LIMIT = 10;
+
+async function getPaidThroughFromSubscriptionInvoices(
+	stripe: Stripe,
+	subscription: Stripe.Subscription | null,
+): Promise<Date | null> {
+	if (!subscription) {
+		return null;
+	}
+	let invoices: Stripe.ApiList<Stripe.Invoice>;
+	try {
+		invoices = await stripe.invoices.list({
+			subscription: subscription.id,
+			status: 'paid',
+			limit: PAID_INVOICE_LOOKUP_LIMIT,
+		});
+	} catch (error) {
+		Logger.warn(
+			{subscriptionId: subscription.id, error},
+			'Failed to list paid invoices while reconciling premium state; not stripping on incomplete data',
+		);
+		throw error;
+	}
+	let paidThrough: Date | null = null;
+	for (const invoice of invoices.data) {
+		const periodEnd = getInvoiceLatestLinePeriodEnd(invoice);
+		if (periodEnd && (paidThrough === null || periodEnd.getTime() > paidThrough.getTime())) {
+			paidThrough = periodEnd;
+		}
+	}
+	return paidThrough;
+}
+
 async function getEffectiveActiveStripeSubscription(
 	stripe: Stripe,
 	user: User,
@@ -240,16 +274,27 @@ async function reconcileUserPremiumStateFromStripe(params: {userId: UserID; stri
 		if (hasStalePremium && !hasNonStripePremium) {
 			const patch: Partial<UserRow> = {};
 			let effectivePremiumUntil = getEffectivePremiumUntil(user);
+			const paidThrough = await getPaidThroughFromSubscriptionInvoices(stripe, mostRecentTerminalSubscription);
 			if (mostRecentTerminalSubscription?.ended_at && user.premiumUntil) {
 				const subscriptionEndedAt = new Date(mostRecentTerminalSubscription.ended_at * 1000);
-				if (subscriptionEndedAt.getTime() < user.premiumUntil.getTime()) {
-					patch.premium_until = subscriptionEndedAt;
-					patch.premium_grace_ends_at = subscriptionEndedAt;
+				const entitlementEnd =
+					paidThrough && paidThrough.getTime() > subscriptionEndedAt.getTime() ? paidThrough : subscriptionEndedAt;
+				if (entitlementEnd.getTime() < user.premiumUntil.getTime()) {
+					patch.premium_until = entitlementEnd;
+					patch.premium_grace_ends_at = entitlementEnd;
 					effectivePremiumUntil = getEffectivePremiumUntil({
-						premiumUntil: subscriptionEndedAt,
+						premiumUntil: entitlementEnd,
 						premiumGiftExtensionEndsAt: user.premiumGiftExtensionEndsAt,
 					});
 				}
+			}
+			if (paidThrough && (effectivePremiumUntil == null || paidThrough.getTime() > effectivePremiumUntil.getTime())) {
+				patch.premium_until = paidThrough;
+				patch.premium_grace_ends_at = paidThrough;
+				effectivePremiumUntil = getEffectivePremiumUntil({
+					premiumUntil: paidThrough,
+					premiumGiftExtensionEndsAt: user.premiumGiftExtensionEndsAt,
+				});
 			}
 			const hasFutureLocalEntitlement = effectivePremiumUntil != null && Date.now() <= effectivePremiumUntil.getTime();
 			if (hasFutureLocalEntitlement) {

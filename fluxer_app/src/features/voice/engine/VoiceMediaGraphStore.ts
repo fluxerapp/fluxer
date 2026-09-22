@@ -18,7 +18,7 @@ import {
 	type VoiceMediaGraphClockPort,
 } from '@app/features/voice/engine/VoiceMediaGraphClock';
 import {checkVoiceMediaGraphInvariants} from '@app/features/voice/engine/VoiceMediaGraphInvariants';
-import {makeObservable, observable} from 'mobx';
+import {makeObservable, observableRef} from 'mobx';
 
 const logger = new Logger('VoiceMediaGraphStore');
 const LOGGED_VIOLATION_LIMIT = 256;
@@ -33,7 +33,7 @@ export class VoiceMediaGraphStore extends Store {
 		super();
 		this.clock = clock;
 		makeObservable(this, {
-			graph: observable.ref,
+			graph: observableRef,
 		});
 	}
 

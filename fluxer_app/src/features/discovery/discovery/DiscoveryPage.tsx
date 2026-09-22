@@ -99,9 +99,10 @@ export const DiscoveryPage = observer(function DiscoveryPage() {
 		return Math.min(SKELETON_DISCOVERY_MAX_COLUMNS, Math.max(1, columnsThatFit));
 	}, [containerWidth, zoomLevel]);
 	const guilds = Discovery.guilds;
+	const loadedCount = Discovery.loadedCount;
 	const searchActive = Discovery.query.length > 0;
 	const rowCount = columns > 0 ? Math.ceil(guilds.length / columns) : 0;
-	const hasMore = guilds.length < Discovery.total;
+	const hasMore = loadedCount < Discovery.total;
 	const virtualizer = useVirtualizer({
 		count: rowCount,
 		getScrollElement: () => scrollerRef.current?.getViewportElement() ?? null,
@@ -114,10 +115,10 @@ export const DiscoveryPage = observer(function DiscoveryPage() {
 			return;
 		}
 		void Discovery.search({
-			offset: guilds.length,
+			offset: loadedCount,
 			limit: PAGE_SIZE,
 		});
-	}, [guilds.length, hasMore]);
+	}, [loadedCount, hasMore]);
 	useEffect(() => {
 		const items = virtualizer.getVirtualItems();
 		const lastItem = items[items.length - 1];

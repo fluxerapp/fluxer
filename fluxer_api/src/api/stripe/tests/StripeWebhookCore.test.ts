@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
+import {Config} from '@app/api/Config';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createMockWebhookPayload, type StripeWebhookEventData} from '@app/api/test/msw/handlers/StripeApiHandlers';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {Config} from '../../Config';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createMockWebhookPayload, type StripeWebhookEventData} from '../../test/msw/handlers/StripeApiHandlers';
-import {createBuilder} from '../../test/TestRequestBuilder';
 
 describe('Stripe Webhook - Core Handling', () => {
 	let harness: ApiTestHarness;

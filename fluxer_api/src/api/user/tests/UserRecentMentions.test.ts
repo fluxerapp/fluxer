@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import type {MessageListResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createChannelID, createGuildID, createMessageID, createUserID} from '../../BrandedTypes';
-import {addMemberRole, createRole, removeMemberRole} from '../../guild/tests/GuildTestUtils';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createChannelID, createGuildID, createMessageID, createUserID} from '@app/api/BrandedTypes';
+import {addMemberRole, createRole, removeMemberRole} from '@app/api/guild/tests/GuildTestUtils';
 import {
 	acceptInvite,
 	createChannelInvite,
 	createGuild,
 	sendMessage,
 	updateChannelPermissions,
-} from '../../message/tests/MessageTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {UserRepository} from '../repositories/UserRepository';
+} from '@app/api/message/tests/MessageTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import type {MessageListResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 describe('User recent mentions', () => {
 	let harness: ApiTestHarness;

@@ -1,22 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::common::{
-    CalverEnv, CommandSpec, S3UploadPlanItem, append_github_env, append_github_output,
-    append_github_path, capture, collect_files, command_succeeds, copy_dir_contents, count_files,
-    count_files_min_depth, directory_upload_plan, download_file, download_s3_prefix, env_bool,
-    env_string, join_s3_key, output_bytes, output_text, parse_bool, path_to_s3_key,
-    remove_dir_if_exists, remove_file_if_exists, require_any_env, require_env, require_home,
-    resolve_calver, run_command, runner_temp, s3_client, title_case, trim_option,
-    upload_directory_to_s3, upload_s3_plan_append_only, upload_s3_plan_overwrite,
+    CalverEnv, CommandSpec, append_github_env, append_github_output, append_github_path, capture,
+    collect_files, command_succeeds, copy_dir_contents, count_files, download_file, env_bool,
+    env_string, output_bytes, output_text, parse_bool, path_to_s3_key, remove_dir_if_exists,
+    remove_file_if_exists, require_any_env, require_env, require_home, resolve_calver, run_command,
+    runner_temp, title_case, trim_option,
 };
 use crate::functions::write_json_pretty;
 use crate::release::{
     DESKTOP_RELEASE_DESCRIPTOR_SCHEMA_VERSION, DesktopReleaseAsset, DesktopReleaseDescriptor,
-    desktop_release_asset_name, desktop_release_descriptor_filename, desktop_release_product,
+    desktop_release_asset_name, desktop_release_coordinates, desktop_release_descriptor_filename,
+    desktop_release_product, desktop_release_shipped_formats,
+    desktop_release_update_payload_suffix, desktop_release_updater_feeds,
     validate_desktop_release_descriptor,
 };
 use anyhow::{Context, Result, anyhow, bail, ensure};
-use aws_sdk_s3::Client as S3Client;
 use chrono::Utc;
 use clap::{Args, ValueEnum};
 use serde::{Deserialize, Serialize};
@@ -34,10 +33,9 @@ use tempfile::TempDir;
 use walkdir::WalkDir;
 use zip::write::SimpleFileOptions;
 
-const PUBLIC_DL_BASE: &str = "https://api.fluxer.app/dl";
-const PNPM_VERSION: &str = "10.29.3";
-const RUST_TOOLCHAIN: &str = "1.93.0";
-const DEFAULT_DESKTOP_VARIANT: &str = "default";
+const PACKAGE_ORIGIN_BASE: &str = "https://pkgs.fluxer.com";
+const PNPM_VERSION: &str = "12.4.2";
+const RUST_TOOLCHAIN: &str = "1.98.1";
 const LINUX_PIPEWIRE_VERSION: &str = "0.3.65";
 const LINUX_PIPEWIRE_SOURCE_SHA256: &str =
     "bb76f938136d0ce8c35bffa99e002dc2dbaeab5e14c6c34154e7f750013d1d6b";
@@ -45,7 +43,8 @@ const LINUX_LIBFIDO2_VERSION: &str = "1.16.0";
 const LINUX_LIBFIDO2_SOURCE_SHA256: &str =
     "8c2b6fb279b5b42e9ac92ade71832e485852647b53607c43baaafbbcecea04e4";
 pub(crate) const MACOS_UNIVERSAL_ARCH: &str = "universal";
-const WINDOWS_GAME_CAPTURE_DESKTOP_VARIANT: &str = "windows-game-capture";
+const MACOS_MINIMUM_SYSTEM_VERSION: &str = "13.0";
+const DESKTOP_PAYLOAD_PREFIX: &str = "desktop";
 
 #[derive(Debug, Args, Clone)]
 pub struct BuildDesktopArgs {
@@ -53,8 +52,6 @@ pub struct BuildDesktopArgs {
     step: DesktopStep,
     #[arg(long)]
     channel: Option<String>,
-    #[arg(long)]
-    test_build: Option<String>,
     #[arg(long)]
     skip_targets: Option<String>,
     #[arg(long)]
@@ -81,7 +78,7 @@ enum DesktopStep {
     WindowsPaths,
     SetWorkdirUnix,
     EnsurePython3Windows,
-    SetupPnpmCorepack,
+    SetupPnpm,
     ResolvePnpmStoreWindows,
     ResolvePnpmStoreUnix,
     InstallSetuptoolsWindowsArm64,
@@ -104,6 +101,7 @@ enum DesktopStep {
     PackageAppWindowsVelopack,
     AnalyseVelopackPaths,
     BuildAppLinux,
+    BuildAppimageUpdateFeed,
     CreatePortableZipWindows,
     VerifyWindowsSignedArtifacts,
     PrepareArtifactsWindows,
@@ -111,16 +109,9 @@ enum DesktopStep {
     NormaliseUpdaterYaml,
     GenerateChecksumsUnix,
     GenerateChecksumsWindows,
-    UploadHandoff,
-    DownloadHandoff,
-    CleanupHandoff,
+    StageHandoff,
     BuildPayload,
     PrepareReleaseAssets,
-    UploadReleaseAssets,
-    DownloadReleaseAssets,
-    UploadPayload,
-    PublishReleaseDescriptor,
-    PublishReleaseMarker,
     BuildSummary,
 }
 
@@ -128,7 +119,6 @@ enum DesktopStep {
 struct Platform {
     platform: &'static str,
     arch: &'static str,
-    desktop_variant: &'static str,
     os: &'static str,
     electron_arch: &'static str,
 }
@@ -137,35 +127,30 @@ const PLATFORMS: &[Platform] = &[
     Platform {
         platform: "windows",
         arch: "x64",
-        desktop_variant: DEFAULT_DESKTOP_VARIANT,
         os: "windows-2025",
         electron_arch: "x64",
     },
     Platform {
         platform: "windows",
         arch: "arm64",
-        desktop_variant: DEFAULT_DESKTOP_VARIANT,
         os: "windows-2025",
         electron_arch: "arm64",
     },
     Platform {
         platform: "macos",
         arch: MACOS_UNIVERSAL_ARCH,
-        desktop_variant: DEFAULT_DESKTOP_VARIANT,
         os: "fluxer-desktop-macos-arm64",
         electron_arch: MACOS_UNIVERSAL_ARCH,
     },
     Platform {
         platform: "linux",
         arch: "x64",
-        desktop_variant: DEFAULT_DESKTOP_VARIANT,
         os: "ubuntu-22.04",
         electron_arch: "x64",
     },
     Platform {
         platform: "linux",
         arch: "arm64",
-        desktop_variant: DEFAULT_DESKTOP_VARIANT,
         os: "ubuntu-22.04-arm",
         electron_arch: "arm64",
     },
@@ -180,18 +165,13 @@ pub async fn run(args: BuildDesktopArgs) -> Result<()> {
                 .filter(|value| !value.is_empty())
                 .or_else(|| env_string("CHANNEL"))
                 .unwrap_or_else(|| "stable".to_string());
-            let test_build = args
-                .test_build
-                .as_deref()
-                .map(parse_bool)
-                .unwrap_or_else(|| env_bool("TEST_BUILD"));
-            set_metadata_step(&channel, test_build)
+            set_metadata_step(&channel)
         }
         DesktopStep::SetMatrix => set_matrix_step(&args),
         DesktopStep::WindowsPaths => windows_paths_step().await,
         DesktopStep::SetWorkdirUnix => set_workdir_unix_step(),
         DesktopStep::EnsurePython3Windows => ensure_python3_windows_step(),
-        DesktopStep::SetupPnpmCorepack => setup_pnpm_corepack_step(),
+        DesktopStep::SetupPnpm => setup_pnpm_step(),
         DesktopStep::ResolvePnpmStoreWindows | DesktopStep::ResolvePnpmStoreUnix => {
             resolve_pnpm_store_step()
         }
@@ -222,6 +202,7 @@ pub async fn run(args: BuildDesktopArgs) -> Result<()> {
         DesktopStep::PackageAppWindowsVelopack => package_app_windows_velopack_step(),
         DesktopStep::AnalyseVelopackPaths => analyse_velopack_paths_step(),
         DesktopStep::BuildAppLinux => build_app_step(DesktopBuildPlatform::Linux),
+        DesktopStep::BuildAppimageUpdateFeed => crate::appimage::build_update_feed_step(),
         DesktopStep::CreatePortableZipWindows => create_portable_zip_windows_step(),
         DesktopStep::VerifyWindowsSignedArtifacts => verify_windows_signed_artifacts_step(),
         DesktopStep::PrepareArtifactsWindows => prepare_artifacts_windows_step(),
@@ -241,16 +222,9 @@ pub async fn run(args: BuildDesktopArgs) -> Result<()> {
             ArtifactChecksumKind::Extension("nupkg"),
             ArtifactChecksumKind::Extension("zip"),
         ]),
-        DesktopStep::UploadHandoff => upload_handoff_step(false).await,
-        DesktopStep::DownloadHandoff => download_handoff_step().await,
-        DesktopStep::CleanupHandoff => cleanup_handoff_step().await,
+        DesktopStep::StageHandoff => stage_handoff_step(),
         DesktopStep::BuildPayload => build_payload_step(),
         DesktopStep::PrepareReleaseAssets => prepare_release_assets_step(),
-        DesktopStep::UploadReleaseAssets => upload_release_assets_step().await,
-        DesktopStep::DownloadReleaseAssets => download_release_assets_step().await,
-        DesktopStep::UploadPayload => upload_payload_step().await,
-        DesktopStep::PublishReleaseDescriptor => publish_release_descriptor_step().await,
-        DesktopStep::PublishReleaseMarker => publish_release_marker_step().await,
         DesktopStep::BuildSummary => build_summary_step(),
     }
 }
@@ -263,18 +237,13 @@ fn calver_env_from_process() -> CalverEnv {
     }
 }
 
-fn set_metadata_step(channel: &str, test_build: bool) -> Result<()> {
+fn set_metadata_step(channel: &str) -> Result<()> {
     let version = resolve_calver(&calver_env_from_process(), Utc::now())?;
     let pub_date = Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string();
     let build_channel = if channel == "canary" {
         "canary"
     } else {
         "stable"
-    };
-    let s3_prefix = if test_build {
-        "desktop-test"
-    } else {
-        "desktop"
     };
     let source_sha = resolve_source_sha()?;
 
@@ -283,8 +252,6 @@ fn set_metadata_step(channel: &str, test_build: bool) -> Result<()> {
         ("pub_date", pub_date.as_str()),
         ("channel", channel),
         ("build_channel", build_channel),
-        ("test_build", if test_build { "true" } else { "false" }),
-        ("s3_prefix", s3_prefix),
         ("source_sha", source_sha.as_str()),
     ])
 }
@@ -447,50 +414,9 @@ fn skip_platform(
 
 fn platform_json(platform: Platform) -> String {
     format!(
-        "{{\"platform\":\"{}\",\"arch\":\"{}\",\"desktop_variant\":\"{}\",\"os\":\"{}\",\"electron_arch\":\"{}\"}}",
-        platform.platform,
-        platform.arch,
-        platform.desktop_variant,
-        platform.os,
-        platform.electron_arch
+        "{{\"platform\":\"{}\",\"arch\":\"{}\",\"os\":\"{}\",\"electron_arch\":\"{}\"}}",
+        platform.platform, platform.arch, platform.os, platform.electron_arch
     )
-}
-
-fn desktop_variant_from_env() -> Result<String> {
-    let variant = env::var("DESKTOP_VARIANT")
-        .ok()
-        .filter(|value| !value.is_empty())
-        .unwrap_or_else(|| DEFAULT_DESKTOP_VARIANT.to_string());
-    ensure_valid_desktop_variant(&variant)?;
-    Ok(variant)
-}
-
-fn ensure_valid_desktop_variant(variant: &str) -> Result<()> {
-    ensure!(
-        matches!(
-            variant,
-            DEFAULT_DESKTOP_VARIANT | WINDOWS_GAME_CAPTURE_DESKTOP_VARIANT
-        ),
-        "Unknown desktop variant: {variant}"
-    );
-    Ok(())
-}
-
-fn ensure_platform_supports_desktop_variant(platform: &str, variant: &str) -> Result<()> {
-    ensure_valid_desktop_variant(variant)?;
-    ensure!(
-        variant == DEFAULT_DESKTOP_VARIANT || platform == "windows",
-        "Desktop variant {variant} is only supported for Windows artifacts."
-    );
-    Ok(())
-}
-
-fn desktop_variant_path_segment(variant: &str) -> Option<&str> {
-    if variant == DEFAULT_DESKTOP_VARIANT {
-        None
-    } else {
-        Some(variant)
-    }
 }
 
 fn workspace_dir() -> PathBuf {
@@ -523,19 +449,20 @@ async fn windows_paths_step() -> Result<()> {
     let store_dir = PathBuf::from(&github_workspace).join(format!("pnpm-store-{arch}"));
     fs::create_dir_all(&store_dir)
         .with_context(|| format!("Failed to create {}", store_dir.display()))?;
-    fs::write(
-        Path::new(r"W:\.npmrc"),
-        format!("store-dir={}\n", store_dir.display()),
-    )
-    .context("Failed to write W:\\.npmrc")?;
 
     append_github_env(&[
         ("WORKDIR", "W:"),
         ("TEMP", r"C:\t"),
         ("TMP", r"C:\t"),
         ("ELECTRON_BUILDER_CACHE", r"C:\ebcache"),
-        ("NPM_CONFIG_STORE_DIR", store_dir.to_string_lossy().as_ref()),
-        ("npm_config_store_dir", store_dir.to_string_lossy().as_ref()),
+        (
+            "PNPM_CONFIG_STORE_DIR",
+            store_dir.to_string_lossy().as_ref(),
+        ),
+        (
+            "pnpm_config_store_dir",
+            store_dir.to_string_lossy().as_ref(),
+        ),
     ])?;
 
     run_command(CommandSpec::new("git").args(["config", "--global", "core.longpaths", "true"]))?;
@@ -585,11 +512,11 @@ fn set_workdir_unix_step() -> Result<()> {
         fs::create_dir_all(&store_dir)
             .with_context(|| format!("Failed to create {}", store_dir.display()))?;
         env_pairs.push((
-            "NPM_CONFIG_STORE_DIR",
+            "PNPM_CONFIG_STORE_DIR",
             store_dir.to_string_lossy().to_string(),
         ));
         env_pairs.push((
-            "npm_config_store_dir",
+            "pnpm_config_store_dir",
             store_dir.to_string_lossy().to_string(),
         ));
     }
@@ -621,69 +548,31 @@ fn ensure_python3_windows_step() -> Result<()> {
     Ok(())
 }
 
-fn setup_pnpm_corepack_step() -> Result<()> {
-    let corepack = corepack_program()?;
-    run_command(CommandSpec::new(corepack.clone()).arg("enable"))?;
-    run_command(CommandSpec::new(corepack).args([
-        "prepare",
-        &format!("pnpm@{PNPM_VERSION}"),
-        "--activate",
-    ]))?;
-    ensure_pnpm_available()
-}
+fn setup_pnpm_step() -> Result<()> {
+    let npm = npm_program()?;
+    let pnpm_package = format!("pnpm@{PNPM_VERSION}");
+    run_command(CommandSpec::new(npm.clone()).args(["install", "--global", &pnpm_package]))?;
 
-fn corepack_program() -> Result<OsString> {
-    if command_succeeds(CommandSpec::new("corepack").arg("--version")) {
-        return Ok(OsString::from("corepack"));
-    }
+    let npm_prefix = output_text(CommandSpec::new(npm).args(["prefix", "--global"]))
+        .context("Failed to resolve global npm prefix after installing pnpm")?;
+    let npm_bin = if cfg!(windows) {
+        PathBuf::from(npm_prefix)
+    } else {
+        PathBuf::from(npm_prefix).join("bin")
+    };
+    append_github_path(&npm_bin)?;
 
-    if cfg!(windows) {
-        let node_dir =
-            node_executable_dir().context("Failed to locate Node.js while resolving corepack")?;
-
-        for file_name in ["corepack.cmd", "corepack.exe", "corepack"] {
-            let candidate = node_dir.join(file_name);
-            if candidate.exists() {
-                return Ok(candidate.into_os_string());
-            }
-        }
-
-        bail!(
-            "corepack not found on PATH or next to Node.js at {}",
-            node_dir.display()
-        );
-    }
-
-    bail!("corepack not found on PATH")
-}
-
-fn ensure_pnpm_available() -> Result<()> {
-    if let Ok(pnpm) = pnpm_program()
-        && command_succeeds(CommandSpec::new(pnpm).arg("--version"))
-    {
-        return Ok(());
-    }
-
-    if cfg!(windows) {
-        let npm = npm_program()?;
-        let pnpm_package = format!("pnpm@{PNPM_VERSION}");
-        run_command(CommandSpec::new(npm.clone()).args(["install", "--global", &pnpm_package]))?;
-
-        let npm_prefix = output_text(CommandSpec::new(npm).args(["prefix", "--global"]))
-            .context("Failed to resolve global npm prefix after installing pnpm")?;
-        let npm_prefix = PathBuf::from(npm_prefix);
-        append_github_path(&npm_prefix)?;
-
-        for file_name in ["pnpm.cmd", "pnpm.exe", "pnpm"] {
-            let candidate = npm_prefix.join(file_name);
-            if candidate.exists() {
-                return run_command(CommandSpec::new(candidate.into_os_string()).arg("--version"));
-            }
+    for file_name in ["pnpm.cmd", "pnpm.exe", "pnpm"] {
+        let candidate = npm_bin.join(file_name);
+        if candidate.exists() {
+            return run_command(CommandSpec::new(candidate.into_os_string()).arg("--version"));
         }
     }
 
-    run_command(pnpm_command()?.arg("--version"))
-        .context("Failed to verify pnpm after Corepack setup")
+    bail!(
+        "pnpm not found in {} after installing {pnpm_package}",
+        npm_bin.display()
+    )
 }
 
 fn pnpm_command() -> Result<CommandSpec> {
@@ -1447,7 +1336,7 @@ fn install_velopack_cli_step() -> Result<()> {
         tool_dir.to_string_lossy().as_ref(),
         "vpk",
         "--version",
-        "0.0.1298",
+        "1.2.0",
     ]))
 }
 
@@ -3526,76 +3415,36 @@ fn checksum_kind_matches(kind: ArtifactChecksumKind, name: &str) -> bool {
     }
 }
 
-async fn upload_handoff_step(signed_windows_artifacts: bool) -> Result<()> {
-    let client = s3_client(None).await?;
-    let bucket = require_env("S3_BUCKET")?;
-    let prefix = require_env("DESKTOP_HANDOFF_PREFIX")?;
+fn stage_handoff_step() -> Result<()> {
     let build_channel = require_env("BUILD_CHANNEL")?;
     let platform = require_any_env(&["DESKTOP_PLATFORM", "PLATFORM"])?;
     let arch = require_any_env(&["DESKTOP_ARCH", "ARCH"])?;
-    let desktop_variant = desktop_variant_from_env()?;
-    ensure_platform_supports_desktop_variant(&platform, &desktop_variant)?;
     let staging = Path::new("upload_staging");
     ensure!(staging.exists(), "upload_staging is missing.");
     let artifact_count = count_files(staging)?;
     ensure!(artifact_count > 0, "upload_staging is empty.");
 
-    let artifact_name = handoff_artifact_name(
-        &build_channel,
-        &platform,
-        &arch,
-        &desktop_variant,
-        signed_windows_artifacts,
-    );
-    let artifact_prefix = join_s3_key(&prefix, &artifact_name);
-    println!("Uploading {artifact_count} desktop artifact file(s) to {artifact_prefix}");
-    upload_directory_to_s3(&client, &bucket, &artifact_prefix, staging, |_| true).await?;
-    Ok(())
+    let artifact_name = handoff_artifact_name(&build_channel, &platform, &arch, false);
+    println!("Staging {artifact_count} desktop artifact file(s) as {artifact_name}");
+    append_github_output(&[("artifact_name", artifact_name.as_str())])
 }
 
 fn handoff_artifact_name(
     build_channel: &str,
     platform: &str,
     arch: &str,
-    desktop_variant: &str,
     signed_windows_artifacts: bool,
 ) -> String {
-    let variant_suffix = desktop_variant_path_segment(desktop_variant)
-        .map(|variant| format!("-{variant}"))
-        .unwrap_or_default();
     let signed_suffix = if signed_windows_artifacts && platform == "windows" {
         "-signed"
     } else {
         ""
     };
-    format!("fluxer-desktop-{build_channel}-{platform}-{arch}{variant_suffix}{signed_suffix}")
-}
-
-async fn download_handoff_step() -> Result<()> {
-    let client = s3_client(None).await?;
-    let bucket = require_env("S3_BUCKET")?;
-    let prefix = require_env("DESKTOP_HANDOFF_PREFIX")?;
-    let artifacts = Path::new("artifacts");
-    remove_dir_if_exists(artifacts)?;
-    fs::create_dir_all(artifacts)?;
-    println!("Downloading desktop handoff artifacts from {prefix}");
-    download_s3_prefix(&client, &bucket, &prefix, artifacts).await?;
-    ensure!(
-        count_files_min_depth(artifacts, 2)? > 0,
-        "No desktop handoff files were downloaded."
-    );
-    println!("Downloaded handoff artifact tree:");
-    print_tree(artifacts, 3)
-}
-
-async fn cleanup_handoff_step() -> Result<()> {
-    println!("S3 handoff cleanup skipped: CI S3 writes are append-only and never delete objects.");
-    Ok(())
+    format!("fluxer-desktop-{build_channel}-{platform}-{arch}{signed_suffix}")
 }
 
 fn build_payload_step() -> Result<()> {
-    let s3_prefix = require_env("S3_DESKTOP_PREFIX")?;
-    let payload_root = Path::new("s3_payload").join(&s3_prefix);
+    let payload_root = Path::new("payload_tree").join(DESKTOP_PAYLOAD_PREFIX);
     remove_dir_if_exists(&payload_root)?;
     fs::create_dir_all(&payload_root)?;
 
@@ -3603,7 +3452,13 @@ fn build_payload_step() -> Result<()> {
     let version = require_env("VERSION")?;
     let pub_date = require_env("PUB_DATE")?;
     let artifacts = Path::new("artifacts");
-    for (dir, identity) in payload_artifact_dirs(artifacts, &channel)? {
+    let artifact_dirs = payload_artifact_dirs(artifacts, &channel)?;
+    ensure!(
+        !artifact_dirs.is_empty(),
+        "No desktop build artifacts were downloaded into {}",
+        artifacts.display()
+    );
+    for (dir, identity) in artifact_dirs {
         let platform = match identity.platform.as_str() {
             "windows" => "win32",
             "macos" => "darwin",
@@ -3614,13 +3469,10 @@ fn build_payload_step() -> Result<()> {
             }
         };
         for published_arch in published_arches(platform, &identity.arch) {
-            let mut dest = payload_root
+            let dest = payload_root
                 .join(&channel)
                 .join(platform)
                 .join(published_arch);
-            if let Some(segment) = desktop_variant_path_segment(&identity.desktop_variant) {
-                dest = dest.join(segment);
-            }
             fs::create_dir_all(&dest)?;
             copy_dir_contents(&dir, &dest)?;
             let manifest = build_desktop_manifest(
@@ -3629,13 +3481,12 @@ fn build_payload_step() -> Result<()> {
                     channel: channel.clone(),
                     platform: platform.to_string(),
                     arch: published_arch.to_string(),
-                    desktop_variant: identity.desktop_variant.clone(),
                     version: version.clone(),
                     pub_date: pub_date.clone(),
                 },
             )?;
             if platform == "darwin" {
-                write_macos_releases(&dest, &s3_prefix, &channel, &manifest)?;
+                write_macos_releases(&dest, &channel, &manifest)?;
             }
             write_json_pretty(&dest.join("manifest.json"), &manifest)?;
         }
@@ -3649,27 +3500,17 @@ fn prepare_release_assets_step() -> Result<()> {
     let channel = require_env("CHANNEL")?;
     let version = require_env("VERSION")?;
     let source_sha = require_env("SOURCE_SHA")?;
-    let s3_prefix = require_env("S3_DESKTOP_PREFIX")?;
-    ensure!(
-        s3_prefix == "desktop",
-        "GitHub desktop releases require S3_DESKTOP_PREFIX=desktop, received {s3_prefix:?}"
-    );
     let product = desktop_release_product(&channel)?;
-    let payload_root = Path::new("s3_payload").join(&s3_prefix).join(&channel);
+    let payload_root = Path::new("payload_tree")
+        .join(DESKTOP_PAYLOAD_PREFIX)
+        .join(&channel);
     let release_assets = Path::new("release_assets");
     remove_dir_if_exists(release_assets)?;
     fs::create_dir_all(release_assets)?;
 
     let mut release_builder =
-        DesktopReleaseAssetBuilder::new(&s3_prefix, &channel, &version, product, release_assets);
-    for (platform, arch) in [
-        ("win32", "x64"),
-        ("win32", "arm64"),
-        ("darwin", "x64"),
-        ("darwin", "arm64"),
-        ("linux", "x64"),
-        ("linux", "arm64"),
-    ] {
+        DesktopReleaseAssetBuilder::new(&channel, &version, product, release_assets);
+    for (platform, arch) in desktop_release_coordinates() {
         let dir = payload_root.join(platform).join(arch);
         ensure!(
             dir.is_dir(),
@@ -3686,17 +3527,14 @@ fn prepare_release_assets_step() -> Result<()> {
             manifest.channel == channel
                 && manifest.platform == platform
                 && manifest.arch == arch
-                && manifest.version == version
-                && manifest.variant.is_none(),
+                && manifest.version == version,
             "Desktop release manifest identity mismatch in {}",
             manifest_path.display()
         );
-        let expected_kinds = match platform {
-            "win32" => BTreeSet::from(["portable", "setup"]),
-            "darwin" => BTreeSet::from(["dmg", "zip"]),
-            "linux" => BTreeSet::from(["appimage", "deb", "rpm", "tar_gz"]),
-            _ => unreachable!(),
-        };
+        let expected_kinds = desktop_release_shipped_formats(platform)?
+            .iter()
+            .copied()
+            .collect::<BTreeSet<&str>>();
         let actual_kinds = manifest
             .files
             .keys()
@@ -3735,32 +3573,26 @@ fn prepare_release_assets_step() -> Result<()> {
 }
 
 fn desktop_updater_release_files(dir: &Path, platform: &str) -> Result<Vec<PathBuf>> {
-    let mut files = match platform {
-        "win32" => vec![
-            dir.join("RELEASES"),
-            dir.join("releases.win.json"),
-            dir.join("assets.win.json"),
-        ],
-        "darwin" => vec![dir.join("RELEASES.json"), dir.join("releases.json")],
-        "linux" => Vec::new(),
-        other => bail!("Unsupported desktop release platform {other:?}"),
-    };
-    if platform == "win32" {
-        let nupkgs = collect_files(dir)?
+    let mut files = desktop_release_updater_feeds(platform)?
+        .iter()
+        .map(|name| dir.join(name))
+        .collect::<Vec<_>>();
+    if let Some(suffix) = desktop_release_update_payload_suffix(platform)? {
+        let payloads = collect_files(dir)?
             .into_iter()
             .filter(|path| {
                 path.file_name()
                     .and_then(OsStr::to_str)
-                    .is_some_and(|name| name.ends_with("-full.nupkg"))
+                    .is_some_and(|name| name.ends_with(suffix))
             })
             .collect::<Vec<_>>();
         ensure!(
-            nupkgs.len() == 1,
-            "Expected one Windows full update package in {}, found {}",
+            payloads.len() == 1,
+            "Expected one {suffix} desktop update payload in {}, found {}",
             dir.display(),
-            nupkgs.len()
+            payloads.len()
         );
-        files.push(nupkgs[0].clone());
+        files.push(payloads[0].clone());
     }
     for path in &files {
         ensure!(
@@ -3773,7 +3605,6 @@ fn desktop_updater_release_files(dir: &Path, platform: &str) -> Result<Vec<PathB
 }
 
 struct DesktopReleaseAssetBuilder<'a> {
-    s3_prefix: &'a str,
     channel: &'a str,
     version: &'a str,
     product: &'a str,
@@ -3785,15 +3616,8 @@ struct DesktopReleaseAssetBuilder<'a> {
 }
 
 impl<'a> DesktopReleaseAssetBuilder<'a> {
-    fn new(
-        s3_prefix: &'a str,
-        channel: &'a str,
-        version: &'a str,
-        product: &'a str,
-        release_assets: &'a Path,
-    ) -> Self {
+    fn new(channel: &'a str, version: &'a str, product: &'a str, release_assets: &'a Path) -> Self {
         Self {
-            s3_prefix,
             channel,
             version,
             product,
@@ -3836,8 +3660,8 @@ impl<'a> DesktopReleaseAssetBuilder<'a> {
             );
         }
         let storage_key = format!(
-            "{}/{}/{platform}/{arch}/{source_name}",
-            self.s3_prefix, self.channel
+            "{DESKTOP_PAYLOAD_PREFIX}/{}/{platform}/{arch}/{source_name}",
+            self.channel
         );
         ensure!(
             self.storage_keys.insert(storage_key.clone()),
@@ -3890,43 +3714,10 @@ impl<'a> DesktopReleaseAssetBuilder<'a> {
     }
 }
 
-async fn upload_release_assets_step() -> Result<()> {
-    let client = s3_client(None).await?;
-    let bucket = require_env("S3_BUCKET")?;
-    let prefix = require_env("DESKTOP_RELEASE_ASSETS_PREFIX")?;
-    let release_assets = Path::new("release_assets");
-    ensure!(
-        release_assets.is_dir(),
-        "GitHub release asset directory is missing"
-    );
-    ensure!(
-        count_files(release_assets)? > 0,
-        "GitHub release asset directory is empty"
-    );
-    upload_directory_to_s3(&client, &bucket, &prefix, release_assets, |_| true).await
-}
-
-async fn download_release_assets_step() -> Result<()> {
-    let client = s3_client(None).await?;
-    let bucket = require_env("S3_BUCKET")?;
-    let prefix = require_env("DESKTOP_RELEASE_ASSETS_PREFIX")?;
-    let release_assets = Path::new("release_assets");
-    remove_dir_if_exists(release_assets)?;
-    fs::create_dir_all(release_assets)?;
-    download_s3_prefix(&client, &bucket, &prefix, release_assets).await?;
-    ensure!(
-        count_files(release_assets)? > 0,
-        "No GitHub release assets were downloaded from {prefix}"
-    );
-    println!("Downloaded GitHub release asset tree:");
-    print_tree(release_assets, 2)
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct ArtifactIdentity {
     platform: String,
     arch: String,
-    desktop_variant: String,
     signed: bool,
 }
 
@@ -3937,15 +3728,10 @@ fn parse_artifact_dir_name(base: &str, channel: &str) -> Option<ArtifactIdentity
         .strip_suffix("-signed")
         .map(|value| (value, true))
         .unwrap_or((rest, false));
-    let (rest, desktop_variant) = rest
-        .strip_suffix(&format!("-{WINDOWS_GAME_CAPTURE_DESKTOP_VARIANT}"))
-        .map(|value| (value, WINDOWS_GAME_CAPTURE_DESKTOP_VARIANT))
-        .unwrap_or((rest, DEFAULT_DESKTOP_VARIANT));
     let (platform, arch) = rest.rsplit_once('-')?;
     Some(ArtifactIdentity {
         platform: platform.to_string(),
         arch: arch.to_string(),
-        desktop_variant: desktop_variant.to_string(),
         signed,
     })
 }
@@ -3954,7 +3740,7 @@ fn payload_artifact_dirs(
     artifacts: &Path,
     channel: &str,
 ) -> Result<Vec<(PathBuf, ArtifactIdentity)>> {
-    let mut selected = BTreeMap::<(String, String, String), (PathBuf, ArtifactIdentity)>::new();
+    let mut selected = BTreeMap::<(String, String), (PathBuf, ArtifactIdentity)>::new();
     if !artifacts.exists() {
         return Ok(Vec::new());
     }
@@ -3975,11 +3761,7 @@ fn payload_artifact_dirs(
             continue;
         };
 
-        let key = (
-            identity.platform.clone(),
-            identity.arch.clone(),
-            identity.desktop_variant.clone(),
-        );
+        let key = (identity.platform.clone(), identity.arch.clone());
         match selected.get(&key) {
             Some((_, current)) if current.signed && !identity.signed => {}
             Some((_, current)) if !current.signed && identity.signed => {
@@ -4000,7 +3782,6 @@ struct PayloadManifestInput {
     channel: String,
     platform: String,
     arch: String,
-    desktop_variant: String,
     version: String,
     pub_date: String,
 }
@@ -4010,8 +3791,6 @@ struct DesktopManifest {
     channel: String,
     platform: String,
     arch: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    variant: Option<String>,
     version: String,
     pub_date: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -4045,11 +3824,10 @@ fn build_desktop_manifest(dest: &Path, input: &PayloadManifestInput) -> Result<D
         channel: input.channel.clone(),
         platform: input.platform.clone(),
         arch: input.arch.clone(),
-        variant: desktop_variant_path_segment(&input.desktop_variant).map(ToOwned::to_owned),
         version: input.version.clone(),
         pub_date: input.pub_date.clone(),
         minimum_system_version: if input.platform == "darwin" {
-            Some("12.0".to_string())
+            Some(MACOS_MINIMUM_SYSTEM_VERSION.to_string())
         } else {
             None
         },
@@ -4138,12 +3916,7 @@ fn published_arches(platform: &str, arch: &str) -> Vec<&'static str> {
     }
 }
 
-fn write_macos_releases(
-    dest: &Path,
-    s3_prefix: &str,
-    channel: &str,
-    manifest: &DesktopManifest,
-) -> Result<()> {
+fn write_macos_releases(dest: &Path, channel: &str, manifest: &DesktopManifest) -> Result<()> {
     let Some(zip) = manifest.files.get("zip") else {
         println!(
             "No .zip found for macOS {} in {} (auto-update requires zip artifacts).",
@@ -4153,13 +3926,11 @@ fn write_macos_releases(
         return Ok(());
     };
     let url = format!(
-        "{PUBLIC_DL_BASE}/{s3_prefix}/{channel}/{}/{}/{}/{}",
+        "{PACKAGE_ORIGIN_BASE}/{DESKTOP_PAYLOAD_PREFIX}/{channel}/{}/{}/{}",
         manifest.platform,
         manifest.arch,
-        zip.filename(),
-        ""
+        zip.filename()
     );
-    let url = url.trim_end_matches('/').to_string();
     let releases = json!({
         "currentRelease": manifest.version,
         "releases": [{
@@ -4178,218 +3949,24 @@ fn write_macos_releases(
     Ok(())
 }
 
-async fn upload_payload_step() -> Result<()> {
-    let client = s3_client(None).await?;
-    let s3_prefix = require_env("S3_DESKTOP_PREFIX")?;
-    let bucket = require_env("S3_BUCKET")?;
-    let payload_root = Path::new("s3_payload").join(&s3_prefix);
-    let overwrite_binaries = should_overwrite_payload(&s3_prefix, env_bool("TEST_BUILD"));
-
-    println!("Uploading desktop binaries and checksums first (prefix: {s3_prefix})...");
-    upload_payload_directory(
-        &client,
-        &bucket,
-        &s3_prefix,
-        &payload_root,
-        overwrite_binaries,
-        |relative| !is_payload_metadata_key(relative),
-    )
-    .await?;
-    println!(
-        "Uploading manifests and updater metadata last, overwriting the previous release feed..."
-    );
-    upload_payload_directory(
-        &client,
-        &bucket,
-        &s3_prefix,
-        &payload_root,
-        true,
-        is_payload_metadata_key,
-    )
-    .await
-}
-
-fn read_release_descriptor_from_assets() -> Result<(PathBuf, DesktopReleaseDescriptor)> {
-    let channel = require_env("CHANNEL")?;
-    let version = require_env("VERSION")?;
-    let source_sha = require_env("SOURCE_SHA")?;
-    let path =
-        Path::new("release_assets").join(desktop_release_descriptor_filename(&channel, &version)?);
-    let descriptor: DesktopReleaseDescriptor = serde_json::from_slice(
-        &fs::read(&path).with_context(|| format!("Failed to read {}", path.display()))?,
-    )
-    .with_context(|| format!("Failed to parse {}", path.display()))?;
-    validate_desktop_release_descriptor(&descriptor, &channel, &version, &source_sha)?;
-    Ok((path, descriptor))
-}
-
-async fn publish_release_descriptor_step() -> Result<()> {
-    let (descriptor_path, descriptor) = read_release_descriptor_from_assets()?;
-    let client = s3_client(None).await?;
-    let bucket = require_env("S3_BUCKET")?;
-    let key = format!(
-        "desktop/{}/github-releases/{}.json",
-        descriptor.channel, descriptor.version
-    );
-    let plan = vec![
-        S3UploadPlanItem::new(descriptor_path, key)
-            .with_content_type("application/json; charset=utf-8")
-            .with_cache_control(VERSIONED_ARTIFACT_CACHE_CONTROL),
-    ];
-    upload_s3_plan_append_only(&client, &bucket, plan).await?;
-    Ok(())
-}
-
-async fn publish_release_marker_step() -> Result<()> {
-    let (descriptor_path, descriptor) = read_release_descriptor_from_assets()?;
-    let descriptor_sha256 = sha256_file(&descriptor_path)?;
-    let temp = TempDir::new().context("Failed to create desktop release marker temp directory")?;
-    let marker_path = temp
-        .path()
-        .join(format!("{}.ready.json", descriptor.version));
-    write_json_pretty(
-        &marker_path,
-        &json!({
-            "schema_version": 1,
-            "channel": descriptor.channel,
-            "version": descriptor.version,
-            "release_tag": descriptor.release_tag,
-            "source_sha": descriptor.source_sha,
-            "descriptor_sha256": descriptor_sha256,
-        }),
-    )?;
-    let client = s3_client(None).await?;
-    let bucket = require_env("S3_BUCKET")?;
-    let key = format!(
-        "desktop/{}/github-releases/{}.ready.json",
-        descriptor.channel, descriptor.version
-    );
-    let plan = vec![
-        S3UploadPlanItem::new(marker_path, key)
-            .with_content_type("application/json; charset=utf-8")
-            .with_cache_control(VERSIONED_ARTIFACT_CACHE_CONTROL),
-    ];
-    upload_s3_plan_append_only(&client, &bucket, plan).await?;
-    Ok(())
-}
-
-async fn upload_payload_directory<F>(
-    client: &S3Client,
-    bucket: &str,
-    s3_prefix: &str,
-    payload_root: &Path,
-    overwrite_existing: bool,
-    include: F,
-) -> Result<()>
-where
-    F: Fn(&Path) -> bool,
-{
-    let plan = desktop_payload_upload_plan(s3_prefix, payload_root, include)?;
-    if overwrite_existing {
-        let stats = upload_s3_plan_overwrite(client, bucket, plan).await?;
-        println!(
-            "Overwrite upload complete for s3://{bucket}/{s3_prefix}: uploaded {}",
-            stats.uploaded
-        );
-    } else {
-        let stats = upload_s3_plan_append_only(client, bucket, plan).await?;
-        println!(
-            "Append-only upload complete for s3://{bucket}/{s3_prefix}: uploaded {}, skipped existing {}",
-            stats.uploaded, stats.skipped_existing
-        );
-    }
-    Ok(())
-}
-
-fn desktop_payload_upload_plan<F>(
-    s3_prefix: &str,
-    payload_root: &Path,
-    include: F,
-) -> Result<Vec<S3UploadPlanItem>>
-where
-    F: Fn(&Path) -> bool,
-{
-    Ok(directory_upload_plan(s3_prefix, payload_root, include)?
-        .into_iter()
-        .map(|item| {
-            let cache_control = desktop_object_cache_control(&item.key);
-            item.with_cache_control(cache_control)
-        })
-        .collect())
-}
-
-pub(crate) const MUTABLE_DOWNLOAD_CACHE_CONTROL: &str = "public, max-age=300";
-pub(crate) const VERSIONED_ARTIFACT_CACHE_CONTROL: &str = "public, max-age=31536000";
-
-fn desktop_object_cache_control(key: &str) -> &'static str {
-    if is_versioned_desktop_artifact_key(key) {
-        VERSIONED_ARTIFACT_CACHE_CONTROL
-    } else {
-        MUTABLE_DOWNLOAD_CACHE_CONTROL
-    }
-}
-
-fn is_versioned_desktop_artifact_key(key: &str) -> bool {
-    if !key.starts_with("desktop/") {
-        return false;
-    }
-    let Some(filename) = key.rsplit('/').next() else {
-        return false;
-    };
-    if filename.is_empty() {
-        return false;
-    }
-    !is_payload_metadata_key(Path::new(filename)) && !filename.ends_with(".yaml")
-}
-
-fn should_overwrite_payload(s3_prefix: &str, test_build: bool) -> bool {
-    test_build && s3_prefix == "desktop-test"
-}
-
-fn is_payload_metadata_key(relative: &Path) -> bool {
-    let name = relative
-        .file_name()
-        .and_then(OsStr::to_str)
-        .unwrap_or_default();
-    name == "manifest.json"
-        || name.ends_with(".yml")
-        || name.starts_with("RELEASES")
-        || (name.starts_with("releases") && name.ends_with(".json"))
-        || (name.starts_with("assets") && name.ends_with(".json"))
-}
-
 fn build_summary_step() -> Result<()> {
     let summary = require_env("GITHUB_STEP_SUMMARY")?;
-    let test_build = env_bool("TEST_BUILD");
     let display_channel = env::var("DISPLAY_CHANNEL").unwrap_or_default();
     let version = require_env("VERSION")?;
-    let s3_prefix = require_env("S3_DESKTOP_PREFIX")?;
     let channel = require_env("CHANNEL")?;
     let mut file = OpenOptions::new()
         .create(true)
         .append(true)
         .open(&summary)
         .with_context(|| format!("Failed to open {summary}"))?;
-    if test_build {
-        writeln!(
-            file,
-            "## Desktop {} Test Upload Complete",
-            title_case(&display_channel)
-        )?;
-        writeln!(
-            file,
-            "\n_This is a **test build**. Artifacts were stashed under `{s3_prefix}/` so the API will not promote them as a release._"
-        )?;
-    } else {
-        writeln!(
-            file,
-            "## Desktop {} Upload Complete",
-            title_case(&display_channel)
-        )?;
-    }
     writeln!(
         file,
-        "\n**Version:** {version}\n\n**S3 prefix:** {s3_prefix}/{channel}/\n\n**Redirect endpoint shape:** /dl/{s3_prefix}/{channel}/{{plat}}/{{arch}}[/{{variant}}]/{{format}}"
+        "## Desktop {} Release Assets Ready",
+        title_case(&display_channel)
+    )?;
+    writeln!(
+        file,
+        "\n**Version:** {version}\n\n**Download prefix:** {DESKTOP_PAYLOAD_PREFIX}/{channel}/\n\n**Redirect endpoint shape:** /dl/{DESKTOP_PAYLOAD_PREFIX}/{channel}/{{plat}}/{{arch}}/{{format}}"
     )?;
     Ok(())
 }
@@ -4507,7 +4084,7 @@ fn extension_is(path: &Path, extension: &str) -> bool {
     path.extension().and_then(OsStr::to_str) == Some(extension)
 }
 
-fn file_name_string(path: &Path) -> Result<String> {
+pub(crate) fn file_name_string(path: &Path) -> Result<String> {
     path.file_name()
         .and_then(OsStr::to_str)
         .map(ToOwned::to_owned)
@@ -4563,70 +4140,8 @@ fn print_tree(root: &Path, max_depth: usize) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::common::{directory_upload_plan, parse_version_instant, s3_directory_prefix};
+    use crate::common::parse_version_instant;
     use chrono::{DateTime, TimeZone, Utc};
-
-    #[test]
-    fn every_uploaded_desktop_object_carries_a_cache_instruction() {
-        let temp = tempfile::tempdir().unwrap();
-        let root = temp.path().join("desktop").join("stable").join("darwin");
-        fs::create_dir_all(root.join("arm64")).unwrap();
-        fs::write(root.join("arm64").join("Fluxer-1.2.3-arm64.dmg"), "dmg").unwrap();
-        fs::write(root.join("arm64").join("manifest.json"), "{}").unwrap();
-        fs::write(root.join("arm64").join("latest-mac.yml"), "version: 1").unwrap();
-
-        let plan =
-            desktop_payload_upload_plan("desktop", temp.path().join("desktop").as_path(), |_| true)
-                .unwrap();
-
-        assert!(
-            !plan.is_empty(),
-            "the sample payload produced no upload plan"
-        );
-        for item in &plan {
-            assert!(
-                item.cache_control.is_some(),
-                "{} would be stored with no cache instruction at all",
-                item.key
-            );
-        }
-    }
-
-    #[test]
-    fn the_stored_lifetime_follows_the_key_not_the_upload_batch() {
-        assert_eq!(
-            desktop_object_cache_control("desktop/stable/darwin/arm64/Fluxer-1.2.3-arm64.dmg"),
-            VERSIONED_ARTIFACT_CACHE_CONTROL
-        );
-        assert_eq!(
-            desktop_object_cache_control(
-                "desktop/stable/darwin/arm64/Fluxer-1.2.3-arm64.dmg.sha256"
-            ),
-            VERSIONED_ARTIFACT_CACHE_CONTROL
-        );
-        assert_eq!(
-            desktop_object_cache_control("desktop/stable/darwin/arm64/manifest.json"),
-            MUTABLE_DOWNLOAD_CACHE_CONTROL,
-            "the release pointer must stay reachable when it moves"
-        );
-        assert_eq!(
-            desktop_object_cache_control("desktop/stable/win32/x64/latest.yml"),
-            MUTABLE_DOWNLOAD_CACHE_CONTROL
-        );
-        assert_eq!(
-            desktop_object_cache_control("desktop/stable/win32/x64/RELEASES.json"),
-            MUTABLE_DOWNLOAD_CACHE_CONTROL
-        );
-        assert_eq!(
-            desktop_object_cache_control("desktop-test/canary/linux/x64/Fluxer-1.2.3.AppImage"),
-            MUTABLE_DOWNLOAD_CACHE_CONTROL,
-            "test artifacts are overwritten in place, so they are not immutable"
-        );
-        assert_ne!(
-            VERSIONED_ARTIFACT_CACHE_CONTROL, MUTABLE_DOWNLOAD_CACHE_CONTROL,
-            "the two policies collapsed into one, so this test proves nothing"
-        );
-    }
 
     fn dt(year: i32, month: u32, day: u32, hour: u32, minute: u32, second: u32) -> DateTime<Utc> {
         Utc.with_ymd_and_hms(year, month, day, hour, minute, second)
@@ -4638,7 +4153,6 @@ mod tests {
         BuildDesktopArgs {
             step: DesktopStep::SetMatrix,
             channel: None,
-            test_build: None,
             skip_targets: None,
             skip_windows: Some("false".to_string()),
             skip_windows_x64: Some("false".to_string()),
@@ -4655,13 +4169,6 @@ mod tests {
             fs::create_dir_all(parent).unwrap();
         }
         fs::write(path, contents).unwrap();
-    }
-
-    #[test]
-    fn only_desktop_test_payloads_overwrite_existing_s3_objects() {
-        assert!(should_overwrite_payload("desktop-test", true));
-        assert!(!should_overwrite_payload("desktop", true));
-        assert!(!should_overwrite_payload("desktop-test", false));
     }
 
     #[test]
@@ -4713,9 +4220,9 @@ mod tests {
         assert_eq!(
             selected,
             vec![
-                "{\"platform\":\"windows\",\"arch\":\"arm64\",\"desktop_variant\":\"default\",\"os\":\"windows-2025\",\"electron_arch\":\"arm64\"}",
-                "{\"platform\":\"linux\",\"arch\":\"x64\",\"desktop_variant\":\"default\",\"os\":\"ubuntu-22.04\",\"electron_arch\":\"x64\"}",
-                "{\"platform\":\"linux\",\"arch\":\"arm64\",\"desktop_variant\":\"default\",\"os\":\"ubuntu-22.04-arm\",\"electron_arch\":\"arm64\"}",
+                "{\"platform\":\"windows\",\"arch\":\"arm64\",\"os\":\"windows-2025\",\"electron_arch\":\"arm64\"}",
+                "{\"platform\":\"linux\",\"arch\":\"x64\",\"os\":\"ubuntu-22.04\",\"electron_arch\":\"x64\"}",
+                "{\"platform\":\"linux\",\"arch\":\"arm64\",\"os\":\"ubuntu-22.04-arm\",\"electron_arch\":\"arm64\"}",
             ]
         );
     }
@@ -4731,11 +4238,6 @@ mod tests {
                 .filter(|platform| platform.platform == "windows")
                 .count(),
             2
-        );
-        assert!(
-            selected
-                .iter()
-                .all(|platform| platform.desktop_variant == DEFAULT_DESKTOP_VARIANT)
         );
     }
 
@@ -4753,9 +4255,9 @@ mod tests {
         assert_eq!(
             selected,
             vec![
-                "{\"platform\":\"windows\",\"arch\":\"arm64\",\"desktop_variant\":\"default\",\"os\":\"windows-2025\",\"electron_arch\":\"arm64\"}",
-                "{\"platform\":\"linux\",\"arch\":\"x64\",\"desktop_variant\":\"default\",\"os\":\"ubuntu-22.04\",\"electron_arch\":\"x64\"}",
-                "{\"platform\":\"linux\",\"arch\":\"arm64\",\"desktop_variant\":\"default\",\"os\":\"ubuntu-22.04-arm\",\"electron_arch\":\"arm64\"}",
+                "{\"platform\":\"windows\",\"arch\":\"arm64\",\"os\":\"windows-2025\",\"electron_arch\":\"arm64\"}",
+                "{\"platform\":\"linux\",\"arch\":\"x64\",\"os\":\"ubuntu-22.04\",\"electron_arch\":\"x64\"}",
+                "{\"platform\":\"linux\",\"arch\":\"arm64\",\"os\":\"ubuntu-22.04-arm\",\"electron_arch\":\"arm64\"}",
             ]
         );
     }
@@ -4785,71 +4287,124 @@ mod tests {
         assert!(error.to_string().contains("Unknown desktop skip target"));
     }
 
-    #[test]
-    fn matrix_skip_targets_reject_retired_windows_game_capture_variant() {
-        for target in [
-            WINDOWS_GAME_CAPTURE_DESKTOP_VARIANT,
-            "windows-game-capture-x64",
-            "windows-game-capture-arm64",
-        ] {
-            let mut args = matrix_args();
-            args.skip_targets = Some(target.to_string());
+    const BUILD_DESKTOP_WORKFLOW: &str =
+        include_str!("../../../.github/workflows/build-desktop.yaml");
 
-            let error = selected_platforms(&args).unwrap_err();
+    fn workflow_job(job: &str) -> &'static str {
+        let header = format!("\n  {job}:\n");
+        let start = BUILD_DESKTOP_WORKFLOW
+            .find(&header)
+            .unwrap_or_else(|| panic!("build-desktop.yaml has no {job} job"))
+            + header.len();
+        let body = &BUILD_DESKTOP_WORKFLOW[start..];
+        let end = body
+            .match_indices('\n')
+            .map(|(index, _)| index + 1)
+            .find(|&index| body[index..].starts_with("  ") && !body[index..].starts_with("   "))
+            .unwrap_or(body.len());
+        &body[..end]
+    }
 
-            assert!(
-                error.to_string().contains("Unknown desktop skip target"),
-                "{target} should no longer be a recognised skip target"
-            );
-        }
+    fn workflow_step_names(job: &str) -> Vec<&str> {
+        job.lines()
+            .filter_map(|line| line.strip_prefix("      - name: "))
+            .collect()
     }
 
     #[test]
-    fn s3_key_join_and_path_conversion_are_platform_neutral() {
-        assert_eq!(
-            join_s3_key("/desktop/", "/canary/linux/"),
-            "desktop/canary/linux"
-        );
-        assert_eq!(
-            s3_directory_prefix("/_handoff/desktop/build/"),
-            "_handoff/desktop/build/"
-        );
-        assert_eq!(join_s3_key("", "manifest.json"), "manifest.json");
-        assert_eq!(
-            path_to_s3_key(Path::new("canary").join("linux").join("x64").as_path()),
-            "canary/linux/x64"
-        );
-    }
-
-    #[test]
-    fn upload_plan_splits_payload_metadata_without_s3() {
-        let temp = tempfile::tempdir().unwrap();
-        let root = temp.path();
-        write_file(&root.join("canary/linux/x64/Fluxer.AppImage"), "app");
-        write_file(&root.join("canary/linux/x64/manifest.json"), "{}");
-        write_file(&root.join("canary/darwin/x64/releases.json"), "{}");
-
-        let binaries = directory_upload_plan("desktop", root, |relative| {
-            !is_payload_metadata_key(relative)
-        })
-        .unwrap()
-        .into_iter()
-        .map(|item| item.key)
-        .collect::<Vec<_>>();
-        let metadata = directory_upload_plan("desktop", root, is_payload_metadata_key)
-            .unwrap()
-            .into_iter()
-            .map(|item| item.key)
+    fn every_build_desktop_workflow_step_dispatches_to_a_desktop_step() {
+        let steps = BUILD_DESKTOP_WORKFLOW
+            .lines()
+            .filter_map(|line| line.trim().strip_prefix("--step "))
             .collect::<Vec<_>>();
 
-        assert_eq!(binaries, vec!["desktop/canary/linux/x64/Fluxer.AppImage"]);
+        assert!(steps.contains(&"stage_handoff"));
+        for step in steps {
+            assert!(
+                <DesktopStep as ValueEnum>::from_str(step, false).is_ok(),
+                "build-desktop.yaml dispatches unknown desktop step {step}"
+            );
+        }
+        assert!(matches!(
+            <DesktopStep as ValueEnum>::from_str("stage_handoff", false),
+            Ok(DesktopStep::StageHandoff)
+        ));
+    }
+
+    #[test]
+    fn the_github_release_is_the_only_destination_for_built_artifacts() {
+        for job in ["build", "upload", "publish_release"] {
+            let body = workflow_job(job);
+            for forbidden in [
+                "S3_BUCKET",
+                "S3_ENDPOINT",
+                "AWS_ACCESS_KEY_ID",
+                "AWS_SECRET_ACCESS_KEY",
+                "DOWNLOADS_S3",
+                "_handoff/",
+            ] {
+                assert!(
+                    !body.contains(forbidden),
+                    "{job} must not reference {forbidden} now that the downloads bucket is gone"
+                );
+            }
+        }
+
         assert_eq!(
-            metadata,
+            workflow_step_names(workflow_job("publish_release")),
             vec![
-                "desktop/canary/darwin/x64/releases.json",
-                "desktop/canary/linux/x64/manifest.json",
+                "Checkout source",
+                "Set up Rust toolchain (CI helpers)",
+                "Download GitHub release assets",
+                "Create token",
+                "Publish GitHub desktop release",
             ]
         );
+    }
+
+    #[test]
+    fn the_job_handoff_travels_as_github_actions_artifacts() {
+        let build = workflow_job("build");
+        assert!(build.contains("--step stage_handoff"));
+        assert!(build.contains("name: ${{ steps.handoff.outputs.artifact_name }}"));
+        assert!(build.contains("path: upload_staging"));
+
+        let upload = workflow_job("upload");
+        assert!(
+            upload.contains("pattern: fluxer-desktop-${{ needs.meta.outputs.build_channel }}-*"),
+            "the upload job must collect every build leg for this channel"
+        );
+        assert!(upload.contains("path: artifacts"));
+        assert!(upload.contains("name: fluxer-desktop-release-assets"));
+
+        let publish = workflow_job("publish_release");
+        assert!(publish.contains("name: fluxer-desktop-release-assets"));
+        assert!(publish.contains("path: release_assets"));
+
+        for job in ["build", "upload", "publish_release"] {
+            let body = workflow_job(job);
+            for action in ["actions/upload-artifact@", "actions/download-artifact@"] {
+                for line in body.lines().filter(|line| line.contains(action)) {
+                    let pin = line.rsplit('@').next().unwrap_or_default();
+                    assert!(
+                        pin.len() == 40 && pin.bytes().all(|byte| byte.is_ascii_hexdigit()),
+                        "{job} must pin {action} to a full commit sha, found {line:?}"
+                    );
+                }
+            }
+            for line in body
+                .lines()
+                .filter_map(|line| line.trim().strip_prefix("retention-days: "))
+            {
+                let days = line
+                    .parse::<u32>()
+                    .expect("retention-days must be a number");
+                assert!(
+                    days <= 7,
+                    "{job} keeps a job relay artifact for {days} days, which is how staging piled up before"
+                );
+            }
+        }
     }
 
     #[test]
@@ -4859,21 +4414,7 @@ mod tests {
             ArtifactIdentity {
                 platform: "windows".to_string(),
                 arch: "arm64".to_string(),
-                desktop_variant: DEFAULT_DESKTOP_VARIANT.to_string(),
                 signed: false,
-            }
-        );
-        assert_eq!(
-            parse_artifact_dir_name(
-                "fluxer-desktop-canary-windows-x64-windows-game-capture-signed",
-                "canary",
-            )
-            .unwrap(),
-            ArtifactIdentity {
-                platform: "windows".to_string(),
-                arch: "x64".to_string(),
-                desktop_variant: WINDOWS_GAME_CAPTURE_DESKTOP_VARIANT.to_string(),
-                signed: true,
             }
         );
         assert!(parse_artifact_dir_name("fluxer-desktop-stable-linux-x64", "canary").is_none());
@@ -4882,7 +4423,6 @@ mod tests {
             ArtifactIdentity {
                 platform: "windows".to_string(),
                 arch: "x64".to_string(),
-                desktop_variant: DEFAULT_DESKTOP_VARIANT.to_string(),
                 signed: true,
             }
         );
@@ -4891,25 +4431,15 @@ mod tests {
     #[test]
     fn handoff_artifact_name_only_marks_signed_windows_uploads() {
         assert_eq!(
-            handoff_artifact_name("canary", "windows", "x64", DEFAULT_DESKTOP_VARIANT, true),
+            handoff_artifact_name("canary", "windows", "x64", true),
             "fluxer-desktop-canary-windows-x64-signed"
         );
         assert_eq!(
-            handoff_artifact_name("canary", "linux", "x64", DEFAULT_DESKTOP_VARIANT, true),
+            handoff_artifact_name("canary", "linux", "x64", true),
             "fluxer-desktop-canary-linux-x64"
         );
         assert_eq!(
-            handoff_artifact_name(
-                "stable",
-                "windows",
-                "arm64",
-                WINDOWS_GAME_CAPTURE_DESKTOP_VARIANT,
-                false,
-            ),
-            "fluxer-desktop-stable-windows-arm64-windows-game-capture"
-        );
-        assert_eq!(
-            handoff_artifact_name("stable", "windows", "arm64", DEFAULT_DESKTOP_VARIANT, false),
+            handoff_artifact_name("stable", "windows", "arm64", false),
             "fluxer-desktop-stable-windows-arm64"
         );
     }
@@ -4960,14 +4490,6 @@ export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
         let artifacts = temp.path();
         fs::create_dir_all(artifacts.join("fluxer-desktop-canary-windows-x64")).unwrap();
         fs::create_dir_all(artifacts.join("fluxer-desktop-canary-windows-x64-signed")).unwrap();
-        fs::create_dir_all(
-            artifacts.join("fluxer-desktop-canary-windows-x64-windows-game-capture"),
-        )
-        .unwrap();
-        fs::create_dir_all(
-            artifacts.join("fluxer-desktop-canary-windows-x64-windows-game-capture-signed"),
-        )
-        .unwrap();
         fs::create_dir_all(artifacts.join("fluxer-desktop-canary-linux-x64")).unwrap();
         fs::create_dir_all(artifacts.join("unrelated")).unwrap();
 
@@ -4990,7 +4512,6 @@ export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
                     ArtifactIdentity {
                         platform: "linux".to_string(),
                         arch: "x64".to_string(),
-                        desktop_variant: DEFAULT_DESKTOP_VARIANT.to_string(),
                         signed: false,
                     },
                 ),
@@ -4999,16 +4520,6 @@ export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
                     ArtifactIdentity {
                         platform: "windows".to_string(),
                         arch: "x64".to_string(),
-                        desktop_variant: DEFAULT_DESKTOP_VARIANT.to_string(),
-                        signed: true,
-                    },
-                ),
-                (
-                    "fluxer-desktop-canary-windows-x64-windows-game-capture-signed".to_string(),
-                    ArtifactIdentity {
-                        platform: "windows".to_string(),
-                        arch: "x64".to_string(),
-                        desktop_variant: WINDOWS_GAME_CAPTURE_DESKTOP_VARIANT.to_string(),
                         signed: true,
                     },
                 ),
@@ -5033,7 +4544,6 @@ export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
                 channel: "canary".to_string(),
                 platform: "linux".to_string(),
                 arch: "x64".to_string(),
-                desktop_variant: DEFAULT_DESKTOP_VARIANT.to_string(),
                 version: "2026.520.1".to_string(),
                 pub_date: "2026-05-20T01:02:03Z".to_string(),
             },
@@ -5062,26 +4572,92 @@ export const CHANNEL_DISPLAY_NAME = BUILD_CHANNEL;\n"
             channel: "canary".to_string(),
             platform: "darwin".to_string(),
             arch: "arm64".to_string(),
-            variant: None,
             version: "2026.520.1".to_string(),
             pub_date: "2026-05-20T01:02:03Z".to_string(),
-            minimum_system_version: Some("12.0".to_string()),
+            minimum_system_version: Some(MACOS_MINIMUM_SYSTEM_VERSION.to_string()),
             files: BTreeMap::from([(
                 "zip".to_string(),
                 DesktopManifestFile::Name("Fluxer-2026.520.1-arm64.zip".to_string()),
             )]),
         };
 
-        write_macos_releases(temp.path(), "desktop-test", "canary", &manifest).unwrap();
+        write_macos_releases(temp.path(), "canary", &manifest).unwrap();
         let releases: Value =
             serde_json::from_str(&fs::read_to_string(temp.path().join("RELEASES.json")).unwrap())
                 .unwrap();
 
         assert_eq!(
             releases["releases"][0]["updateTo"]["url"],
-            "https://api.fluxer.app/dl/desktop-test/canary/darwin/arm64/Fluxer-2026.520.1-arm64.zip"
+            "https://pkgs.fluxer.com/desktop/canary/darwin/arm64/Fluxer-2026.520.1-arm64.zip"
         );
         assert!(temp.path().join("releases.json").exists());
+    }
+
+    #[test]
+    fn desktop_manifest_publishes_macos_minimum_only_for_darwin() {
+        let temp = tempfile::tempdir().unwrap();
+
+        let darwin_root = temp.path().join("darwin");
+        write_file(&darwin_root.join("Fluxer-2026.520.1-arm64.zip"), "zip");
+        let darwin_manifest = build_desktop_manifest(
+            &darwin_root,
+            &PayloadManifestInput {
+                channel: "stable".to_string(),
+                platform: "darwin".to_string(),
+                arch: "arm64".to_string(),
+                version: "2026.520.1".to_string(),
+                pub_date: "2026-05-20T01:02:03Z".to_string(),
+            },
+        )
+        .unwrap();
+        assert_eq!(
+            darwin_manifest.minimum_system_version.as_deref(),
+            Some(MACOS_MINIMUM_SYSTEM_VERSION)
+        );
+
+        let linux_root = temp.path().join("linux");
+        write_file(&linux_root.join("Fluxer-2026.520.1-x64.deb"), "deb");
+        let linux_manifest = build_desktop_manifest(
+            &linux_root,
+            &PayloadManifestInput {
+                channel: "stable".to_string(),
+                platform: "linux".to_string(),
+                arch: "x64".to_string(),
+                version: "2026.520.1".to_string(),
+                pub_date: "2026-05-20T01:02:03Z".to_string(),
+            },
+        )
+        .unwrap();
+        assert_eq!(linux_manifest.minimum_system_version, None);
+
+        let windows_root = temp.path().join("win32");
+        write_file(&windows_root.join("Fluxer-Setup-2026.520.1-x64.exe"), "exe");
+        let windows_manifest = build_desktop_manifest(
+            &windows_root,
+            &PayloadManifestInput {
+                channel: "stable".to_string(),
+                platform: "win32".to_string(),
+                arch: "x64".to_string(),
+                version: "2026.520.1".to_string(),
+                pub_date: "2026-05-20T01:02:03Z".to_string(),
+            },
+        )
+        .unwrap();
+        assert_eq!(windows_manifest.minimum_system_version, None);
+    }
+
+    #[test]
+    fn desktop_macos_minimum_matches_electron_builder_config() {
+        let config_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fluxer_desktop/electron-builder.config.cjs");
+        let config = fs::read_to_string(&config_path)
+            .expect("the electron-builder config should be readable");
+        let declared = config
+            .split_once("const macOSMinimumSystemVersion = '")
+            .and_then(|(_, rest)| rest.split_once('\''))
+            .map(|(value, _)| value)
+            .expect("the electron-builder config should declare macOSMinimumSystemVersion");
+        assert_eq!(declared, MACOS_MINIMUM_SYSTEM_VERSION);
     }
 
     #[test]

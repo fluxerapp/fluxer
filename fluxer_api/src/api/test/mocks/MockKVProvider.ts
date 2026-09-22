@@ -704,7 +704,7 @@ export class MockKVProvider implements IKVProvider {
 		refillRate: number,
 		refillIntervalMs: number,
 	): Promise<{
-		urls: Array<string>;
+		entries: Array<string>;
 		tokensConsumed: number;
 	}> {
 		this.dequeuePurgeBatchSpy(queueKey, bucketKey, maxItems, maxTokens, refillRate, refillIntervalMs);
@@ -734,13 +734,13 @@ export class MockKVProvider implements IKVProvider {
 		if (toPop <= 0) {
 			this.stringStore.set(bucketKey, JSON.stringify({tokens, lastRefill}));
 			this.expiries.set(bucketKey, now + 3600 * 1000);
-			return {urls: [], tokensConsumed: 0};
+			return {entries: [], tokensConsumed: 0};
 		}
-		const urls = await this.spop(queueKey, toPop);
-		tokens -= urls.length;
+		const entries = await this.spop(queueKey, toPop);
+		tokens -= entries.length;
 		this.stringStore.set(bucketKey, JSON.stringify({tokens, lastRefill}));
 		this.expiries.set(bucketKey, now + 3600 * 1000);
-		return {urls, tokensConsumed: urls.length};
+		return {entries, tokensConsumed: entries.length};
 	}
 
 	async evalScript(

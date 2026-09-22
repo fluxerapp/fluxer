@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {Message} from '@app/api/models/Message';
 import type {
 	ISearchAdapter as SchemaISearchAdapter,
 	SearchResult as SchemaSearchResult,
 } from '@fluxer/schema/src/contracts/search/SearchAdapterTypes';
 import type {MessageSearchFilters, SearchableMessage} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
-import type {ChannelID, GuildID, MessageID, UserID} from '../BrandedTypes';
-import type {Message} from '../models/Message';
 
 export interface IMessageSearchService extends SchemaISearchAdapter<MessageSearchFilters, SearchableMessage> {
 	indexMessage(message: Message, authorIsBot?: boolean): Promise<void>;

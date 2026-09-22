@@ -187,7 +187,7 @@ async fn oauth2_callback_finish(
 
     let session_cookie_value =
         session::create_session(&user.id, &token.access_token, &config.secret_key_base);
-    let secure = if config.is_production() {
+    let secure = if config.secure_cookies() {
         "; Secure"
     } else {
         ""

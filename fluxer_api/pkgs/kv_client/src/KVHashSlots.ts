@@ -16,10 +16,10 @@ function extractHashTag(key: string): string {
 }
 
 export function computeHashSlot(key: string): number {
-	const hashed = extractHashTag(key);
+	const hashed = Buffer.from(extractHashTag(key));
 	let crc = 0;
-	for (let index = 0; index < hashed.length; index += 1) {
-		crc ^= (hashed.charCodeAt(index) & 0xff) << 8;
+	for (const byte of hashed) {
+		crc ^= byte << 8;
 		for (let bit = 0; bit < 8; bit += 1) {
 			crc = (crc & 0x8000) === 0 ? (crc << 1) & 0xffff : ((crc << 1) ^ 0x1021) & 0xffff;
 		}
@@ -52,17 +52,17 @@ export function splitIntoSlotBatches<T>(
 }
 
 export async function runSlotBatches<T>(batches: ReadonlyArray<T>, run: (batch: T) => Promise<void>): Promise<void> {
-	if (batches.length <= MAX_CONCURRENT_SLOT_BATCHES) {
-		await Promise.all(batches.map(async (batch) => await run(batch)));
-		return;
-	}
 	let nextIndex = 0;
-	const workers = Array.from({length: MAX_CONCURRENT_SLOT_BATCHES}, async () => {
+	const workers = Array.from({length: Math.min(batches.length, MAX_CONCURRENT_SLOT_BATCHES)}, async () => {
 		while (nextIndex < batches.length) {
 			const batch = batches[nextIndex];
 			nextIndex += 1;
 			await run(batch);
 		}
 	});
-	await Promise.all(workers);
+	for (const result of await Promise.allSettled(workers)) {
+		if (result.status === 'rejected') {
+			throw result.reason;
+		}
+	}
 }

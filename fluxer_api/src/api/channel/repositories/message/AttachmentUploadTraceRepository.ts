@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AttachmentID, ChannelID, UserID} from '../../../BrandedTypes';
-import {fetchOne, upsertOne} from '../../../database/CassandraQueryExecution';
+import type {AttachmentID, ChannelID, UserID} from '@app/api/BrandedTypes';
+import {fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import type {
 	AttachmentUploadTraceByAttachmentRow,
 	AttachmentUploadTraceByKeyRow,
-} from '../../../database/types/AttachmentUploadTypes';
-import {AttachmentUploadTracesByAttachment, AttachmentUploadTracesByKey} from '../../../Tables';
+} from '@app/api/database/types/AttachmentUploadTypes';
+import {AttachmentUploadTracesByAttachment, AttachmentUploadTracesByKey} from '@app/api/Tables';
 
 const GET_UPLOAD_TRACE_BY_KEY_QUERY = AttachmentUploadTracesByKey.select({
 	where: AttachmentUploadTracesByKey.where.eq('upload_key'),

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {defineEmailI18nLocaleMessages} from '../EmailI18nMessages';
+import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18nMessages';
 
 const EMAIL_I18N_FI_MESSAGES = defineEmailI18nLocaleMessages({
 	"account_disabled_suspicious": {
@@ -9,23 +9,23 @@ const EMAIL_I18N_FI_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"account_scheduled_deletion": {
 		"subject": "Käyttäjätilisi {product_name}-palvelussa poistetaan pysyvästi",
-		"body": "Hei {username},\n\n{product_name}-käyttäjätilisi on ajoitettu poistettavaksi pysyvästi käyttöehtojemme tai yhteisön sääntöjemme rikkomusten vuoksi.\n\nAjoitettu poisto: {deletionDate, date, full} klo {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Syy: {reason}}\n}\n\nTämä on vakava toimenpide. Tilisi tiedot poistetaan pysyvästi ajoitettuna päivänä.\n\nTarkista:\n- Käyttöehdot: {termsUrl}\n- Yhteisön säännöt: {guidelinesUrl}\n\nValitusprosessi:\nJos uskot, että tämä päätös oli virheellinen tai perusteeton, sinulla on 60 päivää aikaa tehdä valitus. Lähetä sähköpostia osoitteeseen {appeals_email} tästä sähköpostiosoitteesta.\n\nValituksessasi:\n- Selitä selkeästi, miksi uskot päätöksen olleen virheellinen tai perusteeton\n- Anna kaikki asiaankuuluvat todisteet tai konteksti\n\n{product_name}-turvallisuustiimin jäsen tarkistaa valituksesi ja voi keskeyttää vireillä olevan poiston, kunnes lopullinen päätös on tehty.\n\n– {product_name}-turvallisuustiimi"
+		"body": "Hei {username},\n\n{product_name}-käyttäjätilisi on ajoitettu poistettavaksi pysyvästi käyttöehtojemme tai yhteisösääntöjemme rikkomisen vuoksi.\n\nAjoitettu poisto: {deletionDate, date, full} klo {deletionDate, time, short}\n\n{reason, select,\n  null {}\n  other {Syy: {reason}}\n}\n\nTämä on vakava toimenpide. Tilisi tiedot poistetaan pysyvästi ajoitettuna päivänä.\n\nTutustu:\n- Käyttöehdot: {termsUrl}\n- Yhteisön säännöt: {guidelinesUrl}\n\nValitusprosessi:\nJos uskot, että tämä päätös oli virheellinen tai perusteeton, sinulla on 60 päivää aikaa tehdä valitus. Lähetä sähköpostia osoitteeseen {appeals_email} tästä sähköpostiosoitteesta.\n\nValituksessasi:\n- Selitä selkeästi, miksi uskot päätöksen olleen virheellinen tai perusteeton\n- Liitä mukaan asiaankuuluvat todisteet tai taustatiedot\n\n{product_name}-turvallisuustiimin jäsen käsittelee valituksesi ja voi keskeyttää vireillä olevan poiston, kunnes lopullinen päätös on tehty.\n\n– {product_name}-turvallisuustiimi"
 	},
 	"account_temp_banned": {
 		"subject": "Käyttäjätilisi {product_name}-palvelussa on tilapäisesti jäädytetty",
-		"body": "Hei {username},\n\n{product_name}-käyttäjätilisi on jäädytetty tilapäisesti käyttöehtojemme tai yhteisön sääntöjemme rikkomisen vuoksi.\n\nKesto: {durationHours, plural,\n  =1 {1 tunti}\n  other {# tuntia}\n}\nJäädytettynä {bannedUntil, date, full} klo {bannedUntil, time, short} asti\n\n{reason, select,\n  null {}\n  other {Syy: {reason}}\n}\n\nTänä aikana et voi käyttää tiliäsi.\n\nTarkista:\n- Käyttöehdot: {termsUrl}\n- Yhteisön säännöt: {guidelinesUrl}\n\nJos uskot, että tämä päätös oli virheellinen tai perusteeton, voit tehdä valituksen. Lähetä sähköpostia osoitteeseen {appeals_email} tästä sähköpostiosoitteesta ja selitä selkeästi, miksi uskot päätöksen olleen virheellinen. Tarkistamme valituksesi ja vastaamme päätöksellämme.\n\n– {product_name}-turvallisuustiimi"
+		"body": "Hei {username},\n\n{product_name}-käyttäjätilisi on jäädytetty tilapäisesti käyttöehtojemme tai yhteisösääntöjemme rikkomisen vuoksi.\n\nKesto: {durationHours, plural,\n  =1 {1 tunti}\n  other {# tuntia}\n}\nJäädytettynä {bannedUntil, date, full} klo {bannedUntil, time, short} asti\n\n{reason, select,\n  null {}\n  other {Syy: {reason}}\n}\n\nTänä aikana et voi käyttää tiliäsi.\n\nTutustu:\n- Käyttöehdot: {termsUrl}\n- Yhteisön säännöt: {guidelinesUrl}\n\nJos uskot, että tämä päätös oli virheellinen tai perusteeton, voit tehdä valituksen. Lähetä sähköpostia osoitteeseen {appeals_email} tästä sähköpostiosoitteesta ja selitä selkeästi, miksi uskot päätöksen olleen virheellinen. Käsittelemme valituksesi ja ilmoitamme sinulle päätöksemme.\n\n– {product_name}-turvallisuustiimi"
 	},
 	"donation_confirmation": {
 		"subject": "Kiitos {product_name}-lahjoituksestasi",
-		"body": "Hei,\n\nKiitos {product_name}-lahjoituksestasi! {interval, select,\n  month {Toistuva lahjoituksesi}\n  year {Toistuva lahjoituksesi}\n  other {Kertalahjoituksesi}\n} on {interval, select,\n  month {asetettu}\n  year {asetettu}\n  other {käsitelty}\n} onnistuneesti.\n\nLahjoituksen tiedot:\nSumma: {amount} {currency} {interval, select,\n  month {kuukaudessa}\n  year {vuodessa}\n  other {}\n}\n\nStripe lähettää sinulle erillisen kuitin PDF-laskun kanssa pian. Tämä sisältää kaikki maksutiedot ja sitä voidaan käyttää verotuksessa.\n\nVoit tarkastella lahjoitushistoriaasi, ladata laskuja {interval, select,\n  month {ja hallinnoida tai peruuttaa tilaustasi}\n  year {ja hallinnoida tai peruuttaa tilaustasi}\n  other {ja hallita tulevia lahjoituksia}\n} milloin tahansa käyttämällä tätä linkkiä:\n\n{manageUrl}\n\nTukesi auttaa pitämään {product_name}-palvelun toiminnassa. Kiitos!\n\n– {product_name}-tiimi"
+		"body": "Hei,\n\nKiitos {product_name}-lahjoituksestasi! {interval, select,\n  month {Toistuva lahjoituksesi}\n  year {Toistuva lahjoituksesi}\n  other {Kertalahjoituksesi}\n} on {interval, select,\n  month {käynnistetty}\n  year {käynnistetty}\n  other {käsitelty}\n} onnistuneesti.\n\nLahjoituksen tiedot:\nSumma: {amount} {interval, select,\n  month {kuukaudessa}\n  year {vuodessa}\n  other {}\n}\n\nStripe lähettää sinulle pian sähköpostitse erillisen kuitin sekä PDF-laskun. Niissä ovat kaikki maksutiedot, ja niitä voi käyttää verotuksessa.\n\nVoit tarkastella lahjoitushistoriaasi, ladata laskuja {interval, select,\n  month {ja hallinnoida tai peruuttaa tilaustasi}\n  year {ja hallinnoida tai peruuttaa tilaustasi}\n  other {ja hallita tulevia lahjoituksia}\n} milloin tahansa käyttämällä tätä linkkiä:\n\n{manageUrl}\n\nTukesi auttaa pitämään {product_name}-palvelun toiminnassa. Kiitos!\n\n– {product_name}-tiimi"
 	},
 	"donation_magic_link": {
-		"subject": "Hallinnoi {product_name}-palvelun lahjoituksiasi",
+		"subject": "Hallitse {product_name}-lahjoituksiasi",
 		"body": "Hei,\n\nNapsauta alla olevaa linkkiä päästäksesi lahjoittajaportaaliisi:\n\n{manageUrl}\n\nPortaalissa voit hallinnoida tilauksia, ladata laskuja ja tarkastella lahjoitushistoriaasi.\n\nTämä linkki vanhenee {expiresAt, date, full} klo {expiresAt, time, short}.\n\nJos et pyytänyt tätä linkkiä, voit jättää tämän sähköpostin turvallisesti huomiotta.\n\n– {product_name}-tiimi"
 	},
 	"dsa_report_verification": {
-		"subject": "Vahvista sähköpostiosoite DSA-raporttia varten",
-		"body": "Hei,\n\nKäytä alla olevaa vahvistuskoodia lähettääksesi DSA-raporttisi {product_name}-palveluun:\n\n{code}\n\nTämä koodi vanhenee {expiresAt, date, full} klo {expiresAt, time, short}.\n\nJos et pyytänyt tätä, voit jättää tämän sähköpostin huomiotta.\n\n– {product_name}-turvallisuustiimi"
+		"subject": "Vahvista sähköpostiosoitteesi DSA-ilmoitusta varten",
+		"body": "Hei,\n\nKäytä alla olevaa vahvistuskoodia lähettääksesi digipalvelusäädöksen mukaisen ilmoituksen {product_name}-palveluun:\n\n{code}\n\nTämä koodi vanhenee {expiresAt, date, full} klo {expiresAt, time, short}.\n\nJos et pyytänyt tätä, voit jättää tämän sähköpostin huomiotta.\n\n– {product_name}-turvallisuustiimi"
 	},
 	"email_change_new": {
 		"subject": "Vahvista uusi sähköpostiosoitteesi {product_name}-tilillä",
@@ -33,7 +33,7 @@ const EMAIL_I18N_FI_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"email_change_original": {
 		"subject": "Vahvista sähköpostiosoitteen muutos {product_name}-tilillä",
-		"body": "Hei {username},\n\nSaimme pyynnön muuttaa sähköpostiosoitetta {product_name}-tililläsi.\n\nVahvistaaksesi tämän muutoksen, syötä tämä koodi sovellukseen:\n\n{code}\n\nTämä koodi vanhenee {expiresAt, date, full} klo {expiresAt, time, short}.\n\nJos et pyytänyt tätä, turvaa tilisi välittömästi.\n\n– {product_name}-tiimi"
+		"body": "Hei {username},\n\nSaimme pyynnön muuttaa sähköpostiosoitetta {product_name}-tililläsi.\n\nSyötä tämä koodi sovellukseen vahvistaaksesi muutoksen:\n\n{code}\n\nTämä koodi vanhenee {expiresAt, date, full} klo {expiresAt, time, short}.\n\nJos et pyytänyt tätä, turvaa tilisi välittömästi.\n\n– {product_name}-tiimi"
 	},
 	"email_change_revert": {
 		"subject": "{product_name}-tilisi sähköpostiosoite on vaihdettu",
@@ -57,15 +57,15 @@ const EMAIL_I18N_FI_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"ip_authorization": {
 		"subject": "Hyväksy kirjautuminen uudesta IP-osoitteesta",
-		"body": "Hei {username},\n\nHavaitsimme kirjautumisyrityksen {product_name}-tilillesi uudesta IP-osoitteesta:\n\nIP-osoite: {ipAddress}\nSijainti: {location}\n\nJos tämä olit sinä, valtuuta tämä IP-osoite napsauttamalla alla olevaa linkkiä:\n\n{authUrl}\n\nJos et yrittänyt kirjautua sisään, vaihda salasanasi välittömästi.\n\nTämä linkki on voimassa 30 minuuttia.\n\n– {product_name}-tiimi"
+		"body": "Hei {username},\n\nHavaitsimme kirjautumisyrityksen {product_name}-tilillesi uudesta IP-osoitteesta:\n\nIP-osoite: {ipAddress}\nSijainti: {location}\n\nJos yritit kirjautua sisään, hyväksy tämä IP-osoite napsauttamalla alla olevaa linkkiä:\n\n{authUrl}\n\nJos et yrittänyt kirjautua sisään, vaihda salasanasi välittömästi.\n\nTämä linkki on voimassa 30 minuuttia.\n\n– {product_name}-tiimi"
 	},
 	"mfa_backup_codes_view": {
-		"subject": "Vahvista pääsy {product_name}-tilisi varmuuskoodeihin",
-		"body": "Hei {username},\n\nSaimme pyynnön tarkastella varmuuskoodeja {product_name}-tililläsi.\n\nVahvistaaksesi tämän pyynnön, syötä tämä koodi sovellukseen:\n\n{code}\n\nTämä koodi vanhenee {expiresAt, date, full} klo {expiresAt, time, short}.\n\nJos et pyytänyt tätä, joku saattaa päästä tilillesi. Vaihda salasanasi välittömästi.\n\n– {product_name}-tiimi"
+		"subject": "Vahvista pääsy {product_name}-tilisi varakoodeihin",
+		"body": "Hei {username},\n\nSaimme pyynnön tarkastella varakoodeja {product_name}-tililläsi.\n\nSyötä tämä koodi sovellukseen vahvistaaksesi pyynnön:\n\n{code}\n\nTämä koodi vanhenee {expiresAt, date, full} klo {expiresAt, time, short}.\n\nJos et pyytänyt tätä, joku saattaa päästä tilillesi. Vaihda salasanasi välittömästi.\n\n– {product_name}-tiimi"
 	},
 	"password_change_verification": {
 		"subject": "Vahvista salasanan muutos {product_name}-tilillä",
-		"body": "Hei {username},\n\nSaimme pyynnön muuttaa salasanaa {product_name}-tililläsi.\n\nVahvistaaksesi tämän muutoksen, syötä tämä koodi sovellukseen:\n\n{code}\n\nTämä koodi vanhenee {expiresAt}.\n\nJos et pyytänyt tätä, joku saattaa päästä tilillesi. Vaihda salasanasi välittömästi ja ota käyttöön kaksivaiheinen todennus.\n\n– {product_name}-tiimi"
+		"body": "Hei {username},\n\nSaimme pyynnön muuttaa salasanaa {product_name}-tililläsi.\n\nSyötä tämä koodi sovellukseen vahvistaaksesi muutoksen:\n\n{code}\n\nTämä koodi vanhenee {expiresAt}.\n\nJos et pyytänyt tätä, joku saattaa päästä tilillesi. Vaihda salasanasi välittömästi ja ota käyttöön kaksivaiheinen todennus.\n\n– {product_name}-tiimi"
 	},
 	"password_reset": {
 		"subject": "Nollaa {product_name}-salasanasi",
@@ -76,8 +76,8 @@ const EMAIL_I18N_FI_MESSAGES = defineEmailI18nLocaleMessages({
 		"body": "Hei {username},\n\nHyviä uutisia: {product_name}-rekisteröitymisesi on hyväksytty.\n\nVoit nyt kirjautua {product_name}-sovellukseen täältä:\n{channelsUrl}\n\nTervetuloa {product_name}-yhteisöön.\n\n– {product_name}-tiimi"
 	},
 	"report_resolved": {
-		"subject": "{product_name}-raporttisi on tarkistettu",
-		"body": "Hei {username},\n\nTurvallisuustiimimme on tarkistanut raporttisi (ID: {reportId}).{hasComment, select, yes {\n\nTurvallisuustiimin vastaus:\n{publicComment}} other {}}\n\nKiitos, että autat pitämään {product_name}-palvelun turvallisena kaikille. Otamme kaikki raportit vakavasti ja arvostamme panostasi yhteisöön.\n\nJos sinulla on kysyttävää tai huolenaiheita tästä tuloksesta, ota yhteyttä osoitteeseen {safety_email}.\n\n– {product_name}-turvallisuustiimi"
+		"subject": "{product_name}-ilmoituksesi on käsitelty",
+		"body": "Hei {username},\n\nTurvallisuustiimimme on käsitellyt ilmoituksesi (ID: {reportId}).{hasComment, select, yes {\n\nTurvallisuustiimin vastaus:\n{publicComment}} other {}}\n\nKiitos, että autat pitämään {product_name}-palvelun turvallisena kaikille. Otamme kaikki ilmoitukset vakavasti ja arvostamme panostasi yhteisöön.\n\nJos sinulla on kysyttävää tai huolenaiheita tästä päätöksestä, ota yhteyttä osoitteeseen {safety_email}.\n\n– {product_name}-turvallisuustiimi"
 	},
 	"scheduled_deletion_notification": {
 		"subject": "Käyttäjätilisi {product_name}-palvelussa poistetaan pysyvästi",

@@ -211,12 +211,12 @@ export const DefaultShortcutRow: React.FC<{row: ShortcutRowModel; overriddenActi
 						data-flx="user.keybinds-tab.default-shortcut-row.default-chips-merged"
 					>
 						<DefaultShortcutChipList
-							chips={chipsForDefaultEntry(a)}
+							chips={chipsForDefaultEntry(i18n, a)}
 							overridden={overriddenActions.has(a.action)}
 							data-flx="user.keybinds-tab.default-shortcut-row.default-shortcut-chip-list"
 						/>
 						<DefaultShortcutChipList
-							chips={chipsForDefaultEntry(b)}
+							chips={chipsForDefaultEntry(i18n, b)}
 							overridden={overriddenActions.has(b.action)}
 							data-flx="user.keybinds-tab.default-shortcut-row.default-shortcut-chip-list--2"
 						/>
@@ -248,7 +248,7 @@ export const DefaultShortcutRow: React.FC<{row: ShortcutRowModel; overriddenActi
 				data-flx="user.keybinds-tab.default-shortcut-row.default-row-actions--2"
 			>
 				<DefaultShortcutChipList
-					chips={chipsForDefaultEntry(entry)}
+					chips={chipsForDefaultEntry(i18n, entry)}
 					overridden={overriddenActions.has(entry.action)}
 					data-flx="user.keybinds-tab.default-shortcut-row.default-shortcut-chip-list--3"
 				/>

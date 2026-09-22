@@ -339,6 +339,7 @@ impl Store {
                 reqwest::Body::wrap(SizedFileBody::new(file, options.content_length))
             }
             RelayBody::Streamed(chunks) => reqwest::Body::wrap_stream(chunks),
+            RelayBody::Buffered(bytes) => reqwest::Body::from(bytes),
         };
         let response = self
             .raw_client

@@ -191,6 +191,8 @@ export interface AuditLogSearchFilters {
 	targetType?: string;
 	targetId?: string;
 	action?: string;
+	actions?: Array<string>;
+	excludeActions?: Array<string>;
 	sortBy?: 'createdAt' | 'relevance';
 	sortOrder?: 'asc' | 'desc';
 }

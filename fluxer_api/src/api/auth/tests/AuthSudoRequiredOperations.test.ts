@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomBytes} from 'node:crypto';
+import {createAuthHarness, createTestAccount, loginAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {TotpGenerator} from '@app/api/utils/TotpGenerator';
 import type {AuthSessionResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import {TotpGenerator} from '../../utils/TotpGenerator';
-import {createAuthHarness, createTestAccount, loginAccount, type TestAccount} from './AuthTestUtils';
 
 interface BackupCodesResponse {
 	backup_codes: Array<{
@@ -193,9 +193,9 @@ describe('Auth sudo required operations', () => {
 		await createBuilder(harness, account.token)
 			.post('/users/@me/mfa/totp/disable')
 			.body({
-				code: backupCode,
+				code: 'invalid-code',
 			})
-			.expect(403)
+			.expect(400, 'INVALID_FORM_BODY')
 			.execute();
 		await createBuilder(harness, account.token)
 			.post('/users/@me/mfa/totp/disable')

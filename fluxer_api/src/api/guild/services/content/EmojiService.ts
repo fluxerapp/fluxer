@@ -1,5 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createEmojiID, type EmojiID, type GuildID, type UserID} from '@app/api/BrandedTypes';
+import {getContentMessage} from '@app/api/content_i18n/ContentI18n';
+import {mapGuildEmojisWithUsersToResponse, mapGuildEmojiToResponse} from '@app/api/guild/GuildModel';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {ContentHelpers} from '@app/api/guild/services/content/ContentHelpers';
+import type {ExpressionAssetPurger} from '@app/api/guild/services/content/ExpressionAssetPurger';
+import type {AvatarService} from '@app/api/infrastructure/AvatarService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {GuildEmoji} from '@app/api/models/GuildEmoji';
+import type {User} from '@app/api/models/User';
+import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
@@ -12,22 +28,6 @@ import {getErrorMessageUnsafe} from '@fluxer/errors/src/i18n/ErrorI18n';
 import {resolveLimit} from '@fluxer/limits/src/LimitResolver';
 import type {GuildEmojiResponse, GuildEmojiWithUserResponse} from '@fluxer/schema/src/domains/guild/GuildEmojiSchemas';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {createEmojiID, type EmojiID, type GuildID, type UserID} from '../../../BrandedTypes';
-import {getContentMessage} from '../../../content_i18n/ContentI18n';
-import type {AvatarService} from '../../../infrastructure/AvatarService';
-import type {IGatewayService} from '../../../infrastructure/IGatewayService';
-import type {ISnowflakeService} from '../../../infrastructure/ISnowflakeService';
-import type {UserCacheService} from '../../../infrastructure/UserCacheService';
-import type {LimitConfigService} from '../../../limits/LimitConfigService';
-import {createLimitMatchContext} from '../../../limits/LimitMatchContextBuilder';
-import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
-import type {GuildEmoji} from '../../../models/GuildEmoji';
-import type {User} from '../../../models/User';
-import {getCachedUserPartialResponse} from '../../../user/UserCacheHelpers';
-import {mapGuildEmojisWithUsersToResponse, mapGuildEmojiToResponse} from '../../GuildModel';
-import type {IGuildRepositoryAggregate} from '../../repositories/IGuildRepositoryAggregate';
-import type {ContentHelpers} from './ContentHelpers';
-import type {ExpressionAssetPurger} from './ExpressionAssetPurger';
 
 export class EmojiService {
 	constructor(
@@ -112,6 +112,7 @@ export class EmojiService {
 		const {animated, imageBuffer, contentType} = await this.avatarService.processEmoji({
 			errorPath: 'image',
 			base64Image: image,
+			guildFeatures,
 		});
 		const emojiId = createEmojiID(await this.snowflakeService.generate());
 		await this.avatarService.uploadEmoji({
@@ -156,7 +157,7 @@ export class EmojiService {
 		const sourceEmoji = await this.guildRepository.getEmojiById(sourceEmojiId);
 		if (!sourceEmoji) throw new UnknownGuildEmojiError();
 		const sourceGuild = await this.guildRepository.findUnique(sourceEmoji.guildId);
-		if (!sourceGuild || sourceGuild.features.has(GuildFeatures.CLONE_EMOJI_DISABLED)) {
+		if (!sourceGuild?.features.has(GuildFeatures.CLONE_EMOJI_ENABLED)) {
 			throw new MissingAccessError();
 		}
 		const guildData = await this.contentHelpers.getGuildData({userId: user.id, guildId});
@@ -243,6 +244,7 @@ export class EmojiService {
 				const {animated, imageBuffer, contentType} = await this.avatarService.processEmoji({
 					errorPath: `emojis[${success.length + failed.length}].image`,
 					base64Image: emojiData.image,
+					guildFeatures,
 				});
 				const emojiId = createEmojiID(await this.snowflakeService.generate());
 				await this.avatarService.uploadEmoji({

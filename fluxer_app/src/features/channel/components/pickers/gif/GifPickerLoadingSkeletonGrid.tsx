@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/channel/components/GifPicker.module.css';
+import {buildGifPickerLoadingSkeletonLayout} from '@app/features/channel/components/pickers/gif/GifPickerLoadingSkeletonGridLayout';
 import {motion, useReducedMotion} from 'framer-motion';
 import {useLayoutEffect, useMemo, useRef, useState} from 'react';
-import {buildGifPickerLoadingSkeletonLayout} from './GifPickerLoadingSkeletonGridLayout';
 
 interface SkeletonViewportSize {
 	width: number;

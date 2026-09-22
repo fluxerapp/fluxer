@@ -3,16 +3,17 @@
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {useTextOverflow} from '@app/features/app/hooks/useTextOverflow';
 import styles from '@app/features/input/components/modals/KeyboardShortcutsCheatsheetModal.module.css';
-import Keybind, {type KeybindConfig, type KeybindSection, type KeyCombo} from '@app/features/input/state/InputKeybind';
-import {formatKeyCombo} from '@app/features/input/utils/KeybindUtils';
+import Keybind, {type KeybindConfig, type KeybindSection} from '@app/features/input/state/InputKeybind';
+import {formatKeyComboParts} from '@app/features/input/utils/KeybindUtils';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
 import {
 	chipsForDefaultEntry,
 	DEFAULT_KEYBIND_SECTIONS,
 	sortBySectionDisplayOrder,
 } from '@app/features/user/components/modals/tabs/keybinds_tab/shared';
+import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
-import {Trans, useLingui} from '@lingui/react/macro';
+import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useMemo, useRef} from 'react';
@@ -56,18 +57,13 @@ interface CheatsheetShortcut {
 	chipGroups: Array<Array<string>>;
 }
 
-function chipsForCombo(combo: KeyCombo): Array<string> {
-	const formatted = formatKeyCombo(combo);
-	return formatted ? formatted.split(' + ') : [];
-}
-
-function getShortcutChipGroups(entry: KeybindConfig, hasCustomBinding: boolean): Array<Array<string>> {
+function getShortcutChipGroups(i18n: I18n, entry: KeybindConfig, hasCustomBinding: boolean): Array<Array<string>> {
 	if (!hasCustomBinding) {
-		const chips = chipsForDefaultEntry(entry);
+		const chips = chipsForDefaultEntry(i18n, entry);
 		return chips.length > 0 ? [chips] : [];
 	}
 	return Keybind.getActiveCombosForAction(entry.action)
-		.map(chipsForCombo)
+		.map((combo) => formatKeyComboParts(i18n, combo))
 		.filter((chips) => chips.length > 0);
 }
 
@@ -97,7 +93,7 @@ const ShortcutChipGroups: React.FC<{groups: Array<Array<string>>}> = ({groups}) 
 						key={`${chipIndex}-${chip}`}
 						data-flx="input.keyboard-shortcuts-cheatsheet-modal.chip"
 					>
-						{chip === 'ANY KEY' ? <Trans>Any key</Trans> : chip}
+						{chip}
 					</kbd>
 				))}
 			</div>
@@ -138,7 +134,7 @@ export const KeyboardShortcutsCheatsheetModal = observer(() => {
 		for (const sectionId of DEFAULT_KEYBIND_SECTIONS) {
 			const entries = defaults.filter((entry) => entry.section === sectionId && !entry.hideFromDefaults);
 			for (const entry of sortBySectionDisplayOrder(sectionId, entries)) {
-				const chipGroups = getShortcutChipGroups(entry, customActions.has(entry.action));
+				const chipGroups = getShortcutChipGroups(i18n, entry, customActions.has(entry.action));
 				if (chipGroups.length === 0) continue;
 				result[sectionId].push({
 					action: entry.action,
@@ -148,7 +144,7 @@ export const KeyboardShortcutsCheatsheetModal = observer(() => {
 			}
 		}
 		return result;
-	}, [customActions, defaults]);
+	}, [customActions, defaults, i18n, i18n.locale]);
 	return (
 		<Modal.Root size="xlarge" data-flx="input.keyboard-shortcuts-cheatsheet-modal.modal-root">
 			<Modal.ScreenReaderLabel

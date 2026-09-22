@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {EMPTY_USER_ROW, type UserRow} from '@app/api/database/types/UserTypes';
+import {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {IUsersServiceClient} from '@app/api/infrastructure/UsersServiceClient';
+import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import {User} from '@app/api/models/User';
 import {DELETED_USER_GLOBAL_NAME, DELETED_USER_USERNAME} from '@fluxer/constants/src/UserConstants';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {describe, expect, it} from 'vitest';
-import {createUserID, type UserID} from '../BrandedTypes';
-import {EMPTY_USER_ROW, type UserRow} from '../database/types/UserTypes';
-import {createRequestCache} from '../middleware/RequestCacheMiddleware';
-import {User} from '../models/User';
-import {UserCacheService} from './UserCacheService';
-import type {IUsersServiceClient} from './UsersServiceClient';
 
 class FakeUsersServiceClient implements IUsersServiceClient {
 	readonly requests: Array<Array<UserID>> = [];

@@ -136,7 +136,7 @@ const BUILT_IN_SHORTCUTS_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const MESSAGES_SHORTCUTS_DESCRIPTOR = msg({
-	message: 'Messages shortcuts',
+	message: 'Message shortcuts',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const NAVIGATION_SHORTCUTS_DESCRIPTOR = msg({
@@ -177,6 +177,7 @@ const MUTE_SHORTCUT_DESCRIPTOR = msg({
 });
 const MUTE_DESCRIPTOR = msg({
 	message: 'Mute',
+	context: 'voice-control-action',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const TOGGLE_MUTE_DESCRIPTOR = msg({

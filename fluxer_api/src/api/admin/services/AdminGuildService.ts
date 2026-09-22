@@ -1,24 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {AdminGuildLookupService} from '@app/api/admin/services/guild/AdminGuildLookupService';
+import {AdminGuildManagementService} from '@app/api/admin/services/guild/AdminGuildManagementService';
+import {AdminGuildMembershipService} from '@app/api/admin/services/guild/AdminGuildMembershipService';
+import {AdminGuildUpdatePropagator} from '@app/api/admin/services/guild/AdminGuildUpdatePropagator';
+import {AdminGuildUpdateService} from '@app/api/admin/services/guild/AdminGuildUpdateService';
+import {AdminGuildVanityService} from '@app/api/admin/services/guild/AdminGuildVanityService';
+import {createGuildID, createUserID} from '@app/api/BrandedTypes';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {IGuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildService} from '@app/api/guild/services/GuildService';
+import type {EntityAssetService} from '@app/api/infrastructure/EntityAssetService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {InviteRepository} from '@app/api/invite/InviteRepository';
+import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
 import type {ListGuildAuditLogsRequest} from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
-import {createGuildID, createUserID} from '../../BrandedTypes';
-import type {IChannelRepository} from '../../channel/IChannelRepository';
-import type {IGuildDiscoveryRepository} from '../../guild/repositories/GuildDiscoveryRepository';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import type {GuildService} from '../../guild/services/GuildService';
-import type {EntityAssetService} from '../../infrastructure/EntityAssetService';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {InviteRepository} from '../../invite/InviteRepository';
-import {createRequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {IUserRepository} from '../../user/IUserRepository';
-import type {AdminAuditService} from './AdminAuditService';
-import {AdminGuildBulkService} from './guild/AdminGuildBulkService';
-import {AdminGuildLookupService} from './guild/AdminGuildLookupService';
-import {AdminGuildManagementService} from './guild/AdminGuildManagementService';
-import {AdminGuildMembershipService} from './guild/AdminGuildMembershipService';
-import {AdminGuildUpdatePropagator} from './guild/AdminGuildUpdatePropagator';
-import {AdminGuildUpdateService} from './guild/AdminGuildUpdateService';
-import {AdminGuildVanityService} from './guild/AdminGuildVanityService';
 
 interface AdminGuildServiceDeps {
 	guildRepository: IGuildRepositoryAggregate;
@@ -37,7 +36,6 @@ export class AdminGuildService {
 	readonly updateService: AdminGuildUpdateService;
 	readonly vanityService: AdminGuildVanityService;
 	readonly membershipService: AdminGuildMembershipService;
-	readonly bulkService: AdminGuildBulkService;
 	readonly managementService: AdminGuildManagementService;
 	private readonly updatePropagator: AdminGuildUpdatePropagator;
 	private readonly guildService: GuildService;
@@ -69,10 +67,6 @@ export class AdminGuildService {
 		this.membershipService = new AdminGuildMembershipService({
 			userRepository: deps.userRepository,
 			guildService: deps.guildService,
-			auditService: deps.auditService,
-		});
-		this.bulkService = new AdminGuildBulkService({
-			guildUpdateService: this.updateService,
 			auditService: deps.auditService,
 		});
 		this.managementService = new AdminGuildManagementService({

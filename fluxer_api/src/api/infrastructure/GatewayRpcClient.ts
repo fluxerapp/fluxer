@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import {GatewayRpcMethodError, GatewayRpcMethodErrorCodes} from '@app/api/infrastructure/GatewayRpcError';
+import type {IGatewayRpcTransport} from '@app/api/infrastructure/IGatewayRpcTransport';
+import type {CallData} from '@app/api/infrastructure/IGatewayService';
+import {NatsGatewayRpcTransport} from '@app/api/infrastructure/NatsGatewayRpcTransport';
+import {Logger} from '@app/api/Logger';
 import {NatsConnectionManager} from '@pkgs/nats/src/NatsConnectionManager';
 import {ms} from 'itty-time';
-import {Config} from '../Config';
-import {Logger} from '../Logger';
-import {GatewayRpcMethodError, GatewayRpcMethodErrorCodes} from './GatewayRpcError';
-import type {IGatewayRpcTransport} from './IGatewayRpcTransport';
-import type {CallData} from './IGatewayService';
-import {NatsGatewayRpcTransport} from './NatsGatewayRpcTransport';
 
 const MAX_RETRY_ATTEMPTS = 2;
 

@@ -459,7 +459,7 @@ const ChannelPermissionsTab: React.FC<{channelId: string}> = observer(({channelI
 		],
 	);
 	const isSyncedWithParent = useMemo(() => {
-		if (!channel || !channel.parentId || !parentChannel || !parentChannel.isGuildCategory()) return null;
+		if (!channel?.parentId || !parentChannel?.isGuildCategory()) return null;
 		const channelOverwrites = channel.permissionOverwrites || {};
 		const parentOverwrites = parentChannel.permissionOverwrites || {};
 		const channelKeys = Object.keys(channelOverwrites).sort();

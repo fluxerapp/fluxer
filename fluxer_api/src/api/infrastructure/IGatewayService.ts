@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID, MessageID, RoleID, UserID} from '@app/api/BrandedTypes';
+import type {GatewayDispatchEvent} from '@app/api/constants/Gateway';
 import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import type {ChannelID, GuildID, MessageID, RoleID, UserID} from '../BrandedTypes';
-import type {GatewayDispatchEvent} from '../constants/Gateway';
 
 interface VoiceState {
 	user_id: string;
@@ -88,17 +88,6 @@ export interface GatewayVoiceStateCounts {
 	servers: Array<GatewayVoiceStateServerCount>;
 }
 
-export interface GatewayActiveVoiceRoom {
-	guildId?: GuildID;
-	channelId: ChannelID;
-	voiceStateCount: number;
-}
-
-export interface GatewayActiveVoiceRooms {
-	rooms: Array<GatewayActiveVoiceRoom>;
-	nodeCount: number;
-}
-
 export interface GatewayVoiceStateEntry {
 	connectionId: string;
 	userId: string;
@@ -161,8 +150,6 @@ export abstract class IGatewayService {
 	abstract getGuildMemoryStats(limit: number): Promise<GatewayGuildMemoryStats>;
 
 	abstract getVoiceStateCounts(): Promise<GatewayVoiceStateCounts>;
-
-	abstract getActiveVoiceRooms(): Promise<GatewayActiveVoiceRooms>;
 
 	abstract getUsersToMentionByRoles(params: {
 		guildId: GuildID;
@@ -342,17 +329,6 @@ export abstract class IGatewayService {
 		tokenNonce?: string;
 	}): Promise<{
 		success: boolean;
-		error?: string;
-	}>;
-
-	abstract repairVoiceStateFromCache(params: {
-		guildId?: GuildID;
-		channelId: ChannelID;
-		userId: UserID;
-		connectionId: string;
-	}): Promise<{
-		success: boolean;
-		repaired?: boolean;
 		error?: string;
 	}>;
 

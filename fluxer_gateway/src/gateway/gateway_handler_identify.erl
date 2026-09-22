@@ -350,12 +350,6 @@ session_start_error_action(_) ->
     unknown.
 
 -spec log_session_start_error(term(), state()) -> ws_result().
-log_session_start_error({retries_exhausted, Reason}, State) ->
-    logger:error(
-        "Session start failed after retries: last_error=~p peer_ip=~ts",
-        [Reason, maps:get(peer_ip, State, <<"unknown">>)]
-    ),
-    gateway_handler_encode:close_with_reason(unknown_error, <<"Session start failed">>, State);
 log_session_start_error(Reason, State) ->
     logger:error(
         "Session start failed: reason=~p peer_ip=~ts",

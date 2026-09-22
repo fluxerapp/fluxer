@@ -11,26 +11,24 @@
 	pointer-events: none;
 }
 
-:global([data-flx-action-bar]:hover) .actionBarContainer,
 :global([data-flx-action-bar]) .actionBarContainer:has(:focus-visible) {
 	opacity: 1;
 	visibility: visible;
 	pointer-events: auto;
 }
 
+:global([data-flx-action-bar][data-flx-action-bar-active]) .actionBarContainer {
+	opacity: 1;
+	visibility: visible;
+	pointer-events: auto;
+}
+
 @media (pointer: coarse) {
-	:global([data-flx-action-bar]:not([data-flx-action-bar-forced]):hover) .actionBarContainer {
+	:global([data-flx-action-bar]:not([data-flx-action-bar-forced])) .actionBarContainer:not(:has(:focus-visible)) {
 		opacity: 0;
 		visibility: hidden;
 		pointer-events: none;
 	}
-}
-
-:global([data-flx-action-bar][data-flx-action-bar-forced]) .actionBarContainer,
-.actionBarContainer.actionBarPinned {
-	opacity: 1;
-	visibility: visible;
-	pointer-events: auto;
 }
 
 :global(html:not(.window-focused):not(.unfocused-fully-interactive)) .actionBarContainer,

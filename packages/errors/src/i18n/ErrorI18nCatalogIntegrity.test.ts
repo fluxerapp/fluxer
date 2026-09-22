@@ -5,7 +5,8 @@ import * as path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {getErrorMessageResult} from '@fluxer/errors/src/i18n/ErrorI18n';
 import {ERROR_I18N_LOCALE_MESSAGES} from '@fluxer/errors/src/i18n/ErrorI18nLocales';
-import {ERROR_I18N_MESSAGES} from '@fluxer/errors/src/i18n/ErrorI18nMessages';
+import {ERROR_I18N_MESSAGES, type ErrorI18nKey} from '@fluxer/errors/src/i18n/ErrorI18nMessages';
+import type {I18nResult} from '@fluxer/i18n/src/runtime/I18nTypes';
 import {extractMessageTemplateVariables} from '@fluxer/i18n/src/runtime/MessageCatalogTypes';
 import {parse, type Token} from '@messageformat/parser';
 import {describe, expect, it} from 'vitest';
@@ -28,7 +29,7 @@ type ErrorMessageProbe = (
 	key: string,
 	locale: string,
 	variables: Record<string, number>,
-) => ReturnType<typeof getErrorMessageResult>;
+) => I18nResult<ErrorI18nKey, string>;
 
 const probeErrorMessage = getErrorMessageResult as unknown as ErrorMessageProbe;
 

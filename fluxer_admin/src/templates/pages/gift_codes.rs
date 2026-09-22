@@ -16,7 +16,7 @@ use crate::{
 };
 use maud::{Markup, html};
 
-const MAX_GIFT_CODES: u32 = 100;
+pub const MAX_GIFT_CODES: u32 = 100;
 const DEFAULT_GIFT_COUNT: u32 = 10;
 
 pub fn gift_codes_page(
@@ -44,12 +44,12 @@ pub fn gift_codes_page(
                     (csrf_input(csrf_token))
                     div class="flex flex-col gap-4" {
                         (form_field_group(
-                            "Number of codes", "gift-count-slider", false, None,
+                            "Number of codes", "gift-count-slider", true, None,
                             Some(&format!("Range: 1-{MAX_GIFT_CODES}")),
                             html! {
                                 input type="number" id="gift-count-slider" name="count"
                                     value=(DEFAULT_GIFT_COUNT) min="1"
-                                    max=(MAX_GIFT_CODES)
+                                    max=(MAX_GIFT_CODES) required
                                     class=(FORM_INPUT_CLASS);
                             },
                         ))

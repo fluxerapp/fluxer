@@ -8,6 +8,7 @@ const DEFAULT_DISCOVERY_PAGE_SIZE = 36;
 
 class Discovery {
 	guilds: Array<DiscoveryGuild> = [];
+	loadedCount = 0;
 	total = 0;
 	loading = false;
 	error = false;
@@ -53,6 +54,7 @@ class Discovery {
 			this.error = false;
 			if (offset === 0 && searchModeChanged) {
 				this.guilds = [];
+				this.loadedCount = 0;
 				this.total = 0;
 			}
 			this.query = query;
@@ -78,8 +80,10 @@ class Discovery {
 				if (offset === 0) {
 					this.guilds = result.guilds;
 				} else {
-					this.guilds = [...this.guilds, ...result.guilds];
+					const seen = new Set(this.guilds.map((guild) => guild.id));
+					this.guilds = [...this.guilds, ...result.guilds.filter((guild) => !seen.has(guild.id))];
 				}
+				this.loadedCount = offset + result.guilds.length;
 				this.total = result.total;
 				this.categoryCounts = result.categoryCounts;
 				this.loading = false;
@@ -136,6 +140,7 @@ class Discovery {
 	reset(): void {
 		this.activeSearchToken += 1;
 		this.guilds = [];
+		this.loadedCount = 0;
 		this.total = 0;
 		this.categoryCounts = null;
 		this.loading = false;

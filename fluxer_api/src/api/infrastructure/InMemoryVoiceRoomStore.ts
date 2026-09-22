@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, GuildID} from '../BrandedTypes';
+import type {ChannelID, GuildID} from '@app/api/BrandedTypes';
 
 export class InMemoryVoiceRoomStore {
 	async pinRoomServer(

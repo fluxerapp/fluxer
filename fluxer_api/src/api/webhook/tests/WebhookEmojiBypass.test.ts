@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createGuild} from '../../guild/tests/GuildTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createGuild} from '@app/api/guild/tests/GuildTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {
 	createGuildEmoji,
 	createGuildEmojiWithFile,
@@ -12,7 +11,8 @@ import {
 	executeWebhook,
 	grantCreateExpressionsPermission,
 	grantStaffAccess,
-} from './WebhookTestUtils';
+} from '@app/api/webhook/tests/WebhookTestUtils';
+import {beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 describe('Webhook emoji bypass', () => {
 	let harness: ApiTestHarness;

@@ -5,6 +5,7 @@ import {Mutex} from '@livekit/mutex';
 import {SignalTarget} from '@livekit/protocol';
 import log, {getLogger, LoggerNames} from '../logger.ts';
 import TypedPromise from '../utils/TypedPromise.ts';
+import type {Throws} from '../utils/throws.ts';
 import {roomConnectOptionDefaults} from './defaults.ts';
 import {ConnectionError, NegotiationError} from './errors.ts';
 import PCTransport, {PCEvents} from './PCTransport.ts';
@@ -36,7 +37,6 @@ function describeIceCandidateErrorEvent(event: Event) {
 		port: typeof candidateError.port === 'number' ? candidateError.port : undefined,
 	};
 }
-
 export class PCTransportManager {
 	public publisher: PCTransport;
 
@@ -82,6 +82,8 @@ export class PCTransportManager {
 
 	private log = log;
 
+	private iceLog = log;
+
 	private loggerOptions: LoggerOptions;
 
 	private _mode: PCMode;
@@ -91,32 +93,23 @@ export class PCTransportManager {
 	get mode(): PCMode {
 		return this._mode;
 	}
-
 	constructor(
-		rtcConfig: RTCConfiguration,
 		mode: PCMode,
 		loggerOptions: LoggerOptions,
+		rtcConfig?: RTCConfiguration,
 		subscriberVideoCodecExclusions?: Array<VideoCodec>,
+		screenShareDelivery: boolean = false,
 	) {
-		this.log = getLogger(loggerOptions.loggerName ?? LoggerNames.PCManager);
 		this.loggerOptions = loggerOptions;
+		this.log = getLogger(loggerOptions.loggerName ?? LoggerNames.PCManager, () => this.logContext);
+		this.iceLog = getLogger(LoggerNames.ICE, () => this.logContext);
 
 		this.isPublisherConnectionRequired = mode !== 'subscriber-primary';
 		this.isSubscriberConnectionRequired = mode === 'subscriber-primary';
-		this.publisher = new PCTransport(rtcConfig, loggerOptions);
-		if (subscriberVideoCodecExclusions?.length) {
-			for (const codec of subscriberVideoCodecExclusions) {
-				this.publisher.excludedVideoDecoderMimeTypes.add(`video/${codec}`);
-			}
-		}
+		this.publisher = new PCTransport(rtcConfig, loggerOptions, screenShareDelivery);
 		this._mode = mode;
 		if (mode !== 'publisher-only') {
-			this.subscriber = new PCTransport(rtcConfig, loggerOptions);
-			if (subscriberVideoCodecExclusions?.length) {
-				for (const codec of subscriberVideoCodecExclusions) {
-					this.subscriber.excludedVideoDecoderMimeTypes.add(`video/${codec}`);
-				}
-			}
+			this.subscriber = new PCTransport(rtcConfig, loggerOptions, screenShareDelivery);
 			this.subscriber.onConnectionStateChange = this.updateState;
 			this.subscriber.onIceConnectionStateChange = this.updateState;
 			this.subscriber.onSignalingStatechange = this.updateState;
@@ -132,6 +125,13 @@ export class PCTransportManager {
 			this.subscriber.onTrack = (ev) => {
 				this.onTrack?.(ev);
 			};
+		}
+
+		const receivingTransport = screenShareDelivery ? (this.subscriber ?? this.publisher) : this.subscriber;
+		if (receivingTransport) {
+			for (const codec of subscriberVideoCodecExclusions ?? []) {
+				receivingTransport.excludedVideoDecoderMimeTypes.add(`video/${codec}`);
+			}
 		}
 
 		this.publisher.onConnectionStateChange = this.updateState;
@@ -233,7 +233,7 @@ export class PCTransportManager {
 						publisher.removeTrack(sender);
 					}
 				} catch (e) {
-					this.log.warn('could not removeTrack', {...this.logContext, error: e});
+					this.log.warn('could not removeTrack', {error: e});
 				}
 			}
 		}
@@ -243,15 +243,14 @@ export class PCTransportManager {
 
 	async triggerIceRestart() {
 		this.seenIceCandidateErrorKeys.clear();
-		if (this.subscriber) {
-			this.subscriber.restartingIce = true;
-		}
+		this.iceLog.warn('triggering ICE restart');
 		if (this.needsPublisher) {
 			await this.createAndSendPublisherOffer({iceRestart: true});
 		}
 	}
 
 	async addIceCandidate(candidate: RTCIceCandidateInit, target: SignalTarget) {
+		this.iceLog.debug('adding remote ICE candidate', {target, candidate});
 		if (target === SignalTarget.PUBLISHER) {
 			await this.publisher.addIceCandidate(candidate);
 		} else {
@@ -261,7 +260,6 @@ export class PCTransportManager {
 
 	async createSubscriberAnswerFromOffer(sd: RTCSessionDescriptionInit, offerId: number) {
 		this.log.debug('received server offer', {
-			...this.logContext,
 			RTCSdpType: sd.type,
 			sdp: sd.sdp,
 			signalingState: this.subscriber?.getSignallingState().toString(),
@@ -281,6 +279,7 @@ export class PCTransportManager {
 	}
 
 	updateConfiguration(config: RTCConfiguration, iceRestart?: boolean) {
+		this.log.debug('updating rtc configuration', {iceRestart});
 		this.publisher.setConfiguration(config);
 		this.subscriber?.setConfiguration(config);
 		if (iceRestart) {
@@ -296,7 +295,7 @@ export class PCTransportManager {
 				this.publisher.getConnectionState() !== 'connected' &&
 				this.publisher.getConnectionState() !== 'connecting'
 			) {
-				this.log.debug('negotiation required, start negotiating', this.logContext);
+				this.log.debug('negotiation required, start negotiating');
 				this.publisher.negotiate();
 			}
 			await Promise.all(
@@ -307,42 +306,46 @@ export class PCTransportManager {
 		}
 	}
 
-	async negotiate(abortController: AbortController) {
-		return new TypedPromise<void, NegotiationError | Error>(async (resolve, reject) => {
-			let negotiationTimeout = setTimeout(() => {
-				reject(new NegotiationError('negotiation timed out'));
-			}, this.peerConnectionTimeout);
+	async negotiate(abortController: AbortController): Promise<Throws<void, NegotiationError | Error>> {
+		return new TypedPromise<void, NegotiationError | Error>((resolve, reject) => {
+			const checkpoint = this.publisher.latestOfferId;
 
+			if (this.publisher.latestAcknowledgedOfferId > checkpoint) {
+				this.log.debug(`negotiation already handled in more recent acknowledged offer`, this.logContext);
+				resolve();
+				return;
+			}
+
+			let cleanedUp = false;
 			const cleanup = () => {
-				clearTimeout(negotiationTimeout);
-				this.publisher.off(PCEvents.NegotiationStarted, onNegotiationStarted);
-				abortController.signal.removeEventListener('abort', abortHandler);
+				if (cleanedUp) return;
+				cleanedUp = true;
+				clearTimeout(deadlineTimer);
+				this.publisher.off(PCEvents.OfferAnswered, onAnswered);
+				abortController.signal.removeEventListener('abort', onAbort);
 			};
 
-			const abortHandler = () => {
+			const onAnswered = (offerId: number) => {
+				if (offerId > checkpoint) {
+					cleanup();
+					resolve();
+				}
+			};
+
+			const onAbort = () => {
 				cleanup();
 				reject(new NegotiationError('negotiation aborted'));
 			};
 
-			const onNegotiationStarted = () => {
-				if (abortController.signal.aborted) {
-					return;
-				}
-				clearTimeout(negotiationTimeout);
-				negotiationTimeout = setTimeout(() => {
-					cleanup();
-					reject(new NegotiationError('negotiation timed out'));
-				}, this.peerConnectionTimeout);
-			};
-
-			abortController.signal.addEventListener('abort', abortHandler);
-			this.publisher.on(PCEvents.NegotiationStarted, onNegotiationStarted);
-			this.publisher.once(PCEvents.NegotiationComplete, () => {
+			const deadlineTimer = setTimeout(() => {
 				cleanup();
-				resolve();
-			});
+				reject(new NegotiationError('negotiation timed out'));
+			}, this.peerConnectionTimeout);
 
-			await this.publisher.negotiate((e) => {
+			abortController.signal.addEventListener('abort', onAbort);
+			this.publisher.on(PCEvents.OfferAnswered, onAnswered);
+
+			this.publisher.negotiate((e) => {
 				cleanup();
 				if (e instanceof Error) {
 					reject(e);
@@ -365,6 +368,10 @@ export class PCTransportManager {
 		const transceivers = this.subscriber ? this.subscriber.getTransceivers() : this.publisher.getTransceivers();
 		const matchingTransceiver = transceivers.find((transceiver) => transceiver.receiver === receiver);
 		return matchingTransceiver?.mid;
+	}
+
+	getMaxPublisherMessageSize() {
+		return this.publisher.getMaxMessageSize();
 	}
 
 	addPublisherTrack(track: MediaStreamTrack) {
@@ -414,10 +421,7 @@ export class PCTransportManager {
 		}
 
 		if (previousState !== this.state) {
-			this.log.debug(
-				`pc state change: from ${PCTransportState[previousState]} to ${PCTransportState[this.state]}`,
-				this.logContext,
-			);
+			this.log.debug(`pc state change: from ${PCTransportState[previousState]} to ${PCTransportState[this.state]}`);
 			this.onStateChange?.(this.state, this.publisher.getConnectionState(), this.subscriber?.getConnectionState());
 		}
 	};
@@ -448,7 +452,7 @@ export class PCTransportManager {
 				reject(error);
 			};
 			const abortHandler = () => {
-				this.log.warn('abort transport connection', this.logContext);
+				this.log.warn('abort transport connection');
 				rejectOnce(ConnectionError.cancelled('room connection has been cancelled'));
 			};
 			if (abortController?.signal.aborted) {

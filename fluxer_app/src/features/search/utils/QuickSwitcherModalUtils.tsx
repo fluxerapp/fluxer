@@ -66,14 +66,9 @@ const MESSAGE_1_MENTION_DESCRIPTOR = msg({
 	message: '1 mention',
 	comment: 'Badge text on a quick switcher row when the channel has exactly one mention.',
 });
-const MESSAGE_1_UNREAD_DESCRIPTOR = msg({
-	message: '1 unread',
-	comment: 'Badge text on a quick switcher row when the channel has exactly one unread message.',
-});
 const UNREAD_DESCRIPTOR = msg({
-	message: '{unreadCount} unread',
-	comment:
-		'Badge text on a quick switcher row when the channel has multiple unread messages. unreadCount is the count.',
+	message: '{unreadCount, plural, one {# unread} other {# unread}}',
+	comment: 'Badge text on a quick switcher row when the channel has unread messages. unreadCount is the integer count.',
 });
 
 export interface QuickSwitcherSection {
@@ -299,7 +294,7 @@ export function getQuickSwitcherResultAccessibilityMetadata(
 		);
 	}
 	if (unreadCount > 0) {
-		labelParts.push(unreadCount === 1 ? i18n._(MESSAGE_1_UNREAD_DESCRIPTOR) : i18n._(UNREAD_DESCRIPTOR, {unreadCount}));
+		labelParts.push(i18n._(UNREAD_DESCRIPTOR, {unreadCount}));
 	}
 	return {
 		guildName,

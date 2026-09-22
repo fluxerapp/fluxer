@@ -15,7 +15,7 @@
 		"paths": {
 			"@electron/*": ["./src/*"],
 			"@fluxer/voice_engine_v2": ["../packages/voice_engine_v2/src/index.ts"],
-			"@fluxer/voice_engine_v2/*": ["../packages/voice_engine_v2/src/*"]
+			"@fluxer/voice_engine_v2/*": ["../packages/voice_engine_v2/*"]
 		}
 	},
 	"include": ["src/**/*", "../packages/voice_engine_v2/src/**/*"],

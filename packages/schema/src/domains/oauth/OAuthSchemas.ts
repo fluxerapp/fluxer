@@ -1,18 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {ApplicationFlags, BotFlags, BotFlagsDescriptions} from '@fluxer/constants/src/BotConstants';
-import {AVATAR_MAX_SIZE} from '@fluxer/constants/src/LimitConstants';
-import {
-	PublicUserFlags,
-	PublicUserFlagsDescriptions,
-	UserAuthenticatorTypes,
-	UserAuthenticatorTypesDescriptions,
-} from '@fluxer/constants/src/UserConstants';
+import {AVATAR_MAX_SIZE, MAX_APPLICATION_REDIRECT_URIS} from '@fluxer/constants/src/LimitConstants';
+import {PublicUserFlags, PublicUserFlagsDescriptions} from '@fluxer/constants/src/UserConstants';
 import {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {createBase64StringType} from '@fluxer/schema/src/primitives/FileValidators';
+import {base64LengthForBytes, createBase64StringType} from '@fluxer/schema/src/primitives/FileValidators';
 import {
 	createBitflagInt32Type,
-	createInt32EnumType,
 	createNamedObject,
 	createNamedStringLiteralUnion,
 	createStringType,
@@ -21,6 +15,7 @@ import {
 	SnowflakeType,
 	withOpenApiType,
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {UserAuthenticatorTypesSchema} from '@fluxer/schema/src/primitives/UserSettingsValidators';
 import {DiscriminatorType, UsernameType} from '@fluxer/schema/src/primitives/UserValidators';
 import {z} from 'zod';
 
@@ -34,14 +29,7 @@ const RedirectURIString = createStringType(1).refine((value) => {
 }, 'Invalid URL format');
 
 const AuthenticatorTypeEnum = withOpenApiType(
-	createInt32EnumType(
-		[
-			[UserAuthenticatorTypes.TOTP, 'TOTP', UserAuthenticatorTypesDescriptions.TOTP],
-			[UserAuthenticatorTypes.WEBAUTHN, 'WEBAUTHN', UserAuthenticatorTypesDescriptions.WEBAUTHN],
-		],
-		'The type of authenticator',
-		'AuthenticatorType',
-	),
+	UserAuthenticatorTypesSchema.describe('The type of authenticator'),
 	'AuthenticatorType',
 );
 const PromptType = withOpenApiType(
@@ -87,23 +75,10 @@ export const AuthorizeRequest = z.object({
 
 export type AuthorizeRequest = z.infer<typeof AuthorizeRequest>;
 
-export const AuthorizeConsentRequest = z.object({
+export const AuthorizeConsentRequest = AuthorizeRequest.omit({prompt: true, disable_guild_select: true}).extend({
 	response_type: z.string().optional().describe('The OAuth2 response type'),
-	client_id: SnowflakeType.describe('The application client ID'),
-	redirect_uri: RedirectURIString.optional().describe('The URI to redirect to after authorization'),
-	scope: createStringType(1).describe('The space-separated list of requested scopes'),
-	state: createStringType(1).optional().describe('A random string for CSRF protection'),
-	permissions: z.string().optional().describe('The bot permissions to request'),
-	guild_id: SnowflakeType.optional().describe('The guild ID to add the bot to'),
-	channel_id: SnowflakeType.optional().describe('The group DM channel ID to add the bot to'),
-	code_challenge: createStringType(1).optional().describe('The PKCE code challenge'),
-	code_challenge_method: createNamedStringLiteralUnion(
-		[
-			['S256', 'S256', 'SHA-256 hash of code verifier'],
-			['plain', 'PLAIN', 'Plain text code verifier'],
-		] as const,
-		'The PKCE code challenge method',
-	).optional(),
+	guild_id: AuthorizeRequest.shape.guild_id.describe('The guild ID to add the bot to'),
+	channel_id: AuthorizeRequest.shape.channel_id.describe('The group DM channel ID to add the bot to'),
 });
 
 export type AuthorizeConsentRequest = z.infer<typeof AuthorizeConsentRequest>;
@@ -145,11 +120,9 @@ const TokenTypeHint = withOpenApiType(
 	),
 	'TokenTypeHint',
 );
-export const RevokeRequestForm = z.object({
-	token: createStringType(1).describe('The token to revoke'),
+export const RevokeRequestForm = IntrospectRequestForm.extend({
+	token: IntrospectRequestForm.shape.token.describe('The token to revoke'),
 	token_type_hint: TokenTypeHint.optional(),
-	client_id: SnowflakeType.optional().describe('The application client ID'),
-	client_secret: createStringType(1).optional().describe('The application client secret'),
 });
 
 export type RevokeRequestForm = z.infer<typeof RevokeRequestForm>;
@@ -173,10 +146,15 @@ const ApplicationBotResponse = z
 	})
 	.describe('Detailed bot user metadata');
 
+export type ApplicationBotResponse = z.infer<typeof ApplicationBotResponse>;
+
 export const ApplicationResponse = z.object({
 	id: SnowflakeStringType.describe('The unique identifier of the application'),
 	name: z.string().describe('The name of the application'),
-	redirect_uris: z.array(z.string()).max(20).describe('The registered redirect URIs for OAuth2'),
+	redirect_uris: z
+		.array(z.string())
+		.max(MAX_APPLICATION_REDIRECT_URIS)
+		.describe('The registered redirect URIs for OAuth2'),
 	bot_public: z.boolean().describe('Whether the bot can be invited by anyone'),
 	bot_require_code_grant: z.boolean().describe('Whether the bot requires OAuth2 code grant'),
 	client_secret: z.string().optional().describe('The client secret for OAuth2 authentication'),
@@ -295,10 +273,16 @@ export const ApplicationPublicResponse = z.object({
 	name: z.string().describe('The name of the application'),
 	icon: z.string().nullable().describe('The icon hash of the application'),
 	description: z.string().nullable().describe('The description of the application'),
-	redirect_uris: z.array(z.string()).max(20).describe('The registered redirect URIs for OAuth2'),
+	redirect_uris: z
+		.array(z.string())
+		.max(MAX_APPLICATION_REDIRECT_URIS)
+		.describe('The registered redirect URIs for OAuth2'),
 	scopes: z.array(z.string()).max(50).describe('The available OAuth2 scopes'),
 	bot_public: z.boolean().describe('Whether the bot can be invited by anyone'),
-	bot: ApplicationBotResponse.nullable().describe('The bot user associated with the application'),
+	bot: ApplicationBotResponse.omit({mfa_enabled: true, authenticator_types: true})
+		.describe('Detailed bot user metadata')
+		.nullable()
+		.describe('The bot user associated with the application'),
 	current_user: UserPartialResponse.nullable()
 		.optional()
 		.describe('Partial user data for the authenticated requester, when a session token is present'),
@@ -316,7 +300,11 @@ export const ApplicationsMeResponse = z.object({
 	verify_key: z.string().describe('Compatibility placeholder for AppInfo clients until keys are persisted'),
 	owner: UserPartialResponse.describe('The owner of the application'),
 	bot: ApplicationBotResponse.optional().describe('The bot user associated with the application'),
-	redirect_uris: z.array(z.string()).max(20).optional().describe('The registered redirect URIs for OAuth2'),
+	redirect_uris: z
+		.array(z.string())
+		.max(MAX_APPLICATION_REDIRECT_URIS)
+		.optional()
+		.describe('The registered redirect URIs for OAuth2'),
 });
 
 export type ApplicationsMeResponse = z.infer<typeof ApplicationsMeResponse>;
@@ -377,13 +365,13 @@ function isIPLiteralHost(hostname: string) {
 	return isIPv4Host(hostname) || (hostname.startsWith('[') && hostname.endsWith(']') && hostname.includes(':'));
 }
 
-function isValidRedirectURI(value: string, allowAnyHttp: boolean) {
+function isValidRedirectURI(value: string) {
 	try {
 		const url = new URL(value);
 		if (url.protocol !== 'http:' && url.protocol !== 'https:') {
 			return false;
 		}
-		if (!allowAnyHttp && url.protocol === 'http:' && !isLoopbackHost(url.hostname) && !isIPLiteralHost(url.hostname)) {
+		if (url.protocol === 'http:' && !isLoopbackHost(url.hostname) && !isIPLiteralHost(url.hostname)) {
 			return false;
 		}
 		return !!url.host;
@@ -392,22 +380,17 @@ function isValidRedirectURI(value: string, allowAnyHttp: boolean) {
 	}
 }
 
-const createRedirectURIType = (allowAnyHttp: boolean, message: string) =>
-	createStringType(1).refine((value) => isValidRedirectURI(value, allowAnyHttp), message);
-const OAuth2RedirectURICreateType = createRedirectURIType(
-	false,
+const OAuth2RedirectURIType = createStringType(1).refine(
+	isValidRedirectURI,
 	'Redirect URIs must use HTTPS, or HTTP for localhost and IP addresses only',
 );
-const OAuth2RedirectURIUpdateType = createRedirectURIType(
-	false,
-	'Redirect URIs must use HTTPS, or HTTP for localhost and IP addresses only',
-);
+const OAuth2RedirectURIList = z
+	.array(OAuth2RedirectURIType)
+	.max(MAX_APPLICATION_REDIRECT_URIS, `Maximum of ${MAX_APPLICATION_REDIRECT_URIS} redirect URIs allowed`);
+
 export const ApplicationCreateRequest = z.object({
 	name: createStringType(1, 100).describe('The name of the application'),
-	redirect_uris: z
-		.array(OAuth2RedirectURICreateType)
-		.max(10, 'Maximum of 10 redirect URIs allowed')
-		.optional()
+	redirect_uris: OAuth2RedirectURIList.optional()
 		.nullable()
 		.transform((value) => value ?? [])
 		.describe('The redirect URIs for OAuth2 flows'),
@@ -417,28 +400,24 @@ export const ApplicationCreateRequest = z.object({
 
 export type ApplicationCreateRequest = z.infer<typeof ApplicationCreateRequest>;
 
-export const ApplicationUpdateRequest = z.object({
-	name: createStringType(1, 100).optional().describe('The name of the application'),
-	redirect_uris: z
-		.array(OAuth2RedirectURIUpdateType)
-		.max(10, 'Maximum of 10 redirect URIs allowed')
-		.optional()
-		.nullable()
-		.transform((value) => (value === undefined ? undefined : (value ?? [])))
-		.describe('The redirect URIs for OAuth2 flows'),
-	bot_public: z.boolean().optional().describe('Whether the bot can be invited by anyone'),
-	bot_require_code_grant: z.boolean().optional().describe('Whether the bot requires OAuth2 code grant'),
-});
+export const ApplicationUpdateRequest = ApplicationCreateRequest.omit({redirect_uris: true})
+	.partial()
+	.extend({
+		redirect_uris: OAuth2RedirectURIList.optional()
+			.nullable()
+			.transform((value) => (value === undefined ? undefined : (value ?? [])))
+			.describe('The redirect URIs for OAuth2 flows'),
+	});
 
 export type ApplicationUpdateRequest = z.infer<typeof ApplicationUpdateRequest>;
 
 export const BotProfileUpdateRequest = z.object({
 	username: UsernameType.optional().describe('The username of the bot'),
 	discriminator: DiscriminatorType.optional().describe('The discriminator of the bot'),
-	avatar: createBase64StringType(1, Math.ceil(AVATAR_MAX_SIZE * (4 / 3)))
+	avatar: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
 		.nullish()
 		.describe('The avatar image as base64'),
-	banner: createBase64StringType(1, Math.ceil(AVATAR_MAX_SIZE * (4 / 3)))
+	banner: createBase64StringType(1, base64LengthForBytes(AVATAR_MAX_SIZE))
 		.nullish()
 		.describe('The banner image as base64'),
 	bio: createStringType(0, 1024).nullish().describe('The bio or description of the bot'),

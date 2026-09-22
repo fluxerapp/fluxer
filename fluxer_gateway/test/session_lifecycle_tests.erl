@@ -59,6 +59,7 @@ serialize_transfer_state_includes_resume_fields_test() ->
         relationships => #{},
         seq => 10,
         ack_seq => 8,
+        replay_floor => 4,
         buffer => [#{seq => 9}],
         collected_guild_states => [],
         collected_sessions => [],
@@ -71,6 +72,7 @@ serialize_transfer_state_includes_resume_fields_test() ->
     ?assert(sets:is_element(123, maps:get(active_guilds, TransferState))),
     ?assertEqual(10, maps:get(seq, TransferState)),
     ?assertEqual(8, maps:get(ack_seq, TransferState)),
+    ?assertEqual(8, maps:get(replay_floor, TransferState)),
     ?assertEqual([#{seq => 9}], maps:get(buffer, TransferState)).
 
 serialize_transfer_state_strips_socket_pid_test() ->
@@ -186,6 +188,29 @@ handle_resume_clamps_skipped_event_hole_test() ->
     {reply, {ok, [], 5}, _State1} = session_lifecycle:handle_resume(2, self(), State0),
     ?assertEqual([3, 5], collect_dispatched_seqs(2)).
 
+handle_resume_below_replay_floor_returns_not_resumable_test() ->
+    State0 = replay_floor_resume_state(),
+    {reply, not_resumable, State0} = session_lifecycle:handle_resume(5, self(), State0).
+
+handle_resume_at_replay_floor_still_replays_test() ->
+    ok = drain_mailbox(),
+    State0 = replay_floor_resume_state(),
+    {reply, {ok, [], 10}, State1} = session_lifecycle:handle_resume(6, self(), State0),
+    ?assertEqual([7, 8, 9, 10], collect_dispatched_seqs(4)),
+    ?assertEqual(self(), maps:get(socket_pid, State1)).
+
+replay_floor_resume_state() ->
+    resume_test_state(#{
+        seq => 10,
+        replay_floor => 6,
+        buffer => [
+            #{seq => 7, event => message_create, data => #{}},
+            #{seq => 8, event => message_create, data => #{}},
+            #{seq => 9, event => message_create, data => #{}},
+            #{seq => 10, event => message_create, data => #{}}
+        ]
+    }).
+
 handle_resume_rejects_seq_ahead_of_current_test() ->
     State0 = resume_test_state(#{
         seq => 5,
@@ -202,6 +227,7 @@ handle_resume_rejects_seq_below_ack_seq_test() ->
     {reply, invalid_seq, State0} = session_lifecycle:handle_resume(5, self(), State0).
 
 handle_resume_accepts_seq_at_ack_seq_test() ->
+    ok = drain_mailbox(),
     State0 = resume_test_state(#{
         seq => 10,
         ack_seq => 8,
@@ -215,6 +241,7 @@ handle_resume_accepts_seq_at_ack_seq_test() ->
     ?assertEqual([9, 10], collect_dispatched_seqs(2)).
 
 handle_resume_accepts_contiguous_replay_buffer_test() ->
+    ok = drain_mailbox(),
     State0 = resume_test_state(#{
         seq => 5,
         buffer => [
@@ -456,6 +483,13 @@ collect_dispatched_seq() ->
         {dispatch, _Event, _Payload, Seq} -> Seq
     after 200 ->
         ?assert(false)
+    end.
+
+drain_mailbox() ->
+    receive
+        _ -> drain_mailbox()
+    after 0 ->
+        ok
     end.
 
 fenced_terminate_releases_the_user_session_count_test() ->

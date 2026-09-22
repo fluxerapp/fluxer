@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, EmojiID, GuildID, RoleID, StickerID, UserID} from '../BrandedTypes';
+import type {ChannelID, EmojiID, GuildID, RoleID, StickerID, UserID} from '@app/api/BrandedTypes';
 
 export function toIdString(
 	value: GuildID | ChannelID | RoleID | UserID | EmojiID | StickerID | bigint | string | null | undefined,

@@ -1,10 +1,30 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID, MessageID, RoleID, UserID} from '@app/api/BrandedTypes';
+import {createChannelID, createRoleID, createUserID} from '@app/api/BrandedTypes';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
+import type {GatewayDispatchEvent} from '@app/api/constants/Gateway';
+import {GatewayRpcClient} from '@app/api/infrastructure/GatewayRpcClient';
+import {GatewayRpcMethodError, GatewayRpcMethodErrorCodes} from '@app/api/infrastructure/GatewayRpcError';
+import type {
+	CallData,
+	GatewayChannelMention,
+	GatewayGuildMemoryStats,
+	GatewayMentionSources,
+	GatewayMentionSourcesPage,
+	GatewayNodeStats,
+	GatewayVoiceStateCounts,
+	GatewayVoiceStateEntry,
+	GuildChannelAuthContext,
+} from '@app/api/infrastructure/IGatewayService';
+import {Logger} from '@app/api/Logger';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {CallAlreadyExistsError} from '@fluxer/errors/src/domains/channel/CallAlreadyExistsError';
 import {InvalidChannelTypeForCallError} from '@fluxer/errors/src/domains/channel/InvalidChannelTypeForCallError';
 import {NoActiveCallError} from '@fluxer/errors/src/domains/channel/NoActiveCallError';
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {BadGatewayError} from '@fluxer/errors/src/domains/core/BadGatewayError';
+import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
 import {GatewayTimeoutError} from '@fluxer/errors/src/domains/core/GatewayTimeoutError';
 import {MissingPermissionsError} from '@fluxer/errors/src/domains/core/MissingPermissionsError';
 import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
@@ -14,27 +34,9 @@ import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSc
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {ms} from 'itty-time';
-import type {ChannelID, GuildID, MessageID, RoleID, UserID} from '../BrandedTypes';
-import {createChannelID, createGuildID, createRoleID, createUserID} from '../BrandedTypes';
-import {SYSTEM_USER_ID} from '../constants/Core';
-import type {GatewayDispatchEvent} from '../constants/Gateway';
-import {Logger} from '../Logger';
-import {GatewayRpcClient} from './GatewayRpcClient';
-import {GatewayRpcMethodError, GatewayRpcMethodErrorCodes} from './GatewayRpcError';
-import type {
-	CallData,
-	GatewayActiveVoiceRooms,
-	GatewayChannelMention,
-	GatewayGuildMemoryStats,
-	GatewayMentionSources,
-	GatewayMentionSourcesPage,
-	GatewayNodeStats,
-	GatewayVoiceStateCounts,
-	GatewayVoiceStateEntry,
-	GuildChannelAuthContext,
-} from './IGatewayService';
 
 const PUSH_BADGE_COUNT_BATCH_SIZE = 100;
+const USER_PERMISSIONS_BATCH_SIZE = 100;
 
 const GATEWAY_ERROR_TO_DOMAIN_ERROR: Record<string, () => Error> = {
 	[GatewayRpcMethodErrorCodes.GUILD_NOT_FOUND]: () => new UnknownGuildError(),
@@ -47,6 +49,8 @@ const GATEWAY_ERROR_TO_DOMAIN_ERROR: Record<string, () => Error> = {
 	[GatewayRpcMethodErrorCodes.CONNECTION_NOT_FOUND]: () => new UserNotInVoiceError(),
 	[GatewayRpcMethodErrorCodes.MODERATOR_MISSING_CONNECT]: () => new MissingPermissionsError(),
 	[GatewayRpcMethodErrorCodes.TARGET_MISSING_CONNECT]: () => new MissingPermissionsError(),
+	[GatewayRpcMethodErrorCodes.INVALID_PARAMS]: () => new BadRequestError({code: APIErrorCodes.INVALID_FORM_BODY}),
+	[GatewayRpcMethodErrorCodes.BATCH_TOO_LARGE]: () => new BadRequestError({code: APIErrorCodes.INVALID_FORM_BODY}),
 };
 
 interface DispatchGuildParams {
@@ -1062,26 +1066,6 @@ export class GatewayService {
 		};
 	}
 
-	async getActiveVoiceRooms(): Promise<GatewayActiveVoiceRooms> {
-		const result = await this.call<{
-			rooms?: Array<{
-				guild_id?: string | null;
-				channel_id: string;
-				voice_state_count?: number;
-			}>;
-			node_count?: number;
-		}>('process.active_voice_rooms', {});
-		return {
-			nodeCount: result.node_count ?? 0,
-			rooms: (result.rooms ?? []).map((room) => ({
-				guildId:
-					room.guild_id === undefined || room.guild_id === null ? undefined : createGuildID(BigInt(room.guild_id)),
-				channelId: createChannelID(BigInt(room.channel_id)),
-				voiceStateCount: room.voice_state_count ?? 0,
-			})),
-		};
-	}
-
 	async getUserPermissions({guildId, userId, channelId}: UserPermissionsParams): Promise<bigint> {
 		const result = await this.call<{
 			permissions: string;
@@ -1106,19 +1090,29 @@ export class GatewayService {
 		if (guildIds.length === 0) {
 			return permissionsMap;
 		}
-		const result = await this.call<{
-			permissions: Array<{
-				guild_id: string;
-				permissions: string;
-			}>;
-		}>('guild.get_user_permissions_batch', {
-			guild_ids: guildIds.map((id) => id.toString()),
-			user_id: userId.toString(),
-			channel_id: channelId ? channelId.toString() : '0',
-		});
-		for (const item of result.permissions) {
-			const guildId = BigInt(item.guild_id) as GuildID;
-			permissionsMap.set(guildId, BigInt(item.permissions));
+		const batches: Array<Array<GuildID>> = [];
+		for (let index = 0; index < guildIds.length; index += USER_PERMISSIONS_BATCH_SIZE) {
+			batches.push(guildIds.slice(index, index + USER_PERMISSIONS_BATCH_SIZE));
+		}
+		const results = await Promise.all(
+			batches.map((batch) =>
+				this.call<{
+					permissions: Array<{
+						guild_id: string;
+						permissions: string;
+					}>;
+				}>('guild.get_user_permissions_batch', {
+					guild_ids: batch.map((id) => id.toString()),
+					user_id: userId.toString(),
+					channel_id: channelId ? channelId.toString() : '0',
+				}),
+			),
+		);
+		for (const result of results) {
+			for (const item of result.permissions) {
+				const guildId = BigInt(item.guild_id) as GuildID;
+				permissionsMap.set(guildId, BigInt(item.permissions));
+			}
 		}
 		return permissionsMap;
 	}
@@ -1630,41 +1624,6 @@ export class GatewayService {
 		}>('voice.confirm_connection', params);
 		return {
 			success: result.success,
-			error: result.error,
-		};
-	}
-
-	async repairVoiceStateFromCache({
-		guildId,
-		channelId,
-		userId,
-		connectionId,
-	}: {
-		guildId?: GuildID;
-		channelId: ChannelID;
-		userId: UserID;
-		connectionId: string;
-	}): Promise<{
-		success: boolean;
-		repaired?: boolean;
-		error?: string;
-	}> {
-		const params: Record<string, string> = {
-			channel_id: channelId.toString(),
-			user_id: userId.toString(),
-			connection_id: connectionId,
-		};
-		if (guildId !== undefined) {
-			params['guild_id'] = guildId.toString();
-		}
-		const result = await this.call<{
-			success: boolean;
-			repaired?: boolean;
-			error?: string;
-		}>('voice.repair_state_from_cache', params);
-		return {
-			success: result.success,
-			repaired: result.repaired,
 			error: result.error,
 		};
 	}

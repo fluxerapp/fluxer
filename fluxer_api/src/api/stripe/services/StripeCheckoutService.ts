@@ -1,6 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomUUID} from 'node:crypto';
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {getContentMessage} from '@app/api/content_i18n/ContentI18n';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import {Logger} from '@app/api/Logger';
+import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
+import type {User} from '@app/api/models/User';
+import type {ProductInfo, ProductRegistry} from '@app/api/stripe/ProductRegistry';
+import {
+	canProvisionPremiumFromSubscriptionStatus,
+	getPremiumWillCancelFromSubscription,
+} from '@app/api/stripe/StripeSubscriptionAccessPolicy';
+import {
+	getPrimarySubscriptionItem,
+	getSubscriptionPremiumPeriodEnd,
+	getSubscriptionStartDate,
+} from '@app/api/stripe/StripeSubscriptionPeriod';
+import {extractId} from '@app/api/stripe/StripeUtils';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {type Currency, getCurrencyPreferences, getGiftCurrencyPreferences} from '@app/api/utils/CurrencyUtils';
 import {isEuEeaCountryCode} from '@fluxer/constants/src/EuropeanEconomicArea';
 import {PremiumFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {PurchaseEmailVerificationRequiredError} from '@fluxer/errors/src/domains/auth/EmailVerificationRequiredError';
@@ -13,36 +33,9 @@ import {StripePaymentNotAvailableError} from '@fluxer/errors/src/domains/payment
 import {UnclaimedAccountCannotMakePurchasesError} from '@fluxer/errors/src/domains/user/UnclaimedAccountCannotMakePurchasesError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {CheckoutPaymentMethod} from '@fluxer/schema/src/domains/premium/GiftCodeSchemas';
-import type {PricingMode} from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {seconds} from 'itty-time';
 import type Stripe from 'stripe';
-import {createUserID, type UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {getContentMessage} from '../../content_i18n/ContentI18n';
-import type {UserRow} from '../../database/types/UserTypes';
-import {Logger} from '../../Logger';
-import {getBillingRepository} from '../../middleware/ServiceRegistry';
-import type {User} from '../../models/User';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {
-	type Currency,
-	getBaseCurrencyPreferences,
-	getBaseGiftCurrencyPreferences,
-	getCurrencyPreferences,
-	getGiftCurrencyPreferences,
-} from '../../utils/CurrencyUtils';
-import type {ProductInfo, ProductRegistry} from '../ProductRegistry';
-import {
-	canProvisionPremiumFromSubscriptionStatus,
-	getPremiumWillCancelFromSubscription,
-} from '../StripeSubscriptionAccessPolicy';
-import {
-	getPrimarySubscriptionItem,
-	getSubscriptionPremiumPeriodEnd,
-	getSubscriptionStartDate,
-} from '../StripeSubscriptionPeriod';
-import {extractId} from '../StripeUtils';
 
 const PRODUCT_NAME = 'Fluxer';
 const PREMIUM_TIER_NAME = 'Plutonium';
@@ -86,7 +79,6 @@ export interface CreateCheckoutSessionParams {
 	clientGeoipCountryCode?: string | null;
 	purchaseGeoipCountryCode?: string | null;
 	euWithdrawalWaiverAccepted?: boolean;
-	pricingMode?: PricingMode;
 	paymentMethod?: CheckoutPaymentMethod;
 	isBusiness?: boolean;
 }
@@ -182,7 +174,6 @@ export class StripeCheckoutService {
 		clientGeoipCountryCode,
 		purchaseGeoipCountryCode,
 		euWithdrawalWaiverAccepted,
-		pricingMode = 'localized',
 		paymentMethod = 'card',
 		isBusiness = false,
 	}: CreateCheckoutSessionParams): Promise<string> {
@@ -191,7 +182,7 @@ export class StripeCheckoutService {
 			priceId,
 			isGift,
 			countryCode,
-			pricingMode,
+			purchaseGeoipCountryCode,
 		});
 		const isRecurringSubscription = this.productRegistry.isRecurringSubscription(productInfo);
 		const checkoutMode: CheckoutSessionMode = isRecurringSubscription ? 'subscription' : 'payment';
@@ -221,7 +212,6 @@ export class StripeCheckoutService {
 			eu_withdrawal_waiver_accepted: waiverContext.accepted ? 'true' : 'false',
 			...(waiverContext.acceptedAt ? {eu_withdrawal_waiver_accepted_at: waiverContext.acceptedAt.toISOString()} : {}),
 			eu_withdrawal_waiver_text_version: EU_WITHDRAWAL_WAIVER_TEXT_VERSION,
-			pricing_mode: pricingMode,
 			payment_method: paymentMethod,
 		};
 		const checkoutParams: CheckoutSessionCreateParams = {
@@ -301,7 +291,6 @@ export class StripeCheckoutService {
 		clientGeoipCountryCode,
 		purchaseGeoipCountryCode,
 		euWithdrawalWaiverAccepted,
-		pricingMode = 'localized',
 		isBusiness = false,
 	}: Pick<
 		CreateCheckoutSessionParams,
@@ -310,23 +299,15 @@ export class StripeCheckoutService {
 		| 'euWithdrawalWaiverAccepted'
 		| 'isBusiness'
 		| 'priceId'
-		| 'pricingMode'
 		| 'purchaseGeoipCountryCode'
 		| 'userId'
 	>): Promise<string> {
 		if (!this.stripe) {
 			throw new StripePaymentNotAvailableError();
 		}
-		const normalizedCountryCode = countryCode?.trim().toUpperCase();
+		const normalizedCountryCode = this.resolveEnforcedPricingCountryCode({countryCode, purchaseGeoipCountryCode});
 		if (!normalizedCountryCode) {
 			Logger.error({priceId, userId}, 'Localized card preapproval requires a country code');
-			throw new StripeInvalidProductConfigurationError();
-		}
-		if (pricingMode !== 'localized') {
-			Logger.error(
-				{priceId, userId, pricingMode},
-				'Localized card preapproval requested for non-localized pricing mode',
-			);
 			throw new StripeInvalidProductConfigurationError();
 		}
 		const {customerId, productInfo} = await this.prepareCheckoutContext({
@@ -334,7 +315,6 @@ export class StripeCheckoutService {
 			priceId,
 			isGift: false,
 			countryCode: normalizedCountryCode,
-			pricingMode,
 		});
 		if (!this.requiresLocalizedCardPreapproval(productInfo)) {
 			Logger.error(
@@ -364,7 +344,6 @@ export class StripeCheckoutService {
 				eu_withdrawal_waiver_accepted: waiverContext.accepted ? 'true' : 'false',
 				...(waiverContext.acceptedAt ? {eu_withdrawal_waiver_accepted_at: waiverContext.acceptedAt.toISOString()} : {}),
 				...(waiverContext.required ? {eu_withdrawal_waiver_text_version: EU_WITHDRAWAL_WAIVER_TEXT_VERSION} : {}),
-				pricing_mode: pricingMode,
 				setup_type: 'localized_card_preapproval',
 				localized_card_preapproval_currency: productInfo.currency,
 				localized_card_preapproval_token: token,
@@ -560,7 +539,7 @@ export class StripeCheckoutService {
 		priceId,
 		isGift = false,
 		countryCode,
-		pricingMode = 'localized',
+		purchaseGeoipCountryCode,
 	}: CreateCheckoutSessionParams): Promise<{
 		customerId: string;
 		productInfo: ProductInfo;
@@ -581,12 +560,13 @@ export class StripeCheckoutService {
 			);
 			throw new StripeInvalidProductConfigurationError();
 		}
-		if (this.requiresCountryCodeForLocalizedCurrency(productInfo.currency) && !countryCode) {
+		const enforcedCountryCode = this.resolveEnforcedPricingCountryCode({countryCode, purchaseGeoipCountryCode});
+		if (this.requiresCountryCodeForLocalizedCurrency(productInfo.currency) && !enforcedCountryCode) {
 			Logger.error({priceId, userId, currency: productInfo.currency}, 'Localized price requested without country code');
 			throw new StripeInvalidProductConfigurationError();
 		}
-		if (countryCode) {
-			this.assertPriceMatchesCountryCatalog({countryCode, priceId, isGift, pricingMode, userId});
+		if (enforcedCountryCode) {
+			this.assertPriceMatchesCountryCatalog({countryCode: enforcedCountryCode, priceId, isGift, userId});
 		}
 		const user = await this.userRepository.findUnique(userId);
 		if (!user) {
@@ -703,20 +683,25 @@ export class StripeCheckoutService {
 		return normalized && /^[A-Z]{2}$/.test(normalized) ? normalized : null;
 	}
 
+	private resolveEnforcedPricingCountryCode({
+		countryCode,
+		purchaseGeoipCountryCode,
+	}: Pick<CreateCheckoutSessionParams, 'countryCode' | 'purchaseGeoipCountryCode'>): string | null {
+		return this.normalizeCountryCode(purchaseGeoipCountryCode) ?? this.normalizeCountryCode(countryCode);
+	}
+
 	private assertPriceMatchesCountryCatalog({
 		countryCode,
 		priceId,
 		isGift,
-		pricingMode = 'localized',
 		userId,
 	}: {
 		countryCode: string;
 		priceId: string;
 		isGift: boolean;
-		pricingMode?: PricingMode;
 		userId: UserID;
 	}): void {
-		const localizedPrices = this.resolveConfiguredPriceIds(countryCode, pricingMode);
+		const localizedPrices = this.resolveConfiguredPriceIds(countryCode);
 		const allowedPriceIds = new Set(
 			(isGift
 				? [localizedPrices.gift_1_month, localizedPrices.gift_1_year]
@@ -731,7 +716,6 @@ export class StripeCheckoutService {
 					userId,
 					currency: isGift ? localizedPrices.gift_currency : localizedPrices.currency,
 					isGift,
-					pricingMode,
 				},
 				'Checkout price mismatch for country',
 			);
@@ -1022,8 +1006,8 @@ export class StripeCheckoutService {
 		}
 	}
 
-	async getPriceIds(countryCode?: string, pricingMode: PricingMode = 'localized'): Promise<PriceIdsResponse> {
-		const resolvedPrices = this.resolveConfiguredPriceIds(countryCode, pricingMode);
+	async getPriceIds(countryCode?: string): Promise<PriceIdsResponse> {
+		const resolvedPrices = this.resolveConfiguredPriceIds(countryCode);
 		const [monthlyPrice, yearlyPrice, gift1MonthPrice, gift1YearPrice] = await Promise.all([
 			this.getStripePriceSummary(resolvedPrices.monthly),
 			this.getStripePriceSummary(resolvedPrices.yearly),
@@ -1057,11 +1041,9 @@ export class StripeCheckoutService {
 	private static readonly PRICE_CACHE_TTL_SECONDS = seconds('1 hour');
 	private static readonly PRICE_CACHE_PRODUCE_TIMEOUT_MS = 90000;
 
-	private resolveConfiguredPriceIds(countryCode?: string, pricingMode: PricingMode = 'localized'): ResolvedPriceIds {
-		const recurringCurrencyPreferences =
-			pricingMode === 'base' ? getBaseCurrencyPreferences(countryCode) : getCurrencyPreferences(countryCode);
-		const giftCurrencyPreferences =
-			pricingMode === 'base' ? getBaseGiftCurrencyPreferences(countryCode) : getGiftCurrencyPreferences(countryCode);
+	private resolveConfiguredPriceIds(countryCode?: string): ResolvedPriceIds {
+		const recurringCurrencyPreferences = getCurrencyPreferences(countryCode);
+		const giftCurrencyPreferences = getGiftCurrencyPreferences(countryCode);
 		const recurringPrices = this.resolveRecurringPriceIds(recurringCurrencyPreferences);
 		const giftPrices = this.resolveGiftPriceIds(giftCurrencyPreferences);
 		return {
@@ -1126,6 +1108,15 @@ export class StripeCheckoutService {
 					yearly: prices.yearlyBrl,
 					currency,
 				};
+			case 'DKK':
+				if (!prices.monthlyDkk || !prices.yearlyDkk) {
+					return null;
+				}
+				return {
+					monthly: prices.monthlyDkk,
+					yearly: prices.yearlyDkk,
+					currency,
+				};
 			case 'INR':
 				if (!prices.monthlyInr || !prices.yearlyInr) {
 					return null;
@@ -1135,6 +1126,15 @@ export class StripeCheckoutService {
 					yearly: prices.yearlyInr,
 					currency,
 				};
+			case 'NOK':
+				if (!prices.monthlyNok || !prices.yearlyNok) {
+					return null;
+				}
+				return {
+					monthly: prices.monthlyNok,
+					yearly: prices.yearlyNok,
+					currency,
+				};
 			case 'PLN':
 				if (!prices.monthlyPln || !prices.yearlyPln) {
 					return null;
@@ -1142,6 +1142,15 @@ export class StripeCheckoutService {
 				return {
 					monthly: prices.monthlyPln,
 					yearly: prices.yearlyPln,
+					currency,
+				};
+			case 'SEK':
+				if (!prices.monthlySek || !prices.yearlySek) {
+					return null;
+				}
+				return {
+					monthly: prices.monthlySek,
+					yearly: prices.yearlySek,
 					currency,
 				};
 			case 'TRY':
@@ -1192,6 +1201,33 @@ export class StripeCheckoutService {
 					gift_1_month: prices.gift1MonthInr,
 					gift_1_year: prices.gift1YearInr,
 					gift_currency: 'INR',
+				};
+			case 'DKK':
+				if (!prices.gift1MonthDkk || !prices.gift1YearDkk) {
+					return null;
+				}
+				return {
+					gift_1_month: prices.gift1MonthDkk,
+					gift_1_year: prices.gift1YearDkk,
+					gift_currency: 'DKK',
+				};
+			case 'NOK':
+				if (!prices.gift1MonthNok || !prices.gift1YearNok) {
+					return null;
+				}
+				return {
+					gift_1_month: prices.gift1MonthNok,
+					gift_1_year: prices.gift1YearNok,
+					gift_currency: 'NOK',
+				};
+			case 'SEK':
+				if (!prices.gift1MonthSek || !prices.gift1YearSek) {
+					return null;
+				}
+				return {
+					gift_1_month: prices.gift1MonthSek,
+					gift_1_year: prices.gift1YearSek,
+					gift_currency: 'SEK',
 				};
 			case 'PLN':
 				if (!prices.gift1MonthPln || !prices.gift1YearPln) {

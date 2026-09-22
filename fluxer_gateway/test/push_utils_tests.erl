@@ -56,3 +56,50 @@ hkdf_expand_test() ->
     Info = <<"test info">>,
     Result = push_utils:hkdf_expand(IKM, Salt, Info, 32),
     ?assertEqual(32, byte_size(Result)).
+
+assert_vapid_pair_accepts_generated_pair_test() ->
+    {Pub, Priv} = generate_vapid_pair(),
+    ?assertEqual(
+        ok,
+        push_utils:assert_vapid_pair(
+            push_utils:base64url_encode(Pub),
+            push_utils:base64url_encode(Priv)
+        )
+    ).
+
+assert_vapid_pair_rejects_mismatched_scalar_test() ->
+    {Pub, _} = generate_vapid_pair(),
+    {_, OtherPriv} = generate_vapid_pair(),
+    ?assertError(
+        {vapid_keys_mismatched, _},
+        push_utils:assert_vapid_pair(
+            push_utils:base64url_encode(Pub),
+            push_utils:base64url_encode(OtherPriv)
+        )
+    ).
+
+assert_vapid_pair_rejects_malformed_public_point_test() ->
+    {Pub, Priv} = generate_vapid_pair(),
+    ?assertError(
+        {vapid_keys_malformed, 64, 32},
+        push_utils:assert_vapid_pair(
+            push_utils:base64url_encode(binary:part(Pub, 0, 64)),
+            push_utils:base64url_encode(Priv)
+        )
+    ).
+
+assert_vapid_pair_rejects_short_scalar_test() ->
+    {Pub, Priv} = generate_vapid_pair(),
+    ?assertError(
+        {vapid_keys_malformed, 65, 31},
+        push_utils:assert_vapid_pair(
+            push_utils:base64url_encode(Pub),
+            push_utils:base64url_encode(binary:part(Priv, 0, 31))
+        )
+    ).
+
+generate_vapid_pair() ->
+    case crypto:generate_key(ecdh, prime256v1) of
+        {<<4, _:64/binary>> = Pub, <<_:32/binary>> = Priv} -> {Pub, Priv};
+        _ -> generate_vapid_pair()
+    end.

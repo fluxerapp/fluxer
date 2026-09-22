@@ -1,5 +1,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import * as AuthSession from '@app/api/auth/AuthSession';
+import type {UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildService} from '@app/api/guild/services/GuildService';
+import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
+import {Logger} from '@app/api/Logger';
+import type {Guild} from '@app/api/models/Guild';
+import type {User} from '@app/api/models/User';
+import {
+	canEscapePhoneGate,
+	type DeferredPhoneGateStatus,
+	getDeferredPhoneGateConfig,
+	guildTriggersPhoneGate,
+	PHONE_GATE_ESCAPE_MAX_GUILDS,
+	restorePhoneGateDeferral,
+} from '@app/api/risk/DeferredPhoneGate';
+import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
+import {reschedulePendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
+import type {UserAccountUpdatePropagator} from '@app/api/user/services/UserAccountUpdatePropagator';
+import {getEffectiveSuspiciousFlags} from '@app/api/user/UserHelpers';
+import {hasPartialUserFieldsChanged} from '@app/api/user/UserMappers';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {DEFERRABLE_PHONE_FLAGS, DEFERRED_PHONE_ON_COMMUNITY_JOIN, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {UnknownGuildMemberError} from '@fluxer/errors/src/domains/guild/UnknownGuildMemberError';
@@ -9,29 +32,6 @@ import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import type {IEmailService} from '@pkgs/email/src/IEmailService';
 import {ms} from 'itty-time';
-import type {ApiContext} from '../../ApiContext';
-import * as AuthSession from '../../auth/AuthSession';
-import type {UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import type {GuildService} from '../../guild/services/GuildService';
-import type {KVAccountDeletionQueueService} from '../../infrastructure/KVAccountDeletionQueueService';
-import {Logger} from '../../Logger';
-import type {Guild} from '../../models/Guild';
-import type {User} from '../../models/User';
-import {
-	canEscapePhoneGate,
-	type DeferredPhoneGateStatus,
-	getDeferredPhoneGateConfig,
-	guildTriggersPhoneGate,
-	PHONE_GATE_ESCAPE_MAX_GUILDS,
-	restorePhoneGateDeferral,
-} from '../../risk/DeferredPhoneGate';
-import type {IUserAccountRepository} from '../repositories/IUserAccountRepository';
-import {getEffectiveSuspiciousFlags} from '../UserHelpers';
-import {hasPartialUserFieldsChanged} from '../UserMappers';
-import {reschedulePendingDeletion} from './PendingDeletionCoordinator';
-import type {UserAccountUpdatePropagator} from './UserAccountUpdatePropagator';
 
 const WRITE_RESTORED_DEFERRAL_ATTEMPTS = 3;
 
@@ -84,7 +84,7 @@ export class UserAccountLifecycleService {
 		if (updatedUser) {
 			await this.deps.updatePropagator.dispatchUserUpdate(updatedUser);
 			if (hasPartialUserFieldsChanged(user, updatedUser)) {
-				await this.deps.updatePropagator.updateUserCache(updatedUser);
+				await this.deps.updatePropagator.propagatePartialUserChange(updatedUser);
 			}
 		}
 	}
@@ -100,15 +100,11 @@ export class UserAccountLifecycleService {
 		}
 		const gracePeriodMs = Config.deletionGracePeriodHours * ms('1 hour');
 		const pendingDeletionAt = new Date(Date.now() + gracePeriodMs);
-		const updatedUser = await this.deps.userAccountRepository.patchUpsert(
-			userId,
-			{
-				flags: user.flags | UserFlags.SELF_DELETED,
-				pending_deletion_at: pendingDeletionAt,
-				deletion_reason_code: DeletionReasons.USER_REQUESTED,
-			},
-			user.toRow(),
-		);
+		const updatedUser = await this.deps.userAccountRepository.updateDeletionSchedule(user, {
+			flags: user.flags | UserFlags.SELF_DELETED,
+			pending_deletion_at: pendingDeletionAt,
+			deletion_reason_code: DeletionReasons.USER_REQUESTED,
+		});
 		await reschedulePendingDeletion({
 			userId,
 			currentPendingDeletionAt: user.pendingDeletionAt,
@@ -129,7 +125,7 @@ export class UserAccountLifecycleService {
 		if (updatedUser) {
 			await this.deps.updatePropagator.dispatchUserUpdate(updatedUser);
 			if (hasPartialUserFieldsChanged(user, updatedUser)) {
-				await this.deps.updatePropagator.updateUserCache(updatedUser);
+				await this.deps.updatePropagator.propagatePartialUserChange(updatedUser);
 			}
 		}
 	}

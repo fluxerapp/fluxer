@@ -551,7 +551,7 @@ const SortableAttachmentItem = observer(
 								className={styles.fileSize}
 								data-flx="channel.channel-attachment-area.sortable-attachment-item.file-size"
 							>
-								{formatFileSize(attachment.file.size)}
+								{formatFileSize(i18n.locale, attachment.file.size)}
 							</span>
 							<span
 								className={styles.fileExtension}

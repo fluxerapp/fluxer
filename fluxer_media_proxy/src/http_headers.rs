@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::range::ByteRange;
-use http::{HeaderMap, HeaderName, HeaderValue, header};
+use http::{HeaderMap, HeaderName, HeaderValue, StatusCode, header};
 
 pub const ROBOTS: &str = "noindex, nofollow, nosnippet, noimageindex, notranslate, max-snippet:0, max-image-preview:none, max-video-preview:0";
 pub const MEDIA_CSP: &str = "default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'; script-src 'none'; script-src-attr 'none'; script-src-elem 'none'; style-src 'unsafe-inline'; img-src 'self' blob: data:; media-src 'self' blob:; sandbox allow-same-origin";
@@ -38,6 +38,28 @@ pub fn add_security_headers(headers: &mut HeaderMap) {
         PERMISSIONS_POLICY,
     );
     set_static_header(headers, header::CONTENT_SECURITY_POLICY, MEDIA_CSP);
+}
+
+pub fn neutralize_script_content_type(status: StatusCode, headers: &mut HeaderMap) {
+    let values = headers.get_all(header::CONTENT_TYPE);
+    let scriptable = values.iter().any(|value| {
+        value
+            .to_str()
+            .map_or(true, crate::mime::is_javascript_content_type)
+    });
+    let untyped = values.iter().all(|value| {
+        value
+            .as_bytes()
+            .iter()
+            .all(|byte| matches!(byte, b' ' | b'\t'))
+    });
+    let serves_body = matches!(status, StatusCode::OK | StatusCode::PARTIAL_CONTENT);
+    if scriptable || (untyped && serves_body) {
+        headers.insert(
+            header::CONTENT_TYPE,
+            HeaderValue::from_static(crate::mime::INERT_CONTENT_TYPE),
+        );
+    }
 }
 
 fn set_static_header(headers: &mut HeaderMap, name: HeaderName, value: &'static str) {
@@ -279,6 +301,85 @@ mod tests {
         assert!(headers.get(header::CONTENT_TYPE).is_none());
         assert!(headers.get(header::CACHE_CONTROL).is_none());
         assert!(headers.get("CDN-Cache-Control").is_none());
+    }
+
+    #[test]
+    fn neutralizing_rewrites_only_javascript_or_opaque_content_types() {
+        let mut script = HeaderMap::new();
+        script.insert(
+            header::CONTENT_TYPE,
+            HeaderValue::from_static("text/javascript"),
+        );
+        neutralize_script_content_type(StatusCode::OK, &mut script);
+        assert_eq!(value(&script, "content-type"), "text/plain; charset=utf-8");
+
+        let mut image = HeaderMap::new();
+        image.insert(header::CONTENT_TYPE, HeaderValue::from_static("image/png"));
+        neutralize_script_content_type(StatusCode::OK, &mut image);
+        assert_eq!(value(&image, "content-type"), "image/png");
+
+        let mut opaque = HeaderMap::new();
+        opaque.insert(
+            header::CONTENT_TYPE,
+            HeaderValue::from_bytes(&[0xC3, 0x28]).expect("opaque header value"),
+        );
+        neutralize_script_content_type(StatusCode::OK, &mut opaque);
+        assert_eq!(value(&opaque, "content-type"), "text/plain; charset=utf-8");
+
+        let mut duplicated = HeaderMap::new();
+        duplicated.insert(header::CONTENT_TYPE, HeaderValue::from_static("image/png"));
+        duplicated.append(
+            header::CONTENT_TYPE,
+            HeaderValue::from_static("text/javascript"),
+        );
+        neutralize_script_content_type(StatusCode::OK, &mut duplicated);
+        assert_eq!(duplicated.get_all(header::CONTENT_TYPE).iter().count(), 1);
+        assert_eq!(
+            value(&duplicated, "content-type"),
+            "text/plain; charset=utf-8"
+        );
+
+        let mut junk = HeaderMap::new();
+        junk.insert(
+            header::CONTENT_TYPE,
+            HeaderValue::from_static("video/mp4, text/javascript x"),
+        );
+        neutralize_script_content_type(StatusCode::NOT_FOUND, &mut junk);
+        assert_eq!(value(&junk, "content-type"), "text/plain; charset=utf-8");
+
+        let mut absent = HeaderMap::new();
+        neutralize_script_content_type(StatusCode::RANGE_NOT_SATISFIABLE, &mut absent);
+        assert!(absent.is_empty());
+    }
+
+    #[test]
+    fn neutralizing_types_only_an_untyped_full_or_partial_response() {
+        for status in [StatusCode::OK, StatusCode::PARTIAL_CONTENT] {
+            for blank in [None, Some(""), Some(" \t ")] {
+                let mut headers = HeaderMap::new();
+                if let Some(blank) = blank {
+                    headers.insert(header::CONTENT_TYPE, HeaderValue::from_static(blank));
+                }
+                neutralize_script_content_type(status, &mut headers);
+                assert_eq!(headers.get_all(header::CONTENT_TYPE).iter().count(), 1);
+                assert_eq!(
+                    value(&headers, "content-type"),
+                    "text/plain; charset=utf-8",
+                    "{status} {blank:?}"
+                );
+            }
+        }
+        for status in [
+            StatusCode::NO_CONTENT,
+            StatusCode::NOT_MODIFIED,
+            StatusCode::NOT_FOUND,
+            StatusCode::METHOD_NOT_ALLOWED,
+            StatusCode::RANGE_NOT_SATISFIABLE,
+        ] {
+            let mut headers = HeaderMap::new();
+            neutralize_script_content_type(status, &mut headers);
+            assert!(headers.is_empty(), "{status}");
+        }
     }
 
     #[test]

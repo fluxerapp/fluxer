@@ -17,7 +17,7 @@ wgpu = ["dep:wgpu"]
 
 [dependencies]
 parking_lot = "0.12"
-wgpu = { version = "29", optional = true, default-features = false }
+wgpu = { version = "30", optional = true, default-features = false }
 
 [dev-dependencies]
 parking_lot = "0.12"

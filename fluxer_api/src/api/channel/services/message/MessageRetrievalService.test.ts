@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {AttachmentDecayService} from '@app/api/attachment/AttachmentDecayService';
+import type {ChannelID, MessageID} from '@app/api/BrandedTypes';
+import {createChannelID, createMessageID, createUserID} from '@app/api/BrandedTypes';
+import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
+import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
+import type {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
+import type {MessageProcessingService} from '@app/api/channel/services/message/MessageProcessingService';
+import {MessageRetrievalService} from '@app/api/channel/services/message/MessageRetrievalService';
+import type {MessageSearchService} from '@app/api/channel/services/message/MessageSearchService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {Message} from '@app/api/models/Message';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import {createSnowflakeFromTimestamp} from '@fluxer/snowflake/src/Snowflake';
 import {describe, expect, it} from 'vitest';
-import type {AttachmentDecayService} from '../../../attachment/AttachmentDecayService';
-import type {ChannelID, MessageID} from '../../../BrandedTypes';
-import {createChannelID, createMessageID, createUserID} from '../../../BrandedTypes';
-import type {UserCacheService} from '../../../infrastructure/UserCacheService';
-import {Message} from '../../../models/Message';
-import type {IUserRepository} from '../../../user/IUserRepository';
-import type {IChannelRepositoryAggregate} from '../../repositories/IChannelRepositoryAggregate';
-import type {AuthenticatedChannel} from '../AuthenticatedChannel';
-import type {MessageChannelAuthService} from './MessageChannelAuthService';
-import type {MessageProcessingService} from './MessageProcessingService';
-import {MessageRetrievalService} from './MessageRetrievalService';
-import type {MessageSearchService} from './MessageSearchService';
 
 const CHANNEL_ID = createChannelID(10n);
 const VIEWER_ID = createUserID(7n);

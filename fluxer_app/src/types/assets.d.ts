@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {FunctionComponent, SVGProps} from 'react';
 import type {Messages} from '@lingui/core';
+import type {FunctionComponent, SVGProps} from 'react';
 
 declare module '*.css' {}
 

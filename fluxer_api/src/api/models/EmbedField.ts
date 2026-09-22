@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {MessageEmbedField} from '../database/types/MessageTypes';
+import type {MessageEmbedField} from '@app/api/database/types/MessageTypes';
 
 export class EmbedField {
 	readonly name: string;

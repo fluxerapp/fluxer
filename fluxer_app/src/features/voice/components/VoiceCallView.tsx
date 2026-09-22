@@ -15,6 +15,7 @@ import {
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Favorites from '@app/features/messaging/state/Favorites';
 import {goBackOr} from '@app/features/platform/components/router/NavigationAdapter';
+import {STREAM_VOLUME_DESCRIPTOR} from '@app/features/ui/action_menu/items/voice_participant_menu_data/shared';
 import {BottomSheet} from '@app/features/ui/bottom_sheet/BottomSheet';
 import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
@@ -636,6 +637,7 @@ const VoiceCallViewInner = observer(
 									iconSize={18}
 									className={styles.voiceHeaderIconButton}
 									position="below"
+									ariaLabel={i18n._(STREAM_VOLUME_DESCRIPTOR)}
 									data-flx="voice.voice-call-view.voice-call-view-inner.hud-stream-volume-control"
 								/>
 							)}

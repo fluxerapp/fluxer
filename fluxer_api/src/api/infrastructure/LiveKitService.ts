@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {ListParticipantsResult} from '@app/api/infrastructure/ILiveKitService';
+import {ILiveKitService} from '@app/api/infrastructure/ILiveKitService';
+import {Logger} from '@app/api/Logger';
+import type {VoiceRegionMetadata, VoiceServerRecord} from '@app/api/voice/VoiceModel';
+import type {VoiceTopology} from '@app/api/voice/VoiceTopology';
 import {AccessToken, RoomServiceClient, TrackSource} from 'livekit-server-sdk';
-import type {ChannelID, GuildID, UserID} from '../BrandedTypes';
-import {Config} from '../Config';
-import {Logger} from '../Logger';
-import type {VoiceRegionMetadata, VoiceServerRecord} from '../voice/VoiceModel';
-import type {VoiceTopology} from '../voice/VoiceTopology';
-import type {ListActiveRoomsResult, ListParticipantsResult, LiveKitServerError} from './ILiveKitService';
-import {ILiveKitService} from './ILiveKitService';
 
 interface CreateTokenParams {
 	userId: UserID;
@@ -60,27 +60,6 @@ interface UpdateParticipantPermissionsParams {
 	deaf?: boolean;
 }
 
-interface MuteParticipantTrackParams {
-	userId: UserID;
-	guildId?: GuildID;
-	channelId: ChannelID;
-	connectionId: string;
-	regionId: string;
-	serverId: string;
-	trackSid: string;
-	muted: boolean;
-}
-
-interface RevokeParticipantPublishSourceParams {
-	userId: UserID;
-	guildId?: GuildID;
-	channelId: ChannelID;
-	connectionId: string;
-	regionId: string;
-	serverId: string;
-	source: TrackSource;
-}
-
 interface ServerClientConfig {
 	endpoint: string;
 	apiKey: string;
@@ -96,26 +75,6 @@ interface LiveKitPublishPermissions {
 }
 
 export const VOICE_TOKEN_TTL_SECONDS = 60 * 10;
-
-const ALL_PUBLISH_SOURCES: ReadonlyArray<TrackSource> = [
-	TrackSource.MICROPHONE,
-	TrackSource.CAMERA,
-	TrackSource.SCREEN_SHARE,
-	TrackSource.SCREEN_SHARE_AUDIO,
-];
-
-interface LiveKitPublishGrant {
-	canPublish: boolean;
-	canPublishSources: Array<TrackSource>;
-}
-
-export function computeRevokedPublishGrant(current: LiveKitPublishGrant, source: TrackSource): LiveKitPublishGrant {
-	const allowed = current.canPublishSources.length > 0 ? current.canPublishSources : ALL_PUBLISH_SOURCES;
-	const revoked =
-		source === TrackSource.SCREEN_SHARE ? [TrackSource.SCREEN_SHARE, TrackSource.SCREEN_SHARE_AUDIO] : [source];
-	const canPublishSources = allowed.filter((allowedSource) => !revoked.includes(allowedSource));
-	return {canPublish: current.canPublish && canPublishSources.length > 0, canPublishSources};
-}
 
 export function computeLiveKitPublishSources(permissions: LiveKitPublishPermissions): Array<TrackSource> {
 	const sources: Array<TrackSource> = [];
@@ -140,7 +99,7 @@ function createRoomServiceClient(endpoint: string, apiKey: string, apiSecret: st
 	const httpUrl = toHttpUrl(endpoint);
 	const parsed = new URL(httpUrl);
 	const pathPrefix = parsed.pathname.replace(/\/+$/, '');
-	const client = new RoomServiceClient(parsed.origin, apiKey, apiSecret);
+	const client = new RoomServiceClient(parsed.origin, apiKey, apiSecret, {requestTimeout: 60});
 	if (pathPrefix) {
 		const rpc = Reflect.get(client, 'rpc');
 		if (rpc != null && typeof rpc === 'object' && 'prefix' in rpc) {
@@ -341,72 +300,6 @@ export class LiveKitService extends ILiveKitService {
 		}
 	}
 
-	async muteParticipantTrack(params: MuteParticipantTrackParams): Promise<boolean> {
-		const {userId, guildId, channelId, connectionId, regionId, serverId, trackSid, muted} = params;
-		const roomName = this.getRoomName(guildId, channelId);
-		const participantIdentity = this.getParticipantIdentity(userId, connectionId);
-		const server = this.tryResolveServerClient(regionId, serverId);
-		if (server === null) {
-			Logger.debug(
-				{regionId, serverId, participantIdentity, roomName, trackSid},
-				'LiveKit track mute skipped, pinned server no longer exists in topology',
-			);
-			return false;
-		}
-		try {
-			await server.roomServiceClient.mutePublishedTrack(roomName, participantIdentity, trackSid, muted);
-			return true;
-		} catch (error) {
-			if (LiveKitService.isHttp404(error)) {
-				Logger.debug({participantIdentity, roomName, trackSid}, 'LiveKit track no longer published, nothing to mute');
-				return false;
-			}
-			Logger.error({error, participantIdentity, roomName, trackSid, muted}, 'Error muting LiveKit published track');
-			return false;
-		}
-	}
-
-	async revokeParticipantPublishSource(params: RevokeParticipantPublishSourceParams): Promise<boolean> {
-		const {userId, guildId, channelId, connectionId, regionId, serverId, source} = params;
-		const roomName = this.getRoomName(guildId, channelId);
-		const participantIdentity = this.getParticipantIdentity(userId, connectionId);
-		const server = this.tryResolveServerClient(regionId, serverId);
-		if (server === null) {
-			Logger.debug(
-				{regionId, serverId, participantIdentity, roomName, source},
-				'LiveKit publish source revoke skipped, pinned server no longer exists in topology',
-			);
-			return false;
-		}
-		try {
-			const participants = await server.roomServiceClient.listParticipants(roomName);
-			const participant = participants.find((p) => p.identity === participantIdentity);
-			if (!participant?.permission) {
-				Logger.debug(
-					{participantIdentity, roomName, source},
-					'LiveKit participant no longer in room, nothing to revoke',
-				);
-				return false;
-			}
-			const grant = computeRevokedPublishGrant(participant.permission, source);
-			await server.roomServiceClient.updateParticipant(roomName, participantIdentity, undefined, {
-				...participant.permission,
-				...grant,
-			});
-			return true;
-		} catch (error) {
-			if (LiveKitService.isHttp404(error)) {
-				Logger.debug(
-					{participantIdentity, roomName, source},
-					'LiveKit participant no longer in room, nothing to revoke',
-				);
-				return false;
-			}
-			Logger.error({error, participantIdentity, roomName, source}, 'Error revoking LiveKit publish source');
-			return false;
-		}
-	}
-
 	async listParticipants(params: {
 		guildId?: GuildID;
 		channelId: ChannelID;
@@ -431,9 +324,6 @@ export class LiveKitService extends ILiveKitService {
 				participants: participants.map((participant) => ({identity: participant.identity})),
 			};
 		} catch (error) {
-			if (LiveKitService.isHttp404(error)) {
-				return {status: 'ok', participants: []};
-			}
 			Logger.warn({error, regionId, serverId, roomName}, 'LiveKit listParticipants failed');
 			const status = LiveKitService.getHttpStatus(error);
 			const isRetryable = status != null && status >= 500;
@@ -443,39 +333,6 @@ export class LiveKitService extends ILiveKitService {
 				retryable: isRetryable,
 			};
 		}
-	}
-
-	async listActiveRooms(): Promise<ListActiveRoomsResult> {
-		const rooms: ListActiveRoomsResult['rooms'] = [];
-		const errors: Array<LiveKitServerError> = [];
-		const servers = this.getActiveServerClients();
-		for (const server of servers) {
-			try {
-				const liveRooms = await server.roomServiceClient.listRooms();
-				for (const room of liveRooms) {
-					if (typeof room.name !== 'string' || room.name.length === 0) {
-						continue;
-					}
-					rooms.push({
-						roomName: room.name,
-						regionId: server.regionId,
-						serverId: server.serverId,
-					});
-				}
-			} catch (error) {
-				Logger.warn(
-					{error, regionId: server.regionId, serverId: server.serverId},
-					'LiveKit listRooms failed during voice reconciliation',
-				);
-				errors.push(this.toServerError(server.regionId, server.serverId, error));
-			}
-		}
-		return {
-			rooms,
-			errors,
-			searchedServers: servers.length,
-			completed: errors.length === 0,
-		};
 	}
 
 	private static isHttp404(error: unknown): boolean {
@@ -500,34 +357,6 @@ export class LiveKitService extends ILiveKitService {
 			return null;
 		}
 		return region.get(serverId) ?? null;
-	}
-
-	private getActiveServerClients(): Array<ServerClientConfig & {regionId: string; serverId: string}> {
-		const servers: Array<ServerClientConfig & {regionId: string; serverId: string}> = [];
-		for (const [regionId, region] of this.serverClients.entries()) {
-			for (const [serverId, server] of region.entries()) {
-				if (server.isActive) {
-					servers.push({...server, regionId, serverId});
-				}
-			}
-		}
-		return servers.sort((left, right) => {
-			const regionComparison = left.regionId.localeCompare(right.regionId);
-			if (regionComparison !== 0) {
-				return regionComparison;
-			}
-			return left.serverId.localeCompare(right.serverId);
-		});
-	}
-
-	private toServerError(regionId: string, serverId: string, error: unknown): LiveKitServerError {
-		const status = LiveKitService.getHttpStatus(error);
-		return {
-			regionId,
-			serverId,
-			errorCode: error instanceof Error ? error.message : 'unknown',
-			retryable: status != null && status >= 500,
-		};
 	}
 
 	getDefaultRegionId(): string | null {

@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import type {VoiceEngineV2Event} from '../../protocol/events';
+import {allocateOperation, markOperation, queueCommand} from '@fluxer/voice_engine_v2/src/core/reducers/_helpers';
+import {applyMicrophonePermissionResult} from '@fluxer/voice_engine_v2/src/core/reducers/microphone';
+import type {VoiceEngineV2Snapshot, VoiceEngineV2Transition} from '@fluxer/voice_engine_v2/src/core/state';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
 import type {
 	VoiceEngineV2Error,
 	VoiceEngineV2OperationId,
 	VoiceEngineV2PermissionName,
 	VoiceEngineV2PermissionResult,
-} from '../../protocol/types';
-import type {VoiceEngineV2Snapshot, VoiceEngineV2Transition} from '../state';
-import {allocateOperation, markOperation, queueCommand} from './_helpers';
-import {applyMicrophonePermissionResult} from './microphone';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 
 type VoiceEngineV2PermissionsEvent = Extract<VoiceEngineV2Event, {type: `permissions.${string}`}>;
 

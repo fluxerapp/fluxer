@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Logger} from '@app/api/Logger';
+import {phraseBlocklistCache} from '@app/api/middleware/PhraseBlocklistCache';
+import {urlBlocklistCache} from '@app/api/middleware/UrlBlocklistCache';
+import {readRequestJsonBody} from '@app/api/utils/RequestJsonBody';
+import {extractUrlCandidates} from '@app/api/utils/UrlNormalizer';
 import {ContentBlockedError} from '@fluxer/errors/src/domains/content/ContentBlockedError';
 import {createMiddleware} from 'hono/factory';
-import {Logger} from '../Logger';
-import {readRequestJsonBody} from '../utils/RequestJsonBody';
-import {extractUrlCandidates} from '../utils/UrlNormalizer';
-import {phraseBlocklistCache} from './PhraseBlocklistCache';
-import {urlBlocklistCache} from './UrlBlocklistCache';
 
 const SKIP_FIELDS = new Set([
 	'acls',
@@ -72,13 +72,7 @@ const SKIP_FIELD_SUFFIXES = [
 	'_tokens',
 ] as const;
 const SKIP_CONTENT_FILTER_PATH_PARTS = [
-	'/admin/audit-logs/search/',
-	'/admin/bans/phrase/',
-	'/admin/guilds/search/',
-	'/admin/messages/search/',
-	'/admin/reports/search/',
-	'/admin/users/lookup/',
-	'/admin/users/search/',
+	'/admin/blocklists/phrase/',
 	'/auth/',
 	'/oauth2/',
 	'/reports/dsa/email/',
@@ -134,7 +128,7 @@ const ContentFilterMiddleware = createMiddleware(async (ctx, next) => {
 		return next();
 	}
 	const contentType = ctx.req.header('content-type') ?? '';
-	if (!contentType.includes('application/json')) {
+	if (contentType.includes('multipart/form-data') || contentType.includes('application/x-www-form-urlencoded')) {
 		return next();
 	}
 	const body = await readRequestJsonBody(ctx.req);

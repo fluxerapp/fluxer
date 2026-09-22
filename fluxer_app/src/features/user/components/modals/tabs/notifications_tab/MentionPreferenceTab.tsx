@@ -18,7 +18,7 @@ const NO_PREFERENCE_DESCRIPTOR = msg({
 	comment: 'Empty-state text in the mention preference tab.',
 });
 const RESPECT_THE_SENDER_S_INTENT_WITH_NO_WARNING_DESCRIPTOR = msg({
-	message: "Respect the sender's intent, with no warning when they toggle the @ mention",
+	message: "Respect the sender's intent, with no warning when they toggle the @mention",
 	comment: 'Warning text in the mention preference tab. Keep the tone plain and specific.',
 });
 const PREFER_MENTION_DESCRIPTOR = msg({

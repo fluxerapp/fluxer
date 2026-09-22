@@ -41,7 +41,7 @@ pub enum RuntimeEnv {
 }
 
 impl AdminConfig {
-    pub fn from_env() -> Self {
+    pub fn from_env() -> anyhow::Result<Self> {
         let base_path = normalize_base_path(&read_env("FLUXER_ADMIN_BASE_PATH", ""));
         let admin_endpoint = normalize_public_endpoint_from_env(&trim_trailing_slash(&read_env(
             "FLUXER_ADMIN_ENDPOINT",
@@ -51,14 +51,19 @@ impl AdminConfig {
             &["FLUXER_ADMIN_OAUTH_REDIRECT_URI"],
             &format!("{admin_endpoint}/oauth2_callback"),
         ));
+        let secret_key_base = read_env("FLUXER_ADMIN_SECRET_KEY_BASE", "");
+        anyhow::ensure!(
+            !secret_key_base.trim().is_empty(),
+            "FLUXER_ADMIN_SECRET_KEY_BASE is required"
+        );
 
-        Self {
+        Ok(Self {
             env: RuntimeEnv::from_env_value(&read_env("FLUXER_ENV", "development")),
             host: read_env("FLUXER_ADMIN_HOST", "0.0.0.0"),
             port: read_env("FLUXER_ADMIN_PORT", "3020")
                 .parse()
                 .unwrap_or(3020),
-            secret_key_base: read_env("FLUXER_ADMIN_SECRET_KEY_BASE", "development-admin-secret"),
+            secret_key_base,
             base_path,
             api_endpoint: trim_trailing_slash(&read_env(
                 "FLUXER_API_ENDPOINT",
@@ -110,7 +115,7 @@ impl AdminConfig {
                 .trim()
                 .to_ascii_lowercase(),
             },
-        }
+        })
     }
 
     pub fn is_dev(&self) -> bool {
@@ -119,6 +124,15 @@ impl AdminConfig {
 
     pub fn is_production(&self) -> bool {
         self.env == RuntimeEnv::Production
+    }
+
+    pub fn secure_cookies(&self) -> bool {
+        self.admin_endpoint.starts_with("https://")
+    }
+
+    pub fn admin_origin(&self) -> Option<String> {
+        let origin = url::Url::parse(&self.admin_endpoint).ok()?.origin();
+        origin.is_tuple().then(|| origin.ascii_serialization())
     }
 }
 
@@ -193,10 +207,12 @@ mod tests {
             unsafe { env::remove_var(name) };
         }
         unsafe { env::remove_var("FLUXER_PUBLIC_PORT") };
+        unsafe { env::remove_var("FLUXER_PUBLIC_ORIGIN") };
+        unsafe { env::set_var("FLUXER_ADMIN_SECRET_KEY_BASE", "test-secret") };
         for (name, value) in vars {
             unsafe { env::set_var(name, value) };
         }
-        let config = AdminConfig::from_env();
+        let config = AdminConfig::from_env().expect("config loads with a secret");
         for (name, _) in vars {
             unsafe { env::remove_var(name) };
         }
@@ -340,7 +356,7 @@ mod tests {
             ("FLUXER_BASE_DOMAIN", "fluxer.example"),
             ("FLUXER_PUBLIC_PORT", "19080"),
             ("FLUXER_ADMIN_ENDPOINT", "http://fluxer.example/admin"),
-            ("FLUXER_APP_ENDPOINT", "http://fluxer.example:19080"),
+            ("FLUXER_APP_ENDPOINT", "http://fluxer.example"),
             ("FLUXER_MEDIA_ENDPOINT", "http://fluxer.example/media"),
             ("FLUXER_STATIC_CDN_ENDPOINT", "https://cdn.example.net"),
             (

@@ -220,12 +220,6 @@
 	color: var(--status-danger);
 }
 
-.streamUnderperformanceSlot {
-	padding: 0 0.375rem;
-	color: var(--status-warning);
-	cursor: default;
-}
-
 .avatarFlexShrink {
 	flex-shrink: 0;
 }

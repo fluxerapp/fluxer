@@ -7,8 +7,9 @@
     ensure_voice_server/1,
     handle_voice_server_exit/3,
     reply_voice_server_pid/1,
-    reply_cached_voice_state/2,
-    clear_stale_cached_voice_states/2
+    clear_stale_cached_voice_states/2,
+    authoritative_voice_states/1,
+    cast_disconnect_voice_user/2
 ]).
 
 -type guild_state() :: map().
@@ -59,15 +60,6 @@ reply_voice_server_pid(State) ->
     case ensure_voice_server(State) of
         {ok, Pid, NewState} -> {reply, {ok, Pid}, NewState};
         {{error, Reason}, NewState} -> {reply, {error, Reason}, NewState}
-    end.
-
--spec reply_cached_voice_state(binary(), guild_state()) ->
-    {reply, {ok, map()} | {error, not_found}, guild_state()}.
-reply_cached_voice_state(ConnectionId, State) ->
-    VoiceStates = maps:get(voice_states, State, #{}),
-    case maps:find(ConnectionId, VoiceStates) of
-        {ok, VoiceState} -> {reply, {ok, VoiceState}, State};
-        error -> {reply, {error, not_found}, State}
     end.
 
 -spec clear_stale_cached_voice_states([binary()], guild_state()) -> guild_state().
@@ -170,32 +162,58 @@ schedule_stale_cleanup(ConnectionIds) ->
 
 -spec read_authoritative_voice_states(guild_state()) -> {ok, map()} | {error, term()}.
 read_authoritative_voice_states(State) ->
+    case voice_server_pid(State) of
+        {ok, VoiceServerPid} -> read_from_pid(VoiceServerPid);
+        error -> {error, no_voice_server}
+    end.
+
+-spec authoritative_voice_states(guild_state()) -> map().
+authoritative_voice_states(State) ->
+    case read_authoritative_voice_states(State) of
+        {ok, VoiceStates} -> VoiceStates;
+        {error, _Reason} -> voice_state_utils:voice_states(State)
+    end.
+
+-spec cast_disconnect_voice_user(integer(), guild_state()) -> ok.
+cast_disconnect_voice_user(UserId, State) when is_integer(UserId), UserId > 0 ->
+    case voice_server_pid(State) of
+        {ok, VoiceServerPid} ->
+            gen_server:cast(
+                VoiceServerPid,
+                {disconnect_voice_user, #{user_id => UserId, connection_id => null}}
+            );
+        error ->
+            ok
+    end;
+cast_disconnect_voice_user(_UserId, _State) ->
+    ok.
+
+-spec voice_server_pid(guild_state()) -> {ok, pid()} | error.
+voice_server_pid(State) ->
     case maps:get(voice_server_pid, State, undefined) of
-        VoiceServerPid when is_pid(VoiceServerPid) ->
-            read_from_pid_or_registry(VoiceServerPid, State);
-        _ ->
-            read_from_registry(State)
+        Pid when is_pid(Pid) -> live_voice_server_pid(Pid, State);
+        _ -> registered_voice_server_pid(State)
     end.
 
--spec read_from_pid_or_registry(pid(), guild_state()) -> {ok, map()} | {error, term()}.
-read_from_pid_or_registry(Pid, State) ->
-    case process_liveness:is_alive(Pid) of
-        true -> read_from_pid(Pid);
-        false -> read_from_registry(State)
+-spec live_voice_server_pid(pid(), guild_state()) -> {ok, pid()} | error.
+live_voice_server_pid(Pid, State) ->
+    case Pid =/= self() andalso process_liveness:is_alive(Pid) of
+        true -> {ok, Pid};
+        false -> registered_voice_server_pid(State)
     end.
 
--spec read_from_registry(guild_state()) -> {ok, map()} | {error, term()}.
-read_from_registry(State) ->
+-spec registered_voice_server_pid(guild_state()) -> {ok, pid()} | error.
+registered_voice_server_pid(State) ->
     case state_guild_id(State) of
-        {ok, Id} -> read_registered_pid(Id);
-        error -> {error, no_guild_id}
+        {ok, Id} -> registered_pid_for_guild(Id);
+        error -> error
     end.
 
--spec read_registered_pid(integer()) -> {ok, map()} | {error, term()}.
-read_registered_pid(Id) ->
+-spec registered_pid_for_guild(integer()) -> {ok, pid()} | error.
+registered_pid_for_guild(Id) ->
     case guild_voice_server:lookup_registered(Id) of
-        {ok, Pid} -> read_from_pid(Pid);
-        {error, Reason} -> {error, Reason}
+        {ok, Pid} when Pid =/= self() -> {ok, Pid};
+        _ -> error
     end.
 
 -spec state_guild_id(guild_state()) -> {ok, integer()} | error.
@@ -213,3 +231,52 @@ read_from_pid(VoiceServerPid) ->
     catch
         exit:Reason -> {error, Reason}
     end.
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+cast_disconnect_voice_user_reaches_the_voice_server_test() ->
+    Self = self(),
+    VoicePid = spawn(fun() ->
+        receive
+            Message -> Self ! {voice_server_got, Message}
+        end
+    end),
+    ok = cast_disconnect_voice_user(7, #{id => 42, voice_server_pid => VoicePid}),
+    receive
+        {voice_server_got, {'$gen_cast', {disconnect_voice_user, Request}}} ->
+            ?assertEqual(#{user_id => 7, connection_id => null}, Request)
+    after 200 ->
+        exit(VoicePid, kill),
+        ?assert(false)
+    end.
+
+cast_disconnect_voice_user_without_a_voice_server_is_a_noop_test() ->
+    ?assertEqual(ok, cast_disconnect_voice_user(7, #{id => 987654329})),
+    ?assertEqual(ok, cast_disconnect_voice_user(undefined, #{id => 987654329})).
+
+authoritative_voice_states_falls_back_to_the_guild_copy_test() ->
+    Cached = #{<<"conn">> => #{<<"user_id">> => <<"7">>}},
+    State = #{id => 987654331, voice_states => Cached},
+    ?assertEqual(Cached, authoritative_voice_states(State)).
+
+authoritative_voice_states_prefers_the_voice_server_test() ->
+    Live = #{<<"live">> => #{<<"user_id">> => <<"8">>}},
+    VoicePid = spawn(fun() -> voice_states_reply_loop(Live) end),
+    State = #{id => 987654333, voice_states => #{}, voice_server_pid => VoicePid},
+    try
+        ?assertEqual(Live, authoritative_voice_states(State))
+    after
+        exit(VoicePid, kill)
+    end.
+
+voice_states_reply_loop(VoiceStates) ->
+    receive
+        {'$gen_call', From, {get_voice_states_map}} ->
+            gen_server:reply(From, VoiceStates),
+            voice_states_reply_loop(VoiceStates);
+        _ ->
+            voice_states_reply_loop(VoiceStates)
+    end.
+
+-endif.

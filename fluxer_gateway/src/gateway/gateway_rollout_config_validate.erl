@@ -10,7 +10,6 @@
     | positive_integer
     | relay_max_queue
     | rpc_timeout
-    | reconcile_interval
     | concurrency
     | rollout_mode
     | voice_e2ee_scope
@@ -37,9 +36,7 @@ config_fields() ->
         <<"max_concurrent_guild_starts">>,
         <<"gateway_dispatch_relay_shards">>,
         <<"gateway_dispatch_relay_max_queue">>,
-        <<"voice_e2ee_scope">>,
-        <<"voice_reconciliation_v3_percentage">>,
-        <<"voice_reconciliation_v3_interval_ms">>
+        <<"voice_e2ee_scope">>
     ].
 
 -spec validate_fields([binary()], map()) -> ok | {error, term()}.
@@ -63,8 +60,6 @@ valid_config_field(Key, Value) ->
             valid_relay_max_queue_value(Value);
         rpc_timeout ->
             is_integer(Value) andalso Value >= 1000 andalso Value =< 60000;
-        reconcile_interval ->
-            is_integer(Value) andalso Value >= 500 andalso Value =< 60000;
         concurrency ->
             is_integer(Value) andalso Value >= 1 andalso Value =< 10000;
         rollout_mode ->
@@ -79,11 +74,9 @@ valid_config_field(Key, Value) ->
 -spec config_field_kind(binary()) -> field_kind().
 config_field_kind(<<"session_rollout_percentage">>) -> percentage;
 config_field_kind(<<"guild_rollout_percentage">>) -> percentage;
-config_field_kind(<<"voice_reconciliation_v3_percentage">>) -> percentage;
 config_field_kind(<<"gateway_dispatch_relay_shards">>) -> positive_integer;
 config_field_kind(<<"gateway_dispatch_relay_max_queue">>) -> relay_max_queue;
 config_field_kind(<<"rpc_request_timeout_ms">>) -> rpc_timeout;
-config_field_kind(<<"voice_reconciliation_v3_interval_ms">>) -> reconcile_interval;
 config_field_kind(<<"max_concurrent_session_starts">>) -> concurrency;
 config_field_kind(<<"max_concurrent_guild_starts">>) -> concurrency;
 config_field_kind(<<"session_rollout_mode">>) -> rollout_mode;

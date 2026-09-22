@@ -16,7 +16,7 @@ import {
 	type VoiceGatewayVoiceStates,
 } from '@app/features/voice/engine/VoiceGatewayStateMachine';
 import {ME} from '@fluxer/constants/src/AppConstants';
-import {makeObservable, observable} from 'mobx';
+import {makeObservable, observable, observableRef} from 'mobx';
 
 const logger = new Logger('VoiceEngineV2AppVoiceStateAdapter');
 
@@ -53,10 +53,10 @@ export class VoiceEngineV2AppVoiceStateAdapter extends Store {
 	constructor() {
 		super();
 		makeObservable<this, 'snapshot' | 'voiceStates' | 'userVoiceStates' | 'connectionVoiceStates'>(this, {
-			snapshot: observable.ref,
-			voiceStates: observable.ref,
-			userVoiceStates: observable.ref,
-			connectionVoiceStates: observable.ref,
+			snapshot: observableRef,
+			voiceStates: observableRef,
+			userVoiceStates: observableRef,
+			connectionVoiceStates: observableRef,
 		});
 		this.applyVoiceGatewayStateContext(this.snapshot.context);
 	}

@@ -1,11 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {afterEach, beforeEach, describe, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {
 	createChannel,
 	createFriendship,
@@ -13,7 +8,12 @@ import {
 	createPermissionOverwrite,
 	createRole,
 	setupTestGuildWithMembers,
-} from './ChannelTestUtils';
+} from '@app/api/channel/tests/ChannelTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {afterEach, beforeEach, describe, test} from 'vitest';
 
 async function sendTypingIndicator(harness: ApiTestHarness, token: string, channelId: string): Promise<void> {
 	await createBuilder<void>(harness, token).post(`/channels/${channelId}/typing`).body({}).expect(204).execute();

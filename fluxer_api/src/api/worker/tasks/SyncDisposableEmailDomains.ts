@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {domainToASCII} from 'node:url';
+import {Config} from '@app/api/Config';
+import {isAccountPolicyContactDomainReputationExempt} from '@app/api/risk/AccountPolicyService';
+import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
+import * as FetchUtils from '@app/api/utils/FetchUtils';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {JobCancelledError, type WorkerTaskHandler, type WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
-import {isAccountPolicyContactDomainReputationExempt} from '../../risk/AccountPolicyService';
-import {EXTERNAL_RESPONSE_LIMITS} from '../../utils/ExternalResponseLimits';
-import * as FetchUtils from '../../utils/FetchUtils';
-import {getWorkerDependencies} from '../WorkerContext';
 
 const SOURCES = [
 	'https://raw.githubusercontent.com/doodad-labs/disposable-email-domains/main/data/domains.txt',
@@ -36,7 +37,10 @@ interface SourceCollectResult {
 
 async function fetchSource(url: string): Promise<SourceFetchResult> {
 	const res = await fetch(url, {signal: AbortSignal.timeout(60000)});
-	if (!res.ok) throw new Error(`HTTP ${res.status} fetching ${url}`);
+	if (!res.ok) {
+		FetchUtils.discardResponseBody(res.body, res.status);
+		throw new Error(`HTTP ${res.status} fetching ${url}`);
+	}
 	const contentType = res.headers.get('content-type') ?? '';
 	const responseText = await FetchUtils.streamToStringWithLimit(res.body, {
 		maxBytes: EXTERNAL_RESPONSE_LIMITS.disposableEmailBytes,
@@ -62,7 +66,7 @@ function forEachTextLine(text: string, callback: (line: string) => void): number
 	for (let i = 0; i <= text.length; i++) {
 		const isEnd = i === text.length;
 		if (!isEnd && text.charCodeAt(i) !== 10) continue;
-		const line = text.slice(start, isEnd ? i : i).trim();
+		const line = text.slice(start, i).trim();
 		start = i + 1;
 		if (!line || line.startsWith('#')) continue;
 		raw++;
@@ -128,10 +132,7 @@ async function throwIfCancelled(helpers: WorkerTaskHelpers): Promise<void> {
 	}
 }
 
-const syncDisposableEmailDomains: WorkerTaskHandler = async (_payload, helpers) => {
-	helpers.logger.info('Starting disposable email domain sync');
-	await helpers.setContextLink('/suspicious-email-domains');
-	const {adminRepository} = getWorkerDependencies();
+async function fetchFeedDomains(helpers: WorkerTaskHelpers): Promise<Set<string>> {
 	const freshSet = new Set<string>();
 	const perSourceCounts: Record<string, number> = {};
 	const perSourceRawCounts: Record<string, number> = {};
@@ -161,6 +162,14 @@ const syncDisposableEmailDomains: WorkerTaskHandler = async (_payload, helpers) 
 		},
 		'Fetched disposable email domains from all sources',
 	);
+	return freshSet;
+}
+
+const syncDisposableEmailDomains: WorkerTaskHandler = async (_payload, helpers) => {
+	helpers.logger.info('Starting disposable email domain sync');
+	await helpers.setContextLink('/suspicious-email-domains');
+	const {adminRepository} = getWorkerDependencies();
+	const freshSet = Config.blocklistFeeds.enabled ? await fetchFeedDomains(helpers) : new Set<string>();
 	const currentSet = await loadCurrentDisposableEmailDomains();
 	let addCount = 0;
 	for (const domain of freshSet) {

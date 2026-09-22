@@ -40,7 +40,7 @@ describe('ErrorI18n', () => {
 		});
 		it('returns message for valid key in supported locale', () => {
 			const message = getErrorMessage('rate_limits.rate_limited', 'fr');
-			expect(message).toBe('Tu es soumis à une limitation de débit.');
+			expect(message).toBe('Vous avez atteint la limite de requêtes.');
 		});
 		it('returns key when translation missing', () => {
 			const message = getErrorMessageUnsafe('nonexistent.key', 'en-US');
@@ -78,8 +78,8 @@ describe('ErrorI18n', () => {
 		});
 		it('loads locale on-demand when first accessed', () => {
 			expect(hasErrorLocale('fr')).toBe(true);
-			const message = getErrorMessage('account.disabled', 'fr');
-			expect(message).toBe('Ce compte a été désactivé.');
+			const message = getErrorMessage('account.suspended_permanently', 'fr');
+			expect(message).toBe('Ce compte a été suspendu définitivement.');
 		});
 	});
 	describe('getMessage() - variable interpolation', () => {

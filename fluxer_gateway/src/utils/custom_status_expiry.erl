@@ -4,7 +4,6 @@
 -typing([eqwalizer]).
 
 -export([
-    enabled/0,
     clear_if_expired/1,
     clear_if_expired/2,
     remaining_ms/2,
@@ -20,26 +19,13 @@
 -type wakeup() :: {ok, pos_integer()} | none.
 -type offset() :: {ok, integer()} | none.
 
--define(ENABLED_KEY, custom_status_expiry_enabled).
 -define(MAX_REPAIR_WINDOW_SECONDS, 86400).
 -define(MAX_TIMER_MS, 86400000).
 -define(WAKEUP_JITTER_MS, 5000).
 
--spec enabled() -> boolean().
-enabled() ->
-    application:get_env(fluxer_gateway, ?ENABLED_KEY, false) =:= true.
-
 -spec clear_if_expired(term()) -> custom_status().
 clear_if_expired(CustomStatus) ->
-    clear_when_enabled(enabled(), CustomStatus).
-
--spec clear_when_enabled(boolean(), term()) -> custom_status().
-clear_when_enabled(true, CustomStatus) ->
-    clear_if_expired(CustomStatus, erlang:system_time(millisecond));
-clear_when_enabled(false, CustomStatus) when is_map(CustomStatus) ->
-    CustomStatus;
-clear_when_enabled(false, _CustomStatus) ->
-    null.
+    clear_if_expired(CustomStatus, erlang:system_time(millisecond)).
 
 -spec clear_if_expired(term(), term()) -> custom_status().
 clear_if_expired(CustomStatus, NowMs) when is_map(CustomStatus), is_integer(NowMs) ->
@@ -88,12 +74,6 @@ parse_rfc3339(Chars) ->
 
 -spec next_wakeup_ms(term()) -> wakeup().
 next_wakeup_ms(CustomStatus) ->
-    next_wakeup_ms(enabled(), CustomStatus).
-
--spec next_wakeup_ms(boolean(), term()) -> wakeup().
-next_wakeup_ms(false, _CustomStatus) ->
-    none;
-next_wakeup_ms(true, CustomStatus) ->
     wakeup_delay(remaining_ms(CustomStatus, erlang:system_time(millisecond))).
 
 -spec wakeup_delay(offset()) -> wakeup().
@@ -125,8 +105,7 @@ repair(WindowSeconds) when
     #{
         scheduled => Total,
         considered => length(Considered),
-        window_seconds => WindowSeconds,
-        enabled => enabled()
+        window_seconds => WindowSeconds
     };
 repair(_WindowSeconds) ->
     #{error => invalid_window_seconds}.
@@ -148,10 +127,13 @@ expiring_presence_pids(UserIds) ->
 
 -spec has_expires_at(integer()) -> boolean().
 has_expires_at(UserId) ->
-    case catch presence_cache:get(UserId) of
+    try presence_cache:get(UserId) of
         {ok, Presence} when is_map(Presence) ->
             presence_carries_expiry(Presence);
         _ ->
+            false
+    catch
+        _:_ ->
             false
     end.
 
@@ -334,21 +316,11 @@ wakeup_clamps_to_the_timer_limit_test() ->
     ?assert(DelayMs > ?MAX_TIMER_MS),
     ?assert(DelayMs =< ?MAX_TIMER_MS + ?WAKEUP_JITTER_MS).
 
-disabled_by_default_test() ->
-    application:unset_env(fluxer_gateway, ?ENABLED_KEY),
-    Status = status(?LIVE_EXPIRES_AT),
-    ?assertEqual(false, enabled()),
-    ?assertEqual(Status, clear_if_expired(Status)),
-    ?assertEqual(none, next_wakeup_ms(future_status())).
-
-enabled_clears_expired_and_arms_future_test() ->
+clears_expired_and_arms_future_test() ->
     Live = future_status(),
-    with_expiry_enabled(fun() ->
-        ?assertEqual(true, enabled()),
-        ?assertEqual(null, clear_if_expired(status(?LIVE_EXPIRES_AT))),
-        ?assertEqual(Live, clear_if_expired(Live)),
-        ?assertMatch({ok, _}, next_wakeup_ms(Live))
-    end).
+    ?assertEqual(null, clear_if_expired(status(?LIVE_EXPIRES_AT))),
+    ?assertEqual(Live, clear_if_expired(Live)),
+    ?assertMatch({ok, _}, next_wakeup_ms(Live)).
 
 future_status() ->
     status(rfc3339(erlang:system_time(millisecond) + 3600000)).
@@ -371,8 +343,7 @@ repair_reports_what_it_scheduled_test() ->
     Result = repair(0),
     ?assert(is_integer(maps:get(scheduled, Result))),
     ?assert(maps:get(scheduled, Result) >= 0),
-    ?assertEqual(0, maps:get(window_seconds, Result)),
-    ?assertEqual(enabled(), maps:get(enabled, Result)).
+    ?assertEqual(0, maps:get(window_seconds, Result)).
 
 schedule_reconciles_delivers_the_cast_test() ->
     flush_mailbox(),
@@ -387,19 +358,5 @@ flush_mailbox() ->
         _Any -> flush_mailbox()
     after 0 -> ok
     end.
-
-with_expiry_enabled(Fun) ->
-    Previous = application:get_env(fluxer_gateway, ?ENABLED_KEY),
-    application:set_env(fluxer_gateway, ?ENABLED_KEY, true),
-    try
-        Fun()
-    after
-        restore_expiry_env(Previous)
-    end.
-
-restore_expiry_env(undefined) ->
-    application:unset_env(fluxer_gateway, ?ENABLED_KEY);
-restore_expiry_env({ok, Value}) ->
-    application:set_env(fluxer_gateway, ?ENABLED_KEY, Value).
 
 -endif.

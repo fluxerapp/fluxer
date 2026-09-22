@@ -9,7 +9,6 @@ members = [
 	"fluxer_messages",
 	"fluxer_snowflakes",
 	"tools/ci",
-	"tools/content/update-frozen-snapshot",
 	"tools/dev",
 	"tools/i18n_auto",
 	"fluxer_users",
@@ -17,7 +16,6 @@ members = [
 	"packages/markdown_parser/rust",
 ]
 exclude = [
-	"fluxer_marketing",
 	"packages/markdown_parser/rust/fuzz",
 ]
 resolver = "2"

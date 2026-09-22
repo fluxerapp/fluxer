@@ -87,6 +87,7 @@ import {useState} from 'react';
 
 const MESSAGE_DESCRIPTOR = msg({
 	message: 'Message',
+	context: 'message-action',
 	comment:
 		'Member actions sheet menu item. Sends a direct message to the target user. Standalone verb used as a menu label.',
 });

@@ -38,7 +38,7 @@ describe('TwilioSmsProvider', () => {
 		const fetchStub: typeof fetch = async (_input, init) => {
 			capturedRequest = {
 				url: String(_input),
-				authHeader: (init?.headers as Record<string, string>).Authorization,
+				authHeader: (init?.headers as Record<string, string>)?.Authorization,
 				body: init?.body as string,
 			};
 			return new Response(JSON.stringify({success: true}), {status: 200});
@@ -65,7 +65,7 @@ describe('TwilioSmsProvider', () => {
 		const fetchStub: typeof fetch = async (_input, init) => {
 			capturedRequest = {
 				url: String(_input),
-				authHeader: (init?.headers as Record<string, string>).Authorization,
+				authHeader: (init?.headers as Record<string, string>)?.Authorization,
 				body: init?.body as string,
 			};
 			return new Response(JSON.stringify({channel: 'auto'}), {status: 200});
@@ -232,7 +232,7 @@ describe('TwilioSmsProvider', () => {
 					capturedRequest = {
 						url: String(input),
 						method: init?.method,
-						authHeader: (init?.headers as Record<string, string>).Authorization,
+						authHeader: (init?.headers as Record<string, string>)?.Authorization,
 					};
 					return new Response(
 						JSON.stringify({

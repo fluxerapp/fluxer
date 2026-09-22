@@ -18,6 +18,7 @@ import {
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {EditAltTextModal} from '@app/features/messaging/components/modals/EditAltTextModal';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
 import {createDownloadHandler} from '@app/features/messaging/utils/FileDownloadUtils';
 import {buildMediaProxyURL, stripMediaProxyParams} from '@app/features/messaging/utils/MediaProxyUtils';
 import Permission from '@app/features/permissions/state/Permission';
@@ -131,7 +132,7 @@ const DOWNLOAD_MEDIA_DESCRIPTOR = msg({
 	comment: 'Generic media context menu download action when the specific type is unknown.',
 });
 const ATTACHMENT_IS_EXPIRED_OR_UNAVAILABLE_DESCRIPTOR = msg({
-	message: 'Attachment is expired or unavailable',
+	message: 'Attachment has expired or is unavailable',
 	comment: 'Toast shown when an attachment URL is no longer accessible.',
 });
 const URL_COPIED_TO_CLIPBOARD_DESCRIPTOR = msg({
@@ -429,17 +430,18 @@ export async function copyMediaToClipboard({
 		);
 		return;
 	}
+	const freshSrc = await AttachmentUrlRefresher.refresh(originalSrc);
 	if (type === 'file') {
-		await TextCopyCommands.copy(i18n, originalSrc, true);
+		await TextCopyCommands.copy(i18n, freshSrc, true);
 		ToastCommands.createToast({type: 'success', children: i18n._(LINK_COPIED_TO_CLIPBOARD_DESCRIPTOR)});
 		return;
 	}
-	const baseProxyURL = proxyURL ? stripMediaProxyParams(proxyURL) : null;
+	const baseProxyURL = proxyURL ? await AttachmentUrlRefresher.refresh(stripMediaProxyParams(proxyURL)) : null;
 	const clipboardFileMediaType = getClipboardFileMediaType(type);
 	if (clipboardFileMediaType) {
 		const electronApi = getElectronAPI();
 		if (!electronApi?.clipboardWriteFile) {
-			await TextCopyCommands.copy(i18n, originalSrc, true);
+			await TextCopyCommands.copy(i18n, freshSrc, true);
 			ToastCommands.createToast({type: 'success', children: i18n._(URL_COPIED_TO_CLIPBOARD_DESCRIPTOR)});
 			return;
 		}
@@ -451,7 +453,7 @@ export async function copyMediaToClipboard({
 				timeout: 0,
 			});
 			const result = await electronApi.clipboardWriteFile({
-				url: baseProxyURL || originalSrc,
+				url: baseProxyURL || freshSrc,
 				suggestedName: defaultName,
 				mediaType: clipboardFileMediaType,
 			});
@@ -470,7 +472,7 @@ export async function copyMediaToClipboard({
 	const urlsToTry: Array<string> = [];
 	if (baseProxyURL) urlsToTry.push(buildMediaProxyURL(baseProxyURL, {format: 'png'}));
 	if (baseProxyURL) urlsToTry.push(baseProxyURL);
-	urlsToTry.push(originalSrc);
+	urlsToTry.push(freshSrc);
 	let toastId: string | null = null;
 	try {
 		toastId = ToastCommands.createToast({
@@ -494,7 +496,7 @@ export async function copyMediaToClipboard({
 	} catch (error) {
 		logger.error('Failed to copy image to clipboard:', error);
 		if (toastId) ToastCommands.destroyToast(toastId);
-		await TextCopyCommands.copy(i18n, originalSrc, true);
+		await TextCopyCommands.copy(i18n, freshSrc, true);
 		ToastCommands.createToast({
 			type: 'success',
 			children: i18n._(URL_COPIED_TO_CLIPBOARD_DESCRIPTOR),
@@ -511,7 +513,7 @@ export async function copyMediaLinkToClipboard({i18n, originalSrc}: {i18n: I18n;
 		);
 		return;
 	}
-	await TextCopyCommands.copy(i18n, originalSrc, true);
+	await TextCopyCommands.copy(i18n, await AttachmentUrlRefresher.refresh(originalSrc), true);
 	ToastCommands.createToast({
 		type: 'success',
 		children: i18n._(LINK_COPIED_TO_CLIPBOARD_DESCRIPTOR),

@@ -8,6 +8,7 @@ import {Endpoints} from '@app/features/app/constants/Endpoints';
 import Authentication from '@app/features/auth/state/Authentication';
 import Channels from '@app/features/channel/state/Channels';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
+import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
 import GuildMatureContentAgree from '@app/features/guild/state/GuildMatureContentAgree';
 import {DELETE_MESSAGE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import GuildMembers from '@app/features/member/state/GuildMembers';
@@ -15,6 +16,7 @@ import {
 	type MessageFetchCacheHit,
 	resolveMessageFetchExecutionDecision,
 	resolveMessageFetchPreflightDecision,
+	resolveMessageFetchWindowCached,
 } from '@app/features/messaging/commands/MessageFetchStateMachine';
 import {resolveMessagePageState} from '@app/features/messaging/commands/MessagePageStateMachine';
 import {MessageDeleteFailedModal} from '@app/features/messaging/components/alerts/MessageDeleteFailedModal';
@@ -115,6 +117,7 @@ export interface JumpToMessageOptions {
 
 interface FetchMessagesOptions {
 	throwOnError?: boolean;
+	staleRefetch?: boolean;
 }
 
 interface MessagePageState {
@@ -142,11 +145,12 @@ function makeFetchKey(
 ): string {
 	const SEP = '\x1f';
 	const throwOnError = options?.throwOnError ? '1' : '0';
+	const staleRefetch = options?.staleRefetch ? '1' : '0';
 	if (!jump) {
-		return `${channelId}${SEP}${before ?? ''}${SEP}${after ?? ''}${SEP}${limit}${SEP}${throwOnError}`;
+		return `${channelId}${SEP}${before ?? ''}${SEP}${after ?? ''}${SEP}${limit}${SEP}${throwOnError}${SEP}${staleRefetch}`;
 	}
 	return (
-		`${channelId}${SEP}${before ?? ''}${SEP}${after ?? ''}${SEP}${limit}${SEP}${throwOnError}${SEP}` +
+		`${channelId}${SEP}${before ?? ''}${SEP}${after ?? ''}${SEP}${limit}${SEP}${throwOnError}${SEP}${staleRefetch}${SEP}` +
 		`${jump.present ? '1' : '0'}${SEP}${jump.messageId ?? ''}${SEP}${jump.offset ?? 0}${SEP}` +
 		`${jump.flash ? '1' : '0'}${SEP}${jump.returnToMessageId ?? ''}${SEP}` +
 		`${jump.returnChannelId ?? ''}${SEP}${jump.returnGuildId ?? ''}${SEP}${jump.jumpType ?? ''}`
@@ -243,6 +247,7 @@ function handleMessageFetchSuccess(
 	channelId: string,
 	messages: Array<WireMessage>,
 	pageState: MessagePageState,
+	cached: boolean,
 	jump?: JumpOptions,
 ): void {
 	Messages.handleLoadMessagesSuccess({
@@ -252,7 +257,7 @@ function handleMessageFetchSuccess(
 		isAfter: pageState.isAfter,
 		hasMoreBefore: pageState.hasMoreBefore,
 		hasMoreAfter: pageState.hasMoreAfter,
-		cached: false,
+		cached,
 		jump,
 	});
 	ReadStates.handleLoadMessages({
@@ -341,6 +346,9 @@ function getMessageFetchCacheHit(
 	jump?: JumpOptions,
 ): MessageFetchCacheHit | null {
 	const messages = Messages.getMessages(channelId);
+	if (!messages.ready || messages.cached) {
+		return null;
+	}
 	if (jump?.messageId && messages.has(jump.messageId, false)) {
 		return 'jump';
 	}
@@ -412,13 +420,21 @@ export async function fetchMessages(
 			return handleForcedMessageLoadFailure(channelId, jump);
 		}
 		Messages.handleLoadMessages({channelId, jump});
+		const connectedAtRequest = GatewayConnection.isConnected;
+		const epochAtRequest = GatewayConnection.connectionEpoch;
 		try {
 			const timeStart = Date.now();
 			logger.debug(`Fetching messages for channel ${channelId}`);
 			const messages = await requestChannelMessages(channelId, before, after, limit, jump);
+			const cached = resolveMessageFetchWindowCached({
+				connectedAtRequest,
+				connectedAtResponse: GatewayConnection.isConnected,
+				epochAtRequest,
+				epochAtResponse: GatewayConnection.connectionEpoch,
+			});
 			const pageState = calculateMessagePageState(channelId, before, after, limit, messages, jump);
 			logger.info(`Fetched ${messages.length} messages for channel ${channelId}, took ${Date.now() - timeStart}ms`);
-			handleMessageFetchSuccess(channelId, messages, pageState, jump);
+			handleMessageFetchSuccess(channelId, messages, pageState, cached, jump);
 			return messages;
 		} catch (error) {
 			logger.error(`Failed to fetch messages for channel ${channelId}:`, error);

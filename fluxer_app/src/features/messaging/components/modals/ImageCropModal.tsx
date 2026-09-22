@@ -4,6 +4,7 @@ import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {cropAnimatedImageWithWorkerPool} from '@app/features/expressions/workers/AnimatedImageCropWorkerManager';
 import {showMessagingErrorModal} from '@app/features/messaging/components/alerts/MessagingErrorModalUtils';
 import styles from '@app/features/messaging/components/modals/ImageCropModal.module.css';
+import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -28,6 +29,11 @@ const COULDN_T_CROP_IMAGE_DESCRIPTOR = msg({
 	message: "Couldn't crop image",
 	comment: 'Title of the error modal shown when image cropping fails.',
 });
+const CROPPED_IMAGE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR = msg({
+	message: 'Cropped image is too large. Choose a smaller area or a smaller file (max {maxSizeLabel}).',
+	comment:
+		'Error modal body shown when a cropped image still exceeds the size limit. {maxSizeLabel} is a formatted file size.',
+});
 const logger = new Logger('ImageCropModal');
 
 interface Point {
@@ -45,6 +51,16 @@ interface DragBoundaries {
 	bottom: number;
 	left: number;
 	right: number;
+}
+
+class CropSizeLimitError extends Error {
+	readonly maxBytes: number;
+
+	constructor(actualBytes: number, maxBytes: number) {
+		super(`Cropped image is ${actualBytes} bytes and exceeds the limit of ${maxBytes} bytes`);
+		this.name = 'CropSizeLimitError';
+		this.maxBytes = maxBytes;
+	}
 }
 
 interface AnimatedImageCropOptions {
@@ -285,7 +301,7 @@ async function exportStaticImage(
 		}, 'image/png');
 	});
 	if (blob.size > maxBytes) {
-		throw new Error(`Image size ${(blob.size / 1024).toFixed(1)} KB exceeds max ${(maxBytes / 1024).toFixed(0)} KB`);
+		throw new CropSizeLimitError(blob.size, maxBytes);
 	}
 	return blob;
 }
@@ -343,9 +359,7 @@ async function exportAnimatedImage(
 		throw new Error('Empty animated image blob returned');
 	}
 	if (resultBlob.size > maxBytes) {
-		throw new Error(
-			`Animated image size ${(resultBlob.size / 1024).toFixed(1)} KB exceeds max ${(maxBytes / 1024).toFixed(0)} KB`,
-		);
+		throw new CropSizeLimitError(resultBlob.size, maxBytes);
 	}
 	return resultBlob;
 }
@@ -663,7 +677,12 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = observer(
 				ModalCommands.pop();
 			} catch (error) {
 				logger.error('Error cropping image:', error);
-				const message = error instanceof Error && error.message ? error.message : errorMessage;
+				const message =
+					error instanceof CropSizeLimitError
+						? i18n._(CROPPED_IMAGE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
+								maxSizeLabel: formatFileSize(i18n.locale, error.maxBytes),
+							})
+						: errorMessage;
 				showMessagingErrorModal({
 					title: i18n._(COULDN_T_CROP_IMAGE_DESCRIPTOR),
 					message,

@@ -19,7 +19,9 @@ import {AppErrorBoundary} from '@app/features/app/components/AppErrorBoundary';
 import {BootstrapErrorScreen} from '@app/features/app/components/BootstrapErrorScreen';
 import {ErrorFallback} from '@app/features/app/components/ErrorFallback';
 import {installSelfXssNotice} from '@app/features/devtools/utils/SelfXssNotice';
+import {AppI18nProvider} from '@app/features/i18n/components/AppI18nProvider';
 import {installLocaleSwitchWatchdog} from '@app/features/i18n/utils/LocaleSwitchWatchdog';
+import {installTranslationDomGuard} from '@app/features/i18n/utils/TranslationDomGuard';
 import {installScrollRestoration} from '@app/features/platform/components/router/ScrollRestoration';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {
@@ -32,7 +34,6 @@ import {loadLazyModule} from '@app/features/platform/utils/LazyModuleLoader';
 import {scheduleNonLatinScriptFaces} from '@app/features/theme/fonts/ScriptFontLoader';
 import {installVoiceSubscriptionDebugApi} from '@app/features/voice/diagnostics/VoiceSubscriptionDebugApi';
 import {i18n} from '@lingui/core';
-import {I18nProvider} from '@lingui/react';
 import {configure} from 'mobx';
 import type {ReactNode} from 'react';
 import ReactDOM from 'react-dom/client';
@@ -60,12 +61,13 @@ function createRoot(): ReactDOM.Root {
 }
 
 function mountRoot(content: ReactNode, dataFlxScope: string): void {
+	installTranslationDomGuard();
 	createRoot().render(
 		<AppErrorBoundary
 			fallback={(error) => (
-				<I18nProvider i18n={i18n}>
+				<AppI18nProvider i18n={i18n}>
 					<ErrorFallback error={error ?? undefined} data-flx={`${dataFlxScope}.error-fallback`} />
-				</I18nProvider>
+				</AppI18nProvider>
 			)}
 			data-flx={`${dataFlxScope}.app-error-boundary`}
 		>
@@ -84,7 +86,19 @@ async function logClientInfo(): Promise<void> {
 	}
 }
 
+async function preloadMarkdownParser(): Promise<void> {
+	try {
+		const {preloadMarkdownParserWasm} = await loadLazyModule(
+			() => import('@app/features/messaging/utils/markdown/parser/MarkdownParserWasm'),
+		);
+		await preloadMarkdownParserWasm();
+	} catch (error) {
+		logger.warn('Failed to preload markdown parser:', error);
+	}
+}
+
 async function bootstrapThemeStudio(): Promise<void> {
+	const markdownParserReady = preloadMarkdownParser();
 	const [{ThemeStudioStandaloneApp}, {setupHttp}, {default: AccountManager}] = await Promise.all([
 		loadLazyModule(() => import('@app/features/theme_studio/ThemeStudioStandaloneApp')),
 		loadLazyModule(() => import('@app/app/SetupHttp')),
@@ -92,15 +106,17 @@ async function bootstrapThemeStudio(): Promise<void> {
 	]);
 	await AccountManager.bootstrap();
 	setupHttp();
+	await markdownParserReady;
 	mountRoot(
-		<I18nProvider i18n={i18n}>
+		<AppI18nProvider i18n={i18n}>
 			<ThemeStudioStandaloneApp data-flx="index.render-theme-studio.theme-studio-standalone-app" />
-		</I18nProvider>,
+		</AppI18nProvider>,
 		'index.render-theme-studio',
 	);
 }
 
 async function bootstrapApp(): Promise<void> {
+	const markdownParserReady = preloadMarkdownParser();
 	const [
 		{App},
 		{setupHttp},
@@ -109,6 +125,7 @@ async function bootstrapApp(): Promise<void> {
 		{registerServiceWorker},
 		{default: AccountManager},
 		{default: ChannelDisplayName},
+		_channelFrecency,
 		_geoIp,
 		{default: Keybind},
 		{default: NewDeviceMonitoring},
@@ -124,6 +141,7 @@ async function bootstrapApp(): Promise<void> {
 		loadLazyModule(() => import('@app/features/platform/service_worker/Register')),
 		loadLazyModule(() => import('@app/features/auth/state/AccountManager')),
 		loadLazyModule(() => import('@app/features/channel/state/ChannelDisplayName')),
+		loadLazyModule(() => import('@app/features/channel/state/ChannelFrecency')),
 		loadLazyModule(() => import('@app/features/app/state/GeoIP')),
 		loadLazyModule(() => import('@app/features/input/state/InputKeybind')),
 		loadLazyModule(() => import('@app/features/auth/state/NewDeviceMonitoring')),
@@ -144,6 +162,7 @@ async function bootstrapApp(): Promise<void> {
 	await AccountManager.bootstrap();
 	setupHttp();
 	initializeEmojiParser();
+	await markdownParserReady;
 	mountRoot(<App data-flx="index.bootstrap.app" />, 'index.bootstrap');
 	QuickSwitcher.preloadModal();
 	registerServiceWorker();
@@ -166,8 +185,8 @@ bootstrap().catch((error: unknown) => {
 	const normalized = error instanceof Error ? error : new Error(String(error));
 	logger.error('Failed to bootstrap app:', normalized);
 	createRoot().render(
-		<I18nProvider i18n={i18n}>
+		<AppI18nProvider i18n={i18n}>
 			<BootstrapErrorScreen error={normalized} data-flx="index.bootstrap-error-screen" />
-		</I18nProvider>,
+		</AppI18nProvider>,
 	);
 });

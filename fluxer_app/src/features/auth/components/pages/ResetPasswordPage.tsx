@@ -20,6 +20,10 @@ const RESET_PASSWORD_DESCRIPTOR = msg({
 	message: 'Reset password',
 	comment: 'Short label in the authentication reset password page. Keep the tone plain and specific.',
 });
+const PASSWORDS_DO_NOT_MATCH_DESCRIPTOR = msg({
+	message: 'Passwords do not match',
+	comment: 'Short label in the authentication reset password page. Keep the tone plain and specific.',
+});
 const NEW_PASSWORD_DESCRIPTOR = msg({
 	message: 'New password',
 	comment: 'Short label in the authentication reset password page. Keep the tone plain and specific.',
@@ -68,7 +72,7 @@ const ResetPasswordPage = observer(function ResetPasswordPage() {
 				return;
 			}
 			if (values.password !== values.confirmPassword) {
-				form.setError('confirmPassword', 'Passwords do not match');
+				form.setError('confirmPassword', i18n._(PASSWORDS_DO_NOT_MATCH_DESCRIPTOR));
 				return;
 			}
 			const response = await resetPasswordFlow(token, values.password);
@@ -77,6 +81,7 @@ const ResetPasswordPage = observer(function ResetPasswordPage() {
 					ticket: response.challenge.ticket,
 					totp: response.challenge.totp,
 					webauthn: response.challenge.webauthn,
+					backupCodes: response.challenge.backupCodes,
 				});
 				RouterUtils.replaceWith('/login');
 				return;

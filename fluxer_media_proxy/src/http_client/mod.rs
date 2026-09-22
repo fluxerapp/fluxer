@@ -6,6 +6,7 @@ use crate::metrics::http_client::HTTPClientMetrics;
 use crate::public_net_policy::PinnedDnsResolver;
 use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
 use reqwest_retry::{RetryTransientMiddleware, policies::ExponentialBackoff};
+pub(crate) use retry::is_dropped_connection;
 use retry::{MediaProxyRetryStrategy, ObservableRetryPolicy};
 use std::num::{NonZeroU32, NonZeroU64};
 use std::sync::Arc;

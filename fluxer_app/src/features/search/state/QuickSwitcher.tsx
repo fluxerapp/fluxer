@@ -34,7 +34,7 @@ import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {QuickSwitcherResultTypes} from '@fluxer/constants/src/QuickSwitcherConstants';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
-import {action, makeAutoObservable, runInAction} from 'mobx';
+import {makeAutoObservable, runInAction} from 'mobx';
 
 const GO_TO_MESSAGE_DESCRIPTOR = msg({
 	message: 'Go to message',
@@ -157,7 +157,6 @@ class QuickSwitcher {
 		return this.selectedIndex;
 	}
 
-	@action
 	show(): void {
 		if (this.isOpen) return;
 		this.cancelCandidateWarmup();
@@ -215,7 +214,6 @@ class QuickSwitcher {
 		);
 	}
 
-	@action
 	hide(): void {
 		if (!this.isOpen) {
 			return;
@@ -291,7 +289,6 @@ class QuickSwitcher {
 		return () => clearTimeout(handle);
 	}
 
-	@action
 	search(query: string): void {
 		if (!this.isOpen && query.length === 0) {
 			return;
@@ -372,7 +369,6 @@ class QuickSwitcher {
 		}, 300);
 	}
 
-	@action
 	select(selectedIndex: number): void {
 		if (!this.isOpen) {
 			return;

@@ -9,7 +9,7 @@
 	"scripts": {
 		"test": "vitest run",
 		"test:watch": "vitest",
-		"typecheck": "tsgo --noEmit"
+		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@fluxer/config": "workspace:*",
@@ -17,13 +17,13 @@
 		"@fluxer/hono_types": "workspace:*",
 		"@fluxer/i18n": "workspace:*",
 		"@fluxer/logger": "workspace:*",
+		"@fluxer/schema": "workspace:*",
 		"hono": "catalog:"
 	},
 	"devDependencies": {
 		"@messageformat/parser": "catalog:",
 		"@types/node": "catalog:",
-		"@typescript/native-preview": "catalog:",
-		"vite-tsconfig-paths": "catalog:",
+		"typescript": "catalog:ts7",
 		"vitest": "catalog:"
 	}
 }

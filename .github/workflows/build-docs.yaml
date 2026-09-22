@@ -33,5 +33,4 @@ jobs:
     with:
       image: fluxer-docs
       dockerfile: fluxer_docs/Dockerfile
-      context: fluxer_docs
       build-version: ${{ inputs['build-version'] }}

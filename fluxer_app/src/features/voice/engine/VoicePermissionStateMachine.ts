@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {VoiceChannelPermissions} from '@app/features/voice/utils/VoicePermissionUtils';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export type VoicePermissionChangeTarget = 'speak' | 'stream' | 'video';
 export type VoicePermissionWatchStateValue = 'inactive' | 'watching';
@@ -62,6 +62,7 @@ export const DEFAULT_VOICE_PERMISSION_STATE: VoiceChannelPermissions = {
 	canUseVideo: true,
 	canConnect: true,
 	canPrioritySpeaker: false,
+	canUseVad: true,
 };
 
 const EMPTY_COMMANDS: ReadonlyArray<VoicePermissionCommand> = [];
@@ -86,7 +87,8 @@ function permissionsEqual(left: VoiceChannelPermissions, right: VoiceChannelPerm
 		left.canStream === right.canStream &&
 		left.canUseVideo === right.canUseVideo &&
 		left.canConnect === right.canConnect &&
-		left.canPrioritySpeaker === right.canPrioritySpeaker
+		left.canPrioritySpeaker === right.canPrioritySpeaker &&
+		left.canUseVad === right.canUseVad
 	);
 }
 
@@ -321,7 +323,7 @@ export const voicePermissionStateMachine = setup({
 export type VoicePermissionSnapshot = SnapshotFrom<typeof voicePermissionStateMachine>;
 
 export function createVoicePermissionSnapshot(): VoicePermissionSnapshot {
-	return getInitialSnapshot(voicePermissionStateMachine);
+	return initialTransition(voicePermissionStateMachine)[0];
 }
 
 export function transitionVoicePermissionSnapshot(

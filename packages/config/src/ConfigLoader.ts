@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createECDH} from 'node:crypto';
+import {isConfigObject} from '@fluxer/config/src/config_loader/ConfigObject';
 import {buildNamedFluxerEnvOverrides} from '@fluxer/config/src/config_loader/EnvironmentOverrides';
 import {
+	buildUrl,
 	type DerivedEndpoints,
 	deriveEndpointsFromDomain,
 	normalizePublicEndpoint,
+	parsePublicOrigin,
+	parseWebOrigin,
 } from '@fluxer/config/src/EndpointDerivation';
-import type {MasterConfig} from '@fluxer/config/src/MasterConfig';
-
-type ConfigObject = Record<string, unknown>;
+import {CACHE_PURGE_ADAPTER_NAMES, type MasterConfig} from '@fluxer/config/src/MasterConfig';
 
 let cachedConfig: MasterConfig | null = null;
 
@@ -25,6 +28,7 @@ function defaultConfig(): MasterConfig {
 		env: 'development',
 		domain: {
 			base_domain: '',
+			public_origin: '',
 			public_scheme: 'http',
 			internal_scheme: 'http',
 			public_port: 8088,
@@ -41,6 +45,7 @@ function defaultConfig(): MasterConfig {
 			media: '',
 			static_cdn: '',
 			admin: '',
+			docs: '',
 			marketing: '',
 			invite: '',
 			gift: '',
@@ -87,10 +92,8 @@ function defaultConfig(): MasterConfig {
 			buckets: {
 				cdn: 'fluxer',
 				uploads: 'fluxer-uploads',
-				downloads: 'fluxer-downloads',
 				reports: 'fluxer-reports',
 				harvests: 'fluxer-harvests',
-				static: 'fluxer-static',
 			},
 		},
 		services: {
@@ -100,9 +103,8 @@ function defaultConfig(): MasterConfig {
 				request_timeout_ms: 120_000,
 				max_inflight_requests: 512,
 				ip_ban_exempt_ips: [],
-				desktop_github_redirect_countries: [],
+				donation_proxy_key: '',
 				presigned_attachment_uploads_enabled: false,
-				presigned_downloads_enabled: false,
 				presigned_harvest_downloads_enabled: true,
 				unfurl_ignored_hosts: [],
 				embeds: {
@@ -117,6 +119,10 @@ function defaultConfig(): MasterConfig {
 				content_moderation: {
 					nsfw_threshold: 0.7,
 				},
+				storage_change_feed: {
+					enabled: false,
+					stream: 'STORAGE_CHANGES',
+				},
 			},
 			nats: {
 				core_url: 'nats://127.0.0.1:4222',
@@ -130,14 +136,17 @@ function defaultConfig(): MasterConfig {
 				mode: 'upload',
 				upload_relay: {
 					endpoint: 'http://localhost:8088/media',
-					max_body_bytes: 268_435_456,
+					secret_base64: '',
+					max_body_bytes: 524_288_000,
 					token_ttl_secs: 900,
 					keep_direct_countries: [],
+				},
+				attachment_urls: {
+					secrets_base64: [],
 				},
 			},
 			gateway: {
 				port: 8771,
-				push_enabled: false,
 				rpc_auth_token: '',
 			},
 			admin: {
@@ -145,12 +154,6 @@ function defaultConfig(): MasterConfig {
 				base_path: '/admin',
 				secret_key_base: '',
 				oauth_client_secret: '',
-			},
-			marketing: {
-				port: 3010,
-				host: '0.0.0.0',
-				base_path: '/marketing',
-				secret_key_base: '',
 			},
 			app_proxy: {
 				port: 8773,
@@ -163,7 +166,7 @@ function defaultConfig(): MasterConfig {
 			sso_allow_private_addresses: false,
 			passkeys: {
 				rp_name: 'Fluxer',
-				rp_id: 'fluxer.app',
+				rp_id: '',
 				additional_allowed_origins: DEFAULT_PASSKEY_ORIGINS,
 			},
 			vapid: {
@@ -172,12 +175,12 @@ function defaultConfig(): MasterConfig {
 				email: '',
 			},
 			bluesky: {
-				enabled: true,
+				enabled: false,
 				client_name: 'Fluxer',
 				client_uri: '',
 				logo_uri: '',
-				tos_uri: 'https://fluxer.app/terms',
-				policy_uri: 'https://fluxer.app/privacy',
+				tos_uri: '',
+				policy_uri: '',
 				keys: [],
 			},
 		},
@@ -217,6 +220,7 @@ function defaultConfig(): MasterConfig {
 				secret_key: '',
 				webhook_secret: '',
 				prices: {},
+				legacy_prices: {},
 			},
 			ncmec: {
 				enabled: false,
@@ -236,21 +240,21 @@ function defaultConfig(): MasterConfig {
 			youtube: {
 				api_key: '',
 			},
-			bunny: {
-				purge_enabled: false,
-				api_key: '',
-				pull_zone_id: 0,
+			cache_purge: {
+				adapter: 'none',
+				http: {
+					endpoint: '',
+					token: '',
+					timeout_ms: 10_000,
+				},
 			},
 			blocklist_feeds: {},
+			tor_exit_list: {},
+			breached_password_check: {},
 			risk_integration: {
 				enabled: false,
 				ipinfo_api_key: '',
 				account_policy_dsl: undefined,
-				tor: {
-					block_all_relays: false,
-					reverse_dns_heuristic: false,
-					reverse_dns_timeout_ms: 750,
-				},
 			},
 			push: {
 				apns: {
@@ -307,20 +311,16 @@ function defaultConfig(): MasterConfig {
 	};
 }
 
-function isPlainObject(value: unknown): value is ConfigObject {
-	return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
 function mergeConfig<T>(base: T, overrides: unknown): T {
-	if (!isPlainObject(base) || !isPlainObject(overrides)) {
+	if (!isConfigObject(base) || !isConfigObject(overrides)) {
 		return overrides === undefined ? base : (overrides as T);
 	}
-	const out: ConfigObject = {...base};
+	const out = new Map(Object.entries(base));
 	for (const [key, value] of Object.entries(overrides)) {
-		const current = out[key];
-		out[key] = isPlainObject(current) && isPlainObject(value) ? mergeConfig(current, value) : value;
+		const current = out.get(key);
+		out.set(key, isConfigObject(current) && isConfigObject(value) ? mergeConfig(current, value) : value);
 	}
-	return out as T;
+	return Object.fromEntries(out) as T;
 }
 
 function assertOneOf<T extends string>(value: string, allowed: ReadonlyArray<T>, path: string): asserts value is T {
@@ -332,6 +332,44 @@ function assertOneOf<T extends string>(value: string, allowed: ReadonlyArray<T>,
 function requireString(value: string | undefined, envName: string): void {
 	if (!value || value.trim().length === 0) {
 		throw new Error(`${envName} is required`);
+	}
+}
+
+function validateUploadRelaySecret(value: string, mode: string): void {
+	const trimmed = value.trim();
+	if (trimmed.length === 0) {
+		if (mode === 'upload') {
+			throw new Error('FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 is required in upload mode');
+		}
+		return;
+	}
+	if (!/^[A-Za-z0-9+/]+={0,2}$/u.test(trimmed)) {
+		throw new Error('FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 must be base64');
+	}
+	if (Buffer.from(trimmed, 'base64').length < 32) {
+		throw new Error('FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 must decode to at least 32 bytes');
+	}
+}
+
+function isCanonicalStandardBase64(value: string): boolean {
+	if (!/^[A-Za-z0-9+/]+={0,2}$/u.test(value)) {
+		return false;
+	}
+	return Buffer.from(value, 'base64').toString('base64') === value;
+}
+
+function validateAttachmentUrlSecrets(values: Array<string>): void {
+	for (const value of values) {
+		const trimmed = value.trim();
+		if (trimmed.length === 0) {
+			continue;
+		}
+		if (!isCanonicalStandardBase64(trimmed)) {
+			throw new Error('FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64 entries must be standard base64');
+		}
+		if (Buffer.from(trimmed, 'base64').length < 32) {
+			throw new Error('FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64 entries must decode to at least 32 bytes');
+		}
 	}
 }
 
@@ -350,6 +388,30 @@ function assertIntegerInRange(value: unknown, envName: string, min: number, max:
 function assertIdentifier(value: string, envName: string): void {
 	if (!/^[A-Za-z_][A-Za-z0-9_]*$/u.test(value)) {
 		throw new Error(`${envName} must be a safe Postgres identifier`);
+	}
+}
+
+function validateVapidConfig(config: MasterConfig): void {
+	requireString(config.auth.vapid.public_key, 'FLUXER_VAPID_PUBLIC_KEY');
+	requireString(config.auth.vapid.private_key, 'FLUXER_VAPID_PRIVATE_KEY');
+	const pub = Buffer.from(config.auth.vapid.public_key, 'base64url');
+	const priv = Buffer.from(config.auth.vapid.private_key, 'base64url');
+	if (pub.length !== 65 || pub[0] !== 0x04) {
+		throw new Error('FLUXER_VAPID_PUBLIC_KEY must be the base64url 65-byte uncompressed P-256 point');
+	}
+	if (priv.length !== 32) {
+		throw new Error('FLUXER_VAPID_PRIVATE_KEY must be the base64url 32-byte P-256 scalar');
+	}
+	let derived: Buffer;
+	try {
+		const curve = createECDH('prime256v1');
+		curve.setPrivateKey(priv);
+		derived = curve.getPublicKey();
+	} catch {
+		throw new Error('FLUXER_VAPID_PRIVATE_KEY does not match FLUXER_VAPID_PUBLIC_KEY');
+	}
+	if (!derived.equals(pub)) {
+		throw new Error('FLUXER_VAPID_PRIVATE_KEY does not match FLUXER_VAPID_PUBLIC_KEY');
 	}
 }
 
@@ -380,6 +442,24 @@ function validatePostgresConfig(config: MasterConfig): void {
 	}
 }
 
+function validateCaptchaConfig(config: MasterConfig): void {
+	const captcha = config.integrations.captcha;
+	if (!captcha.enabled) {
+		return;
+	}
+	if (captcha.provider === 'hcaptcha') {
+		requireString(captcha.hcaptcha?.site_key, 'FLUXER_CAPTCHA_HCAPTCHA_SITE_KEY');
+		requireString(captcha.hcaptcha?.secret_key, 'FLUXER_CAPTCHA_HCAPTCHA_SECRET_KEY');
+		return;
+	}
+	if (captcha.provider === 'turnstile') {
+		requireString(captcha.turnstile?.site_key, 'FLUXER_CAPTCHA_TURNSTILE_SITE_KEY');
+		requireString(captcha.turnstile?.secret_key, 'FLUXER_CAPTCHA_TURNSTILE_SECRET_KEY');
+		return;
+	}
+	throw new Error('FLUXER_CAPTCHA_PROVIDER must be hcaptcha or turnstile when FLUXER_CAPTCHA_ENABLED is true');
+}
+
 function validateApiWorkerConfig(config: MasterConfig): void {
 	const worker = config.services.api?.worker;
 	if (!worker) {
@@ -396,6 +476,88 @@ function validateApiWorkerConfig(config: MasterConfig): void {
 	}
 }
 
+function validateStorageChangeFeedConfig(config: MasterConfig): void {
+	const feed = config.services.api?.storage_change_feed;
+	if (!feed?.enabled) {
+		return;
+	}
+	if (feed.stream === undefined || !/^[A-Za-z0-9_-]+$/u.test(feed.stream)) {
+		throw new Error(
+			'FLUXER_API_STORAGE_CHANGE_FEED_STREAM must be letters, digits, underscores or hyphens when the storage change feed is enabled',
+		);
+	}
+}
+
+function validateCachePurgeConfig(config: MasterConfig): void {
+	const cachePurge = config.integrations.cache_purge;
+	if (cachePurge.adapter !== 'http') {
+		return;
+	}
+	requireString(cachePurge.http.endpoint, 'FLUXER_CACHE_PURGE_HTTP_ENDPOINT');
+	const endpoint = URL.parse(cachePurge.http.endpoint);
+	if (
+		endpoint === null ||
+		(endpoint.protocol !== 'http:' && endpoint.protocol !== 'https:') ||
+		endpoint.username !== '' ||
+		endpoint.password !== ''
+	) {
+		throw new Error('FLUXER_CACHE_PURGE_HTTP_ENDPOINT must be an absolute http or https URL without credentials');
+	}
+	requireString(cachePurge.http.token, 'FLUXER_CACHE_PURGE_HTTP_TOKEN');
+	if (!/^[\x21-\x7e]+$/u.test(cachePurge.http.token)) {
+		throw new Error('FLUXER_CACHE_PURGE_HTTP_TOKEN must contain only visible ASCII characters');
+	}
+	assertIntegerInRange(cachePurge.http.timeout_ms, 'FLUXER_CACHE_PURGE_HTTP_TIMEOUT_MS', 1_000, 10_000);
+}
+
+function validateDomain(value: string, envName: string): void {
+	if (value === '') return;
+	const parsed = URL.parse(`http://${value}/`);
+	const hasPort = value.startsWith('[') ? !value.endsWith(']') : value.includes(':');
+	if (
+		!parsed ||
+		hasPort ||
+		/[\s\p{Cc}/\\?#@%]/u.test(value) ||
+		!parsed.hostname ||
+		parsed.port ||
+		parsed.username ||
+		parsed.password ||
+		parsed.pathname !== '/' ||
+		parsed.search ||
+		parsed.hash
+	) {
+		throw new Error(`${envName} must be a hostname without a scheme, port, credentials, or path`);
+	}
+}
+
+function validatePublicEndpoints(endpoints: DerivedEndpoints): void {
+	for (const [key, value] of Object.entries(endpoints)) {
+		const envName = `FLUXER_${key.toUpperCase()}_ENDPOINT`;
+		requireString(value, envName);
+		const gateway = key === 'gateway';
+		const parsed = URL.parse(value);
+		if (parsed?.port === '0') throw new Error(`${envName} must not use port 0`);
+		const authority = /^[a-z]+:\/\/([^/?#]+)/i.exec(value)?.[1];
+		const allowedProtocols = gateway ? ['ws:', 'wss:'] : ['http:', 'https:'];
+		if (
+			!parsed ||
+			!authority ||
+			!allowedProtocols.includes(parsed.protocol) ||
+			!parsed.hostname ||
+			/[\s\p{Cc}\\]/u.test(value) ||
+			authority.includes('@') ||
+			authority.endsWith(':') ||
+			value.includes('#') ||
+			(!gateway && value.includes('?'))
+		) {
+			const expected = gateway
+				? 'ws/wss URL without credentials or a fragment'
+				: 'http/https base URL without credentials, a query, or a fragment';
+			throw new Error(`${envName} must be an absolute ${expected}`);
+		}
+	}
+}
+
 function normalizeConfig(config: MasterConfig): MasterConfig {
 	assertOneOf(config.env, ['development', 'production', 'test'], 'FLUXER_ENV');
 	assertOneOf(config.domain.public_scheme, ['http', 'https'], 'FLUXER_PUBLIC_SCHEME');
@@ -406,43 +568,81 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	assertOneOf(config.integrations.email.provider, ['smtp', 'none'], 'FLUXER_EMAIL_PROVIDER');
 	assertOneOf(config.integrations.captcha.provider, ['hcaptcha', 'turnstile', 'none'], 'FLUXER_CAPTCHA_PROVIDER');
 	assertOneOf(config.integrations.search.engine, ['elasticsearch', 'meilisearch'], 'FLUXER_SEARCH_ENGINE');
+	assertOneOf(config.integrations.cache_purge.adapter, CACHE_PURGE_ADAPTER_NAMES, 'FLUXER_CACHE_PURGE_ADAPTER');
 	assertOneOf(
 		config.instance.abuse_policy.direct_contact_spam.action,
 		['flag_spammer', 'suppress_delivery'],
 		'FLUXER_ABUSE_DIRECT_CONTACT_SPAM_ACTION',
 	);
 	validatePostgresConfig(config);
+	validateCaptchaConfig(config);
 	validateApiWorkerConfig(config);
+	validateStorageChangeFeedConfig(config);
+	validateCachePurgeConfig(config);
 	assertIntegerInRange(config.services.api.max_inflight_requests, 'FLUXER_API_MAX_INFLIGHT_REQUESTS', 1, 100_000);
 	assertIntegerInRange(config.services.api.headers_timeout_ms, 'FLUXER_API_HEADERS_TIMEOUT_MS', 1_000, 3_600_000);
 	assertIntegerInRange(config.services.api.request_timeout_ms, 'FLUXER_API_REQUEST_TIMEOUT_MS', 1_000, 3_600_000);
+	assertIntegerInRange(config.domain.public_port, 'FLUXER_PUBLIC_PORT', 1, 65_535);
 	requireString(config.domain.base_domain, 'FLUXER_BASE_DOMAIN');
+	for (const key of ['base_domain', 'static_cdn_domain', 'invite_domain', 'gift_domain'] as const) {
+		validateDomain(config.domain[key], `FLUXER_${key.toUpperCase()}`);
+	}
 	requireString(config.auth.sudo_mode_secret, 'FLUXER_SUDO_MODE_SECRET');
 	requireString(config.auth.connection_initiation_secret, 'FLUXER_CONNECTION_INITIATION_SECRET');
-	requireString(config.auth.vapid.public_key, 'FLUXER_VAPID_PUBLIC_KEY');
-	requireString(config.auth.vapid.private_key, 'FLUXER_VAPID_PRIVATE_KEY');
+	validateVapidConfig(config);
 	requireString(config.s3?.access_key_id, 'FLUXER_S3_ACCESS_KEY_ID');
 	requireString(config.s3?.secret_access_key, 'FLUXER_S3_SECRET_ACCESS_KEY');
 	requireString(config.services.media_proxy.secret_key, 'FLUXER_MEDIA_PROXY_SECRET_KEY');
+	validateUploadRelaySecret(config.services.media_proxy.upload_relay.secret_base64, config.services.media_proxy.mode);
+	validateAttachmentUrlSecrets(config.services.media_proxy.attachment_urls.secrets_base64);
 	requireString(config.services.admin.secret_key_base, 'FLUXER_ADMIN_SECRET_KEY_BASE');
 	requireString(config.services.admin.oauth_client_secret, 'FLUXER_ADMIN_OAUTH_CLIENT_SECRET');
-	if (!config.instance.self_hosted) {
-		requireString(config.services.marketing.secret_key_base, 'FLUXER_MARKETING_SECRET_KEY_BASE');
-	}
 	requireString(config.services.gateway.rpc_auth_token, 'FLUXER_GATEWAY_RPC_AUTH_TOKEN');
 	return config;
 }
 
+function applyPublicOrigin(config: MasterConfig): MasterConfig {
+	const raw = config.domain.public_origin;
+	if (raw.trim().length === 0 && !/\p{Cc}/u.test(raw)) {
+		return config;
+	}
+	const origin = parsePublicOrigin(raw);
+	if (!origin) {
+		throw new Error(
+			'FLUXER_PUBLIC_ORIGIN must be a scheme, host and optional port such as https://chat.example.com:8443',
+		);
+	}
+	return {
+		...config,
+		domain: {
+			...config.domain,
+			base_domain: origin.base_domain,
+			public_scheme: origin.public_scheme,
+			public_port: origin.public_port,
+		},
+	};
+}
+
 function applyPublicPort(config: MasterConfig, endpoints: DerivedEndpoints): MasterConfig {
 	const {base_domain, public_port} = config.domain;
-	const normalize = (url: string) => normalizePublicEndpoint(url, base_domain, public_port);
+	const comparisonHost = new URL(buildUrl('http', base_domain)).hostname;
+	const normalize = (url: string) => normalizePublicEndpoint(url, comparisonHost, public_port);
+	const normalizeOptional = (url: string | undefined) => (url === undefined ? undefined : normalize(url));
 	const normalizedEndpoints = {...endpoints};
 	for (const key of Object.keys(normalizedEndpoints) as Array<keyof DerivedEndpoints>) {
 		normalizedEndpoints[key] = normalize(normalizedEndpoints[key]);
 	}
+	const {bluesky, passkeys} = config.auth;
+	const {branding} = config.instance;
+	const {email, sms, voice} = config.integrations;
 	return {
 		...config,
+		domain: {
+			...config.domain,
+			public_origin: buildUrl(config.domain.public_scheme, base_domain, public_port),
+		},
 		endpoints: normalizedEndpoints,
+		s3: config.s3 && {...config.s3, presigned_url_base: normalizeOptional(config.s3.presigned_url_base)},
 		services: {
 			...config.services,
 			media_proxy: {
@@ -452,26 +652,90 @@ function applyPublicPort(config: MasterConfig, endpoints: DerivedEndpoints): Mas
 					endpoint: normalize(config.services.media_proxy.upload_relay.endpoint),
 				},
 			},
+			gateway: {
+				...config.services.gateway,
+				media_proxy_endpoint: normalizeOptional(config.services.gateway.media_proxy_endpoint),
+			},
 		},
 		auth: {
 			...config.auth,
 			passkeys: {
-				...config.auth.passkeys,
-				additional_allowed_origins: config.auth.passkeys.additional_allowed_origins.map(normalize),
+				...passkeys,
+				additional_allowed_origins: passkeys.additional_allowed_origins.map(normalize),
+			},
+			bluesky: {
+				...bluesky,
+				client_uri: normalize(bluesky.client_uri),
+				logo_uri: normalize(bluesky.logo_uri),
+				tos_uri: normalize(bluesky.tos_uri),
+				policy_uri: normalize(bluesky.policy_uri),
+			},
+		},
+		integrations: {
+			...config.integrations,
+			email: {...email, app_base_url: normalize(email.app_base_url)},
+			sms: {...sms, inbound_webhook_public_url: normalizeOptional(sms.inbound_webhook_public_url)},
+			voice: {...voice, url: normalize(voice.url)},
+		},
+		instance: {
+			...config.instance,
+			branding: {
+				...branding,
+				icon_url: normalizeOptional(branding.icon_url),
+				symbol_url: normalizeOptional(branding.symbol_url),
+				logo_url: normalizeOptional(branding.logo_url),
+				wordmark_url: normalizeOptional(branding.wordmark_url),
+				favicon_url: normalizeOptional(branding.favicon_url),
+				status_page_url: normalizeOptional(branding.status_page_url),
+				status_page_incident_history_url: normalizeOptional(branding.status_page_incident_history_url),
 			},
 		},
 	};
+}
+
+function normalizePasskeyOrigin(origin: string, index: number): string {
+	const webOrigin = parseWebOrigin(origin);
+	if (webOrigin) {
+		return webOrigin.origin;
+	}
+	const fingerprint = /^android:apk-key-hash:([A-Za-z0-9_-]{43})$/.exec(origin)?.[1];
+	if (fingerprint) {
+		const bytes = Buffer.from(fingerprint, 'base64url');
+		if (bytes.length === 32 && bytes.toString('base64url') === fingerprint) {
+			return origin;
+		}
+	}
+	throw new Error(
+		`FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS entry ${index + 1} must be an HTTP(S) origin or a canonical Android signing-certificate origin`,
+	);
+}
+
+function normalizePasskeys(config: MasterConfig, useDefaultOrigins: boolean): void {
+	const passkeys = config.auth.passkeys;
+	passkeys.additional_allowed_origins = passkeys.additional_allowed_origins.map(normalizePasskeyOrigin);
+	if (passkeys.rp_id.trim().length === 0) {
+		passkeys.rp_id = config.domain.base_domain;
+	}
+	if (useDefaultOrigins || passkeys.additional_allowed_origins.length === 0) {
+		passkeys.additional_allowed_origins = [
+			...new Set([...passkeys.additional_allowed_origins, new URL(config.endpoints.app).origin]),
+		];
+	}
 }
 
 export async function loadConfig(): Promise<MasterConfig> {
 	if (cachedConfig) {
 		return cachedConfig;
 	}
-	const merged = mergeConfig(defaultConfig(), buildNamedFluxerEnvOverrides(process.env));
+	const overrides = buildNamedFluxerEnvOverrides(process.env);
+	const merged = applyPublicOrigin(mergeConfig(defaultConfig(), overrides));
 	const normalized = normalizeConfig(merged);
 	const derived = deriveEndpointsFromDomain(normalized.domain);
 	const endpoints = {...derived, ...(normalized.endpoint_overrides ?? {})};
-	cachedConfig = applyPublicPort(normalized, endpoints);
+	validatePublicEndpoints(endpoints);
+	const withPublicPort = applyPublicPort(normalized, endpoints);
+	normalizePasskeys(withPublicPort, process.env.FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS === undefined);
+	cachedConfig = withPublicPort;
 	return cachedConfig;
 }
 

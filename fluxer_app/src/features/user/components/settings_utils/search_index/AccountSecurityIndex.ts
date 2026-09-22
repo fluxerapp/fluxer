@@ -48,11 +48,11 @@ const CHANGE_YOUR_PASSWORD_DESCRIPTOR = msg({
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
 const TWO_FACTOR_DESCRIPTOR = msg({
-	message: 'Two factor',
+	message: 'Two-factor',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const MULTI_FACTOR_DESCRIPTOR = msg({
-	message: 'Multi factor',
+	message: 'Multi-factor',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const AUTHENTICATION_DESCRIPTOR = msg({
@@ -64,7 +64,7 @@ const AUTHENTICATOR_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const ONE_TIME_PASSWORD_DESCRIPTOR = msg({
-	message: 'One time password',
+	message: 'One-time password',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const ENABLE_TWO_FACTOR_AUTHENTICATION_DESCRIPTOR = msg({
@@ -80,7 +80,7 @@ const RECOVERY_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const TWO_FACTOR_BACKUP_DESCRIPTOR = msg({
-	message: 'Two factor backup',
+	message: 'Two-factor backup',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const VIEW_OR_REGENERATE_BACKUP_CODES_DESCRIPTOR = msg({
@@ -131,8 +131,28 @@ const ADD_PASSKEY_DESCRIPTOR = msg({
 	message: 'Add passkey',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
-const USE_PASSKEYS_FOR_PASSWORDLESS_SIGN_IN_AND_TWO_DESCRIPTOR = msg({
-	message: 'Use passkeys for passwordless sign-in and two-factor authentication',
+const USE_PASSKEYS_TO_SIGN_IN_WITHOUT_A_PASSWORD_DESCRIPTOR = msg({
+	message: 'Use passkeys to sign in without a password',
+	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
+});
+const PASSKEY_TWO_FACTOR_DESCRIPTOR = msg({
+	message: 'Require a passkey as your second factor',
+	comment: 'Settings search entry label. Also used as a search synonym in the settings search bar.',
+});
+const SECOND_FACTOR_DESCRIPTOR = msg({
+	message: 'Second factor',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const REQUIRE_PASSKEY_DESCRIPTOR = msg({
+	message: 'Require passkey',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const TWO_FA_DESCRIPTOR = msg({
+	message: '2FA',
+	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
+});
+const ASK_FOR_A_PASSKEY_AFTER_YOUR_PASSWORD_DESCRIPTOR = msg({
+	message: 'Ask for a passkey after your password when you sign in',
 	comment: 'Settings search entry description. One-line summary of what the settings search entry controls.',
 });
 const DISABLE_DESCRIPTOR = msg({
@@ -235,7 +255,26 @@ export const accountSecurityIndex: Array<SearchableSettingDescriptor> = [
 			HARDWARE_KEY_DESCRIPTOR,
 			ADD_PASSKEY_DESCRIPTOR,
 		],
-		description: USE_PASSKEYS_FOR_PASSWORDLESS_SIGN_IN_AND_TWO_DESCRIPTOR,
+		description: USE_PASSKEYS_TO_SIGN_IN_WITHOUT_A_PASSWORD_DESCRIPTOR,
+		isVisible: shouldShowClaimedAccountSettings,
+	},
+	{
+		id: 'account-passkey-two-factor',
+		tabType: 'account_security',
+		sectionId: 'security',
+		label: PASSKEY_TWO_FACTOR_DESCRIPTOR,
+		keywords: [
+			PASSKEY_DESCRIPTOR,
+			PASSKEYS_DESCRIPTOR,
+			TWO_FACTOR_DESCRIPTOR,
+			SECOND_FACTOR_DESCRIPTOR,
+			REQUIRE_PASSKEY_DESCRIPTOR,
+			TWO_FA_DESCRIPTOR,
+			MULTI_FACTOR_DESCRIPTOR,
+			AUTHENTICATION_DESCRIPTOR,
+			SECURITY_DESCRIPTOR,
+		],
+		description: ASK_FOR_A_PASSKEY_AFTER_YOUR_PASSWORD_DESCRIPTOR,
 		isVisible: shouldShowClaimedAccountSettings,
 	},
 	{

@@ -31,12 +31,10 @@ interface TwilioErrorResponse {
 	message?: string;
 }
 
-interface TwilioVerificationCheckResponse {
-	status?: string;
-}
-
-interface TwilioVerificationStartResponse {
-	channel?: string;
+interface TwilioResponse {
+	ok: boolean;
+	status: number;
+	body: unknown;
 }
 
 type TwilioCooldownScope = 'account' | 'phone' | 'account_and_phone';
@@ -53,17 +51,17 @@ interface StartVerificationSentryContext extends Record<string, unknown> {
 }
 
 interface TwilioLookupV2Response {
-	valid?: boolean;
-	country_code?: string;
+	valid: boolean;
+	country_code?: string | null;
 	line_type_intelligence?: {
-		type?: string;
-		carrier_name?: string;
-		error_code?: number;
-	};
+		type?: string | null;
+		carrier_name?: string | null;
+		error_code?: number | null;
+	} | null;
 	sms_pumping_risk?: {
-		sms_pumping_risk_score?: number;
-		error_code?: number;
-	};
+		sms_pumping_risk_score?: number | null;
+		error_code?: number | null;
+	} | null;
 }
 
 export interface TwilioSmsProviderConfig {
@@ -82,6 +80,7 @@ interface TwilioSmsProviderDependencies {
 }
 
 const DEFAULT_LOOKUP_TIMEOUT_MS = 3000;
+const VERIFY_TIMEOUT_MS = 10000;
 const KNOWN_LINE_TYPES: ReadonlySet<PhoneLineType> = new Set<PhoneLineType>([
 	'mobile',
 	'landline',
@@ -97,7 +96,45 @@ const KNOWN_LINE_TYPES: ReadonlySet<PhoneLineType> = new Set<PhoneLineType>([
 	'unknown',
 ]);
 
-function normalizeLineType(raw: string | undefined): PhoneLineType | null {
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isNullishString(value: unknown): value is string | null | undefined {
+	return value == null || typeof value === 'string';
+}
+
+function isNullishInteger(value: unknown): value is number | null | undefined {
+	return value == null || (typeof value === 'number' && Number.isSafeInteger(value));
+}
+
+function isTwilioLookupResponse(value: unknown): value is TwilioLookupV2Response {
+	if (!isRecord(value) || typeof value.valid !== 'boolean' || !isNullishString(value.country_code)) return false;
+	const line = value.line_type_intelligence;
+	if (
+		line != null &&
+		(!isRecord(line) ||
+			!isNullishString(line.type) ||
+			!isNullishString(line.carrier_name) ||
+			!isNullishInteger(line.error_code))
+	) {
+		return false;
+	}
+	const risk = value.sms_pumping_risk;
+	if (risk == null) return true;
+	if (!isRecord(risk) || !isNullishInteger(risk.error_code)) return false;
+	const score = risk.sms_pumping_risk_score;
+	return isNullishInteger(score) && (score == null || (score >= 0 && score <= 100));
+}
+
+function parseTwilioError(value: unknown): TwilioErrorResponse | null {
+	if (!isRecord(value)) return null;
+	if (value.code !== undefined && (typeof value.code !== 'number' || !Number.isSafeInteger(value.code))) return null;
+	if (value.message !== undefined && typeof value.message !== 'string') return null;
+	return {code: value.code, message: value.message};
+}
+
+function normalizeLineType(raw: string | null | undefined): PhoneLineType | null {
 	if (!raw) return null;
 	return KNOWN_LINE_TYPES.has(raw as PhoneLineType) ? (raw as PhoneLineType) : 'unknown';
 }
@@ -185,7 +222,7 @@ export class TwilioSmsProvider implements ISmsProvider {
 				requestBody[`RateLimits[${key}]`] = value;
 			}
 		}
-		let response: Response;
+		let response: TwilioResponse;
 		try {
 			response = await this.requestTwilio('Verifications', requestBody);
 		} catch (error) {
@@ -196,24 +233,23 @@ export class TwilioSmsProvider implements ISmsProvider {
 			throw new SmsVerificationUnavailableError();
 		}
 		if (response.ok) {
-			let parsed: TwilioVerificationStartResponse | null = null;
-			try {
-				parsed = (await response.json()) as TwilioVerificationStartResponse;
-			} catch (error) {
-				this.logger.warn(
-					{
-						error: error instanceof Error ? error.message : String(error),
-						phone: maskPhoneNumber(phone),
-						channel: requestedChannel,
-					},
-					'[TwilioSmsProvider] Verification start response JSON parse failed',
+			const parsed = response.body;
+			if (
+				!isRecord(parsed) ||
+				!isNullishString(parsed.channel) ||
+				(parsed.status !== undefined && parsed.status !== 'pending' && parsed.status !== 'approved')
+			) {
+				this.logger.error(
+					{phone: maskPhoneNumber(phone), status: response.status},
+					'[TwilioSmsProvider] Invalid verification start response',
 				);
+				throw new SmsVerificationUnavailableError();
 			}
 			return {
-				channel: parsed?.channel ?? requestedChannel,
+				channel: parsed.channel ?? requestedChannel,
 			};
 		}
-		const body = await this.parseErrorBody(response);
+		const body = parseTwilioError(response.body);
 		if (body?.code === TWILIO_INVALID_PHONE_ERROR_CODE) {
 			throw new InvalidPhoneNumberError();
 		}
@@ -230,7 +266,7 @@ export class TwilioSmsProvider implements ISmsProvider {
 	}
 
 	async checkVerification(phone: string, code: string): Promise<boolean> {
-		let response: Response;
+		let response: TwilioResponse;
 		try {
 			response = await this.requestTwilio('VerificationCheck', {
 				To: phone,
@@ -244,7 +280,7 @@ export class TwilioSmsProvider implements ISmsProvider {
 			throw new SmsVerificationUnavailableError();
 		}
 		if (!response.ok) {
-			const body = await this.parseErrorBody(response);
+			const body = parseTwilioError(response.body);
 			const rateLimitError = this.createRateLimitError(response, body, 'VerificationCheck');
 			if (rateLimitError) {
 				throw rateLimitError;
@@ -263,21 +299,26 @@ export class TwilioSmsProvider implements ISmsProvider {
 			}
 			return false;
 		}
-		const body = (await response.json()) as TwilioVerificationCheckResponse;
+		const body = response.body;
+		if (!isRecord(body) || typeof body.status !== 'string') {
+			this.logger.error(
+				{phone: maskPhoneNumber(phone), status: response.status},
+				'[TwilioSmsProvider] Invalid verification check response',
+			);
+			throw new SmsVerificationUnavailableError();
+		}
 		return body.status === 'approved';
 	}
 
 	async lookupPhone(phone: string): Promise<PhoneLookupResult | null> {
 		const url = `${this.lookupApiUrl}/PhoneNumbers/${encodeURIComponent(phone)}?Fields=line_type_intelligence,sms_pumping_risk`;
 		const auth = Buffer.from(`${this.config.accountSid}:${this.config.authToken}`).toString('base64');
-		const abort = new AbortController();
-		const timer = setTimeout(() => abort.abort(), this.lookupTimeoutMs);
 		let response: Response;
 		try {
 			response = await this.fetchFn(url, {
 				method: 'GET',
 				headers: {Authorization: `Basic ${auth}`},
-				signal: abort.signal,
+				signal: AbortSignal.timeout(this.lookupTimeoutMs),
 			});
 		} catch (error) {
 			this.logger.warn(
@@ -285,10 +326,14 @@ export class TwilioSmsProvider implements ISmsProvider {
 				'[TwilioSmsProvider] Lookup request failed (fail-open)',
 			);
 			return null;
-		} finally {
-			clearTimeout(timer);
 		}
 		if (response.status === 404) {
+			await response.body?.cancel().catch(() => {
+				this.logger.warn(
+					{status: response.status},
+					'[TwilioSmsProvider] Failed to cancel discarded lookup response body',
+				);
+			});
 			return {
 				valid: false,
 				lineType: null,
@@ -310,14 +355,18 @@ export class TwilioSmsProvider implements ISmsProvider {
 			);
 			return null;
 		}
-		let parsed: TwilioLookupV2Response;
+		let parsed: unknown;
 		try {
-			parsed = (await response.json()) as TwilioLookupV2Response;
+			parsed = await response.json();
 		} catch (error) {
 			this.logger.warn(
 				{error: error instanceof Error ? error.message : String(error), phone: maskPhoneNumber(phone)},
 				'[TwilioSmsProvider] Lookup response JSON parse failed (fail-open)',
 			);
+			return null;
+		}
+		if (!isTwilioLookupResponse(parsed)) {
+			this.logger.warn({phone: maskPhoneNumber(phone)}, '[TwilioSmsProvider] Invalid lookup response (fail-open)');
 			return null;
 		}
 		const countryCode = parsed.country_code ?? null;
@@ -336,36 +385,40 @@ export class TwilioSmsProvider implements ISmsProvider {
 				'[TwilioSmsProvider] Lookup sms_pumping_risk reported error_code',
 			);
 		}
-		const rawScore = parsed.sms_pumping_risk?.sms_pumping_risk_score;
-		const smsPumpingRiskScore = typeof rawScore === 'number' && Number.isFinite(rawScore) ? rawScore : null;
 		return {
-			valid: parsed.valid !== false,
+			valid: parsed.valid,
 			lineType: normalizeLineType(parsed.line_type_intelligence?.type),
 			countryCode,
 			carrierName,
-			smsPumpingRiskScore,
+			smsPumpingRiskScore: parsed.sms_pumping_risk?.sms_pumping_risk_score ?? null,
 		};
 	}
 
 	private async requestTwilio(
 		endpoint: 'Verifications' | 'VerificationCheck',
 		body: Record<string, string>,
-	): Promise<Response> {
+	): Promise<TwilioResponse> {
 		const url = `${this.verifyApiUrl}/Services/${this.config.verifyServiceSid}/${endpoint}`;
 		const auth = Buffer.from(`${this.config.accountSid}:${this.config.authToken}`).toString('base64');
-		return this.fetchFn(url, {
+		const response = await this.fetchFn(url, {
 			method: 'POST',
 			headers: {
 				Authorization: `Basic ${auth}`,
 				'Content-Type': 'application/x-www-form-urlencoded',
 			},
 			body: new URLSearchParams(body).toString(),
+			signal: AbortSignal.timeout(VERIFY_TIMEOUT_MS),
 		});
+		const parsed: unknown = await response.json().catch((error: unknown) => {
+			if (response.ok) throw error;
+			return null;
+		});
+		return {ok: response.ok, status: response.status, body: parsed};
 	}
 
 	private async parseErrorBody(response: Response): Promise<TwilioErrorResponse | null> {
 		try {
-			return (await response.json()) as TwilioErrorResponse;
+			return parseTwilioError(await response.json());
 		} catch {
 			return null;
 		}

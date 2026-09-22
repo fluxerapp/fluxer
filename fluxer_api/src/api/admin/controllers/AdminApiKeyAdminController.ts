@@ -1,22 +1,38 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
+import {recordAdminRead, recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
+import type {AdminApiKeyView} from '@app/api/admin/services/AdminApiKeyService';
+import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {
+	AdminApiKeyListResponse,
 	CreateAdminApiKeyRequest,
 	CreateAdminApiKeyResponse,
 	type CreateAdminApiKeyResponse as CreateAdminApiKeyResponseType,
 	DeleteApiKeyResponse,
 	ListAdminApiKeyResponse,
 	type ListAdminApiKeyResponse as ListAdminApiKeyResponseType,
+	UpdateAdminApiKeyRequest,
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {KeyIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
-import {z} from 'zod';
-import {requireAdminACL} from '../../middleware/AdminMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
+
+function toApiKeyResponse(key: AdminApiKeyView): ListAdminApiKeyResponseType {
+	return {
+		key_id: key.keyId,
+		name: key.name,
+		created_at: key.createdAt.toISOString(),
+		last_used_at: key.lastUsedAt?.toISOString() ?? null,
+		expires_at: key.expiresAt?.toISOString() ?? null,
+		created_by_user_id: String(key.createdById),
+		acls: Array.from(key.acls),
+	};
+}
 
 export function AdminApiKeyAdminController(app: HonoApp) {
 	app.post(
@@ -48,16 +64,26 @@ export function AdminApiKeyAdminController(app: HonoApp) {
 				expires_at: result.apiKey.expiresAt?.toISOString() ?? null,
 				acls: Array.from(result.apiKey.acls),
 			};
+			await recordAdminWrite(ctx, {
+				targetType: 'admin_api_key',
+				targetId: BigInt(result.apiKey.keyId),
+				action: 'create_admin_api_key',
+				metadata: {
+					acls: response.acls.join(','),
+					expires_in_days: request.expires_in_days,
+				},
+			});
 			return ctx.json(response);
 		},
 	);
 	app.get(
 		'/admin/api-keys',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
 		requireAdminACL(AdminACLs.ADMIN_API_KEY_MANAGE),
 		OpenAPI({
 			operationId: 'list_admin_api_keys',
 			summary: 'List admin API keys',
-			responseSchema: z.array(ListAdminApiKeyResponse),
+			responseSchema: AdminApiKeyListResponse,
 			statusCode: 200,
 			security: ['adminApiKey'],
 			tags: ['Admin'],
@@ -68,26 +94,88 @@ export function AdminApiKeyAdminController(app: HonoApp) {
 			const adminApiKeyService = ctx.get('adminApiKeyService');
 			const user = ctx.get('user');
 			const keys = await adminApiKeyService.listKeys(user.id);
-			const response: Array<ListAdminApiKeyResponseType> = keys.map((key) => ({
-				key_id: key.keyId,
-				name: key.name,
-				created_at: key.createdAt.toISOString(),
-				last_used_at: key.lastUsedAt?.toISOString() ?? null,
-				expires_at: key.expiresAt?.toISOString() ?? null,
-				created_by_user_id: String(key.createdById),
-				acls: Array.from(key.acls),
-			}));
+			const response: Array<ListAdminApiKeyResponseType> = keys.map(toApiKeyResponse);
+			await recordAdminRead(ctx, {
+				targetType: 'admin_api_key',
+				targetId: 0n,
+				action: AdminAuditReadActions.LIST_ADMIN_API_KEYS,
+				metadata: {result_count: response.length},
+			});
+			return ctx.json(response);
+		},
+	);
+	app.get(
+		'/admin/api-keys/:key_id',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
+		requireAdminACL(AdminACLs.ADMIN_API_KEY_MANAGE),
+		Validator('param', KeyIdParam),
+		OpenAPI({
+			operationId: 'get_admin_api_key',
+			summary: 'Get admin API key',
+			responseSchema: ListAdminApiKeyResponse,
+			statusCode: 200,
+			security: ['adminApiKey'],
+			tags: ['Admin'],
+			description:
+				'Retrieves a single API key created by the authenticated admin. Returns metadata including creation time, last used time, and assigned permissions. The actual key material is never returned.',
+		}),
+		async (ctx) => {
+			const adminApiKeyService = ctx.get('adminApiKeyService');
+			const user = ctx.get('user');
+			const keyId = ctx.req.valid('param').key_id;
+			const key = await adminApiKeyService.getKey(keyId, user.id);
+			await recordAdminRead(ctx, {
+				targetType: 'admin_api_key',
+				targetId: keyId,
+				action: AdminAuditReadActions.GET_ADMIN_API_KEY,
+			});
+			return ctx.json(toApiKeyResponse(key));
+		},
+	);
+	app.patch(
+		'/admin/api-keys/:key_id',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
+		requireAdminACL(AdminACLs.ADMIN_API_KEY_MANAGE),
+		Validator('param', KeyIdParam),
+		Validator('json', UpdateAdminApiKeyRequest),
+		OpenAPI({
+			operationId: 'update_admin_api_key',
+			summary: 'Update admin API key',
+			responseSchema: ListAdminApiKeyResponse,
+			statusCode: 200,
+			security: ['adminApiKey'],
+			tags: ['Admin'],
+			description:
+				'Renames an API key or replaces the access control lists (ACLs) it carries. The key may only carry permissions the acting admin already holds. Omitted fields are left unchanged and the key material is never rotated or returned.',
+		}),
+		async (ctx) => {
+			const adminApiKeyService = ctx.get('adminApiKeyService');
+			const user = ctx.get('user');
+			const adminUserAcls = ctx.get('adminUserAcls');
+			const keyId = ctx.req.valid('param').key_id;
+			const request = ctx.req.valid('json');
+			const key = await adminApiKeyService.updateKey(keyId, user.id, request, adminUserAcls);
+			const response = toApiKeyResponse(key);
+			await recordAdminWrite(ctx, {
+				targetType: 'admin_api_key',
+				targetId: keyId,
+				action: 'update_admin_api_key',
+				metadata: {
+					fields: (['name', 'acls'] as const).filter((field) => request[field] !== undefined).join(','),
+					acls: request.acls !== undefined ? response.acls.join(',') : undefined,
+				},
+			});
 			return ctx.json(response);
 		},
 	);
 	app.delete(
-		'/admin/api-keys/:keyId',
+		'/admin/api-keys/:key_id',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
 		requireAdminACL(AdminACLs.ADMIN_API_KEY_MANAGE),
 		Validator('param', KeyIdParam),
 		OpenAPI({
 			operationId: 'delete_admin_api_key',
-			summary: 'Delete admin API key',
+			summary: 'Revoke admin API key',
 			responseSchema: DeleteApiKeyResponse,
 			statusCode: 200,
 			security: ['adminApiKey'],
@@ -98,8 +186,13 @@ export function AdminApiKeyAdminController(app: HonoApp) {
 		async (ctx) => {
 			const adminApiKeyService = ctx.get('adminApiKeyService');
 			const user = ctx.get('user');
-			const keyId = ctx.req.valid('param').keyId;
+			const keyId = ctx.req.valid('param').key_id;
 			await adminApiKeyService.revokeKey(keyId, user.id);
+			await recordAdminWrite(ctx, {
+				targetType: 'admin_api_key',
+				targetId: keyId,
+				action: 'revoke_admin_api_key',
+			});
 			return ctx.json({success: true}, 200);
 		},
 	);

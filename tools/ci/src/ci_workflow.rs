@@ -55,6 +55,11 @@ pub async fn run_ci(args: CiArgs) -> Result<()> {
             run_generators(&root, false)?;
             run_app_test_artifact_generators(&root, AppWasm::ReuseIfPresent)?;
             run_workspace_tests(&root)?;
+            run_command(
+                CommandSpec::new("pnpm")
+                    .args(["--filter", "fluxer_desktop", "test:main"])
+                    .current_dir(&root),
+            )?;
             run_command(with_test_env(
                 CommandSpec::new("pnpm")
                     .args(["--filter", "fluxer_api", "test"])
@@ -144,10 +149,8 @@ fn run_generators(root: &Path, for_typecheck: bool) -> Result<()> {
 }
 
 fn generator_commands(for_typecheck: bool) -> Vec<CommandSpec> {
-    let mut commands = vec![
-        CommandSpec::new("pnpm").args(["--filter", "@fluxer/config", "generate"]),
-        CommandSpec::new("pnpm").args(["--filter", "@fluxer/schema", "generate"]),
-    ];
+    let mut commands =
+        vec![CommandSpec::new("pnpm").args(["--filter", "@fluxer/schema", "generate"])];
     if for_typecheck {
         commands.push(CommandSpec::new("pnpm").args([
             "--filter",

@@ -1,14 +1,14 @@
-FROM chrislusf/seaweedfs:4.31 AS seaweedfs
+FROM chrislusf/seaweedfs:4.47 AS seaweedfs
 
-FROM erlang:28.5.0.1
+FROM erlang:28.5.0.6
 
 ARG USERNAME=vscode
 ARG USER_UID=1000
 ARG USER_GID=1000
-ARG NODE_MAJOR=24
-ARG ELP_VERSION=2026-02-27
-ARG PNPM_VERSION=10.29.3
-ARG WASM_BINDGEN_VERSION=0.2.123
+ARG NODE_MAJOR=26
+ARG ELP_VERSION=2026-08-10
+ARG PNPM_VERSION=11.27.0
+ARG WASM_BINDGEN_VERSION=0.2.128
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -131,7 +131,8 @@ RUN apt-get update \
 RUN curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL https://deb.nodesource.com/setup_${NODE_MAJOR}.x | bash - \
 	&& apt-get install -y --no-install-recommends nodejs \
 	&& rm -rf /var/lib/apt/lists/* \
-	&& corepack enable
+	&& npm install -g "pnpm@${PNPM_VERSION}" \
+	&& pnpm --version
 
 RUN python3 -m pip install --break-system-packages --no-cache-dir awscli
 
@@ -167,7 +168,7 @@ RUN ARCH="$(dpkg --print-architecture)" \
 		arm64) ELP_ARCH="aarch64" ;; \
 		*) echo "Unsupported architecture for ELP: $ARCH" >&2; exit 1 ;; \
 	esac \
-	&& curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL "https://github.com/WhatsApp/erlang-language-platform/releases/download/${ELP_VERSION}/elp-linux-${ELP_ARCH}-unknown-linux-gnu-otp-28.tar.gz" -o /tmp/elp.tgz \
+	&& curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL "https://github.com/WhatsApp/erlang-language-platform/releases/download/${ELP_VERSION}/elp-linux-${ELP_ARCH}-unknown-linux-gnu-otp-28.5.tar.gz" -o /tmp/elp.tgz \
 	&& tar -C /usr/local/bin -xzf /tmp/elp.tgz elp \
 	&& chmod +x /usr/local/bin/elp \
 	&& rm /tmp/elp.tgz
@@ -193,8 +194,5 @@ RUN curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL https://sh.rustup.rs
 	&& cargo install cargo-watch --locked \
 	&& cargo install wasm-bindgen-cli --version "${WASM_BINDGEN_VERSION}" --locked \
 	&& rm -rf "/home/${USERNAME}/.cargo/registry" "/home/${USERNAME}/.cargo/git"
-
-RUN corepack prepare "pnpm@${PNPM_VERSION}" --activate \
-	&& pnpm --version
 
 WORKDIR /workspaces/fluxer

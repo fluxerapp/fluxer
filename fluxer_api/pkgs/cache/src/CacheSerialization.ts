@@ -6,12 +6,8 @@ import type {CacheLookupResult} from '@pkgs/cache/src/ICacheService';
 export function parseCachedValue<T>(value: string, logger?: CacheLogger): CacheLookupResult<T> {
 	try {
 		return {hit: true, value: JSON.parse(value)};
-	} catch (error) {
-		if (logger) {
-			const truncatedValue = value.length > 200 ? `${value.substring(0, 200)}...` : value;
-			const errorMessage = error instanceof Error ? error.message : String(error);
-			logger.error({errorMessage, value: truncatedValue}, '[CacheProvider] JSON parse error');
-		}
+	} catch {
+		logger?.error({valueLength: value.length}, '[CacheProvider] JSON parse error');
 		return {hit: false};
 	}
 }

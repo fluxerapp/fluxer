@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	type ReadStateEntryStatusInput,
+	resolveReadStateEntryStatus,
+} from '@app/features/read_state/state/read_states/ReadStateEntryStatusMachine';
 import {fromTimestamp} from '@fluxer/snowflake/src/SnowflakeUtils';
-import {bench, describe} from 'vitest';
-import {type ReadStateEntryStatusInput, resolveReadStateEntryStatus} from './ReadStateEntryStatusMachine';
+import {test} from 'vitest';
 
 const BASE_TIMESTAMP = Date.UTC(2024, 0, 1);
 const ACK_ID = fromTimestamp(BASE_TIMESTAMP + 1_000);
 const LAST_ID = fromTimestamp(BASE_TIMESTAMP + 2_000);
+const ACK_TS = BASE_TIMESTAMP + 1_000;
+const LAST_TS = BASE_TIMESTAMP + 2_000;
 const INPUTS = Object.freeze(
 	Array.from({length: 100_000}, (_, index): ReadStateEntryStatusInput => {
 		switch (index % 6) {
@@ -14,62 +19,68 @@ const INPUTS = Object.freeze(
 				return {
 					supportsUnreadTracking: false,
 					hasBlockedDirectMessageRecipient: false,
-					readStateKnown: true,
 					lastMessageId: LAST_ID,
 					ackMessageId: ACK_ID,
+					ackTimestamp: ACK_TS,
+					lastMessageTimestamp: LAST_TS,
 					mentionCount: 1,
 				};
 			case 1:
 				return {
 					supportsUnreadTracking: true,
 					hasBlockedDirectMessageRecipient: true,
-					readStateKnown: true,
 					lastMessageId: LAST_ID,
 					ackMessageId: ACK_ID,
+					ackTimestamp: ACK_TS,
+					lastMessageTimestamp: LAST_TS,
 					mentionCount: 1,
 				};
 			case 2:
 				return {
 					supportsUnreadTracking: true,
 					hasBlockedDirectMessageRecipient: false,
-					readStateKnown: false,
 					lastMessageId: LAST_ID,
-					ackMessageId: ACK_ID,
+					ackMessageId: null,
+					ackTimestamp: ACK_TS,
+					lastMessageTimestamp: LAST_TS,
 					mentionCount: 0,
 				};
 			case 3:
 				return {
 					supportsUnreadTracking: true,
 					hasBlockedDirectMessageRecipient: false,
-					readStateKnown: true,
 					lastMessageId: null,
 					ackMessageId: ACK_ID,
+					ackTimestamp: ACK_TS,
+					lastMessageTimestamp: LAST_TS,
 					mentionCount: 0,
 				};
 			case 4:
 				return {
 					supportsUnreadTracking: true,
 					hasBlockedDirectMessageRecipient: false,
-					readStateKnown: true,
 					lastMessageId: LAST_ID,
 					ackMessageId: ACK_ID,
+					ackTimestamp: ACK_TS,
+					lastMessageTimestamp: LAST_TS,
 					mentionCount: 2,
 				};
 			default:
 				return {
 					supportsUnreadTracking: true,
 					hasBlockedDirectMessageRecipient: false,
-					readStateKnown: true,
 					lastMessageId: LAST_ID,
 					ackMessageId: LAST_ID,
+					ackTimestamp: ACK_TS,
+					lastMessageTimestamp: LAST_TS,
 					mentionCount: 0,
 				};
 		}
 	}),
 );
 
-describe('ReadStateEntryStatusMachine benchmarks', () => {
-	bench('resolves 100k mixed read-state entry statuses', () => {
+test('ReadStateEntryStatusMachine benchmarks', async ({bench}) => {
+	await bench('resolves 100k mixed read-state entry statuses', () => {
 		let unreadOrMentionCount = 0;
 		for (const input of INPUTS) {
 			if (resolveReadStateEntryStatus(input).isUnreadOrMentioned) {
@@ -77,5 +88,5 @@ describe('ReadStateEntryStatusMachine benchmarks', () => {
 			}
 		}
 		(globalThis as {__readStateEntryStatusBenchSink?: number}).__readStateEntryStatusBenchSink = unreadOrMentionCount;
-	});
+	}).run();
 });

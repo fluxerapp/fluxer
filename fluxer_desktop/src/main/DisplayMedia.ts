@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {BrowserWindow, desktopCapturer, ipcMain, screen} from 'electron';
-import log from 'electron-log';
 import {
 	isListOnlyDesktopSourcesOption,
 	isValidDesktopSourceId,
 	isValidDisplayMediaRequestId,
 	normalizeDesktopSourceTypes,
 	shouldHonorSelectedAudio,
-} from './DisplayMediaValidation';
-import {startWindowsScreenCaptureGuardForSource} from './WindowsScreenCaptureGuard';
+} from '@electron/main/DisplayMediaValidation';
+import {startWindowsScreenCaptureGuardForSource} from '@electron/main/WindowsScreenCaptureGuard';
+import {BrowserWindow, desktopCapturer, ipcMain, screen} from 'electron';
+import log from 'electron-log';
 
 type DisplayMediaPortalSurfacePreference = 'window' | 'monitor';
 
@@ -461,7 +461,7 @@ export function registerDisplayMediaHandlers(): void {
 					name: selectedSource.name,
 					withAudio: withAudio === true,
 				});
-				startWindowsScreenCaptureGuardForSource(selectedSource);
+				startWindowsScreenCaptureGuardForSource(selectedSource, event.sender);
 				const _attachAudio = shouldHonorSelectedAudio(pending.audioRequested, withAudio);
 				const streams: Electron.Streams = {
 					video: selectedSource,

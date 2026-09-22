@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import {Logger} from '@app/api/Logger';
 import {getDefaultCassandraClient} from '@pkgs/cassandra/src/Client';
 import {createCassandraIpInfoCache} from '@pkgs/geoip/src/CassandraIpInfoCache';
 import {createCassandraIpInfoRequestAuditLogger} from '@pkgs/geoip/src/CassandraIpInfoRequestAudit';
-import type {IpInfoCache, IpInfoRequestAuditLogger} from '@pkgs/geoip/src/IpInfoService';
+import {type IpInfoCache, type IpInfoRequestAuditLogger, isCachedIpInfoFailure} from '@pkgs/geoip/src/IpInfoService';
 import {createPostgresIpInfoCache, createPostgresIpInfoRequestAuditLogger} from '@pkgs/geoip/src/PostgresIpInfoKv';
 import {createTieredIpInfoCache} from '@pkgs/geoip/src/TieredIpInfoCache';
 import {getDefaultPostgresClient} from '@pkgs/postgres/src/Client';
-import {Config} from '../Config';
-import {Logger} from '../Logger';
 
 interface BuildIpInfoCacheOptions {
 	hot: IpInfoCache;
@@ -22,11 +22,13 @@ export function buildIpInfoCache(options: BuildIpInfoCacheOptions): IpInfoCache 
 				getClient: getDefaultPostgresClient,
 				onError: (error, operation) => Logger.warn({error, operation}, 'Postgres IPInfo cache operation failed'),
 			}),
+			skipColdWrite: isCachedIpInfoFailure,
 		});
 	}
 	return createTieredIpInfoCache({
 		hot: options.hot,
 		cold: createCassandraIpInfoCache({getClient: getDefaultCassandraClient}),
+		skipColdWrite: isCachedIpInfoFailure,
 	});
 }
 

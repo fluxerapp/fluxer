@@ -460,6 +460,7 @@ export interface VoiceEngineV2OutboundStats {
 	configuredFps?: number;
 	targetFps?: number;
 	effectiveFps?: number;
+	sourceFps?: number;
 	framesProduced?: number;
 	framesAccepted?: number;
 	framesDropped?: number;
@@ -499,12 +500,14 @@ export interface VoiceEngineV2PerTrackStats {
 	kind: 'audio' | 'video' | 'unknown';
 	ssrc?: number;
 	rid?: string;
+	active?: boolean;
 	mid?: string;
 	trackIdentifier?: string;
 	mediaSourceId?: string;
 	codec?: string;
 	payloadType?: number;
 	bitrateKbps: number;
+	bitrateWindowMs?: number;
 	packetsLost?: number;
 	packetsLossPercent?: number;
 	jitterMs?: number;
@@ -526,7 +529,6 @@ export interface VoiceEngineV2PerTrackStats {
 	maxPushLatencyMs?: number;
 	adaptiveSendTier?: string;
 	adaptiveSendReason?: string;
-	sourceFrames?: number;
 	framesEncoded?: number;
 	framesDecoded?: number;
 	framesDropped?: number;

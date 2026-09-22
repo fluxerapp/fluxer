@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {IGuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
+import type {Guild} from '@app/api/models/Guild';
+import type {GuildDiscoveryContext} from '@app/api/search/guild/GuildSearchSerializer';
 import {DiscoveryApplicationStatus} from '@fluxer/constants/src/DiscoveryConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
-import type {IGuildDiscoveryRepository} from '../../guild/repositories/GuildDiscoveryRepository';
-import type {Guild} from '../../models/Guild';
-import type {GuildDiscoveryContext} from './GuildSearchSerializer';
 
 export async function resolveDiscoveryContextForIndexing(
 	guild: Guild,

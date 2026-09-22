@@ -1,12 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import {parseDeletionQueueMember, parseDeletionQueueUserId} from '@app/api/infrastructure/DeletionQueueMember';
+import {Logger} from '@app/api/Logger';
+import type {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {
+	isPendingDeletionBlocked,
+	resolvePendingDeletionReasonCode,
+} from '@app/api/user/services/PendingDeletionCoordinator';
+import {getValidTimestamp, parseStoredTimestamp} from '@app/api/utils/TimestampUtils';
+import {Int32Type} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {generateLockToken} from '@pkgs/cache/src/CacheLockValidation';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import {ms, seconds} from 'itty-time';
-import type {UserID} from '../BrandedTypes';
-import {Logger} from '../Logger';
-import type {UserRepository} from '../user/repositories/UserRepository';
-import {isPendingDeletionBlocked, resolvePendingDeletionReasonCode} from '../user/services/PendingDeletionCoordinator';
 
 interface QueuedDeletion {
 	userId: bigint;
@@ -25,32 +31,44 @@ export class KVAccountDeletionQueueService {
 	) {}
 
 	private serializeQueueItem(item: QueuedDeletion): string {
-		return `${item.userId}|${item.deletionReasonCode}`;
+		const userId = parseDeletionQueueUserId(item.userId.toString());
+		const reasonCode = this.validateReasonCode(item.deletionReasonCode);
+		return `${userId}|${reasonCode}`;
 	}
 
 	private deserializeQueueItem(value: string): QueuedDeletion {
-		const parts = value.split('|');
+		const {userId, payload} = parseDeletionQueueMember(value);
+		if (payload.length > 10 || /\D/.test(payload)) {
+			throw new TypeError('Deletion queue reason code must be a decimal nonnegative 32-bit integer');
+		}
 		return {
-			userId: BigInt(parts[0]),
-			deletionReasonCode: parseInt(parts[1], 10),
+			userId,
+			deletionReasonCode: this.validateReasonCode(Number(payload)),
 		};
+	}
+
+	private validateReasonCode(value: number): number {
+		const parsed = Int32Type.safeParse(value);
+		if (!parsed.success) {
+			throw new TypeError('Deletion queue reason code must be a decimal nonnegative 32-bit integer');
+		}
+		return parsed.data;
 	}
 
 	async needsRebuild(): Promise<boolean> {
 		try {
-			const versionExists = await this.kvClient.exists(STATE_VERSION_KEY);
-			if (!versionExists) {
+			const stateVersion = parseStoredTimestamp(
+				await this.kvClient.get(STATE_VERSION_KEY),
+				'Deletion queue state version',
+			);
+			if (stateVersion === null) {
 				Logger.debug('Deletion queue needs rebuild: no state version');
 				return true;
 			}
-			const stateVersionStr = await this.kvClient.get(STATE_VERSION_KEY);
-			if (stateVersionStr) {
-				const stateVersion = parseInt(stateVersionStr, 10);
-				const ageMs = Date.now() - stateVersion;
-				if (ageMs > ms('1 day')) {
-					Logger.debug({ageMs, maxAgeMs: ms('1 day')}, 'Deletion queue needs rebuild: state too old');
-					return true;
-				}
+			const ageMs = Date.now() - stateVersion;
+			if (ageMs > ms('1 day')) {
+				Logger.debug({ageMs, maxAgeMs: ms('1 day')}, 'Deletion queue needs rebuild: state too old');
+				return true;
 			}
 			return false;
 		} catch (error) {
@@ -68,39 +86,30 @@ export class KVAccountDeletionQueueService {
 			let totalProcessed = 0;
 			let totalQueued = 0;
 			const batchSize = 1000;
-			while (true) {
+			do {
 				const page = await this.userRepository.scanAllUsersPage(batchSize, pageState);
-				const users = page.users;
-				if (users.length === 0) {
-					break;
-				}
-				let batchQueued = 0;
-				for (const user of users) {
-					if (user.pendingDeletionAt && !isPendingDeletionBlocked(user)) {
-						const queueItem: QueuedDeletion = {
-							userId: user.id,
-							deletionReasonCode: resolvePendingDeletionReasonCode(user, 0),
-						};
-						const score = user.pendingDeletionAt.getTime();
-						const value = this.serializeQueueItem(queueItem);
-						const secondaryKey = this.getSecondaryKey(user.id);
-						await this.kvClient.scheduleBulkDeletion(QUEUE_KEY, secondaryKey, score, value);
-						batchQueued++;
-					}
-				}
-				totalQueued += batchQueued;
-				totalProcessed += users.length;
 				pageState = page.pageState;
+				const users = page.users;
+				for (const user of users) {
+					if (!user.pendingDeletionAt || (!user.deletionStartedAt && isPendingDeletionBlocked(user))) continue;
+					const queueItem: QueuedDeletion = {
+						userId: user.id,
+						deletionReasonCode: resolvePendingDeletionReasonCode(user, 0),
+					};
+					const score = getValidTimestamp(user.pendingDeletionAt, `Pending deletion timestamp for user ${user.id}`);
+					const value = this.serializeQueueItem(queueItem);
+					const secondaryKey = this.getSecondaryKey(user.id);
+					await this.kvClient.scheduleBulkDeletion(QUEUE_KEY, secondaryKey, score, value);
+					totalQueued++;
+				}
+				totalProcessed += users.length;
 				if (lockToken !== null) {
 					await this.renewRebuildLock(lockToken);
 				}
-				if (totalProcessed % 10000 === 0) {
+				if (users.length > 0 && totalProcessed % 10000 === 0) {
 					Logger.debug({totalProcessed, totalQueued}, 'Deletion queue rebuild progress');
 				}
-				if (!pageState) {
-					break;
-				}
-			}
+			} while (pageState);
 			await this.kvClient.set(STATE_VERSION_KEY, Date.now().toString());
 			Logger.info({totalProcessed, totalQueued}, 'Deletion queue rebuild completed');
 		} catch (error) {
@@ -115,7 +124,7 @@ export class KVAccountDeletionQueueService {
 				userId,
 				deletionReasonCode: reasonCode,
 			};
-			const score = pendingAt.getTime();
+			const score = getValidTimestamp(pendingAt, `Pending deletion timestamp for user ${userId}`);
 			const value = this.serializeQueueItem(queueItem);
 			const secondaryKey = this.getSecondaryKey(userId);
 			await this.kvClient.removeBulkDeletion(QUEUE_KEY, secondaryKey);
@@ -147,12 +156,23 @@ export class KVAccountDeletionQueueService {
 		try {
 			const results = await this.kvClient.zrangebyscore(QUEUE_KEY, '-inf', nowMs, 'LIMIT', 0, limit);
 			const deletions: Array<QueuedDeletion> = [];
+			const unparseable: Array<string> = [];
 			for (const result of results) {
 				try {
-					const deletion = this.deserializeQueueItem(result);
-					deletions.push(deletion);
-				} catch (parseError) {
-					Logger.error({error: parseError, result}, 'Failed to parse queued deletion');
+					deletions.push(this.deserializeQueueItem(result));
+				} catch {
+					unparseable.push(result);
+				}
+			}
+			if (unparseable.length > 0) {
+				Logger.error({unparseableCount: unparseable.length}, 'Dropped unparseable deletion queue members');
+				try {
+					await this.kvClient.zrem(QUEUE_KEY, ...unparseable);
+				} catch (error) {
+					Logger.error(
+						{error, unparseableCount: unparseable.length},
+						'Failed to remove unparseable deletion queue members',
+					);
 				}
 			}
 			return deletions;
@@ -212,8 +232,7 @@ export class KVAccountDeletionQueueService {
 
 	async getStateVersion(): Promise<number | null> {
 		try {
-			const versionStr = await this.kvClient.get(STATE_VERSION_KEY);
-			return versionStr ? parseInt(versionStr, 10) : null;
+			return parseStoredTimestamp(await this.kvClient.get(STATE_VERSION_KEY), 'Deletion queue state version');
 		} catch (error) {
 			Logger.error({error}, 'Failed to get state version');
 			throw error;

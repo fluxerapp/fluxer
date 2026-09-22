@@ -1,26 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {PhoneVerificationToken, UserID} from '../../BrandedTypes';
+import type {PhoneVerificationToken, UserID} from '@app/api/BrandedTypes';
 import type {
 	AuthSessionRow,
 	EmailRevertTokenRow,
 	EmailVerificationTokenRow,
 	PasswordResetTokenRow,
 	PhoneTokenRow,
-} from '../../database/types/AuthTypes';
-import type {AuthSession, AuthSessionTombstone} from '../../models/AuthSession';
-import type {EmailRevertToken} from '../../models/EmailRevertToken';
-import type {EmailVerificationToken} from '../../models/EmailVerificationToken';
-import type {MfaBackupCode} from '../../models/MfaBackupCode';
-import type {PasswordResetToken} from '../../models/PasswordResetToken';
-import type {WebAuthnCredential} from '../../models/WebAuthnCredential';
-import {AuthSessionRepository} from './auth/AuthSessionRepository';
-import {IpAuthorizationRepository} from './auth/IpAuthorizationRepository';
-import {MfaBackupCodeRepository} from './auth/MfaBackupCodeRepository';
-import {TokenRepository} from './auth/TokenRepository';
-import {WebAuthnRepository} from './auth/WebAuthnRepository';
-import type {IUserAccountRepository} from './IUserAccountRepository';
-import type {IUserAuthRepository} from './IUserAuthRepository';
+} from '@app/api/database/types/AuthTypes';
+import type {AuthSession, AuthSessionTombstone} from '@app/api/models/AuthSession';
+import type {EmailRevertToken} from '@app/api/models/EmailRevertToken';
+import type {EmailVerificationToken} from '@app/api/models/EmailVerificationToken';
+import type {MfaBackupCode} from '@app/api/models/MfaBackupCode';
+import type {PasswordResetToken} from '@app/api/models/PasswordResetToken';
+import type {WebAuthnCredential} from '@app/api/models/WebAuthnCredential';
+import {AuthSessionRepository} from '@app/api/user/repositories/auth/AuthSessionRepository';
+import {IpAuthorizationRepository} from '@app/api/user/repositories/auth/IpAuthorizationRepository';
+import {MfaBackupCodeRepository} from '@app/api/user/repositories/auth/MfaBackupCodeRepository';
+import {TokenRepository} from '@app/api/user/repositories/auth/TokenRepository';
+import {WebAuthnRepository} from '@app/api/user/repositories/auth/WebAuthnRepository';
+import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
+import type {IUserAuthRepository} from '@app/api/user/repositories/IUserAuthRepository';
 
 export class UserAuthRepository implements IUserAuthRepository {
 	private authSessionRepository: AuthSessionRepository;
@@ -61,12 +61,6 @@ export class UserAuthRepository implements IUserAuthRepository {
 
 	async deleteAuthSessions(userId: UserID, sessionIdHashes: Array<Buffer>): Promise<void> {
 		return this.authSessionRepository.deleteAuthSessions(userId, sessionIdHashes);
-	}
-
-	async revokeAuthSession(sessionIdHash: Buffer): Promise<void> {
-		const session = await this.getAuthSessionByToken(sessionIdHash);
-		if (!session) return;
-		await this.deleteAuthSessions(session.userId, [sessionIdHash]);
 	}
 
 	async deleteAllAuthSessions(userId: UserID): Promise<void> {

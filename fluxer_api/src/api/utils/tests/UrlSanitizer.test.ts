@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {sanitizeOptionalAbsoluteUrl, sanitizeOptionalAbsoluteUrlOrNull} from '@app/api/utils/UrlSanitizer';
 import {describe, expect, it} from 'vitest';
-import {sanitizeOptionalAbsoluteUrl, sanitizeOptionalAbsoluteUrlOrNull} from '../UrlSanitizer';
 
 describe('sanitizeOptionalAbsoluteUrl', () => {
 	it('returns undefined for nullish values', () => {

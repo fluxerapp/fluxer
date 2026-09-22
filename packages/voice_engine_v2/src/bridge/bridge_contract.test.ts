@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	assertAudioFrameInvariants,
 	assertVideoFrameInvariants,
@@ -8,14 +7,15 @@ import {
 	VOICE_ENGINE_V2_VIDEO_DIMENSION_MAX,
 	VOICE_ENGINE_V2_VIDEO_FRAME_BYTES_MAX,
 	VoiceEngineV2FfiAssertError,
-} from './ffi_assertions';
+} from '@fluxer/voice_engine_v2/src/bridge/ffi_assertions';
 import {
 	assertVoiceEngineV2BridgeAudioOptionsInvariants,
 	assertVoiceEngineV2BridgeVideoOptionsInvariants,
 	normalizeVoiceEngineV2BridgeHardwareEncoderCapabilities,
 	unavailableVoiceEngineV2BridgeHardwareEncoderCapabilities,
 	VOICE_ENGINE_V2_HARDWARE_ENCODER_IPC_CHANNEL,
-} from './index';
+} from '@fluxer/voice_engine_v2/src/bridge/index';
+import {describe, expect, it} from 'vitest';
 
 describe('voice engine v2 bridge contract', () => {
 	it('pins the hardware encoder ipc channel shared by preload and the main process', () => {

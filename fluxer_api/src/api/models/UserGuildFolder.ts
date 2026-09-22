@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID} from '@app/api/BrandedTypes';
+import type {GuildFolder} from '@app/api/database/types/UserTypes';
 import {DEFAULT_GUILD_FOLDER_ICON, type GuildFolderIcon} from '@fluxer/constants/src/UserConstants';
-import type {GuildID} from '../BrandedTypes';
-import type {GuildFolder} from '../database/types/UserTypes';
 
 export class UserGuildFolder {
 	readonly folderId: number;

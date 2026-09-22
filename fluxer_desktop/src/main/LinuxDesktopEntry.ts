@@ -10,7 +10,7 @@ import {createChildLogger} from '@electron/common/Logger';
 import {TASK_ARG_PREFIX} from '@electron/main/JumpList';
 import {getStableLinuxLaunchPath} from '@electron/main/LinuxLaunchPath';
 import {isFlatpakRuntime} from '@electron/main/LinuxSandbox';
-import {t} from '@electron/main/MainI18n';
+import {getNativeLocale, t} from '@electron/main/MainI18n';
 import {app} from 'electron';
 
 const logger = createChildLogger('LinuxDesktopEntry');
@@ -18,6 +18,8 @@ const APP_NAME = DESKTOP_APP_NAME;
 const APP_ID = LINUX_DESKTOP_ENTRY_ID;
 export const WM_CLASS = APP_ID;
 const DESKTOP_FILE_BASENAME = `${APP_ID}.desktop`;
+const GENERIC_NAME_DEFAULT = 'Instant Messenger';
+const COMMENT_DEFAULT = 'Instant messaging and VoIP';
 const GENERATED_MARKER = '# X-Generated-By=fluxer-desktop';
 const DESKTOP_ACTIONS = [
 	{
@@ -123,6 +125,15 @@ function buildDesktopActionEntries(execPath: string): Array<string> {
 	return entries;
 }
 
+function buildLocalizedEntryLines(key: string, defaultValue: string, localizedValue: string): Array<string> {
+	const lines = [`${key}=${escapeDesktopValue(defaultValue)}`];
+	if (localizedValue !== defaultValue) {
+		const entryLocale = getNativeLocale().replace(/-/g, '_');
+		lines.push(`${key}[${entryLocale}]=${escapeDesktopValue(localizedValue)}`);
+	}
+	return lines;
+}
+
 function buildDesktopFileContents(execPath: string, hidden: boolean): string {
 	const execLine = `${quoteExecArg(execPath)} %U`;
 	return [
@@ -131,8 +142,8 @@ function buildDesktopFileContents(execPath: string, hidden: boolean): string {
 		'Type=Application',
 		'Version=1.5',
 		`Name=${escapeDesktopValue(APP_NAME)}`,
-		'GenericName=Instant Messenger',
-		'Comment=Instant messaging and VoIP',
+		...buildLocalizedEntryLines('GenericName', GENERIC_NAME_DEFAULT, t('desktop.linuxEntry.genericName')),
+		...buildLocalizedEntryLines('Comment', COMMENT_DEFAULT, t('desktop.linuxEntry.comment')),
 		`Exec=${escapeDesktopValue(execLine)}`,
 		`TryExec=${escapeDesktopValue(execPath)}`,
 		`Icon=${escapeDesktopValue(resolveIconHint())}`,

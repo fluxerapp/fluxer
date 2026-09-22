@@ -1,18 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {setInjectedRegistrationRiskEvaluator} from '../../middleware/ServiceMiddleware';
-import {
-	RecommendedAction,
-	RiskConfidence,
-	RiskDecisionMethod,
-	RiskLevel,
-	type RiskLevel as RiskLevelType,
-} from '../../risk/RiskTypes';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import type {IRegistrationRiskEvaluator} from '../services/IRegistrationRiskEvaluator';
+import type {IRegistrationRiskEvaluator} from '@app/api/auth/services/IRegistrationRiskEvaluator';
 import {
 	createAuthHarness,
 	createTestAccount,
@@ -20,7 +8,19 @@ import {
 	createUniqueUsername,
 	loginAccount,
 	registerUser,
-} from './AuthTestUtils';
+} from '@app/api/auth/tests/AuthTestUtils';
+import {setInjectedRegistrationRiskEvaluator} from '@app/api/middleware/ServiceMiddleware';
+import {
+	RecommendedAction,
+	RiskConfidence,
+	RiskDecisionMethod,
+	RiskLevel,
+	type RiskLevel as RiskLevelType,
+} from '@app/api/risk/RiskTypes';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 function createStaticRiskEvaluator(params: {
 	level: RiskLevelType;

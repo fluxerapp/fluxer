@@ -263,6 +263,46 @@ find_everyone_viewable_text_channel_ignores_user_overwrite_for_guild_id_test() -
     ChannelId = guild_data:find_everyone_viewable_text_channel(Channels, State),
     ?assertEqual(12, ChannelId).
 
+find_everyone_viewable_text_channel_accepts_voice_when_no_text_channel_test() ->
+    GuildId = 100,
+    ViewPerm = constants:view_channel_permission(),
+    State = #{
+        id => GuildId,
+        data => #{
+            <<"roles">> => [
+                #{
+                    <<"id">> => integer_to_binary(GuildId),
+                    <<"permissions">> => integer_to_binary(ViewPerm)
+                }
+            ]
+        }
+    },
+    Channels = [
+        #{<<"id">> => <<"501">>, <<"type">> => 2, <<"permission_overwrites">> => []}
+    ],
+    ChannelId = guild_data:find_everyone_viewable_text_channel(Channels, State),
+    ?assertEqual(501, ChannelId).
+
+find_everyone_viewable_text_channel_skips_link_channel_test() ->
+    GuildId = 100,
+    ViewPerm = constants:view_channel_permission(),
+    State = #{
+        id => GuildId,
+        data => #{
+            <<"roles">> => [
+                #{
+                    <<"id">> => integer_to_binary(GuildId),
+                    <<"permissions">> => integer_to_binary(ViewPerm)
+                }
+            ]
+        }
+    },
+    Channels = [
+        #{<<"id">> => <<"998">>, <<"type">> => 998, <<"permission_overwrites">> => []}
+    ],
+    ChannelId = guild_data:find_everyone_viewable_text_channel(Channels, State),
+    ?assertEqual(null, ChannelId).
+
 voice_members_from_states_reads_embedded_member_test() ->
     EmbeddedMember = #{<<"user">> => #{<<"id">> => <<"300">>}, <<"roles">> => []},
     IndexedMember = #{<<"user">> => #{<<"id">> => <<"200">>}, <<"roles">> => []},
@@ -315,6 +355,17 @@ search_guild_members_limits_prefix_matches_without_paginating_all_test() ->
             end,
             Members
         )
+    ).
+
+search_guild_members_matches_username_of_nicknamed_member_test() ->
+    Nicknamed = (member(1, <<"jiralite">>))#{<<"nick">> => <<"Specsaver engineer">>},
+    State = #{data => #{<<"members">> => [Nicknamed, member(2, <<"Bob">>)]}},
+    {reply, Reply, _State} = guild_data:search_guild_members(
+        #{query => <<"jiralite">>, limit => 25}, State
+    ),
+    ?assertEqual(
+        [1],
+        [guild_request_members_search:extract_user_id(M) || M <- maps:get(members, Reply)]
     ).
 
 get_guild_state_includes_parent_category_when_child_channel_is_visible_test() ->

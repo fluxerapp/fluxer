@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createGuildID, type GuildID, type UserID} from '@app/api/BrandedTypes';
+import type {GuildDataService} from '@app/api/guild/services/GuildDataService';
+import type {GuildMemberService} from '@app/api/guild/services/GuildMemberService';
+import type {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
+import {Logger} from '@app/api/Logger';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {User} from '@app/api/models/User';
 import {JoinSourceTypes} from '@fluxer/constants/src/GuildConstants';
-import {createGuildID, type GuildID, type UserID} from '../BrandedTypes';
-import type {GuildDataService} from '../guild/services/GuildDataService';
-import type {GuildMemberService} from '../guild/services/GuildMemberService';
-import {Logger} from '../Logger';
-import type {RequestCache} from '../middleware/RequestCacheMiddleware';
-import type {User} from '../models/User';
-import type {InstanceConfigRepository} from './InstanceConfigRepository';
+import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 
 export class SingleCommunityService {
 	constructor(
@@ -18,19 +19,15 @@ export class SingleCommunityService {
 
 	async getStockCommunityId(): Promise<GuildID | null> {
 		const policy = await this.instanceConfigRepository.getInstancePolicyConfig();
-		if (!policy.single_community_enabled || !policy.single_community_guild_id) {
+		if (!policy.single_community_enabled || policy.single_community_guild_id === null) {
 			return null;
 		}
-		try {
-			return createGuildID(BigInt(policy.single_community_guild_id));
-		} catch {
-			return null;
-		}
+		return createGuildID(BigInt(policy.single_community_guild_id));
 	}
 
 	async joinStockCommunity(userId: UserID, requestCache: RequestCache): Promise<void> {
 		const guildId = await this.getStockCommunityId();
-		if (!guildId) {
+		if (guildId === null) {
 			return;
 		}
 		try {
@@ -64,20 +61,16 @@ export class SingleCommunityService {
 	}
 
 	private async findDesignatedGuild(rawGuildId: string | null): Promise<GuildID | null> {
-		if (!rawGuildId) {
+		if (rawGuildId === null) {
 			return null;
 		}
-		let guildId: GuildID;
-		try {
-			guildId = createGuildID(BigInt(rawGuildId));
-		} catch {
-			return null;
-		}
+		const guildId = createGuildID(BigInt(rawGuildId));
 		try {
 			await this.guildDataService.getGuildSystem(guildId);
 			return guildId;
-		} catch {
-			return null;
+		} catch (error) {
+			if (error instanceof UnknownGuildError) return null;
+			throw error;
 		}
 	}
 

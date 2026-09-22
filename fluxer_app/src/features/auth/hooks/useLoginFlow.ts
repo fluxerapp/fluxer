@@ -154,6 +154,7 @@ interface MfaControllerOptions {
 	methods: {
 		totp: boolean;
 		webauthn: boolean;
+		backupCodes: boolean;
 	};
 	inviteCode?: string;
 	onLoginSuccess?: (payload: LoginSuccessPayload) => Promise<void> | void;
@@ -164,7 +165,7 @@ export function useMfaController({ticket, methods, inviteCode, onLoginSuccess}: 
 	const {form, isLoading, fieldErrors} = useAuthForm({
 		initialValues: {code: ''},
 		onSubmit: async (values) => {
-			if (!methods.totp) {
+			if (!methods.totp && !methods.backupCodes) {
 				return;
 			}
 			const normalizedCode = values.code.replace(/[\s-]/g, '');
@@ -196,7 +197,10 @@ export function useMfaController({ticket, methods, inviteCode, onLoginSuccess}: 
 			setIsWebAuthnLoading(false);
 		}
 	}, [inviteCode, onLoginSuccess, ticket]);
-	const supports = useMemo(() => ({totp: methods.totp, webauthn: methods.webauthn}), [methods.totp, methods.webauthn]);
+	const supports = useMemo(
+		() => ({totp: methods.totp, webauthn: methods.webauthn, backupCodes: methods.backupCodes}),
+		[methods.totp, methods.webauthn, methods.backupCodes],
+	);
 	return {
 		form,
 		isLoading,

@@ -284,8 +284,10 @@ mod tests {
         assert_eq!(i32::from_le_bytes(payload[16..20].try_into().unwrap()), 1);
 
         let path_units: Vec<u16> = payload[DROPFILES_HEADER_SIZE..payload.len() - 4]
-            .chunks_exact(2)
-            .map(|chunk| u16::from_le_bytes(chunk.try_into().unwrap()))
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .map(|chunk| u16::from_le_bytes(*chunk))
             .collect();
         assert_eq!(String::from_utf16(&path_units).unwrap(), "C:\\Temp\\a.txt");
         assert_eq!(&payload[payload.len() - 4..], &[0, 0, 0, 0]);

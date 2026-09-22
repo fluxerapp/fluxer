@@ -1,8 +1,11 @@
 // SPDX-FileCopyrightText: 2024 LiveKit, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
+import type {FrameMetadataPayload} from '../frameMetadata/frameMetadata.ts';
+import type {FrameMetadataPublishOptions} from '../frameMetadata/types.ts';
 import type {LogLevel} from '../logger.ts';
 import type {VideoCodec} from '../room/track/options.ts';
+import type {NonSharedUint8Array} from '../type-polyfills/non-shared-typed-arrays.ts';
 import type {BaseE2EEManager} from './E2eeManager.ts';
 import type {BaseKeyProvider} from './KeyProvider.ts';
 
@@ -26,6 +29,7 @@ export interface SetKeyMessage extends BaseMessage {
 		isPublisher: boolean;
 		key: CryptoKey;
 		keyIndex?: number;
+		updateCurrentKeyIndex: boolean;
 	};
 }
 
@@ -40,7 +44,7 @@ export interface RTPVideoMapMessage extends BaseMessage {
 export interface SifTrailerMessage extends BaseMessage {
 	kind: 'setSifTrailer';
 	data: {
-		trailer: Uint8Array;
+		trailer: NonSharedUint8Array;
 	};
 }
 
@@ -52,7 +56,8 @@ export interface EncodeMessage extends BaseMessage {
 		writableStream: WritableStream;
 		trackId: string;
 		codec?: VideoCodec;
-		isReuse: boolean;
+		hasPacketTrailer: boolean;
+		packetTrailer?: FrameMetadataPublishOptions;
 	};
 }
 
@@ -69,18 +74,9 @@ export interface UpdateCodecMessage extends BaseMessage {
 	data: {
 		participantIdentity: string;
 		trackId: string;
-		codec: VideoCodec;
-	};
-}
-
-export interface UpdateTrackContextMessage extends BaseMessage {
-	kind: 'updateTrackContext';
-	data: {
-		previousParticipantIdentity?: string;
-		previousTrackId?: string;
-		participantIdentity: string;
-		trackId: string;
 		codec?: VideoCodec;
+		previousTrackId?: string;
+		hasPacketTrailer: boolean;
 	};
 }
 
@@ -129,8 +125,8 @@ export interface DecryptDataRequestMessage extends BaseMessage {
 	kind: 'decryptDataRequest';
 	data: {
 		uuid: string;
-		payload: Uint8Array;
-		iv: Uint8Array;
+		payload: NonSharedUint8Array;
+		iv: NonSharedUint8Array;
 		participantIdentity: string;
 		keyIndex: number;
 	};
@@ -140,7 +136,7 @@ export interface DecryptDataResponseMessage extends BaseMessage {
 	kind: 'decryptDataResponse';
 	data: {
 		uuid: string;
-		payload: Uint8Array;
+		payload: NonSharedUint8Array;
 	};
 }
 
@@ -148,7 +144,7 @@ export interface EncryptDataRequestMessage extends BaseMessage {
 	kind: 'encryptDataRequest';
 	data: {
 		uuid: string;
-		payload: Uint8Array;
+		payload: NonSharedUint8Array;
 		participantIdentity: string;
 	};
 }
@@ -157,9 +153,30 @@ export interface EncryptDataResponseMessage extends BaseMessage {
 	kind: 'encryptDataResponse';
 	data: {
 		uuid: string;
-		payload: Uint8Array;
-		iv: Uint8Array;
+		payload: NonSharedUint8Array;
+		iv: NonSharedUint8Array;
 		keyIndex: number;
+	};
+}
+
+export interface PTMetadataFromE2EEMessage extends BaseMessage {
+	kind: 'packetTrailerMetadata';
+	data: FrameMetadataPayload;
+}
+
+export interface LogMessage extends BaseMessage {
+	kind: 'log';
+	data: {
+		level: 'trace' | 'debug' | 'info' | 'warn' | 'error';
+		msg: string;
+		context?: object;
+	};
+}
+
+export interface SetLogLevelMessage extends BaseMessage {
+	kind: 'setLogLevel';
+	data: {
+		level: LogLevel;
 	};
 }
 
@@ -172,7 +189,6 @@ export type E2EEWorkerMessage =
 	| RemoveTransformMessage
 	| RTPVideoMapMessage
 	| UpdateCodecMessage
-	| UpdateTrackContextMessage
 	| RatchetRequestMessage
 	| RatchetMessage
 	| SifTrailerMessage
@@ -180,7 +196,10 @@ export type E2EEWorkerMessage =
 	| DecryptDataRequestMessage
 	| DecryptDataResponseMessage
 	| EncryptDataRequestMessage
-	| EncryptDataResponseMessage;
+	| EncryptDataResponseMessage
+	| PTMetadataFromE2EEMessage
+	| LogMessage
+	| SetLogLevelMessage;
 
 export type KeySet = {material: CryptoKey; encryptionKey: CryptoKey};
 
@@ -195,6 +214,7 @@ export type KeyProviderOptions = {
 	ratchetWindowSize: number;
 	failureTolerance: number;
 	keyringSize: number;
+	keySize: 128 | 256;
 };
 
 export type KeyInfo = {
@@ -224,4 +244,6 @@ export type ScriptTransformOptions = {
 	participantIdentity: string;
 	trackId: string;
 	codec?: VideoCodec;
+	hasPacketTrailer: boolean;
+	packetTrailer?: FrameMetadataPublishOptions;
 };

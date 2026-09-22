@@ -64,6 +64,7 @@ interface MfaLoginResponse {
 	ticket: string;
 	totp: boolean;
 	webauthn: boolean;
+	backup_codes?: boolean;
 	allowed_methods?: Array<string>;
 }
 
@@ -679,11 +680,12 @@ interface SetMfaTicketPayload {
 	ticket: string;
 	totp: boolean;
 	webauthn: boolean;
+	backupCodes: boolean;
 }
 
-export function setMfaTicket({ticket, totp, webauthn}: SetMfaTicketPayload): void {
+export function setMfaTicket({ticket, totp, webauthn, backupCodes}: SetMfaTicketPayload): void {
 	logger.debug('Setting MFA ticket');
-	Authentication.handleMfaTicketSet({ticket, totp, webauthn});
+	Authentication.handleMfaTicketSet({ticket, totp, webauthn, backupCodes});
 }
 
 export function clearMfaTicket(): void {

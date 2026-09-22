@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {DefaultUserOnly, LoginRequired} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {
 	DsaReportEmailSendRequest,
 	DsaReportEmailVerifyRequest,
@@ -11,12 +17,6 @@ import {
 	ReportUserRequest,
 	TicketResponse,
 } from '@fluxer/schema/src/domains/report/ReportSchemas';
-import {DefaultUserOnly, LoginRequired} from '../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../RateLimitConfig';
-import type {HonoApp} from '../types/HonoEnv';
-import {Validator} from '../Validator';
 
 export function ReportController(app: HonoApp) {
 	app.post(
@@ -106,7 +106,10 @@ export function ReportController(app: HonoApp) {
 		}),
 		Validator('json', DsaReportEmailSendRequest),
 		async (ctx) => {
-			await ctx.get('reportRequestService').sendDsaReportVerificationEmail({data: ctx.req.valid('json')});
+			await ctx.get('reportRequestService').sendDsaReportVerificationEmail({
+				data: ctx.req.valid('json'),
+				locale: ctx.get('requestLocale') ?? null,
+			});
 			return ctx.json({ok: true});
 		},
 	);

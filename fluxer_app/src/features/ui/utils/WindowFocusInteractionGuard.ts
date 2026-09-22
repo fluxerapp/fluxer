@@ -141,14 +141,20 @@ export function createWindowFocusInteractionGuard({
 	return {
 		setFocused(nextFocused: boolean): void {
 			focused = nextFocused;
-			root.classList.toggle(WINDOW_FOCUSED_CLASS, nextFocused);
-			notifyHoverControlsChange();
 			if (!nextFocused) {
+				root.classList.toggle(WINDOW_FOCUSED_CLASS, false);
+				notifyHoverControlsChange();
 				wasBlurred = true;
 				clearActivationGuard();
 				return;
 			}
-			if (wasBlurred) {
+			const shouldGuardActivation = wasBlurred;
+			if (shouldGuardActivation) {
+				root.classList.add(WINDOW_FOCUS_ACTIVATION_GUARD_CLASS);
+			}
+			root.classList.toggle(WINDOW_FOCUSED_CLASS, true);
+			notifyHoverControlsChange();
+			if (shouldGuardActivation) {
 				beginActivationGuard(false);
 			}
 			wasBlurred = false;
@@ -162,9 +168,8 @@ export function createWindowFocusInteractionGuard({
 			windowTarget.removeEventListener('pointercancel', handlePointerEnd, true);
 			windowTarget.removeEventListener('click', handlePointerEnd, true);
 			classObserver?.disconnect();
-			clearActivationGuard();
 			root.classList.remove(WINDOW_FOCUSED_CLASS);
-			notifyHoverControlsChange();
+			clearActivationGuard();
 		},
 	};
 }

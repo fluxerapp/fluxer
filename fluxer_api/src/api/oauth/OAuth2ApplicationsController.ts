@@ -1,5 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {DefaultUserOnly, LoginRequiredAllowSuspicious} from '@app/api/middleware/AuthMiddleware';
+import {CaptchaMiddleware} from '@app/api/middleware/CaptchaMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp, HonoEnv} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {SudoVerificationSchema} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {ApplicationIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {
@@ -12,14 +20,6 @@ import {
 	OAuth2ApplicationsMeResponse,
 } from '@fluxer/schema/src/domains/oauth/OAuthSchemas';
 import type {Context} from 'hono';
-import {DefaultUserOnly, LoginRequiredAllowSuspicious} from '../middleware/AuthMiddleware';
-import {CaptchaMiddleware} from '../middleware/CaptchaMiddleware';
-import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
-import {SudoModeMiddleware} from '../middleware/SudoModeMiddleware';
-import {RateLimitConfigs} from '../RateLimitConfig';
-import type {HonoApp, HonoEnv} from '../types/HonoEnv';
-import {Validator} from '../Validator';
 
 export function OAuth2ApplicationsController(app: HonoApp) {
 	const listApplicationsHandler = async (ctx: Context<HonoEnv>) => {

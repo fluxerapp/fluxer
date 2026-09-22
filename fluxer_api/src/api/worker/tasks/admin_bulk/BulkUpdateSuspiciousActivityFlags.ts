@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {imposePhoneRequirements, SuspiciousActivityFlags} from '@fluxer/constants/src/UserConstants';
+import {createUserID} from '@app/api/BrandedTypes';
+import {runAdminBulkJob} from '@app/api/worker/tasks/admin_bulk/AdminBulkJob';
+import {createAdminBulkServices} from '@app/api/worker/tasks/admin_bulk/AdminBulkServices';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
+import {ALL_SUSPICIOUS_ACTIVITY_FLAGS, SuspiciousActivityFlags} from '@fluxer/constants/src/UserConstants';
+import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
-import {JobCancelledError} from '@pkgs/worker/src/contracts/WorkerTask';
-import {AdminAuditService} from '../../../admin/services/AdminAuditService';
-import {AdminUserUpdatePropagator} from '../../../admin/services/AdminUserUpdatePropagator';
-import {createUserID} from '../../../BrandedTypes';
-import {getWorkerDependencies} from '../../WorkerContext';
 
 interface Payload {
 	user_ids: Array<string>;
@@ -14,6 +14,25 @@ interface Payload {
 	remove_flags: Array<string>;
 	admin_user_id: string;
 	audit_log_reason: string | null;
+}
+
+const PROGRESS_EVERY = 25;
+
+function resolveFlagMask(flagNames: ReadonlyArray<string>): number {
+	let mask = 0;
+	const unknownNames: Array<string> = [];
+	for (const flagName of flagNames) {
+		const value = SuspiciousActivityFlags[flagName as keyof typeof SuspiciousActivityFlags];
+		if (value === undefined) {
+			unknownNames.push(flagName);
+			continue;
+		}
+		mask |= value;
+	}
+	if (unknownNames.length > 0) {
+		throw new Error(`Unknown suspicious activity flag names: ${unknownNames.join(', ')}`);
+	}
+	return mask;
 }
 
 const handler: WorkerTaskHandler = async (rawPayload, helpers) => {
@@ -24,78 +43,48 @@ const handler: WorkerTaskHandler = async (rawPayload, helpers) => {
 		admin_user_id: rawPayload.admin_user_id as string,
 		audit_log_reason: (rawPayload.audit_log_reason as string | null) ?? null,
 	};
+	const addMask = resolveFlagMask(payload.add_flags);
+	const removeMask = resolveFlagMask(payload.remove_flags);
 	const deps = getWorkerDependencies();
-	const auditService = new AdminAuditService(deps.adminRepository, deps.snowflakeService);
-	const propagator = new AdminUserUpdatePropagator({
-		userCacheService: deps.userCacheService,
-		userRepository: deps.userRepository,
-		guildRepository: deps.guildRepository,
-		gatewayService: deps.gatewayService,
-	});
+	const {auditService, userService} = createAdminBulkServices(deps);
 	const adminUserId = createUserID(BigInt(payload.admin_user_id));
-	const userIds = payload.user_ids.map((id) => BigInt(id));
-	const addMask = payload.add_flags.reduce((mask, name) => {
-		const v = SuspiciousActivityFlags[name as keyof typeof SuspiciousActivityFlags];
-		return v !== undefined ? mask | v : mask;
-	}, 0);
-	const removeMask = payload.remove_flags.reduce((mask, name) => {
-		const v = SuspiciousActivityFlags[name as keyof typeof SuspiciousActivityFlags];
-		return v !== undefined ? mask | v : mask;
-	}, 0);
-	const total = userIds.length;
-	const successful: Array<string> = [];
-	const failed: Array<{
-		id: string;
-		error: string;
-	}> = [];
-	await helpers.setContextLink(`/users?ids=${userIds.slice(0, 50).join(',')}`);
+	const acls = new Set<string>();
+	const total = payload.user_ids.length;
+	await helpers.setContextLink(`/users?ids=${payload.user_ids.slice(0, 50).join(',')}`);
 	await helpers.reportProgress(0, total, `Updating suspicious flags on ${total} users`);
-	for (let i = 0; i < userIds.length; i++) {
-		if (await helpers.shouldCancel()) throw new JobCancelledError();
-		const userIdBigInt = userIds[i]!;
-		const userId = createUserID(userIdBigInt);
-		try {
-			const user = await deps.userRepository.findUnique(userId);
-			if (!user) throw new Error('user_not_found');
+	return await runAdminBulkJob({
+		helpers,
+		ids: payload.user_ids,
+		progressEvery: PROGRESS_EVERY,
+		apply: async (id) => {
+			const userIdBigInt = BigInt(id);
+			const user = await deps.userRepository.findUnique(createUserID(userIdBigInt));
+			if (!user) {
+				throw new UnknownUserError();
+			}
 			const currentFlags = user.suspiciousActivityFlags ?? 0;
-			const newFlags = imposePhoneRequirements(currentFlags, addMask) & ~removeMask;
-			const updatedUser = await deps.userRepository.patchUpsert(
-				userId,
-				{suspicious_activity_flags: newFlags},
-				user.toRow(),
+			const flags = (currentFlags | addMask) & ~removeMask & ALL_SUSPICIOUS_ACTIVITY_FLAGS;
+			await userService.securityService.updateSuspiciousActivityFlags(
+				{user_id: userIdBigInt, flags},
+				adminUserId,
+				payload.audit_log_reason,
+				acls,
 			);
-			await propagator.propagateUserUpdate({userId, oldUser: user, updatedUser});
-			successful.push(userId.toString());
-		} catch (err) {
-			failed.push({id: userIdBigInt.toString(), error: err instanceof Error ? err.message : String(err)});
-		}
-		if ((i + 1) % 25 === 0) {
-			await helpers.reportProgress(i + 1, total, null);
-		}
-	}
-	await auditService.createAuditLog({
-		adminUserId,
-		targetType: 'user',
-		targetId: BigInt(0),
-		action: 'bulk_update_suspicious_activity_flags',
-		auditLogReason: payload.audit_log_reason,
-		metadata: new Map(
-			(
+		},
+		summary: {
+			auditService,
+			adminUserId,
+			action: 'bulk_update_suspicious_activity_flags',
+			auditLogReason: payload.audit_log_reason,
+			metadata: (
 				[
 					['user_count', total.toString()],
 					['add_flags', payload.add_flags.join(',')],
 					['remove_flags', payload.remove_flags.join(',')],
-					['successful', successful.length.toString()],
-					['failed', failed.length.toString()],
 				] as Array<[string, string]>
-			).filter(([_, v]) => v.length > 0),
-		),
+			).filter(([, value]) => value.length > 0),
+		},
 	});
-	await helpers.reportProgress(total, total, `+${successful.length} ok, ${failed.length} failed`);
-	helpers.logger.info(
-		{successful: successful.length, failed: failed.length},
-		'bulkUpdateSuspiciousActivityFlags complete',
-	);
 };
 
 export default handler;
