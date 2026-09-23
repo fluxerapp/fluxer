@@ -11,6 +11,7 @@ import {
 	SUPPORT_EMAIL_MAILTO,
 } from '@app/features/app/config/I18nDisplayConstants';
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as EmojiUtils from '@app/features/expressions/utils/EmojiUtils';
 import {VERIFICATION_CODE_DESCRIPTOR, VERIFY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {Button} from '@app/features/ui/button/Button';
@@ -299,14 +300,22 @@ export const PhoneAddModal = observer(() => {
 			<>
 				<div className={styles.notice} data-flx="user.phone-add-modal.notice">
 					<p className={styles.footerText} data-flx="user.phone-add-modal.footer-text--2">
-						<Trans>
-							Sending an SMS to this phone number is too expensive for {PRODUCT_NAME}, so we need you to send us an SMS
-							instead. We know this isn't ideal. You can also contact{' '}
-							<ExternalLink href={SUPPORT_EMAIL_MAILTO} data-flx="user.phone-add-modal.external-link">
-								{SUPPORT_EMAIL}
-							</ExternalLink>{' '}
-							to have us lift this requirement from your account.
-						</Trans>
+						{RuntimeConfig.isSelfHosted() ? (
+							<Trans>
+								Sending an SMS to this phone number is too expensive for {PRODUCT_NAME}, so we need you to send us an
+								SMS instead. We know this isn't ideal. You can also ask the administrators of this instance to lift this
+								requirement from your account.
+							</Trans>
+						) : (
+							<Trans>
+								Sending an SMS to this phone number is too expensive for {PRODUCT_NAME}, so we need you to send us an
+								SMS instead. We know this isn't ideal. You can also contact{' '}
+								<ExternalLink href={SUPPORT_EMAIL_MAILTO} data-flx="user.phone-add-modal.external-link">
+									{SUPPORT_EMAIL}
+								</ExternalLink>{' '}
+								to have us lift this requirement from your account.
+							</Trans>
+						)}
 					</p>
 				</div>
 				<div className={styles.stepsContainer} data-flx="user.phone-add-modal.steps-container">

@@ -1528,6 +1528,9 @@
         "msgid": "Ask for a passkey after your password when you sign in"
       },
       {
+        "msgid": "Ask the administrators of this instance to review your account. This instance is run independently, and only its administrators can change your account."
+      },
+      {
         "msgid": "Attachment {pendingFilename}"
       },
       {
@@ -1769,6 +1772,9 @@
       },
       {
         "msgid": "Connection volume controls"
+      },
+      {
+        "msgid": "Contact the administrators of this instance for help."
       },
       {
         "msgid": "Copy emoji"
@@ -2575,6 +2581,9 @@
         "msgid": "Send messages in this channel."
       },
       {
+        "msgid": "Sending an SMS to this phone number is too expensive for {PRODUCT_NAME}, so we need you to send us an SMS instead. We know this isn't ideal. You can also ask the administrators of this instance to lift this requirement from your account."
+      },
+      {
         "msgid": "Sending {resolution} at {frameRate} FPS with {codec}"
       },
       {
@@ -2995,6 +3004,9 @@
         "msgid": "This is a custom sticker from a community. Ask the author for an invite to use this sticker."
       },
       {
+        "msgid": "This is not available on your account right now. Ask the administrators of this instance to review it."
+      },
+      {
         "msgid": "This is not available on your account right now. Email {supportEmail} and a person will review it."
       },
       {
@@ -3124,6 +3136,9 @@
         "msgid": "Volume sliders"
       },
       {
+        "msgid": "We couldn't reach the attachment upload service. {PRODUCT_NAME} can fall back to the standard upload path for messages up to {fallbackSizeFormatted} total, but these attachments exceed that combined limit and can't be sent until connectivity is restored. Try again later or contact the administrators of this instance if this keeps happening."
+      },
+      {
         "msgid": "We couldn't verify this number automatically. Contact support and a person will review your account."
       },
       {
@@ -3158,6 +3173,9 @@
       },
       {
         "msgid": "You asked for {resolution} at {frameRate} FPS"
+      },
+      {
+        "msgid": "You can still ask the administrators of this instance for a human review at any time."
       },
       {
         "msgid": "You can still email {supportEmail} for a human review at any time."
