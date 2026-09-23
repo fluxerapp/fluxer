@@ -80,6 +80,16 @@ cluster_static_peers_accepts_valid_node_names_test() ->
         maps:get(cluster_static_peers, Config)
     ).
 
+push_endpoint_guard_enabled_defaults_on_test() ->
+    Config = fluxer_gateway_config:load(),
+    ?assertEqual(true, maps:get(push_endpoint_guard_enabled, Config)).
+
+push_endpoint_guard_enabled_can_be_turned_off_test() ->
+    with_env("FLUXER_GATEWAY_PUSH_ENDPOINT_GUARD_ENABLED", "false", fun() ->
+        Config = fluxer_gateway_config:load(),
+        ?assertEqual(false, maps:get(push_endpoint_guard_enabled, Config))
+    end).
+
 presence_push_buffer_env_defaults_test() ->
     with_env("FLUXER_GATEWAY_PRESENCE_PUSH_BUFFER_MAX_ENTRIES", "7", fun() ->
         with_env("FLUXER_GATEWAY_PRESENCE_PUSH_BUFFER_MAX_BYTES", "4096", fun() ->

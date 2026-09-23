@@ -6,12 +6,17 @@
 -include_lib("eunit/include/eunit.hrl").
 
 -define(ENDPOINT, <<"https://push.example.com/wpush/v2/abc">>).
+-define(VERDICT_TABLE, push_endpoint_verdicts).
+-define(MAX_VERDICTS, 2048).
 
 resolves_to(Addresses) ->
     fun(_Host) -> {ok, Addresses} end.
 
 fails_with(Reason) ->
     fun(_Host) -> {error, Reason} end.
+
+never_resolves() ->
+    fun(_Host) -> erlang:error(resolver_called) end.
 
 link_local_metadata_address_is_refused_test() ->
     ?assertEqual(
@@ -185,8 +190,162 @@ userinfo_is_refused_test() ->
         )
     ).
 
+a_repeat_lookup_for_the_same_host_does_not_resolve_again_test() ->
+    with_verdict_cache(fun() ->
+        Counter = counters:new(1, []),
+        Endpoint = endpoint("cache-repeat.example.com"),
+        Resolver = counting_resolver(Counter, [{93, 184, 216, 34}]),
+        ?assertEqual(ok, push_endpoint_guard:check(Endpoint, Resolver, cached)),
+        ?assertEqual(ok, push_endpoint_guard:check(Endpoint, Resolver, cached)),
+        ?assertEqual(ok, push_endpoint_guard:check(Endpoint, Resolver, cached)),
+        ?assertEqual(1, counters:get(Counter, 1))
+    end).
+
+a_cache_hit_returns_the_verdict_the_uncached_path_returns_test() ->
+    with_verdict_cache(fun() ->
+        lists:foreach(
+            fun assert_cached_matches_uncached/1,
+            [
+                {"cache-allow.example.com", resolves_to([{93, 184, 216, 34}]), ok},
+                {"cache-block.example.com", resolves_to([{10, 0, 0, 1}]),
+                    {error, endpoint_blocked}},
+                {"cache-empty.example.com", resolves_to([]), {error, nxdomain}},
+                {"cache-timeout.example.com", fails_with(timeout), {error, timeout}}
+            ]
+        )
+    end).
+
+assert_cached_matches_uncached({Host, Resolver, Expected}) ->
+    Endpoint = endpoint(Host),
+    ?assertEqual(Expected, push_endpoint_guard:check(Endpoint, Resolver)),
+    ?assertEqual(Expected, push_endpoint_guard:check(Endpoint, Resolver, cached)),
+    ?assertEqual(Expected, push_endpoint_guard:check(Endpoint, never_resolves(), cached)).
+
+an_uncached_check_never_writes_the_cache_test() ->
+    with_verdict_cache(fun() ->
+        Endpoint = endpoint("cache-bypass.example.com"),
+        ?assertEqual(ok, push_endpoint_guard:check(Endpoint, resolves_to([{1, 1, 1, 1}]))),
+        ?assertEqual(0, push_ets_cache:table_size(?VERDICT_TABLE))
+    end).
+
+an_ip_literal_is_never_cached_test() ->
+    with_verdict_cache(fun() ->
+        ?assertEqual(
+            ok, push_endpoint_guard:check(<<"https://93.184.216.34/sub">>, never_resolves())
+        ),
+        ?assertEqual(0, push_ets_cache:table_size(?VERDICT_TABLE))
+    end).
+
+a_cached_verdict_expires_test() ->
+    with_verdict_cache(fun() ->
+        Counter = counters:new(1, []),
+        Endpoint = endpoint("cache-expiry.example.com"),
+        Resolver = counting_resolver(Counter, [{93, 184, 216, 34}]),
+        ?assertEqual(ok, push_endpoint_guard:check(Endpoint, Resolver, cached)),
+        ?assertEqual(ok, push_endpoint_guard:check(Endpoint, Resolver, cached)),
+        ?assertEqual(1, counters:get(Counter, 1)),
+        expire_verdict(<<"cache-expiry.example.com">>),
+        ?assertEqual(ok, push_endpoint_guard:check(Endpoint, Resolver, cached)),
+        ?assertEqual(2, counters:get(Counter, 1))
+    end).
+
+a_refused_verdict_expires_sooner_than_an_allowed_one_test() ->
+    with_verdict_cache(fun() ->
+        Allowed = endpoint("cache-ttl-allowed.example.com"),
+        Refused = endpoint("cache-ttl-refused.example.com"),
+        ?assertEqual(
+            ok, push_endpoint_guard:check(Allowed, resolves_to([{93, 184, 216, 34}]), cached)
+        ),
+        ?assertEqual(
+            {error, timeout}, push_endpoint_guard:check(Refused, fails_with(timeout), cached)
+        ),
+        AllowedExpiry = expires_at(<<"cache-ttl-allowed.example.com">>),
+        RefusedExpiry = expires_at(<<"cache-ttl-refused.example.com">>),
+        ?assert(RefusedExpiry < AllowedExpiry)
+    end).
+
+many_distinct_hosts_cannot_grow_the_cache_without_bound_test() ->
+    with_verdict_cache(fun() ->
+        Resolver = resolves_to([{93, 184, 216, 34}]),
+        lists:foreach(
+            fun(N) -> flood_one_host(N, Resolver) end,
+            lists:seq(1, 20000)
+        ),
+        Size = push_ets_cache:table_size(?VERDICT_TABLE),
+        ?assert(Size >= 1500),
+        ?assert(Size =< ?MAX_VERDICTS),
+        ?assert(verdict_table_bytes() =< 4 * 1024 * 1024)
+    end).
+
+flood_one_host(N, Resolver) ->
+    Endpoint = endpoint("flood-" ++ integer_to_list(N) ++ ".example.com"),
+    ?assertEqual(ok, push_endpoint_guard:check(Endpoint, Resolver, cached)),
+    ?assert(push_ets_cache:table_size(?VERDICT_TABLE) =< ?MAX_VERDICTS).
+
+the_guard_is_enabled_by_default_test() ->
+    ?assertEqual(
+        {error, endpoint_blocked},
+        push_endpoint_guard:check(?ENDPOINT, resolves_to([{10, 0, 0, 1}]))
+    ).
+
+a_disabled_guard_passes_everything_through_without_resolving_test() ->
+    with_verdict_cache(fun() ->
+        with_guard_disabled(fun() ->
+            Never = never_resolves(),
+            ?assertEqual(ok, push_endpoint_guard:check(?ENDPOINT, Never)),
+            ?assertEqual(ok, push_endpoint_guard:check(?ENDPOINT, Never, cached)),
+            ?assertEqual(
+                ok, push_endpoint_guard:check(<<"https://169.254.169.254/latest">>, Never)
+            ),
+            ?assertEqual(
+                ok, push_endpoint_guard:check(<<"http://push.example.com/sub">>, Never)
+            ),
+            ?assertEqual(ok, push_endpoint_guard:check(<<"not-a-url">>, Never)),
+            ?assertEqual(0, push_ets_cache:table_size(?VERDICT_TABLE))
+        end)
+    end).
+
+counting_resolver(Counter, Addresses) ->
+    fun(_Host) ->
+        counters:add(Counter, 1, 1),
+        {ok, Addresses}
+    end.
+
+endpoint(Host) ->
+    list_to_binary("https://" ++ Host ++ "/sub").
+
+expires_at(Host) ->
+    [{Host, _Verdict, ExpiresAt}] = ets:lookup(?VERDICT_TABLE, Host),
+    ExpiresAt.
+
+expire_verdict(Host) ->
+    [{Host, Verdict, _ExpiresAt}] = ets:lookup(?VERDICT_TABLE, Host),
+    true = ets:insert(?VERDICT_TABLE, {Host, Verdict, erlang:system_time(second) - 1}),
+    ok.
+
+verdict_table_bytes() ->
+    ets:info(?VERDICT_TABLE, memory) * erlang:system_info(wordsize).
+
+with_verdict_cache(Fun) ->
+    ok = push_ets_cache:init(),
+    true = ets:delete_all_objects(?VERDICT_TABLE),
+    try
+        Fun()
+    after
+        ets:delete_all_objects(?VERDICT_TABLE)
+    end.
+
+with_guard_disabled(Fun) ->
+    Original = fluxer_gateway_env:get(push_endpoint_guard_enabled),
+    _ = fluxer_gateway_env:patch(#{push_endpoint_guard_enabled => false}),
+    try
+        Fun()
+    after
+        _ = fluxer_gateway_env:patch(#{push_endpoint_guard_enabled => Original})
+    end.
+
 ip_literals_skip_dns_and_are_screened_directly_test() ->
-    Never = fun(_Host) -> erlang:error(resolver_called) end,
+    Never = never_resolves(),
     ?assertEqual(
         {error, endpoint_blocked},
         push_endpoint_guard:check(<<"https://169.254.169.254/latest">>, Never)
@@ -204,7 +363,7 @@ ip_literals_skip_dns_and_are_screened_directly_test() ->
     ?assertEqual(ok, push_endpoint_guard:check(<<"https://93.184.216.34/sub">>, Never)).
 
 malformed_and_non_fqdn_hosts_are_refused_test() ->
-    Never = fun(_Host) -> erlang:error(resolver_called) end,
+    Never = never_resolves(),
     lists:foreach(
         fun(Endpoint) ->
             ?assertEqual(

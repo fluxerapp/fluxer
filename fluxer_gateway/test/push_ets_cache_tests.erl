@@ -11,6 +11,7 @@ init_creates_tables_test() ->
     ?assertNotEqual(undefined, ets:whereis(push_subscriptions)),
     ?assertNotEqual(undefined, ets:whereis(push_blocked_ids)),
     ?assertNotEqual(undefined, ets:whereis(push_badge_counts)),
+    ?assertNotEqual(undefined, ets:whereis(push_endpoint_verdicts)),
     cleanup_tables().
 
 init_idempotent_test() ->
@@ -112,6 +113,69 @@ rebalance_evicts_remote_owned_entries_test() ->
     persistent_term:erase({gateway_cluster_membership, members_by_role}),
     cleanup_tables().
 
+endpoint_verdict_round_trip_test() ->
+    cleanup_tables(),
+    ok = push_ets_cache:init(),
+    ?assertEqual(undefined, push_ets_cache:get_endpoint_verdict(<<"push.example.com">>)),
+    ok = push_ets_cache:put_endpoint_verdict(<<"push.example.com">>, ok, 300),
+    ?assertEqual({ok, ok}, push_ets_cache:get_endpoint_verdict(<<"push.example.com">>)),
+    ok = push_ets_cache:put_endpoint_verdict(
+        <<"bad.example.com">>, {error, endpoint_blocked}, 30
+    ),
+    ?assertEqual(
+        {ok, {error, endpoint_blocked}},
+        push_ets_cache:get_endpoint_verdict(<<"bad.example.com">>)
+    ),
+    cleanup_tables().
+
+endpoint_verdicts_expire_and_are_reclaimed_test() ->
+    cleanup_tables(),
+    ok = push_ets_cache:init(),
+    ok = push_ets_cache:put_endpoint_verdict(<<"stale.example.com">>, ok, 300),
+    Stale = erlang:system_time(second) - 1,
+    true = ets:insert(push_endpoint_verdicts, {<<"stale.example.com">>, ok, Stale}),
+    ?assertEqual(undefined, push_ets_cache:get_endpoint_verdict(<<"stale.example.com">>)),
+    ok = push_ets_cache:evict_tables(#{}),
+    ?assertEqual([], ets:lookup(push_endpoint_verdicts, <<"stale.example.com">>)),
+    cleanup_tables().
+
+an_oversized_host_is_never_cached_test() ->
+    cleanup_tables(),
+    ok = push_ets_cache:init(),
+    Oversized = binary:copy(<<"a">>, 254),
+    ok = push_ets_cache:put_endpoint_verdict(Oversized, ok, 300),
+    ?assertEqual(undefined, push_ets_cache:get_endpoint_verdict(Oversized)),
+    ?assertEqual(0, push_ets_cache:table_size(push_endpoint_verdicts)),
+    AtLimit = binary:copy(<<"a">>, 253),
+    ok = push_ets_cache:put_endpoint_verdict(AtLimit, ok, 300),
+    ?assertEqual({ok, ok}, push_ets_cache:get_endpoint_verdict(AtLimit)),
+    cleanup_tables().
+
+endpoint_verdicts_stay_bounded_under_max_length_hosts_test() ->
+    cleanup_tables(),
+    ok = push_ets_cache:init(),
+    lists:foreach(fun seed_max_length_verdict/1, lists:seq(1, 20000)),
+    Size = push_ets_cache:table_size(push_endpoint_verdicts),
+    ?assert(Size >= 1500),
+    ?assert(Size =< 2048),
+    Bytes = ets:info(push_endpoint_verdicts, memory) * erlang:system_info(wordsize),
+    ?assert(Bytes =< 4 * 1024 * 1024),
+    cleanup_tables().
+
+seed_max_length_verdict(N) ->
+    Suffix = integer_to_binary(N),
+    Host = <<(binary:copy(<<"a">>, 253 - byte_size(Suffix)))/binary, Suffix/binary>>,
+    ok = push_ets_cache:put_endpoint_verdict(Host, ok, 300),
+    ?assert(push_ets_cache:table_size(push_endpoint_verdicts) =< 2048).
+
+endpoint_verdicts_are_reported_in_cache_stats_test() ->
+    cleanup_tables(),
+    ok = push_ets_cache:init(),
+    ok = push_ets_cache:put_endpoint_verdict(<<"push.example.com">>, ok, 300),
+    Stats = push_ets_cache:cache_stats(),
+    ?assertEqual(1, maps:get(endpoint_verdicts_size, Stats)),
+    cleanup_tables().
+
 seed_subscriptions(UserId, Subscriptions) ->
     push_ets_cache:put_subscriptions(
         UserId, Subscriptions, push_ets_cache:reserve_subscriptions([UserId])
@@ -143,6 +207,7 @@ cleanup_tables() ->
     delete_table(push_blocked_ids),
     delete_table(push_badge_counts),
     delete_table(push_bearer_tokens),
+    delete_table(push_endpoint_verdicts),
     ok.
 
 delete_table(Table) ->
