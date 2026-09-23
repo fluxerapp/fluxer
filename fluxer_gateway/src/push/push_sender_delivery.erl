@@ -737,7 +737,7 @@ header_value(Name, Headers) ->
 
 capture_web_push(Payload) ->
     Endpoint = <<
-        "https://push.fluxer.app/relay/v1/apns/stable/production/",
+        "https://push.fluxer.com/relay/v1/apns/stable/production/",
         (binary:copy(<<"a">>, 64))/binary
     >>,
     {PeerPub, _PeerPriv} = crypto:generate_key(ecdh, prime256v1),

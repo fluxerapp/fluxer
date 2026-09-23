@@ -17,6 +17,7 @@ const DEFAULT_QUEUE_CAPACITY: usize = 10_000;
 const DEFAULT_SEND_CONCURRENCY: usize = 256;
 const DEFAULT_RELAY_MAX_CONCURRENT: usize = 1_024;
 const DEFAULT_RELAY_MAX_BODY_BYTES: usize = 2_816;
+const DEFAULT_TRUSTED_PROXY_HOPS: usize = 1;
 const DEFAULT_DEVICE_TOKEN_BUCKET_ENTRIES: usize = 1_000_000;
 const DEFAULT_DEVICE_TOKEN_BUCKET_PER_MINUTE: u32 = 60;
 const DEFAULT_DEVICE_TOKEN_BUCKET_BURST: u32 = 20;
@@ -182,6 +183,7 @@ pub struct DeliveryConfig {
     pub vapid: VapidConfig,
     pub apns: Option<ApnsConfig>,
     pub fcm: Option<FcmConfig>,
+    pub own_relay_hosts: Vec<String>,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -198,6 +200,7 @@ pub struct RelayConfig {
     pub max_body_bytes: usize,
     pub trust_client_ip_header: bool,
     pub client_ip_header_name: String,
+    pub trusted_proxy_hops: usize,
     pub device_token_bucket: BucketConfig,
     pub source_bucket: Option<BucketConfig>,
     pub apns: Option<ApnsConfig>,
@@ -260,8 +263,18 @@ impl DeliveryConfig {
             vapid: vapid_config(&env)?,
             apns: apns_config(&env)?,
             fcm: fcm_config(&env)?,
+            own_relay_hosts: own_relay_hosts(&env),
         })
     }
+}
+
+fn own_relay_hosts(env: &Env) -> Vec<String> {
+    env.get("FLUXER_PUSH_SERVICE_OWN_RELAY_HOSTS")
+        .unwrap_or_default()
+        .split(',')
+        .map(|host| host.trim().to_ascii_lowercase())
+        .filter(|host| !host.is_empty())
+        .collect()
 }
 
 impl RelayConfig {
@@ -297,6 +310,13 @@ impl RelayConfig {
                 .get("FLUXER_CLIENT_IP_HEADER_NAME")
                 .unwrap_or(DEFAULT_CLIENT_IP_HEADER_NAME)
                 .to_ascii_lowercase(),
+            trusted_proxy_hops: parse_number(
+                "FLUXER_PUSH_RELAY_TRUSTED_PROXY_HOPS",
+                env.get("FLUXER_PUSH_RELAY_TRUSTED_PROXY_HOPS"),
+                DEFAULT_TRUSTED_PROXY_HOPS,
+                0,
+                8,
+            )?,
             device_token_bucket: bucket_config(
                 &env,
                 "FLUXER_PUSH_RELAY_TOKEN_BUCKET",

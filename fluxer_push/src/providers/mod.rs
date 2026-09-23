@@ -2,6 +2,7 @@
 
 pub mod apns;
 pub mod fcm;
+pub mod own_relay;
 pub mod web_push;
 
 use crate::metrics::{DeliveryRoute, Provider, SendResult, elapsed_ms};
@@ -49,7 +50,10 @@ impl From<VendorOutcome> for SendOutcome {
     fn from(outcome: VendorOutcome) -> Self {
         match outcome {
             VendorOutcome::Accepted => Self::Accepted,
-            VendorOutcome::Unreachable => Self::transient("transport"),
+            VendorOutcome::Unreachable(unreachable) if unreachable.is_permanent() => {
+                Self::permanent(unreachable.label())
+            }
+            VendorOutcome::Unreachable(unreachable) => Self::transient(unreachable.label()),
             VendorOutcome::Refused(refusal) => match refusal.dead_token {
                 Some(dead_token) => Self::TokenInvalid {
                     reason: dead_token.label(),
@@ -87,10 +91,19 @@ pub async fn send(state: &AppState, sub: &Subscription, envelope: &Value) -> Sen
         return SendOutcome::permanent("unsupported_platform");
     };
     let started_ms = now_ms();
-    let outcome = match route {
-        Route::WebPush => web_push::send(state, sub, envelope).await,
-        Route::LegacyApns => apns::send(state, sub, envelope).await,
-        Route::LegacyFcm => fcm::send(state, sub, envelope).await,
+    let direct = own_relay::parse(&sub.endpoint, &state.cfg.own_relay_hosts);
+    let outcome = match (route, direct) {
+        (Route::WebPush, Some(hop)) => {
+            let hopped = hop.as_subscription(sub);
+            state.metrics.record_own_relay_shortcut();
+            match hop.leg {
+                own_relay::Leg::Fcm => fcm::send(state, &hopped, envelope).await,
+                _ => apns::send(state, &hopped, envelope).await,
+            }
+        }
+        (Route::WebPush, None) => web_push::send(state, sub, envelope).await,
+        (Route::LegacyApns, _) => apns::send(state, sub, envelope).await,
+        (Route::LegacyFcm, _) => fcm::send(state, sub, envelope).await,
     };
     state.metrics.record_send(
         provider_of(platform),

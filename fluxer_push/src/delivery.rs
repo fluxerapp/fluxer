@@ -58,10 +58,17 @@ enum Audience {
 
 impl Audience {
     fn admits(self, subscription: &Subscription) -> bool {
-        let voip = subscription.platform() == Some(Platform::IosApnsVoip);
         match self {
-            Self::Standard => !voip,
-            Self::Ring => voip,
+            Self::Standard => subscription.platform() != Some(Platform::IosApnsVoip),
+            Self::Ring => Self::rings(subscription),
+        }
+    }
+
+    fn rings(subscription: &Subscription) -> bool {
+        match subscription.platform() {
+            Some(Platform::IosApnsVoip) => true,
+            Some(Platform::AndroidFcm) => subscription.is_web_push_registration(),
+            _ => false,
         }
     }
 }

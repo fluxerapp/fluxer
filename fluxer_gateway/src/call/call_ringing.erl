@@ -89,40 +89,50 @@ apply_pending_ringing(PendingUnique, State, DispatchUpdates) ->
 publish_rings([], _State) ->
     ok;
 publish_rings(UserIds, State) ->
-    ChannelId = maps:get(channel_id, State),
-    MessageId = maps:get(message_id, State),
     Recipients = maps:get(recipients, State),
-    StartedAt = erlang:system_time(millisecond),
-    ExpiresAt = StartedAt + ?RING_TIMEOUT_MS,
-    _ = proc_lib:spawn(fun() ->
-        publish_ring_jobs(UserIds, Recipients, ChannelId, MessageId, StartedAt, ExpiresAt)
-    end),
+    Ring = build_ring_context(State),
+    _ = proc_lib:spawn(fun() -> publish_ring_jobs(UserIds, Recipients, Ring) end),
     ok.
 
--spec publish_ring_jobs(
-    [integer()], [integer()], integer(), integer(), integer(), integer()
-) -> ok.
-publish_ring_jobs(UserIds, Recipients, ChannelId, MessageId, StartedAt, ExpiresAt) ->
+-spec build_ring_context(map()) -> map().
+build_ring_context(State) ->
+    StartedAt = erlang:system_time(millisecond),
+    #{
+        channel_id => maps:get(channel_id, State),
+        message_id => maps:get(message_id, State),
+        started_at_ms => StartedAt,
+        expires_at_ms => StartedAt + ?RING_TIMEOUT_MS,
+        caller => call_state:caller_from_state(State)
+    }.
+
+-spec publish_ring_jobs([integer()], [integer()], map()) -> ok.
+publish_ring_jobs(UserIds, Recipients, Ring) ->
     lists:foreach(
-        fun(UserId) ->
-            publish_ring_job(UserId, Recipients, ChannelId, MessageId, StartedAt, ExpiresAt)
-        end,
+        fun(UserId) -> publish_ring_job(UserId, Recipients, Ring) end,
         UserIds
     ).
 
--spec publish_ring_job(
-    integer(), [integer()], integer(), integer(), integer(), integer()
-) -> ok.
-publish_ring_job(UserId, Recipients, ChannelId, MessageId, StartedAt, ExpiresAt) ->
+-spec publish_ring_job(integer(), [integer()], map()) -> ok.
+publish_ring_job(UserId, Recipients, Ring) ->
     case ring_suppressed(UserId, Recipients) of
         true ->
             ok;
         false ->
-            _ = push_job_publisher:publish_ring(
-                UserId, ChannelId, MessageId, StartedAt, ExpiresAt
-            ),
-            ok
+            dispatch_ring_job(UserId, Ring)
     end.
+
+-spec dispatch_ring_job(integer(), map()) -> ok.
+dispatch_ring_job(UserId, #{
+    channel_id := ChannelId,
+    message_id := MessageId,
+    started_at_ms := StartedAt,
+    expires_at_ms := ExpiresAt,
+    caller := Caller
+}) ->
+    _ = push_job_publisher:publish_ring(
+        UserId, ChannelId, MessageId, StartedAt, ExpiresAt, Caller
+    ),
+    ok.
 
 -spec ring_suppressed(integer(), [integer()]) -> boolean().
 ring_suppressed(UserId, Recipients) ->
@@ -382,11 +392,14 @@ published_ring_args() ->
     [Args || {_Pid, {push_job_publisher, publish_ring, Args}, _Result} <- History].
 
 published_ring_users() ->
-    lists:usort([UserId || [UserId, _C, _M, _S, _E] <- published_ring_args()]).
+    lists:usort([UserId || [UserId, _C, _M, _S, _E, _Caller] <- published_ring_args()]).
+
+published_ring_callers() ->
+    [Caller || [_U, _C, _M, _S, _E, Caller] <- published_ring_args()].
 
 mock_ring_publisher() ->
     ok = meck:new(push_job_publisher, [passthrough, no_link]),
-    meck:expect(push_job_publisher, publish_ring, fun(_U, _C, _M, _S, _E) -> ok end).
+    meck:expect(push_job_publisher, publish_ring, fun(_U, _C, _M, _S, _E, _Caller) -> ok end).
 
 apply_pending_ringing_publishes_one_ring_per_new_user_test() ->
     ok = mock_ring_publisher(),
@@ -405,7 +418,7 @@ apply_pending_ringing_publishes_the_frozen_ring_fields_test() ->
         State = ring_state([1, 2], [], [2], #{}),
         _ = maybe_dispatch_pending_ringing(State, false),
         ok = meck:wait(1, push_job_publisher, publish_ring, '_', 2000),
-        [[UserId, ChannelId, MessageId, StartedAt, ExpiresAt]] = published_ring_args(),
+        [[UserId, ChannelId, MessageId, StartedAt, ExpiresAt, _Caller]] = published_ring_args(),
         ?assertEqual({2, 100, 200}, {UserId, ChannelId, MessageId}),
         ?assertEqual(?RING_TIMEOUT_MS, ExpiresAt - StartedAt)
     after
@@ -447,10 +460,50 @@ publish_ring_jobs_suppresses_a_fully_blocked_ring_test() ->
     ok = meck:new(push_eligibility, [passthrough, no_link]),
     try
         ok = meck:expect(push_eligibility, is_user_blocked, fun(_U, _O) -> true end),
-        ok = publish_ring_jobs([2], [1, 2], 100, 200, 1, 2),
+        ok = publish_ring_jobs(
+            [2], [1, 2], build_ring_context(ring_state([1, 2], [], [], #{}))
+        ),
         ?assertEqual([], published_ring_args())
     after
         meck:unload(push_eligibility),
+        meck:unload(push_job_publisher)
+    end.
+
+apply_pending_ringing_publishes_the_caller_held_on_state_test() ->
+    ok = mock_ring_publisher(),
+    try
+        State = (ring_state([1, 2], [], [2], #{}))#{
+            caller_id => 1,
+            caller_name => <<"Ada">>,
+            caller_avatar => <<"a1b2c3d4">>
+        },
+        _ = maybe_dispatch_pending_ringing(State, false),
+        ok = meck:wait(1, push_job_publisher, publish_ring, '_', 2000),
+        ?assertEqual(
+            [
+                #{
+                    caller_id => 1,
+                    caller_name => <<"Ada">>,
+                    caller_avatar => <<"a1b2c3d4">>
+                }
+            ],
+            published_ring_callers()
+        )
+    after
+        meck:unload(push_job_publisher)
+    end.
+
+apply_pending_ringing_publishes_an_unresolved_caller_when_state_has_none_test() ->
+    ok = mock_ring_publisher(),
+    try
+        State = ring_state([1, 2], [], [2], #{}),
+        _ = maybe_dispatch_pending_ringing(State, false),
+        ok = meck:wait(1, push_job_publisher, publish_ring, '_', 2000),
+        ?assertEqual(
+            [#{caller_id => undefined, caller_name => undefined, caller_avatar => undefined}],
+            published_ring_callers()
+        )
+    after
         meck:unload(push_job_publisher)
     end.
 

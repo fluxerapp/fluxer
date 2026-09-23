@@ -21,10 +21,11 @@ use base64::prelude::*;
 use envelope::Urgency;
 use fluxer_svc::shutdown::wait_for_shutdown;
 use quota::Quota;
+use rand::Rng as _;
 use reject::{Reason, Rejection};
 use sha2::{Digest as _, Sha256};
 use std::net::SocketAddr;
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 use std::time::{Duration, Instant};
 use tracing::{info, warn};
 
@@ -37,7 +38,15 @@ const TTL_HEADER: &str = "ttl";
 const URGENCY_HEADER: &str = "urgency";
 const JSON_CONTENT_TYPE: &str = "application/json";
 const DIGEST_BYTES: usize = 8;
-const APNS_DEVICE_TOKEN_LEN: usize = 64;
+const LOG_SALT_BYTES: usize = 16;
+
+static LOG_SALT: LazyLock<[u8; LOG_SALT_BYTES]> = LazyLock::new(|| {
+    let mut salt = [0u8; LOG_SALT_BYTES];
+    rand::rng().fill_bytes(&mut salt);
+    salt
+});
+const MIN_APNS_DEVICE_TOKEN_LEN: usize = 64;
+const MAX_APNS_DEVICE_TOKEN_LEN: usize = 256;
 const MAX_FCM_DEVICE_TOKEN_LEN: usize = 512;
 const MAX_TTL_SECONDS: i64 = 86_400;
 const BODY_READ_TIMEOUT: Duration = Duration::from_secs(15);
@@ -396,7 +405,7 @@ fn finish(
     })?;
     let (result, verdict) = match outcome {
         VendorOutcome::Accepted => (RelayResult::Accepted, Ok(())),
-        VendorOutcome::Unreachable => (
+        VendorOutcome::Unreachable(_) => (
             RelayResult::Failed,
             Err(Rejection::new(Reason::ProviderUnavailable)),
         ),
@@ -425,7 +434,8 @@ fn refusal_reason(refusal: &Refusal) -> Reason {
 fn device_token_is_shaped(leg: RelayLeg, device_token: &str) -> bool {
     match leg {
         RelayLeg::Apns | RelayLeg::ApnsVoip => {
-            device_token.len() == APNS_DEVICE_TOKEN_LEN
+            (MIN_APNS_DEVICE_TOKEN_LEN..=MAX_APNS_DEVICE_TOKEN_LEN).contains(&device_token.len())
+                && device_token.len().is_multiple_of(2)
                 && device_token.bytes().all(|byte| byte.is_ascii_hexdigit())
         }
         RelayLeg::Fcm => {
@@ -483,5 +493,80 @@ fn digest(value: &str) -> String {
     if value.is_empty() {
         return "-".to_owned();
     }
-    BASE64_URL_SAFE_NO_PAD.encode(&Sha256::digest(value.as_bytes())[..DIGEST_BYTES])
+    let mut hasher = Sha256::new();
+    hasher.update(*LOG_SALT);
+    hasher.update(value.as_bytes());
+    BASE64_URL_SAFE_NO_PAD.encode(&hasher.finalize()[..DIGEST_BYTES])
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn hex(len: usize) -> String {
+        "a".repeat(len)
+    }
+
+    #[test]
+    fn apns_accepts_every_token_length_apple_hands_out() {
+        for len in [64, 128, 160, 200, 256] {
+            assert!(
+                device_token_is_shaped(RelayLeg::Apns, &hex(len)),
+                "{len} hex characters must be accepted"
+            );
+        }
+        assert!(device_token_is_shaped(RelayLeg::Apns, &"A".repeat(64)));
+        assert!(device_token_is_shaped(RelayLeg::ApnsVoip, &hex(160)));
+    }
+
+    #[test]
+    fn apns_rejects_tokens_that_are_not_even_length_hex() {
+        for token in [hex(62), hex(63), hex(161), hex(258), "z".repeat(64)] {
+            assert!(
+                !device_token_is_shaped(RelayLeg::Apns, &token),
+                "{token} must be rejected"
+            );
+        }
+    }
+
+    #[test]
+    fn the_log_digest_is_not_a_bare_hash_of_the_token() {
+        const TOKEN: &str = "3dbc5a5ef1a1c1666afc26f466e1b3ebaaf4c66d92dddeb0fd1b69c49641d4cd";
+        let unsalted =
+            BASE64_URL_SAFE_NO_PAD.encode(&Sha256::digest(TOKEN.as_bytes())[..DIGEST_BYTES]);
+        assert_ne!(digest(TOKEN), unsalted);
+        assert_eq!(digest(TOKEN), digest(TOKEN));
+        assert_eq!(digest(""), "-");
+    }
+
+    #[test]
+    fn a_clear_survives_a_device_that_is_offline_for_a_day() {
+        assert_eq!(
+            Urgency::Background.ttl_cap_seconds(),
+            Urgency::Alert.ttl_cap_seconds(),
+            "a clear must outlive the alert it removes"
+        );
+    }
+
+    #[test]
+    fn a_clear_stays_silent_on_the_apns_leg() {
+        let body = envelope::apns_body("payload", Urgency::Background).expect("body fits");
+        let parsed: serde_json::Value = serde_json::from_slice(&body).expect("body is json");
+        assert_eq!(parsed["aps"]["content-available"], 1);
+        assert!(parsed["aps"].get("alert").is_none());
+        let headers = envelope::apns_headers(Urgency::Background, 0, 86_400);
+        let push_type = headers
+            .iter()
+            .find(|(name, _)| name == "apns-push-type")
+            .map(|(_, value)| value.as_str());
+        assert_eq!(push_type, Some("background"));
+    }
+
+    #[test]
+    fn payload_too_large_answers_413() {
+        assert_eq!(
+            Reason::PayloadTooLarge.status(),
+            StatusCode::PAYLOAD_TOO_LARGE
+        );
+    }
 }

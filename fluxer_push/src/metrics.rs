@@ -354,6 +354,7 @@ pub struct Metrics {
     sends: [[AtomicU64; SEND_RESULT_COUNT]; PROVIDER_COUNT],
     token_deletions: [AtomicU64; PROVIDER_COUNT],
     payload_shrinks: [AtomicU64; PAYLOAD_SHRINK_COUNT],
+    own_relay_shortcuts: AtomicU64,
     auth_tokens_minted: [AtomicU64; AUTH_PROVIDER_COUNT],
     rpc_requests: [[AtomicU64; RPC_OUTCOME_COUNT]; RPC_METHOD_COUNT],
     rollout_updates: [AtomicU64; ROLLOUT_OUTCOME_COUNT],
@@ -384,6 +385,7 @@ impl Metrics {
             sends: [const { [const { AtomicU64::new(0) }; SEND_RESULT_COUNT] }; PROVIDER_COUNT],
             token_deletions: [const { AtomicU64::new(0) }; PROVIDER_COUNT],
             payload_shrinks: [const { AtomicU64::new(0) }; PAYLOAD_SHRINK_COUNT],
+            own_relay_shortcuts: AtomicU64::new(0),
             auth_tokens_minted: [const { AtomicU64::new(0) }; AUTH_PROVIDER_COUNT],
             rpc_requests: [const { [const { AtomicU64::new(0) }; RPC_OUTCOME_COUNT] };
                 RPC_METHOD_COUNT],
@@ -436,6 +438,10 @@ impl Metrics {
 
     pub fn record_token_deletion(&self, provider: Provider) {
         self.token_deletions[provider as usize].fetch_add(1, ORDERING);
+    }
+
+    pub fn record_own_relay_shortcut(&self) {
+        self.own_relay_shortcuts.fetch_add(1, ORDERING);
     }
 
     pub fn record_payload_shrink(&self, step: PayloadShrink) {
@@ -538,6 +544,11 @@ impl Metrics {
             "provider",
             Provider::ALL.map(Provider::label),
             &self.token_deletions,
+        )?;
+        render_counter(
+            out,
+            "fluxer_push_own_relay_shortcuts_total",
+            &self.own_relay_shortcuts,
         )?;
         render_labelled_counter(
             out,

@@ -6,16 +6,18 @@ import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import type {GatewayDispatchEvent} from '@app/api/constants/Gateway';
 import {GatewayRpcClient} from '@app/api/infrastructure/GatewayRpcClient';
 import {GatewayRpcMethodError, GatewayRpcMethodErrorCodes} from '@app/api/infrastructure/GatewayRpcError';
-import type {
-	CallData,
-	GatewayChannelMention,
-	GatewayGuildMemoryStats,
-	GatewayMentionSources,
-	GatewayMentionSourcesPage,
-	GatewayNodeStats,
-	GatewayVoiceStateCounts,
-	GatewayVoiceStateEntry,
-	GuildChannelAuthContext,
+import {
+	type CallCaller,
+	type CallData,
+	callCallerRpcParams,
+	type GatewayChannelMention,
+	type GatewayGuildMemoryStats,
+	type GatewayMentionSources,
+	type GatewayMentionSourcesPage,
+	type GatewayNodeStats,
+	type GatewayVoiceStateCounts,
+	type GatewayVoiceStateEntry,
+	type GuildChannelAuthContext,
 } from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
@@ -1695,6 +1697,7 @@ export class GatewayService {
 		region: string,
 		ringing: Array<string>,
 		recipients: Array<string>,
+		caller?: CallCaller,
 	): Promise<CallData> {
 		return this.call<CallData>('call.create', {
 			channel_id: channelId.toString(),
@@ -1702,6 +1705,7 @@ export class GatewayService {
 			region,
 			ringing,
 			recipients,
+			...callCallerRpcParams(caller),
 		});
 	}
 
@@ -1709,8 +1713,12 @@ export class GatewayService {
 		return this.call<boolean>('call.update_region', {channel_id: channelId.toString(), region});
 	}
 
-	async ringCallRecipients(channelId: ChannelID, recipients: Array<string>): Promise<boolean> {
-		return this.call<boolean>('call.ring', {channel_id: channelId.toString(), recipients});
+	async ringCallRecipients(channelId: ChannelID, recipients: Array<string>, caller?: CallCaller): Promise<boolean> {
+		return this.call<boolean>('call.ring', {
+			channel_id: channelId.toString(),
+			recipients,
+			...callCallerRpcParams(caller),
+		});
 	}
 
 	async stopRingingCallRecipients(channelId: ChannelID, recipients: Array<string>): Promise<boolean> {

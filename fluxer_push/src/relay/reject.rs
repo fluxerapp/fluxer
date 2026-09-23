@@ -45,10 +45,10 @@ impl Reason {
 
     pub fn status(self) -> StatusCode {
         match self {
-            Self::BadRequest
-            | Self::PayloadTooLarge
-            | Self::DeviceTokenInvalid
-            | Self::AppUnknown => StatusCode::BAD_REQUEST,
+            Self::BadRequest | Self::DeviceTokenInvalid | Self::AppUnknown => {
+                StatusCode::BAD_REQUEST
+            }
+            Self::PayloadTooLarge => StatusCode::PAYLOAD_TOO_LARGE,
             Self::DeviceTokenGone => StatusCode::GONE,
             Self::RateLimited => StatusCode::TOO_MANY_REQUESTS,
             Self::ProviderUnavailable => StatusCode::BAD_GATEWAY,

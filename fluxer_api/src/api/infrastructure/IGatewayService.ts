@@ -24,6 +24,19 @@ export interface CallData {
 	voice_states: Array<VoiceState>;
 }
 
+export interface CallCaller {
+	id: string;
+	name: string;
+	avatar: string | null;
+}
+
+export function callCallerRpcParams(caller: CallCaller | undefined): Record<string, unknown> {
+	if (!caller) {
+		return {};
+	}
+	return {caller_id: caller.id, caller_name: caller.name, caller_avatar: caller.avatar};
+}
+
 export interface GatewayGuildMemoryStatsEntry {
 	node_id: string;
 	guild_id: string | null;
@@ -381,11 +394,12 @@ export abstract class IGatewayService {
 		region: string,
 		ringing: Array<string>,
 		recipients: Array<string>,
+		caller?: CallCaller,
 	): Promise<CallData>;
 
 	abstract updateCallRegion(channelId: ChannelID, region: string | null): Promise<boolean>;
 
-	abstract ringCallRecipients(channelId: ChannelID, recipients: Array<string>): Promise<boolean>;
+	abstract ringCallRecipients(channelId: ChannelID, recipients: Array<string>, caller?: CallCaller): Promise<boolean>;
 
 	abstract stopRingingCallRecipients(channelId: ChannelID, recipients: Array<string>): Promise<boolean>;
 

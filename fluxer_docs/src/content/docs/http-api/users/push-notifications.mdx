@@ -10,16 +10,16 @@ Fluxer delivers a notification to a registered device as [RFC 8291](https://data
 
 Every route here requires a user session. A bot or OAuth2 bearer credential is refused with 403 `ACCESS_DENIED`. An account with an outstanding required action is refused with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
 
-## Registration shapes
+## Registration formats
 
-A registration takes one of two shapes on every platform.
+On every platform a registration takes one of two forms.
 
-| Shape | What `token` holds | Keys |
+| Form | What `token` holds | Keys |
 | --- | --- | --- |
 | Web Push | A publicly routable endpoint URL | Both `encryption_key` and `auth_secret` |
 | Legacy | A raw vendor device token | Neither key is sent |
 
-Fluxer reads the shape from the body rather than from `platform`. A `token` that parses as a URL without both keys is refused, and so is a pair of keys sent with a raw vendor token.
+Fluxer works out which form you sent from the body rather than from `platform`. A `token` that parses as a URL without both keys is refused, and so is a pair of keys sent with a raw vendor token.
 
 `platform` names the transport the device was reached on.
 
@@ -33,6 +33,8 @@ Fluxer reads the shape from the body rather than from `platform`. A `token` that
 `android_unified_push` and `ios_apns_voip` are always Web Push registrations. Sending either with no keys is refused.
 
 Apple issues a PushKit device token separate from the alert token. An iOS device that answers calls registers both: the alert token as `ios_apns`, and the PushKit token as `ios_apns_voip`. Generate a separate key pair for the `ios_apns_voip` registration. The two registrations get two identifiers and two independent lifetimes. Removing one leaves the other in place.
+
+Android registers once. One `android_fcm` Web Push registration receives notifications, clears and call rings. Android has no separate call registration and no second token. An `android_fcm` registration sent with neither key receives no call ring.
 
 ## Device registration object
 
@@ -56,7 +58,7 @@ Stores a push registration for the current account and returns its [device regis
 
 | Field | Type | Description |
 | --- | --- | --- |
-| platform | string | The [platform value](#registration-shapes) the device was reached on |
+| platform | string | The [platform value](#registration-formats) the device was reached on |
 | token<sup>1</sup> | string | The endpoint URL, or the raw vendor token on a legacy registration |
 | encryption_key?<sup>2</sup> | string | The base64url P-256 public key (1-1024 characters) |
 | auth_secret?<sup>2</sup> | string | The base64url auth secret (1-1024 characters) |
@@ -77,7 +79,7 @@ Register an `https` endpoint. A Web Push registration whose `token` is not a val
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [device registration](#device-registration-object) object | The registration was stored |
-| 400 | [error response](/http-api/#error-response) | The body matches neither shape and the request returns `INVALID_FORM_BODY` |
+| 400 | [error response](/http-api/#error-response) | The body matches neither form and the request returns `INVALID_FORM_BODY` |
 
 ### Rate limit
 
@@ -95,7 +97,7 @@ The four values below identify the registration the same way [Register mobile pu
 
 | Field | Type | Description |
 | --- | --- | --- |
-| platform | string | The [platform value](#registration-shapes) sent at registration |
+| platform | string | The [platform value](#registration-formats) sent at registration |
 | token | string | The endpoint URL or raw vendor token sent at registration (1-4096 characters) |
 | app_id? | string | The client build sent at registration (default `stable`) |
 | provider_environment? | string | The environment sent at registration |
@@ -148,7 +150,9 @@ An endpoint that answers 404 or 410 removes the registration. Fluxer retries a t
 
 ### Call ring
 
-A call ring is the only payload an `ios_apns_voip` registration receives. Every other payload for that device goes to its `ios_apns` registration. The fields below sit under `data`.
+Only two kinds of registration receive a call ring. On iOS it goes to the `ios_apns_voip` registration, which receives nothing else, while every other payload for that device goes to its `ios_apns` registration. An `android_fcm` Web Push registration receives call rings alongside its notifications and clears. No other registration receives one.
+
+These fields are under `data`.
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -157,14 +161,34 @@ A call ring is the only payload an `ios_apns_voip` registration receives. Every 
 | message_id | string | The call message, which names the call |
 | target_user_id | string | The account being rung |
 | started_at_ms | integer | When the ring started, in milliseconds since the Unix epoch |
+| expires_at_ms | integer | When the ring window closes, in milliseconds since the Unix epoch |
+| caller_id? | string | The account placing the call |
+| caller_name? | string | The name to show for the caller, resolved before the record was sealed |
+| caller_avatar_url? | string | An image URL for the caller |
+
+Stop ringing at `expires_at_ms` rather than after a fixed number of seconds. The ring window can change without a client release.
+
+`caller_name` is the caller's nickname in that channel if they have one, otherwise their display name, otherwise their username. Display it as sent. If you look the name up yourself from `caller_id` you can get a different answer in a group DM.
+
+The three caller fields are sent together or not at all. An older server, or an account Fluxer could not read, omits all three.
+
+| What arrived | What to show |
+| --- | --- |
+| The three caller fields | The name and the image |
+| A name with no image URL | The name and a local placeholder |
+| No caller fields | The channel name the client already holds, or a generic incoming call string |
+
+Ring in all three cases. Showing a call without a name is better than not showing it at all.
 
 A call ring is not stored for later delivery. A device that cannot be reached while the call rings does not get the ring afterwards.
 
-Nothing cancels a ring with a second push. Fluxer ends the call over the gateway connection the woken client opens.
+Fluxer never sends a second push to cancel a ring. It ends the call over the gateway connection that the woken client opens.
+
+A call also produces an ordinary notification for its call message, under the same `message_id` as the ring. Collapse the two into one rather than showing both.
 
 ### What PushKit requires of the client
 
-iOS terminates an application that takes a PushKit push without reporting a call to CallKit. Repeated failures stop PushKit delivery to that device. The report is due before the record is decrypted. Decryption cannot be what decides whether to ring.
+iOS terminates an application that takes a PushKit push without reporting a call to CallKit. Repeated failures stop PushKit delivery to that device. You have to report the call before you decrypt the record, so decryption cannot decide whether to ring.
 
 Report a call for every PushKit push, before decrypting. Then end that call at once in each of these three cases.
 
@@ -174,11 +198,43 @@ Report a call for every PushKit push, before decrypting. Then end that call at o
 | `type` is not `call_ring` | The push did not come from Fluxer |
 | The gateway names no live call for `channel_id` | The call ended before the ring arrived |
 
-Anyone who learns a PushKit token can send to it. Those three rules are what keeps a forged push from showing a caller.
+Anyone who obtains a PushKit token can send to it. These three checks are what stop a forged push from showing a caller.
 
-Derive the CallKit call identifier from `message_id`. The gateway ends the call over the connection under that same identity. Two rings for one call then name one call.
+Derive the CallKit call identifier from `message_id`. The gateway uses the same identifier when it ends the call, and two rings for the same call resolve to a single CallKit call.
 
-Keep the registered private key and auth secret readable while the device is locked. A call ring arrives on a locked device. A key that cannot be read then costs the report.
+Keep the registered private key and auth secret readable while the device is locked, because call rings arrive on locked devices. If you cannot read the key you cannot decrypt the record, but CallKit still needs its report.
+
+### What an Android client has to do
+
+Android has no PushKit, so there is nothing to do before decrypting. Decrypt the record, read `type`, then decide whether to ring. The CallKit rule above applies only to iOS.
+
+A ring arrives as a high priority data message and is never queued. Your own process handles it and has the registered private key, so decrypt it there. Do not make any network request before you have posted a notification.
+
+Google lowers an app's message priority if its high priority messages stop producing a visible notification. This happens per device and can be reversed. Once downgraded, a ring waits for the device to leave Doze and arrives after the call has already ended, so every ring needs to put something on screen.
+
+1. Post the incoming call notification first, ahead of any step that can fail. Use `Notification.CallStyle.forIncomingCall` from Android 12 on a high importance channel, with `CATEGORY_CALL`, a full screen intent, `setOngoing(true)`, and a timeout taken from `expires_at_ms`. Below Android 12 post a high importance notification with the same full screen intent.
+2. Post with `caller_name` alone, then fetch `caller_avatar_url`, then post again under the same notification id with the image attached. Read the active notifications before that second post. Without that read a ring the user already dismissed comes back.
+3. Show a fallback when the record does not decrypt, or when `type` is not `call_ring`. Returning without showing anything is what triggers the downgrade described above.
+4. Let the system play the ringtone through the notification channel. A ringtone the app starts itself out of a push stops working on newer Android releases and reports no error.
+5. Stop registering the device once notification permission is denied. An app that cannot show anything is spending its delivery priority for no reason.
+
+Answering the call needs a foreground service. Ringing does not. Start a `phoneCall` service once the user answers. From Android 12 a backgrounded app may only start that service because the message arrived at high priority. Read the delivered priority rather than the priority Fluxer sent, and skip the service start when it came down as normal.
+
+| Permission | Granted by default | Without it |
+| --- | --- | --- |
+| POST_NOTIFICATIONS | No, the user is asked from Android 13 | Nothing renders at all |
+| USE_FULL_SCREEN_INTENT | Yes for a calling app, checked at runtime from Android 14 | The ring shows as a heads-up notification |
+| MANAGE_OWN_CALLS | Yes, at install | The `phoneCall` service type is unusable |
+
+Google Play grants `USE_FULL_SCREEN_INTENT` to an app whose stated function includes calling and revokes it for everything else. Read `NotificationManager.canUseFullScreenIntent()` at runtime and send the user to the system setting when it answers false. Losing it does not lose the ring.
+
+In three situations nothing is delivered at all. These are worth documenting for support rather than treating as bugs.
+
+| Situation | What happens |
+| --- | --- |
+| The user force stopped the app | Nothing is delivered until the app is opened again |
+| The app is restricted from background work | Nothing is delivered |
+| The device has not been unlocked since it booted | The key is unreadable and the ring cannot be decrypted |
 
 ### When decryption fails
 

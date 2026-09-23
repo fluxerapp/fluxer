@@ -3,7 +3,7 @@
 import {Config} from '@app/api/Config';
 import {GatewayRpcMethodError, GatewayRpcMethodErrorCodes} from '@app/api/infrastructure/GatewayRpcError';
 import type {IGatewayRpcTransport} from '@app/api/infrastructure/IGatewayRpcTransport';
-import type {CallData} from '@app/api/infrastructure/IGatewayService';
+import {type CallCaller, type CallData, callCallerRpcParams} from '@app/api/infrastructure/IGatewayService';
 import {NatsGatewayRpcTransport} from '@app/api/infrastructure/NatsGatewayRpcTransport';
 import {Logger} from '@app/api/Logger';
 import {NatsConnectionManager} from '@pkgs/nats/src/NatsConnectionManager';
@@ -128,6 +128,7 @@ export class GatewayRpcClient {
 		region: string,
 		ringing: Array<string>,
 		recipients: Array<string>,
+		caller?: CallCaller,
 	): Promise<CallData> {
 		return this.call<CallData>('call.create', {
 			channel_id: channelId,
@@ -135,6 +136,7 @@ export class GatewayRpcClient {
 			region,
 			ringing,
 			recipients,
+			...callCallerRpcParams(caller),
 		});
 	}
 
@@ -142,8 +144,8 @@ export class GatewayRpcClient {
 		return this.call('call.update_region', {channel_id: channelId, region});
 	}
 
-	async ringCallRecipients(channelId: string, recipients: Array<string>): Promise<boolean> {
-		return this.call('call.ring', {channel_id: channelId, recipients});
+	async ringCallRecipients(channelId: string, recipients: Array<string>, caller?: CallCaller): Promise<boolean> {
+		return this.call('call.ring', {channel_id: channelId, recipients, ...callCallerRpcParams(caller)});
 	}
 
 	async stopRingingCallRecipients(channelId: string, recipients: Array<string>): Promise<boolean> {
