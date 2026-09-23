@@ -6,7 +6,7 @@ use serde_json::{Value, json};
 
 pub const FORMAT_VERSION: u64 = 1;
 pub const ALERT_TTL_CAP_SECONDS: i64 = 86_400;
-pub const BACKGROUND_TTL_CAP_SECONDS: i64 = 3_600;
+pub const BACKGROUND_TTL_CAP_SECONDS: i64 = 86_400;
 pub const APNS_BODY_MAX_BYTES: usize = 4_096;
 pub const FCM_DATA_MAX_BYTES: usize = 4_096;
 

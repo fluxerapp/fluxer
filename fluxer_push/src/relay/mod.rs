@@ -540,6 +540,29 @@ mod tests {
     }
 
     #[test]
+    fn a_clear_survives_a_device_that_is_offline_for_a_day() {
+        assert_eq!(
+            Urgency::Background.ttl_cap_seconds(),
+            Urgency::Alert.ttl_cap_seconds(),
+            "a clear must outlive the alert it removes"
+        );
+    }
+
+    #[test]
+    fn a_clear_stays_silent_on_the_apns_leg() {
+        let body = envelope::apns_body("payload", Urgency::Background).expect("body fits");
+        let parsed: serde_json::Value = serde_json::from_slice(&body).expect("body is json");
+        assert_eq!(parsed["aps"]["content-available"], 1);
+        assert!(parsed["aps"].get("alert").is_none());
+        let headers = envelope::apns_headers(Urgency::Background, 0, 86_400);
+        let push_type = headers
+            .iter()
+            .find(|(name, _)| name == "apns-push-type")
+            .map(|(_, value)| value.as_str());
+        assert_eq!(push_type, Some("background"));
+    }
+
+    #[test]
     fn payload_too_large_answers_413() {
         assert_eq!(
             Reason::PayloadTooLarge.status(),

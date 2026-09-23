@@ -34,6 +34,9 @@
 -define(CNT_DISPATCH_DROPPED, push_loss_dispatch_dropped).
 -define(CNT_DISPATCH_DROPPED_USERS, push_loss_dispatch_dropped_users).
 -define(CNT_CLEAR_DROPPED, push_loss_clear_dropped).
+-define(CNT_CLEAR_RETRIED, push_clear_retried).
+-define(CLEAR_RETRY_ATTEMPTS, 3).
+-define(CLEAR_RETRY_BASE_MS, 250).
 -define(CNT_QUEUE_FULL, push_loss_queue_full).
 -define(CNT_INVALID_JOB, push_loss_invalid_job).
 -define(CNT_ENQUEUE_TIMEOUT, push_loss_enqueue_timeout).
@@ -135,6 +138,8 @@ handle_info(evict_caches, State) ->
     }),
     schedule_eviction(),
     {noreply, State};
+handle_info({retry_clear_notifications, UserId, ChannelId, MessageId, Attempt}, State) ->
+    clear_via_dispatcher(UserId, ChannelId, MessageId, Attempt, State);
 handle_info(_Info, State) ->
     {noreply, State}.
 
@@ -855,6 +860,12 @@ clear_via_service(UserId, ChannelId, MessageId, ConfigVersion, State) ->
 
 -spec clear_via_dispatcher(integer(), integer(), integer(), state()) -> {noreply, state()}.
 clear_via_dispatcher(UserId, ChannelId, MessageId, State) ->
+    clear_via_dispatcher(UserId, ChannelId, MessageId, 0, State).
+
+-spec clear_via_dispatcher(
+    integer(), integer(), integer(), non_neg_integer(), state()
+) -> {noreply, state()}.
+clear_via_dispatcher(UserId, ChannelId, MessageId, Attempt, State) ->
     BadgeCountsTtl = maps:get(badge_counts_ttl_seconds, State),
     case
         push_dispatcher:enqueue_clear_notifications(
@@ -864,10 +875,23 @@ clear_via_dispatcher(UserId, ChannelId, MessageId, State) ->
         ok ->
             ok;
         dropped ->
-            count_clear_dropped(),
-            log_clear_drop(loss_logging_enabled(), UserId, ChannelId, MessageId)
+            retry_or_drop_clear(UserId, ChannelId, MessageId, Attempt)
     end,
     {noreply, State}.
+
+-spec retry_or_drop_clear(integer(), integer(), integer(), non_neg_integer()) -> ok.
+retry_or_drop_clear(UserId, ChannelId, MessageId, Attempt) when
+    Attempt < ?CLEAR_RETRY_ATTEMPTS
+->
+    bump_counter(?CNT_CLEAR_RETRIED),
+    Delay = ?CLEAR_RETRY_BASE_MS bsl Attempt,
+    _ = erlang:send_after(
+        Delay, self(), {retry_clear_notifications, UserId, ChannelId, MessageId, Attempt + 1}
+    ),
+    ok;
+retry_or_drop_clear(UserId, ChannelId, MessageId, _Attempt) ->
+    count_clear_dropped(),
+    log_clear_drop(loss_logging_enabled(), UserId, ChannelId, MessageId).
 
 -spec log_clear_drop(boolean(), integer(), integer(), integer()) -> ok.
 log_clear_drop(true, UserId, ChannelId, MessageId) ->
