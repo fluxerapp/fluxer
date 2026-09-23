@@ -1894,6 +1894,7 @@ dependencies = [
  "futures",
  "hmac 0.13.0",
  "p256",
+ "percent-encoding",
  "rand 0.10.2",
  "reqwest",
  "ring",

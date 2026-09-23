@@ -14,7 +14,7 @@ const FALLBACK_TITLE: &str = "Fluxer";
 const APNS_CATEGORY: &str = "FLUXER_MESSAGE";
 const APNS_SOUND: &str = "default";
 const APNS_ALERT_EXPIRATION_SECONDS: i64 = 86_400;
-const APNS_BACKGROUND_EXPIRATION_SECONDS: i64 = 3_600;
+const APNS_BACKGROUND_EXPIRATION_SECONDS: i64 = 86_400;
 const APNS_COLLAPSE_ID_MAX_BYTES: usize = 64;
 const SHRUNK_BODY_MAX_BYTES: usize = 40;
 const MINIMAL_TITLE_MAX_BYTES: usize = 120;
@@ -168,7 +168,7 @@ fn fcm_clear_message(device_token: &str, envelope: &Value) -> Value {
             "data": data,
             "android": {
                 "priority": "NORMAL",
-                "ttl": "3600s",
+                "ttl": "86400s",
                 "collapse_key": format!("clear:{tag}"),
             },
             "fcm_options": {"analytics_label": CLEAR_TYPE},

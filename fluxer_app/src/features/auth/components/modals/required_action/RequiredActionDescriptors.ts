@@ -265,6 +265,11 @@ export const SUPPORT_LINK_LABEL_DESCRIPTOR = msg({
 	message: 'Contact support',
 	comment: 'Link label in the required-action modal. Opens an email to Fluxer support.',
 });
+export const INSTANCE_ADMIN_CONTACT_DESCRIPTOR = msg({
+	message: 'Contact the administrators of this instance for help.',
+	comment:
+		'Shown in the required-action modal on a self-hosted instance in place of the Contact support link. The instance is run by its own administrators, not by the app maker.',
+});
 export const ALT_ROUTES_TITLE_DESCRIPTOR = msg({
 	message: "If you can't verify by SMS",
 	comment:
@@ -275,6 +280,12 @@ export const ALT_ROUTES_HUMAN_REVIEW_DESCRIPTOR = msg({
 		'Email us and a person will review your account. Tell us you cannot verify by SMS and we will take it from there. Replies come by email, so this is not instant.',
 	comment:
 		'Body of the human-review option in the required-action modal, rendered directly above the Contact support link. Sets the expectation that a reply takes time.',
+});
+export const ALT_ROUTES_HUMAN_REVIEW_SELF_HOSTED_DESCRIPTOR = msg({
+	message:
+		'Ask the administrators of this instance to review your account. This instance is run independently, and only its administrators can change your account.',
+	comment:
+		'Body of the human-review option in the required-action modal on a self-hosted instance. The instance is run by its own administrators, not by the app maker.',
 });
 export const ESCAPE_BUTTON_DESCRIPTOR = msg({
 	message: 'Set this check aside',
@@ -328,6 +339,11 @@ export const ESCAPE_CONFIRM_SUPPORT_DESCRIPTOR = msg({
 	comment:
 		'Last line of the set-aside confirmation in the required-action modal. supportEmail is inserted by code. The self-serve route never closes the support route.',
 });
+export const ESCAPE_CONFIRM_SUPPORT_SELF_HOSTED_DESCRIPTOR = msg({
+	message: 'You can still ask the administrators of this instance for a human review at any time.',
+	comment:
+		'Last line of the set-aside confirmation in the required-action modal on a self-hosted instance. The instance is run by its own administrators, not by the app maker.',
+});
 export const ESCAPE_CONFIRM_PRIMARY_NO_GUILDS_DESCRIPTOR = msg({
 	message: 'Set this check aside',
 	comment:
@@ -352,6 +368,11 @@ export const ESCAPE_UNAVAILABLE_DESCRIPTOR = msg({
 	message: 'This is not available on your account right now. Email {supportEmail} and a person will review it.',
 	comment:
 		'Shown in the required-action modal when setting the check aside is refused, and when it reported success but the phone requirement is still in force. supportEmail is inserted by code, and the address is named in full because the support link may have scrolled out of view.',
+});
+export const ESCAPE_UNAVAILABLE_SELF_HOSTED_DESCRIPTOR = msg({
+	message: 'This is not available on your account right now. Ask the administrators of this instance to review it.',
+	comment:
+		'Shown in the required-action modal on a self-hosted instance when setting the check aside is refused, and when it reported success but the phone requirement is still in force.',
 });
 export const ESCAPE_FAILED_NOTHING_CHANGED_DESCRIPTOR = msg({
 	message: 'That did not go through. Nothing changed. Try again.',

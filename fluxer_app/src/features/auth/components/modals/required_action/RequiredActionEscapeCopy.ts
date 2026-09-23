@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {SUPPORT_EMAIL} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {
 	ESCAPE_CONFIRM_EMAIL_REMAINS_DESCRIPTOR,
 	ESCAPE_CONFIRM_LEAVE_DESCRIPTOR,
@@ -9,6 +10,7 @@ import {
 	ESCAPE_CONFIRM_PRIMARY_NO_GUILDS_DESCRIPTOR,
 	ESCAPE_CONFIRM_PRIMARY_WITH_GUILDS_DESCRIPTOR,
 	ESCAPE_CONFIRM_SUPPORT_DESCRIPTOR,
+	ESCAPE_CONFIRM_SUPPORT_SELF_HOSTED_DESCRIPTOR,
 	ESCAPE_CONFIRM_TITLE_NO_GUILDS_DESCRIPTOR,
 	ESCAPE_CONFIRM_TITLE_WITH_GUILDS_DESCRIPTOR,
 	ESCAPE_HINT_NO_GUILDS_DESCRIPTOR,
@@ -60,7 +62,11 @@ export function buildPhoneGateEscapeConfirmCopy(i18n: I18n, plan: PhoneGateEscap
 	if (plan.emailStepRemains) {
 		bodyLines.push(i18n._(ESCAPE_CONFIRM_EMAIL_REMAINS_DESCRIPTOR));
 	}
-	bodyLines.push(i18n._(ESCAPE_CONFIRM_SUPPORT_DESCRIPTOR, {supportEmail: SUPPORT_EMAIL}));
+	bodyLines.push(
+		RuntimeConfig.isSelfHosted()
+			? i18n._(ESCAPE_CONFIRM_SUPPORT_SELF_HOSTED_DESCRIPTOR)
+			: i18n._(ESCAPE_CONFIRM_SUPPORT_DESCRIPTOR, {supportEmail: SUPPORT_EMAIL}),
+	);
 	return {
 		title: leaving
 			? i18n._(ESCAPE_CONFIRM_TITLE_WITH_GUILDS_DESCRIPTOR, {count: plan.guildNames.length})
