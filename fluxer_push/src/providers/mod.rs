@@ -49,7 +49,10 @@ impl From<VendorOutcome> for SendOutcome {
     fn from(outcome: VendorOutcome) -> Self {
         match outcome {
             VendorOutcome::Accepted => Self::Accepted,
-            VendorOutcome::Unreachable => Self::transient("transport"),
+            VendorOutcome::Unreachable(unreachable) if unreachable.is_permanent() => {
+                Self::permanent(unreachable.label())
+            }
+            VendorOutcome::Unreachable(unreachable) => Self::transient(unreachable.label()),
             VendorOutcome::Refused(refusal) => match refusal.dead_token {
                 Some(dead_token) => Self::TokenInvalid {
                     reason: dead_token.label(),

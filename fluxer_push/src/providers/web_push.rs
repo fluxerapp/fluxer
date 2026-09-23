@@ -6,12 +6,13 @@ use crate::providers::SendOutcome;
 use crate::resolver;
 use crate::server::AppState;
 use crate::subscription::Subscription;
-use crate::vendor::is_transient_status;
+use crate::vendor::{Unreachable, is_transient_status};
 use rand::RngExt as _;
 use reqwest::header::{AUTHORIZATION, CONTENT_ENCODING, CONTENT_TYPE};
 use serde_json::Value;
 use std::net::IpAddr;
 use std::time::Duration;
+use tracing::warn;
 use url::{Host, Url};
 
 pub const RECORD_SIZE: usize = 2816;
@@ -90,10 +91,20 @@ pub async fn send(state: &AppState, sub: &Subscription, envelope: &Value) -> Sen
 
         let status = match response {
             Ok(response) => response.status().as_u16(),
-            Err(_) if attempt >= MAX_TRANSIENT_RETRIES => {
-                return SendOutcome::transient("transport");
-            }
-            Err(_) => {
+            Err(error) => {
+                let unreachable = Unreachable::of(&error);
+                warn!(
+                    error = %error,
+                    kind = unreachable.label(),
+                    endpoint = %origin_of(&sub.endpoint),
+                    "web push request did not complete"
+                );
+                if unreachable.is_permanent() {
+                    return SendOutcome::permanent(unreachable.label());
+                }
+                if attempt >= MAX_TRANSIENT_RETRIES {
+                    return SendOutcome::transient(unreachable.label());
+                }
                 tokio::time::sleep(retry_delay(attempt)).await;
                 attempt += 1;
                 continue;

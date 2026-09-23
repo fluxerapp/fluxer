@@ -12,6 +12,7 @@ import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService'
 import type {IVoiceRoomStore} from '@app/api/infrastructure/IVoiceRoomStore';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Channel} from '@app/api/models/Channel';
 import type {ReadStateService} from '@app/api/read_state/ReadStateService';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import type {VoiceAccessContext, VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
@@ -208,14 +209,26 @@ export class CallService {
 			has_reaction: false,
 			version: 1,
 		});
+		const author = await this.userRepository.findUnique(userId);
 		const call = await this.gatewayService.createCall(
 			channelId,
 			messageId.toString(),
 			selectedRegion,
 			ringing.map((id) => id.toString()),
 			allRecipients.map((id) => id.toString()),
+			author
+				? {
+						id: userId.toString(),
+						name: this.resolveCallerName({
+							channel,
+							userId,
+							globalName: author.globalName,
+							username: author.username,
+						}),
+						avatar: author.avatarHash,
+					}
+				: undefined,
 		);
-		const author = await this.userRepository.findUnique(userId);
 		await incrementDmMentionCounts({
 			readStateService: this.readStateService,
 			userRepository: this.userRepository,
@@ -390,11 +403,43 @@ export class CallService {
 				longitude,
 			});
 		} else {
+			const caller = await this.userCacheService.getUserPartialResponse(userId, requestCache);
 			await this.gatewayService.ringCallRecipients(
 				channelId,
 				recipientsToRing.map((id) => id.toString()),
+				{
+					id: userId.toString(),
+					name: this.resolveCallerName({
+						channel,
+						userId,
+						globalName: caller.global_name,
+						username: caller.username,
+					}),
+					avatar: caller.avatar,
+				},
 			);
 		}
+	}
+
+	private resolveCallerName({
+		channel,
+		userId,
+		globalName,
+		username,
+	}: {
+		channel: Channel;
+		userId: UserID;
+		globalName: string | null;
+		username: string;
+	}): string {
+		const nickname = channel.nicknames.get(userId.toString());
+		if (nickname) {
+			return nickname;
+		}
+		if (globalName) {
+			return globalName;
+		}
+		return username;
 	}
 
 	async stopRingingCallRecipients({

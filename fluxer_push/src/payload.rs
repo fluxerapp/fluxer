@@ -20,6 +20,11 @@ const SHRUNK_BODY_MAX_BYTES: usize = 40;
 const MINIMAL_TITLE_MAX_BYTES: usize = 120;
 const MEDIA_KEYS: [&str; 2] = ["image_url", "image"];
 const ICON_KEYS: [&str; 3] = ["icon", "badge", "author_avatar_url"];
+const RING_CALLER_ID_KEY: &str = "caller_id";
+const RING_CALLER_NAME_KEY: &str = "caller_name";
+const RING_CALLER_AVATAR_KEY: &str = "caller_avatar_url";
+const RING_AVATAR_KEYS: [&str; 1] = [RING_CALLER_AVATAR_KEY];
+const RING_IDENTITY_KEYS: [&str; 2] = [RING_CALLER_ID_KEY, RING_CALLER_NAME_KEY];
 const MINIMAL_DATA_KEYS: [&str; 7] = [
     "channel_id",
     "message_id",
@@ -106,18 +111,36 @@ pub fn web_push_clear(job: &ClearJob, badge_count: u32) -> Value {
 }
 
 pub fn web_push_call_ring(job: &RingJob) -> Value {
-    let data = json!({
+    let mut data = json!({
         "type": RING_TYPE,
         "channel_id": job.channel_id,
         "message_id": job.message_id,
         "target_user_id": job.user_id,
         "started_at_ms": job.started_at_ms,
+        "expires_at_ms": job.expires_at_ms,
     });
+    put_caller(&mut data, job);
     json!({
         "web_push": WEB_PUSH_MARKER,
         "type": RING_TYPE,
         "data": data,
     })
+}
+
+fn put_caller(data: &mut Value, job: &RingJob) {
+    let Some(object) = data.as_object_mut() else {
+        return;
+    };
+    let caller = [
+        (RING_CALLER_ID_KEY, job.caller_id.as_deref()),
+        (RING_CALLER_NAME_KEY, job.caller_name.as_deref()),
+        (RING_CALLER_AVATAR_KEY, job.caller_avatar_url.as_deref()),
+    ];
+    for (key, value) in caller {
+        if let Some(value) = value.filter(|value| !value.is_empty()) {
+            object.insert(key.to_owned(), value.into());
+        }
+    }
 }
 
 pub fn fcm_message(device_token: &str, envelope: &Value) -> Value {
@@ -397,6 +420,9 @@ pub fn fit(envelope: &Value, budget: usize) -> (Vec<u8>, Option<PayloadShrink>) 
     if serialized.len() <= budget {
         return (serialized, None);
     }
+    if matches!(record_kind(envelope), RecordKind::Ring) {
+        return fit_ring(envelope, budget);
+    }
     let mut working = envelope.clone();
     for step in PayloadShrink::ALL {
         working = shrink(&working, step, budget);
@@ -405,6 +431,17 @@ pub fn fit(envelope: &Value, budget: usize) -> (Vec<u8>, Option<PayloadShrink>) 
             return (serialized, Some(step));
         }
     }
+    (serialize(&working), Some(PayloadShrink::Minimal))
+}
+
+fn fit_ring(envelope: &Value, budget: usize) -> (Vec<u8>, Option<PayloadShrink>) {
+    let mut working = envelope.clone();
+    drop_keys(&mut working, &RING_AVATAR_KEYS);
+    let serialized = serialize(&working);
+    if serialized.len() <= budget {
+        return (serialized, Some(PayloadShrink::Icons));
+    }
+    drop_keys(&mut working, &RING_IDENTITY_KEYS);
     (serialize(&working), Some(PayloadShrink::Minimal))
 }
 

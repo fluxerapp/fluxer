@@ -19,6 +19,7 @@ import {GuildMemberRepository} from '@app/api/guild/repositories/GuildMemberRepo
 import {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
 import {GuildRoleRepository} from '@app/api/guild/repositories/GuildRoleRepository';
 import {
+	type CallCaller,
 	type CallData,
 	type GatewayChannelMention,
 	type GatewayGuildMemoryStats,
@@ -925,6 +926,7 @@ export class NoopGatewayService extends IGatewayService {
 		_region: string,
 		_ringing: Array<string>,
 		_recipients: Array<string>,
+		_caller?: CallCaller,
 	): Promise<CallData> {
 		return {
 			channel_id: _channelId.toString(),
@@ -940,7 +942,7 @@ export class NoopGatewayService extends IGatewayService {
 		return true;
 	}
 
-	async ringCallRecipients(_channelId: ChannelID, _recipients: Array<string>): Promise<boolean> {
+	async ringCallRecipients(_channelId: ChannelID, _recipients: Array<string>, _caller?: CallCaller): Promise<boolean> {
 		return true;
 	}
 

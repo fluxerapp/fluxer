@@ -53,6 +53,12 @@ pub struct RingJob {
     pub message_id: String,
     pub started_at_ms: i64,
     pub expires_at_ms: i64,
+    #[serde(default)]
+    pub caller_id: Option<String>,
+    #[serde(default)]
+    pub caller_name: Option<String>,
+    #[serde(default)]
+    pub caller_avatar_url: Option<String>,
 }
 
 #[derive(Debug, Error)]

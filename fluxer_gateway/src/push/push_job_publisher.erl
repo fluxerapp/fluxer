@@ -4,13 +4,14 @@
 -typing([eqwalizer]).
 
 -export([publish_message/8, publish_message/10, publish_clear/3, publish_clear/5]).
--export([publish_ring/5, request/3]).
+-export([publish_ring/6, request/3]).
 
 -define(SUBJECT_MESSAGE, <<"push.job.message">>).
 -define(SUBJECT_CLEAR, <<"push.job.clear">>).
 -define(SUBJECT_RING, <<"push.job.ring">>).
 -define(JOB_VERSION, 1).
 -define(NATS_MAX_PAYLOAD_BYTES, 1048576).
+-define(MAX_CALLER_NAME_BYTES, 128).
 
 -type meta() :: #{
     kind := message | clear | ring,
@@ -134,24 +135,54 @@ publish_clear(UserId, ChannelId, MessageId, ConfigVersion, Fallback) ->
         fallback => Fallback
     }).
 
--spec publish_ring(integer(), integer(), integer(), integer(), integer()) ->
+-spec publish_ring(integer(), integer(), integer(), integer(), integer(), map()) ->
     ok | {error, term()}.
-publish_ring(UserId, ChannelId, MessageId, StartedAtMs, ExpiresAtMs) ->
-    Job = #{
-        <<"v">> => ?JOB_VERSION,
-        <<"config_version">> => push_delivery_config:config_version(),
-        <<"user_id">> => integer_to_binary(UserId),
-        <<"channel_id">> => integer_to_binary(ChannelId),
-        <<"message_id">> => integer_to_binary(MessageId),
-        <<"started_at_ms">> => StartedAtMs,
-        <<"expires_at_ms">> => ExpiresAtMs
-    },
+publish_ring(UserId, ChannelId, MessageId, StartedAtMs, ExpiresAtMs, Caller) ->
+    Job = maps:merge(
+        #{
+            <<"v">> => ?JOB_VERSION,
+            <<"config_version">> => push_delivery_config:config_version(),
+            <<"user_id">> => integer_to_binary(UserId),
+            <<"channel_id">> => integer_to_binary(ChannelId),
+            <<"message_id">> => integer_to_binary(MessageId),
+            <<"started_at_ms">> => StartedAtMs,
+            <<"expires_at_ms">> => ExpiresAtMs
+        },
+        caller_fields(Caller)
+    ),
     publish(?SUBJECT_RING, Job, #{
         kind => ring,
         user_ids => [UserId],
         channel_id => ChannelId,
         message_id => MessageId,
         fallback => fun ignore_fallback/1
+    }).
+
+-spec caller_fields(map()) -> map().
+caller_fields(#{caller_id := CallerId, caller_name := Name} = Caller) when
+    is_integer(CallerId), is_binary(Name), byte_size(Name) > 0
+->
+    CallerIdBin = integer_to_binary(CallerId),
+    #{
+        <<"caller_id">> => CallerIdBin,
+        <<"caller_name">> => push_notification_format:truncate_bytes(
+            Name, ?MAX_CALLER_NAME_BYTES
+        ),
+        <<"caller_avatar_url">> => caller_avatar_url(
+            CallerIdBin, maps:get(caller_avatar, Caller, undefined)
+        )
+    };
+caller_fields(_Caller) ->
+    #{}.
+
+-spec caller_avatar_url(binary(), term()) -> binary().
+caller_avatar_url(CallerIdBin, Hash) when is_binary(Hash), byte_size(Hash) > 0 ->
+    push_notification_format:resolve_author_avatar_url(#{
+        <<"id">> => CallerIdBin, <<"avatar">> => Hash
+    });
+caller_avatar_url(CallerIdBin, _Hash) ->
+    push_notification_format:resolve_author_avatar_url(#{
+        <<"id">> => CallerIdBin, <<"avatar">> => null
     }).
 
 -spec request(binary(), binary(), pos_integer()) -> ok | {error, term()}.
@@ -269,3 +300,77 @@ outbox_job(Subject, Job, Body, Meta) ->
         message_id => MessageId,
         fallback => Fallback
     }.
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+unresolved_caller() ->
+    #{caller_id => undefined, caller_name => undefined, caller_avatar => undefined}.
+
+with_endpoint_env(Fun) ->
+    ok = meck:new(fluxer_gateway_env, [passthrough, no_link]),
+    try
+        ok = meck:expect(fluxer_gateway_env, get, fun endpoint_env_meck/1),
+        Fun()
+    after
+        meck:unload(fluxer_gateway_env)
+    end.
+
+endpoint_env_meck(media_proxy_endpoint) -> <<"https://media.example">>;
+endpoint_env_meck(static_cdn_endpoint) -> <<"https://static.example">>;
+endpoint_env_meck(Key) -> meck:passthrough([Key]).
+
+caller_fields_omits_every_key_when_the_caller_is_unresolved_test() ->
+    ?assertEqual(#{}, caller_fields(unresolved_caller())).
+
+caller_fields_omits_every_key_when_only_the_name_resolved_test() ->
+    ?assertEqual(
+        #{},
+        caller_fields(#{
+            caller_id => undefined, caller_name => <<"Ada">>, caller_avatar => undefined
+        })
+    ).
+
+caller_fields_builds_the_avatar_url_from_the_hash_test() ->
+    Fields = with_endpoint_env(fun() ->
+        caller_fields(#{
+            caller_id => 1234567890123456789,
+            caller_name => <<"Ada">>,
+            caller_avatar => <<"a1b2c3d4">>
+        })
+    end),
+    ?assertEqual(
+        #{
+            <<"caller_id">> => <<"1234567890123456789">>,
+            <<"caller_name">> => <<"Ada">>,
+            <<"caller_avatar_url">> =>
+                <<"https://media.example/avatars/1234567890123456789/a1b2c3d4.png">>
+        },
+        Fields
+    ).
+
+caller_fields_falls_back_to_the_default_avatar_test() ->
+    Fields = with_endpoint_env(fun() ->
+        caller_fields(#{
+            caller_id => 1234567890123456789,
+            caller_name => <<"Ada">>,
+            caller_avatar => undefined
+        })
+    end),
+    ?assertMatch(
+        #{<<"caller_avatar_url">> := <<"https://static.example/avatars/", _/binary>>},
+        Fields
+    ).
+
+caller_fields_caps_the_caller_name_test() ->
+    Name = binary:copy(<<"a">>, ?MAX_CALLER_NAME_BYTES + 32),
+    Fields = with_endpoint_env(fun() ->
+        caller_fields(#{
+            caller_id => 1234567890123456789, caller_name => Name, caller_avatar => undefined
+        })
+    end),
+    ?assertEqual(
+        ?MAX_CALLER_NAME_BYTES, byte_size(maps:get(<<"caller_name">>, Fields))
+    ).
+
+-endif.

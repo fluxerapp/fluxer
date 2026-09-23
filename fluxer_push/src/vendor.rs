@@ -8,6 +8,7 @@ use reqwest::header::{AUTHORIZATION, CONTENT_TYPE};
 use reqwest::redirect::Policy;
 use serde_json::Value;
 use std::time::Duration;
+use tracing::warn;
 
 const HTTP_TIMEOUT: Duration = Duration::from_secs(10);
 const APNS_TIMEOUT: Duration = Duration::from_secs(5);
@@ -15,6 +16,7 @@ const CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
 const APNS_TOPIC_HEADER: &str = "apns-topic";
 pub const FCM_CONTENT_TYPE: &str = "application/json; charset=UTF-8";
 const TOO_MANY_REQUESTS: u16 = 429;
+const DNS_ERROR_MARKER: &str = "dns error";
 const MAX_ERROR_BODY_BYTES: usize = 8_192;
 const HTTP_ERROR: &str = "http_error";
 const UNREGISTERED: &str = "UNREGISTERED";
@@ -58,7 +60,45 @@ pub struct ApnsRequest<'a> {
 pub enum VendorOutcome {
     Accepted,
     Refused(Refusal),
-    Unreachable,
+    Unreachable(Unreachable),
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Unreachable {
+    Dns,
+    Transport,
+}
+
+impl Unreachable {
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Dns => "dns",
+            Self::Transport => "transport",
+        }
+    }
+
+    pub fn is_permanent(self) -> bool {
+        matches!(self, Self::Dns)
+    }
+
+    pub fn of(error: &reqwest::Error) -> Self {
+        if names_no_host(error) {
+            Self::Dns
+        } else {
+            Self::Transport
+        }
+    }
+}
+
+fn names_no_host(error: &reqwest::Error) -> bool {
+    let mut current = std::error::Error::source(error);
+    while let Some(error) = current {
+        if error.to_string().contains(DNS_ERROR_MARKER) {
+            return true;
+        }
+        current = error.source();
+    }
+    false
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -139,8 +179,17 @@ async fn outcome(
     response: reqwest::Result<reqwest::Response>,
     refusal: fn(u16, &[u8]) -> Refusal,
 ) -> VendorOutcome {
-    let Ok(response) = response else {
-        return VendorOutcome::Unreachable;
+    let response = match response {
+        Ok(response) => response,
+        Err(error) => {
+            let unreachable = Unreachable::of(&error);
+            warn!(
+                error = %error,
+                kind = unreachable.label(),
+                "vendor request did not complete"
+            );
+            return VendorOutcome::Unreachable(unreachable);
+        }
     };
     if response.status().is_success() {
         return VendorOutcome::Accepted;
@@ -223,4 +272,35 @@ pub async fn read_error_body(response: reqwest::Response) -> Vec<u8> {
         .unwrap_or_default();
     body.truncate(MAX_ERROR_BODY_BYTES);
     body
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    async fn error_for(url: &str) -> reqwest::Error {
+        reqwest::Client::builder()
+            .no_proxy()
+            .connect_timeout(CONNECT_TIMEOUT)
+            .build()
+            .expect("the http client builds")
+            .post(url)
+            .send()
+            .await
+            .expect_err("the request cannot complete")
+    }
+
+    #[tokio::test]
+    async fn a_host_that_does_not_resolve_is_permanent() {
+        let error = error_for("https://push.invalid/relay/v1/apns/stable/production/token").await;
+        assert_eq!(Unreachable::of(&error), Unreachable::Dns);
+        assert!(Unreachable::of(&error).is_permanent());
+    }
+
+    #[tokio::test]
+    async fn a_refused_connection_stays_retryable() {
+        let error = error_for("http://127.0.0.1:1/").await;
+        assert_eq!(Unreachable::of(&error), Unreachable::Transport);
+        assert!(!Unreachable::of(&error).is_permanent());
+    }
 }

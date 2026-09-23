@@ -37,7 +37,8 @@ const TTL_HEADER: &str = "ttl";
 const URGENCY_HEADER: &str = "urgency";
 const JSON_CONTENT_TYPE: &str = "application/json";
 const DIGEST_BYTES: usize = 8;
-const APNS_DEVICE_TOKEN_LEN: usize = 64;
+const MIN_APNS_DEVICE_TOKEN_LEN: usize = 64;
+const MAX_APNS_DEVICE_TOKEN_LEN: usize = 256;
 const MAX_FCM_DEVICE_TOKEN_LEN: usize = 512;
 const MAX_TTL_SECONDS: i64 = 86_400;
 const BODY_READ_TIMEOUT: Duration = Duration::from_secs(15);
@@ -396,7 +397,7 @@ fn finish(
     })?;
     let (result, verdict) = match outcome {
         VendorOutcome::Accepted => (RelayResult::Accepted, Ok(())),
-        VendorOutcome::Unreachable => (
+        VendorOutcome::Unreachable(_) => (
             RelayResult::Failed,
             Err(Rejection::new(Reason::ProviderUnavailable)),
         ),
@@ -425,7 +426,8 @@ fn refusal_reason(refusal: &Refusal) -> Reason {
 fn device_token_is_shaped(leg: RelayLeg, device_token: &str) -> bool {
     match leg {
         RelayLeg::Apns | RelayLeg::ApnsVoip => {
-            device_token.len() == APNS_DEVICE_TOKEN_LEN
+            (MIN_APNS_DEVICE_TOKEN_LEN..=MAX_APNS_DEVICE_TOKEN_LEN).contains(&device_token.len())
+                && device_token.len().is_multiple_of(2)
                 && device_token.bytes().all(|byte| byte.is_ascii_hexdigit())
         }
         RelayLeg::Fcm => {
@@ -484,4 +486,43 @@ fn digest(value: &str) -> String {
         return "-".to_owned();
     }
     BASE64_URL_SAFE_NO_PAD.encode(&Sha256::digest(value.as_bytes())[..DIGEST_BYTES])
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn hex(len: usize) -> String {
+        "a".repeat(len)
+    }
+
+    #[test]
+    fn apns_accepts_every_token_length_apple_hands_out() {
+        for len in [64, 128, 160, 200, 256] {
+            assert!(
+                device_token_is_shaped(RelayLeg::Apns, &hex(len)),
+                "{len} hex characters must be accepted"
+            );
+        }
+        assert!(device_token_is_shaped(RelayLeg::Apns, &"A".repeat(64)));
+        assert!(device_token_is_shaped(RelayLeg::ApnsVoip, &hex(160)));
+    }
+
+    #[test]
+    fn apns_rejects_tokens_that_are_not_even_length_hex() {
+        for token in [hex(62), hex(63), hex(161), hex(258), "z".repeat(64)] {
+            assert!(
+                !device_token_is_shaped(RelayLeg::Apns, &token),
+                "{token} must be rejected"
+            );
+        }
+    }
+
+    #[test]
+    fn payload_too_large_answers_413() {
+        assert_eq!(
+            Reason::PayloadTooLarge.status(),
+            StatusCode::PAYLOAD_TOO_LARGE
+        );
+    }
 }
