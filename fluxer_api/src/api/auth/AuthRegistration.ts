@@ -7,12 +7,14 @@ import * as AuthUtility from '@app/api/auth/AuthUtility';
 import type {IRegistrationRiskEvaluator} from '@app/api/auth/services/IRegistrationRiskEvaluator';
 import {createEmailVerificationToken, createInviteCode, createUserID, type UserID} from '@app/api/BrandedTypes';
 import type {APIConfig} from '@app/api/config/APIConfig';
+import type {UserRow} from '@app/api/database/types/UserTypes';
 import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {KVActivityTracker} from '@app/api/infrastructure/KVActivityTracker';
 import {
 	type InstanceConfigRepository,
 	type InstanceRegistrationUrl,
 	REGISTRATION_PENDING_APPROVAL_TRAIT,
+	type RegistrationUrlClaim,
 } from '@app/api/instance/InstanceConfigRepository';
 import type {SingleCommunityService} from '@app/api/instance/SingleCommunityService';
 import type {InviteService} from '@app/api/invite/InviteService';
@@ -135,9 +137,6 @@ export async function register(
 	}
 	const now = new Date();
 	const registrationAccess = await resolveRegistrationAccess(instanceConfigRepository, data.registration_url_code);
-	if (registrationAccess.pendingApproval) {
-		await instanceConfigRepository.getPendingRegistrations();
-	}
 	const clientIp = requireClientIp(request, {
 		trustClientIpHeader: config.proxy.trust_client_ip_header,
 		clientIpHeaderName: config.proxy.client_ip_header,
@@ -228,7 +227,7 @@ export async function register(
 	const userLocale = parseAcceptLanguage(acceptLanguage);
 	const passwordHash = data.password ? await AuthPassword.hashPassword(ctx, data.password) : null;
 	const flags = config.nodeEnv === 'development' ? UserFlags.STAFF : 0n;
-	let user = await users.create({
+	const userRow: UserRow = {
 		user_id: userId,
 		username,
 		discriminator,
@@ -287,7 +286,39 @@ export async function register(
 		mention_flags: null,
 		last_voice_activity_sharing_change_at: null,
 		version: 1,
-	});
+	};
+	const registrationUrlUse = await claimRegistrationUrlUse(
+		instanceConfigRepository,
+		registrationAccess.registrationUrl,
+		userId,
+	);
+	let user: User;
+	let createAttempted = false;
+	try {
+		if (registrationAccess.pendingApproval) {
+			await instanceConfigRepository.addPendingRegistration({
+				user_id: userId.toString(),
+				username: userRow.username,
+				discriminator: userRow.discriminator,
+				global_name: userRow.global_name,
+				email: rawEmail,
+				requested_at: now.toISOString(),
+				registration_url_id: registrationAccess.registrationUrl?.id ?? null,
+				client_ip: clientIp,
+			});
+		}
+		createAttempted = true;
+		user = await users.create(userRow);
+	} catch (error) {
+		if (!createAttempted) {
+			await withdrawSignupOfUncreatedAccount(instanceConfigRepository, {
+				userId,
+				registrationUrlUse,
+				pendingApproval: registrationAccess.pendingApproval,
+			});
+		}
+		throw error;
+	}
 	await users.upsertSettings(
 		UserSettings.getDefaultUserSettings({
 			userId,
@@ -401,20 +432,7 @@ export async function register(
 	}
 	if (rawEmail && emailEnabled) await maybeSendVerificationEmail(ctx, {user, email: rawEmail});
 	await users.createAuthorizedIp(userId, clientIp);
-	if (registrationAccess.registrationUrl) {
-		await instanceConfigRepository.recordRegistrationUrlUse(registrationAccess.registrationUrl.id, user.id.toString());
-	}
 	if (registrationAccess.pendingApproval) {
-		await instanceConfigRepository.addPendingRegistration({
-			user_id: user.id.toString(),
-			username: user.username,
-			discriminator: user.discriminator,
-			global_name: user.globalName,
-			email: rawEmail,
-			requested_at: now.toISOString(),
-			registration_url_id: registrationAccess.registrationUrl?.id ?? null,
-			client_ip: clientIp,
-		});
 		return {
 			registration_pending_approval: true,
 			user_id: user.id.toString(),
@@ -467,6 +485,38 @@ function shouldAttemptBootstrapAdminGrant(
 		params.rawEmail !== null &&
 		!params.pendingApproval
 	);
+}
+
+async function claimRegistrationUrlUse(
+	instanceConfigRepository: InstanceConfigRepository,
+	registrationUrl: InstanceRegistrationUrl | null,
+	userId: UserID,
+): Promise<RegistrationUrlClaim | null> {
+	if (registrationUrl === null) return null;
+	const use = await instanceConfigRepository.claimRegistrationUrlUse(registrationUrl.id, userId.toString());
+	if (use === null) {
+		throw new RegistrationUrlInvalidError();
+	}
+	return use;
+}
+
+async function withdrawSignupOfUncreatedAccount(
+	instanceConfigRepository: InstanceConfigRepository,
+	signup: {userId: UserID; registrationUrlUse: RegistrationUrlClaim | null; pendingApproval: boolean},
+): Promise<void> {
+	try {
+		if (signup.registrationUrlUse !== null) {
+			await instanceConfigRepository.releaseRegistrationUrlUse(signup.registrationUrlUse);
+		}
+		if (signup.pendingApproval) {
+			await instanceConfigRepository.removePendingRegistration(signup.userId.toString());
+		}
+	} catch (error) {
+		Logger.warn(
+			{userId: signup.userId.toString(), registrationUrlId: signup.registrationUrlUse?.registration_url_id, error},
+			'[AuthRegistration] Failed to withdraw the registration URL use or pending approval of an account that was never created',
+		);
+	}
 }
 
 async function resolveRegistrationAccess(

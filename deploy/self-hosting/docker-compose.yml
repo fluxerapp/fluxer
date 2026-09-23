@@ -482,6 +482,30 @@ services:
       seaweedfs-init: {condition: service_completed_successfully}
       nats: {condition: service_healthy}
 
+  push:
+    <<: *fluxer-service
+    image: ${FLUXER_REGISTRY:-ghcr.io/${FLUXER_REGISTRY_OWNER:-fluxerapp}}/fluxer-push:${FLUXER_IMAGE_TAG:-v1}
+    deploy:
+      resources:
+        limits:
+          memory: ${FLUXER_PUSH_MEMORY_LIMIT:-256mb}
+    environment:
+      <<: *fluxer-env
+      FLUXER_PUSH_SERVICE_HOST: 0.0.0.0
+      FLUXER_PUSH_SERVICE_PORT: "8126"
+      FLUXER_PUSH_SERVICE_QUEUE_CAPACITY: "${FLUXER_PUSH_SERVICE_QUEUE_CAPACITY:-}"
+      FLUXER_PUSH_SERVICE_SEND_CONCURRENCY: "${FLUXER_PUSH_SERVICE_SEND_CONCURRENCY:-}"
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/fluxer-push", "healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+      start_interval: 1s
+    depends_on:
+      nats: {condition: service_healthy}
+      api: {condition: service_healthy}
+
   static-proxy:
     <<: *fluxer-service
     image: ${FLUXER_REGISTRY:-ghcr.io/${FLUXER_REGISTRY_OWNER:-fluxerapp}}/fluxer-static:${FLUXER_IMAGE_TAG:-v1}

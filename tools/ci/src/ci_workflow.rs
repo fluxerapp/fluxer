@@ -384,6 +384,11 @@ mod tests {
                 include_str!("../../../fluxer_messages/Dockerfile"),
             ),
             (
+                "fluxer_push",
+                "fluxer-push",
+                include_str!("../../../fluxer_push/Dockerfile"),
+            ),
+            (
                 "fluxer_snowflakes",
                 "fluxer-snowflakes",
                 include_str!("../../../fluxer_snowflakes/Dockerfile"),

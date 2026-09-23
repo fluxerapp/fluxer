@@ -481,7 +481,9 @@ const MobilePushProviderEnvironmentSchema = createNamedStringLiteralUnion(
 export const RegisterMobileDeviceRequest = z
 	.object({
 		platform: MobilePushPlatformSchema.describe('The mobile push notification platform'),
-		token: createStringType(1, 4096).describe('The platform-specific push notification token or endpoint URL'),
+		token: createStringType(1, 4096).describe(
+			'The Web Push endpoint URL when encryption keys are supplied, otherwise the raw platform push token',
+		),
 		user_agent: createStringType(1, 1024).optional().describe('The user agent string identifying the device'),
 		app_id: createStringType(1, 128)
 			.optional()
@@ -491,32 +493,44 @@ export const RegisterMobileDeviceRequest = z
 		),
 		encryption_key: createStringType(1, 1024)
 			.optional()
-			.describe('The P-256 ECDH public key for UnifiedPush encryption (base64url)'),
+			.describe('The P-256 ECDH public key for Web Push encryption (base64url)'),
 		auth_secret: createStringType(1, 1024)
 			.optional()
-			.describe('The authentication secret for UnifiedPush encryption (base64url)'),
+			.describe('The authentication secret for Web Push encryption (base64url)'),
 	})
 	.superRefine((value, ctx) => {
-		if (value.platform !== 'android_unified_push') return;
-		if (!URLType.safeParse(value.token).success) {
+		const tokenIsUrl = URLType.safeParse(value.token).success;
+		const isWebPushRegistration =
+			value.platform === 'android_unified_push' || value.encryption_key != null || value.auth_secret != null;
+		if (!isWebPushRegistration) {
+			if (tokenIsUrl) {
+				ctx.addIssue({
+					code: 'custom',
+					path: ['token'],
+					message: 'Endpoint URL registrations require encryption_key and auth_secret',
+				});
+			}
+			return;
+		}
+		if (!tokenIsUrl) {
 			ctx.addIssue({
 				code: 'custom',
 				path: ['token'],
-				message: 'UnifiedPush registrations require a valid endpoint URL',
+				message: 'Web Push registrations require a valid endpoint URL',
 			});
 		}
 		if (!value.encryption_key) {
 			ctx.addIssue({
 				code: 'custom',
 				path: ['encryption_key'],
-				message: 'UnifiedPush registrations require encryption_key',
+				message: 'Web Push registrations require encryption_key',
 			});
 		}
 		if (!value.auth_secret) {
 			ctx.addIssue({
 				code: 'custom',
 				path: ['auth_secret'],
-				message: 'UnifiedPush registrations require auth_secret',
+				message: 'Web Push registrations require auth_secret',
 			});
 		}
 	});
@@ -525,7 +539,9 @@ export type RegisterMobileDeviceRequest = z.infer<typeof RegisterMobileDeviceReq
 
 export const UnregisterMobileDeviceRequest = z.object({
 	platform: MobilePushPlatformSchema.describe('The mobile push notification platform'),
-	token: createStringType(1, 4096).describe('The platform-specific push notification token to unregister'),
+	token: createStringType(1, 4096).describe(
+		'The Web Push endpoint URL or raw platform push token used at registration',
+	),
 	app_id: createStringType(1, 128)
 		.optional()
 		.describe('Client app channel or bundle mapping identifier, such as stable, beta, or canary'),

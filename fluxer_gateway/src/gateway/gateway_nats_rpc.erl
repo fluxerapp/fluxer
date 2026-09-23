@@ -346,6 +346,7 @@ subscribe_recorded_extra_subject(
 ) ->
     case nats:sub(Conn, Subject, subscription_opts(QueueGroup)) of
         {ok, Sid} ->
+            notify_resubscribed(Subject),
             Acc#{Key => Sub#{sid => Sid}};
         {error, Reason} ->
             logger:error("Gateway NATS RPC failed to resubscribe extra subject", #{
@@ -381,9 +382,48 @@ handle_msg(
         true ->
             dispatch_rpc(Subject, Payload, MsgOpts, HC, MaxH, HRefs, State);
         false ->
-            ReplyTo = maps:get(reply_to, MsgOpts, undefined),
-            gateway_rollout_config ! {nats_msg, Subject, Payload, ReplyTo},
+            deliver_subject(Subject, Payload, maps:get(reply_to, MsgOpts, undefined)),
             State
+    end.
+
+-spec subject_owner(binary()) -> atom() | undefined.
+subject_owner(<<"config.gateway.rollout">>) -> gateway_rollout_config;
+subject_owner(<<"config.push.delivery">>) -> push_delivery_config;
+subject_owner(_Subject) -> undefined.
+
+-spec notify_resubscribed(binary()) -> ok.
+notify_resubscribed(Subject) ->
+    case subject_owner(Subject) of
+        undefined -> ok;
+        Owner -> notify_owner(whereis(Owner), Subject)
+    end.
+
+-spec notify_owner(pid() | undefined, binary()) -> ok.
+notify_owner(Pid, Subject) when is_pid(Pid) ->
+    Pid ! {nats_resubscribed, Subject},
+    ok;
+notify_owner(undefined, _Subject) ->
+    ok.
+
+-spec deliver_subject(binary(), binary(), binary() | undefined) -> ok.
+deliver_subject(Subject, Payload, ReplyTo) ->
+    case subject_owner(Subject) of
+        undefined ->
+            logger:warning("Gateway NATS RPC has no owner for subject", #{subject => Subject});
+        Owner ->
+            deliver_to_owner(Owner, Subject, Payload, ReplyTo)
+    end.
+
+-spec deliver_to_owner(atom(), binary(), binary(), binary() | undefined) -> ok.
+deliver_to_owner(Owner, Subject, Payload, ReplyTo) ->
+    case whereis(Owner) of
+        undefined ->
+            logger:warning("Gateway NATS RPC subject owner is not running", #{
+                subject => Subject, owner => Owner
+            });
+        Pid ->
+            Pid ! {nats_msg, Subject, Payload, ReplyTo},
+            ok
     end.
 
 -spec dispatch_rpc(

@@ -3,7 +3,6 @@
 -module(push_eligibility_checks).
 -typing([eqwalizer]).
 
--export([check_muted_and_notifications/8]).
 -export([check_muted_and_notifications/9]).
 -export([is_private_channel/1]).
 -export([is_user_in_mentions/2]).
@@ -13,13 +12,11 @@
 -export([resolve_message_notifications/3]).
 -export([resolve_guild_notification/2]).
 -export([normalize_notification_level/1]).
--export([override_for_large_guild/2]).
 -export([enforce_only_mentions/1]).
 -export([is_large_guild/2]).
 -export([large_guild_threshold/0]).
 -export([has_large_guild_override/1]).
 -export([get_guild_large_metadata/1]).
--export([check_temp_muted/1]).
 
 -define(LARGE_GUILD_THRESHOLD, 2500).
 -define(LARGE_GUILD_OVERRIDE_FEATURE, <<"LARGE_GUILD_OVERRIDE">>).
@@ -32,31 +29,6 @@
 -define(CHANNEL_TYPE_GROUP_DM, 3).
 -define(LARGE_METADATA_MAILBOX_SHED_THRESHOLD, 100).
 -define(LARGE_METADATA_CALL_TIMEOUT_MS, 200).
-
--spec check_muted_and_notifications(
-    integer(), integer(), map(), integer(), map(), map(), integer(), map()
-) -> boolean().
-check_muted_and_notifications(
-    UserId,
-    ChannelId,
-    MessageData,
-    GuildDefaultNotifications,
-    UserRolesMap,
-    Settings,
-    GuildId,
-    ConnectedUsers
-) ->
-    check_muted_and_notifications(
-        UserId,
-        ChannelId,
-        MessageData,
-        GuildDefaultNotifications,
-        UserRolesMap,
-        Settings,
-        GuildId,
-        ConnectedUsers,
-        get_guild_large_metadata(GuildId)
-    ).
 
 -spec check_muted_and_notifications(
     integer(), integer(), map(), integer(), map(), map(), integer(), map(), map() | undefined
@@ -72,14 +44,9 @@ check_muted_and_notifications(
     ConnectedUsers,
     LargeGuildMetadata
 ) ->
-    Muted = boolean_setting(muted, Settings, false),
     ChannelOverrides = map_setting(channel_overrides, Settings),
     ChannelOverride = channel_override(ChannelId, ChannelOverrides, #{}),
-    ChannelMuted = optional_boolean_setting(muted, ChannelOverride),
-    ActualMuted = resolve_actual_muted(ChannelMuted, Muted),
-    MuteConfig = push_eligibility:get_setting(mute_config, Settings, undefined),
-    IsTempMuted = check_temp_muted(MuteConfig),
-    case ActualMuted orelse IsTempMuted of
+    case is_mute_active(Settings) orelse is_mute_active(ChannelOverride) of
         true ->
             false;
         false ->
@@ -92,23 +59,29 @@ check_muted_and_notifications(
             )
     end.
 
--spec resolve_actual_muted(boolean() | undefined, boolean()) -> boolean().
-resolve_actual_muted(undefined, Muted) -> Muted;
-resolve_actual_muted(ChannelMuted, _Muted) -> ChannelMuted.
+-spec is_mute_active(term()) -> boolean().
+is_mute_active(Config) ->
+    boolean_setting(muted, Config, false) andalso
+        mute_unexpired(push_eligibility:get_setting(mute_config, Config, undefined)).
 
--spec check_temp_muted(term()) -> boolean().
-check_temp_muted(undefined) ->
-    false;
-check_temp_muted(#{<<"end_time">> := EndTimeStr}) ->
-    case push_utils:parse_timestamp(EndTimeStr) of
-        undefined ->
-            false;
-        EndTime ->
-            Now = erlang:system_time(millisecond),
-            Now < EndTime
+-spec mute_unexpired(term()) -> boolean().
+mute_unexpired(MuteConfig) when is_map(MuteConfig) ->
+    case mute_end_ms(push_eligibility:get_setting(end_time, MuteConfig, undefined)) of
+        undefined -> true;
+        EndMs -> erlang:system_time(millisecond) < EndMs
     end;
-check_temp_muted(_) ->
-    false.
+mute_unexpired(_MuteConfig) ->
+    true.
+
+-spec mute_end_ms(term()) -> integer() | undefined.
+mute_end_ms(EndTime) when is_binary(EndTime) ->
+    try calendar:rfc3339_to_system_time(binary_to_list(EndTime), [{unit, millisecond}]) of
+        EndMs -> EndMs
+    catch
+        _:_ -> undefined
+    end;
+mute_end_ms(_EndTime) ->
+    undefined.
 
 -spec is_private_channel(map()) -> boolean().
 is_private_channel(MessageData) ->
@@ -188,10 +161,6 @@ normalize_notification_level(?MESSAGE_NOTIFICATIONS_NO_MESSAGES) ->
     ?MESSAGE_NOTIFICATIONS_NO_MESSAGES;
 normalize_notification_level(_) ->
     ?MESSAGE_NOTIFICATIONS_ALL.
-
--spec override_for_large_guild(integer(), integer()) -> integer().
-override_for_large_guild(GuildId, CurrentLevel) ->
-    override_for_large_guild_metadata(get_guild_large_metadata(GuildId), CurrentLevel).
 
 -spec override_for_large_guild_metadata(map() | undefined, integer()) -> integer().
 override_for_large_guild_metadata(undefined, CurrentLevel) ->
@@ -281,14 +250,6 @@ boolean_setting(Key, Settings, Default) ->
         _ -> Default
     end.
 
--spec optional_boolean_setting(atom(), term()) -> boolean() | undefined.
-optional_boolean_setting(Key, Settings) ->
-    case push_eligibility:get_setting(Key, Settings, undefined) of
-        true -> true;
-        false -> false;
-        _ -> undefined
-    end.
-
 -spec notification_level_setting(term(), integer()) -> integer().
 notification_level_setting(Settings, Default) ->
     case push_eligibility:get_setting(message_notifications, Settings, Default) of
@@ -328,7 +289,8 @@ muted_channel_suppresses_push_test() ->
             UserRolesMap,
             Settings,
             GuildId,
-            ConnectedUsers
+            ConnectedUsers,
+            undefined
         )
     ).
 
@@ -336,12 +298,16 @@ guild_muted_suppresses_push_test() ->
     ?assertEqual(false, check_with_settings(#{muted => true})).
 
 temp_muted_suppresses_push_test() ->
-    FutureMs = integer_to_binary(erlang:system_time(millisecond) + 60000),
-    ?assertEqual(false, check_with_settings(#{mute_config => #{<<"end_time">> => FutureMs}})).
+    MuteConfig = #{<<"end_time">> => rfc3339_in_ms(60000)},
+    ?assertEqual(false, check_with_settings(#{muted => true, mute_config => MuteConfig})).
 
 expired_temp_mute_allows_push_test() ->
-    PastMs = integer_to_binary(erlang:system_time(millisecond) - 60000),
-    ?assertEqual(true, check_with_settings(#{mute_config => #{<<"end_time">> => PastMs}})).
+    MuteConfig = #{<<"end_time">> => rfc3339_in_ms(-60000)},
+    ?assertEqual(true, check_with_settings(#{muted => true, mute_config => MuteConfig})).
+
+rfc3339_in_ms(OffsetMs) ->
+    Ms = erlang:system_time(millisecond) + OffsetMs,
+    list_to_binary(calendar:system_time_to_rfc3339(Ms, [{unit, millisecond}, {offset, "Z"}])).
 
 check_with_settings(Settings) ->
     check_muted_and_notifications(
@@ -352,7 +318,8 @@ check_with_settings(Settings) ->
         #{},
         Settings,
         1,
-        #{}
+        #{},
+        undefined
     ).
 
 is_user_in_mentions_test() ->

@@ -3,7 +3,7 @@
 use crate::gateway::{build_gateway_cluster_nodes, setup_gateway_config};
 use crate::manifest::{
     ADMIN_PORT, ANY_HOST, API_PORT, APP_PORT, APP_PROXY_PORT, DEV_PROXY_GATEWAY_PORTS_ENV,
-    DEV_PROXY_PORT, GATEWAY_PORT, LOOPBACK_HOST, MEDIA_PROXY_PORT, rust_services,
+    DEV_PROXY_PORT, GATEWAY_PORT, LOOPBACK_HOST, MEDIA_PROXY_PORT, PUSH_PORT, rust_services,
 };
 use crate::object_store::s3_endpoint;
 use crate::paths::{DESKTOP_DIR, ROOT};
@@ -31,6 +31,7 @@ const DEFAULT_TASKS: &[&str] = &[
     "proxy",
     "services",
     "media",
+    "push",
     "admin",
     "api",
     "gateway-single",
@@ -458,6 +459,24 @@ pub fn task_table() -> Result<BTreeMap<&'static str, DevTask>> {
             "upload",
             "--storage-backend",
             "s3",
+        ]),
+        cwd: ROOT.clone(),
+        env: Vec::new(),
+    });
+    insert(DevTask {
+        name: "push",
+        args: strings(&[
+            "cargo",
+            "run",
+            "-p",
+            "fluxer-push",
+            "--bin",
+            "fluxer-push",
+            "--",
+            "--bind-host",
+            ANY_HOST,
+            "--port",
+            &PUSH_PORT.to_string(),
         ]),
         cwd: ROOT.clone(),
         env: Vec::new(),
@@ -906,6 +925,7 @@ mod tests {
                 "proxy",
                 "services",
                 "media",
+                "push",
                 "admin",
                 "api",
                 "gateway-single",
@@ -1096,6 +1116,17 @@ mod tests {
             "-p".to_owned(),
             "fluxer-media-proxy".to_owned()
         ]));
+        assert!(tasks["push"].args.starts_with(&[
+            "cargo".to_owned(),
+            "run".to_owned(),
+            "-p".to_owned(),
+            "fluxer-push".to_owned()
+        ]));
+        assert!(
+            tasks["push"]
+                .args
+                .ends_with(&["--port".to_owned(), PUSH_PORT.to_string()])
+        );
         assert_eq!(
             tasks["admin"].args,
             vec![

@@ -119,7 +119,7 @@ resolve_access_token() ->
 -spec get_or_fetch_token(map(), term(), integer(), binary()) ->
     {ok, binary()} | {error, term()}.
 get_or_fetch_token(ServiceAccount, CacheKey, Now, TokenUri) ->
-    case push_token_cache:get(CacheKey) of
+    case push_ets_cache:get_bearer_token(CacheKey) of
         {ok, Token, ExpiresAt} when ExpiresAt - ?ACCESS_TOKEN_SKEW_SECONDS > Now ->
             {ok, Token};
         _ ->
@@ -175,7 +175,7 @@ parse_token_response(CacheKey, Now, ResponseBody) ->
     case decode_json_map(ResponseBody) of
         #{<<"access_token">> := AccessToken} = Response when is_binary(AccessToken) ->
             ExpiresIn = normalize_expires_in(maps:get(<<"expires_in">>, Response, 3600)),
-            push_token_cache:put(CacheKey, AccessToken, Now + ExpiresIn),
+            push_ets_cache:put_bearer_token(CacheKey, AccessToken, Now + ExpiresIn),
             {ok, AccessToken};
         _ ->
             {error, invalid_token_response}

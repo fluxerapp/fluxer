@@ -97,6 +97,7 @@ import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
 import {UnauthorizedError} from '@fluxer/errors/src/domains/core/UnauthorizedError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
+import {pushServiceDeliveryEnrols} from '@fluxer/schema/src/domains/admin/PushServiceDeliverySchemas';
 import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {VoiceStateResponse} from '@fluxer/schema/src/domains/gateway/GatewaySchemas';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
@@ -430,6 +431,13 @@ export class RpcService {
 					}),
 				};
 			case 'send_apns_push': {
+				const deliveryConfig = await this.instanceConfigRepository.getPushServiceDeliveryConfig();
+				if (pushServiceDeliveryEnrols(deliveryConfig, request.user_id.toString())) {
+					Logger.warn(
+						{userId: request.user_id.toString(), configVersion: deliveryConfig.config_version},
+						'push service delivery path mismatch',
+					);
+				}
 				const result = await sendApnsPush({
 					userId: request.user_id.toString(),
 					subscriptionId: request.subscription_id,
@@ -633,6 +641,13 @@ export class RpcService {
 				return {
 					type: 'get_gateway_rollout_config',
 					data: {config: rolloutConfig},
+				};
+			}
+			case 'get_push_service_delivery_config': {
+				const config = await this.instanceConfigRepository.getPushServiceDeliveryConfig();
+				return {
+					type: 'get_push_service_delivery_config',
+					data: {config},
 				};
 			}
 			default: {

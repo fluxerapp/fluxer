@@ -104,6 +104,27 @@ function assertPublicPushEndpoint(endpoint: string, fieldName: string): void {
 	}
 }
 
+function isPushEndpointUrl(token: string): boolean {
+	const normalized = token.trim().toLowerCase();
+	return normalized.startsWith('https://') || normalized.startsWith('http://');
+}
+
+function resolveMobileWebPushKeys(device: RegisterMobileDeviceRequest): {p256dh: string; auth: string} | null {
+	const p256dh = device.encryption_key;
+	const auth = device.auth_secret;
+	if (p256dh && auth) return {p256dh, auth};
+	if (p256dh || auth) {
+		throw InputValidationError.create(
+			p256dh ? 'auth_secret' : 'encryption_key',
+			'Web Push registrations require encryption_key and auth_secret',
+		);
+	}
+	if (isPushEndpointUrl(device.token)) {
+		throw InputValidationError.create('token', 'Endpoint URL registrations require encryption_key and auth_secret');
+	}
+	return null;
+}
+
 function normalizeMobileAppId(appId: string | undefined): string {
 	const normalized = appId?.trim();
 	return normalized && normalized.length > 0 ? normalized : DEFAULT_MOBILE_APP_ID;
@@ -400,7 +421,8 @@ export class UserContentService {
 
 	async registerMobileDevice(params: RegisterMobileDeviceParams): Promise<PushSubscription> {
 		const {userId, authSessionIdHash, device} = params;
-		if (device.platform === 'android_unified_push') {
+		const webPushKeys = resolveMobileWebPushKeys(device);
+		if (webPushKeys) {
 			assertPublicPushEndpoint(device.token, 'token');
 		}
 		const appId = normalizeMobileAppId(device.app_id);
@@ -411,8 +433,8 @@ export class UserContentService {
 			subscription_id: subscriptionId,
 			auth_session_id_hash: authSessionIdHash ?? null,
 			endpoint: device.token,
-			p256dh_key: device.platform === 'android_unified_push' ? (device.encryption_key ?? null) : null,
-			auth_key: device.platform === 'android_unified_push' ? (device.auth_secret ?? null) : null,
+			p256dh_key: webPushKeys?.p256dh ?? null,
+			auth_key: webPushKeys?.auth ?? null,
 			user_agent: device.user_agent ?? null,
 			platform: device.platform,
 			app_id: appId,

@@ -4,60 +4,53 @@
 -typing([eqwalizer]).
 
 -export([
-    maybe_retry_with_smaller_record_size/4,
-    initial_record_size_for_endpoint/1
+    maybe_retry_with_smaller_record_size/3,
+    initial_record_size/0
 ]).
 
 -export_type([push_response/0]).
 
--define(STANDARD_PUSH_RECORD_SIZE, 4096).
--define(MOZILLA_COMPAT_PUSH_RECORD_SIZE, 2820).
--define(MOZILLA_CONSTRAINED_PUSH_RECORD_SIZE, 2048).
+-define(PUSH_RECORD_SIZE, 2816).
+-define(CONSTRAINED_PUSH_RECORD_SIZE, 2048).
 -define(MIN_PUSH_RECORD_SIZE, 1024).
 -define(MAX_PAYLOAD_RETRY_ATTEMPTS, 2).
 
 -type push_response() :: {ok, integer(), term(), binary()} | {error, term()}.
 
--spec initial_record_size_for_endpoint(binary()) -> pos_integer().
-initial_record_size_for_endpoint(Endpoint) ->
-    case is_mozilla_push_endpoint(Endpoint) of
-        true -> ?MOZILLA_COMPAT_PUSH_RECORD_SIZE;
-        false -> ?STANDARD_PUSH_RECORD_SIZE
-    end.
+-spec initial_record_size() -> pos_integer().
+initial_record_size() ->
+    ?PUSH_RECORD_SIZE.
 
 -spec maybe_retry_with_smaller_record_size(
-    binary(), push_response(), pos_integer(), non_neg_integer()
+    push_response(), pos_integer(), non_neg_integer()
 ) ->
     no_retry | {retry, pos_integer()}.
-maybe_retry_with_smaller_record_size(_Endpoint, _Response, _CurrentRecordSize, Attempt) when
+maybe_retry_with_smaller_record_size(_Response, _CurrentRecordSize, Attempt) when
     Attempt >= ?MAX_PAYLOAD_RETRY_ATTEMPTS
 ->
     no_retry;
 maybe_retry_with_smaller_record_size(
-    Endpoint, {ok, 413, _ResponseHeaders, ResponseBody}, CurrentRecordSize, _Attempt
+    {ok, 413, _ResponseHeaders, ResponseBody}, CurrentRecordSize, _Attempt
 ) ->
-    case next_record_size_for_payload_too_large(CurrentRecordSize, Endpoint, ResponseBody) of
+    case next_record_size_for_payload_too_large(CurrentRecordSize, ResponseBody) of
         undefined -> no_retry;
         NextRecordSize -> {retry, NextRecordSize}
     end;
-maybe_retry_with_smaller_record_size(_Endpoint, _Response, _CurrentRecordSize, _Attempt) ->
+maybe_retry_with_smaller_record_size(_Response, _CurrentRecordSize, _Attempt) ->
     no_retry.
 
--spec next_record_size_for_payload_too_large(pos_integer(), binary(), binary()) ->
+-spec next_record_size_for_payload_too_large(pos_integer(), binary()) ->
     pos_integer() | undefined.
-next_record_size_for_payload_too_large(CurrentRecordSize, Endpoint, ResponseBody) ->
+next_record_size_for_payload_too_large(CurrentRecordSize, ResponseBody) ->
     case parse_constrained_overage_bytes(ResponseBody) of
         OverageBytes when is_integer(OverageBytes), OverageBytes > 0 ->
             sanitize_next_record_size(CurrentRecordSize - OverageBytes, CurrentRecordSize);
         _ ->
-            FallbackRecordSize = fallback_record_size_for_endpoint(CurrentRecordSize, Endpoint),
-            sanitize_next_record_size(FallbackRecordSize, CurrentRecordSize)
+            sanitize_next_record_size(?CONSTRAINED_PUSH_RECORD_SIZE, CurrentRecordSize)
     end.
 
--spec sanitize_next_record_size(integer() | undefined, pos_integer()) ->
+-spec sanitize_next_record_size(integer(), pos_integer()) ->
     pos_integer() | undefined.
-sanitize_next_record_size(undefined, _CurrentRecordSize) ->
-    undefined;
 sanitize_next_record_size(CandidateRecordSize, CurrentRecordSize) when
     is_integer(CandidateRecordSize)
 ->
@@ -65,17 +58,6 @@ sanitize_next_record_size(CandidateRecordSize, CurrentRecordSize) when
     case ClampedRecordSize < CurrentRecordSize of
         true -> ClampedRecordSize;
         false -> undefined
-    end.
-
--spec fallback_record_size_for_endpoint(pos_integer(), binary()) -> pos_integer() | undefined.
-fallback_record_size_for_endpoint(CurrentRecordSize, Endpoint) ->
-    case is_mozilla_push_endpoint(Endpoint) of
-        true when CurrentRecordSize > ?MOZILLA_COMPAT_PUSH_RECORD_SIZE ->
-            ?MOZILLA_COMPAT_PUSH_RECORD_SIZE;
-        true when CurrentRecordSize > ?MOZILLA_CONSTRAINED_PUSH_RECORD_SIZE ->
-            ?MOZILLA_CONSTRAINED_PUSH_RECORD_SIZE;
-        _ ->
-            undefined
     end.
 
 -spec parse_constrained_overage_bytes(binary()) -> non_neg_integer() | undefined.
@@ -119,80 +101,66 @@ parse_non_neg_integer(Value) ->
         _ -> undefined
     end.
 
--spec is_mozilla_push_endpoint(binary()) -> boolean().
-is_mozilla_push_endpoint(Endpoint) ->
-    LowerEndpoint = lowercase_binary(Endpoint),
-    case binary:match(LowerEndpoint, <<"push.services.mozilla.com">>) of
-        nomatch -> false;
-        _ -> true
-    end.
-
--spec lowercase_binary(binary()) -> binary().
-lowercase_binary(Value) ->
-    iolist_to_binary(string:lowercase(Value)).
-
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-is_mozilla_push_endpoint_test() ->
-    Endpoint = <<"https://updates.push.services.mozilla.com/wpush/v2/token">>,
-    ?assertEqual(true, is_mozilla_push_endpoint(Endpoint)),
-    ?assertEqual(
-        true,
-        is_mozilla_push_endpoint(<<"https://push.services.mozilla.com/wpush/x">>)
-    ),
-    ?assertEqual(
-        false,
-        is_mozilla_push_endpoint(<<"https://fcm.googleapis.com/fcm/send">>)
-    ).
-
-initial_record_size_for_endpoint_test() ->
-    MozUrl = <<"https://updates.push.services.mozilla.com/wpush/v2/x">>,
-    ?assertEqual(?MOZILLA_COMPAT_PUSH_RECORD_SIZE, initial_record_size_for_endpoint(MozUrl)),
-    FcmUrl = <<"https://fcm.googleapis.com/fcm/send">>,
-    ?assertEqual(?STANDARD_PUSH_RECORD_SIZE, initial_record_size_for_endpoint(FcmUrl)).
+initial_record_size_is_shared_by_every_endpoint_test() ->
+    ?assertEqual(2816, initial_record_size()).
 
 next_record_size_for_payload_too_large_overage_test() ->
     ResponseBody = <<
         "{\"code\":413,\"errno\":104,\"error\":\"Payload Too Large\","
         "\"message\":\"This message is intended for a constrained device and is limited in size. "
-        "Converted buffer is too long by 1441 bytes\"}"
+        "Converted buffer is too long by 441 bytes\"}"
     >>,
     ?assertEqual(
-        2655,
-        next_record_size_for_payload_too_large(
-            ?STANDARD_PUSH_RECORD_SIZE,
-            <<"https://updates.push.services.mozilla.com/wpush/v2/x">>,
-            ResponseBody
-        )
+        2375,
+        next_record_size_for_payload_too_large(?PUSH_RECORD_SIZE, ResponseBody)
     ).
 
 next_record_size_for_payload_too_large_fallback_test() ->
     ResponseBody = <<"{\"code\":413,\"errno\":104,\"error\":\"Payload Too Large\"}">>,
-    MozillaEndpoint = <<"https://updates.push.services.mozilla.com/wpush/v2/x">>,
     ?assertEqual(
-        ?MOZILLA_COMPAT_PUSH_RECORD_SIZE,
-        next_record_size_for_payload_too_large(
-            ?STANDARD_PUSH_RECORD_SIZE, MozillaEndpoint, ResponseBody
-        )
-    ),
-    ?assertEqual(
-        ?MOZILLA_CONSTRAINED_PUSH_RECORD_SIZE,
-        next_record_size_for_payload_too_large(
-            ?MOZILLA_COMPAT_PUSH_RECORD_SIZE, MozillaEndpoint, ResponseBody
-        )
+        ?CONSTRAINED_PUSH_RECORD_SIZE,
+        next_record_size_for_payload_too_large(?PUSH_RECORD_SIZE, ResponseBody)
     ),
     ?assertEqual(
         undefined,
         next_record_size_for_payload_too_large(
-            ?MOZILLA_CONSTRAINED_PUSH_RECORD_SIZE, MozillaEndpoint, ResponseBody
+            ?CONSTRAINED_PUSH_RECORD_SIZE, ResponseBody
         )
+    ).
+
+next_record_size_is_clamped_to_the_minimum_test() ->
+    ResponseBody = <<
+        "{\"code\":413,\"message\":\"Converted buffer is too long by 2000 bytes\"}"
+    >>,
+    ?assertEqual(
+        ?MIN_PUSH_RECORD_SIZE,
+        next_record_size_for_payload_too_large(?PUSH_RECORD_SIZE, ResponseBody)
+    ).
+
+maybe_retry_stops_after_the_attempt_cap_test() ->
+    Response = {ok, 413, [], <<>>},
+    ?assertEqual(
+        {retry, ?CONSTRAINED_PUSH_RECORD_SIZE},
+        maybe_retry_with_smaller_record_size(Response, ?PUSH_RECORD_SIZE, 0)
     ),
     ?assertEqual(
-        undefined,
-        next_record_size_for_payload_too_large(
-            ?STANDARD_PUSH_RECORD_SIZE, <<"https://fcm.googleapis.com/fcm/send">>, ResponseBody
+        no_retry,
+        maybe_retry_with_smaller_record_size(
+            Response, ?PUSH_RECORD_SIZE, ?MAX_PAYLOAD_RETRY_ATTEMPTS
         )
+    ).
+
+maybe_retry_ignores_non_413_responses_test() ->
+    ?assertEqual(
+        no_retry,
+        maybe_retry_with_smaller_record_size({ok, 400, [], <<>>}, ?PUSH_RECORD_SIZE, 0)
+    ),
+    ?assertEqual(
+        no_retry,
+        maybe_retry_with_smaller_record_size({error, timeout}, ?PUSH_RECORD_SIZE, 0)
     ).
 
 -endif.

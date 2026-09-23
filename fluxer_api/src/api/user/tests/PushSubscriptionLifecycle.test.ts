@@ -6,9 +6,12 @@ import {
 	loginAccount,
 	logoutSpecificSessions,
 } from '@app/api/auth/tests/AuthTestUtils';
+import {createUserID} from '@app/api/BrandedTypes';
+import type {PushSubscription} from '@app/api/models/PushSubscription';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {PushSubscriptionRepository} from '@app/api/user/repositories/PushSubscriptionRepository';
 import {
 	deleteMobileDevice,
 	deletePushSubscription,
@@ -20,6 +23,15 @@ import {
 } from '@app/api/user/tests/UserTestUtils';
 import type {AuthSessionResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {beforeEach, describe, expect, test} from 'vitest';
+
+async function findStoredSubscription(userId: string, subscriptionId: string): Promise<PushSubscription> {
+	const subscriptions = await new PushSubscriptionRepository().listPushSubscriptions(createUserID(BigInt(userId)));
+	const subscription = subscriptions.find((entry) => entry.subscriptionId === subscriptionId);
+	if (!subscription) {
+		throw new Error(`Stored push subscription ${subscriptionId} not found`);
+	}
+	return subscription;
+}
 
 describe('Push Subscription Lifecycle', () => {
 	let harness: ApiTestHarness;
@@ -143,6 +155,155 @@ describe('Push Subscription Lifecycle', () => {
 		const mobileDevices = await listMobileDevices(harness, account.token);
 		expect(mobileDevices.devices[0].device_id).toBe(registered.device_id);
 		expect(mobileDevices.devices[0].platform).toBe('android_unified_push');
+	});
+	test('APNs Web Push registration stores the endpoint and encryption keys', async () => {
+		const account = await createTestAccount(harness);
+		const endpoint = 'https://relay.example.com/apns/device-1';
+		const registered = await registerMobileDevice(harness, account.token, {
+			platform: 'ios_apns',
+			token: endpoint,
+			encryption_key: 'relay-p256dh-key',
+			auth_secret: 'relay-auth-secret',
+			app_id: 'stable',
+		});
+		const subscription = await findStoredSubscription(account.userId, registered.device_id);
+		expect(subscription.platform).toBe('ios_apns');
+		expect(subscription.endpoint).toBe(endpoint);
+		expect(subscription.p256dhKey).toBe('relay-p256dh-key');
+		expect(subscription.authKey).toBe('relay-auth-secret');
+	});
+	test('FCM Web Push registration stores the endpoint and encryption keys', async () => {
+		const account = await createTestAccount(harness);
+		const endpoint = 'https://relay.example.com/fcm/device-1';
+		const registered = await registerMobileDevice(harness, account.token, {
+			platform: 'android_fcm',
+			token: endpoint,
+			encryption_key: 'fcm-relay-p256dh-key',
+			auth_secret: 'fcm-relay-auth-secret',
+		});
+		const subscription = await findStoredSubscription(account.userId, registered.device_id);
+		expect(subscription.platform).toBe('android_fcm');
+		expect(subscription.endpoint).toBe(endpoint);
+		expect(subscription.p256dhKey).toBe('fcm-relay-p256dh-key');
+		expect(subscription.authKey).toBe('fcm-relay-auth-secret');
+	});
+	test('raw token registration stores the token without encryption keys', async () => {
+		const account = await createTestAccount(harness);
+		const registered = await registerMobileDevice(harness, account.token, {
+			platform: 'ios_apns',
+			token: '0123456789abcdef',
+			provider_environment: 'production',
+		});
+		const subscription = await findStoredSubscription(account.userId, registered.device_id);
+		expect(subscription.platform).toBe('ios_apns');
+		expect(subscription.endpoint).toBe('0123456789abcdef');
+		expect(subscription.p256dhKey).toBeNull();
+		expect(subscription.authKey).toBeNull();
+	});
+	test('Web Push and raw token registrations coexist for one platform', async () => {
+		const account = await createTestAccount(harness);
+		const rawDevice = await registerMobileDevice(harness, account.token, {
+			platform: 'android_fcm',
+			token: 'fcm-legacy-token',
+		});
+		const webPushDevice = await registerMobileDevice(harness, account.token, {
+			platform: 'android_fcm',
+			token: 'https://relay.example.com/fcm/device-2',
+			encryption_key: 'coexist-p256dh-key',
+			auth_secret: 'coexist-auth-secret',
+		});
+		expect(rawDevice.device_id).not.toBe(webPushDevice.device_id);
+		const rawSubscription = await findStoredSubscription(account.userId, rawDevice.device_id);
+		const webPushSubscription = await findStoredSubscription(account.userId, webPushDevice.device_id);
+		expect(rawSubscription.p256dhKey).toBeNull();
+		expect(rawSubscription.authKey).toBeNull();
+		expect(webPushSubscription.p256dhKey).toBe('coexist-p256dh-key');
+		expect(webPushSubscription.authKey).toBe('coexist-auth-secret');
+		const mobileDevices = await listMobileDevices(harness, account.token);
+		expect(mobileDevices.devices).toHaveLength(2);
+	});
+	test('endpoint registration without encryption keys is rejected', async () => {
+		const account = await createTestAccount(harness);
+		await createBuilder(harness, account.token)
+			.post('/users/@me/mobile-devices')
+			.body({
+				platform: 'ios_apns',
+				token: 'https://relay.example.com/apns/no-keys',
+			})
+			.expect(HTTP_STATUS.BAD_REQUEST)
+			.execute();
+	});
+	test('endpoint registration with only one encryption key is rejected', async () => {
+		const account = await createTestAccount(harness);
+		await createBuilder(harness, account.token)
+			.post('/users/@me/mobile-devices')
+			.body({
+				platform: 'android_fcm',
+				token: 'https://relay.example.com/fcm/half-keys',
+				encryption_key: 'half-p256dh-key',
+			})
+			.expect(HTTP_STATUS.BAD_REQUEST)
+			.execute();
+	});
+	test('raw token registration with encryption keys is rejected', async () => {
+		const account = await createTestAccount(harness);
+		await createBuilder(harness, account.token)
+			.post('/users/@me/mobile-devices')
+			.body({
+				platform: 'ios_apns',
+				token: '0123456789abcdef',
+				encryption_key: 'raw-p256dh-key',
+				auth_secret: 'raw-auth-secret',
+			})
+			.expect(HTTP_STATUS.BAD_REQUEST)
+			.execute();
+	});
+	test('Web Push registration rejects an endpoint that is not publicly routable', async () => {
+		const account = await createTestAccount(harness);
+		const response = await createBuilder(harness, account.token)
+			.post('/users/@me/mobile-devices')
+			.body({
+				platform: 'ios_apns',
+				token: 'https://127.0.0.1/apns/device',
+				encryption_key: 'local-p256dh-key',
+				auth_secret: 'local-auth-secret',
+			})
+			.expect(HTTP_STATUS.BAD_REQUEST)
+			.execute();
+		expect(JSON.stringify(response)).toContain('URL_NOT_PUBLICLY_ROUTABLE');
+	});
+	test('unregister removes a Web Push mobile registration', async () => {
+		const account = await createTestAccount(harness);
+		const endpoint = 'https://relay.example.com/apns/unregister';
+		await registerMobileDevice(harness, account.token, {
+			platform: 'ios_apns',
+			token: endpoint,
+			encryption_key: 'unregister-p256dh-key',
+			auth_secret: 'unregister-auth-secret',
+			app_id: 'stable',
+			provider_environment: 'production',
+		});
+		await unregisterMobileDevice(harness, account.token, {
+			platform: 'ios_apns',
+			token: endpoint,
+			app_id: 'stable',
+			provider_environment: 'production',
+		});
+		const mobileDevices = await listMobileDevices(harness, account.token);
+		expect(mobileDevices.devices).toHaveLength(0);
+	});
+	test('mobile Web Push registrations stay out of the web push subscription list', async () => {
+		const account = await createTestAccount(harness);
+		await registerMobileDevice(harness, account.token, {
+			platform: 'android_fcm',
+			token: 'https://relay.example.com/fcm/separate',
+			encryption_key: 'separate-p256dh-key',
+			auth_secret: 'separate-auth-secret',
+		});
+		const webSubscriptions = await listPushSubscriptions(harness, account.token);
+		const mobileDevices = await listMobileDevices(harness, account.token);
+		expect(webSubscriptions.subscriptions).toHaveLength(0);
+		expect(mobileDevices.devices).toHaveLength(1);
 	});
 	test('list subscriptions returns multiple subscriptions', async () => {
 		const account = await createTestAccount(harness);

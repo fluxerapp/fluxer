@@ -80,7 +80,7 @@ async fn reports_list(
         return reports_error_page(
             config,
             &auth.0,
-            "That page is out of range. The reports search returns at most the first 10000 reports, so narrow the filters and start again.",
+            "That page is out of range. The reports search returns at most the first 10000 reports. Narrow the filters and start again.",
         );
     }
     let search_query = query.q.as_deref().and_then(clean_string);

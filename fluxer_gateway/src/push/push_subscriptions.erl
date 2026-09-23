@@ -141,35 +141,35 @@ abandon_subscription_batches(Remaining, {Tasks, FailedBatches, FailedUsers, Cons
 
 -spec fetch_next_subscription_batch([[integer()]], subscription_batch_acc(), integer()) ->
     subscription_batch_acc().
-fetch_next_subscription_batch(
-    [Batch | Rest], {Tasks, FailedBatches, FailedUsers, Consecutive}, Deadline
-) ->
+fetch_next_subscription_batch([Batch | Rest], Acc, Deadline) ->
+    fetch_subscription_batches(Rest, fetch_subscription_batch(Batch, Acc), Deadline).
+
+-spec fetch_subscription_batch([integer()], subscription_batch_acc()) ->
+    subscription_batch_acc().
+fetch_subscription_batch(Batch, {Tasks, FailedBatches, FailedUsers, Consecutive}) ->
     Req = #{
         <<"type">> => <<"get_push_subscriptions">>,
         <<"user_ids">> => [integer_to_binary(UserId) || UserId <- Batch]
     },
-    case rpc_client:call(Req) of
+    Fill = push_ets_cache:reserve_subscriptions(Batch),
+    try rpc_client:call(Req) of
         {ok, BatchData} ->
             BatchTasks = lists:foldl(
                 fun(UserId, Acc) ->
-                    add_fetched_user_subscription_task(UserId, BatchData, Acc)
+                    add_fetched_user_subscription_task(UserId, BatchData, Fill, Acc)
                 end,
                 Tasks,
                 Batch
             ),
-            fetch_subscription_batches(
-                Rest, {BatchTasks, FailedBatches, FailedUsers, 0}, Deadline
-            );
+            {BatchTasks, FailedBatches, FailedUsers, 0};
         {error, Reason} ->
             logger:debug(
                 "Push: RPC failed to fetch subscriptions",
                 #{user_count => length(Batch), reason => Reason}
             ),
-            fetch_subscription_batches(
-                Rest,
-                {Tasks, FailedBatches + 1, FailedUsers + length(Batch), Consecutive + 1},
-                Deadline
-            )
+            {Tasks, FailedBatches + 1, FailedUsers + length(Batch), Consecutive + 1}
+    after
+        push_ets_cache:release(Fill)
     end.
 
 -spec batched_user_count([[integer()]], non_neg_integer()) -> non_neg_integer().
@@ -213,17 +213,19 @@ count_subscription_fetch_loss(UserCount) ->
     bump_counter(subscription_fetch_calls_failed, 1),
     bump_counter(subscription_fetch_users_dropped, UserCount).
 
--spec add_fetched_user_subscription_task(integer(), map(), [{integer(), list()}]) ->
+-spec add_fetched_user_subscription_task(
+    integer(), map(), push_ets_cache:fill(), [{integer(), list()}]
+) ->
     [{integer(), list()}].
-add_fetched_user_subscription_task(UserId, SubscriptionsData, Acc) ->
+add_fetched_user_subscription_task(UserId, SubscriptionsData, Fill, Acc) ->
     UserIdBin = integer_to_binary(UserId),
     case maps:get(UserIdBin, SubscriptionsData, []) of
         [] ->
-            push_ets_cache:put_subscriptions(UserId, []),
+            push_ets_cache:put_subscriptions(UserId, [], Fill),
             logger:debug("Push: no subscriptions for user", #{user_id => UserId}),
             Acc;
         Subscriptions ->
-            push_ets_cache:put_subscriptions(UserId, Subscriptions),
+            push_ets_cache:put_subscriptions(UserId, Subscriptions, Fill),
             logger:debug(
                 "Push: found subscriptions for user",
                 #{user_id => UserId, count => length(Subscriptions)}
@@ -259,18 +261,32 @@ fetch_and_send_clear_notification_from_rpc(UserId, ChannelId, MessageId, BadgeCo
         "Push: fetching subscriptions for notification clear",
         #{user_id => UserId, channel_id => ChannelId, message_id => MessageId}
     ),
-    Result = rpc_client:call(SubscriptionsReq),
-    send_clear_rpc_result(UserId, ChannelId, MessageId, BadgeCount, Result).
+    Fill = push_ets_cache:reserve_subscriptions([UserId]),
+    try rpc_client:call(SubscriptionsReq) of
+        Result -> send_clear_rpc_result(UserId, ChannelId, MessageId, BadgeCount, Fill, Result)
+    after
+        push_ets_cache:release(Fill)
+    end.
 
 -spec send_clear_rpc_result(
-    integer(), integer(), integer(), non_neg_integer(), {ok, map()} | {error, term()}
+    integer(),
+    integer(),
+    integer(),
+    non_neg_integer(),
+    push_ets_cache:fill(),
+    {ok, map()} | {error, term()}
 ) -> ok.
-send_clear_rpc_result(UserId, ChannelId, MessageId, BadgeCount, {ok, SubscriptionsData}) ->
+send_clear_rpc_result(UserId, ChannelId, MessageId, BadgeCount, Fill, {ok, SubscriptionsData}) ->
     UserIdBin = integer_to_binary(UserId),
     send_clear_fetched_subscriptions(
-        UserId, ChannelId, MessageId, BadgeCount, maps:get(UserIdBin, SubscriptionsData, [])
+        UserId,
+        ChannelId,
+        MessageId,
+        BadgeCount,
+        Fill,
+        maps:get(UserIdBin, SubscriptionsData, [])
     );
-send_clear_rpc_result(UserId, _ChannelId, _MessageId, _BadgeCount, {error, Reason}) ->
+send_clear_rpc_result(UserId, _ChannelId, _MessageId, _BadgeCount, _Fill, {error, Reason}) ->
     count_subscription_fetch_loss(1),
     logger:debug(
         "Push: RPC failed to fetch subscriptions for notification clear",
@@ -279,13 +295,13 @@ send_clear_rpc_result(UserId, _ChannelId, _MessageId, _BadgeCount, {error, Reaso
     ok.
 
 -spec send_clear_fetched_subscriptions(
-    integer(), integer(), integer(), non_neg_integer(), list()
+    integer(), integer(), integer(), non_neg_integer(), push_ets_cache:fill(), list()
 ) -> ok.
-send_clear_fetched_subscriptions(UserId, _ChannelId, _MessageId, _BadgeCount, []) ->
+send_clear_fetched_subscriptions(UserId, _ChannelId, _MessageId, _BadgeCount, _Fill, []) ->
     logger:debug("Push: no subscriptions for notification clear", #{user_id => UserId}),
     ok;
-send_clear_fetched_subscriptions(UserId, ChannelId, MessageId, BadgeCount, Subscriptions) ->
-    push_ets_cache:put_subscriptions(UserId, Subscriptions),
+send_clear_fetched_subscriptions(UserId, ChannelId, MessageId, BadgeCount, Fill, Subscriptions) ->
+    push_ets_cache:put_subscriptions(UserId, Subscriptions, Fill),
     push_sender:send_clear_to_user_subscriptions(
         UserId,
         Subscriptions,
@@ -688,19 +704,22 @@ fetch_and_cache_user_guild_settings(UserId, GuildId) ->
         "Push: fetching user guild settings via RPC",
         #{user_id => UserId, guild_id => GuildId}
     ),
-    case rpc_client:call(Req) of
+    Fill = push_ets_cache:reserve_user_guild_settings([UserId], GuildId),
+    try rpc_client:call(Req) of
         {ok, Data} ->
-            cache_user_guild_settings(UserId, GuildId, Data);
+            cache_user_guild_settings(UserId, GuildId, Data, Fill);
         {error, Reason} ->
             logger:debug(
                 "Push: RPC failed to fetch user guild settings",
                 #{user_id => UserId, guild_id => GuildId, reason => Reason}
             ),
             null
+    after
+        push_ets_cache:release(Fill)
     end.
 
--spec cache_user_guild_settings(integer(), integer(), map()) -> map().
-cache_user_guild_settings(UserId, GuildId, Data) ->
+-spec cache_user_guild_settings(integer(), integer(), map(), push_ets_cache:fill()) -> map().
+cache_user_guild_settings(UserId, GuildId, Data, Fill) ->
     SettingsData =
         case maps:get(<<"user_guild_settings">>, Data, [null]) of
             [First | _] -> First;
@@ -712,7 +731,7 @@ cache_user_guild_settings(UserId, GuildId, Data) ->
                 "Push: user guild settings returned null; caching empty sentinel",
                 #{user_id => UserId, guild_id => GuildId}
             ),
-            push_ets_cache:put_user_guild_settings(UserId, GuildId, #{}),
+            push_ets_cache:put_user_guild_settings(UserId, GuildId, #{}, Fill),
             #{};
         Settings ->
             logger:debug(
@@ -724,7 +743,7 @@ cache_user_guild_settings(UserId, GuildId, Data) ->
                     mobile_push => maps:get(mobile_push, Settings, undefined)
                 }
             ),
-            push_ets_cache:put_user_guild_settings(UserId, GuildId, Settings),
+            push_ets_cache:put_user_guild_settings(UserId, GuildId, Settings, Fill),
             Settings
     end.
 
@@ -1076,7 +1095,7 @@ fetch_missing_in_batches_sends_only_successful_batches_test() ->
     ok = meck:new(push_ets_cache, [passthrough, no_link]),
     application:set_env(fluxer_gateway, push_subscription_fetch_batch_size, 2),
     try
-        ok = meck:expect(push_ets_cache, put_subscriptions, fun(_UserId, _Subs) -> ok end),
+        ok = meck:expect(push_ets_cache, put_subscriptions, fun(_UserId, _Subs, _Fill) -> ok end),
         ok = meck:expect(rpc_client, call, fun(#{<<"user_ids">> := Ids}) ->
             case Ids of
                 [<<"1">>, <<"2">>] -> {ok, #{<<"1">> => [sub1], <<"2">> => [sub2]}};

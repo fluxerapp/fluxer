@@ -957,7 +957,7 @@ export function UserAccountController(app: HonoApp) {
 			security: ['bearerToken', 'sessionToken'],
 			tags: ['Users'],
 			description:
-				'Registers a mobile push device token for APNs, Firebase Cloud Messaging, or UnifiedPush. UnifiedPush registrations include the endpoint URL plus Web Push encryption keys.',
+				'Registers a mobile push device for APNs, Firebase Cloud Messaging, or UnifiedPush. A Web Push registration sends the endpoint URL with encryption_key and auth_secret. A raw registration sends the platform push token with no keys.',
 		}),
 		async (ctx) => {
 			const authSession = ctx.get('authSession');

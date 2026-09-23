@@ -78,6 +78,12 @@ env_gateway_base_config() ->
         <<"gateway_role">> => env_optional_binary("FLUXER_GATEWAY_ROLE"),
         <<"rpc_auth_token">> => env_binary("FLUXER_GATEWAY_RPC_AUTH_TOKEN", <<>>),
         <<"push_enabled">> => env_bool("FLUXER_GATEWAY_PUSH_ENABLED", true),
+        <<"push_clear_notifications_enabled">> => env_bool(
+            "FLUXER_GATEWAY_PUSH_CLEAR_NOTIFICATIONS_ENABLED", true
+        ),
+        <<"push_outbox_request_timeout_ms">> => env_int(
+            "FLUXER_GATEWAY_PUSH_OUTBOX_REQUEST_TIMEOUT_MS", 100000
+        ),
         <<"logger_level">> => env_binary("FLUXER_GATEWAY_LOGGER_LEVEL", <<"info">>),
         <<"api_rpc_endpoint">> => env_optional_binary("FLUXER_GATEWAY_API_RPC_ENDPOINT"),
         <<"cluster_enabled">> => env_bool("FLUXER_GATEWAY_CLUSTER_ENABLED", false),
@@ -246,7 +252,16 @@ build_push_config(Service, Public) ->
         push_dispatcher_max_inflight => get_int(
             Service, <<"push_dispatcher_max_inflight">>, 16
         ),
-        push_dispatcher_max_queue => get_int(Service, <<"push_dispatcher_max_queue">>, 2048)
+        push_dispatcher_max_queue => get_int(Service, <<"push_dispatcher_max_queue">>, 2048),
+        push_clear_notifications_enabled => get_bool(
+            Service, <<"push_clear_notifications_enabled">>, true
+        ),
+        push_outbox_max_queue => get_int(Service, <<"push_outbox_max_queue">>, 10000),
+        push_outbox_max_inflight => get_int(Service, <<"push_outbox_max_inflight">>, 64),
+        push_outbox_request_timeout_ms => get_int(
+            Service, <<"push_outbox_request_timeout_ms">>, 100000
+        ),
+        push_outbox_max_age_ms => get_int(Service, <<"push_outbox_max_age_ms">>, 300000)
     }.
 
 -spec build_sharding_config(map()) -> config().

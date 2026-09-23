@@ -214,24 +214,24 @@ stringify_list_value(Value) ->
 
 -spec stringify_json_value(term()) -> binary().
 stringify_json_value(Value) ->
-    iolist_to_binary(json:encode(json_compatible_value(Value))).
+    iolist_to_binary(json:encode(json_encodable_value(Value))).
 
--spec json_compatible_value(term()) -> json:encode_value().
-json_compatible_value(Value) when is_binary(Value) -> Value;
-json_compatible_value(Value) when is_integer(Value) -> Value;
-json_compatible_value(Value) when is_float(Value) -> Value;
-json_compatible_value(Value) when is_atom(Value) -> Value;
-json_compatible_value(Value) when is_list(Value) ->
-    [json_compatible_value(Item) || Item <- Value];
-json_compatible_value(Value) when is_map(Value) ->
+-spec json_encodable_value(term()) -> json:encode_value().
+json_encodable_value(Value) when is_binary(Value) -> Value;
+json_encodable_value(Value) when is_integer(Value) -> Value;
+json_encodable_value(Value) when is_float(Value) -> Value;
+json_encodable_value(Value) when is_atom(Value) -> Value;
+json_encodable_value(Value) when is_list(Value) ->
+    [json_encodable_value(Item) || Item <- Value];
+json_encodable_value(Value) when is_map(Value) ->
     maps:fold(
         fun(Key, Item, Acc) ->
-            Acc#{push_utils:normalize_binary(Key, <<>>) => json_compatible_value(Item)}
+            Acc#{push_utils:normalize_binary(Key, <<>>) => json_encodable_value(Item)}
         end,
         #{},
         Value
     );
-json_compatible_value(Value) ->
+json_encodable_value(Value) ->
     iolist_to_binary(io_lib:format("~p", [Value])).
 
 -spec first_binary(list()) -> binary() | undefined.

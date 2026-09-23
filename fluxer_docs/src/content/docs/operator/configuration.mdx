@@ -813,11 +813,11 @@ The Gateway reads the same names. A malformed pair, or a private key that does n
 
 ## Mobile push
 
-Both `api` and `gateway` read the APNs and FCM names. None appear in `.env.example` or in `docker-compose.yml`, so configuring mobile push means editing the Compose file. All are optional.
+`api`, `gateway`, and `push` read the APNs and FCM names. None appear in `.env.example` or in `docker-compose.yml`, so configuring mobile push means editing the Compose file. All are optional.
 
 #### `FLUXER_PUSH_APNS_ENABLED`
 
-Default `false`. The APNs switch. Must be set on both `api` and `gateway`.
+Default `false`. The APNs switch. Must be set on `api`, `gateway`, and `push`.
 
 #### `FLUXER_PUSH_APNS_TEAM_ID`
 
@@ -845,7 +845,7 @@ Default `[]`. Per-app APNs configuration. JSON array. An entry with no `app_id` 
 
 #### `FLUXER_PUSH_FCM_ENABLED`
 
-Default `false`. The FCM switch. Must be set on both `api` and `gateway`.
+Default `false`. The FCM switch. Must be set on `api`, `gateway`, and `push`.
 
 #### `FLUXER_PUSH_FCM_PROJECT_ID`
 
@@ -874,6 +874,34 @@ Default `https://oauth2.googleapis.com/token`. The OAuth token endpoint. Change 
 #### `FLUXER_PUSH_FCM_APPS`
 
 Default `[]`. Per-app FCM configuration. JSON array, under the same `app_id` rule as APNs.
+
+## Push service settings
+
+`push` is the push notification service in the bundled stack. It reads the VAPID pair from [Web push](#web-push), the APNs and FCM names from [Mobile push](#mobile-push), and `FLUXER_SVC_NATS_URL` with `FLUXER_NATS_AUTH_TOKEN` from [Message bus and internal services](#message-bus-and-internal-services). It refuses to start without `FLUXER_INTERNAL_API_ENDPOINT` and `FLUXER_GATEWAY_RPC_AUTH_TOKEN`. Compose supplies both. The names below belong to `push`. All are optional.
+
+#### `FLUXER_PUSH_SERVICE_HOST`
+
+Default `0.0.0.0`. The bind address. It must parse as an IP address. Also settable with `--bind-host`. Compose sets `0.0.0.0`.
+
+#### `FLUXER_PUSH_SERVICE_PORT`
+
+Default `8126`. The listen port for the health and metrics endpoints. Also settable with `--port`. Compose sets `8126`.
+
+#### `FLUXER_PUSH_SERVICE_QUEUE_CAPACITY`
+
+Default `10000`. Notification jobs `push` holds at once. Accepts 1 to 1000000. Compose passes it through from `.env`. An empty value keeps the default.
+
+#### `FLUXER_PUSH_SERVICE_SEND_CONCURRENCY`
+
+Default `256`. Provider requests in flight at once, across every job. Accepts 1 to 65536. Compose passes it through from `.env`. An empty value keeps the default.
+
+#### `FLUXER_PUSH_SERVICE_APNS_BASE_URL`
+
+No default. Replaces the APNs host in both environments. Set it only for a test double.
+
+#### `FLUXER_PUSH_SERVICE_FCM_BASE_URL`
+
+Default `https://fcm.googleapis.com`. The FCM host. Set it only for a proxy or a test double.
 
 ## Payments
 
@@ -1077,7 +1105,7 @@ Defaults to `debug` in development, `info` otherwise. The Node log level. Read b
 
 #### `RUST_LOG`
 
-Default `info`. The Rust log filter. Read by `media-proxy`, `app-proxy`, `admin`, and the internal services. Not in `.env.example` or the Compose file.
+Default `info`. The Rust log filter. Read by `media-proxy`, `app-proxy`, `admin`, `push`, and the internal services. Not in `.env.example` or the Compose file.
 
 #### `FLUXER_GATEWAY_LOGGER_LEVEL`
 
@@ -1111,7 +1139,7 @@ Default `development`. The runtime mode. `development`, `production`, or `test`.
 
 Default `false`. The self-host switch. Compose sets `true`. It relaxes the production Postgres SSL requirement, seeds the limit tier, gates registration, billing and discovery controllers, and turns blocklist feeds off.
 
-`/_metrics` on `api`, `media-proxy`, and `gateway`, plus the Gateway's `/_health/ready`, `/_health/drain`, and `/_health/undrain`, are gated to loopback peers, so no proxy reaches them. The probes that work from outside are `/api/_health`, `/gateway/_health`, `/media/_health`, and the edge's own `/_health`.
+`/_metrics` on `api`, `media-proxy`, `gateway`, and `push`, plus the Gateway's `/_health/ready`, `/_health/drain`, and `/_health/undrain`, are gated to loopback peers, so no proxy reaches them. The probes that work from outside are `/api/_health`, `/gateway/_health`, `/media/_health`, and the edge's own `/_health`.
 
 ## Feature flags and development switches
 
@@ -1663,7 +1691,7 @@ See [Bluesky connections](#bluesky-connections) for configuration.
 
 #### `FLUXER_PUSH_APNS_` and `FLUXER_PUSH_FCM_`
 
-Mobile push cannot be configured at all from the example.
+Mobile push cannot be configured at all from the example. `api`, `gateway`, and `push` all read these names. An override has to reach all three.
 
 #### `RUST_LOG`, `LOG_LEVEL` and `LOGGER_LEVEL`
 
@@ -1742,6 +1770,7 @@ The stack runs its containers on one Docker bridge network, which is private to 
 | worker | fluxer-api | Background lanes and the cron scheduler |
 | gateway | fluxer-gateway | The Gateway WebSocket |
 | media-proxy | fluxer-media-proxy | Uploads, transforms, and media delivery |
+| push | fluxer-push | Push notification delivery |
 | admin | fluxer-admin | The admin dashboard |
 | snowflakes, snowflakes-shard | fluxer-snowflakes | Identifier allocation |
 | users, users-shard | fluxer-users | User reads and writes |
@@ -1758,7 +1787,7 @@ The stack runs its containers on one Docker bridge network, which is private to 
 
 The edge and LiveKit are the only services that publish ports. The edge publishes 80/tcp, 443/tcp, 443/udp, or one plain-HTTP port under the overlay. LiveKit publishes 7881/tcp and 7882/udp. Everything else is reachable only over the bridge network.
 
-`api` is the one service an operator configures directly, through the shared environment block. `worker`, `gateway`, `app-proxy`, and `media-proxy` are touched rarely, `worker` for lane concurrency, `app-proxy` for CSP extras, and `media-proxy` for transform limits. The edge takes only the `FLUXER_EDGE_` variables, `postgres` only the password, `meilisearch` only the master key, `valkey` only the `FLUXER_VALKEY_` tuning values, and `livekit` only the key pair and the port variables. `static-proxy` reads no environment variables, and the remaining services need none.
+`api` is the one service an operator configures directly, through the shared environment block. `worker`, `gateway`, `app-proxy`, `media-proxy`, and `push` are touched rarely, `worker` for lane concurrency, `app-proxy` for CSP extras, `media-proxy` for transform limits, and `push` for queue capacity and send concurrency. The edge takes only the `FLUXER_EDGE_` variables, `postgres` only the password, `meilisearch` only the master key, `valkey` only the `FLUXER_VALKEY_` tuning values, and `livekit` only the key pair and the port variables. `static-proxy` reads no environment variables, and the remaining services need none.
 
 The internal services each run a router, which takes requests and holds no state, and one shard, which holds the caches and the database connections. The shipped stack fixes `FLUXER_SVC_SHARD_COUNT` at `1`.
 
@@ -1766,7 +1795,7 @@ The internal services each run a router, which takes requests and holds no state
 
 Every service has a memory limit and four also have a memory reservation, all under `deploy.resources`. Compose reads `gb` as 1024 MiB and `mb` as 1 MiB, so `5gb` is 5368709120 bytes. Plain `docker compose up` applies both keys on a single host, with no Swarm and no `--compatibility` flag. The engine rejects any limit below `6mb`, and rejects a limit lower than the same service's reservation with `Minimum memory limit can not be less than memory reservation limit`.
 
-A limit is a ceiling. The limits below sum to 16.75 GiB and the stack does not need a host that large, because each container uses only the memory it allocates, up to its limit.
+A limit is a ceiling. The limits below sum to 18.5 GiB and the stack does not need a host that large, because each container uses only the memory it allocates, up to its limit.
 
 `deploy.resources.reservations.memory` becomes the container's cgroup v2 `memory.low`, which biases kernel reclaim towards other containers under host pressure. It reserves nothing on its own.
 
@@ -1827,6 +1856,10 @@ Default `1gb`. The ceiling for `gateway`. The BEAM has no heap ceiling of its ow
 #### `FLUXER_MEDIA_PROXY_MEMORY_LIMIT`
 
 Default `512mb`. The ceiling for `media-proxy`. Image and video transforms decode into this ceiling, so a large upload is what reaches this limit.
+
+#### `FLUXER_PUSH_MEMORY_LIMIT`
+
+Default `256mb`. The ceiling for `push`. Raise it alongside `FLUXER_PUSH_SERVICE_QUEUE_CAPACITY` or `FLUXER_PUSH_SERVICE_SEND_CONCURRENCY`.
 
 #### `FLUXER_STATIC_PROXY_MEMORY_LIMIT`
 
