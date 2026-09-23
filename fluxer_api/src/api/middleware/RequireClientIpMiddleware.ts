@@ -15,6 +15,7 @@ interface RequireClientIpOptions {
 
 const defaultExemptPaths: Array<string> = [
 	'/_health',
+	'/internal',
 	'/webhooks/livekit',
 	'/test',
 	'/connections/bluesky/client-metadata.json',

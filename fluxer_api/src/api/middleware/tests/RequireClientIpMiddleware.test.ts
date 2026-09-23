@@ -22,6 +22,7 @@ function createHarness(path = 'http://localhost/v1/messages'): Harness {
 		return ctx.text('ok');
 	});
 	app.get('/_health', (ctx) => ctx.text('OK'));
+	app.get('/internal/rpc', (ctx) => ctx.text('OK'));
 	app.onError(AppErrorHandler);
 	return {
 		request: async (headers) => app.request(path, {headers}),
@@ -76,6 +77,12 @@ describe('RequireClientIpMiddleware', () => {
 
 	it('leaves exempt paths alone', async () => {
 		const harness = createHarness('http://localhost/_health');
+		const response = await harness.request({});
+		expect(response.status).toBe(200);
+	});
+
+	it('leaves internal service to service calls alone', async () => {
+		const harness = createHarness('http://localhost/internal/rpc');
 		const response = await harness.request({});
 		expect(response.status).toBe(200);
 	});
