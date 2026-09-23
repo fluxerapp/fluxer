@@ -117,7 +117,7 @@ describe('MeilisearchMessageAdapter', () => {
 					'(guildId = "guild-1") AND ((channelId = "channel-\\"quoted\\"" OR channelId = "channel-2")) AND (mentionedUserIds = "user-1")',
 				limit: 10,
 				offset: 20,
-				sort: ['createdAt:asc', 'id:desc'],
+				sort: ['createdAt:asc', 'id:asc'],
 				attributesToSearchOn: ['content', 'embedContent'],
 				showRankingScore: false,
 			},

@@ -52,7 +52,8 @@ function snowflakeSeconds(snowflake: string): number {
 
 function buildSort(sortBy: string, sortOrder: 'asc' | 'desc' | undefined): Array<string> | undefined {
 	if (sortBy === 'relevance') return undefined;
-	return [`${sortBy}:${sortOrder ?? 'desc'}`, 'id:desc'];
+	const direction = sortOrder ?? 'desc';
+	return [`${sortBy}:${direction}`, `id:${direction}`];
 }
 
 function buildTimestampSort(filters: MessageSearchFilters | AuditLogSearchFilters): Array<string> | undefined {

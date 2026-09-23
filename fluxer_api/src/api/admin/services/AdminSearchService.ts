@@ -11,6 +11,7 @@ import {Logger} from '@app/api/Logger';
 import {getGuildSearchService, getUserSearchService} from '@app/api/SearchFactory';
 import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
+import type {UserSearchFilters} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
 import type {WorkerJobPayload} from '@pkgs/worker/src/contracts/WorkerTypes';
 
 interface RefreshSearchIndexJobPayload extends WorkerJobPayload {
@@ -130,16 +131,28 @@ export class AdminSearchService {
 			throw new FeatureTemporarilyDisabledError();
 		}
 		const query = data.query?.trim() || '';
+		const isBrowseAll = query === '' || query === '*';
+		const searchFilters: UserSearchFilters = isBrowseAll
+			? {sortBy: 'createdAt', sortOrder: 'asc'}
+			: {sortBy: 'relevance'};
 		const directUserId = /^\d+$/.test(query) ? createUserID(BigInt(query)) : null;
 		const canResolveDirectUser = directUserId !== null && !isSyntheticUserId(directUserId) && data.offset === 0;
 		const [searchResult, directUser] = await Promise.all([
-			userSearchService.search(query, {}, {limit: data.limit, offset: data.offset}),
+			userSearchService.search(query, searchFilters, {limit: data.limit, offset: data.offset}),
 			canResolveDirectUser ? userRepository.findUnique(directUserId).catch(() => null) : Promise.resolve(null),
 		]);
 		const {hits, total} = searchResult;
 		const userIds = hits.map((hit) => createUserID(BigInt(hit.id)));
 		const users = await userRepository.listUsers(userIds);
-		const response = await Promise.all(users.map((user) => mapUserToAdminResponse(user, cacheService, acls)));
+		const usersById = new Map(users.map((user) => [user.id.toString(), user]));
+		const orderedUsers = [];
+		for (const userId of userIds) {
+			const user = usersById.get(userId.toString());
+			if (user) {
+				orderedUsers.push(user);
+			}
+		}
+		const response = await Promise.all(orderedUsers.map((user) => mapUserToAdminResponse(user, cacheService, acls)));
 		if (directUser && data.offset === 0) {
 			const directId = directUser.id.toString();
 			if (!response.some((u) => u.id === directId)) {
