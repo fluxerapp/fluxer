@@ -3,6 +3,7 @@
 import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {PRODUCT_NAME, SUPPORT_EMAIL} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import {
 	type RequiredActionFlow,
@@ -20,6 +21,7 @@ import {
 	ESCAPE_SUCCESS_EMAIL_REMAINS_TOAST_DESCRIPTOR,
 	ESCAPE_SUCCESS_TOAST_DESCRIPTOR,
 	ESCAPE_UNAVAILABLE_DESCRIPTOR,
+	ESCAPE_UNAVAILABLE_SELF_HOSTED_DESCRIPTOR,
 	GET_NEW_CODE_DESCRIPTOR,
 	NEXT_DESCRIPTOR,
 	RESEND_EMAIL_DESCRIPTOR,
@@ -75,7 +77,7 @@ import * as UserCommands from '@app/features/user/commands/UserCommands';
 import Users from '@app/features/user/state/Users';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import type {PhoneGateEscapePreviewResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import type {MessageDescriptor} from '@lingui/core';
+import type {I18n, MessageDescriptor} from '@lingui/core';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -183,6 +185,12 @@ function getIntroDescription(flow: RequiredActionFlow | null, isEmailBounced: bo
 	if (flow?.mode === 'email_or_phone') return STEP_INTRO_EMAIL_OR_PHONE_DESCRIPTION_DESCRIPTOR;
 	if (flow?.mode === 'phone') return STEP_INTRO_PHONE_DESCRIPTION_DESCRIPTOR;
 	return STEP_INTRO_GENERIC_DESCRIPTION_DESCRIPTOR;
+}
+
+function escapeUnavailableMessage(i18n: I18n): string {
+	return RuntimeConfig.isSelfHosted()
+		? i18n._(ESCAPE_UNAVAILABLE_SELF_HOSTED_DESCRIPTOR)
+		: i18n._(ESCAPE_UNAVAILABLE_DESCRIPTOR, {supportEmail: SUPPORT_EMAIL});
 }
 
 const RequiredActionModal: React.FC<{mock?: boolean}> = observer(({mock = false}) => {
@@ -394,7 +402,7 @@ const RequiredActionModal: React.FC<{mock?: boolean}> = observer(({mock = false}
 			const remaining = updated.required_actions;
 			const phoneRemains = remaining.some((action) => action.includes('PHONE'));
 			if (phoneRemains) {
-				setActionError(i18n._(ESCAPE_UNAVAILABLE_DESCRIPTOR, {supportEmail: SUPPORT_EMAIL}));
+				setActionError(escapeUnavailableMessage(i18n));
 				return;
 			}
 			ToastCommands.success(
@@ -404,7 +412,7 @@ const RequiredActionModal: React.FC<{mock?: boolean}> = observer(({mock = false}
 			);
 		} catch (error) {
 			if (failureCode(error) === APIErrorCodes.PHONE_GATE_ESCAPE_UNAVAILABLE) {
-				setActionError(i18n._(ESCAPE_UNAVAILABLE_DESCRIPTOR, {supportEmail: SUPPORT_EMAIL}));
+				setActionError(escapeUnavailableMessage(i18n));
 			} else if (hadGuildsToLeave) {
 				setActionError(i18n._(ESCAPE_FAILED_PARTIAL_DESCRIPTOR));
 			} else {
