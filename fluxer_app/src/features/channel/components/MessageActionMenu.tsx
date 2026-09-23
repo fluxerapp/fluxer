@@ -3,7 +3,6 @@
 import {
 	canReportMessage,
 	createMessageActionHandlers,
-	getCopyableMessageText,
 	getEffectiveContent,
 	isClientSystemMessage,
 	isEmbedsSuppressed,
@@ -180,7 +179,6 @@ export const useMessageActionMenuData = (
 	);
 	const developerMode = UserSettings.developerMode;
 	const effectiveContent = useMemo(() => getEffectiveContent(message), [message]);
-	const copyableMessageText = useMemo(() => getCopyableMessageText(message, i18n), [message, i18n.locale]);
 	const canManageMessages = useMemo(
 		() =>
 			permissions != null &&
@@ -366,7 +364,7 @@ export const useMessageActionMenuData = (
 					),
 				});
 			}
-			if (copyableMessageText) {
+			if (effectiveContent) {
 				utilityActions.push({
 					id: messageActionMenuItemIds.copyMessage,
 					icon: <CopyMessageTextIcon size={20} data-flx="channel.message-action-menu.groups.copy-message-text-icon" />,
@@ -460,7 +458,6 @@ export const useMessageActionMenuData = (
 		isSpeaking,
 		voiceReady,
 		effectiveContent,
-		copyableMessageText,
 		handleSpeakMessage,
 		handleReportMessage,
 		handleDebugMessage,

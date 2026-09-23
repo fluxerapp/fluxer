@@ -248,10 +248,6 @@ export function buildMessageSnapshotCopyText(snapshot: MessageSnapshot, options:
 	return joinCopyBlocks(blocks);
 }
 
-export function buildRawMessageContentCopyText(message: Pick<Message, 'content'>): string {
-	return message.content;
-}
-
 export function buildUserMessageCopyText(message: Message, options: MessageCopyTextOptions): string {
 	const blocks: Array<string> = [];
 	const messageOptions: MessageCopyTextOptions = {
