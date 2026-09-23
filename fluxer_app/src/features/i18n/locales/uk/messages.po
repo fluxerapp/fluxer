@@ -4,15 +4,17 @@ msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-09-12 11:17+0200\n"
-"PO-Revision-Date: \n"
-"Last-Translator: \n"
-"Language-Team: \n"
+"PO-Revision-Date: 2026-09-23 00:04+0000\n"
+"Last-Translator: Hampus <hampus@fluxer.com>\n"
+"Language-Team: Ukrainian <https://weblate.fluxer.tools/projects/fluxer/app/"
+"uk/>\n"
 "Language: uk\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: \n"
-"X-Generator: @lingui/cli\n"
+"Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
+"X-Generator: Weblate 2026.8.dev0\n"
 
 #. Description text in the messages tab.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx:52
@@ -3987,17 +3989,19 @@ msgstr "Для анімованих банерів потрібна функці
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:259
 msgid "Animated emoji"
-msgstr "Анімовані емодзі"
+msgstr "Анімовані емоджі"
 
 #. Section heading for animated emoji in community emoji settings.
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:106
 msgid "Animated emoji ({emojiCount})"
-msgstr "Анімовані емодзі ({emojiCount})"
+msgstr "Анімовані емоджі ({emojiCount})"
 
 #. Extra hint shown beneath the reduce motion toggle while reduced motion is active.
 #: src/features/user/components/modals/tabs/accessibility_tab/MotionTab.tsx:31
 msgid "Animated emojis, GIFs and stickers stay under your control in the Animation tab."
-msgstr "Анімовані емодзі, GIF-файли та стікери залишаються під вашим контролем на вкладці «Анімація»."
+msgstr ""
+"Анімовані емоджі, GIF-файли та стікери залишаються під вашим контролем на "
+"вкладці «Анімація»."
 
 #. Media type chip shown in the media viewer info panel for animated GIFs.
 #. Short label in the channel and chat embed gifv. Keep it concise.
@@ -6643,7 +6647,7 @@ msgstr "Змінити електронну адресу"
 #: src/features/user/components/modals/CustomStatusBottomSheet.tsx:44
 #: src/features/user/components/modals/CustomStatusModal.tsx:54
 msgid "Change emoji"
-msgstr "Змінити емодзі"
+msgstr "Змінити емоджі"
 
 #. Generic action label that opens the friend-nickname edit flow.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:538
@@ -7453,7 +7457,7 @@ msgstr "Оберіть дію."
 #: src/features/user/components/modals/CustomStatusBottomSheet.tsx:48
 #: src/features/user/components/modals/CustomStatusModal.tsx:58
 msgid "Choose an emoji"
-msgstr "Виберіть емодзі"
+msgstr "Виберіть емоджі"
 
 #. Button or menu action label in the selections tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:21
@@ -9387,12 +9391,12 @@ msgstr "Копіювати емодзі"
 #. Developer-mode action that copies the emoji ID to the clipboard.
 #: src/features/ui/action_menu/items/EmojiContextMenuItems.tsx:32
 msgid "Copy emoji ID"
-msgstr "Копіювати ID емодзі"
+msgstr "Копіювати ID емоджі"
 
 #. Action that copies the emoji URL to the clipboard.
 #: src/features/ui/action_menu/items/EmojiContextMenuItems.tsx:36
 msgid "Copy emoji URL"
-msgstr "Копіювати URL емодзі"
+msgstr "Копіювати URL емоджі"
 
 #. Tooltip / button label that copies the voice endpoint hostname to the clipboard.
 #: src/features/voice/components/voice_connection_status/shared.ts:58
@@ -9725,7 +9729,7 @@ msgstr "Не вдалося очистити особисті нотатки"
 #. Title of the generic fallback error modal shown when cloning an emoji fails.
 #: src/features/app/components/alerts/ExpressionCloneFailedModal.tsx:50
 msgid "Couldn't clone this emoji"
-msgstr "Не вдалося клонувати цей емодзі"
+msgstr "Не вдалося клонувати цей емоджі"
 
 #. Title of the generic fallback error modal shown when cloning a sticker fails.
 #: src/features/app/components/alerts/ExpressionCloneFailedModal.tsx:54
@@ -9805,7 +9809,7 @@ msgstr "Не вдалося видалити цей канал"
 #. Title of the generic fallback error modal shown when deleting a custom emoji fails.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:125
 msgid "Couldn't delete this emoji"
-msgstr "Не вдалося видалити цей емодзі"
+msgstr "Не вдалося видалити цей емоджі"
 
 #. Toast shown when deleting a webhook fails.
 #: src/features/webhook/components/WebhookListItem.tsx:35
@@ -9984,7 +9988,7 @@ msgstr "Не вдалося видалити цього друга. Спробу
 #. Title of the generic fallback error modal shown when renaming a custom emoji fails.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:53
 msgid "Couldn't rename this emoji"
-msgstr "Не вдалося перейменувати цей емодзі"
+msgstr "Не вдалося перейменувати цей емоджі"
 
 #. Error modal title shown when resetting the community role hoist order fails.
 #: src/features/guild/components/modals/guild_tabs/GuildRolesTab.tsx:62
@@ -10116,7 +10120,7 @@ msgstr "Не вдалося оновити дозвіл на особисті п
 #. Error modal title shown when toggling whether other communities can clone this server's emojis fails.
 #: src/features/guild/components/alerts/CloneSettingUpdateFailedModal.tsx:9
 msgid "Couldn't update emoji cloning"
-msgstr "Не вдалося оновити клонування емодзі"
+msgstr "Не вдалося оновити клонування емоджі"
 
 #. Title of the error modal shown when toggling mention suppression bypass fails.
 #: src/features/ui/action_menu/items/StaffUserControlsMenuItems.tsx:24
@@ -10302,7 +10306,7 @@ msgstr "Створити приватний чат"
 #. Permission name: allows uploading custom emoji and stickers.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:390
 msgid "Create emoji & stickers"
-msgstr "Створювати емодзі та стікери"
+msgstr "Створювати емоджі та стікери"
 
 #. Accessible label for the create-favorite-category form.
 #: src/features/expressions/components/modals/CreateFavoriteCategoryModal.tsx:16
@@ -11374,14 +11378,14 @@ msgstr "Видалити спільноту"
 #. Confirmation modal title for deleting a custom emoji.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:196
 msgid "Delete emoji"
-msgstr "Видалити емодзі"
+msgstr "Видалити емоджі"
 
 #. Accessible label for deleting a custom emoji from the grid view.
 #. Accessible label for deleting a custom emoji from the list view.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:220
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:224
 msgid "Delete emoji {emojiName}"
-msgstr "Видалити емодзі {emojiName}"
+msgstr "Видалити емоджі {emojiName}"
 
 #. Destructive button in the community-folder settings modal footer that removes the folder (communities inside are uncategorized).
 #: src/features/guild/components/modals/GuildFolderSettingsModal.tsx:86
@@ -12792,7 +12796,7 @@ msgstr "Область для перетягування файлів"
 
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:471
 msgid "Drag and drop emoji files here"
-msgstr "Перетягніть файли емодзі сюди"
+msgstr "Перетягніть файли емоджі сюди"
 
 #. Permission description in the role/permission editor for the Move Members permission. The target channel must already be accessible to the member being moved. This permission also covers forcing a member out of voice entirely.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:108
@@ -13085,7 +13089,7 @@ msgstr "Редагувати примітку"
 #. Permission description in the role/permission editor for the Manage Emoji & Stickers permission. Lets the member moderate expressions uploaded by anyone in the community.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:53
 msgid "Edit or delete emoji and stickers created by other members."
-msgstr "Редагувати або видаляти емодзі та стікери, створені іншими учасниками."
+msgstr "Редагувати або видаляти емоджі та стікери, створені іншими учасниками."
 
 #. Permission description in the channel-scoped permissions editor for the Manage Permissions permission. "Overwrites" are per-channel permission overrides.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:201
@@ -13356,18 +13360,18 @@ msgstr "Вбудований вміст показано"
 #: src/features/theme_studio/sections/TokenGroups.ts:114
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:162
 msgid "Emoji"
-msgstr "Емодзі"
+msgstr "Емоджі"
 
 #. Community settings tab for managing custom emoji uploaded to the community.
 #: src/features/user/components/settings_utils/GuildSettingsConstants.ts:36
 msgctxt "community-settings-tab"
 msgid "Emoji"
-msgstr "Емодзі"
+msgstr "Емоджі"
 
 #. TTS substitution token spoken in place of a custom emoji. {emojiName} is the emoji shortcode without colons. Lowercase, mid-sentence.
 #: src/features/voice/utils/TtsTextFormatter.ts:37
 msgid "emoji {emojiName}"
-msgstr "емодзі {emojiName}"
+msgstr "емоджі {emojiName}"
 
 #. Settings search entry label for opting into the emoji and sticker cloning shortcuts.
 #: src/features/user/components/settings_utils/search_index/AdvancedSettingsIndex.ts:31
@@ -13377,12 +13381,12 @@ msgstr "Ярлики для клонування емодзі та стікер�
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:351
 msgid "Emoji autocomplete"
-msgstr "Автозаповнення емодзі"
+msgstr "Автозаповнення емоджі"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:431
 msgid "Emoji button"
-msgstr "Кнопка емодзі"
+msgstr "Кнопка емоджі"
 
 #. Audit log entry label. A custom emoji was added to the community.
 #: src/features/app/config/AuditLogConstants.ts:103
@@ -13392,22 +13396,22 @@ msgstr "Емодзі створено"
 #. Audit log entry label. A custom emoji was removed from the community.
 #: src/features/app/config/AuditLogConstants.ts:111
 msgid "Emoji deleted"
-msgstr "Емодзі видалено"
+msgstr "Емоджі видалено"
 
 #. Placeholder in the custom emoji rename text field.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:37
 msgid "Emoji name"
-msgstr "Назва емодзі"
+msgstr "Назва емоджі"
 
 #. Validation error for custom emoji names.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:41
 msgid "Emoji name must be at least 2 characters long"
-msgstr "Назва емодзі має містити щонайменше 2 символи"
+msgstr "Назва емоджі має містити щонайменше 2 символи"
 
 #. Validation error for custom emoji names.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:45
 msgid "Emoji name must be at most 32 characters long"
-msgstr "Назва емодзі має бути не довшою ніж 32 символи"
+msgstr "Назва емоджі має бути не довшою ніж 32 символи"
 
 #. Description in the community emoji upload section. {maxSize} is the formatted size limit.
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:97
@@ -13417,31 +13421,31 @@ msgstr "Назви емодзі мають містити щонайменше 2
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:129
 msgid "Emoji picker"
-msgstr "Вибір емодзі"
+msgstr "Вибір емоджі"
 
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:451
 msgid "Emoji slots"
-msgstr "Слоти для емодзі"
+msgstr "Слоти для емоджі"
 
 #. Title of the error modal shown when the target community has no free emoji slots.
 #: src/features/app/components/alerts/ExpressionCloneFailedModal.tsx:30
 msgid "Emoji slots are full"
-msgstr "Слоти для емодзі заповнені"
+msgstr "Слоти для емоджі заповнені"
 
 #. Status label shown when the target community has no available emoji slots.
 #: src/features/ui/action_menu/items/CloneEmojiMenuItem.tsx:38
 msgid "Emoji slots full"
-msgstr "Слоти для емодзі заповнені"
+msgstr "Слоти для емоджі заповнені"
 
 #. Audit log entry label. A custom emoji was renamed or edited.
 #: src/features/app/config/AuditLogConstants.ts:107
 msgid "Emoji updated"
-msgstr "Емодзі оновлено"
+msgstr "Емоджі оновлено"
 
 #. Generic tab / section / category label for emojis.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:242
 msgid "Emojis"
-msgstr "Емодзі"
+msgstr "Емоджі"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:371
@@ -14689,7 +14693,7 @@ msgstr "Не вдалося завантажити авторизовані за
 
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:444
 msgid "Failed to load emojis. Try again later."
-msgstr "Не вдалося завантажити емодзі. Спробуйте пізніше."
+msgstr "Не вдалося завантажити емоджі. Спробуйте пізніше."
 
 #. Error message in the gift inventory tab.
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:103
@@ -14763,7 +14767,7 @@ msgstr "Не вдалося закріпити повідомлення"
 #. Error message in the guild emoji tab.
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:56
 msgid "Failed to prepare emojis"
-msgstr "Не вдалося підготувати емодзі"
+msgstr "Не вдалося підготувати емоджі"
 
 #. Toast error shown by image-cropping uploaders (avatar, banner, community icon) when the cropped image cannot be processed.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:405
@@ -14909,12 +14913,12 @@ msgstr "Не вдалося завантажити власний звук"
 #. Error message in the emoji upload failure modal. startLabel is a chunk label like "#1"; errorMsg is the server error.
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:64
 msgid "Failed to upload emojis starting at {startLabel}: {errorMsg}"
-msgstr "Не вдалося завантажити емодзі, починаючи з {startLabel}: {errorMsg}"
+msgstr "Не вдалося завантажити емоджі, починаючи з {startLabel}: {errorMsg}"
 
 #. Error message in the guild emoji tab.
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:60
 msgid "Failed to upload emojis. Try again."
-msgstr "Не вдалося завантажити емодзі. Спробуйте ще раз."
+msgstr "Не вдалося завантажити емоджі. Спробуйте ще раз."
 
 #. IAR modal: rule description.
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:237
@@ -15187,7 +15191,7 @@ msgstr "Завершення налаштування камери..."
 #. Label in the channel and chat emoji picker search bar.
 #: src/features/channel/components/emoji_picker/EmojiPickerSearchBar.tsx:14
 msgid "Find the emoji of your dreams"
-msgstr "Знайдіть емодзі своєї мрії"
+msgstr "Знайдіть емоджі своєї мрії"
 
 #. Label in the channel and chat sticker picker search bar.
 #: src/features/channel/components/sticker_picker/StickerPickerSearchBar.tsx:12
@@ -16282,7 +16286,7 @@ msgstr "Раді, що ви тут, {username}!"
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
 #: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:63
 msgid "Global emoji & sticker access"
-msgstr "Доступ до глобальних емодзі та стікерів"
+msgstr "Доступ до глобальних емоджі та стікерів"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:81
@@ -18039,7 +18043,7 @@ msgstr "Insert"
 #. Accessible label for the smiley button that opens the emoji picker beside the channel topic input.
 #: src/features/channel/components/modals/channel_tabs/channel_overview_tab/ChannelOverviewTopicEditor.tsx:44
 msgid "Insert emoji"
-msgstr "Вставити емодзі"
+msgstr "Вставити емоджі"
 
 #. CTA card body in the screen-share picker promoting the desktop app. {productName} is Fluxer.
 #: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:16
@@ -18139,7 +18143,7 @@ msgstr "Недійсні дозволи бота."
 #. Title of the error modal shown when a custom emoji name fails validation.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:49
 msgid "Invalid emoji name"
-msgstr "Недійсна назва емодзі"
+msgstr "Недійсна назва емоджі"
 
 #. Gift redemption error modal title for an invalid or already used code.
 #: src/features/gift/commands/GiftCommands.tsx:32
@@ -21262,7 +21266,7 @@ msgstr "Кнопка «Більше»"
 #. Submenu label that contains additional emoji context menu actions.
 #: src/features/ui/action_menu/items/EmojiContextMenuItems.tsx:52
 msgid "More emoji actions"
-msgstr "Більше дій з емодзі"
+msgstr "Більше дій з емоджі"
 
 #. Submenu label that contains additional media context menu actions.
 #: src/features/ui/action_menu/MessageContextMenu.tsx:65
@@ -22453,16 +22457,16 @@ msgstr "Вбудовані елементи не повернуто"
 #. Empty-state text in the guild emoji tab.
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:48
 msgid "No emoji slots available"
-msgstr "Немає вільних слотів для емодзі"
+msgstr "Немає вільних слотів для емоджі"
 
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:479
 msgid "No emojis found matching your search."
-msgstr "Не знайдено емодзі, що відповідають вашому пошуку."
+msgstr "Не знайдено емоджі, що відповідають вашому пошуку."
 
 #. Empty-state text in the channel and chat emoji picker.
 #: src/features/channel/components/EmojiPicker.tsx:62
 msgid "No emojis match that search"
-msgstr "Немає емодзі, що відповідають цьому пошуку"
+msgstr "Немає емоджі, що відповідають цьому пошуку"
 
 #. Empty-state title in entrance sound settings. The selected scope does not have its own entrance sound yet.
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:609
@@ -22875,7 +22879,7 @@ msgstr "Приглушення шуму"
 #. Section heading for static emoji in community emoji settings.
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:102
 msgid "Non-animated emoji ({emojiCount})"
-msgstr "Неанімовані емодзі ({emojiCount})"
+msgstr "Неанімовані емоджі ({emojiCount})"
 
 #: src/features/input/utils/KeybindUtils.ts:109
 msgctxt "keyboard-key-name"
@@ -23620,13 +23624,13 @@ msgstr "Лише відкриті приватні чати"
 #. Action that opens the emoji URL in an external browser.
 #: src/features/ui/action_menu/items/EmojiContextMenuItems.tsx:40
 msgid "Open emoji in browser"
-msgstr "Відкрити емодзі в браузері"
+msgstr "Відкрити емоджі в браузері"
 
 #. Accessible label for the emoji picker trigger button in the forward modal comment field.
 #: src/features/messaging/components/modals/ForwardModal.tsx:103
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:27
 msgid "Open emoji picker"
-msgstr "Відкрити панель емодзі"
+msgstr "Відкрити панель емоджі"
 
 #: src/features/voice/components/VoiceSettingsMenus.tsx:862
 msgid "Open event sink"
@@ -24403,7 +24407,9 @@ msgstr "Призупиняти попередній перегляд, коли F
 #. Description shown for the emoji toggle while reduced motion is active.
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx:81
 msgid "Paused by reduced motion. Turn on to keep animated emojis playing."
-msgstr "Призупинено через зменшення руху. Увімкніть, щоб анімовані емодзі відтворювалися."
+msgstr ""
+"Призупинено через зменшення руху. Увімкніть, щоб анімовані емоджі "
+"відтворювалися."
 
 #. Description shown for the GIF toggle while reduced motion is active.
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx:85
@@ -24919,7 +24925,7 @@ msgstr "Відтворити"
 #. Short label in the animation tab. Keep it concise.
 #: src/features/user/components/modals/tabs/accessibility_tab/AnimationTab.tsx:48
 msgid "Play animated emojis"
-msgstr "Відтворювати анімовані емодзі"
+msgstr "Відтворювати анімовані емоджі"
 
 #. Short label in the accessibility tab. Keep it concise.
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:71
@@ -25753,7 +25759,7 @@ msgstr "Видалити особисті нотатки"
 #. Optional checkbox in the delete emoji modal. CDN means content delivery network.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:208
 msgid "Purge this emoji from storage and CDN"
-msgstr "Видалити цей емодзі зі сховища та CDN"
+msgstr "Видалити цей емоджі зі сховища та CDN"
 
 #. Staff-only checkbox in the delete-sticker confirmation.
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:39
@@ -26940,7 +26946,7 @@ msgstr "Форма перейменування каналу"
 #. Title for the small popout used to rename a custom emoji.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:284
 msgid "Rename emoji"
-msgstr "Перейменувати емодзі"
+msgstr "Перейменувати емоджі"
 
 #. Activity log detail line under a community settings update, shown when the community name changed. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person. {oldName} is the previous community name and {newName} is the new community name, both shown in bold. The app adds the bold, so do not add ** or <b>.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:46
@@ -28607,7 +28613,7 @@ msgstr "Пошук країн…"
 #. Button or menu action label in the guild emoji tab. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:93
 msgid "Search emojis"
-msgstr "Пошук емодзі"
+msgstr "Пошук емоджі"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:231
@@ -30087,7 +30093,7 @@ msgstr "Показувати дату створення замість дати
 #. Short label for an advanced message input preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:92
 msgid "Show custom emojis in expression autocomplete"
-msgstr "Показувати власні емодзі в автозаповненні виразів"
+msgstr "Показувати власні емоджі в автозаповненні виразів"
 
 #. Label in the avatar uploader.
 #: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:78
@@ -30134,12 +30140,12 @@ msgstr "Показувати вбудований вміст і попередн
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:55
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:124
 msgid "Show emoji button"
-msgstr "Показувати кнопку емодзі"
+msgstr "Показувати кнопку емоджі"
 
 #. Label in the display tab.
 #: src/features/user/components/modals/tabs/chat_settings_tab/DisplayTab.tsx:67
 msgid "Show emoji reactions on messages"
-msgstr "Показувати реакції емодзі на повідомленнях"
+msgstr "Показувати реакції емоджі на повідомленнях"
 
 #. Short label for an advanced media button preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:80
@@ -31015,7 +31021,7 @@ msgstr "Розпродано"
 #. Title of the error modal shown after some emoji uploads fail.
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:69
 msgid "Some emojis couldn't be added"
-msgstr "Деякі емодзі не вдалося додати"
+msgstr "Деякі емоджі не вдалося додати"
 
 #. Body of the file-too-large alert when multiple files exceed the per-file size limit. maxSizeFormatted is the limit formatted with units.
 #: src/features/messaging/components/alerts/FileSizeTooLargeModal.tsx:18
@@ -32267,7 +32273,9 @@ msgstr "Режим SVC"
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:387
 msgid "Swap common text faces such as :) and <3 for emoji when sending messages"
-msgstr "Замінюйте звичайні текстові смайли, такі як :) і <3, на емодзі під час надсилання повідомлень"
+msgstr ""
+"Замінюйте звичайні текстові смайли, такі як :) і <3, на емоджі під час "
+"надсилання повідомлень"
 
 #. Country name. EU member state in the illegal-content report country dropdown.
 #: src/features/moderation/components/report/OptionDescriptors.ts:215
@@ -33660,7 +33668,9 @@ msgstr "Це не схоже на дійсну відповідь шаблону
 #. Generic per-file error text shown when preparing an emoji upload fails.
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:89
 msgid "This emoji could not be prepared. Try another file or try again in a moment."
-msgstr "Цей емодзі не вдалося підготувати. Спробуйте інший файл або повторіть спробу пізніше."
+msgstr ""
+"Цей емоджі не вдалося підготувати. Спробуйте інший файл або повторіть спробу "
+"пізніше."
 
 #. Label above the community an emoji comes from in the emoji info card.
 #: src/features/expressions/components/ExpressionInfoCard.tsx:71
@@ -33672,7 +33682,7 @@ msgstr "Цей емодзі з"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:61
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:133
 msgid "This emoji no longer exists"
-msgstr "Цього емодзі більше не існує"
+msgstr "Цього емоджі більше не існує"
 
 #. Title of the error modal shown when the source emoji or sticker no longer exists.
 #: src/features/app/components/alerts/ExpressionCloneFailedModal.tsx:42
@@ -33692,7 +33702,10 @@ msgstr "Це поле містить помилку"
 #. Error text for animated emoji or SVG uploads that exceed the file size limit. {fileSize} and {maxSize} are formatted file sizes.
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:77
 msgid "This file is {fileSize}, over the {maxSize} limit. Animated emojis and SVGs must already be small enough to upload. Choose a smaller file or shorten the animation."
-msgstr "Цей файл має розмір {fileSize}, що перевищує ліміт у {maxSize}. Анімовані емодзі та SVG-файли вже мають бути достатньо малими для завантаження. Виберіть менший файл або скоротіть анімацію."
+msgstr ""
+"Цей файл має розмір {fileSize}, що перевищує ліміт у {maxSize}. Анімовані "
+"емоджі та SVG-файли вже мають бути достатньо малими для завантаження. "
+"Виберіть менший файл або скоротіть анімацію."
 
 #. Body of the sticker upload size error modal for animated files or SVGs. {fileSize} and {maxSize} are formatted file sizes.
 #: src/features/expressions/components/modals/AddGuildStickerModal.tsx:47
@@ -33776,7 +33789,7 @@ msgstr "Можливо, термін дії запрошення минув аб
 #. Description of a custom emoji from a community the viewer is not a member of.
 #: src/features/expressions/components/ExpressionInfoCard.tsx:61
 msgid "This is a custom emoji from a community."
-msgstr "Це власний емодзі зі спільноти."
+msgstr "Це власний емоджі зі спільноти."
 
 #. Description of a custom sticker from a community the viewer is not a member of.
 #: src/features/expressions/components/ExpressionInfoCard.tsx:65
@@ -34459,7 +34472,7 @@ msgstr "Вмикайте та вимикайте перемикачі, щоб п
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:173
 msgid "Toggle the emoji picker"
-msgstr "Відкрити/закрити панель емодзі"
+msgstr "Відкрити/закрити панель емоджі"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:177
@@ -34981,7 +34994,7 @@ msgstr "Увімкнути конфіденційність трансляції
 #: src/features/user/components/modals/tabs/chat_settings_tab/ChatSettingsTabInputTab.tsx:11
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:363
 msgid "Turn text smileys into emoji"
-msgstr "Увімкнути перетворення текстових смайликів на емодзі"
+msgstr "Увімкнути перетворення текстових смайликів на емоджі"
 
 #. Activity log detail line under a community settings update, shown when the Mature content setting of the community was turned off. It continues the entry summary, so it has no subject. It is a past tense record of a change the actor in the summary already made, never an instruction to the reader. Do not write it as a command, a button label or in first or second person.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogGuildMessages.ts:256
@@ -35200,7 +35213,8 @@ msgstr "Не вдалося завантажити банер профілю, з
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:272
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:328
 msgid "Unable to prepare any emojis for upload. The following errors occurred:"
-msgstr "Не вдалося підготувати жодного емодзі для завантаження. Сталися такі помилки:"
+msgstr ""
+"Не вдалося підготувати жодного емоджі для завантаження. Сталися такі помилки:"
 
 #. Error message in the authentication backup codes view modal. Keep the tone plain and specific.
 #. Error message in the email change modal.
@@ -35433,7 +35447,7 @@ msgstr "Налагоджувач розгортання посилань"
 #. Short label in the markdown tab. Keep it concise.
 #: src/features/user/components/modals/tabs/component_gallery_tab/MarkdownTab.tsx:89
 msgid "Unicode emojis"
-msgstr "Емодзі Unicode"
+msgstr "Емоджі Unicode"
 
 #. Codec description in the screen share codec policy menu, used for the universal fallback codec.
 #: src/features/voice/utils/ScreenShareCodecPolicy.ts:20
@@ -35591,7 +35605,11 @@ msgstr "unknown-role"
 #: src/features/channel/components/EmojiPicker.tsx:176
 #: src/features/channel/components/MobileEmojiPicker.tsx:212
 msgid "Unlock {lockedEmojiCount, plural, one {# custom emoji} other {# custom emojis}} from {communityCount, plural, one {# community} other {# communities}} with {PREMIUM_PRODUCT_NAME}."
-msgstr "Розблокуйте {lockedEmojiCount, plural, one {# власний емодзі} few {# власні емодзі} many {# власних емодзі} other {# власних емодзі}} із {communityCount, plural, one {# спільноти} few {# спільнот} many {# спільнот} other {# спільнот}} за допомогою {PREMIUM_PRODUCT_NAME}."
+msgstr ""
+"Розблокуйте {lockedEmojiCount, plural, one {# власний емоджі} few {# власні "
+"емоджі} many {# власних емоджі} other {# власних емоджі}} із "
+"{communityCount, plural, one {# спільноти} few {# спільнот} many {# "
+"спільнот} other {# спільнот}} за допомогою {PREMIUM_PRODUCT_NAME}."
 
 #: src/features/channel/components/MobileStickersPicker.tsx:160
 #: src/features/channel/components/StickersPicker.tsx:169
@@ -35601,7 +35619,9 @@ msgstr "Розблокуйте {lockedStickerCount, plural, one {# стікер}
 #. Premium upsell banner shown in emoji and sticker pickers.
 #: src/features/channel/components/PremiumUpsellBanner.tsx:24
 msgid "Unlock all custom emojis and stickers across all communities with {premiumProductName}"
-msgstr "Розблокуйте всі власні емодзі та стікери в усіх спільнотах з {premiumProductName}"
+msgstr ""
+"Розблокуйте всі власні емоджі та стікери в усіх спільнотах з "
+"{premiumProductName}"
 
 #. Premium upsell shown when sending custom emoji in a DM without a subscription.
 #: src/features/expressions/utils/ExpressionPermissionUtils.ts:16
@@ -36117,7 +36137,7 @@ msgstr "Завантажити безпосередньо в {displayName}"
 
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:454
 msgid "Upload emoji"
-msgstr "Завантажити емодзі"
+msgstr "Завантажити емоджі"
 
 #. Button or menu action label in the channel and chat mobile textarea plus bottom sheet. Keep it concise.
 #. Plus menu item that opens the system file picker to attach a file.
@@ -36227,7 +36247,7 @@ msgstr "Завантажується {count, plural, one {# файл} few {# ф�
 
 #: src/features/emoji/components/modals/EmojiUploadModal.tsx:26
 msgid "Uploading emojis"
-msgstr "Завантаження емодзі"
+msgstr "Завантаження емоджі"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -36351,7 +36371,7 @@ msgstr "Використовуйте електронну адресу, яка �
 #. Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.
 #: src/features/app/components/dialogs/components/FeatureComparisonTable.tsx:59
 msgid "Use animated emojis"
-msgstr "Використовувати анімовані емодзі"
+msgstr "Використовувати анімовані емоджі"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Short label for an advanced desktop scrolling toggle.
@@ -36420,17 +36440,17 @@ msgstr "Використовувати емодзі з інших спільно
 #. Premium upsell shown when sending external emoji without a subscription.
 #: src/features/expressions/utils/ExpressionPermissionUtils.ts:24
 msgid "Use emoji from other communities with {premiumProductName}"
-msgstr "Використовуйте емодзі з інших спільнот із {premiumProductName}"
+msgstr "Використовуйте емоджі з інших спільнот із {premiumProductName}"
 
 #. Permission description in the role/permission editor for the Use External Emoji permission. "Other communities" means custom emoji uploaded in a different Fluxer community.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:78
 msgid "Use emoji from other communities."
-msgstr "Використовувати емодзі з інших спільнот."
+msgstr "Використовувати емоджі з інших спільнот."
 
 #. Permission name: allows using emoji from other communities.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:430
 msgid "Use external emoji"
-msgstr "Використовувати зовнішні емодзі"
+msgstr "Використовувати зовнішні емоджі"
 
 #. Permission name: allows using stickers from other communities.
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:434
@@ -38958,7 +38978,7 @@ msgstr "Ви не можете це видалити"
 #. Title of the error modal shown when the user lacks permission to delete a custom emoji.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:141
 msgid "You can't delete this emoji"
-msgstr "Ви не можете видалити цей емодзі"
+msgstr "Ви не можете видалити цей емоджі"
 
 #. Title of the error modal shown when a voice moderation action is blocked by missing permissions.
 #: src/features/app/components/alerts/VoiceMemberModerationFailedModal.tsx:13
@@ -39014,7 +39034,7 @@ msgstr "Ви не можете видалити цей дозвіл, бо тод
 #. Title of the error modal shown when the user lacks permission to rename a custom emoji.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:69
 msgid "You can't rename this emoji"
-msgstr "Ви не можете перейменувати цей емодзі"
+msgstr "Ви не можете перейменувати цей емоджі"
 
 #. Body of the friend-request error modal when the target is the current user.
 #. Error toast when sending a friend request fails because the target is the current user.
@@ -39155,7 +39175,7 @@ msgstr "У вас немає дозволу на видалення цього �
 #. Body of the error modal shown when the user lacks permission to delete a custom emoji.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:145
 msgid "You don't have permission to delete this emoji."
-msgstr "У вас немає дозволу на видалення цього емодзі."
+msgstr "У вас немає дозволу на видалення цього емоджі."
 
 #. Body of the error modal shown when a voice moderation action is blocked by missing permissions.
 #: src/features/app/components/alerts/VoiceMemberModerationFailedModal.tsx:17
@@ -39170,7 +39190,9 @@ msgstr "У вас немає дозволу приєднатися до цьог
 #. Body of the error modal shown when the user lacks permission to rename a custom emoji.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:73
 msgid "You don't have permission to rename this emoji. The name was reverted to what it was before."
-msgstr "У вас немає дозволу перейменовувати цей емодзі. Назву було повернено до попередньої."
+msgstr ""
+"У вас немає дозволу перейменовувати цей емоджі. Назву було повернено до "
+"попередньої."
 
 #. Body of the error modal shown when the user is banned from a discovery community.
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx:42
@@ -39627,7 +39649,9 @@ msgstr "Ви досягли ліміту групових чатів"
 #. Emoji upload limit message in community emoji settings. Do not suggest that communities can be upgraded.
 #: src/features/guild/components/modals/guild_tabs/GuildEmojiTab.tsx:52
 msgid "You've reached the maximum number of emojis. Delete some existing emojis to make room."
-msgstr "Ви досягли максимальної кількості емодзі. Видаліть деякі наявні емодзі, щоб звільнити місце."
+msgstr ""
+"Ви досягли максимальної кількості емоджі. Видаліть деякі наявні емоджі, щоб "
+"звільнити місце."
 
 #. Sticker upload limit message in community sticker settings. Do not suggest that communities can be upgraded.
 #: src/features/guild/components/modals/guild_tabs/GuildStickersTab.tsx:65
