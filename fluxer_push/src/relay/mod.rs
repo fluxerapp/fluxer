@@ -29,6 +29,7 @@ use std::time::{Duration, Instant};
 use tracing::{info, warn};
 
 pub const APNS_ROUTE: &str = "/relay/v1/apns/{app_id}/{environment}/{device_token}";
+pub const APNS_VOIP_ROUTE: &str = "/relay/v1/apns-voip/{app_id}/{environment}/{device_token}";
 pub const FCM_ROUTE: &str = "/relay/v1/fcm/{app_id}/{device_token}";
 
 const AES128GCM: &str = "aes128gcm";
@@ -103,6 +104,7 @@ pub fn router(state: Arc<AppState>) -> Router {
     let sidecar = Arc::clone(&state.sidecar);
     Router::new()
         .route(APNS_ROUTE, post(apns_route))
+        .route(APNS_VOIP_ROUTE, post(apns_voip_route))
         .route(FCM_ROUTE, post(fcm_route))
         .fallback(unmatched_route)
         .with_state(state)
@@ -118,17 +120,37 @@ async fn unmatched_route(State(state): State<Arc<AppState>>) -> Response {
 async fn apns_route(
     State(state): State<Arc<AppState>>,
     ConnectInfo(peer): ConnectInfo<SocketAddr>,
-    Path((app_id, environment, device_token)): Path<(String, String, String)>,
+    Path(path): Path<(String, String, String)>,
     headers: HeaderMap,
     body: Body,
 ) -> Response {
-    let environment = ProviderEnvironment::from_label(&environment);
+    apns_leg(&state, RelayLeg::Apns, peer, path, headers, body).await
+}
+
+async fn apns_voip_route(
+    State(state): State<Arc<AppState>>,
+    ConnectInfo(peer): ConnectInfo<SocketAddr>,
+    Path(path): Path<(String, String, String)>,
+    headers: HeaderMap,
+    body: Body,
+) -> Response {
+    apns_leg(&state, RelayLeg::ApnsVoip, peer, path, headers, body).await
+}
+
+async fn apns_leg(
+    state: &AppState,
+    leg: RelayLeg,
+    peer: SocketAddr,
+    (app_id, environment, device_token): (String, String, String),
+    headers: HeaderMap,
+    body: Body,
+) -> Response {
     relay(
-        &state,
+        state,
         Incoming {
-            leg: RelayLeg::Apns,
+            leg,
             app_id,
-            environment,
+            environment: ProviderEnvironment::from_label(&environment),
             device_token,
             peer,
         },
@@ -271,14 +293,16 @@ async fn forward(
 fn resolve<'a>(state: &'a AppState, incoming: &Incoming) -> Result<Target<'a>, Rejection> {
     let unknown = Rejection::new(Reason::AppUnknown);
     match incoming.leg {
-        RelayLeg::Apns => {
+        RelayLeg::Apns | RelayLeg::ApnsVoip => {
             let cfg = state.cfg.apns.as_ref().ok_or(unknown)?;
             let environment = incoming.environment.ok_or(unknown)?;
+            let topic = match incoming.leg {
+                RelayLeg::ApnsVoip => cfg.voip_topic_for(&incoming.app_id, environment),
+                _ => cfg.topic_for(&incoming.app_id, environment),
+            };
             Ok(Target::Apns {
                 environment,
-                topic: cfg
-                    .topic_for(&incoming.app_id, environment)
-                    .ok_or(unknown)?,
+                topic: topic.ok_or(unknown)?,
             })
         }
         RelayLeg::Fcm => {
@@ -303,12 +327,22 @@ async fn send_apns(
         .apns
         .as_ref()
         .ok_or(Rejection::new(Reason::AppUnknown))?;
+    let (headers, body) = match incoming.leg {
+        RelayLeg::ApnsVoip => (
+            envelope::apns_voip_headers(),
+            envelope::apns_voip_body(payload)?,
+        ),
+        _ => (
+            envelope::apns_headers(delivery.urgency, unix_seconds(), delivery.ttl_seconds),
+            envelope::apns_body(payload, delivery.urgency)?,
+        ),
+    };
     let request = ApnsRequest {
         environment,
         topic,
         device_token: &incoming.device_token,
-        headers: &envelope::apns_headers(delivery.urgency, unix_seconds(), delivery.ttl_seconds),
-        body: envelope::apns_body(payload, delivery.urgency)?,
+        headers: &headers,
+        body,
     };
     let outcome = vendor::send_apns(
         &state.apns_http,
@@ -318,7 +352,7 @@ async fn send_apns(
         request,
     )
     .await;
-    finish(state, RelayLeg::Apns, outcome)
+    finish(state, incoming.leg, outcome)
 }
 
 async fn send_fcm(
@@ -390,7 +424,7 @@ fn refusal_reason(refusal: &Refusal) -> Reason {
 
 fn device_token_is_shaped(leg: RelayLeg, device_token: &str) -> bool {
     match leg {
-        RelayLeg::Apns => {
+        RelayLeg::Apns | RelayLeg::ApnsVoip => {
             device_token.len() == APNS_DEVICE_TOKEN_LEN
                 && device_token.bytes().all(|byte| byte.is_ascii_hexdigit())
         }

@@ -75,8 +75,10 @@ pub fn route_of(sub: &Subscription) -> Option<Route> {
         Platform::WebPush | Platform::AndroidUnifiedPush => Some(Route::WebPush),
         Platform::IosApns if sub.is_web_push_registration() => Some(Route::WebPush),
         Platform::AndroidFcm if sub.is_web_push_registration() => Some(Route::WebPush),
+        Platform::IosApnsVoip if sub.is_web_push_registration() => Some(Route::WebPush),
         Platform::IosApns => Some(Route::LegacyApns),
         Platform::AndroidFcm => Some(Route::LegacyFcm),
+        Platform::IosApnsVoip => None,
     }
 }
 
@@ -115,6 +117,7 @@ pub fn provider_of(platform: Platform) -> Provider {
         Platform::AndroidUnifiedPush => Provider::UnifiedPush,
         Platform::AndroidFcm => Provider::Fcm,
         Platform::IosApns => Provider::Apns,
+        Platform::IosApnsVoip => Provider::ApnsVoip,
     }
 }
 

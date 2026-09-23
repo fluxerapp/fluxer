@@ -193,12 +193,16 @@ send_notification_to_subscription(UserId, Subscription, Payload) ->
         platform => Platform,
         web_push_shape => WebPushShape
     }),
-    case WebPushShape of
-        true ->
-            push_sender_delivery:send_webpush_notification(UserId, Subscription, Payload);
-        false ->
-            send_platform_notification(UserId, Platform, Subscription, Payload)
-    end.
+    route_subscription(UserId, Platform, WebPushShape, Subscription, Payload).
+
+-spec route_subscription(integer(), binary(), boolean(), map(), map()) -> false | {true, map()}.
+route_subscription(UserId, <<"ios_apns_voip">>, _WebPushShape, _Subscription, _Payload) ->
+    logger:debug("Push: skipping a VoIP subscription", #{user_id => UserId}),
+    false;
+route_subscription(UserId, _Platform, true, Subscription, Payload) ->
+    push_sender_delivery:send_webpush_notification(UserId, Subscription, Payload);
+route_subscription(UserId, Platform, false, Subscription, Payload) ->
+    send_platform_notification(UserId, Platform, Subscription, Payload).
 
 -spec send_platform_notification(integer(), binary(), map(), map()) -> false | {true, map()}.
 send_platform_notification(UserId, <<"web_push">>, Subscription, Payload) ->
@@ -485,6 +489,25 @@ missing_key_fields_do_not_take_web_push_path_test() ->
 empty_key_does_not_take_web_push_path_test() ->
     Subscription = maps:put(<<"auth_key">>, <<>>, web_push_row(<<"android_fcm">>)),
     ?assertEqual(fcm, routed_target(Subscription)).
+
+voip_row_is_skipped_test() ->
+    ?assertEqual({0, 0, 0}, routed_target(web_push_row(<<"ios_apns_voip">>))).
+
+voip_row_without_keys_is_skipped_test() ->
+    ?assertEqual({0, 0, 0}, routed_target(legacy_row(<<"ios_apns_voip">>))).
+
+send_subscriptions_skips_voip_rows_test() ->
+    ok = meck:new(push_sender_delivery, [passthrough, no_link]),
+    try
+        ok = meck:expect(push_sender_delivery, send_webpush_notification, fun(_U, _S, _P) ->
+            false
+        end),
+        Rows = [web_push_row(<<"ios_apns_voip">>), web_push_row(<<"ios_apns">>)],
+        ?assertEqual([], send_subscriptions(7, #{}, Rows, [])),
+        ?assertEqual(1, meck:num_calls(push_sender_delivery, send_webpush_notification, '_'))
+    after
+        meck:unload(push_sender_delivery)
+    end.
 
 web_push_row_takes_web_push_path_on_unknown_platform_test() ->
     ?assertEqual(web_push, routed_target(web_push_row(<<"desktop_widget">>))).

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::job::{ClearJob, MessageJob};
+use crate::job::{ClearJob, MessageJob, RingJob};
 use crate::metrics::PayloadShrink;
 use crate::unix_seconds;
 use serde_json::{Map, Value, json};
@@ -8,6 +8,7 @@ use serde_json::{Map, Value, json};
 const WEB_PUSH_MARKER: u64 = 8030;
 const CLEAR_TYPE: &str = "notification_clear";
 const CLEAR_ACTION: &str = "clear_channel";
+const RING_TYPE: &str = "call_ring";
 const FALLBACK_TAG: &str = "fluxer-message";
 const FALLBACK_TITLE: &str = "Fluxer";
 const APNS_CATEGORY: &str = "FLUXER_MESSAGE";
@@ -101,6 +102,21 @@ pub fn web_push_clear(job: &ClearJob, badge_count: u32) -> Value {
             "silent": true,
             "close": true,
         },
+    })
+}
+
+pub fn web_push_call_ring(job: &RingJob) -> Value {
+    let data = json!({
+        "type": RING_TYPE,
+        "channel_id": job.channel_id,
+        "message_id": job.message_id,
+        "target_user_id": job.user_id,
+        "started_at_ms": job.started_at_ms,
+    });
+    json!({
+        "web_push": WEB_PUSH_MARKER,
+        "type": RING_TYPE,
+        "data": data,
     })
 }
 
@@ -352,9 +368,28 @@ fn badge_number(value: Option<&Value>) -> Option<u64> {
     }
 }
 
-pub fn is_clear(envelope: &Value) -> bool {
-    envelope.get("type").and_then(Value::as_str) == Some(CLEAR_TYPE)
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum RecordKind {
+    Message,
+    Clear,
+    Ring,
+}
+
+pub fn record_kind(envelope: &Value) -> RecordKind {
+    let kind = envelope.get("type").and_then(Value::as_str);
+    if kind == Some(RING_TYPE) {
+        return RecordKind::Ring;
+    }
+    if kind == Some(CLEAR_TYPE)
         || envelope.get("action").and_then(Value::as_str) == Some(CLEAR_ACTION)
+    {
+        return RecordKind::Clear;
+    }
+    RecordKind::Message
+}
+
+pub fn is_clear(envelope: &Value) -> bool {
+    matches!(record_kind(envelope), RecordKind::Clear)
 }
 
 pub fn fit(envelope: &Value, budget: usize) -> (Vec<u8>, Option<PayloadShrink>) {

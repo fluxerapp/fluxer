@@ -76,15 +76,17 @@ impl Default for Histogram {
 pub enum JobKind {
     Message,
     Clear,
+    Ring,
 }
 
 impl JobKind {
-    pub const ALL: [Self; 2] = [Self::Message, Self::Clear];
+    pub const ALL: [Self; 3] = [Self::Message, Self::Clear, Self::Ring];
 
     pub fn label(self) -> &'static str {
         match self {
             Self::Message => "message",
             Self::Clear => "clear",
+            Self::Ring => "ring",
         }
     }
 }
@@ -114,10 +116,17 @@ pub enum Provider {
     UnifiedPush,
     Fcm,
     Apns,
+    ApnsVoip,
 }
 
 impl Provider {
-    pub const ALL: [Self; 4] = [Self::WebPush, Self::UnifiedPush, Self::Fcm, Self::Apns];
+    pub const ALL: [Self; 5] = [
+        Self::WebPush,
+        Self::UnifiedPush,
+        Self::Fcm,
+        Self::Apns,
+        Self::ApnsVoip,
+    ];
 
     pub fn label(self) -> &'static str {
         match self {
@@ -125,6 +134,7 @@ impl Provider {
             Self::UnifiedPush => "unified_push",
             Self::Fcm => "fcm",
             Self::Apns => "apns",
+            Self::ApnsVoip => "apns_voip",
         }
     }
 }
@@ -161,15 +171,17 @@ impl SendResult {
 pub enum RelayLeg {
     Apns,
     Fcm,
+    ApnsVoip,
 }
 
 impl RelayLeg {
-    pub const ALL: [Self; 2] = [Self::Apns, Self::Fcm];
+    pub const ALL: [Self; 3] = [Self::Apns, Self::Fcm, Self::ApnsVoip];
 
     pub fn label(self) -> &'static str {
         match self {
             Self::Apns => "apns",
             Self::Fcm => "fcm",
+            Self::ApnsVoip => "apns_voip",
         }
     }
 }
@@ -350,6 +362,7 @@ pub struct Metrics {
     relay_vendor_requests: [[AtomicU64; RELAY_RESULT_COUNT]; RELAY_LEG_COUNT],
     relay_rejected: [AtomicU64; REASON_COUNT],
     relay_bucket_drops: [AtomicU64; BUCKET_KEY_COUNT],
+    rings_suppressed: AtomicU64,
     job_duration: [Histogram; JOB_KIND_COUNT],
     rpc_duration: [Histogram; RPC_METHOD_COUNT],
     send_duration: [Histogram; PROVIDER_COUNT],
@@ -383,6 +396,7 @@ impl Metrics {
                 RELAY_LEG_COUNT],
             relay_rejected: [const { AtomicU64::new(0) }; REASON_COUNT],
             relay_bucket_drops: [const { AtomicU64::new(0) }; BUCKET_KEY_COUNT],
+            rings_suppressed: AtomicU64::new(0),
             job_duration: [const { Histogram::new() }; JOB_KIND_COUNT],
             rpc_duration: [const { Histogram::new() }; RPC_METHOD_COUNT],
             send_duration: [const { Histogram::new() }; PROVIDER_COUNT],
@@ -468,6 +482,10 @@ impl Metrics {
 
     pub fn record_bucket_drop(&self, key: BucketKey) {
         self.relay_bucket_drops[key as usize].fetch_add(1, ORDERING);
+    }
+
+    pub fn record_ring_suppressed(&self) {
+        self.rings_suppressed.fetch_add(1, ORDERING);
     }
 
     pub fn set_queue_depth(&self, depth: u64) {
@@ -606,6 +624,11 @@ impl Metrics {
             "key",
             BucketKey::ALL.map(BucketKey::label),
             &self.relay_bucket_drops,
+        )?;
+        render_counter(
+            out,
+            "fluxer_push_rings_suppressed_total",
+            &self.rings_suppressed,
         )?;
         render_gauge(out, "fluxer_push_queue_depth", &self.queue_depth)?;
         render_gauge(out, "fluxer_push_rollout_enabled", &self.rollout_enabled)?;

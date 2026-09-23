@@ -27,7 +27,7 @@
 -define(STATS_TIMEOUT_MS, 1000).
 -define(PRUNE_INTERVAL_MS, 30000).
 
--type kind() :: message | clear.
+-type kind() :: message | clear | ring.
 -type fallback() :: fun(([integer()]) -> term()).
 -type job() :: #{
     kind := kind(),
@@ -283,7 +283,7 @@ send_or_fall_back(Entry, State) ->
     end.
 
 -spec prepare(entry(), state()) -> {skip, state()} | {send, entry(), state()}.
-prepare(#{kind := clear} = Entry, State) ->
+prepare(#{kind := Kind} = Entry, State) when Kind =:= clear; Kind =:= ring ->
     {send, Entry, State};
 prepare(#{user_ids := UserIds} = Entry, #{reads := Reads, active := Active} = State) ->
     #{channel_id := ChannelId, message_id := MessageId, seq := Seq} = Entry,
@@ -537,6 +537,8 @@ settle_if_stale(#{config_version := Version} = Entry, State) ->
     end.
 
 -spec settle(entry(), state()) -> settled().
+settle(#{kind := ring} = Entry, State) ->
+    {keep, Entry, State};
 settle(Entry, State) ->
     case prepare(Entry, State) of
         {skip, State1} ->

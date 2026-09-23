@@ -73,6 +73,7 @@ apply_pending_ringing(PendingUnique, State, DispatchUpdates) ->
             _ -> lists:usort(AlreadyRinging ++ ToAdd)
         end,
     StateWithRinging = State#{pending_ringing => [], ringing => NewRinging},
+    ok = publish_rings(ToAdd, StateWithRinging),
     StateWithTimers = start_ringing_timers(ToAdd, StateWithRinging),
     case ToAdd of
         [] ->
@@ -83,6 +84,55 @@ apply_pending_ringing(PendingUnique, State, DispatchUpdates) ->
         _ ->
             {StateWithTimers, false}
     end.
+
+-spec publish_rings([integer()], map()) -> ok.
+publish_rings([], _State) ->
+    ok;
+publish_rings(UserIds, State) ->
+    ChannelId = maps:get(channel_id, State),
+    MessageId = maps:get(message_id, State),
+    Recipients = maps:get(recipients, State),
+    StartedAt = erlang:system_time(millisecond),
+    ExpiresAt = StartedAt + ?RING_TIMEOUT_MS,
+    _ = proc_lib:spawn(fun() ->
+        publish_ring_jobs(UserIds, Recipients, ChannelId, MessageId, StartedAt, ExpiresAt)
+    end),
+    ok.
+
+-spec publish_ring_jobs(
+    [integer()], [integer()], integer(), integer(), integer(), integer()
+) -> ok.
+publish_ring_jobs(UserIds, Recipients, ChannelId, MessageId, StartedAt, ExpiresAt) ->
+    lists:foreach(
+        fun(UserId) ->
+            publish_ring_job(UserId, Recipients, ChannelId, MessageId, StartedAt, ExpiresAt)
+        end,
+        UserIds
+    ).
+
+-spec publish_ring_job(
+    integer(), [integer()], integer(), integer(), integer(), integer()
+) -> ok.
+publish_ring_job(UserId, Recipients, ChannelId, MessageId, StartedAt, ExpiresAt) ->
+    case ring_suppressed(UserId, Recipients) of
+        true ->
+            ok;
+        false ->
+            _ = push_job_publisher:publish_ring(
+                UserId, ChannelId, MessageId, StartedAt, ExpiresAt
+            ),
+            ok
+    end.
+
+-spec ring_suppressed(integer(), [integer()]) -> boolean().
+ring_suppressed(UserId, Recipients) ->
+    all_blocked(UserId, [Other || Other <- Recipients, Other =/= UserId]).
+
+-spec all_blocked(integer(), [integer()]) -> boolean().
+all_blocked(_UserId, []) ->
+    false;
+all_blocked(UserId, Others) ->
+    lists:all(fun(Other) -> push_eligibility:is_user_blocked(UserId, Other) end, Others).
 
 -spec maybe_dispatch_state_update(map(), map()) -> {map(), boolean()}.
 maybe_dispatch_state_update(PrevState, NewState) ->
@@ -309,3 +359,126 @@ maybe_stop_if_empty(State) ->
 -spec call_has_activity(map()) -> boolean().
 call_has_activity(State) ->
     maps:size(maps:get(voice_states, State)) > 0 orelse maps:get(ringing, State) =/= [].
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+ring_state(Recipients, Ringing, Pending, VoiceStates) ->
+    #{
+        channel_id => 100,
+        message_id => 200,
+        region => undefined,
+        ringing => Ringing,
+        pending_ringing => Pending,
+        recipients => Recipients,
+        voice_states => VoiceStates,
+        ringing_timers => #{},
+        initiator_ready => true,
+        last_call_event => undefined
+    }.
+
+published_ring_args() ->
+    History = meck:history(push_job_publisher),
+    [Args || {_Pid, {push_job_publisher, publish_ring, Args}, _Result} <- History].
+
+published_ring_users() ->
+    lists:usort([UserId || [UserId, _C, _M, _S, _E] <- published_ring_args()]).
+
+mock_ring_publisher() ->
+    ok = meck:new(push_job_publisher, [passthrough, no_link]),
+    meck:expect(push_job_publisher, publish_ring, fun(_U, _C, _M, _S, _E) -> ok end).
+
+apply_pending_ringing_publishes_one_ring_per_new_user_test() ->
+    ok = mock_ring_publisher(),
+    try
+        State = ring_state([1, 2, 3], [], [2, 3], #{}),
+        _ = maybe_dispatch_pending_ringing(State, false),
+        ok = meck:wait(2, push_job_publisher, publish_ring, '_', 2000),
+        ?assertEqual([2, 3], published_ring_users())
+    after
+        meck:unload(push_job_publisher)
+    end.
+
+apply_pending_ringing_publishes_the_frozen_ring_fields_test() ->
+    ok = mock_ring_publisher(),
+    try
+        State = ring_state([1, 2], [], [2], #{}),
+        _ = maybe_dispatch_pending_ringing(State, false),
+        ok = meck:wait(1, push_job_publisher, publish_ring, '_', 2000),
+        [[UserId, ChannelId, MessageId, StartedAt, ExpiresAt]] = published_ring_args(),
+        ?assertEqual({2, 100, 200}, {UserId, ChannelId, MessageId}),
+        ?assertEqual(?RING_TIMEOUT_MS, ExpiresAt - StartedAt)
+    after
+        meck:unload(push_job_publisher)
+    end.
+
+apply_pending_ringing_does_not_publish_for_a_user_already_ringing_test() ->
+    ok = mock_ring_publisher(),
+    try
+        State = ring_state([1, 2], [2], [2], #{}),
+        _ = maybe_dispatch_pending_ringing(State, false),
+        ?assertEqual([], published_ring_args())
+    after
+        meck:unload(push_job_publisher)
+    end.
+
+apply_pending_ringing_does_not_publish_for_a_connected_user_test() ->
+    ok = mock_ring_publisher(),
+    try
+        State = ring_state([1, 2], [], [2], #{2 => #{}}),
+        _ = maybe_dispatch_pending_ringing(State, false),
+        ?assertEqual([], published_ring_args())
+    after
+        meck:unload(push_job_publisher)
+    end.
+
+start_ringing_timers_does_not_publish_test() ->
+    ok = mock_ring_publisher(),
+    try
+        State = ring_state([1, 2], [2], [], #{}),
+        _ = start_ringing_timers([2], State),
+        ?assertEqual([], published_ring_args())
+    after
+        meck:unload(push_job_publisher)
+    end.
+
+publish_ring_jobs_suppresses_a_fully_blocked_ring_test() ->
+    ok = mock_ring_publisher(),
+    ok = meck:new(push_eligibility, [passthrough, no_link]),
+    try
+        ok = meck:expect(push_eligibility, is_user_blocked, fun(_U, _O) -> true end),
+        ok = publish_ring_jobs([2], [1, 2], 100, 200, 1, 2),
+        ?assertEqual([], published_ring_args())
+    after
+        meck:unload(push_eligibility),
+        meck:unload(push_job_publisher)
+    end.
+
+ring_is_suppressed_when_every_other_recipient_is_blocked_test() ->
+    ok = meck:new(push_eligibility, [passthrough, no_link]),
+    try
+        ok = meck:expect(push_eligibility, is_user_blocked, fun(_U, _O) -> true end),
+        ?assertEqual(true, ring_suppressed(2, [1, 2, 3]))
+    after
+        meck:unload(push_eligibility)
+    end.
+
+ring_is_not_suppressed_when_one_other_recipient_is_unblocked_test() ->
+    ok = meck:new(push_eligibility, [passthrough, no_link]),
+    try
+        ok = meck:expect(push_eligibility, is_user_blocked, fun(_U, Other) -> Other =:= 1 end),
+        ?assertEqual(false, ring_suppressed(2, [1, 2, 3]))
+    after
+        meck:unload(push_eligibility)
+    end.
+
+ring_is_not_suppressed_for_a_lone_recipient_test() ->
+    ok = meck:new(push_eligibility, [passthrough, no_link]),
+    try
+        ok = meck:expect(push_eligibility, is_user_blocked, fun(_U, _O) -> true end),
+        ?assertEqual(false, ring_suppressed(2, [2]))
+    after
+        meck:unload(push_eligibility)
+    end.
+
+-endif.

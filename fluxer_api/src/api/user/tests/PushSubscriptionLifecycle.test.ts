@@ -292,6 +292,136 @@ describe('Push Subscription Lifecycle', () => {
 		const mobileDevices = await listMobileDevices(harness, account.token);
 		expect(mobileDevices.devices).toHaveLength(0);
 	});
+	test('VoIP registration stores the PushKit endpoint and encryption keys', async () => {
+		const account = await createTestAccount(harness);
+		const endpoint = 'https://relay.example.com/apns-voip/device-1';
+		const registered = await registerMobileDevice(harness, account.token, {
+			platform: 'ios_apns_voip',
+			token: endpoint,
+			encryption_key: 'voip-p256dh-key',
+			auth_secret: 'voip-auth-secret',
+			app_id: 'stable',
+		});
+		const subscription = await findStoredSubscription(account.userId, registered.device_id);
+		expect(subscription.platform).toBe('ios_apns_voip');
+		expect(subscription.endpoint).toBe(endpoint);
+		expect(subscription.p256dhKey).toBe('voip-p256dh-key');
+		expect(subscription.authKey).toBe('voip-auth-secret');
+	});
+	test('VoIP registration defaults to the production provider environment', async () => {
+		const account = await createTestAccount(harness);
+		const registered = await registerMobileDevice(harness, account.token, {
+			platform: 'ios_apns_voip',
+			token: 'https://relay.example.com/apns-voip/default-environment',
+			encryption_key: 'voip-default-environment-p256dh-key',
+			auth_secret: 'voip-default-environment-auth-secret',
+		});
+		const subscription = await findStoredSubscription(account.userId, registered.device_id);
+		expect(subscription.providerEnvironment).toBe('production');
+	});
+	test('VoIP registration without encryption keys is rejected', async () => {
+		const account = await createTestAccount(harness);
+		await createBuilder(harness, account.token)
+			.post('/users/@me/mobile-devices')
+			.body({
+				platform: 'ios_apns_voip',
+				token: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+			})
+			.expect(HTTP_STATUS.BAD_REQUEST)
+			.execute();
+	});
+	test('VoIP registration with only one encryption key is rejected', async () => {
+		const account = await createTestAccount(harness);
+		await createBuilder(harness, account.token)
+			.post('/users/@me/mobile-devices')
+			.body({
+				platform: 'ios_apns_voip',
+				token: 'https://relay.example.com/apns-voip/half-keys',
+				encryption_key: 'voip-half-p256dh-key',
+			})
+			.expect(HTTP_STATUS.BAD_REQUEST)
+			.execute();
+	});
+	test('VoIP and standard APNs registrations coexist as separate devices', async () => {
+		const account = await createTestAccount(harness);
+		const standard = await registerMobileDevice(harness, account.token, {
+			platform: 'ios_apns',
+			token: 'https://relay.example.com/apns/paired-device',
+			encryption_key: 'paired-apns-p256dh-key',
+			auth_secret: 'paired-apns-auth-secret',
+			app_id: 'stable',
+			provider_environment: 'production',
+		});
+		const voip = await registerMobileDevice(harness, account.token, {
+			platform: 'ios_apns_voip',
+			token: 'https://relay.example.com/apns-voip/paired-device',
+			encryption_key: 'paired-voip-p256dh-key',
+			auth_secret: 'paired-voip-auth-secret',
+			app_id: 'stable',
+			provider_environment: 'production',
+		});
+		expect(voip.device_id).not.toBe(standard.device_id);
+		const mobileDevices = await listMobileDevices(harness, account.token);
+		const platforms = mobileDevices.devices.map((device) => device.platform).sort();
+		expect(platforms).toEqual(['ios_apns', 'ios_apns_voip']);
+	});
+	test('platform alone separates device ids for one registration token', async () => {
+		const account = await createTestAccount(harness);
+		const endpoint = 'https://relay.example.com/apns/shared-token';
+		const standard = await registerMobileDevice(harness, account.token, {
+			platform: 'ios_apns',
+			token: endpoint,
+			encryption_key: 'shared-p256dh-key',
+			auth_secret: 'shared-auth-secret',
+			app_id: 'stable',
+			provider_environment: 'production',
+		});
+		const voip = await registerMobileDevice(harness, account.token, {
+			platform: 'ios_apns_voip',
+			token: endpoint,
+			encryption_key: 'shared-p256dh-key',
+			auth_secret: 'shared-auth-secret',
+			app_id: 'stable',
+			provider_environment: 'production',
+		});
+		expect(voip.device_id).not.toBe(standard.device_id);
+	});
+	test('unregister removes only the named VoIP registration', async () => {
+		const account = await createTestAccount(harness);
+		const voipEndpoint = 'https://relay.example.com/apns-voip/removed-device';
+		const standard = await registerMobileDevice(harness, account.token, {
+			platform: 'ios_apns',
+			token: 'https://relay.example.com/apns/kept-device',
+			encryption_key: 'kept-p256dh-key',
+			auth_secret: 'kept-auth-secret',
+			app_id: 'stable',
+			provider_environment: 'production',
+		});
+		await registerMobileDevice(harness, account.token, {
+			platform: 'ios_apns_voip',
+			token: voipEndpoint,
+			encryption_key: 'removed-p256dh-key',
+			auth_secret: 'removed-auth-secret',
+			app_id: 'stable',
+			provider_environment: 'production',
+		});
+		await unregisterMobileDevice(harness, account.token, {
+			platform: 'ios_apns_voip',
+			token: voipEndpoint,
+			app_id: 'stable',
+			provider_environment: 'production',
+		});
+		const mobileDevices = await listMobileDevices(harness, account.token);
+		expect(mobileDevices.devices).toEqual([
+			{
+				device_id: standard.device_id,
+				platform: 'ios_apns',
+				app_id: 'stable',
+				provider_environment: 'production',
+				user_agent: null,
+			},
+		]);
+	});
 	test('mobile Web Push registrations stay out of the web push subscription list', async () => {
 		const account = await createTestAccount(harness);
 		await registerMobileDevice(harness, account.token, {

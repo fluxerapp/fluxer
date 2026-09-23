@@ -467,6 +467,7 @@ const MobilePushPlatformSchema = createNamedStringLiteralUnion(
 	[
 		['android_fcm', 'ANDROID_FCM', 'Firebase Cloud Messaging (Android)'],
 		['ios_apns', 'IOS_APNS', 'Apple Push Notification Service (iOS)'],
+		['ios_apns_voip', 'IOS_APNS_VOIP', 'Apple PushKit VoIP push, used only to ring an incoming call (iOS)'],
 		['android_unified_push', 'ANDROID_UNIFIED_PUSH', 'UnifiedPush (Android without Google services)'],
 	],
 	'The mobile push notification platform',
@@ -501,7 +502,10 @@ export const RegisterMobileDeviceRequest = z
 	.superRefine((value, ctx) => {
 		const tokenIsUrl = URLType.safeParse(value.token).success;
 		const isWebPushRegistration =
-			value.platform === 'android_unified_push' || value.encryption_key != null || value.auth_secret != null;
+			value.platform === 'android_unified_push' ||
+			value.platform === 'ios_apns_voip' ||
+			value.encryption_key != null ||
+			value.auth_secret != null;
 		if (!isWebPushRegistration) {
 			if (tokenIsUrl) {
 				ctx.addIssue({

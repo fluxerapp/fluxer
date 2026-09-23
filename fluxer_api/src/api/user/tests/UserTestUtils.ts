@@ -344,7 +344,7 @@ export async function registerMobileDevice(
 	harness: ApiTestHarness,
 	token: string,
 	body: {
-		platform: 'android_fcm' | 'ios_apns' | 'android_unified_push';
+		platform: 'android_fcm' | 'ios_apns' | 'ios_apns_voip' | 'android_unified_push';
 		token: string;
 		user_agent?: string;
 		app_id?: string;
@@ -371,7 +371,7 @@ export async function unregisterMobileDevice(
 	harness: ApiTestHarness,
 	token: string,
 	body: {
-		platform: 'android_fcm' | 'ios_apns' | 'android_unified_push';
+		platform: 'android_fcm' | 'ios_apns' | 'ios_apns_voip' | 'android_unified_push';
 		token: string;
 		app_id?: string;
 		provider_environment?: 'production' | 'development';

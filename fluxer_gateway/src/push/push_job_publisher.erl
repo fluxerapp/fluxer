@@ -3,15 +3,17 @@
 -module(push_job_publisher).
 -typing([eqwalizer]).
 
--export([publish_message/8, publish_message/10, publish_clear/3, publish_clear/5, request/3]).
+-export([publish_message/8, publish_message/10, publish_clear/3, publish_clear/5]).
+-export([publish_ring/5, request/3]).
 
 -define(SUBJECT_MESSAGE, <<"push.job.message">>).
 -define(SUBJECT_CLEAR, <<"push.job.clear">>).
+-define(SUBJECT_RING, <<"push.job.ring">>).
 -define(JOB_VERSION, 1).
 -define(NATS_MAX_PAYLOAD_BYTES, 1048576).
 
 -type meta() :: #{
-    kind := message | clear,
+    kind := message | clear | ring,
     user_ids := [integer()],
     channel_id := integer(),
     message_id := integer(),
@@ -130,6 +132,26 @@ publish_clear(UserId, ChannelId, MessageId, ConfigVersion, Fallback) ->
         channel_id => ChannelId,
         message_id => MessageId,
         fallback => Fallback
+    }).
+
+-spec publish_ring(integer(), integer(), integer(), integer(), integer()) ->
+    ok | {error, term()}.
+publish_ring(UserId, ChannelId, MessageId, StartedAtMs, ExpiresAtMs) ->
+    Job = #{
+        <<"v">> => ?JOB_VERSION,
+        <<"config_version">> => push_delivery_config:config_version(),
+        <<"user_id">> => integer_to_binary(UserId),
+        <<"channel_id">> => integer_to_binary(ChannelId),
+        <<"message_id">> => integer_to_binary(MessageId),
+        <<"started_at_ms">> => StartedAtMs,
+        <<"expires_at_ms">> => ExpiresAtMs
+    },
+    publish(?SUBJECT_RING, Job, #{
+        kind => ring,
+        user_ids => [UserId],
+        channel_id => ChannelId,
+        message_id => MessageId,
+        fallback => fun ignore_fallback/1
     }).
 
 -spec request(binary(), binary(), pos_integer()) -> ok | {error, term()}.

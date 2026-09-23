@@ -16,6 +16,9 @@ const APNS_PRIORITY_HEADER: &str = "apns-priority";
 const APNS_EXPIRATION_HEADER: &str = "apns-expiration";
 const CONTENT_TYPE_HEADER: &str = "content-type";
 const JSON_CONTENT_TYPE: &str = "application/json";
+const VOIP_PUSH_TYPE: &str = "voip";
+const VOIP_PRIORITY: &str = "10";
+const VOIP_EXPIRATION: &str = "0";
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Urgency {
@@ -61,6 +64,26 @@ pub fn apns_body(payload: &str, urgency: Urgency) -> Result<Vec<u8>, Rejection> 
         return Err(Rejection::new(Reason::PayloadTooLarge));
     }
     Ok(body)
+}
+
+pub fn apns_voip_body(payload: &str) -> Result<Vec<u8>, Rejection> {
+    let body = serialize(&json!({"aps": {}, "v": FORMAT_VERSION, "p": payload}));
+    if body.len() > APNS_BODY_MAX_BYTES {
+        return Err(Rejection::new(Reason::PayloadTooLarge));
+    }
+    Ok(body)
+}
+
+pub fn apns_voip_headers() -> Vec<(String, String)> {
+    vec![
+        (APNS_PUSH_TYPE_HEADER.to_owned(), VOIP_PUSH_TYPE.to_owned()),
+        (APNS_PRIORITY_HEADER.to_owned(), VOIP_PRIORITY.to_owned()),
+        (
+            APNS_EXPIRATION_HEADER.to_owned(),
+            VOIP_EXPIRATION.to_owned(),
+        ),
+        (CONTENT_TYPE_HEADER.to_owned(), JSON_CONTENT_TYPE.to_owned()),
+    ]
 }
 
 pub fn apns_headers(urgency: Urgency, now_unix: i64, ttl_seconds: i64) -> Vec<(String, String)> {

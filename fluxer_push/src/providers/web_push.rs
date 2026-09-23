@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::crypto;
-use crate::payload;
+use crate::payload::{self, RecordKind};
 use crate::providers::SendOutcome;
 use crate::resolver;
 use crate::server::AppState;
@@ -27,6 +27,7 @@ const BASE_RETRY_DELAY_MS: u64 = 200;
 const MAX_RETRY_DELAY_MS: u64 = 2_000;
 const ALERT_TTL_SECONDS: &str = "86400";
 const CLEAR_TTL_SECONDS: &str = "3600";
+const RING_TTL_SECONDS: &str = "0";
 const TTL_HEADER: &str = "TTL";
 const URGENCY_HEADER: &str = "Urgency";
 const ALERT_URGENCY: &str = "high";
@@ -71,25 +72,15 @@ pub async fn send(state: &AppState, sub: &Subscription, envelope: &Value) -> Sen
         Ok(body) => body,
         Err(error) => return SendOutcome::permanent(format!("encrypt: {error}")),
     };
-    let clear = payload::is_clear(envelope);
+    let (ttl_seconds, urgency) = delivery_headers(envelope);
 
     let mut attempt: u32 = 0;
     loop {
         let response = state
             .web_push_http
             .post(&sub.endpoint)
-            .header(
-                TTL_HEADER,
-                if clear {
-                    CLEAR_TTL_SECONDS
-                } else {
-                    ALERT_TTL_SECONDS
-                },
-            )
-            .header(
-                URGENCY_HEADER,
-                if clear { CLEAR_URGENCY } else { ALERT_URGENCY },
-            )
+            .header(TTL_HEADER, ttl_seconds)
+            .header(URGENCY_HEADER, urgency)
             .header(CONTENT_TYPE, OCTET_STREAM)
             .header(CONTENT_ENCODING, AES128GCM)
             .header(AUTHORIZATION, &authorization)
@@ -114,6 +105,14 @@ pub async fn send(state: &AppState, sub: &Subscription, envelope: &Value) -> Sen
             continue;
         }
         return classify(status);
+    }
+}
+
+fn delivery_headers(envelope: &Value) -> (&'static str, &'static str) {
+    match payload::record_kind(envelope) {
+        RecordKind::Message => (ALERT_TTL_SECONDS, ALERT_URGENCY),
+        RecordKind::Clear => (CLEAR_TTL_SECONDS, CLEAR_URGENCY),
+        RecordKind::Ring => (RING_TTL_SECONDS, ALERT_URGENCY),
     }
 }
 

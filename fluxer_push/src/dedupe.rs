@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::job::{ClearJob, MessageJob};
+use crate::job::{ClearJob, MessageJob, RingJob};
 use sha2::{Digest, Sha256};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::{Arc, Mutex};
@@ -20,6 +20,16 @@ impl JobKey {
 
     pub fn of_clear(job: &ClearJob) -> Self {
         Self::digest(&["clear", &job.user_id, &job.channel_id, &job.message_id])
+    }
+
+    pub fn of_ring(job: &RingJob) -> Self {
+        Self::digest(&[
+            "ring",
+            &job.message_id,
+            &job.channel_id,
+            &job.user_id,
+            &job.started_at_ms.to_string(),
+        ])
     }
 
     fn digest(parts: &[&str]) -> Self {

@@ -28,6 +28,7 @@ const DEFAULT_FCM_BASE_URL: &str = "https://fcm.googleapis.com";
 const DEFAULT_CLIENT_IP_HEADER_NAME: &str = "x-forwarded-for";
 const APNS_PRODUCTION_BASE_URL: &str = "https://api.push.apple.com";
 const APNS_DEVELOPMENT_BASE_URL: &str = "https://api.sandbox.push.apple.com";
+const VOIP_TOPIC_SUFFIX: &str = ".voip";
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, clap::ValueEnum)]
 pub enum Mode {
@@ -72,6 +73,7 @@ impl ProviderEnvironment {
 pub struct ProviderApp {
     pub app_id: String,
     pub topic: Option<String>,
+    pub voip_topic: Option<String>,
     pub environment: Option<ProviderEnvironment>,
     pub project_id: Option<String>,
 }
@@ -107,16 +109,25 @@ pub struct ApnsConfig {
 
 impl ApnsConfig {
     pub fn topic_for(&self, app_id: &str, environment: ProviderEnvironment) -> Option<&str> {
-        let exact = self.apps.iter().find(|app| {
-            app.app_id == app_id && app.environment == Some(environment) && app.topic.is_some()
-        });
-        exact
-            .or_else(|| {
-                self.apps
-                    .iter()
-                    .find(|app| app.app_id == app_id && app.topic.is_some())
-            })
-            .and_then(|app| app.topic.as_deref())
+        self.topic_by(app_id, environment, |app| app.topic.as_deref())
+    }
+
+    pub fn voip_topic_for(&self, app_id: &str, environment: ProviderEnvironment) -> Option<&str> {
+        self.topic_by(app_id, environment, |app| app.voip_topic.as_deref())
+    }
+
+    fn topic_by(
+        &self,
+        app_id: &str,
+        environment: ProviderEnvironment,
+        topic: fn(&ProviderApp) -> Option<&str>,
+    ) -> Option<&str> {
+        let listed = |app: &&ProviderApp| app.app_id == app_id && topic(app).is_some();
+        self.apps
+            .iter()
+            .find(|app| listed(app) && app.environment == Some(environment))
+            .or_else(|| self.apps.iter().find(listed))
+            .and_then(topic)
     }
 
     pub fn base_url(&self, environment: ProviderEnvironment) -> &str {
@@ -587,9 +598,22 @@ fn parse_apps(var_name: &str, raw: Option<&str>) -> anyhow::Result<Vec<ProviderA
                 Some(value) => Some(parse_environment(var_name, value)?),
                 None => None,
             };
+            let topic = entry
+                .topic
+                .map(|topic| topic.trim().to_owned())
+                .filter(|topic| !topic.is_empty());
+            if let Some(topic) = topic.as_deref() {
+                anyhow::ensure!(
+                    !topic.ends_with(VOIP_TOPIC_SUFFIX),
+                    "{var_name} lists a topic that already ends in {VOIP_TOPIC_SUFFIX}: {topic}"
+                );
+            }
             Ok(ProviderApp {
                 app_id,
-                topic: entry.topic.filter(|topic| !topic.trim().is_empty()),
+                voip_topic: topic
+                    .as_deref()
+                    .map(|topic| format!("{topic}{VOIP_TOPIC_SUFFIX}")),
+                topic,
                 environment,
                 project_id: entry
                     .project_id

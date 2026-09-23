@@ -119,6 +119,12 @@ function resolveMobileWebPushKeys(device: RegisterMobileDeviceRequest): {p256dh:
 			'Web Push registrations require encryption_key and auth_secret',
 		);
 	}
+	if (device.platform === 'android_unified_push' || device.platform === 'ios_apns_voip') {
+		throw InputValidationError.create(
+			'encryption_key',
+			'Web Push registrations require encryption_key and auth_secret',
+		);
+	}
 	if (isPushEndpointUrl(device.token)) {
 		throw InputValidationError.create('token', 'Endpoint URL registrations require encryption_key and auth_secret');
 	}
@@ -135,7 +141,7 @@ function normalizeProviderEnvironment(
 	environment: RegisterMobileDeviceRequest['provider_environment'],
 ): string | null {
 	if (environment) return environment;
-	return platform === 'ios_apns' ? DEFAULT_APNS_PROVIDER_ENVIRONMENT : null;
+	return platform === 'ios_apns' || platform === 'ios_apns_voip' ? DEFAULT_APNS_PROVIDER_ENVIRONMENT : null;
 }
 
 const isUnreachableEntityError = (error: unknown): boolean =>

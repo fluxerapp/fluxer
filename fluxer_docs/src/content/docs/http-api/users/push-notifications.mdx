@@ -27,9 +27,12 @@ Fluxer reads the shape from the body rather than from `platform`. A `token` that
 | --- | --- |
 | `android_fcm` | Firebase Cloud Messaging |
 | `ios_apns` | Apple Push Notification service |
+| `ios_apns_voip` | Apple PushKit, the separate call registration of an iOS device |
 | `android_unified_push` | UnifiedPush, on an Android build without Google services |
 
-`android_unified_push` is always a Web Push registration. Sending it with no keys is refused.
+`android_unified_push` and `ios_apns_voip` are always Web Push registrations. Sending either with no keys is refused.
+
+Apple issues a PushKit device token separate from the alert token. An iOS device that answers calls registers both: the alert token as `ios_apns`, and the PushKit token as `ios_apns_voip`. Generate a separate key pair for the `ios_apns_voip` registration. The two registrations get two identifiers and two independent lifetimes. Removing one leaves the other in place.
 
 ## Device registration object
 
@@ -65,7 +68,7 @@ Stores a push registration for the current account and returns its [device regis
 
 <sup>2</sup> Sent together or not at all. Sending one alone is refused at the missing field
 
-An `ios_apns` registration with no `provider_environment` is stored as `production`. Every other platform stores no environment.
+An `ios_apns` or `ios_apns_voip` registration with no `provider_environment` is stored as `production`. Every other platform stores no environment.
 
 Register an `https` endpoint. A Web Push registration whose `token` is not a valid URL is refused at `token`, and one whose host is a private or reserved address is refused with `URL_NOT_PUBLICLY_ROUTABLE`.
 
@@ -122,8 +125,8 @@ Fluxer posts one encrypted record to the registered endpoint for each notificati
 | --- | --- |
 | Content-Encoding | Always `aes128gcm` |
 | Content-Type | Always `application/octet-stream` |
-| TTL | `86400` on a notification and `3600` on a clear |
-| Urgency | `high` on a notification and `low` on a clear |
+| TTL | `86400` on a notification, `3600` on a clear, `0` on a call ring |
+| Urgency | `high` on a notification and on a call ring, `low` on a clear |
 | Authorization | A VAPID token and the instance public key |
 
 The body is one `aes128gcm` record encrypted to the `encryption_key` and `auth_secret` the client registered. The client decrypts it locally with the private half of its key pair and its auth secret. Fluxer holds no key that opens the record after it is sealed.
@@ -139,9 +142,43 @@ A record is 2816 bytes and its plaintext is at most 2713 bytes of JSON. A notifi
 
 A client has to tolerate a missing field.
 
-Two kinds of payload arrive. A notification payload describes something to show. A clear payload sets `type` to `notification_clear` and `action` to `clear_channel`, and asks the client to dismiss what it already showed for one channel.
+Three kinds of payload arrive. A notification payload describes something to show. A clear payload sets `type` to `notification_clear` and `action` to `clear_channel`, and asks the client to dismiss what it already showed for one channel. A [call ring](#call-ring) payload sets `type` to `call_ring` and announces an incoming call.
 
 An endpoint that answers 404 or 410 removes the registration. Fluxer retries a transient failure and keeps the registration.
+
+### Call ring
+
+A call ring is the only payload an `ios_apns_voip` registration receives. Every other payload for that device goes to its `ios_apns` registration. The fields below sit under `data`.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| type | string | Always `call_ring` |
+| channel_id | string | The private channel the call is in |
+| message_id | string | The call message, which names the call |
+| target_user_id | string | The account being rung |
+| started_at_ms | integer | When the ring started, in milliseconds since the Unix epoch |
+
+A call ring is not stored for later delivery. A device that cannot be reached while the call rings does not get the ring afterwards.
+
+Nothing cancels a ring with a second push. Fluxer ends the call over the gateway connection the woken client opens.
+
+### What PushKit requires of the client
+
+iOS terminates an application that takes a PushKit push without reporting a call to CallKit. Repeated failures stop PushKit delivery to that device. The report is due before the record is decrypted. Decryption cannot be what decides whether to ring.
+
+Report a call for every PushKit push, before decrypting. Then end that call at once in each of these three cases.
+
+| Case | What it means |
+| --- | --- |
+| The record does not decrypt | The registered keys no longer match the pair the client holds |
+| `type` is not `call_ring` | The push did not come from Fluxer |
+| The gateway names no live call for `channel_id` | The call ended before the ring arrived |
+
+Anyone who learns a PushKit token can send to it. Those three rules are what keeps a forged push from showing a caller.
+
+Derive the CallKit call identifier from `message_id`. The gateway ends the call over the connection under that same identity. Two rings for one call then name one call.
+
+Keep the registered private key and auth secret readable while the device is locked. A call ring arrives on a locked device. A key that cannot be read then costs the report.
 
 ### When decryption fails
 

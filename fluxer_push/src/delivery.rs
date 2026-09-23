@@ -2,7 +2,8 @@
 
 use crate::dedupe::{Claim, DoneJobs, JobKey, Seen};
 use crate::job::{
-    self, ClearJob, JobError, MessageJob, QUEUE_GROUP, SUBJECT_CLEAR, SUBJECT_MESSAGE,
+    self, ClearJob, JobError, MessageJob, QUEUE_GROUP, RingJob, SUBJECT_CLEAR, SUBJECT_MESSAGE,
+    SUBJECT_RING,
 };
 use crate::metrics::{JobKind, JobRejection, Provider, elapsed_ms};
 use crate::payload;
@@ -10,7 +11,8 @@ use crate::providers::{self, SendOutcome};
 use crate::retry::{self, RETRY_DEADLINE};
 use crate::rpc::RpcError;
 use crate::server::AppState;
-use crate::subscription::Subscription;
+use crate::subscription::{Platform, Subscription};
+use crate::unix_millis;
 use fluxer_svc::metrics::now_ms;
 use fluxer_svc::transport::{Transport, TransportMessage, TransportSubscriber};
 use futures::future::join_all;
@@ -23,6 +25,7 @@ use tokio::task::JoinSet;
 use tracing::{error, info, warn};
 
 const JOB_REPLY_DEADLINE: Duration = Duration::from_secs(90);
+const RING_JOB_DEADLINE: Duration = Duration::from_secs(10);
 
 const UNKNOWN_PROVIDER: &str = "unknown";
 const OVERLOADED: &str = "overloaded";
@@ -34,6 +37,7 @@ const RUNNING: &str = "in_flight";
 enum Job {
     Message(Box<MessageJob>),
     Clear(ClearJob),
+    Ring(RingJob),
 }
 
 impl Job {
@@ -41,6 +45,23 @@ impl Job {
         match self {
             Self::Message(_) => JobKind::Message,
             Self::Clear(_) => JobKind::Clear,
+            Self::Ring(_) => JobKind::Ring,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum Audience {
+    Standard,
+    Ring,
+}
+
+impl Audience {
+    fn admits(self, subscription: &Subscription) -> bool {
+        let voip = subscription.platform() == Some(Platform::IosApnsVoip);
+        match self {
+            Self::Standard => !voip,
+            Self::Ring => voip,
         }
     }
 }
@@ -75,17 +96,29 @@ fn claim_recipients(done: &DoneJobs, job: Job) -> Claimed {
             }
         }
         Job::Clear(job) => {
-            let (claims, recipients_running) = match done.claim(JobKey::of_clear(&job)) {
-                Seen::New(claim) => (vec![claim], false),
-                Seen::Done => (Vec::new(), false),
-                Seen::Running => (Vec::new(), true),
-            };
+            let (claims, recipients_running) = claim_one(done, JobKey::of_clear(&job));
             Claimed {
                 job: Job::Clear(job),
                 claims,
                 recipients_running,
             }
         }
+        Job::Ring(job) => {
+            let (claims, recipients_running) = claim_one(done, JobKey::of_ring(&job));
+            Claimed {
+                job: Job::Ring(job),
+                claims,
+                recipients_running,
+            }
+        }
+    }
+}
+
+fn claim_one(done: &DoneJobs, key: JobKey) -> (Vec<Claim>, bool) {
+    match done.claim(key) {
+        Seen::New(claim) => (vec![claim], false),
+        Seen::Done => (Vec::new(), false),
+        Seen::Running => (Vec::new(), true),
     }
 }
 
@@ -127,7 +160,15 @@ pub async fn run_job_subscribers<T: Transport>(transport: T, state: Arc<AppState
             done.clone(),
             JobKind::Message,
         ),
-        run_subject(transport, state, admission, sends, done, JobKind::Clear),
+        run_subject(
+            transport.clone(),
+            Arc::clone(&state),
+            Arc::clone(&admission),
+            Arc::clone(&sends),
+            done.clone(),
+            JobKind::Clear,
+        ),
+        run_subject(transport, state, admission, sends, done, JobKind::Ring),
     );
 }
 
@@ -270,6 +311,7 @@ async fn run_job(state: &AppState, sends: &Semaphore, job: Job) -> Answer {
         match job {
             Job::Message(job) => run_message_job(state, sends, *job).await,
             Job::Clear(job) => run_clear_job(state, sends, job).await,
+            Job::Ring(job) => run_ring_job(state, sends, job).await,
         }
     };
     match tokio::time::timeout(JOB_REPLY_DEADLINE, work).await {
@@ -325,7 +367,15 @@ async fn run_message_job(
             )
         })
         .collect();
-    let summary = deliver(state, sends, &subscriptions, envelopes, deadline).await;
+    let summary = deliver(
+        state,
+        sends,
+        &subscriptions,
+        envelopes,
+        deadline,
+        Audience::Standard,
+    )
+    .await;
     let duration_ms = elapsed_ms(started_ms);
 
     info!(
@@ -362,7 +412,15 @@ async fn run_clear_job(state: &AppState, sends: &Semaphore, job: ClearJob) -> an
 
     let envelope = payload::web_push_clear(&job, badge_of(&badges, &job.user_id));
     let envelopes = vec![(job.user_id.as_str(), envelope)];
-    let summary = deliver(state, sends, &subscriptions, envelopes, deadline).await;
+    let summary = deliver(
+        state,
+        sends,
+        &subscriptions,
+        envelopes,
+        deadline,
+        Audience::Standard,
+    )
+    .await;
     let duration_ms = elapsed_ms(started_ms);
 
     info!(
@@ -381,6 +439,61 @@ async fn run_clear_job(state: &AppState, sends: &Semaphore, job: ClearJob) -> an
     state
         .metrics
         .record_job_completed(JobKind::Clear, duration_ms);
+    Ok(())
+}
+
+async fn run_ring_job(state: &AppState, sends: &Semaphore, job: RingJob) -> anyhow::Result<()> {
+    let started_ms = now_ms();
+    if job.expires_at_ms <= unix_millis() {
+        state.metrics.record_ring_suppressed();
+        info!(
+            kind = JobKind::Ring.label(),
+            user_id = %job.user_id,
+            channel_id = %job.channel_id,
+            message_id = %job.message_id,
+            config_version = job.config_version,
+            expires_at_ms = job.expires_at_ms,
+            "push ring dropped past its ring window"
+        );
+        state
+            .metrics
+            .record_job_completed(JobKind::Ring, elapsed_ms(started_ms));
+        return Ok(());
+    }
+
+    let deadline = Instant::now() + RING_JOB_DEADLINE;
+    let user_ids = std::slice::from_ref(&job.user_id);
+    let subscriptions = lookup(deadline, || state.rpc.push_subscriptions(user_ids)).await?;
+    state.metrics.record_recipients(1);
+
+    let envelopes = vec![(job.user_id.as_str(), payload::web_push_call_ring(&job))];
+    let summary = deliver(
+        state,
+        sends,
+        &subscriptions,
+        envelopes,
+        deadline,
+        Audience::Ring,
+    )
+    .await;
+    let duration_ms = elapsed_ms(started_ms);
+
+    info!(
+        kind = JobKind::Ring.label(),
+        user_id = %job.user_id,
+        channel_id = %job.channel_id,
+        message_id = %job.message_id,
+        config_version = job.config_version,
+        recipients = 1,
+        subscriptions = summary.subscriptions,
+        accepted = summary.accepted,
+        deleted = summary.deleted,
+        duration_ms,
+        "push job"
+    );
+    state
+        .metrics
+        .record_job_completed(JobKind::Ring, duration_ms);
     Ok(())
 }
 
@@ -411,6 +524,7 @@ async fn deliver(
     subscriptions: &HashMap<String, Vec<Subscription>>,
     envelopes: Vec<(&str, Value)>,
     deadline: Instant,
+    audience: Audience,
 ) -> Summary {
     let mut pending = Vec::new();
     for (user_id, envelope) in envelopes {
@@ -418,7 +532,10 @@ async fn deliver(
             continue;
         };
         let envelope = Arc::new(envelope);
-        for subscription in subscriptions {
+        for subscription in subscriptions
+            .iter()
+            .filter(|subscription| audience.admits(subscription))
+        {
             pending.push(send_one(
                 state,
                 sends,
@@ -522,6 +639,7 @@ fn decode(kind: JobKind, payload: &[u8]) -> Result<Job, JobError> {
     match kind {
         JobKind::Message => job::decode_message(payload).map(Box::new).map(Job::Message),
         JobKind::Clear => job::decode_clear(payload).map(Job::Clear),
+        JobKind::Ring => job::decode_ring(payload).map(Job::Ring),
     }
 }
 
@@ -529,6 +647,7 @@ fn subject_of(kind: JobKind) -> &'static str {
     match kind {
         JobKind::Message => SUBJECT_MESSAGE,
         JobKind::Clear => SUBJECT_CLEAR,
+        JobKind::Ring => SUBJECT_RING,
     }
 }
 

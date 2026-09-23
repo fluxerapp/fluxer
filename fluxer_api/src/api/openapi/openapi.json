@@ -22735,13 +22735,14 @@
 				"properties": {
 					"platform": {
 						"description": "The mobile push notification platform",
-						"x-enumNames": ["ANDROID_FCM", "IOS_APNS", "ANDROID_UNIFIED_PUSH"],
+						"x-enumNames": ["ANDROID_FCM", "IOS_APNS", "IOS_APNS_VOIP", "ANDROID_UNIFIED_PUSH"],
 						"x-enumDescriptions": [
 							"Firebase Cloud Messaging (Android)",
 							"Apple Push Notification Service (iOS)",
+							"Apple PushKit VoIP push, used only to ring an incoming call (iOS)",
 							"UnifiedPush (Android without Google services)"
 						],
-						"enum": ["android_fcm", "ios_apns", "android_unified_push"],
+						"enum": ["android_fcm", "ios_apns", "ios_apns_voip", "android_unified_push"],
 						"type": "string"
 					},
 					"token": {
@@ -22802,13 +22803,14 @@
 				"properties": {
 					"platform": {
 						"description": "The mobile push notification platform",
-						"x-enumNames": ["ANDROID_FCM", "IOS_APNS", "ANDROID_UNIFIED_PUSH"],
+						"x-enumNames": ["ANDROID_FCM", "IOS_APNS", "IOS_APNS_VOIP", "ANDROID_UNIFIED_PUSH"],
 						"x-enumDescriptions": [
 							"Firebase Cloud Messaging (Android)",
 							"Apple Push Notification Service (iOS)",
+							"Apple PushKit VoIP push, used only to ring an incoming call (iOS)",
 							"UnifiedPush (Android without Google services)"
 						],
-						"enum": ["android_fcm", "ios_apns", "android_unified_push"],
+						"enum": ["android_fcm", "ios_apns", "ios_apns_voip", "android_unified_push"],
 						"type": "string"
 					},
 					"token": {

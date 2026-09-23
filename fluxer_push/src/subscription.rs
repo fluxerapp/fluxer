@@ -11,6 +11,7 @@ pub enum Platform {
     AndroidUnifiedPush,
     AndroidFcm,
     IosApns,
+    IosApnsVoip,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -31,6 +32,7 @@ impl Subscription {
             "android_unified_push" => Some(Platform::AndroidUnifiedPush),
             "android_fcm" => Some(Platform::AndroidFcm),
             "ios_apns" => Some(Platform::IosApns),
+            "ios_apns_voip" => Some(Platform::IosApnsVoip),
             _ => None,
         }
     }

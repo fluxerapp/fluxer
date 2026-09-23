@@ -15,7 +15,12 @@ import type {GuildFolderIcon, MentionReplyPreference} from '@fluxer/constants/sr
 import type {types} from 'cassandra-driver';
 
 type Nullish<T> = T | null;
-export type PushSubscriptionPlatform = 'web_push' | 'android_fcm' | 'ios_apns' | 'android_unified_push';
+export type PushSubscriptionPlatform =
+	| 'web_push'
+	| 'android_fcm'
+	| 'ios_apns'
+	| 'ios_apns_voip'
+	| 'android_unified_push';
 
 export interface UserRow {
 	user_id: UserID;
