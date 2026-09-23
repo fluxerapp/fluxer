@@ -184,7 +184,7 @@ async fn outcome(
         Err(error) => {
             let unreachable = Unreachable::of(&error);
             warn!(
-                error = %error,
+                error = %error.without_url(),
                 kind = unreachable.label(),
                 "vendor request did not complete"
             );
@@ -295,6 +295,17 @@ mod tests {
         let error = error_for("https://push.invalid/relay/v1/apns/stable/production/token").await;
         assert_eq!(Unreachable::of(&error), Unreachable::Dns);
         assert!(Unreachable::of(&error).is_permanent());
+    }
+
+    #[tokio::test]
+    async fn a_logged_error_never_carries_the_device_token() {
+        const TOKEN: &str = "3dbc5a5ef1a1c1666afc26f466e1b3ebaaf4c66d92dddeb0fd1b69c49641d4cd";
+        let error = error_for(&format!("https://push.invalid/3/device/{TOKEN}")).await;
+        assert!(
+            error.to_string().contains(TOKEN),
+            "reqwest still puts the url in Display, so the guard below is what matters"
+        );
+        assert!(!error.without_url().to_string().contains(TOKEN));
     }
 
     #[tokio::test]

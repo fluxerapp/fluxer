@@ -94,7 +94,7 @@ pub async fn send(state: &AppState, sub: &Subscription, envelope: &Value) -> Sen
             Err(error) => {
                 let unreachable = Unreachable::of(&error);
                 warn!(
-                    error = %error,
+                    error = %error.without_url(),
                     kind = unreachable.label(),
                     endpoint = %origin_of(&sub.endpoint),
                     "web push request did not complete"

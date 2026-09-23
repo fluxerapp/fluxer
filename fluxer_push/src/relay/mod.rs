@@ -21,10 +21,11 @@ use base64::prelude::*;
 use envelope::Urgency;
 use fluxer_svc::shutdown::wait_for_shutdown;
 use quota::Quota;
+use rand::Rng as _;
 use reject::{Reason, Rejection};
 use sha2::{Digest as _, Sha256};
 use std::net::SocketAddr;
-use std::sync::Arc;
+use std::sync::{Arc, LazyLock};
 use std::time::{Duration, Instant};
 use tracing::{info, warn};
 
@@ -37,6 +38,13 @@ const TTL_HEADER: &str = "ttl";
 const URGENCY_HEADER: &str = "urgency";
 const JSON_CONTENT_TYPE: &str = "application/json";
 const DIGEST_BYTES: usize = 8;
+const LOG_SALT_BYTES: usize = 16;
+
+static LOG_SALT: LazyLock<[u8; LOG_SALT_BYTES]> = LazyLock::new(|| {
+    let mut salt = [0u8; LOG_SALT_BYTES];
+    rand::rng().fill_bytes(&mut salt);
+    salt
+});
 const MIN_APNS_DEVICE_TOKEN_LEN: usize = 64;
 const MAX_APNS_DEVICE_TOKEN_LEN: usize = 256;
 const MAX_FCM_DEVICE_TOKEN_LEN: usize = 512;
@@ -485,7 +493,10 @@ fn digest(value: &str) -> String {
     if value.is_empty() {
         return "-".to_owned();
     }
-    BASE64_URL_SAFE_NO_PAD.encode(&Sha256::digest(value.as_bytes())[..DIGEST_BYTES])
+    let mut hasher = Sha256::new();
+    hasher.update(*LOG_SALT);
+    hasher.update(value.as_bytes());
+    BASE64_URL_SAFE_NO_PAD.encode(&hasher.finalize()[..DIGEST_BYTES])
 }
 
 #[cfg(test)]
@@ -516,6 +527,16 @@ mod tests {
                 "{token} must be rejected"
             );
         }
+    }
+
+    #[test]
+    fn the_log_digest_is_not_a_bare_hash_of_the_token() {
+        const TOKEN: &str = "3dbc5a5ef1a1c1666afc26f466e1b3ebaaf4c66d92dddeb0fd1b69c49641d4cd";
+        let unsalted =
+            BASE64_URL_SAFE_NO_PAD.encode(&Sha256::digest(TOKEN.as_bytes())[..DIGEST_BYTES]);
+        assert_ne!(digest(TOKEN), unsalted);
+        assert_eq!(digest(TOKEN), digest(TOKEN));
+        assert_eq!(digest(""), "-");
     }
 
     #[test]

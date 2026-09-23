@@ -7,7 +7,7 @@ use sha2::{Digest as _, Sha256};
 use std::collections::HashMap;
 use std::net::IpAddr;
 use std::sync::Mutex;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 use tokio::sync::{Semaphore, SemaphorePermit};
 
 const BUSY_RETRY_AFTER_SECONDS: i64 = 1;
@@ -16,6 +16,7 @@ const SECONDS_PER_MINUTE: f64 = 60.0;
 const KEY_BYTES: usize = 16;
 const IPV4_PREFIX_BYTES: usize = 3;
 const IPV6_PREFIX_BYTES: usize = 8;
+const MAX_GENERATION_AGE: Duration = Duration::from_secs(300);
 
 type Key = [u8; KEY_BYTES];
 
@@ -117,6 +118,7 @@ struct Bucket {
 struct Held {
     live: HashMap<Key, Bucket>,
     aged: HashMap<Key, Bucket>,
+    rotated_at: Option<Instant>,
 }
 
 pub struct Buckets {
@@ -135,6 +137,7 @@ impl Buckets {
             held: Mutex::new(Held {
                 live: HashMap::new(),
                 aged: HashMap::new(),
+                rotated_at: None,
             }),
         }
     }
@@ -163,10 +166,50 @@ impl Buckets {
             bucket.tokens -= 1.0;
         }
 
-        if held.live.len() >= self.entries {
+        let rotated_at = *held.rotated_at.get_or_insert(now);
+        let stale = now.saturating_duration_since(rotated_at) >= MAX_GENERATION_AGE;
+        if held.live.len() >= self.entries || stale {
             held.aged = std::mem::take(&mut held.live);
+            held.rotated_at = Some(now);
         }
         held.live.insert(key, bucket);
         allowed
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn config() -> BucketConfig {
+        BucketConfig {
+            entries: 1_000_000,
+            per_minute: 60,
+            burst: 20,
+        }
+    }
+
+    #[test]
+    fn a_generation_rotates_on_age_as_well_as_on_size() {
+        let buckets = Buckets::new(&config());
+        let start = Instant::now();
+        assert!(buckets.take([1u8; KEY_BYTES], start));
+        assert_eq!(buckets.held.lock().unwrap().live.len(), 1);
+        let later = start + MAX_GENERATION_AGE;
+        assert!(buckets.take([2u8; KEY_BYTES], later));
+        let held = buckets.held.lock().unwrap();
+        assert_eq!(held.live.len(), 1);
+        assert_eq!(held.aged.len(), 1);
+    }
+
+    #[test]
+    fn the_burst_is_spent_before_a_caller_is_refused() {
+        let buckets = Buckets::new(&config());
+        let now = Instant::now();
+        let key = [3u8; KEY_BYTES];
+        for _ in 0..20 {
+            assert!(buckets.take(key, now));
+        }
+        assert!(!buckets.take(key, now));
     }
 }
