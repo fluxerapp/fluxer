@@ -81,6 +81,9 @@ env_gateway_base_config() ->
         <<"push_clear_notifications_enabled">> => env_bool(
             "FLUXER_GATEWAY_PUSH_CLEAR_NOTIFICATIONS_ENABLED", true
         ),
+        <<"push_endpoint_guard_enabled">> => env_bool(
+            "FLUXER_GATEWAY_PUSH_ENDPOINT_GUARD_ENABLED", true
+        ),
         <<"push_outbox_request_timeout_ms">> => env_int(
             "FLUXER_GATEWAY_PUSH_OUTBOX_REQUEST_TIMEOUT_MS", 100000
         ),
@@ -255,6 +258,9 @@ build_push_config(Service, Public) ->
         push_dispatcher_max_queue => get_int(Service, <<"push_dispatcher_max_queue">>, 2048),
         push_clear_notifications_enabled => get_bool(
             Service, <<"push_clear_notifications_enabled">>, true
+        ),
+        push_endpoint_guard_enabled => get_bool(
+            Service, <<"push_endpoint_guard_enabled">>, true
         ),
         push_outbox_max_queue => get_int(Service, <<"push_outbox_max_queue">>, 10000),
         push_outbox_max_inflight => get_int(Service, <<"push_outbox_max_inflight">>, 64),

@@ -3,24 +3,46 @@
 -module(push_endpoint_guard).
 -typing([eqwalizer]).
 
--export([check/1, check/2]).
+-export([check/1, check/2, check/3]).
 
--export_type([resolver/0]).
+-export_type([resolver/0, cache_mode/0, verdict/0]).
 
 -define(RESOLVE_TIMEOUT_MS, 3000).
 -define(MAX_HOST_LENGTH, 253).
 -define(MAX_LABEL_LENGTH, 63).
+-define(ALLOWED_VERDICT_TTL_SECONDS, 300).
+-define(REFUSED_VERDICT_TTL_SECONDS, 30).
 
 -type resolver() :: fun((string()) -> {ok, [inet:ip_address()]} | {error, term()}).
+-type cache_mode() :: cached | uncached.
+-type verdict() :: ok | {error, term()}.
 
--spec check(binary()) -> ok | {error, term()}.
+-spec check(binary()) -> verdict().
 check(Endpoint) ->
-    check(Endpoint, fun resolve/1).
+    check(Endpoint, fun resolve/1, cached).
 
--spec check(binary(), resolver()) -> ok | {error, term()}.
+-spec check(binary(), resolver()) -> verdict().
 check(Endpoint, Resolver) ->
+    check(Endpoint, Resolver, uncached).
+
+-spec check(binary(), resolver(), cache_mode()) -> verdict().
+check(Endpoint, Resolver, CacheMode) ->
+    case enabled() of
+        true -> check_endpoint(Endpoint, Resolver, CacheMode);
+        false -> ok
+    end.
+
+-spec enabled() -> boolean().
+enabled() ->
+    case fluxer_gateway_env:get(push_endpoint_guard_enabled) of
+        Enabled when is_boolean(Enabled) -> Enabled;
+        _ -> true
+    end.
+
+-spec check_endpoint(binary(), resolver(), cache_mode()) -> verdict().
+check_endpoint(Endpoint, Resolver, CacheMode) ->
     case parse_endpoint(Endpoint) of
-        {ok, Host} -> check_host(Host, Resolver);
+        {ok, Host} -> check_host(Host, Resolver, CacheMode);
         {error, Reason} -> {error, Reason}
     end.
 
@@ -64,21 +86,41 @@ allowed_port(80) -> true;
 allowed_port(443) -> true;
 allowed_port(_Port) -> false.
 
--spec check_host(string(), resolver()) -> ok | {error, term()}.
-check_host(Host, Resolver) ->
+-spec check_host(string(), resolver(), cache_mode()) -> verdict().
+check_host(Host, Resolver, CacheMode) ->
     case inet:parse_address(Host) of
         {ok, Address} -> check_addresses([Address]);
-        {error, _Reason} -> check_hostname(Host, Resolver)
+        {error, _Reason} -> check_hostname(Host, Resolver, CacheMode)
     end.
 
--spec check_hostname(string(), resolver()) -> ok | {error, term()}.
-check_hostname(Host, Resolver) ->
+-spec check_hostname(string(), resolver(), cache_mode()) -> verdict().
+check_hostname(Host, Resolver, CacheMode) ->
     case is_fqdn(Host) of
-        true -> resolve_and_check(Host, Resolver);
+        true -> resolve_and_check(Host, Resolver, CacheMode);
         false -> {error, endpoint_rejected}
     end.
 
--spec resolve_and_check(string(), resolver()) -> ok | {error, term()}.
+-spec resolve_and_check(string(), resolver(), cache_mode()) -> verdict().
+resolve_and_check(Host, Resolver, uncached) ->
+    resolve_and_check(Host, Resolver);
+resolve_and_check(Host, Resolver, cached) ->
+    CacheKey = list_to_binary(Host),
+    case push_ets_cache:get_endpoint_verdict(CacheKey) of
+        {ok, Verdict} -> Verdict;
+        undefined -> store_verdict(CacheKey, resolve_and_check(Host, Resolver))
+    end.
+
+-spec store_verdict(binary(), verdict()) -> verdict().
+store_verdict(CacheKey, Verdict) ->
+    Ttl = verdict_ttl_seconds(Verdict),
+    ok = push_ets_cache:put_endpoint_verdict(CacheKey, Verdict, Ttl),
+    Verdict.
+
+-spec verdict_ttl_seconds(verdict()) -> pos_integer().
+verdict_ttl_seconds(ok) -> ?ALLOWED_VERDICT_TTL_SECONDS;
+verdict_ttl_seconds({error, _Reason}) -> ?REFUSED_VERDICT_TTL_SECONDS.
+
+-spec resolve_and_check(string(), resolver()) -> verdict().
 resolve_and_check(Host, Resolver) ->
     case Resolver(Host) of
         {ok, Addresses} -> check_addresses(Addresses);

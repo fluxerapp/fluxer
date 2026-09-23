@@ -25,6 +25,8 @@
     reserve_badge_counts/1,
     get_bearer_token/1,
     put_bearer_token/3,
+    get_endpoint_verdict/1,
+    put_endpoint_verdict/3,
     release/1,
     rebalance/0,
     rebalance_async/0,
@@ -33,16 +35,20 @@
     table_size/1
 ]).
 
--export_type([fill/0]).
+-export_type([fill/0, endpoint_verdict/0]).
 
 -define(USER_GUILD_SETTINGS, push_user_guild_settings).
 -define(SUBSCRIPTIONS, push_subscriptions).
 -define(BLOCKED_IDS, push_blocked_ids).
 -define(BADGE_COUNTS, push_badge_counts).
 -define(BEARER_TOKENS, push_bearer_tokens).
+-define(ENDPOINT_VERDICTS, push_endpoint_verdicts).
 
 -define(MAX_TABLE_ENTRIES, 500000).
 -define(MAX_BEARER_TOKENS, 10000).
+-define(MAX_ENDPOINT_VERDICTS, 2048).
+-define(MAX_ENDPOINT_HOST_BYTES, 253).
+-define(ENDPOINT_VERDICT_EVICT_BATCH, 512).
 -define(EVICT_BATCH, 4096).
 -define(MAX_EVICT_RESEEKS, 8).
 -define(RESERVATION_TTL_MS, 120000).
@@ -55,6 +61,7 @@
 ]).
 
 -type fill() :: {atom(), pos_integer(), [term()]}.
+-type endpoint_verdict() :: ok | {error, term()}.
 
 -spec init() -> ok.
 init() ->
@@ -63,6 +70,7 @@ init() ->
     ensure_table(?BLOCKED_IDS),
     ensure_table(?BADGE_COUNTS),
     ensure_table(?BEARER_TOKENS),
+    ensure_table(?ENDPOINT_VERDICTS),
     ok.
 
 -spec get_user_guild_settings(integer(), integer()) -> map() | undefined.
@@ -219,6 +227,48 @@ put_bearer_token(Key, Token, ExpiresAt) when is_binary(Token), is_integer(Expire
         error:badarg -> ok
     end.
 
+-spec get_endpoint_verdict(binary()) -> {ok, endpoint_verdict()} | undefined.
+get_endpoint_verdict(Host) when is_binary(Host) ->
+    try ets:lookup(?ENDPOINT_VERDICTS, Host) of
+        [{_, ok, ExpiresAt}] when is_integer(ExpiresAt) ->
+            live_endpoint_verdict(ok, ExpiresAt);
+        [{_, {error, Reason}, ExpiresAt}] when is_integer(ExpiresAt) ->
+            live_endpoint_verdict({error, Reason}, ExpiresAt);
+        _ ->
+            undefined
+    catch
+        error:badarg -> undefined
+    end.
+
+-spec live_endpoint_verdict(endpoint_verdict(), integer()) ->
+    {ok, endpoint_verdict()} | undefined.
+live_endpoint_verdict(Verdict, ExpiresAt) ->
+    case erlang:system_time(second) < ExpiresAt of
+        true -> {ok, Verdict};
+        false -> undefined
+    end.
+
+-spec put_endpoint_verdict(binary(), endpoint_verdict(), pos_integer()) -> ok.
+put_endpoint_verdict(Host, Verdict, TtlSeconds) when
+    is_binary(Host), is_integer(TtlSeconds), TtlSeconds > 0
+->
+    case byte_size(Host) =< ?MAX_ENDPOINT_HOST_BYTES of
+        true -> insert_endpoint_verdict(Host, Verdict, TtlSeconds);
+        false -> ok
+    end.
+
+-spec insert_endpoint_verdict(binary(), endpoint_verdict(), pos_integer()) -> ok.
+insert_endpoint_verdict(Host, Verdict, TtlSeconds) ->
+    guard_table_size(
+        ?ENDPOINT_VERDICTS, ?MAX_ENDPOINT_VERDICTS, ?ENDPOINT_VERDICT_EVICT_BATCH
+    ),
+    ExpiresAt = erlang:system_time(second) + TtlSeconds,
+    try ets:insert(?ENDPOINT_VERDICTS, {Host, Verdict, ExpiresAt}) of
+        _ -> ok
+    catch
+        error:badarg -> ok
+    end.
+
 -spec write(atom(), tuple()) -> ok.
 write(Table, Row) ->
     guard_table_size(Table, ?MAX_TABLE_ENTRIES),
@@ -292,7 +342,8 @@ cache_stats() ->
         push_subscriptions_size => table_size(?SUBSCRIPTIONS),
         blocked_ids_size => table_size(?BLOCKED_IDS),
         badge_counts_size => table_size(?BADGE_COUNTS),
-        bearer_tokens_size => table_size(?BEARER_TOKENS)
+        bearer_tokens_size => table_size(?BEARER_TOKENS),
+        endpoint_verdicts_size => table_size(?ENDPOINT_VERDICTS)
     }.
 
 -spec evict_tables(map()) -> ok.
@@ -300,6 +351,7 @@ evict_tables(MaxEntries) ->
     Now = erlang:system_time(second),
     select_delete(?BLOCKED_IDS, expired_rows(Now)),
     select_delete(?BEARER_TOKENS, expired_rows(Now)),
+    select_delete(?ENDPOINT_VERDICTS, expired_rows(Now)),
     lists:foreach(
         fun expire_reservations/1,
         [?USER_GUILD_SETTINGS, ?SUBSCRIPTIONS, ?BLOCKED_IDS, ?BADGE_COUNTS]
@@ -309,6 +361,7 @@ evict_tables(MaxEntries) ->
     evict_table(?BLOCKED_IDS, maps:get(blocked_ids, MaxEntries, undefined)),
     evict_table(?BADGE_COUNTS, maps:get(badge_counts, MaxEntries, undefined)),
     evict_table(?BEARER_TOKENS, ?MAX_BEARER_TOKENS),
+    evict_table(?ENDPOINT_VERDICTS, ?MAX_ENDPOINT_VERDICTS),
     ok.
 
 -spec expired_rows(integer()) -> ets:match_spec().
@@ -330,8 +383,12 @@ select_delete(Table, MatchSpec) ->
 
 -spec guard_table_size(atom(), non_neg_integer()) -> ok.
 guard_table_size(Table, MaxEntries) ->
+    guard_table_size(Table, MaxEntries, ?EVICT_BATCH).
+
+-spec guard_table_size(atom(), non_neg_integer(), pos_integer()) -> ok.
+guard_table_size(Table, MaxEntries, EvictBatch) ->
     case table_size(Table) >= MaxEntries of
-        true -> evict_table(Table, max(0, MaxEntries - ?EVICT_BATCH));
+        true -> evict_table(Table, max(0, MaxEntries - EvictBatch));
         false -> ok
     end.
 
