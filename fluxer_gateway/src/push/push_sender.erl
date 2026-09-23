@@ -57,8 +57,7 @@ notification_payload(UserId, SendContext) ->
     } = SendContext,
     AuthorData = maps:get(<<"author">>, MessageData, #{}),
     AuthorUsername = maps:get(<<"username">>, AuthorData, <<"Unknown">>),
-    AuthorAvatar = maps:get(<<"avatar">>, AuthorData, null),
-    AuthorAvatarUrl = resolve_avatar_url(AuthorData, AuthorAvatar),
+    AuthorAvatarUrl = push_notification_format:resolve_author_avatar_url(AuthorData),
     push_notification:build_notification_payload(#{
         message_data => MessageData,
         guild_id => GuildId,
@@ -162,28 +161,6 @@ send_clear_channel_notifications(UserId, ChannelId, MessageId, BadgeCountsTtlSec
     ),
     ok.
 
--spec resolve_avatar_url(map(), binary() | null) -> binary().
-resolve_avatar_url(AuthorData, null) ->
-    default_avatar_url(author_id_binary(AuthorData));
-resolve_avatar_url(AuthorData, Hash) ->
-    case author_id_binary(AuthorData) of
-        undefined -> default_avatar_url(undefined);
-        UserId -> push_utils:construct_avatar_url(UserId, Hash)
-    end.
-
--spec author_id_binary(map()) -> binary() | undefined.
-author_id_binary(AuthorData) ->
-    case snowflake_id:parse_optional(maps:get(<<"id">>, AuthorData, undefined)) of
-        undefined -> undefined;
-        UserId -> integer_to_binary(UserId)
-    end.
-
--spec default_avatar_url(binary() | undefined) -> binary().
-default_avatar_url(undefined) ->
-    push_utils:get_default_avatar_url(<<>>);
-default_avatar_url(UserId) ->
-    push_utils:get_default_avatar_url(UserId).
-
 -spec handle_failed_subscriptions(integer(), list()) -> ok.
 handle_failed_subscriptions(_UserId, []) ->
     ok;
@@ -208,27 +185,45 @@ send_subscriptions(UserId, Payload, [Subscription | Rest], FailedAcc) ->
 
 -spec send_notification_to_subscription(integer(), map(), map()) -> false | {true, map()}.
 send_notification_to_subscription(UserId, Subscription, Payload) ->
+    Platform = subscription_platform(Subscription),
+    WebPushShape = web_push_subscription(Subscription),
     logger:debug("Push: sending to subscription", #{
         user_id => UserId,
         endpoint => maps:get(<<"endpoint">>, Subscription, undefined),
-        platform => subscription_platform(Subscription)
+        platform => Platform,
+        web_push_shape => WebPushShape
     }),
-    case subscription_platform(Subscription) of
-        <<"web_push">> ->
+    case WebPushShape of
+        true ->
             push_sender_delivery:send_webpush_notification(UserId, Subscription, Payload);
-        <<"android_unified_push">> ->
-            push_sender_delivery:send_webpush_notification(UserId, Subscription, Payload);
-        <<"android_fcm">> ->
-            push_fcm:send(UserId, Subscription, Payload);
-        <<"ios_apns">> ->
-            push_apns:send(UserId, Subscription, Payload);
-        Platform ->
-            logger:warning(
-                "Push: unsupported subscription platform",
-                #{user_id => UserId, platform => Platform}
-            ),
-            false
+        false ->
+            send_platform_notification(UserId, Platform, Subscription, Payload)
     end.
+
+-spec send_platform_notification(integer(), binary(), map(), map()) -> false | {true, map()}.
+send_platform_notification(UserId, <<"web_push">>, Subscription, Payload) ->
+    push_sender_delivery:send_webpush_notification(UserId, Subscription, Payload);
+send_platform_notification(UserId, <<"android_unified_push">>, Subscription, Payload) ->
+    push_sender_delivery:send_webpush_notification(UserId, Subscription, Payload);
+send_platform_notification(UserId, <<"android_fcm">>, Subscription, Payload) ->
+    push_fcm:send(UserId, Subscription, Payload);
+send_platform_notification(UserId, <<"ios_apns">>, Subscription, Payload) ->
+    push_apns:send(UserId, Subscription, Payload);
+send_platform_notification(UserId, Platform, _Subscription, _Payload) ->
+    logger:warning(
+        "Push: unsupported subscription platform",
+        #{user_id => UserId, platform => Platform}
+    ),
+    false.
+
+-spec web_push_subscription(map()) -> boolean().
+web_push_subscription(Subscription) ->
+    subscription_key_present(maps:get(<<"p256dh_key">>, Subscription, null)) andalso
+        subscription_key_present(maps:get(<<"auth_key">>, Subscription, null)).
+
+-spec subscription_key_present(term()) -> boolean().
+subscription_key_present(Value) ->
+    is_binary(Value) andalso byte_size(Value) > 0.
 
 -spec subscription_platform(map()) -> binary().
 subscription_platform(Subscription) ->
@@ -304,27 +299,27 @@ badge_batched_user_count([Batch | Rest], Acc) ->
 
 -spec fetch_next_badge_batch([[integer()]], badge_batch_acc(), integer(), integer()) ->
     badge_batch_acc().
-fetch_next_badge_batch(
-    [Batch | Rest], {Counts, FailedBatches, DefaultedUsers, Consecutive}, CachedAt, Deadline
-) ->
+fetch_next_badge_batch([Batch | Rest], Acc, CachedAt, Deadline) ->
+    fetch_badge_count_batches(
+        Rest, fetch_badge_batch(Batch, Acc, CachedAt), CachedAt, Deadline
+    ).
+
+-spec fetch_badge_batch([integer()], badge_batch_acc(), integer()) -> badge_batch_acc().
+fetch_badge_batch(Batch, {Counts, FailedBatches, DefaultedUsers, Consecutive}, CachedAt) ->
     Request = #{
         <<"type">> => <<"get_badge_counts">>,
         <<"user_ids">> => [integer_to_binary(UserId) || UserId <- Batch]
     },
-    case rpc_client:call(Request) of
+    Fill = push_ets_cache:reserve_badge_counts(Batch),
+    try rpc_client:call(Request) of
         {ok, Data} ->
             BadgeData = maps:get(<<"badge_counts">>, Data, #{}),
-            Merged = merge_badge_data(Batch, BadgeData, Counts, CachedAt),
-            fetch_badge_count_batches(
-                Rest, {Merged, FailedBatches, DefaultedUsers, 0}, CachedAt, Deadline
-            );
+            Merged = merge_badge_data(Batch, BadgeData, Counts, CachedAt, Fill),
+            {Merged, FailedBatches, DefaultedUsers, 0};
         {error, _Reason} ->
-            fetch_badge_count_batches(
-                Rest,
-                {Counts, FailedBatches + 1, DefaultedUsers + length(Batch), Consecutive + 1},
-                CachedAt,
-                Deadline
-            )
+            {Counts, FailedBatches + 1, DefaultedUsers + length(Batch), Consecutive + 1}
+    after
+        push_ets_cache:release(Fill)
     end.
 
 -spec report_badge_fetch_failures(non_neg_integer(), non_neg_integer()) -> ok.
@@ -386,13 +381,13 @@ badge_fetch_budget_ms() ->
         _ -> ?DEFAULT_BADGE_FETCH_BUDGET_MS
     end.
 
--spec merge_badge_data([integer()], map(), map(), integer()) -> map().
-merge_badge_data(UserIds, BadgeData, Counts, CachedAt) ->
+-spec merge_badge_data([integer()], map(), map(), integer(), push_ets_cache:fill()) -> map().
+merge_badge_data(UserIds, BadgeData, Counts, CachedAt, Fill) ->
     lists:foldl(
         fun(UserId, Acc) ->
             UserIdBin = integer_to_binary(UserId),
             Count = normalize_badge_count(maps:get(UserIdBin, BadgeData, 0)),
-            push_ets_cache:put_badge_count(UserId, Count, CachedAt),
+            push_ets_cache:put_badge_count(UserId, Count, CachedAt, Fill),
             Acc#{UserId => Count}
         end,
         Counts,
@@ -406,6 +401,99 @@ normalize_badge_count(_) -> 0.
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
+web_push_row(Platform) ->
+    #{
+        <<"subscription_id">> => <<"sub-web">>,
+        <<"endpoint">> => <<"https://relay.fluxer.app/push/abc">>,
+        <<"p256dh_key">> => <<"p256dh">>,
+        <<"auth_key">> => <<"auth">>,
+        <<"platform">> => Platform
+    }.
+
+legacy_row(Platform) ->
+    #{
+        <<"subscription_id">> => <<"sub-legacy">>,
+        <<"endpoint">> => <<"raw-vendor-device-token">>,
+        <<"p256dh_key">> => null,
+        <<"auth_key">> => null,
+        <<"platform">> => Platform
+    }.
+
+routed_target(Subscription) ->
+    ok = meck:new(push_sender_delivery, [passthrough, no_link]),
+    ok = meck:new(push_fcm, [passthrough, no_link]),
+    ok = meck:new(push_apns, [passthrough, no_link]),
+    try
+        ok = meck:expect(push_sender_delivery, send_webpush_notification, fun(_U, _S, _P) ->
+            false
+        end),
+        ok = meck:expect(push_fcm, send, fun(_U, _S, _P) -> false end),
+        ok = meck:expect(push_apns, send, fun(_U, _S, _P) -> false end),
+        ?assertEqual(false, send_notification_to_subscription(7, Subscription, #{})),
+        routed_target_counts()
+    after
+        meck:unload(push_apns),
+        meck:unload(push_fcm),
+        meck:unload(push_sender_delivery)
+    end.
+
+routed_target_counts() ->
+    Counts = {
+        meck:num_calls(push_sender_delivery, send_webpush_notification, '_'),
+        meck:num_calls(push_fcm, send, '_'),
+        meck:num_calls(push_apns, send, '_')
+    },
+    case Counts of
+        {1, 0, 0} -> web_push;
+        {0, 1, 0} -> fcm;
+        {0, 0, 1} -> apns;
+        Other -> Other
+    end.
+
+web_push_row_takes_web_push_path_on_ios_apns_test() ->
+    ?assertEqual(web_push, routed_target(web_push_row(<<"ios_apns">>))).
+
+web_push_row_takes_web_push_path_on_android_fcm_test() ->
+    ?assertEqual(web_push, routed_target(web_push_row(<<"android_fcm">>))).
+
+web_push_row_takes_web_push_path_on_android_unified_push_test() ->
+    ?assertEqual(web_push, routed_target(web_push_row(<<"android_unified_push">>))).
+
+legacy_row_takes_apns_path_on_ios_apns_test() ->
+    ?assertEqual(apns, routed_target(legacy_row(<<"ios_apns">>))).
+
+legacy_row_takes_fcm_path_on_android_fcm_test() ->
+    ?assertEqual(fcm, routed_target(legacy_row(<<"android_fcm">>))).
+
+legacy_row_takes_web_push_path_on_android_unified_push_test() ->
+    ?assertEqual(web_push, routed_target(legacy_row(<<"android_unified_push">>))).
+
+only_p256dh_key_does_not_take_web_push_path_test() ->
+    Subscription = maps:put(<<"auth_key">>, null, web_push_row(<<"ios_apns">>)),
+    ?assertEqual(apns, routed_target(Subscription)).
+
+only_auth_key_does_not_take_web_push_path_test() ->
+    Subscription = maps:put(<<"p256dh_key">>, null, web_push_row(<<"android_fcm">>)),
+    ?assertEqual(fcm, routed_target(Subscription)).
+
+missing_key_fields_do_not_take_web_push_path_test() ->
+    Subscription = maps:without(
+        [<<"p256dh_key">>, <<"auth_key">>], web_push_row(<<"ios_apns">>)
+    ),
+    ?assertEqual(apns, routed_target(Subscription)).
+
+empty_key_does_not_take_web_push_path_test() ->
+    Subscription = maps:put(<<"auth_key">>, <<>>, web_push_row(<<"android_fcm">>)),
+    ?assertEqual(fcm, routed_target(Subscription)).
+
+web_push_row_takes_web_push_path_on_unknown_platform_test() ->
+    ?assertEqual(web_push, routed_target(web_push_row(<<"desktop_widget">>))).
+
+web_push_subscription_predicate_test() ->
+    ?assertEqual(true, web_push_subscription(web_push_row(<<"ios_apns">>))),
+    ?assertEqual(false, web_push_subscription(legacy_row(<<"ios_apns">>))),
+    ?assertEqual(false, web_push_subscription(#{})).
+
 chunk_badge_user_ids_uses_bounded_batches_test() ->
     ?assertEqual([[1, 2], [3, 4], [5]], chunk_badge_user_ids([1, 2, 3, 4, 5], 2, [])),
     ?assertEqual([], chunk_badge_user_ids([], 2, [])).
@@ -415,7 +503,9 @@ fetch_badge_counts_in_batches_keeps_successful_batches_test() ->
     ok = meck:new(push_ets_cache, [passthrough, no_link]),
     application:set_env(fluxer_gateway, push_badge_fetch_batch_size, 2),
     try
-        ok = meck:expect(push_ets_cache, put_badge_count, fun(_UserId, _Count, _At) -> ok end),
+        ok = meck:expect(push_ets_cache, put_badge_count, fun(_UserId, _Count, _At, _Fill) ->
+            ok
+        end),
         ok = meck:expect(rpc_client, call, fun(#{<<"user_ids">> := Ids}) ->
             case Ids of
                 [<<"1">>, <<"2">>] ->
@@ -468,7 +558,9 @@ badge_fetch_defaults_missing_users_to_zero_test() ->
     ok = meck:new(rpc_client, [passthrough, no_link]),
     ok = meck:new(push_ets_cache, [passthrough, no_link]),
     try
-        ok = meck:expect(push_ets_cache, put_badge_count, fun(_UserId, _Count, _At) -> ok end),
+        ok = meck:expect(push_ets_cache, put_badge_count, fun(_UserId, _Count, _At, _Fill) ->
+            ok
+        end),
         ok = meck:expect(rpc_client, call, fun(#{<<"user_ids">> := Ids}) ->
             ?assertEqual([<<"1">>, <<"2">>, <<"3">>], Ids),
             {ok, #{<<"badge_counts">> => #{<<"1">> => 1}}}

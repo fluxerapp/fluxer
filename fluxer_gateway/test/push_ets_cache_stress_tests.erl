@@ -50,7 +50,7 @@ concurrent_subscription_reads_and_writes_keep_cache_consistent() ->
     end.
 
 put_subscription_for_even_user(UserId) when UserId rem 2 =:= 0 ->
-    ok = push_ets_cache:put_subscriptions(UserId, [#{endpoint => endpoint(UserId)}]);
+    ok = put_subscriptions(UserId, [#{endpoint => endpoint(UserId)}]);
 put_subscription_for_even_user(_UserId) ->
     ok.
 
@@ -68,7 +68,7 @@ writer_loop(WriterIndex, Count) ->
     End = Start + Count - 1,
     lists:foreach(
         fun(UserId) ->
-            ok = push_ets_cache:put_subscriptions(UserId, [#{endpoint => endpoint(UserId)}])
+            ok = put_subscriptions(UserId, [#{endpoint => endpoint(UserId)}])
         end,
         lists:seq(Start, End)
     ).
@@ -102,6 +102,11 @@ collect_done(Ref, Message, Remaining) ->
     after 5000 ->
         ?assert(false)
     end.
+
+put_subscriptions(UserId, Subscriptions) ->
+    push_ets_cache:put_subscriptions(
+        UserId, Subscriptions, push_ets_cache:reserve_subscriptions([UserId])
+    ).
 
 endpoint(UserId) ->
     UserIdBin = integer_to_binary(UserId),

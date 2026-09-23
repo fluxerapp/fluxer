@@ -418,6 +418,14 @@ fn deserialize_instance_config_response_with_unknown_keys() {
             "future_delivery_knob": 9,
             "excluded_user_ids": []
         },
+        "push_service_delivery": {
+            "enabled": true,
+            "config_version": 3,
+            "rollout_basis_points": 5000,
+            "rollout_salt": "push-service-delivery-v1",
+            "included_user_ids": ["1500000000000000002"],
+            "excluded_user_ids": []
+        },
         "experiment_delivery": {"poll_interval_seconds": 300, "poll_jitter_percent": 15},
         "registration": {
             "mode": "open",

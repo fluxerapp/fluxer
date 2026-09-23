@@ -34,7 +34,6 @@ const FORBIDDEN_MARKETING_WORDS = [
 ];
 
 const FORBIDDEN_TOPICS = [
-	{pattern: /mobile[- ]device/iu, reason: 'mobile notifications API does not exist in the live era'},
 	{pattern: /push subscription/iu, reason: 'push API does not exist in the live era'},
 	{pattern: /\/push\/events/u, reason: 'push events API does not exist in the live era'},
 	{pattern: /voice[- ]public[- ]key/iu, reason: 'voice connection API does not exist in the live era'},

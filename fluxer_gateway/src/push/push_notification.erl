@@ -6,10 +6,35 @@
 -export([
     build_notification_title/5,
     build_notification_payload/1,
-    build_clear_notification_payload/4
+    build_clear_notification_payload/4,
+    fit_payload_json/2,
+    is_clear/1
 ]).
 
 -export_type([notification_input/0]).
+
+-define(WEB_PUSH_MARKER, 8030).
+-define(CLEAR_TYPE, <<"notification_clear">>).
+-define(CLEAR_ACTION, <<"clear_channel">>).
+-define(FALLBACK_TITLE, <<"Fluxer">>).
+-define(FALLBACK_TAG, <<"fluxer-message">>).
+-define(SHRUNK_BODY_MAX_BYTES, 40).
+-define(MINIMAL_TITLE_MAX_BYTES, 120).
+-define(SHRINK_STEPS, [media, icons, body, minimal]).
+-define(BLOCK_KEYS, [<<"notification">>, <<"data">>]).
+-define(MEDIA_KEYS, [<<"image_url">>, <<"image">>]).
+-define(ICON_KEYS, [<<"icon">>, <<"badge">>, <<"author_avatar_url">>]).
+-define(MINIMAL_DATA_KEYS, [
+    <<"channel_id">>,
+    <<"message_id">>,
+    <<"guild_id">>,
+    <<"target_user_id">>,
+    <<"notification_tag">>,
+    <<"url">>,
+    <<"badge_count">>
+]).
+
+-type shrink_step() :: media | icons | body | minimal.
 
 -type push_ctx() :: #{
     channel_id := integer(),
@@ -137,7 +162,7 @@ assemble_payload(
     Notification = build_notification_body(Ctx, Title, ContentPreview, AuthorAvatarUrl, Data),
     maps:merge(
         #{
-            <<"web_push">> => 8030,
+            <<"web_push">> => ?WEB_PUSH_MARKER,
             <<"notification">> => Notification,
             <<"title">> => Title,
             <<"body">> => ContentPreview,
@@ -215,8 +240,8 @@ build_clear_notification_payload(TargetUserId, ChannelId, MessageId, BadgeCount)
     BadgeValue = max(0, BadgeCount),
     Tag = build_channel_tag(ChannelId),
     Data = #{
-        <<"type">> => <<"notification_clear">>,
-        <<"action">> => <<"clear_channel">>,
+        <<"type">> => ?CLEAR_TYPE,
+        <<"action">> => ?CLEAR_ACTION,
         <<"channel_id">> => integer_to_binary(ChannelId),
         <<"message_id">> => integer_to_binary(MessageId),
         <<"target_user_id">> => integer_to_binary(TargetUserId),
@@ -225,14 +250,14 @@ build_clear_notification_payload(TargetUserId, ChannelId, MessageId, BadgeCount)
         <<"badge_count">> => BadgeValue
     },
     #{
-        <<"type">> => <<"notification_clear">>,
-        <<"action">> => <<"clear_channel">>,
+        <<"type">> => ?CLEAR_TYPE,
+        <<"action">> => ?CLEAR_ACTION,
         <<"silent">> => true,
         <<"tag">> => Tag,
         <<"notification_tag">> => Tag,
         <<"data">> => Data,
         <<"badge_count">> => BadgeValue,
-        <<"web_push">> => 8030,
+        <<"web_push">> => ?WEB_PUSH_MARKER,
         <<"notification">> => #{
             <<"tag">> => Tag,
             <<"data">> => Data,
@@ -240,6 +265,175 @@ build_clear_notification_payload(TargetUserId, ChannelId, MessageId, BadgeCount)
             <<"close">> => true
         }
     }.
+
+-spec is_clear(map()) -> boolean().
+is_clear(Payload) ->
+    maps:get(<<"type">>, Payload, undefined) =:= ?CLEAR_TYPE orelse
+        maps:get(<<"action">>, Payload, undefined) =:= ?CLEAR_ACTION.
+
+-spec fit_payload_json(map(), non_neg_integer()) -> binary().
+fit_payload_json(Payload, Budget) ->
+    Encoded = encode_payload(Payload),
+    case byte_size(Encoded) =< Budget of
+        true -> Encoded;
+        false -> shrink_to_budget(Payload, Budget, ?SHRINK_STEPS)
+    end.
+
+-spec shrink_to_budget(map(), non_neg_integer(), [shrink_step()]) -> binary().
+shrink_to_budget(Payload, _Budget, []) ->
+    encode_payload(Payload);
+shrink_to_budget(Payload, Budget, [Step | RemainingSteps]) ->
+    Shrunk = shrink_payload(Payload, Step, Budget),
+    Encoded = encode_payload(Shrunk),
+    case byte_size(Encoded) =< Budget of
+        true -> Encoded;
+        false -> shrink_to_budget(Shrunk, Budget, RemainingSteps)
+    end.
+
+-spec shrink_payload(map(), shrink_step(), non_neg_integer()) -> map().
+shrink_payload(Payload, media, _Budget) ->
+    drop_block_keys(Payload, ?MEDIA_KEYS);
+shrink_payload(Payload, icons, _Budget) ->
+    drop_block_keys(Payload, ?ICON_KEYS);
+shrink_payload(Payload, body, _Budget) ->
+    truncate_block_bodies(Payload);
+shrink_payload(Payload, minimal, Budget) ->
+    minimal_payload(Payload, Budget).
+
+-spec drop_block_keys(map(), [binary()]) -> map().
+drop_block_keys(Payload, Keys) ->
+    map_blocks(Payload, fun(Block) -> maps:without(Keys, Block) end).
+
+-spec truncate_block_bodies(map()) -> map().
+truncate_block_bodies(Payload) ->
+    map_blocks(Payload, fun truncate_block_body/1).
+
+-spec truncate_block_body(map()) -> map().
+truncate_block_body(Block) ->
+    case maps:get(<<"body">>, Block, undefined) of
+        Body when is_binary(Body) ->
+            Block#{
+                <<"body">> => push_notification_format:truncate_bytes(
+                    Body, ?SHRUNK_BODY_MAX_BYTES
+                )
+            };
+        _ ->
+            Block
+    end.
+
+-spec map_blocks(map(), fun((map()) -> map())) -> map().
+map_blocks(Block, Apply) ->
+    Apply(
+        lists:foldl(fun(Key, Acc) -> map_nested_block(Key, Acc, Apply) end, Block, ?BLOCK_KEYS)
+    ).
+
+-spec map_nested_block(binary(), map(), fun((map()) -> map())) -> map().
+map_nested_block(Key, Block, Apply) ->
+    case maps:get(Key, Block, undefined) of
+        Nested when is_map(Nested) -> Block#{Key => map_blocks(Nested, Apply)};
+        _ -> Block
+    end.
+
+-spec minimal_payload(map(), non_neg_integer()) -> map().
+minimal_payload(Payload, Budget) ->
+    Title = push_notification_format:truncate_bytes(
+        first_text(Payload, <<"title">>, ?FALLBACK_TITLE), ?MINIMAL_TITLE_MAX_BYTES
+    ),
+    Tag = first_text(Payload, <<"tag">>, ?FALLBACK_TAG),
+    Url = minimal_url(Payload),
+    Data = minimal_data(Payload),
+    first_payload_within_budget(
+        [
+            minimal_envelope(Title, Tag, Url, Data),
+            minimal_envelope(Title, Tag, <<>>, Data),
+            minimal_envelope(Title, Tag, <<>>, #{}),
+            minimal_envelope(Title, <<>>, <<>>, #{})
+        ],
+        Budget,
+        Title
+    ).
+
+-spec first_payload_within_budget([map()], non_neg_integer(), binary()) -> map().
+first_payload_within_budget([], Budget, Title) ->
+    title_only_payload(Title, Budget);
+first_payload_within_budget([Candidate | Rest], Budget, Title) ->
+    case byte_size(encode_payload(Candidate)) =< Budget of
+        true -> Candidate;
+        false -> first_payload_within_budget(Rest, Budget, Title)
+    end.
+
+-spec minimal_envelope(binary(), binary(), binary(), map()) -> map().
+minimal_envelope(Title, Tag, Url, Data) ->
+    #{
+        <<"web_push">> => ?WEB_PUSH_MARKER,
+        <<"title">> => Title,
+        <<"tag">> => Tag,
+        <<"data">> => Data,
+        <<"notification">> => #{
+            <<"title">> => Title,
+            <<"tag">> => Tag,
+            <<"navigate">> => Url,
+            <<"data">> => Data
+        }
+    }.
+
+-spec title_only_payload(binary(), non_neg_integer()) -> map().
+title_only_payload(Title, Budget) ->
+    Candidate = #{<<"web_push">> => ?WEB_PUSH_MARKER, <<"title">> => Title},
+    case byte_size(Title) =:= 0 orelse byte_size(encode_payload(Candidate)) =< Budget of
+        true ->
+            Candidate;
+        false ->
+            title_only_payload(
+                push_notification_format:truncate_bytes(Title, byte_size(Title) - 1), Budget
+            )
+    end.
+
+-spec minimal_url(map()) -> binary().
+minimal_url(Payload) ->
+    case first_text(Payload, <<"navigate">>, <<>>) of
+        <<>> -> data_text(Payload, <<"url">>);
+        Url -> Url
+    end.
+
+-spec minimal_data(map()) -> map().
+minimal_data(Payload) ->
+    case maps:get(<<"data">>, Payload, undefined) of
+        Data when is_map(Data) -> maps:with(?MINIMAL_DATA_KEYS, Data);
+        _ -> #{}
+    end.
+
+-spec data_text(map(), binary()) -> binary().
+data_text(Payload, Key) ->
+    case maps:get(<<"data">>, Payload, undefined) of
+        Data when is_map(Data) -> text_or(maps:get(Key, Data, undefined), <<>>);
+        _ -> <<>>
+    end.
+
+-spec first_text(map(), binary(), binary()) -> binary().
+first_text(Payload, Key, Fallback) ->
+    case text_or(maps:get(Key, Payload, undefined), <<>>) of
+        <<>> ->
+            nested_text(maps:get(<<"notification">>, Payload, undefined), Key, Fallback);
+        Value ->
+            Value
+    end.
+
+-spec nested_text(term(), binary(), binary()) -> binary().
+nested_text(Notification, Key, Fallback) when is_map(Notification) ->
+    text_or(maps:get(Key, Notification, undefined), Fallback);
+nested_text(_Notification, _Key, Fallback) ->
+    Fallback.
+
+-spec text_or(term(), binary()) -> binary().
+text_or(Value, _Fallback) when is_binary(Value), byte_size(Value) > 0 ->
+    Value;
+text_or(_Value, Fallback) ->
+    Fallback.
+
+-spec encode_payload(map()) -> binary().
+encode_payload(Payload) ->
+    iolist_to_binary(json:encode(Payload)).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -410,6 +604,75 @@ build_clear_notification_payload_test() ->
     ?assertEqual(<<"channel:456">>, maps:get(<<"tag">>, Result)),
     ?assertEqual(<<"channel:456">>, maps:get(<<"notification_tag">>, Data)),
     ?assertEqual(2, maps:get(<<"badge_count">>, Data)).
+
+is_clear_test() ->
+    ?assertEqual(true, is_clear(build_clear_notification_payload(999, 456, 789, 2))),
+    ?assertEqual(
+        false,
+        is_clear(
+            test_notification_payload(#{<<"content">> => <<"hi">>}, 0, undefined, undefined)
+        )
+    ).
+
+fit_payload_json_leaves_a_payload_within_budget_untouched_test() ->
+    Payload = test_notification_payload(#{<<"content">> => <<"hi">>}, 0, undefined, undefined),
+    Encoded = encode_payload(Payload),
+    ?assertEqual(Encoded, fit_payload_json(Payload, byte_size(Encoded))).
+
+fit_payload_json_drops_media_first_test() ->
+    ImageUrl = <<"https://media.example/external/", (binary:copy(<<"i">>, 400))/binary>>,
+    MessageData = #{
+        <<"content">> => <<"Photo">>,
+        <<"mentions">> => [],
+        <<"attachments">> => [
+            #{<<"content_type">> => <<"image/png">>, <<"proxy_url">> => ImageUrl}
+        ]
+    },
+    Payload = test_notification_payload(MessageData, 123, <<"Server">>, <<"general">>),
+    ?assert(byte_size(encode_payload(Payload)) > 2713),
+    Fitted = fit_payload_json(Payload, 2713),
+    ?assert(byte_size(Fitted) =< 2713),
+    ?assertEqual(nomatch, binary:match(Fitted, ImageUrl)),
+    Decoded = json:decode(Fitted),
+    ?assertEqual(<<"Photo">>, maps:get(<<"body">>, Decoded)),
+    ?assertEqual(<<"http://avatar">>, maps:get(<<"icon">>, Decoded)).
+
+fit_payload_json_falls_back_to_a_minimal_payload_test() ->
+    Payload = test_notification_payload(
+        #{<<"content">> => <<"hi">>, <<"mentions">> => []},
+        123,
+        binary:copy(<<"g">>, 4000),
+        binary:copy(<<"c">>, 4000)
+    ),
+    Fitted = fit_payload_json(Payload, 2713),
+    ?assert(byte_size(Fitted) =< 2713),
+    Decoded = json:decode(Fitted),
+    ?assertEqual(<<"channel:456:789">>, maps:get(<<"tag">>, Decoded)),
+    ?assertEqual(?MINIMAL_TITLE_MAX_BYTES, byte_size(maps:get(<<"title">>, Decoded))).
+
+fit_payload_json_reaches_a_title_only_payload_test() ->
+    Payload = test_notification_payload(
+        #{<<"content">> => <<"hi">>, <<"mentions">> => []},
+        123,
+        binary:copy(<<"g">>, 4000),
+        binary:copy(<<"c">>, 4000)
+    ),
+    Fitted = fit_payload_json(Payload, 60),
+    ?assert(byte_size(Fitted) =< 60),
+    ?assertEqual([<<"title">>, <<"web_push">>], lists:sort(maps:keys(json:decode(Fitted)))).
+
+fit_payload_json_never_splits_a_utf8_character_test() ->
+    Emoji = binary:copy(<<"\xF0\x9F\x98\x80">>, 2000),
+    Payload = test_notification_payload(
+        #{<<"content">> => <<"hi">>, <<"mentions">> => []},
+        123,
+        Emoji,
+        <<"a", Emoji/binary>>
+    ),
+    Fitted = fit_payload_json(Payload, 2713),
+    ?assert(byte_size(Fitted) =< 2713),
+    Title = maps:get(<<"title">>, json:decode(Fitted)),
+    ?assertMatch(Bin when is_binary(Bin), unicode:characters_to_binary(Title, utf8, utf8)).
 
 test_notification_payload(MessageData, GuildId, GuildName, ChannelName) ->
     test_notification_payload(MessageData, GuildId, GuildName, ChannelName, #{}).

@@ -25,6 +25,8 @@ pub struct InstanceConfigResponse {
     #[serde(default)]
     pub screen_share_delivery: ScreenShareDeliveryConfigResponse,
     #[serde(default)]
+    pub push_service_delivery: PushServiceDeliveryConfigResponse,
+    #[serde(default)]
     pub experiment_delivery: ExperimentDeliveryConfigResponse,
 }
 
@@ -449,6 +451,7 @@ impl VoiceE2eeScope {
 }
 
 pub const EXPERIMENT_MAX_TARGETED_USERS: usize = 1_000;
+pub const PUSH_SERVICE_DELIVERY_DEFAULT_SALT: &str = "push-service-delivery-v1";
 pub const SCREEN_SHARE_DELIVERY_DEFAULT_SALT: &str = "screen-share-delivery-v1";
 pub const VOICE_NS_MAX_GUILD_OVERRIDES: usize = 200;
 
@@ -580,6 +583,44 @@ pub struct ScreenShareDeliveryConfigUpdateRequest {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(default)]
+pub struct PushServiceDeliveryConfigResponse {
+    pub enabled: bool,
+    pub config_version: u64,
+    pub rollout_basis_points: u32,
+    pub rollout_salt: String,
+    pub included_user_ids: Vec<String>,
+    pub excluded_user_ids: Vec<String>,
+}
+
+impl Default for PushServiceDeliveryConfigResponse {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            config_version: 0,
+            rollout_basis_points: 0,
+            rollout_salt: PUSH_SERVICE_DELIVERY_DEFAULT_SALT.to_owned(),
+            included_user_ids: Vec::new(),
+            excluded_user_ids: Vec::new(),
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct PushServiceDeliveryConfigUpdateRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enabled: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rollout_basis_points: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rollout_salt: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub included_user_ids: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub excluded_user_ids: Option<Vec<String>>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(default)]
 pub struct ExperimentDeliveryConfigResponse {
     pub poll_interval_seconds: u64,
     pub poll_jitter_percent: u32,
@@ -695,6 +736,8 @@ pub struct InstanceConfigUpdateRequest {
     pub voice_noise_suppression: Option<VoiceNoiseSuppressionConfigUpdateRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub screen_share_delivery: Option<ScreenShareDeliveryConfigUpdateRequest>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub push_service_delivery: Option<PushServiceDeliveryConfigUpdateRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub experiment_delivery: Option<ExperimentDeliveryConfigUpdateRequest>,
 }

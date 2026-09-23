@@ -1,0 +1,152 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Push notifications
+description: Registering a device for push delivery and decrypting what arrives.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+Fluxer delivers a notification to a registered device as [RFC 8291](https://datatracker.ietf.org/doc/html/rfc8291) Web Push. The client generates a P-256 key pair and an auth secret, registers the public half of the pair, and decrypts each delivery with the private half.
+
+Every route here requires a user session. A bot or OAuth2 bearer credential is refused with 403 `ACCESS_DENIED`. An account with an outstanding required action is refused with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`.
+
+## Registration shapes
+
+A registration takes one of two shapes on every platform.
+
+| Shape | What `token` holds | Keys |
+| --- | --- | --- |
+| Web Push | A publicly routable endpoint URL | Both `encryption_key` and `auth_secret` |
+| Legacy | A raw vendor device token | Neither key is sent |
+
+Fluxer reads the shape from the body rather than from `platform`. A `token` that parses as a URL without both keys is refused, and so is a pair of keys sent with a raw vendor token.
+
+`platform` names the transport the device was reached on.
+
+| Value | Meaning |
+| --- | --- |
+| `android_fcm` | Firebase Cloud Messaging |
+| `ios_apns` | Apple Push Notification service |
+| `android_unified_push` | UnifiedPush, on an Android build without Google services |
+
+`android_unified_push` is always a Web Push registration. Sending it with no keys is refused.
+
+## Device registration object
+
+The identifier Fluxer assigns to one registration.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| device_id | string | The registration identifier, 32 lowercase hexadecimal characters |
+
+Fluxer derives the identifier from `platform`, `app_id`, `provider_environment`, and `token`. The same four values always produce the same identifier, and registering them twice replaces the stored entry.
+
+## Register mobile push device
+
+<RouteHeader method="POST" path="/v1/users/@me/mobile-devices" />
+
+Stores a push registration for the current account and returns its [device registration](#device-registration-object) object.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| platform | string | The [platform value](#registration-shapes) the device was reached on |
+| token<sup>1</sup> | string | The endpoint URL, or the raw vendor token on a legacy registration |
+| encryption_key?<sup>2</sup> | string | The base64url P-256 public key (1-1024 characters) |
+| auth_secret?<sup>2</sup> | string | The base64url auth secret (1-1024 characters) |
+| app_id? | string | The client build, such as `stable`, `beta`, or `canary` (default `stable`) |
+| provider_environment? | string | `production` or `development` |
+| user_agent? | string | A user agent string describing the device (1-1024 characters) |
+
+<sup>1</sup> 1 to 4096 characters. A value that parses as a URL is a Web Push registration and needs both keys, and a value that does not must be sent with neither
+
+<sup>2</sup> Sent together or not at all. Sending one alone is refused at the missing field
+
+An `ios_apns` registration with no `provider_environment` is stored as `production`. Every other platform stores no environment.
+
+Register an `https` endpoint. A Web Push registration whose `token` is not a valid URL is refused at `token`, and one whose host is a private or reserved address is refused with `URL_NOT_PUBLICLY_ROUTABLE`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [device registration](#device-registration-object) object | The registration was stored |
+| 400 | [error response](/http-api/#error-response) | The body matches neither shape and the request returns `INVALID_FORM_BODY` |
+
+### Rate limit
+
+20 requests per minute for each authenticated user, on the `user:push:subscribe` bucket.
+
+## Unregister mobile push device
+
+<RouteHeader method="POST" path="/v1/users/@me/mobile-devices/unregister" />
+
+Removes the registration named by the values the client already holds. Returns 200 whether or not a registration was there.
+
+The four values below identify the registration the same way [Register mobile push device](#register-mobile-push-device) does. A value that differs from the one sent at registration names a different registration and removes nothing.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| platform | string | The [platform value](#registration-shapes) sent at registration |
+| token | string | The endpoint URL or raw vendor token sent at registration (1-4096 characters) |
+| app_id? | string | The client build sent at registration (default `stable`) |
+| provider_environment? | string | The environment sent at registration |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| success | boolean | Whether the removal ran, always true |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The registration was removed, or there was none |
+| 400 | [error response](/http-api/#error-response) | `platform` or `token` is missing or malformed and the request returns `INVALID_FORM_BODY` |
+
+### Rate limit
+
+40 requests per minute for each authenticated user, on the `user:push:unsubscribe` bucket.
+
+## Handling an incoming push
+
+Fluxer posts one encrypted record to the registered endpoint for each notification. The push service that owns the endpoint hands that record to the client.
+
+| Header | Value |
+| --- | --- |
+| Content-Encoding | Always `aes128gcm` |
+| Content-Type | Always `application/octet-stream` |
+| TTL | `86400` on a notification and `3600` on a clear |
+| Urgency | `high` on a notification and `low` on a clear |
+| Authorization | A VAPID token and the instance public key |
+
+The body is one `aes128gcm` record encrypted to the `encryption_key` and `auth_secret` the client registered. The client decrypts it locally with the private half of its key pair and its auth secret. Fluxer holds no key that opens the record after it is sealed.
+
+A record is 2816 bytes and its plaintext is at most 2713 bytes of JSON. A notification too large for that is shrunk before it is encrypted, one step at a time, until it fits.
+
+| Step | Effect |
+| --- | --- |
+| First | Media fields are dropped |
+| Second | Icon fields are dropped |
+| Third | The body text is shortened |
+| Last | Only a minimal payload is left |
+
+A client has to tolerate a missing field.
+
+Two kinds of payload arrive. A notification payload describes something to show. A clear payload sets `type` to `notification_clear` and `action` to `clear_channel`, and asks the client to dismiss what it already showed for one channel.
+
+An endpoint that answers 404 or 410 removes the registration. Fluxer retries a transient failure and keeps the registration.
+
+### When decryption fails
+
+A record that does not decrypt cannot be recovered. Discard it and show nothing.
+
+Decryption fails when the registered keys no longer match the pair the client holds. Regenerating the key pair without registering again does that. Fluxer sees none of it. The push service already answered 2xx and the registration stays live.
+
+The client is the only party that can repair it. Unregister the stale entry, then register again with the current public key and auth secret.

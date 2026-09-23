@@ -149,9 +149,16 @@ websocket_info(_, State) ->
     {ok, State}.
 
 -spec terminate(term(), cowboy_req:req(), state() | term()) -> ok.
-terminate(_Reason, _Req, State) when is_map(State) ->
-    terminate_with_state(eqwalizer:dynamic_cast(State));
+terminate(Reason, _Req, State) when is_map(State) ->
+    terminate_with_state(eqwalizer:dynamic_cast(State)),
+    exit_on_client_close(Reason);
 terminate(_Reason, _Req, _State) ->
+    ok.
+
+-spec exit_on_client_close(term()) -> ok.
+exit_on_client_close({remote, Code, _Payload}) when Code =:= 1000; Code =:= 1001 ->
+    exit({shutdown, client_closed});
+exit_on_client_close(_Reason) ->
     ok.
 
 -spec terminate_with_state(state()) -> ok.

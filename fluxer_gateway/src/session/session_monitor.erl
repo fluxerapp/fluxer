@@ -26,7 +26,7 @@ handle_process_down(Ref, Reason, State) ->
     PresenceRef = maps:get(presence_mref, State, undefined),
     case Ref of
         SocketRef when Ref =:= SocketRef ->
-            handle_socket_down(State);
+            handle_socket_down(Reason, State);
         PresenceRef when Ref =:= PresenceRef ->
             handle_presence_down(State);
         _ ->
@@ -63,8 +63,29 @@ handle_call_or_ignore(Ref, Reason, State, Calls) ->
             {noreply, State}
     end.
 
--spec handle_socket_down(session_state()) -> {noreply, session_state()}.
-handle_socket_down(State) ->
+-spec handle_socket_down(term(), session_state()) ->
+    {noreply, session_state()} | {stop, normal, session_state()}.
+handle_socket_down({shutdown, client_closed}, State) ->
+    end_or_hold_session(enrolled_in_push_delivery(State), State);
+handle_socket_down(_Reason, State) ->
+    hold_session_for_resume(State).
+
+-spec end_or_hold_session(boolean(), session_state()) ->
+    {noreply, session_state()} | {stop, normal, session_state()}.
+end_or_hold_session(true, State) ->
+    {stop, normal, State#{socket_pid => undefined, socket_mref => undefined}};
+end_or_hold_session(false, State) ->
+    hold_session_for_resume(State).
+
+-spec enrolled_in_push_delivery(session_state()) -> boolean().
+enrolled_in_push_delivery(State) ->
+    case maps:get(user_id, State, undefined) of
+        UserId when is_integer(UserId) -> push_delivery_config:is_enrolled(UserId);
+        _ -> false
+    end.
+
+-spec hold_session_for_resume(session_state()) -> {noreply, session_state()}.
+hold_session_for_resume(State) ->
     ResumeToken = make_ref(),
     ResumeTimerRef = erlang:send_after(
         constants:resume_timeout(), self(), {resume_timeout, ResumeToken}

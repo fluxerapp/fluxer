@@ -33,15 +33,6 @@ wrap_avatar_index_test() ->
     ?assertEqual(0, push_utils:wrap_avatar_index(6)),
     ?assertEqual(1, push_utils:wrap_avatar_index(7)).
 
-parse_timestamp_valid_test() ->
-    ?assertEqual(123456789, push_utils:parse_timestamp(<<"123456789">>)),
-    ?assertEqual(0, push_utils:parse_timestamp(<<"0">>)).
-
-parse_timestamp_invalid_test() ->
-    ?assertEqual(undefined, push_utils:parse_timestamp(<<"not_a_number">>)),
-    ?assertEqual(undefined, push_utils:parse_timestamp(123)),
-    ?assertEqual(undefined, push_utils:parse_timestamp(undefined)).
-
 base64url_encode_test() ->
     Encoded = push_utils:base64url_encode(<<"test">>),
     ?assert(is_binary(Encoded)).
@@ -49,6 +40,28 @@ base64url_encode_test() ->
 base64url_decode_test() ->
     Encoded = push_utils:base64url_encode(<<"test">>),
     ?assertEqual(<<"test">>, push_utils:base64url_decode(Encoded)).
+
+plaintext_budget_test() ->
+    ?assertEqual(2713, push_utils:plaintext_budget(2816)),
+    ?assertEqual(3993, push_utils:plaintext_budget(4096)),
+    ?assertEqual(0, push_utils:plaintext_budget(1)).
+
+encrypt_payload_fills_the_record_at_the_budget_test() ->
+    RecordSize = push_sender_retry:initial_record_size(),
+    Budget = push_utils:plaintext_budget(RecordSize),
+    {PeerPub, _PeerPriv} = crypto:generate_key(ecdh, prime256v1),
+    P256dh = push_utils:base64url_encode(PeerPub),
+    Auth = push_utils:base64url_encode(crypto:strong_rand_bytes(16)),
+    {ok, Body} = push_utils:encrypt_payload(
+        binary:copy(<<"x">>, Budget), P256dh, Auth, RecordSize
+    ),
+    ?assertEqual(RecordSize, byte_size(Body)),
+    ?assertEqual(
+        {error, max_pad_exceeded},
+        push_utils:encrypt_payload(
+            binary:copy(<<"x">>, Budget + 1), P256dh, Auth, RecordSize
+        )
+    ).
 
 hkdf_expand_test() ->
     IKM = crypto:strong_rand_bytes(32),

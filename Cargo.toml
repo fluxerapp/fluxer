@@ -7,6 +7,7 @@ members = [
 	"fluxer_gifs",
 	"fluxer_svc",
 	"fluxer_messages",
+	"fluxer_push",
 	"fluxer_snowflakes",
 	"tools/ci",
 	"tools/dev",

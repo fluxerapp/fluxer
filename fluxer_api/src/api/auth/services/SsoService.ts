@@ -382,21 +382,8 @@ export class SsoService {
 			throw new RegistrationClosedError();
 		}
 		const pendingApproval = registrationConfig.mode === 'approval';
-		if (pendingApproval) {
-			await this.instanceConfigRepository.getPendingRegistrations();
-		}
 		const user = await this.provisionUserFromClaims(claims, config, {pendingApproval});
 		if (pendingApproval) {
-			await this.instanceConfigRepository.addPendingRegistration({
-				user_id: user.id.toString(),
-				username: user.username,
-				discriminator: user.discriminator,
-				global_name: user.globalName,
-				email: user.email,
-				requested_at: new Date().toISOString(),
-				registration_url_id: null,
-				client_ip: null,
-			});
 			throw new RegistrationPendingApprovalError();
 		}
 		return user;
@@ -537,8 +524,22 @@ export class SsoService {
 			version: 1,
 		} as const;
 		await this.claimSsoIdentity(userId, claims.sub, config);
+		let createAttempted = false;
 		let userCreated = false;
 		try {
+			if (options?.pendingApproval) {
+				await this.instanceConfigRepository.addPendingRegistration({
+					user_id: userId.toString(),
+					username,
+					discriminator: discriminatorResult.discriminator,
+					global_name: globalName,
+					email: userRow.email,
+					requested_at: now.toISOString(),
+					registration_url_id: null,
+					client_ip: null,
+				});
+			}
+			createAttempted = true;
 			const user = await users.create(userRow);
 			userCreated = true;
 			await users.upsertSettings(
@@ -557,6 +558,16 @@ export class SsoService {
 				await this.ssoIdentityRepository.releaseIdentity(config.providerId, claims.sub).catch((releaseError) => {
 					getLogger().error({releaseError}, 'Failed to release SSO identity after user provisioning failed');
 				});
+				if (options?.pendingApproval && !createAttempted) {
+					await this.instanceConfigRepository
+						.removePendingRegistration(userId.toString())
+						.catch((removeError: unknown) => {
+							getLogger().error(
+								{userId: userId.toString(), removeError},
+								'Failed to withdraw the pending approval of an SSO user that was never created',
+							);
+						});
+				}
 			}
 			throw error;
 		}

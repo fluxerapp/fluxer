@@ -69,6 +69,10 @@ const COMPONENTS: &[Component] = &[
         services: &["messages", "messages-shard"],
     },
     Component {
+        image: "fluxer-push",
+        services: &["push"],
+    },
+    Component {
         image: "fluxer-snowflakes",
         services: &["snowflakes", "snowflakes-shard"],
     },
@@ -912,7 +916,7 @@ mod tests {
             .collect();
         let unique: BTreeSet<&str> = services.iter().copied().collect();
         assert_eq!(services.len(), unique.len());
-        assert_eq!(services.len(), 17);
+        assert_eq!(services.len(), 18);
     }
 
     #[test]
@@ -1016,7 +1020,7 @@ mod tests {
                 .lines()
                 .filter(|line| line.starts_with("    image: "))
                 .count(),
-            17
+            18
         );
 
         let api = manifest
@@ -1068,7 +1072,7 @@ mod tests {
         let mut sorted = services.clone();
         sorted.sort_unstable();
         assert_eq!(services, sorted);
-        assert_eq!(services.len(), 17);
+        assert_eq!(services.len(), 18);
     }
 
     #[test]

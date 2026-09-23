@@ -51,6 +51,7 @@ import {createUsersServiceClient} from '@app/api/infrastructure/UsersServiceClie
 import {VirusScanService} from '@app/api/infrastructure/VirusScanService';
 import {GatewayRolloutConfigPublisher} from '@app/api/instance/GatewayRolloutConfigPublisher';
 import {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
+import {PushServiceDeliveryConfigPublisher} from '@app/api/instance/PushServiceDeliveryConfigPublisher';
 import {InviteRepository} from '@app/api/invite/InviteRepository';
 import {Logger} from '@app/api/Logger';
 import {LimitConfigService} from '@app/api/limits/LimitConfigService';
@@ -155,6 +156,18 @@ export const getGatewayRolloutConfigPublisher = singleton(
 			}),
 		),
 );
+
+export const getPushServiceDeliveryConfigPublisher = singleton(
+	() =>
+		new PushServiceDeliveryConfigPublisher(
+			new NatsConnectionManager({
+				url: Config.nats.coreUrl,
+				token: Config.nats.authToken || undefined,
+				name: 'fluxer-api-push-service-delivery-config',
+			}),
+		),
+);
+
 export const getVisionarySlotRepository = singleton(() => new VisionarySlotRepository());
 export const getCacheService: () => ICacheService = singleton(() => new KVCacheProvider({client: getKVClient()}));
 export const getRateLimitService = singleton(() => new RateLimitService(getKVClient()));

@@ -22,7 +22,9 @@ import {
 	matchesPushChannelNotification,
 	normalizePushPayload,
 	resolvePushChannelId,
+	resolvePushMessageId,
 	resolvePushNotificationTag,
+	shouldRenotifyPushNotification,
 	shouldSilenceNonMobilePushNotification,
 } from '@app/features/platform/service_worker/WorkerPushPayload';
 
@@ -214,6 +216,17 @@ const closePushNotifications = async (tag: string | undefined): Promise<number> 
 		return 0;
 	}
 };
+const getShownPushNotifications = async (tag: string): Promise<ReadonlyArray<Notification>> => {
+	if (typeof self.registration.getNotifications !== 'function') {
+		return [];
+	}
+	try {
+		return await self.registration.getNotifications({tag});
+	} catch (error) {
+		await log('error', 'push: failed to read shown notifications', {tag, error: describeError(error)});
+		return [];
+	}
+};
 const closePushNotificationsForChannel = async (channelId: string): Promise<number> => {
 	if (typeof self.registration.getNotifications !== 'function') {
 		return 0;
@@ -347,6 +360,9 @@ self.addEventListener('push', (event: PushEvent) => {
 				})) as ReadonlyArray<WindowClient>;
 				clientState = getPushNotificationClientState(clientList);
 			} catch {}
+			const renotify =
+				tag !== undefined &&
+				shouldRenotifyPushNotification(resolvePushMessageId(payload), await getShownPushNotifications(tag));
 			const options: NotificationOptions & {
 				renotify?: boolean;
 			} = {
@@ -355,7 +371,7 @@ self.addEventListener('push', (event: PushEvent) => {
 				badge: payload.badge ?? undefined,
 				data: payload.data ?? undefined,
 				tag,
-				renotify: tag !== undefined,
+				renotify,
 				...getNotificationAlertOptions({
 					mobileOrTablet: isMobileOrTabletUserAgent(workerNavigator.userAgent, workerNavigator.maxTouchPoints ?? 0),
 					silentOnNonMobile: shouldSilenceNonMobilePushNotification(clientState),
@@ -365,6 +381,7 @@ self.addEventListener('push', (event: PushEvent) => {
 				title,
 				hasBody: Boolean(payload.body),
 				tag,
+				renotify,
 				hasData: payload.data !== undefined,
 				badgeCount,
 				hasWindowClient: clientState.hasWindowClient,

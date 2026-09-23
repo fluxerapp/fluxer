@@ -53,6 +53,19 @@ export const resolvePushNotificationTag = (payload: PushPayload): string | undef
 	}
 	return undefined;
 };
+export const resolvePushMessageId = (payload: PushPayload): string | undefined => {
+	const messageId = payload.data?.message_id;
+	if (typeof messageId === 'string' && messageId.length > 0) {
+		return messageId;
+	}
+	return undefined;
+};
+export const shouldRenotifyPushNotification = (
+	messageId: string | undefined,
+	shownWithSameTag: ReadonlyArray<{readonly data?: unknown}>,
+): boolean =>
+	messageId === undefined ||
+	!shownWithSameTag.some((notification) => isRecord(notification.data) && notification.data.message_id === messageId);
 export const resolvePushChannelId = (payload: PushPayload): string | undefined => {
 	const channelId = payload.data?.channel_id;
 	if (typeof channelId === 'string' && channelId.length > 0) {

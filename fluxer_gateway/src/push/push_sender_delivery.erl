@@ -11,6 +11,8 @@
 -export_type([push_response/0]).
 
 -define(PUSH_TTL, <<"86400">>).
+-define(ALERT_URGENCY, <<"high">>).
+-define(CLEAR_URGENCY, <<"low">>).
 -define(MAX_TRANSIENT_RETRIES, 2).
 -define(MAX_OVERLOAD_RETRIES, 3).
 -define(BASE_RETRY_DELAY_MS, 200).
@@ -26,10 +28,31 @@
 send_webpush_notification(UserId, Subscription, Payload) ->
     case extract_subscription_fields(Subscription) of
         {ok, Endpoint, P256dhKey, AuthKey, SubscriptionId} ->
-            send_with_vapid(UserId, Endpoint, P256dhKey, AuthKey, SubscriptionId, Payload);
+            send_to_allowed_endpoint(
+                UserId, Endpoint, P256dhKey, AuthKey, SubscriptionId, Payload
+            );
         {error, _Reason} ->
             false
     end.
+
+-spec send_to_allowed_endpoint(integer(), binary(), binary(), binary(), binary(), map()) ->
+    false | {true, map()}.
+send_to_allowed_endpoint(UserId, Endpoint, P256dhKey, AuthKey, SubscriptionId, Payload) ->
+    case push_endpoint_guard:check(Endpoint) of
+        ok ->
+            send_with_vapid(UserId, Endpoint, P256dhKey, AuthKey, SubscriptionId, Payload);
+        {error, Reason} ->
+            log_endpoint_rejected(UserId, SubscriptionId, Reason),
+            false
+    end.
+
+-spec log_endpoint_rejected(integer(), binary(), term()) -> ok.
+log_endpoint_rejected(UserId, SubscriptionId, Reason) ->
+    logger:debug(
+        "Push: endpoint rejected",
+        #{user_id => UserId, subscription_id => SubscriptionId, reason => Reason}
+    ),
+    ok.
 
 -spec send_with_vapid(integer(), binary(), binary(), binary(), binary(), map()) ->
     false | {true, map()}.
@@ -39,18 +62,16 @@ send_with_vapid(UserId, Endpoint, P256dhKey, AuthKey, SubscriptionId, Payload) -
         Aud = push_utils:extract_origin(Endpoint),
         {ok, VapidToken} ?=
             cached_vapid_token(Aud, VapidEmail, VapidPublicKey, VapidPrivateKey),
-        Headers = build_push_headers(VapidToken, VapidPublicKey),
-        PayloadJson = iolist_to_binary(json:encode(Payload)),
-        InitialRecordSize = push_sender_retry:initial_record_size_for_endpoint(Endpoint),
+        Headers = build_push_headers(VapidToken, VapidPublicKey, push_urgency(Payload)),
         send_encrypted_push(
             UserId,
             SubscriptionId,
             Endpoint,
             Headers,
-            PayloadJson,
+            Payload,
             P256dhKey,
             AuthKey,
-            InitialRecordSize,
+            push_sender_retry:initial_record_size(),
             0
         )
     else
@@ -76,7 +97,7 @@ cached_vapid_token(Aud, VapidEmail, VapidPublicKey, VapidPrivateKey) ->
     {ok, binary()} | {error, term()}.
 cached_vapid_token(Aud, VapidEmail, VapidPublicKey, VapidPrivateKey, Now) ->
     CacheKey = vapid_cache_key(Aud, VapidEmail, VapidPublicKey),
-    case push_token_cache:get(CacheKey) of
+    case push_ets_cache:get_bearer_token(CacheKey) of
         {ok, Token, ExpiresAt} when
             is_binary(Token), ExpiresAt - ?VAPID_TOKEN_SKEW_SECONDS > Now
         ->
@@ -99,7 +120,7 @@ generate_cached_vapid_token(CacheKey, Aud, VapidEmail, VapidPublicKey, VapidPriv
     },
     case safe_generate_vapid_token(VapidClaims, VapidPublicKey, VapidPrivateKey) of
         {ok, Token} ->
-            push_token_cache:put(CacheKey, Token, ExpiresAt),
+            push_ets_cache:put_bearer_token(CacheKey, Token, ExpiresAt),
             {ok, Token};
         {error, Reason} ->
             {error, Reason}
@@ -124,7 +145,7 @@ safe_generate_vapid_token(VapidClaims, VapidPublicKey, VapidPrivateKey) ->
     binary(),
     binary(),
     [{binary(), binary()}],
-    binary(),
+    map(),
     binary(),
     binary(),
     pos_integer(),
@@ -135,12 +156,13 @@ send_encrypted_push(
     SubscriptionId,
     Endpoint,
     Headers,
-    PayloadJson,
+    Payload,
     P256dhKey,
     AuthKey,
     RecordSize,
     Attempt
 ) ->
+    PayloadJson = fit_payload_json(Payload, RecordSize),
     case push_utils:encrypt_payload(PayloadJson, P256dhKey, AuthKey, RecordSize) of
         {ok, EncryptedBody} ->
             Response = request_push_endpoint(Endpoint, Headers, EncryptedBody),
@@ -149,7 +171,7 @@ send_encrypted_push(
                 SubscriptionId,
                 Endpoint,
                 Headers,
-                PayloadJson,
+                Payload,
                 P256dhKey,
                 AuthKey,
                 RecordSize,
@@ -160,12 +182,23 @@ send_encrypted_push(
             false
     end.
 
+-spec fit_payload_json(map(), pos_integer()) -> binary().
+fit_payload_json(Payload, RecordSize) ->
+    push_notification:fit_payload_json(Payload, push_utils:plaintext_budget(RecordSize)).
+
+-spec push_urgency(map()) -> binary().
+push_urgency(Payload) ->
+    case push_notification:is_clear(Payload) of
+        true -> ?CLEAR_URGENCY;
+        false -> ?ALERT_URGENCY
+    end.
+
 -spec handle_encrypted_response(
     integer(),
     binary(),
     binary(),
     [{binary(), binary()}],
-    binary(),
+    map(),
     binary(),
     binary(),
     pos_integer(),
@@ -177,7 +210,7 @@ handle_encrypted_response(
     SubscriptionId,
     Endpoint,
     Headers,
-    PayloadJson,
+    Payload,
     P256dhKey,
     AuthKey,
     RecordSize,
@@ -189,12 +222,12 @@ handle_encrypted_response(
         subscription_id => SubscriptionId,
         endpoint => Endpoint,
         headers => Headers,
-        payload_json => PayloadJson,
+        payload => Payload,
         p256dh_key => P256dhKey,
         auth_key => AuthKey
     },
     RetryResult = push_sender_retry:maybe_retry_with_smaller_record_size(
-        Endpoint, Response, RecordSize, Attempt
+        Response, RecordSize, Attempt
     ),
     case RetryResult of
         {retry, NextRecordSize} ->
@@ -256,13 +289,14 @@ retry_overload(
     #{
         endpoint := Endpoint,
         headers := Headers,
-        payload_json := PayloadJson,
+        payload := Payload,
         p256dh_key := P256dhKey,
         auth_key := AuthKey
     } = Ctx,
     RecordSize,
     OverloadAttempt
 ) ->
+    PayloadJson = fit_payload_json(Payload, RecordSize),
     case push_utils:encrypt_payload(PayloadJson, P256dhKey, AuthKey, RecordSize) of
         {ok, EncryptedBody} ->
             Response = request_push_endpoint(Endpoint, Headers, EncryptedBody),
@@ -312,7 +346,7 @@ retry_encrypted_push(
         subscription_id := SubscriptionId,
         endpoint := Endpoint,
         headers := Headers,
-        payload_json := PayloadJson,
+        payload := Payload,
         p256dh_key := P256dhKey,
         auth_key := AuthKey
     },
@@ -324,7 +358,7 @@ retry_encrypted_push(
         SubscriptionId,
         Endpoint,
         Headers,
-        PayloadJson,
+        Payload,
         P256dhKey,
         AuthKey,
         RecordSize,
@@ -460,10 +494,11 @@ extract_subscription_fields(Subscription) ->
             {error, "missing keys"}
     end.
 
--spec build_push_headers(binary(), binary()) -> [{binary(), binary()}].
-build_push_headers(VapidToken, VapidPublicKey) ->
+-spec build_push_headers(binary(), binary(), binary()) -> [{binary(), binary()}].
+build_push_headers(VapidToken, VapidPublicKey, Urgency) ->
     [
         {<<"TTL">>, ?PUSH_TTL},
+        {<<"Urgency">>, Urgency},
         {<<"Content-Type">>, <<"application/octet-stream">>},
         {<<"Content-Encoding">>, <<"aes128gcm">>},
         {<<"Authorization">>, <<"vapid t=", VapidToken/binary, ", k=", VapidPublicKey/binary>>}
@@ -532,13 +567,13 @@ retry_delay_capped_test() ->
 maybe_retry_transient_waits_before_retry_test() ->
     Self = self(),
     Endpoint = <<"https://push.example/sub-1">>,
-    RecordSize = push_sender_retry:initial_record_size_for_endpoint(Endpoint),
+    RecordSize = push_sender_retry:initial_record_size(),
     Ctx = #{
         user_id => 42,
         subscription_id => <<"sub-1">>,
         endpoint => Endpoint,
         headers => [],
-        payload_json => <<"{}">>,
+        payload => #{},
         p256dh_key => <<"p256dh">>,
         auth_key => <<"auth">>
     },
@@ -647,11 +682,103 @@ receive_retried_push_request(ExpectedEndpoint) ->
     end.
 
 erase_token_cache(Key) ->
-    ok = push_token_cache:init(),
-    try ets:delete(push_bearer_tokens, Key) of
-        _ -> ok
-    catch
-        error:badarg -> ok
+    ok = push_ets_cache:init(),
+    true = ets:delete(push_bearer_tokens, Key),
+    ok.
+
+relay_endpoint_gets_the_shared_record_size_test() ->
+    {Body, _Headers} = capture_web_push(alert_payload(<<"Hello">>)),
+    ?assertEqual(2816, byte_size(Body)).
+
+alert_notification_sends_high_urgency_test() ->
+    {_Body, Headers} = capture_web_push(alert_payload(<<"Hello">>)),
+    ?assertEqual(?ALERT_URGENCY, header_value(<<"Urgency">>, Headers)).
+
+clear_notification_sends_low_urgency_test() ->
+    Payload = push_notification:build_clear_notification_payload(999, 456, 789, 2),
+    {_Body, Headers} = capture_web_push(Payload),
+    ?assertEqual(?CLEAR_URGENCY, header_value(<<"Urgency">>, Headers)).
+
+payload_over_the_budget_is_shrunk_instead_of_dropped_test() ->
+    Budget = push_utils:plaintext_budget(push_sender_retry:initial_record_size()),
+    Payload = alert_payload(binary:copy(<<"x">>, Budget * 2)),
+    ?assert(byte_size(iolist_to_binary(json:encode(Payload))) > Budget),
+    {Body, _Headers} = capture_web_push(Payload),
+    ?assertEqual(2816, byte_size(Body)).
+
+payload_at_the_budget_boundary_is_sent_unshrunk_test() ->
+    Budget = push_utils:plaintext_budget(push_sender_retry:initial_record_size()),
+    Payload = boundary_payload(Budget),
+    ?assertEqual(2713, Budget),
+    ?assertEqual(Budget, byte_size(iolist_to_binary(json:encode(Payload)))),
+    {Body, _Headers} = capture_web_push(Payload),
+    ?assertEqual(2816, byte_size(Body)).
+
+boundary_payload(Budget) ->
+    Base = #{<<"web_push">> => 8030, <<"title">> => <<>>},
+    Overhead = byte_size(iolist_to_binary(json:encode(Base))),
+    Base#{<<"title">> => binary:copy(<<"x">>, Budget - Overhead)}.
+
+alert_payload(Body) ->
+    #{
+        <<"web_push">> => 8030,
+        <<"title">> => <<"Alice">>,
+        <<"body">> => Body,
+        <<"tag">> => <<"channel:456:789">>,
+        <<"data">> => #{
+            <<"channel_id">> => <<"456">>,
+            <<"message_id">> => <<"789">>,
+            <<"url">> => <<"/channels/123/456/789">>
+        }
+    }.
+
+header_value(Name, Headers) ->
+    proplists:get_value(Name, Headers).
+
+capture_web_push(Payload) ->
+    Endpoint = <<
+        "https://push.fluxer.app/relay/v1/apns/stable/production/",
+        (binary:copy(<<"a">>, 64))/binary
+    >>,
+    {PeerPub, _PeerPriv} = crypto:generate_key(ecdh, prime256v1),
+    Subscription = #{
+        <<"endpoint">> => Endpoint,
+        <<"p256dh_key">> => push_utils:base64url_encode(PeerPub),
+        <<"auth_key">> => push_utils:base64url_encode(crypto:strong_rand_bytes(16)),
+        <<"subscription_id">> => <<"sub-1">>
+    },
+    ok = push_ets_cache:init(),
+    ok = meck:new(fluxer_gateway_env, [passthrough, no_link]),
+    ok = meck:new(push_utils, [passthrough, no_link]),
+    ok = meck:new(gateway_http_client, [passthrough, no_link]),
+    ok = meck:new(push_endpoint_guard, [passthrough, no_link]),
+    try
+        ok = meck:expect(push_endpoint_guard, check, fun(_Endpoint) -> ok end),
+        ok = meck:expect(fluxer_gateway_env, get, fun vapid_env_meck/1),
+        ok = meck:expect(push_utils, generate_vapid_token, fun(_Claims, _Public, _Private) ->
+            <<"vapid-token">>
+        end),
+        ok = meck:expect(gateway_http_client, request, fun capture_request_meck/6),
+        ?assertEqual(false, send_webpush_notification(42, Subscription, Payload)),
+        receive
+            {captured_push, CapturedHeaders, CapturedBody} -> {CapturedBody, CapturedHeaders}
+        after 1000 ->
+            erlang:error(no_push_request)
+        end
+    after
+        meck:unload(push_endpoint_guard),
+        meck:unload(gateway_http_client),
+        meck:unload(push_utils),
+        meck:unload(fluxer_gateway_env)
     end.
+
+vapid_env_meck(vapid_email) -> <<"ops@example.com">>;
+vapid_env_meck(vapid_public_key) -> <<"public-key">>;
+vapid_env_meck(vapid_private_key) -> <<"private-key">>;
+vapid_env_meck(Key) -> meck:passthrough([Key]).
+
+capture_request_meck(push, post, _Endpoint, Headers, Body, _Opts) ->
+    self() ! {captured_push, Headers, Body},
+    {ok, 201, [], <<>>}.
 
 -endif.

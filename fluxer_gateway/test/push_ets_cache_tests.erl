@@ -34,7 +34,7 @@ subscriptions_test() ->
     cleanup_tables(),
     ok = push_ets_cache:init(),
     ?assertEqual(undefined, push_ets_cache:get_subscriptions(1)),
-    ok = push_ets_cache:put_subscriptions(1, [sub1, sub2]),
+    ok = seed_subscriptions(1, [sub1, sub2]),
     ?assertEqual([sub1, sub2], push_ets_cache:get_subscriptions(1)),
     ok = push_ets_cache:delete_subscriptions(1),
     ?assertEqual(undefined, push_ets_cache:get_subscriptions(1)),
@@ -52,7 +52,7 @@ badge_count_test() ->
     cleanup_tables(),
     ok = push_ets_cache:init(),
     ?assertEqual(undefined, push_ets_cache:get_badge_count(1)),
-    ok = push_ets_cache:put_badge_count(1, 5, 1000),
+    ok = seed_badge_count(1, 5, 1000),
     ?assertEqual({5, 1000}, push_ets_cache:get_badge_count(1)),
     ok = push_ets_cache:delete_badge_count(1),
     ?assertEqual(undefined, push_ets_cache:get_badge_count(1)),
@@ -61,20 +61,21 @@ badge_count_test() ->
 badge_count_keeps_fresher_timestamp_test() ->
     cleanup_tables(),
     ok = push_ets_cache:init(),
-    ok = push_ets_cache:put_badge_count(1, 5, 2000),
-    ok = push_ets_cache:put_badge_count(1, 9, 1000),
+    First = push_ets_cache:reserve_badge_counts([1]),
+    ok = push_ets_cache:put_badge_count(1, 5, 2000, First),
+    ok = push_ets_cache:put_badge_count(1, 9, 1000, First),
     ?assertEqual({5, 2000}, push_ets_cache:get_badge_count(1)),
-    ok = push_ets_cache:put_badge_count(1, 7, 3000),
+    ok = seed_badge_count(1, 7, 3000),
     ?assertEqual({7, 3000}, push_ets_cache:get_badge_count(1)),
-    ok = push_ets_cache:put_badge_count(1, 8, 3000),
+    ok = seed_badge_count(1, 8, 3000),
     ?assertEqual({8, 3000}, push_ets_cache:get_badge_count(1)),
     cleanup_tables().
 
 cache_stats_test() ->
     cleanup_tables(),
     ok = push_ets_cache:init(),
-    ok = push_ets_cache:put_subscriptions(1, []),
-    ok = push_ets_cache:put_subscriptions(2, []),
+    ok = seed_subscriptions(1, []),
+    ok = seed_subscriptions(2, []),
     Stats = push_ets_cache:cache_stats(),
     ?assertEqual(2, maps:get(push_subscriptions_size, Stats)),
     ?assertEqual(0, maps:get(user_guild_settings_size, Stats)),
@@ -83,7 +84,7 @@ cache_stats_test() ->
 evict_tables_test() ->
     cleanup_tables(),
     ok = push_ets_cache:init(),
-    lists:foreach(fun(I) -> push_ets_cache:put_subscriptions(I, []) end, lists:seq(1, 10)),
+    lists:foreach(fun(I) -> ok = seed_subscriptions(I, []) end, lists:seq(1, 10)),
     ?assertEqual(10, push_ets_cache:table_size(push_subscriptions)),
     ok = push_ets_cache:evict_tables(#{subscriptions => 5}),
     ?assertEqual(5, push_ets_cache:table_size(push_subscriptions)),
@@ -98,8 +99,8 @@ rebalance_evicts_remote_owned_entries_test() ->
     RoleMap = #{push => Members, all => Members},
     persistent_term:put({gateway_cluster_membership, members}, Members),
     persistent_term:put({gateway_cluster_membership, members_by_role}, RoleMap),
-    ok = push_ets_cache:put_subscriptions(LocalUserId, [local]),
-    ok = push_ets_cache:put_subscriptions(RemoteUserId, [remote]),
+    ok = seed_subscriptions(LocalUserId, [local]),
+    ok = seed_subscriptions(RemoteUserId, [remote]),
     ok = push_ets_cache:put_user_guild_settings(LocalUserId, 10, #{local => true}),
     ok = push_ets_cache:put_user_guild_settings(RemoteUserId, 10, #{remote => true}),
     ok = push_ets_cache:rebalance(),
@@ -110,6 +111,16 @@ rebalance_evicts_remote_owned_entries_test() ->
     persistent_term:erase({gateway_cluster_membership, members}),
     persistent_term:erase({gateway_cluster_membership, members_by_role}),
     cleanup_tables().
+
+seed_subscriptions(UserId, Subscriptions) ->
+    push_ets_cache:put_subscriptions(
+        UserId, Subscriptions, push_ets_cache:reserve_subscriptions([UserId])
+    ).
+
+seed_badge_count(UserId, Count, CachedAt) ->
+    push_ets_cache:put_badge_count(
+        UserId, Count, CachedAt, push_ets_cache:reserve_badge_counts([UserId])
+    ).
 
 find_split_user_ids(Members, RemoteNode) ->
     Local =
@@ -131,6 +142,7 @@ cleanup_tables() ->
     delete_table(push_subscriptions),
     delete_table(push_blocked_ids),
     delete_table(push_badge_counts),
+    delete_table(push_bearer_tokens),
     ok.
 
 delete_table(Table) ->

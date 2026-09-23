@@ -5,10 +5,10 @@ use crate::{
         AppPublicConfigResponse, EXPERIMENT_MAX_TARGETED_USERS, ExperimentDeliveryConfigResponse,
         GatewayRolloutConfigResponse, InstanceConfigResponse, InstanceIntegrationsResponse,
         InstanceMediaResponse, InstancePolicyResponse, InstanceRegistrationResponse,
-        LimitConfigResponse, NoiseSuppressionBackend, PendingRegistrationResponse,
-        RegistrationUrlResponse, SCREEN_SHARE_DELIVERY_DEFAULT_SALT,
-        ScreenShareDeliveryConfigResponse, SsoConfigResponse, VOICE_NS_MAX_GUILD_OVERRIDES,
-        VoiceNoiseSuppressionConfigResponse,
+        LimitConfigResponse, NoiseSuppressionBackend, PUSH_SERVICE_DELIVERY_DEFAULT_SALT,
+        PendingRegistrationResponse, PushServiceDeliveryConfigResponse, RegistrationUrlResponse,
+        SCREEN_SHARE_DELIVERY_DEFAULT_SALT, ScreenShareDeliveryConfigResponse, SsoConfigResponse,
+        VOICE_NS_MAX_GUILD_OVERRIDES, VoiceNoiseSuppressionConfigResponse,
     },
     config::AdminConfig,
     middleware::auth::AuthContext,
@@ -150,6 +150,7 @@ pub fn instance_config_page(
                         (gateway_rollout_section(base, csrf_token, &instance_config.gateway_rollout))
                         (voice_noise_suppression_section(base, csrf_token, &instance_config.voice_noise_suppression))
                         (screen_share_delivery_section(base, csrf_token, &instance_config.screen_share_delivery))
+                        (push_service_delivery_section(base, csrf_token, &instance_config.push_service_delivery))
                         (experiment_delivery_section(base, csrf_token, &instance_config.experiment_delivery))
                         @if let Some(limit_config) = limit_config {
                             (limit_config_section(base, limit_config))
@@ -1112,7 +1113,7 @@ fn voice_noise_suppression_section(
                         p class="text-xs text-neutral-500" {
                             "One snowflake per line, or comma separated. These users are targeted \
                              regardless of the percentage above. IDs must contain 1 to 20 decimal \
-                             digits. Invalid entries prevent the save; blank entries and duplicate \
+                             digits. Invalid entries prevent the save. Blank entries and duplicate \
                              IDs are ignored."
                         }
                     }
@@ -1131,7 +1132,7 @@ fn voice_noise_suppression_section(
                         ))
                         p class="text-xs text-neutral-500" {
                             "Same format. Exclusion wins over both the always-on list and the \
-                             percentage, so this is the per-user kill switch."
+                             percentage. This is the per-user kill switch."
                         }
                     }
 
@@ -1257,7 +1258,7 @@ fn screen_share_delivery_section(
                         p class="text-xs text-neutral-500" {
                             "One snowflake per line, or comma separated. These users are targeted \
                              regardless of the percentage above. IDs must contain 1 to 20 decimal \
-                             digits. Invalid entries prevent the save; blank entries and duplicate \
+                             digits. Invalid entries prevent the save. Blank entries and duplicate \
                              IDs are ignored."
                         }
                     }
@@ -1276,12 +1277,121 @@ fn screen_share_delivery_section(
                         ))
                         p class="text-xs text-neutral-500" {
                             "Same format. Exclusion wins over both the always-on list and the \
-                             percentage, so this is the per-user kill switch."
+                             percentage. This is the per-user kill switch."
                         }
                     }
 
                     (form_actions(html! {
                         (submit_button("Save Screen Share Delivery Configuration"))
+                    }))
+                }
+            }
+        },
+    )
+}
+
+fn push_service_delivery_section(
+    base: &str,
+    csrf_token: &str,
+    push_service_delivery: &PushServiceDeliveryConfigResponse,
+) -> Markup {
+    let status = if push_service_delivery.enabled {
+        ("Live", BadgeVariant::Success)
+    } else {
+        ("Inert", BadgeVariant::Default)
+    };
+    let included_user_ids = push_service_delivery.included_user_ids.join("\n");
+    let excluded_user_ids = push_service_delivery.excluded_user_ids.join("\n");
+    section_card_with_description(
+        "Push Service Delivery",
+        "Routes push notification delivery for the selected accounts through the push service. \
+         Accounts the rollout does not select keep the current path.",
+        html! {
+            form method="post" action={(base) "/instance-config?action=update_push_service_delivery"} {
+                (csrf_input(csrf_token))
+                div class="space-y-6" {
+                    div class="flex flex-wrap items-center gap-2" {
+                        h3 class="text-sm font-semibold text-neutral-900" { "Master switch" }
+                        (badge(status.0, status.1))
+                        span class="text-xs text-neutral-500" {
+                            "Config version " (push_service_delivery.config_version)
+                        }
+                    }
+                    (checkbox(
+                        "push_service_delivery_enabled",
+                        "true",
+                        "Hand push notifications to the push service",
+                        push_service_delivery.enabled,
+                        true,
+                    ))
+                    p class="text-xs text-neutral-500" {
+                        "Off is the safe state. With this unchecked every notification keeps the \
+                         current delivery path, so the rollout and targeting fields below have no \
+                         effect at all."
+                    }
+
+                    h3 class="text-sm font-semibold text-neutral-900" { "Rollout" }
+                    (number_field(
+                        "push_service_delivery_rollout_basis_points",
+                        "Rollout (basis points)",
+                        &push_service_delivery.rollout_basis_points.to_string(),
+                        Some(0), Some(10000), "1",
+                        Some("Share of users bucketed into the canary, in basis points: 0 is nobody, 100 is 1%, 10000 is everybody."),
+                    ))
+                    div class="flex flex-col gap-2" {
+                        (text_input(
+                            "push_service_delivery_rollout_salt",
+                            "Rollout Salt",
+                            &push_service_delivery.rollout_salt,
+                            PUSH_SERVICE_DELIVERY_DEFAULT_SALT,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Seeds the bucketing hash. Changing it reshuffles which users fall \
+                             inside the percentage above. Leave it alone to keep the current \
+                             cohort stable."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "push_service_delivery_included_user_ids",
+                            "Always-on User IDs",
+                            "1500000000000000001\n1500000000000000002",
+                            &included_user_ids,
+                            4,
+                            false,
+                        ))
+                        (entry_count_hint(
+                            push_service_delivery.included_user_ids.len(),
+                            EXPERIMENT_MAX_TARGETED_USERS,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "One snowflake per line, or comma separated. These users are targeted \
+                             regardless of the percentage above. IDs must contain 1 to 20 decimal \
+                             digits. Invalid entries prevent the save. Blank entries and duplicate \
+                             IDs are ignored."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "push_service_delivery_excluded_user_ids",
+                            "Never-on User IDs",
+                            "1500000000000000003\n1500000000000000004",
+                            &excluded_user_ids,
+                            4,
+                            false,
+                        ))
+                        (entry_count_hint(
+                            push_service_delivery.excluded_user_ids.len(),
+                            EXPERIMENT_MAX_TARGETED_USERS,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Same format. Exclusion wins over both the always-on list and the \
+                             percentage. This is the per-user kill switch."
+                        }
+                    }
+
+                    (form_actions(html! {
+                        (submit_button("Save Push Service Delivery Configuration"))
                     }))
                 }
             }

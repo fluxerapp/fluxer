@@ -8,12 +8,15 @@
     build_content_preview/2,
     build_markdown_context/4,
     resolve_author_name/3,
+    resolve_author_avatar_url/1,
     extract_image_url/1,
     maybe_image_fields/1,
-    build_url/3
+    build_url/3,
+    truncate_bytes/2
 ]).
 
 -define(MAX_MENTIONS_FOR_PUSH, 50).
+-define(MAX_PREVIEW_BYTES, 100).
 -define(CHANNEL_TYPE_GUILD_TEXT, 0).
 -define(CHANNEL_TYPE_GUILD_VOICE, 2).
 -define(CHANNEL_TYPE_GUILD_CATEGORY, 4).
@@ -111,6 +114,32 @@ user_nicknames_from_context_or_message(MessageData, MarkdownContext) when
     end;
 user_nicknames_from_context_or_message(MessageData, _MarkdownContext) ->
     group_dm_user_nicknames(MessageData).
+
+-spec resolve_author_avatar_url(map()) -> binary().
+resolve_author_avatar_url(AuthorData) ->
+    resolve_avatar_url(AuthorData, maps:get(<<"avatar">>, AuthorData, null)).
+
+-spec resolve_avatar_url(map(), binary() | null) -> binary().
+resolve_avatar_url(AuthorData, null) ->
+    default_avatar_url(author_id_binary(AuthorData));
+resolve_avatar_url(AuthorData, Hash) ->
+    case author_id_binary(AuthorData) of
+        undefined -> default_avatar_url(undefined);
+        UserId -> push_utils:construct_avatar_url(UserId, Hash)
+    end.
+
+-spec author_id_binary(map()) -> binary() | undefined.
+author_id_binary(AuthorData) ->
+    case snowflake_id:parse_optional(maps:get(<<"id">>, AuthorData, undefined)) of
+        undefined -> undefined;
+        UserId -> integer_to_binary(UserId)
+    end.
+
+-spec default_avatar_url(binary() | undefined) -> binary().
+default_avatar_url(undefined) ->
+    push_utils:get_default_avatar_url(<<>>);
+default_avatar_url(UserId) ->
+    push_utils:get_default_avatar_url(UserId).
 
 -spec user_nicknames(map(), non_neg_integer(), map()) -> map().
 user_nicknames(MessageData, 0, _GuildData) ->
@@ -325,9 +354,13 @@ first_nonempty_binary([Value | Rest]) ->
     end.
 
 -spec truncate_preview(binary()) -> binary().
-truncate_preview(Content) when byte_size(Content) > 100 ->
-    valid_utf8_prefix(binary:part(Content, 0, 100));
 truncate_preview(Content) ->
+    truncate_bytes(Content, ?MAX_PREVIEW_BYTES).
+
+-spec truncate_bytes(binary(), non_neg_integer()) -> binary().
+truncate_bytes(Content, MaxBytes) when byte_size(Content) > MaxBytes ->
+    valid_utf8_prefix(binary:part(Content, 0, MaxBytes));
+truncate_bytes(Content, _MaxBytes) ->
     valid_utf8_prefix(Content).
 
 -spec valid_utf8_prefix(binary()) -> binary().

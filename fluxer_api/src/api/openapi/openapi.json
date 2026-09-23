@@ -17030,7 +17030,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Registers a mobile push device token for APNs, Firebase Cloud Messaging, or UnifiedPush. UnifiedPush registrations include the endpoint URL plus Web Push encryption keys.",
+				"description": "Registers a mobile push device for APNs, Firebase Cloud Messaging, or UnifiedPush. A Web Push registration sends the endpoint URL with encryption_key and auth_secret. A raw registration sends the platform push token with no keys.",
 				"security": [{"sessionToken": []}],
 				"requestBody": {
 					"required": true,
@@ -22744,7 +22744,10 @@
 						"enum": ["android_fcm", "ios_apns", "android_unified_push"],
 						"type": "string"
 					},
-					"token": {"description": "The platform-specific push notification token to unregister", "type": "string"},
+					"token": {
+						"description": "The Web Push endpoint URL or raw platform push token used at registration",
+						"type": "string"
+					},
 					"app_id": {
 						"description": "Client app channel or bundle mapping identifier, such as stable, beta, or canary",
 						"type": "string"
@@ -22808,7 +22811,10 @@
 						"enum": ["android_fcm", "ios_apns", "android_unified_push"],
 						"type": "string"
 					},
-					"token": {"description": "The platform-specific push notification token or endpoint URL", "type": "string"},
+					"token": {
+						"description": "The Web Push endpoint URL when encryption keys are supplied, otherwise the raw platform push token",
+						"type": "string"
+					},
 					"user_agent": {"description": "The user agent string identifying the device", "type": "string"},
 					"app_id": {
 						"description": "Client app channel or bundle mapping identifier, such as stable, beta, or canary",
@@ -22825,11 +22831,11 @@
 						"type": "string"
 					},
 					"encryption_key": {
-						"description": "The P-256 ECDH public key for UnifiedPush encryption (base64url)",
+						"description": "The P-256 ECDH public key for Web Push encryption (base64url)",
 						"type": "string"
 					},
 					"auth_secret": {
-						"description": "The authentication secret for UnifiedPush encryption (base64url)",
+						"description": "The authentication secret for Web Push encryption (base64url)",
 						"type": "string"
 					}
 				},

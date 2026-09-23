@@ -200,6 +200,7 @@ export default defineConfig({
 						'http-api/users/relationships',
 						'http-api/users/notes',
 						'http-api/users/private-channels',
+						'http-api/users/push-notifications',
 						'http-api/users/content',
 						'http-api/users/gifts',
 						'http-api/users/data-harvest',

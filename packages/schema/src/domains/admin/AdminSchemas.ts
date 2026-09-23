@@ -16,6 +16,10 @@ import {
 	GatewayRolloutConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
 import {
+	PushServiceDeliveryConfigResponse,
+	PushServiceDeliveryConfigUpdateRequest,
+} from '@fluxer/schema/src/domains/admin/PushServiceDeliverySchemas';
+import {
 	ScreenShareDeliveryConfigResponse,
 	ScreenShareDeliveryConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/admin/ScreenShareDeliverySchemas';
@@ -649,6 +653,7 @@ export const InstanceConfigResponse = z.object({
 	gateway_rollout: GatewayRolloutConfigResponse,
 	voice_noise_suppression: VoiceNoiseSuppressionConfigResponse,
 	screen_share_delivery: ScreenShareDeliveryConfigResponse,
+	push_service_delivery: PushServiceDeliveryConfigResponse,
 	experiment_delivery: ExperimentDeliveryConfigResponse,
 	registration: InstanceRegistrationResponse,
 	self_hosted: z.boolean(),
@@ -686,6 +691,7 @@ export const InstanceConfigUpdateRequest = z.object({
 	gateway_rollout: GatewayRolloutConfigUpdateRequest.nullish(),
 	voice_noise_suppression: VoiceNoiseSuppressionConfigUpdateRequest.nullish(),
 	screen_share_delivery: ScreenShareDeliveryConfigUpdateRequest.nullish(),
+	push_service_delivery: PushServiceDeliveryConfigUpdateRequest.nullish(),
 	experiment_delivery: ExperimentDeliveryConfigUpdateRequest.nullish(),
 	registration: z
 		.object({

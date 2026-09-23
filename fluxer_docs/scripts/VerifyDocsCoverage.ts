@@ -102,8 +102,6 @@ const MAIN_SPEC_EXEMPT = new Map<string, {file: string; anchor: string; reason: 
 
 const DELIBERATELY_UNDOCUMENTED = new Map([
 	['GET /users/@me/mobile-devices', 'mobile notifications, backported separately'],
-	['POST /users/@me/mobile-devices', 'mobile notifications, backported separately'],
-	['POST /users/@me/mobile-devices/unregister', 'mobile notifications, backported separately'],
 	['DELETE /users/@me/mobile-devices/{}', 'mobile notifications, backported separately'],
 	['GET /users/@me/push/subscriptions', 'push API, backported separately'],
 	['POST /users/@me/push/subscribe', 'push API, backported separately'],

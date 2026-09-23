@@ -817,6 +817,9 @@ async fn spawn_mock_api() -> String {
 
 async fn mock_api(method: Method, uri: Uri) -> Response {
     let path = uri.path().to_owned();
+    if method == Method::PATCH && path == "/admin/instance/config" {
+        return json_response(instance_config());
+    }
     match (method, path.as_str()) {
         (Method::GET, "/admin/users/@me") => json_response(json!({ "user": admin_user() })),
         (Method::GET, "/admin/api-keys") => json_response(json!([])),

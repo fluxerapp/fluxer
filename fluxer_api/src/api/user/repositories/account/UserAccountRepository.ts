@@ -3,6 +3,7 @@
 import type {UserID} from '@app/api/BrandedTypes';
 import {Db, type DbOp} from '@app/api/database/CassandraTypes';
 import type {UserRow} from '@app/api/database/types/UserTypes';
+import {Logger} from '@app/api/Logger';
 import {User} from '@app/api/models/User';
 import {
 	UserDataRepository,
@@ -96,7 +97,12 @@ export class UserAccountRepository {
 			return updatedUser;
 		} catch (error) {
 			if (!dataCommitted && emailClaim) {
-				await this.emailOwnershipRepo.abortEmailClaim(emailClaim);
+				await this.emailOwnershipRepo.abortEmailClaim(emailClaim).catch((abortError: unknown) => {
+					Logger.warn(
+						{userId: userId.toString(), abortError},
+						'Failed to abort the email claim of a user write that did not commit',
+					);
+				});
 			}
 			throw error;
 		}

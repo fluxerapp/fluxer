@@ -18,9 +18,10 @@ use crate::{
             InstancePolicyUpdateRequest, InstanceRegistrationConfigUpdateRequest,
             InstanceServicesUpdateRequest, InstanceYoutubeIntegrationUpdateRequest,
             LimitConfigUpdateRequest, LimitRule, LimitRuleFilters, NoiseSuppressionBackend,
-            PremiumMode, RegistrationMode, ScreenShareDeliveryConfigUpdateRequest,
-            SsoConfigUpdateRequest, VOICE_NS_MAX_GUILD_OVERRIDES, VoiceE2eeScope,
-            VoiceNoiseSuppressionConfigUpdateRequest, VoiceNoiseSuppressionGuildOverride,
+            PremiumMode, PushServiceDeliveryConfigUpdateRequest, RegistrationMode,
+            ScreenShareDeliveryConfigUpdateRequest, SsoConfigUpdateRequest,
+            VOICE_NS_MAX_GUILD_OVERRIDES, VoiceE2eeScope, VoiceNoiseSuppressionConfigUpdateRequest,
+            VoiceNoiseSuppressionGuildOverride,
         },
     },
     config::AdminConfig,
@@ -208,6 +209,10 @@ pub async fn instance_config_post(
             Err(message) => FlashData::error(message),
         },
         "update_screen_share_delivery" => match build_screen_share_delivery_update(&form) {
+            Ok(update) => instance_config_result(client.update_instance_config(&update).await),
+            Err(message) => FlashData::error(message),
+        },
+        "update_push_service_delivery" => match build_push_service_delivery_update(&form) {
             Ok(update) => instance_config_result(client.update_instance_config(&update).await),
             Err(message) => FlashData::error(message),
         },
@@ -496,6 +501,21 @@ fn parse_experiment_rollout_salt(
     Ok(Some(salt.to_owned()))
 }
 
+fn parse_push_service_delivery_rollout_salt(
+    form: &MultiValueForm,
+    key: &str,
+) -> Result<Option<String>, String> {
+    let salt = parse_experiment_rollout_salt(form, key)?;
+    if let Some(value) = salt.as_deref()
+        && !value
+            .bytes()
+            .all(|byte| byte.is_ascii_graphic() || byte == b' ')
+    {
+        return Err("Rollout salt must use printable ASCII".to_owned());
+    }
+    Ok(salt)
+}
+
 fn is_experiment_snowflake(value: &str) -> bool {
     !value.is_empty()
         && value.len() <= EXPERIMENT_MAX_SNOWFLAKE_LENGTH
@@ -657,6 +677,38 @@ fn build_screen_share_delivery_update(
             )?),
             excluded_user_ids: Some(parse_experiment_user_ids(
                 form.first("screen_share_delivery_excluded_user_ids")
+                    .unwrap_or_default(),
+                "Excluded user IDs",
+            )?),
+        }),
+        ..Default::default()
+    })
+}
+
+fn build_push_service_delivery_update(
+    form: &MultiValueForm,
+) -> Result<InstanceConfigUpdateRequest, String> {
+    Ok(InstanceConfigUpdateRequest {
+        push_service_delivery: Some(PushServiceDeliveryConfigUpdateRequest {
+            enabled: Some(form.bool_value("push_service_delivery_enabled")),
+            rollout_basis_points: parse_form_number(
+                form,
+                "push_service_delivery_rollout_basis_points",
+                "Rollout basis points",
+                0,
+                EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX,
+            )?,
+            rollout_salt: parse_push_service_delivery_rollout_salt(
+                form,
+                "push_service_delivery_rollout_salt",
+            )?,
+            included_user_ids: Some(parse_experiment_user_ids(
+                form.first("push_service_delivery_included_user_ids")
+                    .unwrap_or_default(),
+                "Included user IDs",
+            )?),
+            excluded_user_ids: Some(parse_experiment_user_ids(
+                form.first("push_service_delivery_excluded_user_ids")
                     .unwrap_or_default(),
                 "Excluded user IDs",
             )?),
