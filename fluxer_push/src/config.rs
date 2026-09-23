@@ -183,6 +183,7 @@ pub struct DeliveryConfig {
     pub vapid: VapidConfig,
     pub apns: Option<ApnsConfig>,
     pub fcm: Option<FcmConfig>,
+    pub own_relay_hosts: Vec<String>,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -262,8 +263,18 @@ impl DeliveryConfig {
             vapid: vapid_config(&env)?,
             apns: apns_config(&env)?,
             fcm: fcm_config(&env)?,
+            own_relay_hosts: own_relay_hosts(&env),
         })
     }
+}
+
+fn own_relay_hosts(env: &Env) -> Vec<String> {
+    env.get("FLUXER_PUSH_SERVICE_OWN_RELAY_HOSTS")
+        .unwrap_or_default()
+        .split(',')
+        .map(|host| host.trim().to_ascii_lowercase())
+        .filter(|host| !host.is_empty())
+        .collect()
 }
 
 impl RelayConfig {
