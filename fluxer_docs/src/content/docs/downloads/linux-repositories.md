@@ -19,6 +19,16 @@ sudo curl -fsSL -o /etc/apt/sources.list.d/fluxer.sources \
 sudo apt update && sudo apt install fluxer
 ```
 
+For the canary channel, add `fluxer-canary.sources` and install `fluxer-canary`.
+
+```
+sudo curl -fsSL -o /etc/apt/sources.list.d/fluxer-canary.sources \
+  https://pkgs.fluxer.com/deb/fluxer-canary.sources
+sudo apt update && sudo apt install fluxer-canary
+```
+
+The stable entry does not list `fluxer-canary`. A canary `.deb` installed from a download stays on its version until the canary entry is added.
+
 The `.sources` entry uses `Signed-By` rather than `Trusted: yes`, so `apt update` verifies the repository and prints nothing.
 
 ## dnf
@@ -33,6 +43,14 @@ sudo dnf install fluxer
 ```
 
 The `.repo` file names the signing key by URL, so dnf fetches it rather than needing the keyring step the apt entry has. Without the `rpm --import` line dnf asks to import twice on a first install, once for the repository metadata and once for the package. With it dnf asks once, for the metadata, which dnf keeps in its own key store. Both prompts print the fingerprint, which reads `09D01339EE128925F75E675C855C5BDE34D205D2`.
+
+For the canary channel, add `fluxer-canary.repo` and install `fluxer-canary`.
+
+```
+sudo curl -fsSL -o /etc/yum.repos.d/fluxer-canary.repo \
+  https://pkgs.fluxer.com/rpm/fluxer-canary.repo
+sudo dnf install fluxer-canary
+```
 
 Metadata expires after six hours, so a freshly published build becomes visible within that window, or immediately with `dnf --refresh upgrade`.
 

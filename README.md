@@ -49,7 +49,7 @@ On Linux, prefer a repository over a single file so Fluxer updates with the rest
 
 ## Linux package repositories
 
-Every repository serves both channels. The package is `fluxer` for stable, `fluxer-canary` for canary.
+The package is `fluxer` for stable and `fluxer-canary` for canary. apt and dnf subscribe to one channel per entry file. pacman and Flatpak serve both from one repository.
 
 ### Flatpak
 
@@ -59,7 +59,7 @@ Stable is on [Flathub][flathub], the easiest route on most desktops:
 flatpak install flathub app.fluxer.Fluxer
 ```
 
-Flathub has stable only. For canary, or to use Fluxer's own repository, open [this reference file][flatpak-ref] and your software manager takes over. Some desktops also accept `flatpak+https://pkgs.fluxer.com/flatpak/fluxer.flatpakref` in the address bar.
+Flathub has stable only. To use Fluxer's own repository, open [the stable][flatpak-ref] or [the canary][flatpak-canary-ref] reference file and your software manager takes over. Some desktops also accept `flatpak+https://pkgs.fluxer.com/flatpak/fluxer.flatpakref` in the address bar.
 
 From a terminal:
 
@@ -76,11 +76,27 @@ sudo curl -fsSL -o /etc/apt/sources.list.d/fluxer.sources https://pkgs.fluxer.co
 sudo apt update && sudo apt install fluxer
 ```
 
+For canary, use the canary entry file and package.
+
+```sh
+sudo curl -fsSL -o /etc/apt/sources.list.d/fluxer-canary.sources https://pkgs.fluxer.com/deb/fluxer-canary.sources
+sudo apt update && sudo apt install fluxer-canary
+```
+
+A `.deb` installed from a download only updates once its channel's entry is added.
+
 ### Fedora and RHEL
 
 ```sh
 sudo curl -fsSL -o /etc/yum.repos.d/fluxer.repo https://pkgs.fluxer.com/rpm/fluxer.repo
 sudo dnf install fluxer
+```
+
+For canary, use the canary entry file and package.
+
+```sh
+sudo curl -fsSL -o /etc/yum.repos.d/fluxer-canary.repo https://pkgs.fluxer.com/rpm/fluxer-canary.repo
+sudo dnf install fluxer-canary
 ```
 
 RHEL, Rocky, Alma and CentOS Stream need `sudo dnf install epel-release` first, because their base repositories lack `libXScrnSaver`. Fedora does not.
@@ -150,6 +166,7 @@ endorsement rights.
 [linux-targz-x64]: https://pkgs.fluxer.com/desktop/stable/linux/x64/latest/tar_gz
 [linux-targz-arm64]: https://pkgs.fluxer.com/desktop/stable/linux/arm64/latest/tar_gz
 [flatpak-ref]: https://pkgs.fluxer.com/flatpak/fluxer.flatpakref
+[flatpak-canary-ref]: https://pkgs.fluxer.com/flatpak/fluxer-canary.flatpakref
 [flathub]: https://flathub.org/apps/app.fluxer.Fluxer
 [android-apk]: https://github.com/fluxerapp/flutter_client/releases
 [obtainium]: https://obtainium.imranr.dev/
