@@ -627,20 +627,6 @@ const VoiceCallViewInner = observer(
 									{connectionStateText}
 								</div>
 							)}
-							{isFocusedOnScreenShare && focusedStreamKey && hasFocusedStreamAudio && canControlFocusedStreamVolume && (
-								<MediaVerticalVolumeControl
-									volume={focusedStreamVolume / 100}
-									isMuted={isFocusedStreamMuted}
-									maxVolume={VOICE_VOLUME_MAX_SLIDER_VOLUME}
-									onVolumeChange={handleFocusedStreamVolumeChange}
-									onToggleMute={handleFocusedStreamToggleMute}
-									iconSize={18}
-									className={styles.voiceHeaderIconButton}
-									position="below"
-									ariaLabel={i18n._(STREAM_VOLUME_DESCRIPTOR)}
-									data-flx="voice.voice-call-view.voice-call-view-inner.hud-stream-volume-control"
-								/>
-							)}
 							{statsButton}
 							{isMobile && (
 								<ChannelHeaderIcon
@@ -712,6 +698,22 @@ const VoiceCallViewInner = observer(
 						fullscreenLabel={fullscreenButtonLabel}
 						fullscreenIcon={FullscreenButtonIcon}
 						onToggleFullscreen={handleToggleVoiceCallAppFullscreen}
+						volumeControl={
+							isFocusedOnScreenShare && focusedStreamKey && hasFocusedStreamAudio && canControlFocusedStreamVolume ? (
+								<MediaVerticalVolumeControl
+									volume={focusedStreamVolume / 100}
+									isMuted={isFocusedStreamMuted}
+									maxVolume={VOICE_VOLUME_MAX_SLIDER_VOLUME}
+									onVolumeChange={handleFocusedStreamVolumeChange}
+									onToggleMute={handleFocusedStreamToggleMute}
+									iconSize={18}
+									className={styles.voiceHeaderIconButton}
+									position="above"
+									ariaLabel={i18n._(STREAM_VOLUME_DESCRIPTOR)}
+									data-flx="voice.voice-call-view.voice-call-view-inner.stream-volume-control"
+								/>
+							) : undefined
+						}
 						data-flx="voice.voice-call-view.voice-call-view-inner.voice-call-corner-controls"
 					/>
 					{isMobile && (
