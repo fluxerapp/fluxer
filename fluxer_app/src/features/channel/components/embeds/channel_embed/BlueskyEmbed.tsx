@@ -205,6 +205,7 @@ export const BlueskyEmbed: FC<BlueskyEmbedProps> = observer(
 								<EmbedTitle
 									title={embed.title}
 									url={embed.url}
+									markdown
 									messageId={message.id}
 									channelId={message.channelId}
 									data-flx="channel.embeds.channel-embed.bluesky-embed.embed-title"
@@ -212,6 +213,7 @@ export const BlueskyEmbed: FC<BlueskyEmbedProps> = observer(
 							)}
 							<EmbedDescription
 								description={embed.description}
+								markdown
 								messageId={message.id}
 								channelId={message.channelId}
 								data-flx="channel.embeds.channel-embed.bluesky-embed.embed-description"
@@ -255,8 +257,6 @@ export const BlueskyEmbed: FC<BlueskyEmbedProps> = observer(
 								<EmbedFooterComponent
 									footer={embed.footer}
 									timestamp={embed.timestamp ? new Date(embed.timestamp) : undefined}
-									messageId={message.id}
-									channelId={message.channelId}
 									data-flx="channel.embeds.channel-embed.bluesky-embed.embed-footer-component"
 								/>
 							)}
