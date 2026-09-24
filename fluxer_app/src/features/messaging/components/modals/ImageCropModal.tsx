@@ -1,15 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {cropAnimatedImageWithWorkerPool} from '@app/features/expressions/workers/AnimatedImageCropWorkerManager';
+import {AVIF_FORMAT_LABEL} from '@app/features/app/config/I18nDisplayConstants';
+import {inspectImageBytes} from '@app/features/expressions/utils/AnimatedImageUtils';
+import type {AnimatedCropSourceFormat, CropParams} from '@app/features/expressions/workers/AnimatedImageCropMessages';
+import {CropPipelineError, cropAnimatedImage} from '@app/features/expressions/workers/AnimatedImageCropWorkerManager';
 import {showMessagingErrorModal} from '@app/features/messaging/components/alerts/MessagingErrorModalUtils';
 import styles from '@app/features/messaging/components/modals/ImageCropModal.module.css';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {Button} from '@app/features/ui/button/Button';
-import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {Slider} from '@app/features/ui/components/Slider';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
+import {usePopOwningModal} from '@app/features/ui/utils/ModalUtils';
+import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {ArrowClockwiseIcon, ImageSquareIcon} from '@phosphor-icons/react';
@@ -33,6 +37,36 @@ const CROPPED_IMAGE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR = msg({
 	message: 'Cropped image is too large. Choose a smaller area or a smaller file (max {maxSizeLabel}).',
 	comment:
 		'Error modal body shown when a cropped image still exceeds the size limit. {maxSizeLabel} is a formatted file size.',
+});
+const ANIMATION_TOO_LONG_OR_TOO_LARGE_DESCRIPTOR = msg({
+	message: 'This animation is too long or too large to crop. Try a shorter or smaller file.',
+	comment: 'Error modal body shown when an animated image has too many frames or pixels to crop in the browser.',
+});
+const IMAGE_COULDN_T_BE_READ_DESCRIPTOR = msg({
+	message: "This image couldn't be read. It may be damaged.",
+	comment: 'Error modal body shown when an animated image fails to decode during cropping.',
+});
+const BROWSER_CAN_T_CROP_ANIMATED_AVIF_DESCRIPTOR = msg({
+	message: "This browser can't crop animated {avifFormatLabel} files. Upload a GIF or WebP instead.",
+	comment:
+		'Error modal body shown when the browser cannot decode animated AVIF for cropping. {avifFormatLabel} is the AVIF format name.',
+});
+const WEBASSEMBLY_TURNED_OFF_DESCRIPTOR = msg({
+	message: "This browser has WebAssembly turned off, so animated images can't be cropped.",
+	comment: 'Error modal body shown when WebAssembly is unavailable, which animated image cropping needs.',
+});
+const CROP_PROGRESS_PREPARING_DESCRIPTOR = msg({
+	message: 'Preparing',
+	comment: 'Progress label on the save button while an animated image crop starts. Keep it concise.',
+});
+const CROP_PROGRESS_CROPPING_DESCRIPTOR = msg({
+	message: 'Cropping {percent}%',
+	comment:
+		'Progress label on the save button while animated image frames are cropped. {percent} is a whole number. Keep it concise.',
+});
+const CROP_PROGRESS_COMPRESSING_DESCRIPTOR = msg({
+	message: 'Compressing',
+	comment: 'Progress label on the save button while a cropped animated image is compressed. Keep it concise.',
 });
 const logger = new Logger('ImageCropModal');
 
@@ -63,22 +97,19 @@ class CropSizeLimitError extends Error {
 	}
 }
 
-interface AnimatedImageCropOptions {
-	x: number;
-	y: number;
-	width: number;
-	height: number;
-	imageRotation?: number;
-	resizeWidth?: number | null;
-	resizeHeight?: number | null;
+interface CropProgress {
+	phase: 'init' | 'crop' | 'compress';
+	fraction: number;
 }
 
-async function cropAnimatedImageWithWorker(
-	imageBytes: Uint8Array,
-	format: 'gif' | 'webp' | 'avif' | 'apng',
-	options: AnimatedImageCropOptions,
-): Promise<Uint8Array> {
-	return cropAnimatedImageWithWorkerPool(imageBytes, format, options);
+function isAnimatedCropSourceFormat(format: string): format is AnimatedCropSourceFormat {
+	return format === 'gif' || format === 'png' || format === 'webp' || format === 'avif';
+}
+
+function toCropRotation(rotationDeg: number): CropParams['rotation'] {
+	const rot = ((rotationDeg % 360) + 360) % 360;
+	if (rot === 90 || rot === 180 || rot === 270) return rot;
+	return 0;
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -315,8 +346,10 @@ async function exportAnimatedImage(
 	maxW: number,
 	maxH: number,
 	maxBytes: number,
-	src: string,
-	mimeType: string,
+	bytes: ArrayBuffer,
+	format: AnimatedCropSourceFormat,
+	signal: AbortSignal,
+	onProgress: (progress: CropProgress) => void,
 ): Promise<Blob> {
 	const scale = image.naturalWidth / displayDimensions.width;
 	const cropNativeWidth = cropDimensions.width * scale;
@@ -330,31 +363,18 @@ async function exportAnimatedImage(
 		maxDimensions: {width: targetW, height: targetH},
 		rotationDeg,
 	});
-	const response = await fetch(src);
-	if (!response.ok) {
-		throw new Error('Failed to fetch animated image data');
-	}
-	const buffer = await response.arrayBuffer();
-	const imageBytes = new Uint8Array(buffer);
-	const format = mimeType.toLowerCase().includes('gif')
-		? 'gif'
-		: mimeType.toLowerCase().includes('webp')
-			? 'webp'
-			: mimeType.toLowerCase().includes('avif')
-				? 'avif'
-				: 'apng';
-	const cropOptions = {
+	const crop: CropParams = {
 		x: Math.max(0, Math.floor(geom.sourceX)),
 		y: Math.max(0, Math.floor(geom.sourceY)),
 		width: Math.max(1, Math.floor(geom.sourceWidth)),
 		height: Math.max(1, Math.floor(geom.sourceHeight)),
-		imageRotation: rotationDeg,
-		resizeWidth: Math.floor(targetW),
-		resizeHeight: Math.floor(targetH),
+		rotation: toCropRotation(rotationDeg),
+		outputWidth: Math.max(1, Math.floor(targetW)),
+		outputHeight: Math.max(1, Math.floor(targetH)),
 	};
-	snapCropOptionsToImageBounds(cropOptions, image);
-	const resultBytes = await cropAnimatedImageWithWorker(imageBytes, format, cropOptions);
-	const resultBlob = new Blob([new Uint8Array(resultBytes)], {type: mimeType});
+	snapCropToImageBounds(crop, image);
+	const result = await cropAnimatedImage({bytes, format, crop, sizeLimitBytes: maxBytes}, {signal, onProgress});
+	const resultBlob = new Blob([new Uint8Array(result.bytes)], {type: result.mime});
 	if (resultBlob.size === 0) {
 		throw new Error('Empty animated image blob returned');
 	}
@@ -364,7 +384,7 @@ async function exportAnimatedImage(
 	return resultBlob;
 }
 
-function snapCropOptionsToImageBounds(options: AnimatedImageCropOptions, image: HTMLImageElement): void {
+function snapCropToImageBounds(options: CropParams, image: HTMLImageElement): void {
 	const EPS = 2;
 	const naturalWidth = image.naturalWidth;
 	const naturalHeight = image.naturalHeight;
@@ -388,11 +408,58 @@ function snapCropOptionsToImageBounds(options: AnimatedImageCropOptions, image: 
 	if (options.y === 0 && Math.abs(options.height - naturalHeight) <= EPS) {
 		options.height = naturalHeight;
 	}
-	if (options.resizeWidth != null && Math.abs(options.resizeWidth - naturalWidth) <= EPS) {
-		options.resizeWidth = naturalWidth;
+	if (Math.abs(options.outputWidth - naturalWidth) <= EPS) {
+		options.outputWidth = naturalWidth;
 	}
-	if (options.resizeHeight != null && Math.abs(options.resizeHeight - naturalHeight) <= EPS) {
-		options.resizeHeight = naturalHeight;
+	if (Math.abs(options.outputHeight - naturalHeight) <= EPS) {
+		options.outputHeight = naturalHeight;
+	}
+}
+
+function getCropErrorMessage(
+	i18n: I18n,
+	error: unknown,
+	fallbackMessage: string,
+	sizeLimitBytes: number,
+): string | null {
+	if (error instanceof CropSizeLimitError) {
+		return i18n._(CROPPED_IMAGE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
+			maxSizeLabel: formatFileSize(i18n.locale, error.maxBytes),
+		});
+	}
+	if (!(error instanceof CropPipelineError)) {
+		return fallbackMessage;
+	}
+	switch (error.code) {
+		case 'aborted':
+			return null;
+		case 'too_large':
+			return i18n._(CROPPED_IMAGE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
+				maxSizeLabel: formatFileSize(i18n.locale, sizeLimitBytes),
+			});
+		case 'budget_exceeded':
+			return i18n._(ANIMATION_TOO_LONG_OR_TOO_LARGE_DESCRIPTOR);
+		case 'decode_failed':
+			return i18n._(IMAGE_COULDN_T_BE_READ_DESCRIPTOR);
+		case 'animated_avif_unsupported':
+			return i18n._(BROWSER_CAN_T_CROP_ANIMATED_AVIF_DESCRIPTOR, {avifFormatLabel: AVIF_FORMAT_LABEL});
+		case 'wasm_unavailable':
+			return i18n._(WEBASSEMBLY_TURNED_OFF_DESCRIPTOR);
+		default:
+			return fallbackMessage;
+	}
+}
+
+function getCropProgressLabel(i18n: I18n, progress: CropProgress): string {
+	switch (progress.phase) {
+		case 'init':
+			return i18n._(CROP_PROGRESS_PREPARING_DESCRIPTOR);
+		case 'crop':
+			return i18n._(CROP_PROGRESS_CROPPING_DESCRIPTOR, {
+				percent: Math.round(Math.min(1, Math.max(0, progress.fraction)) * 100),
+			});
+		case 'compress':
+			return i18n._(CROP_PROGRESS_COMPRESSING_DESCRIPTOR);
 	}
 }
 
@@ -410,7 +477,6 @@ function cropCoversDisplayedImage(displayDimensions: Size, cropDimensions: Size,
 
 interface ImageCropModalProps {
 	imageUrl: string;
-	sourceMimeType: string;
 	onCropComplete: (croppedImageBlob: Blob) => void;
 	onSkip?: () => void;
 	title: React.ReactNode;
@@ -430,7 +496,6 @@ interface ImageCropModalProps {
 export const ImageCropModal: React.FC<ImageCropModalProps> = observer(
 	({
 		imageUrl,
-		sourceMimeType,
 		onCropComplete,
 		onSkip,
 		title,
@@ -447,6 +512,9 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = observer(
 		canSkipOriginal,
 	}) => {
 		const {i18n} = useLingui();
+		const popOwningModal = usePopOwningModal();
+		const abortRef = useRef<AbortController | null>(null);
+		const [progress, setProgress] = useState<CropProgress | null>(null);
 		const imageRef = useRef<HTMLImageElement | null>(null);
 		const cropperContainerRef = useRef<HTMLDivElement | null>(null);
 		const transformRef = useRef<Point>({x: 0, y: 0});
@@ -470,9 +538,6 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = observer(
 		const [heightSliderKey, setHeightSliderKey] = useState(0);
 		const [isSkipAllowed, setIsSkipAllowed] = useState(false);
 		const isRound = cropShape === 'round';
-		const isAnimated = ['image/gif', 'image/webp', 'image/avif', 'image/png'].some((type) =>
-			sourceMimeType.toLowerCase().includes(type.replace('image/', '')),
-		);
 		const MIN_ZOOM = 1;
 		const MAX_ZOOM = 3;
 		const effectiveMinHeightRatio = !isRound ? (minHeightRatio ?? 1) : 1;
@@ -641,55 +706,74 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = observer(
 				cropCoversDisplayedImage(displayDimensions, cropDimensions, zoomRatio)
 			) {
 				onSkip();
-				ModalCommands.pop();
+				popOwningModal();
 				return;
 			}
+			abortRef.current?.abort();
+			const controller = new AbortController();
+			abortRef.current = controller;
+			const cropOrigin = transformRef.current;
 			try {
 				setIsProcessing(true);
+				setProgress(null);
 				const scaledDisplayDimensions: Size = {
 					width: displayDimensions.width * zoomRatio,
 					height: displayDimensions.height * zoomRatio,
 				};
-				const outBlob = isAnimated
-					? await exportAnimatedImage(
-							img,
-							scaledDisplayDimensions,
-							cropDimensions,
-							transformRef.current,
-							rotation,
-							maxWidth,
-							maxHeight,
-							sizeLimitBytes,
-							imageUrl,
-							sourceMimeType,
-						)
-					: await exportStaticImage(
-							img,
-							scaledDisplayDimensions,
-							cropDimensions,
-							transformRef.current,
-							rotation,
-							maxWidth,
-							maxHeight,
-							sizeLimitBytes,
-						);
+				const response = await fetch(imageUrl);
+				if (controller.signal.aborted) return;
+				if (!response.ok) {
+					throw new Error('Failed to fetch image data');
+				}
+				const bytes = await response.arrayBuffer();
+				if (controller.signal.aborted) return;
+				const inspected = await inspectImageBytes(new Uint8Array(bytes));
+				if (controller.signal.aborted) return;
+				const outBlob =
+					inspected.animated && isAnimatedCropSourceFormat(inspected.format)
+						? await exportAnimatedImage(
+								img,
+								scaledDisplayDimensions,
+								cropDimensions,
+								cropOrigin,
+								rotation,
+								maxWidth,
+								maxHeight,
+								sizeLimitBytes,
+								bytes,
+								inspected.format,
+								controller.signal,
+								setProgress,
+							)
+						: await exportStaticImage(
+								img,
+								scaledDisplayDimensions,
+								cropDimensions,
+								cropOrigin,
+								rotation,
+								maxWidth,
+								maxHeight,
+								sizeLimitBytes,
+							);
+				if (controller.signal.aborted) return;
 				onCropComplete(outBlob);
-				ModalCommands.pop();
+				popOwningModal();
 			} catch (error) {
+				if (controller.signal.aborted) return;
+				const message = getCropErrorMessage(i18n, error, errorMessage, sizeLimitBytes);
+				if (message == null) return;
 				logger.error('Error cropping image:', error);
-				const message =
-					error instanceof CropSizeLimitError
-						? i18n._(CROPPED_IMAGE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR, {
-								maxSizeLabel: formatFileSize(i18n.locale, error.maxBytes),
-							})
-						: errorMessage;
 				showMessagingErrorModal({
 					title: i18n._(COULDN_T_CROP_IMAGE_DESCRIPTOR),
 					message,
 					dataFlx: 'messaging.image-crop-modal.crop-failed.generic-error-modal',
 				});
 			} finally {
-				setIsProcessing(false);
+				if (abortRef.current === controller) {
+					abortRef.current = null;
+					setIsProcessing(false);
+					setProgress(null);
+				}
 			}
 		}, [
 			cropDimensions,
@@ -698,29 +782,30 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = observer(
 			hasEdits,
 			i18n,
 			imageUrl,
-			isAnimated,
 			isSkipAllowed,
 			maxHeight,
 			maxWidth,
 			onCropComplete,
 			onSkip,
+			popOwningModal,
 			rotation,
 			sizeLimitBytes,
-			sourceMimeType,
 			zoomRatio,
 		]);
 		const handleSkip = useCallback(() => {
 			if (!isSkipAllowed) return;
 			if (onSkip) onSkip();
-			ModalCommands.pop();
-		}, [isSkipAllowed, onSkip]);
+			popOwningModal();
+		}, [isSkipAllowed, onSkip, popOwningModal]);
 		const handleCancel = useCallback(() => {
-			ModalCommands.pop();
-		}, []);
+			abortRef.current?.abort();
+			popOwningModal();
+		}, [popOwningModal]);
+		useEffect(() => () => abortRef.current?.abort(), []);
 		useEffect(() => {
 			setIsSkipAllowed(false);
 			setLoadError(false);
-		}, [imageUrl, sourceMimeType]);
+		}, [imageUrl]);
 		useEffect(() => {
 			const onMouseMove = (e: MouseEvent) => handleMouseMove(e);
 			const onMouseUp = () => handleMouseUp();
@@ -769,9 +854,10 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = observer(
 			};
 		}, [displayDimensions, zoomRatio]);
 		const exportDisabled = isProcessing || loadError;
+		const progressLabel = isProcessing && progress != null ? getCropProgressLabel(i18n, progress) : null;
 		return (
-			<Modal.Root size="medium" data-flx="messaging.image-crop-modal.modal-root">
-				<Modal.Header title={title} data-flx="messaging.image-crop-modal.modal-header" />
+			<Modal.Root size="medium" onClose={handleCancel} data-flx="messaging.image-crop-modal.modal-root">
+				<Modal.Header title={title} onClose={handleCancel} data-flx="messaging.image-crop-modal.modal-header" />
 				<Modal.Content className={styles.content} data-flx="messaging.image-crop-modal.content">
 					<div className={styles.description} data-flx="messaging.image-crop-modal.description">
 						{description}
@@ -935,12 +1021,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = observer(
 					>
 						<Trans>Reset</Trans>
 					</Button>
-					<Button
-						variant="secondary"
-						onClick={handleCancel}
-						disabled={isProcessing}
-						data-flx="messaging.image-crop-modal.button.cancel"
-					>
+					<Button variant="secondary" onClick={handleCancel} data-flx="messaging.image-crop-modal.button.cancel">
 						<Trans>Cancel</Trans>
 					</Button>
 					{onSkip && isSkipAllowed && (
@@ -956,10 +1037,10 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = observer(
 					<Button
 						onClick={handleSave}
 						disabled={exportDisabled}
-						submitting={isProcessing}
+						submitting={isProcessing && progressLabel == null}
 						data-flx="messaging.image-crop-modal.button.save"
 					>
-						{saveButtonLabel}
+						{progressLabel ?? saveButtonLabel}
 					</Button>
 				</Modal.Footer>
 			</Modal.Root>

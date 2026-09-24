@@ -1762,6 +1762,12 @@
         "msgid": "Community overrides"
       },
       {
+        "msgid": "Compressing"
+      },
+      {
+        "msgid": "Compressing {percent}%"
+      },
+      {
         "msgid": "Connect a camera and try again."
       },
       {
@@ -1802,6 +1808,9 @@
       },
       {
         "msgid": "Create the administrator account"
+      },
+      {
+        "msgid": "Cropping {percent}%"
       },
       {
         "msgid": "Custom emoji {emojiName} from a community"
@@ -2276,6 +2285,9 @@
       },
       {
         "msgid": "Premium model"
+      },
+      {
+        "msgid": "Preparing"
       },
       {
         "msgid": "Prevent <0>{targetUserTag}</0> from sending messages, reacting, and connecting to voice channels for the specified duration."
@@ -2983,10 +2995,25 @@
         "msgid": "These options change how people use the instance. Some can only be chosen during setup."
       },
       {
+        "msgid": "This animation is too long or too large to crop. Try a shorter or smaller file."
+      },
+      {
+        "msgid": "This browser can't crop animated {AVIF_FORMAT_LABEL} files. Upload a GIF or WebP instead."
+      },
+      {
+        "msgid": "This browser can't crop animated {avifFormatLabel} files. Upload a GIF or WebP instead."
+      },
+      {
+        "msgid": "This browser has WebAssembly turned off, so animated images can't be cropped."
+      },
+      {
         "msgid": "This device could not keep up with {targetResolution} at {targetFrameRate} FPS last time, so your stream started at {resolution} at {frameRate} FPS."
       },
       {
         "msgid": "This emoji is from"
+      },
+      {
+        "msgid": "This image couldn't be read. It may be damaged."
       },
       {
         "msgid": "This instance currently allows screen share up to 720p at 30 FPS."

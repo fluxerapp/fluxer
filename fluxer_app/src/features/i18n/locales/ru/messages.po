@@ -1405,18 +1405,13 @@ msgstr "{itemLabel}, скоро"
 msgid "{kilobits} kbps"
 msgstr "{kilobits} Кбит/с"
 
-#. Error modal body shown when a non-croppable community image has dimensions that do not fit the target asset. {label} names the image field.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:72
-msgid "{label} dimensions do not match this asset. Choose a different image or upload a static image you can crop."
-msgstr "Размеры изображения не подходят для «{label}». Выберите другое изображение или загрузите статичное изображение, которое можно обрезать."
-
 #. Error modal body shown when a community image upload exceeds the size limit. {label} names the image field and {maxSizeLabel} is a formatted file size.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:44
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:33
 msgid "{label} file is too large. Choose a file smaller than {maxSizeLabel}."
 msgstr "Файл «{label}» слишком большой. Выберите файл размером меньше {maxSizeLabel}."
 
 #. Error modal body shown when a community image field does not allow animation. {label} names the image field.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:49
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:38
 msgid "{label} images cannot be animated. Use a static image."
 msgstr "Изображения для «{label}» не могут быть анимированными. Используйте статичное изображение."
 
@@ -2829,7 +2824,7 @@ msgid "Activity sharing"
 msgstr "Показ активности"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:465
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:478
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:102
 msgid "Activity threshold"
 msgstr "Порог активности"
@@ -3566,11 +3561,11 @@ msgstr "Разрешить {everyoneMention} и {hereMention}"
 msgid "Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 msgstr "Разрешите {PRODUCT_NAME} доступ к вашей камере в {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:533
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:535
 msgid "Allow {PRODUCT_NAME} to access your microphone in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 msgstr "Разрешите {PRODUCT_NAME} доступ к микрофону в {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:538
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:540
 msgid "Allow {PRODUCT_NAME} to access your microphone. Check your browser's address bar or settings."
 msgstr "Разрешите {PRODUCT_NAME} доступ к микрофону. Проверьте адресную строку или настройки браузера."
 
@@ -3673,7 +3668,7 @@ msgstr "Разрешить участникам без разрешения «{r
 msgid "Allow mentions for this role"
 msgstr "Разрешить упоминания для этой роли"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:558
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:560
 msgid "Allow microphone"
 msgstr "Разрешить доступ к микрофону"
 
@@ -3942,25 +3937,21 @@ msgstr "и еще {remainingCount}"
 msgid "Animate on interaction"
 msgstr "Анимировать при взаимодействии"
 
-#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:26
-msgid "Animated {AVIF_FORMAT_LABEL} files aren't supported. Upload a static {AVIF_FORMAT_LABEL} file instead."
-msgstr "Анимированные файлы {AVIF_FORMAT_LABEL} не поддерживаются. Вместо этого загрузите статический файл {AVIF_FORMAT_LABEL}."
-
 #. Modal title shown when an animated AVIF upload is rejected by the client.
-#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:11
+#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:10
 msgid "Animated {avifFormatLabel} not supported"
 msgstr "Анимированный формат {avifFormatLabel} не поддерживается"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:206
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:192
 msgid "Animated avatars ({ANIMATED_AVATAR_FORMATS}) are exclusively available to {PREMIUM_PRODUCT_NAME} subscribers."
 msgstr "Анимированные аватары ({ANIMATED_AVATAR_FORMATS}) доступны только подписчикам {PREMIUM_PRODUCT_NAME}."
 
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:240
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:226
 msgid "Animated avatars ({ANIMATED_AVATAR_FORMATS}) are not available on this instance. Upload a static image instead."
 msgstr "Анимированные аватары ({ANIMATED_AVATAR_FORMATS}) недоступны в этом экземпляре. Загрузите статичное изображение."
 
 #. Extra note in the avatar asset upload source modal. Preserve {animatedAvatarFormats} and {premiumProductName}; they are inserted by code.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:115
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:102
 msgid "Animated avatars ({animatedAvatarFormats}) require {premiumProductName}."
 msgstr "Для анимированных аватаров ({animatedAvatarFormats}) требуется {premiumProductName}."
 
@@ -3970,12 +3961,12 @@ msgid "Animated avatars & profile banners"
 msgstr "Анимированные аватары и баннеры профиля"
 
 #. Error message in the avatar uploader.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:91
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:86
 msgid "Animated avatars not available"
 msgstr "Анимированные аватары недоступны"
 
 #. Label in the avatar uploader. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:86
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:81
 msgid "Animated avatars require {premiumProductName}"
 msgstr "Для анимированных аватаров требуется {premiumProductName}"
 
@@ -4046,7 +4037,7 @@ msgid "Animated image preview"
 msgstr "Предпросмотр анимированного изображения"
 
 #. Confirmation modal body shown before using a non-croppable animated community image.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:54
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:43
 msgid "Animated images are not supported for this asset."
 msgstr "Анимированные изображения не поддерживаются для этого ресурса."
 
@@ -4947,7 +4938,7 @@ msgstr "Автоопределение языка"
 
 #. Short label in the voice tab. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:116
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:452
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:465
 msgid "Auto-set activity threshold"
 msgstr "Автоматически устанавливать порог активности"
 
@@ -5127,15 +5118,15 @@ msgstr "Доступно в приложении для ПК."
 #. Form label for a webhook avatar image.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/ui/components/BaseAvatar.tsx:18
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:373
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:421
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:345
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:393
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:13
 #: src/features/webhook/components/WebhookListItem.tsx:252
 msgid "Avatar"
 msgstr "Аватар"
 
 #. Error message in the avatar uploader. Preserve {imageMaxSizeLabel}; it is inserted by code.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:82
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:77
 msgid "Avatar file is too large. Choose a file smaller than {imageMaxSizeLabel}."
 msgstr "Файл аватара слишком большой. Выберите файл размером меньше {imageMaxSizeLabel}."
 
@@ -5145,7 +5136,7 @@ msgid "Avatar is too large — pick one under {imageMaxSizeLabel}."
 msgstr "Аватар слишком большой — выберите файл размером до {imageMaxSizeLabel}."
 
 #. Short label in the avatar uploader. Keep it concise.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:103
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:90
 msgid "Avatar mode selection"
 msgstr "Выбор режима аватара"
 
@@ -5187,11 +5178,11 @@ msgstr "Сейчас нет на месте"
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:155
 #: src/features/channel/components/channel_header/shared.ts:27
 #: src/features/connection/components/modals/AddConnectionModal.tsx:397
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:165
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:164
 #: src/features/guild/components/modals/add_guild_modal/GuildJoinForm.tsx:59
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:356
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:377
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:397
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:355
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:376
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:396
 #: src/features/moderation/components/report_modal/IARModal.tsx:86
 #: src/features/moderation/components/report/ReportStepDetails.tsx:312
 #: src/features/user/components/modals/PhoneAddModal.tsx:420
@@ -5428,19 +5419,19 @@ msgstr "Забаненные пользователи"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:28
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:125
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:280
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:330
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:292
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:342
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:37
 msgid "Banner"
 msgstr "Баннер"
 
 #. Error message in the banner uploader. Preserve {imageMaxSizeLabel}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:81
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:84
 msgid "Banner file is too large. Choose a file smaller than {imageMaxSizeLabel}."
 msgstr "Файл баннера слишком большой. Выберите файл размером меньше {imageMaxSizeLabel}."
 
 #. Button or menu action label in the banner uploader. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:86
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:89
 msgid "Banner mode selection"
 msgstr "Выбор режима баннера"
 
@@ -6107,8 +6098,8 @@ msgstr "Купите подарок {premiumProductName} на вкладке {pr
 msgid "Buy gift"
 msgstr "Купить подарок"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:339
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:655
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:338
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:654
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "Создавая сообщество, вы соглашаетесь соблюдать <0>правила сообщества {PRODUCT_NAME}</0>."
 
@@ -6361,7 +6352,7 @@ msgstr "Сюда нельзя загружать файлы"
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
 #: src/features/messaging/components/modals/ForwardModal.tsx:650
-#: src/features/messaging/components/modals/ImageCropModal.tsx:944
+#: src/features/messaging/components/modals/ImageCropModal.tsx:1025
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/moderation/components/modals/BanMemberModal.tsx:262
 #: src/features/moderation/components/modals/RemoveTimeoutModal.tsx:70
@@ -6614,9 +6605,9 @@ msgid "Centered"
 msgstr "По центру"
 
 #. Title of the modal where the user picks an avatar source (file upload or GIF provider). Keep it concise.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:111
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:395
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:431
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:98
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:367
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:403
 msgid "Change avatar"
 msgstr "Изменить аватар"
 
@@ -6627,9 +6618,9 @@ msgstr "Изменить фон"
 #. Title of the modal where the user picks a banner source (file upload or GIF provider). Keep it concise.
 #. Title of the modal where the user picks a community banner source (file upload or GIF provider). Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:43
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:94
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:303
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:342
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:97
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:315
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:354
 msgid "Change banner"
 msgstr "Изменить баннер"
 
@@ -6668,13 +6659,13 @@ msgstr "Изменить никнейм в группе"
 #. Title of the modal where the user picks a group icon source. Keep it concise. Keep the tone plain and specific.
 #. Title of the modal where the user picks an imported-template community icon source. Keep it concise. Keep the tone plain and specific.
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:88
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:329
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
 #: src/features/channel/components/modals/EditGroupModal.tsx:85
-#: src/features/channel/components/modals/EditGroupModal.tsx:284
+#: src/features/channel/components/modals/EditGroupModal.tsx:283
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:63
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:305
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:304
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:86
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:626
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:625
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:35
 msgid "Change icon"
 msgstr "Изменить значок"
@@ -7669,8 +7660,8 @@ msgstr "Забрать подарок"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:41
 #: src/features/channel/components/direct_message/AddFriendForm.tsx:62
 #: src/features/channel/utils/CreateDMModalUtils.tsx:43
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:214
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:440
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:213
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:439
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:343
 msgid "Claim your account"
 msgstr "Подтвердите аккаунт"
@@ -8518,8 +8509,8 @@ msgstr "Сообщество способствует травле или цел
 msgid "Community filter"
 msgstr "Фильтр сообществ"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:272
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:593
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:271
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:592
 msgid "Community icon"
 msgstr "Значок сообщества"
 
@@ -8763,6 +8754,11 @@ msgstr "Кнопки поля ввода"
 msgid "Composer focus"
 msgstr "Фокус на поле ввода"
 
+#. Progress label on the save button while a cropped animated image is compressed. Keep it concise.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:67
+msgid "Compressing"
+msgstr "Сжимаем"
+
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:164
@@ -8917,7 +8913,7 @@ msgstr "Подключите камеру или виртуальное устр
 msgid "Connect a display, then try again."
 msgstr "Подключите дисплей и попробуйте снова."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:543
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:545
 msgid "Connect a microphone and try again."
 msgstr "Подключите микрофон и попробуйте снова."
 
@@ -9783,7 +9779,7 @@ msgid "Couldn't create this sticker"
 msgstr "Не удалось создать стикер"
 
 #. Title of the error modal shown when image cropping fails.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:28
+#: src/features/messaging/components/modals/ImageCropModal.tsx:32
 msgid "Couldn't crop image"
 msgstr "Не удалось обрезать изображение"
 
@@ -10159,12 +10155,12 @@ msgid "Couldn't update voice activity sharing right now"
 msgstr "Не удалось обновить настройки голосовой активности"
 
 #. Title of the error modal shown when uploading a profile avatar fails.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:107
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:94
 msgid "Couldn't upload avatar"
 msgstr "Не удалось загрузить аватар"
 
 #. Title of the error modal shown when uploading a profile banner fails.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:90
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:93
 msgid "Couldn't upload banner"
 msgstr "Не удалось загрузить баннер"
 
@@ -10230,7 +10226,7 @@ msgstr "Создать и поделиться"
 msgid "Create a community"
 msgstr "Создать сообщество"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:257
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:256
 msgid "Create a community for you and your friends to chat."
 msgstr "Создайте сообщество для общения с друзьями."
 
@@ -10489,7 +10485,7 @@ msgid "Crop invite background"
 msgstr "Обрезать фон приглашения"
 
 #. Short label in the image crop modal. Keep it concise.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:20
+#: src/features/messaging/components/modals/ImageCropModal.tsx:24
 msgid "Crop preview"
 msgstr "Предпросмотр обрезки"
 
@@ -10500,30 +10496,15 @@ msgstr "Обрезать баннер профиля"
 
 #. Error modal body shown when a cropped community image still exceeds the size limit. {maxSizeLabel} is a formatted file size.
 #. Error modal body shown when a cropped image still exceeds the size limit. {maxSizeLabel} is a formatted file size.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:67
-#: src/features/messaging/components/modals/ImageCropModal.tsx:32
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:47
+#: src/features/messaging/components/modals/ImageCropModal.tsx:36
 msgid "Cropped image is too large. Choose a smaller area or a smaller file (max {maxSizeLabel})."
 msgstr "Обрезанное изображение слишком большое. Выберите меньшую область или файл меньшего размера (макс. {maxSizeLabel})."
 
-#. Confirmation modal body shown before using an animated community image without cropping. {formatLabel} is the image format name.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:58
-msgid "Cropping animated {formatLabel} files isn't supported yet. The original image will be used."
-msgstr "Обрезка анимированных файлов формата {formatLabel} пока не поддерживается. Будет использовано исходное изображение."
-
-#. Description text in the avatar uploader. Preserve {formatLabel}; it is inserted by code.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:95
-msgid "Cropping animated {formatLabel} files isn't supported yet. The original upload will be used."
-msgstr "Обрезка анимированных файлов формата {formatLabel} пока не поддерживается. Будет использован исходный файл."
-
-#. Confirmation modal body shown before using an animated community image with an unknown format.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:63
-msgid "Cropping animated files isn't supported yet. The original image will be used."
-msgstr "Обрезка анимированных файлов пока не поддерживается. Будет использовано исходное изображение."
-
-#. Description text in the avatar uploader when the animated image format is unknown.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:99
-msgid "Cropping animated files isn't supported yet. The original upload will be used."
-msgstr "Обрезка анимированных файлов пока не поддерживается. Будет использован исходный файл."
+#. Progress label on the save button while animated image frames are cropped. {percent} is a whole number. Keep it concise.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:62
+msgid "Cropping {percent}%"
+msgstr "Обрезаем {percent}%"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:86
@@ -12597,8 +12578,8 @@ msgstr "Нет аккаунта?"
 
 #. Short label in the avatar uploader. Keep it concise.
 #. Short label in the banner uploader. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:74
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:60
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:69
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:63
 msgid "Don't show"
 msgstr "Не показывать"
 
@@ -16560,8 +16541,8 @@ msgstr "Аватары групповых чатов используют те �
 msgid "Group DMs"
 msgstr "Групповые чаты"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:290
-#: src/features/channel/components/modals/EditGroupModal.tsx:248
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:289
+#: src/features/channel/components/modals/EditGroupModal.tsx:247
 msgid "Group icon"
 msgstr "Значок группы"
 
@@ -16624,8 +16605,8 @@ msgstr "Настройки группы"
 msgid "Group typing states"
 msgstr "Статусы набора в группах"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:232
-#: src/features/channel/components/modals/EditGroupModal.tsx:223
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:231
+#: src/features/channel/components/modals/EditGroupModal.tsx:222
 msgid "Group updated"
 msgstr "Группа обновлена"
 
@@ -16803,7 +16784,7 @@ msgstr "Сердце"
 msgid "Hebrew"
 msgstr "Иврит"
 
-#: src/features/messaging/components/modals/ImageCropModal.tsx:872
+#: src/features/messaging/components/modals/ImageCropModal.tsx:958
 msgid "Height"
 msgstr "Высота"
 
@@ -17510,7 +17491,7 @@ msgstr "Изображение скопировано в буфер обмена
 #. Error modal title shown when a template-import community icon upload cannot be accepted or processed.
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:59
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:155
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:78
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:52
 msgid "Image couldn't be used"
 msgstr "Не удалось использовать изображение"
 
@@ -19671,7 +19652,7 @@ msgid "Look and feel"
 msgstr "Внешний вид"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:652
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:654
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "Похоже, вы используете {0}. Дополнительная обработка звука в {PRODUCT_NAME} может привести к искажениям. Прямой ввод передает ваш звук без изменений."
 
@@ -22577,7 +22558,7 @@ msgstr "Совпадений не найдено"
 msgid "No mentions yet"
 msgstr "Пока нет упоминаний"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:528
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:530
 msgid "No microphone found"
 msgstr "Микрофон не найден"
 
@@ -23806,7 +23787,7 @@ msgstr "Открыть системный чат"
 msgid "Open system picker"
 msgstr "Открыть системный выбор источника"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:528
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:527
 msgid "Open template JSON"
 msgstr "Открыть JSON шаблона"
 
@@ -23820,7 +23801,7 @@ msgstr "Открыть окно бана для этого сообщества.
 msgid "Open the context menu"
 msgstr "Открыть контекстное меню"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:511
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:510
 msgid "Open the link below in your browser, then copy the entire JSON response and paste it into the box."
 msgstr "Откройте ссылку ниже в браузере, затем скопируйте весь JSON-ответ и вставьте его в поле."
 
@@ -24331,7 +24312,7 @@ msgstr "Последние 7 дней"
 msgid "Paste"
 msgstr "Вставить"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:483
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:482
 msgid "Paste a {theOtherPlatform} template URL to import its structure into a new community."
 msgstr "Вставьте URL шаблона {theOtherPlatform}, чтобы импортировать его структуру в новое сообщество."
 
@@ -25191,6 +25172,11 @@ msgstr "Тип подписки"
 msgid "Premium until date"
 msgstr "Дата окончания премиума"
 
+#. Progress label on the save button while an animated image crop starts. Keep it concise.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:58
+msgid "Preparing"
+msgstr "Подготовка"
+
 #. Setup wizard title while the instance configuration loads.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:72
 msgid "Preparing setup"
@@ -25497,22 +25483,22 @@ msgstr "Профиль"
 msgid "Profile badge"
 msgstr "Значок профиля"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:163
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:166
 msgid "Profile banners are a {PREMIUM_PRODUCT_NAME} feature. Get {PREMIUM_PRODUCT_NAME} to add a banner to your profile."
 msgstr "Баннеры профиля — это функция {PREMIUM_PRODUCT_NAME}. Оформите подписку {PREMIUM_PRODUCT_NAME}, чтобы добавить баннер в свой профиль."
 
 #. Profile banner uploader notice shown when the instance configuration disables profile banners.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:68
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:71
 msgid "Profile banners are not enabled on this instance."
 msgstr "Баннеры профиля не включены в этом экземпляре."
 
 #. Label in the banner uploader. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:76
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:79
 msgid "Profile banners require {premiumProductName}"
 msgstr "Для баннеров профиля требуется {premiumProductName}"
 
 #. Profile banner uploader notice shown when profile banners require premium.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:64
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:67
 msgid "Profile banners require {premiumProductName}."
 msgstr "Для баннеров профиля требуется {premiumProductName}."
 
@@ -25838,7 +25824,7 @@ msgstr "Нажми и говори"
 msgid "Push-to-talk (limited)"
 msgstr "Нажми и говори (с ограничениями)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:674
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:681
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "Режим «Нажми и говори» игнорируется при прямом вводе. Переключитесь на «Фокусировку голоса» или «Пользовательский», чтобы использовать его."
 
@@ -26551,8 +26537,8 @@ msgstr "Удалить вложение"
 msgid "Remove authenticator app"
 msgstr "Удалить приложение для аутентификации"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:405
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:441
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:377
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:413
 msgid "Remove avatar"
 msgstr "Удалить аватар"
 
@@ -26561,8 +26547,8 @@ msgstr "Удалить аватар"
 msgid "Remove background"
 msgstr "Удалить фон"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:314
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:353
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:326
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:365
 msgid "Remove banner"
 msgstr "Удалить баннер"
 
@@ -26625,10 +26611,10 @@ msgstr "Убрать закрепление сверху"
 msgid "Remove from URL-only GIF favorites"
 msgstr "Удалить из избранных GIF (только по URL)"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:338
-#: src/features/channel/components/modals/EditGroupModal.tsx:293
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:314
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:635
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:337
+#: src/features/channel/components/modals/EditGroupModal.tsx:292
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:313
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:634
 msgid "Remove icon"
 msgstr "Удалить значок"
 
@@ -27331,7 +27317,7 @@ msgstr "Отправлено повторно"
 #: src/features/app/components/dialogs/shared/UnsavedChangesBannerContent.tsx:51
 #: src/features/app/components/floating/ColorPickerPopover.tsx:190
 #: src/features/input/components/KeybindRecorder.tsx:459
-#: src/features/messaging/components/modals/ImageCropModal.tsx:936
+#: src/features/messaging/components/modals/ImageCropModal.tsx:1022
 msgid "Reset"
 msgstr "Сбросить"
 
@@ -28074,7 +28060,7 @@ msgstr "Румынский"
 
 #. Short label in the image crop modal. Keep it concise.
 #. Tooltip on the media viewer button that rotates the current media item 90 degrees clockwise.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:24
+#: src/features/messaging/components/modals/ImageCropModal.tsx:28
 #: src/features/messaging/components/modals/media_modal/shared.ts:93
 msgid "Rotate clockwise"
 msgstr "Повернуть по часовой стрелке"
@@ -28153,8 +28139,8 @@ msgstr "Насыщенность"
 #. Save button in the community-folder settings modal footer.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:113
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:87
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:367
-#: src/features/channel/components/modals/EditGroupModal.tsx:323
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:366
+#: src/features/channel/components/modals/EditGroupModal.tsx:322
 #: src/features/channel/components/modals/RenameChannelModal.tsx:28
 #: src/features/connection/components/modals/EditConnectionModal.tsx:108
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:328
@@ -28367,7 +28353,7 @@ msgid "Screen share encoder controls"
 msgstr "Настройки кодировщика для демонстрации экрана"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:120
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:119
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "Демонстрация экрана завершена"
@@ -30035,7 +30021,7 @@ msgid "Show a red badge on the app icon when you have unread messages"
 msgstr "Показывать красный значок на иконке приложения при наличии непрочитанных сообщений"
 
 #. Label in the banner uploader. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:72
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:75
 msgid "Show accent color only, ignoring your global profile"
 msgstr "Показывать только акцентный цвет, игнорируя глобальный профиль"
 
@@ -30104,7 +30090,7 @@ msgid "Show custom emojis in expression autocomplete"
 msgstr "Показывать пользовательские эмодзи в автозавершении выражений"
 
 #. Label in the avatar uploader.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:78
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:73
 msgid "Show default avatar, ignoring your global profile"
 msgstr "Показывать аватар по умолчанию, игнорируя ваш глобальный профиль"
 
@@ -30443,12 +30429,12 @@ msgid "Show unread indicator on muted channels"
 msgstr "Показывать индикатор непрочитанных сообщений в каналах без уведомлений"
 
 #. Label in the avatar uploader.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:62
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:57
 msgid "Show your global profile avatar in this community"
 msgstr "Показывать аватар глобального профиля в этом сообществе"
 
 #. Label in the banner uploader. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:48
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:51
 msgid "Show your global profile banner in this community"
 msgstr "Показывать баннер глобального профиля в этом сообществе"
 
@@ -30720,7 +30706,7 @@ msgstr "Пропустить"
 msgid "Skip \"Mark all as read\" confirmation"
 msgstr "Пропускать подтверждение «Отметить все как прочитанные»"
 
-#: src/features/messaging/components/modals/ImageCropModal.tsx:953
+#: src/features/messaging/components/modals/ImageCropModal.tsx:1034
 msgid "Skip cropping"
 msgstr "Пропустить обрезку"
 
@@ -32346,7 +32332,7 @@ msgstr "Переключиться на просторный вид"
 msgid "Switch to dense layout"
 msgstr "Переключиться на компактный вид"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:647
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:649
 msgid "Switch to direct input"
 msgstr "Переключиться на прямой ввод"
 
@@ -32734,7 +32720,7 @@ msgstr "Задачи"
 msgid "Teleporting you to another voice region..."
 msgstr "Перемещаем вас в другой голосовой регион..."
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:560
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:559
 msgid "Template"
 msgstr "Шаблон"
 
@@ -33236,7 +33222,7 @@ msgid "The role granted {permissions}"
 msgstr "Роль предоставляла {permissions}"
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:125
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:124
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "Источник демонстрации экрана прекратил передачу видео, поэтому демонстрация была остановлена."
@@ -33453,6 +33439,11 @@ msgstr "Этот аккаунт нельзя заблокировать."
 msgid "This action cannot be undone. All associated data, including the bot user, will be permanently deleted."
 msgstr "Это действие необратимо. Все связанные данные, включая пользователя-бота, будут удалены без возможности восстановления."
 
+#. Error modal body shown when an animated image has too many frames or pixels to crop in the browser.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:41
+msgid "This animation is too long or too large to crop. Try a shorter or smaller file."
+msgstr "Этот анимированный файл слишком длинный или большой для обрезки. Попробуйте более короткий или меньший файл."
+
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
 #: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:82
 msgid "This application"
@@ -33472,10 +33463,22 @@ msgstr "Этот бот не является публичным, и други�
 msgid "This bot requests the administrator permission. Only grant it if you fully trust the developer. Ask them to request fewer permissions instead. Close this page if unsure."
 msgstr "Этот бот запрашивает права администратора. Предоставляйте их, только если полностью доверяете разработчику. Попросите его запрашивать меньше разрешений. Закройте эту страницу, если не уверены."
 
+#. Error modal body shown when the browser cannot decode animated AVIF for cropping. {avifFormatLabel} is the AVIF format name.
+#. Modal body shown when an animated AVIF upload is rejected because this browser cannot crop it.
+#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:14
+#: src/features/messaging/components/modals/ImageCropModal.tsx:49
+msgid "This browser can't crop animated {avifFormatLabel} files. Upload a GIF or WebP instead."
+msgstr "Этот браузер не может обрезать анимированные файлы {avifFormatLabel}. Загрузите вместо этого GIF или WebP."
+
 #. Console warning line explaining that the browser console is meant for developers.
 #: src/features/devtools/utils/SelfXssNotice.ts:16
 msgid "This browser console is a developer tool."
 msgstr "Консоль браузера — это инструмент разработчика."
+
+#. Error modal body shown when WebAssembly is unavailable, which animated image cropping needs.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:54
+msgid "This browser has WebAssembly turned off, so animated images can't be cropped."
+msgstr "В этом браузере отключен WebAssembly, поэтому анимированные изображения нельзя обрезать."
 
 #. Pre-join indicator shown beneath the Join button on a DM or group DM call where every connected participant supports E2EE.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:320
@@ -33757,6 +33760,11 @@ msgstr "Эта группа заполнена. Удалите кого-нибу
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:105
 msgid "This handoff code has expired. Generate a new one to continue."
 msgstr "Срок действия этого кода истёк. Создайте новый, чтобы продолжить."
+
+#. Error modal body shown when an animated image fails to decode during cropping.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:45
+msgid "This image couldn't be read. It may be damaged."
+msgstr "Не удалось прочитать это изображение. Оно может быть повреждено."
 
 #. Desktop updater modal body for managed package builds such as Flatpak. productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:75
@@ -36078,12 +36086,12 @@ msgid "Upload"
 msgstr "Загрузить"
 
 #. Button or menu action label in the avatar uploader. Keep it concise.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:70
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:65
 msgid "Upload a custom avatar for this community"
 msgstr "Загрузить свой аватар для этого сообщества"
 
 #. Button or menu action label in the banner uploader. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:56
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:59
 msgid "Upload a custom banner for this community"
 msgstr "Загрузить свой баннер для этого сообщества"
 
@@ -36155,10 +36163,10 @@ msgstr "Загружать файлы и медиа в сообщения."
 msgid "Upload files and media in this channel."
 msgstr "Загружать файлы и медиа в этом канале."
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:329
-#: src/features/channel/components/modals/EditGroupModal.tsx:284
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:305
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:626
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
+#: src/features/channel/components/modals/EditGroupModal.tsx:283
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:304
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:625
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:130
 msgid "Upload icon"
 msgstr "Загрузить значок"
@@ -36401,8 +36409,8 @@ msgstr "Использовать угольную тему (абсолютно �
 
 #. Short label in the avatar uploader. Keep it concise.
 #. Short label in the banner uploader. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:66
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:52
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:61
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:55
 msgid "Use custom image"
 msgstr "Использовать свое изображение"
 
@@ -36462,8 +36470,8 @@ msgstr "Используйте фильтры или введите ключев
 
 #. Short label in the avatar uploader. Keep it concise.
 #. Short label in the banner uploader. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:58
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:44
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:53
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:47
 msgid "Use global profile"
 msgstr "Использовать глобальный профиль"
 
@@ -37826,7 +37834,7 @@ msgid "Voice participants"
 msgstr "Участники голосового чата"
 
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:642
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:55
 msgid "Voice processing"
 msgstr "Обработка голоса"
@@ -38684,7 +38692,7 @@ msgctxt "us-state"
 msgid "Wisconsin"
 msgstr "Висконсин"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:215
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:201
 msgid "With {PREMIUM_PRODUCT_NAME}, you can use animated avatars ({ANIMATED_AVATAR_FORMATS}) and profile banners, customize your tag, and unlock many other {PREMIUM_PRODUCT_NAME} perks."
 msgstr "Благодаря {PREMIUM_PRODUCT_NAME} вы можете использовать анимированные аватары ({ANIMATED_AVATAR_FORMATS}), баннеры профиля, настраивать свой тег и получать множество других преимуществ {PREMIUM_PRODUCT_NAME}."
 
@@ -39334,8 +39342,8 @@ msgstr "Чтобы использовать здесь эмодзи из дру�
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "Чтобы использовать здесь стикеры из других сообществ, вам нужно разрешение «{permissionLabel}»."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:208
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:434
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:207
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:433
 msgid "You need to claim your account before you can create a community."
 msgstr "Чтобы создать сообщество, нужно сначала подтвердить аккаунт."
 
@@ -39356,8 +39364,8 @@ msgstr "Чтобы отправлять сообщения в этом сооб�
 msgid "You need to verify a phone number to send messages in this community."
 msgstr "Чтобы отправлять сообщения в этом сообществе, подтвердите номер телефона."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:233
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:459
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:232
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:458
 msgid "You need to verify your email address before you can create a community."
 msgstr "Чтобы создать сообщество, подтвердите адрес электронной почты."
 
@@ -39980,7 +39988,7 @@ msgid "Your saved {savedResolution} at {savedFrameRate} FPS needs {premiumProduc
 msgstr "Ваше сохраненное качество {savedResolution} при {savedFrameRate} FPS требует {premiumProductName}, поэтому используется качество {resolution} при {frameRate} FPS."
 
 #. Body of a modal shown when the video codec the browser negotiated for an active screen share is outside the codecs the app allows and no allowed codec could be published, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:131
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:130
 msgctxt "screen-share"
 msgid "Your screen share could not be published with a compatible video codec, so it was stopped. Try sharing again."
 msgstr "Не удалось опубликовать демонстрацию экрана с совместимым видеокодеком, поэтому она была остановлена. Попробуйте начать демонстрацию снова."
@@ -40079,7 +40087,7 @@ msgid "Your vanity URL has been set to {inviteEndpoint}/{vanitySlug}"
 msgstr "Короткая ссылка установлена: {inviteEndpoint}/{vanitySlug}"
 
 #. Body of a modal shown when the local video encoder produces no frames for an active screen share, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:138
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:137
 msgctxt "screen-share"
 msgid "Your video encoder stopped encoding frames, so your screen share was stopped. Try sharing again."
 msgstr "Ваш видеокодер перестал кодировать кадры, поэтому демонстрация экрана была остановлена. Попробуйте начать демонстрацию снова."
@@ -40100,7 +40108,7 @@ msgid "YubiKey"
 msgstr "YubiKey"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:831
+#: src/features/messaging/components/modals/ImageCropModal.tsx:917
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:182
 msgid "Zoom"
 msgstr "Масштаб"

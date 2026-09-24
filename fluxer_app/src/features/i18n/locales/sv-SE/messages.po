@@ -1405,18 +1405,13 @@ msgstr "{itemLabel}, kommer snart"
 msgid "{kilobits} kbps"
 msgstr "{kilobits} kbps"
 
-#. Error modal body shown when a non-croppable community image has dimensions that do not fit the target asset. {label} names the image field.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:72
-msgid "{label} dimensions do not match this asset. Choose a different image or upload a static image you can crop."
-msgstr "Måtten för {label} matchar inte den här resursen. Välj en annan bild eller ladda upp en statisk bild som du kan beskära."
-
 #. Error modal body shown when a community image upload exceeds the size limit. {label} names the image field and {maxSizeLabel} is a formatted file size.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:44
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:33
 msgid "{label} file is too large. Choose a file smaller than {maxSizeLabel}."
 msgstr "Filen för {label} är för stor. Välj en fil som är mindre än {maxSizeLabel}."
 
 #. Error modal body shown when a community image field does not allow animation. {label} names the image field.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:49
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:38
 msgid "{label} images cannot be animated. Use a static image."
 msgstr "{label}-bilder kan inte vara animerade. Använd en statisk bild."
 
@@ -2829,7 +2824,7 @@ msgid "Activity sharing"
 msgstr "Delning av aktivitet"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:465
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:478
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:102
 msgid "Activity threshold"
 msgstr "Aktivitetströskel"
@@ -3566,11 +3561,11 @@ msgstr "Tillåt {everyoneMention} och {hereMention}"
 msgid "Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 msgstr "Tillåt {PRODUCT_NAME} att komma åt din kamera i {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:533
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:535
 msgid "Allow {PRODUCT_NAME} to access your microphone in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 msgstr "Tillåt att {PRODUCT_NAME} får åtkomst till din mikrofon i {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:538
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:540
 msgid "Allow {PRODUCT_NAME} to access your microphone. Check your browser's address bar or settings."
 msgstr "Tillåt {PRODUCT_NAME} att komma åt din mikrofon. Kontrollera webbläsarens adressfält eller inställningar."
 
@@ -3673,7 +3668,7 @@ msgstr "Tillåt medlemmar utan behörigheten {readMessageHistoryPermissionLabel}
 msgid "Allow mentions for this role"
 msgstr "Tillåt omnämnanden för den här rollen"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:558
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:560
 msgid "Allow microphone"
 msgstr "Tillåt mikrofon"
 
@@ -3942,25 +3937,21 @@ msgstr "och {remainingCount} till"
 msgid "Animate on interaction"
 msgstr "Animera vid interaktion"
 
-#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:26
-msgid "Animated {AVIF_FORMAT_LABEL} files aren't supported. Upload a static {AVIF_FORMAT_LABEL} file instead."
-msgstr "Animerade {AVIF_FORMAT_LABEL}-filer stöds inte. Ladda upp en statisk {AVIF_FORMAT_LABEL}-fil istället."
-
 #. Modal title shown when an animated AVIF upload is rejected by the client.
-#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:11
+#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:10
 msgid "Animated {avifFormatLabel} not supported"
 msgstr "Animerad {avifFormatLabel} stöds inte"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:206
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:192
 msgid "Animated avatars ({ANIMATED_AVATAR_FORMATS}) are exclusively available to {PREMIUM_PRODUCT_NAME} subscribers."
 msgstr "Animerade avatarer ({ANIMATED_AVATAR_FORMATS}) är bara tillgängliga för abonnenter på {PREMIUM_PRODUCT_NAME}."
 
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:240
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:226
 msgid "Animated avatars ({ANIMATED_AVATAR_FORMATS}) are not available on this instance. Upload a static image instead."
 msgstr "Animerade avatarer ({ANIMATED_AVATAR_FORMATS}) är inte tillgängliga på den här instansen. Ladda upp en statisk bild istället."
 
 #. Extra note in the avatar asset upload source modal. Preserve {animatedAvatarFormats} and {premiumProductName}; they are inserted by code.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:115
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:102
 msgid "Animated avatars ({animatedAvatarFormats}) require {premiumProductName}."
 msgstr "Animerade avatarer ({animatedAvatarFormats}) kräver {premiumProductName}."
 
@@ -3970,12 +3961,12 @@ msgid "Animated avatars & profile banners"
 msgstr "Animerade avatarer och profilbanners"
 
 #. Error message in the avatar uploader.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:91
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:86
 msgid "Animated avatars not available"
 msgstr "Animerade avatarer är inte tillgängliga"
 
 #. Label in the avatar uploader. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:86
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:81
 msgid "Animated avatars require {premiumProductName}"
 msgstr "Animerade avatarer kräver {premiumProductName}"
 
@@ -4046,7 +4037,7 @@ msgid "Animated image preview"
 msgstr "Förhandsvisning av animerad bild"
 
 #. Confirmation modal body shown before using a non-croppable animated community image.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:54
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:43
 msgid "Animated images are not supported for this asset."
 msgstr "Animerade bilder stöds inte för den här resursen."
 
@@ -4947,7 +4938,7 @@ msgstr "Identifiera språk automatiskt"
 
 #. Short label in the voice tab. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:116
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:452
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:465
 msgid "Auto-set activity threshold"
 msgstr "Ställ in aktivitetströskel automatiskt"
 
@@ -5127,15 +5118,15 @@ msgstr "Tillgänglig i datorappen."
 #. Form label for a webhook avatar image.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/ui/components/BaseAvatar.tsx:18
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:373
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:421
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:345
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:393
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:13
 #: src/features/webhook/components/WebhookListItem.tsx:252
 msgid "Avatar"
 msgstr "Avatar"
 
 #. Error message in the avatar uploader. Preserve {imageMaxSizeLabel}; it is inserted by code.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:82
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:77
 msgid "Avatar file is too large. Choose a file smaller than {imageMaxSizeLabel}."
 msgstr "Avatarfilen är för stor. Välj en fil som är mindre än {imageMaxSizeLabel}."
 
@@ -5145,7 +5136,7 @@ msgid "Avatar is too large — pick one under {imageMaxSizeLabel}."
 msgstr "Avataren är för stor – välj en under {imageMaxSizeLabel}."
 
 #. Short label in the avatar uploader. Keep it concise.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:103
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:90
 msgid "Avatar mode selection"
 msgstr "Välj avatarläge"
 
@@ -5187,11 +5178,11 @@ msgstr "Borta just nu"
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:155
 #: src/features/channel/components/channel_header/shared.ts:27
 #: src/features/connection/components/modals/AddConnectionModal.tsx:397
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:165
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:164
 #: src/features/guild/components/modals/add_guild_modal/GuildJoinForm.tsx:59
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:356
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:377
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:397
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:355
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:376
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:396
 #: src/features/moderation/components/report_modal/IARModal.tsx:86
 #: src/features/moderation/components/report/ReportStepDetails.tsx:312
 #: src/features/user/components/modals/PhoneAddModal.tsx:420
@@ -5428,19 +5419,19 @@ msgstr "Bannlysta användare"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:28
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:125
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:280
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:330
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:292
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:342
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:37
 msgid "Banner"
 msgstr "Banner"
 
 #. Error message in the banner uploader. Preserve {imageMaxSizeLabel}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:81
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:84
 msgid "Banner file is too large. Choose a file smaller than {imageMaxSizeLabel}."
 msgstr "Bannerfilen är för stor. Välj en fil som är mindre än {imageMaxSizeLabel}."
 
 #. Button or menu action label in the banner uploader. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:86
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:89
 msgid "Banner mode selection"
 msgstr "Val av bannerläge"
 
@@ -6107,8 +6098,8 @@ msgstr "Köp en {premiumProductName}-present på fliken {premiumProductName} fö
 msgid "Buy gift"
 msgstr "Köp present"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:339
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:655
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:338
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:654
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "Genom att skapa en community godkänner du att följa och upprätthålla <0>{PRODUCT_NAME}s communityriktlinjer</0>."
 
@@ -6361,7 +6352,7 @@ msgstr "Kan inte ladda upp filer här"
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
 #: src/features/messaging/components/modals/ForwardModal.tsx:650
-#: src/features/messaging/components/modals/ImageCropModal.tsx:944
+#: src/features/messaging/components/modals/ImageCropModal.tsx:1025
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/moderation/components/modals/BanMemberModal.tsx:262
 #: src/features/moderation/components/modals/RemoveTimeoutModal.tsx:70
@@ -6614,9 +6605,9 @@ msgid "Centered"
 msgstr "Centrerad"
 
 #. Title of the modal where the user picks an avatar source (file upload or GIF provider). Keep it concise.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:111
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:395
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:431
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:98
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:367
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:403
 msgid "Change avatar"
 msgstr "Ändra avatar"
 
@@ -6627,9 +6618,9 @@ msgstr "Ändra bakgrund"
 #. Title of the modal where the user picks a banner source (file upload or GIF provider). Keep it concise.
 #. Title of the modal where the user picks a community banner source (file upload or GIF provider). Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:43
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:94
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:303
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:342
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:97
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:315
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:354
 msgid "Change banner"
 msgstr "Ändra banner"
 
@@ -6668,13 +6659,13 @@ msgstr "Ändra gruppsmeknamn"
 #. Title of the modal where the user picks a group icon source. Keep it concise. Keep the tone plain and specific.
 #. Title of the modal where the user picks an imported-template community icon source. Keep it concise. Keep the tone plain and specific.
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:88
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:329
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
 #: src/features/channel/components/modals/EditGroupModal.tsx:85
-#: src/features/channel/components/modals/EditGroupModal.tsx:284
+#: src/features/channel/components/modals/EditGroupModal.tsx:283
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:63
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:305
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:304
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:86
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:626
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:625
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:35
 msgid "Change icon"
 msgstr "Ändra ikon"
@@ -7669,8 +7660,8 @@ msgstr "Lös in present"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:41
 #: src/features/channel/components/direct_message/AddFriendForm.tsx:62
 #: src/features/channel/utils/CreateDMModalUtils.tsx:43
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:214
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:440
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:213
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:439
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:343
 msgid "Claim your account"
 msgstr "Säkra ditt konto"
@@ -8518,8 +8509,8 @@ msgstr "Communityn underlättar påhopp eller riktade trakasserier."
 msgid "Community filter"
 msgstr "Communityfilter"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:272
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:593
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:271
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:592
 msgid "Community icon"
 msgstr "Communityikon"
 
@@ -8763,6 +8754,11 @@ msgstr "Knappar i skrivfältet"
 msgid "Composer focus"
 msgstr "Fokus på skrivfältet"
 
+#. Progress label on the save button while a cropped animated image is compressed. Keep it concise.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:67
+msgid "Compressing"
+msgstr "Komprimerar"
+
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:164
@@ -8917,7 +8913,7 @@ msgstr "Anslut en kamera eller virtuell inspelningsenhet och försök igen."
 msgid "Connect a display, then try again."
 msgstr "Anslut en skärm och försök igen."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:543
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:545
 msgid "Connect a microphone and try again."
 msgstr "Anslut en mikrofon och försök igen."
 
@@ -9783,7 +9779,7 @@ msgid "Couldn't create this sticker"
 msgstr "Kunde inte skapa det här klistermärket"
 
 #. Title of the error modal shown when image cropping fails.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:28
+#: src/features/messaging/components/modals/ImageCropModal.tsx:32
 msgid "Couldn't crop image"
 msgstr "Kunde inte beskära bilden"
 
@@ -10159,12 +10155,12 @@ msgid "Couldn't update voice activity sharing right now"
 msgstr "Kunde inte uppdatera delning av röstaktivitet just nu"
 
 #. Title of the error modal shown when uploading a profile avatar fails.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:107
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:94
 msgid "Couldn't upload avatar"
 msgstr "Kunde inte ladda upp avatar"
 
 #. Title of the error modal shown when uploading a profile banner fails.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:90
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:93
 msgid "Couldn't upload banner"
 msgstr "Kunde inte ladda upp bannern"
 
@@ -10230,7 +10226,7 @@ msgstr "Skapa och dela"
 msgid "Create a community"
 msgstr "Skapa en community"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:257
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:256
 msgid "Create a community for you and your friends to chat."
 msgstr "Skapa en community där du och dina vänner kan chatta."
 
@@ -10489,7 +10485,7 @@ msgid "Crop invite background"
 msgstr "Beskär inbjudningsbakgrund"
 
 #. Short label in the image crop modal. Keep it concise.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:20
+#: src/features/messaging/components/modals/ImageCropModal.tsx:24
 msgid "Crop preview"
 msgstr "Beskär förhandsvisning"
 
@@ -10500,30 +10496,15 @@ msgstr "Beskär profilbanner"
 
 #. Error modal body shown when a cropped community image still exceeds the size limit. {maxSizeLabel} is a formatted file size.
 #. Error modal body shown when a cropped image still exceeds the size limit. {maxSizeLabel} is a formatted file size.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:67
-#: src/features/messaging/components/modals/ImageCropModal.tsx:32
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:47
+#: src/features/messaging/components/modals/ImageCropModal.tsx:36
 msgid "Cropped image is too large. Choose a smaller area or a smaller file (max {maxSizeLabel})."
 msgstr "Den beskurna bilden är för stor. Välj ett mindre område eller en mindre fil (max {maxSizeLabel})."
 
-#. Confirmation modal body shown before using an animated community image without cropping. {formatLabel} is the image format name.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:58
-msgid "Cropping animated {formatLabel} files isn't supported yet. The original image will be used."
-msgstr "Det går inte att beskära animerade {formatLabel}-filer än. Originalbilden kommer att användas."
-
-#. Description text in the avatar uploader. Preserve {formatLabel}; it is inserted by code.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:95
-msgid "Cropping animated {formatLabel} files isn't supported yet. The original upload will be used."
-msgstr "Det går inte att beskära animerade {formatLabel}-filer än. Den ursprungliga filen kommer att användas."
-
-#. Confirmation modal body shown before using an animated community image with an unknown format.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:63
-msgid "Cropping animated files isn't supported yet. The original image will be used."
-msgstr "Beskärning av animerade filer stöds inte än. Originalbilden kommer att användas."
-
-#. Description text in the avatar uploader when the animated image format is unknown.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:99
-msgid "Cropping animated files isn't supported yet. The original upload will be used."
-msgstr "Det går inte att beskära animerade filer än. Den ursprungliga filen kommer att användas."
+#. Progress label on the save button while animated image frames are cropped. {percent} is a whole number. Keep it concise.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:62
+msgid "Cropping {percent}%"
+msgstr "Beskärning {percent}%"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:86
@@ -12597,8 +12578,8 @@ msgstr "Har du inget konto?"
 
 #. Short label in the avatar uploader. Keep it concise.
 #. Short label in the banner uploader. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:74
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:60
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:69
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:63
 msgid "Don't show"
 msgstr "Visa inte"
 
@@ -16560,8 +16541,8 @@ msgstr "Grupp-DM-avatarer använder samma statusmasker som vanliga avatarer, ink
 msgid "Group DMs"
 msgstr "Grupp-DM"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:290
-#: src/features/channel/components/modals/EditGroupModal.tsx:248
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:289
+#: src/features/channel/components/modals/EditGroupModal.tsx:247
 msgid "Group icon"
 msgstr "Gruppikon"
 
@@ -16624,8 +16605,8 @@ msgstr "Gruppinställningar"
 msgid "Group typing states"
 msgstr "Gruppens skrivindikationer"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:232
-#: src/features/channel/components/modals/EditGroupModal.tsx:223
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:231
+#: src/features/channel/components/modals/EditGroupModal.tsx:222
 msgid "Group updated"
 msgstr "Gruppen uppdaterad"
 
@@ -16803,7 +16784,7 @@ msgstr "Hjärta"
 msgid "Hebrew"
 msgstr "Hebreiska"
 
-#: src/features/messaging/components/modals/ImageCropModal.tsx:872
+#: src/features/messaging/components/modals/ImageCropModal.tsx:958
 msgid "Height"
 msgstr "Höjd"
 
@@ -17510,7 +17491,7 @@ msgstr "Bild kopierad till urklipp"
 #. Error modal title shown when a template-import community icon upload cannot be accepted or processed.
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:59
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:155
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:78
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:52
 msgid "Image couldn't be used"
 msgstr "Bilden kunde inte användas"
 
@@ -19671,7 +19652,7 @@ msgid "Look and feel"
 msgstr "Utseende och känsla"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:652
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:654
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "Det verkar som att du använder {0}. Om du lägger till ljudbehandlingen i {PRODUCT_NAME} ovanpå den kan det orsaka pumpning eller distorsion. Direktinmatning skickar ditt ljud oförändrat."
 
@@ -22577,7 +22558,7 @@ msgstr "Inga träffar"
 msgid "No mentions yet"
 msgstr "Inga omnämnanden än"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:528
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:530
 msgid "No microphone found"
 msgstr "Ingen mikrofon hittades"
 
@@ -23806,7 +23787,7 @@ msgstr "Öppna system-DM"
 msgid "Open system picker"
 msgstr "Öppna systemväljaren"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:528
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:527
 msgid "Open template JSON"
 msgstr "Öppna mall-JSON"
 
@@ -23820,7 +23801,7 @@ msgstr "Öppna bannlysningsdialogen för den här communityn."
 msgid "Open the context menu"
 msgstr "Öppna snabbmenyn"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:511
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:510
 msgid "Open the link below in your browser, then copy the entire JSON response and paste it into the box."
 msgstr "Öppna länken nedan i din webbläsare, kopiera sedan hela JSON-svaret och klistra in det i rutan."
 
@@ -24331,7 +24312,7 @@ msgstr "Senaste 7 dagarna"
 msgid "Paste"
 msgstr "Klistra in"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:483
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:482
 msgid "Paste a {theOtherPlatform} template URL to import its structure into a new community."
 msgstr "Klistra in en {theOtherPlatform}-mall-URL för att importera dess struktur till en ny community."
 
@@ -25191,6 +25172,11 @@ msgstr "Premiumtyp"
 msgid "Premium until date"
 msgstr "Premium till och med"
 
+#. Progress label on the save button while an animated image crop starts. Keep it concise.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:58
+msgid "Preparing"
+msgstr "Förbereder"
+
 #. Setup wizard title while the instance configuration loads.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:72
 msgid "Preparing setup"
@@ -25497,22 +25483,22 @@ msgstr "Profil"
 msgid "Profile badge"
 msgstr "Profilmärke"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:163
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:166
 msgid "Profile banners are a {PREMIUM_PRODUCT_NAME} feature. Get {PREMIUM_PRODUCT_NAME} to add a banner to your profile."
 msgstr "Profilbannrar är en {PREMIUM_PRODUCT_NAME}-funktion. Skaffa {PREMIUM_PRODUCT_NAME} för att lägga till en banner på din profil."
 
 #. Profile banner uploader notice shown when the instance configuration disables profile banners.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:68
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:71
 msgid "Profile banners are not enabled on this instance."
 msgstr "Profilbannrar är inte aktiverade på den här instansen."
 
 #. Label in the banner uploader. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:76
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:79
 msgid "Profile banners require {premiumProductName}"
 msgstr "Profilbannrar kräver {premiumProductName}"
 
 #. Profile banner uploader notice shown when profile banners require premium.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:64
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:67
 msgid "Profile banners require {premiumProductName}."
 msgstr "Profilbannrar kräver {premiumProductName}."
 
@@ -25838,7 +25824,7 @@ msgstr "Tryck för att prata"
 msgid "Push-to-talk (limited)"
 msgstr "Tryck för att prata (begränsat)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:674
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:681
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "Tryck för att prata ignoreras vid direktinmatning. Växla till fokuserat röstläge eller anpassat läge för att använda funktionen."
 
@@ -26551,8 +26537,8 @@ msgstr "Ta bort bilaga"
 msgid "Remove authenticator app"
 msgstr "Ta bort autentiseringsapp"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:405
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:441
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:377
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:413
 msgid "Remove avatar"
 msgstr "Ta bort profilbild"
 
@@ -26561,8 +26547,8 @@ msgstr "Ta bort profilbild"
 msgid "Remove background"
 msgstr "Ta bort bakgrund"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:314
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:353
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:326
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:365
 msgid "Remove banner"
 msgstr "Ta bort banner"
 
@@ -26625,10 +26611,10 @@ msgstr "Sluta visa överst"
 msgid "Remove from URL-only GIF favorites"
 msgstr "Ta bort från URL-baserade GIF-favoriter"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:338
-#: src/features/channel/components/modals/EditGroupModal.tsx:293
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:314
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:635
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:337
+#: src/features/channel/components/modals/EditGroupModal.tsx:292
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:313
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:634
 msgid "Remove icon"
 msgstr "Ta bort ikon"
 
@@ -27331,7 +27317,7 @@ msgstr "Skickat igen"
 #: src/features/app/components/dialogs/shared/UnsavedChangesBannerContent.tsx:51
 #: src/features/app/components/floating/ColorPickerPopover.tsx:190
 #: src/features/input/components/KeybindRecorder.tsx:459
-#: src/features/messaging/components/modals/ImageCropModal.tsx:936
+#: src/features/messaging/components/modals/ImageCropModal.tsx:1022
 msgid "Reset"
 msgstr "Återställ"
 
@@ -28074,7 +28060,7 @@ msgstr "Rumänska"
 
 #. Short label in the image crop modal. Keep it concise.
 #. Tooltip on the media viewer button that rotates the current media item 90 degrees clockwise.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:24
+#: src/features/messaging/components/modals/ImageCropModal.tsx:28
 #: src/features/messaging/components/modals/media_modal/shared.ts:93
 msgid "Rotate clockwise"
 msgstr "Rotera medurs"
@@ -28153,8 +28139,8 @@ msgstr "Mättnad"
 #. Save button in the community-folder settings modal footer.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:113
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:87
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:367
-#: src/features/channel/components/modals/EditGroupModal.tsx:323
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:366
+#: src/features/channel/components/modals/EditGroupModal.tsx:322
 #: src/features/channel/components/modals/RenameChannelModal.tsx:28
 #: src/features/connection/components/modals/EditConnectionModal.tsx:108
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:328
@@ -28367,7 +28353,7 @@ msgid "Screen share encoder controls"
 msgstr "Inställningar för skärmdelningskodare"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:120
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:119
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "Skärmdelningen avslutades"
@@ -30035,7 +30021,7 @@ msgid "Show a red badge on the app icon when you have unread messages"
 msgstr "Visa ett rött märke på appikonen när du har olästa meddelanden"
 
 #. Label in the banner uploader. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:72
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:75
 msgid "Show accent color only, ignoring your global profile"
 msgstr "Visa endast accentfärg, ignorera din globala profil"
 
@@ -30104,7 +30090,7 @@ msgid "Show custom emojis in expression autocomplete"
 msgstr "Visa anpassade emojier i förslag för uttryck"
 
 #. Label in the avatar uploader.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:78
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:73
 msgid "Show default avatar, ignoring your global profile"
 msgstr "Visa standardavatar, ignorera din globala profil"
 
@@ -30443,12 +30429,12 @@ msgid "Show unread indicator on muted channels"
 msgstr "Visa indikator för olästa meddelanden på tystade kanaler"
 
 #. Label in the avatar uploader.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:62
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:57
 msgid "Show your global profile avatar in this community"
 msgstr "Visa din globala profilavatar i den här communityn"
 
 #. Label in the banner uploader. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:48
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:51
 msgid "Show your global profile banner in this community"
 msgstr "Visa din globala profilbanner i den här communityn"
 
@@ -30720,7 +30706,7 @@ msgstr "Hoppa över"
 msgid "Skip \"Mark all as read\" confirmation"
 msgstr "Hoppa över bekräftelse för \"Markera alla som lästa\""
 
-#: src/features/messaging/components/modals/ImageCropModal.tsx:953
+#: src/features/messaging/components/modals/ImageCropModal.tsx:1034
 msgid "Skip cropping"
 msgstr "Hoppa över beskärning"
 
@@ -32346,7 +32332,7 @@ msgstr "Byt till rymlig layout"
 msgid "Switch to dense layout"
 msgstr "Växla till kompakt layout"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:647
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:649
 msgid "Switch to direct input"
 msgstr "Byt till direktinmatning"
 
@@ -32734,7 +32720,7 @@ msgstr "Uppgifter"
 msgid "Teleporting you to another voice region..."
 msgstr "Teleporterar dig till en annan röstregion..."
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:560
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:559
 msgid "Template"
 msgstr "Mall"
 
@@ -33236,7 +33222,7 @@ msgid "The role granted {permissions}"
 msgstr "Rollen gav {permissions}"
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:125
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:124
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "Skärmdelningskällan slutade skicka video, så din skärmdelning har stoppats."
@@ -33453,6 +33439,11 @@ msgstr "Det här kontot kan inte blockeras."
 msgid "This action cannot be undone. All associated data, including the bot user, will be permanently deleted."
 msgstr "Den här åtgärden kan inte ångras. All tillhörande data, inklusive botanvändaren, kommer att raderas permanent."
 
+#. Error modal body shown when an animated image has too many frames or pixels to crop in the browser.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:41
+msgid "This animation is too long or too large to crop. Try a shorter or smaller file."
+msgstr "Den här animeringen är för lång eller för stor för att beskära. Prova en kortare eller mindre fil."
+
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
 #: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:82
 msgid "This application"
@@ -33472,10 +33463,22 @@ msgstr "Den här botten är inte offentlig och kan inte läggas till av andra an
 msgid "This bot requests the administrator permission. Only grant it if you fully trust the developer. Ask them to request fewer permissions instead. Close this page if unsure."
 msgstr "Den här boten begär administratörsbehörighet. Ge den bara behörighet om du litar helt på utvecklaren. Be dem att begära färre behörigheter istället. Stäng den här sidan om du är osäker."
 
+#. Error modal body shown when the browser cannot decode animated AVIF for cropping. {avifFormatLabel} is the AVIF format name.
+#. Modal body shown when an animated AVIF upload is rejected because this browser cannot crop it.
+#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:14
+#: src/features/messaging/components/modals/ImageCropModal.tsx:49
+msgid "This browser can't crop animated {avifFormatLabel} files. Upload a GIF or WebP instead."
+msgstr "Webbläsaren kan inte beskära animerade {avifFormatLabel}-filer. Ladda upp en GIF eller WebP istället."
+
 #. Console warning line explaining that the browser console is meant for developers.
 #: src/features/devtools/utils/SelfXssNotice.ts:16
 msgid "This browser console is a developer tool."
 msgstr "Den här webbläsarkonsolen är ett utvecklarverktyg."
+
+#. Error modal body shown when WebAssembly is unavailable, which animated image cropping needs.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:54
+msgid "This browser has WebAssembly turned off, so animated images can't be cropped."
+msgstr "WebAssembly är avstängt i den här webbläsaren, så animerade bilder kan inte beskäras."
 
 #. Pre-join indicator shown beneath the Join button on a DM or group DM call where every connected participant supports E2EE.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:320
@@ -33757,6 +33760,11 @@ msgstr "Den här gruppen är full. Ta bort någon innan du lägger till fler per
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:105
 msgid "This handoff code has expired. Generate a new one to continue."
 msgstr "Den här överlämningskoden har gått ut. Skapa en ny för att fortsätta."
+
+#. Error modal body shown when an animated image fails to decode during cropping.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:45
+msgid "This image couldn't be read. It may be damaged."
+msgstr "Bilden kunde inte läsas. Den kan vara skadad."
 
 #. Desktop updater modal body for managed package builds such as Flatpak. productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:75
@@ -36078,12 +36086,12 @@ msgid "Upload"
 msgstr "Ladda upp"
 
 #. Button or menu action label in the avatar uploader. Keep it concise.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:70
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:65
 msgid "Upload a custom avatar for this community"
 msgstr "Ladda upp en anpassad avatar för den här communityn"
 
 #. Button or menu action label in the banner uploader. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:56
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:59
 msgid "Upload a custom banner for this community"
 msgstr "Ladda upp en anpassad banner för den här communityn"
 
@@ -36155,10 +36163,10 @@ msgstr "Ladda upp filer och medier i meddelanden."
 msgid "Upload files and media in this channel."
 msgstr "Ladda upp filer och medier i den här kanalen."
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:329
-#: src/features/channel/components/modals/EditGroupModal.tsx:284
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:305
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:626
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
+#: src/features/channel/components/modals/EditGroupModal.tsx:283
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:304
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:625
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:130
 msgid "Upload icon"
 msgstr "Ladda upp ikon"
@@ -36401,8 +36409,8 @@ msgstr "Använd koltema (kolsvarta ytor)"
 
 #. Short label in the avatar uploader. Keep it concise.
 #. Short label in the banner uploader. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:66
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:52
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:61
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:55
 msgid "Use custom image"
 msgstr "Använd egen bild"
 
@@ -36462,8 +36470,8 @@ msgstr "Använd filter eller skriv in sökord för att hitta meddelanden"
 
 #. Short label in the avatar uploader. Keep it concise.
 #. Short label in the banner uploader. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:58
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:44
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:53
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:47
 msgid "Use global profile"
 msgstr "Använd global profil"
 
@@ -37826,7 +37834,7 @@ msgid "Voice participants"
 msgstr "Röstdeltagare"
 
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:642
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:55
 msgid "Voice processing"
 msgstr "Röstbearbetning"
@@ -38684,7 +38692,7 @@ msgctxt "us-state"
 msgid "Wisconsin"
 msgstr "Wisconsin"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:215
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:201
 msgid "With {PREMIUM_PRODUCT_NAME}, you can use animated avatars ({ANIMATED_AVATAR_FORMATS}) and profile banners, customize your tag, and unlock many other {PREMIUM_PRODUCT_NAME} perks."
 msgstr "Med {PREMIUM_PRODUCT_NAME} kan du använda animerade avatarer ({ANIMATED_AVATAR_FORMATS}) och profilbannrar, anpassa din tagg och få många andra {PREMIUM_PRODUCT_NAME}-förmåner."
 
@@ -39334,8 +39342,8 @@ msgstr "Du behöver behörigheten ”{permissionLabel}” för att använda emoj
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "Du behöver behörigheten ”{permissionLabel}” för att använda klistermärken från andra communities här."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:208
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:434
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:207
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:433
 msgid "You need to claim your account before you can create a community."
 msgstr "Du måste säkra ditt konto innan du kan skapa en community."
 
@@ -39356,8 +39364,8 @@ msgstr "Du måste säkra ditt konto för att skicka meddelanden i den här commu
 msgid "You need to verify a phone number to send messages in this community."
 msgstr "Du måste verifiera ett telefonnummer för att skicka meddelanden i den här communityn."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:233
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:459
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:232
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:458
 msgid "You need to verify your email address before you can create a community."
 msgstr "Du måste verifiera din e-postadress innan du kan skapa en community."
 
@@ -39980,7 +39988,7 @@ msgid "Your saved {savedResolution} at {savedFrameRate} FPS needs {premiumProduc
 msgstr "Din sparade {savedResolution} med {savedFrameRate} FPS kräver {premiumProductName}, så delningar använder {resolution} med {frameRate} FPS."
 
 #. Body of a modal shown when the video codec the browser negotiated for an active screen share is outside the codecs the app allows and no allowed codec could be published, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:131
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:130
 msgctxt "screen-share"
 msgid "Your screen share could not be published with a compatible video codec, so it was stopped. Try sharing again."
 msgstr "Din skärmdelning kunde inte publiceras med en kompatibel videokodek, så den stoppades. Försök dela igen."
@@ -40079,7 +40087,7 @@ msgid "Your vanity URL has been set to {inviteEndpoint}/{vanitySlug}"
 msgstr "Din anpassade URL har ställts in till {inviteEndpoint}/{vanitySlug}"
 
 #. Body of a modal shown when the local video encoder produces no frames for an active screen share, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:138
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:137
 msgctxt "screen-share"
 msgid "Your video encoder stopped encoding frames, so your screen share was stopped. Try sharing again."
 msgstr "Din videokodare slutade koda bildrutor, så din skärmdelning stoppades. Försök dela igen."
@@ -40100,7 +40108,7 @@ msgid "YubiKey"
 msgstr "YubiKey"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:831
+#: src/features/messaging/components/modals/ImageCropModal.tsx:917
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:182
 msgid "Zoom"
 msgstr "Zooma"

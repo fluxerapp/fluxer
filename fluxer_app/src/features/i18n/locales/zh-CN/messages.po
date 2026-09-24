@@ -1405,18 +1405,13 @@ msgstr "{itemLabel}，即将推出"
 msgid "{kilobits} kbps"
 msgstr "{kilobits} kbps"
 
-#. Error modal body shown when a non-croppable community image has dimensions that do not fit the target asset. {label} names the image field.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:72
-msgid "{label} dimensions do not match this asset. Choose a different image or upload a static image you can crop."
-msgstr "{label} 的尺寸与此资源不匹配。请选择其他图片，或上传可裁剪的静态图片。"
-
 #. Error modal body shown when a community image upload exceeds the size limit. {label} names the image field and {maxSizeLabel} is a formatted file size.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:44
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:33
 msgid "{label} file is too large. Choose a file smaller than {maxSizeLabel}."
 msgstr "{label} 文件过大。请选择小于 {maxSizeLabel} 的文件。"
 
 #. Error modal body shown when a community image field does not allow animation. {label} names the image field.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:49
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:38
 msgid "{label} images cannot be animated. Use a static image."
 msgstr "{label} 图片不支持动图。请使用静态图片。"
 
@@ -2829,7 +2824,7 @@ msgid "Activity sharing"
 msgstr "活动共享"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:465
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:478
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:102
 msgid "Activity threshold"
 msgstr "活动阈值"
@@ -3566,11 +3561,11 @@ msgstr "允许提及{everyoneMention}和{hereMention}"
 msgid "Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 msgstr "请在“{MACOS_SYSTEM_SETTINGS_NAME}”→“{MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME}”→“{MACOS_CAMERA_PERMISSION_NAME}”中允许 {PRODUCT_NAME} 访问你的摄像头。"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:533
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:535
 msgid "Allow {PRODUCT_NAME} to access your microphone in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 msgstr "请在“{MACOS_SYSTEM_SETTINGS_NAME}”→“{MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME}”→“{MACOS_MICROPHONE_PERMISSION_NAME}”中允许 {PRODUCT_NAME} 访问你的麦克风。"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:538
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:540
 msgid "Allow {PRODUCT_NAME} to access your microphone. Check your browser's address bar or settings."
 msgstr "允许 {PRODUCT_NAME} 访问你的麦克风。请检查浏览器地址栏或设置。"
 
@@ -3673,7 +3668,7 @@ msgstr "允许没有 {readMessageHistoryPermissionLabel} 权限的成员查看�
 msgid "Allow mentions for this role"
 msgstr "允许提及此身份组"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:558
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:560
 msgid "Allow microphone"
 msgstr "允许使用麦克风"
 
@@ -3942,25 +3937,21 @@ msgstr "还有 {remainingCount} 个"
 msgid "Animate on interaction"
 msgstr "互动时播放动画"
 
-#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:26
-msgid "Animated {AVIF_FORMAT_LABEL} files aren't supported. Upload a static {AVIF_FORMAT_LABEL} file instead."
-msgstr "不支持动态 {AVIF_FORMAT_LABEL} 文件。请改为上传静态 {AVIF_FORMAT_LABEL} 文件。"
-
 #. Modal title shown when an animated AVIF upload is rejected by the client.
-#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:11
+#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:10
 msgid "Animated {avifFormatLabel} not supported"
 msgstr "不支持动态 {avifFormatLabel}"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:206
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:192
 msgid "Animated avatars ({ANIMATED_AVATAR_FORMATS}) are exclusively available to {PREMIUM_PRODUCT_NAME} subscribers."
 msgstr "动态头像（{ANIMATED_AVATAR_FORMATS}）仅供 {PREMIUM_PRODUCT_NAME} 订阅用户使用。"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:240
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:226
 msgid "Animated avatars ({ANIMATED_AVATAR_FORMATS}) are not available on this instance. Upload a static image instead."
 msgstr "此实例不支持动态头像（{ANIMATED_AVATAR_FORMATS}）。请上传静态图片。"
 
 #. Extra note in the avatar asset upload source modal. Preserve {animatedAvatarFormats} and {premiumProductName}; they are inserted by code.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:115
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:102
 msgid "Animated avatars ({animatedAvatarFormats}) require {premiumProductName}."
 msgstr "动态头像（{animatedAvatarFormats}）需要 {premiumProductName}。"
 
@@ -3970,12 +3961,12 @@ msgid "Animated avatars & profile banners"
 msgstr "动态头像和个人资料横幅"
 
 #. Error message in the avatar uploader.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:91
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:86
 msgid "Animated avatars not available"
 msgstr "动态头像不可用"
 
 #. Label in the avatar uploader. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:86
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:81
 msgid "Animated avatars require {premiumProductName}"
 msgstr "动态头像需要 {premiumProductName}"
 
@@ -4046,7 +4037,7 @@ msgid "Animated image preview"
 msgstr "动图预览"
 
 #. Confirmation modal body shown before using a non-croppable animated community image.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:54
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:43
 msgid "Animated images are not supported for this asset."
 msgstr "此素材不支持动图。"
 
@@ -4947,7 +4938,7 @@ msgstr "自动检测语言"
 
 #. Short label in the voice tab. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:116
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:452
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:465
 msgid "Auto-set activity threshold"
 msgstr "自动设置活动阈值"
 
@@ -5127,15 +5118,15 @@ msgstr "可在桌面应用中使用。"
 #. Form label for a webhook avatar image.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/ui/components/BaseAvatar.tsx:18
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:373
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:421
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:345
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:393
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:13
 #: src/features/webhook/components/WebhookListItem.tsx:252
 msgid "Avatar"
 msgstr "头像"
 
 #. Error message in the avatar uploader. Preserve {imageMaxSizeLabel}; it is inserted by code.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:82
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:77
 msgid "Avatar file is too large. Choose a file smaller than {imageMaxSizeLabel}."
 msgstr "头像文件过大。请选择小于 {imageMaxSizeLabel} 的文件。"
 
@@ -5145,7 +5136,7 @@ msgid "Avatar is too large — pick one under {imageMaxSizeLabel}."
 msgstr "头像过大，请选择小于 {imageMaxSizeLabel} 的图片。"
 
 #. Short label in the avatar uploader. Keep it concise.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:103
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:90
 msgid "Avatar mode selection"
 msgstr "选择头像模式"
 
@@ -5187,11 +5178,11 @@ msgstr "当前离开"
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:155
 #: src/features/channel/components/channel_header/shared.ts:27
 #: src/features/connection/components/modals/AddConnectionModal.tsx:397
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:165
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:164
 #: src/features/guild/components/modals/add_guild_modal/GuildJoinForm.tsx:59
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:356
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:377
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:397
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:355
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:376
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:396
 #: src/features/moderation/components/report_modal/IARModal.tsx:86
 #: src/features/moderation/components/report/ReportStepDetails.tsx:312
 #: src/features/user/components/modals/PhoneAddModal.tsx:420
@@ -5428,19 +5419,19 @@ msgstr "已封禁用户"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:28
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:125
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:280
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:330
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:292
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:342
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:37
 msgid "Banner"
 msgstr "横幅"
 
 #. Error message in the banner uploader. Preserve {imageMaxSizeLabel}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:81
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:84
 msgid "Banner file is too large. Choose a file smaller than {imageMaxSizeLabel}."
 msgstr "横幅文件过大。请选择小于 {imageMaxSizeLabel} 的文件。"
 
 #. Button or menu action label in the banner uploader. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:86
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:89
 msgid "Banner mode selection"
 msgstr "选择横幅模式"
 
@@ -6107,8 +6098,8 @@ msgstr "在{premiumProductName}标签页购买{premiumProductName}礼物，然�
 msgid "Buy gift"
 msgstr "购买礼物"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:339
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:655
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:338
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:654
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "创建社区即表示你同意遵守并维护<0>{PRODUCT_NAME}社区准则</0>。"
 
@@ -6361,7 +6352,7 @@ msgstr "无法在此上传文件"
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
 #: src/features/messaging/components/modals/ForwardModal.tsx:650
-#: src/features/messaging/components/modals/ImageCropModal.tsx:944
+#: src/features/messaging/components/modals/ImageCropModal.tsx:1025
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/moderation/components/modals/BanMemberModal.tsx:262
 #: src/features/moderation/components/modals/RemoveTimeoutModal.tsx:70
@@ -6614,9 +6605,9 @@ msgid "Centered"
 msgstr "居中"
 
 #. Title of the modal where the user picks an avatar source (file upload or GIF provider). Keep it concise.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:111
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:395
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:431
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:98
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:367
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:403
 msgid "Change avatar"
 msgstr "更换头像"
 
@@ -6627,9 +6618,9 @@ msgstr "更换背景"
 #. Title of the modal where the user picks a banner source (file upload or GIF provider). Keep it concise.
 #. Title of the modal where the user picks a community banner source (file upload or GIF provider). Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:43
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:94
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:303
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:342
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:97
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:315
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:354
 msgid "Change banner"
 msgstr "更换横幅"
 
@@ -6668,13 +6659,13 @@ msgstr "修改群昵称"
 #. Title of the modal where the user picks a group icon source. Keep it concise. Keep the tone plain and specific.
 #. Title of the modal where the user picks an imported-template community icon source. Keep it concise. Keep the tone plain and specific.
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:88
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:329
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
 #: src/features/channel/components/modals/EditGroupModal.tsx:85
-#: src/features/channel/components/modals/EditGroupModal.tsx:284
+#: src/features/channel/components/modals/EditGroupModal.tsx:283
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:63
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:305
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:304
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:86
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:626
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:625
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:35
 msgid "Change icon"
 msgstr "更改图标"
@@ -7669,8 +7660,8 @@ msgstr "领取礼物"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:41
 #: src/features/channel/components/direct_message/AddFriendForm.tsx:62
 #: src/features/channel/utils/CreateDMModalUtils.tsx:43
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:214
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:440
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:213
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:439
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:343
 msgid "Claim your account"
 msgstr "认领你的账号"
@@ -8518,8 +8509,8 @@ msgstr "该社区助长群起攻击或针对性骚扰。"
 msgid "Community filter"
 msgstr "社区筛选"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:272
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:593
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:271
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:592
 msgid "Community icon"
 msgstr "社区图标"
 
@@ -8763,6 +8754,11 @@ msgstr "输入框按钮"
 msgid "Composer focus"
 msgstr "输入框聚焦"
 
+#. Progress label on the save button while a cropped animated image is compressed. Keep it concise.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:67
+msgid "Compressing"
+msgstr "正在压缩"
+
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:164
@@ -8917,7 +8913,7 @@ msgstr "连接摄像头或虚拟捕捉设备后重试。"
 msgid "Connect a display, then try again."
 msgstr "连接显示器后重试。"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:543
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:545
 msgid "Connect a microphone and try again."
 msgstr "连接麦克风后重试。"
 
@@ -9783,7 +9779,7 @@ msgid "Couldn't create this sticker"
 msgstr "无法创建此贴纸"
 
 #. Title of the error modal shown when image cropping fails.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:28
+#: src/features/messaging/components/modals/ImageCropModal.tsx:32
 msgid "Couldn't crop image"
 msgstr "无法裁剪图片"
 
@@ -10159,12 +10155,12 @@ msgid "Couldn't update voice activity sharing right now"
 msgstr "暂时无法更新语音活动分享设置"
 
 #. Title of the error modal shown when uploading a profile avatar fails.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:107
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:94
 msgid "Couldn't upload avatar"
 msgstr "无法上传头像"
 
 #. Title of the error modal shown when uploading a profile banner fails.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:90
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:93
 msgid "Couldn't upload banner"
 msgstr "无法上传横幅"
 
@@ -10230,7 +10226,7 @@ msgstr "创建并分享"
 msgid "Create a community"
 msgstr "创建社区"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:257
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:256
 msgid "Create a community for you and your friends to chat."
 msgstr "创建社区，和好友一起畅聊。"
 
@@ -10489,7 +10485,7 @@ msgid "Crop invite background"
 msgstr "裁剪邀请背景"
 
 #. Short label in the image crop modal. Keep it concise.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:20
+#: src/features/messaging/components/modals/ImageCropModal.tsx:24
 msgid "Crop preview"
 msgstr "裁剪预览"
 
@@ -10500,30 +10496,15 @@ msgstr "裁剪个人资料横幅"
 
 #. Error modal body shown when a cropped community image still exceeds the size limit. {maxSizeLabel} is a formatted file size.
 #. Error modal body shown when a cropped image still exceeds the size limit. {maxSizeLabel} is a formatted file size.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:67
-#: src/features/messaging/components/modals/ImageCropModal.tsx:32
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:47
+#: src/features/messaging/components/modals/ImageCropModal.tsx:36
 msgid "Cropped image is too large. Choose a smaller area or a smaller file (max {maxSizeLabel})."
 msgstr "裁剪后的图片过大。请选择较小的区域或文件（最大 {maxSizeLabel}）。"
 
-#. Confirmation modal body shown before using an animated community image without cropping. {formatLabel} is the image format name.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:58
-msgid "Cropping animated {formatLabel} files isn't supported yet. The original image will be used."
-msgstr "暂不支持裁剪动态 {formatLabel} 文件。将使用原始图片。"
-
-#. Description text in the avatar uploader. Preserve {formatLabel}; it is inserted by code.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:95
-msgid "Cropping animated {formatLabel} files isn't supported yet. The original upload will be used."
-msgstr "暂不支持裁剪动态 {formatLabel} 文件。将使用原始上传文件。"
-
-#. Confirmation modal body shown before using an animated community image with an unknown format.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:63
-msgid "Cropping animated files isn't supported yet. The original image will be used."
-msgstr "暂不支持裁剪动图。将使用原图。"
-
-#. Description text in the avatar uploader when the animated image format is unknown.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:99
-msgid "Cropping animated files isn't supported yet. The original upload will be used."
-msgstr "暂不支持裁剪动图。将使用原始上传文件。"
+#. Progress label on the save button while animated image frames are cropped. {percent} is a whole number. Keep it concise.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:62
+msgid "Cropping {percent}%"
+msgstr "正在裁剪 {percent}%"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:86
@@ -12597,8 +12578,8 @@ msgstr "还没有账号？"
 
 #. Short label in the avatar uploader. Keep it concise.
 #. Short label in the banner uploader. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:74
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:60
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:69
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:63
 msgid "Don't show"
 msgstr "不显示"
 
@@ -16560,8 +16541,8 @@ msgstr "群聊头像使用与普通头像相同的状态蒙版，包括堆叠布
 msgid "Group DMs"
 msgstr "群聊"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:290
-#: src/features/channel/components/modals/EditGroupModal.tsx:248
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:289
+#: src/features/channel/components/modals/EditGroupModal.tsx:247
 msgid "Group icon"
 msgstr "群图标"
 
@@ -16624,8 +16605,8 @@ msgstr "群设置"
 msgid "Group typing states"
 msgstr "群聊输入状态"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:232
-#: src/features/channel/components/modals/EditGroupModal.tsx:223
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:231
+#: src/features/channel/components/modals/EditGroupModal.tsx:222
 msgid "Group updated"
 msgstr "群聊已更新"
 
@@ -16803,7 +16784,7 @@ msgstr "心形"
 msgid "Hebrew"
 msgstr "希伯来语"
 
-#: src/features/messaging/components/modals/ImageCropModal.tsx:872
+#: src/features/messaging/components/modals/ImageCropModal.tsx:958
 msgid "Height"
 msgstr "高度"
 
@@ -17510,7 +17491,7 @@ msgstr "图片已复制到剪贴板"
 #. Error modal title shown when a template-import community icon upload cannot be accepted or processed.
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:59
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:155
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:78
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:52
 msgid "Image couldn't be used"
 msgstr "无法使用图片"
 
@@ -19671,7 +19652,7 @@ msgid "Look and feel"
 msgstr "外观风格"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:652
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:654
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "看起来你正在使用 {0}。在此基础上再叠加 {PRODUCT_NAME} 的音频处理可能会导致抽吸或失真。直接输入会原样传递你的音频。"
 
@@ -22577,7 +22558,7 @@ msgstr "未找到匹配项"
 msgid "No mentions yet"
 msgstr "暂无提及"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:528
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:530
 msgid "No microphone found"
 msgstr "未找到麦克风"
 
@@ -23806,7 +23787,7 @@ msgstr "打开系统私信"
 msgid "Open system picker"
 msgstr "打开系统选择器"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:528
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:527
 msgid "Open template JSON"
 msgstr "打开模板 JSON"
 
@@ -23820,7 +23801,7 @@ msgstr "打开此社区的封禁对话框。"
 msgid "Open the context menu"
 msgstr "打开上下文菜单"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:511
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:510
 msgid "Open the link below in your browser, then copy the entire JSON response and paste it into the box."
 msgstr "在浏览器中打开下方链接，然后复制完整的 JSON 响应并粘贴到框中。"
 
@@ -24331,7 +24312,7 @@ msgstr "过去 7 天"
 msgid "Paste"
 msgstr "粘贴"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:483
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:482
 msgid "Paste a {theOtherPlatform} template URL to import its structure into a new community."
 msgstr "粘贴 {theOtherPlatform} 模板 URL 以将其结构导入新社区。"
 
@@ -25191,6 +25172,11 @@ msgstr "会员类型"
 msgid "Premium until date"
 msgstr "会员到期日期"
 
+#. Progress label on the save button while an animated image crop starts. Keep it concise.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:58
+msgid "Preparing"
+msgstr "准备中"
+
 #. Setup wizard title while the instance configuration loads.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:72
 msgid "Preparing setup"
@@ -25497,22 +25483,22 @@ msgstr "个人资料"
 msgid "Profile badge"
 msgstr "个人资料徽章"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:163
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:166
 msgid "Profile banners are a {PREMIUM_PRODUCT_NAME} feature. Get {PREMIUM_PRODUCT_NAME} to add a banner to your profile."
 msgstr "个人资料横幅是 {PREMIUM_PRODUCT_NAME} 功能。获取 {PREMIUM_PRODUCT_NAME} 即可为你的个人资料添加横幅。"
 
 #. Profile banner uploader notice shown when the instance configuration disables profile banners.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:68
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:71
 msgid "Profile banners are not enabled on this instance."
 msgstr "此实例未启用个人资料横幅。"
 
 #. Label in the banner uploader. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:76
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:79
 msgid "Profile banners require {premiumProductName}"
 msgstr "个人资料横幅需要 {premiumProductName}"
 
 #. Profile banner uploader notice shown when profile banners require premium.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:64
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:67
 msgid "Profile banners require {premiumProductName}."
 msgstr "个人资料横幅需要 {premiumProductName}。"
 
@@ -25838,7 +25824,7 @@ msgstr "按住说话"
 msgid "Push-to-talk (limited)"
 msgstr "按住说话（功能受限）"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:674
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:681
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "直接输入模式下会忽略按住说话。请切换到人声优化或自定义模式后使用。"
 
@@ -26551,8 +26537,8 @@ msgstr "移除附件"
 msgid "Remove authenticator app"
 msgstr "移除身份验证器应用"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:405
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:441
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:377
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:413
 msgid "Remove avatar"
 msgstr "移除头像"
 
@@ -26561,8 +26547,8 @@ msgstr "移除头像"
 msgid "Remove background"
 msgstr "移除背景"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:314
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:353
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:326
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:365
 msgid "Remove banner"
 msgstr "移除横幅"
 
@@ -26625,10 +26611,10 @@ msgstr "取消置顶"
 msgid "Remove from URL-only GIF favorites"
 msgstr "从仅限 URL 的 GIF 收藏夹中移除"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:338
-#: src/features/channel/components/modals/EditGroupModal.tsx:293
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:314
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:635
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:337
+#: src/features/channel/components/modals/EditGroupModal.tsx:292
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:313
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:634
 msgid "Remove icon"
 msgstr "移除图标"
 
@@ -27331,7 +27317,7 @@ msgstr "已重新发送"
 #: src/features/app/components/dialogs/shared/UnsavedChangesBannerContent.tsx:51
 #: src/features/app/components/floating/ColorPickerPopover.tsx:190
 #: src/features/input/components/KeybindRecorder.tsx:459
-#: src/features/messaging/components/modals/ImageCropModal.tsx:936
+#: src/features/messaging/components/modals/ImageCropModal.tsx:1022
 msgid "Reset"
 msgstr "重置"
 
@@ -28074,7 +28060,7 @@ msgstr "罗马尼亚语"
 
 #. Short label in the image crop modal. Keep it concise.
 #. Tooltip on the media viewer button that rotates the current media item 90 degrees clockwise.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:24
+#: src/features/messaging/components/modals/ImageCropModal.tsx:28
 #: src/features/messaging/components/modals/media_modal/shared.ts:93
 msgid "Rotate clockwise"
 msgstr "顺时针旋转"
@@ -28153,8 +28139,8 @@ msgstr "饱和度"
 #. Save button in the community-folder settings modal footer.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:113
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:87
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:367
-#: src/features/channel/components/modals/EditGroupModal.tsx:323
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:366
+#: src/features/channel/components/modals/EditGroupModal.tsx:322
 #: src/features/channel/components/modals/RenameChannelModal.tsx:28
 #: src/features/connection/components/modals/EditConnectionModal.tsx:108
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:328
@@ -28367,7 +28353,7 @@ msgid "Screen share encoder controls"
 msgstr "屏幕共享编码器设置"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:120
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:119
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "屏幕共享已结束"
@@ -30035,7 +30021,7 @@ msgid "Show a red badge on the app icon when you have unread messages"
 msgstr "有未读消息时，在应用图标上显示红点"
 
 #. Label in the banner uploader. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:72
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:75
 msgid "Show accent color only, ignoring your global profile"
 msgstr "仅显示主题色，忽略你的全局个人资料"
 
@@ -30104,7 +30090,7 @@ msgid "Show custom emojis in expression autocomplete"
 msgstr "在表情自动补全中显示自定义表情"
 
 #. Label in the avatar uploader.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:78
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:73
 msgid "Show default avatar, ignoring your global profile"
 msgstr "显示默认头像，忽略你的全局个人资料"
 
@@ -30443,12 +30429,12 @@ msgid "Show unread indicator on muted channels"
 msgstr "在已静音的频道上显示未读标记"
 
 #. Label in the avatar uploader.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:62
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:57
 msgid "Show your global profile avatar in this community"
 msgstr "在此社区中显示你的全局个人资料头像"
 
 #. Label in the banner uploader. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:48
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:51
 msgid "Show your global profile banner in this community"
 msgstr "在此社区中显示你的全局个人资料横幅"
 
@@ -30720,7 +30706,7 @@ msgstr "跳过"
 msgid "Skip \"Mark all as read\" confirmation"
 msgstr "跳过“全部标为已读”确认"
 
-#: src/features/messaging/components/modals/ImageCropModal.tsx:953
+#: src/features/messaging/components/modals/ImageCropModal.tsx:1034
 msgid "Skip cropping"
 msgstr "跳过裁剪"
 
@@ -32346,7 +32332,7 @@ msgstr "切换为舒适布局"
 msgid "Switch to dense layout"
 msgstr "切换为紧凑布局"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:647
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:649
 msgid "Switch to direct input"
 msgstr "切换到直接输入"
 
@@ -32734,7 +32720,7 @@ msgstr "任务"
 msgid "Teleporting you to another voice region..."
 msgstr "正在把你传送到其他语音区域…"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:560
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:559
 msgid "Template"
 msgstr "模板"
 
@@ -33236,7 +33222,7 @@ msgid "The role granted {permissions}"
 msgstr "该身份组授予了 {permissions}"
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:125
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:124
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "屏幕共享源已停止发送视频，因此你的屏幕共享已停止。"
@@ -33453,6 +33439,11 @@ msgstr "此账号无法被屏蔽。"
 msgid "This action cannot be undone. All associated data, including the bot user, will be permanently deleted."
 msgstr "此操作无法撤销。所有相关数据，包括机器人用户，都将被永久删除。"
 
+#. Error modal body shown when an animated image has too many frames or pixels to crop in the browser.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:41
+msgid "This animation is too long or too large to crop. Try a shorter or smaller file."
+msgstr "此动画过长或过大，无法裁剪。请尝试使用更短或更小的文件。"
+
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
 #: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:82
 msgid "This application"
@@ -33472,10 +33463,22 @@ msgstr "此机器人未公开，其他用户无法添加。"
 msgid "This bot requests the administrator permission. Only grant it if you fully trust the developer. Ask them to request fewer permissions instead. Close this page if unsure."
 msgstr "此机器人请求管理员权限。请仅在完全信任开发者的情况下授予。也可以请开发者改为申请更少的权限。如果不确定，请关闭此页面。"
 
+#. Error modal body shown when the browser cannot decode animated AVIF for cropping. {avifFormatLabel} is the AVIF format name.
+#. Modal body shown when an animated AVIF upload is rejected because this browser cannot crop it.
+#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:14
+#: src/features/messaging/components/modals/ImageCropModal.tsx:49
+msgid "This browser can't crop animated {avifFormatLabel} files. Upload a GIF or WebP instead."
+msgstr "此浏览器无法裁剪动态 {avifFormatLabel} 文件。请改用 GIF 或 WebP。"
+
 #. Console warning line explaining that the browser console is meant for developers.
 #: src/features/devtools/utils/SelfXssNotice.ts:16
 msgid "This browser console is a developer tool."
 msgstr "此浏览器控制台是开发者工具。"
+
+#. Error modal body shown when WebAssembly is unavailable, which animated image cropping needs.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:54
+msgid "This browser has WebAssembly turned off, so animated images can't be cropped."
+msgstr "此浏览器已关闭 WebAssembly，因此无法裁剪动态图像。"
 
 #. Pre-join indicator shown beneath the Join button on a DM or group DM call where every connected participant supports E2EE.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:320
@@ -33757,6 +33760,11 @@ msgstr "群聊已满。请先移除一些成员，再添加其他人。"
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:105
 msgid "This handoff code has expired. Generate a new one to continue."
 msgstr "此切换码已过期。请生成新切换码以继续。"
+
+#. Error modal body shown when an animated image fails to decode during cropping.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:45
+msgid "This image couldn't be read. It may be damaged."
+msgstr "无法读取此图片。它可能已损坏。"
 
 #. Desktop updater modal body for managed package builds such as Flatpak. productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:75
@@ -36078,12 +36086,12 @@ msgid "Upload"
 msgstr "上传"
 
 #. Button or menu action label in the avatar uploader. Keep it concise.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:70
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:65
 msgid "Upload a custom avatar for this community"
 msgstr "为本社区上传自定义头像"
 
 #. Button or menu action label in the banner uploader. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:56
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:59
 msgid "Upload a custom banner for this community"
 msgstr "为本社区上传自定义横幅"
 
@@ -36155,10 +36163,10 @@ msgstr "在消息中上传文件和媒体。"
 msgid "Upload files and media in this channel."
 msgstr "在此频道上传文件和媒体。"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:329
-#: src/features/channel/components/modals/EditGroupModal.tsx:284
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:305
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:626
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
+#: src/features/channel/components/modals/EditGroupModal.tsx:283
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:304
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:625
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:130
 msgid "Upload icon"
 msgstr "上传图标"
@@ -36401,8 +36409,8 @@ msgstr "使用煤炭主题（纯黑界面）"
 
 #. Short label in the avatar uploader. Keep it concise.
 #. Short label in the banner uploader. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:66
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:52
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:61
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:55
 msgid "Use custom image"
 msgstr "使用自定义图片"
 
@@ -36462,8 +36470,8 @@ msgstr "使用筛选条件或输入关键词查找消息"
 
 #. Short label in the avatar uploader. Keep it concise.
 #. Short label in the banner uploader. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:58
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:44
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:53
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:47
 msgid "Use global profile"
 msgstr "使用全局个人资料"
 
@@ -37826,7 +37834,7 @@ msgid "Voice participants"
 msgstr "语音参与者"
 
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:642
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:55
 msgid "Voice processing"
 msgstr "语音处理"
@@ -38684,7 +38692,7 @@ msgctxt "us-state"
 msgid "Wisconsin"
 msgstr "威斯康星州"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:215
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:201
 msgid "With {PREMIUM_PRODUCT_NAME}, you can use animated avatars ({ANIMATED_AVATAR_FORMATS}) and profile banners, customize your tag, and unlock many other {PREMIUM_PRODUCT_NAME} perks."
 msgstr "有了 {PREMIUM_PRODUCT_NAME}，你可以使用动态头像（{ANIMATED_AVATAR_FORMATS}）和个人资料横幅、自定义你的标签，并解锁许多其他 {PREMIUM_PRODUCT_NAME} 福利。"
 
@@ -39334,8 +39342,8 @@ msgstr "你需要“{permissionLabel}”权限才能在此处使用其他社区�
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "你需要“{permissionLabel}”权限才能在此处使用其他社区的贴纸。"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:208
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:434
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:207
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:433
 msgid "You need to claim your account before you can create a community."
 msgstr "你需要先认领账号，才能创建社区。"
 
@@ -39356,8 +39364,8 @@ msgstr "你需要先认领账号，才能在此社区中发送消息。"
 msgid "You need to verify a phone number to send messages in this community."
 msgstr "你需要验证手机号才能在此社区中发送消息。"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:233
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:459
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:232
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:458
 msgid "You need to verify your email address before you can create a community."
 msgstr "你需要先验证邮箱地址，才能创建社区。"
 
@@ -39980,7 +39988,7 @@ msgid "Your saved {savedResolution} at {savedFrameRate} FPS needs {premiumProduc
 msgstr "你保存的 {savedResolution} ({savedFrameRate} FPS) 需要 {premiumProductName}，因此共享将使用 {resolution} ({frameRate} FPS)。"
 
 #. Body of a modal shown when the video codec the browser negotiated for an active screen share is outside the codecs the app allows and no allowed codec could be published, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:131
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:130
 msgctxt "screen-share"
 msgid "Your screen share could not be published with a compatible video codec, so it was stopped. Try sharing again."
 msgstr "你的屏幕共享无法使用兼容的视频编解码器发布，因此已停止。请重新共享。"
@@ -40079,7 +40087,7 @@ msgid "Your vanity URL has been set to {inviteEndpoint}/{vanitySlug}"
 msgstr "你的自定义邀请链接已设置为 {inviteEndpoint}/{vanitySlug}"
 
 #. Body of a modal shown when the local video encoder produces no frames for an active screen share, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:138
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:137
 msgctxt "screen-share"
 msgid "Your video encoder stopped encoding frames, so your screen share was stopped. Try sharing again."
 msgstr "你的视频编码器已停止编码帧，因此屏幕共享已停止。请重新共享。"
@@ -40100,7 +40108,7 @@ msgid "YubiKey"
 msgstr "YubiKey"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:831
+#: src/features/messaging/components/modals/ImageCropModal.tsx:917
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:182
 msgid "Zoom"
 msgstr "缩放"

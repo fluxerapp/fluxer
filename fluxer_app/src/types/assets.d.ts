@@ -59,6 +59,16 @@ declare module '@pkgs/libfluxcore/libfluxcore_bg.wasm' {
 	export default url;
 }
 
+declare module '@pkgs/libfluxwebp/libfluxwebp_bg.wasm' {
+	const url: string;
+	export default url;
+}
+
+declare module '@pkgs/libfluxwebp/libfluxwebp_simd_bg.wasm' {
+	const url: string;
+	export default url;
+}
+
 declare module '*.onnx' {
 	const url: string;
 	export default url;

@@ -16,11 +16,7 @@ import type {Gif} from '@app/features/expressions/commands/GifCommands';
 import {AssetCropModal, AssetType} from '@app/features/expressions/components/modals/AssetCropModal';
 import {openAssetSourceModal} from '@app/features/expressions/components/modals/AssetSourceModal';
 import {showAnimatedAvifUnsupportedModal} from '@app/features/expressions/utils/AnimatedAvifModalUtils';
-import {
-	getAnimatedFormatLabel,
-	isAnimatedFile,
-	shouldHandleAnimatedNonGifUpload,
-} from '@app/features/expressions/utils/AnimatedImageUtils';
+import {inspectImageFile} from '@app/features/expressions/utils/AnimatedImageUtils';
 import {getAcceptString, getAssetFormatErrorMessage} from '@app/features/expressions/utils/AssetFormatCopy';
 import {
 	formatImageUploadRecommendedHint,
@@ -28,7 +24,6 @@ import {
 } from '@app/features/expressions/utils/AssetUploadHintCopy';
 import {downloadGifAsImageFile} from '@app/features/expressions/utils/GifFileDownload';
 import {isSvgFile, readImageFileAsUploadDataUrl} from '@app/features/expressions/utils/ImageUploadFileUtils';
-import {isGif} from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/utils/ImageAsset';
 import {
 	CANCEL_DESCRIPTOR,
 	FAILED_TO_PROCESS_CROPPED_IMAGE_DESCRIPTOR,
@@ -37,18 +32,18 @@ import {
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
+import {canDecodeAnimatedAvif} from '@app/features/platform/utils/ImageDecoderInterop';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
-import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {RadioGroup} from '@app/features/ui/radio_group/RadioGroup';
 import styles from '@app/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.module.css';
 import type {ProfileAssetMode} from '@app/features/user/components/modals/tabs/my_profile_tab/ProfileAssetCustomizationStateMachine';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {showUserErrorModal} from '@app/features/user/utils/UserErrorModalUtils';
-import {canCropFormat} from '@app/features/voice/utils/MediaCapabilities';
+import {canCropFile} from '@app/features/voice/utils/MediaCapabilities';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {clsx} from 'clsx';
@@ -91,14 +86,6 @@ const ANIMATED_AVATARS_REQUIRE_DESCRIPTOR = msg({
 const ANIMATED_AVATARS_NOT_AVAILABLE_DESCRIPTOR = msg({
 	message: 'Animated avatars not available',
 	comment: 'Error message in the avatar uploader.',
-});
-const CROPPING_ANIMATED_FILES_ISN_T_SUPPORTED_YET_THE_DESCRIPTOR = msg({
-	message: "Cropping animated {formatLabel} files isn't supported yet. The original upload will be used.",
-	comment: 'Description text in the avatar uploader. Preserve {formatLabel}; it is inserted by code.',
-});
-const CROPPING_ANIMATED_FILES_WITHOUT_FORMAT_ISN_T_SUPPORTED_YET_THE_DESCRIPTOR = msg({
-	message: "Cropping animated files isn't supported yet. The original upload will be used.",
-	comment: 'Description text in the avatar uploader when the animated image format is unknown.',
 });
 const AVATAR_MODE_SELECTION_DESCRIPTOR = msg({
 	message: 'Avatar mode selection',
@@ -185,15 +172,14 @@ export const AvatarUploader = observer(
 					return;
 				}
 				const svg = isSvgFile(file);
-				if (!svg && !(await canCropFormat(file.type))) {
+				if (!svg && !(await canCropFile(file))) {
 					showUserErrorModal(
 						i18n._(COULDN_T_UPLOAD_AVATAR_DESCRIPTOR),
 						getAssetFormatErrorMessage(i18n, 'avatar', 'unsupported_mime'),
 					);
 					return;
 				}
-				const animated = svg ? false : await isAnimatedFile(file);
-				const isGifFile = isGif(file);
+				const {format, animated} = svg ? {format: 'unknown', animated: false} : await inspectImageFile(file);
 				if (animated && !canUploadAnimatedAvatar) {
 					if (shouldShowPremiumFeatures()) {
 						ModalCommands.push(
@@ -249,35 +235,17 @@ export const AvatarUploader = observer(
 					}
 					return;
 				}
-				const base64 = svg ? await readImageFileAsUploadDataUrl(file) : await AvatarUtils.fileToBase64(file);
-				const animatedHandled = shouldHandleAnimatedNonGifUpload({
-					file,
-					isGif: isGifFile,
-					animated,
-					onAnimatedAvif: () => {
-						showAnimatedAvifUnsupportedModal({i18n});
-					},
-					onOtherAnimated: () => {
-						const formatLabel = getAnimatedFormatLabel(file);
-						ToastCommands.createToast({
-							type: 'info',
-							children:
-								formatLabel == null
-									? i18n._(CROPPING_ANIMATED_FILES_WITHOUT_FORMAT_ISN_T_SUPPORTED_YET_THE_DESCRIPTOR)
-									: i18n._(CROPPING_ANIMATED_FILES_ISN_T_SUPPORTED_YET_THE_DESCRIPTOR, {formatLabel}),
-						});
-						onAvatarChange(base64);
-					},
-				});
-				if (animatedHandled) {
+				const isAnimatedAvif = animated && format === 'avif';
+				if (isAnimatedAvif && !(await canDecodeAnimatedAvif())) {
+					showAnimatedAvifUnsupportedModal({i18n});
 					return;
 				}
+				const base64 = svg ? await readImageFileAsUploadDataUrl(file) : await AvatarUtils.fileToBase64(file);
 				ModalCommands.push(
 					modal(() => (
 						<AssetCropModal
 							assetType={AssetType.AVATAR}
 							imageUrl={base64}
-							sourceMimeType={svg ? 'image/svg+xml' : file.type}
 							onCropComplete={(croppedBlob) => {
 								const reader = new FileReader();
 								reader.onload = () => {
@@ -292,9 +260,13 @@ export const AvatarUploader = observer(
 								};
 								reader.readAsDataURL(croppedBlob);
 							}}
-							onSkip={() => {
-								onAvatarChange(base64);
-							}}
+							onSkip={
+								isAnimatedAvif
+									? undefined
+									: () => {
+											onAvatarChange(base64);
+										}
+							}
 							data-flx="user.my-profile-tab.avatar-uploader.handle-avatar-upload.asset-crop-modal"
 						/>
 					)),

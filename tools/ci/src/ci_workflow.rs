@@ -123,6 +123,12 @@ fn app_wasm_artifacts(root: &Path) -> Vec<PathBuf> {
         app_dir.join("pkgs/libfluxcore/libfluxcore_bg.wasm"),
         app_dir.join("pkgs/libfluxcore/libfluxcore_bg.wasm.d.ts"),
         app_dir.join("pkgs/libfluxcore/package.json"),
+        app_dir.join("pkgs/libfluxwebp/libfluxwebp.js"),
+        app_dir.join("pkgs/libfluxwebp/libfluxwebp.d.ts"),
+        app_dir.join("pkgs/libfluxwebp/libfluxwebp_bg.wasm"),
+        app_dir.join("pkgs/libfluxwebp/libfluxwebp_bg.wasm.d.ts"),
+        app_dir.join("pkgs/libfluxwebp/libfluxwebp_simd_bg.wasm"),
+        app_dir.join("pkgs/libfluxwebp/libfluxwebp_simd_bg.wasm.d.ts"),
         app_dir.join("src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts"),
     ]
 }

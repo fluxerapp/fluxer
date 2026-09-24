@@ -116,7 +116,6 @@ export const GuildCreateForm = observer(() => {
 					<AssetCropModal
 						assetType={AssetType.GUILD_ICON}
 						imageUrl={base64}
-						sourceMimeType={svg ? 'image/svg+xml' : file.type}
 						onCropComplete={(croppedBlob) => {
 							const reader = new FileReader();
 							reader.onload = () => {

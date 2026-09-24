@@ -16,6 +16,22 @@ pub fn is_animated_image_bytes(input: &[u8]) -> bool {
     false
 }
 
+pub fn sniff_image_format_bytes(input: &[u8]) -> u8 {
+    if is_png(input) {
+        1
+    } else if is_gif(input) {
+        2
+    } else if is_webp(input) {
+        3
+    } else if is_avif_file(input) {
+        4
+    } else if input.starts_with(&[0xff, 0xd8, 0xff]) {
+        5
+    } else {
+        0
+    }
+}
+
 fn is_gif(input: &[u8]) -> bool {
     input.starts_with(b"GIF89a") || input.starts_with(b"GIF87a")
 }
@@ -35,7 +51,16 @@ fn is_avif_file(input: &[u8]) -> bool {
 }
 
 fn has_avif_anim(input: &[u8]) -> bool {
-    is_avif_file(input) && &input[8..12] == b"avis"
+    if !is_avif_file(input) {
+        return false;
+    }
+    if &input[8..12] == b"avis" {
+        return true;
+    }
+    let box_end = read_u32_be(input, 0).map_or(0, |size| (size as usize).min(input.len()));
+    input
+        .get(16..box_end)
+        .is_some_and(|brands| brands.as_chunks::<4>().0.contains(b"avis"))
 }
 
 fn has_apng_actl(input: &[u8]) -> bool {
@@ -243,11 +268,51 @@ mod tests {
 
     #[test]
     fn detects_avif_sequence_brand() {
-        let avif = b"\x00\x00\x00\x18ftypavif\x00\x00\x00\x00avis";
-        assert!(!is_animated_image_bytes(avif));
+        let still = b"\x00\x00\x00\x18ftypavif\x00\x00\x00\x00mif1miaf";
+        assert!(!is_animated_image_bytes(still));
 
         let avis = b"\x00\x00\x00\x18ftypavis\x00\x00\x00\x00avif";
         assert!(is_animated_image_bytes(avis));
+    }
+
+    #[test]
+    fn detects_avis_among_compatible_brands() {
+        let compat = b"\x00\x00\x00\x1cftypavif\x00\x00\x00\x00mif1avismsf1";
+        assert!(is_animated_image_bytes(compat));
+
+        let outside_ftyp = b"\x00\x00\x00\x14ftypavif\x00\x00\x00\x00mif1avis";
+        assert!(!is_animated_image_bytes(outside_ftyp));
+
+        let truncated = b"\x00\x00\x00\x40ftypavif\x00\x00\x00\x00mif1av";
+        assert!(!is_animated_image_bytes(truncated));
+    }
+
+    #[test]
+    fn sniffs_image_formats_from_magic_bytes() {
+        assert_eq!(sniff_image_format_bytes(b""), 0);
+        assert_eq!(sniff_image_format_bytes(b"<svg xmlns"), 0);
+        assert_eq!(
+            sniff_image_format_bytes(b"\x89PNG\r\n\x1a\n\0\0\0\rIHDR"),
+            1
+        );
+        assert_eq!(sniff_image_format_bytes(b"GIF89a\x01\x00"), 2);
+        assert_eq!(sniff_image_format_bytes(b"GIF87a\x01\x00"), 2);
+        assert_eq!(sniff_image_format_bytes(b"RIFF\x04\0\0\0WEBPVP8 "), 3);
+        assert_eq!(sniff_image_format_bytes(b"RIFF\x04\0\0\0WAVEfmt "), 0);
+        assert_eq!(
+            sniff_image_format_bytes(b"\x00\x00\x00\x18ftypavif\x00\x00\x00\x00"),
+            4
+        );
+        assert_eq!(
+            sniff_image_format_bytes(b"\x00\x00\x00\x18ftypavis\x00\x00\x00\x00"),
+            4
+        );
+        assert_eq!(
+            sniff_image_format_bytes(b"\x00\x00\x00\x18ftypheic\x00\x00\x00\x00"),
+            0
+        );
+        assert_eq!(sniff_image_format_bytes(b"\xff\xd8\xff\xe0\x00\x10JFIF"), 5);
+        assert_eq!(sniff_image_format_bytes(b"\xff\xd8"), 0);
     }
 
     #[test]

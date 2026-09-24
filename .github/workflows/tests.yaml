@@ -123,12 +123,16 @@ jobs:
         with:
           path: |
             fluxer_app/pkgs/libfluxcore
+            fluxer_app/pkgs/libfluxwebp
             fluxer_app/src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts
           key: >-
             app-wasm-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'tools/ci/src/app_wasm.rs',
             'tools/ci/templates/libfluxcore_wrapper.js', 'tools/ci/templates/libfluxcore_wrapper.d.ts',
             'fluxer_app/rust/libfluxcore/Cargo.toml', 'fluxer_app/rust/libfluxcore/Cargo.lock',
             'fluxer_app/rust/libfluxcore/.cargo/config.toml', 'fluxer_app/rust/libfluxcore/src/**',
+            'fluxer_app/rust/libfluxwebp/Cargo.toml', 'fluxer_app/rust/libfluxwebp/Cargo.lock',
+            'fluxer_app/rust/libfluxwebp/src/**', 'fluxer_app/rust/libfluxwebp/shim/**',
+            'fluxer_app/rust/libfluxwebp/simd/**',
             'packages/markdown_parser/rust/Cargo.toml', 'packages/markdown_parser/rust/.cargo/config.toml',
             'packages/markdown_parser/rust/src/**') }}
 
@@ -142,12 +146,16 @@ jobs:
         with:
           path: |
             fluxer_app/pkgs/libfluxcore
+            fluxer_app/pkgs/libfluxwebp
             fluxer_app/src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts
           key: >-
             app-wasm-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'tools/ci/src/app_wasm.rs',
             'tools/ci/templates/libfluxcore_wrapper.js', 'tools/ci/templates/libfluxcore_wrapper.d.ts',
             'fluxer_app/rust/libfluxcore/Cargo.toml', 'fluxer_app/rust/libfluxcore/Cargo.lock',
             'fluxer_app/rust/libfluxcore/.cargo/config.toml', 'fluxer_app/rust/libfluxcore/src/**',
+            'fluxer_app/rust/libfluxwebp/Cargo.toml', 'fluxer_app/rust/libfluxwebp/Cargo.lock',
+            'fluxer_app/rust/libfluxwebp/src/**', 'fluxer_app/rust/libfluxwebp/shim/**',
+            'fluxer_app/rust/libfluxwebp/simd/**',
             'packages/markdown_parser/rust/Cargo.toml', 'packages/markdown_parser/rust/.cargo/config.toml',
             'packages/markdown_parser/rust/src/**') }}
 
@@ -189,6 +197,9 @@ jobs:
 
       - name: Check Rust dependencies
         run: cargo deny --locked check -D warnings
+
+      - name: Check libfluxwebp dependencies
+        run: cargo deny --manifest-path fluxer_app/rust/libfluxwebp/Cargo.toml --config deny.toml --locked check licenses bans sources
 
       - name: Check desktop native dependencies
         run: tools/ci/check-desktop-native-workspaces.sh dependencies
@@ -241,6 +252,9 @@ jobs:
 
       - name: Check formatting
         run: cargo fmt --all -- --check
+
+      - name: Check formatting (libfluxwebp)
+        run: cargo fmt --manifest-path fluxer_app/rust/libfluxwebp/Cargo.toml -- --check
 
       - name: Check formatting (desktop native workspaces)
         run: tools/ci/check-desktop-native-workspaces.sh fmt
@@ -398,12 +412,16 @@ jobs:
         with:
           path: |
             fluxer_app/pkgs/libfluxcore
+            fluxer_app/pkgs/libfluxwebp
             fluxer_app/src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts
           key: >-
             app-wasm-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'tools/ci/src/app_wasm.rs',
             'tools/ci/templates/libfluxcore_wrapper.js', 'tools/ci/templates/libfluxcore_wrapper.d.ts',
             'fluxer_app/rust/libfluxcore/Cargo.toml', 'fluxer_app/rust/libfluxcore/Cargo.lock',
             'fluxer_app/rust/libfluxcore/.cargo/config.toml', 'fluxer_app/rust/libfluxcore/src/**',
+            'fluxer_app/rust/libfluxwebp/Cargo.toml', 'fluxer_app/rust/libfluxwebp/Cargo.lock',
+            'fluxer_app/rust/libfluxwebp/src/**', 'fluxer_app/rust/libfluxwebp/shim/**',
+            'fluxer_app/rust/libfluxwebp/simd/**',
             'packages/markdown_parser/rust/Cargo.toml', 'packages/markdown_parser/rust/.cargo/config.toml',
             'packages/markdown_parser/rust/src/**') }}
 
@@ -417,12 +435,16 @@ jobs:
         with:
           path: |
             fluxer_app/pkgs/libfluxcore
+            fluxer_app/pkgs/libfluxwebp
             fluxer_app/src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts
           key: >-
             app-wasm-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'tools/ci/src/app_wasm.rs',
             'tools/ci/templates/libfluxcore_wrapper.js', 'tools/ci/templates/libfluxcore_wrapper.d.ts',
             'fluxer_app/rust/libfluxcore/Cargo.toml', 'fluxer_app/rust/libfluxcore/Cargo.lock',
             'fluxer_app/rust/libfluxcore/.cargo/config.toml', 'fluxer_app/rust/libfluxcore/src/**',
+            'fluxer_app/rust/libfluxwebp/Cargo.toml', 'fluxer_app/rust/libfluxwebp/Cargo.lock',
+            'fluxer_app/rust/libfluxwebp/src/**', 'fluxer_app/rust/libfluxwebp/shim/**',
+            'fluxer_app/rust/libfluxwebp/simd/**',
             'packages/markdown_parser/rust/Cargo.toml', 'packages/markdown_parser/rust/.cargo/config.toml',
             'packages/markdown_parser/rust/src/**') }}
 

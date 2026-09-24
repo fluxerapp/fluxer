@@ -11,6 +11,18 @@ const FONT_LICENSE_FILES = [
 	{source: 'LICENSE-IBM-PLEX.txt', asset: 'assets/fonts-LICENSE-IBM-PLEX.txt'},
 ];
 
+const WASM_LICENSE_FILES = [
+	{source: 'libfluxcore/NOTICE.md', asset: 'assets/libfluxcore-NOTICE.txt'},
+	{source: 'libfluxcore/LICENSE-ZSTD.txt', asset: 'assets/libfluxcore-LICENSE-ZSTD.txt'},
+	{source: 'libfluxcore/LICENSE-ZSTD-SYS.txt', asset: 'assets/libfluxcore-LICENSE-ZSTD-SYS.txt'},
+	{source: 'libfluxcore/LICENSE-ZSTD-RS.txt', asset: 'assets/libfluxcore-LICENSE-ZSTD-RS.txt'},
+	{source: 'libfluxwebp/NOTICE.md', asset: 'assets/libfluxwebp-NOTICE.txt'},
+	{source: 'libfluxwebp/LICENSE-LIBWEBP.txt', asset: 'assets/libfluxwebp-LICENSE-LIBWEBP.txt'},
+	{source: 'libfluxwebp/PATENTS-LIBWEBP.txt', asset: 'assets/libfluxwebp-PATENTS-LIBWEBP.txt'},
+	{source: 'libfluxwebp/LICENSE-LIBWEBP-SYS.txt', asset: 'assets/libfluxwebp-LICENSE-LIBWEBP-SYS.txt'},
+	{source: 'libfluxwebp/simd/LICENSE', asset: 'assets/libfluxwebp-LICENSE-EMSCRIPTEN.txt'},
+];
+
 function resolveStaticCdnEndpoint(staticCdnEndpoint) {
 	const value = staticCdnEndpoint?.trim().replace(/\/+$/, '');
 	return value || STATIC_CDN_ENDPOINT_PLACEHOLDER;
@@ -86,17 +98,18 @@ export class StaticFilesPlugin {
 	constructor(options = {}) {
 		this.staticCdnEndpoint = options.staticCdnEndpoint;
 		this.fontsDir = options.fontsDir;
+		this.wasmCratesDir = options.wasmCratesDir;
 	}
 
-	emitFontLicenses(compilation) {
-		if (!this.fontsDir) {
+	emitLicenseFiles(compilation, dir, files, subject) {
+		if (!dir) {
 			return;
 		}
-		for (const {source, asset} of FONT_LICENSE_FILES) {
-			const sourcePath = path.join(this.fontsDir, source);
+		for (const {source, asset} of files) {
+			const sourcePath = path.join(dir, source);
 			if (!fs.existsSync(sourcePath)) {
 				throw new Error(
-					`StaticFilesPlugin: ${sourcePath} is missing. The bundled fonts may not be redistributed without it.`,
+					`StaticFilesPlugin: ${sourcePath} is missing. The bundled ${subject} may not be redistributed without it.`,
 				);
 			}
 			compilation.emitAsset(asset, new sources.RawSource(fs.readFileSync(sourcePath)));
@@ -117,7 +130,8 @@ export class StaticFilesPlugin {
 						new sources.RawSource(generateBrowserConfig(this.staticCdnEndpoint)),
 					);
 					compilation.emitAsset('robots.txt', new sources.RawSource(generateRobotsTxt()));
-					this.emitFontLicenses(compilation);
+					this.emitLicenseFiles(compilation, this.fontsDir, FONT_LICENSE_FILES, 'fonts');
+					this.emitLicenseFiles(compilation, this.wasmCratesDir, WASM_LICENSE_FILES, 'WebAssembly modules');
 				},
 			);
 		});

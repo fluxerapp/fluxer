@@ -17,6 +17,13 @@ by `fluxer_app` from `@sapphi-red/web-noise-suppressor` rather than mirrored
 here; their licenses and build-time modification disclosure live with the code in
 `fluxer_app/src/features/voice/utils/noise_suppression/NOTICE.md`.
 
+The `libfluxcore` and `libfluxwebp` WebAssembly modules are built by
+`fluxer_app` from Zstandard, libwebp and Emscripten's SSE compatibility headers
+rather than mirrored here. Their licenses live with the crates in
+`fluxer_app/rust/libfluxcore/NOTICE.md` and `fluxer_app/rust/libfluxwebp/NOTICE.md`,
+and the app build ships them next to the modules as `assets/libfluxcore-*.txt`
+and `assets/libfluxwebp-*.txt`.
+
 Fonts used to be mirrored here under `fonts/`. They are now bundled by each app
 that uses them, and their OFL-1.1 licenses and modification disclosure live with
 the binaries in `packages/fonts/` (`LICENSE-IBM-PLEX.txt`,

@@ -162,6 +162,8 @@ export async function stripNonJpegImageMetadataForUpload(
 			contentType: normalizedContentType === 'image/apng' ? 'image/apng' : 'image/png',
 		};
 	}
+	const strippedWebp = isWebp(data) ? stripWebpMetadataChunks(data) : null;
+	if (strippedWebp) return {body: strippedWebp, contentType: 'image/webp'};
 	const image = sharp(data, {animated: true});
 	const metadata = await image.metadata();
 	switch (metadata.format) {
@@ -235,6 +237,50 @@ function stripPngMetadataChunks(data: Uint8Array): Uint8Array {
 	const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
 	const output = new Uint8Array(totalLength);
 	let cursor = 0;
+	for (const chunk of chunks) {
+		output.set(chunk, cursor);
+		cursor += chunk.length;
+	}
+	return output;
+}
+
+const WEBP_CHUNKS_TO_KEEP = new Set(['VP8 ', 'VP8L', 'VP8X', 'ALPH', 'ANIM', 'ANMF', 'ICCP']);
+const WEBP_VP8X_EXIF_FLAG = 0x08;
+const WEBP_VP8X_XMP_FLAG = 0x04;
+
+function readFourCc(data: Uint8Array, offset: number): string {
+	return String.fromCharCode(data[offset]!, data[offset + 1]!, data[offset + 2]!, data[offset + 3]!);
+}
+
+function readU32LE(data: Uint8Array, offset: number): number {
+	return (data[offset]! | (data[offset + 1]! << 8) | (data[offset + 2]! << 16) | (data[offset + 3]! << 24)) >>> 0;
+}
+
+function isWebp(data: Uint8Array): boolean {
+	return data.length >= 12 && readFourCc(data, 0) === 'RIFF' && readFourCc(data, 8) === 'WEBP';
+}
+
+function stripWebpMetadataChunks(data: Uint8Array): Uint8Array | null {
+	const riffEnd = Math.min(data.length, 8 + readU32LE(data, 4));
+	const chunks: Array<Uint8Array> = [];
+	let offset = 12;
+	while (offset + 8 <= riffEnd) {
+		const length = readU32LE(data, offset + 4);
+		const chunkEnd = offset + 8 + length + (length & 1);
+		if (offset + 8 + length > riffEnd) return null;
+		const type = readFourCc(data, offset);
+		if (WEBP_CHUNKS_TO_KEEP.has(type)) {
+			const chunk = data.slice(offset, Math.min(chunkEnd, riffEnd));
+			if (type === 'VP8X' && length > 0) chunk[8] = (chunk[8] ?? 0) & ~(WEBP_VP8X_EXIF_FLAG | WEBP_VP8X_XMP_FLAG);
+			chunks.push(chunk);
+		}
+		offset = chunkEnd;
+	}
+	const bodyLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+	const output = new Uint8Array(12 + bodyLength);
+	output.set(data.subarray(0, 12));
+	new DataView(output.buffer).setUint32(4, 4 + bodyLength, true);
+	let cursor = 12;
 	for (const chunk of chunks) {
 		output.set(chunk, cursor);
 		cursor += chunk.length;

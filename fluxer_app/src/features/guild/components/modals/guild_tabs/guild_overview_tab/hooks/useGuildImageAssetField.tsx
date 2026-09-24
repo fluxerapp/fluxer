@@ -1,26 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {Gif} from '@app/features/expressions/commands/GifCommands';
-import {
-	AssetCropModal,
-	type AssetType,
-	canSkipOriginalAssetImage,
-} from '@app/features/expressions/components/modals/AssetCropModal';
+import {AssetCropModal, type AssetType} from '@app/features/expressions/components/modals/AssetCropModal';
 import {openAssetSourceModal} from '@app/features/expressions/components/modals/AssetSourceModal';
 import {showAnimatedAvifUnsupportedModal} from '@app/features/expressions/utils/AnimatedAvifModalUtils';
-import {
-	getAnimatedFormatLabel,
-	isAnimatedFile,
-	shouldHandleAnimatedNonGifUpload,
-} from '@app/features/expressions/utils/AnimatedImageUtils';
+import {inspectImageFile} from '@app/features/expressions/utils/AnimatedImageUtils';
 import {downloadGifAsImageFile} from '@app/features/expressions/utils/GifFileDownload';
 import {isSvgFile, readImageFileAsUploadDataUrl} from '@app/features/expressions/utils/ImageUploadFileUtils';
 import {showGuildErrorModal} from '@app/features/guild/components/alerts/GuildErrorModalUtils';
 import {
 	blobToDataUrl,
-	getImageDimensionsFromDataUrl,
-	getSafeImageMimeType,
-	isGif,
 	MAX_IMAGE_BYTES,
 	revokeObjectUrl,
 } from '@app/features/guild/components/modals/guild_tabs/guild_overview_tab/utils/ImageAsset';
@@ -31,9 +20,9 @@ import {
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
+import {canDecodeAnimatedAvif} from '@app/features/platform/utils/ImageDecoderInterop';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
-import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -55,25 +44,10 @@ const ANIMATED_IMAGES_ARE_NOT_SUPPORTED_FOR_THIS_ASSET_DESCRIPTOR = msg({
 	message: 'Animated images are not supported for this asset.',
 	comment: 'Confirmation modal body shown before using a non-croppable animated community image.',
 });
-const CROPPING_ANIMATED_FILES_ISN_T_SUPPORTED_YET_THE_DESCRIPTOR = msg({
-	message: "Cropping animated {formatLabel} files isn't supported yet. The original image will be used.",
-	comment:
-		'Confirmation modal body shown before using an animated community image without cropping. {formatLabel} is the image format name.',
-});
-const CROPPING_ANIMATED_FILES_WITHOUT_FORMAT_ISN_T_SUPPORTED_YET_THE_DESCRIPTOR = msg({
-	message: "Cropping animated files isn't supported yet. The original image will be used.",
-	comment: 'Confirmation modal body shown before using an animated community image with an unknown format.',
-});
 const CROPPED_IMAGE_IS_TOO_LARGE_PLEASE_CHOOSE_A_DESCRIPTOR = msg({
 	message: 'Cropped image is too large. Choose a smaller area or a smaller file (max {maxSizeLabel}).',
 	comment:
 		'Error modal body shown when a cropped community image still exceeds the size limit. {maxSizeLabel} is a formatted file size.',
-});
-const IMAGE_DIMENSIONS_DO_NOT_MATCH_THIS_ASSET_DESCRIPTOR = msg({
-	message:
-		'{label} dimensions do not match this asset. Choose a different image or upload a static image you can crop.',
-	comment:
-		'Error modal body shown when a non-croppable community image has dimensions that do not fit the target asset. {label} names the image field.',
 });
 const IMAGE_COULDN_T_BE_USED_DESCRIPTOR = msg({
 	message: "Image couldn't be used",
@@ -197,22 +171,6 @@ export function useGuildImageAssetField({
 		},
 		[applyAspectRatio, aspectRatio, setFieldValue, setHasCleared, setPreviewUrl],
 	);
-	const canApplyOriginalDataUrl = useCallback(
-		async (dataUrl: string) => {
-			try {
-				const dimensions = await getImageDimensionsFromDataUrl(dataUrl);
-				if (canSkipOriginalAssetImage(assetType, dimensions)) {
-					return true;
-				}
-				showErrorModal(i18n._(IMAGE_DIMENSIONS_DO_NOT_MATCH_THIS_ASSET_DESCRIPTOR, {label}));
-				return false;
-			} catch {
-				showErrorModal(i18n._(INVALID_IMAGE_TRY_ANOTHER_DESCRIPTOR));
-				return false;
-			}
-		},
-		[assetType, i18n, label, showErrorModal],
-	);
 	const handleFile = useCallback(
 		async (file: File | null) => {
 			if (!file) return;
@@ -224,7 +182,7 @@ export function useGuildImageAssetField({
 				return;
 			}
 			const svg = isSvgFile(file);
-			const animated = svg ? false : await isAnimatedFile(file);
+			const {format, animated} = svg ? {format: 'unknown', animated: false} : await inspectImageFile(file);
 			if (animated) {
 				const policy = gif?.mode ?? 'disallow';
 				if (policy === 'disallow') {
@@ -246,6 +204,11 @@ export function useGuildImageAssetField({
 					}
 				}
 			}
+			const isAnimatedAvif = animated && format === 'avif';
+			if (isAnimatedAvif && !(await canDecodeAnimatedAvif())) {
+				showAnimatedAvifUnsupportedModal({i18n});
+				return;
+			}
 			setIsProcessing(true);
 			let sourceBase64: string;
 			try {
@@ -259,42 +222,12 @@ export function useGuildImageAssetField({
 				setIsProcessing(false);
 				return;
 			}
-			const animatedHandled = shouldHandleAnimatedNonGifUpload({
-				file,
-				isGif: isGif(file),
-				animated,
-				onAnimatedAvif: () => {
-					setIsProcessing(false);
-					showAnimatedAvifUnsupportedModal({i18n});
-				},
-				onOtherAnimated: async () => {
-					if (!(await canApplyOriginalDataUrl(sourceBase64))) {
-						setIsProcessing(false);
-						return;
-					}
-					const formatLabel = getAnimatedFormatLabel(file);
-					ToastCommands.createToast({
-						type: 'info',
-						children:
-							formatLabel == null
-								? i18n._(CROPPING_ANIMATED_FILES_WITHOUT_FORMAT_ISN_T_SUPPORTED_YET_THE_DESCRIPTOR)
-								: i18n._(CROPPING_ANIMATED_FILES_ISN_T_SUPPORTED_YET_THE_DESCRIPTOR, {formatLabel}),
-					});
-					await applyDataUrl(sourceBase64, file, requestId);
-					setIsProcessing(false);
-				},
-			});
-			if (animatedHandled) {
-				return;
-			}
 			setIsProcessing(false);
-			const sourceMimeType = getSafeImageMimeType(file);
 			ModalCommands.push(
 				modal(() => (
 					<AssetCropModal
 						assetType={assetType}
 						imageUrl={sourceBase64}
-						sourceMimeType={sourceMimeType}
 						onCropComplete={async (croppedBlob) => {
 							if (requestId !== requestIdRef.current) return;
 							setIsProcessing(true);
@@ -314,10 +247,14 @@ export function useGuildImageAssetField({
 								}
 							}
 						}}
-						onSkip={async () => {
-							if (requestId !== requestIdRef.current) return;
-							await applyDataUrl(sourceBase64, file, requestId);
-						}}
+						onSkip={
+							isAnimatedAvif
+								? undefined
+								: async () => {
+										if (requestId !== requestIdRef.current) return;
+										await applyDataUrl(sourceBase64, file, requestId);
+									}
+						}
 						data-flx="guild.guild-tabs.guild-overview-tab.use-guild-image-asset-field.handle-file.asset-crop-modal"
 					/>
 				)),
@@ -327,7 +264,6 @@ export function useGuildImageAssetField({
 			applyAspectRatio,
 			applyDataUrl,
 			assetType,
-			canApplyOriginalDataUrl,
 			canManage,
 			gif,
 			label,

@@ -13,6 +13,8 @@ import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import type {Gif} from '@app/features/expressions/commands/GifCommands';
 import {AssetCropModal, AssetType} from '@app/features/expressions/components/modals/AssetCropModal';
 import {openAssetSourceModal} from '@app/features/expressions/components/modals/AssetSourceModal';
+import {showAnimatedAvifUnsupportedModal} from '@app/features/expressions/utils/AnimatedAvifModalUtils';
+import {inspectImageFile} from '@app/features/expressions/utils/AnimatedImageUtils';
 import {getAcceptString} from '@app/features/expressions/utils/AssetFormatCopy';
 import {formatImageUploadMinimumHint} from '@app/features/expressions/utils/AssetUploadHintCopy';
 import {downloadGifAsImageFile} from '@app/features/expressions/utils/GifFileDownload';
@@ -25,6 +27,7 @@ import {
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {openFilePicker} from '@app/features/messaging/utils/FilePickerUtils';
 import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
+import {canDecodeAnimatedAvif} from '@app/features/platform/utils/ImageDecoderInterop';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {Button} from '@app/features/ui/button/Button';
@@ -190,12 +193,17 @@ export const BannerUploader = observer(
 					return;
 				}
 				const svg = isSvgFile(file);
+				const {format, animated} = svg ? {format: 'unknown', animated: false} : await inspectImageFile(file);
+				const isAnimatedAvif = animated && format === 'avif';
+				if (isAnimatedAvif && !(await canDecodeAnimatedAvif())) {
+					showAnimatedAvifUnsupportedModal({i18n});
+					return;
+				}
 				const base64 = svg ? await readImageFileAsUploadDataUrl(file) : await AvatarUtils.fileToBase64(file);
 				ModalCommands.push(
 					modal(() => (
 						<AssetCropModal
 							imageUrl={base64}
-							sourceMimeType={svg ? 'image/svg+xml' : file.type}
 							assetType={AssetType.PROFILE_BANNER}
 							onCropComplete={(croppedBlob) => {
 								const reader = new FileReader();
@@ -211,9 +219,13 @@ export const BannerUploader = observer(
 								};
 								reader.readAsDataURL(croppedBlob);
 							}}
-							onSkip={() => {
-								onBannerChange(base64);
-							}}
+							onSkip={
+								isAnimatedAvif
+									? undefined
+									: () => {
+											onBannerChange(base64);
+										}
+							}
 							data-flx="user.my-profile-tab.banner-uploader.handle-banner-upload.asset-crop-modal"
 						/>
 					)),

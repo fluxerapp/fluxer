@@ -1405,18 +1405,13 @@ msgstr "{itemLabel}, σύντομα διαθέσιμο"
 msgid "{kilobits} kbps"
 msgstr "{kilobits} kbps"
 
-#. Error modal body shown when a non-croppable community image has dimensions that do not fit the target asset. {label} names the image field.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:72
-msgid "{label} dimensions do not match this asset. Choose a different image or upload a static image you can crop."
-msgstr "Οι διαστάσεις για {label} δεν ταιριάζουν με αυτό το στοιχείο. Επιλέξτε διαφορετική εικόνα ή ανεβάστε μια στατική εικόνα που μπορείτε να περικόψετε."
-
 #. Error modal body shown when a community image upload exceeds the size limit. {label} names the image field and {maxSizeLabel} is a formatted file size.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:44
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:33
 msgid "{label} file is too large. Choose a file smaller than {maxSizeLabel}."
 msgstr "Το αρχείο {label} είναι πολύ μεγάλο. Επιλέξτε ένα αρχείο μικρότερο από {maxSizeLabel}."
 
 #. Error modal body shown when a community image field does not allow animation. {label} names the image field.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:49
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:38
 msgid "{label} images cannot be animated. Use a static image."
 msgstr "Οι εικόνες για {label} δεν μπορούν να είναι κινούμενες. Χρησιμοποιήστε μια στατική εικόνα."
 
@@ -2829,7 +2824,7 @@ msgid "Activity sharing"
 msgstr "Κοινή χρήση δραστηριοτήτων"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:465
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:478
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:102
 msgid "Activity threshold"
 msgstr "Όριο δραστηριότητας"
@@ -3566,11 +3561,11 @@ msgstr "Να επιτρέπονται οι αναφορές {everyoneMention} κ
 msgid "Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 msgstr "Επιτρέψτε στο {PRODUCT_NAME} να έχει πρόσβαση στην κάμερά σας στις {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:533
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:535
 msgid "Allow {PRODUCT_NAME} to access your microphone in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 msgstr "Επιτρέψτε στο {PRODUCT_NAME} να έχει πρόσβαση στο μικρόφωνό σας στις {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:538
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:540
 msgid "Allow {PRODUCT_NAME} to access your microphone. Check your browser's address bar or settings."
 msgstr "Επιτρέψτε στο {PRODUCT_NAME} να έχει πρόσβαση στο μικρόφωνό σας. Ελέγξτε τη γραμμή διευθύνσεων ή τις ρυθμίσεις του προγράμματος περιήγησής σας."
 
@@ -3673,7 +3668,7 @@ msgstr "Να επιτρέπεται στα μέλη χωρίς το δικαίω
 msgid "Allow mentions for this role"
 msgstr "Να επιτρέπονται οι αναφορές για αυτόν τον ρόλο"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:558
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:560
 msgid "Allow microphone"
 msgstr "Να επιτρέπεται το μικρόφωνο"
 
@@ -3942,25 +3937,21 @@ msgstr "και {remainingCount} ακόμη"
 msgid "Animate on interaction"
 msgstr "Εφέ κίνησης στην αλληλεπίδραση"
 
-#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:26
-msgid "Animated {AVIF_FORMAT_LABEL} files aren't supported. Upload a static {AVIF_FORMAT_LABEL} file instead."
-msgstr "Τα κινούμενα αρχεία {AVIF_FORMAT_LABEL} δεν υποστηρίζονται. Ανεβάστε ένα στατικό αρχείο {AVIF_FORMAT_LABEL} αντ' αυτού."
-
 #. Modal title shown when an animated AVIF upload is rejected by the client.
-#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:11
+#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:10
 msgid "Animated {avifFormatLabel} not supported"
 msgstr "Τα κινούμενα {avifFormatLabel} δεν υποστηρίζονται"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:206
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:192
 msgid "Animated avatars ({ANIMATED_AVATAR_FORMATS}) are exclusively available to {PREMIUM_PRODUCT_NAME} subscribers."
 msgstr "Τα κινούμενα avatar ({ANIMATED_AVATAR_FORMATS}) είναι διαθέσιμα αποκλειστικά στους συνδρομητές {PREMIUM_PRODUCT_NAME}."
 
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:240
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:226
 msgid "Animated avatars ({ANIMATED_AVATAR_FORMATS}) are not available on this instance. Upload a static image instead."
 msgstr "Τα κινούμενα avatar ({ANIMATED_AVATAR_FORMATS}) δεν είναι διαθέσιμα σε αυτήν την παρουσία. Ανεβάστε μια στατική εικόνα αντ' αυτού."
 
 #. Extra note in the avatar asset upload source modal. Preserve {animatedAvatarFormats} and {premiumProductName}; they are inserted by code.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:115
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:102
 msgid "Animated avatars ({animatedAvatarFormats}) require {premiumProductName}."
 msgstr "Τα κινούμενα avatar ({animatedAvatarFormats}) απαιτούν {premiumProductName}."
 
@@ -3970,12 +3961,12 @@ msgid "Animated avatars & profile banners"
 msgstr "Κινούμενα avatar και banner προφίλ"
 
 #. Error message in the avatar uploader.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:91
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:86
 msgid "Animated avatars not available"
 msgstr "Τα κινούμενα avatar δεν είναι διαθέσιμα"
 
 #. Label in the avatar uploader. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:86
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:81
 msgid "Animated avatars require {premiumProductName}"
 msgstr "Τα κινούμενα avatar απαιτούν {premiumProductName}"
 
@@ -4046,7 +4037,7 @@ msgid "Animated image preview"
 msgstr "Προεπισκόπηση κινούμενης εικόνας"
 
 #. Confirmation modal body shown before using a non-croppable animated community image.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:54
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:43
 msgid "Animated images are not supported for this asset."
 msgstr "Οι κινούμενες εικόνες δεν υποστηρίζονται για αυτό το στοιχείο."
 
@@ -4947,7 +4938,7 @@ msgstr "Αυτόματη ανίχνευση γλώσσας"
 
 #. Short label in the voice tab. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:116
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:452
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:465
 msgid "Auto-set activity threshold"
 msgstr "Αυτόματη ρύθμιση ορίου δραστηριότητας"
 
@@ -5127,15 +5118,15 @@ msgstr "Διαθέσιμο στην εφαρμογή για υπολογιστέ
 #. Form label for a webhook avatar image.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/ui/components/BaseAvatar.tsx:18
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:373
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:421
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:345
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:393
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:13
 #: src/features/webhook/components/WebhookListItem.tsx:252
 msgid "Avatar"
 msgstr "Εικόνα προφίλ"
 
 #. Error message in the avatar uploader. Preserve {imageMaxSizeLabel}; it is inserted by code.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:82
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:77
 msgid "Avatar file is too large. Choose a file smaller than {imageMaxSizeLabel}."
 msgstr "Το αρχείο avatar είναι πολύ μεγάλο. Επιλέξτε ένα αρχείο μικρότερο από {imageMaxSizeLabel}."
 
@@ -5145,7 +5136,7 @@ msgid "Avatar is too large — pick one under {imageMaxSizeLabel}."
 msgstr "Το avatar είναι πολύ μεγάλο. Επιλέξτε ένα μικρότερο από {imageMaxSizeLabel}."
 
 #. Short label in the avatar uploader. Keep it concise.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:103
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:90
 msgid "Avatar mode selection"
 msgstr "Επιλογή λειτουργίας avatar"
 
@@ -5187,11 +5178,11 @@ msgstr "Απών τώρα"
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:155
 #: src/features/channel/components/channel_header/shared.ts:27
 #: src/features/connection/components/modals/AddConnectionModal.tsx:397
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:165
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:164
 #: src/features/guild/components/modals/add_guild_modal/GuildJoinForm.tsx:59
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:356
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:377
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:397
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:355
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:376
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:396
 #: src/features/moderation/components/report_modal/IARModal.tsx:86
 #: src/features/moderation/components/report/ReportStepDetails.tsx:312
 #: src/features/user/components/modals/PhoneAddModal.tsx:420
@@ -5428,19 +5419,19 @@ msgstr "Αποκλεισμένοι χρήστες"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:28
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:125
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:280
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:330
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:292
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:342
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:37
 msgid "Banner"
 msgstr "Banner"
 
 #. Error message in the banner uploader. Preserve {imageMaxSizeLabel}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:81
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:84
 msgid "Banner file is too large. Choose a file smaller than {imageMaxSizeLabel}."
 msgstr "Το αρχείο του banner είναι πολύ μεγάλο. Επιλέξτε ένα αρχείο μικρότερο από {imageMaxSizeLabel}."
 
 #. Button or menu action label in the banner uploader. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:86
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:89
 msgid "Banner mode selection"
 msgstr "Επιλογή λειτουργίας banner"
 
@@ -6107,8 +6098,8 @@ msgstr "Αγοράστε ένα δώρο {premiumProductName} από την κα
 msgid "Buy gift"
 msgstr "Αγορά δώρου"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:339
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:655
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:338
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:654
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "Δημιουργώντας μια κοινότητα, συμφωνείτε να ακολουθείτε και να τηρείτε τις <0>οδηγίες κοινότητας του {PRODUCT_NAME}</0>."
 
@@ -6361,7 +6352,7 @@ msgstr "Δεν μπορείτε να ανεβάσετε αρχεία εδώ"
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
 #: src/features/messaging/components/modals/ForwardModal.tsx:650
-#: src/features/messaging/components/modals/ImageCropModal.tsx:944
+#: src/features/messaging/components/modals/ImageCropModal.tsx:1025
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/moderation/components/modals/BanMemberModal.tsx:262
 #: src/features/moderation/components/modals/RemoveTimeoutModal.tsx:70
@@ -6614,9 +6605,9 @@ msgid "Centered"
 msgstr "Στο κέντρο"
 
 #. Title of the modal where the user picks an avatar source (file upload or GIF provider). Keep it concise.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:111
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:395
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:431
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:98
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:367
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:403
 msgid "Change avatar"
 msgstr "Αλλαγή avatar"
 
@@ -6627,9 +6618,9 @@ msgstr "Αλλαγή φόντου"
 #. Title of the modal where the user picks a banner source (file upload or GIF provider). Keep it concise.
 #. Title of the modal where the user picks a community banner source (file upload or GIF provider). Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:43
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:94
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:303
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:342
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:97
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:315
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:354
 msgid "Change banner"
 msgstr "Αλλαγή banner"
 
@@ -6668,13 +6659,13 @@ msgstr "Αλλαγή ψευδώνυμου στην ομάδα"
 #. Title of the modal where the user picks a group icon source. Keep it concise. Keep the tone plain and specific.
 #. Title of the modal where the user picks an imported-template community icon source. Keep it concise. Keep the tone plain and specific.
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:88
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:329
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
 #: src/features/channel/components/modals/EditGroupModal.tsx:85
-#: src/features/channel/components/modals/EditGroupModal.tsx:284
+#: src/features/channel/components/modals/EditGroupModal.tsx:283
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:63
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:305
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:304
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:86
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:626
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:625
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:35
 msgid "Change icon"
 msgstr "Αλλαγή εικονιδίου"
@@ -7669,8 +7660,8 @@ msgstr "Παραλαβή δώρου"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:41
 #: src/features/channel/components/direct_message/AddFriendForm.tsx:62
 #: src/features/channel/utils/CreateDMModalUtils.tsx:43
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:214
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:440
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:213
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:439
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:343
 msgid "Claim your account"
 msgstr "Διεκδικήστε τον λογαριασμό σας"
@@ -8518,8 +8509,8 @@ msgstr "Η κοινότητα διευκολύνει τις ομαδικές ε�
 msgid "Community filter"
 msgstr "Φίλτρο κοινότητας"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:272
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:593
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:271
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:592
 msgid "Community icon"
 msgstr "Εικονίδιο κοινότητας"
 
@@ -8763,6 +8754,11 @@ msgstr "Κουμπιά σύνταξης"
 msgid "Composer focus"
 msgstr "Εστίαση στο πεδίο σύνταξης"
 
+#. Progress label on the save button while a cropped animated image is compressed. Keep it concise.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:67
+msgid "Compressing"
+msgstr "Συμπίεση"
+
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:164
@@ -8917,7 +8913,7 @@ msgstr "Συνδέστε μια κάμερα ή μια συσκευή εικον
 msgid "Connect a display, then try again."
 msgstr "Συνδέστε μια οθόνη και δοκιμάστε ξανά."
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:543
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:545
 msgid "Connect a microphone and try again."
 msgstr "Συνδέστε ένα μικρόφωνο και δοκιμάστε ξανά."
 
@@ -9783,7 +9779,7 @@ msgid "Couldn't create this sticker"
 msgstr "Δεν ήταν δυνατή η δημιουργία αυτού του αυτοκόλλητου"
 
 #. Title of the error modal shown when image cropping fails.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:28
+#: src/features/messaging/components/modals/ImageCropModal.tsx:32
 msgid "Couldn't crop image"
 msgstr "Δεν ήταν δυνατή η περικοπή της εικόνας"
 
@@ -10159,12 +10155,12 @@ msgid "Couldn't update voice activity sharing right now"
 msgstr "Δεν ήταν δυνατή η ενημέρωση της κοινοποίησης φωνητικής δραστηριότητας αυτή τη στιγμή"
 
 #. Title of the error modal shown when uploading a profile avatar fails.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:107
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:94
 msgid "Couldn't upload avatar"
 msgstr "Δεν ήταν δυνατή η μεταφόρτωση της εικόνας προφίλ"
 
 #. Title of the error modal shown when uploading a profile banner fails.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:90
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:93
 msgid "Couldn't upload banner"
 msgstr "Δεν ήταν δυνατή η μεταφόρτωση της εικόνας εξωφύλλου"
 
@@ -10230,7 +10226,7 @@ msgstr "Δημιουργία και κοινή χρήση"
 msgid "Create a community"
 msgstr "Δημιουργία κοινότητας"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:257
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:256
 msgid "Create a community for you and your friends to chat."
 msgstr "Δημιουργήστε μια κοινότητα για να συνομιλείτε με τους φίλους σας."
 
@@ -10489,7 +10485,7 @@ msgid "Crop invite background"
 msgstr "Περικοπή φόντου πρόσκλησης"
 
 #. Short label in the image crop modal. Keep it concise.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:20
+#: src/features/messaging/components/modals/ImageCropModal.tsx:24
 msgid "Crop preview"
 msgstr "Προεπισκόπηση περικοπής"
 
@@ -10500,30 +10496,15 @@ msgstr "Περικοπή banner προφίλ"
 
 #. Error modal body shown when a cropped community image still exceeds the size limit. {maxSizeLabel} is a formatted file size.
 #. Error modal body shown when a cropped image still exceeds the size limit. {maxSizeLabel} is a formatted file size.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:67
-#: src/features/messaging/components/modals/ImageCropModal.tsx:32
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:47
+#: src/features/messaging/components/modals/ImageCropModal.tsx:36
 msgid "Cropped image is too large. Choose a smaller area or a smaller file (max {maxSizeLabel})."
 msgstr "Η περικομμένη εικόνα είναι πολύ μεγάλη. Επιλέξτε μια μικρότερη περιοχή ή ένα μικρότερο αρχείο (μέγ. {maxSizeLabel})."
 
-#. Confirmation modal body shown before using an animated community image without cropping. {formatLabel} is the image format name.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:58
-msgid "Cropping animated {formatLabel} files isn't supported yet. The original image will be used."
-msgstr "Η περικοπή κινούμενων αρχείων {formatLabel} δεν υποστηρίζεται ακόμα. Θα χρησιμοποιηθεί η αρχική εικόνα."
-
-#. Description text in the avatar uploader. Preserve {formatLabel}; it is inserted by code.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:95
-msgid "Cropping animated {formatLabel} files isn't supported yet. The original upload will be used."
-msgstr "Η περικοπή κινούμενων αρχείων {formatLabel} δεν υποστηρίζεται ακόμα. Θα χρησιμοποιηθεί η αρχική μεταφόρτωση."
-
-#. Confirmation modal body shown before using an animated community image with an unknown format.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:63
-msgid "Cropping animated files isn't supported yet. The original image will be used."
-msgstr "Η περικοπή κινούμενων αρχείων δεν υποστηρίζεται ακόμα. Θα χρησιμοποιηθεί η αρχική εικόνα."
-
-#. Description text in the avatar uploader when the animated image format is unknown.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:99
-msgid "Cropping animated files isn't supported yet. The original upload will be used."
-msgstr "Η περικοπή κινούμενων αρχείων δεν υποστηρίζεται ακόμα. Θα χρησιμοποιηθεί η αρχική μεταφόρτωση."
+#. Progress label on the save button while animated image frames are cropped. {percent} is a whole number. Keep it concise.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:62
+msgid "Cropping {percent}%"
+msgstr "Κοπή {percent}%"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:86
@@ -12597,8 +12578,8 @@ msgstr "Δεν έχεις λογαριασμό;"
 
 #. Short label in the avatar uploader. Keep it concise.
 #. Short label in the banner uploader. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:74
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:60
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:69
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:63
 msgid "Don't show"
 msgstr "Να μην εμφανίζεται"
 
@@ -16560,8 +16541,8 @@ msgstr "Τα avatar ομαδικών συνομιλιών χρησιμοποιο
 msgid "Group DMs"
 msgstr "Ομαδικές συνομιλίες"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:290
-#: src/features/channel/components/modals/EditGroupModal.tsx:248
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:289
+#: src/features/channel/components/modals/EditGroupModal.tsx:247
 msgid "Group icon"
 msgstr "Εικονίδιο ομάδας"
 
@@ -16624,8 +16605,8 @@ msgstr "Ρυθμίσεις ομάδας"
 msgid "Group typing states"
 msgstr "Καταστάσεις πληκτρολόγησης ομάδας"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:232
-#: src/features/channel/components/modals/EditGroupModal.tsx:223
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:231
+#: src/features/channel/components/modals/EditGroupModal.tsx:222
 msgid "Group updated"
 msgstr "Η ομάδα ενημερώθηκε"
 
@@ -16803,7 +16784,7 @@ msgstr "Καρδιά"
 msgid "Hebrew"
 msgstr "Εβραϊκά"
 
-#: src/features/messaging/components/modals/ImageCropModal.tsx:872
+#: src/features/messaging/components/modals/ImageCropModal.tsx:958
 msgid "Height"
 msgstr "Ύψος"
 
@@ -17510,7 +17491,7 @@ msgstr "Η εικόνα αντιγράφηκε στο πρόχειρο"
 #. Error modal title shown when a template-import community icon upload cannot be accepted or processed.
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:59
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:155
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:78
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:52
 msgid "Image couldn't be used"
 msgstr "Η εικόνα δεν ήταν δυνατό να χρησιμοποιηθεί"
 
@@ -19671,7 +19652,7 @@ msgid "Look and feel"
 msgstr "Εμφάνιση και αίσθηση"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:652
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:654
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "Φαίνεται ότι χρησιμοποιείτε {0}. Η προσθήκη της επεξεργασίας του {PRODUCT_NAME} από πάνω μπορεί να προκαλέσει διακυμάνσεις έντασης ή παραμόρφωση. Η άμεση είσοδος περνάει τον ήχο σας χωρίς επεξεργασία."
 
@@ -22577,7 +22558,7 @@ msgstr "Δεν βρέθηκαν αποτελέσματα"
 msgid "No mentions yet"
 msgstr "Δεν υπάρχουν αναφορές ακόμα"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:528
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:530
 msgid "No microphone found"
 msgstr "Δεν βρέθηκε μικρόφωνο"
 
@@ -23806,7 +23787,7 @@ msgstr "Άνοιγμα DM συστήματος"
 msgid "Open system picker"
 msgstr "Άνοιγμα επιλογέα συστήματος"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:528
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:527
 msgid "Open template JSON"
 msgstr "Άνοιγμα JSON προτύπου"
 
@@ -23820,7 +23801,7 @@ msgstr "Άνοιγμα του παραθύρου διαλόγου αποκλει
 msgid "Open the context menu"
 msgstr "Άνοιγμα του μενού περιβάλλοντος"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:511
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:510
 msgid "Open the link below in your browser, then copy the entire JSON response and paste it into the box."
 msgstr "Ανοίξτε τον παρακάτω σύνδεσμο στο πρόγραμμα περιήγησής σας, μετά αντιγράψτε ολόκληρη την απόκριση JSON και επικολλήστε την στο πλαίσιο."
 
@@ -24331,7 +24312,7 @@ msgstr "Τελευταίες 7 ημέρες"
 msgid "Paste"
 msgstr "Επικόλληση"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:483
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:482
 msgid "Paste a {theOtherPlatform} template URL to import its structure into a new community."
 msgstr "Επικολλήστε ένα URL προτύπου {theOtherPlatform} για να εισαγάγετε τη δομή του σε μια νέα κοινότητα."
 
@@ -25191,6 +25172,11 @@ msgstr "Τύπος Premium"
 msgid "Premium until date"
 msgstr "Ημερομηνία λήξης Premium"
 
+#. Progress label on the save button while an animated image crop starts. Keep it concise.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:58
+msgid "Preparing"
+msgstr "Ετοιμασία"
+
 #. Setup wizard title while the instance configuration loads.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:72
 msgid "Preparing setup"
@@ -25497,22 +25483,22 @@ msgstr "Προφίλ"
 msgid "Profile badge"
 msgstr "Σήμα προφίλ"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:163
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:166
 msgid "Profile banners are a {PREMIUM_PRODUCT_NAME} feature. Get {PREMIUM_PRODUCT_NAME} to add a banner to your profile."
 msgstr "Τα banner προφίλ είναι λειτουργία του {PREMIUM_PRODUCT_NAME}. Αποκτήστε το {PREMIUM_PRODUCT_NAME} για να προσθέσετε banner στο προφίλ σας."
 
 #. Profile banner uploader notice shown when the instance configuration disables profile banners.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:68
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:71
 msgid "Profile banners are not enabled on this instance."
 msgstr "Τα banner προφίλ δεν είναι ενεργοποιημένα σε αυτήν την παρουσία."
 
 #. Label in the banner uploader. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:76
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:79
 msgid "Profile banners require {premiumProductName}"
 msgstr "Τα banner προφίλ απαιτούν {premiumProductName}"
 
 #. Profile banner uploader notice shown when profile banners require premium.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:64
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:67
 msgid "Profile banners require {premiumProductName}."
 msgstr "Τα banner προφίλ απαιτούν {premiumProductName}."
 
@@ -25838,7 +25824,7 @@ msgstr "Push-to-talk"
 msgid "Push-to-talk (limited)"
 msgstr "Push-to-talk (περιορισμένο)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:674
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:681
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "Η λειτουργία push-to-talk αγνοείται στην άμεση εισαγωγή. Μεταβείτε σε εστιασμένη φωνή ή προσαρμοσμένη για να τη χρησιμοποιήσετε."
 
@@ -26551,8 +26537,8 @@ msgstr "Κατάργηση συνημμένου"
 msgid "Remove authenticator app"
 msgstr "Κατάργηση εφαρμογής ελέγχου ταυτότητας"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:405
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:441
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:377
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:413
 msgid "Remove avatar"
 msgstr "Κατάργηση avatar"
 
@@ -26561,8 +26547,8 @@ msgstr "Κατάργηση avatar"
 msgid "Remove background"
 msgstr "Κατάργηση φόντου"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:314
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:353
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:326
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:365
 msgid "Remove banner"
 msgstr "Κατάργηση banner"
 
@@ -26625,10 +26611,10 @@ msgstr "Αφαίρεση από την κορυφή"
 msgid "Remove from URL-only GIF favorites"
 msgstr "Αφαίρεση από τα αγαπημένα GIF που αποθηκεύονται μόνο μέσω URL"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:338
-#: src/features/channel/components/modals/EditGroupModal.tsx:293
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:314
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:635
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:337
+#: src/features/channel/components/modals/EditGroupModal.tsx:292
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:313
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:634
 msgid "Remove icon"
 msgstr "Αφαίρεση εικονιδίου"
 
@@ -27331,7 +27317,7 @@ msgstr "Εστάλη ξανά"
 #: src/features/app/components/dialogs/shared/UnsavedChangesBannerContent.tsx:51
 #: src/features/app/components/floating/ColorPickerPopover.tsx:190
 #: src/features/input/components/KeybindRecorder.tsx:459
-#: src/features/messaging/components/modals/ImageCropModal.tsx:936
+#: src/features/messaging/components/modals/ImageCropModal.tsx:1022
 msgid "Reset"
 msgstr "Επαναφορά"
 
@@ -28074,7 +28060,7 @@ msgstr "Ρουμανικά"
 
 #. Short label in the image crop modal. Keep it concise.
 #. Tooltip on the media viewer button that rotates the current media item 90 degrees clockwise.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:24
+#: src/features/messaging/components/modals/ImageCropModal.tsx:28
 #: src/features/messaging/components/modals/media_modal/shared.ts:93
 msgid "Rotate clockwise"
 msgstr "Περιστροφή δεξιόστροφα"
@@ -28153,8 +28139,8 @@ msgstr "Κορεσμός"
 #. Save button in the community-folder settings modal footer.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:113
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:87
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:367
-#: src/features/channel/components/modals/EditGroupModal.tsx:323
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:366
+#: src/features/channel/components/modals/EditGroupModal.tsx:322
 #: src/features/channel/components/modals/RenameChannelModal.tsx:28
 #: src/features/connection/components/modals/EditConnectionModal.tsx:108
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:328
@@ -28367,7 +28353,7 @@ msgid "Screen share encoder controls"
 msgstr "Έλεγχος κωδικοποιητή κοινής χρήσης οθόνης"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:120
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:119
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "Η κοινή χρήση οθόνης διακόπηκε"
@@ -30035,7 +30021,7 @@ msgid "Show a red badge on the app icon when you have unread messages"
 msgstr "Εμφάνιση κόκκινης ένδειξης στο εικονίδιο της εφαρμογής όταν έχετε μη αναγνωσμένα μηνύματα"
 
 #. Label in the banner uploader. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:72
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:75
 msgid "Show accent color only, ignoring your global profile"
 msgstr "Εμφάνιση μόνο χρώματος έμφασης, αγνοώντας το καθολικό προφίλ σας"
 
@@ -30104,7 +30090,7 @@ msgid "Show custom emojis in expression autocomplete"
 msgstr "Εμφάνιση προσαρμοσμένων emoji στην αυτόματη συμπλήρωση εκφράσεων"
 
 #. Label in the avatar uploader.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:78
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:73
 msgid "Show default avatar, ignoring your global profile"
 msgstr "Εμφάνιση προεπιλεγμένου avatar, αγνοώντας το καθολικό προφίλ σας"
 
@@ -30443,12 +30429,12 @@ msgid "Show unread indicator on muted channels"
 msgstr "Εμφάνιση ένδειξης μη αναγνωσμένων στα κανάλια σε σίγαση"
 
 #. Label in the avatar uploader.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:62
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:57
 msgid "Show your global profile avatar in this community"
 msgstr "Εμφάνιση του avatar του καθολικού προφίλ σας σε αυτήν την κοινότητα"
 
 #. Label in the banner uploader. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:48
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:51
 msgid "Show your global profile banner in this community"
 msgstr "Εμφάνιση του banner του καθολικού προφίλ σας σε αυτήν την κοινότητα"
 
@@ -30720,7 +30706,7 @@ msgstr "Παράλειψη"
 msgid "Skip \"Mark all as read\" confirmation"
 msgstr "Παράλειψη επιβεβαίωσης \"Επισήμανση όλων ως αναγνωσμένων\""
 
-#: src/features/messaging/components/modals/ImageCropModal.tsx:953
+#: src/features/messaging/components/modals/ImageCropModal.tsx:1034
 msgid "Skip cropping"
 msgstr "Παράλειψη περικοπής"
 
@@ -32346,7 +32332,7 @@ msgstr "Εναλλαγή σε άνετη διάταξη"
 msgid "Switch to dense layout"
 msgstr "Εναλλαγή σε συμπαγή διάταξη"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:647
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:649
 msgid "Switch to direct input"
 msgstr "Εναλλαγή σε απευθείας εισαγωγή"
 
@@ -32734,7 +32720,7 @@ msgstr "Εργασίες"
 msgid "Teleporting you to another voice region..."
 msgstr "Σας μεταφέρουμε σε άλλη περιοχή φωνής..."
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:560
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:559
 msgid "Template"
 msgstr "Πρότυπο"
 
@@ -33236,7 +33222,7 @@ msgid "The role granted {permissions}"
 msgstr "Ο ρόλος παραχώρησε {permissions}"
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:125
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:124
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "Η πηγή κοινής χρήσης οθόνης σταμάτησε να στέλνει βίντεο, επομένως η κοινή χρήση της οθόνης σας διακόπηκε."
@@ -33453,6 +33439,11 @@ msgstr "Αυτός ο λογαριασμός δεν μπορεί να μπλοκ
 msgid "This action cannot be undone. All associated data, including the bot user, will be permanently deleted."
 msgstr "Αυτή η ενέργεια δεν μπορεί να αναιρεθεί. Όλα τα σχετικά δεδομένα, συμπεριλαμβανομένου του χρήστη bot, θα διαγραφούν οριστικά."
 
+#. Error modal body shown when an animated image has too many frames or pixels to crop in the browser.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:41
+msgid "This animation is too long or too large to crop. Try a shorter or smaller file."
+msgstr "Αυτό το κινούμενο σχέδιο είναι πολύ μεγάλο ή έχει πάρα πολλά καρέ για να γίνει περικοπή. Δοκιμάστε ένα μικρότερο αρχείο."
+
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
 #: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:82
 msgid "This application"
@@ -33472,10 +33463,22 @@ msgstr "Αυτό το bot δεν είναι δημόσιο και δεν μπο�
 msgid "This bot requests the administrator permission. Only grant it if you fully trust the developer. Ask them to request fewer permissions instead. Close this page if unsure."
 msgstr "Αυτό το bot ζητά το δικαίωμα διαχειριστή. Παραχωρήστε το μόνο αν εμπιστεύεστε πλήρως τον προγραμματιστή. Καλύτερα ζητήστε του να περιορίσει τα δικαιώματα που ζητά. Κλείστε αυτήν τη σελίδα αν δεν είστε σίγουροι."
 
+#. Error modal body shown when the browser cannot decode animated AVIF for cropping. {avifFormatLabel} is the AVIF format name.
+#. Modal body shown when an animated AVIF upload is rejected because this browser cannot crop it.
+#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:14
+#: src/features/messaging/components/modals/ImageCropModal.tsx:49
+msgid "This browser can't crop animated {avifFormatLabel} files. Upload a GIF or WebP instead."
+msgstr "Αυτό το πρόγραμμα περιήγησης δεν μπορεί να περικόψει κινούμενα αρχεία {avifFormatLabel}. Ανεβάστε ένα αρχείο GIF ή WebP αντ' αυτού."
+
 #. Console warning line explaining that the browser console is meant for developers.
 #: src/features/devtools/utils/SelfXssNotice.ts:16
 msgid "This browser console is a developer tool."
 msgstr "Αυτή η κονσόλα του προγράμματος περιήγησης είναι ένα εργαλείο προγραμματιστών."
+
+#. Error modal body shown when WebAssembly is unavailable, which animated image cropping needs.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:54
+msgid "This browser has WebAssembly turned off, so animated images can't be cropped."
+msgstr "Αυτός ο περιηγητής έχει απενεργοποιημένη τη WebAssembly, οπότε οι κινούμενες εικόνες δεν μπορούν να περικοπούν."
 
 #. Pre-join indicator shown beneath the Join button on a DM or group DM call where every connected participant supports E2EE.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:320
@@ -33757,6 +33760,11 @@ msgstr "Αυτή η ομάδα είναι πλήρης. Αφαιρέστε κά�
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:105
 msgid "This handoff code has expired. Generate a new one to continue."
 msgstr "Αυτός ο κωδικός παράδοσης έχει λήξει. Δημιουργήστε έναν νέο για να συνεχίσετε."
+
+#. Error modal body shown when an animated image fails to decode during cropping.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:45
+msgid "This image couldn't be read. It may be damaged."
+msgstr "Αυτή η εικόνα δεν διαβάστηκε. Μπορεί να είναι κατεστραμμένη."
 
 #. Desktop updater modal body for managed package builds such as Flatpak. productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:75
@@ -36078,12 +36086,12 @@ msgid "Upload"
 msgstr "Ανέβασμα"
 
 #. Button or menu action label in the avatar uploader. Keep it concise.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:70
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:65
 msgid "Upload a custom avatar for this community"
 msgstr "Ανέβασμα προσαρμοσμένου avatar για αυτήν την κοινότητα"
 
 #. Button or menu action label in the banner uploader. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:56
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:59
 msgid "Upload a custom banner for this community"
 msgstr "Ανέβασμα προσαρμοσμένου banner για αυτήν την κοινότητα"
 
@@ -36155,10 +36163,10 @@ msgstr "Ανέβασμα αρχείων και πολυμέσων σε μηνύ�
 msgid "Upload files and media in this channel."
 msgstr "Ανέβασμα αρχείων και πολυμέσων σε αυτό το κανάλι."
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:329
-#: src/features/channel/components/modals/EditGroupModal.tsx:284
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:305
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:626
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
+#: src/features/channel/components/modals/EditGroupModal.tsx:283
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:304
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:625
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:130
 msgid "Upload icon"
 msgstr "Ανέβασμα εικονιδίου"
@@ -36401,8 +36409,8 @@ msgstr "Χρήση θέματος Coal (κατάμαυρες επιφάνειε�
 
 #. Short label in the avatar uploader. Keep it concise.
 #. Short label in the banner uploader. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:66
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:52
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:61
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:55
 msgid "Use custom image"
 msgstr "Χρήση προσαρμοσμένης εικόνας"
 
@@ -36462,8 +36470,8 @@ msgstr "Χρησιμοποιήστε φίλτρα ή πληκτρολογήστ�
 
 #. Short label in the avatar uploader. Keep it concise.
 #. Short label in the banner uploader. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:58
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:44
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:53
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:47
 msgid "Use global profile"
 msgstr "Χρήση καθολικού προφίλ"
 
@@ -37826,7 +37834,7 @@ msgid "Voice participants"
 msgstr "Συμμετέχοντες φωνητικής συνομιλίας"
 
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:642
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:55
 msgid "Voice processing"
 msgstr "Επεξεργασία φωνής"
@@ -38684,7 +38692,7 @@ msgctxt "us-state"
 msgid "Wisconsin"
 msgstr "Ουισκόνσιν"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:215
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:201
 msgid "With {PREMIUM_PRODUCT_NAME}, you can use animated avatars ({ANIMATED_AVATAR_FORMATS}) and profile banners, customize your tag, and unlock many other {PREMIUM_PRODUCT_NAME} perks."
 msgstr "Με το {PREMIUM_PRODUCT_NAME}, μπορείτε να χρησιμοποιείτε κινούμενα avatar ({ANIMATED_AVATAR_FORMATS}) και banner προφίλ, να προσαρμόζετε την ετικέτα σας και να ξεκλειδώνετε πολλά άλλα προνόμια του {PREMIUM_PRODUCT_NAME}."
 
@@ -39334,8 +39342,8 @@ msgstr "Χρειάζεστε το δικαίωμα «{permissionLabel}» για 
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "Χρειάζεστε το δικαίωμα «{permissionLabel}» για να χρησιμοποιήσετε αυτοκόλλητα από άλλες κοινότητες εδώ."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:208
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:434
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:207
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:433
 msgid "You need to claim your account before you can create a community."
 msgstr "Πρέπει να διεκδικήσετε τον λογαριασμό σας πριν δημιουργήσετε μια κοινότητα."
 
@@ -39356,8 +39364,8 @@ msgstr "Πρέπει να διεκδικήσετε τον λογαριασμό �
 msgid "You need to verify a phone number to send messages in this community."
 msgstr "Πρέπει να επαληθεύσετε έναν αριθμό τηλεφώνου για να στείλετε μηνύματα σε αυτήν την κοινότητα."
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:233
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:459
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:232
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:458
 msgid "You need to verify your email address before you can create a community."
 msgstr "Πρέπει να επαληθεύσετε τη διεύθυνση email σας πριν δημιουργήσετε μια κοινότητα."
 
@@ -39980,7 +39988,7 @@ msgid "Your saved {savedResolution} at {savedFrameRate} FPS needs {premiumProduc
 msgstr "Η αποθηκευμένη ποιότητα {savedResolution} στα {savedFrameRate} FPS απαιτεί {premiumProductName}, οπότε οι κοινοποιήσεις χρησιμοποιούν {resolution} στα {frameRate} FPS."
 
 #. Body of a modal shown when the video codec the browser negotiated for an active screen share is outside the codecs the app allows and no allowed codec could be published, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:131
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:130
 msgctxt "screen-share"
 msgid "Your screen share could not be published with a compatible video codec, so it was stopped. Try sharing again."
 msgstr "Η κοινή χρήση οθόνης σας δεν μπόρεσε να δημοσιευτεί με συμβατό κωδικοποιητή βίντεο, επομένως διακόπηκε. Δοκιμάστε να μοιραστείτε ξανά."
@@ -40079,7 +40087,7 @@ msgid "Your vanity URL has been set to {inviteEndpoint}/{vanitySlug}"
 msgstr "Η προσαρμοσμένη διεύθυνση URL έχει οριστεί σε {inviteEndpoint}/{vanitySlug}"
 
 #. Body of a modal shown when the local video encoder produces no frames for an active screen share, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:138
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:137
 msgctxt "screen-share"
 msgid "Your video encoder stopped encoding frames, so your screen share was stopped. Try sharing again."
 msgstr "Ο κωδικοποιητής βίντεο σταμάτησε να κωδικοποιεί καρέ, οπότε η κοινή χρήση οθόνης διακόπηκε. Δοκιμάστε να την μοιραστείτε ξανά."
@@ -40100,7 +40108,7 @@ msgid "YubiKey"
 msgstr "YubiKey"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:831
+#: src/features/messaging/components/modals/ImageCropModal.tsx:917
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:182
 msgid "Zoom"
 msgstr "Ζουμ"

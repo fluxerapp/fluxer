@@ -8,10 +8,7 @@
 		"@types/events",
 		"events",
 		"fflate",
-		"gifenc",
-		"gifuct-js",
-		"tailwindcss",
-		"upng-js"
+		"tailwindcss"
 	],
 	"ignoreFiles": [
 		"fluxer_admin/src/styles/app.css",

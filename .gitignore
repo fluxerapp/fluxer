@@ -26,6 +26,7 @@
 
 /fluxer_app/.devserver-cache.json
 /fluxer_app/pkgs/libfluxcore/
+/fluxer_app/pkgs/libfluxwebp/
 /fluxer_app/src/features/i18n/locales/*/messages.mjs
 /fluxer_app/src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts
 /fluxer_app/src/features/theme/styles/generated/

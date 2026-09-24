@@ -33,7 +33,7 @@ import {Form} from '@app/features/ui/components/form/Form';
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {Scroller} from '@app/features/ui/components/Scroller';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
-import {canCropFormat} from '@app/features/voice/utils/MediaCapabilities';
+import {canCropFile} from '@app/features/voice/utils/MediaCapabilities';
 import {useRemoteFormReset} from '@app/lib/forms/RemoteFormReset';
 import {assignTransientUploadFieldMutation} from '@app/lib/forms/TransientUploadFields';
 import {msg} from '@lingui/core/macro';
@@ -136,7 +136,7 @@ export const EditGroupBottomSheet: React.FC<EditGroupBottomSheetProps> = observe
 					return;
 				}
 				const svg = isSvgFile(file);
-				if (!svg && !(await canCropFormat(file.type))) {
+				if (!svg && !(await canCropFile(file))) {
 					showChannelErrorModal({
 						title: i18n._(UNSUPPORTED_ICON_FORMAT_DESCRIPTOR),
 						message: getAssetFormatErrorMessage(i18n, 'guild_icon', 'unsupported_mime'),
@@ -159,7 +159,6 @@ export const EditGroupBottomSheet: React.FC<EditGroupBottomSheetProps> = observe
 						<AssetCropModal
 							assetType={AssetType.CHANNEL_ICON}
 							imageUrl={base64}
-							sourceMimeType={svg ? 'image/svg+xml' : file.type}
 							onCropComplete={(croppedBlob) => {
 								const reader = new FileReader();
 								reader.onload = () => {

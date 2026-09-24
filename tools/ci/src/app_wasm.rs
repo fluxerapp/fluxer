@@ -15,6 +15,11 @@ const LIBFLUXCORE_WASM_BINDGEN_VERSION: &str = "0.2.128";
 const LIBFLUXCORE_WASM_SIZE_BUDGET_BYTES: u64 = 300 * 1024;
 const LIBFLUXCORE_WRAPPER_JS: &str = include_str!("../templates/libfluxcore_wrapper.js");
 const LIBFLUXCORE_WRAPPER_DTS: &str = include_str!("../templates/libfluxcore_wrapper.d.ts");
+const LIBFLUXWEBP_SIMD_WASM_SIZE_BUDGET_BYTES: u64 = 672 * 1024;
+const LIBFLUXWEBP_SCALAR_WASM_SIZE_BUDGET_BYTES: u64 = 288 * 1024;
+const LIBFLUXWEBP_WASM_IMPORT_MODULE: &str = "./libfluxwebp_bg.js";
+const WASM_TARGET_RUSTFLAGS_ENV: &str = "CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUSTFLAGS";
+const WASM_CFLAGS_ENV: &str = "CFLAGS_wasm32_unknown_unknown";
 
 #[derive(Debug, Args, Clone)]
 pub struct BuildAppWasmArgs {
@@ -31,7 +36,8 @@ pub struct BuildMarkdownParserWasmArgs {
 pub fn run_build_app_wasm(args: BuildAppWasmArgs) -> Result<()> {
     let app_dir = args.app_dir.unwrap_or(resolve_app_dir()?);
     build_markdown_parser_wasm(&app_dir)?;
-    build_libfluxcore_wasm(&app_dir)
+    build_libfluxcore_wasm(&app_dir)?;
+    build_libfluxwebp_wasm(&app_dir)
 }
 
 pub fn run_build_markdown_parser_wasm(args: BuildMarkdownParserWasmArgs) -> Result<()> {
@@ -97,8 +103,8 @@ fn discover_wasm_clang_with(
     }
 
     Err(anyhow!(
-        "No clang with a wasm32 backend was found, so cc-rs cannot compile zstd-sys for \
-         wasm32-unknown-unknown.\nTried: {}\nOn macOS the Xcode clang has no wasm32 target; \
+        "No clang with a wasm32 backend was found, so cc-rs cannot compile the C dependencies \
+         for wasm32-unknown-unknown.\nTried: {}\nOn macOS the Xcode clang has no wasm32 target; \
          install a full LLVM and retry:\n    brew install llvm\nOr point the build at one \
          explicitly:\n    export {WASM_CC_ENV}=/path/to/clang\n    export {WASM_AR_ENV}=/path/to/llvm-ar",
         seen.iter()
@@ -199,19 +205,12 @@ fn build_libfluxcore_wasm(app_dir: &Path) -> Result<()> {
     }
 
     run_command(apply_wasm_c_toolchain(build)?)?;
-    let wasm_bindgen = ensure_wasm_bindgen_cli()?;
     let temp = TempDir::new().context("Failed to create libfluxcore wasm-bindgen temp dir")?;
     let bindgen_dir = temp.path().join("bindgen");
-    fs::create_dir_all(&bindgen_dir)
-        .with_context(|| format!("Failed to create {}", bindgen_dir.display()))?;
-
-    run_command(
-        CommandSpec::new(wasm_bindgen)
-            .args(["--target", "web", "--out-dir"])
-            .arg(&bindgen_dir)
-            .args(["--out-name", "libfluxcore"])
-            .arg(rust_package_dir.join("target/wasm32-unknown-unknown/release/libfluxcore.wasm"))
-            .current_dir(&rust_package_dir),
+    run_wasm_bindgen(
+        &rust_package_dir.join("target/wasm32-unknown-unknown/release/libfluxcore.wasm"),
+        &bindgen_dir,
+        "libfluxcore",
     )?;
 
     let bindgen_js_path = bindgen_dir.join("libfluxcore.js");
@@ -274,14 +273,7 @@ fn build_libfluxcore_wasm(app_dir: &Path) -> Result<()> {
     fs::write(out_dir.join("README.md"), libfluxcore_readme_content())
         .with_context(|| format!("Failed to write {}", out_dir.join("README.md").display()))?;
 
-    let wasm_size = file_size(&wasm_path)?
-        .ok_or_else(|| anyhow!("libfluxcore build did not emit {}", wasm_path.display()))?;
-    ensure!(
-        wasm_size <= LIBFLUXCORE_WASM_SIZE_BUDGET_BYTES,
-        "libfluxcore_bg.wasm is {}, over the {} budget",
-        format_bytes(wasm_size),
-        format_bytes(LIBFLUXCORE_WASM_SIZE_BUDGET_BYTES)
-    );
+    let wasm_size = check_wasm_size_budget(&wasm_path, LIBFLUXCORE_WASM_SIZE_BUDGET_BYTES)?;
 
     let size_comparison = match previous_wasm_size {
         Some(previous) => format!("{} -> {}", format_bytes(previous), format_bytes(wasm_size)),
@@ -293,6 +285,298 @@ fn build_libfluxcore_wasm(app_dir: &Path) -> Result<()> {
     );
 
     Ok(())
+}
+
+fn run_wasm_bindgen(wasm: &Path, out_dir: &Path, out_name: &str) -> Result<()> {
+    let wasm_bindgen = ensure_wasm_bindgen_cli()?;
+    fs::create_dir_all(out_dir)
+        .with_context(|| format!("Failed to create {}", out_dir.display()))?;
+    run_command(
+        CommandSpec::new(wasm_bindgen)
+            .args(["--target", "web", "--out-dir"])
+            .arg(out_dir)
+            .args(["--out-name", out_name])
+            .arg(wasm),
+    )
+}
+
+fn check_wasm_size_budget(path: &Path, budget: u64) -> Result<u64> {
+    let size =
+        file_size(path)?.ok_or_else(|| anyhow!("wasm build did not emit {}", path.display()))?;
+    ensure!(
+        size <= budget,
+        "{} is {}, over the {} budget",
+        path.file_name()
+            .map(|name| name.to_string_lossy().into_owned())
+            .unwrap_or_default(),
+        format_bytes(size),
+        format_bytes(budget)
+    );
+    Ok(size)
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum LibfluxwebpVariant {
+    Simd,
+    Scalar,
+}
+
+impl LibfluxwebpVariant {
+    fn name(self) -> &'static str {
+        match self {
+            Self::Simd => "simd",
+            Self::Scalar => "scalar",
+        }
+    }
+
+    fn installed_wasm_name(self) -> &'static str {
+        match self {
+            Self::Simd => "libfluxwebp_simd_bg.wasm",
+            Self::Scalar => "libfluxwebp_bg.wasm",
+        }
+    }
+
+    fn size_budget(self) -> u64 {
+        match self {
+            Self::Simd => LIBFLUXWEBP_SIMD_WASM_SIZE_BUDGET_BYTES,
+            Self::Scalar => LIBFLUXWEBP_SCALAR_WASM_SIZE_BUDGET_BYTES,
+        }
+    }
+
+    fn cflags(self, crate_dir: &Path) -> String {
+        let shim = crate_dir.join("shim");
+        match self {
+            Self::Simd => format!(
+                "-isystem {} -isystem {} -msimd128 -DEMSCRIPTEN -D__SSE__ -D__SSE2__ \
+                 -DWEBP_HAVE_SSE2 -DNDEBUG -O3",
+                shim.display(),
+                crate_dir.join("simd").display()
+            ),
+            Self::Scalar => format!("-isystem {} -DNDEBUG -Oz", shim.display()),
+        }
+    }
+}
+
+fn build_libfluxwebp_wasm(app_dir: &Path) -> Result<()> {
+    let crate_dir = app_dir.join("rust/libfluxwebp");
+    let crate_dir = fs::canonicalize(&crate_dir)
+        .with_context(|| format!("Failed to resolve {}", crate_dir.display()))?;
+    let out_dir = app_dir.join("pkgs/libfluxwebp");
+    let temp = TempDir::new().context("Failed to create libfluxwebp wasm-bindgen temp dir")?;
+
+    let mut bindgen_dirs = Vec::new();
+    for variant in [LibfluxwebpVariant::Simd, LibfluxwebpVariant::Scalar] {
+        let target_dir = crate_dir.join("target").join(variant.name());
+        let mut build = CommandSpec::new("cargo")
+            .args([
+                "build",
+                "--release",
+                "--locked",
+                "--target",
+                "wasm32-unknown-unknown",
+            ])
+            .env("CARGO_TARGET_DIR", target_dir.as_os_str())
+            .env(WASM_CFLAGS_ENV, variant.cflags(&crate_dir))
+            .current_dir(&crate_dir);
+        build = match variant {
+            LibfluxwebpVariant::Simd => {
+                build.env(WASM_TARGET_RUSTFLAGS_ENV, "-C target-feature=+simd128")
+            }
+            LibfluxwebpVariant::Scalar => build.env_remove(WASM_TARGET_RUSTFLAGS_ENV),
+        };
+        run_command(apply_wasm_c_toolchain(build)?)?;
+
+        let bindgen_dir = temp.path().join(variant.name());
+        run_wasm_bindgen(
+            &target_dir.join("wasm32-unknown-unknown/release/libfluxwebp.wasm"),
+            &bindgen_dir,
+            "libfluxwebp",
+        )?;
+        let wasm_path = bindgen_dir.join("libfluxwebp_bg.wasm");
+        let wasm = fs::read(&wasm_path)
+            .with_context(|| format!("Failed to read {}", wasm_path.display()))?;
+        ensure_wasm_imports_only_from(&wasm, LIBFLUXWEBP_WASM_IMPORT_MODULE)
+            .with_context(|| format!("libfluxwebp {} wasm import gate", variant.name()))?;
+        bindgen_dirs.push((variant, bindgen_dir));
+    }
+
+    let (_, reference_dir) = &bindgen_dirs[0];
+    for file in [
+        "libfluxwebp.js",
+        "libfluxwebp.d.ts",
+        "libfluxwebp_bg.wasm.d.ts",
+    ] {
+        let reference =
+            fs::read(reference_dir.join(file)).with_context(|| format!("Failed to read {file}"))?;
+        for (variant, dir) in &bindgen_dirs[1..] {
+            let other =
+                fs::read(dir.join(file)).with_context(|| format!("Failed to read {file}"))?;
+            ensure!(
+                other == reference,
+                "libfluxwebp {} glue {file} differs from the simd build",
+                variant.name()
+            );
+        }
+    }
+
+    fs::create_dir_all(&out_dir)
+        .with_context(|| format!("Failed to create {}", out_dir.display()))?;
+    write_with_spdx(
+        &out_dir.join("libfluxwebp.js"),
+        &fs::read_to_string(reference_dir.join("libfluxwebp.js"))
+            .context("Failed to read libfluxwebp.js")?,
+    )?;
+    write_with_spdx(
+        &out_dir.join("libfluxwebp.d.ts"),
+        &fs::read_to_string(reference_dir.join("libfluxwebp.d.ts"))
+            .context("Failed to read libfluxwebp.d.ts")?,
+    )?;
+    for installed in ["libfluxwebp_bg.wasm.d.ts", "libfluxwebp_simd_bg.wasm.d.ts"] {
+        fs::copy(
+            reference_dir.join("libfluxwebp_bg.wasm.d.ts"),
+            out_dir.join(installed),
+        )
+        .with_context(|| format!("Failed to install {installed}"))?;
+    }
+
+    for (variant, dir) in &bindgen_dirs {
+        let installed = out_dir.join(variant.installed_wasm_name());
+        let previous = file_size(&installed)?;
+        fs::copy(dir.join("libfluxwebp_bg.wasm"), &installed)
+            .with_context(|| format!("Failed to install {}", installed.display()))?;
+        let size = check_wasm_size_budget(&installed, variant.size_budget())?;
+        let size_comparison = match previous {
+            Some(previous) => format!("{} -> {}", format_bytes(previous), format_bytes(size)),
+            None => "no previous artifact".to_string(),
+        };
+        println!(
+            "{} size: {size_comparison} (budget {})",
+            variant.installed_wasm_name(),
+            format_bytes(variant.size_budget())
+        );
+    }
+
+    Ok(())
+}
+
+fn ensure_wasm_imports_only_from(wasm: &[u8], allowed: &str) -> Result<()> {
+    let foreign: Vec<String> = wasm_import_modules(wasm)?
+        .into_iter()
+        .filter(|module| module != allowed)
+        .collect();
+    ensure!(
+        foreign.is_empty(),
+        "wasm imports from {} instead of only {allowed}; a C dependency probably references a \
+         libc symbol the shim does not provide",
+        foreign.join(", ")
+    );
+    Ok(())
+}
+
+fn wasm_import_modules(wasm: &[u8]) -> Result<Vec<String>> {
+    ensure!(
+        wasm.len() >= 8 && wasm[..4] == *b"\0asm",
+        "not a wasm module"
+    );
+    let mut reader = WasmReader {
+        bytes: wasm,
+        pos: 8,
+    };
+    let mut modules = Vec::new();
+    while reader.pos < wasm.len() {
+        let id = reader.byte()?;
+        let size = reader.leb()? as usize;
+        let end = reader
+            .pos
+            .checked_add(size)
+            .filter(|end| *end <= wasm.len())
+            .ok_or_else(|| anyhow!("wasm section {id} overruns the module"))?;
+        if id == 2 {
+            let count = reader.leb()?;
+            for _ in 0..count {
+                let module = reader.name()?;
+                reader.name()?;
+                reader.import_desc()?;
+                if !modules.contains(&module) {
+                    modules.push(module);
+                }
+            }
+        }
+        reader.pos = end;
+    }
+    Ok(modules)
+}
+
+struct WasmReader<'a> {
+    bytes: &'a [u8],
+    pos: usize,
+}
+
+impl WasmReader<'_> {
+    fn byte(&mut self) -> Result<u8> {
+        let value = *self
+            .bytes
+            .get(self.pos)
+            .ok_or_else(|| anyhow!("wasm module ends early"))?;
+        self.pos += 1;
+        Ok(value)
+    }
+
+    fn leb(&mut self) -> Result<u64> {
+        let mut value = 0u64;
+        for shift in (0..64).step_by(7) {
+            let byte = self.byte()?;
+            value |= u64::from(byte & 0x7f) << shift;
+            if byte & 0x80 == 0 {
+                return Ok(value);
+            }
+        }
+        Err(anyhow!("wasm LEB128 value is too long"))
+    }
+
+    fn name(&mut self) -> Result<String> {
+        let len = self.leb()? as usize;
+        let end = self
+            .pos
+            .checked_add(len)
+            .filter(|end| *end <= self.bytes.len())
+            .ok_or_else(|| anyhow!("wasm name overruns the module"))?;
+        let name = String::from_utf8_lossy(&self.bytes[self.pos..end]).into_owned();
+        self.pos = end;
+        Ok(name)
+    }
+
+    fn limits(&mut self) -> Result<()> {
+        let flags = self.byte()?;
+        self.leb()?;
+        if flags & 1 != 0 {
+            self.leb()?;
+        }
+        Ok(())
+    }
+
+    fn import_desc(&mut self) -> Result<()> {
+        match self.byte()? {
+            0 => {
+                self.leb()?;
+            }
+            1 => {
+                self.byte()?;
+                self.limits()?;
+            }
+            2 => self.limits()?,
+            3 => {
+                self.byte()?;
+                self.byte()?;
+            }
+            4 => {
+                self.byte()?;
+                self.leb()?;
+            }
+            kind => return Err(anyhow!("unknown wasm import kind {kind}")),
+        }
+        Ok(())
+    }
 }
 
 fn patch_libfluxcore_bindgen_js(content: &str) -> Result<String> {
@@ -520,6 +804,73 @@ export const MARKDOWN_PARSER_WASM_BASE64 =\n\
         fs::write(&archiver, "").expect("write llvm-ar");
 
         assert_eq!(discover_wasm_ar(&clang), Some(archiver));
+    }
+
+    fn wasm_with_imports(imports: &[(&str, &str)]) -> Vec<u8> {
+        let mut section = vec![imports.len() as u8];
+        for (module, field) in imports {
+            section.push(module.len() as u8);
+            section.extend_from_slice(module.as_bytes());
+            section.push(field.len() as u8);
+            section.extend_from_slice(field.as_bytes());
+            section.extend_from_slice(&[0, 0]);
+        }
+        let mut wasm = b"\0asm\x01\0\0\0".to_vec();
+        wasm.extend_from_slice(&[1, 4, 1, 0x60, 0, 0]);
+        wasm.push(2);
+        wasm.push(section.len() as u8);
+        wasm.extend_from_slice(&section);
+        wasm.extend_from_slice(&[5, 3, 1, 0, 17]);
+        wasm
+    }
+
+    #[test]
+    fn wasm_import_gate_accepts_a_bindgen_only_module() {
+        let wasm = wasm_with_imports(&[
+            ("./libfluxwebp_bg.js", "__wbg_new_1"),
+            ("./libfluxwebp_bg.js", "__wbindgen_throw"),
+        ]);
+        assert_eq!(
+            wasm_import_modules(&wasm).expect("parse"),
+            vec!["./libfluxwebp_bg.js".to_string()]
+        );
+        ensure_wasm_imports_only_from(&wasm, LIBFLUXWEBP_WASM_IMPORT_MODULE)
+            .expect("bindgen imports pass");
+    }
+
+    #[test]
+    fn wasm_import_gate_rejects_a_libc_import() {
+        let wasm = wasm_with_imports(&[
+            ("./libfluxwebp_bg.js", "__wbindgen_throw"),
+            ("env", "fopen"),
+        ]);
+        let message = ensure_wasm_imports_only_from(&wasm, LIBFLUXWEBP_WASM_IMPORT_MODULE)
+            .expect_err("env import must fail")
+            .to_string();
+        assert!(message.contains("env"), "{message}");
+    }
+
+    #[test]
+    fn wasm_import_parser_rejects_truncated_modules() {
+        let mut wasm = wasm_with_imports(&[("env", "fopen")]);
+        wasm.truncate(wasm.len() - 12);
+        assert!(wasm_import_modules(&wasm).is_err());
+        assert!(wasm_import_modules(b"\0asm").is_err());
+    }
+
+    #[test]
+    fn libfluxwebp_cflags_select_sse2_for_simd_and_oz_for_scalar() {
+        let crate_dir = Path::new("/repo/fluxer_app/rust/libfluxwebp");
+        assert_eq!(
+            LibfluxwebpVariant::Simd.cflags(crate_dir),
+            "-isystem /repo/fluxer_app/rust/libfluxwebp/shim -isystem \
+             /repo/fluxer_app/rust/libfluxwebp/simd -msimd128 -DEMSCRIPTEN -D__SSE__ -D__SSE2__ \
+             -DWEBP_HAVE_SSE2 -DNDEBUG -O3"
+        );
+        assert_eq!(
+            LibfluxwebpVariant::Scalar.cflags(crate_dir),
+            "-isystem /repo/fluxer_app/rust/libfluxwebp/shim -DNDEBUG -Oz"
+        );
     }
 
     #[test]

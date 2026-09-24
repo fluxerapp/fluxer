@@ -1405,18 +1405,13 @@ msgstr "{itemLabel}, जल्द आ रहा है"
 msgid "{kilobits} kbps"
 msgstr "{kilobits} kbps"
 
-#. Error modal body shown when a non-croppable community image has dimensions that do not fit the target asset. {label} names the image field.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:72
-msgid "{label} dimensions do not match this asset. Choose a different image or upload a static image you can crop."
-msgstr "{label} के आयाम इस एसेट से मेल नहीं खाते। कोई अलग इमेज चुनें या ऐसी स्थिर इमेज अपलोड करें जिसे आप क्रॉप कर सकें।"
-
 #. Error modal body shown when a community image upload exceeds the size limit. {label} names the image field and {maxSizeLabel} is a formatted file size.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:44
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:33
 msgid "{label} file is too large. Choose a file smaller than {maxSizeLabel}."
 msgstr "{label} फ़ाइल बहुत बड़ी है। {maxSizeLabel} से छोटी फ़ाइल चुनें।"
 
 #. Error modal body shown when a community image field does not allow animation. {label} names the image field.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:49
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:38
 msgid "{label} images cannot be animated. Use a static image."
 msgstr "{label} इमेज को एनिमेट नहीं किया जा सकता। स्थिर इमेज का इस्तेमाल करें।"
 
@@ -2829,7 +2824,7 @@ msgid "Activity sharing"
 msgstr "गतिविधि शेयरिंग"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:465
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:478
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:102
 msgid "Activity threshold"
 msgstr "गतिविधि थ्रेशोल्ड"
@@ -3566,11 +3561,11 @@ msgstr "{everyoneMention} और {hereMention} की अनुमति दे�
 msgid "Allow {PRODUCT_NAME} to access your camera in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME}."
 msgstr "{PRODUCT_NAME} को {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_CAMERA_PERMISSION_NAME} में अपने कैमरे का उपयोग करने की अनुमति दें।"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:533
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:535
 msgid "Allow {PRODUCT_NAME} to access your microphone in {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME}."
 msgstr "{PRODUCT_NAME} को {MACOS_SYSTEM_SETTINGS_NAME} → {MACOS_PRIVACY_AND_SECURITY_SETTINGS_NAME} → {MACOS_MICROPHONE_PERMISSION_NAME} में अपने माइक्रोफ़ोन का उपयोग करने की अनुमति दें।"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:538
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:540
 msgid "Allow {PRODUCT_NAME} to access your microphone. Check your browser's address bar or settings."
 msgstr "{PRODUCT_NAME} को अपने माइक्रोफ़ोन का इस्तेमाल करने की अनुमति दें। अपने ब्राउज़र के एड्रेस बार या सेटिंग्स में जाँच करें।"
 
@@ -3673,7 +3668,7 @@ msgstr "जिन सदस्यों के पास {readMessageHistoryPerm
 msgid "Allow mentions for this role"
 msgstr "इस रोल के लिए मेंशन की अनुमति दें"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:558
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:560
 msgid "Allow microphone"
 msgstr "माइक्रोफ़ोन का एक्सेस दें"
 
@@ -3942,25 +3937,21 @@ msgstr "और {remainingCount} अन्य"
 msgid "Animate on interaction"
 msgstr "इंटरैक्शन पर एनिमेट करें"
 
-#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:26
-msgid "Animated {AVIF_FORMAT_LABEL} files aren't supported. Upload a static {AVIF_FORMAT_LABEL} file instead."
-msgstr "एनिमेटेड {AVIF_FORMAT_LABEL} फ़ाइलें समर्थित नहीं हैं। इसके बजाय एक स्थिर {AVIF_FORMAT_LABEL} फ़ाइल अपलोड करें।"
-
 #. Modal title shown when an animated AVIF upload is rejected by the client.
-#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:11
+#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:10
 msgid "Animated {avifFormatLabel} not supported"
 msgstr "एनिमेटेड {avifFormatLabel} समर्थित नहीं है"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:206
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:192
 msgid "Animated avatars ({ANIMATED_AVATAR_FORMATS}) are exclusively available to {PREMIUM_PRODUCT_NAME} subscribers."
 msgstr "एनिमेटेड अवतार ({ANIMATED_AVATAR_FORMATS}) विशेष रूप से {PREMIUM_PRODUCT_NAME} सब्सक्राइबर के लिए उपलब्ध हैं।"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:240
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:226
 msgid "Animated avatars ({ANIMATED_AVATAR_FORMATS}) are not available on this instance. Upload a static image instead."
 msgstr "एनिमेटेड अवतार ({ANIMATED_AVATAR_FORMATS}) इस इंस्टेंस पर उपलब्ध नहीं हैं। इसके बजाय एक स्थिर इमेज अपलोड करें।"
 
 #. Extra note in the avatar asset upload source modal. Preserve {animatedAvatarFormats} and {premiumProductName}; they are inserted by code.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:115
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:102
 msgid "Animated avatars ({animatedAvatarFormats}) require {premiumProductName}."
 msgstr "एनिमेटेड अवतार ({animatedAvatarFormats}) के लिए {premiumProductName} की आवश्यकता होती है।"
 
@@ -3970,12 +3961,12 @@ msgid "Animated avatars & profile banners"
 msgstr "एनिमेटेड अवतार और प्रोफ़ाइल बैनर"
 
 #. Error message in the avatar uploader.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:91
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:86
 msgid "Animated avatars not available"
 msgstr "एनिमेटेड अवतार उपलब्ध नहीं हैं"
 
 #. Label in the avatar uploader. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:86
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:81
 msgid "Animated avatars require {premiumProductName}"
 msgstr "एनिमेटेड अवतारों के लिए {premiumProductName} की आवश्यकता है"
 
@@ -4046,7 +4037,7 @@ msgid "Animated image preview"
 msgstr "एनिमेटेड इमेज का प्रीव्यू"
 
 #. Confirmation modal body shown before using a non-croppable animated community image.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:54
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:43
 msgid "Animated images are not supported for this asset."
 msgstr "इस एसेट के लिए एनिमेटेड इमेज समर्थित नहीं हैं।"
 
@@ -4947,7 +4938,7 @@ msgstr "भाषा अपने आप पहचानें"
 
 #. Short label in the voice tab. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:116
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:452
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:465
 msgid "Auto-set activity threshold"
 msgstr "गतिविधि थ्रेशोल्ड अपने आप सेट करें"
 
@@ -5127,15 +5118,15 @@ msgstr "डेस्कटॉप ऐप में उपलब्ध है।"
 #. Form label for a webhook avatar image.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/ui/components/BaseAvatar.tsx:18
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:373
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:421
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:345
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:393
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:13
 #: src/features/webhook/components/WebhookListItem.tsx:252
 msgid "Avatar"
 msgstr "अवतार"
 
 #. Error message in the avatar uploader. Preserve {imageMaxSizeLabel}; it is inserted by code.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:82
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:77
 msgid "Avatar file is too large. Choose a file smaller than {imageMaxSizeLabel}."
 msgstr "अवतार फ़ाइल बहुत बड़ी है। {imageMaxSizeLabel} से छोटी फ़ाइल चुनें।"
 
@@ -5145,7 +5136,7 @@ msgid "Avatar is too large — pick one under {imageMaxSizeLabel}."
 msgstr "अवतार बहुत बड़ा है। {imageMaxSizeLabel} से छोटा चुनें।"
 
 #. Short label in the avatar uploader. Keep it concise.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:103
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:90
 msgid "Avatar mode selection"
 msgstr "अवतार मोड चुनें"
 
@@ -5187,11 +5178,11 @@ msgstr "अभी दूर हूँ"
 #: src/features/auth/flow/IpAuthorizationScreen.tsx:155
 #: src/features/channel/components/channel_header/shared.ts:27
 #: src/features/connection/components/modals/AddConnectionModal.tsx:397
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:165
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:164
 #: src/features/guild/components/modals/add_guild_modal/GuildJoinForm.tsx:59
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:356
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:377
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:397
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:355
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:376
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:396
 #: src/features/moderation/components/report_modal/IARModal.tsx:86
 #: src/features/moderation/components/report/ReportStepDetails.tsx:312
 #: src/features/user/components/modals/PhoneAddModal.tsx:420
@@ -5428,19 +5419,19 @@ msgstr "बैन किए गए यूज़र"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:28
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:125
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:280
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:330
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:292
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:342
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:37
 msgid "Banner"
 msgstr "बैनर"
 
 #. Error message in the banner uploader. Preserve {imageMaxSizeLabel}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:81
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:84
 msgid "Banner file is too large. Choose a file smaller than {imageMaxSizeLabel}."
 msgstr "बैनर फ़ाइल बहुत बड़ी है। {imageMaxSizeLabel} से छोटी फ़ाइल चुनें।"
 
 #. Button or menu action label in the banner uploader. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:86
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:89
 msgid "Banner mode selection"
 msgstr "बैनर मोड चुनें"
 
@@ -6107,8 +6098,8 @@ msgstr "दोस्तों के साथ शेयर करने के 
 msgid "Buy gift"
 msgstr "उपहार खरीदें"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:339
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:655
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:338
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:654
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "एक कम्युनिटी बनाकर, आप <0>{PRODUCT_NAME} कम्युनिटी दिशानिर्देशों</0> का पालन करने और उन्हें बनाए रखने के लिए सहमत हैं।"
 
@@ -6361,7 +6352,7 @@ msgstr "यहां फ़ाइलें अपलोड नहीं की �
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
 #: src/features/messaging/components/modals/ForwardModal.tsx:650
-#: src/features/messaging/components/modals/ImageCropModal.tsx:944
+#: src/features/messaging/components/modals/ImageCropModal.tsx:1025
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/moderation/components/modals/BanMemberModal.tsx:262
 #: src/features/moderation/components/modals/RemoveTimeoutModal.tsx:70
@@ -6614,9 +6605,9 @@ msgid "Centered"
 msgstr "केंद्रित"
 
 #. Title of the modal where the user picks an avatar source (file upload or GIF provider). Keep it concise.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:111
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:395
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:431
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:98
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:367
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:403
 msgid "Change avatar"
 msgstr "अवतार बदलें"
 
@@ -6627,9 +6618,9 @@ msgstr "बैकग्राउंड बदलें"
 #. Title of the modal where the user picks a banner source (file upload or GIF provider). Keep it concise.
 #. Title of the modal where the user picks a community banner source (file upload or GIF provider). Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:43
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:94
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:303
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:342
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:97
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:315
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:354
 msgid "Change banner"
 msgstr "बैनर बदलें"
 
@@ -6668,13 +6659,13 @@ msgstr "ग्रुप का उपनाम बदलें"
 #. Title of the modal where the user picks a group icon source. Keep it concise. Keep the tone plain and specific.
 #. Title of the modal where the user picks an imported-template community icon source. Keep it concise. Keep the tone plain and specific.
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:88
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:329
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
 #: src/features/channel/components/modals/EditGroupModal.tsx:85
-#: src/features/channel/components/modals/EditGroupModal.tsx:284
+#: src/features/channel/components/modals/EditGroupModal.tsx:283
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:63
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:305
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:304
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:86
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:626
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:625
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:35
 msgid "Change icon"
 msgstr "आइकॉन बदलें"
@@ -7669,8 +7660,8 @@ msgstr "उपहार क्लेम करें"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:41
 #: src/features/channel/components/direct_message/AddFriendForm.tsx:62
 #: src/features/channel/utils/CreateDMModalUtils.tsx:43
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:214
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:440
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:213
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:439
 #: src/features/user/components/modals/tabs/GiftInventoryTab.tsx:343
 msgid "Claim your account"
 msgstr "अपना अकाउंट क्लेम करें"
@@ -8518,8 +8509,8 @@ msgstr "कम्युनिटी से लोगों का एक सा�
 msgid "Community filter"
 msgstr "कम्युनिटी फ़िल्टर"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:272
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:593
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:271
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:592
 msgid "Community icon"
 msgstr "कम्युनिटी आइकॉन"
 
@@ -8763,6 +8754,11 @@ msgstr "कंपोजर बटन"
 msgid "Composer focus"
 msgstr "कंपोजर फ़ोकस"
 
+#. Progress label on the save button while a cropped animated image is compressed. Keep it concise.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:67
+msgid "Compressing"
+msgstr "संपीड़ित हो रहा है"
+
 #. Button label that opens a dedicated advanced settings modal for configuring screen-share encoder controls.
 #. Button label that opens a dedicated advanced settings modal.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:164
@@ -8917,7 +8913,7 @@ msgstr "कैमरा या वर्चुअल कैप्चर डि�
 msgid "Connect a display, then try again."
 msgstr "एक डिस्प्ले कनेक्ट करें, फिर दोबारा प्रयास करें।"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:543
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:545
 msgid "Connect a microphone and try again."
 msgstr "माइक्रोफ़ोन कनेक्ट करें और फिर से प्रयास करें।"
 
@@ -9783,7 +9779,7 @@ msgid "Couldn't create this sticker"
 msgstr "यह स्टिकर नहीं बनाया जा सका"
 
 #. Title of the error modal shown when image cropping fails.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:28
+#: src/features/messaging/components/modals/ImageCropModal.tsx:32
 msgid "Couldn't crop image"
 msgstr "इमेज क्रॉप नहीं की जा सकी"
 
@@ -10159,12 +10155,12 @@ msgid "Couldn't update voice activity sharing right now"
 msgstr "वॉइस गतिविधि शेयरिंग अभी अपडेट नहीं की जा सकी"
 
 #. Title of the error modal shown when uploading a profile avatar fails.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:107
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:94
 msgid "Couldn't upload avatar"
 msgstr "अवतार अपलोड नहीं किया जा सका"
 
 #. Title of the error modal shown when uploading a profile banner fails.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:90
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:93
 msgid "Couldn't upload banner"
 msgstr "बैनर अपलोड नहीं किया जा सका"
 
@@ -10230,7 +10226,7 @@ msgstr "बनाएँ और शेयर करें"
 msgid "Create a community"
 msgstr "कम्युनिटी बनाएँ"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:257
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:256
 msgid "Create a community for you and your friends to chat."
 msgstr "अपने और दोस्तों के चैट करने के लिए एक कम्युनिटी बनाएँ।"
 
@@ -10489,7 +10485,7 @@ msgid "Crop invite background"
 msgstr "इनवाइट बैकग्राउंड क्रॉप करें"
 
 #. Short label in the image crop modal. Keep it concise.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:20
+#: src/features/messaging/components/modals/ImageCropModal.tsx:24
 msgid "Crop preview"
 msgstr "क्रॉप का पूर्वावलोकन"
 
@@ -10500,30 +10496,15 @@ msgstr "प्रोफ़ाइल बैनर क्रॉप करें"
 
 #. Error modal body shown when a cropped community image still exceeds the size limit. {maxSizeLabel} is a formatted file size.
 #. Error modal body shown when a cropped image still exceeds the size limit. {maxSizeLabel} is a formatted file size.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:67
-#: src/features/messaging/components/modals/ImageCropModal.tsx:32
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:47
+#: src/features/messaging/components/modals/ImageCropModal.tsx:36
 msgid "Cropped image is too large. Choose a smaller area or a smaller file (max {maxSizeLabel})."
 msgstr "क्रॉप की गई इमेज बहुत बड़ी है। कोई छोटा हिस्सा या छोटी फ़ाइल चुनें (अधिकतम {maxSizeLabel})।"
 
-#. Confirmation modal body shown before using an animated community image without cropping. {formatLabel} is the image format name.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:58
-msgid "Cropping animated {formatLabel} files isn't supported yet. The original image will be used."
-msgstr "एनिमेटेड {formatLabel} फ़ाइलों को क्रॉप करना अभी समर्थित नहीं है। मूल इमेज का इस्तेमाल किया जाएगा।"
-
-#. Description text in the avatar uploader. Preserve {formatLabel}; it is inserted by code.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:95
-msgid "Cropping animated {formatLabel} files isn't supported yet. The original upload will be used."
-msgstr "एनिमेटेड {formatLabel} फ़ाइलों को क्रॉप करना अभी समर्थित नहीं है। मूल अपलोड का इस्तेमाल किया जाएगा।"
-
-#. Confirmation modal body shown before using an animated community image with an unknown format.
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:63
-msgid "Cropping animated files isn't supported yet. The original image will be used."
-msgstr "एनिमेटेड फ़ाइलों को क्रॉप करना अभी समर्थित नहीं है। मूल इमेज का इस्तेमाल किया जाएगा।"
-
-#. Description text in the avatar uploader when the animated image format is unknown.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:99
-msgid "Cropping animated files isn't supported yet. The original upload will be used."
-msgstr "एनिमेटेड फ़ाइलों को क्रॉप करना अभी समर्थित नहीं है। मूल अपलोड का इस्तेमाल किया जाएगा।"
+#. Progress label on the save button while animated image frames are cropped. {percent} is a whole number. Keep it concise.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:62
+msgid "Cropping {percent}%"
+msgstr "{percent}% क्रॉप हो रहा है"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:86
@@ -12597,8 +12578,8 @@ msgstr "अकाउंट नहीं है?"
 
 #. Short label in the avatar uploader. Keep it concise.
 #. Short label in the banner uploader. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:74
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:60
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:69
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:63
 msgid "Don't show"
 msgstr "न दिखाएँ"
 
@@ -16560,8 +16541,8 @@ msgstr "ग्रुप DM अवतार रेगुलर अवतार �
 msgid "Group DMs"
 msgstr "ग्रुप DM"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:290
-#: src/features/channel/components/modals/EditGroupModal.tsx:248
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:289
+#: src/features/channel/components/modals/EditGroupModal.tsx:247
 msgid "Group icon"
 msgstr "ग्रुप आइकॉन"
 
@@ -16624,8 +16605,8 @@ msgstr "ग्रुप सेटिंग्स"
 msgid "Group typing states"
 msgstr "ग्रुप टाइपिंग स्टेटस"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:232
-#: src/features/channel/components/modals/EditGroupModal.tsx:223
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:231
+#: src/features/channel/components/modals/EditGroupModal.tsx:222
 msgid "Group updated"
 msgstr "ग्रुप अपडेट किया गया"
 
@@ -16803,7 +16784,7 @@ msgstr "दिल"
 msgid "Hebrew"
 msgstr "हिब्रू"
 
-#: src/features/messaging/components/modals/ImageCropModal.tsx:872
+#: src/features/messaging/components/modals/ImageCropModal.tsx:958
 msgid "Height"
 msgstr "ऊँचाई"
 
@@ -17510,7 +17491,7 @@ msgstr "इमेज क्लिपबोर्ड पर कॉपी की �
 #. Error modal title shown when a template-import community icon upload cannot be accepted or processed.
 #: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:59
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:155
-#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:78
+#: src/features/guild/components/modals/guild_tabs/guild_overview_tab/hooks/useGuildImageAssetField.tsx:52
 msgid "Image couldn't be used"
 msgstr "इमेज का इस्तेमाल नहीं किया जा सका"
 
@@ -19671,7 +19652,7 @@ msgid "Look and feel"
 msgstr "दिखावट और अनुभव"
 
 #. placeholder {0}: externalProcessor.name
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:652
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:654
 msgid "Looks like you're using {0}. Stacking {PRODUCT_NAME}'s processing on top can cause pumping or distortion. Direct input passes your audio through untouched."
 msgstr "लगता है आप {0} का उपयोग कर रहे हैं। {PRODUCT_NAME} की प्रोसेसिंग को इसके ऊपर रखने से पंपिंग या डिस्टॉर्शन हो सकता है। डायरेक्ट इनपुट आपके ऑडियो को बिना किसी बदलाव के पास करता है।"
 
@@ -22577,7 +22558,7 @@ msgstr "कोई मिलान नहीं मिला"
 msgid "No mentions yet"
 msgstr "अभी तक कोई मेंशन नहीं है"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:528
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:530
 msgid "No microphone found"
 msgstr "कोई माइक्रोफ़ोन नहीं मिला"
 
@@ -23806,7 +23787,7 @@ msgstr "सिस्टम DM खोलें"
 msgid "Open system picker"
 msgstr "सिस्टम पिकर खोलें"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:528
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:527
 msgid "Open template JSON"
 msgstr "टेम्पलेट JSON खोलें"
 
@@ -23820,7 +23801,7 @@ msgstr "इस कम्युनिटी के लिए बैन डाय�
 msgid "Open the context menu"
 msgstr "कॉन्टेक्स्ट मेन्यू खोलें"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:511
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:510
 msgid "Open the link below in your browser, then copy the entire JSON response and paste it into the box."
 msgstr "नीचे दिए गए लिंक को अपने ब्राउज़र में खोलें, फिर पूरे JSON रिस्पॉन्स को कॉपी करके बॉक्स में पेस्ट करें।"
 
@@ -24331,7 +24312,7 @@ msgstr "पिछले 7 दिन"
 msgid "Paste"
 msgstr "पेस्ट करें"
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:483
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:482
 msgid "Paste a {theOtherPlatform} template URL to import its structure into a new community."
 msgstr "{theOtherPlatform} टेम्पलेट यूआरएल पेस्ट करें और उसकी संरचना किसी नई कम्युनिटी में इंपोर्ट करें।"
 
@@ -25191,6 +25172,11 @@ msgstr "प्रीमियम प्रकार"
 msgid "Premium until date"
 msgstr "इस तारीख तक प्रीमियम"
 
+#. Progress label on the save button while an animated image crop starts. Keep it concise.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:58
+msgid "Preparing"
+msgstr "तैयार हो रहा है"
+
 #. Setup wizard title while the instance configuration loads.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:72
 msgid "Preparing setup"
@@ -25497,22 +25483,22 @@ msgstr "प्रोफ़ाइल"
 msgid "Profile badge"
 msgstr "प्रोफ़ाइल बैज"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:163
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:166
 msgid "Profile banners are a {PREMIUM_PRODUCT_NAME} feature. Get {PREMIUM_PRODUCT_NAME} to add a banner to your profile."
 msgstr "प्रोफ़ाइल बैनर एक {PREMIUM_PRODUCT_NAME} सुविधा है। अपनी प्रोफ़ाइल में बैनर जोड़ने के लिए {PREMIUM_PRODUCT_NAME} प्राप्त करें।"
 
 #. Profile banner uploader notice shown when the instance configuration disables profile banners.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:68
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:71
 msgid "Profile banners are not enabled on this instance."
 msgstr "इस इंस्टेंस पर प्रोफ़ाइल बैनर सक्षम नहीं हैं।"
 
 #. Label in the banner uploader. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:76
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:79
 msgid "Profile banners require {premiumProductName}"
 msgstr "प्रोफ़ाइल बैनर के लिए {premiumProductName} ज़रूरी है"
 
 #. Profile banner uploader notice shown when profile banners require premium.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:64
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:67
 msgid "Profile banners require {premiumProductName}."
 msgstr "प्रोफ़ाइल बैनर के लिए {premiumProductName} ज़रूरी है।"
 
@@ -25838,7 +25824,7 @@ msgstr "पुश-टू-टॉक"
 msgid "Push-to-talk (limited)"
 msgstr "पुश-टू-टॉक (सीमित)"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:674
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:681
 msgid "Push-to-talk is ignored in direct input. Switch to focused voice or custom to use it."
 msgstr "सीधा इनपुट मोड में पुश-टू-टॉक को अनदेखा किया जाता है। इसे इस्तेमाल करने के लिए फ़ोकस्ड वॉइस या कस्टम पर स्विच करें।"
 
@@ -26551,8 +26537,8 @@ msgstr "अटैचमेंट हटाएँ"
 msgid "Remove authenticator app"
 msgstr "ऑथेंटिकेटर ऐप हटाएँ"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:405
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:441
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:377
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:413
 msgid "Remove avatar"
 msgstr "अवतार हटाएँ"
 
@@ -26561,8 +26547,8 @@ msgstr "अवतार हटाएँ"
 msgid "Remove background"
 msgstr "बैकग्राउंड हटाएँ"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:314
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:353
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:326
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:365
 msgid "Remove banner"
 msgstr "बैनर हटाएँ"
 
@@ -26625,10 +26611,10 @@ msgstr "सबसे ऊपर रखना बंद करें"
 msgid "Remove from URL-only GIF favorites"
 msgstr "सिर्फ़ URL वाले पसंदीदा GIF से हटाएँ"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:338
-#: src/features/channel/components/modals/EditGroupModal.tsx:293
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:314
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:635
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:337
+#: src/features/channel/components/modals/EditGroupModal.tsx:292
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:313
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:634
 msgid "Remove icon"
 msgstr "आइकॉन हटाएँ"
 
@@ -27331,7 +27317,7 @@ msgstr "फिर से भेजा गया"
 #: src/features/app/components/dialogs/shared/UnsavedChangesBannerContent.tsx:51
 #: src/features/app/components/floating/ColorPickerPopover.tsx:190
 #: src/features/input/components/KeybindRecorder.tsx:459
-#: src/features/messaging/components/modals/ImageCropModal.tsx:936
+#: src/features/messaging/components/modals/ImageCropModal.tsx:1022
 msgid "Reset"
 msgstr "रीसेट करें"
 
@@ -28074,7 +28060,7 @@ msgstr "रोमानियाई"
 
 #. Short label in the image crop modal. Keep it concise.
 #. Tooltip on the media viewer button that rotates the current media item 90 degrees clockwise.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:24
+#: src/features/messaging/components/modals/ImageCropModal.tsx:28
 #: src/features/messaging/components/modals/media_modal/shared.ts:93
 msgid "Rotate clockwise"
 msgstr "घड़ी की दिशा में घुमाएँ"
@@ -28153,8 +28139,8 @@ msgstr "सैचुरेशन"
 #. Save button in the community-folder settings modal footer.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:113
 #: src/features/auth/components/modals/PasskeyNameModal.tsx:87
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:367
-#: src/features/channel/components/modals/EditGroupModal.tsx:323
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:366
+#: src/features/channel/components/modals/EditGroupModal.tsx:322
 #: src/features/channel/components/modals/RenameChannelModal.tsx:28
 #: src/features/connection/components/modals/EditConnectionModal.tsx:108
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:328
@@ -28367,7 +28353,7 @@ msgid "Screen share encoder controls"
 msgstr "स्क्रीन शेयर एन्कोडर कंट्रोल"
 
 #. Title of a modal shown when an active screen share stops unexpectedly.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:120
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:119
 msgctxt "screen-share"
 msgid "Screen share ended"
 msgstr "स्क्रीन शेयर समाप्त हो गया"
@@ -30035,7 +30021,7 @@ msgid "Show a red badge on the app icon when you have unread messages"
 msgstr "जब आपके पास अपठित मैसेज हों, तो ऐप आइकॉन पर लाल बैज दिखाएँ"
 
 #. Label in the banner uploader. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:72
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:75
 msgid "Show accent color only, ignoring your global profile"
 msgstr "केवल एक्सेंट रंग दिखाएं, अपनी ग्लोबल प्रोफ़ाइल को अनदेखा करें"
 
@@ -30104,7 +30090,7 @@ msgid "Show custom emojis in expression autocomplete"
 msgstr "एक्सप्रेशन ऑटो-कम्प्लीट में कस्टम इमोजी दिखाएं"
 
 #. Label in the avatar uploader.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:78
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:73
 msgid "Show default avatar, ignoring your global profile"
 msgstr "डिफ़ॉल्ट अवतार दिखाएं, अपनी ग्लोबल प्रोफ़ाइल को अनदेखा करें"
 
@@ -30443,12 +30429,12 @@ msgid "Show unread indicator on muted channels"
 msgstr "म्यूट किए गए चैनलों पर न पढ़े गए इंडिकेटर दिखाएं"
 
 #. Label in the avatar uploader.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:62
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:57
 msgid "Show your global profile avatar in this community"
 msgstr "इस कम्युनिटी में अपना ग्लोबल प्रोफ़ाइल अवतार दिखाएं"
 
 #. Label in the banner uploader. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:48
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:51
 msgid "Show your global profile banner in this community"
 msgstr "इस कम्युनिटी में अपना ग्लोबल प्रोफ़ाइल बैनर दिखाएं"
 
@@ -30720,7 +30706,7 @@ msgstr "छोड़ें"
 msgid "Skip \"Mark all as read\" confirmation"
 msgstr "\"सभी को पढ़ा गया मार्क करें\" की पुष्टि छोड़ें"
 
-#: src/features/messaging/components/modals/ImageCropModal.tsx:953
+#: src/features/messaging/components/modals/ImageCropModal.tsx:1034
 msgid "Skip cropping"
 msgstr "क्रॉप करना छोड़ें"
 
@@ -32346,7 +32332,7 @@ msgstr "आरामदायक लेआउट पर स्विच कर�
 msgid "Switch to dense layout"
 msgstr "सघन लेआउट पर स्विच करें"
 
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:647
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:649
 msgid "Switch to direct input"
 msgstr "सीधे इनपुट पर स्विच करें"
 
@@ -32734,7 +32720,7 @@ msgstr "टास्क"
 msgid "Teleporting you to another voice region..."
 msgstr "दूसरे वॉइस रीजन में टेलीपोर्ट कर रहे हैं..."
 
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:560
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:559
 msgid "Template"
 msgstr "टेम्पलेट"
 
@@ -33236,7 +33222,7 @@ msgid "The role granted {permissions}"
 msgstr "रोल ने {permissions} प्रदान कीं"
 
 #. Body of a modal shown when a browser screen share track ends outside the app, for example from the browser sharing controls.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:125
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:124
 msgctxt "screen-share"
 msgid "The screen share source stopped sending video, so your screen share was stopped."
 msgstr "स्क्रीन शेयर स्रोत ने वीडियो भेजना बंद कर दिया है, इसलिए आपका स्क्रीन शेयर रोक दिया गया।"
@@ -33453,6 +33439,11 @@ msgstr "इस अकाउंट को ब्लॉक नहीं किय�
 msgid "This action cannot be undone. All associated data, including the bot user, will be permanently deleted."
 msgstr "यह कार्रवाई पूर्ववत नहीं की जा सकती। बॉट यूज़र सहित सभी संबंधित डेटा स्थायी रूप से हटा दिया जाएगा।"
 
+#. Error modal body shown when an animated image has too many frames or pixels to crop in the browser.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:41
+msgid "This animation is too long or too large to crop. Try a shorter or smaller file."
+msgstr "यह एनीमेशन क्रॉप करने के लिए बहुत लंबा या बहुत बड़ा है। एक छोटी या हल्की फ़ाइल आज़माएँ।"
+
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
 #: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:82
 msgid "This application"
@@ -33472,10 +33463,22 @@ msgstr "यह बॉट सार्वजनिक नहीं है और 
 msgid "This bot requests the administrator permission. Only grant it if you fully trust the developer. Ask them to request fewer permissions instead. Close this page if unsure."
 msgstr "यह बॉट एडमिनिस्ट्रेटर की अनुमति का अनुरोध करता है। इसे तभी अनुमति दें जब आप डेवलपर पर पूरी तरह भरोसा करते हों। इसके बजाय उनसे कम अनुमतियों का अनुरोध करने के लिए कहें। यदि अनिश्चित हैं तो इस पेज को बंद कर दें।"
 
+#. Error modal body shown when the browser cannot decode animated AVIF for cropping. {avifFormatLabel} is the AVIF format name.
+#. Modal body shown when an animated AVIF upload is rejected because this browser cannot crop it.
+#: src/features/expressions/utils/AnimatedAvifModalUtils.tsx:14
+#: src/features/messaging/components/modals/ImageCropModal.tsx:49
+msgid "This browser can't crop animated {avifFormatLabel} files. Upload a GIF or WebP instead."
+msgstr "यह ब्राउज़र एनिमेटेड {avifFormatLabel} फ़ाइलों को क्रॉप नहीं कर सकता है। इसके बजाय GIF या WebP अपलोड करें।"
+
 #. Console warning line explaining that the browser console is meant for developers.
 #: src/features/devtools/utils/SelfXssNotice.ts:16
 msgid "This browser console is a developer tool."
 msgstr "यह ब्राउज़र कंसोल एक डेवलपर टूल है।"
+
+#. Error modal body shown when WebAssembly is unavailable, which animated image cropping needs.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:54
+msgid "This browser has WebAssembly turned off, so animated images can't be cropped."
+msgstr "इस ब्राउज़र में वेबअसेंबली बंद है, इसलिए एनिमेटेड इमेज को क्रॉप नहीं किया जा सकता है।"
 
 #. Pre-join indicator shown beneath the Join button on a DM or group DM call where every connected participant supports E2EE.
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:320
@@ -33757,6 +33760,11 @@ msgstr "यह ग्रुप भरा हुआ है। और लोगो
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:105
 msgid "This handoff code has expired. Generate a new one to continue."
 msgstr "यह हैंडऑफ़ कोड समाप्त हो गया है। जारी रखने के लिए एक नया कोड जनरेट करें।"
+
+#. Error modal body shown when an animated image fails to decode during cropping.
+#: src/features/messaging/components/modals/ImageCropModal.tsx:45
+msgid "This image couldn't be read. It may be damaged."
+msgstr "यह इमेज पढ़ी नहीं जा सकी। यह खराब हो सकती है।"
 
 #. Desktop updater modal body for managed package builds such as Flatpak. productName is the app name.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:75
@@ -36078,12 +36086,12 @@ msgid "Upload"
 msgstr "अपलोड करें"
 
 #. Button or menu action label in the avatar uploader. Keep it concise.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:70
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:65
 msgid "Upload a custom avatar for this community"
 msgstr "इस कम्युनिटी के लिए एक कस्टम अवतार अपलोड करें"
 
 #. Button or menu action label in the banner uploader. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:56
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:59
 msgid "Upload a custom banner for this community"
 msgstr "इस कम्युनिटी के लिए एक कस्टम बैनर अपलोड करें"
 
@@ -36155,10 +36163,10 @@ msgstr "मैसेज में फ़ाइल और मीडिया अ�
 msgid "Upload files and media in this channel."
 msgstr "इस चैनल में फ़ाइलें और मीडिया अपलोड करें।"
 
-#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:329
-#: src/features/channel/components/modals/EditGroupModal.tsx:284
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:305
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:626
+#: src/features/channel/components/modals/EditGroupBottomSheet.tsx:328
+#: src/features/channel/components/modals/EditGroupModal.tsx:283
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:304
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:625
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildIconUploadField.tsx:130
 msgid "Upload icon"
 msgstr "आइकॉन अपलोड करें"
@@ -36401,8 +36409,8 @@ msgstr "कोल थीम इस्तेमाल करें (पूरी 
 
 #. Short label in the avatar uploader. Keep it concise.
 #. Short label in the banner uploader. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:66
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:52
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:61
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:55
 msgid "Use custom image"
 msgstr "कस्टम इमेज का इस्तेमाल करें"
 
@@ -36462,8 +36470,8 @@ msgstr "मैसेज ढूंढने के लिए फ़िल्ट�
 
 #. Short label in the avatar uploader. Keep it concise.
 #. Short label in the banner uploader. Keep it concise. Keep the tone plain and specific.
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:58
-#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:44
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:53
+#: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:47
 msgid "Use global profile"
 msgstr "ग्लोबल प्रोफ़ाइल का उपयोग करें"
 
@@ -37826,7 +37834,7 @@ msgid "Voice participants"
 msgstr "वॉइस प्रतिभागी"
 
 #. Voice settings radio group label for microphone processing profile.
-#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:642
+#: src/features/user/components/modals/tabs/UserVoiceTab.tsx:644
 #: src/features/voice/components/voice_connection_status/AudioProcessingModal.tsx:55
 msgid "Voice processing"
 msgstr "वॉइस प्रोसेसिंग"
@@ -38684,7 +38692,7 @@ msgctxt "us-state"
 msgid "Wisconsin"
 msgstr "विस्कॉन्सिन"
 
-#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:215
+#: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:201
 msgid "With {PREMIUM_PRODUCT_NAME}, you can use animated avatars ({ANIMATED_AVATAR_FORMATS}) and profile banners, customize your tag, and unlock many other {PREMIUM_PRODUCT_NAME} perks."
 msgstr "{PREMIUM_PRODUCT_NAME} के साथ आप एनिमेटेड अवतार ({ANIMATED_AVATAR_FORMATS}) और प्रोफ़ाइल बैनर इस्तेमाल कर सकते हैं, अपना टैग कस्टमाइज़ कर सकते हैं और {PREMIUM_PRODUCT_NAME} के कई दूसरे पर्क अनलॉक कर सकते हैं।"
 
@@ -39334,8 +39342,8 @@ msgstr "यहां अन्य कम्युनिटी से इमो�
 msgid "You need the \"{permissionLabel}\" permission to use stickers from other communities here."
 msgstr "यहां अन्य कम्युनिटी से स्टिकर इस्तेमाल करने के लिए आपको \"{permissionLabel}\" अनुमति चाहिए।"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:208
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:434
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:207
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:433
 msgid "You need to claim your account before you can create a community."
 msgstr "कम्युनिटी बनाने से पहले आपको अपना अकाउंट क्लेम करना होगा।"
 
@@ -39356,8 +39364,8 @@ msgstr "इस कम्युनिटी में मैसेज भेज�
 msgid "You need to verify a phone number to send messages in this community."
 msgstr "इस कम्युनिटी में मैसेज भेजने के लिए आपको फ़ोन नंबर वेरिफ़ाई करना होगा।"
 
-#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:233
-#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:459
+#: src/features/guild/components/modals/add_guild_modal/GuildCreateForm.tsx:232
+#: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:458
 msgid "You need to verify your email address before you can create a community."
 msgstr "कम्युनिटी बनाने से पहले आपको अपना ईमेल पता वेरिफ़ाई करना होगा।"
 
@@ -39980,7 +39988,7 @@ msgid "Your saved {savedResolution} at {savedFrameRate} FPS needs {premiumProduc
 msgstr "आपका सहेजा गया {savedResolution} {savedFrameRate} FPS पर {premiumProductName} की आवश्यकता है, इसलिए शेयर {resolution} {frameRate} FPS पर उपयोग करते हैं।"
 
 #. Body of a modal shown when the video codec the browser negotiated for an active screen share is outside the codecs the app allows and no allowed codec could be published, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:131
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:130
 msgctxt "screen-share"
 msgid "Your screen share could not be published with a compatible video codec, so it was stopped. Try sharing again."
 msgstr "आपका स्क्रीन शेयर किसी कम्पैटिबल वीडियो कोडेक के साथ पब्लिश नहीं हो सका, इसलिए इसे रोक दिया गया। फिर से शेयर करने की कोशिश करें।"
@@ -40079,7 +40087,7 @@ msgid "Your vanity URL has been set to {inviteEndpoint}/{vanitySlug}"
 msgstr "आपका वैनिटी यूआरएल {inviteEndpoint}/{vanitySlug} पर सेट कर दिया गया है"
 
 #. Body of a modal shown when the local video encoder produces no frames for an active screen share, which forces the share to stop.
-#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:138
+#: src/features/voice/engine/v2/VoiceEngineV2AppScreenShareExecutionAdapter.tsx:137
 msgctxt "screen-share"
 msgid "Your video encoder stopped encoding frames, so your screen share was stopped. Try sharing again."
 msgstr "आपके वीडियो एन्कोडर ने फ़्रेम एन्कोड करना बंद कर दिया, इसलिए आपकी स्क्रीन शेयरिंग रोक दी गई। फिर से शेयर करने की कोशिश करें।"
@@ -40100,7 +40108,7 @@ msgid "YubiKey"
 msgstr "YubiKey"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/messaging/components/modals/ImageCropModal.tsx:831
+#: src/features/messaging/components/modals/ImageCropModal.tsx:917
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:182
 msgid "Zoom"
 msgstr "ज़ूम"

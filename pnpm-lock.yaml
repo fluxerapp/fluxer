@@ -471,7 +471,9 @@ patchedDependencies:
   '@phosphor-icons/react@2.1.10': 9b0b481de857aa7a7525f023baea9da72be4574ff72825e39d959e6979d78eea
   emscripten-wasm-loader@3.0.3: 65d0567cd2da382764aee3839187feb5284662c4a9f0b755f1e52163c5e36399
   eslint-plugin-react-google-translate@1.0.4: 343c47e52467ec6018beff92d73b6ca2cf231399d98116925687451e8bd527d8
+  gifuct-js@2.1.2: ea6e8ed3084100883f9206acf5b9031ef6aeaf25236ff59a9cb3dbea3b77ed10
   hunspell-asm@4.0.2: 594ff55f398ab3a575ba1b4d090c4838a26e4251a2f1d65ba0f02d5b098d02ae
+  upng-js@2.1.0: 34ef83d86b7cdf910a393193e3321a239470e7c5e5c7755fd14c30e30db4ea8e
 
 importers:
 
@@ -1523,7 +1525,7 @@ importers:
         version: 1.0.3
       gifuct-js:
         specifier: ^2.1.2
-        version: 2.1.2
+        version: 2.1.2(patch_hash=ea6e8ed3084100883f9206acf5b9031ef6aeaf25236ff59a9cb3dbea3b77ed10)
       idna-uts46-hx:
         specifier: 'catalog:'
         version: 6.2.1
@@ -1622,7 +1624,7 @@ importers:
         version: 4.7.1
       upng-js:
         specifier: ^2.1.0
-        version: 2.1.0
+        version: 2.1.0(patch_hash=34ef83d86b7cdf910a393193e3321a239470e7c5e5c7755fd14c30e30db4ea8e)
       urlpattern-polyfill:
         specifier: 'catalog:'
         version: 10.1.0
@@ -17137,7 +17139,7 @@ snapshots:
 
   gifenc@1.0.3: {}
 
-  gifuct-js@2.1.2:
+  gifuct-js@2.1.2(patch_hash=ea6e8ed3084100883f9206acf5b9031ef6aeaf25236ff59a9cb3dbea3b77ed10):
     dependencies:
       js-binary-schema-parser: 2.0.3
 
@@ -20331,7 +20333,7 @@ snapshots:
       github-url-to-object: 4.0.6
       ms: 2.1.3
 
-  upng-js@2.1.0:
+  upng-js@2.1.0(patch_hash=34ef83d86b7cdf910a393193e3321a239470e7c5e5c7755fd14c30e30db4ea8e):
     dependencies:
       pako: 1.0.11
 

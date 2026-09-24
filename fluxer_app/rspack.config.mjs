@@ -433,6 +433,7 @@ export default () => {
 			staticFilesPlugin({
 				staticCdnEndpoint: normalizedStaticCdnEndpoint,
 				fontsDir: path.join(MONOREPO_ROOT, 'packages', 'fonts'),
+				wasmCratesDir: path.join(ROOT_DIR, 'rust'),
 			}),
 			new DefinePlugin({
 				__FLUXER_PRECACHE_MANIFEST__: JSON.stringify([]),
