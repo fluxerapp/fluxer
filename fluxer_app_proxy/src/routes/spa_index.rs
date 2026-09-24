@@ -167,6 +167,11 @@ async fn serve_spa_index(state: &AppState, headers: &HeaderMap) -> Response {
         Ok(content) => content,
         Err(response) => return response,
     };
+    let raw_html = if is_self_hosted(&discovery) {
+        strip_link_preview_metadata(&raw_html)
+    } else {
+        raw_html
+    };
 
     let dev_buster = should_bust_dev_assets.then(current_dev_asset_cache_buster);
     let html = match render_spa_document(
@@ -232,6 +237,36 @@ fn render_spa_document(
         document = bounded_document(append_dev_asset_cache_buster(&document, buster))?;
     }
     Ok(document)
+}
+
+fn is_self_hosted(discovery: &DiscoveryResponse) -> bool {
+    discovery
+        .data
+        .get("features")
+        .and_then(|features| features.get("self_hosted"))
+        .and_then(serde_json::Value::as_bool)
+        .unwrap_or(false)
+}
+
+fn strip_link_preview_metadata(html: &str) -> String {
+    let html = remove_elements(html, "<title", "</title>");
+    remove_elements(&html, r#"<meta name="description""#, ">")
+}
+
+fn remove_elements(html: &str, start: &str, end: &str) -> String {
+    let mut rest = html;
+    let mut output = String::with_capacity(html.len());
+
+    while let Some(index) = rest.find(start) {
+        let Some(length) = rest[index..].find(end) else {
+            break;
+        };
+        output.push_str(&rest[..index]);
+        rest = rest[index + length + end.len()..].trim_start_matches('\n');
+    }
+
+    output.push_str(rest);
+    output
 }
 
 async fn refresh_discovery_for_spa(state: &AppState) -> Option<DiscoveryResponse> {
@@ -721,6 +756,57 @@ mod tests {
     const DISCOVERY_BODY_WITH_BOTH_ENDPOINTS: &str = r#"{"api_code_version":"proxy-test","endpoints":{"static_cdn":"https://cdn.example.test","media":"https://media.example.test"}}"#;
 
     const DISCOVERY_BODY_WITHOUT_ENDPOINTS: &str = r#"{"api_code_version":"proxy-test"}"#;
+
+    const DISCOVERY_BODY_SELF_HOSTED: &str = r#"{"api_code_version":"proxy-test","endpoints":{"static_cdn":"https://cdn.example.test","media":"https://media.example.test"},"features":{"self_hosted":true}}"#;
+
+    const SHIPPED_APP_SHELL: &str = include_str!("../../../fluxer_app/index.html");
+
+    #[test]
+    fn the_shipped_shell_loses_every_link_preview_field_when_stripped() {
+        assert!(SHIPPED_APP_SHELL.contains("<title>"));
+        assert!(SHIPPED_APP_SHELL.contains(r#"<meta name="description""#));
+
+        let stripped = strip_link_preview_metadata(SHIPPED_APP_SHELL);
+
+        assert!(!stripped.contains("<title"));
+        assert!(!stripped.contains(r#"name="description""#));
+        assert!(!stripped.contains("og:"));
+        assert!(!stripped.contains("twitter:"));
+        assert!(stripped.contains(r#"<meta name="viewport""#));
+        assert!(stripped.contains("<!--{{FLUXER_BOOTSTRAP}}-->"));
+    }
+
+    #[tokio::test]
+    async fn a_self_hosted_instance_serves_no_link_preview_metadata() {
+        let state = assemble_spa_state(
+            ReleaseChannel::Stable,
+            Some(SHIPPED_APP_SHELL),
+            DISCOVERY_BODY_SELF_HOSTED,
+            None,
+            None,
+        )
+        .await;
+
+        let response = serve_spa_index(&state, &HeaderMap::new()).await;
+        assert_eq!(response.status(), StatusCode::OK);
+        let served = read_document(response).await;
+
+        assert!(!served.contains("<title"));
+        assert!(!served.contains(r#"name="description""#));
+        assert!(served.contains("window.__FLUXER_BOOTSTRAP__"));
+    }
+
+    #[tokio::test]
+    async fn the_official_instance_keeps_its_link_preview_metadata() {
+        let state = spa_state_serving(ReleaseChannel::Stable, Some(SHIPPED_APP_SHELL)).await;
+
+        let response = serve_spa_index(&state, &HeaderMap::new()).await;
+        assert_eq!(response.status(), StatusCode::OK);
+        let served = read_document(response).await;
+
+        assert!(served.contains("<title>Fluxer</title>"));
+        assert!(served.contains(r#"<meta name="description""#));
+    }
 
     async fn spawn_local_origin(payload: &'static str, content_type: &'static str) -> String {
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
