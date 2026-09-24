@@ -464,6 +464,8 @@ describe('ConfigLoader', () => {
 			FLUXER_APP_STATUS_PAGE_INCIDENT_HISTORY_URL: 'https://status.example/history',
 			FLUXER_INSTANCE_SETUP_CONFIGURED: 'true',
 			FLUXER_ABUSE_INBOUND_PHONE_COUNTRY_CODES: 'AA,BB',
+			FLUXER_ABUSE_PHONE_FLAGGING_ENABLED: 'false',
+			FLUXER_ABUSE_PHONE_FLAGGING_EXEMPT_COUNTRY_CODES: 'CC,DD',
 			FLUXER_ABUSE_PHONE_INBOUND_REQUIRED_PREFIXES: '+101,+202',
 			FLUXER_ABUSE_DIRECT_CONTACT_SPAM_ENABLED: 'true',
 			FLUXER_ABUSE_DIRECT_CONTACT_SPAM_COUNTRY_CODES: 'AA,BB',
@@ -492,6 +494,10 @@ describe('ConfigLoader', () => {
 		expect(config.instance.setup.configured).toBe(true);
 		expect(config.instance.abuse_policy).toEqual({
 			inbound_phone_country_codes: ['AA', 'BB'],
+			phone_flagging: {
+				enabled: false,
+				exempt_country_codes: ['CC', 'DD'],
+			},
 			phone_verification: {
 				inbound_required_prefixes: ['+101', '+202'],
 			},

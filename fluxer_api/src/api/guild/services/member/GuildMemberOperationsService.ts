@@ -3,6 +3,7 @@
 import {requireEmailVerified} from '@app/api/auth/EmailVerificationUtils';
 import type {GuildID, InviteCode, RoleID, UserID} from '@app/api/BrandedTypes';
 import {createChannelID, createRoleID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
 import type {ChannelService} from '@app/api/channel/services/ChannelService';
 import {assertMutableUserId} from '@app/api/constants/Core';
 import type {GuildMemberRow} from '@app/api/database/types/GuildTypes';
@@ -421,6 +422,13 @@ export class GuildMemberOperationsService {
 			memberCount: guild.memberCount,
 			accountAgeMs: Date.now() - snowflakeToDate(BigInt(user.id)).getTime(),
 		};
+		if (
+			!Config.abusePolicy.phoneFlagging.enabled &&
+			(getEffectiveSuspiciousFlags(user) & PHONE_REQUIREMENT_FLAGS) === 0
+		) {
+			Logger.info(logContext, 'deferred_phone_gate.skipped_phone_flagging_disabled');
+			return;
+		}
 		if (status !== 'ok') {
 			const undeferredFlags = getEffectiveSuspiciousFlags({
 				...user,

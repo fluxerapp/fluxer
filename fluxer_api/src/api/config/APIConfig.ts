@@ -336,6 +336,10 @@ export interface APIConfig {
 	};
 	abusePolicy: {
 		inboundPhoneCountryCodes: Array<string>;
+		phoneFlagging: {
+			enabled: boolean;
+			exemptCountryCodes: Array<string>;
+		};
 		phoneVerification: {
 			inboundRequiredPrefixes: Array<string>;
 		};

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
 import type {User} from '@app/api/models/User';
 import {setInjectedAccountPolicyEvaluator} from '@app/api/risk/AccountPolicyService';
 import {setCachedDeferredPhoneGateEnabled} from '@app/api/risk/DeferredPhoneGateCache';
@@ -51,6 +52,20 @@ describe('deferred phone gate marker', () => {
 			suspiciousActivityFlags: SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE | DEFERRED_PHONE_ON_COMMUNITY_JOIN,
 		});
 		expect(getRequiredActions(user)).toEqual(['REQUIRE_VERIFIED_PHONE']);
+	});
+	it('keeps a deferral suppressed when the gate reads off but phone flagging is disabled', () => {
+		setCachedDeferredPhoneGateEnabled(false);
+		const original = {...Config.abusePolicy.phoneFlagging};
+		Config.abusePolicy.phoneFlagging = {enabled: false, exemptCountryCodes: []};
+		try {
+			const user = createUser({
+				suspiciousActivityFlags: SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE | DEFERRED_PHONE_ON_COMMUNITY_JOIN,
+			});
+			expect(getRequiredActions(user)).toEqual([]);
+			expect(getEffectiveSuspiciousFlags(user)).toBe(0);
+		} finally {
+			Config.abusePolicy.phoneFlagging = original;
+		}
 	});
 	it('suppresses a deferred phone requirement so the account is not locked out', () => {
 		const user = createUser({

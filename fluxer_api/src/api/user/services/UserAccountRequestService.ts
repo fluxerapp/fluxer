@@ -12,6 +12,7 @@ import {Logger} from '@app/api/Logger';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {AuthSession} from '@app/api/models/AuthSession';
 import type {User} from '@app/api/models/User';
+import {stripDisallowedPhoneFlags} from '@app/api/risk/AbusePolicy';
 import {createAccountPolicyContactContext, type IAccountPolicyEvaluator} from '@app/api/risk/AccountPolicyEvaluator';
 import type {IRegistrationEventsRepository} from '@app/api/risk/adapters/VelocityAdapter';
 import type {IRiskHistoryRepository} from '@app/api/risk/HistoricalOutcomeRepository';
@@ -42,6 +43,7 @@ import {
 	mapUserToPrivateResponse,
 	mapUserToProfileResponse,
 } from '@app/api/user/UserMappers';
+import {lookupGeoip} from '@app/api/utils/IpUtils';
 import {DEFERRED_PHONE_ON_COMMUNITY_JOIN, imposePhoneRequirements} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {getCurrentTimeZoneOffsetMinutes} from '@fluxer/date_utils/src/TimeZoneUtils';
@@ -302,7 +304,11 @@ export class UserAccountRequestService {
 					action: emailSetRecommendedAction,
 				},
 			});
-			nextSuspiciousFlags = imposePhoneRequirements(nextSuspiciousFlags, policyDecision.flagBits);
+			const policyFlagBits = await stripDisallowedPhoneFlags(
+				policyDecision.flagBits,
+				async () => (await lookupGeoip(request)).countryCode,
+			);
+			nextSuspiciousFlags = imposePhoneRequirements(nextSuspiciousFlags, policyFlagBits);
 			if (nextSuspiciousFlags !== currentSuspiciousFlags) {
 				user = await this.userRepository.patchUpsert(
 					user.id,

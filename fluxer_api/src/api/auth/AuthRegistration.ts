@@ -23,7 +23,7 @@ import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstri
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {User} from '@app/api/models/User';
 import {UserSettings} from '@app/api/models/UserSettings';
-import {countryRequiresInboundPhoneVerification} from '@app/api/risk/AbusePolicy';
+import {countryRequiresInboundPhoneVerification, stripDisallowedPhoneFlags} from '@app/api/risk/AbusePolicy';
 import {
 	type IAccountPolicyEvaluator,
 	isAssessmentThresholdAuditEvent,
@@ -362,7 +362,9 @@ export async function register(
 			action: riskResult.recommendedAction,
 		},
 	});
-	const combinedFlags = await deferPhoneFlagsUntilCommunityJoin(policyDecision.flagBits);
+	const combinedFlags = await deferPhoneFlagsUntilCommunityJoin(
+		await stripDisallowedPhoneFlags(policyDecision.flagBits, async () => countryCode),
+	);
 	const createdAt = new Date();
 	const riskContext = deriveLatestRiskContext({
 		userId: userId.toString(),

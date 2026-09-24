@@ -341,6 +341,10 @@ export interface MasterConfig {
 		};
 		abuse_policy: {
 			inbound_phone_country_codes: Array<string>;
+			phone_flagging: {
+				enabled: boolean;
+				exempt_country_codes: Array<string>;
+			};
 			phone_verification: {
 				inbound_required_prefixes: Array<string>;
 			};

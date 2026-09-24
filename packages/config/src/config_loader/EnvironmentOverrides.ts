@@ -369,6 +369,14 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 		path: ['instance', 'abuse_policy', 'inbound_phone_country_codes'],
 		parse: parseCsv,
 	},
+	FLUXER_ABUSE_PHONE_FLAGGING_ENABLED: {
+		path: ['instance', 'abuse_policy', 'phone_flagging', 'enabled'],
+		parse: parseBoolean,
+	},
+	FLUXER_ABUSE_PHONE_FLAGGING_EXEMPT_COUNTRY_CODES: {
+		path: ['instance', 'abuse_policy', 'phone_flagging', 'exempt_country_codes'],
+		parse: parseCsv,
+	},
 	FLUXER_ABUSE_PHONE_INBOUND_REQUIRED_PREFIXES: {
 		path: ['instance', 'abuse_policy', 'phone_verification', 'inbound_required_prefixes'],
 		parse: parseCsv,

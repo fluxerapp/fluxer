@@ -9,6 +9,7 @@ import {
 	loginAccount,
 	registerUser,
 } from '@app/api/auth/tests/AuthTestUtils';
+import {Config} from '@app/api/Config';
 import {setInjectedRegistrationRiskEvaluator} from '@app/api/middleware/ServiceMiddleware';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import {
@@ -33,7 +34,7 @@ import {
 	SuspiciousActivityFlags,
 } from '@fluxer/constants/src/UserConstants';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import {afterAll, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 
 function phoneRiskEvaluator(level: RiskLevelType, riskScore: number): IRegistrationRiskEvaluator {
 	return {
@@ -239,6 +240,59 @@ describe('Deferred phone verification gate', () => {
 		const flags = await readFlags(registration.user_id);
 		expect(flags & DEFERRED_PHONE_ON_COMMUNITY_JOIN).toBe(0);
 		expect(flags & SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE).not.toBe(0);
+	});
+
+	describe('with phone flagging disabled', () => {
+		const originalPhoneFlagging = {...Config.abusePolicy.phoneFlagging};
+		afterEach(() => {
+			Config.abusePolicy.phoneFlagging = originalPhoneFlagging;
+		});
+
+		it('sets no phone requirement and no deferral at registration', async () => {
+			await getInstanceConfigRepository().setInstancePolicyConfig({deferred_phone_gate_enabled: true});
+			Config.abusePolicy.phoneFlagging = {enabled: false, exemptCountryCodes: []};
+			setInjectedRegistrationRiskEvaluator(phoneRiskEvaluator(RiskLevel.High, 70));
+			const registration = await registerUser(harness, {
+				email: createUniqueEmail('flagging-off'),
+				username: createUniqueUsername('flagging_off'),
+				global_name: 'Flagging Off',
+				password: 'StrongPassword!123',
+				date_of_birth: '2000-01-01',
+				consent: true,
+			});
+			const flags = await readFlags(registration.user_id);
+			expect(flags & SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE).toBe(0);
+			expect(flags & DEFERRED_PHONE_ON_COMMUNITY_JOIN).toBe(0);
+		});
+
+		it('keeps an existing deferral dormant on a qualifying join', async () => {
+			await getInstanceConfigRepository().setInstancePolicyConfig({
+				deferred_phone_gate_enabled: true,
+				deferred_phone_gate_member_threshold: 1,
+				deferred_phone_gate_window_hours: 24,
+			});
+			const {inviteCode} = await createGuildWithInvite(harness);
+			const filler = await createTestAccount(harness);
+			await createBuilder(harness, filler.token).post(`/invites/${inviteCode}`).expect(200).execute();
+			setInjectedRegistrationRiskEvaluator(phoneRiskEvaluator(RiskLevel.High, 70));
+			const registration = await registerUser(harness, {
+				email: createUniqueEmail('flagging-off-join'),
+				username: createUniqueUsername('flagging_off_join'),
+				global_name: 'Flagging Off Join',
+				password: 'StrongPassword!123',
+				date_of_birth: '2000-01-01',
+				consent: true,
+			});
+			setInjectedRegistrationRiskEvaluator(undefined);
+			expect((await readFlags(registration.user_id)) & DEFERRED_PHONE_ON_COMMUNITY_JOIN).not.toBe(0);
+
+			Config.abusePolicy.phoneFlagging = {enabled: false, exemptCountryCodes: []};
+			await createBuilder(harness, registration.token).post(`/invites/${inviteCode}`).expect(200).execute();
+
+			const flags = await readFlags(registration.user_id);
+			expect(flags & DEFERRED_PHONE_ON_COMMUNITY_JOIN).not.toBe(0);
+			expect(flags & PHONE_GATE_PROMOTED_FROM_DEFERRAL).toBe(0);
+		});
 	});
 
 	describe('phone gate escape', () => {

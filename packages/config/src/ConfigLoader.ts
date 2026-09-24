@@ -277,6 +277,10 @@ function defaultConfig(): MasterConfig {
 			},
 			abuse_policy: {
 				inbound_phone_country_codes: [],
+				phone_flagging: {
+					enabled: true,
+					exempt_country_codes: [],
+				},
 				phone_verification: {
 					inbound_required_prefixes: [],
 				},

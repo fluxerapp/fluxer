@@ -476,6 +476,10 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 		},
 		abusePolicy: {
 			inboundPhoneCountryCodes: master.instance.abuse_policy.inbound_phone_country_codes,
+			phoneFlagging: {
+				enabled: master.instance.abuse_policy.phone_flagging.enabled,
+				exemptCountryCodes: master.instance.abuse_policy.phone_flagging.exempt_country_codes,
+			},
 			phoneVerification: {
 				inboundRequiredPrefixes: master.instance.abuse_policy.phone_verification.inbound_required_prefixes,
 			},

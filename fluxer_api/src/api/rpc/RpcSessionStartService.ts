@@ -10,7 +10,7 @@ import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {Logger} from '@app/api/Logger';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {User} from '@app/api/models/User';
-import {countryRequiresInboundPhoneVerification} from '@app/api/risk/AbusePolicy';
+import {countryRequiresInboundPhoneVerification, phoneFlaggingAllowedForCountry} from '@app/api/risk/AbusePolicy';
 import {
 	createRpcTimingNode,
 	RpcTimingRecorder,
@@ -309,6 +309,17 @@ export class RpcSessionStartService {
 				countryRequiresInboundPhoneVerification(geoipCountryIso),
 			)
 		) {
+			return null;
+		}
+		if (
+			!timeRpcStepSync(timingSteps, 'check_phone_flagging_allowed', () =>
+				phoneFlaggingAllowedForCountry(geoipCountryIso),
+			)
+		) {
+			Logger.info(
+				{userId: user.id.toString(), countryIso: geoipCountryIso},
+				'Skipping configured-country inbound phone requirement: phone flagging disabled for this country',
+			);
 			return null;
 		}
 		if (

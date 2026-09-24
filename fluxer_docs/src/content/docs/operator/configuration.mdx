@@ -991,6 +991,14 @@ No default. The account risk policy. JSON. Malformed JSON fails startup, and an 
 
 Default empty. Allowed inbound phone countries. Comma separated, passed through unvalidated.
 
+#### `FLUXER_ABUSE_PHONE_FLAGGING_ENABLED`
+
+Default `true`. Automatic phone requirements. With this off, registration, setting an email and gateway session start never add a requirement that offers phone verification. An email or phone requirement becomes its email only form. A deferred phone requirement stays dormant on a community join. Requirements already on an account and flags set by an Admin are untouched.
+
+#### `FLUXER_ABUSE_PHONE_FLAGGING_EXEMPT_COUNTRY_CODES`
+
+Default empty. Countries that never get an automatic phone requirement, matched against the request's GeoIP country. An email or phone requirement becomes its email only form. Comma separated, unvalidated.
+
 #### `FLUXER_ABUSE_PHONE_INBOUND_REQUIRED_PREFIXES`
 
 Default empty. Required inbound prefixes. Comma separated.
