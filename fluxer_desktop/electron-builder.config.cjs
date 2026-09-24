@@ -1680,6 +1680,7 @@ module.exports = {
 	},
 	deb: {
 		packageCategory: 'net',
+		synopsis: 'Instant messaging and VoIP',
 		desktop: {
 			entry: linuxDesktopEntryWithActions,
 			desktopActions: linuxDesktopActions,
