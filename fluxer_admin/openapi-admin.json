@@ -10524,7 +10524,6 @@
 					},
 					"gateway_rollout": {"$ref": "#/components/schemas/GatewayRolloutConfigResponse"},
 					"voice_noise_suppression": {"$ref": "#/components/schemas/VoiceNoiseSuppressionConfigResponse"},
-					"screen_share_delivery": {"$ref": "#/components/schemas/ScreenShareDeliveryConfigResponse"},
 					"push_service_delivery": {"$ref": "#/components/schemas/PushServiceDeliveryConfigResponse"},
 					"experiment_delivery": {"$ref": "#/components/schemas/ExperimentDeliveryConfigResponse"},
 					"registration": {
@@ -10953,7 +10952,6 @@
 					"sso",
 					"gateway_rollout",
 					"voice_noise_suppression",
-					"screen_share_delivery",
 					"push_service_delivery",
 					"experiment_delivery",
 					"registration",
@@ -11088,10 +11086,6 @@
 					"voice_noise_suppression": {
 						"nullable": true,
 						"allOf": [{"$ref": "#/components/schemas/VoiceNoiseSuppressionConfigUpdateRequest"}]
-					},
-					"screen_share_delivery": {
-						"nullable": true,
-						"allOf": [{"$ref": "#/components/schemas/ScreenShareDeliveryConfigUpdateRequest"}]
 					},
 					"push_service_delivery": {
 						"nullable": true,
@@ -15208,24 +15202,6 @@
 					}
 				}
 			},
-			"ScreenShareDeliveryConfigUpdateRequest": {
-				"type": "object",
-				"properties": {
-					"enabled": {"type": "boolean"},
-					"rollout_basis_points": {"type": "integer", "minimum": 0, "maximum": 10000},
-					"rollout_salt": {"type": "string", "minLength": 1, "maxLength": 64},
-					"included_user_ids": {
-						"maxItems": 1000,
-						"type": "array",
-						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
-					},
-					"excluded_user_ids": {
-						"maxItems": 1000,
-						"type": "array",
-						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
-					}
-				}
-			},
 			"VoiceNoiseSuppressionConfigUpdateRequest": {
 				"type": "object",
 				"properties": {
@@ -15304,36 +15280,6 @@
 						"maxLength": 64,
 						"pattern": "^[\\x20-\\x7e]+$"
 					},
-					"included_user_ids": {
-						"default": [],
-						"maxItems": 1000,
-						"type": "array",
-						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
-					},
-					"excluded_user_ids": {
-						"default": [],
-						"maxItems": 1000,
-						"type": "array",
-						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
-					}
-				},
-				"required": [
-					"enabled",
-					"config_version",
-					"rollout_basis_points",
-					"rollout_salt",
-					"included_user_ids",
-					"excluded_user_ids"
-				],
-				"additionalProperties": false
-			},
-			"ScreenShareDeliveryConfigResponse": {
-				"type": "object",
-				"properties": {
-					"enabled": {"default": false, "type": "boolean"},
-					"config_version": {"default": 0, "type": "integer", "minimum": 0, "maximum": 9007199254740991},
-					"rollout_basis_points": {"default": 0, "type": "integer", "minimum": 0, "maximum": 10000},
-					"rollout_salt": {"default": "screen-share-delivery-v1", "type": "string", "minLength": 1, "maxLength": 64},
 					"included_user_ids": {
 						"default": [],
 						"maxItems": 1000,

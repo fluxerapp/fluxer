@@ -70,11 +70,6 @@ class ActiveScreenShareSource {
 			this.encoding = false;
 			return;
 		}
-		if (target.delivery !== true) {
-			this.target = target;
-			this.encoding = false;
-			return;
-		}
 		const degradationPreference = this.frozenDegradationPreference ?? target.degradationPreference;
 		this.frozenDegradationPreference = degradationPreference;
 		this.softwareEncoderClamped = this.softwareEncoderClamped || target.softwareEncoderClamped;

@@ -11,7 +11,6 @@ import {
 	getLocalScreenShareVideoPublications,
 	isLiveLocalTrackPublication,
 } from '@app/features/voice/engine/VoiceTrackPublicationUtils';
-import ScreenShareDeliveryRollout from '@app/features/voice/state/ScreenShareDeliveryRollout';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
 	buildScreenShareCodecProfile,
@@ -357,7 +356,6 @@ class ScreenShareCodecNegotiation {
 		encoderMode: ScreenShareEncoderMode;
 		order: ReadonlyArray<VideoCodec>;
 	} | null = null;
-	private frozenDelivery: {trackSid: string; enabled: boolean} | null = null;
 	private lastCodecChangeAt = 0;
 	private suppressionTimer: ReturnType<typeof setTimeout> | null = null;
 	private publishedTrackSid: string | null = null;
@@ -452,22 +450,9 @@ class ScreenShareCodecNegotiation {
 		this.localCodecs = buildLocalCodecAdvertisements(this.resolveCodecPreferenceOrder());
 	}
 
-	private resolveScreenShareDelivery(room: Room | null = this.room): boolean {
-		const trackSid = this.getLocalScreenSharePublication(room)?.trackSid ?? null;
-		if (trackSid === null) {
-			this.frozenDelivery = null;
-			return ScreenShareDeliveryRollout.enabled;
-		}
-		if (this.frozenDelivery?.trackSid === trackSid) return this.frozenDelivery.enabled;
-		const enabled = ScreenShareDeliveryRollout.enabled;
-		this.frozenDelivery = {trackSid, enabled};
-		return enabled;
-	}
-
 	private resolveCodecPreferenceOrder(
 		preference: CodecPreference = VoiceSettings.getPreferredScreenShareCodec(),
 	): ReadonlyArray<VideoCodec> {
-		if (!this.resolveScreenShareDelivery()) return getScreenShareCodecPreferenceOrder(preference);
 		const encoderMode = VoiceSettings.getScreenShareEncoderMode();
 		const frozen = this.frozenCodecPreference;
 		if (
@@ -523,7 +508,7 @@ class ScreenShareCodecNegotiation {
 		unknownParticipants: number;
 	} {
 		const now = Date.now();
-		const viewerIdentities = this.resolveScreenShareDelivery(room) ? this.getScreenShareViewerIdentities(room) : null;
+		const viewerIdentities = this.getScreenShareViewerIdentities(room);
 		const knownRemoteCodecs: Array<Array<FluxerCodecAdvertisement>> = [];
 		const participants: Array<{identity: string; firstSeenAt: number}> = [];
 		for (const participant of room?.remoteParticipants.values() ?? []) {
@@ -640,7 +625,6 @@ class ScreenShareCodecNegotiation {
 		this.selectedCodec = null;
 		this.localCodecs = [];
 		this.frozenCodecPreference = null;
-		this.frozenDelivery = null;
 		this.lastCodecChangeAt = 0;
 		this.publishedTrackSid = null;
 		this.clearSuppressionTimer();
@@ -749,7 +733,6 @@ class ScreenShareCodecNegotiation {
 		const {knownRemoteCodecs, unknownParticipants} = this.getRemoteCodecInputs(room);
 		this.scheduleGraceReevaluations(room, bindingRevision);
 		const previousCodec = this.selectedCodec;
-		const delivery = this.resolveScreenShareDelivery(room);
 		this.negotiationSnapshot = transitionScreenShareCodecNegotiationSnapshot(this.negotiationSnapshot, {
 			type: 'negotiation.evaluate',
 			localCodecs: this.localCodecs,
@@ -757,7 +740,7 @@ class ScreenShareCodecNegotiation {
 			unknownParticipants,
 			reason,
 			codecPreference: this.resolveCodecPreferenceOrder(),
-			publishedCodec: delivery ? this.observePublishedScreenShareCodec(room) : null,
+			publishedCodec: this.observePublishedScreenShareCodec(room),
 		});
 		const selection = this.negotiationSnapshot.context.selection;
 		if (!selection) return null;
@@ -765,11 +748,7 @@ class ScreenShareCodecNegotiation {
 			this.selectedCodec = selection.codec;
 			return selection;
 		}
-		if (
-			delivery &&
-			previousCodec !== null &&
-			Date.now() - this.lastCodecChangeAt < SCREEN_SHARE_CODEC_CHANGE_SUPPRESSION_MS
-		) {
+		if (previousCodec !== null && Date.now() - this.lastCodecChangeAt < SCREEN_SHARE_CODEC_CHANGE_SUPPRESSION_MS) {
 			logger.debug('Suppressed a screen share codec change inside the change window', {
 				codec: selection.codec,
 				previousCodec,
@@ -779,7 +758,7 @@ class ScreenShareCodecNegotiation {
 			return selection;
 		}
 		this.selectedCodec = selection.codec;
-		if (delivery) this.armCodecChangeSuppression();
+		this.armCodecChangeSuppression();
 		this.mediaSessionId = createId('media');
 		logger.info('Selected screen share codec from XState capability intersection', selection);
 		await this.publishSessionUpdate(room, selection);

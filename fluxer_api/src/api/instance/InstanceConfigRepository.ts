@@ -37,10 +37,6 @@ import {
 	PushServiceDeliveryConfigSchema,
 } from '@fluxer/schema/src/domains/admin/PushServiceDeliverySchemas';
 import {
-	type ScreenShareDeliveryConfig,
-	ScreenShareDeliveryConfigSchema,
-} from '@fluxer/schema/src/domains/admin/ScreenShareDeliverySchemas';
-import {
 	type VoiceNoiseSuppressionConfig,
 	VoiceNoiseSuppressionConfigSchema,
 } from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
@@ -66,7 +62,6 @@ import {z} from 'zod';
 
 const GATEWAY_ROLLOUT_CONFIG_KEY = 'gateway_rollout_config';
 const VOICE_NOISE_SUPPRESSION_CONFIG_KEY = 'voice_noise_suppression_config';
-const SCREEN_SHARE_DELIVERY_CONFIG_KEY = 'screen_share_delivery_config';
 const PUSH_SERVICE_DELIVERY_CONFIG_KEY = 'push_service_delivery_config';
 const EXPERIMENT_DELIVERY_CONFIG_KEY = 'experiment_delivery_config';
 const REGISTRATION_CONFIG_KEY = 'registration_config';
@@ -374,7 +369,6 @@ type StoredConfigSection =
 	| 'app public'
 	| 'gateway rollout'
 	| 'voice noise suppression'
-	| 'screen share delivery'
 	| 'push service delivery'
 	| 'experiment delivery'
 	| 'instance policy'
@@ -512,10 +506,6 @@ function parseStoredGatewayRolloutConfig(raw: string | null): GatewayRolloutConf
 
 function parseStoredVoiceNoiseSuppressionConfig(raw: string | null): VoiceNoiseSuppressionConfig {
 	return parseStoredConfigOrDefault(VoiceNoiseSuppressionConfigSchema, raw, 'voice noise suppression');
-}
-
-function parseStoredScreenShareDeliveryConfig(raw: string | null): ScreenShareDeliveryConfig {
-	return parseStoredConfigOrDefault(ScreenShareDeliveryConfigSchema, raw, 'screen share delivery');
 }
 
 function parseStoredPushServiceDeliveryConfig(raw: string | null): PushServiceDeliveryConfig {
@@ -1169,7 +1159,6 @@ export class InstanceConfigRepository {
 			parseStoredGatewayRolloutConfig(snapshot.get(GATEWAY_ROLLOUT_CONFIG_KEY) ?? null),
 		);
 		parseStoredVoiceNoiseSuppressionConfig(snapshot.get(VOICE_NOISE_SUPPRESSION_CONFIG_KEY) ?? null);
-		parseStoredScreenShareDeliveryConfig(snapshot.get(SCREEN_SHARE_DELIVERY_CONFIG_KEY) ?? null);
 		parseStoredPushServiceDeliveryConfig(snapshot.get(PUSH_SERVICE_DELIVERY_CONFIG_KEY) ?? null);
 		parseStoredExperimentDeliveryConfig(snapshot.get(EXPERIMENT_DELIVERY_CONFIG_KEY) ?? null);
 		const policy = parseStoredInstancePolicyConfig(snapshot.get(INSTANCE_POLICY_CONFIG_KEY) ?? null);
@@ -1263,27 +1252,6 @@ export class InstanceConfigRepository {
 				VoiceNoiseSuppressionConfigSchema,
 				update(parseStoredVoiceNoiseSuppressionConfig(raw)),
 				'voice noise suppression',
-			),
-		);
-	}
-
-	async getScreenShareDeliveryConfig(): Promise<ScreenShareDeliveryConfig> {
-		const raw = await this.getConfig(SCREEN_SHARE_DELIVERY_CONFIG_KEY);
-		return parseStoredScreenShareDeliveryConfig(raw);
-	}
-
-	async setScreenShareDeliveryConfig(config: ScreenShareDeliveryConfig): Promise<void> {
-		await this.updateScreenShareDeliveryConfig(() => config);
-	}
-
-	updateScreenShareDeliveryConfig(
-		update: (current: ScreenShareDeliveryConfig) => ScreenShareDeliveryConfig,
-	): Promise<ScreenShareDeliveryConfig> {
-		return this.updateStoredConfig(SCREEN_SHARE_DELIVERY_CONFIG_KEY, (raw) =>
-			validateStoredConfig(
-				ScreenShareDeliveryConfigSchema,
-				update(parseStoredScreenShareDeliveryConfig(raw)),
-				'screen share delivery',
 			),
 		);
 	}

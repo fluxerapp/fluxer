@@ -36,7 +36,6 @@ import {
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {GatewayRolloutConfigSchema} from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
 import {PushServiceDeliveryConfigSchema} from '@fluxer/schema/src/domains/admin/PushServiceDeliverySchemas';
-import {ScreenShareDeliveryConfigSchema} from '@fluxer/schema/src/domains/admin/ScreenShareDeliverySchemas';
 import {VoiceNoiseSuppressionConfigSchema} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
 import {UserIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {ExperimentDeliveryConfigSchema} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
@@ -65,7 +64,6 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		ssoConfig,
 		gatewayRollout,
 		voiceNoiseSuppression,
-		screenShareDelivery,
 		pushServiceDelivery,
 		experimentDelivery,
 		registrationConfig,
@@ -75,7 +73,6 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		instanceConfigRepository.getSsoConfig(),
 		instanceConfigRepository.getGatewayRolloutConfig(),
 		instanceConfigRepository.getVoiceNoiseSuppressionConfig(),
-		instanceConfigRepository.getScreenShareDeliveryConfig(),
 		instanceConfigRepository.getPushServiceDeliveryConfig(),
 		instanceConfigRepository.getExperimentDeliveryConfig(),
 		instanceConfigRepository.getRegistrationConfig(),
@@ -108,7 +105,6 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		},
 		gateway_rollout: gatewayRollout,
 		voice_noise_suppression: voiceNoiseSuppression,
-		screen_share_delivery: screenShareDelivery,
 		push_service_delivery: pushServiceDelivery,
 		experiment_delivery: experimentDelivery,
 		registration: {
@@ -266,18 +262,6 @@ export function InstanceConfigAdminController(app: HonoApp) {
 				if (Object.keys(patch).length > 0) {
 					await instanceConfigRepository.updateVoiceNoiseSuppressionConfig((current) =>
 						VoiceNoiseSuppressionConfigSchema.parse({
-							...current,
-							...patch,
-							config_version: current.config_version + 1,
-						}),
-					);
-				}
-			}
-			if (data.screen_share_delivery) {
-				const patch = omitUndefinedFields(data.screen_share_delivery);
-				if (Object.keys(patch).length > 0) {
-					await instanceConfigRepository.updateScreenShareDeliveryConfig((current) =>
-						ScreenShareDeliveryConfigSchema.parse({
 							...current,
 							...patch,
 							config_version: current.config_version + 1,

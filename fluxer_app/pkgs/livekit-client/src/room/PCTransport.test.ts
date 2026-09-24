@@ -73,66 +73,34 @@ describe('applyVideoStartBitrate', () => {
 	}
 
 	it('adds a start bitrate to a non-SVC codec section', () => {
-		for (const screenShareDelivery of [false, true]) {
-			const media = videoMedia('camera-track', [
-				{payload: 96, config: 'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f'},
-			]);
-			expect(applyVideoStartBitrate(media, 'camera-track', 'H264', 1000, false, screenShareDelivery)).toBe(96);
-			expect(media.fmtp[0]?.config).toBe(
-				'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f;x-google-start-bitrate=900',
-			);
-		}
-	});
-
-	it('caps camera start bitrates but not screen share start bitrates while screen share delivery is off', () => {
-		const camera = videoMedia('camera-track', [{payload: 96, config: 'profile-level-id=42e01f'}]);
-		applyVideoStartBitrate(camera, 'camera-track', 'H264', 3000);
-		expect(camera.fmtp[0]?.config).toBe('profile-level-id=42e01f;x-google-start-bitrate=1000');
-
-		const screen = videoMedia('screen-track', [{payload: 96, config: 'profile-level-id=42e01f'}]);
-		applyVideoStartBitrate(screen, 'screen-track', 'H264', 6000, true);
-		expect(screen.fmtp[0]?.config).toBe('profile-level-id=42e01f;x-google-start-bitrate=5400');
+		const media = videoMedia('camera-track', [
+			{payload: 96, config: 'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f'},
+		]);
+		expect(applyVideoStartBitrate(media, 'camera-track', 'H264', 1000, false)).toBe(96);
+		expect(media.fmtp[0]?.config).toBe(
+			'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f;x-google-start-bitrate=900',
+		);
 	});
 
 	it('caps camera and screen share start bitrates at their own ceilings', () => {
 		const camera = videoMedia('camera-track', [{payload: 96, config: 'profile-level-id=42e01f'}]);
-		applyVideoStartBitrate(camera, 'camera-track', 'H264', 3000, false, true);
+		applyVideoStartBitrate(camera, 'camera-track', 'H264', 3000, false);
 		expect(camera.fmtp[0]?.config).toBe('profile-level-id=42e01f;x-google-start-bitrate=1000');
 
 		const screen = videoMedia('screen-track', [{payload: 96, config: 'profile-level-id=42e01f'}]);
-		applyVideoStartBitrate(screen, 'screen-track', 'H264', 6000, true, true);
+		applyVideoStartBitrate(screen, 'screen-track', 'H264', 6000, true);
 		expect(screen.fmtp[0]?.config).toBe('profile-level-id=42e01f;x-google-start-bitrate=1500');
-	});
-
-	it('leaves a small screen share start bitrate on the floor while screen share delivery is off', () => {
-		const screen = videoMedia('screen-track', [{payload: 96, config: 'profile-level-id=42e01f'}]);
-		applyVideoStartBitrate(screen, 'screen-track', 'H264', 300, true);
-		expect(screen.fmtp[0]?.config).toBe('profile-level-id=42e01f;x-google-start-bitrate=270');
 	});
 
 	it('keeps a screen share start bitrate above the frame dropper cliff', () => {
 		const screen = videoMedia('screen-track', [{payload: 96, config: 'profile-level-id=42e01f'}]);
-		applyVideoStartBitrate(screen, 'screen-track', 'H264', 300, true, true);
+		applyVideoStartBitrate(screen, 'screen-track', 'H264', 300, true);
 		expect(screen.fmtp[0]?.config).toBe('profile-level-id=42e01f;x-google-start-bitrate=600');
-	});
-
-	it('stamps only the lead payload type while screen share delivery is off', () => {
-		const media = multiPayloadScreenMedia();
-		expect(applyVideoStartBitrate(media, 'screen-track', 'H264', 6000, true)).toBe(116);
-		expect(media.fmtp.find((fmtp) => fmtp.payload === 116)?.config).toBe(
-			'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=4d001f;x-google-start-bitrate=5400',
-		);
-		expect(media.fmtp.find((fmtp) => fmtp.payload === 102)?.config).toBe(
-			'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42001f',
-		);
-		expect(media.fmtp.find((fmtp) => fmtp.payload === 108)?.config).toBe(
-			'level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f',
-		);
 	});
 
 	it('stamps every payload type the codec is offered under, not only the lead one', () => {
 		const media = multiPayloadScreenMedia();
-		expect(applyVideoStartBitrate(media, 'screen-track', 'H264', 6000, true, true)).toBe(116);
+		expect(applyVideoStartBitrate(media, 'screen-track', 'H264', 6000, true)).toBe(116);
 		for (const fmtp of media.fmtp) {
 			expect(fmtp.config).toContain('x-google-start-bitrate=1500');
 		}
@@ -140,47 +108,35 @@ describe('applyVideoStartBitrate', () => {
 	});
 
 	it('only touches the fmtp line for the matching payload', () => {
-		for (const screenShareDelivery of [false, true]) {
-			const media = videoMedia(
-				'screen-track',
-				[
-					{payload: 96, config: 'profile-level-id=42e01f'},
-					{payload: 98, config: 'profile-id=0'},
-				],
-				[
-					{payload: 96, codec: 'H264'},
-					{payload: 98, codec: 'VP9'},
-				],
-			);
-			applyVideoStartBitrate(media, 'screen-track', 'VP9', 1500, true, screenShareDelivery);
-			expect(media.fmtp[0]?.config).toBe('profile-level-id=42e01f');
-			expect(media.fmtp[1]?.config).toBe('profile-id=0;x-google-start-bitrate=1350');
-		}
-	});
-
-	it('never appends a second start bitrate while screen share delivery is off', () => {
-		const media = videoMedia('camera-track', [
-			{payload: 96, config: 'profile-level-id=42e01f;x-google-start-bitrate=900'},
-		]);
-		applyVideoStartBitrate(media, 'camera-track', 'H264', 2000);
-		expect(media.fmtp[0]?.config).toBe('profile-level-id=42e01f;x-google-start-bitrate=900');
+		const media = videoMedia(
+			'screen-track',
+			[
+				{payload: 96, config: 'profile-level-id=42e01f'},
+				{payload: 98, config: 'profile-id=0'},
+			],
+			[
+				{payload: 96, codec: 'H264'},
+				{payload: 98, codec: 'VP9'},
+			],
+		);
+		applyVideoStartBitrate(media, 'screen-track', 'VP9', 1500, true);
+		expect(media.fmtp[0]?.config).toBe('profile-level-id=42e01f');
+		expect(media.fmtp[1]?.config).toBe('profile-id=0;x-google-start-bitrate=1350');
 	});
 
 	it('replaces a start bitrate an earlier offer wrote instead of keeping it', () => {
 		const media = videoMedia('camera-track', [
 			{payload: 96, config: 'profile-level-id=42e01f;x-google-start-bitrate=900'},
 		]);
-		applyVideoStartBitrate(media, 'camera-track', 'H264', 2000, false, true);
+		applyVideoStartBitrate(media, 'camera-track', 'H264', 2000, false);
 		expect(media.fmtp[0]?.config).toBe('profile-level-id=42e01f;x-google-start-bitrate=1000');
 	});
 
 	it('leaves other tracks and missing codecs alone', () => {
-		for (const screenShareDelivery of [false, true]) {
-			const media = videoMedia('camera-track', [{payload: 96, config: 'profile-level-id=42e01f'}]);
-			expect(applyVideoStartBitrate(media, 'other-track', 'H264', 2000, false, screenShareDelivery)).toBeUndefined();
-			expect(applyVideoStartBitrate(media, 'camera-track', 'AV1', 2000, false, screenShareDelivery)).toBe(0);
-			expect(media.fmtp[0]?.config).toBe('profile-level-id=42e01f');
-		}
+		const media = videoMedia('camera-track', [{payload: 96, config: 'profile-level-id=42e01f'}]);
+		expect(applyVideoStartBitrate(media, 'other-track', 'H264', 2000, false)).toBeUndefined();
+		expect(applyVideoStartBitrate(media, 'camera-track', 'AV1', 2000, false)).toBe(0);
+		expect(media.fmtp[0]?.config).toBe('profile-level-id=42e01f');
 	});
 });
 

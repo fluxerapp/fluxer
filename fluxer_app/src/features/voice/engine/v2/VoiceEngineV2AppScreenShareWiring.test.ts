@@ -32,11 +32,6 @@ const voiceStates: Record<string, Record<string, Record<string, unknown>>> = {};
 const settingsUpdate = vi.fn();
 const openPremiumModal = vi.fn();
 
-vi.mock('@app/features/voice/state/ScreenShareDeliveryRollout', () => ({
-	ScreenShareDeliveryRollout: {enabled: true},
-	default: {enabled: true},
-}));
-
 vi.mock('@app/features/voice/utils/GpuEncoderCapabilities', () => ({
 	getGpuEncoderReportSync: () => gpuReport,
 	getH264HardwareProfilesSync: () => h264HardwareProfiles,

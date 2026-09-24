@@ -19,9 +19,8 @@ use crate::{
             InstanceServicesUpdateRequest, InstanceYoutubeIntegrationUpdateRequest,
             LimitConfigUpdateRequest, LimitRule, LimitRuleFilters, NoiseSuppressionBackend,
             PremiumMode, PushServiceDeliveryConfigUpdateRequest, RegistrationMode,
-            ScreenShareDeliveryConfigUpdateRequest, SsoConfigUpdateRequest,
-            VOICE_NS_MAX_GUILD_OVERRIDES, VoiceE2eeScope, VoiceNoiseSuppressionConfigUpdateRequest,
-            VoiceNoiseSuppressionGuildOverride,
+            SsoConfigUpdateRequest, VOICE_NS_MAX_GUILD_OVERRIDES, VoiceE2eeScope,
+            VoiceNoiseSuppressionConfigUpdateRequest, VoiceNoiseSuppressionGuildOverride,
         },
     },
     config::AdminConfig,
@@ -205,10 +204,6 @@ pub async fn instance_config_post(
             instance_config_result(client.update_instance_config(&update).await)
         }
         "update_voice_noise_suppression" => match build_voice_noise_suppression_update(&form) {
-            Ok(update) => instance_config_result(client.update_instance_config(&update).await),
-            Err(message) => FlashData::error(message),
-        },
-        "update_screen_share_delivery" => match build_screen_share_delivery_update(&form) {
             Ok(update) => instance_config_result(client.update_instance_config(&update).await),
             Err(message) => FlashData::error(message),
         },
@@ -648,38 +643,6 @@ fn build_voice_noise_suppression_update(
                 0,
                 VOICE_NS_SUPPRESSION_STRENGTH_MAX,
             )?,
-        }),
-        ..Default::default()
-    })
-}
-
-fn build_screen_share_delivery_update(
-    form: &MultiValueForm,
-) -> Result<InstanceConfigUpdateRequest, String> {
-    Ok(InstanceConfigUpdateRequest {
-        screen_share_delivery: Some(ScreenShareDeliveryConfigUpdateRequest {
-            enabled: Some(form.bool_value("screen_share_delivery_enabled")),
-            rollout_basis_points: parse_form_number(
-                form,
-                "screen_share_delivery_rollout_basis_points",
-                "Rollout basis points",
-                0,
-                EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX,
-            )?,
-            rollout_salt: parse_experiment_rollout_salt(
-                form,
-                "screen_share_delivery_rollout_salt",
-            )?,
-            included_user_ids: Some(parse_experiment_user_ids(
-                form.first("screen_share_delivery_included_user_ids")
-                    .unwrap_or_default(),
-                "Included user IDs",
-            )?),
-            excluded_user_ids: Some(parse_experiment_user_ids(
-                form.first("screen_share_delivery_excluded_user_ids")
-                    .unwrap_or_default(),
-                "Excluded user IDs",
-            )?),
         }),
         ..Default::default()
     })
@@ -1633,83 +1596,6 @@ mod tests {
             let form = MultiValueForm::parse(form.as_bytes());
             assert_eq!(
                 build_voice_noise_suppression_update(&form).expect_err("invalid targeting"),
-                message
-            );
-        }
-    }
-
-    #[test]
-    fn build_screen_share_delivery_update_reads_the_rollout_fields() {
-        let form = MultiValueForm::parse(
-            b"screen_share_delivery_enabled=true&screen_share_delivery_rollout_basis_points=%20250%20&screen_share_delivery_rollout_salt=%20screen-share-delivery-v2%20&screen_share_delivery_included_user_ids=1500000000000000001%0A1500000000000000002&screen_share_delivery_excluded_user_ids=1500000000000000003%2C%201500000000000000004",
-        );
-        let update = build_screen_share_delivery_update(&form)
-            .expect("valid form")
-            .screen_share_delivery
-            .expect("screen share delivery update");
-        assert_eq!(update.enabled, Some(true));
-        assert_eq!(update.rollout_basis_points, Some(250));
-        assert_eq!(
-            update.rollout_salt,
-            Some("screen-share-delivery-v2".to_owned())
-        );
-        assert_eq!(
-            update.included_user_ids,
-            Some(vec![
-                "1500000000000000001".to_owned(),
-                "1500000000000000002".to_owned()
-            ])
-        );
-        assert_eq!(
-            update.excluded_user_ids,
-            Some(vec![
-                "1500000000000000003".to_owned(),
-                "1500000000000000004".to_owned()
-            ])
-        );
-    }
-
-    #[test]
-    fn build_screen_share_delivery_update_leaves_the_feature_inert_when_nothing_is_submitted() {
-        let form = MultiValueForm::parse(b"_csrf=token");
-        let request = build_screen_share_delivery_update(&form).expect("valid form");
-        assert_eq!(
-            serde_json::to_value(request).expect("serializable update"),
-            serde_json::json!({"screen_share_delivery": {
-                "enabled": false,
-                "included_user_ids": [],
-                "excluded_user_ids": [],
-            }})
-        );
-    }
-
-    #[test]
-    fn build_screen_share_delivery_update_rejects_invalid_rollout_fields() {
-        for (form, message) in [
-            (
-                "screen_share_delivery_rollout_basis_points=10001",
-                "Rollout basis points must be a whole number between 0 and 10000",
-            ),
-            (
-                "screen_share_delivery_rollout_basis_points=abc",
-                "Rollout basis points must be a whole number between 0 and 10000",
-            ),
-            (
-                "screen_share_delivery_rollout_salt=%20%20",
-                "Rollout salt must be between 1 and 64 characters",
-            ),
-            (
-                "screen_share_delivery_included_user_ids=123%2Cinvalid",
-                "Included user IDs entry 2 must contain 1 to 20 decimal digits",
-            ),
-            (
-                "screen_share_delivery_excluded_user_ids=123%2Cinvalid",
-                "Excluded user IDs entry 2 must contain 1 to 20 decimal digits",
-            ),
-        ] {
-            let form = MultiValueForm::parse(form.as_bytes());
-            assert_eq!(
-                build_screen_share_delivery_update(&form).expect_err("invalid rollout field"),
                 message
             );
         }

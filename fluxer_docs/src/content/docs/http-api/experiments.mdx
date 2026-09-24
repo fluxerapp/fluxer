@@ -6,7 +6,7 @@ description: The experiment assignments envelope, the revalidation and polling c
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-An experiment is an instance-wide rollout that an operator configures. For each account, Fluxer works out from that configuration whether the account is in the rollout and which settings the account receives. The single route on this page resolves every experiment the server defines and returns them in one envelope, together with the polling cadence they share. This server defines `voice_noise_suppression`, whose placement protocol [Voice](/voice/) defines, and `screen_share_delivery`.
+An experiment is an instance-wide rollout that an operator configures. For each account, Fluxer works out from that configuration whether the account is in the rollout and which settings the account receives. The single route on this page resolves every experiment the server defines and returns them in one envelope, together with the polling cadence they share. This server defines `voice_noise_suppression`, whose placement protocol [Voice](/voice/) defines.
 
 Every assignment is advice. A client that ignores one behaves as it does with the rollout off, and no route and no Gateway event reports what a client actually ran.
 
@@ -33,7 +33,6 @@ One entry per experiment. The envelope reports this object even when it is empty
 | Field | Type | Description |
 | --- | --- | --- |
 | voice_noise_suppression? | [noise suppression assignment](#noise-suppression-assignment-object) object | The caller's noise suppression assignment |
-| screen_share_delivery? | [screen share delivery assignment](#screen-share-delivery-assignment-object) object | The caller's screen share delivery assignment |
 
 Ignore unknown experiments and treat a missing experiment as off.
 
@@ -101,18 +100,6 @@ One backend replacement scoped to one guild. While the caller is connected to a 
 | backend | string | The [backend](#noise-suppression-backends) to run in that guild |
 
 An override naming a backend that is absent from `enabled_backends` is dropped before the response is written, so every entry is runnable.
-
-## Screen share delivery assignment object
-
-One resolution of the instance screen share delivery rollout against one account. The field is present whenever the key is written.
-
-### Structure
-
-| Field | Type | Description |
-| --- | --- | --- |
-| enabled | boolean | Whether the caller runs the reworked screen share delivery path |
-
-A caller is drawn either by the operator's allowlist or by the sampled share of the account population. `enabled` is false in every other case, the rollout being off included.
 
 ## Get experiment assignments
 

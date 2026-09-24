@@ -4,7 +4,6 @@ import {getDesktopTroubleshootingSettings} from '@app/features/devtools/utils/De
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import ScreenShareCodecNegotiation from '@app/features/voice/engine/ScreenShareCodecNegotiation';
 import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
-import ScreenShareDeliveryRollout from '@app/features/voice/state/ScreenShareDeliveryRollout';
 import SoftwareEncoderWarning from '@app/features/voice/state/SoftwareEncoderWarning';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
@@ -23,7 +22,6 @@ import {
 	resolveScreenShareLayering,
 	resolveScreenShareSenderCodec,
 	resolveScreenShareTarget,
-	SCREEN_SHARE_DELIVERY_MAX_VIDEO_BITRATE_BPS,
 	SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS,
 	type ScreenShareContext,
 	type ScreenShareLayering,
@@ -195,11 +193,13 @@ export async function releaseScreenShareCaptureCleanup(snapshot: ScreenShareCapt
 	}
 }
 
-function clampScreenShareEncoding(encoding: VideoEncoding, delivery: boolean): VideoEncoding {
-	const ceiling = delivery ? SCREEN_SHARE_DELIVERY_MAX_VIDEO_BITRATE_BPS : SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS;
+function clampScreenShareEncoding(encoding: VideoEncoding): VideoEncoding {
 	return {
 		...encoding,
-		maxBitrate: typeof encoding.maxBitrate === 'number' ? Math.min(encoding.maxBitrate, ceiling) : encoding.maxBitrate,
+		maxBitrate:
+			typeof encoding.maxBitrate === 'number'
+				? Math.min(encoding.maxBitrate, SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS)
+				: encoding.maxBitrate,
 		priority: encoding.priority ?? 'high',
 	};
 }
@@ -208,15 +208,10 @@ export function resolveActiveScreenShareContext(): ScreenShareContext {
 	return ActiveScreenShareSource.getShareContext() ?? 'display';
 }
 
-function resolveScreenShareDeliveryArm(): boolean {
-	return ActiveScreenShareSource.getTarget()?.delivery ?? ScreenShareDeliveryRollout.enabled;
-}
-
 export function resolveConfiguredScreenShareTarget(
 	context: ScreenShareContext,
 	sourceDimensions: {width: number; height: number} | null,
 ): ScreenShareTarget {
-	const delivery = resolveScreenShareDeliveryArm();
 	return resolveScreenShareTarget({
 		mode: VoiceSettings.getStreamingMode(),
 		storedResolution: VoiceSettings.getScreenshareResolution(),
@@ -225,13 +220,8 @@ export function resolveConfiguredScreenShareTarget(
 		context,
 		sourceDimensions,
 		hintSetting: VoiceSettings.getScreenShareContentHint(),
-		delivery,
-		...(delivery
-			? {
-					codec: getPreferredScreenShareCodec(),
-					softwareEncoderClamp: ActiveScreenShareSource.isSoftwareEncoderClamped(),
-				}
-			: {}),
+		codec: getPreferredScreenShareCodec(),
+		softwareEncoderClamp: ActiveScreenShareSource.isSoftwareEncoderClamped(),
 	});
 }
 
@@ -242,7 +232,6 @@ export function resolveActiveScreenShareTarget(
 }
 
 function recommitClampedScreenShareTarget(committed: ScreenShareTarget): ScreenShareTarget {
-	if (committed.delivery !== true) return committed;
 	if (committed.softwareEncoderClamped) return committed;
 	const resolved = resolveActiveScreenShareTarget(committed.context);
 	if (!resolved.softwareEncoderClamped) return committed;
@@ -270,7 +259,7 @@ export function getStatsKind(
 
 function resolveScreenShareEncoding(target: ScreenShareTarget, publishOptions?: TrackPublishOptions): VideoEncoding {
 	if (publishOptions?.screenShareEncoding) {
-		return clampScreenShareEncoding(publishOptions.screenShareEncoding, target.delivery === true);
+		return clampScreenShareEncoding(publishOptions.screenShareEncoding);
 	}
 	return {maxBitrate: target.maxBitrate, maxFramerate: target.frameRate, priority: 'high'};
 }
@@ -863,27 +852,22 @@ export function startScreenShareEncoderMonitor(options: ScreenShareEncoderMonito
 	let framesEncoded: number | null = null;
 	let sendSnapshot: ScreenShareSendSnapshot | null = null;
 	let cpuLimitedTicks = 0;
-	const delivery = ActiveScreenShareSource.getTarget()?.delivery === true;
 	const tick = async (): Promise<void> => {
 		const sender = options.track.sender;
 		if (!sender) return;
 		const stats = await sender.getStats();
-		if (delivery) {
-			syncScreenShareCaptureSize(sender);
-		}
+		syncScreenShareCaptureSize(sender);
 		const encoded = countEncodedVideoFrames(stats);
 		ActiveScreenShareSource.setEncoding(encoded !== null && framesEncoded !== null && encoded > framesEncoded);
 		framesEncoded = encoded;
-		if (delivery) {
-			const snapshot = collectScreenShareSendSnapshot(stats);
-			cpuLimitedTicks = snapshot.cpuLimited ? cpuLimitedTicks + 1 : 0;
-			const limit = classifyScreenShareSendLimit(sendSnapshot, snapshot, cpuLimitedTicks);
-			sendSnapshot = snapshot;
-			if (limit !== ActiveScreenShareSource.getLimit()) {
-				logger.info('Screen share send limit changed', {limit, codec: options.codec});
-			}
-			ActiveScreenShareSource.setLimit(limit);
+		const snapshot = collectScreenShareSendSnapshot(stats);
+		cpuLimitedTicks = snapshot.cpuLimited ? cpuLimitedTicks + 1 : 0;
+		const limit = classifyScreenShareSendLimit(sendSnapshot, snapshot, cpuLimitedTicks);
+		sendSnapshot = snapshot;
+		if (limit !== ActiveScreenShareSource.getLimit()) {
+			logger.info('Screen share send limit changed', {limit, codec: options.codec});
 		}
+		ActiveScreenShareSource.setLimit(limit);
 		if (!verified) {
 			const verification = verifyScreenShareEncoderStart(stats, options.codec, options.onEncodeFailure);
 			if (verification === 'failed') return;
@@ -907,8 +891,6 @@ export function startScreenShareEncoderMonitor(options: ScreenShareEncoderMonito
 		cancelled = true;
 		clearTimeout(timer);
 		ActiveScreenShareSource.setEncoding(false);
-		if (delivery) {
-			ActiveScreenShareSource.setLimit(null);
-		}
+		ActiveScreenShareSource.setLimit(null);
 	};
 }

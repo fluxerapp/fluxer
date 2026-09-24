@@ -41,8 +41,6 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 
 	codec?: VideoCodec;
 
-	screenShareDelivery: boolean = false;
-
 	get constraints() {
 		return this._constraints;
 	}
@@ -563,7 +561,7 @@ export default abstract class LocalTrack<TrackKind extends Track.Kind = Track.Ki
 		);
 
 	private debouncedTrackMuteHandler = debounce(async () => {
-		if (this.screenShareDelivery && this.source === Track.Source.ScreenShare) {
+		if (this.source === Track.Source.ScreenShare) {
 			this.log.debug('screen share capture went idle, keeping upstream published', this.logContext);
 			return;
 		}

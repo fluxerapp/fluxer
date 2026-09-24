@@ -465,7 +465,6 @@ async fn mutating_admin_pages_render_usable_csrf_tokens() {
                 "/instance-config?action=update_gateway_rollout",
                 "/instance-config?action=update_sso",
                 "/instance-config?action=update_voice_noise_suppression",
-                "/instance-config?action=update_screen_share_delivery",
                 "/instance-config?action=update_experiment_delivery",
             ][..],
         ),
@@ -1199,14 +1198,6 @@ fn instance_config() -> Value {
             "excluded_user_ids": [],
             "guild_overrides": [],
             "suppression_strength": 80
-        },
-        "screen_share_delivery": {
-            "enabled": false,
-            "config_version": 0,
-            "rollout_basis_points": 0,
-            "rollout_salt": "screen-share-delivery-v1",
-            "included_user_ids": [],
-            "excluded_user_ids": []
         },
         "experiment_delivery": {
             "poll_interval_seconds": 300,

@@ -9,12 +9,7 @@ import {
 	markScreenShareDecodeFailure,
 	resetVideoDecoderExclusions,
 } from '@app/features/voice/utils/VideoDecoderCapabilities';
-import {afterEach, describe, expect, it, vi} from 'vitest';
-
-vi.mock('@app/features/voice/state/ScreenShareDeliveryRollout', () => ({
-	ScreenShareDeliveryRollout: {enabled: true},
-	default: {enabled: true},
-}));
+import {afterEach, describe, expect, it} from 'vitest';
 
 function buildStats(inbound: Record<string, unknown>): RTCStatsReport {
 	return new Map<string, unknown>([

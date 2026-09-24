@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import {isElectronPlatform} from '@app/features/platform/types/Platform';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {Store} from '@app/features/voice/engine/Store';
 import {sendVoiceStateDisconnect} from '@app/features/voice/engine/VoiceChannelConnector';
@@ -37,7 +36,6 @@ import {
 	isReadyToRepublishTrack,
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppAdapterAssertions';
 import {VoiceEngineV2AppReconnectPolicy} from '@app/features/voice/engine/v2/VoiceEngineV2AppReconnectPolicy';
-import ScreenShareDeliveryRollout from '@app/features/voice/state/ScreenShareDeliveryRollout';
 import VoiceRegionTeleport from '@app/features/voice/state/VoiceRegionTeleport';
 import {
 	findVideoPublishCodecPolicyViolation,
@@ -45,10 +43,7 @@ import {
 } from '@app/features/voice/utils/CodecCapabilityDetector';
 import {getH264HardwareProfilesSync} from '@app/features/voice/utils/GpuEncoderCapabilities';
 import {setNoiseSuppressionScopeGuildId} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionSelection';
-import {
-	SCREEN_SHARE_DELIVERY_MAX_VIDEO_BITRATE_BPS,
-	SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS,
-} from '@app/features/voice/utils/ScreenShareOptions';
+import {SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS} from '@app/features/voice/utils/ScreenShareOptions';
 import {
 	clearScreenShareDecodeFailures,
 	getVideoDecoderExclusionsSync,
@@ -151,9 +146,7 @@ function createWebAudioMixOption(): RoomOptions['webAudioMix'] {
 function createRoomPublishDefaults(): RoomOptions['publishDefaults'] {
 	return {
 		screenShareEncoding: {
-			maxBitrate: ScreenShareDeliveryRollout.enabled
-				? SCREEN_SHARE_DELIVERY_MAX_VIDEO_BITRATE_BPS
-				: SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS,
+			maxBitrate: SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS,
 			maxFramerate: 30,
 			priority: 'high',
 		},
@@ -164,7 +157,6 @@ function createRoomPublishDefaults(): RoomOptions['publishDefaults'] {
 function createRoomOptions(
 	e2eeKey: string | null,
 	subscriberVideoCodecExclusions: RoomOptions['subscriberVideoCodecExclusions'],
-	screenShareDelivery: boolean,
 ): {
 	roomOptions: RoomOptions;
 	e2eeKeyProvider: ExternalE2EEKeyProvider | null;
@@ -176,8 +168,7 @@ function createRoomOptions(
 		webAudioMix: createWebAudioMixOption(),
 		publishDefaults: createRoomPublishDefaults(),
 		subscriberVideoCodecExclusions,
-		screenShareDelivery,
-		h264HardwareProfiles: screenShareDelivery ? getH264HardwareProfilesSync()?.profiles : undefined,
+		h264HardwareProfiles: getH264HardwareProfilesSync()?.profiles,
 	};
 	let e2eeKeyProvider: ExternalE2EEKeyProvider | null = null;
 	let e2eeWorker: Worker | null = null;
@@ -196,19 +187,11 @@ function createRoomOptions(
 	return {roomOptions, e2eeKeyProvider, e2eeWorker};
 }
 
-function createRoomConnectOptions(screenShareDelivery: boolean): RoomConnectOptions {
+function createRoomConnectOptions(): RoomConnectOptions {
 	const connectOptions: RoomConnectOptions = {
 		autoSubscribe: false,
 	};
 	assert.equal(connectOptions.autoSubscribe, false, 'LiveKit connect options must not auto-subscribe');
-	if (!screenShareDelivery && isElectronPlatform()) {
-		connectOptions.rtcConfig = {iceTransportPolicy: 'relay'};
-		assert.equal(
-			connectOptions.rtcConfig.iceTransportPolicy,
-			'relay',
-			'Electron LiveKit connects must force relay ICE',
-		);
-	}
 	return connectOptions;
 }
 
@@ -564,12 +547,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 			logger.warn('Aborting LiveKit room creation after codec probing because attempt is stale', {attemptId});
 			return;
 		}
-		const screenShareDelivery = ScreenShareDeliveryRollout.enabled;
-		const {roomOptions, e2eeKeyProvider, e2eeWorker} = createRoomOptions(
-			e2eeKey,
-			subscriberVideoCodecExclusions,
-			screenShareDelivery,
-		);
+		const {roomOptions, e2eeKeyProvider, e2eeWorker} = createRoomOptions(e2eeKey, subscriberVideoCodecExclusions);
 		const room = new LiveKitRoom(roomOptions);
 		ownE2EEWorker(room, e2eeWorker);
 		let roomClosed = false;
@@ -602,7 +580,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 				return;
 			}
 			logger.info('Attempting to connect to LiveKit', {endpoint, guildId, channelId: resolvedChannelId});
-			const connectOptions = createRoomConnectOptions(screenShareDelivery);
+			const connectOptions = createRoomConnectOptions();
 			room
 				.connect(endpoint, token, connectOptions)
 				.then(() => {
@@ -704,14 +682,12 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		const connectionId = raw.connection_id ?? null;
 		this.abortHotSwap();
 		const cachedExclusions = getVideoDecoderExclusionsSync();
-		const screenShareDelivery = ScreenShareDeliveryRollout.enabled;
 		const roomOptions: RoomOptions = {
 			adaptiveStream: false,
 			dynacast: true,
 			webAudioMix: createWebAudioMixOption(),
 			publishDefaults: createRoomPublishDefaults(),
 			subscriberVideoCodecExclusions: cachedExclusions && cachedExclusions.length > 0 ? cachedExclusions : undefined,
-			screenShareDelivery,
 		};
 		if (!this.isLatestConnectionAttempt(attemptId) || this.connectionState.room !== existingRoom) {
 			logger.warn('Region hot-swap: aborted before room creation because attempt is stale', {attemptId});
@@ -728,7 +704,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 				this.abortHotSwap();
 			}
 		});
-		const connectOptions = createRoomConnectOptions(screenShareDelivery);
+		const connectOptions = createRoomConnectOptions();
 		logger.info('Region hot-swap: connecting to new endpoint', {endpoint, guildId, channelId});
 		newRoom
 			.connect(endpoint, token, connectOptions)

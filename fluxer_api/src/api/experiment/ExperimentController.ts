@@ -8,7 +8,6 @@ import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {entityTagMatches} from '@app/api/utils/EntityTag';
 import {Headers as HttpHeaders} from '@fluxer/constants/src/Headers';
-import {resolveScreenShareDeliveryAssignment} from '@fluxer/schema/src/domains/admin/ScreenShareDeliverySchemas';
 import {resolveVoiceNoiseSuppressionAssignment} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
 import {ExperimentAssignmentsResponse} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 
@@ -29,10 +28,9 @@ export function ExperimentController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const instanceConfigRepository = ctx.get('instanceConfigRepository');
-			const [delivery, voiceConfig, screenShareConfig] = await Promise.all([
+			const [delivery, voiceConfig] = await Promise.all([
 				instanceConfigRepository.getExperimentDeliveryConfig(),
 				instanceConfigRepository.getVoiceNoiseSuppressionConfig(),
-				instanceConfigRepository.getScreenShareDeliveryConfig(),
 			]);
 			const userId = ctx.get('user').id.toString();
 			const body: ExperimentAssignmentsResponse = {
@@ -40,7 +38,6 @@ export function ExperimentController(app: HonoApp) {
 				poll_jitter_percent: delivery.poll_jitter_percent,
 				assignments: {
 					voice_noise_suppression: resolveVoiceNoiseSuppressionAssignment(voiceConfig, userId),
-					screen_share_delivery: resolveScreenShareDeliveryAssignment(screenShareConfig, userId),
 				},
 			};
 			const etag = `"${createHash('sha256').update(JSON.stringify(body)).digest('hex')}"`;

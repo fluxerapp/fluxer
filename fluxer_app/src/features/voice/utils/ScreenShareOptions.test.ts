@@ -8,14 +8,7 @@ import {
 	resolveScreenShareLayering,
 	resolveScreenShareTarget,
 } from '@app/features/voice/utils/ScreenShareOptions';
-import {afterEach, describe, expect, it, vi} from 'vitest';
-
-const rollout = vi.hoisted(() => ({enabled: false}));
-
-vi.mock('@app/features/voice/state/ScreenShareDeliveryRollout', () => ({
-	ScreenShareDeliveryRollout: rollout,
-	default: rollout,
-}));
+import {describe, expect, it, vi} from 'vitest';
 
 vi.mock('@app/features/voice/utils/NativeAudioCaptureBridge', () => ({
 	rememberCapturedDisplayAudioTrack: () => undefined,
@@ -28,10 +21,6 @@ vi.mock('@app/features/voice/engine/voice_screen_share_manager/shared', () => ({
 const {getDisplayMediaOptions} = await import(
 	'@app/features/voice/engine/voice_screen_share_manager/DisplayMediaCapture'
 );
-
-afterEach(() => {
-	rollout.enabled = false;
-});
 
 function collectKeys(value: unknown, keys: Set<string>): Set<string> {
 	if (typeof value !== 'object' || value === null) return keys;
@@ -87,29 +76,19 @@ describe('display capture constraints', () => {
 	});
 });
 
-describe('the screen share delivery experiment', () => {
-	it('keeps the source preset and the 90 and 120 FPS rungs off the experiment', () => {
-		expect(targetOf()).toMatchObject({resolution: 'source', frameRate: 15});
-		expect(resolveScreenShareFrameRate(120)).toBe(120);
-		expect(resolveScreenShareFrameRate(90)).toBe(90);
-		expect(resolveScreenShareFrameRate(60)).toBe(60);
-	});
-
-	it('moves the preset to 1080p30 and lands the faster rungs on 60 FPS on the experiment', () => {
-		rollout.enabled = true;
+describe('screen share quality', () => {
+	it('uses the 1080p30 preset and lands the faster rungs on 60 FPS', () => {
 		expect(targetOf()).toMatchObject({resolution: 'high', frameRate: 30});
 		expect(resolveScreenShareFrameRate(120)).toBe(60);
 		expect(resolveScreenShareFrameRate(90)).toBe(60);
 		expect(resolveScreenShareFrameRate(60)).toBe(60);
 	});
 
-	it('reads the rung table off the experiment and the pixel budget on it', () => {
-		expect(getScreenShareBitrateBps('source', 60)).toBe(6_000_000);
-		rollout.enabled = true;
+	it('reads the bitrate off the pixel budget', () => {
 		expect(getScreenShareBitrateBps('source', 60)).toBe(9_000_000);
 	});
 
-	it('publishes the stored frame rate and the rung bitrate off the experiment', () => {
+	it('publishes the resolved frame rate and the pixel budget bitrate', () => {
 		const {publishOptions} = buildScreenShareOptions({
 			resolution: 'source',
 			frameRate: 90,
@@ -118,26 +97,18 @@ describe('the screen share delivery experiment', () => {
 			sourceDimensions: {width: 3840, height: 2160},
 		});
 		expect(publishOptions.screenShareEncoding).toEqual({
-			maxBitrate: 6_000_000,
-			maxFramerate: 90,
+			maxBitrate: 9_000_000,
+			maxFramerate: 60,
 			priority: 'high',
 		});
 		expect(publishOptions.degradationPreference).toBe('maintain-resolution');
 	});
 
-	it('holds the motion hint for every surface off the experiment and only for a camera on it', () => {
-		expect(targetOf({mode: 'gaming'}).contentHint).toBe('motion');
-		rollout.enabled = true;
+	it('holds the motion hint only for a camera', () => {
 		expect(targetOf({mode: 'gaming'}).contentHint).toBeUndefined();
 	});
 
-	it('ignores the software H.264 clamp off the experiment', () => {
-		expect(targetOf({mode: 'gaming', softwareEncoderClamp: true})).toMatchObject({
-			resolution: 'ultra',
-			frameRate: 60,
-			softwareEncoderClamped: false,
-		});
-		rollout.enabled = true;
+	it('applies the software H.264 clamp', () => {
 		expect(targetOf({mode: 'gaming', softwareEncoderClamp: true})).toMatchObject({
 			resolution: 'medium',
 			frameRate: 30,
@@ -147,15 +118,7 @@ describe('the screen share delivery experiment', () => {
 });
 
 describe('screen share degradation preference', () => {
-	it('holds the resolution for every share off the experiment', () => {
-		expect(
-			resolveScreenShareDegradationPreference({
-				context: 'display',
-				rung: 'medium',
-				contentHint: undefined,
-				maxBitrate: 3_000_000,
-			}),
-		).toBe('maintain-resolution');
+	it('keeps device shares balanced', () => {
 		expect(
 			resolveScreenShareDegradationPreference({
 				context: 'device',
@@ -167,7 +130,6 @@ describe('screen share degradation preference', () => {
 	});
 
 	it('refuses maintain-framerate below the initial frame dropper cliff', () => {
-		rollout.enabled = true;
 		expect(
 			resolveScreenShareDegradationPreference({
 				context: 'display',

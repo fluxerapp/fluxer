@@ -63,7 +63,6 @@ import ActiveScreenShareSource, {
 	type PublishedScreenShareSource,
 } from '@app/features/voice/state/ActiveScreenShareSource';
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
-import ScreenShareDeliveryRollout from '@app/features/voice/state/ScreenShareDeliveryRollout';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
 	prepareHighFidelityScreenShareAudioTrack,
@@ -183,7 +182,6 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 	encoderVerificationTimer: (() => void) | null = null;
 	private screenShareTrackingHolds = 0;
 	private screenShareCapturePaused = false;
-	private screenShareDeliveryArmed = false;
 	private screenShareTrackingGeneration = 0;
 	private readonly reconciledCodecPairs = new Set<string>();
 	private readonly verifiedCodecCorrectionsByTrack = new WeakMap<MediaStreamTrack, number>();
@@ -679,7 +677,6 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		preferredTrack?: LocalVideoTrack,
 	): void {
 		this.cleanupActiveScreenShareEndListenerInternal();
-		this.screenShareDeliveryArmed = ScreenShareDeliveryRollout.enabled;
 		const publication = preferredTrack ? undefined : participant.getTrackPublication(Track.Source.ScreenShare);
 		const videoTrack = preferredTrack ?? publication?.videoTrack;
 		const mediaStreamTrack = videoTrack?.mediaStreamTrack;
@@ -730,15 +727,11 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		};
 		const onMuted = (): void => reportCapturePaused(true);
 		const onUnmuted = (): void => reportCapturePaused(false);
-		const tracksCapturePauses = this.screenShareDeliveryArmed;
 		mediaStreamTrack.addEventListener('ended', onEnded);
-		if (tracksCapturePauses) {
-			mediaStreamTrack.addEventListener('mute', onMuted);
-			mediaStreamTrack.addEventListener('unmute', onUnmuted);
-		}
+		mediaStreamTrack.addEventListener('mute', onMuted);
+		mediaStreamTrack.addEventListener('unmute', onUnmuted);
 		this.activeScreenShareEndListener = () => {
 			mediaStreamTrack.removeEventListener('ended', onEnded);
-			if (!tracksCapturePauses) return;
 			mediaStreamTrack.removeEventListener('mute', onMuted);
 			mediaStreamTrack.removeEventListener('unmute', onUnmuted);
 		};
@@ -1152,7 +1145,7 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 			nextConstraints.frameRate = {ideal: resolution.frameRate, max: resolution.frameRate};
 		}
 		if (JSON.stringify(currentConstraints) === JSON.stringify(nextConstraints)) return 'unchanged';
-		if (this.screenShareDeliveryArmed && screenShareSourceHasClonedTracks(screenShareTrack)) {
+		if (screenShareSourceHasClonedTracks(screenShareTrack)) {
 			logger.warn('Screen share capture geometry needs a restart while a backup codec holds a clone of the source', {
 				resolution,
 			});
@@ -1202,7 +1195,6 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 		this.ensureScreenShareKeepAliveSinkInternal(participant);
 		updateLocalParticipantFromRoom(room);
 		this.syncLocalScreenShareAudioStateInternal(participant, participant.isScreenShareEnabled);
-		if (!this.screenShareDeliveryArmed) return true;
 		return geometryUpdate !== 'needs-capture-restart' && geometryUpdate !== 'failed';
 	}
 
@@ -1225,7 +1217,6 @@ class VoiceEngineV2AppScreenShareExecutionAdapter extends Store {
 	}
 
 	resetStreamTracking(): void {
-		this.screenShareDeliveryArmed = false;
 		this.setScreenShareCapturePausedInternal(false);
 		this.clearScreenShareKeepAliveSinkInternal();
 		this.setStreamingPriorityInternal(false);

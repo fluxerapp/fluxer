@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import ScreenShareDeliveryRollout from '@app/features/voice/state/ScreenShareDeliveryRollout';
 import type {VideoCodec} from 'livekit-client';
 
 const logger = new Logger('VideoDecoderCapabilities');
@@ -150,7 +149,7 @@ export function getVideoDecoderExclusionsSync(): Array<VideoCodec> | null {
 }
 
 export function markScreenShareDecodeFailure(codec: VideoCodec, reason: string): boolean {
-	if (ScreenShareDeliveryRollout.enabled && isBaselineWebRtcDecodeCodec(codec)) {
+	if (isBaselineWebRtcDecodeCodec(codec)) {
 		logger.warn('Keeping a baseline codec advertised despite a local screen share decode stall', {codec, reason});
 		return false;
 	}

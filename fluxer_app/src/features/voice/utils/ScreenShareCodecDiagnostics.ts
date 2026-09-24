@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import ScreenShareDeliveryRollout from '@app/features/voice/state/ScreenShareDeliveryRollout';
 import SoftwareEncoderWarning from '@app/features/voice/state/SoftwareEncoderWarning';
 import {classifyVideoDecoderAcceleration} from '@app/features/voice/utils/VideoAccelerationClassification';
 import type {VideoCodec} from 'livekit-client';
 
 const logger = new Logger('ScreenShareCodecDiagnostics');
 const DECODE_SAMPLE_INTERVAL_MS = 5000;
-const DECODER_VERIFICATION_DELAY_MS = 5000;
 const UNKNOWN_DECODER_IMPLEMENTATION = 'software decoder';
 
 interface CodecStatsEntry {
@@ -144,97 +142,6 @@ function collectInboundVideoStats(stats: RTCStatsReport): {
 	return {codecs, reports};
 }
 
-function findSoftwareVideoDecoderInStats(stats: RTCStatsReport): SoftwareVideoDecoderInfo | null {
-	const {codecs, reports} = collectInboundVideoStats(stats);
-	for (const report of reports) {
-		if (getStatsKind(report, codecs) !== 'video') continue;
-		const implementation =
-			typeof report.decoderImplementation === 'string' && report.decoderImplementation.length > 0
-				? report.decoderImplementation
-				: null;
-		const powerEfficientDecoder =
-			typeof report.powerEfficientDecoder === 'boolean' ? report.powerEfficientDecoder : null;
-		if (!isSoftwareVideoStats(implementation, powerEfficientDecoder)) continue;
-		return {
-			codec: getCodecLabel(report.codecId ? codecs.get(report.codecId)?.mimeType : undefined),
-			implementation: implementation ?? UNKNOWN_DECODER_IMPLEMENTATION,
-			powerEfficientDecoder,
-		};
-	}
-	return null;
-}
-
-function findStalledVideoDecoderInStats(stats: RTCStatsReport): StalledVideoDecoderInfo | null {
-	const {codecs, reports} = collectInboundVideoStats(stats);
-	for (const report of reports) {
-		if (getStatsKind(report, codecs) !== 'video') continue;
-		const framesDecoded = finiteNumber(report.framesDecoded);
-		if (framesDecoded === null || framesDecoded > 0) continue;
-		const framesReceived = finiteNumber(report.framesReceived);
-		if (framesReceived === null || framesReceived < 1) continue;
-		const mimeType = report.codecId ? codecs.get(report.codecId)?.mimeType : undefined;
-		const codec = getVideoCodecFromMimeType(mimeType);
-		if (!codec) continue;
-		return {
-			codec,
-			mimeType,
-			packetsReceived: finiteNumber(report.packetsReceived) ?? 0,
-			bytesReceived: finiteNumber(report.bytesReceived) ?? 0,
-			framesDecoded,
-			framesReceived,
-			framesDropped: finiteNumber(report.framesDropped),
-		};
-	}
-	return null;
-}
-
-function scheduleScreenShareDecoderVerification(
-	getStats: () => Promise<RTCStatsReport | undefined>,
-	onDecodeFailure?: (failure: StalledVideoDecoderInfo) => void,
-): () => void {
-	let cancelled = false;
-	let timer: ReturnType<typeof setTimeout> | null = null;
-	const scheduleConfirmation = (first: StalledVideoDecoderInfo): void => {
-		timer = setTimeout(async () => {
-			timer = null;
-			try {
-				const stats = await getStats();
-				const confirmed = confirmDecodeStall(first, stats ? findStalledVideoDecoderInStats(stats) : null);
-				if (cancelled || !confirmed) return;
-				logger.warn('Screen share video decode is stalled', confirmed);
-				onDecodeFailure?.(confirmed);
-			} catch (error) {
-				logger.debug('Failed to confirm the screen share decode stall', {error});
-			}
-		}, DECODER_VERIFICATION_DELAY_MS);
-	};
-	timer = setTimeout(async () => {
-		timer = null;
-		let firstStall: StalledVideoDecoderInfo | null = null;
-		try {
-			const stats = await getStats();
-			if (!stats) return;
-			firstStall = findStalledVideoDecoderInStats(stats);
-			const decoder = findSoftwareVideoDecoderInStats(stats);
-			if (!decoder) return;
-			logger.warn('Screen share is using a software decoder', decoder);
-			SoftwareEncoderWarning.triggerDecoderWarning(decoder.codec, decoder.implementation);
-		} catch (error) {
-			logger.debug('Failed to verify screen share decoder', {error});
-		} finally {
-			if (!cancelled && firstStall) {
-				scheduleConfirmation(firstStall);
-			}
-		}
-	}, DECODER_VERIFICATION_DELAY_MS);
-	return () => {
-		cancelled = true;
-		if (!timer) return;
-		clearTimeout(timer);
-		timer = null;
-	};
-}
-
 export function findInboundVideoDecodeSample(stats: RTCStatsReport): InboundVideoDecodeSample | null {
 	const {codecs, reports} = collectInboundVideoStats(stats);
 	for (const report of reports) {
@@ -338,7 +245,6 @@ export function monitorScreenShareDecodeHealth(
 	getStats: () => Promise<RTCStatsReport | undefined>,
 	onDecodeStall?: (failure: StalledVideoDecoderInfo) => void,
 ): () => void {
-	if (!ScreenShareDeliveryRollout.enabled) return scheduleScreenShareDecoderVerification(getStats, onDecodeStall);
 	let cancelled = false;
 	let timer: ReturnType<typeof setTimeout> | null = null;
 	let previousSample: InboundVideoDecodeSample | null = null;

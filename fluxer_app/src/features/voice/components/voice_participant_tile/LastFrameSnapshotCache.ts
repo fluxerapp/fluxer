@@ -2,25 +2,18 @@
 
 import {videoElementHasRenderedFrame} from '@app/features/voice/components/VideoElementFrameState';
 import {Store} from '@app/features/voice/engine/Store';
-import ScreenShareDeliveryRollout from '@app/features/voice/state/ScreenShareDeliveryRollout';
 
 export const LAST_FRAME_SNAPSHOTS_MAX = 8;
 export const LAST_FRAME_SNAPSHOT_WIDTH_MAX = 640;
 export const LAST_FRAME_SNAPSHOT_JPEG_QUALITY = 0.7;
 
-const LAST_FRAME_SNAPSHOT_LEGACY_WIDTH_MAX = 1280;
-
-function computeSnapshotDimensions(
-	sourceWidth: number,
-	sourceHeight: number,
-	widthMax: number,
-): {width: number; height: number} {
-	if (sourceWidth <= widthMax) {
+function computeSnapshotDimensions(sourceWidth: number, sourceHeight: number): {width: number; height: number} {
+	if (sourceWidth <= LAST_FRAME_SNAPSHOT_WIDTH_MAX) {
 		return {width: sourceWidth, height: sourceHeight};
 	}
-	const scale = widthMax / sourceWidth;
+	const scale = LAST_FRAME_SNAPSHOT_WIDTH_MAX / sourceWidth;
 	return {
-		width: widthMax,
+		width: LAST_FRAME_SNAPSHOT_WIDTH_MAX,
 		height: Math.max(1, Math.round(sourceHeight * scale)),
 	};
 }
@@ -29,12 +22,11 @@ function drawSourceToOffscreenCanvas(
 	source: CanvasImageSource,
 	sourceWidth: number,
 	sourceHeight: number,
-	widthMax: number,
 ): OffscreenCanvas | null {
 	if (typeof OffscreenCanvas === 'undefined') return null;
 	if (sourceWidth <= 0 || sourceHeight <= 0) return null;
 	try {
-		const {width, height} = computeSnapshotDimensions(sourceWidth, sourceHeight, widthMax);
+		const {width, height} = computeSnapshotDimensions(sourceWidth, sourceHeight);
 		const canvas = new OffscreenCanvas(width, height);
 		const context = canvas.getContext('2d');
 		if (!context) return null;
@@ -45,16 +37,11 @@ function drawSourceToOffscreenCanvas(
 	}
 }
 
-function drawSourceToDataUrl(
-	source: CanvasImageSource,
-	sourceWidth: number,
-	sourceHeight: number,
-	widthMax: number,
-): string | null {
+function drawSourceToDataUrl(source: CanvasImageSource, sourceWidth: number, sourceHeight: number): string | null {
 	if (typeof document === 'undefined') return null;
 	if (sourceWidth <= 0 || sourceHeight <= 0) return null;
 	try {
-		const {width, height} = computeSnapshotDimensions(sourceWidth, sourceHeight, widthMax);
+		const {width, height} = computeSnapshotDimensions(sourceWidth, sourceHeight);
 		const canvas = document.createElement('canvas');
 		canvas.width = width;
 		canvas.height = height;
@@ -114,38 +101,29 @@ class LastFrameSnapshotCache extends Store {
 
 	captureFromVideoElement(key: string, video: HTMLVideoElement | null): void {
 		if (!key) return;
-		const deliveryEnabled = ScreenShareDeliveryRollout.enabled;
-		if (deliveryEnabled && typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+		if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
 		if (!videoElementHasRenderedFrame(video)) return;
 		const renderedVideo = video as HTMLVideoElement;
-		const widthMax = deliveryEnabled ? LAST_FRAME_SNAPSHOT_WIDTH_MAX : LAST_FRAME_SNAPSHOT_LEGACY_WIDTH_MAX;
-		if (deliveryEnabled) {
-			const captureId = this.nextCaptureId;
-			this.nextCaptureId += 1;
-			this.captureIds.set(key, captureId);
-			const canvas = drawSourceToOffscreenCanvas(
-				renderedVideo,
-				renderedVideo.videoWidth,
-				renderedVideo.videoHeight,
-				widthMax,
-			);
-			if (canvas) {
-				void canvas
-					.convertToBlob({type: 'image/jpeg', quality: LAST_FRAME_SNAPSHOT_JPEG_QUALITY})
-					.then((blob) => {
-						if (this.captureIds.get(key) !== captureId) return;
-						this.captureIds.delete(key);
-						this.retainSnapshot(key, URL.createObjectURL(blob));
-					})
-					.catch(() => {
-						if (this.captureIds.get(key) !== captureId) return;
-						this.captureIds.delete(key);
-					});
-				return;
-			}
-			this.captureIds.delete(key);
+		const captureId = this.nextCaptureId;
+		this.nextCaptureId += 1;
+		this.captureIds.set(key, captureId);
+		const canvas = drawSourceToOffscreenCanvas(renderedVideo, renderedVideo.videoWidth, renderedVideo.videoHeight);
+		if (canvas) {
+			void canvas
+				.convertToBlob({type: 'image/jpeg', quality: LAST_FRAME_SNAPSHOT_JPEG_QUALITY})
+				.then((blob) => {
+					if (this.captureIds.get(key) !== captureId) return;
+					this.captureIds.delete(key);
+					this.retainSnapshot(key, URL.createObjectURL(blob));
+				})
+				.catch(() => {
+					if (this.captureIds.get(key) !== captureId) return;
+					this.captureIds.delete(key);
+				});
+			return;
 		}
-		const dataUrl = drawSourceToDataUrl(renderedVideo, renderedVideo.videoWidth, renderedVideo.videoHeight, widthMax);
+		this.captureIds.delete(key);
+		const dataUrl = drawSourceToDataUrl(renderedVideo, renderedVideo.videoWidth, renderedVideo.videoHeight);
 		if (!dataUrl) return;
 		this.retainSnapshot(key, dataUrl);
 	}

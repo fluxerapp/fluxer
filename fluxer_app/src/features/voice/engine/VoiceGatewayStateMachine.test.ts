@@ -9,12 +9,7 @@ import {
 	type VoiceGatewayStateEvent,
 	type VoiceGatewayStateSnapshot,
 } from '@app/features/voice/engine/VoiceGatewayStateMachine';
-import {describe, expect, it, vi} from 'vitest';
-
-vi.mock('@app/features/voice/state/ScreenShareDeliveryRollout', () => ({
-	ScreenShareDeliveryRollout: {enabled: false},
-	default: {enabled: false},
-}));
+import {describe, expect, it} from 'vitest';
 
 function voiceState(overrides: Partial<VoiceState> = {}): VoiceState {
 	return {

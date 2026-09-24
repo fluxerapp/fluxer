@@ -49,7 +49,6 @@ export function applyVideoStartBitrate(
 	codec: string,
 	maxbr: number,
 	isScreenShare = false,
-	screenShareDelivery = false,
 ): number | undefined {
 	if (!media.msid?.includes(cid)) {
 		return undefined;
@@ -65,25 +64,10 @@ export function applyVideoStartBitrate(
 	const calculatedStartBitrate = Math.round(maxbr * startBitrateMultiplier);
 	let startBitrate = Math.min(calculatedStartBitrate, maxStartBitrateKbps);
 	if (isScreenShare) {
-		startBitrate = screenShareDelivery
-			? Math.max(minScreenShareStartBitrateKbps, Math.min(calculatedStartBitrate, maxScreenShareStartBitrateKbps))
-			: calculatedStartBitrate;
-	}
-
-	if (!screenShareDelivery) {
-		const codecPayload = codecPayloads[0];
-		const fmtp = media.fmtp.find((entry) => entry.payload === codecPayload);
-		if (fmtp) {
-			if (!fmtp.config.includes(startBitrateParameter)) {
-				fmtp.config += `;${startBitrateParameter}=${startBitrate}`;
-			}
-		} else {
-			media.fmtp.push({
-				payload: codecPayload,
-				config: `${startBitrateParameter}=${startBitrate}`,
-			});
-		}
-		return codecPayload;
+		startBitrate = Math.max(
+			minScreenShareStartBitrateKbps,
+			Math.min(calculatedStartBitrate, maxScreenShareStartBitrateKbps),
+		);
 	}
 
 	for (const payload of codecPayloads) {
@@ -143,8 +127,6 @@ export default class PCTransport extends (EventEmitter as new () => TypedEmitter
 
 	excludedVideoDecoderMimeTypes: Set<string> = new Set();
 
-	private screenShareDelivery: boolean;
-
 	onOffer?: (offer: RTCSessionDescriptionInit, offerId: number) => void;
 
 	onIceCandidate?: (candidate: RTCIceCandidate) => void;
@@ -161,10 +143,9 @@ export default class PCTransport extends (EventEmitter as new () => TypedEmitter
 
 	onTrack?: (ev: RTCTrackEvent) => void;
 
-	constructor(config?: RTCConfiguration, loggerOptions: LoggerOptions = {}, screenShareDelivery: boolean = false) {
+	constructor(config?: RTCConfiguration, loggerOptions: LoggerOptions = {}) {
 		super();
 		this.loggerOptions = loggerOptions;
-		this.screenShareDelivery = screenShareDelivery;
 		this.log = getLogger(loggerOptions.loggerName ?? LoggerNames.PCTransport, () => this.logContext);
 		this.iceLog = getLogger(LoggerNames.ICE, () => this.logContext);
 		this.config = config;
@@ -412,7 +393,6 @@ export default class PCTransport extends (EventEmitter as new () => TypedEmitter
 							trackbr.codec,
 							trackbr.maxbr,
 							trackbr.isScreenShare,
-							this.screenShareDelivery,
 						);
 						if (codecPayload === undefined) {
 							return false;
@@ -471,10 +451,7 @@ export default class PCTransport extends (EventEmitter as new () => TypedEmitter
 		for (const transceiver of this.getTransceivers()) {
 			if (transceiver.receiver.track?.kind !== 'video') continue;
 			if ((transceiver as {stopped?: boolean}).stopped) continue;
-			const receives = this.screenShareDelivery
-				? transceiver.direction === 'recvonly'
-				: transceiver.direction === 'recvonly' || transceiver.direction === 'sendrecv';
-			if (!receives) continue;
+			if (transceiver.direction !== 'recvonly') continue;
 			if (typeof transceiver.setCodecPreferences !== 'function') continue;
 			try {
 				transceiver.setCodecPreferences(allowed);
