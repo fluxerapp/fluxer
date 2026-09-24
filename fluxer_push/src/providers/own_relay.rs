@@ -141,6 +141,27 @@ mod tests {
     }
 
     #[test]
+    fn a_voip_endpoint_on_our_own_relay_keeps_its_own_leg() {
+        let hop = parse(
+            &format!("https://push.fluxer.com/relay/v1/apns-voip/canary/production/{TOKEN}"),
+            &ours(),
+        )
+        .expect("a voip endpoint parses");
+        assert_eq!(hop.leg, Leg::ApnsVoip);
+    }
+
+    #[test]
+    fn only_the_apns_alert_leg_is_taken_in_process() {
+        let shortcut = |path: &str| {
+            parse(&format!("https://push.fluxer.com/relay/v1/{path}"), &ours())
+                .filter(|hop| matches!(hop.leg, Leg::Apns))
+        };
+        assert!(shortcut(&format!("apns/canary/production/{TOKEN}")).is_some());
+        assert!(shortcut(&format!("apns-voip/canary/production/{TOKEN}")).is_none());
+        assert!(shortcut("fcm/canary/dYC_x9gXTjyyrG8_Aw3nUM%3AAPA91bExample").is_none());
+    }
+
+    #[test]
     fn a_relay_we_do_not_operate_is_left_on_the_network_path() {
         let endpoint = format!("https://push.example.org/relay/v1/apns/canary/production/{TOKEN}");
         assert!(parse(&endpoint, &ours()).is_none());

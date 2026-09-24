@@ -91,15 +91,12 @@ pub async fn send(state: &AppState, sub: &Subscription, envelope: &Value) -> Sen
         return SendOutcome::permanent("unsupported_platform");
     };
     let started_ms = now_ms();
-    let direct = own_relay::parse(&sub.endpoint, &state.cfg.own_relay_hosts);
+    let direct = in_process_hop(&sub.endpoint, &state.cfg.own_relay_hosts);
     let outcome = match (route, direct) {
         (Route::WebPush, Some(hop)) => {
             let hopped = hop.as_subscription(sub);
             state.metrics.record_own_relay_shortcut();
-            match hop.leg {
-                own_relay::Leg::Fcm => fcm::send(state, &hopped, envelope).await,
-                _ => apns::send(state, &hopped, envelope).await,
-            }
+            apns::send(state, &hopped, envelope).await
         }
         (Route::WebPush, None) => web_push::send(state, sub, envelope).await,
         (Route::LegacyApns, _) => apns::send(state, sub, envelope).await,
@@ -114,6 +111,10 @@ pub async fn send(state: &AppState, sub: &Subscription, envelope: &Value) -> Sen
         .metrics
         .record_delivery_route(route_label(route), result_of(&outcome));
     outcome
+}
+
+fn in_process_hop(endpoint: &str, hosts: &[String]) -> Option<own_relay::Hop> {
+    own_relay::parse(endpoint, hosts).filter(|hop| matches!(hop.leg, own_relay::Leg::Apns))
 }
 
 fn route_label(route: Route) -> DeliveryRoute {
@@ -140,5 +141,34 @@ fn result_of(outcome: &SendOutcome) -> SendResult {
         SendOutcome::TokenInvalid { .. } => SendResult::TokenInvalid,
         SendOutcome::Permanent { .. } => SendResult::Permanent,
         SendOutcome::Transient { .. } => SendResult::Transient,
+    }
+}
+
+#[cfg(test)]
+mod hop_tests {
+    use super::*;
+
+    const TOKEN: &str = "3dbc5a5ef1a1c1666afc26f466e1b3ebaaf4c66d92dddeb0fd1b69c49641d4cd";
+
+    fn ours() -> Vec<String> {
+        vec!["push.fluxer.com".to_owned()]
+    }
+
+    #[test]
+    fn only_the_plain_apns_leg_is_delivered_in_process() {
+        let apns = format!("https://push.fluxer.com/relay/v1/apns/canary/production/{TOKEN}");
+        assert!(in_process_hop(&apns, &ours()).is_some());
+    }
+
+    #[test]
+    fn an_fcm_relay_endpoint_keeps_its_encrypted_network_hop() {
+        let fcm = "https://push.fluxer.com/relay/v1/fcm/canary/tok%3AAPA91bExample";
+        assert!(in_process_hop(fcm, &ours()).is_none());
+    }
+
+    #[test]
+    fn a_pushkit_relay_endpoint_keeps_its_voip_topic() {
+        let voip = format!("https://push.fluxer.com/relay/v1/apns-voip/canary/production/{TOKEN}");
+        assert!(in_process_hop(&voip, &ours()).is_none());
     }
 }

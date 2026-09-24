@@ -37,6 +37,7 @@ const OCTET_STREAM: &str = "application/octet-stream";
 const AES128GCM: &str = "aes128gcm";
 const NOT_FOUND: u16 = 404;
 const GONE: u16 = 410;
+const INSUFFICIENT_STORAGE: u16 = 507;
 const MAX_HOSTNAME_BYTES: usize = 253;
 const MAX_LABEL_BYTES: usize = 63;
 
@@ -110,7 +111,7 @@ pub async fn send(state: &AppState, sub: &Subscription, envelope: &Value) -> Sen
                 continue;
             }
         };
-        if is_transient_status(status) && attempt < MAX_TRANSIENT_RETRIES {
+        if should_retry(status, attempt) {
             tokio::time::sleep(retry_delay(attempt)).await;
             attempt += 1;
             continue;
@@ -127,6 +128,10 @@ fn delivery_headers(envelope: &Value) -> (&'static str, &'static str) {
     }
 }
 
+fn should_retry(status: u16, attempt: u32) -> bool {
+    is_transient_status(status) && status != INSUFFICIENT_STORAGE && attempt < MAX_TRANSIENT_RETRIES
+}
+
 fn classify(status: u16) -> SendOutcome {
     match status {
         200..=299 => SendOutcome::Accepted,
@@ -134,6 +139,7 @@ fn classify(status: u16) -> SendOutcome {
         NOT_FOUND => SendOutcome::TokenInvalid {
             reason: "not_found",
         },
+        INSUFFICIENT_STORAGE => SendOutcome::permanent("http_507"),
         _ if is_transient_status(status) => SendOutcome::transient(format!("http_{status}")),
         _ => SendOutcome::permanent(format!("http_{status}")),
     }
@@ -207,4 +213,44 @@ fn retry_delay(attempt: u32) -> Duration {
     );
     let jitter = rand::rng().random_range(1..=(base / 4).max(1));
     Duration::from_millis(MAX_RETRY_DELAY_MS.min(base + jitter - 1))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_unified_push_topic_with_no_listener_is_permanent() {
+        assert_eq!(
+            classify(INSUFFICIENT_STORAGE),
+            SendOutcome::permanent("http_507")
+        );
+    }
+
+    #[test]
+    fn an_unavailable_push_service_stays_retryable() {
+        assert_eq!(classify(503), SendOutcome::transient("http_503"));
+    }
+}
+
+#[cfg(test)]
+mod retry_tests {
+    use super::*;
+
+    #[test]
+    fn a_topic_with_no_listener_is_not_retried() {
+        assert!(!should_retry(INSUFFICIENT_STORAGE, 0));
+    }
+
+    #[test]
+    fn an_unavailable_push_service_is_retried_until_the_budget_runs_out() {
+        assert!(should_retry(503, 0));
+        assert!(!should_retry(503, MAX_TRANSIENT_RETRIES));
+    }
+
+    #[test]
+    fn a_permanent_status_is_never_retried() {
+        assert!(!should_retry(400, 0));
+        assert!(!should_retry(410, 0));
+    }
 }

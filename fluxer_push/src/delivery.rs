@@ -279,13 +279,10 @@ async fn run_subject<T: Transport>(
             let job_transport = transport.clone();
             running.spawn(async move {
                 let _permit = permit;
-                let mut result = run_job(&job_state, &job_sends, job).await;
+                let result = run_job(&job_state, &job_sends, job).await;
                 if matches!(result, Answer::Done) {
                     for claim in claims {
                         claim.done();
-                    }
-                    if recipients_running {
-                        result = Answer::NotDone(RUNNING);
                     }
                 }
                 answer(&job_transport, reply_to, result).await;

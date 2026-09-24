@@ -221,7 +221,6 @@ fn apns_dead_token(status: u16, reason: &str) -> Option<DeadToken> {
         (_, "Unregistered") => Some(DeadToken::Gone("unregistered")),
         (410, _) => Some(DeadToken::Gone("gone")),
         (400, "BadDeviceToken") => Some(DeadToken::Invalid("bad_device_token")),
-        (400, "DeviceTokenNotForTopic") => Some(DeadToken::Invalid("device_token_not_for_topic")),
         _ => None,
     }
 }
@@ -306,6 +305,19 @@ mod tests {
             "reqwest still puts the url in Display, so the guard below is what matters"
         );
         assert!(!error.without_url().to_string().contains(TOKEN));
+    }
+
+    #[test]
+    fn a_wrong_topic_is_not_a_dead_token() {
+        assert_eq!(apns_dead_token(400, "DeviceTokenNotForTopic"), None);
+    }
+
+    #[test]
+    fn a_bad_device_token_is_still_a_dead_token() {
+        assert_eq!(
+            apns_dead_token(400, "BadDeviceToken"),
+            Some(DeadToken::Invalid("bad_device_token"))
+        );
     }
 
     #[tokio::test]
