@@ -139,7 +139,7 @@ describe('ApnsPushService', () => {
 			notification: {title: 'Alice', body: 'Hello', icon: 'https://cdn.example/avatar.png'},
 		});
 		expect(payload.image_url).toBeUndefined();
-		expect(payload.aps).not.toHaveProperty('mutable-content');
+		expect(payload.aps).toHaveProperty('mutable-content', 1);
 		expect(payload.author_avatar_url).toBe('https://cdn.example/avatar.png');
 	});
 	it('imports the APNs signing key once per PEM and rejects a truncated one every time', async () => {
