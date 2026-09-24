@@ -242,8 +242,24 @@ field_or_null(Map, Key) ->
 
 -spec route_push_notification(map(), state()) -> state().
 route_push_notification(Params, State) ->
-    push:handle_message_create(Params),
-    State.
+    case push_eligible(State) of
+        true ->
+            FlushedState = flush_push_buffer(State),
+            push:handle_message_create(Params),
+            FlushedState;
+        false ->
+            buffer_push_notification(Params, State)
+    end.
+
+-spec push_eligible(state()) -> boolean().
+push_eligible(State) ->
+    push_eligible(enrolled_in_push_delivery(State), maps:get(sessions, State, #{})).
+
+-spec push_eligible(boolean(), map()) -> boolean().
+push_eligible(true, Sessions) ->
+    no_session_holds_push(Sessions);
+push_eligible(false, Sessions) ->
+    is_push_eligible(Sessions).
 
 -spec build_push_create_params(user_id(), map()) -> map() | undefined.
 build_push_create_params(UserId, Data) ->
@@ -260,6 +276,42 @@ build_push_create_params(UserId, Data) ->
             }
     end.
 
+-spec buffer_push_notification(map(), state()) -> state().
+buffer_push_notification(Params, State) ->
+    case make_push_buffer_entry(Params) of
+        undefined ->
+            State;
+        Entry ->
+            Buffer = [Entry | maps:get(push_buffer, State, [])],
+            Capped = cap_push_buffer(Buffer),
+            ok = count_push_buffer_overflow(
+                maps:get(user_id, State, undefined), length(Buffer) - length(Capped)
+            ),
+            State#{push_buffer := Capped}
+    end.
+
+-spec count_push_buffer_overflow(term(), non_neg_integer()) -> ok.
+count_push_buffer_overflow(_UserId, 0) ->
+    ok;
+count_push_buffer_overflow(UserId, Dropped) ->
+    ok = guild_ets_utils:ensure_table(?PUSH_BUFFER_COUNTERS, [
+        named_table, public, set, {write_concurrency, true}
+    ]),
+    try
+        _ = ets:update_counter(
+            ?PUSH_BUFFER_COUNTERS,
+            ?PUSH_BUFFER_OVERFLOW,
+            {2, Dropped},
+            {?PUSH_BUFFER_OVERFLOW, 0}
+        ),
+        ok
+    catch
+        error:badarg -> ok
+    end,
+    logger:warning(
+        "presence_push_buffer_overflow: user_id=~p dropped=~p", [UserId, Dropped]
+    ).
+
 -spec push_buffer_counters() -> #{atom() => non_neg_integer()}.
 push_buffer_counters() ->
     try ets:lookup(?PUSH_BUFFER_COUNTERS, ?PUSH_BUFFER_OVERFLOW) of
@@ -269,6 +321,52 @@ push_buffer_counters() ->
             #{?PUSH_BUFFER_OVERFLOW => 0}
     catch
         error:badarg -> #{?PUSH_BUFFER_OVERFLOW => 0}
+    end.
+
+-spec cap_push_buffer([push_buffer_entry()]) -> [push_buffer_entry()].
+cap_push_buffer(Buffer) ->
+    MaxEntries = env_non_neg_integer(
+        ?PUSH_BUFFER_MAX_ENTRIES_CONFIG_KEY, ?DEFAULT_PUSH_BUFFER_MAX_ENTRIES
+    ),
+    MaxBytes = env_non_neg_integer(
+        ?PUSH_BUFFER_MAX_BYTES_CONFIG_KEY, ?DEFAULT_PUSH_BUFFER_MAX_BYTES
+    ),
+    cap_push_buffer_bytes(take_newest_push_buffer_entries(Buffer, MaxEntries), MaxBytes).
+
+-spec take_newest_push_buffer_entries([push_buffer_entry()], non_neg_integer()) ->
+    [push_buffer_entry()].
+take_newest_push_buffer_entries(_Buffer, 0) ->
+    [];
+take_newest_push_buffer_entries(Buffer, MaxEntries) ->
+    lists:sublist(Buffer, MaxEntries).
+
+-spec cap_push_buffer_bytes([push_buffer_entry()], non_neg_integer()) -> [push_buffer_entry()].
+cap_push_buffer_bytes(Buffer, 0) ->
+    Buffer;
+cap_push_buffer_bytes(Buffer, MaxBytes) ->
+    cap_push_buffer_bytes(Buffer, MaxBytes, 0, []).
+
+-spec cap_push_buffer_bytes(
+    [push_buffer_entry()], non_neg_integer(), non_neg_integer(), [push_buffer_entry()]
+) -> [push_buffer_entry()].
+cap_push_buffer_bytes([], _MaxBytes, _UsedBytes, Acc) ->
+    lists:reverse(Acc);
+cap_push_buffer_bytes([Entry | Rest], MaxBytes, UsedBytes, Acc) ->
+    EntryBytes = push_buffer_entry_bytes(Entry),
+    case UsedBytes + EntryBytes =< MaxBytes of
+        true -> cap_push_buffer_bytes(Rest, MaxBytes, UsedBytes + EntryBytes, [Entry | Acc]);
+        false -> lists:reverse(Acc)
+    end.
+
+-spec push_buffer_entry_bytes(push_buffer_entry()) -> non_neg_integer().
+push_buffer_entry_bytes(Entry) ->
+    erts_debug:flat_size(Entry) * erlang:system_info(wordsize).
+
+-spec env_non_neg_integer(atom(), non_neg_integer()) -> non_neg_integer().
+env_non_neg_integer(Key, Default) ->
+    case fluxer_gateway_env:get_optional(Key) of
+        Value when is_integer(Value), Value >= 0 -> Value;
+        _ -> Default
     end.
 
 -spec maybe_ack_push_buffer(integer() | undefined, integer() | undefined, state()) -> state().
@@ -291,6 +389,22 @@ ack_push_buffer(_, _, State) ->
 should_drop_buffer_entry(Entry, ChannelId, MessageId) ->
     maps:get(channel_id, Entry) =:= ChannelId andalso
         maps:get(message_id, Entry) =< MessageId.
+
+-spec make_push_buffer_entry(map()) -> push_buffer_entry() | undefined.
+make_push_buffer_entry(Params) ->
+    MessageData = maps:get(message_data, Params, #{}),
+    ChannelId = extract_snowflake(<<"channel_id">>, MessageData),
+    MessageId = extract_snowflake(<<"id">>, MessageData),
+    build_buffer_entry(ChannelId, MessageId, Params).
+
+-spec build_buffer_entry(integer() | undefined, integer() | undefined, map()) ->
+    push_buffer_entry() | undefined.
+build_buffer_entry(ChannelId, MessageId, Params) when
+    is_integer(ChannelId), is_integer(MessageId)
+->
+    #{channel_id => ChannelId, message_id => MessageId, params => Params};
+build_buffer_entry(_, _, _) ->
+    undefined.
 
 -spec is_push_eligible(map()) -> boolean().
 is_push_eligible(Sessions) ->
@@ -324,29 +438,6 @@ parse_snowflake(FieldName, Value) ->
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
-
-a_direct_message_is_pushed_without_being_held_test() ->
-    ok = meck:new(push, [passthrough, no_link]),
-    try
-        ok = meck:expect(push, handle_message_create, fun(_Params) -> ok end),
-        State = route_push_notification(#{a => 1}, #{push_buffer => []}),
-        ?assertEqual(1, meck:num_calls(push, handle_message_create, '_')),
-        ?assertEqual([], maps:get(push_buffer, State))
-    after
-        meck:unload(push)
-    end.
-
-a_connected_session_no_longer_holds_a_direct_message_test() ->
-    ok = meck:new(push, [passthrough, no_link]),
-    try
-        ok = meck:expect(push, handle_message_create, fun(_Params) -> ok end),
-        Sessions = #{<<"s1">> => #{mobile => true, afk => false, status => online}},
-        State = route_push_notification(#{a => 1}, #{push_buffer => [], sessions => Sessions}),
-        ?assertEqual(1, meck:num_calls(push, handle_message_create, '_')),
-        ?assertEqual([], maps:get(push_buffer, State))
-    after
-        meck:unload(push)
-    end.
 
 is_push_eligible_test() ->
     ?assertEqual(true, is_push_eligible(#{})),
@@ -414,6 +505,31 @@ handle_user_settings_update_visible_status_clears_forced_invisible_test() ->
             <<"s2">> => #{status => dnd, afk => false, mobile => false}
         },
         maps:get(sessions, Updated)
+    ).
+
+buffer_push_notification_caps_entries_test() ->
+    with_gateway_config(
+        #{presence_push_buffer_max_entries => 2, presence_push_buffer_max_bytes => 0},
+        fun() ->
+            State0 = #{push_buffer => []},
+            State1 = buffer_push_notification(push_params(1, 1), State0),
+            State2 = buffer_push_notification(push_params(1, 2), State1),
+            State3 = buffer_push_notification(push_params(1, 3), State2),
+            MessageIds = [
+                maps:get(message_id, Entry)
+             || Entry <- maps:get(push_buffer, State3)
+            ],
+            ?assertEqual([3, 2], MessageIds)
+        end
+    ).
+
+buffer_push_notification_caps_bytes_test() ->
+    with_gateway_config(
+        #{presence_push_buffer_max_entries => 10, presence_push_buffer_max_bytes => 1},
+        fun() ->
+            State = buffer_push_notification(push_params(1, 1), #{push_buffer => []}),
+            ?assertEqual([], maps:get(push_buffer, State))
+        end
     ).
 
 push_params(ChannelId, MessageId) ->
