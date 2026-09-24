@@ -17,6 +17,7 @@
 
 -define(MAX_MENTIONS_FOR_PUSH, 50).
 -define(MAX_PREVIEW_BYTES, 100).
+-define(MAX_IMAGE_URL_BYTES, 1024).
 -define(CHANNEL_TYPE_GUILD_TEXT, 0).
 -define(CHANNEL_TYPE_GUILD_VOICE, 2).
 -define(CHANNEL_TYPE_GUILD_CATEGORY, 4).
@@ -487,10 +488,22 @@ format_name_list(Names) ->
 
 -spec extract_image_url(map()) -> binary() | undefined.
 extract_image_url(MessageData) ->
+    bounded_image_url(resolve_image_url(MessageData)).
+
+-spec resolve_image_url(map()) -> binary() | undefined.
+resolve_image_url(MessageData) ->
     case extract_attachment_image_url(maps:get(<<"attachments">>, MessageData, [])) of
         undefined -> extract_embed_image_url(maps:get(<<"embeds">>, MessageData, []));
         ImageUrl -> ImageUrl
     end.
+
+-spec bounded_image_url(binary() | undefined) -> binary() | undefined.
+bounded_image_url(ImageUrl) when
+    is_binary(ImageUrl), byte_size(ImageUrl) =< ?MAX_IMAGE_URL_BYTES
+->
+    ImageUrl;
+bounded_image_url(_ImageUrl) ->
+    undefined.
 
 -spec extract_attachment_image_url(term()) -> binary() | undefined.
 extract_attachment_image_url([Attachment | Rest]) when is_map(Attachment) ->
@@ -631,6 +644,30 @@ build_url_dm_test() ->
 
 build_url_guild_test() ->
     ?assertEqual(<<"/channels/123/456/789">>, build_url(123, 456, 789)).
+
+extract_image_url_keeps_a_url_within_the_size_bound_test() ->
+    Url = image_url_of_size(?MAX_IMAGE_URL_BYTES),
+    ?assertEqual(Url, extract_image_url(message_with_embed_image(Url))).
+
+extract_image_url_rejects_an_oversized_url_test() ->
+    Url = image_url_of_size(?MAX_IMAGE_URL_BYTES + 1),
+    ?assertEqual(undefined, extract_image_url(message_with_embed_image(Url))).
+
+image_url_of_size(Size) ->
+    Prefix = <<"https://media.example/">>,
+    <<Prefix/binary, (binary:copy(<<"a">>, Size - byte_size(Prefix)))/binary>>.
+
+message_with_embed_image(Url) ->
+    #{
+        <<"embeds">> => [
+            #{
+                <<"image">> => #{
+                    <<"content_type">> => <<"image/png">>,
+                    <<"proxy_url">> => Url
+                }
+            }
+        ]
+    }.
 
 extract_image_url_rejects_malformed_flags_test() ->
     MessageData = #{

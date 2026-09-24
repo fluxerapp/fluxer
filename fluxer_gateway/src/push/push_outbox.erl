@@ -437,8 +437,15 @@ handle_result({error, Reason}, Entry, State) ->
         attempts => maps:get(attempts, Entry)
     }),
     case is_expired(Entry, State) of
-        true -> fall_back(Entry, State);
+        true -> fall_back_prepared(Entry, State);
         false -> retry_settled(settle_if_stale(Entry, State))
+    end.
+
+-spec fall_back_prepared(entry(), state()) -> state().
+fall_back_prepared(Entry, State) ->
+    case prepare(Entry, State) of
+        {skip, State1} -> State1;
+        {send, Prepared, State1} -> fall_back(Prepared, State1)
     end.
 
 -spec retry_settled(settled()) -> state().
@@ -661,3 +668,80 @@ app_pos_integer(Key, Default) ->
         Value when is_integer(Value), Value > 0 -> Value;
         _ -> Default
     end.
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+an_expired_entry_is_handed_back_without_the_users_who_read_it_test() ->
+    Self = self(),
+    State = test_state(#{{7, 20} => {30, now_ms()}}),
+    Entry = test_entry([7, 8], fun(UserIds) -> Self ! {handed_back, UserIds} end),
+    Result = handle_result({error, timeout}, Entry, State),
+    ?assertEqual(1, count(fallbacks, Result)),
+    ?assertEqual(1, count(truncations, Result)),
+    receive
+        {handed_back, UserIds} -> ?assertEqual([8], UserIds)
+    after 2000 -> erlang:error(no_fallback_ran)
+    end.
+
+an_expired_entry_every_recipient_read_is_not_handed_back_test() ->
+    Self = self(),
+    State = test_state(#{{7, 20} => {30, now_ms()}, {8, 20} => {31, now_ms()}}),
+    Entry = test_entry([7, 8], fun(UserIds) -> Self ! {handed_back, UserIds} end),
+    Result = handle_result({error, timeout}, Entry, State),
+    ?assertEqual(0, count(fallbacks, Result)),
+    ?assertEqual(2, count(truncations, Result)),
+    receive
+        {handed_back, _} -> erlang:error(fallback_ran_for_read_users)
+    after 200 -> ok
+    end.
+
+an_expired_clear_is_handed_back_unchanged_test() ->
+    Self = self(),
+    State = test_state(#{{7, 20} => {30, now_ms()}, {8, 20} => {30, now_ms()}}),
+    Entry = (test_entry([7, 8], fun(UserIds) -> Self ! {handed_back, UserIds} end))#{
+        kind := clear
+    },
+    Result = handle_result({error, timeout}, Entry, State),
+    ?assertEqual(1, count(fallbacks, Result)),
+    receive
+        {handed_back, UserIds} -> ?assertEqual([7, 8], UserIds)
+    after 2000 -> erlang:error(no_fallback_ran)
+    end.
+
+test_state(Reads) ->
+    #{
+        jobs => gb_trees:empty(),
+        ready => queue:new(),
+        inflight => #{},
+        fallback_backlog => queue:new(),
+        fallback_runners => #{},
+        next_seq => 1,
+        reads => Reads,
+        active => #{},
+        counters => #{},
+        max_queue => ?DEFAULT_MAX_QUEUE,
+        max_inflight => ?DEFAULT_MAX_INFLIGHT,
+        max_fallback_runners => ?DEFAULT_MAX_FALLBACK_RUNNERS,
+        request_timeout_ms => ?DEFAULT_REQUEST_TIMEOUT_MS,
+        max_age_ms => ?DEFAULT_MAX_AGE_MS,
+        retry_base_ms => ?DEFAULT_RETRY_BASE_MS
+    }.
+
+test_entry(UserIds, Fallback) ->
+    #{
+        kind => message,
+        subject => <<"rpc.push.message">>,
+        job => #{<<"user_ids">> => [integer_to_binary(UserId) || UserId <- UserIds]},
+        body => <<"{}">>,
+        user_ids => UserIds,
+        channel_id => 20,
+        message_id => 30,
+        fallback => Fallback,
+        seq => 0,
+        enqueued_at => now_ms() - ?DEFAULT_MAX_AGE_MS,
+        attempts => 3,
+        config_version => undefined
+    }.
+
+-endif.
