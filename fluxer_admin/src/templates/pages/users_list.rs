@@ -115,7 +115,7 @@ pub fn users_list_page(
         div class="space-y-6" {
             (page_header("Users", None))
             div class="rounded-lg bg-white transition-all border border-neutral-200 p-3" {
-								p class="mb-1 text-xs text-neutral-500" {
+                p class="mb-1 text-xs text-neutral-500" {
                     "For example, type " span class="font-mono" { "*" } " in to search for all users."
                 }
                 (search_form(base, params))
