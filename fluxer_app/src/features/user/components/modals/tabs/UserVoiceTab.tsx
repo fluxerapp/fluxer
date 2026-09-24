@@ -445,6 +445,19 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 			data-flx="user.voice-tab.render-auto-gain-control-switch.switch.update-auto-gain-control"
 		/>
 	);
+	const renderStereoMicrophoneSwitch = (dataFlx: string) =>
+		stereoMicrophoneAvailable && (
+			<Switch
+				label={i18n._(STEREO_MICROPHONE_DESCRIPTOR)}
+				description={i18n._(STEREO_MICROPHONE_DESCRIPTION_DESCRIPTOR)}
+				value={isStereoMicrophoneEnabled()}
+				onChange={(value) => {
+					VoiceSettings.stereoMicrophone = value;
+				}}
+				ariaLabel={i18n._(STEREO_MICROPHONE_DESCRIPTOR)}
+				data-flx={dataFlx}
+			/>
+		);
 	const renderCustomProfile = () => (
 		<div className={styles.profileSubSection} data-flx="user.voice-tab.render-custom-profile.profile-sub-section">
 			{renderPttControls()}
@@ -496,18 +509,7 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 				dataFlx="user.voice-tab.render-custom-profile.select.set-noise-suppression-method"
 				data-flx="user.user-voice-tab.render-custom-profile.compact-combobox-row.set-noise-suppression-method"
 			/>
-			{stereoMicrophoneAvailable && (
-				<Switch
-					label={i18n._(STEREO_MICROPHONE_DESCRIPTOR)}
-					description={i18n._(STEREO_MICROPHONE_DESCRIPTION_DESCRIPTOR)}
-					value={isStereoMicrophoneEnabled()}
-					onChange={(value) => {
-						VoiceSettings.stereoMicrophone = value;
-					}}
-					ariaLabel={i18n._(STEREO_MICROPHONE_DESCRIPTOR)}
-					data-flx="user.voice-tab.render-custom-profile.switch.set-stereo-microphone"
-				/>
-			)}
+			{renderStereoMicrophoneSwitch('user.voice-tab.render-custom-profile.switch.set-stereo-microphone')}
 			<Switch
 				label={i18n._(VOICE_ECHO_CANCELLATION_DESCRIPTOR)}
 				value={echoCancellation}
@@ -667,6 +669,11 @@ export const VoiceTab: React.FC<VoiceTabProps> = observer(({voiceSettings, autoR
 							<div className={styles.profileSubSection} data-flx="user.voice-tab.profile-sub-section">
 								{renderPttControls()}
 								{renderAutoGainControlSwitch()}
+							</div>
+						)}
+						{voiceProcessingMode === 'studio' && stereoMicrophoneAvailable && (
+							<div className={styles.profileSubSection} data-flx="user.voice-tab.studio-profile-sub-section">
+								{renderStereoMicrophoneSwitch('user.voice-tab.studio-profile.switch.set-stereo-microphone')}
 							</div>
 						)}
 						{voiceProcessingMode === 'studio' && pttCombo?.key && isPushToTalk && (

@@ -16,6 +16,11 @@ export function normaliseAudioBitrateBps(value: number | null | undefined): numb
 	return Math.min(Math.max(bitsPerSecond, VOICE_CHANNEL_MIN_AUDIO_BITRATE_BPS), OPUS_MAX_AUDIO_BITRATE_BPS);
 }
 
+export function sendsStereoMicrophone(channelBitrate: number | null | undefined, stereoCapture: boolean): boolean {
+	const maxBitrate = normaliseAudioBitrateBps(channelBitrate);
+	return stereoCapture && maxBitrate !== undefined && maxBitrate >= STEREO_VOICE_MIN_AUDIO_BITRATE_BPS;
+}
+
 export function buildMicrophonePublishOptions(
 	channelBitrate: number | null | undefined,
 	stereoCapture = false,
@@ -29,7 +34,7 @@ export function buildMicrophonePublishOptions(
 		},
 		dtx: false,
 		red: true,
-		forceStereo: stereoCapture && maxBitrate >= STEREO_VOICE_MIN_AUDIO_BITRATE_BPS ? undefined : false,
+		forceStereo: sendsStereoMicrophone(maxBitrate, stereoCapture) ? undefined : false,
 	};
 }
 

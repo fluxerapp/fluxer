@@ -84,9 +84,8 @@ export function supportsStereoCapture(profile: ResolvedVoiceProcessing): boolean
 
 export function resolveStereoCapture(effective: EffectiveNoiseSuppression, profile: ResolvedVoiceProcessing): boolean {
 	if (!supportsStereoCapture(profile)) return false;
-	if (profile.mode === 'studio') return true;
-	if (profile.mode === 'custom') return effective.stereoPreferred;
-	return false;
+	if (profile.mode === 'voice') return false;
+	return effective.stereoPreferred;
 }
 
 export function applyNoiseSuppressionOverride(

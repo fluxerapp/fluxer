@@ -98,7 +98,7 @@ import EntranceSoundLibrary from '@app/features/voice/state/EntranceSoundLibrary
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import ParticipantVolume from '@app/features/voice/state/ParticipantVolume';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
-import {buildMicrophonePublishOptions} from '@app/features/voice/utils/AudioPublishOptions';
+import {buildMicrophonePublishOptions, sendsStereoMicrophone} from '@app/features/voice/utils/AudioPublishOptions';
 import {
 	buildCameraPublishOptions,
 	findVideoPublishCodecPolicyViolation,
@@ -605,24 +605,31 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		return applyNoiseSuppressionOverride(profile, readEffectiveNoiseSuppression(MICROPHONE_CAPTURE_SAMPLE_RATE));
 	}
 
-	private getMicrophoneCaptureOptions(options: VoiceEngineV2MicrophoneOptions = {}): AudioCaptureOptions {
+	private resolveMicrophoneChannelBitrate(channelId: string | null): number {
+		const channel = channelId ? Channels.getChannel(channelId) : null;
+		const guild = channel?.guildId ? Guilds.getGuild(channel.guildId) : null;
+		return resolveVoiceChannelBitrate(channel?.bitrate, guild?.features);
+	}
+
+	private getMicrophoneCaptureOptions(
+		options: VoiceEngineV2MicrophoneOptions = {},
+		channelId: string | null = this.getActiveChannelId(),
+	): AudioCaptureOptions {
 		const profile = this.resolveActiveMicrophoneProfile();
+		const stereo = sendsStereoMicrophone(this.resolveMicrophoneChannelBitrate(channelId), profile.stereoCapture);
 		return {
 			deviceId: options.deviceId ?? this.resolveInputDeviceId(),
 			echoCancellation: options.echoCancellation ?? profile.echoCancellation,
 			noiseSuppression: options.noiseSuppression ?? profile.browserNoiseSuppression,
 			autoGainControl: options.autoGainControl ?? profile.autoGainControl,
 			voiceIsolation: false,
-			...(profile.stereoCapture ? {channelCount: {ideal: 2}} : {}),
+			...(stereo ? {channelCount: {ideal: 2}} : {}),
 		};
 	}
 
 	private getMicrophonePublishOptions(channelId: string | null): TrackPublishOptions | undefined {
-		const channel = channelId ? Channels.getChannel(channelId) : null;
-		const guild = channel?.guildId ? Guilds.getGuild(channel.guildId) : null;
-		const channelBitrate = resolveVoiceChannelBitrate(channel?.bitrate, guild?.features);
 		const profile = this.resolveActiveMicrophoneProfile();
-		return buildMicrophonePublishOptions(channelBitrate, profile.stereoCapture);
+		return buildMicrophonePublishOptions(this.resolveMicrophoneChannelBitrate(channelId), profile.stereoCapture);
 	}
 
 	async refreshMicrophonePublishSettings(room: Room | null, channelId: string | null): Promise<void> {
@@ -902,7 +909,7 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		assertObjectLike<MicrophoneEnableState>(state, 'publishMicrophoneAudioTrack.state');
 		await ctx.room.localParticipant.setMicrophoneEnabled(
 			true,
-			this.getMicrophoneCaptureOptions(ctx.options),
+			this.getMicrophoneCaptureOptions(ctx.options, ctx.channelId),
 			this.getMicrophonePublishOptions(ctx.channelId),
 		);
 		state.microphoneWasPublished = true;
