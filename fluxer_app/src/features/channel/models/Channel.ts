@@ -303,7 +303,8 @@ export class Channel {
 		const otherOverwrites = Object.keys(other.permissionOverwrites);
 		if (thisOverwrites.length !== otherOverwrites.length) return false;
 		for (const key of thisOverwrites) {
-			if (!this.permissionOverwrites[key].equals(other.permissionOverwrites[key])) {
+			const otherOverwrite = other.permissionOverwrites[key];
+			if (otherOverwrite == null || !this.permissionOverwrites[key].equals(otherOverwrite)) {
 				return false;
 			}
 		}
