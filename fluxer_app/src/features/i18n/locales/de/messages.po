@@ -1,6 +1,6 @@
 #
 msgid ""
-msgstr "Project-Id-Version: \nReport-Msgid-Bugs-To: \nPOT-Creation-Date: 2025-09-12 11:17+0200\nPO-Revision-Date: 2026-09-24 01:28+0000\nLast-Translator: Anonymous <noreply@weblate.org>\nLanguage-Team: German <https://weblate.fluxer.tools/projects/fluxer/app/de/>\nLanguage: de\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\nPlural-Forms: nplurals=2; plural=n != 1;\nX-Generator: Weblate 2026.8.dev0\n"
+msgstr "Project-Id-Version: \nReport-Msgid-Bugs-To: \nPOT-Creation-Date: 2025-09-12 11:17+0200\nPO-Revision-Date: 2026-09-24 01:28+0000\nLast-Translator: Hampus <hampus@fluxer.com>\nLanguage-Team: German <https://weblate.fluxer.tools/projects/fluxer/app/de/>\nLanguage: de\nMIME-Version: 1.0\nContent-Type: text/plain; charset=UTF-8\nContent-Transfer-Encoding: 8bit\nPlural-Forms: nplurals=2; plural=n != 1;\nX-Generator: Weblate 2026.8.dev0\n"
 
 #. Description text in the messages tab.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx:52
