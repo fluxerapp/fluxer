@@ -246,7 +246,9 @@ clear_channel_notifications(UserId, ChannelId, MessageId) ->
 -spec clear_for_enrolment(boolean(), integer(), integer(), integer()) -> ok.
 clear_for_enrolment(true, UserId, ChannelId, MessageId) ->
     ok = push_outbox:truncate_read(UserId, ChannelId, MessageId),
-    cast_clear_if_enabled(clear_notifications_enabled(), UserId, ChannelId, MessageId);
+    cast_clear_if_enabled(
+        enrolled_clear_notifications_enabled(), UserId, ChannelId, MessageId
+    );
 clear_for_enrolment(false, UserId, ChannelId, MessageId) ->
     cast_clear_if_enabled(clear_notifications_enabled(), UserId, ChannelId, MessageId).
 
@@ -255,6 +257,13 @@ cast_clear_if_enabled(true, UserId, ChannelId, MessageId) ->
     cast_to_push_owner(UserId, {clear_channel_notifications, UserId, ChannelId, MessageId});
 cast_clear_if_enabled(false, _UserId, _ChannelId, _MessageId) ->
     ok.
+
+-spec enrolled_clear_notifications_enabled() -> boolean().
+enrolled_clear_notifications_enabled() ->
+    case persistent_term:get(push_enrolled_clear_notifications_enabled, undefined) of
+        OperatorChoice when is_boolean(OperatorChoice) -> OperatorChoice;
+        _ -> env_boolean(push_enrolled_clear_notifications_enabled, true)
+    end.
 
 -spec clear_notifications_enabled() -> boolean().
 clear_notifications_enabled() ->
