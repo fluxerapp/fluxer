@@ -38,10 +38,12 @@ import {
 	CHANNEL_DEBUG_DESCRIPTOR,
 	CHANNEL_DELETED_DESCRIPTOR,
 	COPY_CHANNEL_ID_DESCRIPTOR,
+	COPY_LINK_DESCRIPTOR,
 	DEBUG_CHANNEL_DESCRIPTOR,
 	EDIT_GROUP_DESCRIPTOR,
 	INVITE_PEOPLE_DESCRIPTOR,
 	INVITES_DESCRIPTOR,
+	LINK_COPIED_TO_CLIPBOARD_DESCRIPTOR,
 	MARK_AS_READ_DESCRIPTOR,
 	NOTIFICATION_SETTINGS_DESCRIPTOR,
 	OPEN_LINK_DESCRIPTOR,
@@ -171,6 +173,7 @@ export interface ChannelMenuHandlers {
 	handleInviteMembers: () => void;
 	handleCopyChannelLink: () => Promise<void>;
 	handleOpenChannelLink: () => void;
+	handleCopyLinkChannelUrl: () => Promise<void>;
 	handleOpenChat: () => void;
 	handleOpenMuteSheet: () => void;
 	handleNotificationSettings: () => void;
@@ -311,6 +314,15 @@ export function useChannelMenuData(
 			},
 			handleOpenChannelLink: () => {
 				LinkChannelCommands.openLinkChannel(channel);
+				onClose();
+			},
+			handleCopyLinkChannelUrl: async () => {
+				if (!channel.url) return;
+				await TextCopyCommands.copy(i18n, channel.url, true);
+				ToastCommands.createToast({
+					type: 'success',
+					children: i18n._(LINK_COPIED_TO_CLIPBOARD_DESCRIPTOR),
+				});
 				onClose();
 			},
 			handleOpenChat: () => {
@@ -668,6 +680,16 @@ export function useChannelMenuData(
 					icon: <OpenLinkIcon size={20} data-flx="ui.action-menu.items.channel-menu-data.groups.open-link-icon" />,
 					label: i18n._(OPEN_LINK_DESCRIPTOR),
 					onClick: handlers.handleOpenChannelLink,
+				});
+				inviteItems.push({
+					icon: (
+						<CopyLinkIcon
+							size={20}
+							data-flx="ui.action-menu.items.channel-menu-data.groups.copy-link-channel-url-icon"
+						/>
+					),
+					label: i18n._(COPY_LINK_DESCRIPTOR),
+					onClick: handlers.handleCopyLinkChannelUrl,
 				});
 			}
 			inviteItems.push({
