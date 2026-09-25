@@ -938,7 +938,7 @@ msgstr "{count, plural, one {# geblokkeerd bericht} other {# geblokkeerde berich
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# community gevonden} other {# communities gevonden}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1953
+#: src/features/app/components/layout/GuildsLayout.tsx:1954
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# community is tijdelijk niet beschikbaar door een storing in de fluxcondensator.} other {# communities zijn tijdelijk niet beschikbaar door een storing in de fluxcondensator.}}"
 
@@ -1692,6 +1692,26 @@ msgstr "{productName} heeft een mogelijke raid gedetecteerd in deze community. U
 msgid "{productName} detected a potential raid, so new users can't join right now."
 msgstr "{productName} heeft een mogelijke raid gedetecteerd, dus nieuwe gebruikers kunnen nu niet deelnemen."
 
+#. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:38
+msgid "{productName} has moved to {host}. Add it to your Home Screen or Dock, then sign in with this app."
+msgstr "{productName} is verhuisd naar {host}. Voeg het toe aan je beginscherm of dock, en meld je daarna aan met deze app."
+
+#. Banner in an installed web app on other browsers. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:43
+msgid "{productName} has moved to {host}. Install it from your browser, then sign in with this app."
+msgstr "{productName} is verhuisd naar {host}. Installeer het vanuit je browser en meld je daarna aan met deze app."
+
+#. Banner in an installed desktop web app after the account moved to the new domain. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:28
+msgid "{productName} has moved to {host}. Install the new app and you will already be signed in."
+msgstr "{productName} is verhuisd naar {host}. Installeer de nieuwe app en je bent al ingelogd."
+
+#. Banner in an installed Android web app. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:33
+msgid "{productName} has moved to {host}. Open it in your browser to install the new app."
+msgstr "{productName} is verhuisd naar {host}. Open het in je browser om de nieuwe app te installeren."
+
 #. Profile membership label showing when the user account was created.
 #: src/features/user/components/popouts/UserProfileShared.tsx:53
 msgid "{productName} member since"
@@ -1731,6 +1751,16 @@ msgstr "{productName} heeft microfoontoegang nodig om je apparaten weer te geven
 #: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:44
 msgid "{productName} needs screen recording access. Allow screen recording in your operating system privacy settings and restart the app."
 msgstr "{productName} heeft toestemming nodig om het scherm op te nemen. Sta schermopname toe in de privacyinstellingen van je besturingssysteem en start de app opnieuw."
+
+#. Intro in the modal that explains how to install the app from its new domain. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:22
+msgid "{productName} now lives at {host}. Install it from there, then sign in with this app."
+msgstr "{productName} is nu te vinden op {host}. Installeer het vanaf daar en log vervolgens in met deze app."
+
+#. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:27
+msgid "{productName} now lives at {host}. Install it from there."
+msgstr "{productName} is nu te vinden op {host}. Installeer het vanaf daar."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx:31
@@ -2461,7 +2491,7 @@ msgid "a poll"
 msgstr "een peiling"
 
 #. OAuth authorize page error shown when the bot scope requires a redirect_uri that is missing. Technical message; keep "redirect_uri" and "bot" untranslated.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:53
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:54
 msgid "A redirect_uri is required when the bot scope is not the only scope."
 msgstr "Een redirect_uri is vereist als \"bot\" niet het enige machtigingsbereik is."
 
@@ -2859,7 +2889,7 @@ msgid "Add a bot to a community with requested permissions"
 msgstr "Voeg een bot toe aan een community met de gevraagde machtigingen"
 
 #. Placeholder text in the optional comment field of the forward modal.
-#: src/features/messaging/components/modals/ForwardModal.tsx:99
+#: src/features/messaging/components/modals/ForwardModal.tsx:96
 msgid "Add a comment (optional)"
 msgstr "Opmerking toevoegen (optioneel)"
 
@@ -2920,7 +2950,7 @@ msgid "Add a YouTube Data API key to enrich YouTube links."
 msgstr "Voeg een YouTube Data API-sleutel toe om YouTube-links te verrijken."
 
 #. Short label in the authentication browser login handoff modal. Keep the tone plain and specific.
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:21
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:22
 msgid "Add account"
 msgstr "Account toevoegen"
 
@@ -4379,6 +4409,11 @@ msgstr "Goedkeuring vereist"
 msgid "Approve"
 msgstr "Goedkeuren"
 
+#. Hint under the sign-in option on fluxer.com that pairs a newly installed app with the old installed app. productName is the app name.
+#: src/features/auth/flow/AuthLoginLayout.tsx:74
+msgid "Approve this app from the {productName} app you already use. No password needed."
+msgstr "Keur deze app goed vanuit de {productName}-app die je al gebruikt. Geen wachtwoord nodig."
+
 #. Discovery application status badge in the community Discovery settings tab. The community has been approved and is listed.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:45
 msgid "Approved"
@@ -4848,7 +4883,7 @@ msgid "Authorization failed"
 msgstr "Autorisatie mislukt"
 
 #. OAuth authorize page generic error toast shown when the authorize request fails unexpectedly.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:74
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:75
 msgid "Authorization failed. Try again."
 msgstr "Autorisatie mislukt. Probeer opnieuw."
 
@@ -5826,7 +5861,7 @@ msgid "Bot permissions"
 msgstr "Botmachtigingen"
 
 #. OAuth authorize page error shown when the permissions query parameter is a negative integer.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:66
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:67
 msgid "Bot permissions cannot be negative."
 msgstr "Botmachtigingen kunnen niet negatief zijn."
 
@@ -6329,10 +6364,10 @@ msgstr "Kan hier geen bestanden uploaden"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:216
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:232
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:72
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:80
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:86
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:278
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:140
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:282
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:164
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:177
 #: src/features/channel/components/modals/ChannelDeleteModal.tsx:53
@@ -6351,7 +6386,7 @@ msgstr "Kan hier geen bestanden uploaden"
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:133
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
-#: src/features/messaging/components/modals/ForwardModal.tsx:650
+#: src/features/messaging/components/modals/ForwardModal.tsx:591
 #: src/features/messaging/components/modals/ImageCropModal.tsx:1025
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/moderation/components/modals/BanMemberModal.tsx:262
@@ -7462,9 +7497,14 @@ msgid "Choose background"
 msgstr "Kies achtergrond"
 
 #. OAuth authorize page error shown when a bot invite request provides both guild_id and channel_id. Keep the parameter names literal.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:86
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:87
 msgid "Choose either guild_id or channel_id, not both."
 msgstr "Kies guild_id of channel_id, niet beide."
+
+#. Second install step on a Mac. File and Add to Dock are the names of the Safari menu items, use the names macOS shows in this language.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:46
+msgid "Choose File, then Add to Dock."
+msgstr "Kies Bestand en vervolgens Toevoegen aan Dock."
 
 #. Subtitle in the create-DM modal. Keep it short and calm.
 #: src/features/channel/utils/CreateDMModalUtils.tsx:39
@@ -8215,7 +8255,7 @@ msgstr "codeblok"
 msgid "Code blocks"
 msgstr "Codeblokken"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:102
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:110
 msgid "Code expired"
 msgstr "Code verlopen"
 
@@ -8385,17 +8425,17 @@ msgid "Commands"
 msgstr "Opdrachten"
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled when at least one selected target has slowmode active.
-#: src/features/messaging/components/modals/ForwardModal.tsx:71
+#: src/features/messaging/components/modals/ForwardModal.tsx:68
 msgid "Comments are disabled because one or more selected channels have slowmode on. The comment would be blocked by slowmode right after the forward."
 msgstr "Reacties zijn uitgeschakeld omdat slowmodus actief is in een of meer geselecteerde kanalen. De reactie zou direct na het doorsturen door slowmodus worden geblokkeerd."
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled for a single selected channel with slowmode.
-#: src/features/messaging/components/modals/ForwardModal.tsx:65
+#: src/features/messaging/components/modals/ForwardModal.tsx:62
 msgid "Comments are disabled because slowmode is on in {forwardChannelDisplayName}. The comment would be blocked by slowmode right after the forward."
 msgstr "Reacties zijn uitgeschakeld omdat slowmodus actief is in {forwardChannelDisplayName}. De reactie zou direct na het doorsturen door slowmodus worden geblokkeerd."
 
 #. Tooltip on the disabled comment field in the forward modal when slowmode blocks comments.
-#: src/features/messaging/components/modals/ForwardModal.tsx:95
+#: src/features/messaging/components/modals/ForwardModal.tsx:92
 msgid "Comments are unavailable while slowmode is on."
 msgstr "Reacties zijn niet beschikbaar als de slowmodus is ingeschakeld."
 
@@ -8551,7 +8591,7 @@ msgid "Community message notifications"
 msgstr "Meldingen voor communityberichten"
 
 #. Developer control label for the community MFA requirement banner.
-#: src/features/devtools/components/NagbarControls.ts:76
+#: src/features/devtools/components/NagbarControls.ts:81
 msgid "Community MFA requirement nagbar"
 msgstr "Banner voor MFA-vereiste van community"
 
@@ -9182,7 +9222,7 @@ msgstr "Doorgaan met community melden"
 msgid "Continue to report user"
 msgstr "Doorgaan met gebruiker melden"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:245
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:249
 msgid "Continue with passkey"
 msgstr "Doorgaan met passkey"
 
@@ -9266,7 +9306,7 @@ msgid "Coordinates raids, brigading, or harassment against people or communities
 msgstr "Coördineert raids, georganiseerde verstoringsacties of intimidatie tegen personen of communities."
 
 #. Generic short status label confirming a value was copied to the clipboard.
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:157
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:165
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:381
 msgid "Copied"
 msgstr "Gekopieerd"
@@ -9368,7 +9408,7 @@ msgid "Copy channel link"
 msgstr "Kanaallink kopiëren"
 
 #. Action label that copies a code block to the clipboard.
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:157
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:165
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:393
 msgid "Copy code"
 msgstr "Code kopiëren"
@@ -10559,12 +10599,12 @@ msgid "Current uses:"
 msgstr "Aantal keer gebruikt:"
 
 #. Developer nagbar status: the banner is dismissed in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:109
+#: src/features/devtools/components/NagbarControls.ts:114
 msgid "Currently dismissed"
 msgstr "Momenteel weggeklikt"
 
 #. Developer nagbar status: the banner is showing in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:113
+#: src/features/devtools/components/NagbarControls.ts:118
 msgid "Currently showing"
 msgstr "Wordt nu weergegeven"
 
@@ -12555,6 +12595,11 @@ msgstr "Blokkeert niet. Je kunt later opnieuw openen."
 msgid "Domain"
 msgstr "Domein"
 
+#. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
+#: src/features/devtools/components/NagbarControls.ts:76
+msgid "Domain moved nagbar"
+msgstr "Domein verplaatst nagbar"
+
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
 #: src/features/voice/components/modals/HideOwnCameraConfirmModal.tsx:59
@@ -12912,7 +12957,7 @@ msgid "Dutch"
 msgstr "Nederlands"
 
 #. Placeholder or example text in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:27
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:31
 msgid "e.g., YubiKey, iPhone, work computer"
 msgstr "bijv. YubiKey, iPhone, werkcomputer"
 
@@ -14056,9 +14101,13 @@ msgstr "Voer de pincode van je beveiligingssleutel in om verder te gaan."
 msgid "Enter the SMS code"
 msgstr "Voer de sms-code in"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:124
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:132
 msgid "Enter this code in your browser to complete sign-in."
 msgstr "Voer deze code in je browser in om het aanmelden te voltooien."
+
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:142
+msgid "Enter this code in your old {PRODUCT_NAME} app to complete sign-in."
+msgstr "Voer deze code in je oude {PRODUCT_NAME}-app in om het aanmelden te voltooien."
 
 #: src/features/channel/components/EditingMessageInput.tsx:358
 msgid "Enter to <0><1>save</1></0>"
@@ -14441,7 +14490,7 @@ msgstr "Verloopt op {absolute} ({relativeText})"
 msgid "Expires between {earliest} and {latest}"
 msgstr "Verloopt tussen {earliest} en {latest}"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:142
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:150
 msgid "Expires in {remaining}s"
 msgstr "Verloopt over {remaining}s"
 
@@ -14835,7 +14884,7 @@ msgid "Failed to start SSO"
 msgstr "Kan SSO niet starten"
 
 #. Login flow error shown when switching to a saved account fails.
-#: src/features/auth/flow/AuthLoginLayout.tsx:51
+#: src/features/auth/flow/AuthLoginLayout.tsx:58
 msgid "Failed to switch account"
 msgstr "Niet gelukt om van account te wisselen"
 
@@ -15413,17 +15462,17 @@ msgstr "Voor mij"
 msgid "For this check, you send us a text message instead of receiving one from us."
 msgstr "Voor deze controle stuur je ons een sms in plaats van er een van ons te ontvangen."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:183
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:187
 msgid "For your security, please confirm it's you to continue."
 msgstr "Bevestig voor je veiligheid dat jij het bent om verder te gaan."
 
 #. Developer nagbar override status: the banner is forced to hide.
-#: src/features/devtools/components/NagbarControls.ts:97
+#: src/features/devtools/components/NagbarControls.ts:102
 msgid "Force disabled"
 msgstr "Geforceerd uitgeschakeld"
 
 #. Developer nagbar override status: the banner is forced to show.
-#: src/features/devtools/components/NagbarControls.ts:93
+#: src/features/devtools/components/NagbarControls.ts:98
 msgid "Force enabled"
 msgstr "Geforceerd ingeschakeld"
 
@@ -15540,7 +15589,7 @@ msgstr "Wachtwoord vergeten"
 
 #. Authentication link label that opens password recovery.
 #: src/features/auth/components/pages/ForgotPasswordPage.tsx:71
-#: src/features/auth/flow/AuthLoginLayout.tsx:63
+#: src/features/auth/flow/AuthLoginLayout.tsx:70
 msgid "Forgot your password?"
 msgstr "Wachtwoord vergeten?"
 
@@ -15571,7 +15620,7 @@ msgstr "Media doorsturen"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Title of the forward message modal.
 #: src/features/input/state/input_keybind/shared.ts:25
-#: src/features/messaging/components/modals/ForwardModal.tsx:86
+#: src/features/messaging/components/modals/ForwardModal.tsx:83
 msgid "Forward message"
 msgstr "Bericht doorsturen"
 
@@ -15965,11 +16014,11 @@ msgstr "Genereer een deelbare link of kopieer je gecombineerde aangepaste CSS."
 msgid "Generate invite link"
 msgstr "Uitnodigingslink genereren"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:109
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:117
 msgid "Generate new code"
 msgstr "Nieuwe code genereren"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:70
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:78
 msgid "Generating code…"
 msgstr "Code genereren…"
 
@@ -16044,6 +16093,11 @@ msgstr "Download de {productName}-desktopapp voor systeembrede push-to-talk en e
 #: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:20
 msgid "Get the desktop app"
 msgstr "Download de desktopapp"
+
+#. Title of the modal that explains how to install the app from its new domain. productName is the app name.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:18
+msgid "Get the new {productName} app"
+msgstr "Download de nieuwe {productName}-app"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Type label for GIF media.
@@ -18037,6 +18091,16 @@ msgstr "Emoji invoegen"
 msgid "Install {productName} for the full source picker and smoother screen-sharing controls."
 msgstr "Installeer {productName} voor de volledige bronkiezer en soepelere bediening van scherm delen."
 
+#. Second install step on other devices. Refers to the install option in the browser menu.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:51
+msgid "Install it from your browser menu."
+msgstr "Installeer het vanuit je browsermenu."
+
+#. Button on the domain moved banner that installs the app from the new domain.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:48
+msgid "Install the new app"
+msgstr "Installeer de nieuwe app"
+
 #. Label for the installed desktop version in the Linux update modal.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:136
 msgid "Installed"
@@ -18123,7 +18187,7 @@ msgid "Invalid authorization request"
 msgstr "Ongeldig autorisatieverzoek"
 
 #. OAuth authorize page error shown when the permissions query parameter is not a valid integer.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:62
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:63
 msgid "Invalid bot permissions."
 msgstr "Ongeldige botmachtigingen."
 
@@ -18164,7 +18228,7 @@ msgid "Invalid or expired code. Try again."
 msgstr "Ongeldige of verlopen code. Probeer het opnieuw."
 
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:78
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:79
 msgid "Invalid redirect_uri"
 msgstr "Ongeldige redirect_uri"
 
@@ -19331,6 +19395,11 @@ msgstr "Link"
 #: src/features/channel/utils/ChannelUtils.tsx:39
 msgid "Link (mature)"
 msgstr "Link (voor volwassenen)"
+
+#. Button on the domain moved banner that opens the code entry used to sign in a new app. Must match the translation used in the "Sign in with your old {productName} app" instructions.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:60
+msgid "Link a new device"
+msgstr "Koppel een nieuw apparaat"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:96
@@ -20697,7 +20766,7 @@ msgstr "Instellingen voor de weergave van berichten zijn alleen beschikbaar op d
 msgid "Message editing"
 msgstr "Bericht bewerken"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:371
+#: src/features/messaging/components/modals/ForwardModal.tsx:309
 msgid "Message forwarded"
 msgstr "Bericht doorgestuurd"
 
@@ -20746,7 +20815,7 @@ msgstr "Knoppen voor berichtinvoer"
 
 #. Error modal title in the forward modal when the optional comment exceeds the message length limit.
 #. Form validation error indicating the message exceeds the allowed length.
-#: src/features/messaging/components/modals/ForwardModal.tsx:57
+#: src/features/messaging/components/modals/ForwardModal.tsx:54
 #: src/features/ui/character_counter/CharacterCountMessages.ts:16
 msgid "Message is too long"
 msgstr "Bericht is te lang"
@@ -21045,7 +21114,7 @@ msgid "Miscellaneous"
 msgstr "Overig"
 
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:36
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:37
 msgid "Missing client_id"
 msgstr "client_id ontbreekt"
 
@@ -21862,12 +21931,12 @@ msgid "Name must be at least 2 characters"
 msgstr "Naam moet minimaal 2 tekens lang zijn"
 
 #. Short label in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:19
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:23
 msgid "Name passkey"
 msgstr "Passkey een naam geven"
 
 #. Accessible form label in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:15
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:19
 msgid "Name passkey form"
 msgstr "Formulier om een passkey een naam te geven"
 
@@ -22381,7 +22450,7 @@ msgstr "Geen wijzigingen om op te slaan"
 msgid "No channels available"
 msgstr "Geen kanalen beschikbaar"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:445
+#: src/features/messaging/components/modals/ForwardModal.tsx:383
 #: src/features/search/components/search/ChannelFilterSheet.tsx:120
 msgid "No channels found"
 msgstr "Geen kanalen gevonden"
@@ -22824,7 +22893,7 @@ msgstr "Geen gebruikers gevonden"
 msgid "No verification is required."
 msgstr "Geen verificatie vereist."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:189
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:193
 msgid "No verification methods available"
 msgstr "Geen verificatiemethoden beschikbaar"
 
@@ -23417,6 +23486,16 @@ msgstr "Open {contextName}"
 msgid "Open {displayName}"
 msgstr "Open {displayName}"
 
+#. First install step on Apple devices. host is the new domain, for example fluxer.com. Safari is the browser.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:32
+msgid "Open {host} in Safari."
+msgstr "Open {host} in Safari."
+
+#. First install step on other devices. host is the new domain, for example fluxer.com.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:37
+msgid "Open {host} in your browser."
+msgstr "Open {host} in je browser."
+
 #. Accessible label for an inline settings deep-link pill. labelText is the resolved settings tab and section breadcrumb.
 #: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:109
 msgid "Open {labelText} in settings"
@@ -23436,6 +23515,11 @@ msgstr "Open {macosSystemSettingsName} → {macosPrivacyAndSecuritySettingsName}
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:27
 msgid "Open {productName}"
 msgstr "Open {productName}"
+
+#. Button on the domain moved banner that opens the new domain in the browser. productName is the app name.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:52
+msgid "Open {productName} in your browser"
+msgstr "Open {productName} in je browser"
 
 #. Button or menu action label in the channel and chat gif picker grid item. Keep it concise. Preserve {title}; it is inserted by code.
 #: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:37
@@ -23510,7 +23594,7 @@ msgstr "Banneropties openen"
 msgid "Open bookmarks"
 msgstr "Opgeslagen berichten openen"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:153
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:178
 msgid "Open browser"
 msgstr "Browser openen"
 
@@ -23614,7 +23698,7 @@ msgid "Open emoji in browser"
 msgstr "Emoji in browser openen"
 
 #. Accessible label for the emoji picker trigger button in the forward modal comment field.
-#: src/features/messaging/components/modals/ForwardModal.tsx:103
+#: src/features/messaging/components/modals/ForwardModal.tsx:100
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:27
 msgid "Open emoji picker"
 msgstr "Emoji-kiezer openen"
@@ -23809,6 +23893,16 @@ msgstr "Open de onderstaande link in je browser, kopieer het volledige JSON-antw
 msgid "Open the menu and choose an option."
 msgstr "Open het menu en kies een optie."
 
+#. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
+msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
+msgstr "Open de nieuwe app en kies Aanmelden met je oude {productName}-app. Kies daarna Hier een nieuw apparaat koppelen en voer de code in die wordt weergegeven."
+
+#. Third install step in a desktop browser that already moved the account to the new domain.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
+msgid "Open the new app. You are already signed in."
+msgstr "Open de nieuwe app. Je bent al aangemeld."
+
 #. Tip explaining the keyboard shortcut for opening the shortcuts list.
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx:42
 msgid "Open the shortcuts list for quick actions."
@@ -23859,7 +23953,7 @@ msgstr "Spraakchat openen"
 msgid "Open voice & video settings"
 msgstr "Audio- en video-instellingen openen"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:113
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:131
 msgid "Open your browser, sign in, then enter the code below to link your account."
 msgstr "Open je browser, meld je aan en voer de onderstaande code in om je account te koppelen."
 
@@ -23867,6 +23961,10 @@ msgstr "Open je browser, meld je aan en voer de onderstaande code in om je accou
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:450
 msgid "Open your messages"
 msgstr "Open je berichten"
+
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:129
+msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
+msgstr "Open je oude {PRODUCT_NAME}-app en kies 'Koppel een nieuw apparaat', voer daarna de onderstaande code in."
 
 #: src/features/user/components/modals/PhoneAddModal.tsx:327
 msgid "Open your phone's messaging app and create a new text message."
@@ -24222,7 +24320,7 @@ msgid "Passkey"
 msgstr "Passkey"
 
 #. Short label in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:23
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:27
 msgid "Passkey name"
 msgstr "Naam van passkey"
 
@@ -28138,7 +28236,7 @@ msgstr "Verzadiging"
 #. Button or menu action label in the rename channel modal. Keep it concise.
 #. Save button in the community-folder settings modal footer.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:113
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:87
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:93
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:366
 #: src/features/channel/components/modals/EditGroupModal.tsx:322
 #: src/features/channel/components/modals/RenameChannelModal.tsx:28
@@ -28545,7 +28643,7 @@ msgstr "Voorbeeld bij spoelen"
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:854
 #: src/features/channel/components/channel_header/shared.ts:47
 #: src/features/channel/components/shared/PickerSearchInput.tsx:21
-#: src/features/messaging/components/modals/ForwardModal.tsx:90
+#: src/features/messaging/components/modals/ForwardModal.tsx:87
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx:43
 #: src/features/search/utils/QuickSwitcherModalUtils.tsx:45
 #: src/features/theme_studio/ui/StudioSearchInput.tsx:16
@@ -29074,8 +29172,8 @@ msgid "Select text"
 msgstr "Tekst selecteren"
 
 #: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:69
-msgid "Select the account you want to sign in with on the desktop app."
-msgstr "Kies het account waarmee je wilt inloggen op de computerapp."
+msgid "Select the account you want to sign in with on your new device."
+msgstr "Selecteer het account waarmee je wilt inloggen op je nieuwe apparaat."
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:120
@@ -29182,7 +29280,7 @@ msgid "Send"
 msgstr "Verzenden"
 
 #. Primary button label in the forward message modal. selectedCount is the number of selected destinations; selectionLimit is the maximum allowed.
-#: src/features/messaging/components/modals/ForwardModal.tsx:107
+#: src/features/messaging/components/modals/ForwardModal.tsx:104
 msgid "Send ({selectedCount}/{selectionLimit})"
 msgstr "Verzenden ({selectedCount}/{selectionLimit})"
 
@@ -29487,7 +29585,7 @@ msgid "Session"
 msgstr "Sessie"
 
 #. Login layout banner shown when the session for a specific account has expired. Account identifier is interpolated.
-#: src/features/auth/flow/AuthLoginLayout.tsx:46
+#: src/features/auth/flow/AuthLoginLayout.tsx:53
 msgid "Session expired for {identifier}. Sign in again."
 msgstr "Sessie verlopen voor {identifier}. Log opnieuw in."
 
@@ -29970,7 +30068,7 @@ msgid "Shortcuts are paused while recording."
 msgstr "Sneltoetsen worden tijdens het opnemen gepauzeerd."
 
 #. Body of the error modal shown when the forward modal comment exceeds the message length limit.
-#: src/features/messaging/components/modals/ForwardModal.tsx:61
+#: src/features/messaging/components/modals/ForwardModal.tsx:58
 msgid "Shorten the message and try again."
 msgstr "Verkort het bericht en probeer het opnieuw."
 
@@ -30216,6 +30314,11 @@ msgstr "Max. 3 weergeven (+5 badge)"
 #: src/features/user/components/modals/tabs/component_gallery_tab/IndicatorsTab.tsx:495
 msgid "Show max 5 (+5 badge)"
 msgstr "Max. 5 weergeven (+5 badge)"
+
+#. Button on the domain moved banner that opens the install steps.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:56
+msgid "Show me how"
+msgstr "Laat me zien hoe"
 
 #. Plus menu submenu toggle that shows the saved media (memes) button next to the textarea.
 #. Short label for an advanced message input preference.
@@ -30488,13 +30591,18 @@ msgstr "Log in om je cadeau in te wisselen"
 
 #. Passkey sign-in action that opens the browser flow from the desktop app.
 #: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:64
-#: src/features/auth/flow/AuthLoginLayout.tsx:67
+#: src/features/auth/flow/AuthLoginLayout.tsx:79
 msgid "Sign in via browser"
 msgstr "Inloggen via browser"
 
 #: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:63
 msgid "Sign in with a passkey"
 msgstr "Inloggen met een passkey"
+
+#. Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:27
+msgid "Sign in with your old {productName} app"
+msgstr "Meld je aan met je oude {productName}-app"
 
 #. Description shown when sign-in is restricted to the configured SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx:17
@@ -30562,7 +30670,7 @@ msgid "Sign-in details"
 msgstr "Aanmeldingsgegevens"
 
 #. Accessible label for the stepped sign-in panel.
-#: src/features/auth/flow/AuthLoginLayout.tsx:55
+#: src/features/auth/flow/AuthLoginLayout.tsx:62
 msgid "Sign-in flow"
 msgstr "Aanmeldingsproces"
 
@@ -31030,7 +31138,7 @@ msgstr "Sommige gebruikers kunnen niet worden toegevoegd"
 #. Generic error modal title for an unexpected failure.
 #. Generic error toast title.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:248
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:82
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:90
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:274
 #: src/lib/forms/index.tsx:18
 msgid "Something went wrong"
@@ -32688,6 +32796,11 @@ msgstr "Praat in dit spraakkanaal. Zonder deze machtiging blijven leden gedempt 
 msgid "Talk in voice channels. Without this permission, members stay muted until someone with the \"Mute members\" permission unmutes them."
 msgstr "Praat in spraakkanalen. Zonder deze machtiging blijven leden gedempt totdat iemand met de machtiging \"Leden dempen\" het dempen opheft."
 
+#. Second install step on iPhone and iPad. Share and Add to Home Screen are the names of the Safari menu items, use the names iOS shows in this language.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:41
+msgid "Tap Share, then Add to Home Screen."
+msgstr "Tik op Delen en vervolgens op Toevoegen aan beginscherm."
+
 #. Label in the note edit sheet.
 #: src/features/user/components/modals/NoteEditSheet.tsx:21
 msgid "Tap to add a note"
@@ -33207,12 +33320,12 @@ msgid "The phone check is set aside. One email step is left."
 msgstr "De telefooncontrole is uitgesteld. Je moet nog één e-mailstap afronden."
 
 #. OAuth authorize page error shown when the redirect_uri is not registered for this OAuth app.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:58
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:59
 msgid "The provided redirect_uri is not registered for this application."
 msgstr "De opgegeven redirect_uri is niet geregistreerd voor deze app."
 
 #. Body text in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:49
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:50
 msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "De opgegeven redirect_uri moet HTTP of HTTPS gebruiken."
 
@@ -33445,7 +33558,7 @@ msgid "This animation is too long or too large to crop. Try a shorter or smaller
 msgstr "Deze animatie is te lang of te groot om bij te snijden. Probeer een korter of kleiner bestand."
 
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:82
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:83
 msgid "This application"
 msgstr "Deze app"
 
@@ -33455,7 +33568,7 @@ msgid "This attachment has expired"
 msgstr "Deze bijlage is verlopen"
 
 #. OAuth authorize page error shown when a private bot cannot be added by non-owners.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:70
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:71
 msgid "This bot is not public and cannot be added by other users."
 msgstr "Deze bot is niet openbaar en kan niet worden toegevoegd door andere gebruikers."
 
@@ -33757,7 +33870,7 @@ msgstr "Deze groep heeft te veel mensen"
 msgid "This group is full. Remove someone before adding more people."
 msgstr "Deze groep is vol. Verwijder iemand voordat je meer mensen toevoegt."
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:105
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:113
 msgid "This handoff code has expired. Generate a new one to continue."
 msgstr "Deze overdrachtscode is verlopen. Genereer een nieuwe om verder te gaan."
 
@@ -35480,7 +35593,7 @@ msgid "Unknown"
 msgstr "Onbekend"
 
 #. OAuth authorize page error shown when the application, session, or request is invalid.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:45
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:46
 msgid "Unknown application, expired session, or invalid authorization request."
 msgstr "Onbekende app, sessie verlopen of ongeldige autorisatieaanvraag."
 
@@ -36862,27 +36975,27 @@ msgid "Uses:"
 msgstr "Aantal keren gebruikt:"
 
 #. Developer nagbar status: banner follows real account state.
-#: src/features/devtools/components/NagbarControls.ts:101
+#: src/features/devtools/components/NagbarControls.ts:106
 msgid "Using actual account state"
 msgstr "Gebruikt de werkelijke accountstatus"
 
 #. Developer nagbar status: banner follows real gift inventory state.
-#: src/features/devtools/components/NagbarControls.ts:121
+#: src/features/devtools/components/NagbarControls.ts:126
 msgid "Using actual gift inventory state"
 msgstr "Werkelijke status van cadeau-inventaris wordt gebruikt"
 
 #. Developer nagbar status: banner follows real premium subscription state.
-#: src/features/devtools/components/NagbarControls.ts:117
+#: src/features/devtools/components/NagbarControls.ts:122
 msgid "Using actual premium state"
 msgstr "Gebruikt de daadwerkelijke premiumstatus"
 
 #. Developer nagbar status: banner follows the real app state.
-#: src/features/devtools/components/NagbarControls.ts:125
+#: src/features/devtools/components/NagbarControls.ts:130
 msgid "Using actual state"
 msgstr "Gebruikt de werkelijke status"
 
 #. Developer nagbar status: banner follows real email verification state.
-#: src/features/devtools/components/NagbarControls.ts:105
+#: src/features/devtools/components/NagbarControls.ts:110
 msgid "Using actual verification state"
 msgstr "Werkelijke verificatiestatus gebruiken"
 
@@ -37947,17 +38060,17 @@ msgstr "Even wachten"
 msgid "Waiting for connection..."
 msgstr "Wachten op verbinding..."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:232
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:236
 msgid "Waiting for passkey…"
 msgstr "Wachten op passkey…"
 
 #. Inline notice in the forward modal when slowmode is active in the selected target channel. forwardChannelDisplayName is the channel name.
-#: src/features/messaging/components/modals/ForwardModal.tsx:77
+#: src/features/messaging/components/modals/ForwardModal.tsx:74
 msgid "Waiting for slowmode in {forwardChannelDisplayName} to expire."
 msgstr "Wachten tot de slowmodus in {forwardChannelDisplayName} is verlopen."
 
 #. Inline notice in the forward modal when slowmode is active in one or more selected target channels.
-#: src/features/messaging/components/modals/ForwardModal.tsx:82
+#: src/features/messaging/components/modals/ForwardModal.tsx:79
 msgid "Waiting for slowmode in one or more selected channels to expire."
 msgstr "Wachten tot de slowmodus in een of meer geselecteerde kanalen is verlopen."
 
@@ -38156,7 +38269,7 @@ msgstr "We hebben deze sticker verkleind en gecomprimeerd naar 320x320 pixels, m
 msgid "We sent a code to {email}."
 msgstr "We hebben een code gestuurd naar {email}."
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:128
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:152
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "We vullen {prefillEmail} alvast in zodra het inlogscherm in je browser opent."
 
@@ -38356,7 +38469,7 @@ msgid "Website previews"
 msgstr "Websitevoorbeelden"
 
 #. Heading on the standard sign-in form.
-#: src/features/auth/flow/AuthLoginLayout.tsx:59
+#: src/features/auth/flow/AuthLoginLayout.tsx:66
 msgid "Welcome back"
 msgstr "Welkom terug"
 
@@ -39699,7 +39812,7 @@ msgid "Your {premiumProductName} subscription has expired. You have lost all {pr
 msgstr "Je {premiumProductName}-abonnement is verlopen. Je bent alle {premiumProductName}-voordelen kwijtgeraakt. Activeer je abonnement opnieuw om weer toegang te krijgen."
 
 #. OAuth authorize page error shown when the session expired mid-authorization. Keep plain. Preserve {productName}; it is inserted by code.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:40
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:41
 msgid "Your {productName} session expired. Sign in again to continue authorizing this application."
 msgstr "Je {productName}-sessie is verlopen. Log opnieuw in om door te gaan met het autoriseren van deze app."
 
@@ -39734,7 +39847,7 @@ msgstr "Je account is te nieuw om berichten te versturen in deze community."
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "Je accountaanvraag wacht op goedkeuring. Je kunt inloggen nadat een beheerder deze heeft goedgekeurd."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:195
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:199
 msgid "Your account requires multi-factor authentication, but no supported methods are set up on this device. Sign in on a device with your authenticator app or security key, or contact support."
 msgstr "Je account vereist meervoudige authenticatie, maar er zijn geen ondersteunde methoden ingesteld op dit apparaat. Meld je aan op een apparaat met je authenticator-app of beveiligingssleutel, of neem contact op met de ondersteuning."
 
@@ -39757,6 +39870,11 @@ msgstr "Je actie kon niet worden voltooid omdat deze is gemarkeerd door onze vei
 msgid "Your application is pending review. You can still update your listing details or withdraw the application."
 msgstr "Je aanvraag wacht op beoordeling. Je kunt de gegevens van je vermelding nog bijwerken of de aanvraag intrekken."
 
+#. Error shown when a passkey prompt fails because the browser cannot use the passkey on this web address. Keep plain.
+#: src/features/auth/utils/WebAuthnUtils.ts:18
+msgid "Your browser does not support passkeys on this domain. Update your browser, or sign in with your password and two-factor code."
+msgstr "Uw browser ondersteunt geen passkeys op dit domein. Werk uw browser bij, of meld u aan met uw wachtwoord en tweefactorcode."
+
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12
 msgid "Your browser requires user interaction before audio can be played. Click the button below to enable voice chat."
@@ -39775,11 +39893,11 @@ msgstr "Je kaart is geschikt. Je wordt nu doorgestuurd naar de betaalpagina."
 msgid "Your carrier says this number isn't in service. Check it and try again, or contact support if it's correct."
 msgstr "Je provider geeft aan dat dit nummer niet in gebruik is. Controleer het en probeer het opnieuw, of neem contact op met support als het wel klopt."
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:128
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:136
 msgid "Your code"
 msgstr "Je code"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:121
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:129
 msgid "Your code is ready"
 msgstr "Je code is klaar"
 

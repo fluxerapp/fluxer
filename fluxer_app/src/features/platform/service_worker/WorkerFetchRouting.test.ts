@@ -26,6 +26,15 @@ describe('WorkerFetchRouting', () => {
 		expect(
 			getWorkerFetchRoute(request(`${WORKER_ORIGIN}/admin`, {headers: {accept: 'text/html'}}), WORKER_ORIGIN),
 		).toBe('ignore');
+		expect(getWorkerFetchRoute(request(`${WORKER_ORIGIN}/app`, {headers: {accept: 'text/html'}}), WORKER_ORIGIN)).toBe(
+			'navigation',
+		);
+		expect(
+			getWorkerFetchRoute(request(`${WORKER_ORIGIN}/migrate/export`, {headers: {accept: 'text/html'}}), WORKER_ORIGIN),
+		).toBe('navigation');
+		expect(getWorkerFetchRoute(request(`${WORKER_ORIGIN}/`, {headers: {accept: 'text/html'}}), WORKER_ORIGIN)).toBe(
+			'ignore',
+		);
 		expect(getWorkerFetchRoute(request(`${WORKER_ORIGIN}/manifest.json`), WORKER_ORIGIN)).toBe('metadata');
 		expect(getWorkerFetchRoute(request(`${WORKER_ORIGIN}/version.json`), WORKER_ORIGIN)).toBe('metadata');
 	});

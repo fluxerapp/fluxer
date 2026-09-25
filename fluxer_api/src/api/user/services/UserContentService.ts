@@ -20,12 +20,23 @@ import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
 import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {Message} from '@app/api/models/Message';
-import type {PushSubscription} from '@app/api/models/PushSubscription';
+import {PushSubscription} from '@app/api/models/PushSubscription';
 import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
 import type {IUserContentRepository} from '@app/api/user/repositories/IUserContentRepository';
 import {BaseUserUpdatePropagator} from '@app/api/user/services/BaseUserUpdatePropagator';
 import {verifyHarvestDownloadToken} from '@app/api/user/services/HarvestDownloadToken';
 import {buildHarvestDownloadUrl} from '@app/api/user/services/HarvestDownloadUrl';
+import {
+	findInstalledLegacyPushSubscriptionIds,
+	findTargetPushSubscriptionIds,
+	getPushOriginReplacement,
+	getPushSessionPredecessor,
+	markInstalledLegacyPushSubscription,
+	markPushOriginReplaced,
+	markTargetPushSubscription,
+	sameUserAgentFamily,
+	type WebPushOriginKind,
+} from '@app/api/user/services/WebPushOriginReplacement';
 import {UserHarvest} from '@app/api/user/UserHarvestModel';
 import {UserHarvestRepository} from '@app/api/user/UserHarvestRepository';
 import {serializeSelfMessageFilter} from '@app/api/worker/utils/SelfMessageFilterPayload';
@@ -56,6 +67,7 @@ import type {
 import type {SavedMessageStatus} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import {isPubliclyRoutableUrlShape} from '@pkgs/http_client/src/PublicInternetRequestUrlPolicy';
+import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
 import {ms} from 'itty-time';
 
@@ -159,6 +171,7 @@ export class UserContentService {
 	private readonly gatewayService: IGatewayService;
 	private readonly workerService: IWorkerService<WorkerTaskName>;
 	private readonly snowflakeService: ISnowflakeService;
+	private readonly kv: IKVProvider;
 
 	constructor(
 		apiContext: ApiContext,
@@ -168,11 +181,12 @@ export class UserContentService {
 		private bulkMessageDeletionQueue: KVBulkMessageDeletionQueueService,
 		private limitConfigService: LimitConfigService,
 	) {
-		const {users, gateway, worker, snowflake} = apiContext.services;
+		const {users, gateway, worker, snowflake, kv} = apiContext.services;
 		this.userRepository = users;
 		this.gatewayService = gateway;
 		this.workerService = worker;
 		this.snowflakeService = snowflake;
+		this.kv = kv;
 		this.updatePropagator = new BaseUserUpdatePropagator({
 			userCacheService,
 			gatewayService: this.gatewayService,
@@ -359,8 +373,10 @@ export class UserContentService {
 			auth: string;
 		};
 		userAgent?: string;
+		originKind?: WebPushOriginKind | null;
+		installedApp?: boolean;
 	}): Promise<PushSubscription> {
-		const {userId, authSessionIdHash, endpoint, keys, userAgent} = params;
+		const {userId, authSessionIdHash, endpoint, keys, userAgent, originKind, installedApp} = params;
 		assertPublicPushEndpoint(endpoint, 'endpoint');
 		const subscriptionId = createWebPushSubscriptionId(endpoint);
 		const data: PushSubscriptionRow = {
@@ -375,9 +391,74 @@ export class UserContentService {
 			app_id: null,
 			provider_environment: null,
 		};
-		const subscription = await this.userRepository.createPushSubscription(data);
+		const subscription = await this.storeWebPushSubscription(data, originKind ?? null, installedApp === true);
 		await this.gatewayService.invalidatePushSubscriptions({userId});
 		return subscription;
+	}
+
+	private async storeWebPushSubscription(
+		data: PushSubscriptionRow,
+		originKind: WebPushOriginKind | null,
+		installedApp: boolean,
+	): Promise<PushSubscription> {
+		if (originKind === 'legacy' && (await this.isLegacyWebPushReplaced(data, installedApp))) {
+			return new PushSubscription(data);
+		}
+		const subscription = await this.userRepository.createPushSubscription(data);
+		if (originKind === 'legacy' && installedApp) {
+			await this.bestEffortPushOriginWrite(() => markInstalledLegacyPushSubscription(this.kv, data.subscription_id));
+		}
+		if (originKind === 'target') {
+			await this.bestEffortPushOriginWrite(() => this.replaceLegacyWebPushSubscriptions(data, installedApp));
+		}
+		return subscription;
+	}
+
+	private async isLegacyWebPushReplaced(data: PushSubscriptionRow, installedApp: boolean): Promise<boolean> {
+		const sessionIdHash = data.auth_session_id_hash;
+		if (!sessionIdHash) return false;
+		try {
+			const replacement = await getPushOriginReplacement(this.kv, sessionIdHash);
+			return replacement === 'installed' || (replacement === 'browser' && !installedApp);
+		} catch (error) {
+			Logger.warn({error}, 'Failed to read the web push origin replacement');
+			return false;
+		}
+	}
+
+	private async bestEffortPushOriginWrite(write: () => Promise<void>): Promise<void> {
+		try {
+			await write();
+		} catch (error) {
+			Logger.warn({error}, 'Failed to apply the web push origin replacement');
+		}
+	}
+
+	private async replaceLegacyWebPushSubscriptions(data: PushSubscriptionRow, installedApp: boolean): Promise<void> {
+		await markTargetPushSubscription(this.kv, data.subscription_id);
+		const sessionIdHash = data.auth_session_id_hash;
+		if (!sessionIdHash) return;
+		await markPushOriginReplaced(this.kv, sessionIdHash, installedApp ? 'installed' : 'browser');
+		const predecessor = await getPushSessionPredecessor(this.kv, sessionIdHash);
+		const candidates = (await this.userRepository.listPushSubscriptions(data.user_id)).filter(
+			(subscription) =>
+				subscription.platform === WEB_PUSH_PLATFORM &&
+				subscription.endpoint !== data.endpoint &&
+				(subscription.authSessionIdHash === sessionIdHash ||
+					(predecessor !== null &&
+						subscription.authSessionIdHash === predecessor &&
+						sameUserAgentFamily(subscription.userAgent, data.user_agent))),
+		);
+		const candidateIds = candidates.map((subscription) => subscription.subscriptionId);
+		const [targetSubscriptionIds, installedLegacySubscriptionIds] = await Promise.all([
+			findTargetPushSubscriptionIds(this.kv, candidateIds),
+			installedApp ? Promise.resolve(new Set<string>()) : findInstalledLegacyPushSubscriptionIds(this.kv, candidateIds),
+		]);
+		for (const subscription of candidates) {
+			if (targetSubscriptionIds.has(subscription.subscriptionId)) continue;
+			if (installedLegacySubscriptionIds.has(subscription.subscriptionId)) continue;
+			await this.userRepository.deletePushSubscription(data.user_id, subscription.subscriptionId);
+		}
 	}
 
 	async listPushSubscriptions(userId: UserID): Promise<Array<PushSubscription>> {
@@ -400,8 +481,10 @@ export class UserContentService {
 			auth: string;
 		};
 		userAgent?: string;
+		originKind?: WebPushOriginKind | null;
+		installedApp?: boolean;
 	}): Promise<PushSubscription> {
-		const {userId, authSessionIdHash, oldEndpoint, endpoint, keys, userAgent} = params;
+		const {userId, authSessionIdHash, oldEndpoint, endpoint, keys, userAgent, originKind, installedApp} = params;
 		assertPublicPushEndpoint(endpoint, 'endpoint');
 		const oldSubscriptionId = createWebPushSubscriptionId(oldEndpoint);
 		const newSubscriptionId = createWebPushSubscriptionId(endpoint);
@@ -420,7 +503,7 @@ export class UserContentService {
 			app_id: null,
 			provider_environment: null,
 		};
-		const subscription = await this.userRepository.createPushSubscription(data);
+		const subscription = await this.storeWebPushSubscription(data, originKind ?? null, installedApp === true);
 		await this.gatewayService.invalidatePushSubscriptions({userId});
 		return subscription;
 	}

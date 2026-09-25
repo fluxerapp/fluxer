@@ -25,6 +25,7 @@ export const NagbarType = {
 	LINUX_INPUT_ACCESS: 'linux-input-access',
 	SOFTWARE_ENCODER: 'software-encoder',
 	STREAMER_MODE: 'streamer-mode',
+	DOMAIN_MOVED: 'domain-moved',
 } as const;
 
 export type NagbarType = ValueOf<typeof NagbarType>;
@@ -63,4 +64,5 @@ export interface NagbarConditions {
 	canShowLinuxInputAccess: boolean;
 	canShowSoftwareEncoder: boolean;
 	canShowStreamerMode: boolean;
+	canShowDomainMoved: boolean;
 }

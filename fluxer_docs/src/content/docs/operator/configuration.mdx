@@ -199,6 +199,10 @@ Defaults to the derived endpoint. The API base handed to clients. Setting only o
 
 Defaults to the derived endpoint. The web app origin. Also one of the allowed CORS origins. Serving the client from another hostname requires setting this.
 
+#### `FLUXER_APP_ORIGIN_ALIASES`
+
+Default empty. Further web app origins, comma separated. Each entry must be an HTTP or HTTPS origin, or the API refuses to start. The API treats each one like the `FLUXER_APP_ENDPOINT` origin. It allows it through CORS, reads invite links on its host, skips unfurling client routes on its host, and refuses webhook token calls from it. Set it when one instance serves the web app on more than one hostname.
+
 #### `FLUXER_GATEWAY_ENDPOINT`
 
 Defaults to the derived endpoint. The public Gateway WebSocket URL. Also the source of the internal Gateway URL when `FLUXER_INTERNAL_GATEWAY_ENDPOINT` is unset, with `ws` rewritten to `http`.
@@ -1597,6 +1601,14 @@ Default `/api`. The API path put in the page bootstrap.
 
 No default. The absolute API URL in the bootstrap. Compose builds it from the public origin.
 
+#### `FLUXER_APP_PROXY_SAME_ORIGIN_HOSTS`
+
+Default empty. Hostnames, comma separated, without a scheme, port or path. When a request's `Host` is in the list, the page bootstrap points the web app and its API at that host, as `https://<host>` and `https://<host>/api`. Every other request gets the discovery values unchanged. Set it when the web app is served on more than one hostname and each hostname routes `/api` to the API. Invalid entries are logged and dropped.
+
+#### `FLUXER_APP_PROXY_MANIFEST_SCOPE_EXTENSIONS`
+
+Default empty. HTTPS origins, comma separated, without a path, query or credentials. `app-proxy` writes each one into the `scope_extensions` list of the web app manifest, so an installed web app keeps other origins inside its window. Empty leaves the list empty. Each listed origin must serve `/.well-known/web-app-origin-association` naming this web app, or browsers ignore the entry. Invalid entries are logged and dropped.
+
 ## Admin settings
 
 `admin` serves the dashboard at `/admin`. All are optional.
@@ -2049,7 +2061,7 @@ The edge is the only HTTP entry point, and every route is served from the one pu
 
 None of the variables on this page change that routing. The `Caddyfile` is a bind mount, so an edit to it takes `docker compose restart edge`.
 
-CORS origins are exactly the app and marketing endpoints. Serving the client from a hostname other than `FLUXER_DOMAIN` requires overriding `FLUXER_APP_ENDPOINT`.
+CORS origins are exactly the app endpoint, the `FLUXER_APP_ORIGIN_ALIASES` origins, and the marketing endpoint. Serving the client from a hostname other than `FLUXER_DOMAIN` requires overriding `FLUXER_APP_ENDPOINT`.
 
 ## Volumes and buckets
 

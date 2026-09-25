@@ -356,6 +356,8 @@ pub struct AppProxyConfig {
     pub geoip_s3_config: Option<GeoipS3Config>,
     pub trust_client_ip_header: bool,
     pub client_ip_header_name: String,
+    pub same_origin_hosts: Vec<String>,
+    pub manifest_scope_extensions: Vec<String>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -511,8 +513,99 @@ impl AppProxyConfig {
             )
             .trim()
             .to_ascii_lowercase(),
+            same_origin_hosts: parse_same_origin_hosts(
+                "FLUXER_APP_PROXY_SAME_ORIGIN_HOSTS",
+                &cfg::read_env("FLUXER_APP_PROXY_SAME_ORIGIN_HOSTS", ""),
+            ),
+            manifest_scope_extensions: parse_manifest_scope_extensions(
+                "FLUXER_APP_PROXY_MANIFEST_SCOPE_EXTENSIONS",
+                &cfg::read_env("FLUXER_APP_PROXY_MANIFEST_SCOPE_EXTENSIONS", ""),
+            ),
         }
     }
+}
+
+fn parse_manifest_scope_extensions(name: &'static str, raw: &str) -> Vec<String> {
+    let mut origins: Vec<String> = Vec::new();
+    for value in raw
+        .split([',', ' ', '\t', '\n'])
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+    {
+        match parse_manifest_scope_extension_origin(name, value) {
+            Ok(origin) => {
+                if !origins.contains(&origin) {
+                    origins.push(origin);
+                }
+            }
+            Err(error) => warn_invalid(&error),
+        }
+    }
+    origins
+}
+
+fn parse_manifest_scope_extension_origin(
+    name: &'static str,
+    value: &str,
+) -> Result<String, InvalidAppProxyEnvironmentError> {
+    let origin = Url::parse(value).ok().filter(|url| {
+        url.scheme() == "https"
+            && url.host_str().is_some()
+            && url.username().is_empty()
+            && url.password().is_none()
+            && url.path() == "/"
+            && url.query().is_none()
+            && url.fragment().is_none()
+    });
+    match origin {
+        Some(url) => Ok(url.origin().ascii_serialization()),
+        None => Err(InvalidAppProxyEnvironmentError::new(
+            name,
+            value,
+            "an HTTPS origin without a path, query or credentials",
+        )),
+    }
+}
+
+fn parse_same_origin_hosts(name: &'static str, raw: &str) -> Vec<String> {
+    let mut hosts: Vec<String> = Vec::new();
+    for value in raw
+        .split([',', ' ', '\t', '\n'])
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+    {
+        match parse_same_origin_host(name, value) {
+            Ok(host) => {
+                if !hosts.contains(&host) {
+                    hosts.push(host);
+                }
+            }
+            Err(error) => warn_invalid(&error),
+        }
+    }
+    hosts
+}
+
+fn parse_same_origin_host(
+    name: &'static str,
+    value: &str,
+) -> Result<String, InvalidAppProxyEnvironmentError> {
+    let host = value.trim_end_matches('.').to_ascii_lowercase();
+    let is_hostname = !host.is_empty()
+        && Url::parse(&format!("https://{host}/")).is_ok_and(|url| {
+            url.host_str() == Some(host.as_str())
+                && url.port().is_none()
+                && url.path() == "/"
+                && url.username().is_empty()
+        });
+    if !is_hostname {
+        return Err(InvalidAppProxyEnvironmentError::new(
+            name,
+            value,
+            "a bare hostname without a scheme, port or path",
+        ));
+    }
+    Ok(host)
 }
 
 fn resolve_discovery_upstream_url_from_env() -> String {
@@ -697,6 +790,65 @@ mod tests {
         ])
         .expect_err("a malformed origin is refused");
         assert!(error.to_string().contains("FLUXER_PUBLIC_ORIGIN"));
+    }
+
+    #[test]
+    fn same_origin_hosts_default_to_none() {
+        assert!(parse_same_origin_hosts("TEST_SAME_ORIGIN_HOSTS", "").is_empty());
+        assert!(parse_same_origin_hosts("TEST_SAME_ORIGIN_HOSTS", " , ").is_empty());
+    }
+
+    #[test]
+    fn same_origin_hosts_are_normalised_and_deduplicated() {
+        assert_eq!(
+            parse_same_origin_hosts(
+                "TEST_SAME_ORIGIN_HOSTS",
+                " web.fluxer.app, Fluxer.COM,fluxer.com. ,fluxer.com"
+            ),
+            vec!["web.fluxer.app".to_owned(), "fluxer.com".to_owned()]
+        );
+    }
+
+    #[test]
+    fn same_origin_hosts_drop_anything_but_a_bare_hostname() {
+        assert_eq!(
+            parse_same_origin_hosts(
+                "TEST_SAME_ORIGIN_HOSTS",
+                "https://fluxer.com,fluxer.com:443,fluxer.com/api,user@fluxer.com,canary.fluxer.com"
+            ),
+            vec!["canary.fluxer.com".to_owned()]
+        );
+    }
+
+    #[test]
+    fn manifest_scope_extensions_default_to_none() {
+        assert!(parse_manifest_scope_extensions("TEST_SCOPE_EXTENSIONS", "").is_empty());
+        assert!(parse_manifest_scope_extensions("TEST_SCOPE_EXTENSIONS", " , ").is_empty());
+    }
+
+    #[test]
+    fn manifest_scope_extensions_are_normalised_and_deduplicated() {
+        assert_eq!(
+            parse_manifest_scope_extensions(
+                "TEST_SCOPE_EXTENSIONS",
+                " https://Fluxer.COM, https://fluxer.com/ ,https://canary.fluxer.com:443"
+            ),
+            vec![
+                "https://fluxer.com".to_owned(),
+                "https://canary.fluxer.com".to_owned()
+            ]
+        );
+    }
+
+    #[test]
+    fn manifest_scope_extensions_drop_anything_but_an_https_origin() {
+        assert_eq!(
+            parse_manifest_scope_extensions(
+                "TEST_SCOPE_EXTENSIONS",
+                "fluxer.com,http://fluxer.com,https://fluxer.com/app,https://fluxer.com/?a=1,https://user@fluxer.com,https://canary.fluxer.com"
+            ),
+            vec!["https://canary.fluxer.com".to_owned()]
+        );
     }
 
     #[test]

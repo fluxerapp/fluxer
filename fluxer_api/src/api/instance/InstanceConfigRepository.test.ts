@@ -19,6 +19,10 @@ import {startDockerContainer} from '@app/api/test/DockerTestContainer';
 import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
 import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import {
+	DEFAULT_DOMAIN_MIGRATION_CONFIG,
+	type DomainMigrationConfig,
+} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
+import {
 	DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG,
 	type VoiceNoiseSuppressionConfig,
 } from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
@@ -35,6 +39,7 @@ import {
 import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi} from 'vitest';
 
 const VOICE_NOISE_SUPPRESSION_CONFIG_KEY = 'voice_noise_suppression_config';
+const DOMAIN_MIGRATION_CONFIG_KEY = 'domain_migration_config';
 const EXPERIMENT_DELIVERY_CONFIG_KEY = 'experiment_delivery_config';
 const APP_PUBLIC_CONFIG_KEY = 'app_public_config';
 const INSTANCE_POLICY_CONFIG_KEY = 'instance_policy_config';
@@ -348,6 +353,92 @@ describe('InstanceConfigRepository', () => {
 			enabled: true,
 			config_version: 2,
 			rollout_basis_points: 1000,
+		});
+	});
+
+	it('returns the default domain migration config when the key is absent', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await expect(repository.getDomainMigrationConfig()).resolves.toEqual(DEFAULT_DOMAIN_MIGRATION_CONFIG);
+	});
+
+	it.each([
+		{name: 'unparseable text', stored: 'not-json'},
+		{name: 'a json array', stored: '[]'},
+		{name: 'out-of-range values', stored: '{"rollout_basis_points":99999}'},
+		{name: 'a non-boolean enabled flag', stored: '{"enabled":"yes"}'},
+	])('falls back to the default domain migration config for $name', async ({stored}) => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setConfig(DOMAIN_MIGRATION_CONFIG_KEY, stored);
+
+		await expect(repository.getDomainMigrationConfig()).resolves.toEqual(DEFAULT_DOMAIN_MIGRATION_CONFIG);
+	});
+
+	it('round-trips a stored domain migration config', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		const config: DomainMigrationConfig = {
+			...DEFAULT_DOMAIN_MIGRATION_CONFIG,
+			enabled: true,
+			config_version: 5,
+			rollout_basis_points: 2500,
+			rollout_salt: 'domain-migration-v2',
+			included_user_ids: ['1400000000000000001'],
+			excluded_user_ids: ['1400000000000000002'],
+			anonymous_rollout_basis_points: 300,
+			standalone_forwarding: true,
+		};
+		await repository.setDomainMigrationConfig(config);
+
+		await expect(repository.getDomainMigrationConfig()).resolves.toEqual(config);
+	});
+
+	it('fills newly added domain migration fields from the schema defaults', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const repository = createRepository(kvProvider);
+
+		await repository.setConfig(
+			DOMAIN_MIGRATION_CONFIG_KEY,
+			JSON.stringify({enabled: true, config_version: 2, rollout_basis_points: 1000}),
+		);
+
+		await expect(repository.getDomainMigrationConfig()).resolves.toEqual({
+			...DEFAULT_DOMAIN_MIGRATION_CONFIG,
+			enabled: true,
+			config_version: 2,
+			rollout_basis_points: 1000,
+		});
+	});
+
+	it('publishes a refresh so another repository observes the domain migration config', async () => {
+		const executor = new CountingInMemoryCassandraQueryExecutor();
+		setCassandraQueryExecutorForTesting(executor);
+		const kvProvider = new MockKVProvider();
+		const reader = createRepository(kvProvider);
+		const writer = createRepository(kvProvider);
+
+		await expect(reader.getDomainMigrationConfig()).resolves.toEqual(DEFAULT_DOMAIN_MIGRATION_CONFIG);
+
+		await writer.setDomainMigrationConfig({
+			...DEFAULT_DOMAIN_MIGRATION_CONFIG,
+			enabled: true,
+			config_version: 1,
+		});
+
+		await vi.waitFor(async () => {
+			expect(await reader.getDomainMigrationConfig()).toMatchObject({enabled: true, config_version: 1});
 		});
 	});
 

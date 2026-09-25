@@ -42,6 +42,7 @@ export interface NagbarSettings {
 	forceScheduledMaintenance: boolean;
 	forceVoiceSessionRestore: boolean;
 	forceGuildMfaRequirement: boolean;
+	forceDomainMoved: boolean;
 	forceHideConnectionNotice: boolean;
 	forceHideEmailVerification: boolean;
 	forceHideIOSInstall: boolean;
@@ -62,6 +63,7 @@ export interface NagbarSettings {
 	forceHideScheduledMaintenance: boolean;
 	forceHideVoiceSessionRestore: boolean;
 	forceHideGuildMfaRequirement: boolean;
+	forceHideDomainMoved: boolean;
 }
 
 export type NagbarToggleKey = Exclude<
@@ -114,6 +116,7 @@ export class Nagbar implements NagbarSettings {
 	forceScheduledMaintenance = false;
 	forceVoiceSessionRestore = false;
 	forceGuildMfaRequirement = false;
+	forceDomainMoved = false;
 	forceConnectionNotice = false;
 	forceHideOffline = false;
 	forceHideEmailVerification = false;
@@ -135,6 +138,7 @@ export class Nagbar implements NagbarSettings {
 	forceHideScheduledMaintenance = false;
 	forceHideVoiceSessionRestore = false;
 	forceHideGuildMfaRequirement = false;
+	forceHideDomainMoved = false;
 	forceHideConnectionNotice = false;
 
 	constructor() {
@@ -430,6 +434,7 @@ export class Nagbar implements NagbarSettings {
 		this.forceScheduledMaintenance = false;
 		this.forceVoiceSessionRestore = false;
 		this.forceGuildMfaRequirement = false;
+		this.forceDomainMoved = false;
 		this.forceConnectionNotice = false;
 		this.forceHideOffline = false;
 		this.forceHideEmailVerification = false;
@@ -451,6 +456,7 @@ export class Nagbar implements NagbarSettings {
 		this.forceHideScheduledMaintenance = false;
 		this.forceHideVoiceSessionRestore = false;
 		this.forceHideGuildMfaRequirement = false;
+		this.forceHideDomainMoved = false;
 		this.forceHideConnectionNotice = false;
 	}
 

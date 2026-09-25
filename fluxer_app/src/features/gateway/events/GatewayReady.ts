@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {startDomainMigrationTrigger} from '@app/features/app/domain_migration/DomainMigrationTrigger';
 import Initialization from '@app/features/app/state/Initialization';
 import AccountManager from '@app/features/auth/state/AccountManager';
 import accountStorage from '@app/features/auth/state/AccountStorage';
@@ -184,4 +185,5 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext)
 	Initialization.setReady();
 	context.setReady();
 	Messages.handleGatewayReady();
+	startDomainMigrationTrigger();
 }

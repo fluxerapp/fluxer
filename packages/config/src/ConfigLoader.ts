@@ -19,6 +19,8 @@ const DEFAULT_PASSKEY_ORIGINS = [
 	'https://fluxer.app',
 	'https://web.fluxer.app',
 	'https://web.canary.fluxer.app',
+	'https://fluxer.com',
+	'https://canary.fluxer.com',
 	'android:apk-key-hash:keSY4bimyLqZQV7bKXgpa2xYuqXi0qZJzsYtp6gpx7w',
 ];
 
@@ -106,6 +108,7 @@ function defaultConfig(): MasterConfig {
 				presigned_attachment_uploads_enabled: false,
 				presigned_harvest_downloads_enabled: true,
 				unfurl_ignored_hosts: [],
+				app_origin_aliases: [],
 				embeds: {
 					oembed_html_enabled: false,
 					oembed_html_allow_untrusted_on_self_hosted: false,
@@ -491,6 +494,21 @@ function validateStorageChangeFeedConfig(config: MasterConfig): void {
 	}
 }
 
+function normalizeAppOriginAliases(config: MasterConfig): void {
+	const api = config.services.api;
+	api.app_origin_aliases = [
+		...new Set(
+			api.app_origin_aliases.map((alias, index) => {
+				const origin = parseWebOrigin(alias);
+				if (!origin) {
+					throw new Error(`FLUXER_APP_ORIGIN_ALIASES entry ${index + 1} must be an HTTP(S) origin`);
+				}
+				return origin.origin;
+			}),
+		),
+	];
+}
+
 function validateCachePurgeConfig(config: MasterConfig): void {
 	const cachePurge = config.integrations.cache_purge;
 	if (cachePurge.adapter !== 'http') {
@@ -582,6 +600,7 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	validateApiWorkerConfig(config);
 	validateStorageChangeFeedConfig(config);
 	validateCachePurgeConfig(config);
+	normalizeAppOriginAliases(config);
 	assertIntegerInRange(config.services.api.max_inflight_requests, 'FLUXER_API_MAX_INFLIGHT_REQUESTS', 1, 100_000);
 	assertIntegerInRange(config.services.api.headers_timeout_ms, 'FLUXER_API_HEADERS_TIMEOUT_MS', 1_000, 3_600_000);
 	assertIntegerInRange(config.services.api.request_timeout_ms, 'FLUXER_API_REQUEST_TIMEOUT_MS', 1_000, 3_600_000);

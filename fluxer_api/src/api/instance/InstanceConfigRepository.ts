@@ -29,6 +29,10 @@ import {
 	type RegistrationUrlResponse,
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {
+	type DomainMigrationConfig,
+	DomainMigrationConfigSchema,
+} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
+import {
 	type GatewayRolloutConfig,
 	GatewayRolloutConfigSchema,
 } from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
@@ -63,6 +67,7 @@ import {z} from 'zod';
 const GATEWAY_ROLLOUT_CONFIG_KEY = 'gateway_rollout_config';
 const VOICE_NOISE_SUPPRESSION_CONFIG_KEY = 'voice_noise_suppression_config';
 const PUSH_SERVICE_DELIVERY_CONFIG_KEY = 'push_service_delivery_config';
+const DOMAIN_MIGRATION_CONFIG_KEY = 'domain_migration_config';
 const EXPERIMENT_DELIVERY_CONFIG_KEY = 'experiment_delivery_config';
 const REGISTRATION_CONFIG_KEY = 'registration_config';
 const REGISTRATION_URLS_KEY = 'registration_urls';
@@ -370,6 +375,7 @@ type StoredConfigSection =
 	| 'gateway rollout'
 	| 'voice noise suppression'
 	| 'push service delivery'
+	| 'domain migration'
 	| 'experiment delivery'
 	| 'instance policy'
 	| 'integrations'
@@ -510,6 +516,10 @@ function parseStoredVoiceNoiseSuppressionConfig(raw: string | null): VoiceNoiseS
 
 function parseStoredPushServiceDeliveryConfig(raw: string | null): PushServiceDeliveryConfig {
 	return parseStoredConfigOrDefault(PushServiceDeliveryConfigSchema, raw, 'push service delivery');
+}
+
+function parseStoredDomainMigrationConfig(raw: string | null): DomainMigrationConfig {
+	return parseStoredConfigOrDefault(DomainMigrationConfigSchema, raw, 'domain migration');
 }
 
 function parseStoredExperimentDeliveryConfig(raw: string | null): ExperimentDeliveryConfig {
@@ -1160,6 +1170,7 @@ export class InstanceConfigRepository {
 		);
 		parseStoredVoiceNoiseSuppressionConfig(snapshot.get(VOICE_NOISE_SUPPRESSION_CONFIG_KEY) ?? null);
 		parseStoredPushServiceDeliveryConfig(snapshot.get(PUSH_SERVICE_DELIVERY_CONFIG_KEY) ?? null);
+		parseStoredDomainMigrationConfig(snapshot.get(DOMAIN_MIGRATION_CONFIG_KEY) ?? null);
 		parseStoredExperimentDeliveryConfig(snapshot.get(EXPERIMENT_DELIVERY_CONFIG_KEY) ?? null);
 		const policy = parseStoredInstancePolicyConfig(snapshot.get(INSTANCE_POLICY_CONFIG_KEY) ?? null);
 		checkStoredConfig('registration', () =>
@@ -1269,6 +1280,27 @@ export class InstanceConfigRepository {
 				PushServiceDeliveryConfigSchema,
 				update(parseStoredPushServiceDeliveryConfig(raw)),
 				'push service delivery',
+			),
+		);
+	}
+
+	async getDomainMigrationConfig(): Promise<DomainMigrationConfig> {
+		const raw = await this.getConfig(DOMAIN_MIGRATION_CONFIG_KEY);
+		return parseStoredDomainMigrationConfig(raw);
+	}
+
+	async setDomainMigrationConfig(config: DomainMigrationConfig): Promise<void> {
+		await this.updateDomainMigrationConfig(() => config);
+	}
+
+	updateDomainMigrationConfig(
+		update: (current: DomainMigrationConfig) => DomainMigrationConfig,
+	): Promise<DomainMigrationConfig> {
+		return this.updateStoredConfig(DOMAIN_MIGRATION_CONFIG_KEY, (raw) =>
+			validateStoredConfig(
+				DomainMigrationConfigSchema,
+				update(parseStoredDomainMigrationConfig(raw)),
+				'domain migration',
 			),
 		);
 	}

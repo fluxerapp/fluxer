@@ -1522,6 +1522,9 @@
         "msgid": "Approval required"
       },
       {
+        "msgid": "Approve this app from the {productName} app you already use. No password needed."
+      },
+      {
         "msgid": "Are you sure you want to kick <0>{targetUserTag}</0> from the community? They will be able to rejoin with a new invite."
       },
       {
@@ -1717,6 +1720,9 @@
         "msgid": "Choices"
       },
       {
+        "msgid": "Choose File, then Add to Dock."
+      },
+      {
         "msgid": "Choose how new accounts are created on this instance."
       },
       {
@@ -1879,6 +1885,9 @@
         "msgid": "Do you want to join {communityName}?"
       },
       {
+        "msgid": "Domain moved nagbar"
+      },
+      {
         "msgid": "Drag members between voice channels they can access, and disconnect them from voice."
       },
       {
@@ -1933,6 +1942,9 @@
         "msgid": "Enter the PIN for your security key to continue."
       },
       {
+        "msgid": "Enter this code in your old {PRODUCT_NAME} app to complete sign-in."
+      },
+      {
         "msgid": "Entire screen"
       },
       {
@@ -1967,6 +1979,9 @@
       },
       {
         "msgid": "Fully quit and restart {productName} so macOS applies this permission."
+      },
+      {
+        "msgid": "Get the new {productName} app"
       },
       {
         "msgid": "Give everyone on this instance the highest premium limits."
@@ -2024,6 +2039,12 @@
       },
       {
         "msgid": "Input level"
+      },
+      {
+        "msgid": "Install it from your browser menu."
+      },
+      {
+        "msgid": "Install the new app"
       },
       {
         "msgid": "Invite new people to the community with a link to this channel."
@@ -2084,6 +2105,9 @@
       },
       {
         "msgid": "Limited the channel to {count, plural, one {# user} other {# users}}."
+      },
+      {
+        "msgid": "Link a new device"
       },
       {
         "msgid": "Loading instance configuration"
@@ -2213,6 +2237,21 @@
       },
       {
         "msgid": "Open popup"
+      },
+      {
+        "msgid": "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
+      },
+      {
+        "msgid": "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
+      },
+      {
+        "msgid": "Open {host} in Safari."
+      },
+      {
+        "msgid": "Open {host} in your browser."
+      },
+      {
+        "msgid": "Open {productName} in your browser"
       },
       {
         "msgid": "Opens the Members page. Press Space or Enter to open."
@@ -2581,6 +2620,9 @@
         "msgid": "See this channel. Denying it for {everyoneMention} makes the channel private."
       },
       {
+        "msgid": "Select the account you want to sign in with on your new device."
+      },
+      {
         "msgid": "Self-host setup"
       },
       {
@@ -2761,6 +2803,9 @@
         "msgid": "Show fewer filters"
       },
       {
+        "msgid": "Show me how"
+      },
+      {
         "msgid": "Show per-device participant volume sliders in voice menus"
       },
       {
@@ -2771,6 +2816,9 @@
       },
       {
         "msgid": "Showed members with this role in their own section in the member list."
+      },
+      {
+        "msgid": "Sign in with your old {productName} app"
       },
       {
         "msgid": "Sign-in details"
@@ -2900,6 +2948,9 @@
       },
       {
         "msgid": "Talk in calls and test your input."
+      },
+      {
+        "msgid": "Tap Share, then Add to Home Screen."
       },
       {
         "msgid": "Text is rendered with grayscale antialiasing instead of ClearType while transparency is enabled, so it will look softer."
@@ -3823,7 +3874,25 @@
         "msgid": "{productName} cannot start a safe isolated route for this app's audio."
       },
       {
+        "msgid": "{productName} has moved to {host}. Add it to your Home Screen or Dock, then sign in with this app."
+      },
+      {
+        "msgid": "{productName} has moved to {host}. Install it from your browser, then sign in with this app."
+      },
+      {
+        "msgid": "{productName} has moved to {host}. Install the new app and you will already be signed in."
+      },
+      {
+        "msgid": "{productName} has moved to {host}. Open it in your browser to install the new app."
+      },
+      {
         "msgid": "{productName} needs screen recording access. Allow screen recording in your operating system privacy settings and restart the app."
+      },
+      {
+        "msgid": "{productName} now lives at {host}. Install it from there, then sign in with this app."
+      },
+      {
+        "msgid": "{productName} now lives at {host}. Install it from there."
       },
       {
         "msgid": "{productName} wordmark"
@@ -6820,6 +6889,9 @@
       },
       {
         "msgid": "Open {displayName}"
+      },
+      {
+        "msgid": "Open {host} in Safari."
       },
       {
         "msgid": "Open {landmarkName}"

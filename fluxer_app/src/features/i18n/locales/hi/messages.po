@@ -938,7 +938,7 @@ msgstr "{count, plural, one {# ब्लॉक किया गया मैस�
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# कम्युनिटी मिली} other {# कम्युनिटी मिलीं}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1953
+#: src/features/app/components/layout/GuildsLayout.tsx:1954
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# कम्युनिटी फ्लक्स कैपेसिटर में खराबी के कारण अस्थायी रूप से अनुपलब्ध है।} other {# कम्युनिटी फ्लक्स कैपेसिटर में खराबी के कारण अस्थायी रूप से अनुपलब्ध हैं।}}"
 
@@ -1692,6 +1692,26 @@ msgstr "{productName} ने इस कम्युनिटी में सं
 msgid "{productName} detected a potential raid, so new users can't join right now."
 msgstr "{productName} ने संभावित रेड का पता लगाया है, इसलिए नए यूज़र अभी शामिल नहीं हो सकते।"
 
+#. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:38
+msgid "{productName} has moved to {host}. Add it to your Home Screen or Dock, then sign in with this app."
+msgstr "{productName} {host} पर चला गया है। इसे अपनी होम स्क्रीन या डॉक में जोड़ें, फिर इस ऐप से साइन इन करें।"
+
+#. Banner in an installed web app on other browsers. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:43
+msgid "{productName} has moved to {host}. Install it from your browser, then sign in with this app."
+msgstr "{productName} {host} पर चला गया है। इसे अपने ब्राउज़र से इंस्टॉल करें, फिर इस ऐप से साइन इन करें।"
+
+#. Banner in an installed desktop web app after the account moved to the new domain. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:28
+msgid "{productName} has moved to {host}. Install the new app and you will already be signed in."
+msgstr "{productName} {host} पर चला गया है। नया ऐप इंस्टॉल करें और आप पहले से ही साइन इन होंगे।"
+
+#. Banner in an installed Android web app. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:33
+msgid "{productName} has moved to {host}. Open it in your browser to install the new app."
+msgstr "{productName} {host} पर चला गया है। नया ऐप इंस्टॉल करने के लिए इसे अपने ब्राउज़र में खोलें।"
+
 #. Profile membership label showing when the user account was created.
 #: src/features/user/components/popouts/UserProfileShared.tsx:53
 msgid "{productName} member since"
@@ -1731,6 +1751,16 @@ msgstr "{productName} को आपके डिवाइस दिखाने 
 #: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:44
 msgid "{productName} needs screen recording access. Allow screen recording in your operating system privacy settings and restart the app."
 msgstr "{productName} को स्क्रीन रिकॉर्डिंग का एक्सेस चाहिए। अपने ऑपरेटिंग सिस्टम की गोपनीयता सेटिंग्स में स्क्रीन रिकॉर्डिंग की अनुमति दें और ऐप को रीस्टार्ट करें।"
+
+#. Intro in the modal that explains how to install the app from its new domain. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:22
+msgid "{productName} now lives at {host}. Install it from there, then sign in with this app."
+msgstr "{productName} अब {host} पर उपलब्ध है। वहां से इसे इंस्टॉल करें, फिर इस ऐप से साइन इन करें।"
+
+#. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:27
+msgid "{productName} now lives at {host}. Install it from there."
+msgstr "{productName} अब {host} पर उपलब्ध है। वहां से इसे इंस्टॉल करें।"
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx:31
@@ -2461,7 +2491,7 @@ msgid "a poll"
 msgstr "एक पोल"
 
 #. OAuth authorize page error shown when the bot scope requires a redirect_uri that is missing. Technical message; keep "redirect_uri" and "bot" untranslated.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:53
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:54
 msgid "A redirect_uri is required when the bot scope is not the only scope."
 msgstr "जब बॉट स्कोप ही एकमात्र स्कोप न हो, तो redirect_uri ज़रूरी है।"
 
@@ -2859,7 +2889,7 @@ msgid "Add a bot to a community with requested permissions"
 msgstr "मांगी गई अनुमतियों के साथ किसी कम्युनिटी में बॉट जोड़ना"
 
 #. Placeholder text in the optional comment field of the forward modal.
-#: src/features/messaging/components/modals/ForwardModal.tsx:99
+#: src/features/messaging/components/modals/ForwardModal.tsx:96
 msgid "Add a comment (optional)"
 msgstr "कोई टिप्पणी जोड़ें (वैकल्पिक)"
 
@@ -2920,7 +2950,7 @@ msgid "Add a YouTube Data API key to enrich YouTube links."
 msgstr "YouTube लिंक को बेहतर बनाने के लिए YouTube Data API कुंजी जोड़ें।"
 
 #. Short label in the authentication browser login handoff modal. Keep the tone plain and specific.
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:21
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:22
 msgid "Add account"
 msgstr "अकाउंट जोड़ें"
 
@@ -4379,6 +4409,11 @@ msgstr "मंज़ूरी ज़रूरी"
 msgid "Approve"
 msgstr "स्वीकृत करें"
 
+#. Hint under the sign-in option on fluxer.com that pairs a newly installed app with the old installed app. productName is the app name.
+#: src/features/auth/flow/AuthLoginLayout.tsx:74
+msgid "Approve this app from the {productName} app you already use. No password needed."
+msgstr "उस ऐप से इस ऐप को मंज़ूरी दें जिसका आप पहले से इस्तेमाल कर रहे हैं, {productName}. पासवर्ड की ज़रूरत नहीं है।"
+
 #. Discovery application status badge in the community Discovery settings tab. The community has been approved and is listed.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:45
 msgid "Approved"
@@ -4848,7 +4883,7 @@ msgid "Authorization failed"
 msgstr "अधिकृत नहीं किया जा सका"
 
 #. OAuth authorize page generic error toast shown when the authorize request fails unexpectedly.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:74
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:75
 msgid "Authorization failed. Try again."
 msgstr "अनुमति नहीं दी जा सकी। फिर से कोशिश करें।"
 
@@ -5826,7 +5861,7 @@ msgid "Bot permissions"
 msgstr "बॉट अनुमतियाँ"
 
 #. OAuth authorize page error shown when the permissions query parameter is a negative integer.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:66
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:67
 msgid "Bot permissions cannot be negative."
 msgstr "बॉट अनुमतियाँ ऋणात्मक नहीं हो सकतीं।"
 
@@ -6329,10 +6364,10 @@ msgstr "यहां फ़ाइलें अपलोड नहीं की �
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:216
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:232
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:72
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:80
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:86
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:278
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:140
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:282
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:164
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:177
 #: src/features/channel/components/modals/ChannelDeleteModal.tsx:53
@@ -6351,7 +6386,7 @@ msgstr "यहां फ़ाइलें अपलोड नहीं की �
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:133
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
-#: src/features/messaging/components/modals/ForwardModal.tsx:650
+#: src/features/messaging/components/modals/ForwardModal.tsx:591
 #: src/features/messaging/components/modals/ImageCropModal.tsx:1025
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/moderation/components/modals/BanMemberModal.tsx:262
@@ -7462,9 +7497,14 @@ msgid "Choose background"
 msgstr "बैकग्राउंड चुनें"
 
 #. OAuth authorize page error shown when a bot invite request provides both guild_id and channel_id. Keep the parameter names literal.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:86
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:87
 msgid "Choose either guild_id or channel_id, not both."
 msgstr "guild_id या channel_id में से कोई एक चुनें, दोनों नहीं।"
+
+#. Second install step on a Mac. File and Add to Dock are the names of the Safari menu items, use the names macOS shows in this language.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:46
+msgid "Choose File, then Add to Dock."
+msgstr "फ़ाइल चुनें, फिर डॉक में जोड़ें।"
 
 #. Subtitle in the create-DM modal. Keep it short and calm.
 #: src/features/channel/utils/CreateDMModalUtils.tsx:39
@@ -8215,7 +8255,7 @@ msgstr "कोड ब्लॉक"
 msgid "Code blocks"
 msgstr "कोड ब्लॉक"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:102
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:110
 msgid "Code expired"
 msgstr "कोड की समय-सीमा समाप्त हो गई"
 
@@ -8385,17 +8425,17 @@ msgid "Commands"
 msgstr "कमांड"
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled when at least one selected target has slowmode active.
-#: src/features/messaging/components/modals/ForwardModal.tsx:71
+#: src/features/messaging/components/modals/ForwardModal.tsx:68
 msgid "Comments are disabled because one or more selected channels have slowmode on. The comment would be blocked by slowmode right after the forward."
 msgstr "टिप्पणियाँ बंद हैं क्योंकि एक या अधिक चुने गए चैनलों में स्लोमोड चालू है। फ़ॉरवर्ड के तुरंत बाद स्लोमोड टिप्पणी को ब्लॉक कर देगा।"
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled for a single selected channel with slowmode.
-#: src/features/messaging/components/modals/ForwardModal.tsx:65
+#: src/features/messaging/components/modals/ForwardModal.tsx:62
 msgid "Comments are disabled because slowmode is on in {forwardChannelDisplayName}. The comment would be blocked by slowmode right after the forward."
 msgstr "{forwardChannelDisplayName} में स्लोमोड चालू होने के कारण टिप्पणियाँ बंद हैं। फ़ॉरवर्ड के तुरंत बाद स्लोमोड टिप्पणी को ब्लॉक कर देगा।"
 
 #. Tooltip on the disabled comment field in the forward modal when slowmode blocks comments.
-#: src/features/messaging/components/modals/ForwardModal.tsx:95
+#: src/features/messaging/components/modals/ForwardModal.tsx:92
 msgid "Comments are unavailable while slowmode is on."
 msgstr "स्लोमोड चालू होने पर टिप्पणियाँ उपलब्ध नहीं हैं।"
 
@@ -8551,7 +8591,7 @@ msgid "Community message notifications"
 msgstr "कम्युनिटी मैसेज की सूचनाएँ"
 
 #. Developer control label for the community MFA requirement banner.
-#: src/features/devtools/components/NagbarControls.ts:76
+#: src/features/devtools/components/NagbarControls.ts:81
 msgid "Community MFA requirement nagbar"
 msgstr "कम्युनिटी MFA आवश्यकता नागबार"
 
@@ -9182,7 +9222,7 @@ msgstr "कम्युनिटी की रिपोर्ट करना �
 msgid "Continue to report user"
 msgstr "यूज़र की रिपोर्ट करना जारी रखें"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:245
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:249
 msgid "Continue with passkey"
 msgstr "पासकी के साथ जारी रखें"
 
@@ -9266,7 +9306,7 @@ msgid "Coordinates raids, brigading, or harassment against people or communities
 msgstr "लोगों या कम्युनिटी के ख़िलाफ़ रेड, ब्रिगेडिंग या उत्पीड़न का समन्वय करता है।"
 
 #. Generic short status label confirming a value was copied to the clipboard.
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:157
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:165
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:381
 msgid "Copied"
 msgstr "कॉपी किया गया"
@@ -9368,7 +9408,7 @@ msgid "Copy channel link"
 msgstr "चैनल लिंक कॉपी करें"
 
 #. Action label that copies a code block to the clipboard.
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:157
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:165
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:393
 msgid "Copy code"
 msgstr "कोड कॉपी करें"
@@ -10559,12 +10599,12 @@ msgid "Current uses:"
 msgstr "मौजूदा उपयोग:"
 
 #. Developer nagbar status: the banner is dismissed in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:109
+#: src/features/devtools/components/NagbarControls.ts:114
 msgid "Currently dismissed"
 msgstr "फ़िलहाल खारिज है"
 
 #. Developer nagbar status: the banner is showing in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:113
+#: src/features/devtools/components/NagbarControls.ts:118
 msgid "Currently showing"
 msgstr "फ़िलहाल दिख रहा है"
 
@@ -12555,6 +12595,11 @@ msgstr "ब्लॉक नहीं होगा। आप बाद में 
 msgid "Domain"
 msgstr "डोमेन"
 
+#. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
+#: src/features/devtools/components/NagbarControls.ts:76
+msgid "Domain moved nagbar"
+msgstr "डोमेन बदला गया"
+
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
 #: src/features/voice/components/modals/HideOwnCameraConfirmModal.tsx:59
@@ -12912,7 +12957,7 @@ msgid "Dutch"
 msgstr "डच"
 
 #. Placeholder or example text in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:27
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:31
 msgid "e.g., YubiKey, iPhone, work computer"
 msgstr "जैसे: YubiKey, iPhone, ऑफ़िस का कंप्यूटर"
 
@@ -14056,9 +14101,13 @@ msgstr "जारी रखने के लिए अपनी सुरक्�
 msgid "Enter the SMS code"
 msgstr "एसएमएस कोड डालें"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:124
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:132
 msgid "Enter this code in your browser to complete sign-in."
 msgstr "साइन-इन पूरा करने के लिए अपने ब्राउज़र में यह कोड डालें।"
+
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:142
+msgid "Enter this code in your old {PRODUCT_NAME} app to complete sign-in."
+msgstr "अपने साइन-इन को पूरा करने के लिए यह कोड अपने पुराने {PRODUCT_NAME} ऐप में दर्ज करें।"
 
 #: src/features/channel/components/EditingMessageInput.tsx:358
 msgid "Enter to <0><1>save</1></0>"
@@ -14441,7 +14490,7 @@ msgstr "{absolute} को समाप्त होगा ({relativeText})"
 msgid "Expires between {earliest} and {latest}"
 msgstr "{earliest} और {latest} के बीच समाप्त होगा"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:142
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:150
 msgid "Expires in {remaining}s"
 msgstr "{remaining} सेकंड में समाप्त होगा"
 
@@ -14835,7 +14884,7 @@ msgid "Failed to start SSO"
 msgstr "SSO शुरू नहीं हो पाया"
 
 #. Login flow error shown when switching to a saved account fails.
-#: src/features/auth/flow/AuthLoginLayout.tsx:51
+#: src/features/auth/flow/AuthLoginLayout.tsx:58
 msgid "Failed to switch account"
 msgstr "अकाउंट नहीं बदला जा सका"
 
@@ -15413,17 +15462,17 @@ msgstr "मेरे लिए"
 msgid "For this check, you send us a text message instead of receiving one from us."
 msgstr "इस जाँच के लिए, आप हमसे मैसेज पाने के बजाय हमें एक टेक्स्ट मैसेज भेजेंगे।"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:183
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:187
 msgid "For your security, please confirm it's you to continue."
 msgstr "आपकी सुरक्षा के लिए, आगे बढ़ने से पहले कृपया पुष्टि करें कि यह आप ही हैं।"
 
 #. Developer nagbar override status: the banner is forced to hide.
-#: src/features/devtools/components/NagbarControls.ts:97
+#: src/features/devtools/components/NagbarControls.ts:102
 msgid "Force disabled"
 msgstr "ज़बरदस्ती अक्षम किया गया"
 
 #. Developer nagbar override status: the banner is forced to show.
-#: src/features/devtools/components/NagbarControls.ts:93
+#: src/features/devtools/components/NagbarControls.ts:98
 msgid "Force enabled"
 msgstr "ज़बरदस्ती चालू किया गया"
 
@@ -15540,7 +15589,7 @@ msgstr "पासवर्ड भूल गए"
 
 #. Authentication link label that opens password recovery.
 #: src/features/auth/components/pages/ForgotPasswordPage.tsx:71
-#: src/features/auth/flow/AuthLoginLayout.tsx:63
+#: src/features/auth/flow/AuthLoginLayout.tsx:70
 msgid "Forgot your password?"
 msgstr "पासवर्ड भूल गए?"
 
@@ -15571,7 +15620,7 @@ msgstr "मीडिया फ़ॉरवर्ड करें"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Title of the forward message modal.
 #: src/features/input/state/input_keybind/shared.ts:25
-#: src/features/messaging/components/modals/ForwardModal.tsx:86
+#: src/features/messaging/components/modals/ForwardModal.tsx:83
 msgid "Forward message"
 msgstr "मैसेज फ़ॉरवर्ड करें"
 
@@ -15965,11 +16014,11 @@ msgstr "शेयर करने लायक लिंक जनरेट क�
 msgid "Generate invite link"
 msgstr "इनवाइट लिंक जनरेट करें"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:109
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:117
 msgid "Generate new code"
 msgstr "नया कोड जनरेट करें"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:70
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:78
 msgid "Generating code…"
 msgstr "कोड जनरेट हो रहा है…"
 
@@ -16044,6 +16093,11 @@ msgstr "सिस्टम-वाइड पुश-टू-टॉक और कु
 #: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:20
 msgid "Get the desktop app"
 msgstr "डेस्कटॉप ऐप पाएँ"
+
+#. Title of the modal that explains how to install the app from its new domain. productName is the app name.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:18
+msgid "Get the new {productName} app"
+msgstr "नया {productName} ऐप प्राप्त करें"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Type label for GIF media.
@@ -18037,6 +18091,16 @@ msgstr "इमोजी डालें"
 msgid "Install {productName} for the full source picker and smoother screen-sharing controls."
 msgstr "पूरे सोर्स पिकर और ज़्यादा स्मूद स्क्रीन-शेयरिंग कंट्रोल के लिए {productName} इंस्टॉल करें।"
 
+#. Second install step on other devices. Refers to the install option in the browser menu.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:51
+msgid "Install it from your browser menu."
+msgstr "अपने ब्राउज़र मेनू से इसे इंस्टॉल करें।"
+
+#. Button on the domain moved banner that installs the app from the new domain.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:48
+msgid "Install the new app"
+msgstr "नया ऐप इंस्टॉल करें"
+
 #. Label for the installed desktop version in the Linux update modal.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:136
 msgid "Installed"
@@ -18123,7 +18187,7 @@ msgid "Invalid authorization request"
 msgstr "अमान्य ऑथराइज़ेशन अनुरोध"
 
 #. OAuth authorize page error shown when the permissions query parameter is not a valid integer.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:62
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:63
 msgid "Invalid bot permissions."
 msgstr "अमान्य बॉट अनुमतियाँ।"
 
@@ -18164,7 +18228,7 @@ msgid "Invalid or expired code. Try again."
 msgstr "कोड अमान्य है या उसकी समय-सीमा समाप्त हो चुकी है। फिर से कोशिश करें।"
 
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:78
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:79
 msgid "Invalid redirect_uri"
 msgstr "अमान्य redirect_uri"
 
@@ -19331,6 +19395,11 @@ msgstr "लिंक"
 #: src/features/channel/utils/ChannelUtils.tsx:39
 msgid "Link (mature)"
 msgstr "लिंक (वयस्क)"
+
+#. Button on the domain moved banner that opens the code entry used to sign in a new app. Must match the translation used in the "Sign in with your old {productName} app" instructions.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:60
+msgid "Link a new device"
+msgstr "नया डिवाइस लिंक करें"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:96
@@ -20697,7 +20766,7 @@ msgstr "मैसेज डिस्प्ले सेटिंग्स सि
 msgid "Message editing"
 msgstr "मैसेज एडिट करना"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:371
+#: src/features/messaging/components/modals/ForwardModal.tsx:309
 msgid "Message forwarded"
 msgstr "मैसेज फ़ॉरवर्ड किया गया"
 
@@ -20746,7 +20815,7 @@ msgstr "मैसेज इनपुट बटन"
 
 #. Error modal title in the forward modal when the optional comment exceeds the message length limit.
 #. Form validation error indicating the message exceeds the allowed length.
-#: src/features/messaging/components/modals/ForwardModal.tsx:57
+#: src/features/messaging/components/modals/ForwardModal.tsx:54
 #: src/features/ui/character_counter/CharacterCountMessages.ts:16
 msgid "Message is too long"
 msgstr "मैसेज बहुत लंबा है"
@@ -21045,7 +21114,7 @@ msgid "Miscellaneous"
 msgstr "अन्य"
 
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:36
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:37
 msgid "Missing client_id"
 msgstr "client_id मौजूद नहीं है"
 
@@ -21862,12 +21931,12 @@ msgid "Name must be at least 2 characters"
 msgstr "नाम कम से कम 2 वर्णों का होना चाहिए"
 
 #. Short label in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:19
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:23
 msgid "Name passkey"
 msgstr "पासकी को नाम दें"
 
 #. Accessible form label in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:15
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:19
 msgid "Name passkey form"
 msgstr "पासकी को नाम देने का फ़ॉर्म"
 
@@ -22381,7 +22450,7 @@ msgstr "सेव करने के लिए कोई बदलाव नह
 msgid "No channels available"
 msgstr "कोई चैनल उपलब्ध नहीं है"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:445
+#: src/features/messaging/components/modals/ForwardModal.tsx:383
 #: src/features/search/components/search/ChannelFilterSheet.tsx:120
 msgid "No channels found"
 msgstr "कोई चैनल नहीं मिला"
@@ -22824,7 +22893,7 @@ msgstr "कोई यूज़र नहीं मिला"
 msgid "No verification is required."
 msgstr "किसी वेरिफ़िकेशन की ज़रूरत नहीं है।"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:189
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:193
 msgid "No verification methods available"
 msgstr "कोई वेरिफ़िकेशन तरीका उपलब्ध नहीं है"
 
@@ -23417,6 +23486,16 @@ msgstr "{contextName} खोलें"
 msgid "Open {displayName}"
 msgstr "{displayName} खोलें"
 
+#. First install step on Apple devices. host is the new domain, for example fluxer.com. Safari is the browser.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:32
+msgid "Open {host} in Safari."
+msgstr "Safari में {host} खोलें।"
+
+#. First install step on other devices. host is the new domain, for example fluxer.com.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:37
+msgid "Open {host} in your browser."
+msgstr "अपने ब्राउज़र में {host} खोलें।"
+
 #. Accessible label for an inline settings deep-link pill. labelText is the resolved settings tab and section breadcrumb.
 #: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:109
 msgid "Open {labelText} in settings"
@@ -23436,6 +23515,11 @@ msgstr "{macosSystemSettingsName} → {macosPrivacyAndSecuritySettingsName} → 
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:27
 msgid "Open {productName}"
 msgstr "{productName} खोलें"
+
+#. Button on the domain moved banner that opens the new domain in the browser. productName is the app name.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:52
+msgid "Open {productName} in your browser"
+msgstr "{productName} को अपने ब्राउज़र में खोलें"
 
 #. Button or menu action label in the channel and chat gif picker grid item. Keep it concise. Preserve {title}; it is inserted by code.
 #: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:37
@@ -23510,7 +23594,7 @@ msgstr "बैनर विकल्प खोलें"
 msgid "Open bookmarks"
 msgstr "बुकमार्क खोलें"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:153
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:178
 msgid "Open browser"
 msgstr "ब्राउज़र खोलें"
 
@@ -23614,7 +23698,7 @@ msgid "Open emoji in browser"
 msgstr "ब्राउज़र में इमोजी खोलें"
 
 #. Accessible label for the emoji picker trigger button in the forward modal comment field.
-#: src/features/messaging/components/modals/ForwardModal.tsx:103
+#: src/features/messaging/components/modals/ForwardModal.tsx:100
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:27
 msgid "Open emoji picker"
 msgstr "इमोजी पिकर खोलें"
@@ -23809,6 +23893,16 @@ msgstr "नीचे दिए गए लिंक को अपने ब्र
 msgid "Open the menu and choose an option."
 msgstr "मेनू खोलें और एक विकल्प चुनें।"
 
+#. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
+msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
+msgstr "नया ऐप खोलें और \"अपने पुराने {productName} ऐप से साइन इन करें\" चुनें। फिर \"यहां एक नया डिवाइस लिंक करें\" चुनें और जो कोड दिखाया गया है उसे दर्ज करें।"
+
+#. Third install step in a desktop browser that already moved the account to the new domain.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
+msgid "Open the new app. You are already signed in."
+msgstr "नया ऐप खोलें। आप पहले से ही साइन इन हैं।"
+
 #. Tip explaining the keyboard shortcut for opening the shortcuts list.
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx:42
 msgid "Open the shortcuts list for quick actions."
@@ -23859,7 +23953,7 @@ msgstr "वॉइस खोलें"
 msgid "Open voice & video settings"
 msgstr "वॉइस और वीडियो सेटिंग्स खोलें"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:113
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:131
 msgid "Open your browser, sign in, then enter the code below to link your account."
 msgstr "अपना ब्राउज़र खोलें, साइन इन करें, फिर अपना अकाउंट लिंक करने के लिए नीचे दिया गया कोड डालें।"
 
@@ -23867,6 +23961,10 @@ msgstr "अपना ब्राउज़र खोलें, साइन इ�
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:450
 msgid "Open your messages"
 msgstr "अपने मैसेज खोलें"
+
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:129
+msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
+msgstr "अपना पुराना {PRODUCT_NAME} ऐप खोलें और एक नया डिवाइस लिंक करें चुनें, फिर नीचे दिया गया कोड दर्ज करें।"
 
 #: src/features/user/components/modals/PhoneAddModal.tsx:327
 msgid "Open your phone's messaging app and create a new text message."
@@ -24222,7 +24320,7 @@ msgid "Passkey"
 msgstr "पासकी"
 
 #. Short label in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:23
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:27
 msgid "Passkey name"
 msgstr "पासकी का नाम"
 
@@ -28138,7 +28236,7 @@ msgstr "सैचुरेशन"
 #. Button or menu action label in the rename channel modal. Keep it concise.
 #. Save button in the community-folder settings modal footer.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:113
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:87
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:93
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:366
 #: src/features/channel/components/modals/EditGroupModal.tsx:322
 #: src/features/channel/components/modals/RenameChannelModal.tsx:28
@@ -28545,7 +28643,7 @@ msgstr "स्क्रब प्रीव्यू"
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:854
 #: src/features/channel/components/channel_header/shared.ts:47
 #: src/features/channel/components/shared/PickerSearchInput.tsx:21
-#: src/features/messaging/components/modals/ForwardModal.tsx:90
+#: src/features/messaging/components/modals/ForwardModal.tsx:87
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx:43
 #: src/features/search/utils/QuickSwitcherModalUtils.tsx:45
 #: src/features/theme_studio/ui/StudioSearchInput.tsx:16
@@ -29074,8 +29172,8 @@ msgid "Select text"
 msgstr "टेक्स्ट चुनें"
 
 #: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:69
-msgid "Select the account you want to sign in with on the desktop app."
-msgstr "वह अकाउंट चुनें जिससे आप डेस्कटॉप ऐप पर साइन इन करना चाहते हैं।"
+msgid "Select the account you want to sign in with on your new device."
+msgstr "अपने नए डिवाइस पर साइन इन करने के लिए वह खाता चुनें जिससे आप साइन इन करना चाहते हैं।"
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:120
@@ -29182,7 +29280,7 @@ msgid "Send"
 msgstr "भेजें"
 
 #. Primary button label in the forward message modal. selectedCount is the number of selected destinations; selectionLimit is the maximum allowed.
-#: src/features/messaging/components/modals/ForwardModal.tsx:107
+#: src/features/messaging/components/modals/ForwardModal.tsx:104
 msgid "Send ({selectedCount}/{selectionLimit})"
 msgstr "भेजें ({selectedCount}/{selectionLimit})"
 
@@ -29487,7 +29585,7 @@ msgid "Session"
 msgstr "सेशन"
 
 #. Login layout banner shown when the session for a specific account has expired. Account identifier is interpolated.
-#: src/features/auth/flow/AuthLoginLayout.tsx:46
+#: src/features/auth/flow/AuthLoginLayout.tsx:53
 msgid "Session expired for {identifier}. Sign in again."
 msgstr "{identifier} के लिए सेशन समाप्त हो गया है। फिर से साइन इन करें।"
 
@@ -29970,7 +30068,7 @@ msgid "Shortcuts are paused while recording."
 msgstr "रिकॉर्डिंग के दौरान कीबोर्ड शॉर्टकट रोक दिए जाते हैं।"
 
 #. Body of the error modal shown when the forward modal comment exceeds the message length limit.
-#: src/features/messaging/components/modals/ForwardModal.tsx:61
+#: src/features/messaging/components/modals/ForwardModal.tsx:58
 msgid "Shorten the message and try again."
 msgstr "मैसेज छोटा करें और फिर से कोशिश करें।"
 
@@ -30216,6 +30314,11 @@ msgstr "अधिकतम 3 दिखाएं (+5 बैज)"
 #: src/features/user/components/modals/tabs/component_gallery_tab/IndicatorsTab.tsx:495
 msgid "Show max 5 (+5 badge)"
 msgstr "अधिकतम 5 दिखाएं (+5 बैज)"
+
+#. Button on the domain moved banner that opens the install steps.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:56
+msgid "Show me how"
+msgstr "मुझे दिखाएँ"
 
 #. Plus menu submenu toggle that shows the saved media (memes) button next to the textarea.
 #. Short label for an advanced message input preference.
@@ -30488,13 +30591,18 @@ msgstr "अपना उपहार पाने के लिए साइन 
 
 #. Passkey sign-in action that opens the browser flow from the desktop app.
 #: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:64
-#: src/features/auth/flow/AuthLoginLayout.tsx:67
+#: src/features/auth/flow/AuthLoginLayout.tsx:79
 msgid "Sign in via browser"
 msgstr "ब्राउज़र से साइन इन करें"
 
 #: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:63
 msgid "Sign in with a passkey"
 msgstr "पासकी से साइन इन करें"
+
+#. Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:27
+msgid "Sign in with your old {productName} app"
+msgstr "अपने पुराने {productName} ऐप से साइन इन करें"
 
 #. Description shown when sign-in is restricted to the configured SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx:17
@@ -30562,7 +30670,7 @@ msgid "Sign-in details"
 msgstr "साइन-इन विवरण"
 
 #. Accessible label for the stepped sign-in panel.
-#: src/features/auth/flow/AuthLoginLayout.tsx:55
+#: src/features/auth/flow/AuthLoginLayout.tsx:62
 msgid "Sign-in flow"
 msgstr "साइन-इन फ़्लो"
 
@@ -31030,7 +31138,7 @@ msgstr "कुछ यूज़र को जोड़ा नहीं जा स
 #. Generic error modal title for an unexpected failure.
 #. Generic error toast title.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:248
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:82
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:90
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:274
 #: src/lib/forms/index.tsx:18
 msgid "Something went wrong"
@@ -32688,6 +32796,11 @@ msgstr "इस वॉइस चैनल में बोलें। इस अ
 msgid "Talk in voice channels. Without this permission, members stay muted until someone with the \"Mute members\" permission unmutes them."
 msgstr "वॉइस चैनलों में बोलें। इस अनुमति के बिना, सदस्य तब तक म्यूट रहते हैं जब तक \"सदस्यों को म्यूट करें\" अनुमति वाला कोई व्यक्ति उन्हें अनम्यूट न कर दे।"
 
+#. Second install step on iPhone and iPad. Share and Add to Home Screen are the names of the Safari menu items, use the names iOS shows in this language.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:41
+msgid "Tap Share, then Add to Home Screen."
+msgstr "शेयर पर टैप करें, फिर होम स्क्रीन पर जोड़ें।"
+
 #. Label in the note edit sheet.
 #: src/features/user/components/modals/NoteEditSheet.tsx:21
 msgid "Tap to add a note"
@@ -33207,12 +33320,12 @@ msgid "The phone check is set aside. One email step is left."
 msgstr "फ़ोन जाँच को अलग रख दिया गया है। एक ईमेल चरण बचा है।"
 
 #. OAuth authorize page error shown when the redirect_uri is not registered for this OAuth app.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:58
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:59
 msgid "The provided redirect_uri is not registered for this application."
 msgstr "दिया गया redirect_uri इस ऐप्लिकेशन के लिए रजिस्टर नहीं है।"
 
 #. Body text in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:49
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:50
 msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "दिए गए redirect_uri में HTTP या HTTPS का इस्तेमाल होना चाहिए।"
 
@@ -33445,7 +33558,7 @@ msgid "This animation is too long or too large to crop. Try a shorter or smaller
 msgstr "यह एनीमेशन क्रॉप करने के लिए बहुत लंबा या बहुत बड़ा है। एक छोटी या हल्की फ़ाइल आज़माएँ।"
 
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:82
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:83
 msgid "This application"
 msgstr "यह ऐप्लिकेशन"
 
@@ -33455,7 +33568,7 @@ msgid "This attachment has expired"
 msgstr "इस अटैचमेंट की समय-सीमा खत्म हो गई है"
 
 #. OAuth authorize page error shown when a private bot cannot be added by non-owners.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:70
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:71
 msgid "This bot is not public and cannot be added by other users."
 msgstr "यह बॉट सार्वजनिक नहीं है और इसे दूसरे यूज़र नहीं जोड़ सकते।"
 
@@ -33757,7 +33870,7 @@ msgstr "इस ग्रुप में बहुत ज़्यादा ल�
 msgid "This group is full. Remove someone before adding more people."
 msgstr "यह ग्रुप भरा हुआ है। और लोगों को जोड़ने से पहले किसी को हटाएँ।"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:105
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:113
 msgid "This handoff code has expired. Generate a new one to continue."
 msgstr "यह हैंडऑफ़ कोड समाप्त हो गया है। जारी रखने के लिए एक नया कोड जनरेट करें।"
 
@@ -35480,7 +35593,7 @@ msgid "Unknown"
 msgstr "अज्ञात"
 
 #. OAuth authorize page error shown when the application, session, or request is invalid.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:45
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:46
 msgid "Unknown application, expired session, or invalid authorization request."
 msgstr "अज्ञात ऐप्लिकेशन, समाप्त हो चुका सेशन या अमान्य ऑथराइज़ेशन अनुरोध।"
 
@@ -36862,27 +36975,27 @@ msgid "Uses:"
 msgstr "उपयोग:"
 
 #. Developer nagbar status: banner follows real account state.
-#: src/features/devtools/components/NagbarControls.ts:101
+#: src/features/devtools/components/NagbarControls.ts:106
 msgid "Using actual account state"
 msgstr "वास्तविक अकाउंट स्थिति का उपयोग किया जा रहा है"
 
 #. Developer nagbar status: banner follows real gift inventory state.
-#: src/features/devtools/components/NagbarControls.ts:121
+#: src/features/devtools/components/NagbarControls.ts:126
 msgid "Using actual gift inventory state"
 msgstr "उपहार इन्वेंट्री की वास्तविक स्थिति का उपयोग किया जा रहा है"
 
 #. Developer nagbar status: banner follows real premium subscription state.
-#: src/features/devtools/components/NagbarControls.ts:117
+#: src/features/devtools/components/NagbarControls.ts:122
 msgid "Using actual premium state"
 msgstr "वास्तविक प्रीमियम स्थिति का उपयोग किया जा रहा है"
 
 #. Developer nagbar status: banner follows the real app state.
-#: src/features/devtools/components/NagbarControls.ts:125
+#: src/features/devtools/components/NagbarControls.ts:130
 msgid "Using actual state"
 msgstr "वास्तविक स्थिति का उपयोग किया जा रहा है"
 
 #. Developer nagbar status: banner follows real email verification state.
-#: src/features/devtools/components/NagbarControls.ts:105
+#: src/features/devtools/components/NagbarControls.ts:110
 msgid "Using actual verification state"
 msgstr "वास्तविक वेरिफ़िकेशन स्थिति का उपयोग किया जा रहा है"
 
@@ -37947,17 +38060,17 @@ msgstr "यहां इंतज़ार करें"
 msgid "Waiting for connection..."
 msgstr "कनेक्शन का इंतज़ार हो रहा है..."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:232
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:236
 msgid "Waiting for passkey…"
 msgstr "पासकी का इंतज़ार हो रहा है…"
 
 #. Inline notice in the forward modal when slowmode is active in the selected target channel. forwardChannelDisplayName is the channel name.
-#: src/features/messaging/components/modals/ForwardModal.tsx:77
+#: src/features/messaging/components/modals/ForwardModal.tsx:74
 msgid "Waiting for slowmode in {forwardChannelDisplayName} to expire."
 msgstr "{forwardChannelDisplayName} में स्लोमोड के खत्म होने का इंतज़ार किया जा रहा है।"
 
 #. Inline notice in the forward modal when slowmode is active in one or more selected target channels.
-#: src/features/messaging/components/modals/ForwardModal.tsx:82
+#: src/features/messaging/components/modals/ForwardModal.tsx:79
 msgid "Waiting for slowmode in one or more selected channels to expire."
 msgstr "एक या ज़्यादा चुने गए चैनलों में स्लोमोड के खत्म होने का इंतज़ार किया जा रहा है।"
 
@@ -38156,7 +38269,7 @@ msgstr "हमने इस स्टिकर का आकार बदलक�
 msgid "We sent a code to {email}."
 msgstr "हमने {email} पर एक कोड भेजा है।"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:128
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:152
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "ब्राउज़र साइन-इन खुलने पर हम {prefillEmail} पहले से भर देंगे।"
 
@@ -38356,7 +38469,7 @@ msgid "Website previews"
 msgstr "वेबसाइट प्रीव्यू"
 
 #. Heading on the standard sign-in form.
-#: src/features/auth/flow/AuthLoginLayout.tsx:59
+#: src/features/auth/flow/AuthLoginLayout.tsx:66
 msgid "Welcome back"
 msgstr "वापस आपका स्वागत है"
 
@@ -39699,7 +39812,7 @@ msgid "Your {premiumProductName} subscription has expired. You have lost all {pr
 msgstr "आपकी {premiumProductName} सदस्यता समाप्त हो गई है। आपने सभी {premiumProductName} पर्क खो दिए हैं। एक्सेस फिर से पाने के लिए अपनी सदस्यता दोबारा सक्रिय करें।"
 
 #. OAuth authorize page error shown when the session expired mid-authorization. Keep plain. Preserve {productName}; it is inserted by code.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:40
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:41
 msgid "Your {productName} session expired. Sign in again to continue authorizing this application."
 msgstr "आपका {productName} सेशन समाप्त हो गया है। इस ऐप्लिकेशन को अधिकृत करना जारी रखने के लिए फिर से साइन इन करें।"
 
@@ -39734,7 +39847,7 @@ msgstr "इस कम्युनिटी में मैसेज भेज�
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "आपके अकाउंट का अनुरोध मंज़ूरी के इंतज़ार में है। एडमिन के मंज़ूर करने के बाद आप साइन इन कर सकेंगे।"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:195
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:199
 msgid "Your account requires multi-factor authentication, but no supported methods are set up on this device. Sign in on a device with your authenticator app or security key, or contact support."
 msgstr "आपके अकाउंट के लिए मल्टी-फ़ैक्टर प्रमाणीकरण ज़रूरी है, लेकिन इस डिवाइस पर कोई भी समर्थित तरीका सेट अप नहीं है। अपने ऑथेंटिकेटर ऐप या सुरक्षा कुंजी वाले डिवाइस पर साइन इन करें या सहायता से संपर्क करें।"
 
@@ -39757,6 +39870,11 @@ msgstr "आपकी कार्रवाई पूरी नहीं हो �
 msgid "Your application is pending review. You can still update your listing details or withdraw the application."
 msgstr "आपका आवेदन समीक्षा के लिए लंबित है। आप अभी भी अपनी लिस्टिंग का विवरण अपडेट कर सकते हैं या आवेदन वापस ले सकते हैं।"
 
+#. Error shown when a passkey prompt fails because the browser cannot use the passkey on this web address. Keep plain.
+#: src/features/auth/utils/WebAuthnUtils.ts:18
+msgid "Your browser does not support passkeys on this domain. Update your browser, or sign in with your password and two-factor code."
+msgstr "आपका ब्राउज़र इस डोमेन पर पासकी का समर्थन नहीं करता है। अपना ब्राउज़र अपडेट करें, या अपने पासवर्ड और दो-कारक कोड से साइन इन करें।"
+
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12
 msgid "Your browser requires user interaction before audio can be played. Click the button below to enable voice chat."
@@ -39775,11 +39893,11 @@ msgstr "आपका कार्ड योग्य है। आपको अ�
 msgid "Your carrier says this number isn't in service. Check it and try again, or contact support if it's correct."
 msgstr "आपका कैरियर कह रहा है कि यह नंबर सेवा में नहीं है। इसे जाँचें और फिर से कोशिश करें, या अगर यह सही है तो सहायता से संपर्क करें।"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:128
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:136
 msgid "Your code"
 msgstr "आपका कोड"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:121
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:129
 msgid "Your code is ready"
 msgstr "आपका कोड तैयार है"
 

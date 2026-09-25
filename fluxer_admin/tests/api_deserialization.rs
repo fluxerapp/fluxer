@@ -417,6 +417,17 @@ fn deserialize_instance_config_response_with_unknown_keys() {
             "included_user_ids": ["1500000000000000002"],
             "excluded_user_ids": []
         },
+        "domain_migration": {
+            "enabled": true,
+            "config_version": 2,
+            "rollout_basis_points": 2500,
+            "rollout_salt": "domain-migration-v1",
+            "included_user_ids": ["1500000000000000001"],
+            "excluded_user_ids": [],
+            "future_migration_knob": 9,
+            "anonymous_rollout_basis_points": 100,
+            "standalone_forwarding": true
+        },
         "experiment_delivery": {"poll_interval_seconds": 300, "poll_jitter_percent": 15},
         "registration": {
             "mode": "open",
@@ -546,6 +557,13 @@ fn deserialize_instance_config_response_with_unknown_keys() {
     assert_eq!(resp.voice_noise_suppression.rollout_basis_points, 10000);
     assert_eq!(*resp.voice_noise_suppression.rollout_salt, "voice-ns-v1");
     assert_eq!(resp.voice_noise_suppression.enabled_backends.len(), 3);
+    assert!(resp.domain_migration.enabled);
+    assert_eq!(resp.domain_migration.config_version, 2);
+    assert_eq!(resp.domain_migration.rollout_basis_points, 2500);
+    assert_eq!(*resp.domain_migration.rollout_salt, "domain-migration-v1");
+    assert_eq!(resp.domain_migration.included_user_ids.len(), 1);
+    assert_eq!(resp.domain_migration.anonymous_rollout_basis_points, 100);
+    assert!(resp.domain_migration.standalone_forwarding);
     assert_eq!(resp.experiment_delivery.poll_interval_seconds, 300);
     assert!(resp.policy.single_community_guild_id.is_none());
     assert_eq!(resp.policy.services.gif_enabled, Some(true));
@@ -556,6 +574,7 @@ fn deserialize_instance_config_response_with_unknown_keys() {
         .replace("\"future_rollout_knob\": 3,", "")
         .replace("\"future_presentation_knob\": \"verbose\",", "")
         .replace("\"future_knob\": 7,", "")
+        .replace("\"future_migration_knob\": 9,", "")
         .replace("\"future_object_knob\": {\"nested\": true},", "")
         .replace("\"future_list_knob\": [\"a\", \"b\"],", "")
         .replace(

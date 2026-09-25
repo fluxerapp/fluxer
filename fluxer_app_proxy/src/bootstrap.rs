@@ -71,6 +71,27 @@ pub fn build_bootstrap_script(
     )
 }
 
+pub fn rewrite_endpoints_for_same_origin_host(instance: &mut serde_json::Value, host: &str) {
+    let Some(endpoints) = instance
+        .get_mut("endpoints")
+        .and_then(serde_json::Value::as_object_mut)
+    else {
+        return;
+    };
+    let origin = format!("https://{host}");
+    let api = format!("{origin}/api");
+    for (key, value) in [
+        ("api_client", &api),
+        ("api", &api),
+        ("webapp", &origin),
+        ("app", &origin),
+    ] {
+        if let Some(endpoint) = endpoints.get_mut(key) {
+            *endpoint = serde_json::Value::String(value.clone());
+        }
+    }
+}
+
 fn api_public_endpoint<'a>(
     configured: Option<&'a str>,
     discovery: &'a DiscoveryResponse,
@@ -539,6 +560,50 @@ mod tests {
     fn an_unconfigured_public_endpoint_is_never_invented_from_discovery() {
         let discovery = discovery_offering("https://chat.example.test:8443/api");
         assert_eq!(api_public_endpoint(None, &discovery), None);
+    }
+
+    #[test]
+    fn a_same_origin_host_takes_over_the_client_and_web_app_endpoints() {
+        let mut instance = serde_json::json!({
+            "endpoints": {
+                "api": "https://web.fluxer.app/api",
+                "api_client": "https://web.fluxer.app/api",
+                "api_public": "https://api.fluxer.app",
+                "gateway": "wss://gateway.fluxer.app",
+                "webapp": "https://web.fluxer.app",
+                "app": "https://web.fluxer.app",
+                "marketing": "https://fluxer.app"
+            }
+        });
+        rewrite_endpoints_for_same_origin_host(&mut instance, "fluxer.com");
+        assert_eq!(
+            instance["endpoints"],
+            serde_json::json!({
+                "api": "https://fluxer.com/api",
+                "api_client": "https://fluxer.com/api",
+                "api_public": "https://api.fluxer.app",
+                "gateway": "wss://gateway.fluxer.app",
+                "webapp": "https://fluxer.com",
+                "app": "https://fluxer.com",
+                "marketing": "https://fluxer.app"
+            })
+        );
+    }
+
+    #[test]
+    fn a_same_origin_host_never_invents_endpoints_discovery_left_out() {
+        let mut instance = serde_json::json!({
+            "endpoints": {"api_client": "https://web.fluxer.app/api"}
+        });
+        rewrite_endpoints_for_same_origin_host(&mut instance, "fluxer.com");
+        assert_eq!(
+            instance,
+            serde_json::json!({"endpoints": {"api_client": "https://fluxer.com/api"}})
+        );
+
+        let mut without_endpoints = serde_json::json!({"name": "test"});
+        rewrite_endpoints_for_same_origin_host(&mut without_endpoints, "fluxer.com");
+        assert_eq!(without_endpoints, serde_json::json!({"name": "test"}));
     }
 
     #[test]

@@ -34,6 +34,7 @@ import {
 	PendingRegistrationActionRequest,
 	RegistrationUrlIdParam,
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
+import {DomainMigrationConfigSchema} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {GatewayRolloutConfigSchema} from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
 import {PushServiceDeliveryConfigSchema} from '@fluxer/schema/src/domains/admin/PushServiceDeliverySchemas';
 import {VoiceNoiseSuppressionConfigSchema} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
@@ -65,6 +66,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		gatewayRollout,
 		voiceNoiseSuppression,
 		pushServiceDelivery,
+		domainMigration,
 		experimentDelivery,
 		registrationConfig,
 		registrationUrls,
@@ -74,6 +76,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		instanceConfigRepository.getGatewayRolloutConfig(),
 		instanceConfigRepository.getVoiceNoiseSuppressionConfig(),
 		instanceConfigRepository.getPushServiceDeliveryConfig(),
+		instanceConfigRepository.getDomainMigrationConfig(),
 		instanceConfigRepository.getExperimentDeliveryConfig(),
 		instanceConfigRepository.getRegistrationConfig(),
 		instanceConfigRepository.getRegistrationUrlsForAdmin(),
@@ -106,6 +109,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		gateway_rollout: gatewayRollout,
 		voice_noise_suppression: voiceNoiseSuppression,
 		push_service_delivery: pushServiceDelivery,
+		domain_migration: domainMigration,
 		experiment_delivery: experimentDelivery,
 		registration: {
 			...registrationConfig,
@@ -280,6 +284,18 @@ export function InstanceConfigAdminController(app: HonoApp) {
 						}),
 					);
 					await getPushServiceDeliveryConfigPublisher().publish(landed);
+				}
+			}
+			if (data.domain_migration) {
+				const patch = omitUndefinedFields(data.domain_migration);
+				if (Object.keys(patch).length > 0) {
+					await instanceConfigRepository.updateDomainMigrationConfig((current) =>
+						DomainMigrationConfigSchema.parse({
+							...current,
+							...patch,
+							config_version: current.config_version + 1,
+						}),
+					);
 				}
 			}
 			if (data.experiment_delivery) {

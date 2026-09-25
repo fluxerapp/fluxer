@@ -19,7 +19,9 @@ import {
 import * as WebAuthnUtils from '@app/features/auth/utils/WebAuthnUtils';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {isDesktop} from '@app/features/ui/utils/NativeUtils';
+import {useLingui} from '@lingui/react/macro';
 import {useCallback, useMemo, useRef, useState} from 'react';
 
 const logger = Logger.create('useLoginFlow');
@@ -87,6 +89,7 @@ export function useLoginFormController({
 	onRequireMfa,
 	onRequireIpAuthorization,
 }: LoginFormControllerOptions) {
+	const {i18n} = useLingui();
 	const [isPasskeyLoading, setIsPasskeyLoading] = useState(false);
 	const {form, isLoading, fieldErrors, error} = useAuthForm({
 		initialValues: {email: '', password: ''},
@@ -129,6 +132,10 @@ export function useLoginFormController({
 				return;
 			}
 			logger.error('Passkey login failed', err);
+			if (err instanceof WebAuthnUtils.PasskeyDomainUnsupportedError) {
+				ToastCommands.error(i18n._(WebAuthnUtils.PASSKEY_DOMAIN_UNSUPPORTED_DESCRIPTOR));
+				return;
+			}
 			const userCancelled =
 				err instanceof DOMException && (err.name === 'NotAllowedError' || err.name === 'AbortError');
 			if (isDesktop() && !userCancelled) {
@@ -137,7 +144,7 @@ export function useLoginFormController({
 		} finally {
 			setIsPasskeyLoading(false);
 		}
-	}, [inviteCode, onLoginSuccess, redirectPath, handleDesktopPasskeyHandoff]);
+	}, [inviteCode, onLoginSuccess, redirectPath, handleDesktopPasskeyHandoff, i18n]);
 	return {
 		form,
 		isLoading,
@@ -161,6 +168,7 @@ interface MfaControllerOptions {
 }
 
 export function useMfaController({ticket, methods, inviteCode, onLoginSuccess}: MfaControllerOptions) {
+	const {i18n} = useLingui();
 	const [isWebAuthnLoading, setIsWebAuthnLoading] = useState(false);
 	const {form, isLoading, fieldErrors} = useAuthForm({
 		initialValues: {code: ''},
@@ -193,10 +201,13 @@ export function useMfaController({ticket, methods, inviteCode, onLoginSuccess}: 
 			await onLoginSuccess?.(response);
 		} catch (error) {
 			logger.error('WebAuthn MFA failed', error);
+			if (error instanceof WebAuthnUtils.PasskeyDomainUnsupportedError) {
+				ToastCommands.error(i18n._(WebAuthnUtils.PASSKEY_DOMAIN_UNSUPPORTED_DESCRIPTOR));
+			}
 		} finally {
 			setIsWebAuthnLoading(false);
 		}
-	}, [inviteCode, onLoginSuccess, ticket]);
+	}, [inviteCode, onLoginSuccess, ticket, i18n]);
 	const supports = useMemo(
 		() => ({totp: methods.totp, webauthn: methods.webauthn, backupCodes: methods.backupCodes}),
 		[methods.totp, methods.webauthn, methods.backupCodes],

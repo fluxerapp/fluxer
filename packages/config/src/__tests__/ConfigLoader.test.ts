@@ -209,10 +209,39 @@ describe('ConfigLoader', () => {
 			'https://fluxer.app',
 			'https://web.fluxer.app',
 			'https://web.canary.fluxer.app',
+			'https://fluxer.com',
+			'https://canary.fluxer.com',
 			'android:apk-key-hash:keSY4bimyLqZQV7bKXgpa2xYuqXi0qZJzsYtp6gpx7w',
 			'http://localhost:8088',
 		]);
 	});
+
+	test('defaults to no app origin aliases', async () => {
+		stubMinimalEnv();
+		const config = await loadConfig();
+		expect(config.services.api.app_origin_aliases).toEqual([]);
+	});
+
+	test('normalizes and deduplicates app origin aliases', async () => {
+		stubMinimalEnv({
+			FLUXER_APP_ORIGIN_ALIASES:
+				'https://Web.Fluxer.App/, https://fluxer.com,https://fluxer.com:443,http://localhost:3000',
+		});
+		const config = await loadConfig();
+		expect(config.services.api.app_origin_aliases).toEqual([
+			'https://web.fluxer.app',
+			'https://fluxer.com',
+			'http://localhost:3000',
+		]);
+	});
+
+	test.each(['fluxer.com', 'https://fluxer.com/app', 'ftp://fluxer.com', 'https://user@fluxer.com'])(
+		'rejects the app origin alias %s',
+		async (alias) => {
+			stubMinimalEnv({FLUXER_APP_ORIGIN_ALIASES: alias});
+			await expect(loadConfig()).rejects.toThrow('FLUXER_APP_ORIGIN_ALIASES entry 1 must be an HTTP(S) origin');
+		},
+	);
 
 	test('rejects an empty client API endpoint override', async () => {
 		stubMinimalEnv({FLUXER_API_CLIENT_ENDPOINT: ''});

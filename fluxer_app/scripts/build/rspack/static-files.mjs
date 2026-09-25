@@ -35,7 +35,8 @@ function generateManifest(staticCdnEndpoint) {
 		short_name: 'Fluxer',
 		description:
 			'Fluxer is a free and open source instant messaging and VoIP platform built for friends, groups, and communities.',
-		start_url: '/',
+		id: '/',
+		start_url: '/app',
 		display: 'standalone',
 		orientation: 'portrait-primary',
 		theme_color: '#4641D9',
@@ -43,6 +44,7 @@ function generateManifest(staticCdnEndpoint) {
 		categories: ['social', 'communication'],
 		lang: 'en',
 		scope: '/',
+		scope_extensions: [],
 		icons: [
 			{
 				src: `${cdn}/web/android-chrome-192x192.png`,

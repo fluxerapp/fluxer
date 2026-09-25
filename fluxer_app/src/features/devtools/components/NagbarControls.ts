@@ -73,6 +73,11 @@ const INVITES_DISABLED_NAGBAR_DESCRIPTOR = msg({
 	message: 'Invites disabled nagbar',
 	comment: 'Developer control label for the invites-disabled banner.',
 });
+const DOMAIN_MOVED_NAGBAR_DESCRIPTOR = msg({
+	message: 'Domain moved nagbar',
+	comment:
+		'Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.',
+});
 const GUILD_MFA_REQUIREMENT_NAGBAR_DESCRIPTOR = msg({
 	message: 'Community MFA requirement nagbar',
 	comment: 'Developer control label for the community MFA requirement banner.',
@@ -408,5 +413,17 @@ export const getNagbarControls = (): Array<NagbarControlDefinition> => [
 		useActualDisabled: (state) => !state.forceGuildMfaRequirement && !state.forceHideGuildMfaRequirement,
 		forceShowDisabled: (state) => state.forceGuildMfaRequirement,
 		forceHideDisabled: (state) => state.forceHideGuildMfaRequirement,
+	},
+	{
+		key: 'forceDomainMoved',
+		label: DOMAIN_MOVED_NAGBAR_DESCRIPTOR,
+		forceKey: 'forceDomainMoved',
+		forceHideKey: 'forceHideDomainMoved',
+		resetKeys: ['forceDomainMoved'],
+		status: (state) =>
+			state.forceDomainMoved ? FORCE_ENABLED : state.forceHideDomainMoved ? FORCE_DISABLED : USING_ACTUAL_STATE,
+		useActualDisabled: (state) => !state.forceDomainMoved && !state.forceHideDomainMoved,
+		forceShowDisabled: (state) => state.forceDomainMoved,
+		forceHideDisabled: (state) => state.forceHideDomainMoved,
 	},
 ];

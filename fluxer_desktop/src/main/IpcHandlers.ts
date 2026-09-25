@@ -20,6 +20,7 @@ import {
 	hasActiveDesktopTray,
 	updateTrayRuntimeState,
 } from '@electron/main/DesktopTray';
+import {registerDomainMigrationHandlers} from '@electron/main/DomainMigration';
 import {DownloadChecksumError, downloadFile} from '@electron/main/FileDownloads';
 import {
 	type LinuxAppearanceSnapshot,
@@ -136,6 +137,7 @@ function getActiveMiddleClickAutoscroll(): boolean {
 export function registerIpcHandlers(): void {
 	registerVoiceDebugEventSinkPopoutIpcHandlers();
 	registerVoiceBackgroundMediaCacheHandlers();
+	registerDomainMigrationHandlers();
 	ipcMain.handle('get-desktop-info', () => getDesktopInfo());
 	ipcMain.handle('get-gpu-info', () => getGpuInfo());
 	ipcMain.handle('get-app-metrics', () => getAppMetricsSnapshot());
