@@ -2350,6 +2350,9 @@
         "msgid": "Previous 6 days"
       },
       {
+        "msgid": "Previous channels"
+      },
+      {
         "msgid": "Product name"
       },
       {
@@ -2606,6 +2609,21 @@
       },
       {
         "msgid": "Search for {query}"
+      },
+      {
+        "msgid": "Searching all users"
+      },
+      {
+        "msgid": "Searching communities"
+      },
+      {
+        "msgid": "Searching friends and members of {communityName}"
+      },
+      {
+        "msgid": "Searching text channels"
+      },
+      {
+        "msgid": "Searching voice channels"
       },
       {
         "msgid": "Second factor"
@@ -3170,6 +3188,9 @@
       },
       {
         "msgid": "Unavailable"
+      },
+      {
+        "msgid": "Unread channels"
       },
       {
         "msgid": "Upload files and media in messages."

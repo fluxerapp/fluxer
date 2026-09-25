@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import Channels from '@app/features/channel/state/Channels';
 import Guilds from '@app/features/guild/state/Guilds';
 import {onLocaleChange} from '@app/features/i18n/utils/LocaleChangeListener';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import MemberSearch, {type SearchContext, type TransformedMember} from '@app/features/member/state/MemberSearch';
-import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
+import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
 import {parseChannelUrl} from '@app/features/navigation/utils/DeepLinkUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {loadLazyModule} from '@app/features/platform/utils/LazyModuleLoader';
@@ -16,6 +15,8 @@ import {
 	generateDefaultResults,
 	generateGeneralResults,
 	generateQueryModeResults,
+	type QuickSwitcherModeVariant,
+	type QuickSwitcherSearchContext,
 	resolveTransformedMember,
 } from '@app/features/search/state/QuickSwitcherResultGenerators';
 import {hasSameResultIdentity, resolveRecomputedSelectedIndex} from '@app/features/search/state/QuickSwitcherSelection';
@@ -27,7 +28,12 @@ import type {
 	QuickSwitcherQueryMode,
 	QuickSwitcherResult,
 } from '@app/features/search/state/QuickSwitcherTypes';
-import {MEMBER_SEARCH_LIMIT, QUICK_SWITCHER_MODAL_KEY} from '@app/features/search/state/QuickSwitcherTypes';
+import {MEMBER_SEARCH_LIMIT, QUICK_SWITCHER_OVERLAY_ID} from '@app/features/search/state/QuickSwitcherTypes';
+import {
+	createForwardSearchCandidates,
+	type ForwardSearchCandidates,
+} from '@app/features/search/utils/DestinationSearchSources';
+import {getLoadedUnicodeConfusables, loadUnicodeConfusables} from '@app/features/search/utils/SearchTextMatching';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
@@ -40,20 +46,48 @@ const GO_TO_MESSAGE_DESCRIPTOR = msg({
 	message: 'Go to message',
 	comment: 'Short label in the quick switcher state. Keep it concise.',
 });
+const PREFIX_MODES: ReadonlyMap<string, QuickSwitcherQueryMode> = new Map([
+	['@', QuickSwitcherResultTypes.USER],
+	['#', QuickSwitcherResultTypes.TEXT_CHANNEL],
+	['!', QuickSwitcherResultTypes.VOICE_CHANNEL],
+	['*', QuickSwitcherResultTypes.GUILD],
+]);
+const ALL_USERS_PREFIX = '@@';
+const NO_CONFUSABLES: ReadonlyMap<string, string> = new Map();
 const QUICK_SWITCHER_I18N_MISSING_ERROR = 'QuickSwitcher i18n has not been set';
+
+interface ParsedPrefix {
+	readonly mode: QuickSwitcherQueryMode | null;
+	readonly search: string;
+	readonly variant: QuickSwitcherModeVariant;
+}
+
+function parsePrefix(query: string): ParsedPrefix {
+	if (query.startsWith(ALL_USERS_PREFIX)) {
+		return {
+			mode: QuickSwitcherResultTypes.USER,
+			search: query.slice(ALL_USERS_PREFIX.length).trim(),
+			variant: 'all_users',
+		};
+	}
+	const mode = PREFIX_MODES.get(query.charAt(0)) ?? null;
+	return {mode, search: (mode == null ? query : query.slice(1)).trim(), variant: null};
+}
 
 type QuickSwitcherModalModule = typeof import('@app/features/search/components/quick_switcher/QuickSwitcherModal');
 
 class QuickSwitcher {
 	private logger = new Logger('QuickSwitcher');
 	private candidateSets: CandidateSets | null = null;
+	private searchSources: ForwardSearchCandidates | null = null;
+	private confusables: ReadonlyMap<string, string> = getLoadedUnicodeConfusables() ?? NO_CONFUSABLES;
 	private candidateWarmupCancel: (() => void) | null = null;
 	private defaultResults: Array<QuickSwitcherResult> | null = null;
 	private modalPreloadPromise: Promise<QuickSwitcherModalModule> | null = null;
 	private modalPreloadCancel: (() => void) | null = null;
 	isOpen = false;
 	query = '';
-	queryMode: QuickSwitcherQueryMode | null = null;
+	prefixMode: QuickSwitcherQueryMode | null = null;
 	results: Array<QuickSwitcherResult> = [];
 	selectedIndex = -1;
 	private memberSearchContext: SearchContext | null = null;
@@ -66,6 +100,8 @@ class QuickSwitcher {
 		makeAutoObservable<
 			this,
 			| 'candidateSets'
+			| 'searchSources'
+			| 'confusables'
 			| 'candidateWarmupCancel'
 			| 'defaultResults'
 			| 'logger'
@@ -75,6 +111,8 @@ class QuickSwitcher {
 			this,
 			{
 				candidateSets: false,
+				searchSources: false,
+				confusables: false,
 				candidateWarmupCancel: false,
 				defaultResults: false,
 				logger: false,
@@ -136,7 +174,7 @@ class QuickSwitcher {
 
 	get isLoadingMemberResults(): boolean {
 		return (
-			this.queryMode === QuickSwitcherResultTypes.USER &&
+			this.prefixMode === QuickSwitcherResultTypes.USER &&
 			this.query['slice'](1).trim().length > 0 &&
 			(this.memberFetchDebounceTimer !== null || this.isFetchingMembersInBackground)
 		);
@@ -164,7 +202,7 @@ class QuickSwitcher {
 		this.defaultResults = null;
 		this.isOpen = true;
 		this.query = '';
-		this.queryMode = null;
+		this.prefixMode = null;
 		if (!MobileLayout.isMobileLayout()) {
 			void this.pushModal();
 		}
@@ -181,6 +219,18 @@ class QuickSwitcher {
 			this.selectedIndex = -1;
 		}
 		this.scheduleCandidateWarmup();
+		this.ensureConfusables();
+	}
+
+	private ensureConfusables(): void {
+		if (this.confusables !== NO_CONFUSABLES) return;
+		loadUnicodeConfusables().then(
+			(loaded) => {
+				this.confusables = loaded;
+				this.recomputeIfOpen({invalidateCandidates: false});
+			},
+			(error: unknown) => this.logger.warn('Failed to load Unicode confusables', error),
+		);
 	}
 
 	private loadModal(): Promise<QuickSwitcherModalModule> {
@@ -210,7 +260,7 @@ class QuickSwitcher {
 		const {QuickSwitcherModal} = modalModule;
 		ModalCommands.pushWithKey(
 			modal(() => <QuickSwitcherModal data-flx="search.quick-switcher.quick-switcher-modal" />),
-			QUICK_SWITCHER_MODAL_KEY,
+			QUICK_SWITCHER_OVERLAY_ID,
 		);
 	}
 
@@ -221,9 +271,10 @@ class QuickSwitcher {
 		this.cancelCandidateWarmup();
 		this.isOpen = false;
 		this.candidateSets = null;
+		this.searchSources = null;
 		this.defaultResults = null;
 		this.query = '';
-		this.queryMode = null;
+		this.prefixMode = null;
 		this.results = [];
 		this.selectedIndex = -1;
 		if (this.memberSearchContext) {
@@ -237,13 +288,14 @@ class QuickSwitcher {
 		this.isFetchingMembersInBackground = false;
 		this.memberSearchResults = [];
 		if (!MobileLayout.isMobileLayout()) {
-			ModalCommands.popWithKey(QUICK_SWITCHER_MODAL_KEY);
+			ModalCommands.popWithKey(QUICK_SWITCHER_OVERLAY_ID);
 		}
 	}
 
 	private invalidateCandidateSets(): void {
 		this.cancelCandidateWarmup();
 		this.candidateSets = null;
+		this.searchSources = null;
 		if (this.isOpen) {
 			this.scheduleCandidateWarmup();
 		}
@@ -253,6 +305,12 @@ class QuickSwitcher {
 		this.cancelCandidateWarmup();
 		this.candidateSets ??= buildCandidateSets(i18n);
 		return this.candidateSets;
+	}
+
+	private getSearchContext(i18n: I18n): QuickSwitcherSearchContext {
+		const sets = this.getCandidateSets(i18n);
+		this.searchSources ??= createForwardSearchCandidates(i18n).get();
+		return {confusables: this.confusables, sets, sources: this.searchSources};
 	}
 
 	private scheduleCandidateWarmup(): void {
@@ -294,16 +352,16 @@ class QuickSwitcher {
 			return;
 		}
 		this.defaultResults = null;
-		const {queryMode, results, selectedIndex} = this.computeResultsForQuery(query);
+		const {prefixMode, results, selectedIndex} = this.computeResultsForQuery(query);
 		this.query = query;
-		this.queryMode = queryMode;
+		this.prefixMode = prefixMode;
 		this.results = results;
 		this.selectedIndex = selectedIndex;
-		this.triggerMemberSearchIfNeeded(query, queryMode);
+		this.triggerMemberSearchIfNeeded(query, prefixMode);
 	}
 
-	private triggerMemberSearchIfNeeded(query: string, queryMode: QuickSwitcherQueryMode | null): void {
-		if (queryMode !== QuickSwitcherResultTypes.USER) {
+	private triggerMemberSearchIfNeeded(query: string, prefixMode: QuickSwitcherQueryMode | null): void {
+		if (prefixMode !== QuickSwitcherResultTypes.USER || query.startsWith(ALL_USERS_PREFIX)) {
 			if (this.memberSearchContext) {
 				this.memberSearchContext.destroy();
 				this.memberSearchContext = null;
@@ -336,7 +394,7 @@ class QuickSwitcher {
 					.filter((member): member is GuildMember => member !== null);
 				runInAction(() => {
 					this.memberSearchResults = guildMemberRecords;
-					if (this.isOpen && this.queryMode === QuickSwitcherResultTypes.USER) {
+					if (this.isOpen && this.prefixMode === QuickSwitcherResultTypes.USER) {
 						this.recomputeIfOpen({invalidateCandidates: false});
 					}
 				});
@@ -346,13 +404,9 @@ class QuickSwitcher {
 		if (this.memberFetchDebounceTimer) {
 			clearTimeout(this.memberFetchDebounceTimer);
 		}
-		const currentChannelId = SelectedChannel.currentChannelId;
-		const currentChannel = currentChannelId ? Channels.getChannel(currentChannelId) : null;
-		const guildId = currentChannel?.guildId ?? null;
-		const allGuilds = Guilds.getGuilds();
-		const guildsToFetch = allGuilds
-			.filter((guild) => !GuildMembers.isGuildFullyLoaded(guild.id))
-			.map((guild) => guild.id);
+		const selectedGuildId = SelectedGuild.selectedGuildId;
+		const guildId = selectedGuildId != null && Guilds.getGuild(selectedGuildId) != null ? selectedGuildId : null;
+		const guildsToFetch = guildId != null && !GuildMembers.isGuildFullyLoaded(guildId) ? [guildId] : [];
 		if (guildsToFetch.length === 0) {
 			this.memberFetchDebounceTimer = null;
 			this.isFetchingMembersInBackground = false;
@@ -396,11 +450,11 @@ class QuickSwitcher {
 			this.invalidateCandidateSets();
 		}
 		const previous = this.results[this.selectedIndex];
-		const {queryMode, results, selectedIndex} = this.computeResultsForQuery(this.query);
-		if (!options.force && this.queryMode === queryMode && hasSameResultIdentity(this.results, results)) {
+		const {prefixMode, results, selectedIndex} = this.computeResultsForQuery(this.query);
+		if (!options.force && this.prefixMode === prefixMode && hasSameResultIdentity(this.results, results)) {
 			return;
 		}
-		this.queryMode = queryMode;
+		this.prefixMode = prefixMode;
 		this.results = results;
 		this.selectedIndex = resolveRecomputedSelectedIndex(previous, results, selectedIndex);
 	}
@@ -415,6 +469,7 @@ class QuickSwitcher {
 	private computeResultsForQuery(query: string): ComputeResultsForQueryResult {
 		const i18n = this.getI18n();
 		const channelPath = parseChannelUrl(query);
+		const linkResults: Array<QuickSwitcherResult> = [];
 		if (channelPath) {
 			const linkResult: LinkResult = {
 				type: QuickSwitcherResultTypes.LINK,
@@ -423,53 +478,29 @@ class QuickSwitcher {
 				subtitle: query,
 				path: channelPath,
 			};
-			return {
-				queryMode: null,
-				results: [linkResult],
-				selectedIndex: 0,
-			};
+			linkResults.push(linkResult);
 		}
-		if (query['trim']().length === 0) {
-			const defaultResults = this.getDefaultResults(i18n);
-			return {
-				queryMode: null,
-				results: defaultResults,
-				selectedIndex: getFirstSelectableIndex(defaultResults),
-			};
-		}
-		const queryMode = this.getQueryMode(query);
-		const rawSearch = queryMode ? query['slice'](1) : query;
-		const trimmedSearch = rawSearch.trim();
+		const {mode, search, variant} = parsePrefix(query);
 		let results: Array<QuickSwitcherResult>;
-		if (queryMode) {
-			const sets = this.getCandidateSets(i18n);
-			results = generateQueryModeResults(queryMode, trimmedSearch, sets, i18n, this.memberSearchResults);
-		} else if (trimmedSearch.length === 0) {
+		if (mode != null) {
+			results = generateQueryModeResults(
+				mode,
+				variant,
+				search,
+				this.getSearchContext(i18n),
+				i18n,
+				this.memberSearchResults,
+			);
+		} else if (search.length === 0) {
 			results = this.getDefaultResults(i18n);
 		} else {
-			const sets = this.getCandidateSets(i18n);
-			results = generateGeneralResults(trimmedSearch, sets, i18n);
+			results = [...linkResults, ...generateGeneralResults(search, this.getSearchContext(i18n), i18n)];
 		}
 		return {
-			queryMode,
+			prefixMode: mode,
 			results,
 			selectedIndex: getFirstSelectableIndex(results),
 		};
-	}
-
-	private getQueryMode(query: string): QuickSwitcherQueryMode | null {
-		switch (query.charAt(0)) {
-			case '@':
-				return QuickSwitcherResultTypes.USER;
-			case '#':
-				return QuickSwitcherResultTypes.TEXT_CHANNEL;
-			case '!':
-				return QuickSwitcherResultTypes.VOICE_CHANNEL;
-			case '*':
-				return QuickSwitcherResultTypes.GUILD;
-			default:
-				return null;
-		}
 	}
 }
 

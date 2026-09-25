@@ -46,10 +46,10 @@ function resolveFrecencyRecordId(key: string): string | null {
 }
 
 class ChannelFrecency {
-	usageHistory = new Map<string, ChannelFrecencyEntry>();
+	useLog = new Map<string, ChannelFrecencyEntry>();
 
 	constructor() {
-		makeAutoObservable(this, {usageHistory: observableShallow}, {autoBind: true});
+		makeAutoObservable(this, {useLog: observableShallow}, {autoBind: true});
 		void this.initPersistence();
 	}
 
@@ -57,11 +57,11 @@ class ChannelFrecency {
 		await makeSyncedField(this, {
 			field: 'channelFrecency',
 			schema: ChannelFrecencyStateSchema,
-			persist: ['usageHistory'],
+			persist: ['useLog'],
 			debounceMs: FRECENCY_SYNC_DEBOUNCE_MS,
-			toMessage: (store) => ({usage: channelFrecencyHistoryToWire(store.usageHistory)}),
+			toMessage: (store) => ({usage: channelFrecencyHistoryToWire(store.useLog)}),
 			applyMessage: (store, message) => {
-				store.usageHistory = channelFrecencyHistoryFromWire(message.usage, Date.now());
+				store.useLog = channelFrecencyHistoryFromWire(message.usage, Date.now());
 			},
 			mergeRemote: (local, incoming) => ({
 				usage: mergeChannelFrecencyWireUsage(local.usage, incoming.usage, Date.now()),
@@ -85,17 +85,17 @@ class ChannelFrecency {
 	}
 
 	get frequentIds(): ReadonlyArray<string> {
-		return rankFrequentChannelIds(this.usageHistory, resolveFrecencyRecordId);
+		return rankFrequentChannelIds(this.useLog, resolveFrecencyRecordId);
 	}
 
-	getScore(id: string): number {
-		return this.usageHistory.get(id)?.frecency ?? 0;
+	scoreFor(id: string): number {
+		return this.useLog.get(id)?.heat ?? 0;
 	}
 
-	track(key: string, timestamp?: number): void {
-		trackChannelUse(this.usageHistory, key, timestamp);
-		capChannelFrecencyHistory(this.usageHistory);
-		computeChannelFrecency(this.usageHistory, Date.now());
+	recordUse(key: string, timestamp?: number): void {
+		trackChannelUse(this.useLog, key, timestamp);
+		capChannelFrecencyHistory(this.useLog);
+		computeChannelFrecency(this.useLog, Date.now());
 	}
 
 	recordSelection(guildId: string | null, channelId: string | null): void {
@@ -103,21 +103,21 @@ class ChannelFrecency {
 		if (channelId !== lastChannelId) {
 			lastChannelId = channelId;
 			if (isTrackableId(channelId)) {
-				this.track(channelId);
+				this.recordUse(channelId);
 			}
 		}
 		if (selectedGuildId !== lastGuildId) {
 			lastGuildId = selectedGuildId;
 			if (isTrackableId(selectedGuildId)) {
-				this.track(selectedGuildId);
+				this.recordUse(selectedGuildId);
 			}
 		}
 	}
 
 	private refreshHistory(): void {
-		const current: unknown = this.usageHistory;
+		const current: unknown = this.useLog;
 		if (!isObservableMap(current)) return;
-		this.usageHistory = restoreChannelFrecencyHistory(current.entries(), Date.now());
+		this.useLog = restoreChannelFrecencyHistory(current.entries(), Date.now());
 	}
 }
 

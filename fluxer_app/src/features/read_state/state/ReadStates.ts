@@ -136,6 +136,7 @@ class ReadStates {
 	}
 
 	private setMentionCount(state: ReadStateEntry, mentionCount: number): void {
+		if (mentionCount > state.mentionCount) this.mentionChannels.delete(state.channelId as ChannelId);
 		state.mentionCount = mentionCount;
 		this.refreshMentionChannel(state.channelId);
 	}
