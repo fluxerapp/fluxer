@@ -3,7 +3,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
-import {CANARY_APP_URL, STABLE_APP_URL} from '@electron/common/Constants';
+import {
+	CANARY_APP_URL,
+	CANARY_MIGRATED_APP_ORIGIN,
+	MIGRATED_APP_ENTRY_PATH,
+	STABLE_APP_URL,
+	STABLE_MIGRATED_APP_ORIGIN,
+} from '@electron/common/Constants';
 import type {DesktopTroubleshootingSettings, DesktopWindowBehaviorSettings} from '@electron/common/Types';
 import log from 'electron-log';
 
@@ -18,6 +24,7 @@ interface DesktopConfig extends Record<string, unknown> {
 	window_behavior?: PersistedDesktopWindowBehaviorSettings;
 	troubleshooting?: PersistedDesktopTroubleshootingSettings;
 	theme_allowed_local_files?: Array<string>;
+	app_origin?: string;
 }
 
 export type ChromiumSwitchesSetting = ReadonlyArray<string> | Record<string, unknown>;
@@ -133,12 +140,34 @@ function sanitizeChromiumSwitchesSetting(value: unknown): ChromiumSwitchesSettin
 	return undefined;
 }
 
+function getLegacyAppUrl(): string {
+	return BUILD_CHANNEL === 'canary' ? CANARY_APP_URL : STABLE_APP_URL;
+}
+
+function getMigratedAppOrigin(): string {
+	return BUILD_CHANNEL === 'canary' ? CANARY_MIGRATED_APP_ORIGIN : STABLE_MIGRATED_APP_ORIGIN;
+}
+
+export function getOfficialAppOrigins(): Array<string> {
+	return [new URL(getLegacyAppUrl()).origin, getMigratedAppOrigin()];
+}
+
+function sanitizeAppOrigin(value: unknown): string | undefined {
+	return typeof value === 'string' && getOfficialAppOrigins().includes(value) ? value : undefined;
+}
+
 function sanitizeDesktopConfig(value: unknown): DesktopConfig {
 	if (!isRecord(value)) {
 		return {};
 	}
 	const nextConfig: DesktopConfig = {...value};
 	delete nextConfig.app_url;
+	const appOrigin = sanitizeAppOrigin(value.app_origin);
+	if (appOrigin) {
+		nextConfig.app_origin = appOrigin;
+	} else {
+		delete nextConfig.app_origin;
+	}
 	const chromiumSwitches = sanitizeChromiumSwitchesSetting(value.chromiumSwitches);
 	if (chromiumSwitches) {
 		nextConfig.chromiumSwitches = chromiumSwitches;
@@ -311,7 +340,29 @@ export function getAppUrl(): string {
 	if (runtimeAppUrlOverride) {
 		return runtimeAppUrlOverride;
 	}
-	return BUILD_CHANNEL === 'canary' ? CANARY_APP_URL : STABLE_APP_URL;
+	const migratedAppOrigin = getMigratedAppOrigin();
+	if (config.app_origin === migratedAppOrigin) {
+		return `${migratedAppOrigin}${MIGRATED_APP_ENTRY_PATH}`;
+	}
+	return getLegacyAppUrl();
+}
+
+export function getAppUrlFallback(url: string): string | null {
+	try {
+		return new URL(url).origin === getMigratedAppOrigin() ? getLegacyAppUrl() : null;
+	} catch {
+		return null;
+	}
+}
+
+export function setAppOrigin(origin: string): boolean {
+	const appOrigin = sanitizeAppOrigin(origin);
+	if (appOrigin === undefined) {
+		return false;
+	}
+	config.app_origin = appOrigin;
+	saveDesktopConfig();
+	return true;
 }
 
 export function getCustomAppUrl(): string | null {

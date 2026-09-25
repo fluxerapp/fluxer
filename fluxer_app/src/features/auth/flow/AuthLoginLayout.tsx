@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {detectDomainMigrationInstallKind} from '@app/features/app/domain_migration/DomainMigrationBrowser';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import {AccountSelector} from '@app/features/auth/components/accounts/AccountSelector';
@@ -17,6 +19,10 @@ import AuthLoginPasskeyActions, {
 	AuthLoginDivider,
 } from '@app/features/auth/flow/auth_login_core/AuthLoginPasskeyActions';
 import {isApprovalFlowMode, useDesktopHandoffFlow} from '@app/features/auth/flow/auth_login_core/useDesktopHandoffFlow';
+import {
+	SIGN_IN_WITH_OLD_APP_DESCRIPTOR,
+	showBrowserLoginHandoffModal,
+} from '@app/features/auth/flow/BrowserLoginHandoffModal';
 import DesktopHandoffAccountSelector from '@app/features/auth/flow/DesktopHandoffAccountSelector';
 import {ConnectedHandoffApprovalFlow} from '@app/features/auth/flow/HandoffApprovalFlow';
 import IpAuthorizationScreen from '@app/features/auth/flow/IpAuthorizationScreen';
@@ -28,6 +34,7 @@ import {
 	type LoginSuccessPayload,
 	startSsoLogin,
 } from '@app/features/auth/state/AuthFlow';
+import {shouldOfferOldAppSignIn} from '@app/features/auth/utils/OldAppSignIn';
 import {NEED_ACCOUNT_DESCRIPTOR, SIGN_IN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
@@ -63,6 +70,11 @@ const WELCOME_BACK_DESCRIPTOR = msg({
 const FORGOT_PASSWORD_DESCRIPTOR = msg({
 	message: 'Forgot your password?',
 	comment: 'Authentication link label that opens password recovery.',
+});
+const OLD_APP_SIGN_IN_HINT_DESCRIPTOR = msg({
+	message: 'Approve this app from the {productName} app you already use. No password needed.',
+	comment:
+		'Hint under the sign-in option on fluxer.com that pairs a newly installed app with the old installed app. productName is the app name.',
 });
 const SIGN_IN_VIA_BROWSER_DESCRIPTOR = msg({
 	message: 'Sign in via browser',
@@ -164,6 +176,28 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 		});
 	const showBrowserPasskey = IS_DEV || isDesktop();
 	const passkeyControlsDisabled = isLoading || Boolean(form.isSubmitting) || isPasskeyLoading;
+	const offerOldAppSignIn = useMemo(
+		() =>
+			!desktopHandoff &&
+			shouldOfferOldAppSignIn({
+				origin: window.location.origin,
+				installKind: detectDomainMigrationInstallKind(),
+				hasStoredAccounts,
+			}),
+		[desktopHandoff, hasStoredAccounts],
+	);
+	const handleOldAppSignIn = useCallback(() => {
+		showBrowserLoginHandoffModal(
+			async (payload) => {
+				await handleLoginSuccess(payload);
+				if (redirectPath) {
+					RouterUtils.replaceWith(redirectPath);
+				}
+			},
+			undefined,
+			'old_app',
+		);
+	}, [handleLoginSuccess, redirectPath]);
 	const handleIpAuthorizationComplete = useCallback(
 		async (payload: LoginSuccessPayload) => {
 			await handleLoginSuccess(payload);
@@ -325,6 +359,21 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 				{!showAccountSelector && switchError ? (
 					<div className={styles.loginNotice} role="alert" data-flx="auth.flow.auth-login-layout.login-notice--2">
 						{switchError}
+					</div>
+				) : null}
+				{offerOldAppSignIn ? (
+					<div className={styles.ssoBlock} data-flx="auth.flow.auth-login-layout.old-app-block">
+						<Button
+							fitContainer
+							onClick={handleOldAppSignIn}
+							type="button"
+							data-flx="auth.flow.auth-login-layout.button.old-app-sign-in"
+						>
+							{i18n._(SIGN_IN_WITH_OLD_APP_DESCRIPTOR, {productName: PRODUCT_NAME})}
+						</Button>
+						<div className={styles.ssoSubtitle} data-flx="auth.flow.auth-login-layout.old-app-subtitle">
+							{i18n._(OLD_APP_SIGN_IN_HINT_DESCRIPTOR, {productName: PRODUCT_NAME})}
+						</div>
 					</div>
 				) : null}
 				{ssoConfig?.enabled ? (

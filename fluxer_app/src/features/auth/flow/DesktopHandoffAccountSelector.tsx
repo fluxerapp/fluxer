@@ -66,7 +66,7 @@ const DesktopHandoffAccountSelector = observer(function DesktopHandoffAccountSel
 		<AccountSelector
 			accounts={accounts}
 			title={<Trans>Choose an account</Trans>}
-			description={<Trans>Select the account you want to sign in with on the desktop app.</Trans>}
+			description={<Trans>Select the account you want to sign in with on your new device.</Trans>}
 			disabled={isLoading}
 			error={error}
 			clickableRows

@@ -107,6 +107,7 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 		parse: parseCsv,
 	},
 	FLUXER_API_UNFURL_IGNORED_HOSTS: {path: ['services', 'api', 'unfurl_ignored_hosts'], parse: parseCsv},
+	FLUXER_APP_ORIGIN_ALIASES: {path: ['services', 'api', 'app_origin_aliases'], parse: parseCsv},
 	FLUXER_API_EMBEDS_OEMBED_HTML_ENABLED: {
 		path: ['services', 'api', 'embeds', 'oembed_html_enabled'],
 		parse: parseBoolean,

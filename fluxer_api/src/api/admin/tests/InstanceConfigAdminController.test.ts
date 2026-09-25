@@ -69,6 +69,20 @@ describe('instance config admin PATCH under concurrent writes', () => {
 		return logs.filter((log) => log.action === 'update_instance_config');
 	}
 
+	it('merges a standalone forwarding patch into the stored domain migration config', async () => {
+		const admin = await createAdmin();
+		await patchConfig(admin, {domain_migration: {enabled: true, rollout_basis_points: 250}}).execute();
+
+		const updated = await patchConfig(admin, {domain_migration: {standalone_forwarding: true}}).execute();
+
+		expect(updated.domain_migration).toMatchObject({
+			enabled: true,
+			rollout_basis_points: 250,
+			standalone_forwarding: true,
+			config_version: 2,
+		});
+	});
+
 	it('answers with a conflict and neither writes, publishes nor audits once every attempt has lost the race', async () => {
 		const publish = spyOnPushDeliveryPublishes();
 		const admin = await createAdmin();

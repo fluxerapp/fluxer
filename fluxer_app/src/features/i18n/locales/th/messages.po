@@ -938,7 +938,7 @@ msgstr "{count, plural, one {ข้อความที่ถูกบล็อ
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {พบ # คอมมูนิตี้} other {พบ # คอมมูนิตี้}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1953
+#: src/features/app/components/layout/GuildsLayout.tsx:1954
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# คอมมูนิตี้ไม่พร้อมใช้งานชั่วคราว เนื่องจากเครื่องฟลักซ์คาปาซิเตอร์ทำงานผิดปกติ} other {# คอมมูนิตี้ไม่พร้อมใช้งานชั่วคราว เนื่องจากเครื่องฟลักซ์คาปาซิเตอร์ทำงานผิดปกติ}}"
 
@@ -1692,6 +1692,26 @@ msgstr "{productName} ตรวจพบการโจมตีที่อา�
 msgid "{productName} detected a potential raid, so new users can't join right now."
 msgstr "{productName} ตรวจพบการโจมตีที่อาจเกิดขึ้น ผู้ใช้ใหม่จึงไม่สามารถเข้าร่วมได้ในขณะนี้"
 
+#. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:38
+msgid "{productName} has moved to {host}. Add it to your Home Screen or Dock, then sign in with this app."
+msgstr "{productName} ย้ายไปที่ {host} แล้ว เพิ่มไปยังหน้าจอโฮมหรือ Dock ของคุณ จากนั้นลงชื่อเข้าใช้ด้วยแอปนี้"
+
+#. Banner in an installed web app on other browsers. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:43
+msgid "{productName} has moved to {host}. Install it from your browser, then sign in with this app."
+msgstr "{productName} ย้ายไปที่ {host} แล้ว ติดตั้งจากเบราว์เซอร์ของคุณ จากนั้นลงชื่อเข้าใช้ด้วยแอปนี้"
+
+#. Banner in an installed desktop web app after the account moved to the new domain. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:28
+msgid "{productName} has moved to {host}. Install the new app and you will already be signed in."
+msgstr "{productName} ได้ย้ายไปยัง {host} แล้ว ติดตั้งแอปใหม่ แล้วคุณจะเข้าสู่ระบบโดยอัตโนมัติ"
+
+#. Banner in an installed Android web app. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:33
+msgid "{productName} has moved to {host}. Open it in your browser to install the new app."
+msgstr "{productName} ย้ายไปที่ {host} แล้ว เปิดในเบราว์เซอร์ของคุณเพื่อติดตั้งแอปใหม่"
+
 #. Profile membership label showing when the user account was created.
 #: src/features/user/components/popouts/UserProfileShared.tsx:53
 msgid "{productName} member since"
@@ -1731,6 +1751,16 @@ msgstr "{productName} ต้องการสิทธิ์เข้าถึ�
 #: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:44
 msgid "{productName} needs screen recording access. Allow screen recording in your operating system privacy settings and restart the app."
 msgstr "{productName} ต้องการสิทธิ์บันทึกหน้าจอ โปรดอนุญาตการบันทึกหน้าจอในการตั้งค่าความเป็นส่วนตัวของระบบปฏิบัติการ แล้วรีสตาร์ทแอป"
+
+#. Intro in the modal that explains how to install the app from its new domain. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:22
+msgid "{productName} now lives at {host}. Install it from there, then sign in with this app."
+msgstr "{productName} ตอนนี้อยู่ที่ {host} แล้ว ติดตั้งจากที่นั่น จากนั้นลงชื่อเข้าใช้ด้วยแอปนี้"
+
+#. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:27
+msgid "{productName} now lives at {host}. Install it from there."
+msgstr "{productName} ตอนนี้อยู่ที่ {host} แล้ว ติดตั้งจากที่นั่นได้เลย"
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx:31
@@ -2461,7 +2491,7 @@ msgid "a poll"
 msgstr "โพล"
 
 #. OAuth authorize page error shown when the bot scope requires a redirect_uri that is missing. Technical message; keep "redirect_uri" and "bot" untranslated.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:53
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:54
 msgid "A redirect_uri is required when the bot scope is not the only scope."
 msgstr "ต้องระบุ redirect_uri เมื่อขอบเขต bot ไม่ใช่ขอบเขตเดียว"
 
@@ -2859,7 +2889,7 @@ msgid "Add a bot to a community with requested permissions"
 msgstr "เพิ่มบอทเข้าสู่คอมมูนิตี้พร้อมสิทธิ์ที่ร้องขอ"
 
 #. Placeholder text in the optional comment field of the forward modal.
-#: src/features/messaging/components/modals/ForwardModal.tsx:99
+#: src/features/messaging/components/modals/ForwardModal.tsx:96
 msgid "Add a comment (optional)"
 msgstr "เพิ่มความคิดเห็น (ไม่บังคับ)"
 
@@ -2920,7 +2950,7 @@ msgid "Add a YouTube Data API key to enrich YouTube links."
 msgstr "เพิ่มคีย์ YouTube Data API เพื่อปรับปรุงลิงก์ YouTube"
 
 #. Short label in the authentication browser login handoff modal. Keep the tone plain and specific.
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:21
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:22
 msgid "Add account"
 msgstr "เพิ่มบัญชี"
 
@@ -4379,6 +4409,11 @@ msgstr "ต้องได้รับการอนุมัติ"
 msgid "Approve"
 msgstr "อนุมัติ"
 
+#. Hint under the sign-in option on fluxer.com that pairs a newly installed app with the old installed app. productName is the app name.
+#: src/features/auth/flow/AuthLoginLayout.tsx:74
+msgid "Approve this app from the {productName} app you already use. No password needed."
+msgstr "อนุมัติแอปนี้จากแอป {productName} ที่คุณใช้อยู่แล้ว ไม่ต้องใช้รหัสผ่าน"
+
 #. Discovery application status badge in the community Discovery settings tab. The community has been approved and is listed.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:45
 msgid "Approved"
@@ -4848,7 +4883,7 @@ msgid "Authorization failed"
 msgstr "การอนุญาตล้มเหลว"
 
 #. OAuth authorize page generic error toast shown when the authorize request fails unexpectedly.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:74
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:75
 msgid "Authorization failed. Try again."
 msgstr "การอนุญาตล้มเหลว ลองอีกครั้ง"
 
@@ -5826,7 +5861,7 @@ msgid "Bot permissions"
 msgstr "สิทธิ์ของบอท"
 
 #. OAuth authorize page error shown when the permissions query parameter is a negative integer.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:66
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:67
 msgid "Bot permissions cannot be negative."
 msgstr "สิทธิ์ของบอทต้องไม่เป็นค่าลบ"
 
@@ -6329,10 +6364,10 @@ msgstr "อัปโหลดไฟล์ที่นี่ไม่ได้"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:216
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:232
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:72
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:80
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:86
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:278
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:140
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:282
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:164
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:177
 #: src/features/channel/components/modals/ChannelDeleteModal.tsx:53
@@ -6351,7 +6386,7 @@ msgstr "อัปโหลดไฟล์ที่นี่ไม่ได้"
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:133
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
-#: src/features/messaging/components/modals/ForwardModal.tsx:650
+#: src/features/messaging/components/modals/ForwardModal.tsx:591
 #: src/features/messaging/components/modals/ImageCropModal.tsx:1025
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/moderation/components/modals/BanMemberModal.tsx:262
@@ -7462,9 +7497,14 @@ msgid "Choose background"
 msgstr "เลือกพื้นหลัง"
 
 #. OAuth authorize page error shown when a bot invite request provides both guild_id and channel_id. Keep the parameter names literal.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:86
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:87
 msgid "Choose either guild_id or channel_id, not both."
 msgstr "เลือก guild_id หรือ channel_id อย่างใดอย่างหนึ่ง ไม่ใช่ทั้งสองอย่าง"
+
+#. Second install step on a Mac. File and Add to Dock are the names of the Safari menu items, use the names macOS shows in this language.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:46
+msgid "Choose File, then Add to Dock."
+msgstr "เลือก ไฟล์ แล้วเลือก เพิ่มไปยัง Dock"
 
 #. Subtitle in the create-DM modal. Keep it short and calm.
 #: src/features/channel/utils/CreateDMModalUtils.tsx:39
@@ -8215,7 +8255,7 @@ msgstr "บล็อกโค้ด"
 msgid "Code blocks"
 msgstr "บล็อกโค้ด"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:102
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:110
 msgid "Code expired"
 msgstr "รหัสหมดอายุแล้ว"
 
@@ -8385,17 +8425,17 @@ msgid "Commands"
 msgstr "คำสั่ง"
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled when at least one selected target has slowmode active.
-#: src/features/messaging/components/modals/ForwardModal.tsx:71
+#: src/features/messaging/components/modals/ForwardModal.tsx:68
 msgid "Comments are disabled because one or more selected channels have slowmode on. The comment would be blocked by slowmode right after the forward."
 msgstr "ปิดใช้งานความคิดเห็นเนื่องจากมีช่องที่เลือกไว้อย่างน้อยหนึ่งช่องเปิดโหมดจำกัดเวลาอยู่ ความคิดเห็นจะถูกบล็อกด้วยโหมดจำกัดเวลาทันทีหลังส่งต่อ"
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled for a single selected channel with slowmode.
-#: src/features/messaging/components/modals/ForwardModal.tsx:65
+#: src/features/messaging/components/modals/ForwardModal.tsx:62
 msgid "Comments are disabled because slowmode is on in {forwardChannelDisplayName}. The comment would be blocked by slowmode right after the forward."
 msgstr "ปิดใช้งานความคิดเห็นเนื่องจาก {forwardChannelDisplayName} เปิดโหมดจำกัดเวลาอยู่ ความคิดเห็นจะถูกบล็อกด้วยโหมดจำกัดเวลาทันทีหลังส่งต่อ"
 
 #. Tooltip on the disabled comment field in the forward modal when slowmode blocks comments.
-#: src/features/messaging/components/modals/ForwardModal.tsx:95
+#: src/features/messaging/components/modals/ForwardModal.tsx:92
 msgid "Comments are unavailable while slowmode is on."
 msgstr "ไม่สามารถแสดงความคิดเห็นได้เมื่อเปิดโหมดจำกัดเวลา"
 
@@ -8551,7 +8591,7 @@ msgid "Community message notifications"
 msgstr "การแจ้งเตือนข้อความของคอมมูนิตี้"
 
 #. Developer control label for the community MFA requirement banner.
-#: src/features/devtools/components/NagbarControls.ts:76
+#: src/features/devtools/components/NagbarControls.ts:81
 msgid "Community MFA requirement nagbar"
 msgstr "แถบแจ้งเตือนข้อกำหนด MFA ของคอมมูนิตี้"
 
@@ -9182,7 +9222,7 @@ msgstr "ดำเนินการรายงานคอมมูนิตี
 msgid "Continue to report user"
 msgstr "ดำเนินการรายงานผู้ใช้ต่อ"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:245
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:249
 msgid "Continue with passkey"
 msgstr "ดำเนินการต่อด้วยพาสคีย์"
 
@@ -9266,7 +9306,7 @@ msgid "Coordinates raids, brigading, or harassment against people or communities
 msgstr "ประสานงานการโจมตี การรุมถล่ม หรือการคุกคามต่อบุคคลหรือคอมมูนิตี้"
 
 #. Generic short status label confirming a value was copied to the clipboard.
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:157
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:165
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:381
 msgid "Copied"
 msgstr "คัดลอกแล้ว"
@@ -9368,7 +9408,7 @@ msgid "Copy channel link"
 msgstr "คัดลอกลิงก์ช่อง"
 
 #. Action label that copies a code block to the clipboard.
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:157
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:165
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:393
 msgid "Copy code"
 msgstr "คัดลอกรหัส"
@@ -10559,12 +10599,12 @@ msgid "Current uses:"
 msgstr "จำนวนครั้งที่ใช้ไปแล้ว:"
 
 #. Developer nagbar status: the banner is dismissed in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:109
+#: src/features/devtools/components/NagbarControls.ts:114
 msgid "Currently dismissed"
 msgstr "ปิดอยู่"
 
 #. Developer nagbar status: the banner is showing in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:113
+#: src/features/devtools/components/NagbarControls.ts:118
 msgid "Currently showing"
 msgstr "กำลังแสดง"
 
@@ -12555,6 +12595,11 @@ msgstr "ไม่บล็อก คุณสามารถเปิดให�
 msgid "Domain"
 msgstr "โดเมน"
 
+#. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
+#: src/features/devtools/components/NagbarControls.ts:76
+msgid "Domain moved nagbar"
+msgstr "ย้ายโดเมนแล้ว"
+
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
 #: src/features/voice/components/modals/HideOwnCameraConfirmModal.tsx:59
@@ -12912,7 +12957,7 @@ msgid "Dutch"
 msgstr "ดัตช์"
 
 #. Placeholder or example text in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:27
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:31
 msgid "e.g., YubiKey, iPhone, work computer"
 msgstr "เช่น YubiKey, iPhone, คอมพิวเตอร์ที่ทำงาน"
 
@@ -14056,9 +14101,13 @@ msgstr "ป้อนรหัส PIN ของคีย์ความปลอ�
 msgid "Enter the SMS code"
 msgstr "ป้อนรหัส SMS"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:124
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:132
 msgid "Enter this code in your browser to complete sign-in."
 msgstr "ป้อนรหัสนี้ในเบราว์เซอร์เพื่อลงชื่อเข้าใช้ให้เสร็จสมบูรณ์"
+
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:142
+msgid "Enter this code in your old {PRODUCT_NAME} app to complete sign-in."
+msgstr "กรอกรหัสนี้ในแอป {PRODUCT_NAME} เดิมของคุณเพื่อดำเนินการลงชื่อเข้าใช้ให้เสร็จสมบูรณ์"
 
 #: src/features/channel/components/EditingMessageInput.tsx:358
 msgid "Enter to <0><1>save</1></0>"
@@ -14441,7 +14490,7 @@ msgstr "หมดอายุ {absolute} ({relativeText})"
 msgid "Expires between {earliest} and {latest}"
 msgstr "หมดอายุระหว่าง {earliest} ถึง {latest}"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:142
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:150
 msgid "Expires in {remaining}s"
 msgstr "หมดอายุใน {remaining} วินาที"
 
@@ -14835,7 +14884,7 @@ msgid "Failed to start SSO"
 msgstr "เริ่ม SSO ไม่สำเร็จ"
 
 #. Login flow error shown when switching to a saved account fails.
-#: src/features/auth/flow/AuthLoginLayout.tsx:51
+#: src/features/auth/flow/AuthLoginLayout.tsx:58
 msgid "Failed to switch account"
 msgstr "เปลี่ยนบัญชีไม่สำเร็จ"
 
@@ -15413,17 +15462,17 @@ msgstr "สำหรับฉัน"
 msgid "For this check, you send us a text message instead of receiving one from us."
 msgstr "สำหรับการตรวจสอบนี้ คุณจะต้องส่งข้อความถึงเราแทนการรับข้อความจากเรา"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:183
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:187
 msgid "For your security, please confirm it's you to continue."
 msgstr "เพื่อความปลอดภัย โปรดยืนยันตัวตนเพื่อดำเนินการต่อ"
 
 #. Developer nagbar override status: the banner is forced to hide.
-#: src/features/devtools/components/NagbarControls.ts:97
+#: src/features/devtools/components/NagbarControls.ts:102
 msgid "Force disabled"
 msgstr "บังคับปิดใช้งาน"
 
 #. Developer nagbar override status: the banner is forced to show.
-#: src/features/devtools/components/NagbarControls.ts:93
+#: src/features/devtools/components/NagbarControls.ts:98
 msgid "Force enabled"
 msgstr "บังคับเปิดใช้งาน"
 
@@ -15540,7 +15589,7 @@ msgstr "ลืมรหัสผ่าน"
 
 #. Authentication link label that opens password recovery.
 #: src/features/auth/components/pages/ForgotPasswordPage.tsx:71
-#: src/features/auth/flow/AuthLoginLayout.tsx:63
+#: src/features/auth/flow/AuthLoginLayout.tsx:70
 msgid "Forgot your password?"
 msgstr "ลืมรหัสผ่านใช่ไหม"
 
@@ -15571,7 +15620,7 @@ msgstr "ส่งต่อสื่อ"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Title of the forward message modal.
 #: src/features/input/state/input_keybind/shared.ts:25
-#: src/features/messaging/components/modals/ForwardModal.tsx:86
+#: src/features/messaging/components/modals/ForwardModal.tsx:83
 msgid "Forward message"
 msgstr "ส่งต่อข้อความ"
 
@@ -15965,11 +16014,11 @@ msgstr "สร้างลิงก์ที่แชร์ได้ หรื�
 msgid "Generate invite link"
 msgstr "สร้างลิงก์เชิญ"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:109
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:117
 msgid "Generate new code"
 msgstr "สร้างรหัสใหม่"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:70
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:78
 msgid "Generating code…"
 msgstr "กำลังสร้างรหัส…"
 
@@ -16044,6 +16093,11 @@ msgstr "รับแอปเดสก์ท็อป {productName} เพื่
 #: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:20
 msgid "Get the desktop app"
 msgstr "รับแอปเดสก์ท็อป"
+
+#. Title of the modal that explains how to install the app from its new domain. productName is the app name.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:18
+msgid "Get the new {productName} app"
+msgstr "รับแอป {productName} ใหม่"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Type label for GIF media.
@@ -18037,6 +18091,16 @@ msgstr "แทรกอิโมจิ"
 msgid "Install {productName} for the full source picker and smoother screen-sharing controls."
 msgstr "ติดตั้ง {productName} เพื่อใช้ตัวเลือกแหล่งที่มาแบบเต็มและควบคุมการแชร์หน้าจอได้ราบรื่นยิ่งขึ้น"
 
+#. Second install step on other devices. Refers to the install option in the browser menu.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:51
+msgid "Install it from your browser menu."
+msgstr "ติดตั้งจากเมนูเบราว์เซอร์ของคุณ"
+
+#. Button on the domain moved banner that installs the app from the new domain.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:48
+msgid "Install the new app"
+msgstr "ติดตั้งแอปใหม่"
+
 #. Label for the installed desktop version in the Linux update modal.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:136
 msgid "Installed"
@@ -18123,7 +18187,7 @@ msgid "Invalid authorization request"
 msgstr "คำขออนุญาตไม่ถูกต้อง"
 
 #. OAuth authorize page error shown when the permissions query parameter is not a valid integer.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:62
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:63
 msgid "Invalid bot permissions."
 msgstr "สิทธิ์ของบอทไม่ถูกต้อง"
 
@@ -18164,7 +18228,7 @@ msgid "Invalid or expired code. Try again."
 msgstr "รหัสไม่ถูกต้องหรือหมดอายุแล้ว ลองอีกครั้ง"
 
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:78
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:79
 msgid "Invalid redirect_uri"
 msgstr "redirect_uri ไม่ถูกต้อง"
 
@@ -19331,6 +19395,11 @@ msgstr "ลิงก์"
 #: src/features/channel/utils/ChannelUtils.tsx:39
 msgid "Link (mature)"
 msgstr "ลิงก์ (เนื้อหาสำหรับผู้ใหญ่)"
+
+#. Button on the domain moved banner that opens the code entry used to sign in a new app. Must match the translation used in the "Sign in with your old {productName} app" instructions.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:60
+msgid "Link a new device"
+msgstr "เชื่อมโยงอุปกรณ์ใหม่"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:96
@@ -20697,7 +20766,7 @@ msgstr "การตั้งค่าการแสดงข้อความ
 msgid "Message editing"
 msgstr "แก้ไขข้อความ"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:371
+#: src/features/messaging/components/modals/ForwardModal.tsx:309
 msgid "Message forwarded"
 msgstr "ส่งต่อข้อความแล้ว"
 
@@ -20746,7 +20815,7 @@ msgstr "ปุ่มป้อนข้อความ"
 
 #. Error modal title in the forward modal when the optional comment exceeds the message length limit.
 #. Form validation error indicating the message exceeds the allowed length.
-#: src/features/messaging/components/modals/ForwardModal.tsx:57
+#: src/features/messaging/components/modals/ForwardModal.tsx:54
 #: src/features/ui/character_counter/CharacterCountMessages.ts:16
 msgid "Message is too long"
 msgstr "ข้อความยาวเกินไป"
@@ -21045,7 +21114,7 @@ msgid "Miscellaneous"
 msgstr "เบ็ดเตล็ด"
 
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:36
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:37
 msgid "Missing client_id"
 msgstr "ไม่มี client_id"
 
@@ -21862,12 +21931,12 @@ msgid "Name must be at least 2 characters"
 msgstr "ชื่อต้องมีอย่างน้อย 2 ตัวอักษร"
 
 #. Short label in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:19
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:23
 msgid "Name passkey"
 msgstr "ตั้งชื่อพาสคีย์"
 
 #. Accessible form label in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:15
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:19
 msgid "Name passkey form"
 msgstr "แบบฟอร์มตั้งชื่อพาสคีย์"
 
@@ -22381,7 +22450,7 @@ msgstr "ไม่มีการเปลี่ยนแปลงที่ต้
 msgid "No channels available"
 msgstr "ไม่มีช่องให้เลือก"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:445
+#: src/features/messaging/components/modals/ForwardModal.tsx:383
 #: src/features/search/components/search/ChannelFilterSheet.tsx:120
 msgid "No channels found"
 msgstr "ไม่พบช่อง"
@@ -22824,7 +22893,7 @@ msgstr "ไม่พบผู้ใช้"
 msgid "No verification is required."
 msgstr "ไม่ต้องยืนยันตัวตน"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:189
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:193
 msgid "No verification methods available"
 msgstr "ไม่มีวิธีการยืนยันตัวตน"
 
@@ -23417,6 +23486,16 @@ msgstr "เปิด {contextName}"
 msgid "Open {displayName}"
 msgstr "เปิด {displayName}"
 
+#. First install step on Apple devices. host is the new domain, for example fluxer.com. Safari is the browser.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:32
+msgid "Open {host} in Safari."
+msgstr "เปิด {host} ใน Safari"
+
+#. First install step on other devices. host is the new domain, for example fluxer.com.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:37
+msgid "Open {host} in your browser."
+msgstr "เปิด {host} ในเบราว์เซอร์ของคุณ"
+
 #. Accessible label for an inline settings deep-link pill. labelText is the resolved settings tab and section breadcrumb.
 #: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:109
 msgid "Open {labelText} in settings"
@@ -23436,6 +23515,11 @@ msgstr "เปิด {macosSystemSettingsName} → {macosPrivacyAndSecuritySetti
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:27
 msgid "Open {productName}"
 msgstr "เปิด {productName}"
+
+#. Button on the domain moved banner that opens the new domain in the browser. productName is the app name.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:52
+msgid "Open {productName} in your browser"
+msgstr "เปิด {productName} ในเบราว์เซอร์ของคุณ"
 
 #. Button or menu action label in the channel and chat gif picker grid item. Keep it concise. Preserve {title}; it is inserted by code.
 #: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:37
@@ -23510,7 +23594,7 @@ msgstr "เปิดตัวเลือกแบนเนอร์"
 msgid "Open bookmarks"
 msgstr "เปิดบุ๊กมาร์ก"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:153
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:178
 msgid "Open browser"
 msgstr "เปิดเบราว์เซอร์"
 
@@ -23614,7 +23698,7 @@ msgid "Open emoji in browser"
 msgstr "เปิดอิโมจิในเบราว์เซอร์"
 
 #. Accessible label for the emoji picker trigger button in the forward modal comment field.
-#: src/features/messaging/components/modals/ForwardModal.tsx:103
+#: src/features/messaging/components/modals/ForwardModal.tsx:100
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:27
 msgid "Open emoji picker"
 msgstr "เปิดตัวเลือกอิโมจิ"
@@ -23809,6 +23893,16 @@ msgstr "เปิดลิงก์ด้านล่างในเบราว
 msgid "Open the menu and choose an option."
 msgstr "เปิดเมนูแล้วเลือกตัวเลือก"
 
+#. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
+msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
+msgstr "เปิดแอปใหม่แล้วเลือก \"ลงชื่อเข้าใช้ด้วยแอป {productName} เดิมของคุณ\" จากนั้นเลือก \"เชื่อมโยงอุปกรณ์ใหม่ที่นี่\" แล้วป้อนรหัสที่แสดง"
+
+#. Third install step in a desktop browser that already moved the account to the new domain.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
+msgid "Open the new app. You are already signed in."
+msgstr "เปิดแอปใหม่ คุณลงชื่อเข้าใช้แล้ว"
+
 #. Tip explaining the keyboard shortcut for opening the shortcuts list.
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx:42
 msgid "Open the shortcuts list for quick actions."
@@ -23859,7 +23953,7 @@ msgstr "เปิดการโทรด้วยเสียง"
 msgid "Open voice & video settings"
 msgstr "เปิดการตั้งค่าเสียงและวิดีโอ"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:113
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:131
 msgid "Open your browser, sign in, then enter the code below to link your account."
 msgstr "เปิดเบราว์เซอร์ของคุณ ลงชื่อเข้าใช้ แล้วป้อนรหัสข้างล่างเพื่อเชื่อมโยงบัญชีของคุณ"
 
@@ -23867,6 +23961,10 @@ msgstr "เปิดเบราว์เซอร์ของคุณ ลง�
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:450
 msgid "Open your messages"
 msgstr "เปิดข้อความของคุณ"
+
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:129
+msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
+msgstr "เปิดแอป {PRODUCT_NAME} เดิมของคุณ แล้วเลือก \"เชื่อมโยงอุปกรณ์ใหม่\" จากนั้นป้อนรหัสโค้ดด้านล่าง"
 
 #: src/features/user/components/modals/PhoneAddModal.tsx:327
 msgid "Open your phone's messaging app and create a new text message."
@@ -24222,7 +24320,7 @@ msgid "Passkey"
 msgstr "พาสคีย์"
 
 #. Short label in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:23
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:27
 msgid "Passkey name"
 msgstr "ชื่อพาสคีย์"
 
@@ -28138,7 +28236,7 @@ msgstr "ความอิ่มตัวของสี"
 #. Button or menu action label in the rename channel modal. Keep it concise.
 #. Save button in the community-folder settings modal footer.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:113
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:87
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:93
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:366
 #: src/features/channel/components/modals/EditGroupModal.tsx:322
 #: src/features/channel/components/modals/RenameChannelModal.tsx:28
@@ -28545,7 +28643,7 @@ msgstr "ตัวอย่างขณะเลื่อนวิดีโอ"
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:854
 #: src/features/channel/components/channel_header/shared.ts:47
 #: src/features/channel/components/shared/PickerSearchInput.tsx:21
-#: src/features/messaging/components/modals/ForwardModal.tsx:90
+#: src/features/messaging/components/modals/ForwardModal.tsx:87
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx:43
 #: src/features/search/utils/QuickSwitcherModalUtils.tsx:45
 #: src/features/theme_studio/ui/StudioSearchInput.tsx:16
@@ -29074,8 +29172,8 @@ msgid "Select text"
 msgstr "เลือกข้อความ"
 
 #: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:69
-msgid "Select the account you want to sign in with on the desktop app."
-msgstr "เลือกบัญชีที่ต้องการลงชื่อเข้าใช้บนแอปเดสก์ท็อป"
+msgid "Select the account you want to sign in with on your new device."
+msgstr "เลือกบัญชีที่คุณต้องการลงชื่อเข้าใช้บนอุปกรณ์ใหม่ของคุณ"
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:120
@@ -29182,7 +29280,7 @@ msgid "Send"
 msgstr "ส่ง"
 
 #. Primary button label in the forward message modal. selectedCount is the number of selected destinations; selectionLimit is the maximum allowed.
-#: src/features/messaging/components/modals/ForwardModal.tsx:107
+#: src/features/messaging/components/modals/ForwardModal.tsx:104
 msgid "Send ({selectedCount}/{selectionLimit})"
 msgstr "ส่ง ({selectedCount}/{selectionLimit})"
 
@@ -29487,7 +29585,7 @@ msgid "Session"
 msgstr "เซสชัน"
 
 #. Login layout banner shown when the session for a specific account has expired. Account identifier is interpolated.
-#: src/features/auth/flow/AuthLoginLayout.tsx:46
+#: src/features/auth/flow/AuthLoginLayout.tsx:53
 msgid "Session expired for {identifier}. Sign in again."
 msgstr "เซสชันของ {identifier} หมดอายุแล้ว โปรดลงชื่อเข้าใช้อีกครั้ง"
 
@@ -29970,7 +30068,7 @@ msgid "Shortcuts are paused while recording."
 msgstr "ปุ่มลัดจะหยุดทำงานชั่วคราวระหว่างการบันทึก"
 
 #. Body of the error modal shown when the forward modal comment exceeds the message length limit.
-#: src/features/messaging/components/modals/ForwardModal.tsx:61
+#: src/features/messaging/components/modals/ForwardModal.tsx:58
 msgid "Shorten the message and try again."
 msgstr "ย่อข้อความแล้วลองอีกครั้ง"
 
@@ -30216,6 +30314,11 @@ msgstr "แสดงสูงสุด 3 (ป้าย +5)"
 #: src/features/user/components/modals/tabs/component_gallery_tab/IndicatorsTab.tsx:495
 msgid "Show max 5 (+5 badge)"
 msgstr "แสดงสูงสุด 5 (ป้าย +5)"
+
+#. Button on the domain moved banner that opens the install steps.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:56
+msgid "Show me how"
+msgstr "แสดงวิธีทำ"
 
 #. Plus menu submenu toggle that shows the saved media (memes) button next to the textarea.
 #. Short label for an advanced message input preference.
@@ -30488,13 +30591,18 @@ msgstr "ลงชื่อเข้าใช้เพื่อรับของ
 
 #. Passkey sign-in action that opens the browser flow from the desktop app.
 #: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:64
-#: src/features/auth/flow/AuthLoginLayout.tsx:67
+#: src/features/auth/flow/AuthLoginLayout.tsx:79
 msgid "Sign in via browser"
 msgstr "ลงชื่อเข้าใช้ด้วยเบราว์เซอร์"
 
 #: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:63
 msgid "Sign in with a passkey"
 msgstr "ลงชื่อเข้าใช้ด้วยพาสคีย์"
+
+#. Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:27
+msgid "Sign in with your old {productName} app"
+msgstr "ลงชื่อเข้าใช้ด้วยแอป {productName} เดิมของคุณ"
 
 #. Description shown when sign-in is restricted to the configured SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx:17
@@ -30562,7 +30670,7 @@ msgid "Sign-in details"
 msgstr "รายละเอียดการลงชื่อเข้าใช้"
 
 #. Accessible label for the stepped sign-in panel.
-#: src/features/auth/flow/AuthLoginLayout.tsx:55
+#: src/features/auth/flow/AuthLoginLayout.tsx:62
 msgid "Sign-in flow"
 msgstr "ขั้นตอนการลงชื่อเข้าใช้"
 
@@ -31030,7 +31138,7 @@ msgstr "เพิ่มผู้ใช้บางคนไม่ได้"
 #. Generic error modal title for an unexpected failure.
 #. Generic error toast title.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:248
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:82
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:90
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:274
 #: src/lib/forms/index.tsx:18
 msgid "Something went wrong"
@@ -32688,6 +32796,11 @@ msgstr "พูดในช่องเสียงนี้ หากไม่�
 msgid "Talk in voice channels. Without this permission, members stay muted until someone with the \"Mute members\" permission unmutes them."
 msgstr "พูดในช่องเสียง หากไม่มีสิทธิ์นี้ สมาชิกจะถูกปิดไมโครโฟนจนกว่าจะมีคนที่มีสิทธิ์ \"ปิดไมโครโฟนของสมาชิก\" เปิดไมโครโฟนให้"
 
+#. Second install step on iPhone and iPad. Share and Add to Home Screen are the names of the Safari menu items, use the names iOS shows in this language.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:41
+msgid "Tap Share, then Add to Home Screen."
+msgstr "แตะแชร์ แล้วแตะ เพิ่มไปยังหน้าจอโฮม"
+
 #. Label in the note edit sheet.
 #: src/features/user/components/modals/NoteEditSheet.tsx:21
 msgid "Tap to add a note"
@@ -33207,12 +33320,12 @@ msgid "The phone check is set aside. One email step is left."
 msgstr "การยืนยันทางโทรศัพท์ถูกพักไว้ เหลือขั้นตอนทางอีเมลอีกหนึ่งขั้นตอน"
 
 #. OAuth authorize page error shown when the redirect_uri is not registered for this OAuth app.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:58
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:59
 msgid "The provided redirect_uri is not registered for this application."
 msgstr "redirect_uri ที่ระบุไม่ได้ลงทะเบียนไว้สำหรับแอปพลิเคชันนี้"
 
 #. Body text in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:49
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:50
 msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "redirect_uri ที่ระบุต้องใช้ HTTP หรือ HTTPS"
 
@@ -33445,7 +33558,7 @@ msgid "This animation is too long or too large to crop. Try a shorter or smaller
 msgstr "ภาพเคลื่อนไหวนี้ยาวหรือใหญ่เกินไปที่จะครอบตัดได้ ลองใช้ไฟล์ที่สั้นกว่าหรือเล็กกว่า"
 
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:82
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:83
 msgid "This application"
 msgstr "แอปนี้"
 
@@ -33455,7 +33568,7 @@ msgid "This attachment has expired"
 msgstr "ไฟล์แนบนี้หมดอายุแล้ว"
 
 #. OAuth authorize page error shown when a private bot cannot be added by non-owners.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:70
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:71
 msgid "This bot is not public and cannot be added by other users."
 msgstr "บอทนี้ไม่เป็นสาธารณะและผู้ใช้รายอื่นไม่สามารถเพิ่มได้"
 
@@ -33757,7 +33870,7 @@ msgstr "กลุ่มนี้มีสมาชิกมากเกินไ
 msgid "This group is full. Remove someone before adding more people."
 msgstr "กลุ่มนี้เต็มแล้ว นำสมาชิกบางคนออกก่อนจึงจะเพิ่มคนอื่นได้"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:105
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:113
 msgid "This handoff code has expired. Generate a new one to continue."
 msgstr "รหัสส่งต่อนี้หมดอายุแล้ว สร้างรหัสใหม่เพื่อดำเนินการต่อ"
 
@@ -35480,7 +35593,7 @@ msgid "Unknown"
 msgstr "ไม่ทราบ"
 
 #. OAuth authorize page error shown when the application, session, or request is invalid.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:45
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:46
 msgid "Unknown application, expired session, or invalid authorization request."
 msgstr "แอปพลิเคชันที่ไม่รู้จัก เซสชันหมดอายุ หรือคำขอการอนุญาตไม่ถูกต้อง"
 
@@ -36862,27 +36975,27 @@ msgid "Uses:"
 msgstr "จำนวนครั้งที่ใช้:"
 
 #. Developer nagbar status: banner follows real account state.
-#: src/features/devtools/components/NagbarControls.ts:101
+#: src/features/devtools/components/NagbarControls.ts:106
 msgid "Using actual account state"
 msgstr "กำลังใช้สถานะบัญชีจริง"
 
 #. Developer nagbar status: banner follows real gift inventory state.
-#: src/features/devtools/components/NagbarControls.ts:121
+#: src/features/devtools/components/NagbarControls.ts:126
 msgid "Using actual gift inventory state"
 msgstr "กำลังใช้สถานะคลังของขวัญจริง"
 
 #. Developer nagbar status: banner follows real premium subscription state.
-#: src/features/devtools/components/NagbarControls.ts:117
+#: src/features/devtools/components/NagbarControls.ts:122
 msgid "Using actual premium state"
 msgstr "กำลังใช้สถานะพรีเมียมจริง"
 
 #. Developer nagbar status: banner follows the real app state.
-#: src/features/devtools/components/NagbarControls.ts:125
+#: src/features/devtools/components/NagbarControls.ts:130
 msgid "Using actual state"
 msgstr "กำลังใช้สถานะจริง"
 
 #. Developer nagbar status: banner follows real email verification state.
-#: src/features/devtools/components/NagbarControls.ts:105
+#: src/features/devtools/components/NagbarControls.ts:110
 msgid "Using actual verification state"
 msgstr "กำลังใช้สถานะการยืนยันจริง"
 
@@ -37947,17 +38060,17 @@ msgstr "รอสักครู่"
 msgid "Waiting for connection..."
 msgstr "กำลังรอการเชื่อมต่อ..."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:232
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:236
 msgid "Waiting for passkey…"
 msgstr "กำลังรอพาสคีย์…"
 
 #. Inline notice in the forward modal when slowmode is active in the selected target channel. forwardChannelDisplayName is the channel name.
-#: src/features/messaging/components/modals/ForwardModal.tsx:77
+#: src/features/messaging/components/modals/ForwardModal.tsx:74
 msgid "Waiting for slowmode in {forwardChannelDisplayName} to expire."
 msgstr "กำลังรอให้โหมดจำกัดเวลาใน {forwardChannelDisplayName} สิ้นสุด"
 
 #. Inline notice in the forward modal when slowmode is active in one or more selected target channels.
-#: src/features/messaging/components/modals/ForwardModal.tsx:82
+#: src/features/messaging/components/modals/ForwardModal.tsx:79
 msgid "Waiting for slowmode in one or more selected channels to expire."
 msgstr "กำลังรอให้โหมดจำกัดเวลาในช่องที่เลือกอย่างน้อยหนึ่งช่องสิ้นสุด"
 
@@ -38156,7 +38269,7 @@ msgstr "เราได้ปรับขนาดและบีบอัดส
 msgid "We sent a code to {email}."
 msgstr "เราได้ส่งรหัสไปยัง {email} แล้ว"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:128
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:152
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "เราจะกรอก {prefillEmail} ให้โดยอัตโนมัติเมื่อเปิดหน้าลงชื่อเข้าใช้ในเบราว์เซอร์"
 
@@ -38356,7 +38469,7 @@ msgid "Website previews"
 msgstr "แสดงตัวอย่างเว็บไซต์"
 
 #. Heading on the standard sign-in form.
-#: src/features/auth/flow/AuthLoginLayout.tsx:59
+#: src/features/auth/flow/AuthLoginLayout.tsx:66
 msgid "Welcome back"
 msgstr "ยินดีต้อนรับกลับมา"
 
@@ -39699,7 +39812,7 @@ msgid "Your {premiumProductName} subscription has expired. You have lost all {pr
 msgstr "การสมัครสมาชิก {premiumProductName} ของคุณหมดอายุแล้ว คุณได้สูญเสียสิทธิประโยชน์ทั้งหมดของ {premiumProductName} ไปแล้ว เปิดใช้งานการสมัครสมาชิกของคุณอีกครั้งเพื่อเข้าถึงสิทธิประโยชน์เหล่านั้น"
 
 #. OAuth authorize page error shown when the session expired mid-authorization. Keep plain. Preserve {productName}; it is inserted by code.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:40
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:41
 msgid "Your {productName} session expired. Sign in again to continue authorizing this application."
 msgstr "เซสชัน {productName} ของคุณหมดอายุแล้ว โปรดลงชื่อเข้าใช้อีกครั้งเพื่อดำเนินการให้สิทธิ์แอปพลิเคชันนี้ต่อ"
 
@@ -39734,7 +39847,7 @@ msgstr "บัญชีของคุณใหม่เกินไปที่
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "คำขอบัญชีของคุณกำลังรอการอนุมัติ คุณจะลงชื่อเข้าใช้ได้หลังจากผู้ดูแลระบบอนุมัติแล้ว"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:195
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:199
 msgid "Your account requires multi-factor authentication, but no supported methods are set up on this device. Sign in on a device with your authenticator app or security key, or contact support."
 msgstr "บัญชีของคุณต้องมีการยืนยันตัวตนแบบหลายปัจจัย แต่ยังไม่ได้ตั้งค่าวิธีการที่รองรับบนอุปกรณ์นี้ โปรดลงชื่อเข้าใช้บนอุปกรณ์ที่มีแอปยืนยันตัวตนหรือคีย์ความปลอดภัยของคุณ หรือติดต่อฝ่ายสนับสนุน"
 
@@ -39757,6 +39870,11 @@ msgstr "ดำเนินการไม่สำเร็จเนื่อง
 msgid "Your application is pending review. You can still update your listing details or withdraw the application."
 msgstr "ใบสมัครของคุณอยู่ระหว่างการตรวจสอบ คุณยังสามารถอัปเดตรายละเอียดประกาศหรือถอนใบสมัครได้"
 
+#. Error shown when a passkey prompt fails because the browser cannot use the passkey on this web address. Keep plain.
+#: src/features/auth/utils/WebAuthnUtils.ts:18
+msgid "Your browser does not support passkeys on this domain. Update your browser, or sign in with your password and two-factor code."
+msgstr "เบราว์เซอร์ของคุณไม่รองรับรหัสผ่านบนโดเมนนี้ โปรดอัปเดตเบราว์เซอร์ของคุณ หรือลงชื่อเข้าใช้ด้วยรหัสผ่านและรหัสยืนยันตัวตนสองชั้น"
+
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12
 msgid "Your browser requires user interaction before audio can be played. Click the button below to enable voice chat."
@@ -39775,11 +39893,11 @@ msgstr "บัตรของคุณใช้ได้ กำลังนำ�
 msgid "Your carrier says this number isn't in service. Check it and try again, or contact support if it's correct."
 msgstr "ผู้ให้บริการของคุณแจ้งว่าหมายเลขนี้ไม่ได้เปิดใช้งาน โปรดตรวจสอบและลองอีกครั้ง หรือติดต่อฝ่ายสนับสนุนหากหมายเลขถูกต้อง"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:128
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:136
 msgid "Your code"
 msgstr "รหัสของคุณ"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:121
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:129
 msgid "Your code is ready"
 msgstr "รหัสของคุณพร้อมแล้ว"
 

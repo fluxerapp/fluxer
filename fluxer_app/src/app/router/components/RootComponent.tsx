@@ -214,7 +214,7 @@ export const RootComponent: React.FC<{children?: React.ReactNode}> = observer(({
 		) {
 			return;
 		}
-		if (location.pathname === Routes.HOME) {
+		if (location.pathname === Routes.HOME || location.pathname === Routes.APP) {
 			return;
 		}
 		hasStartedRestoreRef.current = true;

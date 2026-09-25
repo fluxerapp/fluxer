@@ -1,7 +1,7 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Authentication resource
-description: Registration, login, credentials, sessions, recovery, SSO, IP authorisation, and desktop handoff.
+description: Registration, login, credentials, sessions, recovery, SSO, IP authorisation, desktop handoff, and origin handoff.
 ---
 
 import RouteHeader from '@/components/RouteHeader.astro';
@@ -16,7 +16,7 @@ The Authentication resource covers signing up, signing in, recovering an account
 A client MUST treat every session token, one-use token, ticket, SSO state, and handoff code as confidential. It MUST NOT parse one, expose it to untrusted code, or write it to logs, analytics, or a URL the operation did not assign.
 :::
 
-Most operations need no `Authorization` credential, because the request has a one-use token, MFA ticket, WebAuthn assertion, or account credential of its own. [List authentication sessions](#list-authentication-sessions), [terminate authentication sessions](#terminate-authentication-sessions), [resend email verification](#resend-email-verification), [log out](#log-out), and [complete desktop handoff](#complete-desktop-handoff) are the only operations on this page that read an `Authorization` credential. Complete desktop handoff reads the header only when its body omits the `token` field. The first three require an ordinary user session, and each rejects a bot token and an OAuth2 bearer token with 403 `ACCESS_DENIED`. All three still admit a session whose account is flagged for suspicious activity.
+Most operations need no `Authorization` credential, because the request has a one-use token, MFA ticket, WebAuthn assertion, or account credential of its own. [List authentication sessions](#list-authentication-sessions), [terminate authentication sessions](#terminate-authentication-sessions), [resend email verification](#resend-email-verification), [log out](#log-out), [complete desktop handoff](#complete-desktop-handoff), and [create origin handoff](#create-origin-handoff) are the only operations on this page that read an `Authorization` credential. Complete desktop handoff reads the header only when its body omits the `token` field. The first three and create origin handoff require an ordinary user session, and each rejects a bot token and an OAuth2 bearer token with 403 `ACCESS_DENIED`. All four still admit a session whose account is flagged for suspicious activity.
 
 Every route has a route bucket and is also subject to the [global HTTP limit](/topics/rate-limits/). A route bucket is keyed by the authenticated user when the request has a resolvable credential and by the client IP address otherwise. Bucket or global denial returns 429 `RATE_LIMITED`.
 
@@ -300,6 +300,26 @@ The state of one desktop handoff as observed by the device that initiated it.
 <sup>1</sup> An unknown code and an expired code both report `expired`
 
 <sup>2</sup> The fields are present together only when the status is `completed`
+
+## Origin handoff object
+
+The identifier of one stored origin handoff.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| handoff_id | string | The single-use identifier the receiving origin redeems, 32 random bytes as 43 base64url characters |
+
+## Origin handoff payload object
+
+The client state released by one redeemed origin handoff.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| payload | string | The base64url string stored by [create origin handoff](#create-origin-handoff), returned unchanged |
 
 ## Get SSO status
 
@@ -1491,3 +1511,82 @@ Cancelling prevents any further token retrieval but does not revoke a session al
 ### Rate limit
 
 10 requests per minute, on the `auth:handoff:cancel` bucket.
+
+## Create origin handoff
+
+<RouteHeader method="POST" path="/v1/auth/origin-handoff" />
+
+Stores encrypted client state so that another web origin of the same instance can take it over once. The official web client uses it to move a signed-in browser from its legacy origin to a new one. Requires a user session token. Returns an [origin handoff](#origin-handoff-object) object.
+
+The sending origin encrypts the state and keeps the key. Fluxer never receives the key and never reads the payload. The receiving origin holds a nonce, and the sender passes only its digest here.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| nonce_hash | string | The SHA-256 digest of the receiving origin's nonce, as 64 lowercase hex characters |
+| payload | string | The encrypted client state as base64url, 1 to 8388608 characters |
+
+A bot token and an OAuth2 bearer token both return 403 `ACCESS_DENIED`. A session whose account is flagged for suspicious activity is admitted.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [origin handoff](#origin-handoff-object) object | The state was stored |
+| 400 | [error response](/http-api/#error-response) | The body is invalid, returning `INVALID_FORM_BODY` |
+| 400 | [error response](/http-api/#error-response) | The body is larger than 8 MiB plus 1 KiB and the request returns `FILE_SIZE_TOO_LARGE` |
+| 401 | [error response](/http-api/#error-response) | The user session credential is missing or invalid |
+| 403 | [error response](/http-api/#error-response) | The credential is a bot token or an OAuth2 bearer token |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+Fluxer keeps the payload, the nonce digest, and the account ID for two minutes under a key derived from the identifier. Creating a handoff creates no session and changes no account state. No Gateway Dispatch is emitted.
+
+### Rate limit
+
+3 requests per 10 minutes, on the `auth:origin_handoff:create` bucket.
+
+## Redeem origin handoff
+
+<RouteHeader method="POST" path="/v1/auth/origin-handoff/redeem" unauthenticated />
+
+Releases the client state stored by [create origin handoff](#create-origin-handoff) and deletes it in the same step. Authentication is not required. Returns an [origin handoff payload](#origin-handoff-payload-object) object.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| handoff_id | string | The identifier returned by create origin handoff, 43 base64url characters |
+| nonce | string | The nonce whose digest the sender supplied, as base64url, 16 to 256 characters |
+
+An unknown, expired, or already redeemed identifier returns 404 `UNKNOWN_ORIGIN_HANDOFF`. A nonce whose SHA-256 digest does not match returns 400 `INVALID_ORIGIN_HANDOFF_NONCE`.
+
+:::caution[Every attempt consumes the handoff]
+Fluxer deletes the stored state before it compares the nonce. A wrong nonce leaves nothing to retry, so the sender MUST create a new handoff.
+:::
+
+On an instance that is not self-hosted, the request MUST send an `Origin` header naming one of the instance's web app origins. Any other `Origin`, or none, returns 403 `INVALID_API_ORIGIN`. A self-hosted instance skips this check.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [origin handoff payload](#origin-handoff-payload-object) object | The state was released and deleted |
+| 400 | [error response](/http-api/#error-response) | The body is invalid, or the nonce does not match |
+| 403 | [error response](/http-api/#error-response) | The `Origin` is not a web app origin of the instance, returning `INVALID_API_ORIGIN` |
+| 404 | [error response](/http-api/#error-response) | No stored handoff has this identifier, returning `UNKNOWN_ORIGIN_HANDOFF` |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+A redemption that finds the handoff deletes it, whether or not the nonce matches. Redemption creates no session. The payload is all the receiving origin gets. No Gateway Dispatch is emitted.
+
+### Rate limit
+
+10 requests per minute, on the `auth:origin_handoff:redeem` bucket.

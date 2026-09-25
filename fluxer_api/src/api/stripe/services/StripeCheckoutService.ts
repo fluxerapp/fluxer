@@ -39,7 +39,6 @@ import type Stripe from 'stripe';
 
 const PRODUCT_NAME = 'Fluxer';
 const PREMIUM_TIER_NAME = 'Plutonium';
-const TERMS_URL = 'https://fluxer.app/terms';
 export const EU_WITHDRAWAL_WAIVER_TEXT_VERSION = '2026-04-23';
 
 type CheckoutSessionCreateParams = Stripe.Checkout.SessionCreateParams;
@@ -226,7 +225,7 @@ export class StripeCheckoutService {
 					message: getContentMessage('billing.eu_withdrawal_waiver_checkout', user.locale, {
 						product_name: PRODUCT_NAME,
 						premium_tier_name: PREMIUM_TIER_NAME,
-						terms_url: TERMS_URL,
+						terms_url: `${Config.endpoints.marketing}/terms`,
 					}),
 				},
 			},

@@ -8,6 +8,8 @@ const OFFICIAL_GIFT_URL_BASES = Object.freeze([
 	'https://canary.fluxer.app/gift',
 	'https://web.fluxer.app/gift',
 	'https://web.canary.fluxer.app/gift',
+	'https://fluxer.com/gift',
+	'https://canary.fluxer.com/gift',
 	'https://fluxer.gift',
 	'https://fluxer.gift/gift',
 ]);

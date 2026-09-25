@@ -32,7 +32,7 @@ The [global HTTP limit](/topics/rate-limits/) applies to every management route.
 
 ## Origin refusal
 
-Fluxer refuses a call from the official web client on [Execute webhook](#execute-webhook), [Get webhook message](#get-webhook-message), [Edit webhook message](#edit-webhook-message), and [Delete webhook message](#delete-webhook-message). A request whose `Origin` header is exactly `https://web.fluxer.app` or `https://web.canary.fluxer.app` returns 403 `INVALID_API_ORIGIN`.
+Fluxer refuses a call from a first-party web client on [Execute webhook](#execute-webhook), [Get webhook message](#get-webhook-message), [Edit webhook message](#edit-webhook-message), and [Delete webhook message](#delete-webhook-message). A request whose `Origin` header is exactly `https://web.fluxer.app`, `https://web.canary.fluxer.app`, or one of the instance's own web app origins returns 403 `INVALID_API_ORIGIN`. Those are the origin of `FLUXER_APP_ENDPOINT` and every `FLUXER_APP_ORIGIN_ALIASES` entry.
 
 A request that sends no `Origin`, or any other `Origin` value, passes the check. It runs after the route rate limit and before path validation.
 
@@ -1135,7 +1135,7 @@ The operation removes the webhook, frees its guild and channel webhook slot, and
 
 Creates a webhook-authored [message](/http-api/messages/#message-object) in the webhook's channel. When `wait` is true the created message is returned, and otherwise the operation returns 204 with an empty body.
 
-The route refuses a call from the official web client. See [origin refusal](#origin-refusal). A successful execution emits a [Message Create](/gateway/events/#message-create) Gateway Dispatch whether or not wait is true.
+The route refuses a call from a first-party web client. See [origin refusal](#origin-refusal). A successful execution emits a [Message Create](/gateway/events/#message-create) Gateway Dispatch whether or not wait is true.
 
 ### Path parameters
 
@@ -1187,7 +1187,7 @@ An attachment metadata entry whose `id` matches a supplied file index supplies t
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | The resolved payload has no content, embed, or attachment |
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | The content exceeds the effective maximum length |
 | 400<sup>1</sup> | [error response](/http-api/#error-response) | The embed or attachment count exceeds its effective ceiling |
-| 403 | [error response](/http-api/#error-response) | Request has an official web client `Origin`, returning `INVALID_API_ORIGIN` |
+| 403 | [error response](/http-api/#error-response) | Request has a first-party web client `Origin`, returning `INVALID_API_ORIGIN` |
 | 403 | [error response](/http-api/#error-response) | The resolved content or embed text is blocked, returning `CONTENT_BLOCKED` |
 | 404 | [error response](/http-api/#error-response) | Webhook and token pair does not exist, returning `UNKNOWN_WEBHOOK` |
 | 404 | [error response](/http-api/#error-response) | The target channel is missing or is not a guild text or voice channel, returning `UNKNOWN_CHANNEL` |
@@ -1223,7 +1223,7 @@ The operation updates channel state and search results and emits [Message Create
 
 Returns a [message](/http-api/messages/#message-object) that the webhook authored.
 
-The route refuses a call from the official web client. See [origin refusal](#origin-refusal).
+The route refuses a call from a first-party web client. See [origin refusal](#origin-refusal).
 
 ### Path parameters
 
@@ -1240,7 +1240,7 @@ The route refuses a call from the official web client. See [origin refusal](#ori
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | [message](/http-api/messages/#message-object) object | Webhook message was returned |
-| 403 | [error response](/http-api/#error-response) | Request has an official web client `Origin`, returning `INVALID_API_ORIGIN` |
+| 403 | [error response](/http-api/#error-response) | Request has a first-party web client `Origin`, returning `INVALID_API_ORIGIN` |
 | 403 | [error response](/http-api/#error-response) | The message was authored by another webhook, a user, or a bot, returning `MISSING_PERMISSIONS` |
 | 404 | [error response](/http-api/#error-response) | Webhook and token pair does not exist, returning `UNKNOWN_WEBHOOK` |
 | 404 | [error response](/http-api/#error-response) | The webhook has no channel target, returning `UNKNOWN_CHANNEL` |
@@ -1256,7 +1256,7 @@ The route refuses a call from the official web client. See [origin refusal](#ori
 
 Updates a message that the webhook authored and returns the modified [message](/http-api/messages/#message-object).
 
-The route refuses a call from the official web client. See [origin refusal](#origin-refusal). A successful edit emits a [Message Update](/gateway/events/#message-update).
+The route refuses a call from a first-party web client. See [origin refusal](#origin-refusal). A successful edit emits a [Message Update](/gateway/events/#message-update).
 
 ### Path parameters
 
@@ -1284,7 +1284,7 @@ Any other type returns 400 `CANNOT_MODIFY_SYSTEM_WEBHOOK`, and a forward, which 
 | 400 | [error response](/http-api/#error-response) | The content or embed count exceeds its effective ceiling |
 | 400 | [error response](/http-api/#error-response) | The target message is not an editable type |
 | 400 | [error response](/http-api/#error-response) | The webhook's stored channel no longer resolves to a guild channel |
-| 403 | [error response](/http-api/#error-response) | Request has an official web client `Origin`, returning `INVALID_API_ORIGIN` |
+| 403 | [error response](/http-api/#error-response) | Request has a first-party web client `Origin`, returning `INVALID_API_ORIGIN` |
 | 403 | [error response](/http-api/#error-response) | The message was authored by another webhook, a user, or a bot, returning `MISSING_PERMISSIONS` |
 | 403 | [error response](/http-api/#error-response) | The replacement content or embed text is blocked, returning `CONTENT_BLOCKED` |
 | 404 | [error response](/http-api/#error-response) | Webhook and token pair does not exist, returning `UNKNOWN_WEBHOOK` |
@@ -1314,7 +1314,7 @@ The operation replaces the supplied fields, and a content change marks the messa
 
 Deletes a message that the webhook authored and returns 204 with an empty body on success.
 
-The route refuses a call from the official web client. See [origin refusal](#origin-refusal). Deletion emits a [Message Delete](/gateway/events/#message-delete).
+The route refuses a call from a first-party web client. See [origin refusal](#origin-refusal). Deletion emits a [Message Delete](/gateway/events/#message-delete).
 
 ### Path parameters
 
@@ -1331,7 +1331,7 @@ The route refuses a call from the official web client. See [origin refusal](#ori
 | 204 | empty | Webhook message was deleted |
 | 400 | [error response](/http-api/#error-response) | Path parameters are invalid |
 | 400 | [error response](/http-api/#error-response) | The webhook's stored channel no longer resolves to a guild channel, returning `CANNOT_EXECUTE_ON_DM` |
-| 403 | [error response](/http-api/#error-response) | Request has an official web client `Origin`, returning `INVALID_API_ORIGIN` |
+| 403 | [error response](/http-api/#error-response) | Request has a first-party web client `Origin`, returning `INVALID_API_ORIGIN` |
 | 403 | [error response](/http-api/#error-response) | The message was authored by another webhook, a user, or a bot, returning `MISSING_PERMISSIONS` |
 | 404 | [error response](/http-api/#error-response) | Webhook and token pair does not exist, returning `UNKNOWN_WEBHOOK` |
 | 404 | [error response](/http-api/#error-response) | The message does not exist in the webhook's channel, returning `UNKNOWN_MESSAGE` |

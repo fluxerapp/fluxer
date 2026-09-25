@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Endpoints} from '@app/features/app/constants/Endpoints';
+import {detectDomainMigrationInstallKind} from '@app/features/app/domain_migration/DomainMigrationBrowser';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import AppStorage from '@app/features/platform/state/PersistentStorage';
 import {http} from '@app/features/platform/transport/RestTransport';
@@ -244,6 +245,7 @@ export async function registerPushSubscription(): Promise<string | null> {
 				});
 				return null;
 			}
+			const installedApp = detectDomainMigrationInstallKind() !== 'none';
 			const lastEndpoint = readLastEndpoint();
 			const isRotation = lastEndpoint !== null && lastEndpoint !== subscription.endpoint;
 			const response = isRotation
@@ -255,6 +257,7 @@ export async function registerPushSubscription(): Promise<string | null> {
 							endpoint: subscription.endpoint,
 							keys: {p256dh, auth},
 							user_agent: navigator.userAgent,
+							installed_app: installedApp,
 						},
 					})
 				: await http.post<{
@@ -264,6 +267,7 @@ export async function registerPushSubscription(): Promise<string | null> {
 							endpoint: subscription.endpoint,
 							keys: {p256dh, auth},
 							user_agent: navigator.userAgent,
+							installed_app: installedApp,
 						},
 					});
 			writeLastEndpoint(subscription.endpoint);

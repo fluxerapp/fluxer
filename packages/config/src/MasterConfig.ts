@@ -94,6 +94,7 @@ export interface MasterConfig {
 			presigned_attachment_uploads_enabled: boolean;
 			presigned_harvest_downloads_enabled: boolean;
 			unfurl_ignored_hosts: Array<string>;
+			app_origin_aliases: Array<string>;
 			embeds: {
 				oembed_html_enabled: boolean;
 				oembed_html_allow_untrusted_on_self_hosted: boolean;

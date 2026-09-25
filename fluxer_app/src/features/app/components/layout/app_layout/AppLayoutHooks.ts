@@ -8,6 +8,7 @@ import {
 } from '@app/features/app/components/layout/app_layout/AppLayoutTypes';
 import {isScheduledMaintenanceNagbarDismissed} from '@app/features/app/components/layout/app_layout/ScheduledMaintenanceDismissal';
 import Config from '@app/features/app/config/Config';
+import DomainMovedNotice from '@app/features/app/domain_migration/DomainMovedNotice';
 import {isClientReconnecting} from '@app/features/app/state/ClientReadiness';
 import Initialization from '@app/features/app/state/Initialization';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
@@ -255,6 +256,11 @@ export const useNagbarConditions = (): NagbarConditions => {
 	const canShowSoftwareEncoder = SoftwareEncoderWarning.showWarning;
 	const canShowStreamerMode = StreamerMode.shouldShowNagbar;
 	const canShowDesktopUpdateReady = Updater.shouldShowUpdateReadyNagbar;
+	const canShowDomainMoved = nagbarState.forceHideDomainMoved
+		? false
+		: nagbarState.forceDomainMoved
+			? true
+			: DomainMovedNotice.shouldShow(Date.now());
 	const canShowBuildEnvironment =
 		!BUILD_ENVIRONMENT_HIDDEN_RELEASE_CHANNELS.has(Config.PUBLIC_RELEASE_CHANNEL) &&
 		!nagbarState.buildEnvironmentDismissedThisSession;
@@ -316,6 +322,7 @@ export const useNagbarConditions = (): NagbarConditions => {
 		canShowSoftwareEncoder,
 		canShowStreamerMode,
 		canShowDesktopUpdateReady,
+		canShowDomainMoved,
 	};
 };
 export const useActiveNagbars = (conditions: NagbarConditions): Array<NagbarState> => {
@@ -451,6 +458,12 @@ export const useActiveNagbars = (conditions: NagbarConditions): Array<NagbarStat
 				type: NagbarType.DESKTOP_UPDATE_READY,
 				priority: -1.5,
 				visible: conditions.canShowDesktopUpdateReady,
+				dismissible: true,
+			},
+			{
+				type: NagbarType.DOMAIN_MOVED,
+				priority: 3,
+				visible: conditions.canShowDomainMoved,
 				dismissible: true,
 			},
 		];

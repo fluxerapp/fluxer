@@ -258,6 +258,7 @@ export function buildAPIConfigFromMaster(master: MasterConfig): APIConfig {
 			apiPublic: master.endpoints.api,
 			apiClient: master.endpoints.api_client,
 			webApp: master.endpoints.app,
+			webAppOrigins: [...new Set([new URL(master.endpoints.app).origin, ...master.services.api.app_origin_aliases])],
 			gateway: master.endpoints.gateway,
 			media: master.endpoints.media,
 			marketing: master.endpoints.marketing,

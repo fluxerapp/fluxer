@@ -8,6 +8,7 @@ import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
 import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
+import {DEFAULT_DOMAIN_MIGRATION_CONFIG} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {Hono} from 'hono';
 import {afterEach, describe, expect, it} from 'vitest';
 
@@ -94,6 +95,38 @@ describe('InstanceController discovery captcha', () => {
 			provider: 'turnstile',
 			hcaptcha_site_key: null,
 			turnstile_site_key: 'turnstile-site-key',
+		});
+	});
+
+	it('publishes the domain migration kill switch and anonymous rollout without the targeting lists', async () => {
+		const repository = createRepository();
+		const app = createApp(repository);
+
+		const initial = await app.request('http://localhost/.well-known/fluxer');
+		expect(((await initial.json()) as {domain_migration: unknown}).domain_migration).toEqual({
+			enabled: false,
+			anonymous_rollout_basis_points: 0,
+			rollout_salt: 'domain-migration-v1',
+			standalone_forwarding: false,
+		});
+
+		await repository.setDomainMigrationConfig({
+			...DEFAULT_DOMAIN_MIGRATION_CONFIG,
+			enabled: true,
+			config_version: 2,
+			rollout_basis_points: 100,
+			anonymous_rollout_basis_points: 1500,
+			included_user_ids: ['1400000000000000001'],
+			standalone_forwarding: true,
+		});
+
+		const updated = await app.request('http://localhost/.well-known/fluxer');
+		expect(updated.headers.get('etag')).not.toBe(initial.headers.get('etag'));
+		expect(((await updated.json()) as {domain_migration: unknown}).domain_migration).toEqual({
+			enabled: true,
+			anonymous_rollout_basis_points: 1500,
+			rollout_salt: 'domain-migration-v1',
+			standalone_forwarding: true,
 		});
 	});
 });

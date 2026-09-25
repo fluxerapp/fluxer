@@ -7,20 +7,21 @@ use crate::{
             AppBrandingConfigUpdateRequest, AppLegalConfigUpdateRequest,
             AppPublicConfigUpdateRequest, AppRegistrationConfigUpdateRequest,
             AppSetupConfigUpdateRequest, CreateRegistrationUrlRequest,
-            DeferredPhoneGateUpdateRequest, EXPERIMENT_MAX_TARGETED_USERS,
-            ExperimentDeliveryConfigUpdateRequest, GatewayRolloutConfigUpdateRequest,
-            GatewayRolloutMode, InstanceAttachmentDecayUpdateRequest,
-            InstanceBlueskyIntegrationUpdateRequest, InstanceBlueskyKeyIntegrationUpdateRequest,
-            InstanceCaptchaIntegrationUpdateRequest, InstanceConfigUpdateRequest,
-            InstanceEmailIntegrationUpdateRequest, InstanceEmailSmtpIntegrationUpdateRequest,
-            InstanceEmailSmtpTestRequest, InstanceGifIntegrationUpdateRequest,
-            InstanceIntegrationsUpdateRequest, InstanceMediaUpdateRequest,
-            InstancePolicyUpdateRequest, InstanceRegistrationConfigUpdateRequest,
-            InstanceServicesUpdateRequest, InstanceYoutubeIntegrationUpdateRequest,
-            LimitConfigUpdateRequest, LimitRule, LimitRuleFilters, NoiseSuppressionBackend,
-            PremiumMode, PushServiceDeliveryConfigUpdateRequest, RegistrationMode,
-            SsoConfigUpdateRequest, VOICE_NS_MAX_GUILD_OVERRIDES, VoiceE2eeScope,
-            VoiceNoiseSuppressionConfigUpdateRequest, VoiceNoiseSuppressionGuildOverride,
+            DeferredPhoneGateUpdateRequest, DomainMigrationConfigUpdateRequest,
+            EXPERIMENT_MAX_TARGETED_USERS, ExperimentDeliveryConfigUpdateRequest,
+            GatewayRolloutConfigUpdateRequest, GatewayRolloutMode,
+            InstanceAttachmentDecayUpdateRequest, InstanceBlueskyIntegrationUpdateRequest,
+            InstanceBlueskyKeyIntegrationUpdateRequest, InstanceCaptchaIntegrationUpdateRequest,
+            InstanceConfigUpdateRequest, InstanceEmailIntegrationUpdateRequest,
+            InstanceEmailSmtpIntegrationUpdateRequest, InstanceEmailSmtpTestRequest,
+            InstanceGifIntegrationUpdateRequest, InstanceIntegrationsUpdateRequest,
+            InstanceMediaUpdateRequest, InstancePolicyUpdateRequest,
+            InstanceRegistrationConfigUpdateRequest, InstanceServicesUpdateRequest,
+            InstanceYoutubeIntegrationUpdateRequest, LimitConfigUpdateRequest, LimitRule,
+            LimitRuleFilters, NoiseSuppressionBackend, PremiumMode,
+            PushServiceDeliveryConfigUpdateRequest, RegistrationMode, SsoConfigUpdateRequest,
+            VOICE_NS_MAX_GUILD_OVERRIDES, VoiceE2eeScope, VoiceNoiseSuppressionConfigUpdateRequest,
+            VoiceNoiseSuppressionGuildOverride,
         },
     },
     config::AdminConfig,
@@ -208,6 +209,10 @@ pub async fn instance_config_post(
             Err(message) => FlashData::error(message),
         },
         "update_push_service_delivery" => match build_push_service_delivery_update(&form) {
+            Ok(update) => instance_config_result(client.update_instance_config(&update).await),
+            Err(message) => FlashData::error(message),
+        },
+        "update_domain_migration" => match build_domain_migration_update(&form) {
             Ok(update) => instance_config_result(client.update_instance_config(&update).await),
             Err(message) => FlashData::error(message),
         },
@@ -496,7 +501,7 @@ fn parse_experiment_rollout_salt(
     Ok(Some(salt.to_owned()))
 }
 
-fn parse_push_service_delivery_rollout_salt(
+fn parse_ascii_experiment_rollout_salt(
     form: &MultiValueForm,
     key: &str,
 ) -> Result<Option<String>, String> {
@@ -661,7 +666,7 @@ fn build_push_service_delivery_update(
                 0,
                 EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX,
             )?,
-            rollout_salt: parse_push_service_delivery_rollout_salt(
+            rollout_salt: parse_ascii_experiment_rollout_salt(
                 form,
                 "push_service_delivery_rollout_salt",
             )?,
@@ -675,6 +680,46 @@ fn build_push_service_delivery_update(
                     .unwrap_or_default(),
                 "Excluded user IDs",
             )?),
+        }),
+        ..Default::default()
+    })
+}
+
+fn build_domain_migration_update(
+    form: &MultiValueForm,
+) -> Result<InstanceConfigUpdateRequest, String> {
+    Ok(InstanceConfigUpdateRequest {
+        domain_migration: Some(DomainMigrationConfigUpdateRequest {
+            enabled: Some(form.bool_value("domain_migration_enabled")),
+            rollout_basis_points: parse_form_number(
+                form,
+                "domain_migration_rollout_basis_points",
+                "Rollout basis points",
+                0,
+                EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX,
+            )?,
+            rollout_salt: parse_ascii_experiment_rollout_salt(
+                form,
+                "domain_migration_rollout_salt",
+            )?,
+            included_user_ids: Some(parse_experiment_user_ids(
+                form.first("domain_migration_included_user_ids")
+                    .unwrap_or_default(),
+                "Included user IDs",
+            )?),
+            excluded_user_ids: Some(parse_experiment_user_ids(
+                form.first("domain_migration_excluded_user_ids")
+                    .unwrap_or_default(),
+                "Excluded user IDs",
+            )?),
+            anonymous_rollout_basis_points: parse_form_number(
+                form,
+                "domain_migration_anonymous_rollout_basis_points",
+                "Anonymous rollout basis points",
+                0,
+                EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX,
+            )?,
+            standalone_forwarding: Some(form.bool_value("domain_migration_standalone_forwarding")),
         }),
         ..Default::default()
     })
@@ -1596,6 +1641,91 @@ mod tests {
             let form = MultiValueForm::parse(form.as_bytes());
             assert_eq!(
                 build_voice_noise_suppression_update(&form).expect_err("invalid targeting"),
+                message
+            );
+        }
+    }
+
+    #[test]
+    fn build_domain_migration_update_reads_the_rollout_fields() {
+        let form = MultiValueForm::parse(
+            b"domain_migration_enabled=true&domain_migration_rollout_basis_points=%20250%20&domain_migration_rollout_salt=%20domain-migration-v2%20&domain_migration_included_user_ids=1500000000000000001%0A1500000000000000002&domain_migration_excluded_user_ids=1500000000000000003%2C%201500000000000000004&domain_migration_anonymous_rollout_basis_points=%20100%20&domain_migration_standalone_forwarding=true",
+        );
+        let update = build_domain_migration_update(&form)
+            .expect("valid form")
+            .domain_migration
+            .expect("domain migration update");
+        assert_eq!(update.enabled, Some(true));
+        assert_eq!(update.rollout_basis_points, Some(250));
+        assert_eq!(update.rollout_salt, Some("domain-migration-v2".to_owned()));
+        assert_eq!(
+            update.included_user_ids,
+            Some(vec![
+                "1500000000000000001".to_owned(),
+                "1500000000000000002".to_owned()
+            ])
+        );
+        assert_eq!(
+            update.excluded_user_ids,
+            Some(vec![
+                "1500000000000000003".to_owned(),
+                "1500000000000000004".to_owned()
+            ])
+        );
+        assert_eq!(update.anonymous_rollout_basis_points, Some(100));
+        assert_eq!(update.standalone_forwarding, Some(true));
+    }
+
+    #[test]
+    fn build_domain_migration_update_leaves_the_feature_inert_when_nothing_is_submitted() {
+        let form = MultiValueForm::parse(b"_csrf=token");
+        let request = build_domain_migration_update(&form).expect("valid form");
+        assert_eq!(
+            serde_json::to_value(request).expect("serializable update"),
+            serde_json::json!({"domain_migration": {
+                "enabled": false,
+                "included_user_ids": [],
+                "excluded_user_ids": [],
+                "standalone_forwarding": false,
+            }})
+        );
+    }
+
+    #[test]
+    fn build_domain_migration_update_rejects_invalid_rollout_fields() {
+        for (form, message) in [
+            (
+                "domain_migration_rollout_basis_points=10001",
+                "Rollout basis points must be a whole number between 0 and 10000",
+            ),
+            (
+                "domain_migration_anonymous_rollout_basis_points=10001",
+                "Anonymous rollout basis points must be a whole number between 0 and 10000",
+            ),
+            (
+                "domain_migration_anonymous_rollout_basis_points=abc",
+                "Anonymous rollout basis points must be a whole number between 0 and 10000",
+            ),
+            (
+                "domain_migration_rollout_salt=%20%20",
+                "Rollout salt must be between 1 and 64 characters",
+            ),
+            (
+                "domain_migration_rollout_salt=caf%C3%A9",
+                "Rollout salt must use printable ASCII",
+            ),
+            (
+                "domain_migration_included_user_ids=123%2Cinvalid",
+                "Included user IDs entry 2 must contain 1 to 20 decimal digits",
+            ),
+            (
+                "domain_migration_excluded_user_ids=123%2Cinvalid",
+                "Excluded user IDs entry 2 must contain 1 to 20 decimal digits",
+            ),
+        ] {
+            let form = MultiValueForm::parse(form.as_bytes());
+            assert_eq!(
+                build_domain_migration_update(&form).expect_err("invalid rollout field"),
                 message
             );
         }

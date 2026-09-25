@@ -30,6 +30,8 @@ const RENDERED_INDEX_DOCUMENT = [
 	'</head><body><div id="root"></div></body></html>',
 ].join('');
 
+const MARKETING_DOCUMENT = '<!doctype html><html lang="en"><head></head><body>Marketing</body></html>';
+
 const DEPLOYED_PRECACHE_MANIFEST: ReadonlyArray<PrecacheEntry> = [
 	{url: '/index.html', revision: '2757:1'},
 	{url: '/', revision: '2757:1'},
@@ -101,7 +103,9 @@ function createAppProxyFetch(navigationDelayMs: number): (request: Request) => P
 			return new Response('console.log(1)', {headers: {'content-type': 'text/javascript'}});
 		}
 		await delay(navigationDelayMs);
-		return new Response(RENDERED_INDEX_DOCUMENT, {headers: {'content-type': 'text/html; charset=utf-8'}});
+		return new Response(RENDERED_INDEX_DOCUMENT, {
+			headers: {'content-type': 'text/html; charset=utf-8', 'x-fluxer-app-shell': '1'},
+		});
 	};
 }
 
@@ -192,5 +196,22 @@ describe('WorkerAppShell', () => {
 
 		expect(html).toContain('window.__FLUXER_BOOTSTRAP__');
 		expect(html).not.toContain('{{STATIC_CDN_ENDPOINT}}');
+	});
+
+	it('never keeps a document without the app shell marker as the app shell', async () => {
+		await seedAppShell(createRuntime(0));
+		const marketingRuntime: AppShellRuntime = {
+			...createRuntime(0),
+			fetch: async () => new Response(MARKETING_DOCUMENT, {headers: {'content-type': 'text/html; charset=utf-8'}}),
+		};
+		await fetchAppShellNavigation(marketingRuntime, navigationRequest('/channels/@me'));
+
+		const offlineRuntime: AppShellRuntime = {
+			...createRuntime(0),
+			fetch: () => Promise.reject(new Error('Failed to fetch')),
+		};
+		const response = await fetchAppShellNavigation(offlineRuntime, navigationRequest('/channels/@me'));
+
+		expect(await response.text()).toBe(RENDERED_INDEX_DOCUMENT);
 	});
 });

@@ -602,6 +602,7 @@ export function AuthController(app: HonoApp) {
 				data: ctx.req.valid('json'),
 				clientIp,
 				authToken: ctx.get('authToken') ?? undefined,
+				approverOrigin: ctx.req.header('origin'),
 			});
 			return ctx.body(null, 204);
 		},

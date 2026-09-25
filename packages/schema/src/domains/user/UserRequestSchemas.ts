@@ -615,6 +615,7 @@ export const PushSubscribeRequest = z.object({
 		})
 		.describe('Encryption keys for the push subscription'),
 	user_agent: createStringType(1, 1024).optional().describe('The user agent string identifying the client'),
+	installed_app: z.boolean().optional().describe('Whether the client runs in an installed web app window'),
 });
 
 export type PushSubscribeRequest = z.infer<typeof PushSubscribeRequest>;
@@ -629,6 +630,7 @@ export const PushRotateRequest = z.object({
 		})
 		.describe('Encryption keys for the new push subscription'),
 	user_agent: createStringType(1, 1024).optional().describe('The user agent string identifying the client'),
+	installed_app: z.boolean().optional().describe('Whether the client runs in an installed web app window'),
 });
 
 export type PushRotateRequest = z.infer<typeof PushRotateRequest>;

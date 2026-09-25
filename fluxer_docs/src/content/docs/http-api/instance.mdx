@@ -16,7 +16,7 @@ Each of the routes answers with `Access-Control-Allow-Origin: *`, replaced by th
 
 ## Instance discovery object
 
-The discovery document is the complete public description of one deployment. Every field is always present.
+The discovery document is the complete public description of one deployment. Every field is always present. The one optional field, `domain_migration`, is absent only from a server older than this version.
 
 ### Structure
 
@@ -34,6 +34,7 @@ The discovery document is the complete public description of one deployment. Eve
 | limits | [limit configuration](#limit-configuration-object) object | Ordered limit rules and the trait names the deployment declares |
 | push | [push configuration](#push-configuration-object) object | Public Web Push identity |
 | app_public | [public application configuration](#public-application-configuration-object) object | Public client configuration |
+| domain_migration? | [domain migration](#domain-migration-object) object | Web domain migration switch and logged-out rollout |
 
 <sup>1</sup> The value is a plain integer that increases when the API introduces a change a client is expected to notice, and the current value is `1`
 
@@ -423,6 +424,25 @@ Which extra fields public registration collects.
 | Field | Type | Description |
 | --- | --- | --- |
 | collect_date_of_birth | boolean | Whether public registration collects and validates a date of birth |
+
+## Domain migration object
+
+The public part of the instance [domain migration configuration](/admin-api/instance/#domain-migration-configuration-object). The official web client reads it before sign-in to decide whether its legacy origin forwards to the new one. Every instance publishes it, and only the official web client acts on it.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | boolean | Whether the migration runs at all |
+| anonymous_rollout_basis_points | integer | Share of logged-out devices moved to the new origin, in basis points (0-10000) |
+| rollout_salt | string | Salt of the sampling hash, shared by accounts and devices |
+| standalone_forwarding | boolean | Whether installed desktop web apps forward to the new origin once their data has moved |
+
+`enabled` is the instance-wide switch. While it is false, no client starts a migration and a client that already migrated stops forwarding from the legacy origin.
+
+A logged-out device draws its own random ID once and keeps it. The device moves when its bucket over that ID and `rollout_salt` falls below `anonymous_rollout_basis_points`. Signed-in accounts use the [domain migration assignment](/http-api/experiments/#domain-migration-assignment-object) instead.
+
+While `standalone_forwarding` is false, an installed desktop web app moves its data and stays on the legacy origin. Browser tabs forward either way.
 
 ## Geolocation object
 

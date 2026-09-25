@@ -5,13 +5,20 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {
 	CANARY_APP_URL,
+	CANARY_MIGRATED_APP_ORIGIN,
 	DEFAULT_WINDOW_HEIGHT,
 	DEFAULT_WINDOW_WIDTH,
 	MIN_WINDOW_HEIGHT,
 	MIN_WINDOW_WIDTH,
 	STABLE_APP_URL,
+	STABLE_MIGRATED_APP_ORIGIN,
 } from '@electron/common/Constants';
-import {getAppUrl, getCustomAppUrl, getDesktopWindowBehaviorSettings} from '@electron/common/DesktopConfig';
+import {
+	getAppUrl,
+	getAppUrlFallback,
+	getCustomAppUrl,
+	getDesktopWindowBehaviorSettings,
+} from '@electron/common/DesktopConfig';
 import {createChildLogger} from '@electron/common/Logger';
 import type {DesktopWindowBehaviorSettings} from '@electron/common/Types';
 import {
@@ -60,7 +67,7 @@ const CUSTOM_TITLEBAR_TRAFFIC_LIGHT_POSITION = {
 	y: Math.round((CUSTOM_TITLEBAR_HEIGHT_MAC - CUSTOM_TITLEBAR_TRAFFIC_LIGHT_DIAMETER) / 2),
 };
 const trustedWebOrigins = new Set(
-	[STABLE_APP_URL, CANARY_APP_URL]
+	[STABLE_APP_URL, CANARY_APP_URL, STABLE_MIGRATED_APP_ORIGIN, CANARY_MIGRATED_APP_ORIGIN]
 		.map((url) => {
 			try {
 				return new URL(url).origin;
@@ -726,7 +733,7 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 	const acceptFirstMouseOnFocus = isMac;
 	initialUseNativeTitleBar = useNativeTitleBar;
 	initialAllowTransparency = allowTransparency;
-	const appUrl = getAppUrl();
+	let appUrl = getAppUrl();
 	const windowOptions: Electron.BrowserWindowConstructorOptions = {
 		width: windowWidth,
 		height: windowHeight,
@@ -998,12 +1005,33 @@ export function createWindow(options: CreateWindowOptions = {}): BrowserWindow {
 			});
 		}, delay);
 	};
+	const fallBackFromMigratedAppOrigin = (failedUrl: string, detail: Record<string, unknown>): boolean => {
+		const fallbackUrl = getAppUrlFallback(failedUrl);
+		if (!mainWindow || mainWindow.isDestroyed() || fallbackUrl === null || appUrl === fallbackUrl) {
+			return false;
+		}
+		logger.warn('Migrated app origin failed to load, falling back to the legacy app URL', {failedUrl, ...detail});
+		appUrl = fallbackUrl;
+		clearAppLoadRetry();
+		mainWindow.loadURL(appUrl).catch((error) => {
+			scheduleAppLoadRetry('legacy-fallback-load-url-rejected', {error});
+		});
+		return true;
+	};
 	webContents.on('did-finish-load', clearAppLoadRetry);
+	webContents.on('did-navigate', (_event, url, httpResponseCode) => {
+		if (httpResponseCode >= 400) {
+			fallBackFromMigratedAppOrigin(url, {httpResponseCode});
+		}
+	});
 	webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL, isMainFrame) => {
 		if (isMainFrame) {
 			logger.error('App main-frame load failed', {errorCode, errorDescription, validatedURL});
 		}
 		if (!isMainFrame || !isTrustedOrigin(validatedURL) || !shouldRetryAppLoadFailure(errorCode)) {
+			return;
+		}
+		if (fallBackFromMigratedAppOrigin(validatedURL, {errorCode, errorDescription})) {
 			return;
 		}
 		scheduleAppLoadRetry('did-fail-load', {errorCode, errorDescription, validatedURL});

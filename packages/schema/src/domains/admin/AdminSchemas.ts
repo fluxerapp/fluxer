@@ -12,6 +12,10 @@ import {AdminArchiveResponseSchema} from '@fluxer/schema/src/domains/admin/Admin
 import {GuildAdminResponse} from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
 import {UserAdminResponseSchema} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import {
+	DomainMigrationConfigResponse,
+	DomainMigrationConfigUpdateRequest,
+} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
+import {
 	GatewayRolloutConfigResponse,
 	GatewayRolloutConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
@@ -649,6 +653,7 @@ export const InstanceConfigResponse = z.object({
 	gateway_rollout: GatewayRolloutConfigResponse,
 	voice_noise_suppression: VoiceNoiseSuppressionConfigResponse,
 	push_service_delivery: PushServiceDeliveryConfigResponse,
+	domain_migration: DomainMigrationConfigResponse,
 	experiment_delivery: ExperimentDeliveryConfigResponse,
 	registration: InstanceRegistrationResponse,
 	self_hosted: z.boolean(),
@@ -686,6 +691,7 @@ export const InstanceConfigUpdateRequest = z.object({
 	gateway_rollout: GatewayRolloutConfigUpdateRequest.nullish(),
 	voice_noise_suppression: VoiceNoiseSuppressionConfigUpdateRequest.nullish(),
 	push_service_delivery: PushServiceDeliveryConfigUpdateRequest.nullish(),
+	domain_migration: DomainMigrationConfigUpdateRequest.nullish(),
 	experiment_delivery: ExperimentDeliveryConfigUpdateRequest.nullish(),
 	registration: z
 		.object({
