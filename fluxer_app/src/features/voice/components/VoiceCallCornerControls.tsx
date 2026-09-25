@@ -63,11 +63,7 @@ export const VoiceCallCornerControls: React.FC<VoiceCallCornerControlsProps> = (
 	}, []);
 	const PopInIcon = useMemo(() => {
 		const BoldIcon = forwardRef<SVGSVGElement, React.ComponentProps<typeof ArrowSquareInIcon>>((props, ref) => (
-			<ArrowSquareInIcon
-				ref={ref}
-				weight="bold"
-				{...props}
-			/>
+			<ArrowSquareInIcon ref={ref} weight="bold" {...props} />
 		));
 		BoldIcon.displayName = 'PopInCallIcon';
 		return BoldIcon;
