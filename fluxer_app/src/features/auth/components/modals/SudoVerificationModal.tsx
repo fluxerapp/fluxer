@@ -3,7 +3,13 @@
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {Endpoints} from '@app/features/app/constants/Endpoints';
 import styles from '@app/features/auth/components/modals/SudoVerificationModal.module.css';
+import {PasswordManagerPasskeyAction} from '@app/features/auth/components/PasswordManagerPasskeyAction';
 import SudoPrompt, {SudoVerificationMethod} from '@app/features/auth/state/SudoPrompt';
+import {
+	describePasskeyBridgeFailure,
+	runPasskeyViaBridge,
+	shouldSuggestPasskeyBridge,
+} from '@app/features/auth/utils/PasskeyBridge';
 import * as WebAuthnUtils from '@app/features/auth/utils/WebAuthnUtils';
 import {PASSWORD_DESCRIPTOR, VERIFY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {http} from '@app/features/platform/transport/RestTransport';
@@ -15,6 +21,7 @@ import {Spinner} from '@app/features/ui/components/Spinner';
 import * as FormUtils from '@app/lib/forms';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
+import type {PublicKeyCredentialRequestOptionsJSON} from '@simplewebauthn/browser';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useEffect, useRef, useState} from 'react';
@@ -82,6 +89,7 @@ const SudoVerificationModal: React.FC = observer(() => {
 	const form = useForm<FormInputs>({defaultValues: {password: '', totp: ''}});
 	const [webAuthnInFlight, setWebAuthnInFlight] = useState(false);
 	const [webAuthnError, setWebAuthnError] = useState<string | null>(null);
+	const [passkeyBridgeSuggested, setPasskeyBridgeSuggested] = useState(false);
 	const autoTriggeredRef = useRef(false);
 	const showPasskey = availableMethods.webauthn;
 	const showTotp = availableMethods.totp;
@@ -126,12 +134,42 @@ const SudoVerificationModal: React.FC = observer(() => {
 				setWebAuthnError(i18n._(PASSKEYS_REQUIRE_A_SIGNED_MACOS_BUNDLE_WITH_A_DESCRIPTOR));
 				return;
 			}
+			if (shouldSuggestPasskeyBridge(err)) {
+				setPasskeyBridgeSuggested(true);
+				return;
+			}
 			if (err instanceof WebAuthnUtils.PasskeyDomainUnsupportedError) {
 				setWebAuthnError(i18n._(WebAuthnUtils.PASSKEY_DOMAIN_UNSUPPORTED_DESCRIPTOR));
 				return;
 			}
 			setWebAuthnError(i18n._(COULDN_T_VERIFY_WITH_PASSKEY_PLEASE_TRY_AGAIN_DESCRIPTOR));
 		}
+	};
+	const handlePasskeyBridge = () => {
+		if (webAuthnInFlight || isVerifying) return;
+		const options = http
+			.post<PublicKeyCredentialRequestOptionsJSON>(Endpoints.SUDO_WEBAUTHN_OPTIONS)
+			.then((response) => response.body);
+		const credential = runPasskeyViaBridge('authenticate', options);
+		setWebAuthnError(null);
+		form.clearErrors();
+		setWebAuthnInFlight(true);
+		Promise.all([options, credential])
+			.then(([resolvedOptions, resolvedCredential]) => {
+				SudoPrompt.submit({
+					mfa_method: SudoVerificationMethod.WEBAUTHN,
+					webauthn_challenge: resolvedOptions.challenge,
+					webauthn_response: resolvedCredential,
+				});
+			})
+			.catch((err: unknown) => {
+				logger.error('WebAuthn verification in the pop-up window failed', err);
+				setWebAuthnInFlight(false);
+				const descriptor = describePasskeyBridgeFailure(err);
+				if (descriptor) {
+					setWebAuthnError(i18n._(descriptor));
+				}
+			});
 	};
 	useEffect(() => {
 		if (autoTriggeredRef.current) return;
@@ -248,6 +286,14 @@ const SudoVerificationModal: React.FC = observer(() => {
 											>
 												<Trans>Continue with passkey</Trans>
 											</Button>
+										)}
+										{!webAuthnInFlight && (
+											<PasswordManagerPasskeyAction
+												suggested={passkeyBridgeSuggested}
+												disabled={isVerifying}
+												onClick={handlePasskeyBridge}
+												data-flx="auth.sudo-verification-modal.password-manager-passkey-action"
+											/>
 										)}
 										{webAuthnError && (
 											<p className={styles.formError} role="alert" data-flx="auth.sudo-verification-modal.form-error">

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {PasswordManagerPasskeyAction} from '@app/features/auth/components/PasswordManagerPasskeyAction';
 import {Button} from '@app/features/ui/button/Button';
 import {Trans} from '@lingui/react/macro';
 import {BrowserIcon, KeyIcon} from '@phosphor-icons/react';
@@ -50,6 +51,8 @@ interface Props {
 	onPasskeyLogin: () => void;
 	showBrowserOption: boolean;
 	onBrowserLogin?: () => void;
+	onPasswordManagerLogin?: () => void;
+	passwordManagerSuggested?: boolean;
 	primaryLabel?: React.ReactNode;
 	browserLabel?: React.ReactNode;
 }
@@ -60,6 +63,8 @@ export default function AuthLoginPasskeyActions({
 	onPasskeyLogin,
 	showBrowserOption,
 	onBrowserLogin,
+	onPasswordManagerLogin,
+	passwordManagerSuggested = false,
 	primaryLabel = <Trans>Sign in with a passkey</Trans>,
 	browserLabel = <Trans>Sign in via browser</Trans>,
 }: Props) {
@@ -90,6 +95,14 @@ export default function AuthLoginPasskeyActions({
 				>
 					{browserLabel}
 				</Button>
+			) : null}
+			{onPasswordManagerLogin ? (
+				<PasswordManagerPasskeyAction
+					suggested={passwordManagerSuggested}
+					disabled={disabled}
+					onClick={onPasswordManagerLogin}
+					data-flx="auth.flow.auth-login-core.auth-login-passkey-actions.password-manager-passkey-action"
+				/>
 			) : null}
 		</div>
 	);

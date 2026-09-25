@@ -2370,8 +2370,8 @@ msgstr "6 měsíců"
 
 #. Placeholder for the MFA login one-time password field.
 #. Short label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:58
-#: src/features/auth/flow/MfaScreen.tsx:22
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:65
+#: src/features/auth/flow/MfaScreen.tsx:23
 msgid "6-digit code"
 msgstr "6místný kód"
 
@@ -2649,7 +2649,7 @@ msgid "Account & premium overrides"
 msgstr "Přepsání účtu a prémiových funkcí"
 
 #. Security settings section for third-party app access and signed-in devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:88
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:89
 msgid "Account access"
 msgstr "Přístup k účtu"
 
@@ -2976,7 +2976,7 @@ msgstr "Pokračujte přidáním účtu."
 msgid "Add an email and password to your account first."
 msgstr "Nejprve si k účtu přidejte e-mail a heslo."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:296
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:309
 msgid "Add an extra layer of security to your account"
 msgstr "Přidejte ke svému účtu další vrstvu zabezpečení"
 
@@ -3092,7 +3092,7 @@ msgid "Add override"
 msgstr "Přidat vlastní oprávnění"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:439
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:452
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:130
 msgid "Add passkey"
 msgstr "Přidat přístupový klíč"
@@ -3296,11 +3296,11 @@ msgstr "Přidáno k oblíbeným"
 msgid "Added to saved media"
 msgstr "Přidáno k uloženým médiím"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:495
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:508
 msgid "Added: {createdDate}"
 msgstr "Přidáno: {createdDate}"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:491
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:504
 msgid "Added: {createdDate} • last used: {lastUsedDate}"
 msgstr "Přidáno: {createdDate} • naposledy použito: {lastUsedDate}"
 
@@ -4481,7 +4481,7 @@ msgid "Are you sure you want to delete the category \"{categoryName}\"? This can
 msgstr "Opravdu chcete smazat kategorii „{categoryName}“? Tuto akci nelze vrátit zpět."
 
 #. placeholder {0}: passkey.name
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:227
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:240
 msgid "Are you sure you want to delete the passkey <0>{0}</0>?"
 msgstr "Opravdu chcete smazat přístupový klíč <0>{0}</0>?"
 
@@ -4493,7 +4493,7 @@ msgstr "Opravdu chcete smazat tuto přílohu? Tuto akci nelze vrátit zpět a p�
 msgid "Are you sure you want to delete this community? This action cannot be undone. All channels, messages, and settings will be permanently deleted."
 msgstr "Opravdu chcete smazat tuto komunitu? Tuto akci nelze vrátit zpět. Všechny kanály, zprávy a nastavení budou trvale smazány."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:235
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:248
 msgid "Are you sure you want to delete this passkey?"
 msgstr "Opravdu chcete smazat tento přístupový klíč?"
 
@@ -4573,7 +4573,7 @@ msgid "Ask before starting calls"
 msgstr "Zeptat se před zahájením hovorů"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:449
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:462
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:154
 msgid "Ask for a passkey after your password when you sign in"
 msgstr "Požádat o přístupový klíč po zadání hesla při přihlašování"
@@ -4851,14 +4851,14 @@ msgstr "Ověřování"
 msgid "Authenticator"
 msgstr "Ověřovací aplikace"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:308
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:321
 msgid "Authenticator app"
 msgstr "Ověřovací aplikace"
 
 #. Label for the MFA login one-time password field from an authenticator app or backup code.
 #. Short label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:54
-#: src/features/auth/flow/MfaScreen.tsx:18
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:61
+#: src/features/auth/flow/MfaScreen.tsx:19
 msgid "Authenticator code"
 msgstr "Kód z ověřovací aplikace"
 
@@ -4928,7 +4928,7 @@ msgstr "Autorizované aplikace"
 #. Settings section label for OAuth applications authorized by the user.
 #. User settings tab for OAuth or connected apps authorized by the user.
 #: src/features/user/components/modals/tabs/account_security_tab/AccountManagementModals.tsx:17
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:96
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:97
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:507
 #: src/features/user/components/settings_utils/search_index/AuthorizedAppsIndex.ts:10
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:151
@@ -5342,8 +5342,8 @@ msgstr "Backspace"
 
 #. Label and placeholder for the MFA login field when the only code the account can use is a backup code.
 #. Label and placeholder for the code field in the authentication sudo verification modal when the only code the account can use is a backup code.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:62
-#: src/features/auth/flow/MfaScreen.tsx:38
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:69
+#: src/features/auth/flow/MfaScreen.tsx:39
 msgid "Backup code"
 msgstr "Záložní kód"
 
@@ -5351,7 +5351,7 @@ msgstr "Záložní kód"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/auth/components/modals/BackupCodesModal.tsx:18
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:378
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:391
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:74
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:68
 msgid "Backup codes"
@@ -6364,9 +6364,9 @@ msgstr "Sem nelze nahrávat soubory"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:216
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:232
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:72
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:86
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:138
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:282
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:328
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:164
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:177
@@ -7715,7 +7715,7 @@ msgstr "Dokončete registraci účtu a ověřte svůj e-mail, abyste mohli odes�
 msgid "Claim your account by adding an email and password. We will send a verification code to confirm your email before finishing."
 msgstr "Dokončete registraci účtu přidáním e-mailu a hesla. Před dokončením vám pošleme ověřovací kód pro potvrzení e-mailu."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:277
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:290
 msgid "Claim your account to access security features like two-factor authentication and passkeys."
 msgstr "Dokončete registraci účtu, abyste mohli používat funkce zabezpečení, jako je dvoufaktorové ověřování a přístupové klíče."
 
@@ -8160,9 +8160,11 @@ msgstr "Zavřít do panelu nabídek"
 msgid "Close to tray"
 msgstr "Zavřít do oznamovací oblasti"
 
+#. Button in the passkey pop-up window that closes it after an error.
 #. Button label in a popped-out voice window titlebar that closes the popped-out window.
 #. Short label in the app layout native titlebar.
 #: src/features/app/components/layout/NativeWindowControls.tsx:25
+#: src/features/auth/passkey_bridge/PasskeyBridgeScreen.tsx:31
 #: src/features/voice/components/popout/PopoutTitlebar.tsx:26
 msgid "Close window"
 msgstr "Zavřít okno"
@@ -9212,6 +9214,11 @@ msgstr "Pokračovat"
 msgid "Continue to checkout"
 msgstr "Pokračovat k platbě"
 
+#. Body of the passkey pop-up window when adding a new passkey. host is a web address such as fluxer.com.
+#: src/features/auth/passkey_bridge/PasskeyBridgeScreen.tsx:27
+msgid "Continue to create a passkey for {host}"
+msgstr "Pokračujte a vytvořte přístupový klíč pro {host}"
+
 #. Button or menu action label in the report action utils helper. Keep it concise. Keep the tone plain and specific.
 #: src/features/moderation/utils/ReportActionUtils.tsx:37
 msgid "Continue to report community"
@@ -9222,7 +9229,7 @@ msgstr "Pokračovat v nahlášení komunity"
 msgid "Continue to report user"
 msgstr "Pokračovat v nahlášení uživatele"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:249
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:287
 msgid "Continue with passkey"
 msgstr "Pokračovat pomocí přístupového klíče"
 
@@ -9230,6 +9237,11 @@ msgstr "Pokračovat pomocí přístupového klíče"
 #: src/features/auth/flow/AuthSsoPanel.tsx:21
 msgid "Continue with SSO"
 msgstr "Pokračovat přes SSO"
+
+#. Body of the passkey pop-up window when signing in or confirming identity. host is a web address such as fluxer.com.
+#: src/features/auth/passkey_bridge/PasskeyBridgeScreen.tsx:22
+msgid "Continue with your passkey to sign in to {host}"
+msgstr "Pokračujte pomocí svého přístupového klíče a přihlaste se na {host}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:31
@@ -9829,7 +9841,7 @@ msgid "Couldn't delete application"
 msgstr "Aplikaci se nepodařilo smazat"
 
 #. Title of the error modal shown when removing a registered passkey fails.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:38
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:39
 msgid "Couldn't delete passkey"
 msgstr "Nepodařilo se smazat přístupový klíč"
 
@@ -10170,7 +10182,7 @@ msgid "Couldn't update mention suppression bypass"
 msgstr "Nepodařilo se aktualizovat obcházení potlačení zmínek"
 
 #. Title of the error modal shown when the passkey two-factor setting could not be saved.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:84
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:85
 msgid "Couldn't update passkey two-factor authentication"
 msgstr "Nepodařilo se aktualizovat nastavení přístupových klíčů pro dvoufaktorové ověřování"
 
@@ -10204,6 +10216,11 @@ msgstr "Nepodařilo se nahrát avatar"
 msgid "Couldn't upload banner"
 msgstr "Nepodařilo se nahrát banner"
 
+#. Error shown when the pop-up window used for password manager passkeys does not finish.
+#: src/features/auth/utils/PasskeyBridge.ts:29
+msgid "Couldn't use your passkey in the pop-up window. Try again."
+msgstr "Přístupový klíč se ve vyskakovacím okně nepodařilo použít. Zkuste to znovu."
+
 #. Desktop handoff flow error shown when verifying the pairing code fails for an unexpected reason.
 #: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:14
 msgid "Couldn't verify that code. Try again."
@@ -10215,7 +10232,7 @@ msgid "Couldn't verify the connection"
 msgstr "Nepodařilo se ověřit propojení"
 
 #. Sudo (re-auth) modal toast error shown when passkey verification fails. Keep plain.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:29
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:36
 msgid "Couldn't verify with passkey. Try again."
 msgstr "Ověření pomocí přístupového klíče se nezdařilo. Zkuste to znovu."
 
@@ -11298,7 +11315,7 @@ msgstr "Delaware"
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:109
 #: src/features/platform/utils/DesktopLocaleBridge.ts:76
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:517
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:530
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:117
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:290
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
@@ -11471,7 +11488,7 @@ msgid "Delete other members' messages. Pinning is controlled separately."
 msgstr "Mazat zprávy ostatních členů. Připínání se ovládá zvlášť."
 
 #. Security settings: confirmation modal title and primary button for removing a registered passkey. Destructive action; keep plain and direct.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:33
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:34
 msgid "Delete passkey"
 msgstr "Smazat přístupový klíč"
 
@@ -11949,7 +11966,7 @@ msgstr "Zařízení:"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tab label in the screen-share picker. Lists cameras and virtual capture devices.
 #. User settings tab for managing devices linked to the current account.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:104
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:105
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:530
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
@@ -12060,7 +12077,7 @@ msgstr "Přímé nahrávání aktivní"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short footer action in the screen-share picker that disables screen-share preview frame uploads.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:342
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:355
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:158
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:279
 msgid "Disable"
@@ -12957,7 +12974,7 @@ msgid "Dutch"
 msgstr "Nizozemština"
 
 #. Placeholder or example text in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:31
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:35
 msgid "e.g., YubiKey, iPhone, work computer"
 msgstr "např. YubiKey, iPhone, pracovní počítač"
 
@@ -13508,7 +13525,7 @@ msgstr "Oblíbené položky jsou prázdné"
 #: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:32
 #: src/features/app/components/layout/GuildLayout.tsx:54
 #: src/features/invite/components/DisableInvitesButton.tsx:27
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:360
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:373
 #: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:23
 msgid "Enable"
 msgstr "Zapnout"
@@ -13989,12 +14006,12 @@ msgid "Enter new email"
 msgstr "Zadejte nový e-mail"
 
 #. MFA code entry instructions shown when the account uses passkeys as its second factor.
-#: src/features/auth/flow/MfaScreen.tsx:42
+#: src/features/auth/flow/MfaScreen.tsx:43
 msgid "Enter one of your backup codes if you can't use your passkey."
 msgstr "Zadejte jeden ze svých záložních kódů, pokud nemůžete použít svůj přístupový klíč."
 
 #. Body text in the authentication sudo verification modal, shown when the only code the account can enter is a backup code. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:41
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:48
 msgid "Enter one of your backup codes."
 msgstr "Zadejte jeden ze svých záložních kódů."
 
@@ -14014,7 +14031,7 @@ msgid "Enter text"
 msgstr "Zadejte text"
 
 #. MFA code entry instructions. digitCount is the expected authenticator-code length.
-#: src/features/auth/flow/MfaScreen.tsx:30
+#: src/features/auth/flow/MfaScreen.tsx:31
 msgid "Enter the {digitCount}-digit code from your authenticator app or a backup code."
 msgstr "Zadejte {digitCount}místný kód ze své ověřovací aplikace nebo záložní kód."
 
@@ -14048,7 +14065,7 @@ msgid "Enter the code before continuing."
 msgstr "Před pokračováním zadejte kód."
 
 #. Body text in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:37
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:44
 msgid "Enter the code from your authenticator app."
 msgstr "Zadejte kód ze své ověřovací aplikace."
 
@@ -14132,7 +14149,7 @@ msgid "Enter your name"
 msgstr "Zadejte své jméno"
 
 #. Body text in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:33
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:40
 msgid "Enter your password."
 msgstr "Zadejte heslo."
 
@@ -15462,7 +15479,7 @@ msgstr "Pro mě"
 msgid "For this check, you send us a text message instead of receiving one from us."
 msgstr "Při tomto ověření posíláte SMS vy nám, místo abyste ji od nás dostali."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:187
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:225
 msgid "For your security, please confirm it's you to continue."
 msgstr "Pro vaši bezpečnost prosím potvrďte, že jste to vy, abyste mohli pokračovat."
 
@@ -19842,8 +19859,8 @@ msgstr "Malware nebo nebezpečné odkazy"
 msgid "Malware, credential theft, or harmful files."
 msgstr "Malware, krádež přihlašovacích údajů nebo škodlivé soubory."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:561
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:596
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:574
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:609
 msgid "Manage"
 msgstr "Spravovat"
 
@@ -19853,7 +19870,7 @@ msgid "Manage accounts"
 msgstr "Spravovat účty"
 
 #. Security settings section description for account access controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:92
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:93
 msgid "Manage apps and devices with access to your account"
 msgstr "Spravujte aplikace a zařízení, která mají přístup k vašemu účtu"
 
@@ -21926,12 +21943,12 @@ msgid "Name must be at least 2 characters"
 msgstr "Název musí mít alespoň 2 znaky"
 
 #. Short label in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:23
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:27
 msgid "Name passkey"
 msgstr "Pojmenovat přístupový klíč"
 
 #. Accessible form label in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:19
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:23
 msgid "Name passkey form"
 msgstr "Formulář pro pojmenování přístupového klíče"
 
@@ -22888,7 +22905,7 @@ msgstr "Žádní uživatelé nenalezeni"
 msgid "No verification is required."
 msgstr "Ověření není vyžadováno."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:193
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:231
 msgid "No verification methods available"
 msgstr "Nejsou k dispozici žádné metody ověření"
 
@@ -23918,6 +23935,11 @@ msgstr "Otevřít studio motivů v samostatném okně"
 msgid "Open theme studio…"
 msgstr "Otevřít studio motivů…"
 
+#. Error in the passkey pop-up window when someone opens its address directly. productName is the app name.
+#: src/features/auth/passkey_bridge/PasskeyBridgeScreen.tsx:35
+msgid "Open this window from {productName} to use your passkey."
+msgstr "Otevřete toto okno z aplikace {productName} a použijte svůj přístupový klíč."
+
 #. Short label in the app layout user area. Preserve {displayName}; it is inserted by code.
 #: src/features/app/components/layout/UserArea.tsx:71
 msgid "Open user menu for {displayName}"
@@ -24033,7 +24055,7 @@ msgid "Options"
 msgstr "Možnosti"
 
 #. Small separator between alternative shortcut keycaps in the keyboard mode intro modal.
-#: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:15
+#: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:16
 #: src/features/connection/components/modals/AddConnectionModal.tsx:318
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx:30
 msgid "or"
@@ -24315,20 +24337,20 @@ msgid "Passkey"
 msgstr "Přístupový klíč"
 
 #. Short label in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:27
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:31
 msgid "Passkey name"
 msgstr "Název přístupového klíče"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:409
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:422
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:90
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:88
 msgid "Passkeys"
 msgstr "Přístupové klíče"
 
 #. Sudo (re-auth) modal body shown on unsigned macOS desktop bundles where passkeys cannot work. Direct the user to install the signed client.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:23
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:30
 msgid "Passkeys require a signed macOS bundle with a valid application identifier. Install the signed desktop client and retry."
 msgstr "Přístupové klíče vyžadují podepsaný balíček macOS s platným identifikátorem aplikace. Nainstalujte podepsaného desktopového klienta a zkuste to znovu."
 
@@ -24344,6 +24366,11 @@ msgstr "Heslo"
 #: src/features/user/components/modals/PasswordChangeModal.tsx:138
 msgid "Password changed"
 msgstr "Heslo změněno"
+
+#. Shown after a passkey prompt fails, above the button that retries the passkey prompt in a pop-up window on the old web address.
+#: src/features/auth/components/PasswordManagerPasskeyAction.tsx:16
+msgid "Password managers may not offer your passkey on this web address. Try it in a pop-up window on the old address instead."
+msgstr "Správci hesel nemusí na této adrese nabízet váš přístupový klíč. Zkuste to místo toho ve vyskakovacím okně na staré adrese."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -26433,7 +26460,7 @@ msgstr "Opětovné vygenerování zneplatní aktuální token. Aktualizujte veš
 msgid "Register"
 msgstr "Registrovat se"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:422
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:435
 msgid "Registered passkeys"
 msgstr "Registrované přístupové klíče"
 
@@ -27005,7 +27032,7 @@ msgstr "Odebrání oprávnění může omezit funkce bota."
 msgid "Removing the timeout will allow <0>{targetUserTag}</0> to send messages, react, and join voice channels again."
 msgstr "Zrušení dočasného omezení umožní uživateli <0>{targetUserTag}</0> znovu posílat zprávy, reagovat a připojovat se k hlasovým kanálům."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:509
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:522
 msgid "Rename"
 msgstr "Přejmenovat"
 
@@ -27246,7 +27273,7 @@ msgid "Require 2FA for moderation actions"
 msgstr "Vyžadovat dvoufaktorové ověřování pro moderátorské zásahy"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:448
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:461
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:138
 msgid "Require a passkey as your second factor"
 msgstr "Vyžadovat přístupový klíč jako druhý faktor"
@@ -27899,7 +27926,7 @@ msgid "Review and confirm"
 msgstr "Zkontrolovat a potvrdit"
 
 #. Security settings row description for authorized apps.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:100
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:101
 msgid "Review apps that can access your account."
 msgstr "Prohlédněte si aplikace, které mají přístup k vašemu účtu."
 
@@ -27914,7 +27941,7 @@ msgid "Review past purchases and refund options"
 msgstr "Zkontrolovat minulé nákupy a možnosti vrácení peněz"
 
 #. Security settings row description for linked devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:108
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:109
 msgid "Review signed-in devices and sign out of sessions you don't recognize."
 msgstr "Prohlédněte si přihlášená zařízení a odhlašte relace, které nepoznáváte."
 
@@ -28234,7 +28261,7 @@ msgstr "Sytost"
 #. Button or menu action label in the rename channel modal. Keep it concise.
 #. Save button in the community-folder settings modal footer.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:113
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:93
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:146
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:366
 #: src/features/channel/components/modals/EditGroupModal.tsx:322
 #: src/features/channel/components/modals/RenameChannelModal.tsx:28
@@ -29020,7 +29047,7 @@ msgctxt "security-settings-section"
 msgid "Security"
 msgstr "Zabezpečení"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:275
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:288
 msgid "Security features"
 msgstr "Funkce zabezpečení"
 
@@ -29032,7 +29059,7 @@ msgid "Security key"
 msgstr "Bezpečnostní klíč"
 
 #. MFA action button for authenticating with a hardware security key or passkey.
-#: src/features/auth/flow/MfaScreen.tsx:26
+#: src/features/auth/flow/MfaScreen.tsx:27
 msgid "Security key / passkey"
 msgstr "Bezpečnostní klíč / přístupový klíč"
 
@@ -30613,12 +30640,12 @@ msgid "Sign in to claim your gift"
 msgstr "Přihlaste se a převezměte si dárek"
 
 #. Passkey sign-in action that opens the browser flow from the desktop app.
-#: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:64
+#: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:69
 #: src/features/auth/flow/AuthLoginLayout.tsx:79
 msgid "Sign in via browser"
 msgstr "Přihlásit se přes prohlížeč"
 
-#: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:63
+#: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:68
 msgid "Sign in with a passkey"
 msgstr "Přihlásit se pomocí přístupového klíče"
 
@@ -32063,7 +32090,7 @@ msgid "Stop trusting all links?"
 msgstr "Přestat důvěřovat všem odkazům?"
 
 #. Security settings: confirmation modal title for turning off passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:64
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:65
 msgid "Stop using passkeys for two-factor authentication?"
 msgstr "Přestat používat přístupové klíče pro dvoufaktorové ověřování?"
 
@@ -34008,11 +34035,11 @@ msgstr "Toto je popis druhé možnosti"
 msgid "This is the third option description"
 msgstr "Toto je popis třetí možnosti"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:248
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:261
 msgid "This is your last passkey and passkeys are your second factor. Deleting it turns off two-factor authentication for your account, and your current backup codes will stop working."
 msgstr "Toto je váš poslední přístupový klíč a přístupové klíče jsou vaším druhým faktorem. Jeho smazáním vypnete na svém účtu dvoufaktorové ověřování a vaše stávající záložní kódy přestanou fungovat."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:243
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:256
 msgid "This is your last passkey. Once it's gone you won't be able to use a passkey as your second factor."
 msgstr "Toto je váš poslední přístupový klíč. Jakmile o něj přijdete, nebudete moci používat přístupový klíč jako druhý faktor."
 
@@ -34126,6 +34153,16 @@ msgstr "Tento účastník má vypnutý zvuk"
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:65
 msgid "This participant was deafened by moderators"
 msgstr "Moderátoři tomuto účastníkovi vypnuli zvuk"
+
+#. Error in the passkey pop-up window when the request it received is not valid.
+#: src/features/auth/passkey_bridge/PasskeyBridgeScreen.tsx:39
+msgid "This passkey request could not be verified. Close this window and try again."
+msgstr "Tento požadavek na přístupový klíč nebylo možné ověřit. Zavřete toto okno a zkuste to znovu."
+
+#. Error in the passkey pop-up window after five minutes without finishing.
+#: src/features/auth/passkey_bridge/PasskeyBridgeScreen.tsx:43
+msgid "This passkey request timed out. Close this window and try again."
+msgstr "Platnost této žádosti o přístupový klíč vypršela. Zavřete toto okno a zkuste to znovu."
 
 #. Required-action form error when the backend rejects a phone number.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:530
@@ -35010,7 +35047,7 @@ msgid "Try searching for something like \"theme\", \"notifications\", or \"priva
 msgstr "Zkuste hledat něco jako \"motiv\", \"oznámení\" nebo \"soukromí\""
 
 #. Secondary MFA action that switches from code entry to passkey or security-key authentication.
-#: src/features/auth/flow/MfaScreen.tsx:34
+#: src/features/auth/flow/MfaScreen.tsx:35
 msgid "Try security key / passkey instead"
 msgstr "Zkusit místo toho bezpečnostní klíč / přístupový klíč"
 
@@ -35051,7 +35088,7 @@ msgstr "Turečtina"
 #. Button label that turns off streaming privacy.
 #. Security settings: confirm button for turning off passkey-based two-factor authentication.
 #: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx:16
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:80
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:81
 msgid "Turn off"
 msgstr "Vypnout"
 
@@ -35108,7 +35145,7 @@ msgid "Turn off streaming privacy before viewing login or account security detai
 msgstr "Před zobrazením přihlašovacích údajů nebo podrobností o zabezpečení účtu vypněte soukromí při streamování."
 
 #. Security settings: confirm button for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:60
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:61
 msgid "Turn on"
 msgstr "Zapnout"
 
@@ -35251,7 +35288,7 @@ msgstr "Dvoufaktorové ověřování vypnuto"
 msgid "Two-factor authentication enabled"
 msgstr "Dvoufaktorové ověřování zapnuto"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:315
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:328
 msgid "Two-factor authentication is enabled"
 msgstr "Dvoufaktorové ověřování je zapnuté"
 
@@ -36480,6 +36517,11 @@ msgstr "Použijte speciální okno k nastavení data, od kterého se bude zobraz
 msgid "Use a different email address and verify it with a code."
 msgstr "Použijte jinou e-mailovou adresu a ověřte ji kódem."
 
+#. Button that runs the passkey prompt in a small pop-up window on the old web address, so password manager extensions can find passkeys saved there.
+#: src/features/auth/components/PasswordManagerPasskeyAction.tsx:11
+msgid "Use a password manager passkey"
+msgstr "Použít přístupový klíč ze správce hesel"
+
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/NagbarControls.ts:9
 msgid "Use actual"
@@ -36500,7 +36542,7 @@ msgstr "Použít skutečnou hodnotu"
 msgid "Use alternative method"
 msgstr "Použít jinou metodu"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:317
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:330
 msgid "Use an authenticator app to generate codes for two-factor authentication"
 msgstr "Používejte ověřovací aplikaci ke generování kódů pro dvoufaktorové ověřování"
 
@@ -36672,12 +36714,12 @@ msgid "Use only if it clearly breaks {productName}'s rules and doesn't fit above
 msgstr "Použijte pouze v případě, že jasně porušuje pravidla {productName} a nespadá do výše uvedených kategorií."
 
 #. Security settings: confirmation modal title for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:51
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:52
 msgid "Use passkeys for two-factor authentication?"
 msgstr "Použít přístupové klíče pro dvoufaktorové ověřování?"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:410
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:423
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:134
 msgid "Use passkeys to sign in without a password"
 msgstr "Používejte přístupové klíče k přihlášení bez hesla"
@@ -36781,6 +36823,11 @@ msgstr "Používat hlasovou aktivitu"
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:94
 msgid "Use your operating system's spellchecker when available. Otherwise, use {productName}'s in-app dictionaries."
 msgstr "Použijte kontrolu pravopisu vašeho operačního systému, pokud je k dispozici. Jinak použijte vestavěné slovníky {productName}."
+
+#. Heading of the small pop-up window that runs a passkey prompt for the new web address.
+#: src/features/auth/passkey_bridge/PasskeyBridgeScreen.tsx:18
+msgid "Use your passkey"
+msgstr "Použijte svůj přístupový klíč"
 
 #. Description text in the entrance sound section.
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:66
@@ -37138,7 +37185,7 @@ msgstr "Ověřovací e-mail byl odeslán. Zkontrolujte si doručenou poštu."
 msgid "Verification expired"
 msgstr "Ověření vypršelo"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:67
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:74
 #: src/features/auth/components/pages/VerifyEmailPage.tsx:108
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:241
 msgid "Verification failed"
@@ -37179,12 +37226,12 @@ msgid "Verify email"
 msgstr "Ověřit e-mail"
 
 #. Accessible form label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:46
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:53
 msgid "Verify identity form"
 msgstr "Formulář pro ověření identity"
 
 #. Short label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:50
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:57
 msgid "Verify it's you"
 msgstr "Ověřte, že jste to vy"
 
@@ -37227,12 +37274,12 @@ msgid "Verify your email address to send friend requests."
 msgstr "Ověřte svou e-mailovou adresu, abyste mohli posílat žádosti o přátelství."
 
 #. Security settings warning shown when an unverified account cannot register a new passkey.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:47
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:48
 msgid "Verify your email before adding a passkey."
 msgstr "Před přidáním přístupového klíče ověřte svůj e-mail."
 
 #. Security settings warning shown when an unverified account cannot enable authenticator-app two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:42
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:43
 msgid "Verify your email before adding an authenticator app."
 msgstr "Před přidáním ověřovací aplikace si ověřte svůj e-mail."
 
@@ -37524,7 +37571,7 @@ msgstr "Zobrazit a spravovat zabanované uživatele."
 msgid "View and manage every webhook configured across your community."
 msgstr "Zobrazte a spravujte všechny webhooky nakonfigurované v rámci vaší komunity."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:384
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:397
 msgid "View and manage your backup codes for account recovery"
 msgstr "Zobrazit a spravovat záložní kódy pro obnovení účtu"
 
@@ -37558,7 +37605,7 @@ msgstr "Zobrazit kanál"
 msgid "View channel members"
 msgstr "Zobrazit členy kanálu"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:402
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:415
 msgid "View codes"
 msgstr "Zobrazit kódy"
 
@@ -38084,7 +38131,7 @@ msgstr "Počkejte zde"
 msgid "Waiting for connection..."
 msgstr "Čekání na připojení..."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:236
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:274
 msgid "Waiting for passkey…"
 msgstr "Čekání na přístupový klíč…"
 
@@ -39560,7 +39607,7 @@ msgid "You will still need to finish the email step."
 msgstr "Stále bude potřeba dokončit krok s e-mailem."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when the account also has an authenticator app.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:74
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:75
 msgid "You won't be asked for a passkey after your password anymore. Your authenticator app stays as your second factor."
 msgstr "Už nebudete po zadání hesla vyzváni k použití přístupového klíče. Vaše ověřovací aplikace zůstane vaším druhým faktorem."
 
@@ -39579,7 +39626,7 @@ msgid "You'll have to sign back in on all signed-out devices"
 msgstr "Budete se muset znovu přihlásit na všech odhlášených zařízeních"
 
 #. Security settings: confirmation modal body for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:55
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:56
 msgid "You'll need one of your passkeys to sign in on a new device. If you lose every passkey you can be locked out of your account. Backup codes will be saved for you so you still have a way in."
 msgstr "K přihlášení na novém zařízení budete potřebovat jeden ze svých přístupových klíčů. Pokud přijdete o všechny přístupové klíče, můžete nenávratně ztratit přístup ke svému účtu. Záložní kódy vám uložíme, abyste se do svého účtu stále mohli dostat."
 
@@ -39871,12 +39918,12 @@ msgstr "Váš účet je příliš nový na odesílání zpráv v této komunitě
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "Žádost o váš účet čeká na schválení. Přihlásit se můžete, až ji administrátor schválí."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:199
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:237
 msgid "Your account requires multi-factor authentication, but no supported methods are set up on this device. Sign in on a device with your authenticator app or security key, or contact support."
 msgstr "Váš účet vyžaduje vícefaktorové ověřování, ale na tomto zařízení nejsou nastavené žádné podporované metody. Přihlaste se na zařízení s ověřovací aplikací nebo bezpečnostním klíčem, případně kontaktujte podporu."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when passkeys are the only second factor on the account.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:68
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:69
 msgid "Your account will no longer be protected by two-factor authentication when you sign in with your password. You'll also lose elevated permissions in servers that require two-factor authentication."
 msgstr "Váš účet již nebude chráněn dvoufaktorovým ověřováním při přihlašování heslem. Také ztratíte zvýšená oprávnění v komunitách, které dvoufaktorové ověřování vyžadují."
 
@@ -39893,6 +39940,11 @@ msgstr "Vaši akci se nepodařilo dokončit, protože byla označena našimi bez
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:409
 msgid "Your application is pending review. You can still update your listing details or withdraw the application."
 msgstr "Vaše žádost čeká na posouzení. Stále můžete upravovat údaje v záznamu nebo žádost stáhnout."
+
+#. Error shown when the browser blocks the pop-up window used for password manager passkeys.
+#: src/features/auth/utils/PasskeyBridge.ts:25
+msgid "Your browser blocked the passkey pop-up window. Allow pop-ups for this site and try again."
+msgstr "Prohlížeč zablokoval vyskakovací okno pro přístupový klíč. Povolte pro tento web vyskakovací okna a zkuste to znovu."
 
 #. Error shown when a passkey prompt fails because the browser cannot use the passkey on this web address. Keep plain.
 #: src/features/auth/utils/WebAuthnUtils.ts:18

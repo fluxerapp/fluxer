@@ -1789,6 +1789,12 @@
         "msgid": "Contact the administrators of this instance for help."
       },
       {
+        "msgid": "Continue to create a passkey for {host}"
+      },
+      {
+        "msgid": "Continue with your passkey to sign in to {host}"
+      },
+      {
         "msgid": "Copy emoji"
       },
       {
@@ -1808,6 +1814,9 @@
       },
       {
         "msgid": "Couldn't update passkey two-factor authentication"
+      },
+      {
+        "msgid": "Couldn't use your passkey in the pop-up window. Try again."
       },
       {
         "msgid": "Create administrator account"
@@ -2242,6 +2251,9 @@
         "msgid": "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
       },
       {
+        "msgid": "Open this window from {productName} to use your passkey."
+      },
+      {
         "msgid": "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
       },
       {
@@ -2276,6 +2288,9 @@
       },
       {
         "msgid": "Our phone number check is down right now. This is on us, not your number. Wait a few minutes and try the same number again."
+      },
+      {
+        "msgid": "Password managers may not offer your passkey on this web address. Try it in a pop-up window on the old address instead."
       },
       {
         "msgid": "Pause preview when Fluxer isn’t focused"
@@ -3130,6 +3145,12 @@
         "msgid": "This option is required. Please provide a value."
       },
       {
+        "msgid": "This passkey request could not be verified. Close this window and try again."
+      },
+      {
+        "msgid": "This passkey request timed out. Close this window and try again."
+      },
+      {
         "msgid": "This reset link has expired. Reset links last 1 hour. Please request a new one."
       },
       {
@@ -3199,6 +3220,9 @@
         "msgid": "Upload files and media in this channel."
       },
       {
+        "msgid": "Use a password manager passkey"
+      },
+      {
         "msgid": "Use emoji from other communities in this channel."
       },
       {
@@ -3224,6 +3248,9 @@
       },
       {
         "msgid": "Use your operating system's spellchecker when available. Otherwise, use {productName}'s in-app dictionaries."
+      },
+      {
+        "msgid": "Use your passkey"
       },
       {
         "msgid": "Used in Custom mode. The Gaming and Screen share presets set their own hint."
@@ -3293,6 +3320,9 @@
       },
       {
         "msgid": "Your account works normally again straight away and nothing is removed. We can ask for this check again later."
+      },
+      {
+        "msgid": "Your browser blocked the passkey pop-up window. Allow pop-ups for this site and try again."
       },
       {
         "msgid": "Your capture device is sending {deliveredResolution} instead of {resolution}."

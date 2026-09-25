@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {MFA_CODE_DIGIT_COUNT} from '@app/features/app/config/I18nDisplayConstants';
+import {PasswordManagerPasskeyAction} from '@app/features/auth/components/PasswordManagerPasskeyAction';
 import FormField from '@app/features/auth/flow/AuthFormField';
 import styles from '@app/features/auth/flow/MfaScreen.module.css';
 import {useAuthCardPresentation} from '@app/features/auth/flow/useAuthCardPresentation';
@@ -53,7 +54,16 @@ interface MfaScreenProps {
 
 const MfaScreen = ({challenge, inviteCode, onSuccess, onCancel}: MfaScreenProps) => {
 	const {i18n} = useLingui();
-	const {form, isLoading, fieldErrors, handleWebAuthn, isWebAuthnLoading, supports} = useMfaController({
+	const {
+		form,
+		isLoading,
+		fieldErrors,
+		handleWebAuthn,
+		handlePasskeyBridge,
+		passkeyBridgeSuggested,
+		isWebAuthnLoading,
+		supports,
+	} = useMfaController({
 		ticket: challenge.ticket,
 		methods: {totp: challenge.totp, webauthn: challenge.webauthn, backupCodes: challenge.backupCodes},
 		inviteCode,
@@ -128,6 +138,12 @@ const MfaScreen = ({challenge, inviteCode, onSuccess, onCancel}: MfaScreenProps)
 					>
 						{i18n._(isCodePrimary ? TRY_SECURITY_KEY_INSTEAD_DESCRIPTOR : SECURITY_KEY_OR_PASSKEY_DESCRIPTOR)}
 					</Button>
+					<PasswordManagerPasskeyAction
+						suggested={passkeyBridgeSuggested}
+						disabled={isWebAuthnLoading}
+						onClick={handlePasskeyBridge}
+						data-flx="auth.flow.mfa-screen.password-manager-passkey-action"
+					/>
 				</div>
 			)}
 			<div className={styles.footerButtons} data-flx="auth.flow.mfa-screen.footer-buttons">

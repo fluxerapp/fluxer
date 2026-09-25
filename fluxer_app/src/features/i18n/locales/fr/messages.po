@@ -2370,8 +2370,8 @@ msgstr "6 mois"
 
 #. Placeholder for the MFA login one-time password field.
 #. Short label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:58
-#: src/features/auth/flow/MfaScreen.tsx:22
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:65
+#: src/features/auth/flow/MfaScreen.tsx:23
 msgid "6-digit code"
 msgstr "Code à 6 chiffres"
 
@@ -2649,7 +2649,7 @@ msgid "Account & premium overrides"
 msgstr "Personnalisation de l’état du compte et de l’abonnement premium"
 
 #. Security settings section for third-party app access and signed-in devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:88
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:89
 msgid "Account access"
 msgstr "Accès au compte"
 
@@ -2976,7 +2976,7 @@ msgstr "Ajoutez un compte pour continuer."
 msgid "Add an email and password to your account first."
 msgstr "Ajoutez d'abord un e-mail et un mot de passe à votre compte."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:296
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:309
 msgid "Add an extra layer of security to your account"
 msgstr "Ajoutez une couche de sécurité supplémentaire à votre compte"
 
@@ -3092,7 +3092,7 @@ msgid "Add override"
 msgstr "Ajouter des permissions spécifiques"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:439
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:452
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:130
 msgid "Add passkey"
 msgstr "Ajouter une clé d'accès"
@@ -3296,11 +3296,11 @@ msgstr "Ajouté aux favoris"
 msgid "Added to saved media"
 msgstr "Ajouté aux médias enregistrés"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:495
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:508
 msgid "Added: {createdDate}"
 msgstr "Ajouté : {createdDate}"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:491
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:504
 msgid "Added: {createdDate} • last used: {lastUsedDate}"
 msgstr "Ajouté : {createdDate} • dernière utilisation : {lastUsedDate}"
 
@@ -4481,7 +4481,7 @@ msgid "Are you sure you want to delete the category \"{categoryName}\"? This can
 msgstr "Voulez-vous vraiment supprimer la catégorie « {categoryName} » ? Cette action est irréversible."
 
 #. placeholder {0}: passkey.name
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:227
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:240
 msgid "Are you sure you want to delete the passkey <0>{0}</0>?"
 msgstr "Voulez-vous vraiment supprimer la clé d'accès <0>{0}</0> ?"
 
@@ -4493,7 +4493,7 @@ msgstr "Voulez-vous vraiment supprimer cette pièce jointe ? Cette action est ir
 msgid "Are you sure you want to delete this community? This action cannot be undone. All channels, messages, and settings will be permanently deleted."
 msgstr "Voulez-vous vraiment supprimer cette communauté ? Cette action est irréversible. Tous les salons, messages et paramètres seront définitivement supprimés."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:235
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:248
 msgid "Are you sure you want to delete this passkey?"
 msgstr "Voulez-vous vraiment supprimer cette clé d'accès ?"
 
@@ -4573,7 +4573,7 @@ msgid "Ask before starting calls"
 msgstr "Demander confirmation avant de lancer des appels"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:449
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:462
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:154
 msgid "Ask for a passkey after your password when you sign in"
 msgstr "Demander une clé d'accès après votre mot de passe lors de la connexion"
@@ -4851,14 +4851,14 @@ msgstr "Authentification"
 msgid "Authenticator"
 msgstr "Authentificateur"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:308
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:321
 msgid "Authenticator app"
 msgstr "Application d'authentification"
 
 #. Label for the MFA login one-time password field from an authenticator app or backup code.
 #. Short label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:54
-#: src/features/auth/flow/MfaScreen.tsx:18
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:61
+#: src/features/auth/flow/MfaScreen.tsx:19
 msgid "Authenticator code"
 msgstr "Code d'authentification"
 
@@ -4928,7 +4928,7 @@ msgstr "Applications autorisées"
 #. Settings section label for OAuth applications authorized by the user.
 #. User settings tab for OAuth or connected apps authorized by the user.
 #: src/features/user/components/modals/tabs/account_security_tab/AccountManagementModals.tsx:17
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:96
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:97
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:507
 #: src/features/user/components/settings_utils/search_index/AuthorizedAppsIndex.ts:10
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:151
@@ -5342,8 +5342,8 @@ msgstr "Retour arrière"
 
 #. Label and placeholder for the MFA login field when the only code the account can use is a backup code.
 #. Label and placeholder for the code field in the authentication sudo verification modal when the only code the account can use is a backup code.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:62
-#: src/features/auth/flow/MfaScreen.tsx:38
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:69
+#: src/features/auth/flow/MfaScreen.tsx:39
 msgid "Backup code"
 msgstr "Code de secours"
 
@@ -5351,7 +5351,7 @@ msgstr "Code de secours"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/auth/components/modals/BackupCodesModal.tsx:18
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:378
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:391
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:74
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:68
 msgid "Backup codes"
@@ -6364,9 +6364,9 @@ msgstr "Impossible d’envoyer des fichiers ici"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:216
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:232
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:72
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:86
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:138
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:282
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:328
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:164
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:177
@@ -7715,7 +7715,7 @@ msgstr "Finalisez votre inscription et vérifiez votre adresse e-mail pour envoy
 msgid "Claim your account by adding an email and password. We will send a verification code to confirm your email before finishing."
 msgstr "Finalisez votre inscription en ajoutant une adresse e-mail et un mot de passe à votre compte. Nous vous enverrons un code pour vérifier votre adresse e-mail avant de terminer."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:277
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:290
 msgid "Claim your account to access security features like two-factor authentication and passkeys."
 msgstr "Finalisez votre inscription pour accéder aux fonctionnalités de sécurité comme l’authentification à deux facteurs et les clés d’accès."
 
@@ -8160,9 +8160,11 @@ msgstr "Fermer dans la barre de menus"
 msgid "Close to tray"
 msgstr "Fermer vers la zone de notification"
 
+#. Button in the passkey pop-up window that closes it after an error.
 #. Button label in a popped-out voice window titlebar that closes the popped-out window.
 #. Short label in the app layout native titlebar.
 #: src/features/app/components/layout/NativeWindowControls.tsx:25
+#: src/features/auth/passkey_bridge/PasskeyBridgeScreen.tsx:31
 #: src/features/voice/components/popout/PopoutTitlebar.tsx:26
 msgid "Close window"
 msgstr "Fermer la fenêtre"
@@ -9212,6 +9214,11 @@ msgstr "Continuer"
 msgid "Continue to checkout"
 msgstr "Continuer vers le paiement"
 
+#. Body of the passkey pop-up window when adding a new passkey. host is a web address such as fluxer.com.
+#: src/features/auth/passkey_bridge/PasskeyBridgeScreen.tsx:27
+msgid "Continue to create a passkey for {host}"
+msgstr "Continuer pour créer une clé d'accès pour {host}"
+
 #. Button or menu action label in the report action utils helper. Keep it concise. Keep the tone plain and specific.
 #: src/features/moderation/utils/ReportActionUtils.tsx:37
 msgid "Continue to report community"
@@ -9222,7 +9229,7 @@ msgstr "Poursuivre le signalement de la communauté"
 msgid "Continue to report user"
 msgstr "Poursuivre le signalement de l’utilisateur"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:249
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:287
 msgid "Continue with passkey"
 msgstr "Continuer avec une clé d'accès"
 
@@ -9230,6 +9237,11 @@ msgstr "Continuer avec une clé d'accès"
 #: src/features/auth/flow/AuthSsoPanel.tsx:21
 msgid "Continue with SSO"
 msgstr "Continuer avec l'authentification unique"
+
+#. Body of the passkey pop-up window when signing in or confirming identity. host is a web address such as fluxer.com.
+#: src/features/auth/passkey_bridge/PasskeyBridgeScreen.tsx:22
+msgid "Continue with your passkey to sign in to {host}"
+msgstr "Continuer avec votre clé d'accès pour vous connecter à {host}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:31
@@ -9829,7 +9841,7 @@ msgid "Couldn't delete application"
 msgstr "Impossible de supprimer l’application"
 
 #. Title of the error modal shown when removing a registered passkey fails.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:38
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:39
 msgid "Couldn't delete passkey"
 msgstr "Impossible de supprimer la clé d’accès"
 
@@ -10170,7 +10182,7 @@ msgid "Couldn't update mention suppression bypass"
 msgstr "Impossible de mettre à jour le contournement de la suppression des mentions"
 
 #. Title of the error modal shown when the passkey two-factor setting could not be saved.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:84
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:85
 msgid "Couldn't update passkey two-factor authentication"
 msgstr "Impossible de mettre à jour l'authentification à deux facteurs par clé d'accès"
 
@@ -10204,6 +10216,11 @@ msgstr "Impossible d’envoyer l’avatar"
 msgid "Couldn't upload banner"
 msgstr "Impossible d’envoyer la bannière"
 
+#. Error shown when the pop-up window used for password manager passkeys does not finish.
+#: src/features/auth/utils/PasskeyBridge.ts:29
+msgid "Couldn't use your passkey in the pop-up window. Try again."
+msgstr "Impossible d'utiliser votre clé d'accès dans la fenêtre contextuelle. Réessayez."
+
 #. Desktop handoff flow error shown when verifying the pairing code fails for an unexpected reason.
 #: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:14
 msgid "Couldn't verify that code. Try again."
@@ -10215,7 +10232,7 @@ msgid "Couldn't verify the connection"
 msgstr "Impossible de vérifier la connexion"
 
 #. Sudo (re-auth) modal toast error shown when passkey verification fails. Keep plain.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:29
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:36
 msgid "Couldn't verify with passkey. Try again."
 msgstr "Impossible de vérifier avec la clé d'accès. Veuillez réessayer."
 
@@ -11298,7 +11315,7 @@ msgstr "Delaware"
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:109
 #: src/features/platform/utils/DesktopLocaleBridge.ts:76
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:517
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:530
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:117
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:290
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
@@ -11471,7 +11488,7 @@ msgid "Delete other members' messages. Pinning is controlled separately."
 msgstr "Supprimer les messages des autres membres. L'épinglage est géré séparément."
 
 #. Security settings: confirmation modal title and primary button for removing a registered passkey. Destructive action; keep plain and direct.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:33
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:34
 msgid "Delete passkey"
 msgstr "Supprimer la clé d'accès"
 
@@ -11949,7 +11966,7 @@ msgstr "Appareil :"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tab label in the screen-share picker. Lists cameras and virtual capture devices.
 #. User settings tab for managing devices linked to the current account.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:104
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:105
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:530
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
@@ -12060,7 +12077,7 @@ msgstr "Envoi direct actif"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short footer action in the screen-share picker that disables screen-share preview frame uploads.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:342
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:355
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:158
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:279
 msgid "Disable"
@@ -12957,7 +12974,7 @@ msgid "Dutch"
 msgstr "Néerlandais"
 
 #. Placeholder or example text in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:31
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:35
 msgid "e.g., YubiKey, iPhone, work computer"
 msgstr "ex. : YubiKey, iPhone, ordinateur professionnel"
 
@@ -13508,7 +13525,7 @@ msgstr "Favoris vides"
 #: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:32
 #: src/features/app/components/layout/GuildLayout.tsx:54
 #: src/features/invite/components/DisableInvitesButton.tsx:27
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:360
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:373
 #: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:23
 msgid "Enable"
 msgstr "Activer"
@@ -13989,12 +14006,12 @@ msgid "Enter new email"
 msgstr "Saisir la nouvelle adresse e-mail"
 
 #. MFA code entry instructions shown when the account uses passkeys as its second factor.
-#: src/features/auth/flow/MfaScreen.tsx:42
+#: src/features/auth/flow/MfaScreen.tsx:43
 msgid "Enter one of your backup codes if you can't use your passkey."
 msgstr "Saisissez l'un de vos codes de secours si vous ne pouvez pas utiliser votre clé d'accès."
 
 #. Body text in the authentication sudo verification modal, shown when the only code the account can enter is a backup code. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:41
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:48
 msgid "Enter one of your backup codes."
 msgstr "Saisissez l'un de vos codes de secours."
 
@@ -14014,7 +14031,7 @@ msgid "Enter text"
 msgstr "Saisir du texte"
 
 #. MFA code entry instructions. digitCount is the expected authenticator-code length.
-#: src/features/auth/flow/MfaScreen.tsx:30
+#: src/features/auth/flow/MfaScreen.tsx:31
 msgid "Enter the {digitCount}-digit code from your authenticator app or a backup code."
 msgstr "Saisissez le code à {digitCount} chiffres de votre application d'authentification ou un code de secours."
 
@@ -14048,7 +14065,7 @@ msgid "Enter the code before continuing."
 msgstr "Saisissez le code avant de continuer."
 
 #. Body text in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:37
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:44
 msgid "Enter the code from your authenticator app."
 msgstr "Saisissez le code de votre application d'authentification."
 
@@ -14132,7 +14149,7 @@ msgid "Enter your name"
 msgstr "Saisissez votre nom"
 
 #. Body text in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:33
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:40
 msgid "Enter your password."
 msgstr "Saisissez votre mot de passe."
 
@@ -15462,7 +15479,7 @@ msgstr "Pour moi"
 msgid "For this check, you send us a text message instead of receiving one from us."
 msgstr "Pour cette vérification, vous nous envoyez un SMS au lieu d’en recevoir un de notre part."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:187
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:225
 msgid "For your security, please confirm it's you to continue."
 msgstr "Pour votre sécurité, veuillez confirmer votre identité pour continuer."
 
@@ -19842,8 +19859,8 @@ msgstr "Logiciels malveillants ou liens dangereux"
 msgid "Malware, credential theft, or harmful files."
 msgstr "Logiciels malveillants, vol d'identifiants ou fichiers nuisibles."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:561
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:596
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:574
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:609
 msgid "Manage"
 msgstr "Gérer"
 
@@ -19853,7 +19870,7 @@ msgid "Manage accounts"
 msgstr "Gérer les comptes"
 
 #. Security settings section description for account access controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:92
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:93
 msgid "Manage apps and devices with access to your account"
 msgstr "Gérez les applications et les appareils qui ont accès à votre compte"
 
@@ -21926,12 +21943,12 @@ msgid "Name must be at least 2 characters"
 msgstr "Le nom doit contenir au moins 2 caractères"
 
 #. Short label in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:23
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:27
 msgid "Name passkey"
 msgstr "Nommer la clé d'accès"
 
 #. Accessible form label in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:19
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:23
 msgid "Name passkey form"
 msgstr "Formulaire pour nommer la clé d’accès"
 
@@ -22888,7 +22905,7 @@ msgstr "Aucun utilisateur trouvé"
 msgid "No verification is required."
 msgstr "Aucune vérification n'est requise."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:193
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:231
 msgid "No verification methods available"
 msgstr "Aucune méthode de vérification disponible"
 
@@ -23918,6 +23935,11 @@ msgstr "Ouvrir la fenêtre contextuelle du studio de thèmes"
 msgid "Open theme studio…"
 msgstr "Ouvrir le studio de thèmes…"
 
+#. Error in the passkey pop-up window when someone opens its address directly. productName is the app name.
+#: src/features/auth/passkey_bridge/PasskeyBridgeScreen.tsx:35
+msgid "Open this window from {productName} to use your passkey."
+msgstr "Ouvrez cette fenêtre depuis {productName} pour utiliser votre clé d'accès."
+
 #. Short label in the app layout user area. Preserve {displayName}; it is inserted by code.
 #: src/features/app/components/layout/UserArea.tsx:71
 msgid "Open user menu for {displayName}"
@@ -24033,7 +24055,7 @@ msgid "Options"
 msgstr "Options"
 
 #. Small separator between alternative shortcut keycaps in the keyboard mode intro modal.
-#: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:15
+#: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:16
 #: src/features/connection/components/modals/AddConnectionModal.tsx:318
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx:30
 msgid "or"
@@ -24315,20 +24337,20 @@ msgid "Passkey"
 msgstr "Clé d'accès"
 
 #. Short label in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:27
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:31
 msgid "Passkey name"
 msgstr "Nom de la clé d'accès"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:409
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:422
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:90
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:88
 msgid "Passkeys"
 msgstr "Clés d'accès"
 
 #. Sudo (re-auth) modal body shown on unsigned macOS desktop bundles where passkeys cannot work. Direct the user to install the signed client.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:23
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:30
 msgid "Passkeys require a signed macOS bundle with a valid application identifier. Install the signed desktop client and retry."
 msgstr "Les clés d'accès nécessitent un paquet macOS signé avec un identifiant d'application valide. Installez le client de bureau signé et réessayez."
 
@@ -24344,6 +24366,11 @@ msgstr "Mot de passe"
 #: src/features/user/components/modals/PasswordChangeModal.tsx:138
 msgid "Password changed"
 msgstr "Mot de passe modifié"
+
+#. Shown after a passkey prompt fails, above the button that retries the passkey prompt in a pop-up window on the old web address.
+#: src/features/auth/components/PasswordManagerPasskeyAction.tsx:16
+msgid "Password managers may not offer your passkey on this web address. Try it in a pop-up window on the old address instead."
+msgstr "Les gestionnaires de mots de passe ne proposent peut-être pas votre clé d'accès à cette adresse web. Essayez-la plutôt dans une fenêtre contextuelle sur l'ancienne adresse."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -26433,7 +26460,7 @@ msgstr "La régénération invalidera le jeton actuel. Mettez à jour tout code 
 msgid "Register"
 msgstr "S'inscrire"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:422
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:435
 msgid "Registered passkeys"
 msgstr "Clés d'accès enregistrées"
 
@@ -27005,7 +27032,7 @@ msgstr "Retirer des permissions peut limiter les fonctionnalités du bot."
 msgid "Removing the timeout will allow <0>{targetUserTag}</0> to send messages, react, and join voice channels again."
 msgstr "Lever la restriction temporaire permettra à <0>{targetUserTag}</0> d’envoyer des messages, de réagir et de rejoindre à nouveau les salons vocaux."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:509
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:522
 msgid "Rename"
 msgstr "Renommer"
 
@@ -27246,7 +27273,7 @@ msgid "Require 2FA for moderation actions"
 msgstr "Exiger la 2FA pour les actions de modération"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:448
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:461
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:138
 msgid "Require a passkey as your second factor"
 msgstr "Exiger une clé d'accès comme deuxième facteur"
@@ -27899,7 +27926,7 @@ msgid "Review and confirm"
 msgstr "Vérifier et confirmer"
 
 #. Security settings row description for authorized apps.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:100
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:101
 msgid "Review apps that can access your account."
 msgstr "Consultez les applications autorisées à accéder à votre compte."
 
@@ -27914,7 +27941,7 @@ msgid "Review past purchases and refund options"
 msgstr "Consulter les achats passés et les options de remboursement"
 
 #. Security settings row description for linked devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:108
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:109
 msgid "Review signed-in devices and sign out of sessions you don't recognize."
 msgstr "Consultez les appareils connectés et fermez les sessions que vous ne reconnaissez pas."
 
@@ -28234,7 +28261,7 @@ msgstr "Saturation"
 #. Button or menu action label in the rename channel modal. Keep it concise.
 #. Save button in the community-folder settings modal footer.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:113
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:93
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:146
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:366
 #: src/features/channel/components/modals/EditGroupModal.tsx:322
 #: src/features/channel/components/modals/RenameChannelModal.tsx:28
@@ -29020,7 +29047,7 @@ msgctxt "security-settings-section"
 msgid "Security"
 msgstr "Sécurité"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:275
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:288
 msgid "Security features"
 msgstr "Fonctionnalités de sécurité"
 
@@ -29032,7 +29059,7 @@ msgid "Security key"
 msgstr "Clé de sécurité"
 
 #. MFA action button for authenticating with a hardware security key or passkey.
-#: src/features/auth/flow/MfaScreen.tsx:26
+#: src/features/auth/flow/MfaScreen.tsx:27
 msgid "Security key / passkey"
 msgstr "Clé de sécurité / clé d’accès"
 
@@ -30613,12 +30640,12 @@ msgid "Sign in to claim your gift"
 msgstr "Connectez-vous pour récupérer votre cadeau"
 
 #. Passkey sign-in action that opens the browser flow from the desktop app.
-#: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:64
+#: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:69
 #: src/features/auth/flow/AuthLoginLayout.tsx:79
 msgid "Sign in via browser"
 msgstr "Se connecter via le navigateur"
 
-#: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:63
+#: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:68
 msgid "Sign in with a passkey"
 msgstr "Se connecter avec une clé d'accès"
 
@@ -32063,7 +32090,7 @@ msgid "Stop trusting all links?"
 msgstr "Arrêter de faire confiance à tous les liens ?"
 
 #. Security settings: confirmation modal title for turning off passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:64
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:65
 msgid "Stop using passkeys for two-factor authentication?"
 msgstr "Ne plus utiliser de clés d'accès pour l'authentification à deux facteurs ?"
 
@@ -34008,11 +34035,11 @@ msgstr "Ceci est la description de la deuxième option"
 msgid "This is the third option description"
 msgstr "Ceci est la description de la troisième option"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:248
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:261
 msgid "This is your last passkey and passkeys are your second factor. Deleting it turns off two-factor authentication for your account, and your current backup codes will stop working."
 msgstr "C'est votre dernière clé d'accès, et les clés d'accès sont votre deuxième facteur. La supprimer désactivera l'authentification à deux facteurs pour votre compte, et vos codes de secours actuels cesseront de fonctionner."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:243
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:256
 msgid "This is your last passkey. Once it's gone you won't be able to use a passkey as your second factor."
 msgstr "C'est votre dernière clé d'accès. Une fois qu'elle sera supprimée, vous ne pourrez plus utiliser de clé d'accès comme deuxième facteur."
 
@@ -34126,6 +34153,16 @@ msgstr "Le son est désactivé pour ce participant"
 #: src/features/voice/utils/VoiceMessageDescriptors.ts:65
 msgid "This participant was deafened by moderators"
 msgstr "Les modérateurs ont désactivé le son de ce participant"
+
+#. Error in the passkey pop-up window when the request it received is not valid.
+#: src/features/auth/passkey_bridge/PasskeyBridgeScreen.tsx:39
+msgid "This passkey request could not be verified. Close this window and try again."
+msgstr "Cette demande de clé d'accès n'a pas pu être vérifiée. Fermez cette fenêtre et réessayez."
+
+#. Error in the passkey pop-up window after five minutes without finishing.
+#: src/features/auth/passkey_bridge/PasskeyBridgeScreen.tsx:43
+msgid "This passkey request timed out. Close this window and try again."
+msgstr "Cette demande de clé d'accès a expiré. Fermez cette fenêtre et réessayez."
 
 #. Required-action form error when the backend rejects a phone number.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:530
@@ -35010,7 +35047,7 @@ msgid "Try searching for something like \"theme\", \"notifications\", or \"priva
 msgstr "Essayez de rechercher « thème », « notifications » ou « confidentialité »"
 
 #. Secondary MFA action that switches from code entry to passkey or security-key authentication.
-#: src/features/auth/flow/MfaScreen.tsx:34
+#: src/features/auth/flow/MfaScreen.tsx:35
 msgid "Try security key / passkey instead"
 msgstr "Essayer plutôt une clé de sécurité / clé d'accès"
 
@@ -35051,7 +35088,7 @@ msgstr "Turc"
 #. Button label that turns off streaming privacy.
 #. Security settings: confirm button for turning off passkey-based two-factor authentication.
 #: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx:16
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:80
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:81
 msgid "Turn off"
 msgstr "Désactiver"
 
@@ -35108,7 +35145,7 @@ msgid "Turn off streaming privacy before viewing login or account security detai
 msgstr "Désactivez la confidentialité de la diffusion avant de consulter les informations de connexion ou de sécurité du compte."
 
 #. Security settings: confirm button for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:60
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:61
 msgid "Turn on"
 msgstr "Activer"
 
@@ -35251,7 +35288,7 @@ msgstr "Authentification à deux facteurs désactivée"
 msgid "Two-factor authentication enabled"
 msgstr "Authentification à deux facteurs activée"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:315
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:328
 msgid "Two-factor authentication is enabled"
 msgstr "L'authentification à deux facteurs est activée"
 
@@ -36480,6 +36517,11 @@ msgstr "Utilisez une fenêtre dédiée pour définir une date limite d'historiqu
 msgid "Use a different email address and verify it with a code."
 msgstr "Utilisez une autre adresse e-mail et vérifiez-la avec un code."
 
+#. Button that runs the passkey prompt in a small pop-up window on the old web address, so password manager extensions can find passkeys saved there.
+#: src/features/auth/components/PasswordManagerPasskeyAction.tsx:11
+msgid "Use a password manager passkey"
+msgstr "Utiliser une clé d'accès de gestionnaire de mots de passe"
+
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/NagbarControls.ts:9
 msgid "Use actual"
@@ -36500,7 +36542,7 @@ msgstr "Utiliser la valeur réelle"
 msgid "Use alternative method"
 msgstr "Utiliser une autre méthode"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:317
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:330
 msgid "Use an authenticator app to generate codes for two-factor authentication"
 msgstr "Utiliser une application d’authentification pour générer les codes de l’authentification à deux facteurs"
 
@@ -36672,12 +36714,12 @@ msgid "Use only if it clearly breaks {productName}'s rules and doesn't fit above
 msgstr "À utiliser uniquement si le contenu enfreint clairement les règles de {productName} et ne correspond pas aux catégories ci-dessus."
 
 #. Security settings: confirmation modal title for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:51
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:52
 msgid "Use passkeys for two-factor authentication?"
 msgstr "Utiliser des clés d'accès pour l'authentification à deux facteurs ?"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:410
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:423
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:134
 msgid "Use passkeys to sign in without a password"
 msgstr "Utiliser des clés d'accès pour se connecter sans mot de passe"
@@ -36781,6 +36823,11 @@ msgstr "Utiliser l'activité vocale"
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:94
 msgid "Use your operating system's spellchecker when available. Otherwise, use {productName}'s in-app dictionaries."
 msgstr "Utilisez le correcteur orthographique de votre système d'exploitation si disponible. Sinon, utilisez les dictionnaires intégrés de {productName}."
+
+#. Heading of the small pop-up window that runs a passkey prompt for the new web address.
+#: src/features/auth/passkey_bridge/PasskeyBridgeScreen.tsx:18
+msgid "Use your passkey"
+msgstr "Utilisez votre clé d'accès"
 
 #. Description text in the entrance sound section.
 #: src/features/user/components/modals/tabs/components/EntranceSoundSection.tsx:66
@@ -37138,7 +37185,7 @@ msgstr "E-mail de vérification envoyé. Vérifiez votre boîte de réception."
 msgid "Verification expired"
 msgstr "Vérification expirée"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:67
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:74
 #: src/features/auth/components/pages/VerifyEmailPage.tsx:108
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:241
 msgid "Verification failed"
@@ -37179,12 +37226,12 @@ msgid "Verify email"
 msgstr "Vérifier l'e-mail"
 
 #. Accessible form label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:46
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:53
 msgid "Verify identity form"
 msgstr "Formulaire de vérification d'identité"
 
 #. Short label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:50
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:57
 msgid "Verify it's you"
 msgstr "Vérifiez que c'est bien vous"
 
@@ -37227,12 +37274,12 @@ msgid "Verify your email address to send friend requests."
 msgstr "Vérifiez votre adresse e-mail pour envoyer des demandes d'ami."
 
 #. Security settings warning shown when an unverified account cannot register a new passkey.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:47
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:48
 msgid "Verify your email before adding a passkey."
 msgstr "Vérifiez votre adresse e-mail avant d'ajouter une clé d'accès."
 
 #. Security settings warning shown when an unverified account cannot enable authenticator-app two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:42
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:43
 msgid "Verify your email before adding an authenticator app."
 msgstr "Vérifiez votre adresse e-mail avant d'ajouter une application d'authentification."
 
@@ -37524,7 +37571,7 @@ msgstr "Voir et gérer les utilisateurs bannis."
 msgid "View and manage every webhook configured across your community."
 msgstr "Afficher et gérer tous les webhooks configurés pour votre communauté."
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:384
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:397
 msgid "View and manage your backup codes for account recovery"
 msgstr "Afficher et gérer vos codes de secours pour la récupération de compte"
 
@@ -37558,7 +37605,7 @@ msgstr "Voir le salon"
 msgid "View channel members"
 msgstr "Voir les membres du salon"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:402
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:415
 msgid "View codes"
 msgstr "Afficher les codes"
 
@@ -38084,7 +38131,7 @@ msgstr "Veuillez patienter"
 msgid "Waiting for connection..."
 msgstr "En attente de connexion…"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:236
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:274
 msgid "Waiting for passkey…"
 msgstr "En attente de la clé d’accès…"
 
@@ -39560,7 +39607,7 @@ msgid "You will still need to finish the email step."
 msgstr "Vous devrez toujours terminer l'étape de l'e-mail."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when the account also has an authenticator app.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:74
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:75
 msgid "You won't be asked for a passkey after your password anymore. Your authenticator app stays as your second factor."
 msgstr "Votre clé d'accès ne vous sera plus demandée après votre mot de passe. Votre application d'authentification restera votre deuxième facteur."
 
@@ -39579,7 +39626,7 @@ msgid "You'll have to sign back in on all signed-out devices"
 msgstr "Vous devrez vous reconnecter sur tous les appareils déconnectés"
 
 #. Security settings: confirmation modal body for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:55
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:56
 msgid "You'll need one of your passkeys to sign in on a new device. If you lose every passkey you can be locked out of your account. Backup codes will be saved for you so you still have a way in."
 msgstr "Vous aurez besoin de l'une de vos clés d'accès pour vous connecter sur un nouvel appareil. Si vous perdez toutes vos clés d'accès, vous risquez de perdre définitivement l'accès à votre compte. Des codes de secours seront enregistrés pour vous, afin qu'il vous reste un moyen d'accéder à votre compte."
 
@@ -39871,12 +39918,12 @@ msgstr "Votre compte est trop récent pour envoyer des messages dans cette commu
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "Votre demande de compte est en attente d’approbation. Vous pourrez vous connecter lorsqu’un admin l’aura approuvée."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:199
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:237
 msgid "Your account requires multi-factor authentication, but no supported methods are set up on this device. Sign in on a device with your authenticator app or security key, or contact support."
 msgstr "Votre compte nécessite une authentification multifacteur, mais aucune méthode prise en charge n'est configurée sur cet appareil. Connectez-vous sur un appareil doté de votre application d'authentification ou de votre clé de sécurité, ou contactez l'assistance."
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when passkeys are the only second factor on the account.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:68
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:69
 msgid "Your account will no longer be protected by two-factor authentication when you sign in with your password. You'll also lose elevated permissions in servers that require two-factor authentication."
 msgstr "Votre compte ne sera plus protégé par l'authentification à deux facteurs lorsque vous vous connecterez avec votre mot de passe. Vous perdrez également vos permissions élevées dans les communautés qui exigent l'authentification à deux facteurs."
 
@@ -39893,6 +39940,11 @@ msgstr "Votre action n'a pas pu être effectuée, car elle a été signalée par
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:409
 msgid "Your application is pending review. You can still update your listing details or withdraw the application."
 msgstr "Votre candidature est en attente d’examen. Vous pouvez encore modifier les détails de votre fiche ou retirer votre candidature."
+
+#. Error shown when the browser blocks the pop-up window used for password manager passkeys.
+#: src/features/auth/utils/PasskeyBridge.ts:25
+msgid "Your browser blocked the passkey pop-up window. Allow pop-ups for this site and try again."
+msgstr "Votre navigateur a bloqué la fenêtre contextuelle de la clé d'accès. Autorisez les fenêtres contextuelles pour ce site et réessayez."
 
 #. Error shown when a passkey prompt fails because the browser cannot use the passkey on this web address. Keep plain.
 #: src/features/auth/utils/WebAuthnUtils.ts:18
