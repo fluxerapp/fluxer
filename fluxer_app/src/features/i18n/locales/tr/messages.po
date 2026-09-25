@@ -1700,7 +1700,7 @@ msgstr "{productName}, {host} adresine taşındı. Ana Ekranınıza veya Dock'un
 #. Banner in an installed web app on other browsers. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:43
 msgid "{productName} has moved to {host}. Install it from your browser, then sign in with this app."
-msgstr "{productName} {host} adresine taşındı. Tarayıcınızdan yükleyin, ardından bu uygulamayla giriş yapın."
+msgstr "{productName}, {host} adresine taşındı. Tarayıcınızdan yükleyin, ardından bu uygulamayla giriş yapın."
 
 #. Banner in an installed desktop web app after the account moved to the new domain. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:28
@@ -1760,7 +1760,7 @@ msgstr "{productName} artık {host} adresinde. Oradan yükleyin, ardından bu uy
 #. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:27
 msgid "{productName} now lives at {host}. Install it from there."
-msgstr "{productName} artık {host} adresinde. Buradan yükleyin."
+msgstr "{productName} artık {host} adresinde. Oradan yükleyin."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx:31
@@ -12615,7 +12615,7 @@ msgstr "Alan adı"
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
 #: src/features/devtools/components/NagbarControls.ts:76
 msgid "Domain moved nagbar"
-msgstr "Alan adı taşındı bildirimi"
+msgstr "Alan adı taşındı bildirim çubuğu"
 
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
@@ -23531,7 +23531,7 @@ msgstr "{productName} uygulamasını aç"
 #. Button on the domain moved banner that opens the new domain in the browser. productName is the app name.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:52
 msgid "Open {productName} in your browser"
-msgstr "{productName} tarayıcınızda açın"
+msgstr "Tarayıcıda {productName} uygulamasını aç"
 
 #. Button or menu action label in the channel and chat gif picker grid item. Keep it concise. Preserve {title}; it is inserted by code.
 #: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:37
@@ -23908,12 +23908,12 @@ msgstr "Menüyü açın ve bir seçenek belirleyin."
 #. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
 msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
-msgstr "Yeni uygulamayı açın ve eski {productName} uygulamanızla giriş yap'ı seçin. Ardından buradaki yeni bir cihaz bağla'yı seçin ve gösterilen kodu girin."
+msgstr "Yeni uygulamayı açın ve Eski {productName} uygulamanızla giriş yap seçeneğini belirleyin. Ardından burada Yeni bir cihaz bağla seçeneğini belirleyin ve gösterilen kodu girin."
 
 #. Third install step in a desktop browser that already moved the account to the new domain.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
 msgid "Open the new app. You are already signed in."
-msgstr "Yeni uygulamayı aç. Zaten oturumun açık."
+msgstr "Yeni uygulamayı açın. Oturumunuz zaten açık."
 
 #. Tip explaining the keyboard shortcut for opening the shortcuts list.
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx:42
@@ -28966,7 +28966,7 @@ msgstr "Kişiler aranıyor..."
 #. Quick switcher header shown while the query starts with @ inside a community. communityName is the community name.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:74
 msgid "Searching friends and members of {communityName}"
-msgstr "{communityName} topluluğundaki arkadaşları ve üyeleri ara"
+msgstr "Arkadaşlar ve {communityName} topluluğunun üyeleri aranıyor"
 
 #. Quick switcher header shown while the query starts with # and only text channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:58
@@ -28976,7 +28976,7 @@ msgstr "Metin kanalları aranıyor"
 #. Quick switcher header shown while the query starts with ! and only voice channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:62
 msgid "Searching voice channels"
-msgstr "Sesli kanallarda aranıyor"
+msgstr "Sesli kanallar aranıyor"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:142
@@ -30652,7 +30652,7 @@ msgstr "Geçiş anahtarıyla giriş yap"
 #. Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:27
 msgid "Sign in with your old {productName} app"
-msgstr "Eski {productName} uygulamanla oturum aç"
+msgstr "Eski {productName} uygulamanızla giriş yap"
 
 #. Description shown when sign-in is restricted to the configured SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx:17
@@ -36049,7 +36049,7 @@ msgstr "Okunmamış rozetleri"
 #. Quick switcher section header above the unread channels of the current community.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:54
 msgid "Unread channels"
-msgstr "Okunmayan kanallar"
+msgstr "Okunmamış kanallar"
 
 #. Short label in the visual tab. Keep it concise.
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:29
@@ -39949,7 +39949,7 @@ msgstr "Tarayıcınız geçiş anahtarı açılır penceresini engelledi. Bu sit
 #. Error shown when a passkey prompt fails because the browser cannot use the passkey on this web address. Keep plain.
 #: src/features/auth/utils/WebAuthnUtils.ts:18
 msgid "Your browser does not support passkeys on this domain. Update your browser, or sign in with your password and two-factor code."
-msgstr "Tarayıcınız bu alan adında kimlik anahtarlarını desteklemiyor. Tarayıcınızı güncelleyin veya parolanız ve iki faktör kodunuzla giriş yapın."
+msgstr "Tarayıcınız bu alan adında geçiş anahtarlarını desteklemiyor. Tarayıcınızı güncelleyin veya parolanız ve iki faktör kodunuzla giriş yapın."
 
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12

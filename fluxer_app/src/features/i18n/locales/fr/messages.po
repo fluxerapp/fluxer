@@ -7504,7 +7504,7 @@ msgstr "Choisissez guild_id ou channel_id, pas les deux."
 #. Second install step on a Mac. File and Add to Dock are the names of the Safari menu items, use the names macOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:46
 msgid "Choose File, then Add to Dock."
-msgstr "Choisissez Fichier, puis Ajouter à mon Dock."
+msgstr "Choisissez Fichier, puis Ajouter au Dock."
 
 #. Subtitle in the create-DM modal. Keep it short and calm.
 #: src/features/channel/utils/CreateDMModalUtils.tsx:39
@@ -12615,7 +12615,7 @@ msgstr "Domaine"
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
 #: src/features/devtools/components/NagbarControls.ts:76
 msgid "Domain moved nagbar"
-msgstr "Le domaine a déménagé"
+msgstr "Barre de notification de domaine déplacé"
 
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
@@ -23908,7 +23908,7 @@ msgstr "Ouvrez le menu et choisissez une option."
 #. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
 msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
-msgstr "Ouvrez la nouvelle application et choisissez Se connecter avec votre ancienne application {productName}. Ensuite, choisissez Lier un nouvel appareil ici et entrez le code qui s'affiche."
+msgstr "Ouvrez la nouvelle application et choisissez « Se connecter avec votre ancienne application {productName} ». Ensuite, choisissez « Lier un nouvel appareil » ici et saisissez le code qui s'affiche."
 
 #. Third install step in a desktop browser that already moved the account to the new domain.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
@@ -23981,7 +23981,7 @@ msgstr "Ouvrez vos messages"
 
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:129
 msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
-msgstr "Ouvrez votre ancienne application {PRODUCT_NAME} et choisissez \"Lier un nouvel appareil\", puis entrez le code ci-dessous."
+msgstr "Ouvrez votre ancienne application {PRODUCT_NAME} et choisissez « Lier un nouvel appareil », puis saisissez le code ci-dessous."
 
 #: src/features/user/components/modals/PhoneAddModal.tsx:327
 msgid "Open your phone's messaging app and create a new text message."
@@ -25453,7 +25453,7 @@ msgstr "Pièce jointe précédente"
 #. Quick switcher section header above the channels the user visited most recently.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:50
 msgid "Previous channels"
-msgstr "Canaux précédents"
+msgstr "Salons précédents"
 
 #. Message-history-deletion option when banning a member. Deletes the member's messages from the last hour.
 #: src/features/moderation/constants/BanDeleteMessageOptions.ts:21
@@ -28976,7 +28976,7 @@ msgstr "Recherche des salons textuels"
 #. Quick switcher header shown while the query starts with ! and only voice channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:62
 msgid "Searching voice channels"
-msgstr "Recherche des canaux vocaux"
+msgstr "Recherche des salons vocaux"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:142
@@ -30652,7 +30652,7 @@ msgstr "Se connecter avec une clé d'accès"
 #. Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:27
 msgid "Sign in with your old {productName} app"
-msgstr "Connectez-vous avec votre ancienne application {productName}"
+msgstr "Se connecter avec votre ancienne application {productName}"
 
 #. Description shown when sign-in is restricted to the configured SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx:17
@@ -32849,7 +32849,7 @@ msgstr "Parler dans les salons vocaux. Sans cette permission, le micro des membr
 #. Second install step on iPhone and iPad. Share and Add to Home Screen are the names of the Safari menu items, use the names iOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:41
 msgid "Tap Share, then Add to Home Screen."
-msgstr "Appuyez sur Partager, puis sur Ajouter à l'écran d'accueil."
+msgstr "Touchez Partager, puis Sur l’écran d’accueil."
 
 #. Label in the note edit sheet.
 #: src/features/user/components/modals/NoteEditSheet.tsx:21
@@ -36049,7 +36049,7 @@ msgstr "Badges de messages non lus"
 #. Quick switcher section header above the unread channels of the current community.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:54
 msgid "Unread channels"
-msgstr "Canaux non lus"
+msgstr "Salons non lus"
 
 #. Short label in the visual tab. Keep it concise.
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:29

@@ -1695,7 +1695,7 @@ msgstr "{productName} potenciális támadást észlelt, ezért az új felhaszná
 #. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:38
 msgid "{productName} has moved to {host}. Add it to your Home Screen or Dock, then sign in with this app."
-msgstr "A(z) {productName} ide költözött: {host}. Add hozzá a Főképernyőhöz vagy az Dockhoz, majd jelentkezz be ezzel az alkalmazással."
+msgstr "A(z) {productName} ide költözött: {host}. Add hozzá a Főképernyőhöz vagy a Dockhoz, majd jelentkezz be ezzel az alkalmazással."
 
 #. Banner in an installed web app on other browsers. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:43
@@ -1705,12 +1705,12 @@ msgstr "A(z) {productName} ide költözött: {host}. Telepítsd a böngésződb�
 #. Banner in an installed desktop web app after the account moved to the new domain. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:28
 msgid "{productName} has moved to {host}. Install the new app and you will already be signed in."
-msgstr "A(z) {productName} átkerült ide: {host}. Telepítsd az új alkalmazást, és már be is leszel jelentkezve."
+msgstr "A(z) {productName} ide költözött: {host}. Telepítsd az új alkalmazást, és már be is leszel jelentkezve."
 
 #. Banner in an installed Android web app. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:33
 msgid "{productName} has moved to {host}. Open it in your browser to install the new app."
-msgstr "A(z) {productName} ide költözött: {host}. Nyissa meg a böngészőben az új alkalmazás telepítéséhez."
+msgstr "A(z) {productName} ide költözött: {host}. Nyisd meg a böngésződben az új alkalmazás telepítéséhez."
 
 #. Profile membership label showing when the user account was created.
 #: src/features/user/components/popouts/UserProfileShared.tsx:53
@@ -4412,7 +4412,7 @@ msgstr "Jóváhagyás"
 #. Hint under the sign-in option on fluxer.com that pairs a newly installed app with the old installed app. productName is the app name.
 #: src/features/auth/flow/AuthLoginLayout.tsx:74
 msgid "Approve this app from the {productName} app you already use. No password needed."
-msgstr "Jóváhagytad ezt az alkalmazást a már használt {productName} alkalmazásból. Nincs szükség jelszóra."
+msgstr "Hagyd jóvá ezt az alkalmazást a már használt {productName} alkalmazásodból. Nincs szükség jelszóra."
 
 #. Discovery application status badge in the community Discovery settings tab. The community has been approved and is listed.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:45
@@ -7504,7 +7504,7 @@ msgstr "Vagy a guild_id, vagy a channel_id mezőt add meg, ne mindkettőt."
 #. Second install step on a Mac. File and Add to Dock are the names of the Safari menu items, use the names macOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:46
 msgid "Choose File, then Add to Dock."
-msgstr "Válaszd a Fájl menüpontot, majd az Indítóhoz adás parancsot."
+msgstr "Válaszd a Fájl menüt, majd a Hozzáadás a Dockhoz parancsot."
 
 #. Subtitle in the create-DM modal. Keep it short and calm.
 #: src/features/channel/utils/CreateDMModalUtils.tsx:39
@@ -12615,7 +12615,7 @@ msgstr "Domain"
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
 #: src/features/devtools/components/NagbarControls.ts:76
 msgid "Domain moved nagbar"
-msgstr "Domain áthelyezve értesítősáv"
+msgstr "Domainköltözésre figyelmeztető sáv"
 
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
@@ -23501,12 +23501,12 @@ msgstr "{displayName} megnyitása"
 #. First install step on Apple devices. host is the new domain, for example fluxer.com. Safari is the browser.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:32
 msgid "Open {host} in Safari."
-msgstr "Nyisd meg a(z) {host} webhelyet a Szafariban."
+msgstr "Nyisd meg a(z) {host} webhelyet a Safariban."
 
 #. First install step on other devices. host is the new domain, for example fluxer.com.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:37
 msgid "Open {host} in your browser."
-msgstr "Nyissa meg a böngészőjében a(z) {host} címet."
+msgstr "Nyisd meg a(z) {host} webhelyet a böngésződben."
 
 #. Accessible label for an inline settings deep-link pill. labelText is the resolved settings tab and section breadcrumb.
 #: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:109
@@ -23531,7 +23531,7 @@ msgstr "A(z) {productName} megnyitása"
 #. Button on the domain moved banner that opens the new domain in the browser. productName is the app name.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:52
 msgid "Open {productName} in your browser"
-msgstr "Megnyitás a böngészőben: {productName}"
+msgstr "A(z) {productName} megnyitása a böngészőben"
 
 #. Button or menu action label in the channel and chat gif picker grid item. Keep it concise. Preserve {title}; it is inserted by code.
 #: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:37
@@ -23908,7 +23908,7 @@ msgstr "Nyisd meg a menüt, és válassz egy lehetőséget."
 #. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
 msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
-msgstr "Nyisd meg az új alkalmazást, és válaszd a Bejelentkezés a régi {productName} alkalmazásoddal lehetőséget. Ezután válaszd az Új eszköz csatolása itt lehetőséget, és add meg a megjelenő kódot."
+msgstr "Nyisd meg az új alkalmazást, és válaszd a „Jelentkezz be a régi {productName} alkalmazásoddal” lehetőséget. Ezután itt válaszd az „Új eszköz csatolása” lehetőséget, és add meg az ott megjelenő kódot."
 
 #. Third install step in a desktop browser that already moved the account to the new domain.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
@@ -28966,12 +28966,12 @@ msgstr "Személyek keresése..."
 #. Quick switcher header shown while the query starts with @ inside a community. communityName is the community name.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:74
 msgid "Searching friends and members of {communityName}"
-msgstr "Tagok és barátok keresése itt: {communityName}"
+msgstr "Ismerősök és a(z) {communityName} tagjainak keresése"
 
 #. Quick switcher header shown while the query starts with # and only text channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:58
 msgid "Searching text channels"
-msgstr "Csatornák keresése"
+msgstr "Szöveges csatornák keresése"
 
 #. Quick switcher header shown while the query starts with ! and only voice channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:62
@@ -30368,7 +30368,7 @@ msgstr "Legfeljebb 5 megjelenítése (+5 jelvény)"
 #. Button on the domain moved banner that opens the install steps.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:56
 msgid "Show me how"
-msgstr "Mutasd meg"
+msgstr "Mutasd meg, hogyan"
 
 #. Plus menu submenu toggle that shows the saved media (memes) button next to the textarea.
 #. Short label for an advanced message input preference.
@@ -32849,7 +32849,7 @@ msgstr "Beszéd a hangcsatornákban. E jogosultság nélkül a tagok mikrofonja 
 #. Second install step on iPhone and iPad. Share and Add to Home Screen are the names of the Safari menu items, use the names iOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:41
 msgid "Tap Share, then Add to Home Screen."
-msgstr "Érintsd meg a Megosztás lehetőséget, majd az Ugrás a kezdőképernyőre elemet."
+msgstr "Érintsd meg a Megosztás gombot, majd a Főképernyőhöz adás lehetőséget."
 
 #. Label in the note edit sheet.
 #: src/features/user/components/modals/NoteEditSheet.tsx:21
@@ -39949,7 +39949,7 @@ msgstr "A böngésződ blokkolta a jelszókulcs felugró ablakát. Engedélyezd 
 #. Error shown when a passkey prompt fails because the browser cannot use the passkey on this web address. Keep plain.
 #: src/features/auth/utils/WebAuthnUtils.ts:18
 msgid "Your browser does not support passkeys on this domain. Update your browser, or sign in with your password and two-factor code."
-msgstr "Böngésződ nem támogatja a jelszókulcsokat ezen a domainen. Frissítsd a böngésződet, vagy jelentkezz be jelszavaddal és kétfaktoros kódoddal."
+msgstr "A böngésződ nem támogatja a jelszókulcsokat ezen a domainen. Frissítsd a böngésződet, vagy jelentkezz be a jelszavaddal és a kétlépcsős azonosítás kódjával."
 
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12

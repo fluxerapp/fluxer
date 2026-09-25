@@ -1695,7 +1695,7 @@ msgstr "Aplikace {productName} zjistila možný nájezd, takže se teď noví u�
 #. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:38
 msgid "{productName} has moved to {host}. Add it to your Home Screen or Dock, then sign in with this app."
-msgstr "{productName} se přesunul na {host}. Přidejte si ho na úvodní obrazovku nebo do Docku a poté se přihlaste pomocí této aplikace."
+msgstr "{productName} se přesunul na {host}. Přidejte si ho na plochu nebo do Docku a poté se přihlaste pomocí této aplikace."
 
 #. Banner in an installed web app on other browsers. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:43
@@ -12615,7 +12615,7 @@ msgstr "Doména"
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
 #: src/features/devtools/components/NagbarControls.ts:76
 msgid "Domain moved nagbar"
-msgstr "Přesun domény"
+msgstr "Lišta s oznámením o přesunu domény"
 
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
@@ -23908,7 +23908,7 @@ msgstr "Otevřete nabídku a vyberte možnost."
 #. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
 msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
-msgstr "Otevřete novou aplikaci a zvolte Přihlásit se pomocí své staré aplikace {productName}. Poté zvolte Propojit nové zařízení zde a zadejte zobrazený kód."
+msgstr "Otevřete novou aplikaci a zvolte „Přihlásit se pomocí staré aplikace {productName}“. Poté zde zvolte „Propojit nové zařízení“ a zadejte zobrazený kód."
 
 #. Third install step in a desktop browser that already moved the account to the new domain.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
@@ -28949,12 +28949,12 @@ msgstr "Vyhledávání"
 #. Quick switcher header shown while the query starts with @ outside a community, or with @@.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:70
 msgid "Searching all users"
-msgstr "Hledám všechny uživatele"
+msgstr "Hledání mezi všemi uživateli"
 
 #. Quick switcher header shown while the query starts with * and only communities are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:66
 msgid "Searching communities"
-msgstr "Hledám komunity"
+msgstr "Hledání komunit"
 
 #. Loading state in the desktop quick switcher while fetching people results. Trailing ellipsis is intentional.
 #. Loading state shown while the quick switcher fetches matching people. Trailing ellipsis is intentional.
@@ -28976,7 +28976,7 @@ msgstr "Hledání textových kanálů"
 #. Quick switcher header shown while the query starts with ! and only voice channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:62
 msgid "Searching voice channels"
-msgstr "Hledám hlasové kanály"
+msgstr "Hledání hlasových kanálů"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:142
@@ -30368,7 +30368,7 @@ msgstr "Zobrazit nejvýše 5 (odznak +5)"
 #. Button on the domain moved banner that opens the install steps.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:56
 msgid "Show me how"
-msgstr "Ukázat mi jak"
+msgstr "Ukázat jak"
 
 #. Plus menu submenu toggle that shows the saved media (memes) button next to the textarea.
 #. Short label for an advanced message input preference.
@@ -30652,7 +30652,7 @@ msgstr "Přihlásit se pomocí přístupového klíče"
 #. Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:27
 msgid "Sign in with your old {productName} app"
-msgstr "Přihlaste se pomocí své staré aplikace {productName}"
+msgstr "Přihlásit se pomocí staré aplikace {productName}"
 
 #. Description shown when sign-in is restricted to the configured SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx:17

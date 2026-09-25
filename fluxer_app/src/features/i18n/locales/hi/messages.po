@@ -1695,7 +1695,7 @@ msgstr "{productName} ने संभावित रेड का पता �
 #. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:38
 msgid "{productName} has moved to {host}. Add it to your Home Screen or Dock, then sign in with this app."
-msgstr "{productName} {host} पर चला गया है। इसे अपनी होम स्क्रीन या डॉक में जोड़ें, फिर इस ऐप से साइन इन करें।"
+msgstr "{productName} {host} पर चला गया है। इसे अपनी होम स्क्रीन या Dock में जोड़ें, फिर इस ऐप से साइन इन करें।"
 
 #. Banner in an installed web app on other browsers. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:43
@@ -4412,7 +4412,7 @@ msgstr "स्वीकृत करें"
 #. Hint under the sign-in option on fluxer.com that pairs a newly installed app with the old installed app. productName is the app name.
 #: src/features/auth/flow/AuthLoginLayout.tsx:74
 msgid "Approve this app from the {productName} app you already use. No password needed."
-msgstr "उस ऐप से इस ऐप को मंज़ूरी दें जिसका आप पहले से इस्तेमाल कर रहे हैं, {productName}. पासवर्ड की ज़रूरत नहीं है।"
+msgstr "जिस {productName} ऐप का आप पहले से इस्तेमाल करते हैं, उससे इस ऐप को मंज़ूरी दें। पासवर्ड की ज़रूरत नहीं है।"
 
 #. Discovery application status badge in the community Discovery settings tab. The community has been approved and is listed.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:45
@@ -7504,7 +7504,7 @@ msgstr "guild_id या channel_id में से कोई एक चुन�
 #. Second install step on a Mac. File and Add to Dock are the names of the Safari menu items, use the names macOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:46
 msgid "Choose File, then Add to Dock."
-msgstr "फ़ाइल चुनें, फिर डॉक में जोड़ें।"
+msgstr "फ़ाइल चुनें, फिर Dock में जोड़ें।"
 
 #. Subtitle in the create-DM modal. Keep it short and calm.
 #: src/features/channel/utils/CreateDMModalUtils.tsx:39
@@ -12615,7 +12615,7 @@ msgstr "डोमेन"
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
 #: src/features/devtools/components/NagbarControls.ts:76
 msgid "Domain moved nagbar"
-msgstr "डोमेन बदला गया"
+msgstr "डोमेन बदलाव नागबार"
 
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
@@ -23908,7 +23908,7 @@ msgstr "मेनू खोलें और एक विकल्प चुन�
 #. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
 msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
-msgstr "नया ऐप खोलें और \"अपने पुराने {productName} ऐप से साइन इन करें\" चुनें। फिर \"यहां एक नया डिवाइस लिंक करें\" चुनें और जो कोड दिखाया गया है उसे दर्ज करें।"
+msgstr "नया ऐप खोलें और \"अपने पुराने {productName} ऐप से साइन इन करें\" चुनें। फिर यहां \"नया डिवाइस लिंक करें\" चुनें और जो कोड दिखे उसे दर्ज करें।"
 
 #. Third install step in a desktop browser that already moved the account to the new domain.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
@@ -23981,7 +23981,7 @@ msgstr "अपने मैसेज खोलें"
 
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:129
 msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
-msgstr "अपना पुराना {PRODUCT_NAME} ऐप खोलें और एक नया डिवाइस लिंक करें चुनें, फिर नीचे दिया गया कोड दर्ज करें।"
+msgstr "अपना पुराना {PRODUCT_NAME} ऐप खोलें और \"नया डिवाइस लिंक करें\" चुनें, फिर नीचे दिया गया कोड दर्ज करें।"
 
 #: src/features/user/components/modals/PhoneAddModal.tsx:327
 msgid "Open your phone's messaging app and create a new text message."
@@ -28949,12 +28949,12 @@ msgstr "खोजा जा रहा है"
 #. Quick switcher header shown while the query starts with @ outside a community, or with @@.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:70
 msgid "Searching all users"
-msgstr "सभी उपयोगकर्ताओं को खोजें"
+msgstr "सभी उपयोगकर्ताओं को खोजा जा रहा है"
 
 #. Quick switcher header shown while the query starts with * and only communities are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:66
 msgid "Searching communities"
-msgstr "समुदायों की खोज की जा रही है"
+msgstr "कम्युनिटी खोजी जा रही हैं"
 
 #. Loading state in the desktop quick switcher while fetching people results. Trailing ellipsis is intentional.
 #. Loading state shown while the quick switcher fetches matching people. Trailing ellipsis is intentional.
@@ -28966,17 +28966,17 @@ msgstr "लोगों को खोजा जा रहा है..."
 #. Quick switcher header shown while the query starts with @ inside a community. communityName is the community name.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:74
 msgid "Searching friends and members of {communityName}"
-msgstr "{communityName} के दोस्तों और सदस्यों को खोज रहे हैं"
+msgstr "दोस्तों और {communityName} के सदस्यों को खोजा जा रहा है"
 
 #. Quick switcher header shown while the query starts with # and only text channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:58
 msgid "Searching text channels"
-msgstr "टेक्स्ट चैनल खोज रहे हैं"
+msgstr "टेक्स्ट चैनल खोजे जा रहे हैं"
 
 #. Quick switcher header shown while the query starts with ! and only voice channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:62
 msgid "Searching voice channels"
-msgstr "वॉइस चैनल खोज रहे हैं"
+msgstr "वॉइस चैनल खोजे जा रहे हैं"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:142
@@ -29223,7 +29223,7 @@ msgstr "टेक्स्ट चुनें"
 
 #: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:69
 msgid "Select the account you want to sign in with on your new device."
-msgstr "अपने नए डिवाइस पर साइन इन करने के लिए वह खाता चुनें जिससे आप साइन इन करना चाहते हैं।"
+msgstr "वह खाता चुनें जिससे आप अपने नए डिवाइस पर साइन इन करना चाहते हैं।"
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:120
@@ -30368,7 +30368,7 @@ msgstr "अधिकतम 5 दिखाएं (+5 बैज)"
 #. Button on the domain moved banner that opens the install steps.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:56
 msgid "Show me how"
-msgstr "मुझे दिखाएँ"
+msgstr "तरीका दिखाएँ"
 
 #. Plus menu submenu toggle that shows the saved media (memes) button next to the textarea.
 #. Short label for an advanced message input preference.
@@ -32849,7 +32849,7 @@ msgstr "वॉइस चैनलों में बोलें। इस अ�
 #. Second install step on iPhone and iPad. Share and Add to Home Screen are the names of the Safari menu items, use the names iOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:41
 msgid "Tap Share, then Add to Home Screen."
-msgstr "शेयर पर टैप करें, फिर होम स्क्रीन पर जोड़ें।"
+msgstr "\"शेयर करें\" पर टैप करें, फिर \"होम स्क्रीन में जोड़ें\" पर टैप करें।"
 
 #. Label in the note edit sheet.
 #: src/features/user/components/modals/NoteEditSheet.tsx:21
@@ -36049,7 +36049,7 @@ msgstr "न पढ़े गए बैज"
 #. Quick switcher section header above the unread channels of the current community.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:54
 msgid "Unread channels"
-msgstr "अनपढ़े चैनल"
+msgstr "अपठित चैनल"
 
 #. Short label in the visual tab. Keep it concise.
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:29

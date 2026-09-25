@@ -1705,12 +1705,12 @@ msgstr "{productName} 已迁移到 {host}。请在浏览器中安装，然后使
 #. Banner in an installed desktop web app after the account moved to the new domain. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:28
 msgid "{productName} has moved to {host}. Install the new app and you will already be signed in."
-msgstr "{productName} 已迁移到 {host}。安装新应用后，您将自动登录。"
+msgstr "{productName} 已迁移到 {host}。安装新应用后，你将自动登录。"
 
 #. Banner in an installed Android web app. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:33
 msgid "{productName} has moved to {host}. Open it in your browser to install the new app."
-msgstr "{productName} 已移至 {host}。请在浏览器中打开以安装新应用。"
+msgstr "{productName} 已迁移到 {host}。请在浏览器中打开以安装新应用。"
 
 #. Profile membership label showing when the user account was created.
 #: src/features/user/components/popouts/UserProfileShared.tsx:53
@@ -4412,7 +4412,7 @@ msgstr "批准"
 #. Hint under the sign-in option on fluxer.com that pairs a newly installed app with the old installed app. productName is the app name.
 #: src/features/auth/flow/AuthLoginLayout.tsx:74
 msgid "Approve this app from the {productName} app you already use. No password needed."
-msgstr "从您已安装的 {productName} 应用批准此应用"
+msgstr "从你已在使用的 {productName} 应用批准此应用。无需密码。"
 
 #. Discovery application status badge in the community Discovery settings tab. The community has been approved and is listed.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:45
@@ -7504,7 +7504,7 @@ msgstr "请选择 guild_id 或 channel_id，不能同时选择两者。"
 #. Second install step on a Mac. File and Add to Dock are the names of the Safari menu items, use the names macOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:46
 msgid "Choose File, then Add to Dock."
-msgstr "选择“文件”，然后选择“添加到 Dock”。"
+msgstr "选择“文件”，然后选择“添加到程序坞”。"
 
 #. Subtitle in the create-DM modal. Keep it short and calm.
 #: src/features/channel/utils/CreateDMModalUtils.tsx:39
@@ -12615,7 +12615,7 @@ msgstr "域名"
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
 #: src/features/devtools/components/NagbarControls.ts:76
 msgid "Domain moved nagbar"
-msgstr "域名已移动通知栏"
+msgstr "域名迁移提示栏"
 
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
@@ -14124,7 +14124,7 @@ msgstr "在浏览器中输入此代码以完成登录。"
 
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:142
 msgid "Enter this code in your old {PRODUCT_NAME} app to complete sign-in."
-msgstr "在你的旧版 {PRODUCT_NAME} 应用中输入此代码以完成登录。"
+msgstr "在你的旧版 {PRODUCT_NAME} 应用中输入此验证码以完成登录。"
 
 #: src/features/channel/components/EditingMessageInput.tsx:358
 msgid "Enter to <0><1>save</1></0>"
@@ -16114,7 +16114,7 @@ msgstr "获取桌面应用"
 #. Title of the modal that explains how to install the app from its new domain. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:18
 msgid "Get the new {productName} app"
-msgstr "获取新的{productName}应用"
+msgstr "获取新的 {productName} 应用"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Type label for GIF media.
@@ -23908,12 +23908,12 @@ msgstr "打开菜单并选择一个选项。"
 #. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
 msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
-msgstr "打开新应用，然后选择“使用旧版 {productName} 应用登录”。接着选择“在此处关联新设备”，并输入它显示的验证码。"
+msgstr "打开新应用，然后选择“使用旧版 {productName} 应用登录”。接着在此处选择“关联新设备”，并输入新应用显示的验证码。"
 
 #. Third install step in a desktop browser that already moved the account to the new domain.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
 msgid "Open the new app. You are already signed in."
-msgstr "打开新应用。您已登录。"
+msgstr "打开新应用。你已登录。"
 
 #. Tip explaining the keyboard shortcut for opening the shortcuts list.
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx:42
@@ -23981,7 +23981,7 @@ msgstr "打开短信应用"
 
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:129
 msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
-msgstr "打开你的旧 {PRODUCT_NAME} 应用，选择“关联新设备”，然后输入下面的代码。"
+msgstr "打开你的旧版 {PRODUCT_NAME} 应用，选择“关联新设备”，然后输入下方的验证码。"
 
 #: src/features/user/components/modals/PhoneAddModal.tsx:327
 msgid "Open your phone's messaging app and create a new text message."
@@ -28949,12 +28949,12 @@ msgstr "正在搜索"
 #. Quick switcher header shown while the query starts with @ outside a community, or with @@.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:70
 msgid "Searching all users"
-msgstr "搜索所有用户"
+msgstr "正在搜索所有用户"
 
 #. Quick switcher header shown while the query starts with * and only communities are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:66
 msgid "Searching communities"
-msgstr "搜索社群"
+msgstr "正在搜索社区"
 
 #. Loading state in the desktop quick switcher while fetching people results. Trailing ellipsis is intentional.
 #. Loading state shown while the quick switcher fetches matching people. Trailing ellipsis is intentional.
@@ -28966,17 +28966,17 @@ msgstr "正在搜索用户…"
 #. Quick switcher header shown while the query starts with @ inside a community. communityName is the community name.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:74
 msgid "Searching friends and members of {communityName}"
-msgstr "在 {communityName} 中搜索好友和成员"
+msgstr "正在 {communityName} 中搜索好友和成员"
 
 #. Quick switcher header shown while the query starts with # and only text channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:58
 msgid "Searching text channels"
-msgstr "搜索文本频道"
+msgstr "正在搜索文字频道"
 
 #. Quick switcher header shown while the query starts with ! and only voice channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:62
 msgid "Searching voice channels"
-msgstr "搜索语音频道"
+msgstr "正在搜索语音频道"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:142
@@ -29223,7 +29223,7 @@ msgstr "选择文本"
 
 #: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:69
 msgid "Select the account you want to sign in with on your new device."
-msgstr "选择您想在新设备上登录的账号。"
+msgstr "选择你想在新设备上登录的账号。"
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:120
@@ -30368,7 +30368,7 @@ msgstr "显示最多 5 个（+5 徽章）"
 #. Button on the domain moved banner that opens the install steps.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:56
 msgid "Show me how"
-msgstr "给我看看"
+msgstr "告诉我怎么做"
 
 #. Plus menu submenu toggle that shows the saved media (memes) button next to the textarea.
 #. Short label for an advanced message input preference.
@@ -30652,7 +30652,7 @@ msgstr "使用通行密钥登录"
 #. Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:27
 msgid "Sign in with your old {productName} app"
-msgstr "使用你的旧版 {productName} 应用登录"
+msgstr "使用旧版 {productName} 应用登录"
 
 #. Description shown when sign-in is restricted to the configured SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx:17
@@ -39949,7 +39949,7 @@ msgstr "你的浏览器阻止了通行密钥弹出窗口。请允许此网站的
 #. Error shown when a passkey prompt fails because the browser cannot use the passkey on this web address. Keep plain.
 #: src/features/auth/utils/WebAuthnUtils.ts:18
 msgid "Your browser does not support passkeys on this domain. Update your browser, or sign in with your password and two-factor code."
-msgstr "您的浏览器不支持此域名下的凭证。请更新您的浏览器，或使用密码和双因素代码登录。"
+msgstr "你的浏览器不支持在此域名上使用通行密钥。请更新浏览器，或使用密码和双重认证验证码登录。"
 
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12

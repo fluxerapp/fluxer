@@ -7504,7 +7504,7 @@ msgstr "Chọn guild_id hoặc channel_id, không chọn cả hai."
 #. Second install step on a Mac. File and Add to Dock are the names of the Safari menu items, use the names macOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:46
 msgid "Choose File, then Add to Dock."
-msgstr "Chọn Tệp, sau đó Thêm vào Dock."
+msgstr "Chọn Tệp, sau đó chọn Thêm vào Dock."
 
 #. Subtitle in the create-DM modal. Keep it short and calm.
 #: src/features/channel/utils/CreateDMModalUtils.tsx:39
@@ -12615,7 +12615,7 @@ msgstr "Tên miền"
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
 #: src/features/devtools/components/NagbarControls.ts:76
 msgid "Domain moved nagbar"
-msgstr "Chuyển miền"
+msgstr "Thanh thông báo chuyển miền"
 
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
@@ -19411,7 +19411,7 @@ msgstr "Liên kết (người lớn)"
 #. Button on the domain moved banner that opens the code entry used to sign in a new app. Must match the translation used in the "Sign in with your old {productName} app" instructions.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:60
 msgid "Link a new device"
-msgstr "Liên kết một thiết bị mới"
+msgstr "Liên kết thiết bị mới"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:96
@@ -28949,12 +28949,12 @@ msgstr "Đang tìm kiếm"
 #. Quick switcher header shown while the query starts with @ outside a community, or with @@.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:70
 msgid "Searching all users"
-msgstr "Tìm kiếm tất cả người dùng"
+msgstr "Đang tìm kiếm tất cả người dùng"
 
 #. Quick switcher header shown while the query starts with * and only communities are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:66
 msgid "Searching communities"
-msgstr "Tìm kiếm cộng đồng"
+msgstr "Đang tìm kiếm cộng đồng"
 
 #. Loading state in the desktop quick switcher while fetching people results. Trailing ellipsis is intentional.
 #. Loading state shown while the quick switcher fetches matching people. Trailing ellipsis is intentional.
@@ -28966,17 +28966,17 @@ msgstr "Đang tìm người..."
 #. Quick switcher header shown while the query starts with @ inside a community. communityName is the community name.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:74
 msgid "Searching friends and members of {communityName}"
-msgstr "Tìm kiếm bạn bè và thành viên của {communityName}"
+msgstr "Đang tìm kiếm bạn bè và thành viên của {communityName}"
 
 #. Quick switcher header shown while the query starts with # and only text channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:58
 msgid "Searching text channels"
-msgstr "Tìm kiếm kênh văn bản"
+msgstr "Đang tìm kiếm kênh văn bản"
 
 #. Quick switcher header shown while the query starts with ! and only voice channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:62
 msgid "Searching voice channels"
-msgstr "Đang tìm kênh thoại"
+msgstr "Đang tìm kiếm kênh thoại"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:142
@@ -32849,7 +32849,7 @@ msgstr "Nói trong các kênh thoại. Nếu không có quyền này, thành vi�
 #. Second install step on iPhone and iPad. Share and Add to Home Screen are the names of the Safari menu items, use the names iOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:41
 msgid "Tap Share, then Add to Home Screen."
-msgstr "Chạm vào Chia sẻ, sau đó chọn Thêm vào Màn hình chính."
+msgstr "Chạm vào Chia sẻ, sau đó chọn Thêm vào MH chính."
 
 #. Label in the note edit sheet.
 #: src/features/user/components/modals/NoteEditSheet.tsx:21
@@ -39949,7 +39949,7 @@ msgstr "Trình duyệt của bạn đã chặn cửa sổ bật lên dùng cho k
 #. Error shown when a passkey prompt fails because the browser cannot use the passkey on this web address. Keep plain.
 #: src/features/auth/utils/WebAuthnUtils.ts:18
 msgid "Your browser does not support passkeys on this domain. Update your browser, or sign in with your password and two-factor code."
-msgstr "Trình duyệt của bạn không hỗ trợ khóa truy cập trên miền này. Hãy cập nhật trình duyệt hoặc đăng nhập bằng mật khẩu và mã hai yếu tố của bạn."
+msgstr "Trình duyệt của bạn không hỗ trợ khóa truy cập trên miền này. Hãy cập nhật trình duyệt hoặc đăng nhập bằng mật khẩu và mã xác thực hai yếu tố của bạn."
 
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12

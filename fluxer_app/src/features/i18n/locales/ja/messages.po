@@ -1695,7 +1695,7 @@ msgstr "{productName}がレイドの可能性を検出したため、現在新�
 #. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:38
 msgid "{productName} has moved to {host}. Add it to your Home Screen or Dock, then sign in with this app."
-msgstr "{productName} は {host} に移動しました。ホーム画面またはドックに追加してから、このアプリでサインインしてください。"
+msgstr "{productName}は{host}に移動しました。ホーム画面またはDockに追加してから、このアプリでサインインしてください。"
 
 #. Banner in an installed web app on other browsers. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:43
@@ -1705,12 +1705,12 @@ msgstr "{productName}は{host}に移動しました。ブラウザからイン�
 #. Banner in an installed desktop web app after the account moved to the new domain. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:28
 msgid "{productName} has moved to {host}. Install the new app and you will already be signed in."
-msgstr "{productName} は {host} に移動しました。新しいアプリをインストールすると、すでにサインインされています。"
+msgstr "{productName}は{host}に移動しました。新しいアプリをインストールすると、すでにサインインした状態になります。"
 
 #. Banner in an installed Android web app. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:33
 msgid "{productName} has moved to {host}. Open it in your browser to install the new app."
-msgstr "{productName} は {host} に移動しました。ブラウザで開いて新しいアプリをインストールしてください。"
+msgstr "{productName}は{host}に移動しました。ブラウザで開いて新しいアプリをインストールしてください。"
 
 #. Profile membership label showing when the user account was created.
 #: src/features/user/components/popouts/UserProfileShared.tsx:53
@@ -1760,7 +1760,7 @@ msgstr "{productName}は{host}に移動しました。そちらからインス�
 #. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:27
 msgid "{productName} now lives at {host}. Install it from there."
-msgstr "{productName} は {host} に移動しました。そちらからインストールしてください。"
+msgstr "{productName}は{host}に移動しました。そちらからインストールしてください。"
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx:31
@@ -4412,7 +4412,7 @@ msgstr "承認"
 #. Hint under the sign-in option on fluxer.com that pairs a newly installed app with the old installed app. productName is the app name.
 #: src/features/auth/flow/AuthLoginLayout.tsx:74
 msgid "Approve this app from the {productName} app you already use. No password needed."
-msgstr "お使いの {productName} アプリからこのアプリを承認してください。パスワードは不要です。"
+msgstr "すでにお使いの{productName}アプリからこのアプリを承認してください。パスワードは不要です。"
 
 #. Discovery application status badge in the community Discovery settings tab. The community has been approved and is listed.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:45
@@ -12615,7 +12615,7 @@ msgstr "ドメイン"
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
 #: src/features/devtools/components/NagbarControls.ts:76
 msgid "Domain moved nagbar"
-msgstr "ドメイン移動のお知らせ"
+msgstr "ドメイン移動ナグバー"
 
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
@@ -23908,12 +23908,12 @@ msgstr "メニューを開いてオプションを選択します。"
 #. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
 msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
-msgstr "新しいアプリを開き、「古い{productName}アプリでサインイン」を選択してください。次に、「新しいデバイスをこちらでリンク」を選択し、表示されるコードを入力します。"
+msgstr "新しいアプリを開き、「古い{productName}アプリでサインイン」を選択してください。次に、こちらで「新しいデバイスをリンク」を選択し、表示されたコードを入力してください。"
 
 #. Third install step in a desktop browser that already moved the account to the new domain.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
 msgid "Open the new app. You are already signed in."
-msgstr "新しいアプリを開く。すでにサインインしています。"
+msgstr "新しいアプリを開いてください。すでにサインインしています。"
 
 #. Tip explaining the keyboard shortcut for opening the shortcuts list.
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx:42
@@ -28949,7 +28949,7 @@ msgstr "検索中"
 #. Quick switcher header shown while the query starts with @ outside a community, or with @@.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:70
 msgid "Searching all users"
-msgstr "ユーザーを検索中"
+msgstr "すべてのユーザーを検索中"
 
 #. Quick switcher header shown while the query starts with * and only communities are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:66
@@ -28966,7 +28966,7 @@ msgstr "ユーザーを検索中…"
 #. Quick switcher header shown while the query starts with @ inside a community. communityName is the community name.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:74
 msgid "Searching friends and members of {communityName}"
-msgstr "{communityName} の友達やメンバーを検索中"
+msgstr "{communityName}の友達やメンバーを検索中"
 
 #. Quick switcher header shown while the query starts with # and only text channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:58
@@ -30652,7 +30652,7 @@ msgstr "パスキーでサインイン"
 #. Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:27
 msgid "Sign in with your old {productName} app"
-msgstr "古い {productName} アプリでサインインしてください"
+msgstr "古い{productName}アプリでサインイン"
 
 #. Description shown when sign-in is restricted to the configured SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx:17
