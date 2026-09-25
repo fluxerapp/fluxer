@@ -1695,22 +1695,22 @@ msgstr "{productName} aptiko galimą ataką, todėl nauji naudotojai šiuo metu 
 #. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:38
 msgid "{productName} has moved to {host}. Add it to your Home Screen or Dock, then sign in with this app."
-msgstr "{productName} perkeltas į {host}. Pridėkite jį prie pagrindinio ekrano arba doko, tada prisijunkite naudodami šią programą."
+msgstr "{productName} perkeltas į {host}. Pridėkite jį prie pradžios ekrano arba Dock, tada prisijunkite naudodami šią programėlę."
 
 #. Banner in an installed web app on other browsers. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:43
 msgid "{productName} has moved to {host}. Install it from your browser, then sign in with this app."
-msgstr "{productName} perkeltas į {host}. Įdiekite jį naršyklėje, tada prisijunkite naudodami šią programą."
+msgstr "{productName} perkeltas į {host}. Įdiekite jį iš naršyklės, tada prisijunkite naudodami šią programėlę."
 
 #. Banner in an installed desktop web app after the account moved to the new domain. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:28
 msgid "{productName} has moved to {host}. Install the new app and you will already be signed in."
-msgstr "{productName} perkeltas į {host}. Įdiekite naują programėlę ir būsite automatiškai prisijungę."
+msgstr "{productName} perkeltas į {host}. Įdiekite naująją programėlę ir jau būsite prisijungę."
 
 #. Banner in an installed Android web app. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:33
 msgid "{productName} has moved to {host}. Open it in your browser to install the new app."
-msgstr "{productName} perkeltas į {host}. Atidarykite naršyklėje, kad įdiegtumėte naują programėlę."
+msgstr "{productName} perkeltas į {host}. Atidarykite jį naršyklėje, kad įdiegtumėte naująją programėlę."
 
 #. Profile membership label showing when the user account was created.
 #: src/features/user/components/popouts/UserProfileShared.tsx:53
@@ -1755,7 +1755,7 @@ msgstr "{productName} reikia leidimo įrašyti ekraną. Leiskite įrašyti ekran
 #. Intro in the modal that explains how to install the app from its new domain. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:22
 msgid "{productName} now lives at {host}. Install it from there, then sign in with this app."
-msgstr "{productName} dabar veikia adresu {host}. Įdiekite jį ten, tada prisijunkite naudodami šią programą."
+msgstr "{productName} dabar veikia adresu {host}. Įdiekite jį ten, tada prisijunkite naudodami šią programėlę."
 
 #. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:27
@@ -12615,7 +12615,7 @@ msgstr "Domenas"
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
 #: src/features/devtools/components/NagbarControls.ts:76
 msgid "Domain moved nagbar"
-msgstr "Domenas perkeltas"
+msgstr "Domeno perkėlimo pranešimų juosta"
 
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
@@ -18111,7 +18111,7 @@ msgstr "Įdiekite jį iš savo naršyklės meniu."
 #. Button on the domain moved banner that installs the app from the new domain.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:48
 msgid "Install the new app"
-msgstr "Įdiegti naują programą"
+msgstr "Įdiegti naująją programėlę"
 
 #. Label for the installed desktop version in the Linux update modal.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:136
@@ -19411,7 +19411,7 @@ msgstr "Nuoroda (suaugusiesiems)"
 #. Button on the domain moved banner that opens the code entry used to sign in a new app. Must match the translation used in the "Sign in with your old {productName} app" instructions.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:60
 msgid "Link a new device"
-msgstr "Susiekite naują įrenginį"
+msgstr "Susieti naują įrenginį"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:96
@@ -23501,7 +23501,7 @@ msgstr "Atidaryti „{displayName}“"
 #. First install step on Apple devices. host is the new domain, for example fluxer.com. Safari is the browser.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:32
 msgid "Open {host} in Safari."
-msgstr "Atidarykite {host} „Safari“."
+msgstr "Atidarykite {host} naršyklėje „Safari“."
 
 #. First install step on other devices. host is the new domain, for example fluxer.com.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:37
@@ -23531,7 +23531,7 @@ msgstr "Atidaryti „{productName}“"
 #. Button on the domain moved banner that opens the new domain in the browser. productName is the app name.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:52
 msgid "Open {productName} in your browser"
-msgstr "Atidarykite naršyklėje {productName}"
+msgstr "Atidaryti {productName} naršyklėje"
 
 #. Button or menu action label in the channel and chat gif picker grid item. Keep it concise. Preserve {title}; it is inserted by code.
 #: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:37
@@ -23908,7 +23908,7 @@ msgstr "Atidarykite meniu ir pasirinkite parinktį."
 #. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
 msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
-msgstr "Atidarykite naują programėlę ir pasirinkite „Prisijungti naudojant senąją {productName} programėlę“. Tada pasirinkite „Susieti naują įrenginį čia“ ir įveskite rodomą kodą."
+msgstr "Atidarykite naująją programėlę ir pasirinkite „Prisijungti naudojant senąją {productName} programėlę“. Tada čia pasirinkite „Susieti naują įrenginį“ ir įveskite rodomą kodą."
 
 #. Third install step in a desktop browser that already moved the account to the new domain.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
@@ -28949,7 +28949,7 @@ msgstr "Ieškoma"
 #. Quick switcher header shown while the query starts with @ outside a community, or with @@.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:70
 msgid "Searching all users"
-msgstr "Visų vartotojų paieška"
+msgstr "Ieškoma visų naudotojų"
 
 #. Quick switcher header shown while the query starts with * and only communities are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:66
@@ -28966,7 +28966,7 @@ msgstr "Ieškoma žmonių..."
 #. Quick switcher header shown while the query starts with @ inside a community. communityName is the community name.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:74
 msgid "Searching friends and members of {communityName}"
-msgstr "Ieškoma draugų ir narių iš {communityName}"
+msgstr "Ieškoma draugų ir {communityName} narių"
 
 #. Quick switcher header shown while the query starts with # and only text channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:58
@@ -30368,7 +30368,7 @@ msgstr "Rodyti daugiausia 5 (+5 ženklelis)"
 #. Button on the domain moved banner that opens the install steps.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:56
 msgid "Show me how"
-msgstr "Rodyk man kaip"
+msgstr "Rodyti, kaip"
 
 #. Plus menu submenu toggle that shows the saved media (memes) button next to the textarea.
 #. Short label for an advanced message input preference.
@@ -30652,7 +30652,7 @@ msgstr "Prisijungti naudojant prieigos raktą"
 #. Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:27
 msgid "Sign in with your old {productName} app"
-msgstr "Prisijunkite naudodami savo senąją {productName} programėlę"
+msgstr "Prisijungti naudojant senąją {productName} programėlę"
 
 #. Description shown when sign-in is restricted to the configured SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx:17
@@ -39949,7 +39949,7 @@ msgstr "Jūsų naršyklė užblokavo iššokantįjį prieigos rakto langą. Leis
 #. Error shown when a passkey prompt fails because the browser cannot use the passkey on this web address. Keep plain.
 #: src/features/auth/utils/WebAuthnUtils.ts:18
 msgid "Your browser does not support passkeys on this domain. Update your browser, or sign in with your password and two-factor code."
-msgstr "Jūsų naršyklė nepalaiko slapta rakto šiame domene. Atnaujinkite naršyklę arba prisijunkite naudodami slaptažodį ir dviejų veiksnių kodą."
+msgstr "Jūsų naršyklė šiame domene nepalaiko prieigos raktų. Atnaujinkite naršyklę arba prisijunkite naudodami slaptažodį ir dviejų veiksnių kodą."
 
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12

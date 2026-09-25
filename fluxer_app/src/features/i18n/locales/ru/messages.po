@@ -1695,12 +1695,12 @@ msgstr "{productName} обнаружил потенциальный рейд, п
 #. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:38
 msgid "{productName} has moved to {host}. Add it to your Home Screen or Dock, then sign in with this app."
-msgstr "{productName} перемещён на {host}. Добавьте его на главный экран или в Dock, а затем войдите через это приложение."
+msgstr "{productName} переехал на {host}. Добавьте его на экран «Домой» или в Dock, а затем войдите через это приложение."
 
 #. Banner in an installed web app on other browsers. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:43
 msgid "{productName} has moved to {host}. Install it from your browser, then sign in with this app."
-msgstr "{productName} переехал на {host}. Установите его из браузера, а затем войдите в это приложение."
+msgstr "{productName} переехал на {host}. Установите его из браузера, а затем войдите через это приложение."
 
 #. Banner in an installed desktop web app after the account moved to the new domain. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:28
@@ -1710,7 +1710,7 @@ msgstr "{productName} переехал на {host}. Установите нов�
 #. Banner in an installed Android web app. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:33
 msgid "{productName} has moved to {host}. Open it in your browser to install the new app."
-msgstr "{productName} переехал на {host}. Откройте в браузере, чтобы установить новое приложение."
+msgstr "{productName} переехал на {host}. Откройте его в браузере, чтобы установить новое приложение."
 
 #. Profile membership label showing when the user account was created.
 #: src/features/user/components/popouts/UserProfileShared.tsx:53
@@ -1755,7 +1755,7 @@ msgstr "{productName} требуется доступ к записи экран
 #. Intro in the modal that explains how to install the app from its new domain. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:22
 msgid "{productName} now lives at {host}. Install it from there, then sign in with this app."
-msgstr "{productName} теперь находится по адресу {host}. Установите его оттуда, а затем войдите в систему с помощью этого приложения."
+msgstr "{productName} теперь находится по адресу {host}. Установите его оттуда, а затем войдите через это приложение."
 
 #. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:27
@@ -12615,7 +12615,7 @@ msgstr "Домен"
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
 #: src/features/devtools/components/NagbarControls.ts:76
 msgid "Domain moved nagbar"
-msgstr "Домен перемещен"
+msgstr "Баннер о смене домена"
 
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
@@ -19411,7 +19411,7 @@ msgstr "Ссылка (18+)"
 #. Button on the domain moved banner that opens the code entry used to sign in a new app. Must match the translation used in the "Sign in with your old {productName} app" instructions.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:60
 msgid "Link a new device"
-msgstr "Связать новое устройство"
+msgstr "Привязать новое устройство"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:96
@@ -23908,7 +23908,7 @@ msgstr "Откройте меню и выберите один из вариан
 #. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
 msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
-msgstr "Откройте новое приложение и выберите «Войти через старое приложение {productName}». Затем выберите «Связать новое устройство» и введите отображаемый код."
+msgstr "Откройте новое приложение и выберите «Войти через старое приложение {productName}». Затем здесь выберите «Привязать новое устройство» и введите показанный там код."
 
 #. Third install step in a desktop browser that already moved the account to the new domain.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
@@ -30368,7 +30368,7 @@ msgstr "Показывать максимум 5 (значок +5)"
 #. Button on the domain moved banner that opens the install steps.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:56
 msgid "Show me how"
-msgstr "Показать как"
+msgstr "Показать, как"
 
 #. Plus menu submenu toggle that shows the saved media (memes) button next to the textarea.
 #. Short label for an advanced message input preference.
@@ -30652,7 +30652,7 @@ msgstr "Войти с помощью ключа доступа"
 #. Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:27
 msgid "Sign in with your old {productName} app"
-msgstr "Войдите с помощью вашего старого приложения {productName}"
+msgstr "Войти через старое приложение {productName}"
 
 #. Description shown when sign-in is restricted to the configured SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx:17
@@ -32849,7 +32849,7 @@ msgstr "Говорите в голосовых каналах. Без этого
 #. Second install step on iPhone and iPad. Share and Add to Home Screen are the names of the Safari menu items, use the names iOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:41
 msgid "Tap Share, then Add to Home Screen."
-msgstr "Нажмите «Поделиться», затем «Добавить на главный экран»."
+msgstr "Нажмите «Поделиться», затем «На экран «Домой»»."
 
 #. Label in the note edit sheet.
 #: src/features/user/components/modals/NoteEditSheet.tsx:21

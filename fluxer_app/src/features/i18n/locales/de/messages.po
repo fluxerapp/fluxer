@@ -1695,12 +1695,12 @@ msgstr "{productName} hat einen potenziellen Raid erkannt. Neue Nutzer können d
 #. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:38
 msgid "{productName} has moved to {host}. Add it to your Home Screen or Dock, then sign in with this app."
-msgstr "{productName} ist zu {host} umgezogen. Füge es zu deinem Home Screen oder Dock hinzu und melde dich dann mit dieser App an."
+msgstr "{productName} ist zu {host} umgezogen. Füge es zu deinem Home-Bildschirm oder Dock hinzu und melde dich dann mit dieser App an."
 
 #. Banner in an installed web app on other browsers. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:43
 msgid "{productName} has moved to {host}. Install it from your browser, then sign in with this app."
-msgstr "{productName} ist zu {host} umgezogen. Installiere es in deinem Browser und melde dich dann mit dieser App an."
+msgstr "{productName} ist zu {host} umgezogen. Installiere es über deinen Browser und melde dich dann mit dieser App an."
 
 #. Banner in an installed desktop web app after the account moved to the new domain. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:28
@@ -4412,7 +4412,7 @@ msgstr "Genehmigen"
 #. Hint under the sign-in option on fluxer.com that pairs a newly installed app with the old installed app. productName is the app name.
 #: src/features/auth/flow/AuthLoginLayout.tsx:74
 msgid "Approve this app from the {productName} app you already use. No password needed."
-msgstr "Bestätige diese App aus der {productName}-App, die du bereits verwendest. Kein Passwort erforderlich."
+msgstr "Bestätige diese App in der {productName}-App, die du bereits verwendest. Kein Passwort erforderlich."
 
 #. Discovery application status badge in the community Discovery settings tab. The community has been approved and is listed.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:45
@@ -7504,7 +7504,7 @@ msgstr "Wähle entweder „guild_id“ oder „channel_id“, nicht beides."
 #. Second install step on a Mac. File and Add to Dock are the names of the Safari menu items, use the names macOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:46
 msgid "Choose File, then Add to Dock."
-msgstr "Wähle \"Ablage\" und dann \"Zum Dock hinzufügen\"."
+msgstr "Wähle „Ablage“ und dann „Zum Dock hinzufügen“."
 
 #. Subtitle in the create-DM modal. Keep it short and calm.
 #: src/features/channel/utils/CreateDMModalUtils.tsx:39
@@ -12615,7 +12615,7 @@ msgstr "Domain"
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
 #: src/features/devtools/components/NagbarControls.ts:76
 msgid "Domain moved nagbar"
-msgstr "Domain umgezogen-Hinweis"
+msgstr "Hinweisleiste zum Domainumzug"
 
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
@@ -16114,7 +16114,7 @@ msgstr "Desktop-App herunterladen"
 #. Title of the modal that explains how to install the app from its new domain. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:18
 msgid "Get the new {productName} app"
-msgstr "Hol dir die neue {productName} App"
+msgstr "Hol dir die neue {productName}-App"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Type label for GIF media.
@@ -23531,7 +23531,7 @@ msgstr "{productName} öffnen"
 #. Button on the domain moved banner that opens the new domain in the browser. productName is the app name.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:52
 msgid "Open {productName} in your browser"
-msgstr "Öffne {productName} in deinem Browser"
+msgstr "{productName} im Browser öffnen"
 
 #. Button or menu action label in the channel and chat gif picker grid item. Keep it concise. Preserve {title}; it is inserted by code.
 #: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:37
@@ -23908,7 +23908,7 @@ msgstr "Öffne das Menü und wähle eine Option aus."
 #. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
 msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
-msgstr "Öffne die neue App und wähle \"Mit deiner alten {productName}-App anmelden\". Wähle dann hier \"Neues Gerät verknüpfen\" und gib den angezeigten Code ein."
+msgstr "Öffne die neue App und wähle „Mit deiner alten {productName}-App anmelden“. Wähle dann hier „Neues Gerät verknüpfen“ und gib den angezeigten Code ein."
 
 #. Third install step in a desktop browser that already moved the account to the new domain.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
@@ -23981,7 +23981,7 @@ msgstr "Öffne deine Nachrichten"
 
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:129
 msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
-msgstr "Öffne deine alte {PRODUCT_NAME} App und wähle \"Neues Gerät verknüpfen\", gib dann den folgenden Code ein."
+msgstr "Öffne deine alte {PRODUCT_NAME}-App, wähle „Neues Gerät verknüpfen“ und gib dann den folgenden Code ein."
 
 #: src/features/user/components/modals/PhoneAddModal.tsx:327
 msgid "Open your phone's messaging app and create a new text message."
@@ -28954,7 +28954,7 @@ msgstr "Alle Nutzer durchsuchen"
 #. Quick switcher header shown while the query starts with * and only communities are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:66
 msgid "Searching communities"
-msgstr "Communities durchsuchen"
+msgstr "Communitys durchsuchen"
 
 #. Loading state in the desktop quick switcher while fetching people results. Trailing ellipsis is intentional.
 #. Loading state shown while the quick switcher fetches matching people. Trailing ellipsis is intentional.
@@ -32849,7 +32849,7 @@ msgstr "In Sprachkanälen sprechen. Ohne diese Berechtigung bleiben Mitglieder s
 #. Second install step on iPhone and iPad. Share and Add to Home Screen are the names of the Safari menu items, use the names iOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:41
 msgid "Tap Share, then Add to Home Screen."
-msgstr "Tippe auf Teilen und dann auf „Zum Home-Bildschirm hinzufügen“."
+msgstr "Tippe auf „Teilen“ und dann auf „Zum Home-Bildschirm hinzufügen“."
 
 #. Label in the note edit sheet.
 #: src/features/user/components/modals/NoteEditSheet.tsx:21

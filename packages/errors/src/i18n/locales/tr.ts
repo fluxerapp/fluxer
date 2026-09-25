@@ -101,7 +101,7 @@ const ERROR_I18N_TR_MESSAGES = defineErrorI18nLocaleMessages({
 	"auth_and_oauth.invalid_token_admin_api_key": "Geçersiz yönetici API anahtarı.",
 	"auth_and_oauth.missing_authorization": "Eksik veya geçersiz yetkilendirme başlığı.",
 	"auth_and_oauth.must_start_session_before_sending_messages": "Mesaj göndermeden önce bir oturum başlatmalısın.",
-	"auth_and_oauth.origin_handoff_nonce_invalid": "Bu oturum açma aktarımı başlattığın aktarımla eşleşmiyor.",
+	"auth_and_oauth.origin_handoff_nonce_invalid": "Bu oturum açma aktarımı başlattığınız aktarımla eşleşmiyor.",
 	"auth_and_oauth.registration_closed": "Bu kurulumda kayıt kapalı.",
 	"auth_and_oauth.registration_pending_approval": "Bu kayıt yönetici onayını bekliyor.",
 	"auth_and_oauth.registration_rejected": "Bu kayıt isteği reddedildi.",

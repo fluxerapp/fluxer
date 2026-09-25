@@ -1695,22 +1695,22 @@ msgstr "{productName} oppdaget et potensielt raid, så nye brukere kan ikke bli 
 #. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:38
 msgid "{productName} has moved to {host}. Add it to your Home Screen or Dock, then sign in with this app."
-msgstr "{productName} har flyttet til {host}. Legg det til på Hjem-skjermen eller Dock, og logg deretter inn med denne appen."
+msgstr "{productName} har flyttet til {host}. Legg det til på Hjem-skjermen eller i Dock, og logg deretter på med denne appen."
 
 #. Banner in an installed web app on other browsers. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:43
 msgid "{productName} has moved to {host}. Install it from your browser, then sign in with this app."
-msgstr "{productName} har flyttet til {host}. Installer fra nettleseren din, og logg deretter inn med denne appen."
+msgstr "{productName} har flyttet til {host}. Installer det fra nettleseren din, og logg deretter på med denne appen."
 
 #. Banner in an installed desktop web app after the account moved to the new domain. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:28
 msgid "{productName} has moved to {host}. Install the new app and you will already be signed in."
-msgstr "{productName} har flyttet til {host}. Installer den nye appen, så er du allerede logget inn."
+msgstr "{productName} har flyttet til {host}. Installer den nye appen, så er du allerede logget på."
 
 #. Banner in an installed Android web app. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:33
 msgid "{productName} has moved to {host}. Open it in your browser to install the new app."
-msgstr "{productName} har flyttet til {host}. Åpne i nettleseren for å installere den nye appen."
+msgstr "{productName} har flyttet til {host}. Åpne det i nettleseren for å installere den nye appen."
 
 #. Profile membership label showing when the user account was created.
 #: src/features/user/components/popouts/UserProfileShared.tsx:53
@@ -1755,7 +1755,7 @@ msgstr "{productName} trenger tilgang til skjermopptak. Tillat skjermopptak i op
 #. Intro in the modal that explains how to install the app from its new domain. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:22
 msgid "{productName} now lives at {host}. Install it from there, then sign in with this app."
-msgstr "{productName} holder nå til på {host}. Installer det derfra, og logg deretter inn med denne appen."
+msgstr "{productName} holder nå til på {host}. Installer det derfra, og logg deretter på med denne appen."
 
 #. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:27
@@ -12615,7 +12615,7 @@ msgstr "Domene"
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
 #: src/features/devtools/components/NagbarControls.ts:76
 msgid "Domain moved nagbar"
-msgstr "Domene flyttet nagbar"
+msgstr "Varsellinje for flyttet domene"
 
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
@@ -14124,7 +14124,7 @@ msgstr "Skriv inn denne koden i nettleseren din for å fullføre påloggingen."
 
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:142
 msgid "Enter this code in your old {PRODUCT_NAME} app to complete sign-in."
-msgstr "Skriv inn denne koden i din gamle {PRODUCT_NAME}-app for å fullføre innloggingen."
+msgstr "Skriv inn denne koden i din gamle {PRODUCT_NAME}-app for å fullføre påloggingen."
 
 #: src/features/channel/components/EditingMessageInput.tsx:358
 msgid "Enter to <0><1>save</1></0>"
@@ -23908,12 +23908,12 @@ msgstr "Åpne menyen og velg et alternativ."
 #. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
 msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
-msgstr "Åpne den nye appen og velg «Logg inn med din gamle {productName}-app». Velg deretter «Koble til en ny enhet her» og skriv inn koden som vises."
+msgstr "Åpne den nye appen og velg «Logg på med den gamle {productName}-appen din». Velg deretter «Koble til en ny enhet» her, og skriv inn koden som vises."
 
 #. Third install step in a desktop browser that already moved the account to the new domain.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
 msgid "Open the new app. You are already signed in."
-msgstr "Åpne den nye appen. Du er allerede logget inn."
+msgstr "Åpne den nye appen. Du er allerede logget på."
 
 #. Tip explaining the keyboard shortcut for opening the shortcuts list.
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx:42
@@ -28954,7 +28954,7 @@ msgstr "Søker etter alle brukere"
 #. Quick switcher header shown while the query starts with * and only communities are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:66
 msgid "Searching communities"
-msgstr "Søker i lokalsamfunn"
+msgstr "Søker i fellesskap"
 
 #. Loading state in the desktop quick switcher while fetching people results. Trailing ellipsis is intentional.
 #. Loading state shown while the quick switcher fetches matching people. Trailing ellipsis is intentional.
@@ -30652,7 +30652,7 @@ msgstr "Logg på med passnøkkel"
 #. Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:27
 msgid "Sign in with your old {productName} app"
-msgstr "Logg inn med din gamle {productName}-app"
+msgstr "Logg på med den gamle {productName}-appen din"
 
 #. Description shown when sign-in is restricted to the configured SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx:17
@@ -36049,7 +36049,7 @@ msgstr "Merker for uleste"
 #. Quick switcher section header above the unread channels of the current community.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:54
 msgid "Unread channels"
-msgstr "Ulest kanaler"
+msgstr "Uleste kanaler"
 
 #. Short label in the visual tab. Keep it concise.
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:29
@@ -39949,7 +39949,7 @@ msgstr "Nettleseren din blokkerte popup-vinduet for passnøkkelen. Tillat popup-
 #. Error shown when a passkey prompt fails because the browser cannot use the passkey on this web address. Keep plain.
 #: src/features/auth/utils/WebAuthnUtils.ts:18
 msgid "Your browser does not support passkeys on this domain. Update your browser, or sign in with your password and two-factor code."
-msgstr "Nettleseren din støtter ikke sikkerhetsnøkler på dette domenet. Oppdater nettleseren, eller logg inn med passordet ditt og tofaktor-kode."
+msgstr "Nettleseren din støtter ikke passnøkler på dette domenet. Oppdater nettleseren, eller logg på med passordet ditt og tofaktorkoden."
 
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12

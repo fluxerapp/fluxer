@@ -101,7 +101,7 @@ const ERROR_I18N_ZH_TW_MESSAGES = defineErrorI18nLocaleMessages({
 	"auth_and_oauth.invalid_token_admin_api_key": "無效的管理 API 金鑰。",
 	"auth_and_oauth.missing_authorization": "授權標頭遺失或無效。",
 	"auth_and_oauth.must_start_session_before_sending_messages": "你必須先開始工作階段才能傳送訊息。",
-	"auth_and_oauth.origin_handoff_nonce_invalid": "此登入轉移與你發起的不一致。",
+	"auth_and_oauth.origin_handoff_nonce_invalid": "此登入轉移與您發起的不一致。",
 	"auth_and_oauth.registration_closed": "此實例已關閉註冊。",
 	"auth_and_oauth.registration_pending_approval": "此註冊正在等待管理員核准。",
 	"auth_and_oauth.registration_rejected": "此註冊要求已被拒絕。",

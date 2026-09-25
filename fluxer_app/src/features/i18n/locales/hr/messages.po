@@ -1705,7 +1705,7 @@ msgstr "{productName} se preselio na {host}. Instalirajte ga iz preglednika, a z
 #. Banner in an installed desktop web app after the account moved to the new domain. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:28
 msgid "{productName} has moved to {host}. Install the new app and you will already be signed in."
-msgstr "{productName} se preselio na {host}. Instaliraj novu aplikaciju i automatski ćeš biti prijavljen."
+msgstr "{productName} se preselio na {host}. Instalirajte novu aplikaciju i već ćete biti prijavljeni."
 
 #. Banner in an installed Android web app. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:33
@@ -1755,12 +1755,12 @@ msgstr "Aplikaciji {productName} potreban je pristup snimanju zaslona. Dopustite
 #. Intro in the modal that explains how to install the app from its new domain. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:22
 msgid "{productName} now lives at {host}. Install it from there, then sign in with this app."
-msgstr "{productName} se sada nalazi na adresi {host}. Instalirajte ga od tamo, a zatim se prijavite ovom aplikacijom."
+msgstr "{productName} se sada nalazi na adresi {host}. Instalirajte ga odande, a zatim se prijavite ovom aplikacijom."
 
 #. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:27
 msgid "{productName} now lives at {host}. Install it from there."
-msgstr "{productName} se sada nalazi na adresi {host}. Instalirajte ga od tamo."
+msgstr "{productName} se sada nalazi na adresi {host}. Instalirajte ga odande."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx:31
@@ -4412,7 +4412,7 @@ msgstr "Odobri"
 #. Hint under the sign-in option on fluxer.com that pairs a newly installed app with the old installed app. productName is the app name.
 #: src/features/auth/flow/AuthLoginLayout.tsx:74
 msgid "Approve this app from the {productName} app you already use. No password needed."
-msgstr "Odobri ovu aplikaciju iz {productName} aplikacije koju već koristiš. Lozinka nije potrebna."
+msgstr "Odobrite ovu aplikaciju iz aplikacije {productName} koju već koristite. Lozinka nije potrebna."
 
 #. Discovery application status badge in the community Discovery settings tab. The community has been approved and is listed.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:45
@@ -12615,7 +12615,7 @@ msgstr "Domena"
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
 #: src/features/devtools/components/NagbarControls.ts:76
 msgid "Domain moved nagbar"
-msgstr "Obavijest o premještanju domene"
+msgstr "Traka s obavijestima o premještanju domene"
 
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
@@ -14124,7 +14124,7 @@ msgstr "Unesite ovaj kôd u preglednik kako biste dovršili prijavu."
 
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:142
 msgid "Enter this code in your old {PRODUCT_NAME} app to complete sign-in."
-msgstr "Unesite ovaj kod u svoju staru {PRODUCT_NAME} aplikaciju kako biste dovršili prijavu."
+msgstr "Unesite ovaj kod u svoju staru aplikaciju {PRODUCT_NAME} kako biste dovršili prijavu."
 
 #: src/features/channel/components/EditingMessageInput.tsx:358
 msgid "Enter to <0><1>save</1></0>"
@@ -23501,7 +23501,7 @@ msgstr "Otvori {displayName}"
 #. First install step on Apple devices. host is the new domain, for example fluxer.com. Safari is the browser.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:32
 msgid "Open {host} in Safari."
-msgstr "Otvori {host} u Safariju."
+msgstr "Otvorite {host} u Safariju."
 
 #. First install step on other devices. host is the new domain, for example fluxer.com.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:37
@@ -23908,7 +23908,7 @@ msgstr "Otvorite izbornik i odaberite opciju."
 #. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
 msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
-msgstr "Otvorite novu aplikaciju i odaberite \"Prijavi se sa svojom starom aplikacijom {productName}\". Zatim odaberite \"Poveži novi uređaj ovdje\" i unesite prikazani kod."
+msgstr "Otvorite novu aplikaciju i odaberite \"Prijavi se sa svojom starom aplikacijom {productName}\". Zatim ovdje odaberite \"Poveži novi uređaj\" i unesite prikazani kod."
 
 #. Third install step in a desktop browser that already moved the account to the new domain.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
@@ -23981,7 +23981,7 @@ msgstr "Otvorite poruke"
 
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:129
 msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
-msgstr "Otvorite svoju staru {PRODUCT_NAME} aplikaciju i odaberite Poveži novi uređaj, a zatim unesite kod ispod."
+msgstr "Otvorite svoju staru aplikaciju {PRODUCT_NAME} i odaberite \"Poveži novi uređaj\", a zatim unesite kod ispod."
 
 #: src/features/user/components/modals/PhoneAddModal.tsx:327
 msgid "Open your phone's messaging app and create a new text message."
@@ -30652,7 +30652,7 @@ msgstr "Prijavite se s pristupnim ključem"
 #. Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:27
 msgid "Sign in with your old {productName} app"
-msgstr "Prijavi se sa svojom starom {productName} aplikacijom"
+msgstr "Prijavi se sa svojom starom aplikacijom {productName}"
 
 #. Description shown when sign-in is restricted to the configured SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx:17
@@ -39949,7 +39949,7 @@ msgstr "Vaš preglednik blokirao je skočni prozor za pristupni ključ. Dopustit
 #. Error shown when a passkey prompt fails because the browser cannot use the passkey on this web address. Keep plain.
 #: src/features/auth/utils/WebAuthnUtils.ts:18
 msgid "Your browser does not support passkeys on this domain. Update your browser, or sign in with your password and two-factor code."
-msgstr "Vaš preglednik ne podržava passkey na ovoj domeni. Ažurirajte preglednik ili se prijavite svojom lozinkom i dvofaktorskim kodom."
+msgstr "Vaš preglednik ne podržava pristupne ključeve na ovoj domeni. Ažurirajte preglednik ili se prijavite svojom lozinkom i dvofaktorskim kodom."
 
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12

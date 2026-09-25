@@ -1695,22 +1695,22 @@ msgstr "{productName} mendeteksi potensi serangan, jadi pengguna baru tidak bisa
 #. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:38
 msgid "{productName} has moved to {host}. Add it to your Home Screen or Dock, then sign in with this app."
-msgstr "{productName} telah pindah ke {host}. Tambahkan ke Layar Utama atau Dock Anda, lalu masuk dengan aplikasi ini."
+msgstr "{productName} telah pindah ke {host}. Tambahkan ke Layar Utama atau Dock-mu, lalu masuk dengan aplikasi ini."
 
 #. Banner in an installed web app on other browsers. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:43
 msgid "{productName} has moved to {host}. Install it from your browser, then sign in with this app."
-msgstr "{productName} telah pindah ke {host}. Instal dari peramban Anda, lalu masuk dengan aplikasi ini."
+msgstr "{productName} telah pindah ke {host}. Instal dari browsermu, lalu masuk dengan aplikasi ini."
 
 #. Banner in an installed desktop web app after the account moved to the new domain. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:28
 msgid "{productName} has moved to {host}. Install the new app and you will already be signed in."
-msgstr "{productName} telah pindah ke {host}. Instal aplikasi baru dan Anda akan langsung masuk."
+msgstr "{productName} telah pindah ke {host}. Instal aplikasi baru dan kamu akan langsung masuk."
 
 #. Banner in an installed Android web app. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:33
 msgid "{productName} has moved to {host}. Open it in your browser to install the new app."
-msgstr "{productName} telah pindah ke {host}. Buka di browser Anda untuk menginstal aplikasi baru."
+msgstr "{productName} telah pindah ke {host}. Buka di browsermu untuk menginstal aplikasi baru."
 
 #. Profile membership label showing when the user account was created.
 #: src/features/user/components/popouts/UserProfileShared.tsx:53
@@ -4412,7 +4412,7 @@ msgstr "Setujui"
 #. Hint under the sign-in option on fluxer.com that pairs a newly installed app with the old installed app. productName is the app name.
 #: src/features/auth/flow/AuthLoginLayout.tsx:74
 msgid "Approve this app from the {productName} app you already use. No password needed."
-msgstr "Setujui aplikasi ini dari aplikasi {productName} yang sudah Anda gunakan. Tidak perlu kata sandi."
+msgstr "Setujui aplikasi ini dari aplikasi {productName} yang sudah kamu gunakan. Tidak perlu kata sandi."
 
 #. Discovery application status badge in the community Discovery settings tab. The community has been approved and is listed.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:45
@@ -7504,7 +7504,7 @@ msgstr "Pilih guild_id atau channel_id, jangan keduanya."
 #. Second install step on a Mac. File and Add to Dock are the names of the Safari menu items, use the names macOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:46
 msgid "Choose File, then Add to Dock."
-msgstr "Pilih File, lalu Tambahkan ke Dock."
+msgstr "Pilih Arsip, lalu Tambah ke Dock."
 
 #. Subtitle in the create-DM modal. Keep it short and calm.
 #: src/features/channel/utils/CreateDMModalUtils.tsx:39
@@ -12615,7 +12615,7 @@ msgstr "Domain"
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
 #: src/features/devtools/components/NagbarControls.ts:76
 msgid "Domain moved nagbar"
-msgstr "Domain dipindahkan"
+msgstr "Bilah notifikasi domain dipindahkan"
 
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
@@ -14124,7 +14124,7 @@ msgstr "Masukkan kode ini di browsermu untuk menyelesaikan proses masuk."
 
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:142
 msgid "Enter this code in your old {PRODUCT_NAME} app to complete sign-in."
-msgstr "Masukkan kode ini di aplikasi {PRODUCT_NAME} lama Anda untuk menyelesaikan masuk."
+msgstr "Masukkan kode ini di aplikasi {PRODUCT_NAME} lamamu untuk menyelesaikan proses masuk."
 
 #: src/features/channel/components/EditingMessageInput.tsx:358
 msgid "Enter to <0><1>save</1></0>"
@@ -18106,12 +18106,12 @@ msgstr "Instal {productName} untuk pemilih sumber lengkap dan kontrol berbagi la
 #. Second install step on other devices. Refers to the install option in the browser menu.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:51
 msgid "Install it from your browser menu."
-msgstr "Pasang dari menu peramban Anda."
+msgstr "Instal dari menu browsermu."
 
 #. Button on the domain moved banner that installs the app from the new domain.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:48
 msgid "Install the new app"
-msgstr "Pasang aplikasi baru"
+msgstr "Instal aplikasi baru"
 
 #. Label for the installed desktop version in the Linux update modal.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:136
@@ -23506,7 +23506,7 @@ msgstr "Buka {host} di Safari."
 #. First install step on other devices. host is the new domain, for example fluxer.com.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:37
 msgid "Open {host} in your browser."
-msgstr "Buka {host} di browser Anda."
+msgstr "Buka {host} di browsermu."
 
 #. Accessible label for an inline settings deep-link pill. labelText is the resolved settings tab and section breadcrumb.
 #: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:109
@@ -23531,7 +23531,7 @@ msgstr "Buka {productName}"
 #. Button on the domain moved banner that opens the new domain in the browser. productName is the app name.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:52
 msgid "Open {productName} in your browser"
-msgstr "Buka {productName} di browser Anda"
+msgstr "Buka {productName} di browsermu"
 
 #. Button or menu action label in the channel and chat gif picker grid item. Keep it concise. Preserve {title}; it is inserted by code.
 #: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:37
@@ -23908,12 +23908,12 @@ msgstr "Buka menu dan pilih opsi."
 #. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
 msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
-msgstr "Buka aplikasi baru dan pilih Masuk dengan aplikasi {productName} lama Anda. Kemudian pilih Tautkan perangkat baru di sini dan masukkan kode yang ditampilkan."
+msgstr "Buka aplikasi baru dan pilih Masuk dengan aplikasi {productName} lamamu. Kemudian pilih Tautkan perangkat baru di sini dan masukkan kode yang ditampilkannya."
 
 #. Third install step in a desktop browser that already moved the account to the new domain.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
 msgid "Open the new app. You are already signed in."
-msgstr "Buka aplikasi baru. Anda sudah masuk."
+msgstr "Buka aplikasi baru. Kamu sudah masuk."
 
 #. Tip explaining the keyboard shortcut for opening the shortcuts list.
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx:42
@@ -23981,7 +23981,7 @@ msgstr "Buka pesanmu"
 
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:129
 msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
-msgstr "Buka aplikasi {PRODUCT_NAME} lama Anda dan pilih Tautkan perangkat baru, lalu masukkan kode di bawah ini."
+msgstr "Buka aplikasi {PRODUCT_NAME} lamamu dan pilih Tautkan perangkat baru, lalu masukkan kode di bawah ini."
 
 #: src/features/user/components/modals/PhoneAddModal.tsx:327
 msgid "Open your phone's messaging app and create a new text message."
@@ -28971,7 +28971,7 @@ msgstr "Mencari teman dan anggota {communityName}"
 #. Quick switcher header shown while the query starts with # and only text channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:58
 msgid "Searching text channels"
-msgstr "Mencari kanal teks"
+msgstr "Mencari saluran teks"
 
 #. Quick switcher header shown while the query starts with ! and only voice channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:62
@@ -29223,7 +29223,7 @@ msgstr "Pilih teks"
 
 #: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:69
 msgid "Select the account you want to sign in with on your new device."
-msgstr "Pilih akun yang ingin Anda gunakan untuk masuk di perangkat baru Anda."
+msgstr "Pilih akun yang ingin kamu gunakan untuk masuk di perangkat barumu."
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:120
@@ -30652,7 +30652,7 @@ msgstr "Masuk dengan passkey"
 #. Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:27
 msgid "Sign in with your old {productName} app"
-msgstr "Masuk dengan aplikasi {productName} lama Anda"
+msgstr "Masuk dengan aplikasi {productName} lamamu"
 
 #. Description shown when sign-in is restricted to the configured SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx:17
@@ -32849,7 +32849,7 @@ msgstr "Bicara di saluran suara. Tanpa izin ini, anggota tetap dibisukan sampai 
 #. Second install step on iPhone and iPad. Share and Add to Home Screen are the names of the Safari menu items, use the names iOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:41
 msgid "Tap Share, then Add to Home Screen."
-msgstr "Ketuk Bagikan, lalu Tambahkan ke Layar Utama."
+msgstr "Ketuk Bagikan, lalu Tambah ke Layar Utama."
 
 #. Label in the note edit sheet.
 #: src/features/user/components/modals/NoteEditSheet.tsx:21
@@ -39949,7 +39949,7 @@ msgstr "Browsermu memblokir jendela pop-up passkey. Izinkan pop-up untuk situs i
 #. Error shown when a passkey prompt fails because the browser cannot use the passkey on this web address. Keep plain.
 #: src/features/auth/utils/WebAuthnUtils.ts:18
 msgid "Your browser does not support passkeys on this domain. Update your browser, or sign in with your password and two-factor code."
-msgstr "Peramban Anda tidak mendukung kunci sandi di domain ini. Perbarui peramban Anda, atau masuk dengan kata sandi dan kode dua faktor Anda."
+msgstr "Browsermu tidak mendukung passkey di domain ini. Perbarui browsermu, atau masuk dengan kata sandi dan kode autentikasi dua faktormu."
 
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12

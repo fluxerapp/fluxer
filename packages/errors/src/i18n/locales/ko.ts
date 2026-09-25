@@ -101,7 +101,7 @@ const ERROR_I18N_KO_MESSAGES = defineErrorI18nLocaleMessages({
 	"auth_and_oauth.invalid_token_admin_api_key": "잘못된 관리자 API 키예요.",
 	"auth_and_oauth.missing_authorization": "인증 헤더가 없거나 유효하지 않아요.",
 	"auth_and_oauth.must_start_session_before_sending_messages": "메시지를 보내기 전에 세션을 시작해야 해요.",
-	"auth_and_oauth.origin_handoff_nonce_invalid": "이 로그인 이전 요청이 시작한 요청과 일치하지 않습니다.",
+	"auth_and_oauth.origin_handoff_nonce_invalid": "이 로그인 이전 요청이 시작하신 요청과 일치하지 않습니다.",
 	"auth_and_oauth.registration_closed": "이 인스턴스에서는 가입을 받고 있지 않아요.",
 	"auth_and_oauth.registration_pending_approval": "이 가입 신청은 관리자 승인을 기다리고 있어요.",
 	"auth_and_oauth.registration_rejected": "이 가입 요청은 거부되었어요.",
