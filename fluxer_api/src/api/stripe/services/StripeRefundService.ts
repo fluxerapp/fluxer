@@ -261,7 +261,7 @@ export class StripeRefundService {
 		const subscriptionId = refund.metadata.subscription_id;
 		if (subscriptionId) {
 			try {
-				await this.subscriptionService.cancelSubscriptionImmediately(user.id, 'self_serve_refund');
+				await this.subscriptionService.cancelSubscriptionImmediately(user.id, 'self_serve_refund', subscriptionId);
 			} catch (error) {
 				Logger.error(
 					{error, userId: user.id.toString(), subscriptionId},

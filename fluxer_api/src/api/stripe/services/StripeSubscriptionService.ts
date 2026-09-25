@@ -174,7 +174,7 @@ export class StripeSubscriptionService {
 		}
 	}
 
-	async cancelSubscriptionImmediately(userId: UserID, reason?: string): Promise<void> {
+	async cancelSubscriptionImmediately(userId: UserID, reason?: string, expectedSubscriptionId?: string): Promise<void> {
 		if (!this.stripe) {
 			throw new StripePaymentNotAvailableError();
 		}
@@ -184,6 +184,18 @@ export class StripeSubscriptionService {
 		}
 		if (!user.stripeSubscriptionId) {
 			throw new StripeNoActiveSubscriptionError();
+		}
+		if (expectedSubscriptionId && user.stripeSubscriptionId !== expectedSubscriptionId) {
+			Logger.info(
+				{
+					userId: user.id.toString(),
+					expectedSubscriptionId,
+					currentSubscriptionId: user.stripeSubscriptionId,
+					reason: reason ?? null,
+				},
+				'Skipping immediate cancellation because the target subscription is no longer the current one',
+			);
+			return;
 		}
 		try {
 			const canceledSubscription = await this.stripe.subscriptions.cancel(
