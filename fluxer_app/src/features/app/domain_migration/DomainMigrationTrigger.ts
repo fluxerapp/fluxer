@@ -17,11 +17,13 @@ import {
 	writeDomainMigrationIntent,
 } from '@app/features/app/domain_migration/DomainMigrationCore';
 import DomainMigrationRollout from '@app/features/app/domain_migration/DomainMigrationRollout';
+import ExperimentAssignments from '@app/features/experiment/state/ExperimentAssignments';
 import {getProtectedLocalStorage, getProtectedSessionStorage} from '@app/features/platform/state/ProtectedWebStorage';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as NagbarCommands from '@app/features/ui/commands/NagbarCommands';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
-import {compareShallow, reaction} from 'mobx';
+import {INERT_EXPERIMENT_ASSIGNMENTS_RESPONSE} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
+import {when} from 'mobx';
 
 const logger = new Logger('DomainMigrationTrigger');
 
@@ -107,13 +109,12 @@ export function startDomainMigrationTrigger(): void {
 		setTimeout(offerNotificationReenable, 0);
 		return;
 	}
-	reaction(
-		() => ({enabled: DomainMigrationRollout.enabled, voiceActive: isVoiceActive()}),
-		({enabled}) => {
-			evaluateSource(side, enabled).catch((err) => {
+	when(
+		() => ExperimentAssignments.response !== INERT_EXPERIMENT_ASSIGNMENTS_RESPONSE,
+		() => {
+			evaluateSource(side, DomainMigrationRollout.enabled).catch((err) => {
 				logger.warn('Domain migration trigger failed:', err);
 			});
 		},
-		{fireImmediately: true, equals: compareShallow},
 	);
 }
