@@ -1417,7 +1417,7 @@
 .fullscreenButtonWrap {
 	position: absolute;
 	right: clamp(1rem, 2vw, 2rem);
-	bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+	bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px) + 0.0625rem);
 	z-index: 35;
 	display: flex;
 	align-items: center;
