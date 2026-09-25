@@ -1705,12 +1705,12 @@ msgstr "{productName}이(가) {host}(으)로 이전했습니다. 브라우저에
 #. Banner in an installed desktop web app after the account moved to the new domain. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:28
 msgid "{productName} has moved to {host}. Install the new app and you will already be signed in."
-msgstr "{productName}이(가) {host}(으)로 이전되었습니다. 새 앱을 설치하면 자동으로 로그인됩니다."
+msgstr "{productName}이(가) {host}(으)로 이전했습니다. 새 앱을 설치하면 이미 로그인되어 있습니다."
 
 #. Banner in an installed Android web app. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:33
 msgid "{productName} has moved to {host}. Open it in your browser to install the new app."
-msgstr "{productName}이(가) {host}(으)로 이전했습니다. 새 앱을 설치하려면 브라우저에서 열어주세요."
+msgstr "{productName}이(가) {host}(으)로 이전했습니다. 새 앱을 설치하려면 브라우저에서 열어 주세요."
 
 #. Profile membership label showing when the user account was created.
 #: src/features/user/components/popouts/UserProfileShared.tsx:53
@@ -1755,12 +1755,12 @@ msgstr "{productName}에 화면 녹화 접근 권한이 필요합니다. 운영�
 #. Intro in the modal that explains how to install the app from its new domain. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:22
 msgid "{productName} now lives at {host}. Install it from there, then sign in with this app."
-msgstr "{productName}이(가) 이제 {host}(으)로 이전했습니다. 해당 주소에서 설치한 후 이 앱으로 로그인하세요."
+msgstr "{productName}이(가) 이제 {host}에 있습니다. 해당 주소에서 설치한 후 이 앱으로 로그인하세요."
 
 #. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:27
 msgid "{productName} now lives at {host}. Install it from there."
-msgstr "{productName}이(가) 이제 {host}(으)로 이전되었습니다. 해당 주소에서 설치하세요."
+msgstr "{productName}이(가) 이제 {host}에 있습니다. 해당 주소에서 설치하세요."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx:31
@@ -12615,7 +12615,7 @@ msgstr "도메인"
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
 #: src/features/devtools/components/NagbarControls.ts:76
 msgid "Domain moved nagbar"
-msgstr "도메인 이동 알림"
+msgstr "도메인 이동 알림 표시줄"
 
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
@@ -16114,7 +16114,7 @@ msgstr "데스크톱 앱 다운로드"
 #. Title of the modal that explains how to install the app from its new domain. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:18
 msgid "Get the new {productName} app"
-msgstr "새로운 {productName} 앱을 받으세요"
+msgstr "새 {productName} 앱 받기"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Type label for GIF media.
@@ -23501,7 +23501,7 @@ msgstr "{displayName} 열기"
 #. First install step on Apple devices. host is the new domain, for example fluxer.com. Safari is the browser.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:32
 msgid "Open {host} in Safari."
-msgstr "Safari에서 {host}를(을) 여세요."
+msgstr "Safari에서 {host}을(를) 여세요."
 
 #. First install step on other devices. host is the new domain, for example fluxer.com.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:37
@@ -23908,7 +23908,7 @@ msgstr "메뉴를 열고 옵션을 선택합니다."
 #. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
 msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
-msgstr "새 앱을 열고 기존 {productName} 앱으로 로그인하기를 선택하세요. 그런 다음 여기서 새 기기 연결을 선택하고 표시되는 코드를 입력하세요."
+msgstr "새 앱을 열고 기존 {productName} 앱으로 로그인을 선택하세요. 그런 다음 여기서 새 기기 연결을 선택하고 표시되는 코드를 입력하세요."
 
 #. Third install step in a desktop browser that already moved the account to the new domain.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
@@ -23981,7 +23981,7 @@ msgstr "메시지 열기"
 
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:129
 msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
-msgstr "기존 {PRODUCT_NAME} 앱을 열고 '기기 연결'을 선택한 다음 아래 코드를 입력하세요."
+msgstr "기존 {PRODUCT_NAME} 앱을 열고 새 기기 연결을 선택한 다음 아래 코드를 입력하세요."
 
 #: src/features/user/components/modals/PhoneAddModal.tsx:327
 msgid "Open your phone's messaging app and create a new text message."
@@ -28966,7 +28966,7 @@ msgstr "사람 검색 중..."
 #. Quick switcher header shown while the query starts with @ inside a community. communityName is the community name.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:74
 msgid "Searching friends and members of {communityName}"
-msgstr "{communityName}의 친구 및 멤버 검색"
+msgstr "{communityName}의 친구 및 멤버 검색 중"
 
 #. Quick switcher header shown while the query starts with # and only text channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:58

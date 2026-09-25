@@ -1695,7 +1695,7 @@ msgstr "{productName} upptäckte en potentiell räd, så nya användare kan inte
 #. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:38
 msgid "{productName} has moved to {host}. Add it to your Home Screen or Dock, then sign in with this app."
-msgstr "{productName} har flyttat till {host}. Lägg till det på hemskärmen eller i Dock, logga sedan in med den här appen."
+msgstr "{productName} har flyttat till {host}. Lägg till det på hemskärmen eller i Dock och logga sedan in med den här appen."
 
 #. Banner in an installed web app on other browsers. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:43
@@ -1710,7 +1710,7 @@ msgstr "{productName} har flyttat till {host}. Installera den nya appen så är 
 #. Banner in an installed Android web app. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:33
 msgid "{productName} has moved to {host}. Open it in your browser to install the new app."
-msgstr "{productName} har flyttat till {host}. Öppna i webbläsaren för att installera den nya appen."
+msgstr "{productName} har flyttat till {host}. Öppna det i webbläsaren för att installera den nya appen."
 
 #. Profile membership label showing when the user account was created.
 #: src/features/user/components/popouts/UserProfileShared.tsx:53
@@ -7504,7 +7504,7 @@ msgstr "Välj antingen guild_id eller channel_id, inte båda."
 #. Second install step on a Mac. File and Add to Dock are the names of the Safari menu items, use the names macOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:46
 msgid "Choose File, then Add to Dock."
-msgstr "Välj Arkiv och sedan Lägg till i Docka."
+msgstr "Välj Arkiv och sedan Lägg till i Dock."
 
 #. Subtitle in the create-DM modal. Keep it short and calm.
 #: src/features/channel/utils/CreateDMModalUtils.tsx:39
@@ -12615,7 +12615,7 @@ msgstr "Domän"
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
 #: src/features/devtools/components/NagbarControls.ts:76
 msgid "Domain moved nagbar"
-msgstr "Domän flyttad"
+msgstr "Meddelandefält för flyttad domän"
 
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
@@ -23981,7 +23981,7 @@ msgstr "Öppna dina meddelanden"
 
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:129
 msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
-msgstr "Öppna din gamla {PRODUCT_NAME}-app och välj \"Länka en ny enhet\" och ange sedan koden nedan."
+msgstr "Öppna din gamla {PRODUCT_NAME}-app, välj Länka en ny enhet och ange sedan koden nedan."
 
 #: src/features/user/components/modals/PhoneAddModal.tsx:327
 msgid "Open your phone's messaging app and create a new text message."
@@ -32849,7 +32849,7 @@ msgstr "Prata i röstkanaler. Utan den här behörigheten förblir medlemmar tys
 #. Second install step on iPhone and iPad. Share and Add to Home Screen are the names of the Safari menu items, use the names iOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:41
 msgid "Tap Share, then Add to Home Screen."
-msgstr "Tryck på Dela, sedan Lägg till på hemskärmen."
+msgstr "Tryck på Dela och sedan på Lägg till på hemskärmen."
 
 #. Label in the note edit sheet.
 #: src/features/user/components/modals/NoteEditSheet.tsx:21
@@ -39949,7 +39949,7 @@ msgstr "Webbläsaren blockerade popup-fönstret för lösennyckeln. Tillåt popu
 #. Error shown when a passkey prompt fails because the browser cannot use the passkey on this web address. Keep plain.
 #: src/features/auth/utils/WebAuthnUtils.ts:18
 msgid "Your browser does not support passkeys on this domain. Update your browser, or sign in with your password and two-factor code."
-msgstr "Webbläsaren stöder inte passkeys på den här domänen. Uppdatera webbläsaren, eller logga in med ditt lösenord och tvåfaktorskod."
+msgstr "Webbläsaren stöder inte lösennycklar på den här domänen. Uppdatera webbläsaren eller logga in med ditt lösenord och din tvåfaktorskod."
 
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12

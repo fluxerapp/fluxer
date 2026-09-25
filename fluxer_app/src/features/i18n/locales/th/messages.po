@@ -1705,7 +1705,7 @@ msgstr "{productName} ย้ายไปที่ {host} แล้ว ติด�
 #. Banner in an installed desktop web app after the account moved to the new domain. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:28
 msgid "{productName} has moved to {host}. Install the new app and you will already be signed in."
-msgstr "{productName} ได้ย้ายไปยัง {host} แล้ว ติดตั้งแอปใหม่ แล้วคุณจะเข้าสู่ระบบโดยอัตโนมัติ"
+msgstr "{productName} ได้ย้ายไปยัง {host} แล้ว ติดตั้งแอปใหม่ แล้วคุณจะลงชื่อเข้าใช้ไว้แล้ว"
 
 #. Banner in an installed Android web app. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:33
@@ -12615,7 +12615,7 @@ msgstr "โดเมน"
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
 #: src/features/devtools/components/NagbarControls.ts:76
 msgid "Domain moved nagbar"
-msgstr "ย้ายโดเมนแล้ว"
+msgstr "แถบแจ้งเตือนการย้ายโดเมน"
 
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
@@ -23908,7 +23908,7 @@ msgstr "เปิดเมนูแล้วเลือกตัวเลือ
 #. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
 msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
-msgstr "เปิดแอปใหม่แล้วเลือก \"ลงชื่อเข้าใช้ด้วยแอป {productName} เดิมของคุณ\" จากนั้นเลือก \"เชื่อมโยงอุปกรณ์ใหม่ที่นี่\" แล้วป้อนรหัสที่แสดง"
+msgstr "เปิดแอปใหม่แล้วเลือก \"ลงชื่อเข้าใช้ด้วยแอป {productName} เดิมของคุณ\" จากนั้นเลือก \"เชื่อมโยงอุปกรณ์ใหม่\" ที่นี่ แล้วป้อนรหัสที่แสดง"
 
 #. Third install step in a desktop browser that already moved the account to the new domain.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
@@ -23981,7 +23981,7 @@ msgstr "เปิดข้อความของคุณ"
 
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:129
 msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
-msgstr "เปิดแอป {PRODUCT_NAME} เดิมของคุณ แล้วเลือก \"เชื่อมโยงอุปกรณ์ใหม่\" จากนั้นป้อนรหัสโค้ดด้านล่าง"
+msgstr "เปิดแอป {PRODUCT_NAME} เดิมของคุณ แล้วเลือก \"เชื่อมโยงอุปกรณ์ใหม่\" จากนั้นป้อนรหัสด้านล่าง"
 
 #: src/features/user/components/modals/PhoneAddModal.tsx:327
 msgid "Open your phone's messaging app and create a new text message."
@@ -25453,7 +25453,7 @@ msgstr "ไฟล์แนบก่อนหน้า"
 #. Quick switcher section header above the channels the user visited most recently.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:50
 msgid "Previous channels"
-msgstr "ช่องทางล่าสุด"
+msgstr "ช่องก่อนหน้า"
 
 #. Message-history-deletion option when banning a member. Deletes the member's messages from the last hour.
 #: src/features/moderation/constants/BanDeleteMessageOptions.ts:21
@@ -28954,7 +28954,7 @@ msgstr "กำลังค้นหาผู้ใช้ทั้งหมด"
 #. Quick switcher header shown while the query starts with * and only communities are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:66
 msgid "Searching communities"
-msgstr "กำลังค้นหาชุมชน"
+msgstr "กำลังค้นหาคอมมูนิตี้"
 
 #. Loading state in the desktop quick switcher while fetching people results. Trailing ellipsis is intentional.
 #. Loading state shown while the quick switcher fetches matching people. Trailing ellipsis is intentional.
@@ -28966,7 +28966,7 @@ msgstr "กำลังค้นหาผู้คน..."
 #. Quick switcher header shown while the query starts with @ inside a community. communityName is the community name.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:74
 msgid "Searching friends and members of {communityName}"
-msgstr "ค้นหาเพื่อนและสมาชิกของ {communityName}"
+msgstr "กำลังค้นหาเพื่อนและสมาชิกของ {communityName}"
 
 #. Quick switcher header shown while the query starts with # and only text channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:58
@@ -39949,7 +39949,7 @@ msgstr "เบราว์เซอร์ของคุณบล็อกหน
 #. Error shown when a passkey prompt fails because the browser cannot use the passkey on this web address. Keep plain.
 #: src/features/auth/utils/WebAuthnUtils.ts:18
 msgid "Your browser does not support passkeys on this domain. Update your browser, or sign in with your password and two-factor code."
-msgstr "เบราว์เซอร์ของคุณไม่รองรับรหัสผ่านบนโดเมนนี้ โปรดอัปเดตเบราว์เซอร์ของคุณ หรือลงชื่อเข้าใช้ด้วยรหัสผ่านและรหัสยืนยันตัวตนสองชั้น"
+msgstr "เบราว์เซอร์ของคุณไม่รองรับพาสคีย์บนโดเมนนี้ โปรดอัปเดตเบราว์เซอร์ของคุณ หรือลงชื่อเข้าใช้ด้วยรหัสผ่านและรหัสยืนยันตัวตนสองชั้น"
 
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12

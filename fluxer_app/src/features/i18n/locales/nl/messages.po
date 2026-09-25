@@ -1695,12 +1695,12 @@ msgstr "{productName} heeft een mogelijke raid gedetecteerd, dus nieuwe gebruike
 #. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:38
 msgid "{productName} has moved to {host}. Add it to your Home Screen or Dock, then sign in with this app."
-msgstr "{productName} is verhuisd naar {host}. Voeg het toe aan je beginscherm of dock, en meld je daarna aan met deze app."
+msgstr "{productName} is verhuisd naar {host}. Zet het op je beginscherm of in het Dock en log daarna in met deze app."
 
 #. Banner in an installed web app on other browsers. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:43
 msgid "{productName} has moved to {host}. Install it from your browser, then sign in with this app."
-msgstr "{productName} is verhuisd naar {host}. Installeer het vanuit je browser en meld je daarna aan met deze app."
+msgstr "{productName} is verhuisd naar {host}. Installeer het vanuit je browser en log daarna in met deze app."
 
 #. Banner in an installed desktop web app after the account moved to the new domain. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:28
@@ -7504,7 +7504,7 @@ msgstr "Kies guild_id of channel_id, niet beide."
 #. Second install step on a Mac. File and Add to Dock are the names of the Safari menu items, use the names macOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:46
 msgid "Choose File, then Add to Dock."
-msgstr "Kies Bestand en vervolgens Toevoegen aan Dock."
+msgstr "Kies Archief en vervolgens Voeg toe aan Dock."
 
 #. Subtitle in the create-DM modal. Keep it short and calm.
 #: src/features/channel/utils/CreateDMModalUtils.tsx:39
@@ -12615,7 +12615,7 @@ msgstr "Domein"
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
 #: src/features/devtools/components/NagbarControls.ts:76
 msgid "Domain moved nagbar"
-msgstr "Domein verplaatst nagbar"
+msgstr "Banner voor domeinverhuizing"
 
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
@@ -14124,7 +14124,7 @@ msgstr "Voer deze code in je browser in om het aanmelden te voltooien."
 
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:142
 msgid "Enter this code in your old {PRODUCT_NAME} app to complete sign-in."
-msgstr "Voer deze code in je oude {PRODUCT_NAME}-app in om het aanmelden te voltooien."
+msgstr "Voer deze code in je oude {PRODUCT_NAME}-app in om het inloggen te voltooien."
 
 #: src/features/channel/components/EditingMessageInput.tsx:358
 msgid "Enter to <0><1>save</1></0>"
@@ -18111,7 +18111,7 @@ msgstr "Installeer het vanuit je browsermenu."
 #. Button on the domain moved banner that installs the app from the new domain.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:48
 msgid "Install the new app"
-msgstr "Installeer de nieuwe app"
+msgstr "Nieuwe app installeren"
 
 #. Label for the installed desktop version in the Linux update modal.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:136
@@ -19411,7 +19411,7 @@ msgstr "Link (voor volwassenen)"
 #. Button on the domain moved banner that opens the code entry used to sign in a new app. Must match the translation used in the "Sign in with your old {productName} app" instructions.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:60
 msgid "Link a new device"
-msgstr "Koppel een nieuw apparaat"
+msgstr "Nieuw apparaat koppelen"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:96
@@ -23531,7 +23531,7 @@ msgstr "Open {productName}"
 #. Button on the domain moved banner that opens the new domain in the browser. productName is the app name.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:52
 msgid "Open {productName} in your browser"
-msgstr "Open {productName} in je browser"
+msgstr "{productName} openen in je browser"
 
 #. Button or menu action label in the channel and chat gif picker grid item. Keep it concise. Preserve {title}; it is inserted by code.
 #: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:37
@@ -23908,12 +23908,12 @@ msgstr "Open het menu en kies een optie."
 #. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
 msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
-msgstr "Open de nieuwe app en kies Aanmelden met je oude {productName}-app. Kies daarna Hier een nieuw apparaat koppelen en voer de code in die wordt weergegeven."
+msgstr "Open de nieuwe app en kies 'Inloggen met je oude {productName}-app'. Kies daarna hier 'Nieuw apparaat koppelen' en voer de code in die wordt weergegeven."
 
 #. Third install step in a desktop browser that already moved the account to the new domain.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
 msgid "Open the new app. You are already signed in."
-msgstr "Open de nieuwe app. Je bent al aangemeld."
+msgstr "Open de nieuwe app. Je bent al ingelogd."
 
 #. Tip explaining the keyboard shortcut for opening the shortcuts list.
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx:42
@@ -23981,7 +23981,7 @@ msgstr "Open je berichten"
 
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:129
 msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
-msgstr "Open je oude {PRODUCT_NAME}-app en kies 'Koppel een nieuw apparaat', voer daarna de onderstaande code in."
+msgstr "Open je oude {PRODUCT_NAME}-app en kies 'Nieuw apparaat koppelen' en voer daarna de onderstaande code in."
 
 #: src/features/user/components/modals/PhoneAddModal.tsx:327
 msgid "Open your phone's messaging app and create a new text message."
@@ -28949,7 +28949,7 @@ msgstr "Zoeken"
 #. Quick switcher header shown while the query starts with @ outside a community, or with @@.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:70
 msgid "Searching all users"
-msgstr "Gebruikers zoeken"
+msgstr "Alle gebruikers zoeken"
 
 #. Quick switcher header shown while the query starts with * and only communities are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:66
@@ -28966,7 +28966,7 @@ msgstr "Personen zoeken..."
 #. Quick switcher header shown while the query starts with @ inside a community. communityName is the community name.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:74
 msgid "Searching friends and members of {communityName}"
-msgstr "Vrienden en leden zoeken in {communityName}"
+msgstr "Vrienden en leden van {communityName} zoeken"
 
 #. Quick switcher header shown while the query starts with # and only text channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:58
@@ -28976,7 +28976,7 @@ msgstr "Tekstkanalen zoeken"
 #. Quick switcher header shown while the query starts with ! and only voice channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:62
 msgid "Searching voice channels"
-msgstr "Kanalen zoeken"
+msgstr "Spraakkanalen zoeken"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:142
@@ -30652,7 +30652,7 @@ msgstr "Inloggen met een passkey"
 #. Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:27
 msgid "Sign in with your old {productName} app"
-msgstr "Meld je aan met je oude {productName}-app"
+msgstr "Inloggen met je oude {productName}-app"
 
 #. Description shown when sign-in is restricted to the configured SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx:17
@@ -32849,7 +32849,7 @@ msgstr "Praat in spraakkanalen. Zonder deze machtiging blijven leden gedempt tot
 #. Second install step on iPhone and iPad. Share and Add to Home Screen are the names of the Safari menu items, use the names iOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:41
 msgid "Tap Share, then Add to Home Screen."
-msgstr "Tik op Delen en vervolgens op Toevoegen aan beginscherm."
+msgstr "Tik op Deel en vervolgens op Zet op beginscherm."
 
 #. Label in the note edit sheet.
 #: src/features/user/components/modals/NoteEditSheet.tsx:21
@@ -39949,7 +39949,7 @@ msgstr "Je browser heeft het pop-upvenster voor de passkey geblokkeerd. Sta pop-
 #. Error shown when a passkey prompt fails because the browser cannot use the passkey on this web address. Keep plain.
 #: src/features/auth/utils/WebAuthnUtils.ts:18
 msgid "Your browser does not support passkeys on this domain. Update your browser, or sign in with your password and two-factor code."
-msgstr "Uw browser ondersteunt geen passkeys op dit domein. Werk uw browser bij, of meld u aan met uw wachtwoord en tweefactorcode."
+msgstr "Je browser ondersteunt geen passkeys op dit domein. Werk je browser bij of log in met je wachtwoord en tweefactorcode."
 
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12

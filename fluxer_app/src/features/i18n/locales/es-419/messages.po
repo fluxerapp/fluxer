@@ -1695,7 +1695,7 @@ msgstr "{productName} detectó un posible ataque, por lo que los usuarios nuevos
 #. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:38
 msgid "{productName} has moved to {host}. Add it to your Home Screen or Dock, then sign in with this app."
-msgstr "{productName} se mudó a {host}. Agrégalo a tu pantalla de inicio o Dock, luego inicia sesión con esta app."
+msgstr "{productName} se mudó a {host}. Agrégalo a tu pantalla de inicio o al Dock y luego inicia sesión con esta app."
 
 #. Banner in an installed web app on other browsers. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:43
@@ -1760,7 +1760,7 @@ msgstr "{productName} ahora está en {host}. Instálalo desde allí y luego inic
 #. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:27
 msgid "{productName} now lives at {host}. Install it from there."
-msgstr "{productName} ahora vive en {host}. Instálalo desde allí."
+msgstr "{productName} ahora está en {host}. Instálalo desde allí."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx:31
@@ -7504,7 +7504,7 @@ msgstr "Elige guild_id o channel_id, no ambos."
 #. Second install step on a Mac. File and Add to Dock are the names of the Safari menu items, use the names macOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:46
 msgid "Choose File, then Add to Dock."
-msgstr "Selecciona Archivo, luego Agregar al Dock."
+msgstr "Selecciona Archivo y luego Agregar al Dock."
 
 #. Subtitle in the create-DM modal. Keep it short and calm.
 #: src/features/channel/utils/CreateDMModalUtils.tsx:39
@@ -12615,7 +12615,7 @@ msgstr "Dominio"
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
 #: src/features/devtools/components/NagbarControls.ts:76
 msgid "Domain moved nagbar"
-msgstr "La dominio se movió"
+msgstr "Barra de notificación de cambio de dominio"
 
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
@@ -23908,7 +23908,7 @@ msgstr "Abre el menú y elige una opción."
 #. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
 msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
-msgstr "Abre la nueva app y elige Iniciar sesión con tu antigua app de {productName}. Luego, elige Vincular un dispositivo nuevo aquí e introduce el código que se muestre."
+msgstr "Abre la nueva app y elige \"Iniciar sesión con tu antigua app de {productName}\". Luego, aquí elige \"Vincular un dispositivo nuevo\" e ingresa el código que muestre."
 
 #. Third install step in a desktop browser that already moved the account to the new domain.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
@@ -23981,7 +23981,7 @@ msgstr "Abre tus mensajes"
 
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:129
 msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
-msgstr "Abre tu app de {PRODUCT_NAME} anterior y selecciona \"Vincular un dispositivo nuevo\", luego ingresa el código a continuación."
+msgstr "Abre tu antigua app de {PRODUCT_NAME}, selecciona \"Vincular un dispositivo nuevo\" y luego ingresa el código de abajo."
 
 #: src/features/user/components/modals/PhoneAddModal.tsx:327
 msgid "Open your phone's messaging app and create a new text message."
@@ -30652,7 +30652,7 @@ msgstr "Iniciar sesión con una llave de acceso"
 #. Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:27
 msgid "Sign in with your old {productName} app"
-msgstr "Inicia sesión con tu antigua app {productName}"
+msgstr "Iniciar sesión con tu antigua app de {productName}"
 
 #. Description shown when sign-in is restricted to the configured SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx:17

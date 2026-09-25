@@ -1695,7 +1695,7 @@ msgstr "{productName} detectou um ataque em potencial, então novos usuários n�
 #. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:38
 msgid "{productName} has moved to {host}. Add it to your Home Screen or Dock, then sign in with this app."
-msgstr "O {productName} mudou para {host}. Adicione-o à sua Tela de Início ou Dock, depois faça login com este app."
+msgstr "O {productName} mudou para {host}. Adicione-o à Tela de Início ou ao Dock e depois faça login com este app."
 
 #. Banner in an installed web app on other browsers. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:43
@@ -1710,7 +1710,7 @@ msgstr "O {productName} mudou para {host}. Instale o novo app e você já estar�
 #. Banner in an installed Android web app. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:33
 msgid "{productName} has moved to {host}. Open it in your browser to install the new app."
-msgstr "O {productName} mudou para {host}. Abra no seu navegador para instalar o novo app."
+msgstr "O {productName} mudou para {host}. Abra-o no seu navegador para instalar o novo app."
 
 #. Profile membership label showing when the user account was created.
 #: src/features/user/components/popouts/UserProfileShared.tsx:53
@@ -7504,7 +7504,7 @@ msgstr "Escolha guild_id ou channel_id, não ambos."
 #. Second install step on a Mac. File and Add to Dock are the names of the Safari menu items, use the names macOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:46
 msgid "Choose File, then Add to Dock."
-msgstr "Escolha Arquivo e depois Adicionar à Dock."
+msgstr "Escolha Arquivo e depois Adicionar ao Dock."
 
 #. Subtitle in the create-DM modal. Keep it short and calm.
 #: src/features/channel/utils/CreateDMModalUtils.tsx:39
@@ -12615,7 +12615,7 @@ msgstr "Domínio"
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
 #: src/features/devtools/components/NagbarControls.ts:76
 msgid "Domain moved nagbar"
-msgstr "Domínio movido na barra de notificações"
+msgstr "Barra de notificação de domínio alterado"
 
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
@@ -23908,7 +23908,7 @@ msgstr "Abra o menu e escolha uma opção."
 #. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
 msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
-msgstr "Abra o novo app e escolha Entrar com seu app {productName} antigo. Em seguida, escolha Vincular um novo dispositivo aqui e insira o código exibido."
+msgstr "Abra o novo app e escolha \"Entrar com seu app antigo do {productName}\". Em seguida, aqui, escolha \"Vincular um novo dispositivo\" e insira o código exibido."
 
 #. Third install step in a desktop browser that already moved the account to the new domain.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
@@ -28966,7 +28966,7 @@ msgstr "Procurando pessoas..."
 #. Quick switcher header shown while the query starts with @ inside a community. communityName is the community name.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:74
 msgid "Searching friends and members of {communityName}"
-msgstr "Procurando amigos e membros de {communityName}"
+msgstr "Buscando amigos e membros de {communityName}"
 
 #. Quick switcher header shown while the query starts with # and only text channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:58
@@ -30368,7 +30368,7 @@ msgstr "Mostrar no máximo 5 (indicador +5)"
 #. Button on the domain moved banner that opens the install steps.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:56
 msgid "Show me how"
-msgstr "Mostre como"
+msgstr "Mostrar como"
 
 #. Plus menu submenu toggle that shows the saved media (memes) button next to the textarea.
 #. Short label for an advanced message input preference.
@@ -30652,7 +30652,7 @@ msgstr "Entrar com uma chave de acesso"
 #. Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:27
 msgid "Sign in with your old {productName} app"
-msgstr "Faça login com seu app antigo do {productName}"
+msgstr "Entrar com seu app antigo do {productName}"
 
 #. Description shown when sign-in is restricted to the configured SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx:17

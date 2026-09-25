@@ -1695,7 +1695,7 @@ msgstr "{productName} har registreret et potentielt raid, så nye brugere kan ik
 #. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:38
 msgid "{productName} has moved to {host}. Add it to your Home Screen or Dock, then sign in with this app."
-msgstr "{productName} er flyttet til {host}. Tilføj det til din hjemmeskærm eller Dock, og log derefter ind med denne app."
+msgstr "{productName} er flyttet til {host}. Føj det til din hjemmeskærm eller til Dock, og log derefter ind med denne app."
 
 #. Banner in an installed web app on other browsers. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:43
@@ -7504,7 +7504,7 @@ msgstr "Vælg enten guild_id eller channel_id, ikke begge."
 #. Second install step on a Mac. File and Add to Dock are the names of the Safari menu items, use the names macOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:46
 msgid "Choose File, then Add to Dock."
-msgstr "Vælg Arkiv, derefter Tilføj til Dock."
+msgstr "Vælg Arkiv, og vælg derefter Føj til Dock."
 
 #. Subtitle in the create-DM modal. Keep it short and calm.
 #: src/features/channel/utils/CreateDMModalUtils.tsx:39
@@ -12615,7 +12615,7 @@ msgstr "Domæne"
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
 #: src/features/devtools/components/NagbarControls.ts:76
 msgid "Domain moved nagbar"
-msgstr "Domæne flyttet nagbar"
+msgstr "Banner om flyttet domæne"
 
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
@@ -16114,7 +16114,7 @@ msgstr "Hent computerappen"
 #. Title of the modal that explains how to install the app from its new domain. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:18
 msgid "Get the new {productName} app"
-msgstr "Hent den nye {productName} app"
+msgstr "Hent den nye {productName}-app"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Type label for GIF media.
@@ -18106,7 +18106,7 @@ msgstr "Installer {productName} for at få den fulde kildevælger og mere flyden
 #. Second install step on other devices. Refers to the install option in the browser menu.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:51
 msgid "Install it from your browser menu."
-msgstr "Installer det fra din browser menu."
+msgstr "Installer det fra browsermenuen."
 
 #. Button on the domain moved banner that installs the app from the new domain.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:48
@@ -19411,7 +19411,7 @@ msgstr "Link (indhold for voksne)"
 #. Button on the domain moved banner that opens the code entry used to sign in a new app. Must match the translation used in the "Sign in with your old {productName} app" instructions.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:60
 msgid "Link a new device"
-msgstr "Link en ny enhed"
+msgstr "Tilknyt en ny enhed"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:96
@@ -23908,7 +23908,7 @@ msgstr "Åbn menuen, og vælg en mulighed."
 #. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
 msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
-msgstr "Åbn den nye app, og vælg \"Log ind med din gamle {productName}-app\". Vælg derefter \"Link en ny enhed her\" og indtast den kode, den viser."
+msgstr "Åbn den nye app, og vælg \"Log ind med din gamle {productName}-app\". Vælg derefter \"Tilknyt en ny enhed\" her, og indtast den kode, der vises."
 
 #. Third install step in a desktop browser that already moved the account to the new domain.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
@@ -23981,7 +23981,7 @@ msgstr "Åbn dine beskeder"
 
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:129
 msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
-msgstr "Åbn din gamle {PRODUCT_NAME}-app, og vælg \"Link en ny enhed\", og indtast derefter koden nedenfor."
+msgstr "Åbn din gamle {PRODUCT_NAME}-app, vælg \"Tilknyt en ny enhed\", og indtast derefter koden nedenfor."
 
 #: src/features/user/components/modals/PhoneAddModal.tsx:327
 msgid "Open your phone's messaging app and create a new text message."
@@ -28949,12 +28949,12 @@ msgstr "Søger"
 #. Quick switcher header shown while the query starts with @ outside a community, or with @@.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:70
 msgid "Searching all users"
-msgstr "Søger efter alle brugere"
+msgstr "Søger blandt alle brugere"
 
 #. Quick switcher header shown while the query starts with * and only communities are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:66
 msgid "Searching communities"
-msgstr "Søger i communities"
+msgstr "Søger i fællesskaber"
 
 #. Loading state in the desktop quick switcher while fetching people results. Trailing ellipsis is intentional.
 #. Loading state shown while the quick switcher fetches matching people. Trailing ellipsis is intentional.
@@ -28966,7 +28966,7 @@ msgstr "Søger efter personer ..."
 #. Quick switcher header shown while the query starts with @ inside a community. communityName is the community name.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:74
 msgid "Searching friends and members of {communityName}"
-msgstr "Søger efter venner og medlemmer af {communityName}"
+msgstr "Søger blandt venner og medlemmer af {communityName}"
 
 #. Quick switcher header shown while the query starts with # and only text channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:58
@@ -28976,7 +28976,7 @@ msgstr "Søger i tekstkanaler"
 #. Quick switcher header shown while the query starts with ! and only voice channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:62
 msgid "Searching voice channels"
-msgstr "Søger i stemmekanaler"
+msgstr "Søger i talekanaler"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:142
@@ -32849,7 +32849,7 @@ msgstr "Tal i talekanaler. Uden denne tilladelse forbliver medlemmers mikrofon s
 #. Second install step on iPhone and iPad. Share and Add to Home Screen are the names of the Safari menu items, use the names iOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:41
 msgid "Tap Share, then Add to Home Screen."
-msgstr "Tryk på Del, og derefter Tilføj til hjemmeskærm."
+msgstr "Tryk på Del, og vælg derefter Føj til hjemmeskærm."
 
 #. Label in the note edit sheet.
 #: src/features/user/components/modals/NoteEditSheet.tsx:21
@@ -36049,7 +36049,7 @@ msgstr "Badges for ulæste beskeder"
 #. Quick switcher section header above the unread channels of the current community.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:54
 msgid "Unread channels"
-msgstr "Uolæste kanaler"
+msgstr "Ulæste kanaler"
 
 #. Short label in the visual tab. Keep it concise.
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:29
@@ -39949,7 +39949,7 @@ msgstr "Din browser blokerede pop op-vinduet til adgangsnøglen. Tillad pop op-v
 #. Error shown when a passkey prompt fails because the browser cannot use the passkey on this web address. Keep plain.
 #: src/features/auth/utils/WebAuthnUtils.ts:18
 msgid "Your browser does not support passkeys on this domain. Update your browser, or sign in with your password and two-factor code."
-msgstr "Din browser understøtter ikke sikkerhedsnøgler på dette domæne. Opdater din browser, eller log ind med din adgangskode og to-faktor-kode."
+msgstr "Din browser understøtter ikke adgangsnøgler på dette domæne. Opdater din browser, eller log ind med din adgangskode og tofaktorkode."
 
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12

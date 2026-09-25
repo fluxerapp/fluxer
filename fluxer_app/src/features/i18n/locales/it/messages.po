@@ -4412,7 +4412,7 @@ msgstr "Approva"
 #. Hint under the sign-in option on fluxer.com that pairs a newly installed app with the old installed app. productName is the app name.
 #: src/features/auth/flow/AuthLoginLayout.tsx:74
 msgid "Approve this app from the {productName} app you already use. No password needed."
-msgstr "Approva questa app da {productName}, l'app che usi già. Non serve la password."
+msgstr "Approva questa app dall'app {productName} che usi già. Non serve la password."
 
 #. Discovery application status badge in the community Discovery settings tab. The community has been approved and is listed.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:45
@@ -12615,7 +12615,7 @@ msgstr "Dominio"
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
 #: src/features/devtools/components/NagbarControls.ts:76
 msgid "Domain moved nagbar"
-msgstr "La dominio è stata spostata"
+msgstr "Banner del dominio spostato"
 
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
@@ -23908,7 +23908,7 @@ msgstr "Apri il menu e scegli un'opzione."
 #. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
 msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
-msgstr "Apri la nuova app e scegli Accedi con la tua vecchia app {productName}. Poi scegli Collega un nuovo dispositivo qui e inserisci il codice che mostra."
+msgstr "Apri la nuova app e scegli Accedi con la tua vecchia app {productName}. Poi, qui, scegli Collega un nuovo dispositivo e inserisci il codice mostrato dalla nuova app."
 
 #. Third install step in a desktop browser that already moved the account to the new domain.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
@@ -32849,7 +32849,7 @@ msgstr "Parla nei canali vocali. Senza questo permesso, i membri rimangono con i
 #. Second install step on iPhone and iPad. Share and Add to Home Screen are the names of the Safari menu items, use the names iOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:41
 msgid "Tap Share, then Add to Home Screen."
-msgstr "Tocca Condividi, quindi Aggiungi a schermata Home."
+msgstr "Tocca Condividi, quindi Aggiungi alla schermata Home."
 
 #. Label in the note edit sheet.
 #: src/features/user/components/modals/NoteEditSheet.tsx:21
@@ -39949,7 +39949,7 @@ msgstr "Il tuo browser ha bloccato la finestra popup della passkey. Consenti i p
 #. Error shown when a passkey prompt fails because the browser cannot use the passkey on this web address. Keep plain.
 #: src/features/auth/utils/WebAuthnUtils.ts:18
 msgid "Your browser does not support passkeys on this domain. Update your browser, or sign in with your password and two-factor code."
-msgstr "Il tuo browser non supporta le passkey su questo dominio. Aggiorna il browser oppure accedi con la password e il codice di verifica in due passaggi."
+msgstr "Il tuo browser non supporta le passkey su questo dominio. Aggiorna il browser oppure accedi con la password e il codice di autenticazione a due fattori."
 
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12

@@ -1695,22 +1695,22 @@ msgstr "{productName} виявив потенційний рейд, тому н�
 #. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:38
 msgid "{productName} has moved to {host}. Add it to your Home Screen or Dock, then sign in with this app."
-msgstr "{productName} переїхав на {host}. Додайте його на головний екран або в Dock, а потім увійдіть за допомогою цієї програми."
+msgstr "{productName} переїхав на {host}. Додайте його на Початковий екран або в Dock, а потім увійдіть за допомогою цього застосунку."
 
 #. Banner in an installed web app on other browsers. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:43
 msgid "{productName} has moved to {host}. Install it from your browser, then sign in with this app."
-msgstr "{productName} переїхав на {host}. Встановіть його з браузера, а потім увійдіть за допомогою цієї програми."
+msgstr "{productName} переїхав на {host}. Встановіть його з браузера, а потім увійдіть за допомогою цього застосунку."
 
 #. Banner in an installed desktop web app after the account moved to the new domain. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:28
 msgid "{productName} has moved to {host}. Install the new app and you will already be signed in."
-msgstr "{productName} переїхав на {host}. Встановіть новий додаток, і ви вже будете ввійшли."
+msgstr "{productName} переїхав на {host}. Установіть новий застосунок, і вхід уже буде виконано."
 
 #. Banner in an installed Android web app. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:33
 msgid "{productName} has moved to {host}. Open it in your browser to install the new app."
-msgstr "{productName} переїхав на {host}. Відкрийте його у браузері, щоб установити новий додаток."
+msgstr "{productName} переїхав на {host}. Відкрийте його у браузері, щоб установити новий застосунок."
 
 #. Profile membership label showing when the user account was created.
 #: src/features/user/components/popouts/UserProfileShared.tsx:53
@@ -1755,12 +1755,12 @@ msgstr "{productName} потрібен доступ до запису екран
 #. Intro in the modal that explains how to install the app from its new domain. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:22
 msgid "{productName} now lives at {host}. Install it from there, then sign in with this app."
-msgstr "{productName} тепер знаходиться за адресою {host}. Встановіть його звідти, а потім увійдіть за допомогою цієї програми."
+msgstr "{productName} тепер доступний на {host}. Встановіть його звідти, а потім увійдіть за допомогою цього застосунку."
 
 #. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:27
 msgid "{productName} now lives at {host}. Install it from there."
-msgstr "{productName} тепер знаходиться за адресою {host}. Встановіть його звідти."
+msgstr "{productName} тепер доступний на {host}. Встановіть його звідти."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx:31
@@ -4412,7 +4412,7 @@ msgstr "Схвалити"
 #. Hint under the sign-in option on fluxer.com that pairs a newly installed app with the old installed app. productName is the app name.
 #: src/features/auth/flow/AuthLoginLayout.tsx:74
 msgid "Approve this app from the {productName} app you already use. No password needed."
-msgstr "Підтвердьте цей додаток у програмі {productName}, яку ви вже використовуєте. Пароль не потрібен."
+msgstr "Підтвердьте цей застосунок у застосунку {productName}, яким ви вже користуєтеся. Пароль не потрібен."
 
 #. Discovery application status badge in the community Discovery settings tab. The community has been approved and is listed.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:45
@@ -7504,7 +7504,7 @@ msgstr "Виберіть guild_id або channel_id, але не обидва."
 #. Second install step on a Mac. File and Add to Dock are the names of the Safari menu items, use the names macOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:46
 msgid "Choose File, then Add to Dock."
-msgstr "Виберіть Файл, а потім Додати в Dock."
+msgstr "Виберіть «Файл», а потім «Додати в Dock»."
 
 #. Subtitle in the create-DM modal. Keep it short and calm.
 #: src/features/channel/utils/CreateDMModalUtils.tsx:39
@@ -12615,7 +12615,7 @@ msgstr "Домен"
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
 #: src/features/devtools/components/NagbarControls.ts:76
 msgid "Domain moved nagbar"
-msgstr "Банер: домен перенесено"
+msgstr "Нагадування про перенесення домену"
 
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
@@ -14124,7 +14124,7 @@ msgstr "Введіть цей код у своєму браузері, щоб з
 
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:142
 msgid "Enter this code in your old {PRODUCT_NAME} app to complete sign-in."
-msgstr "Введіть цей код у своєму старому додатку {PRODUCT_NAME}, щоб завершити вхід."
+msgstr "Введіть цей код у своєму старому застосунку {PRODUCT_NAME}, щоб завершити вхід."
 
 #: src/features/channel/components/EditingMessageInput.tsx:358
 msgid "Enter to <0><1>save</1></0>"
@@ -16114,7 +16114,7 @@ msgstr "Завантажити десктопний застосунок"
 #. Title of the modal that explains how to install the app from its new domain. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:18
 msgid "Get the new {productName} app"
-msgstr "Завантажте новий додаток {productName}"
+msgstr "Отримайте новий застосунок {productName}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Type label for GIF media.
@@ -18111,7 +18111,7 @@ msgstr "Встановіть його з меню браузера."
 #. Button on the domain moved banner that installs the app from the new domain.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:48
 msgid "Install the new app"
-msgstr "Встановити новий додаток"
+msgstr "Встановити новий застосунок"
 
 #. Label for the installed desktop version in the Linux update modal.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:136
@@ -23908,7 +23908,7 @@ msgstr "Відкрийте меню та виберіть варіант."
 #. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
 msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
-msgstr "Відкрийте новий додаток і виберіть «Увійти за допомогою старого додатка {productName}». Потім виберіть «Зв’язати новий пристрій тут» і введіть код, який там з’явиться."
+msgstr "Відкрийте новий застосунок і виберіть «Увійти за допомогою старого застосунку {productName}». Потім виберіть тут «Підключити новий пристрій» і введіть код, який там з’явиться."
 
 #. Third install step in a desktop browser that already moved the account to the new domain.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
@@ -23981,7 +23981,7 @@ msgstr "Відкрийте повідомлення"
 
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:129
 msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
-msgstr "Відкрийте свій старий застосунок {PRODUCT_NAME} і виберіть «Прив'язати новий пристрій», а потім введіть код нижче."
+msgstr "Відкрийте свій старий застосунок {PRODUCT_NAME} і виберіть «Підключити новий пристрій», а потім введіть код нижче."
 
 #: src/features/user/components/modals/PhoneAddModal.tsx:327
 msgid "Open your phone's messaging app and create a new text message."
@@ -30652,7 +30652,7 @@ msgstr "Увійти за допомогою ключа доступу"
 #. Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:27
 msgid "Sign in with your old {productName} app"
-msgstr "Увійдіть за допомогою старого застосунку {productName}"
+msgstr "Увійти за допомогою старого застосунку {productName}"
 
 #. Description shown when sign-in is restricted to the configured SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx:17
@@ -32849,7 +32849,7 @@ msgstr "Розмовляти в голосових каналах. Без цьо
 #. Second install step on iPhone and iPad. Share and Add to Home Screen are the names of the Safari menu items, use the names iOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:41
 msgid "Tap Share, then Add to Home Screen."
-msgstr "Натисніть «Поділитися», а потім «Додати на головний екран»."
+msgstr "Торкніться «Поширити», а потім «На Початковий екран»."
 
 #. Label in the note edit sheet.
 #: src/features/user/components/modals/NoteEditSheet.tsx:21

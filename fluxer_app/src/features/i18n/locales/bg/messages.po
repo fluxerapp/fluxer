@@ -1695,22 +1695,22 @@ msgstr "{productName} откри потенциална атака, така ч�
 #. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:38
 msgid "{productName} has moved to {host}. Add it to your Home Screen or Dock, then sign in with this app."
-msgstr "{productName} се премести на адрес {host}. Добавете го към началния си екран или Dock, след което влезте с това приложение."
+msgstr "{productName} се премести на {host}. Добави го към началния си екран или в Dock, след което влез с това приложение."
 
 #. Banner in an installed web app on other browsers. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:43
 msgid "{productName} has moved to {host}. Install it from your browser, then sign in with this app."
-msgstr "{productName} се премести на {host}. Инсталирайте го от браузъра си, след което влезте с това приложение."
+msgstr "{productName} се премести на {host}. Инсталирай го от браузъра си, след което влез с това приложение."
 
 #. Banner in an installed desktop web app after the account moved to the new domain. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:28
 msgid "{productName} has moved to {host}. Install the new app and you will already be signed in."
-msgstr "{productName} се премести на адрес {host}. Инсталирайте новото приложение и ще бъдете автоматично вписани."
+msgstr "{productName} се премести на {host}. Инсталирай новото приложение и няма да е нужно да влизаш отново."
 
 #. Banner in an installed Android web app. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:33
 msgid "{productName} has moved to {host}. Open it in your browser to install the new app."
-msgstr "{productName} се премести на {host}. Отворете го в браузъра си, за да инсталирате новото приложение."
+msgstr "{productName} се премести на {host}. Отвори го в браузъра си, за да инсталираш новото приложение."
 
 #. Profile membership label showing when the user account was created.
 #: src/features/user/components/popouts/UserProfileShared.tsx:53
@@ -1755,12 +1755,12 @@ msgstr "{productName} се нуждае от достъп до записа на
 #. Intro in the modal that explains how to install the app from its new domain. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:22
 msgid "{productName} now lives at {host}. Install it from there, then sign in with this app."
-msgstr "{productName} вече се намира на адрес {host}. Инсталирайте го оттам, след което влезте с това приложение."
+msgstr "{productName} вече се намира на {host}. Инсталирай го оттам, след което влез с това приложение."
 
 #. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:27
 msgid "{productName} now lives at {host}. Install it from there."
-msgstr "{productName} вече се намира на адрес {host}. Инсталирайте го оттам."
+msgstr "{productName} вече се намира на {host}. Инсталирай го оттам."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx:31
@@ -4412,7 +4412,7 @@ msgstr "Одобри"
 #. Hint under the sign-in option on fluxer.com that pairs a newly installed app with the old installed app. productName is the app name.
 #: src/features/auth/flow/AuthLoginLayout.tsx:74
 msgid "Approve this app from the {productName} app you already use. No password needed."
-msgstr "Одобрете това приложение от {productName}, което вече използвате. Не е необходима парола."
+msgstr "Одобри това приложение от приложението {productName}, което вече използваш. Не е нужна парола."
 
 #. Discovery application status badge in the community Discovery settings tab. The community has been approved and is listed.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:45
@@ -7504,7 +7504,7 @@ msgstr "Избери guild_id или channel_id, не и двете."
 #. Second install step on a Mac. File and Add to Dock are the names of the Safari menu items, use the names macOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:46
 msgid "Choose File, then Add to Dock."
-msgstr "Изберете Файл, след това Добавяне в Dock."
+msgstr "Избери „Файл“, след това „Добавяне в Dock“."
 
 #. Subtitle in the create-DM modal. Keep it short and calm.
 #: src/features/channel/utils/CreateDMModalUtils.tsx:39
@@ -12615,7 +12615,7 @@ msgstr "Домейн"
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
 #: src/features/devtools/components/NagbarControls.ts:76
 msgid "Domain moved nagbar"
-msgstr "Домейнът е преместен"
+msgstr "Лента за преместен домейн"
 
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
@@ -14124,7 +14124,7 @@ msgstr "Въведи този код в браузъра си, за да зав�
 
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:142
 msgid "Enter this code in your old {PRODUCT_NAME} app to complete sign-in."
-msgstr "Въведете този код в старото си приложение {PRODUCT_NAME}, за да завършите влизането."
+msgstr "Въведи този код в старото си приложение {PRODUCT_NAME}, за да завършиш влизането."
 
 #: src/features/channel/components/EditingMessageInput.tsx:358
 msgid "Enter to <0><1>save</1></0>"
@@ -16114,7 +16114,7 @@ msgstr "Изтегли настолното приложение"
 #. Title of the modal that explains how to install the app from its new domain. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:18
 msgid "Get the new {productName} app"
-msgstr "Вземете новото приложение {productName}"
+msgstr "Вземи новото приложение {productName}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Type label for GIF media.
@@ -23908,12 +23908,12 @@ msgstr "Отвори менюто и избери опция."
 #. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
 msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
-msgstr "Отворете новото приложение и изберете Вход със старото си приложение {productName}. След това изберете Свързване на ново устройство тук и въведете показания код."
+msgstr "Отвори новото приложение и избери „Влез със старото си приложение {productName}“. След това избери тук „Свържи ново устройство“ и въведи показания код."
 
 #. Third install step in a desktop browser that already moved the account to the new domain.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
 msgid "Open the new app. You are already signed in."
-msgstr "Отвори новото приложение. Вече си влязъл."
+msgstr "Отвори новото приложение. Не е нужно да влизаш отново."
 
 #. Tip explaining the keyboard shortcut for opening the shortcuts list.
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx:42
@@ -23981,7 +23981,7 @@ msgstr "Отвори съобщенията си"
 
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:129
 msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
-msgstr "Отворете старото си приложение {PRODUCT_NAME} и изберете „Свързване на ново устройство“, след което въведете кода по-долу."
+msgstr "Отвори старото си приложение {PRODUCT_NAME} и избери „Свържи ново устройство“, след което въведи кода по-долу."
 
 #: src/features/user/components/modals/PhoneAddModal.tsx:327
 msgid "Open your phone's messaging app and create a new text message."
@@ -28949,7 +28949,7 @@ msgstr "Търсене"
 #. Quick switcher header shown while the query starts with @ outside a community, or with @@.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:70
 msgid "Searching all users"
-msgstr "Търсене във всички потребители"
+msgstr "Търсене сред всички потребители"
 
 #. Quick switcher header shown while the query starts with * and only communities are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:66
@@ -28966,7 +28966,7 @@ msgstr "Търсене на хора..."
 #. Quick switcher header shown while the query starts with @ inside a community. communityName is the community name.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:74
 msgid "Searching friends and members of {communityName}"
-msgstr "Търсене на приятели и членове на {communityName}"
+msgstr "Търсене сред приятели и членове на {communityName}"
 
 #. Quick switcher header shown while the query starts with # and only text channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:58
@@ -29223,7 +29223,7 @@ msgstr "Избор на текст"
 
 #: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:69
 msgid "Select the account you want to sign in with on your new device."
-msgstr "Изберете акаунта, с който искате да влезете на новото си устройство."
+msgstr "Избери акаунта, с който искаш да влезеш на новото си устройство."
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:120
@@ -30652,7 +30652,7 @@ msgstr "Вход с ключ за достъп"
 #. Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:27
 msgid "Sign in with your old {productName} app"
-msgstr "Влезте със старото си приложение {productName}"
+msgstr "Влез със старото си приложение {productName}"
 
 #. Description shown when sign-in is restricted to the configured SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx:17
@@ -32849,7 +32849,7 @@ msgstr "Говорене в гласови канали. Без това раз�
 #. Second install step on iPhone and iPad. Share and Add to Home Screen are the names of the Safari menu items, use the names iOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:41
 msgid "Tap Share, then Add to Home Screen."
-msgstr "Докоснете „Споделяне“, след което „Добавяне към начален екран“."
+msgstr "Докосни „Споделяне“, след което „Добавяне към начален екран“."
 
 #. Label in the note edit sheet.
 #: src/features/user/components/modals/NoteEditSheet.tsx:21
@@ -39949,7 +39949,7 @@ msgstr "Браузърът ти блокира изскачащия прозор
 #. Error shown when a passkey prompt fails because the browser cannot use the passkey on this web address. Keep plain.
 #: src/features/auth/utils/WebAuthnUtils.ts:18
 msgid "Your browser does not support passkeys on this domain. Update your browser, or sign in with your password and two-factor code."
-msgstr "Вашият браузър не поддържа ключове за достъп за този домейн. Актуализирайте браузъра си или влезте с паролата и двуфакторния си код."
+msgstr "Браузърът ти не поддържа ключове за достъп за този домейн. Актуализирай браузъра си или влез с паролата и двуфакторния си код."
 
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12

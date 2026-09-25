@@ -1695,12 +1695,12 @@ msgstr "{productName} זיהה פשיטה אפשרית, ולכן משתמשים 
 #. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:38
 msgid "{productName} has moved to {host}. Add it to your Home Screen or Dock, then sign in with this app."
-msgstr "{productName} עבר ל-{host}. הוסף אותו למסך הבית או לעמדת העגינה, ואז היכנס באמצעות אפליקציה זו."
+msgstr "{productName} עבר ל-{host}. הוסף אותו למסך הבית או ל-Dock, ואז התחבר באמצעות האפליקציה הזו."
 
 #. Banner in an installed web app on other browsers. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:43
 msgid "{productName} has moved to {host}. Install it from your browser, then sign in with this app."
-msgstr "{productName} עבר ל-{host}. התקן אותו מהדפדפן שלך, ואז היכנס עם האפליקציה הזו."
+msgstr "{productName} עבר ל-{host}. התקן אותו מהדפדפן שלך, ואז התחבר באמצעות האפליקציה הזו."
 
 #. Banner in an installed desktop web app after the account moved to the new domain. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:28
@@ -1710,7 +1710,7 @@ msgstr "{productName} עבר ל-{host}. התקן את האפליקציה החד�
 #. Banner in an installed Android web app. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:33
 msgid "{productName} has moved to {host}. Open it in your browser to install the new app."
-msgstr "האפליקציה {productName} עברה ל- {host}. פתח אותה בדפדפן כדי להתקין את האפליקציה החדשה."
+msgstr "{productName} עבר ל-{host}. פתח אותו בדפדפן כדי להתקין את האפליקציה החדשה."
 
 #. Profile membership label showing when the user account was created.
 #: src/features/user/components/popouts/UserProfileShared.tsx:53
@@ -1755,12 +1755,12 @@ msgstr "{productName} זקוק לגישה להקלטת מסך. אפשר הקלט
 #. Intro in the modal that explains how to install the app from its new domain. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:22
 msgid "{productName} now lives at {host}. Install it from there, then sign in with this app."
-msgstr "{productName} נמצא כעת בכתובת {host}. התקן אותו משם, ולאחר מכן היכנס באמצעות האפליקציה הזו."
+msgstr "{productName} נמצא כעת בכתובת {host}. התקן אותו משם, ולאחר מכן התחבר באמצעות האפליקציה הזו."
 
 #. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:27
 msgid "{productName} now lives at {host}. Install it from there."
-msgstr "{productName} עבר לכתובת {host}. התקן אותו משם."
+msgstr "{productName} נמצא כעת בכתובת {host}. התקן אותו משם."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx:31
@@ -7504,7 +7504,7 @@ msgstr "יש לבחור guild_id או channel_id, לא את שניהם."
 #. Second install step on a Mac. File and Add to Dock are the names of the Safari menu items, use the names macOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:46
 msgid "Choose File, then Add to Dock."
-msgstr "בחר קובץ, ואז הוסף ל-Dock."
+msgstr "בחר \"קובץ\", ואז \"הוספה ל-Dock\"."
 
 #. Subtitle in the create-DM modal. Keep it short and calm.
 #: src/features/channel/utils/CreateDMModalUtils.tsx:39
@@ -12615,7 +12615,7 @@ msgstr "דומיין"
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
 #: src/features/devtools/components/NagbarControls.ts:76
 msgid "Domain moved nagbar"
-msgstr "הדומיין הועבר"
+msgstr "שורת התראה על העברת הדומיין"
 
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
@@ -14124,7 +14124,7 @@ msgstr "הזן קוד זה בדפדפן שלך כדי להשלים את הכני
 
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:142
 msgid "Enter this code in your old {PRODUCT_NAME} app to complete sign-in."
-msgstr "הזן את הקוד הזה באפליקציית ה-{PRODUCT_NAME} הישנה שלך כדי להשלים את הכניסה."
+msgstr "הזן את הקוד הזה באפליקציית {PRODUCT_NAME} הישנה שלך כדי להשלים את ההתחברות."
 
 #: src/features/channel/components/EditingMessageInput.tsx:358
 msgid "Enter to <0><1>save</1></0>"
@@ -23908,7 +23908,7 @@ msgstr "פתח את התפריט ובחר אפשרות."
 #. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
 msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
-msgstr "פתח את האפליקציה החדשה ובחר \"התחבר עם אפליקציית {productName} הישנה שלך\". לאחר מכן בחר \"קשר מכשיר חדש כאן\" והזן את הקוד שיוצג."
+msgstr "פתח את האפליקציה החדשה ובחר \"התחבר עם אפליקציית {productName} הישנה שלך\". לאחר מכן בחר כאן \"קשר מכשיר חדש\" והזן את הקוד שיוצג."
 
 #. Third install step in a desktop browser that already moved the account to the new domain.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
@@ -23981,7 +23981,7 @@ msgstr "פתח את ההודעות שלך"
 
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:129
 msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
-msgstr "פתח את אפליקציית ה-{PRODUCT_NAME} הישנה שלך ובחר \"קשר מכשיר חדש\", ואז הזן את הקוד שלמטה."
+msgstr "פתח את אפליקציית {PRODUCT_NAME} הישנה שלך ובחר \"קשר מכשיר חדש\", ואז הזן את הקוד שלמטה."
 
 #: src/features/user/components/modals/PhoneAddModal.tsx:327
 msgid "Open your phone's messaging app and create a new text message."
@@ -28949,7 +28949,7 @@ msgstr "מחפש"
 #. Quick switcher header shown while the query starts with @ outside a community, or with @@.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:70
 msgid "Searching all users"
-msgstr "מחפש את כל המשתמשים"
+msgstr "חיפוש בכל המשתמשים"
 
 #. Quick switcher header shown while the query starts with * and only communities are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:66
@@ -28966,7 +28966,7 @@ msgstr "מחפש אנשים..."
 #. Quick switcher header shown while the query starts with @ inside a community. communityName is the community name.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:74
 msgid "Searching friends and members of {communityName}"
-msgstr "מחפש חברים וחברים ב-{communityName}"
+msgstr "חיפוש חברים וחברי {communityName}"
 
 #. Quick switcher header shown while the query starts with # and only text channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:58
@@ -28976,7 +28976,7 @@ msgstr "חיפוש ערוצי טקסט"
 #. Quick switcher header shown while the query starts with ! and only voice channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:62
 msgid "Searching voice channels"
-msgstr "מחפש ערוצי קול"
+msgstr "חיפוש ערוצי קול"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:142
@@ -30368,7 +30368,7 @@ msgstr "הצג עד 5 (תג +5)"
 #. Button on the domain moved banner that opens the install steps.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:56
 msgid "Show me how"
-msgstr "הצג לי כיצד"
+msgstr "הראה לי איך"
 
 #. Plus menu submenu toggle that shows the saved media (memes) button next to the textarea.
 #. Short label for an advanced message input preference.
@@ -30652,7 +30652,7 @@ msgstr "היכנס באמצעות מפתח גישה"
 #. Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:27
 msgid "Sign in with your old {productName} app"
-msgstr "התחבר עם האפליקציה הישנה שלך של {productName}"
+msgstr "התחבר עם אפליקציית {productName} הישנה שלך"
 
 #. Description shown when sign-in is restricted to the configured SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx:17
@@ -32849,7 +32849,7 @@ msgstr "דיבור בערוצי קול. בלי הרשאה זו, חברים יי�
 #. Second install step on iPhone and iPad. Share and Add to Home Screen are the names of the Safari menu items, use the names iOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:41
 msgid "Tap Share, then Add to Home Screen."
-msgstr "הקש על \"שתף\", ואז על \"הוסף למסך הבית\"."
+msgstr "הקש על \"שיתוף\", ואז על \"הוספה למסך הבית\"."
 
 #. Label in the note edit sheet.
 #: src/features/user/components/modals/NoteEditSheet.tsx:21
@@ -39949,7 +39949,7 @@ msgstr "הדפדפן שלך חסם את החלון הקופץ של מפתח הג
 #. Error shown when a passkey prompt fails because the browser cannot use the passkey on this web address. Keep plain.
 #: src/features/auth/utils/WebAuthnUtils.ts:18
 msgid "Your browser does not support passkeys on this domain. Update your browser, or sign in with your password and two-factor code."
-msgstr "הדפדפן שלך אינו תומך במפתחות גישה בתחום זה. עדכן את הדפדפן שלך, או היכנס באמצעות הסיסמה שלך וקוד האימות הדו-שלבי."
+msgstr "הדפדפן שלך אינו תומך במפתחות גישה בדומיין זה. עדכן את הדפדפן שלך, או התחבר באמצעות הסיסמה שלך וקוד האימות הדו-שלבי."
 
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12

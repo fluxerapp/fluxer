@@ -1760,7 +1760,7 @@ msgstr "{productName} موجود الآن على {host}. قم بتثبيته م�
 #. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:27
 msgid "{productName} now lives at {host}. Install it from there."
-msgstr "تم نقل {productName} الآن إلى {host}. قم بتثبيته من هناك."
+msgstr "{productName} موجود الآن على {host}. ثبّته من هناك."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx:31
@@ -12615,7 +12615,7 @@ msgstr "النطاق"
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
 #: src/features/devtools/components/NagbarControls.ts:76
 msgid "Domain moved nagbar"
-msgstr "تم نقل النطاق"
+msgstr "شريط تنبيه نقل النطاق"
 
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
@@ -23531,7 +23531,7 @@ msgstr "فتح {productName}"
 #. Button on the domain moved banner that opens the new domain in the browser. productName is the app name.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:52
 msgid "Open {productName} in your browser"
-msgstr "افتح {productName} في متصفحك"
+msgstr "فتح {productName} في المتصفح"
 
 #. Button or menu action label in the channel and chat gif picker grid item. Keep it concise. Preserve {title}; it is inserted by code.
 #: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:37
@@ -23908,7 +23908,7 @@ msgstr "افتح القائمة واختر خيارًا."
 #. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
 msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
-msgstr "افتح التطبيق الجديد واختر \"تسجيل الدخول باستخدام تطبيق {productName} القديم\". ثم اختر \"ربط جهاز جديد هنا\" وأدخل الرمز الذي يظهر."
+msgstr "افتح التطبيق الجديد واختر \"تسجيل الدخول باستخدام تطبيق {productName} القديم\". ثم اختر \"ربط جهاز جديد\" هنا وأدخل الرمز الذي يظهر."
 
 #. Third install step in a desktop browser that already moved the account to the new domain.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
@@ -28954,7 +28954,7 @@ msgstr "جارٍ البحث في جميع المستخدمين"
 #. Quick switcher header shown while the query starts with * and only communities are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:66
 msgid "Searching communities"
-msgstr "جارٍ البحث عن المجتمعات"
+msgstr "جارٍ البحث في المجتمعات"
 
 #. Loading state in the desktop quick switcher while fetching people results. Trailing ellipsis is intentional.
 #. Loading state shown while the quick switcher fetches matching people. Trailing ellipsis is intentional.
@@ -28966,17 +28966,17 @@ msgstr "جارٍ البحث عن أشخاص..."
 #. Quick switcher header shown while the query starts with @ inside a community. communityName is the community name.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:74
 msgid "Searching friends and members of {communityName}"
-msgstr "البحث عن الأصدقاء والأعضاء في {communityName}"
+msgstr "جارٍ البحث في الأصدقاء وأعضاء {communityName}"
 
 #. Quick switcher header shown while the query starts with # and only text channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:58
 msgid "Searching text channels"
-msgstr "البحث في قنوات النص"
+msgstr "جارٍ البحث في القنوات النصية"
 
 #. Quick switcher header shown while the query starts with ! and only voice channels are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:62
 msgid "Searching voice channels"
-msgstr "جارٍ البحث في قنوات الصوت"
+msgstr "جارٍ البحث في القنوات الصوتية"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:142
@@ -30652,7 +30652,7 @@ msgstr "تسجيل الدخول باستخدام مفتاح مرور"
 #. Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:27
 msgid "Sign in with your old {productName} app"
-msgstr "تسجيل الدخول باستخدام تطبيق {productName} القديم الخاص بك"
+msgstr "تسجيل الدخول باستخدام تطبيق {productName} القديم"
 
 #. Description shown when sign-in is restricted to the configured SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx:17
@@ -32849,7 +32849,7 @@ msgstr "التحدث في القنوات الصوتية. بدون هذا الإ�
 #. Second install step on iPhone and iPad. Share and Add to Home Screen are the names of the Safari menu items, use the names iOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:41
 msgid "Tap Share, then Add to Home Screen."
-msgstr "اضغط على مشاركة، ثم إضافة إلى الشاشة الرئيسية."
+msgstr "اضغط على \"مشاركة\"، ثم \"إضافة إلى الشاشة الرئيسية\"."
 
 #. Label in the note edit sheet.
 #: src/features/user/components/modals/NoteEditSheet.tsx:21

@@ -1755,7 +1755,7 @@ msgstr "{productName} are nevoie de acces la înregistrarea ecranului. Permite �
 #. Intro in the modal that explains how to install the app from its new domain. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:22
 msgid "{productName} now lives at {host}. Install it from there, then sign in with this app."
-msgstr "{productName} se găsește acum la {host}. Instalează-l de acolo, apoi conectează-te cu această aplicație."
+msgstr "{productName} se află acum la adresa {host}. Instalează-l de acolo, apoi conectează-te cu această aplicație."
 
 #. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:27
@@ -12615,7 +12615,7 @@ msgstr "Domeniu"
 #. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
 #: src/features/devtools/components/NagbarControls.ts:76
 msgid "Domain moved nagbar"
-msgstr "Domeniul s-a mutat"
+msgstr "Bara de notificare pentru domeniul mutat"
 
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
@@ -19411,7 +19411,7 @@ msgstr "Link (matur)"
 #. Button on the domain moved banner that opens the code entry used to sign in a new app. Must match the translation used in the "Sign in with your old {productName} app" instructions.
 #: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:60
 msgid "Link a new device"
-msgstr "Conectează un dispozitiv nou"
+msgstr "Asociază un dispozitiv nou"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:96
@@ -23908,7 +23908,7 @@ msgstr "Deschide meniul și alege o opțiune."
 #. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
 msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
-msgstr "Deschide noua aplicație și alege Autentificare cu vechea aplicație {productName}. Apoi alege Conectează un dispozitiv nou aici și introdu codul afișat."
+msgstr "Deschide noua aplicație și alege „Conectează-te cu vechea ta aplicație {productName}”. Apoi, aici, alege „Asociază un dispozitiv nou” și introdu codul afișat."
 
 #. Third install step in a desktop browser that already moved the account to the new domain.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
@@ -23981,7 +23981,7 @@ msgstr "Deschide mesajele"
 
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:129
 msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
-msgstr "Deschide vechiul tău aplicație {PRODUCT_NAME} și alege Conectează un dispozitiv nou, apoi introdu codul de mai jos."
+msgstr "Deschide vechea ta aplicație {PRODUCT_NAME} și alege „Asociază un dispozitiv nou”, apoi introdu codul de mai jos."
 
 #: src/features/user/components/modals/PhoneAddModal.tsx:327
 msgid "Open your phone's messaging app and create a new text message."
@@ -28949,7 +28949,7 @@ msgstr "Se caută"
 #. Quick switcher header shown while the query starts with @ outside a community, or with @@.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:70
 msgid "Searching all users"
-msgstr "Căutare în toți utilizatorii"
+msgstr "Căutare printre toți utilizatorii"
 
 #. Quick switcher header shown while the query starts with * and only communities are searched.
 #: src/features/search/state/QuickSwitcherResultGenerators.ts:66
@@ -32849,7 +32849,7 @@ msgstr "Vorbește în canalele vocale. Fără această permisiune, membrii răm�
 #. Second install step on iPhone and iPad. Share and Add to Home Screen are the names of the Safari menu items, use the names iOS shows in this language.
 #: src/features/app/domain_migration/DomainMovedStepsModal.tsx:41
 msgid "Tap Share, then Add to Home Screen."
-msgstr "Atingeți Partajare, apoi Adăugați pe ecranul principal."
+msgstr "Atinge Partajează, apoi Adaugă pe ecranul principal."
 
 #. Label in the note edit sheet.
 #: src/features/user/components/modals/NoteEditSheet.tsx:21
@@ -39949,7 +39949,7 @@ msgstr "Browserul tău a blocat fereastra pop-up pentru cheia de acces. Permite 
 #. Error shown when a passkey prompt fails because the browser cannot use the passkey on this web address. Keep plain.
 #: src/features/auth/utils/WebAuthnUtils.ts:18
 msgid "Your browser does not support passkeys on this domain. Update your browser, or sign in with your password and two-factor code."
-msgstr "Browserul tău nu acceptă chei de acces pe acest domeniu. Actualizează-ți browserul sau conectează-te cu parola și codul de doi factori."
+msgstr "Browserul tău nu acceptă chei de acces pe acest domeniu. Actualizează-ți browserul sau conectează-te cu parola și codul de autentificare în doi pași."
 
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12
