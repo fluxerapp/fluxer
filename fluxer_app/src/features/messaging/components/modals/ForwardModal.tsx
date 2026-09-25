@@ -208,10 +208,10 @@ export const ForwardModal = observer(
 		const {
 			composerChannel,
 			options,
-			searchQuery,
+			filterText,
 			selected,
 			selectedKeys,
-			setSearchQuery,
+			setFilterText,
 			slowmodeActiveSelectedOptions,
 			slowmodeEnabledSelectedOptions,
 			toggleDestination,
@@ -232,11 +232,11 @@ export const ForwardModal = observer(
 		const isMobileLayout = MobileLayout.enabled;
 		const shouldFocusSearch = !shouldDisableAutofocusOnMobile();
 		useEffect(() => {
-			if (searchQuery !== '' || shouldDisableAutofocusOnMobile()) {
+			if (filterText !== '' || shouldDisableAutofocusOnMobile()) {
 				return;
 			}
 			searchInputRef.current?.focus();
-		}, [searchQuery]);
+		}, [filterText]);
 		const handleOptionalMessageExceedsLimit = useCallback(() => {
 			showMessagingErrorModal({
 				title: i18n._(MESSAGE_IS_TOO_LONG_DESCRIPTOR),
@@ -349,8 +349,8 @@ export const ForwardModal = observer(
 						<Input
 							ref={searchInputRef}
 							type="text"
-							value={searchQuery}
-							onChange={(event) => setSearchQuery(event.target.value)}
+							value={filterText}
+							onChange={(event) => setFilterText(event.target.value)}
 							placeholder={i18n._(SEARCH_DESCRIPTOR)}
 							aria-label={i18n._(SEARCH_DESCRIPTOR)}
 							maxLength={100}

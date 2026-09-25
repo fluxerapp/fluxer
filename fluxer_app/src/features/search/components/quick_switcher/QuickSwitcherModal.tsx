@@ -311,6 +311,12 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 			return;
 		}
 		setIsKeyboardNavigating(true);
+		if (event.ctrlKey && !event.altKey && !event.metaKey && (event.key === 'n' || event.key === 'p')) {
+			event.preventDefault();
+			event.stopPropagation();
+			QuickSwitcherCommands.moveSelection(event.key === 'n' ? 'down' : 'up');
+			return;
+		}
 		switch (event.key) {
 			case 'ArrowDown':
 			case 'ArrowUp':
