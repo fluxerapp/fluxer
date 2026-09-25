@@ -21,11 +21,12 @@ const CHANNEL_CONTEXT_SCORE_CAP = 6;
 const VOICE_IN_TEXT_SEARCH_PENALTY = 1;
 const VOICE_IN_TEXT_SEARCH_FLOOR = 0.5;
 const CHANNEL_FRECENCY_BONUS = 3;
+const SNOWFLAKE_SCORE = 10;
 
-type ForwardChannelKind = 'text' | 'voice';
+export type ForwardChannelKind = 'text' | 'voice';
 
 export interface ForwardUserCandidate {
-	readonly friendNickname: string | null;
+	readonly friendAlias: string | null;
 	readonly globalName: string | null;
 	readonly id: string;
 	readonly nicknames: ReadonlyArray<string>;
@@ -48,69 +49,79 @@ export interface ForwardChannelCandidate {
 	readonly parentName: string | null;
 }
 
+export interface ForwardGuildCandidate {
+	readonly id: string;
+	readonly name: string;
+}
+
 export interface ForwardFrequentItem {
 	readonly id: string;
-	readonly kind: 'dm' | 'group_dm' | 'text' | 'voice' | 'other';
+	readonly kind: 'dm' | 'group_dm' | 'guild' | 'text' | 'voice' | 'other';
 	readonly recipientId?: string | null;
 	readonly score: number;
 }
 
-export interface ForwardSearchBoosters {
+export interface ForwardSearchWeights {
 	readonly groupDMs: ReadonlyMap<string, number>;
-	readonly textChannels: ReadonlyMap<string, number>;
+	readonly guilds: ReadonlyMap<string, number>;
+	readonly textChannel: ReadonlyMap<string, number>;
 	readonly users: ReadonlyMap<string, number>;
-	readonly voiceChannels: ReadonlyMap<string, number>;
+	readonly voiceChannel: ReadonlyMap<string, number>;
 }
 
 export interface ForwardSearchResult {
-	readonly comparator: string;
+	readonly matchedText: string;
 	readonly id: string;
 	readonly score: number;
 	readonly type: ForwardResultType;
 }
 
-interface BuildForwardSearchBoostersRequest {
+interface BuildForwardSearchWeightsRequest {
 	readonly dmUserIds: Iterable<string>;
 	readonly frequent: ReadonlyArray<ForwardFrequentItem>;
 	readonly friendIds: Iterable<string>;
 }
 
 interface SearchForwardDestinationsRequest {
-	readonly blacklist: ReadonlySet<string>;
-	readonly boosters: ForwardSearchBoosters;
+	readonly excludedIds: ReadonlySet<string>;
+	readonly weights: ForwardSearchWeights;
 	readonly channels: ReadonlyArray<ForwardChannelCandidate>;
 	readonly confusables: ReadonlyMap<string, string>;
 	readonly groupDMs: ReadonlyArray<ForwardGroupDMCandidate>;
 	readonly limit: number;
 	readonly query: string;
-	readonly resultTypes: ReadonlyArray<ForwardResultType>;
+	readonly kinds: ReadonlyArray<ForwardResultType>;
 	readonly users: ReadonlyArray<ForwardUserCandidate>;
 }
 
-export function buildForwardSearchBoosters({
+export function buildForwardSearchWeights({
 	dmUserIds,
 	frequent,
 	friendIds,
-}: BuildForwardSearchBoostersRequest): ForwardSearchBoosters {
+}: BuildForwardSearchWeightsRequest): ForwardSearchWeights {
 	const maxScore = frequent.reduce((max, item) => Math.max(max, item.score), 0);
 	const users = new Map<string, number>();
 	const groupDMs = new Map<string, number>();
-	const textChannels = new Map<string, number>();
-	const voiceChannels = new Map<string, number>();
+	const guilds = new Map<string, number>();
+	const textChannel = new Map<string, number>();
+	const voiceChannel = new Map<string, number>();
 	for (const item of frequent) {
-		const boost = maxScore > 0 ? 1 + item.score / maxScore : 1;
+		const weight = maxScore > 0 ? 1 + item.score / maxScore : 1;
 		switch (item.kind) {
 			case 'dm':
-				if (item.recipientId != null) users.set(item.recipientId, boost);
+				if (item.recipientId != null) users.set(item.recipientId, weight);
 				break;
 			case 'group_dm':
-				groupDMs.set(item.id, boost);
+				groupDMs.set(item.id, weight);
+				break;
+			case 'guild':
+				guilds.set(item.id, weight);
 				break;
 			case 'text':
-				textChannels.set(item.id, boost);
+				textChannel.set(item.id, weight);
 				break;
 			case 'voice':
-				voiceChannels.set(item.id, boost);
+				voiceChannel.set(item.id, weight);
 				break;
 			case 'other':
 				break;
@@ -118,31 +129,27 @@ export function buildForwardSearchBoosters({
 	}
 	for (const friendId of friendIds) users.set(friendId, (users.get(friendId) ?? 1) + FRIEND_BOOST);
 	for (const userId of dmUserIds) users.set(userId, (users.get(userId) ?? 1) + OPEN_DM_BOOST);
-	return Object.freeze({groupDMs, textChannels, users, voiceChannels});
+	return Object.freeze({groupDMs, guilds, textChannel, users, voiceChannel});
 }
 
 export function searchForwardDestinations(
 	request: SearchForwardDestinationsRequest,
 ): ReadonlyArray<ForwardSearchResult> {
-	const {boosters, channels, confusables, limit, query, resultTypes} = request;
+	const {weights, channels, confusables, limit, query, kinds} = request;
 	if (query.trim() === '') return [];
 	const results = [
-		...(resultTypes.includes('user')
-			? searchUsers(query, request.users, boosters.users, request.blacklist, confusables, limit)
+		...(kinds.includes('user')
+			? searchUsers(query, request.users, weights.users, request.excludedIds, confusables, limit)
 			: []),
-		...(resultTypes.includes('group_dm')
-			? searchGroupDMs(query, request.groupDMs, boosters.groupDMs, confusables, limit)
+		...(kinds.includes('group_dm')
+			? searchGroupDMs(query, request.groupDMs, weights.groupDMs, confusables, limit)
 			: []),
-		...(resultTypes.includes('text_channel')
-			? searchChannels(query, channels, 'text', boosters.textChannels, limit)
-			: []),
-		...(resultTypes.includes('voice_channel')
-			? searchChannels(query, channels, 'voice', boosters.voiceChannels, limit)
-			: []),
+		...(kinds.includes('text_channel') ? searchChannels(query, channels, 'text', weights.textChannel, limit) : []),
+		...(kinds.includes('voice_channel') ? searchChannels(query, channels, 'voice', weights.voiceChannel, limit) : []),
 	];
 	const seenKeys = new Set<string>();
 	const merged = results.filter((result) => {
-		const key = `${result.type}-${result.id}`;
+		const key = `${result.type}|${result.id}`;
 		if (seenKeys.has(key)) return false;
 		seenKeys.add(key);
 		return true;
@@ -150,10 +157,10 @@ export function searchForwardDestinations(
 	return merged.sort(compareSearchResults);
 }
 
-function compareSearchResults(left: ForwardSearchResult, right: ForwardSearchResult): number {
+export function compareSearchResults(left: ForwardSearchResult, right: ForwardSearchResult): number {
 	if (left.score === right.score && left.type === 'user') {
-		const leftName = left.comparator.toLocaleLowerCase();
-		const rightName = right.comparator.toLocaleLowerCase();
+		const leftName = left.matchedText.toLocaleLowerCase();
+		const rightName = right.matchedText.toLocaleLowerCase();
 		if (leftName < rightName) return -1;
 		if (leftName > rightName) return 1;
 	}
@@ -164,69 +171,69 @@ function sortAndLimit(results: Array<ForwardSearchResult>, limit: number): Array
 	return results.sort(compareSearchResults).slice(0, limit);
 }
 
-function searchUsers(
+export function searchUsers(
 	query: string,
 	users: ReadonlyArray<ForwardUserCandidate>,
-	boosters: ReadonlyMap<string, number>,
-	blacklist: ReadonlySet<string>,
+	weights: ReadonlyMap<string, number>,
+	excludedIds: ReadonlySet<string>,
 	confusables: ReadonlyMap<string, string>,
 	limit: number,
 ): Array<ForwardSearchResult> {
 	const escapedQuery = escapeSearchPattern(query);
 	const prefixQuery = new RegExp(`^${escapedQuery}`, 'i');
-	const containQuery = new RegExp(escapedQuery, 'i');
-	const queryLower = query.toLocaleLowerCase();
-	const querySkeleton = toConfusableSkeleton(queryLower, confusables);
+	const substringPattern = new RegExp(escapedQuery, 'i');
+	const loweredText = query.toLocaleLowerCase();
+	const querySkeleton = toConfusableSkeleton(loweredText, confusables);
 	const scoreField = (field: string): number => {
 		if (prefixQuery.test(field)) return 10;
-		if (containQuery.test(field)) return 5;
+		if (substringPattern.test(field)) return 5;
 		const stripped = stripCombiningMarks(field.toLocaleLowerCase());
-		if (fuzzySearch(queryLower, stripped)) return 1;
+		if (fuzzySearch(loweredText, stripped)) return 1;
 		if (fuzzySearch(querySkeleton, toConfusableSkeleton(stripped, confusables))) return 1;
 		return 0;
 	};
 	const matches: Array<ForwardSearchResult> = [];
 	for (const user of users) {
-		if (blacklist.has(user.id)) continue;
-		const booster = boosters.get(user.id) ?? 1;
+		if (excludedIds.has(user.id)) continue;
+		const booster = weights.get(user.id) ?? 1;
 		if (user.id === query) {
-			matches.push({comparator: user.id, id: user.id, score: 10 * booster, type: 'user'});
+			matches.push({matchedText: user.id, id: user.id, score: 10 * booster, type: 'user'});
 			continue;
 		}
 		let best: ForwardSearchResult | null = null;
-		for (const field of [user.username, user.friendNickname, user.globalName, ...user.nicknames]) {
+		for (const field of [user.username, user.friendAlias, user.globalName, ...user.nicknames]) {
 			if (field == null) continue;
 			const score = scoreField(field) * booster;
 			if (score === 0 || (best != null && best.score >= score)) continue;
-			best = {comparator: field, id: user.id, score, type: 'user'};
+			best = {matchedText: field, id: user.id, score, type: 'user'};
 		}
 		if (best != null) matches.push(best);
 	}
 	return sortAndLimit(matches, limit).map((match) => Object.freeze({...match, score: SCORE_SCALE * match.score}));
 }
 
-function searchGroupDMs(
+export function searchGroupDMs(
 	query: string,
 	groupDMs: ReadonlyArray<ForwardGroupDMCandidate>,
-	boosters: ReadonlyMap<string, number>,
+	weights: ReadonlyMap<string, number>,
 	confusables: ReadonlyMap<string, string>,
 	limit: number,
 ): Array<ForwardSearchResult> {
-	const normalize = (text: string): string =>
+	const foldText = (text: string): string =>
 		stripCombiningMarks(toConfusableSkeleton(text.toLocaleLowerCase(), confusables));
-	const term = createSearchTerm(normalize(query));
+	const term = createSearchTerm(foldText(query));
 	const results: Array<ForwardSearchResult> = [];
 	for (const groupDM of groupDMs) {
-		let score = scoreSearchTerm(normalize(groupDM.name), term);
+		let score = scoreSearchTerm(foldText(groupDM.name), term);
 		for (const field of groupDM.memberFields) {
-			score = Math.max(score, Math.min(GROUP_DM_MEMBER_SCORE_CAP, scoreSearchTerm(normalize(field), term)));
+			score = Math.max(score, Math.min(GROUP_DM_MEMBER_SCORE_CAP, scoreSearchTerm(foldText(field), term)));
 		}
 		if (score === 0) continue;
 		results.push(
 			Object.freeze({
-				comparator: groupDM.name,
+				matchedText: groupDM.name,
 				id: groupDM.id,
-				score: SCORE_SCALE * score * (boosters.get(groupDM.id) ?? 1),
+				score: SCORE_SCALE * score * (weights.get(groupDM.id) ?? 1),
 				type: 'group_dm',
 			}),
 		);
@@ -234,12 +241,13 @@ function searchGroupDMs(
 	return sortAndLimit(results, limit);
 }
 
-function searchChannels(
+export function searchChannels(
 	query: string,
 	channels: ReadonlyArray<ForwardChannelCandidate>,
 	searchKind: ForwardChannelKind,
-	boosters: ReadonlyMap<string, number>,
+	weights: ReadonlyMap<string, number>,
 	limit: number,
+	matchExactIds = false,
 ): Array<ForwardSearchResult> {
 	const terms = buildChannelSearchTerms(query);
 	const results: Array<ForwardSearchResult> = [];
@@ -247,29 +255,64 @@ function searchChannels(
 		if (searchKind === 'voice' && channel.kind !== 'voice') continue;
 		if (!channel.canAccess) continue;
 		const remainingTerms = [...terms];
-		let score = consumeBestSearchTerm(channel.name.toLocaleLowerCase(), remainingTerms, true);
+		const isSnowflakeMatch = matchExactIds && channel.id === query;
+		let score = isSnowflakeMatch
+			? SNOWFLAKE_SCORE
+			: consumeBestSearchTerm(channel.name.toLocaleLowerCase(), remainingTerms, true);
 		if (score === 0) continue;
-		if (remainingTerms.length > 0) {
+		if (!isSnowflakeMatch && remainingTerms.length > 0) {
 			for (const context of [channel.guildName, channel.parentName]) {
 				if (context == null || context === '') continue;
 				score += CHANNEL_CONTEXT_WEIGHT * consumeBestSearchTerm(context.toLocaleLowerCase(), remainingTerms, false);
 			}
 			score = Math.min(CHANNEL_CONTEXT_SCORE_CAP, score);
 		}
-		if (remainingTerms.length > 1) continue;
-		if (remainingTerms.length === 1 && !remainingTerms[0].isFullMatch) continue;
+		if (!isSnowflakeMatch && remainingTerms.length > 1) continue;
+		if (!isSnowflakeMatch && remainingTerms.length === 1 && !remainingTerms[0].spansWholeQuery) continue;
 		if (searchKind === 'text' && channel.kind === 'voice') {
 			score = Math.max(score - VOICE_IN_TEXT_SEARCH_PENALTY, VOICE_IN_TEXT_SEARCH_FLOOR);
 		}
 		score = Math.min(score + (channel.hasFrecency ? CHANNEL_FRECENCY_BONUS : 0), score >= 7 ? 10 : 7);
 		results.push(
 			Object.freeze({
-				comparator: channel.name,
+				matchedText: channel.name,
 				id: channel.id,
-				score: SCORE_SCALE * score * (boosters.get(channel.id) ?? 1),
+				score: SCORE_SCALE * score * (weights.get(channel.id) ?? 1),
 				type: channel.kind === 'voice' ? 'voice_channel' : 'text_channel',
 			}),
 		);
 	}
 	return sortAndLimit(results, limit);
+}
+
+export interface GuildSearchResult {
+	readonly matchedText: string;
+	readonly id: string;
+	readonly score: number;
+}
+
+export function searchGuilds(
+	query: string,
+	guilds: ReadonlyArray<ForwardGuildCandidate>,
+	weights: ReadonlyMap<string, number>,
+	excludedIds: ReadonlySet<string>,
+	limit: number,
+	matchExactIds = false,
+): Array<GuildSearchResult> {
+	const term = createSearchTerm(query.toLocaleLowerCase());
+	const results: Array<GuildSearchResult> = [];
+	for (const guild of guilds) {
+		if (excludedIds.has(guild.id)) continue;
+		const score =
+			matchExactIds && guild.id === query ? SNOWFLAKE_SCORE : scoreSearchTerm(guild.name.toLocaleLowerCase(), term);
+		if (score === 0) continue;
+		results.push(
+			Object.freeze({
+				matchedText: guild.name,
+				id: guild.id,
+				score: SCORE_SCALE * score * (weights.get(guild.id) ?? 1),
+			}),
+		);
+	}
+	return results.sort((left, right) => right.score - left.score).slice(0, limit);
 }

@@ -9,13 +9,7 @@ import {
 } from '@app/features/app/components/dialogs/shared/ForwardDefaultDestinations';
 import {parseForwardDestinationQuery} from '@app/features/app/components/dialogs/shared/ForwardDestinationQuery';
 import {
-	buildForwardSearchBoosters,
-	type ForwardChannelCandidate,
-	type ForwardFrequentItem,
-	type ForwardGroupDMCandidate,
-	type ForwardSearchBoosters,
 	type ForwardSearchResult,
-	type ForwardUserCandidate,
 	searchForwardDestinations,
 } from '@app/features/app/components/dialogs/shared/ForwardDestinationSearch';
 import {
@@ -33,7 +27,6 @@ import * as ChannelUtils from '@app/features/channel/utils/ChannelUtils';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import type {Guild} from '@app/features/guild/models/Guild';
 import Guilds from '@app/features/guild/state/Guilds';
-import {PERSONAL_NOTES_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import type {ForwardMediaSelection} from '@app/features/messaging/commands/MessageCommands';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
@@ -41,7 +34,7 @@ import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import Permission from '@app/features/permissions/state/Permission';
 import {formatPermissionLabel} from '@app/features/permissions/utils/PermissionUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import Relationships from '@app/features/relationship/state/Relationships';
+import {createForwardSearchCandidates} from '@app/features/search/utils/DestinationSearchSources';
 import {getLoadedUnicodeConfusables, loadUnicodeConfusables} from '@app/features/search/utils/SearchTextMatching';
 import Slowmode from '@app/features/slowmode/state/Slowmode';
 import {useNow} from '@app/features/ui/state/Tick';
@@ -51,13 +44,11 @@ import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildNSFWLevel, GuildOperations} from '@fluxer/constants/src/GuildConstants';
 import {CHANNEL_RATE_LIMIT_PER_USER_MAX} from '@fluxer/constants/src/LimitConstants';
-import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import type {MessageEmbed} from '@fluxer/schema/src/domains/message/EmbedSchemas';
 import type {MessageAttachment} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
-import {compareStructural, computed, type IComputedValue} from 'mobx';
 import {useEffect, useMemo, useState} from 'react';
 
 const GUILD_MESSAGES_DISABLED_DESCRIPTOR = msg({
@@ -110,13 +101,6 @@ interface ForwardMediaNeeds {
 	readonly hasEmbeds: boolean;
 }
 
-interface ForwardSearchCandidates {
-	readonly boosters: ForwardSearchBoosters;
-	readonly channels: ReadonlyArray<ForwardChannelCandidate>;
-	readonly groupDMs: ReadonlyArray<ForwardGroupDMCandidate>;
-	readonly users: ReadonlyArray<ForwardUserCandidate>;
-}
-
 export interface ForwardDestinationOption {
 	readonly channel: Channel | null;
 	readonly destination: ForwardDestination;
@@ -137,10 +121,10 @@ interface UseForwardDestinationsOptions {
 interface ForwardDestinationsState {
 	readonly composerChannel: Channel | null;
 	readonly options: ReadonlyArray<ForwardDestinationOption>;
-	readonly searchQuery: string;
+	readonly filterText: string;
 	readonly selected: ReadonlyArray<ForwardDestination>;
 	readonly selectedKeys: ReadonlySet<string>;
-	readonly setSearchQuery: (query: string) => void;
+	readonly setFilterText: (query: string) => void;
 	readonly slowmodeActiveSelectedOptions: ReadonlyArray<ForwardDestinationOption>;
 	readonly slowmodeEnabledSelectedOptions: ReadonlyArray<ForwardDestinationOption>;
 	readonly toggleDestination: (destination: ForwardDestination) => void;
@@ -195,144 +179,6 @@ function isForwardRowValid(row: ForwardRowIdentity): boolean {
 			return !GuildMembers.isUserTimedOut(channel.guildId ?? null, Users.currentUserId);
 		}
 	}
-}
-
-function collectGuildNicknames(): ReadonlyMap<string, Array<string>> {
-	const nicknames = new Map<string, Array<string>>();
-	for (const guild of Guilds.getGuilds()) {
-		for (const member of GuildMembers.getMembers(guild.id)) {
-			if (member.nick == null) continue;
-			const userNicknames = nicknames.get(member.user.id);
-			if (userNicknames === undefined) {
-				nicknames.set(member.user.id, [member.nick]);
-			} else {
-				userNicknames.push(member.nick);
-			}
-		}
-	}
-	return nicknames;
-}
-
-function buildForwardUserCandidates(): ReadonlyArray<ForwardUserCandidate> {
-	const nicknames = collectGuildNicknames();
-	const candidates: Array<ForwardUserCandidate> = [];
-	for (const user of Users.getUsers()) {
-		const relationship = Relationships.getRelationship(user.id);
-		if (relationship?.type === RelationshipTypes.BLOCKED) continue;
-		let friendNickname: string | null = null;
-		if (relationship?.type === RelationshipTypes.FRIEND) friendNickname = relationship.nickname;
-		candidates.push(
-			Object.freeze({
-				friendNickname,
-				globalName: user.globalName,
-				id: user.id,
-				nicknames: nicknames.get(user.id) ?? NO_STRINGS,
-				username: user.discriminator === '0' ? user.username : `${user.username}#${user.discriminator}`,
-			}),
-		);
-	}
-	return Object.freeze(candidates);
-}
-
-function collectRecipientSearchFields(recipientIds: ReadonlyArray<string>): ReadonlyArray<string> {
-	const fields: Array<string> = [];
-	for (const recipientId of recipientIds) {
-		const recipient = Users.getUser(recipientId);
-		if (recipient == null) continue;
-		fields.push(recipient.username);
-		if (recipient.globalName != null) fields.push(recipient.globalName);
-		const relationshipNickname = Relationships.getRelationship(recipientId)?.nickname;
-		if (relationshipNickname != null) fields.push(relationshipNickname);
-	}
-	return Object.freeze(fields);
-}
-
-function buildForwardGroupDMCandidates(i18n: I18n): ReadonlyArray<ForwardGroupDMCandidate> {
-	const candidates: Array<ForwardGroupDMCandidate> = [];
-	for (const channel of Channels.getPrivateChannels()) {
-		if (channel.type !== ChannelTypes.GROUP_DM) continue;
-		candidates.push(
-			Object.freeze({
-				id: channel.id,
-				memberFields: collectRecipientSearchFields(channel.recipientIds),
-				name: ChannelUtils.getDMDisplayName(channel),
-			}),
-		);
-	}
-	const currentUserId = Users.currentUserId;
-	const personalNotes = currentUserId == null ? undefined : Channels.getChannel(currentUserId);
-	if (personalNotes?.type === ChannelTypes.DM_PERSONAL_NOTES) {
-		candidates.push(
-			Object.freeze({id: personalNotes.id, memberFields: NO_STRINGS, name: i18n._(PERSONAL_NOTES_DESCRIPTOR)}),
-		);
-	}
-	return Object.freeze(candidates);
-}
-
-function buildForwardChannelCandidates(): ReadonlyArray<ForwardChannelCandidate> {
-	const candidates: Array<ForwardChannelCandidate> = [];
-	for (const channel of Channels.allChannels) {
-		if (channel.type !== ChannelTypes.GUILD_TEXT && channel.type !== ChannelTypes.GUILD_VOICE) continue;
-		const isVoice = channel.type === ChannelTypes.GUILD_VOICE;
-		const accessPermissions = isVoice ? Permissions.VIEW_CHANNEL | Permissions.CONNECT : Permissions.VIEW_CHANNEL;
-		candidates.push(
-			Object.freeze({
-				canAccess: Permission.can(accessPermissions, channel),
-				guildName: channel.guildId == null ? null : (Guilds.getGuild(channel.guildId)?.name ?? null),
-				hasFrecency: ChannelFrecency.getScore(channel.id) > 0,
-				id: channel.id,
-				kind: isVoice ? 'voice' : 'text',
-				name: channel.name ?? '',
-				parentName: channel.parentId == null ? null : (Channels.getChannel(channel.parentId)?.name ?? null),
-			}),
-		);
-	}
-	return Object.freeze(candidates);
-}
-
-function resolveForwardFrequentItem(id: string): ForwardFrequentItem {
-	const score = ChannelFrecency.getScore(id);
-	const channel = Guilds.getGuild(id) == null ? Channels.getChannel(id) : undefined;
-	switch (channel?.type) {
-		case ChannelTypes.DM:
-			return {id, kind: 'dm', recipientId: channel.recipientIds.length > 0 ? channel.recipientIds[0] : null, score};
-		case ChannelTypes.GROUP_DM:
-		case ChannelTypes.DM_PERSONAL_NOTES:
-			return {id, kind: 'group_dm', score};
-		case ChannelTypes.GUILD_TEXT:
-			return {id, kind: 'text', score};
-		case ChannelTypes.GUILD_VOICE:
-			return {id, kind: 'voice', score};
-		default:
-			return {id, kind: 'other', score};
-	}
-}
-
-function buildForwardSearchBoostersFromStores(): ForwardSearchBoosters {
-	const friendIds: Array<string> = [];
-	for (const relationship of Relationships.getRelationships()) {
-		if (relationship.type === RelationshipTypes.FRIEND) friendIds.push(relationship.userId);
-	}
-	const dmUserIds: Array<string> = [];
-	for (const channel of Channels.getPrivateChannels()) {
-		if (channel.type === ChannelTypes.DM && channel.recipientIds.length > 0) dmUserIds.push(channel.recipientIds[0]);
-	}
-	return buildForwardSearchBoosters({
-		dmUserIds,
-		frequent: ChannelFrecency.frequentIds.map(resolveForwardFrequentItem),
-		friendIds,
-	});
-}
-
-function createForwardSearchCandidates(i18n: I18n): IComputedValue<ForwardSearchCandidates> {
-	const options = {equals: compareStructural};
-	const users = computed(buildForwardUserCandidates, options);
-	const groupDMs = computed(() => buildForwardGroupDMCandidates(i18n), options);
-	const channels = computed(buildForwardChannelCandidates, options);
-	const boosters = computed(buildForwardSearchBoostersFromStores, options);
-	return computed(() =>
-		Object.freeze({boosters: boosters.get(), channels: channels.get(), groupDMs: groupDMs.get(), users: users.get()}),
-	);
 }
 
 function selectForwardedAttachments(
@@ -531,16 +377,16 @@ export function useForwardDestinations({
 	message,
 }: UseForwardDestinationsOptions): ForwardDestinationsState {
 	const {i18n} = useLingui();
-	const [searchQuery, setSearchQuery] = useState('');
+	const [filterText, setFilterText] = useState('');
 	const [selected, setSelected] = useState(NO_DESTINATIONS);
-	const [pinnedDestinations, setPinnedDestinations] = useState(INITIAL_PINNED_DESTINATIONS);
+	const [stickyPicks, setStickyPicks] = useState(INITIAL_PINNED_DESTINATIONS);
 	const [confusables, setConfusables] = useState(() => getLoadedUnicodeConfusables() ?? NO_CONFUSABLES);
 	const searchCandidates = useMemo(() => createForwardSearchCandidates(i18n), [i18n, i18n.locale]);
 	const mediaNeeds = useMemo(() => resolveForwardMediaNeeds(message, mediaSelection), [message, mediaSelection]);
-	const parsedQuery = useMemo(() => parseForwardDestinationQuery(searchQuery), [searchQuery]);
+	const parsedQuery = useMemo(() => parseForwardDestinationQuery(filterText), [filterText]);
 	const engineQuery = parsedQuery.query.trim() === '' ? '' : parsedQuery.query;
-	const currentPinned = pinForwardDestinations(pinnedDestinations, engineQuery, selected);
-	if (currentPinned !== pinnedDestinations) setPinnedDestinations(currentPinned);
+	const currentPinned = pinForwardDestinations(stickyPicks, engineQuery, selected);
+	if (currentPinned !== stickyPicks) setStickyPicks(currentPinned);
 	useEffect(() => {
 		let isMounted = true;
 		loadUnicodeConfusables().then(
@@ -559,11 +405,11 @@ export function useForwardDestinations({
 		if (candidates == null) return NO_SEARCH_RESULTS;
 		return searchForwardDestinations({
 			...candidates,
-			blacklist: new Set(currentUserId == null ? NO_STRINGS : [currentUserId]),
+			excludedIds: new Set(currentUserId == null ? NO_STRINGS : [currentUserId]),
 			confusables,
-			limit: parsedQuery.resultTypes.length === 1 ? SINGLE_TYPE_SEARCH_LIMIT : SEARCH_LIMIT,
+			limit: parsedQuery.kinds.length === 1 ? SINGLE_TYPE_SEARCH_LIMIT : SEARCH_LIMIT,
 			query: engineQuery,
-			resultTypes: parsedQuery.resultTypes,
+			kinds: parsedQuery.kinds,
 		});
 	}, [candidates, confusables, currentUserId, engineQuery, parsedQuery]);
 	const rows =
@@ -571,7 +417,7 @@ export function useForwardDestinations({
 			? buildForwardDefaultDestinations({
 					frequentIds: ChannelFrecency.frequentIds,
 					history: [...new Set(SelectedChannel.sortedRecentVisits.map((visit) => visit.channelId))],
-					isValid: isForwardRowValid,
+					accepts: isForwardRowValid,
 					mode: parsedQuery.mode,
 					origin: resolveForwardOrigin(message.channelId, Channels.getChannel(message.channelId)),
 					pinned: currentPinned.pinned,
@@ -590,16 +436,16 @@ export function useForwardDestinations({
 	const toggleDestination = (destination: ForwardDestination) => {
 		const next = toggleForwardDestination(selected, destination);
 		if (next === selected) return;
-		if (next.length > selected.length) setSearchQuery('');
+		if (next.length > selected.length) setFilterText('');
 		setSelected(next);
 	};
 	return {
 		composerChannel: resolveForwardComposerChannel(selected),
 		options,
-		searchQuery,
+		filterText,
 		selected,
 		selectedKeys: new Set(selected.map(forwardDestinationKey)),
-		setSearchQuery,
+		setFilterText,
 		slowmodeActiveSelectedOptions: selectedOptions.filter(isSlowmodeActive),
 		slowmodeEnabledSelectedOptions: selectedOptions.filter((option) => option.slowmodeEnabled),
 		toggleDestination,

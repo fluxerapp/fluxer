@@ -5,7 +5,7 @@ export type ForwardResultType = 'user' | 'text_channel' | 'voice_channel' | 'gro
 export interface ForwardDestinationQuery {
 	readonly mode: ForwardResultType | null;
 	readonly query: string;
-	readonly resultTypes: ReadonlyArray<ForwardResultType>;
+	readonly kinds: ReadonlyArray<ForwardResultType>;
 }
 
 const FORWARD_RESULT_TYPES: ReadonlyArray<ForwardResultType> = Object.freeze([
@@ -24,10 +24,10 @@ const SIGIL_PATTERN = /^@|#|!|\*|\$/;
 
 export function parseForwardDestinationQuery(text: string): ForwardDestinationQuery {
 	if (text.startsWith(GLOBAL_USER_SIGIL)) {
-		return Object.freeze({mode: null, query: text.slice(GLOBAL_USER_SIGIL.length), resultTypes: FORWARD_RESULT_TYPES});
+		return Object.freeze({mode: null, query: text.slice(GLOBAL_USER_SIGIL.length), kinds: FORWARD_RESULT_TYPES});
 	}
 	const query = text.replace(SIGIL_PATTERN, '');
 	const mode = SIGIL_RESULT_TYPES.get(text.charAt(0));
-	if (mode === undefined) return Object.freeze({mode: null, query, resultTypes: FORWARD_RESULT_TYPES});
-	return Object.freeze({mode, query, resultTypes: Object.freeze([mode])});
+	if (mode === undefined) return Object.freeze({mode: null, query, kinds: FORWARD_RESULT_TYPES});
+	return Object.freeze({mode, query, kinds: Object.freeze([mode])});
 }

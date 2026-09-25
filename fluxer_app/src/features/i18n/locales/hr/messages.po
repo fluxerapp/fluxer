@@ -1977,7 +1977,7 @@ msgid "{unreadCount, plural, one {# new} other {# new}} since {shortTime}"
 msgstr "{unreadCount, plural, one {# nova} few {# nove} other {# novih}} od {shortTime}"
 
 #. Badge text on a quick switcher row when the channel has unread messages. unreadCount is the integer count.
-#: src/features/search/utils/QuickSwitcherModalUtils.tsx:69
+#: src/features/search/utils/QuickSwitcherModalUtils.tsx:70
 msgid "{unreadCount, plural, one {# unread} other {# unread}}"
 msgstr "{unreadCount, plural, one {# nepročitana} few {# nepročitane} other {# nepročitanih}}"
 
@@ -2144,7 +2144,7 @@ msgid "1 hour"
 msgstr "1 sat"
 
 #. Badge text on a quick switcher row when the channel has exactly one mention.
-#: src/features/search/utils/QuickSwitcherModalUtils.tsx:65
+#: src/features/search/utils/QuickSwitcherModalUtils.tsx:66
 msgid "1 mention"
 msgstr "1 spominjanje"
 
@@ -7053,7 +7053,7 @@ msgid "Channel"
 msgstr "Kanal"
 
 #. Fallback name for an unnamed channel in the forward modal destination list. Preserve {id}; it is inserted by code.
-#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:87
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:78
 msgid "Channel {id}"
 msgstr "Kanal {id}"
 
@@ -15755,7 +15755,7 @@ msgstr "Prijateljski bot"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:555
 #: src/features/connection/components/modals/EditConnectionModal.tsx:86
-#: src/features/search/utils/QuickSwitcherModalUtils.tsx:49
+#: src/features/search/utils/QuickSwitcherModalUtils.tsx:50
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:63
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:89
 msgid "Friends"
@@ -16404,7 +16404,7 @@ msgid "Go to home"
 msgstr "Idi na početnu"
 
 #. Short label in the quick switcher state. Keep it concise.
-#: src/features/search/state/QuickSwitcher.tsx:39
+#: src/features/search/state/QuickSwitcher.tsx:45
 msgid "Go to message"
 msgstr "Idi na poruku"
 
@@ -16611,11 +16611,6 @@ msgstr "Pozivnice za grupu"
 #: src/features/search/state/QuickSwitcherCandidateBuilder.ts:43
 msgid "Group message"
 msgstr "Grupna poruka"
-
-#. Quick switcher section header for group DM results.
-#: src/features/search/state/QuickSwitcherResultConverters.ts:26
-msgid "Group messages"
-msgstr "Grupne poruke"
 
 #. Field label for the group name input in the mobile edit group sheet.
 #. Short label in the edit group modal. Keep it concise.
@@ -24556,12 +24551,10 @@ msgid "Pennsylvania"
 msgstr "Pennsylvania"
 
 #. Community settings sidebar category grouping members, invites, and bans.
-#. Quick switcher section header for user results.
 #. Quick switcher section header listing user candidates.
 #. Unicode emoji category label.
 #: src/features/expressions/utils/UnicodeEmojis.ts:22
-#: src/features/search/state/QuickSwitcherResultConverters.ts:22
-#: src/features/search/utils/QuickSwitcherModalUtils.tsx:53
+#: src/features/search/utils/QuickSwitcherModalUtils.tsx:54
 #: src/features/user/components/settings_utils/GuildSettingsConstants.ts:261
 msgid "People"
 msgstr "Osobe"
@@ -25429,6 +25422,11 @@ msgstr "Prethodnih 7 dana"
 #: src/features/messaging/components/modals/media_modal/shared.ts:137
 msgid "Previous attachment"
 msgstr "Prethodni privitak"
+
+#. Quick switcher section header above the channels the user visited most recently.
+#: src/features/search/state/QuickSwitcherResultGenerators.ts:50
+msgid "Previous channels"
+msgstr "Prethodni kanali"
 
 #. Message-history-deletion option when banning a member. Deletes the member's messages from the last hour.
 #: src/features/moderation/constants/BanDeleteMessageOptions.ts:21
@@ -28645,7 +28643,7 @@ msgstr "Pregled pri pomicanju"
 #: src/features/channel/components/shared/PickerSearchInput.tsx:21
 #: src/features/messaging/components/modals/ForwardModal.tsx:87
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx:43
-#: src/features/search/utils/QuickSwitcherModalUtils.tsx:45
+#: src/features/search/utils/QuickSwitcherModalUtils.tsx:46
 #: src/features/theme_studio/ui/StudioSearchInput.tsx:16
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:38
 msgid "Search"
@@ -28921,12 +28919,37 @@ msgstr "Pretraži…"
 msgid "Searching"
 msgstr "Pretraživanje"
 
+#. Quick switcher header shown while the query starts with @ outside a community, or with @@.
+#: src/features/search/state/QuickSwitcherResultGenerators.ts:70
+msgid "Searching all users"
+msgstr "Pretraživanje svih korisnika"
+
+#. Quick switcher header shown while the query starts with * and only communities are searched.
+#: src/features/search/state/QuickSwitcherResultGenerators.ts:66
+msgid "Searching communities"
+msgstr "Pretraživanje zajednica"
+
 #. Loading state in the desktop quick switcher while fetching people results. Trailing ellipsis is intentional.
 #. Loading state shown while the quick switcher fetches matching people. Trailing ellipsis is intentional.
 #: src/features/search/components/bottomsheets/QuickSwitcherBottomSheet.tsx:44
 #: src/features/search/components/quick_switcher/QuickSwitcherModal.tsx:62
 msgid "Searching for people..."
 msgstr "Traženje osoba..."
+
+#. Quick switcher header shown while the query starts with @ inside a community. communityName is the community name.
+#: src/features/search/state/QuickSwitcherResultGenerators.ts:74
+msgid "Searching friends and members of {communityName}"
+msgstr "Pretraživanje prijatelja i članova zajednice {communityName}"
+
+#. Quick switcher header shown while the query starts with # and only text channels are searched.
+#: src/features/search/state/QuickSwitcherResultGenerators.ts:58
+msgid "Searching text channels"
+msgstr "Pretraživanje tekstualnih kanala"
+
+#. Quick switcher header shown while the query starts with ! and only voice channels are searched.
+#: src/features/search/state/QuickSwitcherResultGenerators.ts:62
+msgid "Searching voice channels"
+msgstr "Pretraživanje glasovnih kanala"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:142
@@ -29496,7 +29519,7 @@ msgid "Sending malware or dangerous links"
 msgstr "Slanje zlonamjernog softvera ili opasnih poveznica"
 
 #. Short label under a destination row in the forward modal, shown when the community has messaging disabled.
-#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:63
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:54
 msgid "Sending messages is disabled in this community"
 msgstr "Slanje poruka onemogućeno je u ovoj zajednici"
 
@@ -30940,7 +30963,7 @@ msgid "Slowmode"
 msgstr "Usporeni način rada"
 
 #. Short label under a destination row in the forward modal while slowmode blocks sending. Preserve {remaining}; it is inserted by code.
-#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:82
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:73
 msgid "Slowmode · wait {remaining}"
 msgstr "Usporeni način rada · čekajte {remaining}"
 
@@ -31723,7 +31746,7 @@ msgstr "Počni ispočetka"
 msgid "Start recording"
 msgstr "Započni snimanje"
 
-#: src/features/search/components/quick_switcher/QuickSwitcherModal.tsx:586
+#: src/features/search/components/quick_switcher/QuickSwitcherModal.tsx:592
 msgid "Start searches with <0>{peoplePrefix}</0> <1>{textChannelPrefix}</1> <2>{voiceChannelPrefix}</2> <3>{communityPrefix}</3> to narrow down results."
 msgstr "Započnite pretraživanje s <0>{peoplePrefix}</0> <1>{textChannelPrefix}</1> <2>{voiceChannelPrefix}</2> <3>{communityPrefix}</3> kako biste suzili rezultate."
 
@@ -32963,10 +32986,8 @@ msgstr "Tekstualni kanal"
 msgid "Text channel names"
 msgstr "Nazivi tekstualnih kanala"
 
-#. Quick switcher section header for text channel results.
 #. Quick switcher section header listing text channel candidates.
-#: src/features/search/state/QuickSwitcherResultConverters.ts:30
-#: src/features/search/utils/QuickSwitcherModalUtils.tsx:57
+#: src/features/search/utils/QuickSwitcherModalUtils.tsx:58
 msgid "Text channels"
 msgstr "Tekstualni kanali"
 
@@ -34057,7 +34078,7 @@ msgid "This member isn't connected to voice anymore."
 msgstr "Ovaj član više nije povezan s glasovnim kanalom."
 
 #. Forward dialog error shown when the forwarded message contains age-restricted media and the target channel is not age-restricted.
-#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:77
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:68
 msgid "This message can only be forwarded to age-restricted channels"
 msgstr "Ovu poruku možete proslijediti samo u kanale s ograničenim pristupom prema dobi"
 
@@ -35988,6 +36009,11 @@ msgstr "Prilagodba značke za nepročitane poruke"
 msgid "Unread badges"
 msgstr "Značke za nepročitano"
 
+#. Quick switcher section header above the unread channels of the current community.
+#: src/features/search/state/QuickSwitcherResultGenerators.ts:54
+msgid "Unread channels"
+msgstr "Nepročitani kanali"
+
 #. Short label in the visual tab. Keep it concise.
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:29
 msgid "Unread DMs only"
@@ -37880,10 +37906,8 @@ msgstr "Glasovni kanal je pun"
 msgid "Voice channel join behavior"
 msgstr "Ponašanje pri pridruživanju glasovnom kanalu"
 
-#. Quick switcher section header for voice channel results.
 #. Quick switcher section header listing voice channel candidates.
-#: src/features/search/state/QuickSwitcherResultConverters.ts:34
-#: src/features/search/utils/QuickSwitcherModalUtils.tsx:61
+#: src/features/search/utils/QuickSwitcherModalUtils.tsx:62
 msgid "Voice channels"
 msgstr "Glasovni kanali"
 
@@ -39413,12 +39437,12 @@ msgid "You need access to your current email to change it from here. Use phone v
 msgstr "Za promjenu e-pošte ovdje morate imati pristup svojoj trenutačnoj adresi e-pošte. Upotrijebite provjeru telefonom ako je dostupna ili se obratite podršci."
 
 #. Forward dialog error shown when the forwarded message has attachments and the user lacks Attach Files in the target channel.
-#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:72
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:63
 msgid "You need the \"{attachFilesPermissionLabel}\" permission to attach files in this channel"
 msgstr "Potrebno vam je dopuštenje \"{attachFilesPermissionLabel}\" za prilaganje datoteka u ovom kanalu"
 
 #. Forward dialog error shown when the forwarded message contains embeds and the user lacks Embed Links in the target channel.
-#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:67
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:58
 msgid "You need the \"{embedLinksPermissionLabel}\" permission to embed links in this channel"
 msgstr "Potrebno vam je dopuštenje \"{embedLinksPermissionLabel}\" za ugrađivanje poveznica u ovom kanalu"
 

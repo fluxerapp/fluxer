@@ -1977,7 +1977,7 @@ msgid "{unreadCount, plural, one {# new} other {# new}} since {shortTime}"
 msgstr "{shortTime} 이후 {unreadCount, plural, other {새 메시지 #개}}"
 
 #. Badge text on a quick switcher row when the channel has unread messages. unreadCount is the integer count.
-#: src/features/search/utils/QuickSwitcherModalUtils.tsx:69
+#: src/features/search/utils/QuickSwitcherModalUtils.tsx:70
 msgid "{unreadCount, plural, one {# unread} other {# unread}}"
 msgstr "{unreadCount, plural, other {읽지 않은 메시지 #개}}"
 
@@ -2144,7 +2144,7 @@ msgid "1 hour"
 msgstr "1시간"
 
 #. Badge text on a quick switcher row when the channel has exactly one mention.
-#: src/features/search/utils/QuickSwitcherModalUtils.tsx:65
+#: src/features/search/utils/QuickSwitcherModalUtils.tsx:66
 msgid "1 mention"
 msgstr "멘션 1개"
 
@@ -7053,7 +7053,7 @@ msgid "Channel"
 msgstr "채널"
 
 #. Fallback name for an unnamed channel in the forward modal destination list. Preserve {id}; it is inserted by code.
-#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:87
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:78
 msgid "Channel {id}"
 msgstr "채널 {id}"
 
@@ -15755,7 +15755,7 @@ msgstr "친구 추가 가능 봇"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:555
 #: src/features/connection/components/modals/EditConnectionModal.tsx:86
-#: src/features/search/utils/QuickSwitcherModalUtils.tsx:49
+#: src/features/search/utils/QuickSwitcherModalUtils.tsx:50
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:63
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:89
 msgid "Friends"
@@ -16404,7 +16404,7 @@ msgid "Go to home"
 msgstr "홈으로 이동"
 
 #. Short label in the quick switcher state. Keep it concise.
-#: src/features/search/state/QuickSwitcher.tsx:39
+#: src/features/search/state/QuickSwitcher.tsx:45
 msgid "Go to message"
 msgstr "메시지로 이동"
 
@@ -16610,11 +16610,6 @@ msgstr "그룹 초대"
 #. Fallback display name for an unnamed group DM in quick switcher results.
 #: src/features/search/state/QuickSwitcherCandidateBuilder.ts:43
 msgid "Group message"
-msgstr "그룹 메시지"
-
-#. Quick switcher section header for group DM results.
-#: src/features/search/state/QuickSwitcherResultConverters.ts:26
-msgid "Group messages"
 msgstr "그룹 메시지"
 
 #. Field label for the group name input in the mobile edit group sheet.
@@ -24556,12 +24551,10 @@ msgid "Pennsylvania"
 msgstr "펜실베이니아"
 
 #. Community settings sidebar category grouping members, invites, and bans.
-#. Quick switcher section header for user results.
 #. Quick switcher section header listing user candidates.
 #. Unicode emoji category label.
 #: src/features/expressions/utils/UnicodeEmojis.ts:22
-#: src/features/search/state/QuickSwitcherResultConverters.ts:22
-#: src/features/search/utils/QuickSwitcherModalUtils.tsx:53
+#: src/features/search/utils/QuickSwitcherModalUtils.tsx:54
 #: src/features/user/components/settings_utils/GuildSettingsConstants.ts:261
 msgid "People"
 msgstr "사람"
@@ -25429,6 +25422,11 @@ msgstr "지난 7일"
 #: src/features/messaging/components/modals/media_modal/shared.ts:137
 msgid "Previous attachment"
 msgstr "이전 첨부 파일"
+
+#. Quick switcher section header above the channels the user visited most recently.
+#: src/features/search/state/QuickSwitcherResultGenerators.ts:50
+msgid "Previous channels"
+msgstr "최근 채널"
 
 #. Message-history-deletion option when banning a member. Deletes the member's messages from the last hour.
 #: src/features/moderation/constants/BanDeleteMessageOptions.ts:21
@@ -28645,7 +28643,7 @@ msgstr "스크러빙 미리보기"
 #: src/features/channel/components/shared/PickerSearchInput.tsx:21
 #: src/features/messaging/components/modals/ForwardModal.tsx:87
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx:43
-#: src/features/search/utils/QuickSwitcherModalUtils.tsx:45
+#: src/features/search/utils/QuickSwitcherModalUtils.tsx:46
 #: src/features/theme_studio/ui/StudioSearchInput.tsx:16
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:38
 msgid "Search"
@@ -28921,12 +28919,37 @@ msgstr "검색…"
 msgid "Searching"
 msgstr "검색 중"
 
+#. Quick switcher header shown while the query starts with @ outside a community, or with @@.
+#: src/features/search/state/QuickSwitcherResultGenerators.ts:70
+msgid "Searching all users"
+msgstr "모든 사용자 검색 중"
+
+#. Quick switcher header shown while the query starts with * and only communities are searched.
+#: src/features/search/state/QuickSwitcherResultGenerators.ts:66
+msgid "Searching communities"
+msgstr "커뮤니티 검색 중"
+
 #. Loading state in the desktop quick switcher while fetching people results. Trailing ellipsis is intentional.
 #. Loading state shown while the quick switcher fetches matching people. Trailing ellipsis is intentional.
 #: src/features/search/components/bottomsheets/QuickSwitcherBottomSheet.tsx:44
 #: src/features/search/components/quick_switcher/QuickSwitcherModal.tsx:62
 msgid "Searching for people..."
 msgstr "사람 검색 중..."
+
+#. Quick switcher header shown while the query starts with @ inside a community. communityName is the community name.
+#: src/features/search/state/QuickSwitcherResultGenerators.ts:74
+msgid "Searching friends and members of {communityName}"
+msgstr "{communityName}의 친구 및 멤버 검색"
+
+#. Quick switcher header shown while the query starts with # and only text channels are searched.
+#: src/features/search/state/QuickSwitcherResultGenerators.ts:58
+msgid "Searching text channels"
+msgstr "텍스트 채널 검색 중"
+
+#. Quick switcher header shown while the query starts with ! and only voice channels are searched.
+#: src/features/search/state/QuickSwitcherResultGenerators.ts:62
+msgid "Searching voice channels"
+msgstr "음성 채널 검색 중"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:142
@@ -29496,7 +29519,7 @@ msgid "Sending malware or dangerous links"
 msgstr "악성 코드 또는 위험한 링크 전송"
 
 #. Short label under a destination row in the forward modal, shown when the community has messaging disabled.
-#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:63
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:54
 msgid "Sending messages is disabled in this community"
 msgstr "이 커뮤니티에서는 메시지 전송이 비활성화되어 있습니다"
 
@@ -30940,7 +30963,7 @@ msgid "Slowmode"
 msgstr "슬로우 모드"
 
 #. Short label under a destination row in the forward modal while slowmode blocks sending. Preserve {remaining}; it is inserted by code.
-#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:82
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:73
 msgid "Slowmode · wait {remaining}"
 msgstr "슬로우 모드 · {remaining} 대기"
 
@@ -31723,7 +31746,7 @@ msgstr "다시 시작"
 msgid "Start recording"
 msgstr "녹음 시작"
 
-#: src/features/search/components/quick_switcher/QuickSwitcherModal.tsx:586
+#: src/features/search/components/quick_switcher/QuickSwitcherModal.tsx:592
 msgid "Start searches with <0>{peoplePrefix}</0> <1>{textChannelPrefix}</1> <2>{voiceChannelPrefix}</2> <3>{communityPrefix}</3> to narrow down results."
 msgstr "검색어 앞에 <0>{peoplePrefix}</0>, <1>{textChannelPrefix}</1>, <2>{voiceChannelPrefix}</2>, <3>{communityPrefix}</3> 기호를 붙이면 검색 범위를 좁힐 수 있습니다."
 
@@ -32963,10 +32986,8 @@ msgstr "텍스트 채널"
 msgid "Text channel names"
 msgstr "텍스트 채널 이름"
 
-#. Quick switcher section header for text channel results.
 #. Quick switcher section header listing text channel candidates.
-#: src/features/search/state/QuickSwitcherResultConverters.ts:30
-#: src/features/search/utils/QuickSwitcherModalUtils.tsx:57
+#: src/features/search/utils/QuickSwitcherModalUtils.tsx:58
 msgid "Text channels"
 msgstr "텍스트 채널"
 
@@ -34057,7 +34078,7 @@ msgid "This member isn't connected to voice anymore."
 msgstr "이 멤버는 더 이상 음성 채팅에 연결되어 있지 않습니다."
 
 #. Forward dialog error shown when the forwarded message contains age-restricted media and the target channel is not age-restricted.
-#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:77
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:68
 msgid "This message can only be forwarded to age-restricted channels"
 msgstr "이 메시지는 연령 제한 채널로만 전달할 수 있습니다."
 
@@ -35988,6 +36009,11 @@ msgstr "읽지 않은 메시지 배지 사용자 지정"
 msgid "Unread badges"
 msgstr "읽지 않은 메시지 배지"
 
+#. Quick switcher section header above the unread channels of the current community.
+#: src/features/search/state/QuickSwitcherResultGenerators.ts:54
+msgid "Unread channels"
+msgstr "읽지 않은 채널"
+
 #. Short label in the visual tab. Keep it concise.
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:29
 msgid "Unread DMs only"
@@ -37880,10 +37906,8 @@ msgstr "음성 채널 정원 초과"
 msgid "Voice channel join behavior"
 msgstr "음성 채널 참여 방식"
 
-#. Quick switcher section header for voice channel results.
 #. Quick switcher section header listing voice channel candidates.
-#: src/features/search/state/QuickSwitcherResultConverters.ts:34
-#: src/features/search/utils/QuickSwitcherModalUtils.tsx:61
+#: src/features/search/utils/QuickSwitcherModalUtils.tsx:62
 msgid "Voice channels"
 msgstr "음성 채널"
 
@@ -39413,12 +39437,12 @@ msgid "You need access to your current email to change it from here. Use phone v
 msgstr "이메일을 변경하려면 현재 이메일에 액세스해야 합니다. 가능한 경우 전화 인증을 사용하거나 고객지원팀에 문의하세요."
 
 #. Forward dialog error shown when the forwarded message has attachments and the user lacks Attach Files in the target channel.
-#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:72
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:63
 msgid "You need the \"{attachFilesPermissionLabel}\" permission to attach files in this channel"
 msgstr "이 채널에 파일을 첨부하려면 \"{attachFilesPermissionLabel}\" 권한이 필요합니다"
 
 #. Forward dialog error shown when the forwarded message contains embeds and the user lacks Embed Links in the target channel.
-#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:67
+#: src/features/app/components/dialogs/shared/UseForwardDestinations.ts:58
 msgid "You need the \"{embedLinksPermissionLabel}\" permission to embed links in this channel"
 msgstr "이 채널에 링크를 임베드하려면 \"{embedLinksPermissionLabel}\" 권한이 필요합니다"
 
