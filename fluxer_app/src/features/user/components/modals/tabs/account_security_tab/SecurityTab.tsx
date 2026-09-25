@@ -8,7 +8,6 @@ import {openClaimAccountModal} from '@app/features/auth/components/modals/ClaimA
 import {MfaTotpDisableModal} from '@app/features/auth/components/modals/MfaTotpDisableModal';
 import {MfaTotpEnableModal} from '@app/features/auth/components/modals/MfaTotpEnableModal';
 import {PasskeyNameModal} from '@app/features/auth/components/modals/PasskeyNameModal';
-import {runPasskeyViaBridge} from '@app/features/auth/utils/PasskeyBridge';
 import * as WebAuthnUtils from '@app/features/auth/utils/WebAuthnUtils';
 import {
 	CLAIM_ACCOUNT_DESCRIPTOR,
@@ -141,17 +140,6 @@ export const SecurityTabContent: React.FC<SecurityTabProps> = observer(
 				throw error;
 			}
 		};
-		const registerPasskeyWithPasswordManager = async (name: string) => {
-			const options = UserCommands.getWebAuthnRegistrationOptions();
-			const credential = runPasskeyViaBridge('register', options);
-			try {
-				const [resolvedOptions, resolvedCredential] = await Promise.all([options, credential]);
-				await UserCommands.registerWebAuthnCredential(resolvedCredential, resolvedOptions.challenge, name);
-			} catch (error) {
-				logger.error('Failed to add passkey in the pop-up window', error);
-				throw error;
-			}
-		};
 		const handleAddPasskey = () => {
 			if (!canAddPasskey) {
 				return;
@@ -160,7 +148,6 @@ export const SecurityTabContent: React.FC<SecurityTabProps> = observer(
 				modal(() => (
 					<PasskeyNameModal
 						onSubmit={registerPasskey}
-						onSubmitWithPasswordManager={registerPasskeyWithPasswordManager}
 						data-flx="user.account-security-tab.security-tab.handle-add-passkey.passkey-name-modal"
 					/>
 				)),

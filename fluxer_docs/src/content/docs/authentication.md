@@ -111,6 +111,7 @@ An instance can enforce single sign-on once it is configured and enabled. While 
 - [Register an account](/http-api/authentication/#register-an-account) and [Log in with a password](/http-api/authentication/#log-in-with-a-password).
 - [Get discoverable WebAuthn options](/http-api/authentication/#get-discoverable-webauthn-options) and [Authenticate with WebAuthn](/http-api/authentication/#authenticate-with-webauthn).
 - [Complete login with TOTP](/http-api/authentication/#complete-login-with-totp), [Get WebAuthn MFA options](/http-api/authentication/#get-webauthn-mfa-options), and [Complete login with WebAuthn MFA](/http-api/authentication/#complete-login-with-webauthn-mfa).
+- [Start passkey bridge sign-in](/http-api/authentication/#start-passkey-bridge-sign-in) and [Redeem passkey bridge sign-in](/http-api/authentication/#redeem-passkey-bridge-sign-in).
 - [Verify an email address](/http-api/authentication/#verify-an-email-address) and [Resend email verification](/http-api/authentication/#resend-email-verification).
 - [Request password recovery](/http-api/authentication/#request-password-recovery), [Validate a password reset token](/http-api/authentication/#validate-a-password-reset-token), and [Reset a password](/http-api/authentication/#reset-a-password).
 - [Revert an email change](/http-api/authentication/#revert-an-email-change).

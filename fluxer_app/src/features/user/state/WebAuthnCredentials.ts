@@ -10,6 +10,7 @@ export interface WebAuthnCredential {
 	name: string;
 	created_at: string;
 	last_used_at: string | null;
+	rp_id: string;
 }
 
 class WebAuthnCredentials {

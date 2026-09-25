@@ -51,7 +51,6 @@ import {
 	randomBase64Url,
 	sha256Hex,
 } from '@app/features/app/domain_migration/DomainMigrationCrypto';
-import {resolvePasskeyBridgeOpenerOrigin} from '@app/features/auth/utils/PasskeyBridgeProtocol';
 import type {SoundType} from '@app/features/notification/utils/SoundUtils';
 import {getProtectedLocalStorage, getProtectedSessionStorage} from '@app/features/platform/state/ProtectedWebStorage';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -593,7 +592,7 @@ export async function runDomainMigrationPreMount(): Promise<boolean> {
 		return false;
 	}
 	const side = resolveDomainMigrationSide(window.location.origin);
-	if (side === null || resolvePasskeyBridgeOpenerOrigin(window.location.origin, window.location.pathname) !== null) {
+	if (side === null) {
 		return false;
 	}
 	try {

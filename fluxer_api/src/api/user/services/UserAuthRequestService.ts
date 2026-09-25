@@ -4,12 +4,13 @@ import type {ApiContext} from '@app/api/ApiContext';
 import * as AuthMfa from '@app/api/auth/AuthMfa';
 import * as AuthPhone from '@app/api/auth/AuthPhone';
 import {requireEmailVerified} from '@app/api/auth/EmailVerificationUtils';
+import {visibleWebAuthnCredentials} from '@app/api/auth/services/PasskeyRelyingParty';
 import type {SudoVerificationResult} from '@app/api/auth/services/SudoVerificationService';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import type {User} from '@app/api/models/User';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import * as UserAuth from '@app/api/user/services/UserAuth';
-import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {mapUserToPrivateResponse, mapWebAuthnCredentialToResponse} from '@app/api/user/UserMappers';
 import {GuildVerificationLevel} from '@fluxer/constants/src/GuildConstants';
 import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
 import {PhoneAddNotEligibleError} from '@fluxer/errors/src/domains/auth/PhoneAddNotEligibleError';
@@ -170,17 +171,16 @@ export class UserAuthRequestService {
 
 	async listWebAuthnCredentials(user: User): Promise<WebAuthnCredentialListResponse> {
 		const credentials = await this.userRepository.listWebAuthnCredentials(user.id);
-		return credentials.map((cred) => ({
-			id: cred.credentialId,
-			name: cred.name,
-			created_at: cred.createdAt.toISOString(),
-			last_used_at: cred.lastUsedAt?.toISOString() ?? null,
-		}));
+		const legacyRpId = this.apiContext.services.config.auth.passkeys.rpId;
+		return visibleWebAuthnCredentials(credentials).map((cred) => mapWebAuthnCredentialToResponse(cred, legacyRpId));
 	}
 
-	async generateWebAuthnRegistrationOptions(user: User): Promise<WebAuthnChallengeResponse> {
+	async generateWebAuthnRegistrationOptions(
+		user: User,
+		origin: string | undefined,
+	): Promise<WebAuthnChallengeResponse> {
 		requireEmailVerified(user, 'mfa');
-		const options = await AuthMfa.generateWebAuthnRegistrationOptions(this.apiContext, user.id);
+		const options = await AuthMfa.generateWebAuthnRegistrationOptions(this.apiContext, user.id, origin);
 		return this.toWebAuthnChallengeResponse(options);
 	}
 
@@ -217,8 +217,8 @@ export class UserAuthRequestService {
 		return AuthMfa.getAvailableMfaMethods(this.apiContext, user.id);
 	}
 
-	async getSudoWebAuthnOptions(user: User): Promise<WebAuthnChallengeResponse> {
-		const options = await AuthMfa.generateWebAuthnOptionsForSudo(this.apiContext, user.id);
+	async getSudoWebAuthnOptions(user: User, origin: string | undefined): Promise<WebAuthnChallengeResponse> {
+		const options = await AuthMfa.generateWebAuthnOptionsForSudo(this.apiContext, user.id, origin);
 		return this.toWebAuthnChallengeResponse(options);
 	}
 

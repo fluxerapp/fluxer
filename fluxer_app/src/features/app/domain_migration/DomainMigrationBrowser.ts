@@ -27,10 +27,6 @@ const DISPLAY_MODES: ReadonlyArray<DomainMigrationDisplayMode> = [
 	'minimal-ui',
 ];
 
-interface PublicKeyCredentialWithCapabilities {
-	getClientCapabilities?: () => Promise<Record<string, boolean | undefined>>;
-}
-
 export function readDomainMigrationDiscovery(): DomainMigrationDiscoveryResponse | null {
 	return window.__FLUXER_BOOTSTRAP__?.instance.domain_migration ?? null;
 }
@@ -68,20 +64,16 @@ export function readDomainMigrationEnvironment(): DomainMigrationEnvironment {
 		installKind: detectDomainMigrationInstallKind(),
 		electron: isElectronEnvironment(),
 		electronMigrationVersion: window.electron?.domainMigration?.version ?? null,
+		electronPasskeyRpIds: window.electron?.passkeyRpIds ?? [],
 	};
 }
 
-export async function browserSupportsRelatedOrigins(): Promise<boolean> {
-	if (typeof PublicKeyCredential === 'undefined') {
-		return false;
-	}
-	const credential = PublicKeyCredential as unknown as PublicKeyCredentialWithCapabilities;
-	if (typeof credential.getClientCapabilities !== 'function') {
-		return false;
+export async function desktopPasskeysSupported(): Promise<boolean> {
+	if (!isElectronEnvironment()) {
+		return true;
 	}
 	try {
-		const capabilities = await credential.getClientCapabilities();
-		return capabilities.relatedOrigins === true;
+		return (await window.electron?.passkeyIsSupported?.()) === true;
 	} catch {
 		return false;
 	}

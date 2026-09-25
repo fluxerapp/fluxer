@@ -210,6 +210,9 @@ The first entry always has `session_id: "all"` and the account's combined status
 | name | string | Credential name |
 | created_at | ISO8601 timestamp | When the credential was registered |
 | last_used_at | ?ISO8601 timestamp | When the credential was last used |
+| rp_id | string | The domain the passkey was created for, as in the [WebAuthn credential object](/http-api/users/mfa/#webauthn-credential-object) |
+
+[Replaced passkeys](/http-api/users/mfa/#replaced-passkeys) never appear in this list.
 
 #### RTC region object
 

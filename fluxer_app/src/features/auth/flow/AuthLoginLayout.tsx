@@ -28,6 +28,7 @@ import {ConnectedHandoffApprovalFlow} from '@app/features/auth/flow/HandoffAppro
 import IpAuthorizationScreen from '@app/features/auth/flow/IpAuthorizationScreen';
 import {useAuthCardPresentation} from '@app/features/auth/flow/useAuthCardPresentation';
 import {useLoginFormController} from '@app/features/auth/hooks/useLoginFlow';
+import {usePasskeyBridgeReturn} from '@app/features/auth/passkey_migration/usePasskeyBridgeReturn';
 import AccountManager from '@app/features/auth/state/AccountManager';
 import {
 	type IpAuthorizationChallenge,
@@ -35,7 +36,11 @@ import {
 	startSsoLogin,
 } from '@app/features/auth/state/AuthFlow';
 import {shouldOfferOldAppSignIn} from '@app/features/auth/utils/OldAppSignIn';
-import {NEED_ACCOUNT_DESCRIPTOR, SIGN_IN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {
+	COULDN_T_VERIFY_WITH_PASSKEY_DESCRIPTOR,
+	NEED_ACCOUNT_DESCRIPTOR,
+	SIGN_IN_DESCRIPTOR,
+} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import {type Account, SessionExpiredError} from '@app/features/platform/state/AuthSession';
@@ -162,28 +167,29 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 		},
 		[desktopHandoff, handoff, onLoginComplete],
 	);
-	const {
-		form,
-		isLoading,
-		fieldErrors,
-		handlePasskeyLogin,
-		handlePasskeyBrowserLogin,
-		handlePasskeyBridgeLogin,
-		passkeyBridgeSuggested,
-		isPasskeyLoading,
-	} = useLoginFormController({
+	const {form, isLoading, fieldErrors, handlePasskeyLogin, handlePasskeyBrowserLogin, isPasskeyLoading} =
+		useLoginFormController({
+			redirectPath,
+			inviteCode,
+			onLoginSuccess: handleLoginSuccess,
+			onRequireMfa: (challenge) => {
+				AuthenticationCommands.setMfaTicket(challenge);
+			},
+			onRequireIpAuthorization: (challenge) => {
+				setIpAuthChallenge(challenge);
+			},
+		});
+	const isPasskeyBridgeRedeeming = usePasskeyBridgeReturn({
 		redirectPath,
-		inviteCode,
 		onLoginSuccess: handleLoginSuccess,
-		onRequireMfa: (challenge) => {
-			AuthenticationCommands.setMfaTicket(challenge);
-		},
-		onRequireIpAuthorization: (challenge) => {
-			setIpAuthChallenge(challenge);
+		onRequireMfa: AuthenticationCommands.setMfaTicket,
+		onFailure: () => {
+			setSwitchError(i18n._(COULDN_T_VERIFY_WITH_PASSKEY_DESCRIPTOR));
 		},
 	});
 	const showBrowserPasskey = IS_DEV || isDesktop();
-	const passkeyControlsDisabled = isLoading || Boolean(form.isSubmitting) || isPasskeyLoading;
+	const passkeyControlsDisabled =
+		isLoading || Boolean(form.isSubmitting) || isPasskeyLoading || isPasskeyBridgeRedeeming;
 	const offerOldAppSignIn = useMemo(
 		() =>
 			!desktopHandoff &&
@@ -414,7 +420,7 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 							</AuthRouterLink>
 						) : null
 					}
-					disableSubmit={isPasskeyLoading}
+					disableSubmit={isPasskeyLoading || isPasskeyBridgeRedeeming}
 					data-flx="auth.flow.auth-login-layout.auth-login-email-password-form"
 				/>
 				<AuthLoginDivider
@@ -433,8 +439,6 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 					onPasskeyLogin={handlePasskeyLogin}
 					showBrowserOption={showBrowserPasskey}
 					onBrowserLogin={handlePasskeyBrowserLogin}
-					onPasswordManagerLogin={handlePasskeyBridgeLogin}
-					passwordManagerSuggested={passkeyBridgeSuggested}
 					browserLabel={i18n._(SIGN_IN_VIA_BROWSER_DESCRIPTOR)}
 					data-flx="auth.flow.auth-login-layout.auth-login-passkey-actions"
 				/>

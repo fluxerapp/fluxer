@@ -447,7 +447,7 @@ export function AuthController(app: HonoApp) {
 				'Retrieve WebAuthn authentication challenge and options for passwordless login with biometrics or security keys.',
 		}),
 		async (ctx) => {
-			return ctx.json(await ctx.get('authRequestService').getWebAuthnAuthenticationOptions());
+			return ctx.json(await ctx.get('authRequestService').getWebAuthnAuthenticationOptions(ctx.req.header('origin')));
 		},
 	);
 	app.post(
@@ -490,7 +490,9 @@ export function AuthController(app: HonoApp) {
 				'Retrieve WebAuthn challenge and options for multi-factor authentication. Requires the MFA ticket from initial login.',
 		}),
 		async (ctx) => {
-			return ctx.json(await ctx.get('authRequestService').getWebAuthnMfaOptions(ctx.req.valid('json')));
+			return ctx.json(
+				await ctx.get('authRequestService').getWebAuthnMfaOptions(ctx.req.valid('json'), ctx.req.header('origin')),
+			);
 		},
 	);
 	app.post(

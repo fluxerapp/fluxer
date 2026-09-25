@@ -1914,7 +1914,7 @@ Lists the passkeys and security keys registered on the account, as a bare JSON a
 
 <sup>1</sup> An account with no credential receives an empty array
 
-The complete credential set is returned in one response, bounded by the ten credentials an account may register. No public key, attestation object, or signature counter is exposed.
+The complete credential set is returned in one response, bounded by the ten credentials an account may register. [Replaced passkeys](/http-api/users/mfa/#replaced-passkeys) are left out, and `credential_count` counts only the returned ones. No public key, attestation object, or signature counter is exposed.
 
 ### Side effects
 
@@ -1944,7 +1944,7 @@ Deletes one passkey or security key from the account. Requires `user:update:mfa`
 | 204 | empty | The credential was deleted |
 | 404<sup>1</sup> | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
 
-<sup>1</sup> A credential that does not exist on the account also answers `UNKNOWN_USER`, never `UNKNOWN_WEBAUTHN_CREDENTIAL`, so a 404 does not distinguish an unknown account from an unknown credential
+<sup>1</sup> A credential that does not exist on the account also answers `UNKNOWN_USER`, so a 404 with that code does not distinguish an unknown account from an unknown credential. A [replaced passkey](/http-api/users/mfa/#replaced-passkeys) answers `UNKNOWN_WEBAUTHN_CREDENTIAL` and records no audit entry
 
 :::caution[A deleted passkey cannot be restored]
 The passkey or security key stops authenticating immediately and cannot be restored from its deleted record. The account holder must register it again to use it later.
@@ -1952,7 +1952,7 @@ The passkey or security key stops authenticating immediately and cannot be resto
 
 ### Side effects
 
-The credential record is deleted. When it was the account's final WebAuthn credential and the account had enabled passkeys as a second factor, Fluxer removes the `WEBAUTHN` [authenticator type](/http-api/users/#authenticator-types) from the account, emits [User Update](/gateway/events/#user-update) to the account's own sessions, and copies the account's authenticator types onto the bot user of every application the account owns. An account that never enabled passkeys as a second factor holds no `WEBAUTHN` type to remove.
+The credential record is deleted, together with the [replaced passkeys](/http-api/users/mfa/#replaced-passkeys) it took over from, and every replaced passkey goes once no listed credential remains. When it was the account's final WebAuthn credential and the account had enabled passkeys as a second factor, Fluxer removes the `WEBAUTHN` [authenticator type](/http-api/users/#authenticator-types) from the account, emits [User Update](/gateway/events/#user-update) to the account's own sessions, and copies the account's authenticator types onto the bot user of every application the account owns. An account that never enabled passkeys as a second factor holds no `WEBAUTHN` type to remove.
 
 [WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update) is emitted to the target account with its remaining credentials.
 
