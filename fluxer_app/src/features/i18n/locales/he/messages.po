@@ -7116,7 +7116,7 @@ msgstr "מקטעי פרטי הערוץ"
 
 #. Toast confirming the channel ID was copied to the clipboard.
 #. Toast confirming the channel ID was copied to the clipboard.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:106
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:108
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:37
 msgid "Channel ID copied"
 msgstr "מזהה הערוץ הועתק"
@@ -7134,7 +7134,7 @@ msgid "channel link"
 msgstr "קישור לערוץ"
 
 #. Toast confirming the channel link was copied to the clipboard.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:98
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:100
 msgid "Channel link copied"
 msgstr "הקישור לערוץ הועתק"
 
@@ -9415,7 +9415,7 @@ msgstr "העתקת מזהה ערוץ"
 #. Action that copies a deep link to the selected channel.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:205
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:130
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:132
 msgid "Copy channel link"
 msgstr "העתקת קישור לערוץ"
 
@@ -9883,7 +9883,7 @@ msgid "Couldn't download the desktop update"
 msgstr "לא ניתן היה להוריד את עדכון שולחן העבודה"
 
 #. Title of the error modal shown when duplicating a channel fails.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:138
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:140
 msgid "Couldn't duplicate this channel"
 msgstr "לא ניתן לשכפל את הערוץ הזה"
 
@@ -9973,7 +9973,7 @@ msgid "Couldn't open the billing portal"
 msgstr "לא ניתן לפתוח את פורטל החיוב"
 
 #. Title of the error modal shown when pinning a DM or group DM fails.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:118
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:120
 msgid "Couldn't pin this conversation"
 msgstr "לא ניתן להצמיד את השיחה הזו"
 
@@ -10152,7 +10152,7 @@ msgid "Couldn't unblock user"
 msgstr "לא ניתן לבטל את חסימת המשתמש"
 
 #. Title of the error modal shown when unpinning a DM or group DM fails.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:122
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:124
 msgid "Couldn't unpin this conversation"
 msgstr "לא ניתן לבטל את הצמדת השיחה הזו"
 
@@ -11349,7 +11349,7 @@ msgstr "למחוק את \"{stickerName}\"? לא ניתן לבטל פעולה ז�
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Confirm dialog body before deleting a channel.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:107
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:102
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:104
 msgid "Delete {channelLabel}? Can't be undone."
 msgstr "למחוק את {channelLabel}? לא ניתן לבטל פעולה זו."
 
@@ -12954,7 +12954,7 @@ msgstr "שכפול"
 #. Action that creates a copy of the selected channel.
 #. Short label in the channel duplicate modal. Keep it concise.
 #: src/features/channel/components/modals/ChannelDuplicateModal.tsx:28
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:134
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:136
 msgid "Duplicate channel"
 msgstr "שכפול ערוץ"
 
@@ -13061,7 +13061,7 @@ msgstr "עריכת קטגוריה"
 #. Action that opens the edit-channel modal.
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:162
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:146
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:148
 #: src/features/ui/action_menu/items/ChannelMenuItems.tsx:75
 msgid "Edit channel"
 msgstr "עריכת ערוץ"
@@ -21460,7 +21460,7 @@ msgid "Move members"
 msgstr "העברת חברים"
 
 #. Favorites menu submenu label that moves the favorited channel into another favorites category.
-#: src/features/ui/action_menu/FavoritesChannelContextMenu.tsx:53
+#: src/features/ui/action_menu/FavoritesChannelContextMenu.tsx:57
 msgid "Move to"
 msgstr "העברה אל"
 
@@ -23634,7 +23634,7 @@ msgstr "פתח פרטי ערוץ עבור {channelName}"
 #. Context-menu action that opens a voice channel's embedded chat view without connecting to voice.
 #. Tooltip and accessible label for the chat icon shown beside a voice channel in the channel list.
 #: src/features/app/components/layout/ChannelItem.tsx:128
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:150
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:152
 msgid "Open chat"
 msgstr "פתח צ'אט"
 
@@ -23780,7 +23780,7 @@ msgid "Open in browser"
 msgstr "פתיחה בדפדפן"
 
 #. Favorites menu action that opens the favorited channel in the community it belongs to.
-#: src/features/ui/action_menu/FavoritesChannelContextMenu.tsx:49
+#: src/features/ui/action_menu/FavoritesChannelContextMenu.tsx:53
 msgid "Open in community"
 msgstr "פתח בקהילה"
 
@@ -24956,7 +24956,7 @@ msgstr "קבוצה מוצמדת"
 
 #. Toast confirming a group DM was pinned in the sidebar.
 #. Toast confirming a group DM was pinned in the sidebar.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:110
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:112
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:13
 msgid "Pinned group DM"
 msgstr "צ'אט קבוצתי מוצמד"
@@ -31305,8 +31305,8 @@ msgstr "משהו השתבש."
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:129
 #: src/features/theme/components/modals/ShareThemeModal.tsx:51
 #: src/features/ui/action_menu/items/CallMenuItems.tsx:45
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:126
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:142
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:128
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:144
 msgid "Something went wrong. Please try again in a moment."
 msgstr "משהו השתבש. יש לנסות שוב בעוד רגע."
 
@@ -35998,7 +35998,7 @@ msgstr "קבוצה לא מוצמדת"
 
 #. Toast confirming a group DM was unpinned in the sidebar.
 #. Toast confirming a group DM was unpinned in the sidebar.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:114
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:116
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:25
 msgid "Unpinned group DM"
 msgstr "צ'אט קבוצתי לא מוצמד"

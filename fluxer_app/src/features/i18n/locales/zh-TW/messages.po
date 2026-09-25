@@ -7116,7 +7116,7 @@ msgstr "頻道詳細資訊區塊"
 
 #. Toast confirming the channel ID was copied to the clipboard.
 #. Toast confirming the channel ID was copied to the clipboard.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:106
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:108
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:37
 msgid "Channel ID copied"
 msgstr "頻道 ID 已複製"
@@ -7134,7 +7134,7 @@ msgid "channel link"
 msgstr "頻道連結"
 
 #. Toast confirming the channel link was copied to the clipboard.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:98
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:100
 msgid "Channel link copied"
 msgstr "頻道連結已複製"
 
@@ -9415,7 +9415,7 @@ msgstr "複製頻道 ID"
 #. Action that copies a deep link to the selected channel.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/input/state/input_keybind/shared.ts:205
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:130
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:132
 msgid "Copy channel link"
 msgstr "複製頻道連結"
 
@@ -9883,7 +9883,7 @@ msgid "Couldn't download the desktop update"
 msgstr "無法下載桌面版更新"
 
 #. Title of the error modal shown when duplicating a channel fails.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:138
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:140
 msgid "Couldn't duplicate this channel"
 msgstr "無法複製此頻道"
 
@@ -9973,7 +9973,7 @@ msgid "Couldn't open the billing portal"
 msgstr "無法開啟帳務入口網站"
 
 #. Title of the error modal shown when pinning a DM or group DM fails.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:118
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:120
 msgid "Couldn't pin this conversation"
 msgstr "無法釘選此對話"
 
@@ -10152,7 +10152,7 @@ msgid "Couldn't unblock user"
 msgstr "無法解除封鎖使用者"
 
 #. Title of the error modal shown when unpinning a DM or group DM fails.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:122
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:124
 msgid "Couldn't unpin this conversation"
 msgstr "無法取消釘選此對話"
 
@@ -11349,7 +11349,7 @@ msgstr "要刪除「{stickerName}」嗎？此動作無法復原。"
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Confirm dialog body before deleting a channel.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:107
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:102
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:104
 msgid "Delete {channelLabel}? Can't be undone."
 msgstr "要刪除「{channelLabel}」嗎？此動作無法復原。"
 
@@ -12954,7 +12954,7 @@ msgstr "複製"
 #. Action that creates a copy of the selected channel.
 #. Short label in the channel duplicate modal. Keep it concise.
 #: src/features/channel/components/modals/ChannelDuplicateModal.tsx:28
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:134
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:136
 msgid "Duplicate channel"
 msgstr "複製頻道"
 
@@ -13061,7 +13061,7 @@ msgstr "編輯類別"
 #. Action that opens the edit-channel modal.
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:162
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:146
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:148
 #: src/features/ui/action_menu/items/ChannelMenuItems.tsx:75
 msgid "Edit channel"
 msgstr "編輯頻道"
@@ -21460,7 +21460,7 @@ msgid "Move members"
 msgstr "移動成員"
 
 #. Favorites menu submenu label that moves the favorited channel into another favorites category.
-#: src/features/ui/action_menu/FavoritesChannelContextMenu.tsx:53
+#: src/features/ui/action_menu/FavoritesChannelContextMenu.tsx:57
 msgid "Move to"
 msgstr "移至"
 
@@ -23634,7 +23634,7 @@ msgstr "開啟「{channelName}」的頻道詳細資訊"
 #. Context-menu action that opens a voice channel's embedded chat view without connecting to voice.
 #. Tooltip and accessible label for the chat icon shown beside a voice channel in the channel list.
 #: src/features/app/components/layout/ChannelItem.tsx:128
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:150
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:152
 msgid "Open chat"
 msgstr "開啟聊天"
 
@@ -23780,7 +23780,7 @@ msgid "Open in browser"
 msgstr "在瀏覽器中開啟"
 
 #. Favorites menu action that opens the favorited channel in the community it belongs to.
-#: src/features/ui/action_menu/FavoritesChannelContextMenu.tsx:49
+#: src/features/ui/action_menu/FavoritesChannelContextMenu.tsx:53
 msgid "Open in community"
 msgstr "在社群中開啟"
 
@@ -24956,7 +24956,7 @@ msgstr "已釘選群組"
 
 #. Toast confirming a group DM was pinned in the sidebar.
 #. Toast confirming a group DM was pinned in the sidebar.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:110
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:112
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:13
 msgid "Pinned group DM"
 msgstr "已釘選群組私訊"
@@ -31305,8 +31305,8 @@ msgstr "發生錯誤。"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:129
 #: src/features/theme/components/modals/ShareThemeModal.tsx:51
 #: src/features/ui/action_menu/items/CallMenuItems.tsx:45
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:126
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:142
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:128
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:144
 msgid "Something went wrong. Please try again in a moment."
 msgstr "發生錯誤。請稍後再試一次。"
 
@@ -35998,7 +35998,7 @@ msgstr "已取消釘選群組"
 
 #. Toast confirming a group DM was unpinned in the sidebar.
 #. Toast confirming a group DM was unpinned in the sidebar.
-#: src/features/ui/action_menu/items/ChannelMenuData.tsx:114
+#: src/features/ui/action_menu/items/ChannelMenuData.tsx:116
 #: src/features/ui/action_menu/items/dm_menu_data/shared.ts:25
 msgid "Unpinned group DM"
 msgstr "已取消釘選群組私訊"
