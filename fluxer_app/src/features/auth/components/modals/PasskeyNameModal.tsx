@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
+import {PasswordManagerPasskeyAction} from '@app/features/auth/components/PasswordManagerPasskeyAction';
+import {describePasskeyBridgeFailure, shouldSuggestPasskeyBridge} from '@app/features/auth/utils/PasskeyBridge';
 import {
 	PASSKEY_DOMAIN_UNSUPPORTED_DESCRIPTOR,
 	PasskeyDomainUnsupportedError,
@@ -14,6 +16,8 @@ import * as FormUtils from '@app/lib/forms';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
+import type React from 'react';
+import {useState} from 'react';
 import {useForm} from 'react-hook-form';
 
 const NAME_PASSKEY_FORM_DESCRIPTOR = msg({
@@ -37,14 +41,54 @@ interface FormInputs {
 	name: string;
 }
 
-export const PasskeyNameModal = observer(({onSubmit}: {onSubmit: (name: string) => void | Promise<void>}) => {
+interface PasskeyNameModalProps {
+	onSubmit: (name: string) => void | Promise<void>;
+	onSubmitWithPasswordManager?: (name: string) => Promise<void>;
+}
+
+export const PasskeyNameModal = observer(({onSubmit, onSubmitWithPasswordManager}: PasskeyNameModalProps) => {
 	const {i18n} = useLingui();
 	const form = useForm<FormInputs>();
+	const [passkeyBridgeSuggested, setPasskeyBridgeSuggested] = useState(false);
+	const [passkeyBridgeSubmitting, setPasskeyBridgeSubmitting] = useState(false);
+	const handlePasswordManagerSubmit = (
+		event: React.MouseEvent<HTMLButtonElement> | React.KeyboardEvent<HTMLButtonElement>,
+	) => {
+		if (!onSubmitWithPasswordManager || passkeyBridgeSubmitting || form.formState.isSubmitting) {
+			return;
+		}
+		if (event.currentTarget.form?.reportValidity() === false) {
+			return;
+		}
+		const submission = onSubmitWithPasswordManager(form.getValues('name').trim());
+		form.clearErrors('name');
+		setPasskeyBridgeSubmitting(true);
+		submission
+			.then(() => {
+				ModalCommands.pop();
+			})
+			.catch((error: unknown) => {
+				if (error instanceof HttpError) {
+					FormUtils.handleError(i18n, form, error, 'name');
+					return;
+				}
+				const descriptor = describePasskeyBridgeFailure(error);
+				if (descriptor) {
+					form.setError('name', {type: 'server', message: i18n._(descriptor)});
+				}
+			})
+			.finally(() => {
+				setPasskeyBridgeSubmitting(false);
+			});
+	};
 	const handleSubmit = async (data: FormInputs) => {
 		try {
 			await onSubmit(data.name.trim());
 			ModalCommands.pop();
 		} catch (error) {
+			if (onSubmitWithPasswordManager && shouldSuggestPasskeyBridge(error)) {
+				setPasskeyBridgeSuggested(true);
+			}
 			if (error instanceof HttpError) {
 				FormUtils.handleError(i18n, form, error, 'name');
 			} else if (error instanceof PasskeyDomainUnsupportedError) {
@@ -79,6 +123,14 @@ export const PasskeyNameModal = observer(({onSubmit}: {onSubmit: (name: string) 
 							required={true}
 							type="text"
 						/>
+						{onSubmitWithPasswordManager && (
+							<PasswordManagerPasskeyAction
+								suggested={passkeyBridgeSuggested}
+								disabled={form.formState.isSubmitting || passkeyBridgeSubmitting}
+								onClick={handlePasswordManagerSubmit}
+								data-flx="auth.passkey-name-modal.password-manager-passkey-action"
+							/>
+						)}
 					</Modal.ContentLayout>
 				</Modal.Content>
 				<Modal.Footer data-flx="auth.passkey-name-modal.modal-footer">
@@ -88,6 +140,7 @@ export const PasskeyNameModal = observer(({onSubmit}: {onSubmit: (name: string) 
 					<Button
 						type="submit"
 						submitting={form.formState.isSubmitting}
+						disabled={passkeyBridgeSubmitting}
 						data-flx="auth.passkey-name-modal.button.submit"
 					>
 						<Trans>Save</Trans>

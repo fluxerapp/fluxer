@@ -162,18 +162,26 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 		},
 		[desktopHandoff, handoff, onLoginComplete],
 	);
-	const {form, isLoading, fieldErrors, handlePasskeyLogin, handlePasskeyBrowserLogin, isPasskeyLoading} =
-		useLoginFormController({
-			redirectPath,
-			inviteCode,
-			onLoginSuccess: handleLoginSuccess,
-			onRequireMfa: (challenge) => {
-				AuthenticationCommands.setMfaTicket(challenge);
-			},
-			onRequireIpAuthorization: (challenge) => {
-				setIpAuthChallenge(challenge);
-			},
-		});
+	const {
+		form,
+		isLoading,
+		fieldErrors,
+		handlePasskeyLogin,
+		handlePasskeyBrowserLogin,
+		handlePasskeyBridgeLogin,
+		passkeyBridgeSuggested,
+		isPasskeyLoading,
+	} = useLoginFormController({
+		redirectPath,
+		inviteCode,
+		onLoginSuccess: handleLoginSuccess,
+		onRequireMfa: (challenge) => {
+			AuthenticationCommands.setMfaTicket(challenge);
+		},
+		onRequireIpAuthorization: (challenge) => {
+			setIpAuthChallenge(challenge);
+		},
+	});
 	const showBrowserPasskey = IS_DEV || isDesktop();
 	const passkeyControlsDisabled = isLoading || Boolean(form.isSubmitting) || isPasskeyLoading;
 	const offerOldAppSignIn = useMemo(
@@ -425,6 +433,8 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 					onPasskeyLogin={handlePasskeyLogin}
 					showBrowserOption={showBrowserPasskey}
 					onBrowserLogin={handlePasskeyBrowserLogin}
+					onPasswordManagerLogin={handlePasskeyBridgeLogin}
+					passwordManagerSuggested={passkeyBridgeSuggested}
 					browserLabel={i18n._(SIGN_IN_VIA_BROWSER_DESCRIPTOR)}
 					data-flx="auth.flow.auth-login-layout.auth-login-passkey-actions"
 				/>
