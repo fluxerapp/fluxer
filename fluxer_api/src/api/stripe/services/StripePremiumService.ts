@@ -14,7 +14,7 @@ import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {addGiftCodeDuration} from '@app/api/models/GiftCode';
 import type {User} from '@app/api/models/User';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
-import {createPremiumClearPatch, getEffectivePremiumUntil} from '@app/api/user/UserHelpers';
+import {clearPerksSanitizedFlag, createPremiumClearPatch, getEffectivePremiumUntil} from '@app/api/user/UserHelpers';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
@@ -62,6 +62,7 @@ export class StripePremiumService {
 				premium_will_cancel: false,
 				premium_billing_cycle: billingCycle,
 				premium_grace_ends_at: null,
+				premium_flags: clearPerksSanitizedFlag(user.premiumFlags),
 			},
 			user.toRow(),
 		);
@@ -90,6 +91,7 @@ export class StripePremiumService {
 				premium_since: this.resolvePremiumSince(user.premiumSince, premiumSinceAnchor, now),
 				premium_until: null,
 				premium_lifetime_sequence: visionarySequence,
+				premium_flags: clearPerksSanitizedFlag(user.premiumFlags),
 				has_ever_purchased: hasEverPurchased,
 				premium_will_cancel: false,
 				premium_billing_cycle: null,
@@ -127,6 +129,7 @@ export class StripePremiumService {
 		};
 		if ((user.premiumType ?? 0) <= 0) {
 			patch.premium_type = premiumType;
+			patch.premium_flags = clearPerksSanitizedFlag(user.premiumFlags);
 			patch.premium_since = this.resolvePremiumSince(user.premiumSince, null, now);
 		}
 		if (hasEverPurchased && !user.hasEverPurchased) {

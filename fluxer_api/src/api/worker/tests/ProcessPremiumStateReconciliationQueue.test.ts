@@ -10,6 +10,7 @@ import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import processPremiumStateReconciliationQueue from '@app/api/worker/tasks/ProcessPremiumStateReconciliationQueue';
 import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/worker/WorkerContext';
+import {PremiumFlags} from '@fluxer/constants/src/UserConstants';
 import type {WorkerTaskHelpers} from '@pkgs/worker/src/contracts/WorkerTask';
 import type Stripe from 'stripe';
 import {afterEach, describe, expect, test} from 'vitest';
@@ -45,6 +46,28 @@ function createCancelledSubscription(endedAtMs: number): Stripe.Subscription {
 		trial_end: null,
 		start_date: Math.floor((Date.now() - 200 * ONE_DAY_MS) / 1000),
 		items: {data: []},
+	} as unknown as Stripe.Subscription;
+}
+
+function createActiveSubscription(periodEndMs: number): Stripe.Subscription {
+	return {
+		id: 'sub_test',
+		status: 'active',
+		customer: 'cus_test',
+		ended_at: null,
+		canceled_at: null,
+		cancel_at: null,
+		cancel_at_period_end: false,
+		trial_end: null,
+		start_date: Math.floor((Date.now() - 200 * ONE_DAY_MS) / 1000),
+		items: {
+			data: [
+				{
+					current_period_end: Math.floor(periodEndMs / 1000),
+					price: {recurring: {interval: 'month'}},
+				},
+			],
+		},
 	} as unknown as Stripe.Subscription;
 }
 
@@ -298,5 +321,28 @@ describe('processPremiumStateReconciliationQueue', () => {
 		expect(patches[0].premium_type).toBeNull();
 		expect(patches[0].premium_until).toBeNull();
 		expect(patches[0].premium_since).toBeNull();
+	});
+	test('clears the perks-sanitized latch once the subscription is active again', async () => {
+		const queueService = createQueueService();
+		await queueService.enqueueUser(USER_ID, new Date(Date.now() - 1000));
+
+		const periodEndMs = Math.floor((Date.now() + 20 * ONE_DAY_MS) / 1000) * 1000;
+		const user = createPremiumUser({
+			premium_until: new Date(periodEndMs),
+			premium_flags: PremiumFlags.PERKS_SANITIZED,
+		});
+		const {userRepository, patches, extras} = createCapturingDeps(user);
+
+		setWorkerDependenciesForTest({
+			premiumStateReconciliationQueueService: queueService,
+			stripe: createStripeStub(createActiveSubscription(periodEndMs), []),
+			userRepository,
+			...extras,
+		});
+
+		await processPremiumStateReconciliationQueue({}, createHelpers());
+
+		expect(patches).toHaveLength(1);
+		expect(patches[0].premium_flags).toBe(0);
 	});
 });

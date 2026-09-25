@@ -13,7 +13,7 @@ import {
 	getSubscriptionPremiumPeriodEnd,
 	getSubscriptionStartDate,
 } from '@app/api/stripe/StripeSubscriptionPeriod';
-import {createPremiumClearPatch, getEffectivePremiumUntil} from '@app/api/user/UserHelpers';
+import {clearPerksSanitizedFlag, createPremiumClearPatch, getEffectivePremiumUntil} from '@app/api/user/UserHelpers';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {PremiumFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
@@ -72,6 +72,10 @@ function buildStripePremiumRepairPatch(user: User, subscription: Stripe.Subscrip
 	}
 	if (user.stripeSubscriptionId !== subscription.id) {
 		patch.stripe_subscription_id = subscription.id;
+	}
+	const clearedPremiumFlags = clearPerksSanitizedFlag(user.premiumFlags);
+	if (user.premiumFlags !== clearedPremiumFlags) {
+		patch.premium_flags = clearedPremiumFlags;
 	}
 	if (subscriptionCustomerId && user.stripeCustomerId !== subscriptionCustomerId) {
 		patch.stripe_customer_id = subscriptionCustomerId;
