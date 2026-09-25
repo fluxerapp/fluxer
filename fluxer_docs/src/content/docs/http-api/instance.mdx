@@ -438,7 +438,7 @@ The public part of the instance [domain migration configuration](/admin-api/inst
 | rollout_salt | string | Salt of the sampling hash, shared by accounts and devices |
 | standalone_forwarding | boolean | Whether installed desktop web apps forward to the new origin once their data has moved |
 
-`enabled` is the instance-wide switch. While it is false, no client starts a migration and a client that already migrated stops forwarding from the legacy origin.
+`enabled` is the instance-wide switch. While it is false, no client starts a migration and a client that already migrated stops forwarding from the legacy origin. No [passkey update](/http-api/users/mfa/#passkey-updates) opens, and the [passkey bridge](/http-api/authentication/#passkey-bridge) keeps working for people already on a new origin.
 
 A logged-out device draws its own random ID once and keeps it. The device moves when its bucket over that ID and `rollout_salt` falls below `anonymous_rollout_basis_points`. Signed-in accounts use the [domain migration assignment](/http-api/experiments/#domain-migration-assignment-object) instead.
 

@@ -4,6 +4,7 @@ import {registerAdminControllers} from '@app/api/admin/controllers/index';
 import {AttachmentController} from '@app/api/attachment/AttachmentController';
 import {AuthController} from '@app/api/auth/AuthController';
 import {OriginHandoffController} from '@app/api/auth/OriginHandoffController';
+import {PasskeyBridgeController} from '@app/api/auth/PasskeyBridgeController';
 import {BlueskyOAuthController} from '@app/api/bluesky/BlueskyOAuthController';
 import {Config} from '@app/api/Config';
 import {ChannelController} from '@app/api/channel/ChannelController';
@@ -48,6 +49,7 @@ export function registerControllers(routes: HonoApp, config: APIConfig): void {
 	registerAdminControllers(routes);
 	AuthController(routes);
 	OriginHandoffController(routes);
+	PasskeyBridgeController(routes);
 	AttachmentController(routes);
 	ChannelController(routes);
 	ConnectionController(routes);

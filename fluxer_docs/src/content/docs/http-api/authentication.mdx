@@ -1,7 +1,7 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Authentication resource
-description: Registration, login, credentials, sessions, recovery, SSO, IP authorisation, desktop handoff, and origin handoff.
+description: Registration, login, credentials, sessions, recovery, SSO, IP authorisation, desktop handoff, origin handoff, and the passkey bridge.
 ---
 
 import RouteHeader from '@/components/RouteHeader.astro';
@@ -22,7 +22,7 @@ Every route has a route bucket and is also subject to the [global HTTP limit](/t
 
 An invalid JSON shape returns 400 `INVALID_FORM_BODY` with [validation error object](/http-api/#validation-error-object) entries in `errors`. An unexpected failure returns 500 `INTERNAL_SERVER_ERROR`. Every enumerated code on this page is registered in [Errors](/http-api/errors/), and every snowflake field is the decimal string form defined by [Snowflakes](/snowflakes/).
 
-When SSO is both enabled and enforced, every local authentication operation returns 403 `SSO_REQUIRED`. The SSO status route, SSO start and completion, logout, both session routes, and every handoff route stay available under enforcement. Every other route on this page is a local authentication operation.
+When SSO is both enabled and enforced, every local authentication operation returns 403 `SSO_REQUIRED`. The SSO status route, SSO start and completion, logout, both session routes, every handoff route, and the passkey bridge options, complete, and cancel routes stay available under enforcement. Every other route on this page is a local authentication operation.
 
 :::caution[SSO enforcement precedes every other check]
 An enforced instance returns 403 `SSO_REQUIRED` even for a malformed or unauthenticated local authentication request.
@@ -156,7 +156,7 @@ The ticket and the method list a client needs to finish a login with a second fa
 
 Both WebAuthn option operations return a PublicKeyCredential request options object that a browser passes straight to its credential request. The [WebAuthn authentication options object](/http-api/users/mfa/#webauthn-authentication-options-object) on the Multi-factor authentication resource defines its fields, together with its [WebAuthn credential descriptor](/http-api/users/mfa/#webauthn-credential-descriptor-object) and [WebAuthn client extension inputs](/http-api/users/mfa/#webauthn-client-extension-inputs-object) objects.
 
-A challenge issued for MFA completion is also bound to its ticket and account, so it cannot be replayed against discoverable login. The MFA route lists every registered credential for the resolved account in `allowCredentials`. The discoverable route omits the member, because discovery happens at the authenticator.
+A challenge issued for MFA completion is also bound to its ticket and account, so it cannot be replayed against discoverable login. The MFA route lists one group of the resolved account's credentials in `allowCredentials`, and the discoverable route omits the member, because discovery happens at the authenticator. [Passkey domain selection](/http-api/users/mfa/#passkey-domain-selection) decides the group and `rpId` on both routes.
 
 <a id="webauthn-assertion"></a>
 
@@ -320,6 +320,80 @@ The client state released by one redeemed origin handoff.
 | Field | Type | Description |
 | --- | --- | --- |
 | payload | string | The base64url string stored by [create origin handoff](#create-origin-handoff), returned unchanged |
+
+## Passkey bridge
+
+The official instance is moving its web client from `https://web.fluxer.app` to `https://fluxer.com`, and its canary client from `https://web.canary.fluxer.app` to `https://canary.fluxer.com`. A passkey works only under the domain it was created for, so a page on a new origin cannot use a passkey created for `fluxer.app`. The passkey bridge runs that passkey somewhere that can, then hands the result back to the new origin.
+
+The bridge exists only on the official instance and only for requests from the two new origins. It keeps working while the [domain migration switch](/http-api/instance/#domain-migration-object) is off, so people already on a new origin can still use their passkeys. Every bridge route on a self-hosted instance returns 403 `INVALID_API_ORIGIN`.
+
+A ceremony has one of three purposes. `login` signs in with any passkey the person picks, `login_mfa` finishes a password login whose second factor is passkeys, and `sudo` proves [sudo mode](/http-api/users/mfa/#sudo-mode) through [start passkey bridge sudo verification](/http-api/users/mfa/#start-passkey-bridge-sudo-verification). It also has one of two runners. With `page`, the ceremony runs on the paired legacy origin at `/passkey-bridge`. With `native`, the desktop client on the new origin runs it itself.
+
+A ceremony runs in four steps.
+
+1. The page on the new origin draws a nonce, keeps it, and starts the ceremony with the nonce's SHA-256 digest.
+2. The runner fetches [passkey bridge options](#get-passkey-bridge-options), asks the authenticator, and calls [complete passkey bridge](#complete-passkey-bridge) or [cancel passkey bridge](#cancel-passkey-bridge).
+3. Completing or cancelling issues a completion code. The `page` runner gets it in the fragment of `return_url` and navigates there. The `native` runner gets it in the response.
+4. The page on the new origin redeems the ceremony once with the nonce and the completion code.
+
+Redemption needs both secrets. Someone who starts a ceremony and sends another person the bridge link holds the nonce, but the completion code reaches the other person's browser, which holds no nonce.
+
+A ceremony lasts 10 minutes from its start, or 5 minutes for `login_mfa`, which is the life of an MFA ticket. It is `pending` until it completes or is cancelled. Only a passkey the account lists for `fluxer.app` completes a ceremony. A [replaced passkey](/http-api/users/mfa/#replaced-passkeys) never does.
+
+When the request comes from a new origin and the instance-wide [domain migration switch](/http-api/instance/#domain-migration-object) is on, a completed redemption also opens a [passkey update](/http-api/users/mfa/#passkey-updates) for the session it signs in, or for the session that proves sudo mode.
+
+## Passkey bridge start object
+
+One started passkey bridge ceremony.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ceremony_id | string | The ceremony identifier, 32 random bytes as 43 base64url characters |
+| bridge_url<sup>1</sup> | ?string | The page that runs the ceremony |
+
+<sup>1</sup> The paired legacy origin, the path `/passkey-bridge`, and the ceremony ID as the fragment. Null for the `native` runner
+
+## Passkey bridge options object
+
+The WebAuthn request for one pending ceremony.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| options | [WebAuthn authentication options](#webauthn-authentication-options) object | The request options the runner passes to the authenticator |
+
+## Passkey bridge finish object
+
+What the runner does after a ceremony completes or is cancelled. Exactly one field is non-null.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| return_url<sup>1</sup> | ?string | Where the `page` runner goes next, null for the `native` runner |
+| completion_code<sup>2</sup> | ?string | The code the `native` runner redeems, null for the `page` runner |
+
+<sup>1</sup> Always `/passkey-bridge` on the new origin, whatever the purpose. The fragment is `passkey-bridge=` followed by the ceremony ID, a full stop, and the completion code. The page there decides where the code goes next from what the starting tab kept, so the start request cannot choose where the code lands
+
+<sup>2</sup> 32 random bytes as 43 base64url characters. Each call issues a new one
+
+## Passkey bridge sign-in redemption object
+
+The result of one redeemed `login` or `login_mfa` ceremony.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| status | string | The ceremony state, either `completed` or `cancelled` |
+| token?<sup>1</sup> | string | The newly issued user session token |
+| user_id?<sup>1</sup> | snowflake | The authenticated user ID |
+| user?<sup>1</sup> | [partial user](/http-api/users/#partial-user-object) object | The public representation of the authenticated account |
+
+<sup>1</sup> Present together only when the status is `completed`
 
 ## Get SSO status
 
@@ -633,7 +707,7 @@ Resolves the account from an MFA ticket and creates a challenge restricted to th
 
 <sup>1</sup> The ticket is read but not consumed
 
-A client MUST still complete the returned challenge through [complete login with WebAuthn MFA](#complete-login-with-webauthn-mfa) before the ticket expires. An expired or unknown ticket returns the field code `SESSION_TIMEOUT` on `ticket`. An account with no registered credential returns 400 `NO_PASSKEYS_REGISTERED`.
+A client MUST still complete the returned challenge through [complete login with WebAuthn MFA](#complete-login-with-webauthn-mfa) before the ticket expires. An expired or unknown ticket returns the field code `SESSION_TIMEOUT` on `ticket`. An account with no credential in the group [passkey domain selection](/http-api/users/mfa/#passkey-domain-selection) picks returns 400 `NO_PASSKEYS_REGISTERED`.
 
 ### Response
 
@@ -670,7 +744,7 @@ Consumes the MFA ticket, verifies the WebAuthn assertion against the challenge, 
 
 <sup>1</sup> The challenge is consumed before verification and is accepted only when its bound context, account, and ticket all match this request
 
-An expired or unknown ticket returns the field code `SESSION_TIMEOUT` on `ticket`. A ticket for an account that does not count passkeys as its second factor returns 400 `TWO_FACTOR_REQUIRED`, which is what a TOTP account holding registered credentials without [Set WebAuthn two-factor authentication](/http-api/users/mfa/#set-webauthn-two-factor-authentication) receives. A challenge mismatch, an unknown credential, a stored public key that cannot be decoded, a signature counter that the authenticator did not advance, and a failed signature verification all return 401 `PASSKEY_AUTHENTICATION_FAILED`. A verified assertion whose reported signature counter cannot be read returns 500 `INVALID_WEBAUTHN_AUTHENTICATION_COUNTER`.
+An expired or unknown ticket returns the field code `SESSION_TIMEOUT` on `ticket`. A ticket for an account that does not count passkeys as its second factor returns 400 `TWO_FACTOR_REQUIRED`, which is what a TOTP account holding registered credentials without [Set WebAuthn two-factor authentication](/http-api/users/mfa/#set-webauthn-two-factor-authentication) receives. A challenge mismatch, an unknown credential, a credential the options did not list, a stored public key that cannot be decoded, a signature counter that the authenticator did not advance, and a failed signature verification all return 401 `PASSKEY_AUTHENTICATION_FAILED`. A verified assertion whose reported signature counter cannot be read returns 500 `INVALID_WEBAUTHN_AUTHENTICATION_COUNTER`.
 
 This operation shares the MFA attempt allowances of [complete login with TOTP](#complete-login-with-totp). It permits 10 failed attempts per account in 15 minutes and destroys the ticket after 5 failed attempts. An exhausted allowance returns the field code `INVALID_CODE` on `ticket`.
 
@@ -701,7 +775,7 @@ Success consumes the challenge and ticket and creates one authentication session
 
 Creates a challenge for passwordless authentication with a discoverable credential. Authentication is not required. Returns a [WebAuthn authentication options](#webauthn-authentication-options) object.
 
-The request has no body. The response omits `allowCredentials` and requests `required` user verification.
+The request has no body. The response omits `allowCredentials` and requests `required` user verification. Its `rpId` follows [passkey domain selection](/http-api/users/mfa/#passkey-domain-selection).
 
 ### Response
 
@@ -736,7 +810,7 @@ Resolves the account from the presented credential ID, verifies the assertion wi
 
 <sup>1</sup> The challenge is consumed before verification and is accepted only when it was issued for the discoverable context, so a challenge issued for MFA or for sudo mode cannot be used here
 
-An unknown credential ID, a challenge mismatch, a stored public key that cannot be decoded, a signature counter that the authenticator did not advance, and a failed signature verification all return 401 `PASSKEY_AUTHENTICATION_FAILED`. A verified assertion whose reported signature counter cannot be read returns 500 `INVALID_WEBAUTHN_AUTHENTICATION_COUNTER`. Account suspension returns 403 `ACCOUNT_SUSPENDED_TEMPORARILY` or 403 `ACCOUNT_SUSPENDED_PERMANENTLY`.
+An unknown credential ID, a challenge mismatch, a credential for another domain than the challenge, a stored public key that cannot be decoded, a signature counter that the authenticator did not advance, and a failed signature verification all return 401 `PASSKEY_AUTHENTICATION_FAILED`. A verified assertion whose reported signature counter cannot be read returns 500 `INVALID_WEBAUTHN_AUTHENTICATION_COUNTER`. Account suspension returns 403 `ACCOUNT_SUSPENDED_TEMPORARILY` or 403 `ACCOUNT_SUSPENDED_PERMANENTLY`.
 
 A bot account returns 403 `BOT_USER_AUTH_SESSION_CREATION_DENIED`. An account that has not been admitted returns 403 `REGISTRATION_PENDING_APPROVAL` or 403 `REGISTRATION_REJECTED`.
 
@@ -1590,3 +1664,210 @@ A redemption that finds the handoff deletes it, whether or not the nonce matches
 ### Rate limit
 
 10 requests per minute, on the `auth:origin_handoff:redeem` bucket.
+
+## Start passkey bridge sign-in
+
+<RouteHeader method="POST" path="/v1/auth/passkey-bridge" unauthenticated />
+
+Starts a `login` or `login_mfa` [passkey bridge](#passkey-bridge) ceremony. Authentication is not required. Returns a [passkey bridge start](#passkey-bridge-start-object) object.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| purpose | string | The purpose, either `login` or `login_mfa` |
+| runner | string | Where the ceremony runs, either `page` or `native` |
+| ticket?<sup>1</sup> | string | The ticket returned by [password login](#log-in-with-a-password) (1-256 characters) |
+| nonce_hash | string | The SHA-256 digest of the nonce the new origin keeps, as 64 lowercase hex characters |
+
+<sup>1</sup> Required for `login_mfa` and refused for `login`. The ticket is read but not consumed
+
+The request MUST send an `Origin` header of `https://fluxer.com` or `https://canary.fluxer.com`. Any other `Origin`, none, or a self-hosted instance returns 403 `INVALID_API_ORIGIN`.
+
+For `login_mfa`, an expired or unknown ticket returns the field code `SESSION_TIMEOUT` on `ticket`. A ticket for an account that does not count passkeys as its second factor returns 400 `TWO_FACTOR_REQUIRED`, and one for an account with no passkey listed for `fluxer.app` returns 400 `NO_PASSKEYS_REGISTERED`. A ticket that resolves to a bot account returns 403 `BOT_USER_AUTH_ENDPOINT_ACCESS_DENIED`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [passkey bridge start](#passkey-bridge-start-object) object | The ceremony was started |
+| 400 | [error response](/http-api/#error-response) | The body or ticket is invalid, passkeys are not the second factor, or the account has no `fluxer.app` passkey |
+| 403 | [error response](/http-api/#error-response) | SSO enforcement rejects the operation, the `Origin` is refused, or the ticket resolves to a bot account |
+| 404 | [error response](/http-api/#error-response) | The ticket resolves to an account that no longer exists |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+Fluxer stores the ceremony for 10 minutes, or 5 minutes for `login_mfa`, under a key derived from its identifier. It changes no account state. No Gateway Dispatch is emitted.
+
+### Rate limit
+
+10 requests per minute, on the `auth:passkey_bridge:start` bucket.
+
+## Get passkey bridge options
+
+<RouteHeader method="POST" path="/v1/auth/passkey-bridge/{ceremony_id}/options" unauthenticated />
+
+Issues the WebAuthn request for a pending [passkey bridge](#passkey-bridge) ceremony. Authentication is not required. Returns a [passkey bridge options](#passkey-bridge-options-object) object.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ceremony_id | string | The identifier from the start response, 43 base64url characters |
+
+The request has no body. Its `Origin` MUST be the origin that runs the ceremony, which is the paired legacy origin for `page` and the new origin for `native`. Any other `Origin` returns 403 `INVALID_API_ORIGIN`. An unknown, expired, completed, or cancelled ceremony returns 404 `UNKNOWN_PASSKEY_BRIDGE`, as does a request that arrives while another request holds the same ceremony.
+
+A `login` ceremony gets options with no `allowCredentials` and `required` user verification. A `login_mfa` or `sudo` ceremony gets the account's passkeys for `fluxer.app` in `allowCredentials` and `discouraged` user verification, and an account left with none returns 400 `NO_PASSKEYS_REGISTERED`. `rpId` is always `fluxer.app`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [passkey bridge options](#passkey-bridge-options-object) object | A challenge was issued |
+| 400 | [error response](/http-api/#error-response) | The ceremony ID is malformed, or the account has no passkey for `fluxer.app` |
+| 403 | [error response](/http-api/#error-response) | The `Origin` is refused, returning `INVALID_API_ORIGIN` |
+| 404 | [error response](/http-api/#error-response) | The ceremony is not pending, returning `UNKNOWN_PASSKEY_BRIDGE` |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+The operation issues a one-use challenge valid for five minutes and bound to the bridge, so no other WebAuthn route accepts it. It revokes the challenge the ceremony held before, so only the latest options can complete it. No Gateway Dispatch is emitted.
+
+### Rate limit
+
+20 requests per minute, on the `auth:passkey_bridge:ceremony` bucket, shared with complete and cancel.
+
+## Complete passkey bridge
+
+<RouteHeader method="POST" path="/v1/auth/passkey-bridge/{ceremony_id}/complete" unauthenticated />
+
+Verifies the assertion for a pending [passkey bridge](#passkey-bridge) ceremony and marks it completed. Authentication is not required. Returns a [passkey bridge finish](#passkey-bridge-finish-object) object.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ceremony_id | string | The identifier from the start response, 43 base64url characters |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| response | [WebAuthn assertion](#webauthn-assertion) object | The browser credential assertion |
+
+The `Origin` rule and the 404 cases are those of [get passkey bridge options](#get-passkey-bridge-options). Fluxer verifies the assertion against the latest challenge and accepts only the ceremony origin in its client data.
+
+A ceremony with no options issued yet, a credential that is unknown, belongs to another account, is replaced, or is not for `fluxer.app`, and a failed verification all return 401 `PASSKEY_AUTHENTICATION_FAILED`. A verified assertion whose reported signature counter cannot be read returns 500 `INVALID_WEBAUTHN_AUTHENTICATION_COUNTER`.
+
+A `login_mfa` ceremony whose ticket has expired returns the field code `SESSION_TIMEOUT` on `ticket`. It draws one attempt from the [login MFA allowances](/topics/rate-limits/#allowances-answering-400), and an exhausted allowance returns the field code `INVALID_CODE` on `ticket`. A `sudo` ceremony draws one attempt from the sudo allowance, and an exhausted allowance returns the field code `INVALID_MFA_CODE` on `mfa_code`.
+
+:::note[A failed completion leaves the ceremony pending]
+The runner can fetch new options and try again, or cancel. The MFA allowances bound the retries.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [passkey bridge finish](#passkey-bridge-finish-object) object | The assertion was accepted |
+| 400 | [error response](/http-api/#error-response) | The body, ceremony ID, or ticket is invalid, or an MFA allowance is exhausted |
+| 401 | [error response](/http-api/#error-response) | Challenge or assertion verification fails |
+| 403 | [error response](/http-api/#error-response) | The `Origin` is refused, or the ticket resolves to a bot account |
+| 404 | [error response](/http-api/#error-response) | The ceremony is not pending, returning `UNKNOWN_PASSKEY_BRIDGE` |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | The verified assertion reported no readable signature counter, or the request could not be completed |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+Success consumes the challenge, advances the credential's signature counter, sets its last use, and stores the completion code's digest with the ceremony. It creates no session and consumes no MFA ticket. No Gateway Dispatch is emitted.
+
+### Rate limit
+
+20 requests per minute, on the shared `auth:passkey_bridge:ceremony` bucket.
+
+## Cancel passkey bridge
+
+<RouteHeader method="POST" path="/v1/auth/passkey-bridge/{ceremony_id}/cancel" unauthenticated />
+
+Marks a [passkey bridge](#passkey-bridge) ceremony cancelled so the new origin can stop waiting. Authentication is not required. Returns a [passkey bridge finish](#passkey-bridge-finish-object) object.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ceremony_id | string | The identifier from the start response, 43 base64url characters |
+
+The request has no body, and the `Origin` rule is that of [get passkey bridge options](#get-passkey-bridge-options). Cancelling a cancelled ceremony succeeds again with a new completion code. A completed, unknown, or expired ceremony returns 404 `UNKNOWN_PASSKEY_BRIDGE`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [passkey bridge finish](#passkey-bridge-finish-object) object | The ceremony is cancelled |
+| 400 | [error response](/http-api/#error-response) | The ceremony ID is malformed |
+| 403 | [error response](/http-api/#error-response) | The `Origin` is refused, returning `INVALID_API_ORIGIN` |
+| 404 | [error response](/http-api/#error-response) | The ceremony is completed or does not exist, returning `UNKNOWN_PASSKEY_BRIDGE` |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+The ceremony stores the digest of the new completion code. No account state changes and no Gateway Dispatch is emitted.
+
+### Rate limit
+
+20 requests per minute, on the shared `auth:passkey_bridge:ceremony` bucket.
+
+## Redeem passkey bridge sign-in
+
+<RouteHeader method="POST" path="/v1/auth/passkey-bridge/{ceremony_id}/redeem" unauthenticated />
+
+Redeems a finished `login` or `login_mfa` [passkey bridge](#passkey-bridge) ceremony once. Authentication is not required. Returns a [passkey bridge sign-in redemption](#passkey-bridge-sign-in-redemption-object) object.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ceremony_id | string | The identifier from the start response, 43 base64url characters |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| nonce | string | The nonce whose digest started the ceremony, as base64url, 16 to 256 characters |
+| completion_code | string | The completion code from the return fragment or the finish response, 43 base64url characters |
+
+The `Origin` MUST be the new origin that started the ceremony, or the request returns 403 `INVALID_API_ORIGIN`. A pending ceremony and a `sudo` ceremony return 404 `UNKNOWN_PASSKEY_BRIDGE` and stay in place, as does an unknown or expired identifier. A wrong nonce or completion code returns 400 `INVALID_PASSKEY_BRIDGE_NONCE`.
+
+:::caution[A wrong secret consumes the ceremony]
+Fluxer deletes the ceremony before it answers a wrong nonce or completion code, so the new origin MUST start a new one.
+:::
+
+A cancelled ceremony returns `cancelled`. A completed `login` ceremony creates a session under the policy of [authenticate with WebAuthn](#authenticate-with-webauthn), so a suspended, bot, or unadmitted account gets the same 403 codes. A completed `login_mfa` ceremony needs its ticket once more, and an expired one returns the field code `SESSION_TIMEOUT` on `ticket`. An account that no longer counts passkeys as its second factor returns 400 `TWO_FACTOR_REQUIRED`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [passkey bridge sign-in redemption](#passkey-bridge-sign-in-redemption-object) object | The ceremony was redeemed |
+| 400 | [error response](/http-api/#error-response) | The body, ceremony ID, or ticket is invalid, a secret does not match, or passkeys are no longer the second factor |
+| 403 | [error response](/http-api/#error-response) | SSO enforcement, the `Origin`, account suspension, a bot account, or an unadmitted registration rejects the request |
+| 404 | [error response](/http-api/#error-response) | No redeemable sign-in ceremony has this identifier, returning `UNKNOWN_PASSKEY_BRIDGE` |
+| 429 | [rate limit response](/topics/rate-limits/#rate-limit-response-object) | Route or global bucket denies the request |
+| 500 | [error response](/http-api/#error-response) | Unexpected internal failure occurs |
+| 503 | [error response](/http-api/#error-response) | The instance is at its in-flight request ceiling |
+
+### Side effects
+
+A redemption that gets past the secret check deletes the ceremony, whatever happens next. A completed ceremony creates one authentication session, and for `login_mfa` it also consumes the ticket and clears the login MFA allowances. When the request comes from a new origin and the domain migration switch is on, Fluxer opens a [passkey update](/http-api/users/mfa/#passkey-updates) for the new session. No Gateway Dispatch is emitted.
+
+### Rate limit
+
+60 requests per minute, on the `auth:passkey_bridge:redeem` bucket.

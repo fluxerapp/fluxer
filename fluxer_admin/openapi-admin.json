@@ -15711,9 +15711,10 @@
 					"id": {"type": "string", "description": "The credential ID"},
 					"name": {"type": "string", "description": "User-assigned name for the credential"},
 					"created_at": {"type": "string", "description": "When the credential was registered"},
-					"last_used_at": {"nullable": true, "description": "When the credential was last used", "type": "string"}
+					"last_used_at": {"nullable": true, "description": "When the credential was last used", "type": "string"},
+					"rp_id": {"type": "string", "description": "Relying party ID the passkey belongs to"}
 				},
-				"required": ["id", "name", "created_at", "last_used_at"],
+				"required": ["id", "name", "created_at", "last_used_at", "rp_id"],
 				"additionalProperties": false
 			},
 			"VoiceServerAdminResponse": {

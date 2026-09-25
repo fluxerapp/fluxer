@@ -2,7 +2,7 @@
 
 import {Routes} from '@app/app/Routes';
 import {
-	browserSupportsRelatedOrigins,
+	desktopPasskeysSupported,
 	readDomainMigrationDiscovery,
 	readDomainMigrationEnvironment,
 } from '@app/features/app/domain_migration/DomainMigrationBrowser';
@@ -50,28 +50,24 @@ function isOneShotRoute(pathname: string): boolean {
 	return ONE_SHOT_ROUTE_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
 }
 
-function readGateInput(assignmentEnabled: boolean, relatedOriginsSupported: boolean): DomainMigrationGateInput {
+function readGateInput(assignmentEnabled: boolean): DomainMigrationGateInput {
 	return {
 		environment: readDomainMigrationEnvironment(),
 		assignmentEnabled,
 		discovery: readDomainMigrationDiscovery(),
 		marker: readDomainMigrationMarker(getProtectedLocalStorage()),
 		now: Date.now(),
-		relatedOriginsSupported,
 		voiceActive: isVoiceActive(),
 		oneShotRoute: isOneShotRoute(window.location.pathname),
 	};
 }
 
 async function evaluateSource(side: DomainMigrationSide, assignmentEnabled: boolean): Promise<void> {
-	if (navigating || !shouldStartDomainMigration(readGateInput(assignmentEnabled, true))) {
+	if (navigating || !shouldStartDomainMigration(readGateInput(assignmentEnabled))) {
 		return;
 	}
-	const relatedOriginsSupported = await browserSupportsRelatedOrigins();
-	if (
-		navigating ||
-		!shouldStartDomainMigration(readGateInput(DomainMigrationRollout.enabled, relatedOriginsSupported))
-	) {
+	const passkeysSupported = await desktopPasskeysSupported();
+	if (navigating || !passkeysSupported || !shouldStartDomainMigration(readGateInput(DomainMigrationRollout.enabled))) {
 		return;
 	}
 	navigating = true;

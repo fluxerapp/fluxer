@@ -764,6 +764,7 @@ export interface ElectronAPI {
 	passkeyIsSupported: () => Promise<boolean>;
 	passkeyAuthenticate: (options: PublicKeyCredentialRequestOptionsJSON) => Promise<AuthenticationResponseJSON>;
 	passkeyRegister: (options: PublicKeyCredentialCreationOptionsJSON) => Promise<RegistrationResponseJSON>;
+	passkeyRpIds: ReadonlyArray<string>;
 	domainMigration: DomainMigrationApi;
 	virtmic: VirtmicApi;
 	nativeAudio: NativeAudioApi;

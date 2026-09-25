@@ -32,7 +32,7 @@ export type LoginResult =
 	| {type: 'ip_authorization'; challenge: IpAuthorizationChallenge}
 	| {type: 'suspended'; banViewToken: string};
 
-function toLoginSuccessPayload(response: AuthenticationCommands.AuthTokenResponse): LoginSuccessPayload {
+export function toLoginSuccessPayload(response: AuthenticationCommands.AuthTokenResponse): LoginSuccessPayload {
 	const userData = AuthenticationCommands.authResponseUserToUserData(response.user);
 	return {
 		token: response.token,

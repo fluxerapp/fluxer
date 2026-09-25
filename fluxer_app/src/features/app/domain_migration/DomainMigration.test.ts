@@ -60,7 +60,7 @@ function environment(
 	installKind: core.DomainMigrationInstallKind,
 	overrides: Partial<core.DomainMigrationEnvironment> = {},
 ): core.DomainMigrationEnvironment {
-	return {installKind, electron: false, electronMigrationVersion: null, ...overrides};
+	return {installKind, electron: false, electronMigrationVersion: null, electronPasskeyRpIds: [], ...overrides};
 }
 
 function gateInput(overrides: Partial<core.DomainMigrationGateInput> = {}): core.DomainMigrationGateInput {
@@ -70,7 +70,6 @@ function gateInput(overrides: Partial<core.DomainMigrationGateInput> = {}): core
 		discovery: ENABLED_DISCOVERY,
 		marker: null,
 		now: NOW,
-		relatedOriginsSupported: true,
 		voiceActive: false,
 		oneShotRoute: false,
 		...overrides,
@@ -255,7 +254,13 @@ describe('migration gate', () => {
 		expect(core.shouldStartDomainMigration(gateInput())).toBe(true);
 		expect(
 			core.shouldStartDomainMigration(
-				gateInput({environment: environment('none', {electron: true, electronMigrationVersion: 1})}),
+				gateInput({
+					environment: environment('none', {
+						electron: true,
+						electronMigrationVersion: 1,
+						electronPasskeyRpIds: ['fluxer.app', 'fluxer.com'],
+					}),
+				}),
 			),
 		).toBe(true);
 	});
@@ -272,7 +277,16 @@ describe('migration gate', () => {
 		['Firefox web app', {environment: environment('firefox')}],
 		['other web app', {environment: environment('other')}],
 		['old desktop', {environment: environment('none', {electron: true})}],
-		['no related origins', {relatedOriginsSupported: false}],
+		[
+			'desktop that cannot create fluxer.com passkeys',
+			{
+				environment: environment('none', {
+					electron: true,
+					electronMigrationVersion: 1,
+					electronPasskeyRpIds: ['fluxer.app'],
+				}),
+			},
+		],
 		['in a voice call', {voiceActive: true}],
 		['on a one-shot token route', {oneShotRoute: true}],
 	])('blocks when %s', (_label, overrides) => {

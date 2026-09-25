@@ -1053,6 +1053,292 @@
 				}
 			}
 		},
+		"/auth/passkey-bridge": {
+			"post": {
+				"operationId": "start_passkey_bridge_login",
+				"summary": "Start passkey bridge sign in",
+				"tags": ["Auth"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyBridgeStartResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Start a sign in or two-factor ceremony for a passkey that belongs to the paired first-party origin. Only available on the official instance from the new origin.",
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyBridgeLoginStartRequest"}}}
+				}
+			}
+		},
+		"/auth/passkey-bridge/{ceremony_id}/cancel": {
+			"post": {
+				"operationId": "cancel_passkey_bridge",
+				"summary": "Cancel passkey bridge",
+				"tags": ["Auth"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyBridgeFinishResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Cancel a passkey bridge ceremony that has not completed.",
+				"parameters": [
+					{
+						"name": "ceremony_id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"pattern": "^[A-Za-z0-9_-]{43}$",
+							"description": "Identifier of the passkey ceremony"
+						},
+						"description": "Identifier of the passkey ceremony"
+					}
+				]
+			}
+		},
+		"/auth/passkey-bridge/{ceremony_id}/complete": {
+			"post": {
+				"operationId": "complete_passkey_bridge",
+				"summary": "Complete passkey bridge",
+				"tags": ["Auth"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyBridgeFinishResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Verify the WebAuthn response for a pending passkey bridge ceremony. A failed verification leaves the ceremony pending so it can be retried.",
+				"parameters": [
+					{
+						"name": "ceremony_id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"pattern": "^[A-Za-z0-9_-]{43}$",
+							"description": "Identifier of the passkey ceremony"
+						},
+						"description": "Identifier of the passkey ceremony"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyBridgeCompleteRequest"}}}
+				}
+			}
+		},
+		"/auth/passkey-bridge/{ceremony_id}/options": {
+			"post": {
+				"operationId": "get_passkey_bridge_options",
+				"summary": "Get passkey bridge options",
+				"tags": ["Auth"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyBridgeOptionsResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Issue WebAuthn authentication options for a pending passkey bridge ceremony. The request must come from the origin that runs the ceremony.",
+				"parameters": [
+					{
+						"name": "ceremony_id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"pattern": "^[A-Za-z0-9_-]{43}$",
+							"description": "Identifier of the passkey ceremony"
+						},
+						"description": "Identifier of the passkey ceremony"
+					}
+				]
+			}
+		},
+		"/auth/passkey-bridge/{ceremony_id}/redeem": {
+			"post": {
+				"operationId": "redeem_passkey_bridge_login",
+				"summary": "Redeem passkey bridge sign in",
+				"tags": ["Auth"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyBridgeLoginRedeemResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Redeem a finished sign in or two-factor passkey bridge ceremony once. Requires the nonce kept by the starting page and the completion code handed back when the ceremony finished.",
+				"parameters": [
+					{
+						"name": "ceremony_id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"pattern": "^[A-Za-z0-9_-]{43}$",
+							"description": "Identifier of the passkey ceremony"
+						},
+						"description": "Identifier of the passkey ceremony"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyBridgeRedeemRequest"}}}
+				}
+			}
+		},
 		"/auth/register": {
 			"post": {
 				"operationId": "register_account",
@@ -17029,6 +17315,164 @@
 				}
 			}
 		},
+		"/users/@me/mfa/webauthn/migration": {
+			"get": {
+				"operationId": "get_webauthn_migration",
+				"summary": "Get pending passkey update",
+				"tags": ["Users"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyMigrationResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Return the passkey this session can update to the new domain after using it within the last five minutes, or null.",
+				"security": [{"sessionToken": []}]
+			},
+			"post": {
+				"operationId": "complete_webauthn_migration",
+				"summary": "Complete passkey update",
+				"tags": ["Users"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Register the replacement passkey under the name of the pending one. The old passkey stops appearing in lists and is removed together with its replacement.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyMigrationCompleteRequest"}}}
+				}
+			}
+		},
+		"/users/@me/mfa/webauthn/migration/registration-options": {
+			"post": {
+				"operationId": "get_webauthn_migration_registration_options",
+				"summary": "Get passkey update registration options",
+				"tags": ["Users"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/WebAuthnChallengeResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Generate registration options for the passkey that replaces the pending one. Requires a pending passkey update for this session.",
+				"security": [{"sessionToken": []}]
+			}
+		},
 		"/users/@me/mfa/webauthn/two-factor": {
 			"put": {
 				"operationId": "set_webauthn_two_factor",
@@ -17486,6 +17930,135 @@
 				"requestBody": {
 					"required": false,
 					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/UserNoteUpdateRequest"}}}
+				}
+			}
+		},
+		"/users/@me/passkey-bridge": {
+			"post": {
+				"operationId": "start_passkey_bridge_sudo",
+				"summary": "Start passkey bridge sudo verification",
+				"tags": ["Users"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyBridgeStartResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Start a sudo verification ceremony for a passkey that belongs to the paired first-party origin. Only available on the official instance from the new origin.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyBridgeSudoStartRequest"}}}
+				}
+			}
+		},
+		"/users/@me/passkey-bridge/{ceremony_id}/redeem": {
+			"post": {
+				"operationId": "redeem_passkey_bridge_sudo",
+				"summary": "Redeem passkey bridge sudo verification",
+				"tags": ["Users"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {
+							"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyBridgeSudoRedeemResponse"}}
+						}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Redeem a finished sudo passkey bridge ceremony once for a sudo mode token. Requires the nonce kept by the starting page and the completion code handed back when the ceremony finished.",
+				"security": [{"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "ceremony_id",
+						"in": "path",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"pattern": "^[A-Za-z0-9_-]{43}$",
+							"description": "Identifier of the passkey ceremony"
+						},
+						"description": "Identifier of the passkey ceremony"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/PasskeyBridgeRedeemRequest"}}}
 				}
 			}
 		},
@@ -22821,6 +23394,54 @@
 				"required": ["token", "auth_session_id_hash"],
 				"additionalProperties": false
 			},
+			"PasskeyBridgeRedeemRequest": {
+				"type": "object",
+				"properties": {
+					"nonce": {
+						"type": "string",
+						"minLength": 16,
+						"maxLength": 256,
+						"pattern": "^[A-Za-z0-9_-]+$",
+						"description": "Nonce whose SHA-256 digest was sent when the ceremony started"
+					},
+					"completion_code": {
+						"type": "string",
+						"pattern": "^[A-Za-z0-9_-]{43}$",
+						"description": "Code handed back when the ceremony finished"
+					}
+				},
+				"required": ["nonce", "completion_code"]
+			},
+			"PasskeyBridgeSudoRedeemResponse": {
+				"oneOf": [
+					{"$ref": "#/components/schemas/CancelledPasskeyBridgeSudoRedeemResponse"},
+					{"$ref": "#/components/schemas/CompletedPasskeyBridgeSudoRedeemResponse"}
+				]
+			},
+			"PasskeyBridgeSudoStartRequest": {
+				"type": "object",
+				"properties": {
+					"runner": {"$ref": "#/components/schemas/PasskeyBridgeRunner"},
+					"nonce_hash": {
+						"type": "string",
+						"pattern": "^[0-9a-f]{64}$",
+						"description": "Lowercase hex SHA-256 digest of the nonce the starting page keeps"
+					}
+				},
+				"required": ["runner", "nonce_hash"]
+			},
+			"PasskeyBridgeStartResponse": {
+				"type": "object",
+				"properties": {
+					"ceremony_id": {"type": "string", "description": "Identifier of the passkey ceremony"},
+					"bridge_url": {
+						"description": "Page that runs the ceremony, or null for the native runner",
+						"type": ["string", "null"]
+					}
+				},
+				"required": ["ceremony_id", "bridge_url"],
+				"additionalProperties": false
+			},
 			"UserNoteUpdateRequest": {
 				"type": "object",
 				"properties": {"note": {"description": "The note text (max 256 characters)", "type": ["string", "null"]}}
@@ -23015,6 +23636,40 @@
 					}
 				},
 				"required": ["user", "backup_codes"],
+				"additionalProperties": false
+			},
+			"PasskeyMigrationCompleteRequest": {
+				"type": "object",
+				"properties": {
+					"response": {
+						"description": "WebAuthn registration response",
+						"$ref": "#/components/schemas/WebAuthnRegistrationResponse"
+					},
+					"challenge": {"description": "The challenge from registration options", "type": "string"}
+				},
+				"required": ["response", "challenge"]
+			},
+			"PasskeyMigrationResponse": {
+				"type": "object",
+				"properties": {
+					"pending": {
+						"anyOf": [
+							{
+								"type": "object",
+								"properties": {
+									"credential_id": {"type": "string", "description": "ID of the passkey waiting to be updated"},
+									"name": {"type": "string", "description": "User-assigned name of the passkey"},
+									"cross_device": {"type": "boolean", "description": "Whether the passkey was used from another device"}
+								},
+								"required": ["credential_id", "name", "cross_device"],
+								"additionalProperties": false
+							},
+							{"type": "null"}
+						],
+						"description": "The passkey this session can update, or null"
+					}
+				},
+				"required": ["pending"],
 				"additionalProperties": false
 			},
 			"SudoVerificationSchema": {
@@ -28511,6 +29166,71 @@
 					{"$ref": "#/components/schemas/AuthRegistrationPendingApprovalResponse"}
 				]
 			},
+			"PasskeyBridgeLoginRedeemResponse": {
+				"oneOf": [
+					{"$ref": "#/components/schemas/CancelledPasskeyBridgeLoginRedeemResponse"},
+					{"$ref": "#/components/schemas/CompletedPasskeyBridgeLoginRedeemResponse"}
+				]
+			},
+			"PasskeyBridgeOptionsResponse": {
+				"type": "object",
+				"properties": {
+					"options": {
+						"description": "WebAuthn authentication options for the ceremony",
+						"$ref": "#/components/schemas/WebAuthnAuthenticationOptionsResponse"
+					}
+				},
+				"required": ["options"],
+				"additionalProperties": false
+			},
+			"PasskeyBridgeCompleteRequest": {
+				"type": "object",
+				"properties": {
+					"response": {
+						"description": "WebAuthn authentication response",
+						"$ref": "#/components/schemas/WebAuthnAuthenticationResponse"
+					}
+				},
+				"required": ["response"]
+			},
+			"PasskeyBridgeFinishResponse": {
+				"type": "object",
+				"properties": {
+					"return_url": {
+						"description": "Where the page runner goes next, or null for the native runner",
+						"type": ["string", "null"]
+					},
+					"completion_code": {
+						"description": "Code the native runner redeems, or null for the page runner",
+						"type": ["string", "null"]
+					}
+				},
+				"required": ["return_url", "completion_code"],
+				"additionalProperties": false
+			},
+			"PasskeyBridgeLoginStartRequest": {
+				"type": "object",
+				"properties": {
+					"purpose": {
+						"type": "string",
+						"enum": ["login", "login_mfa"],
+						"description": "Whether the passkey signs in or completes two-factor sign in"
+					},
+					"runner": {"$ref": "#/components/schemas/PasskeyBridgeRunner"},
+					"ticket": {
+						"description": "The MFA ticket from the login response, for login_mfa",
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 256
+					},
+					"nonce_hash": {
+						"type": "string",
+						"pattern": "^[0-9a-f]{64}$",
+						"description": "Lowercase hex SHA-256 digest of the nonce the starting page keeps"
+					}
+				},
+				"required": ["purpose", "runner", "nonce_hash"]
+			},
 			"OriginHandoffRedeemRequest": {
 				"type": "object",
 				"properties": {
@@ -29338,6 +30058,34 @@
 				},
 				"required": ["id", "rawId", "type", "clientExtensionResults", "response"],
 				"additionalProperties": {}
+			},
+			"PasskeyBridgeRunner": {
+				"type": "string",
+				"enum": ["page", "native"],
+				"description": "Where the passkey ceremony runs: a page on the paired origin or the native desktop client"
+			},
+			"CompletedPasskeyBridgeLoginRedeemResponse": {
+				"type": "object",
+				"properties": {
+					"status": {"type": "string", "const": "completed", "description": "The ceremony finished"},
+					"token": {"type": "string", "description": "Authentication token for API requests"},
+					"user_id": {
+						"description": "ID of the authenticated user",
+						"$ref": "#/components/schemas/SnowflakeStringType"
+					},
+					"user": {
+						"description": "Partial user data for the authenticated account",
+						"$ref": "#/components/schemas/UserPartialResponse"
+					}
+				},
+				"required": ["status", "token", "user_id", "user"],
+				"additionalProperties": false
+			},
+			"CancelledPasskeyBridgeLoginRedeemResponse": {
+				"type": "object",
+				"properties": {"status": {"type": "string", "const": "cancelled", "description": "The ceremony was cancelled"}},
+				"required": ["status"],
+				"additionalProperties": false
 			},
 			"AuthRegistrationPendingApprovalResponse": {
 				"type": "object",
@@ -33666,9 +34414,10 @@
 					"id": {"type": "string", "description": "The credential ID"},
 					"name": {"type": "string", "description": "User-assigned name for the credential"},
 					"created_at": {"type": "string", "description": "When the credential was registered"},
-					"last_used_at": {"description": "When the credential was last used", "type": ["string", "null"]}
+					"last_used_at": {"description": "When the credential was last used", "type": ["string", "null"]},
+					"rp_id": {"type": "string", "description": "Relying party ID the passkey belongs to"}
 				},
-				"required": ["id", "name", "created_at", "last_used_at"],
+				"required": ["id", "name", "created_at", "last_used_at", "rp_id"],
 				"additionalProperties": false
 			},
 			"WebAuthnRegistrationResponse": {
@@ -33716,6 +34465,21 @@
 				"x-enumDescriptions": ["Time-based one-time password authenticator", "WebAuthn authenticator"]
 			},
 			"HexString32Type": {"type": "string", "pattern": "^[a-f0-9]{32}$"},
+			"CompletedPasskeyBridgeSudoRedeemResponse": {
+				"type": "object",
+				"properties": {
+					"status": {"type": "string", "const": "completed", "description": "The ceremony finished"},
+					"sudo_token": {"type": "string", "description": "Sudo mode token"}
+				},
+				"required": ["status", "sudo_token"],
+				"additionalProperties": false
+			},
+			"CancelledPasskeyBridgeSudoRedeemResponse": {
+				"type": "object",
+				"properties": {"status": {"type": "string", "const": "cancelled", "description": "The ceremony was cancelled"}},
+				"required": ["status"],
+				"additionalProperties": false
+			},
 			"PhoneNumberType": {"type": "string"},
 			"RelationshipTypesInput": {
 				"description": "Relationship type",

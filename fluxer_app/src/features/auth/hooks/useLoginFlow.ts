@@ -4,6 +4,13 @@ import {showBrowserLoginHandoffModal} from '@app/features/auth/flow/BrowserLogin
 import {useAuthForm} from '@app/features/auth/hooks/useAuthForm';
 import {CaptchaCancelledError} from '@app/features/auth/hooks/useCaptcha';
 import {
+	isPasskeyCeremonyDismissed,
+	runPasskeyBridgeNativeLogin,
+	startPasskeyBridgePageLogin,
+} from '@app/features/auth/passkey_migration/PasskeyLegacyCeremony';
+import {readPasskeyLoginRoute, writePasskeyLoginRoute} from '@app/features/auth/passkey_migration/PasskeyLoginRoute';
+import {isPasskeyMigrationOrigin, rpIdMatchesPage} from '@app/features/auth/passkey_migration/PasskeyMigrationOrigin';
+import {
 	authenticateMfaWithWebAuthn,
 	authenticateWithWebAuthn,
 	completeLoginSession,
@@ -15,19 +22,13 @@ import {
 	loginWithMfaCode,
 	loginWithPassword,
 	type MfaChallenge,
+	toLoginSuccessPayload,
 } from '@app/features/auth/state/AuthFlow';
-import {
-	describePasskeyBridgeFailure,
-	runPasskeyViaBridge,
-	shouldSuggestPasskeyBridge,
-} from '@app/features/auth/utils/PasskeyBridge';
 import * as WebAuthnUtils from '@app/features/auth/utils/WebAuthnUtils';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
+import {Platform} from '@app/features/platform/types/Platform';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {isDesktop} from '@app/features/ui/utils/NativeUtils';
-import {useLingui} from '@lingui/react/macro';
-import type {AuthenticationResponseJSON, PublicKeyCredentialRequestOptionsJSON} from '@simplewebauthn/browser';
 import {useCallback, useMemo, useRef, useState} from 'react';
 
 const logger = Logger.create('useLoginFlow');
@@ -55,6 +56,20 @@ export function useLoginCompletion(mode: LoginCompletionMode) {
 		}
 	}, []);
 	return {completeLogin};
+}
+
+type LegacyPasskeyLoginOutcome = LoginSuccessPayload | 'cancelled' | 'navigating';
+
+async function runLegacyPasskeyLogin(mfa: MfaChallenge | null): Promise<LegacyPasskeyLoginOutcome> {
+	if (!Platform.isElectron) {
+		await startPasskeyBridgePageLogin(mfa, `${window.location.pathname}${window.location.search}`);
+		return 'navigating';
+	}
+	const result =
+		mfa === null
+			? await runPasskeyBridgeNativeLogin('login')
+			: await runPasskeyBridgeNativeLogin('login_mfa', mfa.ticket);
+	return result.status === 'completed' ? toLoginSuccessPayload(result) : 'cancelled';
 }
 
 const handleLoginOutcome = async (
@@ -95,9 +110,7 @@ export function useLoginFormController({
 	onRequireMfa,
 	onRequireIpAuthorization,
 }: LoginFormControllerOptions) {
-	const {i18n} = useLingui();
 	const [isPasskeyLoading, setIsPasskeyLoading] = useState(false);
-	const [passkeyBridgeSuggested, setPasskeyBridgeSuggested] = useState(false);
 	const {form, isLoading, fieldErrors, error} = useAuthForm({
 		initialValues: {email: '', password: ''},
 		onSubmit: async (values) => {
@@ -119,69 +132,63 @@ export function useLoginFormController({
 			}
 		});
 	}, [onLoginSuccess, redirectPath]);
-	const completePasskeyLogin = useCallback(
-		async (options: PublicKeyCredentialRequestOptionsJSON, credential: AuthenticationResponseJSON) => {
-			const response = await authenticateWithWebAuthn({
-				response: credential,
-				challenge: options.challenge,
-				inviteCode,
-			});
-			await onLoginSuccess?.(response);
+	const handlePasskeyLogin = useCallback(async () => {
+		setIsPasskeyLoading(true);
+		const migrationOrigin = isPasskeyMigrationOrigin();
+		let navigating = false;
+		try {
+			let outcome: LegacyPasskeyLoginOutcome | null = null;
+			if (!migrationOrigin || readPasskeyLoginRoute() === 'native') {
+				await WebAuthnUtils.assertWebAuthnSupported();
+				const options = await getWebAuthnAuthenticationOptions();
+				const credential = await WebAuthnUtils.performAuthentication(options).catch((error: unknown) => {
+					if (migrationOrigin && isPasskeyCeremonyDismissed(error)) {
+						return null;
+					}
+					throw error;
+				});
+				if (credential !== null) {
+					outcome = await authenticateWithWebAuthn({
+						response: credential,
+						challenge: options.challenge,
+						inviteCode,
+					});
+				}
+			}
+			if (outcome === null) {
+				writePasskeyLoginRoute('legacy');
+				outcome = await runLegacyPasskeyLogin(null).catch((error: unknown) => {
+					writePasskeyLoginRoute('native');
+					throw error;
+				});
+				if (outcome === 'cancelled') {
+					writePasskeyLoginRoute('native');
+				}
+			}
+			navigating = outcome === 'navigating';
+			if (typeof outcome === 'string') {
+				return;
+			}
+			await onLoginSuccess?.(outcome);
 			if (redirectPath) {
 				RouterUtils.replaceWith(redirectPath);
 			}
-		},
-		[inviteCode, onLoginSuccess, redirectPath],
-	);
-	const handlePasskeyLogin = useCallback(async () => {
-		setIsPasskeyLoading(true);
-		try {
-			await WebAuthnUtils.assertWebAuthnSupported();
-			const options = await getWebAuthnAuthenticationOptions();
-			const credential = await WebAuthnUtils.performAuthentication(options);
-			await completePasskeyLogin(options, credential);
 		} catch (err) {
 			if (err instanceof CaptchaCancelledError) {
 				return;
 			}
 			logger.error('Passkey login failed', err);
-			if (shouldSuggestPasskeyBridge(err)) {
-				setPasskeyBridgeSuggested(true);
-				return;
-			}
-			if (err instanceof WebAuthnUtils.PasskeyDomainUnsupportedError) {
-				ToastCommands.error(i18n._(WebAuthnUtils.PASSKEY_DOMAIN_UNSUPPORTED_DESCRIPTOR));
-				return;
-			}
 			const userCancelled =
 				err instanceof DOMException && (err.name === 'NotAllowedError' || err.name === 'AbortError');
 			if (isDesktop() && !userCancelled) {
 				handleDesktopPasskeyHandoff();
 			}
 		} finally {
-			setIsPasskeyLoading(false);
-		}
-	}, [completePasskeyLogin, handleDesktopPasskeyHandoff, i18n]);
-	const handlePasskeyBridgeLogin = useCallback(() => {
-		const options = getWebAuthnAuthenticationOptions();
-		const credential = runPasskeyViaBridge('authenticate', options);
-		setIsPasskeyLoading(true);
-		Promise.all([options, credential])
-			.then(([resolvedOptions, resolvedCredential]) => completePasskeyLogin(resolvedOptions, resolvedCredential))
-			.catch((err: unknown) => {
-				if (err instanceof CaptchaCancelledError) {
-					return;
-				}
-				logger.error('Passkey login in the pop-up window failed', err);
-				const descriptor = describePasskeyBridgeFailure(err);
-				if (descriptor) {
-					ToastCommands.error(i18n._(descriptor));
-				}
-			})
-			.finally(() => {
+			if (!navigating) {
 				setIsPasskeyLoading(false);
-			});
-	}, [completePasskeyLogin, i18n]);
+			}
+		}
+	}, [inviteCode, onLoginSuccess, redirectPath, handleDesktopPasskeyHandoff]);
 	return {
 		form,
 		isLoading,
@@ -189,8 +196,6 @@ export function useLoginFormController({
 		error,
 		handlePasskeyLogin,
 		handlePasskeyBrowserLogin: handleDesktopPasskeyHandoff,
-		handlePasskeyBridgeLogin,
-		passkeyBridgeSuggested,
 		isPasskeyLoading,
 	};
 }
@@ -207,9 +212,8 @@ interface MfaControllerOptions {
 }
 
 export function useMfaController({ticket, methods, inviteCode, onLoginSuccess}: MfaControllerOptions) {
-	const {i18n} = useLingui();
 	const [isWebAuthnLoading, setIsWebAuthnLoading] = useState(false);
-	const [passkeyBridgeSuggested, setPasskeyBridgeSuggested] = useState(false);
+	const preferLegacyRef = useRef(false);
 	const {form, isLoading, fieldErrors} = useAuthForm({
 		initialValues: {code: ''},
 		onSubmit: async (values) => {
@@ -227,54 +231,51 @@ export function useMfaController({ticket, methods, inviteCode, onLoginSuccess}: 
 		firstFieldName: 'code',
 		redirectPath: undefined,
 	});
-	const completeWebAuthnMfa = useCallback(
-		async (options: PublicKeyCredentialRequestOptionsJSON, credential: AuthenticationResponseJSON) => {
-			const response = await authenticateMfaWithWebAuthn({
-				response: credential,
-				challenge: options.challenge,
-				ticket,
-				inviteCode,
-			});
-			await onLoginSuccess?.(response);
-		},
-		[inviteCode, onLoginSuccess, ticket],
-	);
 	const handleWebAuthn = useCallback(async () => {
 		setIsWebAuthnLoading(true);
+		let navigating = false;
 		try {
 			const options = await getWebAuthnMfaOptions(ticket);
-			const credential = await WebAuthnUtils.performAuthentication(options);
-			await completeWebAuthnMfa(options, credential);
+			const migrationOrigin = isPasskeyMigrationOrigin();
+			const runsOnPage =
+				!migrationOrigin || (!preferLegacyRef.current && (options.rpId === undefined || rpIdMatchesPage(options.rpId)));
+			let response: LoginSuccessPayload;
+			if (runsOnPage) {
+				const credential = await WebAuthnUtils.performAuthentication(options).catch((error: unknown) => {
+					if (migrationOrigin && isPasskeyCeremonyDismissed(error)) {
+						preferLegacyRef.current = true;
+					}
+					throw error;
+				});
+				response = await authenticateMfaWithWebAuthn({
+					response: credential,
+					challenge: options.challenge,
+					ticket,
+					inviteCode,
+				});
+			} else {
+				const outcome = await runLegacyPasskeyLogin({ticket, ...methods}).catch((error: unknown) => {
+					preferLegacyRef.current = false;
+					throw error;
+				});
+				navigating = outcome === 'navigating';
+				if (outcome === 'cancelled') {
+					preferLegacyRef.current = false;
+				}
+				if (typeof outcome === 'string') {
+					return;
+				}
+				response = outcome;
+			}
+			await onLoginSuccess?.(response);
 		} catch (error) {
 			logger.error('WebAuthn MFA failed', error);
-			if (shouldSuggestPasskeyBridge(error)) {
-				setPasskeyBridgeSuggested(true);
-				return;
-			}
-			if (error instanceof WebAuthnUtils.PasskeyDomainUnsupportedError) {
-				ToastCommands.error(i18n._(WebAuthnUtils.PASSKEY_DOMAIN_UNSUPPORTED_DESCRIPTOR));
-			}
 		} finally {
-			setIsWebAuthnLoading(false);
-		}
-	}, [completeWebAuthnMfa, ticket, i18n]);
-	const handlePasskeyBridge = useCallback(() => {
-		const options = getWebAuthnMfaOptions(ticket);
-		const credential = runPasskeyViaBridge('authenticate', options);
-		setIsWebAuthnLoading(true);
-		Promise.all([options, credential])
-			.then(([resolvedOptions, resolvedCredential]) => completeWebAuthnMfa(resolvedOptions, resolvedCredential))
-			.catch((error: unknown) => {
-				logger.error('WebAuthn MFA in the pop-up window failed', error);
-				const descriptor = describePasskeyBridgeFailure(error);
-				if (descriptor) {
-					ToastCommands.error(i18n._(descriptor));
-				}
-			})
-			.finally(() => {
+			if (!navigating) {
 				setIsWebAuthnLoading(false);
-			});
-	}, [completeWebAuthnMfa, ticket, i18n]);
+			}
+		}
+	}, [inviteCode, methods, onLoginSuccess, ticket]);
 	const supports = useMemo(
 		() => ({totp: methods.totp, webauthn: methods.webauthn, backupCodes: methods.backupCodes}),
 		[methods.totp, methods.webauthn, methods.backupCodes],
@@ -284,8 +285,6 @@ export function useMfaController({ticket, methods, inviteCode, onLoginSuccess}: 
 		isLoading,
 		fieldErrors,
 		handleWebAuthn,
-		handlePasskeyBridge,
-		passkeyBridgeSuggested,
 		isWebAuthnLoading,
 		supports,
 	};

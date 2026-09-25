@@ -3,6 +3,7 @@
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/RuntimeConfig';
 import type {StoredAccount} from '@app/features/auth/state/AccountStorage';
 import {isIOSMobileOrTabletUserAgent} from '@app/features/platform/notifications/NotificationAlertOptions';
+import {PASSKEY_MIGRATION_RP_ID} from '@fluxer/constants/src/PasskeyConstants';
 import type {DomainMigrationDiscoveryResponse} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {experimentBucket} from '@fluxer/schema/src/domains/experiment/ExperimentBucket';
 
@@ -256,6 +257,7 @@ export interface DomainMigrationEnvironment {
 	installKind: DomainMigrationInstallKind;
 	electron: boolean;
 	electronMigrationVersion: number | null;
+	electronPasskeyRpIds: ReadonlyArray<string>;
 }
 
 export function environmentAllowsDomainMigration(environment: DomainMigrationEnvironment): boolean {
@@ -263,7 +265,11 @@ export function environmentAllowsDomainMigration(environment: DomainMigrationEnv
 		return false;
 	}
 	if (environment.electron) {
-		return environment.electronMigrationVersion !== null && environment.electronMigrationVersion >= 1;
+		return (
+			environment.electronMigrationVersion !== null &&
+			environment.electronMigrationVersion >= 1 &&
+			environment.electronPasskeyRpIds.includes(PASSKEY_MIGRATION_RP_ID)
+		);
 	}
 	return true;
 }
@@ -284,7 +290,6 @@ export interface DomainMigrationGateInput {
 	discovery: DomainMigrationDiscoveryResponse | null;
 	marker: DomainMigrationMarker | null;
 	now: number;
-	relatedOriginsSupported: boolean;
 	voiceActive: boolean;
 	oneShotRoute: boolean;
 }
@@ -295,7 +300,6 @@ export function shouldStartDomainMigration(input: DomainMigrationGateInput): boo
 		input.discovery?.enabled === true &&
 		markerAllowsDomainMigration(input.marker, input.now) &&
 		environmentAllowsDomainMigration(input.environment) &&
-		input.relatedOriginsSupported &&
 		!input.voiceActive &&
 		!input.oneShotRoute
 	);

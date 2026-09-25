@@ -441,6 +441,7 @@ export interface ElectronAPI {
 	nativeAudio: NativeAudioApi;
 	voiceEngine?: VoiceEngineV2BridgeHardwareEncoderApi;
 	domainMigration?: {version: number; setAppOrigin(origin: string): Promise<void>};
+	passkeyRpIds?: ReadonlyArray<string>;
 }
 
 export type VirtmicUnavailableReason =

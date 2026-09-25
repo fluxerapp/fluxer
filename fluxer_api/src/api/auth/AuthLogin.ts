@@ -23,6 +23,7 @@ import type {InviteService} from '@app/api/invite/InviteService';
 import {Logger} from '@app/api/Logger';
 import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
+import type {AuthSession as AuthSessionModel} from '@app/api/models/AuthSession';
 import type {User} from '@app/api/models/User';
 import {lookupGeoip} from '@app/api/utils/IpUtils';
 import {createRateLimitError} from '@app/api/utils/RateLimitUtils';
@@ -353,7 +354,7 @@ export async function login(
 const MFA_TICKET_MAX_ATTEMPTS = 5;
 const MFA_USER_MAX_ATTEMPTS = 10;
 
-async function consumeMfaAttempt(
+export async function consumeMfaAttempt(
 	ctx: ApiContext,
 	{userId, ticket, field}: {userId: string; ticket: string; field: string},
 ): Promise<void> {
@@ -381,7 +382,7 @@ export async function loginMfaTotp(
 	ctx: ApiContext,
 	{code, ticket, request}: LoginMfaTotpParams,
 ): Promise<LoginTokenResult> {
-	const {users, cache, rateLimit} = ctx.services;
+	const {users, cache} = ctx.services;
 	const userId = await cache.get<string>(`mfa-ticket:${ticket}`);
 	if (!userId) {
 		throw InputValidationError.fromCode('ticket', ValidationErrorCodes.SESSION_TIMEOUT);
@@ -405,21 +406,36 @@ export async function loginMfaTotp(
 	if (!isValid) {
 		throw InputValidationError.fromCode('code', ValidationErrorCodes.INVALID_CODE);
 	}
+	const [token] = await completeMfaLogin(ctx, user, ticket, request);
+	return {user_id: user.id.toString(), token};
+}
+
+export async function createLoginSession(
+	ctx: ApiContext,
+	user: User,
+	request: Request,
+): Promise<[token: string, AuthSessionModel]> {
+	return AuthSession.createAuthSession(ctx, {user, origin: AuthSession.resolveSessionOrigin(ctx, request)});
+}
+
+export async function completeMfaLogin(
+	ctx: ApiContext,
+	user: User,
+	ticket: string,
+	request: Request,
+): Promise<[token: string, AuthSessionModel]> {
+	const {cache, rateLimit} = ctx.services;
 	await cache.delete(`mfa-ticket:${ticket}`);
 	await rateLimit.resetLimit(`mfa:ticket:${ticket}`);
 	await rateLimit.resetLimit(`mfa:user:${user.id}`);
-	const [token] = await AuthSession.createAuthSession(ctx, {
-		user,
-		origin: AuthSession.resolveSessionOrigin(ctx, request),
-	});
-	return {user_id: user.id.toString(), token};
+	return createLoginSession(ctx, user, request);
 }
 
 export async function loginMfaWebAuthn(
 	ctx: ApiContext,
 	{response, challenge, ticket, request}: LoginMfaWebAuthnParams,
 ): Promise<LoginTokenResult> {
-	const {users, cache, rateLimit} = ctx.services;
+	const {users, cache} = ctx.services;
 	const userId = await cache.get<string>(`mfa-ticket:${ticket}`);
 	if (!userId) {
 		throw InputValidationError.fromCode('ticket', ValidationErrorCodes.SESSION_TIMEOUT);
@@ -434,13 +450,7 @@ export async function loginMfaWebAuthn(
 	}
 	await consumeMfaAttempt(ctx, {userId: user.id.toString(), ticket, field: 'ticket'});
 	await AuthMfa.verifyWebAuthnAuthentication(ctx, user.id, response, challenge, 'mfa', ticket);
-	await cache.delete(`mfa-ticket:${ticket}`);
-	await rateLimit.resetLimit(`mfa:ticket:${ticket}`);
-	await rateLimit.resetLimit(`mfa:user:${user.id}`);
-	const [token] = await AuthSession.createAuthSession(ctx, {
-		user,
-		origin: AuthSession.resolveSessionOrigin(ctx, request),
-	});
+	const [token] = await completeMfaLogin(ctx, user, ticket, request);
 	return {user_id: user.id.toString(), token};
 }
 
