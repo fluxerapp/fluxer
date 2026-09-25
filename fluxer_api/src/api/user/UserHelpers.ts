@@ -275,6 +275,10 @@ export function createPremiumClearPatch(): Partial<UserRow> {
 	return mapExpiredPremiumFields(() => null) as Partial<UserRow>;
 }
 
+export function clearPerksSanitizedFlag(premiumFlags: number): number {
+	return premiumFlags & ~PremiumFlags.PERKS_SANITIZED;
+}
+
 const PROFILE_SUBSTRING_EXEMPT_FLAGS = UserFlags.STAFF;
 
 export function isProfileSubstringExempt(user: Pick<PremiumCheckable, 'flags'>): boolean {
