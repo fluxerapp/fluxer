@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::bootstrap::{build_bootstrap_script, inject_bootstrap};
-use crate::config::HttpEndpoint;
+use crate::bootstrap::{
+    build_bootstrap_script, inject_bootstrap, rewrite_endpoints_for_same_origin_host,
+};
+use crate::config::{AppProxyConfig, HttpEndpoint};
 use crate::csp::{RuntimeCspSources, generate_nonce};
 use crate::discovery_cache::{DiscoveryResponse, discovery_endpoint};
 use crate::geoip::build_geoip_response;
@@ -141,13 +143,16 @@ async fn serve_static_file(
 async fn serve_spa_index(state: &AppState, headers: &HeaderMap) -> Response {
     let should_bust_dev_assets = state.config.index_upstream_url.is_some();
 
-    let discovery = match refresh_discovery_for_spa(state).await {
+    let mut discovery = match refresh_discovery_for_spa(state).await {
         Some(d) => d,
         None => {
             tracing::error!("discovery cache empty, cannot serve SPA");
             return StatusCode::SERVICE_UNAVAILABLE.into_response();
         }
     };
+    if let Some(host) = same_origin_host(&state.config, headers) {
+        rewrite_endpoints_for_same_origin_host(&mut discovery.data, host);
+    }
 
     let nonce = generate_nonce();
     let runtime_csp_sources = build_runtime_csp_sources(state, &discovery);
@@ -190,6 +195,29 @@ async fn serve_spa_index(state: &AppState, headers: &HeaderMap) -> Response {
     };
     let html = html.into_boxed_str();
     build_spa_response(html, csp, should_bust_dev_assets)
+}
+
+fn same_origin_host<'a>(config: &'a AppProxyConfig, headers: &HeaderMap) -> Option<&'a str> {
+    if config.same_origin_hosts.is_empty() {
+        return None;
+    }
+    let host = request_hostname(headers.get(header::HOST)?.to_str().ok()?)?;
+    config
+        .same_origin_hosts
+        .iter()
+        .find(|candidate| candidate.eq_ignore_ascii_case(host))
+        .map(String::as_str)
+}
+
+fn request_hostname(authority: &str) -> Option<&str> {
+    let authority = authority.trim();
+    let hostname = if authority.starts_with('[') {
+        &authority[..=authority.find(']')?]
+    } else {
+        authority.split(':').next()?
+    };
+    let hostname = hostname.trim_end_matches('.');
+    (!hostname.is_empty()).then_some(hostname)
 }
 
 #[derive(Debug)]
@@ -432,6 +460,10 @@ fn build_spa_response(html: Box<str>, csp: HeaderValue, dev_no_store: bool) -> R
         headers.insert(header::CACHE_CONTROL, HeaderValue::from_static("no-cache"));
     }
     super::set_security_headers(headers);
+    headers.insert(
+        HeaderName::from_static("x-fluxer-app-shell"),
+        HeaderValue::from_static("1"),
+    );
     headers.insert(
         axum::http::HeaderName::from_static("accept-ch"),
         HeaderValue::from_static(ACCEPT_CH_VALUE),
@@ -755,6 +787,8 @@ mod tests {
 
     const DISCOVERY_BODY_WITH_BOTH_ENDPOINTS: &str = r#"{"api_code_version":"proxy-test","endpoints":{"static_cdn":"https://cdn.example.test","media":"https://media.example.test"}}"#;
 
+    const DISCOVERY_BODY_WITH_WEB_APP_ENDPOINTS: &str = r#"{"api_code_version":"proxy-test","endpoints":{"api":"https://web.fluxer.app/api","api_client":"https://web.fluxer.app/api","api_public":"https://api.fluxer.app","webapp":"https://web.fluxer.app","static_cdn":"https://cdn.example.test","media":"https://media.example.test"}}"#;
+
     const DISCOVERY_BODY_WITHOUT_ENDPOINTS: &str = r#"{"api_code_version":"proxy-test"}"#;
 
     const DISCOVERY_BODY_SELF_HOSTED: &str = r#"{"api_code_version":"proxy-test","endpoints":{"static_cdn":"https://cdn.example.test","media":"https://media.example.test"},"features":{"self_hosted":true}}"#;
@@ -922,6 +956,100 @@ mod tests {
             .await
             .unwrap();
         String::from_utf8(bytes.to_vec()).unwrap()
+    }
+
+    async fn spa_state_with_same_origin_hosts(hosts: &[&str]) -> AppState {
+        let mut state = assemble_spa_state(
+            ReleaseChannel::Stable,
+            Some(SHELL_WITH_ENDPOINT_HOLES),
+            DISCOVERY_BODY_WITH_WEB_APP_ENDPOINTS,
+            None,
+            None,
+        )
+        .await;
+        let mut config = (*state.config).clone();
+        config.same_origin_hosts = hosts.iter().map(|host| (*host).to_owned()).collect();
+        state.config = Arc::new(config);
+        state
+    }
+
+    fn request_from_host(host: &str) -> HeaderMap {
+        let mut headers = HeaderMap::new();
+        headers.insert(header::HOST, HeaderValue::from_str(host).unwrap());
+        headers
+    }
+
+    #[test]
+    fn the_request_hostname_drops_its_port_and_trailing_dot() {
+        assert_eq!(request_hostname("fluxer.com"), Some("fluxer.com"));
+        assert_eq!(request_hostname("Fluxer.com:443"), Some("Fluxer.com"));
+        assert_eq!(request_hostname("fluxer.com.:8443"), Some("fluxer.com"));
+        assert_eq!(request_hostname("[::1]:8080"), Some("[::1]"));
+        assert_eq!(request_hostname(":443"), None);
+        assert_eq!(request_hostname("[::1"), None);
+    }
+
+    #[tokio::test]
+    async fn a_listed_host_gets_same_origin_endpoints_in_its_bootstrap() {
+        let state = spa_state_with_same_origin_hosts(&["web.fluxer.app", "fluxer.com"]).await;
+
+        let response = serve_spa_index(&state, &request_from_host("FLUXER.com:443")).await;
+        assert_eq!(response.status(), StatusCode::OK);
+        let served = read_document(response).await;
+        assert!(served.contains(r#""api_client":"https://fluxer.com/api""#));
+        assert!(served.contains(r#""api":"https://fluxer.com/api""#));
+        assert!(served.contains(r#""webapp":"https://fluxer.com""#));
+        assert!(served.contains(r#""api_public":"https://api.fluxer.app""#));
+        assert!(!served.contains("https://web.fluxer.app"));
+
+        let cached = state.discovery_cache.get().await.unwrap();
+        assert_eq!(
+            cached.data["endpoints"]["api_client"], "https://web.fluxer.app/api",
+            "the shared discovery snapshot was rewritten for one request"
+        );
+
+        let response = serve_spa_index(&state, &request_from_host("web.fluxer.app")).await;
+        let served = read_document(response).await;
+        assert!(served.contains(r#""api_client":"https://web.fluxer.app/api""#));
+        assert!(!served.contains("https://fluxer.com"));
+    }
+
+    #[tokio::test]
+    async fn an_unlisted_host_keeps_the_discovered_endpoints() {
+        let state = spa_state_with_same_origin_hosts(&["fluxer.com"]).await;
+
+        for headers in [request_from_host("evil.example"), HeaderMap::new()] {
+            let response = serve_spa_index(&state, &headers).await;
+            let served = read_document(response).await;
+            assert!(served.contains(r#""api_client":"https://web.fluxer.app/api""#));
+            assert!(served.contains(r#""webapp":"https://web.fluxer.app""#));
+            assert!(!served.contains("https://fluxer.com"));
+        }
+    }
+
+    #[tokio::test]
+    async fn no_host_is_rewritten_when_none_is_configured() {
+        let state = spa_state_with_same_origin_hosts(&[]).await;
+
+        let response = serve_spa_index(&state, &request_from_host("fluxer.com")).await;
+        let served = read_document(response).await;
+        assert!(served.contains(r#""api_client":"https://web.fluxer.app/api""#));
+    }
+
+    #[tokio::test]
+    async fn the_spa_document_marks_itself_as_the_app_shell() {
+        let state =
+            spa_state_serving(ReleaseChannel::Canary, Some(SHELL_WITH_ENDPOINT_HOLES)).await;
+
+        let response = serve_spa_index(&state, &HeaderMap::new()).await;
+        assert_eq!(response.status(), StatusCode::OK);
+        assert_eq!(
+            response
+                .headers()
+                .get("x-fluxer-app-shell")
+                .and_then(|value| value.to_str().ok()),
+            Some("1")
+        );
     }
 
     #[tokio::test]

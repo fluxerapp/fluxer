@@ -4,6 +4,7 @@ import {marketingUrl} from '@app/features/messaging/utils/MessagingUrlUtils';
 
 export const Routes = {
 	HOME: '/',
+	APP: '/app',
 	LOGIN: '/login',
 	REGISTER: '/register',
 	FORGOT_PASSWORD: '/forgot',

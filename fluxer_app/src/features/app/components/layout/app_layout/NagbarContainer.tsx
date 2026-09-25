@@ -8,6 +8,7 @@ import {CorruptedInstallationNagbar} from '@app/features/app/components/layout/a
 import {DesktopDownloadNagbar} from '@app/features/app/components/layout/app_layout/nagbars/DesktopDownloadNagbar';
 import {DesktopNotificationNagbar} from '@app/features/app/components/layout/app_layout/nagbars/DesktopNotificationNagbar';
 import {DesktopUpdateReadyNagbar} from '@app/features/app/components/layout/app_layout/nagbars/DesktopUpdateReadyNagbar';
+import {DomainMovedNagbar} from '@app/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar';
 import {EmailVerificationNagbar} from '@app/features/app/components/layout/app_layout/nagbars/EmailVerificationNagbar';
 import {GiftInventoryNagbar} from '@app/features/app/components/layout/app_layout/nagbars/GiftInventoryNagbar';
 import {GuildMembershipCtaNagbar} from '@app/features/app/components/layout/app_layout/nagbars/GuildMembershipCtaNagbar';
@@ -228,6 +229,14 @@ export const NagbarContainer: React.FC<NagbarContainerProps> = observer(({nagbar
 								key={nagbar.type}
 								isMobile={mobileLayout.enabled}
 								data-flx="app.app-layout.nagbar-container.streamer-mode-nagbar"
+							/>
+						);
+					case NagbarType.DOMAIN_MOVED:
+						return (
+							<DomainMovedNagbar
+								key={nagbar.type}
+								isMobile={mobileLayout.enabled}
+								data-flx="app.app-layout.nagbar-container.domain-moved-nagbar"
 							/>
 						);
 					default:

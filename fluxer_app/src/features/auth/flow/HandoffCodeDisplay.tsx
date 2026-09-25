@@ -6,7 +6,7 @@ import {Button} from '@app/features/ui/button/Button';
 import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {CheckCircleIcon, ClipboardIcon} from '@phosphor-icons/react';
-import {useCallback, useEffect, useRef, useState} from 'react';
+import {type ReactNode, useCallback, useEffect, useRef, useState} from 'react';
 
 interface HandoffCodeDisplayProps {
 	code: string | null;
@@ -14,6 +14,7 @@ interface HandoffCodeDisplayProps {
 	isGenerating: boolean;
 	error: string | null;
 	onRetry?: () => void;
+	description?: ReactNode;
 }
 
 function useCountdown(expiresAt: string | null): number | null {
@@ -48,7 +49,14 @@ function useCountdown(expiresAt: string | null): number | null {
 	return remaining;
 }
 
-export function HandoffCodeDisplay({code, expiresAt, isGenerating, error, onRetry}: HandoffCodeDisplayProps) {
+export function HandoffCodeDisplay({
+	code,
+	expiresAt,
+	isGenerating,
+	error,
+	onRetry,
+	description,
+}: HandoffCodeDisplayProps) {
 	const {i18n} = useLingui();
 	const [copied, setCopied] = useState(false);
 	const remaining = useCountdown(expiresAt);
@@ -121,7 +129,7 @@ export function HandoffCodeDisplay({code, expiresAt, isGenerating, error, onRetr
 				<Trans>Your code is ready</Trans>
 			</h1>
 			<p className={styles.description} data-flx="auth.flow.handoff-code-display.description">
-				<Trans>Enter this code in your browser to complete sign-in.</Trans>
+				{description ?? <Trans>Enter this code in your browser to complete sign-in.</Trans>}
 			</p>
 			<div className={styles.codeSection} data-flx="auth.flow.handoff-code-display.code-section">
 				<p className={styles.codeLabel} data-flx="auth.flow.handoff-code-display.code-label">

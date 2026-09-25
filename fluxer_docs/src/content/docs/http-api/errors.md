@@ -540,6 +540,10 @@ Invalid form body
 
 Invalid handoff code
 
+### `INVALID_ORIGIN_HANDOFF_NONCE`
+
+This sign-in transfer doesn't match the one you started
+
 ### `INVALID_PERMISSIONS_INTEGER`
 
 Permissions must be a valid integer
@@ -1099,6 +1103,10 @@ Member wasn't found in this community
 ### `UNKNOWN_MESSAGE`
 
 Message wasn't found
+
+### `UNKNOWN_ORIGIN_HANDOFF`
+
+This sign-in transfer has expired or was already used
 
 ### `UNKNOWN_REPORT`
 

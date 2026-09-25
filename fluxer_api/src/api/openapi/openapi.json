@@ -948,6 +948,111 @@
 				"security": [{"botToken": []}, {"sessionToken": []}]
 			}
 		},
+		"/auth/origin-handoff": {
+			"post": {
+				"operationId": "create_origin_handoff",
+				"summary": "Create origin handoff",
+				"tags": ["Auth"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/OriginHandoffCreateResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Store encrypted client state for up to two minutes so another first-party web origin can redeem it once. The receiving origin must present the nonce whose SHA-256 digest is sent here.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/OriginHandoffCreateRequest"}}}
+				}
+			}
+		},
+		"/auth/origin-handoff/redeem": {
+			"post": {
+				"operationId": "redeem_origin_handoff",
+				"summary": "Redeem origin handoff",
+				"tags": ["Auth"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/OriginHandoffRedeemResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Return the encrypted client state stored by create origin handoff and delete it in the same step. A wrong nonce also consumes the handoff. On the official instance the request must come from a first-party web origin.",
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/OriginHandoffRedeemRequest"}}}
+				}
+			}
+		},
 		"/auth/register": {
 			"post": {
 				"operationId": "register_account",
@@ -22495,7 +22600,8 @@
 						"required": ["p256dh", "auth"],
 						"description": "Encryption keys for the push subscription"
 					},
-					"user_agent": {"description": "The user agent string identifying the client", "type": "string"}
+					"user_agent": {"description": "The user agent string identifying the client", "type": "string"},
+					"installed_app": {"description": "Whether the client runs in an installed web app window", "type": "boolean"}
 				},
 				"required": ["endpoint", "keys"]
 			},
@@ -22524,7 +22630,8 @@
 						"required": ["p256dh", "auth"],
 						"description": "Encryption keys for the new push subscription"
 					},
-					"user_agent": {"description": "The user agent string identifying the client", "type": "string"}
+					"user_agent": {"description": "The user agent string identifying the client", "type": "string"},
+					"installed_app": {"description": "Whether the client runs in an installed web app window", "type": "boolean"}
 				},
 				"required": ["old_endpoint", "endpoint", "keys"]
 			},
@@ -27190,7 +27297,8 @@
 					"assignments": {
 						"type": "object",
 						"properties": {
-							"voice_noise_suppression": {"$ref": "#/components/schemas/VoiceNoiseSuppressionAssignmentResponse"}
+							"voice_noise_suppression": {"$ref": "#/components/schemas/VoiceNoiseSuppressionAssignmentResponse"},
+							"domain_migration": {"$ref": "#/components/schemas/DomainMigrationAssignmentResponse"}
 						},
 						"additionalProperties": false
 					}
@@ -28403,6 +28511,56 @@
 					{"$ref": "#/components/schemas/AuthRegistrationPendingApprovalResponse"}
 				]
 			},
+			"OriginHandoffRedeemRequest": {
+				"type": "object",
+				"properties": {
+					"handoff_id": {
+						"type": "string",
+						"pattern": "^[A-Za-z0-9_-]{43}$",
+						"description": "Identifier returned when the handoff was created"
+					},
+					"nonce": {
+						"type": "string",
+						"minLength": 16,
+						"maxLength": 256,
+						"pattern": "^[A-Za-z0-9_-]+$",
+						"description": "Nonce whose SHA-256 digest was sent when the handoff was created"
+					}
+				},
+				"required": ["handoff_id", "nonce"]
+			},
+			"OriginHandoffRedeemResponse": {
+				"type": "object",
+				"properties": {"payload": {"type": "string", "description": "Encrypted client state encoded as base64url"}},
+				"required": ["payload"],
+				"additionalProperties": false
+			},
+			"OriginHandoffCreateRequest": {
+				"type": "object",
+				"properties": {
+					"nonce_hash": {
+						"type": "string",
+						"pattern": "^[0-9a-f]{64}$",
+						"description": "Lowercase hex SHA-256 digest of the nonce the receiving origin holds"
+					},
+					"payload": {
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 8388608,
+						"pattern": "^[A-Za-z0-9_-]+$",
+						"description": "Encrypted client state encoded as base64url"
+					}
+				},
+				"required": ["nonce_hash", "payload"]
+			},
+			"OriginHandoffCreateResponse": {
+				"type": "object",
+				"properties": {
+					"handoff_id": {"type": "string", "description": "Single-use identifier the receiving origin redeems"}
+				},
+				"required": ["handoff_id"],
+				"additionalProperties": false
+			},
 			"MfaTicketRequest": {
 				"type": "object",
 				"properties": {"ticket": {"description": "The MFA ticket from the login response", "type": "string"}},
@@ -28766,6 +28924,10 @@
 						},
 						"description": "Public application configuration for client-side features",
 						"$ref": "#/components/schemas/InstanceAppPublicSchema"
+					},
+					"domain_migration": {
+						"description": "Web domain migration switch and anonymous rollout, only acted on by official instance clients",
+						"$ref": "#/components/schemas/DomainMigrationDiscoveryResponse"
 					}
 				},
 				"required": [
@@ -28782,6 +28944,31 @@
 					"push",
 					"app_public"
 				],
+				"additionalProperties": false
+			},
+			"DomainMigrationDiscoveryResponse": {
+				"type": "object",
+				"properties": {
+					"enabled": {"type": "boolean", "description": "Whether the domain migration is switched on"},
+					"anonymous_rollout_basis_points": {
+						"type": "integer",
+						"minimum": 0,
+						"maximum": 10000,
+						"description": "Share of logged-out devices, in basis points, that move to the new domain"
+					},
+					"rollout_salt": {
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 64,
+						"pattern": "^[\\x20-\\x7e]+$",
+						"description": "Salt used to bucket devices and users"
+					},
+					"standalone_forwarding": {
+						"type": "boolean",
+						"description": "Whether installed desktop web apps forward to the new domain after moving their session"
+					}
+				},
+				"required": ["enabled", "anonymous_rollout_basis_points", "rollout_salt", "standalone_forwarding"],
 				"additionalProperties": false
 			},
 			"InstanceAppPublicSchema": {
@@ -30694,6 +30881,12 @@
 				"additionalProperties": false
 			},
 			"DonationCurrency": {"type": "string", "enum": ["usd", "eur", "brl", "inr", "pln", "try", "sek", "dkk", "nok"]},
+			"DomainMigrationAssignmentResponse": {
+				"type": "object",
+				"properties": {"enabled": {"type": "boolean"}},
+				"required": ["enabled"],
+				"additionalProperties": false
+			},
 			"VoiceNoiseSuppressionAssignmentResponse": {
 				"type": "object",
 				"properties": {

@@ -3,6 +3,7 @@
 import * as AuthSession from '@app/api/auth/AuthSession';
 import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
 import {createGuildID, createUserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
 import {DefaultUserOnly, LoginRequired, LoginRequiredAllowSuspicious} from '@app/api/middleware/AuthMiddleware';
 import {requireOAuth2ScopeForBearer} from '@app/api/middleware/OAuth2ScopeMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
@@ -10,6 +11,7 @@ import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
+import {classifyWebPushOrigin} from '@app/api/user/services/WebPushOriginReplacement';
 import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
 import {
 	mapUserGuildSettingsToResponse,
@@ -854,7 +856,7 @@ export function UserAccountController(app: HonoApp) {
 				'Registers a new push notification subscription for the current user. Takes push endpoint and encryption keys from a Web Push API subscription. Returns subscription ID for future reference.',
 		}),
 		async (ctx) => {
-			const {endpoint, keys, user_agent} = ctx.req.valid('json');
+			const {endpoint, keys, user_agent, installed_app} = ctx.req.valid('json');
 			const authSession = ctx.get('authSession');
 			const subscription = await ctx.get('userService').contentService.registerPushSubscription({
 				userId: ctx.get('user').id,
@@ -862,6 +864,8 @@ export function UserAccountController(app: HonoApp) {
 				endpoint,
 				keys,
 				userAgent: user_agent,
+				originKind: classifyWebPushOrigin(ctx.req.header('origin'), Config.instance.selfHosted),
+				installedApp: installed_app,
 			});
 			return ctx.json({subscription_id: subscription.subscriptionId});
 		},
@@ -883,7 +887,7 @@ export function UserAccountController(app: HonoApp) {
 				'Replaces an existing push subscription whose endpoint has been rotated by the browser (pushsubscriptionchange). Deletes the row keyed by the old endpoint and inserts a new one for the new endpoint.',
 		}),
 		async (ctx) => {
-			const {old_endpoint, endpoint, keys, user_agent} = ctx.req.valid('json');
+			const {old_endpoint, endpoint, keys, user_agent, installed_app} = ctx.req.valid('json');
 			const authSession = ctx.get('authSession');
 			const subscription = await ctx.get('userService').contentService.rotatePushSubscription({
 				userId: ctx.get('user').id,
@@ -892,6 +896,8 @@ export function UserAccountController(app: HonoApp) {
 				endpoint,
 				keys,
 				userAgent: user_agent,
+				originKind: classifyWebPushOrigin(ctx.req.header('origin'), Config.instance.selfHosted),
+				installedApp: installed_app,
 			});
 			return ctx.json({subscription_id: subscription.subscriptionId});
 		},

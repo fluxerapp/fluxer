@@ -8,12 +8,19 @@ import * as AuthMfa from '@app/api/auth/AuthMfa';
 import * as AuthPassword from '@app/api/auth/AuthPassword';
 import * as AuthRegistration from '@app/api/auth/AuthRegistration';
 import * as AuthSession from '@app/api/auth/AuthSession';
+import {getTokenIdHash} from '@app/api/auth/AuthUtility';
 import type {DesktopHandoffService} from '@app/api/auth/services/DesktopHandoffService';
 import type {SsoService} from '@app/api/auth/services/SsoService';
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {Logger} from '@app/api/Logger';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {User} from '@app/api/models/User';
+import {
+	classifyWebPushOrigin,
+	encodePushSessionIdHash,
+	recordPushSessionPredecessor,
+} from '@app/api/user/services/WebPushOriginReplacement';
 import {mapUserToPartialResponse} from '@app/api/user/UserMappers';
 import {lookupGeoip} from '@app/api/utils/IpUtils';
 import {parseJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
@@ -91,6 +98,7 @@ interface AuthHandoffCompleteRequest {
 	data: HandoffCompleteRequest;
 	clientIp: string;
 	authToken?: string;
+	approverOrigin?: string | null;
 }
 
 interface AuthAuthorizeIpRequest {
@@ -305,7 +313,10 @@ export class AuthRequestService {
 
 	async initiateHandoff({request}: AuthHandoffInitiateRequest): Promise<HandoffInitiateResponse> {
 		const origin = AuthSession.resolveSessionOrigin(this.apiContext, request);
-		const result = await this.desktopHandoffService.initiateHandoff({origin});
+		const result = await this.desktopHandoffService.initiateHandoff({
+			origin,
+			initiatorOrigin: request.headers.get('origin'),
+		});
 		return {
 			code: result.code,
 			expires_at: result.expiresAt.toISOString(),
@@ -340,21 +351,53 @@ export class AuthRequestService {
 		};
 	}
 
-	async completeHandoff({data, clientIp, authToken}: AuthHandoffCompleteRequest): Promise<void> {
+	async completeHandoff({data, clientIp, authToken, approverOrigin}: AuthHandoffCompleteRequest): Promise<void> {
 		const sessionToken = data.token ?? authToken;
 		if (!sessionToken) {
 			throw new UnauthorizedError();
 		}
-		await this.desktopHandoffService.completeHandoff(
+		let createdToken: string | null = null;
+		const {initiatorOrigin} = await this.desktopHandoffService.completeHandoff(
 			data.code,
-			(origin) =>
-				AuthSession.createAdditionalAuthSessionFromToken(this.apiContext, {
+			async (origin) => {
+				const created = await AuthSession.createAdditionalAuthSessionFromToken(this.apiContext, {
 					token: sessionToken,
 					expectedUserId: data.user_id,
 					origin,
-				}),
+				});
+				createdToken = created.token;
+				return created;
+			},
 			clientIp,
 		);
+		if (createdToken !== null) {
+			await this.recordPushSessionPredecessor(createdToken, sessionToken, initiatorOrigin, approverOrigin);
+		}
+	}
+
+	private async recordPushSessionPredecessor(
+		createdToken: string,
+		approverToken: string,
+		initiatorOrigin: string | null,
+		approverOrigin: string | null | undefined,
+	): Promise<void> {
+		const {config, kv} = this.apiContext.services;
+		const {selfHosted} = config.instance;
+		if (
+			classifyWebPushOrigin(initiatorOrigin, selfHosted) !== 'target' ||
+			classifyWebPushOrigin(approverOrigin, selfHosted) !== 'legacy'
+		) {
+			return;
+		}
+		try {
+			await recordPushSessionPredecessor(
+				kv,
+				encodePushSessionIdHash(getTokenIdHash(this.apiContext, createdToken)),
+				encodePushSessionIdHash(getTokenIdHash(this.apiContext, approverToken)),
+			);
+		} catch (error) {
+			Logger.warn({error}, 'Failed to record the push session predecessor');
+		}
 	}
 
 	async getHandoffStatus({code, clientIp, pollSecret}: AuthHandoffStatusRequest): Promise<HandoffStatusResponse> {

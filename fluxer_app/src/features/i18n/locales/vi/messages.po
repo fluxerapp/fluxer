@@ -938,7 +938,7 @@ msgstr "{count, plural, one {# tin nhắn bị chặn} other {# tin nhắn bị 
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {# cộng đồng được tìm thấy} other {# cộng đồng được tìm thấy}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1953
+#: src/features/app/components/layout/GuildsLayout.tsx:1954
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# cộng đồng hiện không khả dụng do lỗi bộ biến đổi dòng chảy.} other {# cộng đồng hiện không khả dụng do lỗi bộ biến đổi dòng chảy.}}"
 
@@ -1692,6 +1692,26 @@ msgstr "{productName} đã phát hiện một cuộc tấn công tiềm ẩn tro
 msgid "{productName} detected a potential raid, so new users can't join right now."
 msgstr "{productName} đã phát hiện một cuộc tấn công tiềm ẩn, vì vậy người dùng mới không thể tham gia ngay bây giờ."
 
+#. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:38
+msgid "{productName} has moved to {host}. Add it to your Home Screen or Dock, then sign in with this app."
+msgstr "{productName} đã chuyển sang {host}. Hãy thêm ứng dụng vào Màn hình chính hoặc Dock, sau đó đăng nhập bằng ứng dụng này."
+
+#. Banner in an installed web app on other browsers. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:43
+msgid "{productName} has moved to {host}. Install it from your browser, then sign in with this app."
+msgstr "{productName} đã chuyển sang {host}. Hãy cài đặt từ trình duyệt của bạn, sau đó đăng nhập bằng ứng dụng này."
+
+#. Banner in an installed desktop web app after the account moved to the new domain. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:28
+msgid "{productName} has moved to {host}. Install the new app and you will already be signed in."
+msgstr "{productName} đã chuyển sang {host}. Hãy cài đặt ứng dụng mới và bạn sẽ được đăng nhập sẵn."
+
+#. Banner in an installed Android web app. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:33
+msgid "{productName} has moved to {host}. Open it in your browser to install the new app."
+msgstr "{productName} đã chuyển sang {host}. Mở trên trình duyệt để cài đặt ứng dụng mới."
+
 #. Profile membership label showing when the user account was created.
 #: src/features/user/components/popouts/UserProfileShared.tsx:53
 msgid "{productName} member since"
@@ -1731,6 +1751,16 @@ msgstr "{productName} cần quyền truy cập micrô để liệt kê thiết b
 #: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:44
 msgid "{productName} needs screen recording access. Allow screen recording in your operating system privacy settings and restart the app."
 msgstr "{productName} cần quyền truy cập ghi màn hình. Hãy cho phép ghi màn hình trong cài đặt quyền riêng tư của hệ điều hành và khởi động lại ứng dụng."
+
+#. Intro in the modal that explains how to install the app from its new domain. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:22
+msgid "{productName} now lives at {host}. Install it from there, then sign in with this app."
+msgstr "{productName} hiện đã có tại {host}. Hãy cài đặt từ đó, sau đó đăng nhập bằng ứng dụng này."
+
+#. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:27
+msgid "{productName} now lives at {host}. Install it from there."
+msgstr "{productName} giờ đã có tại {host}. Hãy cài đặt từ đó."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx:31
@@ -2461,7 +2491,7 @@ msgid "a poll"
 msgstr "một cuộc thăm dò"
 
 #. OAuth authorize page error shown when the bot scope requires a redirect_uri that is missing. Technical message; keep "redirect_uri" and "bot" untranslated.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:53
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:54
 msgid "A redirect_uri is required when the bot scope is not the only scope."
 msgstr "Cần có redirect_uri khi phạm vi bot không phải là phạm vi duy nhất."
 
@@ -2859,7 +2889,7 @@ msgid "Add a bot to a community with requested permissions"
 msgstr "Thêm bot vào cộng đồng với các quyền được yêu cầu"
 
 #. Placeholder text in the optional comment field of the forward modal.
-#: src/features/messaging/components/modals/ForwardModal.tsx:99
+#: src/features/messaging/components/modals/ForwardModal.tsx:96
 msgid "Add a comment (optional)"
 msgstr "Thêm bình luận (tùy chọn)"
 
@@ -2920,7 +2950,7 @@ msgid "Add a YouTube Data API key to enrich YouTube links."
 msgstr "Thêm khóa YouTube Data API để bổ sung thông tin cho các liên kết YouTube."
 
 #. Short label in the authentication browser login handoff modal. Keep the tone plain and specific.
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:21
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:22
 msgid "Add account"
 msgstr "Thêm tài khoản"
 
@@ -4379,6 +4409,11 @@ msgstr "Cần phê duyệt"
 msgid "Approve"
 msgstr "Duyệt"
 
+#. Hint under the sign-in option on fluxer.com that pairs a newly installed app with the old installed app. productName is the app name.
+#: src/features/auth/flow/AuthLoginLayout.tsx:74
+msgid "Approve this app from the {productName} app you already use. No password needed."
+msgstr "Phê duyệt ứng dụng này từ ứng dụng {productName} mà bạn đã sử dụng. Không cần mật khẩu."
+
 #. Discovery application status badge in the community Discovery settings tab. The community has been approved and is listed.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:45
 msgid "Approved"
@@ -4848,7 +4883,7 @@ msgid "Authorization failed"
 msgstr "Ủy quyền thất bại"
 
 #. OAuth authorize page generic error toast shown when the authorize request fails unexpectedly.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:74
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:75
 msgid "Authorization failed. Try again."
 msgstr "Ủy quyền thất bại. Vui lòng thử lại."
 
@@ -5826,7 +5861,7 @@ msgid "Bot permissions"
 msgstr "Quyền của bot"
 
 #. OAuth authorize page error shown when the permissions query parameter is a negative integer.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:66
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:67
 msgid "Bot permissions cannot be negative."
 msgstr "Quyền của bot không thể là số âm."
 
@@ -6329,10 +6364,10 @@ msgstr "Không thể tải tệp lên ở đây"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:216
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:232
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:72
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:80
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:86
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:278
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:140
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:282
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:164
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:177
 #: src/features/channel/components/modals/ChannelDeleteModal.tsx:53
@@ -6351,7 +6386,7 @@ msgstr "Không thể tải tệp lên ở đây"
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:133
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
-#: src/features/messaging/components/modals/ForwardModal.tsx:650
+#: src/features/messaging/components/modals/ForwardModal.tsx:591
 #: src/features/messaging/components/modals/ImageCropModal.tsx:1025
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/moderation/components/modals/BanMemberModal.tsx:262
@@ -7462,9 +7497,14 @@ msgid "Choose background"
 msgstr "Chọn hình nền"
 
 #. OAuth authorize page error shown when a bot invite request provides both guild_id and channel_id. Keep the parameter names literal.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:86
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:87
 msgid "Choose either guild_id or channel_id, not both."
 msgstr "Chọn guild_id hoặc channel_id, không chọn cả hai."
+
+#. Second install step on a Mac. File and Add to Dock are the names of the Safari menu items, use the names macOS shows in this language.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:46
+msgid "Choose File, then Add to Dock."
+msgstr "Chọn Tệp, sau đó Thêm vào Dock."
 
 #. Subtitle in the create-DM modal. Keep it short and calm.
 #: src/features/channel/utils/CreateDMModalUtils.tsx:39
@@ -8215,7 +8255,7 @@ msgstr "khối mã"
 msgid "Code blocks"
 msgstr "Khối mã"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:102
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:110
 msgid "Code expired"
 msgstr "Mã đã hết hạn"
 
@@ -8385,17 +8425,17 @@ msgid "Commands"
 msgstr "Lệnh"
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled when at least one selected target has slowmode active.
-#: src/features/messaging/components/modals/ForwardModal.tsx:71
+#: src/features/messaging/components/modals/ForwardModal.tsx:68
 msgid "Comments are disabled because one or more selected channels have slowmode on. The comment would be blocked by slowmode right after the forward."
 msgstr "Không thể bình luận vì một hoặc nhiều kênh đã chọn đang bật chế độ chậm. Bình luận sẽ bị chặn ngay sau khi chuyển tiếp."
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled for a single selected channel with slowmode.
-#: src/features/messaging/components/modals/ForwardModal.tsx:65
+#: src/features/messaging/components/modals/ForwardModal.tsx:62
 msgid "Comments are disabled because slowmode is on in {forwardChannelDisplayName}. The comment would be blocked by slowmode right after the forward."
 msgstr "Không thể bình luận vì kênh {forwardChannelDisplayName} đang bật chế độ chậm. Bình luận sẽ bị chặn ngay sau khi chuyển tiếp."
 
 #. Tooltip on the disabled comment field in the forward modal when slowmode blocks comments.
-#: src/features/messaging/components/modals/ForwardModal.tsx:95
+#: src/features/messaging/components/modals/ForwardModal.tsx:92
 msgid "Comments are unavailable while slowmode is on."
 msgstr "Không thể bình luận khi đang bật chế độ chậm."
 
@@ -8551,7 +8591,7 @@ msgid "Community message notifications"
 msgstr "Thông báo tin nhắn cộng đồng"
 
 #. Developer control label for the community MFA requirement banner.
-#: src/features/devtools/components/NagbarControls.ts:76
+#: src/features/devtools/components/NagbarControls.ts:81
 msgid "Community MFA requirement nagbar"
 msgstr "Thanh thông báo yêu cầu MFA của cộng đồng"
 
@@ -9182,7 +9222,7 @@ msgstr "Tiếp tục báo cáo cộng đồng"
 msgid "Continue to report user"
 msgstr "Tiếp tục báo cáo người dùng"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:245
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:249
 msgid "Continue with passkey"
 msgstr "Tiếp tục bằng khóa truy cập"
 
@@ -9266,7 +9306,7 @@ msgid "Coordinates raids, brigading, or harassment against people or communities
 msgstr "Điều phối các cuộc tấn công, quấy rối hoặc gây rối có tổ chức nhắm vào người hoặc cộng đồng."
 
 #. Generic short status label confirming a value was copied to the clipboard.
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:157
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:165
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:381
 msgid "Copied"
 msgstr "Đã sao chép"
@@ -9368,7 +9408,7 @@ msgid "Copy channel link"
 msgstr "Sao chép liên kết kênh"
 
 #. Action label that copies a code block to the clipboard.
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:157
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:165
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:393
 msgid "Copy code"
 msgstr "Sao chép mã"
@@ -10559,12 +10599,12 @@ msgid "Current uses:"
 msgstr "Lượt dùng hiện tại:"
 
 #. Developer nagbar status: the banner is dismissed in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:109
+#: src/features/devtools/components/NagbarControls.ts:114
 msgid "Currently dismissed"
 msgstr "Đang ẩn"
 
 #. Developer nagbar status: the banner is showing in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:113
+#: src/features/devtools/components/NagbarControls.ts:118
 msgid "Currently showing"
 msgstr "Đang hiển thị"
 
@@ -12555,6 +12595,11 @@ msgstr "Không chặn. Bạn có thể mở lại sau."
 msgid "Domain"
 msgstr "Tên miền"
 
+#. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
+#: src/features/devtools/components/NagbarControls.ts:76
+msgid "Domain moved nagbar"
+msgstr "Chuyển miền"
+
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
 #: src/features/voice/components/modals/HideOwnCameraConfirmModal.tsx:59
@@ -12912,7 +12957,7 @@ msgid "Dutch"
 msgstr "Tiếng Hà Lan"
 
 #. Placeholder or example text in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:27
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:31
 msgid "e.g., YubiKey, iPhone, work computer"
 msgstr "Ví dụ: YubiKey, iPhone, máy tính làm việc"
 
@@ -14056,9 +14101,13 @@ msgstr "Nhập mã PIN cho khóa bảo mật của bạn để tiếp tục."
 msgid "Enter the SMS code"
 msgstr "Nhập mã SMS"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:124
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:132
 msgid "Enter this code in your browser to complete sign-in."
 msgstr "Nhập mã này vào trình duyệt để hoàn tất đăng nhập."
+
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:142
+msgid "Enter this code in your old {PRODUCT_NAME} app to complete sign-in."
+msgstr "Nhập mã này vào ứng dụng {PRODUCT_NAME} cũ của bạn để hoàn tất đăng nhập."
 
 #: src/features/channel/components/EditingMessageInput.tsx:358
 msgid "Enter to <0><1>save</1></0>"
@@ -14441,7 +14490,7 @@ msgstr "Hết hạn {absolute} ({relativeText})"
 msgid "Expires between {earliest} and {latest}"
 msgstr "Hết hạn từ {earliest} đến {latest}"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:142
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:150
 msgid "Expires in {remaining}s"
 msgstr "Hết hạn sau {remaining} giây"
 
@@ -14835,7 +14884,7 @@ msgid "Failed to start SSO"
 msgstr "Không thể bắt đầu SSO"
 
 #. Login flow error shown when switching to a saved account fails.
-#: src/features/auth/flow/AuthLoginLayout.tsx:51
+#: src/features/auth/flow/AuthLoginLayout.tsx:58
 msgid "Failed to switch account"
 msgstr "Không thể chuyển tài khoản"
 
@@ -15413,17 +15462,17 @@ msgstr "Dành cho tôi"
 msgid "For this check, you send us a text message instead of receiving one from us."
 msgstr "Để thực hiện bước kiểm tra này, bạn sẽ gửi tin nhắn cho chúng tôi thay vì nhận tin nhắn từ chúng tôi."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:183
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:187
 msgid "For your security, please confirm it's you to continue."
 msgstr "Để bảo mật, vui lòng xác nhận danh tính của bạn để tiếp tục."
 
 #. Developer nagbar override status: the banner is forced to hide.
-#: src/features/devtools/components/NagbarControls.ts:97
+#: src/features/devtools/components/NagbarControls.ts:102
 msgid "Force disabled"
 msgstr "Buộc tắt"
 
 #. Developer nagbar override status: the banner is forced to show.
-#: src/features/devtools/components/NagbarControls.ts:93
+#: src/features/devtools/components/NagbarControls.ts:98
 msgid "Force enabled"
 msgstr "Buộc bật"
 
@@ -15540,7 +15589,7 @@ msgstr "Quên mật khẩu"
 
 #. Authentication link label that opens password recovery.
 #: src/features/auth/components/pages/ForgotPasswordPage.tsx:71
-#: src/features/auth/flow/AuthLoginLayout.tsx:63
+#: src/features/auth/flow/AuthLoginLayout.tsx:70
 msgid "Forgot your password?"
 msgstr "Quên mật khẩu?"
 
@@ -15571,7 +15620,7 @@ msgstr "Chuyển tiếp phương tiện"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Title of the forward message modal.
 #: src/features/input/state/input_keybind/shared.ts:25
-#: src/features/messaging/components/modals/ForwardModal.tsx:86
+#: src/features/messaging/components/modals/ForwardModal.tsx:83
 msgid "Forward message"
 msgstr "Chuyển tiếp tin nhắn"
 
@@ -15965,11 +16014,11 @@ msgstr "Tạo liên kết có thể chia sẻ hoặc sao chép CSS tùy chỉnh 
 msgid "Generate invite link"
 msgstr "Tạo liên kết mời"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:109
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:117
 msgid "Generate new code"
 msgstr "Tạo mã mới"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:70
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:78
 msgid "Generating code…"
 msgstr "Đang tạo mã…"
 
@@ -16044,6 +16093,11 @@ msgstr "Tải ứng dụng {productName} cho máy tính để bàn để sử d�
 #: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:20
 msgid "Get the desktop app"
 msgstr "Tải ứng dụng cho máy tính"
+
+#. Title of the modal that explains how to install the app from its new domain. productName is the app name.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:18
+msgid "Get the new {productName} app"
+msgstr "Tải ứng dụng {productName} mới"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Type label for GIF media.
@@ -18037,6 +18091,16 @@ msgstr "Chèn biểu tượng cảm xúc"
 msgid "Install {productName} for the full source picker and smoother screen-sharing controls."
 msgstr "Cài đặt {productName} để có bộ chọn nguồn đầy đủ và điều khiển chia sẻ màn hình mượt mà hơn."
 
+#. Second install step on other devices. Refers to the install option in the browser menu.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:51
+msgid "Install it from your browser menu."
+msgstr "Cài đặt từ menu trình duyệt của bạn."
+
+#. Button on the domain moved banner that installs the app from the new domain.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:48
+msgid "Install the new app"
+msgstr "Cài đặt ứng dụng mới"
+
 #. Label for the installed desktop version in the Linux update modal.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:136
 msgid "Installed"
@@ -18123,7 +18187,7 @@ msgid "Invalid authorization request"
 msgstr "Yêu cầu ủy quyền không hợp lệ"
 
 #. OAuth authorize page error shown when the permissions query parameter is not a valid integer.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:62
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:63
 msgid "Invalid bot permissions."
 msgstr "Quyền của bot không hợp lệ."
 
@@ -18164,7 +18228,7 @@ msgid "Invalid or expired code. Try again."
 msgstr "Mã không hợp lệ hoặc đã hết hạn. Hãy thử lại."
 
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:78
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:79
 msgid "Invalid redirect_uri"
 msgstr "redirect_uri không hợp lệ"
 
@@ -19331,6 +19395,11 @@ msgstr "Liên kết"
 #: src/features/channel/utils/ChannelUtils.tsx:39
 msgid "Link (mature)"
 msgstr "Liên kết (người lớn)"
+
+#. Button on the domain moved banner that opens the code entry used to sign in a new app. Must match the translation used in the "Sign in with your old {productName} app" instructions.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:60
+msgid "Link a new device"
+msgstr "Liên kết một thiết bị mới"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:96
@@ -20697,7 +20766,7 @@ msgstr "Cài đặt hiển thị tin nhắn chỉ có trên máy tính."
 msgid "Message editing"
 msgstr "Chỉnh sửa tin nhắn"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:371
+#: src/features/messaging/components/modals/ForwardModal.tsx:309
 msgid "Message forwarded"
 msgstr "Đã chuyển tiếp tin nhắn"
 
@@ -20746,7 +20815,7 @@ msgstr "Nút nhập tin nhắn"
 
 #. Error modal title in the forward modal when the optional comment exceeds the message length limit.
 #. Form validation error indicating the message exceeds the allowed length.
-#: src/features/messaging/components/modals/ForwardModal.tsx:57
+#: src/features/messaging/components/modals/ForwardModal.tsx:54
 #: src/features/ui/character_counter/CharacterCountMessages.ts:16
 msgid "Message is too long"
 msgstr "Tin nhắn quá dài"
@@ -21045,7 +21114,7 @@ msgid "Miscellaneous"
 msgstr "Khác"
 
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:36
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:37
 msgid "Missing client_id"
 msgstr "Thiếu client_id"
 
@@ -21862,12 +21931,12 @@ msgid "Name must be at least 2 characters"
 msgstr "Tên phải có ít nhất 2 ký tự"
 
 #. Short label in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:19
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:23
 msgid "Name passkey"
 msgstr "Đặt tên khóa truy cập"
 
 #. Accessible form label in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:15
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:19
 msgid "Name passkey form"
 msgstr "Biểu mẫu đặt tên khóa truy cập"
 
@@ -22381,7 +22450,7 @@ msgstr "Không có thay đổi nào để lưu"
 msgid "No channels available"
 msgstr "Không có kênh nào"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:445
+#: src/features/messaging/components/modals/ForwardModal.tsx:383
 #: src/features/search/components/search/ChannelFilterSheet.tsx:120
 msgid "No channels found"
 msgstr "Không tìm thấy kênh nào"
@@ -22824,7 +22893,7 @@ msgstr "Không tìm thấy người dùng nào"
 msgid "No verification is required."
 msgstr "Không yêu cầu xác minh."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:189
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:193
 msgid "No verification methods available"
 msgstr "Không có phương thức xác minh nào"
 
@@ -23417,6 +23486,16 @@ msgstr "Mở {contextName}"
 msgid "Open {displayName}"
 msgstr "Mở {displayName}"
 
+#. First install step on Apple devices. host is the new domain, for example fluxer.com. Safari is the browser.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:32
+msgid "Open {host} in Safari."
+msgstr "Mở {host} trên Safari."
+
+#. First install step on other devices. host is the new domain, for example fluxer.com.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:37
+msgid "Open {host} in your browser."
+msgstr "Mở {host} trên trình duyệt của bạn."
+
 #. Accessible label for an inline settings deep-link pill. labelText is the resolved settings tab and section breadcrumb.
 #: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:109
 msgid "Open {labelText} in settings"
@@ -23436,6 +23515,11 @@ msgstr "Mở {macosSystemSettingsName} → {macosPrivacyAndSecuritySettingsName}
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:27
 msgid "Open {productName}"
 msgstr "Mở {productName}"
+
+#. Button on the domain moved banner that opens the new domain in the browser. productName is the app name.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:52
+msgid "Open {productName} in your browser"
+msgstr "Mở {productName} trên trình duyệt của bạn"
 
 #. Button or menu action label in the channel and chat gif picker grid item. Keep it concise. Preserve {title}; it is inserted by code.
 #: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:37
@@ -23510,7 +23594,7 @@ msgstr "Mở tùy chọn ảnh bìa"
 msgid "Open bookmarks"
 msgstr "Mở tin nhắn đã lưu"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:153
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:178
 msgid "Open browser"
 msgstr "Mở trình duyệt"
 
@@ -23614,7 +23698,7 @@ msgid "Open emoji in browser"
 msgstr "Mở biểu tượng cảm xúc trong trình duyệt"
 
 #. Accessible label for the emoji picker trigger button in the forward modal comment field.
-#: src/features/messaging/components/modals/ForwardModal.tsx:103
+#: src/features/messaging/components/modals/ForwardModal.tsx:100
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:27
 msgid "Open emoji picker"
 msgstr "Mở bảng chọn biểu tượng cảm xúc"
@@ -23809,6 +23893,16 @@ msgstr "Mở liên kết bên dưới trong trình duyệt, sau đó sao chép t
 msgid "Open the menu and choose an option."
 msgstr "Mở menu và chọn một tùy chọn."
 
+#. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
+msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
+msgstr "Mở ứng dụng mới và chọn Đăng nhập bằng ứng dụng {productName} cũ của bạn. Sau đó chọn Liên kết thiết bị mới tại đây và nhập mã hiển thị."
+
+#. Third install step in a desktop browser that already moved the account to the new domain.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
+msgid "Open the new app. You are already signed in."
+msgstr "Mở ứng dụng mới. Bạn đã đăng nhập."
+
 #. Tip explaining the keyboard shortcut for opening the shortcuts list.
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx:42
 msgid "Open the shortcuts list for quick actions."
@@ -23859,7 +23953,7 @@ msgstr "Mở trò chuyện thoại"
 msgid "Open voice & video settings"
 msgstr "Mở cài đặt âm thanh & video"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:113
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:131
 msgid "Open your browser, sign in, then enter the code below to link your account."
 msgstr "Mở trình duyệt, đăng nhập, sau đó nhập mã bên dưới để liên kết tài khoản của bạn."
 
@@ -23867,6 +23961,10 @@ msgstr "Mở trình duyệt, đăng nhập, sau đó nhập mã bên dưới đ�
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:450
 msgid "Open your messages"
 msgstr "Mở tin nhắn của bạn"
+
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:129
+msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
+msgstr "Mở ứng dụng {PRODUCT_NAME} cũ của bạn và chọn Liên kết thiết bị mới, sau đó nhập mã bên dưới."
 
 #: src/features/user/components/modals/PhoneAddModal.tsx:327
 msgid "Open your phone's messaging app and create a new text message."
@@ -24222,7 +24320,7 @@ msgid "Passkey"
 msgstr "Khóa truy cập"
 
 #. Short label in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:23
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:27
 msgid "Passkey name"
 msgstr "Tên khóa truy cập"
 
@@ -28138,7 +28236,7 @@ msgstr "Độ bão hòa"
 #. Button or menu action label in the rename channel modal. Keep it concise.
 #. Save button in the community-folder settings modal footer.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:113
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:87
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:93
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:366
 #: src/features/channel/components/modals/EditGroupModal.tsx:322
 #: src/features/channel/components/modals/RenameChannelModal.tsx:28
@@ -28545,7 +28643,7 @@ msgstr "Xem trước khi tua"
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:854
 #: src/features/channel/components/channel_header/shared.ts:47
 #: src/features/channel/components/shared/PickerSearchInput.tsx:21
-#: src/features/messaging/components/modals/ForwardModal.tsx:90
+#: src/features/messaging/components/modals/ForwardModal.tsx:87
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx:43
 #: src/features/search/utils/QuickSwitcherModalUtils.tsx:45
 #: src/features/theme_studio/ui/StudioSearchInput.tsx:16
@@ -29074,8 +29172,8 @@ msgid "Select text"
 msgstr "Chọn văn bản"
 
 #: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:69
-msgid "Select the account you want to sign in with on the desktop app."
-msgstr "Chọn tài khoản bạn muốn đăng nhập trên ứng dụng máy tính."
+msgid "Select the account you want to sign in with on your new device."
+msgstr "Chọn tài khoản bạn muốn đăng nhập trên thiết bị mới của mình."
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:120
@@ -29182,7 +29280,7 @@ msgid "Send"
 msgstr "Gửi"
 
 #. Primary button label in the forward message modal. selectedCount is the number of selected destinations; selectionLimit is the maximum allowed.
-#: src/features/messaging/components/modals/ForwardModal.tsx:107
+#: src/features/messaging/components/modals/ForwardModal.tsx:104
 msgid "Send ({selectedCount}/{selectionLimit})"
 msgstr "Gửi ({selectedCount}/{selectionLimit})"
 
@@ -29487,7 +29585,7 @@ msgid "Session"
 msgstr "Phiên"
 
 #. Login layout banner shown when the session for a specific account has expired. Account identifier is interpolated.
-#: src/features/auth/flow/AuthLoginLayout.tsx:46
+#: src/features/auth/flow/AuthLoginLayout.tsx:53
 msgid "Session expired for {identifier}. Sign in again."
 msgstr "Phiên đăng nhập của {identifier} đã hết hạn. Hãy đăng nhập lại."
 
@@ -29970,7 +30068,7 @@ msgid "Shortcuts are paused while recording."
 msgstr "Các phím tắt tạm ngừng hoạt động trong khi ghi lại tổ hợp phím."
 
 #. Body of the error modal shown when the forward modal comment exceeds the message length limit.
-#: src/features/messaging/components/modals/ForwardModal.tsx:61
+#: src/features/messaging/components/modals/ForwardModal.tsx:58
 msgid "Shorten the message and try again."
 msgstr "Rút gọn tin nhắn và thử lại."
 
@@ -30216,6 +30314,11 @@ msgstr "Hiển thị tối đa 3 (huy hiệu +5)"
 #: src/features/user/components/modals/tabs/component_gallery_tab/IndicatorsTab.tsx:495
 msgid "Show max 5 (+5 badge)"
 msgstr "Hiển thị tối đa 5 (huy hiệu +5)"
+
+#. Button on the domain moved banner that opens the install steps.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:56
+msgid "Show me how"
+msgstr "Chỉ cho tôi cách"
 
 #. Plus menu submenu toggle that shows the saved media (memes) button next to the textarea.
 #. Short label for an advanced message input preference.
@@ -30488,13 +30591,18 @@ msgstr "Đăng nhập để nhận quà"
 
 #. Passkey sign-in action that opens the browser flow from the desktop app.
 #: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:64
-#: src/features/auth/flow/AuthLoginLayout.tsx:67
+#: src/features/auth/flow/AuthLoginLayout.tsx:79
 msgid "Sign in via browser"
 msgstr "Đăng nhập qua trình duyệt"
 
 #: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:63
 msgid "Sign in with a passkey"
 msgstr "Đăng nhập bằng khóa truy cập"
+
+#. Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:27
+msgid "Sign in with your old {productName} app"
+msgstr "Đăng nhập bằng ứng dụng {productName} cũ của bạn"
 
 #. Description shown when sign-in is restricted to the configured SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx:17
@@ -30562,7 +30670,7 @@ msgid "Sign-in details"
 msgstr "Chi tiết đăng nhập"
 
 #. Accessible label for the stepped sign-in panel.
-#: src/features/auth/flow/AuthLoginLayout.tsx:55
+#: src/features/auth/flow/AuthLoginLayout.tsx:62
 msgid "Sign-in flow"
 msgstr "Quy trình đăng nhập"
 
@@ -31030,7 +31138,7 @@ msgstr "Không thể thêm một số người dùng"
 #. Generic error modal title for an unexpected failure.
 #. Generic error toast title.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:248
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:82
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:90
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:274
 #: src/lib/forms/index.tsx:18
 msgid "Something went wrong"
@@ -32688,6 +32796,11 @@ msgstr "Nói trong kênh thoại này. Nếu không có quyền này, thành vi�
 msgid "Talk in voice channels. Without this permission, members stay muted until someone with the \"Mute members\" permission unmutes them."
 msgstr "Nói trong các kênh thoại. Nếu không có quyền này, thành viên sẽ bị tắt tiếng cho đến khi ai đó có quyền Tắt tiếng thành viên bật tiếng cho họ."
 
+#. Second install step on iPhone and iPad. Share and Add to Home Screen are the names of the Safari menu items, use the names iOS shows in this language.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:41
+msgid "Tap Share, then Add to Home Screen."
+msgstr "Chạm vào Chia sẻ, sau đó chọn Thêm vào Màn hình chính."
+
 #. Label in the note edit sheet.
 #: src/features/user/components/modals/NoteEditSheet.tsx:21
 msgid "Tap to add a note"
@@ -33207,12 +33320,12 @@ msgid "The phone check is set aside. One email step is left."
 msgstr "Đã bỏ qua kiểm tra điện thoại. Còn một bước email."
 
 #. OAuth authorize page error shown when the redirect_uri is not registered for this OAuth app.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:58
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:59
 msgid "The provided redirect_uri is not registered for this application."
 msgstr "redirect_uri được cung cấp chưa đăng ký với ứng dụng này."
 
 #. Body text in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:49
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:50
 msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "redirect_uri được cung cấp phải dùng HTTP hoặc HTTPS."
 
@@ -33445,7 +33558,7 @@ msgid "This animation is too long or too large to crop. Try a shorter or smaller
 msgstr "Ảnh động này quá dài hoặc quá lớn để cắt. Hãy thử một tệp ngắn hơn hoặc nhỏ hơn."
 
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:82
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:83
 msgid "This application"
 msgstr "Ứng dụng này"
 
@@ -33455,7 +33568,7 @@ msgid "This attachment has expired"
 msgstr "Tệp đính kèm này đã hết hạn"
 
 #. OAuth authorize page error shown when a private bot cannot be added by non-owners.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:70
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:71
 msgid "This bot is not public and cannot be added by other users."
 msgstr "Bot này không công khai nên người dùng khác không thể thêm."
 
@@ -33757,7 +33870,7 @@ msgstr "Nhóm này có quá nhiều người"
 msgid "This group is full. Remove someone before adding more people."
 msgstr "Nhóm này đã đầy. Hãy xóa bớt một người trước khi thêm người khác."
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:105
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:113
 msgid "This handoff code has expired. Generate a new one to continue."
 msgstr "Mã chuyển giao này đã hết hạn. Tạo mã mới để tiếp tục."
 
@@ -35480,7 +35593,7 @@ msgid "Unknown"
 msgstr "Không rõ"
 
 #. OAuth authorize page error shown when the application, session, or request is invalid.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:45
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:46
 msgid "Unknown application, expired session, or invalid authorization request."
 msgstr "Ứng dụng không xác định, phiên đã hết hạn hoặc yêu cầu ủy quyền không hợp lệ."
 
@@ -36862,27 +36975,27 @@ msgid "Uses:"
 msgstr "Lượt dùng:"
 
 #. Developer nagbar status: banner follows real account state.
-#: src/features/devtools/components/NagbarControls.ts:101
+#: src/features/devtools/components/NagbarControls.ts:106
 msgid "Using actual account state"
 msgstr "Đang sử dụng trạng thái tài khoản thực tế"
 
 #. Developer nagbar status: banner follows real gift inventory state.
-#: src/features/devtools/components/NagbarControls.ts:121
+#: src/features/devtools/components/NagbarControls.ts:126
 msgid "Using actual gift inventory state"
 msgstr "Đang sử dụng trạng thái kho quà tặng thực tế"
 
 #. Developer nagbar status: banner follows real premium subscription state.
-#: src/features/devtools/components/NagbarControls.ts:117
+#: src/features/devtools/components/NagbarControls.ts:122
 msgid "Using actual premium state"
 msgstr "Đang sử dụng trạng thái premium thực tế"
 
 #. Developer nagbar status: banner follows the real app state.
-#: src/features/devtools/components/NagbarControls.ts:125
+#: src/features/devtools/components/NagbarControls.ts:130
 msgid "Using actual state"
 msgstr "Đang sử dụng trạng thái thực tế"
 
 #. Developer nagbar status: banner follows real email verification state.
-#: src/features/devtools/components/NagbarControls.ts:105
+#: src/features/devtools/components/NagbarControls.ts:110
 msgid "Using actual verification state"
 msgstr "Đang sử dụng trạng thái xác minh thực tế"
 
@@ -37947,17 +38060,17 @@ msgstr "Đợi ở đây"
 msgid "Waiting for connection..."
 msgstr "Đang chờ kết nối..."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:232
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:236
 msgid "Waiting for passkey…"
 msgstr "Đang chờ khóa truy cập…"
 
 #. Inline notice in the forward modal when slowmode is active in the selected target channel. forwardChannelDisplayName is the channel name.
-#: src/features/messaging/components/modals/ForwardModal.tsx:77
+#: src/features/messaging/components/modals/ForwardModal.tsx:74
 msgid "Waiting for slowmode in {forwardChannelDisplayName} to expire."
 msgstr "Đang chờ chế độ chậm trong {forwardChannelDisplayName} hết hạn."
 
 #. Inline notice in the forward modal when slowmode is active in one or more selected target channels.
-#: src/features/messaging/components/modals/ForwardModal.tsx:82
+#: src/features/messaging/components/modals/ForwardModal.tsx:79
 msgid "Waiting for slowmode in one or more selected channels to expire."
 msgstr "Đang chờ chế độ chậm trong một hoặc nhiều kênh đã chọn hết hạn."
 
@@ -38156,7 +38269,7 @@ msgstr "Chúng tôi đã đổi kích thước và nén nhãn dán này thành 3
 msgid "We sent a code to {email}."
 msgstr "Chúng tôi đã gửi mã đến {email}."
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:128
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:152
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "Chúng tôi sẽ điền sẵn {prefillEmail} khi trình duyệt mở trang đăng nhập."
 
@@ -38356,7 +38469,7 @@ msgid "Website previews"
 msgstr "Xem trước trang web"
 
 #. Heading on the standard sign-in form.
-#: src/features/auth/flow/AuthLoginLayout.tsx:59
+#: src/features/auth/flow/AuthLoginLayout.tsx:66
 msgid "Welcome back"
 msgstr "Chào mừng bạn trở lại"
 
@@ -39699,7 +39812,7 @@ msgid "Your {premiumProductName} subscription has expired. You have lost all {pr
 msgstr "Gói đăng ký {premiumProductName} của bạn đã hết hạn. Bạn đã mất tất cả các đặc quyền của {premiumProductName}. Vui lòng kích hoạt lại gói đăng ký để lấy lại quyền truy cập."
 
 #. OAuth authorize page error shown when the session expired mid-authorization. Keep plain. Preserve {productName}; it is inserted by code.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:40
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:41
 msgid "Your {productName} session expired. Sign in again to continue authorizing this application."
 msgstr "Phiên {productName} của bạn đã hết hạn. Vui lòng đăng nhập lại để tiếp tục ủy quyền cho ứng dụng này."
 
@@ -39734,7 +39847,7 @@ msgstr "Tài khoản của bạn còn quá mới để gửi tin nhắn trong c�
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "Yêu cầu tài khoản của bạn đang chờ phê duyệt. Bạn có thể đăng nhập sau khi quản trị viên phê duyệt."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:195
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:199
 msgid "Your account requires multi-factor authentication, but no supported methods are set up on this device. Sign in on a device with your authenticator app or security key, or contact support."
 msgstr "Tài khoản của bạn yêu cầu xác thực đa yếu tố, nhưng chưa có phương thức nào được thiết lập trên thiết bị này. Vui lòng đăng nhập trên thiết bị có ứng dụng xác thực hoặc khóa bảo mật của bạn, hoặc liên hệ bộ phận hỗ trợ."
 
@@ -39757,6 +39870,11 @@ msgstr "Hành động của bạn không thể hoàn tất vì đã bị hệ th
 msgid "Your application is pending review. You can still update your listing details or withdraw the application."
 msgstr "Đơn đăng ký của bạn đang chờ xét duyệt. Bạn vẫn có thể cập nhật chi tiết hoặc rút lại đơn đăng ký."
 
+#. Error shown when a passkey prompt fails because the browser cannot use the passkey on this web address. Keep plain.
+#: src/features/auth/utils/WebAuthnUtils.ts:18
+msgid "Your browser does not support passkeys on this domain. Update your browser, or sign in with your password and two-factor code."
+msgstr "Trình duyệt của bạn không hỗ trợ khóa truy cập trên miền này. Hãy cập nhật trình duyệt hoặc đăng nhập bằng mật khẩu và mã hai yếu tố của bạn."
+
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12
 msgid "Your browser requires user interaction before audio can be played. Click the button below to enable voice chat."
@@ -39775,11 +39893,11 @@ msgstr "Thẻ của bạn đủ điều kiện. Đang chuyển bạn đến tran
 msgid "Your carrier says this number isn't in service. Check it and try again, or contact support if it's correct."
 msgstr "Nhà mạng cho biết số này không còn được sử dụng. Vui lòng kiểm tra lại rồi thử lại, hoặc liên hệ bộ phận hỗ trợ nếu số này là chính xác."
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:128
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:136
 msgid "Your code"
 msgstr "Mã của bạn"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:121
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:129
 msgid "Your code is ready"
 msgstr "Mã của bạn đã sẵn sàng"
 

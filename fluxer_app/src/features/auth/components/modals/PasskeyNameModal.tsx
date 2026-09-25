@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
+import {
+	PASSKEY_DOMAIN_UNSUPPORTED_DESCRIPTOR,
+	PasskeyDomainUnsupportedError,
+} from '@app/features/auth/utils/WebAuthnUtils';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -43,6 +47,8 @@ export const PasskeyNameModal = observer(({onSubmit}: {onSubmit: (name: string) 
 		} catch (error) {
 			if (error instanceof HttpError) {
 				FormUtils.handleError(i18n, form, error, 'name');
+			} else if (error instanceof PasskeyDomainUnsupportedError) {
+				form.setError('name', {type: 'server', message: i18n._(PASSKEY_DOMAIN_UNSUPPORTED_DESCRIPTOR)});
 			} else {
 				form.setError('name', {type: 'server', message: FormUtils.extractErrorMessage(i18n, error)});
 			}

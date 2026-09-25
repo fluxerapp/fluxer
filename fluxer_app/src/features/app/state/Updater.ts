@@ -54,7 +54,12 @@ const MIN_CHECK_INTERVAL_MS = 60 * 1000;
 const MANUAL_DOWNLOAD_REFRESH_TIMEOUT_MS = 5 * 1000;
 const VERSION_ENDPOINT = '/version.json';
 const CURRENT_BUILD_VERSION = Config.PUBLIC_BUILD_VERSION ?? null;
-const ALLOWED_WEB_UPDATE_HOSTS = new Set(['web.fluxer.app', 'web.canary.fluxer.app']);
+const ALLOWED_WEB_UPDATE_HOSTS = new Set([
+	'web.fluxer.app',
+	'web.canary.fluxer.app',
+	'fluxer.com',
+	'canary.fluxer.com',
+]);
 
 function normalizeUpdaterContext(context: NativeUpdaterEvent['context']): UpdaterContext {
 	switch (context) {

@@ -129,6 +129,7 @@ export interface APIConfig {
 		apiPublic: string;
 		apiClient: string;
 		webApp: string;
+		webAppOrigins: Array<string>;
 		gateway: string;
 		media: string;
 		staticCdn: string;

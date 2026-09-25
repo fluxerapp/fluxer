@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
+import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import styles from '@app/features/auth/flow/BrowserLoginHandoffModal.module.css';
@@ -23,15 +24,25 @@ const ADD_ACCOUNT_DESCRIPTOR = msg({
 	comment: 'Short label in the authentication browser login handoff modal. Keep the tone plain and specific.',
 });
 
+export const SIGN_IN_WITH_OLD_APP_DESCRIPTOR = msg({
+	message: 'Sign in with your old {productName} app',
+	comment:
+		'Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.',
+});
+
+export type BrowserLoginHandoffVariant = 'browser' | 'old_app';
+
 interface BrowserLoginHandoffModalProps {
 	onSuccess: (payload: LoginSuccessPayload) => Promise<void>;
 	prefillEmail?: string;
+	variant?: BrowserLoginHandoffVariant;
 }
 
 const POLL_INTERVAL_MS = 2000;
 
-const BrowserLoginHandoffModal = observer(({onSuccess, prefillEmail}: BrowserLoginHandoffModalProps) => {
+const BrowserLoginHandoffModal = observer(({onSuccess, prefillEmail, variant}: BrowserLoginHandoffModalProps) => {
 	const {i18n} = useLingui();
+	const isOldAppVariant = variant === 'old_app';
 	const currentWebAppUrl = RuntimeConfig.webAppBaseUrl;
 	const [handoffCode, setHandoffCode] = useState<string | null>(null);
 	const [handoffExpiresAt, setHandoffExpiresAt] = useState<string | null>(null);
@@ -104,13 +115,21 @@ const BrowserLoginHandoffModal = observer(({onSuccess, prefillEmail}: BrowserLog
 			data-flx="auth.flow.browser-login-handoff-modal.modal-root"
 		>
 			<Modal.Header
-				title={i18n._(ADD_ACCOUNT_DESCRIPTOR)}
+				title={
+					isOldAppVariant
+						? i18n._(SIGN_IN_WITH_OLD_APP_DESCRIPTOR, {productName: PRODUCT_NAME})
+						: i18n._(ADD_ACCOUNT_DESCRIPTOR)
+				}
 				data-flx="auth.flow.browser-login-handoff-modal.modal-header"
 			/>
 			<Modal.Content data-flx="auth.flow.browser-login-handoff-modal.modal-content">
 				<Modal.ContentLayout className={styles.content} data-flx="auth.flow.browser-login-handoff-modal.content">
 					<Modal.Description data-flx="auth.flow.browser-login-handoff-modal.description">
-						<Trans>Open your browser, sign in, then enter the code below to link your account.</Trans>
+						{isOldAppVariant ? (
+							<Trans>Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below.</Trans>
+						) : (
+							<Trans>Open your browser, sign in, then enter the code below to link your account.</Trans>
+						)}
 					</Modal.Description>
 					<HandoffCodeDisplay
 						code={handoffCode}
@@ -118,9 +137,14 @@ const BrowserLoginHandoffModal = observer(({onSuccess, prefillEmail}: BrowserLog
 						isGenerating={isGenerating}
 						error={error}
 						onRetry={generateCode}
+						description={
+							isOldAppVariant ? (
+								<Trans>Enter this code in your old {PRODUCT_NAME} app to complete sign-in.</Trans>
+							) : undefined
+						}
 						data-flx="auth.flow.browser-login-handoff-modal.handoff-code-display"
 					/>
-					{prefillEmail ? (
+					{prefillEmail && !isOldAppVariant ? (
 						<Modal.Description
 							className={styles.prefillHint}
 							data-flx="auth.flow.browser-login-handoff-modal.prefill-hint"
@@ -139,19 +163,21 @@ const BrowserLoginHandoffModal = observer(({onSuccess, prefillEmail}: BrowserLog
 				>
 					<Trans>Cancel</Trans>
 				</Button>
-				<Button
-					variant="primary"
-					onClick={handleOpenBrowser}
-					submitting={isGenerating}
-					data-flx="auth.flow.browser-login-handoff-modal.button.open-browser"
-				>
-					<ArrowSquareOutIcon
-						size={remFromPx(16)}
-						weight="bold"
-						data-flx="auth.flow.browser-login-handoff-modal.arrow-square-out-icon"
-					/>
-					<Trans>Open browser</Trans>
-				</Button>
+				{isOldAppVariant ? null : (
+					<Button
+						variant="primary"
+						onClick={handleOpenBrowser}
+						submitting={isGenerating}
+						data-flx="auth.flow.browser-login-handoff-modal.button.open-browser"
+					>
+						<ArrowSquareOutIcon
+							size={remFromPx(16)}
+							weight="bold"
+							data-flx="auth.flow.browser-login-handoff-modal.arrow-square-out-icon"
+						/>
+						<Trans>Open browser</Trans>
+					</Button>
+				)}
 			</Modal.Footer>
 		</Modal.Root>
 	);
@@ -160,6 +186,7 @@ const BrowserLoginHandoffModal = observer(({onSuccess, prefillEmail}: BrowserLog
 export function showBrowserLoginHandoffModal(
 	onSuccess: (payload: LoginSuccessPayload) => Promise<void>,
 	prefillEmail?: string,
+	variant: BrowserLoginHandoffVariant = 'browser',
 ): void {
 	ModalCommands.push(
 		modal(() => (
@@ -168,6 +195,7 @@ export function showBrowserLoginHandoffModal(
 					await onSuccess(payload);
 				}}
 				prefillEmail={prefillEmail}
+				variant={variant}
 				data-flx="auth.flow.browser-login-handoff-modal.show-browser-login-handoff-modal.browser-login-handoff-modal"
 			/>
 		)),

@@ -132,6 +132,7 @@ export const ErrorCodeToI18nKey = {
 	[ValidationErrorCodes.INVALID_OR_EXPIRED_AUTHORIZATION_TICKET]:
 		'auth_and_oauth.invalid_or_expired_authorization_ticket',
 	[ValidationErrorCodes.INVALID_OR_EXPIRED_SSO_STATE]: 'auth_and_oauth.invalid_or_expired_sso_state',
+	[APIErrorCodes.INVALID_ORIGIN_HANDOFF_NONCE]: 'auth_and_oauth.origin_handoff_nonce_invalid',
 	[APIErrorCodes.INVALID_PERMISSIONS_INTEGER]: 'misc.invalid_permissions_integer',
 	[APIErrorCodes.INVALID_PERMISSIONS_NEGATIVE]: 'misc.invalid_permissions_negative',
 	[APIErrorCodes.INVALID_PHONE_NUMBER]: 'phone.invalid_number',
@@ -295,6 +296,7 @@ export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.UNKNOWN_INVITE]: 'unknown_entities.unknown_invite',
 	[APIErrorCodes.UNKNOWN_MEMBER]: 'unknown_entities.unknown_member',
 	[APIErrorCodes.UNKNOWN_MESSAGE]: 'unknown_entities.unknown_message',
+	[APIErrorCodes.UNKNOWN_ORIGIN_HANDOFF]: 'auth_and_oauth.unknown_origin_handoff',
 	[APIErrorCodes.UNKNOWN_REPORT]: 'moderation_and_reports.unknown_report',
 	[APIErrorCodes.UNKNOWN_ROLE]: 'unknown_entities.unknown_role',
 	[APIErrorCodes.UNKNOWN_STICKER]: 'stickers_and_emojis.unknown_sticker',

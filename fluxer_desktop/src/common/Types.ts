@@ -627,6 +627,11 @@ export type TrayActionPayload =
 			action: 'check-for-updates';
 	  };
 
+export interface DomainMigrationApi {
+	version: 1;
+	setAppOrigin: (origin: string) => Promise<void>;
+}
+
 export interface ElectronAPI {
 	platform: NodeJS.Platform;
 	buildChannel: 'stable' | 'canary';
@@ -759,6 +764,7 @@ export interface ElectronAPI {
 	passkeyIsSupported: () => Promise<boolean>;
 	passkeyAuthenticate: (options: PublicKeyCredentialRequestOptionsJSON) => Promise<AuthenticationResponseJSON>;
 	passkeyRegister: (options: PublicKeyCredentialCreationOptionsJSON) => Promise<RegistrationResponseJSON>;
+	domainMigration: DomainMigrationApi;
 	virtmic: VirtmicApi;
 	nativeAudio: NativeAudioApi;
 	nativeScreenCapture: NativeScreenCaptureApi;

@@ -938,7 +938,7 @@ msgstr "{count, plural, one {# 則被封鎖的訊息} other {# 則被封鎖的�
 msgid "{count, plural, one {# community found} other {# communities found}}"
 msgstr "{count, plural, one {找到 # 個社群} other {找到 # 個社群}}"
 
-#: src/features/app/components/layout/GuildsLayout.tsx:1953
+#: src/features/app/components/layout/GuildsLayout.tsx:1954
 msgid "{count, plural, one {# community is temporarily unavailable due to a flux capacitor malfunction.} other {# communities are temporarily unavailable due to a flux capacitor malfunction.}}"
 msgstr "{count, plural, one {# 個社群} other {# 個社群}}因時空電容器故障，暫時無法使用。"
 
@@ -1692,6 +1692,26 @@ msgstr "{productName} 偵測到此社群可能遭到突襲。邀請功能已暫�
 msgid "{productName} detected a potential raid, so new users can't join right now."
 msgstr "{productName} 偵測到可能的突襲，因此新使用者目前無法加入。"
 
+#. Banner in a web app installed on iPhone, iPad or Mac. productName is the app name. host is the new domain, for example fluxer.com. Home Screen and Dock are Apple names.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:38
+msgid "{productName} has moved to {host}. Add it to your Home Screen or Dock, then sign in with this app."
+msgstr "{productName} 已移至 {host}。將它加入主畫面或 Dock，然後使用此應用程式登入。"
+
+#. Banner in an installed web app on other browsers. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:43
+msgid "{productName} has moved to {host}. Install it from your browser, then sign in with this app."
+msgstr "{productName} 已移至 {host}。請從您的瀏覽器安裝，然後使用此應用程式登入。"
+
+#. Banner in an installed desktop web app after the account moved to the new domain. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:28
+msgid "{productName} has moved to {host}. Install the new app and you will already be signed in."
+msgstr "{productName} 已移至 {host}。安裝新應用程式後，您將自動登入。"
+
+#. Banner in an installed Android web app. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:33
+msgid "{productName} has moved to {host}. Open it in your browser to install the new app."
+msgstr "{productName} 已移至 {host}。請在瀏覽器中開啟以安裝新應用程式。"
+
 #. Profile membership label showing when the user account was created.
 #: src/features/user/components/popouts/UserProfileShared.tsx:53
 msgid "{productName} member since"
@@ -1731,6 +1751,16 @@ msgstr "{productName} 需要麥克風存取權限才能列出您的裝置。"
 #: src/features/permissions/system/components/MediaPermissionBlockedModal.tsx:44
 msgid "{productName} needs screen recording access. Allow screen recording in your operating system privacy settings and restart the app."
 msgstr "{productName} 需要螢幕錄影權限。請在您的作業系統隱私設定中允許螢幕錄影，然後重新啟動應用程式。"
+
+#. Intro in the modal that explains how to install the app from its new domain. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:22
+msgid "{productName} now lives at {host}. Install it from there, then sign in with this app."
+msgstr "{productName} 現在已移至 {host}。請從該處安裝，然後使用此應用程式登入。"
+
+#. Intro in the modal that explains how to install the app from its new domain when the account already moved. productName is the app name. host is the new domain, for example fluxer.com.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:27
+msgid "{productName} now lives at {host}. Install it from there."
+msgstr "{productName} 現在已移至 {host}。請從該處安裝。"
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
 #: src/features/user/components/popouts/UserProfileBadges.tsx:31
@@ -2461,7 +2491,7 @@ msgid "a poll"
 msgstr "投票"
 
 #. OAuth authorize page error shown when the bot scope requires a redirect_uri that is missing. Technical message; keep "redirect_uri" and "bot" untranslated.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:53
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:54
 msgid "A redirect_uri is required when the bot scope is not the only scope."
 msgstr "當「bot」範圍不是唯一的範圍時，必須提供 redirect_uri。"
 
@@ -2859,7 +2889,7 @@ msgid "Add a bot to a community with requested permissions"
 msgstr "將機器人新增至社群並授予要求的權限"
 
 #. Placeholder text in the optional comment field of the forward modal.
-#: src/features/messaging/components/modals/ForwardModal.tsx:99
+#: src/features/messaging/components/modals/ForwardModal.tsx:96
 msgid "Add a comment (optional)"
 msgstr "新增留言（選填）"
 
@@ -2920,7 +2950,7 @@ msgid "Add a YouTube Data API key to enrich YouTube links."
 msgstr "新增 YouTube Data API 金鑰以豐富 YouTube 連結。"
 
 #. Short label in the authentication browser login handoff modal. Keep the tone plain and specific.
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:21
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:22
 msgid "Add account"
 msgstr "新增帳號"
 
@@ -4379,6 +4409,11 @@ msgstr "需要核准"
 msgid "Approve"
 msgstr "核准"
 
+#. Hint under the sign-in option on fluxer.com that pairs a newly installed app with the old installed app. productName is the app name.
+#: src/features/auth/flow/AuthLoginLayout.tsx:74
+msgid "Approve this app from the {productName} app you already use. No password needed."
+msgstr "從您已安裝的 {productName} App 批准此 App。無需密碼。"
+
 #. Discovery application status badge in the community Discovery settings tab. The community has been approved and is listed.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:45
 msgid "Approved"
@@ -4848,7 +4883,7 @@ msgid "Authorization failed"
 msgstr "授權失敗"
 
 #. OAuth authorize page generic error toast shown when the authorize request fails unexpectedly.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:74
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:75
 msgid "Authorization failed. Try again."
 msgstr "授權失敗。請再試一次。"
 
@@ -5826,7 +5861,7 @@ msgid "Bot permissions"
 msgstr "機器人權限"
 
 #. OAuth authorize page error shown when the permissions query parameter is a negative integer.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:66
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:67
 msgid "Bot permissions cannot be negative."
 msgstr "機器人權限不能是負數。"
 
@@ -6329,10 +6364,10 @@ msgstr "無法在這裡上傳檔案"
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:216
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:232
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:72
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:80
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:86
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:278
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:140
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:282
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:164
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:177
 #: src/features/channel/components/modals/ChannelDeleteModal.tsx:53
@@ -6351,7 +6386,7 @@ msgstr "無法在這裡上傳檔案"
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:133
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
 #: src/features/messaging/components/modals/ExternalLinkWarningModal.tsx:111
-#: src/features/messaging/components/modals/ForwardModal.tsx:650
+#: src/features/messaging/components/modals/ForwardModal.tsx:591
 #: src/features/messaging/components/modals/ImageCropModal.tsx:1025
 #: src/features/messaging/components/modals/MessageHistoryThresholdModal.tsx:107
 #: src/features/moderation/components/modals/BanMemberModal.tsx:262
@@ -7462,9 +7497,14 @@ msgid "Choose background"
 msgstr "選擇背景"
 
 #. OAuth authorize page error shown when a bot invite request provides both guild_id and channel_id. Keep the parameter names literal.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:86
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:87
 msgid "Choose either guild_id or channel_id, not both."
 msgstr "請選擇 guild_id 或 channel_id，不可兩者都選。"
+
+#. Second install step on a Mac. File and Add to Dock are the names of the Safari menu items, use the names macOS shows in this language.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:46
+msgid "Choose File, then Add to Dock."
+msgstr "選擇「檔案」，然後選擇「加入 Dock」。"
 
 #. Subtitle in the create-DM modal. Keep it short and calm.
 #: src/features/channel/utils/CreateDMModalUtils.tsx:39
@@ -8215,7 +8255,7 @@ msgstr "程式碼區塊"
 msgid "Code blocks"
 msgstr "程式碼區塊"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:102
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:110
 msgid "Code expired"
 msgstr "驗證碼已過期"
 
@@ -8385,17 +8425,17 @@ msgid "Commands"
 msgstr "指令"
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled when at least one selected target has slowmode active.
-#: src/features/messaging/components/modals/ForwardModal.tsx:71
+#: src/features/messaging/components/modals/ForwardModal.tsx:68
 msgid "Comments are disabled because one or more selected channels have slowmode on. The comment would be blocked by slowmode right after the forward."
 msgstr "由於所選頻道中至少有一個已開啟慢速模式，留言功能已停用。轉傳後，留言會立即被慢速模式阻擋。"
 
 #. Helper text in the forward modal explaining why the optional comment field is disabled for a single selected channel with slowmode.
-#: src/features/messaging/components/modals/ForwardModal.tsx:65
+#: src/features/messaging/components/modals/ForwardModal.tsx:62
 msgid "Comments are disabled because slowmode is on in {forwardChannelDisplayName}. The comment would be blocked by slowmode right after the forward."
 msgstr "由於「{forwardChannelDisplayName}」已開啟慢速模式，留言功能已停用。轉傳後，留言會立即被慢速模式阻擋。"
 
 #. Tooltip on the disabled comment field in the forward modal when slowmode blocks comments.
-#: src/features/messaging/components/modals/ForwardModal.tsx:95
+#: src/features/messaging/components/modals/ForwardModal.tsx:92
 msgid "Comments are unavailable while slowmode is on."
 msgstr "慢速模式開啟時無法留言。"
 
@@ -8551,7 +8591,7 @@ msgid "Community message notifications"
 msgstr "社群訊息通知"
 
 #. Developer control label for the community MFA requirement banner.
-#: src/features/devtools/components/NagbarControls.ts:76
+#: src/features/devtools/components/NagbarControls.ts:81
 msgid "Community MFA requirement nagbar"
 msgstr "社群 MFA 要求提示列"
 
@@ -9182,7 +9222,7 @@ msgstr "繼續檢舉社群"
 msgid "Continue to report user"
 msgstr "繼續檢舉使用者"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:245
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:249
 msgid "Continue with passkey"
 msgstr "使用通行金鑰繼續"
 
@@ -9266,7 +9306,7 @@ msgid "Coordinates raids, brigading, or harassment against people or communities
 msgstr "協調對個人或社群發動突襲、集體圍攻或騷擾。"
 
 #. Generic short status label confirming a value was copied to the clipboard.
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:157
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:165
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:381
 msgid "Copied"
 msgstr "已複製"
@@ -9368,7 +9408,7 @@ msgid "Copy channel link"
 msgstr "複製頻道連結"
 
 #. Action label that copies a code block to the clipboard.
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:157
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:165
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:393
 msgid "Copy code"
 msgstr "複製代碼"
@@ -10559,12 +10599,12 @@ msgid "Current uses:"
 msgstr "目前使用次數："
 
 #. Developer nagbar status: the banner is dismissed in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:109
+#: src/features/devtools/components/NagbarControls.ts:114
 msgid "Currently dismissed"
 msgstr "目前已關閉"
 
 #. Developer nagbar status: the banner is showing in the current real state.
-#: src/features/devtools/components/NagbarControls.ts:113
+#: src/features/devtools/components/NagbarControls.ts:118
 msgid "Currently showing"
 msgstr "目前顯示"
 
@@ -12555,6 +12595,11 @@ msgstr "不會封鎖。您可以稍後再重新開啟。"
 msgid "Domain"
 msgstr "網域"
 
+#. Developer or debug surface, keep terse and technical. Label in the developer Nagbar controls panel for the banner telling installed web apps that the app has moved to a new domain.
+#: src/features/devtools/components/NagbarControls.ts:76
+msgid "Domain moved nagbar"
+msgstr "網域已轉移通知列"
+
 #. Label in the inbox commands.
 #: src/features/inbox/commands/InboxCommands.tsx:27
 #: src/features/voice/components/modals/HideOwnCameraConfirmModal.tsx:59
@@ -12912,7 +12957,7 @@ msgid "Dutch"
 msgstr "荷蘭文"
 
 #. Placeholder or example text in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:27
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:31
 msgid "e.g., YubiKey, iPhone, work computer"
 msgstr "例如：YubiKey、iPhone、公司電腦"
 
@@ -14056,9 +14101,13 @@ msgstr "請輸入安全金鑰的 PIN 以繼續。"
 msgid "Enter the SMS code"
 msgstr "輸入簡訊驗證碼"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:124
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:132
 msgid "Enter this code in your browser to complete sign-in."
 msgstr "請在瀏覽器中輸入此代碼以完成登入。"
+
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:142
+msgid "Enter this code in your old {PRODUCT_NAME} app to complete sign-in."
+msgstr "請在你的舊版 {PRODUCT_NAME} App 中輸入此代碼以完成登入。"
 
 #: src/features/channel/components/EditingMessageInput.tsx:358
 msgid "Enter to <0><1>save</1></0>"
@@ -14441,7 +14490,7 @@ msgstr "將於 {absolute}（{relativeText}）到期"
 msgid "Expires between {earliest} and {latest}"
 msgstr "將於 {earliest} 到 {latest} 之間到期"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:142
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:150
 msgid "Expires in {remaining}s"
 msgstr "{remaining} 秒後到期"
 
@@ -14835,7 +14884,7 @@ msgid "Failed to start SSO"
 msgstr "無法啟動單一登入"
 
 #. Login flow error shown when switching to a saved account fails.
-#: src/features/auth/flow/AuthLoginLayout.tsx:51
+#: src/features/auth/flow/AuthLoginLayout.tsx:58
 msgid "Failed to switch account"
 msgstr "無法切換帳號"
 
@@ -15413,17 +15462,17 @@ msgstr "自己使用"
 msgid "For this check, you send us a text message instead of receiving one from us."
 msgstr "這次驗證，您需要傳送簡訊給我們，而不是接收我們的簡訊。"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:183
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:187
 msgid "For your security, please confirm it's you to continue."
 msgstr "為了您的帳戶安全，請驗證是您本人操作，才能繼續。"
 
 #. Developer nagbar override status: the banner is forced to hide.
-#: src/features/devtools/components/NagbarControls.ts:97
+#: src/features/devtools/components/NagbarControls.ts:102
 msgid "Force disabled"
 msgstr "強制停用"
 
 #. Developer nagbar override status: the banner is forced to show.
-#: src/features/devtools/components/NagbarControls.ts:93
+#: src/features/devtools/components/NagbarControls.ts:98
 msgid "Force enabled"
 msgstr "強制啟用"
 
@@ -15540,7 +15589,7 @@ msgstr "忘記密碼"
 
 #. Authentication link label that opens password recovery.
 #: src/features/auth/components/pages/ForgotPasswordPage.tsx:71
-#: src/features/auth/flow/AuthLoginLayout.tsx:63
+#: src/features/auth/flow/AuthLoginLayout.tsx:70
 msgid "Forgot your password?"
 msgstr "忘記密碼？"
 
@@ -15571,7 +15620,7 @@ msgstr "轉傳媒體"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Title of the forward message modal.
 #: src/features/input/state/input_keybind/shared.ts:25
-#: src/features/messaging/components/modals/ForwardModal.tsx:86
+#: src/features/messaging/components/modals/ForwardModal.tsx:83
 msgid "Forward message"
 msgstr "轉傳訊息"
 
@@ -15965,11 +16014,11 @@ msgstr "產生可分享的連結，或複製合併後的自訂 CSS。"
 msgid "Generate invite link"
 msgstr "產生邀請連結"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:109
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:117
 msgid "Generate new code"
 msgstr "產生新代碼"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:70
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:78
 msgid "Generating code…"
 msgstr "正在產生代碼…"
 
@@ -16044,6 +16093,11 @@ msgstr "取得 {productName} 電腦版應用程式，即可在整個系統使用
 #: src/features/voice/components/modals/screen_share_picker_modal/DesktopDownloadCta.tsx:20
 msgid "Get the desktop app"
 msgstr "取得電腦版應用程式"
+
+#. Title of the modal that explains how to install the app from its new domain. productName is the app name.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:18
+msgid "Get the new {productName} app"
+msgstr "取得新的 {productName} App"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Type label for GIF media.
@@ -18037,6 +18091,16 @@ msgstr "插入表情符號"
 msgid "Install {productName} for the full source picker and smoother screen-sharing controls."
 msgstr "安裝 {productName} 以取得完整的來源選擇器和更流暢的螢幕分享控制項。"
 
+#. Second install step on other devices. Refers to the install option in the browser menu.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:51
+msgid "Install it from your browser menu."
+msgstr "從瀏覽器選單安裝。"
+
+#. Button on the domain moved banner that installs the app from the new domain.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:48
+msgid "Install the new app"
+msgstr "安裝新版 App"
+
 #. Label for the installed desktop version in the Linux update modal.
 #: src/features/updater/commands/UpdaterModalCommands.tsx:136
 msgid "Installed"
@@ -18123,7 +18187,7 @@ msgid "Invalid authorization request"
 msgstr "無效的授權請求"
 
 #. OAuth authorize page error shown when the permissions query parameter is not a valid integer.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:62
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:63
 msgid "Invalid bot permissions."
 msgstr "無效的機器人權限。"
 
@@ -18164,7 +18228,7 @@ msgid "Invalid or expired code. Try again."
 msgstr "代碼無效或已過期。請再試一次。"
 
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:78
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:79
 msgid "Invalid redirect_uri"
 msgstr "redirect_uri 無效"
 
@@ -19331,6 +19395,11 @@ msgstr "連結"
 #: src/features/channel/utils/ChannelUtils.tsx:39
 msgid "Link (mature)"
 msgstr "連結（成人內容）"
+
+#. Button on the domain moved banner that opens the code entry used to sign in a new app. Must match the translation used in the "Sign in with your old {productName} app" instructions.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:60
+msgid "Link a new device"
+msgstr "連結新裝置"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ApplicationsIndex.ts:96
@@ -20697,7 +20766,7 @@ msgstr "訊息顯示設定僅供桌面版使用。"
 msgid "Message editing"
 msgstr "編輯訊息"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:371
+#: src/features/messaging/components/modals/ForwardModal.tsx:309
 msgid "Message forwarded"
 msgstr "訊息已轉傳"
 
@@ -20746,7 +20815,7 @@ msgstr "訊息輸入按鈕"
 
 #. Error modal title in the forward modal when the optional comment exceeds the message length limit.
 #. Form validation error indicating the message exceeds the allowed length.
-#: src/features/messaging/components/modals/ForwardModal.tsx:57
+#: src/features/messaging/components/modals/ForwardModal.tsx:54
 #: src/features/ui/character_counter/CharacterCountMessages.ts:16
 msgid "Message is too long"
 msgstr "訊息過長"
@@ -21045,7 +21114,7 @@ msgid "Miscellaneous"
 msgstr "其他"
 
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:36
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:37
 msgid "Missing client_id"
 msgstr "缺少 client_id"
 
@@ -21862,12 +21931,12 @@ msgid "Name must be at least 2 characters"
 msgstr "名稱至少需要 2 個字元"
 
 #. Short label in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:19
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:23
 msgid "Name passkey"
 msgstr "命名通行金鑰"
 
 #. Accessible form label in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:15
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:19
 msgid "Name passkey form"
 msgstr "命名通行金鑰表單"
 
@@ -22381,7 +22450,7 @@ msgstr "沒有要儲存的變更"
 msgid "No channels available"
 msgstr "沒有可用的頻道"
 
-#: src/features/messaging/components/modals/ForwardModal.tsx:445
+#: src/features/messaging/components/modals/ForwardModal.tsx:383
 #: src/features/search/components/search/ChannelFilterSheet.tsx:120
 msgid "No channels found"
 msgstr "找不到任何頻道"
@@ -22824,7 +22893,7 @@ msgstr "找不到使用者"
 msgid "No verification is required."
 msgstr "不需要驗證。"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:189
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:193
 msgid "No verification methods available"
 msgstr "沒有可用的驗證方式"
 
@@ -23417,6 +23486,16 @@ msgstr "開啟「{contextName}」"
 msgid "Open {displayName}"
 msgstr "開啟 {displayName}"
 
+#. First install step on Apple devices. host is the new domain, for example fluxer.com. Safari is the browser.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:32
+msgid "Open {host} in Safari."
+msgstr "在 Safari 中開啟 {host}。"
+
+#. First install step on other devices. host is the new domain, for example fluxer.com.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:37
+msgid "Open {host} in your browser."
+msgstr "在瀏覽器中開啟 {host}。"
+
 #. Accessible label for an inline settings deep-link pill. labelText is the resolved settings tab and section breadcrumb.
 #: src/features/messaging/components/markdown/renderers/LinkRenderer.tsx:109
 msgid "Open {labelText} in settings"
@@ -23436,6 +23515,11 @@ msgstr "開啟「{macosSystemSettingsName}」，然後前往「{macosPrivacyAndS
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:27
 msgid "Open {productName}"
 msgstr "開啟 {productName}"
+
+#. Button on the domain moved banner that opens the new domain in the browser. productName is the app name.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:52
+msgid "Open {productName} in your browser"
+msgstr "在瀏覽器中開啟 {productName}"
 
 #. Button or menu action label in the channel and chat gif picker grid item. Keep it concise. Preserve {title}; it is inserted by code.
 #: src/features/channel/components/pickers/gif/GifPickerGridItem.tsx:37
@@ -23510,7 +23594,7 @@ msgstr "開啟橫幅選項"
 msgid "Open bookmarks"
 msgstr "開啟書籤"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:153
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:178
 msgid "Open browser"
 msgstr "開啟瀏覽器"
 
@@ -23614,7 +23698,7 @@ msgid "Open emoji in browser"
 msgstr "在瀏覽器中開啟表情符號"
 
 #. Accessible label for the emoji picker trigger button in the forward modal comment field.
-#: src/features/messaging/components/modals/ForwardModal.tsx:103
+#: src/features/messaging/components/modals/ForwardModal.tsx:100
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:27
 msgid "Open emoji picker"
 msgstr "開啟表情符號選取器"
@@ -23809,6 +23893,16 @@ msgstr "請在瀏覽器中開啟下方連結，然後複製完整的 JSON 回應
 msgid "Open the menu and choose an option."
 msgstr "開啟選單並選擇一個選項。"
 
+#. Third install step. "Sign in with your old {productName} app" and "Link a new device" are button labels and must match their translations. productName is the app name.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:55
+msgid "Open the new app and choose Sign in with your old {productName} app. Then choose Link a new device here and enter the code it shows."
+msgstr "打開新應用程式，然後選擇「使用舊版 {productName} 應用程式登入」。接著選擇「在此連結新裝置」，然後輸入顯示的代碼。"
+
+#. Third install step in a desktop browser that already moved the account to the new domain.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:62
+msgid "Open the new app. You are already signed in."
+msgstr "開啟新版應用程式。您已登入。"
+
 #. Tip explaining the keyboard shortcut for opening the shortcuts list.
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx:42
 msgid "Open the shortcuts list for quick actions."
@@ -23859,7 +23953,7 @@ msgstr "開啟語音"
 msgid "Open voice & video settings"
 msgstr "開啟語音與視訊設定"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:113
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:131
 msgid "Open your browser, sign in, then enter the code below to link your account."
 msgstr "開啟您的瀏覽器，登入後輸入以下代碼，即可連結您的帳號。"
 
@@ -23867,6 +23961,10 @@ msgstr "開啟您的瀏覽器，登入後輸入以下代碼，即可連結您的
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:450
 msgid "Open your messages"
 msgstr "開啟您的訊息"
+
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:129
+msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
+msgstr "打開你的舊版 {PRODUCT_NAME} App，選擇「連結新裝置」，然後輸入下方的代碼。"
 
 #: src/features/user/components/modals/PhoneAddModal.tsx:327
 msgid "Open your phone's messaging app and create a new text message."
@@ -24222,7 +24320,7 @@ msgid "Passkey"
 msgstr "通行金鑰"
 
 #. Short label in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:23
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:27
 msgid "Passkey name"
 msgstr "通行金鑰名稱"
 
@@ -28138,7 +28236,7 @@ msgstr "飽和度"
 #. Button or menu action label in the rename channel modal. Keep it concise.
 #. Save button in the community-folder settings modal footer.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:113
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:87
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:93
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:366
 #: src/features/channel/components/modals/EditGroupModal.tsx:322
 #: src/features/channel/components/modals/RenameChannelModal.tsx:28
@@ -28545,7 +28643,7 @@ msgstr "拖曳預覽"
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:854
 #: src/features/channel/components/channel_header/shared.ts:47
 #: src/features/channel/components/shared/PickerSearchInput.tsx:21
-#: src/features/messaging/components/modals/ForwardModal.tsx:90
+#: src/features/messaging/components/modals/ForwardModal.tsx:87
 #: src/features/search/components/modals/SearchProviderPickerModal.tsx:43
 #: src/features/search/utils/QuickSwitcherModalUtils.tsx:45
 #: src/features/theme_studio/ui/StudioSearchInput.tsx:16
@@ -29074,8 +29172,8 @@ msgid "Select text"
 msgstr "選取文字"
 
 #: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:69
-msgid "Select the account you want to sign in with on the desktop app."
-msgstr "請選擇您想登入桌面版應用程式的帳號。"
+msgid "Select the account you want to sign in with on your new device."
+msgstr "選擇您想在新裝置上登入的帳號。"
 
 #. Aria label for the voice processing radio group in the voice settings tab. Keep it concise.
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:120
@@ -29182,7 +29280,7 @@ msgid "Send"
 msgstr "傳送"
 
 #. Primary button label in the forward message modal. selectedCount is the number of selected destinations; selectionLimit is the maximum allowed.
-#: src/features/messaging/components/modals/ForwardModal.tsx:107
+#: src/features/messaging/components/modals/ForwardModal.tsx:104
 msgid "Send ({selectedCount}/{selectionLimit})"
 msgstr "傳送 ({selectedCount}/{selectionLimit})"
 
@@ -29487,7 +29585,7 @@ msgid "Session"
 msgstr "工作階段"
 
 #. Login layout banner shown when the session for a specific account has expired. Account identifier is interpolated.
-#: src/features/auth/flow/AuthLoginLayout.tsx:46
+#: src/features/auth/flow/AuthLoginLayout.tsx:53
 msgid "Session expired for {identifier}. Sign in again."
 msgstr "「{identifier}」的工作階段已過期。請重新登入。"
 
@@ -29970,7 +30068,7 @@ msgid "Shortcuts are paused while recording."
 msgstr "錄製期間快速鍵會暫停作用。"
 
 #. Body of the error modal shown when the forward modal comment exceeds the message length limit.
-#: src/features/messaging/components/modals/ForwardModal.tsx:61
+#: src/features/messaging/components/modals/ForwardModal.tsx:58
 msgid "Shorten the message and try again."
 msgstr "請縮短訊息後再試一次。"
 
@@ -30216,6 +30314,11 @@ msgstr "顯示最多 3 個（+5 徽章）"
 #: src/features/user/components/modals/tabs/component_gallery_tab/IndicatorsTab.tsx:495
 msgid "Show max 5 (+5 badge)"
 msgstr "顯示最多 5 個（+5 徽章）"
+
+#. Button on the domain moved banner that opens the install steps.
+#: src/features/app/components/layout/app_layout/nagbars/DomainMovedNagbar.tsx:56
+msgid "Show me how"
+msgstr "顯示操作說明"
 
 #. Plus menu submenu toggle that shows the saved media (memes) button next to the textarea.
 #. Short label for an advanced message input preference.
@@ -30488,13 +30591,18 @@ msgstr "登入以領取您的禮物"
 
 #. Passkey sign-in action that opens the browser flow from the desktop app.
 #: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:64
-#: src/features/auth/flow/AuthLoginLayout.tsx:67
+#: src/features/auth/flow/AuthLoginLayout.tsx:79
 msgid "Sign in via browser"
 msgstr "透過瀏覽器登入"
 
 #: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:63
 msgid "Sign in with a passkey"
 msgstr "使用通行金鑰登入"
+
+#. Sign-in option and modal title on fluxer.com that pairs a newly installed app with the old installed app still signed in on the previous domain. productName is the app name.
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:27
+msgid "Sign in with your old {productName} app"
+msgstr "使用你舊的 {productName} App 登入"
 
 #. Description shown when sign-in is restricted to the configured SSO provider.
 #: src/features/auth/flow/AuthSsoPanel.tsx:17
@@ -30562,7 +30670,7 @@ msgid "Sign-in details"
 msgstr "登入詳細資訊"
 
 #. Accessible label for the stepped sign-in panel.
-#: src/features/auth/flow/AuthLoginLayout.tsx:55
+#: src/features/auth/flow/AuthLoginLayout.tsx:62
 msgid "Sign-in flow"
 msgstr "登入流程"
 
@@ -31030,7 +31138,7 @@ msgstr "部分使用者無法新增"
 #. Generic error modal title for an unexpected failure.
 #. Generic error toast title.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:248
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:82
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:90
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:274
 #: src/lib/forms/index.tsx:18
 msgid "Something went wrong"
@@ -32688,6 +32796,11 @@ msgstr "在此語音頻道中發言。如果沒有此權限，成員會保持靜
 msgid "Talk in voice channels. Without this permission, members stay muted until someone with the \"Mute members\" permission unmutes them."
 msgstr "在語音頻道中發言。如果沒有此權限，成員會保持靜音，直到擁有「將成員靜音」權限的人為其解除靜音。"
 
+#. Second install step on iPhone and iPad. Share and Add to Home Screen are the names of the Safari menu items, use the names iOS shows in this language.
+#: src/features/app/domain_migration/DomainMovedStepsModal.tsx:41
+msgid "Tap Share, then Add to Home Screen."
+msgstr "點一下「分享」，然後點一下「加到主畫面」。"
+
 #. Label in the note edit sheet.
 #: src/features/user/components/modals/NoteEditSheet.tsx:21
 msgid "Tap to add a note"
@@ -33207,12 +33320,12 @@ msgid "The phone check is set aside. One email step is left."
 msgstr "電話驗證已暫緩。剩下一個電子郵件驗證步驟。"
 
 #. OAuth authorize page error shown when the redirect_uri is not registered for this OAuth app.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:58
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:59
 msgid "The provided redirect_uri is not registered for this application."
 msgstr "提供的 redirect_uri 未在此應用程式中註冊。"
 
 #. Body text in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:49
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:50
 msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "提供的 redirect_uri 必須使用 HTTP 或 HTTPS。"
 
@@ -33445,7 +33558,7 @@ msgid "This animation is too long or too large to crop. Try a shorter or smaller
 msgstr "這段動畫太長或太大，無法裁切。請嘗試較短或較小的檔案。"
 
 #. Short label in the authentication authorize flow. Keep the tone plain and specific.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:82
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:83
 msgid "This application"
 msgstr "這個應用程式"
 
@@ -33455,7 +33568,7 @@ msgid "This attachment has expired"
 msgstr "此附件已過期"
 
 #. OAuth authorize page error shown when a private bot cannot be added by non-owners.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:70
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:71
 msgid "This bot is not public and cannot be added by other users."
 msgstr "此機器人非公開，其他使用者無法新增。"
 
@@ -33757,7 +33870,7 @@ msgstr "此群組人數過多"
 msgid "This group is full. Remove someone before adding more people."
 msgstr "此群組已滿。請先移除成員，才能再新增成員。"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:105
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:113
 msgid "This handoff code has expired. Generate a new one to continue."
 msgstr "此交接碼已過期。請產生新的交接碼以繼續。"
 
@@ -35480,7 +35593,7 @@ msgid "Unknown"
 msgstr "不明"
 
 #. OAuth authorize page error shown when the application, session, or request is invalid.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:45
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:46
 msgid "Unknown application, expired session, or invalid authorization request."
 msgstr "不明應用程式、工作階段已過期或授權請求無效。"
 
@@ -36862,27 +36975,27 @@ msgid "Uses:"
 msgstr "使用次數："
 
 #. Developer nagbar status: banner follows real account state.
-#: src/features/devtools/components/NagbarControls.ts:101
+#: src/features/devtools/components/NagbarControls.ts:106
 msgid "Using actual account state"
 msgstr "使用實際帳號狀態"
 
 #. Developer nagbar status: banner follows real gift inventory state.
-#: src/features/devtools/components/NagbarControls.ts:121
+#: src/features/devtools/components/NagbarControls.ts:126
 msgid "Using actual gift inventory state"
 msgstr "使用實際禮物庫存狀態"
 
 #. Developer nagbar status: banner follows real premium subscription state.
-#: src/features/devtools/components/NagbarControls.ts:117
+#: src/features/devtools/components/NagbarControls.ts:122
 msgid "Using actual premium state"
 msgstr "使用實際的進階方案狀態"
 
 #. Developer nagbar status: banner follows the real app state.
-#: src/features/devtools/components/NagbarControls.ts:125
+#: src/features/devtools/components/NagbarControls.ts:130
 msgid "Using actual state"
 msgstr "使用實際狀態"
 
 #. Developer nagbar status: banner follows real email verification state.
-#: src/features/devtools/components/NagbarControls.ts:105
+#: src/features/devtools/components/NagbarControls.ts:110
 msgid "Using actual verification state"
 msgstr "使用實際驗證狀態"
 
@@ -37947,17 +38060,17 @@ msgstr "請在此等候"
 msgid "Waiting for connection..."
 msgstr "正在等待連線…"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:232
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:236
 msgid "Waiting for passkey…"
 msgstr "正在等候通行金鑰…"
 
 #. Inline notice in the forward modal when slowmode is active in the selected target channel. forwardChannelDisplayName is the channel name.
-#: src/features/messaging/components/modals/ForwardModal.tsx:77
+#: src/features/messaging/components/modals/ForwardModal.tsx:74
 msgid "Waiting for slowmode in {forwardChannelDisplayName} to expire."
 msgstr "正在等待「{forwardChannelDisplayName}」的慢速模式結束。"
 
 #. Inline notice in the forward modal when slowmode is active in one or more selected target channels.
-#: src/features/messaging/components/modals/ForwardModal.tsx:82
+#: src/features/messaging/components/modals/ForwardModal.tsx:79
 msgid "Waiting for slowmode in one or more selected channels to expire."
 msgstr "正在等待一個或多個所選頻道的慢速模式結束。"
 
@@ -38156,7 +38269,7 @@ msgstr "我們已將此貼圖調整大小並壓縮至 320x320 像素，但它仍
 msgid "We sent a code to {email}."
 msgstr "我們已將驗證碼傳送至 {email}。"
 
-#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:128
+#: src/features/auth/flow/BrowserLoginHandoffModal.tsx:152
 msgid "We will prefill {prefillEmail} once browser sign-in opens."
 msgstr "瀏覽器登入開啟後，我們會預填 {prefillEmail}。"
 
@@ -38356,7 +38469,7 @@ msgid "Website previews"
 msgstr "網站預覽"
 
 #. Heading on the standard sign-in form.
-#: src/features/auth/flow/AuthLoginLayout.tsx:59
+#: src/features/auth/flow/AuthLoginLayout.tsx:66
 msgid "Welcome back"
 msgstr "歡迎回來"
 
@@ -39699,7 +39812,7 @@ msgid "Your {premiumProductName} subscription has expired. You have lost all {pr
 msgstr "您的 {premiumProductName} 訂閱已到期。您已失去所有 {premiumProductName} 福利。請重新啟用訂閱以重新取得存取權。"
 
 #. OAuth authorize page error shown when the session expired mid-authorization. Keep plain. Preserve {productName}; it is inserted by code.
-#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:40
+#: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:41
 msgid "Your {productName} session expired. Sign in again to continue authorizing this application."
 msgstr "您的 {productName} 工作階段已過期。請重新登入以繼續授權此應用程式。"
 
@@ -39734,7 +39847,7 @@ msgstr "您的帳號建立時間太短，無法在此社群傳送訊息。"
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "您的帳號申請正在等待核准。管理員核准後即可登入。"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:195
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:199
 msgid "Your account requires multi-factor authentication, but no supported methods are set up on this device. Sign in on a device with your authenticator app or security key, or contact support."
 msgstr "您的帳號需要多重要素驗證，但此裝置上未設定任何支援的方法。請使用已設定驗證器應用程式或安全金鑰的裝置登入，或聯絡客服。"
 
@@ -39757,6 +39870,11 @@ msgstr "您的操作未能完成，因為系統偵測到有安全疑慮。如果
 msgid "Your application is pending review. You can still update your listing details or withdraw the application."
 msgstr "您的申請正在審核中。您仍然可以更新刊登資訊或撤回申請。"
 
+#. Error shown when a passkey prompt fails because the browser cannot use the passkey on this web address. Keep plain.
+#: src/features/auth/utils/WebAuthnUtils.ts:18
+msgid "Your browser does not support passkeys on this domain. Update your browser, or sign in with your password and two-factor code."
+msgstr "您的瀏覽器不支援此網域的通行密鑰。請更新您的瀏覽器，或使用密碼和雙重驗證碼登入。"
+
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12
 msgid "Your browser requires user interaction before audio can be played. Click the button below to enable voice chat."
@@ -39775,11 +39893,11 @@ msgstr "您的卡片符合資格。正在將您重新導向至付款頁面。"
 msgid "Your carrier says this number isn't in service. Check it and try again, or contact support if it's correct."
 msgstr "您的電信業者表示此號碼未啟用。請檢查號碼後再試一次，或若號碼正確，請聯絡客服。"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:128
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:136
 msgid "Your code"
 msgstr "您的代碼"
 
-#: src/features/auth/flow/HandoffCodeDisplay.tsx:121
+#: src/features/auth/flow/HandoffCodeDisplay.tsx:129
 msgid "Your code is ready"
 msgstr "您的代碼已準備好"
 

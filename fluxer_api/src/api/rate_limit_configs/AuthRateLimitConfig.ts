@@ -132,6 +132,14 @@ export const AuthRateLimitConfigs = {
 		bucket: 'auth:handoff:cancel',
 		config: {limit: 10, windowMs: ms('1 minute')},
 	} as RouteRateLimitConfig,
+	AUTH_ORIGIN_HANDOFF_CREATE: {
+		bucket: 'auth:origin_handoff:create',
+		config: {limit: 3, windowMs: ms('10 minutes')},
+	} as RouteRateLimitConfig,
+	AUTH_ORIGIN_HANDOFF_REDEEM: {
+		bucket: 'auth:origin_handoff:redeem',
+		config: {limit: 10, windowMs: ms('1 minute')},
+	} as RouteRateLimitConfig,
 	SUDO_WEBAUTHN_OPTIONS: {
 		bucket: 'sudo:webauthn:options',
 		config: {limit: 10, windowMs: ms('1 minute')},

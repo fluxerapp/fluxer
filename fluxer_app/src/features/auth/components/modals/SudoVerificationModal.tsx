@@ -126,6 +126,10 @@ const SudoVerificationModal: React.FC = observer(() => {
 				setWebAuthnError(i18n._(PASSKEYS_REQUIRE_A_SIGNED_MACOS_BUNDLE_WITH_A_DESCRIPTOR));
 				return;
 			}
+			if (err instanceof WebAuthnUtils.PasskeyDomainUnsupportedError) {
+				setWebAuthnError(i18n._(WebAuthnUtils.PASSKEY_DOMAIN_UNSUPPORTED_DESCRIPTOR));
+				return;
+			}
 			setWebAuthnError(i18n._(COULDN_T_VERIFY_WITH_PASSKEY_PLEASE_TRY_AGAIN_DESCRIPTOR));
 		}
 	};

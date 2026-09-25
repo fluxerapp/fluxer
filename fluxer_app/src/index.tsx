@@ -18,6 +18,7 @@ import {Routes} from '@app/app/Routes';
 import {AppErrorBoundary} from '@app/features/app/components/AppErrorBoundary';
 import {BootstrapErrorScreen} from '@app/features/app/components/BootstrapErrorScreen';
 import {ErrorFallback} from '@app/features/app/components/ErrorFallback';
+import {runDomainMigrationPreMount} from '@app/features/app/domain_migration/DomainMigrationPreMount';
 import {installSelfXssNotice} from '@app/features/devtools/utils/SelfXssNotice';
 import {AppI18nProvider} from '@app/features/i18n/components/AppI18nProvider';
 import {installLocaleSwitchWatchdog} from '@app/features/i18n/utils/LocaleSwitchWatchdog';
@@ -169,6 +170,9 @@ async function bootstrapApp(): Promise<void> {
 }
 
 async function bootstrap(): Promise<void> {
+	if (await runDomainMigrationPreMount()) {
+		return;
+	}
 	scheduleNonLatinScriptFaces();
 	await initI18n();
 	installLocaleSwitchWatchdog();

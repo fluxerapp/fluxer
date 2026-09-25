@@ -449,6 +449,13 @@ class AccountStorage {
 		}
 	}
 
+	async importAccounts(records: ReadonlyArray<StoredAccount>): Promise<void> {
+		await this.ensureDb();
+		for (const record of records) {
+			await this.putRecord(this.sanitizeRecord(record));
+		}
+	}
+
 	async deleteAccount(userId: string): Promise<void> {
 		await this.ensureDb();
 		if (!userId) {

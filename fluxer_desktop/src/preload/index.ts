@@ -451,6 +451,10 @@ const api: ElectronAPI = {
 		options: PublicKeyCredentialCreationOptionsJSON,
 		requestContext?: {pin?: string},
 	): Promise<RegistrationResponseJSON> => ipcRenderer.invoke('passkey-register', options, requestContext),
+	domainMigration: {
+		version: 1,
+		setAppOrigin: (origin: string): Promise<void> => ipcRenderer.invoke('domain-migration:set-app-origin', origin),
+	},
 	toggleDevTools: (): void => {
 		ipcRenderer.send('toggle-devtools');
 	},
