@@ -26,7 +26,7 @@ const FETCH_WEBAUTHN_CREDENTIALS_FOR_USER_CQL = WebAuthnCredentials.selectCql({
 export class WebAuthnRepository {
 	async listWebAuthnCredentials(userId: UserID): Promise<Array<WebAuthnCredential>> {
 		const credentials = await fetchMany<WebAuthnCredentialRow>(FETCH_WEBAUTHN_CREDENTIALS_CQL, {user_id: userId});
-		return credentials.map((cred) => new WebAuthnCredential(cred));
+		return credentials.filter((cred) => cred.public_key).map((cred) => new WebAuthnCredential(cred));
 	}
 
 	async getWebAuthnCredential(userId: UserID, credentialId: string): Promise<WebAuthnCredential | null> {
@@ -34,7 +34,7 @@ export class WebAuthnRepository {
 			user_id: userId,
 			credential_id: credentialId,
 		});
-		if (!cred) {
+		if (!cred?.public_key) {
 			return null;
 		}
 		return new WebAuthnCredential(cred);
@@ -47,6 +47,7 @@ export class WebAuthnRepository {
 		counter: bigint,
 		transports: Set<string> | null,
 		name: string,
+		rpId: string | null,
 	): Promise<void> {
 		const credentialData = {
 			user_id: userId,
@@ -58,6 +59,8 @@ export class WebAuthnRepository {
 			created_at: new Date(),
 			last_used_at: null,
 			version: 1 as const,
+			rp_id: rpId,
+			superseded_by: null,
 		};
 		await upsertOne(WebAuthnCredentials.insert(credentialData));
 		await upsertOne(
@@ -96,6 +99,17 @@ export class WebAuthnRepository {
 				{user_id: userId, credential_id: credentialId},
 				{
 					name: Db.set(name),
+				},
+			),
+		);
+	}
+
+	async setWebAuthnCredentialSupersededBy(userId: UserID, credentialId: string, supersededBy: string): Promise<void> {
+		await upsertOne(
+			WebAuthnCredentials.patchByPk(
+				{user_id: userId, credential_id: credentialId},
+				{
+					superseded_by: Db.set(supersededBy),
 				},
 			),
 		);

@@ -8989,6 +8989,14 @@
 				{
 					"name": "version",
 					"type": "int"
+				},
+				{
+					"name": "rp_id",
+					"type": "text"
+				},
+				{
+					"name": "superseded_by",
+					"type": "text"
 				}
 			],
 			"primary_key": "((user_id), credential_id)",

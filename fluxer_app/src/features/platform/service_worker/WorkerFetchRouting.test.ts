@@ -35,6 +35,9 @@ describe('WorkerFetchRouting', () => {
 		expect(getWorkerFetchRoute(request(`${WORKER_ORIGIN}/`, {headers: {accept: 'text/html'}}), WORKER_ORIGIN)).toBe(
 			'ignore',
 		);
+		expect(
+			getWorkerFetchRoute(request(`${WORKER_ORIGIN}/passkey-bridge`, {headers: {accept: 'text/html'}}), WORKER_ORIGIN),
+		).toBe('ignore');
 		expect(getWorkerFetchRoute(request(`${WORKER_ORIGIN}/manifest.json`), WORKER_ORIGIN)).toBe('metadata');
 		expect(getWorkerFetchRoute(request(`${WORKER_ORIGIN}/version.json`), WORKER_ORIGIN)).toBe('metadata');
 	});

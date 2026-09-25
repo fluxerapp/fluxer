@@ -194,6 +194,23 @@ Within minutes of the upgrade, `worker` starts deleting existing data that is pa
 
 Instances on Cassandra already behave this way.
 
+## Add the passkey columns on Cassandra
+
+An instance on the Postgres backend needs nothing here. An instance on Cassandra or Scylla adds two columns to `webauthn_credentials` before it starts the new `api` and `worker` images. Replace `fluxer` with the value of `FLUXER_CASSANDRA_KEYSPACE`.
+
+```sql
+ALTER TABLE fluxer.webauthn_credentials ADD rp_id text;
+ALTER TABLE fluxer.webauthn_credentials ADD superseded_by text;
+```
+
+Both columns start empty on every row, and existing passkeys keep working as before. Wait until every node reports the same schema version, as `nodetool describecluster` shows, then upgrade.
+
+:::danger[Upgrading without the columns breaks every connection]
+The new release reads both columns whenever it loads passkeys, and every Gateway connection loads them. Without the columns no client finishes connecting, and passkey sign-in fails.
+:::
+
+An earlier release ignores the columns, so a rollback leaves them in place.
+
 ## What the backup covers
 
 Each upgrade writes one record directory, named `record-` and a UTC stamp, under `backups` or wherever `--backup-dir` points. It holds:

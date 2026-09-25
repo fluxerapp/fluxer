@@ -1473,7 +1473,7 @@ msgid "{memberCount} {rawMemberCount, plural, one {member} other {members}}"
 msgstr "{memberCount} {rawMemberCount, plural, one {सदस्य} other {सदस्य}}"
 
 #. Generic aria-label for an unread-mentions badge. Preserve {mentionCount}.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:800
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:805
 msgid "{mentionCount, plural, one {# mention} other {# mentions}}"
 msgstr "{mentionCount, plural, one {# मेंशन} other {# मेंशन}}"
 
@@ -2370,8 +2370,8 @@ msgstr "6 महीने"
 
 #. Placeholder for the MFA login one-time password field.
 #. Short label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:65
-#: src/features/auth/flow/MfaScreen.tsx:23
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:73
+#: src/features/auth/flow/MfaScreen.tsx:22
 msgid "6-digit code"
 msgstr "6 अंकों का कोड"
 
@@ -2649,7 +2649,7 @@ msgid "Account & premium overrides"
 msgstr "अकाउंट और प्रीमियम ओवरराइड"
 
 #. Security settings section for third-party app access and signed-in devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:89
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:88
 msgid "Account access"
 msgstr "अकाउंट एक्सेस"
 
@@ -2807,7 +2807,7 @@ msgstr "सक्रिय मासिक सब्सक्राइबर (�
 #. Short label in the appearance tab. Keep it concise.
 #. Short label in the inline. Keep it concise.
 #. Status label indicating a user is currently active.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:744
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:749
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabInline.tsx:43
 #: src/features/user/components/modals/tabs/AppearanceTab.tsx:51
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:430
@@ -2976,7 +2976,7 @@ msgstr "जारी रखने के लिए कोई अकाउंट 
 msgid "Add an email and password to your account first."
 msgstr "पहले अपने अकाउंट में ईमेल और पासवर्ड जोड़ें।"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:309
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:296
 msgid "Add an extra layer of security to your account"
 msgstr "अपने अकाउंट में सुरक्षा की एक और लेयर जोड़ें"
 
@@ -3001,7 +3001,7 @@ msgid "Add bot to a destination"
 msgstr "बॉट को किसी गंतव्य में जोड़ें"
 
 #. Generic action label that opens the create-channel flow from inside a category or sidebar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:510
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:515
 msgid "Add channel"
 msgstr "चैनल जोड़ें"
 
@@ -3082,7 +3082,7 @@ msgid "Add new reactions to messages."
 msgstr "मैसेज पर नई रिएक्शन जोड़ें।"
 
 #. Action label for adding a private note about a user.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:454
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:459
 msgid "Add note"
 msgstr "नोट जोड़ें"
 
@@ -3092,14 +3092,14 @@ msgid "Add override"
 msgstr "ओवरराइड जोड़ें"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:452
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:439
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:130
 msgid "Add passkey"
 msgstr "पासकी जोड़ें"
 
 #. Generic action label that opens the reaction picker for a message.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:522
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:527
 #: src/features/input/state/input_keybind/shared.ts:17
 msgid "Add reaction"
 msgstr "रिएक्शन जोड़ें"
@@ -3178,7 +3178,7 @@ msgid "Add to dictionary"
 msgstr "शब्दकोश में जोड़ें"
 
 #. Action label that pins the current channel, DM, or attachment to the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:322
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:327
 msgid "Add to favorites"
 msgstr "पसंदीदा में जोड़ें"
 
@@ -3287,7 +3287,7 @@ msgid "Added to favorite GIFs"
 msgstr "पसंदीदा GIF में जोड़ा गया"
 
 #. Toast confirming an item was added to the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:615
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:620
 msgid "Added to favorites"
 msgstr "पसंदीदा में जोड़ा गया"
 
@@ -3296,11 +3296,11 @@ msgstr "पसंदीदा में जोड़ा गया"
 msgid "Added to saved media"
 msgstr "सेव किए गए मीडिया में जोड़ा गया"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:508
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:495
 msgid "Added: {createdDate}"
 msgstr "जोड़ा गया: {createdDate}"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:504
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:491
 msgid "Added: {createdDate} • last used: {lastUsedDate}"
 msgstr "जोड़ा गया: {createdDate} • आखिरी बार इस्तेमाल किया गया: {lastUsedDate}"
 
@@ -3556,7 +3556,7 @@ msgstr "सभी भाषाएँ"
 #. Short label in the visual tab. Keep it concise.
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/sections/DefaultNotificationsSection.tsx:20
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages.ts:86
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:338
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:343
 #: src/features/user/components/modals/tabs/accessibility_tab/VisualTab.tsx:21
 msgid "All messages"
 msgstr "सभी मैसेज"
@@ -3786,7 +3786,7 @@ msgid "Already deleted"
 msgstr "पहले ही हटा दिया गया है"
 
 #. Short prompt shown near links that open sign-in.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:90
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:95
 msgid "Already have an account?"
 msgstr "पहले से ही अकाउंट है?"
 
@@ -4286,7 +4286,7 @@ msgid "App zoom"
 msgstr "ऐप ज़ूम"
 
 #. Setting label for the global UI zoom level.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:776
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:781
 msgid "App zoom level"
 msgstr "ऐप ज़ूम स्तर"
 
@@ -4410,7 +4410,7 @@ msgid "Approve"
 msgstr "स्वीकृत करें"
 
 #. Hint under the sign-in option on fluxer.com that pairs a newly installed app with the old installed app. productName is the app name.
-#: src/features/auth/flow/AuthLoginLayout.tsx:74
+#: src/features/auth/flow/AuthLoginLayout.tsx:79
 msgid "Approve this app from the {productName} app you already use. No password needed."
 msgstr "जिस {productName} ऐप का आप पहले से इस्तेमाल करते हैं, उससे इस ऐप को मंज़ूरी दें। पासवर्ड की ज़रूरत नहीं है।"
 
@@ -4481,7 +4481,7 @@ msgid "Are you sure you want to delete the category \"{categoryName}\"? This can
 msgstr "क्या आप वाकई \"{categoryName}\" श्रेणी को मिटाना चाहते हैं? इसे पहले जैसा नहीं किया जा सकता।"
 
 #. placeholder {0}: passkey.name
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:240
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:227
 msgid "Are you sure you want to delete the passkey <0>{0}</0>?"
 msgstr "क्या आप वाकई पासकी <0>{0}</0> मिटाना चाहते हैं?"
 
@@ -4493,7 +4493,7 @@ msgstr "क्या आप वाकई इस अटैचमेंट को 
 msgid "Are you sure you want to delete this community? This action cannot be undone. All channels, messages, and settings will be permanently deleted."
 msgstr "क्या आप वाकई इस कम्युनिटी को मिटाना चाहते हैं? इस कार्रवाई को पहले जैसा नहीं किया जा सकता। सभी चैनल, मैसेज और सेटिंग्स हमेशा के लिए मिटा दिए जाएंगे।"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:248
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:235
 msgid "Are you sure you want to delete this passkey?"
 msgstr "क्या आप वाकई यह पासकी हटाना चाहते हैं?"
 
@@ -4573,7 +4573,7 @@ msgid "Ask before starting calls"
 msgstr "कॉल शुरू करने से पहले पूछें"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:462
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:449
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:154
 msgid "Ask for a passkey after your password when you sign in"
 msgstr "साइन इन करते समय आपके पासवर्ड के बाद पासकी भी मांगी जाए"
@@ -4690,7 +4690,7 @@ msgstr "अटैचमेंट"
 
 #. Generic tab / section / category label for audio content or settings.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:250
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:255
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:170
 msgid "Audio"
 msgstr "ऑडियो"
@@ -4851,14 +4851,14 @@ msgstr "प्रमाणीकरण"
 msgid "Authenticator"
 msgstr "ऑथेंटिकेटर"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:321
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:308
 msgid "Authenticator app"
 msgstr "ऑथेंटिकेटर ऐप"
 
 #. Label for the MFA login one-time password field from an authenticator app or backup code.
 #. Short label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:61
-#: src/features/auth/flow/MfaScreen.tsx:19
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:69
+#: src/features/auth/flow/MfaScreen.tsx:18
 msgid "Authenticator code"
 msgstr "ऑथेंटिकेटर कोड"
 
@@ -4928,7 +4928,7 @@ msgstr "अधिकृत ऐप्लिकेशन"
 #. Settings section label for OAuth applications authorized by the user.
 #. User settings tab for OAuth or connected apps authorized by the user.
 #: src/features/user/components/modals/tabs/account_security_tab/AccountManagementModals.tsx:17
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:97
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:96
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:507
 #: src/features/user/components/settings_utils/search_index/AuthorizedAppsIndex.ts:10
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:151
@@ -5225,6 +5225,11 @@ msgstr "अभी दूर हूँ"
 msgid "Back"
 msgstr "वापस"
 
+#. Button on the expired passkey page that returns to the app. productName is the app name.
+#: src/features/auth/passkey_migration/PasskeyBridgePage.tsx:44
+msgid "Back to {productName}"
+msgstr "{productName} पर वापस जाएँ"
+
 #. Button label on the PiP overlay. Returns to the full call view.
 #: src/features/voice/components/pip_overlay/PiPHeader.tsx:10
 msgid "Back to call"
@@ -5257,12 +5262,12 @@ msgid "Back to roles"
 msgstr "रोल पर वापस जाएँ"
 
 #. Back-navigation label that returns from a nested settings pane to the settings tab list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:119
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:124
 msgid "Back to settings"
 msgstr "सेटिंग्स पर वापस जाएँ"
 
 #. Navigation label that returns from recovery, MFA, or related authentication flows to sign-in.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:94
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:99
 msgid "Back to sign-in"
 msgstr "साइन-इन पर वापस जाएँ"
 
@@ -5342,8 +5347,8 @@ msgstr "बैकस्पेस"
 
 #. Label and placeholder for the MFA login field when the only code the account can use is a backup code.
 #. Label and placeholder for the code field in the authentication sudo verification modal when the only code the account can use is a backup code.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:69
-#: src/features/auth/flow/MfaScreen.tsx:39
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:77
+#: src/features/auth/flow/MfaScreen.tsx:38
 msgid "Backup code"
 msgstr "बैकअप कोड"
 
@@ -5351,7 +5356,7 @@ msgstr "बैकअप कोड"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/auth/components/modals/BackupCodesModal.tsx:18
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:391
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:378
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:74
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:68
 msgid "Backup codes"
@@ -5749,7 +5754,7 @@ msgstr "बुकमार्क की सीमा पूरी हो गई"
 #. Generic action label that saves a message to the bookmarks list.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:526
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:531
 #: src/features/input/state/input_keybind/shared.ts:265
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:66
 msgid "Bookmark message"
@@ -6228,7 +6233,7 @@ msgstr "कॉल"
 #. Generic voice/video setting label for the active camera device.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:720
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:725
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:98
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:162
 #: src/features/voice/utils/SettingsDeviceOptions.ts:24
@@ -6288,7 +6293,7 @@ msgstr "कैमरा बंद"
 
 #. Generic action label that enables the local camera.
 #. Notification sound setting label. Sound played when the user turns their camera on in a call.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:724
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:729
 #: src/features/notification/utils/SoundLabels.ts:52
 msgid "Camera on"
 msgstr "कैमरा चालू"
@@ -6364,9 +6369,9 @@ msgstr "यहां फ़ाइलें अपलोड नहीं की �
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:216
 #: src/features/auth/components/modals/ClaimAccountModal.tsx:232
 #: src/features/auth/components/modals/DeviceRevokeModal.tsx:72
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:138
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:80
 #: src/features/auth/components/modals/PasskeyPinModal.tsx:104
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:328
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:400
 #: src/features/auth/flow/BrowserLoginHandoffModal.tsx:164
 #: src/features/channel/components/bottomsheets/CreateDMBottomSheet.tsx:137
 #: src/features/channel/components/MentionEveryonePopout.tsx:177
@@ -6380,7 +6385,7 @@ msgstr "यहां फ़ाइलें अपलोड नहीं की �
 #: src/features/expressions/components/modals/EditFavoriteMemeModal.tsx:87
 #: src/features/expressions/components/modals/EditGuildStickerModal.tsx:116
 #: src/features/guild/components/modals/TransferOwnershipModal.tsx:91
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:98
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:103
 #: src/features/input/state/input_keybind/shared.ts:137
 #: src/features/invite/components/modals/InviteModal.tsx:552
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:133
@@ -6677,7 +6682,7 @@ msgid "Change emoji"
 msgstr "इमोजी बदलें"
 
 #. Generic action label that opens the friend-nickname edit flow.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:538
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:543
 msgid "Change friend nickname"
 msgstr "दोस्त का उपनाम बदलें"
 
@@ -6721,7 +6726,7 @@ msgid "Change my group nickname"
 msgstr "ग्रुप में अपना उपनाम बदलें"
 
 #. Action label for changing a user nickname in a community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:470
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:475
 msgid "Change nickname"
 msgstr "उपनाम बदलें"
 
@@ -7077,7 +7082,7 @@ msgid "Channel actions"
 msgstr "चैनल ऐक्शन"
 
 #. Toast confirming a channel was added to the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:792
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:797
 msgid "Channel added to favorites"
 msgstr "चैनल पसंदीदा में जोड़ा गया"
 
@@ -7098,14 +7103,14 @@ msgid "Channel created"
 msgstr "चैनल बनाया गया"
 
 #. Title of the developer-mode channel debug modal (distinct from the action label that opens it).
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:546
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:551
 msgid "Channel debug"
 msgstr "चैनल डीबग"
 
 #. Audit log entry label. Past-tense action describing that a channel was deleted.
 #. Toast confirming a channel was successfully deleted.
 #: src/features/app/config/AuditLogConstants.ts:20
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:760
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:765
 msgid "Channel deleted"
 msgstr "चैनल मिटा दिया गया"
 
@@ -7195,7 +7200,7 @@ msgid "Channel record"
 msgstr "चैनल रिकॉर्ड"
 
 #. Toast confirming a channel was removed from the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:788
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:793
 msgid "Channel removed from favorites"
 msgstr "चैनल को पसंदीदा से हटाया गया"
 
@@ -7674,7 +7679,7 @@ msgid "Choose your profile accent color"
 msgstr "अपनी प्रोफ़ाइल का एक्सेंट रंग चुनें"
 
 #. Generic account action label that opens or submits the flow to secure an unclaimed account.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:152
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:157
 msgid "Claim account"
 msgstr "अकाउंट क्लेम करें"
 
@@ -7715,7 +7720,7 @@ msgstr "रिपोर्ट भेजने के लिए अपना अ�
 msgid "Claim your account by adding an email and password. We will send a verification code to confirm your email before finishing."
 msgstr "ईमेल और पासवर्ड जोड़कर अपना अकाउंट क्लेम करें। पूरा करने से पहले हम आपके ईमेल की पुष्टि करने के लिए एक वेरिफ़िकेशन कोड भेजेंगे।"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:290
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:277
 msgid "Claim your account to access security features like two-factor authentication and passkeys."
 msgstr "दो-कारक प्रमाणीकरण और पासकी जैसे सुरक्षा फ़ीचर एक्सेस करने के लिए अपना अकाउंट क्लेम करें।"
 
@@ -7902,7 +7907,7 @@ msgid "Clear quick CSS?"
 msgstr "क्विक CSS साफ़ करें?"
 
 #. Generic short button / icon label that clears the active search query.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:514
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:519
 #: src/features/theme_studio/sections/TokensSection.tsx:205
 msgid "Clear search"
 msgstr "खोज साफ़ करें"
@@ -8103,7 +8108,7 @@ msgstr "क्लोनिंग बंद है"
 
 #. Aria-label / button text for dismissing a modal, sheet, popout, or overlay. Short.
 #. Native Window menu item that closes the focused desktop window.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:306
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:311
 #: src/features/platform/utils/DesktopLocaleBridge.ts:138
 msgid "Close"
 msgstr "बंद करें"
@@ -8160,11 +8165,9 @@ msgstr "मेनू बार में बंद करें"
 msgid "Close to tray"
 msgstr "ट्रे में बंद करें"
 
-#. Button in the passkey pop-up window that closes it after an error.
 #. Button label in a popped-out voice window titlebar that closes the popped-out window.
 #. Short label in the app layout native titlebar.
 #: src/features/app/components/layout/NativeWindowControls.tsx:25
-#: src/features/auth/passkey_bridge/PasskeyBridgeScreen.tsx:31
 #: src/features/voice/components/popout/PopoutTitlebar.tsx:26
 msgid "Close window"
 msgstr "विंडो बंद करें"
@@ -8456,7 +8459,7 @@ msgstr "कम्युनिकेशन"
 #. Summary chip on the confirm step indicating that community channels are included.
 #. Summary row label on the confirm step showing the community filter selection.
 #. Switch label for including community (guild) channels in a data export / deletion scope.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:222
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:227
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:144
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:212
 #: src/features/user/components/modals/tabs/privacy_safety_tab/data_request_modal/DataRequestModal.tsx:264
@@ -8522,7 +8525,7 @@ msgid "Community debug"
 msgstr "कम्युनिटी डीबग"
 
 #. Notification level option indicating the channel inherits the community default.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:764
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:769
 msgid "Community default"
 msgstr "कम्युनिटी डिफ़ॉल्ट"
 
@@ -8577,7 +8580,7 @@ msgstr "कम्युनिटी सदस्य रिकॉर्ड"
 
 #. Privacy option label for people who share a community with the user.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:450
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:455
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:144
 msgid "Community members"
 msgstr "कम्युनिटी सदस्य"
@@ -8622,7 +8625,7 @@ msgid "Community notification level"
 msgstr "कम्युनिटी सूचना स्तर"
 
 #. Shared label or heading for per-community notification settings.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:334
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:339
 msgid "Community notification settings"
 msgstr "कम्युनिटी सूचना सेटिंग"
 
@@ -8727,7 +8730,7 @@ msgid "Comparison"
 msgstr "तुलना"
 
 #. Action label that starts the credit-card check used to unlock mature content in supported regions.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:290
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:295
 msgid "Complete mature content check"
 msgstr "वयस्क सामग्री की जाँच पूरी करें"
 
@@ -9093,7 +9096,7 @@ msgstr "कनेक्शन: {connectionId}"
 #. Section header for the linked-accounts area in privacy & safety settings.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for external accounts and verified domains.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:410
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:415
 #: src/features/user/components/popouts/UserProfileShared.tsx:614
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:8
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:30
@@ -9203,7 +9206,7 @@ msgstr "कॉन्टेक्स्ट मेन्यू को लेफ्
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:34
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:109
 #: src/features/connection/components/modals/AddConnectionModal.tsx:384
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:712
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:717
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:397
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:182
 msgid "Continue"
@@ -9213,11 +9216,6 @@ msgstr "जारी रखें"
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:88
 msgid "Continue to checkout"
 msgstr "चेकआउट के लिए आगे बढ़ें"
-
-#. Body of the passkey pop-up window when adding a new passkey. host is a web address such as fluxer.com.
-#: src/features/auth/passkey_bridge/PasskeyBridgeScreen.tsx:27
-msgid "Continue to create a passkey for {host}"
-msgstr "{host} के लिए पासकी बनाना जारी रखें"
 
 #. Button or menu action label in the report action utils helper. Keep it concise. Keep the tone plain and specific.
 #: src/features/moderation/utils/ReportActionUtils.tsx:37
@@ -9229,7 +9227,9 @@ msgstr "कम्युनिटी की रिपोर्ट करना �
 msgid "Continue to report user"
 msgstr "यूज़र की रिपोर्ट करना जारी रखें"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:287
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:326
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:339
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:362
 msgid "Continue with passkey"
 msgstr "पासकी के साथ जारी रखें"
 
@@ -9237,11 +9237,6 @@ msgstr "पासकी के साथ जारी रखें"
 #: src/features/auth/flow/AuthSsoPanel.tsx:21
 msgid "Continue with SSO"
 msgstr "SSO के साथ जारी रखें"
-
-#. Body of the passkey pop-up window when signing in or confirming identity. host is a web address such as fluxer.com.
-#: src/features/auth/passkey_bridge/PasskeyBridgeScreen.tsx:22
-msgid "Continue with your passkey to sign in to {host}"
-msgstr "{host} में साइन इन करने के लिए अपनी पासकी के साथ जारी रखें"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:31
@@ -9319,7 +9314,7 @@ msgstr "लोगों या कम्युनिटी के ख़िल�
 
 #. Generic short status label confirming a value was copied to the clipboard.
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:165
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:381
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:386
 msgid "Copied"
 msgstr "कॉपी किया गया"
 
@@ -9408,7 +9403,7 @@ msgid "Copy category ID"
 msgstr "श्रेणी आईडी कॉपी करें"
 
 #. Developer-mode action that copies a channel snowflake/ID to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:397
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:402
 msgid "Copy channel ID"
 msgstr "चैनल आईडी कॉपी करें"
 
@@ -9421,12 +9416,12 @@ msgstr "चैनल लिंक कॉपी करें"
 
 #. Action label that copies a code block to the clipboard.
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:165
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:393
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:398
 msgid "Copy code"
 msgstr "कोड कॉपी करें"
 
 #. Developer-mode action that copies a community snowflake/ID to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:728
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:733
 msgid "Copy community ID"
 msgstr "कम्युनिटी आईडी कॉपी करें"
 
@@ -9529,7 +9524,7 @@ msgid "Copy invite URL"
 msgstr "इनवाइट यूआरएल कॉपी करें"
 
 #. Generic action label that copies a URL to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:740
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:745
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:330
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:145
 msgid "Copy link"
@@ -9562,7 +9557,7 @@ msgstr "मैसेज कॉपी करें"
 
 #. Developer-mode action that copies a message snowflake/ID to the clipboard.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:732
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:737
 #: src/features/input/state/input_keybind/shared.ts:277
 msgid "Copy message ID"
 msgstr "मैसेज आईडी कॉपी करें"
@@ -9570,7 +9565,7 @@ msgstr "मैसेज आईडी कॉपी करें"
 #. Generic action label that copies a permalink to the selected message.
 #. IAR modal: quick-action card title.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:518
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:523
 #: src/features/input/state/input_keybind/shared.ts:273
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:389
 msgid "Copy message link"
@@ -9626,7 +9621,7 @@ msgstr "स्टिकर यूआरएल कॉपी करें"
 #. Action label that copies a message body / selected text to the clipboard.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:389
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:394
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:93
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:83
 msgid "Copy text"
@@ -9638,12 +9633,12 @@ msgstr "अपने ऑथेंटिकेटर ऐप में सेट�
 
 #. Developer-mode action that copies a user snowflake/ID to the clipboard.
 #: src/features/app/components/floating/UserAreaPopout.tsx:692
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:172
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:177
 msgid "Copy user ID"
 msgstr "यूज़र आईडी कॉपी करें"
 
 #. Action that copies a user username (handle) to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:736
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:741
 msgid "Copy username"
 msgstr "यूज़रनेम कॉपी करें"
 
@@ -9841,7 +9836,7 @@ msgid "Couldn't delete application"
 msgstr "ऐप्लिकेशन को हटाया नहीं जा सका"
 
 #. Title of the error modal shown when removing a registered passkey fails.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:39
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:38
 msgid "Couldn't delete passkey"
 msgstr "पासकी मिटाई नहीं जा सकी"
 
@@ -10085,7 +10080,7 @@ msgid "Couldn't send invite"
 msgstr "इनवाइट भेजा नहीं जा सका"
 
 #. Toast shown when sending an invite (group DM or community) fails.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:704
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:709
 msgid "Couldn't send invite. Try again."
 msgstr "इनवाइट भेजा नहीं जा सका। फिर से कोशिश करें।"
 
@@ -10182,7 +10177,7 @@ msgid "Couldn't update mention suppression bypass"
 msgstr "मेंशन सप्रेशन बायपास अपडेट नहीं किया जा सका"
 
 #. Title of the error modal shown when the passkey two-factor setting could not be saved.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:85
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:84
 msgid "Couldn't update passkey two-factor authentication"
 msgstr "पासकी दो-कारक प्रमाणीकरण अपडेट नहीं किया जा सका"
 
@@ -10206,6 +10201,11 @@ msgstr "ऑल्ट टेक्स्ट अपडेट नहीं कि�
 msgid "Couldn't update voice activity sharing right now"
 msgstr "वॉइस गतिविधि शेयरिंग अभी अपडेट नहीं की जा सकी"
 
+#. Error shown in the passkey update modal when saving the updated passkey failed. Keep plain.
+#: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:47
+msgid "Couldn't update your passkey. Try again."
+msgstr "आपकी पासकी अपडेट नहीं हो सकी। फिर से कोशिश करें।"
+
 #. Title of the error modal shown when uploading a profile avatar fails.
 #: src/features/user/components/modals/tabs/my_profile_tab/AvatarUploader.tsx:94
 msgid "Couldn't upload avatar"
@@ -10215,11 +10215,6 @@ msgstr "अवतार अपलोड नहीं किया जा सक�
 #: src/features/user/components/modals/tabs/my_profile_tab/BannerUploader.tsx:93
 msgid "Couldn't upload banner"
 msgstr "बैनर अपलोड नहीं किया जा सका"
-
-#. Error shown when the pop-up window used for password manager passkeys does not finish.
-#: src/features/auth/utils/PasskeyBridge.ts:29
-msgid "Couldn't use your passkey in the pop-up window. Try again."
-msgstr "आपकी पासकी का उपयोग पॉप-अप विंडो में नहीं किया जा सका। फिर से कोशिश करें।"
 
 #. Desktop handoff flow error shown when verifying the pairing code fails for an unexpected reason.
 #: src/features/auth/flow/auth_login_core/useDesktopHandoffFlow.ts:14
@@ -10231,8 +10226,8 @@ msgstr "उस कोड को सत्यापित नहीं किय�
 msgid "Couldn't verify the connection"
 msgstr "कनेक्शन सत्यापित नहीं किया जा सका"
 
-#. Sudo (re-auth) modal toast error shown when passkey verification fails. Keep plain.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:36
+#. Error shown when verifying with a passkey fails, in the sudo (re-auth) modal and on the sign-in page. Keep plain.
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:70
 msgid "Couldn't verify with passkey. Try again."
 msgstr "पासकी से पुष्टि नहीं हो पाई। फिर से कोशिश करें।"
 
@@ -10270,7 +10265,7 @@ msgid "Cozy"
 msgstr "आरामदायक"
 
 #. Generic primary action label that creates the item described by the current dialog or form.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:148
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:153
 msgid "Create"
 msgstr "बनाएँ"
 
@@ -10298,7 +10293,7 @@ msgstr "{userName} के साथ एक नया ग्रुप बना�
 
 #. Generic authentication action label for starting or submitting account creation.
 #: src/features/auth/components/pages/RegisterPage.tsx:46
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:82
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:87
 #: src/features/invite/components/modals/InvitePagePreviewModal.tsx:162
 #: src/features/theme/components/pages/ThemeRegisterPage.tsx:129
 msgid "Create account"
@@ -10336,17 +10331,17 @@ msgid "Create application"
 msgstr "ऐप्लिकेशन बनाएँ"
 
 #. Generic action label that creates a new channel category or favorites category.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:198
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:203
 msgid "Create category"
 msgstr "श्रेणी बनाएँ"
 
 #. Action label that opens the create-channel flow.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:474
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:479
 msgid "Create channel"
 msgstr "चैनल बनाएँ"
 
 #. Generic action or title label for creating a new community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:156
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:161
 msgid "Create community"
 msgstr "कम्युनिटी बनाएँ"
 
@@ -10844,7 +10839,7 @@ msgid "Custom warning text"
 msgstr "कस्टम चेतावनी टेक्स्ट"
 
 #. Last "Custom…" option in dropdown menus that opens a custom-value picker.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:768
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:773
 msgid "Custom…"
 msgstr "कस्टम…"
 
@@ -11136,7 +11131,7 @@ msgid "Debug"
 msgstr "डीबग"
 
 #. Developer-mode action that opens the channel debug panel.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:401
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:406
 msgid "Debug channel"
 msgstr "चैनल डीबग करें"
 
@@ -11164,7 +11159,7 @@ msgstr "मैसेज डीबग करें"
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Developer-mode action that opens a user debug panel.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:167
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:542
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:547
 msgid "Debug user"
 msgstr "यूज़र को डीबग करें"
 
@@ -11315,7 +11310,7 @@ msgstr "डेलावेयर"
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:109
 #: src/features/platform/utils/DesktopLocaleBridge.ts:76
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:530
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:517
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:117
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:290
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
@@ -11368,7 +11363,7 @@ msgid "Delete {fileName}"
 msgstr "{fileName} मिटाएँ"
 
 #. Destructive action or section label for permanently deleting the current account.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:442
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:447
 msgid "Delete account"
 msgstr "अकाउंट मिटाएँ"
 
@@ -11389,7 +11384,7 @@ msgid "Delete application"
 msgstr "ऐप्लिकेशन मिटाएँ"
 
 #. Generic action label that removes an attachment from the upload tray / message.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:748
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:753
 msgid "Delete attachment"
 msgstr "अटैचमेंट मिटाएँ"
 
@@ -11452,7 +11447,7 @@ msgid "Delete media"
 msgstr "मीडिया मिटाएँ"
 
 #. Destructive action label for deleting a message.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:458
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:463
 msgid "Delete message"
 msgstr "मैसेज मिटाएँ"
 
@@ -11488,7 +11483,7 @@ msgid "Delete other members' messages. Pinning is controlled separately."
 msgstr "अन्य सदस्यों के मैसेज मिटाएँ। पिन करना अलग से नियंत्रित होता है।"
 
 #. Security settings: confirmation modal title and primary button for removing a registered passkey. Destructive action; keep plain and direct.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:34
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:33
 msgid "Delete passkey"
 msgstr "पासकी मिटाएँ"
 
@@ -11701,7 +11696,7 @@ msgstr "बताएं कि आपकी कम्युनिटी कि�
 #. Generic form-field label for a free-form description.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:422
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:498
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:503
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:137
 msgid "Description"
 msgstr "विवरण"
@@ -11966,7 +11961,7 @@ msgstr "डिवाइस:"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Tab label in the screen-share picker. Lists cameras and virtual capture devices.
 #. User settings tab for managing devices linked to the current account.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:105
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:104
 #: src/features/user/components/modals/tabs/DevicesTab.tsx:530
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:11
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:82
@@ -12021,7 +12016,7 @@ msgstr "सीधा इनपुट"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:14
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:398
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:562
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:567
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:85
 msgid "Direct message"
 msgstr "डायरेक्ट मैसेज"
@@ -12050,7 +12045,7 @@ msgstr "डायरेक्ट मैसेज के प्रीव्यू
 #. Summary row label for the direct messages choice in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:348
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:629
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:218
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:223
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:255
 msgid "Direct messages"
 msgstr "डायरेक्ट मैसेज"
@@ -12077,14 +12072,14 @@ msgstr "सीधा अपलोड चालू है"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short footer action in the screen-share picker that disables screen-share preview frame uploads.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:355
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:342
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:158
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:279
 msgid "Disable"
 msgstr "बंद करें"
 
 #. Destructive action or section label for temporarily disabling the current account.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:438
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:443
 msgid "Disable account"
 msgstr "अकाउंट निष्क्रिय करें"
 
@@ -12309,7 +12304,7 @@ msgid "Disconnected"
 msgstr "कनेक्शन कट गया"
 
 #. Label for a community that anyone can find through discovery. Used in the community badge and as the community subtitle in expression info cards. Keep it concise.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:679
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:684
 msgid "Discoverable community"
 msgstr "डिस्कवरेबल कम्युनिटी"
 
@@ -12363,7 +12358,7 @@ msgid "Discriminator"
 msgstr "डिस्क्रिमिनेटर"
 
 #. Generic button label that dismisses a banner, modal, sheet, or prompt without taking the primary action.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:310
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:315
 msgid "Dismiss"
 msgstr "खारिज करें"
 
@@ -12477,7 +12472,7 @@ msgstr "DM और फ्रेंड रिक्वेस्ट सेटिं
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Generic success-toast label confirming that a DM channel was closed.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:87
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:558
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:563
 msgid "DM closed"
 msgstr "DM बंद"
 
@@ -12607,7 +12602,7 @@ msgstr "ब्लॉक नहीं होगा। आप बाद में 
 
 #. Generic form-field / table-column label for an internet domain.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:772
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:777
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:28
 msgid "Domain"
 msgstr "डोमेन"
@@ -12697,7 +12692,7 @@ msgstr "किसी की स्ट्रीम देखने के लि�
 #. Generic action label that downloads an attachment / file.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/auth/components/modals/BackupCodesModal.tsx:85
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:377
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:382
 #: src/features/theme_studio/sections/QuickCssSection.tsx:205
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:216
 msgid "Download"
@@ -12974,7 +12969,7 @@ msgid "Dutch"
 msgstr "डच"
 
 #. Placeholder or example text in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:35
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:27
 msgid "e.g., YubiKey, iPhone, work computer"
 msgstr "जैसे: YubiKey, iPhone, ऑफ़िस का कंप्यूटर"
 
@@ -13092,7 +13087,7 @@ msgstr "नाम, विवरण और आइकॉन जैसी ग्ल
 
 #. Action label for editing a group DM (name, icon, members).
 #: src/features/channel/components/direct_message/GroupDMWelcomeSection.tsx:103
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:466
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:471
 msgid "Edit group"
 msgstr "ग्रुप एडिट करें"
 
@@ -13123,7 +13118,7 @@ msgstr "मीडिया एडिट करें"
 
 #. Generic action label that opens the message edit composer.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:708
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:713
 #: src/features/input/state/input_keybind/shared.ts:9
 msgid "Edit message"
 msgstr "मैसेज एडिट करें"
@@ -13248,7 +13243,7 @@ msgid "Eligible for a refund until {windowEndsOn}. This will also cancel your su
 msgstr "{windowEndsOn} तक रिफंड के लिए पात्र हैं। इससे आपकी सदस्यता तुरंत रद्द भी हो जाएगी।"
 
 #. Generic form-field label for an email address.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:206
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:211
 #: src/features/moderation/components/report/ReportBreadcrumbs.tsx:28
 msgid "Email"
 msgstr "ईमेल"
@@ -13492,7 +13487,7 @@ msgid "Emoji updated"
 msgstr "इमोजी अपडेट किया गया"
 
 #. Generic tab / section / category label for emojis.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:242
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:247
 msgid "Emojis"
 msgstr "इमोजी"
 
@@ -13525,7 +13520,7 @@ msgstr "पसंदीदा खाली हैं"
 #: src/features/app/components/layout/app_layout/nagbars/LinuxInputAccessNagbar.tsx:32
 #: src/features/app/components/layout/GuildLayout.tsx:54
 #: src/features/invite/components/DisableInvitesButton.tsx:27
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:373
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:360
 #: src/features/user/components/modals/tabs/components/LinuxInputAccessSection.tsx:23
 msgid "Enable"
 msgstr "चालू करें"
@@ -13680,7 +13675,7 @@ msgstr "मोबाइल पुश नोटिफ़िकेशन चाल
 
 #. Generic action label / toggle that turns on push or desktop notifications.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:780
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:785
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:127
 msgid "Enable notifications"
 msgstr "नोटिफ़िकेशन चालू करें"
@@ -13760,7 +13755,7 @@ msgid "Enable the integrations whose credentials you have configured. Only avail
 msgstr "उन इंटीग्रेशन को चालू करें जिनके क्रेडेंशियल आपने कॉन्फ़िगर किए हैं। सिर्फ़ उपलब्ध सेवाएँ दिखाई जाती हैं।"
 
 #. Generic action label that opens or starts two-factor authentication setup.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:168
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:173
 msgid "Enable two-factor auth"
 msgstr "दो-कारक प्रमाणीकरण चालू करें"
 
@@ -13895,7 +13890,7 @@ msgid "English (US)"
 msgstr "अंग्रेज़ी (यूएस)"
 
 #. Generic radio / dropdown option label for an "enhanced" tier.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:784
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:789
 msgid "Enhanced"
 msgstr "बेहतर"
 
@@ -14006,12 +14001,12 @@ msgid "Enter new email"
 msgstr "नया ईमेल डालें"
 
 #. MFA code entry instructions shown when the account uses passkeys as its second factor.
-#: src/features/auth/flow/MfaScreen.tsx:43
+#: src/features/auth/flow/MfaScreen.tsx:42
 msgid "Enter one of your backup codes if you can't use your passkey."
 msgstr "अगर आप अपनी पासकी का इस्तेमाल नहीं कर सकते, तो अपने बैकअप कोड में से कोई एक डालें।"
 
 #. Body text in the authentication sudo verification modal, shown when the only code the account can enter is a backup code. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:48
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:56
 msgid "Enter one of your backup codes."
 msgstr "अपने बैकअप कोड में से कोई एक डालें।"
 
@@ -14031,7 +14026,7 @@ msgid "Enter text"
 msgstr "टेक्स्ट डालें"
 
 #. MFA code entry instructions. digitCount is the expected authenticator-code length.
-#: src/features/auth/flow/MfaScreen.tsx:31
+#: src/features/auth/flow/MfaScreen.tsx:30
 msgid "Enter the {digitCount}-digit code from your authenticator app or a backup code."
 msgstr "अपने ऑथेंटिकेटर ऐप से {digitCount} अंकों वाला कोड या कोई बैकअप कोड डालें।"
 
@@ -14065,7 +14060,7 @@ msgid "Enter the code before continuing."
 msgstr "जारी रखने से पहले कोड डालें।"
 
 #. Body text in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:44
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:52
 msgid "Enter the code from your authenticator app."
 msgstr "अपने ऑथेंटिकेटर ऐप से कोड डालें।"
 
@@ -14149,7 +14144,7 @@ msgid "Enter your name"
 msgstr "अपना नाम डालें"
 
 #. Body text in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:40
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:48
 msgid "Enter your password."
 msgstr "अपना पासवर्ड डालें।"
 
@@ -14493,7 +14488,7 @@ msgid "Expired on <0>{expiredDate}</0>. <1/> are no longer active. You can resub
 msgstr "<0>{expiredDate}</0> को समाप्त हो गया। <1/> अब सक्रिय नहीं हैं। आप किसी भी समय फिर से सदस्यता ले सकते हैं।"
 
 #. Generic column or field label for an expiration date.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:430
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:435
 msgid "Expires"
 msgstr "समाप्त होगा"
 
@@ -14584,7 +14579,7 @@ msgid "Expression autocomplete"
 msgstr "एक्सप्रेशन ऑटो-कम्प्लीट"
 
 #. Aria label for the expression picker category nav.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:752
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:757
 msgid "Expression picker categories"
 msgstr "एक्सप्रेशन पिकर श्रेणियाँ"
 
@@ -14823,7 +14818,7 @@ msgid "Failed to prepare emojis"
 msgstr "इमोजी तैयार नहीं हो पाए"
 
 #. Toast error shown by image-cropping uploaders (avatar, banner, community icon) when the cropped image cannot be processed.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:405
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:410
 msgid "Failed to process the cropped image. Try again."
 msgstr "क्रॉप की गई इमेज प्रोसेस नहीं हो पाई। फिर से कोशिश करें।"
 
@@ -14901,7 +14896,7 @@ msgid "Failed to start SSO"
 msgstr "SSO शुरू नहीं हो पाया"
 
 #. Login flow error shown when switching to a saved account fails.
-#: src/features/auth/flow/AuthLoginLayout.tsx:58
+#: src/features/auth/flow/AuthLoginLayout.tsx:63
 msgid "Failed to switch account"
 msgstr "अकाउंट नहीं बदला जा सका"
 
@@ -15053,7 +15048,7 @@ msgstr "पसंदीदा"
 
 #. Generic section heading / category label for favorites.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:258
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:263
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:426
 msgid "Favorites"
 msgstr "पसंदीदा"
@@ -15268,6 +15263,11 @@ msgstr "अकाउंट सेटअप पूरा करें"
 msgid "Finish account setup first"
 msgstr "पहले अकाउंट सेटअप पूरा करें"
 
+#. Sudo (re-auth) modal hint shown after the passkey button opened a new tab to confirm the passkey. "Continue with passkey" is the button label. Keep plain.
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:83
+msgid "Finish in the new tab. If you closed it, press Continue with passkey again."
+msgstr "नए टैब में पूरा करें। अगर आपने इसे बंद कर दिया है, तो 'पासकी के साथ जारी रखें' फिर से दबाएँ।"
+
 #. Button that saves the configuration and completes the setup wizard.
 #. Setup wizard finish step title.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:85
@@ -15391,7 +15391,7 @@ msgid "Folder name"
 msgstr "फ़ोल्डर का नाम"
 
 #. Shared label for the settings menu or modal that configures a community folder.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:266
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:271
 msgid "Folder settings"
 msgstr "फ़ोल्डर सेटिंग्स"
 
@@ -15479,7 +15479,7 @@ msgstr "मेरे लिए"
 msgid "For this check, you send us a text message instead of receiving one from us."
 msgstr "इस जाँच के लिए, आप हमसे मैसेज पाने के बजाय हमें एक टेक्स्ट मैसेज भेजेंगे।"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:225
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:268
 msgid "For your security, please confirm it's you to continue."
 msgstr "आपकी सुरक्षा के लिए, आगे बढ़ने से पहले कृपया पुष्टि करें कि यह आप ही हैं।"
 
@@ -15606,7 +15606,7 @@ msgstr "पासवर्ड भूल गए"
 
 #. Authentication link label that opens password recovery.
 #: src/features/auth/components/pages/ForgotPasswordPage.tsx:71
-#: src/features/auth/flow/AuthLoginLayout.tsx:70
+#: src/features/auth/flow/AuthLoginLayout.tsx:75
 msgid "Forgot your password?"
 msgstr "पासवर्ड भूल गए?"
 
@@ -15810,7 +15810,7 @@ msgid "Friends and small communities only"
 msgstr "सिर्फ़ दोस्त और छोटी कम्युनिटी"
 
 #. Privacy option label for people connected through mutual friends.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:446
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:451
 msgid "Friends of friends"
 msgstr "दोस्तों के दोस्त"
 
@@ -16018,7 +16018,7 @@ msgid "GDPR"
 msgstr "GDPR"
 
 #. Generic section label for broad or default settings.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:123
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:128
 msgid "General"
 msgstr "सामान्य"
 
@@ -16066,7 +16066,7 @@ msgid "Germany"
 msgstr "जर्मनी"
 
 #. Generic upsell CTA button to start the Plutonium purchase flow. Preserve {premiumProductName}.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:796
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:801
 msgid "Get {premiumProductName}"
 msgstr "{premiumProductName} पाएँ"
 
@@ -16159,7 +16159,7 @@ msgid "GIF URLs"
 msgstr "GIF यूआरएल"
 
 #. Generic tab / section / category label for animated GIFs.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:246
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:251
 msgid "GIFs"
 msgstr "GIF"
 
@@ -16365,7 +16365,7 @@ msgid "Global shortcut"
 msgstr "ग्लोबल शॉर्टकट"
 
 #. Generic back-navigation label in modals, settings tabs, and nested flows.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:107
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:112
 msgid "Go back"
 msgstr "वापस जाएँ"
 
@@ -16373,6 +16373,11 @@ msgstr "वापस जाएँ"
 #: src/features/moderation/components/pages/ReportPage.tsx:84
 msgid "Go back and enter a valid email."
 msgstr "वापस जाएं और मान्य ईमेल पता दर्ज करें।"
+
+#. Body of the page shown after a passkey confirmation finished in a separate tab. productName is the app name.
+#: src/features/auth/passkey_migration/PasskeyBridgePage.tsx:52
+msgid "Go back to {productName} to continue."
+msgstr "जारी रखने के लिए {productName} पर वापस जाएँ।"
 
 #. Accessible label for the community row of an expression info card, which opens a community the viewer is already a member of. {communityName} is the community name.
 #: src/features/expressions/components/ExpressionInfoCard.tsx:89
@@ -16994,7 +16999,7 @@ msgid "Hide expiration footnotes"
 msgstr "एक्सपायरी फ़ुटनोट छिपाएं"
 
 #. Toggle / action label that collapses or hides the favorites section.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:696
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:701
 msgid "Hide favorites"
 msgstr "पसंदीदा छिपाएं"
 
@@ -17025,7 +17030,7 @@ msgid "Hide muted"
 msgstr "म्यूट किए गए छिपाएं"
 
 #. Toggle label in community / sidebar settings that collapses muted channels from the channel list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:318
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:323
 msgid "Hide muted channels"
 msgstr "म्यूट किए गए चैनल छिपाएं"
 
@@ -17358,7 +17363,7 @@ msgstr "पहचान"
 
 #. Generic presence-status label indicating the user is idle / AFK.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:639
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:644
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:46
 msgid "Idle"
 msgstr "निष्क्रिय"
@@ -17818,7 +17823,7 @@ msgstr "अनुपयुक्त प्रोफ़ाइल"
 
 #. Generic header / tab label for the unread / mentions / bookmarks inbox.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:486
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:491
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:21
 msgid "Inbox"
 msgstr "इनबॉक्स"
@@ -17867,7 +17872,7 @@ msgstr "कम्युनिटी आईडी शामिल करें।
 #. Generic label for an incoming voice or video call.
 #. Notification sound setting label. Ringtone for an incoming DM or group DM call.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:502
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:507
 #: src/features/notification/utils/SoundLabels.ts:48
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:172
 msgid "Incoming call"
@@ -18406,7 +18411,7 @@ msgid "Invite page preview"
 msgstr "इनवाइट पेज का प्रीव्यू"
 
 #. Action label that opens the community invite creation modal or sheet.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:357
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:362
 msgid "Invite people"
 msgstr "लोगों को आमंत्रित करें"
 
@@ -18456,7 +18461,7 @@ msgstr "आमंत्रित करने वाला:"
 #. Generic section / tab label for the invites list.
 #: src/features/channel/components/modals/channel_tabs/ChannelInvitesTab.tsx:191
 #: src/features/guild/components/modals/guild_tabs/GuildInvitesTab.tsx:53
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:684
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:689
 msgid "Invites"
 msgstr "इनवाइट"
 
@@ -18645,7 +18650,7 @@ msgid "Join call"
 msgstr "कॉल में शामिल हों"
 
 #. Generic action label that accepts a community invite / joins a community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:675
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:680
 msgid "Join community"
 msgstr "कम्युनिटी में शामिल हों"
 
@@ -18727,7 +18732,7 @@ msgid "Joined {productName}"
 msgstr "{productName} से जुड़े"
 
 #. Generic short action label that scrolls/navigates to a specific message.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:494
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:499
 #: src/features/messaging/components/popouts/RecentMentionsContent.tsx:204
 msgid "Jump"
 msgstr "जाएं"
@@ -18991,7 +18996,7 @@ msgid "Kick a member from this community."
 msgstr "इस कम्युनिटी से किसी सदस्य को किक करें।"
 
 #. Moderation action label that removes a member from a community without banning.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:671
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:676
 msgid "Kick member"
 msgstr "सदस्य को किक करें"
 
@@ -19169,7 +19174,7 @@ msgid "Leave call"
 msgstr "कॉल छोड़ें"
 
 #. Destructive action label that removes the current user from a community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:667
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:672
 msgid "Leave community"
 msgstr "कम्युनिटी छोड़ें"
 
@@ -19419,7 +19424,7 @@ msgid "Link builder"
 msgstr "लिंक बिल्डर"
 
 #. Generic toast confirming that a link was copied to the system clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:385
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:390
 msgid "Link copied to clipboard"
 msgstr "लिंक क्लिपबोर्ड पर कॉपी किया गया"
 
@@ -19859,8 +19864,8 @@ msgstr "मैलवेयर या खतरनाक लिंक"
 msgid "Malware, credential theft, or harmful files."
 msgstr "मैलवेयर, क्रेडेंशियल चोरी या नुकसान पहुँचाने वाली फ़ाइलें।"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:574
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:609
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:561
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:596
 msgid "Manage"
 msgstr "प्रबंधित करें"
 
@@ -19870,7 +19875,7 @@ msgid "Manage accounts"
 msgstr "अकाउंट प्रबंधित करें"
 
 #. Security settings section description for account access controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:93
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:92
 msgid "Manage apps and devices with access to your account"
 msgstr "अपने अकाउंट तक एक्सेस रखने वाले ऐप्स और डिवाइस प्रबंधित करें"
 
@@ -20001,7 +20006,7 @@ msgid "Mark all unread inbox channels as read immediately, without asking to con
 msgstr "सभी अपठित इनबॉक्स चैनलों को बिना पुष्टि पूछे तुरंत पढ़ा गया मार्क करें"
 
 #. Action label that clears unread indicators for the selected channel, category, community, or DM.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:314
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:319
 msgid "Mark as read"
 msgstr "पढ़ा गया मार्क करें"
 
@@ -20021,7 +20026,7 @@ msgstr "स्पॉइलर मार्क करें"
 
 #. Generic action label that flips a channel back to unread.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:663
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:668
 #: src/features/input/state/input_keybind/shared.ts:33
 msgid "Mark as unread"
 msgstr "अपठित मार्क करें"
@@ -20169,7 +20174,7 @@ msgstr "वयस्क कम्युनिटी"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:90
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:131
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:286
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:291
 #: src/features/user/components/settings_utils/section_registry/PrivacySafetySections.ts:180
 msgid "Mature content"
 msgstr "वयस्क सामग्री"
@@ -20315,7 +20320,7 @@ msgstr "मापा जा रहा है…"
 #. Collapsible group heading in the Theme Studio tokens list, for image and video tokens.
 #. Generic tab / section / category label for media content.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:254
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:259
 #: src/features/theme_studio/sections/TokenGroups.ts:110
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:16
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:101
@@ -20513,7 +20518,7 @@ msgstr "सदस्य"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/shared/AddOverridePopout.tsx:190
 #: src/features/channel/components/bottomsheets/ChannelDetailsBottomSheet.tsx:591
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:490
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:495
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:346
 msgid "Members"
 msgstr "सदस्य"
@@ -20616,7 +20621,7 @@ msgstr "इस रोल को मेंशन करें?"
 #. Generic section / tab label for the mentions inbox.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:136
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:643
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:648
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:166
 msgid "Mentions"
 msgstr "मेंशन"
@@ -21342,7 +21347,7 @@ msgid "More media actions"
 msgstr "ज़्यादा मीडिया ऐक्शन"
 
 #. Generic overflow-menu trigger aria-label / tooltip ("…" or kebab menu).
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:111
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:116
 msgid "More options"
 msgstr "ज़्यादा विकल्प"
 
@@ -21617,7 +21622,7 @@ msgid "Mute calls"
 msgstr "कॉल म्यूट करें"
 
 #. Action label that mutes notifications for a channel category.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:575
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:580
 msgid "Mute category"
 msgstr "श्रेणी म्यूट करें"
 
@@ -21632,7 +21637,7 @@ msgid "Mute communities"
 msgstr "कम्युनिटी को म्यूट करें"
 
 #. Generic action label that mutes notifications for an entire community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:550
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:555
 msgid "Mute community"
 msgstr "कम्युनिटी म्यूट करें"
 
@@ -21664,7 +21669,7 @@ msgid "Mute entrance sound"
 msgstr "एंट्रेंस साउंड म्यूट करें"
 
 #. Action label that mutes notifications for the favourites pseudo-guild.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:688
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:693
 msgid "Mute favorites"
 msgstr "पसंदीदा को म्यूट करें"
 
@@ -21943,12 +21948,12 @@ msgid "Name must be at least 2 characters"
 msgstr "नाम कम से कम 2 वर्णों का होना चाहिए"
 
 #. Short label in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:27
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:19
 msgid "Name passkey"
 msgstr "पासकी को नाम दें"
 
 #. Accessible form label in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:23
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:15
 msgid "Name passkey form"
 msgstr "पासकी को नाम देने का फ़ॉर्म"
 
@@ -22023,7 +22028,7 @@ msgid "Nebraska"
 msgstr "नेब्रास्का"
 
 #. Short prompt shown near links that open account registration.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:86
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:91
 msgid "Need an account?"
 msgstr "अकाउंट चाहिए?"
 
@@ -22084,7 +22089,7 @@ msgid "Nevada"
 msgstr "नेवादा"
 
 #. Generic short option label for "never" in time / frequency dropdowns.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:647
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:652
 msgid "Never"
 msgstr "कभी नहीं"
 
@@ -22276,7 +22281,7 @@ msgstr "सबसे नया पहले"
 #. Primary button in the required-action modal. Moves to the next carousel step.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:81
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:154
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:716
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:721
 msgid "Next"
 msgstr "आगे"
 
@@ -22905,7 +22910,7 @@ msgstr "कोई यूज़र नहीं मिला"
 msgid "No verification is required."
 msgstr "किसी वेरिफ़िकेशन की ज़रूरत नहीं है।"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:231
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:274
 msgid "No verification methods available"
 msgstr "कोई वेरिफ़िकेशन तरीका उपलब्ध नहीं है"
 
@@ -23038,11 +23043,13 @@ msgstr "नहीं मिला"
 
 #. Button that cancels a subscription billing change.
 #. Secondary button on the voice-session-restore nagbar. Dismisses the reconnect prompt.
+#. Secondary button that closes the passkey update modal after an attempt failed.
 #. Short label in the Plutonium self serve refund section. Keep the tone plain and specific.
 #. Short label in the authentication new device monitoring. Keep the tone plain and specific.
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:31
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:69
 #: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:35
+#: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:43
 #: src/features/auth/state/NewDeviceMonitoring.tsx:31
 msgid "Not now"
 msgstr "अभी नहीं"
@@ -23086,7 +23093,7 @@ msgid "Note (only visible to you)"
 msgstr "नोट (सिर्फ़ आपको दिखेगा)"
 
 #. Notification level option. Suppresses all pushes for the channel or community. Paired with "All messages" and "Only mentions".
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:348
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:353
 msgid "Nothing"
 msgstr "कुछ नहीं"
 
@@ -23129,7 +23136,7 @@ msgid "Notification overrides"
 msgstr "सूचना ओवरराइड"
 
 #. Submenu / section header that groups per-channel or per-community notification preferences.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:330
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:335
 msgid "Notification settings"
 msgstr "सूचना सेटिंग"
 
@@ -23152,7 +23159,7 @@ msgstr "सूचना वॉल्यूम"
 #. Generic section header / tab label for the notifications area.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/layout/MobileBottomNav.tsx:136
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:700
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:705
 #: src/features/notification/components/pages/NotificationsPage.tsx:61
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:18
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:30
@@ -23248,7 +23255,7 @@ msgid "Off"
 msgstr "बंद"
 
 #. Generic presence-status label indicating the user is offline.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:635
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:640
 msgid "Offline"
 msgstr "ऑफ़लाइन"
 
@@ -23263,7 +23270,7 @@ msgid "OK"
 msgstr "ठीक है"
 
 #. Generic acknowledgement button on an informational alert. Closes the alert. Use for benign confirms; for "I have read and understood" use UNDERSTOOD_DESCRIPTOR.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:102
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:107
 msgid "Okay"
 msgstr "ठीक है"
 
@@ -23348,7 +23355,7 @@ msgid "online"
 msgstr "ऑनलाइन"
 
 #. Generic presence-status label indicating the user is connected and available.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:202
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:207
 msgid "Online"
 msgstr "ऑनलाइन"
 
@@ -23404,7 +23411,7 @@ msgid "Only members with the \"{manageCommunityPermissionLabel}\" permission can
 msgstr "केवल \"{manageCommunityPermissionLabel}\" की अनुमति वाले सदस्य ही इसे बदल सकते हैं।"
 
 #. Notification level option. Sends a push only when the user is mentioned. Paired with "All messages" and "Nothing".
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:343
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:348
 msgid "Only mentions"
 msgstr "सिर्फ़ मेंशन"
 
@@ -23514,7 +23521,7 @@ msgid "Open {labelText} in settings"
 msgstr "सेटिंग्स में {labelText} खोलें"
 
 #. Generic action label that opens a named app area, settings menu, or settings sheet. {landmarkName} is a shared localized label for that destination.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:143
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:148
 msgid "Open {landmarkName}"
 msgstr "{landmarkName} खोलें"
 
@@ -23683,7 +23690,7 @@ msgid "Open direct messages"
 msgstr "खुले डायरेक्ट मैसेज"
 
 #. Action label that opens or switches to a direct-message channel with the selected user.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:176
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:181
 msgid "Open DM"
 msgstr "DM खोलें"
 
@@ -23795,7 +23802,7 @@ msgid "Open invoice {invoiceLabel}"
 msgstr "इनवॉइस {invoiceLabel} खोलें"
 
 #. Generic action or tooltip label for opening an external or attached link.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:278
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:283
 msgid "Open link"
 msgstr "लिंक खोलें"
 
@@ -23850,7 +23857,7 @@ msgstr "क्विक स्विचर खोलें"
 
 #. Button label that opens macOS System Settings for a denied permission.
 #. Generic action label that opens the global app settings modal.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:115
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:120
 #: src/features/permissions/system/components/modals/MacPermissionsModal.tsx:76
 msgid "Open settings"
 msgstr "सेटिंग्स खोलें"
@@ -23934,11 +23941,6 @@ msgstr "थीम स्टूडियो पॉपआउट खोलें"
 #: src/features/user/components/modals/tabs/appearance_tab/theme/ThemeTabContent.tsx:78
 msgid "Open theme studio…"
 msgstr "थीम स्टूडियो खोलें…"
-
-#. Error in the passkey pop-up window when someone opens its address directly. productName is the app name.
-#: src/features/auth/passkey_bridge/PasskeyBridgeScreen.tsx:35
-msgid "Open this window from {productName} to use your passkey."
-msgstr "अपनी पासकी का उपयोग करने के लिए इस विंडो को {productName} से खोलें।"
 
 #. Short label in the app layout user area. Preserve {displayName}; it is inserted by code.
 #: src/features/app/components/layout/UserArea.tsx:71
@@ -24055,7 +24057,7 @@ msgid "Options"
 msgstr "विकल्प"
 
 #. Small separator between alternative shortcut keycaps in the keyboard mode intro modal.
-#: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:16
+#: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:15
 #: src/features/connection/components/modals/AddConnectionModal.tsx:318
 #: src/features/input/components/modals/KeyboardModeIntroModal.tsx:30
 msgid "or"
@@ -24337,27 +24339,32 @@ msgid "Passkey"
 msgstr "पासकी"
 
 #. Short label in the authentication passkey name modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:31
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:23
 msgid "Passkey name"
 msgstr "पासकी का नाम"
 
+#. Toast shown after the user saved an updated passkey.
+#: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:51
+msgid "Passkey updated"
+msgstr "पासकी अपडेट की गई"
+
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:422
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:409
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:90
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:88
 msgid "Passkeys"
 msgstr "पासकी"
 
 #. Sudo (re-auth) modal body shown on unsigned macOS desktop bundles where passkeys cannot work. Direct the user to install the signed client.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:30
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:42
 msgid "Passkeys require a signed macOS bundle with a valid application identifier. Install the signed desktop client and retry."
 msgstr "पासकी के लिए मान्य ऐप्लिकेशन आइडेंटिफ़ायर वाला साइन किया हुआ macOS बंडल ज़रूरी है। साइन किया हुआ डेस्कटॉप क्लाइंट इंस्टॉल करें और फिर से कोशिश करें।"
 
 #. Generic form-field label for a password.
 #. Label for SMTP password input.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:997
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:210
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:215
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:146
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:183
 msgid "Password"
@@ -24366,11 +24373,6 @@ msgstr "पासवर्ड"
 #: src/features/user/components/modals/PasswordChangeModal.tsx:138
 msgid "Password changed"
 msgstr "पासवर्ड बदल दिया गया"
-
-#. Shown after a passkey prompt fails, above the button that retries the passkey prompt in a pop-up window on the old web address.
-#: src/features/auth/components/PasswordManagerPasskeyAction.tsx:16
-msgid "Password managers may not offer your passkey on this web address. Try it in a pop-up window on the old address instead."
-msgstr "हो सकता है कि पासवर्ड मैनेजर इस वेब पते पर आपकी पासकी न दिखाएँ। इसके बजाय पुराने पते पर पॉप-अप विंडो में आज़माएँ।"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -24464,7 +24466,7 @@ msgstr "मैसेज लिंक पेस्ट करें।"
 #. Button label in the trimmer modal that pauses preview playback.
 #. Generic media-player control: pause playback.
 #. Pause-preview button label in the voice message composer modal.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:369
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:374
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx:45
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:89
 msgid "Pause"
@@ -24712,7 +24714,7 @@ msgid "Personal dictionary"
 msgstr "व्यक्तिगत शब्दकोश"
 
 #. Label for the user-only private channel where they can jot notes to themselves.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:418
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:423
 msgid "Personal notes"
 msgstr "निजी नोट्स"
 
@@ -24885,7 +24887,7 @@ msgstr "ग्रुप DM पिन करें"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Title of the confirmation alert shown when pinning a message.
 #: src/features/channel/components/MessageActionUtils.tsx:55
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:534
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:539
 #: src/features/input/state/input_keybind/shared.ts:13
 msgid "Pin message"
 msgstr "मैसेज पिन करें"
@@ -24945,7 +24947,7 @@ msgid "pinned"
 msgstr "पिन किया गया"
 
 #. Generic short toast / status label confirming a DM was pinned.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:651
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:656
 msgid "Pinned DM"
 msgstr "पिन किया गया DM"
 
@@ -25020,7 +25022,7 @@ msgstr "प्लेटफ़ॉर्म एडमिन"
 
 #. Generic media-player control: start playback.
 #. Play-preview button label in the voice message composer modal.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:365
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:370
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:85
 msgid "Play"
 msgstr "चलाएँ"
@@ -25318,6 +25320,11 @@ msgstr "बाइंड करने के लिए कोई कुंजी,
 msgid "Press a shortcut…"
 msgstr "शॉर्टकट दबाएं…"
 
+#. Body of the page that asks the user to confirm with their passkey. Continue is the button label.
+#: src/features/auth/passkey_migration/PasskeyBridgePage.tsx:32
+msgid "Press Continue to use your passkey."
+msgstr "अपनी पासकी का उपयोग करने के लिए 'जारी रखें' दबाएँ।"
+
 #. Label in the channel and chat message reactions.
 #: src/features/channel/components/MessageReactions.tsx:46
 msgid "press to add reaction"
@@ -25497,7 +25504,7 @@ msgid "Primary language"
 msgstr "प्राथमिक भाषा"
 
 #. ARIA landmark label for the main app navigation area.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:139
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:144
 msgid "Primary navigation"
 msgstr "मुख्य नेविगेशन"
 
@@ -25536,7 +25543,7 @@ msgid "Privacy policy"
 msgstr "गोपनीयता नीति"
 
 #. Generic section heading / button label for the privacy settings area.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:659
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:664
 msgid "Privacy settings"
 msgstr "गोपनीयता सेटिंग्स"
 
@@ -25581,7 +25588,7 @@ msgid "Pro tip:"
 msgstr "प्रो टिप:"
 
 #. Generic action label that confirms proceeding past a content warning or mature-content gate.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:294
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:299
 msgid "Proceed"
 msgstr "आगे बढ़ें"
 
@@ -26090,7 +26097,7 @@ msgstr "{emojiShortcode} से रिएक्ट करें"
 
 #. Generic short section / tab / aria label for emoji reactions.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:655
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:660
 #: src/features/messaging/components/modals/MessageReactionsModal.tsx:144
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:13
 msgid "Reactions"
@@ -26456,11 +26463,11 @@ msgid "Regenerating will invalidate the current token. Update any code that uses
 msgstr "फिर से जनरेट करने से मौजूदा टोकन अमान्य हो जाएगा। पुराने मान का इस्तेमाल करने वाले किसी भी कोड को अपडेट करें।"
 
 #. Generic authentication action label for opening or submitting account registration.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:78
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:83
 msgid "Register"
 msgstr "रजिस्टर करें"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:435
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:422
 msgid "Registered passkeys"
 msgstr "रजिस्टर्ड पासकी"
 
@@ -26676,7 +26683,7 @@ msgid "Remove banner"
 msgstr "बैनर हटाएँ"
 
 #. Action label that removes a saved bookmark.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:478
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:483
 msgid "Remove bookmark"
 msgstr "बुकमार्क हटाएँ"
 
@@ -26706,7 +26713,7 @@ msgid "Remove from dictionary"
 msgstr "शब्दकोश से हटाएँ"
 
 #. Action label that unpins the current channel, DM, or attachment from the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:326
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:331
 msgid "Remove from favorites"
 msgstr "पसंदीदा से हटाएँ"
 
@@ -26856,7 +26863,7 @@ msgid "Removed from favorite GIFs"
 msgstr "पसंदीदा GIF से हटाया गया"
 
 #. Toast confirming an item was removed from the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:611
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:616
 msgid "Removed from favorites"
 msgstr "पसंदीदा से हटाया गया"
 
@@ -27032,7 +27039,7 @@ msgstr "अनुमतियाँ हटाने से बॉट की स�
 msgid "Removing the timeout will allow <0>{targetUserTag}</0> to send messages, react, and join voice channels again."
 msgstr "टाइमआउट हटाने से <0>{targetUserTag}</0> को फिर से मैसेज भेजने, रिएक्ट करने और वॉइस चैनल में शामिल होने की अनुमति मिल जाएगी।"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:522
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:509
 msgid "Rename"
 msgstr "नाम बदलें"
 
@@ -27119,7 +27126,7 @@ msgstr "जवाब"
 
 #. Generic action label that opens the reply composer for a message.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:607
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:612
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:71
 msgid "Reply"
 msgstr "रिप्लाई करें"
@@ -27209,7 +27216,7 @@ msgstr "समस्या की रिपोर्ट करें"
 
 #. Generic action label that opens the report flow targeting a specific message.
 #. Modal title for the IAR flow when reporting a specific message.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:530
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:535
 #: src/features/moderation/components/report_modal/IARModalContext.ts:22
 msgid "Report message"
 msgstr "मैसेज की रिपोर्ट करें"
@@ -27273,7 +27280,7 @@ msgid "Require 2FA for moderation actions"
 msgstr "मॉडरेशन ऐक्शन के लिए 2FA ज़रूरी करें"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:461
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:448
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:138
 msgid "Require a passkey as your second factor"
 msgstr "अपने दूसरे कारक के रूप में पासकी ज़रूरी करें"
@@ -27521,7 +27528,7 @@ msgid "Reset link invalid or expired"
 msgstr "रीसेट लिंक अमान्य है या उसकी समय-सीमा समाप्त हो गई है"
 
 #. Developer tool action that forgets a local mature-content gate acknowledgement.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:298
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:303
 msgid "Reset mature content agreement state"
 msgstr "वयस्क सामग्री सहमति स्थिति रीसेट करें"
 
@@ -27880,7 +27887,7 @@ msgstr "रिवर्स इमेज"
 
 #. Generic action label that runs a reverse-image search on the selected media.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:603
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:608
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:267
 msgid "Reverse image search"
 msgstr "रिवर्स इमेज सर्च"
@@ -27926,7 +27933,7 @@ msgid "Review and confirm"
 msgstr "समीक्षा करें और पुष्टि करें"
 
 #. Security settings row description for authorized apps.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:101
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:100
 msgid "Review apps that can access your account."
 msgstr "उन ऐप्स की समीक्षा करें जिनके पास आपके अकाउंट का एक्सेस है।"
 
@@ -27941,7 +27948,7 @@ msgid "Review past purchases and refund options"
 msgstr "पिछली खरीदारी और रिफ़ंड के विकल्प देखें"
 
 #. Security settings row description for linked devices.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:109
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:108
 msgid "Review signed-in devices and sign out of sessions you don't recognize."
 msgstr "साइन इन किए गए डिवाइस की समीक्षा करें और जिन सेशन को आप नहीं पहचानते, उनसे साइन आउट करें।"
 
@@ -28152,7 +28159,7 @@ msgid "Role updated"
 msgstr "रोल अपडेट किया गया"
 
 #. Generic section, column, or submenu label for community roles.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:422
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:427
 msgid "Roles"
 msgstr "रोल"
 
@@ -28261,7 +28268,7 @@ msgstr "सैचुरेशन"
 #. Button or menu action label in the rename channel modal. Keep it concise.
 #. Save button in the community-folder settings modal footer.
 #: src/features/app/components/dialogs/shared/MobileSettingsComponents.tsx:113
-#: src/features/auth/components/modals/PasskeyNameModal.tsx:146
+#: src/features/auth/components/modals/PasskeyNameModal.tsx:87
 #: src/features/channel/components/modals/EditGroupBottomSheet.tsx:366
 #: src/features/channel/components/modals/EditGroupModal.tsx:322
 #: src/features/channel/components/modals/RenameChannelModal.tsx:28
@@ -28410,13 +28417,13 @@ msgid "Scope"
 msgstr "दायरा"
 
 #. Generic OAuth label for requested authorization scopes.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:426
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:431
 msgid "Scopes"
 msgstr "अनुमतियाँ"
 
 #. Section heading for screen-reader related accessibility settings.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:599
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:604
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:51
 msgid "Screen reader"
 msgstr "स्क्रीन रीडर"
@@ -28767,7 +28774,7 @@ msgid "Search for channels, people, or communities"
 msgstr "चैनल, लोग या कम्युनिटी खोजें"
 
 #. Generic search-input placeholder for filtering the current friends list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:194
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:199
 msgid "Search friends"
 msgstr "दोस्त खोजें"
 
@@ -28878,12 +28885,12 @@ msgid "Search selected text"
 msgstr "चुने हुए टेक्स्ट को खोजें"
 
 #. Accessible label for settings search fields.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:131
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:136
 msgid "Search settings"
 msgstr "सेटिंग्स खोजें"
 
 #. Placeholder text in settings search fields. The ellipsis indicates the user can type a query.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:127
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:132
 msgid "Search settings…"
 msgstr "सेटिंग्स खोजें…"
 
@@ -29047,7 +29054,7 @@ msgctxt "security-settings-section"
 msgid "Security"
 msgstr "सुरक्षा"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:288
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:275
 msgid "Security features"
 msgstr "सुरक्षा सुविधाएं"
 
@@ -29059,7 +29066,7 @@ msgid "Security key"
 msgstr "सुरक्षा कुंजी"
 
 #. MFA action button for authenticating with a hardware security key or passkey.
-#: src/features/auth/flow/MfaScreen.tsx:27
+#: src/features/auth/flow/MfaScreen.tsx:26
 msgid "Security key / passkey"
 msgstr "सुरक्षा कुंजी / पासकी"
 
@@ -29589,7 +29596,7 @@ msgid "Sensitive media"
 msgstr "संवेदनशील मीडिया"
 
 #. Generic short status label confirming an item (invite, gift, theme link) was sent.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:804
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:809
 msgid "Sent"
 msgstr "भेजा गया"
 
@@ -29635,7 +29642,7 @@ msgid "Session"
 msgstr "सेशन"
 
 #. Login layout banner shown when the session for a specific account has expired. Account identifier is interpolated.
-#: src/features/auth/flow/AuthLoginLayout.tsx:53
+#: src/features/auth/flow/AuthLoginLayout.tsx:58
 msgid "Session expired for {identifier}. Sign in again."
 msgstr "{identifier} के लिए सेशन समाप्त हो गया है। फिर से साइन इन करें।"
 
@@ -29880,7 +29887,7 @@ msgid "Sets the level for every sound effect. Per-sound overrides ignore this."
 msgstr "हर ध्वनि प्रभाव के लिए लेवल सेट करता है। अलग-अलग ध्वनि के ओवरराइड इसे अनदेखा करते हैं।"
 
 #. Generic action label / section header that opens settings.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:262
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:267
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:282
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:125
 msgid "Settings"
@@ -29897,7 +29904,7 @@ msgid "Settings opened."
 msgstr "सेटिंग्स खुल गईं।"
 
 #. ARIA label for the section navigation inside a settings modal.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:135
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:140
 msgid "Settings sections"
 msgstr "सेटिंग्स सेक्शन"
 
@@ -30627,7 +30634,7 @@ msgid "Sidebar"
 msgstr "साइडबार"
 
 #. Generic authentication action label. Use for buttons, links, page titles, and accessible labels.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:74
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:79
 msgid "Sign in"
 msgstr "साइन इन करें"
 
@@ -30640,12 +30647,12 @@ msgid "Sign in to claim your gift"
 msgstr "अपना उपहार पाने के लिए साइन इन करें"
 
 #. Passkey sign-in action that opens the browser flow from the desktop app.
-#: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:69
-#: src/features/auth/flow/AuthLoginLayout.tsx:79
+#: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:64
+#: src/features/auth/flow/AuthLoginLayout.tsx:84
 msgid "Sign in via browser"
 msgstr "ब्राउज़र से साइन इन करें"
 
-#: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:68
+#: src/features/auth/flow/auth_login_core/AuthLoginPasskeyActions.tsx:63
 msgid "Sign in with a passkey"
 msgstr "पासकी से साइन इन करें"
 
@@ -30666,7 +30673,7 @@ msgstr "अपने संगठन के सिंगल साइन-ऑन 
 #: src/features/auth/utils/AccountSwitcherModalUtils.tsx:195
 #: src/features/auth/utils/AccountSwitcherModalUtils.tsx:256
 #: src/features/auth/utils/AccountSwitcherModalUtils.tsx:313
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:595
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:600
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:47
 msgid "Sign out"
 msgstr "साइन आउट करें"
@@ -30720,7 +30727,7 @@ msgid "Sign-in details"
 msgstr "साइन-इन विवरण"
 
 #. Accessible label for the stepped sign-in panel.
-#: src/features/auth/flow/AuthLoginLayout.tsx:62
+#: src/features/auth/flow/AuthLoginLayout.tsx:67
 msgid "Sign-in flow"
 msgstr "साइन-इन फ़्लो"
 
@@ -31189,7 +31196,7 @@ msgstr "कुछ यूज़र को जोड़ा नहीं जा स
 #. Generic error toast title.
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:248
 #: src/features/auth/flow/HandoffCodeDisplay.tsx:90
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:274
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:279
 #: src/lib/forms/index.tsx:18
 msgid "Something went wrong"
 msgstr "कुछ गड़बड़ हो गई"
@@ -31374,7 +31381,7 @@ msgstr "साउंड वॉल्यूम"
 
 #. Section heading / tab label for the notification-sounds area.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:808
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:813
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:135
 msgid "Sounds"
 msgstr "साउंड"
@@ -31788,12 +31795,12 @@ msgid "Start uploading attachments as soon as they are added to the message inpu
 msgstr "मैसेज इनपुट में जोड़े जाते ही अटैचमेंट अपलोड करना शुरू करें"
 
 #. Action label that initiates a video call (DM or group DM).
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:591
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:596
 msgid "Start video call"
 msgstr "वीडियो कॉल शुरू करें"
 
 #. Action label that initiates a voice call (DM or group DM).
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:190
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:195
 msgid "Start voice call"
 msgstr "वॉइस कॉल शुरू करें"
 
@@ -31899,7 +31906,7 @@ msgstr "स्टिकर"
 #. Label for the has:sticker option in the mobile content-type filter sheet.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/config/AuditLogConstants.ts:171
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:234
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:239
 #: src/features/search/components/search/HasFilterSheet.tsx:73
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:133
 msgid "Sticker"
@@ -31974,7 +31981,7 @@ msgid "Sticker: {stickerName}"
 msgstr "स्टिकर: {stickerName}"
 
 #. Generic tab / section / category label for stickers.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:238
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:243
 msgid "Stickers"
 msgstr "स्टिकर"
 
@@ -32090,7 +32097,7 @@ msgid "Stop trusting all links?"
 msgstr "सभी लिंक पर भरोसा करना बंद करें?"
 
 #. Security settings: confirmation modal title for turning off passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:65
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:64
 msgid "Stop using passkeys for two-factor authentication?"
 msgstr "दो-कारक प्रमाणीकरण के लिए पासकी का उपयोग बंद करें?"
 
@@ -32379,7 +32386,7 @@ msgid "Suppress all role mentions"
 msgstr "सभी रोल मेंशन की सूचनाएँ बंद करें"
 
 #. Action label on a message that hides link previews / embeds.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:587
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:592
 msgid "Suppress embeds"
 msgstr "एम्बेड छिपाएँ"
 
@@ -33005,7 +33012,7 @@ msgid "text channel"
 msgstr "टेक्स्ट चैनल"
 
 #. Generic label for a text channel type.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:230
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:235
 msgid "Text channel"
 msgstr "टेक्स्ट चैनल"
 
@@ -33055,7 +33062,7 @@ msgstr "अपने फ़ोन से हमें टेक्स्ट क�
 
 #. Feature label / section heading for the text-to-speech feature.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:414
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:419
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:138
 msgid "Text-to-speech"
 msgstr "टेक्स्ट-टू-स्पीच"
@@ -33119,6 +33126,11 @@ msgstr "यह पूरा नहीं हुआ। हो सकता है
 msgid "That did not go through. Nothing changed. Try again."
 msgstr "यह नहीं हो पाया। कुछ भी नहीं बदला। फिर से कोशिश करें।"
 
+#. Body of the passkey page after the passkey prompt failed or was dismissed. Keep plain.
+#: src/features/auth/passkey_migration/PasskeyBridgePage.tsx:36
+msgid "That didn't work. Try again or cancel."
+msgstr "यह नहीं हो पाया। फिर से कोशिश करें या रद्द करें।"
+
 #: src/features/ui/components/form/ColorPickerField.tsx:301
 msgid "That doesn't look like a valid color. Try hex, rgb(), hsl(), or a CSS color name."
 msgstr "यह कोई मान्य रंग नहीं लग रहा है। हेक्स, rgb(), hsl() या CSS रंग का नाम आज़माएँ।"
@@ -33143,7 +33155,7 @@ msgid "That image could not be used. Try a different file."
 msgstr "वह इमेज इस्तेमाल नहीं की जा सकी। कोई दूसरी फ़ाइल आज़माएँ।"
 
 #. Generic image upload error shown when the selected file cannot be decoded or accepted.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:282
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:287
 msgid "That image is invalid. Try another one."
 msgstr "यह इमेज अमान्य है। कोई दूसरी इमेज आज़माएँ।"
 
@@ -34035,11 +34047,11 @@ msgstr "यह दूसरा विकल्प विवरण है"
 msgid "This is the third option description"
 msgstr "यह तीसरा विकल्प विवरण है"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:261
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:248
 msgid "This is your last passkey and passkeys are your second factor. Deleting it turns off two-factor authentication for your account, and your current backup codes will stop working."
 msgstr "यह आपकी आखिरी पासकी है और पासकी ही आपका दूसरा कारक है। इसे मिटाने से आपके अकाउंट का दो-कारक प्रमाणीकरण बंद हो जाएगा, और आपके मौजूदा बैकअप कोड काम करना बंद कर देंगे।"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:256
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:243
 msgid "This is your last passkey. Once it's gone you won't be able to use a passkey as your second factor."
 msgstr "यह आपकी आखिरी पासकी है। इसके मिट जाने के बाद आप पासकी का उपयोग अपने दूसरे कारक के रूप में नहीं कर पाएँगे।"
 
@@ -34154,16 +34166,6 @@ msgstr "इस प्रतिभागी को डीफ़ेन किय�
 msgid "This participant was deafened by moderators"
 msgstr "इस प्रतिभागी को मॉडरेटर ने डीफ़ेन किया है"
 
-#. Error in the passkey pop-up window when the request it received is not valid.
-#: src/features/auth/passkey_bridge/PasskeyBridgeScreen.tsx:39
-msgid "This passkey request could not be verified. Close this window and try again."
-msgstr "यह पासकी अनुरोध सत्यापित नहीं किया जा सका। इस विंडो को बंद करें और फिर से कोशिश करें।"
-
-#. Error in the passkey pop-up window after five minutes without finishing.
-#: src/features/auth/passkey_bridge/PasskeyBridgeScreen.tsx:43
-msgid "This passkey request timed out. Close this window and try again."
-msgstr "यह पासकी अनुरोध टाइम आउट हो गया। इस विंडो को बंद करें और फिर से कोशिश करें।"
-
 #. Required-action form error when the backend rejects a phone number.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:530
 msgid "This phone number cannot be used. Try another mobile number or contact support."
@@ -34220,6 +34222,11 @@ msgstr "यह सभी भरोसेमंद डोमेन हटा द�
 #: src/features/user/components/modals/tabs/keybinds_tab/CustomKeybindsList.tsx:34
 msgid "This removes every custom shortcut and re-enables all built-in shortcuts. This cannot be undone."
 msgstr "इससे सभी कस्टम शॉर्टकट हट जाएंगे और सभी बिल्ट-इन शॉर्टकट फिर से चालू हो जाएंगे। इसे पहले जैसा नहीं किया जा सकता।"
+
+#. Body of the passkey page when the passkey request is no longer valid. Keep plain.
+#: src/features/auth/passkey_migration/PasskeyBridgePage.tsx:40
+msgid "This request has expired. Go back and try again."
+msgstr "इस अनुरोध की समय-सीमा समाप्त हो गई है। वापस जाएँ और फिर से कोशिश करें।"
 
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:132
 msgid "This reset link has expired. Reset links last 1 hour. Please request a new one."
@@ -34807,7 +34814,7 @@ msgstr "ग्रुप का स्वामित्व {userName} को ट
 
 #. Action label in community settings that hands ownership of the community to another member.
 #: src/features/guild/components/modals/TransferOwnershipModal.tsx:99
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:361
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:366
 msgid "Transfer ownership"
 msgstr "स्वामित्व ट्रांसफ़र करें"
 
@@ -34823,7 +34830,7 @@ msgstr "स्वामित्व {0} को ट्रांसफ़र क�
 
 #. Generic action label that translates a message body.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:583
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:588
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:255
 msgid "Translate"
 msgstr "अनुवाद करें"
@@ -34980,7 +34987,7 @@ msgstr "कोई दूसरा वैरिएबल नाम आज़म�
 
 #. Generic action label for retrying a failed or interrupted operation.
 #: src/features/auth/flow/AuthRouteLoadError.tsx:22
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:70
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:75
 msgid "Try again"
 msgstr "फिर से कोशिश करें"
 
@@ -34991,7 +34998,7 @@ msgid "Try again"
 msgstr "फिर से कोशिश करें"
 
 #. Generic short retry body used in error modals and toasts.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:270
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:275
 msgid "Try again in a moment."
 msgstr "कुछ देर में फिर से कोशिश करें।"
 
@@ -35047,7 +35054,7 @@ msgid "Try searching for something like \"theme\", \"notifications\", or \"priva
 msgstr "\"थीम\", \"सूचनाएं\" या \"गोपनीयता\" जैसा कुछ खोजकर देखें"
 
 #. Secondary MFA action that switches from code entry to passkey or security-key authentication.
-#: src/features/auth/flow/MfaScreen.tsx:35
+#: src/features/auth/flow/MfaScreen.tsx:34
 msgid "Try security key / passkey instead"
 msgstr "इसके बजाय सुरक्षा कुंजी/पासकी आज़माएँ"
 
@@ -35088,7 +35095,7 @@ msgstr "तुर्की"
 #. Button label that turns off streaming privacy.
 #. Security settings: confirm button for turning off passkey-based two-factor authentication.
 #: src/features/app/components/layout/app_layout/nagbars/StreamerModeNagbar.tsx:16
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:81
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:80
 msgid "Turn off"
 msgstr "बंद करें"
 
@@ -35109,7 +35116,7 @@ msgid "Turn off audio sharing for this source or try again in a moment."
 msgstr "इस स्रोत के लिए ऑडियो शेयरिंग बंद करें या थोड़ी देर बाद फिर से प्रयास करें।"
 
 #. Voice / call action label that disables the local camera.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:506
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:511
 msgid "Turn off camera"
 msgstr "कैमरा बंद करें"
 
@@ -35145,7 +35152,7 @@ msgid "Turn off streaming privacy before viewing login or account security detai
 msgstr "लॉगिन या अकाउंट सुरक्षा विवरण देखने से पहले स्ट्रीमिंग गोपनीयता बंद करें।"
 
 #. Security settings: confirm button for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:61
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:60
 msgid "Turn on"
 msgstr "चालू करें"
 
@@ -35274,7 +35281,7 @@ msgid "Two-factor"
 msgstr "दो कारक"
 
 #. Generic security setting label for two-factor authentication.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:434
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:439
 msgid "Two-factor authentication"
 msgstr "दो-कारक प्रमाणीकरण"
 
@@ -35288,7 +35295,7 @@ msgstr "दो-कारक प्रमाणीकरण बंद किय�
 msgid "Two-factor authentication enabled"
 msgstr "दो-कारक प्रमाणीकरण चालू किया गया"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:328
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:315
 msgid "Two-factor authentication is enabled"
 msgstr "दो-कारक प्रमाणीकरण चालू है"
 
@@ -35488,7 +35495,7 @@ msgid "Unblock user"
 msgstr "यूज़र को अनब्लॉक करें"
 
 #. Generic label for items that do not belong to a category.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:631
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:636
 msgid "Uncategorized"
 msgstr "बिना श्रेणी"
 
@@ -35561,7 +35568,7 @@ msgid "Underline website links"
 msgstr "वेबसाइट लिंक को रेखांकित करें"
 
 #. Acknowledgement button on an informational modal. Closes the modal after the user has read the message.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:302
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:307
 msgid "Understood"
 msgstr "समझ गया"
 
@@ -35643,7 +35650,7 @@ msgstr "यूनिवर्सल फ़ॉलबैक। सबसे कम
 #. Generic fallback label when a more specific value is unavailable.
 #. Short label in the invite list item. Keep it concise.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:584
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:756
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:761
 #: src/features/invite/components/InviteListItem.tsx:36
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:114
 #: src/features/updater/commands/UpdaterModalCommands.tsx:144
@@ -35869,7 +35876,7 @@ msgid "Unmute all devices"
 msgstr "सभी डिवाइस अनम्यूट करें"
 
 #. Action label that unmutes notifications for a channel category.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:579
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:584
 msgid "Unmute category"
 msgstr "श्रेणी को अनम्यूट करें"
 
@@ -35884,7 +35891,7 @@ msgid "Unmute communities"
 msgstr "कम्युनिटी को अनम्यूट करें"
 
 #. Generic action label that unmutes notifications for an entire community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:554
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:559
 msgid "Unmute community"
 msgstr "कम्युनिटी को अनम्यूट करें"
 
@@ -35904,7 +35911,7 @@ msgid "Unmute DMs"
 msgstr "DM अनम्यूट करें"
 
 #. Action label that unmutes notifications for the favourites pseudo-guild.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:692
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:697
 msgid "Unmute favorites"
 msgstr "पसंदीदा को अनम्यूट करें"
 
@@ -35977,7 +35984,7 @@ msgid "Unpin it"
 msgstr "अनपिन करें"
 
 #. Action label for removing a pinned message from the channel pins.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:462
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:467
 msgid "Unpin message"
 msgstr "मैसेज अनपिन करें"
 
@@ -35987,7 +35994,7 @@ msgid "Unpin this message?"
 msgstr "इस मैसेज को अनपिन करें?"
 
 #. Generic short toast / status label confirming a DM was unpinned.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:627
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:632
 msgid "Unpinned DM"
 msgstr "अनपिन किया गया DM"
 
@@ -36193,6 +36200,11 @@ msgstr "ईमेल अपडेट करें"
 msgid "Update my status"
 msgstr "अपना स्टेटस अपडेट करें"
 
+#. Primary button in the modal that saves an updated passkey.
+#: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:39
+msgid "Update passkey"
+msgstr "पासकी अपडेट करें"
+
 #. Short label in the settings dialog mobile settings view.
 #: src/features/app/components/dialogs/components/MobileSettingsView.tsx:56
 msgid "Update service worker"
@@ -36207,6 +36219,11 @@ msgstr "टाइमआउट अपडेट करें"
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:38
 msgid "Update your own nickname."
 msgstr "अपना उपनाम अपडेट करें।"
+
+#. Title of the modal that asks the user to save an updated passkey after signing in with an older one.
+#: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:24
+msgid "Update your passkey"
+msgstr "अपनी पासकी अपडेट करें"
 
 #. Short label in the password change modal. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/PasswordChangeModal.tsx:38
@@ -36517,11 +36534,6 @@ msgstr "जिन सदस्यों के पास {readMessageHistoryPerm
 msgid "Use a different email address and verify it with a code."
 msgstr "किसी दूसरे ईमेल पते का इस्तेमाल करें और उसे कोड से वेरिफ़ाई करें।"
 
-#. Button that runs the passkey prompt in a small pop-up window on the old web address, so password manager extensions can find passkeys saved there.
-#: src/features/auth/components/PasswordManagerPasskeyAction.tsx:11
-msgid "Use a password manager passkey"
-msgstr "पासवर्ड मैनेजर से पासकी का उपयोग करें"
-
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #: src/features/channel/components/channel_header_components/developer_tools/NagbarControls.ts:9
 msgid "Use actual"
@@ -36542,7 +36554,7 @@ msgstr "वास्तविक मान का उपयोग करें"
 msgid "Use alternative method"
 msgstr "कोई और तरीका इस्तेमाल करें"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:330
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:317
 msgid "Use an authenticator app to generate codes for two-factor authentication"
 msgstr "दो-कारक प्रमाणीकरण के लिए कोड जनरेट करने के लिए एक ऑथेंटिकेटर ऐप का उपयोग करें"
 
@@ -36714,12 +36726,12 @@ msgid "Use only if it clearly breaks {productName}'s rules and doesn't fit above
 msgstr "इसका उपयोग तभी करें जब यह स्पष्ट रूप से {productName} के नियमों का उल्लंघन करता हो और ऊपर दिए गए विकल्पों में फिट न होता हो।"
 
 #. Security settings: confirmation modal title for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:52
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:51
 msgid "Use passkeys for two-factor authentication?"
 msgstr "दो-कारक प्रमाणीकरण के लिए पासकी का उपयोग करें?"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:423
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:410
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:134
 msgid "Use passkeys to sign in without a password"
 msgstr "पासवर्ड के बिना साइन इन करने के लिए पासकी का उपयोग करें"
@@ -36824,8 +36836,8 @@ msgstr "वॉइस गतिविधि का इस्तेमाल क�
 msgid "Use your operating system's spellchecker when available. Otherwise, use {productName}'s in-app dictionaries."
 msgstr "उपलब्ध होने पर अपने ऑपरेटिंग सिस्टम के स्पेलचेकर का उपयोग करें। अन्यथा, {productName} की इन-ऐप डिक्शनरी का उपयोग करें।"
 
-#. Heading of the small pop-up window that runs a passkey prompt for the new web address.
-#: src/features/auth/passkey_bridge/PasskeyBridgeScreen.tsx:18
+#. Heading of the page that asks the user to confirm with their passkey.
+#: src/features/auth/passkey_migration/PasskeyBridgePage.tsx:28
 msgid "Use your passkey"
 msgstr "अपनी पासकी का उपयोग करें"
 
@@ -36894,7 +36906,7 @@ msgid "User controls"
 msgstr "यूज़र कंट्रोल"
 
 #. Title of the developer-mode user debug modal.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:571
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:576
 msgid "User debug"
 msgstr "यूज़र डीबग"
 
@@ -36972,7 +36984,7 @@ msgstr "यूज़र का वॉल्यूम"
 #. Label for SMTP username input.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:996
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:567
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:572
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:218
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx:56
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:53
@@ -37158,7 +37170,7 @@ msgid "Verification canceled"
 msgstr "वेरिफ़िकेशन रद्द किया गया"
 
 #. Generic form-field label for a one-time verification code.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:214
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:219
 msgid "Verification code"
 msgstr "वेरिफ़िकेशन कोड"
 
@@ -37185,7 +37197,7 @@ msgstr "वेरिफ़िकेशन ईमेल भेजा गया �
 msgid "Verification expired"
 msgstr "वेरिफ़िकेशन की समय-सीमा खत्म हो गई है"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:74
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:82
 #: src/features/auth/components/pages/VerifyEmailPage.tsx:108
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:241
 msgid "Verification failed"
@@ -37202,7 +37214,7 @@ msgid "Verified community"
 msgstr "वेरिफ़ाइड कम्युनिटी"
 
 #. Generic primary action label that confirms a code, identity check, or account verification step.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:160
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:165
 msgid "Verify"
 msgstr "वेरिफ़ाई करें"
 
@@ -37221,17 +37233,17 @@ msgid "Verify connection"
 msgstr "कनेक्शन वेरिफ़ाई करें"
 
 #. Shared action or page-title label for starting or completing email address verification.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:164
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:169
 msgid "Verify email"
 msgstr "ईमेल वेरिफ़ाई करें"
 
 #. Accessible form label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:53
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:61
 msgid "Verify identity form"
 msgstr "पहचान वेरिफ़ाई करने का फ़ॉर्म"
 
 #. Short label in the authentication sudo verification modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:57
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:65
 msgid "Verify it's you"
 msgstr "पुष्टि करें कि यह आप ही हैं"
 
@@ -37274,12 +37286,12 @@ msgid "Verify your email address to send friend requests."
 msgstr "फ्रेंड रिक्वेस्ट भेजने के लिए अपना ईमेल पता वेरिफ़ाई करें।"
 
 #. Security settings warning shown when an unverified account cannot register a new passkey.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:48
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:47
 msgid "Verify your email before adding a passkey."
 msgstr "पासकी जोड़ने से पहले अपना ईमेल वेरिफ़ाई करें।"
 
 #. Security settings warning shown when an unverified account cannot enable authenticator-app two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:43
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:42
 msgid "Verify your email before adding an authenticator app."
 msgstr "ऑथेंटिकेटर ऐप जोड़ने से पहले अपना ईमेल वेरिफ़ाई करें।"
 
@@ -37571,7 +37583,7 @@ msgstr "बैन किए गए यूज़र देखें और प्
 msgid "View and manage every webhook configured across your community."
 msgstr "अपनी कम्युनिटी में कॉन्फ़िगर किए गए सभी वेबहुक देखें और प्रबंधित करें।"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:397
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:384
 msgid "View and manage your backup codes for account recovery"
 msgstr "अकाउंट रिकवरी के लिए अपने बैकअप कोड देखें और प्रबंधित करें"
 
@@ -37605,7 +37617,7 @@ msgstr "चैनल देखें"
 msgid "View channel members"
 msgstr "चैनल के सदस्य देखें"
 
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:415
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:402
 msgid "View codes"
 msgstr "कोड देखें"
 
@@ -37690,7 +37702,7 @@ msgid "View plans"
 msgstr "प्लान देखें"
 
 #. Action label that opens the user profile modal or sheet for the selected user.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:353
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:358
 msgid "View profile"
 msgstr "प्रोफ़ाइल देखें"
 
@@ -37932,7 +37944,7 @@ msgid "voice channel"
 msgstr "वॉइस चैनल"
 
 #. Generic label for a voice channel type.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:226
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:231
 msgid "Voice channel"
 msgstr "वॉइस चैनल"
 
@@ -38073,7 +38085,7 @@ msgstr "रद्द किया गया"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subsection title in the voice tab. Keep it concise.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:373
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:378
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:181
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:86
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:174
@@ -38131,7 +38143,7 @@ msgstr "यहां इंतज़ार करें"
 msgid "Waiting for connection..."
 msgstr "कनेक्शन का इंतज़ार हो रहा है..."
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:274
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:349
 msgid "Waiting for passkey…"
 msgstr "पासकी का इंतज़ार हो रहा है…"
 
@@ -38178,7 +38190,7 @@ msgid "Watch"
 msgstr "देखें"
 
 #. Voice action label that starts watching a remote screen share.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:482
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:487
 msgid "Watch stream"
 msgstr "स्ट्रीम देखें"
 
@@ -38540,7 +38552,7 @@ msgid "Website previews"
 msgstr "वेबसाइट प्रीव्यू"
 
 #. Heading on the standard sign-in form.
-#: src/features/auth/flow/AuthLoginLayout.tsx:66
+#: src/features/auth/flow/AuthLoginLayout.tsx:71
 msgid "Welcome back"
 msgstr "वापस आपका स्वागत है"
 
@@ -39066,7 +39078,7 @@ msgid "You aren't in any communities right now."
 msgstr "आप अभी किसी भी कम्युनिटी में नहीं हैं।"
 
 #. Warning shown before opening or composing a DM with a user the current user has blocked. {userName} is the blocked user.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:180
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:185
 msgid "You blocked {userName}. You won't be able to send messages unless you unblock them."
 msgstr "आपने {userName} को ब्लॉक किया है। आप उन्हें तब तक मैसेज नहीं भेज पाएंगे जब तक आप उन्हें अनब्लॉक नहीं करते।"
 
@@ -39100,6 +39112,11 @@ msgstr "आप 14 दिनों के अंदर डिलीट करन�
 #: src/features/channel/components/pickers/gif/ImportFavoriteGifsModal.tsx:42
 msgid "You can close this modal. The import will continue in the background."
 msgstr "आप इस मोडल को बंद कर सकते हैं। इंपोर्ट बैकग्राउंड में जारी रहेगा।"
+
+#. Heading of the page shown after a passkey confirmation finished in a separate tab.
+#: src/features/auth/passkey_migration/PasskeyBridgePage.tsx:48
+msgid "You can close this tab"
+msgstr "आप इस टैब को बंद कर सकते हैं"
 
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:169
 msgid "You can now close this tab and return to the app."
@@ -39244,7 +39261,7 @@ msgid "You can't send a friend request to yourself."
 msgstr "आप खुद को फ्रेंड रिक्वेस्ट नहीं भेज सकते।"
 
 #. Permission-denied message shown when the current user cannot send messages in the current channel. Keep the tone calm and factual.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:185
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:190
 msgid "You can't send messages in this channel."
 msgstr "आप इस चैनल में मैसेज नहीं भेज सकते।"
 
@@ -39607,7 +39624,7 @@ msgid "You will still need to finish the email step."
 msgstr "आपको अभी भी ईमेल वाला चरण पूरा करना होगा।"
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when the account also has an authenticator app.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:75
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:74
 msgid "You won't be asked for a passkey after your password anymore. Your authenticator app stays as your second factor."
 msgstr "अब आपसे पासवर्ड के बाद पासकी नहीं मांगी जाएगी। आपका ऑथेंटिकेटर ऐप आपका दूसरा कारक बना रहेगा।"
 
@@ -39626,7 +39643,7 @@ msgid "You'll have to sign back in on all signed-out devices"
 msgstr "आपको सभी साइन-आउट किए गए डिवाइस पर फिर से साइन इन करना होगा"
 
 #. Security settings: confirmation modal body for turning on passkey-based two-factor authentication.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:56
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:55
 msgid "You'll need one of your passkeys to sign in on a new device. If you lose every passkey you can be locked out of your account. Backup codes will be saved for you so you still have a way in."
 msgstr "नए डिवाइस पर साइन इन करने के लिए आपको अपनी पासकी में से कोई एक चाहिए होगी। अगर आप अपनी सभी पासकी खो देते हैं, तो आप अपने अकाउंट से लॉक आउट हो सकते हैं। आपके बैकअप कोड सेव कर दिए जाएँगे, ताकि अंदर आने का एक रास्ता आपके पास बना रहे।"
 
@@ -39918,12 +39935,12 @@ msgstr "इस कम्युनिटी में मैसेज भेज�
 msgid "Your account request is pending approval. You can sign in after an admin approves it."
 msgstr "आपके अकाउंट का अनुरोध मंज़ूरी के इंतज़ार में है। एडमिन के मंज़ूर करने के बाद आप साइन इन कर सकेंगे।"
 
-#: src/features/auth/components/modals/SudoVerificationModal.tsx:237
+#: src/features/auth/components/modals/SudoVerificationModal.tsx:280
 msgid "Your account requires multi-factor authentication, but no supported methods are set up on this device. Sign in on a device with your authenticator app or security key, or contact support."
 msgstr "आपके अकाउंट के लिए मल्टी-फ़ैक्टर प्रमाणीकरण ज़रूरी है, लेकिन इस डिवाइस पर कोई भी समर्थित तरीका सेट अप नहीं है। अपने ऑथेंटिकेटर ऐप या सुरक्षा कुंजी वाले डिवाइस पर साइन इन करें या सहायता से संपर्क करें।"
 
 #. Security settings: confirmation modal body for turning off passkey-based two-factor authentication when passkeys are the only second factor on the account.
-#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:69
+#: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:68
 msgid "Your account will no longer be protected by two-factor authentication when you sign in with your password. You'll also lose elevated permissions in servers that require two-factor authentication."
 msgstr "पासवर्ड से साइन इन करते समय आपके अकाउंट को दो-कारक प्रमाणीकरण की सुरक्षा नहीं मिलेगी। जिन कम्युनिटी में दो-कारक प्रमाणीकरण ज़रूरी है, उनमें आपकी बढ़ी हुई अनुमतियाँ भी चली जाएँगी।"
 
@@ -39940,16 +39957,6 @@ msgstr "आपकी कार्रवाई पूरी नहीं हो �
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:409
 msgid "Your application is pending review. You can still update your listing details or withdraw the application."
 msgstr "आपका आवेदन समीक्षा के लिए लंबित है। आप अभी भी अपनी लिस्टिंग का विवरण अपडेट कर सकते हैं या आवेदन वापस ले सकते हैं।"
-
-#. Error shown when the browser blocks the pop-up window used for password manager passkeys.
-#: src/features/auth/utils/PasskeyBridge.ts:25
-msgid "Your browser blocked the passkey pop-up window. Allow pop-ups for this site and try again."
-msgstr "आपके ब्राउज़र ने पासकी पॉप-अप विंडो को ब्लॉक कर दिया है। इस साइट के लिए पॉप-अप की अनुमति दें और फिर से कोशिश करें।"
-
-#. Error shown when a passkey prompt fails because the browser cannot use the passkey on this web address. Keep plain.
-#: src/features/auth/utils/WebAuthnUtils.ts:18
-msgid "Your browser does not support passkeys on this domain. Update your browser, or sign in with your password and two-factor code."
-msgstr "आपका ब्राउज़र इस डोमेन पर पासकी का समर्थन नहीं करता है। अपना ब्राउज़र अपडेट करें, या अपने पासवर्ड और दो-कारक कोड से साइन इन करें।"
 
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12
@@ -39990,6 +39997,16 @@ msgstr "डिस्कवरी में लिस्ट होने के �
 #: src/features/auth/components/pages/MatureContentCheckCallbackPage.tsx:14
 msgid "Your credit card has been checked. If the card is valid, mature content will unlock shortly. You can close this tab and return to the app."
 msgstr "आपके क्रेडिट कार्ड की जाँच कर ली गई है। अगर कार्ड मान्य है, तो जल्द ही वयस्क सामग्री अनलॉक हो जाएगी। आप इस टैब को बंद करके ऐप पर वापस जा सकते हैं।"
+
+#. Body of the modal that asks the user to save an updated passkey. name is the name the user gave the passkey. Keep plain.
+#: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:28
+msgid "Your device will ask you to save an updated passkey for {name}. It replaces the old one."
+msgstr "आपका डिवाइस आपसे {name} के लिए एक अपडेटेड पासकी सेव करने के लिए कहेगा। यह पुरानी पासकी की जगह ले लेगी।"
+
+#. Body of the modal that asks the user to save an updated passkey when they signed in with a phone or security key. name is the name the user gave the passkey. Keep plain.
+#: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:33
+msgid "Your device will ask you to save an updated passkey for {name}. Use the same phone or security key you just used."
+msgstr "आपका डिवाइस आपसे {name} के लिए एक अपडेटेड पासकी सेव करने के लिए कहेगा। वही फ़ोन या सुरक्षा कुंजी इस्तेमाल करें जो आपने अभी इस्तेमाल की है।"
 
 #. Toast confirmation after the email address has been successfully updated.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:124
@@ -40317,7 +40334,7 @@ msgstr "ज़ूम"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Native View menu item that increases UI zoom level.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:623
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:628
 #: src/features/input/state/input_keybind/shared.ts:253
 #: src/features/platform/utils/DesktopLocaleBridge.ts:112
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:82
@@ -40328,7 +40345,7 @@ msgstr "ज़ूम इन करें"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Native View menu item that decreases UI zoom level.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:619
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:624
 #: src/features/input/state/input_keybind/shared.ts:257
 #: src/features/platform/utils/DesktopLocaleBridge.ts:116
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:86

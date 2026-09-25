@@ -8,12 +8,14 @@ import * as AuthEmail from '@app/api/auth/AuthEmail';
 import * as AuthMfa from '@app/api/auth/AuthMfa';
 import * as AuthSession from '@app/api/auth/AuthSession';
 import * as AuthUtility from '@app/api/auth/AuthUtility';
+import {visibleWebAuthnCredentials} from '@app/api/auth/services/PasskeyRelyingParty';
 import {createPasswordResetToken, createUserID, type UserID} from '@app/api/BrandedTypes';
 import type {UserRow} from '@app/api/database/types/UserTypes';
 import {Logger} from '@app/api/Logger';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {IRiskHistoryRepository} from '@app/api/risk/HistoricalOutcomeRepository';
 import type {HistoricalOutcomeCode} from '@app/api/risk/RiskHistoryTypes';
+import {mapWebAuthnCredentialToResponse} from '@app/api/user/UserMappers';
 import {resolveAssignedTraits} from '@app/api/user/UserTraits';
 import {getIpAddressReverse, getLocationLabelFromIp} from '@app/api/utils/IpUtils';
 import {resolveSessionClientInfo} from '@app/api/utils/SessionClientIdentity';
@@ -545,7 +547,7 @@ export class AdminUserSecurityService {
 		if (!user) {
 			throw new UnknownUserError();
 		}
-		const credentials = await userRepository.listWebAuthnCredentials(userId);
+		const credentials = visibleWebAuthnCredentials(await userRepository.listWebAuthnCredentials(userId));
 		await auditService.createAuditLog({
 			adminUserId,
 			targetType: 'user',
@@ -554,12 +556,9 @@ export class AdminUserSecurityService {
 			auditLogReason,
 			metadata: new Map([['credential_count', credentials.length.toString()]]),
 		});
-		return credentials.map((cred) => ({
-			id: cred.credentialId,
-			name: cred.name,
-			created_at: cred.createdAt.toISOString(),
-			last_used_at: cred.lastUsedAt?.toISOString() ?? null,
-		}));
+		return credentials.map((cred) =>
+			mapWebAuthnCredentialToResponse(cred, this.deps.apiContext.services.config.auth.passkeys.rpId),
+		);
 	}
 
 	async deleteWebAuthnCredential(

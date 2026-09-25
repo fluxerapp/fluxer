@@ -3,6 +3,7 @@
 import {createHash} from 'node:crypto';
 import type {ApiContext} from '@app/api/ApiContext';
 import * as AuthSession from '@app/api/auth/AuthSession';
+import {visibleWebAuthnCredentials} from '@app/api/auth/services/PasskeyRelyingParty';
 import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
 import {
 	createChannelID,
@@ -75,6 +76,7 @@ import {
 	mapUserGuildSettingsToResponse,
 	mapUserSettingsToResponse,
 	mapUserToPrivateResponse,
+	mapWebAuthnCredentialToResponse,
 } from '@app/api/user/UserMappers';
 import {isUserAdult} from '@app/api/utils/AgeUtils';
 import {deriveDominantAvatarColor} from '@app/api/utils/AvatarColorUtils';
@@ -1199,12 +1201,9 @@ export class RpcService {
 			longitude: geoipLongitude,
 			rtc_regions: rtcRegions,
 			webauthn_credentials: timeRpcStepSync(responseBuildSteps, 'map_webauthn_credentials', () =>
-				userData.webAuthnCredentials.map((cred) => ({
-					id: cred.credentialId,
-					name: cred.name,
-					created_at: cred.createdAt.toISOString(),
-					last_used_at: cred.lastUsedAt?.toISOString() ?? null,
-				})),
+				visibleWebAuthnCredentials(userData.webAuthnCredentials).map((cred) =>
+					mapWebAuthnCredentialToResponse(cred, Config.auth.passkeys.rpId),
+				),
 			),
 			version,
 		};

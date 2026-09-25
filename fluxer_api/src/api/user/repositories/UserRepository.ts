@@ -407,8 +407,9 @@ export class UserRepository implements IUserRepositoryAggregate {
 		counter: bigint,
 		transports: Set<string> | null,
 		name: string,
+		rpId: string | null,
 	): Promise<void> {
-		return this.authRepo.createWebAuthnCredential(userId, credentialId, publicKey, counter, transports, name);
+		return this.authRepo.createWebAuthnCredential(userId, credentialId, publicKey, counter, transports, name, rpId);
 	}
 
 	async updateWebAuthnCredentialCounter(userId: UserID, credentialId: string, counter: bigint): Promise<void> {
@@ -421,6 +422,10 @@ export class UserRepository implements IUserRepositoryAggregate {
 
 	async updateWebAuthnCredentialName(userId: UserID, credentialId: string, name: string): Promise<void> {
 		return this.authRepo.updateWebAuthnCredentialName(userId, credentialId, name);
+	}
+
+	async setWebAuthnCredentialSupersededBy(userId: UserID, credentialId: string, supersededBy: string): Promise<void> {
+		return this.authRepo.setWebAuthnCredentialSupersededBy(userId, credentialId, supersededBy);
 	}
 
 	async deleteWebAuthnCredential(userId: UserID, credentialId: string): Promise<void> {

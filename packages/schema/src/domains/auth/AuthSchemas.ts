@@ -471,6 +471,7 @@ export const WebAuthnCredentialResponse = z.object({
 	name: z.string().describe('User-assigned name for the credential'),
 	created_at: z.string().describe('When the credential was registered'),
 	last_used_at: z.string().nullable().describe('When the credential was last used'),
+	rp_id: z.string().describe('Relying party ID the passkey belongs to'),
 });
 
 export type WebAuthnCredentialResponse = z.infer<typeof WebAuthnCredentialResponse>;

@@ -3,13 +3,20 @@
 import {timingSafeEqual} from 'node:crypto';
 import type {ApiContext} from '@app/api/ApiContext';
 import * as AuthUtility from '@app/api/auth/AuthUtility';
+import {
+	type CredentialRpSelection,
+	effectiveRpId,
+	originRpId,
+	selectCredentialRp,
+	visibleWebAuthnCredentials,
+} from '@app/api/auth/services/PasskeyRelyingParty';
 import {deriveSudoMethods, userHasMfa, userHasSudoCapability} from '@app/api/auth/services/SudoMethods';
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import {Logger} from '@app/api/Logger';
 import type {MfaBackupCode} from '@app/api/models/MfaBackupCode';
 import type {User} from '@app/api/models/User';
 import type {WebAuthnCredential} from '@app/api/models/WebAuthnCredential';
-import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {mapUserToPrivateResponse, mapWebAuthnCredentialToResponse} from '@app/api/user/UserMappers';
 import {TotpGenerator} from '@app/api/utils/TotpGenerator';
 import {UserAuthenticatorTypes} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -22,7 +29,12 @@ import {PasskeyAuthenticationFailedError} from '@fluxer/errors/src/domains/auth/
 import {UnknownWebAuthnCredentialError} from '@fluxer/errors/src/domains/auth/UnknownWebAuthnCredentialError';
 import {WebAuthnCredentialLimitReachedError} from '@fluxer/errors/src/domains/auth/WebAuthnCredentialLimitReachedError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import type {AuthenticationResponseJSON, RegistrationResponseJSON} from '@simplewebauthn/server';
+import type {
+	AuthenticationResponseJSON,
+	PublicKeyCredentialCreationOptionsJSON,
+	PublicKeyCredentialRequestOptionsJSON,
+	RegistrationResponseJSON,
+} from '@simplewebauthn/server';
 import {
 	generateAuthenticationOptions,
 	generateRegistrationOptions,
@@ -33,7 +45,41 @@ import {
 } from '@simplewebauthn/server';
 import {ms, seconds} from 'itty-time';
 
-type WebAuthnChallengeContext = 'registration' | 'discoverable' | 'mfa' | 'sudo';
+type WebAuthnChallengeContext = 'registration' | 'discoverable' | 'mfa' | 'sudo' | 'bridge' | 'migration_registration';
+
+interface WebAuthnChallengeEntry {
+	context: WebAuthnChallengeContext;
+	userId?: string;
+	ticket?: string;
+	rpId?: string;
+	credentialIds?: Array<string> | null;
+}
+
+interface WebAuthnChallengeScope {
+	rpId: string;
+	credentialIds: Array<string> | null;
+}
+
+interface WebAuthnAuthenticationOptionsParams {
+	selection: CredentialRpSelection | {rpId: string; credentials: null};
+	context: WebAuthnChallengeContext;
+	userId?: UserID;
+	ticket?: string;
+}
+
+interface WebAuthnRegistrationOptionsParams {
+	rpId: string;
+	context: WebAuthnChallengeContext;
+	excludeCredentials: Array<WebAuthnCredential>;
+}
+
+interface VerifiedWebAuthnRegistration {
+	credentialId: string;
+	publicKey: Buffer;
+	counter: bigint;
+	transports: Set<string> | null;
+	rpId: string;
+}
 
 interface SudoMfaVerificationParams {
 	userId: UserID;
@@ -122,35 +168,115 @@ export async function verifyMfaCode(ctx: ApiContext, params: VerifyMfaCodeParams
 	return false;
 }
 
-export async function generateWebAuthnRegistrationOptions(ctx: ApiContext, userId: UserID) {
+function toCredentialDescriptor(credential: WebAuthnCredential) {
+	return {
+		id: credential.credentialId,
+		transports: credential.transports
+			? (Array.from(credential.transports) as Array<'usb' | 'nfc' | 'ble' | 'internal' | 'cable' | 'hybrid'>)
+			: undefined,
+	};
+}
+
+export function storedRpId(ctx: ApiContext, rpId: string): string | null {
+	return rpId === ctx.services.config.auth.passkeys.rpId ? null : rpId;
+}
+
+export async function createWebAuthnRegistrationOptions(
+	ctx: ApiContext,
+	userId: UserID,
+	{rpId, context, excludeCredentials}: WebAuthnRegistrationOptionsParams,
+): Promise<PublicKeyCredentialCreationOptionsJSON> {
 	const {users, config} = ctx.services;
 	const user = await users.findUniqueAssert(userId);
-	const existingCredentials = await users.listWebAuthnCredentials(userId);
-	if (existingCredentials.length >= 10) {
-		throw new WebAuthnCredentialLimitReachedError();
-	}
 	const options = await generateRegistrationOptions({
 		rpName: config.auth.passkeys.rpName,
-		rpID: config.auth.passkeys.rpId,
+		rpID: rpId,
 		userID: new TextEncoder().encode(user.id.toString()),
 		userName: user.username!,
 		userDisplayName: user.username!,
 		attestationType: 'none',
 		supportedAlgorithmIDs: [-8, -7, -257],
-		excludeCredentials: existingCredentials.map((cred) => ({
-			id: cred.credentialId,
-			transports: cred.transports
-				? (Array.from(cred.transports) as Array<'usb' | 'nfc' | 'ble' | 'internal' | 'cable' | 'hybrid'>)
-				: undefined,
-		})),
+		excludeCredentials: excludeCredentials.map(toCredentialDescriptor),
 		authenticatorSelection: {
 			residentKey: 'preferred',
 			requireResidentKey: false,
 			userVerification: 'preferred',
 		},
 	});
-	await saveWebAuthnChallenge(ctx, options.challenge, {context: 'registration', userId});
+	await saveWebAuthnChallenge(ctx, options.challenge, {context, userId, rpId, credentialIds: null});
 	return options;
+}
+
+export async function generateWebAuthnRegistrationOptions(
+	ctx: ApiContext,
+	userId: UserID,
+	origin: string | null | undefined,
+): Promise<PublicKeyCredentialCreationOptionsJSON> {
+	const existingCredentials = await ctx.services.users.listWebAuthnCredentials(userId);
+	if (visibleWebAuthnCredentials(existingCredentials).length >= 10) {
+		throw new WebAuthnCredentialLimitReachedError();
+	}
+	return createWebAuthnRegistrationOptions(ctx, userId, {
+		rpId: originRpId(ctx, origin),
+		context: 'registration',
+		excludeCredentials: existingCredentials,
+	});
+}
+
+export async function verifyWebAuthnRegistrationResponse(
+	ctx: ApiContext,
+	userId: UserID,
+	response: RegistrationResponseJSON,
+	expectedChallenge: string,
+	context: WebAuthnChallengeContext,
+	expectedOrigin: Array<string> = ctx.services.config.auth.passkeys.allowedOrigins,
+): Promise<VerifiedWebAuthnRegistration> {
+	const {config} = ctx.services;
+	const {rpId} = await consumeWebAuthnChallenge(ctx, expectedChallenge, context, {userId});
+	const responseObj = response as {id?: string; response?: {transports?: Array<string>}};
+	const transports = responseObj.response?.transports ? new Set(responseObj.response.transports) : null;
+	if (config.dev.testModeEnabled) {
+		const credentialId = responseObj.id ?? `test-credential:${userId.toString()}:${Date.now()}`;
+		return {credentialId, publicKey: Buffer.from(`test-public-key:${credentialId}`), counter: 0n, transports, rpId};
+	}
+	let verification: VerifiedRegistrationResponse;
+	try {
+		verification = await verifyRegistrationResponse({
+			response,
+			expectedChallenge,
+			expectedOrigin,
+			expectedRPID: rpId,
+			requireUserVerification: false,
+			supportedAlgorithmIDs: [-8, -7, -257],
+		});
+	} catch (error) {
+		Logger.error({error, userId, expectedChallenge, rpId, expectedOrigin}, 'WebAuthn verification failed');
+		throw new InvalidWebAuthnCredentialError();
+	}
+	if (!verification.verified || !verification.registrationInfo) {
+		Logger.error(
+			{userId, verified: verification.verified, hasRegistrationInfo: !!verification.registrationInfo},
+			'WebAuthn verification result invalid',
+		);
+		throw new InvalidWebAuthnCredentialError();
+	}
+	const {credential} = verification.registrationInfo;
+	let publicKeyBuffer: Buffer;
+	let counterBigInt: bigint;
+	try {
+		publicKeyBuffer = Buffer.from(credential.publicKey);
+	} catch (_error) {
+		throw new InvalidWebAuthnPublicKeyFormatError();
+	}
+	try {
+		if (credential.counter === undefined || credential.counter === null) {
+			throw new Error('Counter value is undefined or null');
+		}
+		counterBigInt = BigInt(credential.counter);
+	} catch (_error) {
+		throw new InvalidWebAuthnCredentialCounterError();
+	}
+	return {credentialId: credential.id, publicKey: publicKeyBuffer, counter: counterBigInt, transports, rpId};
 }
 
 export async function verifyWebAuthnRegistration(
@@ -160,85 +286,39 @@ export async function verifyWebAuthnRegistration(
 	expectedChallenge: string,
 	name: string,
 ): Promise<void> {
-	const {users, config} = ctx.services;
+	const {users} = ctx.services;
 	const existingCredentials = await users.listWebAuthnCredentials(userId);
-	await consumeWebAuthnChallenge(ctx, expectedChallenge, 'registration', {userId});
-	if (existingCredentials.length >= 10) {
+	if (visibleWebAuthnCredentials(existingCredentials).length >= 10) {
 		throw new WebAuthnCredentialLimitReachedError();
 	}
-	if (config.dev.testModeEnabled) {
-		const responseObj = response as {id?: string; response?: {transports?: Array<string>}};
-		const credentialId = responseObj.id ?? `test-credential:${userId.toString()}:${Date.now()}`;
-		const publicKeyBuffer = Buffer.from(`test-public-key:${credentialId}`);
-		await users.createWebAuthnCredential(
-			userId,
-			credentialId,
-			publicKeyBuffer,
-			0n,
-			responseObj.response?.transports ? new Set(responseObj.response.transports) : null,
-			name,
-		);
-	} else {
-		const expectedOrigin = config.auth.passkeys.allowedOrigins;
-		const rpID = config.auth.passkeys.rpId;
-		let verification: VerifiedRegistrationResponse;
-		try {
-			verification = await verifyRegistrationResponse({
-				response,
-				expectedChallenge,
-				expectedOrigin,
-				expectedRPID: rpID,
-				requireUserVerification: false,
-				supportedAlgorithmIDs: [-8, -7, -257],
-			});
-		} catch (error) {
-			Logger.error({error, userId, expectedChallenge, rpID, expectedOrigin}, 'WebAuthn verification failed');
-			throw new InvalidWebAuthnCredentialError();
-		}
-		if (!verification.verified || !verification.registrationInfo) {
-			Logger.error(
-				{userId, verified: verification.verified, hasRegistrationInfo: !!verification.registrationInfo},
-				'WebAuthn verification result invalid',
-			);
-			throw new InvalidWebAuthnCredentialError();
-		}
-		const {credential} = verification.registrationInfo;
-		let publicKeyBuffer: Buffer;
-		let counterBigInt: bigint;
-		try {
-			publicKeyBuffer = Buffer.from(credential.publicKey);
-		} catch (_error) {
-			throw new InvalidWebAuthnPublicKeyFormatError();
-		}
-		try {
-			if (credential.counter === undefined || credential.counter === null) {
-				throw new Error('Counter value is undefined or null');
-			}
-			counterBigInt = BigInt(credential.counter);
-		} catch (_error) {
-			throw new InvalidWebAuthnCredentialCounterError();
-		}
-		const responseObj = response as {response?: {transports?: Array<string>}};
-		await users.createWebAuthnCredential(
-			userId,
-			credential.id,
-			publicKeyBuffer,
-			counterBigInt,
-			responseObj.response?.transports ? new Set(responseObj.response.transports) : null,
-			name,
-		);
-	}
+	const verified = await verifyWebAuthnRegistrationResponse(ctx, userId, response, expectedChallenge, 'registration');
+	await users.createWebAuthnCredential(
+		userId,
+		verified.credentialId,
+		verified.publicKey,
+		verified.counter,
+		verified.transports,
+		name,
+		storedRpId(ctx, verified.rpId),
+	);
 	await dispatchWebAuthnCredentialsUpdate(ctx, userId);
 }
 
 export async function deleteWebAuthnCredential(ctx: ApiContext, userId: UserID, credentialId: string): Promise<void> {
 	const {users, gateway, botMfaMirror} = ctx.services;
 	const credential = await users.getWebAuthnCredential(userId, credentialId);
-	if (!credential) {
+	if (!credential || credential.supersededBy !== null) {
 		throw new UnknownWebAuthnCredentialError();
 	}
 	await users.deleteWebAuthnCredential(userId, credentialId);
-	const remainingCredentials = await users.listWebAuthnCredentials(userId);
+	const remaining = await users.listWebAuthnCredentials(userId);
+	const remainingCredentials = visibleWebAuthnCredentials(remaining);
+	const orphanedTwins = remaining.filter(
+		(cred) => cred.supersededBy === credentialId || (cred.supersededBy !== null && remainingCredentials.length === 0),
+	);
+	for (const twin of orphanedTwins) {
+		await users.deleteWebAuthnCredential(userId, twin.credentialId);
+	}
 	if (remainingCredentials.length === 0) {
 		const user = await users.findUniqueAssert(userId);
 		if (user.authenticatorTypes.has(UserAuthenticatorTypes.WEBAUTHN)) {
@@ -298,35 +378,64 @@ export async function renameWebAuthnCredential(
 ): Promise<void> {
 	const {users} = ctx.services;
 	const credential = await users.getWebAuthnCredential(userId, credentialId);
-	if (!credential) {
+	if (!credential || credential.supersededBy !== null) {
 		throw new UnknownWebAuthnCredentialError();
 	}
 	await users.updateWebAuthnCredentialName(userId, credentialId, name);
 	await dispatchWebAuthnCredentialsUpdate(ctx, userId);
 }
 
-async function dispatchWebAuthnCredentialsUpdate(ctx: ApiContext, userId: UserID): Promise<void> {
-	const {users, gateway} = ctx.services;
+export async function dispatchWebAuthnCredentialsUpdate(ctx: ApiContext, userId: UserID): Promise<void> {
+	const {users, gateway, config} = ctx.services;
 	const credentials = await users.listWebAuthnCredentials(userId);
 	await gateway.dispatchPresence({
 		userId,
 		event: 'WEBAUTHN_CREDENTIALS_UPDATE',
-		data: credentials.map((cred: WebAuthnCredential) => ({
-			id: cred.credentialId,
-			name: cred.name,
-			created_at: cred.createdAt.toISOString(),
-			last_used_at: cred.lastUsedAt?.toISOString() ?? null,
-		})),
+		data: visibleWebAuthnCredentials(credentials).map((cred) =>
+			mapWebAuthnCredentialToResponse(cred, config.auth.passkeys.rpId),
+		),
 	});
 }
 
-export async function generateWebAuthnAuthenticationOptionsDiscoverable(ctx: ApiContext) {
+export async function generateWebAuthnAuthenticationOptions(
+	ctx: ApiContext,
+	{selection, context, userId, ticket}: WebAuthnAuthenticationOptionsParams,
+): Promise<PublicKeyCredentialRequestOptionsJSON> {
 	const options = await generateAuthenticationOptions({
-		rpID: ctx.services.config.auth.passkeys.rpId,
-		userVerification: 'required',
+		rpID: selection.rpId,
+		allowCredentials: selection.credentials?.map(toCredentialDescriptor),
+		userVerification: selection.credentials === null ? 'required' : 'discouraged',
 	});
-	await saveWebAuthnChallenge(ctx, options.challenge, {context: 'discoverable'});
+	await saveWebAuthnChallenge(ctx, options.challenge, {
+		context,
+		userId,
+		ticket,
+		rpId: selection.rpId,
+		credentialIds: selection.credentials?.map((cred) => cred.credentialId) ?? null,
+	});
 	return options;
+}
+
+function selectCredentialRpOrThrow(
+	ctx: ApiContext,
+	origin: string | null | undefined,
+	credentials: Array<WebAuthnCredential>,
+): CredentialRpSelection {
+	const selection = selectCredentialRp(ctx, origin, credentials);
+	if (selection.credentials.length === 0) {
+		throw new NoPasskeysRegisteredError();
+	}
+	return selection;
+}
+
+export async function generateWebAuthnAuthenticationOptionsDiscoverable(
+	ctx: ApiContext,
+	origin: string | null | undefined,
+): Promise<PublicKeyCredentialRequestOptionsJSON> {
+	return generateWebAuthnAuthenticationOptions(ctx, {
+		selection: {rpId: originRpId(ctx, origin), credentials: null},
+		context: 'discoverable',
+	});
 }
 
 export async function verifyWebAuthnAuthenticationDiscoverable(
@@ -344,29 +453,24 @@ export async function verifyWebAuthnAuthenticationDiscoverable(
 	return users.findUniqueAssert(userId);
 }
 
-export async function generateWebAuthnAuthenticationOptionsForMfa(ctx: ApiContext, ticket: string) {
-	const {users, cache, config} = ctx.services;
+export async function generateWebAuthnAuthenticationOptionsForMfa(
+	ctx: ApiContext,
+	ticket: string,
+	origin: string | null | undefined,
+): Promise<PublicKeyCredentialRequestOptionsJSON> {
+	const {users, cache} = ctx.services;
 	const userIdStr = await cache.get<string>(`mfa-ticket:${ticket}`);
 	if (!userIdStr) {
 		throw InputValidationError.fromCode('ticket', ValidationErrorCodes.SESSION_TIMEOUT);
 	}
 	const userId = createUserID(BigInt(userIdStr));
 	const credentials = await users.listWebAuthnCredentials(userId);
-	if (credentials.length === 0) {
-		throw new NoPasskeysRegisteredError();
-	}
-	const options = await generateAuthenticationOptions({
-		rpID: config.auth.passkeys.rpId,
-		allowCredentials: credentials.map((cred) => ({
-			id: cred.credentialId,
-			transports: cred.transports
-				? (Array.from(cred.transports) as Array<'usb' | 'nfc' | 'ble' | 'internal' | 'cable' | 'hybrid'>)
-				: undefined,
-		})),
-		userVerification: 'discouraged',
+	return generateWebAuthnAuthenticationOptions(ctx, {
+		selection: selectCredentialRpOrThrow(ctx, origin, credentials),
+		context: 'mfa',
+		userId,
+		ticket,
 	});
-	await saveWebAuthnChallenge(ctx, options.challenge, {context: 'mfa', userId, ticket});
-	return options;
 }
 
 export async function verifyWebAuthnAuthentication(
@@ -376,21 +480,26 @@ export async function verifyWebAuthnAuthentication(
 	expectedChallenge: string,
 	context: WebAuthnChallengeContext = 'mfa',
 	ticket?: string,
-): Promise<void> {
+	expectedOrigin: Array<string> = ctx.services.config.auth.passkeys.allowedOrigins,
+): Promise<WebAuthnCredential> {
 	const {users, config} = ctx.services;
-	await consumeWebAuthnChallenge(ctx, expectedChallenge, context, {userId, ticket});
+	const scope = await consumeWebAuthnChallenge(ctx, expectedChallenge, context, {userId, ticket});
 	const credentialId = (response as {id: string}).id;
 	const credential = await users.getWebAuthnCredential(userId, credentialId);
 	if (!credential) {
 		throw new PasskeyAuthenticationFailedError();
 	}
+	if (
+		effectiveRpId(ctx, credential) !== scope.rpId ||
+		(scope.credentialIds !== null && !scope.credentialIds.includes(credentialId))
+	) {
+		throw new PasskeyAuthenticationFailedError();
+	}
 	if (config.dev.testModeEnabled) {
 		await users.updateWebAuthnCredentialCounter(userId, credentialId, credential.counter + 1n);
 		await users.updateWebAuthnCredentialLastUsed(userId, credentialId);
-		return;
+		return credential;
 	}
-	const expectedOrigin = config.auth.passkeys.allowedOrigins;
-	const rpID = config.auth.passkeys.rpId;
 	let verification: VerifiedAuthenticationResponse;
 	try {
 		let publicKeyUint8Array: Uint8Array<ArrayBuffer>;
@@ -405,15 +514,12 @@ export async function verifyWebAuthnAuthentication(
 			response,
 			expectedChallenge,
 			expectedOrigin,
-			expectedRPID: rpID,
-			requireUserVerification: requiresWebAuthnUserVerification(context),
+			expectedRPID: scope.rpId,
+			requireUserVerification: requiresWebAuthnUserVerification(context, scope),
 			credential: {
-				id: credential.credentialId,
+				...toCredentialDescriptor(credential),
 				publicKey: publicKeyUint8Array,
 				counter: Number(credential.counter),
-				transports: credential.transports
-					? (Array.from(credential.transports) as Array<'usb' | 'nfc' | 'ble' | 'internal' | 'cable' | 'hybrid'>)
-					: undefined,
 			},
 		});
 	} catch (_error) {
@@ -434,31 +540,25 @@ export async function verifyWebAuthnAuthentication(
 	}
 	await users.updateWebAuthnCredentialCounter(userId, credentialId, newCounter);
 	await users.updateWebAuthnCredentialLastUsed(userId, credentialId);
+	return credential;
 }
 
-export async function generateWebAuthnOptionsForSudo(ctx: ApiContext, userId: UserID) {
-	const {users, config} = ctx.services;
-	const credentials = await users.listWebAuthnCredentials(userId);
-	if (credentials.length === 0) {
-		throw new NoPasskeysRegisteredError();
-	}
-	const options = await generateAuthenticationOptions({
-		rpID: config.auth.passkeys.rpId,
-		allowCredentials: credentials.map((cred) => ({
-			id: cred.credentialId,
-			transports: cred.transports
-				? (Array.from(cred.transports) as Array<'usb' | 'nfc' | 'ble' | 'internal' | 'cable' | 'hybrid'>)
-				: undefined,
-		})),
-		userVerification: 'discouraged',
+export async function generateWebAuthnOptionsForSudo(
+	ctx: ApiContext,
+	userId: UserID,
+	origin: string | null | undefined,
+): Promise<PublicKeyCredentialRequestOptionsJSON> {
+	const credentials = await ctx.services.users.listWebAuthnCredentials(userId);
+	return generateWebAuthnAuthenticationOptions(ctx, {
+		selection: selectCredentialRpOrThrow(ctx, origin, credentials),
+		context: 'sudo',
+		userId,
 	});
-	await saveWebAuthnChallenge(ctx, options.challenge, {context: 'sudo', userId});
-	return options;
 }
 
 const SUDO_MFA_USER_MAX_ATTEMPTS = 10;
 
-async function consumeSudoMfaAttempt(ctx: ApiContext, userId: UserID): Promise<void> {
+export async function consumeSudoMfaAttempt(ctx: ApiContext, userId: UserID): Promise<void> {
 	const {rateLimit} = ctx.services;
 	const userLimit = await rateLimit.checkLimit({
 		identifier: `sudo-mfa:user:${userId}`,
@@ -535,20 +635,33 @@ function webAuthnChallengeCacheKey(challenge: string): string {
 	return `webauthn:challenge:${challenge}`;
 }
 
-function requiresWebAuthnUserVerification(context: WebAuthnChallengeContext): boolean {
-	return context === 'discoverable';
+function requiresWebAuthnUserVerification(context: WebAuthnChallengeContext, scope: WebAuthnChallengeScope): boolean {
+	return context === 'discoverable' || (context === 'bridge' && scope.credentialIds === null);
 }
 
 async function saveWebAuthnChallenge(
 	ctx: ApiContext,
 	challenge: string,
-	entry: {context: WebAuthnChallengeContext; userId?: UserID; ticket?: string},
+	entry: {
+		context: WebAuthnChallengeContext;
+		userId?: UserID;
+		ticket?: string;
+		rpId: string;
+		credentialIds: Array<string> | null;
+	},
 ): Promise<void> {
-	await ctx.services.cache.set(
-		webAuthnChallengeCacheKey(challenge),
-		{context: entry.context, userId: entry.userId?.toString(), ticket: entry.ticket},
-		seconds('5 minutes'),
-	);
+	const value: WebAuthnChallengeEntry = {
+		context: entry.context,
+		userId: entry.userId?.toString(),
+		ticket: entry.ticket,
+		rpId: entry.rpId,
+		credentialIds: entry.credentialIds,
+	};
+	await ctx.services.cache.set(webAuthnChallengeCacheKey(challenge), value, seconds('5 minutes'));
+}
+
+export async function deleteWebAuthnChallenge(ctx: ApiContext, challenge: string): Promise<void> {
+	await ctx.services.cache.delete(webAuthnChallengeCacheKey(challenge));
 }
 
 async function consumeWebAuthnChallenge(
@@ -556,10 +669,8 @@ async function consumeWebAuthnChallenge(
 	challenge: string,
 	expectedContext: WebAuthnChallengeContext,
 	{userId, ticket}: {userId?: UserID; ticket?: string} = {},
-): Promise<void> {
-	const {cache} = ctx.services;
-	const key = webAuthnChallengeCacheKey(challenge);
-	const cached = await cache.get<{context: WebAuthnChallengeContext; userId?: string; ticket?: string}>(key);
+): Promise<WebAuthnChallengeScope> {
+	const cached = await ctx.services.cache.getAndDelete<WebAuthnChallengeEntry>(webAuthnChallengeCacheKey(challenge));
 	const challengeMatches =
 		cached &&
 		cached.context === expectedContext &&
@@ -581,11 +692,14 @@ async function consumeWebAuthnChallenge(
 		);
 		throw createChallengeError(expectedContext);
 	}
-	await cache.delete(key);
+	return {
+		rpId: cached.rpId ?? ctx.services.config.auth.passkeys.rpId,
+		credentialIds: cached.credentialIds ?? null,
+	};
 }
 
 function createChallengeError(context: WebAuthnChallengeContext) {
-	if (context === 'registration') {
+	if (context === 'registration' || context === 'migration_registration') {
 		return new InvalidWebAuthnCredentialError();
 	}
 	return new PasskeyAuthenticationFailedError();

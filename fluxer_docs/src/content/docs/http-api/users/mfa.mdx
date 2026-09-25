@@ -1,7 +1,7 @@
 ---
 # SPDX-License-Identifier: AGPL-3.0-or-later
 title: Multi-factor authentication
-description: TOTP, backup codes, WebAuthn credentials, and sudo mode.
+description: TOTP, backup codes, WebAuthn credentials, passkey updates, and sudo mode.
 ---
 
 import RouteHeader from '@/components/RouteHeader.astro';
@@ -13,7 +13,7 @@ Registering a WebAuthn credential does not make passkeys a second factor. A regi
 Every route here requires a non-bot user session. Fluxer rejects an account in suspicious activity state with 403 `ACCOUNT_SUSPICIOUS_ACTIVITY`, including on the sudo routes.
 
 :::caution[A challenge is one-use and context-bound]
-Fluxer consumes a backup code, a WebAuthn registration challenge, and a WebAuthn sudo challenge on first use. A challenge is bound to the user it was issued to and to the operation it was issued for: registration, sudo, MFA login, or discoverable login. It expires after five minutes, so a registration challenge cannot be redeemed as a sudo assertion.
+Fluxer consumes a backup code, a WebAuthn registration challenge, and a WebAuthn sudo challenge on first use. A challenge is bound to the user it was issued to and to the operation it was issued for. The operations are registration, sudo, MFA login, discoverable login, the passkey bridge, and the passkey update. It expires after five minutes, so a registration challenge cannot be redeemed as a sudo assertion.
 :::
 
 ## TOTP parameters
@@ -208,9 +208,9 @@ The backup codes and the proof a verified challenge returns.
 
 ## WebAuthn credential object
 
-An account holds at most 10 WebAuthn credentials. Both [Create WebAuthn registration options](#create-webauthn-registration-options) and [Register WebAuthn credential](#register-webauthn-credential) enforce this limit.
+An account holds at most 10 WebAuthn credentials, not counting [replaced passkeys](#replaced-passkeys). Both [Create WebAuthn registration options](#create-webauthn-registration-options) and [Register WebAuthn credential](#register-webauthn-credential) enforce this limit.
 
-Fluxer verifies every assertion against the relying party identifier and the allowed origins configured for the instance. Fluxer rejects an assertion whose reported signature counter is not greater than the stored counter. The exception is a stored and a reported counter of zero, which is how an authenticator without a counter appears.
+Fluxer verifies every assertion against the domain its challenge was issued for, chosen by [passkey domain selection](#passkey-domain-selection), and against the allowed origins configured for the instance. A passkey bridge assertion and a passkey update registration accept only the origin the ceremony runs on. Fluxer rejects an assertion whose reported signature counter is not greater than the stored counter. The exception is a stored and a reported counter of zero, which is how an authenticator without a counter appears.
 
 ### Structure
 
@@ -220,10 +220,73 @@ Fluxer verifies every assertion against the relying party identifier and the all
 | name | string | User-assigned credential name (1-100 characters) |
 | created_at | ISO8601 timestamp | The time [Register WebAuthn credential](#register-webauthn-credential) stored the credential |
 | last_used_at<sup>1</sup> | ?ISO8601 timestamp | Most recent successful authentication |
+| rp_id<sup>2</sup> | string | The domain the passkey was created for |
 
 <sup>1</sup> Null until the credential completes a login, MFA, or sudo assertion for the first time
 
+<sup>2</sup> The instance's `FLUXER_PASSKEY_RP_ID` for every passkey except one created on a new origin of the official instance, which reports `fluxer.com`. See [passkey domain selection](#passkey-domain-selection)
+
 Fluxer never returns the credential's public key, signature counter, or reported transports.
+
+## Passkey domain selection
+
+A passkey works only under the domain it was created for, its relying party identifier. Most instances have one, `FLUXER_PASSKEY_RP_ID`, and every passkey uses it. The official instance has two while its web client moves from `web.fluxer.app` to `fluxer.com`, as the [passkey bridge](/http-api/authentication/#passkey-bridge) describes. There, a request whose `Origin` is `https://fluxer.com` or `https://canary.fluxer.com` is a new-origin request, and the domain follows the table below. A request with any other `Origin`, or with none as from the mobile apps, keeps `fluxer.app` wherever the account can use it.
+
+| Operation | New-origin request | Any other request |
+| --- | --- | --- |
+| [Create WebAuthn registration options](#create-webauthn-registration-options) | A new `fluxer.com` passkey | A new `fluxer.app` passkey |
+| [Get discoverable WebAuthn options](/http-api/authentication/#get-discoverable-webauthn-options) | Any `fluxer.com` passkey | Any `fluxer.app` passkey, replaced ones included |
+| [Get WebAuthn MFA options](/http-api/authentication/#get-webauthn-mfa-options) | The `fluxer.com` passkeys, else the `fluxer.app` ones | The `fluxer.app` passkeys with replaced ones, else the `fluxer.com` ones |
+| [Create sudo WebAuthn authentication options](#create-sudo-webauthn-authentication-options) | The `fluxer.com` passkeys, else the `fluxer.app` ones | The `fluxer.app` passkeys with replaced ones, else the `fluxer.com` ones |
+
+The options name the chosen domain in `rpId` and list only the chosen passkeys. An assertion from any other credential returns 401 `PASSKEY_AUTHENTICATION_FAILED`. A page on a new origin cannot run options for `fluxer.app` itself, so the official web client runs them through the passkey bridge.
+
+## Replaced passkeys
+
+A [passkey update](#passkey-updates) keeps the old `fluxer.app` credential as a replaced passkey, so the mobile apps and `web.fluxer.app` still accept it. A replaced passkey appears in no list, no [Ready](/gateway/events/#ready) payload, and no [WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update), and it does not count toward the 10-credential limit.
+
+A replaced passkey works only on requests that are not new-origin requests. It never works on a new origin or through the passkey bridge. Renaming or deleting it by ID returns 404 `UNKNOWN_WEBAUTHN_CREDENTIAL`. Deleting the passkey that replaced it deletes it too, and deleting the account's last listed passkey deletes every replaced one.
+
+## Passkey updates
+
+A passkey update swaps one `fluxer.app` passkey for a `fluxer.com` passkey with the same name. Fluxer opens one only when a [passkey bridge](/http-api/authentication/#passkey-bridge) redemption completes from a new origin while the instance-wide [domain migration switch](/http-api/instance/#domain-migration-object) is on. Nothing else opens one.
+
+An open update belongs to one session and names the passkey the ceremony used. It lasts five minutes, and a later redemption on the same session replaces it.
+
+The open update stands in for sudo mode on the update routes, because it exists only after this session used the old passkey within the last five minutes. It allows one action. [Complete passkey update](#complete-passkey-update) registers the new passkey. When the authenticator already holds a `fluxer.com` passkey for the account, registration fails on `excludeCredentials` and the old passkey stays listed, so the person can remove it themselves.
+
+## Passkey update object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| pending<sup>1</sup> | ?[pending passkey update](#pending-passkey-update-object) object | The passkey this session can update |
+
+<sup>1</sup> Null when the session has no open update, and when the passkey it names was deleted or replaced since
+
+## Pending passkey update object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| credential_id | string | Base64url ID of the passkey to update |
+| name | string | The passkey's name, which the new passkey takes |
+| cross_device | boolean | Whether the ceremony used a phone or security key rather than the device itself |
+
+## Passkey bridge sudo redemption object
+
+The result of one redeemed `sudo` [passkey bridge](/http-api/authentication/#passkey-bridge) ceremony.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| status | string | The ceremony state, either `completed` or `cancelled` |
+| sudo_token?<sup>1</sup> | string | A sudo mode token, sent later in the `X-Fluxer-Sudo-Mode-JWT` request header |
+
+<sup>1</sup> Present only when the status is `completed`
 
 ## WebAuthn credential descriptor object
 
@@ -341,7 +404,7 @@ Every operation that issues a WebAuthn authentication challenge returns this obj
 | --- | --- | --- |
 | challenge<sup>1</sup> | string | Base64url one-use challenge |
 | timeout<sup>2</sup> | integer | Authenticator operation timeout in milliseconds |
-| rpId | string | Relying party identifier configured for the instance |
+| rpId | string | Relying party identifier chosen by [passkey domain selection](#passkey-domain-selection) |
 | allowCredentials?<sup>3</sup> | array[[WebAuthn credential descriptor](#webauthn-credential-descriptor-object) object] | Credentials accepted for this operation |
 | userVerification<sup>4</sup> | string | User verification requirement, one of `discouraged`, `preferred`, or `required` |
 
@@ -349,9 +412,9 @@ Every operation that issues a WebAuthn authentication challenge returns this obj
 
 <sup>2</sup> Every operation emits the fixed value `60000`, a standard PublicKeyCredential request option
 
-<sup>3</sup> Sudo options list every credential registered to the account. The field is absent only on the discoverable login route
+<sup>3</sup> Sudo and MFA login options list the passkeys [passkey domain selection](#passkey-domain-selection) chooses, and passkey bridge options list the account's `fluxer.app` passkeys. The field is absent on the discoverable login route and on passkey bridge options for sign-in
 
-<sup>4</sup> Sudo options and MFA login completion request `discouraged`. Discoverable login requests and verifies `required`
+<sup>4</sup> Sudo options, MFA login completion, and passkey bridge options for two-factor sign-in and sudo request `discouraged`. Discoverable login and passkey bridge options for sign-in request and verify `required`
 
 Fluxer emits no other PublicKeyCredential request options member, so `hints` and `extensions` never appear on this object.
 
@@ -376,7 +439,7 @@ Fluxer emits no other PublicKeyCredential request options member, so `hints` and
 
 <sup>2</sup> Every registration emits the fixed value `60000`
 
-<sup>3</sup> Holds every credential already registered to the account, so an authenticator cannot enrol the same credential twice. It is an empty array when the account holds none
+<sup>3</sup> Holds every credential already stored for the account, replaced passkeys included, so an authenticator cannot enrol the same credential twice. It is an empty array when the account holds none. Passkey update options hold only the account's listed `fluxer.com` passkeys
 
 <sup>4</sup> Fluxer requests a preferred discoverable credential and preferred user verification, and requires neither, so `requireResidentKey` is `false`
 
@@ -384,7 +447,7 @@ Fluxer emits no other PublicKeyCredential request options member, so `hints` and
 
 <sup>6</sup> Always present with `credProps` set to `true`, the only extension Fluxer requests
 
-<sup>7</sup> Always an empty array
+<sup>7</sup> An empty array, except on [passkey update](#passkey-updates) options for a passkey last used from a phone or security key, where it is `hybrid` then `security-key`
 
 ## WebAuthn relying party object
 
@@ -393,7 +456,7 @@ Fluxer emits no other PublicKeyCredential request options member, so `hints` and
 | Field | Type | Description |
 | --- | --- | --- |
 | name | string | Relying party display name configured for the instance |
-| id | string | Relying party identifier configured for the instance |
+| id | string | Relying party identifier chosen by [passkey domain selection](#passkey-domain-selection) |
 
 ## WebAuthn registration user object
 
@@ -724,7 +787,7 @@ The previous set is replaced with 10 new codes. A failure can leave the old code
 
 <RouteHeader method="GET" path="/v1/users/@me/mfa/webauthn/credentials" />
 
-Returns an array of [WebAuthn credential](#webauthn-credential-object) objects registered to the current account, or an empty array when none exist. Sudo mode is not required.
+Returns an array of [WebAuthn credential](#webauthn-credential-object) objects registered to the current account, or an empty array when none exist. [Replaced passkeys](#replaced-passkeys) are left out. Sudo mode is not required.
 
 ### Response
 
@@ -740,7 +803,7 @@ Returns an array of [WebAuthn credential](#webauthn-credential-object) objects r
 
 <RouteHeader method="POST" path="/v1/users/@me/mfa/webauthn/credentials/registration-options" mfa />
 
-Creates a one-use registration challenge and returns a [WebAuthn registration options](#webauthn-registration-options-object) object. [Sudo mode](#sudo-mode) is required.
+Creates a one-use registration challenge and returns a [WebAuthn registration options](#webauthn-registration-options-object) object for the domain [passkey domain selection](#passkey-domain-selection) chooses. [Sudo mode](#sudo-mode) is required.
 
 This operation sets no `X-Fluxer-Sudo-Mode-JWT` response header.
 
@@ -777,7 +840,7 @@ Consumes a registration challenge, adds one WebAuthn credential to the current a
 
 Registration changes no [authenticator type](/http-api/users/#authenticator-types). The credential answers a sudo mode challenge and a passwordless login straight away, and passkeys become a second factor at password login only through [Set WebAuthn two-factor authentication](#set-webauthn-two-factor-authentication).
 
-The account needs a verified email and fewer than 10 registered credentials. This route accepts no sudo verification fields of its own. Fluxer verifies the attestation against the instance relying party identifier and its allowed origins, and does not require user verification.
+The account needs a verified email and fewer than 10 registered credentials. This route accepts no sudo verification fields of its own. Fluxer verifies the attestation against the domain the challenge was issued for and the instance's allowed origins, and does not require user verification. The credential keeps that domain.
 
 ### JSON body
 
@@ -837,7 +900,7 @@ The body extends the [sudo verification object](#sudo-verification-object) with 
 | --- | --- | --- |
 | 204 | empty | Credential was renamed |
 | 403 | [error response](/http-api/#error-response) | Sudo mode was not proven and the request returns `SUDO_MODE_REQUIRED` |
-| 404 | [error response](/http-api/#error-response) | The credential is not registered to the current account, returning `UNKNOWN_WEBAUTHN_CREDENTIAL` |
+| 404 | [error response](/http-api/#error-response) | The credential is not registered to the current account or is a [replaced passkey](#replaced-passkeys), returning `UNKNOWN_WEBAUTHN_CREDENTIAL` |
 
 ### Side effects
 
@@ -875,17 +938,97 @@ Deleting the account's last WebAuthn credential removes the WebAuthn authenticat
 | --- | --- | --- |
 | 204 | empty | Credential was deleted |
 | 403 | [error response](/http-api/#error-response) | Sudo mode was not proven and the request returns `SUDO_MODE_REQUIRED` |
-| 404 | [error response](/http-api/#error-response) | The credential is not registered to the current account, returning `UNKNOWN_WEBAUTHN_CREDENTIAL` |
+| 404 | [error response](/http-api/#error-response) | The credential is not registered to the current account or is a [replaced passkey](#replaced-passkeys), returning `UNKNOWN_WEBAUTHN_CREDENTIAL` |
 
 ### Side effects
 
-The credential is deleted. When it was the final one and the account had passkeys enabled as a second factor, the WebAuthn authenticator type is removed from the account and from every bot account owned by the user.
+The credential is deleted, together with the [replaced passkeys](#replaced-passkeys) it took over from. When no listed credential remains, every replaced passkey the account still holds is deleted as well. When it was the final one and the account had passkeys enabled as a second factor, the WebAuthn authenticator type is removed from the account and from every bot account owned by the user.
 
 [WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update) reaches the user's sessions with the remaining credential summaries. When the authenticator types changed, [User Update](/gateway/events/#user-update) also reaches the user and each affected owned bot.
 
 ### Rate limit
 
 10 requests per minute for each authenticated user, on the `mfa:webauthn:delete` bucket.
+
+## Get passkey update
+
+<RouteHeader method="GET" path="/v1/users/@me/mfa/webauthn/migration" />
+
+Returns a [passkey update](#passkey-update-object) object for the current session. Sudo mode is not required, and any `Origin` is accepted.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [passkey update](#passkey-update-object) object | The session's update state was returned |
+
+### Side effects
+
+An open update whose passkey was deleted or replaced since is discarded. No Gateway Dispatch is emitted.
+
+### Rate limit
+
+20 requests per minute for each authenticated user, on the `mfa:webauthn:migration` bucket, shared with the other passkey update routes.
+
+## Create passkey update registration options
+
+<RouteHeader method="POST" path="/v1/users/@me/mfa/webauthn/migration/registration-options" />
+
+Creates a one-use registration challenge for the `fluxer.com` passkey that replaces the session's open [passkey update](#passkey-updates). Returns a [WebAuthn registration options](#webauthn-registration-options-object) object.
+
+The request has no body. It needs a new-origin request and an open update on this session, and otherwise returns 404 `UNKNOWN_PASSKEY_MIGRATION`. Sudo mode, a verified email, and room under the credential limit are not required.
+
+`excludeCredentials` lists the account's `fluxer.com` passkeys. When the update's `cross_device` is true, `hints` is `hybrid` then `security-key`, so the browser offers the phone or key used a moment ago.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [WebAuthn registration options](#webauthn-registration-options-object) object | Challenge and registration options were issued |
+| 404 | [error response](/http-api/#error-response) | The request is not from a new origin or the session has no open update, returning `UNKNOWN_PASSKEY_MIGRATION` |
+
+### Side effects
+
+Fluxer issues a registration challenge for the current user, bound to the passkey update. It expires after five minutes, can be redeemed once, and no other WebAuthn route accepts it. The update stays open.
+
+### Rate limit
+
+20 requests per minute for each authenticated user, on the shared `mfa:webauthn:migration` bucket.
+
+## Complete passkey update
+
+<RouteHeader method="POST" path="/v1/users/@me/mfa/webauthn/migration" />
+
+Registers the `fluxer.com` passkey that replaces the session's open [passkey update](#passkey-updates) and returns 204 with an empty body. Emits a [WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update) Gateway event.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| response | [WebAuthn registration response](#webauthn-registration-response-object) object | Authenticator response for the update challenge |
+| challenge | string | The challenge from [create passkey update registration options](#create-passkey-update-registration-options) (1-1024 characters) |
+
+The request needs a new-origin request and an open update on this session, and otherwise returns 404 `UNKNOWN_PASSKEY_MIGRATION`. Fluxer verifies the attestation for `fluxer.com` and accepts only the request's own `Origin` in its client data.
+
+A failed verification returns the codes of [register WebAuthn credential](#register-webauthn-credential) and leaves the update open. It consumes the challenge, so fetch new options before trying again. An update that another request settled first, and a passkey that was deleted or replaced since, return 404 `UNKNOWN_PASSKEY_MIGRATION`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The passkey was updated |
+| 400 | [error response](/http-api/#error-response) | Verification failed, with a code from [register WebAuthn credential](#register-webauthn-credential) |
+| 404 | [error response](/http-api/#error-response) | No open update applies, returning `UNKNOWN_PASSKEY_MIGRATION` |
+
+### Side effects
+
+Fluxer closes the update, adds the new passkey under the old one's name, and makes the old one a [replaced passkey](#replaced-passkeys). No authenticator type changes.
+
+[WebAuthn Credentials Update](/gateway/events/#webauthn-credentials-update) reaches the user's sessions with the complete current credential summaries.
+
+### Rate limit
+
+20 requests per minute for each authenticated user, on the shared `mfa:webauthn:migration` bucket.
 
 ## Set WebAuthn two-factor authentication
 
@@ -958,9 +1101,9 @@ Returns a [sudo MFA methods](#sudo-mfa-methods-object) object describing which s
 
 <RouteHeader method="POST" path="/v1/users/@me/sudo/webauthn/authentication-options" />
 
-Creates a one-use sudo challenge and returns a [WebAuthn authentication options](#webauthn-authentication-options-object) object listing every credential registered to the current account.
+Creates a one-use sudo challenge and returns a [WebAuthn authentication options](#webauthn-authentication-options-object) object listing the passkeys [passkey domain selection](#passkey-domain-selection) chooses.
 
-The account needs at least one registered WebAuthn credential. Sudo mode is not required to obtain the challenge.
+The account needs at least one credential in the chosen group. Sudo mode is not required to obtain the challenge.
 
 ### Response
 
@@ -976,3 +1119,74 @@ Fluxer issues a sudo challenge for the current user. It expires after five minut
 ### Rate limit
 
 10 requests per minute for each authenticated user, on the `sudo:webauthn:options` bucket.
+
+## Start passkey bridge sudo verification
+
+<RouteHeader method="POST" path="/v1/users/@me/passkey-bridge" />
+
+Starts a `sudo` [passkey bridge](/http-api/authentication/#passkey-bridge) ceremony for the current account. Sudo mode is not required. Returns a [passkey bridge start](/http-api/authentication/#passkey-bridge-start-object) object.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| runner | string | Where the ceremony runs, either `page` or `native` |
+| nonce_hash | string | The SHA-256 digest of the nonce the new origin keeps, as 64 lowercase hex characters |
+
+The request MUST send an `Origin` header of `https://fluxer.com` or `https://canary.fluxer.com`. Any other `Origin`, none, or a self-hosted instance returns 403 `INVALID_API_ORIGIN`. An account with no passkey listed for `fluxer.app` returns 400 `NO_PASSKEYS_REGISTERED`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [passkey bridge start](/http-api/authentication/#passkey-bridge-start-object) object | The ceremony was started |
+| 400 | [error response](/http-api/#error-response) | The body is invalid, or the account has no passkey for `fluxer.app` |
+| 403 | [error response](/http-api/#error-response) | The `Origin` is refused, returning `INVALID_API_ORIGIN` |
+
+### Side effects
+
+Fluxer stores the ceremony for 10 minutes. It changes no account state. No Gateway Dispatch is emitted.
+
+### Rate limit
+
+10 requests per minute for each authenticated user, on the `mfa:passkey_bridge:start` bucket.
+
+## Redeem passkey bridge sudo verification
+
+<RouteHeader method="POST" path="/v1/users/@me/passkey-bridge/{ceremony_id}/redeem" />
+
+Redeems a finished `sudo` [passkey bridge](/http-api/authentication/#passkey-bridge) ceremony once for a sudo mode token. Returns a [passkey bridge sudo redemption](#passkey-bridge-sudo-redemption-object) object.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ceremony_id | string | The identifier from the start response, 43 base64url characters |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| nonce | string | The nonce whose digest started the ceremony, as base64url, 16 to 256 characters |
+| completion_code | string | The completion code from the return fragment or the finish response, 43 base64url characters |
+
+The `Origin` MUST be the new origin that started the ceremony, or the request returns 403 `INVALID_API_ORIGIN`. A pending ceremony, a sign-in ceremony, and a ceremony another account started return 404 `UNKNOWN_PASSKEY_BRIDGE` and stay in place, as does an unknown or expired identifier. A wrong nonce or completion code deletes the ceremony and returns 400 `INVALID_PASSKEY_BRIDGE_NONCE`.
+
+A cancelled ceremony returns `cancelled`. A completed one returns a token that works like one [sudo mode](#sudo-mode) issues, for five minutes and for this account. The response sets no `X-Fluxer-Sudo-Mode-JWT` header, so the client sends the token in that header itself.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [passkey bridge sudo redemption](#passkey-bridge-sudo-redemption-object) object | The ceremony was redeemed |
+| 400 | [error response](/http-api/#error-response) | The body or ceremony ID is invalid, or a secret does not match, returning `INVALID_PASSKEY_BRIDGE_NONCE` |
+| 403 | [error response](/http-api/#error-response) | The `Origin` is refused, returning `INVALID_API_ORIGIN` |
+| 404 | [error response](/http-api/#error-response) | No redeemable sudo ceremony of this account has this identifier, returning `UNKNOWN_PASSKEY_BRIDGE` |
+
+### Side effects
+
+A redemption that gets past the secret check deletes the ceremony. When the request comes from a new origin and the domain migration switch is on, Fluxer opens a [passkey update](#passkey-updates) for the calling session. No Gateway Dispatch is emitted.
+
+### Rate limit
+
+60 requests per minute for each authenticated user, on the `mfa:passkey_bridge:redeem` bucket.

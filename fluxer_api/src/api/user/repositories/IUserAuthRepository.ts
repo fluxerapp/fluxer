@@ -65,10 +65,12 @@ export interface IUserAuthRepository {
 		counter: bigint,
 		transports: Set<string> | null,
 		name: string,
+		rpId: string | null,
 	): Promise<void>;
 	updateWebAuthnCredentialCounter(userId: UserID, credentialId: string, counter: bigint): Promise<void>;
 	updateWebAuthnCredentialLastUsed(userId: UserID, credentialId: string): Promise<void>;
 	updateWebAuthnCredentialName(userId: UserID, credentialId: string, name: string): Promise<void>;
+	setWebAuthnCredentialSupersededBy(userId: UserID, credentialId: string, supersededBy: string): Promise<void>;
 	deleteWebAuthnCredential(userId: UserID, credentialId: string): Promise<void>;
 	getUserIdByCredentialId(credentialId: string): Promise<UserID | null>;
 	deleteAllWebAuthnCredentials(userId: UserID): Promise<void>;

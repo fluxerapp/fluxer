@@ -181,13 +181,13 @@ The Resend IP authorisation cooldown has no `X-RateLimit-*` header. It has a `Re
 | [Modify current guild member](/http-api/guild-members/#modify-current-guild-member) | 25 per 30 minutes on the guild pronouns, when the submitted value differs | `PRONOUNS_CHANGED_TOO_MANY_TIMES` |
 | [Modify current guild member](/http-api/guild-members/#modify-current-guild-member) | 25 per 30 minutes on the guild accent colour, when the submitted value differs | `ACCENT_COLOR_CHANGED_TOO_MANY_TIMES` |
 | [Modify voice activity sharing](/http-api/users/settings/#modify-voice-activity-sharing) | 1 per 24 hours on the sharing default | `VOICE_ACTIVITY_SHARING_ON_COOLDOWN` |
-| [Complete login with TOTP](/http-api/authentication/#complete-login-with-totp) and [Complete login with WebAuthn MFA](/http-api/authentication/#complete-login-with-webauthn-mfa) | 10 multi-factor attempts per 15 minutes | `INVALID_CODE` |
-| [Complete login with TOTP](/http-api/authentication/#complete-login-with-totp) and [Complete login with WebAuthn MFA](/http-api/authentication/#complete-login-with-webauthn-mfa) | 5 multi-factor attempts per 5 minutes on one MFA ticket | `INVALID_CODE` |
-| [Sudo mode](/http-api/users/mfa/#sudo-mode) with the `totp` method | 10 multi-factor attempts per 15 minutes | `INVALID_MFA_CODE` |
+| [Complete login with TOTP](/http-api/authentication/#complete-login-with-totp), [Complete login with WebAuthn MFA](/http-api/authentication/#complete-login-with-webauthn-mfa), and [Complete passkey bridge](/http-api/authentication/#complete-passkey-bridge) for `login_mfa` | 10 multi-factor attempts per 15 minutes | `INVALID_CODE` |
+| [Complete login with TOTP](/http-api/authentication/#complete-login-with-totp), [Complete login with WebAuthn MFA](/http-api/authentication/#complete-login-with-webauthn-mfa), and [Complete passkey bridge](/http-api/authentication/#complete-passkey-bridge) for `login_mfa` | 5 multi-factor attempts per 5 minutes on one MFA ticket | `INVALID_CODE` |
+| [Sudo mode](/http-api/users/mfa/#sudo-mode) with the `totp` method, and [Complete passkey bridge](/http-api/authentication/#complete-passkey-bridge) for `sudo` | 10 multi-factor attempts per 15 minutes | `INVALID_MFA_CODE` |
 
 Every Modify current user allowance is keyed by the authenticated account, and the bot tag allowance by the bot account, so an owner changing a bot's tag draws on the bot's allowance. The guild member allowances are keyed by the guild and the member together, and one account holds a separate allowance in each guild. The login allowances are keyed by the account and by the MFA ticket respectively, and the sudo allowance by the account.
 
-Fluxer consumes every multi-factor allowance before it checks the code, so a correct code drawn against an exhausted allowance is reported exactly like a wrong one. A correct code clears the counter. The ticket allowance also destroys the MFA ticket as it denies, and the client restarts from [Log in with a password](/http-api/authentication/#log-in-with-a-password).
+Fluxer consumes every multi-factor allowance before it checks the code, so a correct code drawn against an exhausted allowance is reported exactly like a wrong one. A correct code clears the counter. A completed passkey bridge ceremony clears nothing, and redeeming a `login_mfa` ceremony clears the login counters. The ticket allowance also destroys the MFA ticket as it denies, and the client restarts from [Log in with a password](/http-api/authentication/#log-in-with-a-password).
 
 ### Allowances answering neither shape
 

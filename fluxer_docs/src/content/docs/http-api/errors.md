@@ -544,6 +544,10 @@ Invalid handoff code
 
 This sign-in transfer doesn't match the one you started
 
+### `INVALID_PASSKEY_BRIDGE_NONCE`
+
+This passkey request could not be confirmed
+
 ### `INVALID_PERMISSIONS_INTEGER`
 
 Permissions must be a valid integer
@@ -1107,6 +1111,14 @@ Message wasn't found
 ### `UNKNOWN_ORIGIN_HANDOFF`
 
 This sign-in transfer has expired or was already used
+
+### `UNKNOWN_PASSKEY_BRIDGE`
+
+This passkey request has expired
+
+### `UNKNOWN_PASSKEY_MIGRATION`
+
+There is no passkey to update right now
 
 ### `UNKNOWN_REPORT`
 
