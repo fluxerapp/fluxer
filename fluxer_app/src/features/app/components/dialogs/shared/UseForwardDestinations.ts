@@ -418,6 +418,16 @@ function formatGuildChannelDetail(guild: Guild | undefined, channel: Channel): s
 	return detail === '' ? null : detail;
 }
 
+function formatGroupDMDetail(channel: Channel): string | null {
+	if (channel.type !== ChannelTypes.GROUP_DM || (channel.name?.trim() ?? '') === '') return null;
+	const names: Array<string> = [];
+	for (const recipientId of channel.recipientIds) {
+		const recipient = Users.getUser(recipientId);
+		if (recipient != null) names.push(NicknameUtils.getNickname(recipient, null, channel.id));
+	}
+	return names.length === 0 ? null : names.join(', ');
+}
+
 function resolveGuildChannelDisableReason(
 	channel: Channel,
 	guild: Guild | undefined,
@@ -469,7 +479,7 @@ function resolveForwardDestinationOption(
 		return Object.freeze({
 			channel,
 			destination,
-			detail: null,
+			detail: formatGroupDMDetail(channel),
 			disableReason: resolveAgeRestrictedDisableReason(channel, mediaNeeds, i18n),
 			displayName: ChannelUtils.getDMDisplayName(channel),
 			key,
