@@ -853,7 +853,7 @@ msgstr "قناة {channelName}"
 msgid "{characterCount, plural, one {# character} other {# characters}}"
 msgstr "{characterCount, plural, zero {# حرف} one {حرف واحد} two {حرفان} few {# أحرف} many {# حرفًا} other {# حرف}}"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:79
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:81
 msgid "{clientLabel} wants to connect"
 msgstr "يريد {clientLabel} الاتصال"
 
@@ -22807,7 +22807,7 @@ msgstr "لم يتم تعيين اختصار"
 msgid "No shortcuts match that search."
 msgstr "لا توجد اختصارات مطابقة لهذا البحث."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:115
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:117
 msgid "No specific scopes requested."
 msgstr "لم تُطلب نطاقات صلاحيات محددة."
 
@@ -27265,7 +27265,7 @@ msgstr "اطلب رمز التحقق أولاً."
 msgid "Request export"
 msgstr "طلب تصدير"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:106
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:108
 msgid "Requested scopes"
 msgstr "نطاقات الصلاحيات المطلوبة"
 
@@ -27967,7 +27967,7 @@ msgstr "راجع الأذونات التي يستخدمها {productName} للص
 msgid "Review these files and try again with smaller or simpler images."
 msgstr "راجع هذه الملفات وحاول مرة أخرى باستخدام صور أصغر أو أبسط."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:85
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:87
 msgid "Review what this app is asking for before you continue."
 msgstr "راجع ما يطلبه هذا التطبيق قبل المتابعة."
 
@@ -35106,7 +35106,7 @@ msgstr "إيقاف التشغيل"
 msgid "Turn off all device cameras"
 msgstr "إيقاف الكاميرات على جميع الأجهزة"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:109
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:111
 msgid "Turn off anything you're not comfortable with. Some features may stop working."
 msgstr "أوقف تشغيل أي شيء لا يناسبك. قد تتوقف بعض الميزات عن العمل."
 
@@ -35165,6 +35165,10 @@ msgstr "تشغيل الكاميرا أو مشاركة الشاشة في هذه �
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:172
 msgid "Turn on a camera or share a screen in voice channels."
 msgstr "تشغيل الكاميرا أو مشاركة الشاشة في القنوات الصوتية."
+
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:158
+msgid "Turn on at least one scope to authorize this app."
+msgstr "قم بتشغيل نطاق واحد على الأقل للسماح لهذا التطبيق."
 
 #. Label for the automatic streaming privacy detection settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:19
@@ -35233,7 +35237,7 @@ msgstr "تم تفعيل اللافتة المنفصلة"
 msgid "Turned the member's microphone back on in this community"
 msgstr "تمت إعادة تشغيل ميكروفون العضو في هذا المجتمع"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:156
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:163
 msgid "Turning off scopes may prevent the app from working correctly."
 msgstr "قد يؤدي إيقاف بعض النطاقات إلى عدم عمل التطبيق بشكل صحيح."
 

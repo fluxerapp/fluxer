@@ -853,7 +853,7 @@ msgstr "ערוץ {channelName}"
 msgid "{characterCount, plural, one {# character} other {# characters}}"
 msgstr "{characterCount, plural, one {# תו} other {# תווים}}"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:79
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:81
 msgid "{clientLabel} wants to connect"
 msgstr "{clientLabel} רוצה להתחבר"
 
@@ -22807,7 +22807,7 @@ msgstr "לא הוגדר קיצור דרך"
 msgid "No shortcuts match that search."
 msgstr "לא נמצאו קיצורי דרך התואמים לחיפוש."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:115
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:117
 msgid "No specific scopes requested."
 msgstr "לא נתבקשו הרשאות ספציפיות."
 
@@ -27265,7 +27265,7 @@ msgstr "יש לבקש קוד אימות תחילה."
 msgid "Request export"
 msgstr "בקשת ייצוא"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:106
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:108
 msgid "Requested scopes"
 msgstr "הרשאות מבוקשות"
 
@@ -27967,7 +27967,7 @@ msgstr "בדוק את ההרשאות ש-{productName} משתמש בהן עבור
 msgid "Review these files and try again with smaller or simpler images."
 msgstr "יש לבדוק את הקבצים האלה ולנסות שוב עם תמונות קטנות או פשוטות יותר."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:85
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:87
 msgid "Review what this app is asking for before you continue."
 msgstr "יש לבדוק מה האפליקציה הזו מבקשת לפני שממשיכים."
 
@@ -35106,7 +35106,7 @@ msgstr "כיבוי"
 msgid "Turn off all device cameras"
 msgstr "כיבוי המצלמות בכל המכשירים"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:109
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:111
 msgid "Turn off anything you're not comfortable with. Some features may stop working."
 msgstr "כבה כל מה שלא נוח לך איתו. ייתכן שחלק מהתכונות יפסיקו לפעול."
 
@@ -35165,6 +35165,10 @@ msgstr "הפעל מצלמה או שתף מסך בערוץ הקולי הזה."
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:172
 msgid "Turn on a camera or share a screen in voice channels."
 msgstr "הפעל מצלמה או שתף מסך בערוצי קול."
+
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:158
+msgid "Turn on at least one scope to authorize this app."
+msgstr "הפעל לפחות תחום אחד כדי לאשר את האפליקציה הזו."
 
 #. Label for the automatic streaming privacy detection settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:19
@@ -35233,7 +35237,7 @@ msgstr "הפעלת הבאנר המנותק"
 msgid "Turned the member's microphone back on in this community"
 msgstr "הפעלה מחדש של המיקרופון של החבר בקהילה זו"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:156
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:163
 msgid "Turning off scopes may prevent the app from working correctly."
 msgstr "כיבוי הרשאות עלול למנוע מהאפליקציה לפעול כראוי."
 

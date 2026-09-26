@@ -853,7 +853,7 @@ msgstr "Kanal {channelName}"
 msgid "{characterCount, plural, one {# character} other {# characters}}"
 msgstr "{characterCount, plural, one {# znak} few {# znaka} other {# znakova}}"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:79
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:81
 msgid "{clientLabel} wants to connect"
 msgstr "{clientLabel} se želi povezati"
 
@@ -22807,7 +22807,7 @@ msgstr "Prečac nije postavljen"
 msgid "No shortcuts match that search."
 msgstr "Nema prečaca koji odgovaraju pretraživanju."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:115
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:117
 msgid "No specific scopes requested."
 msgstr "Nisu zatraženi specifični opsezi."
 
@@ -27265,7 +27265,7 @@ msgstr "Prvo zatražite kod za provjeru."
 msgid "Request export"
 msgstr "Zatraži izvoz"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:106
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:108
 msgid "Requested scopes"
 msgstr "Zatraženi opsezi"
 
@@ -27967,7 +27967,7 @@ msgstr "Pregledajte dopuštenja koja {productName} koristi za glas, video, dijel
 msgid "Review these files and try again with smaller or simpler images."
 msgstr "Pregledajte ove datoteke i pokušajte ponovno s manjim ili jednostavnijim slikama."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:85
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:87
 msgid "Review what this app is asking for before you continue."
 msgstr "Pregledajte što ova aplikacija traži prije nego što nastavite."
 
@@ -35106,7 +35106,7 @@ msgstr "Isključi"
 msgid "Turn off all device cameras"
 msgstr "Isključi sve kamere uređaja"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:109
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:111
 msgid "Turn off anything you're not comfortable with. Some features may stop working."
 msgstr "Isključite sve s čime vam nije ugodno. Neke značajke možda neće raditi."
 
@@ -35165,6 +35165,10 @@ msgstr "Uključi kameru ili podijeli zaslon u ovom glasovnom kanalu."
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:172
 msgid "Turn on a camera or share a screen in voice channels."
 msgstr "Uključi kameru ili podijeli zaslon u glasovnim kanalima."
+
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:158
+msgid "Turn on at least one scope to authorize this app."
+msgstr "Uključite barem jedan opseg za autorizaciju ove aplikacije."
 
 #. Label for the automatic streaming privacy detection settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:19
@@ -35233,7 +35237,7 @@ msgstr "Uključen je odvojeni natpis"
 msgid "Turned the member's microphone back on in this community"
 msgstr "Ponovno je uključen mikrofon člana u ovoj zajednici"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:156
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:163
 msgid "Turning off scopes may prevent the app from working correctly."
 msgstr "Isključivanje opsega može spriječiti ispravan rad aplikacije."
 

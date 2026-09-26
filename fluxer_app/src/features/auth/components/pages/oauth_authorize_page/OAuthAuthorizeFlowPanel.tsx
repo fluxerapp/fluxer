@@ -141,6 +141,7 @@ export const OAuthAuthorizeFlowPanel: React.FC<OAuthAuthorizeFlowPanelProps> = o
 						<OAuthScopesStep
 							authParams={authParams}
 							botInviteWithoutRedirect={flow.botInviteWithoutRedirect}
+							cannotSubmit={flow.cannotSubmit}
 							clientLabel={flow.clientLabel}
 							hasNextStep={flow.hasNextStep}
 							hasPreviousStep={flow.hasPreviousStep}

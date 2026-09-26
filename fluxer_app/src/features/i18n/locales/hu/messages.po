@@ -853,7 +853,7 @@ msgstr "{channelName} csatorna"
 msgid "{characterCount, plural, one {# character} other {# characters}}"
 msgstr "{characterCount, plural, one {# karakter} other {# karakter}}"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:79
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:81
 msgid "{clientLabel} wants to connect"
 msgstr "{clientLabel} csatlakozni szeretne"
 
@@ -22807,7 +22807,7 @@ msgstr "Nincs beállított billentyűparancs"
 msgid "No shortcuts match that search."
 msgstr "Nincs a keresésnek megfelelő billentyűparancs."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:115
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:117
 msgid "No specific scopes requested."
 msgstr "Az alkalmazás nem kért konkrét hatóköröket."
 
@@ -27265,7 +27265,7 @@ msgstr "Előbb kérj egy ellenőrző kódot."
 msgid "Request export"
 msgstr "Exportálás kérése"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:106
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:108
 msgid "Requested scopes"
 msgstr "Kért hatókörök"
 
@@ -27967,7 +27967,7 @@ msgstr "Tekintsd át a(z) {productName} által hanghoz, videóhoz, képernyőmeg
 msgid "Review these files and try again with smaller or simpler images."
 msgstr "Nézd át ezeket a fájlokat, és próbáld újra kisebb vagy egyszerűbb képekkel."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:85
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:87
 msgid "Review what this app is asking for before you continue."
 msgstr "Mielőtt folytatnád, nézd át, hogy mit kér az alkalmazás."
 
@@ -35106,7 +35106,7 @@ msgstr "Kikapcsolás"
 msgid "Turn off all device cameras"
 msgstr "Kamera kikapcsolása minden eszközön"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:109
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:111
 msgid "Turn off anything you're not comfortable with. Some features may stop working."
 msgstr "Kapcsolj ki minden hozzáférést, amelyet nem szeretnél megadni. Egyes funkciók emiatt leállhatnak."
 
@@ -35165,6 +35165,10 @@ msgstr "Kamera bekapcsolása vagy képernyő megosztása ebben a hangcsatornába
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:172
 msgid "Turn on a camera or share a screen in voice channels."
 msgstr "Kamera bekapcsolása vagy képernyő megosztása a hangcsatornákban."
+
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:158
+msgid "Turn on at least one scope to authorize this app."
+msgstr "Engedélyezz legalább egy hatókört az alkalmazás engedélyezéséhez."
 
 #. Label for the automatic streaming privacy detection settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:19
@@ -35233,7 +35237,7 @@ msgstr "Bekapcsolta a különálló borítóképet"
 msgid "Turned the member's microphone back on in this community"
 msgstr "Visszakapcsolta a tag mikrofonját ebben a közösségben"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:156
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:163
 msgid "Turning off scopes may prevent the app from working correctly."
 msgstr "A hatókörök kikapcsolása megakadályozhatja az alkalmazás megfelelő működését."
 
