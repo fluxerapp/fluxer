@@ -224,6 +224,9 @@ export const CompactVoiceCallViewInner: React.FC<CompactVoiceCallViewProps> = ob
 				void exitVoiceCallAppFullscreen();
 			}
 		}, [channel.guildId, channel.id, channel.name, exitVoiceCallAppFullscreen, i18n, isVoiceCallAppFullscreen]);
+		const handlePopInCall = useCallback(() => {
+			PopoutWindowManager.close(getVoiceCallPopoutKey(channel.id));
+		}, [channel.id]);
 		useEffect(() => {
 			if (fullscreenRequestNonce == null) return;
 			if (previousFullscreenRequestNonceRef.current === fullscreenRequestNonce) return;
@@ -518,6 +521,8 @@ export const CompactVoiceCallViewInner: React.FC<CompactVoiceCallViewProps> = ob
 					wrapClassName={clsx(styles.fullscreenButtonWrap, voiceCallStyles.voiceChrome)}
 					showPopout={isVoicePopoutSupported()}
 					onPopOut={handlePopOutCall}
+					showPopin={isPoppedOut}
+					onPopIn={handlePopInCall}
 					showFullscreen={supportsVoiceCallAppFullscreen}
 					isFullscreen={isVoiceCallAppFullscreen}
 					fullscreenLabel={fullscreenButtonLabel}

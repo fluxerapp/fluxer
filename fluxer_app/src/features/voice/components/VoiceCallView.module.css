@@ -1222,7 +1222,6 @@
 	}
 
 	.fullscreenButtonWrap {
-		bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
 		right: 1rem;
 	}
 }
@@ -1251,6 +1250,8 @@
 	background-color: #000;
 	--voice-focus-safe-top: 4rem;
 	--voice-focus-safe-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+	--voice-control-pill-size: 3.5rem;
+	--voice-control-corner-offset: calc((var(--voice-control-pill-size) - 2.625rem) / 2);
 }
 
 .rootFocused .mainContent {
@@ -1417,7 +1418,7 @@
 .fullscreenButtonWrap {
 	position: absolute;
 	right: clamp(1rem, 2vw, 2rem);
-	bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+	bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px) + var(--voice-control-corner-offset));
 	z-index: 35;
 	display: flex;
 	align-items: center;

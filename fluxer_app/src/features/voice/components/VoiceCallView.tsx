@@ -403,6 +403,9 @@ const VoiceCallViewInner = observer(
 				void exitVoiceCallAppFullscreen();
 			}
 		}, [channel.guildId, channel.id, channel.name, exitVoiceCallAppFullscreen, i18n, isVoiceCallAppFullscreen]);
+		const handlePopInCall = useCallback(() => {
+			PopoutWindowManager.close(getVoiceCallPopoutKey(channel.id));
+		}, [channel.id]);
 		const fullscreenButtonLabel = isVoiceCallAppFullscreen
 			? i18n._(EXIT_FULLSCREEN_DESCRIPTOR)
 			: i18n._(ENTER_FULLSCREEN_DESCRIPTOR);
@@ -693,6 +696,8 @@ const VoiceCallViewInner = observer(
 						buttonClassName={styles.voiceHeaderIconButton}
 						showPopout={!inPopout && isVoicePopoutSupported()}
 						onPopOut={handlePopOutCall}
+						showPopin={inPopout}
+						onPopIn={handlePopInCall}
 						showFullscreen={!inPopout && supportsVoiceCallAppFullscreen}
 						isFullscreen={isVoiceCallAppFullscreen}
 						fullscreenLabel={fullscreenButtonLabel}
