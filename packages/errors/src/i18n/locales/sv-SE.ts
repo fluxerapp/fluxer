@@ -323,6 +323,7 @@ const ERROR_I18N_SV_SE_MESSAGES = defineErrorI18nLocaleMessages({
 	"messages.cannot_edit_others_message": "Du kan inte redigera en annan användares meddelande.",
 	"messages.cannot_preload_more_than_100_channels": "Du kan inte förladda fler än {max, plural, one {# kanal} other {# kanaler}} samtidigt.",
 	"messages.cannot_reply_to_system_message": "Du kan inte svara på ett systemmeddelande.",
+	"messages.cannot_select_multiple_answers": "You can't select multiple answers on this poll.",
 	"messages.cannot_send_empty_message": "Du kan inte skicka ett tomt meddelande.",
 	"messages.forward_messages_cannot_include_extra_content": "Vidarebefordrade meddelanden kan inte ha textinnehåll, inbäddningar, bilagor eller klistermärken.",
 	"messages.forward_reference_requires_channel_and_message": "Referensen till ett vidarebefordrat meddelande måste innehålla `channel_id` och `message_id`.",

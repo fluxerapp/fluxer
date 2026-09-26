@@ -147,6 +147,72 @@ pub struct EmbedUdt {
     derive(scylla::DeserializeValue, scylla::SerializeValue)
 )]
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PollEmojiUdt {
+    pub id: Option<String>,
+    pub name: Option<String>,
+}
+
+#[cfg_attr(
+    feature = "scylla",
+    derive(scylla::DeserializeValue, scylla::SerializeValue)
+)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PollMediaUdt {
+    pub emoji: Option<PollEmojiUdt>,
+    pub text: Option<String>,
+}
+
+#[cfg_attr(
+    feature = "scylla",
+    derive(scylla::DeserializeValue, scylla::SerializeValue)
+)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PollAnswerUdt {
+    pub answer_id: Option<i32>,
+    pub poll_media: Option<PollMediaUdt>,
+}
+
+#[cfg_attr(
+    feature = "scylla",
+    derive(scylla::DeserializeValue, scylla::SerializeValue)
+)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PollAnswerCountUdt {
+    pub id: Option<i32>,
+    pub count: Option<i32>,
+    pub me_voted: Option<bool>,
+}
+
+#[cfg_attr(
+    feature = "scylla",
+    derive(scylla::DeserializeValue, scylla::SerializeValue)
+)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PollResultsUdt {
+    pub answer_counts: Option<Vec<PollAnswerCountUdt>>,
+    pub is_finalized: Option<bool>,
+}
+
+#[cfg_attr(
+    feature = "scylla",
+    derive(scylla::DeserializeValue, scylla::SerializeValue)
+)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PollUdt {
+    pub question: Option<PollMediaUdt>,
+    pub answers: Option<Vec<PollAnswerUdt>>,
+    pub expiry: Option<DateTime<Utc>>,
+    pub anonymous_voting: Option<bool>,
+    pub allow_multiselect: Option<bool>,
+    pub layout_type: Option<i32>,
+    pub results: Option<PollResultsUdt>,
+}
+
+#[cfg_attr(
+    feature = "scylla",
+    derive(scylla::DeserializeValue, scylla::SerializeValue)
+)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StickerItemUdt {
     pub sticker_id: Option<i64>,
     pub name: Option<String>,

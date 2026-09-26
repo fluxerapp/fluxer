@@ -44,6 +44,7 @@ import {
 	DebugMessageIcon,
 	DeleteIcon,
 	EditMessageIcon,
+	EndPollNowIcon,
 	ForwardIcon,
 	MarkAsUnreadIcon,
 	PinIcon,
@@ -91,6 +92,10 @@ const COPY_MESSAGE_DESCRIPTOR = msg({
 	message: 'Copy message',
 	comment: 'Message context menu item that copies the message text content to the clipboard.',
 });
+const END_POLL_NOW_DESCRIPTOR = msg({
+	message: 'End poll now',
+	comment: 'Message context menu item that ends the poll now. Only displayed on poll messages.',
+});
 const STOP_SPEAKING_DESCRIPTOR = msg({
 	message: 'Stop speaking',
 	comment: 'Message context menu item that stops the text-to-speech playback in progress.',
@@ -128,6 +133,7 @@ export const messageActionMenuItemIds = {
 	speakMessage: 'message_speak',
 	deleteMessage: 'message_delete',
 	reportMessage: 'report_message',
+	endPollNow: 'end_poll_now',
 	copyMessage: 'copy_message',
 	copyMessageLink: 'message_copy_link',
 	copyMessageId: 'message_copy_id',
@@ -281,7 +287,7 @@ export const useMessageActionMenuData = (
 					),
 				});
 			}
-			if (message.isUserMessage() && supportsInteractiveActions && permissions?.canForwardMessage) {
+			if (message.isUserMessage() && supportsInteractiveActions && permissions?.canForwardMessage && !message.poll) {
 				interactionActions.push({
 					id: messageActionMenuItemIds.forward,
 					icon: <ForwardIcon size={20} data-flx="channel.message-action-menu.groups.forward-icon" />,
@@ -292,7 +298,7 @@ export const useMessageActionMenuData = (
 					),
 				});
 			}
-			if (message.isCurrentUserAuthor() && message.isUserMessage() && !message.messageSnapshots) {
+			if (message.isCurrentUserAuthor() && message.isUserMessage() && !message.messageSnapshots && !message.poll) {
 				interactionActions.push({
 					id: messageActionMenuItemIds.edit,
 					icon: <EditMessageIcon size={20} data-flx="channel.message-action-menu.groups.edit-message-icon" />,
@@ -373,6 +379,14 @@ export const useMessageActionMenuData = (
 					shortcut: (
 						<KeybindHint action="message_copy_text" data-flx="channel.message-action-menu.groups.keybind-hint--11" />
 					),
+				});
+			}
+			if (message.isCurrentUserAuthor() && message.isUserMessage() && !message.messageSnapshots && message.poll && !message.poll.results?.is_finalized) {
+				utilityActions.push({
+					id: messageActionMenuItemIds.endPollNow,
+					icon: <EndPollNowIcon size={20}  data-flx="channel.message-action-menu.groups.end-poll-now-icon" />,
+					label: i18n._(END_POLL_NOW_DESCRIPTOR),
+					onClick: handlers.handleEndPollNow,
 				});
 			}
 			if (TtsUtils.isSupported() && voiceReady && effectiveContent.trim()) {

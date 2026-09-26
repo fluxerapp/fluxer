@@ -30,6 +30,7 @@ export function retryFailedMessage(message: Message): boolean {
 		flags: message.flags,
 		favoriteMemeId: message._favoriteMemeId,
 		stickers: [...(message.stickers ?? [])],
+		poll: message.poll ?? undefined,
 	});
 	return true;
 }

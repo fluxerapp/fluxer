@@ -95,6 +95,7 @@ function makeMessage(messageId: bigint = 2n, content: string = '', channelId: bi
 		mention_channels: null,
 		attachments: null,
 		embeds: null,
+		poll: null,
 		sticker_items: null,
 		message_reference: null,
 		message_snapshots: null,

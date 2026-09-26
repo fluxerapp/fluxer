@@ -63,6 +63,7 @@ import {
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {EmailType} from '@fluxer/schema/src/primitives/UserValidators';
 import {z} from 'zod';
+import {MessagePollResponse} from '../message/PollSchemas';
 
 const ReportStatusSchema = withOpenApiType(
 	createInt32EnumType(
@@ -1353,6 +1354,7 @@ export const AdminMessageSchema = z.object({
 	content: createStringType(0, 4000),
 	timestamp: z.string(),
 	attachments: z.array(AdminMessageAttachmentSchema).max(10),
+	poll: MessagePollResponse.optional(),
 	user_prior_ncmec_report_ids: z.array(createStringType(1, 256)).max(100).optional(),
 });
 export const LookupMessageResponse = z.object({

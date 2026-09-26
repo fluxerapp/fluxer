@@ -461,6 +461,7 @@ hsl(258, calc(10% * var(--saturation-factor)), 2%) 10%
 			{name: '--brand-secondary', family: 'brand', saturation: 60, lightness: 49},
 			{name: '--brand-primary-light', family: 'brand', saturation: 100, lightness: 84},
 			{name: '--brand-primary-fill', hue: 0, saturation: 0, lightness: 100},
+			{name: '--poll-answer-bar-accent', family: 'brand', lightness: 60},
 			{name: '--status-online', family: 'statusOnline', lightness: 40},
 			{name: '--status-idle', family: 'statusIdle', lightness: 50},
 			{name: '--status-dnd', family: 'statusDnd', lightness: 60},
@@ -593,6 +594,7 @@ hsl(245, calc(100% * var(--saturation-factor)), 80%) 40%
 		light: [
 			{scale: 'lightSurface'},
 			{scale: 'lightText'},
+			{name: '--poll-answer-bar-accent', family: 'brand', lightness: 70},
 			{name: '--panel-control-bg', value: 'color-mix(in srgb, var(--background-secondary) 65%, hsl(0, 0%, 100%) 35%)'},
 			{name: '--panel-control-border', family: 'neutralLight', saturation: 25, lightness: 45, alpha: 0.25},
 			{name: '--panel-control-divider', family: 'neutralLight', saturation: 30, lightness: 35, alpha: 0.2},

@@ -253,6 +253,7 @@ export async function createMessageSnapshotsForForward(
 			mention_channels: isMediaOnlyForward ? null : snapshot.mentionedChannelIds,
 			attachments: clonedAttachments.length > 0 ? clonedAttachments : null,
 			embeds: snapshotEmbeds.length > 0 ? snapshotEmbeds : null,
+			poll: snapshot.poll,
 			sticker_items: isMediaOnlyForward ? null : snapshot.stickers.map((sticker) => sticker.toMessageStickerItem()),
 			type: snapshot.type,
 			flags: snapshot.flags,
@@ -298,6 +299,7 @@ export async function createMessageSnapshotsForForward(
 				: null,
 		attachments: clonedAttachments.length > 0 ? clonedAttachments : null,
 		embeds: referencedMessageEmbeds.length > 0 ? referencedMessageEmbeds : null,
+		poll: referencedMessage.poll,
 		sticker_items:
 			!isMediaOnlyForward && referencedMessage.stickers.length > 0
 				? referencedMessage.stickers.map((s) => s.toMessageStickerItem())

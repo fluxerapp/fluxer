@@ -562,6 +562,18 @@ export class User {
 		return this.resolveRuntimeLimit('max_message_length', DEFAULT_STOCK_LIMITS.max_message_length);
 	}
 
+	get maxPollQuestionLength(): number {
+		return this.resolveRuntimeLimit('max_poll_question_length', DEFAULT_STOCK_LIMITS.max_poll_question_length);
+	}
+
+	get maxPollAnswers(): number {
+		return this.resolveRuntimeLimit('max_poll_answers', DEFAULT_STOCK_LIMITS.max_poll_answers);
+	}
+
+	get maxPollAnswerLength(): number {
+		return this.resolveRuntimeLimit('max_poll_answer_length', DEFAULT_STOCK_LIMITS.max_poll_answer_length);
+	}
+
 	get maxAttachmentFileSize(): number {
 		return this.resolveRuntimeLimit('max_attachment_file_size', DEFAULT_STOCK_LIMITS.max_attachment_file_size);
 	}

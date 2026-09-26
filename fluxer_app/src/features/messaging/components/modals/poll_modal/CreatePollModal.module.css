@@ -1,0 +1,19 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.pollForm {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    gap: 1rem;
+    padding: var(--spacing-2) var(--spacing-4);
+}
+
+.answers {
+    flex-grow: 1;
+}
+
+.modalFooter {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between !important;
+}

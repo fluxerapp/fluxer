@@ -34,6 +34,9 @@ import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
+import {MessagePollService} from '@app/api/channel/services/message/MessagePollService';
+import type {MessageReactionService} from '@app/api/channel/services/interaction/MessageReactionService';
+import {PollMessageExpiryRepository} from '@app/api/channel/repositories/PollMessageExpiryRepository';
 
 export class MessageService {
 	public readonly validation: MessageValidationService;
@@ -46,6 +49,7 @@ export class MessageService {
 	public readonly system: MessageSystemService;
 	public readonly send: MessageSendService;
 	public readonly edit: MessageEditService;
+	public readonly poll: MessagePollService;
 	public readonly deletion: MessageDeleteService;
 	public readonly retrieval: MessageRetrievalService;
 	public readonly anonymization: MessageAnonymizationService;
@@ -70,6 +74,7 @@ export class MessageService {
 		attachmentUploadTraceRepository: AttachmentUploadTraceRepository,
 		limitConfigService: LimitConfigService,
 		directMessageSpamMitigationService: DirectMessageSpamMitigationService,
+		messageReactionService: MessageReactionService,
 	) {
 		this.validation = new MessageValidationService(cacheService, limitConfigService);
 		this.mention = new MessageMentionService(
@@ -111,7 +116,9 @@ export class MessageService {
 			snowflakeService,
 			favoriteMemeRepository,
 		});
+		const pollMessageExpiryRepository = new PollMessageExpiryRepository();
 		this.send = new MessageSendService({
+			guildRepository,
 			channelRepository,
 			userRepository,
 			storageService,
@@ -127,6 +134,7 @@ export class MessageService {
 			processingService: this.processing,
 			dispatchService: this.dispatch,
 			embedAttachmentResolver: this.persistence.getEmbedAttachmentResolver(),
+			pollMessageExpiryRepository,
 			attachmentUploadTraceRepository,
 			operationsHelpers,
 			limitConfigService,
@@ -145,6 +153,16 @@ export class MessageService {
 			embedAttachmentResolver: this.persistence.getEmbedAttachmentResolver(),
 			mentionService: this.mention,
 		});
+		this.poll = new MessagePollService({
+			channelAuthService: this.channelAuth,
+			channelRepository,
+			userRepository,
+			dispatchService: this.dispatch,
+			pollExpiryRepository: pollMessageExpiryRepository,
+			messageReactionService,
+			messageSendService: this.send,
+			limitConfigService,
+		});
 		this.deletion = new MessageDeleteService({
 			channelRepository,
 			storageService,
@@ -153,6 +171,7 @@ export class MessageService {
 			channelAuthService: this.channelAuth,
 			dispatchService: this.dispatch,
 			searchService: this.search,
+			pollService: this.poll,
 			gatewayService,
 			guildAuditLogService,
 		});

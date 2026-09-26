@@ -84,7 +84,7 @@ export class MessageDispatchService {
 	}: {
 		channel: Channel;
 		message: Message;
-		requestCache: RequestCache;
+		requestCache?: RequestCache;
 		currentUserId?: UserID;
 	}): Promise<void> {
 		await dispatchMessageUpdateBroadcast({

@@ -13,8 +13,8 @@ import type {
 	AllowedMentions,
 	MessageAttachment,
 	MessageReference,
-	MessageStickerItem,
 } from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import type {MessagePoll} from '@fluxer/schema/src/domains/message/PollSchemas';
 
 interface MessageSubmitData {
 	content: string;
@@ -23,8 +23,8 @@ interface MessageSubmitData {
 	currentUser: User;
 	referencedMessage?: Message | null;
 	replyMentioning?: boolean;
-	stickers?: Array<MessageStickerItem>;
 	favoriteMemeId?: string;
+	poll?: MessagePoll;
 }
 
 export function createUploadingAttachments(
@@ -60,6 +60,7 @@ export function createOptimisticMessage(data: MessageSubmitData, attachments: Ar
 		state: MessageStates.SENDING,
 		nonce: data.nonce,
 		attachments,
+		poll: data.poll,
 		_allowedMentions: data.referencedMessage ? {replied_user: data.replyMentioning ?? true} : undefined,
 	});
 }

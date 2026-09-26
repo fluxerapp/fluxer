@@ -4,6 +4,7 @@ import type {ChannelID, RoleID, UserID} from '@app/api/BrandedTypes';
 import type {MessageSnapshot as CassandraMessageSnapshot} from '@app/api/database/types/MessageTypes';
 import {Attachment} from '@app/api/models/Attachment';
 import {Embed} from '@app/api/models/Embed';
+import {Poll} from '@app/api/models/Poll';
 import {StickerItem} from '@app/api/models/StickerItem';
 import type {MessageTypeValue} from '@fluxer/constants/src/ChannelConstants';
 
@@ -16,6 +17,7 @@ export class MessageSnapshot {
 	readonly mentionedChannelIds: Set<ChannelID>;
 	readonly attachments: Array<Attachment>;
 	readonly embeds: Array<Embed>;
+	readonly poll: Poll | null;
 	readonly stickers: Array<StickerItem>;
 	readonly type: MessageTypeValue;
 	readonly flags: number;
@@ -29,6 +31,7 @@ export class MessageSnapshot {
 		this.mentionedChannelIds = snapshot.mention_channels ?? new Set();
 		this.attachments = (snapshot.attachments ?? []).map((att) => new Attachment(att));
 		this.embeds = (snapshot.embeds ?? []).map((embed) => new Embed(embed));
+		this.poll = snapshot.poll ? new Poll(snapshot.poll) : null;
 		this.stickers = (snapshot.sticker_items ?? []).map((sticker) => new StickerItem(sticker));
 		this.type = snapshot.type as MessageTypeValue;
 		this.flags = snapshot.flags;
@@ -44,6 +47,7 @@ export class MessageSnapshot {
 			mention_channels: this.mentionedChannelIds.size > 0 ? this.mentionedChannelIds : null,
 			attachments: this.attachments.length > 0 ? this.attachments.map((att) => att.toMessageAttachment()) : null,
 			embeds: this.embeds.length > 0 ? this.embeds.map((embed) => embed.toMessageEmbed()) : null,
+			poll: this.poll ? this.poll.toMessagePoll() : null,
 			sticker_items: this.stickers.length > 0 ? this.stickers.map((sticker) => sticker.toMessageStickerItem()) : null,
 			type: this.type,
 			flags: this.flags,

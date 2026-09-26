@@ -5,6 +5,7 @@ import type {MessageRow} from '@app/api/database/types/MessageTypes';
 import {Attachment} from '@app/api/models/Attachment';
 import {CallInfo} from '@app/api/models/CallInfo';
 import {Embed} from '@app/api/models/Embed';
+import {Poll} from '@app/api/models/Poll';
 import {MessageRef} from '@app/api/models/MessageRef';
 import {MessageSnapshot} from '@app/api/models/MessageSnapshot';
 import {StickerItem} from '@app/api/models/StickerItem';
@@ -29,6 +30,7 @@ export class Message {
 	readonly mentionedChannelIds: Set<ChannelID>;
 	readonly attachments: Array<Attachment>;
 	readonly embeds: Array<Embed>;
+	readonly poll: Poll | null;
 	readonly stickers: Array<StickerItem>;
 	readonly reference: MessageRef | null;
 	readonly messageSnapshots: Array<MessageSnapshot>;
@@ -61,6 +63,7 @@ export class Message {
 				return [];
 			}
 		});
+		this.poll = row.poll ? new Poll(row.poll) : null;
 		this.stickers = (row.sticker_items ?? []).map((sticker) => new StickerItem(sticker));
 		this.reference = row.message_reference ? new MessageRef(row.message_reference) : null;
 		this.messageSnapshots = (row.message_snapshots ?? []).map((snapshot) => new MessageSnapshot(snapshot));
@@ -89,6 +92,7 @@ export class Message {
 			mention_channels: this.mentionedChannelIds.size > 0 ? this.mentionedChannelIds : null,
 			attachments: this.attachments.length > 0 ? this.attachments.map((att) => att.toMessageAttachment()) : null,
 			embeds: this.embeds.length > 0 ? this.embeds.map((embed) => embed.toMessageEmbed()) : null,
+			poll: this.poll?.toMessagePoll() ?? null,
 			sticker_items: this.stickers.length > 0 ? this.stickers.map((sticker) => sticker.toMessageStickerItem()) : null,
 			message_reference: this.reference?.toMessageReference() ?? null,
 			message_snapshots:
