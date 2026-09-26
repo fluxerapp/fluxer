@@ -3,11 +3,10 @@
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {HttpStatus} from '@fluxer/constants/src/HttpConstants';
 import {FluxerError} from '@fluxer/errors/src/FluxerError';
+import type {ValidationErrorItem} from '@fluxer/schema/src/domains/common/ErrorSchemas';
 
-interface PathError {
-	path: string;
+interface PathError extends ValidationErrorItem {
 	code: string;
-	message: string;
 }
 
 interface ValidationErrorOptions {

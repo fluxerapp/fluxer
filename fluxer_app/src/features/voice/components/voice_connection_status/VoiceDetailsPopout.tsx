@@ -332,7 +332,7 @@ export const VoiceDetailsPopout = observer(({onClose, hideHeader = false}: Voice
 											className={styles.gridText}
 											data-flx="voice.voice-connection-status.voice-details-popout.grid-text"
 										>
-											{value}ms
+											{formatMilliseconds(value, locale)}
 										</text>
 									</g>
 								);

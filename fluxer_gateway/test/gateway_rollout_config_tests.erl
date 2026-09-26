@@ -16,9 +16,7 @@ default_config() ->
         <<"max_concurrent_guild_starts">> => 256,
         <<"gateway_dispatch_relay_shards">> => 32,
         <<"gateway_dispatch_relay_max_queue">> => 50000,
-        <<"voice_e2ee_scope">> => <<"guild_feature_only">>,
-        <<"voice_reconciliation_v3_percentage">> => 100,
-        <<"voice_reconciliation_v3_interval_ms">> => 2000
+        <<"voice_e2ee_scope">> => <<"guild_feature_only">>
     }.
 
 default_config_has_expected_keys_test() ->
@@ -29,9 +27,7 @@ default_config_has_expected_keys_test() ->
     ?assertEqual(100, maps:get(<<"guild_rollout_percentage">>, Config)),
     ?assertEqual(10000, maps:get(<<"rpc_request_timeout_ms">>, Config)),
     ?assertEqual(512, maps:get(<<"max_concurrent_session_starts">>, Config)),
-    ?assertEqual(256, maps:get(<<"max_concurrent_guild_starts">>, Config)),
-    ?assertEqual(100, maps:get(<<"voice_reconciliation_v3_percentage">>, Config)),
-    ?assertEqual(2000, maps:get(<<"voice_reconciliation_v3_interval_ms">>, Config)).
+    ?assertEqual(256, maps:get(<<"max_concurrent_guild_starts">>, Config)).
 
 is_session_eligible_full_rollout_test() ->
     persistent_term:put(?PERSISTENT_TERM_KEY, default_config()),
@@ -234,20 +230,38 @@ validate_config_rejects_rpc_timeout_above_maximum_test() ->
         )
     ).
 
-validate_config_rejects_voice_reconciliation_v3_interval_below_minimum_test() ->
+validate_config_rejects_relay_max_queue_zero_test() ->
     ?assertMatch(
-        {error, {invalid_field, <<"voice_reconciliation_v3_interval_ms">>, 499}},
+        {error, {invalid_field, <<"gateway_dispatch_relay_max_queue">>, 0}},
         gateway_rollout_config_validate:validate(
-            #{<<"voice_reconciliation_v3_interval_ms">> => 499},
+            #{<<"gateway_dispatch_relay_max_queue">> => 0},
             default_config()
         )
     ).
 
-validate_config_rejects_voice_reconciliation_v3_percentage_above_maximum_test() ->
+validate_config_rejects_relay_max_queue_above_kill_threshold_test() ->
+    Above = process_health_watchdog:kill_threshold() + 1,
     ?assertMatch(
-        {error, {invalid_field, <<"voice_reconciliation_v3_percentage">>, 101}},
+        {error, {invalid_field, <<"gateway_dispatch_relay_max_queue">>, Above}},
         gateway_rollout_config_validate:validate(
-            #{<<"voice_reconciliation_v3_percentage">> => 101},
+            #{<<"gateway_dispatch_relay_max_queue">> => Above},
+            default_config()
+        )
+    ).
+
+validate_config_accepts_relay_max_queue_range_bounds_test() ->
+    Ceiling = process_health_watchdog:kill_threshold(),
+    ?assertMatch(
+        {ok, #{<<"gateway_dispatch_relay_max_queue">> := 1}},
+        gateway_rollout_config_validate:validate(
+            #{<<"gateway_dispatch_relay_max_queue">> => 1},
+            default_config()
+        )
+    ),
+    ?assertMatch(
+        {ok, #{<<"gateway_dispatch_relay_max_queue">> := Ceiling}},
+        gateway_rollout_config_validate:validate(
+            #{<<"gateway_dispatch_relay_max_queue">> => Ceiling},
             default_config()
         )
     ).

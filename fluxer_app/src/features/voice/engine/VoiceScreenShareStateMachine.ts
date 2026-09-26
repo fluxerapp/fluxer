@@ -1,32 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {NegotiationReason} from '@app/features/voice/engine/ScreenShareCodecNegotiation';
 import type {PendingScreenShareStopRequest} from '@app/features/voice/engine/voice_screen_share_manager/shared';
-import type {VideoCodec} from 'livekit-client';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export type VoiceScreenShareSourceType = 'display' | 'native-display' | 'native-app' | 'device';
 
-export type VoiceScreenShareOperation = 'starting' | 'stopping' | 'replacing' | 'codecRepublishing' | 'restoring';
+export type VoiceScreenShareOperation = 'starting' | 'stopping' | 'replacing' | 'restoring';
 
 export type VoiceScreenShareCodecReadiness = 'idle' | 'loading' | 'ready' | 'timeout';
 
 export type VoiceScreenShareWatchCommand = {type: 'watch.add'; key: string} | {type: 'watch.remove'; key: string};
-
-export interface PendingScreenShareCodecRepublishRequest {
-	codec: VideoCodec;
-	reason: NegotiationReason;
-	force: boolean;
-}
 
 interface VoiceScreenShareContext {
 	active: boolean;
 	sourceType: VoiceScreenShareSourceType | null;
 	pendingOperation: VoiceScreenShareOperation | null;
 	queuedStopRequest: PendingScreenShareStopRequest | null;
-	queuedCodecRepublishRequest: PendingScreenShareCodecRepublishRequest | null;
-	deferredCodecRepublishRequest: PendingScreenShareCodecRepublishRequest | null;
-	codecRepublishInFlight: boolean;
+	publicationReplaceInFlight: boolean;
 	codecReadiness: VoiceScreenShareCodecReadiness;
 	encoderVerificationScheduled: boolean;
 	endedTrackStopInFlight: boolean;
@@ -41,11 +31,8 @@ export type VoiceScreenShareEvent =
 	| {
 			type: 'share.replace';
 			sourceType: VoiceScreenShareSourceType;
-			codecRepublishInFlight?: boolean;
+			publicationReplaceInFlight?: boolean;
 	  }
-	| {type: 'share.codecRepublish'}
-	| {type: 'share.codecRepublish.queue'; request: PendingScreenShareCodecRepublishRequest}
-	| {type: 'share.codecRepublish.defer'; request: PendingScreenShareCodecRepublishRequest}
 	| {
 			type: 'share.resolve';
 			active: boolean;
@@ -72,9 +59,8 @@ export type VoiceScreenShareEvent =
 	| {type: 'share.codecReadiness.timeout'}
 	| {type: 'share.codecReadiness.reset'}
 	| {type: 'share.streamingPriority.set'; active: boolean}
+	| {type: 'share.publicationReplace.set'; inFlight: boolean}
 	| {type: 'share.queuedStop.clear'}
-	| {type: 'share.queuedCodecRepublish.clear'}
-	| {type: 'share.deferredCodecRepublish.clear'}
 	| {
 			type: 'share.localWatcher.sync';
 			enabled: boolean;
@@ -92,9 +78,7 @@ function initialContext(): VoiceScreenShareContext {
 		sourceType: null,
 		pendingOperation: null,
 		queuedStopRequest: null,
-		queuedCodecRepublishRequest: null,
-		deferredCodecRepublishRequest: null,
-		codecRepublishInFlight: false,
+		publicationReplaceInFlight: false,
 		codecReadiness: 'idle',
 		encoderVerificationScheduled: false,
 		endedTrackStopInFlight: false,
@@ -107,15 +91,14 @@ function beginOperation(
 	context: VoiceScreenShareContext,
 	pendingOperation: VoiceScreenShareOperation,
 	sourceType: VoiceScreenShareSourceType | null = context.sourceType,
-	codecRepublishInFlight = false,
+	publicationReplaceInFlight = false,
 ): VoiceScreenShareContext {
 	if (context.pendingOperation) return context;
 	return {
 		...context,
 		pendingOperation,
 		sourceType,
-		deferredCodecRepublishRequest: null,
-		codecRepublishInFlight,
+		publicationReplaceInFlight,
 		codecReadiness: 'idle',
 	};
 }
@@ -140,7 +123,7 @@ function beginStop(
 		...context,
 		pendingOperation: 'stopping',
 		queuedStopRequest: null,
-		codecRepublishInFlight: false,
+		publicationReplaceInFlight: false,
 		codecReadiness: 'idle',
 		encoderVerificationScheduled: false,
 		streamingPriorityHeld: false,
@@ -159,9 +142,8 @@ function resolveOperation(
 		active,
 		sourceType: active ? (sourceType ?? context.sourceType) : null,
 		pendingOperation: null,
-		codecRepublishInFlight: false,
+		publicationReplaceInFlight: false,
 		codecReadiness: active ? context.codecReadiness : 'idle',
-		deferredCodecRepublishRequest: active ? context.deferredCodecRepublishRequest : null,
 		encoderVerificationScheduled: encoderVerificationScheduled ?? (active && context.encoderVerificationScheduled),
 		streamingPriorityHeld: streamingPriorityHeld ?? (active && context.streamingPriorityHeld),
 	};
@@ -177,48 +159,10 @@ function rejectOperation(
 		active,
 		sourceType: active ? (sourceType ?? context.sourceType) : null,
 		pendingOperation: null,
-		codecRepublishInFlight: false,
+		publicationReplaceInFlight: false,
 		codecReadiness: active ? context.codecReadiness : 'idle',
-		deferredCodecRepublishRequest: active ? context.deferredCodecRepublishRequest : null,
 		encoderVerificationScheduled: active && context.encoderVerificationScheduled,
 		streamingPriorityHeld: active && context.streamingPriorityHeld,
-	};
-}
-
-function queueCodecRepublish(
-	context: VoiceScreenShareContext,
-	request: PendingScreenShareCodecRepublishRequest,
-): VoiceScreenShareContext {
-	const force =
-		context.queuedCodecRepublishRequest?.codec === request.codec
-			? context.queuedCodecRepublishRequest.force || request.force
-			: request.force;
-	return {
-		...context,
-		queuedCodecRepublishRequest: {
-			codec: request.codec,
-			reason: request.reason,
-			force,
-		},
-	};
-}
-
-function deferCodecRepublish(
-	context: VoiceScreenShareContext,
-	request: PendingScreenShareCodecRepublishRequest,
-): VoiceScreenShareContext {
-	const force =
-		context.deferredCodecRepublishRequest?.codec === request.codec
-			? context.deferredCodecRepublishRequest.force || request.force
-			: request.force;
-	return {
-		...context,
-		deferredCodecRepublishRequest: {
-			codec: request.codec,
-			reason: request.reason,
-			force,
-		},
-		codecRepublishInFlight: false,
 	};
 }
 
@@ -266,15 +210,8 @@ export const voiceScreenShareStateMachine = setup({
 		stop: assign(({context, event}) => (event.type === 'share.stop' ? beginStop(context, event.request) : context)),
 		replace: assign(({context, event}) =>
 			event.type === 'share.replace'
-				? beginOperation(context, 'replacing', event.sourceType, event.codecRepublishInFlight === true)
+				? beginOperation(context, 'replacing', event.sourceType, event.publicationReplaceInFlight === true)
 				: context,
-		),
-		codecRepublish: assign(({context}) => beginOperation(context, 'codecRepublishing', context.sourceType, true)),
-		queueCodecRepublish: assign(({context, event}) =>
-			event.type === 'share.codecRepublish.queue' ? queueCodecRepublish(context, event.request) : context,
-		),
-		deferCodecRepublish: assign(({context, event}) =>
-			event.type === 'share.codecRepublish.defer' ? deferCodecRepublish(context, event.request) : context,
 		),
 		resolve: assign(({context, event}) =>
 			event.type === 'share.resolve'
@@ -325,14 +262,13 @@ export const voiceScreenShareStateMachine = setup({
 		setStreamingPriority: assign(({context, event}) =>
 			event.type === 'share.streamingPriority.set' ? {...context, streamingPriorityHeld: event.active} : context,
 		),
+		setPublicationReplaceInFlight: assign(({context, event}) =>
+			event.type === 'share.publicationReplace.set' && context.pendingOperation
+				? {...context, publicationReplaceInFlight: event.inFlight}
+				: context,
+		),
 		clearQueuedStop: assign(({context}) =>
 			context.queuedStopRequest ? {...context, queuedStopRequest: null} : context,
-		),
-		clearQueuedCodecRepublish: assign(({context}) =>
-			context.queuedCodecRepublishRequest ? {...context, queuedCodecRepublishRequest: null} : context,
-		),
-		clearDeferredCodecRepublish: assign(({context}) =>
-			context.deferredCodecRepublishRequest ? {...context, deferredCodecRepublishRequest: null} : context,
 		),
 		syncLocalWatcher: assign(({context, event}) =>
 			event.type === 'share.localWatcher.sync'
@@ -368,9 +304,6 @@ export const voiceScreenShareStateMachine = setup({
 				'share.restore': {target: 'routing', actions: 'restore'},
 				'share.stop': {target: 'routing', actions: 'stop'},
 				'share.replace': {target: 'routing', actions: 'replace'},
-				'share.codecRepublish': {target: 'routing', actions: 'codecRepublish'},
-				'share.codecRepublish.queue': {target: 'routing', actions: 'queueCodecRepublish'},
-				'share.codecRepublish.defer': {target: 'routing', actions: 'deferCodecRepublish'},
 				'share.resolve': {target: 'routing', actions: 'resolve'},
 				'share.reject': {target: 'routing', actions: 'reject'},
 				'share.cancel': {target: 'routing', actions: 'reject'},
@@ -379,9 +312,8 @@ export const voiceScreenShareStateMachine = setup({
 				'share.encoderVerification.scheduled': {target: 'routing', actions: 'scheduleEncoderVerification'},
 				'share.encoderVerification.cleared': {target: 'routing', actions: 'clearEncoderVerification'},
 				'share.streamingPriority.set': {target: 'routing', actions: 'setStreamingPriority'},
+				'share.publicationReplace.set': {target: 'routing', actions: 'setPublicationReplaceInFlight'},
 				'share.queuedStop.clear': {target: 'routing', actions: 'clearQueuedStop'},
-				'share.queuedCodecRepublish.clear': {target: 'routing', actions: 'clearQueuedCodecRepublish'},
-				'share.deferredCodecRepublish.clear': {target: 'routing', actions: 'clearDeferredCodecRepublish'},
 				'share.localWatcher.sync': {target: 'routing', actions: 'syncLocalWatcher'},
 				'share.clearWatchCommands': {actions: 'clearWatchCommands'},
 				'share.reset': {target: 'routing', actions: 'reset'},
@@ -393,9 +325,6 @@ export const voiceScreenShareStateMachine = setup({
 				'share.restore': {target: 'routing', actions: 'restore'},
 				'share.stop': {target: 'routing', actions: 'stop'},
 				'share.replace': {target: 'routing', actions: 'replace'},
-				'share.codecRepublish': {target: 'routing', actions: 'codecRepublish'},
-				'share.codecRepublish.queue': {target: 'routing', actions: 'queueCodecRepublish'},
-				'share.codecRepublish.defer': {target: 'routing', actions: 'deferCodecRepublish'},
 				'share.resolve': {target: 'routing', actions: 'resolve'},
 				'share.reject': {target: 'routing', actions: 'reject'},
 				'share.cancel': {target: 'routing', actions: 'reject'},
@@ -404,9 +333,8 @@ export const voiceScreenShareStateMachine = setup({
 				'share.encoderVerification.scheduled': {target: 'routing', actions: 'scheduleEncoderVerification'},
 				'share.encoderVerification.cleared': {target: 'routing', actions: 'clearEncoderVerification'},
 				'share.streamingPriority.set': {target: 'routing', actions: 'setStreamingPriority'},
+				'share.publicationReplace.set': {target: 'routing', actions: 'setPublicationReplaceInFlight'},
 				'share.queuedStop.clear': {target: 'routing', actions: 'clearQueuedStop'},
-				'share.queuedCodecRepublish.clear': {target: 'routing', actions: 'clearQueuedCodecRepublish'},
-				'share.deferredCodecRepublish.clear': {target: 'routing', actions: 'clearDeferredCodecRepublish'},
 				'share.localWatcher.sync': {target: 'routing', actions: 'syncLocalWatcher'},
 				'share.clearWatchCommands': {actions: 'clearWatchCommands'},
 				'share.reset': {target: 'routing', actions: 'reset'},
@@ -418,9 +346,6 @@ export const voiceScreenShareStateMachine = setup({
 				'share.restore': {actions: 'restore'},
 				'share.stop': {actions: 'stop'},
 				'share.replace': {actions: 'replace'},
-				'share.codecRepublish': {actions: 'codecRepublish'},
-				'share.codecRepublish.queue': {actions: 'queueCodecRepublish'},
-				'share.codecRepublish.defer': {actions: 'deferCodecRepublish'},
 				'share.resolve': {target: 'routing', actions: 'resolve'},
 				'share.reject': {target: 'routing', actions: 'reject'},
 				'share.cancel': {target: 'routing', actions: 'reject'},
@@ -429,9 +354,8 @@ export const voiceScreenShareStateMachine = setup({
 				'share.encoderVerification.scheduled': {actions: 'scheduleEncoderVerification'},
 				'share.encoderVerification.cleared': {actions: 'clearEncoderVerification'},
 				'share.streamingPriority.set': {actions: 'setStreamingPriority'},
+				'share.publicationReplace.set': {actions: 'setPublicationReplaceInFlight'},
 				'share.queuedStop.clear': {actions: 'clearQueuedStop'},
-				'share.queuedCodecRepublish.clear': {actions: 'clearQueuedCodecRepublish'},
-				'share.deferredCodecRepublish.clear': {actions: 'clearDeferredCodecRepublish'},
 				'share.localWatcher.sync': {actions: 'syncLocalWatcher'},
 				'share.clearWatchCommands': {actions: 'clearWatchCommands'},
 				'share.reset': {target: 'routing', actions: 'reset'},
@@ -444,7 +368,7 @@ export type VoiceScreenShareSnapshot = SnapshotFrom<typeof voiceScreenShareState
 export type VoiceScreenShareStateValue = 'inactive' | 'active' | 'pending';
 
 export function createVoiceScreenShareSnapshot(): VoiceScreenShareSnapshot {
-	return getInitialSnapshot(voiceScreenShareStateMachine);
+	return initialTransition(voiceScreenShareStateMachine)[0];
 }
 
 export function transitionVoiceScreenShareSnapshot(

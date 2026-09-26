@@ -1,13 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createUserID, type UserID} from '../../../BrandedTypes';
-import {BatchBuilder, fetchMany, fetchOne, upsertOne} from '../../../database/CassandraQueryExecution';
-import {Db} from '../../../database/CassandraTypes';
-import type {AuthSessionRow, AuthSessionTombstoneRow, UserCountryHistoryRow} from '../../../database/types/AuthTypes';
-import {Logger} from '../../../Logger';
-import {getCacheService, getPhoneFraudGraphService} from '../../../middleware/ServiceSingletons';
-import {AuthSession, AuthSessionTombstone} from '../../../models/AuthSession';
-import {AuthSessions, AuthSessionsByUserId, AuthSessionTombstones, UserCountryHistory} from '../../../Tables';
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {BatchBuilder, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {Db} from '@app/api/database/CassandraTypes';
+import type {AuthSessionRow, AuthSessionTombstoneRow, UserCountryHistoryRow} from '@app/api/database/types/AuthTypes';
+import {Logger} from '@app/api/Logger';
+import {getCacheService, getPhoneFraudGraphService} from '@app/api/middleware/ServiceSingletons';
+import {AuthSession, AuthSessionTombstone} from '@app/api/models/AuthSession';
+import {AuthSessions, AuthSessionsByUserId, AuthSessionTombstones, UserCountryHistory} from '@app/api/Tables';
+import {awaitAll} from '@app/api/utils/ConcurrencyUtils';
+import {isValidTimestamp} from '@app/api/utils/TimestampUtils';
+import {SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {z} from 'zod';
 
 const AUTH_SESSION_CACHE_TTL_SECONDS = 30;
 const AUTH_SESSION_MISS_CACHE_TTL_SECONDS = 5;
@@ -23,6 +27,20 @@ interface CachedAuthSession {
 	client_country: string | null;
 	version: number;
 }
+
+const CachedAuthSessionSchema = z.object({
+	user_id: z
+		.string()
+		.refine((value) => value.length <= 19 && !/\D/.test(value) && SnowflakeType.safeParse(value).success),
+	session_id_hash: z.string(),
+	created_at: z.custom<number>(isValidTimestamp),
+	approx_last_used_at: z.custom<number>(isValidTimestamp),
+	client_ip: z.string(),
+	client_user_agent: z.string().nullable(),
+	client_os: z.string().nullable(),
+	client_country: z.string().nullable(),
+	version: z.int().nonnegative(),
+}) satisfies z.ZodType<CachedAuthSession>;
 
 function authSessionCacheKey(sessionIdHash: Buffer): string {
 	return `auth:session:${sessionIdHash.toString('base64url')}`;
@@ -42,10 +60,18 @@ function encodeCachedAuthSession(row: AuthSessionRow): CachedAuthSession {
 	};
 }
 
-function decodeCachedAuthSession(cached: CachedAuthSession): AuthSessionRow {
+function decodeCachedAuthSession(value: unknown, sessionIdHash: Buffer): AuthSessionRow {
+	const parsed = CachedAuthSessionSchema.safeParse(value);
+	if (!parsed.success) {
+		throw new TypeError('Cached auth session has an invalid shape', {cause: parsed.error});
+	}
+	const cached = parsed.data;
+	if (cached.session_id_hash !== sessionIdHash.toString('base64url')) {
+		throw new Error('Cached auth session does not match the requested token hash');
+	}
 	return {
 		user_id: createUserID(BigInt(cached.user_id)),
-		session_id_hash: Buffer.from(cached.session_id_hash, 'base64url'),
+		session_id_hash: Buffer.from(sessionIdHash),
 		created_at: new Date(cached.created_at),
 		approx_last_used_at: new Date(cached.approx_last_used_at),
 		client_ip: cached.client_ip,
@@ -60,7 +86,10 @@ async function invalidateAuthSessionCache(sessionIdHashes: ReadonlyArray<Buffer>
 	if (sessionIdHashes.length === 0) return;
 	try {
 		const cache = getCacheService();
-		await Promise.all(sessionIdHashes.map((sessionIdHash) => cache.delete(authSessionCacheKey(sessionIdHash))));
+		await awaitAll(
+			sessionIdHashes.map(async (sessionIdHash) => cache.delete(authSessionCacheKey(sessionIdHash))),
+			'Failed to invalidate cached auth sessions',
+		);
 	} catch (error) {
 		Logger.error({error}, 'Failed to invalidate cached auth sessions; they expire with the cache ttl');
 	}
@@ -163,19 +192,21 @@ export class AuthSessionRepository {
 	}
 
 	async getAuthSessionByToken(sessionIdHash: Buffer): Promise<AuthSession | null> {
+		let sessionRead: Promise<AuthSessionRow | null> | undefined;
+		const readSession = () => (sessionRead ??= this.fetchAuthSessionByToken(sessionIdHash));
 		try {
-			const cached = await getCacheService().getOrSet<CachedAuthSession | null>(
+			const cached = await getCacheService().getOrSet<unknown>(
 				authSessionCacheKey(sessionIdHash),
 				async () => {
-					const session = await this.fetchAuthSessionByToken(sessionIdHash);
+					const session = await readSession();
 					return session ? encodeCachedAuthSession(session) : null;
 				},
 				(value) => (value === null ? AUTH_SESSION_MISS_CACHE_TTL_SECONDS : AUTH_SESSION_CACHE_TTL_SECONDS),
 			);
-			return cached ? new AuthSession(decodeCachedAuthSession(cached)) : null;
+			return cached === null ? null : new AuthSession(decodeCachedAuthSession(cached, sessionIdHash));
 		} catch (error) {
+			const session = await readSession();
 			Logger.warn({error}, 'Auth session cache lookup failed; falling back to the datastore');
-			const session = await this.fetchAuthSessionByToken(sessionIdHash);
 			return session ? new AuthSession(session) : null;
 		}
 	}
@@ -217,18 +248,9 @@ export class AuthSessionRepository {
 	async deleteAuthSessions(userId: UserID, sessionIdHashes: Array<Buffer>): Promise<void> {
 		if (sessionIdHashes.length === 0) return;
 		await invalidateAuthSessionCache(sessionIdHashes);
-		let originals: Array<AuthSessionRow> = [];
-		try {
-			originals = await fetchMany<AuthSessionRow>(FETCH_AUTH_SESSIONS_CQL, {
-				session_id_hashes: sessionIdHashes,
-			});
-		} catch (error) {
-			Logger.warn(
-				{userId: userId.toString(), error},
-				'Failed to read auth sessions before delete; aborting to avoid cross-user deletion',
-			);
-			return;
-		}
+		const originals = await fetchMany<AuthSessionRow>(FETCH_AUTH_SESSIONS_CQL, {
+			session_id_hashes: sessionIdHashes,
+		});
 		const owned = originals.filter((original) => original.user_id === userId);
 		if (owned.length === 0) return;
 		const deletedAt = new Date();

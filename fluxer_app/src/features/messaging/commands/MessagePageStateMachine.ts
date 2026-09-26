@@ -5,7 +5,7 @@ import {
 	calculateAroundPaginationState,
 } from '@app/features/messaging/utils/MessagePaginationUtils';
 import {compare as compareSnowflakes} from '@fluxer/snowflake/src/SnowflakeUtils';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export interface MessagePageStateInput {
 	before: string | null;
@@ -158,7 +158,7 @@ export const messagePageStateMachine = setup({
 export type MessagePageStateSnapshot = SnapshotFrom<typeof messagePageStateMachine>;
 
 export function createMessagePageStateSnapshot(input: MessagePageStateInput): MessagePageStateSnapshot {
-	return getInitialSnapshot(messagePageStateMachine, input);
+	return initialTransition(messagePageStateMachine, input)[0];
 }
 
 export function transitionMessagePageStateSnapshot(

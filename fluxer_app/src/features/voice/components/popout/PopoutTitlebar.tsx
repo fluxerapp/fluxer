@@ -34,7 +34,7 @@ interface PopoutTitlebarProps {
 	title: string;
 	showTitle?: boolean;
 	isAlwaysOnTop: boolean;
-	onToggleAlwaysOnTop: () => void;
+	onToggleAlwaysOnTop?: () => void;
 	onRestore: () => void;
 	onClose: () => void;
 }
@@ -66,19 +66,21 @@ export const PopoutTitlebar: React.FC<PopoutTitlebarProps> = ({
 				</span>
 			)}
 			<div role="group" className={styles.actions} data-flx="voice.popout-titlebar.actions">
-				<FocusRing offset={-2} data-flx="voice.popout-titlebar.focus-ring.pin">
-					<button
-						type="button"
-						className={clsx(nativeTitlebarStyles.controlButton, isAlwaysOnTop && styles.actionButtonActive)}
-						onClick={onToggleAlwaysOnTop}
-						aria-pressed={isAlwaysOnTop}
-						aria-label={pinLabel}
-						title={pinLabel}
-						data-flx="voice.popout-titlebar.control-button.toggle-always-on-top"
-					>
-						<PinIcon weight="bold" data-flx="voice.popout-titlebar.pin-icon" />
-					</button>
-				</FocusRing>
+				{onToggleAlwaysOnTop && (
+					<FocusRing offset={-2} data-flx="voice.popout-titlebar.focus-ring.pin">
+						<button
+							type="button"
+							className={clsx(nativeTitlebarStyles.controlButton, isAlwaysOnTop && styles.actionButtonActive)}
+							onClick={onToggleAlwaysOnTop}
+							aria-pressed={isAlwaysOnTop}
+							aria-label={pinLabel}
+							title={pinLabel}
+							data-flx="voice.popout-titlebar.control-button.toggle-always-on-top"
+						>
+							<PinIcon weight="bold" data-flx="voice.popout-titlebar.pin-icon" />
+						</button>
+					</FocusRing>
+				)}
 				<FocusRing offset={-2} data-flx="voice.popout-titlebar.focus-ring.restore">
 					<button
 						type="button"

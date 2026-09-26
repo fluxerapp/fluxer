@@ -15,7 +15,7 @@ type DeviceListener = (state: VoiceDeviceState) => void;
 class VoiceDevicePermissionState {
 	deviceState: VoiceDeviceState = voiceDeviceManager.getState();
 	private deviceListeners = new Set<DeviceListener>();
-	private permissionRequestInFlight: Promise<boolean> | null = null;
+	private permissionRequestsInFlight = new Map<'audio' | 'video', Promise<boolean>>();
 
 	constructor() {
 		voiceDeviceManager.subscribe((state) => this.handleDeviceStateChange(state));
@@ -57,12 +57,20 @@ class VoiceDevicePermissionState {
 	}
 
 	async requestPermissionFor(type: 'audio' | 'video'): Promise<boolean> {
-		if (this.permissionRequestInFlight) {
-			return this.permissionRequestInFlight;
+		const permissionGranted =
+			type === 'audio' ? MediaPermission.isMicrophoneGranted() : MediaPermission.isCameraGranted();
+		const hasPrimaryDevice =
+			type === 'audio'
+				? this.deviceState.inputDevices.some((device) => device.kind === 'audioinput')
+				: this.deviceState.videoDevices.some((device) => device.kind === 'videoinput');
+		if (permissionGranted && hasPrimaryDevice) return true;
+		const inFlightRequest = this.permissionRequestsInFlight.get(type);
+		if (inFlightRequest) {
+			return inFlightRequest;
 		}
 		const requestPromise = (async (): Promise<boolean> => {
-			const state = await this.ensureDevices({requestPermissions: true});
-			if (state.permissionStatus === 'granted') {
+			const state = await this.ensureDevices({requestPermissionTypes: [type], forceRefresh: true});
+			if (state.permissionStatus[type] === 'granted') {
 				if (type === 'audio') {
 					MediaPermission.updateMicrophonePermissionGranted({refreshDevices: false});
 				} else {
@@ -70,7 +78,7 @@ class VoiceDevicePermissionState {
 				}
 				return true;
 			}
-			if (state.permissionStatus === 'denied') {
+			if (state.permissionStatus[type] === 'denied') {
 				if (type === 'audio') {
 					MediaPermission.markMicrophoneExplicitlyDenied();
 				} else {
@@ -78,16 +86,16 @@ class VoiceDevicePermissionState {
 				}
 				return false;
 			}
-			return type === 'audio' ? MediaPermission.isMicrophoneGranted() : MediaPermission.isCameraGranted();
+			return false;
 		})()
 			.catch((error) => {
 				logger.error('Failed to request media permission', {type, error});
 				return false;
 			})
 			.finally(() => {
-				this.permissionRequestInFlight = null;
+				this.permissionRequestsInFlight.delete(type);
 			});
-		this.permissionRequestInFlight = requestPromise;
+		this.permissionRequestsInFlight.set(type, requestPromise);
 		return requestPromise;
 	}
 }

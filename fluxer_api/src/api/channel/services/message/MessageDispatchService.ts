@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {MessageID, UserID} from '@app/api/BrandedTypes';
 import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
-import type {MessageID, UserID} from '../../../BrandedTypes';
-import type {GatewayDispatchEvent} from '../../../constants/Gateway';
-import type {IGatewayService} from '../../../infrastructure/IGatewayService';
-import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
-import type {Channel} from '../../../models/Channel';
-import type {Message} from '../../../models/Message';
 import {
 	dispatchMessageCreateBroadcast,
 	dispatchMessageCreateToUser,
 	dispatchMessageUpdateBroadcast,
-} from './MessageGatewayDispatch';
+} from '@app/api/channel/services/message/MessageGatewayDispatch';
+import type {GatewayDispatchEvent} from '@app/api/constants/Gateway';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Channel} from '@app/api/models/Channel';
+import type {Message} from '@app/api/models/Message';
 
 export class MessageDispatchService {
 	constructor(private gatewayService: IGatewayService) {}

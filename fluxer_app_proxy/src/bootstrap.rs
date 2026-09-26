@@ -2,6 +2,7 @@
 
 use crate::config::AppProxyConfig;
 use crate::discovery_cache::DiscoveryResponse;
+use reqwest::Url;
 use serde::Serialize;
 
 #[derive(Serialize)]
@@ -43,11 +44,14 @@ pub fn build_bootstrap_script(
     geoip: &serde_json::Value,
     nonce: &str,
 ) -> String {
+    let api_public_endpoint =
+        api_public_endpoint(config.bootstrap_api_public_endpoint.as_deref(), discovery);
+
     let payload = BootstrapPayload {
         config: BootstrapConfig {
             release_channel: config.release_channel.as_str(),
             bootstrap_api_endpoint: &config.bootstrap_api_endpoint,
-            bootstrap_api_public_endpoint: config.bootstrap_api_public_endpoint.as_deref(),
+            bootstrap_api_public_endpoint: api_public_endpoint,
         },
         instance: &discovery.data,
         geoip,
@@ -56,7 +60,7 @@ pub fn build_bootstrap_script(
     let legacy = LegacyConfig {
         release_channel: config.release_channel.as_str(),
         bootstrap_api_endpoint: &config.bootstrap_api_endpoint,
-        bootstrap_api_public_endpoint: config.bootstrap_api_public_endpoint.as_deref(),
+        bootstrap_api_public_endpoint: api_public_endpoint,
     };
 
     let bootstrap_json = escape_json_for_script(&serde_json::to_string(&payload).unwrap());
@@ -65,6 +69,71 @@ pub fn build_bootstrap_script(
     format!(
         r#"<script nonce="{nonce}">window.__FLUXER_BOOTSTRAP__={bootstrap_json};window.__FLUXER_CONFIG__={legacy_json};</script>"#
     )
+}
+
+pub fn rewrite_endpoints_for_same_origin_host(instance: &mut serde_json::Value, host: &str) {
+    let Some(endpoints) = instance
+        .get_mut("endpoints")
+        .and_then(serde_json::Value::as_object_mut)
+    else {
+        return;
+    };
+    let origin = format!("https://{host}");
+    let api = format!("{origin}/api");
+    for (key, value) in [
+        ("api_client", &api),
+        ("api", &api),
+        ("webapp", &origin),
+        ("app", &origin),
+    ] {
+        if let Some(endpoint) = endpoints.get_mut(key) {
+            *endpoint = serde_json::Value::String(value.clone());
+        }
+    }
+}
+
+fn api_public_endpoint<'a>(
+    configured: Option<&'a str>,
+    discovery: &'a DiscoveryResponse,
+) -> Option<&'a str> {
+    let configured = configured?;
+    let Some(discovered) = discovered_api_public(discovery) else {
+        return Some(configured);
+    };
+    if has_explicit_port(configured) || !has_explicit_port(discovered) {
+        return Some(configured);
+    }
+    let (Ok(configured_url), Ok(discovered_url)) = (Url::parse(configured), Url::parse(discovered))
+    else {
+        return Some(configured);
+    };
+    if configured_url.scheme() != discovered_url.scheme()
+        || configured_url.host_str() != discovered_url.host_str()
+        || configured_url.path() != discovered_url.path()
+    {
+        return Some(configured);
+    }
+    Some(discovered)
+}
+
+fn discovered_api_public(discovery: &DiscoveryResponse) -> Option<&str> {
+    discovery
+        .data
+        .get("endpoints")
+        .and_then(|endpoints| endpoints.get("api_public"))
+        .and_then(serde_json::Value::as_str)
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+}
+
+fn has_explicit_port(url: &str) -> bool {
+    let Some(scheme_end) = url.find("://") else {
+        return false;
+    };
+    let rest = &url[scheme_end + 3..];
+    let authority_end = rest.find(['/', '\\', '?', '#']).unwrap_or(rest.len());
+    let host = rest[..authority_end].rsplit('@').next().unwrap_or_default();
+    host[host.rfind(']').map_or(0, |index| index + 1)..].contains(':')
 }
 
 const MEDIA_PRECONNECT_TAG: &str = r#"<link rel="preconnect" href="{{MEDIA_ENDPOINT}}">"#;
@@ -84,7 +153,7 @@ pub fn inject_bootstrap(
     let media = media_endpoint.trim_end_matches('/');
 
     let nonced = html.replace("{{CSP_NONCE_PLACEHOLDER}}", nonce);
-    let nonced = apply_static_preconnect(&nonced, static_cdn);
+    let nonced = apply_static_preconnect(nonced, static_cdn);
     let nonced = nonced.replace("{{STATIC_CDN_ENDPOINT}}", static_cdn);
     let nonced = apply_media_preconnect(&nonced, media, static_cdn);
 
@@ -95,20 +164,14 @@ pub fn inject_bootstrap(
         return nonced.replace("{{FLUXER_BOOTSTRAP}}", script_tag);
     }
 
-    if let Some(pos) = nonced.find("<head>") {
-        let insert_at = pos + "<head>".len();
-        let mut result = String::with_capacity(nonced.len() + script_tag.len() + 3);
-        result.push_str(&nonced[..insert_at]);
-        result.push_str("\n\t\t");
-        result.push_str(script_tag);
-        result.push_str(&nonced[insert_at..]);
-        return result;
-    }
-
-    if let Some(pos) = nonced.find("<head ")
-        && let Some(close) = nonced[pos..].find('>')
-    {
-        let insert_at = pos + close + 1;
+    let insert_at = nonced
+        .find("<head>")
+        .map(|pos| pos + "<head>".len())
+        .or_else(|| {
+            let pos = nonced.find("<head ")?;
+            nonced[pos..].find('>').map(|close| pos + close + 1)
+        });
+    if let Some(insert_at) = insert_at {
         let mut result = String::with_capacity(nonced.len() + script_tag.len() + 3);
         result.push_str(&nonced[..insert_at]);
         result.push_str("\n\t\t");
@@ -120,15 +183,14 @@ pub fn inject_bootstrap(
     nonced
 }
 
-fn apply_static_preconnect(html: &str, static_cdn: &str) -> String {
+fn apply_static_preconnect(mut html: String, static_cdn: &str) -> String {
     if !static_cdn.is_empty() {
-        return html.to_owned();
+        return html;
     }
-    let mut stripped = html.to_owned();
     for tag in STATIC_PRECONNECT_TAGS {
-        stripped = stripped.replace(&format!("{tag}\n"), "").replace(tag, "");
+        html = html.replace(&format!("{tag}\n"), "").replace(tag, "");
     }
-    stripped
+    html
 }
 
 fn apply_media_preconnect(html: &str, media: &str, static_cdn: &str) -> String {
@@ -410,5 +472,153 @@ mod tests {
         };
         let json = serde_json::to_string(&payload).unwrap();
         assert!(!json.contains("bootstrapApiPublicEndpoint"));
+    }
+
+    fn discovery_offering(api_public: &str) -> DiscoveryResponse {
+        DiscoveryResponse {
+            data: serde_json::json!({"endpoints": {"api_public": api_public}}),
+        }
+    }
+
+    #[test]
+    fn the_discovered_port_repairs_a_portless_configured_endpoint() {
+        let discovery = discovery_offering("https://chat.example.test:8443/api");
+        assert_eq!(
+            api_public_endpoint(Some("https://chat.example.test/api"), &discovery),
+            Some("https://chat.example.test:8443/api")
+        );
+    }
+
+    #[test]
+    fn a_configured_endpoint_that_already_carries_a_port_is_left_alone() {
+        let discovery = discovery_offering("https://chat.example.test:8443/api");
+        assert_eq!(
+            api_public_endpoint(Some("https://chat.example.test:9443/api"), &discovery),
+            Some("https://chat.example.test:9443/api")
+        );
+    }
+
+    #[test]
+    fn a_discovered_endpoint_on_another_host_is_ignored() {
+        let discovery = discovery_offering("https://api.example.test:8443/api");
+        assert_eq!(
+            api_public_endpoint(Some("https://chat.example.test/api"), &discovery),
+            Some("https://chat.example.test/api")
+        );
+    }
+
+    #[test]
+    fn a_discovered_endpoint_on_another_path_is_ignored() {
+        let discovery = discovery_offering("https://chat.example.test:8443/v9/api");
+        assert_eq!(
+            api_public_endpoint(Some("https://chat.example.test/api"), &discovery),
+            Some("https://chat.example.test/api")
+        );
+    }
+
+    #[test]
+    fn a_discovered_endpoint_on_another_scheme_is_ignored() {
+        let discovery = discovery_offering("http://chat.example.test:8443/api");
+        assert_eq!(
+            api_public_endpoint(Some("https://chat.example.test/api"), &discovery),
+            Some("https://chat.example.test/api")
+        );
+    }
+
+    #[test]
+    fn a_discovery_document_without_a_snapshot_leaves_the_configured_endpoint_alone() {
+        let discovery = DiscoveryResponse {
+            data: serde_json::json!({}),
+        };
+        assert_eq!(
+            api_public_endpoint(Some("https://chat.example.test/api"), &discovery),
+            Some("https://chat.example.test/api")
+        );
+    }
+
+    #[test]
+    fn a_discovery_document_without_a_public_api_endpoint_changes_nothing() {
+        let discovery = DiscoveryResponse {
+            data: serde_json::json!({"endpoints": {"api_public": "   "}}),
+        };
+        assert_eq!(
+            api_public_endpoint(Some("https://chat.example.test/api"), &discovery),
+            Some("https://chat.example.test/api")
+        );
+    }
+
+    #[test]
+    fn a_portless_discovered_endpoint_leaves_a_default_install_alone() {
+        let discovery = discovery_offering("https://chat.example.test/api");
+        assert_eq!(
+            api_public_endpoint(Some("https://chat.example.test/api"), &discovery),
+            Some("https://chat.example.test/api")
+        );
+    }
+
+    #[test]
+    fn an_unconfigured_public_endpoint_is_never_invented_from_discovery() {
+        let discovery = discovery_offering("https://chat.example.test:8443/api");
+        assert_eq!(api_public_endpoint(None, &discovery), None);
+    }
+
+    #[test]
+    fn a_same_origin_host_takes_over_the_client_and_web_app_endpoints() {
+        let mut instance = serde_json::json!({
+            "endpoints": {
+                "api": "https://web.fluxer.app/api",
+                "api_client": "https://web.fluxer.app/api",
+                "api_public": "https://api.fluxer.app",
+                "gateway": "wss://gateway.fluxer.app",
+                "webapp": "https://web.fluxer.app",
+                "app": "https://web.fluxer.app",
+                "marketing": "https://fluxer.app"
+            }
+        });
+        rewrite_endpoints_for_same_origin_host(&mut instance, "fluxer.com");
+        assert_eq!(
+            instance["endpoints"],
+            serde_json::json!({
+                "api": "https://fluxer.com/api",
+                "api_client": "https://fluxer.com/api",
+                "api_public": "https://api.fluxer.app",
+                "gateway": "wss://gateway.fluxer.app",
+                "webapp": "https://fluxer.com",
+                "app": "https://fluxer.com",
+                "marketing": "https://fluxer.app"
+            })
+        );
+    }
+
+    #[test]
+    fn a_same_origin_host_never_invents_endpoints_discovery_left_out() {
+        let mut instance = serde_json::json!({
+            "endpoints": {"api_client": "https://web.fluxer.app/api"}
+        });
+        rewrite_endpoints_for_same_origin_host(&mut instance, "fluxer.com");
+        assert_eq!(
+            instance,
+            serde_json::json!({"endpoints": {"api_client": "https://fluxer.com/api"}})
+        );
+
+        let mut without_endpoints = serde_json::json!({"name": "test"});
+        rewrite_endpoints_for_same_origin_host(&mut without_endpoints, "fluxer.com");
+        assert_eq!(without_endpoints, serde_json::json!({"name": "test"}));
+    }
+
+    #[test]
+    fn the_boot_script_hands_the_repaired_endpoint_to_both_globals() {
+        let discovery = discovery_offering("https://chat.example.test:8443/api");
+        let mut config = AppProxyConfig::from_env();
+        config.bootstrap_api_public_endpoint = Some("https://chat.example.test/api".to_owned());
+        let script =
+            build_bootstrap_script(&config, &discovery, &serde_json::json!({}), "scriptnonce");
+        assert!(
+            script.contains(r#""bootstrapApiPublicEndpoint":"https://chat.example.test:8443/api""#)
+        );
+        assert!(script.contains(
+            r#""PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT":"https://chat.example.test:8443/api""#
+        ));
+        assert!(!script.contains(r#""https://chat.example.test/api""#));
     }
 }

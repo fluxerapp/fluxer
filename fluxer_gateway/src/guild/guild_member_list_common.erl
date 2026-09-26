@@ -65,10 +65,44 @@ get_member_sort_key(Member) ->
 -spec casefold_binary(term()) -> binary().
 casefold_binary(Value) ->
     Bin = normalize_name(Value),
-    case unicode_chardata_to_binary(string:casefold(Bin)) of
-        {ok, Folded} -> Folded;
-        error -> Bin
+    case ascii_casefold(Bin) of
+        {ok, Folded} ->
+            Folded;
+        not_ascii ->
+            case unicode_chardata_to_binary(string:casefold(Bin)) of
+                {ok, Folded} -> Folded;
+                error -> Bin
+            end
     end.
+
+%% Case folding a pure-ASCII binary is exactly A-Z -> a-z, so a byte pass is
+%% equivalent to string:casefold/1 and skips two full unicode traversals per
+%% member. Anything with a byte above 127 falls through to the unicode path.
+-spec ascii_casefold(binary()) -> {ok, binary()} | not_ascii.
+ascii_casefold(Bin) ->
+    case scan_ascii(Bin, false) of
+        not_ascii -> not_ascii;
+        false -> {ok, Bin};
+        true -> {ok, lower_ascii(Bin, <<>>)}
+    end.
+
+-spec scan_ascii(binary(), boolean()) -> boolean() | not_ascii.
+scan_ascii(<<>>, HasUpper) ->
+    HasUpper;
+scan_ascii(<<C, Rest/binary>>, _HasUpper) when C >= $A, C =< $Z ->
+    scan_ascii(Rest, true);
+scan_ascii(<<C, Rest/binary>>, HasUpper) when C < 128 ->
+    scan_ascii(Rest, HasUpper);
+scan_ascii(_Bin, _HasUpper) ->
+    not_ascii.
+
+-spec lower_ascii(binary(), binary()) -> binary().
+lower_ascii(<<>>, Acc) ->
+    Acc;
+lower_ascii(<<C, Rest/binary>>, Acc) when C >= $A, C =< $Z ->
+    lower_ascii(Rest, <<Acc/binary, (C + 32)>>);
+lower_ascii(<<C, Rest/binary>>, Acc) ->
+    lower_ascii(Rest, <<Acc/binary, C>>).
 
 -spec deep_merge_member(map(), map()) -> map().
 deep_merge_member(CurrentMember, MemberUpdate) ->
@@ -153,3 +187,43 @@ default_presence() -> guild_member_list_connected:default_presence().
 
 -spec connected_session_user_ids(map()) -> sets:set(integer()).
 connected_session_user_ids(S) -> guild_member_list_connected:connected_session_user_ids(S).
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+casefold_reference(Bin) ->
+    {ok, Folded} = unicode_chardata_to_binary(string:casefold(Bin)),
+    Folded.
+
+ascii_casefold_matches_unicode_casefold_test() ->
+    lists:foreach(
+        fun(Bin) ->
+            ?assertEqual({Bin, casefold_reference(Bin)}, {Bin, casefold_binary(Bin)})
+        end,
+        [
+            <<>>,
+            <<"a">>,
+            <<"A">>,
+            <<"Zed">>,
+            <<"already lower">>,
+            <<"MiXeD CaSe 123">>,
+            <<"punct!@#$%^&*()_+-=[]{}">>,
+            <<"0123456789">>,
+            <<"~", 127>>
+        ]
+    ).
+
+ascii_casefold_defers_to_unicode_for_non_ascii_test() ->
+    ?assertEqual(not_ascii, ascii_casefold(<<"Ärger"/utf8>>)),
+    lists:foreach(
+        fun(Bin) ->
+            ?assertEqual({Bin, casefold_reference(Bin)}, {Bin, casefold_binary(Bin)})
+        end,
+        [<<"Ärger"/utf8>>, <<"ÅSTRÖM"/utf8>>, <<"日本語"/utf8>>, <<"ß"/utf8>>]
+    ).
+
+ascii_casefold_returns_input_untouched_when_already_folded_test() ->
+    Bin = <<"no uppercase here">>,
+    ?assertEqual({ok, Bin}, ascii_casefold(Bin)).
+
+-endif.

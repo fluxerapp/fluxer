@@ -1,5 +1,50 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {requireEmailVerified} from '@app/api/auth/EmailVerificationUtils';
+import type {GuildID, InviteCode, RoleID, UserID} from '@app/api/BrandedTypes';
+import {createChannelID, createRoleID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import {assertMutableUserId} from '@app/api/constants/Core';
+import type {GuildMemberRow} from '@app/api/database/types/GuildTypes';
+import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
+import type {GuildAuditLogChange} from '@app/api/guild/GuildAuditLogTypes';
+import {resolveMaxGuildMembersLimit} from '@app/api/guild/GuildMemberLimitUtils';
+import {mapGuildMemberToResponse} from '@app/api/guild/GuildModel';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildMemberAuthService} from '@app/api/guild/services/member/GuildMemberAuthService';
+import type {GuildMemberEventService} from '@app/api/guild/services/member/GuildMemberEventService';
+import type {GuildMemberSearchIndexService} from '@app/api/guild/services/member/GuildMemberSearchIndexService';
+import type {GuildMemberValidationService} from '@app/api/guild/services/member/GuildMemberValidationService';
+import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
+import type {EntityAssetService, PreparedAssetUpload} from '@app/api/infrastructure/EntityAssetService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {Logger} from '@app/api/Logger';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Guild} from '@app/api/models/Guild';
+import type {GuildMember} from '@app/api/models/GuildMember';
+import type {User} from '@app/api/models/User';
+import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
+import type {UserSettings} from '@app/api/models/UserSettings';
+import {
+	DEFAULT_PHONE_GATE_MEMBER_THRESHOLD,
+	evaluateDeferredPhoneGate,
+	getDeferredPhoneGateConfig,
+	guildTriggersPhoneGate,
+} from '@app/api/risk/DeferredPhoneGate';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {getEffectiveSuspiciousFlags, isProfileSubstringExempt} from '@app/api/user/UserHelpers';
+import {
+	mapUserGuildSettingsToResponse,
+	mapUserSettingsToResponse,
+	mapUserToPrivateResponse,
+} from '@app/api/user/UserMappers';
+import {addGuildToUncategorizedFolder, removeGuildFromUserFolders} from '@app/api/user/utils/GuildFolderUtils';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {
@@ -32,49 +77,6 @@ import type {GuildMemberUpdateRequest} from '@fluxer/schema/src/domains/guild/Gu
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 import {ms} from 'itty-time';
-import {requireEmailVerified} from '../../../auth/EmailVerificationUtils';
-import type {GuildID, InviteCode, RoleID, UserID} from '../../../BrandedTypes';
-import {createChannelID, createRoleID} from '../../../BrandedTypes';
-import type {ChannelService} from '../../../channel/services/ChannelService';
-import type {GuildMemberRow} from '../../../database/types/GuildTypes';
-import {contentModerationService} from '../../../infrastructure/ContentModerationService';
-import type {EntityAssetService, PreparedAssetUpload} from '../../../infrastructure/EntityAssetService';
-import type {IGatewayService} from '../../../infrastructure/IGatewayService';
-import type {UserCacheService} from '../../../infrastructure/UserCacheService';
-import {Logger} from '../../../Logger';
-import type {LimitConfigService} from '../../../limits/LimitConfigService';
-import {resolveLimitSafe} from '../../../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../../../limits/LimitMatchContextBuilder';
-import {profileSubstringBlocklistCache} from '../../../middleware/ProfileSubstringBlocklistCache';
-import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
-import type {Guild} from '../../../models/Guild';
-import type {GuildMember} from '../../../models/GuildMember';
-import type {User} from '../../../models/User';
-import type {UserGuildSettings} from '../../../models/UserGuildSettings';
-import type {UserSettings} from '../../../models/UserSettings';
-import {
-	DEFAULT_PHONE_GATE_MEMBER_THRESHOLD,
-	evaluateDeferredPhoneGate,
-	getDeferredPhoneGateConfig,
-	guildTriggersPhoneGate,
-} from '../../../risk/DeferredPhoneGate';
-import type {IUserRepository} from '../../../user/IUserRepository';
-import {getEffectiveSuspiciousFlags, isProfileSubstringExempt} from '../../../user/UserHelpers';
-import {
-	mapUserGuildSettingsToResponse,
-	mapUserSettingsToResponse,
-	mapUserToPrivateResponse,
-} from '../../../user/UserMappers';
-import {addGuildToUncategorizedFolder, removeGuildFromUserFolders} from '../../../user/utils/GuildFolderUtils';
-import type {GuildAuditLogService} from '../../GuildAuditLogService';
-import type {GuildAuditLogChange} from '../../GuildAuditLogTypes';
-import {resolveMaxGuildMembersLimit} from '../../GuildMemberLimitUtils';
-import {mapGuildMemberToResponse} from '../../GuildModel';
-import type {IGuildRepositoryAggregate} from '../../repositories/IGuildRepositoryAggregate';
-import type {GuildMemberAuthService} from './GuildMemberAuthService';
-import type {GuildMemberEventService} from './GuildMemberEventService';
-import type {GuildMemberSearchIndexService} from './GuildMemberSearchIndexService';
-import type {GuildMemberValidationService} from './GuildMemberValidationService';
 
 const MEMBERSHIP_METADATA_TTL_SECONDS = 365 * 24 * 60 * 60;
 
@@ -176,6 +178,13 @@ export class GuildMemberOperationsService {
 		connectionId: string | null;
 		auditLogReason?: string | null;
 	}): Promise<void> {
+		if (
+			params.previousChannelId !== null &&
+			params.newChannelId !== null &&
+			params.previousChannelId === params.newChannelId.toString()
+		) {
+			return;
+		}
 		const action = params.newChannelId === null ? AuditLogActionType.MEMBER_DISCONNECT : AuditLogActionType.MEMBER_MOVE;
 		const previousSnapshot = params.previousChannelId !== null ? {channel_id: params.previousChannelId} : null;
 		const nextSnapshot = params.newChannelId !== null ? {channel_id: params.newChannelId.toString()} : null;
@@ -358,10 +367,13 @@ export class GuildMemberOperationsService {
 		try {
 			updatedMember = await this.guildRepository.upsertMember(updatedMemberData);
 		} catch (error) {
-			await this.rollbackPreparedAssets(preparedAssets);
+			Logger.error(
+				{error, guildId, userId: targetId},
+				'Guild member update failed with unknown commit status; retaining uploaded assets',
+			);
 			throw error;
 		}
-		await this.commitPreparedAssets(preparedAssets);
+		await this.entityAssetService.commitAssetChanges([preparedAssets.avatar, preparedAssets.banner]);
 		if (shouldRemoveTemporaryStatus) {
 			await this.gatewayService.removeTemporaryGuild({userId: targetId, guildId});
 		}
@@ -410,6 +422,13 @@ export class GuildMemberOperationsService {
 			memberCount: guild.memberCount,
 			accountAgeMs: Date.now() - snowflakeToDate(BigInt(user.id)).getTime(),
 		};
+		if (
+			!Config.abusePolicy.phoneFlagging.enabled &&
+			(getEffectiveSuspiciousFlags(user) & PHONE_REQUIREMENT_FLAGS) === 0
+		) {
+			Logger.info(logContext, 'deferred_phone_gate.skipped_phone_flagging_disabled');
+			return;
+		}
 		if (status !== 'ok') {
 			const undeferredFlags = getEffectiveSuspiciousFlags({
 				...user,
@@ -493,6 +512,7 @@ export class GuildMemberOperationsService {
 			if (!guild) throw new UnknownGuildError();
 			const existingMember = await this.guildRepository.getMember(guildId, userId);
 			if (existingMember) return existingMember;
+			assertMutableUserId(userId);
 			const user = await this.userRepository.findUnique(userId);
 			if (!user) throw new UnknownGuildError();
 			if (!skipBanCheck) {
@@ -914,8 +934,13 @@ export class GuildMemberOperationsService {
 			if (userId !== targetId) {
 				await checkTargetMember(targetId);
 			}
-			if (data.mute !== undefined || data.deaf !== undefined) {
+			if (data.mute !== undefined) {
 				if (!(await hasPermission(Permissions.MUTE_MEMBERS))) {
+					throw new MissingPermissionsError();
+				}
+			}
+			if (data.deaf !== undefined) {
+				if (!(await hasPermission(Permissions.DEAFEN_MEMBERS))) {
 					throw new MissingPermissionsError();
 				}
 			}
@@ -1025,17 +1050,6 @@ export class GuildMemberOperationsService {
 			rollbackPromises.push(this.entityAssetService.rollbackAssetUpload(preparedAssets.banner));
 		}
 		await Promise.all(rollbackPromises);
-	}
-
-	private async commitPreparedAssets(preparedAssets: PreparedMemberAssets): Promise<void> {
-		const commitPromises: Array<Promise<void>> = [];
-		if (preparedAssets.avatar) {
-			commitPromises.push(this.entityAssetService.commitAssetChange({prepared: preparedAssets.avatar}));
-		}
-		if (preparedAssets.banner) {
-			commitPromises.push(this.entityAssetService.commitAssetChange({prepared: preparedAssets.banner}));
-		}
-		await Promise.all(commitPromises);
 	}
 
 	private async snapshotMembershipMetadata(member: GuildMember): Promise<void> {

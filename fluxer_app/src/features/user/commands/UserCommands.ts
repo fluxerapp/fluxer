@@ -10,9 +10,15 @@ import Messages from '@app/features/messaging/state/MessagingMessages';
 import SessionManager from '@app/features/platform/state/AuthSession';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import Users from '@app/features/user/state/Users';
 import type {Message as WireMessage} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {HarvestStatusResponse} from '@fluxer/schema/src/domains/user/UserHarvestSchemas';
-import type {PasswordChangeCompleteResponse, UserPrivate} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
+import type {
+	BackupCode,
+	PasswordChangeCompleteResponse,
+	PhoneGateEscapePreviewResponse,
+	UserPrivate,
+} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import type {PublicKeyCredentialCreationOptionsJSON, RegistrationResponseJSON} from '@simplewebauthn/browser';
 
 export interface BulkDeleteMyMessagesFilter {
@@ -120,6 +126,11 @@ type UserUpdateResponse = UserPrivate & {
 
 interface HarvestRequestResponse {
 	harvest_id: string;
+}
+
+interface WebAuthnTwoFactorResponse {
+	user: UserPrivate;
+	backup_codes: Array<BackupCode> | null;
 }
 
 export type PreloadedDirectMessages = Record<string, WireMessage>;
@@ -275,6 +286,29 @@ export async function checkFluxerTagAvailability({
 		return response.body.taken;
 	} catch (error) {
 		logger.error('Failed to check FluxerTag availability:', error);
+		throw error;
+	}
+}
+
+export async function getPhoneGateEscapePreview(): Promise<PhoneGateEscapePreviewResponse> {
+	try {
+		logger.debug('Fetching phone gate escape preview');
+		const response = await http.get<PhoneGateEscapePreviewResponse>(Endpoints.USER_REQUIRED_ACTION_PHONE_GATE_ESCAPE);
+		return response.body;
+	} catch (error) {
+		logger.error('Failed to fetch phone gate escape preview', error);
+		throw error;
+	}
+}
+
+export async function executePhoneGateEscape(): Promise<UserPrivate> {
+	try {
+		logger.debug('Setting the phone gate check aside');
+		const response = await http.post<UserPrivate>(Endpoints.USER_REQUIRED_ACTION_PHONE_GATE_ESCAPE, {body: {}});
+		logger.debug('Phone gate check set aside');
+		return response.body;
+	} catch (error) {
+		logger.error('Failed to set the phone gate check aside', error);
 		throw error;
 	}
 }
@@ -554,6 +588,23 @@ export async function registerWebAuthnCredential(
 		Sudo.clearToken();
 	} catch (error) {
 		logger.error('Failed to register WebAuthn credential', error);
+		throw error;
+	}
+}
+
+export async function setWebAuthnTwoFactor(enabled: boolean): Promise<Array<BackupCode> | null> {
+	try {
+		logger.debug('Updating the passkey two-factor preference');
+		const response = await http.put<WebAuthnTwoFactorResponse>(Endpoints.USER_MFA_WEBAUTHN_TWO_FACTOR, {
+			body: {enabled},
+		});
+		const {user, backup_codes: backupCodes} = response.body;
+		Users.handleUserUpdate(user);
+		logger.info('Passkey two-factor preference updated');
+		Sudo.clearToken();
+		return backupCodes ?? null;
+	} catch (error) {
+		logger.error('Failed to update the passkey two-factor preference', error);
 		throw error;
 	}
 }

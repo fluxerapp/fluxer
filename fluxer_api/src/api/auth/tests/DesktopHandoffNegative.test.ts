@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createAuthHarness, createTestAccount, loginAccount} from '@app/api/auth/tests/AuthTestUtils';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {afterAll, beforeAll, beforeEach, describe, it} from 'vitest';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import {createAuthHarness, createTestAccount, loginAccount} from './AuthTestUtils';
 
 interface HandoffInitiateResponse {
 	code: string;
@@ -72,6 +72,7 @@ describe('Auth desktop handoff negative paths', () => {
 	it('handles cancel for unknown handoff code gracefully', async () => {
 		await createBuilderWithoutAuth(harness)
 			.delete('/auth/handoff/unknown-code')
+			.body({poll_secret: 'not-the-secret'})
 			.expect(HTTP_STATUS.BAD_REQUEST, APIErrorCodes.INVALID_HANDOFF_CODE)
 			.execute();
 	});

@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID, MessageID, RoleID, UserID} from '@app/api/BrandedTypes';
+import type {GatewayDispatchEvent} from '@app/api/constants/Gateway';
 import type {ChannelResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import type {ChannelID, GuildID, MessageID, RoleID, UserID} from '../BrandedTypes';
-import type {GatewayDispatchEvent} from '../constants/Gateway';
 
 interface VoiceState {
 	user_id: string;
@@ -22,6 +22,19 @@ export interface CallData {
 	ringing: Array<string>;
 	recipients: Array<string>;
 	voice_states: Array<VoiceState>;
+}
+
+export interface CallCaller {
+	id: string;
+	name: string;
+	avatar: string | null;
+}
+
+export function callCallerRpcParams(caller: CallCaller | undefined): Record<string, unknown> {
+	if (!caller) {
+		return {};
+	}
+	return {caller_id: caller.id, caller_name: caller.name, caller_avatar: caller.avatar};
 }
 
 export interface GatewayGuildMemoryStatsEntry {
@@ -88,17 +101,6 @@ export interface GatewayVoiceStateCounts {
 	servers: Array<GatewayVoiceStateServerCount>;
 }
 
-export interface GatewayActiveVoiceRoom {
-	guildId?: GuildID;
-	channelId: ChannelID;
-	voiceStateCount: number;
-}
-
-export interface GatewayActiveVoiceRooms {
-	rooms: Array<GatewayActiveVoiceRoom>;
-	nodeCount: number;
-}
-
 export interface GatewayVoiceStateEntry {
 	connectionId: string;
 	userId: string;
@@ -161,8 +163,6 @@ export abstract class IGatewayService {
 	abstract getGuildMemoryStats(limit: number): Promise<GatewayGuildMemoryStats>;
 
 	abstract getVoiceStateCounts(): Promise<GatewayVoiceStateCounts>;
-
-	abstract getActiveVoiceRooms(): Promise<GatewayActiveVoiceRooms>;
 
 	abstract getUsersToMentionByRoles(params: {
 		guildId: GuildID;
@@ -345,17 +345,6 @@ export abstract class IGatewayService {
 		error?: string;
 	}>;
 
-	abstract repairVoiceStateFromCache(params: {
-		guildId?: GuildID;
-		channelId: ChannelID;
-		userId: UserID;
-		connectionId: string;
-	}): Promise<{
-		success: boolean;
-		repaired?: boolean;
-		error?: string;
-	}>;
-
 	abstract getVoiceStatesForChannel(params: {guildId?: GuildID; channelId: ChannelID}): Promise<{
 		voiceStates: Array<GatewayVoiceStateEntry>;
 	}>;
@@ -405,11 +394,12 @@ export abstract class IGatewayService {
 		region: string,
 		ringing: Array<string>,
 		recipients: Array<string>,
+		caller?: CallCaller,
 	): Promise<CallData>;
 
 	abstract updateCallRegion(channelId: ChannelID, region: string | null): Promise<boolean>;
 
-	abstract ringCallRecipients(channelId: ChannelID, recipients: Array<string>): Promise<boolean>;
+	abstract ringCallRecipients(channelId: ChannelID, recipients: Array<string>, caller?: CallCaller): Promise<boolean>;
 
 	abstract stopRingingCallRecipients(channelId: ChannelID, recipients: Array<string>): Promise<boolean>;
 

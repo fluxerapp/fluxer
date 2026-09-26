@@ -15,13 +15,14 @@ import {focusChannelTextareaAfterNavigation} from '@app/features/messaging/utils
 import {goToMessage} from '@app/features/messaging/utils/MessageNavigator';
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {Scroller, type ScrollerHandle} from '@app/features/ui/components/Scroller';
+import {Spinner} from '@app/features/ui/components/Spinner';
 import {MessagePreviewContext} from '@fluxer/constants/src/ChannelConstants';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
 import {FlagCheckeredIcon, SparkleIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {useMemo, useRef} from 'react';
+import {useCallback, useMemo, useRef} from 'react';
 
 const YOU_VE_REACHED_THE_END_DESCRIPTOR = msg({
 	message: "You've reached the end",
@@ -37,6 +38,9 @@ interface MessageListPageProps {
 	endStateDescription: string;
 	renderActionButtons: (message: Message) => React.ReactNode;
 	renderMissingMessage?: (message: Message) => React.ReactNode;
+	hasMore?: boolean;
+	isLoadingMore?: boolean;
+	onLoadMore?: () => void;
 }
 
 export const MessageListPage = observer(
@@ -49,6 +53,9 @@ export const MessageListPage = observer(
 		endStateDescription,
 		renderActionButtons,
 		renderMissingMessage,
+		hasMore = false,
+		isLoadingMore = false,
+		onLoadMore,
 	}: MessageListPageProps) => {
 		const {i18n} = useLingui();
 		const scrollerRef = useRef<ScrollerHandle | null>(null);
@@ -66,6 +73,16 @@ export const MessageListPage = observer(
 			containerRef: scrollerRef,
 			allowWhenInactive: true,
 		});
+		const handleScroll = useCallback(
+			(event: React.UIEvent<HTMLDivElement>) => {
+				const target = event.currentTarget;
+				const scrollPercentage = (target.scrollTop + target.offsetHeight) / target.scrollHeight;
+				if (scrollPercentage > 0.8 && hasMore && !isLoadingMore) {
+					onLoadMore?.();
+				}
+			},
+			[hasMore, isLoadingMore, onLoadMore],
+		);
 		return (
 			<div className={styles.container} data-flx="messaging.message-list-page.container">
 				<ChannelHeader
@@ -78,6 +95,7 @@ export const MessageListPage = observer(
 						<NearViewportSurfaceContext.Provider value={resolveListPageScrollSurface}>
 							<Scroller
 								className={styles.scroller}
+								onScroll={handleScroll}
 								key="message-list-page-scroller"
 								ref={scrollerRef}
 								onCopy={onCopySelectedMessages}
@@ -127,25 +145,32 @@ export const MessageListPage = observer(
 										</div>
 									);
 								})}
-								<div className={styles.endState} data-flx="messaging.message-list-page.end-state">
-									<div className={styles.endStateContent} data-flx="messaging.message-list-page.end-state-content">
-										<FlagCheckeredIcon
-											className={styles.endStateIcon}
-											data-flx="messaging.message-list-page.end-state-icon"
-										/>
-										<div className={styles.endStateText} data-flx="messaging.message-list-page.end-state-text">
-											<h3 className={styles.endStateTitle} data-flx="messaging.message-list-page.end-state-title">
-												{i18n._(YOU_VE_REACHED_THE_END_DESCRIPTOR)}
-											</h3>
-											<p
-												className={styles.endStateDescription}
-												data-flx="messaging.message-list-page.end-state-description"
-											>
-												{endStateDescription}
-											</p>
+								{isLoadingMore && (
+									<div className={previewStyles.loadingState} data-flx="messaging.message-list-page.loading-state">
+										<Spinner data-flx="messaging.message-list-page.spinner" />
+									</div>
+								)}
+								{!hasMore && !isLoadingMore && (
+									<div className={styles.endState} data-flx="messaging.message-list-page.end-state">
+										<div className={styles.endStateContent} data-flx="messaging.message-list-page.end-state-content">
+											<FlagCheckeredIcon
+												className={styles.endStateIcon}
+												data-flx="messaging.message-list-page.end-state-icon"
+											/>
+											<div className={styles.endStateText} data-flx="messaging.message-list-page.end-state-text">
+												<h3 className={styles.endStateTitle} data-flx="messaging.message-list-page.end-state-title">
+													{i18n._(YOU_VE_REACHED_THE_END_DESCRIPTOR)}
+												</h3>
+												<p
+													className={styles.endStateDescription}
+													data-flx="messaging.message-list-page.end-state-description"
+												>
+													{endStateDescription}
+												</p>
+											</div>
 										</div>
 									</div>
-								</div>
+								)}
 							</Scroller>
 						</NearViewportSurfaceContext.Provider>
 					) : (

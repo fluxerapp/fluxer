@@ -79,15 +79,6 @@
 	gap: 0.5rem;
 }
 
-.packBadge {
-	background: var(--background-modifier-accent);
-	border-radius: 62.4375rem;
-	padding: 0.15rem 0.6rem;
-	font-size: 0.75rem;
-	color: var(--text-primary);
-	font-weight: 600;
-}
-
 .entityTitle {
 	font-weight: 700;
 	font-size: 1.25rem;
@@ -105,24 +96,6 @@
 	align-items: center;
 	justify-content: center;
 	gap: 1rem;
-}
-
-.packDescription {
-	font-size: 0.95rem;
-	color: var(--text-secondary);
-	line-height: 1.4;
-	margin: 0.25rem 0;
-}
-
-.packMeta {
-	display: flex;
-	flex-direction: column;
-	gap: 0.25rem;
-}
-
-.packMetaText {
-	font-size: 0.78rem;
-	color: var(--text-tertiary);
 }
 
 .entityStat {

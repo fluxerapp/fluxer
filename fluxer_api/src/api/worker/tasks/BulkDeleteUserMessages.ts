@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID} from '@app/api/BrandedTypes';
+import {UserMessageDeletionService} from '@app/api/channel/services/message/UserMessageDeletionService';
+import {Logger} from '@app/api/Logger';
+import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import {z} from 'zod';
-import {createUserID} from '../../BrandedTypes';
-import {UserMessageDeletionService} from '../../channel/services/message/UserMessageDeletionService';
-import {Logger} from '../../Logger';
-import {getWorkerDependencies} from '../WorkerContext';
 
 const PayloadSchema = z.object({
 	userId: z.string(),

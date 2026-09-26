@@ -25,9 +25,9 @@ const MATURE_CONTENT_CHECK_DESCRIPTOR = msg({
 });
 const MATURE_CONTENT_CHECK_REQUIRED_DESCRIPTOR = msg({
 	message:
-		"UK law requires a mature content check. To continue, you'll complete a {verificationAuthorizationAmountLabel} credit card authorization through Stripe. Your card will not be charged.",
+		"UK law requires a mature content check. To continue, you'll complete a zero-amount credit card authorization through Stripe. Your card will not be charged.",
 	comment:
-		'Body copy in the mature content check modal. Preserve {verificationAuthorizationAmountLabel}; it is inserted by code.',
+		'Body copy in the mature content check modal. The Stripe authorization has no amount and the card is never charged.',
 });
 const CREDIT_CARDS_ONLY_DESCRIPTOR = msg({
 	message: 'Only credit cards are accepted. Debit and prepaid cards cannot be used for the mature content check.',
@@ -43,7 +43,6 @@ export const MatureContentCheckModal = observer(() => {
 	const [error, setError] = useState<string | null>(null);
 	const initialFocusRef = useRef<HTMLButtonElement | null>(null);
 	const matureContentCheckAvailable = isMatureContentCheckAvailableInRegion();
-	const verificationAuthorizationAmountLabel = '$0.00';
 	const handleVerify = useCallback(async () => {
 		setSubmitting(true);
 		setError(null);
@@ -76,7 +75,7 @@ export const MatureContentCheckModal = observer(() => {
 					{matureContentCheckAvailable ? (
 						<>
 							<Modal.Description data-flx="auth.mature-content-check-modal.modal-description">
-								{i18n._(MATURE_CONTENT_CHECK_REQUIRED_DESCRIPTOR, {verificationAuthorizationAmountLabel})}
+								{i18n._(MATURE_CONTENT_CHECK_REQUIRED_DESCRIPTOR)}
 							</Modal.Description>
 							<Modal.Description data-flx="auth.mature-content-check-modal.modal-description--2">
 								{i18n._(CREDIT_CARDS_ONLY_DESCRIPTOR)}

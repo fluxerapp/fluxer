@@ -13,7 +13,7 @@ use std::sync::OnceLock;
 use crate::frame_pool::PooledFrame;
 
 #[cfg(target_os = "linux")]
-use std::os::fd::OwnedFd;
+use std::os::fd::{IntoRawFd, OwnedFd};
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -325,42 +325,35 @@ pub type NativeScreenFrameSinkEnqueueScreenAudioFn = unsafe extern "C" fn(
 #[repr(C)]
 #[derive(Clone, Copy)]
 pub struct NativeScreenFrameSinkHandle {
-    pub magic: u32,
-    pub version: u32,
-    pub context: *const c_void,
-    pub retain: NativeScreenFrameSinkRetainFn,
-    pub release: NativeScreenFrameSinkReleaseFn,
-    pub enqueue_nv12: Option<NativeScreenFrameSinkEnqueueNv12Fn>,
-    pub enqueue_bgra: Option<NativeScreenFrameSinkEnqueueBgraFn>,
-    pub enqueue_mac_cv_pixel_buffer: Option<NativeScreenFrameSinkEnqueueMacCvPixelBufferFn>,
-    pub enqueue_dmabuf: Option<NativeScreenFrameSinkEnqueueDmabufFn>,
-    pub enqueue_shared_texture: Option<NativeScreenFrameSinkEnqueueSharedTextureFn>,
-    pub enqueue_screen_audio: Option<NativeScreenFrameSinkEnqueueScreenAudioFn>,
+    magic: u32,
+    version: u32,
+    context: *const c_void,
+    retain: NativeScreenFrameSinkRetainFn,
+    release: NativeScreenFrameSinkReleaseFn,
+    enqueue_nv12: Option<NativeScreenFrameSinkEnqueueNv12Fn>,
+    enqueue_bgra: Option<NativeScreenFrameSinkEnqueueBgraFn>,
+    enqueue_mac_cv_pixel_buffer: Option<NativeScreenFrameSinkEnqueueMacCvPixelBufferFn>,
+    enqueue_dmabuf: Option<NativeScreenFrameSinkEnqueueDmabufFn>,
+    enqueue_shared_texture: Option<NativeScreenFrameSinkEnqueueSharedTextureFn>,
+    enqueue_screen_audio: Option<NativeScreenFrameSinkEnqueueScreenAudioFn>,
 }
 
 unsafe impl Send for NativeScreenFrameSinkHandle {}
 unsafe impl Sync for NativeScreenFrameSinkHandle {}
 
 impl NativeScreenFrameSinkHandle {
-    pub fn is_valid(&self) -> bool {
+    fn is_valid(&self) -> bool {
         self.magic == NATIVE_SCREEN_FRAME_SINK_HANDLE_MAGIC
             && self.version == NATIVE_SCREEN_FRAME_SINK_HANDLE_VERSION
             && !self.context.is_null()
     }
 
-    pub unsafe fn retain_ref(&self) -> Option<NativeScreenFrameSinkHandleRef> {
+    pub fn retain_ref(&self) -> Option<NativeScreenFrameSinkHandleRef> {
         if !self.is_valid() {
             return None;
         }
         unsafe { (self.retain)(self.context) };
         Some(NativeScreenFrameSinkHandleRef { handle: *self })
-    }
-
-    pub unsafe fn retain_from_raw(raw: *const Self) -> Option<NativeScreenFrameSinkHandleRef> {
-        if raw.is_null() {
-            return None;
-        }
-        unsafe { (*raw).retain_ref() }
     }
 
     pub fn native_outcome(outcome: EnqueueOutcome) -> u32 {
@@ -388,10 +381,6 @@ unsafe impl Send for NativeScreenFrameSinkHandleRef {}
 unsafe impl Sync for NativeScreenFrameSinkHandleRef {}
 
 impl NativeScreenFrameSinkHandleRef {
-    pub fn handle(&self) -> &NativeScreenFrameSinkHandle {
-        &self.handle
-    }
-
     pub fn enqueue_nv12_copy(
         &self,
         data: &[u8],
@@ -443,6 +432,11 @@ impl NativeScreenFrameSinkHandleRef {
     }
 
     #[cfg(target_os = "macos")]
+    pub fn supports_mac_cv_pixel_buffer(&self) -> bool {
+        self.handle.enqueue_mac_cv_pixel_buffer.is_some()
+    }
+
+    #[cfg(target_os = "macos")]
     pub unsafe fn enqueue_mac_cv_pixel_buffer(
         &self,
         pixel_buffer: *mut c_void,
@@ -467,12 +461,25 @@ impl NativeScreenFrameSinkHandleRef {
     }
 
     #[cfg(target_os = "linux")]
-    pub unsafe fn enqueue_dmabuf_take_fds(&self, desc: DmabufDesc, fds: &[i32]) -> EnqueueOutcome {
+    pub fn supports_dmabuf(&self) -> bool {
+        self.handle.enqueue_dmabuf.is_some()
+    }
+
+    #[cfg(target_os = "linux")]
+    pub fn enqueue_dmabuf_take_fds(&self, desc: DmabufDesc, fds: Vec<OwnedFd>) -> EnqueueOutcome {
         let Some(enqueue) = self.handle.enqueue_dmabuf else {
             return EnqueueOutcome::Rejected;
         };
+        let fd_count = fds.len();
+        if fd_count == 0 || fd_count > 4 || usize::from(desc.plane_count) != fd_count {
+            return EnqueueOutcome::Rejected;
+        }
+        let mut raw_fds = [-1; 4];
+        for (raw_fd, fd) in raw_fds.iter_mut().zip(fds) {
+            *raw_fd = fd.into_raw_fd();
+        }
         NativeScreenFrameSinkHandle::outcome_from_native(unsafe {
-            enqueue(self.handle.context, desc, fds.as_ptr(), fds.len())
+            enqueue(self.handle.context, desc, raw_fds.as_ptr(), fd_count)
         })
     }
 

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {type EmailVerificationRequiredReason, requireEmailVerified} from '@app/api/auth/EmailVerificationUtils';
 import {type APIErrorCode, APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {describe, expect, it} from 'vitest';
-import {type EmailVerificationRequiredReason, requireEmailVerified} from '../EmailVerificationUtils';
 
 const ReasonCodeCases: Array<[EmailVerificationRequiredReason, APIErrorCode]> = [
 	['direct_message', APIErrorCodes.DIRECT_MESSAGE_EMAIL_VERIFICATION_REQUIRED],

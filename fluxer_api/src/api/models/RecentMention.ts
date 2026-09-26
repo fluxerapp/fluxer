@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, GuildID, MessageID, UserID} from '../BrandedTypes';
-import type {RecentMentionRow} from '../database/types/UserTypes';
+import type {ChannelID, GuildID, MessageID, UserID} from '@app/api/BrandedTypes';
+import type {RecentMentionRow} from '@app/api/database/types/UserTypes';
 
 export class RecentMention {
 	readonly userId: UserID;

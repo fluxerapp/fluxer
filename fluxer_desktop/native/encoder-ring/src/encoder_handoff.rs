@@ -52,12 +52,11 @@ impl EncoderFrameRate {
         let denominator = u64::from(self.denominator);
         assert!(numerator > 0, "fps numerator positive");
         assert!(denominator > 0, "fps denominator positive");
-        ((1_000_000u64 * denominator) + numerator - 1) / numerator
+        (1_000_000u64 * denominator).div_ceil(numerator)
     }
 
     pub fn gop_pic_size(self) -> u16 {
-        let rounded = (u64::from(self.numerator) + u64::from(self.denominator) - 1)
-            / u64::from(self.denominator);
+        let rounded = u64::from(self.numerator).div_ceil(u64::from(self.denominator));
         let bounded = rounded.clamp(1, u64::from(ENCODER_FRAME_RATE_MAX));
         bounded as u16
     }

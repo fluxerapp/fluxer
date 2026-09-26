@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, GuildID, InviteCode, UserID} from '../BrandedTypes';
-import {createInviteCode} from '../BrandedTypes';
-import {BatchBuilder, fetchMany, fetchOne, upsertOne} from '../database/CassandraQueryExecution';
-import {Db} from '../database/CassandraTypes';
-import type {InviteRow} from '../database/types/ChannelTypes';
-import {Invite} from '../models/Invite';
-import {Invites, InvitesByChannel, InvitesByGuild} from '../Tables';
-import {IInviteRepository} from './IInviteRepository';
+import type {ChannelID, GuildID, InviteCode, UserID} from '@app/api/BrandedTypes';
+import {createInviteCode} from '@app/api/BrandedTypes';
+import {BatchBuilder, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {Db} from '@app/api/database/CassandraTypes';
+import type {InviteRow} from '@app/api/database/types/ChannelTypes';
+import {IInviteRepository} from '@app/api/invite/IInviteRepository';
+import {Invite} from '@app/api/models/Invite';
+import {Invites, InvitesByChannel, InvitesByGuild} from '@app/api/Tables';
 
 const FETCH_INVITE_BY_CODE_CQL = Invites.selectCql({
 	where: Invites.where.eq('code'),

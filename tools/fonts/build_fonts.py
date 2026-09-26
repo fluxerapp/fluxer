@@ -379,6 +379,13 @@ FAMILIES: tuple[Family, ...] = (
 
 FAMILY_BY_DIR = {family.out_dir: family for family in FAMILIES}
 
+KANA_OWNED_BY_JP = frozenset(range(0x3040, 0x3100))
+
+WITHHELD_CODEPOINTS: dict[str, frozenset[int]] = {
+    "FluxerSansSC": KANA_OWNED_BY_JP,
+    "FluxerSansTC": KANA_OWNED_BY_JP,
+}
+
 SOURCE_EXPECTATIONS: dict[str, dict[str, object]] = {
     "FluxerSansKR": {
         "sfntVersion": "\x00\x01\x00\x00",
@@ -1156,6 +1163,7 @@ def build(cache: Path, dry_run: bool, workers: int) -> int:
         union: set[int] = set()
         for name in family.source_files():
             union |= face_cmap(src_dir / name)
+        union -= WITHHELD_CODEPOINTS.get(family.out_dir, frozenset())
         family_codepoints[family.out_dir] = len(union)
         if family.mode != SUBSET:
             continue

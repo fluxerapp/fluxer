@@ -1,5 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import * as AuthSession from '@app/api/auth/AuthSession';
+import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
+import {createGuildID, createUserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {DefaultUserOnly, LoginRequired, LoginRequiredAllowSuspicious} from '@app/api/middleware/AuthMiddleware';
+import {requireOAuth2ScopeForBearer} from '@app/api/middleware/OAuth2ScopeMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {classifyWebPushOrigin} from '@app/api/user/services/WebPushOriginReplacement';
+import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
+import {
+	mapUserGuildSettingsToResponse,
+	mapUserSettingsToResponse,
+	mapUserToPrivateResponse,
+} from '@app/api/user/UserMappers';
+import {Validator} from '@app/api/Validator';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {MissingAccessError} from '@fluxer/errors/src/domains/core/MissingAccessError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
@@ -33,6 +52,7 @@ import {
 	UserGuildSettingsUpdateRequest,
 	UserNoteUpdateRequest,
 	UserProfileQueryRequest,
+	UserSettingsUpdateRequest,
 	UserTagCheckQueryRequest,
 	UserUpdateWithVerificationRequest,
 	VoiceActivitySharingUpdateRequest,
@@ -46,6 +66,7 @@ import {
 	PasswordChangeCompleteResponse,
 	PasswordChangeStartResponse,
 	PasswordChangeVerifyResponse,
+	PhoneGateEscapePreviewResponse,
 	PreloadMessagesResponse,
 	PushSubscribeResponse,
 	PushSubscriptionsListResponse,
@@ -60,21 +81,6 @@ import {
 	UserTagCheckResponse,
 } from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {uint8ArrayToBase64} from 'uint8array-extras';
-import * as AuthSession from '../../auth/AuthSession';
-import {requireSudoMode} from '../../auth/services/SudoVerificationService';
-import {createGuildID, createUserID} from '../../BrandedTypes';
-import {DefaultUserOnly, LoginRequired, LoginRequiredAllowSuspicious} from '../../middleware/AuthMiddleware';
-import {requireOAuth2ScopeForBearer} from '../../middleware/OAuth2ScopeMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {SudoModeMiddleware} from '../../middleware/SudoModeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
-import type {UserUpdateWithVerificationRequestData} from '../services/UserAccountRequestService';
-import {getCachedUserPartialResponse} from '../UserCacheHelpers';
-import {mapUserGuildSettingsToResponse, mapUserSettingsToResponse, mapUserToPrivateResponse} from '../UserMappers';
-import {UserSettingsUpdateRequest} from '../UserModel';
 
 export function UserAccountController(app: HonoApp) {
 	app.get(
@@ -124,7 +130,7 @@ export function UserAccountController(app: HonoApp) {
 		async (ctx) => {
 			const userAccountRequestService = ctx.get('userAccountRequestService');
 			const user = ctx.get('user');
-			const rawBody: UserUpdateWithVerificationRequestData = ctx.req.valid('json');
+			const rawBody: UserUpdateWithVerificationRequest = ctx.req.valid('json');
 			return ctx.json(
 				await userAccountRequestService.updateCurrentUser({
 					ctx,
@@ -850,7 +856,7 @@ export function UserAccountController(app: HonoApp) {
 				'Registers a new push notification subscription for the current user. Takes push endpoint and encryption keys from a Web Push API subscription. Returns subscription ID for future reference.',
 		}),
 		async (ctx) => {
-			const {endpoint, keys, user_agent} = ctx.req.valid('json');
+			const {endpoint, keys, user_agent, installed_app} = ctx.req.valid('json');
 			const authSession = ctx.get('authSession');
 			const subscription = await ctx.get('userService').contentService.registerPushSubscription({
 				userId: ctx.get('user').id,
@@ -858,6 +864,8 @@ export function UserAccountController(app: HonoApp) {
 				endpoint,
 				keys,
 				userAgent: user_agent,
+				originKind: classifyWebPushOrigin(ctx.req.header('origin'), Config.instance.selfHosted),
+				installedApp: installed_app,
 			});
 			return ctx.json({subscription_id: subscription.subscriptionId});
 		},
@@ -879,7 +887,7 @@ export function UserAccountController(app: HonoApp) {
 				'Replaces an existing push subscription whose endpoint has been rotated by the browser (pushsubscriptionchange). Deletes the row keyed by the old endpoint and inserts a new one for the new endpoint.',
 		}),
 		async (ctx) => {
-			const {old_endpoint, endpoint, keys, user_agent} = ctx.req.valid('json');
+			const {old_endpoint, endpoint, keys, user_agent, installed_app} = ctx.req.valid('json');
 			const authSession = ctx.get('authSession');
 			const subscription = await ctx.get('userService').contentService.rotatePushSubscription({
 				userId: ctx.get('user').id,
@@ -888,6 +896,8 @@ export function UserAccountController(app: HonoApp) {
 				endpoint,
 				keys,
 				userAgent: user_agent,
+				originKind: classifyWebPushOrigin(ctx.req.header('origin'), Config.instance.selfHosted),
+				installedApp: installed_app,
 			});
 			return ctx.json({subscription_id: subscription.subscriptionId});
 		},
@@ -953,7 +963,7 @@ export function UserAccountController(app: HonoApp) {
 			security: ['bearerToken', 'sessionToken'],
 			tags: ['Users'],
 			description:
-				'Registers a mobile push device token for APNs, Firebase Cloud Messaging, or UnifiedPush. UnifiedPush registrations include the endpoint URL plus Web Push encryption keys.',
+				'Registers a mobile push device for APNs, Firebase Cloud Messaging, or UnifiedPush. A Web Push registration sends the endpoint URL with encryption_key and auth_secret. A raw registration sends the platform push token with no keys.',
 		}),
 		async (ctx) => {
 			const authSession = ctx.get('authSession');
@@ -1172,6 +1182,55 @@ export function UserAccountController(app: HonoApp) {
 				},
 			});
 			return ctx.body(null, 202);
+		},
+	);
+	app.get(
+		'/users/@me/required-actions/phone-gate-escape',
+		RateLimitMiddleware(RateLimitConfigs.USER_PHONE_GATE_ESCAPE_PREVIEW),
+		LoginRequiredAllowSuspicious,
+		DefaultUserOnly,
+		OpenAPI({
+			operationId: 'get_phone_gate_escape',
+			summary: 'Preview setting the deferred phone check aside',
+			responseSchema: PhoneGateEscapePreviewResponse,
+			statusCode: 200,
+			security: ['bearerToken', 'sessionToken'],
+			tags: ['Users'],
+			description:
+				'Reports whether this account can set a deferred phone verification requirement aside, and which communities would be left if it did. Returns available false with empty lists for any account outside that state.',
+		}),
+		async (ctx) => {
+			const {available, guilds, ownedGuilds} = await ctx
+				.get('userService')
+				.accountService.lifecycleService.previewPhoneGateEscape(ctx.get('user').id);
+			return ctx.json({
+				available,
+				guilds: guilds.map((guild) => ({id: guild.id.toString(), name: guild.name})),
+				owned_guilds: ownedGuilds.map((guild) => ({id: guild.id.toString(), name: guild.name})),
+			});
+		},
+	);
+	app.post(
+		'/users/@me/required-actions/phone-gate-escape',
+		RateLimitMiddleware(RateLimitConfigs.USER_PHONE_GATE_ESCAPE),
+		LoginRequiredAllowSuspicious,
+		DefaultUserOnly,
+		Validator('json', EmptyBodyRequest),
+		OpenAPI({
+			operationId: 'execute_phone_gate_escape',
+			summary: 'Set the deferred phone check aside',
+			responseSchema: UserPrivateResponse,
+			statusCode: 200,
+			security: ['bearerToken', 'sessionToken'],
+			tags: ['Users'],
+			description:
+				'Leaves the communities that trigger the deferred phone verification check and restores the deferral, so the account works normally again. Communities the user owns are kept, and a run that hits the per-call community limit leaves what it can and can be repeated. Returns the updated private user object.',
+		}),
+		async (ctx) => {
+			const {user} = await ctx
+				.get('userService')
+				.accountService.lifecycleService.executePhoneGateEscape(ctx.get('user').id);
+			return ctx.json(mapUserToPrivateResponse(user));
 		},
 	);
 	app.post(

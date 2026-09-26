@@ -6,6 +6,9 @@ import {DataPacket_Kind, DisconnectReason, Encryption_Type, SubscriptionError, T
 import {getLogger, LoggerNames, LogLevel, setLogExtension, setLogLevel} from './logger.ts';
 import * as attributes from './room/attribute-typings.ts';
 import DefaultReconnectPolicy from './room/DefaultReconnectPolicy.ts';
+import LocalDataTrack from './room/data-track/LocalDataTrack.ts';
+import RemoteDataTrack, {type DataTrackSubscribeOptions} from './room/data-track/RemoteDataTrack.ts';
+import type {RemoteDataTrackPipelineOptions} from './room/data-track/types.ts';
 import LocalParticipant from './room/participant/LocalParticipant.ts';
 import Participant, {
 	ConnectionQuality,
@@ -42,6 +45,7 @@ import {
 	isLocalTrack,
 	isRemoteParticipant,
 	isRemoteTrack,
+	isSVCCodec,
 	isVideoCodec,
 	isVideoTrack,
 	selectPreferredVideoCodec,
@@ -57,12 +61,26 @@ import {getBrowser} from './utils/browserParser.ts';
 
 export type {BaseE2EEManager} from './e2ee/E2eeManager.ts';
 export * from './e2ee/index.ts';
+export {
+	FrameMetadataManager,
+	type FrameMetadataOptions,
+	PacketTrailerManager,
+	type PacketTrailerOptions,
+} from './frameMetadata/FrameMetadataManager.ts';
+export type {
+	FrameMetadata,
+	FrameMetadataPublishOptions,
+	PacketTrailerMetadata,
+	PacketTrailerPublishOptions,
+} from './frameMetadata/types.ts';
 export * from './options.ts';
 export type * from './room/data-stream/incoming/StreamReader.ts';
 export type * from './room/data-stream/outgoing/StreamWriter.ts';
+export type {DataTrackFrame} from './room/data-track/frame.ts';
 export * from './room/errors.ts';
 export * from './room/events.ts';
-export {type PerformRpcParams, RpcError, type RpcInvocationData} from './room/rpc.ts';
+export type {DataChannelKind} from './room/RTCEngine.ts';
+export {type PerformRpcParams, RpcError, type RpcInvocationData} from './room/rpc/index.ts';
 export * from './room/token-source/TokenSource.ts';
 export * from './room/token-source/types.ts';
 export * from './room/track/create.ts';
@@ -72,80 +90,94 @@ export * from './room/track/processor/types.ts';
 export * from './room/track/Track.ts';
 export * from './room/track/types.ts';
 export type {
+	ByteStreamInfo,
 	ChatMessage,
 	DataPublishOptions,
+	SendBytesOptions,
 	SendTextOptions,
 	SimulationScenario,
 	TranscriptionSegment,
 } from './room/types.ts';
+export {
+	isSerializer,
+	type Serializer,
+	type SerializerInput,
+	type SerializerOutput,
+	serializers,
+} from './utils/serializer.ts';
 export * from './version.ts';
+export type {
+	AudioAnalyserOptions,
+	AudioReceiverStats,
+	AudioSenderStats,
+	DataTrackSubscribeOptions,
+	ElementInfo,
+	LiveKitReactNativeInfo,
+	ParticipantEventCallbacks,
+	ParticipantTrackPermission,
+	PublicationEventCallbacks,
+	ReconnectContext,
+	ReconnectPolicy,
+	RemoteDataTrackPipelineOptions,
+	RoomEventCallbacks,
+	TextStreamInfo,
+	VideoReceiverStats,
+	VideoSenderStats,
+};
 export {
 	attributes,
 	ConnectionQuality,
 	ConnectionState,
 	CriticalTimers,
+	compareVersions,
+	createAudioAnalyser,
 	DataPacket_Kind,
-	Encryption_Type,
 	DefaultReconnectPolicy,
 	DisconnectReason,
+	Encryption_Type,
+	getBrowser,
+	getEmptyAudioStreamTrack,
+	getEmptyVideoStreamTrack,
+	getLogger,
+	isAudioCodec,
+	isAudioTrack,
+	isBrowserSupported,
+	isLocalParticipant,
+	isLocalTrack,
+	isRemoteParticipant,
+	isRemoteTrack,
+	isSVCCodec,
+	isVideoCodec,
+	isVideoTrack,
 	LocalAudioTrack,
+	LocalDataTrack,
 	LocalParticipant,
 	LocalTrack,
 	LocalTrackPublication,
 	LocalVideoTrack,
-	LogLevel,
 	LoggerNames,
+	LogLevel,
+	Mutex,
 	Participant,
-	RemoteAudioTrack,
-	RemoteParticipant,
 	ParticipantKind,
+	RemoteAudioTrack,
+	RemoteDataTrack,
+	RemoteParticipant,
 	RemoteTrack,
 	RemoteTrackPublication,
 	RemoteVideoTrack,
 	Room,
 	SubscriptionError,
-	TrackPublication,
-	TrackType,
-	compareVersions,
-	createAudioAnalyser,
-	getBrowser,
-	getEmptyAudioStreamTrack,
-	getEmptyVideoStreamTrack,
-	getLogger,
-	isBrowserSupported,
+	selectPreferredVideoCodec,
 	setLogExtension,
 	setLogLevel,
-	selectPreferredVideoCodec,
-	supportsAV1,
 	supportsAdaptiveStream,
 	supportsAudioOutputSelection,
+	supportsAV1,
 	supportsDynacast,
 	supportsH265,
 	supportsVideoCodec,
 	supportsVP9,
-	Mutex,
-	isAudioCodec,
-	isAudioTrack,
-	isLocalTrack,
-	isRemoteTrack,
-	isVideoCodec,
-	isVideoTrack,
-	isLocalParticipant,
-	isRemoteParticipant,
-};
-export type {
-	AudioAnalyserOptions,
-	ElementInfo,
-	LiveKitReactNativeInfo,
-	TextStreamInfo,
-	ParticipantTrackPermission,
-	AudioReceiverStats,
-	AudioSenderStats,
-	VideoReceiverStats,
-	VideoSenderStats,
-	ReconnectContext,
-	ReconnectPolicy,
-	RoomEventCallbacks,
-	ParticipantEventCallbacks,
-	PublicationEventCallbacks,
+	TrackPublication,
+	TrackType,
 };

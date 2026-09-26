@@ -126,11 +126,11 @@ export class TestEmailService implements ITestEmailService {
 	async sendUnbanNotification(
 		email: string,
 		username: string,
-		reason: string,
+		reason: string | null,
 		_locale?: string | null,
 	): Promise<boolean> {
-		this.logger.info(`Unban notification sent to ${email} for user ${username}, reason: ${reason}`);
-		return this.record(email, 'unban_notification', {reason});
+		this.logger.info(`Unban notification sent to ${email} for user ${username}, reason: ${reason ?? 'none'}`);
+		return this.record(email, 'unban_notification', {reason: reason ?? ''});
 	}
 
 	async sendScheduledDeletionNotification(
@@ -221,6 +221,16 @@ export class TestEmailService implements ITestEmailService {
 	): Promise<boolean> {
 		this.logger.info(`Password change verification sent to ${email} for user ${username}`);
 		return this.record(email, 'password_change_verification', {code});
+	}
+
+	async sendMfaBackupCodesVerification(
+		email: string,
+		username: string,
+		code: string,
+		_locale?: string | null,
+	): Promise<boolean> {
+		this.logger.info(`MFA backup codes verification sent to ${email} for user ${username}`);
+		return this.record(email, 'mfa_backup_codes_view', {code});
 	}
 
 	async sendEmailChangeOriginal(

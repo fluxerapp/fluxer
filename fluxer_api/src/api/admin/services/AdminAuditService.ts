@@ -1,17 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../../BrandedTypes';
-import {createChannelID, createGuildID, createUserID} from '../../BrandedTypes';
-import type {IChannelRepository} from '../../channel/IChannelRepository';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import type {ISnowflakeService} from '../../infrastructure/ISnowflakeService';
-import {Logger} from '../../Logger';
-import type {Channel} from '../../models/Channel';
-import type {Guild} from '../../models/Guild';
-import type {User} from '../../models/User';
-import {getAuditLogSearchService} from '../../SearchFactory';
-import type {IUserRepository} from '../../user/IUserRepository';
-import type {AdminAuditLog, IAdminRepository} from '../IAdminRepository';
+import {ADMIN_AUDIT_READ_ACTIONS, getAdminAuditAccess} from '@app/api/admin/AdminAuditActions';
+import type {AdminAuditLog, IAdminRepository} from '@app/api/admin/IAdminRepository';
+import type {UserID} from '@app/api/BrandedTypes';
+import {createChannelID, createGuildID, createUserID} from '@app/api/BrandedTypes';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import {Logger} from '@app/api/Logger';
+import type {Channel} from '@app/api/models/Channel';
+import type {Guild} from '@app/api/models/Guild';
+import type {User} from '@app/api/models/User';
+import {getAuditLogSearchService} from '@app/api/SearchFactory';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {AuditLogSearchFilters} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
+import type {
+	AdminAuditAccess,
+	AdminAuditLogChannelSummary,
+	AdminAuditLogGuildSummary,
+	AdminAuditLogResponse,
+	AdminAuditLogUserSummary,
+	AuditLogsListResponse,
+} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 
 interface CreateAdminAuditLogParams {
 	adminUserId: UserID;
@@ -48,44 +58,52 @@ export class AdminAuditService {
 			created_at: new Date(),
 		});
 		const auditLogSearchService = getAuditLogSearchService();
-		if (auditLogSearchService && 'indexAuditLog' in auditLogSearchService) {
+		if (auditLogSearchService) {
 			auditLogSearchService.indexAuditLog(log).catch((error) => {
 				Logger.error({error, logId: log.logId}, 'Failed to index audit log to search');
 			});
 		}
 	}
 
+	async getAuditLog(logId: bigint): Promise<AdminAuditLogResponse | null> {
+		const log = await this.adminRepository.getAuditLog(logId);
+		if (!log) {
+			return null;
+		}
+		const [response] = await this.toResponses([log]);
+		return response;
+	}
+
 	async listAuditLogs(data: {
 		admin_user_id?: bigint;
 		target_type?: string;
 		target_id?: string;
+		access?: AdminAuditAccess;
 		limit?: number;
 		offset?: number;
-	}): Promise<{
-		logs: Array<AdminAuditLogResponse>;
-		total: number;
-	}> {
+	}): Promise<AuditLogsListResponse> {
 		const auditLogSearchService = getAuditLogSearchService();
 		const targetIdBigInt = data.target_id ? BigInt(data.target_id) : undefined;
-		if (!auditLogSearchService || !auditLogSearchService.isAvailable()) {
+		if (!auditLogSearchService?.isAvailable()) {
 			return this.listAuditLogsFromDatabase({
 				adminUserId: data.admin_user_id,
 				targetType: data.target_type,
 				targetId: targetIdBigInt,
+				access: data.access,
 				limit: data.limit,
 				offset: data.offset,
 			});
 		}
 		const limit = data.limit || 50;
-		const filters: Record<string, string> = {};
+		const filters: AuditLogSearchFilters = {...accessFilters(data.access)};
 		if (data.admin_user_id) {
-			filters['adminUserId'] = data.admin_user_id.toString();
+			filters.adminUserId = data.admin_user_id.toString();
 		}
 		if (data.target_type) {
-			filters['targetType'] = data.target_type;
+			filters.targetType = data.target_type;
 		}
 		if (data.target_id) {
-			filters['targetId'] = data.target_id;
+			filters.targetId = data.target_id;
 		}
 		const {hits, total} = await auditLogSearchService.searchAuditLogs('', filters, {
 			limit,
@@ -103,40 +121,39 @@ export class AdminAuditService {
 		admin_user_id?: bigint;
 		target_type?: string;
 		target_id?: string;
+		access?: AdminAuditAccess;
 		sort_by?: 'createdAt' | 'relevance';
 		sort_order?: 'asc' | 'desc';
 		limit?: number;
 		offset?: number;
-	}): Promise<{
-		logs: Array<AdminAuditLogResponse>;
-		total: number;
-	}> {
+	}): Promise<AuditLogsListResponse> {
 		const auditLogSearchService = getAuditLogSearchService();
 		const targetIdBigInt = data.target_id ? BigInt(data.target_id) : undefined;
-		if (!auditLogSearchService || !auditLogSearchService.isAvailable()) {
+		if (!auditLogSearchService?.isAvailable()) {
 			return this.listAuditLogsFromDatabase({
 				adminUserId: data.admin_user_id,
 				targetType: data.target_type,
 				targetId: targetIdBigInt,
+				access: data.access,
 				limit: data.limit,
 				offset: data.offset,
 			});
 		}
-		const filters: Record<string, string> = {};
+		const filters: AuditLogSearchFilters = {...accessFilters(data.access)};
 		if (data.admin_user_id) {
-			filters['adminUserId'] = data.admin_user_id.toString();
+			filters.adminUserId = data.admin_user_id.toString();
 		}
 		if (data.target_id) {
-			filters['targetId'] = data.target_id;
+			filters.targetId = data.target_id;
 		}
 		if (data.target_type) {
-			filters['targetType'] = data.target_type;
+			filters.targetType = data.target_type;
 		}
 		if (data.sort_by) {
-			filters['sortBy'] = data.sort_by;
+			filters.sortBy = data.sort_by;
 		}
 		if (data.sort_order) {
-			filters['sortOrder'] = data.sort_order;
+			filters.sortOrder = data.sort_order;
 		}
 		const {hits, total} = await auditLogSearchService.searchAuditLogs(data.query || '', filters, {
 			limit: data.limit || 50,
@@ -153,12 +170,10 @@ export class AdminAuditService {
 		adminUserId?: bigint;
 		targetType?: string;
 		targetId?: bigint;
+		access?: AdminAuditAccess;
 		limit?: number;
 		offset?: number;
-	}): Promise<{
-		logs: Array<AdminAuditLogResponse>;
-		total: number;
-	}> {
+	}): Promise<AuditLogsListResponse> {
 		const limit = data.limit || 50;
 		const allLogs = await this.adminRepository.listAllAuditLogsPaginated(limit + (data.offset || 0));
 		let filteredLogs = allLogs;
@@ -170,6 +185,9 @@ export class AdminAuditService {
 		}
 		if (data.targetId) {
 			filteredLogs = filteredLogs.filter((log) => log.targetId === data.targetId);
+		}
+		if (data.access) {
+			filteredLogs = filteredLogs.filter((log) => getAdminAuditAccess(log.action) === data.access);
 		}
 		const offset = data.offset || 0;
 		const paginatedLogs = filteredLogs.slice(offset, offset + limit);
@@ -222,6 +240,7 @@ export class AdminAuditService {
 				[...enrichment.channels.entries()].map(([id, channel]) => [id, mapChannelSummary(channel)!]),
 			),
 			action: log.action,
+			access: getAdminAuditAccess(log.action),
 			audit_log_reason: log.auditLogReason,
 			metadata: Object.fromEntries(log.metadata),
 			created_at: log.createdAt.toISOString(),
@@ -311,22 +330,10 @@ export class AdminAuditService {
 	}
 }
 
-interface AdminAuditLogResponse {
-	log_id: string;
-	admin_user_id: string;
-	admin_user: AuditLogUserSummary | null;
-	target_type: string;
-	target_id: string;
-	target_user: AuditLogUserSummary | null;
-	target_guild: AuditLogGuildSummary | null;
-	target_channel: AuditLogChannelSummary | null;
-	related_users: Record<string, AuditLogUserSummary>;
-	related_guilds: Record<string, AuditLogGuildSummary>;
-	related_channels: Record<string, AuditLogChannelSummary>;
-	action: string;
-	audit_log_reason: string | null;
-	metadata: Record<string, string>;
-	created_at: string;
+function accessFilters(access: AdminAuditAccess | undefined): AuditLogSearchFilters {
+	if (access === 'read') return {actions: [...ADMIN_AUDIT_READ_ACTIONS]};
+	if (access === 'write') return {excludeActions: [...ADMIN_AUDIT_READ_ACTIONS]};
+	return {};
 }
 
 interface AuditLogEnrichmentDeps {
@@ -339,25 +346,6 @@ interface AuditLogEnrichment {
 	users: Map<string, User>;
 	guilds: Map<string, Guild>;
 	channels: Map<string, Channel>;
-}
-
-interface AuditLogUserSummary {
-	id: string;
-	username: string;
-	discriminator: string;
-	global_name: string | null;
-}
-
-interface AuditLogGuildSummary {
-	id: string;
-	name: string;
-}
-
-interface AuditLogChannelSummary {
-	id: string;
-	name: string | null;
-	type: number;
-	guild_id: string | null;
 }
 
 const USER_TARGET_TYPES = new Set(['user', 'guild_member', 'message_deletion', 'message_shred']);
@@ -379,7 +367,7 @@ function isChannelIdKey(key: string): boolean {
 	return key === 'channel_id' || key.endsWith('_channel_id');
 }
 
-function mapUserSummary(user: User | null): AuditLogUserSummary | null {
+function mapUserSummary(user: User | null): AdminAuditLogUserSummary | null {
 	if (!user) return null;
 	return {
 		id: user.id.toString(),
@@ -389,7 +377,7 @@ function mapUserSummary(user: User | null): AuditLogUserSummary | null {
 	};
 }
 
-function mapGuildSummary(guild: Guild | null): AuditLogGuildSummary | null {
+function mapGuildSummary(guild: Guild | null): AdminAuditLogGuildSummary | null {
 	if (!guild) return null;
 	return {
 		id: guild.id.toString(),
@@ -397,7 +385,7 @@ function mapGuildSummary(guild: Guild | null): AuditLogGuildSummary | null {
 	};
 }
 
-function mapChannelSummary(channel: Channel | null): AuditLogChannelSummary | null {
+function mapChannelSummary(channel: Channel | null): AdminAuditLogChannelSummary | null {
 	if (!channel) return null;
 	return {
 		id: channel.id.toString(),

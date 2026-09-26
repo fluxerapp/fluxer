@@ -84,3 +84,6 @@ export const GifFeaturedResponse = z.object({
 });
 
 export type GifFeaturedResponse = z.infer<typeof GifFeaturedResponse>;
+
+export const GifListResponse = z.array(GifResponse);
+export const GifSearchSuggestionsResponse = z.array(z.string());

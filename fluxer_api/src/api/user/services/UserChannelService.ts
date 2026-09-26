@@ -1,11 +1,38 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {requireEmailVerified} from '@app/api/auth/EmailVerificationUtils';
+import type {ChannelID, UserID} from '@app/api/BrandedTypes';
+import {createChannelID, createMessageID, createUserID} from '@app/api/BrandedTypes';
+import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import {dispatchMessageCreateBroadcast} from '@app/api/channel/services/message/MessageGatewayDispatch';
+import {
+	createMessageResponseDataService,
+	messageResponseAccessForGuild,
+} from '@app/api/channel/services/message/MessageResponseDataService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Channel} from '@app/api/models/Channel';
+import type {Message} from '@app/api/models/Message';
+import type {User} from '@app/api/models/User';
+import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
+import type {IUserChannelRepository} from '@app/api/user/repositories/IUserChannelRepository';
+import type {IUserRelationshipRepository} from '@app/api/user/repositories/IUserRelationshipRepository';
+import type {DirectMessageSpamMitigationService} from '@app/api/user/services/DirectMessageSpamMitigationService';
+import {createDirectMessageSpamMitigationService} from '@app/api/user/services/DirectMessageSpamMitigationService';
+import type {UserPermissionUtils} from '@app/api/utils/UserPermissionUtils';
 import {ChannelTypes, MessageTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
 import {MAX_GROUP_DM_RECIPIENTS, MAX_GROUP_DMS_PER_USER} from '@fluxer/constants/src/LimitConstants';
 import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
-import {CannotSendMessagesToUserError} from '@fluxer/errors/src/domains/channel/CannotSendMessagesToUserError';
 import type {GroupDmUnaddableRecipient} from '@fluxer/errors/src/domains/channel/GroupDmRecipientsNotAddableError';
 import {GroupDmRecipientsNotAddableError} from '@fluxer/errors/src/domains/channel/GroupDmRecipientsNotAddableError';
 import {MaxGroupDmRecipientsError} from '@fluxer/errors/src/domains/channel/MaxGroupDmRecipientsError';
@@ -18,36 +45,6 @@ import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError
 import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {CreatePrivateChannelRequest} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
-import type {ApiContext} from '../../ApiContext';
-import {requireEmailVerified} from '../../auth/EmailVerificationUtils';
-import type {ChannelID, UserID} from '../../BrandedTypes';
-import {createChannelID, createMessageID, createUserID} from '../../BrandedTypes';
-import {mapChannelToResponse} from '../../channel/ChannelMappers';
-import type {IChannelRepository} from '../../channel/IChannelRepository';
-import type {ChannelService} from '../../channel/services/ChannelService';
-import {dispatchMessageCreateBroadcast} from '../../channel/services/message/MessageGatewayDispatch';
-import {
-	createMessageResponseDataService,
-	messageResponseAccessForGuild,
-} from '../../channel/services/message/MessageResponseDataService';
-import {SYSTEM_USER_ID} from '../../constants/Core';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {ISnowflakeService} from '../../infrastructure/ISnowflakeService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import {resolveLimitSafe} from '../../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../../limits/LimitMatchContextBuilder';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {Channel} from '../../models/Channel';
-import type {Message} from '../../models/Message';
-import type {User} from '../../models/User';
-import type {UserPermissionUtils} from '../../utils/UserPermissionUtils';
-import type {IUserAccountRepository} from '../repositories/IUserAccountRepository';
-import type {IUserChannelRepository} from '../repositories/IUserChannelRepository';
-import type {IUserRelationshipRepository} from '../repositories/IUserRelationshipRepository';
-import {isBugHunterBotUser} from '../UserHelpers';
-import type {DirectMessageSpamMitigationService} from './DirectMessageSpamMitigationService';
-import {createDirectMessageSpamMitigationService} from './DirectMessageSpamMitigationService';
 
 interface UserChannelRepository extends IUserAccountRepository, IUserChannelRepository, IUserRelationshipRepository {}
 
@@ -180,12 +177,7 @@ export class UserChannelService {
 		}
 		const targetUser = await this.userRepository.findUnique(recipientId);
 		if (!targetUser) throw new UnknownUserError();
-		if (recipientId === SYSTEM_USER_ID) {
-			return await this.createNewDMChannel({userId, recipientId, userCacheService, requestCache});
-		}
-		await this.validateNewDmAllowed({sender: callingUser, recipient: targetUser});
-		const channel = await this.createNewDMChannel({userId, recipientId, userCacheService, requestCache});
-		return channel;
+		return await this.createNewDMChannel({userId, recipientId, userCacheService, requestCache});
 	}
 
 	async pinDmChannel({userId, channelId}: {userId: UserID; channelId: ChannelID}): Promise<void> {
@@ -256,30 +248,6 @@ export class UserChannelService {
 
 	async getExistingDmForUsers(userId: UserID, recipientId: UserID): Promise<Channel | null> {
 		return await this.userRepository.findExistingDmState(userId, recipientId);
-	}
-
-	private async validateNewDmAllowed({sender, recipient}: {sender: User; recipient: User}): Promise<void> {
-		if (isBugHunterBotUser(sender)) {
-			return;
-		}
-		const [senderBlockedRecipient, recipientBlockedSender, friendship] = await Promise.all([
-			this.userRepository.getRelationship(sender.id, recipient.id, RelationshipTypes.BLOCKED),
-			this.userRepository.getRelationship(recipient.id, sender.id, RelationshipTypes.BLOCKED),
-			this.userRepository.getRelationship(sender.id, recipient.id, RelationshipTypes.FRIEND),
-		]);
-		if (senderBlockedRecipient || recipientBlockedSender) {
-			throw new CannotSendMessagesToUserError();
-		}
-		if (friendship) {
-			return;
-		}
-		const hasMutualGuilds = await this.userPermissionUtils.checkMutualGuildsForDmAccessAsync({
-			userId: sender.id,
-			targetId: recipient.id,
-		});
-		if (!hasMutualGuilds) {
-			throw new CannotSendMessagesToUserError();
-		}
 	}
 
 	async ensureDmOpenForBothUsers({
@@ -549,7 +517,6 @@ export class UserChannelService {
 				message_reference: null,
 				message_snapshots: null,
 				call: null,
-				nsfw_emojis: null,
 				has_reaction: false,
 				version: 1,
 			});

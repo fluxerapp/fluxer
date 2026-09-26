@@ -8,6 +8,7 @@ interface TieredIpInfoCacheOptions {
 	hot: IpInfoCache;
 	cold: IpInfoCache;
 	hotTtlSeconds?: number;
+	skipColdWrite?: (value: unknown) => boolean;
 }
 
 export function createTieredIpInfoCache(opts: TieredIpInfoCacheOptions): IpInfoCache {
@@ -18,14 +19,17 @@ export function createTieredIpInfoCache(opts: TieredIpInfoCacheOptions): IpInfoC
 			if (hit !== null) return hit;
 			const cold = await opts.cold.get<T>(key).catch(() => null);
 			if (cold === null) return null;
+			if (opts.skipColdWrite?.(cold) === true) return cold;
 			void opts.hot.set(key, cold, hotTtl).catch(() => {});
 			return cold;
 		},
 		async set<T>(key: string, value: T, ttlSeconds?: number): Promise<void> {
-			await Promise.all([
-				opts.hot.set(key, value, hotTtl).catch(() => {}),
-				opts.cold.set(key, value, ttlSeconds).catch(() => {}),
-			]);
+			const effectiveHotTtl = Math.max(1, Math.min(hotTtl, ttlSeconds ?? hotTtl));
+			const writes: Array<Promise<void>> = [opts.hot.set(key, value, effectiveHotTtl).catch(() => {})];
+			if (opts.skipColdWrite?.(value) !== true) {
+				writes.push(opts.cold.set(key, value, ttlSeconds).catch(() => {}));
+			}
+			await Promise.all(writes);
 		},
 	};
 }

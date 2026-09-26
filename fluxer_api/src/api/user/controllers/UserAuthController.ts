@@ -1,10 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	completePasskeyMigration,
+	getPasskeyMigration,
+	getPasskeyMigrationRegistrationOptions,
+} from '@app/api/auth/services/PasskeyMigrationService';
+import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
+import {Config} from '@app/api/Config';
+import {DefaultUserOnly, LoginRequired, LoginRequiredAllowSuspicious} from '@app/api/middleware/AuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import {
 	DisableTotpRequest,
 	EnableMfaTotpRequest,
 	InboundSmsChallengeStartResponse,
+	MfaBackupCodesChallengeRegenerateRequest,
+	MfaBackupCodesChallengeResendRequest,
+	MfaBackupCodesChallengeStartResponse,
+	MfaBackupCodesChallengeVerifyRequest,
+	MfaBackupCodesChallengeVerifyResponse,
 	MfaBackupCodesRequest,
 	MfaBackupCodesResponse,
 	PhoneSendVerificationRequest,
@@ -17,17 +36,15 @@ import {
 	WebAuthnCredentialListResponse,
 	WebAuthnCredentialUpdateRequest,
 	WebAuthnRegisterRequest,
+	WebAuthnTwoFactorRequest,
+	WebAuthnTwoFactorResponse,
 } from '@fluxer/schema/src/domains/auth/AuthSchemas';
+import {
+	PasskeyMigrationCompleteRequest,
+	PasskeyMigrationResponse,
+} from '@fluxer/schema/src/domains/auth/PasskeyMigrationSchemas';
 import {CredentialIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
-import {requireSudoMode} from '../../auth/services/SudoVerificationService';
-import {Config} from '../../Config';
-import {DefaultUserOnly, LoginRequired, LoginRequiredAllowSuspicious} from '../../middleware/AuthMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {SudoModeMiddleware} from '../../middleware/SudoModeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
+import {EmptyBodyRequest} from '@fluxer/schema/src/domains/user/UserRequestSchemas';
 
 export function UserAuthController(app: HonoApp) {
 	app.post(
@@ -80,7 +97,9 @@ export function UserAuthController(app: HonoApp) {
 		async (ctx) => {
 			const body = ctx.req.valid('json');
 			const user = ctx.get('user');
-			const sudoResult = await requireSudoMode(ctx, user, body);
+			const sudoBody =
+				body.mfa_method || !user.totpSecret ? body : {...body, mfa_method: 'totp' as const, mfa_code: body.code};
+			const sudoResult = await requireSudoMode(ctx, user, sudoBody);
 			await ctx.get('userAuthRequestService').disableTotp({user, data: body, sudoContext: sudoResult});
 			return ctx.body(null, 204);
 		},
@@ -108,6 +127,96 @@ export function UserAuthController(app: HonoApp) {
 			const sudoResult = await requireSudoMode(ctx, user, body);
 			return ctx.json(
 				await ctx.get('userAuthRequestService').getBackupCodes({user, data: body, sudoContext: sudoResult}),
+			);
+		},
+	);
+	app.post(
+		'/users/@me/mfa/backup-codes/challenge',
+		RateLimitMiddleware(RateLimitConfigs.USER_MFA_BACKUP_CODES_CHALLENGE_START),
+		LoginRequired,
+		DefaultUserOnly,
+		Validator('json', EmptyBodyRequest),
+		OpenAPI({
+			operationId: 'start_backup_codes_challenge',
+			summary: 'Start backup codes challenge',
+			responseSchema: MfaBackupCodesChallengeStartResponse,
+			statusCode: 200,
+			security: ['bearerToken', 'sessionToken'],
+			tags: ['Users'],
+			description:
+				"Initiates the challenge required to view existing backup codes. Sends a verification code to the user's email address. Returns a ticket for use in the remaining challenge steps.",
+		}),
+		async (ctx) => {
+			const user = ctx.get('user');
+			return ctx.json(await ctx.get('mfaBackupCodesChallengeService').start(user));
+		},
+	);
+	app.post(
+		'/users/@me/mfa/backup-codes/challenge/resend',
+		RateLimitMiddleware(RateLimitConfigs.USER_MFA_BACKUP_CODES_CHALLENGE_RESEND),
+		LoginRequired,
+		DefaultUserOnly,
+		Validator('json', MfaBackupCodesChallengeResendRequest),
+		OpenAPI({
+			operationId: 'resend_backup_codes_challenge',
+			summary: 'Resend backup codes challenge code',
+			responseSchema: null,
+			statusCode: 204,
+			security: ['bearerToken', 'sessionToken'],
+			tags: ['Users'],
+			description:
+				'Resends the verification code for a backup codes challenge. Use if the original code was not received. Requires a valid backup codes challenge ticket.',
+		}),
+		async (ctx) => {
+			const user = ctx.get('user');
+			const body = ctx.req.valid('json');
+			await ctx.get('mfaBackupCodesChallengeService').resend(user, body.ticket);
+			return ctx.body(null, 204);
+		},
+	);
+	app.post(
+		'/users/@me/mfa/backup-codes/challenge/verify',
+		RateLimitMiddleware(RateLimitConfigs.USER_MFA_BACKUP_CODES_CHALLENGE_VERIFY),
+		LoginRequired,
+		DefaultUserOnly,
+		Validator('json', MfaBackupCodesChallengeVerifyRequest),
+		OpenAPI({
+			operationId: 'verify_backup_codes_challenge',
+			summary: 'Verify backup codes challenge code',
+			responseSchema: MfaBackupCodesChallengeVerifyResponse,
+			statusCode: 200,
+			security: ['bearerToken', 'sessionToken'],
+			tags: ['Users'],
+			description:
+				'Verifies the email code sent during a backup codes challenge and returns the existing backup codes along with a proof token. The code is consumed on success and the proof token authorizes regeneration on the same ticket.',
+		}),
+		async (ctx) => {
+			const user = ctx.get('user');
+			const body = ctx.req.valid('json');
+			return ctx.json(await ctx.get('mfaBackupCodesChallengeService').verify(user, body.ticket, body.code));
+		},
+	);
+	app.post(
+		'/users/@me/mfa/backup-codes/challenge/regenerate',
+		RateLimitMiddleware(RateLimitConfigs.USER_MFA_BACKUP_CODES_CHALLENGE_REGENERATE),
+		LoginRequired,
+		DefaultUserOnly,
+		Validator('json', MfaBackupCodesChallengeRegenerateRequest),
+		OpenAPI({
+			operationId: 'regenerate_backup_codes_challenge',
+			summary: 'Regenerate backup codes with a verified challenge',
+			responseSchema: MfaBackupCodesResponse,
+			statusCode: 200,
+			security: ['bearerToken', 'sessionToken'],
+			tags: ['Users'],
+			description:
+				'Replaces the account backup codes using the proof token from a verified backup codes challenge. Old codes are invalidated.',
+		}),
+		async (ctx) => {
+			const user = ctx.get('user');
+			const body = ctx.req.valid('json');
+			return ctx.json(
+				await ctx.get('mfaBackupCodesChallengeService').regenerate(user, body.ticket, body.verification_proof),
 			);
 		},
 	);
@@ -247,7 +356,9 @@ export function UserAuthController(app: HonoApp) {
 			await requireSudoMode(ctx, user, body, {
 				issueSudoToken: false,
 			});
-			return ctx.json(await ctx.get('userAuthRequestService').generateWebAuthnRegistrationOptions(user));
+			return ctx.json(
+				await ctx.get('userAuthRequestService').generateWebAuthnRegistrationOptions(user, ctx.req.header('origin')),
+			);
 		},
 	);
 	app.post(
@@ -334,6 +445,102 @@ export function UserAuthController(app: HonoApp) {
 		},
 	);
 	app.get(
+		'/users/@me/mfa/webauthn/migration',
+		RateLimitMiddleware(RateLimitConfigs.MFA_WEBAUTHN_MIGRATION),
+		LoginRequired,
+		DefaultUserOnly,
+		OpenAPI({
+			operationId: 'get_webauthn_migration',
+			summary: 'Get pending passkey update',
+			responseSchema: PasskeyMigrationResponse,
+			statusCode: 200,
+			security: ['bearerToken', 'sessionToken'],
+			tags: ['Users'],
+			description:
+				'Return the passkey this session can update to the new domain after using it within the last five minutes, or null.',
+		}),
+		async (ctx) => {
+			return ctx.json(await getPasskeyMigration(ctx.get('apiContext'), ctx.get('user').id, ctx.get('authSession')));
+		},
+	);
+	app.post(
+		'/users/@me/mfa/webauthn/migration/registration-options',
+		RateLimitMiddleware(RateLimitConfigs.MFA_WEBAUTHN_MIGRATION),
+		LoginRequired,
+		DefaultUserOnly,
+		OpenAPI({
+			operationId: 'get_webauthn_migration_registration_options',
+			summary: 'Get passkey update registration options',
+			responseSchema: WebAuthnChallengeResponse,
+			statusCode: 200,
+			security: ['bearerToken', 'sessionToken'],
+			tags: ['Users'],
+			description:
+				'Generate registration options for the passkey that replaces the pending one. Requires a pending passkey update for this session.',
+		}),
+		async (ctx) => {
+			return ctx.json(
+				await getPasskeyMigrationRegistrationOptions(
+					ctx.get('apiContext'),
+					ctx.get('user').id,
+					ctx.get('authSession'),
+					ctx.req.header('origin'),
+				),
+			);
+		},
+	);
+	app.post(
+		'/users/@me/mfa/webauthn/migration',
+		RateLimitMiddleware(RateLimitConfigs.MFA_WEBAUTHN_MIGRATION),
+		LoginRequired,
+		DefaultUserOnly,
+		Validator('json', PasskeyMigrationCompleteRequest),
+		OpenAPI({
+			operationId: 'complete_webauthn_migration',
+			summary: 'Complete passkey update',
+			responseSchema: null,
+			statusCode: 204,
+			security: ['bearerToken', 'sessionToken'],
+			tags: ['Users'],
+			description:
+				'Register the replacement passkey under the name of the pending one. The old passkey stops appearing in lists and is removed together with its replacement.',
+		}),
+		async (ctx) => {
+			await completePasskeyMigration(
+				ctx.get('apiContext'),
+				ctx.get('user').id,
+				ctx.get('authSession'),
+				ctx.req.header('origin'),
+				ctx.req.valid('json'),
+			);
+			return ctx.body(null, 204);
+		},
+	);
+	app.put(
+		'/users/@me/mfa/webauthn/two-factor',
+		RateLimitMiddleware(RateLimitConfigs.MFA_WEBAUTHN_TWO_FACTOR),
+		LoginRequired,
+		DefaultUserOnly,
+		SudoModeMiddleware,
+		Validator('json', WebAuthnTwoFactorRequest),
+		OpenAPI({
+			operationId: 'set_webauthn_two_factor',
+			summary: 'Set WebAuthn two-factor authentication',
+			responseSchema: WebAuthnTwoFactorResponse,
+			statusCode: 200,
+			security: ['bearerToken', 'sessionToken'],
+			tags: ['Users'],
+			description:
+				'Choose whether registered passkeys are required as a second factor when signing in with email and password. Enabling requires at least one registered credential and mints backup codes when the account has none. Requires sudo mode verification.',
+		}),
+		async (ctx) => {
+			const user = ctx.get('user');
+			const body = ctx.req.valid('json');
+			await requireSudoMode(ctx, user, body);
+			return ctx.json(await ctx.get('userAuthRequestService').setWebAuthnTwoFactor({user, data: body}));
+		},
+	);
+	app.get(
 		'/users/@me/sudo/mfa-methods',
 		RateLimitMiddleware(RateLimitConfigs.SUDO_MFA_METHODS),
 		LoginRequired,
@@ -368,7 +575,9 @@ export function UserAuthController(app: HonoApp) {
 				'Generate WebAuthn challenge for sudo mode verification using a registered security key or biometric device.',
 		}),
 		async (ctx) => {
-			return ctx.json(await ctx.get('userAuthRequestService').getSudoWebAuthnOptions(ctx.get('user')));
+			return ctx.json(
+				await ctx.get('userAuthRequestService').getSudoWebAuthnOptions(ctx.get('user'), ctx.req.header('origin')),
+			);
 		},
 	);
 }

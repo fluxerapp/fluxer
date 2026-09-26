@@ -151,7 +151,7 @@ maybe_put(Key, Value, Map) ->
     {ok, binary(), map(), term(), [binary()], non_neg_integer(), integer() | undefined,
         gateway_sharding:shard() | undefined}
     | {error, atom()}.
-validate_identify_data(Data) ->
+validate_identify_data(Data) when is_map(Data) ->
     try
         Token = maps:get(<<"token">>, Data),
         Properties = maps:get(<<"properties">>, Data),
@@ -163,7 +163,9 @@ validate_identify_data(Data) ->
         )
     catch
         error:{badkey, _} -> {error, missing_required_field}
-    end.
+    end;
+validate_identify_data(_Data) ->
+    {error, invalid_data}.
 
 -spec validate_properties(binary(), term(), term(), term(), term(), map()) ->
     {ok, binary(), map(), term(), [binary()], non_neg_integer(), integer() | undefined,
@@ -348,12 +350,6 @@ session_start_error_action(_) ->
     unknown.
 
 -spec log_session_start_error(term(), state()) -> ws_result().
-log_session_start_error({retries_exhausted, Reason}, State) ->
-    logger:error(
-        "Session start failed after retries: last_error=~p peer_ip=~ts",
-        [Reason, maps:get(peer_ip, State, <<"unknown">>)]
-    ),
-    gateway_handler_encode:close_with_reason(unknown_error, <<"Session start failed">>, State);
 log_session_start_error(Reason, State) ->
     logger:error(
         "Session start failed: reason=~p peer_ip=~ts",

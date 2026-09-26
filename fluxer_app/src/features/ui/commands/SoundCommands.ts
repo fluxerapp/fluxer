@@ -57,6 +57,18 @@ export function playSoundBypassingSelfDeafened(sound: SoundType, loop?: boolean)
 	dispatchSoundIntent({kind: 'play', sound, loop, options: {bypassSelfDeafened: true}});
 }
 
+export function playOneShotSoundImmediatelyBypassingSelfDeafened(
+	sound: SoundType,
+	signal?: AbortSignal,
+	options: {ignoreGroupCooldown?: boolean} = {},
+): Promise<boolean> {
+	return Sound.playOneShotSoundImmediately(
+		sound,
+		{bypassSelfDeafened: true, ignoreGroupCooldown: options.ignoreGroupCooldown === true},
+		signal,
+	);
+}
+
 export function previewSound(sound: SoundType): void {
 	dispatchSoundIntent({kind: 'preview', sound});
 }

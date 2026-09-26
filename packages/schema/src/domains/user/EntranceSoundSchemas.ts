@@ -7,7 +7,7 @@ import {
 	ENTRANCE_SOUND_NAME_MAX_LENGTH,
 } from '@fluxer/constants/src/EntranceSoundConstants';
 import {createBase64StringType} from '@fluxer/schema/src/primitives/FileValidators';
-import {createStringType, SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {createStringType, SnowflakeStringType, SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
 
 const ScopeIdSchema = z
@@ -18,16 +18,6 @@ const ScopeIdSchema = z
 	.describe('Entrance sound scope identifier');
 
 const ENTRANCE_SOUND_BASE64_MAX_CHARS = Math.ceil((ENTRANCE_SOUND_MAX_BYTES * 4) / 3) + 32;
-
-function toNonEmptyStringTuple<TValue extends string>(values: ReadonlyArray<TValue>): [TValue, ...Array<TValue>] {
-	const [first, ...rest] = values;
-	if (first === undefined) {
-		throw new Error('Expected at least one enum value');
-	}
-	return [first, ...rest];
-}
-
-const EntranceSoundExtensionValues = toNonEmptyStringTuple(ENTRANCE_SOUND_EXTENSIONS);
 
 export const EntranceSoundUploadRequest = z.object({
 	name: createStringType(1, ENTRANCE_SOUND_NAME_MAX_LENGTH).describe('Display label for the sound'),
@@ -50,22 +40,22 @@ export const EntranceSoundSelectionRequest = z.object({
 export type EntranceSoundSelectionRequest = z.infer<typeof EntranceSoundSelectionRequest>;
 
 export const EntranceSoundResponse = z.object({
-	id: SnowflakeType,
+	id: SnowflakeStringType,
 	name: z.string(),
 	hash: z.string(),
-	extension: z.enum(EntranceSoundExtensionValues),
+	extension: z.enum(ENTRANCE_SOUND_EXTENSIONS),
 	content_type: z.string(),
 	duration_ms: z.number().int().min(0).max(ENTRANCE_SOUND_MAX_DURATION_MS),
 	size_bytes: z.number().int().min(0).max(ENTRANCE_SOUND_MAX_BYTES),
-	url: z.string().url(),
-	created_at: z.string().datetime(),
+	url: z.url(),
+	created_at: z.iso.datetime(),
 });
 
 export type EntranceSoundResponse = z.infer<typeof EntranceSoundResponse>;
 
 const EntranceSoundSelectionResponse = z.object({
 	scope_id: ScopeIdSchema,
-	sound_id: SnowflakeType,
+	sound_id: SnowflakeStringType,
 });
 
 export const EntranceSoundLibraryResponse = z.object({

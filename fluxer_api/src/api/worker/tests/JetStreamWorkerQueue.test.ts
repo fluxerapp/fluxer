@@ -1,14 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {JetStreamWorkerQueue} from '@app/api/worker/JetStreamWorkerQueue';
+import {WORKER_LANES} from '@app/api/worker/WorkerLaneConfig';
+import {WorkerQueueOverflowError} from '@app/api/worker/WorkerQueueOverflowError';
+import {DiscardPolicy, JetStreamApiError, RetentionPolicy, StorageType, type StreamConfig} from '@nats-io/jetstream';
 import type {JetStreamConnectionManager} from '@pkgs/nats/src/JetStreamConnectionManager';
-import {DiscardPolicy, NatsError, RetentionPolicy, StorageType, type StreamConfig} from 'nats';
 import {describe, expect, it} from 'vitest';
-import {JetStreamWorkerQueue} from '../JetStreamWorkerQueue';
-import {WorkerQueueOverflowError} from '../WorkerQueueOverflowError';
+
+const GIB = 1024 * 1024 * 1024;
+const MIB = 1024 * 1024;
 
 const EXPECTED_LIMITS = {
 	max_msgs: 2_000_000,
-	max_bytes: 8 * 1024 * 1024 * 1024,
+	max_bytes: 8 * GIB,
 	max_msgs_per_subject: 250_000,
 	discard: DiscardPolicy.New,
 	discard_new_per_subject: true,
@@ -19,6 +23,8 @@ const LEGACY_CONFIG = {
 	subjects: ['jobs.>'],
 	retention: RetentionPolicy.Workqueue,
 	storage: StorageType.File,
+	max_age: 7 * 24 * 60 * 60 * 1_000_000_000,
+	duplicate_window: 2 * 60 * 1_000_000_000,
 	max_msgs: -1,
 	max_bytes: -1,
 	max_msgs_per_subject: -1,
@@ -26,10 +32,47 @@ const LEGACY_CONFIG = {
 	discard_new_per_subject: false,
 } as unknown as StreamConfig;
 
-function streamLimitError(description: string): NatsError {
-	const error = new NatsError('503', '503');
-	error.api_error = {code: 503, err_code: 10077, description};
-	return error;
+interface ConsumerAddConfig {
+	durable_name: string;
+	filter_subjects: Array<string>;
+}
+
+function withStreamDefaults(config: Partial<StreamConfig>): Partial<StreamConfig> {
+	return {
+		max_age: 0,
+		duplicate_window: 2 * 60 * 1_000_000_000,
+		max_msgs: -1,
+		max_bytes: -1,
+		max_msgs_per_subject: -1,
+		max_msg_size: -1,
+		discard: DiscardPolicy.Old,
+		discard_new_per_subject: false,
+		...config,
+	};
+}
+
+function missingResourceError(resource: 'stream' | 'consumer'): JetStreamApiError {
+	return new JetStreamApiError({
+		code: 404,
+		err_code: resource === 'stream' ? 10059 : 10014,
+		description: `${resource} not found`,
+	});
+}
+
+function streamLimitError(description: string): JetStreamApiError {
+	return new JetStreamApiError({code: 503, err_code: 10077, description});
+}
+
+function serverResourceError(): JetStreamApiError {
+	return new JetStreamApiError({code: 503, err_code: 10023, description: 'insufficient resources'});
+}
+
+function noStorageError(): JetStreamApiError {
+	return new JetStreamApiError({code: 503, err_code: 10047, description: 'insufficient storage resources available'});
+}
+
+function storageBudget(budget: number): (config: Partial<StreamConfig>) => Error | null {
+	return (config) => ((config.max_bytes ?? 0) > budget ? noStorageError() : null);
 }
 
 function boundedPublisher(maxPerSubject: number): (subject: string) => {seq: number} {
@@ -48,42 +91,93 @@ function boundedPublisher(maxPerSubject: number): (subject: string) => {seq: num
 
 function createQueue(params: {
 	existing?: StreamConfig | null;
+	dlqExists?: boolean;
+	reject?: (config: Partial<StreamConfig>) => Error | null;
 	updateError?: Error;
-	publish?: (subject: string) => {seq: number};
-}): {queue: JetStreamWorkerQueue; added: Array<Partial<StreamConfig>>; updated: Array<Partial<StreamConfig>>} {
+	publish?: (subject: string, body: string, options: {msgID: string}) => {seq: number; duplicate?: boolean};
+	subjectCounts?: Record<string, number>;
+	subjectCountsError?: Error;
+}): {
+	queue: JetStreamWorkerQueue;
+	added: Array<Partial<StreamConfig>>;
+	dlqAdded: Array<Partial<StreamConfig>>;
+	updated: Array<Partial<StreamConfig>>;
+	consumerAdds: Array<ConsumerAddConfig>;
+} {
 	const added: Array<Partial<StreamConfig>> = [];
+	const dlqAdded: Array<Partial<StreamConfig>> = [];
 	const updated: Array<Partial<StreamConfig>> = [];
+	const consumerAdds: Array<ConsumerAddConfig> = [];
 	const connectionManager = {
 		getJetStreamManager: () =>
 			Promise.resolve({
+				consumers: {
+					add: (_stream: string, config: ConsumerAddConfig) => {
+						consumerAdds.push(config);
+						return Promise.resolve({config});
+					},
+					delete: () => Promise.resolve(true),
+					info: () => Promise.reject(missingResourceError('consumer')),
+				},
 				streams: {
-					info: () => {
-						if (!params.existing) {
-							return Promise.reject(new Error('stream not found'));
+					info: (name: string, options?: {subjects_filter?: string}) => {
+						if (name === 'JOBS' && options?.subjects_filter !== undefined) {
+							if (params.subjectCountsError) {
+								return Promise.reject(params.subjectCountsError);
+							}
+							return Promise.resolve({
+								config: withStreamDefaults(params.existing ?? {}),
+								state: {subjects: params.subjectCounts},
+							});
 						}
-						return Promise.resolve({config: params.existing});
+						if (name === 'JOBS_DLQ') {
+							return params.dlqExists
+								? Promise.resolve({
+										config: withStreamDefaults({
+											name,
+											subjects: ['dlq.>'],
+											retention: RetentionPolicy.Limits,
+											storage: StorageType.File,
+											max_age: 30 * 24 * 60 * 60 * 1_000_000_000,
+											max_bytes: 64 * MIB,
+										}),
+									})
+								: Promise.reject(missingResourceError('stream'));
+						}
+						if (!params.existing) {
+							return Promise.reject(missingResourceError('stream'));
+						}
+						return Promise.resolve({config: withStreamDefaults(params.existing), state: {}});
 					},
 					add: (config: Partial<StreamConfig>) => {
-						added.push(config);
-						return Promise.resolve({config});
+						(config.name === 'JOBS_DLQ' ? dlqAdded : added).push(config);
+						const rejection = params.reject?.(config) ?? null;
+						if (rejection !== null) {
+							return Promise.reject(rejection);
+						}
+						return Promise.resolve({config: withStreamDefaults(config)});
 					},
 					update: (_name: string, config: Partial<StreamConfig>) => {
 						if (params.updateError) {
 							return Promise.reject(params.updateError);
 						}
 						updated.push(config);
-						return Promise.resolve({config});
+						const rejection = params.reject?.(config) ?? null;
+						if (rejection !== null) {
+							return Promise.reject(rejection);
+						}
+						return Promise.resolve({config: withStreamDefaults(config)});
 					},
 				},
 			}),
 		getJetStreamClient: () => ({
-			publish: (subject: string) => {
+			publish: (subject: string, body: string, options: {msgID: string}) => {
 				const publish = params.publish ?? (() => ({seq: 1}));
-				return Promise.resolve(publish(subject));
+				return Promise.resolve(publish(subject, body, options));
 			},
 		}),
 	} as unknown as JetStreamConnectionManager;
-	return {queue: new JetStreamWorkerQueue(connectionManager), added, updated};
+	return {queue: new JetStreamWorkerQueue(connectionManager), added, dlqAdded, updated, consumerAdds};
 }
 
 describe('jobs stream limits', () => {
@@ -96,12 +190,40 @@ describe('jobs stream limits', () => {
 		expect(added[0]).toMatchObject({retention: RetentionPolicy.Workqueue, storage: StorageType.File});
 	});
 
+	it('lowers the new stream until the server storage budget accepts it', async () => {
+		const {queue, added} = createQueue({existing: null, reject: storageBudget(2 * GIB)});
+		await queue.ensureStream();
+		expect(added.map((config) => config.max_bytes)).toEqual([8 * GIB, 4 * GIB, 2 * GIB]);
+		expect(added[2]).toMatchObject({...EXPECTED_LIMITS, max_bytes: 2 * GIB});
+		expect(added[2]).toMatchObject({retention: RetentionPolicy.Workqueue, storage: StorageType.File});
+	});
+
+	it('fails the boot when even the smallest jobs stream does not fit', async () => {
+		const {queue, added} = createQueue({existing: null, reject: storageBudget(0)});
+		await expect(queue.ensureStream()).rejects.toBeInstanceOf(JetStreamApiError);
+		expect(added).toHaveLength(8);
+		expect(added[7]?.max_bytes).toBe(64 * MIB);
+	});
+
+	it('rethrows stream creation failures that are not storage rejections', async () => {
+		const failure = new Error('stream name already in use');
+		const {queue, added} = createQueue({existing: null, reject: () => failure});
+		await expect(queue.ensureStream()).rejects.toBe(failure);
+		expect(added).toHaveLength(1);
+	});
+
 	it('applies the limits to an existing unbounded stream', async () => {
 		const {queue, added, updated} = createQueue({existing: LEGACY_CONFIG});
 		await queue.ensureStream();
 		expect(added).toHaveLength(0);
 		expect(updated).toHaveLength(1);
 		expect(updated[0]).toEqual(EXPECTED_LIMITS);
+	});
+
+	it('lowers the limit update until the server storage budget accepts it', async () => {
+		const {queue, updated} = createQueue({existing: LEGACY_CONFIG, reject: storageBudget(1 * GIB)});
+		await queue.ensureStream();
+		expect(updated.map((config) => config.max_bytes)).toEqual([8 * GIB, 4 * GIB, 2 * GIB, 1 * GIB]);
 	});
 
 	it('leaves an already bounded stream alone', async () => {
@@ -111,25 +233,135 @@ describe('jobs stream limits', () => {
 		expect(updated).toHaveLength(0);
 	});
 
+	it('leaves a stream that was lowered to fit the server alone', async () => {
+		const {queue, added, updated} = createQueue({
+			existing: {...LEGACY_CONFIG, ...EXPECTED_LIMITS, max_bytes: 1536 * MIB},
+		});
+		await queue.ensureStream();
+		expect(added).toHaveLength(0);
+		expect(updated).toHaveLength(0);
+	});
+
 	it('keeps startup alive when the limit update is rejected', async () => {
 		const {queue} = createQueue({existing: LEGACY_CONFIG, updateError: new Error('stream update rejected')});
 		await expect(queue.ensureStream()).resolves.toBeUndefined();
+	});
+
+	it('keeps startup alive when no limit update fits the server', async () => {
+		const {queue, updated} = createQueue({existing: LEGACY_CONFIG, reject: storageBudget(0)});
+		await expect(queue.ensureStream()).resolves.toBeUndefined();
+		expect(updated).toHaveLength(8);
+	});
+
+	it('leaves the limits alone while a subject holds more than the per-subject limit', async () => {
+		const {queue, updated} = createQueue({
+			existing: LEGACY_CONFIG,
+			subjectCounts: {'jobs.extractEmbeds': 300_000, 'jobs.processAssetDeletionQueue': 10},
+		});
+		await expect(queue.ensureStream()).resolves.toBeUndefined();
+		expect(updated).toHaveLength(0);
+	});
+
+	it('leaves the limits alone when the subject counts cannot be read', async () => {
+		const {queue, updated} = createQueue({existing: LEGACY_CONFIG, subjectCountsError: new Error('no responders')});
+		await expect(queue.ensureStream()).resolves.toBeUndefined();
+		expect(updated).toHaveLength(0);
+	});
+
+	it('applies the limits to a drained stream that reports no subjects', async () => {
+		const {queue, updated} = createQueue({existing: LEGACY_CONFIG, subjectCounts: undefined});
+		await queue.ensureStream();
+		expect(updated).toHaveLength(1);
+		expect(updated[0]).toEqual(EXPECTED_LIMITS);
+	});
+
+	it('refuses a stream that is not the worker stream', async () => {
+		const {queue} = createQueue({existing: {...LEGACY_CONFIG, retention: RetentionPolicy.Limits} as StreamConfig});
+		await expect(queue.ensureStream()).rejects.toThrow(/incompatible retention/);
+	});
+});
+
+describe('jobs stream max age', () => {
+	it('reports the max age of a jobs stream it creates', async () => {
+		const {queue, added} = createQueue({existing: null});
+		await queue.ensureStream();
+		expect(queue.getJobsStreamMaxAgeMs()).toBe(7 * 24 * 60 * 60 * 1000);
+		expect(added[0]?.max_age).toBe(queue.getJobsStreamMaxAgeMs() * 1_000_000);
+	});
+
+	it('reports the max age an existing jobs stream really has and never changes it', async () => {
+		for (const [maxAgeNanos, expectedMs] of [
+			[30 * 24 * 60 * 60 * 1_000_000_000, 30 * 24 * 60 * 60 * 1000],
+			[0, 0],
+		] as const) {
+			const {queue, updated} = createQueue({existing: {...LEGACY_CONFIG, max_age: maxAgeNanos} as StreamConfig});
+			await queue.ensureStream();
+			expect(queue.getJobsStreamMaxAgeMs()).toBe(expectedMs);
+			expect(updated.some((config) => 'max_age' in config)).toBe(false);
+		}
+	});
+});
+
+describe('dead-letter stream', () => {
+	it('keeps startup alive when the dead-letter stream does not fit', async () => {
+		const {queue, dlqAdded} = createQueue({dlqExists: false, reject: () => noStorageError()});
+		await expect(queue.ensureDlqStream()).resolves.toBeUndefined();
+		expect(dlqAdded).toHaveLength(4);
+	});
+
+	it('rethrows dead-letter creation failures that are not storage rejections', async () => {
+		const failure = new Error('no responders');
+		const {queue} = createQueue({dlqExists: false, reject: () => failure});
+		await expect(queue.ensureDlqStream()).rejects.toBe(failure);
 	});
 });
 
 describe('jobs stream enqueue shedding', () => {
 	it('rejects enqueues once the stream is at its cap', async () => {
 		const {queue} = createQueue({existing: LEGACY_CONFIG, publish: boundedPublisher(2)});
-		await expect(queue.enqueue('extractEmbeds', {})).resolves.toBe('1');
-		await expect(queue.enqueue('extractEmbeds', {})).resolves.toBe('2');
+		await expect(queue.enqueue('extractEmbeds', {})).resolves.toEqual({seq: '1', duplicate: false});
+		await expect(queue.enqueue('extractEmbeds', {})).resolves.toEqual({seq: '2', duplicate: false});
 		await expect(queue.enqueue('extractEmbeds', {})).rejects.toBeInstanceOf(WorkerQueueOverflowError);
 	});
 
 	it('caps each task type independently', async () => {
 		const {queue} = createQueue({existing: LEGACY_CONFIG, publish: boundedPublisher(1)});
-		await expect(queue.enqueue('extractEmbeds', {})).resolves.toBe('1');
+		await expect(queue.enqueue('extractEmbeds', {})).resolves.toEqual({seq: '1', duplicate: false});
 		await expect(queue.enqueue('extractEmbeds', {})).rejects.toBeInstanceOf(WorkerQueueOverflowError);
-		await expect(queue.enqueue('handleMentions', {})).resolves.toBe('2');
+		await expect(queue.enqueue('handleMentions', {})).resolves.toEqual({seq: '2', duplicate: false});
+	});
+
+	it('sheds enqueues the server refuses for lack of resources', async () => {
+		const {queue} = createQueue({
+			existing: LEGACY_CONFIG,
+			publish: () => {
+				throw serverResourceError();
+			},
+		});
+		await expect(queue.enqueue('handleMentions', {})).rejects.toBeInstanceOf(WorkerQueueOverflowError);
+	});
+
+	it('reports a publish the stream deduplicated under the same job key', async () => {
+		const seen = new Map<string, number>();
+		const {queue} = createQueue({
+			existing: LEGACY_CONFIG,
+			publish: (_subject, _body, options) => {
+				const existing = seen.get(options.msgID);
+				if (existing !== undefined) return {seq: existing, duplicate: true};
+				seen.set(options.msgID, seen.size + 1);
+				return {seq: seen.size, duplicate: false};
+			},
+		});
+		const options = {jobKey: 'batch-audit-log-message-deletes:1'};
+		await expect(queue.enqueue('batchGuildAuditLogMessageDeletes', {}, options)).resolves.toEqual({
+			seq: '1',
+			duplicate: false,
+		});
+		await expect(queue.enqueue('batchGuildAuditLogMessageDeletes', {}, options)).resolves.toEqual({
+			seq: '1',
+			duplicate: true,
+		});
+		await expect(queue.enqueue('batchGuildAuditLogMessageDeletes', {})).resolves.toEqual({seq: '2', duplicate: false});
 	});
 
 	it('rethrows publish failures that are not stream limits', async () => {
@@ -141,5 +373,29 @@ describe('jobs stream enqueue shedding', () => {
 			},
 		});
 		await expect(queue.enqueue('extractEmbeds', {})).rejects.toBe(failure);
+	});
+});
+
+describe('lane consumer filters', () => {
+	it('keeps consuming retired subjects so legacy jobs are drained instead of orphaned', async () => {
+		const {queue, consumerAdds} = createQueue({existing: LEGACY_CONFIG});
+		await queue.ensureConsumers(WORKER_LANES);
+		const lifecycle = consumerAdds.find((config) => config.durable_name === 'workers_lifecycle');
+		expect(lifecycle?.filter_subjects).toContain('jobs.sendSystemDm');
+		expect(lifecycle?.filter_subjects).toContain('jobs.sendScheduledMessage');
+	});
+
+	it('leaves lanes without retired tasks filtering only their own subjects', async () => {
+		const {queue, consumerAdds} = createQueue({existing: LEGACY_CONFIG});
+		await queue.ensureConsumers(WORKER_LANES);
+		const unfurl = consumerAdds.find((config) => config.durable_name === 'workers_unfurl');
+		expect(unfurl?.filter_subjects).toEqual(['jobs.extractEmbeds']);
+	});
+
+	it('never claims the same subject from two lane consumers', async () => {
+		const {queue, consumerAdds} = createQueue({existing: LEGACY_CONFIG});
+		await queue.ensureConsumers(WORKER_LANES);
+		const allSubjects = consumerAdds.flatMap((config) => config.filter_subjects);
+		expect(new Set(allSubjects).size).toBe(allSubjects.length);
 	});
 });

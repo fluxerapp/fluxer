@@ -960,15 +960,14 @@ fn retain_native_frame_sink_handle(
         ));
     }
 
-    let handle = unsafe {
-        NativeScreenFrameSinkHandle::retain_from_raw(data.cast::<NativeScreenFrameSinkHandle>())
-    }
-    .ok_or_else(|| {
-        napi::Error::new(
-            Status::InvalidArg,
-            "ScreenCapture.setFrameSinkHandle received an invalid native frame sink handle",
-        )
-    })?;
+    let handle = unsafe { data.cast::<NativeScreenFrameSinkHandle>().as_ref() }
+        .and_then(NativeScreenFrameSinkHandle::retain_ref)
+        .ok_or_else(|| {
+            napi::Error::new(
+                Status::InvalidArg,
+                "ScreenCapture.setFrameSinkHandle received an invalid native frame sink handle",
+            )
+        })?;
 
     Ok(Arc::new(handle))
 }
@@ -980,7 +979,7 @@ fn try_enqueue_native_cv_pixel_buffer(
     height: u32,
     sample_buffer: &CMSampleBuffer,
 ) -> EnqueueOutcome {
-    if sink.handle().enqueue_mac_cv_pixel_buffer.is_none() {
+    if !sink.supports_mac_cv_pixel_buffer() {
         return EnqueueOutcome::Rejected;
     }
     let retained =

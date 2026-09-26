@@ -17,11 +17,14 @@ pub fn clean_string(value: &str) -> Option<String> {
 }
 
 pub fn parse_comma_separated(value: &str) -> Vec<String> {
+    comma_separated_values(value).map(str::to_owned).collect()
+}
+
+fn comma_separated_values(value: &str) -> impl Iterator<Item = &str> {
     value
         .split([',', '\n', '\r'])
-        .map(|s| s.trim().to_owned())
-        .filter(|s| !s.is_empty())
-        .collect()
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
 }
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
@@ -63,12 +66,18 @@ impl MultiValueForm {
         self.first(key).and_then(clean_string)
     }
 
-    pub fn parse_i32(&self, key: &str) -> Option<i32> {
-        self.first(key).and_then(|value| value.parse().ok())
+    pub fn parse_value<T: std::str::FromStr>(&self, key: &str) -> Result<Option<T>, T::Err> {
+        self.parse_value_any(&[key])
     }
 
-    pub fn parse_i64(&self, key: &str) -> Option<i64> {
-        self.first(key).and_then(|value| value.parse().ok())
+    pub fn parse_value_any<T: std::str::FromStr>(
+        &self,
+        keys: &[&str],
+    ) -> Result<Option<T>, T::Err> {
+        keys.iter()
+            .find_map(|key| self.first(key))
+            .map(str::parse)
+            .transpose()
     }
 
     pub fn parse_u32(&self, key: &str) -> Option<u32> {
@@ -92,12 +101,20 @@ impl MultiValueForm {
             .get(key)
             .into_iter()
             .flat_map(|values| values.iter())
-            .flat_map(|value| parse_comma_separated(value))
+            .flat_map(|value| comma_separated_values(value))
+            .map(str::to_owned)
             .collect()
     }
 
     pub fn list_values_any(&self, keys: &[&str]) -> Vec<String> {
         keys.iter().flat_map(|key| self.list_values(key)).collect()
+    }
+
+    pub fn parse_list_values<T: std::str::FromStr>(&self, keys: &[&str]) -> Result<Vec<T>, T::Err> {
+        self.list_values_any(keys)
+            .iter()
+            .map(|value| value.parse())
+            .collect()
     }
 }
 

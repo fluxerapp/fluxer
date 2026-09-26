@@ -114,7 +114,10 @@ pub fn users_list_page(
     let content = html! {
         div class="space-y-6" {
             (page_header("Users", None))
-            div class="rounded-lg bg-white transition-all border border-neutral-200 p-4" {
+            div class="rounded-lg bg-white transition-all border border-neutral-200 p-3" {
+                p class="mb-1 text-xs text-neutral-500" {
+                    "For example, type " span class="font-mono" { "*" } " in to search for all users."
+                }
                 (search_form(base, params))
             }
             (results_markup)
@@ -393,6 +396,7 @@ fn render_users_table(config: &AdminConfig, users: &[AdminUser], can_view_email:
 }
 
 fn pagination_controls(base: &str, params: &UserListParams, has_more: bool) -> Markup {
+    let next_page = params.page.checked_add(1).filter(|_| has_more);
     html! {
         div class="mt-4 flex items-center justify-between" {
             @if params.page > 0 {
@@ -403,8 +407,8 @@ fn pagination_controls(base: &str, params: &UserListParams, has_more: bool) -> M
             } @else {
                 span {}
             }
-            @if has_more {
-                a href=(users_url(base, params, params.page + 1))
+            @if let Some(next_page) = next_page {
+                a href=(users_url(base, params, next_page))
                     class="text-neutral-900 underline decoration-neutral-300 hover:text-neutral-600 hover:decoration-neutral-500" {
                     "Next >"
                 }

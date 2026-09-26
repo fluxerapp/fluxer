@@ -1,14 +1,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-export interface AdminArchiveRow {
-	subject_type: 'user' | 'guild';
+import type {ArchiveSubjectType} from '@fluxer/schema/src/domains/admin/AdminArchiveSchemas';
+
+export interface AdminArchiveIndexRow {
+	subject_type: ArchiveSubjectType;
 	subject_id: bigint;
 	archive_id: bigint;
 	requested_by: bigint;
+}
+
+export const ADMIN_ARCHIVE_INDEX_COLUMNS = [
+	'subject_type',
+	'subject_id',
+	'archive_id',
+	'requested_by',
+] as const satisfies ReadonlyArray<keyof AdminArchiveIndexRow>;
+
+export interface AdminArchiveRow extends AdminArchiveIndexRow {
 	requested_at: Date;
+	attempt_id?: string | null;
 	started_at: Date | null;
 	completed_at: Date | null;
 	failed_at: Date | null;
+	terminal_failed_at?: Date | null;
 	storage_key: string | null;
 	file_size: bigint | null;
 	progress_percent: number;
@@ -19,14 +33,13 @@ export interface AdminArchiveRow {
 }
 
 export const ADMIN_ARCHIVE_COLUMNS = [
-	'subject_type',
-	'subject_id',
-	'archive_id',
-	'requested_by',
+	...ADMIN_ARCHIVE_INDEX_COLUMNS,
 	'requested_at',
+	'attempt_id',
 	'started_at',
 	'completed_at',
 	'failed_at',
+	'terminal_failed_at',
 	'storage_key',
 	'file_size',
 	'progress_percent',

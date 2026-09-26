@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {startDomainMigrationTrigger} from '@app/features/app/domain_migration/DomainMigrationTrigger';
 import Initialization from '@app/features/app/state/Initialization';
+import PasskeyMigration from '@app/features/auth/passkey_migration/PasskeyMigration';
 import AccountManager from '@app/features/auth/state/AccountManager';
 import accountStorage from '@app/features/auth/state/AccountStorage';
 import Authentication from '@app/features/auth/state/Authentication';
@@ -10,6 +12,7 @@ import Channels from '@app/features/channel/state/Channels';
 import UserConnection from '@app/features/connection/state/UserConnection';
 import Emoji from '@app/features/emoji/state/Emoji';
 import Sticker from '@app/features/emoji/state/EmojiSticker';
+import ExperimentAssignments from '@app/features/experiment/state/ExperimentAssignments';
 import type {FavoriteMemeWire} from '@app/features/expressions/models/FavoriteMeme';
 import FavoriteMemes from '@app/features/expressions/state/FavoriteMemes';
 import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRouter';
@@ -28,7 +31,6 @@ import MemberSidebar from '@app/features/member/state/MemberSidebar';
 import MessageReactions from '@app/features/messaging/state/MessageReactions';
 import Messages from '@app/features/messaging/state/MessagingMessages';
 import SavedMessages from '@app/features/messaging/state/SavedMessages';
-import ScheduledMessages from '@app/features/messaging/state/ScheduledMessages';
 import MentionFeed from '@app/features/notification/state/MentionFeed';
 import Permission from '@app/features/permissions/state/Permission';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -46,7 +48,6 @@ import Users from '@app/features/user/state/Users';
 import WebAuthnCredentials, {type WebAuthnCredential} from '@app/features/user/state/WebAuthnCredentials';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import RtcRegions from '@app/features/voice/state/RtcRegions';
-import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import type {RtcRegionResponse, Channel as WireChannel} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {UserPrivate, User as WireUser} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {runInAction} from 'mobx';
@@ -131,6 +132,7 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext)
 	if (data.rtc_regions) {
 		RtcRegions.setRegions(data.rtc_regions);
 	}
+	ExperimentAssignments.start();
 	Users.handleGatewayReady(data.user);
 	if (data.users && data.users.length > 0) {
 		Users.cacheUsers(data.users);
@@ -147,7 +149,6 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext)
 		void accountStorage.updateAccountUserData(user.id, userData);
 		void AccountManager.updateAccountUserData(user.id, userData);
 	}
-	VoiceSettings.handleGatewayReady(data.user);
 	Authentication.handleGatewayReady({user: data.user});
 	void PremiumCommands.refreshPremiumState().catch((error) => {
 		logger.warn('Failed to refresh premium state after READY', error);
@@ -172,7 +173,6 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext)
 	MemberSearch.handleGatewayReady();
 	SavedMessages.handleGatewayReady();
 	MentionFeed.handleGatewayReady();
-	ScheduledMessages.handleGatewayReady();
 	ChannelPins.handleGatewayReady();
 	UserConnection.handleGatewayReady();
 	UserGuildSettings.handleGatewayReady(data.user_guild_settings ?? []);
@@ -188,4 +188,6 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext)
 	Initialization.setReady();
 	context.setReady();
 	Messages.handleGatewayReady();
+	startDomainMigrationTrigger();
+	PasskeyMigration.handleGatewayReady(data.user.id);
 }

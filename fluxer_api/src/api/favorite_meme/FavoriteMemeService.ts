@@ -1,5 +1,30 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {makeSignedAttachmentCdnUrl} from '@app/api/attachment/AttachmentUrls';
+import type {ChannelID, MemeID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {createAttachmentID, createMemeID, userIdToChannelId} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import {makeAttachmentCdnKey} from '@app/api/channel/services/message/MessageHelpers';
+import {mapFavoriteMemeToResponse} from '@app/api/favorite_meme/FavoriteMemeModel';
+import type {IFavoriteMemeRepository} from '@app/api/favorite_meme/IFavoriteMemeRepository';
+import {
+	isOptionalGifProviderError,
+	type ResolvedGifProviderSlug,
+	tryExtractGifProviderSlug,
+} from '@app/api/gif/GifProviderUtils';
+import type {GifService} from '@app/api/gif/GifService';
+import type {MediaProxyMetadataResponse} from '@app/api/infrastructure/IMediaService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import type {IUnfurlerService} from '@app/api/infrastructure/IUnfurlerService';
+import {Logger} from '@app/api/Logger';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import type {FavoriteMeme} from '@app/api/models/FavoriteMeme';
+import type {Message} from '@app/api/models/Message';
+import type {User} from '@app/api/models/User';
 import {EmbedMediaFlags, MessageAttachmentFlags} from '@fluxer/constants/src/ChannelConstants';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
 import {MAX_FAVORITE_MEME_TAGS, MAX_FAVORITE_MEMES_NON_PREMIUM} from '@fluxer/constants/src/LimitConstants';
@@ -11,31 +36,8 @@ import {MediaMetadataError} from '@fluxer/errors/src/domains/core/MediaMetadataE
 import {UnknownFavoriteMemeError} from '@fluxer/errors/src/domains/core/UnknownFavoriteMemeError';
 import type {GifMediaFormat} from '@fluxer/schema/src/domains/gif/GifSchemas';
 import {normalizeFilename} from '@fluxer/schema/src/primitives/FileValidators';
+import {attachmentStorageKeyFromUrl} from '@pkgs/media_proxy_utils/src/AttachmentUrlSignature';
 import mime from 'mime';
-import type {ApiContext} from '../ApiContext';
-import type {ChannelID, MemeID, MessageID, UserID} from '../BrandedTypes';
-import {createAttachmentID, createMemeID, userIdToChannelId} from '../BrandedTypes';
-import {Config} from '../Config';
-import type {ChannelService} from '../channel/services/ChannelService';
-import {makeAttachmentCdnKey, makeAttachmentCdnUrl} from '../channel/services/message/MessageHelpers';
-import {
-	isOptionalGifProviderError,
-	type ResolvedGifProviderSlug,
-	tryExtractGifProviderSlug,
-} from '../gif/GifProviderUtils';
-import type {GifService} from '../gif/GifService';
-import type {MediaProxyMetadataResponse} from '../infrastructure/IMediaService';
-import type {IStorageService} from '../infrastructure/IStorageService';
-import type {IUnfurlerService} from '../infrastructure/IUnfurlerService';
-import {Logger} from '../Logger';
-import type {LimitConfigService} from '../limits/LimitConfigService';
-import {resolveLimitSafe} from '../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../limits/LimitMatchContextBuilder';
-import type {FavoriteMeme} from '../models/FavoriteMeme';
-import type {Message} from '../models/Message';
-import type {User} from '../models/User';
-import {mapFavoriteMemeToResponse} from './FavoriteMemeModel';
-import type {IFavoriteMemeRepository} from './IFavoriteMemeRepository';
 
 type MessageAttachmentCandidate = Message['attachments'][number];
 type MessageEmbedCandidate = Message['embeds'][number];
@@ -76,6 +78,11 @@ function isAnimatedAttachment(contentType: string, flags: number | undefined): b
 function isAnimatedEmbedMedia(contentType: string | null | undefined, flags: number | undefined): boolean {
 	if (contentType === 'image/gif' || contentType === 'image/apng') return true;
 	return ((flags ?? 0) & EmbedMediaFlags.IS_ANIMATED) !== 0;
+}
+
+function isAttachmentKeyInChannel(storageKey: string, channelId: ChannelID): boolean {
+	const segments = storageKey.split('/');
+	return segments.length === 4 && segments[0] === 'attachments' && segments[1] === channelId.toString();
 }
 
 function resolveFavoriteMemeAnimationFlag(
@@ -315,7 +322,7 @@ export class FavoriteMemeService {
 		this.ensureFavoriteMemeTagLimit(user, urlTags);
 		const metadata = await this.apiContext.services.media.getMetadata({
 			type: 'external',
-			url,
+			url: url,
 			with_base64: true,
 			nsfw: 'allow',
 		});
@@ -544,7 +551,7 @@ export class FavoriteMemeService {
 					embedCount: embeds.length,
 				});
 			}
-			return this.mediaFromEmbed(embeds[preferredEmbedIndex], `embed_${preferredEmbedIndex}`);
+			return this.mediaFromEmbed(embeds[preferredEmbedIndex], `embed_${preferredEmbedIndex}`, message.channelId);
 		}
 		if (attachments.length > 0) {
 			let attachment: MessageAttachmentCandidate | undefined;
@@ -566,7 +573,7 @@ export class FavoriteMemeService {
 			}
 		}
 		for (const embed of embeds) {
-			const media = await this.mediaFromEmbed(embed, 'media');
+			const media = await this.mediaFromEmbed(embed, 'media', message.channelId);
 			if (media) return media;
 		}
 		return null;
@@ -587,7 +594,7 @@ export class FavoriteMemeService {
 		const isGifv = isAnimatedAttachment(attachment.contentType, attachment.flags);
 		return {
 			isExternal: false,
-			url: makeAttachmentCdnUrl(message.channelId, attachment.id, attachment.filename),
+			url: makeSignedAttachmentCdnUrl(message.channelId, attachment.id, attachment.filename),
 			sourceKey: makeAttachmentCdnKey(message.channelId, attachment.id, attachment.filename),
 			filename: attachment.filename,
 			contentType: attachment.contentType,
@@ -607,6 +614,7 @@ export class FavoriteMemeService {
 	private async mediaFromEmbed(
 		embed: MessageEmbedCandidate,
 		fallbackFilename: string,
+		channelId: ChannelID,
 	): Promise<FavoriteMemeMedia | null> {
 		const media = embed.image || embed.video || embed.thumbnail;
 		if (!media?.url) {
@@ -617,13 +625,14 @@ export class FavoriteMemeService {
 		if (!this.isValidMediaType(contentType)) {
 			return null;
 		}
-		const isExternal = !this.isInternalCDNUrl(media.url);
+		const candidateKey = attachmentStorageKeyFromUrl(media.url, Config.endpoints.media);
+		const sourceKey = candidateKey !== null && isAttachmentKeyInChannel(candidateKey, channelId) ? candidateKey : null;
 		const isGifv = embed.type === 'gifv' || isAnimatedEmbedMedia(media.contentType, media.flags);
 		const detectedGif = embed.type === 'gifv' ? await this.detectGifFromUrl(media.url) : null;
 		return {
-			isExternal,
+			isExternal: sourceKey === null,
 			url: media.url,
-			sourceKey: isExternal ? '' : this.extractStorageKeyFromUrl(media.url) || '',
+			sourceKey: sourceKey ?? '',
 			filename,
 			contentType,
 			size: BigInt(0),
@@ -639,10 +648,6 @@ export class FavoriteMemeService {
 		};
 	}
 
-	private isInternalCDNUrl(url: string): boolean {
-		return url.startsWith(`${Config.endpoints.media}/`);
-	}
-
 	private isValidMediaType(contentType: string): boolean {
 		return contentType.startsWith('image/') || contentType.startsWith('video/') || contentType.startsWith('audio/');
 	}
@@ -656,15 +661,6 @@ export class FavoriteMemeService {
 			}
 			const decoded = decodeURIComponent(rawSegment);
 			return normalizeFilename(decoded) || null;
-		} catch {
-			return null;
-		}
-	}
-
-	private extractStorageKeyFromUrl(url: string): string | null {
-		try {
-			const urlObj = new URL(url);
-			return urlObj.pathname.substring(1);
 		} catch {
 			return null;
 		}

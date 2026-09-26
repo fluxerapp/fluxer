@@ -40,6 +40,11 @@ const SPECTATORS_DESCRIPTOR = msg({
 	message: 'Spectators',
 	comment: 'Title of the screen-share spectators popout listing users watching the stream.',
 });
+const SPECTATORS_WITH_COUNT_DESCRIPTOR = msg({
+	message: 'Spectators - {count}',
+	comment:
+		'Header of the screen-share spectators popout. {count} is the number of people currently watching the stream.',
+});
 const VIEW_PROFILE_FOR_DESCRIPTOR = msg({
 	message: 'View profile for {displayName}',
 	comment: "Aria label on an avatar in the spectators popout. {displayName} is the participant's display name.",
@@ -157,7 +162,7 @@ export const StreamSpectatorsPopout = observer(function StreamSpectatorsPopout({
 						>
 							<div className={styles.card} data-flx="voice.stream-spectators-popout.card">
 								<div className={styles.header} data-flx="voice.stream-spectators-popout.header">
-									{i18n._(SPECTATORS_DESCRIPTOR)} - {count}
+									{i18n._(SPECTATORS_WITH_COUNT_DESCRIPTOR, {count: i18n.number(count)})}
 								</div>
 								<div
 									className={styles.list}

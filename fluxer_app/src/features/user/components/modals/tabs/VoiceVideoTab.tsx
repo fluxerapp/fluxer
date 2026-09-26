@@ -25,10 +25,20 @@ const VoiceVideoTab: React.FC = observer(() => {
 		<SettingsTabContainer data-flx="user.voice-video-tab.settings-tab-container">
 			<SettingsTabContent data-flx="user.voice-video-tab.settings-tab-content">
 				<SettingsSection id="audio" title={i18n._(AUDIO_DESCRIPTOR)} data-flx="user.voice-video-tab.audio">
-					<VoiceTab voiceSettings={voiceSettings} hasPremium={hasPremium} data-flx="user.voice-video-tab.voice-tab" />
+					<VoiceTab
+						voiceSettings={voiceSettings}
+						hasPremium={hasPremium}
+						autoRequestPermission={false}
+						data-flx="user.voice-video-tab.voice-tab"
+					/>
 				</SettingsSection>
 				<SettingsSection id="video" title={i18n._(VIDEO_DESCRIPTOR)} data-flx="user.voice-video-tab.video">
-					<VideoTab voiceSettings={voiceSettings} hasPremium={hasPremium} data-flx="user.voice-video-tab.video-tab" />
+					<VideoTab
+						voiceSettings={voiceSettings}
+						hasPremium={hasPremium}
+						autoRequestPermission={false}
+						data-flx="user.voice-video-tab.video-tab"
+					/>
 				</SettingsSection>
 			</SettingsTabContent>
 		</SettingsTabContainer>

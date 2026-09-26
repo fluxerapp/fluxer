@@ -5,11 +5,9 @@
 
 -export([
     check_rate_limit/2,
-    acquire_connection/1,
-    release_connection/1,
     check_shared_ip_rate/1,
     check_shared_user_rate/1,
-    note_disconnect/1
+    rate_limits_disabled/0
 ]).
 
 -export_type([state/0]).
@@ -21,17 +19,17 @@
 
 -define(SHARED_IP_RATE_TABLE, gateway_shared_ip_rate).
 -define(SHARED_USER_RATE_TABLE, gateway_shared_user_rate).
--define(IP_CONNECTION_TABLE, gateway_ip_connections).
 
 -define(SHARED_IP_RATE_WINDOW_MS, 60000).
 -define(SHARED_IP_RATE_MAX_EVENTS, 6000).
 -define(SHARED_USER_RATE_WINDOW_MS, 60000).
 -define(SHARED_USER_RATE_MAX_EVENTS, 600).
--define(MAX_CONNECTIONS_PER_IP, 256).
+-define(SHARED_RATE_CLEANUP_INTERVAL_MS, ?SHARED_IP_RATE_WINDOW_MS * 2).
 
 -type state() :: gateway_handler:state().
 
 -ifdef(TEST).
+-export([prune_old_window_entries/2]).
 -include_lib("eunit/include/eunit.hrl").
 -endif.
 
@@ -138,7 +136,7 @@ check_shared_ip_rate(PeerIP) when is_binary(PeerIP), PeerIP =/= <<"unknown">> ->
         true ->
             ok;
         false ->
-            ensure_window_table(?SHARED_IP_RATE_TABLE),
+            ensure_window_table(?SHARED_IP_RATE_TABLE, ?SHARED_IP_RATE_WINDOW_MS),
             check_shared_ip_window(PeerIP)
     end;
 check_shared_ip_rate(_) ->
@@ -165,7 +163,7 @@ check_shared_user_rate(UserKey) when UserKey =/= undefined ->
         true ->
             ok;
         false ->
-            ensure_window_table(?SHARED_USER_RATE_TABLE),
+            ensure_window_table(?SHARED_USER_RATE_TABLE, ?SHARED_USER_RATE_WINDOW_MS),
             check_shared_user_window(UserKey)
     end;
 check_shared_user_rate(_) ->
@@ -199,92 +197,66 @@ check_shared_window(Table, Key, WindowMs, MaxEvents, LimitReason) ->
         error:badarg -> ok
     end.
 
--spec acquire_connection(term()) -> ok | {error, too_many_connections}.
-acquire_connection(PeerIP) when is_binary(PeerIP), PeerIP =/= <<"unknown">> ->
-    case rate_limits_disabled() of
-        true ->
-            ok;
-        false ->
-            ensure_counter_table(?IP_CONNECTION_TABLE),
-            do_acquire_connection(PeerIP)
-    end;
-acquire_connection(_) ->
-    ok.
-
--spec do_acquire_connection(binary()) -> ok | {error, too_many_connections}.
-do_acquire_connection(PeerIP) ->
-    try ets:update_counter(?IP_CONNECTION_TABLE, PeerIP, {2, 1}, {PeerIP, 0}) of
-        Count when Count > ?MAX_CONNECTIONS_PER_IP ->
-            _ = ets:update_counter(?IP_CONNECTION_TABLE, PeerIP, {2, -1, 0, 0}),
-            {error, too_many_connections};
-        _ ->
-            ok
-    catch
-        error:badarg -> ok
-    end.
-
--spec release_connection(term()) -> ok.
-release_connection(PeerIP) when is_binary(PeerIP), PeerIP =/= <<"unknown">> ->
-    case ets:whereis(?IP_CONNECTION_TABLE) of
-        undefined ->
-            ok;
-        _ ->
-            decrement_connection(PeerIP)
-    end;
-release_connection(_) ->
-    ok.
-
--spec decrement_connection(binary()) -> ok.
-decrement_connection(PeerIP) ->
-    try update_connection_count(PeerIP) of
-        ok -> ok
-    catch
-        error:badarg -> ok
-    end.
-
--spec update_connection_count(binary()) -> ok.
-update_connection_count(PeerIP) ->
-    case ets:update_counter(?IP_CONNECTION_TABLE, PeerIP, {2, -1, 0, 0}) of
-        0 ->
-            ets:delete(?IP_CONNECTION_TABLE, PeerIP),
-            ok;
-        _ ->
-            ok
-    end.
-
--spec note_disconnect(state()) -> ok.
-note_disconnect(State) ->
-    release_connection(maps:get(peer_ip, State, undefined)).
-
--spec ensure_window_table(atom()) -> ok.
-ensure_window_table(Table) ->
-    ensure_table(Table).
-
--spec ensure_counter_table(atom()) -> ok.
-ensure_counter_table(Table) ->
-    ensure_table(Table).
-
--spec ensure_table(atom()) -> ok.
-ensure_table(Table) ->
+-spec ensure_window_table(atom(), pos_integer()) -> ok.
+ensure_window_table(Table, WindowMs) ->
     case ets:whereis(Table) of
-        undefined -> create_table(Table);
+        undefined -> create_window_table(Table, WindowMs);
         _ -> ok
     end.
 
--spec create_table(atom()) -> ok.
-create_table(Table) ->
+-spec create_window_table(atom(), pos_integer()) -> ok.
+create_window_table(Table, WindowMs) ->
+    case create_table(Table) of
+        created -> schedule_window_cleanup(Table, WindowMs);
+        exists -> ok
+    end.
+
+-spec schedule_window_cleanup(atom(), pos_integer()) -> ok.
+schedule_window_cleanup(Table, WindowMs) ->
+    case ets:whereis(Table) of
+        undefined -> ok;
+        Tid -> spawn_window_cleanup(Tid, WindowMs)
+    end.
+
+-spec spawn_window_cleanup(ets:table(), pos_integer()) -> ok.
+spawn_window_cleanup(Tid, WindowMs) ->
+    _ = spawn(fun() -> window_cleanup_loop(Tid, WindowMs) end),
+    ok.
+
+-spec window_cleanup_loop(ets:table(), pos_integer()) -> ok.
+window_cleanup_loop(Table, WindowMs) ->
+    ok = gateway_retry_timer:wait(?SHARED_RATE_CLEANUP_INTERVAL_MS),
+    case prune_old_window_entries(Table, WindowMs) of
+        ok -> window_cleanup_loop(Table, WindowMs);
+        gone -> ok
+    end.
+
+-spec prune_old_window_entries(ets:table(), pos_integer()) -> ok | gone.
+prune_old_window_entries(Table, WindowMs) ->
+    Now = erlang:system_time(millisecond),
+    Cutoff = Now div WindowMs - 1,
     try
-        _ = ets:new(Table, [
-            named_table,
-            public,
-            set,
-            {write_concurrency, true},
-            {read_concurrency, true}
+        _ = ets:select_delete(Table, [
+            {{{'$1', '$2'}, '_'}, [{'<', '$2', Cutoff}], [true]}
         ]),
         ok
     catch
-        error:badarg -> ok
+        error:badarg -> gone
     end.
+
+-spec create_table(atom()) -> created | exists.
+create_table(Table) ->
+    try
+        _ = ets:new(Table, rate_table_options()),
+        created
+    catch
+        error:badarg -> exists
+    end.
+
+-spec rate_table_options() -> list().
+rate_table_options() ->
+    [named_table, public, set, {write_concurrency, true}, {read_concurrency, true}] ++
+        guild_ets_utils:heir_options().
 
 -spec rate_limits_disabled() -> boolean().
 rate_limits_disabled() ->
@@ -343,37 +315,11 @@ shared_ip_rate_ignores_unknown_ip_test() ->
         ?assertEqual(ok, check_shared_ip_rate(undefined))
     end).
 
-connection_cap_blocks_over_limit_test() ->
-    with_rate_limits_enabled(fun() ->
-        IP = <<"198.51.100.20">>,
-        reset_connections(IP),
-        assert_connection_cap_allows_limit(IP),
-        ?assertEqual({error, too_many_connections}, acquire_connection(IP)),
-        ok = release_connection(IP),
-        ?assertEqual(ok, acquire_connection(IP)),
-        reset_connections(IP)
-    end).
-
 assert_shared_ip_rate_allows_limit(IP) ->
     lists:foreach(
         fun(_) -> ?assertEqual(ok, check_shared_ip_rate(IP)) end,
         lists:seq(1, ?SHARED_IP_RATE_MAX_EVENTS)
     ).
-
-assert_connection_cap_allows_limit(IP) ->
-    lists:foreach(
-        fun(_) -> ?assertEqual(ok, acquire_connection(IP)) end,
-        lists:seq(1, ?MAX_CONNECTIONS_PER_IP)
-    ).
-
-connection_release_decrements_test() ->
-    with_rate_limits_enabled(fun() ->
-        IP = <<"198.51.100.30">>,
-        reset_connections(IP),
-        ok = acquire_connection(IP),
-        ok = release_connection(IP),
-        ?assertEqual([], ets:lookup(?IP_CONNECTION_TABLE, IP))
-    end).
 
 reset_shared_ip(IP) ->
     case ets:whereis(?SHARED_IP_RATE_TABLE) of
@@ -386,13 +332,179 @@ reset_shared_ip(IP) ->
             ok
     end.
 
-reset_connections(IP) ->
-    case ets:whereis(?IP_CONNECTION_TABLE) of
+prune_old_window_entries_removes_old_buckets_test() ->
+    with_rate_limits_enabled(fun() ->
+        ok = check_shared_ip_rate(<<"198.51.100.50">>),
+        CurrentBucket = erlang:system_time(millisecond) div ?SHARED_IP_RATE_WINDOW_MS,
+        OldKey = {<<"198.51.100.51">>, CurrentBucket - 5},
+        CurrentKey = {<<"198.51.100.52">>, CurrentBucket},
+        ets:insert(?SHARED_IP_RATE_TABLE, [{OldKey, 3}, {CurrentKey, 7}]),
+        prune_old_window_entries(?SHARED_IP_RATE_TABLE, ?SHARED_IP_RATE_WINDOW_MS),
+        ?assertEqual([], ets:lookup(?SHARED_IP_RATE_TABLE, OldKey)),
+        ?assertEqual([{CurrentKey, 7}], ets:lookup(?SHARED_IP_RATE_TABLE, CurrentKey)),
+        ets:delete(?SHARED_IP_RATE_TABLE, CurrentKey)
+    end).
+
+prune_old_window_entries_keeps_recent_buckets_test() ->
+    with_rate_limits_enabled(fun() ->
+        ok = check_shared_user_rate(<<"user-900100">>),
+        CurrentBucket = erlang:system_time(millisecond) div ?SHARED_USER_RATE_WINDOW_MS,
+        RecentKey = {<<"user-900101">>, CurrentBucket - 1},
+        ets:insert(?SHARED_USER_RATE_TABLE, {RecentKey, 5}),
+        prune_old_window_entries(?SHARED_USER_RATE_TABLE, ?SHARED_USER_RATE_WINDOW_MS),
+        ?assertNotEqual([], ets:lookup(?SHARED_USER_RATE_TABLE, RecentKey)),
+        ets:delete(?SHARED_USER_RATE_TABLE, RecentKey)
+    end).
+
+shared_ip_rate_table_sweeps_stale_buckets_test() ->
+    with_rate_limits_enabled(fun() -> with_fast_cleanup_timer(fun sweep_stale_ip_buckets/0) end).
+
+with_fast_cleanup_timer(Fun) ->
+    meck:new(gateway_retry_timer, [passthrough]),
+    meck:expect(gateway_retry_timer, wait, fun(_) -> timer:sleep(5) end),
+    try
+        Fun()
+    after
+        meck:unload(gateway_retry_timer)
+    end.
+
+sweep_stale_ip_buckets() ->
+    drop_table(?SHARED_IP_RATE_TABLE),
+    IP = <<"198.51.100.40">>,
+    ?assertEqual(ok, check_shared_ip_rate(IP)),
+    Bucket = erlang:system_time(millisecond) div ?SHARED_IP_RATE_WINDOW_MS,
+    fill_stale_buckets(?SHARED_IP_RATE_TABLE, IP, Bucket, 200),
+    ?assert(await_table_size(?SHARED_IP_RATE_TABLE, 2, 150)).
+
+drop_table(Table) ->
+    case ets:whereis(Table) of
         undefined ->
             ok;
         _ ->
-            ets:delete(?IP_CONNECTION_TABLE, IP),
+            ets:delete(Table),
             ok
+    end.
+
+fill_stale_buckets(Table, Key, Bucket, Count) ->
+    lists:foreach(
+        fun(N) -> ets:insert(Table, {{Key, Bucket - N - 1}, 1}) end,
+        lists:seq(1, Count)
+    ).
+
+await_table_size(Table, Max, 0) ->
+    ets:info(Table, size) =< Max;
+await_table_size(Table, Max, Attempts) ->
+    case ets:info(Table, size) =< Max of
+        true ->
+            true;
+        false ->
+            timer:sleep(10),
+            await_table_size(Table, Max, Attempts - 1)
+    end.
+
+shared_ip_bucket_survives_creating_process_death_test() ->
+    with_rate_limits_enabled(fun assert_shared_ip_bucket_survives_creator/0).
+
+assert_shared_ip_bucket_survives_creator() ->
+    drop_table(?SHARED_IP_RATE_TABLE),
+    {ok, _} = guild_ets_owner:start_link(),
+    try
+        assert_shared_ip_bucket_outlives_creator()
+    after
+        gen_server:stop(guild_ets_owner)
+    end.
+
+assert_shared_ip_bucket_outlives_creator() ->
+    IP = <<"198.51.100.70">>,
+    stop_table_owner(start_shared_ip_bucket_creator(IP)),
+    ?assertNotEqual(undefined, ets:whereis(?SHARED_IP_RATE_TABLE)),
+    Key = {IP, erlang:system_time(millisecond) div ?SHARED_IP_RATE_WINDOW_MS},
+    ?assertEqual([{Key, 1}], ets:lookup(?SHARED_IP_RATE_TABLE, Key)).
+
+start_shared_ip_bucket_creator(IP) ->
+    Parent = self(),
+    Pid = spawn(fun() -> create_shared_ip_bucket(Parent, IP) end),
+    receive
+        {owner_ready, Pid} -> Pid
+    after 1000 -> error(owner_start_timeout)
+    end.
+
+create_shared_ip_bucket(Parent, IP) ->
+    ok = check_shared_ip_rate(IP),
+    Parent ! {owner_ready, self()},
+    receive
+        stop -> ok
+    after 30000 -> ok
+    end.
+
+window_cleanup_loops_do_not_outlive_their_table_test() ->
+    with_rate_limits_enabled(fun() ->
+        with_fast_cleanup_timer(fun assert_window_cleanup_loops_do_not_leak/0)
+    end).
+
+assert_window_cleanup_loops_do_not_leak() ->
+    drop_table(?SHARED_IP_RATE_TABLE),
+    Before = count_window_cleanup_loops(),
+    lists:foreach(fun(_) -> churn_shared_ip_table_owner() end, lists:seq(1, 5)),
+    Owner = start_shared_ip_table_owner(),
+    try
+        ?assert(await_window_cleanup_loops(Before + 1, 200))
+    after
+        stop_table_owner(Owner)
+    end.
+
+churn_shared_ip_table_owner() ->
+    stop_table_owner(start_shared_ip_table_owner()).
+
+start_shared_ip_table_owner() ->
+    Parent = self(),
+    Pid = spawn(fun() -> own_shared_ip_table(Parent) end),
+    receive
+        {owner_ready, Pid} -> Pid
+    after 1000 -> error(owner_start_timeout)
+    end.
+
+own_shared_ip_table(Parent) ->
+    ok = check_shared_ip_rate(<<"198.51.100.60">>),
+    Parent ! {owner_ready, self()},
+    receive
+        stop -> ok
+    after 30000 -> ok
+    end.
+
+stop_table_owner(Pid) ->
+    Ref = erlang:monitor(process, Pid),
+    Pid ! stop,
+    receive
+        {'DOWN', Ref, process, Pid, _Reason} -> ok
+    after 1000 -> error(owner_stop_timeout)
+    end.
+
+count_window_cleanup_loops() ->
+    length([Pid || Pid <- erlang:processes(), is_window_cleanup_loop(Pid)]).
+
+is_window_cleanup_loop(Pid) ->
+    case erlang:process_info(Pid, current_stacktrace) of
+        {current_stacktrace, Stack} ->
+            lists:any(fun is_window_cleanup_frame/1, Stack);
+        _ ->
+            false
+    end.
+
+is_window_cleanup_frame({?MODULE, window_cleanup_loop, _Arity, _Location}) ->
+    true;
+is_window_cleanup_frame(_Frame) ->
+    false.
+
+await_window_cleanup_loops(Max, 0) ->
+    count_window_cleanup_loops() =< Max;
+await_window_cleanup_loops(Max, Attempts) ->
+    case count_window_cleanup_loops() =< Max of
+        true ->
+            true;
+        false ->
+            timer:sleep(10),
+            await_window_cleanup_loops(Max, Attempts - 1)
     end.
 
 -endif.

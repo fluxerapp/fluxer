@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {Config} from '@app/api/Config';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createPwnedPasswordsRangeHandler} from '@app/api/test/msw/handlers/PwnedPasswordsHandlers';
+import {createStripeApiHandlers, type StripeApiHandlers} from '@app/api/test/msw/handlers/StripeApiHandlers';
+import {server} from '@app/api/test/msw/server';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {HttpResponse, http} from 'msw';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {Config} from '../../Config';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createPwnedPasswordsRangeHandler} from '../../test/msw/handlers/PwnedPasswordsHandlers';
-import {createStripeApiHandlers, type StripeApiHandlers} from '../../test/msw/handlers/StripeApiHandlers';
-import {server} from '../../test/msw/server';
-import {createBuilder} from '../../test/TestRequestBuilder';
 
 const MOCK_PRICES = {
 	monthlyUsd: 'price_monthly_usd',
@@ -229,6 +229,10 @@ describe('StripeSubscriptionService', () => {
 			await createBuilder(harness, account.token)
 				.post('/premium/reactivate-subscription')
 				.expect(400, APIErrorCodes.STRIPE_NO_SUBSCRIPTION)
+				.execute();
+			await createBuilder(harness, account.token)
+				.post('/premium/cancel-subscription')
+				.expect(400, APIErrorCodes.STRIPE_NO_ACTIVE_SUBSCRIPTION)
 				.execute();
 			expect(stripeHandlers.spies.updatedSubscriptions).toHaveLength(0);
 		});

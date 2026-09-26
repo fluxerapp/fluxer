@@ -41,16 +41,41 @@ export const GuildFeatureSchema = withOpenApiType(
 		[
 			[GuildFeatures.ANIMATED_ICON, 'ANIMATED_ICON', 'Guild can have an animated icon'],
 			[GuildFeatures.ANIMATED_BANNER, 'ANIMATED_BANNER', 'Guild can have an animated banner'],
+			[
+				GuildFeatures.AUDIO_BITRATE_128_KBPS,
+				'AUDIO_BITRATE_128_KBPS',
+				'Guild can set a voice channel bitrate of up to 128 kbps',
+			],
+			[
+				GuildFeatures.AUDIO_BITRATE_256_KBPS,
+				'AUDIO_BITRATE_256_KBPS',
+				'Guild can set a voice channel bitrate of up to 256 kbps',
+			],
+			[
+				GuildFeatures.AUDIO_BITRATE_384_KBPS,
+				'AUDIO_BITRATE_384_KBPS',
+				'Guild can set a voice channel bitrate of up to 384 kbps',
+			],
 			[GuildFeatures.BANNER, 'BANNER', 'Guild can have a banner'],
 			[
 				GuildFeatures.CLONE_EMOJI_DISABLED,
 				'CLONE_EMOJI_DISABLED',
-				'Guild has the in-app one-click emoji clone shortcut disabled for non-members',
+				'Deprecated and no longer enforced: emoji cloning is now opt-in through CLONE_EMOJI_ENABLED',
+			],
+			[
+				GuildFeatures.CLONE_EMOJI_ENABLED,
+				'CLONE_EMOJI_ENABLED',
+				'Guild allows non-members to use the in-app one-click emoji clone shortcut',
 			],
 			[
 				GuildFeatures.CLONE_STICKER_DISABLED,
 				'CLONE_STICKER_DISABLED',
-				'Guild has the in-app one-click sticker clone shortcut disabled for non-members',
+				'Deprecated and no longer enforced: sticker cloning is now opt-in through CLONE_STICKER_ENABLED',
+			],
+			[
+				GuildFeatures.CLONE_STICKER_ENABLED,
+				'CLONE_STICKER_ENABLED',
+				'Guild allows non-members to use the in-app one-click sticker clone shortcut',
 			],
 			[GuildFeatures.DETACHED_BANNER, 'DETACHED_BANNER', 'Guild banner is detached from splash'],
 			[GuildFeatures.INVITE_SPLASH, 'INVITE_SPLASH', 'Guild can have an invite splash'],
@@ -90,7 +115,7 @@ export const GuildFeatureSchema = withOpenApiType(
 );
 const GuildFeatureListSchema = z
 	.array(GuildFeatureSchema)
-	.transform(normalizeGuildFeatures)
+	.overwrite(normalizeGuildFeatures)
 	.describe('Array of guild feature flags');
 export const GuildResponse = z.object({
 	id: SnowflakeStringType.describe('The unique identifier for this guild'),
@@ -156,9 +181,7 @@ export const GuildResponse = z.object({
 		.describe(
 			'ISO8601 timestamp controlling how far back members without Read Message History can access messages. When null, no historical access is allowed.',
 		),
-	permissions: PermissionStringType.optional().describe(
-		'fluxer:PermissionStringType The current user permissions in this guild when available',
-	),
+	permissions: PermissionStringType.optional().describe('The current user permissions in this guild when available'),
 	roles: z.array(GuildRoleResponse).optional().describe('Roles in the guild from gateway state'),
 	emojis: z.array(GuildEmojiResponse).optional().describe('Emojis in the guild from gateway state'),
 	stickers: z.array(GuildStickerResponse).optional().describe('Stickers in the guild from gateway state'),
@@ -175,21 +198,21 @@ export const GuildResponse = z.object({
 
 export type GuildResponse = z.infer<typeof GuildResponse>;
 
-export const GuildPartialResponse = z.object({
-	id: SnowflakeStringType.describe('The unique identifier for this guild'),
-	name: z.string().describe('The name of the guild'),
-	icon: z.string().nullish().describe('The hash of the guild icon'),
-	banner: z.string().nullish().describe('The hash of the guild banner'),
-	banner_width: Int32Type.nullish().describe('The width of the guild banner in pixels'),
-	banner_height: Int32Type.nullish().describe('The height of the guild banner in pixels'),
-	splash: z.string().nullish().describe('The hash of the guild splash screen'),
-	splash_width: Int32Type.nullish().describe('The width of the guild splash in pixels'),
-	splash_height: Int32Type.nullish().describe('The height of the guild splash in pixels'),
-	splash_card_alignment: SplashCardAlignmentSchema.describe('The alignment of the splash card'),
-	embed_splash: z.string().nullish().describe('The hash of the embedded invite splash'),
-	embed_splash_width: Int32Type.nullish().describe('The width of the embedded invite splash in pixels'),
-	embed_splash_height: Int32Type.nullish().describe('The height of the embedded invite splash in pixels'),
-	features: GuildFeatureListSchema,
+export const GuildPartialResponse = GuildResponse.pick({
+	id: true,
+	name: true,
+	icon: true,
+	banner: true,
+	banner_width: true,
+	banner_height: true,
+	splash: true,
+	splash_width: true,
+	splash_height: true,
+	splash_card_alignment: true,
+	embed_splash: true,
+	embed_splash_width: true,
+	embed_splash_height: true,
+	features: true,
 });
 
 export type GuildPartialResponse = z.infer<typeof GuildPartialResponse>;
@@ -240,8 +263,10 @@ export interface Guild {
 	readonly online_count?: number;
 	readonly approximate_member_count?: number;
 	readonly approximate_presence_count?: number;
-	readonly roles?: ReadonlyArray<z.infer<typeof GuildRoleResponse>>;
-	readonly emojis?: ReadonlyArray<z.infer<typeof GuildEmojiResponse>>;
-	readonly stickers?: ReadonlyArray<z.infer<typeof GuildStickerResponse>>;
-	readonly channels?: ReadonlyArray<z.infer<typeof ChannelResponse>>;
+	readonly roles?: ReadonlyArray<GuildRoleResponse>;
+	readonly emojis?: ReadonlyArray<GuildEmojiResponse>;
+	readonly stickers?: ReadonlyArray<GuildStickerResponse>;
+	readonly channels?: ReadonlyArray<ChannelResponse>;
 }
+
+export const GuildListResponse = z.array(GuildResponse);

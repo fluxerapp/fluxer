@@ -1,6 +1,32 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import fs from 'node:fs/promises';
+import {stripOwnAttachmentSignature} from '@app/api/attachment/AttachmentUrls';
+import type {ChannelID, GuildID, MessageID, UserID, WebhookID, WebhookToken} from '@app/api/BrandedTypes';
+import {createChannelID, createGuildID, createWebhookID, createWebhookToken} from '@app/api/BrandedTypes';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/MessageTypes';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
+import type {GuildService} from '@app/api/guild/services/GuildService';
+import type {AvatarService} from '@app/api/infrastructure/AvatarService';
+import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {IMediaService} from '@app/api/infrastructure/IMediaService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import {Logger} from '@app/api/Logger';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Channel} from '@app/api/models/Channel';
+import type {Message} from '@app/api/models/Message';
+import type {Webhook} from '@app/api/models/Webhook';
+import {resolveAssetPath} from '@app/api/utils/AssetPaths';
+import * as RandomUtils from '@app/api/utils/RandomUtils';
+import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
+import {transform as GitHubTransform} from '@app/api/webhook/transformers/GitHubTransformer';
+import {instatusDeliveryKey, transformInstatusWebhook} from '@app/api/webhook/transformers/InstatusTransformer';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {GUILD_TEXT_BASED_CHANNEL_TYPES, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
@@ -22,31 +48,6 @@ import type {
 } from '@fluxer/schema/src/domains/webhook/WebhookRequestSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import {seconds} from 'itty-time';
-import type {ChannelID, GuildID, MessageID, UserID, WebhookID, WebhookToken} from '../BrandedTypes';
-import {createChannelID, createGuildID, createWebhookID, createWebhookToken} from '../BrandedTypes';
-import type {IChannelRepository} from '../channel/IChannelRepository';
-import type {MessageRequest, MessageUpdateRequest} from '../channel/MessageTypes';
-import type {ChannelService} from '../channel/services/ChannelService';
-import type {GuildAuditLogService} from '../guild/GuildAuditLogService';
-import type {GuildService} from '../guild/services/GuildService';
-import type {AvatarService} from '../infrastructure/AvatarService';
-import {contentModerationService} from '../infrastructure/ContentModerationService';
-import type {IGatewayService} from '../infrastructure/IGatewayService';
-import type {IMediaService} from '../infrastructure/IMediaService';
-import type {ISnowflakeService} from '../infrastructure/ISnowflakeService';
-import {Logger} from '../Logger';
-import type {LimitConfigService} from '../limits/LimitConfigService';
-import {resolveLimitSafe} from '../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../limits/LimitMatchContextBuilder';
-import type {RequestCache} from '../middleware/RequestCacheMiddleware';
-import type {Channel} from '../models/Channel';
-import type {Message} from '../models/Message';
-import type {Webhook} from '../models/Webhook';
-import {resolveAssetPath} from '../utils/AssetPaths';
-import * as RandomUtils from '../utils/RandomUtils';
-import type {IWebhookRepository} from './IWebhookRepository';
-import {transform as GitHubTransform} from './transformers/GitHubTransformer';
-import {transformInstatusWebhook} from './transformers/InstatusTransformer';
 
 export interface WebhookExecuteMessageData extends Omit<WebhookMessageRequest, 'attachments'> {
 	attachments?: WebhookMessageRequest['attachments'] | MessageRequest['attachments'];
@@ -430,6 +431,11 @@ export class WebhookService {
 		const {webhookId, token, data, requestCache} = params;
 		const webhook = await this.getTokenAuthenticatedWebhook({webhookId, token});
 		await this.assertWebhookGuildChannel(webhook);
+		const delivery = instatusDeliveryKey(data);
+		if (delivery) {
+			const isCached = await this.cacheService.get<number>(`instatus:${webhookId}:${delivery}`);
+			if (isCached) return;
+		}
 		const embed = transformInstatusWebhook(data);
 		if (!embed) return;
 		await this.channelService.messages.send.sendWebhookMessage({
@@ -439,6 +445,7 @@ export class WebhookService {
 			avatar: await this.getInstatusWebhookAvatar(webhook.id),
 			requestCache,
 		});
+		if (delivery) await this.cacheService.set(`instatus:${webhookId}:${delivery}`, 1, seconds('1 day'));
 	}
 
 	async dispatchWebhooksUpdate({
@@ -565,12 +572,13 @@ export class WebhookService {
 
 	private async getWebhookAvatar({
 		webhookId,
-		avatarUrl,
+		avatarUrl: requestedAvatarUrl,
 	}: {
 		webhookId: WebhookID;
 		avatarUrl: string | null;
 	}): Promise<string | null> {
-		if (!avatarUrl) return null;
+		if (!requestedAvatarUrl) return null;
+		const avatarUrl = stripOwnAttachmentSignature(requestedAvatarUrl);
 		try {
 			const cacheKey = `webhook:${webhookId}:avatar:${avatarUrl}`;
 			const avatarCache = await this.cacheService.get<string>(cacheKey);
@@ -580,7 +588,7 @@ export class WebhookService {
 				type: 'external',
 				url: avatarUrl,
 				with_base64: true,
-				nsfw: 'block',
+				nsfw: 'allow',
 			});
 			if (!metadata?.base64) {
 				await this.cacheService.set(cacheKey, WEBHOOK_AVATAR_MISSING_CACHE_VALUE, seconds('5 minutes'));

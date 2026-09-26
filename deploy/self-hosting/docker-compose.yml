@@ -1,55 +1,65 @@
 name: fluxer
 
+x-fluxer-postgres-env: &fluxer-postgres-env
+  FLUXER_DATABASE_BACKEND: postgres
+  FLUXER_POSTGRES_HOST: ${FLUXER_POSTGRES_HOST:-postgres}
+  FLUXER_POSTGRES_PORT: "${FLUXER_POSTGRES_PORT:-5432}"
+  FLUXER_POSTGRES_DATABASE: ${FLUXER_POSTGRES_DATABASE:-fluxer}
+  FLUXER_POSTGRES_USERNAME: ${FLUXER_POSTGRES_USERNAME:-fluxer}
+  FLUXER_POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+  FLUXER_POSTGRES_SSL: "${FLUXER_POSTGRES_SSL:-false}"
+  FLUXER_POSTGRES_PREPARED_STATEMENTS: ${FLUXER_POSTGRES_PREPARED_STATEMENTS:-true}
+
 x-fluxer-env: &fluxer-env
+  <<: *fluxer-postgres-env
   FLUXER_ENV: production
   NODE_ENV: production
+  LOG_LEVEL: ${LOG_LEVEL:-info}
   FLUXER_SELF_HOSTED: "true"
   FLUXER_BASE_DOMAIN: ${FLUXER_DOMAIN:?set FLUXER_DOMAIN in .env}
   FLUXER_PUBLIC_SCHEME: ${FLUXER_PUBLIC_SCHEME:-https}
   FLUXER_PUBLIC_PORT: ${FLUXER_PUBLIC_PORT:-443}
-  FLUXER_TRUST_CLIENT_IP_HEADER: "true"
-  FLUXER_CLIENT_IP_HEADER_NAME: x-forwarded-for
+  FLUXER_PUBLIC_ORIGIN: ${FLUXER_PUBLIC_ORIGIN:-}
+  FLUXER_TRUST_CLIENT_IP_HEADER: "${FLUXER_TRUST_CLIENT_IP_HEADER:-true}"
+  FLUXER_CLIENT_IP_HEADER_NAME: ${FLUXER_CLIENT_IP_HEADER_NAME:-x-forwarded-for}
+  FLUXER_API_HEADERS_TIMEOUT_MS: ${FLUXER_API_HEADERS_TIMEOUT_MS:-30000}
+  FLUXER_API_REQUEST_TIMEOUT_MS: ${FLUXER_API_REQUEST_TIMEOUT_MS:-120000}
+  FLUXER_TOR_EXIT_LIST_ENABLED: "${FLUXER_TOR_EXIT_LIST_ENABLED:-false}"
+  FLUXER_BREACHED_PASSWORD_CHECK_ENABLED: "${FLUXER_BREACHED_PASSWORD_CHECK_ENABLED:-false}"
 
-  FLUXER_DATABASE_BACKEND: postgres
-  FLUXER_POSTGRES_HOST: postgres
-  FLUXER_POSTGRES_PORT: "5432"
-  FLUXER_POSTGRES_DATABASE: fluxer
-  FLUXER_POSTGRES_USERNAME: fluxer
-  FLUXER_POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
-  FLUXER_POSTGRES_SSL: "false"
-
-  FLUXER_KV_URL: redis://valkey:6379/0
-  FLUXER_NATS_URL: nats://nats:4222
-  FLUXER_NATS_JETSTREAM_URL: nats://nats:4222
-  FLUXER_SVC_NATS_URL: nats://nats:4222
+  FLUXER_KV_URL: ${FLUXER_KV_URL:-redis://valkey:6379/0}
+  FLUXER_NATS_URL: ${FLUXER_NATS_URL:-nats://nats:4222}
+  FLUXER_NATS_JETSTREAM_URL: ${FLUXER_NATS_JETSTREAM_URL:-${FLUXER_NATS_URL:-nats://nats:4222}}
+  FLUXER_NATS_AUTH_TOKEN: ${FLUXER_NATS_AUTH_TOKEN:-}
+  FLUXER_SVC_NATS_URL: ${FLUXER_SVC_NATS_URL:-${FLUXER_NATS_URL:-nats://nats:4222}}
   FLUXER_SVC_SHARD_COUNT: "1"
 
   FLUXER_SEARCH_ENGINE: meilisearch
-  FLUXER_SEARCH_URL: http://meilisearch:7700
+  FLUXER_SEARCH_URL: ${FLUXER_SEARCH_URL:-http://meilisearch:7700}
   FLUXER_SEARCH_API_KEY: ${MEILI_MASTER_KEY:?set MEILI_MASTER_KEY in .env}
 
-  FLUXER_S3_ENDPOINT: http://seaweedfs:8333
-  FLUXER_S3_PUBLIC_ENDPOINT: http://seaweedfs:8333
-  FLUXER_S3_REGION: us-east-1
+  FLUXER_S3_ENDPOINT: ${FLUXER_S3_ENDPOINT:-http://seaweedfs:8333}
+  FLUXER_S3_PUBLIC_ENDPOINT: ${FLUXER_S3_PUBLIC_ENDPOINT:-${FLUXER_S3_ENDPOINT:-http://seaweedfs:8333}}
+  FLUXER_S3_REGION: ${FLUXER_S3_REGION:-us-east-1}
   FLUXER_S3_ACCESS_KEY_ID: ${FLUXER_S3_ACCESS_KEY:?set FLUXER_S3_ACCESS_KEY in .env}
   FLUXER_S3_SECRET_ACCESS_KEY: ${FLUXER_S3_SECRET_KEY:?set FLUXER_S3_SECRET_KEY in .env}
-  FLUXER_S3_FORCE_PATH_STYLE: "true"
-  FLUXER_S3_BUCKET_CDN: fluxer
-  FLUXER_S3_BUCKET_UPLOADS: fluxer-uploads
-  FLUXER_S3_BUCKET_DOWNLOADS: fluxer-downloads
-  FLUXER_S3_BUCKET_REPORTS: fluxer-reports
-  FLUXER_S3_BUCKET_HARVESTS: fluxer-harvests
-  AWS_ACCESS_KEY_ID: ${FLUXER_S3_ACCESS_KEY:?}
-  AWS_SECRET_ACCESS_KEY: ${FLUXER_S3_SECRET_KEY:?}
-  AWS_DEFAULT_REGION: us-east-1
+  FLUXER_S3_FORCE_PATH_STYLE: "${FLUXER_S3_FORCE_PATH_STYLE:-true}"
+  FLUXER_S3_BUCKET_CDN: ${FLUXER_S3_BUCKET_CDN:-fluxer}
+  FLUXER_S3_BUCKET_UPLOADS: ${FLUXER_S3_BUCKET_UPLOADS:-fluxer-uploads}
+  FLUXER_S3_BUCKET_REPORTS: ${FLUXER_S3_BUCKET_REPORTS:-fluxer-reports}
+  FLUXER_S3_BUCKET_HARVESTS: ${FLUXER_S3_BUCKET_HARVESTS:-fluxer-harvests}
+  AWS_ACCESS_KEY_ID: ${FLUXER_S3_ACCESS_KEY:?set FLUXER_S3_ACCESS_KEY in .env}
+  AWS_SECRET_ACCESS_KEY: ${FLUXER_S3_SECRET_KEY:?set FLUXER_S3_SECRET_KEY in .env}
+  AWS_DEFAULT_REGION: ${FLUXER_S3_REGION:-us-east-1}
   AWS_EC2_METADATA_DISABLED: "true"
 
-  FLUXER_LIVEKIT_ENABLED: "true"
+  FLUXER_LIVEKIT_ENABLED: "${FLUXER_LIVEKIT_ENABLED:-true}"
   FLUXER_LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:?set LIVEKIT_API_KEY in .env}
   FLUXER_LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:?set LIVEKIT_API_SECRET in .env}
-  FLUXER_LIVEKIT_INTERNAL_URL: http://livekit:7880
+  FLUXER_LIVEKIT_INTERNAL_URL: ${FLUXER_LIVEKIT_INTERNAL_URL:-http://livekit:7880}
   FLUXER_LIVEKIT_WEBHOOK_URL: http://api:8080/webhooks/livekit
   FLUXER_LIVEKIT_DEFAULT_REGION: '{"id":"default","name":"Default","emoji":"🌍","latitude":0,"longitude":0}'
+  FLUXER_LIVEKIT_URL: ${FLUXER_LIVEKIT_URL:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}:${FLUXER_PUBLIC_PORT:-443}}/livekit}
 
   FLUXER_KLIPY_API_KEY: ${FLUXER_KLIPY_API_KEY:-}
 
@@ -64,12 +74,16 @@ x-fluxer-env: &fluxer-env
   FLUXER_EMAIL_SMTP_PASSWORD: ${FLUXER_EMAIL_SMTP_PASSWORD:-}
   FLUXER_EMAIL_SMTP_SECURE: ${FLUXER_EMAIL_SMTP_SECURE:-true}
 
-  FLUXER_SMS_ENABLED: "false"
+  FLUXER_SMS_ENABLED: "${FLUXER_SMS_ENABLED:-false}"
   FLUXER_CAPTCHA_ENABLED: ${FLUXER_CAPTCHA_ENABLED:-false}
   FLUXER_CAPTCHA_PROVIDER: ${FLUXER_CAPTCHA_PROVIDER:-none}
-  FLUXER_STRIPE_ENABLED: "false"
-  FLUXER_NCMEC_ENABLED: "false"
-  FLUXER_CLAMAV_ENABLED: "false"
+  FLUXER_CAPTCHA_HCAPTCHA_SITE_KEY: ${FLUXER_CAPTCHA_HCAPTCHA_SITE_KEY:-}
+  FLUXER_CAPTCHA_HCAPTCHA_SECRET_KEY: ${FLUXER_CAPTCHA_HCAPTCHA_SECRET_KEY:-}
+  FLUXER_CAPTCHA_TURNSTILE_SITE_KEY: ${FLUXER_CAPTCHA_TURNSTILE_SITE_KEY:-}
+  FLUXER_CAPTCHA_TURNSTILE_SECRET_KEY: ${FLUXER_CAPTCHA_TURNSTILE_SECRET_KEY:-}
+  FLUXER_STRIPE_ENABLED: "${FLUXER_STRIPE_ENABLED:-false}"
+  FLUXER_NCMEC_ENABLED: "${FLUXER_NCMEC_ENABLED:-false}"
+  FLUXER_CLAMAV_ENABLED: "${FLUXER_CLAMAV_ENABLED:-false}"
   FLUXER_DISCOVERY_ENABLED: ${FLUXER_DISCOVERY_ENABLED:-true}
 
   FLUXER_SUDO_MODE_SECRET: ${FLUXER_SUDO_MODE_SECRET:?set FLUXER_SUDO_MODE_SECRET in .env}
@@ -80,44 +94,59 @@ x-fluxer-env: &fluxer-env
   FLUXER_VAPID_EMAIL: ${FLUXER_VAPID_EMAIL:-admin@${FLUXER_DOMAIN}}
   FLUXER_PASSKEY_RP_ID: ${FLUXER_PASSKEY_RP_ID:-${FLUXER_DOMAIN}}
   FLUXER_PASSKEY_RP_NAME: ${FLUXER_PASSKEY_RP_NAME:-Fluxer}
-  FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS: ${FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}
+  FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS: ${FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}}
   FLUXER_GATEWAY_RPC_AUTH_TOKEN: ${FLUXER_GATEWAY_RPC_AUTH_TOKEN:?set FLUXER_GATEWAY_RPC_AUTH_TOKEN in .env}
   FLUXER_MEDIA_PROXY_SECRET_KEY: ${FLUXER_MEDIA_PROXY_SECRET_KEY:?set FLUXER_MEDIA_PROXY_SECRET_KEY in .env}
   FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64: ${FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64:?set FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 in .env}
+  FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64: ${FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64:-}
   FLUXER_ADMIN_SECRET_KEY_BASE: ${FLUXER_ADMIN_SECRET_KEY_BASE:?set FLUXER_ADMIN_SECRET_KEY_BASE in .env}
   FLUXER_ADMIN_OAUTH_CLIENT_SECRET: ${FLUXER_ADMIN_OAUTH_CLIENT_SECRET:?set FLUXER_ADMIN_OAUTH_CLIENT_SECRET in .env}
 
   FLUXER_INTERNAL_API_ENDPOINT: http://api:8080
   FLUXER_INTERNAL_GATEWAY_ENDPOINT: http://gateway:8080
   FLUXER_INTERNAL_MEDIA_PROXY_ENDPOINT: http://media-proxy:8080
-  FLUXER_MARKETING_ENDPOINT: ${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}
+  FLUXER_MARKETING_ENDPOINT: ${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}
   FLUXER_MEDIA_PROXY_ENDPOINT: http://media-proxy:8080
-  FLUXER_MEDIA_ENDPOINT: ${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}/media
-  FLUXER_MEDIA_PROXY_UPLOAD_RELAY_ENDPOINT: ${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}/media
+  FLUXER_MEDIA_ENDPOINT: ${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}/media
+  FLUXER_MEDIA_PROXY_UPLOAD_RELAY_ENDPOINT: ${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}/media
 
 x-fluxer-service: &fluxer-service
   restart: unless-stopped
   networks: [fluxer]
 
+x-fluxer-svc-healthcheck: &fluxer-svc-healthcheck
+  test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8090 && printf 'GET /_health HTTP/1.0\\r\\n\\r\\n' >&3 && head -n 1 <&3 | grep -q ' 200 '"]
+  interval: 10s
+  timeout: 5s
+  retries: 30
+  start_period: 60s
+  start_interval: 1s
+
 services:
-  caddy:
-    image: caddy:2.10-alpine
+  edge:
+    image: caddy:2.11-alpine
     deploy:
       resources:
         limits:
-          memory: 256mb
+          memory: ${FLUXER_CADDY_MEMORY_LIMIT:-256mb}
     restart: unless-stopped
     networks: [fluxer]
     ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
+      - "${FLUXER_HTTP_PORT:-80}:80"
+      - "${FLUXER_HTTPS_PORT:-443}:443"
+      - "${FLUXER_HTTPS_PORT:-443}:443/udp"
     environment:
-      FLUXER_CADDY_SITE_ADDRESS: ${FLUXER_CADDY_SITE_ADDRESS:?set FLUXER_CADDY_SITE_ADDRESS in .env}
+      FLUXER_EDGE_SITE_ADDRESS: ${FLUXER_EDGE_SITE_ADDRESS:-${FLUXER_CADDY_SITE_ADDRESS:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN:?set FLUXER_DOMAIN in .env}}}
+      FLUXER_EDGE_TRUSTED_PROXIES: ${FLUXER_EDGE_TRUSTED_PROXIES:-private_ranges}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy-data:/data
-      - caddy-config:/config
+      - edge-data:/data
+      - edge-config:/config
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:2019/config/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
     depends_on:
       api: {condition: service_started}
       gateway: {condition: service_healthy}
@@ -130,19 +159,19 @@ services:
     deploy:
       resources:
         limits:
-          memory: 2gb
+          memory: ${FLUXER_POSTGRES_MEMORY_LIMIT:-5gb}
         reservations:
-          memory: 768mb
+          memory: ${FLUXER_POSTGRES_MEMORY_RESERVATION:-3gb}
     restart: unless-stopped
     networks: [fluxer]
     command: >
       postgres
-      -c max_connections=150
-      -c shared_buffers=512MB
-      -c effective_cache_size=2GB
-      -c work_mem=8MB
-      -c maintenance_work_mem=256MB
-      -c autovacuum_work_mem=128MB
+      -c max_connections=${FLUXER_POSTGRES_SERVER_MAX_CONNECTIONS:-150}
+      -c shared_buffers=${FLUXER_POSTGRES_SHARED_BUFFERS:-512MB}
+      -c effective_cache_size=${FLUXER_POSTGRES_EFFECTIVE_CACHE_SIZE:-2GB}
+      -c work_mem=${FLUXER_POSTGRES_WORK_MEM:-8MB}
+      -c maintenance_work_mem=${FLUXER_POSTGRES_MAINTENANCE_WORK_MEM:-256MB}
+      -c autovacuum_work_mem=${FLUXER_POSTGRES_AUTOVACUUM_WORK_MEM:-128MB}
       -c random_page_cost=1.1
       -c effective_io_concurrency=200
       -c default_statistics_target=200
@@ -159,7 +188,7 @@ services:
       -c autovacuum_vacuum_cost_limit=2000
       -c track_io_timing=on
       -c shared_preload_libraries=pg_stat_statements
-    shm_size: 256mb
+    shm_size: ${FLUXER_POSTGRES_SHM_SIZE:-1gb}
     environment:
       POSTGRES_DB: fluxer
       POSTGRES_USER: fluxer
@@ -173,14 +202,18 @@ services:
       retries: 10
 
   valkey:
-    image: valkey/valkey:8.1-alpine
+    image: valkey/valkey:9.1-alpine
     deploy:
       resources:
         limits:
-          memory: 256mb
+          memory: ${FLUXER_VALKEY_MEMORY_LIMIT:-256mb}
     restart: unless-stopped
     networks: [fluxer]
-    command: ["valkey-server", "--save", "", "--appendonly", "no", "--maxmemory", "192mb", "--maxmemory-policy", "allkeys-lru"]
+    command: ["valkey-server", "--appendonly", "yes", "--appendfsync", "everysec", "--dir", "/data",
+              "--maxmemory", "${FLUXER_VALKEY_MAXMEMORY:-192mb}",
+              "--maxmemory-policy", "${FLUXER_VALKEY_MAXMEMORY_POLICY:-noeviction}"]
+    volumes:
+      - valkey-data:/data
     healthcheck:
       test: ["CMD", "valkey-cli", "ping"]
       interval: 10s
@@ -192,55 +225,82 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256mb
+          memory: ${FLUXER_NATS_MEMORY_LIMIT:-256mb}
     restart: unless-stopped
     networks: [fluxer]
     command: ["-js", "-sd", "/data", "-m", "8222"]
     volumes:
       - nats-data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8222/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   meilisearch:
-    image: getmeili/meilisearch:v1.12
+    image: getmeili/meilisearch:v1.53
     deploy:
       resources:
         limits:
-          memory: 768mb
+          memory: ${FLUXER_MEILISEARCH_MEMORY_LIMIT:-768mb}
     restart: unless-stopped
     networks: [fluxer]
     environment:
       MEILI_ENV: production
       MEILI_NO_ANALYTICS: "true"
-      MEILI_MAX_INDEXING_MEMORY: 384mb
+      MEILI_UPGRADE_DB: "true"
+      MEILI_MAX_INDEXING_MEMORY: ${FLUXER_MEILISEARCH_MAX_INDEXING_MEMORY:-384mb}
       MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:?set MEILI_MASTER_KEY in .env}
     volumes:
       - meilisearch-data:/meili_data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:7700/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   seaweedfs:
-    image: chrislusf/seaweedfs:4.34
+    image: chrislusf/seaweedfs:4.47
     deploy:
       resources:
         limits:
-          memory: 512mb
+          memory: ${FLUXER_SEAWEEDFS_MEMORY_LIMIT:-2gb}
     restart: unless-stopped
     networks: [fluxer]
-    command: ["server", "-s3", "-dir=/data"]
+    environment:
+      GOMEMLIMIT: ${FLUXER_SEAWEEDFS_GOMEMLIMIT:-1536MiB}
+    command: ["server", "-s3", "-dir=/data", "-master.telemetry=false"]
     volumes:
       - seaweedfs-data:/data
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8333/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
 
   seaweedfs-init:
-    image: chrislusf/seaweedfs:4.34
+    image: chrislusf/seaweedfs:4.47
     deploy:
       resources:
         limits:
-          memory: 128mb
+          memory: ${FLUXER_SEAWEEDFS_INIT_MEMORY_LIMIT:-128mb}
     networks: [fluxer]
-    depends_on: [seaweedfs]
+    depends_on:
+      seaweedfs: {condition: service_healthy}
     restart: "no"
+    environment:
+      FLUXER_S3_ACCESS_KEY: ${FLUXER_S3_ACCESS_KEY:?set FLUXER_S3_ACCESS_KEY in .env}
+      FLUXER_S3_SECRET_KEY: ${FLUXER_S3_SECRET_KEY:?set FLUXER_S3_SECRET_KEY in .env}
+      FLUXER_S3_BUCKET_CDN: ${FLUXER_S3_BUCKET_CDN:-fluxer}
+      FLUXER_S3_BUCKET_UPLOADS: ${FLUXER_S3_BUCKET_UPLOADS:-fluxer-uploads}
+      FLUXER_S3_BUCKET_REPORTS: ${FLUXER_S3_BUCKET_REPORTS:-fluxer-reports}
+      FLUXER_S3_BUCKET_HARVESTS: ${FLUXER_S3_BUCKET_HARVESTS:-fluxer-harvests}
     entrypoint:
       - /bin/sh
       - -c
       - >
-        buckets="fluxer fluxer-uploads fluxer-downloads fluxer-reports fluxer-harvests";
+        buckets="$$FLUXER_S3_BUCKET_CDN $$FLUXER_S3_BUCKET_UPLOADS $$FLUXER_S3_BUCKET_REPORTS $$FLUXER_S3_BUCKET_HARVESTS";
         missing="$$buckets";
         for attempt in $$(seq 1 60); do
           if ! nc -z seaweedfs 9333 2>/dev/null; then
@@ -253,6 +313,10 @@ services:
             echo "$$listed" | grep -q "^[[:space:]]*$$b[[:space:]]" || missing="$${missing:+$$missing }$$b";
           done;
           if [ -z "$$missing" ]; then
+            if ! echo "s3.configure -user=fluxer -access_key=$$FLUXER_S3_ACCESS_KEY -secret_key=$$FLUXER_S3_SECRET_KEY -actions=Admin,Read,Write,List,Tagging -apply" | timeout 10 weed shell -master=seaweedfs:9333 >/dev/null 2>&1; then
+              echo "seaweedfs-init could not configure the S3 identity" >&2;
+              exit 1;
+            fi;
             echo "buckets ready";
             exit 0;
           fi;
@@ -269,17 +333,34 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512mb
+          memory: ${FLUXER_LIVEKIT_MEMORY_LIMIT:-512mb}
     restart: unless-stopped
     networks: [fluxer]
-    command: ["--config", "/etc/livekit.yaml"]
     environment:
       LIVEKIT_KEYS: "${LIVEKIT_API_KEY:?set LIVEKIT_API_KEY in .env}: ${LIVEKIT_API_SECRET:?set LIVEKIT_API_SECRET in .env}"
-    volumes:
-      - ./livekit.yaml:/etc/livekit.yaml:ro
+      LIVEKIT_CONFIG: |
+        port: 7880
+        log_level: info
+        rtc:
+          tcp_port: ${FLUXER_LIVEKIT_TCP_PORT:-7881}
+          udp_port: ${FLUXER_LIVEKIT_UDP_PORT:-7882}
+          use_external_ip: ${FLUXER_LIVEKIT_USE_EXTERNAL_IP:-true}
+          node_ip: "${FLUXER_LIVEKIT_NODE_IP:-}"
+          stun_servers:
+            - ${FLUXER_LIVEKIT_STUN_PRIMARY:-stun.l.google.com:19302}
+            - ${FLUXER_LIVEKIT_STUN_SECONDARY:-stun1.l.google.com:19302}
+        webhook:
+          api_key: ${LIVEKIT_API_KEY:?set LIVEKIT_API_KEY in .env}
+          urls:
+            - http://api:8080/webhooks/livekit
     ports:
-      - "${FLUXER_LIVEKIT_TCP_PORT:-7881}:7881"
-      - "${FLUXER_LIVEKIT_UDP_PORT:-7882}:7882/udp"
+      - "${FLUXER_LIVEKIT_TCP_PORT:-7881}:${FLUXER_LIVEKIT_TCP_PORT:-7881}"
+      - "${FLUXER_LIVEKIT_UDP_PORT:-7882}:${FLUXER_LIVEKIT_UDP_PORT:-7882}/udp"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:7880/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   api:
     <<: *fluxer-service
@@ -287,12 +368,13 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1536mb
+          memory: ${FLUXER_API_MEMORY_LIMIT:-2560mb}
         reservations:
-          memory: 512mb
+          memory: ${FLUXER_API_MEMORY_RESERVATION:-1gb}
     environment:
       <<: *fluxer-env
       FLUXER_API_PORT: "8080"
+      NODE_OPTIONS: --enable-source-maps${FLUXER_API_NODE_HEAP_MB:+ --max-old-space-size=$FLUXER_API_NODE_HEAP_MB}
       FLUXER_API_PRESIGNED_ATTACHMENT_UPLOADS_ENABLED: "true"
       FLUXER_POSTGRES_MAX_CONNECTIONS: "25"
     healthcheck:
@@ -305,17 +387,17 @@ services:
     depends_on:
       postgres: {condition: service_healthy}
       valkey: {condition: service_healthy}
-      nats: {condition: service_started}
-      meilisearch: {condition: service_started}
+      nats: {condition: service_healthy}
+      meilisearch: {condition: service_healthy}
       seaweedfs-init: {condition: service_completed_successfully}
-      gifs: {condition: service_started}
-      gifs-shard: {condition: service_started}
-      snowflakes: {condition: service_started}
-      snowflakes-shard: {condition: service_started}
-      messages: {condition: service_started}
-      messages-shard: {condition: service_started}
-      users: {condition: service_started}
-      users-shard: {condition: service_started}
+      gifs: {condition: service_healthy}
+      gifs-shard: {condition: service_healthy}
+      snowflakes: {condition: service_healthy}
+      snowflakes-shard: {condition: service_healthy}
+      messages: {condition: service_healthy}
+      messages-shard: {condition: service_healthy}
+      users: {condition: service_healthy}
+      users-shard: {condition: service_healthy}
 
   worker:
     <<: *fluxer-service
@@ -323,23 +405,32 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1536mb
+          memory: ${FLUXER_WORKER_MEMORY_LIMIT:-2560mb}
+        reservations:
+          memory: ${FLUXER_WORKER_MEMORY_RESERVATION:-1gb}
     working_dir: /usr/src/app/fluxer_api
-    command: ["node", "dist/WorkerEntrypoint.js"]
+    command: ["sh", "-c", "if [ -f dist/WorkerEntrypoint.js ]; then exec node dist/WorkerEntrypoint.js; else exec ./node_modules/.bin/tsx src/WorkerEntrypoint.ts; fi"]
     environment:
       <<: *fluxer-env
+      NODE_OPTIONS: --enable-source-maps${FLUXER_WORKER_NODE_HEAP_MB:+ --max-old-space-size=$FLUXER_WORKER_NODE_HEAP_MB}
       FLUXER_API_WORKER_MODE: all_lanes
       FLUXER_API_WORKER_ENABLE_CRON_SCHEDULER: "true"
-      FLUXER_API_WORKER_ENABLE_VOICE_RECONCILIATION: "true"
       FLUXER_POSTGRES_MAX_CONNECTIONS: "25"
+    healthcheck:
+      test: ["CMD", "node", "-e", "const age=Date.now()-require('node:fs').statSync('/tmp/fluxer-worker-heartbeat').mtimeMs;if(age>30000){console.error('worker heartbeat is '+Math.round(age)+'ms old');process.exit(1)}"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+      start_interval: 1s
     depends_on:
       postgres: {condition: service_healthy}
       valkey: {condition: service_healthy}
-      nats: {condition: service_started}
+      nats: {condition: service_healthy}
       seaweedfs-init: {condition: service_completed_successfully}
-      snowflakes-shard: {condition: service_started}
-      messages-shard: {condition: service_started}
-      users-shard: {condition: service_started}
+      snowflakes-shard: {condition: service_healthy}
+      messages-shard: {condition: service_healthy}
+      users-shard: {condition: service_healthy}
 
   gateway:
     <<: *fluxer-service
@@ -347,15 +438,18 @@ services:
     deploy:
       resources:
         limits:
-          memory: 1gb
+          memory: ${FLUXER_GATEWAY_MEMORY_LIMIT:-1gb}
         reservations:
-          memory: 384mb
+          memory: ${FLUXER_GATEWAY_MEMORY_RESERVATION:-384mb}
     environment:
       <<: *fluxer-env
       FLUXER_GATEWAY_PORT: "8080"
-      FLUXER_GATEWAY_MEDIA_PROXY_ENDPOINT: ${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}/media
-      FLUXER_GATEWAY_STATIC_CDN_ENDPOINT: ${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}
+      FLUXER_GATEWAY_MEDIA_PROXY_ENDPOINT: ${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}/media
+      FLUXER_GATEWAY_STATIC_CDN_ENDPOINT: ${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}
       FLUXER_GATEWAY_LOGGER_LEVEL: info
+      FLUXER_ERLANG_COOKIE: ${FLUXER_ERLANG_COOKIE:?set FLUXER_ERLANG_COOKIE in .env}
+      FLUXER_ERLANG_SCHEDULERS_MIN: "${FLUXER_ERLANG_SCHEDULERS_MIN:-2}"
+      FLUXER_ERLANG_SCHEDULERS_MAX: "${FLUXER_ERLANG_SCHEDULERS_MAX:-16}"
     healthcheck:
       test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1:8080/_health/ready"]
       interval: 10s
@@ -363,7 +457,7 @@ services:
       retries: 30
       start_period: 90s
     depends_on:
-      nats: {condition: service_started}
+      nats: {condition: service_healthy}
       valkey: {condition: service_healthy}
 
   media-proxy:
@@ -372,18 +466,45 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512mb
+          memory: ${FLUXER_MEDIA_PROXY_MEMORY_LIMIT:-512mb}
     environment:
       <<: *fluxer-env
       FLUXER_MEDIA_PROXY_HOST: 0.0.0.0
       FLUXER_MEDIA_PROXY_PORT: "8080"
       FLUXER_MEDIA_PROXY_MODE: upload
       FLUXER_MEDIA_PROXY_STORAGE_BACKEND: s3
-    healthcheck:
-      disable: true
+      FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT: ${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}/media
+      FLUXER_MEDIA_PROXY_CORS_MODE: ${FLUXER_MEDIA_PROXY_CORS_MODE:-off}
+      FLUXER_MEDIA_PROXY_CORS_ALLOWED_ORIGINS: ${FLUXER_MEDIA_PROXY_CORS_ALLOWED_ORIGINS:-${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}:${FLUXER_PUBLIC_PORT:-443}}}
+      FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE: ${FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE:-off}
+      FLUXER_S3_READ_SIGNED: "true"
     depends_on:
       seaweedfs-init: {condition: service_completed_successfully}
-      nats: {condition: service_started}
+      nats: {condition: service_healthy}
+
+  push:
+    <<: *fluxer-service
+    image: ${FLUXER_REGISTRY:-ghcr.io/${FLUXER_REGISTRY_OWNER:-fluxerapp}}/fluxer-push:${FLUXER_IMAGE_TAG:-v1}
+    deploy:
+      resources:
+        limits:
+          memory: ${FLUXER_PUSH_MEMORY_LIMIT:-256mb}
+    environment:
+      <<: *fluxer-env
+      FLUXER_PUSH_SERVICE_HOST: 0.0.0.0
+      FLUXER_PUSH_SERVICE_PORT: "8126"
+      FLUXER_PUSH_SERVICE_QUEUE_CAPACITY: "${FLUXER_PUSH_SERVICE_QUEUE_CAPACITY:-}"
+      FLUXER_PUSH_SERVICE_SEND_CONCURRENCY: "${FLUXER_PUSH_SERVICE_SEND_CONCURRENCY:-}"
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/fluxer-push", "healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+      start_interval: 1s
+    depends_on:
+      nats: {condition: service_healthy}
+      api: {condition: service_healthy}
 
   static-proxy:
     <<: *fluxer-service
@@ -391,7 +512,12 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256mb
+          memory: ${FLUXER_STATIC_PROXY_MEMORY_LIMIT:-256mb}
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/avatars/0.png"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   app-proxy:
     <<: *fluxer-service
@@ -399,13 +525,17 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256mb
+          memory: ${FLUXER_APP_PROXY_MEMORY_LIMIT:-256mb}
     environment:
       FLUXER_APP_PROXY_HOST: 0.0.0.0
       FLUXER_APP_PROXY_PORT: "8080"
-      DISCOVERY_UPSTREAM_URL: http://caddy:8088/api/.well-known/fluxer
+      FLUXER_BASE_DOMAIN: ${FLUXER_DOMAIN:?set FLUXER_DOMAIN in .env}
+      FLUXER_PUBLIC_SCHEME: ${FLUXER_PUBLIC_SCHEME:-https}
+      FLUXER_PUBLIC_PORT: ${FLUXER_PUBLIC_PORT:-443}
+      FLUXER_PUBLIC_ORIGIN: ${FLUXER_PUBLIC_ORIGIN:-}
+      DISCOVERY_UPSTREAM_URL: http://edge:8088/.well-known/fluxer
       PUBLIC_BOOTSTRAP_API_ENDPOINT: /api
-      PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT: ${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}/api
+      PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT: ${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}/api
       FLUXER_CSP_EXTRA_DEFAULT_SRC: ${FLUXER_CSP_EXTRA_DEFAULT_SRC:-}
       FLUXER_CSP_EXTRA_CONNECT_SRC: ${FLUXER_CSP_EXTRA_CONNECT_SRC:-}
       FLUXER_CSP_EXTRA_IMG_SRC: ${FLUXER_CSP_EXTRA_IMG_SRC:-}
@@ -417,11 +547,9 @@ services:
       FLUXER_CSP_EXTRA_WORKER_SRC: ${FLUXER_CSP_EXTRA_WORKER_SRC:-}
       FLUXER_CSP_EXTRA_MANIFEST_SRC: ${FLUXER_CSP_EXTRA_MANIFEST_SRC:-}
       FLUXER_CSP_REPORT_URI: ${FLUXER_CSP_REPORT_URI:-}
-      FLUXER_POSTGRES_MAX_CONNECTIONS: "5"
     depends_on:
       api: {condition: service_healthy}
-      caddy: {condition: service_started}
-      postgres: {condition: service_healthy}
+      edge: {condition: service_healthy}
 
   snowflakes:
     <<: *fluxer-service
@@ -429,13 +557,14 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128mb
+          memory: ${FLUXER_SNOWFLAKES_MEMORY_LIMIT:-128mb}
     environment:
       <<: *fluxer-env
       FLUXER_SVC_NAME: snowflakes
       FLUXER_SVC_MODE: router
+    healthcheck: *fluxer-svc-healthcheck
     depends_on:
-      nats: {condition: service_started}
+      nats: {condition: service_healthy}
 
   snowflakes-shard:
     <<: *fluxer-service
@@ -443,14 +572,15 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256mb
+          memory: ${FLUXER_SNOWFLAKES_SHARD_MEMORY_LIMIT:-256mb}
     environment:
       <<: *fluxer-env
       FLUXER_SVC_NAME: snowflakes
       FLUXER_SVC_MODE: shard
       FLUXER_SVC_SHARD_ID: "0"
+    healthcheck: *fluxer-svc-healthcheck
     depends_on:
-      nats: {condition: service_started}
+      nats: {condition: service_healthy}
 
   users:
     <<: *fluxer-service
@@ -458,12 +588,15 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128mb
+          memory: ${FLUXER_USERS_MEMORY_LIMIT:-128mb}
     environment:
       <<: *fluxer-env
+      FLUXER_SVC_NAME: users
       FLUXER_SVC_MODE: router
+      FLUXER_SVC_MAX_CONCURRENT_REQUESTS: "${FLUXER_SVC_MAX_CONCURRENT_REQUESTS:-}"
+    healthcheck: *fluxer-svc-healthcheck
     depends_on:
-      nats: {condition: service_started}
+      nats: {condition: service_healthy}
 
   users-shard:
     <<: *fluxer-service
@@ -471,15 +604,17 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256mb
+          memory: ${FLUXER_USERS_SHARD_MEMORY_LIMIT:-256mb}
     environment:
       <<: *fluxer-env
+      FLUXER_SVC_NAME: users
       FLUXER_SVC_MODE: shard
       FLUXER_SVC_SHARD_ID: "0"
       FLUXER_POSTGRES_MAX_CONNECTIONS: "20"
-      FLUXER_SVC_MAX_CONCURRENT_REQUESTS: "20"
+      FLUXER_SVC_MAX_CONCURRENT_REQUESTS: "${FLUXER_SVC_MAX_CONCURRENT_REQUESTS:-}"
+    healthcheck: *fluxer-svc-healthcheck
     depends_on:
-      nats: {condition: service_started}
+      nats: {condition: service_healthy}
       postgres: {condition: service_healthy}
 
   gifs:
@@ -488,14 +623,15 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128mb
+          memory: ${FLUXER_GIFS_MEMORY_LIMIT:-128mb}
     environment:
       <<: *fluxer-env
       FLUXER_SVC_NAME: gifs
       FLUXER_SVC_MODE: router
-      FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT: ${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}/media
+      FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT: ${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}/media
+    healthcheck: *fluxer-svc-healthcheck
     depends_on:
-      nats: {condition: service_started}
+      nats: {condition: service_healthy}
 
   gifs-shard:
     <<: *fluxer-service
@@ -503,15 +639,16 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256mb
+          memory: ${FLUXER_GIFS_SHARD_MEMORY_LIMIT:-256mb}
     environment:
       <<: *fluxer-env
       FLUXER_SVC_NAME: gifs
       FLUXER_SVC_MODE: shard
       FLUXER_SVC_SHARD_ID: "0"
-      FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT: ${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}/media
+      FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT: ${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}/media
+    healthcheck: *fluxer-svc-healthcheck
     depends_on:
-      nats: {condition: service_started}
+      nats: {condition: service_healthy}
 
   messages:
     <<: *fluxer-service
@@ -519,13 +656,15 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128mb
+          memory: ${FLUXER_MESSAGES_MEMORY_LIMIT:-128mb}
     environment:
       <<: *fluxer-env
       FLUXER_SVC_NAME: messages
       FLUXER_SVC_MODE: router
+      FLUXER_SVC_MAX_CONCURRENT_REQUESTS: "${FLUXER_SVC_MAX_CONCURRENT_REQUESTS:-}"
+    healthcheck: *fluxer-svc-healthcheck
     depends_on:
-      nats: {condition: service_started}
+      nats: {condition: service_healthy}
 
   messages-shard:
     <<: *fluxer-service
@@ -533,16 +672,17 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256mb
+          memory: ${FLUXER_MESSAGES_SHARD_MEMORY_LIMIT:-256mb}
     environment:
       <<: *fluxer-env
       FLUXER_SVC_NAME: messages
       FLUXER_SVC_MODE: shard
       FLUXER_SVC_SHARD_ID: "0"
       FLUXER_POSTGRES_MAX_CONNECTIONS: "20"
-      FLUXER_SVC_MAX_CONCURRENT_REQUESTS: "20"
+      FLUXER_SVC_MAX_CONCURRENT_REQUESTS: "${FLUXER_SVC_MAX_CONCURRENT_REQUESTS:-}"
+    healthcheck: *fluxer-svc-healthcheck
     depends_on:
-      nats: {condition: service_started}
+      nats: {condition: service_healthy}
       postgres: {condition: service_healthy}
 
   unfurl:
@@ -551,12 +691,16 @@ services:
     deploy:
       resources:
         limits:
-          memory: 128mb
+          memory: ${FLUXER_UNFURL_MEMORY_LIMIT:-128mb}
     environment:
       <<: *fluxer-env
+      FLUXER_SVC_NAME: unfurl
       FLUXER_SVC_MODE: router
+      FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT: ${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}/media
+      FLUXER_STATIC_CDN_ENDPOINT: ${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}
+    healthcheck: *fluxer-svc-healthcheck
     depends_on:
-      nats: {condition: service_started}
+      nats: {condition: service_healthy}
 
   unfurl-shard:
     <<: *fluxer-service
@@ -564,13 +708,17 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256mb
+          memory: ${FLUXER_UNFURL_SHARD_MEMORY_LIMIT:-256mb}
     environment:
       <<: *fluxer-env
+      FLUXER_SVC_NAME: unfurl
       FLUXER_SVC_MODE: shard
       FLUXER_SVC_SHARD_ID: "0"
+      FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT: ${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}/media
+      FLUXER_STATIC_CDN_ENDPOINT: ${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}
+    healthcheck: *fluxer-svc-healthcheck
     depends_on:
-      nats: {condition: service_started}
+      nats: {condition: service_healthy}
 
   admin:
     <<: *fluxer-service
@@ -578,18 +726,25 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256mb
+          memory: ${FLUXER_ADMIN_MEMORY_LIMIT:-256mb}
     environment:
       <<: *fluxer-env
       FLUXER_ADMIN_HOST: 0.0.0.0
       FLUXER_ADMIN_PORT: "8080"
       FLUXER_ADMIN_BASE_PATH: /admin
       FLUXER_API_ENDPOINT: http://api:8080
-      FLUXER_ADMIN_ENDPOINT: ${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}/admin
-      FLUXER_APP_ENDPOINT: ${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}
-      FLUXER_MEDIA_ENDPOINT: ${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}/media
-      FLUXER_STATIC_CDN_ENDPOINT: ${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}
-      FLUXER_ADMIN_OAUTH_REDIRECT_URI: ${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}/admin/oauth2_callback
+      FLUXER_ADMIN_ENDPOINT: ${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}/admin
+      FLUXER_APP_ENDPOINT: ${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}
+      FLUXER_MEDIA_ENDPOINT: ${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}/media
+      FLUXER_STATIC_CDN_ENDPOINT: ${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}
+      FLUXER_ADMIN_OAUTH_REDIRECT_URI: ${FLUXER_PUBLIC_ORIGIN:-${FLUXER_PUBLIC_SCHEME:-https}://${FLUXER_DOMAIN}}/admin/oauth2_callback
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080 && printf 'GET /_health HTTP/1.0\\r\\n\\r\\n' >&3 && head -n 1 <&3 | grep -q ' 200 '"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+      start_interval: 1s
     depends_on:
       api: {condition: service_healthy}
 
@@ -598,9 +753,10 @@ networks:
     driver: bridge
 
 volumes:
-  caddy-data:
-  caddy-config:
+  edge-data:
+  edge-config:
   postgres-data:
+  valkey-data:
   nats-data:
   meilisearch-data:
   seaweedfs-data:

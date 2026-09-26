@@ -58,11 +58,11 @@ const AUTOMATICALLY_PLAY_GIFS_WHEN_IS_FOCUSED_DESCRIPTOR = msg({
 	comment: 'Label in the animation tab. Preserve {productName}; it is inserted by code.',
 });
 const DEFAULTS_TO_OFF_ON_MOBILE_TO_PRESERVE_BATTERY_DESCRIPTOR = msg({
-	message: 'Defaults to off on mobile to preserve battery life and data usage.',
+	message: 'Defaults to off on mobile to preserve battery life and reduce data usage.',
 	comment: 'Description text in the animation tab.',
 });
 const DEFAULTS_TO_ANIMATE_ON_INTERACTION_ON_MOBILE_TO_DESCRIPTOR = msg({
-	message: 'Defaults to animate on interaction on mobile to preserve battery life.',
+	message: 'Defaults to animating on interaction on mobile to preserve battery life.',
 	comment: 'Description text in the animation tab.',
 });
 const STICKER_ANIMATION_PREFERENCE_DESCRIPTOR = msg({
@@ -71,7 +71,7 @@ const STICKER_ANIMATION_PREFERENCE_DESCRIPTOR = msg({
 });
 const REDUCED_MOTION_ACTIVE_NOTE_DESCRIPTOR = msg({
 	message:
-		'Reduced motion is on, so content animations are paused by default. You can still turn any of these back on to keep it playing.',
+		'Reduced motion is on, so content animations are paused by default. You can still turn any of these back on to keep them playing.',
 	comment: 'Explanatory note shown above the animation controls when reduced motion is active.',
 });
 const PLAYING_DESPITE_REDUCED_MOTION_DESCRIPTOR = msg({
@@ -91,7 +91,7 @@ const STICKERS_ALWAYS_ANIMATE_DESPITE_REDUCED_MOTION_DESCRIPTOR = msg({
 	comment: 'Description shown for stickers when always-animate overrides reduced motion.',
 });
 const STICKERS_REDUCED_MOTION_HINT_DESCRIPTOR = msg({
-	message: 'Reduced motion limits stickers to animate on interaction. Choose always animate to override.',
+	message: 'With reduced motion on, stickers only animate on interaction. Choose "Always animate" to override.',
 	comment: 'Description shown for the sticker control while reduced motion is active.',
 });
 

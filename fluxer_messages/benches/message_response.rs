@@ -121,7 +121,6 @@ fn sample_message(index: u64) -> ApiMessageResponse {
             expired: None,
         }],
         stickers: Vec::new(),
-        nsfw_emojis: None,
         reactions: Some(vec![ApiMessageReactionResponse {
             emoji: ApiReactionEmojiResponse {
                 id: None,

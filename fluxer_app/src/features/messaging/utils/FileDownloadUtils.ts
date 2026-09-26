@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import AttachmentUrlRefresher from '@app/features/messaging/state/AttachmentUrlRefresher';
+import {isUrlOnEndpoint, parseEndpoint} from '@app/features/messaging/utils/AttachmentCdnUrl';
 import {isMobileOrTabletUserAgent} from '@app/features/platform/notifications/NotificationAlertOptions';
 import {supportsShowSaveFilePicker} from '@app/features/platform/types/Browser';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -9,34 +11,6 @@ import {downloadWithNative, isElectron, isFirefoxBrowser, openExternalUrl} from 
 const logger = new Logger('FileDownloadUtils');
 
 type MediaType = 'image' | 'gif' | 'video' | 'audio' | 'file';
-
-interface EndpointInfo {
-	basePath: string;
-	origin: string;
-}
-
-function parseEndpoint(endpoint: string): EndpointInfo | null {
-	if (!endpoint) return null;
-	try {
-		const parsedEndpoint = new URL(endpoint);
-		const basePath =
-			parsedEndpoint.pathname.length > 1 && parsedEndpoint.pathname.endsWith('/')
-				? parsedEndpoint.pathname.slice(0, -1)
-				: parsedEndpoint.pathname || '/';
-		return {
-			basePath,
-			origin: parsedEndpoint.origin,
-		};
-	} catch {
-		return null;
-	}
-}
-
-function isUrlOnEndpoint(targetUrl: URL, endpoint: EndpointInfo): boolean {
-	if (targetUrl.origin !== endpoint.origin) return false;
-	if (endpoint.basePath === '/') return true;
-	return targetUrl.pathname === endpoint.basePath || targetUrl.pathname.startsWith(`${endpoint.basePath}/`);
-}
 
 function appendMediaProxyDownloadParam(src: string): string {
 	let parsedSrc: URL;
@@ -221,23 +195,21 @@ function downloadViaAnchor(src: string, suggestedName: string, options?: {append
 
 export async function downloadFile(src: string, type: MediaType, providedFilename?: string): Promise<void> {
 	if (!src) return;
+	const suggestedName = deriveSuggestedName(src, type, providedFilename);
+	const target = await AttachmentUrlRefresher.refresh(src);
 	if (isElectron()) {
 		try {
-			const outcome = await downloadWithNative({
-				url: src,
-				suggestedName: deriveSuggestedName(src, type, providedFilename),
-			});
+			const outcome = await downloadWithNative({url: target, suggestedName});
 			if (outcome !== 'unavailable') return;
 		} catch (error) {
 			logger.warn('Native download failed', error);
 			return;
 		}
 	}
-	const suggestedName = deriveSuggestedName(src, type, providedFilename);
-	if (await downloadViaFileSystemAccess(src, suggestedName, type)) return;
-	if (await downloadViaFetchBlob(src, suggestedName)) return;
-	if (downloadViaAnchor(src, suggestedName)) return;
-	await openExternalUrl(appendMediaProxyDownloadParam(src));
+	if (await downloadViaFileSystemAccess(target, suggestedName, type)) return;
+	if (await downloadViaFetchBlob(target, suggestedName)) return;
+	if (downloadViaAnchor(target, suggestedName)) return;
+	await openExternalUrl(appendMediaProxyDownloadParam(target));
 }
 
 export function createDownloadHandler(src: string, type: MediaType, providedFilename?: string) {

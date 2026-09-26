@@ -19,6 +19,7 @@ import {safePause, safePlay} from '@app/features/channel/components/GifVideoPool
 import {useMaybeMessageViewContext} from '@app/features/channel/components/MessageViewContext';
 import type {Channel} from '@app/features/channel/models/Channel';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
+import {useAttachmentRefreshOnError} from '@app/features/messaging/hooks/useAttachmentRefreshOnError';
 import {useDeleteAttachment} from '@app/features/messaging/hooks/useDeleteAttachment';
 import {useMatureMedia} from '@app/features/messaging/hooks/useMatureMedia';
 import {useMediaFavorite} from '@app/features/messaging/hooks/useMediaFavorite';
@@ -389,6 +390,7 @@ export const EmbedGifv: FC<
 		const messageViewContext = useMaybeMessageViewContext();
 		const mediaCalculator = useEmbedMediaCalculator();
 		const videoRef = useRef<HTMLVideoElement>(null);
+		const handleVideoError = useAttachmentRefreshOnError(videoProxyURL);
 		const [containerElement, setContainerElement] = useState<HTMLDivElement | null>(null);
 		const {isPointerInside, hasFocusInside} = useMediaSurfaceInteraction(containerElement);
 		const {shouldBlur, gateReason, canReveal, reveal: revealSensitiveMedia} = useMatureMedia(nsfw, channelId);
@@ -632,6 +634,7 @@ export const EmbedGifv: FC<
 								height={dimensions.height}
 								tabIndex={-1}
 								aria-label={i18n._(ANIMATED_GIF_VIDEO_DESCRIPTOR)}
+								onError={handleVideoError}
 								data-embed-media="gifv"
 								data-flx="channel.embeds.media.embed-gifv.video-element"
 							/>

@@ -180,3 +180,7 @@ export function toNativeLinuxAudioPatterns(patterns: Array<VirtmicNode>): Array<
 		return next ? [next] : [];
 	});
 }
+
+export function filterRoutableLinuxAudioSources(patterns: ReadonlyArray<VirtmicNode>): Array<VirtmicNode> {
+	return patterns.filter((pattern) => toNativeLinuxAudioPattern(pattern) != null);
+}

@@ -141,25 +141,12 @@ async function repairOneShortcut(
 
 async function repairWindowsShortcutsAsync(repairPaths: WindowsShortcutRepairPaths): Promise<void> {
 	const binding = loadWinShell();
-	if (!binding || !binding.createShortcut) {
+	if (!binding?.createShortcut) {
 		console.warn('[WindowsShortcuts] @fluxer/win-shell unavailable; skipping shortcut repair');
 		return;
 	}
 	const {createShortcut} = binding;
-	try {
-		if (fs.existsSync(repairPaths.rootShortcut)) {
-			const authorDir = path.dirname(repairPaths.authorShortcut);
-			fs.mkdirSync(authorDir, {recursive: true});
-			if (fs.existsSync(repairPaths.authorShortcut)) {
-				fs.rmSync(repairPaths.rootShortcut, {force: true});
-			} else {
-				fs.renameSync(repairPaths.rootShortcut, repairPaths.authorShortcut);
-			}
-		}
-	} catch (error) {
-		console.warn('[WindowsShortcuts] Failed to migrate root Start-Menu shortcut', error);
-	}
-	const shortcutPaths: Array<string> = [repairPaths.authorShortcut];
+	const shortcutPaths: Array<string> = [repairPaths.authorShortcut, repairPaths.rootShortcut];
 	const desktopDir = process.env.USERPROFILE ? path.join(process.env.USERPROFILE, 'Desktop') : '';
 	if (desktopDir) shortcutPaths.push(path.join(desktopDir, `${DESKTOP_APP_NAME}.lnk`));
 	if (process.env.APPDATA) {

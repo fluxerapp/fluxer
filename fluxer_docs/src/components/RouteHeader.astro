@@ -1,0 +1,103 @@
+---
+// SPDX-License-Identifier: AGPL-3.0-or-later
+interface Props {
+	method: 'GET' | 'HEAD' | 'POST' | 'PATCH' | 'PUT' | 'DELETE';
+	path: string;
+	bot?: boolean;
+	oauth2?: string;
+	unauthenticated?: boolean;
+	auditReason?: boolean;
+	mfa?: boolean;
+}
+
+interface Capability {
+	label: string;
+	title: string;
+	href?: string;
+}
+
+function resolveAuditReasonHref(routePath: string): string {
+	if (routePath === '/v1/admin') {
+		return '/admin-api/#audit-reasons-and-effects';
+	}
+	if (routePath.startsWith('/v1/admin/')) {
+		return '/admin-api/#audit-reasons-and-effects';
+	}
+	return '/http-api/guild-audit-logs/#audit-log-reason';
+}
+
+const {method, path, bot, oauth2, unauthenticated, auditReason, mfa} = Astro.props;
+
+const docsBase = import.meta.env.BASE_URL.replace(/\/$/, '');
+const withBase = (href: string): string => `${docsBase}${href}`;
+
+const segments = path.split(/(\{[^}]+\})/).filter((segment) => segment.length > 0);
+
+const capabilities: Array<Capability> = [];
+if (unauthenticated === true) {
+	capabilities.push({
+		label: 'Unauthenticated',
+		title: 'Accepts requests without an authentication credential',
+		href: withBase('/authentication/'),
+	});
+}
+if (bot === true) {
+	capabilities.push({
+		label: 'Bot',
+		title: 'Accepts a bot token authorisation scheme',
+		href: withBase('/authentication/#authorization-schemes'),
+	});
+}
+if (oauth2 != null) {
+	capabilities.push({
+		label: oauth2,
+		title: `Requires the ${oauth2} OAuth2 scope`,
+		href: withBase('/http-api/oauth2/#oauth2-scopes'),
+	});
+}
+if (auditReason === true) {
+	capabilities.push({
+		label: 'Audit reason',
+		title: 'Supports the X-Audit-Log-Reason request header',
+		href: withBase(resolveAuditReasonHref(path)),
+	});
+}
+if (mfa === true) {
+	capabilities.push({
+		label: 'MFA',
+		title: 'Requires multi-factor authentication or an elevated sudo session',
+		href: withBase('/http-api/users/mfa/'),
+	});
+}
+---
+
+<flx-route-header class="not-content">
+	<flx-route-line>
+		<code class="route-method" data-method={method}>{method}</code><code class="route-path">{
+			segments.map((segment) =>
+				segment.startsWith('{') && segment.endsWith('}') ? (
+					<span data-param>{segment}</span>
+				) : (
+					segment
+				),
+			)
+		}</code>
+	</flx-route-line>
+	{
+		capabilities.length > 0 && (
+			<flx-route-capabilities>
+				{capabilities.map((capability) =>
+					capability.href == null ? (
+						<span class="route-capability" title={capability.title}>
+							{capability.label}
+						</span>
+					) : (
+						<a class="route-capability" href={capability.href} title={capability.title}>
+							{capability.label}
+						</a>
+					),
+				)}
+			</flx-route-capabilities>
+		)
+	}
+</flx-route-header>

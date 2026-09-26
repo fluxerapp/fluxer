@@ -131,7 +131,7 @@ class PiP {
 	}
 }
 
-export {PIP_DEFAULT_WIDTH};
 export type {PiPContent, PiPContentType, PiPCorner};
+export {PIP_DEFAULT_WIDTH};
 
 export default new PiP();

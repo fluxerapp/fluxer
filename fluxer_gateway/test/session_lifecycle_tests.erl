@@ -59,6 +59,7 @@ serialize_transfer_state_includes_resume_fields_test() ->
         relationships => #{},
         seq => 10,
         ack_seq => 8,
+        replay_floor => 4,
         buffer => [#{seq => 9}],
         collected_guild_states => [],
         collected_sessions => [],
@@ -71,6 +72,7 @@ serialize_transfer_state_includes_resume_fields_test() ->
     ?assert(sets:is_element(123, maps:get(active_guilds, TransferState))),
     ?assertEqual(10, maps:get(seq, TransferState)),
     ?assertEqual(8, maps:get(ack_seq, TransferState)),
+    ?assertEqual(8, maps:get(replay_floor, TransferState)),
     ?assertEqual([#{seq => 9}], maps:get(buffer, TransferState)).
 
 serialize_transfer_state_strips_socket_pid_test() ->
@@ -108,6 +110,34 @@ serialize_transfer_state_strips_socket_pid_test() ->
     TransferState = session_lifecycle:serialize_transfer_state(State),
     ?assertEqual(undefined, maps:get(socket_pid, TransferState)).
 
+serialize_transfer_state_preserves_deque_replay_buffer_test() ->
+    Deque = lists:foldl(
+        fun(Seq, Acc) ->
+            limited_deque:push(#{event => message_create, data => #{}, seq => Seq}, Acc)
+        end,
+        limited_deque:new(4096, 16777216),
+        [1000, 1001]
+    ),
+    State = #{
+        id => <<"session-deque-transfer">>,
+        user_id => 42,
+        user_data => #{},
+        version => 9,
+        token_hash => <<"token_hash">>,
+        auth_session_id_hash => <<"auth_hash">>,
+        properties => #{},
+        status => online,
+        afk => false,
+        mobile => false,
+        ready => undefined,
+        seq => 1001,
+        ack_seq => 999,
+        buffer => Deque
+    },
+    TransferState = session_lifecycle:serialize_transfer_state(State),
+    Restored = session_init:normalize_buffer(maps:get(buffer, TransferState)),
+    ?assertEqual([1000, 1001], [maps:get(seq, Event) || Event <- Restored]).
+
 heartbeat_ack_recalculates_buffer_bytes_test() ->
     Event1 = #{seq => 1, event => message_create, data => #{<<"content">> => <<"one">>}},
     Event2 = #{seq => 2, event => message_create, data => #{<<"content">> => <<"two">>}},
@@ -123,6 +153,18 @@ heartbeat_ack_tolerates_backwards_ack_without_trimming_test() ->
     ?assertEqual(5, maps:get(ack_seq, State1)),
     ?assertEqual([Event], maps:get(buffer, State1)).
 
+heartbeat_ack_clamps_ack_seq_to_current_seq_test() ->
+    State0 = resume_test_state(#{
+        seq => 5,
+        ack_seq => 0,
+        buffer => [#{seq => 5, event => message_create, data => #{}}]
+    }),
+    {reply, true, State1} = session_lifecycle:handle_heartbeat_ack(1000000, State0),
+    ?assertEqual(5, maps:get(ack_seq, State1)),
+    ?assertMatch(
+        {reply, {ok, [], 5}, _}, session_lifecycle:handle_resume(5, self(), State1)
+    ).
+
 handle_resume_clamps_truncated_gap_in_replay_buffer_test() ->
     State0 = resume_test_state(#{
         seq => 5,
@@ -131,8 +173,8 @@ handle_resume_clamps_truncated_gap_in_replay_buffer_test() ->
             #{seq => 5, event => message_create, data => #{}}
         ]
     }),
-    {reply, {ok, Missed, 5}, State1} = session_lifecycle:handle_resume(2, self(), State0),
-    ?assertEqual([4, 5], [maps:get(seq, Event) || Event <- Missed]),
+    {reply, {ok, [], 5}, State1} = session_lifecycle:handle_resume(2, self(), State0),
+    ?assertEqual([4, 5], collect_dispatched_seqs(2)),
     ?assertEqual(self(), maps:get(socket_pid, State1)).
 
 handle_resume_clamps_skipped_event_hole_test() ->
@@ -143,8 +185,31 @@ handle_resume_clamps_skipped_event_hole_test() ->
             #{seq => 5, event => message_create, data => #{}}
         ]
     }),
-    {reply, {ok, Missed, 5}, _State1} = session_lifecycle:handle_resume(2, self(), State0),
-    ?assertEqual([3, 5], [maps:get(seq, Event) || Event <- Missed]).
+    {reply, {ok, [], 5}, _State1} = session_lifecycle:handle_resume(2, self(), State0),
+    ?assertEqual([3, 5], collect_dispatched_seqs(2)).
+
+handle_resume_below_replay_floor_returns_not_resumable_test() ->
+    State0 = replay_floor_resume_state(),
+    {reply, not_resumable, State0} = session_lifecycle:handle_resume(5, self(), State0).
+
+handle_resume_at_replay_floor_still_replays_test() ->
+    ok = drain_mailbox(),
+    State0 = replay_floor_resume_state(),
+    {reply, {ok, [], 10}, State1} = session_lifecycle:handle_resume(6, self(), State0),
+    ?assertEqual([7, 8, 9, 10], collect_dispatched_seqs(4)),
+    ?assertEqual(self(), maps:get(socket_pid, State1)).
+
+replay_floor_resume_state() ->
+    resume_test_state(#{
+        seq => 10,
+        replay_floor => 6,
+        buffer => [
+            #{seq => 7, event => message_create, data => #{}},
+            #{seq => 8, event => message_create, data => #{}},
+            #{seq => 9, event => message_create, data => #{}},
+            #{seq => 10, event => message_create, data => #{}}
+        ]
+    }).
 
 handle_resume_rejects_seq_ahead_of_current_test() ->
     State0 = resume_test_state(#{
@@ -162,6 +227,7 @@ handle_resume_rejects_seq_below_ack_seq_test() ->
     {reply, invalid_seq, State0} = session_lifecycle:handle_resume(5, self(), State0).
 
 handle_resume_accepts_seq_at_ack_seq_test() ->
+    ok = drain_mailbox(),
     State0 = resume_test_state(#{
         seq => 10,
         ack_seq => 8,
@@ -171,10 +237,11 @@ handle_resume_accepts_seq_at_ack_seq_test() ->
             #{seq => 10, event => message_create, data => #{}}
         ]
     }),
-    {reply, {ok, Missed, 10}, _State1} = session_lifecycle:handle_resume(8, self(), State0),
-    ?assertEqual([9, 10], [maps:get(seq, Event) || Event <- Missed]).
+    {reply, {ok, [], 10}, _State1} = session_lifecycle:handle_resume(8, self(), State0),
+    ?assertEqual([9, 10], collect_dispatched_seqs(2)).
 
 handle_resume_accepts_contiguous_replay_buffer_test() ->
+    ok = drain_mailbox(),
     State0 = resume_test_state(#{
         seq => 5,
         buffer => [
@@ -183,8 +250,8 @@ handle_resume_accepts_contiguous_replay_buffer_test() ->
             #{seq => 5, event => message_create, data => #{}}
         ]
     }),
-    {reply, {ok, Missed, 5}, State1} = session_lifecycle:handle_resume(2, self(), State0),
-    ?assertEqual([3, 4, 5], [maps:get(seq, Event) || Event <- Missed]),
+    {reply, {ok, [], 5}, State1} = session_lifecycle:handle_resume(2, self(), State0),
+    ?assertEqual([3, 4, 5], collect_dispatched_seqs(3)),
     ?assertEqual(self(), maps:get(socket_pid, State1)).
 
 handle_resume_cancels_pending_resume_timer_test() ->
@@ -404,6 +471,36 @@ resume_test_state(Overrides) ->
         },
         Overrides
     ).
+
+%% Small replay buffers are delivered inline (dispatched straight to the socket) rather
+%% than returned in the resume reply, so these tests read the missed events back off
+%% self()'s mailbox instead of the (now empty) reply list.
+collect_dispatched_seqs(Count) ->
+    lists:sort([collect_dispatched_seq() || _ <- lists:seq(1, Count)]).
+
+collect_dispatched_seq() ->
+    receive
+        {dispatch, _Event, _Payload, Seq} -> Seq
+    after 200 ->
+        ?assert(false)
+    end.
+
+drain_mailbox() ->
+    receive
+        _ -> drain_mailbox()
+    after 0 ->
+        ok
+    end.
+
+fenced_terminate_releases_the_user_session_count_test() ->
+    ok = session_abuse_protection:ensure_tables(),
+    UserId = 900201,
+    _ = ets:delete(session_user_counts, UserId),
+    ok = session_abuse_protection:increment_user_sessions(UserId),
+    ok = session_lifecycle:terminate(normal, #{
+        fenced => true, user_id => UserId, guilds => #{}, calls => #{}
+    }),
+    ?assertEqual([], ets:lookup(session_user_counts, UserId)).
 
 terminate_cleans_up_guild_monitors_test() ->
     GuildPid1 = spawn(fun test_wait_for_stop/0),

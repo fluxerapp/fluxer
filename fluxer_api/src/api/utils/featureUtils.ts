@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {Headers} from '@fluxer/constants/src/Headers';
 
-export const CLIENT_FEATURES_HEADER = 'X-Fluxer-Features';
+export const CLIENT_FEATURES_HEADER = Headers.X_FLUXER_FEATURES;
 const PERMISSION_BIT_CLIENT_FEATURES: ReadonlyArray<{
 	bit: bigint;
 	feature: string;

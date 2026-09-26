@@ -46,7 +46,6 @@ export type DeveloperOptionsState = Readonly<{
 	selfHostedModeOverride: boolean;
 	forceShowVanityURLDisclaimer: boolean;
 	forceShowVoiceConnection: boolean;
-	showExpressionPacksSettings: boolean;
 	showProfileTimezoneSettings: boolean;
 	premiumScenarioOverride: PremiumScenarioOverride | null;
 	premiumTypeOverride: number | null;
@@ -97,6 +96,7 @@ export type DeveloperOptionsState = Readonly<{
 		}
 	>;
 	noOpInAppReports: boolean;
+	disableTranslationDomGuard: boolean;
 }>;
 type MutableDeveloperOptionsState = {
 	-readonly [K in keyof DeveloperOptionsState]: DeveloperOptionsState[K];
@@ -129,7 +129,6 @@ class DeveloperOptions implements DeveloperOptionsState {
 	selfHostedModeOverride = false;
 	forceShowVanityURLDisclaimer = false;
 	forceShowVoiceConnection = false;
-	showExpressionPacksSettings = false;
 	showProfileTimezoneSettings = false;
 	premiumScenarioOverride: PremiumScenarioOverride | null = null;
 	premiumTypeOverride: number | null = null;
@@ -181,6 +180,7 @@ class DeveloperOptions implements DeveloperOptionsState {
 	mockGiftRedeemed: boolean | null = null;
 	mockTitlebarPlatformOverride: DeveloperOptionsState['mockTitlebarPlatformOverride'] = 'auto';
 	noOpInAppReports = false;
+	disableTranslationDomGuard = false;
 
 	constructor() {
 		makeAutoObservable(this, {}, {autoBind: true});
@@ -215,7 +215,6 @@ class DeveloperOptions implements DeveloperOptionsState {
 			'selfHostedModeOverride',
 			'forceShowVanityURLDisclaimer',
 			'forceShowVoiceConnection',
-			'showExpressionPacksSettings',
 			'showProfileTimezoneSettings',
 			'premiumScenarioOverride',
 			'premiumTypeOverride',
@@ -253,6 +252,7 @@ class DeveloperOptions implements DeveloperOptionsState {
 			'mockTitlebarPlatformOverride',
 			'mockAttachmentStates',
 			'noOpInAppReports',
+			'disableTranslationDomGuard',
 		]);
 	}
 

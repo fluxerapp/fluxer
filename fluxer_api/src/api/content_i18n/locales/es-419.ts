@@ -3,6 +3,12 @@
 import {defineContentI18nLocaleMessages} from '../ContentI18nMessages';
 
 const CONTENT_I18N_ES_419_MESSAGES = defineContentI18nLocaleMessages({
+	"auth.unknown_location": "Ubicación desconocida",
+	"billing.donation_description_monthly": "Donación mensual para apoyar a {product_name}",
+	"billing.donation_description_one_time": "Donación única para apoyar a {product_name}",
+	"billing.donation_description_yearly": "Donación anual para apoyar a {product_name}",
+	"billing.donation_name_one_time": "Donación a {product_name}",
+	"billing.donation_name_recurring": "Donación recurrente a {product_name}",
 	"billing.eu_withdrawal_waiver_checkout": "Si soy un consumidor de la UE/EEE, doy mi consentimiento expreso para que el contenido digital de {product_name} {premium_tier_name} se proporcione de inmediato y reconozco que pierdo mi derecho legal de desistimiento una vez que se otorgue el acceso. Esto no afecta otros derechos de consumo obligatorios. Consulta los [Términos de servicio]({terms_url}).",
 	"bulk_message_deletion.complete": "Terminamos de eliminar tus mensajes. Eliminamos {message_count, plural, =0 {0 mensajes} one {# mensaje} other {# mensajes}} de {channel_count, plural, =0 {0 lugares} one {# lugar} other {# lugares}}.",
 	"content.virus_detected": "Ese archivo fue marcado como potencialmente inseguro y se ha eliminado.",

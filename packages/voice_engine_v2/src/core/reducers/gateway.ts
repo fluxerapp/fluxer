@@ -1,17 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import type {VoiceEngineV2Event} from '../../protocol/events';
+import {
+	allocateOperation,
+	isConnected,
+	markOperation,
+	queueCommand,
+} from '@fluxer/voice_engine_v2/src/core/reducers/_helpers';
+import {
+	beginGatewayVoiceStateClear,
+	planPendingConnectionTeardown,
+} from '@fluxer/voice_engine_v2/src/core/reducers/connection';
+import type {VoiceEngineV2Snapshot, VoiceEngineV2Transition} from '@fluxer/voice_engine_v2/src/core/state';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
 import type {
 	VoiceEngineV2Error,
 	VoiceEngineV2GatewayDesiredVoiceState,
 	VoiceEngineV2GatewayVoiceState,
 	VoiceEngineV2GatewayVoiceStateWrite,
 	VoiceEngineV2OperationId,
-} from '../../protocol/types';
-import type {VoiceEngineV2Snapshot, VoiceEngineV2Transition} from '../state';
-import {allocateOperation, isConnected, markOperation, queueCommand} from './_helpers';
-import {beginGatewayVoiceStateClear, planPendingConnectionTeardown} from './connection';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
 
 type VoiceEngineV2GatewayEvent = Extract<VoiceEngineV2Event, {type: `gateway.${string}` | 'livekit.roomStateChanged'}>;
 

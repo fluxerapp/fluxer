@@ -1,102 +1,56 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
+import {recordAdminRead, recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
+import {Config} from '@app/api/Config';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
-import {
-	LIMIT_CATEGORY_LABELS,
-	LIMIT_KEY_METADATA,
-	LIMIT_KEYS,
-	type LimitKey,
-} from '@fluxer/constants/src/LimitConfigMetadata';
+import {LIMIT_CATEGORY_LABELS, LIMIT_KEY_METADATA, LIMIT_KEYS} from '@fluxer/constants/src/LimitConfigMetadata';
 import type {LimitConfigSnapshot, LimitRule} from '@fluxer/limits/src/LimitTypes';
 import {LimitConfigGetResponse, LimitConfigUpdateRequest} from '@fluxer/schema/src/domains/admin/AdminSchemas';
-import {Config} from '../../Config';
-import {createDefaultLimitConfig} from '../../constants/LimitConfig';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import {requireAdminACL} from '../../middleware/AdminMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
 
-function formatConfig(config: LimitConfigSnapshot) {
-	const defaults = createDefaultLimitConfig({selfHosted: Config.instance.selfHosted});
-	const defaultLimitsMap: Record<string, Record<LimitKey, number>> = {};
-	for (const rule of defaults.rules) {
-		defaultLimitsMap[rule.id] = rule.limits as Record<LimitKey, number>;
-	}
+function formatConfig(service: LimitConfigService) {
+	const config = service.getConfigSnapshot();
+	const defaults = service.getDefaultConfigSnapshot();
 	return {
 		limit_config: config,
 		limit_config_json: JSON.stringify(config, null, 2),
 		self_hosted: Config.instance.selfHosted,
-		defaults: defaultLimitsMap,
+		defaults: Object.fromEntries(defaults.rules.map((rule) => [rule.id, rule.limits])),
 		metadata: LIMIT_KEY_METADATA,
 		categories: LIMIT_CATEGORY_LABELS,
 		limit_keys: LIMIT_KEYS,
 	};
 }
 
-function trackModifiedFields(config: LimitConfigSnapshot): LimitConfigSnapshot {
-	const defaults = createDefaultLimitConfig({selfHosted: Config.instance.selfHosted});
-	const defaultRulesMap = buildRulesMap(defaults.rules);
-	const rulesWithTracking = config.rules.map((rule) => trackRuleModifiedFields(rule, defaultRulesMap));
-	return {
-		...config,
-		rules: rulesWithTracking,
-	};
+function describeLimitRule(rule: LimitRule): string {
+	return JSON.stringify([
+		rule.filters?.traits ?? [],
+		rule.filters?.guildFeatures ?? [],
+		LIMIT_KEYS.map((key) => rule.limits[key] ?? null),
+	]);
 }
 
-function buildRulesMap(rules: Array<LimitRule>): Map<string, LimitRule> {
-	const map = new Map<string, LimitRule>();
-	for (const rule of rules) {
-		map.set(rule.id, rule);
-	}
-	return map;
-}
-
-function trackRuleModifiedFields(
-	rule: LimitRule,
-	defaultRulesMap: Map<string, LimitRule>,
-): LimitRule & {
-	modifiedFields?: Array<LimitKey>;
-} {
-	const defaultRule = defaultRulesMap.get(rule.id);
-	const fallbackDefault = defaultRule ?? defaultRulesMap.get('default');
-	if (!fallbackDefault) {
-		return {
-			...rule,
-			modifiedFields: Object.keys(rule.limits) as Array<LimitKey>,
-		};
-	}
-	const modifiedFields = findModifiedLimits(rule.limits, fallbackDefault.limits);
-	return {
-		...rule,
-		modifiedFields: modifiedFields.length > 0 ? modifiedFields : undefined,
-	};
-}
-
-function findModifiedLimits(
-	currentLimits: Partial<Record<LimitKey, number>>,
-	defaultLimits: Partial<Record<LimitKey, number>>,
-): Array<LimitKey> {
-	const modified: Array<LimitKey> = [];
-	for (const key of LIMIT_KEYS) {
-		const currentValue = currentLimits[key];
-		const defaultValue = defaultLimits[key];
-		if (currentValue !== undefined && currentValue !== defaultValue) {
-			modified.push(key);
-		}
-	}
-	return modified;
+function countChangedLimitRules(before: LimitConfigSnapshot, after: LimitConfigSnapshot): number {
+	const previous = new Map(before.rules.map((rule) => [rule.id, describeLimitRule(rule)]));
+	const next = new Map(after.rules.map((rule) => [rule.id, describeLimitRule(rule)]));
+	const ruleIds = new Set([...previous.keys(), ...next.keys()]);
+	return Array.from(ruleIds).filter((ruleId) => previous.get(ruleId) !== next.get(ruleId)).length;
 }
 
 export function LimitConfigAdminController(app: HonoApp) {
-	app.post(
-		'/admin/limit-config/get',
+	app.get(
+		'/admin/limit-config',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
 		requireAdminACL(AdminACLs.INSTANCE_LIMIT_CONFIG_VIEW),
 		OpenAPI({
-			operationId: 'get_limit_config',
+			operationId: 'get_admin_limit_config',
 			summary: 'Get limit configuration',
 			description:
 				'Retrieves rate limit configuration including message limits, upload limits, and request throttles. Shows defaults, metadata, and any modifications from defaults. Requires INSTANCE_LIMIT_CONFIG_VIEW permission.',
@@ -107,20 +61,26 @@ export function LimitConfigAdminController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const limitConfigService = ctx.get('limitConfigService') as LimitConfigService;
-			const snapshot = limitConfigService.getConfigSnapshot();
-			return ctx.json(formatConfig(snapshot));
+			const response = formatConfig(limitConfigService);
+			await recordAdminRead(ctx, {
+				targetType: 'limit_config',
+				targetId: 0n,
+				action: AdminAuditReadActions.GET_LIMIT_CONFIG,
+				metadata: {rule_count: response.limit_config.rules.length},
+			});
+			return ctx.json(response);
 		},
 	);
-	app.post(
-		'/admin/limit-config/update',
+	app.put(
+		'/admin/limit-config',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
 		requireAdminACL(AdminACLs.INSTANCE_LIMIT_CONFIG_UPDATE),
 		Validator('json', LimitConfigUpdateRequest),
 		OpenAPI({
-			operationId: 'update_limit_config',
-			summary: 'Update limit configuration',
+			operationId: 'replace_admin_limit_config',
+			summary: 'Replace limit configuration',
 			description:
-				'Updates rate limit configuration including message throughput, upload sizes, and request throttles. Changes apply immediately to all new operations. Requires INSTANCE_LIMIT_CONFIG_UPDATE permission.',
+				'Replaces the stored limit configuration, which covers message throughput, upload sizes, and request throttles, with the supplied document. Changes apply immediately to all new operations. Requires INSTANCE_LIMIT_CONFIG_UPDATE permission.',
 			responseSchema: LimitConfigGetResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
@@ -133,9 +93,20 @@ export function LimitConfigAdminController(app: HonoApp) {
 				...data.limit_config,
 				traitDefinitions: data.limit_config.traitDefinitions ?? [],
 			};
-			const withTracking = trackModifiedFields(normalized);
-			await limitConfigService.updateConfig(withTracking);
-			return ctx.json(formatConfig(limitConfigService.getConfigSnapshot()));
+			const previous = limitConfigService.getConfigSnapshot();
+			await limitConfigService.updateConfig(normalized);
+			const response = formatConfig(limitConfigService);
+			await recordAdminWrite(ctx, {
+				targetType: 'limit_config',
+				targetId: 0n,
+				action: 'update_limit_config',
+				metadata: {
+					rule_count: response.limit_config.rules.length,
+					changed_rule_count: countChangedLimitRules(previous, response.limit_config),
+					trait_definition_count: response.limit_config.traitDefinitions.length,
+				},
+			});
+			return ctx.json(response);
 		},
 	);
 }

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserAgentResult} from '../RiskTypes';
+import type {UserAgentResult} from '@app/api/risk/RiskTypes';
 
 const BOT_PATTERNS: ReadonlyArray<RegExp> = [
 	/\bbot\b/i,

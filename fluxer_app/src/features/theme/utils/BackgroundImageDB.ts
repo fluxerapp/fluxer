@@ -8,21 +8,29 @@ export interface NativeBackgroundMediaSource {
 	mediaKind: VoiceBackgroundMediaKind;
 }
 
-interface BackgroundImageRead {
-	cancelled: boolean;
-	promise: Promise<string | null>;
+export interface BackgroundMediaObjectURL {
+	url: string;
+	mediaKind: VoiceBackgroundMediaKind;
 }
 
-const resolvedUrls = new Map<string, string>();
+interface BackgroundImageRead {
+	cancelled: boolean;
+	promise: Promise<BackgroundMediaObjectURL | null>;
+}
+
+const resolvedMedia = new Map<string, BackgroundMediaObjectURL>();
 const pendingReads = new Map<string, BackgroundImageRead>();
 
-async function readBackgroundImageObjectURL(id: string): Promise<string | null> {
+async function readBackgroundMediaObjectURL(id: string): Promise<BackgroundMediaObjectURL | null> {
 	const readVoiceBackgroundMedia = getElectronAPI()?.readVoiceBackgroundMedia;
 	if (!readVoiceBackgroundMedia) return null;
 	const media = await readVoiceBackgroundMedia(id);
 	if (!media?.dataUrl) return null;
 	const response = await fetch(media.dataUrl);
-	return URL.createObjectURL(await response.blob());
+	return {
+		url: URL.createObjectURL(await response.blob()),
+		mediaKind: media.mediaKind,
+	};
 }
 
 export async function saveBackgroundImage(id: string, blob: Blob): Promise<NativeBackgroundMediaSource> {
@@ -50,14 +58,14 @@ export async function deleteBackgroundImage(id: string): Promise<void> {
 }
 
 export function getCachedBackgroundImageURL(id: string): string | null {
-	return resolvedUrls.get(id) ?? null;
+	return resolvedMedia.get(id)?.url ?? null;
 }
 
 export function releaseBackgroundImageURL(id: string): void {
-	const resolved = resolvedUrls.get(id);
+	const resolved = resolvedMedia.get(id);
 	if (resolved != null) {
-		URL.revokeObjectURL(resolved);
-		resolvedUrls.delete(id);
+		URL.revokeObjectURL(resolved.url);
+		resolvedMedia.delete(id);
 	}
 	const pending = pendingReads.get(id);
 	if (pending != null) {
@@ -66,21 +74,21 @@ export function releaseBackgroundImageURL(id: string): void {
 	}
 }
 
-export async function getBackgroundImageURL(id: string): Promise<string | null> {
-	const resolved = resolvedUrls.get(id);
+export async function getBackgroundMediaObjectURL(id: string): Promise<BackgroundMediaObjectURL | null> {
+	const resolved = resolvedMedia.get(id);
 	if (resolved != null) return resolved;
 	const inFlight = pendingReads.get(id);
 	if (inFlight != null) return inFlight.promise;
 	const read: BackgroundImageRead = {cancelled: false, promise: Promise.resolve(null)};
-	read.promise = readBackgroundImageObjectURL(id).then(
-		(url) => {
+	read.promise = readBackgroundMediaObjectURL(id).then(
+		(media) => {
 			if (read.cancelled) {
-				if (url != null) URL.revokeObjectURL(url);
+				if (media != null) URL.revokeObjectURL(media.url);
 				return null;
 			}
 			pendingReads.delete(id);
-			if (url != null) resolvedUrls.set(id, url);
-			return url;
+			if (media != null) resolvedMedia.set(id, media);
+			return media;
 		},
 		(error: unknown) => {
 			if (!read.cancelled) pendingReads.delete(id);
@@ -89,4 +97,8 @@ export async function getBackgroundImageURL(id: string): Promise<string | null> 
 	);
 	pendingReads.set(id, read);
 	return read.promise;
+}
+
+export async function getBackgroundImageURL(id: string): Promise<string | null> {
+	return (await getBackgroundMediaObjectURL(id))?.url ?? null;
 }

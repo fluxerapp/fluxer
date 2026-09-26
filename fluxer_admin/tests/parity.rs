@@ -3,6 +3,7 @@
 #[path = "parity/mod.rs"]
 mod parity_support;
 
+use fluxer_admin::api::generated::types::{LookupGuildResponse, SearchGuildsResponse};
 use parity_support::{
     TEST_ACCESS_TOKEN, TEST_ADMIN_SECRET, TEST_ADMIN_USER_ID, api_fixtures, capture,
     html_normalizer, rust_server,
@@ -46,6 +47,31 @@ fn html_normalizer_allows_intentional_rust_markup_fixes() {
         html_normalizer::normalize_html(ts),
         html_normalizer::normalize_html(rust)
     );
+}
+
+#[test]
+fn guild_search_fixture_matches_the_generated_response_contract() {
+    let response: SearchGuildsResponse =
+        serde_json::from_str(include_str!("parity/fixtures/api/search_guilds.json"))
+            .expect("guild search fixture must match the generated response contract");
+    assert_eq!(response.guilds.len(), 1);
+    let guild = &response.guilds[0];
+    assert_eq!(guild.name, "Parity Guild");
+    assert_eq!(guild.content_warning_level.as_deref(), Some(&0));
+}
+
+#[test]
+fn guild_lookup_fixture_matches_the_generated_response_contract() {
+    let response: LookupGuildResponse =
+        serde_json::from_str(include_str!("parity/fixtures/api/lookup_guild.json"))
+            .expect("guild lookup fixture must match the generated response contract");
+    let guild = response
+        .guild
+        .expect("guild lookup fixture must contain a guild");
+    assert_eq!(String::from(guild.name), "Parity Guild");
+    assert_eq!(guild.content_warning_level.as_deref(), Some(&0));
+    assert_eq!(guild.channels.len(), 1);
+    assert_eq!(guild.channels[0].content_warning_level.as_deref(), Some(&0));
 }
 
 #[tokio::test(flavor = "multi_thread")]

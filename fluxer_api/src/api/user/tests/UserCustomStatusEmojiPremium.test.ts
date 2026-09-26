@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createTestBotAccount} from '@app/api/bot/tests/BotTestUtils';
+import {getPngDataUrl} from '@app/api/emoji/tests/EmojiTestUtils';
+import {createGuild} from '@app/api/guild/tests/GuildTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {grantPremium} from '@app/api/user/tests/UserTestUtils';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import type {UserSettingsResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createTestBotAccount} from '../../bot/tests/BotTestUtils';
-import {getPngDataUrl} from '../../emoji/tests/EmojiTestUtils';
-import {createGuild} from '../../guild/tests/GuildTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {grantPremium} from './UserTestUtils';
 
 interface EmojiResponse {
 	id: string;
@@ -87,7 +87,7 @@ describe('User custom status emoji premium', () => {
 		expect(settings.custom_status?.emoji_id).toBeUndefined();
 		expect(settings.custom_status?.emoji_animated).toBe(false);
 	});
-	it('allows custom emoji status for premium users without guild or installed pack access', async () => {
+	it('allows custom emoji status for premium users without guild access', async () => {
 		const owner = await createTestAccount(harness);
 		const premiumAccount = await createTestAccount(harness);
 		await grantPremium(harness, premiumAccount.userId, UserPremiumTypes.SUBSCRIPTION);

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ArchiveSubjectTypeSchema} from '@fluxer/schema/src/domains/admin/AdminArchiveSchemas';
 import {createStringType, Int64Type, SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
 
@@ -39,64 +40,41 @@ export const InviteCodeParam = z.object({
 
 export type InviteCodeParam = z.infer<typeof InviteCodeParam>;
 
-export const PackIdParam = z.object({
-	pack_id: SnowflakeType.describe('The ID of the pack'),
-});
-
-export type PackIdParam = z.infer<typeof PackIdParam>;
-
 export const ApplicationIdParam = z.object({
 	id: SnowflakeType.describe('The ID of the application'),
 });
 
 export type ApplicationIdParam = z.infer<typeof ApplicationIdParam>;
 
-export const GuildIdUserIdParam = z.object({
-	guild_id: SnowflakeType.describe('The ID of the guild'),
-	user_id: SnowflakeType.describe('The ID of the user'),
-});
+export const GuildIdUserIdParam = GuildIdParam.extend(UserIdParam.shape);
 
 export type GuildIdUserIdParam = z.infer<typeof GuildIdUserIdParam>;
 
-export const GuildIdRoleIdParam = z.object({
-	guild_id: SnowflakeType.describe('The ID of the guild'),
+export const GuildIdRoleIdParam = GuildIdParam.extend({
 	role_id: SnowflakeType.describe('The ID of the role'),
 });
 
 export type GuildIdRoleIdParam = z.infer<typeof GuildIdRoleIdParam>;
 
-export const GuildIdUserIdRoleIdParam = z.object({
-	guild_id: SnowflakeType.describe('The ID of the guild'),
-	user_id: SnowflakeType.describe('The ID of the user'),
-	role_id: SnowflakeType.describe('The ID of the role'),
-});
+export const GuildIdUserIdRoleIdParam = GuildIdRoleIdParam.extend(UserIdParam.shape);
 
 export type GuildIdUserIdRoleIdParam = z.infer<typeof GuildIdUserIdRoleIdParam>;
 
-export const ChannelIdMessageIdParam = z.object({
-	channel_id: SnowflakeType.describe('The ID of the channel'),
-	message_id: SnowflakeType.describe('The ID of the message'),
-});
+export const ChannelIdMessageIdParam = ChannelIdParam.extend(MessageIdParam.shape);
 
 export type ChannelIdMessageIdParam = z.infer<typeof ChannelIdMessageIdParam>;
 
-export const ChannelIdUserIdParam = z.object({
-	channel_id: SnowflakeType.describe('The ID of the channel'),
-	user_id: SnowflakeType.describe('The ID of the user'),
-});
+export const ChannelIdUserIdParam = ChannelIdParam.extend(UserIdParam.shape);
 
 export type ChannelIdUserIdParam = z.infer<typeof ChannelIdUserIdParam>;
 
-export const ChannelIdOverwriteIdParam = z.object({
-	channel_id: SnowflakeType.describe('The ID of the channel'),
+export const ChannelIdOverwriteIdParam = ChannelIdParam.extend({
 	overwrite_id: SnowflakeType.describe('The ID of the permission overwrite'),
 });
 
 export type ChannelIdOverwriteIdParam = z.infer<typeof ChannelIdOverwriteIdParam>;
 
-export const ChannelIdMessageIdAttachmentIdParam = z.object({
-	channel_id: SnowflakeType.describe('The ID of the channel'),
-	message_id: SnowflakeType.describe('The ID of the message'),
+export const ChannelIdMessageIdAttachmentIdParam = ChannelIdMessageIdParam.extend({
 	attachment_id: SnowflakeType.describe('The ID of the attachment'),
 });
 
@@ -110,18 +88,13 @@ export const ChannelIdMessageIdAnswerIdParam = z.object({
 
 export type ChannelIdMessageIdAnswerIdParam = z.infer<typeof ChannelIdMessageIdAnswerIdParam>;
 
-export const WebhookIdTokenParam = z.object({
-	webhook_id: SnowflakeType.describe('The ID of the webhook'),
+export const WebhookIdTokenParam = WebhookIdParam.extend({
 	token: createStringType().describe('The webhook token'),
 });
 
 export type WebhookIdTokenParam = z.infer<typeof WebhookIdTokenParam>;
 
-export const WebhookIdTokenMessageIdParam = z.object({
-	webhook_id: SnowflakeType.describe('The ID of the webhook'),
-	token: createStringType().describe('The webhook token'),
-	message_id: SnowflakeType.describe('The ID of the message'),
-});
+export const WebhookIdTokenMessageIdParam = WebhookIdTokenParam.extend(MessageIdParam.shape);
 
 export type WebhookIdTokenMessageIdParam = z.infer<typeof WebhookIdTokenMessageIdParam>;
 
@@ -143,18 +116,6 @@ export const SuccessResponse = z.object({
 
 export type SuccessResponse = z.infer<typeof SuccessResponse>;
 
-export const EnabledToggleRequest = z.object({
-	enabled: z.boolean().describe('Whether to enable or disable the feature'),
-});
-
-export type EnabledToggleRequest = z.infer<typeof EnabledToggleRequest>;
-
-export const DisabledToggleRequest = z.object({
-	disabled: z.boolean().describe('Whether the feature should be in the disabled state'),
-});
-
-export type DisabledToggleRequest = z.infer<typeof DisabledToggleRequest>;
-
 export const EmojiIdParam = z.object({
 	emoji_id: SnowflakeType.describe('The ID of the emoji'),
 });
@@ -167,33 +128,13 @@ export const StickerIdParam = z.object({
 
 export type StickerIdParam = z.infer<typeof StickerIdParam>;
 
-export const GuildIdEmojiIdParam = z.object({
-	guild_id: SnowflakeType.describe('The ID of the guild'),
-	emoji_id: SnowflakeType.describe('The ID of the emoji'),
-});
+export const GuildIdEmojiIdParam = GuildIdParam.extend(EmojiIdParam.shape);
 
 export type GuildIdEmojiIdParam = z.infer<typeof GuildIdEmojiIdParam>;
 
-export const GuildIdStickerIdParam = z.object({
-	guild_id: SnowflakeType.describe('The ID of the guild'),
-	sticker_id: SnowflakeType.describe('The ID of the sticker'),
-});
+export const GuildIdStickerIdParam = GuildIdParam.extend(StickerIdParam.shape);
 
 export type GuildIdStickerIdParam = z.infer<typeof GuildIdStickerIdParam>;
-
-export const PackIdEmojiIdParam = z.object({
-	pack_id: SnowflakeType.describe('The ID of the pack'),
-	emoji_id: SnowflakeType.describe('The ID of the emoji'),
-});
-
-export type PackIdEmojiIdParam = z.infer<typeof PackIdEmojiIdParam>;
-
-export const PackIdStickerIdParam = z.object({
-	pack_id: SnowflakeType.describe('The ID of the pack'),
-	sticker_id: SnowflakeType.describe('The ID of the sticker'),
-});
-
-export type PackIdStickerIdParam = z.infer<typeof PackIdStickerIdParam>;
 
 export const GiftCodeParam = z.object({
 	code: createStringType(1, 32).describe('The gift code'),
@@ -207,20 +148,13 @@ export const StreamKeyParam = z.object({
 
 export type StreamKeyParam = z.infer<typeof StreamKeyParam>;
 
-export const ChannelIdMessageIdEmojiParam = z.object({
-	channel_id: SnowflakeType.describe('The ID of the channel'),
-	message_id: SnowflakeType.describe('The ID of the message'),
+export const ChannelIdMessageIdEmojiParam = ChannelIdMessageIdParam.extend({
 	emoji: createStringType(1, 64).describe('The emoji identifier'),
 });
 
 export type ChannelIdMessageIdEmojiParam = z.infer<typeof ChannelIdMessageIdEmojiParam>;
 
-export const ChannelIdMessageIdEmojiTargetIdParam = z.object({
-	channel_id: SnowflakeType.describe('The ID of the channel'),
-	message_id: SnowflakeType.describe('The ID of the message'),
-	emoji: createStringType(1, 64).describe('The emoji identifier'),
-	target_id: SnowflakeType.describe('The ID of the target user'),
-});
+export const ChannelIdMessageIdEmojiTargetIdParam = ChannelIdMessageIdEmojiParam.extend(TargetIdParam.shape);
 
 export type ChannelIdMessageIdEmojiTargetIdParam = z.infer<typeof ChannelIdMessageIdEmojiTargetIdParam>;
 
@@ -231,7 +165,7 @@ export const ReportIdParam = z.object({
 export type ReportIdParam = z.infer<typeof ReportIdParam>;
 
 export const KeyIdParam = z.object({
-	keyId: createStringType(1, 64).describe('The ID of the key'),
+	key_id: SnowflakeType.describe('The ID of the key'),
 });
 
 export type KeyIdParam = z.infer<typeof KeyIdParam>;
@@ -254,23 +188,19 @@ export const CredentialIdParam = z.object({
 
 export type CredentialIdParam = z.infer<typeof CredentialIdParam>;
 
-export const ScheduledMessageIdParam = z.object({
-	scheduled_message_id: SnowflakeType.describe('The ID of the scheduled message'),
-});
-
-export type ScheduledMessageIdParam = z.infer<typeof ScheduledMessageIdParam>;
-
-const ArchiveSubjectTypeEnum = z
-	.enum(['user', 'guild'])
-	.describe('Type of entity being archived: user for user data archives, guild for guild data archives');
-
 export const ArchivePathParam = z.object({
-	subjectType: ArchiveSubjectTypeEnum.describe('The type of subject (user or guild)'),
-	subjectId: SnowflakeType.describe('The ID of the subject'),
-	archiveId: SnowflakeType.describe('The ID of the archive'),
+	subject_type: ArchiveSubjectTypeSchema.describe('The type of subject (user or guild)'),
+	subject_id: SnowflakeType.describe('The ID of the subject'),
+	archive_id: SnowflakeType.describe('The ID of the archive'),
 });
 
 export type ArchivePathParam = z.infer<typeof ArchivePathParam>;
+
+export const JobIdParam = z.object({
+	job_id: SnowflakeType.describe('The ID of the job'),
+});
+
+export type JobIdParam = z.infer<typeof JobIdParam>;
 
 export const HarvestIdParam = z.object({
 	harvestId: SnowflakeType.describe('The ID of the harvest request'),

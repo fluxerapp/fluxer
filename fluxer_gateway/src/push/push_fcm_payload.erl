@@ -40,9 +40,9 @@ build_clear_message(DeviceToken, Payload) ->
             <<"token">> => DeviceToken,
             <<"data">> => Data,
             <<"android">> => #{
-                <<"priority">> => <<"HIGH">>,
-                <<"ttl">> => <<"300s">>,
-                <<"collapse_key">> => Tag
+                <<"priority">> => <<"NORMAL">>,
+                <<"ttl">> => <<"3600s">>,
+                <<"collapse_key">> => <<"clear:", Tag/binary>>
             },
             <<"fcm_options">> => #{
                 <<"analytics_label">> => <<"notification_clear">>
@@ -63,9 +63,8 @@ build_notification_message(DeviceToken, Payload) ->
         <<"image">>, ImageUrl, #{<<"title">> => Title, <<"body">> => Body}
     ),
     Data = build_notification_data(Payload, Title, Body, Tag, ImageUrl),
-    Group = resolve_notification_group(maps:get(<<"data">>, Payload, #{}), Tag),
     AndroidNotification = build_android_notification(Tag, ImageUrl),
-    wrap_notification_message(DeviceToken, NotificationBody, Data, AndroidNotification, Group).
+    wrap_notification_message(DeviceToken, NotificationBody, Data, AndroidNotification).
 
 -spec build_android_notification(binary(), binary() | undefined) -> map().
 build_android_notification(Tag, ImageUrl) ->
@@ -75,8 +74,8 @@ build_android_notification(Tag, ImageUrl) ->
         <<"click_action">> => <<"FLUXER_MESSAGE">>
     }).
 
--spec wrap_notification_message(binary(), map(), map(), map(), binary()) -> map().
-wrap_notification_message(DeviceToken, NotificationBody, Data, AndroidNotification, Group) ->
+-spec wrap_notification_message(binary(), map(), map(), map()) -> map().
+wrap_notification_message(DeviceToken, NotificationBody, Data, AndroidNotification) ->
     #{
         <<"message">> => #{
             <<"token">> => DeviceToken,
@@ -85,7 +84,6 @@ wrap_notification_message(DeviceToken, NotificationBody, Data, AndroidNotificati
             <<"android">> => #{
                 <<"priority">> => <<"HIGH">>,
                 <<"ttl">> => <<"86400s">>,
-                <<"collapse_key">> => Group,
                 <<"notification">> => AndroidNotification
             },
             <<"fcm_options">> => #{
@@ -93,37 +91,6 @@ wrap_notification_message(DeviceToken, NotificationBody, Data, AndroidNotificati
             }
         }
     }.
-
--spec resolve_notification_group(map(), binary()) -> binary().
-resolve_notification_group(Data, MessageTag) ->
-    case
-        push_utils:normalize_binary(
-            maps:get(<<"notification_tag">>, Data, undefined), undefined
-        )
-    of
-        Group when is_binary(Group), byte_size(Group) > 0 ->
-            Group;
-        _ ->
-            case
-                push_utils:normalize_binary(
-                    maps:get(<<"channel_id">>, Data, undefined), undefined
-                )
-            of
-                ChannelId when is_binary(ChannelId), byte_size(ChannelId) > 0 ->
-                    <<"channel:", ChannelId/binary>>;
-                _ ->
-                    derive_channel_tag_from_message_tag(MessageTag)
-            end
-    end.
-
--spec derive_channel_tag_from_message_tag(binary()) -> binary().
-derive_channel_tag_from_message_tag(MessageTag) ->
-    case binary:split(MessageTag, <<":">>, [global]) of
-        [<<"channel">>, ChannelId, _MessageId] when byte_size(ChannelId) > 0 ->
-            <<"channel:", ChannelId/binary>>;
-        _ ->
-            MessageTag
-    end.
 
 -spec build_notification_data(map(), binary(), binary(), binary(), binary() | undefined) ->
     map().
@@ -247,24 +214,24 @@ stringify_list_value(Value) ->
 
 -spec stringify_json_value(term()) -> binary().
 stringify_json_value(Value) ->
-    iolist_to_binary(json:encode(json_compatible_value(Value))).
+    iolist_to_binary(json:encode(json_encodable_value(Value))).
 
--spec json_compatible_value(term()) -> json:encode_value().
-json_compatible_value(Value) when is_binary(Value) -> Value;
-json_compatible_value(Value) when is_integer(Value) -> Value;
-json_compatible_value(Value) when is_float(Value) -> Value;
-json_compatible_value(Value) when is_atom(Value) -> Value;
-json_compatible_value(Value) when is_list(Value) ->
-    [json_compatible_value(Item) || Item <- Value];
-json_compatible_value(Value) when is_map(Value) ->
+-spec json_encodable_value(term()) -> json:encode_value().
+json_encodable_value(Value) when is_binary(Value) -> Value;
+json_encodable_value(Value) when is_integer(Value) -> Value;
+json_encodable_value(Value) when is_float(Value) -> Value;
+json_encodable_value(Value) when is_atom(Value) -> Value;
+json_encodable_value(Value) when is_list(Value) ->
+    [json_encodable_value(Item) || Item <- Value];
+json_encodable_value(Value) when is_map(Value) ->
     maps:fold(
         fun(Key, Item, Acc) ->
-            Acc#{push_utils:normalize_binary(Key, <<>>) => json_compatible_value(Item)}
+            Acc#{push_utils:normalize_binary(Key, <<>>) => json_encodable_value(Item)}
         end,
         #{},
         Value
     );
-json_compatible_value(Value) ->
+json_encodable_value(Value) ->
     iolist_to_binary(io_lib:format("~p", [Value])).
 
 -spec first_binary(list()) -> binary() | undefined.
@@ -345,7 +312,7 @@ build_message_includes_android_chat_notification_fields_test() ->
     ?assertEqual(<<"fluxer_default_push">>, maps:get(<<"channel_id">>, AndroidNotification)),
     ?assertEqual(<<"channel:123:456">>, maps:get(<<"tag">>, AndroidNotification)),
     Android = maps:get(<<"android">>, Message),
-    ?assertEqual(<<"channel:123">>, maps:get(<<"collapse_key">>, Android)),
+    ?assertEqual(false, maps:is_key(<<"collapse_key">>, Android)),
     ?assertEqual(
         <<"https://cdn.example/image.png">>, maps:get(<<"image">>, AndroidNotification)
     ),
@@ -366,9 +333,9 @@ build_clear_message_is_data_only_and_collapsible_test() ->
     #{<<"message">> := Message} = build_message(<<"device-token">>, Payload),
     ?assertEqual(false, maps:is_key(<<"notification">>, Message)),
     Android = maps:get(<<"android">>, Message),
-    ?assertEqual(<<"HIGH">>, maps:get(<<"priority">>, Android)),
-    ?assertEqual(<<"300s">>, maps:get(<<"ttl">>, Android)),
-    ?assertEqual(<<"channel:123">>, maps:get(<<"collapse_key">>, Android)),
+    ?assertEqual(<<"NORMAL">>, maps:get(<<"priority">>, Android)),
+    ?assertEqual(<<"3600s">>, maps:get(<<"ttl">>, Android)),
+    ?assertEqual(<<"clear:channel:123">>, maps:get(<<"collapse_key">>, Android)),
     Data = maps:get(<<"data">>, Message),
     ?assertEqual(<<"notification_clear">>, maps:get(<<"type">>, Data)),
     ?assertEqual(<<"clear_channel">>, maps:get(<<"action">>, Data)),

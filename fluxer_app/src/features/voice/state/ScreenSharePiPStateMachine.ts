@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {PiPContent} from '@app/features/ui/state/PiP';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export interface ScreenSharePiPScreenShare {
 	participantIdentity: string;
@@ -130,7 +130,7 @@ export const screenSharePiPStateMachine = setup({
 export type ScreenSharePiPSnapshot = SnapshotFrom<typeof screenSharePiPStateMachine>;
 
 export function createScreenSharePiPSnapshot(): ScreenSharePiPSnapshot {
-	return getInitialSnapshot(screenSharePiPStateMachine, undefined);
+	return initialTransition(screenSharePiPStateMachine, undefined)[0];
 }
 
 export function transitionScreenSharePiPSnapshot(

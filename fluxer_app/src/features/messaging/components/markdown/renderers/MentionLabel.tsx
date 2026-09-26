@@ -14,7 +14,9 @@ export function MentionLabel({icon, children}: MentionLabelProps): React.ReactEl
 	return (
 		<>
 			{icon}
-			{icon == null ? null : ICON_LABEL_JOINER}
+			{icon == null ? null : (
+				<span data-flx="messaging.markdown.renderers.mention-label.joiner">{ICON_LABEL_JOINER}</span>
+			)}
 			<span className={mentionRendererStyles.label} data-flx="messaging.markdown.renderers.mention-label.span">
 				{children}
 			</span>

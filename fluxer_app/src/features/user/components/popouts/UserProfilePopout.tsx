@@ -415,7 +415,7 @@ export const UserProfilePopout: React.FC<UserProfilePopoutProps> = observer(
 													disabled={true}
 													data-flx="user.user-profile-popout.button"
 												>
-													<Trans>Message</Trans>
+													<Trans context="message-action">Message</Trans>
 												</Button>
 											</div>
 										</Tooltip>
@@ -445,7 +445,7 @@ export const UserProfilePopout: React.FC<UserProfilePopoutProps> = observer(
 										onClick={isBlocked ? handleOpenBlockedDm : handleMessage}
 										data-flx="user.user-profile-popout.button.open-blocked-dm"
 									>
-										{isBlocked ? i18n._(OPEN_DM_DESCRIPTOR) : <Trans>Message</Trans>}
+										{isBlocked ? i18n._(OPEN_DM_DESCRIPTOR) : <Trans context="message-action">Message</Trans>}
 									</Button>
 								)}
 							</ProfileCardFooter>

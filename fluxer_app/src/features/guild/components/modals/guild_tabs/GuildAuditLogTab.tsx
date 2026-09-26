@@ -7,36 +7,27 @@ import {
 	type AuditLogTargetType,
 	getTranslatedAuditLogActions,
 } from '@app/features/app/config/AuditLogConstants';
+import Emoji from '@app/features/emoji/state/Emoji';
+import EmojiSticker from '@app/features/emoji/state/EmojiSticker';
 import * as GuildCommands from '@app/features/guild/commands/GuildCommands';
+import {GuildAuditLogSentence} from '@app/features/guild/components/modals/guild_tabs/GuildAuditLogSentence';
 import styles from '@app/features/guild/components/modals/guild_tabs/GuildAuditLogTab.module.css';
 import {
 	type AuditLogActionKind,
-	DEFAULT_FOR_STRINGS_KEY,
 	LOG_PAGE_SIZE,
 } from '@app/features/guild/components/modals/guild_tabs/GuildAuditLogTabConstants';
-import {getRendererTableForTarget} from '@app/features/guild/components/modals/guild_tabs/GuildAuditLogTabRenderers';
 import {
 	type AuditLogUserOption,
 	buildUserOptions,
 	formatTimestamp,
-	renderEntrySummary,
-	renderFallbackChangeDetail,
-	renderOptionDetailSentence,
-	resolveChannelLabel,
-	resolveTargetLabel,
-	shouldNotRenderChangeDetail,
-	shouldShowFallbackChangeDetail,
 } from '@app/features/guild/components/modals/guild_tabs/GuildAuditLogTabUtils';
-import {
-	getActionKind,
-	getTargetType,
-	looksLikeSnowflake,
-	normalizeChanges,
-	resolveIdToName,
-	safeScalarString,
-	shouldSuppressDetailsForAction,
-	toChangeShape,
-} from '@app/features/guild/utils/guild_tabs/GuildAuditLogTabUtils';
+import {presentAuditLogEntry} from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogPresentation';
+import type {
+	AuditLogPresentationContext,
+	AuditLogTone,
+} from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogPresentationTypes';
+import {BAN_REASON_LABEL} from '@app/features/guild/utils/guild_tabs/audit_log/AuditLogSharedMessages';
+import {getActionKind, getTargetType} from '@app/features/guild/utils/guild_tabs/GuildAuditLogTabUtils';
 import {TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import GuildMembers from '@app/features/member/state/GuildMembers';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -57,6 +48,7 @@ import {
 	BuildingsIcon,
 	CaretDownIcon,
 	ClipboardTextIcon,
+	DotIcon,
 	FunnelSimpleIcon,
 	GearIcon,
 	HashIcon,
@@ -68,13 +60,13 @@ import {
 	SmileyIcon,
 	StampIcon,
 	TagIcon,
+	TrashIcon,
 	UserGearIcon,
 	WarningCircleIcon,
 } from '@phosphor-icons/react';
 import clsx from 'clsx';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import type {ReactElement} from 'react';
 import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 
 const ALL_USERS_DESCRIPTOR = msg({
@@ -107,10 +99,6 @@ const FILTER_BY_ACTION_DESCRIPTOR = msg({
 	message: 'Filter by action',
 	comment: 'Label of the action-type filter dropdown in the activity log tab.',
 });
-const NO_REASON_WAS_PROVIDED_DESCRIPTOR = msg({
-	message: 'No reason was provided.',
-	comment: 'Fallback text in an expanded activity log entry when the moderator did not supply a reason.',
-});
 const UNKNOWN_USER_DESCRIPTOR = msg({
 	message: 'Unknown user',
 	comment: 'Fallback avatar label in the audit log when the acting user is unavailable.',
@@ -129,7 +117,6 @@ const UNABLE_TO_LOAD_ACTIVITY_LOGS_DESCRIPTOR = msg({
 });
 
 type IconComponent = React.ComponentType<{size?: number | string; weight?: IconWeight; className?: string}>;
-type ChangeTone = 'add' | 'remove' | 'update';
 
 const logger = new Logger('GuildAuditLogTab');
 const actionIconMap: Partial<Record<AuditLogActionType, IconComponent>> = {
@@ -164,8 +151,8 @@ const actionIconMap: Partial<Record<AuditLogActionType, IconComponent>> = {
 	[AuditLogActionType.STICKER_CREATE]: StampIcon,
 	[AuditLogActionType.STICKER_UPDATE]: StampIcon,
 	[AuditLogActionType.STICKER_DELETE]: StampIcon,
-	[AuditLogActionType.MESSAGE_DELETE]: PencilSimpleIcon,
-	[AuditLogActionType.MESSAGE_BULK_DELETE]: PencilSimpleIcon,
+	[AuditLogActionType.MESSAGE_DELETE]: TrashIcon,
+	[AuditLogActionType.MESSAGE_BULK_DELETE]: TrashIcon,
 	[AuditLogActionType.MESSAGE_PIN]: PencilSimpleIcon,
 	[AuditLogActionType.MESSAGE_UNPIN]: PencilSimpleIcon,
 };
@@ -182,18 +169,28 @@ const targetIconMap: Record<AuditLogTargetType, IconComponent> = {
 	[AUDIT_LOG_TARGET_TYPES.STICKER]: StampIcon,
 	[AUDIT_LOG_TARGET_TYPES.MESSAGE]: PencilSimpleIcon,
 };
+const changeToneIconMap: Record<AuditLogTone, IconComponent> = {
+	add: PlusIcon,
+	remove: MinusIcon,
+	neutral: DotIcon,
+};
+const changeToneClassMap: Record<AuditLogTone, string> = {
+	add: styles.changeBulletAdd,
+	remove: styles.changeBulletRemove,
+	neutral: styles.changeBulletNeutral,
+};
 const getActionIcon = (actionType: AuditLogActionType): IconComponent => {
 	const targetType = getTargetType(actionType);
-	return targetIconMap[targetType as AuditLogTargetType] ?? actionIconMap[actionType] ?? BuildingsIcon;
+	return actionIconMap[actionType] ?? targetIconMap[targetType as AuditLogTargetType] ?? BuildingsIcon;
 };
 const getActionOptionIcon = (value: string): IconComponent => {
 	if (!value) return FunnelSimpleIcon;
 	const action = AUDIT_LOG_ACTIONS.find((item) => item.value.toString() === value);
 	if (!action) return FunnelSimpleIcon;
-	const actionType = Number(value) as AuditLogActionType;
-	const targetType = getTargetType(actionType);
-	return targetIconMap[targetType as AuditLogTargetType] ?? getActionIcon(actionType);
+	return getActionIcon(action.value);
 };
+const isUserTargetAction = (actionType: AuditLogActionType): boolean =>
+	(getTargetType(actionType) as AuditLogTargetType) === AUDIT_LOG_TARGET_TYPES.USER;
 const USER_FILTER_AVATAR_SIZE = 28;
 const getActionSelectIconToneClass = (actionKind: AuditLogActionKind): string => {
 	switch (actionKind) {
@@ -207,42 +204,7 @@ const getActionSelectIconToneClass = (actionKind: AuditLogActionKind): string =>
 			return styles.actionSelectIconNeutral;
 	}
 };
-const getChangeTone = (change: {key: string; oldValue: unknown; newValue: unknown}): ChangeTone => {
-	if (change.key === '$remove') return 'remove';
-	if (typeof change.newValue === 'boolean' && typeof change.oldValue === 'boolean') {
-		return change.newValue ? 'add' : 'remove';
-	}
-	if (change.oldValue != null && change.newValue == null) return 'remove';
-	return 'add';
-};
-const getOptionTone = (value: unknown): ChangeTone => {
-	if (typeof value === 'boolean') return value ? 'add' : 'remove';
-	return 'add';
-};
-const getChangeIcon = (tone: ChangeTone): IconComponent => {
-	switch (tone) {
-		case 'remove':
-			return MinusIcon;
-		default:
-			return PlusIcon;
-	}
-};
-const maybeUrlDecodeReason = (raw: string): string => {
-	if (!/%[0-9A-Fa-f]{2}/.test(raw)) return raw;
-	try {
-		const decoded = decodeURIComponent(raw);
-		return decoded === raw ? raw : decoded;
-	} catch {
-		return raw;
-	}
-};
 const INFINITE_SCROLL_OVERSCAN_PX = 1200;
-const getChangeBulletToneClass = (tone: ChangeTone): string => {
-	if (tone === 'remove') {
-		return styles.changeBulletRemove;
-	}
-	return styles.changeBulletAdd;
-};
 
 type UserFilterOption = AuditLogUserOption | ComboboxOption<string>;
 
@@ -251,6 +213,7 @@ const isAuditLogUserOption = (option: UserFilterOption): option is AuditLogUserO
 const GuildAuditLogTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 	const {i18n} = useLingui();
 	const [entries, setEntries] = useState<Array<GuildAuditLogEntryResponse>>([]);
+	const [webhookNames, setWebhookNames] = useState<Map<string, string>>(() => new Map());
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [hasSuccessfulEmptyLoad, setHasSuccessfulEmptyLoad] = useState(false);
@@ -259,6 +222,15 @@ const GuildAuditLogTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 	const [hasMore, setHasMore] = useState(true);
 	const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null);
 	const members = GuildMembers.getMembers(guildId);
+	const presentationContext = useMemo<AuditLogPresentationContext>(
+		() => ({
+			guildId,
+			getWebhookName: (id) => webhookNames.get(id) ?? null,
+			getEmojiName: (id) => Emoji.getEmojiById(id)?.name ?? null,
+			getStickerName: (id) => EmojiSticker.getStickerById(id)?.name ?? null,
+		}),
+		[guildId, webhookNames],
+	);
 	const userOptions = useMemo<Array<UserFilterOption>>(
 		() => [{value: '', label: i18n._(ALL_USERS_DESCRIPTOR)}, ...buildUserOptions(members)],
 		[members, i18n.locale],
@@ -372,6 +344,13 @@ const GuildAuditLogTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 				});
 				const fetchedEntries = response.audit_log_entries;
 				Users.cacheUsers(response.users);
+				setWebhookNames((current) => {
+					const merged = reset ? new Map<string, string>() : new Map(current);
+					for (const webhook of response.webhooks) {
+						merged.set(webhook.id, webhook.name);
+					}
+					return merged;
+				});
 				setEntries((current) => {
 					const updatedEntries = reset ? fetchedEntries : [...current, ...fetchedEntries];
 					setHasSuccessfulEmptyLoad(reset && updatedEntries.length === 0);
@@ -401,7 +380,7 @@ const GuildAuditLogTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 			if (entry.user_id) {
 				userIds.add(entry.user_id);
 			}
-			if (entry.target_id) {
+			if (entry.target_id && isUserTargetAction(entry.action_type as AuditLogActionType)) {
 				userIds.add(entry.target_id);
 			}
 		}
@@ -484,89 +463,15 @@ const GuildAuditLogTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 							const entryClasses = clsx(styles.auditLog, styles[targetClassKey], styles[actionClassKey]);
 							const ActionIcon = getActionIcon(entry.action_type as AuditLogActionType);
 							const actorUser = entry.user_id ? (Users.getUser(entry.user_id) ?? null) : null;
-							const targetUser = entry.target_id ? (Users.getUser(entry.target_id) ?? null) : null;
-							const targetLabel = resolveTargetLabel(entry, i18n);
-							const channelLabel = resolveChannelLabel(entry, guildId, i18n);
-							const summaryNode = renderEntrySummary({
-								entry,
-								actorUser,
-								targetUser,
-								targetLabel,
-								channelLabel,
-								guildId,
-								i18n,
-							});
-							const suppressDetails = shouldSuppressDetailsForAction(entry.action_type as AuditLogActionType);
-							const changeShapes = suppressDetails
-								? []
-								: normalizeChanges(entry.changes)
-										.map(toChangeShape)
-										.filter((change) => change.key && !shouldNotRenderChangeDetail(targetType, change.key));
-							const rendererTable = getRendererTableForTarget(targetType);
-							const renderedChangeKeys = new Set(
-								changeShapes
-									.filter((change) => rendererTable[change.key]?.(change, {entry, guildId, i18n}) != null)
-									.map((change) => change.key),
+							const presentation = presentAuditLogEntry(entry, presentationContext);
+							const summaryNode = (
+								<GuildAuditLogSentence
+									sentence={presentation.summary}
+									guildId={guildId}
+									data-flx="guild.guild-tabs.guild-audit-log-tab.guild-audit-log-sentence"
+								/>
 							);
-							const optionEntries =
-								suppressDetails || !entry.options
-									? []
-									: Object.entries(entry.options).filter(([key, value]) => {
-											if (key === DEFAULT_FOR_STRINGS_KEY) return false;
-											if (renderedChangeKeys.has(key)) return false;
-											if (
-												key !== 'channel_id' &&
-												key !== 'message_id' &&
-												key !== 'inviter_id' &&
-												(key === 'id' || key.endsWith('_id'))
-											)
-												return false;
-											const scalar = safeScalarString(value, i18n);
-											if (scalar && looksLikeSnowflake(scalar)) {
-												return resolveIdToName(scalar, guildId) != null;
-											}
-											return true;
-										});
-							const rawReason = typeof entry.reason === 'string' && entry.reason.trim() ? entry.reason.trim() : '';
-							const decodedReason = rawReason ? maybeUrlDecodeReason(rawReason) : '';
-							const reasonText = decodedReason || i18n._(NO_REASON_WAS_PROVIDED_DESCRIPTOR);
-							const changeRows = changeShapes
-								.map((change, changeIndex) => {
-									const renderer = rendererTable[change.key];
-									const rendered = renderer?.(change, {entry, guildId, i18n});
-									if (!rendered && !shouldShowFallbackChangeDetail(change)) {
-										return null;
-									}
-									const tone = getChangeTone(change);
-									const ChangeIcon = getChangeIcon(tone);
-									const toneClass = getChangeBulletToneClass(tone);
-									return (
-										<div
-											className={styles.changeItem}
-											key={`${entryId}-${change.key}-${changeIndex}`}
-											data-flx="guild.guild-tabs.guild-audit-log-tab.change-item"
-										>
-											<span
-												className={clsx(styles.changeBullet, toneClass)}
-												aria-hidden
-												data-flx="guild.guild-tabs.guild-audit-log-tab.change-bullet"
-											>
-												<ChangeIcon
-													size={remFromPx(12)}
-													weight="bold"
-													className={styles.changeBulletIcon}
-													data-flx="guild.guild-tabs.guild-audit-log-tab.change-bullet-icon"
-												/>
-											</span>
-											<span className={styles.changeText} data-flx="guild.guild-tabs.guild-audit-log-tab.change-text">
-												{rendered ?? renderFallbackChangeDetail(change, guildId, i18n)}
-											</span>
-										</div>
-									);
-								})
-								.filter((row): row is ReactElement => row !== null);
-							const shouldShowReasonPreview = typeof entry.reason === 'string' && entry.reason.trim().length > 0;
-							const isExpandable = shouldShowReasonPreview || changeRows.length > 0 || optionEntries.length > 0;
+							const isExpandable = presentation.expandable;
 							const isExpandedView = isExpandable && expandedEntryId === entryId;
 							const headerClasses = clsx(styles.header, {
 								[styles.headerClickable]: isExpandable,
@@ -677,64 +582,61 @@ const GuildAuditLogTab: React.FC<{guildId: string}> = observer(({guildId}) => {
 									)}
 									{isExpandedView && (
 										<div className={styles.details} data-flx="guild.guild-tabs.guild-audit-log-tab.details">
-											{shouldShowReasonPreview && (
-												<div className={styles.reasonRow} data-flx="guild.guild-tabs.guild-audit-log-tab.reason-row">
+											{presentation.blocks.map((block) => (
+												<div
+													className={styles.reasonRow}
+													key={block.kind}
+													data-flx="guild.guild-tabs.guild-audit-log-tab.reason-row"
+												>
 													<span
 														className={styles.reasonLabel}
 														data-flx="guild.guild-tabs.guild-audit-log-tab.reason-label"
 													>
-														<Trans>Reason</Trans>
+														{block.kind === 'ban_reason' ? i18n._(BAN_REASON_LABEL) : <Trans>Reason</Trans>}
 													</span>
 													<span
 														className={styles.reasonValue}
 														data-flx="guild.guild-tabs.guild-audit-log-tab.reason-value"
 													>
-														{reasonText}
+														{block.text}
 													</span>
 												</div>
-											)}
-											{(changeRows.length > 0 || optionEntries.length > 0) && (
+											))}
+											{presentation.rows.length > 0 && (
 												<div className={styles.changeList} data-flx="guild.guild-tabs.guild-audit-log-tab.change-list">
-													{changeRows}
-													{optionEntries.map(([key, value]) => (
-														<div
-															className={styles.changeItem}
-															key={key}
-															data-flx="guild.guild-tabs.guild-audit-log-tab.change-item--2"
-														>
-															{(() => {
-																const tone = getOptionTone(value);
-																const ChangeIcon = getChangeIcon(tone);
-																const toneClass = getChangeBulletToneClass(tone);
-																return (
-																	<span
-																		className={clsx(styles.changeBullet, toneClass)}
-																		aria-hidden
-																		data-flx="guild.guild-tabs.guild-audit-log-tab.change-bullet--2"
-																	>
-																		<ChangeIcon
-																			size={remFromPx(12)}
-																			weight="bold"
-																			className={styles.changeBulletIcon}
-																			data-flx="guild.guild-tabs.guild-audit-log-tab.change-bullet-icon--2"
-																		/>
-																	</span>
-																);
-															})()}
-															<span
-																className={styles.changeText}
-																data-flx="guild.guild-tabs.guild-audit-log-tab.change-text--2"
+													{presentation.rows.map((row) => {
+														const ChangeIcon = changeToneIconMap[row.tone];
+														return (
+															<div
+																className={styles.changeItem}
+																key={row.id}
+																data-flx="guild.guild-tabs.guild-audit-log-tab.change-item"
 															>
-																{renderOptionDetailSentence(
-																	key,
-																	value,
-																	guildId,
-																	entry.action_type as AuditLogActionType,
-																	i18n,
-																)}
-															</span>
-														</div>
-													))}
+																<span
+																	className={clsx(styles.changeBullet, changeToneClassMap[row.tone])}
+																	aria-hidden
+																	data-flx="guild.guild-tabs.guild-audit-log-tab.change-bullet"
+																>
+																	<ChangeIcon
+																		size={remFromPx(12)}
+																		weight="bold"
+																		className={styles.changeBulletIcon}
+																		data-flx="guild.guild-tabs.guild-audit-log-tab.change-bullet-icon"
+																	/>
+																</span>
+																<span
+																	className={styles.changeText}
+																	data-flx="guild.guild-tabs.guild-audit-log-tab.change-text"
+																>
+																	<GuildAuditLogSentence
+																		sentence={row.sentence}
+																		guildId={guildId}
+																		data-flx="guild.guild-tabs.guild-audit-log-tab.guild-audit-log-sentence--2"
+																	/>
+																</span>
+															</div>
+														);
+													})}
 												</div>
 											)}
 										</div>

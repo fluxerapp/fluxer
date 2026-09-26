@@ -1,5 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {mapGuildToAdminResponse} from '@app/api/admin/models/GuildTypes';
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import type {AdminGuildUpdatePropagator} from '@app/api/admin/services/guild/AdminGuildUpdatePropagator';
+import {createGuildID, createUserID, type GuildID, type UserID} from '@app/api/BrandedTypes';
+import type {GuildRow} from '@app/api/database/types/GuildTypes';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {EntityAssetService, PreparedAssetUpload} from '@app/api/infrastructure/EntityAssetService';
+import {Logger} from '@app/api/Logger';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import type {
 	ClearGuildFieldsRequest,
@@ -7,14 +15,6 @@ import type {
 	UpdateGuildNameRequest,
 	UpdateGuildSettingsRequest,
 } from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
-import {createGuildID, createUserID, type GuildID, type UserID} from '../../../BrandedTypes';
-import type {GuildRow} from '../../../database/types/GuildTypes';
-import type {IGuildRepositoryAggregate} from '../../../guild/repositories/IGuildRepositoryAggregate';
-import type {EntityAssetService, PreparedAssetUpload} from '../../../infrastructure/EntityAssetService';
-import type {Guild} from '../../../models/Guild';
-import {mapGuildToAdminResponse} from '../../models/GuildTypes';
-import type {AdminAuditService} from '../AdminAuditService';
-import type {AdminGuildUpdatePropagator} from './AdminGuildUpdatePropagator';
 
 interface AdminGuildUpdateServiceDeps {
 	guildRepository: IGuildRepositoryAggregate;
@@ -82,62 +82,37 @@ export class AdminGuildUpdateService {
 		}
 		const patch: Partial<GuildRow> = {};
 		const preparedAssets: Array<PreparedAssetUpload> = [];
+		const imageFields = {
+			icon: {previousHash: guild.iconHash, patchField: 'icon_hash'},
+			banner: {previousHash: guild.bannerHash, patchField: 'banner_hash'},
+			splash: {previousHash: guild.splashHash, patchField: 'splash_hash'},
+			embed_splash: {previousHash: guild.embedSplashHash, patchField: 'embed_splash_hash'},
+		} as const;
 		for (const field of data.fields) {
-			if (field === 'icon') {
-				const prepared = await entityAssetService.prepareAssetUpload({
-					assetType: 'icon',
-					entityType: 'guild',
-					entityId: guildId,
-					previousHash: guild.iconHash,
-					base64Image: null,
-					errorPath: 'icon',
-				});
-				preparedAssets.push(prepared);
-				patch.icon_hash = prepared.newHash;
-			} else if (field === 'banner') {
-				const prepared = await entityAssetService.prepareAssetUpload({
-					assetType: 'banner',
-					entityType: 'guild',
-					entityId: guildId,
-					previousHash: guild.bannerHash,
-					base64Image: null,
-					errorPath: 'banner',
-				});
-				preparedAssets.push(prepared);
-				patch.banner_hash = prepared.newHash;
-			} else if (field === 'splash') {
-				const prepared = await entityAssetService.prepareAssetUpload({
-					assetType: 'splash',
-					entityType: 'guild',
-					entityId: guildId,
-					previousHash: guild.splashHash,
-					base64Image: null,
-					errorPath: 'splash',
-				});
-				preparedAssets.push(prepared);
-				patch.splash_hash = prepared.newHash;
-			} else if (field === 'embed_splash') {
-				const prepared = await entityAssetService.prepareAssetUpload({
-					assetType: 'embed_splash',
-					entityType: 'guild',
-					entityId: guildId,
-					previousHash: guild.embedSplashHash,
-					base64Image: null,
-					errorPath: 'embed_splash',
-				});
-				preparedAssets.push(prepared);
-				patch.embed_splash_hash = prepared.newHash;
-			}
+			const {previousHash, patchField} = imageFields[field];
+			const prepared = await entityAssetService.prepareAssetUpload({
+				assetType: field,
+				entityType: 'guild',
+				entityId: guildId,
+				previousHash,
+				base64Image: null,
+				errorPath: field,
+			});
+			preparedAssets.push(prepared);
+			patch[patchField] = prepared.newHash;
 		}
-		let updatedGuild: Guild;
-		try {
-			updatedGuild =
-				Object.keys(patch).length === 0 ? guild : await guildRepository.upsertPartial(guildId, patch, guild.toRow());
-		} catch (error) {
-			await Promise.allSettled(preparedAssets.map((p) => entityAssetService.rollbackAssetUpload(p)));
-			throw error;
+		const updatedGuild =
+			Object.keys(patch).length === 0 ? guild : await guildRepository.upsertPartial(guildId, patch, guild.toRow());
+		const commitResults = await Promise.allSettled(
+			preparedAssets.map((prepared) => entityAssetService.commitAssetChange(prepared)),
+		);
+		for (const [index, result] of commitResults.entries()) {
+			if (result.status === 'fulfilled') continue;
+			Logger.error(
+				{error: result.reason, guildId, previousS3Key: preparedAssets[index].previousS3Key},
+				'Failed to queue cleared guild asset for deletion after successful DB update',
+			);
 		}
-		await Promise.allSettled(preparedAssets.map((p) => entityAssetService.commitAssetChange({prepared: p})));
 		await updatePropagator.dispatchGuildUpdate(guildId, updatedGuild);
 		await auditService.createAuditLog({
 			adminUserId,
@@ -195,6 +170,18 @@ export class AdminGuildUpdateService {
 		if (data.nsfw_level !== undefined) {
 			patch.nsfw_level = data.nsfw_level;
 			metadata.set('nsfw_level', data.nsfw_level.toString());
+		}
+		if (data.nsfw !== undefined) {
+			patch.nsfw = data.nsfw;
+			metadata.set('nsfw', data.nsfw.toString());
+		}
+		if (data.content_warning_level !== undefined) {
+			patch.content_warning_level = data.content_warning_level;
+			metadata.set('content_warning_level', data.content_warning_level.toString());
+		}
+		if (data.content_warning_text !== undefined) {
+			patch.content_warning_text = data.content_warning_text;
+			metadata.set('content_warning_text', data.content_warning_text ?? '');
 		}
 		if (data.explicit_content_filter !== undefined) {
 			patch.explicit_content_filter = data.explicit_content_filter;

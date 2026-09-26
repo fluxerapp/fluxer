@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use fluxer_media_proxy::constants::AssetExtension;
-use fluxer_media_proxy::media_process::{ImageOptions, transform_image};
+use fluxer_media_proxy::media_process::{
+    AnimationLimits, AnimationMode, ImageOptions, ImageQuality, MediaLimits, ResizeMode,
+    transform_image,
+};
+use fluxer_media_proxy::metrics::Metrics;
+use fluxer_media_proxy::output_format::OutputFormat;
 use std::path::PathBuf;
 use std::time::Instant;
 
@@ -71,6 +75,11 @@ fn parse_gif(bytes: &[u8]) -> Option<(u16, u16, usize, usize)> {
 }
 
 fn main() {
+    let metrics = Metrics::new();
+    let media_limits = MediaLimits::default_from_config();
+    let animation = AnimationMode::Animated(
+        AnimationLimits::new(20_000, 30_000).expect("valid animation limits"),
+    );
     let runs_per_file = std::env::var("RUNS")
         .ok()
         .and_then(|s| s.parse().ok())
@@ -106,12 +115,14 @@ fn main() {
                 &ImageOptions {
                     width: Some(target),
                     height: Some(target),
-                    format: AssetExtension::Gif,
-                    quality: "high".to_owned(),
-                    animated: true,
-                    cover_crop: false,
+                    format: OutputFormat::GIF,
+                    quality: ImageQuality::High,
+                    animation,
+                    resize_mode: ResizeMode::Fit,
                     ..Default::default()
                 },
+                &media_limits,
+                &metrics.transform(),
             )
             .expect("transform ok");
             runs_ms.push(t0.elapsed().as_millis());

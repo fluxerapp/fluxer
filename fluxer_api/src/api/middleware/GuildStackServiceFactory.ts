@@ -1,38 +1,34 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
+import {ChannelService} from '@app/api/channel/services/ChannelService';
+import type {IFavoriteMemeRepository} from '@app/api/favorite_meme/IFavoriteMemeRepository';
+import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import {GuildService} from '@app/api/guild/services/GuildService';
+import type {AvatarService} from '@app/api/infrastructure/AvatarService';
+import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
+import type {EmbedService} from '@app/api/infrastructure/EmbedService';
+import type {EntityAssetService} from '@app/api/infrastructure/EntityAssetService';
+import type {IAssetDeletionQueue} from '@app/api/infrastructure/IAssetDeletionQueue';
+import type {ILiveKitService} from '@app/api/infrastructure/ILiveKitService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import type {IVoiceRoomStore} from '@app/api/infrastructure/IVoiceRoomStore';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {InviteRepository} from '@app/api/invite/InviteRepository';
+import {InviteService} from '@app/api/invite/InviteService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import type {ReadStateService} from '@app/api/read_state/ReadStateService';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {VoiceAvailabilityService} from '@app/api/voice/VoiceAvailabilityService';
+import type {IWebhookRepository} from '@app/api/webhook/IWebhookRepository';
 import type {IpInfoService} from '@pkgs/geoip/src/IpInfoService';
 import type {IVirusScanService} from '@pkgs/virus_scan/src/IVirusScanService';
-import type {ApiContext} from '../ApiContext';
-import type {IChannelRepository} from '../channel/IChannelRepository';
-import type {AttachmentUploadTraceRepository} from '../channel/repositories/message/AttachmentUploadTraceRepository';
-import {ChannelService} from '../channel/services/ChannelService';
-import type {IFavoriteMemeRepository} from '../favorite_meme/IFavoriteMemeRepository';
-import type {GuildAuditLogService} from '../guild/GuildAuditLogService';
-import type {IGuildRepositoryAggregate} from '../guild/repositories/IGuildRepositoryAggregate';
-import type {ExpressionAssetPurger} from '../guild/services/content/ExpressionAssetPurger';
-import {GuildService} from '../guild/services/GuildService';
-import type {AvatarService} from '../infrastructure/AvatarService';
-import type {IPurgeQueue} from '../infrastructure/BunnyPurgeQueue';
-import type {EmbedService} from '../infrastructure/EmbedService';
-import type {EntityAssetService} from '../infrastructure/EntityAssetService';
-import type {IAssetDeletionQueue} from '../infrastructure/IAssetDeletionQueue';
-import type {ILiveKitService} from '../infrastructure/ILiveKitService';
-import type {IStorageService} from '../infrastructure/IStorageService';
-import type {IVoiceRoomStore} from '../infrastructure/IVoiceRoomStore';
-import type {UserCacheService} from '../infrastructure/UserCacheService';
-import type {InviteRepository} from '../invite/InviteRepository';
-import {InviteService} from '../invite/InviteService';
-import type {LimitConfigService} from '../limits/LimitConfigService';
-import type {PackRepository} from '../pack/PackRepository';
-import {PackService} from '../pack/PackService';
-import type {ReadStateService} from '../read_state/ReadStateService';
-import type {IUserRepository} from '../user/IUserRepository';
-import type {VoiceAvailabilityService} from '../voice/VoiceAvailabilityService';
-import type {IWebhookRepository} from '../webhook/IWebhookRepository';
 
 interface GuildStackServiceFactoryDependencies {
 	apiContext: ApiContext;
-	packRepository: PackRepository;
 	channelRepository: IChannelRepository;
 	userRepository: IUserRepository;
 	guildRepository: IGuildRepositoryAggregate;
@@ -42,7 +38,6 @@ interface GuildStackServiceFactoryDependencies {
 	avatarService: AvatarService;
 	entityAssetService: EntityAssetService;
 	assetDeletionQueue: IAssetDeletionQueue;
-	expressionAssetPurger: ExpressionAssetPurger;
 	userCacheService: UserCacheService;
 	limitConfigService: LimitConfigService;
 	embedService: EmbedService;
@@ -59,32 +54,17 @@ interface GuildStackServiceFactoryDependencies {
 }
 
 export interface GuildStackServices {
-	packService: PackService;
 	channelService: ChannelService;
 	guildService: GuildService;
 	inviteService: InviteService;
 }
 
 class LazyGuildStackServices implements GuildStackServices {
-	private cachedPackService: PackService | undefined;
 	private cachedChannelService: ChannelService | undefined;
 	private cachedGuildService: GuildService | undefined;
 	private cachedInviteService: InviteService | undefined;
 
 	constructor(private readonly dependencies: GuildStackServiceFactoryDependencies) {}
-
-	get packService(): PackService {
-		this.cachedPackService ??= new PackService(
-			this.dependencies.apiContext,
-			this.dependencies.packRepository,
-			this.dependencies.guildRepository,
-			this.dependencies.avatarService,
-			this.dependencies.expressionAssetPurger,
-			this.dependencies.userCacheService,
-			this.dependencies.limitConfigService,
-		);
-		return this.cachedPackService;
-	}
 
 	get channelService(): ChannelService {
 		this.cachedChannelService ??= new ChannelService(
@@ -92,7 +72,6 @@ class LazyGuildStackServices implements GuildStackServices {
 			this.dependencies.channelRepository,
 			this.dependencies.userRepository,
 			this.dependencies.guildRepository,
-			this.packService,
 			this.dependencies.userCacheService,
 			this.dependencies.embedService,
 			this.dependencies.readStateService,
@@ -139,8 +118,6 @@ class LazyGuildStackServices implements GuildStackServices {
 			this.guildService,
 			this.channelService,
 			this.dependencies.guildAuditLogService,
-			this.dependencies.packRepository,
-			this.packService,
 			this.dependencies.limitConfigService,
 		);
 		return this.cachedInviteService;

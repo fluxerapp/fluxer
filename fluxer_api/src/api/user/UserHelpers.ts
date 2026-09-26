@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import {getCachedInstancePremiumMode} from '@app/api/limits/InstancePremiumModeCache';
+import type {User} from '@app/api/models/User';
+import {accountPolicyContactHasCapability} from '@app/api/risk/AccountPolicyService';
+import {getCachedDeferredPhoneGateEnabled} from '@app/api/risk/DeferredPhoneGateCache';
 import {
 	DEFERRABLE_PHONE_FLAGS,
 	DEFERRED_PHONE_ON_COMMUNITY_JOIN,
@@ -9,12 +15,6 @@ import {
 } from '@fluxer/constants/src/UserConstants';
 import type {RequiredAction} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {ms} from 'itty-time';
-import {Config} from '../Config';
-import type {UserRow} from '../database/types/UserTypes';
-import {getCachedInstancePremiumMode} from '../limits/InstancePremiumModeCache';
-import type {User} from '../models/User';
-import {accountPolicyContactHasCapability} from '../risk/AccountPolicyService';
-import {getCachedDeferredPhoneGateEnabled} from '../risk/DeferredPhoneGateCache';
 
 type ClauseAction = Exclude<RequiredAction, 'REQUIRE_INBOUND_PHONE_VERIFICATION'>;
 type VerificationChannel = 'email' | 'phone';
@@ -134,7 +134,7 @@ function suppressDeferredPhoneFlags(rawFlags: number): number {
 	if ((rawFlags & DEFERRED_PHONE_ON_COMMUNITY_JOIN) === 0) {
 		return rawFlags;
 	}
-	if (!getCachedDeferredPhoneGateEnabled()) {
+	if (getCachedDeferredPhoneGateEnabled() === false && Config.abusePolicy.phoneFlagging.enabled) {
 		return rawFlags & ~DEFERRED_PHONE_ON_COMMUNITY_JOIN;
 	}
 	return rawFlags & ~DEFERRABLE_PHONE_FLAGS;
@@ -275,7 +275,11 @@ export function createPremiumClearPatch(): Partial<UserRow> {
 	return mapExpiredPremiumFields(() => null) as Partial<UserRow>;
 }
 
-const PROFILE_SUBSTRING_EXEMPT_FLAGS = UserFlags.STAFF | UserFlags.CTP_MEMBER;
+export function clearPerksSanitizedFlag(premiumFlags: number): number {
+	return premiumFlags & ~PremiumFlags.PERKS_SANITIZED;
+}
+
+const PROFILE_SUBSTRING_EXEMPT_FLAGS = UserFlags.STAFF;
 
 export function isProfileSubstringExempt(user: Pick<PremiumCheckable, 'flags'>): boolean {
 	return (user.flags & PROFILE_SUBSTRING_EXEMPT_FLAGS) !== 0n;

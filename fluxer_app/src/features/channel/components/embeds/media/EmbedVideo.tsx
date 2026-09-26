@@ -67,10 +67,12 @@ const PLAY_VIDEO_DESCRIPTOR = msg({
 });
 const UNMUTE_DESCRIPTOR = msg({
 	message: 'Unmute',
+	context: 'playback-control-action',
 	comment: 'Button or menu action label in the channel and chat embed video. Keep it concise.',
 });
 const MUTE_DESCRIPTOR = msg({
 	message: 'Mute',
+	context: 'playback-control-action',
 	comment: 'Button or menu action label in the channel and chat embed video. Keep it concise.',
 });
 

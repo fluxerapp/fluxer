@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Resolver} from 'node:dns/promises';
-import {Logger} from '../../Logger';
-import {EXTERNAL_RESPONSE_LIMITS} from '../../utils/ExternalResponseLimits';
-import * as FetchUtils from '../../utils/FetchUtils';
-import type {ConnectionVerificationParams, IConnectionVerifier} from './IConnectionVerifier';
+import type {
+	ConnectionVerificationParams,
+	IConnectionVerifier,
+} from '@app/api/connection/verification/IConnectionVerifier';
+import {Logger} from '@app/api/Logger';
+import {EXTERNAL_RESPONSE_LIMITS} from '@app/api/utils/ExternalResponseLimits';
+import * as FetchUtils from '@app/api/utils/FetchUtils';
+import {isFqdnHostname} from '@fluxer/schema/src/primitives/UrlValidators';
 
 const VERIFICATION_TIMEOUT_MS = 5000;
 const DNS_VERIFICATION_TIMEOUT_MS = 2000;
@@ -51,6 +55,9 @@ export class DomainConnectionVerifier implements IConnectionVerifier {
 	}
 
 	private async checkDnsTxt(domain: string, token: string): Promise<boolean> {
+		if (!isFqdnHostname(domain)) {
+			return false;
+		}
 		const recordDomain = `_fluxer.${domain}`;
 		const results = await Promise.allSettled(
 			this.dnsServers.map(async (dnsServer) => {
@@ -81,20 +88,39 @@ export class DomainConnectionVerifier implements IConnectionVerifier {
 	}
 
 	private async checkWellKnown(domain: string, token: string): Promise<boolean> {
+		const verificationPath = '/.well-known/fluxer-verification';
+		let url: URL;
+		try {
+			url = new URL(verificationPath, `https://${domain}`);
+		} catch {
+			return false;
+		}
+		if (
+			url.host !== domain ||
+			url.username !== '' ||
+			url.password !== '' ||
+			url.port !== '' ||
+			url.pathname !== verificationPath ||
+			url.search !== '' ||
+			url.hash !== ''
+		) {
+			return false;
+		}
 		try {
 			const response = await FetchUtils.sendRequest({
-				url: `https://${domain}/.well-known/fluxer-verification`,
+				url: url.href,
 				method: 'GET',
 				timeout: VERIFICATION_TIMEOUT_MS,
 				serviceName: 'connection_verification',
 			});
 			if (response.status < 200 || response.status >= 300) {
+				FetchUtils.discardResponseBody(response.stream, response.status);
 				return false;
 			}
 			const body = await FetchUtils.streamToStringWithLimit(response.stream, {
 				maxBytes: EXTERNAL_RESPONSE_LIMITS.domainVerificationBytes,
 				headers: response.headers,
-				url: `https://${domain}/.well-known/fluxer-verification`,
+				url: url.href,
 				description: 'Domain verification response',
 			});
 			return body.trim() === token;

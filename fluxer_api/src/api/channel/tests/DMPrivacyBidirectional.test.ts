@@ -1,14 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
-import {UserFlags} from '@fluxer/constants/src/UserConstants';
-import {afterAll, beforeAll, beforeEach, describe, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {ensureSessionStarted} from '../../message/tests/MessageTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {removeRelationship} from '../../user/tests/RelationshipTestUtils';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {
 	acceptInvite,
 	createChannelInvite,
@@ -19,7 +11,15 @@ import {
 	leaveGuild,
 	sendChannelMessage,
 	updateUserSettings,
-} from './ChannelTestUtils';
+} from '@app/api/channel/tests/ChannelTestUtils';
+import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {removeRelationship} from '@app/api/user/tests/RelationshipTestUtils';
+import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import {afterAll, beforeAll, beforeEach, describe, it} from 'vitest';
 
 async function setUserFlags(harness: ApiTestHarness, userId: string, flags: bigint): Promise<void> {
 	await createBuilder(harness, '')

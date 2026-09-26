@@ -217,10 +217,10 @@ dedup_users(Users) ->
     Map = lists:foldl(fun add_user_by_id/2, #{}, Users),
     maps:values(Map).
 
--spec add_user_by_id(term(), #{user_id() => map()}) -> #{user_id() => map()}.
+-spec add_user_by_id(map() | undefined, #{user_id() => map()}) -> #{user_id() => map()}.
 add_user_by_id(undefined, Acc) ->
     Acc;
-add_user_by_id(U, Acc) ->
+add_user_by_id(U, Acc) when is_map(U) ->
     case user_id(U) of
         undefined -> Acc;
         Id -> Acc#{Id => U#{<<"id">> => Id}}

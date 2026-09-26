@@ -1,5 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, InviteCode, RoleID, UserID} from '@app/api/BrandedTypes';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import {GuildMemberAuditService} from '@app/api/guild/services/member/GuildMemberAuditService';
+import {GuildMemberAuthService} from '@app/api/guild/services/member/GuildMemberAuthService';
+import {GuildMemberEventService} from '@app/api/guild/services/member/GuildMemberEventService';
+import {GuildMemberOperationsService} from '@app/api/guild/services/member/GuildMemberOperationsService';
+import {GuildMemberRoleService} from '@app/api/guild/services/member/GuildMemberRoleService';
+import {GuildMemberSearchIndexService} from '@app/api/guild/services/member/GuildMemberSearchIndexService';
+import {GuildMemberValidationService} from '@app/api/guild/services/member/GuildMemberValidationService';
+import type {EntityAssetService} from '@app/api/infrastructure/EntityAssetService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Guild} from '@app/api/models/Guild';
+import type {GuildMember} from '@app/api/models/GuildMember';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import type {JoinSourceType} from '@fluxer/constants/src/GuildConstants';
 import {UnknownGuildMemberError} from '@fluxer/errors/src/domains/guild/UnknownGuildMemberError';
@@ -7,25 +26,6 @@ import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMe
 import type {GuildMemberUpdateRequest} from '@fluxer/schema/src/domains/guild/GuildRequestSchemas';
 import type {IpInfoService} from '@pkgs/geoip/src/IpInfoService';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
-import type {GuildID, InviteCode, RoleID, UserID} from '../../BrandedTypes';
-import type {ChannelService} from '../../channel/services/ChannelService';
-import type {EntityAssetService} from '../../infrastructure/EntityAssetService';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import type {LimitConfigService} from '../../limits/LimitConfigService';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {Guild} from '../../models/Guild';
-import type {GuildMember} from '../../models/GuildMember';
-import type {IUserRepository} from '../../user/IUserRepository';
-import type {GuildAuditLogService} from '../GuildAuditLogService';
-import type {IGuildRepositoryAggregate} from '../repositories/IGuildRepositoryAggregate';
-import {GuildMemberAuditService} from './member/GuildMemberAuditService';
-import {GuildMemberAuthService} from './member/GuildMemberAuthService';
-import {GuildMemberEventService} from './member/GuildMemberEventService';
-import {GuildMemberOperationsService} from './member/GuildMemberOperationsService';
-import {GuildMemberRoleService} from './member/GuildMemberRoleService';
-import {GuildMemberSearchIndexService} from './member/GuildMemberSearchIndexService';
-import {GuildMemberValidationService} from './member/GuildMemberValidationService';
 
 export class GuildMemberService {
 	private readonly authService: GuildMemberAuthService;
@@ -137,27 +137,14 @@ export class GuildMemberService {
 				void this.searchIndexService.updateMember(updatedMember, targetUser, searchIndexOptions);
 			}
 		}
-		const timeoutMetadata = (() => {
-			if (data.communication_disabled_until === undefined) {
-				return undefined;
-			}
-			const metadata: Record<string, string> = {};
-			if (data.communication_disabled_until !== null) {
-				metadata['communication_disabled_until'] = data.communication_disabled_until;
-			}
-			const trimmedReason = data.timeout_reason?.trim();
-			if (trimmedReason) {
-				metadata['timeout_reason'] = trimmedReason;
-			}
-			return Object.keys(metadata).length > 0 ? metadata : undefined;
-		})();
 		await this.auditService.recordAuditLog({
 			guildId,
 			userId,
 			action: AuditLogActionType.MEMBER_UPDATE,
 			targetId: targetId,
-			auditLogReason: auditLogReason ?? null,
-			metadata: timeoutMetadata,
+			auditLogReason:
+				auditLogReason ??
+				(data.communication_disabled_until !== undefined ? data.timeout_reason?.trim() || null : null),
 			changes: this.guildAuditLogService.computeChanges(
 				previousSnapshot,
 				this.auditService.serializeMemberForAudit(updatedMember),
@@ -180,6 +167,7 @@ export class GuildMemberService {
 		const targetMember = await this.guildRepository.getMember(guildId, targetId);
 		if (!targetMember) throw new UnknownGuildMemberError();
 		const previousSnapshot = this.auditService.serializeMemberForAudit(targetMember);
+		const role = await this.guildRepository.getRole(roleId, guildId);
 		await this.roleService.addMemberRole(params);
 		const updatedMember = await this.guildRepository.getMember(guildId, targetId);
 		if (updatedMember) {
@@ -198,7 +186,7 @@ export class GuildMemberService {
 				action: AuditLogActionType.MEMBER_ROLE_UPDATE,
 				targetId: targetId,
 				auditLogReason: auditLogReason ?? null,
-				metadata: {role_id: roleId.toString(), action: 'add'},
+				metadata: role ? {role_name: role.name} : undefined,
 				changes: this.guildAuditLogService.computeChanges(
 					previousSnapshot,
 					this.auditService.serializeMemberForAudit(updatedMember),
@@ -218,6 +206,7 @@ export class GuildMemberService {
 		const targetMember = await this.guildRepository.getMember(guildId, targetId);
 		if (!targetMember) throw new UnknownGuildMemberError();
 		const previousSnapshot = this.auditService.serializeMemberForAudit(targetMember);
+		const role = await this.guildRepository.getRole(roleId, guildId);
 		await this.roleService.systemAddMemberRole({targetId, guildId, roleId});
 		const updatedMember = await this.guildRepository.getMember(guildId, targetId);
 		if (updatedMember) {
@@ -236,7 +225,7 @@ export class GuildMemberService {
 				action: AuditLogActionType.MEMBER_ROLE_UPDATE,
 				targetId: targetId,
 				auditLogReason: null,
-				metadata: {role_id: roleId.toString(), action: 'add'},
+				metadata: role ? {role_name: role.name} : undefined,
 				changes: this.guildAuditLogService.computeChanges(
 					previousSnapshot,
 					this.auditService.serializeMemberForAudit(updatedMember),
@@ -259,6 +248,7 @@ export class GuildMemberService {
 		const targetMember = await this.guildRepository.getMember(guildId, targetId);
 		if (!targetMember) throw new UnknownGuildMemberError();
 		const previousSnapshot = this.auditService.serializeMemberForAudit(targetMember);
+		const role = await this.guildRepository.getRole(roleId, guildId);
 		await this.roleService.removeMemberRole(params);
 		const updatedMember = await this.guildRepository.getMember(guildId, targetId);
 		if (updatedMember) {
@@ -277,7 +267,7 @@ export class GuildMemberService {
 				action: AuditLogActionType.MEMBER_ROLE_UPDATE,
 				targetId: targetId,
 				auditLogReason: auditLogReason ?? null,
-				metadata: {role_id: roleId.toString(), action: 'remove'},
+				metadata: role ? {role_name: role.name} : undefined,
 				changes: this.guildAuditLogService.computeChanges(
 					previousSnapshot,
 					this.auditService.serializeMemberForAudit(updatedMember),

@@ -81,7 +81,7 @@ init(Req, _Opts) ->
 
 -spec websocket_init(state()) -> ws_result().
 websocket_init(#{version := 1} = State) ->
-    case gateway_handler_rate_limit:acquire_connection(maps:get(peer_ip, State, undefined)) of
+    case gateway_ip_connections:acquire(maps:get(peer_ip, State, undefined)) of
         ok ->
             do_websocket_init(State#{connection_acquired => true});
         {error, too_many_connections} ->
@@ -111,7 +111,9 @@ websocket_info({heartbeat_check}, State) ->
     gateway_handler_heartbeat:handle_legacy_heartbeat_check(State);
 websocket_info({dispatch, Event, Data, Seq}, State) when
     is_integer(Seq), is_atom(Event), is_map(Data);
-    is_integer(Seq), is_binary(Event), is_map(Data)
+    is_integer(Seq), is_binary(Event), is_map(Data);
+    is_integer(Seq), is_atom(Event), is_list(Data);
+    is_integer(Seq), is_binary(Event), is_list(Data)
 ->
     gateway_handler_dispatch:handle_dispatch(Event, Data, Seq, State);
 websocket_info({dispatch, Event, null, Seq}, State) when
@@ -123,8 +125,6 @@ websocket_info({dispatch, Event, {pre_encoded, Bin} = Data, Seq}, State) when
     is_integer(Seq), is_binary(Event), is_binary(Bin)
 ->
     gateway_handler_dispatch:handle_dispatch(Event, Data, Seq, State);
-websocket_info({session_backpressure_error, _Details}, State) ->
-    {ok, State};
 websocket_info(rollout_config_changed, State) ->
     gateway_handler_identify:handle_rollout_config_changed(State);
 websocket_info({retry_pending_identify, Token}, State) when is_reference(Token) ->
@@ -149,9 +149,16 @@ websocket_info(_, State) ->
     {ok, State}.
 
 -spec terminate(term(), cowboy_req:req(), state() | term()) -> ok.
-terminate(_Reason, _Req, State) when is_map(State) ->
-    terminate_with_state(eqwalizer:dynamic_cast(State));
+terminate(Reason, _Req, State) when is_map(State) ->
+    terminate_with_state(eqwalizer:dynamic_cast(State)),
+    exit_on_client_close(Reason);
 terminate(_Reason, _Req, _State) ->
+    ok.
+
+-spec exit_on_client_close(term()) -> ok.
+exit_on_client_close({remote, Code, _Payload}) when Code =:= 1000; Code =:= 1001 ->
+    exit({shutdown, client_closed});
+exit_on_client_close(_Reason) ->
     ok.
 
 -spec terminate_with_state(state()) -> ok.
@@ -168,7 +175,7 @@ terminate_with_state(_) ->
 
 -spec maybe_release_connection(state()) -> ok.
 maybe_release_connection(#{connection_acquired := true} = State) ->
-    gateway_handler_rate_limit:note_disconnect(State);
+    gateway_ip_connections:note_disconnect(State);
 maybe_release_connection(_) ->
     ok.
 
@@ -292,6 +299,13 @@ dispatch_after_rate_limit({rate_limited, RLState}, _OpAtom, _Payload) ->
 
 -spec extract_client_ip(cowboy_req:req()) -> binary().
 extract_client_ip(Req) ->
+    case fluxer_gateway_env:get(trust_client_ip_header) of
+        true -> extract_trusted_client_ip(Req);
+        _ -> peer_ip_to_binary(cowboy_req:peer(Req))
+    end.
+
+-spec extract_trusted_client_ip(cowboy_req:req()) -> binary().
+extract_trusted_client_ip(Req) ->
     ClientIpHeader = client_ip_header(),
     case cowboy_req:header(ClientIpHeader, Req) of
         undefined -> peer_ip_to_binary(cowboy_req:peer(Req));

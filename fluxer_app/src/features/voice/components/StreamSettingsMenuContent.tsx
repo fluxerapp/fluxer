@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
-import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as PremiumModalCommands from '@app/features/premium/commands/PremiumModalCommands';
 import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
@@ -15,47 +13,62 @@ import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettin
 import {AudioSourcePickerLinuxSubmenu} from '@app/features/voice/components/AudioSourcePickerLinux';
 import styles from '@app/features/voice/components/StreamSettingsMenuContent.module.css';
 import {
-	type StreamSettingsAudioControlLabelKey,
+	CAPTURE_DEVICES_USE_THE_GAMING_PRESET_DESCRIPTOR,
+	type OfferedScreenShareResolution,
+	type StreamSettingsAudioMenuViewState,
+	type StreamSettingsQualityWrite,
 	selectStreamSettingsAudioMenuState,
+	selectStreamSettingsPresetOverriddenByContext,
+	selectStreamSettingsQualityMenuState,
 } from '@app/features/voice/components/StreamSettingsMenuContentStateMachine';
-import AdaptiveScreenShareEngine from '@app/features/voice/engine/AdaptiveScreenShareEngine';
 import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
 import ScreenShareCodecNegotiation from '@app/features/voice/engine/ScreenShareCodecNegotiation';
-import {useStoreVersion} from '@app/features/voice/engine/Store';
 import {VoiceTrackSource} from '@app/features/voice/engine/VoiceTrackSource';
+import {resolveConfiguredScreenShareTarget} from '@app/features/voice/engine/voice_screen_share_manager/shared';
 import {useMediaDevices} from '@app/features/voice/hooks/useMediaDevices';
-import VoiceSettings, {type ScreenshareResolution, type StreamingMode} from '@app/features/voice/state/VoiceSettings';
-import {resolveScreenShareContentHintForContext} from '@app/features/voice/utils/CodecCapabilityDetector';
-import {getNativeAudioAvailabilityCached} from '@app/features/voice/utils/NativeAudioCaptureBridge';
+import ActiveScreenShareSource from '@app/features/voice/state/ActiveScreenShareSource';
+import VoiceSettings, {type StreamingMode} from '@app/features/voice/state/VoiceSettings';
+import {filterRoutableLinuxAudioSources} from '@app/features/voice/utils/LinuxAudioSourceRules';
+import {
+	getNativeAudioAvailabilityCached,
+	getNativeAudioAvailabilitySnapshot,
+} from '@app/features/voice/utils/NativeAudioCaptureBridge';
 import {
 	canRestartDisplayShareWithoutPreselectedSource,
 	type DisplayShareEnvironment,
 	usesNativeDisplayShareAudioSelection,
 } from '@app/features/voice/utils/ScreenShareEnvironment';
 import {
-	buildScreenShareOptions,
-	normaliseResolutionForContext,
-	normaliseStreamingModeForContext,
 	resolveScreenShareFrameRate,
-	resolveStreamingModeSettings,
-	type ScreenShareContext,
-	type SupportedScreenShareFrameRate,
+	resolveScreenShareTarget,
+	type ScreenShareQualityInput,
+	type ScreenShareTarget,
 } from '@app/features/voice/utils/ScreenShareOptions';
+import {isScreenShareRollbackIncompleteError} from '@app/features/voice/utils/ScreenShareRollbackIncompleteError';
 import {
+	applyLiveScreenShareAudioSourceChange,
+	buildConfiguredScreenShareOptions,
+	reconfigureActiveDeviceShareAudio,
+	reconfigureActiveLinuxAppShareAudio,
 	reconfigureActiveLinuxScreenShareAudioLink,
+	restartActiveScreenShareCapture,
+	scheduleConfiguredScreenShareMutation,
 	stopActiveLinuxScreenShareAudioLink,
 } from '@app/features/voice/utils/ScreenShareStartFlow';
-import {executeScreenShareOperation} from '@app/features/voice/utils/ScreenShareUtils';
+import {executeScreenShareOperation, handleScreenShareError} from '@app/features/voice/utils/ScreenShareUtils';
 import {
 	isLinuxDesktopAudioShare,
 	type StreamSettingsShareContext,
-	shouldReconfigureLinuxAudioForActiveStreamSettings,
+	shouldReconfigureAudioForActiveStreamSettings,
+	type WindowShareAudioScope,
 } from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
+import {hasHigherVideoQuality as resolveHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
 import {formatVoiceAudioDeviceLabel} from '@app/features/voice/utils/VoiceMessageDescriptors';
 import type {NativeAudioAvailability} from '@app/types/electron.d';
+import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
-import {CrownSimpleIcon} from '@phosphor-icons/react';
+import {CrownSimpleIcon, MicrophoneIcon, WaveformIcon} from '@phosphor-icons/react';
 import type {Track} from 'livekit-client';
 import {observer} from 'mobx-react-lite';
 import {useCallback, useEffect, useMemo, useState} from 'react';
@@ -64,26 +77,26 @@ const GAMING_DESCRIPTOR = msg({
 	message: 'Gaming',
 	comment: 'Streaming preset label in the stream settings menu. Higher frame rate, optimized for video games.',
 });
-const FLUID_MOTION_AT_1440P_60_FPS_DESCRIPTOR = msg({
-	message: 'Fluid motion at 1440p 60 FPS',
+const SMOOTH_60_FPS_AT_UP_TO_1440P_DESCRIPTOR = msg({
+	message: 'Smooth 60 FPS at up to 1440p',
 	comment:
 		'Description for the high-tier Gaming streaming preset (Plutonium). Resolution and frame rate are technical tokens.',
 });
-const FLUID_MOTION_AT_720P_30_FPS_DESCRIPTOR = msg({
-	message: 'Fluid motion at 720p 30 FPS',
+const SMOOTH_30_FPS_AT_UP_TO_720P_DESCRIPTOR = msg({
+	message: 'Smooth 30 FPS at up to 720p',
 	comment: 'Description for the free-tier Gaming streaming preset. Resolution and frame rate are technical tokens.',
 });
 const SCREENSHARE_DESCRIPTOR = msg({
 	message: 'Screen share',
 	comment: 'Streaming preset label in the stream settings menu. Optimized for sharp text in screen shares.',
 });
-const RAZOR_SHARP_TEXT_AT_NATIVE_SOURCE_15_FPS_DESCRIPTOR = msg({
-	message: 'Razor-sharp text at native source, 15 FPS',
+const SHARP_TEXT_AT_UP_TO_4K_DESCRIPTOR = msg({
+	message: 'Sharp text at up to 4K, up to 15 FPS',
 	comment:
-		'Description for the high-tier Screen share streaming preset (Plutonium). Source resolution and frame rate are technical tokens.',
+		'Description for the high-tier Screen share streaming preset (Plutonium). Resolution and frame rate are technical tokens.',
 });
-const SHARPER_TEXT_AT_720P_15_FPS_DESCRIPTOR = msg({
-	message: 'Sharper text at 720p, 15 FPS',
+const SHARP_TEXT_AT_720P_DESCRIPTOR = msg({
+	message: 'Sharp text at 720p, up to 30 FPS',
 	comment:
 		'Description for the free-tier Screen share streaming preset. Resolution and frame rate are technical tokens.',
 });
@@ -99,18 +112,16 @@ const SOURCE_DESCRIPTOR = msg({
 	message: 'Source',
 	comment: 'Resolution option in the stream settings menu meaning the original source resolution (no downscale).',
 });
-const MESSAGE_15_FPS_DESCRIPTOR = msg({
-	message: '15 FPS',
-	comment: 'Frame rate option label in the stream settings menu. FPS is a technical token.',
+const FPS_DESCRIPTOR = msg({
+	message: '{frameRate} FPS',
+	comment: 'Frame rate option label in the video tab. FPS is a technical token and frameRate is a whole number.',
 });
-const MESSAGE_30_FPS_DESCRIPTOR = msg({
-	message: '30 FPS',
-	comment: 'Frame rate option label in the stream settings menu. FPS is a technical token.',
-});
-const MESSAGE_60_FPS_DESCRIPTOR = msg({
-	message: '60 FPS',
-	comment: 'Frame rate option label in the stream settings menu. FPS is a technical token.',
-});
+const SCREEN_SHARE_RESOLUTION_LABELS: Record<Exclude<OfferedScreenShareResolution, 'source'>, string> = {
+	low_480p: '480p',
+	medium: '720p',
+	high: '1080p',
+	ultra: '1440p',
+};
 const STREAMING_MODE_DESCRIPTOR = msg({
 	message: 'Streaming mode',
 	comment: 'Section header in the stream settings menu. Picks between Gaming / Screen share / Custom presets.',
@@ -120,7 +131,7 @@ const RESOLUTION_DESCRIPTOR = msg({
 	comment: 'Section header in the stream settings menu for resolution options.',
 });
 const FRAMERATE_DESCRIPTOR = msg({
-	message: 'Framerate',
+	message: 'Frame rate',
 	comment: 'Section header in the stream settings menu for frame rate options.',
 });
 const AUDIO_DEVICE_DESCRIPTOR = msg({
@@ -139,23 +150,18 @@ const AUDIO_SETTINGS_DESCRIPTOR = msg({
 	message: 'Audio settings',
 	comment: 'Section header in the stream settings menu grouping audio-related toggles.',
 });
-const ADAPTIVE_QUALITY_DESCRIPTOR = msg({
-	message: 'Adaptive quality',
-	comment:
-		'Toggle label in the stream settings menu. When enabled, productName can lower screen-share resolution if the encoder is CPU or bandwidth limited.',
-});
-const ADAPTIVE_QUALITY_ACTIVE_DESCRIPTOR = msg({
-	message: 'Adjusted to {resolution} {frameRate} FPS',
-	comment:
-		'Inline adaptive-quality status in the stream settings menu. Shows the current automatically lowered resolution and frame rate.',
-});
 const STREAM_QUALITY_DESCRIPTOR = msg({
-	message: 'Stream Quality',
+	message: 'Stream quality',
 	comment: 'Compact submenu label for changing the resolution and frame rate of an active stream.',
 });
 const SHARE_STREAM_AUDIO_DESCRIPTOR = msg({
-	message: 'Share Stream Audio',
+	message: 'Share stream audio',
 	comment: 'Toggle label for sharing audio with an active stream.',
+});
+const CAPTURE_ENTIRE_SYSTEM_AUDIO_DESCRIPTOR = msg({
+	message: 'Capture entire system audio',
+	comment:
+		'Toggle label in the stream settings menu for a window share whose audio scope the user widened from the shared window to the whole system mix.',
 });
 const logger = new Logger('StreamSettingsMenuContent');
 const SCREEN_SHARE_AUDIO_SOURCE = VoiceTrackSource.ScreenShareAudio as Track.Source;
@@ -185,20 +191,12 @@ const PremiumBadge = () => (
 	</span>
 );
 
-function useHasHigherVideoQuality(): boolean {
-	return useMemo(
-		() =>
-			isLimitToggleEnabled(
-				{
-					feature_higher_video_quality: LimitResolver.resolve({
-						key: 'feature_higher_video_quality',
-						fallback: 0,
-					}),
-				},
-				'feature_higher_video_quality',
-			),
-		[],
-	);
+export function useHasHigherVideoQuality(): boolean {
+	return resolveHigherVideoQuality();
+}
+
+function getScreenShareResolutionLabel(i18n: I18n, resolution: OfferedScreenShareResolution): string {
+	return resolution === 'source' ? i18n._(SOURCE_DESCRIPTOR) : SCREEN_SHARE_RESOLUTION_LABELS[resolution];
 }
 
 function supportsStreamAudioCapture(shareContext: StreamSettingsShareContext): boolean {
@@ -208,45 +206,21 @@ function supportsStreamAudioCapture(shareContext: StreamSettingsShareContext): b
 	return supportsDesktopScreenShareAudioCapture();
 }
 
-function getScreenShareContext(shareContext: StreamSettingsShareContext): ScreenShareContext {
-	return shareContext === 'device' ? 'device' : 'display';
-}
-
 function getPreferredDisplaySurface(shareContext: StreamSettingsShareContext): 'window' | 'monitor' | undefined {
 	if (shareContext === 'app') return 'window';
 	if (shareContext === 'display') return 'monitor';
 	return undefined;
 }
 
-export async function pushActiveStreamSettings(
+async function runActiveStreamSettingsPush(
 	shareContext: StreamSettingsShareContext,
 	displayShareEnvironment: DisplayShareEnvironment,
-	hasHigherVideoQuality: boolean,
-	options: PushActiveStreamSettingsOptions = {},
-): Promise<void> {
-	const mode = VoiceSettings.getStreamingMode();
-	const screenShareContext = getScreenShareContext(shareContext);
-	const normalisedMode = normaliseStreamingModeForContext(mode, screenShareContext);
-	const normalisedResolution = normaliseResolutionForContext(
-		VoiceSettings.getScreenshareResolution(),
-		screenShareContext,
-		hasHigherVideoQuality,
-	);
-	const {resolution, frameRate} = resolveStreamingModeSettings(
-		normalisedMode,
-		normalisedResolution,
-		VoiceSettings.getVideoFrameRate(),
-		hasHigherVideoQuality,
-	);
+	options: PushActiveStreamSettingsOptions,
+): Promise<boolean> {
+	const sourceDimensions = ActiveScreenShareSource.getSourceDimensions();
+	const target = resolveConfiguredScreenShareTarget(shareContext, sourceDimensions);
+	ActiveScreenShareSource.setTarget(target);
 	const preferredDisplaySurface = getPreferredDisplaySurface(shareContext);
-	const preferredScreenShareCodecPreference = VoiceSettings.getPreferredScreenShareCodec();
-	const preferredVideoCodec = ScreenShareCodecNegotiation.selectScreenShareCodec(preferredScreenShareCodecPreference);
-	const contentHint = resolveScreenShareContentHintForContext(
-		VoiceSettings.getScreenShareContentHintOverride(),
-		preferredVideoCodec,
-		shareContext,
-		normalisedMode,
-	);
 	const canControlAudio = supportsStreamAudioCapture(shareContext);
 	const includeAudio =
 		canControlAudio &&
@@ -255,18 +229,13 @@ export async function pushActiveStreamSettings(
 			: shareContext === 'device'
 				? VoiceSettings.getShareDeviceAudio()
 				: VoiceSettings.getShareDesktopAudio());
-	const {captureOptions, publishOptions} = buildScreenShareOptions({
-		resolution,
-		frameRate,
+	const {captureOptions, publishOptions} = buildConfiguredScreenShareOptions({
+		target,
+		sourceDimensions,
 		includeAudio,
-		streamingMode: normalisedMode,
-		contentHint,
-		maxBitrateBps: VoiceSettings.getScreenShareMaxBitrateBpsOverride(),
+		videoCodec: ScreenShareCodecNegotiation.selectScreenShareCodec(VoiceSettings.getPreferredScreenShareCodec()),
 		preferredDisplaySurface,
 	});
-	if (preferredScreenShareCodecPreference !== 'auto') {
-		publishOptions.videoCodec = preferredVideoCodec;
-	}
 	const localParticipant = MediaEngine.room?.localParticipant ?? null;
 	const hasActiveScreenShareAudioPublication = localParticipant?.getTrackPublication(SCREEN_SHARE_AUDIO_SOURCE) != null;
 	const linuxDesktopAudioShare = isLinuxDesktopAudioShare({
@@ -292,44 +261,61 @@ export async function pushActiveStreamSettings(
 				publishOptions,
 			);
 		} catch (error) {
+			if (isScreenShareRollbackIncompleteError(error)) handleScreenShareError(error);
 			logger.warn('Failed to restart active screen share with audio enabled', error);
+			return false;
 		}
-		return;
+		return true;
 	}
 	const activeCaptureOptions = canControlAudio
-		? {...captureOptions, contentHint}
-		: {contentHint, resolution: captureOptions.resolution};
+		? {...captureOptions, contentHint: target.contentHint}
+		: {contentHint: target.contentHint, resolution: captureOptions.resolution};
 	if (
-		shouldReconfigureLinuxAudioForActiveStreamSettings({
+		shouldReconfigureAudioForActiveStreamSettings({
 			platform: getElectronAPI()?.platform,
 			shareContext,
 			audioSettingsChanged: options.audioSettingsChanged,
 		})
 	) {
-		let linuxAudioLinkUpdated = true;
+		let audioLinkUpdated = true;
 		try {
-			if (includeAudio) {
-				linuxAudioLinkUpdated = await reconfigureActiveLinuxScreenShareAudioLink();
+			if (!includeAudio) {
+				audioLinkUpdated = await stopActiveLinuxScreenShareAudioLink();
+			} else if (shareContext === 'device') {
+				audioLinkUpdated = await reconfigureActiveDeviceShareAudio();
+			} else if (shareContext === 'app') {
+				audioLinkUpdated = await reconfigureActiveLinuxAppShareAudio();
 			} else {
-				linuxAudioLinkUpdated = await stopActiveLinuxScreenShareAudioLink();
+				audioLinkUpdated = await reconfigureActiveLinuxScreenShareAudioLink();
 			}
 		} catch (error) {
-			linuxAudioLinkUpdated = false;
-			logger.warn('Failed to update active Linux screen share audio link', error);
+			audioLinkUpdated = false;
+			logger.warn('Failed to update the active screen share audio link', error);
 		}
-		if (includeAudio && !linuxAudioLinkUpdated) {
-			logger.warn('Linux screen-share audio link could not be updated; keeping video-only', {
+		if (includeAudio && !audioLinkUpdated) {
+			logger.warn('Screen-share audio link could not be updated; keeping video-only', {
 				platform: getElectronAPI()?.platform ?? null,
-				sourceMode: VoiceSettings.getScreenShareAudioSourceMode(),
+				sourceMode: VoiceSettings.getEffectiveScreenShareAudioSourceMode(),
 			});
 		}
 	}
 	try {
-		await MediaEngine.updateActiveScreenShareSettings(activeCaptureOptions, publishOptions);
-		AdaptiveScreenShareEngine.start(MediaEngine.room);
+		return await MediaEngine.updateActiveScreenShareSettings(activeCaptureOptions, publishOptions);
 	} catch (error) {
 		logger.warn('Failed to push updated stream settings to the active share', error);
+		return false;
 	}
+}
+
+export async function pushActiveStreamSettings(
+	shareContext: StreamSettingsShareContext,
+	displayShareEnvironment: DisplayShareEnvironment,
+	options: PushActiveStreamSettingsOptions = {},
+): Promise<void> {
+	await scheduleConfiguredScreenShareMutation(async () => {
+		if (await runActiveStreamSettingsPush(shareContext, displayShareEnvironment, options)) return true;
+		return restartActiveScreenShareCapture();
+	});
 }
 
 interface StreamSettingsMenuContentProps {
@@ -358,18 +344,19 @@ export const StreamSettingsMenuContent = observer(
 		const currentMode = VoiceSettings.getStreamingMode();
 		const currentResolution = VoiceSettings.getScreenshareResolution();
 		const currentFrameRate = resolveScreenShareFrameRate(VoiceSettings.getVideoFrameRate());
-		const effectiveMode = normaliseStreamingModeForContext(currentMode, getScreenShareContext(shareContext));
-		const effectiveResolution = normaliseResolutionForContext(
-			currentResolution,
-			getScreenShareContext(shareContext),
-			hasHigherVideoQuality,
-		);
-		const effectiveQuality = resolveStreamingModeSettings(
-			effectiveMode,
-			effectiveResolution,
-			currentFrameRate,
-			hasHigherVideoQuality,
-		);
+		const quality: ScreenShareQualityInput = {
+			mode: currentMode,
+			storedResolution: currentResolution,
+			storedFrameRate: currentFrameRate,
+			entitled: hasHigherVideoQuality,
+			context: shareContext,
+		};
+		const target: ScreenShareTarget = resolveScreenShareTarget({
+			...quality,
+			sourceDimensions: null,
+			hintSetting: VoiceSettings.getScreenShareContentHint(),
+		});
+		const presetOverriddenByContext = selectStreamSettingsPresetOverriddenByContext(currentMode, shareContext);
 		const captureAudioEnabled = isAppShare
 			? VoiceSettings.getShareAppAudio()
 			: isDeviceShare
@@ -381,7 +368,9 @@ export const StreamSettingsMenuContent = observer(
 		const supportsStreamAudio = supportsStreamAudioCapture(shareContext);
 		const hasLiveScreenShareAudioPublication =
 			MediaEngine.room?.localParticipant?.getTrackPublication(SCREEN_SHARE_AUDIO_SOURCE) != null;
-		const [nativeAudioAvailability, setNativeAudioAvailability] = useState<NativeAudioAvailability | null>(null);
+		const [nativeAudioAvailability, setNativeAudioAvailability] = useState<NativeAudioAvailability | null>(
+			getNativeAudioAvailabilitySnapshot,
+		);
 		useEffect(() => {
 			let cancelled = false;
 			void getNativeAudioAvailabilityCached().then((availability) => {
@@ -392,6 +381,13 @@ export const StreamSettingsMenuContent = observer(
 			};
 		}, []);
 		const platform = getElectronAPI()?.platform;
+		const audioSourceMode = VoiceSettings.getScreenShareAudioSourceMode();
+		const selectedAudioSourceCount = filterRoutableLinuxAudioSources(
+			VoiceSettings.getScreenShareAudioIncludeSources(),
+		).length;
+		const windowAudioScope = applyToLiveStream
+			? ActiveScreenShareSource.getWindowAudioScope()
+			: ActiveScreenShareSource.getPendingWindowAudioScope();
 		const audioMenuState = useMemo(
 			() =>
 				selectStreamSettingsAudioMenuState({
@@ -403,31 +399,32 @@ export const StreamSettingsMenuContent = observer(
 					hasLiveScreenShareAudioPublication,
 					nativeAudioAvailability,
 					platform,
+					audioSourceMode,
+					selectedAudioSourceCount,
+					windowAudioScope,
 				}),
 			[
 				applyToLiveStream,
+				audioSourceMode,
 				captureAudioEnabled,
 				displayShareEnvironment,
 				hasLiveScreenShareAudioPublication,
 				nativeAudioAvailability,
 				platform,
+				selectedAudioSourceCount,
 				shareContext,
 				supportsStreamAudio,
+				windowAudioScope,
 			],
 		);
-		const renderAudioCaptureLabel = (labelKey: StreamSettingsAudioControlLabelKey) => {
-			if (labelKey === 'captureDeviceAudio') return <Trans>Capture device audio</Trans>;
-			if (labelKey === 'captureAppAudio') return <Trans>Capture app audio</Trans>;
-			return <Trans>Capture desktop audio</Trans>;
-		};
 		const modeOptions: Array<Option<StreamingMode>> = useMemo(() => {
 			const modes: Array<Option<StreamingMode>> = [
 				{
 					value: 'gaming',
 					label: i18n._(GAMING_DESCRIPTOR),
 					description: hasHigherVideoQuality
-						? i18n._(FLUID_MOTION_AT_1440P_60_FPS_DESCRIPTOR)
-						: i18n._(FLUID_MOTION_AT_720P_30_FPS_DESCRIPTOR),
+						? i18n._(SMOOTH_60_FPS_AT_UP_TO_1440P_DESCRIPTOR)
+						: i18n._(SMOOTH_30_FPS_AT_UP_TO_720P_DESCRIPTOR),
 					isPremium: false,
 				},
 			];
@@ -436,8 +433,8 @@ export const StreamSettingsMenuContent = observer(
 					value: 'screenshare',
 					label: i18n._(SCREENSHARE_DESCRIPTOR),
 					description: hasHigherVideoQuality
-						? i18n._(RAZOR_SHARP_TEXT_AT_NATIVE_SOURCE_15_FPS_DESCRIPTOR)
-						: i18n._(SHARPER_TEXT_AT_720P_15_FPS_DESCRIPTOR),
+						? i18n._(SHARP_TEXT_AT_UP_TO_4K_DESCRIPTOR)
+						: i18n._(SHARP_TEXT_AT_720P_DESCRIPTOR),
 					isPremium: false,
 				});
 			}
@@ -449,33 +446,7 @@ export const StreamSettingsMenuContent = observer(
 			});
 			return modes;
 		}, [isDeviceShare, hasHigherVideoQuality, i18n.locale]);
-		const resolutionOptions: Array<Option<ScreenshareResolution>> = useMemo(() => {
-			const options: Array<Option<ScreenshareResolution>> = [
-				{value: 'low_240p', label: '240p', isPremium: false},
-				{value: 'low_480p', label: '480p', isPremium: false},
-				{value: 'medium', label: '720p', isPremium: false},
-			];
-			if (hasHigherVideoQuality || showPremiumFeatures) {
-				options.push(
-					{value: 'high', label: '1080p', isPremium: true},
-					{value: 'ultra', label: '1440p', isPremium: true},
-				);
-			}
-			if (!isDeviceShare && (hasHigherVideoQuality || showPremiumFeatures)) {
-				options.push({value: 'source', label: i18n._(SOURCE_DESCRIPTOR), isPremium: true});
-			}
-			return options;
-		}, [hasHigherVideoQuality, isDeviceShare, showPremiumFeatures, i18n.locale]);
-		const frameRateOptions: Array<Option<SupportedScreenShareFrameRate>> = useMemo(
-			() => [
-				{value: 15, label: i18n._(MESSAGE_15_FPS_DESCRIPTOR), isPremium: false},
-				{value: 30, label: i18n._(MESSAGE_30_FPS_DESCRIPTOR), isPremium: false},
-				...(hasHigherVideoQuality || showPremiumFeatures
-					? [{value: 60 as const, label: i18n._(MESSAGE_60_FPS_DESCRIPTOR), isPremium: true}]
-					: []),
-			],
-			[hasHigherVideoQuality, showPremiumFeatures, i18n.locale],
-		);
+		const qualityMenuState = selectStreamSettingsQualityMenuState({quality, target, showPremiumFeatures});
 		const audioDeviceOptions = useMemo(() => {
 			const real = inputDevices.filter((d) => d.deviceId && d.deviceId !== 'default');
 			return real;
@@ -484,17 +455,45 @@ export const StreamSettingsMenuContent = observer(
 			(options?: PushActiveStreamSettingsOptions) => {
 				if (!applyToLiveStream) return;
 				void executeScreenShareOperation(() =>
-					pushActiveStreamSettings(shareContext, displayShareEnvironment, hasHigherVideoQuality, options),
+					pushActiveStreamSettings(shareContext, displayShareEnvironment, options),
 				).catch(() => undefined);
 			},
-			[applyToLiveStream, displayShareEnvironment, hasHigherVideoQuality, shareContext],
+			[applyToLiveStream, displayShareEnvironment, shareContext],
 		);
-		const reconfigureLinuxDisplayAudio = useCallback(() => {
-			if (!applyToLiveStream || shareContext === 'device') return;
-			void reconfigureActiveLinuxScreenShareAudioLink().catch((error) => {
-				logger.warn('Failed to reconfigure active Linux screen share audio link', error);
-			});
-		}, [applyToLiveStream, shareContext]);
+		const applyQualityWrite = useCallback(
+			(write: StreamSettingsQualityWrite) => {
+				if (write.kind === 'premium') {
+					PremiumModalCommands.open();
+					return;
+				}
+				if (write.kind === 'none') return;
+				VoiceSettingsCommands.update(write.patch);
+				runApply();
+			},
+			[runApply],
+		);
+		const applyAudioSourceChange = useCallback(
+			(nextWindowAudioScope?: WindowShareAudioScope) => {
+				if (!applyToLiveStream) {
+					if (nextWindowAudioScope != null) {
+						ActiveScreenShareSource.setPendingWindowAudioScope(nextWindowAudioScope);
+					}
+					return;
+				}
+				void applyLiveScreenShareAudioSourceChange(shareContext, nextWindowAudioScope)
+					.then((applied) => {
+						if (applied) return;
+						logger.warn('The screen share audio source change did not take; the share is running without audio', {
+							shareContext,
+							nextWindowAudioScope,
+						});
+					})
+					.catch((error) => {
+						logger.warn('Failed to apply the screen share audio source change', error);
+					});
+			},
+			[applyToLiveStream, shareContext],
+		);
 		const handleModeSelect = useCallback(
 			(option: Option<StreamingMode>) => {
 				if (option.isPremium && !hasHigherVideoQuality) {
@@ -503,39 +502,11 @@ export const StreamSettingsMenuContent = observer(
 					}
 					return;
 				}
-				if (currentMode === option.value) return;
+				if (target.mode === option.value) return;
 				VoiceSettingsCommands.update({streamingMode: option.value});
 				runApply();
 			},
-			[currentMode, hasHigherVideoQuality, runApply, showPremiumFeatures],
-		);
-		const handleResolutionSelect = useCallback(
-			(option: Option<ScreenshareResolution>) => {
-				if (option.isPremium && !hasHigherVideoQuality) {
-					if (showPremiumFeatures) {
-						PremiumModalCommands.open();
-					}
-					return;
-				}
-				if (currentResolution === option.value) return;
-				VoiceSettingsCommands.update({screenshareResolution: option.value});
-				runApply();
-			},
-			[currentResolution, hasHigherVideoQuality, runApply, showPremiumFeatures],
-		);
-		const handleFrameRateSelect = useCallback(
-			(option: Option<SupportedScreenShareFrameRate>) => {
-				if (option.isPremium && !hasHigherVideoQuality) {
-					if (showPremiumFeatures) {
-						PremiumModalCommands.open();
-					}
-					return;
-				}
-				if (currentFrameRate === option.value) return;
-				VoiceSettingsCommands.update({videoFrameRate: option.value});
-				runApply();
-			},
-			[currentFrameRate, hasHigherVideoQuality, runApply, showPremiumFeatures],
+			[hasHigherVideoQuality, runApply, showPremiumFeatures, target.mode],
 		);
 		const handleCaptureAudioToggle = useCallback(
 			(checked: boolean) => {
@@ -575,32 +546,6 @@ export const StreamSettingsMenuContent = observer(
 			? formatVoiceAudioDeviceLabel(i18n, selectedAudioDevice, i18n._(UNNAMED_INPUT_DESCRIPTOR))
 			: i18n._(SYSTEM_DEFAULT_DESCRIPTOR);
 		if (variant === 'compactLive') {
-			const selectCompactResolution = (option: Option<ScreenshareResolution>) => {
-				if (option.isPremium && !hasHigherVideoQuality) {
-					if (showPremiumFeatures) PremiumModalCommands.open();
-					return;
-				}
-				if (currentMode === 'custom' && effectiveQuality.resolution === option.value) return;
-				VoiceSettingsCommands.update({
-					streamingMode: 'custom',
-					screenshareResolution: option.value,
-					videoFrameRate: effectiveQuality.frameRate,
-				});
-				runApply();
-			};
-			const selectCompactFrameRate = (option: Option<SupportedScreenShareFrameRate>) => {
-				if (option.isPremium && !hasHigherVideoQuality) {
-					if (showPremiumFeatures) PremiumModalCommands.open();
-					return;
-				}
-				if (currentMode === 'custom' && effectiveQuality.frameRate === option.value) return;
-				VoiceSettingsCommands.update({
-					streamingMode: 'custom',
-					screenshareResolution: effectiveQuality.resolution,
-					videoFrameRate: option.value,
-				});
-				runApply();
-			};
 			return (
 				<>
 					<MenuItemSubmenu
@@ -608,16 +553,19 @@ export const StreamSettingsMenuContent = observer(
 						render={() => (
 							<>
 								<MenuGroup data-flx="voice.stream-settings-menu-content.compact-live.frame-rate-group">
-									<MenuGroupLabel data-flx="voice.stream-settings-menu-content.compact-live.frame-rate-label">
+									<MenuGroupLabel
+										className={styles.compactLiveGroupLabel}
+										data-flx="voice.stream-settings-menu-content.compact-live.frame-rate-label"
+									>
 										{i18n._(FRAMERATE_DESCRIPTOR)}
 									</MenuGroupLabel>
-									{frameRateOptions.map((option) => {
-										const premiumLocked = showPremiumFeatures && option.isPremium && !hasHigherVideoQuality;
+									{qualityMenuState.frameRates.map((option) => {
+										const isPlutoniumReserved = showPremiumFeatures && option.premium;
 										return (
 											<MenuItemRadio
 												key={option.value}
-												selected={effectiveQuality.frameRate === option.value}
-												onSelect={() => selectCompactFrameRate(option)}
+												selected={option.selected}
+												onSelect={() => applyQualityWrite(option.write)}
 												data-flx="voice.stream-settings-menu-content.compact-live.frame-rate-option"
 											>
 												<span
@@ -628,9 +576,9 @@ export const StreamSettingsMenuContent = observer(
 														className={styles.rowLabel}
 														data-flx="voice.stream-settings-menu-content.compact-live.frame-rate-row-label"
 													>
-														{option.label}
+														{i18n._(FPS_DESCRIPTOR, {frameRate: option.value})}
 													</span>
-													{premiumLocked && (
+													{isPlutoniumReserved && (
 														<PremiumBadge data-flx="voice.stream-settings-menu-content.compact-live.frame-rate-premium-badge" />
 													)}
 												</span>
@@ -639,16 +587,19 @@ export const StreamSettingsMenuContent = observer(
 									})}
 								</MenuGroup>
 								<MenuGroup data-flx="voice.stream-settings-menu-content.compact-live.resolution-group">
-									<MenuGroupLabel data-flx="voice.stream-settings-menu-content.compact-live.resolution-label">
+									<MenuGroupLabel
+										className={styles.compactLiveGroupLabel}
+										data-flx="voice.stream-settings-menu-content.compact-live.resolution-label"
+									>
 										{i18n._(RESOLUTION_DESCRIPTOR)}
 									</MenuGroupLabel>
-									{resolutionOptions.map((option) => {
-										const premiumLocked = showPremiumFeatures && option.isPremium && !hasHigherVideoQuality;
+									{qualityMenuState.resolutions.map((option) => {
+										const isPlutoniumReserved = showPremiumFeatures && option.premium;
 										return (
 											<MenuItemRadio
 												key={option.value}
-												selected={effectiveQuality.resolution === option.value}
-												onSelect={() => selectCompactResolution(option)}
+												selected={option.selected}
+												onSelect={() => applyQualityWrite(option.write)}
 												data-flx="voice.stream-settings-menu-content.compact-live.resolution-option"
 											>
 												<span
@@ -659,9 +610,9 @@ export const StreamSettingsMenuContent = observer(
 														className={styles.rowLabel}
 														data-flx="voice.stream-settings-menu-content.compact-live.resolution-row-label"
 													>
-														{option.label}
+														{getScreenShareResolutionLabel(i18n, option.value)}
 													</span>
-													{premiumLocked && (
+													{isPlutoniumReserved && (
 														<PremiumBadge data-flx="voice.stream-settings-menu-content.compact-live.resolution-premium-badge" />
 													)}
 												</span>
@@ -673,15 +624,20 @@ export const StreamSettingsMenuContent = observer(
 						)}
 						data-flx="voice.stream-settings-menu-content.compact-live.quality-submenu"
 					/>
-					{audioMenuState.control.value === 'toggle' && (
-						<CheckboxItem
-							checked={audioMenuState.control.checked}
-							onCheckedChange={handleCaptureAudioToggle}
-							data-flx="voice.stream-settings-menu-content.compact-live.share-audio"
-						>
-							{i18n._(SHARE_STREAM_AUDIO_DESCRIPTOR)}
-						</CheckboxItem>
-					)}
+					<StreamSettingsAudioGroup
+						audioMenuState={audioMenuState}
+						shareContext={shareContext}
+						displayShareEnvironment={displayShareEnvironment}
+						windowAudioScope={windowAudioScope}
+						compact={true}
+						audioDeviceOptions={audioDeviceOptions}
+						currentAudioDeviceId={currentAudioDeviceId}
+						selectedAudioDeviceLabel={selectedAudioDeviceLabel}
+						onCaptureAudioToggle={handleCaptureAudioToggle}
+						onAudioSourceChange={applyAudioSourceChange}
+						onAudioDeviceSelect={handleAudioDeviceSelect}
+						data-flx="voice.stream-settings-menu-content.compact-live.audio-group"
+					/>
 				</>
 			);
 		}
@@ -692,11 +648,11 @@ export const StreamSettingsMenuContent = observer(
 						{i18n._(STREAMING_MODE_DESCRIPTOR)}
 					</MenuGroupLabel>
 					{modeOptions.map((option) => {
-						const premiumLocked = showPremiumFeatures && option.isPremium && !hasHigherVideoQuality;
+						const isPlutoniumReserved = showPremiumFeatures && option.isPremium;
 						return (
 							<MenuItemRadio
 								key={option.value}
-								selected={currentMode === option.value}
+								selected={target.mode === option.value}
 								onSelect={() => handleModeSelect(option)}
 								data-flx="voice.stream-settings-menu-content.menu-item-radio.mode-select"
 							>
@@ -716,8 +672,16 @@ export const StreamSettingsMenuContent = observer(
 												{option.description}
 											</span>
 										)}
+										{presetOverriddenByContext && option.value === target.mode && (
+											<span
+												className={styles.modeDescription}
+												data-flx="voice.stream-settings-menu-content.mode-context-note"
+											>
+												{i18n._(CAPTURE_DEVICES_USE_THE_GAMING_PRESET_DESCRIPTOR)}
+											</span>
+										)}
 									</span>
-									{premiumLocked && <PremiumBadge data-flx="voice.stream-settings-menu-content.premium-badge" />}
+									{isPlutoniumReserved && <PremiumBadge data-flx="voice.stream-settings-menu-content.premium-badge" />}
 								</span>
 							</MenuItemRadio>
 						);
@@ -729,20 +693,20 @@ export const StreamSettingsMenuContent = observer(
 							label={i18n._(RESOLUTION_DESCRIPTOR)}
 							render={() => (
 								<MenuGroup data-flx="voice.stream-settings-menu-content.menu-group--3">
-									{resolutionOptions.map((option) => {
-										const premiumLocked = showPremiumFeatures && option.isPremium && !hasHigherVideoQuality;
+									{qualityMenuState.resolutions.map((option) => {
+										const isPlutoniumReserved = showPremiumFeatures && option.premium;
 										return (
 											<MenuItemRadio
 												key={option.value}
-												selected={currentResolution === option.value}
-												onSelect={() => handleResolutionSelect(option)}
+												selected={option.selected}
+												onSelect={() => applyQualityWrite(option.write)}
 												data-flx="voice.stream-settings-menu-content.menu-item-radio.resolution-select"
 											>
 												<span className={styles.row} data-flx="voice.stream-settings-menu-content.row">
 													<span className={styles.rowLabel} data-flx="voice.stream-settings-menu-content.row-label">
-														{option.label}
+														{getScreenShareResolutionLabel(i18n, option.value)}
 													</span>
-													{premiumLocked && (
+													{isPlutoniumReserved && (
 														<PremiumBadge data-flx="voice.stream-settings-menu-content.premium-badge--2" />
 													)}
 												</span>
@@ -757,20 +721,20 @@ export const StreamSettingsMenuContent = observer(
 							label={i18n._(FRAMERATE_DESCRIPTOR)}
 							render={() => (
 								<MenuGroup data-flx="voice.stream-settings-menu-content.menu-group--4">
-									{frameRateOptions.map((option) => {
-										const premiumLocked = showPremiumFeatures && option.isPremium && !hasHigherVideoQuality;
+									{qualityMenuState.frameRates.map((option) => {
+										const isPlutoniumReserved = showPremiumFeatures && option.premium;
 										return (
 											<MenuItemRadio
 												key={option.value}
-												selected={currentFrameRate === option.value}
-												onSelect={() => handleFrameRateSelect(option)}
+												selected={option.selected}
+												onSelect={() => applyQualityWrite(option.write)}
 												data-flx="voice.stream-settings-menu-content.menu-item-radio.frame-rate-select"
 											>
 												<span className={styles.row} data-flx="voice.stream-settings-menu-content.row--2">
 													<span className={styles.rowLabel} data-flx="voice.stream-settings-menu-content.row-label--2">
-														{option.label}
+														{i18n._(FPS_DESCRIPTOR, {frameRate: option.value})}
 													</span>
-													{premiumLocked && (
+													{isPlutoniumReserved && (
 														<PremiumBadge data-flx="voice.stream-settings-menu-content.premium-badge--3" />
 													)}
 												</span>
@@ -784,74 +748,20 @@ export const StreamSettingsMenuContent = observer(
 					</MenuGroup>
 				)}
 				<MenuGroup data-flx="voice.stream-settings-menu-content.menu-group--5">
-					{audioMenuState.control.value === 'toggle' && (
-						<CheckboxItem
-							checked={audioMenuState.control.checked}
-							onCheckedChange={handleCaptureAudioToggle}
-							data-flx="voice.stream-settings-menu-content.checkbox-item"
-						>
-							{renderAudioCaptureLabel(audioMenuState.control.labelKey)}
-						</CheckboxItem>
-					)}
-					{audioMenuState.showLinuxAudioControls && (
-						<>
-							<AudioSourcePickerLinuxSubmenu
-								onSelectionChange={reconfigureLinuxDisplayAudio}
-								data-flx="voice.stream-settings-menu-content.audio-source-picker-linux-submenu"
-							/>
-							<VenmicSettingsSubmenu
-								onSettingsChange={reconfigureLinuxDisplayAudio}
-								data-flx="voice.stream-settings-menu-content.venmic-settings-submenu"
-							/>
-						</>
-					)}
-					{audioMenuState.showDeviceAudioMenu && (
-						<MenuItemSubmenu
-							label={i18n._(AUDIO_DEVICE_DESCRIPTOR)}
-							render={() => (
-								<MenuGroup data-flx="voice.stream-settings-menu-content.menu-group--6">
-									<MenuItemRadio
-										selected={currentAudioDeviceId === 'default'}
-										onSelect={() => handleAudioDeviceSelect('default')}
-										data-flx="voice.stream-settings-menu-content.menu-item-radio.audio-device-select"
-									>
-										<span
-											className={styles.audioDeviceLabel}
-											data-flx="voice.stream-settings-menu-content.audio-device-label"
-										>
-											<span
-												className={styles.audioDeviceName}
-												data-flx="voice.stream-settings-menu-content.audio-device-name"
-											>
-												<Trans>Follow voice input</Trans>
-											</span>
-											<span
-												className={styles.audioDeviceSubtext}
-												data-flx="voice.stream-settings-menu-content.audio-device-subtext"
-											>
-												{selectedAudioDeviceLabel}
-											</span>
-										</span>
-									</MenuItemRadio>
-									{audioDeviceOptions.map((device) => (
-										<MenuItemRadio
-											key={device.deviceId}
-											selected={currentAudioDeviceId === device.deviceId}
-											onSelect={() => handleAudioDeviceSelect(device.deviceId)}
-											data-flx="voice.stream-settings-menu-content.menu-item-radio.audio-device-select--2"
-										>
-											<span className={styles.row} data-flx="voice.stream-settings-menu-content.row--3">
-												<span className={styles.rowLabel} data-flx="voice.stream-settings-menu-content.row-label--3">
-													{formatVoiceAudioDeviceLabel(i18n, device, i18n._(UNNAMED_INPUT_DESCRIPTOR))}
-												</span>
-											</span>
-										</MenuItemRadio>
-									))}
-								</MenuGroup>
-							)}
-							data-flx="voice.stream-settings-menu-content.menu-item-submenu--3"
-						/>
-					)}
+					<StreamSettingsAudioGroup
+						audioMenuState={audioMenuState}
+						shareContext={shareContext}
+						displayShareEnvironment={displayShareEnvironment}
+						windowAudioScope={windowAudioScope}
+						compact={false}
+						audioDeviceOptions={audioDeviceOptions}
+						currentAudioDeviceId={currentAudioDeviceId}
+						selectedAudioDeviceLabel={selectedAudioDeviceLabel}
+						onCaptureAudioToggle={handleCaptureAudioToggle}
+						onAudioSourceChange={applyAudioSourceChange}
+						onAudioDeviceSelect={handleAudioDeviceSelect}
+						data-flx="voice.stream-settings-menu-content.audio-group"
+					/>
 					<CheckboxItem
 						checked={currentHideStreamPreview}
 						onCheckedChange={handleHidePreviewToggle}
@@ -859,7 +769,6 @@ export const StreamSettingsMenuContent = observer(
 					>
 						<Trans>Hide preview thumbnail</Trans>
 					</CheckboxItem>
-					<AdaptiveQualityToggle data-flx="voice.stream-settings-menu-content.adaptive-quality-toggle" />
 				</MenuGroup>
 			</>
 		);
@@ -868,61 +777,144 @@ export const StreamSettingsMenuContent = observer(
 
 StreamSettingsMenuContent.displayName = 'StreamSettingsMenuContent';
 
-const RESOLUTION_LABELS: Record<ScreenshareResolution, string> = {
-	low_240p: '240p',
-	low_480p: '480p',
-	medium: '720p',
-	high: '1080p',
-	ultra: '1440p',
-	source: '',
-};
+interface StreamSettingsAudioGroupProps {
+	audioMenuState: StreamSettingsAudioMenuViewState;
+	shareContext: StreamSettingsShareContext;
+	displayShareEnvironment: DisplayShareEnvironment;
+	windowAudioScope: WindowShareAudioScope;
+	compact: boolean;
+	audioDeviceOptions: Array<MediaDeviceInfo>;
+	currentAudioDeviceId: string;
+	selectedAudioDeviceLabel: string;
+	onCaptureAudioToggle: (checked: boolean) => void;
+	onAudioSourceChange: (nextWindowAudioScope?: WindowShareAudioScope) => void;
+	onAudioDeviceSelect: (deviceId: string) => void;
+}
 
-const AdaptiveQualityToggle = observer(() => {
+const StreamSettingsAudioGroup = observer((props: StreamSettingsAudioGroupProps) => {
+	const {
+		audioMenuState,
+		shareContext,
+		displayShareEnvironment,
+		windowAudioScope,
+		compact,
+		audioDeviceOptions,
+		currentAudioDeviceId,
+		selectedAudioDeviceLabel,
+		onCaptureAudioToggle,
+		onAudioSourceChange,
+		onAudioDeviceSelect,
+	} = props;
 	const {i18n} = useLingui();
-	useStoreVersion(AdaptiveScreenShareEngine);
-	const enabled = VoiceSettings.getAdaptiveScreenShareQuality();
-	const snapshot = AdaptiveScreenShareEngine.qualitySnapshot;
-	const label = i18n._(ADAPTIVE_QUALITY_DESCRIPTOR);
-	const effectiveResolutionLabel =
-		snapshot.effectiveResolution === 'source'
-			? i18n._(SOURCE_DESCRIPTOR)
-			: RESOLUTION_LABELS[snapshot.effectiveResolution];
-	const adjustedStatus =
-		enabled && snapshot.isAdapted
-			? i18n._(ADAPTIVE_QUALITY_ACTIVE_DESCRIPTOR, {
-					resolution: effectiveResolutionLabel,
-					frameRate: snapshot.effectiveFrameRate,
-				})
-			: null;
+	const renderCaptureLabel = () => {
+		if (compact) return i18n._(SHARE_STREAM_AUDIO_DESCRIPTOR);
+		if (audioMenuState.control.labelKey === 'captureDeviceAudio') return <Trans>Capture device audio</Trans>;
+		if (audioMenuState.control.labelKey === 'captureAppAudio') return <Trans>Capture app audio</Trans>;
+		if (audioMenuState.control.labelKey === 'captureSystemAudio') return i18n._(CAPTURE_ENTIRE_SYSTEM_AUDIO_DESCRIPTOR);
+		return <Trans>Capture desktop audio</Trans>;
+	};
 	return (
-		<CheckboxItem
-			label={label}
-			checked={enabled}
-			onCheckedChange={(checked) => {
-				VoiceSettingsCommands.update({adaptiveScreenShareQuality: checked});
-			}}
-			data-flx="voice.stream-settings-menu-content.adaptive-quality-toggle.checkbox-item"
-		>
-			<span className={styles.audioDeviceLabel} data-flx="voice.stream-settings-menu-content.adaptive-quality-label">
-				<span className={styles.audioDeviceName} data-flx="voice.stream-settings-menu-content.adaptive-quality-name">
-					{label}
-				</span>
-				{adjustedStatus && (
-					<span
-						className={styles.audioDeviceSubtext}
-						data-flx="voice.stream-settings-menu-content.adaptive-quality-status"
-					>
-						{adjustedStatus}
-					</span>
-				)}
-			</span>
-		</CheckboxItem>
+		<>
+			{audioMenuState.control.value === 'toggle' && (
+				<CheckboxItem
+					checked={audioMenuState.control.checked}
+					onCheckedChange={onCaptureAudioToggle}
+					data-flx="voice.stream-settings-menu-content.audio-group.capture-audio"
+				>
+					{renderCaptureLabel()}
+				</CheckboxItem>
+			)}
+			{audioMenuState.showManualAudioSources && (
+				<>
+					<AudioSourcePickerLinuxSubmenu
+						onSelectionChange={onAudioSourceChange}
+						shareContext={shareContext}
+						displayShareEnvironment={displayShareEnvironment}
+						windowAudioScope={windowAudioScope}
+						microphoneLabel={selectedAudioDeviceLabel}
+						data-flx="voice.stream-settings-menu-content.audio-group.audio-source-picker-submenu"
+					/>
+					<VenmicSettingsSubmenu
+						onSettingsChange={onAudioSourceChange}
+						data-flx="voice.stream-settings-menu-content.audio-group.venmic-settings-submenu"
+					/>
+				</>
+			)}
+			{audioMenuState.showDeviceAudioMenu && (
+				<MenuItemSubmenu
+					label={i18n._(AUDIO_DEVICE_DESCRIPTOR)}
+					render={() => (
+						<MenuGroup data-flx="voice.stream-settings-menu-content.audio-group.audio-device-group">
+							<MenuItemRadio
+								selected={currentAudioDeviceId === 'default'}
+								onSelect={() => onAudioDeviceSelect('default')}
+								data-flx="voice.stream-settings-menu-content.audio-group.audio-device-default"
+							>
+								<span className={styles.row} data-flx="voice.stream-settings-menu-content.audio-group.audio-device-row">
+									<WaveformIcon
+										className={styles.audioDeviceIcon}
+										weight="fill"
+										aria-hidden={true}
+										data-flx="voice.stream-settings-menu-content.audio-group.audio-device-icon"
+									/>
+									<span
+										className={styles.audioDeviceLabel}
+										data-flx="voice.stream-settings-menu-content.audio-group.audio-device-label"
+									>
+										<span
+											className={styles.audioDeviceName}
+											data-flx="voice.stream-settings-menu-content.audio-group.audio-device-name"
+										>
+											<Trans>Device audio only</Trans>
+										</span>
+										<span
+											className={styles.audioDeviceSubtext}
+											data-flx="voice.stream-settings-menu-content.audio-group.audio-device-subtext"
+										>
+											<Trans>Silent when the capture device has no audio input of its own</Trans>
+										</span>
+									</span>
+								</span>
+							</MenuItemRadio>
+							{audioDeviceOptions.map((device) => (
+								<MenuItemRadio
+									key={device.deviceId}
+									selected={currentAudioDeviceId === device.deviceId}
+									onSelect={() => onAudioDeviceSelect(device.deviceId)}
+									data-flx="voice.stream-settings-menu-content.audio-group.audio-device-option"
+								>
+									<span
+										className={styles.row}
+										data-flx="voice.stream-settings-menu-content.audio-group.audio-device-option-row"
+									>
+										<MicrophoneIcon
+											className={styles.audioDeviceIcon}
+											weight="fill"
+											aria-hidden={true}
+											data-flx="voice.stream-settings-menu-content.audio-group.audio-device-option-icon"
+										/>
+										<span
+											className={styles.rowLabel}
+											data-flx="voice.stream-settings-menu-content.audio-group.audio-device-option-label"
+										>
+											{formatVoiceAudioDeviceLabel(i18n, device, i18n._(UNNAMED_INPUT_DESCRIPTOR))}
+										</span>
+									</span>
+								</MenuItemRadio>
+							))}
+						</MenuGroup>
+					)}
+					data-flx="voice.stream-settings-menu-content.audio-group.audio-device-submenu"
+				/>
+			)}
+		</>
 	);
 });
 
+StreamSettingsAudioGroup.displayName = 'StreamSettingsAudioGroup';
+
 const VenmicSettingsSubmenu = observer(({onSettingsChange}: {onSettingsChange?: () => void}) => {
 	const {i18n} = useLingui();
-	const workaround = VoiceSettings.getLinuxAudioCaptureWorkaround();
 	const onlySpeakers = VoiceSettings.getLinuxAudioCaptureOnlySpeakers();
 	const onlyDefaultSpeakers = VoiceSettings.getLinuxAudioCaptureOnlyDefaultSpeakers();
 	const ignoreInputMedia = VoiceSettings.getLinuxAudioCaptureIgnoreInputMedia();
@@ -935,16 +927,6 @@ const VenmicSettingsSubmenu = observer(({onSettingsChange}: {onSettingsChange?: 
 			label={i18n._(AUDIO_SETTINGS_DESCRIPTOR)}
 			render={() => (
 				<MenuGroup data-flx="voice.stream-settings-menu-content.venmic-settings-submenu.menu-group">
-					<CheckboxItem
-						checked={workaround}
-						onCheckedChange={(value) => {
-							VoiceSettingsCommands.update({linuxAudioCaptureWorkaround: value});
-							onSettingsChange?.();
-						}}
-						data-flx="voice.stream-settings-menu-content.venmic-settings-submenu.checkbox-item"
-					>
-						<Trans>Microphone workaround</Trans>
-					</CheckboxItem>
 					<CheckboxItem
 						checked={onlySpeakers}
 						onCheckedChange={(value) => {

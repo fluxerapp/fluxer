@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
-    api::client::AdminApiClient,
+    api::{client::AdminApiClient, generated::types::GiftCodeDurationTypeSchema},
     middleware::{
         auth::AuthContext,
         csrf::CsrfToken,
         flash::{self, FlashData},
     },
     state::AppState,
-    templates,
+    templates::{self, pages::gift_codes::MAX_GIFT_CODES},
 };
 use axum::{
     Form, Router,
@@ -28,11 +28,11 @@ struct GiftCodesForm {
     #[serde(default)]
     _csrf: Option<String>,
     #[serde(default)]
-    count: Option<String>,
+    count: Option<u32>,
     #[serde(default)]
-    duration_type: Option<String>,
+    duration_type: Option<GiftCodeDurationTypeSchema>,
     #[serde(default)]
-    duration_quantity: Option<String>,
+    duration_quantity: Option<u32>,
 }
 
 pub fn router() -> Router<AppState> {
@@ -82,31 +82,27 @@ async fn gift_codes_post(
             return flash::redirect_with_flash(
                 &format!("{base}/gift-codes"),
                 FlashData::error("Invalid form data"),
-                config.is_production(),
+                config.secure_cookies(),
             );
         }
     };
-    let count = form
-        .count
-        .as_deref()
-        .and_then(|s| s.parse::<u32>().ok())
-        .unwrap_or(1)
-        .clamp(1, 100);
-    let dur_type = form.duration_type.as_deref().unwrap_or("month");
-    let dur_qty = form
-        .duration_quantity
-        .as_deref()
-        .and_then(|s| s.parse::<u32>().ok())
-        .unwrap_or(1);
+    let count = form.count.unwrap_or(1).clamp(1, MAX_GIFT_CODES);
+    let duration_type = form
+        .duration_type
+        .unwrap_or(GiftCodeDurationTypeSchema::Months);
+    let duration_quantity = form.duration_quantity.unwrap_or(1);
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
-    let is_prod = config.is_production();
-    match client.generate_gift_codes(count, dur_type, dur_qty).await {
+    let secure_cookies = config.secure_cookies();
+    match client
+        .generate_gift_codes(count, duration_type, duration_quantity)
+        .await
+    {
         Ok(result) => {
             let codes = result.codes.join(",");
             flash::redirect_with_flash(
                 &format!("{base}/gift-codes?codes={codes}"),
                 FlashData::success(format!("{} gift code(s) generated", result.codes.len())),
-                is_prod,
+                secure_cookies,
             )
         }
         Err(error) => {
@@ -114,7 +110,7 @@ async fn gift_codes_post(
             flash::redirect_with_flash(
                 &format!("{base}/gift-codes"),
                 FlashData::error("Failed to generate gift codes"),
-                is_prod,
+                secure_cookies,
             )
         }
     }

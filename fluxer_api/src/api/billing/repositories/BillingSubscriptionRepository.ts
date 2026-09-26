@@ -1,16 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {fetchMany, fetchOne, upsertOne} from '../../database/CassandraQueryExecution';
-import type {BillingSubscriptionRow} from '../../database/types/BillingTypes';
-import {BILLING_SUBSCRIPTION_COLUMNS} from '../../database/types/BillingTypes';
-import {BillingSubscriptions, BillingSubscriptionsByCustomer, BillingSubscriptionsByUser} from '../../Tables';
 import {
 	type MapStripeSubscriptionHints,
 	mapStripeSubscriptionToRow,
 	normalizeBillingSubscriptionRow,
 	type StripeSubscriptionPayload,
-} from '../mappers/StripeToBillingMapper';
-import {buildPatchFromRow, executeBillingVersionedUpdate, isExistingNewer, rowsEquivalent} from './BillingRepoHelpers';
+} from '@app/api/billing/mappers/StripeToBillingMapper';
+import {
+	buildPatchFromRow,
+	executeBillingVersionedUpdate,
+	isExistingNewer,
+	rowsEquivalent,
+} from '@app/api/billing/repositories/BillingRepoHelpers';
+import {fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import type {BillingSubscriptionRow} from '@app/api/database/types/BillingTypes';
+import {BILLING_SUBSCRIPTION_COLUMNS} from '@app/api/database/types/BillingTypes';
+import {BillingSubscriptions, BillingSubscriptionsByCustomer, BillingSubscriptionsByUser} from '@app/api/Tables';
 
 const FETCH_BY_ID = BillingSubscriptions.selectCql({
 	where: BillingSubscriptions.where.eq('provider_id'),

@@ -4,7 +4,7 @@
 -typing([eqwalizer]).
 -behaviour(gen_server).
 
--export([start_link/0]).
+-export([start_link/0, kill_threshold/0]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -define(CHECK_INTERVAL_MS, 10_000).
@@ -16,6 +16,10 @@
 
 -type queue_history() :: #{pid() => [non_neg_integer()]}.
 -type state() :: #{history := queue_history()}.
+
+-spec kill_threshold() -> pos_integer().
+kill_threshold() ->
+    ?KILL_THRESHOLD.
 
 -spec start_link() -> {ok, pid()} | {error, term()}.
 start_link() ->
@@ -77,7 +81,15 @@ run_watchdog_check(#{history := History}) ->
 
 -spec collect_monitored_pids() -> [{pid(), binary()}].
 collect_monitored_pids() ->
-    guild_pids() ++ singleton_pids().
+    guild_pids() ++ singleton_pids() ++ dispatch_relay_worker_pids().
+
+-spec dispatch_relay_worker_pids() -> [{pid(), binary()}].
+dispatch_relay_worker_pids() ->
+    Workers = gateway_dispatch_relay_batch:current_workers(),
+    [
+        {Pid, iolist_to_binary(["dispatch_relay_worker:", integer_to_list(Index)])}
+     || {Index, Pid} <- lists:enumerate(0, Workers), is_pid(Pid)
+    ].
 
 -spec guild_pids() -> [{pid(), binary()}].
 guild_pids() ->
@@ -286,6 +298,19 @@ prune_dead_removes_absent_pids_test() ->
 resolve_singleton_missing_test() ->
     ?assertEqual(false, resolve_singleton(nonexistent_process_xyz_test)).
 
+dispatch_relay_workers_are_monitored_test() ->
+    Key = {gateway_dispatch_relay, state},
+    Previous = persistent_term:get(Key, undefined),
+    Worker = self(),
+    persistent_term:put(Key, #{workers => {Worker}, shard_count => 1}),
+    try
+        Expected = {Worker, <<"dispatch_relay_worker:0">>},
+        ?assertEqual([Expected], dispatch_relay_worker_pids()),
+        ?assert(lists:member(Expected, collect_monitored_pids()))
+    after
+        restore_relay_state_test_term(Key, Previous)
+    end.
+
 check_pid_dead_process_test() ->
     Pid = spawn(fun() -> ok end),
     ok = gateway_retry_timer:wait(50),
@@ -313,5 +338,11 @@ is_sustained_over_kill_threshold_false_insufficient_samples_test() ->
 safe_run_watchdog_check_survives_bad_state_test() ->
     BadState = maps:remove(history, #{history => #{}}),
     ?assertEqual(BadState, safe_run_watchdog_check(eqwalizer:dynamic_cast(BadState))).
+
+restore_relay_state_test_term(Key, undefined) ->
+    _ = persistent_term:erase(Key),
+    ok;
+restore_relay_state_test_term(Key, Previous) ->
+    persistent_term:put(Key, Previous).
 
 -endif.

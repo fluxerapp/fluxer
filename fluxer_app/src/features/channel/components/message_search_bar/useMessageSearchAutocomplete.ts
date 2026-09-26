@@ -90,10 +90,7 @@ const UNNAMED_DESCRIPTOR = msg({
 	comment: 'Short label in the channel and chat use message search autocomplete. Keep it concise.',
 });
 
-function resolveInputCursorPosition(
-	inputRef: React.MutableRefObject<LexicalSearchInputHandle | null>,
-	value: string,
-): number {
+function resolveInputCursorPosition(inputRef: React.RefObject<LexicalSearchInputHandle | null>, value: string): number {
 	const input = inputRef.current;
 	if (input == null) {
 		return value.length;
@@ -399,13 +396,23 @@ export function useMessageSearchAutocomplete({
 			if (plan.mode !== 'none') {
 				return memberSearchResults.slice(0, limit);
 			}
-			if (channel) {
-				const users = channel.recipientIds.map((id) => Users.getUser(id)).filter((u): u is User => u != null);
-				return matchSorter(users, searchTerm, {
-					keys: ['username', 'tag'],
-				}).slice(0, limit);
+			const usersById = new Map<string, User>();
+			const currentUser = Users.getCurrentUser();
+			if (currentUser) {
+				usersById.set(currentUser.id, currentUser);
 			}
-			return [];
+			for (const recipientId of channel?.recipientIds ?? []) {
+				const user = Users.getUser(recipientId);
+				if (user) {
+					usersById.set(user.id, user);
+				}
+			}
+			if (usersById.size === 0) {
+				return [];
+			}
+			return matchSorter(Array.from(usersById.values()), searchTerm, {
+				keys: ['username', 'tag'],
+			}).slice(0, limit);
 		},
 		[activeScope, currentGuildIdForScope, memberSearchResults, channel],
 	);

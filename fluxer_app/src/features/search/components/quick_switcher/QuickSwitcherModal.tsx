@@ -60,7 +60,7 @@ const AUTOCOMPLETE_SUGGESTION_DESCRIPTOR = msg({
 	comment: 'Screen-reader announcement for the highlighted autocomplete suggestion, without query echo.',
 });
 const SEARCHING_PEOPLE_DESCRIPTOR = msg({
-	message: 'Searching people...',
+	message: 'Searching for people...',
 	comment:
 		'Loading state in the desktop quick switcher while fetching people results. Trailing ellipsis is intentional.',
 });
@@ -73,7 +73,7 @@ const MESSAGE_1_RESULT_AVAILABLE_DESCRIPTOR = msg({
 	comment: 'Screen-reader live region announcement when exactly one quick switcher result is available.',
 });
 const RESULTS_AVAILABLE_DESCRIPTOR = msg({
-	message: '{resultCount} results available',
+	message: '{resultCount, plural, one {# result available} other {# results available}}',
 	comment: 'Screen-reader live region announcement listing the quick switcher result count.',
 });
 const QUICK_SWITCHER_DESCRIPTOR = msg({
@@ -181,6 +181,7 @@ const ResultRow = observer(
 			quickStyles.optionIcon,
 			quickStyles.optionIconHighlight,
 		);
+		const iconContent: React.ReactElement = iconRendered.content;
 		const key = getViewContext(executableResult)
 			? `${executableResult.type}-${getViewContext(executableResult)}-${executableResult.id}`
 			: `${executableResult.type}-${executableResult.id}`;
@@ -215,17 +216,17 @@ const ResultRow = observer(
 								className={quickStyles.avatar}
 								data-flx="search.quick-switcher.quick-switcher-modal.result-row.div--3"
 							>
-								{iconRendered.content}
+								{iconContent}
 							</div>
 						) : iconRendered.type === 'guild' ? (
 							<div
 								className={quickStyles.guildIcon}
 								data-flx="search.quick-switcher.quick-switcher-modal.result-row.div--4"
 							>
-								{iconRendered.content}
+								{iconContent}
 							</div>
 						) : (
-							iconRendered.content
+							iconContent
 						)}
 						<div
 							className={clsx(quickStyles.optionText, isHighlight && quickStyles.optionHighlight)}
@@ -310,6 +311,12 @@ const QuickSwitcherModalComponent: React.FC = observer(() => {
 			return;
 		}
 		setIsKeyboardNavigating(true);
+		if (event.ctrlKey && !event.altKey && !event.metaKey && (event.key === 'n' || event.key === 'p')) {
+			event.preventDefault();
+			event.stopPropagation();
+			QuickSwitcherCommands.moveSelection(event.key === 'n' ? 'down' : 'up');
+			return;
+		}
 		switch (event.key) {
 			case 'ArrowDown':
 			case 'ArrowUp':

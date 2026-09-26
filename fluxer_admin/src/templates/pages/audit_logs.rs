@@ -22,6 +22,7 @@ pub struct AuditLogsParams<'a> {
     pub admin_user_id: &'a str,
     pub target_id: &'a str,
     pub target_type: &'a str,
+    pub access: &'a str,
     pub sort_by: &'a str,
     pub sort_order: &'a str,
     pub limit: u32,
@@ -33,6 +34,7 @@ fn filters_section(base: &str, params: &AuditLogsParams<'_>) -> Markup {
         ("", "Any"),
         ("user", "User"),
         ("guild", "Guild"),
+        ("bulk_job", "Bulk job"),
         ("email_domain", "Email domain"),
         ("ip", "IP"),
         ("phrase", "Phrase"),
@@ -40,6 +42,11 @@ fn filters_section(base: &str, params: &AuditLogsParams<'_>) -> Markup {
         ("url_domain", "URL domain"),
         ("file_sha", "File SHA"),
         ("email", "Email"),
+    ];
+    let access_options: &[(&str, &str)] = &[
+        ("", "All entries"),
+        ("write", "Writes only"),
+        ("read", "Reads only"),
     ];
     let sort_options: &[(&str, &str)] = &[("createdAt", "Created at"), ("relevance", "Relevance")];
     let order_options: &[(&str, &str)] = &[("desc", "Newest first"), ("asc", "Oldest first")];
@@ -59,6 +66,7 @@ fn filters_section(base: &str, params: &AuditLogsParams<'_>) -> Markup {
                     "Filter by admin user ID..."))
                 (select_input("target_type", "Target type",
                     target_type_options, params.target_type))
+                (select_input("access", "Access", access_options, params.access))
                 (select_input("sort_by", "Sort by", sort_options, params.sort_by))
                 (select_input("sort_order", "Order", order_options, params.sort_order))
                 (select_input("limit", "Page size", limit_options, &limit_str))
@@ -72,27 +80,23 @@ fn filters_section(base: &str, params: &AuditLogsParams<'_>) -> Markup {
 }
 
 fn build_pagination_url(base: &str, page: u32, params: &AuditLogsParams<'_>) -> String {
-    let mut url = format!("{base}/audit-logs?page={page}");
-    if !params.query.is_empty() {
-        url.push_str(&format!("&q={}", params.query));
-    }
-    if !params.admin_user_id.is_empty() {
-        url.push_str(&format!("&admin_user_id={}", params.admin_user_id));
-    }
-    if !params.target_id.is_empty() {
-        url.push_str(&format!("&target_id={}", params.target_id));
-    }
-    if !params.target_type.is_empty() {
-        url.push_str(&format!("&target_type={}", params.target_type));
-    }
-    if !params.sort_by.is_empty() {
-        url.push_str(&format!("&sort_by={}", params.sort_by));
-    }
-    if !params.sort_order.is_empty() {
-        url.push_str(&format!("&sort_order={}", params.sort_order));
-    }
-    url.push_str(&format!("&limit={}", params.limit));
-    url
+    let mut query = url::form_urlencoded::Serializer::new(String::new());
+    query.append_pair("page", &page.to_string());
+    query.extend_pairs(
+        [
+            ("q", params.query),
+            ("admin_user_id", params.admin_user_id),
+            ("target_id", params.target_id),
+            ("target_type", params.target_type),
+            ("access", params.access),
+            ("sort_by", params.sort_by),
+            ("sort_order", params.sort_order),
+        ]
+        .into_iter()
+        .filter(|(_, value)| !value.is_empty()),
+    );
+    query.append_pair("limit", &params.limit.to_string());
+    format!("{base}/audit-logs?{}", query.finish())
 }
 
 pub fn audit_logs_page(
@@ -107,10 +111,15 @@ pub fn audit_logs_page(
             let total = data.total;
             let entries = &data.logs;
             let total_pages = if params.limit > 0 {
-                ((total as f64) / (params.limit as f64)).ceil().max(1.0) as u64
+                total.div_ceil(u64::from(params.limit)).max(1)
             } else {
                 1
             };
+            let page_number = u64::from(params.current_page) + 1;
+            let next_page = params
+                .current_page
+                .checked_add(1)
+                .filter(|page| u64::from(*page) < total_pages);
             let showing = format!("Showing {} of {} entries", entries.len(), total);
             html! {
                 (page_header_with_actions("Audit Logs", None, html! {
@@ -134,10 +143,10 @@ pub fn audit_logs_page(
                             }
                         } @else { span {} }
                         span class="text-sm text-neutral-500" {
-                            "Page " (params.current_page + 1) " of " (total_pages)
+                            "Page " (page_number) " of " (total_pages)
                         }
-                        @if (params.current_page + 1) < total_pages as u32 {
-                            a href=(build_pagination_url(base, params.current_page + 1, params))
+                        @if let Some(page) = next_page {
+                            a href=(build_pagination_url(base, page, params))
                                 class="text-sm text-neutral-900 underline" {
                                 (PreEscaped("Next &rarr;"))
                             }
@@ -155,4 +164,49 @@ pub fn audit_logs_page(
         }
     };
     admin_layout(config, auth, "Audit Logs", "audit-logs", None, content)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn target_type_filter_offers_bulk_jobs() {
+        let params = AuditLogsParams {
+            query: "",
+            admin_user_id: "",
+            target_id: "",
+            target_type: "bulk_job",
+            access: "",
+            sort_by: "createdAt",
+            sort_order: "desc",
+            limit: 50,
+            current_page: 0,
+        };
+        let markup = filters_section("/admin", &params).into_string();
+        assert!(markup.contains(r#"<option value="bulk_job" selected>Bulk job</option>"#));
+        assert!(markup.contains(r#"<option value="" selected>All entries</option>"#));
+    }
+
+    #[test]
+    fn access_filter_survives_form_and_pagination() {
+        let params = AuditLogsParams {
+            query: "",
+            admin_user_id: "",
+            target_id: "1500000000000000001",
+            target_type: "",
+            access: "read",
+            sort_by: "createdAt",
+            sort_order: "desc",
+            limit: 50,
+            current_page: 0,
+        };
+        let markup = filters_section("/admin", &params).into_string();
+        assert!(markup.contains(r#"<select id="access" name="access""#));
+        assert!(markup.contains(r#"<option value="read" selected>Reads only</option>"#));
+        assert_eq!(
+            build_pagination_url("/admin", 1, &params),
+            "/admin/audit-logs?page=1&target_id=1500000000000000001&access=read&sort_by=createdAt&sort_order=desc&limit=50"
+        );
+    }
 }

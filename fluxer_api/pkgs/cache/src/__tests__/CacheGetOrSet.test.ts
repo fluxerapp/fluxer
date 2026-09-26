@@ -94,18 +94,49 @@ describe('ICacheService.getOrSet', () => {
 		expect(store.get('absent')).toBe('null');
 	});
 
-	it('rejects every waiter and retries on the next call when the factory fails', async () => {
+	it('rejects every waiter after a single coalesced retry when the factory keeps failing', async () => {
 		const cache = new InMemoryProvider();
 		const failing = vi.fn(async () => {
 			await delay(10);
 			throw new Error('factory failed');
 		});
-		const settled = await Promise.allSettled([cache.getOrSet('key', failing), cache.getOrSet('key', failing)]);
-		expect(settled.map((result) => result.status)).toEqual(['rejected', 'rejected']);
-		expect(failing).toHaveBeenCalledTimes(1);
+		const settled = await Promise.allSettled([
+			cache.getOrSet('key', failing),
+			cache.getOrSet('key', failing),
+			cache.getOrSet('key', failing),
+			cache.getOrSet('key', failing),
+		]);
+		expect(settled.map((result) => result.status)).toEqual(['rejected', 'rejected', 'rejected', 'rejected']);
+		expect(failing).toHaveBeenCalledTimes(2);
 		await expect(cache.exists('key')).resolves.toBe(false);
 		const succeeding = vi.fn(async () => 11);
 		await expect(cache.getOrSet('key', succeeding)).resolves.toBe(11);
 		expect(succeeding).toHaveBeenCalledTimes(1);
+	});
+
+	it('does not fan a transient producer failure out to the callers that joined it', async () => {
+		const cache = new InMemoryProvider();
+		let calls = 0;
+		const factory = vi.fn(async () => {
+			calls += 1;
+			const attempt = calls;
+			await delay(10);
+			if (attempt === 1) {
+				throw new Error('transient failure');
+			}
+			return 11;
+		});
+		const settled = await Promise.allSettled([
+			cache.getOrSet('key', factory),
+			cache.getOrSet('key', factory),
+			cache.getOrSet('key', factory),
+			cache.getOrSet('key', factory),
+		]);
+		expect(settled.map((result) => result.status)).toEqual(['rejected', 'fulfilled', 'fulfilled', 'fulfilled']);
+		expect(settled.filter((result) => result.status === 'fulfilled').map((result) => result.value)).toEqual([
+			11, 11, 11,
+		]);
+		expect(factory).toHaveBeenCalledTimes(2);
+		await expect(cache.get('key')).resolves.toBe(11);
 	});
 });

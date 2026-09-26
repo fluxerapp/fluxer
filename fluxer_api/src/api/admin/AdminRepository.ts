@@ -1,8 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
-import {createUserID} from '../BrandedTypes';
-import {deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../database/CassandraQueryExecution';
+import type {AdminAuditLog, BannedIpEntry, BannedIpKind, IAdminRepository} from '@app/api/admin/IAdminRepository';
+import {createUserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {ContentBlocklistCategory} from '@app/api/constants/ContentModeration';
+import {
+	deleteOneOrMany,
+	executeConditional,
+	fetchMany,
+	fetchOne,
+	upsertOne,
+} from '@app/api/database/CassandraQueryExecution';
 import type {
 	AdminAuditLogRow,
 	BannedAvatarHashRow,
@@ -11,9 +19,9 @@ import type {
 	BannedProfileSubstringScope,
 	BannedUrlDomainRow,
 	BannedUrlRow,
-} from '../database/types/AdminArchiveTypes';
-import {isAccountPolicyContactDomainReputationExempt} from '../risk/AccountPolicyService';
-import {isIpBanExempt} from '../risk/IpBanExemptions';
+} from '@app/api/database/types/AdminArchiveTypes';
+import {isAccountPolicyContactDomainReputationExempt} from '@app/api/risk/AccountPolicyService';
+import {isIpBanExempt} from '@app/api/risk/IpBanExemptions';
 import {
 	AdminAuditLogs,
 	BannedAvatarHashes,
@@ -27,10 +35,10 @@ import {
 	BannedUrls,
 	DisposableEmailDomains,
 	SuspiciousEmailDomains,
-} from '../Tables';
-import {parseIpBanEntry, tryParseSingleIp} from '../utils/IpRangeUtils';
-import {canonicalizeStoredPhrase} from '../utils/PhraseBlocklistNormalization';
-import type {AdminAuditLog, BannedIpEntry, BannedIpKind, IAdminRepository} from './IAdminRepository';
+} from '@app/api/Tables';
+import {parseIpBanEntry, tryParseSingleIp} from '@app/api/utils/IpRangeUtils';
+import {canonicalizeStoredPhrase} from '@app/api/utils/PhraseBlocklistNormalization';
+import {getSameIpDecisionKey} from '@fluxer/ip_utils/src/IpAddress';
 
 const FETCH_AUDIT_LOG_BY_ID_QUERY = AdminAuditLogs.select({
 	where: AdminAuditLogs.where.eq('log_id'),
@@ -42,9 +50,11 @@ const LOAD_ALL_BANNED_IPS_QUERY = BannedIps.select();
 const IS_EMAIL_BANNED_QUERY = BannedEmails.select({
 	where: BannedEmails.where.eq('email_lower'),
 });
+const LOAD_ALL_BANNED_EMAILS_QUERY = BannedEmails.select();
 const IS_EMAIL_DOMAIN_SUSPICIOUS_QUERY = SuspiciousEmailDomains.select({
 	where: SuspiciousEmailDomains.where.eq('domain'),
 });
+const LOAD_ALL_SUSPICIOUS_EMAIL_DOMAINS_QUERY = SuspiciousEmailDomains.select();
 const IS_EMAIL_DOMAIN_DISPOSABLE_QUERY = DisposableEmailDomains.select({
 	where: DisposableEmailDomains.where.eq('domain'),
 });
@@ -246,6 +256,13 @@ export class AdminRepository implements IAdminRepository {
 		await deleteOneOrMany(BannedEmails.deleteByPk({email_lower: emailLower}));
 	}
 
+	async loadAllBannedEmails(): Promise<Array<string>> {
+		const rows = await fetchMany<{
+			email_lower: string;
+		}>(LOAD_ALL_BANNED_EMAILS_QUERY.bind({}));
+		return rows.map((row) => row.email_lower);
+	}
+
 	async isEmailDomainSuspicious(domain: string): Promise<boolean> {
 		const domainLower = domain.toLowerCase();
 		if (isAccountPolicyContactDomainReputationExempt(domainLower)) return false;
@@ -265,7 +282,15 @@ export class AdminRepository implements IAdminRepository {
 		await deleteOneOrMany(SuspiciousEmailDomains.deleteByPk({domain: domainLower}));
 	}
 
+	async loadAllSuspiciousEmailDomains(): Promise<Array<string>> {
+		const rows = await fetchMany<{
+			domain: string;
+		}>(LOAD_ALL_SUSPICIOUS_EMAIL_DOMAINS_QUERY.bind({}));
+		return rows.map((row) => row.domain);
+	}
+
 	async isEmailDomainDisposable(domain: string): Promise<boolean> {
+		if (!Config.blocklistFeeds.enabled) return false;
 		const domainLower = domain.toLowerCase();
 		if (isAccountPolicyContactDomainReputationExempt(domainLower)) return false;
 		const result = await fetchOne<{
@@ -377,6 +402,15 @@ export class AdminRepository implements IAdminRepository {
 
 	async unbanFileSha(sha256Hex: string): Promise<void> {
 		await deleteOneOrMany(BannedFileShas.deleteByPk({sha256_hex: sha256Hex.toLowerCase()}));
+	}
+
+	async unbanFeedFileSha(sha256Hex: string): Promise<boolean> {
+		return executeConditional(
+			BannedFileShas.conditionalDeleteByPk(
+				{sha256_hex: sha256Hex.toLowerCase()},
+				{added_by: null, category: ContentBlocklistCategory.MALWARE_BAZAAR},
+			),
+		);
 	}
 
 	async loadAllBannedFileShas(): Promise<Array<BannedFileShaRow>> {

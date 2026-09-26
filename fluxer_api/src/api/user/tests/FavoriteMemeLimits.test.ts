@@ -1,17 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {MAX_FAVORITE_MEME_TAGS, MAX_FAVORITE_MEMES_NON_PREMIUM} from '@fluxer/constants/src/LimitConstants';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccountForAttachmentTests, setupTestGuildAndChannel} from '../../channel/tests/AttachmentTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
+import {
+	createTestAccountForAttachmentTests,
+	setupTestGuildAndChannel,
+} from '@app/api/channel/tests/AttachmentTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {
 	createFavoriteMemeFromMessage,
 	createFavoriteMemeFromUrl,
 	createMessageWithImageAttachment,
 	listFavoriteMemes,
-} from './FavoriteMemeTestUtils';
+} from '@app/api/user/tests/FavoriteMemeTestUtils';
+import {MAX_FAVORITE_MEME_TAGS, MAX_FAVORITE_MEMES_NON_PREMIUM} from '@fluxer/constants/src/LimitConstants';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 describe('Favorite Meme Limits', () => {
 	let harness: ApiTestHarness;
@@ -147,7 +150,7 @@ describe('Favorite Meme Limits', () => {
 	test('should return error for message without media', async () => {
 		const account = await createTestAccountForAttachmentTests(harness);
 		const {channel} = await setupTestGuildAndChannel(harness, account);
-		const {sendMessage} = await import('../../message/tests/MessageTestUtils');
+		const {sendMessage} = await import('@app/api/message/tests/MessageTestUtils');
 		const textMessage = await sendMessage(harness, account.token, channel.id, 'No media here');
 		await createBuilder(harness, account.token)
 			.post(`/channels/${channel.id}/messages/${textMessage.id}/memes`)

@@ -1,14 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import {GuildFeatures, GuildNSFWLevel} from '@fluxer/constants/src/GuildConstants';
-import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import {beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {authorizeBot, createTestBotAccount} from '../../bot/tests/BotTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {authorizeBot, createTestBotAccount} from '@app/api/bot/tests/BotTestUtils';
 import {
 	acceptInvite,
 	addMemberRole,
@@ -17,7 +10,14 @@ import {
 	createRole,
 	getChannel,
 	leaveGuild,
-} from './GuildTestUtils';
+} from '@app/api/guild/tests/GuildTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {GuildFeatures, GuildNSFWLevel} from '@fluxer/constants/src/GuildConstants';
+import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
+import {beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 describe('Guild Operation Permissions', () => {
 	let harness: ApiTestHarness;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {VelocityResult} from '@app/api/risk/RiskTypes';
 import {getSubnet} from '@fluxer/ip_utils/src/IpAddress';
-import type {VelocityResult} from '../RiskTypes';
 
 export interface RegistrationEventRecord {
 	userId: string;

@@ -1,5 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	createInviteCode,
+	createVanityURLCode,
+	type GuildID,
+	type UserID,
+	vanityCodeToInviteCode,
+} from '@app/api/BrandedTypes';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildDataHelpers} from '@app/api/guild/services/data/GuildDataHelpers';
+import type {InviteRepository} from '@app/api/invite/InviteRepository';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
 import {InviteTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
@@ -7,17 +18,8 @@ import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {UnknownGuildError} from '@fluxer/errors/src/domains/guild/UnknownGuildError';
 import type {GuildVanityURLResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import {
-	createInviteCode,
-	createVanityURLCode,
-	type GuildID,
-	type UserID,
-	vanityCodeToInviteCode,
-} from '../../../BrandedTypes';
-import type {InviteRepository} from '../../../invite/InviteRepository';
-import type {RequestCache} from '../../../middleware/RequestCacheMiddleware';
-import type {IGuildRepositoryAggregate} from '../../repositories/IGuildRepositoryAggregate';
-import type {GuildDataHelpers} from './GuildDataHelpers';
+
+const VANITY_AUDIT_KEYS: ReadonlySet<string> = new Set(['vanity_url_code']);
 
 export class GuildVanityService {
 	constructor(
@@ -83,8 +85,7 @@ export class GuildVanityService {
 					action: AuditLogActionType.GUILD_UPDATE,
 					targetId: guildId,
 					auditLogReason: auditLogReason ?? null,
-					metadata: {vanity_url_code: ''},
-					changes: this.helpers.computeGuildChanges(previousSnapshot, updatedGuild),
+					changes: this.helpers.computeGuildChanges(previousSnapshot, updatedGuild, VANITY_AUDIT_KEYS),
 				});
 				return {code: null};
 			}
@@ -122,8 +123,7 @@ export class GuildVanityService {
 			action: AuditLogActionType.GUILD_UPDATE,
 			targetId: guildId,
 			auditLogReason: auditLogReason ?? null,
-			metadata: {vanity_url_code: code},
-			changes: this.helpers.computeGuildChanges(previousSnapshot, updatedGuild),
+			changes: this.helpers.computeGuildChanges(previousSnapshot, updatedGuild, VANITY_AUDIT_KEYS),
 		});
 		return {code};
 	}

@@ -1,8 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID} from '@app/api/BrandedTypes';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Channel} from '@app/api/models/Channel';
+import type {Invite} from '@app/api/models/Invite';
+import {getCachedUserPartialResponse, getCachedUserPartialResponses} from '@app/api/user/UserCacheHelpers';
 import {InviteTypes} from '@fluxer/constants/src/ChannelConstants';
 import {UnknownInviteError} from '@fluxer/errors/src/domains/invite/UnknownInviteError';
-import {UnknownPackError} from '@fluxer/errors/src/domains/pack/UnknownPackError';
 import type {ChannelPartialResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {GuildPartialResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import type {
@@ -10,39 +16,14 @@ import type {
 	GroupDmInviteResponse,
 	GuildInviteMetadataResponse,
 	GuildInviteResponse,
-	PackInviteMetadataResponse,
-	PackInviteResponse,
 } from '@fluxer/schema/src/domains/invite/InviteSchemas';
-import type {z} from 'zod';
-import type {ChannelID, GuildID} from '../BrandedTypes';
-import type {IGatewayService} from '../infrastructure/IGatewayService';
-import type {UserCacheService} from '../infrastructure/UserCacheService';
-import type {RequestCache} from '../middleware/RequestCacheMiddleware';
-import type {Channel} from '../models/Channel';
-import type {Invite} from '../models/Invite';
-import {mapPackToSummary} from '../pack/PackModel';
-import type {PackRepository} from '../pack/PackRepository';
-import {getCachedUserPartialResponse, getCachedUserPartialResponses} from '../user/UserCacheHelpers';
 
 interface MapInviteToGuildInviteResponseParams {
 	invite: Invite;
 	userCacheService: UserCacheService;
 	requestCache: RequestCache;
-	getChannelResponse: (channelId: ChannelID) => Promise<z.infer<typeof ChannelPartialResponse>>;
-	getGuildResponse: (guildId: GuildID) => Promise<z.infer<typeof GuildPartialResponse>>;
-	getGuildCounts: (guildId: GuildID) => Promise<{
-		memberCount: number;
-		presenceCount: number;
-	}>;
-	gatewayService: IGatewayService;
-}
-
-interface MapInviteToGuildInviteMetadataResponseParams {
-	invite: Invite;
-	userCacheService: UserCacheService;
-	requestCache: RequestCache;
-	getChannelResponse: (channelId: ChannelID) => Promise<z.infer<typeof ChannelPartialResponse>>;
-	getGuildResponse: (guildId: GuildID) => Promise<z.infer<typeof GuildPartialResponse>>;
+	getChannelResponse: (channelId: ChannelID) => Promise<ChannelPartialResponse>;
+	getGuildResponse: (guildId: GuildID) => Promise<GuildPartialResponse>;
 	getGuildCounts: (guildId: GuildID) => Promise<{
 		memberCount: number;
 		presenceCount: number;
@@ -54,16 +35,7 @@ interface MapInviteToGroupDmInviteResponseParams {
 	invite: Invite;
 	userCacheService: UserCacheService;
 	requestCache: RequestCache;
-	getChannelResponse: (channelId: ChannelID) => Promise<z.infer<typeof ChannelPartialResponse>>;
-	getChannelSystem: (channelId: ChannelID) => Promise<Channel | null>;
-	getChannelMemberCount: (channelId: ChannelID) => Promise<number>;
-}
-
-interface MapInviteToGroupDmInviteMetadataResponseParams {
-	invite: Invite;
-	userCacheService: UserCacheService;
-	requestCache: RequestCache;
-	getChannelResponse: (channelId: ChannelID) => Promise<z.infer<typeof ChannelPartialResponse>>;
+	getChannelResponse: (channelId: ChannelID) => Promise<ChannelPartialResponse>;
 	getChannelSystem: (channelId: ChannelID) => Promise<Channel | null>;
 	getChannelMemberCount: (channelId: ChannelID) => Promise<number>;
 }
@@ -76,7 +48,7 @@ export async function mapInviteToGuildInviteResponse({
 	getGuildResponse,
 	getGuildCounts,
 	gatewayService,
-}: MapInviteToGuildInviteResponseParams): Promise<z.infer<typeof GuildInviteResponse>> {
+}: MapInviteToGuildInviteResponseParams): Promise<GuildInviteResponse> {
 	if (!invite.guildId) {
 		throw new UnknownInviteError();
 	}
@@ -122,7 +94,7 @@ export async function mapInviteToGuildInviteMetadataResponse({
 	getGuildResponse,
 	getGuildCounts,
 	gatewayService,
-}: MapInviteToGuildInviteMetadataResponseParams): Promise<z.infer<typeof GuildInviteMetadataResponse>> {
+}: MapInviteToGuildInviteResponseParams): Promise<GuildInviteMetadataResponse> {
 	const baseResponse = await mapInviteToGuildInviteResponse({
 		invite,
 		userCacheService,
@@ -148,7 +120,7 @@ export async function mapInviteToGroupDmInviteResponse({
 	getChannelResponse,
 	getChannelSystem,
 	getChannelMemberCount,
-}: MapInviteToGroupDmInviteResponseParams): Promise<z.infer<typeof GroupDmInviteResponse>> {
+}: MapInviteToGroupDmInviteResponseParams): Promise<GroupDmInviteResponse> {
 	if (!invite.channelId) {
 		throw new UnknownInviteError();
 	}
@@ -200,7 +172,7 @@ export async function mapInviteToGroupDmInviteMetadataResponse({
 	getChannelResponse,
 	getChannelSystem,
 	getChannelMemberCount,
-}: MapInviteToGroupDmInviteMetadataResponseParams): Promise<z.infer<typeof GroupDmInviteMetadataResponse>> {
+}: MapInviteToGroupDmInviteResponseParams): Promise<GroupDmInviteMetadataResponse> {
 	const baseResponse = await mapInviteToGroupDmInviteResponse({
 		invite,
 		userCacheService,
@@ -214,69 +186,5 @@ export async function mapInviteToGroupDmInviteMetadataResponse({
 		created_at: invite.createdAt.toISOString(),
 		uses: invite.uses,
 		max_uses: invite.maxUses,
-	};
-}
-
-interface MapInviteToPackInviteResponseParams {
-	invite: Invite;
-	userCacheService: UserCacheService;
-	requestCache: RequestCache;
-	packRepository: PackRepository;
-}
-
-const buildPackInviteBase = async ({
-	invite,
-	userCacheService,
-	requestCache,
-	packRepository,
-}: MapInviteToPackInviteResponseParams): Promise<z.infer<typeof PackInviteResponse>> => {
-	if (!invite.guildId) {
-		throw new UnknownPackError();
-	}
-	const pack = await packRepository.getPack(invite.guildId);
-	if (!pack) {
-		throw new UnknownPackError();
-	}
-	const creator = await getCachedUserPartialResponse({
-		userId: pack.creatorId,
-		userCacheService,
-		requestCache,
-	});
-	const inviter = invite.inviterId
-		? await getCachedUserPartialResponse({
-				userId: invite.inviterId,
-				userCacheService,
-				requestCache,
-			})
-		: null;
-	const expiresAt = invite.maxAge > 0 ? new Date(invite.createdAt.getTime() + invite.maxAge * 1000) : null;
-	return {
-		code: invite.code,
-		type: invite.type as typeof InviteTypes.EMOJI_PACK | typeof InviteTypes.STICKER_PACK,
-		pack: {
-			...mapPackToSummary(pack),
-			creator,
-		},
-		inviter,
-		expires_at: expiresAt?.toISOString() ?? null,
-		temporary: invite.temporary,
-	};
-};
-
-export async function mapInviteToPackInviteResponse(
-	params: MapInviteToPackInviteResponseParams,
-): Promise<z.infer<typeof PackInviteResponse>> {
-	return buildPackInviteBase(params);
-}
-
-export async function mapInviteToPackInviteMetadataResponse(
-	params: MapInviteToPackInviteResponseParams,
-): Promise<z.infer<typeof PackInviteMetadataResponse>> {
-	const baseResponse = await buildPackInviteBase(params);
-	return {
-		...baseResponse,
-		created_at: params.invite.createdAt.toISOString(),
-		uses: params.invite.uses,
-		max_uses: params.invite.maxUses,
 	};
 }

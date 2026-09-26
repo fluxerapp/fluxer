@@ -26,6 +26,10 @@
 	display: block;
 }
 
+flx-i18n {
+	display: contents;
+}
+
 html,
 :host {
 	line-height: 1.5;
@@ -35,6 +39,7 @@ html,
 	font-family: var(--font-sans);
 	font-feature-settings: normal;
 	font-variation-settings: normal;
+	font-variant-emoji: unicode;
 	-webkit-tap-highlight-color: transparent;
 }
 

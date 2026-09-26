@@ -43,7 +43,7 @@
 }
 
 .rowLabel {
-	flex: 1;
+	flex: 0 1 auto;
 	min-width: 0;
 	white-space: nowrap;
 	overflow: hidden;
@@ -54,8 +54,7 @@
 	display: inline-flex;
 	align-items: center;
 	gap: 0.25rem;
-	color: var(--status-online);
-	margin-left: auto;
+	color: var(--plutonium-icon);
 	flex-shrink: 0;
 }
 
@@ -83,4 +82,21 @@
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+
+.compactLiveGroupLabel {
+	padding: 0.375rem 0.5rem 0.25rem;
+	color: var(--text-tertiary);
+	font-size: 0.875rem;
+	font-weight: 600;
+	line-height: 1.125rem;
+	letter-spacing: 0;
+	text-transform: none;
+}
+
+.audioDeviceIcon {
+	flex: 0 0 auto;
+	width: 1rem;
+	height: 1rem;
+	color: var(--text-tertiary);
 }

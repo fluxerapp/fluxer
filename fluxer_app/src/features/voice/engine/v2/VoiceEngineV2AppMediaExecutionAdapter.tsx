@@ -6,6 +6,7 @@ import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import Channels from '@app/features/channel/state/Channels';
 import type {VoiceState} from '@app/features/gateway/types/GatewayVoiceTypes';
+import Guilds from '@app/features/guild/state/Guilds';
 import Keybind from '@app/features/input/state/InputKeybind';
 import {getVoiceContextEntranceSoundScope} from '@app/features/notification/utils/EntranceSoundScopes';
 import {handleMediaPermissionBlocked} from '@app/features/permissions/system/commands/MacPermissionsModalCommands';
@@ -48,6 +49,7 @@ import {
 import type {VoiceStateSyncPartial} from '@app/features/voice/engine/VoiceStateSyncTypes';
 import {
 	enforceLocalMediaPublicationCap,
+	getLocalCameraPublications,
 	getLocalMicrophonePublications,
 	getPrimaryLocalMicrophonePublication,
 } from '@app/features/voice/engine/VoiceTrackPublicationUtils';
@@ -65,7 +67,7 @@ import {
 	isMutedOrDeafened,
 	isPermissionDeniedError,
 } from '@app/features/voice/engine/v2/VoiceEngineV2AppAdapterAssertions';
-import {getCameraVideoPreset} from '@app/features/voice/engine/v2/VoiceEngineV2AppCameraResolutionPresets';
+import {getCameraCaptureDimensions} from '@app/features/voice/engine/v2/VoiceEngineV2AppCameraResolutionPresets';
 import {
 	runCameraTransition,
 	type VoiceEngineV2AppCameraTransitionOutcome,
@@ -96,8 +98,14 @@ import EntranceSoundLibrary from '@app/features/voice/state/EntranceSoundLibrary
 import LocalVoiceState from '@app/features/voice/state/LocalVoiceState';
 import ParticipantVolume from '@app/features/voice/state/ParticipantVolume';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
-import {buildMicrophonePublishOptions} from '@app/features/voice/utils/AudioPublishOptions';
-import {applyBackgroundProcessor} from '@app/features/voice/utils/VideoBackgroundProcessor';
+import {buildMicrophonePublishOptions, sendsStereoMicrophone} from '@app/features/voice/utils/AudioPublishOptions';
+import {
+	buildCameraPublishOptions,
+	findVideoPublishCodecPolicyViolation,
+} from '@app/features/voice/utils/CodecCapabilityDetector';
+import {readEffectiveNoiseSuppression} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionRuntime';
+import {applyNoiseSuppressionOverride} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionSelection';
+import {applyBackgroundProcessor, clearCameraVideoProcessor} from '@app/features/voice/utils/VideoBackgroundProcessor';
 import {
 	removeVoiceInputProcessor,
 	syncVoiceInputProcessor,
@@ -110,8 +118,10 @@ import {
 import {
 	applyContentHintToTrack,
 	getActiveVoiceProcessingMode,
+	type ResolvedVoiceProcessing,
 	resolveVoiceProcessingFromStateForDeviceLabel,
 } from '@app/features/voice/utils/VoiceProcessingProfile';
+import {resolveVoiceChannelBitrate} from '@fluxer/constants/src/GuildConstants';
 import type {
 	VoiceEngineV2AudioControls,
 	VoiceEngineV2AudioMode,
@@ -125,11 +135,14 @@ import type {
 	LocalVideoTrack,
 	Room,
 	TrackPublishOptions,
+	VideoCaptureOptions,
 } from 'livekit-client';
 import {Track} from 'livekit-client';
 
 const logger = new Logger('VoiceEngineV2AppMediaExecutionAdapter');
 const LOCAL_SPEAKING_ANALYSER_INTERVAL_MS = 50;
+const MICROPHONE_CAPTURE_SAMPLE_RATE = 48000;
+const CAMERA_PUBLISH_CODEC_CORRECTION_MAX = 1;
 export const REPUBLISH_MICROPHONE_GUARD_MS = 150;
 type VoiceMuteReason = VoiceEngineV2AppVoiceMuteReason;
 
@@ -366,11 +379,11 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		);
 		this.transitionMediaState({type: 'permission.warmup.start'});
 		const devicePermission = VoiceDevicePermissionState.getState().permissionStatus;
-		if (MediaPermission.isMicrophoneGranted() || devicePermission === 'granted') {
+		if (MediaPermission.isMicrophoneGranted() || devicePermission.audio === 'granted') {
 			this.transitionMediaState({type: 'permission.warmup.granted'});
 			return true;
 		}
-		if (MediaPermission.isMicrophoneExplicitlyDenied() || devicePermission === 'denied') {
+		if (MediaPermission.isMicrophoneExplicitlyDenied() || devicePermission.audio === 'denied') {
 			this.transitionMediaState({type: 'permission.warmup.denied'});
 			this.handleMicrophonePermissionDenied();
 			return false;
@@ -587,21 +600,36 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		return device?.label || null;
 	}
 
-	private getMicrophoneCaptureOptions(options: VoiceEngineV2MicrophoneOptions = {}): AudioCaptureOptions {
+	private resolveActiveMicrophoneProfile(): ResolvedVoiceProcessing {
 		const profile = resolveVoiceProcessingFromStateForDeviceLabel(VoiceSettings, this.resolveActiveInputDeviceLabel());
+		return applyNoiseSuppressionOverride(profile, readEffectiveNoiseSuppression(MICROPHONE_CAPTURE_SAMPLE_RATE));
+	}
+
+	private resolveMicrophoneChannelBitrate(channelId: string | null): number {
+		const channel = channelId ? Channels.getChannel(channelId) : null;
+		const guild = channel?.guildId ? Guilds.getGuild(channel.guildId) : null;
+		return resolveVoiceChannelBitrate(channel?.bitrate, guild?.features);
+	}
+
+	private getMicrophoneCaptureOptions(
+		options: VoiceEngineV2MicrophoneOptions = {},
+		channelId: string | null = this.getActiveChannelId(),
+	): AudioCaptureOptions {
+		const profile = this.resolveActiveMicrophoneProfile();
+		const stereo = sendsStereoMicrophone(this.resolveMicrophoneChannelBitrate(channelId), profile.stereoCapture);
 		return {
 			deviceId: options.deviceId ?? this.resolveInputDeviceId(),
 			echoCancellation: options.echoCancellation ?? profile.echoCancellation,
 			noiseSuppression: options.noiseSuppression ?? profile.browserNoiseSuppression,
 			autoGainControl: options.autoGainControl ?? profile.autoGainControl,
 			voiceIsolation: false,
+			...(stereo ? {channelCount: {ideal: 2}} : {}),
 		};
 	}
 
 	private getMicrophonePublishOptions(channelId: string | null): TrackPublishOptions | undefined {
-		const channelBitrate = channelId ? Channels.getChannel(channelId)?.bitrate : null;
-		const profile = resolveVoiceProcessingFromStateForDeviceLabel(VoiceSettings, this.resolveActiveInputDeviceLabel());
-		return buildMicrophonePublishOptions(channelBitrate, profile.mode);
+		const profile = this.resolveActiveMicrophoneProfile();
+		return buildMicrophonePublishOptions(this.resolveMicrophoneChannelBitrate(channelId), profile.stereoCapture);
 	}
 
 	async refreshMicrophonePublishSettings(room: Room | null, channelId: string | null): Promise<void> {
@@ -799,7 +827,12 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		assertObjectLike<VoiceEngineV2MicrophoneOptions>(options, 'enableMicrophone.options');
 		if (this.microphoneEnablePromise) {
 			await this.microphoneEnablePromise;
-			return;
+			if (this.hasLiveMicrophonePublication(room) || this.microphoneEnablePromise !== null) {
+				return;
+			}
+			logger.warn('Coalesced microphone enable left no live publication for this room; enabling again', {
+				channelId,
+			});
 		}
 		this.microphoneEnablePromise = this.enableMicrophoneNow(room, channelId, options);
 		try {
@@ -876,7 +909,7 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		assertObjectLike<MicrophoneEnableState>(state, 'publishMicrophoneAudioTrack.state');
 		await ctx.room.localParticipant.setMicrophoneEnabled(
 			true,
-			this.getMicrophoneCaptureOptions(ctx.options),
+			this.getMicrophoneCaptureOptions(ctx.options, ctx.channelId),
 			this.getMicrophonePublishOptions(ctx.channelId),
 		);
 		state.microphoneWasPublished = true;
@@ -1133,8 +1166,24 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		assert.ok(participant, 'camera transition requires a local participant');
 		assertBoolean(enabled, 'publishCameraTransition.enabled');
 		await this.enforceCameraPublicationCap(participant, enabled ? 'before camera enable' : 'before camera disable');
-		const videoResolution = getCameraVideoPreset(VoiceSettings.getCameraResolution());
-		await participant.setCameraEnabled(enabled, {resolution: videoResolution, ...restOptions});
+		if (!enabled) {
+			this.unbindCameraLifecycle();
+			const cameraTrack = getLocalCameraPublications(participant)[0]?.track as LocalVideoTrack | undefined;
+			if (cameraTrack != null) {
+				await clearCameraVideoProcessor(cameraTrack);
+			}
+		}
+		const captureOptions: VideoCaptureOptions = {
+			resolution: getCameraCaptureDimensions(VoiceSettings.getCameraResolution()),
+			...restOptions,
+		};
+		if (enabled) {
+			const publishOptions = buildCameraPublishOptions();
+			await participant.setCameraEnabled(true, captureOptions, publishOptions);
+			await this.enforceCameraPublishCodecPolicy(participant, publishOptions);
+		} else {
+			await participant.setCameraEnabled(false, captureOptions);
+		}
 		await this.enforceCameraPublicationCap(participant, enabled ? 'after camera enable' : 'after camera disable');
 		if (enabled) {
 			await this.applyBackgroundToCamera(participant);
@@ -1145,6 +1194,31 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 			this.bindCameraLifecycle(cameraTrack);
 		} else {
 			this.unbindCameraLifecycle();
+		}
+	}
+
+	private async enforceCameraPublishCodecPolicy(
+		participant: Room['localParticipant'],
+		initialPublishOptions: TrackPublishOptions,
+	): Promise<void> {
+		let publishOptions = initialPublishOptions;
+		for (let corrections = 0; ; corrections++) {
+			const publication = getLocalCameraPublications(participant)[0];
+			const track = publication?.videoTrack as LocalVideoTrack | undefined;
+			const requested = publishOptions.videoCodec;
+			if (!publication || !track || !requested) return;
+			const violation = findVideoPublishCodecPolicyViolation(requested, publication.options?.videoCodec ?? track.codec);
+			if (!violation) return;
+			logger.warn('Camera published a codec outside the publish policy', {...violation, corrections});
+			if (corrections >= CAMERA_PUBLISH_CODEC_CORRECTION_MAX || !violation.alternative) {
+				await participant.setCameraEnabled(false);
+				throw new Error(
+					`camera negotiated ${violation.negotiated} after requesting ${violation.requested}; no allowed codec could be published`,
+				);
+			}
+			await participant.unpublishTrack(track, false);
+			publishOptions = buildCameraPublishOptions(violation.alternative);
+			await participant.publishTrack(track, {...publishOptions, source: Track.Source.Camera});
 		}
 	}
 
@@ -1228,6 +1302,8 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		if (!cameraTrack) {
 			return;
 		}
+		this.unbindCameraLifecycle();
+		await clearCameraVideoProcessor(cameraTrack as LocalVideoTrack);
 		await participant.unpublishTrack(cameraTrack);
 		await this.publishCameraTransition(activeRoom, true, {deviceId: VoiceSettings.getVideoDeviceId()});
 		updateLocalParticipantFromRoom(activeRoom);
@@ -1474,6 +1550,9 @@ export class VoiceEngineV2AppMediaExecutionAdapter extends Store {
 		this.syncVoiceState({self_mute: targetMute});
 		this.updateMediaAudioControls();
 		this.syncLocalSpeakingOverride(room);
+		void this.refreshLocalVoiceInputProcessor(room).catch((error) => {
+			logger.warn('Failed to refresh voice input processor after transmit mode change', {error});
+		});
 	}
 
 	getMuteReason(voiceState: VoiceState | null, guildId?: string | null, channelId?: string | null): VoiceMuteReason {

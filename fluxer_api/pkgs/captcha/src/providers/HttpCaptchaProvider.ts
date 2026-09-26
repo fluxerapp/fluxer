@@ -20,6 +20,21 @@ interface CaptchaVerifyResponse {
 	'error-codes'?: Array<string>;
 	hostname?: string;
 	challenge_ts?: string;
+	score?: number;
+}
+
+function isCaptchaVerifyResponse(value: unknown): value is CaptchaVerifyResponse {
+	if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
+	const data = value as Record<string, unknown>;
+	const errorCodes = data['error-codes'];
+	return (
+		typeof data.success === 'boolean' &&
+		(errorCodes === undefined || (Array.isArray(errorCodes) && errorCodes.every((code) => typeof code === 'string'))) &&
+		(data.hostname === undefined || typeof data.hostname === 'string') &&
+		(data.challenge_ts === undefined || typeof data.challenge_ts === 'string') &&
+		(data.score === undefined ||
+			(typeof data.score === 'number' && Number.isFinite(data.score) && data.score >= 0 && data.score <= 1))
+	);
 }
 
 export abstract class HttpCaptchaProvider implements ICaptchaProvider {
@@ -58,10 +73,17 @@ export abstract class HttpCaptchaProvider implements ICaptchaProvider {
 				signal: AbortSignal.timeout(this.timeoutMs),
 			});
 			if (!response.ok) {
+				await response.body?.cancel().catch(() => {
+					this.logger?.warn({status: response.status}, `${this.providerName} failed to cancel discarded response body`);
+				});
 				this.logger?.error({status: response.status}, `${this.providerName} verify request failed`);
 				return false;
 			}
-			const data = (await response.json()) as CaptchaVerifyResponse;
+			const data: unknown = await response.json();
+			if (!isCaptchaVerifyResponse(data)) {
+				this.logger?.error({}, `${this.providerName} returned an invalid verification response`);
+				return false;
+			}
 			if (!data.success) {
 				this.logger?.warn({errorCodes: data['error-codes']}, `${this.providerName} verification failed`);
 				return false;

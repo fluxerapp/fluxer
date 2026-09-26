@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import type {InstanceCaptchaEffectiveConfig} from '@app/api/instance/InstanceConfigRepository';
+import type {User} from '@app/api/models/User';
+import {accountPolicyContactHasCapability} from '@app/api/risk/AccountPolicyService';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
+import {Headers} from '@fluxer/constants/src/Headers';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {CaptchaRequiredError, InvalidCaptchaError} from '@fluxer/errors/src/CaptchaErrors';
 import {extractClientIp} from '@fluxer/ip_utils/src/ClientIp';
+import type {InstanceCaptchaProvider} from '@fluxer/schema/src/domains/instance/InstanceSchemas';
 import {createCaptchaProvider} from '@pkgs/captcha/src/CaptchaProviderFactory';
 import type {ICaptchaProvider} from '@pkgs/captcha/src/ICaptchaProvider';
 import type {Context} from 'hono';
 import {createMiddleware} from 'hono/factory';
-import {Config} from '../Config';
-import type {InstanceCaptchaEffectiveConfig, InstanceCaptchaProvider} from '../instance/InstanceConfigRepository';
-import type {User} from '../models/User';
-import {accountPolicyContactHasCapability} from '../risk/AccountPolicyService';
-import type {HonoEnv} from '../types/HonoEnv';
 
 function resolveProviderSecret(
 	config: InstanceCaptchaEffectiveConfig,
@@ -44,7 +46,7 @@ function resolveCaptchaProvider(
 	}
 	const secretKey = resolveProviderSecret(config, requestedProvider);
 	if (!secretKey) {
-		throw new Error(`Captcha provider ${requestedProvider} is enabled but has no configured secret key`);
+		throw new InvalidCaptchaError();
 	}
 	return createCaptchaProvider({mode: requestedProvider, secretKey});
 }
@@ -55,13 +57,12 @@ export async function verifyCaptchaToken(ctx: Context<HonoEnv>): Promise<void> {
 	const user = ctx.get('user') as User | undefined;
 	if (accountPolicyContactHasCapability(user?.email, 'captcha_exempt')) return;
 	if (userHasCaptchaExemptFlag(user)) return;
-	if (await requestContactHasCaptchaExemption(ctx.req.raw)) return;
 	if (await requestUserHasCaptchaExemptFlag(ctx)) return;
-	const token = ctx.req.header('x-captcha-token');
+	const token = ctx.req.header(Headers.X_CAPTCHA_TOKEN);
 	if (!token) {
 		throw new CaptchaRequiredError();
 	}
-	const provider = resolveCaptchaProvider(captchaConfig, ctx.req.header('x-captcha-type'));
+	const provider = resolveCaptchaProvider(captchaConfig, ctx.req.header(Headers.X_CAPTCHA_TYPE));
 	const isValid = await provider.verify({
 		token,
 		remoteIp:
@@ -72,17 +73,6 @@ export async function verifyCaptchaToken(ctx: Context<HonoEnv>): Promise<void> {
 	});
 	if (!isValid) {
 		throw new InvalidCaptchaError();
-	}
-}
-
-async function requestContactHasCaptchaExemption(request: Request): Promise<boolean> {
-	try {
-		const body = (await request.clone().json()) as unknown;
-		if (!body || typeof body !== 'object' || Array.isArray(body)) return false;
-		const email = (body as Record<string, unknown>).email;
-		return typeof email === 'string' && accountPolicyContactHasCapability(email, 'captcha_exempt');
-	} catch {
-		return false;
 	}
 }
 

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Accessibility from '@app/features/accessibility/state/Accessibility';
+import {getBoundaryPadding} from '@app/features/app/hooks/useAntiShiftFloating';
 import {isKeyboardActivationKey} from '@app/features/input/utils/KeyboardUtils';
 import styles from '@app/features/ui/action_menu/ContextMenu.module.css';
 import {Scroller} from '@app/features/ui/components/Scroller';
@@ -243,7 +244,10 @@ const RootContextMenuInner: React.FC<RootContextMenuProps> = observer(({contextM
 					align={placement.align}
 					sideOffset={CONTEXT_MENU_OFFSET}
 					alignOffset={0}
-					collisionPadding={CONTEXT_MENU_EDGE_PADDING}
+					collisionPadding={getBoundaryPadding(
+						resolvedPortalHost?.ownerDocument ?? document,
+						CONTEXT_MENU_EDGE_PADDING,
+					)}
 					className={styles.contextMenuPositioner}
 					data-flx="ui.action-menu.context-menu.positioner"
 				>
@@ -553,7 +557,7 @@ export const SubMenu = React.forwardRef<HTMLDivElement, SubMenuProps>(
 					<BaseContextMenu.Positioner
 						sideOffset={SUBMENU_OFFSET}
 						className={styles.contextMenuPositioner}
-						collisionPadding={CONTEXT_MENU_EDGE_PADDING}
+						collisionPadding={getBoundaryPadding(portalHost?.ownerDocument ?? document, CONTEXT_MENU_EDGE_PADDING)}
 						data-flx="ui.action-menu.context-menu.sub-menu.positioner"
 					>
 						<BaseContextMenu.Popup

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {EmailSyntaxResult} from '../RiskTypes';
+import type {EmailSyntaxResult} from '@app/api/risk/RiskTypes';
 
 const KEYBOARD_ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm', '1234567890'];
 const COMMON_BIGRAMS = new Set<string>([

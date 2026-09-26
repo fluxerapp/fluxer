@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomUUID} from 'node:crypto';
+import type {ApiContext} from '@app/api/ApiContext';
+import {EMAIL_CLEARABLE_SUSPICIOUS_ACTIVITY_FLAGS} from '@app/api/auth/AuthEmail';
+import * as AuthPassword from '@app/api/auth/AuthPassword';
+import type {User} from '@app/api/models/User';
+import type {EmailChangeRepository} from '@app/api/user/repositories/auth/EmailChangeRepository';
 import {
 	assertChangeCooldown,
 	checkChangeRateLimit,
@@ -11,11 +16,6 @@ import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
 import {AccessDeniedError} from '@fluxer/errors/src/domains/core/AccessDeniedError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {ms} from 'itty-time';
-import type {ApiContext} from '../../ApiContext';
-import {EMAIL_CLEARABLE_SUSPICIOUS_ACTIVITY_FLAGS} from '../../auth/AuthEmail';
-import * as AuthPassword from '../../auth/AuthPassword';
-import type {User} from '../../models/User';
-import type {EmailChangeRepository} from '../repositories/auth/EmailChangeRepository';
 
 interface StartEmailChangeResult {
 	ticket: string;
@@ -178,7 +178,7 @@ export class EmailChangeService {
 		}
 		const hasValidDns = await emailDnsValidation.hasValidDnsRecords(trimmedEmail);
 		if (!hasValidDns) {
-			throw InputValidationError.fromCode('new_email', ValidationErrorCodes.INVALID_EMAIL_ADDRESS);
+			throw InputValidationError.fromCode('new_email', ValidationErrorCodes.EMAIL_DOMAIN_CANNOT_RECEIVE_MAIL);
 		}
 		const existing = await users.findByEmail(trimmedEmail.toLowerCase());
 		if (existing && existing.id !== user.id) {

@@ -76,6 +76,11 @@ export interface EmailTemplateVariables {
 		ipAddress: string;
 		location: string;
 	};
+	mfa_backup_codes_view: {
+		username: string;
+		code: string;
+		expiresAt: Date;
+	};
 	password_change_verification: {
 		username: string;
 		code: string;
@@ -106,6 +111,6 @@ export interface EmailTemplateVariables {
 	};
 	unban_notification: {
 		username: string;
-		reason: string;
+		reason: string | null;
 	};
 }

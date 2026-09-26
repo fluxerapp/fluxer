@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {GuildID, StickerID, UserID} from '../BrandedTypes';
-import type {GuildStickerRow} from '../database/types/GuildTypes';
+import type {GuildID, StickerID, UserID} from '@app/api/BrandedTypes';
+import type {GuildStickerRow} from '@app/api/database/types/GuildTypes';
 
 export class GuildSticker {
 	readonly guildId: GuildID;
@@ -9,8 +9,6 @@ export class GuildSticker {
 	readonly name: string;
 	readonly description: string | null;
 	readonly animated: boolean;
-	readonly isNsfw: boolean;
-	readonly hasNsfwClassification: boolean;
 	readonly tags: Array<string>;
 	readonly creatorId: UserID;
 	readonly version: number;
@@ -21,8 +19,6 @@ export class GuildSticker {
 		this.name = row.name;
 		this.description = row.description ?? null;
 		this.animated = row.animated;
-		this.isNsfw = row.nsfw ?? false;
-		this.hasNsfwClassification = row.nsfw !== null && row.nsfw !== undefined;
 		this.tags = row.tags ?? [];
 		this.creatorId = row.creator_id;
 		this.version = row.version;
@@ -35,7 +31,6 @@ export class GuildSticker {
 			name: this.name,
 			description: this.description,
 			animated: this.animated,
-			nsfw: this.hasNsfwClassification ? this.isNsfw : null,
 			tags: this.tags.length > 0 ? this.tags : null,
 			creator_id: this.creatorId,
 			version: this.version,

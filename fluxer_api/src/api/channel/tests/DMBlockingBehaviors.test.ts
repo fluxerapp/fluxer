@@ -1,11 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {ensureSessionStarted} from '../../message/tests/MessageTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {
 	acceptInvite,
 	blockUser,
@@ -17,7 +12,12 @@ import {
 	initiateCall,
 	pinMessage,
 	sendChannelMessage,
-} from './ChannelTestUtils';
+} from '@app/api/channel/tests/ChannelTestUtils';
+import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 describe('DM Blocking Behaviors', () => {
 	let harness: ApiTestHarness;
@@ -31,7 +31,7 @@ describe('DM Blocking Behaviors', () => {
 		await harness?.shutdown();
 	});
 	describe('DM Creation Blocking', () => {
-		it('prevents DM creation when the other user has blocked you, even with mutual guild', async () => {
+		it('allows DM creation when the other user has blocked you', async () => {
 			const user1 = await createTestAccount(harness);
 			const user2 = await createTestAccount(harness);
 			const guild = await createGuild(harness, user1.token, 'Test Community');
@@ -42,10 +42,10 @@ describe('DM Blocking Behaviors', () => {
 			await createBuilder(harness, user2.token)
 				.post('/users/@me/channels')
 				.body({recipient_id: user1.userId})
-				.expect(HTTP_STATUS.BAD_REQUEST)
+				.expect(HTTP_STATUS.OK)
 				.execute();
 		});
-		it('prevents DM creation with someone you have blocked, even with mutual guild', async () => {
+		it('allows DM creation with someone you have blocked', async () => {
 			const user1 = await createTestAccount(harness);
 			const user2 = await createTestAccount(harness);
 			const guild = await createGuild(harness, user1.token, 'Test Community');
@@ -56,7 +56,7 @@ describe('DM Blocking Behaviors', () => {
 			await createBuilder(harness, user1.token)
 				.post('/users/@me/channels')
 				.body({recipient_id: user2.userId})
-				.expect(HTTP_STATUS.BAD_REQUEST)
+				.expect(HTTP_STATUS.OK)
 				.execute();
 		});
 	});

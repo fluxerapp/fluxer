@@ -20,7 +20,8 @@ execute_method(<<"presence.terminate_all_sessions">>, P) -> handle_terminate_all
 execute_method(<<"presence.has_active">>, P) -> handle_has_active(P);
 execute_method(<<"presence.add_temporary_guild">>, P) -> handle_add_temp_guild(P);
 execute_method(<<"presence.remove_temporary_guild">>, P) -> handle_remove_temp_guild(P);
-execute_method(<<"presence.sync_group_dm_recipients">>, P) -> handle_sync_dm_recipients(P).
+execute_method(<<"presence.sync_group_dm_recipients">>, P) -> handle_sync_dm_recipients(P);
+execute_method(Method, _P) -> gateway_rpc_error:raise(<<"Unknown method: ", Method/binary>>).
 
 -spec handle_dispatch(map()) -> true.
 handle_dispatch(#{<<"user_id">> := UserIdBin, <<"event">> := Event, <<"data">> := Data}) ->
@@ -29,8 +30,22 @@ handle_dispatch(#{<<"user_id">> := UserIdBin, <<"event">> := Event, <<"data">> :
     case dispatch_to_owner(UserId, EventAtom, Data) of
         ok -> true;
         {error, not_found} -> handle_offline_dispatch(EventAtom, UserId, Data);
+        {error, unavailable} -> handle_unreachable_dispatch(EventAtom, UserId, Data);
         _ -> gateway_rpc_error:raise(<<"presence_dispatch_error">>)
     end.
+
+-spec handle_unreachable_dispatch(atom(), integer(), map()) -> no_return().
+handle_unreachable_dispatch(message_create, UserId, Data) ->
+    push_unreachable_dispatch(push_delivery_config:is_enrolled(UserId), UserId, Data);
+handle_unreachable_dispatch(_EventAtom, _UserId, _Data) ->
+    gateway_rpc_error:raise(<<"presence_dispatch_error">>).
+
+-spec push_unreachable_dispatch(boolean(), integer(), map()) -> no_return().
+push_unreachable_dispatch(true, UserId, Data) ->
+    _ = handle_offline_dispatch(message_create, UserId, Data),
+    gateway_rpc_error:raise(<<"presence_dispatch_error">>);
+push_unreachable_dispatch(false, _UserId, _Data) ->
+    gateway_rpc_error:raise(<<"presence_dispatch_error">>).
 
 -spec dispatch_event_atom_or_error(term()) -> atom().
 dispatch_event_atom_or_error(Event) when is_binary(Event) ->
@@ -286,7 +301,7 @@ maybe_valid_owner_node(OwnerNode) ->
         false -> unavailable
     end.
 
--spec handle_offline_dispatch(atom(), integer(), map()) -> true.
+-spec handle_offline_dispatch(atom(), integer(), map() | list()) -> true.
 handle_offline_dispatch(message_create, UserId, Data) ->
     case offline_message_author_id(Data) of
         {ok, AuthorId} ->

@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ApiContext, ApiServices, RequestScope} from './ApiContext';
-import {CassandraPhoneLookupRepository} from './auth/services/PhoneLookupRepository';
-import {Config} from './Config';
-import {getInboundSmsChallengeServiceInstance} from './middleware/ServiceMiddleware';
+import type {ApiContext, ApiServices, RequestScope} from '@app/api/ApiContext';
+import {CassandraPhoneLookupRepository} from '@app/api/auth/services/PhoneLookupRepository';
+import {Config} from '@app/api/Config';
+import {getInboundSmsChallengeServiceInstance} from '@app/api/middleware/ServiceMiddleware';
 import {
 	getGatewayService,
 	getKVClient,
 	getMediaService,
 	getSnowflakeService,
 	getWorkerService,
-} from './middleware/ServiceRegistry';
+} from '@app/api/middleware/ServiceRegistry';
 import {
 	getBotMfaMirrorService,
 	getCacheService,
@@ -22,7 +22,7 @@ import {
 	getSmsService,
 	getUserActivityBuffer,
 	getUserRepository,
-} from './middleware/ServiceSingletons';
+} from '@app/api/middleware/ServiceSingletons';
 
 let cachedServices: ApiServices | null = null;
 let cachedConfigRef: typeof Config | null = null;

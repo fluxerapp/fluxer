@@ -21,7 +21,7 @@ import type {Gif, GifFeatured} from '@app/features/expressions/commands/GifComma
 import * as GifCommands from '@app/features/expressions/commands/GifCommands';
 import type {DebouncedFunction} from '@app/features/platform/utils/scroll_manager/shared';
 import debounce from 'lodash/debounce';
-import {makeAutoObservable, observable, runInAction} from 'mobx';
+import {makeAutoObservable, observableRef, runInAction} from 'mobx';
 
 const EMPTY_FEATURED: GifFeatured = Object.freeze({categories: [], gifs: []});
 const TRENDING_CACHE_KEY = 'trending';
@@ -83,7 +83,7 @@ export class GifPickerState {
 				suggestDebounced: false,
 				disposed: false,
 				requestSequence: false,
-				snapshot: observable.ref,
+				snapshot: observableRef,
 				categoryResultCache: false,
 				loadingSkeletonTimerId: false,
 				pendingSearchSkeletonMode: false,

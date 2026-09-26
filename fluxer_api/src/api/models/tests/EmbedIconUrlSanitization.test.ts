@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Embed} from '@app/api/models/Embed';
+import {EmbedAuthor} from '@app/api/models/EmbedAuthor';
+import {EmbedFooter} from '@app/api/models/EmbedFooter';
+import {EmbedProvider} from '@app/api/models/EmbedProvider';
 import {describe, expect, it} from 'vitest';
-import {Embed} from '../Embed';
-import {EmbedAuthor} from '../EmbedAuthor';
-import {EmbedFooter} from '../EmbedFooter';
-import {EmbedProvider} from '../EmbedProvider';
 
 describe('EmbedAuthor icon URL sanitisation', () => {
 	it('normalises empty icon_url values to null', () => {

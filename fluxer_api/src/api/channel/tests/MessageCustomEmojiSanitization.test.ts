@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createGuild, getChannel, sendChannelMessage} from '@app/api/channel/tests/ChannelTestUtils';
+import {createEmoji, getGifDataUrl, getPngDataUrl} from '@app/api/emoji/tests/EmojiTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createEmoji, getGifDataUrl, getPngDataUrl} from '../../emoji/tests/EmojiTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createGuild, getChannel, sendChannelMessage} from './ChannelTestUtils';
 
 describe('Message custom emoji sanitization', () => {
 	let harness: ApiTestHarness;

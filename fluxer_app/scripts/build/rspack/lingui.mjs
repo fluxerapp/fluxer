@@ -10,12 +10,11 @@ export function getLinguiSwcPluginConfig() {
 	return [
 		'@lingui/swc-plugin',
 		{
-			localeDir: 'src/locales/{locale}/messages',
+			descriptorFields: 'all',
 			runtimeModules: {
 				i18n: ['@lingui/core', 'i18n'],
 				trans: ['@lingui/react', 'Trans'],
 			},
-			stripNonEssentialFields: false,
 		},
 	];
 }

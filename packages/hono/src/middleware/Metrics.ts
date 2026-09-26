@@ -75,10 +75,8 @@ class Histogram {
 		const lines: Array<string> = [];
 		lines.push(`# HELP ${name} ${help}`);
 		lines.push(`# TYPE ${name} histogram`);
-		let cumulative = 0;
 		for (let i = 0; i < this.buckets.length; i++) {
-			cumulative += this.counts[i];
-			lines.push(`${name}_bucket{le="${this.buckets[i]}"} ${cumulative}`);
+			lines.push(`${name}_bucket{le="${this.buckets[i]}"} ${this.counts[i]}`);
 		}
 		lines.push(`${name}_bucket{le="+Inf"} ${this.count}`);
 		lines.push(`${name}_sum ${this.sum}`);
@@ -118,12 +116,12 @@ interface MetricsResult {
 
 export function createMetricsMiddleware(serviceName: string): MetricsResult {
 	const prefix = `fluxer_${serviceName}`;
-	const startTime = Date.now();
+	const startTime = performance.now();
 
 	const requestsTotal = new Counter();
 	const errorsTotal = new Counter();
 	const requestDuration = new Histogram(DEFAULT_BUCKETS);
-	const uptime = new Gauge(() => (Date.now() - startTime) / 1000);
+	const uptime = new Gauge(() => (performance.now() - startTime) / 1000);
 
 	const state: MetricsState = {requestsTotal, errorsTotal, requestDuration, uptime};
 

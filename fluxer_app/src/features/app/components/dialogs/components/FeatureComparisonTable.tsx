@@ -28,10 +28,6 @@ const PER_COMMUNITY_PROFILES_DESCRIPTOR = msg({
 	message: 'Per-community profiles',
 	comment: 'Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.',
 });
-const MESSAGE_SCHEDULING_DESCRIPTOR = msg({
-	message: 'Message scheduling',
-	comment: 'Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.',
-});
 const PROFILE_BADGE_DESCRIPTOR = msg({
 	message: 'Profile badge',
 	comment: 'Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.',
@@ -54,10 +50,6 @@ const BOOKMARKED_MESSAGES_DESCRIPTOR = msg({
 });
 const FILE_UPLOAD_SIZE_DESCRIPTOR = msg({
 	message: 'File upload size',
-	comment: 'Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.',
-});
-const EMOJI_STICKER_PACKS_DESCRIPTOR = msg({
-	message: 'Emoji & sticker packs',
 	comment: 'Feature comparison table perk label. Shown as the row name comparing restricted vs stock limits.',
 });
 const SAVED_MEDIA_DESCRIPTOR = msg({
@@ -100,7 +92,6 @@ export const FeatureComparisonTable = observer(() => {
 		() => ({
 			custom_4_digit_username_tag: i18n._(CUSTOM_USERNAME_TAG_DESCRIPTOR),
 			per_community_profiles: i18n._(PER_COMMUNITY_PROFILES_DESCRIPTOR),
-			message_scheduling: i18n._(MESSAGE_SCHEDULING_DESCRIPTOR),
 			profile_badge: i18n._(PROFILE_BADGE_DESCRIPTOR),
 			custom_video_backgrounds: i18n._(CUSTOM_VIDEO_BACKGROUNDS_DESCRIPTOR),
 			entrance_sounds: i18n._(ENTRANCE_SOUNDS_DESCRIPTOR),
@@ -108,7 +99,6 @@ export const FeatureComparisonTable = observer(() => {
 			message_character_limit: i18n._(MESSAGE_CHARACTER_LIMIT_DESCRIPTOR),
 			bookmarked_messages: i18n._(BOOKMARKED_MESSAGES_DESCRIPTOR),
 			file_upload_size: i18n._(FILE_UPLOAD_SIZE_DESCRIPTOR),
-			emoji_sticker_packs: i18n._(EMOJI_STICKER_PACKS_DESCRIPTOR),
 			saved_media: i18n._(SAVED_MEDIA_DESCRIPTOR),
 			use_animated_emojis: i18n._(USE_ANIMATED_EMOJIS_DESCRIPTOR),
 			global_emoji_sticker_access: i18n._(GLOBAL_EMOJI_STICKER_ACCESS_DESCRIPTOR),
@@ -130,7 +120,7 @@ export const FeatureComparisonTable = observer(() => {
 				: Limits.getRestrictedValue(perk.limitKey, value)
 			: value;
 		if (perk.unit === 'bytes') {
-			return formatFileSize(resolvedValue);
+			return formatFileSize(i18n.locale, resolvedValue);
 		}
 		return formatNumber(resolvedValue, locale);
 	};

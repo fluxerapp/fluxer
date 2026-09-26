@@ -1,26 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ILogger} from '@app/api/ILogger';
+import {ClientErrorAbuseSignalMiddleware} from '@app/api/middleware/AbusiveIpAutoBanner';
+import {AuditLogMiddleware} from '@app/api/middleware/AuditLogMiddleware';
+import {ConcurrencyLimitMiddleware} from '@app/api/middleware/ConcurrencyLimitMiddleware';
+import ContentFilterMiddleware from '@app/api/middleware/ContentFilterMiddleware';
+import {GuildAvailabilityMiddleware} from '@app/api/middleware/GuildAvailabilityMiddleware';
+import {IpBanMiddleware} from '@app/api/middleware/IpBanMiddleware';
+import {LocaleMiddleware} from '@app/api/middleware/LocaleMiddleware';
+import {RequestCacheMiddleware} from '@app/api/middleware/RequestCacheMiddleware';
+import {RequireClientIpMiddleware} from '@app/api/middleware/RequireClientIpMiddleware';
+import {ServiceMiddleware} from '@app/api/middleware/ServiceMiddleware';
+import {TorExitMiddleware} from '@app/api/middleware/TorExitMiddleware';
+import {TrustedClientIpHeaderMiddleware} from '@app/api/middleware/TrustedClientIpHeaderMiddleware';
+import {UserMiddleware} from '@app/api/middleware/UserMiddleware';
+import type {HonoApp} from '@app/api/types/HonoEnv';
 import {Headers as HttpHeaders} from '@fluxer/constants/src/Headers';
 import {InvalidApiOriginError} from '@fluxer/errors/src/domains/core/InvalidApiOriginError';
 import {cors} from '@fluxer/hono/src/middleware/Cors';
 import {applyMiddlewareStack} from '@fluxer/hono/src/middleware/MiddlewareStack';
 import {createInfoRequestLogger, requestLogger} from '@fluxer/hono/src/middleware/RequestLogger';
 import {resolveClientIpHeaderName} from '@fluxer/ip_utils/src/ClientIp';
-import type {ILogger} from '../ILogger';
-import {ClientErrorAbuseSignalMiddleware} from '../middleware/AbusiveIpAutoBanner';
-import {AuditLogMiddleware} from '../middleware/AuditLogMiddleware';
-import {ConcurrencyLimitMiddleware} from '../middleware/ConcurrencyLimitMiddleware';
-import ContentFilterMiddleware from '../middleware/ContentFilterMiddleware';
-import {GuildAvailabilityMiddleware} from '../middleware/GuildAvailabilityMiddleware';
-import {IpBanMiddleware} from '../middleware/IpBanMiddleware';
-import {LocaleMiddleware} from '../middleware/LocaleMiddleware';
-import {RequestCacheMiddleware} from '../middleware/RequestCacheMiddleware';
-import {RequireClientIpMiddleware} from '../middleware/RequireClientIpMiddleware';
-import {ServiceMiddleware} from '../middleware/ServiceMiddleware';
-import {TorExitMiddleware} from '../middleware/TorExitMiddleware';
-import {TrustedClientIpHeaderMiddleware} from '../middleware/TrustedClientIpHeaderMiddleware';
-import {UserMiddleware} from '../middleware/UserMiddleware';
-import type {HonoApp} from '../types/HonoEnv';
 
 interface MiddlewarePipelineOptions {
 	logger: ILogger;
@@ -29,16 +29,50 @@ interface MiddlewarePipelineOptions {
 	trustClientIpHeader: boolean;
 	clientIpHeaderName?: string;
 	maxInflightRequests: number;
+	torExitBlockingEnabled: boolean;
 }
 
 export function configureMiddleware(routes: HonoApp, options: MiddlewarePipelineOptions): void {
-	const {logger, nodeEnv, corsOrigins, trustClientIpHeader, clientIpHeaderName, maxInflightRequests} = options;
+	const {
+		logger,
+		nodeEnv,
+		corsOrigins,
+		trustClientIpHeader,
+		clientIpHeaderName,
+		maxInflightRequests,
+		torExitBlockingEnabled,
+	} = options;
 	const resolvedHeader = resolveClientIpHeaderName(clientIpHeaderName);
 	routes.use('/webhooks/:webhook_id/:token', cors({origins: '*'}));
 	routes.use('/webhooks/:webhook_id/:token/messages/:message_id', cors({origins: '*'}));
+	routes.use(
+		'/.well-known/fluxer',
+		cors({
+			origins: '*',
+			methods: ['GET', 'HEAD', 'OPTIONS'],
+			allowedHeaders: [
+				HttpHeaders.ACCEPT,
+				HttpHeaders.CONTENT_TYPE,
+				HttpHeaders.IF_MODIFIED_SINCE,
+				HttpHeaders.IF_NONE_MATCH,
+			],
+			exposedHeaders: [HttpHeaders.ETAG, HttpHeaders.LAST_MODIFIED],
+		}),
+	);
 	applyMiddlewareStack(routes, {
 		requestId: {},
-		cors: {origins: corsOrigins, exposedHeaders: [HttpHeaders.X_FLUXER_VERSION]},
+		cors: {
+			origins: corsOrigins,
+			allowedHeaders: [
+				HttpHeaders.CONTENT_TYPE,
+				HttpHeaders.AUTHORIZATION,
+				'X-Requested-With',
+				'Accept-Language',
+				HttpHeaders.X_REQUEST_ID,
+				HttpHeaders.IF_NONE_MATCH,
+			],
+			exposedHeaders: [HttpHeaders.X_FLUXER_VERSION, HttpHeaders.ETAG],
+		},
 		skipLogger: true,
 		skipErrorHandler: true,
 	});
@@ -75,13 +109,11 @@ export function configureMiddleware(routes: HonoApp, options: MiddlewarePipeline
 			}),
 		);
 	}
-	routes.use(TorExitMiddleware);
+	if (torExitBlockingEnabled) {
+		routes.use(TorExitMiddleware);
+	}
 	routes.use(AuditLogMiddleware);
-	routes.use(
-		RequireClientIpMiddleware({
-			requiredHeaders: [resolvedHeader],
-		}),
-	);
+	routes.use(RequireClientIpMiddleware());
 	routes.use(ServiceMiddleware);
 	routes.use(UserMiddleware);
 	routes.use(ContentFilterMiddleware);

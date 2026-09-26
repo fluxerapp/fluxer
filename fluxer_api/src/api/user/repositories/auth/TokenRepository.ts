@@ -1,29 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {seconds} from 'itty-time';
 import type {
 	PasswordResetToken as PasswordResetTokenBrand,
 	PhoneVerificationToken,
 	UserID,
-} from '../../../BrandedTypes';
-import {createEmailRevertToken, createEmailVerificationToken, createPasswordResetToken} from '../../../BrandedTypes';
-import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../../../database/CassandraQueryExecution';
+} from '@app/api/BrandedTypes';
+import {createEmailRevertToken, createEmailVerificationToken, createPasswordResetToken} from '@app/api/BrandedTypes';
+import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
 import type {
 	EmailRevertTokenRow,
 	EmailVerificationTokenRow,
 	PasswordResetTokenRow,
 	PhoneTokenRow,
-} from '../../../database/types/AuthTypes';
-import {EmailRevertToken} from '../../../models/EmailRevertToken';
-import {EmailVerificationToken} from '../../../models/EmailVerificationToken';
-import {PasswordResetToken} from '../../../models/PasswordResetToken';
+} from '@app/api/database/types/AuthTypes';
+import {EmailRevertToken} from '@app/api/models/EmailRevertToken';
+import {EmailVerificationToken} from '@app/api/models/EmailVerificationToken';
+import {PasswordResetToken} from '@app/api/models/PasswordResetToken';
 import {
 	EmailRevertTokens,
 	EmailVerificationTokens,
 	PasswordResetTokens,
 	PasswordResetTokensByUserId,
 	PhoneTokens,
-} from '../../../Tables';
+} from '@app/api/Tables';
+import {seconds} from 'itty-time';
 
 const FETCH_EMAIL_VERIFICATION_TOKEN_CQL = EmailVerificationTokens.selectCql({
 	where: EmailVerificationTokens.where.eq('token_'),

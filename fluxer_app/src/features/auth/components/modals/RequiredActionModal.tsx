@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import * as Modal from '@app/features/app/components/dialogs/Modal';
-import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {PRODUCT_NAME, SUPPORT_EMAIL} from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import * as AuthenticationCommands from '@app/features/auth/commands/AuthenticationCommands';
 import {
 	type RequiredActionFlow,
@@ -14,6 +16,12 @@ import {
 	CHOOSE_METHOD_DESCRIPTION_DESCRIPTOR,
 	CHOOSE_METHOD_TITLE_DESCRIPTOR,
 	CONTINUE_DESCRIPTOR,
+	ESCAPE_FAILED_NOTHING_CHANGED_DESCRIPTOR,
+	ESCAPE_FAILED_PARTIAL_DESCRIPTOR,
+	ESCAPE_SUCCESS_EMAIL_REMAINS_TOAST_DESCRIPTOR,
+	ESCAPE_SUCCESS_TOAST_DESCRIPTOR,
+	ESCAPE_UNAVAILABLE_DESCRIPTOR,
+	ESCAPE_UNAVAILABLE_SELF_HOSTED_DESCRIPTOR,
 	GET_NEW_CODE_DESCRIPTOR,
 	NEXT_DESCRIPTOR,
 	RESEND_EMAIL_DESCRIPTOR,
@@ -37,6 +45,7 @@ import {
 	NewEmailStep,
 	useEmailVerification,
 } from '@app/features/auth/components/modals/required_action/RequiredActionEmail';
+import {buildPhoneGateEscapeConfirmCopy} from '@app/features/auth/components/modals/required_action/RequiredActionEscapeCopy';
 import {
 	InboundPhoneInstructionStep,
 	InboundPhoneStartStep,
@@ -46,6 +55,7 @@ import {
 } from '@app/features/auth/components/modals/required_action/RequiredActionPhone';
 import {
 	BackButton,
+	RequiredActionAltRoutes,
 	RequiredActionBackdrop,
 	resolveRequiredActionErrorMessage,
 	SignOutFooterRow,
@@ -57,12 +67,17 @@ import type {
 	PhoneScreen,
 } from '@app/features/auth/components/modals/required_action/RequiredActionTypes';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
-import {VERIFY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {CANCEL_DESCRIPTOR, VERIFY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {failureCode} from '@app/features/platform/utils/ResponseInspection';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
+import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import {SteppedCarousel} from '@app/features/ui/stepped_carousel/SteppedCarousel';
+import * as UserCommands from '@app/features/user/commands/UserCommands';
 import Users from '@app/features/user/state/Users';
-import type {MessageDescriptor} from '@lingui/core';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import type {PhoneGateEscapePreviewResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
+import type {I18n, MessageDescriptor} from '@lingui/core';
 import {useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
@@ -172,6 +187,12 @@ function getIntroDescription(flow: RequiredActionFlow | null, isEmailBounced: bo
 	return STEP_INTRO_GENERIC_DESCRIPTION_DESCRIPTOR;
 }
 
+function escapeUnavailableMessage(i18n: I18n): string {
+	return RuntimeConfig.isSelfHosted()
+		? i18n._(ESCAPE_UNAVAILABLE_SELF_HOSTED_DESCRIPTOR)
+		: i18n._(ESCAPE_UNAVAILABLE_DESCRIPTOR, {supportEmail: SUPPORT_EMAIL});
+}
+
 const RequiredActionModal: React.FC<{mock?: boolean}> = observer(({mock = false}) => {
 	const {i18n} = useLingui();
 	const user = Users.currentUser;
@@ -188,6 +209,8 @@ const RequiredActionModal: React.FC<{mock?: boolean}> = observer(({mock = false}
 	const [history, setHistory] = useState<Array<RequiredActionView>>([]);
 	const [carouselDirection, setCarouselDirection] = useState(1);
 	const [actionError, setActionError] = useState<string | null>(null);
+	const [escapePreview, setEscapePreview] = useState<PhoneGateEscapePreviewResponse | null>(null);
+	const [escapeSubmitting, setEscapeSubmitting] = useState(false);
 	const viewRef = useRef(view);
 	const isEmailBounced = !mock && !!user?.emailBounced;
 	const mockFlow = mock ? buildMockRequiredActionFlow() : null;
@@ -219,6 +242,27 @@ const RequiredActionModal: React.FC<{mock?: boolean}> = observer(({mock = false}
 	const requiresInboundPhone = effectiveFlow?.phone?.requiresInboundPhone ?? false;
 	const canSelfServeEmailRecovery = !mock && !isEmailBounced && user?.verified !== true;
 	const canUsePhoneRecovery = hasPhoneVerification;
+	useEffect(() => {
+		if (mock) {
+			setEscapePreview({available: true, guilds: [], owned_guilds: []});
+			return;
+		}
+		if (!hasPhoneVerification) {
+			setEscapePreview(null);
+			return;
+		}
+		let cancelled = false;
+		void UserCommands.getPhoneGateEscapePreview()
+			.then((preview) => {
+				if (!cancelled) setEscapePreview(preview);
+			})
+			.catch(() => {
+				if (!cancelled) setEscapePreview(null);
+			});
+		return () => {
+			cancelled = true;
+		};
+	}, [mock, hasPhoneVerification, flowKey]);
 	const goTo = useCallback((nextView: RequiredActionView) => {
 		setCarouselDirection(1);
 		setActionError(null);
@@ -348,6 +392,71 @@ const RequiredActionModal: React.FC<{mock?: boolean}> = observer(({mock = false}
 		},
 		[i18n],
 	);
+	const handleEscape = useCallback(async () => {
+		const hadGuildsToLeave = (escapePreview?.guilds.length ?? 0) > 0;
+		setActionError(null);
+		setEscapeSubmitting(true);
+		try {
+			const updated = await UserCommands.executePhoneGateEscape();
+			Users.handleUserUpdate(updated, {clearMissingOptionalFields: true});
+			const remaining = updated.required_actions;
+			const phoneRemains = remaining.some((action) => action.includes('PHONE'));
+			if (phoneRemains) {
+				setActionError(escapeUnavailableMessage(i18n));
+				return;
+			}
+			ToastCommands.success(
+				remaining.length === 0
+					? i18n._(ESCAPE_SUCCESS_TOAST_DESCRIPTOR)
+					: i18n._(ESCAPE_SUCCESS_EMAIL_REMAINS_TOAST_DESCRIPTOR),
+			);
+		} catch (error) {
+			if (failureCode(error) === APIErrorCodes.PHONE_GATE_ESCAPE_UNAVAILABLE) {
+				setActionError(escapeUnavailableMessage(i18n));
+			} else if (hadGuildsToLeave) {
+				setActionError(i18n._(ESCAPE_FAILED_PARTIAL_DESCRIPTOR));
+			} else {
+				setActionError(i18n._(ESCAPE_FAILED_NOTHING_CHANGED_DESCRIPTOR));
+			}
+			void UserCommands.getPhoneGateEscapePreview()
+				.then(setEscapePreview)
+				.catch(() => undefined);
+		} finally {
+			setEscapeSubmitting(false);
+		}
+	}, [escapePreview, i18n]);
+	const handleEscapePress = useCallback(() => {
+		if (!escapePreview?.available) return;
+		const copy = buildPhoneGateEscapeConfirmCopy(i18n, {
+			guildNames: escapePreview.guilds.map((guild) => guild.name),
+			ownedGuildNames: escapePreview.owned_guilds.map((guild) => guild.name),
+			emailStepRemains: hasEmailVerification,
+		});
+		ModalCommands.push(
+			ModalCommands.modal(() => (
+				<ConfirmModal
+					title={copy.title}
+					description={
+						<div className={styles.escapeConfirmLines} data-flx="auth.required-action-modal.escape-confirm.lines">
+							{copy.bodyLines.map((line) => (
+								<p key={line} data-flx="auth.required-action-modal.escape-confirm.line">
+									{line}
+								</p>
+							))}
+						</div>
+					}
+					primaryText={copy.primaryText}
+					primaryVariant={copy.primaryVariant}
+					secondaryText={i18n._(CANCEL_DESCRIPTOR)}
+					onPrimary={handleEscape}
+					data-flx="auth.required-action-modal.escape-confirm.confirm-modal"
+				/>
+			)),
+		);
+	}, [escapePreview, hasEmailVerification, handleEscape, i18n]);
+	const escapeAction = escapePreview?.available
+		? {guildCount: escapePreview.guilds.length, submitting: escapeSubmitting, onPress: handleEscapePress}
+		: null;
 	const activeInboundChallenge: ActiveInboundChallenge | null =
 		phoneVerification.screen.kind === 'phone-inbound-challenge'
 			? {
@@ -368,6 +477,14 @@ const RequiredActionModal: React.FC<{mock?: boolean}> = observer(({mock = false}
 					<StepShell
 						title={i18n._(STEP_INTRO_TITLE_DESCRIPTOR)}
 						description={description}
+						notice={
+							hasPhoneVerification ? (
+								<RequiredActionAltRoutes
+									escapeAction={escapeAction}
+									data-flx="auth.required-action-modal.render-view.required-action-alt-routes"
+								/>
+							) : undefined
+						}
 						data-flx="auth.required-action-modal.render-view.step-shell"
 					/>
 				);
@@ -802,6 +919,14 @@ const RequiredActionModal: React.FC<{mock?: boolean}> = observer(({mock = false}
 					{actionError ? (
 						<div className={styles.errorNotice} data-flx="auth.required-action-modal.error-notice">
 							{actionError}
+						</div>
+					) : null}
+					{hasPhoneVerification && view.kind !== 'intro' ? (
+						<div className={styles.supportBlock} data-flx="auth.required-action-modal.alt-routes-outside">
+							<RequiredActionAltRoutes
+								escapeAction={escapeAction}
+								data-flx="auth.required-action-modal.required-action-alt-routes"
+							/>
 						</div>
 					) : null}
 					<SignOutFooterRow

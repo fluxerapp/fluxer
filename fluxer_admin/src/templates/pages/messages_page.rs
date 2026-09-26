@@ -10,10 +10,8 @@ use crate::{
                 FORM_INPUT_CLASS, csrf_input, danger_button, form_actions, form_field_group,
                 submit_button,
             },
-            message_list::{
-                Attachment, Message, Poll, PollAnswer, PollAnswerCount, PollEmoji, PollMedia,
-                PollResults, message_deletion_script, message_list,
-            },
+            message_data::{Message, ordered_messages, value_id},
+            message_list::{message_deletion_script, message_list},
             page_container::{card, page_header},
         },
         layout::{LayoutOptions, admin_layout_ext},
@@ -21,7 +19,6 @@ use crate::{
 };
 use maud::{Markup, html};
 use serde_json::Value;
-use std::cmp::Ordering;
 
 const MESSAGE_BROWSE_SCRIPT: &str = r#"
 (function () {
@@ -265,7 +262,7 @@ pub fn browse_messages_fragment(
     show_delete: bool,
     highlight_message_id: Option<&str>,
 ) -> Markup {
-    let messages = ordered_messages(result);
+    let messages = response_messages(result);
     let has_more = result
         .get("has_more")
         .and_then(Value::as_bool)
@@ -297,7 +294,7 @@ fn browse_result_card(
     csrf_token: &str,
     context_limit: u32,
 ) -> Markup {
-    let messages = ordered_messages(result);
+    let messages = response_messages(result);
     let has_more = result
         .get("has_more")
         .and_then(Value::as_bool)
@@ -347,7 +344,7 @@ fn search_result_card(
     query_text: &str,
     show_delete: bool,
 ) -> Markup {
-    let messages = ordered_messages(result);
+    let messages = response_messages(result);
     let total = result
         .get("total")
         .and_then(Value::as_u64)
@@ -384,7 +381,7 @@ fn lookup_result_card(
     show_delete: bool,
     context_limit: u32,
 ) -> Markup {
-    let messages = ordered_messages(result);
+    let messages = response_messages(result);
     let channel_id = messages
         .first()
         .map(|m| m.channel_id.as_str())
@@ -510,211 +507,12 @@ fn empty_state(text: &str) -> Markup {
     }
 }
 
-fn ordered_messages(result: &Value) -> Vec<Message> {
-    let mut messages: Vec<Message> = result
-        .get("messages")
-        .and_then(Value::as_array)
-        .into_iter()
-        .flatten()
-        .map(message_from_value)
-        .collect();
-    messages.sort_by(compare_message_ids);
-    messages
-}
-
-fn message_from_value(value: &Value) -> Message {
-    let attachments = value
-        .get("attachments")
-        .and_then(Value::as_array)
-        .into_iter()
-        .flatten()
-        .map(attachment_from_value)
-        .collect();
-    Message {
-        id: value.get("id").and_then(value_id).unwrap_or_default(),
-        content: value
-            .get("content")
-            .and_then(Value::as_str)
-            .unwrap_or("")
-            .to_owned(),
-        timestamp: value
-            .get("timestamp")
-            .and_then(Value::as_str)
-            .unwrap_or("")
-            .to_owned(),
-        author_id: value
-            .get("author_id")
-            .and_then(value_id)
-            .unwrap_or_default(),
-        author_username: value
-            .get("author_username")
-            .and_then(Value::as_str)
-            .unwrap_or("Unknown")
-            .to_owned(),
-        author_global_name: value
-            .get("author_global_name")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-        author_discriminator: value
-            .get("author_discriminator")
-            .and_then(value_id)
-            .unwrap_or_else(|| "0000".to_owned()),
-        author_avatar: value
-            .get("author_avatar")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-        channel_id: value
-            .get("channel_id")
-            .and_then(value_id)
-            .unwrap_or_default(),
-        channel_nsfw: value.get("channel_nsfw").and_then(Value::as_bool),
-        channel_content_warning_level: value
-            .get("channel_content_warning_level")
-            .and_then(Value::as_i64)
-            .map(|n| n as i32),
-        channel_content_warning_text: value
-            .get("channel_content_warning_text")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-        guild_nsfw: value.get("guild_nsfw").and_then(Value::as_bool),
-        poll: value.get("poll").map(poll_from_value),
-        attachments,
-    }
-}
-
-pub fn poll_from_value(value: &Value) -> Poll {
-    Poll {
-        question: value.get("question").map(poll_media_from_value),
-        answers: value
-            .get("answers")
-            .and_then(Value::as_array)
-            .map(|answers| answers.iter().map(poll_answer_from_value).collect()),
-        expiry: value
-            .get("expiry")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-        allow_multiselect: value.get("allow_multiselect").and_then(Value::as_bool),
-        layout_type: value
-            .get("layout_type")
-            .and_then(Value::as_i64)
-            .and_then(|id| i32::try_from(id).ok()),
-        results: value.get("results").map(poll_results_from_value),
-    }
-}
-
-fn poll_media_from_value(value: &Value) -> PollMedia {
-    PollMedia {
-        emoji: value.get("emoji").map(poll_emoji_from_value),
-        text: value
-            .get("text")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-    }
-}
-
-fn poll_emoji_from_value(value: &Value) -> PollEmoji {
-    PollEmoji {
-        id: value
-            .get("id")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-        name: value
-            .get("name")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-    }
-}
-
-fn poll_answer_from_value(value: &Value) -> PollAnswer {
-    PollAnswer {
-        answer_id: value
-            .get("answer_id")
-            .and_then(Value::as_i64)
-            .and_then(|id| i32::try_from(id).ok()),
-        poll_media: value.get("poll_media").map(poll_media_from_value),
-    }
-}
-
-fn poll_results_from_value(value: &Value) -> PollResults {
-    PollResults {
-        answer_counts: value
-            .get("answer_counts")
-            .and_then(Value::as_array)
-            .map(|answer_counts| {
-                (answer_counts.iter())
-                    .map(poll_answer_count_from_value)
-                    .collect()
-            }),
-        is_finalized: value.get("is_finalized").and_then(Value::as_bool),
-    }
-}
-
-fn poll_answer_count_from_value(value: &Value) -> PollAnswerCount {
-    PollAnswerCount {
-        id: value
-            .get("id")
-            .and_then(Value::as_i64)
-            .and_then(|id| i32::try_from(id).ok()),
-        count: value
-            .get("count")
-            .and_then(Value::as_i64)
-            .and_then(|id| i32::try_from(id).ok()),
-    }
-}
-
-fn attachment_from_value(value: &Value) -> Attachment {
-    Attachment {
-        id: value.get("id").and_then(value_id).unwrap_or_default(),
-        url: value
-            .get("url")
-            .and_then(Value::as_str)
-            .unwrap_or("")
-            .to_owned(),
-        filename: value
-            .get("filename")
-            .and_then(Value::as_str)
-            .unwrap_or("")
-            .to_owned(),
-        nsfw: value.get("nsfw").and_then(Value::as_bool),
-        content_type: value
-            .get("content_type")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-        width: value.get("width").and_then(Value::as_u64).map(|n| n as u32),
-        height: value
-            .get("height")
-            .and_then(Value::as_u64)
-            .map(|n| n as u32),
-        size: value.get("size").and_then(Value::as_u64),
-        ncmec_status: value
-            .get("ncmec_status")
-            .and_then(Value::as_str)
-            .unwrap_or("not_submitted")
-            .to_owned(),
-        ncmec_report_id: value
-            .get("ncmec_report_id")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-        ncmec_failure_reason: value
-            .get("ncmec_failure_reason")
-            .and_then(Value::as_str)
-            .map(ToOwned::to_owned),
-    }
-}
-
-fn value_id(value: &Value) -> Option<String> {
-    match value {
-        Value::String(s) => Some(s.clone()),
-        Value::Number(n) => Some(n.to_string()),
-        _ => None,
-    }
-}
-
-fn compare_message_ids(left: &Message, right: &Message) -> Ordering {
-    match (left.id.parse::<u128>(), right.id.parse::<u128>()) {
-        (Ok(l), Ok(r)) => l.cmp(&r),
-        _ => left.id.cmp(&right.id),
-    }
+fn response_messages(result: &Value) -> Vec<Message> {
+    let values = result["messages"]
+        .as_array()
+        .map(Vec::as_slice)
+        .unwrap_or_default();
+    ordered_messages(values)
 }
 
 fn browse_channel_form(config: &AdminConfig, csrf_token: &str, prefill: Option<&str>) -> Markup {

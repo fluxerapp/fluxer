@@ -9,6 +9,13 @@ import {
 	type MicTestAudioGraph,
 } from '@app/features/user/components/modals/tabs/hooks/MicTestAudioGraph';
 import {
+	getNoiseSuppressionBackendDescriptor,
+	type VoiceNoiseSuppressionBackend,
+} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionBackends';
+import {readEffectiveNoiseSuppression} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionRuntime';
+import {applyNoiseSuppressionOverride} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionSelection';
+import type {NoiseSuppressionWorkletBackend} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionWorkletTypes';
+import {
 	applyContentHintToTrack,
 	resolveVoiceProcessing,
 	type VoiceProcessingMode,
@@ -41,6 +48,14 @@ export interface MicTestSettings {
 	voiceProcessingMode: VoiceProcessingMode;
 }
 
+const MIC_TEST_PROBE_SAMPLE_RATE = 48000;
+
+function resolveMicTestWorkletBackend(backend: VoiceNoiseSuppressionBackend): NoiseSuppressionWorkletBackend | null {
+	return getNoiseSuppressionBackendDescriptor(backend).engine === 'worklet'
+		? (backend as NoiseSuppressionWorkletBackend)
+		: null;
+}
+
 function normalizeOutputDeviceId(deviceId: string): string {
 	return deviceId === 'default' ? '' : deviceId;
 }
@@ -62,6 +77,7 @@ export const useMicTest = (settings: MicTestSettings) => {
 	const restartPendingRef = useRef(false);
 	const activeCaptureSignatureRef = useRef<string | null>(null);
 	const micExplicitlyDenied = MediaPermission.microphoneExplicitlyDenied;
+	const activeNoiseSuppression = readEffectiveNoiseSuppression(MIC_TEST_PROBE_SAMPLE_RATE);
 	const captureSignature = useMemo(
 		() =>
 			JSON.stringify({
@@ -73,6 +89,8 @@ export const useMicTest = (settings: MicTestSettings) => {
 				deepFilterNoiseSuppression: settings.deepFilterNoiseSuppression,
 				deepFilterNoiseSuppressionLevel: settings.deepFilterNoiseSuppressionLevel,
 				voiceProcessingMode: settings.voiceProcessingMode,
+				noiseSuppressionBackend: activeNoiseSuppression.backend,
+				noiseSuppressionStrength: activeNoiseSuppression.suppressionStrength,
 			}),
 		[
 			settings.autoGainControl,
@@ -83,6 +101,8 @@ export const useMicTest = (settings: MicTestSettings) => {
 			settings.noiseSuppression,
 			settings.outputDeviceId,
 			settings.voiceProcessingMode,
+			activeNoiseSuppression.backend,
+			activeNoiseSuppression.suppressionStrength,
 		],
 	);
 	const updateLevel = useCallback(() => {
@@ -171,7 +191,9 @@ export const useMicTest = (settings: MicTestSettings) => {
 					return exhaustive;
 				}
 			}
-			const profile = resolveVoiceProcessing(settings);
+			const effectiveNoiseSuppression = readEffectiveNoiseSuppression(MIC_TEST_PROBE_SAMPLE_RATE);
+			const profile = applyNoiseSuppressionOverride(resolveVoiceProcessing(settings), effectiveNoiseSuppression);
+			const workletBackend = resolveMicTestWorkletBackend(profile.noiseSuppressionBackend);
 			const baseAudioConstraints: MediaTrackConstraints & {voiceIsolation?: boolean} = {
 				echoCancellation: profile.echoCancellation,
 				noiseSuppression: profile.browserNoiseSuppression,
@@ -219,6 +241,8 @@ export const useMicTest = (settings: MicTestSettings) => {
 				playbackDelaySeconds: MIC_TEST_MONITOR_DELAY_SECONDS,
 				deepFilter: profile.deepFilter,
 				deepFilterNoiseReductionLevel: profile.deepFilterNoiseReductionLevel,
+				workletBackend,
+				suppressionStrength: effectiveNoiseSuppression.suppressionStrength,
 			});
 			timeDomainDataRef.current = new Float32Array(graphRef.current.analyser.fftSize);
 			const audioElement = new Audio();

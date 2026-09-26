@@ -1,13 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createUserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {GuildService} from '@app/api/guild/services/GuildService';
+import {createGuild, createRole, getMember} from '@app/api/guild/tests/GuildTestUtils';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {StripePremiumService} from '@app/api/stripe/services/StripePremiumService';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
+import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {Config} from '../../Config';
-import {createGuild, createRole, getMember} from '../../guild/tests/GuildTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder} from '../../test/TestRequestBuilder';
 
 describe('StripePremiumService', () => {
 	let harness: ApiTestHarness;
@@ -61,6 +68,23 @@ describe('StripePremiumService', () => {
 		});
 		test('requires authentication', async () => {
 			await createBuilder(harness, 'invalid-token').post('/premium/visionary/rejoin').expect(401).execute();
+		});
+	});
+	describe('POST /premium/grace/end', () => {
+		test('rejects with UNKNOWN_USER when the account record is gone', async () => {
+			const premiumService = new StripePremiumService(
+				new UserRepository(),
+				{} as IGatewayService,
+				{} as IGuildRepositoryAggregate,
+				{} as GuildService,
+			);
+			const error = await premiumService.endGracePeriod(createUserID(999999999999999997n)).then(
+				() => null,
+				(caught: unknown) => caught,
+			);
+			expect(error).toBeInstanceOf(UnknownUserError);
+			expect((error as UnknownUserError).status).toBe(404);
+			expect((error as UnknownUserError).code).toBe(APIErrorCodes.UNKNOWN_USER);
 		});
 	});
 	describe('premium duration and stacking', () => {

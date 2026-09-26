@@ -9,19 +9,24 @@
     get_default_avatar_url/1,
     extract_origin/1,
     generate_vapid_token/3,
+    assert_vapid_pair/2,
     generate_jwt_from_pem/3,
     base64url_encode/1,
     base64url_decode/1,
     encrypt_payload/4,
+    plaintext_budget/1,
     decode_subscription_key/1,
     hkdf_expand/4,
     hkdf_expand_loop/6,
-    parse_timestamp/1,
     normalize_binary/1,
     normalize_binary/2,
     avatar_index/1,
     wrap_avatar_index/1
 ]).
+
+-define(RECORD_HEADER_BYTES, 86).
+-define(RECORD_TAG_BYTES, 16).
+-define(RECORD_DELIMITER_BYTES, 1).
 
 -spec construct_avatar_url(binary(), binary()) -> binary().
 construct_avatar_url(UserId, Hash) ->
@@ -166,6 +171,31 @@ build_ec_jwk(PrivRaw, PubRaw) ->
 unwrap_jwk({JW, _Fields}) -> JW;
 unwrap_jwk(JW) -> JW.
 
+-spec assert_vapid_pair(binary(), binary()) -> ok.
+assert_vapid_pair(PublicKeyB64Url, PrivateKeyB64Url) ->
+    ensure_crypto_started(),
+    PubRaw = decode_or_error(PublicKeyB64Url, invalid_public_key),
+    PrivRaw = decode_or_error(PrivateKeyB64Url, invalid_private_key),
+    case {PubRaw, PrivRaw} of
+        {<<4, _:64/binary>>, <<_:32/binary>>} ->
+            assert_vapid_scalar_derives_point(PublicKeyB64Url, PubRaw, PrivRaw);
+        _ ->
+            erlang:error({vapid_keys_malformed, byte_size(PubRaw), byte_size(PrivRaw)})
+    end.
+
+-spec assert_vapid_scalar_derives_point(binary(), binary(), binary()) -> ok.
+assert_vapid_scalar_derives_point(PublicKeyB64Url, PubRaw, PrivRaw) ->
+    Derived =
+        try crypto:generate_key(ecdh, prime256v1, PrivRaw) of
+            {Point, _} -> Point
+        catch
+            _:_ -> undefined
+        end,
+    case Derived of
+        PubRaw -> ok;
+        _ -> erlang:error({vapid_keys_mismatched, PublicKeyB64Url})
+    end.
+
 -spec sign_and_compact(term(), map(), map()) -> binary().
 sign_and_compact(JWK, Header, Claims) ->
     JWS = jose_jwt:sign(JWK, Header, Claims),
@@ -216,6 +246,13 @@ base64url_decode(Data) ->
         error -> error
     end.
 
+-spec plaintext_budget(pos_integer()) -> non_neg_integer().
+plaintext_budget(RecordSize) when is_integer(RecordSize) ->
+    case RecordSize - ?RECORD_HEADER_BYTES - ?RECORD_TAG_BYTES - ?RECORD_DELIMITER_BYTES of
+        Budget when Budget > 0 -> Budget;
+        _ -> 0
+    end.
+
 -spec encrypt_payload(binary(), binary(), binary(), non_neg_integer()) ->
     {ok, binary()} | {error, term()}.
 encrypt_payload(Message, PeerPubB64, AuthSecretB64, RecordSize0) ->
@@ -224,7 +261,7 @@ encrypt_payload(Message, PeerPubB64, AuthSecretB64, RecordSize0) ->
         AuthSecret = decode_subscription_key(AuthSecretB64),
         RecordSize =
             case RecordSize0 of
-                0 -> 4096;
+                0 -> push_sender_retry:initial_record_size();
                 _ -> RecordSize0
             end,
         Salt = crypto:strong_rand_bytes(16),
@@ -327,16 +364,6 @@ hkdf_expand_loop(_PRK, _Info, Length, _I, _Tprev, Acc) when byte_size(Acc) >= Le
 hkdf_expand_loop(PRK, Info, Length, I, Tprev, Acc) ->
     T = crypto:mac(hmac, sha256, PRK, <<Tprev/binary, Info/binary, I:8/integer>>),
     hkdf_expand_loop(PRK, Info, Length, I + 1, T, <<Acc/binary, T/binary>>).
-
--spec parse_timestamp(binary() | term()) -> integer() | undefined.
-parse_timestamp(Str) when is_binary(Str) ->
-    try
-        binary_to_integer(Str)
-    catch
-        _:_ -> undefined
-    end;
-parse_timestamp(_) ->
-    undefined.
 
 -spec normalize_binary(term()) -> binary() | undefined.
 normalize_binary(Value) when is_binary(Value) -> Value;

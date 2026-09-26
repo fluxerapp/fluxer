@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
-import appVoiceSessionFixtureJson from '../../fixtures/event_logs/app_voice_session.json';
-import {coalesceVoiceEngineV2OutboundStats} from '../policies/voiceStats';
-import type {VoiceEngineV2OutboundStats} from '../protocol/types';
+import appVoiceSessionFixtureJson from '@fluxer/voice_engine_v2/fixtures/event_logs/app_voice_session.json';
+import {coalesceVoiceEngineV2OutboundStats} from '@fluxer/voice_engine_v2/src/policies/voiceStats';
+import type {VoiceEngineV2OutboundStats} from '@fluxer/voice_engine_v2/src/protocol/types';
 import {
 	createVoiceEngineV2DeterministicPlatformPort,
 	createVoiceEngineV2SeededRandomPort,
 	createVoiceEngineV2SystemClockPort,
-} from '../runtime';
-import {replayVoiceEngineV2EventLogFixture, type VoiceEngineV2EventLogFixture} from './eventLogReplay';
+} from '@fluxer/voice_engine_v2/src/runtime';
+import {
+	replayVoiceEngineV2EventLogFixture,
+	type VoiceEngineV2EventLogFixture,
+} from '@fluxer/voice_engine_v2/src/testing/eventLogReplay';
+import {describe, expect, it} from 'vitest';
 
 const fixture = appVoiceSessionFixtureJson as unknown as VoiceEngineV2EventLogFixture;
 

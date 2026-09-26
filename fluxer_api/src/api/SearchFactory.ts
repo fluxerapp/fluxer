@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {Config} from '@app/api/Config';
+import {ElasticsearchSearchProvider} from '@app/api/infrastructure/ElasticsearchSearchProvider';
+import {MeilisearchSearchProvider} from '@app/api/infrastructure/MeilisearchSearchProvider';
+import {NullSearchProvider} from '@app/api/infrastructure/NullSearchProvider';
+import {Logger} from '@app/api/Logger';
+import {getInjectedSearchProvider} from '@app/api/middleware/ServiceRegistry';
+import type {IAuditLogSearchService} from '@app/api/search/IAuditLogSearchService';
+import type {IGuildMemberSearchService} from '@app/api/search/IGuildMemberSearchService';
+import type {IGuildSearchService} from '@app/api/search/IGuildSearchService';
+import type {IMessageSearchService} from '@app/api/search/IMessageSearchService';
+import type {IReportSearchService} from '@app/api/search/IReportSearchService';
+import type {ISearchProvider} from '@app/api/search/ISearchProvider';
+import type {IUserSearchService} from '@app/api/search/IUserSearchService';
 import {DEFAULT_SEARCH_CLIENT_TIMEOUT_MS} from '@fluxer/constants/src/Timeouts';
 import type {ElasticsearchDistributedLock} from '@pkgs/elasticsearch_search/src/adapters/ElasticsearchIndexAdapter';
-import {Config} from './Config';
-import {ElasticsearchSearchProvider} from './infrastructure/ElasticsearchSearchProvider';
-import {MeilisearchSearchProvider} from './infrastructure/MeilisearchSearchProvider';
-import {NullSearchProvider} from './infrastructure/NullSearchProvider';
-import {Logger} from './Logger';
-import {getInjectedSearchProvider} from './middleware/ServiceRegistry';
-import type {IAuditLogSearchService} from './search/IAuditLogSearchService';
-import type {IGuildMemberSearchService} from './search/IGuildMemberSearchService';
-import type {IGuildSearchService} from './search/IGuildSearchService';
-import type {IMessageSearchService} from './search/IMessageSearchService';
-import type {IReportSearchService} from './search/IReportSearchService';
-import type {ISearchProvider} from './search/ISearchProvider';
-import type {IUserSearchService} from './search/IUserSearchService';
 
 let searchProvider: ISearchProvider | null = null;
 

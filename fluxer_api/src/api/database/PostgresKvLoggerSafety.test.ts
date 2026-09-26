@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {defineTable} from '@app/api/database/CassandraTableDsl';
+import type {KvQueryMeta} from '@app/api/database/CassandraTypes';
 import {describe, expect, it, vi} from 'vitest';
-import {defineTable} from './CassandraTableDsl';
-import type {KvQueryMeta} from './CassandraTypes';
 
-vi.mock('../Logger', () => ({
+vi.mock('@app/api/Logger', () => ({
 	Logger: new Proxy(
 		{},
 		{
@@ -42,7 +42,7 @@ const client = {
 
 describe('PostgresKvQueryExecutor logging safety', () => {
 	it('runs full scan queries in a process whose logger was never initialized', async () => {
-		const {PostgresKvQueryExecutor} = await import('./PostgresKvQueryExecutor');
+		const {PostgresKvQueryExecutor} = await import('@app/api/database/PostgresKvQueryExecutor');
 		const executor = new PostgresKvQueryExecutor(client);
 		for (const action of ['select', 'count', 'delete'] as const) {
 			const meta = {action, table: Probe, where: [], columns: ['k', 'v']} as unknown as KvQueryMeta<Row>;

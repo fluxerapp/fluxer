@@ -1,5 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import {getGlobalLimitConfigSnapshot} from '@app/api/limits/LimitConfigService';
+import {resolveLimitSafe} from '@app/api/limits/LimitConfigUtils';
+import {createLimitMatchContext} from '@app/api/limits/LimitMatchContextBuilder';
+import {checkIsPremium, getEffectivePremiumUntil} from '@app/api/user/UserHelpers';
 import {
 	extractPremiumFlagsFromLegacyUserFlags,
 	type MentionReplyPreference,
@@ -8,12 +14,6 @@ import {
 	type UserPremiumType,
 } from '@fluxer/constants/src/UserConstants';
 import {types} from 'cassandra-driver';
-import type {UserID} from '../BrandedTypes';
-import type {UserRow} from '../database/types/UserTypes';
-import {getGlobalLimitConfigSnapshot} from '../limits/LimitConfigService';
-import {resolveLimitSafe} from '../limits/LimitConfigUtils';
-import {createLimitMatchContext} from '../limits/LimitMatchContextBuilder';
-import {checkIsPremium, getEffectivePremiumUntil} from '../user/UserHelpers';
 
 export class User {
 	readonly id: UserID;
@@ -64,6 +64,7 @@ export class User {
 	readonly pendingBulkMessageDeletionChannelCount: number | null;
 	readonly pendingBulkMessageDeletionMessageCount: number | null;
 	readonly pendingDeletionAt: Date | null;
+	readonly deletionStartedAt: Date | null;
 	readonly deletionReasonCode: number | null;
 	readonly deletionPublicReason: string | null;
 	readonly deletionAuditLogReason: string | null;
@@ -127,6 +128,7 @@ export class User {
 		this.pendingBulkMessageDeletionChannelCount = row.pending_bulk_message_deletion_channel_count ?? null;
 		this.pendingBulkMessageDeletionMessageCount = row.pending_bulk_message_deletion_message_count ?? null;
 		this.pendingDeletionAt = row.pending_deletion_at ?? null;
+		this.deletionStartedAt = row.deletion_started_at ?? null;
 		this.deletionReasonCode = row.deletion_reason_code ?? null;
 		this.deletionPublicReason = row.deletion_public_reason ?? null;
 		this.deletionAuditLogReason = row.deletion_audit_log_reason ?? null;
@@ -217,6 +219,7 @@ export class User {
 			pending_bulk_message_deletion_channel_count: this.pendingBulkMessageDeletionChannelCount,
 			pending_bulk_message_deletion_message_count: this.pendingBulkMessageDeletionMessageCount,
 			pending_deletion_at: this.pendingDeletionAt,
+			deletion_started_at: this.deletionStartedAt,
 			deletion_reason_code: this.deletionReasonCode,
 			deletion_public_reason: this.deletionPublicReason,
 			deletion_audit_log_reason: this.deletionAuditLogReason,

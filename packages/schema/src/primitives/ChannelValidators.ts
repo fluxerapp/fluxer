@@ -18,19 +18,17 @@ import {
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {z} from 'zod';
 
-export const ChannelTypeSchema = withOpenApiType(
-	createInt32EnumType(
-		[
-			[ChannelTypes.GUILD_TEXT, 'GUILD_TEXT', 'A text channel within a guild'],
-			[ChannelTypes.DM, 'DM', 'A direct message between users'],
-			[ChannelTypes.GUILD_VOICE, 'GUILD_VOICE', 'A voice channel within a guild'],
-			[ChannelTypes.GROUP_DM, 'GROUP_DM', 'A group direct message between users'],
-			[ChannelTypes.GUILD_CATEGORY, 'GUILD_CATEGORY', 'A category that contains channels'],
-			[ChannelTypes.GUILD_LINK, 'GUILD_LINK', 'A link channel for external resources'],
-			[ChannelTypes.DM_PERSONAL_NOTES, 'DM_PERSONAL_NOTES', 'Personal notes DM channel'],
-		],
-		'The type of the channel',
-	),
+export const ChannelTypeSchema = createInt32EnumType(
+	[
+		[ChannelTypes.GUILD_TEXT, 'GUILD_TEXT', 'A text channel within a guild'],
+		[ChannelTypes.DM, 'DM', 'A direct message between users'],
+		[ChannelTypes.GUILD_VOICE, 'GUILD_VOICE', 'A voice channel within a guild'],
+		[ChannelTypes.GROUP_DM, 'GROUP_DM', 'A group direct message between users'],
+		[ChannelTypes.GUILD_CATEGORY, 'GUILD_CATEGORY', 'A category that contains channels'],
+		[ChannelTypes.GUILD_LINK, 'GUILD_LINK', 'A link channel for external resources'],
+		[ChannelTypes.DM_PERSONAL_NOTES, 'DM_PERSONAL_NOTES', 'Personal notes DM channel'],
+	],
+	'The type of the channel',
 	'ChannelType',
 );
 export const ChannelOverwriteTypeSchema = withOpenApiType(
@@ -60,7 +58,7 @@ function sanitizeChannelName(value: string): string {
 
 export const ChannelNameType = z
 	.string()
-	.superRefine((value, ctx) => {
+	.transform((value, ctx) => {
 		if (value.length > MAX_STRING_PROCESSING_LENGTH) {
 			ctx.addIssue({
 				code: 'custom',
@@ -68,26 +66,6 @@ export const ChannelNameType = z
 				params: {min: 1, max: 100},
 			});
 			return z.NEVER;
-		}
-		const normalized = normalizeString(value);
-		const processed =
-			normalized
-				.toLowerCase()
-				.replace(WHITESPACE_REGEX, '-')
-				.split('')
-				.filter((char) => !DISALLOWED_CHARS.has(char))
-				.join('') || '-';
-		if (processed.length < 1) {
-			ctx.addIssue({
-				code: 'custom',
-				message: ValidationErrorCodes.CHANNEL_NAME_EMPTY_AFTER_NORMALIZATION,
-			});
-			return z.NEVER;
-		}
-	})
-	.transform((value) => {
-		if (value.length > MAX_STRING_PROCESSING_LENGTH) {
-			throw new Error(ValidationErrorCodes.STRING_LENGTH_INVALID);
 		}
 		const normalized = normalizeString(value);
 		return (
@@ -121,21 +99,11 @@ export const GeneralChannelNameType = z
 	.pipe(withStringLengthRangeValidation(z.string(), 1, 100, ValidationErrorCodes.STRING_LENGTH_INVALID));
 export const VanityURLCodeType = z
 	.string()
-	.superRefine((value, ctx) => {
-		const normalized = normalizeString(value);
-		const processed = normalized.toLowerCase().replace(WHITESPACE_REGEX, '-').replace(MULTIPLE_HYPHENS_REGEX, '-');
-		if (!VANITY_URL_REGEX.test(processed)) {
-			ctx.addIssue({
-				code: 'custom',
-				message: ValidationErrorCodes.VANITY_URL_INVALID_CHARACTERS,
-			});
-			return z.NEVER;
-		}
-	})
-	.transform((value) => {
+	.overwrite((value) => {
 		const normalized = normalizeString(value);
 		return normalized.toLowerCase().replace(WHITESPACE_REGEX, '-').replace(MULTIPLE_HYPHENS_REGEX, '-');
 	})
+	.refine((value) => VANITY_URL_REGEX.test(value), ValidationErrorCodes.VANITY_URL_INVALID_CHARACTERS)
 	.pipe(withStringLengthRangeValidation(z.string(), 2, 32, ValidationErrorCodes.VANITY_URL_CODE_LENGTH_INVALID));
 const AUDIT_LOG_REASON_MAX_LENGTH = 512;
 export const AuditLogReasonType = z

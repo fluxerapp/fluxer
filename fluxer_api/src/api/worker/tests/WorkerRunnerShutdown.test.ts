@@ -1,0 +1,138 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+import type {IJobLedgerRepository} from '@app/api/jobs/IJobLedgerRepository';
+import {setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
+import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
+import {WorkerRunner} from '@app/api/worker/WorkerRunner';
+import type {ConsumerMessages, JsMsg} from '@nats-io/jetstream';
+import {beforeAll, describe, expect, it, vi} from 'vitest';
+
+const TASK_TYPE = 'processInactivityDeletions';
+
+class FakeConsumerMessages {
+	private readonly pending: Array<JsMsg> = [];
+	private notify: (() => void) | null = null;
+	private closed = false;
+	private failure: Error | null = null;
+
+	push(msg: JsMsg): void {
+		this.pending.push(msg);
+		this.wake();
+	}
+
+	async close(): Promise<void> {
+		this.stop();
+	}
+
+	stop(error?: Error): void {
+		if (error) {
+			this.failure = error;
+		}
+		this.closed = true;
+		this.wake();
+	}
+
+	async *[Symbol.asyncIterator](): AsyncGenerator<JsMsg> {
+		while (true) {
+			while (this.pending.length > 0) {
+				yield this.pending.shift()!;
+			}
+			if (this.failure !== null) {
+				throw this.failure;
+			}
+			if (this.closed) {
+				return;
+			}
+			await new Promise<void>((resolve) => {
+				this.notify = resolve;
+			});
+		}
+	}
+
+	private wake(): void {
+		const notify = this.notify;
+		this.notify = null;
+		notify?.();
+	}
+}
+
+function createQueueStub(messages: FakeConsumerMessages) {
+	return {
+		getConnectionManager: () => ({
+			getJetStreamClient: () => ({
+				consumers: {
+					get: async () => ({
+						fetch: async () => messages as unknown as ConsumerMessages,
+					}),
+				},
+			}),
+		}),
+		getStreamName: () => 'JOBS',
+		publishToDlq: vi.fn(),
+	};
+}
+
+function createRunner(task: () => Promise<void>, messages: FakeConsumerMessages): WorkerRunner {
+	return new WorkerRunner({
+		tasks: {[TASK_TYPE]: task},
+		queue: createQueueStub(messages),
+		consumerName: 'workers_batch',
+		laneName: 'batch',
+		ledger: {} as IJobLedgerRepository,
+		concurrency: 12,
+		maxDeliver: 25,
+		ackWaitMs: 120000,
+	});
+}
+
+function createJobMessage() {
+	const envelope = {
+		payload: {},
+		max_attempts: 5,
+		priority: 0,
+		created_at: new Date().toISOString(),
+	};
+	return {
+		seq: 1,
+		subject: `jobs.${TASK_TYPE}`,
+		redelivered: false,
+		data: new TextEncoder().encode(JSON.stringify(envelope)),
+		info: {deliveryCount: 1},
+		ack: vi.fn(),
+		nak: vi.fn(),
+		term: vi.fn(),
+		working: vi.fn(),
+	};
+}
+
+describe('Worker runner shutdown', () => {
+	beforeAll(() => {
+		setInjectedWorkerService(new NoopWorkerService());
+	});
+
+	it('drains in-flight jobs before stop resolves', async () => {
+		let started = false;
+		let finished = false;
+		let release: () => void = () => {};
+		const pending = new Promise<void>((resolve) => {
+			release = resolve;
+		});
+		const messages = new FakeConsumerMessages();
+		const runner = createRunner(async () => {
+			started = true;
+			await pending;
+			finished = true;
+		}, messages);
+		const msg = createJobMessage();
+
+		await runner.start();
+		messages.push(msg as unknown as JsMsg);
+		await vi.waitFor(() => expect(started).toBe(true));
+
+		setTimeout(release, 0);
+		await runner.stop();
+
+		expect(finished).toBe(true);
+		expect(msg.ack).toHaveBeenCalledTimes(1);
+	});
+});

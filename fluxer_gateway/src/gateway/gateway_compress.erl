@@ -19,6 +19,7 @@
 -define(MAX_DECOMPRESSED_SIZE, 10 * 1024 * 1024).
 -define(ZSTD_STREAM_BUFFER_SIZE, 64 * 1024).
 -define(ZSTD_COMPRESSION_LEVEL, 3).
+-define(ZSTD_DECOMPRESS_WINDOW_LOG_MAX, 23).
 -define(ZSTD_AVAILABLE_KEY, {?MODULE, zstd_available}).
 -define(ZSTD_STREAM_AVAILABLE_KEY, {?MODULE, zstd_stream_available}).
 
@@ -221,7 +222,11 @@ zstd_frame_decompress_available(Data, Ctx) ->
 handle_zstd_decompress_result(Decompressed, Ctx) when is_binary(Decompressed) ->
     check_decompressed_size(Decompressed, Ctx);
 handle_zstd_decompress_result(Decompressed, Ctx) when is_list(Decompressed) ->
-    check_decompressed_size(iolist_to_binary(eqwalizer:dynamic_cast(Decompressed)), Ctx);
+    IoList = eqwalizer:dynamic_cast(Decompressed),
+    case erlang:iolist_size(IoList) > ?MAX_DECOMPRESSED_SIZE of
+        true -> {error, decompression_too_large};
+        false -> check_decompressed_size(iolist_to_binary(IoList), Ctx)
+    end;
 handle_zstd_decompress_result({error, Reason}, _Ctx) ->
     {error, {decompress_failed, Reason}};
 handle_zstd_decompress_result(Other, _Ctx) ->
@@ -263,11 +268,23 @@ ensure_zstd_decompress_stream_context(
 ensure_zstd_decompress_stream_context(#{type := zstd_stream} = Ctx) ->
     case erlang:apply(ezstd, create_decompression_context, [?ZSTD_STREAM_BUFFER_SIZE]) of
         StreamCtx when is_reference(StreamCtx) ->
-            {ok, StreamCtx, Ctx#{decompress_stream_ctx => StreamCtx}};
+            set_zstd_decompress_window_log_max(StreamCtx, Ctx);
         {error, Reason} ->
             {error, {decompress_failed, Reason}};
         Other ->
             {error, {decompress_failed, {case_clause, Other}}}
+    end.
+
+-spec set_zstd_decompress_window_log_max(reference(), compress_ctx()) ->
+    {ok, reference(), compress_ctx()} | {error, term()}.
+set_zstd_decompress_window_log_max(StreamCtx, Ctx) ->
+    Result = erlang:apply(ezstd, set_decompression_parameter, [
+        StreamCtx, zstd_d_window_log_max, ?ZSTD_DECOMPRESS_WINDOW_LOG_MAX
+    ]),
+    case Result of
+        ok -> {ok, StreamCtx, Ctx#{decompress_stream_ctx => StreamCtx}};
+        {error, Reason} -> {error, {decompress_failed, Reason}};
+        Other -> {error, {decompress_failed, {case_clause, Other}}}
     end.
 
 -spec check_decompressed_size(binary(), compress_ctx()) ->

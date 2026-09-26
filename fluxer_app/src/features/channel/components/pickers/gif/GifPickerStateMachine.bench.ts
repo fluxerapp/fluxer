@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {bench, describe} from 'vitest';
 import {
 	createGifPickerRequestId,
 	createGifPickerSnapshot,
 	selectGifPickerModel,
 	transitionGifPickerSnapshot,
-} from './GifPickerStateMachine';
+} from '@app/features/channel/components/pickers/gif/GifPickerStateMachine';
+import {test} from 'vitest';
 
 const SEARCH_TERMS = Array.from({length: 1_000}, (_, index) => `query-${index}`);
 
-describe('GifPickerStateMachine benchmarks', () => {
-	bench('coalesces 1k search term transitions while preserving the visible surface', () => {
+test('GifPickerStateMachine benchmarks', async ({bench}) => {
+	await bench('coalesces 1k search term transitions while preserving the visible surface', () => {
 		let snapshot = createGifPickerSnapshot();
 		snapshot = transitionGifPickerSnapshot(snapshot, {
 			type: 'gifPicker.featuredSucceeded',
@@ -25,9 +25,9 @@ describe('GifPickerStateMachine benchmarks', () => {
 			});
 		}
 		selectGifPickerModel(snapshot);
-	});
+	}).run();
 
-	bench('rejects 1k stale search completions', () => {
+	await bench('rejects 1k stale search completions', () => {
 		let snapshot = createGifPickerSnapshot();
 		for (let index = 0; index < SEARCH_TERMS.length; index += 1) {
 			const term = SEARCH_TERMS[index];
@@ -52,9 +52,9 @@ describe('GifPickerStateMachine benchmarks', () => {
 			});
 		}
 		selectGifPickerModel(snapshot);
-	});
+	}).run();
 
-	bench('commits latest search result after a fast query burst', () => {
+	await bench('commits latest search result after a fast query burst', () => {
 		let snapshot = createGifPickerSnapshot();
 		for (let index = 0; index < SEARCH_TERMS.length; index += 1) {
 			const term = SEARCH_TERMS[index];
@@ -77,9 +77,9 @@ describe('GifPickerStateMachine benchmarks', () => {
 			resultCount: 24,
 		});
 		selectGifPickerModel(snapshot);
-	});
+	}).run();
 
-	bench('rejects 1k stale skeleton timer events before showing the active one', () => {
+	await bench('rejects 1k stale skeleton timer events before showing the active one', () => {
 		const activeRequestId = createGifPickerRequestId(SEARCH_TERMS.length + 1);
 		let snapshot = createGifPickerSnapshot();
 		snapshot = transitionGifPickerSnapshot(snapshot, {
@@ -107,9 +107,9 @@ describe('GifPickerStateMachine benchmarks', () => {
 			term: 'active',
 		});
 		selectGifPickerModel(snapshot);
-	});
+	}).run();
 
-	bench('opens 1k cached category snapshots without entering loading', () => {
+	await bench('opens 1k cached category snapshots without entering loading', () => {
 		let snapshot = createGifPickerSnapshot();
 		for (const term of SEARCH_TERMS) {
 			snapshot = transitionGifPickerSnapshot(snapshot, {
@@ -119,5 +119,5 @@ describe('GifPickerStateMachine benchmarks', () => {
 			});
 		}
 		selectGifPickerModel(snapshot);
-	});
+	}).run();
 });

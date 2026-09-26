@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import {createChannelID, createMessageID} from '@app/api/BrandedTypes';
+import {mapReadStateResponse} from '@app/api/read_state/ReadStateResponseMapper';
+import type {ReadStateService} from '@app/api/read_state/ReadStateService';
 import type {
 	ReadStateAckBulkRequest,
 	ReadStateAckRequest,
 	ReadStateAckResponse,
 } from '@fluxer/schema/src/domains/channel/ChannelRequestSchemas';
-import type {UserID} from '../BrandedTypes';
-import {createChannelID, createMessageID} from '../BrandedTypes';
-import {mapReadStateResponse} from './ReadStateResponseMapper';
-import type {ReadStateService} from './ReadStateService';
 
 interface ReadStateAckBulkParams {
 	userId: UserID;

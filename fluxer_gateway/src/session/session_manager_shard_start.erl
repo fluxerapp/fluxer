@@ -137,6 +137,8 @@ check_user_session_limit(
     {reply, start_reply(), state()}.
 handle_user_session_limit_result({error, too_many_sessions}, Ctx) ->
     {reply, {error, too_many_sessions}, maps:get(state, Ctx)};
+handle_user_session_limit_result({error, sharding_required}, Ctx) ->
+    {reply, {error, sharding_required}, maps:get(state, Ctx)};
 handle_user_session_limit_result(ok, Ctx) ->
     UserId = maps:get(user_id, Ctx),
     session_abuse_protection:increment_user_sessions(UserId),

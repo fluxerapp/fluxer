@@ -3,7 +3,7 @@
 -module(guild_ets_utils).
 -typing([eqwalizer]).
 
--export([ensure_table/2]).
+-export([ensure_table/2, heir_options/0]).
 
 -spec ensure_table(atom(), list()) -> ok.
 ensure_table(TableName, Options) ->
@@ -12,6 +12,13 @@ ensure_table(TableName, Options) ->
             guild_ets_owner:ensure_table(TableName, Options);
         _ ->
             ensure_table_local(TableName, Options)
+    end.
+
+-spec heir_options() -> list().
+heir_options() ->
+    case whereis(guild_ets_owner) of
+        Pid when is_pid(Pid), Pid =/= self() -> [{heir, Pid, inherited}];
+        _ -> []
     end.
 
 -spec ensure_table_local(atom(), list()) -> ok.

@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, UserID, WebhookID} from '@app/api/BrandedTypes';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
+import type {Channel} from '@app/api/models/Channel';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import * as EmojiUtils from '@app/api/utils/EmojiUtils';
 import {ChannelTypes, GUILD_TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
 import {GuildExplicitContentFilterTypes, GuildFeatures, GuildNSFWLevel} from '@fluxer/constants/src/GuildConstants';
 import {SensitiveMediaFilterLevel} from '@fluxer/constants/src/UserConstants';
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
-import type {GuildID, UserID, WebhookID} from '../../../BrandedTypes';
-import type {IGuildRepositoryAggregate} from '../../../guild/repositories/IGuildRepositoryAggregate';
-import type {LimitConfigService} from '../../../limits/LimitConfigService';
-import type {Channel} from '../../../models/Channel';
-import type {PackService} from '../../../pack/PackService';
-import type {IUserRepository} from '../../../user/IUserRepository';
-import * as EmojiUtils from '../../../utils/EmojiUtils';
 
 export interface DmNsfwContext {
 	senderFilterLevel: number;
@@ -22,7 +21,6 @@ export class MessageContentService {
 	constructor(
 		private userRepository: IUserRepository,
 		private guildRepository: IGuildRepositoryAggregate,
-		private packService: PackService,
 		private limitConfigService: LimitConfigService,
 	) {}
 
@@ -33,15 +31,10 @@ export class MessageContentService {
 		guildId: GuildID | null;
 		hasPermission?: (permission: bigint) => Promise<boolean>;
 	}): Promise<string> {
-		const packResolver = await this.packService.createPackExpressionAccessResolver({
-			userId: params.userId,
-			type: 'emoji',
-		});
 		return await EmojiUtils.sanitizeCustomEmojis({
 			...params,
 			userRepository: this.userRepository,
 			guildRepository: this.guildRepository,
-			packResolver,
 			limitConfigService: this.limitConfigService,
 		});
 	}

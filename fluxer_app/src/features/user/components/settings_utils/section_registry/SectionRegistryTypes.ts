@@ -32,7 +32,6 @@ export type UserSettingsTabType =
 	| 'component_gallery'
 	| 'language'
 	| 'keybinds'
-	| 'expression_packs'
 	| 'linked_accounts';
 
 export interface SectionDefinition extends SettingsMetadata {

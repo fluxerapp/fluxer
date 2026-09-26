@@ -1,20 +1,31 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	compareSearchResults,
+	type ForwardChannelCandidate,
+	type ForwardSearchResult,
+	type ForwardUserCandidate,
+	searchChannels,
+	searchGroupDMs,
+	searchGuilds,
+	searchUsers,
+} from '@app/features/app/components/dialogs/shared/ForwardDestinationSearch';
 import type {Channel} from '@app/features/channel/models/Channel';
 import Channels from '@app/features/channel/state/Channels';
+import {compareChannels} from '@app/features/channel/utils/ChannelUtils';
 import Guilds from '@app/features/guild/state/Guilds';
+import {MENTIONS_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import type {GuildMember} from '@app/features/member/models/GuildMember';
 import GuildMembers from '@app/features/member/state/GuildMembers';
+import Messages from '@app/features/messaging/state/MessagingMessages';
 import Navigation from '@app/features/navigation/state/Navigation';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
+import SelectedGuild from '@app/features/navigation/state/SelectedGuild';
+import Permission from '@app/features/permissions/state/Permission';
 import ReadStates from '@app/features/read_state/state/ReadStates';
+import Relationships from '@app/features/relationship/state/Relationships';
 import {buildChannelCandidate} from '@app/features/search/state/QuickSwitcherCandidateBuilder';
-import {
-	candidateToResult,
-	createHeaderResult,
-	getHeaderTitle,
-	type HeaderTitleType,
-} from '@app/features/search/state/QuickSwitcherResultConverters';
+import {candidateToResult, createHeaderResult} from '@app/features/search/state/QuickSwitcherResultConverters';
 import type {
 	Candidate,
 	CandidateSets,
@@ -23,235 +34,467 @@ import type {
 	QuickSwitcherResult,
 	UserCandidate,
 } from '@app/features/search/state/QuickSwitcherTypes';
-import {
-	MAX_GENERAL_RESULTS,
-	MAX_QUERY_MODE_RESULTS,
-	MAX_RECENT_RESULTS,
-	MAX_UNREAD_RESULTS,
-} from '@app/features/search/state/QuickSwitcherTypes';
+import type {ForwardSearchCandidates} from '@app/features/search/utils/DestinationSearchSources';
+import {createSearchTerm, scoreSearchTerm} from '@app/features/search/utils/SearchTextMatching';
+import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
+import {ME} from '@fluxer/constants/src/AppConstants';
+import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {MessageNotifications} from '@fluxer/constants/src/NotificationConstants';
 import {QuickSwitcherResultTypes} from '@fluxer/constants/src/QuickSwitcherConstants';
-import * as SnowflakeUtils from '@fluxer/snowflake/src/SnowflakeUtils';
+import {RelationshipTypes} from '@fluxer/constants/src/UserConstants';
 import type {I18n} from '@lingui/core';
-import {matchSorter, rankings} from 'match-sorter';
+import {msg} from '@lingui/core/macro';
 
-function getChannelRecency(channel: {id: string; lastMessageId: string | null}): number {
-	if (channel.lastMessageId) {
-		return SnowflakeUtils.extractTimestamp(channel.lastMessageId);
-	}
-	return SnowflakeUtils.extractTimestamp(channel.id);
+const PREVIOUS_CHANNELS_DESCRIPTOR = msg({
+	message: 'Previous channels',
+	comment: 'Quick switcher section header above the channels the user visited most recently.',
+});
+const UNREAD_CHANNELS_DESCRIPTOR = msg({
+	message: 'Unread channels',
+	comment: 'Quick switcher section header above the unread channels of the current community.',
+});
+const SEARCHING_TEXT_CHANNELS_DESCRIPTOR = msg({
+	message: 'Searching text channels',
+	comment: 'Quick switcher header shown while the query starts with # and only text channels are searched.',
+});
+const SEARCHING_VOICE_CHANNELS_DESCRIPTOR = msg({
+	message: 'Searching voice channels',
+	comment: 'Quick switcher header shown while the query starts with ! and only voice channels are searched.',
+});
+const SEARCHING_COMMUNITIES_DESCRIPTOR = msg({
+	message: 'Searching communities',
+	comment: 'Quick switcher header shown while the query starts with * and only communities are searched.',
+});
+const SEARCHING_ALL_USERS_DESCRIPTOR = msg({
+	message: 'Searching all users',
+	comment: 'Quick switcher header shown while the query starts with @ outside a community, or with @@.',
+});
+const SEARCHING_USERS_IN_COMMUNITY_DESCRIPTOR = msg({
+	message: 'Searching friends and members of {communityName}',
+	comment:
+		'Quick switcher header shown while the query starts with @ inside a community. communityName is the community name.',
+});
+
+const HISTORY_LIMIT = 8;
+const PREVIOUS_CHANNELS_WITH_SECTIONS = 3;
+const PREVIOUS_CHANNELS_ALONE = 7;
+const HISTORY_HIDDEN_FROM_SECTIONS = 3;
+const CATEGORY_LIMIT = 5;
+const MODE_LIMIT = 100;
+const RECENT_AUTHOR_LIMIT = 100;
+const SCORE_SCALE = 1000;
+const LISTING_TEXT_SCORE = 7;
+const LISTING_VOICE_IN_TEXT_SCORE = 6;
+const LISTING_FRECENCY_BONUS = 3;
+
+export type QuickSwitcherModeVariant = 'all_users' | null;
+
+interface RankedCandidate {
+	readonly candidate: Candidate;
+	readonly matchedText: string;
+	readonly score: number;
 }
 
-function getExcludedChannelIds(): Set<string> {
-	const excluded = new Set<string>();
-	const currentChannelId = Navigation.channelId ?? SelectedChannel.currentChannelId;
-	if (!currentChannelId) return excluded;
-	excluded.add(currentChannelId);
-	const currentChannel = Channels.getChannel(currentChannelId);
-	if (currentChannel?.parentId) {
-		excluded.add(currentChannel.parentId);
-	}
-	return excluded;
+interface SearchContext {
+	readonly confusables: ReadonlyMap<string, string>;
+	readonly sets: CandidateSets;
+	readonly sources: ForwardSearchCandidates;
 }
 
-function matchCandidates<T extends Candidate>(candidates: Array<T>, search: string, limit: number): Array<T> {
-	if (candidates.length === 0) {
-		return [];
-	}
-	if (search.length === 0) {
-		return sortCandidatesByWeight(candidates).slice(0, limit);
-	}
-	const results = matchSorter(candidates, search, {
-		keys: [
-			'title',
-			{minRanking: rankings.CONTAINS, key: 'subtitle'},
-			{minRanking: rankings.CONTAINS, key: (item) => item.searchValues},
-		],
-	});
-	return results.slice(0, limit);
+function getCurrentChannelId(): string | null {
+	return Navigation.channelId ?? SelectedChannel.currentChannelId ?? null;
 }
 
-function sortCandidatesByWeight<T extends Candidate>(candidates: Array<T>): Array<T> {
-	return [...candidates].sort((a, b) => {
-		if (b.sortWeight !== a.sortWeight) {
-			return b.sortWeight - a.sortWeight;
-		}
-		return a.title.localeCompare(b.title);
-	});
+function getCurrentGuildId(): string | null {
+	const guildId = SelectedGuild.selectedGuildId;
+	if (guildId == null || guildId === ME || Guilds.getGuild(guildId) == null) return null;
+	return guildId;
 }
 
-function createDefaultResultFromChannel(
-	channel: Channel,
-	i18n: I18n,
-	viewContext?: string,
-): QuickSwitcherExecutableResult | null {
+function isChannelVisible(channel: Channel): boolean {
+	if (channel.guildId == null) return true;
+	return Permission.can(Permissions.VIEW_CHANNEL, channel);
+}
+
+function channelResult(channel: Channel, i18n: I18n): QuickSwitcherExecutableResult | null {
 	const candidate = buildChannelCandidate(channel, i18n);
-	return candidate ? candidateToResult(candidate, i18n, viewContext) : null;
+	return candidate == null ? null : candidateToResult(candidate, i18n);
+}
+
+function collectChannelResults(
+	channelIds: ReadonlyArray<string>,
+	i18n: I18n,
+	seen: Set<string>,
+): Array<QuickSwitcherExecutableResult> {
+	const results: Array<QuickSwitcherExecutableResult> = [];
+	for (const channelId of channelIds) {
+		if (seen.has(channelId)) continue;
+		const channel = Channels.getChannel(channelId);
+		if (channel == null || !isChannelVisible(channel)) continue;
+		const result = channelResult(channel, i18n);
+		if (result == null) continue;
+		seen.add(channelId);
+		results.push(result);
+	}
+	return results;
+}
+
+function isUnreadInCurrentCommunity(channel: Channel): boolean {
+	if (channel.type !== ChannelTypes.GUILD_TEXT || !isChannelVisible(channel)) return false;
+	if (UserGuildSettings.isMutedAtAnyLevel(channel.guildId ?? null, channel.id)) return false;
+	if (!ReadStates.hasUnread(channel.id)) return false;
+	const unreadLevel = UserGuildSettings.resolvedGuildUnreadBadgesLevel({
+		id: channel.id,
+		guildId: channel.guildId ?? undefined,
+		parentId: channel.parentId ?? undefined,
+		type: channel.type,
+	});
+	return unreadLevel === MessageNotifications.ALL_MESSAGES;
 }
 
 export function generateDefaultResults(i18n: I18n): Array<QuickSwitcherResult> {
-	const recentVisits = SelectedChannel.recentChannelVisits;
-	const excludedIds = getExcludedChannelIds();
-	const recentEntries: Array<{
-		channelId: string;
-		result: QuickSwitcherExecutableResult;
-	}> = [];
-	for (const visit of recentVisits) {
-		if (excludedIds.has(visit.channelId)) continue;
-		const channel = Channels.getChannel(visit.channelId);
-		if (!channel) continue;
-		const result = createDefaultResultFromChannel(channel, i18n, visit.guildId);
-		if (result) {
-			recentEntries.push({channelId: visit.channelId, result});
+	const currentChannelId = getCurrentChannelId();
+	const history = [...new Set(SelectedChannel.sortedRecentVisits.map((visit) => visit.channelId))]
+		.filter((channelId) => channelId !== currentChannelId)
+		.slice(0, HISTORY_LIMIT - 1);
+	const previous = collectChannelResults(history, i18n, new Set());
+	const seen = new Set(previous.slice(0, HISTORY_HIDDEN_FROM_SECTIONS).map((result) => resultChannelId(result)));
+	if (currentChannelId != null) seen.add(currentChannelId);
+	const sections: Array<QuickSwitcherResult> = [];
+	const mentions = collectChannelResults([...ReadStates.mentionChannelIds].reverse(), i18n, seen);
+	if (mentions.length > 0) {
+		sections.push(createHeaderResult('section-mentions', i18n._(MENTIONS_DESCRIPTOR)), ...mentions);
+	}
+	const guildId = getCurrentGuildId();
+	if (guildId != null) {
+		const unreadIds = [...Channels.getGuildChannels(guildId)]
+			.filter(isUnreadInCurrentCommunity)
+			.sort(compareChannels)
+			.map((channel) => channel.id);
+		const unread = collectChannelResults(unreadIds, i18n, seen);
+		if (unread.length > 0) {
+			sections.push(createHeaderResult('section-unread', i18n._(UNREAD_CHANNELS_DESCRIPTOR)), ...unread);
 		}
 	}
-	const recentSlicedEntries = recentEntries.slice(0, MAX_RECENT_RESULTS);
-	const recentSliced = recentSlicedEntries.map(({result}) => result);
-	const recentChannelIds = new Set(recentSlicedEntries.map(({channelId}) => channelId));
-	const unreadResults = generateUnreadResults(i18n, recentChannelIds);
-	return [...recentSliced, ...unreadResults];
+	const previousCap = sections.length > 0 ? PREVIOUS_CHANNELS_WITH_SECTIONS : PREVIOUS_CHANNELS_ALONE;
+	const shownPrevious = previous.slice(0, previousCap);
+	if (shownPrevious.length === 0) return sections;
+	return [createHeaderResult('section-previous', i18n._(PREVIOUS_CHANNELS_DESCRIPTOR)), ...shownPrevious, ...sections];
 }
 
-function generateUnreadResults(
+function resultChannelId(result: QuickSwitcherExecutableResult): string {
+	if (result.type === QuickSwitcherResultTypes.USER) return result.dmChannelId ?? result.id;
+	return result.id;
+}
+
+function getModeHeader(
+	prefixMode: QuickSwitcherQueryMode,
+	variant: QuickSwitcherModeVariant,
 	i18n: I18n,
-	additionalExcludedChannelIds: ReadonlySet<string>,
-): Array<QuickSwitcherExecutableResult> {
-	const excludedIds = getExcludedChannelIds();
-	const unreadChannels = ReadStates.getChannelIds()
-		.filter((channelId) => {
-			if (excludedIds.has(channelId) || additionalExcludedChannelIds.has(channelId)) {
-				return false;
-			}
-			return ReadStates.isUnreadOrMentioned(channelId);
-		})
-		.map((channelId) => Channels.getChannel(channelId))
-		.filter((channel): channel is Channel => channel != null)
-		.sort((a, b) => getChannelRecency(b) - getChannelRecency(a))
-		.slice(0, MAX_UNREAD_RESULTS);
-	const results: Array<QuickSwitcherExecutableResult> = [];
-	for (const channel of unreadChannels) {
-		const result = createDefaultResultFromChannel(channel, i18n);
-		if (result) {
-			results.push(result);
+): QuickSwitcherResult {
+	switch (prefixMode) {
+		case QuickSwitcherResultTypes.USER: {
+			const guild = variant === 'all_users' ? null : getCurrentGuildId();
+			const title =
+				guild == null
+					? i18n._(SEARCHING_ALL_USERS_DESCRIPTOR)
+					: i18n._(SEARCHING_USERS_IN_COMMUNITY_DESCRIPTOR, {communityName: Guilds.getGuild(guild)?.name ?? ''});
+			return createHeaderResult(`query-${prefixMode}`, title);
 		}
+		case QuickSwitcherResultTypes.TEXT_CHANNEL:
+			return createHeaderResult(`query-${prefixMode}`, i18n._(SEARCHING_TEXT_CHANNELS_DESCRIPTOR));
+		case QuickSwitcherResultTypes.VOICE_CHANNEL:
+			return createHeaderResult(`query-${prefixMode}`, i18n._(SEARCHING_VOICE_CHANNELS_DESCRIPTOR));
+		default:
+			return createHeaderResult(`query-${prefixMode}`, i18n._(SEARCHING_COMMUNITIES_DESCRIPTOR));
 	}
-	return results;
+}
+
+function buildUserCandidate(userId: string, sets: CandidateSets): UserCandidate | null {
+	const existing = sets.users.find((candidate) => candidate.id === userId);
+	if (existing != null) return existing;
+	const user = Users.getUser(userId);
+	if (user == null) return null;
+	const title = NicknameUtils.getNickname(user, null);
+	const subtitle = NicknameUtils.formatUserTagForStreamerMode(user);
+	return {
+		type: QuickSwitcherResultTypes.USER,
+		id: user.id,
+		title,
+		subtitle,
+		user,
+		dmChannelId: null,
+		searchValues: [title, subtitle],
+		sortWeight: 0,
+	};
+}
+
+function resolveSearchCandidate(result: ForwardSearchResult, sets: CandidateSets): Candidate | null {
+	switch (result.type) {
+		case 'user':
+			return buildUserCandidate(result.id, sets);
+		case 'group_dm':
+			return sets.groupDMByChannelId.get(result.id) ?? sets.userByChannelId.get(result.id) ?? null;
+		default:
+			return sets.channelById.get(result.id) ?? null;
+	}
+}
+
+function toRanked(results: ReadonlyArray<ForwardSearchResult>, sets: CandidateSets): Array<RankedCandidate> {
+	const ranked: Array<RankedCandidate> = [];
+	for (const result of results) {
+		const candidate = resolveSearchCandidate(result, sets);
+		if (candidate != null) ranked.push({candidate, matchedText: result.matchedText, score: result.score});
+	}
+	return ranked;
+}
+
+function compareRanked(left: RankedCandidate, right: RankedCandidate): number {
+	return compareSearchResults(
+		{matchedText: left.matchedText, id: left.candidate.id, score: left.score, type: rankedType(left)},
+		{matchedText: right.matchedText, id: right.candidate.id, score: right.score, type: rankedType(right)},
+	);
+}
+
+function rankedType(ranked: RankedCandidate): ForwardSearchResult['type'] {
+	return ranked.candidate.type === QuickSwitcherResultTypes.USER ? 'user' : 'text_channel';
+}
+
+function rankedToResult(ranked: RankedCandidate, i18n: I18n): QuickSwitcherExecutableResult {
+	const result = candidateToResult(ranked.candidate, i18n);
+	if (result.type !== QuickSwitcherResultTypes.USER) return result;
+	const {user} = result;
+	const tag = NicknameUtils.formatUserTagForStreamerMode(user);
+	const matched = ranked.matchedText;
+	if (matched === '' || matched === user.username || matched === user.id || matched === tag) return result;
+	return {...result, title: NicknameUtils.formatNicknameForStreamerMode(matched)};
+}
+
+function currentUserBlacklist(): ReadonlySet<string> {
+	const currentUserId = Users.currentUserId;
+	return new Set(currentUserId == null ? [] : [currentUserId]);
+}
+
+function mergeMemberSearchUsers(
+	users: ReadonlyArray<ForwardUserCandidate>,
+	memberSearchResults: ReadonlyArray<GuildMember>,
+): ReadonlyArray<ForwardUserCandidate> {
+	if (memberSearchResults.length === 0) return users;
+	const known = new Set(users.map((user) => user.id));
+	const extra: Array<ForwardUserCandidate> = [];
+	for (const member of memberSearchResults) {
+		if (known.has(member.user.id)) continue;
+		known.add(member.user.id);
+		extra.push({
+			friendAlias: null,
+			globalName: member.user.globalName,
+			id: member.user.id,
+			nicknames: member.nick == null ? [] : [member.nick],
+			username: member.user.username,
+		});
+	}
+	return [...users, ...extra];
+}
+
+function filterUsersToCommunity(
+	users: ReadonlyArray<ForwardUserCandidate>,
+	guildId: string,
+): ReadonlyArray<ForwardUserCandidate> {
+	return users.filter((user) => {
+		if (Relationships.getRelationship(user.id)?.type === RelationshipTypes.FRIEND) return true;
+		return GuildMembers.getMember(guildId, user.id) != null;
+	});
+}
+
+function scoreNavigationCandidates(query: string, candidates: ReadonlyArray<Candidate>, limit: number) {
+	const term = createSearchTerm(query.toLocaleLowerCase());
+	const ranked: Array<RankedCandidate> = [];
+	for (const candidate of candidates) {
+		const score = scoreSearchTerm(candidate.title.toLocaleLowerCase(), term);
+		if (score > 0) ranked.push({candidate, matchedText: candidate.title, score: SCORE_SCALE * score});
+	}
+	return ranked.sort((left, right) => right.score - left.score).slice(0, limit);
+}
+
+function searchGuildCandidates(
+	query: string,
+	context: SearchContext,
+	limit: number,
+	excludedIds: ReadonlySet<string>,
+): Array<RankedCandidate> {
+	const guildById = new Map(context.sets.guilds.map((candidate) => [candidate.id, candidate]));
+	const ranked: Array<RankedCandidate> = [];
+	for (const result of searchGuilds(
+		query,
+		context.sources.guilds,
+		context.sources.weights.guilds,
+		excludedIds,
+		limit,
+		true,
+	)) {
+		const candidate = guildById.get(result.id);
+		if (candidate != null) ranked.push({candidate, matchedText: result.matchedText, score: result.score});
+	}
+	return ranked;
+}
+
+function currentGuildBlacklist(): ReadonlySet<string> {
+	const guildId = getCurrentGuildId();
+	return new Set(guildId == null ? [] : [guildId]);
+}
+
+export function generateGeneralResults(search: string, context: SearchContext, i18n: I18n): Array<QuickSwitcherResult> {
+	const {confusables, sets, sources} = context;
+	const runCategories = (limit: number): Array<Array<RankedCandidate>> => [
+		toRanked(
+			searchUsers(search, sources.users, sources.weights.users, currentUserBlacklist(), confusables, limit),
+			sets,
+		),
+		toRanked(searchGroupDMs(search, sources.groupDMs, sources.weights.groupDMs, confusables, limit), sets),
+		toRanked(searchChannels(search, sources.channels, 'text', sources.weights.textChannel, limit, true), sets),
+		searchGuildCandidates(search, context, limit, currentGuildBlacklist()),
+		scoreNavigationCandidates(search, sets.virtualGuilds, limit),
+		scoreNavigationCandidates(search, sets.settings, limit),
+	];
+	let categories = runCategories(CATEGORY_LIMIT);
+	if (categories.filter((category) => category.length > 0).length === 1) {
+		const index = categories.findIndex((category) => category.length > 0);
+		categories = categories.map((category, categoryIndex) =>
+			categoryIndex === index ? runCategories(MODE_LIMIT)[index] : category,
+		);
+	}
+	const seen = new Set<string>();
+	return categories
+		.flat()
+		.filter((ranked) => {
+			const key = `${ranked.candidate.type}|${ranked.candidate.id}`;
+			if (seen.has(key)) return false;
+			seen.add(key);
+			return true;
+		})
+		.sort(compareRanked)
+		.map((ranked) => rankedToResult(ranked, i18n));
+}
+
+function listRecentAuthors(sets: CandidateSets): Array<Candidate> {
+	const channelId = getCurrentChannelId();
+	if (channelId == null) return [];
+	const channel = Channels.getChannel(channelId);
+	const currentUserId = Users.currentUserId;
+	const authors: Array<Candidate> = [];
+	const seen = new Set<string>();
+	Messages.getCachedMessages(channelId)?.searchFromNewest((message) => {
+		const author = message.author;
+		if (author.id === currentUserId || author.bot || seen.has(author.id)) return false;
+		if (channel?.guildId != null && GuildMembers.getMember(channel.guildId, author.id) == null) return false;
+		seen.add(author.id);
+		const candidate = buildUserCandidate(author.id, sets);
+		if (candidate != null) authors.push(candidate);
+		return authors.length >= RECENT_AUTHOR_LIMIT;
+	});
+	return authors;
+}
+
+function listChannels(kind: 'text' | 'voice', context: SearchContext): Array<Candidate> {
+	const guildId = getCurrentGuildId();
+	const guildOrder = new Map(Guilds.getGuilds().map((guild, index) => [guild.id, index]));
+	const pool: Array<ForwardChannelCandidate> = context.sources.channels.filter((channel) => {
+		if (!channel.canAccess) return false;
+		if (kind === 'voice' && channel.kind !== 'voice') return false;
+		if (kind === 'text' && channel.kind === 'voice' && guildId != null) return false;
+		if (guildId == null) return true;
+		return Channels.getChannel(channel.id)?.guildId === guildId;
+	});
+	const scoreOf = (channel: ForwardChannelCandidate): number => {
+		const base = kind === 'text' && channel.kind === 'voice' ? LISTING_VOICE_IN_TEXT_SCORE : LISTING_TEXT_SCORE;
+		return channel.hasFrecency ? Math.min(base + LISTING_FRECENCY_BONUS, base >= 7 ? 10 : 7) : base;
+	};
+	const channelOf = (id: string): Channel | undefined => Channels.getChannel(id);
+	return pool
+		.map((channel) => ({channel, model: channelOf(channel.id), score: scoreOf(channel)}))
+		.filter((entry): entry is {channel: ForwardChannelCandidate; model: Channel; score: number} => entry.model != null)
+		.sort((left, right) => {
+			if (left.score !== right.score) return right.score - left.score;
+			const leftGuild = guildOrder.get(left.model.guildId ?? '') ?? 0;
+			const rightGuild = guildOrder.get(right.model.guildId ?? '') ?? 0;
+			if (leftGuild !== rightGuild) return leftGuild - rightGuild;
+			return compareChannels(left.model, right.model);
+		})
+		.slice(0, MODE_LIMIT)
+		.map((entry) => context.sets.channelById.get(entry.channel.id))
+		.filter((candidate): candidate is NonNullable<typeof candidate> => candidate != null);
+}
+
+function searchModeUsers(
+	search: string,
+	variant: QuickSwitcherModeVariant,
+	context: SearchContext,
+	memberSearchResults: ReadonlyArray<GuildMember>,
+): Array<RankedCandidate> {
+	const guildId = variant === 'all_users' ? null : getCurrentGuildId();
+	let users = mergeMemberSearchUsers(context.sources.users, memberSearchResults);
+	if (guildId != null) users = filterUsersToCommunity(users, guildId);
+	return toRanked(
+		searchUsers(search, users, context.sources.weights.users, currentUserBlacklist(), context.confusables, MODE_LIMIT),
+		context.sets,
+	);
 }
 
 export function generateQueryModeResults(
-	queryMode: QuickSwitcherQueryMode,
+	prefixMode: QuickSwitcherQueryMode,
+	variant: QuickSwitcherModeVariant,
 	search: string,
-	sets: CandidateSets,
+	context: SearchContext,
 	i18n: I18n,
-	memberSearchResults: Array<GuildMember>,
+	memberSearchResults: ReadonlyArray<GuildMember>,
 ): Array<QuickSwitcherResult> {
-	let candidates: Array<Candidate>;
-	switch (queryMode) {
+	const header = getModeHeader(prefixMode, variant, i18n);
+	const {sets, sources} = context;
+	if (search.length === 0) {
+		let listed: Array<Candidate>;
+		switch (prefixMode) {
+			case QuickSwitcherResultTypes.USER:
+				listed = listRecentAuthors(sets);
+				break;
+			case QuickSwitcherResultTypes.TEXT_CHANNEL:
+				listed = listChannels('text', context);
+				break;
+			case QuickSwitcherResultTypes.VOICE_CHANNEL:
+				listed = listChannels('voice', context);
+				break;
+			default:
+				listed = [...sets.guilds, ...sets.virtualGuilds];
+				break;
+		}
+		return [header, ...listed.map((candidate) => candidateToResult(candidate, i18n))];
+	}
+	let ranked: Array<RankedCandidate>;
+	switch (prefixMode) {
 		case QuickSwitcherResultTypes.USER:
-			candidates = buildUserCandidatesWithMemberSearch(sets.users, memberSearchResults);
+			ranked = searchModeUsers(search, variant, context, memberSearchResults);
 			break;
 		case QuickSwitcherResultTypes.TEXT_CHANNEL:
-			candidates = sets.textChannels;
+			ranked = toRanked(
+				searchChannels(search, sources.channels, 'text', sources.weights.textChannel, MODE_LIMIT, true),
+				sets,
+			);
 			break;
 		case QuickSwitcherResultTypes.VOICE_CHANNEL:
-			candidates = sets.voiceChannels;
-			break;
-		case QuickSwitcherResultTypes.GUILD:
-			candidates = [...sets.guilds, ...sets.virtualGuilds];
-			break;
-		case QuickSwitcherResultTypes.VIRTUAL_GUILD:
-			candidates = sets.virtualGuilds;
-			break;
-		case QuickSwitcherResultTypes.SETTINGS:
-			candidates = sets.settings;
+			ranked = toRanked(
+				searchChannels(search, sources.channels, 'voice', sources.weights.voiceChannel, MODE_LIMIT, true),
+				sets,
+			);
 			break;
 		default:
-			candidates = [];
+			ranked = [
+				...searchGuildCandidates(search, context, MODE_LIMIT, currentGuildBlacklist()),
+				...scoreNavigationCandidates(search, sets.virtualGuilds, MODE_LIMIT),
+			].sort(compareRanked);
+			break;
 	}
-	if (
-		search.length === 0 &&
-		(queryMode === QuickSwitcherResultTypes.TEXT_CHANNEL || queryMode === QuickSwitcherResultTypes.VOICE_CHANNEL)
-	) {
-		const excludedIds = getExcludedChannelIds();
-		candidates = candidates.filter((c) => !excludedIds.has(c.id));
-	}
-	const matches = matchCandidates(candidates, search, MAX_QUERY_MODE_RESULTS);
-	if (matches.length === 0) {
-		return [];
-	}
-	return [
-		createHeaderResult(`query-${queryMode}`, getHeaderTitle(queryMode, i18n)),
-		...matches.map((c) => candidateToResult(c, i18n)),
-	];
-}
-
-export function generateGeneralResults(search: string, sets: CandidateSets, i18n: I18n): Array<QuickSwitcherResult> {
-	const sections: Array<{
-		type: HeaderTitleType;
-		headerId: string;
-		candidates: Array<Candidate>;
-	}> = [
-		{type: QuickSwitcherResultTypes.USER, headerId: 'people', candidates: sets.users},
-		{type: QuickSwitcherResultTypes.GROUP_DM, headerId: 'group-dm', candidates: sets.groupDMs},
-		{type: QuickSwitcherResultTypes.TEXT_CHANNEL, headerId: 'text-channels', candidates: sets.textChannels},
-		{type: QuickSwitcherResultTypes.VOICE_CHANNEL, headerId: 'voice-channels', candidates: sets.voiceChannels},
-		{type: QuickSwitcherResultTypes.GUILD, headerId: 'guilds', candidates: [...sets.guilds, ...sets.virtualGuilds]},
-		{type: QuickSwitcherResultTypes.SETTINGS, headerId: 'settings', candidates: sets.settings},
-	];
-	const results: Array<QuickSwitcherResult> = [];
-	for (const section of sections) {
-		const matches = matchCandidates(section.candidates, search, MAX_GENERAL_RESULTS);
-		if (matches.length === 0) continue;
-		results.push(createHeaderResult(`section-${section.headerId}`, getHeaderTitle(section.type, i18n)));
-		results.push(...matches.map((candidate) => candidateToResult(candidate, i18n)));
-	}
-	return results;
-}
-
-function buildUserCandidatesWithMemberSearch(
-	baseCandidates: Array<UserCandidate>,
-	memberSearchResults: Array<GuildMember>,
-): Array<UserCandidate> {
-	if (memberSearchResults.length === 0) {
-		return baseCandidates;
-	}
-	const candidateMap = new Map<string, UserCandidate>();
-	for (const candidate of baseCandidates) {
-		candidateMap.set(candidate.user.id, candidate);
-	}
-	const currentUserId = Users.getCurrentUser()?.id ?? null;
-	for (const member of memberSearchResults) {
-		const userId = member.user.id;
-		if (currentUserId && userId === currentUserId) {
-			continue;
-		}
-		if (candidateMap.has(userId)) {
-			continue;
-		}
-		candidateMap.set(userId, createUserCandidateFromMember(member));
-	}
-	return Array.from(candidateMap.values());
-}
-
-function createUserCandidateFromMember(member: GuildMember): UserCandidate {
-	const title = member.nick
-		? NicknameUtils.formatNicknameForStreamerMode(member.nick)
-		: NicknameUtils.getNickname(member.user, member.guildId);
-	const subtitle = NicknameUtils.formatUserTagForStreamerMode(member.user);
-	const searchValues = [title, subtitle, member.user.username, member.user.id, member.nick].filter(
-		Boolean,
-	) as Array<string>;
-	return {
-		type: QuickSwitcherResultTypes.USER,
-		id: member.user.id,
-		title,
-		subtitle,
-		user: member.user,
-		dmChannelId: null,
-		searchValues,
-		sortWeight: member.joinedAt ? member.joinedAt.getTime() : 0,
-	};
+	return [header, ...ranked.map((entry) => rankedToResult(entry, i18n))];
 }
 
 export function resolveTransformedMember(member: {id: string; guildIds?: Array<string>}): GuildMember | null {
@@ -270,3 +513,5 @@ export function resolveTransformedMember(member: {id: string; guildIds?: Array<s
 	}
 	return null;
 }
+
+export type {SearchContext as QuickSwitcherSearchContext};

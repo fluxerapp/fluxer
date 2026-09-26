@@ -1,11 +1,16 @@
 {
 	servers {
-		trusted_proxies static private_ranges
+		trusted_proxies static {$FLUXER_EDGE_TRUSTED_PROXIES:private_ranges}
+		trusted_proxies_strict
 	}
 }
 
-{$FLUXER_CADDY_SITE_ADDRESS} {
+{$FLUXER_EDGE_SITE_ADDRESS} {
 	encode zstd gzip
+
+	handle /_health {
+		respond "OK" 200
+	}
 
 	handle_path /api/* {
 		reverse_proxy api:8080
@@ -52,7 +57,7 @@
 }
 
 :8088 {
-	handle_path /api/* {
+	handle /.well-known/fluxer {
 		reverse_proxy api:8080
 	}
 }

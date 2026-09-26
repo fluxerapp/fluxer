@@ -16,9 +16,10 @@ import type {
 	NativeScreenCaptureStartResult,
 	WindowsHagsState,
 } from '@electron/common/Types';
+import {getTccStatus} from '@electron/main/MacTcc';
+import {isValidStartOptions, normalizeScreenCaptureDimension} from '@electron/main/NativeScreenCaptureValidation';
+import {requirePrivilegedRendererDocumentSender} from '@electron/main/PrivilegedRendererDocuments';
 import {ipcMain} from 'electron';
-import {getTccStatus} from './MacTcc';
-import {isValidStartOptions, normalizeScreenCaptureDimension} from './NativeScreenCaptureValidation';
 
 const logger = createChildLogger('NativeScreenCapture');
 const requireModule = createRequire(import.meta.url);
@@ -944,14 +945,16 @@ export function registerNativeScreenCaptureHandlers(): void {
 		'native-screen-capture:get-availability',
 		(): Promise<NativeScreenCaptureAvailability> => getNativeScreenCaptureAvailability(),
 	);
-	ipcMain.handle(
-		'native-screen-capture:list-sources',
-		(): Promise<Array<NativeScreenCaptureSource>> => listNativeScreenCaptureSources(),
-	);
+	ipcMain.handle('native-screen-capture:list-sources', (event): Promise<Array<NativeScreenCaptureSource>> => {
+		requirePrivilegedRendererDocumentSender(event, 'native-screen-capture:list-sources');
+		return listNativeScreenCaptureSources();
+	});
 	ipcMain.handle(
 		'native-screen-capture:start',
-		(event, options: NativeScreenCaptureStartOptions): Promise<NativeScreenCaptureStartResult> =>
-			startNativeScreenCapture(event.sender, options),
+		(event, options: NativeScreenCaptureStartOptions): Promise<NativeScreenCaptureStartResult> => {
+			requirePrivilegedRendererDocumentSender(event, 'native-screen-capture:start');
+			return startNativeScreenCapture(event.sender, options);
+		},
 	);
 	ipcMain.handle(
 		'native-screen-capture:get-diagnostics',

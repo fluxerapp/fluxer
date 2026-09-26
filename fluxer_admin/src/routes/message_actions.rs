@@ -48,7 +48,7 @@ pub(crate) async fn messages_post(
             return flash::redirect_with_flash(
                 &format!("{base}/messages"),
                 FlashData::error("Invalid form data"),
-                config.is_production(),
+                config.secure_cookies(),
             );
         }
     };
@@ -59,53 +59,51 @@ pub(crate) async fn messages_post(
     match action {
         "lookup" => {
             let context_limit = parse_context_limit(form.first("context_limit"));
-            return Redirect::to(&format!(
+            Redirect::to(&format!(
                 "{base}/messages?channel_id={}&message_id={}&context_limit={context_limit}",
                 encode_opt(&channel_id),
                 encode_opt(&message_id)
             ))
-            .into_response();
+            .into_response()
         }
         "lookup-by-attachment" => {
             let attachment_id = form.clean("attachment_id");
             let filename = form.clean("filename");
             let context_limit = parse_context_limit(form.first("context_limit"));
-            return Redirect::to(&format!(
+            Redirect::to(&format!(
                 "{base}/messages?channel_id={}&attachment_id={}&filename={}&context_limit={context_limit}",
                 encode_opt(&channel_id),
                 encode_opt(&attachment_id),
                 encode_opt(&filename)
             ))
-            .into_response();
+            .into_response()
         }
-        "browse" => {
-            return Redirect::to(&format!(
-                "{base}/messages?channel_id={}",
-                encode_opt(&channel_id)
-            ))
-            .into_response();
-        }
+        "browse" => Redirect::to(&format!(
+            "{base}/messages?channel_id={}",
+            encode_opt(&channel_id)
+        ))
+        .into_response(),
         "search" => {
             let search = form.clean("search");
-            return Redirect::to(&format!(
+            Redirect::to(&format!(
                 "{base}/messages?channel_id={}&search={}",
                 encode_opt(&channel_id),
                 encode_opt(&search)
             ))
-            .into_response();
+            .into_response()
         }
         "delete" => {
             let (Some(cid), Some(mid)) = (&channel_id, &message_id) else {
                 return json_error(StatusCode::BAD_REQUEST, "Missing channel_id or message_id");
             };
             let audit_log_reason = form.clean("audit_log_reason");
-            return match client
+            match client
                 .delete_message(cid, mid, audit_log_reason.as_deref())
                 .await
             {
                 Ok(()) => Json(serde_json::json!({"success": true})).into_response(),
                 Err(e) => json_error(StatusCode::BAD_REQUEST, &format!("{e}")),
-            };
+            }
         }
         "report-to-ncmec" => {
             let attachment_id = form.clean("attachment_id");
@@ -131,7 +129,7 @@ pub(crate) async fn messages_post(
                     "Missing required NCMEC report fields",
                 );
             }
-            return match client
+            match client
                 .report_attachment_to_ncmec(
                     cid,
                     mid,
@@ -144,11 +142,10 @@ pub(crate) async fn messages_post(
             {
                 Ok(resp) => Json(resp.data).into_response(),
                 Err(e) => json_error(StatusCode::BAD_REQUEST, &format!("{e}")),
-            };
+            }
         }
-        _ => {}
+        _ => Redirect::to(&format!("{base}/messages")).into_response(),
     }
-    Redirect::to(&format!("{base}/messages")).into_response()
 }
 
 pub(crate) async fn system_dms_post(
@@ -164,7 +161,7 @@ pub(crate) async fn system_dms_post(
             return flash::redirect_with_flash(
                 &format!("{base}/system-dms"),
                 FlashData::error("Invalid form data"),
-                config.is_production(),
+                config.secure_cookies(),
             );
         }
     };
@@ -184,7 +181,11 @@ pub(crate) async fn system_dms_post(
     } else {
         FlashData::error("Recipients and content are required")
     };
-    flash::redirect_with_flash(&format!("{base}/system-dms"), flash, config.is_production())
+    flash::redirect_with_flash(
+        &format!("{base}/system-dms"),
+        flash,
+        config.secure_cookies(),
+    )
 }
 
 pub(crate) async fn bulk_actions_post(
@@ -201,7 +202,7 @@ pub(crate) async fn bulk_actions_post(
             return flash::redirect_with_flash(
                 &format!("{base}/bulk-actions"),
                 FlashData::error("Invalid form data"),
-                config.is_production(),
+                config.secure_cookies(),
             );
         }
     };
@@ -247,32 +248,40 @@ pub(crate) async fn bulk_actions_post(
                 .bulk_add_guild_members(&guild_id, &user_ids, audit_log_reason.as_deref())
                 .await
         }
-        "bulk-schedule-user-deletion" => {
+        "bulk-schedule-user-deletion" | "bulk_delete_users" => {
             let user_ids = form.list_values_any(&["user_ids[]", "user_ids"]);
-            let reason_code = form.parse_u32("reason_code").unwrap_or(2);
-            let days = form.parse_u32("days_until_deletion").unwrap_or(14);
+            let (Ok(reason_code), Ok(days)) = (
+                form.parse_value::<u32>("reason_code"),
+                form.parse_value::<u32>("days_until_deletion"),
+            ) else {
+                return flash::redirect_with_flash(
+                    &format!("{base}/bulk-actions"),
+                    FlashData::error("Invalid deletion reason code or delay"),
+                    config.secure_cookies(),
+                );
+            };
             let public_reason = form.clean("public_reason");
             client
                 .bulk_schedule_user_deletion(
                     &user_ids,
-                    reason_code,
-                    days,
+                    reason_code.unwrap_or(2),
+                    days.unwrap_or(14),
                     public_reason.as_deref(),
                     audit_log_reason.as_deref(),
                 )
                 .await
         }
-        "bulk_delete_users" => {
+        "bulk-delete-user-messages" => {
             let user_ids = form.list_values_any(&["user_ids[]", "user_ids"]);
             client
-                .bulk_schedule_user_deletion(&user_ids, 0, 30, None, audit_log_reason.as_deref())
+                .bulk_delete_user_messages(&user_ids, audit_log_reason.as_deref())
                 .await
         }
         _ => {
             return flash::redirect_with_flash(
                 &format!("{base}/bulk-actions"),
                 FlashData::error("Unknown bulk action"),
-                config.is_production(),
+                config.secure_cookies(),
             );
         }
     };
@@ -284,7 +293,7 @@ pub(crate) async fn bulk_actions_post(
                 flash::redirect_with_flash(
                     &format!("{base}/bulk-actions"),
                     FlashData::success("Bulk action submitted"),
-                    config.is_production(),
+                    config.secure_cookies(),
                 )
             }
         }
@@ -292,8 +301,8 @@ pub(crate) async fn bulk_actions_post(
             tracing::warn!(%error, action, "admin API request failed: submit bulk action");
             flash::redirect_with_flash(
                 &format!("{base}/bulk-actions"),
-                FlashData::error("Failed to submit bulk action"),
-                config.is_production(),
+                FlashData::error(format!("Failed to submit bulk action: {error}")),
+                config.secure_cookies(),
             )
         }
     }
@@ -353,7 +362,7 @@ pub(crate) async fn messages_browse_fragment(
     }
 }
 
-fn parse_context_limit(value: Option<&str>) -> u32 {
+pub(super) fn parse_context_limit(value: Option<&str>) -> u32 {
     value
         .and_then(|s| s.parse::<u32>().ok())
         .filter(|n| *n > 0)
@@ -399,14 +408,14 @@ pub(crate) async fn archives_download(
         Ok(_) => flash::redirect_with_flash(
             &format!("{base}/archives"),
             FlashData::error("Archive download URL was empty"),
-            config.is_production(),
+            config.secure_cookies(),
         ),
         Err(error) => {
             tracing::warn!(%error, "admin API request failed: get archive download URL");
             flash::redirect_with_flash(
                 &format!("{base}/archives"),
                 FlashData::error("Failed to create archive download URL"),
-                config.is_production(),
+                config.secure_cookies(),
             )
         }
     }

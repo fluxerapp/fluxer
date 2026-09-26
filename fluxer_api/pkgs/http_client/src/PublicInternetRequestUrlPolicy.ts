@@ -1,11 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import assert from 'node:assert/strict';
 import dns from 'node:dns';
+import type {LookupFunction} from 'node:net';
 import {BlockList, isIP} from 'node:net';
-import type {RequestUrlPolicy, RequestUrlValidationContext} from '@pkgs/http_client/src/HttpClientTypes';
+import {formatUrlForDiagnostics} from '@pkgs/http_client/src/HttpClientDiagnostics';
+import type {
+	FetchDispatcher,
+	RequestUrlPolicy,
+	RequestUrlValidationContext,
+} from '@pkgs/http_client/src/HttpClientTypes';
 import {HttpError} from '@pkgs/http_client/src/HttpError';
+import {Agent, Dispatcher1Wrapper} from 'undici';
 
 const DEFAULT_DNS_CACHE_TTL_MS = 60000;
+const DNS_CACHE_MAX_ENTRIES = 10000;
 const ALLOWED_PROTOCOLS = new Set(['http:', 'https:']);
 const HOSTNAME_LABEL_REGEX = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
 
@@ -185,57 +194,108 @@ function isBlockedIpAddress(address: string): boolean {
 	return true;
 }
 
+export function isPubliclyRoutableUrlShape(url: URL): boolean {
+	if (!ALLOWED_PROTOCOLS.has(url.protocol)) {
+		return false;
+	}
+	const normalizedHostname = normalizeHostname(url.hostname);
+	if (!normalizedHostname) {
+		return false;
+	}
+	if (isIP(normalizedHostname)) {
+		return !isBlockedIpAddress(normalizedHostname);
+	}
+	return isFqdnHostname(normalizedHostname);
+}
+
 function getPolicyErrorContext(context: RequestUrlValidationContext): string {
 	if (context.phase === 'redirect') {
-		const previous = context.previousUrl ?? 'unknown';
+		const previous = context.previousUrl === undefined ? 'unknown' : formatUrlForDiagnostics(context.previousUrl);
 		return `redirect #${context.redirectCount} from ${previous}`;
 	}
 	return 'initial request';
 }
 
 function createBlockedRequestError(url: URL, context: RequestUrlValidationContext, reason: string): HttpError {
-	const message = `Blocked outbound ${getPolicyErrorContext(context)} to ${url.href}: ${reason}`;
+	const message = `Blocked outbound ${getPolicyErrorContext(context)} to ${formatUrlForDiagnostics(url)}: ${reason}`;
 	return new HttpError(message, undefined, undefined, true, 'network_error');
 }
 
 async function defaultLookupHost(hostname: string): Promise<Array<string>> {
-	const addresses = await dns.promises.lookup(hostname, {all: true, verbatim: true});
+	const addresses = await dns.promises.lookup(hostname, {all: true, order: 'verbatim'});
 	return addresses.map((addressEntry) => addressEntry.address);
 }
 
-function deduplicateAddresses(addresses: Array<string>): Array<string> {
-	const seen = new Set<string>();
-	const deduplicated: Array<string> = [];
-	for (const address of addresses) {
-		if (seen.has(address)) {
-			continue;
-		}
-		seen.add(address);
-		deduplicated.push(address);
-	}
-	return deduplicated;
+function createBlocklistDispatcher(allowPrivateAddresses: boolean): FetchDispatcher {
+	const lookup: LookupFunction = (hostname, options, callback) => {
+		dns.lookup(hostname, {...options, all: true, order: options.order ?? 'verbatim'}, (error, addresses) => {
+			if (error) {
+				callback(error, []);
+				return;
+			}
+			if (!allowPrivateAddresses && addresses.some((entry) => isBlockedIpAddress(entry.address))) {
+				callback(new Error(`Hostname ${hostname} resolved to a disallowed address`), []);
+				return;
+			}
+			if (options.all) {
+				callback(null, addresses);
+				return;
+			}
+			const [primary] = addresses;
+			if (!primary) {
+				callback(new Error(`Hostname ${hostname} resolved to no IP addresses`), []);
+				return;
+			}
+			callback(null, primary.address, primary.family);
+		});
+	};
+	return new Dispatcher1Wrapper(
+		new Agent({
+			allowH2: false,
+			connect: {
+				lookup,
+			},
+		}),
+	) as unknown as FetchDispatcher;
+}
+
+interface PublicInternetRequestUrlPolicy extends RequestUrlPolicy {
+	readonly dispatcher: FetchDispatcher;
 }
 
 export function createPublicInternetRequestUrlPolicy(
 	options?: PublicInternetRequestUrlPolicyOptions,
-): RequestUrlPolicy {
-	const dnsCacheTtlMs =
-		typeof options?.dnsCacheTtlMs === 'number' && options.dnsCacheTtlMs > 0
-			? options.dnsCacheTtlMs
-			: DEFAULT_DNS_CACHE_TTL_MS;
+): PublicInternetRequestUrlPolicy {
+	const dnsCacheTtlMs = options?.dnsCacheTtlMs ?? DEFAULT_DNS_CACHE_TTL_MS;
+	if (!Number.isFinite(dnsCacheTtlMs) || dnsCacheTtlMs <= 0) {
+		throw new RangeError('DNS cache TTL must be a positive finite number');
+	}
 	const lookupHost = options?.lookupHost ?? defaultLookupHost;
 	const allowPrivateAddresses = options?.allowPrivateAddresses === true;
 	const dnsCache = new Map<string, CachedLookupResult>();
 	async function resolveHostname(hostname: string): Promise<Array<string>> {
-		const now = Date.now();
+		const now = performance.now();
 		const cached = dnsCache.get(hostname);
+		dnsCache.delete(hostname);
 		if (cached && cached.expiresAt > now) {
+			dnsCache.set(hostname, cached);
 			return cached.addresses;
 		}
-		const resolvedAddresses = deduplicateAddresses(await lookupHost(hostname));
+		const expiresAt = now + dnsCacheTtlMs;
+		const resolvedAddresses = [...new Set(await lookupHost(hostname))];
+		const current = dnsCache.get(hostname);
+		if (expiresAt <= performance.now() || (current && current.expiresAt > expiresAt)) {
+			return resolvedAddresses;
+		}
+		dnsCache.delete(hostname);
+		if (dnsCache.size >= DNS_CACHE_MAX_ENTRIES) {
+			const oldest = dnsCache.keys().next();
+			assert(!oldest.done, 'A full DNS cache must contain an eviction candidate');
+			dnsCache.delete(oldest.value);
+		}
 		dnsCache.set(hostname, {
 			addresses: resolvedAddresses,
-			expiresAt: now + dnsCacheTtlMs,
+			expiresAt,
 		});
 		return resolvedAddresses;
 	}
@@ -269,5 +329,6 @@ export function createPublicInternetRequestUrlPolicy(
 			}
 		}
 	}
-	return {validate};
+	const dispatcher = createBlocklistDispatcher(allowPrivateAddresses);
+	return {validate, dispatcher};
 }

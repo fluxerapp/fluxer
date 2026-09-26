@@ -97,15 +97,27 @@ broadcast_disconnect_if_needed(OldChannelId, DisconnectVS, State) ->
 -spec disconnect_voice_user(integer(), dm_state()) -> {reply, map(), dm_state()}.
 disconnect_voice_user(UserId, State) ->
     VoiceStates = maps:get(dm_voice_states, State, #{}),
+    SessionId = normalize_session_id(maps:get(id, State, undefined)),
     UserVoiceStates = maps:filter(
         fun(_ConnId, VS) ->
-            snowflake_id:equal(UserId, maps:get(<<"user_id">>, VS, undefined))
+            snowflake_id:equal(UserId, maps:get(<<"user_id">>, VS, undefined)) andalso
+                voice_state_session_matches(VS, SessionId)
         end,
         VoiceStates
     ),
     case maps:size(UserVoiceStates) of
         0 -> {reply, #{success => true}, State};
         _ -> do_disconnect_voice_user(UserVoiceStates, VoiceStates, State)
+    end.
+
+-spec voice_state_session_matches(voice_state(), binary() | undefined) -> boolean().
+voice_state_session_matches(_VoiceState, undefined) ->
+    true;
+voice_state_session_matches(VoiceState, SessionId) ->
+    case normalize_session_id(maps:get(<<"session_id">>, VoiceState, undefined)) of
+        undefined -> true;
+        SessionId -> true;
+        _ -> false
     end.
 
 -spec do_disconnect_voice_user(voice_state_map(), voice_state_map(), dm_state()) ->
@@ -306,6 +318,60 @@ resolve_effective_session_id_test() ->
     ?assertEqual(<<"req">>, resolve_effective_session_id(undefined, <<"req">>)),
     ?assertEqual(<<"existing">>, resolve_effective_session_id(<<"existing">>, <<"req">>)),
     ?assertEqual(<<"same">>, resolve_effective_session_id(<<"same">>, <<"same">>)).
+
+session_voice_state(UserId, ChannelId, ConnId, SessionId) ->
+    #{
+        <<"user_id">> => integer_to_binary(UserId),
+        <<"channel_id">> => integer_to_binary(ChannelId),
+        <<"connection_id">> => ConnId,
+        <<"session_id">> => SessionId
+    }.
+
+disconnect_voice_user_keeps_other_session_connections_test() ->
+    State = #{
+        id => <<"session-1">>,
+        user_id => 5,
+        channels => #{},
+        dm_voice_states => #{
+            <<"conn-own">> => session_voice_state(5, 100, <<"conn-own">>, <<"session-1">>),
+            <<"conn-other">> => session_voice_state(5, 100, <<"conn-other">>, <<"session-2">>),
+            <<"conn-peer">> => session_voice_state(6, 100, <<"conn-peer">>, <<"session-3">>)
+        }
+    },
+    {reply, #{success := true}, NewState} = disconnect_voice_user(5, State),
+    VoiceStates = maps:get(dm_voice_states, NewState),
+    ?assertNot(maps:is_key(<<"conn-own">>, VoiceStates)),
+    ?assert(maps:is_key(<<"conn-other">>, VoiceStates)),
+    ?assert(maps:is_key(<<"conn-peer">>, VoiceStates)).
+
+disconnect_voice_user_without_session_id_test() ->
+    State = #{
+        user_id => 5,
+        channels => #{},
+        dm_voice_states => #{
+            <<"conn-a">> => session_voice_state(5, 100, <<"conn-a">>, <<"session-1">>),
+            <<"conn-b">> => session_voice_state(5, 100, <<"conn-b">>, <<"session-2">>)
+        }
+    },
+    {reply, #{success := true}, NewState} = disconnect_voice_user(5, State),
+    ?assertEqual(#{}, maps:get(dm_voice_states, NewState)).
+
+disconnect_voice_user_keeps_unattributed_connections_test() ->
+    State = #{
+        id => <<"session-1">>,
+        user_id => 5,
+        channels => #{},
+        dm_voice_states => #{
+            <<"conn-legacy">> => #{
+                <<"user_id">> => <<"5">>,
+                <<"channel_id">> => <<"100">>,
+                <<"connection_id">> => <<"conn-legacy">>
+            },
+            <<"conn-own">> => session_voice_state(5, 100, <<"conn-own">>, <<"session-1">>)
+        }
+    },
+    {reply, #{success := true}, NewState} = disconnect_voice_user(5, State),
+    ?assertEqual(#{}, maps:get(dm_voice_states, NewState)).
 
 call_region_from_dead_pid_returns_null_test() ->
     DeadPid = spawn(fun() -> ok end),

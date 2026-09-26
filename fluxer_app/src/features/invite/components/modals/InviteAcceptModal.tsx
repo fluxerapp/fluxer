@@ -5,18 +5,11 @@ import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
 import {AuthErrorState} from '@app/features/auth/flow/AuthErrorState';
 import {AuthLoadingState} from '@app/features/auth/flow/AuthLoadingState';
 import {InviteHeader} from '@app/features/auth/flow/InviteHeader';
-import {
-	JOIN_COMMUNITY_DESCRIPTOR,
-	NO_DESCRIPTION_PROVIDED_DESCRIPTOR,
-} from '@app/features/i18n/utils/CommonMessageDescriptors';
+import {JOIN_COMMUNITY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import * as InviteCommands from '@app/features/invite/commands/InviteCommands';
 import styles from '@app/features/invite/components/modals/InviteAcceptModal.module.css';
 import Invites from '@app/features/invite/state/Invites';
-import {
-	isGroupDmInvite,
-	isGuildInvite,
-	isPackInvite as isPackInviteGuard,
-} from '@app/features/invite/types/InviteTypes';
+import {isGroupDmInvite, isGuildInvite} from '@app/features/invite/types/InviteTypes';
 import {getGroupDmInviteCounts} from '@app/features/invite/utils/GroupDmInviteCounts';
 import {
 	GuildInvitePrimaryAction,
@@ -35,7 +28,6 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
-import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import foodPatternUrl from '@app/media/images/i-like-food.svg';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -53,34 +45,6 @@ const INVITES_PAUSED_DESCRIPTOR = msg({
 const GO_TO_COMMUNITY_DESCRIPTOR = msg({
 	message: 'Go to community',
 	comment: 'Short label in the invite accept modal. Keep it concise.',
-});
-const EMOJI_PACK_DESCRIPTOR = msg({
-	message: 'Emoji pack',
-	comment: 'Short label in the invite accept modal. Keep it concise.',
-});
-const STICKER_PACK_DESCRIPTOR = msg({
-	message: 'Sticker pack',
-	comment: 'Short label in the invite accept modal. Keep it concise.',
-});
-const INSTALL_EMOJI_PACK_DESCRIPTOR = msg({
-	message: 'Install emoji pack',
-	comment: 'Short label in the invite accept modal. Keep it concise.',
-});
-const INSTALL_STICKER_PACK_DESCRIPTOR = msg({
-	message: 'Install sticker pack',
-	comment: 'Short label in the invite accept modal. Keep it concise.',
-});
-const CREATED_BY_DESCRIPTOR = msg({
-	message: 'Created by {userName}',
-	comment: 'Metadata label for an expression pack invite. userName is the pack creator username.',
-});
-const INVITED_BY_DESCRIPTOR = msg({
-	message: 'Invited by {userTag}',
-	comment: 'Metadata label for an expression pack invite. userTag is the inviter username and discriminator.',
-});
-const ACCEPTING_INVITE_INSTALLS_PACK_DESCRIPTOR = msg({
-	message: 'Accepting this invite installs the pack automatically.',
-	comment: 'Note shown on expression pack invites before accepting.',
 });
 const logger = new Logger('InviteAcceptModal');
 
@@ -106,7 +70,6 @@ export const InviteAcceptModal = observer(function InviteAcceptModal({code}: Inv
 					inviteMemberCount: invite.member_count,
 				})
 			: null;
-	const isPackInvite = invite != null && isPackInviteGuard(invite);
 	const guildActionState = getGuildInviteActionState({invite});
 	const {presenceCount, memberCount} = guildActionState;
 	const inviteForHeader = useMemo(() => {
@@ -178,51 +141,6 @@ export const InviteAcceptModal = observer(function InviteAcceptModal({code}: Inv
 						text={i18n._(INVITE_NOT_FOUND_DESCRIPTION_DESCRIPTOR)}
 						data-flx="invite.invite-accept-modal.render-body.auth-error-state"
 					/>
-				</div>
-			);
-		}
-		if (isPackInvite && invite) {
-			const packKindLabel =
-				invite.pack.type === 'emoji' ? i18n._(EMOJI_PACK_DESCRIPTOR) : i18n._(STICKER_PACK_DESCRIPTOR);
-			const packActionLabel =
-				invite.pack.type === 'emoji' ? i18n._(INSTALL_EMOJI_PACK_DESCRIPTOR) : i18n._(INSTALL_STICKER_PACK_DESCRIPTOR);
-			const creatorUserName = NicknameUtils.getDisplayName(invite.pack.creator);
-			const inviterTag = invite.inviter ? `${invite.inviter.username}#${invite.inviter.discriminator}` : null;
-			return (
-				<div className={styles.cardInner} data-flx="invite.invite-accept-modal.render-body.card-inner">
-					<InviteHeader invite={inviteForHeader} data-flx="invite.invite-accept-modal.render-body.invite-header" />
-					<p
-						className={styles.packDescriptionText}
-						data-flx="invite.invite-accept-modal.render-body.pack-description-text"
-					>
-						{invite.pack.description || i18n._(NO_DESCRIPTION_PROVIDED_DESCRIPTOR)}
-					</p>
-					<div className={styles.packMetaRow} data-flx="invite.invite-accept-modal.render-body.pack-meta-row">
-						<span className={styles.packMetaText} data-flx="invite.invite-accept-modal.render-body.pack-meta-text">
-							{packKindLabel}
-						</span>
-						<span className={styles.packMetaText} data-flx="invite.invite-accept-modal.render-body.pack-meta-text--2">
-							{i18n._(CREATED_BY_DESCRIPTOR, {userName: creatorUserName})}
-						</span>
-						{inviterTag ? (
-							<span className={styles.packMetaText} data-flx="invite.invite-accept-modal.render-body.pack-meta-text--3">
-								{i18n._(INVITED_BY_DESCRIPTOR, {userTag: inviterTag})}
-							</span>
-						) : null}
-					</div>
-					<p className={styles.packNote} data-flx="invite.invite-accept-modal.render-body.pack-note">
-						{i18n._(ACCEPTING_INVITE_INSTALLS_PACK_DESCRIPTOR)}
-					</p>
-					<div className={styles.actions} data-flx="invite.invite-accept-modal.render-body.actions">
-						<Button
-							onClick={handleAccept}
-							disabled={isAccepting}
-							submitting={isAccepting}
-							data-flx="invite.invite-accept-modal.render-body.button.accept"
-						>
-							{packActionLabel}
-						</Button>
-					</div>
 				</div>
 			);
 		}

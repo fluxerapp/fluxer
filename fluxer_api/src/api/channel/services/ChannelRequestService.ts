@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, UserID} from '@app/api/BrandedTypes';
+import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
+import type {ChannelService} from '@app/api/channel/services/ChannelService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {User} from '@app/api/models/User';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {ChannelUpdateRequest} from '@fluxer/schema/src/domains/channel/ChannelRequestSchemas';
 import type {ChannelResponse, ChannelSlowmodeStateResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
-import type {ChannelID, UserID} from '../../BrandedTypes';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {User} from '../../models/User';
-import {mapChannelToResponse} from '../ChannelMappers';
-import type {ChannelService} from './ChannelService';
 
 export class ChannelRequestService {
 	constructor(
@@ -61,6 +61,7 @@ export class ChannelRequestService {
 		data: ChannelUpdateRequest;
 		clientFeatures: ReadonlySet<string>;
 		requestCache: RequestCache;
+		auditLogReason: string | null;
 	}): Promise<ChannelResponse> {
 		const channel = await this.channelService.channelData.editChannel({
 			userId: params.userId,
@@ -68,6 +69,7 @@ export class ChannelRequestService {
 			data: params.data,
 			clientFeatures: params.clientFeatures,
 			requestCache: params.requestCache,
+			auditLogReason: params.auditLogReason,
 		});
 		return mapChannelToResponse({
 			channel,
@@ -82,6 +84,7 @@ export class ChannelRequestService {
 		channelId: ChannelID;
 		requestCache: RequestCache;
 		silent?: boolean;
+		auditLogReason: string | null;
 	}): Promise<void> {
 		const channel = await this.channelService.channelData.operations.getChannel({
 			userId: params.userId,
@@ -101,6 +104,7 @@ export class ChannelRequestService {
 			userId: params.userId,
 			channelId: params.channelId,
 			requestCache: params.requestCache,
+			auditLogReason: params.auditLogReason,
 		});
 	}
 }

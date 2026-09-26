@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {getSubnet} from '@fluxer/ip_utils/src/IpAddress';
-import {createUserID} from '../BrandedTypes';
-import {BatchBuilder, fetchMany} from '../database/CassandraQueryExecution';
+import {createUserID} from '@app/api/BrandedTypes';
+import {BatchBuilder, fetchMany} from '@app/api/database/CassandraQueryExecution';
 import type {
 	RegistrationEventByEmailDomainRow,
 	RegistrationEventByIpRow,
 	RegistrationEventByPlusAddressBaseRow,
 	RegistrationEventBySubnetRow,
-} from '../database/types/RiskTypes';
+} from '@app/api/database/types/RiskTypes';
+import type {IRegistrationEventsRepository, RegistrationEventRecord} from '@app/api/risk/adapters/VelocityAdapter';
+import {derivePlusAddressBase} from '@app/api/risk/PlusAddressUtils';
 import {
 	RegistrationEventsByEmailDomain,
 	RegistrationEventsByIp,
 	RegistrationEventsByPlusAddressBase,
 	RegistrationEventsBySubnet,
-} from '../Tables';
-import type {IRegistrationEventsRepository, RegistrationEventRecord} from './adapters/VelocityAdapter';
-import {derivePlusAddressBase} from './PlusAddressUtils';
+} from '@app/api/Tables';
+import {getSubnet} from '@fluxer/ip_utils/src/IpAddress';
 
 const SELECT_BY_IP_CQL = RegistrationEventsByIp.selectCql({
 	where: [RegistrationEventsByIp.where.eq('ip'), RegistrationEventsByIp.where.gte('created_at')],

@@ -10,7 +10,8 @@
     handle_message_create_event/2,
     handle_message_ack_event/2,
     flush_push_buffer/1,
-    maybe_update_push_eligibility/1
+    maybe_update_push_eligibility/1,
+    push_buffer_counters/0
 ]).
 
 -export_type([state/0]).
@@ -25,6 +26,8 @@
 -define(DEFAULT_PUSH_BUFFER_MAX_BYTES, 1048576).
 -define(PUSH_BUFFER_MAX_ENTRIES_CONFIG_KEY, presence_push_buffer_max_entries).
 -define(PUSH_BUFFER_MAX_BYTES_CONFIG_KEY, presence_push_buffer_max_bytes).
+-define(PUSH_BUFFER_COUNTERS, presence_push_buffer_counters).
+-define(PUSH_BUFFER_OVERFLOW, push_buffer_overflow).
 
 -spec maybe_handle_custom_status(map(), state()) -> {map(), state()}.
 maybe_handle_custom_status(Request, State) ->
@@ -152,11 +155,44 @@ flush_push_buffer(#{push_buffer := Buffer} = State) ->
 
 -spec maybe_update_push_eligibility(state()) -> state().
 maybe_update_push_eligibility(State) ->
-    Sessions = maps:get(sessions, State, #{}),
-    case {is_push_eligible(Sessions), maps:get(push_buffer, State, [])} of
+    update_push_eligibility(enrolled_in_push_delivery(State), State).
+
+-spec update_push_eligibility(boolean(), state()) -> state().
+update_push_eligibility(true, State) ->
+    Eligible = no_session_holds_push(maps:get(sessions, State, #{})),
+    flush_when_eligible(Eligible, record_push_eligibility(Eligible, State));
+update_push_eligibility(false, State) ->
+    flush_when_eligible(is_push_eligible(maps:get(sessions, State, #{})), State).
+
+-spec flush_when_eligible(boolean(), state()) -> state().
+flush_when_eligible(Eligible, State) ->
+    case {Eligible, maps:get(push_buffer, State, [])} of
         {true, [_ | _]} -> flush_push_buffer(State);
         _ -> State
     end.
+
+-spec enrolled_in_push_delivery(state()) -> boolean().
+enrolled_in_push_delivery(State) ->
+    case maps:get(user_id, State, undefined) of
+        UserId when is_integer(UserId) -> push_delivery_config:is_enrolled(UserId);
+        _ -> false
+    end.
+
+-spec record_push_eligibility(boolean(), state()) -> state().
+record_push_eligibility(true, State) ->
+    State#{push_eligible => true};
+record_push_eligibility(false, State) ->
+    case maps:get(push_eligible, State, true) of
+        true -> announce_session_active(maps:get(user_id, State, undefined));
+        false -> ok
+    end,
+    State#{push_eligible => false}.
+
+-spec announce_session_active(user_id() | undefined) -> ok.
+announce_session_active(UserId) when is_integer(UserId) ->
+    push_outbox:note_session_active(UserId);
+announce_session_active(_UserId) ->
+    ok.
 
 -spec compare_and_validate(map(), map(), state()) -> {map(), state()}.
 compare_and_validate(CustomStatus, Request, State) ->
@@ -206,8 +242,7 @@ field_or_null(Map, Key) ->
 
 -spec route_push_notification(map(), state()) -> state().
 route_push_notification(Params, State) ->
-    Sessions = maps:get(sessions, State, #{}),
-    case is_push_eligible(Sessions) of
+    case push_eligible(State) of
         true ->
             FlushedState = flush_push_buffer(State),
             push:handle_message_create(Params),
@@ -215,6 +250,16 @@ route_push_notification(Params, State) ->
         false ->
             buffer_push_notification(Params, State)
     end.
+
+-spec push_eligible(state()) -> boolean().
+push_eligible(State) ->
+    push_eligible(enrolled_in_push_delivery(State), maps:get(sessions, State, #{})).
+
+-spec push_eligible(boolean(), map()) -> boolean().
+push_eligible(true, Sessions) ->
+    no_session_holds_push(Sessions);
+push_eligible(false, Sessions) ->
+    is_push_eligible(Sessions).
 
 -spec build_push_create_params(user_id(), map()) -> map() | undefined.
 build_push_create_params(UserId, Data) ->
@@ -237,8 +282,45 @@ buffer_push_notification(Params, State) ->
         undefined ->
             State;
         Entry ->
-            Buffer = maps:get(push_buffer, State, []),
-            State#{push_buffer := cap_push_buffer([Entry | Buffer])}
+            Buffer = [Entry | maps:get(push_buffer, State, [])],
+            Capped = cap_push_buffer(Buffer),
+            ok = count_push_buffer_overflow(
+                maps:get(user_id, State, undefined), length(Buffer) - length(Capped)
+            ),
+            State#{push_buffer := Capped}
+    end.
+
+-spec count_push_buffer_overflow(term(), non_neg_integer()) -> ok.
+count_push_buffer_overflow(_UserId, 0) ->
+    ok;
+count_push_buffer_overflow(UserId, Dropped) ->
+    ok = guild_ets_utils:ensure_table(?PUSH_BUFFER_COUNTERS, [
+        named_table, public, set, {write_concurrency, true}
+    ]),
+    try
+        _ = ets:update_counter(
+            ?PUSH_BUFFER_COUNTERS,
+            ?PUSH_BUFFER_OVERFLOW,
+            {2, Dropped},
+            {?PUSH_BUFFER_OVERFLOW, 0}
+        ),
+        ok
+    catch
+        error:badarg -> ok
+    end,
+    logger:warning(
+        "presence_push_buffer_overflow: user_id=~p dropped=~p", [UserId, Dropped]
+    ).
+
+-spec push_buffer_counters() -> #{atom() => non_neg_integer()}.
+push_buffer_counters() ->
+    try ets:lookup(?PUSH_BUFFER_COUNTERS, ?PUSH_BUFFER_OVERFLOW) of
+        [{?PUSH_BUFFER_OVERFLOW, Count}] when is_integer(Count), Count >= 0 ->
+            #{?PUSH_BUFFER_OVERFLOW => Count};
+        _ ->
+            #{?PUSH_BUFFER_OVERFLOW => 0}
+    catch
+        error:badarg -> #{?PUSH_BUFFER_OVERFLOW => 0}
     end.
 
 -spec cap_push_buffer([push_buffer_entry()]) -> [push_buffer_entry()].
@@ -334,6 +416,14 @@ is_push_eligible(Sessions) ->
 -spec all_sessions_afk(map()) -> boolean().
 all_sessions_afk(Sessions) ->
     lists:all(fun(S) -> maps:get(afk, S, false) end, maps:values(Sessions)).
+
+-spec no_session_holds_push(map()) -> boolean().
+no_session_holds_push(Sessions) ->
+    not lists:any(fun session_holds_push/1, maps:values(Sessions)).
+
+-spec session_holds_push(map()) -> boolean().
+session_holds_push(Session) ->
+    not maps:get(afk, Session, false) andalso maps:get(status, Session, online) =/= offline.
 
 -spec extract_snowflake(binary(), map()) -> integer() | undefined.
 extract_snowflake(FieldName, Data) ->

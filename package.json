@@ -22,8 +22,9 @@
 		"dev:tunnel:configure": "cargo run -p fluxer-dev -- tunnel configure",
 		"dev:tunnel:env": "cargo run -p fluxer-dev -- tunnel print-env",
 		"dev:tunnel:run": "cargo run -p fluxer-dev -- tunnel run",
-		"docs:build": "bash fluxer_docs/serve.sh build --clean",
-		"docs:dev": "bash fluxer_docs/serve.sh",
+		"docs:build": "pnpm --filter fluxer_docs build",
+		"docs:dev": "pnpm --filter fluxer_docs dev",
+		"docs:typecheck": "pnpm --filter fluxer_docs typecheck",
 		"i18n:compile": "pnpm --filter fluxer_app i18n:compile && pnpm --filter @fluxer/i18n static:compile && pnpm --filter @fluxer/i18n generate:types",
 		"i18n:refresh": "pnpm --filter fluxer_app i18n:refresh",
 		"i18n:generate": "pnpm --filter @fluxer/i18n generate:types",
@@ -33,9 +34,9 @@
 		"i18n:typecheck": "pnpm --filter @fluxer/errors --filter @pkgs/email typecheck",
 		"i18n:weblate-compile": "pnpm i18n:compile",
 		"knip": "cargo run -p fluxer-dev -- knip",
+		"lint": "cargo run -p fluxer-dev -- lint",
 		"openapi:generate": "pnpm --filter @fluxer/openapi generate",
 		"openapi:validate": "pnpm --filter @fluxer/openapi validate",
-		"remote": "node scripts/remote.mjs",
 		"test": "cargo run -p fluxer-dev -- test",
 		"typecheck": "cargo run -p fluxer-dev -- typecheck"
 	},
@@ -49,7 +50,12 @@
 	"devDependencies": {
 		"@biomejs/biome": "catalog:",
 		"@vitest/coverage-v8": "catalog:",
-		"knip": "catalog:"
+		"eslint": "catalog:",
+		"eslint-plugin-react-google-translate": "catalog:",
+		"knip": "catalog:",
+		"typescript": "catalog:",
+		"typescript-eslint": "catalog:",
+		"vite": "catalog:"
 	},
-	"packageManager": "pnpm@10.29.3"
+	"packageManager": "pnpm@11.27.0"
 }

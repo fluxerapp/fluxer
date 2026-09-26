@@ -33,7 +33,7 @@ interface PermissionOverwrite {
 	deny: bigint;
 }
 
-interface Role {
+export interface Role {
 	id: string;
 	permissions: bigint;
 	position: number;
@@ -190,6 +190,17 @@ export function getHighestRole(guild: Guild, userId: string): Role | null {
 			position: roleRecord.position,
 		}));
 	return memberRoles[0] ?? null;
+}
+
+export function canManageTargetUser(
+	guild: Guild,
+	userId: string,
+	userHighestRole: Role | null,
+	targetUserId: string,
+): boolean {
+	if (guild.owner_id === userId) return true;
+	if (!GuildMembers.isMembershipKnown(guild.id, targetUserId)) return false;
+	return isRoleHigher(guild, userId, userHighestRole, getHighestRole(guild, targetUserId));
 }
 
 export function can(

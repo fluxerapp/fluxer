@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {BUILD_CHANNEL} from '@electron/common/BuildChannel';
+import {PASSKEY_RP_IDS} from '@electron/common/Constants';
 import type {
 	AppMetricsSnapshot,
 	ClipboardWriteFileOptions,
@@ -42,7 +43,6 @@ import type {
 	NativeScreenCaptureStartResult,
 	NotificationOptions,
 	NotificationResult,
-	OpenH264Status,
 	SetDesktopTroubleshootingDisableHardwareAccelerationOptions,
 	SpellcheckBundledDictionary,
 	SpellcheckResolvedEngineInfo,
@@ -340,9 +340,6 @@ const api: ElectronAPI = {
 	getDesktopInfo: (): Promise<DesktopInfo> => ipcRenderer.invoke('get-desktop-info'),
 	getGpuInfo: (): Promise<GpuInfo> => ipcRenderer.invoke('get-gpu-info'),
 	getAppMetrics: (): Promise<AppMetricsSnapshot> => ipcRenderer.invoke('get-app-metrics'),
-	getOpenH264Status: (): Promise<OpenH264Status> => ipcRenderer.invoke('get-openh264-status'),
-	setOpenH264Enabled: (enabled: boolean): Promise<OpenH264Status> =>
-		ipcRenderer.invoke('set-openh264-enabled', enabled),
 	getSystemIdleTimeMs: (): Promise<number> => ipcRenderer.invoke('system-idle-time-ms'),
 	getDesktopWindowBehaviorSettings: (): Promise<DesktopWindowBehaviorSettings> =>
 		ipcRenderer.invoke('desktop-window-behavior-get'),
@@ -444,8 +441,8 @@ const api: ElectronAPI = {
 		ipcRenderer.invoke('mac-tcc:status', 'screen-recording'),
 	requestScreenRecordingPermission: (): Promise<InputMonitoringPermissionStatus> =>
 		ipcRenderer.invoke('mac-tcc:request', 'screen-recording'),
-	downloadFile: (url: string, defaultPath: string): Promise<DownloadFileResult> =>
-		ipcRenderer.invoke('download-file', {url, defaultPath}),
+	downloadFile: (url: string, defaultPath: string, sha256?: string | null): Promise<DownloadFileResult> =>
+		ipcRenderer.invoke('download-file', {url, defaultPath, sha256}),
 	passkeyIsSupported: (): Promise<boolean> => ipcRenderer.invoke('passkey-is-supported'),
 	passkeyAuthenticate: (
 		options: PublicKeyCredentialRequestOptionsJSON,
@@ -455,6 +452,11 @@ const api: ElectronAPI = {
 		options: PublicKeyCredentialCreationOptionsJSON,
 		requestContext?: {pin?: string},
 	): Promise<RegistrationResponseJSON> => ipcRenderer.invoke('passkey-register', options, requestContext),
+	passkeyRpIds: PASSKEY_RP_IDS,
+	domainMigration: {
+		version: 1,
+		setAppOrigin: (origin: string): Promise<void> => ipcRenderer.invoke('domain-migration:set-app-origin', origin),
+	},
 	toggleDevTools: (): void => {
 		ipcRenderer.send('toggle-devtools');
 	},
@@ -684,6 +686,8 @@ const api: ElectronAPI = {
 			ipcRenderer.invoke('native-audio:resolve-root-pid', sourceId),
 		start: (options: NativeAudioStartOptions): Promise<NativeAudioStartResult> =>
 			ipcRenderer.invoke('native-audio:start', options),
+		setRule: (captureId: string, linuxRule: NonNullable<NativeAudioStartOptions['linuxRule']>): Promise<boolean> =>
+			ipcRenderer.invoke('native-audio:set-rule', captureId, linuxRule),
 		stop: (captureId: string): Promise<void> => ipcRenderer.invoke('native-audio:stop', captureId),
 		getRoutingGraph: (captureId?: string): Promise<NativeAudioRoutingGraphResult> =>
 			ipcRenderer.invoke('native-audio:get-routing-graph', captureId),

@@ -3,7 +3,7 @@
 import {type DragItem, DragItemType, type DropResult} from '@app/features/app/components/layout/types/DndTypes';
 import {getVerticalDropTargetHeight, resolveVerticalDropEdge} from '@app/features/ui/dnd/DropGeometry';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export interface ChannelReorderPoint {
 	x: number;
@@ -244,7 +244,7 @@ export type ChannelReorderSnapshot = SnapshotFrom<typeof channelReorderStateMach
 export type ChannelReorderStateValue = 'idle' | 'resolving' | 'targeting' | 'voiceParticipantTransfer' | 'blocked';
 
 export function createChannelReorderSnapshot(): ChannelReorderSnapshot {
-	return getInitialSnapshot(channelReorderStateMachine);
+	return initialTransition(channelReorderStateMachine)[0];
 }
 
 export function transitionChannelReorderSnapshot(

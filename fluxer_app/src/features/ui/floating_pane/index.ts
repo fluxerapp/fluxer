@@ -11,7 +11,7 @@ export type {
 	ResizeStart,
 	Size,
 	WidthRange,
-} from './FloatingPaneMath';
+} from '@app/features/ui/floating_pane/FloatingPaneMath';
 export {
 	ALL_CORNERS,
 	ALL_RESIZE_EDGES,
@@ -26,8 +26,12 @@ export {
 	pickCornerForFling,
 	reconcileToGeometry,
 	snapPointToCorner,
-} from './FloatingPaneMath';
-export type {FloatingPaneResizeHandlesProps} from './FloatingPaneResizeHandles';
-export {FloatingPaneResizeHandles} from './FloatingPaneResizeHandles';
-export type {FloatingPanePointerHandlers, FloatingPaneResult, UseFloatingPaneOptions} from './useFloatingPane';
-export {useFloatingPane} from './useFloatingPane';
+} from '@app/features/ui/floating_pane/FloatingPaneMath';
+export type {FloatingPaneResizeHandlesProps} from '@app/features/ui/floating_pane/FloatingPaneResizeHandles';
+export {FloatingPaneResizeHandles} from '@app/features/ui/floating_pane/FloatingPaneResizeHandles';
+export type {
+	FloatingPanePointerHandlers,
+	FloatingPaneResult,
+	UseFloatingPaneOptions,
+} from '@app/features/ui/floating_pane/useFloatingPane';
+export {useFloatingPane} from '@app/features/ui/floating_pane/useFloatingPane';

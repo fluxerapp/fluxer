@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {IAdminRepository} from '../../admin/IAdminRepository';
-import type {DisposableCheckResult} from '../RiskTypes';
+import type {IAdminRepository} from '@app/api/admin/IAdminRepository';
+import type {DisposableCheckResult} from '@app/api/risk/RiskTypes';
 
 interface DisposableDomainCheckerContext {
 	adminRepository: Pick<IAdminRepository, 'isEmailDomainSuspicious' | 'isEmailDomainDisposable'>;

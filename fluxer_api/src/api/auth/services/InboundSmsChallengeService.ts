@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import {BatchBuilder, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import {Db} from '@app/api/database/CassandraTypes';
+import type {InboundSmsChallengeRow} from '@app/api/database/types/RiskTypes';
+import {InboundSmsChallenges, InboundSmsChallengesByUser} from '@app/api/Tables';
+import {randomNumericCode} from '@app/api/utils/RandomUtils';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import type {UserID} from '../../BrandedTypes';
-import {BatchBuilder, fetchOne} from '../../database/CassandraQueryExecution';
-import {Db} from '../../database/CassandraTypes';
-import type {InboundSmsChallengeRow} from '../../database/types/RiskTypes';
-import {InboundSmsChallenges, InboundSmsChallengesByUser} from '../../Tables';
-import {randomNumericCode} from '../../utils/RandomUtils';
 
 interface IssueChallengeParams {
 	userId: UserID;

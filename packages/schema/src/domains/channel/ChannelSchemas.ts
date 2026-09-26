@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {CONTENT_WARNING_TEXT_MAX_LENGTH} from '@fluxer/constants/src/GuildConstants';
-import {MAX_GROUP_DM_OTHER_RECIPIENTS} from '@fluxer/constants/src/LimitConstants';
+import {MAX_GROUP_DM_OTHER_RECIPIENTS, MAX_GROUP_DM_RECIPIENTS} from '@fluxer/constants/src/LimitConstants';
 import {type UserPartial, UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {ChannelOverwriteTypeSchema, ChannelTypeSchema} from '@fluxer/schema/src/primitives/ChannelValidators';
 import {ContentWarningLevelSchema} from '@fluxer/schema/src/primitives/GuildValidators';
@@ -12,8 +12,8 @@ import {z} from 'zod';
 export const ChannelOverwriteResponse = z.object({
 	id: SnowflakeStringType.describe('The unique identifier for the role or user this overwrite applies to'),
 	type: ChannelOverwriteTypeSchema.describe('The type of entity the overwrite applies to'),
-	allow: PermissionStringType.describe('fluxer:PermissionStringType The bitwise value of allowed permissions'),
-	deny: PermissionStringType.describe('fluxer:PermissionStringType The bitwise value of denied permissions'),
+	allow: PermissionStringType.describe('The bitwise value of allowed permissions'),
+	deny: PermissionStringType.describe('The bitwise value of denied permissions'),
 });
 
 export type ChannelOverwriteResponse = z.infer<typeof ChannelOverwriteResponse>;
@@ -50,7 +50,7 @@ export type CallEligibilityResponse = z.infer<typeof CallEligibilityResponse>;
 export const ChannelResponse = z.object({
 	id: SnowflakeStringType.describe('The unique identifier (snowflake) for this channel'),
 	guild_id: SnowflakeStringType.optional().describe('The ID of the guild this channel belongs to'),
-	name: z.string().optional().describe('The name of the channel'),
+	name: z.string().nullish().describe('The name of the channel'),
 	topic: z.string().nullish().describe('The topic of the channel'),
 	url: z.url().nullish().describe('The URL associated with the channel'),
 	icon: z.string().nullish().describe('The icon hash of the channel (for group DMs)'),
@@ -71,7 +71,6 @@ export const ChannelResponse = z.object({
 		.describe('The ISO 8601 timestamp of when the last pinned message was pinned'),
 	permission_overwrites: z
 		.array(ChannelOverwriteResponse)
-		.max(500)
 		.optional()
 		.describe('The permission overwrites for this channel'),
 	recipients: z
@@ -125,7 +124,7 @@ export const ChannelPartialResponse = z.object({
 	type: ChannelTypeSchema.describe('The type of the channel'),
 	recipients: z
 		.array(ChannelPartialRecipientResponse)
-		.max(MAX_GROUP_DM_OTHER_RECIPIENTS)
+		.max(MAX_GROUP_DM_RECIPIENTS)
 		.optional()
 		.describe('The recipients of the DM channel'),
 });
@@ -142,7 +141,7 @@ export interface ChannelOverwrite {
 export interface Channel {
 	readonly id: string;
 	readonly guild_id?: string;
-	readonly name?: string;
+	readonly name?: string | null;
 	readonly topic?: string | null;
 	readonly url?: string | null;
 	readonly icon?: string | null;
@@ -165,3 +164,6 @@ export interface Channel {
 	readonly rate_limit_per_user?: number;
 	readonly nicks?: Readonly<Record<string, string>>;
 }
+
+export const ChannelListResponse = z.array(ChannelResponse);
+export const RtcRegionListResponse = z.array(RtcRegionResponse);

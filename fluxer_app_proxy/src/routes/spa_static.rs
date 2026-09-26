@@ -1,57 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-use crate::discovery_cache::DiscoveryResponse;
-use crate::state::AppState;
-use crate::time_freeze::{
-    TimeFreezeConfig, describe_decision, load_time_freeze_config_for_request,
-    time_freeze_debug_header,
-};
+use crate::config::HttpEndpoint;
+use crate::discovery_cache::discovery_endpoint;
+use crate::state::{AppState, MAX_STATIC_TEXT_FILE_BYTES, read_bounded_file};
 use axum::{
     extract::State,
-    http::{HeaderMap, HeaderValue, StatusCode, header},
+    http::{HeaderValue, StatusCode, header},
     response::{IntoResponse, Response},
 };
 use std::path::Path;
 
-fn serve_frozen_file(
-    config: &TimeFreezeConfig,
-    pick: impl FnOnce(&crate::time_freeze::FrozenSnapshot) -> Option<(&[u8], &str)>,
-) -> (Option<Response>, Option<String>) {
-    let debug = describe_decision(config);
-    let debug_header = time_freeze_debug_header(config);
-
-    if debug.decision != crate::time_freeze::TimeFreezeDecision::Frozen {
-        return (None, debug_header);
-    }
-
-    if let Some(snapshot) = &config.snapshot
-        && let Some((bytes, content_type)) = pick(snapshot)
-    {
-        let mut response = bytes.to_vec().into_response();
-        if let Ok(ct) = HeaderValue::from_str(content_type) {
-            response.headers_mut().insert(header::CONTENT_TYPE, ct);
-        }
-        response
-            .headers_mut()
-            .insert(header::CACHE_CONTROL, HeaderValue::from_static("no-cache"));
-        set_time_freeze_header(&mut response, debug_header.as_deref());
-        return (Some(response), None);
-    }
-
-    (None, debug_header)
-}
-
-pub async fn version_json(State(state): State<AppState>, headers: HeaderMap) -> Response {
-    let tf = load_time_freeze_config_for_request(&state.config, &headers);
-    let (frozen, debug_header) = serve_frozen_file(&tf, |snap| {
-        Some((snap.version_json.as_slice(), "application/json"))
-    });
-    if let Some(resp) = frozen {
-        return resp;
-    }
-
-    let mut result =
-        serve_static_text_file(&state.config.static_dir, "version.json", "application/json");
+pub async fn version_json(State(state): State<AppState>) -> Response {
+    let mut result = serve_static_text_file(&state, "version.json", "application/json").await;
 
     if result.status() == StatusCode::NOT_FOUND && !state.config.build_version.is_empty() {
         let body = serde_json::json!({ "version": state.config.build_version });
@@ -61,71 +21,71 @@ pub async fn version_json(State(state): State<AppState>, headers: HeaderMap) -> 
             .insert(header::CACHE_CONTROL, HeaderValue::from_static("no-cache"));
     }
 
-    set_time_freeze_header(&mut result, debug_header.as_deref());
     result
 }
 
 pub async fn manifest_json(State(state): State<AppState>) -> Response {
     let static_cdn_endpoint = runtime_static_cdn_endpoint(&state).await;
-    serve_static_text_file_with_cdn(
-        &state.config.static_dir,
+    serve_static_text_file_with_substitutions(
+        &state,
         "manifest.json",
         "application/manifest+json",
-        static_cdn_endpoint.as_deref(),
+        static_cdn_endpoint.as_ref(),
+        Some(&state.config.manifest_scope_extensions),
     )
+    .await
+}
+
+fn with_scope_extensions(text: String, origins: &[String]) -> String {
+    if origins.is_empty() {
+        return text;
+    }
+    let Ok(serde_json::Value::Object(mut manifest)) = serde_json::from_str(&text) else {
+        return text;
+    };
+    let scope_extensions = origins
+        .iter()
+        .map(|origin| serde_json::json!({ "type": "origin", "origin": origin }))
+        .collect();
+    manifest.insert(
+        "scope_extensions".to_owned(),
+        serde_json::Value::Array(scope_extensions),
+    );
+    serde_json::to_string_pretty(&manifest).unwrap_or(text)
+}
+
+fn substitute_placeholders(
+    text: &str,
+    static_cdn_endpoint: &str,
+    scope_extensions: Option<&[String]>,
+) -> String {
+    let text = text.replace("{{STATIC_CDN_ENDPOINT}}", static_cdn_endpoint);
+    match scope_extensions {
+        Some(origins) => with_scope_extensions(text, origins),
+        None => text,
+    }
 }
 
 pub async fn browserconfig_xml(State(state): State<AppState>) -> Response {
     let static_cdn_endpoint = runtime_static_cdn_endpoint(&state).await;
     serve_static_text_file_with_cdn(
-        &state.config.static_dir,
+        &state,
         "browserconfig.xml",
         "application/xml; charset=utf-8",
-        static_cdn_endpoint.as_deref(),
+        static_cdn_endpoint.as_ref(),
     )
+    .await
 }
 
-pub async fn service_worker(State(state): State<AppState>, headers: HeaderMap) -> Response {
-    let tf = load_time_freeze_config_for_request(&state.config, &headers);
-    let (frozen, debug_header) = serve_frozen_file(&tf, |snap| {
-        Some((
-            snap.sw_js.as_slice(),
-            "application/javascript; charset=utf-8",
-        ))
-    });
-    if let Some(resp) = frozen {
-        return resp;
-    }
-    let mut result = serve_static_text_file(
-        &state.config.static_dir,
-        "sw.js",
-        "application/javascript; charset=utf-8",
-    );
-    set_time_freeze_header(&mut result, debug_header.as_deref());
-    result
+pub async fn service_worker(State(state): State<AppState>) -> Response {
+    serve_static_text_file(&state, "sw.js", "application/javascript; charset=utf-8").await
 }
 
 pub async fn service_worker_map(State(state): State<AppState>) -> Response {
-    serve_static_text_file(&state.config.static_dir, "sw.js.map", "application/json")
+    serve_static_text_file(&state, "sw.js.map", "application/json").await
 }
 
-fn set_time_freeze_header(response: &mut Response, value: Option<&str>) {
-    #[cfg(feature = "time-freeze")]
-    {
-        if let Some(v) = value
-            && let Ok(hv) = HeaderValue::from_str(v)
-        {
-            response
-                .headers_mut()
-                .insert(axum::http::HeaderName::from_static("x-time-freeze"), hv);
-        }
-    }
-
-    #[cfg(not(feature = "time-freeze"))]
-    let _ = (response, value);
-}
-
-async fn runtime_static_cdn_endpoint(state: &AppState) -> Option<String> {
+async fn runtime_static_cdn_endpoint(state: &AppState) -> Option<HttpEndpoint> {
     if let Some(discovery) = state.discovery_cache.get().await
         && let Some(endpoint) = discovery_endpoint(&discovery, "static_cdn")
     {
@@ -135,34 +95,45 @@ async fn runtime_static_cdn_endpoint(state: &AppState) -> Option<String> {
     state.config.static_cdn_endpoint.clone()
 }
 
-fn discovery_endpoint(discovery: &DiscoveryResponse, key: &str) -> Option<String> {
-    discovery
-        .data
-        .get("endpoints")
-        .and_then(|endpoints| endpoints.get(key))
-        .and_then(|value| value.as_str())
-        .map(str::trim)
-        .filter(|value| !value.is_empty())
-        .map(ToOwned::to_owned)
+async fn serve_static_text_file(state: &AppState, filename: &str, content_type: &str) -> Response {
+    serve_static_text_file_with_cdn(state, filename, content_type, None).await
 }
 
-fn serve_static_text_file(static_dir: &str, filename: &str, content_type: &str) -> Response {
-    serve_static_text_file_with_cdn(static_dir, filename, content_type, None)
-}
-
-fn serve_static_text_file_with_cdn(
-    static_dir: &str,
+async fn serve_static_text_file_with_cdn(
+    state: &AppState,
     filename: &str,
     content_type: &str,
-    static_cdn_endpoint: Option<&str>,
+    static_cdn_endpoint: Option<&HttpEndpoint>,
 ) -> Response {
+    serve_static_text_file_with_substitutions(
+        state,
+        filename,
+        content_type,
+        static_cdn_endpoint,
+        None,
+    )
+    .await
+}
+
+async fn serve_static_text_file_with_substitutions(
+    state: &AppState,
+    filename: &str,
+    content_type: &str,
+    static_cdn_endpoint: Option<&HttpEndpoint>,
+    scope_extensions: Option<&[String]>,
+) -> Response {
+    let static_dir = state.config.static_dir.as_str();
     let file_path = Path::new(static_dir).join(filename);
 
-    let resolved = match file_path.canonicalize() {
+    let Ok(_read_slot) = state.budgets.local_read_slots.try_acquire() else {
+        return super::capacity_refused_response();
+    };
+
+    let resolved = match tokio::fs::canonicalize(&file_path).await {
         Ok(p) => p,
         Err(_) => return StatusCode::NOT_FOUND.into_response(),
     };
-    let base = match Path::new(static_dir).canonicalize() {
+    let base = match tokio::fs::canonicalize(static_dir).await {
         Ok(p) => p,
         Err(_) => return StatusCode::NOT_FOUND.into_response(),
     };
@@ -170,15 +141,18 @@ fn serve_static_text_file_with_cdn(
         return StatusCode::NOT_FOUND.into_response();
     }
 
-    let content = match std::fs::read(&resolved) {
+    let content = match read_bounded_file(&resolved, MAX_STATIC_TEXT_FILE_BYTES).await {
         Ok(bytes) => bytes,
-        Err(_) => return StatusCode::NOT_FOUND.into_response(),
+        Err(error) if error.is_not_found() => return StatusCode::NOT_FOUND.into_response(),
+        Err(error) => {
+            tracing::error!(file = filename, %error, "refusing to serve static text file");
+            return StatusCode::NOT_FOUND.into_response();
+        }
     };
 
-    let replacement = static_cdn_endpoint.unwrap_or("").trim_end_matches('/');
+    let replacement = static_cdn_endpoint.map_or("", HttpEndpoint::as_str);
     let body: axum::body::Body = match std::str::from_utf8(&content) {
-        Ok(text) => text
-            .replace("{{STATIC_CDN_ENDPOINT}}", replacement)
+        Ok(text) => substitute_placeholders(text, replacement, scope_extensions)
             .into_bytes()
             .into(),
         Err(_) => content.into(),
@@ -273,6 +247,80 @@ fn is_content_hash(value: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const BUILT_MANIFEST: &str = r#"{
+  "id": "/",
+  "start_url": "/app",
+  "scope": "/",
+  "scope_extensions": [],
+  "icons": [
+    {
+      "src": "{{STATIC_CDN_ENDPOINT}}/web/android-chrome-192x192.png"
+    }
+  ]
+}"#;
+
+    fn substituted_manifest(origins: &[&str]) -> serde_json::Value {
+        let origins: Vec<String> = origins.iter().map(|origin| (*origin).to_owned()).collect();
+        let text =
+            substitute_placeholders(BUILT_MANIFEST, "https://fluxerstatic.com", Some(&origins));
+        serde_json::from_str(&text).expect("substituted manifest must stay valid JSON")
+    }
+
+    #[test]
+    fn manifest_scope_extensions_default_to_the_built_empty_list() {
+        let manifest = substituted_manifest(&[]);
+        assert_eq!(manifest["scope_extensions"], serde_json::json!([]));
+        assert_eq!(
+            manifest["icons"][0]["src"],
+            "https://fluxerstatic.com/web/android-chrome-192x192.png"
+        );
+    }
+
+    #[test]
+    fn manifest_scope_extensions_list_each_configured_origin() {
+        let manifest = substituted_manifest(&["https://fluxer.com", "https://canary.fluxer.com"]);
+        assert_eq!(
+            manifest["scope_extensions"],
+            serde_json::json!([
+                { "type": "origin", "origin": "https://fluxer.com" },
+                { "type": "origin", "origin": "https://canary.fluxer.com" }
+            ])
+        );
+        assert_eq!(manifest["id"], "/");
+        assert_eq!(manifest["start_url"], "/app");
+    }
+
+    #[test]
+    fn manifest_scope_extensions_are_added_when_the_build_has_none() {
+        let text = substitute_placeholders(
+            r#"{"id":"/"}"#,
+            "",
+            Some(&["https://fluxer.com".to_owned()]),
+        );
+        let manifest: serde_json::Value = serde_json::from_str(&text).expect("valid JSON");
+        assert_eq!(
+            manifest["scope_extensions"],
+            serde_json::json!([{ "type": "origin", "origin": "https://fluxer.com" }])
+        );
+    }
+
+    #[test]
+    fn other_text_files_are_left_alone() {
+        let origins = ["https://fluxer.com".to_owned()];
+        assert_eq!(
+            substitute_placeholders(
+                "not json {{STATIC_CDN_ENDPOINT}}",
+                "https://cdn",
+                Some(&origins)
+            ),
+            "not json https://cdn"
+        );
+        assert_eq!(
+            substitute_placeholders(BUILT_MANIFEST, "", None),
+            BUILT_MANIFEST.replace("{{STATIC_CDN_ENDPOINT}}", "")
+        );
+    }
 
     #[test]
     fn mime_html() {

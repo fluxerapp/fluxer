@@ -1,0 +1,106 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+_channel="${FLUXER_CHANNEL:-stable}"
+if [[ $_channel == canary ]]; then
+	pkgname=fluxer-canary
+	_appname='Fluxer Canary'
+	_comment='Canary build of Fluxer'
+else
+	pkgname=fluxer
+	_appname='Fluxer'
+	_comment='Instant messaging and VoIP'
+fi
+pkgver="${FLUXER_VERSION:?FLUXER_VERSION must be set}"
+pkgrel=1
+pkgdesc='Instant messaging and VoIP application'
+arch=('x86_64' 'aarch64')
+url='https://fluxer.app'
+license=('AGPL-3.0-or-later')
+depends=(
+	'alsa-lib'
+	'at-spi2-core'
+	'cairo'
+	'dbus'
+	'expat'
+	'glib2'
+	'glibc'
+	'gtk3'
+	'libcups'
+	'libgcc'
+	'libnotify'
+	'libpipewire'
+	'libpulse'
+	'libsecret'
+	'libstdc++'
+	'libx11'
+	'libxcb'
+	'libxcomposite'
+	'libxdamage'
+	'libxext'
+	'libxfixes'
+	'libxkbcommon'
+	'libxrandr'
+	'mesa'
+	'nspr'
+	'nss'
+	'pango'
+	'systemd-libs'
+	'xdg-utils'
+)
+optdepends=(
+	'libdbusmenu-glib: tray icon menu support'
+	'libspeechd: text to speech support'
+	'xdg-desktop-portal: screen sharing and file dialogs on Wayland'
+)
+provides=("$pkgname-bin")
+conflicts=("$pkgname-bin")
+replaces=("$pkgname-bin")
+options=('!strip' '!debug' 'emptydirs')
+source=("$pkgname-$pkgver-$CARCH.tar.gz")
+sha256sums=('SKIP')
+
+package() {
+	local payload opt size
+	payload=$(printf '%s\n' "$srcdir"/*-linux-*/ | head -n1)
+	opt="$pkgdir/opt/$pkgname"
+
+	install -dm755 "$opt"
+	cp -a "$payload"/. "$opt/"
+	chmod 4755 "$opt/chrome-sandbox"
+
+	install -dm755 "$pkgdir/usr/bin"
+	ln -s "/opt/$pkgname/$pkgname" "$pkgdir/usr/bin/$pkgname"
+
+	install -dm755 "$pkgdir/usr/share/applications"
+	cat > "$pkgdir/usr/share/applications/$pkgname.desktop" <<-EOF
+		[Desktop Entry]
+		Name=$_appname
+		Exec=/opt/$pkgname/$pkgname %U
+		Terminal=false
+		Type=Application
+		Icon=$pkgname
+		StartupWMClass=$pkgname
+		GenericName=Instant Messenger
+		Comment=$_comment
+		Keywords=chat;im;messaging;messenger;voip;voice;video;call;
+		Categories=Network;InstantMessaging;Chat;
+		StartupNotify=true
+		SingleMainWindow=true
+		MimeType=x-scheme-handler/fluxer;
+		X-GNOME-UsesNotifications=true
+		Actions=open-settings;new-dm;
+
+		[Desktop Action open-settings]
+		Name=Open Settings
+		Exec=/opt/$pkgname/$pkgname --fluxer-task=open-settings %U
+
+		[Desktop Action new-dm]
+		Name=New Direct Message
+		Exec=/opt/$pkgname/$pkgname --fluxer-task=new-dm %U
+	EOF
+	chmod 644 "$pkgdir/usr/share/applications/$pkgname.desktop"
+
+	for size in 16 24 32 48 64 128 256 512; do
+		install -Dm644 "$opt/resources/icons/${size}x${size}.png" \
+			"$pkgdir/usr/share/icons/hicolor/${size}x${size}/apps/$pkgname.png"
+	done
+}

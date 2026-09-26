@@ -7,6 +7,18 @@ import {
 	DeveloperOptionRadioItems,
 	DeveloperOptionRadioSubmenu,
 } from '@app/features/channel/components/channel_header_components/developer_tools/DeveloperToolsMenuComponents';
+import {
+	getCountdownTimerOptions,
+	getGiftDurationOptions,
+	getMatureContentChannelGateOptions,
+	getMatureContentMediaGateOptions,
+	getRequiredActionModeOptions,
+	getRequiredActionPhoneStepOptions,
+	getRequiredActionResendOutcomeOptions,
+	getRequiredActionTabOptions,
+	getVerificationBarrierOptions,
+} from '@app/features/channel/components/channel_header_components/developer_tools/OptionPresets';
+import {updateOption} from '@app/features/channel/components/channel_header_components/developer_tools/ResetOptions';
 import * as DeveloperOptionsCommands from '@app/features/devtools/commands/DeveloperOptionsCommands';
 import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -20,18 +32,6 @@ import {Trans, useLingui} from '@lingui/react/macro';
 import {PhoneIcon, TrashIcon, UsersIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {
-	getCountdownTimerOptions,
-	getGiftDurationOptions,
-	getMatureContentChannelGateOptions,
-	getMatureContentMediaGateOptions,
-	getRequiredActionModeOptions,
-	getRequiredActionPhoneStepOptions,
-	getRequiredActionResendOutcomeOptions,
-	getRequiredActionTabOptions,
-	getVerificationBarrierOptions,
-} from './OptionPresets';
-import {updateOption} from './ResetOptions';
 
 const VERIFICATION_MEMBERSHIP_BARRIERS_DESCRIPTOR = msg({
 	message: 'Verification & membership barriers',

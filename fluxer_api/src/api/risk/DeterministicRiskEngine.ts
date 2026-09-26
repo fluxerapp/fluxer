@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {AbuseProneEmailTldRisk, classifyAbuseProneEmailTld} from './AbuseProneEmailTlds';
-import {isMajorEmailProvider} from './MajorEmailProviders';
-import {derivePlusAddressBase} from './PlusAddressUtils';
-import type {RiskToolbox} from './RiskToolbox';
+import {AbuseProneEmailTldRisk, classifyAbuseProneEmailTld} from '@app/api/risk/AbuseProneEmailTlds';
+import {isMajorEmailProvider} from '@app/api/risk/MajorEmailProviders';
+import {derivePlusAddressBase} from '@app/api/risk/PlusAddressUtils';
+import type {RiskToolbox} from '@app/api/risk/RiskToolbox';
 import {
 	type HistoricalOutcomeResult,
 	type IpInfoAnonymousResult,
@@ -14,8 +14,8 @@ import {
 	RiskDecisionMethod,
 	RiskLevel,
 	type RiskSignals,
-} from './RiskTypes';
-import {isTrustedCommercialPrivacyProvider} from './TrustedPrivacyProviders';
+} from '@app/api/risk/RiskTypes';
+import {isTrustedCommercialPrivacyProvider} from '@app/api/risk/TrustedPrivacyProviders';
 
 interface DeterministicRiskEngineLogger {
 	info(payload: object, msg: string): void;
@@ -519,7 +519,7 @@ function scoreUserAgent(signals: RiskSignals): Array<ScoreContribution> {
 
 function scoreGeoLocale(signals: RiskSignals): Array<ScoreContribution> {
 	const geo = signals.localeGeoMatch;
-	if (!geo || !geo.mismatchDetected) return [];
+	if (!geo?.mismatchDetected) return [];
 	return [
 		{
 			rule: RULE.geoMismatch,
@@ -606,7 +606,7 @@ function applySharedConnectionDampener(
 
 function scoreTiming(signals: RiskSignals): Array<ScoreContribution> {
 	const timing = signals.registrationTiming;
-	if (!timing || !timing.isSuspiciousHour) return [];
+	if (!timing?.isSuspiciousHour) return [];
 	return [
 		{
 			rule: RULE.suspiciousHour,

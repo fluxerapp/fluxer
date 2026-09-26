@@ -1,154 +1,150 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
-import {buildScreenShareOptions, resolveStreamingModeSettings} from './ScreenShareOptions';
+import {
+	buildScreenShareOptions,
+	getScreenShareBitrateBps,
+	resolveScreenShareDegradationPreference,
+	resolveScreenShareFrameRate,
+	resolveScreenShareLayering,
+	resolveScreenShareTarget,
+} from '@app/features/voice/utils/ScreenShareOptions';
+import {describe, expect, it, vi} from 'vitest';
 
-describe('buildScreenShareOptions', () => {
-	it('asks display capture to omit the cursor for app windows', () => {
-		const {captureOptions} = buildScreenShareOptions({
-			resolution: 'medium',
-			frameRate: 30,
-			includeAudio: false,
-			preferredDisplaySurface: 'window',
-		});
-		expect(captureOptions.video).toMatchObject({cursor: 'never'});
+vi.mock('@app/features/voice/utils/NativeAudioCaptureBridge', () => ({
+	rememberCapturedDisplayAudioTrack: () => undefined,
+}));
+vi.mock('@app/features/voice/engine/voice_screen_share_manager/shared', () => ({
+	stopMediaTrack: () => undefined,
+	stopUnselectedStreamTracks: () => undefined,
+}));
+
+const {getDisplayMediaOptions} = await import(
+	'@app/features/voice/engine/voice_screen_share_manager/DisplayMediaCapture'
+);
+
+function collectKeys(value: unknown, keys: Set<string>): Set<string> {
+	if (typeof value !== 'object' || value === null) return keys;
+	for (const [key, entry] of Object.entries(value)) {
+		keys.add(key);
+		collectKeys(entry, keys);
+	}
+	return keys;
+}
+
+function targetOf(overrides: {mode?: 'gaming' | 'screenshare' | 'custom'; softwareEncoderClamp?: boolean} = {}) {
+	return resolveScreenShareTarget({
+		mode: overrides.mode ?? 'screenshare',
+		storedResolution: 'medium',
+		storedFrameRate: 30,
+		entitled: true,
+		context: 'display',
+		sourceDimensions: null,
+		hintSetting: 'auto',
+		...(overrides.softwareEncoderClamp === undefined ? {} : {softwareEncoderClamp: overrides.softwareEncoderClamp}),
 	});
-	it('asks display capture to include the cursor for full displays', () => {
+}
+
+describe('screen share layering', () => {
+	it('never asks for temporal layers on the codecs livekit forwards without a dependency descriptor', () => {
+		for (const codec of ['h264', 'vp8'] as const) {
+			expect(resolveScreenShareLayering({codec, svcSetting: 'auto'}).scalabilityMode).toBeUndefined();
+			expect(resolveScreenShareLayering({codec, svcSetting: 'temporal'}).scalabilityMode).toBeUndefined();
+		}
+	});
+
+	it('keeps temporal layers for the SVC codecs that carry one', () => {
+		for (const codec of ['av1', 'vp9'] as const) {
+			expect(resolveScreenShareLayering({codec, svcSetting: 'auto'}).scalabilityMode).toBe('L1T3');
+		}
+	});
+});
+
+describe('display capture constraints', () => {
+	it('asks for no min and no exact, which getDisplayMedia rejects before the picker runs', () => {
 		const {captureOptions} = buildScreenShareOptions({
-			resolution: 'medium',
-			frameRate: 30,
-			includeAudio: false,
+			resolution: 'high',
+			frameRate: 60,
+			context: 'display',
+			includeAudio: true,
+			contentHint: 'text',
+			sourceDimensions: {width: 3840, height: 2160},
 			preferredDisplaySurface: 'monitor',
 		});
-		expect(captureOptions.video).toMatchObject({
-			cursor: 'always',
-			displaySurface: 'monitor',
-		});
+		const keys = collectKeys(getDisplayMediaOptions(captureOptions).video, new Set<string>());
+		expect(keys.has('min')).toBe(false);
+		expect(keys.has('exact')).toBe(false);
 	});
-	it('preserves the preferred app display surface while omitting the cursor', () => {
-		const {captureOptions} = buildScreenShareOptions({
-			resolution: 'medium',
-			frameRate: 30,
-			includeAudio: true,
-			preferredDisplaySurface: 'window',
-		});
-		expect(captureOptions.video).toMatchObject({
-			cursor: 'never',
-			displaySurface: 'window',
-		});
+});
+
+describe('screen share quality', () => {
+	it('uses the 1080p30 preset and lands the faster rungs on 60 FPS', () => {
+		expect(targetOf()).toMatchObject({resolution: 'high', frameRate: 30});
+		expect(resolveScreenShareFrameRate(120)).toBe(60);
+		expect(resolveScreenShareFrameRate(90)).toBe(60);
+		expect(resolveScreenShareFrameRate(60)).toBe(60);
 	});
-	it('requests own-audio restriction without offering monitor system audio for app window shares', () => {
-		const {captureOptions} = buildScreenShareOptions({
-			resolution: 'medium',
-			frameRate: 30,
-			includeAudio: true,
-			preferredDisplaySurface: 'window',
-		});
-		expect(captureOptions).toMatchObject({
-			audio: true,
-			restrictOwnAudio: true,
-			systemAudio: 'exclude',
-			windowAudio: 'window',
-			monitorTypeSurfaces: 'exclude',
-		});
+
+	it('reads the bitrate off the pixel budget', () => {
+		expect(getScreenShareBitrateBps('source', 60)).toBe(9_000_000);
 	});
-	it('does not offer system audio for full display shares', () => {
-		const {captureOptions} = buildScreenShareOptions({
-			resolution: 'medium',
-			frameRate: 30,
-			includeAudio: true,
-			preferredDisplaySurface: 'monitor',
-		});
-		expect(captureOptions).toMatchObject({
-			audio: true,
-			restrictOwnAudio: true,
-			systemAudio: 'exclude',
-			windowAudio: 'window',
-			monitorTypeSurfaces: 'include',
-		});
-	});
-	it('excludes window and system audio hints when audio is disabled', () => {
-		const {captureOptions} = buildScreenShareOptions({
-			resolution: 'medium',
-			frameRate: 30,
-			includeAudio: false,
-		});
-		expect(captureOptions).toMatchObject({
-			audio: false,
-			systemAudio: 'exclude',
-			windowAudio: 'exclude',
-		});
-	});
-	it('prefers framerate for detail-oriented shares', () => {
-		const {publishOptions} = buildScreenShareOptions({
-			resolution: 'medium',
-			frameRate: 30,
-			includeAudio: true,
-		});
-		expect(publishOptions.degradationPreference).toBe('maintain-framerate');
-	});
-	it('prefers framerate for non-gaming high-framerate shares', () => {
-		const {publishOptions} = buildScreenShareOptions({
-			resolution: 'ultra',
-			frameRate: 60,
-			includeAudio: true,
-			streamingMode: 'screenshare',
-		});
-		expect(publishOptions.degradationPreference).toBe('maintain-framerate');
-	});
-	it('prefers framerate degradation for gaming streams', () => {
-		const {publishOptions} = buildScreenShareOptions({
-			resolution: 'ultra',
-			frameRate: 60,
-			includeAudio: true,
-			streamingMode: 'gaming',
-		});
-		expect(publishOptions.degradationPreference).toBe('maintain-framerate');
-	});
-	it('passes the selected content hint through capture options', () => {
-		const {captureOptions} = buildScreenShareOptions({
-			resolution: 'medium',
-			frameRate: 30,
-			includeAudio: false,
-			contentHint: 'motion',
-		});
-		expect(captureOptions.contentHint).toBe('motion');
-	});
-	it('leaves screen share content hint unset by default', () => {
-		const {captureOptions} = buildScreenShareOptions({
-			resolution: 'medium',
-			frameRate: 30,
-			includeAudio: false,
-		});
-		expect(captureOptions.contentHint).toBeUndefined();
-	});
-	it('uses a caller supplied bitrate ceiling', () => {
+
+	it('publishes the resolved frame rate and the pixel budget bitrate', () => {
 		const {publishOptions} = buildScreenShareOptions({
 			resolution: 'source',
-			frameRate: 60,
+			frameRate: 90,
+			context: 'display',
 			includeAudio: false,
-			maxBitrateBps: 50000000,
+			sourceDimensions: {width: 3840, height: 2160},
 		});
-		expect(publishOptions.screenShareEncoding?.maxBitrate).toBe(50000000);
-	});
-	it('lets the preset ladder exceed the old 10 Mbps default cap', () => {
-		const {publishOptions} = buildScreenShareOptions({
-			resolution: 'ultra',
-			frameRate: 60,
-			includeAudio: false,
+		expect(publishOptions.screenShareEncoding).toEqual({
+			maxBitrate: 9_000_000,
+			maxFramerate: 60,
+			priority: 'high',
 		});
-		expect(publishOptions.screenShareEncoding?.maxBitrate).toBe(24000000);
+		expect(publishOptions.degradationPreference).toBe('maintain-resolution');
 	});
-	it('defaults the high-tier gaming preset to 60 fps', () => {
-		expect(resolveStreamingModeSettings('gaming', 'medium', 30, true)).toEqual({
-			resolution: 'ultra',
-			frameRate: 60,
-		});
+
+	it('holds the motion hint only for a camera', () => {
+		expect(targetOf({mode: 'gaming'}).contentHint).toBeUndefined();
 	});
-	it('keeps free-tier gaming capped at 30 fps', () => {
-		expect(resolveStreamingModeSettings('gaming', 'medium', 30, false)).toEqual({
+
+	it('applies the software H.264 clamp', () => {
+		expect(targetOf({mode: 'gaming', softwareEncoderClamp: true})).toMatchObject({
 			resolution: 'medium',
 			frameRate: 30,
+			softwareEncoderClamped: true,
 		});
+	});
+});
+
+describe('screen share degradation preference', () => {
+	it('keeps device shares balanced', () => {
+		expect(
+			resolveScreenShareDegradationPreference({
+				context: 'device',
+				rung: 'medium',
+				contentHint: undefined,
+				maxBitrate: 3_000_000,
+			}),
+		).toBe('balanced');
+	});
+
+	it('refuses maintain-framerate below the initial frame dropper cliff', () => {
+		expect(
+			resolveScreenShareDegradationPreference({
+				context: 'display',
+				rung: 'low_240p',
+				contentHint: undefined,
+				maxBitrate: 300_000,
+			}),
+		).toBe('maintain-resolution');
+		expect(
+			resolveScreenShareDegradationPreference({
+				context: 'display',
+				rung: 'medium',
+				contentHint: undefined,
+				maxBitrate: 3_000_000,
+			}),
+		).toBe('maintain-framerate');
 	});
 });

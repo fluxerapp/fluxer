@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import {isElectronPlatform} from '@app/features/platform/types/Platform';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {Store} from '@app/features/voice/engine/Store';
 import {sendVoiceStateDisconnect} from '@app/features/voice/engine/VoiceChannelConnector';
@@ -39,6 +38,14 @@ import {
 import {VoiceEngineV2AppReconnectPolicy} from '@app/features/voice/engine/v2/VoiceEngineV2AppReconnectPolicy';
 import VoiceRegionTeleport from '@app/features/voice/state/VoiceRegionTeleport';
 import {
+	findVideoPublishCodecPolicyViolation,
+	getRoomVideoPublishDefaults,
+} from '@app/features/voice/utils/CodecCapabilityDetector';
+import {getH264HardwareProfilesSync} from '@app/features/voice/utils/GpuEncoderCapabilities';
+import {setNoiseSuppressionScopeGuildId} from '@app/features/voice/utils/noise_suppression/NoiseSuppressionSelection';
+import {SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS} from '@app/features/voice/utils/ScreenShareOptions';
+import {
+	clearScreenShareDecodeFailures,
 	getVideoDecoderExclusionsSync,
 	loadVideoDecoderExclusions,
 } from '@app/features/voice/utils/VideoDecoderCapabilities';
@@ -51,7 +58,7 @@ import type {
 	TrackPublishOptions,
 } from 'livekit-client';
 import {Room as LiveKitRoom, RoomEvent, Track} from 'livekit-client';
-import {makeObservable, observable} from 'mobx';
+import {makeObservable, observableRef} from 'mobx';
 import type {Subscription} from 'rxjs';
 import {timer} from 'rxjs';
 
@@ -112,22 +119,19 @@ const initialHotSwapState: RegionHotSwapState = {
 const REGION_HOT_SWAP_TIMEOUT_MS = 10000;
 
 async function getRoomVideoDecoderExclusions(): Promise<RoomOptions['subscriberVideoCodecExclusions']> {
-	const cached = getVideoDecoderExclusionsSync();
-	if (cached) return cached.length > 0 ? cached : undefined;
 	let timeoutId: NodeJS.Timeout | undefined;
 	const timeout = new Promise<null>((resolve) => {
 		timeoutId = setTimeout(() => resolve(null), VIDEO_DECODER_EXCLUSION_TIMEOUT_MS);
 	});
 	try {
-		const exclusions = await Promise.race([loadVideoDecoderExclusions(), timeout]);
-		if (exclusions && exclusions.length > 0) return exclusions;
-		const latest = getVideoDecoderExclusionsSync();
-		return latest && latest.length > 0 ? latest : undefined;
+		await Promise.race([loadVideoDecoderExclusions(), timeout]);
 	} finally {
 		if (timeoutId !== undefined) {
 			clearTimeout(timeoutId);
 		}
 	}
+	const exclusions = getVideoDecoderExclusionsSync();
+	return exclusions && exclusions.length > 0 ? exclusions : undefined;
 }
 
 function createWebAudioMixOption(): RoomOptions['webAudioMix'] {
@@ -137,6 +141,17 @@ function createWebAudioMixOption(): RoomOptions['webAudioMix'] {
 		return {audioContext};
 	}
 	return true;
+}
+
+function createRoomPublishDefaults(): RoomOptions['publishDefaults'] {
+	return {
+		screenShareEncoding: {
+			maxBitrate: SCREEN_SHARE_MAX_VIDEO_BITRATE_BPS,
+			maxFramerate: 30,
+			priority: 'high',
+		},
+		...getRoomVideoPublishDefaults(),
+	};
 }
 
 function createRoomOptions(
@@ -151,7 +166,9 @@ function createRoomOptions(
 		adaptiveStream: false,
 		dynacast: true,
 		webAudioMix: createWebAudioMixOption(),
+		publishDefaults: createRoomPublishDefaults(),
 		subscriberVideoCodecExclusions,
+		h264HardwareProfiles: getH264HardwareProfilesSync()?.profiles,
 	};
 	let e2eeKeyProvider: ExternalE2EEKeyProvider | null = null;
 	let e2eeWorker: Worker | null = null;
@@ -175,14 +192,6 @@ function createRoomConnectOptions(): RoomConnectOptions {
 		autoSubscribe: false,
 	};
 	assert.equal(connectOptions.autoSubscribe, false, 'LiveKit connect options must not auto-subscribe');
-	if (isElectronPlatform()) {
-		connectOptions.rtcConfig = {iceTransportPolicy: 'relay'};
-		assert.equal(
-			connectOptions.rtcConfig.iceTransportPolicy,
-			'relay',
-			'Electron LiveKit connects must force relay ICE',
-		);
-	}
 	return connectOptions;
 }
 
@@ -200,8 +209,8 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 	constructor() {
 		super();
 		makeObservable(this, {
-			connectionState: observable.ref,
-			hotSwapState: observable.ref,
+			connectionState: observableRef,
+			hotSwapState: observableRef,
 		});
 		this.throttle.subscribe(() => this.emitChange());
 		this.reconnect.subscribe(() => this.emitChange());
@@ -341,6 +350,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 			voiceServerEndpoint: context.voiceServerEndpoint,
 			connectionId: context.connectionId,
 		};
+		setNoiseSuppressionScopeGuildId(context.guildId);
 		this.hotSwapState = {
 			pendingRoom: context.hotSwap.pendingRoom as Room | null,
 			previousRoom: context.hotSwap.previousRoom as Room | null,
@@ -527,6 +537,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 		});
 		this.throttle.setInFlightConnect(true);
 		const e2eeKey = raw.e2ee_key ?? null;
+		clearScreenShareDecodeFailures();
 		const subscriberVideoCodecExclusions = await getRoomVideoDecoderExclusions();
 		if (
 			!this.isLatestConnectionAttempt(attemptId) ||
@@ -675,6 +686,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 			adaptiveStream: false,
 			dynacast: true,
 			webAudioMix: createWebAudioMixOption(),
+			publishDefaults: createRoomPublishDefaults(),
 			subscriberVideoCodecExclusions: cachedExclusions && cachedExclusions.length > 0 ? cachedExclusions : undefined,
 		};
 		if (!this.isLatestConnectionAttempt(attemptId) || this.connectionState.room !== existingRoom) {
@@ -797,6 +809,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 			Array.from(oldParticipant.trackPublications.values()),
 		);
 		const errors: Array<{source: string; error: unknown}> = [];
+		let codecPolicyFailure: Error | null = null;
 		for (const publication of publications) {
 			const track = publication.track as LocalTrack | undefined;
 			if (!isReadyToRepublishTrack(track)) {
@@ -816,7 +829,16 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 					source: publication.source,
 					name: publication.trackName,
 				};
-				await newParticipant.publishTrack(track.mediaStreamTrack, publishOptions);
+				const republished = await newParticipant.publishTrack(track.mediaStreamTrack, publishOptions);
+				const violation = publishOptions.videoCodec
+					? findVideoPublishCodecPolicyViolation(publishOptions.videoCodec, republished.options?.videoCodec)
+					: null;
+				if (violation) {
+					codecPolicyFailure = new Error(
+						`Region hot-swap: ${publication.source} negotiated ${violation.negotiated} after requesting ${violation.requested}`,
+					);
+					break;
+				}
 			} catch (error) {
 				errors.push({source: publication.source ?? 'unknown', error});
 				logger.warn('Region hot-swap: failed to republish track', {
@@ -825,6 +847,7 @@ export class VoiceEngineV2AppConnectionHostAdapter extends Store {
 				});
 			}
 		}
+		if (codecPolicyFailure) throw codecPolicyFailure;
 		const screenShareFailure = errors.find(
 			(error) => error.source === Track.Source.ScreenShare || error.source === Track.Source.ScreenShareAudio,
 		);

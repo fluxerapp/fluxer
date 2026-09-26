@@ -45,9 +45,11 @@ const CODEC_PROBES: ReadonlyArray<CodecProbe> = [
 	},
 ];
 
+const SCREEN_SHARE_DECODE_FAILURES_MAX = 1;
+
 let cachedExclusions: Array<VideoCodec> | null = null;
 let pendingProbe: Promise<Array<VideoCodec>> | null = null;
-const runtimeExcludedCodecs = new Set<VideoCodec>();
+const screenShareDecodeFailures = new Set<VideoCodec>();
 
 interface VideoDecoderLike {
 	isConfigSupported(config: WebCodecsConfig): Promise<{supported: boolean}>;
@@ -72,32 +74,8 @@ function hasRtcReceiverCapability(mimeType: string): boolean {
 	});
 }
 
-function shouldExcludeByPlatformPolicy(_codec: VideoCodec): boolean {
-	return false;
-}
-
 function isBaselineWebRtcDecodeCodec(codec: VideoCodec): boolean {
 	return codec === 'h264' || codec === 'vp8';
-}
-
-function mergeRuntimeExclusions(exclusions: Array<VideoCodec> | null): Array<VideoCodec> | null {
-	if (runtimeExcludedCodecs.size === 0) return exclusions;
-	const merged = new Set(exclusions ?? []);
-	for (const codec of runtimeExcludedCodecs) {
-		merged.add(codec);
-	}
-	return [...merged];
-}
-
-function getPlatformPolicyExclusions(): Array<VideoCodec> | null {
-	if ((globalThis as Record<string, unknown>).RTCRtpReceiver === undefined) return null;
-	const excluded: Array<VideoCodec> = [];
-	for (const probe of CODEC_PROBES) {
-		if (hasRtcReceiverCapability(`video/${probe.codec}`) && shouldExcludeByPlatformPolicy(probe.codec)) {
-			excluded.push(probe.codec);
-		}
-	}
-	return excluded.length > 0 ? excluded : null;
 }
 
 async function probeCodecDecode(probe: CodecProbe): Promise<boolean> {
@@ -106,9 +84,6 @@ async function probeCodecDecode(probe: CodecProbe): Promise<boolean> {
 	}
 	if (isBaselineWebRtcDecodeCodec(probe.codec)) {
 		return true;
-	}
-	if (shouldExcludeByPlatformPolicy(probe.codec)) {
-		return false;
 	}
 	const api = getVideoDecoderApi();
 	if (!api) {
@@ -145,17 +120,17 @@ async function probeAllCodecs(): Promise<Array<VideoCodec>> {
 }
 
 export function loadVideoDecoderExclusions(): Promise<Array<VideoCodec>> {
-	if (cachedExclusions) return Promise.resolve(mergeRuntimeExclusions(cachedExclusions) ?? []);
+	if (cachedExclusions) return Promise.resolve(cachedExclusions);
 	if (pendingProbe) return pendingProbe;
 	pendingProbe = probeAllCodecs()
 		.then((result) => {
 			cachedExclusions = result;
-			return mergeRuntimeExclusions(result) ?? [];
+			return result;
 		})
 		.catch((error) => {
 			logger.warn('Video decoder probe failed entirely, not excluding any codecs', {error});
 			cachedExclusions = [];
-			return mergeRuntimeExclusions([]) ?? [];
+			return [];
 		})
 		.finally(() => {
 			pendingProbe = null;
@@ -163,22 +138,40 @@ export function loadVideoDecoderExclusions(): Promise<Array<VideoCodec>> {
 	return pendingProbe;
 }
 
-export function getVideoDecoderExclusionsSync(): Array<VideoCodec> | null {
-	return mergeRuntimeExclusions(cachedExclusions ?? getPlatformPolicyExclusions());
+export function getProbedVideoDecoderExclusionsSync(): Array<VideoCodec> | null {
+	return cachedExclusions;
 }
 
-export function markVideoDecoderRuntimeFailure(codec: VideoCodec, reason: string): boolean {
-	if (isBaselineWebRtcDecodeCodec(codec)) return false;
-	if (runtimeExcludedCodecs.has(codec)) return false;
-	runtimeExcludedCodecs.add(codec);
-	logger.warn('Excluding codec from subscriber decode after runtime failure', {codec, reason});
+export function getVideoDecoderExclusionsSync(): Array<VideoCodec> | null {
+	const probed = getProbedVideoDecoderExclusionsSync();
+	if (probed === null && screenShareDecodeFailures.size === 0) return null;
+	return [...new Set([...(probed ?? []), ...screenShareDecodeFailures])];
+}
+
+export function markScreenShareDecodeFailure(codec: VideoCodec, reason: string): boolean {
+	if (isBaselineWebRtcDecodeCodec(codec)) {
+		logger.warn('Keeping a baseline codec advertised despite a local screen share decode stall', {codec, reason});
+		return false;
+	}
+	if (screenShareDecodeFailures.has(codec)) return false;
+	if (screenShareDecodeFailures.size >= SCREEN_SHARE_DECODE_FAILURES_MAX) return false;
+	screenShareDecodeFailures.add(codec);
+	logger.warn('Withdrawing decode advertisement for a codec after a screen share decode stall', {codec, reason});
 	return true;
+}
+
+export function getScreenShareDecodeFailures(): ReadonlySet<VideoCodec> {
+	return screenShareDecodeFailures;
+}
+
+export function clearScreenShareDecodeFailures(): void {
+	screenShareDecodeFailures.clear();
 }
 
 export function resetVideoDecoderExclusions(): void {
 	cachedExclusions = null;
 	pendingProbe = null;
-	runtimeExcludedCodecs.clear();
+	screenShareDecodeFailures.clear();
 }
 
 if (typeof window !== 'undefined') {

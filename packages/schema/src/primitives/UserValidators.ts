@@ -33,10 +33,10 @@ function sanitizeUsername(value: string): string {
 export const EmailType = withOpenApiType(
 	z
 		.string()
-		.transform(normalizeString)
+		.overwrite(normalizeString)
 		.pipe(
 			withStringLengthRangeValidation(
-				z.string().email(ValidationErrorCodes.INVALID_EMAIL_FORMAT),
+				z.email(ValidationErrorCodes.INVALID_EMAIL_FORMAT),
 				1,
 				254,
 				ValidationErrorCodes.EMAIL_LENGTH_INVALID,
@@ -63,7 +63,7 @@ export const DiscriminatorType = withOpenApiType(
 export const UsernameType = withOpenApiType(
 	z
 		.string()
-		.transform((value) => value.trim())
+		.trim()
 		.pipe(withStringLengthRangeValidation(z.string(), 1, 32, ValidationErrorCodes.USERNAME_LENGTH_INVALID))
 		.refine((value) => FLUXER_TAG_REGEX.test(value), ValidationErrorCodes.USERNAME_INVALID_CHARACTERS)
 		.refine((value) => {
@@ -101,18 +101,18 @@ export const GlobalNameType = z
 export const PasswordType = withOpenApiType(
 	z
 		.string()
-		.transform(normalizeString)
+		.overwrite(normalizeString)
 		.pipe(withStringLengthRangeValidation(z.string(), 8, 256, ValidationErrorCodes.PASSWORD_LENGTH_INVALID)),
 	'PasswordType',
 );
 export const PhoneNumberType = withOpenApiType(
 	z
 		.string()
-		.transform(normalizeString)
+		.overwrite(normalizeString)
 		.refine((value) => PHONE_E164_REGEX.test(value), ValidationErrorCodes.PHONE_NUMBER_INVALID_FORMAT),
 	'PhoneNumberType',
 );
 export const WebhookNameType = z
 	.string()
-	.transform(normalizeString)
+	.overwrite(normalizeString)
 	.pipe(withStringLengthRangeValidation(z.string(), 1, 80, ValidationErrorCodes.WEBHOOK_NAME_LENGTH_INVALID));

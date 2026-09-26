@@ -9,6 +9,7 @@ import type {Channel} from '@app/features/channel/models/Channel';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import type {ChannelMessages} from '@app/features/messaging/state/ChannelMessages';
 import {type ChannelStreamItem, ChannelStreamType} from '@app/features/messaging/utils/MessageGroupingUtils';
+import {CHANNEL_MESSAGE_ID_PREFIX} from '@app/features/messaging/utils/MessageNodeSelectors';
 import {IS_DEV} from '@app/features/platform/types/Env';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import type {MessagePreviewContext} from '@fluxer/constants/src/ChannelConstants';
@@ -126,7 +127,7 @@ export function renderChannelStream(props: RenderChannelStreamProps): Array<Reac
 				flashKey={pendingFlashKey}
 				showUnreadDividerSlots={true}
 				unreadDividerBeforeMessageId={unreadDividerBeforeMessageId}
-				idPrefix="chat-messages"
+				idPrefix={CHANNEL_MESSAGE_ID_PREFIX}
 				messageRowClassName={messageRowClassName}
 				messageActionsClassName={messageActionsClassName}
 				renderMessageActions={renderMessageActions}

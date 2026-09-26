@@ -952,12 +952,13 @@ fn retain_native_frame_sink_handle(
         ));
     }
 
-    let handle = unsafe {
-        NativeScreenFrameSinkHandle::retain_from_raw(data.cast::<NativeScreenFrameSinkHandle>())
-    }
-    .ok_or_else(|| {
-        invalid_arg("ScreenCapture.setFrameSinkHandle received an invalid native frame sink handle")
-    })?;
+    let handle = unsafe { data.cast::<NativeScreenFrameSinkHandle>().as_ref() }
+        .and_then(NativeScreenFrameSinkHandle::retain_ref)
+        .ok_or_else(|| {
+            invalid_arg(
+                "ScreenCapture.setFrameSinkHandle received an invalid native frame sink handle",
+            )
+        })?;
 
     Ok(Arc::new(handle))
 }
@@ -967,7 +968,7 @@ fn enqueue_native_bus_video_frame(
     frame: &VideoFrame,
 ) -> EnqueueOutcome {
     if let Some(dmabuf) = frame.dmabuf.as_ref() {
-        if sink.handle().enqueue_dmabuf.is_none() {
+        if !sink.supports_dmabuf() {
             return EnqueueOutcome::Rejected;
         }
         let plane_count = dmabuf.plane_count as usize;
@@ -975,18 +976,13 @@ fn enqueue_native_bus_video_frame(
             return EnqueueOutcome::Rejected;
         }
 
-        let mut duped_fds: Vec<i32> = Vec::with_capacity(plane_count);
+        let mut duped_fds: Vec<OwnedFd> = Vec::with_capacity(plane_count);
         for raw in dmabuf.fds.iter().take(plane_count) {
             let duped = unsafe { libc::dup(*raw) };
             if duped < 0 {
-                for fd in duped_fds {
-                    unsafe {
-                        libc::close(fd);
-                    }
-                }
                 return EnqueueOutcome::Rejected;
             }
-            duped_fds.push(duped);
+            duped_fds.push(unsafe { OwnedFd::from_raw_fd(duped) });
         }
 
         let desc = BusDmabufDesc {
@@ -1001,7 +997,7 @@ fn enqueue_native_bus_video_frame(
             timestamp_us: frame.timestamp_us,
         };
 
-        return unsafe { sink.enqueue_dmabuf_take_fds(desc, &duped_fds) };
+        return sink.enqueue_dmabuf_take_fds(desc, duped_fds);
     }
 
     sink.enqueue_nv12_copy(

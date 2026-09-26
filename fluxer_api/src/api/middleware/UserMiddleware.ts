@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import * as AuthSession from '@app/api/auth/AuthSession';
+import {Logger} from '@app/api/Logger';
+import {hashAuthToken, recordAbuseSignal} from '@app/api/middleware/AbusiveIpAutoBanner';
+import type {User} from '@app/api/models/User';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
+import {getRequestClientIp} from '@app/api/utils/RequestClientIp';
+import {stripApiPrefix} from '@app/api/utils/RequestPathUtils';
 import type {Context} from 'hono';
 import {createMiddleware} from 'hono/factory';
-import * as AuthSession from '../auth/AuthSession';
-import {Logger} from '../Logger';
-import type {User} from '../models/User';
-import type {HonoEnv} from '../types/HonoEnv';
-import {requireRequestClientIp} from '../utils/RequestClientIp';
-import {stripApiPrefix} from '../utils/RequestPathUtils';
-import {hashAuthToken, recordAbuseSignal} from './AbusiveIpAutoBanner';
 
 type TokenType = 'session' | 'bearer' | 'bot' | 'admin_api_key';
 
@@ -60,7 +60,7 @@ function setUserInContext(ctx: Context<HonoEnv>, user: User, trackActivity: bool
 	ctx.set('user', user);
 	if (trackActivity) {
 		const now = new Date();
-		const ip = requireRequestClientIp(ctx);
+		const ip = getRequestClientIp(ctx);
 		const kvActivityTracker = ctx.get('kvActivityTracker');
 		const userActivityBuffer = ctx.get('userActivityBuffer');
 		userActivityBuffer.recordActivity(user.id, now, ip);
@@ -77,7 +77,7 @@ export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 	}
 	const rawAuthHeader = ctx.req.header('Authorization');
 	const parsed = parseAuthHeader(rawAuthHeader);
-	const resolvedClientIp = requireRequestClientIp(ctx);
+	const resolvedClientIp = getRequestClientIp(ctx);
 	ctx.set('oauthBearerToken', undefined);
 	ctx.set('oauthBearerApplicationId', undefined);
 	ctx.set('oauthBearerAllowed', false);
@@ -98,10 +98,14 @@ export const UserMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 		const authSession = await AuthSession.getAuthSessionByToken(apiContext, token);
 		if (authSession) {
 			void AuthSession.updateAuthSessionLastUsed(apiContext, authSession.sessionIdHash);
-			const user = await apiContext.services.users.findUniqueAssert(authSession.userId);
-			ctx.set('authSession', authSession);
-			ctx.set('authTokenType', 'session');
-			setUserInContext(ctx, user, true);
+			const user = await apiContext.services.users.findUnique(authSession.userId);
+			if (user) {
+				ctx.set('authSession', authSession);
+				ctx.set('authTokenType', 'session');
+				setUserInContext(ctx, user, true);
+			} else {
+				recordAbuseSignal(resolvedClientIp, 'auth_failure:session', {tokenHash});
+			}
 		} else {
 			recordAbuseSignal(resolvedClientIp, 'auth_failure:session', {tokenHash});
 		}

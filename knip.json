@@ -1,18 +1,21 @@
 {
-	"$schema": "https://unpkg.com/knip@5/schema.json",
+	"$schema": "https://unpkg.com/knip@6/schema.json",
 	"include": ["files", "exports", "types", "dependencies", "unlisted", "binaries", "catalog"],
+	"ignoreExportsUsedInFile": true,
 	"ignoreDependencies": [
 		"@bufbuild/protoc-gen-es",
 		"@tailwindcss/cli",
 		"@types/events",
 		"events",
 		"fflate",
-		"gifenc",
-		"gifuct-js",
-		"tailwindcss",
-		"upng-js"
+		"tailwindcss"
 	],
-	"ignoreFiles": ["fluxer_admin/src/styles/app.css", "fluxer_admin/static/htmx.min.js"],
+	"ignoreFiles": [
+		"fluxer_admin/src/styles/app.css",
+		"fluxer_admin/static/htmx.min.js",
+		"tools/ci/templates/libfluxcore_wrapper.d.ts",
+		"tools/ci/templates/libfluxcore_wrapper.js"
+	],
 	"ignoreIssues": {
 		"fluxer_app/scripts/build/Config.tsx": ["exports"],
 		"fluxer_app/scripts/build/rspack/static-files.mjs": ["exports"],
@@ -23,12 +26,17 @@
 		"fluxer_desktop/src/main/Autostart.ts": ["exports"],
 		"fluxer_desktop/src/main/LinuxDesktopEntry.ts": ["exports"],
 		"fluxer_desktop/src/main/NotificationState.ts": ["exports", "types"],
+		"packages/schema/src/domains/admin/AdminUserSchemas.ts": ["exports"],
+		"packages/schema/src/domains/admin/PushServiceDeliverySchemas.ts": ["exports"],
+		"packages/schema/src/domains/admin/VoiceNoiseSuppressionSchemas.ts": ["exports"],
+		"packages/schema/src/domains/download/DownloadSchemas.ts": ["exports"],
 		"packages/schema/src/domains/geolocation/GeolocationSchemas.ts": ["exports"],
+		"packages/schema/src/domains/guild/GuildAuditLogSchemas.ts": ["exports"],
 		"pnpm-workspace.yaml": ["catalog"]
 	},
 	"workspaces": {
 		".": {
-			"project": ["scripts/**/*.mjs"]
+			"ignoreDependencies": ["vite"]
 		},
 		"fluxer_api": {
 			"ignoreDependencies": [
@@ -43,12 +51,12 @@
 				"nodemailer",
 				"pg",
 				"pino",
+				"undici",
 				"validator"
 			]
 		},
 		"fluxer_app": {
-			"entry": ["lingui.config.js", "scripts/build-sw.mjs", "scripts/Generate*.ts"],
-			"ignoreDependencies": ["@lingui/swc-plugin"]
+			"entry": ["lingui.config.js", "scripts/build-sw.mjs", "scripts/Generate*.ts"]
 		},
 		"fluxer_desktop": {
 			"entry": [
@@ -62,10 +70,14 @@
 				"native/*/test/**/*.mjs"
 			],
 			"project": ["src/**/*.{ts,tsx,mjs,js}", "scripts/**/*.mjs", "native/**/*.{js,mjs,cjs,d.ts}"],
-			"ignoreDependencies": ["electron-builder"]
+			"ignoreBinaries": ["reg.exe", "update-desktop-database"],
+			"ignoreDependencies": ["electron-builder", "electron-builder-squirrel-windows"]
+		},
+		"fluxer_docs": {
+			"entry": ["scripts/*.ts", "src/**/*.astro"],
+			"project": ["src/**/*.{ts,astro,mdx}", "scripts/**/*.ts"]
 		},
 		"packages/openapi": {
-			"entry": ["src/GenerateOpenAPISpec.ts"],
 			"project": ["src/**/*.ts"]
 		},
 		"packages/schema": {

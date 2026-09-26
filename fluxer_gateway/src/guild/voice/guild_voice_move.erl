@@ -176,7 +176,7 @@ send_voice_server_update_for_move(
     integer(), integer(), integer(), binary(), binary() | null, pid()
 ) -> ok.
 do_send_voice_server_update(GuildId, ChannelId, UserId, SessionId, OldConnectionId, GuildPid) ->
-    try gen_server:call(GuildPid, {get_sessions}, 10000) of
+    try guild_voice_server_state:guild_state_call(GuildPid, 10000) of
         State when is_map(State) ->
             request_and_broadcast_token(
                 GuildId, ChannelId, UserId, SessionId, OldConnectionId, State

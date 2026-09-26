@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {
-	canUseWindowFocusedHoverControls,
-	subscribeWindowHoverControlsChange,
-} from '@app/features/ui/utils/WindowFocusInteractionGuard';
-import type React from 'react';
-import {useCallback, useEffect, useRef, useState} from 'react';
-import {
 	createHoverStateSnapshot,
 	type HoverStateEvent,
 	type HoverStateSnapshot,
 	selectIsHovering,
 	transitionHoverStateSnapshot,
-} from './HoverStateMachine';
+} from '@app/features/app/hooks/HoverStateMachine';
+import {
+	canUseWindowFocusedHoverControls,
+	subscribeWindowHoverControlsChange,
+} from '@app/features/ui/utils/WindowFocusInteractionGuard';
+import type React from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 
 type HoverHook = [React.RefCallback<HTMLElement>, boolean];
 

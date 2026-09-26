@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, MessageID} from '@app/api/BrandedTypes';
+import {Logger} from '@app/api/Logger';
+import type {Message} from '@app/api/models/Message';
+import {getMessageSearchService} from '@app/api/SearchFactory';
+import type {IMessageSearchService} from '@app/api/search/IMessageSearchService';
+import {deleteMessageSearchDocuments} from '@app/api/search/MessageSearchIndexCleanup';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import type {MessageSearchFilters} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
 import type {MessageSearchRequest} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
-import type {ChannelID, MessageID} from '../../../BrandedTypes';
-import {Logger} from '../../../Logger';
-import type {Message} from '../../../models/Message';
-import {getMessageSearchService} from '../../../SearchFactory';
-import type {IMessageSearchService} from '../../../search/IMessageSearchService';
-import {deleteMessageSearchDocuments} from '../../../search/MessageSearchIndexCleanup';
-import type {IUserRepository} from '../../../user/IUserRepository';
-import type {WorkerTaskName} from '../../../worker/WorkerLaneConfig';
 
 interface MessageSearchIndexOptions {
 	includeDefault?: boolean;

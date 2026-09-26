@@ -3,20 +3,15 @@
 import assert from 'node:assert/strict';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {
-	createLocalMigrationReadinessState,
-	isLocalMigrationReadinessComplete,
-	type ScreenShareLocalMigrationReadinessState,
-	type ScreenShareMigrationReadinessResult,
 	type ScreenShareRemoteMigrationEvent,
 	type ScreenShareRemoteMigrationState,
-	selectLocalMigrationReadinessResult,
-	transitionLocalMigrationReadinessState,
 	transitionRemoteScreenShareMigrationState,
 } from '@app/features/voice/engine/ScreenSharePublicationMigrationStateMachine';
 import {Store} from '@app/features/voice/engine/Store';
 import {selectVoiceMediaGraphViewerStreamKeys} from '@app/features/voice/engine/VoiceMediaGraph';
 import {voiceMediaGraphStore} from '@app/features/voice/engine/VoiceMediaGraphStore';
 import {getStreamKeyForParticipantIdentity} from '@app/features/voice/engine/VoiceStreamWatchState';
+import {isScreenShareVideoCodecValue} from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareNativePublishOptions';
 import {
 	type LocalParticipant,
 	type Participant,
@@ -40,14 +35,16 @@ const COMMIT_OP = 3;
 const ABORT_OP = 4;
 const BREAK_OP = 5;
 const TEXT_ENCODER = new TextEncoder();
-const TEXT_DECODER = new TextDecoder();
-const DEFAULT_READY_TIMEOUT_MS = 5000;
+const TEXT_DECODER = new TextDecoder('utf-8', {fatal: true});
+const MIGRATION_MESSAGE_BYTES_MAX = 4096;
+const MIGRATION_IDENTIFIER_CHARS_MAX = 256;
+const TRACK_SID_CHARS_MAX = 256;
+const MIGRATION_REASON_CHARS_MAX = 512;
 const REMOTE_READY_PROBE_TIMEOUT_MS = 6500;
 const REMOTE_MIGRATION_STATE_TIMEOUT_MS = 10000;
 const REMOTE_READY_PROBE_STATS_INTERVAL_MS = 200;
 const CANDIDATE_TRACK_NAME_MARKER = '.candidate.';
 export const REMOTE_MIGRATION_STATES_MAX = 256;
-export const LOCAL_MIGRATION_SESSIONS_MAX = 16;
 export const READY_PROBES_MAX = 64;
 
 export interface ScreenShareMigrationCandidateMessage {
@@ -109,58 +106,36 @@ export type ScreenShareMigrationMessage =
 	| ScreenShareMigrationCommitMessage
 	| ScreenShareMigrationAbortMessage;
 
-interface LocalMigrationInput {
-	room: Room;
-	publisherIdentity: string;
-	migrationId: string;
-	generation: number;
-	previousTrackSid: string | null;
-	candidateTrackSid: string;
-	codec: VideoCodec;
-	reason: string;
-	targetIdentities: ReadonlyArray<string>;
-}
-
-interface LocalBreakBeforeMakeMigrationInput {
-	migrationId: string;
-	generation: number;
-	previousTrackSid: string | null;
-	codec: VideoCodec;
-	reason: string;
-}
-
 interface ReadyProbe {
 	dispose: () => void;
-}
-
-function createId(prefix: string): string {
-	const cryptoObject = globalThis.crypto as Crypto | undefined;
-	if (typeof cryptoObject?.randomUUID === 'function') return `${prefix}_${cryptoObject.randomUUID()}`;
-	return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`;
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {
 	return value !== null && typeof value === 'object';
 }
 
-function isVideoCodec(value: unknown): value is VideoCodec {
-	return value === 'av1' || value === 'h265' || value === 'h264' || value === 'vp9' || value === 'vp8';
+function isBoundedString(value: unknown, maximumLength: number): value is string {
+	return typeof value === 'string' && value.length > 0 && value.length <= maximumLength;
 }
 
-function isStringOrNull(value: unknown): value is string | null {
-	return typeof value === 'string' || value === null;
+function isBoundedStringOrNull(value: unknown, maximumLength: number): value is string | null {
+	return value === null || isBoundedString(value, maximumLength);
+}
+
+function isMigrationGeneration(value: unknown): value is number {
+	return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
 }
 
 function isCandidateMessage(message: unknown): message is ScreenShareMigrationCandidateMessage {
 	if (!isObject(message)) return false;
 	if (message.op !== CANDIDATE_OP || !isObject(message.d)) return false;
 	return (
-		typeof message.d.migration_id === 'string' &&
-		typeof message.d.generation === 'number' &&
-		isStringOrNull(message.d.previous_track_sid) &&
-		typeof message.d.candidate_track_sid === 'string' &&
-		isVideoCodec(message.d.codec) &&
-		typeof message.d.reason === 'string'
+		isBoundedString(message.d.migration_id, MIGRATION_IDENTIFIER_CHARS_MAX) &&
+		isMigrationGeneration(message.d.generation) &&
+		isBoundedStringOrNull(message.d.previous_track_sid, TRACK_SID_CHARS_MAX) &&
+		isBoundedString(message.d.candidate_track_sid, TRACK_SID_CHARS_MAX) &&
+		isScreenShareVideoCodecValue(message.d.codec) &&
+		isBoundedString(message.d.reason, MIGRATION_REASON_CHARS_MAX)
 	);
 }
 
@@ -168,11 +143,11 @@ function isBreakMessage(message: unknown): message is ScreenShareMigrationBreakM
 	if (!isObject(message)) return false;
 	if (message.op !== BREAK_OP || !isObject(message.d)) return false;
 	return (
-		typeof message.d.migration_id === 'string' &&
-		typeof message.d.generation === 'number' &&
-		isStringOrNull(message.d.previous_track_sid) &&
-		isVideoCodec(message.d.codec) &&
-		typeof message.d.reason === 'string'
+		isBoundedString(message.d.migration_id, MIGRATION_IDENTIFIER_CHARS_MAX) &&
+		isMigrationGeneration(message.d.generation) &&
+		isBoundedStringOrNull(message.d.previous_track_sid, TRACK_SID_CHARS_MAX) &&
+		isScreenShareVideoCodecValue(message.d.codec) &&
+		isBoundedString(message.d.reason, MIGRATION_REASON_CHARS_MAX)
 	);
 }
 
@@ -180,9 +155,9 @@ function isReadyMessage(message: unknown): message is ScreenShareMigrationReadyM
 	if (!isObject(message)) return false;
 	if (message.op !== READY_OP || !isObject(message.d)) return false;
 	return (
-		typeof message.d.migration_id === 'string' &&
-		typeof message.d.generation === 'number' &&
-		typeof message.d.candidate_track_sid === 'string'
+		isBoundedString(message.d.migration_id, MIGRATION_IDENTIFIER_CHARS_MAX) &&
+		isMigrationGeneration(message.d.generation) &&
+		isBoundedString(message.d.candidate_track_sid, TRACK_SID_CHARS_MAX)
 	);
 }
 
@@ -190,10 +165,10 @@ function isCommitMessage(message: unknown): message is ScreenShareMigrationCommi
 	if (!isObject(message)) return false;
 	if (message.op !== COMMIT_OP || !isObject(message.d)) return false;
 	return (
-		typeof message.d.migration_id === 'string' &&
-		typeof message.d.generation === 'number' &&
-		isStringOrNull(message.d.previous_track_sid) &&
-		typeof message.d.candidate_track_sid === 'string'
+		isBoundedString(message.d.migration_id, MIGRATION_IDENTIFIER_CHARS_MAX) &&
+		isMigrationGeneration(message.d.generation) &&
+		isBoundedStringOrNull(message.d.previous_track_sid, TRACK_SID_CHARS_MAX) &&
+		isBoundedString(message.d.candidate_track_sid, TRACK_SID_CHARS_MAX)
 	);
 }
 
@@ -201,14 +176,15 @@ function isAbortMessage(message: unknown): message is ScreenShareMigrationAbortM
 	if (!isObject(message)) return false;
 	if (message.op !== ABORT_OP || !isObject(message.d)) return false;
 	return (
-		typeof message.d.migration_id === 'string' &&
-		typeof message.d.generation === 'number' &&
-		isStringOrNull(message.d.candidate_track_sid) &&
-		typeof message.d.reason === 'string'
+		isBoundedString(message.d.migration_id, MIGRATION_IDENTIFIER_CHARS_MAX) &&
+		isMigrationGeneration(message.d.generation) &&
+		isBoundedStringOrNull(message.d.candidate_track_sid, TRACK_SID_CHARS_MAX) &&
+		isBoundedString(message.d.reason, MIGRATION_REASON_CHARS_MAX)
 	);
 }
 
 export function parseScreenShareMigrationMessage(payload: Uint8Array): ScreenShareMigrationMessage | null {
+	if (payload.byteLength === 0 || payload.byteLength > MIGRATION_MESSAGE_BYTES_MAX) return null;
 	try {
 		const parsed = JSON.parse(TEXT_DECODER.decode(payload)) as unknown;
 		if (!isObject(parsed)) return null;
@@ -223,7 +199,7 @@ export function parseScreenShareMigrationMessage(payload: Uint8Array): ScreenSha
 	}
 }
 
-export function encodeScreenShareMigrationMessage(message: ScreenShareMigrationMessage): Uint8Array {
+export function encodeScreenShareMigrationMessage(message: ScreenShareMigrationMessage): Uint8Array<ArrayBuffer> {
 	return TEXT_ENCODER.encode(JSON.stringify(message));
 }
 
@@ -315,6 +291,14 @@ function safeSetEnabled(publication: RemoteTrackPublication, enabled: boolean): 
 	}
 }
 
+function getRemoteTrackStatsReport(track: RemoteTrack): Promise<RTCStatsReport | undefined> | undefined {
+	try {
+		return track.getRTCStatsReport?.();
+	} catch {
+		return undefined;
+	}
+}
+
 function publishMigrationMessage(
 	participant: LocalParticipant,
 	message: ScreenShareMigrationMessage,
@@ -327,95 +311,18 @@ function publishMigrationMessage(
 	});
 }
 
-class ScreenShareLocalMigrationSession {
-	readonly migrationId: string;
-	readonly generation: number;
-	readonly previousTrackSid: string | null;
-	readonly candidateTrackSid: string;
-	private readinessState: ScreenShareLocalMigrationReadinessState;
-	private waitResolve: ((result: ScreenShareMigrationReadinessResult) => void) | null = null;
-	private waitTimer: NodeJS.Timeout | null = null;
-
-	constructor(input: LocalMigrationInput) {
-		this.migrationId = input.migrationId;
-		this.generation = input.generation;
-		this.previousTrackSid = input.previousTrackSid;
-		this.candidateTrackSid = input.candidateTrackSid;
-		this.readinessState = createLocalMigrationReadinessState(input.targetIdentities);
-	}
-
-	markReady(participantIdentity: string): void {
-		this.readinessState = transitionLocalMigrationReadinessState(this.readinessState, {
-			type: 'watcher.ready',
-			participantIdentity,
-		});
-		this.resolveIfComplete(false);
-	}
-
-	waitForReady(timeoutMs = DEFAULT_READY_TIMEOUT_MS): Promise<ScreenShareMigrationReadinessResult> {
-		if (isLocalMigrationReadinessComplete(this.readinessState)) {
-			return Promise.resolve(this.buildResult(false));
-		}
-		return new Promise((resolve) => {
-			this.waitResolve = resolve;
-			this.waitTimer = setTimeout(() => {
-				this.waitTimer = null;
-				this.finish(true);
-			}, timeoutMs);
-		});
-	}
-
-	finish(timedOut = false): ScreenShareMigrationReadinessResult {
-		if (this.waitTimer) {
-			clearTimeout(this.waitTimer);
-			this.waitTimer = null;
-		}
-		const result = this.buildResult(timedOut);
-		this.waitResolve?.(result);
-		this.waitResolve = null;
-		return result;
-	}
-
-	private resolveIfComplete(timedOut: boolean): void {
-		if (!isLocalMigrationReadinessComplete(this.readinessState)) return;
-		this.finish(timedOut);
-	}
-
-	private buildResult(timedOut: boolean): ScreenShareMigrationReadinessResult {
-		return selectLocalMigrationReadinessResult(this.readinessState, timedOut);
-	}
-}
-
 class ScreenSharePublicationMigration extends Store {
 	private room: Room | null = null;
 	private bindDisposer: (() => void) | null = null;
 	private guildId: string | null = null;
 	private channelId: string | null = null;
 	private remoteStatesByIdentity = new Map<string, ScreenShareRemoteMigrationState>();
-	private localSessionsById = new Map<string, ScreenShareLocalMigrationSession>();
 	private readyProbesByKey = new Map<string, ReadyProbe>();
 	private remoteStateExpiryTimersByIdentity = new Map<string, NodeJS.Timeout>();
 	version = 0;
 
-	createMigrationId(): string {
-		return createId('ssm');
-	}
-
-	getDefaultReadyTimeoutMs(): number {
-		return DEFAULT_READY_TIMEOUT_MS;
-	}
-
 	getRemoteMigrationStateTimeoutMs(): number {
 		return REMOTE_MIGRATION_STATE_TIMEOUT_MS;
-	}
-
-	shouldAbortLocalMigrationForReadiness(readiness: ScreenShareMigrationReadinessResult): boolean {
-		return readiness.timedOut && readiness.missingIdentities.length > 0;
-	}
-
-	createCandidateTrackName(baseName: string | undefined, migrationId: string, generation: number): string {
-		const prefix = baseName && baseName.length > 0 ? baseName : 'screen_share';
-		return `${prefix}${CANDIDATE_TRACK_NAME_MARKER}${generation}.${migrationId}`;
 	}
 
 	bind(room: Room, options: {guildId?: string | null; channelId?: string | null} = {}): () => void {
@@ -468,10 +375,6 @@ class ScreenSharePublicationMigration extends Store {
 			probe.dispose();
 		}
 		this.readyProbesByKey.clear();
-		for (const session of this.localSessionsById.values()) {
-			session.finish(true);
-		}
-		this.localSessionsById.clear();
 		for (const timer of this.remoteStateExpiryTimersByIdentity.values()) {
 			clearTimeout(timer);
 		}
@@ -481,84 +384,6 @@ class ScreenSharePublicationMigration extends Store {
 		this.guildId = null;
 		this.channelId = null;
 		this.bumpVersion();
-	}
-
-	beginLocalMigration(input: LocalMigrationInput): ScreenShareLocalMigrationSession {
-		const session = new ScreenShareLocalMigrationSession(input);
-		if (this.hasLocalSessionCapacity(input.migrationId)) {
-			this.localSessionsById.set(input.migrationId, session);
-		}
-		this.commitRemoteMigrationState(input.publisherIdentity, {
-			type: 'migration.candidate',
-			migrationId: input.migrationId,
-			generation: input.generation,
-			previousTrackSid: input.previousTrackSid,
-			candidateTrackSid: input.candidateTrackSid,
-			codec: input.codec,
-			readySent: true,
-		});
-		return session;
-	}
-
-	markLocalMigrationBreaking(publisherIdentity: string, message: ScreenShareMigrationBreakMessage['d']): void {
-		this.applyBreak(publisherIdentity, message);
-	}
-
-	finishLocalMigration(migrationId: string): void {
-		const session = this.localSessionsById.get(migrationId);
-		session?.finish(false);
-		this.localSessionsById.delete(migrationId);
-	}
-
-	markLocalMigrationCommitted(publisherIdentity: string, message: ScreenShareMigrationCommitMessage['d']): void {
-		this.applyCommit(publisherIdentity, message);
-		this.finishLocalMigration(message.migration_id);
-	}
-
-	markLocalMigrationAborted(publisherIdentity: string, message: ScreenShareMigrationAbortMessage['d']): void {
-		this.applyAbort(publisherIdentity, message);
-		this.finishLocalMigration(message.migration_id);
-	}
-
-	async publishCandidate(room: Room, input: LocalMigrationInput): Promise<void> {
-		await publishMigrationMessage(room.localParticipant, {
-			op: CANDIDATE_OP,
-			d: {
-				migration_id: input.migrationId,
-				generation: input.generation,
-				previous_track_sid: input.previousTrackSid,
-				candidate_track_sid: input.candidateTrackSid,
-				codec: input.codec,
-				reason: input.reason,
-			},
-		});
-	}
-
-	async publishBreak(room: Room, input: LocalBreakBeforeMakeMigrationInput): Promise<void> {
-		await publishMigrationMessage(room.localParticipant, {
-			op: BREAK_OP,
-			d: {
-				migration_id: input.migrationId,
-				generation: input.generation,
-				previous_track_sid: input.previousTrackSid,
-				codec: input.codec,
-				reason: input.reason,
-			},
-		});
-	}
-
-	async publishCommit(room: Room, message: ScreenShareMigrationCommitMessage['d']): Promise<void> {
-		await publishMigrationMessage(room.localParticipant, {
-			op: COMMIT_OP,
-			d: message,
-		});
-	}
-
-	async publishAbort(room: Room, message: ScreenShareMigrationAbortMessage['d']): Promise<void> {
-		await publishMigrationMessage(room.localParticipant, {
-			op: ABORT_OP,
-			d: message,
-		});
 	}
 
 	selectScreenSharePublication(
@@ -631,9 +456,6 @@ class ScreenSharePublicationMigration extends Store {
 				this.applyCandidate(participant.identity, message.d);
 				this.ensureRemoteCandidateSubscription(room, participant as RemoteParticipant);
 				break;
-			case READY_OP:
-				this.applyReady(participant.identity, message.d);
-				break;
 			case COMMIT_OP:
 				this.applyCommit(participant.identity, message.d);
 				break;
@@ -662,13 +484,6 @@ class ScreenSharePublicationMigration extends Store {
 			previousTrackSid: message.previous_track_sid,
 			codec: message.codec,
 		});
-	}
-
-	private applyReady(participantIdentity: string, message: ScreenShareMigrationReadyMessage['d']): void {
-		const session = this.localSessionsById.get(message.migration_id);
-		if (!session) return;
-		if (session.generation !== message.generation || session.candidateTrackSid !== message.candidate_track_sid) return;
-		session.markReady(participantIdentity);
 	}
 
 	private applyCommit(participantIdentity: string, message: ScreenShareMigrationCommitMessage['d']): void {
@@ -811,6 +626,7 @@ class ScreenSharePublicationMigration extends Store {
 		let disposed = false;
 		let video: HTMLVideoElement | null = null;
 		let statsInterval: NodeJS.Timeout | null = null;
+		let statsRequestPending = false;
 		const cleanups: Array<() => void> = [];
 		const complete = (): void => {
 			if (disposed) return;
@@ -841,8 +657,10 @@ class ScreenSharePublicationMigration extends Store {
 		cleanups.push(() => clearTimeout(expireTimer));
 
 		const checkStats = (): void => {
-			const statsPromise = track.getRTCStatsReport?.();
+			if (disposed || statsRequestPending) return;
+			const statsPromise = getRemoteTrackStatsReport(track);
 			if (!statsPromise) return;
+			statsRequestPending = true;
 			void statsPromise
 				.then((report) => {
 					if (!report) return;
@@ -861,7 +679,10 @@ class ScreenSharePublicationMigration extends Store {
 						}
 					}
 				})
-				.catch(() => {});
+				.catch(() => {})
+				.finally(() => {
+					statsRequestPending = false;
+				});
 		};
 		statsInterval = setInterval(checkStats, REMOTE_READY_PROBE_STATS_INTERVAL_MS);
 		checkStats();
@@ -1022,18 +843,6 @@ class ScreenSharePublicationMigration extends Store {
 		return false;
 	}
 
-	private hasLocalSessionCapacity(migrationId: string): boolean {
-		assert.ok(this.localSessionsById.size <= LOCAL_MIGRATION_SESSIONS_MAX, 'local sessions must stay within cap');
-		if (this.localSessionsById.has(migrationId)) return true;
-		if (this.localSessionsById.size < LOCAL_MIGRATION_SESSIONS_MAX) return true;
-		logger.error('Refusing local screen share migration session beyond cap; a stale session may have leaked', {
-			migrationId,
-			trackedCount: this.localSessionsById.size,
-			cap: LOCAL_MIGRATION_SESSIONS_MAX,
-		});
-		return false;
-	}
-
 	private hasReadyProbeCapacity(participantIdentity: string, trackSid: string): boolean {
 		assert.ok(this.readyProbesByKey.size <= READY_PROBES_MAX, 'ready probes must stay within cap');
 		if (this.readyProbesByKey.size < READY_PROBES_MAX) return true;
@@ -1069,7 +878,5 @@ if (typeof window !== 'undefined') {
 		}
 	)._screenSharePublicationMigration = instance;
 }
-
-export type {ScreenShareMigrationReadinessResult, ScreenShareLocalMigrationSession};
 
 export default instance;

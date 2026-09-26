@@ -1,5 +1,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import type {AdminBanManagementService} from '@app/api/admin/services/AdminBanManagementService';
+import {AdminUserBanService} from '@app/api/admin/services/AdminUserBanService';
+import {AdminUserDeletionService} from '@app/api/admin/services/AdminUserDeletionService';
+import {AdminUserLookupService} from '@app/api/admin/services/AdminUserLookupService';
+import {AdminUserProfileService} from '@app/api/admin/services/AdminUserProfileService';
+import {AdminUserSecurityService} from '@app/api/admin/services/AdminUserSecurityService';
+import {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserUpdatePropagator';
+import {createChannelID, createUserID, type UserID} from '@app/api/BrandedTypes';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
+import type {EntityAssetService} from '@app/api/infrastructure/EntityAssetService';
+import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
+import type {KVBulkMessageDeletionQueueService} from '@app/api/infrastructure/KVBulkMessageDeletionQueueService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
+import type {ReportService} from '@app/api/report/ReportService';
+import type {IRiskHistoryRepository} from '@app/api/risk/HistoricalOutcomeRepository';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import type {UserContactChangeLogService} from '@app/api/user/services/UserContactChangeLogService';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {
@@ -10,29 +33,6 @@ import type {
 } from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type Stripe from 'stripe';
-import type {ApiContext} from '../../ApiContext';
-import {createChannelID, createUserID, type UserID} from '../../BrandedTypes';
-import type {IChannelRepository} from '../../channel/IChannelRepository';
-import type {IGuildRepositoryAggregate} from '../../guild/repositories/IGuildRepositoryAggregate';
-import type {IDiscriminatorService} from '../../infrastructure/DiscriminatorService';
-import type {EntityAssetService} from '../../infrastructure/EntityAssetService';
-import type {KVAccountDeletionQueueService} from '../../infrastructure/KVAccountDeletionQueueService';
-import type {KVBulkMessageDeletionQueueService} from '../../infrastructure/KVBulkMessageDeletionQueueService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import {getBillingRepository} from '../../middleware/ServiceRegistry';
-import type {ReportService} from '../../report/ReportService';
-import type {IRiskHistoryRepository} from '../../risk/HistoricalOutcomeRepository';
-import type {IUserRepository} from '../../user/IUserRepository';
-import type {UserContactChangeLogService} from '../../user/services/UserContactChangeLogService';
-import {mapUserToAdminResponse} from '../models/UserTypes';
-import type {AdminAuditService} from './AdminAuditService';
-import type {AdminBanManagementService} from './AdminBanManagementService';
-import {AdminUserBanService} from './AdminUserBanService';
-import {AdminUserDeletionService} from './AdminUserDeletionService';
-import {AdminUserLookupService} from './AdminUserLookupService';
-import {AdminUserProfileService} from './AdminUserProfileService';
-import {AdminUserSecurityService} from './AdminUserSecurityService';
-import {AdminUserUpdatePropagator} from './AdminUserUpdatePropagator';
 
 interface AdminUserServiceDeps {
 	apiContext: ApiContext;

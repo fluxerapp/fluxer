@@ -52,7 +52,6 @@ const SOURCE_TAB_CATEGORY: Partial<Record<UserSettingsTabType, SettingsCategoryT
 	linked_accounts: 'account',
 	plutonium: 'account',
 	gift_inventory: 'account',
-	expression_packs: 'account',
 	privacy_safety: 'privacy',
 	authorized_apps: 'privacy',
 	blocked_users: 'privacy',

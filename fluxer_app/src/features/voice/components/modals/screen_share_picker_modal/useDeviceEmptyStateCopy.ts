@@ -12,7 +12,7 @@ const NO_CAMERAS_OR_VIRTUAL_DEVICES_FOUND_DESCRIPTOR = msg({
 });
 const BROWSERS_DO_NOT_LIST_CAMERAS_IN_THE_SCREEN_DESCRIPTOR = msg({
 	message:
-		'Browsers do not list cameras in the screen-share picker. Choose them from this devices tab instead. If nothing appears here, allow camera access or connect a device.',
+		'Browsers do not list cameras in the screen-share picker. Choose them from the Devices tab instead. If nothing appears here, allow camera access or connect a device.',
 	comment: 'Empty-state explanation in the screen-share picker devices tab on web.',
 });
 const CAMERAS_AND_VIRTUAL_CAPTURE_DEVICES_ARE_SELECTED_HERE_DESCRIPTOR = msg({

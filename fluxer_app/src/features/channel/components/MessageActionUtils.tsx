@@ -19,7 +19,6 @@ import * as SavedMessageCommands from '@app/features/messaging/commands/SavedMes
 import {ForwardModal, type ForwardModalSuccess} from '@app/features/messaging/components/modals/ForwardModal';
 import type {Message} from '@app/features/messaging/models/MessagingMessage';
 import SavedMessages from '@app/features/messaging/state/SavedMessages';
-import {buildRawMessageContentCopyText} from '@app/features/messaging/utils/MessageCopyTextUtils';
 import {buildMessageJumpLink} from '@app/features/messaging/utils/MessageLinkUtils';
 import {retryFailedMessage} from '@app/features/messaging/utils/MessageRetryUtils';
 import {type ReactionEmoji, toReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
@@ -93,10 +92,6 @@ export function getEffectiveContent(message: Message): string {
 		return message.messageSnapshots[0].content ?? '';
 	}
 	return '';
-}
-
-export function getCopyableMessageText(message: Message, _i18n: I18n): string {
-	return buildRawMessageContentCopyText(message);
 }
 
 export function isEmbedsSuppressed(message: Message): boolean {
@@ -326,7 +321,7 @@ export function createMessageActionHandlers(
 		onClose?.();
 	};
 	const handleCopyMessage = () => {
-		const content = getCopyableMessageText(message, i18n);
+		const content = getEffectiveContent(message);
 		if (content) {
 			TextCopyCommands.copy(i18n, content);
 			onClose?.();
@@ -551,7 +546,7 @@ export function requestMessageForward(
 }
 
 export function requestCopyMessageText(message: Message, i18n: I18n): void {
-	const content = getCopyableMessageText(message, i18n);
+	const content = getEffectiveContent(message);
 	if (!content) return;
 	void TextCopyCommands.copy(i18n, content);
 }

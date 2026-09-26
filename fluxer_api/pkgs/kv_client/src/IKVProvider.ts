@@ -28,6 +28,11 @@ export interface IKVSubscription {
 	removeAllListeners(event?: 'message' | 'error'): void;
 }
 
+export interface KVPurgeBatchResult {
+	entries: Array<string>;
+	tokensConsumed: number;
+}
+
 export interface KVRateLimitResult {
 	allowed: boolean;
 	limit: number;
@@ -88,7 +93,8 @@ export interface IKVProvider {
 		refillIntervalMs: number,
 	): Promise<number>;
 	scheduleBulkDeletion(queueKey: string, secondaryKey: string, score: number, value: string): Promise<void>;
-	removeBulkDeletion(queueKey: string, secondaryKey: string): Promise<boolean>;
+	claimBulkDeletion(queueKey: string, member: string, maxScore: number, leaseScore: number): Promise<boolean>;
+	removeBulkDeletion(queueKey: string, secondaryKey: string, member?: string): Promise<boolean>;
 	scan(pattern: string, count: number): Promise<Array<string>>;
 	dequeuePurgeBatch(
 		queueKey: string,
@@ -97,11 +103,9 @@ export interface IKVProvider {
 		maxTokens: number,
 		refillRate: number,
 		refillIntervalMs: number,
-	): Promise<{
-		urls: Array<string>;
-		tokensConsumed: number;
-	}>;
+	): Promise<KVPurgeBatchResult>;
 	pipeline(): IKVPipeline;
 	multi(): IKVPipeline;
+	isClustered(): boolean;
 	health(): Promise<boolean>;
 }

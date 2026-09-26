@@ -4,3 +4,25 @@
 	height: 1rem;
 	width: 1rem;
 }
+
+.leadingActionLabel {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.inputLevelItem {
+	padding: 0.375rem 0.5rem;
+	border: 0.0625rem solid transparent;
+}
+
+.inputLevelLabel {
+	color: var(--text-primary);
+	font-size: 0.8125rem;
+	font-weight: 500;
+}
+
+.inputLevelMeter {
+	height: 1.5rem;
+	margin-top: 0.25rem;
+}

@@ -16,6 +16,10 @@ interface FluxerDebugApi {
 	getClientInfoSync?: () => string;
 	getClientInfoObject?: () => Promise<unknown>;
 	getClientInfoObjectSync?: () => unknown;
+	getVoiceSubscriptionDebug?: () => Promise<unknown>;
+	getVoiceSubscriptionDebugJson?: () => Promise<string>;
+	getTranslationDomGuardStats?: () => unknown;
+	uninstallTranslationDomGuard?: () => boolean;
 }
 
 type FluxerDebugGlobal = Record<string, unknown> & FluxerDebugApi;

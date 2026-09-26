@@ -1,9 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Config} from '../Config';
-import * as RegexUtils from './RegexUtils';
+import {Config} from '@app/api/Config';
+import * as RegexUtils from '@app/api/utils/RegexUtils';
 
 let _invitePattern: RegExp | null = null;
+
+function getInviteEndpointBase(): string {
+	const url = new URL(Config.endpoints.invite);
+	return `${url.hostname}${url.pathname.replace(/\/+$/, '')}`;
+}
+
+function getWebAppHostsPattern(): string {
+	const hostnames = new Set(Config.endpoints.webAppOrigins.map((origin) => new URL(origin).hostname));
+	return [...hostnames].map((hostname) => RegexUtils.escapeRegex(hostname)).join('|');
+}
 
 function getInvitePattern(): RegExp {
 	if (!_invitePattern) {
@@ -11,9 +21,9 @@ function getInvitePattern(): RegExp {
 			[
 				'(?:https?:\\/\\/)?',
 				'(?:',
-				`${RegexUtils.escapeRegex(Config.hosts.invite)}(?:\\/#)?\\/(?!invite\\/)([a-zA-Z0-9\\-]{2,32})(?![a-zA-Z0-9\\-])`,
+				`${RegexUtils.escapeRegex(getInviteEndpointBase())}(?:\\/#)?\\/(?!invite\\/)([a-zA-Z0-9\\-]{2,32})(?![a-zA-Z0-9\\-])`,
 				'|',
-				`${RegexUtils.escapeRegex(new URL(Config.endpoints.webApp).hostname)}(?:\\/#)?\\/invite\\/([a-zA-Z0-9\\-]{2,32})(?![a-zA-Z0-9\\-])`,
+				`(?:${getWebAppHostsPattern()})(?:\\/#)?\\/invite\\/([a-zA-Z0-9\\-]{2,32})(?![a-zA-Z0-9\\-])`,
 				')',
 			].join(''),
 			'gi',

@@ -1,6 +1,7 @@
 // SPDX-FileCopyrightText: 2024 LiveKit, Inc.
 //
 // SPDX-License-Identifier: Apache-2.0
+import {Mutex} from '@livekit/mutex';
 import {
 	AddTrackRequest,
 	AudioTrackFeature,
@@ -11,29 +12,40 @@ import {
 	DataPacket_Kind,
 	Encryption_Type,
 	type JoinResponse,
+	type PacketTrailerFeature,
 	type ParticipantInfo,
 	protoInt64,
 	type RequestResponse,
 	RequestResponse_Reason,
-	type RpcAck,
-	RpcRequest,
-	type RpcResponse,
 	SimulcastCodec,
 	SipDTMF,
 	type SubscribedQualityUpdate,
 	type TrackInfo,
 	type TrackUnpublishedResponse,
 	UserPacket,
+	VideoLayer_Mode,
 } from '@livekit/protocol';
 import {SignalConnectionState} from '../../api/SignalClient.ts';
+import {
+	getFrameMetadataFeatures,
+	getFrameMetadataPublishOptions,
+	hasFrameMetadataPublishOptions,
+	isFrameMetadataSupported,
+} from '../../frameMetadata/utils.ts';
 import type {InternalRoomOptions} from '../../options.ts';
+import type {NonSharedUint8Array} from '../../type-polyfills/non-shared-typed-arrays.ts';
 import TypedPromise from '../../utils/TypedPromise.ts';
 import type OutgoingDataStreamManager from '../data-stream/outgoing/OutgoingDataStreamManager.ts';
 import type {TextStreamWriter} from '../data-stream/outgoing/StreamWriter.ts';
+import LocalDataTrack from '../data-track/LocalDataTrack.ts';
+import {DataTrackPublishError} from '../data-track/outgoing/errors.ts';
+import type OutgoingDataTrackManager from '../data-track/outgoing/OutgoingDataTrackManager.ts';
+import type {DataTrackOptions} from '../data-track/outgoing/types.ts';
 import {defaultVideoCodec} from '../defaults.ts';
 import {
 	DeviceUnsupportedError,
 	type LivekitError,
+	NegotiationError,
 	PublishTrackError,
 	SignalRequestError,
 	TrackInvalidError,
@@ -42,7 +54,8 @@ import {
 import {EngineEvent, ParticipantEvent, TrackEvent} from '../events.ts';
 import {PCTransportState} from '../PCTransportManager.ts';
 import type RTCEngine from '../RTCEngine.ts';
-import {byteLength, MAX_PAYLOAD_BYTES, type PerformRpcParams, RpcError, type RpcInvocationData} from '../rpc.ts';
+import {DataChannelKind} from '../RTCEngine.ts';
+import type {PerformRpcParams, RpcClientManager, RpcError, RpcInvocationData, RpcServerManager} from '../rpc/index.ts';
 import CriticalTimers, {type TimerHandle} from '../timers.ts';
 import {createLocalTracks} from '../track/create.ts';
 import LocalAudioTrack from '../track/LocalAudioTrack.ts';
@@ -68,8 +81,10 @@ import {
 	sourceToKind,
 } from '../track/utils.ts';
 import type {
+	ByteStreamInfo,
 	ChatMessage,
 	DataPublishOptions,
+	SendBytesOptions,
 	SendFileOptions,
 	SendTextOptions,
 	StreamBytesOptions,
@@ -77,7 +92,6 @@ import type {
 	TextStreamInfo,
 } from '../types.ts';
 import {
-	compareVersions,
 	Future,
 	isAudioTrack,
 	isE2EESimulcastSupported,
@@ -87,24 +101,32 @@ import {
 	isLocalVideoTrack,
 	isSafari17Based,
 	isSVCCodec,
+	isSVCSimulcast,
+	isSVCSimulcastSupportedByServer,
 	isVideoCodec,
 	isVideoTrack,
 	isWeb,
 	selectPreferredVideoCodec,
 	sleep,
+	stopTransceiversForSender,
 	supportsVideoCodec,
+	usesLegacySVCEncodings,
 } from '../utils.ts';
 import Participant from './Participant.ts';
 import type {ParticipantTrackPermission} from './ParticipantTrackPermission.ts';
 import {trackPermissionToProto} from './ParticipantTrackPermission.ts';
-import {computeTrackBackupEncodings, computeVideoEncodings, getDefaultDegradationPreference} from './publishUtils.ts';
+import {
+	computeStartTargetBitrate,
+	computeTrackBackupEncodings,
+	computeVideoEncodings,
+	getDefaultDegradationPreference,
+} from './publishUtils.ts';
 import type RemoteParticipant from './RemoteParticipant.ts';
 
-type PendingSignalRequestValues = {
-	metadata?: string;
-	name?: string;
-	attributes?: Record<string, string>;
-};
+function hasSingleRidlessEncoding(track: LocalVideoTrack): boolean {
+	const encodings = track.sender?.getParameters().encodings;
+	return encodings?.length === 1 && !encodings[0].rid;
+}
 
 export default class LocalParticipant extends Participant {
 	override audioTrackPublications: Map<string, LocalTrackPublication>;
@@ -135,6 +157,8 @@ export default class LocalParticipant extends Participant {
 
 	private encryptionType: Encryption_Type = Encryption_Type.NONE;
 
+	private e2eeStateMutex = new Mutex();
+
 	private reconnectFuture?: Future<void, Error>;
 
 	private signalConnectedFuture?: Future<void, Error>;
@@ -143,38 +167,34 @@ export default class LocalParticipant extends Participant {
 
 	private firstActiveAgent?: RemoteParticipant;
 
-	private rpcHandlers: Map<string, (data: RpcInvocationData) => Promise<string>>;
-
 	private roomOutgoingDataStreamManager: OutgoingDataStreamManager;
+
+	private roomOutgoingDataTrackManager: OutgoingDataTrackManager;
+
+	private rpcClientManager: RpcClientManager;
+
+	private rpcServerManager: RpcServerManager;
 
 	private pendingSignalRequests: Map<
 		number,
 		{
-			resolve: () => void;
+			resolve: (arg: any) => void;
 			reject: (reason: LivekitError) => void;
-			values: PendingSignalRequestValues;
+			values: Partial<Record<keyof LocalParticipant, any>>;
 		}
 	>;
 
 	private enabledPublishVideoCodecs: Array<Codec> = [];
-
-	private pendingAcks = new Map<string, {resolve: () => void; participantIdentity: string}>();
-
-	private pendingResponses = new Map<
-		string,
-		{
-			resolve: (payload: string | null, error: RpcError | null) => void;
-			participantIdentity: string;
-		}
-	>();
 
 	constructor(
 		sid: string,
 		identity: string,
 		engine: RTCEngine,
 		options: InternalRoomOptions,
-		roomRpcHandlers: Map<string, (data: RpcInvocationData) => Promise<string>>,
 		roomOutgoingDataStreamManager: OutgoingDataStreamManager,
+		roomOutgoingDataTrackManager: OutgoingDataTrackManager,
+		rpcClientManager: RpcClientManager,
+		rpcServerManager: RpcServerManager,
 	) {
 		super(sid, identity, undefined, undefined, undefined, {
 			loggerName: options.loggerName,
@@ -192,8 +212,10 @@ export default class LocalParticipant extends Participant {
 			['audiooutput', 'default'],
 		]);
 		this.pendingSignalRequests = new Map();
-		this.rpcHandlers = roomRpcHandlers;
 		this.roomOutgoingDataStreamManager = roomOutgoingDataStreamManager;
+		this.roomOutgoingDataTrackManager = roomOutgoingDataTrackManager;
+		this.rpcClientManager = rpcClientManager;
+		this.rpcServerManager = rpcServerManager;
 	}
 
 	get lastCameraError(): Error | undefined {
@@ -228,7 +250,7 @@ export default class LocalParticipant extends Participant {
 		this.engine = engine;
 		this.engine.on(EngineEvent.RemoteMute, (trackSid: string, muted: boolean) => {
 			const pub = this.trackPublications.get(trackSid);
-			if (!pub || !pub.track) {
+			if (!pub?.track) {
 				return;
 			}
 			if (muted) {
@@ -252,8 +274,7 @@ export default class LocalParticipant extends Participant {
 			.on(EngineEvent.LocalTrackUnpublished, this.handleLocalTrackUnpublished)
 			.on(EngineEvent.SubscribedQualityUpdate, this.handleSubscribedQualityUpdate)
 			.on(EngineEvent.Closing, this.handleClosing)
-			.on(EngineEvent.SignalRequestResponse, this.handleSignalRequestResponse)
-			.on(EngineEvent.DataPacketReceived, this.handleDataPacket);
+			.on(EngineEvent.SignalRequestResponse, this.handleSignalRequestResponse);
 	}
 
 	private handleReconnecting = () => {
@@ -270,7 +291,7 @@ export default class LocalParticipant extends Participant {
 
 	private handleClosing = () => {
 		if (this.reconnectFuture) {
-			this.reconnectFuture.promise.catch((e) => this.log.warn(e.message, this.logContext));
+			this.reconnectFuture.promise.catch((e) => this.log.warn(e.message));
 			this.reconnectFuture?.reject?.(new Error('Got disconnected during reconnection attempt'));
 			this.reconnectFuture = undefined;
 		}
@@ -304,26 +325,34 @@ export default class LocalParticipant extends Participant {
 			}
 			this.pendingSignalRequests.delete(requestId);
 		}
-	};
 
-	private handleDataPacket = (packet: DataPacket) => {
-		switch (packet.value.case) {
-			case 'rpcResponse': {
-				const rpcResponse = packet.value.value as RpcResponse;
-				let payload: string | null = null;
-				let error: RpcError | null = null;
-
-				if (rpcResponse.value.case === 'payload') {
-					payload = rpcResponse.value.value;
-				} else if (rpcResponse.value.case === 'error') {
-					error = RpcError.fromProto(rpcResponse.value.value);
+		switch (response.request.case) {
+			case 'publishDataTrack': {
+				let error: ReturnType<
+					(typeof DataTrackPublishError)['notAllowed' | 'duplicateName' | 'invalidName' | 'limitReached' | 'unknown']
+				>;
+				switch (response.reason) {
+					case RequestResponse_Reason.NOT_ALLOWED:
+						error = DataTrackPublishError.notAllowed(response.message);
+						break;
+					case RequestResponse_Reason.DUPLICATE_NAME:
+						error = DataTrackPublishError.duplicateName(response.message);
+						break;
+					case RequestResponse_Reason.INVALID_NAME:
+						error = DataTrackPublishError.invalidName(response.message);
+						break;
+					case RequestResponse_Reason.LIMIT_EXCEEDED:
+						error = DataTrackPublishError.limitReached(response.message);
+						break;
+					default:
+						error = DataTrackPublishError.unknown(response.reason, response.message);
+						break;
 				}
-				this.handleIncomingRpcResponse(rpcResponse.requestId, payload, error);
-				break;
-			}
-			case 'rpcAck': {
-				const rpcAck = packet.value.value as RpcAck;
-				this.handleIncomingRpcAck(rpcAck.requestId);
+
+				this.roomOutgoingDataTrackManager.receivedSfuPublishResponse(response.request.value.pubHandle, {
+					type: 'error',
+					error,
+				});
 				break;
 			}
 		}
@@ -413,13 +442,26 @@ export default class LocalParticipant extends Participant {
 		enabled: boolean,
 		options?: ScreenShareCaptureOptions,
 		publishOptions?: TrackPublishOptions,
+		audioPublishOptions?: TrackPublishOptions,
 	): Promise<LocalTrackPublication | undefined> {
-		return this.setTrackEnabled(Track.Source.ScreenShare, enabled, options, publishOptions);
+		return this.setTrackEnabled(Track.Source.ScreenShare, enabled, options, publishOptions, audioPublishOptions);
 	}
 
 	async setE2EEEnabled(enabled: boolean) {
-		this.encryptionType = enabled ? Encryption_Type.GCM : Encryption_Type.NONE;
-		await this.republishAllTracks(undefined, false);
+		const unlock = await this.e2eeStateMutex.lock();
+		try {
+			this.encryptionType = enabled ? Encryption_Type.GCM : Encryption_Type.NONE;
+			await Promise.all(this.pendingPublishPromises.values());
+			if (
+				this.trackPublications.size === 0 ||
+				Array.from(this.trackPublications.values()).every((pub) => pub.isEncrypted === enabled)
+			) {
+				return;
+			}
+			await this.republishAllTracks(undefined, false);
+		} finally {
+			unlock();
+		}
 	}
 
 	private async setTrackEnabled(
@@ -439,14 +481,16 @@ export default class LocalParticipant extends Participant {
 		enabled: boolean,
 		options?: ScreenShareCaptureOptions,
 		publishOptions?: TrackPublishOptions,
+		audioPublishOptions?: TrackPublishOptions,
 	): Promise<LocalTrackPublication | undefined>;
 	private async setTrackEnabled(
 		source: Track.Source,
 		enabled: true,
 		options?: VideoCaptureOptions | AudioCaptureOptions | ScreenShareCaptureOptions,
 		publishOptions?: TrackPublishOptions,
+		audioPublishOptions?: TrackPublishOptions,
 	) {
-		this.log.debug('setTrackEnabled', {...this.logContext, source, enabled});
+		this.log.debug('setTrackEnabled', {source, enabled});
 		if (this.republishPromise) {
 			await this.republishPromise;
 		}
@@ -459,10 +503,7 @@ export default class LocalParticipant extends Participant {
 				if (this.pendingPublishing.has(source)) {
 					const pendingTrack = await this.waitForPendingPublicationOfSource(source);
 					if (!pendingTrack) {
-						this.log.info('waiting for pending publication promise timed out', {
-							...this.logContext,
-							source,
-						});
+						this.log.info('waiting for pending publication promise timed out', {source});
 					}
 					await pendingTrack?.unmute();
 					return pendingTrack;
@@ -506,9 +547,7 @@ export default class LocalParticipant extends Participant {
 						...options,
 					};
 					if (source === Track.Source.Microphone && isAudioTrack(localTrack) && opts.preConnectBuffer) {
-						this.log.info('starting preconnect buffer for microphone', {
-							...this.logContext,
-						});
+						this.log.info('starting preconnect buffer for microphone');
 						localTrack.startPreConnectBuffer();
 					}
 				}
@@ -516,12 +555,14 @@ export default class LocalParticipant extends Participant {
 				try {
 					const publishPromises: Array<Promise<LocalTrackPublication>> = [];
 					for (const localTrack of localTracks) {
-						this.log.info('publishing track', {
-							...this.logContext,
-							...getLogContextFromTrack(localTrack),
-						});
+						this.log.info('publishing track', getLogContextFromTrack(localTrack));
 
-						publishPromises.push(this.publishTrack(localTrack, publishOptions));
+						publishPromises.push(
+							this.publishTrack(
+								localTrack,
+								audioPublishOptions && isAudioTrack(localTrack) ? audioPublishOptions : publishOptions,
+							),
+						);
 					}
 					const publishedTracks = await Promise.all(publishPromises);
 
@@ -539,19 +580,17 @@ export default class LocalParticipant extends Participant {
 			if (!track?.track && this.pendingPublishing.has(source)) {
 				track = await this.waitForPendingPublicationOfSource(source);
 				if (!track) {
-					this.log.info('waiting for pending publication promise timed out', {
-						...this.logContext,
-						source,
-					});
+					this.log.info('waiting for pending publication promise timed out', {source});
 				}
 			}
 			if (track?.track) {
 				if (source === Track.Source.ScreenShare) {
-					track = await this.unpublishTrack(track.track);
+					const unpublishPromises = [this.unpublishTrack(track.track)];
 					const screenAudioTrack = this.getTrackPublication(Track.Source.ScreenShareAudio);
 					if (screenAudioTrack?.track) {
-						this.unpublishTrack(screenAudioTrack.track);
+						unpublishPromises.push(this.unpublishTrack(screenAudioTrack.track));
 					}
+					[track] = await Promise.all(unpublishPromises);
 				} else {
 					await track.mute();
 				}
@@ -668,10 +707,35 @@ export default class LocalParticipant extends Participant {
 		return this.publishOrRepublishTrack(track, options);
 	}
 
+	private waitForNextEngineRestart(timeoutMs = 15_000): Promise<void> {
+		return new Promise<void>((resolve, reject) => {
+			const cleanup = () => {
+				clearTimeout(timeout);
+				this.engine.off(EngineEvent.Restarted, onRestarted);
+				this.engine.off(EngineEvent.Closing, onClosing);
+			};
+			const onRestarted = () => {
+				cleanup();
+				resolve();
+			};
+			const onClosing = () => {
+				cleanup();
+				reject(new Error('engine closed before restart completed'));
+			};
+			const timeout = setTimeout(() => {
+				cleanup();
+				reject(new Error('timed out waiting for engine restart'));
+			}, timeoutMs);
+			this.engine.once(EngineEvent.Restarted, onRestarted);
+			this.engine.once(EngineEvent.Closing, onClosing);
+		});
+	}
+
 	private async publishOrRepublishTrack(
 		track: LocalTrack | MediaStreamTrack,
 		options?: TrackPublishOptions,
 		isRepublish = false,
+		hasRetriedAfterNegotiationError = false,
 	): Promise<LocalTrackPublication> {
 		if (isLocalAudioTrack(track)) {
 			track.setAudioContext(this.audioContext);
@@ -742,10 +806,7 @@ export default class LocalParticipant extends Participant {
 		});
 
 		if (existingPublication) {
-			this.log.warn('track has already been published, skipping', {
-				...this.logContext,
-				...getLogContextFromTrack(existingPublication),
-			});
+			this.log.warn('track has already been published, skipping', getLogContextFromTrack(existingPublication));
 			return existingPublication;
 		}
 
@@ -761,16 +822,13 @@ export default class LocalParticipant extends Participant {
 
 		if (isStereo) {
 			if (opts.dtx === undefined) {
-				this.log.info(
+				this.log.debug(
 					`Opus DTX will be disabled for stereo tracks by default. Enable them explicitly to make it work.`,
-					{
-						...this.logContext,
-						...getLogContextFromTrack(track),
-					},
+					getLogContextFromTrack(track),
 				);
 			}
 			if (opts.red === undefined) {
-				this.log.info(
+				this.log.debug(
 					`Opus RED will be disabled for stereo tracks by default. Enable them explicitly to make it work.`,
 				);
 			}
@@ -781,9 +839,6 @@ export default class LocalParticipant extends Participant {
 		if (!isE2EESimulcastSupported() && this.roomOptions.e2ee) {
 			this.log.info(
 				`End-to-end encryption is set up, simulcast publishing will be disabled on Safari versions and iOS browsers running iOS < v17.2`,
-				{
-					...this.logContext,
-				},
 			);
 			opts.simulcast = false;
 		}
@@ -794,7 +849,6 @@ export default class LocalParticipant extends Participant {
 		const publishPromise = (async (): Promise<LocalTrackPublication> => {
 			if (this.engine.client.currentState !== SignalConnectionState.CONNECTED) {
 				this.log.debug('deferring track publication until signal is connected', {
-					...this.logContext,
 					track: getLogContextFromTrack(track),
 				});
 
@@ -821,6 +875,16 @@ export default class LocalParticipant extends Participant {
 		try {
 			const publication = await publishPromise;
 			return publication;
+		} catch (e) {
+			if (!hasRetriedAfterNegotiationError && e instanceof NegotiationError) {
+				this.log.warn('negotiation due to track publish failed, retrying after reconnect', {
+					error: e,
+				});
+				this.pendingPublishPromises.delete(track);
+				await this.waitForNextEngineRestart();
+				return await this.publishOrRepublishTrack(track, options, isRepublish, true);
+			}
+			throw e;
 		} finally {
 			this.pendingPublishPromises.delete(track);
 		}
@@ -835,10 +899,7 @@ export default class LocalParticipant extends Participant {
 
 	private hasPermissionsToPublish(track: LocalTrack): boolean {
 		if (!this.permissions) {
-			this.log.warn('no permissions present for publishing track', {
-				...this.logContext,
-				...getLogContextFromTrack(track),
-			});
+			this.log.warn('no permissions present for publishing track', getLogContextFromTrack(track));
 			return false;
 		}
 		const {canPublish, canPublishSources} = this.permissions;
@@ -849,10 +910,7 @@ export default class LocalParticipant extends Participant {
 		) {
 			return true;
 		}
-		this.log.warn('insufficient permissions to publish', {
-			...this.logContext,
-			...getLogContextFromTrack(track),
-		});
+		this.log.warn('insufficient permissions to publish', getLogContextFromTrack(track));
 		return false;
 	}
 
@@ -864,10 +922,7 @@ export default class LocalParticipant extends Participant {
 			(publishedTrack) => isLocalTrack(track) && publishedTrack.source === track.source,
 		);
 		if (existingTrackOfSource && track.source !== Track.Source.Unknown) {
-			this.log.info(`publishing a second track with the same source: ${track.source}`, {
-				...this.logContext,
-				...getLogContextFromTrack(track),
-			});
+			this.log.info(`publishing a second track with the same source: ${track.source}`, getLogContextFromTrack(track));
 		}
 		if (opts.stopMicTrackOnMute && isAudioTrack(track)) {
 			track.stopOnMute = true;
@@ -920,6 +975,7 @@ export default class LocalParticipant extends Participant {
 		if (isLocalAudioTrack(track) && track.hasPreConnectBuffer) {
 			audioFeatures.push(AudioTrackFeature.TF_PRECONNECT_BUFFER);
 		}
+		const packetTrailerFeatures: Array<PacketTrailerFeature> = this.normalizeRequestedFrameMetadataOptions(track, opts);
 
 		const req = new AddTrackRequest({
 			cid: track.mediaStreamTrack.id,
@@ -934,14 +990,12 @@ export default class LocalParticipant extends Participant {
 			stream: opts?.stream,
 			backupCodecPolicy: opts?.backupCodecPolicy as BackupCodecPolicy,
 			audioFeatures,
+			packetTrailerFeatures,
 		});
 
 		let encodings: Array<RTCRtpEncodingParameters> | undefined;
 		if (track.kind === Track.Kind.Video) {
-			let dims: Track.Dimensions = {
-				width: 0,
-				height: 0,
-			};
+			let dims: Track.Dimensions;
 			try {
 				dims = await track.waitForDimensions();
 			} catch (_e) {
@@ -951,7 +1005,6 @@ export default class LocalParticipant extends Participant {
 					height: defaultRes.height,
 				};
 				this.log.error('could not determine track dimensions, using defaults', {
-					...this.logContext,
 					...getLogContextFromTrack(track),
 					dims,
 				});
@@ -959,16 +1012,27 @@ export default class LocalParticipant extends Participant {
 			req.width = dims.width;
 			req.height = dims.height;
 			if (isLocalVideoTrack(track)) {
-				if (track.source !== Track.Source.ScreenShare && isSVCCodec(videoCodec)) {
+				if (
+					isSVCSimulcast(videoCodec, opts) &&
+					(usesLegacySVCEncodings() || !isSVCSimulcastSupportedByServer(this.engine?.serverVersion))
+				) {
+					opts.simulcast = false;
+					this.log.info('SVC simulcast is not supported, disabling simulcast.', getLogContextFromTrack(track));
+				}
+
+				const svcSimulcast = isSVCSimulcast(videoCodec, opts);
+				if (isSVCCodec(videoCodec) && !svcSimulcast && track.source !== Track.Source.ScreenShare) {
 					opts.scalabilityMode = opts.scalabilityMode ?? 'L3T3_KEY';
 				}
 
-				req.simulcastCodecs = [
-					new SimulcastCodec({
-						codec: videoCodec,
-						cid: track.mediaStreamTrack.id,
-					}),
-				];
+				const primaryCodec = new SimulcastCodec({
+					codec: videoCodec,
+					cid: track.mediaStreamTrack.id,
+				});
+				if (svcSimulcast) {
+					primaryCodec.videoLayerMode = VideoLayer_Mode.ONE_SPATIAL_LAYER_PER_STREAM;
+				}
+				req.simulcastCodecs = [primaryCodec];
 
 				if (opts.backupCodec === true) {
 					opts.backupCodec = {codec: 'h264'};
@@ -990,6 +1054,7 @@ export default class LocalParticipant extends Participant {
 			encodings = computeVideoEncodings(track.source === Track.Source.ScreenShare, req.width, req.height, opts);
 			const usesSvcLayers =
 				isSVCCodec(opts.videoCodec) &&
+				!isSVCSimulcast(opts.videoCodec, opts) &&
 				encodings.some(
 					(encoding) => typeof encoding.scalabilityMode === 'string' && encoding.scalabilityMode.length > 0,
 				);
@@ -1014,6 +1079,9 @@ export default class LocalParticipant extends Participant {
 			}
 
 			track.sender = await this.engine.createSender(track, opts, encodings);
+			if (isLocalVideoTrack(track)) {
+				track.publishOptions = opts;
+			}
 			this.emit(ParticipantEvent.LocalSenderCreated, track.sender, track, opts.videoCodec, track.mediaStreamID);
 
 			if (isLocalVideoTrack(track)) {
@@ -1035,14 +1103,19 @@ export default class LocalParticipant extends Participant {
 							transceiver: trackTransceiver,
 							codec: 'opus',
 							maxbr: encodings[0]?.maxBitrate ? encodings[0].maxBitrate / 1000 : 0,
+							stereo: isStereo,
 						});
 					}
-				} else if (track.codec && isSVCCodec(track.codec) && encodings[0]?.maxBitrate) {
-					this.engine.pcManager.publisher.setTrackCodecBitrate({
-						cid: req.cid,
-						codec: track.codec,
-						maxbr: encodings[0].maxBitrate / 1000,
-					});
+				} else if (track.codec && isVideoCodec(track.codec)) {
+					const targetBitrate = computeStartTargetBitrate(track.codec, opts, encodings);
+					if (targetBitrate > 0) {
+						this.engine.pcManager.publisher.setTrackCodecBitrate({
+							cid: req.cid,
+							codec: track.codec,
+							maxbr: targetBitrate / 1000,
+							isScreenShare: track.source === Track.Source.ScreenShare,
+						});
+					}
 				}
 			}
 
@@ -1055,10 +1128,13 @@ export default class LocalParticipant extends Participant {
 				return await this.engine.addTrack(req);
 			} catch (err) {
 				if (track.sender && this.engine.pcManager?.publisher) {
-					this.engine.pcManager.publisher.removeTrack(track.sender);
+					try {
+						this.engine.pcManager.publisher.removeTrack(track.sender);
+					} catch (e) {
+						this.log.error(e);
+					}
 					await this.engine.negotiate().catch((negotiateErr) => {
 						this.log.error('failed to negotiate after removing track due to failed add track request', {
-							...this.logContext,
 							...getLogContextFromTrack(track),
 							error: negotiateErr,
 						});
@@ -1067,7 +1143,7 @@ export default class LocalParticipant extends Participant {
 				throw err;
 			}
 		})();
-		if (this.enabledPublishVideoCodecs.length > 0) {
+		if (this.enabledPublishVideoCodecs.length > 0 && packetTrailerFeatures.length === 0) {
 			const rets = await Promise.all([addTrackPromise, negotiate()]);
 			ti = rets[0];
 		} else {
@@ -1082,7 +1158,6 @@ export default class LocalParticipant extends Participant {
 				const updatedCodec = mimeTypeToVideoCodecString(primaryCodecMime);
 				if (updatedCodec !== videoCodec) {
 					this.log.debug('falling back to server selected codec', {
-						...this.logContext,
 						...getLogContextFromTrack(track),
 						codec: updatedCodec,
 					});
@@ -1104,11 +1179,14 @@ export default class LocalParticipant extends Participant {
 		publication.options = opts;
 		track.sid = ti.sid;
 
-		this.log.debug(`publishing ${track.kind} with encodings`, {
-			...this.logContext,
-			encodings,
-			trackInfo: ti,
-		});
+		if (isLocalVideoTrack(track)) {
+			track.publishOptions = opts;
+			if (req.width && req.height) {
+				track.lastEncodedDimensions = {width: req.width, height: req.height};
+			}
+		}
+
+		this.log.debug(`publishing ${track.kind} with encodings`, {encodings, trackInfo: ti});
 
 		if (isLocalVideoTrack(track)) {
 			track.startMonitor(this.engine.client);
@@ -1125,23 +1203,17 @@ export default class LocalParticipant extends Participant {
 			this.on(ParticipantEvent.LocalTrackSubscribed, (pub) => {
 				if (pub.trackSid === ti.sid) {
 					if (!track.hasPreConnectBuffer) {
-						this.log.warn('subscribe event came to late, buffer already closed', this.logContext);
+						this.log.warn('subscribe event came to late, buffer already closed');
 						return;
 					}
-					this.log.debug('finished recording preconnect buffer', {
-						...this.logContext,
-						...getLogContextFromTrack(track),
-					});
+					this.log.debug('finished recording preconnect buffer', getLogContextFromTrack(track));
 					track.stopPreConnectBuffer();
 				}
 			});
 
 			if (stream) {
 				const bufferStreamPromise = (async (): Promise<void> => {
-					this.log.debug('waiting for agent', {
-						...this.logContext,
-						...getLogContextFromTrack(track),
-					});
+					this.log.debug('waiting for agent', getLogContextFromTrack(track));
 					let agentActiveTimeout: TimerHandle | undefined;
 					let agent: RemoteParticipant;
 					try {
@@ -1158,10 +1230,7 @@ export default class LocalParticipant extends Participant {
 							CriticalTimers.clearTimeout(agentActiveTimeout);
 						}
 					}
-					this.log.debug('sending preconnect buffer', {
-						...this.logContext,
-						...getLogContextFromTrack(track),
-					});
+					this.log.debug('sending preconnect buffer', getLogContextFromTrack(track));
 					const writer = await this.streamBytes({
 						name: 'preconnect-buffer',
 						mimeType,
@@ -1180,14 +1249,10 @@ export default class LocalParticipant extends Participant {
 				})();
 				bufferStreamPromise
 					.then(() => {
-						this.log.debug('preconnect buffer sent successfully', {
-							...this.logContext,
-							...getLogContextFromTrack(track),
-						});
+						this.log.debug('preconnect buffer sent successfully', getLogContextFromTrack(track));
 					})
 					.catch((e) => {
 						this.log.error('error sending preconnect buffer', {
-							...this.logContext,
 							...getLogContextFromTrack(track),
 							error: e,
 						});
@@ -1195,6 +1260,39 @@ export default class LocalParticipant extends Participant {
 			}
 		}
 		return publication;
+	}
+
+	private canPublishFrameMetadata() {
+		return !!(
+			this.roomOptions.e2ee ||
+			this.roomOptions.encryption ||
+			isFrameMetadataSupported(this.roomOptions.frameMetadata ?? this.roomOptions.packetTrailer)
+		);
+	}
+
+	private normalizeRequestedFrameMetadataOptions(track: LocalTrack, opts: TrackPublishOptions) {
+		const fmOpts = opts.frameMetadata ?? opts.packetTrailer;
+		if (track.kind !== Track.Kind.Video || !hasFrameMetadataPublishOptions(fmOpts)) {
+			opts.frameMetadata = undefined;
+			opts.packetTrailer = undefined;
+			return [];
+		}
+
+		if (!this.canPublishFrameMetadata()) {
+			this.log.warn('frame metadata transform not supported; not advertising features', {
+				...this.logContext,
+				...getLogContextFromTrack(track),
+			});
+			opts.frameMetadata = undefined;
+			opts.packetTrailer = undefined;
+			return [];
+		}
+
+		const features = getFrameMetadataFeatures(fmOpts);
+		const normalized = getFrameMetadataPublishOptions(features);
+		opts.frameMetadata = normalized;
+		opts.packetTrailer = normalized;
+		return features;
 	}
 
 	override get isLocal(): boolean {
@@ -1230,16 +1328,18 @@ export default class LocalParticipant extends Participant {
 
 		const encodings = computeTrackBackupEncodings(track, videoCodec, opts);
 		if (!encodings) {
-			this.log.info(`backup codec has been disabled, ignoring request to add additional codec for track`, {
-				...this.logContext,
-				...getLogContextFromTrack(track),
-			});
+			this.log.info(
+				`backup codec has been disabled, ignoring request to add additional codec for track`,
+				getLogContextFromTrack(track),
+			);
 			return;
 		}
 		const simulcastTrack = track.addSimulcastTrack(videoCodec, encodings);
 		if (!simulcastTrack) {
 			return;
 		}
+		const packetTrailerFeatures = this.normalizeRequestedFrameMetadataOptions(track, opts);
+
 		const req = new AddTrackRequest({
 			cid: simulcastTrack.mediaStreamTrack.id,
 			type: Track.kindToProto(track.kind),
@@ -1247,6 +1347,7 @@ export default class LocalParticipant extends Participant {
 			source: Track.sourceToProto(track.source),
 			sid: track.sid,
 			encryption: this.encryptionType,
+			packetTrailerFeatures,
 			simulcastCodecs: [
 				{
 					codec: opts.videoCodec,
@@ -1278,17 +1379,14 @@ export default class LocalParticipant extends Participant {
 			const ti = rets[0];
 
 			this.log.debug(`published ${videoCodec} for track ${track.sid}`, {
-				...this.logContext,
 				encodings,
 				trackInfo: ti,
 			});
 		} catch (e) {
-			if (isLocalVideoTrack(track)) {
-				const scInfo = track.simulcastCodecs.get(videoCodec);
-				if (scInfo) {
-					scInfo.mediaStreamTrack.stop();
-					track.simulcastCodecs.delete(videoCodec);
-				}
+			const scInfo = track.simulcastCodecs.get(videoCodec);
+			if (scInfo) {
+				scInfo.mediaStreamTrack.stop();
+				track.simulcastCodecs.delete(videoCodec);
 			}
 			throw e;
 		}
@@ -1301,10 +1399,7 @@ export default class LocalParticipant extends Participant {
 		if (isLocalTrack(track)) {
 			const publishPromise = this.pendingPublishPromises.get(track);
 			if (publishPromise) {
-				this.log.info('awaiting publish promise before attempting to unpublish', {
-					...this.logContext,
-					...getLogContextFromTrack(track),
-				});
+				this.log.debug('awaiting publish promise before attempting to unpublish', getLogContextFromTrack(track));
 				await publishPromise;
 			}
 		}
@@ -1312,16 +1407,10 @@ export default class LocalParticipant extends Participant {
 
 		const pubLogContext = publication ? getLogContextFromTrack(publication) : undefined;
 
-		this.log.debug('unpublishing track', {
-			...this.logContext,
-			...pubLogContext,
-		});
+		this.log.info('unpublishing track', pubLogContext);
 
-		if (!publication || !publication.track) {
-			this.log.warn('track was not unpublished because no publication was found', {
-				...this.logContext,
-				...pubLogContext,
-			});
+		if (!publication?.track) {
+			this.log.warn('track was not unpublished because no publication was found', pubLogContext);
 			return undefined;
 		}
 
@@ -1346,20 +1435,28 @@ export default class LocalParticipant extends Participant {
 		const trackSender = track.sender;
 		track.sender = undefined;
 		if (this.engine.pcManager && this.engine.pcManager.currentState < PCTransportState.FAILED && trackSender) {
+			const publisher = this.engine.pcManager.publisher;
 			try {
-				for (const transceiver of this.engine.pcManager.publisher.getTransceivers()) {
-					if (transceiver.sender === trackSender) {
-						transceiver.direction = 'inactive';
-						negotiationNeeded = true;
-					}
-				}
-				if (this.engine.removeTrack(trackSender)) {
+				try {
+					negotiationNeeded = this.engine.removeTrack(trackSender);
+				} catch (e) {
+					this.log.warn(e);
 					negotiationNeeded = true;
 				}
+				if (stopTransceiversForSender(publisher.getTransceivers(), trackSender)) {
+					negotiationNeeded = true;
+				}
+
 				if (isLocalVideoTrack(track)) {
 					for (const [, trackInfo] of track.simulcastCodecs) {
 						if (trackInfo.sender) {
-							if (this.engine.removeTrack(trackInfo.sender)) {
+							try {
+								negotiationNeeded = this.engine.removeTrack(trackInfo.sender) || negotiationNeeded;
+							} catch (e) {
+								this.log.warn(e);
+								negotiationNeeded = true;
+							}
+							if (stopTransceiversForSender(publisher.getTransceivers(), trackInfo.sender)) {
 								negotiationNeeded = true;
 							}
 							trackInfo.sender = undefined;
@@ -1368,11 +1465,7 @@ export default class LocalParticipant extends Participant {
 					track.simulcastCodecs.clear();
 				}
 			} catch (e) {
-				this.log.warn('failed to unpublish track', {
-					...this.logContext,
-					...pubLogContext,
-					error: e,
-				});
+				this.log.warn('failed to unpublish track', {...pubLogContext, error: e});
 			}
 		}
 
@@ -1430,10 +1523,7 @@ export default class LocalParticipant extends Participant {
 							(isLocalAudioTrack(track) || isLocalVideoTrack(track)) &&
 							!track.isUserProvided
 						) {
-							this.log.debug('restarting existing track', {
-								...this.logContext,
-								track: pub.trackSid,
-							});
+							this.log.debug('restarting existing track', {track: pub.trackSid});
 							await track.restartTrack();
 						}
 						await this.publishOrRepublishTrack(track, pub.options, true);
@@ -1454,8 +1544,9 @@ export default class LocalParticipant extends Participant {
 		await this.republishPromise;
 	}
 
-	async publishData(data: Uint8Array, options: DataPublishOptions = {}): Promise<void> {
-		const kind = options.reliable ? DataPacket_Kind.RELIABLE : DataPacket_Kind.LOSSY;
+	async publishData(data: NonSharedUint8Array, options: DataPublishOptions = {}): Promise<void> {
+		const kind = options.reliable ? DataChannelKind.RELIABLE : DataChannelKind.LOSSY;
+		const dataPacketKind = options.reliable ? DataPacket_Kind.RELIABLE : DataPacket_Kind.LOSSY;
 		const destinationIdentities = options.destinationIdentities;
 		const topic = options.topic;
 
@@ -1467,7 +1558,7 @@ export default class LocalParticipant extends Participant {
 		});
 
 		const packet = new DataPacket({
-			kind: kind,
+			kind: dataPacketKind,
 			value: {
 				case: 'user',
 				value: userPacket,
@@ -1489,7 +1580,7 @@ export default class LocalParticipant extends Participant {
 			},
 		});
 
-		await this.engine.sendDataPacket(packet, DataPacket_Kind.RELIABLE);
+		await this.engine.sendDataPacket(packet, DataChannelKind.RELIABLE);
 	}
 
 	async sendChatMessage(text: string, options?: SendTextOptions): Promise<ChatMessage> {
@@ -1508,7 +1599,7 @@ export default class LocalParticipant extends Participant {
 				}),
 			},
 		});
-		await this.engine.sendDataPacket(packet, DataPacket_Kind.RELIABLE);
+		await this.engine.sendDataPacket(packet, DataChannelKind.RELIABLE);
 
 		this.emit(ParticipantEvent.ChatMessage, msg);
 		return msg;
@@ -1530,7 +1621,7 @@ export default class LocalParticipant extends Participant {
 				}),
 			},
 		});
-		await this.engine.sendDataPacket(packet, DataPacket_Kind.RELIABLE);
+		await this.engine.sendDataPacket(packet, DataChannelKind.RELIABLE);
 		this.emit(ParticipantEvent.ChatMessage, msg);
 		return msg;
 	}
@@ -1547,86 +1638,26 @@ export default class LocalParticipant extends Participant {
 		return this.roomOutgoingDataStreamManager.sendFile(file, options);
 	}
 
+	async sendBytes(bytes: Uint8Array, options?: SendBytesOptions): Promise<ByteStreamInfo> {
+		return this.roomOutgoingDataStreamManager.sendBytes(bytes, options);
+	}
+
 	async streamBytes(options?: StreamBytesOptions) {
 		return this.roomOutgoingDataStreamManager.streamBytes(options);
 	}
 
-	performRpc({
-		destinationIdentity,
-		method,
-		payload,
-		responseTimeout = 15000,
-	}: PerformRpcParams): TypedPromise<string, RpcError> {
-		const maxRoundTripLatency = 7000;
-		const minEffectiveTimeout = maxRoundTripLatency + 1000;
-
-		return new TypedPromise<string, RpcError>(async (resolve, reject) => {
-			if (byteLength(payload) > MAX_PAYLOAD_BYTES) {
-				reject(RpcError.builtIn('REQUEST_PAYLOAD_TOO_LARGE'));
-				return;
-			}
-
-			if (
-				this.engine.latestJoinResponse?.serverInfo?.version &&
-				compareVersions(this.engine.latestJoinResponse?.serverInfo?.version, '1.8.0') < 0
-			) {
-				reject(RpcError.builtIn('UNSUPPORTED_SERVER'));
-				return;
-			}
-
-			const effectiveTimeout = Math.max(responseTimeout, minEffectiveTimeout);
-			const id = crypto.randomUUID();
-			await this.publishRpcRequest(destinationIdentity, id, method, payload, effectiveTimeout);
-
-			const ackTimeoutId = setTimeout(() => {
-				this.pendingAcks.delete(id);
-				reject(RpcError.builtIn('CONNECTION_TIMEOUT'));
-				this.pendingResponses.delete(id);
-				clearTimeout(responseTimeoutId);
-			}, maxRoundTripLatency);
-
-			this.pendingAcks.set(id, {
-				resolve: () => {
-					clearTimeout(ackTimeoutId);
-				},
-				participantIdentity: destinationIdentity,
-			});
-
-			const responseTimeoutId = setTimeout(() => {
-				this.pendingResponses.delete(id);
-				reject(RpcError.builtIn('RESPONSE_TIMEOUT'));
-			}, responseTimeout);
-
-			this.pendingResponses.set(id, {
-				resolve: (responsePayload: string | null, responseError: RpcError | null) => {
-					clearTimeout(responseTimeoutId);
-					if (this.pendingAcks.has(id)) {
-						this.log.warn('RPC response received before ack', id);
-						this.pendingAcks.delete(id);
-						clearTimeout(ackTimeoutId);
-					}
-
-					if (responseError) {
-						reject(responseError);
-					} else {
-						resolve(responsePayload ?? '');
-					}
-				},
-				participantIdentity: destinationIdentity,
-			});
+	performRpc(params: PerformRpcParams): TypedPromise<string, RpcError> {
+		return this.rpcClientManager.performRpc(params).then(([_id, completionPromise]) => {
+			return completionPromise;
 		});
 	}
 
 	registerRpcMethod(method: string, handler: (data: RpcInvocationData) => Promise<string>) {
-		if (this.rpcHandlers.has(method)) {
-			this.log.warn(`you're overriding the RPC handler for method ${method}, in the future this will throw an error`);
-		}
-
-		this.rpcHandlers.set(method, handler);
+		this.rpcServerManager.registerRpcMethod(method, handler);
 	}
 
 	unregisterRpcMethod(method: string) {
-		this.rpcHandlers.delete(method);
+		this.rpcServerManager.unregisterRpcMethod(method);
 	}
 
 	setTrackSubscriptionPermissions(
@@ -1637,66 +1668,6 @@ export default class LocalParticipant extends Participant {
 		this.allParticipantsAllowedToSubscribe = allParticipantsAllowed;
 		if (!this.engine.client.isDisconnected) {
 			this.updateTrackSubscriptionPermissions();
-		}
-	}
-
-	private handleIncomingRpcAck(requestId: string) {
-		const handler = this.pendingAcks.get(requestId);
-		if (handler) {
-			handler.resolve();
-			this.pendingAcks.delete(requestId);
-		} else {
-			this.log.warn('Ack received for unexpected RPC request', {...this.logContext, requestId});
-		}
-	}
-
-	private handleIncomingRpcResponse(requestId: string, payload: string | null, error: RpcError | null) {
-		const handler = this.pendingResponses.get(requestId);
-		if (handler) {
-			handler.resolve(payload, error);
-			this.pendingResponses.delete(requestId);
-		} else {
-			this.log.warn('Response received for unexpected RPC request', {...this.logContext, requestId});
-		}
-	}
-
-	private async publishRpcRequest(
-		destinationIdentity: string,
-		requestId: string,
-		method: string,
-		payload: string,
-		responseTimeout: number,
-	) {
-		const packet = new DataPacket({
-			destinationIdentities: [destinationIdentity],
-			kind: DataPacket_Kind.RELIABLE,
-			value: {
-				case: 'rpcRequest',
-				value: new RpcRequest({
-					id: requestId,
-					method,
-					payload,
-					responseTimeoutMs: responseTimeout,
-					version: 1,
-				}),
-			},
-		});
-
-		await this.engine.sendDataPacket(packet, DataPacket_Kind.RELIABLE);
-	}
-
-	handleParticipantDisconnected(participantIdentity: string) {
-		for (const [id, {participantIdentity: pendingIdentity}] of this.pendingAcks) {
-			if (pendingIdentity === participantIdentity) {
-				this.pendingAcks.delete(id);
-			}
-		}
-
-		for (const [id, {participantIdentity: pendingIdentity, resolve}] of this.pendingResponses) {
-			if (pendingIdentity === participantIdentity) {
-				resolve(null, RpcError.builtIn('RECIPIENT_DISCONNECTED'));
-				this.pendingResponses.delete(id);
-			}
 		}
 	}
 
@@ -1716,7 +1687,6 @@ export default class LocalParticipant extends Participant {
 				const mutedOnServer = pub.isMuted || (pub.track?.isUpstreamPaused ?? false);
 				if (mutedOnServer !== ti.muted) {
 					this.log.debug('updating server mute state after reconcile', {
-						...this.logContext,
 						...getLogContextFromTrack(pub),
 						mutedOnServer,
 					});
@@ -1729,7 +1699,6 @@ export default class LocalParticipant extends Participant {
 
 	private updateTrackSubscriptionPermissions = () => {
 		this.log.debug('updating track subscription permissions', {
-			...this.logContext,
 			allParticipantsAllowed: this.allParticipantsAllowedToSubscribe,
 			participantTrackPermissions: this.participantTrackPermissions,
 		});
@@ -1772,10 +1741,7 @@ export default class LocalParticipant extends Participant {
 		}
 
 		if (!track.sid) {
-			this.log.error('could not update mute status for unpublished track', {
-				...this.logContext,
-				...getLogContextFromTrack(track),
-			});
+			this.log.error('could not update mute status for unpublished track', getLogContextFromTrack(track));
 			return;
 		}
 
@@ -1783,38 +1749,26 @@ export default class LocalParticipant extends Participant {
 	};
 
 	private onTrackUpstreamPaused = (track: LocalTrack) => {
-		this.log.debug('upstream paused', {
-			...this.logContext,
-			...getLogContextFromTrack(track),
-		});
+		this.log.debug('upstream paused', getLogContextFromTrack(track));
 		this.onTrackMuted(track, true);
 	};
 
 	private onTrackUpstreamResumed = (track: LocalTrack) => {
-		this.log.debug('upstream resumed', {
-			...this.logContext,
-			...getLogContextFromTrack(track),
-		});
+		this.log.debug('upstream resumed', getLogContextFromTrack(track));
 		this.onTrackMuted(track, track.isMuted);
 	};
 
 	private onTrackFeatureUpdate = (track: LocalAudioTrack) => {
 		const pub = this.audioTrackPublications.get(track.sid!);
 		if (!pub) {
-			this.log.warn(
-				`Could not update local audio track settings, missing publication for track ${track.sid}`,
-				this.logContext,
-			);
+			this.log.warn(`Could not update local audio track settings, missing publication for track ${track.sid}`);
 			return;
 		}
 		this.engine.client.sendUpdateLocalAudioTrack(pub.trackSid, pub.getTrackFeatures());
 	};
 
 	private onTrackCpuConstrained = (track: LocalVideoTrack, publication: LocalTrackPublication) => {
-		this.log.debug('track cpu constrained', {
-			...this.logContext,
-			...getLogContextFromTrack(publication),
-		});
+		this.log.debug('track cpu constrained', getLogContextFromTrack(publication));
 		this.emit(ParticipantEvent.LocalTrackCpuConstrained, track, publication);
 	};
 
@@ -1825,7 +1779,6 @@ export default class LocalParticipant extends Participant {
 		const pub = this.videoTrackPublications.get(update.trackSid);
 		if (!pub) {
 			this.log.warn('received subscribed quality update for unknown track', {
-				...this.logContext,
 				trackSid: update.trackSid,
 			});
 			return;
@@ -1833,18 +1786,21 @@ export default class LocalParticipant extends Participant {
 		if (!pub.videoTrack) {
 			return;
 		}
-		const newCodecs = await pub.videoTrack.setPublishingCodecs(update.subscribedCodecs);
+		let subscribedCodecs = update.subscribedCodecs;
+		if (hasSingleRidlessEncoding(pub.videoTrack)) {
+			subscribedCodecs = subscribedCodecs.filter((codec) => codec.qualities.some((quality) => quality.enabled));
+			if (subscribedCodecs.length === 0) {
+				return;
+			}
+		}
+		const newCodecs = await pub.videoTrack.setPublishingCodecs(subscribedCodecs);
 		for await (const codec of newCodecs) {
 			if (isBackupCodec(codec)) {
-				this.log.debug(`publish ${codec} for ${pub.videoTrack.sid}`, {
-					...this.logContext,
-					...getLogContextFromTrack(pub),
-				});
+				this.log.debug(`publish ${codec} for ${pub.videoTrack.sid}`, getLogContextFromTrack(pub));
 				try {
 					await this.publishAdditionalCodecForTrack(pub.videoTrack, codec, pub.options);
 				} catch (e) {
 					this.log.warn(`failed to publish backup codec ${codec} for ${pub.videoTrack.sid}`, {
-						...this.logContext,
 						...getLogContextFromTrack(pub),
 						error: e,
 					});
@@ -1857,7 +1813,6 @@ export default class LocalParticipant extends Participant {
 		const track = this.trackPublications.get(unpublished.trackSid);
 		if (!track) {
 			this.log.warn('received unpublished event for unknown track', {
-				...this.logContext,
 				trackSid: unpublished.trackSid,
 			});
 			return;
@@ -1867,10 +1822,7 @@ export default class LocalParticipant extends Participant {
 
 	private handleTrackEnded = async (track: LocalTrack) => {
 		if (track.source === Track.Source.ScreenShare || track.source === Track.Source.ScreenShareAudio) {
-			this.log.debug('unpublishing local track due to TrackEnded', {
-				...this.logContext,
-				...getLogContextFromTrack(track),
-			});
+			this.log.debug('unpublishing local track due to TrackEnded', getLogContextFromTrack(track));
 			this.unpublishTrack(track);
 		} else if (track.isUserProvided) {
 			await track.mute();
@@ -1882,10 +1834,7 @@ export default class LocalParticipant extends Participant {
 							name: track.source === Track.Source.Camera ? 'camera' : 'microphone',
 						});
 						if (currentPermissions && currentPermissions.state === 'denied') {
-							this.log.warn(`user has revoked access to ${track.source}`, {
-								...this.logContext,
-								...getLogContextFromTrack(track),
-							});
+							this.log.warn(`user has revoked access to ${track.source}`, getLogContextFromTrack(track));
 
 							currentPermissions.onchange = () => {
 								if (currentPermissions.state !== 'denied') {
@@ -1897,13 +1846,10 @@ export default class LocalParticipant extends Participant {
 							};
 							throw new Error('GetUserMedia Permission denied');
 						}
-					} catch (_e: unknown) {}
+					} catch (_e: any) {}
 				}
 				if (!track.isMuted) {
-					this.log.debug('track ended, attempting to use a different device', {
-						...this.logContext,
-						...getLogContextFromTrack(track),
-					});
+					this.log.debug('track ended, attempting to use a different device', getLogContextFromTrack(track));
 					if (isLocalAudioTrack(track)) {
 						await track.restartTrack({deviceId: 'default'});
 					} else {
@@ -1911,10 +1857,7 @@ export default class LocalParticipant extends Participant {
 					}
 				}
 			} catch (_e) {
-				this.log.warn(`could not restart track, muting instead`, {
-					...this.logContext,
-					...getLogContextFromTrack(track),
-				});
+				this.log.warn(`could not restart track, muting instead`, getLogContextFromTrack(track));
 				await track.mute();
 			}
 		}
@@ -1955,5 +1898,12 @@ export default class LocalParticipant extends Participant {
 			await sleep(20);
 		}
 		return undefined;
+	}
+
+	async publishDataTrack(options: DataTrackOptions): Promise<LocalDataTrack> {
+		const track = new LocalDataTrack(options, this.roomOutgoingDataTrackManager);
+		await track.publish();
+
+		return track;
 	}
 }

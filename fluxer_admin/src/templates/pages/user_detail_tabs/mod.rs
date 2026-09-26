@@ -5,7 +5,6 @@ use crate::{api::types::AdminResolvedUser, utils::bigint::format_discriminator};
 pub mod account;
 pub mod applications;
 pub mod archives;
-pub mod billing;
 pub mod dm_history;
 pub mod group_dm;
 pub mod guilds;

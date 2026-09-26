@@ -64,14 +64,6 @@ export const LIMIT_TIER_PERKS: ReadonlyArray<LimitTierPerk> = [
 		stockValue: true,
 	},
 	{
-		id: 'message_scheduling',
-		type: 'boolean',
-		status: 'coming_soon',
-		i18nKey: 'message_scheduling',
-		restrictedValue: false,
-		stockValue: true,
-	},
-	{
 		id: 'profile_badge',
 		type: 'boolean',
 		status: 'available',
@@ -136,14 +128,6 @@ export const LIMIT_TIER_PERKS: ReadonlyArray<LimitTierPerk> = [
 		stockValue: 500 * 1024 * 1024,
 		limitKey: 'max_attachment_file_size',
 		unit: 'bytes',
-	},
-	{
-		id: 'emoji_sticker_packs',
-		type: 'boolean',
-		status: 'coming_soon',
-		i18nKey: 'emoji_sticker_packs',
-		restrictedValue: false,
-		stockValue: true,
 	},
 	{
 		id: 'max_favorite_memes',

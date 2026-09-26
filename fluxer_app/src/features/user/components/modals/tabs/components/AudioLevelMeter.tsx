@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import styles from '@app/features/user/components/modals/tabs/components/AudioLevelMeter.module.css';
+import {clsx} from 'clsx';
 import type {HTMLAttributes} from 'react';
 import {useMemo} from 'react';
 
@@ -26,7 +27,7 @@ function makeActiveBarStyle(index: number): AudioLevelBarStyle {
 	};
 }
 
-export function AudioLevelMeter({level, ...rest}: AudioLevelMeterProps & HTMLAttributes<HTMLDivElement>) {
+export function AudioLevelMeter({level, className, ...rest}: AudioLevelMeterProps & HTMLAttributes<HTMLDivElement>) {
 	const bars = useMemo(() => {
 		const clampedLevel = Math.min(1, Math.max(0, level));
 		return Array.from({length: BAR_COUNT}, (_, index) => {
@@ -40,7 +41,7 @@ export function AudioLevelMeter({level, ...rest}: AudioLevelMeterProps & HTMLAtt
 		});
 	}, [level]);
 	return (
-		<div className={styles.track} data-flx="user.audio-level-meter.track" {...rest}>
+		<div className={clsx(styles.track, className)} data-flx="user.audio-level-meter.track" {...rest}>
 			{bars.map((bar, index) => (
 				<span
 					key={index}

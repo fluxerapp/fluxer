@@ -33,7 +33,7 @@ export interface MembersPaginationProps {
 	isSearching: boolean;
 	activeEllipsis: PaginationEllipsisSide | null;
 	pageJumpValue: string;
-	ellipsisInputRef: React.MutableRefObject<HTMLInputElement | null>;
+	ellipsisInputRef: React.RefObject<HTMLInputElement | null>;
 	onPageSelect: (page: number) => void;
 	setActiveEllipsis: React.Dispatch<React.SetStateAction<PaginationEllipsisSide | null>>;
 	setPageJumpValue: React.Dispatch<React.SetStateAction<string>>;
@@ -57,7 +57,7 @@ export function MembersPagination({
 		setPageJumpValue('');
 	}, [setActiveEllipsis, setPageJumpValue]);
 	const handleJumpSubmit = useCallback(
-		(event: React.FormEvent<HTMLFormElement>) => {
+		(event: React.SubmitEvent<HTMLFormElement>) => {
 			event.preventDefault();
 			const nextPage = parseInt(pageJumpValue, 10);
 			if (!Number.isNaN(nextPage) && nextPage >= 1 && nextPage <= totalPages) {

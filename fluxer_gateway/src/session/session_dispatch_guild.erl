@@ -16,7 +16,7 @@
 -type user_id() :: session:user_id().
 -type channel_event() :: channel_create | channel_update.
 
--spec update_channels_map(event(), map(), session_state()) -> session_state().
+-spec update_channels_map(event(), map() | list(), session_state()) -> session_state().
 update_channels_map(channel_create, Data, State) when is_map(Data) ->
     maybe_add_dm_channel(channel_create, Data, State);
 update_channels_map(channel_update, Data, State) when is_map(Data) ->
@@ -33,7 +33,7 @@ update_channels_map(channel_recipient_remove, Data, State) when is_map(Data) ->
 update_channels_map(_Event, _Data, State) ->
     State.
 
--spec update_dm_voice_states_map(event(), map(), session_state()) -> session_state().
+-spec update_dm_voice_states_map(event(), map() | list(), session_state()) -> session_state().
 update_dm_voice_states_map(voice_state_update, Data, State) when is_map(Data) ->
     update_dm_voice_state(Data, State);
 update_dm_voice_states_map(call_create, Data, State) when is_map(Data) ->
@@ -359,7 +359,7 @@ add_unique_user_by_id(UserMap, Id, List) ->
         false -> [UserMap | List]
     end.
 
--spec update_relationships_map(event(), map(), session_state()) -> session_state().
+-spec update_relationships_map(event(), map() | list(), session_state()) -> session_state().
 update_relationships_map(relationship_add, Data, State) ->
     upsert_relationship(Data, State);
 update_relationships_map(relationship_update, Data, State) ->

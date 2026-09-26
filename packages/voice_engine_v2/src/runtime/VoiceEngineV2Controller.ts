@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {selectVoiceEngineV2Model, type VoiceEngineV2Snapshot} from '../core';
+import {selectVoiceEngineV2Model, type VoiceEngineV2Snapshot} from '@fluxer/voice_engine_v2/src/core';
 import type {
 	VoiceEngineV2AudioControlsPatch,
 	VoiceEngineV2CameraEncodingOptions,
@@ -12,7 +12,6 @@ import type {
 	VoiceEngineV2GatewayDesiredVoiceState,
 	VoiceEngineV2GatewayVoiceStateWrite,
 	VoiceEngineV2LifecycleReason,
-	VoiceEngineV2LocalStreamSource,
 	VoiceEngineV2MicrophoneOptions,
 	VoiceEngineV2Model,
 	VoiceEngineV2NativeAudioTapOptions,
@@ -27,12 +26,14 @@ import type {
 	VoiceEngineV2ScreenEncodingOptions,
 	VoiceEngineV2ScreenOptions,
 	VoiceEngineV2TimerOptions,
-	VoiceEngineV2VideoCodec,
 	VoiceEngineV2WatchedStream,
 	VoiceEngineV2WatchedStreamKey,
-} from '../protocol';
-import type {VoiceEngineV2Event} from '../protocol/events';
-import type {VoiceEngineV2Runtime, VoiceEngineV2RuntimeListener} from './VoiceEngineV2Runtime';
+} from '@fluxer/voice_engine_v2/src/protocol';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
+import type {
+	VoiceEngineV2Runtime,
+	VoiceEngineV2RuntimeListener,
+} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Runtime';
 
 export class VoiceEngineV2Controller {
 	constructor(private readonly runtime: VoiceEngineV2Runtime) {}
@@ -111,45 +112,6 @@ export class VoiceEngineV2Controller {
 
 	updateCameraEncoding(options: VoiceEngineV2CameraEncodingOptions): void {
 		this.runtime.dispatch({type: 'camera.updateEncodingRequested', options});
-	}
-
-	setVideoCodecOverride(source: VoiceEngineV2LocalStreamSource, codec: VoiceEngineV2VideoCodec | null): void {
-		this.runtime.dispatch({type: 'codecNegotiation.overrideSetRequested', source, codec});
-	}
-
-	setLocalVideoCodecCapability(supportedVideoCodecs: Array<VoiceEngineV2VideoCodec>): void {
-		this.runtime.dispatch({type: 'codecNegotiation.localCapabilityChanged', supportedVideoCodecs});
-	}
-
-	registerLocalStreamCodec(
-		source: VoiceEngineV2LocalStreamSource,
-		streamIdentity: string,
-		preferredCodec: VoiceEngineV2VideoCodec,
-	): void {
-		this.runtime.dispatch({type: 'codecNegotiation.streamRegistered', source, streamIdentity, preferredCodec});
-	}
-
-	unregisterLocalStreamCodec(source: VoiceEngineV2LocalStreamSource): void {
-		this.runtime.dispatch({type: 'codecNegotiation.streamUnregistered', source});
-	}
-
-	reportStreamViewer(
-		source: VoiceEngineV2LocalStreamSource,
-		viewerIdentity: string,
-		watching: boolean,
-		supportedVideoCodecs: Array<VoiceEngineV2VideoCodec>,
-	): void {
-		this.runtime.dispatch({
-			type: 'codecNegotiation.viewerChanged',
-			source,
-			viewerIdentity,
-			watching,
-			supportedVideoCodecs,
-		});
-	}
-
-	reportRemoteVideoCodecCapability(identity: string, supportedVideoCodecs: Array<VoiceEngineV2VideoCodec>): void {
-		this.runtime.dispatch({type: 'codecNegotiation.remoteCapabilityChanged', identity, supportedVideoCodecs});
 	}
 
 	unpublishCamera(options?: VoiceEngineV2CameraOptions): void {

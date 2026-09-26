@@ -4,6 +4,7 @@ import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {SettingsSection} from '@app/features/app/components/dialogs/shared/SettingsSection';
 import {SettingsTabContainer} from '@app/features/app/components/dialogs/shared/SettingsTabLayout';
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
+import {MacPermissionsSettingsRow} from '@app/features/permissions/system/components/MacPermissionsSettingsRow';
 import {
 	getAutostartStatus,
 	getCachedAutostartStatus,
@@ -19,7 +20,7 @@ import {
 	relaunchDesktopApp,
 	setDesktopWindowBehaviorSettings,
 } from '@app/features/ui/utils/DesktopWindowBehaviorUtils';
-import {guessPlatform, isDesktop, isNativeLinux, isNativeMacOS} from '@app/features/ui/utils/NativeUtils';
+import {getNativePlatformSync, isDesktop, isNativeLinux, isNativeMacOS} from '@app/features/ui/utils/NativeUtils';
 import type {DesktopWindowBehaviorSettings} from '@app/types/electron.d';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -59,7 +60,7 @@ const DesktopSettingsTab: React.FC = observer(() => {
 	);
 	const [desktopWindowBehaviorBusy, setDesktopWindowBehaviorBusy] = useState(cachedWindowBehavior === null);
 	const [trayChangePendingRestart, setTrayChangePendingRestart] = useState(false);
-	const platform = guessPlatform();
+	const platform = getNativePlatformSync();
 	const isMac = isNativeMacOS(platform);
 	const isLinux = isNativeLinux(platform);
 	useLayoutEffect(() => {
@@ -197,6 +198,15 @@ const DesktopSettingsTab: React.FC = observer(() => {
 					</>
 				)}
 			</SettingsSection>
+			{isMac && (
+				<SettingsSection
+					id="macos-permissions"
+					title={<Trans>macOS permissions</Trans>}
+					data-flx="user.desktop-settings-tab.macos-permissions-section"
+				>
+					<MacPermissionsSettingsRow showTitle={false} data-flx="user.desktop-settings-tab.macos-permissions-row" />
+				</SettingsSection>
+			)}
 		</SettingsTabContainer>
 	);
 });

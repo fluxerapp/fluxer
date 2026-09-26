@@ -170,11 +170,7 @@ struct KeysymCache {
 impl KeysymCache {
     fn build(reply: &GetKeyboardMappingReply, min_keycode: Keycode) -> Self {
         let per = reply.keysyms_per_keycode as usize;
-        let count = if per == 0 {
-            0
-        } else {
-            reply.keysyms.len() / per
-        };
+        let count = reply.keysyms.len().checked_div(per).unwrap_or(0);
         let mut syms = Vec::with_capacity(count);
         if per > 0 {
             for i in 0..count {

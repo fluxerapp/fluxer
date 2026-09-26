@@ -91,7 +91,9 @@ export const PlaintextSection: React.FC<PlaintextSectionProps> = observer(
 										data-flx="channel.message-search-bar.plaintext-section.magnifying-glass-icon"
 									/>
 								)}
-								{group === 'filter-key' ? i18n._(SEARCH_FILTERS_DESCRIPTOR) : `${group}:`}
+								<flx-i18n data-flx="channel.message-search-bar.plaintext-section.flx-i18n">
+									{group === 'filter-key' ? i18n._(SEARCH_FILTERS_DESCRIPTOR) : `${group}:`}
+								</flx-i18n>
 							</span>
 						</div>
 						{entries.map(({row, index}) => {

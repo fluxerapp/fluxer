@@ -212,10 +212,8 @@ maybe_disconnect_voice(UserId, ProcessedUsers, State) ->
         true ->
             {State, ProcessedUsers};
         false ->
-            {reply, _Result, VoiceState} = guild_voice_disconnect:disconnect_voice_user(
-                #{user_id => UserId, connection_id => null}, State
-            ),
-            {VoiceState, sets:add_element(UserId, ProcessedUsers)}
+            ok = guild_voice_lifecycle:cast_disconnect_voice_user(UserId, State),
+            {State, sets:add_element(UserId, ProcessedUsers)}
     end.
 
 -spec schedule_availability_recheck(guild_state()) -> guild_state().

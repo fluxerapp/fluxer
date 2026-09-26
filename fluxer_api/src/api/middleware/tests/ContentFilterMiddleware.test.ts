@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {extractStringValues, shouldSkipContentFilterPath} from '@app/api/middleware/ContentFilterMiddleware';
 import {describe, expect, test} from 'vitest';
-import {extractStringValues, shouldSkipContentFilterPath} from '../ContentFilterMiddleware';
 
 describe('extractStringValues', () => {
 	test('returns text from user-generated content fields', () => {

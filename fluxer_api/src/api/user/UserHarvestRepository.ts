@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../BrandedTypes';
-import {fetchMany, fetchOne, upsertOne} from '../database/CassandraQueryExecution';
-import {Db} from '../database/CassandraTypes';
-import type {UserHarvestRow} from '../database/types/UserTypes';
-import {Logger} from '../Logger';
-import {UserHarvests} from '../Tables';
-import {UserHarvest} from './UserHarvestModel';
+import assert from 'node:assert/strict';
+import {randomUUID} from 'node:crypto';
+import {ArchiveAttemptSupersededError} from '@app/api/archive/ArchiveAttemptSupersededError';
+import type {UserID} from '@app/api/BrandedTypes';
+import {executeConditional, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import {Db, type DbOp} from '@app/api/database/CassandraTypes';
+import type {UserHarvestRow} from '@app/api/database/types/UserTypes';
+import {Logger} from '@app/api/Logger';
+import {UserHarvests} from '@app/api/Tables';
+import {UserHarvest} from '@app/api/user/UserHarvestModel';
+import {UnknownHarvestError} from '@fluxer/errors/src/domains/moderation/UnknownHarvestError';
 
 const FIND_HARVEST_CQL = UserHarvests.selectCql({
 	where: [UserHarvests.where.eq('user_id'), UserHarvests.where.eq('harvest_id')],
@@ -21,31 +25,23 @@ const FIND_LATEST_HARVEST_CQL = UserHarvests.selectCql({
 	limit: 1,
 });
 
+interface UserHarvestPatch {
+	completed_at?: DbOp<Date>;
+	failed_at?: DbOp<Date>;
+	terminal_failed_at?: DbOp<Date>;
+	storage_key?: DbOp<string>;
+	file_size?: DbOp<bigint>;
+	progress_percent?: DbOp<number>;
+	progress_step?: DbOp<string>;
+	error_message?: DbOp<string>;
+	download_url_expires_at?: DbOp<Date>;
+}
+
 export class UserHarvestRepository {
 	async create(harvest: UserHarvest): Promise<void> {
-		await upsertOne(UserHarvests.upsertAll(harvest.toRow()));
+		const applied = await executeConditional(UserHarvests.insertIfNotExists(harvest.toRow()));
+		if (!applied) throw new Error(`Harvest ${harvest.harvestId} for user ${harvest.userId} already exists`);
 		Logger.debug({userId: harvest.userId, harvestId: harvest.harvestId}, 'Created harvest record');
-	}
-
-	async update(harvest: UserHarvest): Promise<void> {
-		const row = harvest.toRow();
-		await upsertOne(
-			UserHarvests.patchByPk(
-				{user_id: row.user_id, harvest_id: row.harvest_id},
-				{
-					started_at: Db.set(row.started_at),
-					completed_at: Db.set(row.completed_at),
-					failed_at: Db.set(row.failed_at),
-					storage_key: Db.set(row.storage_key),
-					file_size: Db.set(row.file_size),
-					progress_percent: Db.set(row.progress_percent),
-					progress_step: Db.set(row.progress_step),
-					error_message: Db.set(row.error_message),
-					download_url_expires_at: Db.set(row.download_url_expires_at),
-				},
-			),
-		);
-		Logger.debug({userId: harvest.userId, harvestId: harvest.harvestId}, 'Updated harvest record');
 	}
 
 	async findByUserAndHarvestId(userId: UserID, harvestId: bigint): Promise<UserHarvest | null> {
@@ -72,71 +68,120 @@ export class UserHarvestRepository {
 		return row ? new UserHarvest(row) : null;
 	}
 
-	async updateProgress(
-		userId: UserID,
-		harvestId: bigint,
-		progressPercent: number,
-		progressStep: string,
-	): Promise<void> {
-		await upsertOne(
-			UserHarvests.patchByPk(
-				{user_id: userId, harvest_id: harvestId},
+	async markAsStarted(harvest: UserHarvest): Promise<UserHarvest> {
+		const attemptId = randomUUID();
+		const startedAt = new Date();
+		const applied = await executeConditional(
+			UserHarvests.conditionalPatchByPk(
+				{user_id: harvest.userId, harvest_id: harvest.harvestId},
 				{
-					progress_percent: Db.set(progressPercent),
-					progress_step: Db.set(progressStep),
-				},
-			),
-		);
-		Logger.debug({userId, harvestId, progressPercent, progressStep}, 'Updated harvest progress');
-	}
-
-	async markAsStarted(userId: UserID, harvestId: bigint): Promise<void> {
-		await upsertOne(
-			UserHarvests.patchByPk(
-				{user_id: userId, harvest_id: harvestId},
-				{
-					started_at: Db.set(new Date()),
+					attempt_id: Db.set(attemptId),
+					started_at: Db.set(startedAt),
+					failed_at: Db.clear(),
+					error_message: Db.clear(),
 					progress_percent: Db.set(0),
 					progress_step: Db.set('Starting harvest'),
 				},
+				{
+					requested_at: harvest.requestedAt,
+					attempt_id: harvest.attemptId ?? null,
+					completed_at: null,
+					terminal_failed_at: null,
+				},
 			),
 		);
-		Logger.debug({userId, harvestId}, 'Marked harvest as started');
+		if (!applied) throw new ArchiveAttemptSupersededError();
+		Logger.debug({userId: harvest.userId, harvestId: harvest.harvestId, attemptId}, 'Claimed harvest attempt');
+		return new UserHarvest({
+			...harvest.toRow(),
+			attempt_id: attemptId,
+			started_at: startedAt,
+			failed_at: null,
+			error_message: null,
+			progress_percent: 0,
+			progress_step: 'Starting harvest',
+		});
+	}
+
+	async updateProgress(harvest: UserHarvest, progressPercent: number, progressStep: string): Promise<void> {
+		await this.patchOwned(harvest, {
+			progress_percent: Db.set(progressPercent),
+			progress_step: Db.set(progressStep),
+		});
+		Logger.debug(
+			{userId: harvest.userId, harvestId: harvest.harvestId, progressPercent, progressStep},
+			'Updated harvest progress',
+		);
 	}
 
 	async markAsCompleted(
-		userId: UserID,
-		harvestId: bigint,
+		harvest: UserHarvest,
 		storageKey: string,
 		fileSize: bigint,
 		downloadUrlExpiresAt: Date,
 	): Promise<void> {
-		await upsertOne(
-			UserHarvests.patchByPk(
-				{user_id: userId, harvest_id: harvestId},
-				{
-					completed_at: Db.set(new Date()),
-					storage_key: Db.set(storageKey),
-					file_size: Db.set(fileSize),
-					download_url_expires_at: Db.set(downloadUrlExpiresAt),
-					progress_percent: Db.set(100),
-					progress_step: Db.set('Completed'),
-				},
-			),
+		await this.patchOwned(harvest, {
+			completed_at: Db.set(new Date()),
+			failed_at: Db.clear(),
+			error_message: Db.clear(),
+			storage_key: Db.set(storageKey),
+			file_size: Db.set(fileSize),
+			download_url_expires_at: Db.set(downloadUrlExpiresAt),
+			progress_percent: Db.set(100),
+			progress_step: Db.set('Completed'),
+		});
+		Logger.debug(
+			{userId: harvest.userId, harvestId: harvest.harvestId, storageKey, fileSize},
+			'Marked harvest as completed',
 		);
-		Logger.debug({userId, harvestId, storageKey, fileSize}, 'Marked harvest as completed');
 	}
 
-	async markAsFailed(userId: UserID, harvestId: bigint, errorMessage: string): Promise<void> {
-		await upsertOne(
-			UserHarvests.patchByPk(
+	async markAsFailed(harvest: UserHarvest, errorMessage: string): Promise<void> {
+		await this.patchOwned(harvest, {
+			failed_at: Db.set(new Date()),
+			error_message: Db.set(errorMessage),
+		});
+		Logger.error({userId: harvest.userId, harvestId: harvest.harvestId, errorMessage}, 'Marked harvest as failed');
+	}
+
+	async markAsTerminallyFailed(harvest: UserHarvest, errorMessage: string): Promise<void> {
+		const failedAt = new Date();
+		await this.patchOwned(harvest, {
+			failed_at: Db.set(failedAt),
+			terminal_failed_at: Db.set(failedAt),
+			error_message: Db.set(errorMessage),
+			progress_step: Db.set('Failed'),
+		});
+		Logger.error(
+			{userId: harvest.userId, harvestId: harvest.harvestId, errorMessage},
+			'Marked harvest as terminally failed',
+		);
+	}
+
+	async setDownloadUrlExpiry(userId: UserID, harvestId: bigint, expiresAt: Date): Promise<void> {
+		const harvest = await this.findByUserAndHarvestId(userId, harvestId);
+		if (!harvest) throw new UnknownHarvestError();
+		const applied = await executeConditional(
+			UserHarvests.conditionalPatchByPk(
 				{user_id: userId, harvest_id: harvestId},
-				{
-					failed_at: Db.set(new Date()),
-					error_message: Db.set(errorMessage),
-				},
+				{download_url_expires_at: Db.set(expiresAt)},
+				{requested_at: harvest.requestedAt},
 			),
 		);
-		Logger.error({userId, harvestId, errorMessage}, 'Marked harvest as failed');
+		if (!applied) throw new UnknownHarvestError();
+	}
+
+	private async patchOwned(harvest: UserHarvest, patch: UserHarvestPatch): Promise<void> {
+		assert(harvest.attemptId, 'A claimed harvest attempt is required');
+		const applied = await executeConditional(
+			UserHarvests.conditionalPatchByPk({user_id: harvest.userId, harvest_id: harvest.harvestId}, patch, {
+				requested_at: harvest.requestedAt,
+				attempt_id: harvest.attemptId,
+				completed_at: null,
+				failed_at: null,
+				terminal_failed_at: null,
+			}),
+		);
+		if (!applied) throw new ArchiveAttemptSupersededError();
 	}
 }

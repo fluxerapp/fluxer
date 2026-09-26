@@ -1,30 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
+import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import type {AdminBanManagementService} from '@app/api/admin/services/AdminBanManagementService';
+import type {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserUpdatePropagator';
+import * as AuthSession from '@app/api/auth/AuthSession';
+import {createReportID, createUserID, type UserID} from '@app/api/BrandedTypes';
+import type {BillingRepository} from '@app/api/billing/repositories/BillingRepository';
+import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
+import {ReportStatus} from '@app/api/report/IReportRepository';
+import type {ReportService} from '@app/api/report/ReportService';
+import {getReportSearchService} from '@app/api/SearchFactory';
+import {clearPendingDeletion, reschedulePendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ReportAlreadyResolvedError} from '@fluxer/errors/src/domains/moderation/ReportAlreadyResolvedError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
-import type {
-	BulkScheduleUserDeletionRequest,
-	ScheduleAccountDeletionRequest,
-} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
+import type {ScheduleAccountDeletionRequest} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import type Stripe from 'stripe';
-import type {ApiContext} from '../../ApiContext';
-import * as AuthSession from '../../auth/AuthSession';
-import {createReportID, createUserID, type UserID} from '../../BrandedTypes';
-import type {BillingRepository} from '../../billing/repositories/BillingRepository';
-import type {KVAccountDeletionQueueService} from '../../infrastructure/KVAccountDeletionQueueService';
-import {Logger} from '../../Logger';
-import type {User} from '../../models/User';
-import {ReportStatus} from '../../report/IReportRepository';
-import type {ReportService} from '../../report/ReportService';
-import {getReportSearchService} from '../../SearchFactory';
-import {clearPendingDeletion, reschedulePendingDeletion} from '../../user/services/PendingDeletionCoordinator';
-import {mapUserToAdminResponse} from '../models/UserTypes';
-import type {AdminAuditService} from './AdminAuditService';
-import type {AdminBanManagementService} from './AdminBanManagementService';
-import type {AdminUserUpdatePropagator} from './AdminUserUpdatePropagator';
-import {BulkCancelledError, type BulkProgressHelpers} from './BulkProgressHelpers';
 
 interface AdminUserDeletionServiceDeps {
 	apiContext: ApiContext;
@@ -40,6 +36,12 @@ interface AdminUserDeletionServiceDeps {
 const minUserRequestedDeletionDays = 14;
 const minStandardDeletionDays = 60;
 
+export function resolveDeletionDays(reasonCode: number, requestedDays: number): number {
+	const minDays =
+		reasonCode === DeletionReasons.USER_REQUESTED ? minUserRequestedDeletionDays : minStandardDeletionDays;
+	return Math.max(requestedDays, minDays);
+}
+
 export class AdminUserDeletionService {
 	constructor(private readonly deps: AdminUserDeletionServiceDeps) {}
 
@@ -49,29 +51,35 @@ export class AdminUserDeletionService {
 		auditLogReason: string | null,
 		acls: ReadonlySet<string>,
 	) {
-		const {users: userRepository, email: emailService, cache: cacheService} = this.deps.apiContext.services;
+		const {cache: cacheService} = this.deps.apiContext.services;
+		const updatedUser = await this.applyScheduledDeletion(data, adminUserId, auditLogReason);
+		return {
+			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
+		};
+	}
+
+	async applyScheduledDeletion(
+		data: ScheduleAccountDeletionRequest,
+		adminUserId: UserID,
+		auditLogReason: string | null,
+	): Promise<User> {
+		const {users: userRepository, email: emailService} = this.deps.apiContext.services;
 		const {auditService, updatePropagator} = this.deps;
 		const userId = createUserID(data.user_id);
 		const user = await userRepository.findUnique(userId);
 		if (!user) {
 			throw new UnknownUserError();
 		}
-		const minDays =
-			data.reason_code === DeletionReasons.USER_REQUESTED ? minUserRequestedDeletionDays : minStandardDeletionDays;
-		const daysUntilDeletion = Math.max(data.days_until_deletion, minDays);
+		const daysUntilDeletion = resolveDeletionDays(data.reason_code, data.days_until_deletion);
 		const pendingDeletionAt = new Date();
 		pendingDeletionAt.setDate(pendingDeletionAt.getDate() + daysUntilDeletion);
-		const updatedUser = await userRepository.patchUpsert(
-			userId,
-			{
-				flags: user.flags | UserFlags.DELETED,
-				pending_deletion_at: pendingDeletionAt,
-				deletion_reason_code: data.reason_code,
-				deletion_public_reason: data.public_reason ?? null,
-				deletion_audit_log_reason: auditLogReason,
-			},
-			user.toRow(),
-		);
+		const updatedUser = await userRepository.updateDeletionSchedule(user, {
+			flags: user.flags | UserFlags.DELETED,
+			pending_deletion_at: pendingDeletionAt,
+			deletion_reason_code: data.reason_code,
+			deletion_public_reason: data.public_reason ?? null,
+			deletion_audit_log_reason: auditLogReason,
+		});
 		await reschedulePendingDeletion({
 			userId,
 			currentPendingDeletionAt: user.pendingDeletionAt,
@@ -141,25 +149,6 @@ export class AdminUserDeletionService {
 				);
 			}
 		}
-		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
-		if (user.email) {
-			await emailService.sendAccountScheduledForDeletionEmail(
-				user.email,
-				user.username,
-				data.public_reason ?? null,
-				pendingDeletionAt,
-				user.locale,
-			);
-		}
-		if (data.reason_code !== DeletionReasons.USER_REQUESTED) {
-			await this.banIdentifiersForScheduledDeletion({
-				user,
-				adminUserId,
-				auditLogReason,
-				deletionReasonCode: data.reason_code,
-			});
-			await this.resolvePendingReportsAgainstUser({user, adminUserId});
-		}
 		await auditService.createAuditLog({
 			adminUserId,
 			targetType: 'user',
@@ -171,9 +160,33 @@ export class AdminUserDeletionService {
 				['reason_code', data.reason_code.toString()],
 			]),
 		});
-		return {
-			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
-		};
+		if (data.reason_code !== DeletionReasons.USER_REQUESTED) {
+			await this.banIdentifiersForScheduledDeletion({
+				user,
+				adminUserId,
+				auditLogReason,
+				deletionReasonCode: data.reason_code,
+			});
+			await this.resolvePendingReportsAgainstUser({user, adminUserId});
+		}
+		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
+		if (user.email) {
+			try {
+				await emailService.sendAccountScheduledForDeletionEmail(
+					user.email,
+					user.username,
+					data.public_reason ?? null,
+					pendingDeletionAt,
+					user.locale,
+				);
+			} catch (error) {
+				Logger.warn(
+					{error, userId: userId.toString()},
+					'Failed to send scheduled deletion email after the deletion was scheduled',
+				);
+			}
+		}
+		return updatedUser;
 	}
 
 	async cancelAccountDeletion(
@@ -191,31 +204,22 @@ export class AdminUserDeletionService {
 		if (!user) {
 			throw new UnknownUserError();
 		}
+		const updatedUser = await userRepository.updateDeletionSchedule(user, {
+			flags: user.flags & ~UserFlags.DELETED & ~UserFlags.SELF_DELETED,
+			pending_deletion_at: null,
+			deletion_reason_code: null,
+			deletion_public_reason: null,
+			deletion_audit_log_reason: null,
+		});
 		await clearPendingDeletion({
 			userId,
 			pendingDeletionAt: user.pendingDeletionAt,
 			userRepository,
 			deletionQueue: this.deps.kvDeletionQueue,
 		});
-		const updatedUser = await userRepository.patchUpsert(
-			userId,
-			{
-				flags: user.flags & ~UserFlags.DELETED & ~UserFlags.SELF_DELETED,
-				pending_deletion_at: null,
-				deletion_reason_code: null,
-				deletion_public_reason: null,
-				deletion_audit_log_reason: null,
-			},
-			user.toRow(),
-		);
 		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
 		if (user.email) {
-			await emailService.sendUnbanNotification(
-				user.email,
-				user.username,
-				auditLogReason || 'deletion canceled',
-				user.locale,
-			);
+			await emailService.sendUnbanNotification(user.email, user.username, auditLogReason || null, user.locale);
 		}
 		await auditService.createAuditLog({
 			adminUserId,
@@ -227,70 +231,6 @@ export class AdminUserDeletionService {
 		});
 		return {
 			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
-		};
-	}
-
-	async bulkScheduleUserDeletion(
-		data: BulkScheduleUserDeletionRequest,
-		adminUserId: UserID,
-		auditLogReason: string | null,
-		acls: ReadonlySet<string>,
-		helpers?: BulkProgressHelpers,
-	) {
-		const {auditService} = this.deps;
-		const successful: Array<string> = [];
-		const failed: Array<{
-			id: string;
-			error: string;
-		}> = [];
-		const total = data.user_ids.length;
-		await helpers?.reportProgress(0, total, `Scheduling deletion of ${total} users`);
-		let processed = 0;
-		for (const userIdBigInt of data.user_ids) {
-			if (helpers && (await helpers.shouldCancel())) throw new BulkCancelledError();
-			try {
-				await this.scheduleAccountDeletion(
-					{
-						user_id: userIdBigInt,
-						reason_code: data.reason_code,
-						public_reason: data.public_reason,
-						days_until_deletion: data.days_until_deletion,
-					},
-					adminUserId,
-					null,
-					acls,
-				);
-				successful.push(userIdBigInt.toString());
-			} catch (error) {
-				failed.push({
-					id: userIdBigInt.toString(),
-					error: error instanceof Error ? error.message : 'Unknown error',
-				});
-			}
-			processed++;
-			if (helpers && processed % 10 === 0) {
-				await helpers.reportProgress(processed, total, null);
-			}
-		}
-		await helpers?.reportProgress(total, total, `+${successful.length} ok, ${failed.length} failed`);
-		const bulkMinDays =
-			data.reason_code === DeletionReasons.USER_REQUESTED ? minUserRequestedDeletionDays : minStandardDeletionDays;
-		const bulkDaysUntilDeletion = Math.max(data.days_until_deletion, bulkMinDays);
-		await auditService.createAuditLog({
-			adminUserId,
-			targetType: 'user',
-			targetId: BigInt(0),
-			action: 'bulk_schedule_deletion',
-			auditLogReason,
-			metadata: new Map([
-				['user_count', data.user_ids.length.toString()],
-				['reason_code', data.reason_code.toString()],
-				['days', bulkDaysUntilDeletion.toString()],
-			]),
-		});
-		return {
-			successful,
-			failed,
 		};
 	}
 
@@ -364,11 +304,15 @@ export class AdminUserDeletionService {
 		const {reportService, auditService} = this.deps;
 		const reportSearchService = getReportSearchService();
 		if (!reportSearchService) {
+			Logger.warn(
+				{userId: user.id.toString()},
+				'Report search is unavailable; pending reports were not auto-resolved on scheduled deletion',
+			);
 			return;
 		}
 		const auditLogReason = 'auto-resolved on scheduled deletion of reported user';
 		const pageSize = 100;
-		const seen = new Set<string>();
+		const pendingReportIds = new Set<string>();
 		let resolvedCount = 0;
 		let offset = 0;
 		try {
@@ -382,26 +326,10 @@ export class AdminUserDeletionService {
 					{limit: pageSize, offset},
 				);
 				if (hits.length === 0) break;
-				let advanced = false;
 				for (const hit of hits) {
-					if (seen.has(hit.id)) continue;
-					seen.add(hit.id);
-					advanced = true;
-					const reportId = createReportID(BigInt(hit.id));
-					try {
-						await reportService.resolveReport(reportId, adminUserId, null, auditLogReason);
-						resolvedCount++;
-					} catch (error) {
-						if (error instanceof ReportAlreadyResolvedError) continue;
-						Logger.warn(
-							{error, userId: user.id.toString(), reportId: reportId.toString()},
-							'Failed to auto-resolve report on scheduled deletion',
-						);
-					}
+					pendingReportIds.add(hit.id);
 				}
-				if (!advanced) {
-					offset += hits.length;
-				}
+				offset += hits.length;
 				if (hits.length < pageSize) break;
 			}
 		} catch (error) {
@@ -409,6 +337,19 @@ export class AdminUserDeletionService {
 				{error, userId: user.id.toString()},
 				'Failed to enumerate pending reports for auto-resolution on scheduled deletion',
 			);
+		}
+		for (const hitId of pendingReportIds) {
+			const reportId = createReportID(BigInt(hitId));
+			try {
+				await reportService.resolveReport(reportId, adminUserId, null, auditLogReason);
+				resolvedCount++;
+			} catch (error) {
+				if (error instanceof ReportAlreadyResolvedError) continue;
+				Logger.warn(
+					{error, userId: user.id.toString(), reportId: reportId.toString()},
+					'Failed to auto-resolve report on scheduled deletion',
+				);
+			}
 		}
 		if (resolvedCount > 0) {
 			await auditService

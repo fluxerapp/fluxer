@@ -21,7 +21,6 @@ export const EXTERNAL_RESPONSE_LIMITS = {
 	pwnedPasswordsBytes: 1024 * 1024,
 	rdapBytes: 512 * 1024,
 	externalTemplateBytes: 512 * 1024,
-	bunnyErrorBytes: 16 * 1024,
 	ncmecResponseBytes: 64 * 1024,
 	fileBlocklistBytes: 25 * 1024 * 1024,
 	urlBlocklistBytes: 25 * 1024 * 1024,

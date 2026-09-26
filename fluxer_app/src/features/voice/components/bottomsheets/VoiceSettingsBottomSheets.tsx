@@ -4,7 +4,6 @@ import sharedStyles from '@app/features/app/components/bottomsheets/shared.modul
 import * as VoiceStateCommands from '@app/features/devtools/commands/VoiceStateCommands';
 import {
 	DeafenIcon,
-	EchoCancellationIcon,
 	GridViewIcon,
 	InputDeviceIcon,
 	MembersIcon,
@@ -16,6 +15,7 @@ import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 import type {MenuGroupType, MenuSheetItem} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
 import {MenuBottomSheet} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
+import {formatRoundedPercentage} from '@app/features/ui/utils/PercentageFormatting';
 import {UserSettingsModal} from '@app/features/user/components/modals/UserSettingsModal';
 import * as VoiceCallLayoutCommands from '@app/features/voice/commands/VoiceCallLayoutCommands';
 import * as VoiceSettingsCommands from '@app/features/voice/commands/VoiceSettingsCommands';
@@ -26,10 +26,8 @@ import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
 	getVoiceDeafenedByModeratorsStatusLabel,
 	getVoiceVideoSettingsLabel,
-	VOICE_AUTOMATIC_GAIN_CONTROL_DESCRIPTOR,
 	VOICE_DEAFEN_DESCRIPTOR,
 	VOICE_DIRECT_INPUT_PROFILE_DESCRIPTOR,
-	VOICE_ECHO_CANCELLATION_DESCRIPTOR,
 	VOICE_FOCUSED_VOICE_PROFILE_DESCRIPTOR,
 	VOICE_INPUT_DEVICE_DESCRIPTOR,
 	VOICE_INPUT_VOLUME_DESCRIPTOR,
@@ -48,26 +46,9 @@ const CUSTOM_DESCRIPTOR = msg({
 	message: 'Custom',
 	comment: 'Voice processing profile option label (mobile voice settings). User configures processing manually.',
 });
-const ENHANCED_DESCRIPTOR = msg({
-	message: 'Enhanced',
-	comment: 'Noise suppression option label (mobile voice settings). Enhanced engine (DeepFilterNet3).',
-});
-const STANDARD_DESCRIPTOR = msg({
-	message: 'Standard',
-	comment: 'Noise suppression option label (mobile voice settings). Browser built-in engine.',
-});
-const OFF_DESCRIPTOR = msg({
-	message: 'Off',
-	comment: 'Noise suppression option label (mobile voice settings). Suppression disabled.',
-});
 const INPUT_PROFILE_DESCRIPTOR = msg({
 	message: 'Input profile: {processingModeLabel}',
 	comment: 'Row label in the mobile voice settings input-profile picker. {processingModeLabel} is the profile name.',
-});
-const NOISE_SUPPRESSION_DESCRIPTOR = msg({
-	message: 'Noise suppression: {noiseSuppressionLabel}',
-	comment:
-		'Row label in the mobile voice settings noise-suppression picker. {noiseSuppressionLabel} is the suppression choice.',
 });
 const VOICE_SETTINGS_DESCRIPTOR = msg({
 	message: 'Voice settings',
@@ -116,39 +97,10 @@ export const VoiceAudioSettingsBottomSheet: React.FC<VoiceAudioSettingsBottomShe
 			? getVoiceDeafenedByModeratorsStatusLabel(i18n, true)
 			: i18n._(isDeafened ? VOICE_UNDEAFEN_DESCRIPTOR : VOICE_DEAFEN_DESCRIPTOR);
 		const processingMode = getActiveVoiceProcessingMode(voiceSettings);
-		const isCustomMode = processingMode === 'custom';
-		const deepFilterEnabled = voiceSettings.deepFilterNoiseSuppression;
-		const browserNsEnabled = voiceSettings.noiseSuppression;
 		const processingModeLabels: Record<VoiceProcessingMode, string> = {
 			voice: i18n._(VOICE_FOCUSED_VOICE_PROFILE_DESCRIPTOR),
 			studio: i18n._(VOICE_DIRECT_INPUT_PROFILE_DESCRIPTOR),
 			custom: i18n._(CUSTOM_DESCRIPTOR),
-		};
-		type NoiseSuppressionChoice = 'enhanced' | 'standard' | 'none';
-		const noiseSuppressionChoice: NoiseSuppressionChoice = deepFilterEnabled
-			? 'enhanced'
-			: browserNsEnabled
-				? 'standard'
-				: 'none';
-		const noiseSuppressionLabels: Record<NoiseSuppressionChoice, string> = {
-			enhanced: i18n._(ENHANCED_DESCRIPTOR),
-			standard: i18n._(STANDARD_DESCRIPTOR),
-			none: i18n._(OFF_DESCRIPTOR),
-		};
-		const cycleNoiseSuppression = () => {
-			const order: Array<NoiseSuppressionChoice> = ['enhanced', 'standard', 'none'];
-			const next = order[(order.indexOf(noiseSuppressionChoice) + 1) % order.length];
-			switch (next) {
-				case 'enhanced':
-					VoiceSettingsCommands.update({deepFilterNoiseSuppression: true, noiseSuppression: false});
-					return;
-				case 'standard':
-					VoiceSettingsCommands.update({deepFilterNoiseSuppression: false, noiseSuppression: true});
-					return;
-				case 'none':
-					VoiceSettingsCommands.update({deepFilterNoiseSuppression: false, noiseSuppression: false});
-					return;
-			}
 		};
 		const handleToggleDeafen = () => {
 			VoiceStateCommands.toggleSelfDeaf(null);
@@ -220,7 +172,7 @@ export const VoiceAudioSettingsBottomSheet: React.FC<VoiceAudioSettingsBottomShe
 				onChange: (value: number) => {
 					VoiceSettingsCommands.update({inputVolume: value});
 				},
-				onFormat: (value: number) => `${Math.round(value)}%`,
+				onFormat: (value: number) => formatRoundedPercentage(i18n.locale, value),
 				factoryDefaultValue: 100,
 			},
 			{
@@ -231,7 +183,7 @@ export const VoiceAudioSettingsBottomSheet: React.FC<VoiceAudioSettingsBottomShe
 				onChange: (value: number) => {
 					VoiceSettingsCommands.update({outputVolume: value});
 				},
-				onFormat: (value: number) => `${Math.round(value)}%`,
+				onFormat: (value: number) => formatRoundedPercentage(i18n.locale, value),
 				factoryDefaultValue: 100,
 			},
 		];
@@ -245,44 +197,6 @@ export const VoiceAudioSettingsBottomSheet: React.FC<VoiceAudioSettingsBottomShe
 				selected: processingMode === mode,
 				onSelect: () => {
 					VoiceSettingsCommands.setActiveInputVoiceProcessingMode(mode);
-				},
-			});
-		}
-		if (isCustomMode) {
-			processingItems.push({
-				icon: (
-					<InputDeviceIcon
-						className={sharedStyles.icon}
-						data-flx="voice.voice-settings-bottom-sheets.voice-audio-settings-bottom-sheet.input-device-icon--3"
-					/>
-				),
-				label: i18n._(NOISE_SUPPRESSION_DESCRIPTOR, {
-					noiseSuppressionLabel: noiseSuppressionLabels[noiseSuppressionChoice],
-				}),
-				onClick: cycleNoiseSuppression,
-			});
-			processingItems.push({
-				icon: (
-					<EchoCancellationIcon
-						className={sharedStyles.icon}
-						data-flx="voice.voice-settings-bottom-sheets.voice-audio-settings-bottom-sheet.echo-cancellation-icon"
-					/>
-				),
-				label: i18n._(VOICE_ECHO_CANCELLATION_DESCRIPTOR),
-				onClick: () => {
-					VoiceSettingsCommands.update({echoCancellation: !voiceSettings.echoCancellation});
-				},
-			});
-			processingItems.push({
-				icon: (
-					<InputDeviceIcon
-						className={sharedStyles.icon}
-						data-flx="voice.voice-settings-bottom-sheets.voice-audio-settings-bottom-sheet.input-device-icon--4"
-					/>
-				),
-				label: i18n._(VOICE_AUTOMATIC_GAIN_CONTROL_DESCRIPTOR),
-				onClick: () => {
-					VoiceSettingsCommands.update({autoGainControl: !voiceSettings.autoGainControl});
 				},
 			});
 		}

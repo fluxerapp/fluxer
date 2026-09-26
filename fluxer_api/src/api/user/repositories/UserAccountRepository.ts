@@ -1,16 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import type {User} from '@app/api/models/User';
+import {UserEmailOwnershipRepository} from '@app/api/user/repositories/account/crud/UserEmailOwnershipRepository';
+import {UserAccountRepository as UserAccountCrudRepository} from '@app/api/user/repositories/account/UserAccountRepository';
+import {UserDeletionRepository} from '@app/api/user/repositories/account/UserDeletionRepository';
+import {UserGuildRepository} from '@app/api/user/repositories/account/UserGuildRepository';
+import {UserLookupRepository} from '@app/api/user/repositories/account/UserLookupRepository';
+import {TokenRepository} from '@app/api/user/repositories/auth/TokenRepository';
+import type {
+	IUserAccountRepository,
+	UserDeletionScheduleUpdate,
+} from '@app/api/user/repositories/IUserAccountRepository';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import type {GuildID, UserID} from '../../BrandedTypes';
-import type {UserRow} from '../../database/types/UserTypes';
-import type {User} from '../../models/User';
-import {UserEmailOwnershipRepository} from './account/crud/UserEmailOwnershipRepository';
-import {UserAccountRepository as UserAccountCrudRepository} from './account/UserAccountRepository';
-import {UserDeletionRepository} from './account/UserDeletionRepository';
-import {UserGuildRepository} from './account/UserGuildRepository';
-import {UserLookupRepository} from './account/UserLookupRepository';
-import {TokenRepository} from './auth/TokenRepository';
-import type {IUserAccountRepository} from './IUserAccountRepository';
 
 export class UserAccountRepository implements IUserAccountRepository {
 	private accountRepo: UserAccountCrudRepository;
@@ -66,6 +69,22 @@ export class UserAccountRepository implements IUserAccountRepository {
 
 	async patchUpsert(userId: UserID, patchData: Partial<UserRow>, oldData?: UserRow | null): Promise<User> {
 		return this.accountRepo.patchUpsert(userId, patchData, oldData);
+	}
+
+	async updateDeletionSchedule(user: User, patch: UserDeletionScheduleUpdate): Promise<User> {
+		return this.accountRepo.updateDeletionSchedule(user, patch);
+	}
+
+	async startDeletion(userId: UserID, pendingDeletionAt: Date): Promise<User | null> {
+		return this.accountRepo.startDeletion(userId, pendingDeletionAt);
+	}
+
+	async anonymizeForDeletion(user: User, patch: Partial<UserRow>): Promise<User> {
+		return this.accountRepo.anonymizeForDeletion(user, patch);
+	}
+
+	async completeDeletion(user: User): Promise<void> {
+		return this.accountRepo.completeDeletion(user);
 	}
 
 	async deleteUserSecondaryIndices(userId: UserID): Promise<void> {

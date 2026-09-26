@@ -1,5 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
+import {Config} from '@app/api/Config';
+import {DefaultUserOnly, LoginRequiredAllowSuspicious} from '@app/api/middleware/AuthMiddleware';
+import {CaptchaMiddleware} from '@app/api/middleware/CaptchaMiddleware';
+import {LocalAuthMiddleware} from '@app/api/middleware/LocalAuthMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import {
 	AuthLoginResponse,
@@ -9,15 +20,17 @@ import {
 	AuthTokenWithUserIdResponse,
 	EmailRevertRequest,
 	ForgotPasswordRequest,
+	HandoffCancelRequest,
 	HandoffCodeParam,
 	HandoffCompleteRequest,
 	HandoffInfoResponse,
 	HandoffInitiateResponse,
+	HandoffStatusRequest,
 	HandoffStatusResponse,
 	IpAuthorizationPollQuery,
 	IpAuthorizationPollResponse,
 	LoginRequest,
-	LogoutAuthSessionsRequest,
+	LogoutAuthSessionsWithVerificationRequest,
 	MfaTicketRequest,
 	MfaTotpRequest,
 	RegisterRequest,
@@ -28,7 +41,6 @@ import {
 	SsoStartRequest,
 	SsoStartResponse,
 	SsoStatusResponse,
-	SudoVerificationSchema,
 	UsernameSuggestionsRequest,
 	UsernameSuggestionsResponse,
 	ValidateResetPasswordTokenResponse,
@@ -37,17 +49,6 @@ import {
 	WebAuthnAuthenticationOptionsResponse,
 	WebAuthnMfaRequest,
 } from '@fluxer/schema/src/domains/auth/AuthSchemas';
-import {Config} from '../Config';
-import {DefaultUserOnly, LoginRequiredAllowSuspicious} from '../middleware/AuthMiddleware';
-import {CaptchaMiddleware} from '../middleware/CaptchaMiddleware';
-import {LocalAuthMiddleware} from '../middleware/LocalAuthMiddleware';
-import {RateLimitMiddleware} from '../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../middleware/ResponseTypeMiddleware';
-import {SudoModeMiddleware} from '../middleware/SudoModeMiddleware';
-import {RateLimitConfigs} from '../RateLimitConfig';
-import type {HonoApp} from '../types/HonoEnv';
-import {Validator} from '../Validator';
-import {requireSudoMode} from './services/SudoVerificationService';
 
 export function AuthController(app: HonoApp) {
 	app.get(
@@ -179,21 +180,19 @@ export function AuthController(app: HonoApp) {
 	app.post(
 		'/auth/logout',
 		RateLimitMiddleware(RateLimitConfigs.AUTH_LOGOUT),
+		LoginRequiredAllowSuspicious,
 		OpenAPI({
 			operationId: 'logout_user',
 			summary: 'Logout account',
 			responseSchema: null,
 			statusCode: 204,
-			security: ['bearerToken', 'sessionToken'],
+			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Auth'],
 			description:
-				'Invalidate the current authentication token and end the session. The auth token in the Authorization header will no longer be valid.',
+				'Invalidate the current authentication token and end the session. The auth token in the Authorization header will no longer be valid. A bot token has no session to end, so the call answers 204 and the token stays valid.',
 		}),
 		async (ctx) => {
-			await ctx.get('authRequestService').logout({
-				authorizationHeader: ctx.req.header('Authorization') ?? undefined,
-				authToken: ctx.get('authToken') ?? undefined,
-			});
+			await ctx.get('authRequestService').logout({authToken: ctx.get('authToken')});
 			return ctx.body(null, 204);
 		},
 	);
@@ -344,7 +343,8 @@ export function AuthController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const userId = ctx.get('user').id;
-			return ctx.json(await ctx.get('authRequestService').getAuthSessions(userId));
+			const currentSessionIdHash = ctx.get('authSession')?.sessionIdHash;
+			return ctx.json(await ctx.get('authRequestService').getAuthSessions(userId, currentSessionIdHash));
 		},
 	);
 	app.post(
@@ -353,7 +353,7 @@ export function AuthController(app: HonoApp) {
 		LoginRequiredAllowSuspicious,
 		DefaultUserOnly,
 		SudoModeMiddleware,
-		Validator('json', LogoutAuthSessionsRequest.merge(SudoVerificationSchema)),
+		Validator('json', LogoutAuthSessionsWithVerificationRequest),
 		OpenAPI({
 			operationId: 'logout_all_sessions',
 			summary: 'Logout all sessions',
@@ -447,7 +447,7 @@ export function AuthController(app: HonoApp) {
 				'Retrieve WebAuthn authentication challenge and options for passwordless login with biometrics or security keys.',
 		}),
 		async (ctx) => {
-			return ctx.json(await ctx.get('authRequestService').getWebAuthnAuthenticationOptions());
+			return ctx.json(await ctx.get('authRequestService').getWebAuthnAuthenticationOptions(ctx.req.header('origin')));
 		},
 	);
 	app.post(
@@ -490,7 +490,9 @@ export function AuthController(app: HonoApp) {
 				'Retrieve WebAuthn challenge and options for multi-factor authentication. Requires the MFA ticket from initial login.',
 		}),
 		async (ctx) => {
-			return ctx.json(await ctx.get('authRequestService').getWebAuthnMfaOptions(ctx.req.valid('json')));
+			return ctx.json(
+				await ctx.get('authRequestService').getWebAuthnMfaOptions(ctx.req.valid('json'), ctx.req.header('origin')),
+			);
 		},
 	);
 	app.post(
@@ -602,6 +604,7 @@ export function AuthController(app: HonoApp) {
 				data: ctx.req.valid('json'),
 				clientIp,
 				authToken: ctx.get('authToken') ?? undefined,
+				approverOrigin: ctx.req.header('origin'),
 			});
 			return ctx.body(null, 204);
 		},
@@ -632,10 +635,39 @@ export function AuthController(app: HonoApp) {
 			return ctx.json(response);
 		},
 	);
+	app.post(
+		'/auth/handoff/:code/status',
+		RateLimitMiddleware(RateLimitConfigs.AUTH_HANDOFF_STATUS),
+		Validator('param', HandoffCodeParam),
+		Validator('json', HandoffStatusRequest),
+		OpenAPI({
+			operationId: 'get_handoff_status_with_secret',
+			summary: 'Get handoff status with secret',
+			responseSchema: HandoffStatusResponse,
+			statusCode: 200,
+			security: [],
+			tags: ['Auth'],
+			description:
+				'Check the status of a handoff session using the poll secret from initiation. Returns the authentication token once the handoff is complete and the presented secret matches.',
+		}),
+		async (ctx) => {
+			const clientIp = requireClientIp(ctx.req.raw, {
+				trustClientIpHeader: Config.proxy.trust_client_ip_header,
+				clientIpHeaderName: Config.proxy.client_ip_header,
+			});
+			const response = await ctx.get('authRequestService').getHandoffStatus({
+				code: ctx.req.valid('param').code,
+				clientIp,
+				pollSecret: ctx.req.valid('json').poll_secret,
+			});
+			return ctx.json(response);
+		},
+	);
 	app.delete(
 		'/auth/handoff/:code',
 		RateLimitMiddleware(RateLimitConfigs.AUTH_HANDOFF_CANCEL),
 		Validator('param', HandoffCodeParam),
+		Validator('json', HandoffCancelRequest),
 		OpenAPI({
 			operationId: 'cancel_handoff',
 			summary: 'Cancel handoff',
@@ -646,7 +678,10 @@ export function AuthController(app: HonoApp) {
 			description: 'Cancel an ongoing handoff session. The handoff code will no longer be valid for authentication.',
 		}),
 		async (ctx) => {
-			await ctx.get('authRequestService').cancelHandoff({code: ctx.req.valid('param').code});
+			await ctx.get('authRequestService').cancelHandoff({
+				code: ctx.req.valid('param').code,
+				pollSecret: ctx.req.valid('json').poll_secret,
+			});
 			return ctx.body(null, 204);
 		},
 	);

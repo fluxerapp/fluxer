@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
-
 import {
 	ArrowBendUpLeftIcon,
 	ArrowBendUpRightIcon,

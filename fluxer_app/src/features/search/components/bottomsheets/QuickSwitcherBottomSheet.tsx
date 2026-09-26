@@ -42,7 +42,7 @@ const SEARCH_FOR_CHANNELS_PEOPLE_OR_COMMUNITIES_DESCRIPTOR = msg({
 	comment: 'Placeholder text in the mobile quick switcher search input.',
 });
 const SEARCHING_PEOPLE_DESCRIPTOR = msg({
-	message: 'Searching people...',
+	message: 'Searching for people...',
 	comment: 'Loading state shown while the quick switcher fetches matching people. Trailing ellipsis is intentional.',
 });
 const NO_MATCHES_FOUND_DESCRIPTOR = msg({
@@ -54,7 +54,7 @@ const MESSAGE_1_RESULT_AVAILABLE_DESCRIPTOR = msg({
 	comment: 'Screen-reader live region announcement when exactly one quick switcher result is available.',
 });
 const RESULTS_AVAILABLE_DESCRIPTOR = msg({
-	message: '{resultCount} results available',
+	message: '{resultCount, plural, one {# result available} other {# results available}}',
 	comment: 'Screen-reader live region announcement listing the quick switcher result count.',
 });
 const NO_AUTOCOMPLETE_SUGGESTION_DESCRIPTOR = msg({
@@ -165,6 +165,7 @@ const ResultRow = observer(
 			onConfirm(executableResult);
 		};
 		const iconRendered = renderIcon(executableResult, isHighlight, styles.optionIcon, styles.optionIconHighlight);
+		const iconContent: React.ReactElement = iconRendered.content;
 		const key = getViewContext(executableResult)
 			? `${executableResult.type}-${getViewContext(executableResult)}-${executableResult.id}`
 			: `${executableResult.type}-${executableResult.id}`;
@@ -194,14 +195,14 @@ const ResultRow = observer(
 					<div className={styles.optionContent} data-flx="search.quick-switcher-bottom-sheet.result-row.option-content">
 						{iconRendered.type === 'avatar' ? (
 							<div className={styles.avatar} data-flx="search.quick-switcher-bottom-sheet.result-row.avatar">
-								{iconRendered.content}
+								{iconContent}
 							</div>
 						) : iconRendered.type === 'guild' ? (
 							<div className={styles.guildIcon} data-flx="search.quick-switcher-bottom-sheet.result-row.guild-icon">
-								{iconRendered.content}
+								{iconContent}
 							</div>
 						) : (
-							iconRendered.content
+							iconContent
 						)}
 						<div
 							className={clsx(styles.optionText, isHighlight && styles.optionHighlight)}

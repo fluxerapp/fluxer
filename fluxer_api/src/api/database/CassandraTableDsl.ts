@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {registerKvMeta, registerTableSpec} from './CassandraMetaRegistry';
+import {isDeepStrictEqual} from 'node:util';
+import {registerKvMeta, registerTableSpec} from '@app/api/database/CassandraMetaRegistry';
 import type {
 	CassandraParam,
 	CassandraParams,
 	ColumnName,
+	ConditionalWriteEntry,
 	DbOp,
+	KvConditionalBatchEntry,
+	KvQueryCondition,
 	KvQueryMeta,
 	KvTableSpec,
 	OrderBy,
@@ -14,8 +18,8 @@ import type {
 	RowValue,
 	Table,
 	WhereExpr,
-} from './CassandraTypes';
-import {prepared} from './CassandraTypes';
+} from '@app/api/database/CassandraTypes';
+import {prepared, validateTtlSeconds} from '@app/api/database/CassandraTypes';
 
 const DEFAULT_TTL_PARAM_NAME = 'ttl_seconds_bind';
 const DEFAULT_LIMIT_PARAM_NAME = 'limit_bind';
@@ -66,11 +70,20 @@ function opToValue(op: DbOp<unknown>): CassandraParam {
 	return op.kind === 'clear' ? null : (op.value as CassandraParam);
 }
 
+function assertConditionalValue(value: unknown, column: string): void {
+	if (value === null || typeof value === 'string' || typeof value === 'boolean' || typeof value === 'bigint') return;
+	if (typeof value === 'number' && Number.isFinite(value)) return;
+	if (value instanceof Date && Number.isFinite(value.getTime())) return;
+	if (Buffer.isBuffer(value)) return;
+	throw new Error(`Conditional writes require a finite scalar, date or buffer for "${column}"`);
+}
+
 export function defineTable<Row extends object, PK extends ColumnName<Row>, PartKey extends ColumnName<Row> = PK>(def: {
 	name: string;
 	columns: ReadonlyArray<ColumnName<Row>>;
 	primaryKey: ReadonlyArray<PK>;
 	partitionKey?: ReadonlyArray<PartKey>;
+	defaultTtlSeconds?: number;
 }): Table<Row, PK, PartKey> {
 	const columns = [...def.columns];
 	const pk = [...def.primaryKey];
@@ -79,11 +92,15 @@ export function defineTable<Row extends object, PK extends ColumnName<Row>, Part
 	for (const c of columns) assertCqlIdentifier(c as string);
 	for (const k of pk) assertCqlIdentifier(k as string);
 	for (const k of partitionKey) assertCqlIdentifier(k as string);
+	if (def.defaultTtlSeconds !== undefined && validateTtlSeconds(def.defaultTtlSeconds) === 0) {
+		throw new Error(`Table "${def.name}" needs a positive default TTL`);
+	}
 	const tableSpec: KvTableSpec<Row> = {
 		name: def.name,
 		columns,
 		primaryKey: pk as ReadonlyArray<ColumnName<Row>>,
 		partitionKey: partitionKey as ReadonlyArray<ColumnName<Row>>,
+		defaultTtlSeconds: def.defaultTtlSeconds,
 	};
 	registerTableSpec(tableSpec);
 	const nonPkColumns = columns.filter((c) => !pk.includes(c as PK)) as Array<Exclude<ColumnName<Row>, PK>>;
@@ -237,6 +254,179 @@ WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};
 		};
 		return prepared(cql, params, kvMeta as KvQueryMeta<Record<string, unknown>>);
 	}
+	function withConditions(query: PreparedQuery, expected: Partial<Row>): PreparedQuery {
+		const keys = Object.keys(expected) as Array<ColumnName<Row>>;
+		if (keys.length === 0) {
+			throw new Error(`Conditional writes require expected values for table "${def.name}"`);
+		}
+		if (!query.kvMeta) {
+			throw new Error(`Conditional writes require query metadata for table "${def.name}"`);
+		}
+		const params = {...query.params};
+		for (const col of pk) {
+			if (!Object.hasOwn(params, col) || params[col] == null) {
+				throw new Error(`Conditional writes require a primary key value for "${def.name}.${col}"`);
+			}
+		}
+		const conditions: Array<KvQueryCondition<Row>> = [];
+		let hasNonNullValue = false;
+		keys.sort((a, b) => columns.indexOf(a) - columns.indexOf(b));
+		for (const col of keys) {
+			if (!columns.includes(col) || pk.includes(col as PK)) {
+				throw new Error(`Invalid conditional write column "${def.name}.${col}"`);
+			}
+			const value = expected[col];
+			if (value === undefined) {
+				throw new Error(`Missing expected value for "${def.name}.${col}"`);
+			}
+			assertConditionalValue(value, `${def.name}.${col}`);
+			const expectedParam = `expected_${col}`;
+			if (Object.hasOwn(params, expectedParam)) {
+				throw new Error(`Conditional write parameter "${expectedParam}" conflicts with a column value`);
+			}
+			params[expectedParam] = value as CassandraParam;
+			conditions.push({col, expectedParam});
+			hasNonNullValue ||= value !== null;
+		}
+		if (!hasNonNullValue) {
+			throw new Error(`Conditional writes require a non-null expected value for table "${def.name}"`);
+		}
+		const conditionCql = conditions.map(({col, expectedParam}) => `${col} = :${expectedParam}`).join(' AND ');
+		const cql = query.cql.replace(/;\s*$/, ` IF ${conditionCql};`);
+		const kvMeta: KvQueryMeta<Row> = {
+			action: query.kvMeta.action,
+			table: tableSpec,
+			pkColumns: pk,
+			patchKeys: query.kvMeta.patchKeys as ReadonlyArray<ColumnName<Row>> | undefined,
+			ttlParamName: query.kvMeta.ttlParamName,
+			conditions,
+		};
+		return prepared(cql, params, kvMeta as KvQueryMeta<Record<string, unknown>>);
+	}
+	function assertConditionalPatchColumns(patch: object): void {
+		for (const col of Object.keys(patch)) {
+			if (!nonPkColumns.includes(col as Exclude<ColumnName<Row>, PK>)) {
+				throw new Error(`Invalid conditional patch column "${def.name}.${col}"`);
+			}
+		}
+	}
+	function conditionalPatchByPk(
+		pkValues: Pick<Row, PK>,
+		patch: Partial<{
+			[K in Exclude<ColumnName<Row>, PK>]: DbOp<RowValue<Row, K>>;
+		}>,
+		expected: Partial<Row>,
+	): PreparedQuery {
+		assertConditionalPatchColumns(patch);
+		return withConditions(patchByPk(pkValues, patch), expected);
+	}
+	function conditionalPatchByPkWithTtl(
+		pkValues: Pick<Row, PK>,
+		patch: Partial<{
+			[K in Exclude<ColumnName<Row>, PK>]: DbOp<RowValue<Row, K>>;
+		}>,
+		expected: Partial<Row>,
+		ttlSeconds: number,
+	): PreparedQuery {
+		assertConditionalPatchColumns(patch);
+		return withConditions(patchByPkWithTtl(pkValues, patch, validateTtlSeconds(ttlSeconds)), expected);
+	}
+	function conditionalBatch(entries: ReadonlyArray<ConditionalWriteEntry<Row, PK>>): PreparedQuery {
+		const first = entries[0];
+		if (!first) {
+			throw new Error(`Conditional batches require at least one row for table "${def.name}"`);
+		}
+		const params: CassandraParams = {};
+		const statements: Array<string> = [];
+		const batchEntries: Array<KvConditionalBatchEntry<Row>> = [];
+		const firstKey = first.action === 'insert' ? first.row : first.pk;
+		const firstPartition = partitionKey.map((col) => Reflect.get(firstKey, col));
+		const seenKeys: Array<Pick<Row, PK>> = [];
+		for (const [index, entry] of entries.entries()) {
+			const entryKey = entry.action === 'insert' ? entry.row : entry.pk;
+			for (const col of pk) {
+				if (entryKey[col] == null) {
+					throw new Error(`Conditional batches require a primary key value for "${def.name}.${col}"`);
+				}
+			}
+			if (
+				!isDeepStrictEqual(
+					partitionKey.map((col) => Reflect.get(entryKey, col)),
+					firstPartition,
+				)
+			) {
+				throw new Error(`Conditional batches must stay within one partition of table "${def.name}"`);
+			}
+			if (seenKeys.some((other) => pk.every((col) => isDeepStrictEqual(entryKey[col], other[col])))) {
+				throw new Error(`Conditional batches cannot repeat a row of table "${def.name}"`);
+			}
+			seenKeys.push(entryKey);
+			const query = conditionalEntryQuery(entry);
+			const prefix = `entry_${index}_`;
+			for (const [name, value] of Object.entries(query.params)) params[`${prefix}${name}`] = value;
+			statements.push(query.cql.replace(/:([A-Za-z_][A-Za-z0-9_]*)/g, (_match, name: string) => `:${prefix}${name}`));
+			batchEntries.push(conditionalEntryMeta(entry, query, prefix));
+		}
+		const kvMeta: KvQueryMeta<Row> = {
+			action: 'batch',
+			table: tableSpec,
+			batchEntries,
+		};
+		return prepared(
+			`BEGIN BATCH\n${statements.join('\n')}\nAPPLY BATCH;`,
+			params,
+			kvMeta as KvQueryMeta<Record<string, unknown>>,
+		);
+	}
+	function conditionalEntryQuery(entry: ConditionalWriteEntry<Row, PK>): PreparedQuery {
+		switch (entry.action) {
+			case 'insert':
+				return entry.ttlSeconds === undefined
+					? insertIfNotExists(entry.row)
+					: insertIfNotExistsWithTtl(entry.row, entry.ttlSeconds);
+			case 'patch':
+				return entry.ttlSeconds === undefined
+					? conditionalPatchByPk(entry.pk, entry.patch, entry.expected)
+					: conditionalPatchByPkWithTtl(entry.pk, entry.patch, entry.expected, entry.ttlSeconds);
+			case 'delete':
+				return conditionalDeleteByPk(entry.pk, entry.expected);
+		}
+	}
+	function conditionalEntryMeta(
+		entry: ConditionalWriteEntry<Row, PK>,
+		query: PreparedQuery,
+		prefix: string,
+	): KvConditionalBatchEntry<Row> {
+		const key = pk.map((col) => ({col, param: `${prefix}${col}`}));
+		const ttlMetadata =
+			query.kvMeta?.ttlParamName === undefined ? {} : {ttlParamName: `${prefix}${query.kvMeta.ttlParamName}`};
+		if (entry.action === 'insert') {
+			return {
+				action: 'insert',
+				pk: key,
+				values: columns.map((col) => ({col, param: `${prefix}${col}`})),
+				...ttlMetadata,
+			};
+		}
+		if (!query.kvMeta?.conditions) {
+			throw new Error(`Conditional batch entry has incomplete metadata for table "${def.name}"`);
+		}
+		const conditions = query.kvMeta.conditions.map(({col, expectedParam}) => ({
+			col: col as ColumnName<Row>,
+			expectedParam: `${prefix}${expectedParam}`,
+		}));
+		if (entry.action === 'delete') return {action: 'delete', pk: key, conditions};
+		if (!query.kvMeta.patchKeys) {
+			throw new Error(`Conditional batch patch has incomplete metadata for table "${def.name}"`);
+		}
+		return {
+			action: 'patch',
+			pk: key,
+			patch: query.kvMeta.patchKeys.map((col) => ({col: col as ColumnName<Row>, param: `${prefix}${col}`})),
+			conditions,
+			...ttlMetadata,
+		};
+	}
 	const deleteByPkCql = `DELETE FROM ${def.name} WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};`;
 	registerKvMeta(deleteByPkCql, {
 		action: 'delete',
@@ -281,9 +471,13 @@ WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};
 		const kvMeta: KvQueryMeta<Row> = {
 			action: 'delete',
 			table: tableSpec,
+			pkColumns: pk,
 			where: pk.map((col) => ({kind: 'eq', col, param: col})) as ReadonlyArray<WhereExpr<Row>>,
 		} as KvQueryMeta<Row>;
 		return prepared(deleteByPkCql, params, kvMeta as KvQueryMeta<Record<string, unknown>>);
+	}
+	function conditionalDeleteByPk(pkValues: Pick<Row, PK>, expected: Partial<Row>): PreparedQuery {
+		return withConditions(deleteByPk(pkValues), expected);
 	}
 	function deletePartition(partKeyValues: Pick<Row, PartKey>): PreparedQuery {
 		if (partitionKey.length === 0) {
@@ -315,6 +509,18 @@ WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};
 		const params = paramsFromRow(row);
 		const cql = `${insertBaseCql} IF NOT EXISTS;`;
 		const kvMeta: KvQueryMeta<Row> = {action: 'upsert', table: tableSpec, ifNotExists: true};
+		return prepared(cql, params, kvMeta as KvQueryMeta<Record<string, unknown>>);
+	}
+	function insertIfNotExistsWithTtl(row: Row, ttlSeconds: number): PreparedQuery {
+		const cql = `${insertBaseCql} IF NOT EXISTS USING TTL :${DEFAULT_TTL_PARAM_NAME};`;
+		const params = paramsFromRow(row);
+		params[DEFAULT_TTL_PARAM_NAME] = validateTtlSeconds(ttlSeconds);
+		const kvMeta: KvQueryMeta<Row> = {
+			action: 'upsert',
+			table: tableSpec,
+			ifNotExists: true,
+			ttlParamName: DEFAULT_TTL_PARAM_NAME,
+		};
 		return prepared(cql, params, kvMeta as KvQueryMeta<Record<string, unknown>>);
 	}
 	function insertWithTtl(row: Row, ttlSeconds: number): PreparedQuery {
@@ -484,6 +690,7 @@ WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};
 		columns: def.columns,
 		primaryKey: def.primaryKey,
 		partitionKey: partitionKey,
+		defaultTtlSeconds: def.defaultTtlSeconds,
 		selectCql,
 		select,
 		updateAllCql() {
@@ -501,13 +708,18 @@ WHERE ${pk.map((k) => `${k} = :${k}`).join(' AND ')};
 			return prepared(cql, params, kvMeta as KvQueryMeta<Record<string, unknown>>);
 		},
 		patchByPk,
+		conditionalPatchByPk,
+		conditionalPatchByPkWithTtl,
+		conditionalBatch,
 		deleteCql,
 		delete: del,
 		deleteByPk,
+		conditionalDeleteByPk,
 		deletePartition,
 		insertCql,
 		insert,
 		insertIfNotExists,
+		insertIfNotExistsWithTtl,
 		insertWithTtl,
 		insertWithTtlParam,
 		selectCountCql,

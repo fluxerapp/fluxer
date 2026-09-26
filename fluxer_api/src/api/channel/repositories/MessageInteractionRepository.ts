@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {MessagePollAnswerVotersPage, MessagePollSelectedAnswer, MessagePollVoteRow} from '@app/api/database/types/PollTypes';
+import type {ChannelID, EmojiID, MessageID, UserID} from '@app/api/BrandedTypes';
+import {createEmojiID} from '@app/api/BrandedTypes';
+import {IMessageInteractionRepository} from '@app/api/channel/repositories/IMessageInteractionRepository';
+import type {MessageRepository} from '@app/api/channel/repositories/MessageRepository';
+import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {Db} from '@app/api/database/CassandraTypes';
+import type {ChannelPinRow, MessageReactionRow} from '@app/api/database/types/MessageTypes';
+import type {Message} from '@app/api/models/Message';
+import {MessageReaction} from '@app/api/models/MessageReaction';
+import {ChannelPins, MessagePollVotes, MessageReactions, Messages} from '@app/api/Tables';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
-import type {ChannelID, EmojiID, MessageID, UserID} from '../../BrandedTypes';
-import {createEmojiID} from '../../BrandedTypes';
-import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../../database/CassandraQueryExecution';
-import {Db} from '../../database/CassandraTypes';
-import type {ChannelPinRow, MessageReactionRow} from '../../database/types/MessageTypes';
-import type {Message} from '../../models/Message';
-import {MessageReaction} from '../../models/MessageReaction';
-import {ChannelPins, MessagePollVotes, MessageReactions, Messages} from '../../Tables';
-import {IMessageInteractionRepository} from './IMessageInteractionRepository';
-import type {MessageRepository} from './MessageRepository';
 
 const createFetchChannelPinsQuery = (limit: number) =>
 	ChannelPins.select({
@@ -136,7 +136,7 @@ export class MessageInteractionRepository extends IMessageInteractionRepository 
 
 	async removeChannelPin(channelId: ChannelID, messageId: MessageID): Promise<void> {
 		const message = await this.messageRepository.getMessage(channelId, messageId);
-		if (!message || !message.pinnedTimestamp) {
+		if (!message?.pinnedTimestamp) {
 			return;
 		}
 		await deleteOneOrMany(
@@ -199,7 +199,6 @@ export class MessageInteractionRepository extends IMessageInteractionRepository 
 		emojiName: string,
 		emojiId?: EmojiID,
 		emojiAnimated: boolean = false,
-		knownHasReaction?: boolean | null,
 	): Promise<MessageReaction> {
 		const bucket = BucketUtils.makeBucket(messageId);
 		const normalizedEmojiId = emojiId ? emojiId : createEmojiID(0n);
@@ -214,9 +213,7 @@ export class MessageInteractionRepository extends IMessageInteractionRepository 
 			created_at: new Date(),
 		};
 		await upsertOne(MessageReactions.upsertAll(reactionData));
-		if (knownHasReaction !== true) {
-			await this.setHasReaction(channelId, messageId, true);
-		}
+		await this.setHasReaction(channelId, messageId, true);
 		return new MessageReaction(reactionData);
 	}
 

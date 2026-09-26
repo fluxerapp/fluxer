@@ -2195,8 +2195,8 @@ mod tests {
     #[test]
     fn host_mapped_import_reads_cpu_nv12_and_preserves_source_dmabuf_metadata() {
         let mut bgra = vec![0u8; 16 * 16 * 4];
-        for pixel in bgra.chunks_exact_mut(4) {
-            pixel.copy_from_slice(&[0, 0, 255, 255]);
+        for pixel in bgra.as_chunks_mut::<4>().0 {
+            *pixel = [0, 0, 255, 255];
         }
         let fd = memfd_with_data("fluxer-host-mapped-texture-test", &bgra);
         let (callback, _observed) = lifecycle_recorder();

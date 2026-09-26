@@ -22,20 +22,8 @@ build_request(UserId, CustomStatus) ->
 
 -spec build_custom_status_payload(map()) -> map().
 build_custom_status_payload(CustomStatus) ->
-    Fields = [
-        {<<"text">>, maps:get(<<"text">>, CustomStatus, undefined)},
-        {<<"expires_at">>, maps:get(<<"expires_at">>, CustomStatus, undefined)},
-        {<<"emoji_id">>, maps:get(<<"emoji_id">>, CustomStatus, undefined)},
-        {<<"emoji_name">>, maps:get(<<"emoji_name">>, CustomStatus, undefined)}
-    ],
-    lists:foldl(
-        fun
-            ({_Key, undefined}, Acc) -> Acc;
-            ({Key, Value}, Acc) -> Acc#{Key => Value}
-        end,
-        #{},
-        Fields
-    ).
+    Fields = [<<"text">>, <<"expires_at">>, <<"emoji_id">>, <<"emoji_name">>],
+    maps:filter(fun(_Key, Value) -> Value =/= undefined end, maps:with(Fields, CustomStatus)).
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").

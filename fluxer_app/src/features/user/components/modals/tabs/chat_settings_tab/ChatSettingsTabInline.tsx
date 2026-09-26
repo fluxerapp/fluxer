@@ -15,7 +15,8 @@ const DISPLAY_DESCRIPTOR = msg({
 });
 const INPUT_DESCRIPTOR = msg({
 	message: 'Input',
-	comment: 'Short label in the inline. Keep it concise.',
+	context: 'chat-settings-section',
+	comment: 'Chat settings section for message composer/input behavior.',
 });
 export const ChatSettingsInlineContent: React.FC = observer(() => {
 	const {i18n} = useLingui();

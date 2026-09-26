@@ -1,10 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {GuildDiscoveryRow} from '@app/api/database/types/GuildDiscoveryTypes';
+import {mapGuildToGuildResponse} from '@app/api/guild/GuildModel';
+import type {IGuildDiscoveryRepository} from '@app/api/guild/repositories/GuildDiscoveryRepository';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import {contentModerationService} from '@app/api/infrastructure/ContentModerationService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import {Logger} from '@app/api/Logger';
+import type {IGuildSearchService} from '@app/api/search/IGuildSearchService';
 import {
 	DISCOVERY_DEFAULT_LANGUAGE,
 	DISCOVERY_MAX_TAGS,
 	DiscoveryApplicationStatus,
-	DiscoveryCategories,
 	type DiscoveryCategory,
 	isValidDiscoveryLanguage,
 	isValidDiscoveryTag,
@@ -16,22 +25,9 @@ import {DiscoveryAlreadyAppliedError} from '@fluxer/errors/src/domains/discovery
 import {DiscoveryApplicationAlreadyReviewedError} from '@fluxer/errors/src/domains/discovery/DiscoveryApplicationAlreadyReviewedError';
 import {DiscoveryApplicationNotFoundError} from '@fluxer/errors/src/domains/discovery/DiscoveryApplicationNotFoundError';
 import {DiscoveryInsufficientMembersError} from '@fluxer/errors/src/domains/discovery/DiscoveryInsufficientMembersError';
-import {DiscoveryInvalidCategoryError} from '@fluxer/errors/src/domains/discovery/DiscoveryInvalidCategoryError';
 import {DiscoveryNotDiscoverableError} from '@fluxer/errors/src/domains/discovery/DiscoveryNotDiscoverableError';
 import type {GuildSearchFilters} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes.jsx';
 import type {DiscoveryApplicationPatchRequest} from '@fluxer/schema/src/domains/guild/GuildDiscoverySchemas';
-import type {GuildID, UserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import type {GuildDiscoveryRow} from '../../database/types/GuildDiscoveryTypes';
-import {contentModerationService} from '../../infrastructure/ContentModerationService';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import {Logger} from '../../Logger';
-import type {IGuildSearchService} from '../../search/IGuildSearchService';
-import {mapGuildToGuildResponse} from '../GuildModel';
-import type {IGuildDiscoveryRepository} from '../repositories/GuildDiscoveryRepository';
-import type {IGuildRepositoryAggregate} from '../repositories/IGuildRepositoryAggregate';
-
-const VALID_CATEGORY_TYPES = new Set<number>(Object.values(DiscoveryCategories));
 
 function sanitizeTags(tags: ReadonlyArray<string> | null | undefined): Array<string> {
 	if (!tags || tags.length === 0) return [];
@@ -85,7 +81,7 @@ export abstract class IGuildDiscoveryService {
 		min_member_count: number;
 	}>;
 
-	abstract listByStatus(params: {status: string; limit: number}): Promise<Array<GuildDiscoveryRow>>;
+	abstract listByStatus(params: {status: string}): Promise<Array<GuildDiscoveryRow>>;
 
 	abstract searchDiscoverable(params: {
 		query?: string;
@@ -169,9 +165,6 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 			messageId: null,
 			surface: 'profile_field',
 		});
-		if (!VALID_CATEGORY_TYPES.has(categoryId)) {
-			throw new DiscoveryInvalidCategoryError();
-		}
 		const guild = await this.guildRepository.findUnique(guildId);
 		if (!guild) {
 			throw new DiscoveryApplicationNotFoundError();
@@ -250,9 +243,6 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 			existing.status !== DiscoveryApplicationStatus.APPROVED
 		) {
 			throw new DiscoveryApplicationAlreadyReviewedError();
-		}
-		if (data.category_type !== undefined && !VALID_CATEGORY_TYPES.has(data.category_type)) {
-			throw new DiscoveryInvalidCategoryError();
 		}
 		const updatedRow: GuildDiscoveryRow = {
 			...existing,
@@ -388,8 +378,8 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 		return updatedRow;
 	}
 
-	async listByStatus(params: {status: string; limit: number}): Promise<Array<GuildDiscoveryRow>> {
-		return this.discoveryRepository.listFullByStatus(params.status, params.limit);
+	async listByStatus(params: {status: string}): Promise<Array<GuildDiscoveryRow>> {
+		return this.discoveryRepository.listFullByStatus(params.status);
 	}
 
 	async searchDiscoverable(params: {
@@ -411,7 +401,7 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 		const language =
 			params.primaryLanguage && isValidDiscoveryLanguage(params.primaryLanguage) ? params.primaryLanguage : undefined;
 		const tag = params.tag && params.tag.trim().length > 0 ? normalizeDiscoveryTag(params.tag) : undefined;
-		const sortBy = params.sortBy === 'member_count' ? 'memberCount' : 'relevance';
+		const sortBy = params.sortBy === 'relevance' ? 'relevance' : 'memberCount';
 		const filters: GuildSearchFilters = {
 			isDiscoverable: true,
 			discoveryCategory: params.categoryId,
@@ -454,7 +444,6 @@ export class GuildDiscoveryService extends IGuildDiscoveryService {
 				for (const guild of guilds) {
 					const counts = freshCounts.get(BigInt(guild.id) as GuildID);
 					if (counts) {
-						guild.member_count = counts.memberCount;
 						guild.online_count = counts.onlineCount;
 					}
 				}

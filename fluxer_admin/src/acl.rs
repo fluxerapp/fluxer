@@ -41,11 +41,9 @@ pub const BAN_AVATAR_HASH_REMOVE: &str = "ban:avatar_hash:remove";
 pub const BAN_PROFILE_SUBSTRING_ADD: &str = "ban:profile_substring:add";
 pub const BAN_PROFILE_SUBSTRING_CHECK: &str = "ban:profile_substring:check";
 pub const BAN_PROFILE_SUBSTRING_REMOVE: &str = "ban:profile_substring:remove";
-pub const BILLING_MANAGE_SUBSCRIPTION: &str = "billing:manage_subscription";
-pub const BILLING_REFUND: &str = "billing:refund";
-pub const BILLING_VIEW: &str = "billing:view";
 pub const BULK_ADD_GUILD_MEMBERS: &str = "bulk:add:guild_members";
 pub const BULK_DELETE_USERS: &str = "bulk:delete:users";
+pub const BULK_DELETE_USER_MESSAGES: &str = "bulk:delete:user_messages";
 pub const BULK_UPDATE_GUILD_FEATURES: &str = "bulk:update:guild_features";
 pub const BULK_UPDATE_SUSPICIOUS_ACTIVITY: &str = "bulk:update:suspicious_activity";
 pub const BULK_UPDATE_USER_FLAGS: &str = "bulk:update:user_flags";
@@ -81,7 +79,6 @@ pub const REPORT_RESOLVE: &str = "report:resolve";
 pub const REPORT_VIEW: &str = "report:view";
 pub const REPORT_VIEW_REPORTER_PII: &str = "report:view:reporter_pii";
 pub const SYSTEM_DM_SEND: &str = "system_dm:send";
-pub const SYSTEM_HEAP_SNAPSHOT: &str = "system:heap_snapshot";
 pub const USER_CANCEL_BULK_MESSAGE_DELETION: &str = "user:cancel:bulk_message_deletion";
 pub const USER_DELETE: &str = "user:delete";
 pub const USER_DISABLE_SUSPICIOUS: &str = "user:disable:suspicious";
@@ -124,6 +121,7 @@ pub const ALL_ACLS: &[&str] = &[
     ARCHIVE_TRIGGER_GUILD,
     ARCHIVE_TRIGGER_USER,
     ARCHIVE_VIEW_ALL,
+    ASSET_PURGE,
     AUDIT_LOG_VIEW,
     AUTHENTICATE,
     JOBS_VIEW,
@@ -155,11 +153,9 @@ pub const ALL_ACLS: &[&str] = &[
     BAN_PROFILE_SUBSTRING_ADD,
     BAN_PROFILE_SUBSTRING_CHECK,
     BAN_PROFILE_SUBSTRING_REMOVE,
-    BILLING_MANAGE_SUBSCRIPTION,
-    BILLING_REFUND,
-    BILLING_VIEW,
     BULK_ADD_GUILD_MEMBERS,
     BULK_DELETE_USERS,
+    BULK_DELETE_USER_MESSAGES,
     BULK_UPDATE_GUILD_FEATURES,
     BULK_UPDATE_SUSPICIOUS_ACTIVITY,
     BULK_UPDATE_USER_FLAGS,
@@ -195,7 +191,6 @@ pub const ALL_ACLS: &[&str] = &[
     REPORT_VIEW,
     REPORT_VIEW_REPORTER_PII,
     SYSTEM_DM_SEND,
-    SYSTEM_HEAP_SNAPSHOT,
     USER_CANCEL_BULK_MESSAGE_DELETION,
     USER_DELETE,
     USER_DISABLE_SUSPICIOUS,

@@ -13,8 +13,6 @@
 -spec execute_method(binary(), map()) -> term().
 execute_method(<<"voice.confirm_connection">>, P) ->
     handle_confirm_connection(P);
-execute_method(<<"voice.repair_state_from_cache">>, P) ->
-    handle_repair_state(P);
 execute_method(<<"voice.disconnect_user_if_in_channel">>, P) ->
     handle_disconnect_if_in_channel(P);
 execute_method(<<"voice.get_voice_states_for_channel">>, P) ->
@@ -43,18 +41,6 @@ handle_confirm_connection(Params) ->
                     <<"connection_id">> => ConnectionId,
                     <<"token_nonce">> => TokenNonce
                 }
-            )
-    end.
-
--spec handle_repair_state(map()) -> map() | term().
-handle_repair_state(Params) ->
-    case parse_optional_guild_id(Params) of
-        undefined ->
-            #{<<"success">> => false, <<"error">> => <<"voice_not_supported">>};
-        GuildId ->
-            gateway_rpc_guild:execute_method(
-                <<"guild.repair_voice_state_from_cache">>,
-                Params#{<<"guild_id">> => integer_to_binary(GuildId)}
             )
     end.
 

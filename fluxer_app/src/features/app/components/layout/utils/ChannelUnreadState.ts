@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {resolveChannelUnreadState} from './ChannelUnreadStateMachine';
+import {resolveChannelUnreadState} from '@app/features/app/components/layout/utils/ChannelUnreadStateMachine';
 
 export interface ChannelUnreadStateInput {
 	hasUnread: boolean;

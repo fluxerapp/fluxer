@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {RouteRateLimitConfig} from '@app/api/middleware/RateLimitMiddleware';
 import {ms} from 'itty-time';
-import type {RouteRateLimitConfig} from '../middleware/RateLimitMiddleware';
 
 export const ChannelRateLimitConfigs = {
 	CHANNEL_GET: {
@@ -67,6 +67,10 @@ export const ChannelRateLimitConfigs = {
 	ATTACHMENT_DELETE: {
 		bucket: 'attachment:delete',
 		config: {limit: 40, windowMs: ms('10 seconds')},
+	} as RouteRateLimitConfig,
+	ATTACHMENT_URLS_REFRESH: {
+		bucket: 'attachment:refresh_urls',
+		config: {limit: 20, windowMs: ms('10 seconds')},
 	} as RouteRateLimitConfig,
 	CHANNEL_TYPING: {
 		bucket: 'channel:typing::channel_id',

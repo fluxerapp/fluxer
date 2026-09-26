@@ -85,7 +85,7 @@ export const GiftSendToFriendModal = observer(function GiftSendToFriendModal({co
 			>
 				<p className={styles.description} data-flx="expressions.gift-send-to-friend-modal.description">
 					<Trans>
-						We'd love to give you more than infinity of {PREMIUM_PRODUCT_NAME}, but that breaks the space-time
+						We'd love to give you more than a lifetime of {PREMIUM_PRODUCT_NAME}, but that breaks the space-time
 						continuum. Send the gift to a friend instead?
 					</Trans>
 				</p>

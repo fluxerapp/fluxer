@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {IJobLedgerRepository} from '@app/api/jobs/IJobLedgerRepository';
+import {setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
+import {NoopWorkerService} from '@app/api/test/NoopWorkerService';
+import {WorkerRunner} from '@app/api/worker/WorkerRunner';
+import type {JsMsg} from '@nats-io/jetstream';
 import {JobCancelledError} from '@pkgs/worker/src/contracts/WorkerTask';
-import type {JsMsg} from 'nats';
 import {afterEach, beforeAll, describe, expect, it, vi} from 'vitest';
-import {KVScheduledJobQueueService} from '../../infrastructure/KVScheduledJobQueueService';
-import type {IJobLedgerRepository} from '../../jobs/IJobLedgerRepository';
-import {setInjectedWorkerService} from '../../middleware/ServiceRegistry';
-import {MockKVProvider} from '../../test/mocks/MockKVProvider';
-import {NoopWorkerService} from '../../test/NoopWorkerService';
-import {WorkerRunner} from '../WorkerRunner';
 
 const LANE_ACK_WAIT_MS = 120000;
 const LANE_MAX_DELIVER = 25;
@@ -32,7 +30,6 @@ function createRunner(task: () => Promise<void>): TestWorkerRunner {
 	return new TestWorkerRunner({
 		tasks: {[TASK_TYPE]: task},
 		queue: queueStub,
-		scheduledJobQueue: new KVScheduledJobQueueService(new MockKVProvider()),
 		consumerName: 'workers_batch',
 		laneName: 'batch',
 		ledger: {} as IJobLedgerRepository,
@@ -146,12 +143,10 @@ describe('Worker ack heartbeat', () => {
 		expect(msg.working.mock.calls.length).toBe(heartbeatsAtCompletion);
 	});
 
-	it('does not heartbeat a parked scheduled job', async () => {
-		const scheduledJobQueue = new KVScheduledJobQueueService(new MockKVProvider());
+	it('does not heartbeat a job deferred to the future', async () => {
 		const runner = new TestWorkerRunner({
 			tasks: {[TASK_TYPE]: async () => {}},
 			queue: queueStub,
-			scheduledJobQueue,
 			consumerName: 'workers_batch',
 			laneName: 'batch',
 			ledger: {} as IJobLedgerRepository,
@@ -174,8 +169,8 @@ describe('Worker ack heartbeat', () => {
 
 		await runner.runJob(TASK_TYPE, msg as unknown as JsMsg);
 
-		expect(msg.ack).toHaveBeenCalledTimes(1);
+		expect(msg.ack).not.toHaveBeenCalled();
+		expect(msg.nak).toHaveBeenCalledTimes(1);
 		expect(msg.working).not.toHaveBeenCalled();
-		expect(await scheduledJobQueue.getQueueSize()).toBe(1);
 	});
 });

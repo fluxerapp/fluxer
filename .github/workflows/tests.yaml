@@ -28,12 +28,12 @@ jobs:
       FLUXER_CI_BIN: ${{ github.workspace }}/target/debug/fluxer-ci
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
         with:
-          toolchain: "1.93.0"
+          toolchain: "1.98.1"
           targets: wasm32-unknown-unknown
 
       - name: Restore ci helper
@@ -42,7 +42,7 @@ jobs:
         with:
           path: target/debug/fluxer-ci
           key: >-
-            fluxer-ci-bin-${{ runner.os }}-1.93.0-${{ hashFiles('Cargo.lock', 'Cargo.toml',
+            fluxer-ci-bin-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'Cargo.toml',
             'tools/ci/Cargo.toml', 'tools/ci/src/**', 'tools/ci/templates/**') }}
 
       - name: Build ci helper
@@ -55,16 +55,16 @@ jobs:
         with:
           path: target/debug/fluxer-ci
           key: >-
-            fluxer-ci-bin-${{ runner.os }}-1.93.0-${{ hashFiles('Cargo.lock', 'Cargo.toml',
+            fluxer-ci-bin-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'Cargo.toml',
             'tools/ci/Cargo.toml', 'tools/ci/src/**', 'tools/ci/templates/**') }}
 
       - name: Install pnpm
-        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
 
       - name: Install Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: '24'
+          node-version: '26'
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -83,12 +83,12 @@ jobs:
       PNPM_TEST_WORKSPACE_CONCURRENCY: '2'
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
         with:
-          toolchain: "1.93.0"
+          toolchain: "1.98.1"
           targets: wasm32-unknown-unknown
 
       - name: Restore ci helper
@@ -97,7 +97,7 @@ jobs:
         with:
           path: target/debug/fluxer-ci
           key: >-
-            fluxer-ci-bin-${{ runner.os }}-1.93.0-${{ hashFiles('Cargo.lock', 'Cargo.toml',
+            fluxer-ci-bin-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'Cargo.toml',
             'tools/ci/Cargo.toml', 'tools/ci/src/**', 'tools/ci/templates/**') }}
 
       - name: Build ci helper
@@ -105,12 +105,12 @@ jobs:
         run: cargo build --locked --package fluxer-ci
 
       - name: Install pnpm
-        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
 
       - name: Install Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: '24'
+          node-version: '26'
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -123,12 +123,16 @@ jobs:
         with:
           path: |
             fluxer_app/pkgs/libfluxcore
+            fluxer_app/pkgs/libfluxwebp
             fluxer_app/src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts
           key: >-
-            app-wasm-${{ runner.os }}-1.93.0-${{ hashFiles('Cargo.lock', 'tools/ci/src/app_wasm.rs',
+            app-wasm-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'tools/ci/src/app_wasm.rs',
             'tools/ci/templates/libfluxcore_wrapper.js', 'tools/ci/templates/libfluxcore_wrapper.d.ts',
             'fluxer_app/rust/libfluxcore/Cargo.toml', 'fluxer_app/rust/libfluxcore/Cargo.lock',
             'fluxer_app/rust/libfluxcore/.cargo/config.toml', 'fluxer_app/rust/libfluxcore/src/**',
+            'fluxer_app/rust/libfluxwebp/Cargo.toml', 'fluxer_app/rust/libfluxwebp/Cargo.lock',
+            'fluxer_app/rust/libfluxwebp/src/**', 'fluxer_app/rust/libfluxwebp/shim/**',
+            'fluxer_app/rust/libfluxwebp/simd/**',
             'packages/markdown_parser/rust/Cargo.toml', 'packages/markdown_parser/rust/.cargo/config.toml',
             'packages/markdown_parser/rust/src/**') }}
 
@@ -142,56 +146,106 @@ jobs:
         with:
           path: |
             fluxer_app/pkgs/libfluxcore
+            fluxer_app/pkgs/libfluxwebp
             fluxer_app/src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts
           key: >-
-            app-wasm-${{ runner.os }}-1.93.0-${{ hashFiles('Cargo.lock', 'tools/ci/src/app_wasm.rs',
+            app-wasm-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'tools/ci/src/app_wasm.rs',
             'tools/ci/templates/libfluxcore_wrapper.js', 'tools/ci/templates/libfluxcore_wrapper.d.ts',
             'fluxer_app/rust/libfluxcore/Cargo.toml', 'fluxer_app/rust/libfluxcore/Cargo.lock',
             'fluxer_app/rust/libfluxcore/.cargo/config.toml', 'fluxer_app/rust/libfluxcore/src/**',
+            'fluxer_app/rust/libfluxwebp/Cargo.toml', 'fluxer_app/rust/libfluxwebp/Cargo.lock',
+            'fluxer_app/rust/libfluxwebp/src/**', 'fluxer_app/rust/libfluxwebp/shim/**',
+            'fluxer_app/rust/libfluxwebp/simd/**',
             'packages/markdown_parser/rust/Cargo.toml', 'packages/markdown_parser/rust/.cargo/config.toml',
             'packages/markdown_parser/rust/src/**') }}
 
   rust:
-    runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 45
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
         with:
-          toolchain: "1.93.0"
+          toolchain: "1.98.1"
           components: clippy, rustfmt
 
       - name: Install pnpm
-        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
 
       - name: Install Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: '24'
+          node-version: '26'
           cache: 'pnpm'
 
       - name: Cache cargo
-        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
         with:
-          workspaces: |
-            . -> target
-            fluxer_desktop/native/rust -> target
-          save-if: ${{ github.ref == 'refs/heads/main' }}
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: rust-${{ runner.os }}-${{ hashFiles('fluxer_media_proxy/tools/install-native-deps.sh') }}-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            rust-${{ runner.os }}-${{ hashFiles('fluxer_media_proxy/tools/install-native-deps.sh') }}-
+
+      - name: Install cargo-deny
+        run: cargo install cargo-deny --version 0.20.2 --locked
+
+      - name: Check Rust dependencies
+        run: cargo deny --locked check -D warnings
+
+      - name: Check libfluxwebp dependencies
+        run: cargo deny --manifest-path fluxer_app/rust/libfluxwebp/Cargo.toml --config deny.toml --locked check licenses bans sources
+
+      - name: Check desktop native dependencies
+        run: tools/ci/check-desktop-native-workspaces.sh dependencies
+
+      - name: Cache native media dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: /opt/fluxer-native
+          key: media-native-${{ runner.os }}-${{ hashFiles('fluxer_media_proxy/tools/install-native-deps.sh') }}
 
       - name: Install native dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            pkg-config \
             build-essential \
-            libcurl4-openssl-dev \
-            libvips-dev \
+            binutils \
+            clang \
+            cmake \
+            curl \
+            libaom-dev \
             libavfilter-dev \
+            libclang-dev \
+            libcurl4-openssl-dev \
+            libdav1d-dev \
+            libde265-dev \
+            libfido2-dev \
             libheif-dev \
-            libwebp-dev
+            liblcms2-dev \
+            libpipewire-0.3-dev \
+            libspa-0.2-dev \
+            libssl-dev \
+            libudev-dev \
+            libvips-dev \
+            libwebp-dev \
+            libyuv-dev \
+            meson \
+            nasm \
+            ninja-build \
+            pkg-config \
+            xz-utils \
+            yasm \
+            zlib1g-dev
+          sudo fluxer_media_proxy/tools/install-native-deps.sh /opt/fluxer-native
+          echo "PKG_CONFIG_PATH=/opt/fluxer-native/lib/pkgconfig:/opt/fluxer-native/lib64/pkgconfig" >> "$GITHUB_ENV"
+          echo "LD_LIBRARY_PATH=/opt/fluxer-native/lib:/opt/fluxer-native/lib64" >> "$GITHUB_ENV"
+          echo "/opt/fluxer-native/bin" >> "$GITHUB_PATH"
 
       - name: Install Node.js dependencies
         run: pnpm --filter fluxer_admin install
@@ -199,17 +253,32 @@ jobs:
       - name: Check formatting
         run: cargo fmt --all -- --check
 
-      - name: Check formatting (desktop native)
-        run: cargo fmt --manifest-path fluxer_desktop/native/rust/Cargo.toml --all -- --check
+      - name: Check formatting (libfluxwebp)
+        run: cargo fmt --manifest-path fluxer_app/rust/libfluxwebp/Cargo.toml -- --check
+
+      - name: Check formatting (desktop native workspaces)
+        run: tools/ci/check-desktop-native-workspaces.sh fmt
 
       - name: Clippy (warnings as errors)
-        run: cargo clippy --workspace -- -D warnings
+        run: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+
+      - name: Clippy (desktop native workspaces on Linux, warnings as errors)
+        run: tools/ci/check-desktop-native-workspaces.sh clippy
+
+      - name: Verify the source-built ffmpeg CLI is on PATH
+        run: |
+          set -euo pipefail
+          command -v ffmpeg
+          test "$(command -v ffmpeg)" = /opt/fluxer-native/bin/ffmpeg
+          ffmpeg -hide_banner -version
 
       - name: Run tests
-        run: cargo test --workspace
+        env:
+          FLUXER_REQUIRE_MEDIA_FIXTURES: "1"
+        run: cargo test --workspace --all-features --locked
 
-      - name: Run desktop native tests
-        run: cargo test --manifest-path fluxer_desktop/native/rust/Cargo.toml
+      - name: Run desktop native workspace tests on Linux
+        run: tools/ci/check-desktop-native-workspaces.sh test
 
   gateway:
     runs-on: ubuntu-24.04
@@ -218,12 +287,12 @@ jobs:
       FLUXER_CI_BIN: ${{ github.workspace }}/target/debug/fluxer-ci
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
         with:
-          toolchain: "1.93.0"
+          toolchain: "1.98.1"
 
       - name: Cache cargo (gateway NIFs)
         uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6
@@ -239,7 +308,7 @@ jobs:
         with:
           path: target/debug/fluxer-ci
           key: >-
-            fluxer-ci-bin-${{ runner.os }}-1.93.0-${{ hashFiles('Cargo.lock', 'Cargo.toml',
+            fluxer-ci-bin-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'Cargo.toml',
             'tools/ci/Cargo.toml', 'tools/ci/src/**', 'tools/ci/templates/**') }}
 
       - name: Build ci helper
@@ -250,7 +319,7 @@ jobs:
         uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124
         with:
           otp-version: '28'
-          rebar3-version: '3.24.0'
+          rebar3-version: '3.27.0'
 
       - name: Restore rebar3 dependencies
         id: rebar3-cache
@@ -259,13 +328,13 @@ jobs:
           path: |
             ~/.cache/rebar3
             fluxer_gateway/_build
-            !fluxer_gateway/_build/default/lib/fluxer_gateway
-            !fluxer_gateway/_build/test/lib/fluxer_gateway
+            !fluxer_gateway/_build/default/lib/fluxer_gateway/**
+            !fluxer_gateway/_build/test/lib/fluxer_gateway/**
           key: >-
-            rebar3-${{ runner.os }}-otp28-rebar3.24.0-${{ hashFiles('fluxer_gateway/rebar.lock',
+            rebar3-${{ runner.os }}-otp28-rebar3.27.0-${{ hashFiles('fluxer_gateway/rebar.lock',
             'fluxer_gateway/rebar.config') }}
           restore-keys: |
-            rebar3-${{ runner.os }}-otp28-rebar3.24.0-
+            rebar3-${{ runner.os }}-otp28-rebar3.27.0-
 
       - name: Check formatting
         run: |
@@ -290,10 +359,10 @@ jobs:
           path: |
             ~/.cache/rebar3
             fluxer_gateway/_build
-            !fluxer_gateway/_build/default/lib/fluxer_gateway
-            !fluxer_gateway/_build/test/lib/fluxer_gateway
+            !fluxer_gateway/_build/default/lib/fluxer_gateway/**
+            !fluxer_gateway/_build/test/lib/fluxer_gateway/**
           key: >-
-            rebar3-${{ runner.os }}-otp28-rebar3.24.0-${{ hashFiles('fluxer_gateway/rebar.lock',
+            rebar3-${{ runner.os }}-otp28-rebar3.27.0-${{ hashFiles('fluxer_gateway/rebar.lock',
             'fluxer_gateway/rebar.config') }}
 
   knip:
@@ -303,12 +372,12 @@ jobs:
       FLUXER_CI_BIN: ${{ github.workspace }}/target/debug/fluxer-ci
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Set up Rust toolchain (CI helpers)
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9
+        uses: dtolnay/rust-toolchain@02cb101ec7c40f2c49e1d9714d64511d8e1b74de
         with:
-          toolchain: "1.93.0"
+          toolchain: "1.98.1"
           targets: wasm32-unknown-unknown
 
       - name: Restore ci helper
@@ -317,7 +386,7 @@ jobs:
         with:
           path: target/debug/fluxer-ci
           key: >-
-            fluxer-ci-bin-${{ runner.os }}-1.93.0-${{ hashFiles('Cargo.lock', 'Cargo.toml',
+            fluxer-ci-bin-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'Cargo.toml',
             'tools/ci/Cargo.toml', 'tools/ci/src/**', 'tools/ci/templates/**') }}
 
       - name: Build ci helper
@@ -325,12 +394,12 @@ jobs:
         run: cargo build --locked --package fluxer-ci
 
       - name: Install pnpm
-        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
 
       - name: Install Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: '24'
+          node-version: '26'
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -343,12 +412,16 @@ jobs:
         with:
           path: |
             fluxer_app/pkgs/libfluxcore
+            fluxer_app/pkgs/libfluxwebp
             fluxer_app/src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts
           key: >-
-            app-wasm-${{ runner.os }}-1.93.0-${{ hashFiles('Cargo.lock', 'tools/ci/src/app_wasm.rs',
+            app-wasm-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'tools/ci/src/app_wasm.rs',
             'tools/ci/templates/libfluxcore_wrapper.js', 'tools/ci/templates/libfluxcore_wrapper.d.ts',
             'fluxer_app/rust/libfluxcore/Cargo.toml', 'fluxer_app/rust/libfluxcore/Cargo.lock',
             'fluxer_app/rust/libfluxcore/.cargo/config.toml', 'fluxer_app/rust/libfluxcore/src/**',
+            'fluxer_app/rust/libfluxwebp/Cargo.toml', 'fluxer_app/rust/libfluxwebp/Cargo.lock',
+            'fluxer_app/rust/libfluxwebp/src/**', 'fluxer_app/rust/libfluxwebp/shim/**',
+            'fluxer_app/rust/libfluxwebp/simd/**',
             'packages/markdown_parser/rust/Cargo.toml', 'packages/markdown_parser/rust/.cargo/config.toml',
             'packages/markdown_parser/rust/src/**') }}
 
@@ -362,29 +435,58 @@ jobs:
         with:
           path: |
             fluxer_app/pkgs/libfluxcore
+            fluxer_app/pkgs/libfluxwebp
             fluxer_app/src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts
           key: >-
-            app-wasm-${{ runner.os }}-1.93.0-${{ hashFiles('Cargo.lock', 'tools/ci/src/app_wasm.rs',
+            app-wasm-${{ runner.os }}-1.98.1-${{ hashFiles('Cargo.lock', 'tools/ci/src/app_wasm.rs',
             'tools/ci/templates/libfluxcore_wrapper.js', 'tools/ci/templates/libfluxcore_wrapper.d.ts',
             'fluxer_app/rust/libfluxcore/Cargo.toml', 'fluxer_app/rust/libfluxcore/Cargo.lock',
             'fluxer_app/rust/libfluxcore/.cargo/config.toml', 'fluxer_app/rust/libfluxcore/src/**',
+            'fluxer_app/rust/libfluxwebp/Cargo.toml', 'fluxer_app/rust/libfluxwebp/Cargo.lock',
+            'fluxer_app/rust/libfluxwebp/src/**', 'fluxer_app/rust/libfluxwebp/shim/**',
+            'fluxer_app/rust/libfluxwebp/simd/**',
             'packages/markdown_parser/rust/Cargo.toml', 'packages/markdown_parser/rust/.cargo/config.toml',
             'packages/markdown_parser/rust/src/**') }}
+
+  lint:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
+
+      - name: Install Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '26'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check formatting and lint
+        run: pnpm exec biome ci .
+
+      - name: Lint JSX for browser-translation safety
+        run: pnpm exec eslint . --max-warnings 0
 
   i18n:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Install pnpm
-        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
 
       - name: Install Node.js
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
-          node-version: '24'
+          node-version: '26'
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -405,17 +507,42 @@ jobs:
             exit 1
           fi
 
+  docs:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
+
+      - name: Install Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '26'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --filter fluxer_docs...
+
+      - name: Verify documentation matches the live API
+        run: pnpm --filter fluxer_docs verify
+
+      - name: Build documentation
+        run: pnpm --filter fluxer_docs build
+
   fonts:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
       - name: Set up Python
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
-          python-version: "3.13"
+          python-version: "3.14"
 
       - name: Install font tooling
         run: python3 -m pip install -r tools/fonts/requirements.txt

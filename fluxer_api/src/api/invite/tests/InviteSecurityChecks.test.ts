@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createChannelID, createGuildID, createInviteCode, createUserID} from '@app/api/BrandedTypes';
+import {acceptInvite, createChannelInvite, createGuild, getChannel} from '@app/api/channel/tests/ChannelTestUtils';
+import {InviteRepository} from '@app/api/invite/InviteRepository';
+import {deleteInvite} from '@app/api/invite/tests/InviteTestUtils';
+import {banUser} from '@app/api/moderation/tests/ModerationTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {InviteTypes} from '@fluxer/constants/src/ChannelConstants';
 import type {GuildInviteMetadataResponse} from '@fluxer/schema/src/domains/invite/InviteSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createChannelID, createGuildID, createInviteCode, createUserID} from '../../BrandedTypes';
-import {acceptInvite, createChannelInvite, createGuild, getChannel} from '../../channel/tests/ChannelTestUtils';
-import {banUser} from '../../moderation/tests/ModerationTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import {InviteRepository} from '../InviteRepository';
-import {deleteInvite} from './InviteTestUtils';
 
 async function createGuildInviteWithCodeForTesting(
 	code: string,

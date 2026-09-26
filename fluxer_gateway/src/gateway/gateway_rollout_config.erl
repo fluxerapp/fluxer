@@ -16,8 +16,6 @@
     gateway_dispatch_relay_shards/0,
     gateway_dispatch_relay_max_queue/0,
     rpc_request_timeout_ms/0,
-    voice_reconciliation_v3_percentage/0,
-    voice_reconciliation_v3_interval_ms/0,
     max_concurrent_session_starts/0,
     max_concurrent_guild_starts/0,
     is_session_eligible/1,
@@ -98,14 +96,6 @@ gateway_dispatch_relay_max_queue() ->
 -spec rpc_request_timeout_ms() -> integer().
 rpc_request_timeout_ms() ->
     maps:get(<<"rpc_request_timeout_ms">>, get(), 10000).
-
--spec voice_reconciliation_v3_percentage() -> number().
-voice_reconciliation_v3_percentage() ->
-    maps:get(<<"voice_reconciliation_v3_percentage">>, get(), 100).
-
--spec voice_reconciliation_v3_interval_ms() -> integer().
-voice_reconciliation_v3_interval_ms() ->
-    maps:get(<<"voice_reconciliation_v3_interval_ms">>, get(), 2000).
 
 -spec max_concurrent_session_starts() -> integer().
 max_concurrent_session_starts() ->
@@ -237,9 +227,7 @@ default_config() ->
         <<"max_concurrent_guild_starts">> => 256,
         <<"gateway_dispatch_relay_shards">> => 32,
         <<"gateway_dispatch_relay_max_queue">> => 50000,
-        <<"voice_e2ee_scope">> => <<"guild_feature_only">>,
-        <<"voice_reconciliation_v3_percentage">> => 100,
-        <<"voice_reconciliation_v3_interval_ms">> => 2000
+        <<"voice_e2ee_scope">> => <<"guild_feature_only">>
     }.
 
 -spec initial_config() -> map().
@@ -357,9 +345,7 @@ log_config_transitions(OldConfig, NewConfig) ->
     WatchKeys = [
         <<"session_rollout_percentage">>,
         <<"guild_rollout_percentage">>,
-        <<"rpc_request_timeout_ms">>,
-        <<"voice_reconciliation_v3_percentage">>,
-        <<"voice_reconciliation_v3_interval_ms">>
+        <<"rpc_request_timeout_ms">>
     ],
     lists:foreach(
         fun(Key) -> log_key_transition(Key, OldConfig, NewConfig) end,

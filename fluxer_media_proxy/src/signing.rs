@@ -27,6 +27,10 @@ pub fn verify_signature(input: &str, provided: &str, secret: &[u8]) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test_fixtures::ADVERSARIAL_TEXT_INPUTS;
+    use proptest::prelude::*;
+
+    const HMAC_SHA256_BASE64URL_LEN: usize = 43;
 
     #[test]
     fn signature_matches_node_hmac_base64url_behavior() {
@@ -79,5 +83,65 @@ mod tests {
             create_signature("input", b"secret"),
             create_signature("input", b"secret")
         );
+    }
+
+    #[test]
+    fn adversarial_text_signs_and_verifies_without_panicking() {
+        for input in ADVERSARIAL_TEXT_INPUTS {
+            let signature = create_signature(input, b"secret");
+            assert_eq!(HMAC_SHA256_BASE64URL_LEN, signature.len());
+            assert!(verify_signature(input, &signature, b"secret"));
+            assert!(!verify_signature(input, &signature, b"another-secret"));
+            assert!(!verify_signature(input, &signature, b""));
+        }
+    }
+
+    #[test]
+    fn an_empty_provided_signature_is_rejected_by_the_length_check() {
+        for input in ADVERSARIAL_TEXT_INPUTS {
+            assert!(!verify_signature(input, "", b"secret"));
+            assert!(!verify_signature(input, " ", b"secret"));
+            let truncated = &create_signature(input, b"secret")[..HMAC_SHA256_BASE64URL_LEN - 1];
+            assert!(!verify_signature(input, truncated, b"secret"));
+        }
+    }
+
+    #[test]
+    fn a_signature_from_another_adversarial_input_never_verifies() {
+        for input in ADVERSARIAL_TEXT_INPUTS {
+            let signature = create_signature(input, b"secret");
+            for other in ADVERSARIAL_TEXT_INPUTS {
+                assert_eq!(
+                    input == other,
+                    verify_signature(other, &signature, b"secret"),
+                    "{input:?} against {other:?}"
+                );
+            }
+        }
+    }
+
+    proptest! {
+        #![proptest_config(ProptestConfig {
+            cases: 256,
+            failure_persistence: None,
+            ..ProptestConfig::default()
+        })]
+
+        #[test]
+        fn only_the_signed_input_and_its_own_secret_verify(
+            input in ".{0,96}",
+            other in ".{0,96}",
+            secret in prop::collection::vec(1u8..=u8::MAX, 0..64),
+            other_secret in prop::collection::vec(1u8..=u8::MAX, 0..64),
+        ) {
+            let signature = create_signature(&input, &secret);
+            prop_assert_eq!(HMAC_SHA256_BASE64URL_LEN, signature.len());
+            prop_assert!(verify_signature(&input, &signature, &secret));
+            prop_assert_eq!(input == other, verify_signature(&other, &signature, &secret));
+            prop_assert_eq!(
+                secret == other_secret,
+                verify_signature(&input, &signature, &other_secret)
+            );
+        }
     }
 }

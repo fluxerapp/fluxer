@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {EmojiID, GuildID, UserID} from '../BrandedTypes';
-import type {GuildEmojiRow} from '../database/types/GuildTypes';
+import type {EmojiID, GuildID, UserID} from '@app/api/BrandedTypes';
+import type {GuildEmojiRow} from '@app/api/database/types/GuildTypes';
 
 export class GuildEmoji {
 	readonly guildId: GuildID;
@@ -9,8 +9,6 @@ export class GuildEmoji {
 	readonly name: string;
 	readonly creatorId: UserID;
 	readonly isAnimated: boolean;
-	readonly isNsfw: boolean;
-	readonly hasNsfwClassification: boolean;
 	readonly version: number;
 
 	constructor(row: GuildEmojiRow) {
@@ -19,8 +17,6 @@ export class GuildEmoji {
 		this.name = row.name;
 		this.creatorId = row.creator_id;
 		this.isAnimated = row.animated ?? false;
-		this.isNsfw = row.nsfw ?? false;
-		this.hasNsfwClassification = row.nsfw != null;
 		this.version = row.version;
 	}
 
@@ -31,7 +27,6 @@ export class GuildEmoji {
 			name: this.name,
 			creator_id: this.creatorId,
 			animated: this.isAnimated,
-			nsfw: this.hasNsfwClassification ? this.isNsfw : null,
 			version: this.version,
 		};
 	}

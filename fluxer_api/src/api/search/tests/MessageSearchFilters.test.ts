@@ -1,21 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {MessageReferenceTypes} from '@fluxer/constants/src/ChannelConstants';
-import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {loadFixture, sendMessageWithAttachments} from '../../channel/tests/AttachmentTestUtils';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {loadFixture, sendMessageWithAttachments} from '@app/api/channel/tests/AttachmentTestUtils';
 import {
 	acceptInvite,
 	createChannel,
 	createChannelInvite,
 	createGuild,
 	getChannel,
-} from '../../guild/tests/GuildTestUtils';
-import {markChannelAsIndexed, pinMessage, sendMessage} from '../../message/tests/MessageTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
+} from '@app/api/guild/tests/GuildTestUtils';
+import {
+	markChannelAsIndexed,
+	markGuildChannelsAsIndexed,
+	pinMessage,
+	sendMessage,
+} from '@app/api/message/tests/MessageTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {MessageReferenceTypes} from '@fluxer/constants/src/ChannelConstants';
+import type {MessageResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 interface MessageSearchResult {
 	messages: Array<{
@@ -291,6 +296,55 @@ describe('Message Search Filters', () => {
 				}
 				expect(result.messages.every((m) => m.channel_id !== channel3.id)).toBe(true);
 			}
+		});
+		test('channel_id narrows scope like channel_ids', async () => {
+			const account = await createTestAccount(harness);
+			const guild = await createGuild(harness, account.token, 'Channel Id Alias Guild');
+			const channel1 = await getChannel(harness, account.token, guild.system_channel_id!);
+			const channel2 = await createChannel(harness, account.token, guild.id, 'alias-second-channel');
+			const timestamp = Date.now();
+			const baseContent = `channel-id-alias-${timestamp}`;
+			await sendMessage(harness, account.token, channel1.id, `${baseContent} channel1 msg`);
+			await sendMessage(harness, account.token, channel2.id, `${baseContent} channel2 msg`);
+			await markGuildChannelsAsIndexed(harness, account.token, guild.id);
+			const result = await createBuilder<MessageSearchResponse>(harness, account.token)
+				.post('/search/messages')
+				.body({
+					content: baseContent,
+					scope: 'all_guilds',
+					channel_id: [channel1.id],
+				})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			if (!isSearchResult(result)) {
+				expect.fail('Expected search result but got indexing response');
+			}
+			expect(result.messages.length).toBeGreaterThan(0);
+			for (const msg of result.messages) {
+				expect(msg.channel_id).toBe(channel1.id);
+			}
+			expect(result.messages.every((m) => m.channel_id !== channel2.id)).toBe(true);
+		});
+		test('channel_id outside the resolved scope returns 403', async () => {
+			const account = await createTestAccount(harness);
+			const outsider = await createTestAccount(harness);
+			const guild = await createGuild(harness, account.token, 'Channel Id Scope Guild');
+			const outsideGuild = await createGuild(harness, outsider.token, 'Channel Id Outside Guild');
+			const timestamp = Date.now();
+			const baseContent = `channel-id-scope-${timestamp}`;
+			await sendMessage(harness, account.token, guild.system_channel_id!, `${baseContent} own msg`);
+			await sendMessage(harness, outsider.token, outsideGuild.system_channel_id!, `${baseContent} outside msg`);
+			await markGuildChannelsAsIndexed(harness, account.token, guild.id);
+			await markGuildChannelsAsIndexed(harness, outsider.token, outsideGuild.id);
+			await createBuilder<MessageSearchResponse>(harness, account.token)
+				.post('/search/messages')
+				.body({
+					content: baseContent,
+					scope: 'all_guilds',
+					channel_id: [outsideGuild.system_channel_id!],
+				})
+				.expect(HTTP_STATUS.FORBIDDEN, 'MISSING_PERMISSIONS')
+				.execute();
 		});
 	});
 	describe('Content Type Filtering (has/exclude_has)', () => {

@@ -44,17 +44,12 @@ import {
 	ProhibitIcon,
 	RobotIcon,
 	ShieldIcon,
-	StickerIcon,
 	TranslateIcon,
 	UserIcon,
 	UserListIcon,
 } from '@phosphor-icons/react';
 import type React from 'react';
 
-const EXPRESSION_PACKS_DESCRIPTOR = msg({
-	message: 'Expression packs',
-	comment: 'User settings tab for purchased or owned emoji/sticker expression packs.',
-});
 const BLOCKED_USERS_DESCRIPTOR = msg({
 	message: 'Blocked users',
 	comment: 'User settings tab listing accounts the current user has blocked.',
@@ -266,12 +261,6 @@ const ALL_TABS_DESCRIPTORS: Array<SettingsTabDescriptor> = [
 		category: 'billing',
 		label: GIFTS_AND_CODES_DESCRIPTOR,
 		icon: GiftIcon,
-	},
-	{
-		type: 'expression_packs',
-		category: 'billing',
-		label: EXPRESSION_PACKS_DESCRIPTOR,
-		icon: StickerIcon,
 	},
 	{
 		type: 'appearance',

@@ -163,10 +163,7 @@ safe_guild_counts_get(GuildId) ->
 
 -spec validate_batch_size(non_neg_integer()) -> ok.
 validate_batch_size(Size) when Size > ?MAX_BATCH_SIZE ->
-    Max = integer_to_binary(?MAX_BATCH_SIZE),
-    gateway_rpc_error:raise(
-        <<"Batch size exceeds maximum of ", Max/binary>>
-    );
+    gateway_rpc_error:raise(<<"batch_too_large">>);
 validate_batch_size(_) ->
     ok.
 
@@ -265,7 +262,7 @@ owner_groups_for_reload_all_empty_ids_uses_active_nodes_test() ->
 validate_batch_size_test() ->
     ?assertEqual(ok, validate_batch_size(50)),
     ?assertEqual(ok, validate_batch_size(100)),
-    ?assertError({gateway_rpc_error, _}, validate_batch_size(101)).
+    ?assertError({gateway_rpc_error, <<"batch_too_large">>}, validate_batch_size(101)).
 
 process_batch_collects_successful_results_test() ->
     Results = process_batch([1, 2, 3], fun(N) -> eqwalizer:dynamic_cast(N) * 2 end, 1000),

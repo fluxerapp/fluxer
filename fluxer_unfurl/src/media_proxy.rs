@@ -112,10 +112,13 @@ impl MediaProxyClient {
         }
     }
 
-    pub fn external_proxy_url(&self, input_url: &str) -> Option<String> {
-        if input_url == self.public_endpoint
+    pub fn is_own_url(&self, input_url: &str) -> bool {
+        input_url == self.public_endpoint
             || input_url.starts_with(&format!("{}/", self.public_endpoint))
-        {
+    }
+
+    pub fn external_proxy_url(&self, input_url: &str) -> Option<String> {
+        if self.is_own_url(input_url) {
             return Some(input_url.to_owned());
         }
         let parsed = Url::parse(input_url).ok()?;
@@ -158,6 +161,20 @@ mod tests {
             MediaProxyClient::nsfw_mode_str(crate::types::NsfwMode::Flag),
             "flag"
         );
+    }
+
+    #[test]
+    fn own_urls_are_recognised_by_their_public_endpoint() {
+        let mp = MediaProxyClient::new_with_public_endpoint(
+            "http://media-proxy:8080",
+            "secret",
+            Some("https://chat.example.test/media/"),
+            reqwest::Client::new(),
+        );
+        assert!(mp.is_own_url("https://chat.example.test/media"));
+        assert!(mp.is_own_url("https://chat.example.test/media/attachments/1/2/cat.gif"));
+        assert!(!mp.is_own_url("https://chat.example.test/mediafiles/1.gif"));
+        assert!(!mp.is_own_url("https://static.klipy.com/ii/c8/28/HkAKKCzZ.webp"));
     }
 
     #[test]

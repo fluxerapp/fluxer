@@ -1,15 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import type {VoiceEngineV2SourceLifecycleTransitionedEvent} from '../../protocol/events';
-import type {VoiceEngineV2DiagnosticEntry} from '../../protocol/types';
-import type {SourceFault, SourceLifecycleState} from '../../source_isolation/SourceLifecycleState';
-import type {VoiceEngineV2Snapshot, VoiceEngineV2Transition} from '../state';
-import {allocateOperation, appendDiagnostic, queueCommand} from './_helpers';
+import {allocateOperation, appendDiagnostic, queueCommand} from '@fluxer/voice_engine_v2/src/core/reducers/_helpers';
+import type {VoiceEngineV2Snapshot, VoiceEngineV2Transition} from '@fluxer/voice_engine_v2/src/core/state';
+import type {
+	VoiceEngineV2SourceLifecycleRemovedEvent,
+	VoiceEngineV2SourceLifecycleTransitionedEvent,
+} from '@fluxer/voice_engine_v2/src/protocol/events';
+import type {VoiceEngineV2DiagnosticEntry} from '@fluxer/voice_engine_v2/src/protocol/types';
+import type {
+	SourceFault,
+	SourceLifecycleState,
+} from '@fluxer/voice_engine_v2/src/source_isolation/SourceLifecycleState';
 
 const SOURCE_LIFECYCLE_DIAGNOSTICS_CODE = 'sourceFailed';
 
-type VoiceEngineV2SourceLifecyclesEvent = VoiceEngineV2SourceLifecycleTransitionedEvent;
+type VoiceEngineV2SourceLifecyclesEvent =
+	| VoiceEngineV2SourceLifecycleTransitionedEvent
+	| VoiceEngineV2SourceLifecycleRemovedEvent;
 
 function assertNeverLifecycleKind(kind: never): never {
 	assert.fail(`unhandled source lifecycle kind: ${JSON.stringify(kind)}`);
@@ -43,6 +51,12 @@ export function transitionSourceLifecycles(
 	assert.ok(event != null, 'transitionSourceLifecycles event must not be null');
 	assert.equal(typeof event.sourceId, 'string', 'sourceLifecycle.sourceId must be a string');
 	assert.ok(event.sourceId.length > 0, 'sourceLifecycle.sourceId must not be empty');
+	if (event.type === 'sourceLifecycle.removed') {
+		if (!Object.hasOwn(snapshot.sourceLifecycles, event.sourceId)) return {snapshot, commands: []};
+		const sourceLifecycles = {...snapshot.sourceLifecycles};
+		delete sourceLifecycles[event.sourceId];
+		return {snapshot: {...snapshot, sourceLifecycles}, commands: []};
+	}
 	const nextState = rebuildSourceLifecycleState(event);
 	const base: VoiceEngineV2Snapshot = {
 		...snapshot,

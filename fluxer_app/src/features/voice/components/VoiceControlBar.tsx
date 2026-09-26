@@ -254,7 +254,7 @@ const VoiceControlBarInner = observer(function VoiceControlBarInner() {
 	});
 	const effectiveMuted = effectiveAudioState.effectiveMute || muteReason !== null || isMuted || isPermissionMuted;
 	const pushToTalkCombo = Keybind.getByAction('voice_push_to_talk').combo;
-	const pushToTalkHint = formatKeyCombo(pushToTalkCombo);
+	const pushToTalkHint = formatKeyCombo(i18n, pushToTalkCombo);
 	const displayShareEnvironment = resolveDisplayShareEnvironment(isDesktop(), NativePermission.isLinuxWaylandDesktop);
 	const disconnectLabel = i18n._(VOICE_DISCONNECT_DESCRIPTOR);
 	const renderInputSettingsMenu = useCallback(
@@ -350,8 +350,8 @@ const VoiceControlBarInner = observer(function VoiceControlBarInner() {
 	}, [localParticipant, isCameraEnabled, isConnected]);
 	const renderScreenShareMenu = useCallback(
 		({onClose}: {onClose: () => void}) => {
-			const shareContext = ActiveScreenShareSource.getSourceId()?.startsWith('window:') ? 'app' : 'display';
-			const shareContextResolved = ActiveScreenShareSource.getSourceId() != null;
+			const shareContext = ActiveScreenShareSource.getShareContext() ?? 'display';
+			const shareContextResolved = ActiveScreenShareSource.getPublishedSource() != null;
 			const screenShareSettingsMenu = (
 				<MenuGroup data-flx="voice.voice-control-bar.render-screen-share-menu.menu-group--2">
 					<MenuItem

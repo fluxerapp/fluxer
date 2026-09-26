@@ -1,13 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import type {WebhookResponse} from '@fluxer/schema/src/domains/webhook/WebhookSchemas';
-import {afterEach, beforeEach, describe, expect, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createChannel, createGuild} from '../../guild/tests/GuildTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createChannel, createGuild} from '@app/api/guild/tests/GuildTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {
 	createWebhook,
 	deleteWebhook,
@@ -18,7 +15,10 @@ import {
 	getWebhookByToken,
 	updateWebhook,
 	updateWebhookByToken,
-} from './WebhookTestUtils';
+} from '@app/api/webhook/tests/WebhookTestUtils';
+import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
+import type {WebhookResponse} from '@fluxer/schema/src/domains/webhook/WebhookSchemas';
+import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
 describe('Webhook Operations', () => {
 	let harness: ApiTestHarness;

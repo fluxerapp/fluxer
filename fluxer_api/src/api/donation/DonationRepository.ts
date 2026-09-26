@@ -1,25 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne} from '../database/CassandraQueryExecution';
-import {Db, type PatchObject} from '../database/CassandraTypes';
-import {executeVersionedUpdate} from '../database/CassandraVersionedUpdate';
+import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {Db, type PatchObject} from '@app/api/database/CassandraTypes';
+import {executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
 import type {
 	DonorByStripeCustomerIdRow,
 	DonorByStripeSubscriptionIdRow,
 	DonorMagicLinkTokenByEmailRow,
 	DonorMagicLinkTokenRow,
 	DonorRow,
-} from '../database/types/DonationTypes';
+} from '@app/api/database/types/DonationTypes';
 import {
 	DonorMagicLinkTokens,
 	DonorMagicLinkTokensByEmail,
 	Donors,
 	DonorsByStripeCustomerId,
 	DonorsByStripeSubscriptionId,
-} from './DonationTables';
-import {IDonationRepository} from './IDonationRepository';
-import {Donor} from './models/Donor';
-import {DonorMagicLinkToken} from './models/DonorMagicLinkToken';
+} from '@app/api/donation/DonationTables';
+import {IDonationRepository} from '@app/api/donation/IDonationRepository';
+import {Donor} from '@app/api/donation/models/Donor';
+import {DonorMagicLinkToken} from '@app/api/donation/models/DonorMagicLinkToken';
 
 const FETCH_DONOR_BY_EMAIL_QUERY = Donors.selectCql({
 	where: Donors.where.eq('email'),
@@ -101,6 +101,7 @@ export class DonationRepository extends IDonationRepository {
 		subscriptionInterval: string | null;
 		subscriptionCurrentPeriodEnd: Date | null;
 		subscriptionCancelAt?: Date | null;
+		subscriptionStatus?: string | null;
 	}): Promise<Donor> {
 		const now = new Date();
 		const donorRow: DonorRow = {
@@ -115,6 +116,7 @@ export class DonationRepository extends IDonationRepository {
 			subscription_interval: data.subscriptionInterval,
 			subscription_current_period_end: data.subscriptionCurrentPeriodEnd,
 			subscription_cancel_at: data.subscriptionCancelAt ?? null,
+			subscription_status: data.subscriptionStatus ?? null,
 			created_at: now,
 			updated_at: now,
 			version: 1,
@@ -154,6 +156,7 @@ export class DonationRepository extends IDonationRepository {
 			subscriptionInterval: string | null;
 			subscriptionCurrentPeriodEnd: Date | null;
 			subscriptionCancelAt?: Date | null;
+			subscriptionStatus?: string | null;
 		},
 	): Promise<Donor | null> {
 		await executeVersionedUpdate(
@@ -167,6 +170,7 @@ export class DonationRepository extends IDonationRepository {
 					subscription_interval: Db.set(data.subscriptionInterval),
 					subscription_current_period_end: Db.set(data.subscriptionCurrentPeriodEnd),
 					subscription_cancel_at: Db.set(data.subscriptionCancelAt ?? null),
+					subscription_status: Db.set(data.subscriptionStatus ?? null),
 					updated_at: Db.set(new Date()),
 				};
 				if (data.businessName !== undefined) {
@@ -206,6 +210,84 @@ export class DonationRepository extends IDonationRepository {
 		return this.findDonorByEmail(email);
 	}
 
+	async updateDonorCustomerDetails(
+		email: string,
+		data: {
+			stripeCustomerId: string | null;
+			businessName?: string | null;
+			taxId?: string | null;
+			taxIdType?: string | null;
+		},
+	): Promise<Donor | null> {
+		await executeVersionedUpdate(
+			() => fetchOne<DonorRow>(FETCH_DONOR_BY_EMAIL_QUERY, {email}),
+			() => {
+				const patch: PatchObject = {
+					stripe_customer_id: Db.set(data.stripeCustomerId),
+					updated_at: Db.set(new Date()),
+				};
+				if (data.businessName !== undefined) {
+					patch.business_name = Db.set(data.businessName);
+				}
+				if (data.taxId !== undefined) {
+					patch.tax_id = Db.set(data.taxId);
+				}
+				if (data.taxIdType !== undefined) {
+					patch.tax_id_type = Db.set(data.taxIdType);
+				}
+				return {
+					pk: {email},
+					patch,
+				};
+			},
+			Donors,
+		);
+		if (data.stripeCustomerId) {
+			await upsertOne(
+				DonorsByStripeCustomerId.upsertAll({
+					stripe_customer_id: data.stripeCustomerId,
+					email,
+				}),
+			);
+		}
+		return this.findDonorByEmail(email);
+	}
+
+	async linkDonorStripeCustomer(email: string, stripeCustomerId: string): Promise<void> {
+		await upsertOne(
+			DonorsByStripeCustomerId.upsertAll({
+				stripe_customer_id: stripeCustomerId,
+				email,
+			}),
+		);
+	}
+
+	async clearDonorStripeCustomer(stripeCustomerId: string): Promise<void> {
+		const donor = await this.findDonorByStripeCustomerId(stripeCustomerId);
+		if (!donor) {
+			return;
+		}
+		if (donor.stripeCustomerId === stripeCustomerId) {
+			await executeVersionedUpdate(
+				() => fetchOne<DonorRow>(FETCH_DONOR_BY_EMAIL_QUERY, {email: donor.email}),
+				() => ({
+					pk: {email: donor.email},
+					patch: {
+						stripe_customer_id: Db.clear(),
+						updated_at: Db.set(new Date()),
+					},
+				}),
+				Donors,
+			);
+		}
+		await deleteOneOrMany(
+			DonorsByStripeCustomerId.deleteByPk({
+				stripe_customer_id: stripeCustomerId,
+				email: donor.email,
+			}),
+		);
+	}
+
 	async cancelDonorSubscription(email: string): Promise<void> {
 		const current = await this.findDonorByEmail(email);
 		if (!current) {
@@ -223,6 +305,7 @@ export class DonationRepository extends IDonationRepository {
 					subscription_interval: Db.clear(),
 					subscription_current_period_end: Db.clear(),
 					subscription_cancel_at: Db.clear(),
+					subscription_status: Db.clear(),
 					updated_at: Db.set(new Date()),
 				},
 			}),
@@ -236,6 +319,15 @@ export class DonationRepository extends IDonationRepository {
 				}),
 			);
 		}
+	}
+
+	async deleteDonorSubscriptionMapping(stripeSubscriptionId: string, email: string): Promise<void> {
+		await deleteOneOrMany(
+			DonorsByStripeSubscriptionId.deleteByPk({
+				stripe_subscription_id: stripeSubscriptionId,
+				email,
+			}),
+		);
 	}
 
 	async createMagicLinkToken(token: DonorMagicLinkToken): Promise<void> {

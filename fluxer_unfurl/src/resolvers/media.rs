@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::direct_media::{MediaKind, detect_media_kind};
-use crate::media_proxy::{MediaProxyClient, embed_media_flags};
+use crate::media_proxy::{MediaMetadata, MediaProxyClient, embed_media_flags};
 use crate::types::{EmbedMedia, MessageEmbed, NsfwMode};
 use url::Url;
 
@@ -71,9 +71,28 @@ pub async fn build_direct_media_embed(
     nsfw_mode: NsfwMode,
     kind: MediaKind,
 ) -> anyhow::Result<MessageEmbed> {
-    let url_str = url.to_string();
     let nsfw_str = MediaProxyClient::nsfw_mode_str(nsfw_mode);
-    let meta = media_proxy.get_metadata(&url_str, nsfw_str).await?;
+    let meta = media_proxy.get_metadata(url.as_str(), nsfw_str).await?;
+    Ok(media_embed(url, &meta, kind))
+}
+
+pub async fn build_own_media_embed(
+    media_proxy: &MediaProxyClient,
+    url: &Url,
+    nsfw_mode: NsfwMode,
+) -> anyhow::Result<Option<MessageEmbed>> {
+    let nsfw_str = MediaProxyClient::nsfw_mode_str(nsfw_mode);
+    let meta = media_proxy.get_metadata(url.as_str(), nsfw_str).await?;
+    let Some(kind) =
+        media_kind_from_content_type(&meta.content_type).or_else(|| detect_media_kind(url))
+    else {
+        return Ok(None);
+    };
+    Ok(Some(media_embed(url, &meta, kind)))
+}
+
+fn media_embed(url: &Url, meta: &MediaMetadata, kind: MediaKind) -> MessageEmbed {
+    let url_str = url.to_string();
     let media = EmbedMedia {
         url: Some(url_str.clone()),
         content_type: Some(meta.content_type.clone()),
@@ -82,7 +101,7 @@ pub async fn build_direct_media_embed(
         height: meta.height,
         placeholder: meta.placeholder.clone(),
         duration: meta.duration.map(|duration| duration as u32),
-        flags: embed_media_flags(&meta),
+        flags: embed_media_flags(meta),
         ..Default::default()
     };
 
@@ -104,7 +123,7 @@ pub async fn build_direct_media_embed(
         }
     };
     embed.url = Some(url_str);
-    Ok(embed)
+    embed
 }
 
 #[cfg(test)]

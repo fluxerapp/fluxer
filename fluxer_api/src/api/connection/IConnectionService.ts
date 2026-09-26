@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import type {BlueskyCallbackResult} from '@app/api/bluesky/IBlueskyOAuthService';
+import type {UpdateConnectionParams} from '@app/api/connection/IConnectionRepository';
+import type {UserConnectionRow} from '@app/api/database/types/ConnectionTypes';
 import type {ConnectionType} from '@fluxer/constants/src/ConnectionConstants';
-import type {UserID} from '../BrandedTypes';
-import type {UserConnectionRow} from '../database/types/ConnectionTypes';
-import type {UpdateConnectionParams} from './IConnectionRepository';
 
 export type InitiateConnectionResult = Record<string, never>;
 
@@ -33,18 +34,7 @@ export abstract class IConnectionService {
 
 	abstract deleteConnection(userId: UserID, connectionType: ConnectionType, connectionId: string): Promise<void>;
 
-	abstract verifyConnection(
-		userId: UserID,
-		connectionType: ConnectionType,
-		connectionId: string,
-	): Promise<UserConnectionRow>;
-
 	abstract reorderConnections(userId: UserID, connectionIds: Array<string>): Promise<void>;
 
-	abstract revalidateConnection(connection: UserConnectionRow): Promise<{
-		isValid: boolean;
-		updateParams: UpdateConnectionParams | null;
-	}>;
-
-	abstract createOrUpdateBlueskyConnection(userId: UserID, did: string, handle: string): Promise<UserConnectionRow>;
+	abstract createOrUpdateBlueskyConnection(result: BlueskyCallbackResult): Promise<UserConnectionRow>;
 }

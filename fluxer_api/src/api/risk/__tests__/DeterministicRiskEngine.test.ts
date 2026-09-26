@@ -1,11 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {setInjectedAccountPolicyEvaluator} from '@app/api/risk/AccountPolicyService';
+import {DeterministicRiskEngine} from '@app/api/risk/DeterministicRiskEngine';
+import type {RiskToolbox} from '@app/api/risk/RiskToolbox';
+import {
+	type IpInfoAnonymousResult,
+	RecommendedAction,
+	type RegistrationEvent,
+	RiskLevel,
+} from '@app/api/risk/RiskTypes';
+import {createCurrentBehaviorTestAccountPolicyEvaluator} from '@app/api/test/AccountPolicyTestEvaluator';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
-import {createCurrentBehaviorTestAccountPolicyEvaluator} from '../../test/AccountPolicyTestEvaluator';
-import {setInjectedAccountPolicyEvaluator} from '../AccountPolicyService';
-import {DeterministicRiskEngine} from '../DeterministicRiskEngine';
-import type {RiskToolbox} from '../RiskToolbox';
-import {type IpInfoAnonymousResult, RecommendedAction, type RegistrationEvent, RiskLevel} from '../RiskTypes';
 
 const BASE_EVENT: RegistrationEvent = {
 	email: null,

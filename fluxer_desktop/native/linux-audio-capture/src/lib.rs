@@ -228,12 +228,11 @@ fn retain_screen_audio_sink_handle(
             "DirectAudioCapture.setScreenAudioSink received an empty native external sink handle",
         ));
     }
-    let handle = unsafe {
-        NativeScreenFrameSinkHandle::retain_from_raw(data.cast::<NativeScreenFrameSinkHandle>())
-    }
-    .ok_or_else(|| {
-        generic_error("DirectAudioCapture.setScreenAudioSink received an invalid handle")
-    })?;
+    let handle = unsafe { data.cast::<NativeScreenFrameSinkHandle>().as_ref() }
+        .and_then(NativeScreenFrameSinkHandle::retain_ref)
+        .ok_or_else(|| {
+            generic_error("DirectAudioCapture.setScreenAudioSink received an invalid handle")
+        })?;
     Ok(Arc::new(handle))
 }
 

@@ -8,10 +8,13 @@ MEASUREMENT_TIME="${BENCH_MEASUREMENT_TIME:-5}"
 WARM_UP_TIME="${BENCH_WARM_UP_TIME:-2}"
 
 log() { printf '[check-regression] %s\n' "$*" >&2; }
-fail() { log "ERROR: $*"; exit 1; }
+fail() {
+	log "ERROR: $*"
+	exit 1
+}
 
 if [ "$#" -ne 2 ]; then
-  fail "usage: $0 <crate-path> <bench-name>"
+	fail "usage: $0 <crate-path> <bench-name>"
 fi
 
 CRATE_PATH="$1"
@@ -29,14 +32,14 @@ trap 'rm -f "$LOG_FILE"' EXIT
 
 log "running cargo bench --bench $BENCH_NAME in $CRATE_PATH"
 (
-  cd "$CRATE_PATH"
-  cargo bench --bench "$BENCH_NAME" -- \
-    --warm-up-time "$WARM_UP_TIME" \
-    --measurement-time "$MEASUREMENT_TIME"
+	cd "$CRATE_PATH"
+	cargo bench --bench "$BENCH_NAME" -- \
+		--warm-up-time "$WARM_UP_TIME" \
+		--measurement-time "$MEASUREMENT_TIME"
 ) >"$LOG_FILE" 2>&1 || {
-  tail -50 "$LOG_FILE" >&2
-  fail "cargo bench failed; see log above"
+	tail -50 "$LOG_FILE" >&2
+	fail "cargo bench failed; see log above"
 }
 
 BUDGET_PERCENT="$BUDGET" BASELINE_PATH="$BASELINE" \
-  python3 "$(dirname "$0")/_compare_criterion.py" "$LOG_FILE"
+	python3 "$(dirname "$0")/_compare_criterion.py" "$LOG_FILE"

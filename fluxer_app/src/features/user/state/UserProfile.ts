@@ -24,26 +24,30 @@ class UserProfile {
 	}
 
 	handleGatewayReady(): void {
-		Object.values(this.profileTimeouts).forEach(clearTimeout);
-		this.profiles = {};
-		this.profileTimeouts = {};
+		this.clearAllProfiles();
 	}
 
 	handleProfileInvalidate(userId: string, guildId?: string): void {
 		const targetGuildId = guildId ?? ME;
 		this.clearProfileTimeout(userId, targetGuildId);
-		const userProfiles = this.profiles[userId];
-		if (!userProfiles) return;
-		const {[targetGuildId]: _, ...remainingGuildProfiles} = userProfiles;
-		if (Object.keys(remainingGuildProfiles).length === 0) {
-			const {[userId]: __, ...remainingProfiles} = this.profiles;
-			this.profiles = remainingProfiles;
-		} else {
-			this.profiles = {
-				...this.profiles,
-				[userId]: remainingGuildProfiles,
-			};
-		}
+		this.removeProfile(userId, targetGuildId);
+	}
+
+	handleGuildMemberAdd(userId: string): void {
+		this.clearUserProfiles(userId);
+	}
+
+	handleGuildMemberRemove(userId: string): void {
+		this.clearUserProfiles(userId);
+	}
+
+	handleGuildCreate(): void {
+		this.clearAllProfiles();
+	}
+
+	handleGuildDelete(unavailable?: boolean): void {
+		if (unavailable) return;
+		this.clearAllProfiles();
 	}
 
 	handleProfileCreate(profile: Profile): void {
@@ -82,6 +86,37 @@ class UserProfile {
 		this.profileTimeouts = updatedTimeouts;
 	}
 
+	private clearAllProfiles(): void {
+		Object.values(this.profileTimeouts).forEach(clearTimeout);
+		this.profiles = {};
+		this.profileTimeouts = {};
+	}
+
+	private clearUserProfiles(userId: string): void {
+		const userProfiles = this.profiles[userId];
+		if (!userProfiles) return;
+		for (const guildId of Object.keys(userProfiles)) {
+			this.clearProfileTimeout(userId, guildId);
+		}
+		const {[userId]: _, ...remainingProfiles} = this.profiles;
+		this.profiles = remainingProfiles;
+	}
+
+	private removeProfile(userId: string, guildId: string): void {
+		const userProfiles = this.profiles[userId];
+		if (!userProfiles) return;
+		const {[guildId]: _, ...remainingGuildProfiles} = userProfiles;
+		if (Object.keys(remainingGuildProfiles).length === 0) {
+			const {[userId]: __, ...remainingProfiles} = this.profiles;
+			this.profiles = remainingProfiles;
+		} else {
+			this.profiles = {
+				...this.profiles,
+				[userId]: remainingGuildProfiles,
+			};
+		}
+	}
+
 	private createTimeoutKey(userId: string, guildId: string): string {
 		return `${userId}:${guildId}`;
 	}
@@ -101,23 +136,8 @@ class UserProfile {
 		this.clearProfileTimeout(userId, guildId);
 		const timeout = setTimeout(() => {
 			runInAction(() => {
-				const userProfiles = this.profiles[userId];
-				if (!userProfiles) {
-					const {[timeoutKey]: _, ...remainingTimeouts} = this.profileTimeouts;
-					this.profileTimeouts = remainingTimeouts;
-					return;
-				}
-				const {[guildId]: _, ...remainingGuildProfiles} = userProfiles;
-				if (Object.keys(remainingGuildProfiles).length === 0) {
-					const {[userId]: __, ...remainingProfiles} = this.profiles;
-					this.profiles = remainingProfiles;
-				} else {
-					this.profiles = {
-						...this.profiles,
-						[userId]: remainingGuildProfiles,
-					};
-				}
-				const {[timeoutKey]: ___, ...remainingTimeouts} = this.profileTimeouts;
+				this.removeProfile(userId, guildId);
+				const {[timeoutKey]: _, ...remainingTimeouts} = this.profileTimeouts;
 				this.profileTimeouts = remainingTimeouts;
 			});
 		}, PROFILE_TIMEOUT_MS);

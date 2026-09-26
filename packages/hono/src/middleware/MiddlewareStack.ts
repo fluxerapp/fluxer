@@ -13,7 +13,7 @@ import {requestId} from '@fluxer/hono/src/middleware/RequestId';
 import type {LogFunction, RequestLoggerOptions} from '@fluxer/hono/src/middleware/RequestLogger';
 import {requestLogger} from '@fluxer/hono/src/middleware/RequestLogger';
 import {fluxerVersionHeader} from '@fluxer/hono/src/middleware/VersionHeader';
-import type {Context, Env, Hono, MiddlewareHandler} from 'hono';
+import type {Env, Hono, MiddlewareHandler} from 'hono';
 
 interface MiddlewareStackOptions {
 	requestId?: RequestIdOptions;
@@ -38,7 +38,7 @@ interface ApplyMiddlewareStackOptions extends MiddlewareStackOptions {
 	skipErrorHandler?: boolean;
 }
 
-export function createStandardMiddlewareStack(options: MiddlewareStackOptions = {}): Array<MiddlewareHandler> {
+function createStandardMiddlewareStack(options: MiddlewareStackOptions = {}): Array<MiddlewareHandler> {
 	const stack: Array<MiddlewareHandler> = [fluxerVersionHeader()];
 	if (options.requestId) {
 		stack.push(requestId(options.requestId));
@@ -89,37 +89,4 @@ export function applyMiddlewareStack<E extends Env = Env>(
 		const errorHandler = createErrorHandler(options.errorHandler ?? {});
 		app.onError(errorHandler);
 	}
-}
-
-export function createDefaultLogger(options: {serviceName: string; skip?: Array<string>}): LogFunction {
-	return (data) => {
-		if (options.skip?.includes(data.path)) {
-			return;
-		}
-		console.log(
-			JSON.stringify({
-				service: options.serviceName,
-				method: data.method,
-				path: data.path,
-				status: data.status,
-				durationMs: data.durationMs,
-				timestamp: new Date().toISOString(),
-			}),
-		);
-	};
-}
-
-export function createDefaultErrorLogger(options: {serviceName: string}): (error: Error, context: Context) => void {
-	return (error: Error, context: Context) => {
-		console.error(
-			JSON.stringify({
-				service: options.serviceName,
-				error: error.message,
-				stack: error.stack,
-				path: context.req.path,
-				method: context.req.method,
-				timestamp: new Date().toISOString(),
-			}),
-		);
-	};
 }

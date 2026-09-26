@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {MuteConfig} from '../database/types/UserTypes';
+import type {MuteConfig} from '@app/api/database/types/UserTypes';
 
 export class MuteConfiguration {
 	readonly endTime: Date | null;

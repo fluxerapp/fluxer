@@ -1,23 +1,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import type {IDonationRepository} from '@app/api/donation/IDonationRepository';
+import type {Donor} from '@app/api/donation/models/Donor';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import {Logger} from '@app/api/Logger';
+import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
+import type {GiftCode} from '@app/api/models/GiftCode';
+import type {User} from '@app/api/models/User';
+import {extractId} from '@app/api/stripe/StripeUtils';
+import type {StripeGiftReversalHandler} from '@app/api/stripe/services/StripeGiftReversalHandler';
+import type {StripePaymentFraudService} from '@app/api/stripe/services/StripePaymentFraudService';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {clearPendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
+import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {PremiumFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
 import type {IEmailService} from '@pkgs/email/src/IEmailService';
 import type Stripe from 'stripe';
-import type {IDonationRepository} from '../../donation/IDonationRepository';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {KVAccountDeletionQueueService} from '../../infrastructure/KVAccountDeletionQueueService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import {Logger} from '../../Logger';
-import type {GiftCode} from '../../models/GiftCode';
-import type {User} from '../../models/User';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {clearPendingDeletion} from '../../user/services/PendingDeletionCoordinator';
-import {mapUserToPrivateResponse} from '../../user/UserMappers';
-import {extractId} from '../StripeUtils';
-import type {StripeGiftReversalHandler} from './StripeGiftReversalHandler';
-import type {StripePaymentFraudService} from './StripePaymentFraudService';
+
+export const REFUND_ALLOWANCE_CLAIM_PREFIX = 'refund-allowance';
 
 export class StripeDisputeWebhookHandler {
 	constructor(
@@ -45,6 +50,14 @@ export class StripeDisputeWebhookHandler {
 		}
 		const payment = await this.userRepository.getPaymentByPaymentIntent(paymentIntentId);
 		if (!payment) {
+			const donor = await this.findDonorForDispute(dispute);
+			if (donor) {
+				Logger.info(
+					{paymentIntentId, disputeId: dispute.id, email: donor.email},
+					'Chargeback for donation customer - no premium action required',
+				);
+				return;
+			}
 			Logger.error({paymentIntentId}, 'No payment found for chargeback');
 			throw new StripeError('No payment found for chargeback');
 		}
@@ -69,6 +82,14 @@ export class StripeDisputeWebhookHandler {
 		}
 		const payment = await this.userRepository.getPaymentByPaymentIntent(paymentIntentId);
 		if (!payment) {
+			const donor = await this.findDonorForDispute(dispute);
+			if (donor) {
+				Logger.info(
+					{paymentIntentId, disputeId: dispute.id, email: donor.email},
+					'Chargeback withdrawal for donation customer - no premium action required',
+				);
+				return;
+			}
 			throw new StripeError('No payment found for chargeback withdrawal');
 		}
 		const user = await this.userRepository.findUnique(payment.userId);
@@ -76,24 +97,20 @@ export class StripeDisputeWebhookHandler {
 			throw new StripeError('User not found for chargeback withdrawal');
 		}
 		if (user.flags & UserFlags.DELETED && user.deletionReasonCode === DeletionReasons.BILLING_DISPUTE_OR_ABUSE) {
+			const updatedUser = await this.userRepository.updateDeletionSchedule(user, {
+				flags: user.flags & ~UserFlags.DELETED,
+				pending_deletion_at: null,
+				deletion_reason_code: null,
+				deletion_public_reason: null,
+				deletion_audit_log_reason: null,
+				first_refund_at: user.firstRefundAt || new Date(),
+			});
 			await clearPendingDeletion({
 				userId: payment.userId,
 				pendingDeletionAt: user.pendingDeletionAt,
 				userRepository: this.userRepository,
 				deletionQueue: this.kvDeletionQueue,
 			});
-			const updatedUser = await this.userRepository.patchUpsert(
-				payment.userId,
-				{
-					flags: user.flags & ~UserFlags.DELETED,
-					pending_deletion_at: null,
-					deletion_reason_code: null,
-					deletion_public_reason: null,
-					deletion_audit_log_reason: null,
-					first_refund_at: user.firstRefundAt || new Date(),
-				},
-				user.toRow(),
-			);
 			await this.userCacheService.setUserPartialResponseFromUser(updatedUser);
 			if (updatedUser.email) {
 				await this.emailService.sendUnbanNotification(
@@ -105,9 +122,33 @@ export class StripeDisputeWebhookHandler {
 			}
 			Logger.debug(
 				{userId: payment.userId},
-				'User unsuspended after chargeback withdrawal - 30 day purchase block applied',
+				'User unsuspended after chargeback withdrawal - 30 day self-serve refund cooldown applied',
 			);
 		}
+	}
+
+	private async resolveDisputeCustomerId(dispute: Stripe.Dispute): Promise<string | null> {
+		const expandedCharge = typeof dispute.charge === 'object' ? dispute.charge : null;
+		if (expandedCharge) {
+			const expandedCustomerId = extractId(expandedCharge.customer);
+			if (expandedCustomerId) {
+				return expandedCustomerId;
+			}
+		}
+		const chargeId = extractId(dispute.charge);
+		if (!chargeId) {
+			return null;
+		}
+		const mirroredCharge = await getBillingRepository().charges.findById(chargeId);
+		return mirroredCharge?.customer_id ?? null;
+	}
+
+	private async findDonorForDispute(dispute: Stripe.Dispute): Promise<Donor | null> {
+		const customerId = await this.resolveDisputeCustomerId(dispute);
+		if (!customerId) {
+			return null;
+		}
+		return await this.donationRepository.findDonorByStripeCustomerId(customerId);
 	}
 
 	async handleRefund(charge: Stripe.Charge): Promise<void> {
@@ -167,25 +208,94 @@ export class StripeDisputeWebhookHandler {
 			);
 			user = foundUser;
 		}
-		if (!user.firstRefundAt) {
-			const updatedUser = await this.userRepository.patchUpsert(user.id, {first_refund_at: new Date()}, user.toRow());
-			await this.dispatchUser(updatedUser);
+		const claimKeys = await this.resolveRefundAllowanceClaimKeys(charge);
+		if (claimKeys.length === 0) {
 			Logger.debug(
 				{userId: user.id, chargeId: charge.id, paymentIntentId},
-				'First refund recorded - 30 day purchase block applied',
+				'Refund was issued by Fluxer - not counted against the user refund allowance',
 			);
-		} else {
-			const updatedUser = await this.userRepository.patchUpsert(
-				user.id,
-				{premium_flags: user.premiumFlags | PremiumFlags.PURCHASE_DISABLED},
-				user.toRow(),
-			);
-			await this.dispatchUser(updatedUser);
-			Logger.debug(
-				{userId: user.id, chargeId: charge.id, paymentIntentId},
-				'Second refund recorded - permanent purchase block applied',
-			);
+			return;
 		}
+		const claimedKeys: Array<string> = [];
+		let alreadyCounted = false;
+		for (const claimKey of claimKeys) {
+			const claim = await getBillingRepository().webhookEvents.tryClaim(claimKey);
+			if (claim === 'claimed') {
+				claimedKeys.push(claimKey);
+			} else {
+				alreadyCounted = true;
+			}
+		}
+		if (alreadyCounted) {
+			for (const claimKey of claimedKeys) {
+				await getBillingRepository().webhookEvents.markProcessed(claimKey);
+			}
+			Logger.debug(
+				{userId: user.id, chargeId: charge.id, paymentIntentId, claimKeys},
+				'Refund already counted against the user refund allowance',
+			);
+			return;
+		}
+		const isFirstRefund = !user.firstRefundAt;
+		const patch: Partial<UserRow> = isFirstRefund
+			? {first_refund_at: new Date()}
+			: {premium_flags: user.premiumFlags | PremiumFlags.PURCHASE_DISABLED};
+		let updatedUser: User;
+		try {
+			updatedUser = await this.userRepository.patchUpsert(user.id, patch, user.toRow());
+		} catch (error) {
+			for (const claimKey of claimedKeys) {
+				await getBillingRepository().webhookEvents.releaseClaim(claimKey);
+			}
+			throw error;
+		}
+		for (const claimKey of claimedKeys) {
+			await getBillingRepository().webhookEvents.markProcessed(claimKey);
+		}
+		await this.dispatchUser(updatedUser);
+		Logger.debug(
+			{userId: user.id, chargeId: charge.id, paymentIntentId},
+			isFirstRefund
+				? 'First refund recorded - 30 day self-serve refund cooldown applied'
+				: 'Second refund recorded - permanent purchase block applied',
+		);
+	}
+
+	private async resolveRefundAllowanceClaimKeys(charge: Stripe.Charge): Promise<Array<string>> {
+		const chargeClaimKey = `${REFUND_ALLOWANCE_CLAIM_PREFIX}:${charge.id}`;
+		const inlined = charge.refunds?.data ?? [];
+		const refunds = (
+			inlined.length > 0
+				? inlined.map((refund) => ({
+						id: refund.id,
+						createdAtMs: refund.created * 1000,
+						status: refund.status,
+						rejectionReason: refund.metadata?.rejection_reason ?? null,
+					}))
+				: (await getBillingRepository().refunds.listByCharge(charge.id)).map((row) => ({
+						id: row.provider_id,
+						createdAtMs: row.stripe_created_at?.getTime() ?? 0,
+						status: row.status,
+						rejectionReason: row.metadata?.get('rejection_reason') ?? null,
+					}))
+		).filter((refund) => refund.status !== 'failed' && refund.status !== 'canceled');
+		if (refunds.length === 0) {
+			Logger.warn(
+				{chargeId: charge.id},
+				'No refund records found for refunded charge; counting the charge once against the user refund allowance',
+			);
+			return [chargeClaimKey];
+		}
+		const customerRefunds = refunds
+			.filter((refund) => refund.rejectionReason === null)
+			.sort((left, right) => left.createdAtMs - right.createdAtMs || left.id.localeCompare(right.id));
+		const earliest = customerRefunds[0];
+		const latest = customerRefunds[customerRefunds.length - 1];
+		if (!earliest || !latest) {
+			return [];
+		}
+		const latestClaimKey = `${REFUND_ALLOWANCE_CLAIM_PREFIX}:${latest.id}`;
+		return latest.id === earliest.id ? [chargeClaimKey, latestClaimKey] : [latestClaimKey];
 	}
 
 	private async handleGiftChargeback(giftCode: GiftCode, dispute: Stripe.Dispute): Promise<void> {

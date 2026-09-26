@@ -109,7 +109,7 @@ impl Node {
 }
 
 impl MemberOSet {
-    fn from_sorted(&mut self, mut keys: Vec<MemberKey>) {
+    fn replace_from_keys(&mut self, mut keys: Vec<MemberKey>) {
         keys.sort_unstable();
         keys.dedup();
         self.root = build_balanced(&keys);
@@ -192,7 +192,7 @@ fn from_sorted<'a>(
         return Err(Error::BadArg);
     }
     let mut set = resource.inner.lock().map_err(|_| Error::BadArg)?;
-    set.from_sorted(keys);
+    set.replace_from_keys(keys);
     Ok(atoms::ok().encode(env))
 }
 

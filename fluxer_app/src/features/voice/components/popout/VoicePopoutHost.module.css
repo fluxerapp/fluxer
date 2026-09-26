@@ -14,3 +14,24 @@
 	flex: 1 1 auto;
 	min-height: 0;
 }
+
+.standaloneUserContent {
+	display: flex;
+	flex: 1 1 auto;
+	min-height: 0;
+	align-items: center;
+	justify-content: center;
+	flex-direction: column;
+	gap: 16px;
+	color: var(--text-primary);
+}
+
+.standaloneUserName {
+	max-width: min(80%, 480px);
+	overflow: hidden;
+	font-size: 20px;
+	font-weight: 600;
+	line-height: 24px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}

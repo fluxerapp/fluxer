@@ -75,11 +75,6 @@ const YOUR_MESSAGE_COULD_NOT_BE_DELIVERED_BECAUSE_IT_DESCRIPTOR = msg({
 		'Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact support.',
 	comment: 'Label in the message queue state.',
 });
-const YOUR_MESSAGE_COULD_NOT_BE_DELIVERED_BECAUSE_IT_2_DESCRIPTOR = msg({
-	message:
-		'Your message could not be delivered because it contains mature emoji or stickers that are not allowed in this context.',
-	comment: 'Label in the message queue state.',
-});
 const logger = new Logger('MessageQueue');
 const DEFAULT_MAX_SIZE = 5;
 const DEV_MESSAGE_DELAY = 3000;
@@ -609,7 +604,7 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 	private scheduleTextareaAttachmentUploadCleanup(attachmentId: number): void {
 		window.setTimeout(() => {
 			const entry = this.textareaAttachmentUploads.get(attachmentId);
-			if (!entry || !entry.settled) {
+			if (!entry?.settled) {
 				return;
 			}
 			if (Date.now() - entry.startedAt >= TEXTAREA_ATTACHMENT_UPLOAD_CACHE_TTL_MS) {
@@ -988,7 +983,7 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 		});
 		const plans = response.body?.attachments ?? [];
 		for (const entry of plans) {
-			if (!entry || !entry.upload_mode || !entry.upload_filename || !entry.filename) {
+			if (!entry?.upload_mode || !entry.upload_filename || !entry.filename) {
 				throw new Error('Invalid presigned attachment upload response');
 			}
 			if (entry.upload_mode === 'singlepart') {
@@ -1282,14 +1277,6 @@ export class MessageQueue extends Queue<MessageQueuePayload, RestResponse<Messag
 			const systemMessage = createSystemMessage(
 				channelId,
 				i18n._(YOUR_MESSAGE_COULD_NOT_BE_DELIVERED_BECAUSE_IT_DESCRIPTOR),
-			);
-			MessageCommands.createOptimistic(channelId, systemMessage.toJSON());
-			return;
-		}
-		if (getApiErrorBody(error)?.code === APIErrorCodes.NSFW_EMOJI_STICKER_BLOCKED) {
-			const systemMessage = createSystemMessage(
-				channelId,
-				i18n._(YOUR_MESSAGE_COULD_NOT_BE_DELIVERED_BECAUSE_IT_2_DESCRIPTOR),
 			);
 			MessageCommands.createOptimistic(channelId, systemMessage.toJSON());
 			return;

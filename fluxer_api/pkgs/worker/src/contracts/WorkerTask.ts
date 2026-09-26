@@ -3,9 +3,14 @@
 import type {LoggerInterface} from '@fluxer/logger/src/LoggerInterface';
 import type {WorkerJobOptions, WorkerJobPayload} from '@pkgs/worker/src/contracts/WorkerTypes';
 
+export interface WorkerTaskAttempt {
+	readonly isLastAttempt: boolean;
+}
+
 export interface WorkerTaskHelpers {
 	logger: LoggerInterface;
 	jobId: bigint;
+	attempt?: WorkerTaskAttempt;
 	addJob: <TPayload extends WorkerJobPayload = WorkerJobPayload>(
 		taskType: string,
 		payload: TPayload,
@@ -16,10 +21,12 @@ export interface WorkerTaskHelpers {
 	setContextLink: (link: string) => Promise<void>;
 }
 
+export type WorkerTaskResult = Record<string, unknown>;
+
 export type WorkerTaskHandler<Payload = Record<string, unknown>> = (
 	payload: Payload,
 	helpers: WorkerTaskHelpers,
-) => Promise<void>;
+) => Promise<WorkerTaskResult> | Promise<void>;
 
 export class JobCancelledError extends Error {
 	constructor(message = 'Job cancelled by admin') {

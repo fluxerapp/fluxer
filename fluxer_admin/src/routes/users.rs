@@ -2,7 +2,10 @@
 
 use crate::{
     acl,
-    api::client::{AdminApiClient, ApiResultExt},
+    api::{
+        client::{AdminApiClient, ApiResult, ApiResultExt},
+        types::AdminUser,
+    },
     middleware::{auth::AuthContext, csrf::CsrfToken, flash, htmx},
     routes::user_tabs,
     state::AppState,
@@ -17,6 +20,8 @@ use axum::{
     routing::get,
 };
 use serde::Deserialize;
+
+const USER_ID_LOOKUP_BATCH: usize = 100;
 
 #[derive(Deserialize)]
 struct UserListQuery {
@@ -55,7 +60,6 @@ pub fn router() -> Router<AppState> {
         .route("/users", get(users_list))
         .route("/users/{user_id}", get(user_detail).post(user_detail_post))
         .route("/users/{user_id}/tabs/{tab}", get(user_tab))
-        .route("/users/{user_id}/peek", get(user_peek))
         .route("/users/{user_id}/fragment", get(user_peek))
 }
 
@@ -84,16 +88,12 @@ async fn users_list(
     let can_view_email = acl::has_permission(admin_acls, acl::USER_VIEW_EMAIL);
     let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
     let results = if params.has_id_lookup() {
-        let users = client
-            .lookup_users_by_ids(&params.requested_ids)
+        lookup_users_in_batches(&client, &params.requested_ids)
             .await
-            .map_err(
-                |error| tracing::warn!(%error, "admin API request failed: lookup users by ids"),
-            )
-            .unwrap_or_default();
-        Some((users, false))
+            .log_error("lookup users by ids")
+            .map(|users| (users, false))
     } else if params.has_search() {
-        let offset = params.page.saturating_mul(params.limit);
+        let offset = u64::from(params.page) * u64::from(params.limit);
         client
             .search_users(
                 params.search_query(),
@@ -105,7 +105,7 @@ async fn users_list(
             .await
             .log_error("search users")
             .map(|r| {
-                let has_more = u64::from(offset) + (r.users.len() as u64) < r.total;
+                let has_more = (r.users.len() as u64) < r.total.saturating_sub(offset);
                 (r.users, has_more)
             })
     } else {
@@ -123,6 +123,17 @@ async fn users_list(
         is_results_fragment,
     );
     Html(markup.into_string()).into_response()
+}
+
+async fn lookup_users_in_batches(
+    client: &AdminApiClient,
+    user_ids: &[String],
+) -> ApiResult<Vec<AdminUser>> {
+    let mut users = Vec::new();
+    for batch in user_ids.chunks(USER_ID_LOOKUP_BATCH) {
+        users.extend(client.lookup_users_by_ids(batch).await?);
+    }
+    Ok(users)
 }
 
 async fn user_detail(
@@ -189,7 +200,7 @@ async fn user_detail_post(
             return flash::redirect_with_flash(
                 &format!("{base}/users/{user_id}"),
                 flash,
-                config.is_production(),
+                config.secure_cookies(),
             );
         }
     };
@@ -208,7 +219,7 @@ async fn user_detail_post(
     {
         return htmx::toast_response(&outcome.flash);
     }
-    flash::redirect_with_flash(&redirect, outcome.flash, config.is_production())
+    flash::redirect_with_flash(&redirect, outcome.flash, config.secure_cookies())
 }
 
 async fn user_tab(

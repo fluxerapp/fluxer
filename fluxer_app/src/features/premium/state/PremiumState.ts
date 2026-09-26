@@ -13,6 +13,9 @@ class PremiumState {
 	}
 
 	beginLoad(userId: string): void {
+		if (this.loadedForUserId !== userId) {
+			this.state = null;
+		}
 		this.loading = true;
 		this.loadedForUserId = userId;
 	}

@@ -17,19 +17,18 @@ use serde::Deserialize;
 use super::system_actions;
 
 #[derive(Deserialize)]
-#[allow(dead_code)]
 struct GatewayQuery {
     leaderboard_limit: Option<String>,
     node_stats: Option<String>,
 }
 
 #[derive(Deserialize)]
-#[allow(dead_code)]
 struct AuditLogsQuery {
     q: Option<String>,
     admin_user_id: Option<String>,
     target_id: Option<String>,
     target_type: Option<String>,
+    access: Option<String>,
     sort_by: Option<String>,
     sort_order: Option<String>,
     limit: Option<u32>,
@@ -121,6 +120,7 @@ async fn audit_logs_page(
         admin_user_id: query.admin_user_id.as_deref().unwrap_or(""),
         target_id: query.target_id.as_deref().unwrap_or(""),
         target_type: query.target_type.as_deref().unwrap_or(""),
+        access: query.access.as_deref().unwrap_or(""),
         sort_by: query.sort_by.as_deref().unwrap_or("createdAt"),
         sort_order: query.sort_order.as_deref().unwrap_or("desc"),
         limit,
@@ -133,10 +133,11 @@ async fn audit_logs_page(
         admin_user_id: nonempty(params.admin_user_id),
         target_id: nonempty(params.target_id),
         target_type: nonempty(params.target_type),
+        access: nonempty(params.access),
         sort_by: Some(params.sort_by.to_owned()),
         sort_order: Some(params.sort_order.to_owned()),
         limit,
-        offset: current_page * limit,
+        offset: u64::from(current_page) * u64::from(limit),
     };
     let result = client
         .search_audit_logs(&search_params)

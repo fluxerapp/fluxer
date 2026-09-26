@@ -1,12 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {GENERAL_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import {
-	VOICE_DEAFEN_DESCRIPTOR,
-	VOICE_DEAFEN_SOUND_DESCRIPTOR,
-} from '@app/features/voice/utils/VoiceMessageDescriptors';
-import {msg} from '@lingui/core/macro';
-import type {SectionDefinition} from './SectionRegistryTypes';
+import type {SectionDefinition} from '@app/features/user/components/settings_utils/section_registry/SectionRegistryTypes';
 import {
 	ACCESSIBILITY_DESCRIPTOR,
 	AUDIO_2_DESCRIPTOR,
@@ -25,7 +20,12 @@ import {
 	TTS_DESCRIPTOR,
 	UNREAD_DESCRIPTOR,
 	VOLUME_DESCRIPTOR,
-} from './SharedDescriptors';
+} from '@app/features/user/components/settings_utils/section_registry/SharedDescriptors';
+import {
+	VOICE_DEAFEN_DESCRIPTOR,
+	VOICE_DEAFEN_SOUND_DESCRIPTOR,
+} from '@app/features/voice/utils/VoiceMessageDescriptors';
+import {msg} from '@lingui/core/macro';
 
 const NOTIFICATIONS_2_DESCRIPTOR = msg({
 	message: 'Notifications',
@@ -146,6 +146,7 @@ const ALERT_SOUND_DESCRIPTOR = msg({
 });
 const MUTE_DESCRIPTOR = msg({
 	message: 'Mute',
+	context: 'playback-control-action',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const MESSAGE_SOUND_DESCRIPTOR = msg({
@@ -229,7 +230,7 @@ const OUTPUT_VOLUME_DESCRIPTOR = msg({
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const PER_SOUND_VOLUME_DESCRIPTOR = msg({
-	message: 'Per sound volume',
+	message: 'Per-sound volume',
 	comment: 'Settings search synonym. Used to match this term when the user types it in the settings search bar.',
 });
 const STREAM_DESCRIPTOR = msg({

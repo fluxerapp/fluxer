@@ -1,5 +1,45 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import * as AuthPassword from '@app/api/auth/AuthPassword';
+import * as AuthSession from '@app/api/auth/AuthSession';
+import * as AuthUtility from '@app/api/auth/AuthUtility';
+import type {IRegistrationRiskEvaluator} from '@app/api/auth/services/IRegistrationRiskEvaluator';
+import {createEmailVerificationToken, createInviteCode, createUserID, type UserID} from '@app/api/BrandedTypes';
+import type {APIConfig} from '@app/api/config/APIConfig';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
+import type {KVActivityTracker} from '@app/api/infrastructure/KVActivityTracker';
+import {
+	type InstanceConfigRepository,
+	type InstanceRegistrationUrl,
+	REGISTRATION_PENDING_APPROVAL_TRAIT,
+	type RegistrationUrlClaim,
+} from '@app/api/instance/InstanceConfigRepository';
+import type {SingleCommunityService} from '@app/api/instance/SingleCommunityService';
+import type {InviteService} from '@app/api/invite/InviteService';
+import {Logger} from '@app/api/Logger';
+import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {User} from '@app/api/models/User';
+import {UserSettings} from '@app/api/models/UserSettings';
+import {countryRequiresInboundPhoneVerification, stripDisallowedPhoneFlags} from '@app/api/risk/AbusePolicy';
+import {
+	type IAccountPolicyEvaluator,
+	isAssessmentThresholdAuditEvent,
+	normalizePolicyContactDomain,
+} from '@app/api/risk/AccountPolicyEvaluator';
+import type {IRegistrationEventsRepository} from '@app/api/risk/adapters/VelocityAdapter';
+import {deferPhoneFlagsUntilCommunityJoin} from '@app/api/risk/DeferredPhoneGate';
+import type {IRiskHistoryRepository} from '@app/api/risk/HistoricalOutcomeRepository';
+import type {IRiskAssessmentRepository} from '@app/api/risk/RiskAssessmentRepository';
+import {deriveLatestRiskContext} from '@app/api/risk/RiskHistoryContext';
+import * as AgeUtils from '@app/api/utils/AgeUtils';
+import {extractEmailDomain} from '@app/api/utils/EmailDomainUtils';
+import {lookupGeoip} from '@app/api/utils/IpUtils';
+import {createRateLimitError} from '@app/api/utils/RateLimitUtils';
+import {generateRandomUsername} from '@app/api/utils/UsernameGenerator';
+import {deriveUsernameFromDisplayName} from '@app/api/utils/UsernameSuggestionUtils';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {ProfileFieldPrivacyFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -7,73 +47,28 @@ import {RegistrationClosedError} from '@fluxer/errors/src/domains/auth/Registrat
 import {RegistrationUrlInvalidError} from '@fluxer/errors/src/domains/auth/RegistrationUrlInvalidError';
 import {ContentBlockedError} from '@fluxer/errors/src/domains/content/ContentBlockedError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
-import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
 import {requireClientIp} from '@fluxer/ip_utils/src/ClientIp';
 import {getSameIpDecisionKey, getSubnet} from '@fluxer/ip_utils/src/IpAddress';
 import type {RegisterRequest} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {parseAcceptLanguage} from '@pkgs/locale/src/LocaleService';
-import type {RateLimitResult} from '@pkgs/rate_limit/src/IRateLimitService';
 import {types} from 'cassandra-driver';
 import {ms} from 'itty-time';
-import type {ApiContext} from '../ApiContext';
-import {createEmailVerificationToken, createInviteCode, createUserID, type UserID} from '../BrandedTypes';
-import type {APIConfig} from '../config/APIConfig';
-import type {IDiscriminatorService} from '../infrastructure/DiscriminatorService';
-import type {KVActivityTracker} from '../infrastructure/KVActivityTracker';
-import {
-	type InstanceConfigRepository,
-	type InstanceRegistrationUrl,
-	REGISTRATION_PENDING_APPROVAL_TRAIT,
-} from '../instance/InstanceConfigRepository';
-import type {SingleCommunityService} from '../instance/SingleCommunityService';
-import type {InviteService} from '../invite/InviteService';
-import {Logger} from '../Logger';
-import {profileSubstringBlocklistCache} from '../middleware/ProfileSubstringBlocklistCache';
-import type {RequestCache} from '../middleware/RequestCacheMiddleware';
-import type {User} from '../models/User';
-import {UserSettings} from '../models/UserSettings';
-import {countryRequiresInboundPhoneVerification} from '../risk/AbusePolicy';
-import {
-	type IAccountPolicyEvaluator,
-	isAssessmentThresholdAuditEvent,
-	normalizePolicyContactDomain,
-} from '../risk/AccountPolicyEvaluator';
-import type {IRegistrationEventsRepository} from '../risk/adapters/VelocityAdapter';
-import {deferPhoneFlagsUntilCommunityJoin} from '../risk/DeferredPhoneGate';
-import type {IRiskHistoryRepository} from '../risk/HistoricalOutcomeRepository';
-import type {IRiskAssessmentRepository} from '../risk/RiskAssessmentRepository';
-import {deriveLatestRiskContext} from '../risk/RiskHistoryContext';
-import {getUserSearchService} from '../SearchFactory';
-import * as AgeUtils from '../utils/AgeUtils';
-import {extractEmailDomain} from '../utils/EmailDomainUtils';
-import {lookupGeoip} from '../utils/IpUtils';
-import {generateRandomUsername} from '../utils/UsernameGenerator';
-import {deriveUsernameFromDisplayName} from '../utils/UsernameSuggestionUtils';
-import * as AuthPassword from './AuthPassword';
-import * as AuthSession from './AuthSession';
-import * as AuthUtility from './AuthUtility';
-import type {IRegistrationRiskEvaluator} from './services/IRegistrationRiskEvaluator';
 
 const DEFAULT_MINIMUM_AGE = 13;
 
-function getRetryAfterSeconds(result: RateLimitResult): number {
-	return result.retryAfter ?? Math.max(0, Math.ceil((result.resetTime.getTime() - Date.now()) / 1000));
-}
-
-function throwRegistrationRateLimit(result: RateLimitResult): never {
-	throw new RateLimitError({
-		retryAfter: getRetryAfterSeconds(result),
-		limit: result.limit,
-		resetTime: result.resetTime,
-	});
-}
-
 function parseDobLocalDate(dateOfBirth: string): types.LocalDate {
-	try {
-		return types.LocalDate.fromString(dateOfBirth);
-	} catch {
+	const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateOfBirth);
+	if (!match) {
 		throw InputValidationError.fromCode('date_of_birth', ValidationErrorCodes.INVALID_DATE_OF_BIRTH_FORMAT);
 	}
+	const year = Number(match[1]);
+	const month = Number(match[2]);
+	const day = Number(match[3]);
+	const probe = new Date(Date.UTC(year, month - 1, day));
+	if (probe.getUTCFullYear() !== year || probe.getUTCMonth() !== month - 1 || probe.getUTCDate() !== day) {
+		throw InputValidationError.fromCode('date_of_birth', ValidationErrorCodes.INVALID_DATE_OF_BIRTH_FORMAT);
+	}
+	return new types.LocalDate(year, month, day);
 }
 
 interface RegisterParams {
@@ -156,11 +151,11 @@ export async function register(
 		if (!dateOfBirthInput) {
 			throw InputValidationError.fromCode('date_of_birth', ValidationErrorCodes.INVALID_DATE_OF_BIRTH_FORMAT);
 		}
+		dateOfBirth = parseDobLocalDate(dateOfBirthInput);
 		const minAge = accountPolicyEvaluator.getMinimumAgeForRegion(countryCode, DEFAULT_MINIMUM_AGE);
 		if (!AuthUtility.validateAge(ctx, {dateOfBirth: dateOfBirthInput, minAge})) {
 			throw InputValidationError.fromCode('date_of_birth', ValidationErrorCodes.MUST_BE_MINIMUM_AGE, {minAge});
 		}
-		dateOfBirth = parseDobLocalDate(dateOfBirthInput);
 		isAdult = AgeUtils.isUserAdult(dateOfBirthInput);
 	}
 	if (data.password && (await AuthPassword.isPasswordPwned(ctx, data.password))) {
@@ -180,7 +175,7 @@ export async function register(
 		contactDomain = normalizePolicyContactDomain(extractEmailDomain(rawEmail));
 		const hasValidDns = await emailDnsValidation.hasValidDnsRecords(rawEmail);
 		if (!hasValidDns) {
-			throw InputValidationError.fromCode('email', ValidationErrorCodes.INVALID_EMAIL_ADDRESS);
+			throw InputValidationError.fromCode('email', ValidationErrorCodes.EMAIL_DOMAIN_CANNOT_RECEIVE_MAIL);
 		}
 		contactDomainBlocked = accountPolicyEvaluator.isBlockedRegistrationEmailDomain(contactDomain);
 		if (contactDomainBlocked) {
@@ -232,7 +227,7 @@ export async function register(
 	const userLocale = parseAcceptLanguage(acceptLanguage);
 	const passwordHash = data.password ? await AuthPassword.hashPassword(ctx, data.password) : null;
 	const flags = config.nodeEnv === 'development' ? UserFlags.STAFF : 0n;
-	let user = await users.create({
+	const userRow: UserRow = {
 		user_id: userId,
 		username,
 		discriminator,
@@ -291,7 +286,39 @@ export async function register(
 		mention_flags: null,
 		last_voice_activity_sharing_change_at: null,
 		version: 1,
-	});
+	};
+	const registrationUrlUse = await claimRegistrationUrlUse(
+		instanceConfigRepository,
+		registrationAccess.registrationUrl,
+		userId,
+	);
+	let user: User;
+	let createAttempted = false;
+	try {
+		if (registrationAccess.pendingApproval) {
+			await instanceConfigRepository.addPendingRegistration({
+				user_id: userId.toString(),
+				username: userRow.username,
+				discriminator: userRow.discriminator,
+				global_name: userRow.global_name,
+				email: rawEmail,
+				requested_at: now.toISOString(),
+				registration_url_id: registrationAccess.registrationUrl?.id ?? null,
+				client_ip: clientIp,
+			});
+		}
+		createAttempted = true;
+		user = await users.create(userRow);
+	} catch (error) {
+		if (!createAttempted) {
+			await withdrawSignupOfUncreatedAccount(instanceConfigRepository, {
+				userId,
+				registrationUrlUse,
+				pendingApproval: registrationAccess.pendingApproval,
+			});
+		}
+		throw error;
+	}
 	await users.upsertSettings(
 		UserSettings.getDefaultUserSettings({
 			userId,
@@ -335,7 +362,9 @@ export async function register(
 			action: riskResult.recommendedAction,
 		},
 	});
-	const combinedFlags = await deferPhoneFlagsUntilCommunityJoin(policyDecision.flagBits);
+	const combinedFlags = await deferPhoneFlagsUntilCommunityJoin(
+		await stripDisallowedPhoneFlags(policyDecision.flagBits, async () => countryCode),
+	);
 	const createdAt = new Date();
 	const riskContext = deriveLatestRiskContext({
 		userId: userId.toString(),
@@ -403,23 +432,9 @@ export async function register(
 			);
 		}
 	}
-	await maybeIndexUser(user);
 	if (rawEmail && emailEnabled) await maybeSendVerificationEmail(ctx, {user, email: rawEmail});
 	await users.createAuthorizedIp(userId, clientIp);
-	if (registrationAccess.registrationUrl) {
-		await instanceConfigRepository.recordRegistrationUrlUse(registrationAccess.registrationUrl.id, user.id.toString());
-	}
 	if (registrationAccess.pendingApproval) {
-		await instanceConfigRepository.addPendingRegistration({
-			user_id: user.id.toString(),
-			username: user.username,
-			discriminator: user.discriminator,
-			global_name: user.globalName,
-			email: rawEmail,
-			requested_at: now.toISOString(),
-			registration_url_id: registrationAccess.registrationUrl?.id ?? null,
-			client_ip: clientIp,
-		});
 		return {
 			registration_pending_approval: true,
 			user_id: user.id.toString(),
@@ -474,6 +489,38 @@ function shouldAttemptBootstrapAdminGrant(
 	);
 }
 
+async function claimRegistrationUrlUse(
+	instanceConfigRepository: InstanceConfigRepository,
+	registrationUrl: InstanceRegistrationUrl | null,
+	userId: UserID,
+): Promise<RegistrationUrlClaim | null> {
+	if (registrationUrl === null) return null;
+	const use = await instanceConfigRepository.claimRegistrationUrlUse(registrationUrl.id, userId.toString());
+	if (use === null) {
+		throw new RegistrationUrlInvalidError();
+	}
+	return use;
+}
+
+async function withdrawSignupOfUncreatedAccount(
+	instanceConfigRepository: InstanceConfigRepository,
+	signup: {userId: UserID; registrationUrlUse: RegistrationUrlClaim | null; pendingApproval: boolean},
+): Promise<void> {
+	try {
+		if (signup.registrationUrlUse !== null) {
+			await instanceConfigRepository.releaseRegistrationUrlUse(signup.registrationUrlUse);
+		}
+		if (signup.pendingApproval) {
+			await instanceConfigRepository.removePendingRegistration(signup.userId.toString());
+		}
+	} catch (error) {
+		Logger.warn(
+			{userId: signup.userId.toString(), registrationUrlId: signup.registrationUrlUse?.registration_url_id, error},
+			'[AuthRegistration] Failed to withdraw the registration URL use or pending approval of an account that was never created',
+		);
+	}
+}
+
 async function resolveRegistrationAccess(
 	instanceConfigRepository: InstanceConfigRepository,
 	registrationUrlCode: string | null | undefined,
@@ -497,18 +544,6 @@ async function resolveRegistrationAccess(
 		pendingApproval: registrationUrl ? registrationUrl.approval_required : registrationConfig.mode === 'approval',
 		registrationUrl,
 	};
-}
-
-async function maybeIndexUser(user: User): Promise<void> {
-	const userSearchService = getUserSearchService();
-	if (!userSearchService) return;
-	if ('indexUser' in userSearchService) {
-		try {
-			await userSearchService.indexUser(user);
-		} catch (error) {
-			Logger.error({userId: user.id, error}, 'Failed to index user in search');
-		}
-	}
 }
 
 async function maybeSendVerificationEmail(ctx: ApiContext, params: {user: User; email: string}): Promise<void> {
@@ -563,14 +598,14 @@ async function enforceRegistrationRateLimits(
 			maxAttempts: 3,
 			windowMs: ms('15 minutes'),
 		});
-		if (!emailRateLimit.allowed) throwRegistrationRateLimit(emailRateLimit);
+		if (!emailRateLimit.allowed) throw createRateLimitError(emailRateLimit);
 	}
 	const ipRateLimit = await rateLimit.checkLimit({
 		identifier: `registration:ip:${getSameIpDecisionKey(clientIp) ?? clientIp}`,
 		maxAttempts: 3,
 		windowMs: ms('1 hour'),
 	});
-	if (!ipRateLimit.allowed) throwRegistrationRateLimit(ipRateLimit);
+	if (!ipRateLimit.allowed) throw createRateLimitError(ipRateLimit);
 	const subnet = getSubnet(clientIp);
 	if (subnet) {
 		const subnetRateLimit = await rateLimit.checkLimit({
@@ -578,7 +613,7 @@ async function enforceRegistrationRateLimits(
 			maxAttempts: 15,
 			windowMs: ms('1 hour'),
 		});
-		if (!subnetRateLimit.allowed) throwRegistrationRateLimit(subnetRateLimit);
+		if (!subnetRateLimit.allowed) throw createRateLimitError(subnetRateLimit);
 	}
 }
 

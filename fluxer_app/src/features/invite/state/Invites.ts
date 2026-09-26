@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as InviteCommands from '@app/features/invite/commands/InviteCommands';
-import {isGuildInvite, isPackInvite} from '@app/features/invite/types/InviteTypes';
+import {isGuildInvite} from '@app/features/invite/types/InviteTypes';
 import type {Invite} from '@fluxer/schema/src/domains/invite/InviteSchemas';
 import {action, computed, makeAutoObservable, runInAction} from 'mobx';
 
@@ -268,13 +268,12 @@ class Invites {
 	handleInviteCreate = action((invite: Invite): void => {
 		const alive = this.filterAlive(invite);
 		if (alive === null) return;
-		if (!isPackInvite(alive)) {
-			const channelId = alive.channel.id;
-			const next = new Map(this.channelInviteCache);
-			next.set(channelId, withInvite(this.channelInviteCache.get(channelId) ?? [], alive));
-			this.channelInviteCache = next;
-			this.channelFetchStatus = new Map(this.channelFetchStatus).set(channelId, 'success');
-		}
+		const channelId = alive.channel.id;
+		this.channelInviteCache = new Map(this.channelInviteCache).set(
+			channelId,
+			withInvite(this.channelInviteCache.get(channelId) ?? [], alive),
+		);
+		this.channelFetchStatus = new Map(this.channelFetchStatus).set(channelId, 'success');
 		if (isGuildInvite(alive)) {
 			const guildId = alive.guild.id;
 			const next = new Map(this.guildInviteCache);

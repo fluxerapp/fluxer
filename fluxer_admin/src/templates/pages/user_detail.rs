@@ -22,7 +22,6 @@ use maud::{Markup, html};
 pub const USER_TABS: &[(&str, &str)] = &[
     ("overview", "Overview"),
     ("account", "Account"),
-    ("billing", "Billing"),
     ("guilds", "Guilds"),
     ("dm_history", "DM History"),
     ("group_dms", "Group DMs"),
@@ -164,21 +163,10 @@ fn render_user_detail(
     }
 }
 
-fn user_tab_visible(config: &AdminConfig, tab_id: &str, admin_acls: &[String]) -> bool {
+fn user_tab_visible(_config: &AdminConfig, tab_id: &str, admin_acls: &[String]) -> bool {
     match tab_id {
         "overview" | "account" | "guilds" | "dm_history" | "group_dms" | "reports"
         | "moderation" => true,
-        "billing" => {
-            !config.self_hosted
-                && acl::has_any_permission(
-                    admin_acls,
-                    &[
-                        acl::BILLING_VIEW,
-                        acl::BILLING_REFUND,
-                        acl::BILLING_MANAGE_SUBSCRIPTION,
-                    ],
-                )
-        }
         "relationships" => acl::has_permission(admin_acls, acl::USER_LIST_RELATIONSHIPS),
         "applications" => acl::has_permission(admin_acls, acl::APPLICATION_LIST_BY_OWNER),
         "archives" => acl::has_any_permission(

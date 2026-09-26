@@ -136,7 +136,39 @@ async fn spool_body_inner(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use bytes::Bytes;
+    use http_body::Frame;
+    use http_body_util::StreamBody;
     use tokio::io::AsyncReadExt;
+
+    const SPOOL_RESERVATION_BYTES: u64 = 600 * 1024 * 1024;
+    const SPOOL_CEILING_BYTES: u64 = 1000 * 1024 * 1024;
+
+    async fn budgeted_spool(
+        dir: &Path,
+        declared_length: Option<u64>,
+    ) -> Result<SpooledBody, SpoolError> {
+        spool_to_temp(
+            Body::from(vec![0u8; 16]),
+            declared_length,
+            SPOOL_RESERVATION_BYTES,
+            dir,
+            64 * 1024,
+            SPOOL_CEILING_BYTES,
+        )
+        .await
+    }
+
+    fn body_with_trailers(chunks: &[&[u8]]) -> Body {
+        let mut frames: Vec<Result<Frame<Bytes>, std::io::Error>> = chunks
+            .iter()
+            .map(|chunk| Ok(Frame::data(Bytes::copy_from_slice(chunk))))
+            .collect();
+        let mut trailers = http::HeaderMap::new();
+        trailers.insert("x-checksum", http::HeaderValue::from_static("deadbeef"));
+        frames.push(Ok(Frame::trailers(trailers)));
+        Body::new(StreamBody::new(futures_util::stream::iter(frames)))
+    }
 
     #[tokio::test]
     async fn spools_full_body_to_disk() {
@@ -213,5 +245,97 @@ mod tests {
             .await
             .unwrap_err();
         assert!(matches!(err, SpoolError::PayloadTooLarge));
+    }
+
+    #[tokio::test]
+    async fn concurrent_spools_share_and_release_one_total_budget() {
+        let dir = tempfile::tempdir().unwrap();
+        let held = budgeted_spool(dir.path(), None).await.unwrap();
+        assert_eq!(held.len(), 16);
+        let contended = budgeted_spool(dir.path(), None).await.unwrap_err();
+        assert!(matches!(contended, SpoolError::BudgetExhausted));
+
+        drop(held);
+        let failed = budgeted_spool(dir.path(), Some(SPOOL_RESERVATION_BYTES))
+            .await
+            .unwrap_err();
+        assert!(matches!(failed, SpoolError::PayloadShortRead));
+
+        let after_release = budgeted_spool(dir.path(), None).await.unwrap();
+        assert_eq!(after_release.len(), 16);
+    }
+
+    #[tokio::test]
+    async fn a_trailer_frame_carries_no_payload_towards_the_declared_length() {
+        let dir = tempfile::tempdir().unwrap();
+        let short = spool_to_temp(
+            body_with_trailers(&[b"hello".as_slice()]),
+            Some(8),
+            1 << 20,
+            dir.path(),
+            1024,
+            1 << 30,
+        )
+        .await
+        .unwrap_err();
+        assert!(matches!(short, SpoolError::PayloadShortRead));
+
+        let exact = spool_to_temp(
+            body_with_trailers(&[b"hel".as_slice(), b"".as_slice(), b"lo".as_slice()]),
+            Some(5),
+            1 << 20,
+            dir.path(),
+            1024,
+            1 << 30,
+        )
+        .await
+        .unwrap();
+        let (mut file, len) = exact.into_parts();
+        assert_eq!(len, 5);
+        let mut read_back = Vec::new();
+        file.read_to_end(&mut read_back).await.unwrap();
+        assert_eq!(read_back, b"hello".as_slice());
+    }
+
+    #[tokio::test]
+    async fn no_spool_file_is_ever_left_behind_in_the_spool_directory() {
+        let dir = tempfile::tempdir().unwrap();
+        for (declared, max_body_bytes, payload) in [
+            (Some(1024u64), 1 << 20, 2048usize),
+            (Some(2048), 1 << 20, 1024),
+            (None, 1024, 2048),
+        ] {
+            assert!(
+                spool_to_temp(
+                    Body::from(vec![0u8; payload]),
+                    declared,
+                    max_body_bytes,
+                    dir.path(),
+                    1024,
+                    1 << 30,
+                )
+                .await
+                .is_err()
+            );
+            assert!(spool_dir_is_empty(dir.path()).await);
+        }
+        let spooled = spool_to_temp(
+            Body::from(vec![0u8; 1024]),
+            Some(1024),
+            1 << 20,
+            dir.path(),
+            1024,
+            1 << 30,
+        )
+        .await
+        .unwrap();
+        assert!(spool_dir_is_empty(dir.path()).await);
+        drop(spooled);
+        assert!(spool_dir_is_empty(dir.path()).await);
+    }
+
+    async fn spool_dir_is_empty(dir: &Path) -> bool {
+        let mut entries = tokio::fs::read_dir(dir).await.unwrap();
+        entries.next_entry().await.unwrap().is_none()
     }
 }

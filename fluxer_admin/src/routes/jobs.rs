@@ -21,7 +21,6 @@ use axum::{
 use serde::Deserialize;
 
 #[derive(Deserialize)]
-#[allow(dead_code)]
 struct JobsQuery {
     status: Option<String>,
     task_type: Option<String>,
@@ -187,7 +186,7 @@ async fn job_detail_post(
             return flash::redirect_with_flash(
                 &format!("{base}/jobs/{job_id}"),
                 FlashData::error("Invalid form data"),
-                config.is_production(),
+                config.secure_cookies(),
             );
         }
     };
@@ -214,54 +213,41 @@ async fn job_detail_post(
     flash::redirect_with_flash(
         &format!("{base}/jobs/{job_id}"),
         flash,
-        config.is_production(),
+        config.secure_cookies(),
     )
 }
 
 fn jobs_url(config: &crate::config::AdminConfig, query: &JobsQuery) -> String {
-    let mut params = Vec::new();
-    push_query(&mut params, "status", query.status.as_deref());
-    push_query(&mut params, "task_type", query.task_type.as_deref());
-    push_query(
-        &mut params,
-        "requested_by_user_id",
-        query.requested_by_user_id.as_deref(),
-    );
-    push_query(
-        &mut params,
-        "max_lookback_days",
-        query.max_lookback_days.as_deref(),
-    );
-    push_query(
-        &mut params,
-        "cursor_bucket_day",
-        query.cursor_bucket_day.as_deref(),
-    );
-    push_query(
-        &mut params,
-        "cursor_created_at",
-        query.cursor_created_at.as_deref(),
-    );
-    push_query(&mut params, "cursor_job_id", query.cursor_job_id.as_deref());
-    if params.is_empty() {
-        return format!("{}/jobs", config.base_path);
-    }
-    let query = params
-        .iter()
-        .map(|(key, value)| {
-            format!(
-                "{}={}",
-                urlencoding::encode(key),
-                urlencoding::encode(value)
-            )
-        })
-        .collect::<Vec<_>>()
-        .join("&");
-    format!("{}/jobs?{query}", config.base_path)
-}
-
-fn push_query(params: &mut Vec<(String, String)>, key: &str, value: Option<&str>) {
-    if let Some(value) = value.filter(|value| !value.is_empty()) {
-        params.push((key.to_owned(), value.to_owned()));
+    let query = [
+        ("status", query.status.as_deref()),
+        ("task_type", query.task_type.as_deref()),
+        (
+            "requested_by_user_id",
+            query.requested_by_user_id.as_deref(),
+        ),
+        ("max_lookback_days", query.max_lookback_days.as_deref()),
+        ("cursor_bucket_day", query.cursor_bucket_day.as_deref()),
+        ("cursor_created_at", query.cursor_created_at.as_deref()),
+        ("cursor_job_id", query.cursor_job_id.as_deref()),
+    ]
+    .into_iter()
+    .filter_map(|(key, value)| {
+        value
+            .filter(|value| !value.is_empty())
+            .map(|value| (key, value))
+    })
+    .map(|(key, value)| {
+        format!(
+            "{}={}",
+            urlencoding::encode(key),
+            urlencoding::encode(value)
+        )
+    })
+    .collect::<Vec<_>>()
+    .join("&");
+    if query.is_empty() {
+        format!("{}/jobs", config.base_path)
+    } else {
+        format!("{}/jobs?{query}", config.base_path)
     }
 }

@@ -12,7 +12,6 @@ export class GuildSticker {
 	readonly tags: ReadonlyArray<string>;
 	readonly url: string;
 	readonly animated: boolean;
-	readonly nsfw: boolean;
 	readonly user?: UserPartial;
 
 	constructor(guildId: string, data: WireGuildSticker) {
@@ -27,7 +26,6 @@ export class GuildSticker {
 			size: 320,
 		});
 		this.animated = data.animated;
-		this.nsfw = data.nsfw;
 		this.user = data.user;
 	}
 
@@ -38,7 +36,6 @@ export class GuildSticker {
 			description: updates.description ?? this.description,
 			tags: updates.tags ?? [...this.tags],
 			animated: updates.animated ?? this.animated,
-			nsfw: updates.nsfw ?? this.nsfw,
 			user: updates.user ?? this.user,
 		});
 	}
@@ -51,7 +48,6 @@ export class GuildSticker {
 			this.description === other.description &&
 			JSON.stringify(this.tags) === JSON.stringify(other.tags) &&
 			this.animated === other.animated &&
-			this.nsfw === other.nsfw &&
 			this.user?.id === other.user?.id
 		);
 	}
@@ -63,7 +59,6 @@ export class GuildSticker {
 			description: this.description,
 			tags: [...this.tags],
 			animated: this.animated,
-			nsfw: this.nsfw,
 			user: this.user,
 		};
 	}

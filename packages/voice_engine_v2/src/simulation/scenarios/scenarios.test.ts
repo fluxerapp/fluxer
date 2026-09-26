@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
-import {SIMULATOR_TICK_MAX, VoiceEngineV2Simulator} from '../Simulator';
+import {SIMULATOR_TICK_MAX, VoiceEngineV2Simulator} from '@fluxer/voice_engine_v2/src/simulation/Simulator';
 import {
 	defineAsymmetricNatAfterConnectScenario,
 	defineCaptureDeviceDisconnectScenario,
@@ -9,7 +8,8 @@ import {
 	defineGpuTdrMidFrameScenario,
 	defineNetworkPartitionDuringScreenShareScenario,
 	type VoiceEngineV2SimulationScenario,
-} from './index';
+} from '@fluxer/voice_engine_v2/src/simulation/scenarios/index';
+import {describe, expect, it} from 'vitest';
 
 const SCENARIO_FACTORIES: ReadonlyArray<(seed: number) => VoiceEngineV2SimulationScenario> = [
 	defineNetworkPartitionDuringScreenShareScenario,

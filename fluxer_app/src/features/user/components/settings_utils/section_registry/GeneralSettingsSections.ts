@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {SectionDefinition} from '@app/features/user/components/settings_utils/section_registry/SectionRegistryTypes';
 import {msg} from '@lingui/core/macro';
-import type {SectionDefinition} from './SectionRegistryTypes';
 
 const PROFILE_CUSTOMIZATION_DESCRIPTOR = msg({
 	message: 'Profile customization',
@@ -14,14 +14,6 @@ const REDEEM_A_GIFT_DESCRIPTOR = msg({
 const PURCHASED_GIFTS_DESCRIPTOR = msg({
 	message: 'Purchased gifts',
 	comment: 'Settings section label for managing purchased gift codes.',
-});
-const EMOJI_PACKS_DESCRIPTOR = msg({
-	message: 'Emoji packs',
-	comment: 'Settings section label for emoji expression packs.',
-});
-const STICKER_PACKS_DESCRIPTOR = msg({
-	message: 'Sticker packs',
-	comment: 'Settings section label for sticker expression packs.',
 });
 const BLOCKED_USERS_DESCRIPTOR = msg({
 	message: 'Blocked users',
@@ -92,8 +84,6 @@ export const generalSettingsSections = [
 		keywords: [],
 		isAdvanced: false,
 	},
-	{id: 'emoji-packs', tabType: 'expression_packs', label: EMOJI_PACKS_DESCRIPTOR, keywords: [], isAdvanced: false},
-	{id: 'sticker-packs', tabType: 'expression_packs', label: STICKER_PACKS_DESCRIPTOR, keywords: [], isAdvanced: false},
 	{id: 'blocked-users', tabType: 'blocked_users', label: BLOCKED_USERS_DESCRIPTOR, keywords: [], isAdvanced: false},
 	{
 		id: 'authorized-applications',

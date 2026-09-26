@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID} from '@app/api/BrandedTypes';
+import {createChannelID, createGuildID} from '@app/api/BrandedTypes';
+import {parseJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
+import {VOICE_OCCUPANCY_REGION_KEY_PREFIX, VOICE_OCCUPANCY_SERVER_KEY_PREFIX} from '@app/api/voice/VoiceConstants';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
-import type {ChannelID, GuildID} from '../BrandedTypes';
-import {createChannelID, createGuildID} from '../BrandedTypes';
-import {parseJsonRecord} from '../utils/JsonBoundaryUtils';
-import {VOICE_OCCUPANCY_REGION_KEY_PREFIX, VOICE_OCCUPANCY_SERVER_KEY_PREFIX} from '../voice/VoiceConstants';
 
 export interface PinnedRoomServer {
 	regionId: string;
@@ -106,7 +106,7 @@ export class VoiceRoomStore {
 		const member = this.buildOccupancyMember(guildId, channelId);
 		const regionKey = `${VOICE_OCCUPANCY_REGION_KEY_PREFIX}:${regionId}`;
 		const serverKey = `${VOICE_OCCUPANCY_SERVER_KEY_PREFIX}:${regionId}:${serverId}`;
-		await this.kvClient.multi().sadd(regionKey, member).sadd(serverKey, member).exec();
+		await Promise.all([this.kvClient.sadd(regionKey, member), this.kvClient.sadd(serverKey, member)]);
 	}
 
 	private async removeOccupancy(
@@ -118,7 +118,7 @@ export class VoiceRoomStore {
 		const member = this.buildOccupancyMember(guildId, channelId);
 		const regionKey = `${VOICE_OCCUPANCY_REGION_KEY_PREFIX}:${regionId}`;
 		const serverKey = `${VOICE_OCCUPANCY_SERVER_KEY_PREFIX}:${regionId}:${serverId}`;
-		await this.kvClient.multi().srem(regionKey, member).srem(serverKey, member).exec();
+		await Promise.all([this.kvClient.srem(regionKey, member), this.kvClient.srem(serverKey, member)]);
 	}
 
 	private buildOccupancyMember(guildId: bigint | undefined, channelId: bigint): string {

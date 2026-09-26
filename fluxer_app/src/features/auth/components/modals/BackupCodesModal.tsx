@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
+import type {BackupCodesChallenge} from '@app/features/auth/commands/MfaCommands';
 import styles from '@app/features/auth/components/modals/BackupCodesModal.module.css';
 import {BackupCodesRegenerateModal} from '@app/features/auth/components/modals/BackupCodesRegenerateModal';
 import {Button} from '@app/features/ui/button/Button';
@@ -22,9 +23,10 @@ const BACKUP_CODES_DESCRIPTOR = msg({
 interface BackupCodesModalProps {
 	backupCodes: ReadonlyArray<BackupCode>;
 	user: User;
+	challenge?: BackupCodesChallenge;
 }
 
-export const BackupCodesModal = observer(({backupCodes, user}: BackupCodesModalProps) => {
+export const BackupCodesModal = observer(({backupCodes, user, challenge}: BackupCodesModalProps) => {
 	const {i18n} = useLingui();
 	return (
 		<Modal.Root size="small" centered data-flx="auth.backup-codes-modal.modal-root">
@@ -101,6 +103,7 @@ export const BackupCodesModal = observer(({backupCodes, user}: BackupCodesModalP
 									modal(() => (
 										<BackupCodesRegenerateModal
 											user={user}
+											challenge={challenge}
 											data-flx="auth.backup-codes-modal.backup-codes-regenerate-modal"
 										/>
 									)),

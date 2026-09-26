@@ -206,7 +206,14 @@ export async function startDeepLinkHandling(): Promise<void> {
 	}
 }
 
-const OFFICIAL_INTERNAL_APP_HOSTS = ['fluxer.app', 'canary.fluxer.app', 'web.fluxer.app', 'web.canary.fluxer.app'];
+const OFFICIAL_INTERNAL_APP_HOSTS = [
+	'fluxer.app',
+	'canary.fluxer.app',
+	'web.fluxer.app',
+	'web.canary.fluxer.app',
+	'fluxer.com',
+	'canary.fluxer.com',
+];
 const getNormalizedWebAppHost = (): string => {
 	try {
 		return new URL(RuntimeConfig.webAppBaseUrl).host.toLowerCase();
@@ -333,7 +340,7 @@ export function parseChannelJumpLink(url: string): ChannelJumpLink | null {
 
 export function parseMessageJumpLink(url: string): MessageJumpLink | null {
 	const segments = getChannelSegments(url);
-	if (!segments || segments.length !== 4) return null;
+	if (segments?.length !== 4) return null;
 	const [, scope, channelId, messageId] = segments;
 	if (!messageId || !isProbablyAValidSnowflake(messageId)) {
 		return null;

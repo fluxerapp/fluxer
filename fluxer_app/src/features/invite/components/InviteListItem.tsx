@@ -13,16 +13,18 @@ import * as TextCopyCommands from '@app/features/ui/commands/TextCopyCommands';
 import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import {Tooltip} from '@app/features/ui/tooltip/Tooltip';
+import {formatShortRelativeTime} from '@app/features/ui/utils/ShortRelativeTimeLabels';
 import Users from '@app/features/user/state/Users';
 import * as AvatarUtils from '@app/features/user/utils/AvatarUtils';
 import * as DateUtils from '@app/features/user/utils/DateFormatting';
+import {getCurrentLocale} from '@app/features/user/utils/LocaleUtils';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
-import {formatShortRelativeTime} from '@fluxer/date_utils/src/DateDuration';
 import type {Invite} from '@fluxer/schema/src/domains/invite/InviteSchemas';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
 import {ClipboardIcon, XIcon} from '@phosphor-icons/react';
+import {formatNumber} from '@pkgs/number_utils/src/NumberFormatting';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useMemo} from 'react';
@@ -104,26 +106,27 @@ export const InviteListItem: React.FC<{
 	const channel = showChannel ? channelFromState : null;
 	const category = showChannel && channelFromState?.parentId ? categoryFromState : null;
 	const usesText = useMemo(() => {
+		const locale = getCurrentLocale();
 		if (!guildInvite) {
-			return '0';
+			return formatNumber(0, locale);
 		}
 		const currentUses = guildInvite.uses ?? 0;
 		const maxUses = guildInvite.max_uses ?? 0;
 		if (maxUses > 0) {
-			return `${currentUses} / ${maxUses}`;
+			return `${formatNumber(currentUses, locale)} / ${formatNumber(maxUses, locale)}`;
 		}
-		return String(currentUses);
-	}, [guildInvite]);
+		return formatNumber(currentUses, locale);
+	}, [guildInvite, i18n.locale]);
 	const dateDisplay = useMemo(() => {
 		if (showCreatedDate) {
 			if (!guildInvite?.created_at) {
 				return '';
 			}
 			const createdDate = new Date(guildInvite.created_at);
-			return formatShortRelativeTime(createdDate);
+			return formatShortRelativeTime(i18n, createdDate);
 		}
 		return countdown || i18n._(NEVER_DESCRIPTOR);
-	}, [showCreatedDate, guildInvite, countdown]);
+	}, [showCreatedDate, guildInvite, countdown, i18n.locale]);
 	const dateTooltip = useMemo(() => {
 		if (showCreatedDate) {
 			if (!guildInvite?.created_at) {

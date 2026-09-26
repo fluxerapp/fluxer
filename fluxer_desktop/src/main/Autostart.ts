@@ -79,7 +79,6 @@ const AUTOSTART_LAUNCH_ARG = '--autostart';
 interface AutoLaunchConfig {
 	name: string;
 	path: string;
-	isHidden: boolean;
 	args: Array<string>;
 }
 
@@ -152,7 +151,6 @@ function getAutoLaunchConfig(): AutoLaunchConfig {
 	return {
 		name: isWindows ? WINDOWS_APP_USER_MODEL_ID : APP_NAME,
 		path: isWindows ? getWindowsLoginItemPath() : isLinux ? getStableLinuxLaunchPath() : process.execPath,
-		isHidden: false,
 		args: [AUTOSTART_LAUNCH_ARG],
 	};
 }
@@ -174,13 +172,11 @@ function getWindowsAutoLaunchConfigs(): Array<AutoLaunchConfig> {
 			configs.push({
 				name,
 				path: launchPath,
-				isHidden: false,
 				args: [AUTOSTART_LAUNCH_ARG],
 			});
 			configs.push({
 				name,
 				path: launchPath,
-				isHidden: false,
 				args: [],
 			});
 		}
@@ -289,7 +285,7 @@ export function isAutostartLaunch(): boolean {
 	}
 	if (isMac) {
 		const settings = app.getLoginItemSettings();
-		return Boolean(settings.wasOpenedAtLogin || settings.wasOpenedAsHidden);
+		return Boolean(settings.wasOpenedAtLogin);
 	}
 	return false;
 }
@@ -333,6 +329,10 @@ function tryParseDesktopEntry(contents: string): Map<string, string> {
 
 function desktopEntryBoolean(value: string | undefined): boolean {
 	return value?.trim().toLowerCase() === 'true';
+}
+
+function desktopEntryDisabled(value: string | undefined): boolean {
+	return value?.trim().toLowerCase() === 'false';
 }
 
 function parseDesktopExecCommand(value: string | undefined): string | null {
@@ -502,7 +502,6 @@ async function enableAutostart(): Promise<void> {
 	if (isMac) {
 		app.setLoginItemSettings({
 			openAtLogin: true,
-			openAsHidden: config.isHidden,
 		});
 		return;
 	}
@@ -588,7 +587,32 @@ async function isAutostartEnabled(): Promise<boolean> {
 	return false;
 }
 
+async function repairLinuxAutostartEntry(): Promise<void> {
+	if (!isLinux || isFlatpakRuntime() || isPortableMode()) return;
+	let contents: string;
+	try {
+		contents = fs.readFileSync(getLinuxDesktopFilePath(), 'utf8');
+	} catch {
+		return;
+	}
+	const entry = tryParseDesktopEntry(contents);
+	if (entry.get('StartupWMClass')?.trim() !== LINUX_STARTUP_WM_CLASS) return;
+	if (desktopEntryBoolean(entry.get('Hidden'))) return;
+	if (desktopEntryDisabled(entry.get('X-GNOME-Autostart-enabled'))) return;
+	if (linuxDesktopEntryTargetsExistingCommand(entry)) return;
+	if (!commandExists(getStableLinuxLaunchPath())) return;
+	try {
+		await enableLinuxAutostart();
+		log.info('[Autostart] Rewrote a Linux autostart entry whose command no longer exists', {
+			execPath: getStableLinuxLaunchPath(),
+		});
+	} catch (error) {
+		log.warn('[Autostart] Failed to rewrite the stale Linux autostart entry:', error);
+	}
+}
+
 export function registerAutostartHandlers(): void {
+	void repairLinuxAutostartEntry();
 	ipcMain.handle('autostart-enable', async (): Promise<void> => {
 		await enableAutostart();
 	});

@@ -1,0 +1,111 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: Unfurl
+description: Resolve a public URL into embed previews.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+Unfurl resolves one URL into the preview a message would show for it. That preview is an array of [embed](/http-api/messages/#embed-object) objects, the same objects the ordinary message path attaches.
+
+The route is user-only. Fluxer rejects a bot token and an OAuth2 bearer credential with 403 `ACCESS_DENIED`.
+
+## Site resolvers
+
+The table below lists every site resolver. Whether a site produces a preview depends on the site, and the Klipy and YouTube resolvers also require an API key configured on the instance. Other public URLs can produce previews from their page metadata or media content.
+
+| Site | Matched URL |
+| --- | --- |
+| Hacker News<sup>1</sup> | `news.ycombinator.com` with a path beginning `/item` |
+| Klipy<sup>2</sup><sup>3</sup> | `klipy.com` and `www.klipy.com` |
+| Tenor | `tenor.com` |
+| xkcd | `xkcd.com` |
+| YouTube<sup>2</sup><sup>4</sup> | `youtube.com`, `www.youtube.com`, `m.youtube.com`, `music.youtube.com`, `youtube-nocookie.com`, `www.youtube-nocookie.com`, and `youtu.be` |
+| Wikipedia<sup>5</sup> | `wikipedia.org`, `www.wikipedia.org`, and the language hosts `en`, `de`, `fr`, `es`, `it`, `ja`, `ru`, and `zh`, with a path beginning `/wiki/` |
+| Bluesky<sup>6</sup> | `bsky.app` |
+| FxTwitter<sup>7</sup> | `fxtwitter.com`, `fixupx.com`, `twittpr.com`, `xfixup.com`, and any subdomain of those |
+| Generic<sup>8</sup> | Every URL |
+
+<sup>1</sup> The item identifier is read from the `id` query parameter, and a URL that has none produces no embed
+
+<sup>2</sup> Klipy and YouTube preview URLs use their canonical provider form
+
+<sup>3</sup> Requires the instance to have a Klipy API key configured, and produces nothing without one
+
+<sup>4</sup> The URL has a video identifier of 6 through 15 characters drawn from `A-Za-z0-9_-`, and the instance needs a YouTube Data API key configured
+
+<sup>5</sup> A host whose language subdomain is outside the supported set does not match, and the article title is taken from the path after `/wiki/`
+
+<sup>6</sup> Resolves a post URL and a profile URL. Any other path on the host produces no embed
+
+<sup>7</sup> The mirror domains only. `twitter.com` and `x.com` do not match this resolver and fall through to the generic one
+
+<sup>8</sup> Builds a direct media embed when the response is an image, video, or audio asset. A final response whose status is not 200 produces no embed
+
+A resolved embed has at most one nested embed in `children`, and a nested embed has no `children` of its own.
+
+## Network policy
+
+Fluxer applies its network policy before every fetch and again to every redirect target. It refuses a URL on any of these grounds:
+
+- The URL is empty, exceeds 8192 characters, or contains a control character.
+- The scheme is neither HTTP nor HTTPS.
+- The URL has user information.
+- The port is `0`.
+- The host is not a valid public hostname.
+- The host resolves to a loopback, private, link-local, or otherwise reserved address.
+- The host resolves to no address at all.
+
+Resolution has a 12-second deadline. A fetch fails on a redirect loop, more than five redirects, or a document larger than 8 MiB.
+
+A refused or failed fetch does not by itself fail the operation. When Fluxer produces no embed, the response is 200 with an empty array.
+
+## Cache behaviour
+
+This endpoint reads no cached result and resolves the URL again. A message can show a cached preview for the same URL, or receive its preview later in a message update.
+
+## Resolve URL embeds
+
+<RouteHeader method="POST" path="/v1/unfurl" />
+
+Resolves the supplied URL. Returns an array of [embed](/http-api/messages/#embed-object) objects, empty when no resolver produces one. User-only.
+
+No permission applies.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| url<sup>1</sup><sup>2</sup><sup>3</sup> | string | Absolute HTTP or HTTPS URL (1-2048 characters) |
+
+<sup>1</sup> Trimmed before its length is measured
+
+<sup>2</sup> A normalised value outside 1 through 2048 characters has the validation code `URL_LENGTH_INVALID`, and every other rejection at this boundary has `INVALID_URL_FORMAT`
+
+<sup>3</sup> The value begins with `http://` or `https://`. Fluxer rejects a value that has embedded credentials, omits a host, uses a protocol-relative form, or ends its host with a trailing dot
+
+Outside a development instance, Fluxer also rejects a URL that omits a top-level domain.
+
+Explicit media can carry `CONTAINS_EXPLICIT_MEDIA` in its [flags](/http-api/messages/#attachment-flags). Klipy media is not classified. Message previews in channels that permit explicit media can have different flags.
+
+:::note[This route applies none of the message-path filtering]
+It resolves precisely the URL in the request body and returns the complete resolver output, with no URL extraction, no embed cap, and no banned-content scan.
+:::
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[embed](/http-api/messages/#embed-object) object] | Resolution completed, possibly with no embed |
+| 403 | [error response](/http-api/#error-response) | Caller is a bot or presents a bearer credential and the request returns `ACCESS_DENIED`, or the account has an outstanding required action and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
+| 502 | [error response](/http-api/#error-response) | The resolution service reports a failure, or answers with a payload the API cannot read, and the request returns `BAD_GATEWAY` |
+| 503 | [error response](/http-api/#error-response) | No resolution service is answering, or the service rejects the request at its concurrency limit, and the request returns `SERVICE_UNAVAILABLE` |
+| 504 | [error response](/http-api/#error-response) | The resolution service does not answer within its 12-second deadline and the request returns `GATEWAY_TIMEOUT` |
+
+### Side effects
+
+Resolution can fetch the URL and its linked media. It creates no message.
+
+### Rate limit
+
+10 requests per minute for each authenticated user, on the `unfurl:debug` bucket. Fluxer charges the bucket before it checks the credential, and keys it on the caller's address when no valid credential is present. An unauthenticated caller therefore consumes it and receives 429 `RATE_LIMITED` once it is exhausted, not 401.

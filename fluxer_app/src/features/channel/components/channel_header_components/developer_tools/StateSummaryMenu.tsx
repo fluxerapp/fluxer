@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {getActiveDeveloperOptionEntries} from '@app/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels';
 import {
 	ActiveOverrideMenuGroup,
 	BackendPremiumOverrideMenuGroup,
@@ -10,6 +11,8 @@ import {
 	humanizeDeveloperStateKey,
 	nonEmptyText,
 } from '@app/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared';
+import {setNagbarUseActual} from '@app/features/channel/components/channel_header_components/developer_tools/NagbarControls';
+import {resetAllDeveloperOptions} from '@app/features/channel/components/channel_header_components/developer_tools/ResetOptions';
 import {getNagbarControls} from '@app/features/devtools/components/NagbarControls';
 import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
 import {remFromPx} from '@app/features/theme/layout/RemFromPx';
@@ -24,9 +27,6 @@ import {Trans, useLingui} from '@lingui/react/macro';
 import {BellRingingIcon, TrashIcon, WarningCircleIcon} from '@phosphor-icons/react';
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
-import {getActiveDeveloperOptionEntries} from './DeveloperOptionLabels';
-import {setNagbarUseActual} from './NagbarControls';
-import {resetAllDeveloperOptions} from './ResetOptions';
 
 const NO_ACTIVE_OVERRIDES_DESCRIPTOR = msg({
 	message: 'No active overrides',

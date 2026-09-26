@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {canonicalizeUrl, extractUrlCandidates} from '@app/api/utils/UrlNormalizer';
 import {describe, expect, it} from 'vitest';
-import {canonicalizeUrl, extractUrlCandidates} from '../UrlNormalizer';
 
 describe('canonicalizeUrl', () => {
 	it('lowercases scheme and host', () => {

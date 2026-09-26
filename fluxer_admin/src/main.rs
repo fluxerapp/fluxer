@@ -14,7 +14,7 @@ async fn main() -> anyhow::Result<()> {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let config = AdminConfig::from_env();
+    let config = AdminConfig::from_env()?;
     let addr = format!("{}:{}", config.host, config.port);
     let router = build_router(config);
 

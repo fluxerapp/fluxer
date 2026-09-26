@@ -67,7 +67,7 @@ function keepCurrentArrayIfEqual<T>(currentItems: ReadonlyArray<T>, nextItems: R
 interface ResolveHoverDeferredItemsRequest<T> {
 	readonly currentItems: ReadonlyArray<T>;
 	readonly getKey: (item: T) => string;
-	readonly hasDeferredOrderRef: React.MutableRefObject<boolean>;
+	readonly hasDeferredOrderRef: React.RefObject<boolean>;
 	readonly isHoveringDynamicItem: boolean;
 	readonly items: ReadonlyArray<T>;
 	readonly sourceChanged: boolean;

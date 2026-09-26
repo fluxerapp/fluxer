@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
+import type {UserID} from '@app/api/BrandedTypes';
+import type {GatewayDispatchEvent} from '@app/api/constants/Gateway';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
+import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import {isJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
 import {SuspiciousActivityFlags} from '@fluxer/constants/src/UserConstants';
-import type {UserID} from '../BrandedTypes';
-import type {GatewayDispatchEvent} from '../constants/Gateway';
-import type {UserRow} from '../database/types/UserTypes';
-import {Logger} from '../Logger';
-import type {User} from '../models/User';
-import {mapUserToPrivateResponse} from '../user/UserMappers';
-import {isJsonRecord, parseJsonWithGuard} from '../utils/JsonBoundaryUtils';
 
 interface ISweegoUserRepository {
 	findByEmail(email: string): Promise<User | null>;

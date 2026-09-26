@@ -11,6 +11,7 @@ export class LivekitError extends Error {
 		super(message || 'an error has occurred');
 		this.name = 'LiveKitError';
 		this.code = code;
+
 		if (typeof options?.cause !== 'undefined') {
 			this.cause = options?.cause;
 		}
@@ -19,6 +20,7 @@ export class LivekitError extends Error {
 
 export abstract class LivekitReasonedError<Reason> extends LivekitError {
 	abstract reason: Reason;
+
 	abstract reasonName: string;
 }
 
@@ -46,41 +48,49 @@ type NotAllowed = {
 	status: number;
 	context?: unknown;
 };
+
 type InternalError = {
 	reason: ConnectionErrorReason.InternalError;
 	status: never;
 	context?: {status?: number; statusText?: string};
 };
+
 type ConnectionTimeout = {
 	reason: ConnectionErrorReason.Timeout;
 	status: never;
 	context: never;
 };
+
 type LeaveRequest = {
 	reason: ConnectionErrorReason.LeaveRequest;
 	status: never;
 	context: DisconnectReason;
 };
+
 type Cancelled = {
 	reason: ConnectionErrorReason.Cancelled;
 	status: never;
 	context: never;
 };
+
 type ServerUnreachable = {
 	reason: ConnectionErrorReason.ServerUnreachable;
 	status?: number;
 	context?: never;
 };
+
 type WebSocket = {
 	reason: ConnectionErrorReason.WebSocket;
 	status?: number;
 	context?: string;
 };
+
 type ServiceNotFound = {
 	reason: ConnectionErrorReason.ServiceNotFound;
 	status: never;
 	context: string;
 };
+
 type ConnectionErrorVariants =
 	| NotAllowed
 	| ConnectionTimeout
@@ -95,8 +105,11 @@ export class ConnectionError<
 	Variant extends ConnectionErrorVariants = ConnectionErrorVariants,
 > extends LivekitReasonedError<Variant['reason']> {
 	status?: Variant['status'];
+
 	context: Variant['context'];
+
 	reason: Variant['reason'];
+
 	reasonName: string;
 	override readonly name = 'ConnectionError';
 
@@ -166,7 +179,7 @@ export class UnsupportedServer extends LivekitError {
 	override readonly name = 'UnsupportedServer';
 
 	constructor(message?: string) {
-		super(10, message ?? 'unsupported server');
+		super(10, message || 'unsupported server');
 	}
 }
 
@@ -174,7 +187,7 @@ export class UnexpectedConnectionState extends LivekitError {
 	override readonly name = 'UnexpectedConnectionState';
 
 	constructor(message?: string) {
-		super(12, message ?? 'unexpected connection state');
+		super(12, message || 'unexpected connection state');
 	}
 }
 
@@ -182,7 +195,7 @@ export class NegotiationError extends LivekitError {
 	override readonly name = 'NegotiationError';
 
 	constructor(message?: string) {
-		super(13, message ?? 'unable to negotiate');
+		super(13, message || 'unable to negotiate');
 	}
 }
 
@@ -190,12 +203,13 @@ export class PublishDataError extends LivekitError {
 	override readonly name = 'PublishDataError';
 
 	constructor(message?: string) {
-		super(14, message ?? 'unable to publish data');
+		super(14, message || 'unable to publish data');
 	}
 }
 
 export class PublishTrackError extends LivekitError {
 	override readonly name = 'PublishTrackError';
+
 	status: number;
 
 	constructor(message: string, status: number) {
@@ -208,7 +222,9 @@ export type RequestErrorReason = Exclude<RequestResponse_Reason, RequestResponse
 
 export class SignalRequestError extends LivekitReasonedError<RequestErrorReason> {
 	override readonly name = 'SignalRequestError';
+
 	reason: RequestErrorReason;
+
 	reasonName: string;
 
 	constructor(message: string, reason: RequestErrorReason) {
@@ -220,17 +236,29 @@ export class SignalRequestError extends LivekitReasonedError<RequestErrorReason>
 
 export enum DataStreamErrorReason {
 	AlreadyOpened = 0,
+
 	AbnormalEnd = 1,
+
 	DecodeFailed = 2,
+
 	LengthExceeded = 3,
+
 	Incomplete = 4,
+
 	HandlerAlreadyRegistered = 7,
+
 	EncryptionTypeMismatch = 8,
+
+	HeaderTooLarge = 9,
+
+	PayloadTooLarge = 10,
 }
 
 export class DataStreamError extends LivekitReasonedError<DataStreamErrorReason> {
 	override readonly name = 'DataStreamError';
+
 	reason: DataStreamErrorReason;
+
 	reasonName: string;
 
 	constructor(message: string, reason: DataStreamErrorReason) {

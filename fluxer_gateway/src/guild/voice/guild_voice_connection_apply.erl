@@ -140,6 +140,4 @@ apply_same_channel_update(Update, ParsedViewerKey) ->
         needs_token => false,
         viewer_stream_keys => ParsedViewerKey
     }),
-    guild_voice_connection_util:applied_mutation_reply(
-        UpdateResult, Context, ChannelIdValue
-    ).
+    UpdateResult.

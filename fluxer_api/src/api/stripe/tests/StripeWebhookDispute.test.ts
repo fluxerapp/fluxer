@@ -1,28 +1,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {DeletionReasons} from '@fluxer/constants/src/Core';
-import {UserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createUserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {
-	createMockWebhookPayload,
-	createStripeApiHandlers,
-	type StripeWebhookEventData,
-} from '../../test/msw/handlers/StripeApiHandlers';
-import {server} from '../../test/msw/server';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import {PaymentRepository} from '../../user/repositories/PaymentRepository';
-import {UserRepository} from '../../user/repositories/UserRepository';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createUserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
 import {
 	mockStripeWebhookSecret,
 	restoreStripeWebhookSecret,
 	setupSyncStripeWebhookWorker,
-} from './StripeWebhookTestUtils';
+} from '@app/api/stripe/tests/StripeWebhookTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {
+	createMockWebhookPayload,
+	createStripeApiHandlers,
+	type StripeWebhookEventData,
+} from '@app/api/test/msw/handlers/StripeApiHandlers';
+import {server} from '@app/api/test/msw/server';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
+import {UserRepository} from '@app/api/user/repositories/UserRepository';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {DeletionReasons} from '@fluxer/constants/src/Core';
+import {UserFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 interface UserDataExistsResponse {
 	user_exists: boolean;
@@ -468,21 +468,14 @@ describe('Stripe Webhook Dispute Events', () => {
 				checkout_session_id: 'cs_test_dispute_won',
 				payment_intent_id: paymentIntentId,
 			});
-			await createBuilderWithoutAuth(harness)
-				.patch(`/test/users/${purchaser.userId}/flags`)
-				.body({flags: Number(UserFlags.DELETED)})
-				.execute();
 			const userRepository = new UserRepository();
 			const userId = createUserID(BigInt(purchaser.userId));
-			const user = await userRepository.findUnique(userId);
-			await userRepository.patchUpsert(
-				userId,
-				{
-					deletion_reason_code: DeletionReasons.BILLING_DISPUTE_OR_ABUSE,
-					pending_deletion_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-				},
-				user!.toRow(),
-			);
+			const user = await userRepository.findUniqueAssert(userId);
+			await userRepository.updateDeletionSchedule(user, {
+				flags: (user.flags | UserFlags.DELETED) & ~UserFlags.SELF_DELETED,
+				deletion_reason_code: DeletionReasons.BILLING_DISPUTE_OR_ABUSE,
+				pending_deletion_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+			});
 			const userBeforeWin = await createBuilderWithoutAuth<UserDataExistsResponse>(harness)
 				.get(`/test/users/${purchaser.userId}/data-exists`)
 				.execute();
@@ -523,21 +516,14 @@ describe('Stripe Webhook Dispute Events', () => {
 				checkout_session_id: 'cs_test_dispute_lost',
 				payment_intent_id: paymentIntentId,
 			});
-			await createBuilderWithoutAuth(harness)
-				.patch(`/test/users/${purchaser.userId}/flags`)
-				.body({flags: Number(UserFlags.DELETED)})
-				.execute();
 			const userRepository = new UserRepository();
 			const userId = createUserID(BigInt(purchaser.userId));
-			const user = await userRepository.findUnique(userId);
-			await userRepository.patchUpsert(
-				userId,
-				{
-					deletion_reason_code: DeletionReasons.BILLING_DISPUTE_OR_ABUSE,
-					pending_deletion_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-				},
-				user!.toRow(),
-			);
+			const user = await userRepository.findUniqueAssert(userId);
+			await userRepository.updateDeletionSchedule(user, {
+				flags: (user.flags | UserFlags.DELETED) & ~UserFlags.SELF_DELETED,
+				deletion_reason_code: DeletionReasons.BILLING_DISPUTE_OR_ABUSE,
+				pending_deletion_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+			});
 			const eventData: StripeWebhookEventData = {
 				type: 'charge.dispute.closed',
 				data: {

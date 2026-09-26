@@ -1,13 +1,41 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ScreenshareResolution, StreamingMode} from '@app/features/voice/state/VoiceSettings';
 import {
 	canRestartDisplayShareWithoutPreselectedSource,
 	type DisplayShareEnvironment,
 	prestartAudioToggleIsPickerOwned,
 } from '@app/features/voice/utils/ScreenShareEnvironment';
-import type {StreamSettingsShareContext} from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
+import {
+	normaliseResolutionForContext,
+	normaliseStreamingModeForContext,
+	resolveScreenShareQualityPick,
+	type ScreenShareContext,
+	type ScreenShareQualityInput,
+	type ScreenShareQualityPatch,
+	type ScreenShareQualityPick,
+	type ScreenShareTarget,
+	SUPPORTED_SCREEN_SHARE_FRAME_RATES,
+	type SupportedScreenShareFrameRate,
+} from '@app/features/voice/utils/ScreenShareOptions';
+import {
+	canSelectManualAudioSources,
+	manualAudioSourcesGovernShare,
+	resolveWindowShareAudioScope,
+	type ScreenShareAudioSourceMode,
+	type StreamSettingsShareContext,
+	selectAppShareAudioRoute,
+	type WindowShareAudioScope,
+} from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
 import type {NativeAudioAvailability} from '@app/types/electron.d';
-import {getInitialSnapshot, setup, transition} from 'xstate';
+import {msg} from '@lingui/core/macro';
+import {initialTransition, setup, transition} from 'xstate';
+
+export const CAPTURE_DEVICES_USE_THE_GAMING_PRESET_DESCRIPTOR = msg({
+	message: 'Capture devices use the Gaming preset.',
+	comment:
+		'Note shown beside the stored Screen share preset in the stream settings menu and the video settings tab of a capture device share, explaining why that preset is not used.',
+});
 
 export type StreamSettingsAudioControlStateValue =
 	| 'hidden'
@@ -15,10 +43,12 @@ export type StreamSettingsAudioControlStateValue =
 	| 'prestartNativePickerOwned'
 	| 'restartRequired'
 	| 'toggle';
-export type StreamSettingsAudioControlLabelKey = 'captureAppAudio' | 'captureDesktopAudio' | 'captureDeviceAudio';
-export type StreamSettingsAudioControlHintKey = 'nativeAudioUnsupported' | 'prestartNativePicker' | 'restartRequired';
-export type StreamSettingsNativeAudioUnsupportedScope = 'process' | 'system';
-export type StreamSettingsNativePickerNoticeKey = 'browserManagedDesktopAudio' | 'systemManagedDesktopAudio';
+export type StreamSettingsAudioControlLabelKey =
+	| 'captureAppAudio'
+	| 'captureDesktopAudio'
+	| 'captureDeviceAudio'
+	| 'captureSystemAudio';
+type StreamSettingsNativeAudioUnsupportedScope = 'process' | 'system';
 
 export interface StreamSettingsNativeAudioSignals {
 	shareContext: StreamSettingsShareContext;
@@ -32,23 +62,20 @@ export interface StreamSettingsAudioControlSignals extends StreamSettingsNativeA
 	supportsStreamAudio: boolean;
 	captureAudioEnabled: boolean;
 	hasLiveScreenShareAudioPublication: boolean;
+	audioSourceMode?: ScreenShareAudioSourceMode;
+	selectedAudioSourceCount?: number;
+	windowAudioScope?: WindowShareAudioScope;
 }
 
 export interface StreamSettingsAudioControlViewState {
 	value: StreamSettingsAudioControlStateValue;
-	visible: boolean;
-	disabled: boolean;
 	checked: boolean;
 	labelKey: StreamSettingsAudioControlLabelKey;
-	hintKey: StreamSettingsAudioControlHintKey | null;
 }
 
 export interface StreamSettingsAudioMenuViewState {
 	control: StreamSettingsAudioControlViewState;
-	nativeAudioUnsupportedScope: StreamSettingsNativeAudioUnsupportedScope | null;
-	showNativePickerNotice: boolean;
-	nativePickerNoticeKey: StreamSettingsNativePickerNoticeKey | null;
-	showLinuxAudioControls: boolean;
+	showManualAudioSources: boolean;
 	showDeviceAudioMenu: boolean;
 }
 
@@ -57,7 +84,7 @@ type StreamSettingsAudioControlEvent = {
 	signals: StreamSettingsAudioControlSignals;
 };
 
-export function selectStreamSettingsNativeAudioUnsupportedScope(
+function selectStreamSettingsNativeAudioUnsupportedScope(
 	shareContext: StreamSettingsShareContext,
 ): StreamSettingsNativeAudioUnsupportedScope | null {
 	if (shareContext === 'app') return 'process';
@@ -65,7 +92,7 @@ export function selectStreamSettingsNativeAudioUnsupportedScope(
 	return null;
 }
 
-export function selectStreamSettingsNativeAudioUnsupportedOnThisOs(signals: StreamSettingsNativeAudioSignals): boolean {
+function selectStreamSettingsNativeAudioUnsupportedOnThisOs(signals: StreamSettingsNativeAudioSignals): boolean {
 	const scope = selectStreamSettingsNativeAudioUnsupportedScope(signals.shareContext);
 	return (
 		scope != null &&
@@ -139,7 +166,7 @@ export function selectStreamSettingsAudioControlState(
 ): StreamSettingsAudioControlStateValue {
 	const [snapshot] = transition(
 		streamSettingsAudioControlStateMachine,
-		getInitialSnapshot(streamSettingsAudioControlStateMachine),
+		initialTransition(streamSettingsAudioControlStateMachine)[0],
 		{
 			type: 'audio.evaluate',
 			signals,
@@ -148,19 +175,15 @@ export function selectStreamSettingsAudioControlState(
 	return typeof snapshot.value === 'string' ? (snapshot.value as StreamSettingsAudioControlStateValue) : 'hidden';
 }
 
-function selectAudioControlLabelKey(shareContext: StreamSettingsShareContext): StreamSettingsAudioControlLabelKey {
-	if (shareContext === 'device') return 'captureDeviceAudio';
-	if (shareContext === 'app') return 'captureAppAudio';
-	return 'captureDesktopAudio';
-}
-
-function selectAudioControlHintKey(
-	value: StreamSettingsAudioControlStateValue,
-): StreamSettingsAudioControlHintKey | null {
-	if (value === 'unsupported') return 'nativeAudioUnsupported';
-	if (value === 'prestartNativePickerOwned') return 'prestartNativePicker';
-	if (value === 'restartRequired') return 'restartRequired';
-	return null;
+function selectAudioControlLabelKey(signals: StreamSettingsAudioControlSignals): StreamSettingsAudioControlLabelKey {
+	if (signals.shareContext === 'device') return 'captureDeviceAudio';
+	if (signals.shareContext !== 'app') return 'captureDesktopAudio';
+	const route = selectAppShareAudioRoute({
+		audioSourceMode: signals.audioSourceMode,
+		selectedSourceCount: signals.selectedAudioSourceCount,
+		windowAudioScope: resolveWindowShareAudioScope(signals),
+	});
+	return route === 'system' ? 'captureSystemAudio' : 'captureAppAudio';
 }
 
 export function selectStreamSettingsAudioMenuState(
@@ -170,20 +193,137 @@ export function selectStreamSettingsAudioMenuState(
 	return {
 		control: {
 			value,
-			visible: value === 'toggle',
-			disabled: value !== 'toggle',
 			checked: signals.captureAudioEnabled,
-			labelKey: selectAudioControlLabelKey(signals.shareContext),
-			hintKey: selectAudioControlHintKey(value),
+			labelKey: selectAudioControlLabelKey(signals),
 		},
-		nativeAudioUnsupportedScope: selectStreamSettingsNativeAudioUnsupportedScope(signals.shareContext),
-		showNativePickerNotice: false,
-		nativePickerNoticeKey: null,
-		showLinuxAudioControls:
+		showManualAudioSources:
 			signals.supportsStreamAudio &&
 			signals.captureAudioEnabled &&
-			signals.shareContext !== 'device' &&
-			signals.platform === 'linux',
+			manualAudioSourcesGovernShare(signals) &&
+			canSelectManualAudioSources({
+				platform: signals.platform,
+				nativeAudioAvailability: signals.nativeAudioAvailability,
+			}),
 		showDeviceAudioMenu: signals.shareContext === 'device' && signals.captureAudioEnabled,
 	};
+}
+
+export type StreamSettingsQualityWrite =
+	| {kind: 'none'}
+	| {kind: 'premium'}
+	| {kind: 'write'; patch: ScreenShareQualityPatch};
+
+export interface StreamSettingsQualitySignals {
+	quality: ScreenShareQualityInput;
+	pick: ScreenShareQualityPick;
+	premiumOption: boolean;
+	showPremiumFeatures: boolean;
+}
+
+export function selectStreamSettingsQualityWrite(signals: StreamSettingsQualitySignals): StreamSettingsQualityWrite {
+	if (signals.premiumOption && !signals.quality.entitled) {
+		return signals.showPremiumFeatures ? {kind: 'premium'} : {kind: 'none'};
+	}
+	const patch = resolveScreenShareQualityPick(signals.quality, signals.pick);
+	return patch === null ? {kind: 'none'} : {kind: 'write', patch};
+}
+
+export const OFFERED_SCREEN_SHARE_RESOLUTIONS = [
+	'low_480p',
+	'medium',
+	'high',
+	'ultra',
+	'source',
+] as const satisfies ReadonlyArray<ScreenshareResolution>;
+
+export type OfferedScreenShareResolution = (typeof OFFERED_SCREEN_SHARE_RESOLUTIONS)[number];
+
+export function offeredScreenShareResolution(resolution: ScreenshareResolution): OfferedScreenShareResolution {
+	return resolution === 'low_240p' ? 'low_480p' : resolution;
+}
+
+const STREAM_SETTINGS_FREE_RESOLUTIONS: ReadonlyArray<OfferedScreenShareResolution> = ['low_480p', 'medium'];
+const STREAM_SETTINGS_PREMIUM_RESOLUTIONS: ReadonlyArray<OfferedScreenShareResolution> = ['high', 'ultra', 'source'];
+const STREAM_SETTINGS_FREE_FRAME_RATES: ReadonlyArray<SupportedScreenShareFrameRate> = [15, 30];
+const STREAM_SETTINGS_PREMIUM_FRAME_RATES: ReadonlyArray<SupportedScreenShareFrameRate> = [60];
+
+export interface StreamSettingsQualityOption<T> {
+	value: T;
+	premium: boolean;
+	selected: boolean;
+	write: StreamSettingsQualityWrite;
+}
+
+export interface StreamSettingsQualityMenuViewState {
+	resolutions: Array<StreamSettingsQualityOption<OfferedScreenShareResolution>>;
+	frameRates: Array<StreamSettingsQualityOption<SupportedScreenShareFrameRate>>;
+}
+
+export interface StreamSettingsQualityMenuSignals {
+	quality: ScreenShareQualityInput;
+	target: ScreenShareTarget;
+	showPremiumFeatures: boolean;
+}
+
+export function contextAllowsScreenShareResolution(
+	resolution: OfferedScreenShareResolution,
+	context: ScreenShareContext,
+): boolean {
+	return normaliseResolutionForContext(resolution, context, true) === resolution;
+}
+
+export function selectStreamSettingsQualityMenuState(
+	signals: StreamSettingsQualityMenuSignals,
+): StreamSettingsQualityMenuViewState {
+	const offersPremium = signals.quality.entitled || signals.showPremiumFeatures;
+	const selectedResolution = offeredScreenShareResolution(signals.target.resolution);
+	const buildOption = <T>(
+		value: T,
+		premium: boolean,
+		selected: boolean,
+		pick: ScreenShareQualityPick,
+	): StreamSettingsQualityOption<T> => ({
+		value,
+		premium,
+		selected,
+		write: selectStreamSettingsQualityWrite({
+			quality: signals.quality,
+			pick,
+			premiumOption: premium,
+			showPremiumFeatures: signals.showPremiumFeatures,
+		}),
+	});
+	return {
+		resolutions: OFFERED_SCREEN_SHARE_RESOLUTIONS.filter(
+			(value) =>
+				value === selectedResolution ||
+				STREAM_SETTINGS_FREE_RESOLUTIONS.includes(value) ||
+				(offersPremium &&
+					STREAM_SETTINGS_PREMIUM_RESOLUTIONS.includes(value) &&
+					contextAllowsScreenShareResolution(value, signals.quality.context)),
+		).map((value) =>
+			buildOption(value, STREAM_SETTINGS_PREMIUM_RESOLUTIONS.includes(value), value === selectedResolution, {
+				axis: 'resolution',
+				resolution: value,
+			}),
+		),
+		frameRates: SUPPORTED_SCREEN_SHARE_FRAME_RATES.filter(
+			(value) =>
+				value === signals.target.frameRate ||
+				STREAM_SETTINGS_FREE_FRAME_RATES.includes(value) ||
+				(offersPremium && STREAM_SETTINGS_PREMIUM_FRAME_RATES.includes(value)),
+		).map((value) =>
+			buildOption(value, !STREAM_SETTINGS_FREE_FRAME_RATES.includes(value), value === signals.target.frameRate, {
+				axis: 'frameRate',
+				frameRate: value,
+			}),
+		),
+	};
+}
+
+export function selectStreamSettingsPresetOverriddenByContext(
+	mode: StreamingMode,
+	context: ScreenShareContext,
+): boolean {
+	return normaliseStreamingModeForContext(mode, context) !== mode;
 }

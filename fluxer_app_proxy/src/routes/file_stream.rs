@@ -156,6 +156,7 @@ fn parse_byte_range(raw: &str, file_size: u64) -> RequestedRange {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::sync::atomic::{AtomicU64, Ordering};
 
     struct StreamedFile {
         root: std::path::PathBuf,
@@ -163,11 +164,10 @@ mod tests {
 
     impl StreamedFile {
         fn with_bytes(bytes: &[u8]) -> Self {
-            let unique = std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_nanos();
-            let root = std::env::temp_dir().join(format!("fluxer-file-stream-{unique}"));
+            static NEXT_FIXTURE: AtomicU64 = AtomicU64::new(0);
+            let unique = NEXT_FIXTURE.fetch_add(1, Ordering::Relaxed);
+            let pid = std::process::id();
+            let root = std::env::temp_dir().join(format!("fluxer-file-stream-{pid}-{unique}"));
             std::fs::create_dir_all(&root).unwrap();
             std::fs::write(root.join("payload.bin"), bytes).unwrap();
             Self { root }

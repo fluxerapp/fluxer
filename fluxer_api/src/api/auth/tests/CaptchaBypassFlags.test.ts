@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	createAuthHarness,
+	createUniqueEmail,
+	createUniqueUsername,
+	registerUser,
+} from '@app/api/auth/tests/AuthTestUtils';
+import {Config} from '@app/api/Config';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {Config} from '../../Config';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import {createAuthHarness, createUniqueEmail, createUniqueUsername, registerUser} from './AuthTestUtils';
 
 async function withCaptchaEnabled<T>(run: () => Promise<T>): Promise<T> {
 	const previousEnabled = Config.captcha.enabled;

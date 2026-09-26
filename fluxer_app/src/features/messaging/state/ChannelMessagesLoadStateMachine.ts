@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export interface ChannelMessagesLoadInput {
 	isBefore: boolean;
@@ -123,7 +123,7 @@ export const channelMessagesLoadMachine = setup({
 export type ChannelMessagesLoadSnapshot = SnapshotFrom<typeof channelMessagesLoadMachine>;
 
 export function createChannelMessagesLoadSnapshot(input: ChannelMessagesLoadInput): ChannelMessagesLoadSnapshot {
-	return getInitialSnapshot(channelMessagesLoadMachine, input);
+	return initialTransition(channelMessagesLoadMachine, input)[0];
 }
 
 export function transitionChannelMessagesLoadSnapshot(
@@ -246,7 +246,7 @@ export const channelMessagesWindowMachine = setup({
 export type ChannelMessagesWindowSnapshot = SnapshotFrom<typeof channelMessagesWindowMachine>;
 
 export function createChannelMessagesWindowSnapshot(input: ChannelMessagesWindowInput): ChannelMessagesWindowSnapshot {
-	return getInitialSnapshot(channelMessagesWindowMachine, input);
+	return initialTransition(channelMessagesWindowMachine, input)[0];
 }
 
 export function transitionChannelMessagesWindowSnapshot(
@@ -279,6 +279,15 @@ export function selectChannelMessagesFillerVisible(input: ChannelMessagesFillerM
 
 export function selectChannelMessagesSpacerHeight(status: ChannelMessagesWindowStatus, fillerHeight: number): number {
 	return status.olderPageAvailable || status.newerPageAvailable ? fillerHeight : 0;
+}
+
+export function selectChannelMessagesLoadRestoresTrust(input: {
+	mode: ChannelMessagesLoadMode;
+	isAfter: boolean;
+	hasMoreAfter: boolean;
+}): boolean {
+	if (input.mode === 'replace') return true;
+	return input.isAfter && !input.hasMoreAfter;
 }
 
 export function selectChannelMessagesWindowBar(status: ChannelMessagesWindowStatus): ChannelMessagesWindowBar {

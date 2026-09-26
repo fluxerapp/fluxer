@@ -4,7 +4,10 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
 import type {VoiceEngineV2AppSourceLifecycleBridge} from '@app/features/voice/engine/v2/VoiceEngineV2AppSourceLifecycleBridge';
 import {getNativeAudioErrorDetail} from '@app/features/voice/utils/NativeAudioFailureUtils';
-import {getBridgeStats as getNativeAudioBridgeStats} from '@app/features/voice/utils/native_audio_capture_bridge/bridgeStats';
+import {
+	getEndedBridgeCaptures,
+	getBridgeStats as getNativeAudioBridgeStats,
+} from '@app/features/voice/utils/native_audio_capture_bridge/bridgeStats';
 import {createGeneratorBridge} from '@app/features/voice/utils/native_audio_capture_bridge/createGeneratorBridge';
 import {createScriptProcessorBridge} from '@app/features/voice/utils/native_audio_capture_bridge/createScriptProcessorBridge';
 import {
@@ -18,6 +21,7 @@ import {
 	isValidAudioFrameMessage,
 	type NativeAudioBridgeHandle,
 	type NativeAudioBridgeStats,
+	nativeAudioRoutingRulesEqual,
 	patchTrackStopForCleanup,
 	replaceStreamAudioTrack,
 	shouldMixSelfWindowAudioIntoSystemCapture,
@@ -47,6 +51,7 @@ const logger = new Logger('NativeAudioCaptureBridge');
 let patched = false;
 let originalGetDisplayMedia: MediaDevices['getDisplayMedia'] | null = null;
 let availabilityCache: Promise<NativeAudioAvailability> | null = null;
+let resolvedAvailability: NativeAudioAvailability | null = null;
 let armedCapture: ArmedNativeAudioCapture | null = null;
 let lastArmFailure: ScreenShareAudioCaptureDebugInfo | null = null;
 let activeBridge: ActiveNativeAudioBridge | null = null;
@@ -65,8 +70,18 @@ interface NativeAudioStartedCaptureDiagnostic {
 	includeSelfWindowAudio?: boolean;
 }
 
+interface NativeAudioLifecycleFaultDiagnostic {
+	captureId: string;
+	sourceId: string;
+	message: string;
+	atMs: number;
+}
+
+const MAX_RETAINED_LIFECYCLE_FAULTS = 8;
+
 let lastStartedCapture: NativeAudioStartedCaptureDiagnostic | null = null;
 let sourceLifecycleBridge: VoiceEngineV2AppSourceLifecycleBridge | null = null;
+let lifecycleFaults: Array<NativeAudioLifecycleFaultDiagnostic> = [];
 const lifecycleBoundCaptureIds = new Set<string>();
 
 export {getNativeAudioBridgeStats};
@@ -91,12 +106,22 @@ function bindNativeAudioCaptureLifecycle(captureId: string): void {
 	}
 }
 
-function unbindNativeAudioCaptureLifecycle(captureId: string, faulted: boolean): void {
+function recordLifecycleFault(captureId: string, message: string): void {
+	lifecycleFaults.push({captureId, sourceId: `native-audio-tap:${captureId}`, message, atMs: Date.now()});
+	if (lifecycleFaults.length > MAX_RETAINED_LIFECYCLE_FAULTS) {
+		lifecycleFaults = lifecycleFaults.slice(-MAX_RETAINED_LIFECYCLE_FAULTS);
+	}
+}
+
+function unbindNativeAudioCaptureLifecycle(captureId: string, fault: string | null): void {
 	if (!lifecycleBoundCaptureIds.has(captureId)) return;
 	const bridge = sourceLifecycleBridge;
+	if (fault) {
+		recordLifecycleFault(captureId, fault);
+	}
 	if (bridge) {
-		if (faulted) {
-			bridge.reportLifecycle({captureId, kind: 'error', message: 'native-audio-tap-track-ended'});
+		if (fault) {
+			bridge.reportLifecycle({captureId, kind: 'error', message: fault});
 		}
 		bridge.unbind(captureId);
 	}
@@ -151,6 +176,29 @@ function rememberStartedCapture(capture: NativeAudioStartedCaptureDiagnostic): v
 	};
 }
 
+type CapturedDisplayAudioDiagnostic = {
+	readyState: MediaStreamTrackState;
+	label: string;
+	deviceId: string | null;
+	discarded: boolean;
+};
+
+let lastCapturedDisplayAudio: CapturedDisplayAudioDiagnostic | null = null;
+
+export function rememberCapturedDisplayAudioTrack(track: MediaStreamTrack | undefined, discarded: boolean): void {
+	if (!track) {
+		lastCapturedDisplayAudio = null;
+		return;
+	}
+	let deviceId: string | null = null;
+	try {
+		deviceId = track.getSettings().deviceId ?? null;
+	} catch {
+		deviceId = null;
+	}
+	lastCapturedDisplayAudio = {readyState: track.readyState, label: track.label, deviceId, discarded};
+}
+
 export function getNativeAudioCaptureDiagnosticState(): Record<string, unknown> {
 	const started = lastStartedCapture
 		? {
@@ -165,11 +213,19 @@ export function getNativeAudioCaptureDiagnosticState(): Record<string, unknown> 
 		lastStartedCapture: started,
 		lastArmFailure: getLastNativeAudioArmFailure(),
 		bridgeStats: getNativeAudioBridgeStats(),
+		endedBridgeCaptures: getEndedBridgeCaptures(),
+		lifecycleFaults: lifecycleFaults.map((fault) => ({...fault})),
+		capturedDisplayAudio: lastCapturedDisplayAudio ? {...lastCapturedDisplayAudio} : null,
 	};
 }
 
-function cleanupBridgeAsync(bridge: ActiveNativeAudioBridge, stopRemote: boolean, logContext: string): void {
-	void bridge.cleanup(stopRemote).catch((error) => {
+function cleanupBridgeAsync(
+	bridge: ActiveNativeAudioBridge,
+	stopRemote: boolean,
+	logContext: string,
+	endDetail?: string,
+): void {
+	void bridge.cleanup(stopRemote, endDetail).catch((error) => {
 		logger.warn(`Failed to clean up native audio bridge after ${logContext}`, {
 			captureId: bridge.captureId,
 			error,
@@ -177,18 +233,23 @@ function cleanupBridgeAsync(bridge: ActiveNativeAudioBridge, stopRemote: boolean
 	});
 }
 
-function cleanupManagedBridgeById(captureId: string, stopRemote: boolean, logContext: string): boolean {
+function cleanupManagedBridgeById(
+	captureId: string,
+	stopRemote: boolean,
+	logContext: string,
+	endDetail?: string,
+): boolean {
 	if (activeBridge?.captureId === captureId) {
 		const bridge = activeBridge;
 		activeBridge = supersededBridge;
 		supersededBridge = null;
-		cleanupBridgeAsync(bridge, stopRemote, logContext);
+		cleanupBridgeAsync(bridge, stopRemote, logContext, endDetail);
 		return true;
 	}
 	if (supersededBridge?.captureId === captureId) {
 		const bridge = supersededBridge;
 		supersededBridge = null;
-		cleanupBridgeAsync(bridge, stopRemote, logContext);
+		cleanupBridgeAsync(bridge, stopRemote, logContext, endDetail);
 		return true;
 	}
 	return false;
@@ -215,12 +276,13 @@ function attachNativeAudioCleanup(
 	captureId: string,
 	handle: NativeAudioBridgeHandle,
 ): ActiveNativeAudioBridge['cleanup'] {
-	const tracks = [...stream.getVideoTracks(), handle.track];
+	const videoTracks = stream.getVideoTracks();
+	const tracks = [...videoTracks, handle.track];
 	const cleanupListeners: Array<() => void> = [];
 	const restoreStops: Array<() => void> = [];
 	let cleanedUp = false;
 	bindNativeAudioCaptureLifecycle(captureId);
-	const cleanup = async (stopRemote: boolean = true): Promise<void> => {
+	const cleanup = async (stopRemote: boolean = true, endDetail?: string): Promise<void> => {
 		if (cleanedUp) return;
 		cleanedUp = true;
 		for (const removeListener of cleanupListeners.splice(0)) {
@@ -232,20 +294,22 @@ function attachNativeAudioCleanup(
 		if (activeBridge?.captureId === captureId) {
 			activeBridge = null;
 		}
-		unbindNativeAudioCaptureLifecycle(captureId, false);
-		await handle.cleanup(stopRemote);
+		unbindNativeAudioCaptureLifecycle(captureId, null);
+		await handle.cleanup(stopRemote, endDetail);
 	};
-	const requestCleanup = (): void => {
-		unbindNativeAudioCaptureLifecycle(captureId, true);
-		if (!cleanupManagedBridgeById(captureId, true, 'track ended')) {
-			cleanupBridgeAsync({captureId, cleanup}, true, 'track ended');
+	const requestCleanup = (fault: string | null, endDetail: string, logContext: string): void => {
+		unbindNativeAudioCaptureLifecycle(captureId, fault);
+		if (!cleanupManagedBridgeById(captureId, true, logContext, endDetail)) {
+			cleanupBridgeAsync({captureId, cleanup}, true, logContext, endDetail);
 		}
 	};
 	for (const track of tracks) {
-		const onEnded = (): void => requestCleanup();
+		const trackKind = track === handle.track ? 'audio' : 'video';
+		const onEnded = (): void =>
+			requestCleanup(`native-audio-tap-${trackKind}-track-ended`, `${trackKind}-track-ended`, 'track ended');
 		track.addEventListener('ended', onEnded);
 		cleanupListeners.push(() => track.removeEventListener('ended', onEnded));
-		restoreStops.push(patchTrackStopForCleanup(track, requestCleanup));
+		restoreStops.push(patchTrackStopForCleanup(track, () => requestCleanup(null, 'caller-stopped', 'caller stop')));
 	}
 	return cleanup;
 }
@@ -276,11 +340,11 @@ async function createNativeAudioBridgeWithSelfWindowAudio(captureId: string): Pr
 		throw error;
 	}
 	let cleanedUp = false;
-	const cleanup = async (stopRemote: boolean = true): Promise<void> => {
+	const cleanup = async (stopRemote: boolean = true, endDetail?: string): Promise<void> => {
 		if (cleanedUp) return;
 		cleanedUp = true;
 		await mixedTrack.cleanup();
-		await nativeHandle.cleanup(stopRemote);
+		await nativeHandle.cleanup(stopRemote, endDetail);
 	};
 	return {
 		track: mixedTrack.track,
@@ -293,7 +357,7 @@ async function startLinuxNativeAudioCapture(
 ): Promise<NativeAudioStartResult | null> {
 	const electronApi = getElectronAPI();
 	const nativeAudioApi = electronApi?.nativeAudio;
-	if (!electronApi || electronApi.platform !== 'linux' || !nativeAudioApi) {
+	if (electronApi?.platform !== 'linux' || !nativeAudioApi) {
 		setLastArmFailure({
 			platform: electronApi?.platform,
 			reason: !electronApi
@@ -394,7 +458,7 @@ function createDirectNativeAudioFramePump(
 		cleanedUp = true;
 		unsubscribeFrame();
 		unsubscribeEnd();
-		unbindNativeAudioCaptureLifecycle(captureId, true);
+		unbindNativeAudioCaptureLifecycle(captureId, 'native-audio-tap-track-ended');
 		onEnd?.(message);
 	});
 	const cleanup = async (stopRemote: boolean = true): Promise<void> => {
@@ -402,7 +466,7 @@ function createDirectNativeAudioFramePump(
 		cleanedUp = true;
 		unsubscribeFrame();
 		unsubscribeEnd();
-		unbindNativeAudioCaptureLifecycle(captureId, false);
+		unbindNativeAudioCaptureLifecycle(captureId, null);
 		if (stopRemote) {
 			await nativeAudioApi.stop(captureId).catch((error) => {
 				logger.warn('Failed to stop native screen-share audio frame pump', {captureId, error});
@@ -765,10 +829,18 @@ export async function getNativeAudioAvailabilityCached(): Promise<NativeAudioAva
 			: Promise.resolve<NativeAudioAvailability>({available: false, reason: 'unsupported-platform'});
 	}
 	const availability = await availabilityCache;
+	resolvedAvailability = availability;
 	if (!availability.available) {
 		availabilityCache = null;
 	}
 	return availability;
+}
+
+export function getNativeAudioAvailabilitySnapshot(): NativeAudioAvailability | null {
+	if (resolvedAvailability == null) {
+		void getNativeAudioAvailabilityCached().catch(() => undefined);
+	}
+	return resolvedAvailability;
 }
 
 function nativeAudioSupportsScope(availability: NativeAudioAvailability, scope: 'process' | 'system'): boolean {
@@ -1030,7 +1102,7 @@ export async function armNativeAudioForLinuxRouting(
 ): Promise<boolean> {
 	const electronApi = getElectronAPI();
 	const nativeAudioApi = electronApi?.nativeAudio;
-	if (!electronApi || electronApi.platform !== 'linux' || !nativeAudioApi) {
+	if (electronApi?.platform !== 'linux' || !nativeAudioApi) {
 		setLastArmFailure({
 			platform: electronApi?.platform,
 			reason: !electronApi
@@ -1354,6 +1426,35 @@ export function captureNativeAudioTrackForSelfWindow(): MediaStreamTrack | null 
 	return track;
 }
 
+export type LinuxNativeAudioReconfigureResult = 'unchanged' | 'updated' | 'unsupported';
+
+export async function reconfigureLinuxNativeAudioRouting(
+	linuxRule: NonNullable<NativeAudioStartOptions['linuxRule']>,
+	options: {includeSelfWindowAudio?: boolean} = {},
+): Promise<LinuxNativeAudioReconfigureResult> {
+	const bridge = activeBridge;
+	if (!bridge) return 'unsupported';
+	if (bridge.linuxRule === undefined) return 'unsupported';
+	if (Boolean(bridge.includeSelfWindowAudio) !== (options.includeSelfWindowAudio === true)) return 'unsupported';
+	if (nativeAudioRoutingRulesEqual(bridge.linuxRule, linuxRule)) return 'unchanged';
+	const nativeAudioApi = getNativeAudioApi();
+	if (typeof nativeAudioApi?.setRule !== 'function') return 'unsupported';
+	let applied = false;
+	try {
+		applied = await nativeAudioApi.setRule(bridge.captureId, linuxRule);
+	} catch (error) {
+		logger.warn('Failed to reconfigure Linux native audio routing in place', {
+			captureId: bridge.captureId,
+			error,
+		});
+		return 'unsupported';
+	}
+	if (!applied) return 'unsupported';
+	if (activeBridge !== bridge) return 'unsupported';
+	activeBridge = {...bridge, linuxRule};
+	return 'updated';
+}
+
 export async function captureNativeAudioTrackForLinuxRouting(
 	linuxRule: NonNullable<NativeAudioStartOptions['linuxRule']>,
 	options: {includeSelfWindowAudio?: boolean} = {},
@@ -1367,7 +1468,12 @@ export async function captureNativeAudioTrackForLinuxRouting(
 			? await createNativeAudioBridgeWithSelfWindowAudio(result.captureId)
 			: await createNativeAudioBridge(result.captureId);
 		const cleanup = attachNativeAudioCleanup(new MediaStream([handle.track]), result.captureId, handle);
-		activeBridge = {captureId: result.captureId, cleanup};
+		activeBridge = {
+			captureId: result.captureId,
+			cleanup,
+			linuxRule,
+			includeSelfWindowAudio: options.includeSelfWindowAudio === true,
+		};
 		if (previousBridge && previousBridge.captureId !== result.captureId) {
 			supersededBridge = previousBridge;
 		}
@@ -1439,6 +1545,7 @@ export function disarmNativeAudio(): void {
 
 export function resetNativeAudioAvailabilityCache(): void {
 	availabilityCache = null;
+	resolvedAvailability = null;
 }
 
 export function resetNativeAudioCaptureBridgeForTests(): void {
@@ -1454,5 +1561,6 @@ export function resetNativeAudioCaptureBridgeForTests(): void {
 	activeBridge = null;
 	supersededBridge = null;
 	sourceLifecycleBridge = null;
+	lifecycleFaults = [];
 	lifecycleBoundCaptureIds.clear();
 }

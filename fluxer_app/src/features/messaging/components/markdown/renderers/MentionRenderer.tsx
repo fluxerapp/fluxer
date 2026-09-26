@@ -40,6 +40,7 @@ const CHANNEL_LINK_DESCRIPTOR = msg({
 	message: 'channel link',
 	comment: 'Short label in the messaging mention renderer. Keep it concise.',
 });
+const UNKNOWN_MENTION_DESCRIPTOR = msg({message: 'unknown-mention'});
 
 interface InteractiveChannelMentionProps {
 	channel: Channel;
@@ -123,7 +124,7 @@ export const MentionRenderer = observer(function MentionRenderer({
 			const genericMention = (
 				<span key={id} className={markupStyles.mention} data-flx="messaging.markdown.renderers.mention-renderer.span">
 					<MentionLabel data-flx="messaging.markdown.renderers.mention-renderer.mention-label">
-						@{name || kind.id}
+						{`@${name || kind.id}`}
 					</MentionLabel>
 				</span>
 			);
@@ -138,7 +139,7 @@ export const MentionRenderer = observer(function MentionRenderer({
 						data-flx="messaging.markdown.renderers.mention-renderer.span--2"
 					>
 						<MentionLabel data-flx="messaging.markdown.renderers.mention-renderer.mention-label--2">
-							@{name || user.displayName}
+							{`@${name || user.displayName}`}
 						</MentionLabel>
 					</span>
 				);
@@ -166,7 +167,7 @@ export const MentionRenderer = observer(function MentionRenderer({
 							data-flx="messaging.markdown.renderers.mention-renderer.button.stop-propagation"
 						>
 							<MentionLabel data-flx="messaging.markdown.renderers.mention-renderer.mention-label--3">
-								@{name || user.displayName}
+								{`@${name || user.displayName}`}
 							</MentionLabel>
 						</span>
 					</FocusRing>
@@ -366,7 +367,7 @@ export const MentionRenderer = observer(function MentionRenderer({
 		default:
 			return (
 				<span key={id} data-flx="messaging.markdown.renderers.mention-renderer.span--13">
-					{'<unknown-mention>'}
+					{`<${i18n._(UNKNOWN_MENTION_DESCRIPTOR)}>`}
 				</span>
 			);
 	}

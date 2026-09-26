@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {acceptInvite, createGuild} from '@app/api/guild/tests/GuildTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {createChannelInvite, createWebhook, deleteWebhook} from '@app/api/webhook/tests/WebhookTestUtils';
 import {beforeAll, beforeEach, describe, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {joinGuild} from '../../channel/tests/ScheduledMessageTestUtils';
-import {createGuild} from '../../guild/tests/GuildTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {createChannelInvite, createWebhook, deleteWebhook} from './WebhookTestUtils';
 
 describe('Webhook permissions', () => {
 	let harness: ApiTestHarness;
@@ -23,7 +22,7 @@ describe('Webhook permissions', () => {
 		const guild = await createGuild(harness, owner.token, `Webhook Security ${Date.now()}`);
 		const channelId = guild.system_channel_id!;
 		const invite = await createChannelInvite(harness, owner.token, channelId);
-		await joinGuild(harness, member.token, invite.code);
+		await acceptInvite(harness, member.token, invite.code);
 		const webhook = await createWebhook(harness, channelId, owner.token, 'Test Webhook');
 		await createBuilder(harness, member.token)
 			.post(`/channels/${channelId}/webhooks`)

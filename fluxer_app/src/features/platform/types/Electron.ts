@@ -212,6 +212,7 @@ export interface DownloadFileOptions {
 export interface DownloadFileResult {
 	success: boolean;
 	canceled?: boolean;
+	checksumMismatch?: boolean;
 	path?: string;
 	error?: string;
 }
@@ -357,7 +358,7 @@ export interface ElectronAPI {
 	requestInputMonitoringPermission?: () => Promise<InputMonitoringPermissionStatus>;
 	getScreenRecordingPermissionStatus?: () => Promise<InputMonitoringPermissionStatus>;
 	requestScreenRecordingPermission?: () => Promise<InputMonitoringPermissionStatus>;
-	downloadFile: (url: string, defaultPath: string) => Promise<DownloadFileResult>;
+	downloadFile: (url: string, defaultPath: string, sha256?: string | null) => Promise<DownloadFileResult>;
 	toggleDevTools: () => void;
 	showNotification: (options: NotificationOptions) => Promise<NotificationResult>;
 	shouldPlayNotificationSound?: () => Promise<boolean>;
@@ -439,6 +440,8 @@ export interface ElectronAPI {
 	virtmic: VirtmicApi;
 	nativeAudio: NativeAudioApi;
 	voiceEngine?: VoiceEngineV2BridgeHardwareEncoderApi;
+	domainMigration?: {version: number; setAppOrigin(origin: string): Promise<void>};
+	passkeyRpIds?: ReadonlyArray<string>;
 }
 
 export type VirtmicUnavailableReason =
@@ -556,6 +559,7 @@ export interface NativeAudioApi {
 	listAudibleApplications: () => Promise<Array<NativeAudioApplication>>;
 	resolveAudioRootPidForSource: (sourceId: string) => Promise<number | null>;
 	start: (options: NativeAudioStartOptions) => Promise<NativeAudioStartResult>;
+	setRule: (captureId: string, linuxRule: NonNullable<NativeAudioStartOptions['linuxRule']>) => Promise<boolean>;
 	stop: (captureId: string) => Promise<void>;
 	onFrame: (callback: (message: NativeAudioFrameMessage) => void) => () => void;
 	onEnd: (callback: (message: NativeAudioEndMessage) => void) => () => void;

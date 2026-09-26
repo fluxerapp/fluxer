@@ -179,7 +179,7 @@ maybe_ensure_store(ListId, SubsTab, State) ->
 ensure_channel_engine_for_subs(ListId, SubsTab, State) ->
     case map_size(guild_member_list_subs:get_list_subs(ListId, SubsTab)) > 0 of
         true -> guild_member_list_channel_engine:ensure(ListId, State);
-        false -> State
+        false -> guild_member_list_channel_engine:drop(ListId, State)
     end.
 
 -spec compute_ranges_to_sync([range()], [range()], boolean()) -> [range()].

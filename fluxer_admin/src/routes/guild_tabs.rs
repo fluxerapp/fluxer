@@ -43,7 +43,7 @@ pub async fn render(
             let page = query.members_page.unwrap_or(0);
             let limit: u32 = 50;
             let resp = client
-                .list_guild_members(guild_id, limit, page * limit)
+                .list_guild_members(guild_id, limit, u64::from(page) * u64::from(limit))
                 .await
                 .log_error("load guild members")?;
             Some(tabs::members::members_tab(
@@ -57,7 +57,7 @@ pub async fn render(
             let page = query.reports_page.unwrap_or(0);
             let limit: u32 = 25;
             let resp = client
-                .search_reports_by_guild(guild_id, limit, page * limit)
+                .search_reports_by_guild(guild_id, limit, u64::from(page) * u64::from(limit))
                 .await
                 .log_error("load guild reports")?;
             Some(tabs::reports::reports_tab(
@@ -121,6 +121,7 @@ pub async fn render(
                     admin_user_id: None,
                     target_id: Some(guild_id.to_owned()),
                     target_type: Some("guild".to_owned()),
+                    access: Some("write".to_owned()),
                     sort_by: Some("created_at".to_owned()),
                     sort_order: Some("desc".to_owned()),
                     limit: 50,
@@ -134,7 +135,7 @@ pub async fn render(
                     @if let Some(resp) = resp {
                         @if resp.logs.is_empty() {
                             p class="text-sm text-neutral-500" {
-                                "No admin audit log entries for this guild."
+                                "No admin write actions have been recorded for this guild."
                             }
                         } @else {
                             (table_container(table(maud::html! {
@@ -150,22 +151,6 @@ pub async fn render(
                 },
             ))
         }
-        "billing" => {
-            if config.self_hosted || !acl::has_permission(admin_acls, acl::BILLING_VIEW) {
-                return None;
-            }
-            let billing = client
-                .get_billing_overview(guild_id)
-                .await
-                .log_error("load guild billing overview")
-                .map(|b| b.data);
-            Some(tabs::billing::billing_tab(
-                config,
-                guild_id,
-                billing.as_ref(),
-                csrf_token,
-            ))
-        }
         "applications" => {
             if !acl::has_any_permission(
                 admin_acls,
@@ -174,7 +159,7 @@ pub async fn render(
                 return None;
             }
             let apps = client
-                .list_user_applications(guild_id)
+                .list_guild_applications(guild_id)
                 .await
                 .map_err(|error| tracing::warn!(%error, guild_id, "admin API request failed: list guild applications"))
                 .unwrap_or_default();

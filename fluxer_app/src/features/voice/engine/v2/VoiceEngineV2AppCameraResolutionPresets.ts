@@ -14,12 +14,17 @@ export interface CameraCaptureDimensions {
 const CAMERA_RESOLUTION_PRESET_TABLE = {
 	high: {capture: {width: 1920, height: 1080, frameRate: 30}, videoPreset: VideoPresets.h1080},
 	medium: {capture: {width: 1280, height: 720, frameRate: 30}, videoPreset: VideoPresets.h720},
-	low: {capture: {width: 640, height: 360, frameRate: 24}, videoPreset: VideoPresets.h360},
+	low: {capture: {width: 640, height: 360, frameRate: 20}, videoPreset: VideoPresets.h360},
 } as const;
 
 for (const [resolution, entry] of Object.entries(CAMERA_RESOLUTION_PRESET_TABLE)) {
 	assert.equal(entry.videoPreset.width, entry.capture.width, `camera preset width must agree for ${resolution}`);
 	assert.equal(entry.videoPreset.height, entry.capture.height, `camera preset height must agree for ${resolution}`);
+	assert.equal(
+		entry.videoPreset.encoding.maxFramerate,
+		entry.capture.frameRate,
+		`camera preset frame rate must agree for ${resolution}`,
+	);
 }
 
 function resolvePresetEntry(resolution: CameraResolution) {
@@ -33,13 +38,6 @@ export function getCameraCaptureDimensions(resolution: CameraResolution): Camera
 	assert.ok(dimensions.width > 0, 'camera capture width must be positive');
 	assert.ok(dimensions.height > 0, 'camera capture height must be positive');
 	return dimensions;
-}
-
-export function getCameraVideoPreset(resolution: CameraResolution) {
-	const preset = resolvePresetEntry(resolution).videoPreset;
-	assert.ok(preset.width > 0, 'camera video preset width must be positive');
-	assert.ok(preset.height > 0, 'camera video preset height must be positive');
-	return preset;
 }
 
 const CAMERA_SUBSCRIPTION_QUALITY_LAYERS = [

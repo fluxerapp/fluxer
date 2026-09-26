@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomBytes} from 'node:crypto';
+import {createAuthHarness, createTestAccount, loginUser, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
+import {TotpGenerator} from '@app/api/utils/TotpGenerator';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
-import {TotpGenerator} from '../../utils/TotpGenerator';
-import {createAuthHarness, createTestAccount, loginUser, type TestAccount} from './AuthTestUtils';
 
 const SUDO_MODE_HEADER = 'X-Fluxer-Sudo-Mode-JWT';
 

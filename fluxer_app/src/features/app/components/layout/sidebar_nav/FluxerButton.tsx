@@ -33,21 +33,13 @@ import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useMemo, useRef} from 'react';
 
-const MESSAGE_1_UNREAD_DM_DESCRIPTOR = msg({
-	message: '1 unread DM',
-	comment: 'Short label in the sidebar navigation fluxer button.',
-});
 const UNREAD_DMS_DESCRIPTOR = msg({
-	message: '{displayedUnreadDmCount} unread DMs',
+	message: '{displayedUnreadDmCount, plural, one {# unread DM} other {# unread DMs}}',
 	comment:
 		'Short label in the sidebar navigation fluxer button. Preserve {displayedUnreadDmCount}; it is inserted by code.',
 });
-const MESSAGE_1_FRIEND_REQUEST_DESCRIPTOR = msg({
-	message: '1 friend request',
-	comment: 'Short label in the sidebar navigation fluxer button.',
-});
 const FRIEND_REQUESTS_DESCRIPTOR = msg({
-	message: '{displayedIncomingFriendRequestCount} friend requests',
+	message: '{displayedIncomingFriendRequestCount, plural, one {# friend request} other {# friend requests}}',
 	comment:
 		'Sidebar Fluxer-home button tooltip showing how many incoming friend requests are pending. Count is interpolated.',
 });
@@ -89,14 +81,10 @@ export const FluxerButton = observer(() => {
 	const displayedIncomingFriendRequestCount = showIncomingFriendRequestBadge ? incomingFriendRequestCount : 0;
 	const directMessagesLabel = useMemo(() => {
 		const parts = [i18n._(DIRECT_MESSAGES_DESCRIPTOR)];
-		if (displayedUnreadDmCount === 1) {
-			parts.push(i18n._(MESSAGE_1_UNREAD_DM_DESCRIPTOR));
-		} else if (displayedUnreadDmCount > 1) {
+		if (displayedUnreadDmCount > 0) {
 			parts.push(i18n._(UNREAD_DMS_DESCRIPTOR, {displayedUnreadDmCount}));
 		}
-		if (displayedIncomingFriendRequestCount === 1) {
-			parts.push(i18n._(MESSAGE_1_FRIEND_REQUEST_DESCRIPTOR));
-		} else if (displayedIncomingFriendRequestCount > 1) {
+		if (displayedIncomingFriendRequestCount > 0) {
 			parts.push(i18n._(FRIEND_REQUESTS_DESCRIPTOR, {displayedIncomingFriendRequestCount}));
 		}
 		return parts.join(', ');

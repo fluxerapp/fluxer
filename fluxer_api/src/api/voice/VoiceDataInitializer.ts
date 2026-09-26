@@ -1,8 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Config} from '../Config';
-import {Logger} from '../Logger';
-import {VoiceRepository} from './VoiceRepository';
+import {Config} from '@app/api/Config';
+import {Logger} from '@app/api/Logger';
+import {VoiceRepository} from '@app/api/voice/VoiceRepository';
+
+export function resolveLivekitEndpoint(configuredUrl: string | undefined, apiPublicUrl: string): string {
+	if (configuredUrl) {
+		return configuredUrl;
+	}
+	const apiPublic = new URL(apiPublicUrl);
+	const protocol = apiPublic.protocol === 'https:' ? 'wss' : 'ws';
+	return `${protocol}://${apiPublic.host}/livekit`;
+}
 
 export class VoiceDataInitializer {
 	async initialize(): Promise<void> {
@@ -19,7 +28,7 @@ export class VoiceDataInitializer {
 		try {
 			const repository = new VoiceRepository();
 			const serverId = `${defaultRegion.id}-server-1`;
-			const livekitEndpoint = this.resolveLivekitEndpoint();
+			const livekitEndpoint = resolveLivekitEndpoint(Config.voice.url, Config.endpoints.apiPublic);
 			const existingRegions = await repository.listRegions();
 			if (existingRegions.length === 0) {
 				Logger.info('[VoiceDataInitializer] Creating default voice region from config...');
@@ -47,6 +56,7 @@ export class VoiceDataInitializer {
 					latitude: null,
 					longitude: null,
 					isActive: true,
+					softConnectionLimit: null,
 					restrictions: {
 						vipOnly: false,
 						requiredGuildFeatures: new Set(),
@@ -90,13 +100,5 @@ export class VoiceDataInitializer {
 		} catch (error) {
 			Logger.error({error}, '[VoiceDataInitializer] Failed to initialise config-managed voice topology');
 		}
-	}
-
-	private resolveLivekitEndpoint(): string {
-		if (Config.voice.url) {
-			return Config.voice.url;
-		}
-		const protocol = new URL(Config.endpoints.apiPublic).protocol.slice(0, -1) === 'https' ? 'wss' : 'ws';
-		return `${protocol}://${new URL(Config.endpoints.apiPublic).hostname}/livekit`;
 	}
 }

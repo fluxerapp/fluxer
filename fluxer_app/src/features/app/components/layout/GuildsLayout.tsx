@@ -423,11 +423,11 @@ function resolvePinnedCallChannel(directMessagesDisabled: boolean): Channel | nu
 
 interface DMChannelVisibilityControllerState {
 	readonly removalDelayMs: number;
-	readonly removalTimers: React.MutableRefObject<Map<string, number>>;
+	readonly removalTimers: React.RefObject<Map<string, number>>;
 	readonly orderedUnreadChannels: ReadonlyArray<Channel>;
 	readonly setVisibleChannels: React.Dispatch<React.SetStateAction<ReadonlyArray<Channel>>>;
 	readonly unreadChannels: ReadonlyArray<Channel>;
-	readonly unreadIdsRef: React.MutableRefObject<ReadonlySet<string>>;
+	readonly unreadIdsRef: React.RefObject<ReadonlySet<string>>;
 }
 
 interface ProjectVisibleDMChannelsRequest {
@@ -437,11 +437,11 @@ interface ProjectVisibleDMChannelsRequest {
 
 class DMChannelVisibilityController {
 	private readonly removalDelayMs: number;
-	private readonly removalTimers: React.MutableRefObject<Map<string, number>>;
+	private readonly removalTimers: React.RefObject<Map<string, number>>;
 	private readonly orderedUnreadChannels: ReadonlyArray<Channel>;
 	private readonly setVisibleChannels: React.Dispatch<React.SetStateAction<ReadonlyArray<Channel>>>;
 	private readonly unreadChannels: ReadonlyArray<Channel>;
-	private readonly unreadIdsRef: React.MutableRefObject<ReadonlySet<string>>;
+	private readonly unreadIdsRef: React.RefObject<ReadonlySet<string>>;
 
 	public constructor({
 		removalDelayMs,
@@ -1275,8 +1275,11 @@ const SKELETON_NAGBAR_ROW_SHAPES: Record<NagbarType, SkeletonNagbarRowShape> = {
 	[NagbarType.PREMIUM_GRACE_PERIOD]: {tone: SkeletonNagbarTone.PREMIUM, hasActions: true},
 	[NagbarType.PREMIUM_EXPIRED]: {tone: SkeletonNagbarTone.DANGER, hasActions: true},
 	[NagbarType.PREMIUM_ONBOARDING]: {tone: SkeletonNagbarTone.BRAND, hasActions: true},
+	[NagbarType.PRICE_ANNOUNCEMENT]: {tone: SkeletonNagbarTone.BRAND, hasActions: true},
+	[NagbarType.LEGACY_PRICE_OPT_IN]: {tone: SkeletonNagbarTone.BRAND, hasActions: true},
 	[NagbarType.GIFT_INVENTORY]: {tone: SkeletonNagbarTone.BRAND, hasActions: true},
 	[NagbarType.DESKTOP_DOWNLOAD]: {tone: SkeletonNagbarTone.BRAND, hasActions: true},
+	[NagbarType.DESKTOP_UPDATE_READY]: {tone: SkeletonNagbarTone.BRAND, hasActions: true},
 	[NagbarType.GUILD_MEMBERSHIP_CTA]: {tone: SkeletonNagbarTone.BRAND, hasActions: true},
 	[NagbarType.VISIONARY_MFA]: {tone: SkeletonNagbarTone.BRAND, hasActions: true},
 	[NagbarType.VOICE_SESSION_RESTORE]: {tone: SkeletonNagbarTone.VOICE, hasActions: true},
@@ -1284,6 +1287,7 @@ const SKELETON_NAGBAR_ROW_SHAPES: Record<NagbarType, SkeletonNagbarRowShape> = {
 	[NagbarType.LINUX_INPUT_ACCESS]: {tone: SkeletonNagbarTone.BRAND, hasActions: true},
 	[NagbarType.SOFTWARE_ENCODER]: {tone: SkeletonNagbarTone.ENCODER, hasActions: true},
 	[NagbarType.STREAMER_MODE]: {tone: SkeletonNagbarTone.STREAMER, hasActions: true},
+	[NagbarType.DOMAIN_MOVED]: {tone: SkeletonNagbarTone.BRAND, hasActions: true},
 };
 
 const CONNECTION_SKELETON_NAGBAR_TONES: Record<ConnectionNoticeTone, SkeletonNagbarTone> = {

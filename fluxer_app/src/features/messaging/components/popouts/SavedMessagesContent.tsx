@@ -49,6 +49,8 @@ const readonlyBehaviorOverrides = {
 export const SavedMessagesContent = observer(() => {
 	const {i18n} = useLingui();
 	const {savedMessages, missingSavedMessages, fetched} = SavedMessages;
+	const hasMore = SavedMessages.getHasMore();
+	const isLoadingMore = SavedMessages.getIsLoadingMore();
 	const scrollerRef = useRef<ScrollerHandle | null>(null);
 	const resolveSavedScrollSurface = useMemo(() => () => scrollerRef.current?.getViewportElement() ?? null, []);
 	const onCopySelectedMessages = useMessageSelectionCopyForMessages<HTMLDivElement>(savedMessages);
@@ -79,6 +81,16 @@ export const SavedMessagesContent = observer(() => {
 		goToMessage(channelId, messageId);
 		InboxCommands.closeInboxAndFocusChannelTextarea(channelId);
 	}, []);
+	const handleScroll = useCallback(
+		(event: React.UIEvent<HTMLDivElement>) => {
+			const target = event.currentTarget;
+			const scrollPercentage = (target.scrollTop + target.offsetHeight) / target.scrollHeight;
+			if (scrollPercentage > 0.8 && hasMore && !isLoadingMore) {
+				SavedMessageCommands.loadMore();
+			}
+		},
+		[hasMore, isLoadingMore],
+	);
 	if (!fetched) {
 		return (
 			<div className={previewStyles.emptyState} data-flx="messaging.saved-messages-content.div">
@@ -110,6 +122,7 @@ export const SavedMessagesContent = observer(() => {
 		<NearViewportSurfaceContext.Provider value={resolveSavedScrollSurface}>
 			<Scroller
 				className={styles.scroller}
+				onScroll={handleScroll}
 				key="saved-messages-scroller"
 				ref={scrollerRef}
 				onCopy={onCopySelectedMessages}
@@ -189,22 +202,29 @@ export const SavedMessagesContent = observer(() => {
 						</div>
 					);
 				})}
-				<div className={previewStyles.endState} data-flx="messaging.saved-messages-content.div--7">
-					<div className={previewStyles.endStateContent} data-flx="messaging.saved-messages-content.div--8">
-						<FlagCheckeredIcon
-							className={previewStyles.endStateIcon}
-							data-flx="messaging.saved-messages-content.flag-checkered-icon"
-						/>
-						<div className={previewStyles.endStateTextContainer} data-flx="messaging.saved-messages-content.div--9">
-							<h3 className={previewStyles.endStateTitle} data-flx="messaging.saved-messages-content.h3--2">
-								{i18n._(YOU_VE_REACHED_THE_END_DESCRIPTOR)}
-							</h3>
-							<p className={previewStyles.endStateDescription} data-flx="messaging.saved-messages-content.p--2">
-								{i18n._(THERE_S_NOTHING_MORE_TO_SEE_HERE_DESCRIPTOR)}
-							</p>
+				{isLoadingMore && (
+					<div className={previewStyles.loadingState} data-flx="messaging.saved-messages-content.div--10">
+						<Spinner data-flx="messaging.saved-messages-content.spinner--2" />
+					</div>
+				)}
+				{!hasMore && !isLoadingMore && (
+					<div className={previewStyles.endState} data-flx="messaging.saved-messages-content.div--7">
+						<div className={previewStyles.endStateContent} data-flx="messaging.saved-messages-content.div--8">
+							<FlagCheckeredIcon
+								className={previewStyles.endStateIcon}
+								data-flx="messaging.saved-messages-content.flag-checkered-icon"
+							/>
+							<div className={previewStyles.endStateTextContainer} data-flx="messaging.saved-messages-content.div--9">
+								<h3 className={previewStyles.endStateTitle} data-flx="messaging.saved-messages-content.h3--2">
+									{i18n._(YOU_VE_REACHED_THE_END_DESCRIPTOR)}
+								</h3>
+								<p className={previewStyles.endStateDescription} data-flx="messaging.saved-messages-content.p--2">
+									{i18n._(THERE_S_NOTHING_MORE_TO_SEE_HERE_DESCRIPTOR)}
+								</p>
+							</div>
 						</div>
 					</div>
-				</div>
+				)}
 			</Scroller>
 		</NearViewportSurfaceContext.Provider>
 	);

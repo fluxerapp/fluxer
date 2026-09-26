@@ -18,8 +18,8 @@ interface UseTextareaEmojiPickerReturn {
 interface UseTextareaEmojiPickerParams {
 	setValue: React.Dispatch<React.SetStateAction<string>>;
 	textareaRef: React.RefObject<HTMLTextAreaElement | null>;
-	segmentManagerRef: React.MutableRefObject<TextareaSegmentManager>;
-	previousValueRef: React.MutableRefObject<string>;
+	segmentManagerRef: React.RefObject<TextareaSegmentManager>;
+	previousValueRef: React.RefObject<string>;
 	prepareTextChange: PrepareTextareaTextChange;
 	channelId?: string;
 	maxActualLength?: number;

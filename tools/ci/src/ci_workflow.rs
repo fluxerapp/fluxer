@@ -43,7 +43,6 @@ pub async fn run_ci(args: CiArgs) -> Result<()> {
                 .current_dir(root),
         ),
         CiStep::Typecheck => {
-            ensure_desktop_build_channel_file(&root)?;
             run_generators(&root, true)?;
             run_app_test_artifact_generators(&root, AppWasm::Build)?;
             run_command(
@@ -56,6 +55,11 @@ pub async fn run_ci(args: CiArgs) -> Result<()> {
             run_generators(&root, false)?;
             run_app_test_artifact_generators(&root, AppWasm::ReuseIfPresent)?;
             run_workspace_tests(&root)?;
+            run_command(
+                CommandSpec::new("pnpm")
+                    .args(["--filter", "fluxer_desktop", "test:main"])
+                    .current_dir(&root),
+            )?;
             run_command(with_test_env(
                 CommandSpec::new("pnpm")
                     .args(["--filter", "fluxer_api", "test"])
@@ -119,6 +123,12 @@ fn app_wasm_artifacts(root: &Path) -> Vec<PathBuf> {
         app_dir.join("pkgs/libfluxcore/libfluxcore_bg.wasm"),
         app_dir.join("pkgs/libfluxcore/libfluxcore_bg.wasm.d.ts"),
         app_dir.join("pkgs/libfluxcore/package.json"),
+        app_dir.join("pkgs/libfluxwebp/libfluxwebp.js"),
+        app_dir.join("pkgs/libfluxwebp/libfluxwebp.d.ts"),
+        app_dir.join("pkgs/libfluxwebp/libfluxwebp_bg.wasm"),
+        app_dir.join("pkgs/libfluxwebp/libfluxwebp_bg.wasm.d.ts"),
+        app_dir.join("pkgs/libfluxwebp/libfluxwebp_simd_bg.wasm"),
+        app_dir.join("pkgs/libfluxwebp/libfluxwebp_simd_bg.wasm.d.ts"),
         app_dir.join("src/features/messaging/utils/markdown/parser/MarkdownParserWasmBytes.ts"),
     ]
 }
@@ -145,18 +155,17 @@ fn run_generators(root: &Path, for_typecheck: bool) -> Result<()> {
 }
 
 fn generator_commands(for_typecheck: bool) -> Vec<CommandSpec> {
-    let mut commands = vec![
-        CommandSpec::new("pnpm").args(["--filter", "@fluxer/config", "generate"]),
-        CommandSpec::new("pnpm").args(["--filter", "@fluxer/schema", "generate"]),
-    ];
+    let mut commands =
+        vec![CommandSpec::new("pnpm").args(["--filter", "@fluxer/schema", "generate"])];
     if for_typecheck {
         commands.push(CommandSpec::new("pnpm").args([
             "--filter",
             "@fluxer/i18n",
             "generate:types",
         ]));
+    } else {
+        commands.push(CommandSpec::new("pnpm").args(["--filter", "fluxer_app", "i18n:compile"]));
     }
-    commands.push(CommandSpec::new("pnpm").args(["--filter", "fluxer_app", "i18n:compile"]));
     commands
 }
 
@@ -226,7 +235,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn generator_commands_include_i18n_types_only_for_typecheck() {
+    fn generator_commands_split_i18n_types_and_compile_by_step() {
         let typecheck = generator_commands(true)
             .into_iter()
             .map(|command| command.args)
@@ -245,6 +254,16 @@ mod tests {
             OsString::from("--filter"),
             OsString::from("@fluxer/i18n"),
             OsString::from("generate:types"),
+        ]));
+        assert!(!typecheck.contains(&vec![
+            OsString::from("--filter"),
+            OsString::from("fluxer_app"),
+            OsString::from("i18n:compile"),
+        ]));
+        assert!(test.contains(&vec![
+            OsString::from("--filter"),
+            OsString::from("fluxer_app"),
+            OsString::from("i18n:compile"),
         ]));
     }
 
@@ -313,5 +332,107 @@ mod tests {
         }
 
         assert_eq!(missing_app_wasm_artifact(root), None);
+    }
+
+    #[test]
+    fn image_dockerfiles_carry_the_release_label_block() {
+        const REQUIRED: [&str; 9] = [
+            "LABEL org.opencontainers.image.licenses=\"AGPL-3.0-or-later\"",
+            "LABEL org.opencontainers.image.vendor=\"Fluxer\"",
+            "LABEL org.opencontainers.image.url=\"https://fluxer.app\"",
+            "LABEL org.opencontainers.image.documentation=\"https://docs.fluxer.app\"",
+            "LABEL org.opencontainers.image.source=\"https://github.com/fluxerapp/fluxer\"",
+            "LABEL org.opencontainers.image.version=\"${BUILD_VERSION}\"",
+            "LABEL org.opencontainers.image.revision=\"${SOURCE_SHA}\"",
+            "LABEL org.opencontainers.image.created=\"${SOURCE_DATE}\"",
+            "LABEL app.fluxer.build-version=\"${BUILD_VERSION}\"",
+        ];
+
+        for (name, title, dockerfile) in [
+            (
+                "fluxer_admin",
+                "fluxer-admin",
+                include_str!("../../../fluxer_admin/Dockerfile"),
+            ),
+            (
+                "fluxer_api",
+                "fluxer-api",
+                include_str!("../../../fluxer_api/Dockerfile"),
+            ),
+            (
+                "fluxer_app_proxy",
+                "fluxer-app-proxy",
+                include_str!("../../../fluxer_app_proxy/Dockerfile"),
+            ),
+            (
+                "fluxer_docs",
+                "fluxer-docs",
+                include_str!("../../../fluxer_docs/Dockerfile"),
+            ),
+            (
+                "fluxer_gateway",
+                "fluxer-gateway",
+                include_str!("../../../fluxer_gateway/Dockerfile"),
+            ),
+            (
+                "fluxer_gifs",
+                "fluxer-gifs",
+                include_str!("../../../fluxer_gifs/Dockerfile"),
+            ),
+            (
+                "fluxer_media_proxy",
+                "fluxer-media-proxy",
+                include_str!("../../../fluxer_media_proxy/Dockerfile"),
+            ),
+            (
+                "fluxer_messages",
+                "fluxer-messages",
+                include_str!("../../../fluxer_messages/Dockerfile"),
+            ),
+            (
+                "fluxer_push",
+                "fluxer-push",
+                include_str!("../../../fluxer_push/Dockerfile"),
+            ),
+            (
+                "fluxer_snowflakes",
+                "fluxer-snowflakes",
+                include_str!("../../../fluxer_snowflakes/Dockerfile"),
+            ),
+            (
+                "fluxer_static",
+                "fluxer-static",
+                include_str!("../../../fluxer_static/Dockerfile"),
+            ),
+            (
+                "fluxer_unfurl",
+                "fluxer-unfurl",
+                include_str!("../../../fluxer_unfurl/Dockerfile"),
+            ),
+            (
+                "fluxer_users",
+                "fluxer-users",
+                include_str!("../../../fluxer_users/Dockerfile"),
+            ),
+        ] {
+            assert!(
+                dockerfile.contains("ARG SOURCE_SHA"),
+                "{name}/Dockerfile must declare ARG SOURCE_SHA"
+            );
+            assert!(
+                dockerfile.contains("ARG SOURCE_DATE"),
+                "{name}/Dockerfile must declare ARG SOURCE_DATE"
+            );
+            assert!(
+                dockerfile.contains(&format!("LABEL org.opencontainers.image.title=\"{title}\"")),
+                "{name}/Dockerfile must declare the title {title}"
+            );
+            for label in REQUIRED {
+                assert!(
+                    dockerfile.contains(label),
+                    "{name}/Dockerfile must declare {label}"
+                );
+            }
+        }
     }
 }

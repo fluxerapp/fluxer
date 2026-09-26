@@ -10,6 +10,8 @@ import {
 import {StreamSettingsMenuContent} from '@app/features/voice/components/StreamSettingsMenuContent';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import type {DisplayShareEnvironment} from '@app/features/voice/utils/ScreenShareEnvironment';
+import {isScreenShareRollbackIncompleteError} from '@app/features/voice/utils/ScreenShareRollbackIncompleteError';
+import {handleScreenShareError} from '@app/features/voice/utils/ScreenShareUtils';
 import type {StreamSettingsShareContext} from '@app/features/voice/utils/StreamSettingsUpdatePolicy';
 import {msg} from '@lingui/core/macro';
 import {useLingui} from '@lingui/react/macro';
@@ -17,11 +19,11 @@ import {MonitorPlayIcon, StopCircleIcon} from '@phosphor-icons/react';
 import type React from 'react';
 
 const STOP_STREAMING_DESCRIPTOR = msg({
-	message: 'Stop Streaming',
+	message: 'Stop streaming',
 	comment: 'Danger action that stops the active screen share.',
 });
 const CHANGE_STREAM_DESCRIPTOR = msg({
-	message: 'Change Stream',
+	message: 'Change stream',
 	comment: 'Action that opens the source picker for the active screen share.',
 });
 const logger = new Logger('ActiveScreenShareMenu');
@@ -33,7 +35,6 @@ export interface ActiveScreenShareMenuProps {
 	shareContextResolved: boolean;
 	iconClassName?: string;
 	additionalActions?: React.ReactNode;
-	showLiveSettings?: boolean;
 	tail?: React.ReactNode;
 }
 
@@ -58,7 +59,6 @@ export const ActiveScreenShareMenu: React.FC<ActiveScreenShareMenuProps> = ({
 	shareContextResolved,
 	iconClassName,
 	additionalActions,
-	showLiveSettings = true,
 	tail,
 }) => {
 	const {i18n} = useLingui();
@@ -85,6 +85,7 @@ export const ActiveScreenShareMenu: React.FC<ActiveScreenShareMenuProps> = ({
 					onClick={() => {
 						onClose();
 						void stopActiveScreenShare().catch((error) => {
+							if (isScreenShareRollbackIncompleteError(error)) handleScreenShareError(error);
 							logger.error('Failed to stop active screen share', error);
 						});
 					}}
@@ -106,7 +107,7 @@ export const ActiveScreenShareMenu: React.FC<ActiveScreenShareMenuProps> = ({
 					{i18n._(CHANGE_STREAM_DESCRIPTOR)}
 				</MenuItem>
 				{additionalActions}
-				{showLiveSettings && !isWeb && (
+				{!isWeb && (
 					<StreamSettingsMenuContent
 						applyToLiveStream
 						variant="compactLive"

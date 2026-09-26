@@ -1,0 +1,7 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+.error {
+	margin: 0;
+	font-size: 0.8125rem;
+	color: var(--accent-danger);
+}

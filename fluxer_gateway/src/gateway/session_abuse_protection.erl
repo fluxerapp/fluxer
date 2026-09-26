@@ -5,8 +5,6 @@
 
 -export([
     ensure_tables/0,
-    is_token_banned/1,
-    ban_token/1,
     check_user_session_limit/1,
     increment_user_sessions/1,
     decrement_user_sessions/1,
@@ -14,12 +12,11 @@
 ]).
 
 -ifdef(TEST).
--export([prune_old_identify_entries/0]).
+-export([prune_old_identify_entries/1]).
 -endif.
 
 -define(IDENTIFY_TABLE, gateway_identify_rate).
 -define(SESSION_USER_COUNTS, session_user_counts).
--define(TOKEN_BAN_TABLE, gateway_token_bans).
 -define(IDENTIFY_MAX_PER_IP, 300).
 -define(IDENTIFY_WINDOW_SECS, 60).
 -define(IDENTIFY_CLEANUP_INTERVAL_MS, ?IDENTIFY_WINDOW_SECS * 2 * 1000).
@@ -29,48 +26,17 @@
 ensure_tables() ->
     ensure_identify_table(),
     ensure_session_user_counts_table(),
-    ensure_token_ban_table(),
     ok.
-
--spec is_token_banned(term()) -> boolean().
-is_token_banned(Token) when is_binary(Token) ->
-    ok = ensure_token_ban_table(),
-    Key = utils:hash_token(Token),
-    try ets:member(?TOKEN_BAN_TABLE, Key) of
-        Member when is_boolean(Member) -> Member
-    catch
-        error:badarg -> false
-    end;
-is_token_banned(_) ->
-    false.
-
--spec ban_token(term()) -> ok.
-ban_token(Token) when is_binary(Token) ->
-    ok = ensure_token_ban_table(),
-    Key = utils:hash_token(Token),
-    try
-        _ = ets:insert(?TOKEN_BAN_TABLE, {Key, erlang:system_time(second)}),
-        ok
-    catch
-        error:badarg -> ok
-    end;
-ban_token(_) ->
-    ok.
-
--spec ensure_token_ban_table() -> ok.
-ensure_token_ban_table() ->
-    case ets:whereis(?TOKEN_BAN_TABLE) of
-        undefined ->
-            _ = create_rate_table(?TOKEN_BAN_TABLE),
-            ok;
-        _ ->
-            ok
-    end.
 
 -spec check_user_session_limit(term()) -> ok | {error, too_many_sessions}.
 check_user_session_limit(UserId) when is_integer(UserId), UserId > 0 ->
-    ok = ensure_session_user_counts_table(),
-    do_check_user_session_limit(UserId);
+    case gateway_handler_rate_limit:rate_limits_disabled() of
+        true ->
+            ok;
+        false ->
+            ok = ensure_session_user_counts_table(),
+            do_check_user_session_limit(UserId)
+    end;
 check_user_session_limit(_) ->
     ok.
 
@@ -116,8 +82,13 @@ decrement_user_sessions(_) ->
 
 -spec check_identify_rate(term()) -> ok | {error, identify_rate_limited}.
 check_identify_rate(PeerIP) when is_binary(PeerIP) ->
-    ok = ensure_identify_table(),
-    do_check_identify_rate(PeerIP);
+    case gateway_handler_rate_limit:rate_limits_disabled() of
+        true ->
+            ok;
+        false ->
+            ok = ensure_identify_table(),
+            do_check_identify_rate(PeerIP)
+    end;
 check_identify_rate(_) ->
     ok.
 
@@ -151,17 +122,16 @@ create_session_user_counts_table() ->
 -spec create_rate_table(atom()) -> created | exists.
 create_rate_table(Table) ->
     try
-        _ = ets:new(Table, [
-            named_table,
-            public,
-            set,
-            {write_concurrency, true},
-            {read_concurrency, true}
-        ]),
+        _ = ets:new(Table, rate_table_options()),
         created
     catch
         error:badarg -> exists
     end.
+
+-spec rate_table_options() -> list().
+rate_table_options() ->
+    [named_table, public, set, {write_concurrency, true}, {read_concurrency, true}] ++
+        guild_ets_utils:heir_options().
 
 -spec ensure_identify_table() -> ok.
 ensure_identify_table() ->
@@ -179,28 +149,36 @@ create_identify_table() ->
 
 -spec schedule_identify_cleanup() -> ok.
 schedule_identify_cleanup() ->
-    _ = spawn(fun identify_cleanup_loop/0),
+    case ets:whereis(?IDENTIFY_TABLE) of
+        undefined -> ok;
+        Tid -> spawn_identify_cleanup(Tid)
+    end.
+
+-spec spawn_identify_cleanup(ets:table()) -> ok.
+spawn_identify_cleanup(Tid) ->
+    _ = spawn(fun() -> identify_cleanup_loop(Tid) end),
     ok.
 
--spec identify_cleanup_loop() -> no_return().
-identify_cleanup_loop() ->
+-spec identify_cleanup_loop(ets:table()) -> ok.
+identify_cleanup_loop(Table) ->
     ok = gateway_retry_timer:wait(?IDENTIFY_CLEANUP_INTERVAL_MS),
-    prune_old_identify_entries(),
-    identify_cleanup_loop().
+    case prune_old_identify_entries(Table) of
+        ok -> identify_cleanup_loop(Table);
+        gone -> ok
+    end.
 
--spec prune_old_identify_entries() -> ok.
-prune_old_identify_entries() ->
+-spec prune_old_identify_entries(ets:table()) -> ok | gone.
+prune_old_identify_entries(Table) ->
     Now = erlang:system_time(second),
     Cutoff = Now div ?IDENTIFY_WINDOW_SECS - 1,
     try
-        _ = ets:select_delete(?IDENTIFY_TABLE, [
+        _ = ets:select_delete(Table, [
             {{{'$1', '$2'}, '_'}, [{'<', '$2', Cutoff}], [true]}
         ]),
         ok
     catch
-        error:badarg -> ok
-    end,
-    ok.
+        error:badarg -> gone
+    end.
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
@@ -211,29 +189,33 @@ check_identify_rate_allows_under_limit_test() ->
     ?assertEqual(ok, check_identify_rate(IP)).
 
 check_identify_rate_blocks_over_limit_test() ->
-    ensure_tables(),
-    IP = <<"192.0.2.200">>,
-    lists:foreach(
-        fun(_) -> check_identify_rate(IP) end,
-        lists:seq(1, ?IDENTIFY_MAX_PER_IP)
-    ),
-    ?assertEqual({error, identify_rate_limited}, check_identify_rate(IP)).
+    with_rate_limits_enabled(fun() ->
+        ensure_tables(),
+        IP = <<"192.0.2.200">>,
+        lists:foreach(
+            fun(_) -> check_identify_rate(IP) end,
+            lists:seq(1, ?IDENTIFY_MAX_PER_IP)
+        ),
+        ?assertEqual({error, identify_rate_limited}, check_identify_rate(IP))
+    end).
+
+check_identify_rate_disabled_by_env_test() ->
+    OldValue = os:getenv("FLUXER_DISABLE_RATE_LIMITS"),
+    os:putenv("FLUXER_DISABLE_RATE_LIMITS", "true"),
+    try
+        ensure_tables(),
+        IP = <<"192.0.2.201">>,
+        lists:foreach(
+            fun(_) -> ?assertEqual(ok, check_identify_rate(IP)) end,
+            lists:seq(1, ?IDENTIFY_MAX_PER_IP + 1)
+        ),
+        ?assertEqual(ok, check_identify_rate(IP))
+    after
+        restore_env("FLUXER_DISABLE_RATE_LIMITS", OldValue)
+    end.
 
 check_identify_rate_non_binary_returns_ok_test() ->
     ?assertEqual(ok, check_identify_rate(undefined)).
-
-token_ban_round_trips_test() ->
-    ensure_tables(),
-    Token = <<"banned_token_abc">>,
-    ?assertEqual(false, is_token_banned(Token)),
-    ?assertEqual(ok, ban_token(Token)),
-    ?assertEqual(true, is_token_banned(Token)),
-    ?assertEqual(false, is_token_banned(<<"other_token">>)),
-    ets:delete(?TOKEN_BAN_TABLE, utils:hash_token(Token)).
-
-token_ban_non_binary_returns_ok_test() ->
-    ?assertEqual(false, is_token_banned(undefined)),
-    ?assertEqual(ok, ban_token(undefined)).
 
 user_session_limit_allows_under_limit_test() ->
     ensure_tables(),
@@ -245,28 +227,49 @@ user_session_limit_allows_under_limit_test() ->
     delete_user_session_count(UserId).
 
 user_session_limit_blocks_over_limit_test() ->
-    ensure_tables(),
-    UserId = 900002,
-    delete_user_session_count(UserId),
-    lists:foreach(
-        fun(_) -> increment_user_sessions(UserId) end,
-        lists:seq(1, ?MAX_SESSIONS_PER_USER)
-    ),
-    ?assertEqual({error, too_many_sessions}, check_user_session_limit(UserId)),
-    delete_user_session_count(UserId).
+    with_rate_limits_enabled(fun() ->
+        ensure_tables(),
+        UserId = 900002,
+        delete_user_session_count(UserId),
+        lists:foreach(
+            fun(_) -> increment_user_sessions(UserId) end,
+            lists:seq(1, ?MAX_SESSIONS_PER_USER)
+        ),
+        ?assertEqual({error, too_many_sessions}, check_user_session_limit(UserId)),
+        delete_user_session_count(UserId)
+    end).
+
+check_user_session_limit_disabled_by_env_test() ->
+    OldValue = os:getenv("FLUXER_DISABLE_RATE_LIMITS"),
+    os:putenv("FLUXER_DISABLE_RATE_LIMITS", "true"),
+    try
+        ensure_tables(),
+        UserId = 900005,
+        delete_user_session_count(UserId),
+        lists:foreach(
+            fun(_) -> increment_user_sessions(UserId) end,
+            lists:seq(1, ?MAX_SESSIONS_PER_USER + 1)
+        ),
+        ?assertEqual(ok, check_user_session_limit(UserId)),
+        delete_user_session_count(UserId)
+    after
+        restore_env("FLUXER_DISABLE_RATE_LIMITS", OldValue)
+    end.
 
 user_session_decrement_works_test() ->
-    ensure_tables(),
-    UserId = 900003,
-    delete_user_session_count(UserId),
-    lists:foreach(
-        fun(_) -> increment_user_sessions(UserId) end,
-        lists:seq(1, ?MAX_SESSIONS_PER_USER)
-    ),
-    ?assertEqual({error, too_many_sessions}, check_user_session_limit(UserId)),
-    decrement_user_sessions(UserId),
-    ?assertEqual(ok, check_user_session_limit(UserId)),
-    delete_user_session_count(UserId).
+    with_rate_limits_enabled(fun() ->
+        ensure_tables(),
+        UserId = 900003,
+        delete_user_session_count(UserId),
+        lists:foreach(
+            fun(_) -> increment_user_sessions(UserId) end,
+            lists:seq(1, ?MAX_SESSIONS_PER_USER)
+        ),
+        ?assertEqual({error, too_many_sessions}, check_user_session_limit(UserId)),
+        decrement_user_sessions(UserId),
+        ?assertEqual(ok, check_user_session_limit(UserId)),
+        delete_user_session_count(UserId)
+    end).
 
 user_session_decrement_does_not_go_negative_test() ->
     ensure_tables(),
@@ -290,7 +293,7 @@ prune_old_identify_entries_removes_old_buckets_test() ->
     CurrentKey = {<<"10.0.0.2">>, CurrentBucket},
     ets:insert(?IDENTIFY_TABLE, {OldKey, 3}),
     ets:insert(?IDENTIFY_TABLE, {CurrentKey, 7}),
-    prune_old_identify_entries(),
+    prune_old_identify_entries(?IDENTIFY_TABLE),
     ?assertEqual([], ets:lookup(?IDENTIFY_TABLE, OldKey)),
     ?assertEqual([{CurrentKey, 7}], ets:lookup(?IDENTIFY_TABLE, CurrentKey)),
     ets:delete(?IDENTIFY_TABLE, CurrentKey).
@@ -301,15 +304,144 @@ prune_old_identify_entries_keeps_recent_buckets_test() ->
     CurrentBucket = Now div ?IDENTIFY_WINDOW_SECS,
     RecentKey = {<<"10.0.0.3">>, CurrentBucket - 1},
     ets:insert(?IDENTIFY_TABLE, {RecentKey, 5}),
-    prune_old_identify_entries(),
+    prune_old_identify_entries(?IDENTIFY_TABLE),
     ?assertNotEqual([], ets:lookup(?IDENTIFY_TABLE, RecentKey)),
     ets:delete(?IDENTIFY_TABLE, RecentKey).
+
+identify_bucket_survives_creating_process_death_test() ->
+    drop_identify_table(),
+    {ok, _} = guild_ets_owner:start_link(),
+    try
+        assert_identify_bucket_outlives_creator()
+    after
+        gen_server:stop(guild_ets_owner)
+    end.
+
+assert_identify_bucket_outlives_creator() ->
+    IP = <<"192.0.2.220">>,
+    stop_table_owner(start_identify_bucket_creator(IP)),
+    ?assertNotEqual(undefined, ets:whereis(?IDENTIFY_TABLE)),
+    Key = {IP, erlang:system_time(second) div ?IDENTIFY_WINDOW_SECS},
+    ?assertEqual([{Key, 1}], ets:lookup(?IDENTIFY_TABLE, Key)).
+
+start_identify_bucket_creator(IP) ->
+    Parent = self(),
+    Pid = spawn(fun() -> create_identify_bucket(Parent, IP) end),
+    receive
+        {owner_ready, Pid} -> Pid
+    after 1000 -> error(owner_start_timeout)
+    end.
+
+create_identify_bucket(Parent, IP) ->
+    ok = check_identify_rate(IP),
+    Parent ! {owner_ready, self()},
+    receive
+        stop -> ok
+    after 30000 -> ok
+    end.
+
+identify_cleanup_loops_do_not_outlive_their_table_test() ->
+    meck:new(gateway_retry_timer, [passthrough]),
+    meck:expect(gateway_retry_timer, wait, fun(_) -> timer:sleep(5) end),
+    try
+        assert_identify_cleanup_loops_do_not_leak()
+    after
+        meck:unload(gateway_retry_timer)
+    end.
+
+assert_identify_cleanup_loops_do_not_leak() ->
+    drop_identify_table(),
+    Before = count_identify_cleanup_loops(),
+    lists:foreach(fun(_) -> churn_identify_table_owner() end, lists:seq(1, 5)),
+    Owner = start_identify_table_owner(),
+    try
+        ?assert(await_identify_cleanup_loops(Before + 1, 200))
+    after
+        stop_table_owner(Owner)
+    end.
+
+drop_identify_table() ->
+    case ets:whereis(?IDENTIFY_TABLE) of
+        undefined ->
+            ok;
+        _ ->
+            ets:delete(?IDENTIFY_TABLE),
+            ok
+    end.
+
+churn_identify_table_owner() ->
+    stop_table_owner(start_identify_table_owner()).
+
+start_identify_table_owner() ->
+    Parent = self(),
+    Pid = spawn(fun() -> own_identify_table(Parent) end),
+    receive
+        {owner_ready, Pid} -> Pid
+    after 1000 -> error(owner_start_timeout)
+    end.
+
+own_identify_table(Parent) ->
+    ok = check_identify_rate(<<"192.0.2.210">>),
+    Parent ! {owner_ready, self()},
+    receive
+        stop -> ok
+    after 30000 -> ok
+    end.
+
+stop_table_owner(Pid) ->
+    Ref = erlang:monitor(process, Pid),
+    Pid ! stop,
+    receive
+        {'DOWN', Ref, process, Pid, _Reason} -> ok
+    after 1000 -> error(owner_stop_timeout)
+    end.
+
+count_identify_cleanup_loops() ->
+    length([Pid || Pid <- erlang:processes(), is_identify_cleanup_loop(Pid)]).
+
+is_identify_cleanup_loop(Pid) ->
+    case erlang:process_info(Pid, current_stacktrace) of
+        {current_stacktrace, Stack} ->
+            lists:any(fun is_identify_cleanup_frame/1, Stack);
+        _ ->
+            false
+    end.
+
+is_identify_cleanup_frame({?MODULE, identify_cleanup_loop, _Arity, _Location}) ->
+    true;
+is_identify_cleanup_frame(_Frame) ->
+    false.
+
+await_identify_cleanup_loops(Max, 0) ->
+    count_identify_cleanup_loops() =< Max;
+await_identify_cleanup_loops(Max, Attempts) ->
+    case count_identify_cleanup_loops() =< Max of
+        true ->
+            true;
+        false ->
+            timer:sleep(10),
+            await_identify_cleanup_loops(Max, Attempts - 1)
+    end.
 
 delete_user_session_count(UserId) ->
     try ets:delete(?SESSION_USER_COUNTS, UserId) of
         _ -> ok
     catch
         error:badarg -> ok
+    end.
+
+restore_env(Key, false) ->
+    os:unsetenv(Key);
+restore_env(Key, Value) ->
+    os:putenv(Key, Value).
+
+with_rate_limits_enabled(Fun) ->
+    OldValue = os:getenv("FLUXER_DISABLE_RATE_LIMITS"),
+    os:unsetenv("FLUXER_DISABLE_RATE_LIMITS"),
+    try
+        Fun()
+    after
+        restore_env("FLUXER_DISABLE_RATE_LIMITS", OldValue)
     end.
 
 -endif.

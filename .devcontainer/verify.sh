@@ -7,10 +7,16 @@ QUICK=0
 SKIP_INSTALL=0
 for arg in "$@"; do
 	case "$arg" in
-		--quick) QUICK=1 ;;
-		--skip-install) SKIP_INSTALL=1 ;;
-		-h|--help) sed -n '2,25p' "$0"; exit 0 ;;
-		*) echo "unknown argument: $arg" >&2; exit 2 ;;
+	--quick) QUICK=1 ;;
+	--skip-install) SKIP_INSTALL=1 ;;
+	-h | --help)
+		sed -n '2,25p' "$0"
+		exit 0
+		;;
+	*)
+		echo "unknown argument: $arg" >&2
+		exit 2
+		;;
 	esac
 done
 
@@ -64,6 +70,7 @@ stage "app: typecheck" pnpm --filter fluxer_app typecheck
 stage "app: unit tests" pnpm --filter fluxer_app exec vitest run
 
 if [ "$QUICK" -eq 0 ]; then
+	stage "desktop: typecheck" pnpm --filter fluxer_desktop typecheck
 	stage "app: production build" pnpm --filter fluxer_app build
 fi
 

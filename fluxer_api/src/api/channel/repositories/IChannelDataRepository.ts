@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ChannelID, GuildID, MessageID} from '../../BrandedTypes';
-import type {ChannelRow} from '../../database/types/ChannelTypes';
-import type {Channel} from '../../models/Channel';
+import type {ChannelID, GuildID, MessageID} from '@app/api/BrandedTypes';
+import type {ChannelRow} from '@app/api/database/types/ChannelTypes';
+import type {Channel} from '@app/api/models/Channel';
 
 export abstract class IChannelDataRepository {
 	abstract findUnique(channelId: ChannelID): Promise<Channel | null>;

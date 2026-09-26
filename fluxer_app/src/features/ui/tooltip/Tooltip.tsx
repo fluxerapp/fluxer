@@ -10,6 +10,12 @@ import ContextMenuState from '@app/features/ui/state/ContextMenu';
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
 import MobileLayout from '@app/features/ui/state/MobileLayout';
 import styles from '@app/features/ui/tooltip/Tooltip.module.css';
+import {useExclusiveTooltip} from '@app/features/ui/tooltip/TooltipExclusivity';
+import {isTooltipHandoffWarm, markTooltipOpen} from '@app/features/ui/tooltip/TooltipHandoff';
+import {
+	getTooltipScrollSuppressRemainingMs,
+	subscribeTooltipScrollHide,
+} from '@app/features/ui/tooltip/TooltipScrollCoordinator';
 import {
 	createTooltipSnapshot,
 	getTooltipStateValue,
@@ -33,8 +39,6 @@ import {clsx} from 'clsx';
 import {AnimatePresence, motion} from 'framer-motion';
 import {observer} from 'mobx-react-lite';
 import React, {useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState} from 'react';
-import {useExclusiveTooltip} from './TooltipExclusivity';
-import {getTooltipScrollSuppressRemainingMs, subscribeTooltipScrollHide} from './TooltipScrollCoordinator';
 
 const logger = new Logger('Tooltip');
 
@@ -466,9 +470,10 @@ export const Tooltip = observer(
 		}, [updatePositionNow, cancelRaf, getTooltipOwnerWindow]);
 		const getVisibilityDriverDelayMs = useCallback(() => {
 			const scrollSuppressRemainingMs = getTooltipScrollSuppressRemainingMs();
+			const openDelay = isTooltipHandoffWarm() ? 0 : delay;
 			switch (true) {
-				case delay > 0 || scrollSuppressRemainingMs > 0:
-					return Math.max(delay, scrollSuppressRemainingMs > 0 ? scrollSuppressRemainingMs + 1 : 0);
+				case openDelay > 0 || scrollSuppressRemainingMs > 0:
+					return Math.max(openDelay, scrollSuppressRemainingMs > 0 ? scrollSuppressRemainingMs + 1 : 0);
 				default:
 					return 0;
 			}
@@ -604,6 +609,10 @@ export const Tooltip = observer(
 		}, [cancelRaf, clearDelayTimer, clearPointerFocusTimeout]);
 		useEffect(() => {
 			if (!shouldRenderTooltip) return;
+			return markTooltipOpen();
+		}, [shouldRenderTooltip]);
+		useEffect(() => {
+			if (!shouldRenderTooltip) return;
 			return subscribeTooltipScrollHide(dismissTooltip);
 		}, [dismissTooltip, shouldRenderTooltip]);
 		useEffect(() => {
@@ -634,7 +643,7 @@ export const Tooltip = observer(
 		useEffect(() => {
 			if (!openOnMountHover || !hasChild || mobileLayout.enabled || isDisabled) return;
 			const target = targetRef.current;
-			if (!target || !target.matches(':hover')) return;
+			if (!target?.matches(':hover')) return;
 			beginVisibilityDriver('hover');
 		}, [beginVisibilityDriver, hasChild, isDisabled, mobileLayout.enabled, openOnMountHover]);
 		useEffect(() => {
@@ -670,7 +679,7 @@ export const Tooltip = observer(
 			let frameId: number | null = null;
 			const verifyTargetHover = () => {
 				const target = targetRef.current;
-				if (!target || !target.matches(':hover')) {
+				if (!target?.matches(':hover')) {
 					endVisibilityDriver('hover');
 					frameId = null;
 					return;

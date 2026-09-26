@@ -1,15 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {ACTIVE_RING_CONTEXT_MANAGER} from '@app/features/ui/focus_ring/FocusRingContext';
+import {makeAutoObservable} from 'mobx';
 
 class FocusRingManagerClass {
 	ringsEnabled = true;
 
+	constructor() {
+		makeAutoObservable(this, {}, {autoBind: true});
+	}
+
 	setRingsEnabled(enabled: boolean) {
+		if (this.ringsEnabled === enabled) return;
 		this.ringsEnabled = enabled;
-		if (!enabled) {
-			ACTIVE_RING_CONTEXT_MANAGER?.hide();
-		}
 	}
 }
 

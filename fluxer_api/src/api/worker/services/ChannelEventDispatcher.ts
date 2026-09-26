@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {MessageID} from '../../BrandedTypes';
-import {dispatchChannelEvent} from '../../channel/services/ChannelGatewayDispatch';
-import type {GatewayDispatchEvent} from '../../constants/Gateway';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {Channel} from '../../models/Channel';
+import type {MessageID} from '@app/api/BrandedTypes';
+import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
+import type {GatewayDispatchEvent} from '@app/api/constants/Gateway';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {Channel} from '@app/api/models/Channel';
 
 interface ChannelEventDispatcherDeps {
 	gatewayService: IGatewayService;

@@ -42,7 +42,7 @@ const SELECT_SCOPES_AND_REDIRECT_URI_IF_REQUIRED_DESCRIPTOR = msg({
 		'Button or menu action label in the o auth builder section. Keep it concise. Keep the tone plain and specific.',
 });
 const COPY_AUTHORIZE_URL_DESCRIPTOR = msg({
-	message: 'Copy authorize URL',
+	message: 'Copy authorization URL',
 	comment:
 		'Button or menu action label in the o auth builder section. Keep it concise. Keep the tone plain and specific.',
 });
@@ -82,7 +82,7 @@ export const OAuthBuilderSection: React.FC<OAuthBuilderSectionProps> = ({
 	return (
 		<SectionCard
 			title={<Trans>OAuth2 URL builder</Trans>}
-			subtitle={<Trans>Construct an authorize URL with scopes and permissions.</Trans>}
+			subtitle={<Trans>Construct an authorization URL with scopes and permissions.</Trans>}
 			data-flx="user.applications-tab.application-detail.o-auth-builder-section.section-card"
 		>
 			<div

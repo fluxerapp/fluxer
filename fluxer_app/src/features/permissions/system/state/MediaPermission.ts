@@ -52,7 +52,16 @@ class MediaPermission {
 	}
 
 	private permissionStateFromNativeStatus(status: NativePermissionResult): PermissionState {
-		return status === 'granted' ? 'granted' : 'denied';
+		switch (status) {
+			case 'granted':
+				return 'granted';
+			case 'denied':
+				return 'denied';
+			case 'not-determined':
+				return 'prompt';
+			case 'unsupported':
+				throw new Error('Unsupported native permission status cannot be mapped to a browser permission state');
+		}
 	}
 
 	private applyNativeStatus(kind: 'microphone' | 'camera' | 'screen', status: NativePermissionResult): void {

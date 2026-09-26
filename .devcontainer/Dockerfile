@@ -1,14 +1,14 @@
-FROM chrislusf/seaweedfs:4.31 AS seaweedfs
+FROM chrislusf/seaweedfs:4.47 AS seaweedfs
 
-FROM erlang:28.5.0.1
+FROM erlang:28.5.0.6
 
 ARG USERNAME=vscode
 ARG USER_UID=1000
 ARG USER_GID=1000
-ARG NODE_MAJOR=24
-ARG ELP_VERSION=2026-02-27
-ARG PNPM_VERSION=10.29.3
-ARG WASM_BINDGEN_VERSION=0.2.122
+ARG NODE_MAJOR=26
+ARG ELP_VERSION=2026-08-10
+ARG PNPM_VERSION=11.27.0
+ARG WASM_BINDGEN_VERSION=0.2.128
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -32,6 +32,7 @@ RUN apt-get update \
 		jq \
 		libasound2 \
 		libatk-bridge2.0-0 \
+		libaom-dev \
 		libavcodec-dev \
 		libavfilter-dev \
 		libavformat-dev \
@@ -51,9 +52,15 @@ RUN apt-get update \
 		libcurl4-openssl-dev \
 		libswresample-dev \
 		libswscale-dev \
+		libdav1d-dev \
+		libde265-dev \
+		liblcms2-dev \
 		libvips-dev \
+		libyuv-dev \
 		libwayland-dev \
 		libwebp-dev \
+		nasm \
+		yasm \
 		libssl-dev \
 		libx11-xcb1 \
 		libxcb-dri3-0 \
@@ -78,6 +85,7 @@ RUN apt-get update \
 		unzip \
 		xz-utils \
 		xdg-utils \
+		zlib1g-dev \
 		zstd \
 	&& rm -rf /var/lib/apt/lists/*
 
@@ -123,9 +131,30 @@ RUN apt-get update \
 RUN curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL https://deb.nodesource.com/setup_${NODE_MAJOR}.x | bash - \
 	&& apt-get install -y --no-install-recommends nodejs \
 	&& rm -rf /var/lib/apt/lists/* \
-	&& corepack enable
+	&& npm install -g "pnpm@${PNPM_VERSION}" \
+	&& pnpm --version
 
 RUN python3 -m pip install --break-system-packages --no-cache-dir awscli
+
+COPY fluxer_media_proxy/tools/install-native-deps.sh /tmp/fluxer-install-native-deps.sh
+RUN /tmp/fluxer-install-native-deps.sh /usr/local \
+	&& rm /tmp/fluxer-install-native-deps.sh
+
+ENV PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/usr/local/lib64/pkgconfig
+ENV LD_LIBRARY_PATH=/usr/local/lib
+
+RUN printf '%s\n' \
+		'#include <libheif/heif.h>' \
+		'#include <string.h>' \
+		'#if !LIBHEIF_HAVE_VERSION(1, 23, 0)' \
+		'#error the source-built libheif headers must win the include search' \
+		'#endif' \
+		'int main(void) { return strcmp(heif_get_version(), LIBHEIF_VERSION) != 0; }' \
+		>/tmp/fluxer-heif-probe.c \
+	&& cc /tmp/fluxer-heif-probe.c $(pkg-config --cflags --libs libheif) -o /tmp/fluxer-heif-probe \
+	&& /tmp/fluxer-heif-probe \
+	&& [ "$(pkg-config --variable=prefix libheif)" = /usr/local ] \
+	&& rm /tmp/fluxer-heif-probe.c /tmp/fluxer-heif-probe
 
 COPY tools/fonts/requirements.txt /tmp/fluxer-fonts-requirements.txt
 RUN python3 -m pip install --break-system-packages --no-cache-dir -r /tmp/fluxer-fonts-requirements.txt \
@@ -139,7 +168,7 @@ RUN ARCH="$(dpkg --print-architecture)" \
 		arm64) ELP_ARCH="aarch64" ;; \
 		*) echo "Unsupported architecture for ELP: $ARCH" >&2; exit 1 ;; \
 	esac \
-	&& curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL "https://github.com/WhatsApp/erlang-language-platform/releases/download/${ELP_VERSION}/elp-linux-${ELP_ARCH}-unknown-linux-gnu-otp-28.tar.gz" -o /tmp/elp.tgz \
+	&& curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL "https://github.com/WhatsApp/erlang-language-platform/releases/download/${ELP_VERSION}/elp-linux-${ELP_ARCH}-unknown-linux-gnu-otp-28.5.tar.gz" -o /tmp/elp.tgz \
 	&& tar -C /usr/local/bin -xzf /tmp/elp.tgz elp \
 	&& chmod +x /usr/local/bin/elp \
 	&& rm /tmp/elp.tgz
@@ -165,8 +194,5 @@ RUN curl --retry 5 --retry-delay 2 --retry-all-errors -fsSL https://sh.rustup.rs
 	&& cargo install cargo-watch --locked \
 	&& cargo install wasm-bindgen-cli --version "${WASM_BINDGEN_VERSION}" --locked \
 	&& rm -rf "/home/${USERNAME}/.cargo/registry" "/home/${USERNAME}/.cargo/git"
-
-RUN corepack prepare "pnpm@${PNPM_VERSION}" --activate \
-	&& pnpm --version
 
 WORKDIR /workspaces/fluxer

@@ -38,10 +38,12 @@ import {
 	CHANNEL_DEBUG_DESCRIPTOR,
 	CHANNEL_DELETED_DESCRIPTOR,
 	COPY_CHANNEL_ID_DESCRIPTOR,
+	COPY_LINK_DESCRIPTOR,
 	DEBUG_CHANNEL_DESCRIPTOR,
 	EDIT_GROUP_DESCRIPTOR,
 	INVITE_PEOPLE_DESCRIPTOR,
 	INVITES_DESCRIPTOR,
+	LINK_COPIED_TO_CLIPBOARD_DESCRIPTOR,
 	MARK_AS_READ_DESCRIPTOR,
 	NOTIFICATION_SETTINGS_DESCRIPTOR,
 	OPEN_LINK_DESCRIPTOR,
@@ -54,7 +56,6 @@ import {
 import {InviteModal} from '@app/features/invite/components/modals/InviteModal';
 import * as InviteUtils from '@app/features/invite/utils/InviteUtils';
 import Favorites from '@app/features/messaging/state/Favorites';
-import {getEffectiveChannelMatureContent} from '@app/features/messaging/utils/ContentWarningUtils';
 import {buildChannelLink} from '@app/features/messaging/utils/MessageLinkUtils';
 import * as NavigationCommands from '@app/features/navigation/commands/NavigationCommands';
 import Permission from '@app/features/permissions/state/Permission';
@@ -88,7 +89,6 @@ import * as ToastCommands from '@app/features/ui/commands/ToastCommands';
 import type {MenuActionEvent, MenuGroupType, MenuItemType} from '@app/features/ui/menu_bottom_sheet/MenuBottomSheet';
 import UserGuildSettings from '@app/features/user/state/UserGuildSettings';
 import UserSettings from '@app/features/user/state/UserSettings';
-import Users from '@app/features/user/state/Users';
 import CompactVoiceCallHeight, {getGuildVoiceCallExpansionKey} from '@app/features/voice/state/CompactVoiceCallHeight';
 import {getMutedText} from '@app/lib/overlay/OverlayContextMenu';
 import {ME} from '@fluxer/constants/src/AppConstants';
@@ -173,6 +173,7 @@ export interface ChannelMenuHandlers {
 	handleInviteMembers: () => void;
 	handleCopyChannelLink: () => Promise<void>;
 	handleOpenChannelLink: () => void;
+	handleCopyLinkChannelUrl: () => Promise<void>;
 	handleOpenChat: () => void;
 	handleOpenMuteSheet: () => void;
 	handleNotificationSettings: () => void;
@@ -203,7 +204,6 @@ export interface ChannelMenuState {
 	hasUnread: boolean;
 	canManageChannels: boolean;
 	canEditChannel: boolean;
-	nsfwBlockedForMinor: boolean;
 	canInvite: boolean;
 	developerMode: boolean;
 	isPinned: boolean;
@@ -237,10 +237,6 @@ function getChannelMenuState(channel: Channel, guild: Guild | undefined): Channe
 			guildId: channel.guildId,
 		});
 	const canEditChannel = canManageChannels || canUpdateRtcRegion;
-	const currentUser = Users.getCurrentUser();
-	const channelIsNsfw =
-		(isTextChannel || isVoiceChannel || isLinkChannel) && getEffectiveChannelMatureContent(channel, guild ?? null);
-	const nsfwBlockedForMinor = channelIsNsfw && !!currentUser && !currentUser.matureContentAllowed;
 	const canInvite = InviteUtils.canInviteToChannel(channel.id, channel.guildId);
 	const developerMode = UserSettings.developerMode;
 	const isPinned = channel.isPinned;
@@ -256,7 +252,6 @@ function getChannelMenuState(channel: Channel, guild: Guild | undefined): Channe
 		hasUnread,
 		canManageChannels,
 		canEditChannel,
-		nsfwBlockedForMinor,
 		canInvite,
 		developerMode,
 		isPinned,
@@ -319,6 +314,15 @@ export function useChannelMenuData(
 			},
 			handleOpenChannelLink: () => {
 				LinkChannelCommands.openLinkChannel(channel);
+				onClose();
+			},
+			handleCopyLinkChannelUrl: async () => {
+				if (!channel.url) return;
+				await TextCopyCommands.copy(i18n, channel.url, true);
+				ToastCommands.createToast({
+					type: 'success',
+					children: i18n._(LINK_COPIED_TO_CLIPBOARD_DESCRIPTOR),
+				});
 				onClose();
 			},
 			handleOpenChat: () => {
@@ -677,6 +681,16 @@ export function useChannelMenuData(
 					label: i18n._(OPEN_LINK_DESCRIPTOR),
 					onClick: handlers.handleOpenChannelLink,
 				});
+				inviteItems.push({
+					icon: (
+						<CopyLinkIcon
+							size={20}
+							data-flx="ui.action-menu.items.channel-menu-data.groups.copy-link-channel-url-icon"
+						/>
+					),
+					label: i18n._(COPY_LINK_DESCRIPTOR),
+					onClick: handlers.handleCopyLinkChannelUrl,
+				});
 			}
 			inviteItems.push({
 				icon: <CopyLinkIcon size={20} data-flx="ui.action-menu.items.channel-menu-data.groups.copy-link-icon" />,
@@ -711,24 +725,21 @@ export function useChannelMenuData(
 			});
 			menuGroups.push({items: notificationItems});
 			if (state.canEditChannel) {
-				const manageItems: Array<MenuItemType> = [];
-				if (!state.nsfwBlockedForMinor) {
-					manageItems.push({
+				const manageItems: Array<MenuItemType> = [
+					{
 						icon: <SettingsIcon size={20} data-flx="ui.action-menu.items.channel-menu-data.groups.settings-icon" />,
 						label: i18n._(EDIT_CHANNEL_DESCRIPTOR),
 						onClick: handlers.handleChannelSettings,
-					});
-				}
-				if (state.canManageChannels && !state.nsfwBlockedForMinor) {
+					},
+				];
+				if (state.canManageChannels) {
 					manageItems.push({
 						icon: <CopyIcon size={20} data-flx="ui.action-menu.items.channel-menu-data.groups.copy-icon" />,
 						label: i18n._(DUPLICATE_CHANNEL_DESCRIPTOR),
 						onClick: handlers.handleDuplicateChannel,
 					});
 				}
-				if (manageItems.length > 0) {
-					menuGroups.push({items: manageItems});
-				}
+				menuGroups.push({items: manageItems});
 			}
 			const debugItems: Array<MenuItemType> = [];
 			if (state.developerMode) {

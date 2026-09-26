@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
+import type {GuildAuditLogChange} from '@app/api/guild/GuildAuditLogTypes';
+import {Logger} from '@app/api/Logger';
+import type {GuildMember} from '@app/api/models/GuildMember';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';
-import type {GuildID, UserID} from '../../../BrandedTypes';
-import {Logger} from '../../../Logger';
-import type {GuildMember} from '../../../models/GuildMember';
-import type {GuildAuditLogService} from '../../GuildAuditLogService';
-import type {GuildAuditLogChange} from '../../GuildAuditLogTypes';
 
 export class GuildMemberAuditService {
 	constructor(private readonly guildAuditLogService: GuildAuditLogService) {}

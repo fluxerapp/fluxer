@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {UserID} from '../../BrandedTypes';
-import type {RelationshipRow} from '../../database/types/UserTypes';
-import type {Relationship} from '../../models/Relationship';
-import type {UserNote} from '../../models/UserNote';
+import type {UserID} from '@app/api/BrandedTypes';
+import type {RelationshipRow} from '@app/api/database/types/UserTypes';
+import type {Relationship} from '@app/api/models/Relationship';
+import type {UserNote} from '@app/api/models/UserNote';
 
 export interface IUserRelationshipRepository {
 	listRelationships(sourceUserId: UserID): Promise<Array<Relationship>>;

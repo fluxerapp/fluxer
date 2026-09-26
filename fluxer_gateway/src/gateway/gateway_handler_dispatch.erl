@@ -41,8 +41,12 @@ handle_opcode(identify, _, State) ->
     gateway_handler_encode:close_with_reason(
         already_authenticated, <<"Already authenticated">>, State
     );
-handle_opcode(resume, #{<<"d">> := Data}, State) ->
-    gateway_handler_identify:handle_resume(Data, State);
+handle_opcode(resume, #{<<"d">> := Data}, #{session_pid := undefined} = State) ->
+    handle_rate_limited_resume(Data, State);
+handle_opcode(resume, _, State) ->
+    gateway_handler_encode:close_with_reason(
+        already_authenticated, <<"Already authenticated">>, State
+    );
 handle_opcode(Op, #{<<"d">> := Data}, State) ->
     handle_authenticated_opcode(Op, Data, State);
 handle_opcode(_, _, State) ->
@@ -56,9 +60,13 @@ handle_authenticated_opcode(presence_update, Data, #{session_pid := Pid} = State
 ->
     handle_presence_update(Data, Pid, State);
 handle_authenticated_opcode(voice_state_update, Data, #{session_pid := Pid} = State) when
-    is_pid(Pid)
+    is_pid(Pid), is_map(Data)
 ->
     gateway_handler_voice:handle_voice_state_update(Pid, Data, State);
+handle_authenticated_opcode(voice_state_update, _Data, State) ->
+    gateway_handler_encode:close_with_reason(
+        decode_error, <<"Invalid voice payload">>, State
+    );
 handle_authenticated_opcode(request_guild_members, Data, #{session_pid := Pid} = State) when
     is_pid(Pid)
 ->
@@ -80,8 +88,18 @@ handle_authenticated_opcode(
 handle_authenticated_opcode(_, _, State) ->
     gateway_handler_encode:close_with_reason(unknown_opcode, <<"Unknown opcode">>, State).
 
+-spec handle_rate_limited_resume(map(), state()) -> ws_result().
+handle_rate_limited_resume(Data, State) ->
+    case session_abuse_protection:check_identify_rate(peer_ip(State)) of
+        {error, identify_rate_limited} ->
+            logger:debug("Holding gateway resume: reason=rate_limited"),
+            {ok, State};
+        ok ->
+            gateway_handler_identify:handle_resume(Data, State)
+    end.
+
 -spec handle_dispatch(
-    atom() | binary(), map() | null | {pre_encoded, binary()}, integer(), state()
+    atom() | binary(), map() | list() | null | {pre_encoded, binary()}, integer(), state()
 ) -> ws_result().
 handle_dispatch(Event, Data, Seq, State) ->
     case gateway_event_pause:is_frozen() of
@@ -90,7 +108,7 @@ handle_dispatch(Event, Data, Seq, State) ->
     end.
 
 -spec do_dispatch(
-    atom() | binary(), map() | null | {pre_encoded, binary()}, integer(), state()
+    atom() | binary(), map() | list() | null | {pre_encoded, binary()}, integer(), state()
 ) ->
     ws_result().
 do_dispatch(Event, {pre_encoded, EncodedData}, Seq, State) ->
@@ -125,7 +143,9 @@ dispatch_pre_encoded(Event, EncodedData, Seq, #{compress_ctx := CompressCtx} = S
             {ok, State}
     end.
 
--spec dispatch_standard(atom() | binary(), map() | null, integer(), state()) -> ws_result().
+-spec dispatch_standard(
+    atom() | binary(), map() | list() | null, integer(), state()
+) -> ws_result().
 dispatch_standard(Event, Data, Seq, State) ->
     EventName = gateway_handler_encode:dispatch_event_name(Event),
     Message = #{

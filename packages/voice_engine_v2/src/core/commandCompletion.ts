@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import type {VoiceEngineV2Command} from '../protocol/commands';
-import type {VoiceEngineV2Snapshot} from './state';
+import type {VoiceEngineV2Snapshot} from '@fluxer/voice_engine_v2/src/core/state';
+import type {VoiceEngineV2Command} from '@fluxer/voice_engine_v2/src/protocol/commands';
 
 export function isVoiceEngineV2CommandCompletionStale(
 	snapshot: VoiceEngineV2Snapshot,

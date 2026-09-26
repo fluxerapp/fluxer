@@ -57,7 +57,8 @@ pub fn validate(buffer: &[u8], sniffed_mime: &str) -> std::result::Result<Result
 }
 
 fn validate_image(buffer: &[u8], sniffed_mime: &str) -> std::result::Result<Result, ValidateError> {
-    media_process::ensure_vips_init().map_err(|_| ValidateError::UnsupportedCodec)?;
+    media_process::native_runtime::ensure_vips_init()
+        .map_err(|_| ValidateError::UnsupportedCodec)?;
     let opts = CString::new("").expect("static string has no NUL");
     let image = unsafe {
         native::fluxer_vips_image_new_from_buffer(
@@ -66,7 +67,8 @@ fn validate_image(buffer: &[u8], sniffed_mime: &str) -> std::result::Result<Resu
             opts.as_ptr(),
         )
     };
-    let Some(image) = native::VipsImageHandle::new(image) else {
+    let Some(image) = (unsafe { native::VipsImageHandle::from_raw_borrowing(image, buffer) })
+    else {
         unsafe { native::fluxer_vips_error_clear() };
         return Err(ValidateError::UnsupportedCodec);
     };

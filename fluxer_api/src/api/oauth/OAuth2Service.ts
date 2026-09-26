@@ -1,6 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash} from 'node:crypto';
+import type {ApiContext} from '@app/api/ApiContext';
+import type {ApplicationID, UserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {
+	OAuth2AccessTokenRow,
+	OAuth2AuthorizationCodeRow,
+	OAuth2RefreshTokenRow,
+} from '@app/api/database/types/OAuth2Types';
+import {Logger} from '@app/api/Logger';
+import type {Application} from '@app/api/models/Application';
+import {filterOAuth2ScopeSet, isOAuth2Scope, sortOAuth2Scopes} from '@app/api/oauth/OAuth2ScopeUtils';
+import {ACCESS_TOKEN_TTL_SECONDS} from '@app/api/oauth/OAuth2TokenConstants';
+import {generateOAuthTokenSecret} from '@app/api/oauth/OAuthTokenSecret';
+import {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
+import type {IApplicationRepository} from '@app/api/oauth/repositories/IApplicationRepository';
+import type {IOAuth2TokenRepository} from '@app/api/oauth/repositories/IOAuth2TokenRepository';
+import {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
+import {mapUserToOAuthResponse} from '@app/api/user/UserMappers';
+import {verifyPassword} from '@app/api/utils/PasswordUtils';
 import {InvalidRequestError} from '@fluxer/errors/src/domains/core/InvalidRequestError';
 import {InvalidTokenError} from '@fluxer/errors/src/domains/core/InvalidTokenError';
 import {BotIsPrivateError} from '@fluxer/errors/src/domains/oauth/BotIsPrivateError';
@@ -11,25 +30,6 @@ import {InvalidRedirectUriError} from '@fluxer/errors/src/domains/oauth/InvalidR
 import {InvalidScopeError} from '@fluxer/errors/src/domains/oauth/InvalidScopeError';
 import {MissingClientSecretError} from '@fluxer/errors/src/domains/oauth/MissingClientSecretError';
 import {MissingRedirectUriError} from '@fluxer/errors/src/domains/oauth/MissingRedirectUriError';
-import type {ApiContext} from '../ApiContext';
-import type {ApplicationID, UserID} from '../BrandedTypes';
-import {Config} from '../Config';
-import type {
-	OAuth2AccessTokenRow,
-	OAuth2AuthorizationCodeRow,
-	OAuth2RefreshTokenRow,
-} from '../database/types/OAuth2Types';
-import {Logger} from '../Logger';
-import type {Application} from '../models/Application';
-import {mapUserToOAuthResponse} from '../user/UserMappers';
-import {verifyPassword} from '../utils/PasswordUtils';
-import {filterOAuth2ScopeSet, isOAuth2Scope, sortOAuth2Scopes} from './OAuth2ScopeUtils';
-import {ACCESS_TOKEN_TTL_SECONDS} from './OAuth2TokenConstants';
-import {generateOAuthTokenSecret} from './OAuthTokenSecret';
-import {ApplicationRepository} from './repositories/ApplicationRepository';
-import type {IApplicationRepository} from './repositories/IApplicationRepository';
-import type {IOAuth2TokenRepository} from './repositories/IOAuth2TokenRepository';
-import {OAuth2TokenRepository} from './repositories/OAuth2TokenRepository';
 
 interface OAuth2ServiceDeps {
 	applicationRepository?: IApplicationRepository;
@@ -333,7 +333,7 @@ export class OAuth2Service {
 
 	async userInfo(accessToken: string) {
 		const token = await this.tokens.getAccessToken(accessToken);
-		if (!token || !token.userId) {
+		if (!token?.userId) {
 			throw new InvalidTokenError();
 		}
 		const application = await this.applications.getApplication(token.applicationId);

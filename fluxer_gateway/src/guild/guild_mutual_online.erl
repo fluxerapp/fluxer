@@ -13,6 +13,8 @@
 
 -type user_id() :: integer().
 -type guild_state() :: map().
+-type viewable_index() :: #{user_id() => map()}.
+-type index_ctx() :: {map(), viewable_index(), guild_state()}.
 
 -spec compute_count(user_id() | term(), guild_state()) -> non_neg_integer().
 compute_count(UserId, State) when is_integer(UserId), UserId > 0 ->
@@ -37,7 +39,7 @@ slow_count(UserId, State) ->
         true ->
             self_online_count(UserId, State);
         false ->
-            count_mutually_visible(UserId, ViewerSet, State)
+            count_mutually_visible_indexed(UserId, ViewerSet, State)
     end.
 
 -spec self_online_count(user_id(), guild_state()) -> non_neg_integer().
@@ -47,38 +49,120 @@ self_online_count(UserId, State) ->
         false -> 0
     end.
 
--spec count_mutually_visible(user_id(), sets:set(), guild_state()) -> non_neg_integer().
-count_mutually_visible(UserId, ViewerSet, State) ->
+-spec count_mutually_visible_indexed(user_id(), sets:set(), guild_state()) ->
+    non_neg_integer().
+count_mutually_visible_indexed(UserId, ViewerSet, State) ->
     Tab = maps:get(member_presence, State),
+    Ctx = {viewer_channel_map(ViewerSet), build_viewable_index(State), State},
     ets:foldl(
         fun({OtherUserId, Presence}, Acc) ->
-            count_online_member(UserId, ViewerSet, State, OtherUserId, Presence, Acc)
+            count_online_member_indexed(UserId, Ctx, OtherUserId, Presence, Acc)
         end,
         0,
         Tab
     ).
 
--spec count_online_member(
-    user_id(), sets:set(), guild_state(), term(), term(), non_neg_integer()
+-spec count_online_member_indexed(
+    user_id(), index_ctx(), term(), term(), non_neg_integer()
 ) -> non_neg_integer().
-count_online_member(UserId, ViewerSet, State, OtherUserId, Presence, Acc) when
+count_online_member_indexed(UserId, Ctx, OtherUserId, Presence, Acc) when
     is_integer(OtherUserId), is_map(Presence), OtherUserId > 0
 ->
     case is_online(Presence) of
         false -> Acc;
         true when OtherUserId =:= UserId -> Acc + 1;
-        true -> count_if_mutually_visible(OtherUserId, ViewerSet, State, Acc)
+        true -> count_if_mutually_visible_indexed(OtherUserId, Ctx, Acc)
     end;
-count_online_member(_UserId, _ViewerSet, _State, _OtherUserId, _Presence, Acc) ->
+count_online_member_indexed(_UserId, _Ctx, _OtherUserId, _Presence, Acc) ->
     Acc.
 
--spec count_if_mutually_visible(user_id(), sets:set(), guild_state(), non_neg_integer()) ->
+-spec count_if_mutually_visible_indexed(user_id(), index_ctx(), non_neg_integer()) ->
     non_neg_integer().
-count_if_mutually_visible(OtherUserId, ViewerSet, State, Acc) ->
-    OtherSet = guild_visibility:viewable_channel_set(OtherUserId, State),
-    case sets:is_empty(sets:intersection(ViewerSet, OtherSet)) of
+count_if_mutually_visible_indexed(OtherUserId, Ctx, Acc) ->
+    case shares_viewable_channel(OtherUserId, Ctx) of
+        true -> Acc + 1;
+        false -> Acc
+    end.
+
+-spec shares_viewable_channel(user_id(), index_ctx()) -> boolean().
+shares_viewable_channel(OtherUserId, {ViewerMap, Index, State}) ->
+    case maps:find(OtherUserId, Index) of
+        {ok, OtherMap} -> maps_share_any_key(OtherMap, ViewerMap);
+        error -> channel_list_shares_any(OtherUserId, ViewerMap, State)
+    end.
+
+-spec channel_list_shares_any(user_id(), map(), guild_state()) -> boolean().
+channel_list_shares_any(OtherUserId, ViewerMap, State) ->
+    Channels = guild_visibility:get_user_viewable_channels(OtherUserId, State),
+    lists:any(fun(ChannelId) -> maps:is_key(ChannelId, ViewerMap) end, Channels).
+
+-spec viewer_channel_map(sets:set()) -> map().
+viewer_channel_map(ViewerSet) ->
+    sets:fold(fun(ChannelId, Acc) -> Acc#{ChannelId => true} end, #{}, ViewerSet).
+
+-spec build_viewable_index(guild_state()) -> viewable_index().
+build_viewable_index(State) ->
+    build_index_from_sessions(maps:get(sessions, State, #{})).
+
+-spec build_index_from_sessions(term()) -> viewable_index().
+build_index_from_sessions(Sessions) when is_map(Sessions) ->
+    build_index_iter(maps:iterator(Sessions), #{});
+build_index_from_sessions(_) ->
+    #{}.
+
+-spec build_index_iter(maps:iterator(), viewable_index()) -> viewable_index().
+build_index_iter(Iterator, Acc) ->
+    case maps:next(Iterator) of
+        none ->
+            Acc;
+        {_, SessionData, Next} when is_map(SessionData) ->
+            build_index_iter(Next, index_session(SessionData, Acc));
+        {_, _, Next} ->
+            build_index_iter(Next, Acc)
+    end.
+
+-spec index_session(map(), viewable_index()) -> viewable_index().
+index_session(SessionData, Acc) ->
+    SessionUserId = maps:get(user_id, SessionData, undefined),
+    ViewableChannels = maps:get(viewable_channels, SessionData, undefined),
+    index_session_entry(SessionUserId, ViewableChannels, Acc).
+
+-spec index_session_entry(term(), term(), viewable_index()) -> viewable_index().
+index_session_entry(UserId, ViewableChannels, Acc) when
+    is_integer(UserId), is_map(ViewableChannels)
+->
+    put_first_session_map(UserId, ViewableChannels, Acc);
+index_session_entry(_, _, Acc) ->
+    Acc.
+
+-spec put_first_session_map(user_id(), map(), viewable_index()) -> viewable_index().
+put_first_session_map(UserId, ViewableChannels, Acc) ->
+    case maps:is_key(UserId, Acc) of
         true -> Acc;
-        false -> Acc + 1
+        false -> Acc#{UserId => ViewableChannels}
+    end.
+
+-spec maps_share_any_key(map(), map()) -> boolean().
+maps_share_any_key(MapA, MapB) ->
+    {Smaller, Larger} =
+        case map_size(MapA) =< map_size(MapB) of
+            true -> {MapA, MapB};
+            false -> {MapB, MapA}
+        end,
+    maps_share_any_key_iter(maps:iterator(Smaller), Larger).
+
+-spec maps_share_any_key_iter(maps:iterator(), map()) -> boolean().
+maps_share_any_key_iter(Iterator, LargerMap) ->
+    case maps:next(Iterator) of
+        none -> false;
+        {Key, _, NextIterator} -> key_matches_or_continue(Key, NextIterator, LargerMap)
+    end.
+
+-spec key_matches_or_continue(term(), maps:iterator(), map()) -> boolean().
+key_matches_or_continue(Key, NextIterator, LargerMap) ->
+    case maps:is_key(Key, LargerMap) of
+        true -> true;
+        false -> maps_share_any_key_iter(NextIterator, LargerMap)
     end.
 
 -spec is_self_online(user_id(), guild_state()) -> boolean().
@@ -257,6 +341,69 @@ slow_path_returns_zero_when_viewer_offline_and_no_channels_test() ->
         sessions => #{}
     },
     ?assertEqual(0, compute_count(10, State)).
+
+index_matches_scan_without_sessions_test() ->
+    State = mutual_visibility_state(1, 5000),
+    ViewerSet = guild_visibility:viewable_channel_set(10, State),
+    Expected = reference_count_mutually_visible(10, ViewerSet, State),
+    ?assertEqual(2, Expected),
+    ?assertEqual(Expected, compute_count(10, State)).
+
+index_matches_scan_with_cached_session_channels_test() ->
+    Base = mutual_visibility_state(1, 5000),
+    State = Base#{sessions => cached_viewable_sessions()},
+    ViewerSet = guild_visibility:viewable_channel_set(10, State),
+    Expected = reference_count_mutually_visible(10, ViewerSet, State),
+    ?assertEqual(3, Expected),
+    ?assertEqual(Expected, compute_count(10, State)).
+
+index_counts_with_cached_session_channels_test() ->
+    Base = mutual_visibility_state(1, 5000),
+    State = Base#{sessions => cached_viewable_sessions()},
+    ?assertEqual(3, compute_count(10, State)).
+
+cached_viewable_sessions() ->
+    #{
+        <<"s20a">> => #{user_id => 20, viewable_channels => undefined},
+        <<"s20b">> => #{user_id => 20, viewable_channels => #{100 => true}},
+        <<"s40">> => #{user_id => 40, viewable_channels => #{101 => true}}
+    }.
+
+-spec reference_count_mutually_visible(user_id(), sets:set(), guild_state()) ->
+    non_neg_integer().
+reference_count_mutually_visible(UserId, ViewerSet, State) ->
+    Tab = maps:get(member_presence, State),
+    ets:foldl(
+        fun({OtherUserId, Presence}, Acc) ->
+            reference_count_online_member(UserId, ViewerSet, State, OtherUserId, Presence, Acc)
+        end,
+        0,
+        Tab
+    ).
+
+-spec reference_count_online_member(
+    user_id(), sets:set(), guild_state(), term(), term(), non_neg_integer()
+) -> non_neg_integer().
+reference_count_online_member(UserId, ViewerSet, State, OtherUserId, Presence, Acc) when
+    is_integer(OtherUserId), is_map(Presence), OtherUserId > 0
+->
+    case is_online(Presence) of
+        false -> Acc;
+        true when OtherUserId =:= UserId -> Acc + 1;
+        true -> reference_count_if_mutually_visible(OtherUserId, ViewerSet, State, Acc)
+    end;
+reference_count_online_member(_UserId, _ViewerSet, _State, _OtherUserId, _Presence, Acc) ->
+    Acc.
+
+-spec reference_count_if_mutually_visible(
+    user_id(), sets:set(), guild_state(), non_neg_integer()
+) -> non_neg_integer().
+reference_count_if_mutually_visible(OtherUserId, ViewerSet, State, Acc) ->
+    OtherSet = guild_visibility:viewable_channel_set(OtherUserId, State),
+    case sets:is_empty(sets:intersection(ViewerSet, OtherSet)) of
+        true -> Acc;
+        false -> Acc + 1
+    end.
 
 make_presence_tab(Map) ->
     Tab = ets:new(test_member_presence, [set, public]),

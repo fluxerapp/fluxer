@@ -3,7 +3,7 @@
 import type {RuntimeConfigSnapshot} from '@app/features/app/state/RuntimeConfig';
 import type {AccountPresenceIntent, UserData} from '@app/features/auth/state/AccountStorage';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export const SessionState = {
 	Idle: 'idle',
@@ -285,7 +285,7 @@ export const authSessionStateMachine = setup({
 export type AuthSessionSnapshot = SnapshotFrom<typeof authSessionStateMachine>;
 
 export function createAuthSessionSnapshot(): AuthSessionSnapshot {
-	return getInitialSnapshot(authSessionStateMachine);
+	return initialTransition(authSessionStateMachine)[0];
 }
 
 export function transitionAuthSessionSnapshot(

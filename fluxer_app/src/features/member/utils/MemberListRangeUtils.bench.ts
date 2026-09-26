@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {bench, describe} from 'vitest';
 import {
 	areMemberListRangesCovered,
 	areMemberListRangesEqual,
@@ -9,7 +8,8 @@ import {
 	buildMemberListRangeWindow,
 	buildMemberListRenderWindow,
 	normalizeMemberListRanges,
-} from './MemberListRangeUtils';
+} from '@app/features/member/utils/MemberListRangeUtils';
+import {test} from 'vitest';
 
 const ROW_HEIGHT = 44;
 const VIEWPORT_HEIGHT = ROW_HEIGHT * 18;
@@ -26,12 +26,12 @@ const NORMALIZED_COVERING_RANGES = normalizeMemberListRanges(COVERING_RANGES);
 const NORMALIZED_COVERING_RANGES_COPY = normalizeMemberListRanges(COVERING_RANGES_COPY);
 const NORMALIZED_INNER_RANGES = normalizeMemberListRanges(INNER_RANGES);
 
-describe('MemberListRangeUtils benchmarks', () => {
-	bench('normalize 1k mixed overlapping ranges', () => {
+test('MemberListRangeUtils benchmarks', async ({bench}) => {
+	await bench('normalize 1k mixed overlapping ranges', () => {
 		normalizeMemberListRanges(OVERLAPPING_RANGES);
-	});
+	}).run();
 
-	bench('build subscription windows while fast scrolling', () => {
+	await bench('build subscription windows while fast scrolling', () => {
 		for (const scrollTop of SCROLL_OFFSETS) {
 			buildMemberListRangeWindow({
 				scrollTop,
@@ -42,9 +42,9 @@ describe('MemberListRangeUtils benchmarks', () => {
 				totalRows: LARGE_TOTAL_ROWS,
 			});
 		}
-	});
+	}).run();
 
-	bench('build render windows while fast scrolling', () => {
+	await bench('build render windows while fast scrolling', () => {
 		for (const scrollTop of SCROLL_OFFSETS) {
 			buildMemberListRenderWindow({
 				scrollTop,
@@ -54,21 +54,21 @@ describe('MemberListRangeUtils benchmarks', () => {
 				totalRows: LARGE_TOTAL_ROWS,
 			});
 		}
-	});
+	}).run();
 
-	bench('coverage checks for 1k normalized pages', () => {
+	await bench('coverage checks for 1k normalized pages', () => {
 		areMemberListRangesCovered(INNER_RANGES, COVERING_RANGES);
-	});
+	}).run();
 
-	bench('normalized coverage checks without re-normalizing', () => {
+	await bench('normalized coverage checks without re-normalizing', () => {
 		areNormalizedMemberListRangesCovered(NORMALIZED_INNER_RANGES, NORMALIZED_COVERING_RANGES);
-	});
+	}).run();
 
-	bench('range equality for raw normalized-shaped windows', () => {
+	await bench('range equality for raw normalized-shaped windows', () => {
 		areMemberListRangesEqual(COVERING_RANGES, COVERING_RANGES_COPY);
-	});
+	}).run();
 
-	bench('normalized range equality without re-normalizing', () => {
+	await bench('normalized range equality without re-normalizing', () => {
 		areNormalizedMemberListRangesEqual(NORMALIZED_COVERING_RANGES, NORMALIZED_COVERING_RANGES_COPY);
-	});
+	}).run();
 });

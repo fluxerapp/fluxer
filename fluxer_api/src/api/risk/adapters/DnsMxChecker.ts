@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Resolver} from 'node:dns/promises';
-import type {MxCheckResult} from '../RiskTypes';
+import type {MxCheckResult} from '@app/api/risk/RiskTypes';
 
 export interface MxResolver {
 	resolveMx(domain: string): Promise<

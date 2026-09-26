@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import type {
 	MobileDevicesListResponse,
 	PushSubscribeResponse,
@@ -11,8 +13,6 @@ import type {
 	UserSettingsResponse,
 	UserTagCheckResponse,
 } from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import type {ApiTestHarness} from '../../test/ApiTestHarness';
-import {createBuilder, createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 
 export async function fetchUserMe(
 	harness: ApiTestHarness,
@@ -140,10 +140,6 @@ export async function checkUsernameDiscriminatorAvailability(
 	return {response, json};
 }
 
-export async function disableAccount(harness: ApiTestHarness, token: string, password: string): Promise<void> {
-	await createBuilder<void>(harness, token).post('/users/@me/disable').body({password}).expect(204).execute();
-}
-
 export async function deleteAccount(harness: ApiTestHarness, token: string, password: string): Promise<void> {
 	await createBuilder<void>(harness, token).post('/users/@me/delete').body({password}).expect(204).execute();
 }
@@ -155,23 +151,6 @@ export async function setUserNote(
 	note: string | null,
 ): Promise<void> {
 	await createBuilder<void>(harness, token).put(`/users/@me/notes/${targetId}`).body({note}).expect(204).execute();
-}
-
-export async function fetchUserNote(
-	harness: ApiTestHarness,
-	token: string,
-	targetId: string,
-): Promise<{
-	response: Response;
-	json: unknown;
-}> {
-	const {response, json} = await createBuilder<unknown>(harness, token)
-		.get(`/users/@me/notes/${targetId}`)
-		.executeWithResponse();
-	if (response.status !== 200) {
-		throw new Error(`Expected 200, got ${response.status}`);
-	}
-	return {response, json};
 }
 
 export async function preloadMessages(
@@ -287,7 +266,7 @@ export async function waitForDeletionCompletion(
 	throw new Error('Deletion did not complete within timeout');
 }
 
-export interface UserProfileUpdateResult {
+interface UserProfileUpdateResult {
 	id: string;
 	username: string;
 	avatar: string | null;
@@ -365,7 +344,7 @@ export async function registerMobileDevice(
 	harness: ApiTestHarness,
 	token: string,
 	body: {
-		platform: 'android_fcm' | 'ios_apns' | 'android_unified_push';
+		platform: 'android_fcm' | 'ios_apns' | 'ios_apns_voip' | 'android_unified_push';
 		token: string;
 		user_agent?: string;
 		app_id?: string;
@@ -392,7 +371,7 @@ export async function unregisterMobileDevice(
 	harness: ApiTestHarness,
 	token: string,
 	body: {
-		platform: 'android_fcm' | 'ios_apns' | 'android_unified_push';
+		platform: 'android_fcm' | 'ios_apns' | 'ios_apns_voip' | 'android_unified_push';
 		token: string;
 		app_id?: string;
 		provider_environment?: 'production' | 'development';

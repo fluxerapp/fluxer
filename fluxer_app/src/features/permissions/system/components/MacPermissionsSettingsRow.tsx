@@ -22,29 +22,35 @@ const REVIEW_DESCRIPTOR = msg({
 	comment: 'Button label for opening the macOS permissions modal.',
 });
 
-type MacPermissionsSettingsRowProps = React.HTMLAttributes<HTMLDivElement>;
+interface MacPermissionsSettingsRowProps extends React.HTMLAttributes<HTMLDivElement> {
+	readonly showTitle?: boolean;
+}
 
-export const MacPermissionsSettingsRow: React.FC<MacPermissionsSettingsRowProps> = observer((props) => {
-	const {i18n} = useLingui();
-	if (!isDesktop() || getNativePlatformSync() !== 'macos') return null;
-	return (
-		<div className={styles.row} data-flx="permissions.mac-permissions-settings-row.row" {...props}>
-			<div className={styles.text} data-flx="permissions.mac-permissions-settings-row.text">
-				<div className={styles.title} data-flx="permissions.mac-permissions-settings-row.title">
-					{i18n._(TITLE_DESCRIPTOR)}
+export const MacPermissionsSettingsRow: React.FC<MacPermissionsSettingsRowProps> = observer(
+	({showTitle = true, ...props}) => {
+		const {i18n} = useLingui();
+		if (!isDesktop() || getNativePlatformSync() !== 'macos') return null;
+		return (
+			<div className={styles.row} data-flx="permissions.mac-permissions-settings-row.row" {...props}>
+				<div className={styles.text} data-flx="permissions.mac-permissions-settings-row.text">
+					{showTitle ? (
+						<div className={styles.title} data-flx="permissions.mac-permissions-settings-row.title">
+							{i18n._(TITLE_DESCRIPTOR)}
+						</div>
+					) : null}
+					<p className={styles.description} data-flx="permissions.mac-permissions-settings-row.description">
+						{i18n._(DESCRIPTION_DESCRIPTOR)}
+					</p>
 				</div>
-				<p className={styles.description} data-flx="permissions.mac-permissions-settings-row.description">
-					{i18n._(DESCRIPTION_DESCRIPTOR)}
-				</p>
+				<Button
+					variant="secondary"
+					small={true}
+					onClick={() => openMacPermissionsModal()}
+					data-flx="permissions.mac-permissions-settings-row.button.review"
+				>
+					{i18n._(REVIEW_DESCRIPTOR)}
+				</Button>
 			</div>
-			<Button
-				variant="secondary"
-				small={true}
-				onClick={() => openMacPermissionsModal()}
-				data-flx="permissions.mac-permissions-settings-row.button.review"
-			>
-				{i18n._(REVIEW_DESCRIPTOR)}
-			</Button>
-		</div>
-	);
-});
+		);
+	},
+);

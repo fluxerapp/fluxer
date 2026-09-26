@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {describe, expect, it} from 'vitest';
 import {
 	createHistoricalOutcomeAdapter,
 	type HistoricalOutcomeAdapterContext,
-} from '../adapters/HistoricalOutcomeAdapter';
-import type {IRiskHistoryRepository} from '../HistoricalOutcomeRepository';
-import type {HistoricalOutcomeRecord} from '../RiskHistoryTypes';
+} from '@app/api/risk/adapters/HistoricalOutcomeAdapter';
+import type {IRiskHistoryRepository} from '@app/api/risk/HistoricalOutcomeRepository';
+import type {HistoricalOutcomeRecord} from '@app/api/risk/RiskHistoryTypes';
+import {describe, expect, it} from 'vitest';
 
 function makeRepository(records: ReadonlyArray<HistoricalOutcomeRecord>): IRiskHistoryRepository {
 	return {

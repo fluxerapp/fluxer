@@ -20,6 +20,10 @@ const RESET_PASSWORD_DESCRIPTOR = msg({
 	message: 'Reset password',
 	comment: 'Short label in the authentication reset password page. Keep the tone plain and specific.',
 });
+const PASSWORDS_DO_NOT_MATCH_DESCRIPTOR = msg({
+	message: 'Passwords do not match',
+	comment: 'Short label in the authentication reset password page. Keep the tone plain and specific.',
+});
 const NEW_PASSWORD_DESCRIPTOR = msg({
 	message: 'New password',
 	comment: 'Short label in the authentication reset password page. Keep the tone plain and specific.',
@@ -32,6 +36,24 @@ const CONFIRM_NEW_PASSWORD_DESCRIPTOR = msg({
 type TokenStatus = 'validating' | 'valid' | 'invalid';
 
 const API_RENDERED_FIELDS = new Set(['password']);
+
+function resolveBannerError(
+	error: string | null,
+	fieldErrors: ReadonlyMap<string, string> | null | undefined,
+): string | null {
+	if (error != null) {
+		return error;
+	}
+	if (fieldErrors == null) {
+		return null;
+	}
+	for (const [fieldName, message] of fieldErrors) {
+		if (!API_RENDERED_FIELDS.has(fieldName)) {
+			return message;
+		}
+	}
+	return null;
+}
 const ResetPasswordPage = observer(function ResetPasswordPage() {
 	const {i18n} = useLingui();
 	const passwordId = useId();
@@ -50,7 +72,7 @@ const ResetPasswordPage = observer(function ResetPasswordPage() {
 				return;
 			}
 			if (values.password !== values.confirmPassword) {
-				form.setError('confirmPassword', 'Passwords do not match');
+				form.setError('confirmPassword', i18n._(PASSWORDS_DO_NOT_MATCH_DESCRIPTOR));
 				return;
 			}
 			const response = await resetPasswordFlow(token, values.password);
@@ -59,6 +81,7 @@ const ResetPasswordPage = observer(function ResetPasswordPage() {
 					ticket: response.challenge.ticket,
 					totp: response.challenge.totp,
 					webauthn: response.challenge.webauthn,
+					backupCodes: response.challenge.backupCodes,
 				});
 				RouterUtils.replaceWith('/login');
 				return;
@@ -86,12 +109,7 @@ const ResetPasswordPage = observer(function ResetPasswordPage() {
 			cancelled = true;
 		};
 	}, [token]);
-	const unrenderedFieldErrors = fieldErrors
-		? Object.entries(fieldErrors)
-				.filter(([field]) => !API_RENDERED_FIELDS.has(field))
-				.map(([, message]) => message)
-		: [];
-	const bannerError = error ?? unrenderedFieldErrors[0] ?? null;
+	const bannerError = resolveBannerError(error, fieldErrors);
 	if (tokenStatus === 'validating') {
 		return (
 			<>
@@ -144,7 +162,7 @@ const ResetPasswordPage = observer(function ResetPasswordPage() {
 					label={i18n._(NEW_PASSWORD_DESCRIPTOR)}
 					value={form.getValue('password')}
 					onChange={(value) => form.setValue('password', value)}
-					error={form.getError('password') || fieldErrors?.password}
+					error={form.getError('password') || fieldErrors?.get('password')}
 					data-flx="auth.reset-password-page.form-field.set-value.password"
 				/>
 				<FormField

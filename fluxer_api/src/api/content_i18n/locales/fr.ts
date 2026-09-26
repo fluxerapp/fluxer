@@ -3,8 +3,14 @@
 import {defineContentI18nLocaleMessages} from '../ContentI18nMessages';
 
 const CONTENT_I18N_FR_MESSAGES = defineContentI18nLocaleMessages({
-	"billing.eu_withdrawal_waiver_checkout": "En tant que consommateur UE/EEE, je consens expressément à ce que le contenu numérique {product_name} {premium_tier_name} soit fourni immédiatement et reconnais perdre mon droit de rétractation légal dès l'accès fourni. Cela n'affecte pas les autres droits impératifs des consommateurs. Voir les [Conditions d'utilisation]({terms_url}).",
-	"bulk_message_deletion.complete": "Nous avons terminé la suppression de tes messages. Nous avons retiré {message_count, plural, =0 {0 message} one {# message} other {# messages}} dans {channel_count, plural, =0 {0 endroit} one {# endroit} other {# endroits}}.",
+	"auth.unknown_location": "Lieu inconnu",
+	"billing.donation_description_monthly": "Don mensuel pour soutenir {product_name}",
+	"billing.donation_description_one_time": "Don ponctuel pour soutenir {product_name}",
+	"billing.donation_description_yearly": "Don annuel pour soutenir {product_name}",
+	"billing.donation_name_one_time": "Don à {product_name}",
+	"billing.donation_name_recurring": "Don récurrent à {product_name}",
+	"billing.eu_withdrawal_waiver_checkout": "Si je suis un consommateur de l'UE/EEE, je consens expressément à ce que le contenu numérique de {product_name} {premium_tier_name} soit fourni immédiatement et reconnais que je perds mon droit légal de rétractation dès que l'accès est fourni. Cela n'affecte pas les autres droits impératifs des consommateurs. Voir les [Conditions d'utilisation]({terms_url}).",
+	"bulk_message_deletion.complete": "Nous avons terminé de supprimer vos messages. Nous avons supprimé {message_count, plural, =0 {0 message} one {# message} other {# messages}} dans {channel_count, plural, =0 {0 endroit} one {# endroit} other {# endroits}}.",
 	"content.virus_detected": "Ce fichier a été signalé comme potentiellement dangereux et a été supprimé.",
 	"guild.bulk_create.emoji_limit": "Nombre maximal d’émojis atteint ({limit}).",
 	"guild.bulk_create.sticker_limit": "Nombre maximal d’autocollants atteint ({limit}).",

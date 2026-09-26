@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {CassandraParams, KvQueryMeta, KvTableSpec, WhereExpr} from '@app/api/database/CassandraTypes';
+import {buildCandidatePlan, keyFromColumns, matchesWhere} from '@app/api/database/PostgresKvQueryExecutor';
 import cassandra from 'cassandra-driver';
 import {describe, expect, it} from 'vitest';
-import type {CassandraParams, KvQueryMeta, KvTableSpec, WhereExpr} from './CassandraTypes';
-import {buildCandidatePlan, keyFromColumns, matchesWhere} from './PostgresKvQueryExecutor';
 
 type Row = Record<string, unknown>;
 type AnyMeta = KvQueryMeta<Row>;

@@ -740,8 +740,8 @@ mod tests {
                 .expect("apm");
         let frame_len = DIRECT_CAPTURE_APM_FRAME_SAMPLES;
         let mut samples = vec![0.0_f32; frame_len];
-        for n in 0..frame_len {
-            samples[n] = ((n as f32) / (frame_len as f32) - 0.5) * 0.5;
+        for (n, sample) in samples.iter_mut().enumerate() {
+            *sample = ((n as f32) / (frame_len as f32) - 0.5) * 0.5;
         }
         let original = samples.clone();
         let _ = apm.process_in_place(&mut samples).expect("process");

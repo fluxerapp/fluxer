@@ -9,7 +9,9 @@ const APP_DIR = fileURLToPath(new URL('..', import.meta.url));
 const SOURCE_DIR = join(APP_DIR, 'src');
 const JSX_EXTENSIONS = new Set(['.tsx', '.jsx']);
 const SKIP_DIRS = new Set(['node_modules', 'dist', 'coverage', '.cache', '.swc']);
+const GENERATED_FILES = new Set([join(SOURCE_DIR, 'features', 'ui', 'components', 'SVGMasks.tsx')]);
 const NON_THEMEABLE_IDENTIFIERS = new Set([
+	'AppI18nProvider',
 	'Fragment',
 	'I18nProvider',
 	'Outlet',
@@ -153,7 +155,9 @@ function collectFiles(paths) {
 			files.push(absolute);
 		}
 	}
-	return Array.from(new Set(files)).sort();
+	return Array.from(new Set(files))
+		.filter((file) => !GENERATED_FILES.has(file))
+		.sort();
 }
 
 function parseSource(source, filePath) {
@@ -258,7 +262,7 @@ function shouldTagOpeningElement(opening, target) {
 }
 
 function getAttributeName(attribute) {
-	if (!attribute || attribute.type !== 'JSXAttribute') return '';
+	if (attribute?.type !== 'JSXAttribute') return '';
 	return getNodeName(attribute.name);
 }
 

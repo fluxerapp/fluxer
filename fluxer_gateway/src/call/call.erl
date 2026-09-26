@@ -12,7 +12,10 @@
     message_id := integer(),
     region := binary() | undefined,
     ringing := [integer()],
-    recipients := [integer()]
+    recipients := [integer()],
+    caller_id => integer() | undefined,
+    caller_name => binary() | undefined,
+    caller_avatar => binary() | undefined
 }.
 -type call_request() ::
     {get_state}
@@ -28,12 +31,13 @@
     | {update_voice_state, integer(), map()}
     | {get_sessions}
     | {get_pending_connections}.
--type cast_request() :: {join_async, integer(), map(), binary(), pid()}.
+-type cast_request() ::
+    {join_async, integer(), map(), binary(), pid()}
+    | {set_caller, map()}.
 -type info_message() ::
     {'DOWN', reference(), process, pid(), term()}
     | {ring_timeout, integer()}
     | {pending_connection_timeout, binary()}
-    | voice_reconcile_v3_tick
     | idle_timeout.
 -type start_result() :: {ok, pid()} | {error, term()}.
 
@@ -49,32 +53,35 @@ start_link_from_state(State) ->
 init({transferred, TransferState}) ->
     erlang:process_flag(fullsweep_after, 10),
     State = call_handoff:restore_state(TransferState),
-    voice_reconciliation_v3:schedule_tick(voice_reconcile_v3_tick),
     erlang:garbage_collect(),
     {ok, State};
 init(CallData) ->
     erlang:process_flag(fullsweep_after, 10),
     State = build_initial_state(CallData),
     FinalState = run_init_pipeline(State),
-    voice_reconciliation_v3:schedule_tick(voice_reconcile_v3_tick),
     erlang:garbage_collect(),
     {ok, FinalState}.
 
 -spec build_initial_state(call_data()) -> map().
-build_initial_state(#{
-    channel_id := ChannelId,
-    message_id := MessageId,
-    region := Region,
-    ringing := Ringing,
-    recipients := Recipients
-}) ->
+build_initial_state(
     #{
+        channel_id := ChannelId,
+        message_id := MessageId,
+        region := Region,
+        ringing := Ringing,
+        recipients := Recipients
+    } = CallData
+) ->
+    State = #{
         channel_id => ChannelId,
         message_id => MessageId,
         region => Region,
         ringing => [],
         pending_ringing => Ringing,
         recipients => Recipients,
+        caller_id => undefined,
+        caller_name => undefined,
+        caller_avatar => undefined,
         voice_states => #{},
         sessions => #{},
         pending_connections => #{},
@@ -84,7 +91,8 @@ build_initial_state(#{
         created_at => erlang:system_time(millisecond),
         participants_history => sets:new(),
         last_call_event => undefined
-    }.
+    },
+    call_state:put_caller(CallData, State).
 
 -spec run_init_pipeline(map()) -> map().
 run_init_pipeline(State) ->
@@ -158,6 +166,8 @@ handle_cast(Request, State) ->
     case decode_cast_request(Request) of
         {ok, {join_async, UserId, VoiceState, SessionId, SessionPid}} ->
             call_voice:handle_join_async(UserId, VoiceState, SessionId, SessionPid, State);
+        {ok, {set_caller, Caller}} ->
+            {noreply, call_state:put_caller(Caller, State)};
         error ->
             {noreply, State}
     end.
@@ -176,9 +186,6 @@ handle_info_message({ring_timeout, UserId}, State) ->
     call_ringing:handle_ring_timeout(UserId, State);
 handle_info_message({pending_connection_timeout, ConnectionId}, State) ->
     handle_pending_timeout(ConnectionId, State);
-handle_info_message(voice_reconcile_v3_tick, State) ->
-    voice_reconciliation_v3:schedule_tick(voice_reconcile_v3_tick),
-    maybe_reconcile_voice_v3(State);
 handle_info_message(idle_timeout, State) ->
     call_ringing:handle_idle_timeout(State).
 
@@ -314,6 +321,8 @@ decode_cast_request({join_async, UserId, VoiceState, SessionId, SessionPid}) whe
     is_integer(UserId), is_map(VoiceState), is_binary(SessionId), is_pid(SessionPid)
 ->
     {ok, {join_async, UserId, VoiceState, SessionId, SessionPid}};
+decode_cast_request({set_caller, Caller}) when is_map(Caller) ->
+    {ok, {set_caller, Caller}};
 decode_cast_request(_) ->
     error.
 
@@ -324,8 +333,6 @@ decode_info_message({ring_timeout, UserId}) when is_integer(UserId) ->
     {ok, {ring_timeout, UserId}};
 decode_info_message({pending_connection_timeout, ConnectionId}) when is_binary(ConnectionId) ->
     {ok, {pending_connection_timeout, ConnectionId}};
-decode_info_message(voice_reconcile_v3_tick) ->
-    {ok, voice_reconcile_v3_tick};
 decode_info_message(idle_timeout) ->
     {ok, idle_timeout};
 decode_info_message(_) ->
@@ -449,17 +456,4 @@ check_pending_session_alive(ConnectionId, UserId, SessionId, SessionPid, State) 
             call_voice:disconnect_user_after_pending_timeout(
                 ConnectionId, UserId, SessionId, State
             )
-    end.
-
--spec maybe_reconcile_voice_v3(map()) -> {noreply, map()} | {stop, normal, map()}.
-maybe_reconcile_voice_v3(#{channel_id := ChannelId, voice_states := VoiceStates} = State) ->
-    case
-        maps:size(VoiceStates) > 0 andalso
-            voice_reconciliation_v3:enabled_for(call, ChannelId)
-    of
-        true ->
-            AbsentEntries = voice_reconciliation_v3:find_absent_call_entries(State),
-            call_voice:reconcile_absent_connections(AbsentEntries, State);
-        false ->
-            {noreply, State}
     end.

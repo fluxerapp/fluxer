@@ -3,7 +3,11 @@
 import type {CustomKeybindEntry, KeybindCommand, KeybindConfig, KeyCombo} from '@app/features/input/state/InputKeybind';
 import {keyComboHasTriggerInput} from '@app/features/input/state/KeybindResolution';
 
-export {comboModifierSignature, hookShortcutIdForAction, hookShortcutIdForKeybind} from './HookShortcutIds';
+export {
+	comboModifierSignature,
+	hookShortcutIdForAction,
+	hookShortcutIdForKeybind,
+} from '@app/features/app/keybindings/utils/HookShortcutIds';
 
 export type RuntimeKeybind = KeybindConfig & {
 	combo: KeyCombo;

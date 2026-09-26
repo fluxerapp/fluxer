@@ -60,7 +60,9 @@ pub async fn dispatch(
                     "Failed to update user flags",
                 );
             }
-            let submitted = parse_u64_list(form, &["flags[]", "flags"]);
+            let Ok(submitted) = form.parse_list_values::<u64>(&["flags[]", "flags"]) else {
+                return DispatchOutcome::error("Invalid user flag value");
+            };
             let selected = submitted.iter().copied().collect::<HashSet<_>>();
             let user = match client.get_user_by_id(user_id).await {
                 Ok(user) => user,
@@ -89,15 +91,22 @@ pub async fn dispatch(
         }
         "update_premium_flags" => {
             if has_legacy_flag_delta_fields(form) {
-                let add = parse_i32_list(form, &["add_flags[]", "add_flags"]);
-                let remove = parse_i32_list(form, &["remove_flags[]", "remove_flags"]);
+                let Ok(add) = form.parse_list_values::<i32>(&["add_flags[]", "add_flags"]) else {
+                    return DispatchOutcome::error("Invalid premium flag value to add");
+                };
+                let Ok(remove) = form.parse_list_values::<i32>(&["remove_flags[]", "remove_flags"])
+                else {
+                    return DispatchOutcome::error("Invalid premium flag value to remove");
+                };
                 return DispatchOutcome::from_result(
                     client.update_premium_flags(user_id, &add, &remove).await,
                     "Premium flags updated successfully",
                     "Failed to update premium flags",
                 );
             }
-            let submitted = parse_i32_list(form, &["flags[]", "flags"]);
+            let Ok(submitted) = form.parse_list_values::<i32>(&["flags[]", "flags"]) else {
+                return DispatchOutcome::error("Invalid premium flag value");
+            };
             let selected = submitted.iter().copied().collect::<HashSet<_>>();
             let user = match client.get_user_by_id(user_id).await {
                 Ok(user) => user,
@@ -124,9 +133,12 @@ pub async fn dispatch(
             )
         }
         "update_suspicious_flags" => {
-            let flags = parse_i32_list(form, &["suspicious_flags[]", "suspicious_flags"])
-                .into_iter()
-                .fold(0, |acc, flag| acc | flag);
+            let Ok(submitted) =
+                form.parse_list_values::<i32>(&["suspicious_flags[]", "suspicious_flags"])
+            else {
+                return DispatchOutcome::error("Invalid suspicious activity flag value");
+            };
+            let flags = submitted.into_iter().fold(0, |acc, flag| acc | flag);
             DispatchOutcome::from_result(
                 client.update_suspicious_flags(user_id, flags).await,
                 "Suspicious activity flags updated successfully",
@@ -225,15 +237,19 @@ pub async fn dispatch(
             )
         }
         "temp_ban" => {
-            let dur = form
-                .parse_u32("duration_hours")
-                .or_else(|| form.parse_u32("duration"))
-                .unwrap_or(24);
+            let Ok(duration) = form.parse_value_any::<u32>(&["duration_hours", "duration"]) else {
+                return DispatchOutcome::error("Invalid ban duration");
+            };
             let reason = get("reason");
             let private = get("private_reason");
             DispatchOutcome::from_result(
                 client
-                    .temp_ban_user(user_id, dur, reason.as_deref(), private.as_deref())
+                    .temp_ban_user(
+                        user_id,
+                        duration.unwrap_or(24),
+                        reason.as_deref(),
+                        private.as_deref(),
+                    )
                     .await,
                 "User temporarily banned successfully",
                 "Failed to temporarily ban user",
@@ -249,7 +265,7 @@ pub async fn dispatch(
                 return DispatchOutcome::error("IP address is required");
             };
             DispatchOutcome::from_result(
-                client.ban_ip(&ip).await,
+                client.ban_ip(&ip, None).await,
                 "IP banned successfully",
                 "Failed to ban IP",
             )
@@ -259,18 +275,29 @@ pub async fn dispatch(
                 return DispatchOutcome::error("Avatar hash is required");
             };
             DispatchOutcome::from_result(
-                client.ban_avatar_hash(&hash).await,
+                client.ban_avatar_hash(&hash, None).await,
                 "Avatar hash banned successfully",
                 "Failed to ban avatar hash",
             )
         }
         "schedule_deletion" => {
-            let reason_code = form.parse_i32("reason_code").unwrap_or(0);
+            let Ok(reason_code) = form.parse_value::<i32>("reason_code") else {
+                return DispatchOutcome::error("Invalid deletion reason code");
+            };
             let public_reason = get("public_reason");
-            let days = form.parse_u32("days_until_deletion").unwrap_or(60);
+            let private_reason = get("private_reason");
+            let Ok(days) = form.parse_value_any::<u32>(&["days_until_deletion", "days"]) else {
+                return DispatchOutcome::error("Invalid deletion delay");
+            };
             DispatchOutcome::from_result(
                 client
-                    .schedule_deletion(user_id, reason_code, public_reason.as_deref(), days)
+                    .schedule_deletion(
+                        user_id,
+                        reason_code.unwrap_or(0),
+                        public_reason.as_deref(),
+                        days.unwrap_or(60),
+                        private_reason.as_deref(),
+                    )
                     .await,
                 "User deletion scheduled successfully",
                 "Failed to schedule user deletion",
@@ -399,55 +426,6 @@ pub async fn dispatch(
             "Bulk message deletion cancelled successfully",
             "Failed to cancel bulk message deletion",
         ),
-        "refund_payment" => {
-            let Some(pi) = form.clean("payment_intent_id") else {
-                return DispatchOutcome::error("Payment intent ID is required");
-            };
-            let amt = form.parse_u64("amount_cents");
-            let reason = get("reason");
-            DispatchOutcome::from_result(
-                client
-                    .issue_refund(user_id, &pi, amt, reason.as_deref())
-                    .await,
-                "Refund issued successfully",
-                "Failed to issue refund",
-            )
-        }
-        "refund_policy_cancel_now" => {
-            let reason = get("reason");
-            DispatchOutcome::from_result(
-                client
-                    .refund_policy_cancel_now(user_id, reason.as_deref())
-                    .await,
-                "Refund policy cancellation completed successfully",
-                "Failed to apply refund policy cancellation",
-            )
-        }
-        "cancel_subscription" => DispatchOutcome::from_result(
-            client.cancel_subscription(user_id).await,
-            "Subscription cancelled successfully",
-            "Failed to cancel subscription",
-        ),
-        "cancel_subscription_now" => {
-            let reason = get("reason");
-            DispatchOutcome::from_result(
-                client
-                    .cancel_subscription_immediately(user_id, reason.as_deref())
-                    .await,
-                "Subscription cancelled immediately",
-                "Failed to cancel subscription immediately",
-            )
-        }
-        "reactivate_subscription" => DispatchOutcome::from_result(
-            client.reactivate_subscription(user_id).await,
-            "Subscription reactivated successfully",
-            "Failed to reactivate subscription",
-        ),
-        "end_premium_grace_period" => DispatchOutcome::from_result(
-            client.end_premium_grace_period(user_id).await,
-            "Premium grace period ended successfully",
-            "Failed to end premium grace period",
-        ),
         "message_shred" => {
             let csv = form.first("csv_data").unwrap_or_default();
             match parse_message_shred_csv(csv) {
@@ -488,20 +466,6 @@ fn is_relationship_category(category: &str) -> bool {
         category,
         "friend" | "incoming_request" | "outgoing_request" | "blocked"
     )
-}
-
-fn parse_u64_list(form: &MultiValueForm, keys: &[&str]) -> Vec<u64> {
-    form.list_values_any(keys)
-        .iter()
-        .filter_map(|value| value.parse().ok())
-        .collect()
-}
-
-fn parse_i32_list(form: &MultiValueForm, keys: &[&str]) -> Vec<i32> {
-    form.list_values_any(keys)
-        .iter()
-        .filter_map(|value| value.parse().ok())
-        .collect()
 }
 
 fn parse_dry_run(value: Option<&str>) -> bool {

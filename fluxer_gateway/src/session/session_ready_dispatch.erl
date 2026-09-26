@@ -70,7 +70,8 @@ dispatch_ready_to_socket(State) ->
         IsBot, CollectedGuilds, Guilds, StateAfterReady
     ),
     schedule_call_creates(StateAfterGuilds, SessionId),
-    FinalState = StateAfterGuilds#{
+    StateAfterPresences = release_pending_presences(StateAfterGuilds, CollectedPresences),
+    FinalState = StateAfterPresences#{
         ready => undefined,
         collected_guild_states => [],
         collected_sessions => [],
@@ -79,6 +80,65 @@ dispatch_ready_to_socket(State) ->
     erlang:garbage_collect(),
     {noreply, FinalState}.
 
+-spec release_pending_presences(session_state(), [map()]) -> session_state().
+release_pending_presences(State, CollectedPresences) ->
+    Covered = covered_presence_ids(CollectedPresences),
+    Pruned = drop_covered_pending_presences(State, Covered),
+    Flushed = session_dispatch:flush_all_pending_presences(Pruned),
+    Flushed#{suppress_presence_updates => false}.
+
+-spec covered_presence_ids([map()]) -> #{integer() => true}.
+covered_presence_ids(CollectedPresences) ->
+    lists:foldl(
+        fun(Presence, Acc) ->
+            case presence_user_id(Presence) of
+                undefined -> Acc;
+                UserId -> Acc#{UserId => true}
+            end
+        end,
+        #{},
+        CollectedPresences
+    ).
+
+-spec drop_covered_pending_presences(session_state(), #{integer() => true}) -> session_state().
+drop_covered_pending_presences(State, Covered) when map_size(Covered) =:= 0 ->
+    State;
+drop_covered_pending_presences(State, Covered) ->
+    case maps:get(pending_presences, State, undefined) of
+        undefined ->
+            State;
+        Pending ->
+            State#{pending_presences => filter_pending_presences(Pending, Covered)}
+    end.
+
+-spec filter_pending_presences(term(), #{integer() => true}) -> term().
+filter_pending_presences(Pending, Covered) ->
+    Keep = fun(Entry) -> not covered_entry(Entry, Covered) end,
+    try queue:filter(Keep, Pending) of
+        Filtered -> Filtered
+    catch
+        error:_ when is_list(Pending) -> lists:filter(Keep, Pending);
+        error:_ -> Pending
+    end.
+
+-spec covered_entry(term(), #{integer() => true}) -> boolean().
+covered_entry(#{user_id := UserId}, Covered) when is_integer(UserId) ->
+    maps:is_key(UserId, Covered);
+covered_entry(_Entry, _Covered) ->
+    false.
+
+-spec presence_user_id(term()) -> integer() | undefined.
+presence_user_id(Presence) when is_map(Presence) ->
+    User = maps:get(<<"user">>, Presence, #{}),
+    presence_id(User);
+presence_user_id(_Presence) ->
+    undefined.
+
+-spec presence_id(term()) -> integer() | undefined.
+presence_id(User) when is_map(User) ->
+    snowflake_id:parse_maybe(maps:get(<<"id">>, User, undefined));
+presence_id(_User) ->
+    undefined.
 -spec is_staff_session(session_state()) -> boolean().
 is_staff_session(#{is_staff := true}) ->
     true;
@@ -113,9 +173,8 @@ build_final_ready_data(
     SessionId,
     IsBot
 ) ->
-    ReadyData = prepare_ready_base(State, IsBot),
-    AllGuildStates = build_all_guild_states(CollectedGuilds, Guilds),
-    GuildsForReady = guilds_for_ready_payload(IsBot, AllGuildStates),
+    ReadyData = prepare_ready_base(State),
+    GuildsForReady = guilds_for_ready_payload(IsBot, CollectedGuilds, Guilds),
     FinalReadyData = ReadyData#{
         <<"guilds">> => GuildsForReady,
         <<"sessions">> => CollectedSessions,
@@ -126,15 +185,11 @@ build_final_ready_data(
     },
     gateway_sharding:maybe_put_ready_shard(FinalReadyData, maps:get(shard, State, undefined)).
 
--spec prepare_ready_base(session_state(), boolean()) -> map().
-prepare_ready_base(#{ready := undefined}, _IsBot) ->
+-spec prepare_ready_base(session_state()) -> map().
+prepare_ready_base(#{ready := undefined}) ->
     #{<<"guilds">> => []};
-prepare_ready_base(#{ready := Ready}, IsBot) ->
-    Stripped = session_ready_collect:strip_user_from_relationships(Ready),
-    case IsBot of
-        true -> Stripped#{<<"guilds">> => []};
-        false -> Stripped
-    end.
+prepare_ready_base(#{ready := Ready}) ->
+    session_ready_collect:strip_user_from_relationships(Ready).
 
 -spec build_all_guild_states([map()], map()) -> [map()].
 build_all_guild_states(CollectedGuilds, Guilds) ->
@@ -165,8 +220,12 @@ collect_unavailable_placeholder(GuildId, _Value, StrippedGuildIds, Acc) ->
 maybe_add_unavailable_guild(GuildId, ExistingGuildIds, Acc) ->
     case maps:is_key(GuildId, ExistingGuildIds) of
         true -> Acc;
-        false -> [#{<<"id">> => integer_to_binary(GuildId), <<"unavailable">> => true} | Acc]
+        false -> [unavailable_guild_placeholder(GuildId) | Acc]
     end.
+
+-spec unavailable_guild_placeholder(guild_id()) -> map().
+unavailable_guild_placeholder(GuildId) ->
+    #{<<"id">> => integer_to_binary(GuildId), <<"unavailable">> => true}.
 
 -spec collected_guild_id_map([map()]) -> #{guild_id() => true}.
 collected_guild_id_map(GuildStates) ->
@@ -195,22 +254,25 @@ parse_guild_id_binary(GuildIdBin) ->
         error:badarg -> error
     end.
 
--spec guilds_for_ready_payload(boolean(), [map()]) -> [map()].
-guilds_for_ready_payload(true, _AllGuildStates) -> [];
-guilds_for_ready_payload(false, AllGuildStates) -> AllGuildStates.
+-spec guilds_for_ready_payload(boolean(), [map()], map()) -> [map()].
+guilds_for_ready_payload(true, _CollectedGuilds, Guilds) ->
+    [unavailable_guild_placeholder(GuildId) || GuildId <- maps:keys(Guilds)];
+guilds_for_ready_payload(false, CollectedGuilds, Guilds) ->
+    build_all_guild_states(CollectedGuilds, Guilds).
 
 -spec dispatch_bot_guild_creates(boolean(), [map()], map(), session_state()) -> session_state().
 dispatch_bot_guild_creates(false, _CollectedGuilds, _Guilds, State) ->
     State;
-dispatch_bot_guild_creates(true, CollectedGuilds, _Guilds, State) ->
+dispatch_bot_guild_creates(true, CollectedGuilds, Guilds, State) ->
     AllGuildStates = strip_collected_guild_states(CollectedGuilds),
-    lists:foldl(
-        fun(GuildState, AccState) ->
-            dispatch_event(guild_state_event(GuildState), GuildState, AccState)
-        end,
-        State,
-        AllGuildStates
-    ).
+    AnnouncedState = session_bot_guilds:forget_joins(maps:keys(Guilds), State),
+    lists:foldl(fun dispatch_bot_guild_state/2, AnnouncedState, AllGuildStates).
+
+-spec dispatch_bot_guild_state(map(), session_state()) -> session_state().
+dispatch_bot_guild_state(GuildState, State) ->
+    Event = guild_state_event(GuildState),
+    {Data, NextState} = session_bot_guilds:guild_event(Event, GuildState, State),
+    dispatch_event(Event, Data, NextState).
 
 -spec schedule_call_creates(session_state(), binary()) -> ok.
 schedule_call_creates(State, SessionId) ->

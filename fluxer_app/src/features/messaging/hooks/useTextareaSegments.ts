@@ -5,8 +5,8 @@ import {TextareaSegmentManager} from '@app/features/messaging/utils/TextareaSegm
 import {useCallback, useRef} from 'react';
 
 interface UseTextareaSegmentsReturn {
-	segmentManagerRef: React.MutableRefObject<TextareaSegmentManager>;
-	previousValueRef: React.MutableRefObject<string>;
+	segmentManagerRef: React.RefObject<TextareaSegmentManager>;
+	previousValueRef: React.RefObject<string>;
 	displayToActual: (displayText: string) => string;
 	rememberSegmentsForValue: (value: string, segments?: ReadonlyArray<MentionSegment>) => void;
 	prepareTextChange: (nextValue: string, nextSegments: ReadonlyArray<MentionSegment>) => void;

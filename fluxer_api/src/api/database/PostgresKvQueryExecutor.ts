@@ -1,10 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {getKvMeta, getTableMetadata} from '@app/api/database/CassandraMetaRegistry';
+import type {
+	CassandraParams,
+	ColumnName,
+	KvColumnParam,
+	KvQueryMeta,
+	PreparedQuery,
+	WhereExpr,
+} from '@app/api/database/CassandraTypes';
+import {isConditionalQuery, validateTtlSeconds} from '@app/api/database/CassandraTypes';
+import {Logger} from '@app/api/Logger';
 import {type IPostgresClient, type PostgresQueryable, quoteIdentifier} from '@pkgs/postgres/src/Client';
 import cassandra from 'cassandra-driver';
-import {Logger} from '../Logger';
-import {getKvMeta, getTableMetadata} from './CassandraMetaRegistry';
-import type {CassandraParams, ColumnName, KvQueryMeta, PreparedQuery, WhereExpr} from './CassandraTypes';
 
 type Row = Record<string, unknown>;
 type EqWhereExpr = Extract<WhereExpr<Row>, {kind: 'eq'}>;
@@ -18,6 +26,13 @@ interface StoredRow {
 
 interface PageState {
 	offset: number;
+	after?: string;
+	keyed?: boolean;
+}
+
+interface PageEntry {
+	key: string;
+	row: Row;
 }
 
 interface RangeGroup {
@@ -66,9 +81,42 @@ const POSTGRES_KV_SCHEMA_LOCK_TIMEOUT = '120s';
 const POSTGRES_KV_SCHEMA_MIGRATION_TIMEOUT = '30min';
 export const POSTGRES_KV_MIGRATION_TABLE = '__fluxer_schema_migrations';
 const POSTGRES_KV_MESSAGES_PARTITION_MIGRATION = 'messages_partition_key_v1';
+const POSTGRES_KV_SCHEMA_ATTEMPTS = 3;
+const POSTGRES_KV_SCHEMA_RETRY_DELAY_MS = 250;
+const POSTGRES_KV_CONCURRENT_DDL_CODES = new Set(['23505', '42P07', '42710']);
+const NUMERIC_ROW_KEY_BIGINT_PATTERN = '^\\{"__fluxer_type":"bigint","value":"(-?[0-9]+)"\\}$';
+const NUMERIC_ROW_KEY_NUMBER_PATTERN = '^(-?[0-9]+(?:\\.[0-9]+)?(?:[eE][-+]?[0-9]+)?)$';
 const EXPIRED_STORED_ROW = 'kv.expires_at IS NOT NULL AND kv.expires_at <= now()';
 const MERGED_ROW_DATA = `CASE WHEN ${EXPIRED_STORED_ROW} THEN EXCLUDED.row_data ELSE kv.row_data || EXCLUDED.row_data END`;
 const KEPT_EXPIRES_AT = `CASE WHEN ${EXPIRED_STORED_ROW} THEN NULL ELSE kv.expires_at END`;
+const NO_EXPIRY = 'infinity';
+
+export async function postgresKvPassIsFresh(
+	client: IPostgresClient,
+	marker: string,
+	maxAgeMs: number,
+): Promise<boolean> {
+	const result = await client.query(
+		`SELECT 1 FROM ${quoteIdentifier(client.kvTable())} WHERE table_name = $1 AND row_key = $2 AND (row_data ->> 'applied_at')::timestamptz > now() - make_interval(secs => $3::double precision)`,
+		[POSTGRES_KV_MIGRATION_TABLE, marker, maxAgeMs / 1000],
+	);
+	return result.rows.length > 0;
+}
+
+export async function recordPostgresKvCleanPass(client: IPostgresClient, marker: string): Promise<void> {
+	await client.query(
+		`INSERT INTO ${quoteIdentifier(client.kvTable())} (table_name, partition_key, row_key, row_data)
+VALUES ($1, $2, $2, jsonb_build_object('applied_at', now()))
+ON CONFLICT (table_name, row_key) DO UPDATE SET row_data = EXCLUDED.row_data, updated_at = now()`,
+		[POSTGRES_KV_MIGRATION_TABLE, marker],
+	);
+}
+
+function numericRowKeyExpr(column: string): string {
+	return `(COALESCE(substring(${column} from '${NUMERIC_ROW_KEY_BIGINT_PATTERN}'), substring(${column} from '${NUMERIC_ROW_KEY_NUMBER_PATTERN}'))::numeric)`;
+}
+
+const NUMERIC_ROW_KEY = numericRowKeyExpr('kv.row_key');
 
 function planStatementName(prefix: string, plan: CandidatePlan): string | undefined {
 	switch (plan.kind) {
@@ -180,6 +228,17 @@ function paramsRow(params: CassandraParams, columns: ReadonlyArray<string>): Row
 			throw new Error(`Missing Postgres KV key parameter: ${column}`);
 		}
 		row[column] = params[column];
+	}
+	return row;
+}
+
+function boundColumns(params: CassandraParams, columns: ReadonlyArray<KvColumnParam>): CassandraParams {
+	const row: CassandraParams = {};
+	for (const {col, param} of columns) {
+		if (!Object.hasOwn(params, param) || params[param] === undefined) {
+			throw new Error(`Missing conditional write parameter: ${param}`);
+		}
+		row[col] = params[param];
 	}
 	return row;
 }
@@ -296,18 +355,54 @@ function projectRow(row: Row, columns: ReadonlyArray<string> | undefined): Row {
 	return projected;
 }
 
-function sortRows(meta: KvQueryMeta, rows: Array<Row>): Array<Row> {
-	if (meta.orderBy) {
-		const direction = meta.orderBy.direction === 'DESC' ? -1 : 1;
-		return rows.sort((left, right) => compareValues(left[meta.orderBy!.col], right[meta.orderBy!.col]) * direction);
+function compareColumns(columns: ReadonlyArray<string>, left: Row, right: Row): number {
+	for (const column of columns) {
+		const cmp = compareValues(left[column], right[column]);
+		if (cmp !== 0) return cmp;
 	}
-	return rows.sort((left, right) => {
-		for (const column of meta.table.primaryKey) {
-			const cmp = compareValues(left[column], right[column]);
-			if (cmp !== 0) return cmp;
+	return 0;
+}
+
+function rowComparator(meta: KvQueryMeta): (left: Row, right: Row) => number {
+	const primaryKey = meta.table.primaryKey as ReadonlyArray<string>;
+	if (!meta.orderBy) return (left, right) => compareColumns(primaryKey, left, right);
+	const column = meta.orderBy.col as string;
+	const columns = [column, ...primaryKey.slice(primaryKey.indexOf(column) + 1)];
+	const direction = meta.orderBy.direction === 'DESC' ? -1 : 1;
+	return (left, right) => compareColumns(columns, left, right) * direction;
+}
+
+function sortRows(meta: KvQueryMeta, rows: Array<Row>): Array<Row> {
+	return rows.sort(rowComparator(meta));
+}
+
+function decodeRowKey(key: string, columns: number): Array<unknown> | null {
+	const segments = key.split(VALUE_SEPARATOR);
+	if (segments.length !== columns) return null;
+	const values: Array<unknown> = [];
+	for (const segment of segments) {
+		try {
+			values.push(decodeValue(JSON.parse(segment)));
+		} catch {
+			return null;
 		}
-		return 0;
-	});
+	}
+	return values;
+}
+
+function compareKeyValues(left: ReadonlyArray<unknown>, right: ReadonlyArray<unknown>): number {
+	for (let index = 0; index < left.length; index += 1) {
+		const cmp = compareValues(left[index], right[index]);
+		if (cmp !== 0) return cmp;
+	}
+	return 0;
+}
+
+function compareRowToKeyValues(meta: KvQueryMeta, row: Row, values: ReadonlyArray<unknown>): number {
+	return compareKeyValues(
+		(meta.table.primaryKey as ReadonlyArray<string>).map((column) => row[column]),
+		values,
+	);
 }
 
 function whereClauses(meta: KvQueryMeta): ReadonlyArray<WhereExpr<Row>> {
@@ -577,7 +672,7 @@ function planFragments(plan: Exclude<CandidatePlan, {kind: 'rangeGroups'}>): Pla
 	}
 }
 
-export function planFragmentGroups(plan: CandidatePlan): Array<PlanFragments> {
+function planFragmentGroups(plan: CandidatePlan): Array<PlanFragments> {
 	if (plan.kind === 'rangeGroups') return plan.groups.map(rangeFragments);
 	return [planFragments(plan)];
 }
@@ -607,14 +702,21 @@ function logFullScan(meta: KvQueryMeta): void {
 	logWarn({table: meta.table.name, action: meta.action, where: shape.summary || 'none'}, 'Postgres KV full table scan');
 }
 
-function ttlExpiresAt(meta: KvQueryMeta, params: CassandraParams): Date | null | undefined {
+function ttlExpiresAt(meta: KvQueryMeta, params: CassandraParams): Date | typeof NO_EXPIRY | null | undefined {
 	const ttlParam = meta.ttlParamName;
 	if (!ttlParam) return undefined;
 	const ttlRaw = params[ttlParam];
 	if (typeof ttlRaw !== 'number') {
 		throw new Error(`TTL parameter ${ttlParam} must be a number`);
 	}
-	return new Date(Date.now() + ttlRaw * 1000);
+	const ttlSeconds = validateTtlSeconds(ttlRaw);
+	if (ttlSeconds === 0) return meta.table.defaultTtlSeconds === undefined ? null : NO_EXPIRY;
+	return new Date(Date.now() + ttlSeconds * 1000);
+}
+
+function defaultExpiresAt(meta: KvQueryMeta): Date | undefined {
+	const ttlSeconds = meta.table.defaultTtlSeconds;
+	return ttlSeconds === undefined ? undefined : new Date(Date.now() + ttlSeconds * 1000);
 }
 
 function encodePageState(pageState: PageState): string {
@@ -627,7 +729,53 @@ function decodePageState(pageState: string | null | undefined): PageState {
 	if (!Number.isInteger(decoded.offset) || decoded.offset < 0) {
 		throw new Error('Invalid Postgres KV page state');
 	}
-	return decoded;
+	if (typeof decoded.after !== 'string') return {offset: decoded.offset};
+	return {offset: decoded.offset, after: decoded.after, keyed: decoded.keyed === true};
+}
+
+function pageableSelect(meta: KvQueryMeta, pageSize: number): boolean {
+	return (
+		meta.action === 'select' &&
+		meta.orderBy === undefined &&
+		meta.limit === undefined &&
+		Number.isInteger(pageSize) &&
+		pageSize > 0
+	);
+}
+
+function numericKeyValue(value: unknown): string | null {
+	if (typeof value === 'bigint') return value.toString();
+	if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+	return null;
+}
+
+function numericScanPlan(meta: KvQueryMeta, plan: QueryPlan): boolean {
+	return plan.exact && plan.candidates.kind === 'scan' && (meta.table.primaryKey as ReadonlyArray<string>).length === 1;
+}
+
+function numericScanKeyed(meta: KvQueryMeta, plan: QueryPlan, entries: ReadonlyArray<PageEntry>): boolean {
+	if (!numericScanPlan(meta, plan)) return false;
+	const column = (meta.table.primaryKey as ReadonlyArray<string>)[0]!;
+	return entries.every((entry) => numericKeyValue(entry.row[column]) !== null);
+}
+
+function numericScanCursor(state: PageState): {rowKey: string; value: string} | null {
+	if (state.keyed !== true || state.after === undefined) return null;
+	const values = decodeRowKey(state.after, 1);
+	if (values === null) return null;
+	const value = numericKeyValue(values[0]);
+	return value === null ? null : {rowKey: state.after, value};
+}
+
+function pageStart(meta: KvQueryMeta, entries: ReadonlyArray<PageEntry>, state: PageState): number {
+	if (state.after === undefined) return state.offset;
+	const index = entries.findIndex((entry) => entry.key === state.after);
+	if (index >= 0) return index + 1;
+	const values = decodeRowKey(state.after, (meta.table.primaryKey as ReadonlyArray<string>).length);
+	if (values === null) return state.offset;
+	let start = 0;
+	while (start < entries.length && compareRowToKeyValues(meta, entries[start]!.row, values) <= 0) start += 1;
+	return start;
 }
 
 function parseRawMeta(cql: string): KvQueryMeta<Row> | null {
@@ -720,7 +868,7 @@ WHERE att.attrelid = to_regclass($1)
 	return result.rows[0]?.c_collated === true;
 }
 
-export async function ensurePostgresKvSchema(client: IPostgresClient): Promise<void> {
+async function ensurePostgresKvSchemaOnce(client: IPostgresClient): Promise<void> {
 	const kvTable = client.kvTable();
 	const table = quoteIdentifier(kvTable);
 	await client.transaction(async (db) => {
@@ -745,6 +893,9 @@ CREATE TABLE IF NOT EXISTS ${table} (
 				`CREATE INDEX IF NOT EXISTS ${quoteIdentifier(`${kvTable}_row_key_c_idx`)} ON ${table} (table_name, row_key COLLATE "C")`,
 			);
 		}
+		await db.query(
+			`CREATE INDEX IF NOT EXISTS ${quoteIdentifier(`${kvTable}_row_key_numeric_idx`)} ON ${table} (table_name, ${numericRowKeyExpr('row_key')}) WHERE ${numericRowKeyExpr('row_key')} IS NOT NULL`,
+		);
 		await db.query(
 			`CREATE INDEX IF NOT EXISTS ${quoteIdentifier(`${kvTable}_expires_idx`)} ON ${table} (expires_at) WHERE expires_at IS NOT NULL`,
 		);
@@ -786,6 +937,28 @@ ON CONFLICT (table_name, row_key) DO NOTHING`,
 	});
 }
 
+function isConcurrentDdlConflict(error: unknown): boolean {
+	return (
+		typeof error === 'object' &&
+		error !== null &&
+		'code' in error &&
+		POSTGRES_KV_CONCURRENT_DDL_CODES.has(String((error as {code: unknown}).code))
+	);
+}
+
+export async function ensurePostgresKvSchema(client: IPostgresClient): Promise<void> {
+	for (let attempt = 1; attempt <= POSTGRES_KV_SCHEMA_ATTEMPTS; attempt += 1) {
+		try {
+			await ensurePostgresKvSchemaOnce(client);
+			return;
+		} catch (error) {
+			if (attempt === POSTGRES_KV_SCHEMA_ATTEMPTS || !isConcurrentDdlConflict(error)) throw error;
+			logWarn({table: client.kvTable(), attempt}, 'Postgres KV schema hit a concurrent DDL conflict, retrying');
+			await new Promise((resolve) => setTimeout(resolve, POSTGRES_KV_SCHEMA_RETRY_DELAY_MS));
+		}
+	}
+}
+
 export async function pruneExpiredPostgresKvRows(client: IPostgresClient, batchSize = 5000): Promise<number> {
 	if (!Number.isInteger(batchSize) || batchSize <= 0) {
 		throw new Error('Postgres KV prune batch size must be a positive integer');
@@ -821,6 +994,9 @@ export class PostgresKvQueryExecutor {
 		db: PostgresQueryable = this.client,
 	): Promise<Array<T>> {
 		const meta = this.meta(query);
+		if (meta.conditions !== undefined) {
+			return (await this.conditionalWrite(meta, query.params, db)) as Array<T>;
+		}
 		switch (meta.action) {
 			case 'select':
 				return (await this.select(meta, query.params, buildCandidatePlan(meta, query.params), db)) as Array<T>;
@@ -837,7 +1013,11 @@ export class PostgresKvQueryExecutor {
 				await this.delete(meta, query.params, db);
 				return [];
 			case 'batch':
-				return [];
+				if (meta.batchEntries === undefined) return [];
+				if (db !== this.client) {
+					throw new Error('Conditional batches must own their database transaction');
+				}
+				return (await this.conditionalBatch(meta, query.params)) as Array<T>;
 			default: {
 				const _exhaustive: never = meta.action;
 				throw new Error(`Unsupported Postgres KV action: ${_exhaustive}`);
@@ -850,6 +1030,15 @@ export class PostgresKvQueryExecutor {
 		options: {pageSize: number; pageState?: string | null},
 	): Promise<{rows: Array<T>; pageState: string | null}> {
 		const state = decodePageState(options.pageState);
+		const meta = this.meta(query);
+		if (pageableSelect(meta, options.pageSize) && (state.after !== undefined || state.offset === 0)) {
+			const plan = buildCandidatePlan(meta, query.params);
+			const cursor = numericScanPlan(meta, plan) ? numericScanCursor(state) : null;
+			const page = cursor
+				? await this.numericScanPage(meta, query.params, cursor, state.offset, options.pageSize)
+				: await this.sortedPage(meta, query.params, plan, state, options.pageSize);
+			return {rows: page.rows as Array<T>, pageState: page.pageState};
+		}
 		const rows = await this.executeQuery<T, P>(query);
 		const pageRows = rows.slice(state.offset, state.offset + options.pageSize);
 		const nextOffset = state.offset + pageRows.length;
@@ -859,10 +1048,66 @@ export class PostgresKvQueryExecutor {
 		};
 	}
 
+	private async numericScanPage(
+		meta: KvQueryMeta,
+		params: CassandraParams,
+		cursor: {rowKey: string; value: string},
+		offset: number,
+		pageSize: number,
+	): Promise<{rows: Array<Row>; pageState: string | null}> {
+		logFullScan(meta);
+		const result = await this.client.query<StoredRow>(
+			`SELECT kv.row_key, kv.row_data FROM ${this.table} kv WHERE kv.table_name = $1 AND ${NUMERIC_ROW_KEY} IS NOT NULL AND (${NUMERIC_ROW_KEY}, kv.row_key COLLATE "C") > ($2::numeric, $3) AND (kv.expires_at IS NULL OR kv.expires_at > now()) ORDER BY ${NUMERIC_ROW_KEY}, kv.row_key COLLATE "C" LIMIT $4`,
+			[meta.table.name, cursor.value, cursor.rowKey, pageSize + 1],
+		);
+		const entries = this.matchingEntries(meta, result.rows.slice(0, pageSize), params);
+		const last = entries[entries.length - 1];
+		return {
+			rows: this.projected(meta, entries),
+			pageState:
+				result.rows.length > pageSize && last
+					? encodePageState({offset: offset + entries.length, after: last.key, keyed: true})
+					: null,
+		};
+	}
+
+	private async sortedPage(
+		meta: KvQueryMeta,
+		params: CassandraParams,
+		plan: QueryPlan,
+		state: PageState,
+		pageSize: number,
+	): Promise<{rows: Array<Row>; pageState: string | null}> {
+		const entries = this.matchingEntries(meta, await this.candidates(meta, plan, this.client), params);
+		const compare = rowComparator(meta);
+		entries.sort((left, right) => compare(left.row, right.row));
+		const start = pageStart(meta, entries, state);
+		const page = entries.slice(start, start + pageSize);
+		const last = page[page.length - 1];
+		const nextOffset = start + page.length;
+		if (nextOffset >= entries.length || !last) return {rows: this.projected(meta, page), pageState: null};
+		const keyed = numericScanKeyed(meta, plan, entries);
+		return {
+			rows: this.projected(meta, page),
+			pageState: encodePageState(
+				keyed ? {offset: nextOffset, after: last.key, keyed: true} : {offset: nextOffset, after: last.key},
+			),
+		};
+	}
+
+	private projected(meta: KvQueryMeta, entries: ReadonlyArray<PageEntry>): Array<Row> {
+		return entries.map((entry) => projectRow(entry.row, meta.columns as ReadonlyArray<string> | undefined));
+	}
+
 	async executeBatch(
 		queries: Array<{query: string; params: object; meta?: KvQueryMeta}>,
 		atomic = true,
 	): Promise<void> {
+		for (const query of queries) {
+			if (isConditionalQuery({cql: query.query, params: query.params as CassandraParams, kvMeta: query.meta})) {
+				throw new Error('Conditional writes must use executeConditional to preserve their result');
+			}
+		}
 		if (atomic) {
 			await this.client.transaction(async (db) => {
 				for (const query of queries) {
@@ -911,11 +1156,24 @@ export class PostgresKvQueryExecutor {
 		return [...byRowKey.values()];
 	}
 
-	private matchingRows(meta: KvQueryMeta, stored: ReadonlyArray<StoredRow>, params: CassandraParams): Array<Row> {
+	private matchingEntries(
+		meta: KvQueryMeta,
+		stored: ReadonlyArray<StoredRow>,
+		params: CassandraParams,
+	): Array<PageEntry> {
 		const required = queryShape(meta).requiredColumns;
-		return stored
-			.map((entry) => (required ? decodeRowColumns(entry.row_data, required) : decodeRow(entry.row_data)))
-			.filter((row) => matchesWhere(row, meta.where as ReadonlyArray<WhereExpr<Row>> | undefined, params));
+		const entries: Array<PageEntry> = [];
+		for (const entry of stored) {
+			const row = required ? decodeRowColumns(entry.row_data, required) : decodeRow(entry.row_data);
+			if (matchesWhere(row, meta.where as ReadonlyArray<WhereExpr<Row>> | undefined, params)) {
+				entries.push({key: entry.row_key, row});
+			}
+		}
+		return entries;
+	}
+
+	private matchingRows(meta: KvQueryMeta, stored: ReadonlyArray<StoredRow>, params: CassandraParams): Array<Row> {
+		return this.matchingEntries(meta, stored, params).map((entry) => entry.row);
 	}
 
 	private async select(
@@ -962,7 +1220,8 @@ export class PostgresKvQueryExecutor {
 				'kv_del_expired',
 			);
 		}
-		const expiresAt = ttlExpiresAt(meta, params) ?? null;
+		const explicit = ttlExpiresAt(meta, params);
+		const expiresAt = explicit === undefined ? (defaultExpiresAt(meta) ?? null) : explicit;
 		const result = await db.query(
 			`INSERT INTO ${this.table} AS kv (table_name, partition_key, row_key, row_data, expires_at, updated_at)
 VALUES ($1, $2, $3, $4::jsonb, $5, now())
@@ -985,21 +1244,163 @@ WHERE NOT $6`,
 		return [];
 	}
 
+	private async conditionalWrite(
+		meta: KvQueryMeta,
+		params: CassandraParams,
+		db: PostgresQueryable,
+	): Promise<Array<Row>> {
+		if (meta.action !== 'patch' && meta.action !== 'delete') {
+			throw new Error(`Unsupported conditional write action: ${meta.action}`);
+		}
+		if (!meta.conditions?.length) {
+			throw new Error('Conditional writes require expected values');
+		}
+		const bindings: Array<unknown> = [meta.table.name, rowKeyFromParams(meta, params)];
+		const predicates = ['kv.table_name = $1', 'kv.row_key = $2', '(kv.expires_at IS NULL OR kv.expires_at > now())'];
+		for (const {col, expectedParam} of meta.conditions) {
+			if (!Object.hasOwn(params, expectedParam) || params[expectedParam] === undefined) {
+				throw new Error(`Missing conditional write parameter: ${expectedParam}`);
+			}
+			bindings.push(col, JSON.stringify(encodeValue(params[expectedParam])));
+			predicates.push(
+				`COALESCE(kv.row_data -> $${bindings.length - 1}::text, 'null'::jsonb) = $${bindings.length}::jsonb`,
+			);
+		}
+		const where = predicates.join(' AND ');
+		let sql = `DELETE FROM ${this.table} kv WHERE ${where}`;
+		if (meta.action === 'patch') {
+			if (!meta.patchKeys?.length) {
+				throw new Error('Conditional patches require at least one column');
+			}
+			bindings.push(JSON.stringify(encodeRow(paramsRow(params, meta.patchKeys))));
+			const assignments = [`row_data = kv.row_data || $${bindings.length}::jsonb`, 'updated_at = now()'];
+			const explicit = ttlExpiresAt(meta, params);
+			const fallback = explicit === undefined ? defaultExpiresAt(meta) : undefined;
+			if (explicit !== undefined) {
+				bindings.push(explicit);
+				assignments.push(`expires_at = $${bindings.length}`);
+			} else if (fallback !== undefined) {
+				bindings.push(fallback);
+				assignments.push(`expires_at = GREATEST(kv.expires_at, $${bindings.length}::timestamptz)`);
+			}
+			sql = `UPDATE ${this.table} kv SET ${assignments.join(', ')} WHERE ${where}`;
+		}
+		const result = await db.query(sql, bindings);
+		if (result.rowCount !== 0 && result.rowCount !== 1) {
+			throw new Error('Conditional write returned an invalid affected row count');
+		}
+		return [{'[applied]': result.rowCount === 1}];
+	}
+
+	private async conditionalBatch(meta: KvQueryMeta, params: CassandraParams): Promise<Array<Row>> {
+		const entries = meta.batchEntries;
+		if (!entries?.length) {
+			throw new Error('Conditional batches require at least one row');
+		}
+		const writes = entries.map((entry) => {
+			const values = boundColumns(params, entry.pk);
+			const writeMeta: KvQueryMeta = {
+				action: entry.action,
+				table: meta.table,
+				pkColumns: entry.pk.map(({col}) => col),
+			};
+			if (entry.action === 'insert') {
+				Object.assign(values, boundColumns(params, entry.values));
+				writeMeta.ifNotExists = true;
+			} else {
+				if (entry.conditions.length === 0) {
+					throw new Error('Conditional batch updates and deletes require expected values');
+				}
+				if (entry.action === 'patch') {
+					if (entry.patch.length === 0) {
+						throw new Error('Conditional batch patches require at least one column');
+					}
+					Object.assign(values, boundColumns(params, entry.patch));
+					writeMeta.patchKeys = entry.patch.map(({col}) => col);
+				}
+				const expected = boundColumns(
+					params,
+					entry.conditions.map(({col, expectedParam}) => ({col, param: expectedParam})),
+				);
+				writeMeta.conditions = Object.entries(expected).map(([col, value]) => {
+					const expectedParam = `expected_${col}`;
+					if (Object.hasOwn(values, expectedParam)) {
+						throw new Error(`Conditional batch parameter conflicts with a column value: ${expectedParam}`);
+					}
+					values[expectedParam] = value;
+					return {col, expectedParam};
+				});
+			}
+			if (entry.action !== 'delete' && entry.ttlParamName !== undefined) {
+				const ttl = params[entry.ttlParamName];
+				if (typeof ttl !== 'number') {
+					throw new Error(`TTL parameter ${entry.ttlParamName} must be a number`);
+				}
+				if (Object.hasOwn(values, entry.ttlParamName)) {
+					throw new Error(`Conditional batch TTL parameter conflicts with a column value: ${entry.ttlParamName}`);
+				}
+				values[entry.ttlParamName] = validateTtlSeconds(ttl);
+				writeMeta.ttlParamName = entry.ttlParamName;
+			}
+			const key = rowKey(meta, values);
+			return {key, keyBytes: Buffer.from(key), partition: partitionKey(meta, values), meta: writeMeta, params: values};
+		});
+		if (new Set(writes.map(({key}) => key)).size !== writes.length) {
+			throw new Error('Conditional batches cannot repeat a row');
+		}
+		if (new Set(writes.map(({partition}) => partition)).size !== 1) {
+			throw new Error('Conditional batches must stay within one partition');
+		}
+		writes.sort((left, right) => Buffer.compare(left.keyBytes, right.keyBytes));
+		const rejected = new Error('Conditional batch was not applied');
+		try {
+			await this.client.transaction(async (db) => {
+				for (const write of writes) {
+					const result =
+						write.meta.action === 'insert'
+							? await this.upsert(write.meta, write.params, db)
+							: await this.conditionalWrite(write.meta, write.params, db);
+					const applied = result[0]?.['[applied]'];
+					if (result.length !== 1 || typeof applied !== 'boolean') {
+						throw new Error('Conditional batch entry returned an invalid database result');
+					}
+					if (!applied) throw rejected;
+				}
+			});
+		} catch (error) {
+			if (error !== rejected) throw error;
+			return [{'[applied]': false}];
+		}
+		return [{'[applied]': true}];
+	}
+
 	private async patch(meta: KvQueryMeta, params: CassandraParams, db: PostgresQueryable): Promise<void> {
 		const key = rowKeyFromParams(meta, params);
 		const incoming = paramsRow(params, (meta.pkColumns ?? meta.table.primaryKey) as ReadonlyArray<string>);
 		for (const column of meta.patchKeys ?? []) {
 			incoming[column] = column in params ? params[column] : null;
 		}
-		const ttl = ttlExpiresAt(meta, params);
-		const expiresAtExpr = ttl === undefined ? KEPT_EXPIRES_AT : 'EXCLUDED.expires_at';
+		const explicit = ttlExpiresAt(meta, params);
+		const fallback = explicit === undefined ? defaultExpiresAt(meta) : undefined;
+		const [expiresAtExpr, statementName] =
+			explicit !== undefined
+				? ['EXCLUDED.expires_at', 'kv_patch_set_ttl']
+				: fallback !== undefined
+					? ['GREATEST(kv.expires_at, EXCLUDED.expires_at)', 'kv_patch_default_ttl']
+					: [KEPT_EXPIRES_AT, 'kv_patch_keep_ttl'];
 		await db.query(
 			`INSERT INTO ${this.table} AS kv (table_name, partition_key, row_key, row_data, expires_at, updated_at)
 VALUES ($1, $2, $3, $4::jsonb, $5, now())
 ON CONFLICT (table_name, row_key)
 DO UPDATE SET partition_key = EXCLUDED.partition_key, row_data = ${MERGED_ROW_DATA}, expires_at = ${expiresAtExpr}, updated_at = now()`,
-			[meta.table.name, partitionKey(meta, incoming), key, JSON.stringify(encodeRow(incoming)), ttl ?? null],
-			ttl === undefined ? 'kv_patch_keep_ttl' : 'kv_patch_set_ttl',
+			[
+				meta.table.name,
+				partitionKey(meta, incoming),
+				key,
+				JSON.stringify(encodeRow(incoming)),
+				explicit ?? fallback ?? null,
+			],
+			statementName,
 		);
 	}
 

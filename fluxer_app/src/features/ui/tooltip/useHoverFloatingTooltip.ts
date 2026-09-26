@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import KeyboardMode from '@app/features/ui/state/KeyboardMode';
+import {useExclusiveTooltip} from '@app/features/ui/tooltip/TooltipExclusivity';
+import {isTooltipHandoffWarm, markTooltipOpen} from '@app/features/ui/tooltip/TooltipHandoff';
+import {subscribeTooltipScrollHide} from '@app/features/ui/tooltip/TooltipScrollCoordinator';
 import {appZoomLayoutPx} from '@app/features/ui/utils/AppZoomUtils';
 import type {Placement, ReferenceType} from '@floating-ui/react';
 import {
@@ -16,8 +19,6 @@ import {
 } from '@floating-ui/react';
 import type React from 'react';
 import {useCallback, useEffect, useMemo, useState} from 'react';
-import {useExclusiveTooltip} from './TooltipExclusivity';
-import {subscribeTooltipScrollHide} from './TooltipScrollCoordinator';
 
 export interface HoverFloatingTooltipState {
 	x: number;
@@ -67,7 +68,10 @@ export function useHoverFloatingTooltip(hoverDelay = 500, placement: Placement =
 		middleware,
 		whileElementsMounted: hoverFloatingAutoUpdate,
 	});
-	const hoverDelayConfig = useMemo(() => ({open: hoverDelay, close: CLOSE_DELAY_MS}), [hoverDelay]);
+	const hoverDelayConfig = useCallback(
+		() => ({open: isTooltipHandoffWarm() ? 0 : hoverDelay, close: CLOSE_DELAY_MS}),
+		[hoverDelay],
+	);
 	const hoverSafePolygon = useMemo(() => safePolygon({buffer: SAFE_POLYGON_BUFFER_PX, requireIntent: false}), []);
 	const hover = useHover(context, {
 		delay: hoverDelayConfig,
@@ -95,6 +99,10 @@ export function useHoverFloatingTooltip(hoverDelay = 500, placement: Placement =
 		setIsOpen(false);
 	}, []);
 	useExclusiveTooltip(isOpen, hide);
+	useEffect(() => {
+		if (!isOpen) return;
+		return markTooltipOpen();
+	}, [isOpen]);
 	useEffect(() => {
 		if (!isOpen) return;
 		return subscribeTooltipScrollHide(hide);

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash} from 'node:crypto';
+import {RateLimitMiddleware, type RouteRateLimitConfig} from '@app/api/middleware/RateLimitMiddleware';
+import type {HonoEnv} from '@app/api/types/HonoEnv';
 import type {
 	BucketConfig,
 	IRateLimitService,
@@ -9,8 +11,6 @@ import type {
 } from '@pkgs/rate_limit/src/IRateLimitService';
 import {type Context, Hono} from 'hono';
 import {describe, expect, test} from 'vitest';
-import type {HonoEnv} from '../../types/HonoEnv';
-import {RateLimitMiddleware, type RouteRateLimitConfig} from '../RateLimitMiddleware';
 
 const CLIENT_IP = '203.0.113.10';
 const SWAPPED_CLIENT_IP = '198.51.100.7';

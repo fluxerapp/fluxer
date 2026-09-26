@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {ProfileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
 import {beforeEach, describe, expect, it} from 'vitest';
-import {ProfileSubstringBlocklistCache} from '../ProfileSubstringBlocklistCache';
 
 describe('ProfileSubstringBlocklistCache', () => {
 	let cache: ProfileSubstringBlocklistCache;

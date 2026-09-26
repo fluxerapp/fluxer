@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
-import type {UserID} from '../../BrandedTypes';
 
 interface PendingDeletionRepositoryLike {
 	addPendingDeletion(userId: UserID, pendingDeletionAt: Date, deletionReasonCode: number): Promise<void>;
@@ -32,6 +32,11 @@ interface ClearPendingDeletionParams {
 
 interface PendingDeletionReasonUserLike {
 	deletionReasonCode?: number | null;
+	flags: bigint;
+}
+
+interface PendingDeletionEligibilityUserLike {
+	isBot: boolean;
 	flags: bigint;
 }
 
@@ -82,4 +87,11 @@ export function resolvePendingDeletionReasonCode(
 		return DeletionReasons.OTHER;
 	}
 	return 0;
+}
+
+export function isPendingDeletionBlocked(user: PendingDeletionEligibilityUserLike): boolean {
+	if (user.isBot) {
+		return true;
+	}
+	return (user.flags & UserFlags.APP_STORE_REVIEWER) !== 0n;
 }

@@ -13,6 +13,7 @@
 -export([get_vanity_url_channel/1]).
 -export([get_first_viewable_text_channel/1]).
 -export([get_guild_state/2]).
+-export([build_connect_snapshot/2]).
 -export([fetch_latest_voice_states/1]).
 -export([find_everyone_viewable_text_channel/2]).
 
@@ -20,6 +21,11 @@
 -type guild_reply(T) :: {reply, T, guild_state()}.
 -type user_id() :: integer().
 -type guild_id() :: integer().
+
+-define(CONNECT_SNAPSHOT_HEAVY_MEMBER_KEYS, [
+    <<"members">>, members_normalized, <<"member_role_index">>, members_sorted_ids
+]).
+-define(CONNECT_SNAPSHOT_HEAVY_SESSION_KEYS, [active_guilds, user_roles, viewable_channels]).
 
 -export_type([guild_state/0, guild_reply/1, user_id/0]).
 
@@ -147,6 +153,112 @@ get_guild_state(UserId, State) ->
         JoinedAt
     ).
 
+-spec build_connect_snapshot(map(), guild_state()) -> map().
+build_connect_snapshot(Item, State) ->
+    Base = maps:with(
+        [
+            id,
+            data,
+            sessions,
+            member_count,
+            voice_server_pid,
+            voice_states,
+            member_list_engine,
+            virtual_channel_access
+        ],
+        State
+    ),
+    project_snapshot_sessions(maybe_trim_connect_snapshot(Item, Base, State)).
+
+-spec project_snapshot_sessions(map()) -> map().
+project_snapshot_sessions(#{sessions := Sessions} = Snapshot) when is_map(Sessions) ->
+    Projected = maps:map(
+        fun(_SessionId, SessionData) -> project_snapshot_session(SessionData) end,
+        Sessions
+    ),
+    Snapshot#{sessions => Projected};
+project_snapshot_sessions(Snapshot) ->
+    Snapshot.
+
+-spec project_snapshot_session(term()) -> term().
+project_snapshot_session(SessionData) when is_map(SessionData) ->
+    maps:without(?CONNECT_SNAPSHOT_HEAVY_SESSION_KEYS, SessionData);
+project_snapshot_session(SessionData) ->
+    SessionData.
+
+-spec maybe_trim_connect_snapshot(map(), map(), guild_state()) -> map().
+maybe_trim_connect_snapshot(Item, Base, State) ->
+    case should_trim_connect_snapshot(State) of
+        true -> trim_connect_snapshot(Item, Base);
+        false -> Base
+    end.
+
+-spec should_trim_connect_snapshot(guild_state()) -> boolean().
+should_trim_connect_snapshot(State) ->
+    has_members_ets(State).
+
+-spec has_members_ets(guild_state()) -> boolean().
+has_members_ets(#{data := #{members_ets := Tab}}) -> is_reference(Tab);
+has_members_ets(_) -> false.
+
+-spec trim_connect_snapshot(map(), map()) -> map().
+trim_connect_snapshot(Item, #{data := Data} = Base) when is_map(Data) ->
+    Retained = retained_member_map(Item, Base, Data),
+    Trimmed = maps:without(?CONNECT_SNAPSHOT_HEAVY_MEMBER_KEYS, Data),
+    Base#{
+        data => Trimmed#{
+            <<"members">> => Retained,
+            members_normalized => Retained,
+            <<"member_role_index">> =>
+                guild_data_index_members:build_member_role_index(Retained)
+        }
+    };
+trim_connect_snapshot(_Item, Base) ->
+    Base.
+
+-spec retained_member_map(map(), map(), map()) -> #{integer() => map()}.
+retained_member_map(Item, Base, Data) ->
+    UserIds = [connect_user_id(Item) | voice_state_user_ids(Base)],
+    lists:foldl(
+        fun(UserId, Acc) -> retain_member(UserId, Data, Acc) end,
+        #{},
+        UserIds
+    ).
+
+-spec retain_member(term(), map(), #{integer() => map()}) -> #{integer() => map()}.
+retain_member(UserId, Data, Acc) when is_integer(UserId) ->
+    case guild_data_index_members:get_member_ets(UserId, Data) of
+        Member when is_map(Member) -> Acc#{UserId => Member};
+        _ -> Acc
+    end;
+retain_member(_UserId, _Data, Acc) ->
+    Acc.
+
+-spec connect_user_id(map()) -> integer() | undefined.
+connect_user_id(Item) ->
+    Request = maps:get(request, Item, #{}),
+    case maps:get(user_id, Request, undefined) of
+        UserId when is_integer(UserId) -> UserId;
+        _ -> undefined
+    end.
+
+-spec voice_state_user_ids(map()) -> [integer()].
+voice_state_user_ids(Base) ->
+    maps:fold(
+        fun(_Key, VoiceState, Acc) -> add_voice_state_user_id(VoiceState, Acc) end,
+        [],
+        voice_state_utils:voice_states(Base)
+    ).
+
+-spec add_voice_state_user_id(term(), [integer()]) -> [integer()].
+add_voice_state_user_id(VoiceState, Acc) when is_map(VoiceState) ->
+    case voice_state_utils:voice_state_user_id(VoiceState) of
+        UserId when is_integer(UserId) -> [UserId | Acc];
+        _ -> Acc
+    end;
+add_voice_state_user_id(_VoiceState, Acc) ->
+    Acc.
+
 -spec resolve_voice_members([map()], map()) -> [map()].
 resolve_voice_members(VoiceStates, Data) ->
     lists:filtermap(fun(VS) -> resolve_voice_member_entry(VS, Data) end, VoiceStates).
@@ -164,12 +276,16 @@ resolve_voice_member_entry(VoiceState, Data) ->
 resolve_voice_member_by_lookup(VoiceState, Data) ->
     case voice_state_utils:voice_state_user_id(VoiceState) of
         UserId when is_integer(UserId) ->
-            case guild_data_index_members:get_member_ets(UserId, Data) of
-                Member when is_map(Member) -> {true, Member};
-                _ -> false
-            end;
+            resolve_voice_member_from_index(UserId, Data);
         _ ->
             false
+    end.
+
+-spec resolve_voice_member_from_index(integer(), map()) -> {true, map()} | false.
+resolve_voice_member_from_index(UserId, Data) ->
+    case guild_data_index_members:get_member_ets(UserId, Data) of
+        Member when is_map(Member) -> {true, Member};
+        _ -> false
     end.
 
 -spec fetch_latest_voice_states(guild_state()) -> guild_state().
@@ -353,3 +469,90 @@ guild_id_wire_value(undefined) ->
     null;
 guild_id_wire_value(GuildId) ->
     integer_to_binary(GuildId).
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+projection_snapshot() ->
+    #{
+        sessions => #{
+            <<"s1">> => #{
+                session_id => <<"s1">>,
+                user_id => 7,
+                pid => self(),
+                bot => false,
+                is_staff => true,
+                pending_connect => false,
+                active_guilds => sets:new(),
+                user_roles => [1, 2],
+                viewable_channels => #{10 => true}
+            }
+        }
+    }.
+
+projection_entry(Snapshot) ->
+    maps:get(<<"s1">>, maps:get(sessions, Snapshot)).
+
+project_snapshot_sessions_drops_only_heavy_keys_test() ->
+    Entry = projection_entry(project_snapshot_sessions(projection_snapshot())),
+    ?assertEqual(7, maps:get(user_id, Entry)),
+    ?assertEqual(true, maps:get(is_staff, Entry)),
+    ?assertEqual(false, maps:get(pending_connect, Entry)),
+    ?assertEqual(<<"s1">>, maps:get(session_id, Entry)),
+    ?assertNot(maps:is_key(active_guilds, Entry)),
+    ?assertNot(maps:is_key(user_roles, Entry)),
+    ?assertNot(maps:is_key(viewable_channels, Entry)).
+
+projection_keeps_session_staff_lookup_test() ->
+    Projected = project_snapshot_sessions(projection_snapshot()),
+    ?assertEqual(true, guild_availability_check:is_user_staff(7, Projected)).
+
+projection_leaves_snapshot_data_untouched_test() ->
+    Data = #{<<"members">> => #{7 => #{}}, members_ets => make_ref()},
+    Snapshot = maps:put(data, Data, projection_snapshot()),
+    ?assertEqual(Data, maps:get(data, project_snapshot_sessions(Snapshot))).
+
+projection_keeps_non_map_session_entries_test() ->
+    Snapshot = #{sessions => #{<<"broken">> => not_a_map}},
+    ?assertEqual(Snapshot, project_snapshot_sessions(Snapshot)).
+
+projection_keeps_snapshot_without_sessions_test() ->
+    Snapshot = #{id => 42, member_count => 3},
+    ?assertEqual(Snapshot, project_snapshot_sessions(Snapshot)).
+
+trim_state(MemberCount) ->
+    #{id => 42, member_count => MemberCount, data => #{members_ets => make_ref()}}.
+
+trim_applies_at_every_member_count_test() ->
+    ?assertEqual(true, should_trim_connect_snapshot(trim_state(49435))),
+    ?assertEqual(true, should_trim_connect_snapshot(trim_state(5000))),
+    ?assertEqual(true, should_trim_connect_snapshot(trim_state(1))),
+    ?assertEqual(true, should_trim_connect_snapshot(maps:remove(member_count, trim_state(1)))).
+
+trim_ignores_threshold_env_test() ->
+    application:set_env(fluxer_gateway, connect_snapshot_trim_member_threshold, 20000),
+    try
+        ?assertEqual(true, should_trim_connect_snapshot(trim_state(1)))
+    after
+        application:unset_env(fluxer_gateway, connect_snapshot_trim_member_threshold)
+    end.
+
+trim_needs_members_ets_test() ->
+    ?assertEqual(false, should_trim_connect_snapshot(#{member_count => 10, data => #{}})),
+    ?assertEqual(
+        false,
+        should_trim_connect_snapshot(#{member_count => 10, data => #{members_ets => 7}})
+    ),
+    ?assertEqual(false, should_trim_connect_snapshot(#{member_count => 10})).
+
+trim_and_projection_target_disjoint_keys_test() ->
+    ?assertEqual(
+        [],
+        [
+            Key
+         || Key <- ?CONNECT_SNAPSHOT_HEAVY_SESSION_KEYS,
+            lists:member(Key, ?CONNECT_SNAPSHOT_HEAVY_MEMBER_KEYS)
+        ]
+    ).
+
+-endif.

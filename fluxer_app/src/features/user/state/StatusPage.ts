@@ -2,7 +2,6 @@
 
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {ExternalUrls} from '@fluxer/constants/src/ExternalUrls';
 import {makeAutoObservable, runInAction} from 'mobx';
 
 type IncidentStatus = 'investigating' | 'identified' | 'monitoring' | 'resolved';
@@ -90,7 +89,12 @@ const POLL_ACTIVE_MAINTENANCE_JITTER_MS = 15 * 1000;
 const POLL_AFTER_MAINTENANCE_START_MS = 5 * 1000;
 const POLL_MIN_DELAY_MS = 10 * 1000;
 const POLL_RESUME_STALE_MS = 30 * 1000;
-const STATUS_PAGE_FETCH_OPTIONS: RequestInit = {cache: 'no-store'};
+const STATUS_PAGE_FETCH_TIMEOUT_MS = 10 * 1000;
+const STATUS_PAGE_URL = RuntimeConfig.statusPageUrl;
+
+function statusPageFetchOptions(): RequestInit {
+	return {cache: 'no-store', signal: AbortSignal.timeout(STATUS_PAGE_FETCH_TIMEOUT_MS)};
+}
 
 export function computePollDelay(scheduledMaintenance: StatusPageMaintenance | null): number {
 	if (scheduledMaintenance?.status === 'in_progress') {
@@ -192,7 +196,6 @@ export class StatusPage {
 	private checkInFlight: Promise<void> | null = null;
 	private lastCheckedAt = 0;
 	private pollingStarted = false;
-	private readonly isSelfHosted = RuntimeConfig.isSelfHosted();
 
 	constructor() {
 		makeAutoObservable<StatusPage, 'checkInFlight' | 'lastCheckedAt' | 'pollingStarted' | 'pollTimerId'>(
@@ -208,7 +211,7 @@ export class StatusPage {
 	}
 
 	startPolling(): void {
-		if (this.isSelfHosted || this.pollingStarted) {
+		if (!STATUS_PAGE_URL || this.pollingStarted) {
 			return;
 		}
 
@@ -239,7 +242,7 @@ export class StatusPage {
 	}
 
 	async checkIncidents(): Promise<void> {
-		if (this.isSelfHosted) {
+		if (!STATUS_PAGE_URL) {
 			return;
 		}
 		if (this.checkInFlight) {
@@ -256,12 +259,8 @@ export class StatusPage {
 
 	private async fetchIncidents(): Promise<void> {
 		try {
-			const response = await fetch(`${ExternalUrls.SERVICE_STATUS}/summary.json`, STATUS_PAGE_FETCH_OPTIONS);
+			const response = await fetch(`${STATUS_PAGE_URL}/summary.json`, statusPageFetchOptions());
 			if (!response.ok) {
-				runInAction(() => {
-					this.incident = null;
-					this.scheduledMaintenance = null;
-				});
 				return;
 			}
 			const data: InstatusSummary = await response.json();
@@ -296,16 +295,12 @@ export class StatusPage {
 			});
 		} catch {
 			logger.warn('Failed to fetch status page');
-			runInAction(() => {
-				this.incident = null;
-				this.scheduledMaintenance = null;
-			});
 		}
 	}
 
 	private async fetchComponentMaintenances(): Promise<Array<InstatusMaintenance>> {
 		try {
-			const response = await fetch(`${ExternalUrls.SERVICE_STATUS}/components.json`, STATUS_PAGE_FETCH_OPTIONS);
+			const response = await fetch(`${STATUS_PAGE_URL}/components.json`, statusPageFetchOptions());
 			if (!response.ok) {
 				return [];
 			}
@@ -319,6 +314,10 @@ export class StatusPage {
 
 	clearIncident(): void {
 		this.incident = null;
+	}
+
+	refreshForConnectionIssue(): void {
+		this.refreshIfStale();
 	}
 
 	private async refreshAndReschedule(): Promise<void> {

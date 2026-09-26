@@ -8,7 +8,7 @@
     repair_presence_connection/1,
     handle_guild_connect/3,
     handle_guild_connect_result/4,
-    handle_guild_connect_timeout/3,
+    handle_guild_connect_timeout/4,
     handle_call_reconnect/3
 ]).
 
@@ -53,10 +53,10 @@ handle_guild_connect(GuildId, Attempt, State) ->
 handle_guild_connect_result(GuildId, Attempt, Result, State) ->
     session_connection_guild:handle_guild_connect_result(GuildId, Attempt, Result, State).
 
--spec handle_guild_connect_timeout(guild_id(), attempt(), session_state()) ->
+-spec handle_guild_connect_timeout(guild_id(), attempt(), reference(), session_state()) ->
     session_result().
-handle_guild_connect_timeout(GuildId, Attempt, State) ->
-    session_connection_guild:handle_guild_connect_timeout(GuildId, Attempt, State).
+handle_guild_connect_timeout(GuildId, Attempt, Token, State) ->
+    session_connection_guild:handle_guild_connect_timeout(GuildId, Attempt, Token, State).
 
 -spec handle_call_reconnect(channel_id(), attempt(), session_state()) ->
     {noreply, session_state()}.

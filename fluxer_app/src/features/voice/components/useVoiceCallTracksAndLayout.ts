@@ -230,10 +230,24 @@ export function useVoiceCallTracksAndLayout({channel, expandedUserIds}: UseVoice
 	const screenSharePublicationMigrationVersion = ScreenSharePublicationMigration.version;
 	const localConnectionId = MediaEngine.connectionId;
 	const localSelfStream = LocalVoiceState.getSelfStream();
-	const {screenShareTracks, cameraTracksAll} = useMemo(
-		() => splitVoiceCallRenderableTracks(renderableTracks),
-		[renderableTracks, screenSharePublicationMigrationVersion],
-	);
+	const {screenShareTracks, cameraTracksAll} = useMemo(() => {
+		const split = splitVoiceCallRenderableTracks(renderableTracks);
+		const activeScreenShareTracks = split.screenShareTracks.filter((tr) => {
+			const connectionId = parseVoiceParticipantIdentity(tr.participant.identity).connectionId;
+			if (!connectionId) return true;
+			if (connectionId === localConnectionId) return localSelfStream;
+			const voiceState = connectionVoiceStates[connectionId];
+			return Boolean(voiceState?.self_stream && voiceState.channel_id === channel.id);
+		});
+		return {screenShareTracks: activeScreenShareTracks, cameraTracksAll: split.cameraTracksAll};
+	}, [
+		renderableTracks,
+		screenSharePublicationMigrationVersion,
+		connectionVoiceStates,
+		localConnectionId,
+		localSelfStream,
+		channel.id,
+	]);
 	const activeScreenShareState = useMemo(() => {
 		const connectionIds = new Set<string>();
 		const participantIdentities = new Set<string>();

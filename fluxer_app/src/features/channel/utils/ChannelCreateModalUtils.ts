@@ -5,7 +5,10 @@ import type {Channel} from '@app/features/channel/models/Channel';
 import {selectChannel} from '@app/features/navigation/commands/NavigationCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {ChannelTypes, GUILD_TEXT_BASED_CHANNEL_TYPES} from '@fluxer/constants/src/ChannelConstants';
-import {VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT} from '@fluxer/constants/src/LimitConstants';
+import {
+	VOICE_CHANNEL_BITRATE_DEFAULT,
+	VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT,
+} from '@fluxer/constants/src/LimitConstants';
 
 export interface FormInputs {
 	name: string;
@@ -52,7 +55,7 @@ export async function createChannel(guildId: string, data: FormInputs, parentId?
 		url: data.url,
 		type: channelType,
 		parent_id: parentId || null,
-		bitrate: channelType === ChannelTypes.GUILD_VOICE ? 64000 : null,
+		bitrate: channelType === ChannelTypes.GUILD_VOICE ? VOICE_CHANNEL_BITRATE_DEFAULT : null,
 		user_limit: channelType === ChannelTypes.GUILD_VOICE ? 0 : null,
 		voice_connection_limit: channelType === ChannelTypes.GUILD_VOICE ? VOICE_CHANNEL_CONNECTION_LIMIT_DEFAULT : null,
 	});

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
 import {dispatchChannelEvent} from '@app/api/channel/services/ChannelGatewayDispatch';
+import {MessageInteractionBase} from '@app/api/channel/services/interaction/MessageInteractionBase';
+import type {Channel} from '@app/api/models/Channel';
 import {GuildOperations} from '@fluxer/constants/src/GuildConstants';
-import type {UserID} from '../../../BrandedTypes';
-import type {Channel} from '../../../models/Channel';
-import type {AuthenticatedChannel} from '../AuthenticatedChannel';
-import {MessageInteractionBase} from './MessageInteractionBase';
 
 export class MessageReadStateService extends MessageInteractionBase {
 	async startTyping({authChannel, userId}: {authChannel: AuthenticatedChannel; userId: UserID}): Promise<void> {

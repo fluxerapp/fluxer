@@ -1,20 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {SourceFault, SourceLifecycleState} from '../source_isolation/SourceLifecycleState';
-import type {VoiceEngineV2CommandType} from './commands';
-
-export type VoiceEngineV2SourceLifecycleTransitionKind = SourceLifecycleState['kind'];
-
-export interface VoiceEngineV2SourceLifecycleTransitionedEvent {
-	type: 'sourceLifecycle.transitioned';
-	sourceId: string;
-	kind: VoiceEngineV2SourceLifecycleTransitionKind;
-	since: bigint;
-	attempts: number;
-	fault: SourceFault | null;
-	atMs: number;
-}
-
+import type {VoiceEngineV2CommandType} from '@fluxer/voice_engine_v2/src/protocol/commands';
 import type {
 	VoiceEngineV2AudioControlsPatch,
 	VoiceEngineV2CameraEncodingOptions,
@@ -37,7 +23,6 @@ import type {
 	VoiceEngineV2InboundVideoTrackSubscription,
 	VoiceEngineV2LifecycleReason,
 	VoiceEngineV2LiveKitRoomState,
-	VoiceEngineV2LocalStreamSource,
 	VoiceEngineV2MicrophoneOptions,
 	VoiceEngineV2NativeAudioTapOptions,
 	VoiceEngineV2NativeCaptureFrame,
@@ -57,10 +42,30 @@ import type {
 	VoiceEngineV2Stats,
 	VoiceEngineV2TimerOptions,
 	VoiceEngineV2Track,
-	VoiceEngineV2VideoCodec,
 	VoiceEngineV2WatchedStream,
 	VoiceEngineV2WatchedStreamKey,
-} from './types';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
+import type {
+	SourceFault,
+	SourceLifecycleState,
+} from '@fluxer/voice_engine_v2/src/source_isolation/SourceLifecycleState';
+
+export type VoiceEngineV2SourceLifecycleTransitionKind = SourceLifecycleState['kind'];
+
+export interface VoiceEngineV2SourceLifecycleTransitionedEvent {
+	type: 'sourceLifecycle.transitioned';
+	sourceId: string;
+	kind: VoiceEngineV2SourceLifecycleTransitionKind;
+	since: bigint;
+	attempts: number;
+	fault: SourceFault | null;
+	atMs: number;
+}
+
+export interface VoiceEngineV2SourceLifecycleRemovedEvent {
+	type: 'sourceLifecycle.removed';
+	sourceId: string;
+}
 
 export type VoiceEngineV2Event =
 	| {type: 'implementation.prewarmRequested'}
@@ -232,31 +237,6 @@ export type VoiceEngineV2Event =
 	| {type: 'room.trackUnpublished'; trackSid: string}
 	| {type: 'room.trackMuted'; trackSid: string}
 	| {type: 'room.trackUnmuted'; trackSid: string}
-	| {
-			type: 'codecNegotiation.overrideSetRequested';
-			source: VoiceEngineV2LocalStreamSource;
-			codec: VoiceEngineV2VideoCodec | null;
-	  }
-	| {type: 'codecNegotiation.localCapabilityChanged'; supportedVideoCodecs: Array<VoiceEngineV2VideoCodec>}
-	| {
-			type: 'codecNegotiation.streamRegistered';
-			source: VoiceEngineV2LocalStreamSource;
-			streamIdentity: string;
-			preferredCodec: VoiceEngineV2VideoCodec;
-	  }
-	| {type: 'codecNegotiation.streamUnregistered'; source: VoiceEngineV2LocalStreamSource}
-	| {
-			type: 'codecNegotiation.viewerChanged';
-			source: VoiceEngineV2LocalStreamSource;
-			viewerIdentity: string;
-			watching: boolean;
-			supportedVideoCodecs: Array<VoiceEngineV2VideoCodec>;
-	  }
-	| {
-			type: 'codecNegotiation.remoteCapabilityChanged';
-			identity: string;
-			supportedVideoCodecs: Array<VoiceEngineV2VideoCodec>;
-	  }
 	| {type: 'watchedStream.watchRequested'; stream: VoiceEngineV2WatchedStream}
 	| {type: 'watchedStream.unwatchRequested'; stream: VoiceEngineV2WatchedStreamKey}
 	| {type: 'watchedStreams.replaced'; streams: Array<VoiceEngineV2WatchedStream>}
@@ -264,4 +244,5 @@ export type VoiceEngineV2Event =
 	| {type: 'inboundVideo.trackUnsubscribed'; trackSid: string}
 	| {type: 'inboundVideo.frameReceived'; frame: VoiceEngineV2InboundVideoFrame}
 	| {type: 'inboundVideo.frameStats'; stats: VoiceEngineV2InboundVideoFrameStats}
-	| VoiceEngineV2SourceLifecycleTransitionedEvent;
+	| VoiceEngineV2SourceLifecycleTransitionedEvent
+	| VoiceEngineV2SourceLifecycleRemovedEvent;

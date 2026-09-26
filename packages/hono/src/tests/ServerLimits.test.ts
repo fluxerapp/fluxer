@@ -42,7 +42,7 @@ describe('Server limits', () => {
 		const listening = await listen({port: 0});
 		server = listening.server;
 		const httpServer = server as Server;
-		expect(httpServer.requestTimeout).toBe(30_000);
+		expect(httpServer.requestTimeout).toBe(120_000);
 		expect(httpServer.keepAliveTimeout).toBe(125_000);
 		expect(httpServer.maxRequestsPerSocket).toBe(1_000);
 		expect(httpServer.headersTimeout).toBeLessThanOrEqual(httpServer.requestTimeout);

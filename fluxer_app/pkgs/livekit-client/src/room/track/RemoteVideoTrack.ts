@@ -2,8 +2,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 /// <reference path="../../type-polyfills/document-pip.d.ts" />
-
-import {debounce} from 'ts-debounce';
+import type {FrameMetadata} from '../../frameMetadata/types.ts';
+import {debounce} from '../debounce.ts';
 import {TrackEvent} from '../events.ts';
 import type {VideoReceiverStats} from '../stats.ts';
 import {computeBitrate} from '../stats.ts';
@@ -11,6 +11,7 @@ import CriticalTimers from '../timers.ts';
 import type {LoggerOptions} from '../types.ts';
 import type {ObservableMediaElement} from '../utils.ts';
 import {getDevicePixelRatio, getIntersectionObserver, getResizeObserver, isWeb} from '../utils.ts';
+import type {FrameMetadataExtractor} from './FrameMetadataExtractor.ts';
 import RemoteTrack from './RemoteTrack.ts';
 import {attachToElement, detachTrack, Track} from './Track.ts';
 import type {AdaptiveStreamSettings} from './types.ts';
@@ -36,6 +37,8 @@ export default class RemoteVideoTrack extends RemoteTrack<Track.Kind.Video> {
 
 	private lastDimensions?: Track.Dimensions;
 
+	frameMetadataExtractor?: FrameMetadataExtractor;
+
 	constructor(
 		mediaTrack: MediaStreamTrack,
 		sid: string,
@@ -49,6 +52,10 @@ export default class RemoteVideoTrack extends RemoteTrack<Track.Kind.Video> {
 
 	get isAdaptiveStream(): boolean {
 		return this.adaptiveStreamSettings !== undefined;
+	}
+
+	lookupFrameMetadata({rtpTimestamp}: {rtpTimestamp: number}): FrameMetadata | undefined {
+		return this.frameMetadataExtractor?.lookupMetadata(rtpTimestamp);
 	}
 
 	override setStreamState(value: Track.StreamState) {
@@ -121,16 +128,14 @@ export default class RemoteVideoTrack extends RemoteTrack<Track.Kind.Video> {
 		this.updateVisibility();
 		this.debouncedHandleResize();
 	}
-
 	override detach(): Array<HTMLMediaElement>;
 	override detach(element: HTMLMediaElement): HTMLMediaElement;
 	override detach(element?: HTMLMediaElement): HTMLMediaElement | Array<HTMLMediaElement> {
-		let detachedElements: Array<HTMLMediaElement> = [];
 		if (element) {
 			this.stopObservingElement(element);
 			return super.detach(element);
 		}
-		detachedElements = super.detach();
+		const detachedElements = super.detach();
 
 		for (const e of detachedElements) {
 			this.stopObservingElement(e);
@@ -163,7 +168,7 @@ export default class RemoteVideoTrack extends RemoteTrack<Track.Kind.Video> {
 	};
 
 	async getReceiverStats(): Promise<VideoReceiverStats | undefined> {
-		if (!this.receiver || !this.receiver.getStats) {
+		if (!this.receiver?.getStats) {
 			return;
 		}
 
@@ -366,8 +371,12 @@ class HTMLElementInfo implements ElementInfo {
 
 	private onEnterPiP = () => {
 		window.documentPictureInPicture?.window?.addEventListener('pagehide', this.onLeavePiP);
-		this.isPiP = isElementInPiP(this.element);
-		this.handleVisibilityChanged?.();
+		queueMicrotask(() => {
+			requestAnimationFrame(() => {
+				this.isPiP = isElementInPiP(this.element);
+				this.handleVisibilityChanged?.();
+			});
+		});
 	};
 
 	private onLeavePiP = () => {

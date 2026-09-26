@@ -2,7 +2,7 @@
 
 import {User} from '@app/features/user/models/User';
 import type {UserPartial} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export type FetchStatus = 'idle' | 'pending' | 'success' | 'error';
 
@@ -336,7 +336,7 @@ export const reactionUsersStateMachine = setup({
 export type ReactionUsersMachineSnapshot = SnapshotFrom<typeof reactionUsersStateMachine>;
 
 export function createReactionUsersSnapshot(requestSerial = 0): ReactionUsersMachineSnapshot {
-	return getInitialSnapshot(reactionUsersStateMachine, {requestSerial});
+	return initialTransition(reactionUsersStateMachine, {requestSerial})[0];
 }
 
 export function transitionReactionUsersSnapshot(

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {ApplicationID, UserID} from '../../BrandedTypes';
+import type {ApplicationID, UserID} from '@app/api/BrandedTypes';
 import type {
 	OAuth2AccessTokenRow,
 	OAuth2AuthorizationCodeRow,
 	OAuth2RefreshTokenRow,
-} from '../../database/types/OAuth2Types';
-import type {OAuth2AccessToken} from '../../models/OAuth2AccessToken';
-import type {OAuth2AuthorizationCode} from '../../models/OAuth2AuthorizationCode';
-import type {OAuth2RefreshToken} from '../../models/OAuth2RefreshToken';
+} from '@app/api/database/types/OAuth2Types';
+import type {OAuth2AccessToken} from '@app/api/models/OAuth2AccessToken';
+import type {OAuth2AuthorizationCode} from '@app/api/models/OAuth2AuthorizationCode';
+import type {OAuth2RefreshToken} from '@app/api/models/OAuth2RefreshToken';
 
 export interface IOAuth2TokenRepository {
 	createAuthorizationCode(data: OAuth2AuthorizationCodeRow): Promise<OAuth2AuthorizationCode>;

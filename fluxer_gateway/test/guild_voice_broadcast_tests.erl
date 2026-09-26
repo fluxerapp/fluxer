@@ -86,7 +86,9 @@ decoded_voice_state({pre_encoded, Bin}) -> json:decode(Bin);
 decoded_voice_state(Payload) -> Payload.
 
 map_path_wire_bytes(VoiceState) ->
-    iolist_to_binary(json:encode(guild_data_wire:payload(VoiceState))).
+    iolist_to_binary(
+        json:encode(guild_data_wire:payload(VoiceState), fun json:encode_value/2)
+    ).
 
 confirm_join(ConnId, GuildState) ->
     VoiceServerState = (voice_server_state(GuildState))#{
@@ -177,10 +179,11 @@ guild_fanout_pre_encodes_identical_wire_bytes_test() ->
 guild_fanout_payload_never_touches_dm_voice_states_test() ->
     {pre_encoded, Bin} = dispatch_payload_for(join_voice_state(<<"conn1">>)),
     State = #{dm_voice_states => #{}},
+    EventData = #{} = json:decode(Bin),
     ?assertEqual(
         State,
         session_dispatch_guild:update_dm_voice_states_map(
-            voice_state_update, json:decode(Bin), State
+            voice_state_update, EventData, State
         )
     ).
 
@@ -191,9 +194,10 @@ dm_scoped_voice_state_stays_a_map_and_updates_dm_voice_states_test() ->
     State = session_dispatch_guild:update_dm_voice_states_map(
         voice_state_update, Payload, #{dm_voice_states => #{}}
     ),
+    #{dm_voice_states := #{<<"conn1">> := StoredVoiceState}} = State,
     ?assertEqual(
         broadcast_payload(DmVS),
-        maps:get(<<"conn1">>, maps:get(dm_voice_states, State))
+        StoredVoiceState
     ).
 
 dispatch_payload_for(VoiceState) ->

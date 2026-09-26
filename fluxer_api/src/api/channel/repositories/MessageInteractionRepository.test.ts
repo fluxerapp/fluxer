@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {type ChannelID, createChannelID, createMessageID, createUserID, type MessageID} from '@app/api/BrandedTypes';
+import {ChannelDataRepository} from '@app/api/channel/repositories/ChannelDataRepository';
+import {MessageInteractionRepository} from '@app/api/channel/repositories/MessageInteractionRepository';
+import {MessageRepository} from '@app/api/channel/repositories/MessageRepository';
+import {fetchOne, setCassandraQueryExecutorForTesting} from '@app/api/database/CassandraQueryExecution';
+import type {PreparedQuery} from '@app/api/database/CassandraTypes';
+import type {MessageRow} from '@app/api/database/types/MessageTypes';
+import {Messages} from '@app/api/Tables';
+import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
 import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
-import {type ChannelID, createChannelID, createMessageID, createUserID, type MessageID} from '../../BrandedTypes';
-import {fetchOne, setCassandraQueryExecutorForTesting} from '../../database/CassandraQueryExecution';
-import type {PreparedQuery} from '../../database/CassandraTypes';
-import type {MessageRow} from '../../database/types/MessageTypes';
-import {Messages} from '../../Tables';
-import {InMemoryCassandraQueryExecutor} from '../../test/InMemoryCassandraQueryExecutor';
-import {ChannelDataRepository} from './ChannelDataRepository';
-import {MessageInteractionRepository} from './MessageInteractionRepository';
-import {MessageRepository} from './MessageRepository';
 
 const FETCH_MESSAGE_HAS_REACTION = Messages.selectCql({
 	columns: ['has_reaction'],
@@ -73,23 +73,25 @@ describe('MessageInteractionRepository has_reaction writes', () => {
 		expect(executor.countHasReactionWrites()).toBe(1);
 		expect(await loadHasReaction(channelId, messageId)).toBe(true);
 	});
-	it('skips the flag write when the message is already known to be flagged', async () => {
+	it('flags the message on every reaction add', async () => {
 		const channelId = createChannelID(10n);
 		const messageId = createMessageID(100n);
 		const repository = createRepository();
 		await repository.addReaction(channelId, messageId, createUserID(1n), '🔥');
-		await repository.addReaction(channelId, messageId, createUserID(2n), '🔥', undefined, false, true);
-		expect(executor.countHasReactionWrites()).toBe(1);
+		await repository.addReaction(channelId, messageId, createUserID(2n), '🔥');
+		expect(executor.countHasReactionWrites()).toBe(2);
 		expect(await repository.listMessageReactions(channelId, messageId)).toHaveLength(2);
 		expect(await loadHasReaction(channelId, messageId)).toBe(true);
 	});
-	it('flags the message when the loaded flag is not already true', async () => {
+	it('restores the flag when it was cleared after the message was read', async () => {
 		const channelId = createChannelID(10n);
 		const messageId = createMessageID(100n);
 		const repository = createRepository();
-		await repository.addReaction(channelId, messageId, createUserID(1n), '🔥', undefined, false, null);
-		await repository.addReaction(channelId, messageId, createUserID(2n), '🔥', undefined, false, false);
-		expect(executor.countHasReactionWrites()).toBe(2);
+		await repository.addReaction(channelId, messageId, createUserID(1n), '🔥');
+		await repository.setHasReaction(channelId, messageId, false);
+		expect(await loadHasReaction(channelId, messageId)).toBe(false);
+		await repository.addReaction(channelId, messageId, createUserID(2n), '🔥');
 		expect(await loadHasReaction(channelId, messageId)).toBe(true);
+		expect(await repository.listMessageReactions(channelId, messageId)).toHaveLength(2);
 	});
 });

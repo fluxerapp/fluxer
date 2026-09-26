@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {assign, getInitialSnapshot, type SnapshotFrom, setup, transition} from 'xstate';
+import {assign, initialTransition, type SnapshotFrom, setup, transition} from 'xstate';
 
 export type ScrollIndicatorSeverity = 'mention' | 'unread';
 export type ScrollIndicatorDirection = 'top' | 'bottom';
@@ -238,7 +238,7 @@ export type ScrollIndicatorMachineSnapshot = SnapshotFrom<typeof scrollIndicator
 export type ScrollIndicatorStateValue = 'hidden' | 'visible';
 
 export function createScrollIndicatorSnapshot(input: ScrollIndicatorMachineInput = {}): ScrollIndicatorMachineSnapshot {
-	return getInitialSnapshot(scrollIndicatorStateMachine, input);
+	return initialTransition(scrollIndicatorStateMachine, input)[0];
 }
 
 export function transitionScrollIndicatorSnapshot(

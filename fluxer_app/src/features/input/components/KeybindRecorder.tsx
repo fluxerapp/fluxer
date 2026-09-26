@@ -155,8 +155,8 @@ const KeybindEditorPopout: React.FC<KeybindEditorPopoutProps> = ({
 	const [recording, setRecording] = useState(true);
 	const [previewCombo, setPreviewCombo] = useState<KeyCombo | null>(null);
 	const currentCombo = previewCombo ?? value;
-	const displayValue = formatKeyCombo(currentCombo);
-	const defaultDisplayValue = defaultValue ? formatKeyCombo(defaultValue) : null;
+	const displayValue = formatKeyCombo(i18n, currentCombo);
+	const defaultDisplayValue = defaultValue ? formatKeyCombo(i18n, defaultValue) : null;
 	const currentHasValue = !!(
 		currentCombo?.key ||
 		currentCombo?.code ||
@@ -490,7 +490,7 @@ export const KeybindRecorder: React.FC<KeybindRecorderProps> = ({
 	const triggerRef = useRef<HTMLButtonElement | null>(null);
 	const isEmpty = !value?.key && !value?.code && value?.mouseButton === undefined && value?.gamepadButton === undefined;
 	const hasValue = !isEmpty;
-	const displayValue = formatKeyCombo(value);
+	const displayValue = formatKeyCombo(i18n, value);
 	return (
 		<div
 			className={clsx(styles.field, labelPlacement === 'inline' && styles.fieldInline)}

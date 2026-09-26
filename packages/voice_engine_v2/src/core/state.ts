@@ -1,15 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {VoiceEngineV2Command} from '../protocol/commands';
-import type {SourceLifecycleState} from '../source_isolation/SourceLifecycleState';
-
-export type {SourceLifecycleState} from '../source_isolation/SourceLifecycleState';
-
+import type {VoiceEngineV2Command} from '@fluxer/voice_engine_v2/src/protocol/commands';
 import type {
 	VoiceEngineV2AudioControls,
 	VoiceEngineV2CameraOptions,
 	VoiceEngineV2Capabilities,
-	VoiceEngineV2CodecNegotiationState,
 	VoiceEngineV2ConnectionStatus,
 	VoiceEngineV2ConnectOptions,
 	VoiceEngineV2DeviceInventory,
@@ -42,7 +37,10 @@ import type {
 	VoiceEngineV2Stats,
 	VoiceEngineV2Track,
 	VoiceEngineV2WatchedStream,
-} from '../protocol/types';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
+import type {SourceLifecycleState} from '@fluxer/voice_engine_v2/src/source_isolation/SourceLifecycleState';
+
+export type {SourceLifecycleState} from '@fluxer/voice_engine_v2/src/source_isolation/SourceLifecycleState';
 
 export interface VoiceEngineV2ConnectionState {
 	status: VoiceEngineV2ConnectionStatus;
@@ -170,7 +168,6 @@ export interface VoiceEngineV2Snapshot {
 	participantVolumes: Record<string, number>;
 	remoteTrackSubscriptions: Record<string, VoiceEngineV2RemoteTrackSubscriptionOptions>;
 	watchedStreams: Record<string, VoiceEngineV2WatchedStream>;
-	codecNegotiation: VoiceEngineV2CodecNegotiationState;
 	stats: VoiceEngineV2Stats | null;
 	statsOperationId: VoiceEngineV2OperationId | null;
 	statsFailure: VoiceEngineV2Error | null;
@@ -338,12 +335,6 @@ export function createVoiceEngineV2InitialSnapshot(
 		participantVolumes: {},
 		remoteTrackSubscriptions: {},
 		watchedStreams: {},
-		codecNegotiation: {
-			overrides: {},
-			localSupportedVideoCodecs: [],
-			remoteSupportedVideoCodecs: {},
-			streams: {},
-		},
 		stats: null,
 		statsOperationId: null,
 		statsFailure: null,

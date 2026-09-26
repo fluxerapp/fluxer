@@ -8,7 +8,7 @@ import GatewayConnection from '@app/features/gateway/transport/GatewayConnection
 import {http} from '@app/features/platform/transport/RestTransport';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
-import {failureCode} from '@app/features/platform/utils/ResponseInspection';
+import {failureCode, ipAuthorizationRequiredResponseFromError} from '@app/features/platform/utils/ResponseInspection';
 import UserSettings from '@app/features/user/state/UserSettings';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import type {ValueOf} from '@fluxer/constants/src/ValueOf';
@@ -64,6 +64,7 @@ interface MfaLoginResponse {
 	ticket: string;
 	totp: boolean;
 	webauthn: boolean;
+	backup_codes?: boolean;
 	allowed_methods?: Array<string>;
 }
 
@@ -113,6 +114,7 @@ export type ResetPasswordResponse = AuthTokenResponse | MfaLoginResponse;
 interface DesktopHandoffInitiateResponse {
 	code: string;
 	expires_at: string;
+	poll_secret?: string;
 }
 
 interface DesktopHandoffStatusResponse {
@@ -210,17 +212,28 @@ function tokenBody(token: string): {token: string} {
 	return {token};
 }
 
+export class MalformedIpAuthorizationChallengeError extends HttpError {
+	constructor(error: HttpError) {
+		super({
+			method: error.method,
+			path: error.path,
+			status: error.status,
+			body: error.body,
+			responseHeaders: error.responseHeaders,
+		});
+		this.name = 'MalformedIpAuthorizationChallengeError';
+	}
+}
+
 function loginIpAuthorizationResponse(error: HttpError): IpAuthorizationRequiredResponse | null {
 	if (error.status !== 403 || failureCode(error) !== APIErrorCodes.IP_AUTHORIZATION_REQUIRED) {
 		return null;
 	}
-	const body = error.body as Record<string, unknown> | undefined;
-	return {
-		ip_authorization_required: true,
-		ticket: body?.ticket as string,
-		email: body?.email as string,
-		resend_available_in: (body?.resend_available_in as number) ?? 30,
-	};
+	const challenge = ipAuthorizationRequiredResponseFromError(error);
+	if (challenge === null) {
+		throw new MalformedIpAuthorizationChallengeError(error);
+	}
+	return challenge;
 }
 
 function verificationResultFromError(
@@ -526,9 +539,19 @@ export async function initiateDesktopHandoff(): Promise<DesktopHandoffInitiateRe
 	return response.body;
 }
 
-export async function pollDesktopHandoffStatus(code: string): Promise<DesktopHandoffStatusResponse> {
-	const response = await http.get<DesktopHandoffStatusResponse>(Endpoints.AUTH_HANDOFF_STATUS(code), {
+export async function pollDesktopHandoffStatus(
+	code: string,
+	pollSecret?: string | null,
+): Promise<DesktopHandoffStatusResponse> {
+	if (pollSecret == null || pollSecret.length === 0) {
+		const response = await http.get<DesktopHandoffStatusResponse>(Endpoints.AUTH_HANDOFF_STATUS(code), {
+			auth: 'none',
+		});
+		return response.body;
+	}
+	const response = await http.post<DesktopHandoffStatusResponse>(Endpoints.AUTH_HANDOFF_STATUS(code), {
 		auth: 'none',
+		body: {poll_secret: pollSecret},
 	});
 	return response.body;
 }
@@ -657,11 +680,12 @@ interface SetMfaTicketPayload {
 	ticket: string;
 	totp: boolean;
 	webauthn: boolean;
+	backupCodes: boolean;
 }
 
-export function setMfaTicket({ticket, totp, webauthn}: SetMfaTicketPayload): void {
+export function setMfaTicket({ticket, totp, webauthn, backupCodes}: SetMfaTicketPayload): void {
 	logger.debug('Setting MFA ticket');
-	Authentication.handleMfaTicketSet({ticket, totp, webauthn});
+	Authentication.handleMfaTicketSet({ticket, totp, webauthn, backupCodes});
 }
 
 export function clearMfaTicket(): void {

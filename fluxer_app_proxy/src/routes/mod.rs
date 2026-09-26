@@ -13,8 +13,8 @@ use axum::{
     Router,
     extract::Request,
     http::{HeaderName, HeaderValue, header},
-    middleware::{Next, from_fn, from_fn_with_state},
-    response::Response,
+    middleware::{Next, from_fn},
+    response::{IntoResponse, Response},
     routing::get,
 };
 use rand::RngExt;
@@ -34,6 +34,7 @@ const PERMISSIONS_POLICY_VALUE: &str = "accelerometer=(), camera=(self), ch-dpr=
 pub fn build_router(state: AppState) -> Router {
     Router::new()
         .route("/_health", get(health::health))
+        .route("/_ready", get(health::ready))
         .route(
             "/.well-known/apple-app-site-association",
             get(apple_association::apple_app_site_association),
@@ -55,10 +56,7 @@ pub fn build_router(state: AppState) -> Router {
         .fallback(get(spa_index::spa_catch_all))
         .layer(from_fn(request_id_middleware))
         .layer(from_fn(cache_headers_middleware))
-        .layer(from_fn_with_state(
-            state.clone(),
-            security_headers_middleware,
-        ))
+        .layer(from_fn(security_headers_middleware))
         .layer(
             CompressionLayer::new()
                 .compress_when(DefaultPredicate::new().and(NotForContentType::const_new("font/"))),
@@ -67,14 +65,13 @@ pub fn build_router(state: AppState) -> Router {
         .with_state(state)
 }
 
-async fn security_headers_middleware(
-    axum::extract::State(_state): axum::extract::State<AppState>,
-    request: Request,
-    next: Next,
-) -> Response {
+async fn security_headers_middleware(request: Request, next: Next) -> Response {
     let mut response = next.run(request).await;
-    let headers = response.headers_mut();
+    set_security_headers(response.headers_mut());
+    response
+}
 
+fn set_security_headers(headers: &mut axum::http::HeaderMap) {
     set_static_header(
         headers,
         header::STRICT_TRANSPORT_SECURITY,
@@ -88,8 +85,6 @@ async fn security_headers_middleware(
         HeaderName::from_static("permissions-policy"),
         PERMISSIONS_POLICY_VALUE,
     );
-
-    response
 }
 
 async fn cache_headers_middleware(request: Request, next: Next) -> Response {
@@ -124,6 +119,14 @@ async fn request_id_middleware(request: Request, next: Next) -> Response {
 fn generate_request_id() -> String {
     let bytes: [u8; 16] = rand::rng().random();
     hex::encode(bytes)
+}
+
+pub(super) fn capacity_refused_response() -> Response {
+    let mut response = axum::http::StatusCode::SERVICE_UNAVAILABLE.into_response();
+    let headers = response.headers_mut();
+    headers.insert(header::RETRY_AFTER, HeaderValue::from_static("1"));
+    headers.insert(header::CACHE_CONTROL, HeaderValue::from_static("no-store"));
+    response
 }
 
 fn set_static_header(headers: &mut axum::http::HeaderMap, name: HeaderName, value: &'static str) {

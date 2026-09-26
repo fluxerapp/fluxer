@@ -1,40 +1,63 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AdminAuditReadActions} from '@app/api/admin/AdminAuditActions';
+import {recordAdminRead, recordAdminWrite} from '@app/api/admin/AdminAuditRecorder';
+import {createGuildID, createUserID} from '@app/api/BrandedTypes';
+import {requireAdminACL, requireAnyAdminACL} from '@app/api/middleware/AdminMiddleware';
+import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
+import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
+import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import type {HonoApp} from '@app/api/types/HonoEnv';
+import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {MissingACLError} from '@fluxer/errors/src/domains/core/MissingACLError';
 import {
 	AdminArchiveResponseSchema,
+	type ArchiveSubjectType,
+} from '@fluxer/schema/src/domains/admin/AdminArchiveSchemas';
+import {
+	AdminArchiveCreateRequest,
 	DownloadUrlResponseSchema,
 	GetArchiveResponseSchema,
-	ListArchivesRequest,
+	ListArchivesQuery,
 	ListArchivesResponseSchema,
-	TriggerGuildArchiveRequest,
-	TriggerUserArchiveRequest,
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
-import {ArchivePathParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
-import {createGuildID, createUserID} from '../../BrandedTypes';
-import {requireAdminACL, requireAnyAdminACL} from '../../middleware/AdminMiddleware';
-import {RateLimitMiddleware} from '../../middleware/RateLimitMiddleware';
-import {OpenAPI} from '../../middleware/ResponseTypeMiddleware';
-import {RateLimitConfigs} from '../../RateLimitConfig';
-import type {HonoApp} from '../../types/HonoEnv';
-import {Validator} from '../../Validator';
+import {ArchivePathParam, GuildIdParam, UserIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 
-function canViewArchive(adminAcls: Set<string>, subjectType: 'user' | 'guild'): boolean {
+function canViewArchive(adminAcls: Set<string>, subjectType: ArchiveSubjectType): boolean {
 	if (adminAcls.has(AdminACLs.WILDCARD) || adminAcls.has(AdminACLs.ARCHIVE_VIEW_ALL)) return true;
 	if (subjectType === 'user') return adminAcls.has(AdminACLs.ARCHIVE_TRIGGER_USER);
 	return adminAcls.has(AdminACLs.ARCHIVE_TRIGGER_GUILD);
 }
 
+function requireArchiveSubjectAccess(adminAcls: Set<string>, subjectType: 'user' | 'guild'): void {
+	if (canViewArchive(adminAcls, subjectType) || adminAcls.has(AdminACLs.WILDCARD)) return;
+	throw new MissingACLError(subjectType === 'user' ? AdminACLs.ARCHIVE_TRIGGER_USER : AdminACLs.ARCHIVE_TRIGGER_GUILD);
+}
+
+function resolveListSubjectType(adminAcls: Set<string>, requested: 'all' | 'user' | 'guild'): 'all' | 'user' | 'guild' {
+	if (requested !== 'all') {
+		requireArchiveSubjectAccess(adminAcls, requested);
+		return requested;
+	}
+	const viewUser = canViewArchive(adminAcls, 'user');
+	const viewGuild = canViewArchive(adminAcls, 'guild');
+	if (viewUser && viewGuild) return 'all';
+	if (viewUser) return 'user';
+	if (viewGuild) return 'guild';
+	throw new MissingACLError(AdminACLs.ARCHIVE_VIEW_ALL);
+}
+
 export function ArchiveAdminController(app: HonoApp) {
 	app.post(
-		'/admin/archives/user',
+		'/admin/users/:user_id/archives',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
 		requireAdminACL(AdminACLs.ARCHIVE_TRIGGER_USER),
-		Validator('json', TriggerUserArchiveRequest),
+		Validator('param', UserIdParam),
+		Validator('json', AdminArchiveCreateRequest),
 		OpenAPI({
-			operationId: 'trigger_user_archive',
-			summary: 'Trigger user archive',
+			operationId: 'create_admin_user_archive',
+			summary: 'Create user archive',
 			responseSchema: AdminArchiveResponseSchema,
 			statusCode: 200,
 			security: ['adminApiKey'],
@@ -45,23 +68,27 @@ export function ArchiveAdminController(app: HonoApp) {
 		async (ctx) => {
 			const adminArchiveService = ctx.get('adminArchiveService');
 			const adminUserId = ctx.get('adminUserId');
-			const body = ctx.req.valid('json');
-			const result = await adminArchiveService.triggerUserArchive(
-				createUserID(body.user_id),
-				adminUserId,
-				body.include_attachments,
-			);
+			const userId = createUserID(ctx.req.valid('param').user_id);
+			const includeAttachments = ctx.req.valid('json').include_attachments;
+			const result = await adminArchiveService.triggerUserArchive(userId, adminUserId, includeAttachments);
+			await recordAdminWrite(ctx, {
+				targetType: 'user',
+				targetId: userId,
+				action: 'trigger_user_archive',
+				metadata: {archive_id: result.archive_id, include_attachments: includeAttachments},
+			});
 			return ctx.json(result, 200);
 		},
 	);
 	app.post(
-		'/admin/archives/guild',
+		'/admin/guilds/:guild_id/archives',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
 		requireAdminACL(AdminACLs.ARCHIVE_TRIGGER_GUILD),
-		Validator('json', TriggerGuildArchiveRequest),
+		Validator('param', GuildIdParam),
+		Validator('json', AdminArchiveCreateRequest),
 		OpenAPI({
-			operationId: 'trigger_guild_archive',
-			summary: 'Trigger guild archive',
+			operationId: 'create_admin_guild_archive',
+			summary: 'Create guild archive',
 			responseSchema: AdminArchiveResponseSchema,
 			statusCode: 200,
 			security: ['adminApiKey'],
@@ -72,22 +99,25 @@ export function ArchiveAdminController(app: HonoApp) {
 		async (ctx) => {
 			const adminArchiveService = ctx.get('adminArchiveService');
 			const adminUserId = ctx.get('adminUserId');
-			const body = ctx.req.valid('json');
-			const result = await adminArchiveService.triggerGuildArchive(
-				createGuildID(body.guild_id),
-				adminUserId,
-				body.include_attachments,
-			);
+			const guildId = createGuildID(ctx.req.valid('param').guild_id);
+			const includeAttachments = ctx.req.valid('json').include_attachments;
+			const result = await adminArchiveService.triggerGuildArchive(guildId, adminUserId, includeAttachments);
+			await recordAdminWrite(ctx, {
+				targetType: 'guild',
+				targetId: guildId,
+				action: 'trigger_guild_archive',
+				metadata: {archive_id: result.archive_id, include_attachments: includeAttachments},
+			});
 			return ctx.json(result, 200);
 		},
 	);
-	app.post(
-		'/admin/archives/list',
+	app.get(
+		'/admin/archives',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
 		requireAnyAdminACL([AdminACLs.ARCHIVE_VIEW_ALL, AdminACLs.ARCHIVE_TRIGGER_USER, AdminACLs.ARCHIVE_TRIGGER_GUILD]),
-		Validator('json', ListArchivesRequest),
+		Validator('query', ListArchivesQuery),
 		OpenAPI({
-			operationId: 'list_archives',
+			operationId: 'list_admin_archives',
 			summary: 'List archives',
 			responseSchema: ListArchivesResponseSchema,
 			statusCode: 200,
@@ -99,40 +129,39 @@ export function ArchiveAdminController(app: HonoApp) {
 		async (ctx) => {
 			const adminArchiveService = ctx.get('adminArchiveService');
 			const adminAcls = ctx.get('adminUserAcls');
-			const body = ctx.req.valid('json') as ListArchivesRequest;
-			if (
-				body.subject_type === 'all' &&
-				!adminAcls.has(AdminACLs.ARCHIVE_VIEW_ALL) &&
-				!adminAcls.has(AdminACLs.WILDCARD)
-			) {
-				throw new MissingACLError(AdminACLs.ARCHIVE_VIEW_ALL);
-			}
-			if (
-				body.subject_type !== 'all' &&
-				!canViewArchive(adminAcls, body.subject_type) &&
-				!adminAcls.has(AdminACLs.WILDCARD)
-			) {
-				throw new MissingACLError(
-					body.subject_type === 'user' ? AdminACLs.ARCHIVE_TRIGGER_USER : AdminACLs.ARCHIVE_TRIGGER_GUILD,
-				);
-			}
+			const query = ctx.req.valid('query');
+			const subjectType = resolveListSubjectType(adminAcls, query.subject_type);
 			const result = await adminArchiveService.listArchives({
-				subjectType: body.subject_type as 'user' | 'guild' | 'all',
-				subjectId: body.subject_id ?? undefined,
-				requestedBy: body.requested_by ?? undefined,
-				limit: body.limit,
-				includeExpired: body.include_expired,
+				subjectType,
+				subjectId: query.subject_id ?? undefined,
+				requestedBy: query.requested_by ?? undefined,
+				limit: query.limit,
+				includeExpired: query.include_expired,
+			});
+			await recordAdminRead(ctx, {
+				targetType: 'archive',
+				targetId: 0n,
+				action: AdminAuditReadActions.LIST_ARCHIVES,
+				metadata: {
+					subject_type: subjectType,
+					subject_user_id: subjectType === 'user' ? query.subject_id : undefined,
+					subject_guild_id: subjectType === 'guild' ? query.subject_id : undefined,
+					requested_by_user_id: query.requested_by,
+					limit: query.limit,
+					include_expired: query.include_expired,
+					result_count: result.length,
+				},
 			});
 			return ctx.json({archives: result}, 200);
 		},
 	);
 	app.get(
-		'/admin/archives/:subjectType/:subjectId/:archiveId',
+		'/admin/archives/:subject_type/:subject_id/:archive_id',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
 		requireAnyAdminACL([AdminACLs.ARCHIVE_VIEW_ALL, AdminACLs.ARCHIVE_TRIGGER_USER, AdminACLs.ARCHIVE_TRIGGER_GUILD]),
 		Validator('param', ArchivePathParam),
 		OpenAPI({
-			operationId: 'get_archive_details',
+			operationId: 'get_admin_archive',
 			summary: 'Get archive details',
 			responseSchema: GetArchiveResponseSchema,
 			statusCode: 200,
@@ -145,25 +174,24 @@ export function ArchiveAdminController(app: HonoApp) {
 			const adminArchiveService = ctx.get('adminArchiveService');
 			const adminAcls = ctx.get('adminUserAcls');
 			const params = ctx.req.valid('param');
-			const subjectType = params.subjectType;
-			if (!canViewArchive(adminAcls, subjectType) && !adminAcls.has(AdminACLs.WILDCARD)) {
-				throw new MissingACLError(
-					subjectType === 'user' ? AdminACLs.ARCHIVE_TRIGGER_USER : AdminACLs.ARCHIVE_TRIGGER_GUILD,
-				);
-			}
-			const subjectId = params.subjectId;
-			const archiveId = params.archiveId;
-			const archive = await adminArchiveService.getArchive(subjectType, subjectId, archiveId);
+			requireArchiveSubjectAccess(adminAcls, params.subject_type);
+			const archive = await adminArchiveService.getArchive(params.subject_type, params.subject_id, params.archive_id);
+			await recordAdminRead(ctx, {
+				targetType: params.subject_type,
+				targetId: params.subject_id,
+				action: AdminAuditReadActions.GET_ARCHIVE,
+				metadata: {archive_id: params.archive_id, found: archive !== null},
+			});
 			return ctx.json({archive}, 200);
 		},
 	);
 	app.get(
-		'/admin/archives/:subjectType/:subjectId/:archiveId/download',
+		'/admin/archives/:subject_type/:subject_id/:archive_id/download',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_LOOKUP),
 		requireAnyAdminACL([AdminACLs.ARCHIVE_VIEW_ALL, AdminACLs.ARCHIVE_TRIGGER_USER, AdminACLs.ARCHIVE_TRIGGER_GUILD]),
 		Validator('param', ArchivePathParam),
 		OpenAPI({
-			operationId: 'get_archive_download_url',
+			operationId: 'get_admin_archive_download',
 			summary: 'Get archive download URL',
 			responseSchema: DownloadUrlResponseSchema,
 			statusCode: 200,
@@ -176,15 +204,18 @@ export function ArchiveAdminController(app: HonoApp) {
 			const adminArchiveService = ctx.get('adminArchiveService');
 			const adminAcls = ctx.get('adminUserAcls');
 			const params = ctx.req.valid('param');
-			const subjectType = params.subjectType;
-			if (!canViewArchive(adminAcls, subjectType) && !adminAcls.has(AdminACLs.WILDCARD)) {
-				throw new MissingACLError(
-					subjectType === 'user' ? AdminACLs.ARCHIVE_TRIGGER_USER : AdminACLs.ARCHIVE_TRIGGER_GUILD,
-				);
-			}
-			const subjectId = params.subjectId;
-			const archiveId = params.archiveId;
-			const result = await adminArchiveService.getDownloadUrl(subjectType, subjectId, archiveId);
+			requireArchiveSubjectAccess(adminAcls, params.subject_type);
+			const result = await adminArchiveService.getDownloadUrl(
+				params.subject_type,
+				params.subject_id,
+				params.archive_id,
+			);
+			await recordAdminRead(ctx, {
+				targetType: params.subject_type,
+				targetId: params.subject_id,
+				action: AdminAuditReadActions.GET_ARCHIVE_DOWNLOAD_URL,
+				metadata: {archive_id: params.archive_id},
+			});
 			return ctx.json(result, 200);
 		},
 	);

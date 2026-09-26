@@ -17,6 +17,19 @@
 -define(DEFAULT_MAX_QUEUE, 10000).
 -define(ENQUEUE_TIMEOUT_MS, 1000).
 
+-define(PUSH_COUNTER_TABLE, push_worker_counter).
+-define(CNT_QUEUE_FULL, push_loss_queue_full).
+-define(CNT_INVALID_JOB, push_loss_invalid_job).
+-define(CNT_ENQUEUE_TIMEOUT, push_loss_enqueue_timeout).
+-define(CNT_ENQUEUE_FAILED, push_loss_enqueue_failed).
+-define(CNT_JOB_CRASHED, push_loss_job_crashed).
+-define(CNT_WORKER_DIED, push_loss_worker_died).
+-define(CNT_WORKER_POOL, push_loss_worker_pool).
+-define(CNT_RESTARTS, push_dispatcher_restarts).
+-define(CNT_RESTART_DISCARDED, push_dispatcher_restart_discarded).
+-define(CNT_QUEUE_ENQUEUED, push_dispatcher_queue_enqueued).
+-define(CNT_QUEUE_DEQUEUED, push_dispatcher_queue_dequeued).
+
 -type push_job() ::
     #{
         type := message_create,
@@ -44,7 +57,27 @@
     inflight := non_neg_integer(),
     workers := #{reference() => true},
     max_inflight := pos_integer(),
-    max_queue := pos_integer()
+    max_queue := pos_integer(),
+    started_at => integer()
+}.
+
+-type counter_value() :: non_neg_integer() | unavailable.
+
+-type stats() :: #{
+    queued := non_neg_integer(),
+    inflight := non_neg_integer(),
+    counters := live | unavailable,
+    dispatcher_uptime_seconds := non_neg_integer() | undefined,
+    dispatcher_restarts := counter_value(),
+    restart_discarded_jobs := counter_value(),
+    queue_backlog_lost := counter_value(),
+    queue_full_dropped := counter_value(),
+    invalid_job_dropped := counter_value(),
+    enqueue_timeout := counter_value(),
+    enqueue_failed := counter_value(),
+    job_crashed := counter_value(),
+    worker_died := counter_value(),
+    worker_pool_dropped := counter_value()
 }.
 
 -spec start_link() -> {ok, pid()} | {error, term()} | ignore.
@@ -135,25 +168,57 @@ enqueue_clear_notifications(UserId, ChannelId, MessageId, BadgeCountsTtlSeconds)
     ),
     safe_enqueue(Job).
 
--spec stats() -> #{queued := non_neg_integer(), inflight := non_neg_integer()} | #{}.
+-spec stats() -> stats() | #{}.
 stats() ->
-    try
-        gen_server:call(?MODULE, stats, 1000)
+    Enqueued = read_counter(?CNT_QUEUE_ENQUEUED),
+    try gen_server:call(?MODULE, stats, 1000) of
+        #{queued := Queued, inflight := Inflight} = Reply ->
+            StartedAt = maps:get(started_at, Reply, undefined),
+            stats_with_loss(Queued, Inflight, StartedAt, Enqueued);
+        _ ->
+            #{}
     catch
         exit:_ -> #{};
         error:_ -> #{}
     end.
 
+-spec stats_with_loss(non_neg_integer(), non_neg_integer(), term(), term()) -> stats().
+stats_with_loss(Queued, Inflight, StartedAt, Enqueued) ->
+    #{
+        queued => Queued,
+        inflight => Inflight,
+        counters => counter_table_status(),
+        dispatcher_uptime_seconds => uptime_seconds(StartedAt),
+        dispatcher_restarts => read_counter(?CNT_RESTARTS),
+        restart_discarded_jobs => read_counter(?CNT_RESTART_DISCARDED),
+        queue_backlog_lost => queue_backlog_lost(Enqueued, Queued),
+        queue_full_dropped => read_counter(?CNT_QUEUE_FULL),
+        invalid_job_dropped => read_counter(?CNT_INVALID_JOB),
+        enqueue_timeout => read_counter(?CNT_ENQUEUE_TIMEOUT),
+        enqueue_failed => read_counter(?CNT_ENQUEUE_FAILED),
+        job_crashed => read_counter(?CNT_JOB_CRASHED),
+        worker_died => read_counter(?CNT_WORKER_DIED),
+        worker_pool_dropped => read_counter(?CNT_WORKER_POOL)
+    }.
+
+-spec uptime_seconds(term()) -> non_neg_integer() | undefined.
+uptime_seconds(StartedAt) when is_integer(StartedAt) ->
+    max(0, erlang:monotonic_time(second) - StartedAt);
+uptime_seconds(_StartedAt) ->
+    undefined.
+
 -spec init([]) -> {ok, state()}.
 init([]) ->
     erlang:process_flag(fullsweep_after, 10),
+    bump_counter(?CNT_RESTARTS),
     {ok, #{
         queue => queue:new(),
         queued => 0,
         inflight => 0,
         workers => #{},
         max_inflight => budget_aware_max_inflight(),
-        max_queue => get_int_or_default(push_dispatcher_max_queue, ?DEFAULT_MAX_QUEUE)
+        max_queue => get_int_or_default(push_dispatcher_max_queue, ?DEFAULT_MAX_QUEUE),
+        started_at => erlang:monotonic_time(second)
     }}.
 
 -spec budget_aware_max_inflight() -> pos_integer().
@@ -167,7 +232,12 @@ budget_aware_max_inflight() ->
 -spec handle_call(term(), gen_server:from(), state()) ->
     {reply, term(), state()}.
 handle_call(stats, _From, #{queued := Queued, inflight := Inflight} = State) ->
-    {reply, #{queued => Queued, inflight => Inflight}, State};
+    Reply = #{
+        queued => Queued,
+        inflight => Inflight,
+        started_at => maps:get(started_at, State, undefined)
+    },
+    {reply, Reply, State};
 handle_call({enqueue, Job}, _From, State) ->
     {Result, State1} = handle_enqueue(Job, State),
     {reply, Result, State1};
@@ -183,11 +253,12 @@ handle_cast(_Msg, State) ->
 
 -spec handle_info(term(), state()) -> {noreply, state()}.
 handle_info(
-    {'DOWN', Ref, process, _Pid, _Reason},
+    {'DOWN', Ref, process, _Pid, Reason},
     #{workers := Workers, inflight := Inflight} = State
 ) ->
     case maps:is_key(Ref, Workers) of
         true ->
+            count_worker_down(Reason),
             RemainingWorkers = maps:remove(Ref, Workers),
             DecrementedInflight = max(0, Inflight - 1),
             drain_queue(State#{
@@ -201,8 +272,15 @@ handle_info(_Info, State) ->
     {noreply, State}.
 
 -spec terminate(term(), state()) -> ok.
-terminate(_Reason, _State) ->
-    ok.
+terminate(_Reason, State) ->
+    bump_counter(?CNT_RESTART_DISCARDED, maps:get(queued, State, 0)).
+
+-spec count_worker_down(term()) -> ok.
+count_worker_down(normal) ->
+    ok;
+count_worker_down(_Reason) ->
+    bump_counter(?CNT_JOB_CRASHED),
+    bump_counter(?CNT_WORKER_DIED).
 
 -spec code_change(term(), state(), term()) -> {ok, state()}.
 code_change(_OldVsn, State, _Extra) ->
@@ -239,21 +317,39 @@ maybe_enqueue_or_start(Job, #{inflight := Inflight, max_inflight := MaxInflight}
 maybe_enqueue(Job, #{queued := Queued, max_queue := MaxQueue, queue := Queue0} = State) ->
     case Queued < MaxQueue of
         true ->
+            bump_counter(?CNT_QUEUE_ENQUEUED),
             Queue1 = queue:in(Job, Queue0),
             {ok, State#{queue := Queue1, queued := Queued + 1}};
         false ->
+            bump_counter(?CNT_QUEUE_FULL),
             DropCount = bump_drop_count(),
-            logger:warning(
-                "Push: queue full, dropping job",
-                #{
-                    message_id => maps:get(message_id, Job, undefined),
-                    queued => Queued,
-                    max_queue => MaxQueue,
-                    total_dropped => DropCount
-                }
-            ),
+            log_queue_full_drop(loss_logging_enabled(), Job, Queued, MaxQueue, DropCount),
             {dropped, State}
     end.
+
+-spec log_queue_full_drop(
+    boolean(), push_job(), non_neg_integer(), pos_integer(), non_neg_integer()
+) -> ok.
+log_queue_full_drop(true, Job, Queued, MaxQueue, _DropCount) ->
+    logger:error(
+        "Push: queue full, dropping job",
+        #{
+            message_id => maps:get(message_id, Job, undefined),
+            queued => Queued,
+            max_queue => MaxQueue,
+            total_dropped => read_counter(?CNT_QUEUE_FULL)
+        }
+    );
+log_queue_full_drop(false, Job, Queued, MaxQueue, DropCount) ->
+    logger:warning(
+        "Push: queue full, dropping job",
+        #{
+            message_id => maps:get(message_id, Job, undefined),
+            queued => Queued,
+            max_queue => MaxQueue,
+            total_dropped => DropCount
+        }
+    ).
 
 -spec bump_drop_count() -> non_neg_integer().
 bump_drop_count() ->
@@ -265,6 +361,68 @@ bump_drop_count() ->
     Updated = Current + 1,
     erlang:put(push_dispatcher_drop_count, Updated),
     Updated.
+
+-spec loss_logging_enabled() -> boolean().
+loss_logging_enabled() ->
+    application:get_env(fluxer_gateway, push_loss_logging, false) =:= true.
+
+-spec counter_table_status() -> live | unavailable.
+counter_table_status() ->
+    case ets:info(?PUSH_COUNTER_TABLE, size) of
+        Size when is_integer(Size) -> live;
+        _ -> unavailable
+    end.
+
+-spec queue_backlog_lost(term(), non_neg_integer()) -> counter_value().
+queue_backlog_lost(Enqueued, Queued) when is_integer(Enqueued) ->
+    max(0, trunc(Enqueued - dequeued_total() - Queued));
+queue_backlog_lost(_Enqueued, _Queued) ->
+    unavailable.
+
+-spec dequeued_total() -> non_neg_integer().
+dequeued_total() ->
+    case read_counter(?CNT_QUEUE_DEQUEUED) of
+        Dequeued when is_integer(Dequeued) -> Dequeued;
+        unavailable -> 0
+    end.
+
+-spec read_counter(atom()) -> counter_value().
+read_counter(Key) ->
+    try ets:lookup(?PUSH_COUNTER_TABLE, Key) of
+        [{Key, Value}] when is_integer(Value), Value >= 0 -> Value;
+        _ -> unavailable
+    catch
+        error:badarg -> unavailable
+    end.
+
+-spec bump_counter(atom()) -> ok.
+bump_counter(Key) ->
+    bump_counter(Key, 1).
+
+-spec bump_counter(atom(), non_neg_integer()) -> ok.
+bump_counter(Key, Increment) ->
+    try ets:update_counter(?PUSH_COUNTER_TABLE, Key, {2, Increment}) of
+        _Value -> ok
+    catch
+        error:badarg -> insert_missing_counter(Key, Increment)
+    end.
+
+-spec insert_missing_counter(atom(), non_neg_integer()) -> ok.
+insert_missing_counter(Key, Increment) ->
+    try ets:insert_new(?PUSH_COUNTER_TABLE, {Key, Increment}) of
+        true -> ok;
+        false -> retry_bump_counter(Key, Increment)
+    catch
+        error:badarg -> ok
+    end.
+
+-spec retry_bump_counter(atom(), non_neg_integer()) -> ok.
+retry_bump_counter(Key, Increment) ->
+    try ets:update_counter(?PUSH_COUNTER_TABLE, Key, {2, Increment}) of
+        _Value -> ok
+    catch
+        error:badarg -> ok
+    end.
 
 -spec start_job(push_job(), state()) -> state().
 start_job(Job, #{workers := Workers, inflight := Inflight} = State) ->
@@ -340,6 +498,7 @@ log_enqueue_send_notifications(UserIds, GuildId, ChannelId, MessageId) ->
     state()
 ) -> {noreply, state()}.
 drain_available_queue({{value, Job}, Queue1}, Queued, State) ->
+    bump_counter(?CNT_QUEUE_DEQUEUED),
     State1 = State#{queue := Queue1, queued := max(0, Queued - 1)},
     State2 = start_job(Job, State1),
     drain_queue(State2);
@@ -353,13 +512,28 @@ run_job(#{message_id := MessageId} = Job) ->
         logger:debug("Push: worker completed", #{message_id => MessageId}),
         ok
     catch
-        Class:Reason ->
-            logger:debug(
-                "Push: worker crashed",
-                #{message_id => MessageId, class => Class, reason => Reason}
-            ),
+        Class:Reason:Stacktrace ->
+            bump_counter(?CNT_JOB_CRASHED),
+            log_job_crash(loss_logging_enabled(), MessageId, Class, Reason, Stacktrace),
             ok
     end.
+
+-spec log_job_crash(boolean(), integer(), atom(), term(), list()) -> ok.
+log_job_crash(true, MessageId, Class, Reason, Stacktrace) ->
+    logger:error(
+        "Push: worker crashed",
+        #{
+            message_id => MessageId,
+            class => Class,
+            reason => Reason,
+            stacktrace => Stacktrace
+        }
+    );
+log_job_crash(false, MessageId, Class, Reason, _Stacktrace) ->
+    logger:debug(
+        "Push: worker crashed",
+        #{message_id => MessageId, class => Class, reason => Reason}
+    ).
 
 -spec run_typed_job(message_create | clear_channel, push_job()) -> ok.
 run_typed_job(message_create, #{
@@ -412,20 +586,39 @@ get_int_or_default(Key, Default) ->
 -spec safe_enqueue(push_job()) -> ok | dropped.
 safe_enqueue(Job) ->
     try gen_server:call(?MODULE, {enqueue, Job}, ?ENQUEUE_TIMEOUT_MS) of
-        ok -> ok;
-        dropped -> dropped;
-        _ -> dropped
+        ok ->
+            ok;
+        dropped ->
+            dropped;
+        _ ->
+            bump_counter(?CNT_ENQUEUE_FAILED),
+            dropped
     catch
-        throw:_Reason -> dropped;
-        error:_Reason -> dropped;
-        exit:_Reason -> dropped
+        throw:_Reason ->
+            bump_counter(?CNT_ENQUEUE_FAILED),
+            dropped;
+        error:_Reason ->
+            bump_counter(?CNT_ENQUEUE_FAILED),
+            dropped;
+        exit:Reason ->
+            count_enqueue_exit(Reason),
+            dropped
     end.
+
+-spec count_enqueue_exit(term()) -> ok.
+count_enqueue_exit({timeout, _Call}) ->
+    bump_counter(?CNT_ENQUEUE_TIMEOUT);
+count_enqueue_exit(_Reason) ->
+    bump_counter(?CNT_ENQUEUE_FAILED).
 
 -spec handle_enqueue(term(), state()) -> {ok | dropped, state()}.
 handle_enqueue(Job0, State) ->
     case push_job(Job0) of
-        {ok, Job} -> maybe_enqueue_or_start(Job, State);
-        error -> {dropped, State}
+        {ok, Job} ->
+            maybe_enqueue_or_start(Job, State);
+        error ->
+            bump_counter(?CNT_INVALID_JOB),
+            {dropped, State}
     end.
 
 -spec push_job(term()) -> {ok, push_job()} | error.
@@ -527,26 +720,18 @@ send_job_options(UserIds0, Options) ->
     ChannelName0 = maps:get(channel_name, Options),
     BadgeCountsTtlSeconds = maps:get(badge_counts_ttl_seconds, Options),
     MarkdownContext = maps:get(markdown_context, Options, #{}),
-    case {integer_list(UserIds0), optional_binary(GuildName0), optional_binary(ChannelName0)} of
+    case
+        {
+            push_normalize:integer_list(UserIds0),
+            optional_binary(GuildName0),
+            optional_binary(ChannelName0)
+        }
+    of
         {{ok, UserIds}, {ok, GuildName}, {ok, ChannelName}} when is_map(MarkdownContext) ->
             {ok, UserIds, GuildName, ChannelName, BadgeCountsTtlSeconds, MarkdownContext};
         _ ->
             error
     end.
-
--spec integer_list(term()) -> {ok, [integer()]} | error.
-integer_list(Value) when is_list(Value) ->
-    integer_list(Value, []);
-integer_list(_) ->
-    error.
-
--spec integer_list([term()], [integer()]) -> {ok, [integer()]} | error.
-integer_list([], Acc) ->
-    {ok, lists:reverse(Acc)};
-integer_list([Value | Rest], Acc) when is_integer(Value) ->
-    integer_list(Rest, [Value | Acc]);
-integer_list(_, _) ->
-    error.
 
 -spec optional_binary(term()) -> {ok, binary() | undefined} | error.
 optional_binary(undefined) ->
@@ -555,3 +740,135 @@ optional_binary(Value) when is_binary(Value) ->
     {ok, Value};
 optional_binary(_) ->
     error.
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+absent_counter_table_reads_unavailable_test() ->
+    delete_counter_table(),
+    ?assertEqual(unavailable, counter_table_status()),
+    ?assertEqual(unavailable, read_counter(?CNT_QUEUE_FULL)),
+    ?assertEqual(ok, bump_counter(?CNT_QUEUE_FULL)),
+    ?assertEqual(unavailable, read_counter(?CNT_QUEUE_FULL)).
+
+absent_counter_key_is_distinct_from_zero_test() ->
+    with_counter_table(fun() ->
+        ?assertEqual(live, counter_table_status()),
+        ?assertEqual(unavailable, read_counter(?CNT_QUEUE_FULL)),
+        ok = bump_counter(?CNT_RESTART_DISCARDED, 0),
+        ?assertEqual(0, read_counter(?CNT_RESTART_DISCARDED))
+    end).
+
+bump_counter_creates_then_increments_key_test() ->
+    with_counter_table(fun() ->
+        ok = bump_counter(?CNT_QUEUE_FULL),
+        ?assertEqual(1, read_counter(?CNT_QUEUE_FULL)),
+        ok = bump_counter(?CNT_QUEUE_FULL, 4),
+        ?assertEqual(5, read_counter(?CNT_QUEUE_FULL))
+    end).
+
+enqueue_exit_separates_timeout_from_failure_test() ->
+    with_counter_table(fun() ->
+        ok = count_enqueue_exit({timeout, {gen_server, call, []}}),
+        ok = count_enqueue_exit({noproc, {gen_server, call, []}}),
+        ?assertEqual(1, read_counter(?CNT_ENQUEUE_TIMEOUT)),
+        ?assertEqual(1, read_counter(?CNT_ENQUEUE_FAILED))
+    end).
+
+worker_down_counts_only_abnormal_exits_test() ->
+    with_counter_table(fun() ->
+        ok = count_worker_down(normal),
+        ?assertEqual(unavailable, read_counter(?CNT_WORKER_DIED)),
+        ok = count_worker_down(killed),
+        ok = count_worker_down({shutdown, restarting}),
+        ?assertEqual(2, read_counter(?CNT_WORKER_DIED))
+    end).
+
+terminate_counts_discarded_queue_depth_test() ->
+    with_counter_table(fun() ->
+        ?assertEqual(ok, terminate(shutdown, dispatcher_state(7, 10))),
+        ?assertEqual(7, read_counter(?CNT_RESTART_DISCARDED))
+    end).
+
+invalid_job_enqueue_is_counted_test() ->
+    with_counter_table(fun() ->
+        State = dispatcher_state(0, 10),
+        ?assertEqual({dropped, State}, handle_enqueue(#{type => invalid}, State)),
+        ?assertEqual(1, read_counter(?CNT_INVALID_JOB))
+    end).
+
+uptime_seconds_reports_undefined_without_start_time_test() ->
+    ?assertEqual(undefined, uptime_seconds(undefined)),
+    ?assertEqual(0, uptime_seconds(erlang:monotonic_time(second) + 5)),
+    ?assert(is_integer(uptime_seconds(erlang:monotonic_time(second) - 3))).
+
+abnormal_worker_down_also_counts_a_crashed_job_test() ->
+    with_counter_table(fun() ->
+        ok = count_worker_down(normal),
+        ?assertEqual(unavailable, read_counter(?CNT_JOB_CRASHED)),
+        ok = count_worker_down(killed),
+        ?assertEqual(1, read_counter(?CNT_JOB_CRASHED)),
+        ?assertEqual(1, read_counter(?CNT_WORKER_DIED))
+    end).
+
+enqueue_records_queue_growth_outside_the_process_test() ->
+    with_counter_table(fun() ->
+        {ok, State1} = maybe_enqueue(clear_job(), dispatcher_state(0, 10)),
+        ?assertEqual(1, maps:get(queued, State1)),
+        ?assertEqual(1, read_counter(?CNT_QUEUE_ENQUEUED)),
+        ?assertEqual(unavailable, read_counter(?CNT_QUEUE_DEQUEUED))
+    end).
+
+queue_full_drop_does_not_record_queue_growth_test() ->
+    with_counter_table(fun() ->
+        {dropped, _State1} = maybe_enqueue(clear_job(), dispatcher_state(3, 3)),
+        ?assertEqual(1, read_counter(?CNT_QUEUE_FULL)),
+        ?assertEqual(unavailable, read_counter(?CNT_QUEUE_ENQUEUED))
+    end).
+
+queue_backlog_lost_survives_an_untrappable_kill_test() ->
+    with_counter_table(fun() ->
+        ?assertEqual(unavailable, queue_backlog_lost(read_counter(?CNT_QUEUE_ENQUEUED), 0)),
+        ok = bump_counter(?CNT_QUEUE_ENQUEUED, 7),
+        ok = bump_counter(?CNT_QUEUE_DEQUEUED, 2),
+        ?assertEqual(0, queue_backlog_lost(read_counter(?CNT_QUEUE_ENQUEUED), 5)),
+        ?assertEqual(5, queue_backlog_lost(read_counter(?CNT_QUEUE_ENQUEUED), 0)),
+        ?assertEqual(0, queue_backlog_lost(read_counter(?CNT_QUEUE_ENQUEUED), 900))
+    end).
+
+dispatcher_state(Queued, MaxQueue) ->
+    #{
+        queue => queue:new(),
+        queued => Queued,
+        inflight => 0,
+        workers => #{},
+        max_inflight => 1,
+        max_queue => MaxQueue
+    }.
+
+clear_job() ->
+    #{
+        type => clear_channel,
+        user_id => 1,
+        channel_id => 2,
+        message_id => 3,
+        badge_counts_ttl_seconds => 0
+    }.
+
+with_counter_table(Fun) ->
+    delete_counter_table(),
+    _ = ets:new(?PUSH_COUNTER_TABLE, [named_table, public, set, {write_concurrency, true}]),
+    try
+        Fun()
+    after
+        delete_counter_table()
+    end.
+
+delete_counter_table() ->
+    try ets:delete(?PUSH_COUNTER_TABLE) of
+        _ -> ok
+    catch
+        error:badarg -> ok
+    end.
+
+-endif.

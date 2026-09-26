@@ -7,7 +7,7 @@ import type {
 	MfaBackupCode,
 	PasswordResetToken,
 	UserID,
-} from '../../BrandedTypes';
+} from '@app/api/BrandedTypes';
 
 type Nullish<T> = T | null;
 
@@ -100,6 +100,8 @@ export interface WebAuthnCredentialRow {
 	created_at: Date;
 	last_used_at: Nullish<Date>;
 	version: number;
+	rp_id: Nullish<string>;
+	superseded_by: Nullish<string>;
 }
 
 export interface EmailChangeTicketRow {
@@ -193,6 +195,8 @@ export const WEBAUTHN_CREDENTIAL_COLUMNS = [
 	'created_at',
 	'last_used_at',
 	'version',
+	'rp_id',
+	'superseded_by',
 ] as const satisfies ReadonlyArray<keyof WebAuthnCredentialRow>;
 
 export interface PhoneTokenRow {

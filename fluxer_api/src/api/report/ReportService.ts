@@ -1,6 +1,50 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash, randomBytes, randomInt} from 'node:crypto';
+import type {ChannelID, GuildID, InviteCode, MessageID, ReportID, UserID} from '@app/api/BrandedTypes';
+import {
+	createChannelID,
+	createGuildID,
+	createInviteCode,
+	createMessageID,
+	createReportID,
+	createUserID,
+} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
+import {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
+import * as MessageHelpers from '@app/api/channel/services/message/MessageHelpers';
+import type {ContentWarningChannelLike} from '@app/api/channel/utils/EffectiveContentWarning';
+import {
+	channelToContentWarningView,
+	computeEffectiveChannelNsfw,
+	computeEffectiveContentWarning,
+	guildToContentWarningView,
+} from '@app/api/channel/utils/EffectiveContentWarning';
+import type {MessageAttachment} from '@app/api/database/types/MessageTypes';
+import type {DSAReportTicketRow} from '@app/api/database/types/ReportTypes';
+import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import type {IEmailDnsValidationService} from '@app/api/infrastructure/IEmailDnsValidationService';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
+import type {IStorageService} from '@app/api/infrastructure/IStorageService';
+import type {IInviteRepository} from '@app/api/invite/IInviteRepository';
+import {Logger} from '@app/api/Logger';
+import type {Attachment} from '@app/api/models/Attachment';
+import type {Channel} from '@app/api/models/Channel';
+import type {Guild} from '@app/api/models/Guild';
+import type {Message} from '@app/api/models/Message';
+import type {User} from '@app/api/models/User';
+import type {
+	IARMessageContextRow,
+	IARSubmission,
+	IARSubmissionRow,
+	IReportRepository,
+} from '@app/api/report/IReportRepository';
+import {ReportStatus, ReportType} from '@app/api/report/IReportRepository';
+import type {IReportSearchService} from '@app/api/search/IReportSearchService';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {InviteTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildFeatures} from '@fluxer/constants/src/GuildConstants';
@@ -10,6 +54,7 @@ import {CannotReportOwnMessageError} from '@fluxer/errors/src/domains/channel/Ca
 import {UnknownChannelError} from '@fluxer/errors/src/domains/channel/UnknownChannelError';
 import {UnknownMessageError} from '@fluxer/errors/src/domains/channel/UnknownMessageError';
 import {ConflictError} from '@fluxer/errors/src/domains/core/ConflictError';
+import {FeatureTemporarilyDisabledError} from '@fluxer/errors/src/domains/core/FeatureTemporarilyDisabledError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
 import {CannotReportGuildError} from '@fluxer/errors/src/domains/guild/CannotReportGuildError';
@@ -24,49 +69,11 @@ import {ReportBannedError} from '@fluxer/errors/src/domains/moderation/ReportBan
 import {UnknownReportError} from '@fluxer/errors/src/domains/moderation/UnknownReportError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {DsaReportRequest} from '@fluxer/schema/src/domains/report/ReportSchemas';
+import {SnowflakeType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import type {IEmailService} from '@pkgs/email/src/IEmailService';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
 import {ms} from 'itty-time';
-import type {ChannelID, GuildID, InviteCode, MessageID, ReportID, UserID} from '../BrandedTypes';
-import {
-	createChannelID,
-	createGuildID,
-	createInviteCode,
-	createMessageID,
-	createReportID,
-	createUserID,
-} from '../BrandedTypes';
-import {Config} from '../Config';
-import type {IChannelRepository} from '../channel/IChannelRepository';
-import type {AuthenticatedChannel} from '../channel/services/AuthenticatedChannel';
-import {MessageChannelAuthService} from '../channel/services/message/MessageChannelAuthService';
-import * as MessageHelpers from '../channel/services/message/MessageHelpers';
-import type {ContentWarningChannelLike} from '../channel/utils/EffectiveContentWarning';
-import {
-	channelToContentWarningView,
-	computeEffectiveChannelNsfw,
-	computeEffectiveContentWarning,
-	guildToContentWarningView,
-} from '../channel/utils/EffectiveContentWarning';
-import type {MessageAttachment} from '../database/types/MessageTypes';
-import type {DSAReportTicketRow} from '../database/types/ReportTypes';
-import type {IGuildRepositoryAggregate} from '../guild/repositories/IGuildRepositoryAggregate';
-import type {IEmailDnsValidationService} from '../infrastructure/IEmailDnsValidationService';
-import type {IGatewayService} from '../infrastructure/IGatewayService';
-import type {ISnowflakeService} from '../infrastructure/ISnowflakeService';
-import type {IStorageService} from '../infrastructure/IStorageService';
-import type {IInviteRepository} from '../invite/IInviteRepository';
-import {Logger} from '../Logger';
-import type {Attachment} from '../models/Attachment';
-import type {Channel} from '../models/Channel';
-import type {Guild} from '../models/Guild';
-import type {Message} from '../models/Message';
-import type {User} from '../models/User';
-import type {IReportSearchService} from '../search/IReportSearchService';
-import type {IUserRepository} from '../user/IUserRepository';
-import type {IARMessageContextRow, IARSubmission, IARSubmissionRow, IReportRepository} from './IReportRepository';
-import {ReportStatus, ReportType} from './IReportRepository';
 
 interface ReporterMetadata {
 	id: UserID | null;
@@ -170,7 +177,6 @@ export class ReportService {
 			reported_guild_invite_code: null,
 			...contentWarningSnapshot,
 		};
-		await this.consumeMessageReportRateLimits({reporter, channel, message});
 		let duplicateReservationCreated = false;
 		if (reporter.id) {
 			duplicateReservationCreated = await this.reportRepository.reserveMessageReportByReporter({
@@ -185,6 +191,7 @@ export class ReportService {
 			}
 		}
 		try {
+			await this.consumeMessageReportRateLimits({reporter, channel, message});
 			const report = await this.reportRepository.createReport(reportData);
 			if (this.reportSearchService && 'indexReport' in this.reportSearchService) {
 				await this.reportSearchService.indexReport(report).catch((error) => {
@@ -221,6 +228,9 @@ export class ReportService {
 		}
 		const reportId = createReportID(await this.snowflakeService.generate());
 		const guild = guildId ? await this.guildRepository.findUnique(guildId) : null;
+		if (guildId && !guild) {
+			throw new UnknownGuildError();
+		}
 		const contentWarningSnapshot = await this.buildContentWarningSnapshot(guild, null);
 		const reportData: IARSubmissionRow = {
 			report_id: reportId,
@@ -334,11 +344,11 @@ export class ReportService {
 		throw new CannotReportGuildError();
 	}
 
-	async sendDsaReportVerificationCode(email: string): Promise<void> {
+	async sendDsaReportVerificationCode(email: string, locale: string | null = null): Promise<void> {
 		const normalizedEmail = this.normalizeEmail(email);
 		const hasValidDns = await this.emailDnsValidationService.hasValidDnsRecords(normalizedEmail);
 		if (!hasValidDns) {
-			throw InputValidationError.fromCode('email', ValidationErrorCodes.INVALID_EMAIL_ADDRESS);
+			throw InputValidationError.fromCode('email', ValidationErrorCodes.EMAIL_DOMAIN_CANNOT_RECEIVE_MAIL);
 		}
 		const verificationCode = this.generateDsaVerificationCode();
 		const expiresAt = new Date(Date.now() + ms('10 minutes'));
@@ -348,7 +358,7 @@ export class ReportService {
 			expires_at: expiresAt,
 			last_sent_at: new Date(),
 		});
-		await this.emailService.sendDsaReportVerificationCode(normalizedEmail, verificationCode, expiresAt);
+		await this.emailService.sendDsaReportVerificationCode(normalizedEmail, verificationCode, expiresAt, locale);
 	}
 
 	async verifyDsaReportEmail(email: string, code: string): Promise<string> {
@@ -372,7 +382,7 @@ export class ReportService {
 	}
 
 	async createDsaReport(report: DsaReportRequest): Promise<IARSubmission> {
-		const ticket = await this.consumeDsaTicket(report.ticket);
+		const ticket = await this.readDsaTicket(report.ticket);
 		const reporterMeta: ReporterMetadata = {
 			id: null,
 			email: ticket.email_lower,
@@ -385,6 +395,7 @@ export class ReportService {
 		const reportId = createReportID(await this.snowflakeService.generate());
 		const reportRow = await this.buildDsaReportRow(reportId, report, reporterMeta);
 		await this.ensureReportRateLimit(this.createReportRateLimitIdentifier(reporterKey), REPORT_RATE_LIMIT_MAX, true);
+		await this.reportRepository.deleteDsaTicket(report.ticket);
 		const createdReport = await this.reportRepository.createReport(reportRow);
 		if (this.reportSearchService && 'indexReport' in this.reportSearchService) {
 			await this.reportSearchService.indexReport(createdReport).catch((error) => {
@@ -706,12 +717,11 @@ export class ReportService {
 		return user;
 	}
 
-	private async consumeDsaTicket(ticket: string): Promise<DSAReportTicketRow> {
+	private async readDsaTicket(ticket: string): Promise<DSAReportTicketRow> {
 		const ticketRow = await this.reportRepository.getDsaTicket(ticket);
 		if (!ticketRow || ticketRow.expires_at.getTime() < Date.now()) {
 			throw new InvalidDsaTicketError();
 		}
-		await this.reportRepository.deleteDsaTicket(ticket);
 		return ticketRow;
 	}
 
@@ -762,11 +772,14 @@ export class ReportService {
 		if (segments.length < 4 || segments[0] !== 'channels') {
 			throw new UnknownMessageError();
 		}
-		const channelIdSegment = segments[2];
-		const messageIdSegment = segments[3];
+		const channelId = SnowflakeType.safeParse(segments[2]);
+		const messageId = SnowflakeType.safeParse(segments[3]);
+		if (!channelId.success || !messageId.success) {
+			throw new UnknownMessageError();
+		}
 		return {
-			channelId: createChannelID(BigInt(channelIdSegment)),
-			messageId: createMessageID(BigInt(messageIdSegment)),
+			channelId: createChannelID(channelId.data),
+			messageId: createMessageID(messageId.data),
 		};
 	}
 
@@ -797,7 +810,7 @@ export class ReportService {
 
 	async listMyReports(reporterId: UserID, limit?: number, offset?: number): Promise<Array<IARSubmission>> {
 		if (!this.reportSearchService) {
-			throw new Error('Search service not available');
+			throw new FeatureTemporarilyDisabledError();
 		}
 		const {hits} = await this.reportSearchService.listReportsByReporter(reporterId, limit, offset);
 		const reportIds = hits.map((hit) => createReportID(BigInt(hit.id)));
@@ -805,14 +818,19 @@ export class ReportService {
 		return reports.filter((report): report is IARSubmission => report !== null);
 	}
 
-	async listReportsByStatus(status: number, limit?: number, offset?: number): Promise<Array<IARSubmission>> {
+	async listReportsByStatus(
+		status: number,
+		limit?: number,
+		offset?: number,
+	): Promise<{reports: Array<IARSubmission>; total: number}> {
 		if (!this.reportSearchService) {
-			throw new Error('Search service not available');
+			throw new FeatureTemporarilyDisabledError();
 		}
-		const {hits} = await this.reportSearchService.listReportsByStatus(status, limit, offset);
+		const {hits, total} = await this.reportSearchService.listReportsByStatus(status, limit, offset);
 		const reportIds = hits.map((hit) => createReportID(BigInt(hit.id)));
-		const reports = await Promise.all(reportIds.map((id) => this.reportRepository.getReport(id)));
-		return reports.filter((report): report is IARSubmission => report !== null);
+		const loaded = await Promise.all(reportIds.map((id) => this.reportRepository.getReport(id)));
+		const reports = loaded.filter((report): report is IARSubmission => report !== null);
+		return {reports, total: Math.max(0, total - (hits.length - reports.length))};
 	}
 
 	async resolveReport(

@@ -4,9 +4,9 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"typecheck": "tsgo --noEmit"
+		"typecheck": "tsc --noEmit"
 	},
 	"devDependencies": {
-		"@typescript/native-preview": "catalog:"
+		"typescript": "catalog:ts7"
 	}
 }

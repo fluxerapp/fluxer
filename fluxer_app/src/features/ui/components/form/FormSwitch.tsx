@@ -42,7 +42,7 @@ export const Switch = observer(
 		);
 		const resolvedLabelledBy = hasLabel ? labelId : ariaLabelledBy;
 		const resolvedDescribedBy = [hasDescription ? descriptionId : null, ariaDescribedBy].filter(Boolean).join(' ');
-		const rootRef = useRef<React.ElementRef<typeof SwitchPrimitive.Root>>(null);
+		const rootRef = useRef<React.ComponentRef<typeof SwitchPrimitive.Root>>(null);
 		const valueChange = useCallback(
 			(next: boolean) => {
 				if (disabled) return;

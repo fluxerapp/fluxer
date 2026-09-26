@@ -32,6 +32,7 @@ import {
 	ShieldIcon,
 	StarIcon,
 } from '@phosphor-icons/react';
+import {formatListWithConfig} from '@pkgs/list_utils/src/ListFormatting';
 import {observer} from 'mobx-react-lite';
 import type {ReactNode} from 'react';
 import {useCallback, useMemo, useState} from 'react';
@@ -138,8 +139,8 @@ export const GuildFolderSettingsModal = observer(({folderId}: GuildFolderSetting
 			.slice(0, 3)
 			.map((guildId) => Guilds.getGuild(guildId)?.name)
 			.filter((name): name is string => name != null);
-		return guildNames.join(', ');
-	}, [folder]);
+		return formatListWithConfig(guildNames, {locale: i18n.locale, style: 'narrow', type: 'conjunction'});
+	}, [folder, i18n.locale]);
 	const [name, setName] = useState(folder?.name ?? '');
 	const nameRef = useCursorAtEnd<HTMLInputElement>();
 	const [color, setColor] = useState(folder?.color ?? 0);

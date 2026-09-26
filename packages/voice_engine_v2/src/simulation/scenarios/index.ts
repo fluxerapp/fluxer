@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import type {VoiceEngineV2FaultPlan} from '../FaultInjector';
-import type {VoiceEngineV2SimulatorMode, VoiceEngineV2SimulatorResult} from '../Simulator';
-import type {VoiceEngineV2Workload} from '../Workload';
+import type {VoiceEngineV2FaultPlan} from '@fluxer/voice_engine_v2/src/simulation/FaultInjector';
+import type {
+	VoiceEngineV2SimulatorMode,
+	VoiceEngineV2SimulatorResult,
+} from '@fluxer/voice_engine_v2/src/simulation/Simulator';
+import type {VoiceEngineV2Workload} from '@fluxer/voice_engine_v2/src/simulation/Workload';
 
 const SCENARIO_SEED_MAX = 0x7fffffff;
 
@@ -50,8 +53,8 @@ export function assertSeedWellFormed(seed: number): void {
 	assert.ok(seed <= SCENARIO_SEED_MAX, 'scenario seed exceeds SCENARIO_SEED_MAX');
 }
 
-export {defineAsymmetricNatAfterConnectScenario} from './asymmetricNatAfterConnect';
-export {defineCaptureDeviceDisconnectScenario} from './captureDeviceDisconnect';
-export {defineEncoderFailUnderLoadScenario} from './encoderFailUnderLoad';
-export {defineGpuTdrMidFrameScenario} from './gpuTdrMidFrame';
-export {defineNetworkPartitionDuringScreenShareScenario} from './networkPartitionDuringScreenShare';
+export {defineAsymmetricNatAfterConnectScenario} from '@fluxer/voice_engine_v2/src/simulation/scenarios/asymmetricNatAfterConnect';
+export {defineCaptureDeviceDisconnectScenario} from '@fluxer/voice_engine_v2/src/simulation/scenarios/captureDeviceDisconnect';
+export {defineEncoderFailUnderLoadScenario} from '@fluxer/voice_engine_v2/src/simulation/scenarios/encoderFailUnderLoad';
+export {defineGpuTdrMidFrameScenario} from '@fluxer/voice_engine_v2/src/simulation/scenarios/gpuTdrMidFrame';
+export {defineNetworkPartitionDuringScreenShareScenario} from '@fluxer/voice_engine_v2/src/simulation/scenarios/networkPartitionDuringScreenShare';

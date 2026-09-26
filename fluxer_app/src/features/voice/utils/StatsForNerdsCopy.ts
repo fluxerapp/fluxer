@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import Config from '@app/features/app/config/Config';
-import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
-import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import {
 	getCachedDesktopTroubleshootingSettings,
 	getDesktopTroubleshootingSettings,
@@ -13,19 +11,20 @@ import {
 	isDesktop,
 	supportsDesktopScreenShareAudioCapture,
 } from '@app/features/ui/utils/NativeUtils';
-import AdaptiveScreenShareEngine from '@app/features/voice/engine/AdaptiveScreenShareEngine';
+import {collectVoiceSubscriptionDebugReport} from '@app/features/voice/diagnostics/VoiceSubscriptionDebugReport';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
 import ScreenShareCodecNegotiation, {
 	getScreenShareCodecPreferenceOrder,
 } from '@app/features/voice/engine/ScreenShareCodecNegotiation';
-import {getScreenShareAudioPumpDiagnostics} from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareAudioPump';
 import {getNativeEngineAudioTrackPumpStats} from '@app/features/voice/engine/voice_screen_share_manager/NativeEngineAudioTrackPump';
+import {getPublishedScreenShareMaxBitrateBps} from '@app/features/voice/engine/voice_screen_share_manager/shared';
+import {ScreenShareWatchFailures} from '@app/features/voice/state/ScreenShareWatchFailures';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {
 	type CodecCapabilityReport,
+	getCameraPublishCodecPolicy,
 	getCodecCapabilityReport,
 	getLiveKitSupportedCodecs,
-	selectOptimalCameraCodec,
 	selectOptimalScreenShareCodec,
 } from '@app/features/voice/utils/CodecCapabilityDetector';
 import {loadGpuEncoderReport} from '@app/features/voice/utils/GpuEncoderCapabilities';
@@ -34,9 +33,13 @@ import {
 	getNativeAudioCaptureDiagnosticState,
 } from '@app/features/voice/utils/NativeAudioCaptureBridge';
 import {getDisplayShareEnvironment} from '@app/features/voice/utils/ScreenShareEnvironment';
-import {resolveStreamingModeSettings} from '@app/features/voice/utils/ScreenShareOptions';
+import {getRecentScreenShares} from '@app/features/voice/utils/ScreenShareLifecycleLog';
+import {getScreenShareBitrateBps, resolveStreamingModeSettings} from '@app/features/voice/utils/ScreenShareOptions';
+import {getScreenShareDecodeFailures} from '@app/features/voice/utils/VideoDecoderCapabilities';
+import {hasHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
 import {
 	buildVoiceStatsForNerdsPresentation,
+	collectScreenShareAudioPublicationDiagnostics,
 	type StatsForNerdsData,
 } from '@app/features/voice/utils/VoiceStatsForNerdsPresenter';
 import type {NativeAudioApplication, VirtmicNode} from '@app/types/electron.d';
@@ -53,6 +56,14 @@ function safeError(error: unknown): Record<string, unknown> {
 		};
 	}
 	return {message: String(error)};
+}
+
+function safeCollect<T>(collect: () => T): T | {error: Record<string, unknown>} {
+	try {
+		return collect();
+	} catch (error) {
+		return {error: safeError(error)};
+	}
 }
 
 async function withTimeout<T>(
@@ -226,7 +237,7 @@ async function collectCodecMetadata(): Promise<Record<string, unknown>> {
 		report = null;
 	}
 	try {
-		resolvedCameraCodec = selectOptimalCameraCodec(cameraPreference);
+		resolvedCameraCodec = getCameraPublishCodecPolicy().primary;
 	} catch {
 		resolvedCameraCodec = null;
 	}
@@ -251,6 +262,12 @@ async function collectCodecMetadata(): Promise<Record<string, unknown>> {
 }
 
 async function collectVoiceSettingsMetadata(): Promise<Record<string, unknown>> {
+	const configuredScreenShare = resolveStreamingModeSettings(
+		VoiceSettings.getStreamingMode(),
+		VoiceSettings.getScreenshareResolution(),
+		VoiceSettings.getVideoFrameRate(),
+		hasHigherVideoQuality(),
+	);
 	return {
 		inputDeviceIdHash: await hashString(VoiceSettings.getInputDeviceId()),
 		outputDeviceIdHash: await hashString(VoiceSettings.getOutputDeviceId()),
@@ -284,12 +301,9 @@ async function collectVoiceSettingsMetadata(): Promise<Record<string, unknown>> 
 		preferredScreenShareCodec: VoiceSettings.getPreferredScreenShareCodec(),
 		screenShareContentHint: VoiceSettings.getScreenShareContentHint(),
 		screenShareEncoderMode: VoiceSettings.getScreenShareEncoderMode(),
-		screenShareSoftwareQuality: VoiceSettings.getScreenShareSoftwareQuality(),
 		screenShareScalabilityMode: VoiceSettings.getScreenShareScalabilityMode(),
-		screenShareBackupCodecMode: VoiceSettings.getScreenShareBackupCodecMode(),
-		screenShareMaxBitrateMbps: VoiceSettings.getScreenShareMaxBitrateMbps(),
-		adaptiveScreenShareQuality: VoiceSettings.getAdaptiveScreenShareQuality(),
-		openH264Enabled: VoiceSettings.getOpenH264Enabled(),
+		screenShareMaxBitrateMbps:
+			getScreenShareBitrateBps(configuredScreenShare.resolution, configuredScreenShare.frameRate) / 1000000,
 		linuxAudioCapture: {
 			workaround: VoiceSettings.getLinuxAudioCaptureWorkaround(),
 			onlySpeakers: VoiceSettings.getLinuxAudioCaptureOnlySpeakers(),
@@ -453,20 +467,7 @@ async function collectDesktopMetadata(): Promise<Record<string, unknown>> {
 	};
 }
 
-function hasHigherVideoQuality(): boolean {
-	return isLimitToggleEnabled(
-		{
-			feature_higher_video_quality: LimitResolver.resolve({
-				key: 'feature_higher_video_quality',
-				fallback: 0,
-			}),
-		},
-		'feature_higher_video_quality',
-	);
-}
-
 export function collectStatsForNerdsSnapshot(): StatsForNerdsData {
-	const adaptiveQualitySnapshot = AdaptiveScreenShareEngine.qualitySnapshot;
 	const effectiveScreenShareSettings = resolveStreamingModeSettings(
 		VoiceSettings.getStreamingMode(),
 		VoiceSettings.getScreenshareResolution(),
@@ -511,28 +512,21 @@ export function collectStatsForNerdsSnapshot(): StatsForNerdsData {
 			codecPreferenceOrder: [...getScreenShareCodecPreferenceOrder()],
 			contentHint: VoiceSettings.getScreenShareContentHint(),
 			encoderMode: VoiceSettings.getScreenShareEncoderMode(),
-			softwareQuality: VoiceSettings.getScreenShareSoftwareQuality(),
 			scalabilityMode: VoiceSettings.getScreenShareScalabilityMode(),
-			backupCodecMode: VoiceSettings.getScreenShareBackupCodecMode(),
-			maxBitrateMbps: VoiceSettings.getScreenShareMaxBitrateMbps(),
-			adaptiveQuality: VoiceSettings.getAdaptiveScreenShareQuality(),
-			adaptiveQualityAdapted: adaptiveQualitySnapshot.isAdapted,
-			adaptiveQualityConfiguredResolution: adaptiveQualitySnapshot.configuredResolution,
-			adaptiveQualityConfiguredFrameRate: adaptiveQualitySnapshot.configuredFrameRate,
-			adaptiveQualityEffectiveResolution: adaptiveQualitySnapshot.effectiveResolution,
-			adaptiveQualityEffectiveFrameRate: adaptiveQualitySnapshot.effectiveFrameRate,
-			adaptiveQualityLimitationReason: adaptiveQualitySnapshot.limitationReason,
+			maxBitrateMbps:
+				(getPublishedScreenShareMaxBitrateBps(localParticipant) ??
+					getScreenShareBitrateBps(effectiveScreenShareSettings.resolution, effectiveScreenShareSettings.frameRate)) /
+				1000000,
 			audioSourceMode: VoiceSettings.getScreenShareAudioSourceMode(),
 			audioIncludeSources: VoiceSettings.getScreenShareAudioIncludeSources(),
 			audioExcludeSources: VoiceSettings.getScreenShareAudioExcludeSources(),
 			shareDesktopAudio: VoiceSettings.getShareDesktopAudio(),
 			shareAppAudio: VoiceSettings.getShareAppAudio(),
 			muteStreamAudio: VoiceSettings.getMuteStreamAudio(),
-			openH264Enabled: VoiceSettings.getOpenH264Enabled(),
 		},
 		screenShareAudioCapture: {
-			pump: getScreenShareAudioPumpDiagnostics(),
 			nativeCapture: getNativeAudioCaptureDiagnosticState(),
+			publications: collectScreenShareAudioPublicationDiagnostics(localParticipant),
 		},
 		appInfo: {
 			appVersion: Config.PUBLIC_BUILD_VERSION ?? 'dev',
@@ -596,6 +590,15 @@ export async function buildStatsForNerdsCopyPayload(data: StatsForNerdsData): Pr
 		mediaDevices,
 		voiceSettings,
 		voiceSession: summarizeRoom(),
+		recentScreenShares: getRecentScreenShares(),
+		screenShareWatchFailures: safeCollect(() => ScreenShareWatchFailures.getFailureHistory()),
+		screenShareNegotiation: safeCollect(() => ({
+			selectedCodec: ScreenShareCodecNegotiation.getSelectedCodec(),
+			localCodecs: ScreenShareCodecNegotiation.getLocalCodecAdvertisements(),
+			remoteDecodeCodecsByIdentity: ScreenShareCodecNegotiation.getRemoteDecodeCodecsByIdentity(),
+			decodeFailures: [...getScreenShareDecodeFailures()],
+		})),
+		voiceSubscriptionDebug: safeCollect(() => collectVoiceSubscriptionDebugReport()),
 		desktop,
 	};
 }

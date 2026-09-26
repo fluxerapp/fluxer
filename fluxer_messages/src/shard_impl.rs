@@ -16,9 +16,11 @@ use crate::types::{
     MessageReference, MessageRequest, MessageResponse, MessageSnapshot, MessageStickerItem,
 };
 use crate::udt;
+use base64::prelude::{BASE64_STANDARD, Engine};
 use chrono::{DateTime, Utc};
+use fluxer_common::user_flags::{USER_FLAG_STAFF, visible_user_flags};
 use fluxer_svc::shard::ShardService;
-use fluxer_svc::transport::NatsTransport;
+use fluxer_svc::transport::Transport;
 use fluxer_svc::{postgres, postgres::BigIntBound, postgres::KeyPart};
 use futures::stream::{self, StreamExt};
 #[cfg(feature = "scylla")]
@@ -47,14 +49,11 @@ fn effective_reference_type(reference: &MessageReference) -> i32 {
         .unwrap_or(MESSAGE_REFERENCE_TYPE_DEFAULT)
 }
 const MESSAGE_FLAG_SUPPRESS_EMBEDS: i64 = 1 << 2;
-const PUBLIC_USER_FLAGS: i64 =
-    (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4) | (1 << 5) | (1 << 6);
 #[cfg(test)]
 const USER_FLAG_DELETED: i64 = 1_i64 << 34;
 const FLUXER_SYSTEM_USER_ID: i64 = 0;
 const FLUXER_SYSTEM_USERNAME: &str = "Fluxer";
 const FLUXER_SYSTEM_DISCRIMINATOR: &str = "0000";
-const USER_FLAG_STAFF: i64 = 1;
 const DELETED_USER_USERNAME: &str = "DeletedUser";
 const DELETED_USER_GLOBAL_NAME: &str = "Deleted User";
 const BUCKET_SCAN_CONCURRENCY: usize = 16;
@@ -79,19 +78,24 @@ const MESSAGE_COLUMNS: &str = "\
     webhook_id, webhook_name, webhook_avatar_hash, \
     content, edited_timestamp, pinned_timestamp, flags, mention_everyone, \
     mention_users, mention_roles, mention_channels, \
-    has_reaction, version, nsfw_emojis, \
+    has_reaction, version, \
     attachments, embeds, sticker_items, message_reference, call, message_snapshots";
 
-pub struct MessagesShard {
+pub struct MessagesShard<T> {
     storage: MessagesStorage,
-    transport: NatsTransport,
+    transport: T,
 }
+
+#[cfg(test)]
+type DeletedMessageKeys = std::sync::Arc<std::sync::Mutex<Vec<(i64, i32, i64)>>>;
 
 #[derive(Clone)]
 enum MessagesStorage {
     Postgres(PostgresMessagesStorage),
     #[cfg(feature = "scylla")]
-    Scylla(ScyllaMessagesStorage),
+    Scylla(Box<ScyllaMessagesStorage>),
+    #[cfg(test)]
+    Deletions(DeletedMessageKeys),
 }
 
 #[derive(Clone)]
@@ -137,7 +141,6 @@ struct MessageDbRow {
     mention_channels: Option<std::collections::HashSet<i64>>,
     has_reaction: Option<bool>,
     version: Option<i32>,
-    nsfw_emojis: Option<std::collections::HashSet<i64>>,
     attachments: Option<Vec<udt::AttachmentUdt>>,
     embeds: Option<Vec<udt::EmbedUdt>>,
     poll: Option<udt::PollUdt>,
@@ -254,6 +257,7 @@ struct ResponseBuildOptions {
     can_read_message_history: bool,
     media_endpoint: String,
     media_proxy_secret_key: String,
+    attachment_url_secret: Vec<u8>,
     include_reactions: bool,
     nonce: Option<String>,
     tts: bool,
@@ -276,8 +280,8 @@ struct MessageMentionContext {
     embed_users: HashSet<i64>,
 }
 
-impl MessagesShard {
-    pub fn new_postgres(kv: postgres::KvClient, transport: NatsTransport) -> anyhow::Result<Self> {
+impl<T: Transport> MessagesShard<T> {
+    pub fn new_postgres(kv: postgres::KvClient, transport: T) -> anyhow::Result<Self> {
         Ok(Self {
             storage: MessagesStorage::Postgres(PostgresMessagesStorage { kv }),
             transport,
@@ -285,7 +289,7 @@ impl MessagesShard {
     }
 
     #[cfg(feature = "scylla")]
-    pub async fn new_scylla(db: Arc<Session>, transport: NatsTransport) -> anyhow::Result<Self> {
+    pub async fn new_scylla(db: Arc<Session>, transport: T) -> anyhow::Result<Self> {
         let stmt_get_by_id = db
             .prepare(format!(
                 "SELECT {MESSAGE_COLUMNS} FROM messages WHERE channel_id = ? AND bucket = ? AND message_id = ? LIMIT 1"
@@ -341,7 +345,7 @@ impl MessagesShard {
             .await?;
 
         Ok(Self {
-            storage: MessagesStorage::Scylla(ScyllaMessagesStorage {
+            storage: MessagesStorage::Scylla(Box::new(ScyllaMessagesStorage {
                 db,
                 stmt_get_by_id,
                 stmt_get_latest,
@@ -354,25 +358,13 @@ impl MessagesShard {
                 stmt_get_attachment_decay,
                 stmt_get_attachment_decay_many,
                 stmt_delete_message,
-            }),
+            })),
             transport,
         })
     }
 
-    fn snowflake_to_bucket(snowflake: i64) -> i32 {
-        ((snowflake >> 22) / BUCKET_DURATION_MS) as i32
-    }
-
-    fn current_bucket() -> i32 {
-        let now_ms = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_millis() as i64;
-        epoch_millis_to_bucket(now_ms)
-    }
-
     async fn get_by_id(&self, channel_id: i64, message_id: i64) -> anyhow::Result<Option<Message>> {
-        let bucket = Self::snowflake_to_bucket(message_id);
+        let bucket = snowflake_to_bucket(message_id);
         self.storage.get_by_id(channel_id, bucket, message_id).await
     }
 
@@ -380,7 +372,7 @@ impl MessagesShard {
         if limit == 0 {
             return Ok(Vec::new());
         }
-        self.scan_indexed_buckets_desc(channel_id, 0, Self::current_bucket(), limit, None)
+        self.scan_indexed_buckets_desc(channel_id, 0, current_bucket(), limit, None)
             .await
     }
 
@@ -396,7 +388,7 @@ impl MessagesShard {
         self.scan_indexed_buckets_desc(
             channel_id,
             0,
-            Self::snowflake_to_bucket(before_id),
+            snowflake_to_bucket(before_id),
             limit,
             Some(before_id),
         )
@@ -412,8 +404,8 @@ impl MessagesShard {
         if limit == 0 {
             return Ok(Vec::new());
         }
-        let min_bucket = Self::snowflake_to_bucket(after_id);
-        let max_bucket = Self::current_bucket().max(min_bucket);
+        let min_bucket = snowflake_to_bucket(after_id);
+        let max_bucket = current_bucket().max(min_bucket);
         self.scan_indexed_buckets_asc(channel_id, min_bucket, max_bucket, limit, after_id)
             .await
     }
@@ -674,6 +666,7 @@ impl MessagesShard {
             return Ok(None);
         }
         if message.author_id.is_none() && message.webhook_id.is_none() {
+            self.cleanup_orphaned_messages(vec![message]).await;
             return Ok(None);
         }
         let context = self
@@ -689,11 +682,11 @@ impl MessagesShard {
         messages: Vec<Message>,
         options: ResponseBuildOptions,
     ) -> anyhow::Result<Vec<ApiMessageResponse>> {
-        let messages = messages
+        let (messages, orphaned_messages): (Vec<_>, Vec<_>) = messages
             .into_iter()
             .filter(|message| self.is_message_visible_to_requester(message.message_id, &options))
-            .filter(|message| message.author_id.is_some() || message.webhook_id.is_some())
-            .collect::<Vec<_>>();
+            .partition(|message| message.author_id.is_some() || message.webhook_id.is_some());
+        self.cleanup_orphaned_messages(orphaned_messages).await;
         let context = self
             .build_response_context(&messages, &options, true)
             .await?;
@@ -724,7 +717,7 @@ impl MessagesShard {
         let count = messages.len();
         let failures = stream::iter(messages)
             .map(|message| async move {
-                let bucket = Self::snowflake_to_bucket(message.message_id);
+                let bucket = snowflake_to_bucket(message.message_id);
                 self.storage
                     .delete_message(message.channel_id, bucket, message.message_id)
                     .await
@@ -842,7 +835,7 @@ impl MessagesShard {
             if message.has_reaction == Some(false) {
                 continue;
             }
-            let bucket = Self::snowflake_to_bucket(message.message_id);
+            let bucket = snowflake_to_bucket(message.message_id);
             groups
                 .entry((message.channel_id, bucket))
                 .or_default()
@@ -1144,13 +1137,6 @@ impl MessagesShard {
             poll,
             attachments,
             stickers,
-            nsfw_emojis: (!message.nsfw_emojis.is_empty()).then(|| {
-                message
-                    .nsfw_emojis
-                    .iter()
-                    .map(ToString::to_string)
-                    .collect()
-            }),
             reactions: context.reactions.get(&message.message_id).cloned(),
             message_reference: message
                 .message_reference
@@ -1219,15 +1205,18 @@ impl MessagesShard {
     ) -> Option<ApiMessageAttachmentResponse> {
         let attachment_id = attachment.attachment_id?;
         let filename = attachment.filename.clone().unwrap_or_default();
-        let url = make_attachment_cdn_url(
-            &options.media_endpoint,
-            channel_id,
-            attachment_id,
-            &filename,
-        );
         let decay = context.attachment_decay.get(&attachment_id);
         let expired =
             decay.is_some_and(|expires_at| expires_at.timestamp_millis() <= now_epoch_millis());
+        let url = (!expired).then(|| {
+            attachment_cdn_url(
+                channel_id,
+                attachment_id,
+                &filename,
+                options,
+                now_epoch_secs(),
+            )
+        });
         let content_type = attachment.content_type.clone().unwrap_or_else(|| {
             mime_guess::from_path(&filename)
                 .first_or_octet_stream()
@@ -1243,8 +1232,8 @@ impl MessagesShard {
             content_type: Some(content_type),
             content_hash: attachment.content_hash.clone(),
             size: assert_safe_byte_size(attachment.size.unwrap_or_default()),
-            url: (!expired).then_some(url.clone()),
-            proxy_url: (!expired).then_some(url),
+            url: url.clone(),
+            proxy_url: url,
             width: (!is_audio).then_some(attachment.width).flatten(),
             height: (!is_audio).then_some(attachment.height).flatten(),
             placeholder: attachment.placeholder.clone(),
@@ -1344,24 +1333,24 @@ impl MessagesShard {
             embed_type: embed_type.unwrap_or_else(|| "rich".to_owned()),
             title,
             description,
-            url,
+            url: url.map(|url| sign_own_url(&url, options)),
             timestamp: timestamp.map(epoch_millis_to_iso),
             color,
             author: author.and_then(|author| {
                 author.name.map(|name| ApiEmbedAuthorResponse {
                     name,
-                    url: author.url,
+                    url: author.url.map(|url| sign_own_url(&url, options)),
                     proxy_icon_url: author
                         .icon_url
                         .as_ref()
                         .map(|url| external_media_proxy_url(url, options)),
-                    icon_url: author.icon_url,
+                    icon_url: author.icon_url.map(|url| sign_own_url(&url, options)),
                 })
             }),
             provider: provider.and_then(|provider| {
                 provider.name.map(|name| ApiEmbedProviderResponse {
                     name,
-                    url: provider.url,
+                    url: provider.url.map(|url| sign_own_url(&url, options)),
                     icon_url: None,
                     proxy_icon_url: None,
                 })
@@ -1377,7 +1366,7 @@ impl MessagesShard {
                         .icon_url
                         .as_ref()
                         .map(|url| external_media_proxy_url(url, options)),
-                    icon_url: footer.icon_url,
+                    icon_url: footer.icon_url.map(|url| sign_own_url(&url, options)),
                 })
             }),
             fields: fields.map(|fields| fields.into_iter().map(map_embed_field_response).collect()),
@@ -1396,7 +1385,7 @@ impl MessagesShard {
         let url = media.url?;
         Some(ApiEmbedMediaResponse {
             proxy_url: external_media_proxy_url(&url, options),
-            url,
+            url: sign_own_url(&url, options),
             width: media.width,
             height: media.height,
             duration: media.duration,
@@ -1496,6 +1485,8 @@ impl MessagesStorage {
             MessagesStorage::Scylla(storage) => {
                 storage.get_by_id(channel_id, bucket, message_id).await
             }
+            #[cfg(test)]
+            MessagesStorage::Deletions(_) => Ok(None),
         }
     }
 
@@ -1518,6 +1509,8 @@ impl MessagesStorage {
                     .list_buckets_desc(channel_id, min_bucket, max_bucket, limit)
                     .await
             }
+            #[cfg(test)]
+            MessagesStorage::Deletions(_) => Ok(Vec::new()),
         }
     }
 
@@ -1540,6 +1533,8 @@ impl MessagesStorage {
                     .list_buckets_asc(channel_id, min_bucket, max_bucket, limit)
                     .await
             }
+            #[cfg(test)]
+            MessagesStorage::Deletions(_) => Ok(Vec::new()),
         }
     }
 
@@ -1559,6 +1554,8 @@ impl MessagesStorage {
             MessagesStorage::Scylla(storage) => {
                 storage.fetch_latest_bucket(channel_id, bucket, limit).await
             }
+            #[cfg(test)]
+            MessagesStorage::Deletions(_) => Ok(Vec::new()),
         }
     }
 
@@ -1587,6 +1584,8 @@ impl MessagesStorage {
                     .fetch_before_bucket(channel_id, bucket, before_id, limit)
                     .await
             }
+            #[cfg(test)]
+            MessagesStorage::Deletions(_) => Ok(Vec::new()),
         }
     }
 
@@ -1615,6 +1614,8 @@ impl MessagesStorage {
                     .fetch_after_bucket(channel_id, bucket, after_id, limit)
                     .await
             }
+            #[cfg(test)]
+            MessagesStorage::Deletions(_) => Ok(Vec::new()),
         }
     }
 
@@ -1631,6 +1632,14 @@ impl MessagesStorage {
             #[cfg(feature = "scylla")]
             MessagesStorage::Scylla(storage) => {
                 storage.delete_message(channel_id, bucket, message_id).await
+            }
+            #[cfg(test)]
+            MessagesStorage::Deletions(deleted) => {
+                deleted
+                    .lock()
+                    .expect("deleted message keys mutex poisoned")
+                    .push((channel_id, bucket, message_id));
+                Ok(())
             }
         }
     }
@@ -1664,6 +1673,8 @@ impl MessagesStorage {
                     )
                     .await
             }
+            #[cfg(test)]
+            MessagesStorage::Deletions(_) => HashMap::new(),
         }
     }
 
@@ -1679,6 +1690,8 @@ impl MessagesStorage {
             MessagesStorage::Scylla(storage) => {
                 storage.fetch_attachment_decay_batch(attachment_ids).await
             }
+            #[cfg(test)]
+            MessagesStorage::Deletions(_) => Ok(HashMap::new()),
         }
     }
 }
@@ -2101,7 +2114,7 @@ impl ScyllaMessagesStorage {
     }
 }
 
-impl ShardService for MessagesShard {
+impl<T: Transport> ShardService for MessagesShard<T> {
     type Request = MessageRequest;
     type Response = MessageResponse;
 
@@ -2147,6 +2160,7 @@ impl ShardService for MessagesShard {
                 can_read_message_history,
                 media_endpoint,
                 media_proxy_secret_key,
+                attachment_url_secret_base64,
                 include_reactions,
                 nonce,
                 tts,
@@ -2169,6 +2183,9 @@ impl ShardService for MessagesShard {
                             can_read_message_history,
                             media_endpoint,
                             media_proxy_secret_key,
+                            attachment_url_secret: decode_attachment_url_secret(
+                                attachment_url_secret_base64.as_deref(),
+                            ),
                             include_reactions: include_reactions.unwrap_or(true),
                             nonce,
                             tts: tts.unwrap_or(false),
@@ -2188,6 +2205,7 @@ impl ShardService for MessagesShard {
                 can_read_message_history,
                 media_endpoint,
                 media_proxy_secret_key,
+                attachment_url_secret_base64,
                 include_reactions,
                 nonce,
                 tts,
@@ -2207,6 +2225,9 @@ impl ShardService for MessagesShard {
                             can_read_message_history,
                             media_endpoint,
                             media_proxy_secret_key,
+                            attachment_url_secret: decode_attachment_url_secret(
+                                attachment_url_secret_base64.as_deref(),
+                            ),
                             include_reactions: include_reactions.unwrap_or(true),
                             nonce,
                             tts: tts.unwrap_or(false),
@@ -2226,6 +2247,7 @@ impl ShardService for MessagesShard {
                 can_read_message_history,
                 media_endpoint,
                 media_proxy_secret_key,
+                attachment_url_secret_base64,
                 include_reactions,
             } => {
                 let viewer_user_id = parse_i64(&viewer_user_id, "viewer_user_id")?;
@@ -2243,6 +2265,9 @@ impl ShardService for MessagesShard {
                             can_read_message_history,
                             media_endpoint,
                             media_proxy_secret_key,
+                            attachment_url_secret: decode_attachment_url_secret(
+                                attachment_url_secret_base64.as_deref(),
+                            ),
                             include_reactions: include_reactions.unwrap_or(true),
                             nonce: None,
                             tts: false,
@@ -2263,6 +2288,7 @@ impl ShardService for MessagesShard {
                 can_read_message_history,
                 media_endpoint,
                 media_proxy_secret_key,
+                attachment_url_secret_base64,
                 include_reactions,
             } => {
                 let channel_id = parse_i64(&channel_id, "channel_id")?;
@@ -2297,6 +2323,9 @@ impl ShardService for MessagesShard {
                             can_read_message_history,
                             media_endpoint,
                             media_proxy_secret_key,
+                            attachment_url_secret: decode_attachment_url_secret(
+                                attachment_url_secret_base64.as_deref(),
+                            ),
                             include_reactions: include_reactions.unwrap_or(true),
                             nonce: None,
                             tts: false,
@@ -2325,6 +2354,13 @@ fn now_epoch_millis() -> i64 {
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_millis() as i64
+}
+
+fn now_epoch_secs() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs()
 }
 
 fn message_row_key(channel_id: i64, bucket: i32, message_id: i64) -> anyhow::Result<String> {
@@ -2461,6 +2497,18 @@ fn snowflake_to_epoch_millis(snowflake: i64) -> i64 {
 
 fn epoch_millis_to_bucket(epoch_millis: i64) -> i32 {
     ((epoch_millis - FLUXER_EPOCH_MS) / BUCKET_DURATION_MS) as i32
+}
+
+fn snowflake_to_bucket(snowflake: i64) -> i32 {
+    ((snowflake >> 22) / BUCKET_DURATION_MS) as i32
+}
+
+fn current_bucket() -> i32 {
+    let now_ms = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis() as i64;
+    epoch_millis_to_bucket(now_ms)
 }
 
 fn epoch_millis_to_iso(epoch_millis: i64) -> String {
@@ -2670,7 +2718,7 @@ fn map_user_partial(partial: UserPartialServiceResponse) -> ApiUserPartialRespon
         avatar_color: partial.avatar_color,
         bot: partial.bot.filter(|bot| *bot),
         system: partial.system.filter(|system| *system),
-        flags: flags & PUBLIC_USER_FLAGS,
+        flags: i64::from(visible_user_flags(flags)),
         mention_flags: partial.mention_flags.filter(|flags| *flags != 0),
     }
 }
@@ -2786,7 +2834,6 @@ fn map_sticker(sticker: &MessageStickerItem) -> Option<ApiMessageStickerResponse
         id: sticker.sticker_id?.to_string(),
         name: sticker.name.clone().unwrap_or_default(),
         animated: sticker.animated.unwrap_or(false),
-        nsfw: sticker.nsfw.filter(|nsfw| *nsfw),
     })
 }
 
@@ -2801,6 +2848,10 @@ fn map_call(call: &MessageCall) -> ApiMessageCallResponse {
     }
 }
 
+fn make_attachment_cdn_key(channel_id: i64, attachment_id: i64, filename: &str) -> String {
+    format!("attachments/{channel_id}/{attachment_id}/{filename}")
+}
+
 fn make_attachment_cdn_url(
     media_endpoint: &str,
     channel_id: i64,
@@ -2808,27 +2859,173 @@ fn make_attachment_cdn_url(
     filename: &str,
 ) -> String {
     format!(
-        "{}/attachments/{}/{}/{}",
+        "{}/{}",
         media_endpoint.trim_end_matches('/'),
-        channel_id,
+        make_attachment_cdn_key(channel_id, attachment_id, filename)
+    )
+}
+
+fn decode_attachment_url_secret(encoded: Option<&str>) -> Vec<u8> {
+    let Some(encoded) = encoded.filter(|value| !value.is_empty()) else {
+        return Vec::new();
+    };
+    match BASE64_STANDARD.decode(encoded) {
+        Ok(secret) => secret,
+        Err(error) => {
+            tracing::warn!(%error, "attachment url secret is not standard base64");
+            Vec::new()
+        }
+    }
+}
+
+fn attachment_anchor_secs(attachment_id: i64) -> u64 {
+    snowflake_to_epoch_millis(attachment_id).max(0) as u64 / 1_000
+}
+
+fn sign_attachment_url(
+    url: &str,
+    storage_key: &str,
+    attachment_id: i64,
+    now_secs: u64,
+    secret: &[u8],
+) -> String {
+    if secret.is_empty() {
+        return url.to_owned();
+    }
+    fluxer_common::attachment_url_signature::with_signature(
+        url,
+        storage_key,
+        attachment_anchor_secs(attachment_id),
+        now_secs,
+        secret,
+    )
+}
+
+fn attachment_cdn_url(
+    channel_id: i64,
+    attachment_id: i64,
+    filename: &str,
+    options: &ResponseBuildOptions,
+    now_secs: u64,
+) -> String {
+    let storage_key = make_attachment_cdn_key(channel_id, attachment_id, filename);
+    let url = make_attachment_cdn_url(&options.media_endpoint, channel_id, attachment_id, filename);
+    sign_attachment_url(
+        &url,
+        &storage_key,
         attachment_id,
-        filename
+        now_secs,
+        &options.attachment_url_secret,
+    )
+}
+
+fn is_own_endpoint(media_endpoint: &str, target: &Url) -> bool {
+    let Ok(base) = Url::parse(media_endpoint) else {
+        return false;
+    };
+    let same_host = match (base.host_str(), target.host_str()) {
+        (Some(base_host), Some(target_host)) => base_host.eq_ignore_ascii_case(target_host),
+        _ => false,
+    };
+    same_host
+        && base.scheme().eq_ignore_ascii_case(target.scheme())
+        && base.port_or_known_default() == target.port_or_known_default()
+        && target
+            .path()
+            .strip_prefix(base.path().trim_end_matches('/'))
+            .is_some_and(|rest| rest.starts_with('/'))
+}
+
+fn raw_url_path(url: &str) -> &str {
+    let Some((_, after_scheme)) = url.split_once("://") else {
+        return "";
+    };
+    let Some(start) = after_scheme.find(['/', '?', '#']) else {
+        return "";
+    };
+    let path = &after_scheme[start..];
+    if !path.starts_with('/') {
+        return "";
+    }
+    path.find(['?', '#']).map_or(path, |end| &path[..end])
+}
+
+fn own_attachment_key(input_url: &str, media_endpoint: &str) -> Option<(String, i64)> {
+    let endpoint_path = raw_url_path(media_endpoint).trim_end_matches('/');
+    let path = raw_url_path(input_url).strip_prefix(endpoint_path)?;
+    if !path.starts_with("/attachments/") {
+        return None;
+    }
+    let storage_key = fluxer_common::attachment_url_signature::decode_key(path)?;
+    let attachment_id = attachment_key_id(&storage_key)?;
+    Some((storage_key, attachment_id))
+}
+
+fn attachment_key_id(storage_key: &str) -> Option<i64> {
+    let segments: Vec<&str> = storage_key.split('/').collect();
+    let ["attachments", channel_id, attachment_id, filename @ ..] = segments.as_slice() else {
+        return None;
+    };
+    if !is_snowflake_segment(channel_id)
+        || !is_snowflake_segment(attachment_id)
+        || filename.is_empty()
+        || filename
+            .iter()
+            .any(|part| matches!(*part, "" | "." | "..") || part.contains('\0'))
+    {
+        return None;
+    }
+    attachment_id.parse().ok()
+}
+
+fn is_snowflake_segment(segment: &str) -> bool {
+    (1..=20).contains(&segment.len()) && segment.bytes().all(|byte| byte.is_ascii_digit())
+}
+
+fn sign_own_media_url(
+    input_url: &str,
+    media_endpoint: &str,
+    now_secs: u64,
+    secret: &[u8],
+) -> String {
+    let Some((storage_key, attachment_id)) = own_attachment_key(input_url, media_endpoint) else {
+        return input_url.to_owned();
+    };
+    sign_attachment_url(input_url, &storage_key, attachment_id, now_secs, secret)
+}
+
+fn sign_own_url(input_url: &str, options: &ResponseBuildOptions) -> String {
+    sign_own_media_url(
+        input_url,
+        options.media_endpoint.trim_end_matches('/'),
+        now_epoch_secs(),
+        &options.attachment_url_secret,
     )
 }
 
 fn external_media_proxy_url(input_url: &str, options: &ResponseBuildOptions) -> String {
-    if input_url.starts_with(options.media_endpoint.trim_end_matches('/')) {
-        return input_url.to_owned();
-    }
-    if options.media_proxy_secret_key.is_empty() {
-        return input_url.to_owned();
-    }
+    media_proxy_url_at(input_url, options, now_epoch_secs())
+}
+
+fn media_proxy_url_at(input_url: &str, options: &ResponseBuildOptions, now_secs: u64) -> String {
+    let media_endpoint = options.media_endpoint.trim_end_matches('/');
     let parsed_url = match Url::parse(input_url) {
         Ok(url) => url,
         Err(_) => return input_url.to_owned(),
     };
+    if is_own_endpoint(media_endpoint, &parsed_url) {
+        return sign_own_media_url(
+            input_url,
+            media_endpoint,
+            now_secs,
+            &options.attachment_url_secret,
+        );
+    }
+    if options.media_proxy_secret_key.is_empty() {
+        return input_url.to_owned();
+    }
     fluxer_common::external_media_path::build_external_media_proxy_url(
-        options.media_endpoint.trim_end_matches('/'),
+        media_endpoint,
         parsed_url.as_str(),
         options.media_proxy_secret_key.as_bytes(),
     )
@@ -3013,7 +3210,6 @@ fn convert_sticker_item(s: udt::StickerItemUdt) -> MessageStickerItem {
         name: s.name,
         format_type: s.format_type,
         animated: s.animated,
-        nsfw: s.nsfw,
     }
 }
 
@@ -3101,10 +3297,6 @@ impl From<MessageDbRow> for Message {
                 .unwrap_or_default(),
             has_reaction: row.has_reaction,
             version: row.version.unwrap_or_default(),
-            nsfw_emojis: row
-                .nsfw_emojis
-                .map(|s| s.into_iter().collect())
-                .unwrap_or_default(),
             attachments: row
                 .attachments
                 .map(|v| v.into_iter().map(convert_attachment).collect()),
@@ -3127,6 +3319,7 @@ impl From<MessageDbRow> for Message {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use fluxer_svc::transport::{InMemoryTransport, TransportSubscriber, reply_message};
     use serde_json::json;
 
     #[test]
@@ -3232,7 +3425,6 @@ mod tests {
             ]},
             "mention_roles": {"__fluxer_type": "set", "value": []},
             "mention_channels": {"__fluxer_type": "set", "value": []},
-            "nsfw_emojis": {"__fluxer_type": "set", "value": []},
             "attachments": [{
                 "attachment_id": {"__fluxer_type": "bigint", "value": "1509197195776110593"},
                 "filename": "a.png",
@@ -3441,24 +3633,15 @@ mod tests {
         let message_id = 1_509_197_195_776_110_592;
         assert_eq!(
             epoch_millis_to_bucket(snowflake_to_epoch_millis(message_id)),
-            MessagesShard::snowflake_to_bucket(message_id)
+            snowflake_to_bucket(message_id)
         );
     }
 
     #[test]
     fn snowflake_bucket_matches_existing_channel_rows() {
-        assert_eq!(
-            MessagesShard::snowflake_to_bucket(1_474_193_838_282_432_581),
-            406
-        );
-        assert_eq!(
-            MessagesShard::snowflake_to_bucket(1_488_946_116_942_273_651),
-            410
-        );
-        assert_eq!(
-            MessagesShard::snowflake_to_bucket(1_509_256_674_043_502_592),
-            416
-        );
+        assert_eq!(snowflake_to_bucket(1_474_193_838_282_432_581), 406);
+        assert_eq!(snowflake_to_bucket(1_488_946_116_942_273_651), 410);
+        assert_eq!(snowflake_to_bucket(1_509_256_674_043_502_592), 416);
     }
 
     #[test]
@@ -3569,6 +3752,837 @@ mod tests {
         assert_eq!(
             collect_user_ids(&all_messages, &mention_context),
             HashSet::from([1, 2, 3])
+        );
+    }
+
+    fn recording_shard(deleted: &DeletedMessageKeys) -> MessagesShard<InMemoryTransport> {
+        MessagesShard {
+            storage: MessagesStorage::Deletions(deleted.clone()),
+            transport: InMemoryTransport::new(),
+        }
+    }
+
+    fn build_options() -> ResponseBuildOptions {
+        ResponseBuildOptions {
+            viewer_user_id: 1,
+            source_guild_id: None,
+            message_history_cutoff_ms: None,
+            can_read_message_history: true,
+            media_endpoint: "https://media.example.com".to_owned(),
+            media_proxy_secret_key: "secret".to_owned(),
+            attachment_url_secret: Vec::new(),
+            include_reactions: false,
+            nonce: None,
+            tts: false,
+        }
+    }
+
+    fn orphaned_message(message_id: i64) -> Message {
+        decode_postgres_message(json!({
+            "channel_id": {"__fluxer_type": "bigint", "value": "10"},
+            "bucket": 416,
+            "message_id": {"__fluxer_type": "bigint", "value": message_id.to_string()},
+            "content": "orphan"
+        }))
+        .unwrap()
+    }
+
+    fn webhook_message(message_id: i64) -> Message {
+        decode_postgres_message(json!({
+            "channel_id": {"__fluxer_type": "bigint", "value": "10"},
+            "bucket": 416,
+            "message_id": {"__fluxer_type": "bigint", "value": message_id.to_string()},
+            "webhook_id": {"__fluxer_type": "bigint", "value": "77"},
+            "webhook_name": "hook",
+            "content": "kept"
+        }))
+        .unwrap()
+    }
+
+    fn authored_message(message_id: i64) -> Message {
+        decode_postgres_message(json!({
+            "channel_id": {"__fluxer_type": "bigint", "value": "10"},
+            "bucket": 416,
+            "message_id": {"__fluxer_type": "bigint", "value": message_id.to_string()},
+            "author_id": {"__fluxer_type": "bigint", "value": "1472426752046002208"},
+            "content": "kept"
+        }))
+        .unwrap()
+    }
+
+    fn legacy_string_author_message(message_id: i64) -> Message {
+        decode_postgres_message(json!({
+            "channel_id": {"__fluxer_type": "bigint", "value": "10"},
+            "bucket": 416,
+            "message_id": {"__fluxer_type": "bigint", "value": message_id.to_string()},
+            "author_id": "1472426752046002208",
+            "content": "kept"
+        }))
+        .unwrap()
+    }
+
+    async fn stub_user_service(transport: &InMemoryTransport) -> tokio::task::JoinHandle<()> {
+        let mut subscriber = transport.subscribe("svc.users").await.unwrap();
+        let transport = transport.clone();
+        tokio::spawn(async move {
+            while let Some(message) = subscriber.next().await {
+                let _ = reply_message(&message, &transport, b"\"NotFound\"").await;
+            }
+        })
+    }
+
+    fn recorded_deletions(deleted: &DeletedMessageKeys) -> Vec<(i64, i32, i64)> {
+        deleted.lock().unwrap().clone()
+    }
+
+    #[tokio::test]
+    async fn build_path_keeps_authored_rows_from_older_releases() {
+        let deleted = DeletedMessageKeys::default();
+        let shard = recording_shard(&deleted);
+        let users = stub_user_service(&shard.transport).await;
+        let wrapped_id = 1_509_197_195_776_110_592;
+        let legacy_id = 1_509_197_195_776_110_593;
+
+        let responses = shard
+            .build_api_responses_from_messages(
+                vec![
+                    authored_message(wrapped_id),
+                    legacy_string_author_message(legacy_id),
+                ],
+                build_options(),
+            )
+            .await
+            .unwrap();
+        users.abort();
+
+        assert_eq!(responses.len(), 2);
+        assert_eq!(responses[0].id, wrapped_id.to_string());
+        assert_eq!(responses[1].id, legacy_id.to_string());
+        assert_eq!(responses[0].author.id, "1472426752046002208");
+        assert_eq!(responses[1].author.id, "1472426752046002208");
+        assert!(recorded_deletions(&deleted).is_empty());
+    }
+
+    #[tokio::test]
+    async fn build_path_reaps_orphaned_messages() {
+        let deleted = DeletedMessageKeys::default();
+        let shard = recording_shard(&deleted);
+        let orphan_id = 1_509_197_195_776_110_592;
+        let kept_id = 1_509_197_195_776_110_593;
+
+        let responses = shard
+            .build_api_responses_from_messages(
+                vec![orphaned_message(orphan_id), webhook_message(kept_id)],
+                build_options(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(responses.len(), 1);
+        assert_eq!(responses[0].id, kept_id.to_string());
+        assert_eq!(
+            recorded_deletions(&deleted),
+            vec![(10, snowflake_to_bucket(orphan_id), orphan_id)]
+        );
+    }
+
+    #[tokio::test]
+    async fn build_path_reaps_orphans_of_each_batch_separately() {
+        let deleted = DeletedMessageKeys::default();
+        let shard = recording_shard(&deleted);
+        let first_orphan_id = 1_509_197_195_776_110_592;
+        let second_orphan_id = 1_509_197_195_776_110_594;
+
+        shard
+            .build_api_responses_from_messages(
+                vec![
+                    orphaned_message(first_orphan_id),
+                    webhook_message(1_509_197_195_776_110_593),
+                ],
+                build_options(),
+            )
+            .await
+            .unwrap();
+        shard
+            .build_api_responses_from_messages(
+                vec![orphaned_message(second_orphan_id)],
+                build_options(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(
+            recorded_deletions(&deleted),
+            vec![
+                (10, snowflake_to_bucket(first_orphan_id), first_orphan_id),
+                (10, snowflake_to_bucket(second_orphan_id), second_orphan_id),
+            ]
+        );
+    }
+
+    #[tokio::test]
+    async fn build_path_reaps_a_repeated_orphan_without_failing() {
+        let deleted = DeletedMessageKeys::default();
+        let shard = recording_shard(&deleted);
+        let orphan_id = 1_509_197_195_776_110_592;
+
+        for _ in 0..2 {
+            let responses = shard
+                .build_api_responses_from_messages(
+                    vec![orphaned_message(orphan_id)],
+                    build_options(),
+                )
+                .await
+                .unwrap();
+            assert!(responses.is_empty());
+        }
+
+        assert_eq!(
+            recorded_deletions(&deleted),
+            vec![
+                (10, snowflake_to_bucket(orphan_id), orphan_id),
+                (10, snowflake_to_bucket(orphan_id), orphan_id),
+            ]
+        );
+    }
+
+    #[tokio::test]
+    async fn build_path_leaves_orphans_the_requester_cannot_see() {
+        let deleted = DeletedMessageKeys::default();
+        let shard = recording_shard(&deleted);
+        let orphan_id = 1_509_197_195_776_110_592;
+        let options = ResponseBuildOptions {
+            can_read_message_history: false,
+            message_history_cutoff_ms: Some(snowflake_to_epoch_millis(orphan_id) + 1),
+            ..build_options()
+        };
+
+        let responses = shard
+            .build_api_responses_from_messages(vec![orphaned_message(orphan_id)], options)
+            .await
+            .unwrap();
+
+        assert!(responses.is_empty());
+        assert!(recorded_deletions(&deleted).is_empty());
+    }
+
+    #[tokio::test]
+    async fn single_build_path_reaps_an_orphaned_message() {
+        let deleted = DeletedMessageKeys::default();
+        let shard = recording_shard(&deleted);
+        let orphan_id = 1_509_197_195_776_110_592;
+        let kept_id = 1_509_197_195_776_110_593;
+
+        let orphan_response = shard
+            .build_api_response_from_message(orphaned_message(orphan_id), build_options())
+            .await
+            .unwrap();
+        let kept_response = shard
+            .build_api_response_from_message(webhook_message(kept_id), build_options())
+            .await
+            .unwrap();
+
+        assert!(orphan_response.is_none());
+        assert_eq!(kept_response.unwrap().id, kept_id.to_string());
+        assert_eq!(
+            recorded_deletions(&deleted),
+            vec![(10, snowflake_to_bucket(orphan_id), orphan_id)]
+        );
+    }
+
+    #[tokio::test]
+    async fn single_build_path_leaves_an_orphan_the_requester_cannot_see() {
+        let deleted = DeletedMessageKeys::default();
+        let shard = recording_shard(&deleted);
+        let orphan_id = 1_509_197_195_776_110_592;
+        let options = ResponseBuildOptions {
+            can_read_message_history: false,
+            message_history_cutoff_ms: Some(snowflake_to_epoch_millis(orphan_id) + 1),
+            ..build_options()
+        };
+
+        let response = shard
+            .build_api_response_from_message(orphaned_message(orphan_id), options)
+            .await
+            .unwrap();
+
+        assert!(response.is_none());
+        assert!(recorded_deletions(&deleted).is_empty());
+    }
+
+    const SIGNATURE_VECTORS: &str =
+        include_str!("../../fluxer_common/src/testdata/attachment_url_signature_vectors.json");
+    const SIGNED_CHANNEL_ID: i64 = 1_544_725_486_800_732_163;
+    const SIGNED_ATTACHMENT_ID: i64 = 1_544_971_349_200_470_016;
+    const SIGNED_FILENAME: &str = "cat.gif";
+    const SIGNED_ANCHOR_SECS: u64 = 1_788_420_273;
+
+    fn signing_options() -> ResponseBuildOptions {
+        ResponseBuildOptions {
+            media_endpoint: "https://media.test".to_owned(),
+            attachment_url_secret: (0u8..32).collect(),
+            ..build_options()
+        }
+    }
+
+    fn signed_attachment() -> MessageAttachment {
+        serde_json::from_value(json!({
+            "attachment_id": SIGNED_ATTACHMENT_ID.to_string(),
+            "filename": SIGNED_FILENAME,
+            "size": 1024,
+        }))
+        .unwrap()
+    }
+
+    fn signed_storage_key() -> String {
+        make_attachment_cdn_key(SIGNED_CHANNEL_ID, SIGNED_ATTACHMENT_ID, SIGNED_FILENAME)
+    }
+
+    fn unsigned_attachment_url(options: &ResponseBuildOptions) -> String {
+        make_attachment_cdn_url(
+            &options.media_endpoint,
+            SIGNED_CHANNEL_ID,
+            SIGNED_ATTACHMENT_ID,
+            SIGNED_FILENAME,
+        )
+    }
+
+    fn assert_signs(url: &str, unsigned_prefix: &str, options: &ResponseBuildOptions, now: u64) {
+        assert_eq!(
+            Some(format!("{unsigned_prefix}?")),
+            url.split_once("ex=").map(|(head, _)| head.to_owned()),
+            "{url}"
+        );
+        assert!(!url.contains("/external/"), "{url}");
+        assert!(!url.ends_with('&'), "{url}");
+        assert!(!url.contains("&&"), "{url}");
+        let query = url.split_once('?').expect("a signed url carries a query").1;
+        assert_eq!(
+            fluxer_common::attachment_url_signature::Verdict::Valid,
+            fluxer_common::attachment_url_signature::verify(
+                &signed_storage_key(),
+                Some(query),
+                &[&options.attachment_url_secret],
+                now,
+            )
+            .verdict,
+            "{url}"
+        );
+    }
+
+    #[test]
+    fn the_signing_anchor_is_the_attachment_snowflake_second() {
+        assert_eq!(
+            SIGNED_ANCHOR_SECS,
+            attachment_anchor_secs(SIGNED_ATTACHMENT_ID)
+        );
+        assert_eq!(0, attachment_anchor_secs(i64::MIN));
+    }
+
+    #[test]
+    fn attachment_urls_match_the_shared_signature_fixture() {
+        let fixture: serde_json::Value = serde_json::from_str(SIGNATURE_VECTORS).unwrap();
+        let secret = BASE64_STANDARD
+            .decode(fixture["secrets_base64"][0].as_str().unwrap())
+            .unwrap();
+        let options = ResponseBuildOptions {
+            attachment_url_secret: secret,
+            ..signing_options()
+        };
+        let parsed = fixture["sign"].as_array().unwrap();
+        let mut run = 0;
+        let mut data_packages = 0;
+        for case in parsed {
+            let name = case["name"].as_str().unwrap();
+            if case["uc"].as_str().unwrap() == "dp" {
+                data_packages += 1;
+                continue;
+            }
+            assert_eq!("", case["uc"].as_str().unwrap(), "{name} uc");
+            let channel_id: i64 = case["channel_id"].as_str().unwrap().parse().unwrap();
+            let attachment_id: i64 = case["attachment_id"].as_str().unwrap().parse().unwrap();
+            let filename = case["filename"].as_str().unwrap();
+            let now = case["now"].as_u64().unwrap();
+            let url = case["url"].as_str().unwrap();
+            let signed = case["signed"].as_str().unwrap();
+            assert_eq!(
+                case["anchor"].as_u64().unwrap(),
+                attachment_anchor_secs(attachment_id),
+                "{name} anchor"
+            );
+            assert_eq!(
+                case["storage_key"].as_str().unwrap(),
+                make_attachment_cdn_key(channel_id, attachment_id, filename),
+                "{name} key"
+            );
+            let unsigned = make_attachment_cdn_url(
+                &options.media_endpoint,
+                channel_id,
+                attachment_id,
+                filename,
+            );
+            assert_eq!(
+                Some(unsigned.as_str()),
+                url.split(['?', '#']).next(),
+                "{name} unsigned url"
+            );
+            if url == unsigned {
+                assert_eq!(
+                    signed,
+                    attachment_cdn_url(channel_id, attachment_id, filename, &options, now),
+                    "{name} attachment url"
+                );
+            }
+            assert_eq!(
+                signed,
+                media_proxy_url_at(url, &options, now),
+                "{name} embed url"
+            );
+            run += 1;
+        }
+        assert_eq!(parsed.len(), run + data_packages);
+        assert!(run >= 5);
+        assert!(data_packages >= 1);
+    }
+
+    #[test]
+    fn an_attachment_signs_url_and_proxy_url_identically() {
+        let deleted = DeletedMessageKeys::default();
+        let shard = recording_shard(&deleted);
+        let options = signing_options();
+        let mapped = shard
+            .map_attachment(
+                SIGNED_CHANNEL_ID,
+                &signed_attachment(),
+                &options,
+                &ResponseContext::default(),
+            )
+            .expect("an attachment carrying an id maps");
+
+        let url = mapped.url.expect("a live attachment carries a url");
+        assert_eq!(Some(url.clone()), mapped.proxy_url);
+        assert_signs(
+            &url,
+            &unsigned_attachment_url(&options),
+            &options,
+            now_epoch_secs(),
+        );
+    }
+
+    #[test]
+    fn an_own_url_whose_filename_carries_a_slash_is_signed() {
+        let options = signing_options();
+        let now = SIGNED_ANCHOR_SECS + 10;
+        let key = "attachments/1544725486800732163/1544971349200470016/a/b.gif";
+
+        for url in [
+            format!("{}/{key}", options.media_endpoint),
+            format!(
+                "{}/attachments/1544725486800732163/1544971349200470016/a%2Fb.gif",
+                options.media_endpoint
+            ),
+        ] {
+            let signed = media_proxy_url_at(&url, &options, now);
+            assert_eq!(
+                Some(format!("{url}?")),
+                signed.split_once("ex=").map(|(head, _)| head.to_owned()),
+                "{url}"
+            );
+            let query = signed
+                .split_once('?')
+                .expect("a signed url carries a query")
+                .1;
+            assert_eq!(
+                fluxer_common::attachment_url_signature::Verdict::Valid,
+                fluxer_common::attachment_url_signature::verify(
+                    key,
+                    Some(query),
+                    &[&options.attachment_url_secret],
+                    now,
+                )
+                .verdict,
+                "{url}"
+            );
+        }
+
+        for refused in [
+            format!(
+                "{}/attachments/1544725486800732163/1544971349200470016/a//b.gif",
+                options.media_endpoint
+            ),
+            format!(
+                "{}/attachments/1544725486800732163/1544971349200470016/a/../b.gif",
+                options.media_endpoint
+            ),
+            format!(
+                "{}/attachments/1544725486800732163/1544971349200470016/a/",
+                options.media_endpoint
+            ),
+        ] {
+            assert_eq!(
+                refused,
+                media_proxy_url_at(&refused, &options, now),
+                "{refused}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_decayed_attachment_is_never_signed() {
+        let deleted = DeletedMessageKeys::default();
+        let shard = recording_shard(&deleted);
+        let options = signing_options();
+        let context = ResponseContext {
+            attachment_decay: [(
+                SIGNED_ATTACHMENT_ID,
+                DateTime::<Utc>::from_timestamp_millis(now_epoch_millis() - 1_000).unwrap(),
+            )]
+            .into_iter()
+            .collect(),
+            ..ResponseContext::default()
+        };
+
+        let mapped = shard
+            .map_attachment(SIGNED_CHANNEL_ID, &signed_attachment(), &options, &context)
+            .expect("a decayed attachment still maps");
+
+        assert_eq!(None, mapped.url);
+        assert_eq!(None, mapped.proxy_url);
+        assert_eq!(Some(true), mapped.expired);
+    }
+
+    #[test]
+    fn an_attachment_backed_embed_signs_every_own_url_field() {
+        let deleted = DeletedMessageKeys::default();
+        let shard = recording_shard(&deleted);
+        let options = signing_options();
+        let unsigned = unsigned_attachment_url(&options);
+        let embed: MessageEmbed = serde_json::from_value(json!({
+            "type": "rich",
+            "url": unsigned,
+            "author": {"name": "author", "url": unsigned, "icon_url": unsigned},
+            "provider": {"name": "provider", "url": unsigned},
+            "footer": {"text": "footer", "icon_url": unsigned},
+            "image": {"url": unsigned},
+            "thumbnail": {"url": unsigned},
+        }))
+        .unwrap();
+
+        let mapped = shard.map_embed(&embed, &options);
+
+        let now = now_epoch_secs();
+        let base = mapped.base;
+        let author = base.author.expect("the embed carries an author");
+        let provider = base.provider.expect("the embed carries a provider");
+        let footer = base.footer.expect("the embed carries a footer");
+        let image = base.image.expect("the embed carries an image");
+        let thumbnail = base.thumbnail.expect("the embed carries a thumbnail");
+        for signed in [
+            base.url.expect("the embed carries a url"),
+            author.url.expect("the author carries a url"),
+            author.icon_url.expect("the author carries an icon url"),
+            author
+                .proxy_icon_url
+                .expect("the author carries a proxy icon url"),
+            provider.url.expect("the provider carries a url"),
+            footer.icon_url.expect("the footer carries an icon url"),
+            footer
+                .proxy_icon_url
+                .expect("the footer carries a proxy icon url"),
+            image.url.clone(),
+            image.proxy_url.clone(),
+            thumbnail.url,
+            thumbnail.proxy_url,
+        ] {
+            assert_signs(&signed, &unsigned, &options, now);
+        }
+        assert_eq!(image.url, image.proxy_url);
+    }
+
+    #[test]
+    fn a_foreign_embed_url_is_never_rewritten() {
+        let deleted = DeletedMessageKeys::default();
+        let shard = recording_shard(&deleted);
+        let options = signing_options();
+        let embed: MessageEmbed = serde_json::from_value(json!({
+            "type": "link",
+            "url": "https://example.com/article",
+            "author": {"name": "author", "url": "https://example.com/author"},
+            "provider": {"name": "provider", "url": "https://example.com"},
+        }))
+        .unwrap();
+
+        let mapped = shard.map_embed(&embed, &options);
+
+        let base = mapped.base;
+        assert_eq!(
+            Some("https://example.com/article".to_owned()),
+            base.url,
+            "a page link never reaches the media proxy"
+        );
+        assert_eq!(
+            Some("https://example.com/author".to_owned()),
+            base.author.expect("the embed carries an author").url
+        );
+        assert_eq!(
+            Some("https://example.com".to_owned()),
+            base.provider.expect("the embed carries a provider").url
+        );
+    }
+
+    #[test]
+    fn an_own_attachment_embed_url_is_signed_for_every_origin_spelling() {
+        let options = signing_options();
+        let now = SIGNED_ANCHOR_SECS;
+        for prefix in [
+            "https://media.test",
+            "https://MEDIA.test",
+            "https://Media.Test",
+            "https://media.test:443",
+        ] {
+            let input = format!("{prefix}/{}", signed_storage_key());
+            let signed = media_proxy_url_at(&input, &options, now);
+            assert_signs(&signed, &input, &options, now);
+        }
+    }
+
+    #[test]
+    fn an_own_attachment_embed_url_keeps_its_transform_parameters_and_fragment() {
+        let options = signing_options();
+        let now = SIGNED_ANCHOR_SECS;
+        let input = format!(
+            "https://media.test/{}?width=64&format=webp#frame",
+            signed_storage_key()
+        );
+
+        let signed = media_proxy_url_at(&input, &options, now);
+
+        assert!(signed.ends_with("&width=64&format=webp#frame"), "{signed}");
+        assert!(!signed.contains("/external/"), "{signed}");
+        let query = signed
+            .split_once('?')
+            .expect("a signed url carries a query")
+            .1
+            .split_once('#')
+            .expect("the fragment is kept")
+            .0;
+        assert_eq!(
+            fluxer_common::attachment_url_signature::Verdict::Valid,
+            fluxer_common::attachment_url_signature::verify(
+                &signed_storage_key(),
+                Some(query),
+                &[&options.attachment_url_secret],
+                now,
+            )
+            .verdict
+        );
+    }
+
+    #[test]
+    fn an_own_endpoint_url_outside_attachments_passes_through_unsigned() {
+        let options = signing_options();
+        let now = SIGNED_ANCHOR_SECS;
+        for input in [
+            "https://media.test/emojis/1544725486800732163.webp",
+            "https://media.test/avatars/1/abc.png",
+            "https://media.test/stickers/1/abc.png",
+            "https://media.test/attachments/1544725486800732163",
+            "https://media.test/attachments/1544725486800732163/1544971349200470016",
+            "https://media.test/attachments/1544725486800732163/1544971349200470016/",
+            "https://media.test/attachments/1544725486800732163/not-a-snowflake/cat.gif",
+        ] {
+            assert_eq!(input, media_proxy_url_at(input, &options, now), "{input}");
+        }
+    }
+
+    #[test]
+    fn a_foreign_url_is_still_wrapped_into_the_external_path() {
+        let options = signing_options();
+        let now = SIGNED_ANCHOR_SECS;
+        for input in [
+            "https://example.com/attachments/1544725486800732163/1544971349200470016/cat.gif",
+            "https://media.test.example.com/attachments/1/2/cat.gif",
+            "http://media.test/attachments/1/2/cat.gif",
+            "https://media.test:8443/attachments/1/2/cat.gif",
+        ] {
+            let wrapped = media_proxy_url_at(input, &options, now);
+            assert!(
+                wrapped.starts_with("https://media.test/external/"),
+                "{input}"
+            );
+            assert!(!wrapped.contains("ex="), "{input}");
+        }
+    }
+
+    #[test]
+    fn an_absent_attachment_secret_leaves_every_url_unsigned() {
+        let deleted = DeletedMessageKeys::default();
+        let shard = recording_shard(&deleted);
+        let options = ResponseBuildOptions {
+            attachment_url_secret: Vec::new(),
+            ..signing_options()
+        };
+        let unsigned = unsigned_attachment_url(&options);
+
+        let mapped = shard
+            .map_attachment(
+                SIGNED_CHANNEL_ID,
+                &signed_attachment(),
+                &options,
+                &ResponseContext::default(),
+            )
+            .expect("an attachment carrying an id maps");
+
+        assert_eq!(Some(unsigned.clone()), mapped.url);
+        assert_eq!(Some(unsigned.clone()), mapped.proxy_url);
+        assert_eq!(
+            unsigned,
+            media_proxy_url_at(&unsigned, &options, SIGNED_ANCHOR_SECS)
+        );
+        assert_eq!(
+            unsigned,
+            attachment_cdn_url(
+                SIGNED_CHANNEL_ID,
+                SIGNED_ATTACHMENT_ID,
+                SIGNED_FILENAME,
+                &options,
+                SIGNED_ANCHOR_SECS
+            )
+        );
+    }
+
+    #[test]
+    fn a_self_hosted_path_prefix_only_matches_whole_segments() {
+        let options = ResponseBuildOptions {
+            media_endpoint: "https://self.test/media".to_owned(),
+            ..signing_options()
+        };
+        let now = SIGNED_ANCHOR_SECS;
+        let own = format!("https://self.test/media/{}", signed_storage_key());
+
+        let signed = media_proxy_url_at(&own, &options, now);
+
+        assert_signs(&signed, &own, &options, now);
+        let foreign = format!("https://self.test/mediaxyz/{}", signed_storage_key());
+        assert!(
+            media_proxy_url_at(&foreign, &options, now)
+                .starts_with("https://self.test/media/external/")
+        );
+    }
+
+    #[test]
+    fn a_percent_encoded_filename_signs_the_decoded_key() {
+        let options = signing_options();
+        let now = SIGNED_ANCHOR_SECS;
+        let encoded =
+            "https://media.test/attachments/1544725486800732163/1544971349200470016/caf%C3%A9.gif";
+        let decoded =
+            "https://media.test/attachments/1544725486800732163/1544971349200470016/café.gif";
+        let key = "attachments/1544725486800732163/1544971349200470016/café.gif";
+
+        for input in [encoded, decoded] {
+            let signed = media_proxy_url_at(input, &options, now);
+            let query = signed
+                .split_once('?')
+                .expect("a signed url carries a query")
+                .1;
+            assert_eq!(
+                fluxer_common::attachment_url_signature::Verdict::Valid,
+                fluxer_common::attachment_url_signature::verify(
+                    key,
+                    Some(query),
+                    &[&options.attachment_url_secret],
+                    now,
+                )
+                .verdict,
+                "{input}"
+            );
+        }
+    }
+
+    #[test]
+    fn a_percent_encoded_slash_signs_the_key_the_media_proxy_decodes() {
+        let options = signing_options();
+        let now = SIGNED_ANCHOR_SECS;
+        for input in [
+            "https://media.test/attachments/1544725486800732163%2F1544971349200470016/cat.gif",
+            "https://media.test/attachments/1544725486800732163%2f1544971349200470016%2Fcat.gif",
+            "https://media.test/attachments/%31544725486800732163/1544971349200470016/cat.gif",
+        ] {
+            let raw_path = input.strip_prefix("https://media.test").unwrap();
+            assert_eq!(
+                Some(signed_storage_key()),
+                fluxer_common::attachment_url_signature::decode_key(raw_path),
+                "{input}"
+            );
+            let signed = media_proxy_url_at(input, &options, now);
+            assert_signs(&signed, input, &options, now);
+        }
+        for input in [
+            "https://media.test/attachments/1544725486800732163/1544971349200470016/%2F",
+            "https://media.test/attachments/1544725486800732163/1544971349200470016/cat.gif%00",
+        ] {
+            assert_eq!(input, media_proxy_url_at(input, &options, now), "{input}");
+        }
+    }
+
+    #[test]
+    fn a_dot_segment_is_never_signed_under_its_normalised_key() {
+        let options = signing_options();
+        let now = SIGNED_ANCHOR_SECS;
+        for input in [
+            "https://media.test/attachments/1544725486800732163/9/../1544971349200470016/cat.gif",
+            "https://media.test/attachments/1544725486800732163/1544971349200470016/./cat.gif",
+            "https://media.test/attachments/1544725486800732163/1544971349200470016/%2E/cat.gif",
+            "https://media.test/attachments/1544725486800732163/9/%2e%2e/1544971349200470016/cat.gif",
+        ] {
+            assert_eq!(
+                format!("/{}", signed_storage_key()),
+                Url::parse(input).unwrap().path(),
+                "{input}"
+            );
+            assert_eq!(input, media_proxy_url_at(input, &options, now), "{input}");
+        }
+        for input in [
+            "https://media.test/attachments/1544725486800732163/1544971349200470016/..",
+            "https://media.test/attachments/+1544725486800732163/1544971349200470016/cat.gif",
+            "https://media.test/attachments/1544725486800732163/-1544971349200470016/cat.gif",
+            "https://media.test/attachments/1544725486800732163/1544971349200470016/caf%C3%28.gif",
+        ] {
+            assert_eq!(input, media_proxy_url_at(input, &options, now), "{input}");
+        }
+    }
+
+    #[test]
+    fn a_request_without_the_secret_field_still_decodes() {
+        let request: MessageRequest = serde_json::from_value(json!({
+            "op": "ListResponses",
+            "channel_id": "10",
+            "viewer_user_id": "1",
+            "limit": 50,
+            "can_read_message_history": true,
+            "media_endpoint": "https://media.test",
+            "media_proxy_secret_key": "secret",
+        }))
+        .expect("an older caller omits the attachment secret");
+
+        match request {
+            MessageRequest::ListResponses {
+                attachment_url_secret_base64,
+                ..
+            } => assert_eq!(None, attachment_url_secret_base64),
+            other => panic!("unexpected request {other:?}"),
+        }
+    }
+
+    #[test]
+    fn a_secret_that_is_not_base64_disables_signing() {
+        assert!(decode_attachment_url_secret(None).is_empty());
+        assert!(decode_attachment_url_secret(Some("")).is_empty());
+        assert!(decode_attachment_url_secret(Some("not base64!")).is_empty());
+        assert_eq!(
+            (0u8..32).collect::<Vec<u8>>(),
+            decode_attachment_url_secret(Some("AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8="))
         );
     }
 }

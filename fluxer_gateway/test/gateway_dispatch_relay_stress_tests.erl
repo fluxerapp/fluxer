@@ -14,8 +14,8 @@ dispatch_many_direct_fallback_delivers_once_to_many_sessions_test_() ->
 dispatch_many_worker_shards_deliver_once_to_many_sessions_test_() ->
     {timeout, 30, fun dispatch_many_worker_shards_deliver_once_to_many_sessions/0}.
 
-dispatch_many_backpressured_worker_falls_back_to_direct_delivery_test_() ->
-    {timeout, 30, fun dispatch_many_backpressured_worker_falls_back_to_direct_delivery/0}.
+dispatch_many_backpressured_worker_still_relays_delivery_test_() ->
+    {timeout, 30, fun dispatch_many_backpressured_worker_still_relays_delivery/0}.
 
 dispatch_many_direct_fallback_delivers_once_to_many_sessions() ->
     with_relay_state_cleared(fun() ->
@@ -44,24 +44,26 @@ dispatch_many_worker_shards_deliver_once_to_many_sessions() ->
     end),
     stop_workers(Workers).
 
-dispatch_many_backpressured_worker_falls_back_to_direct_delivery() ->
-    BackpressuredWorker = start_backpressured_worker(64),
-    with_relay_workers([BackpressuredWorker], fun() ->
-        ok = wait_until(fun() ->
-            gateway_dispatch_relay_batch:message_queue_len(BackpressuredWorker) >= 64
-        end),
+dispatch_many_backpressured_worker_still_relays_delivery() ->
+    Worker = gateway_dispatch_relay_batch:start_worker(0),
+    with_relay_workers([Worker], fun() ->
+        ok = sys:suspend(Worker),
+        backpressure_worker(Worker, 64),
         {Receivers, Ref} = start_receivers(512),
         try
             Payload = #{<<"stress">> => <<"backpressure">>},
             ok = gateway_dispatch_relay_batch:relay_or_direct_many(
-                Receivers, relay_stress_event, Payload, 1
+                Receivers, relay_stress_event, Payload
             ),
-            assert_received_once(Receivers, Ref, relay_stress_event, Payload)
+            ?assert(gateway_dispatch_relay_batch:message_queue_len(Worker) >= 64),
+            ok = sys:resume(Worker),
+            assert_received_once(Receivers, Ref, relay_stress_event, Payload),
+            assert_worker_queues_drained([Worker])
         after
             stop_receivers(Receivers)
         end
     end),
-    BackpressuredWorker ! stop.
+    stop_worker(Worker).
 
 with_relay_state_cleared(Fun) ->
     Previous = persistent_term:get(?STATE_KEY, undefined),
@@ -124,17 +126,8 @@ stop_worker(Pid) ->
         exit:_ -> ok
     end.
 
-start_backpressured_worker(MessageCount) ->
-    Pid = spawn_link(fun backpressured_worker_loop/0),
-    lists:foreach(fun(I) -> Pid ! {queued, I} end, lists:seq(1, MessageCount)),
-    Pid.
-
-backpressured_worker_loop() ->
-    receive
-        stop -> ok
-    after 30000 ->
-        ok
-    end.
+backpressure_worker(Worker, MessageCount) ->
+    lists:foreach(fun(I) -> Worker ! {queued, I} end, lists:seq(1, MessageCount)).
 
 assert_received_once(Receivers, Ref, Event, Payload) ->
     Expected = maps:from_list([{Pid, false} || Pid <- Receivers]),

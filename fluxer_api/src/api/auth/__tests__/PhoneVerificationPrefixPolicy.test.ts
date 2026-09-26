@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {requiresInboundPhoneVerification} from '@app/api/auth/PhoneVerificationPrefixPolicy';
 import {describe, expect, it} from 'vitest';
-import {requiresInboundPhoneVerification} from '../PhoneVerificationPrefixPolicy';
 
 describe('PhoneVerificationPrefixPolicy', () => {
 	const configuredPrefixes = ['+101', '+202', '+3034'];

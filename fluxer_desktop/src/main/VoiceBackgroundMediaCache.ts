@@ -31,6 +31,7 @@ const MEDIA_TYPES = new Map<
 	['image/gif', {mimeType: 'image/gif', extension: 'gif', mediaKind: 'animated'}],
 	['image/webp', {mimeType: 'image/webp', extension: 'webp', mediaKind: 'static'}],
 	['video/mp4', {mimeType: 'video/mp4', extension: 'mp4', mediaKind: 'video'}],
+	['video/webm', {mimeType: 'video/webm', extension: 'webm', mediaKind: 'video'}],
 ]);
 
 const MEDIA_TYPES_BY_EXTENSION = new Map(Array.from(MEDIA_TYPES.values()).map((value) => [value.extension, value]));

@@ -446,6 +446,11 @@ fn gather_wasm_inputs(project_root: &Path) -> Result<StepInputs> {
     )?);
     inputs.extend(collect_directory_digests(
         project_root,
+        Path::new("rust/libfluxwebp"),
+        |path| !path.contains("/target/"),
+    )?);
+    inputs.extend(collect_directory_digests(
+        project_root,
         &markdown_parser_rust_dir,
         |path| !path.contains("/target/"),
     )?);
@@ -599,6 +604,23 @@ mod tests {
             rel_path_key(Path::new("scripts/GenerateColorSystem.ts")),
             "scripts/GenerateColorSystem.ts"
         );
+    }
+
+    #[test]
+    fn wasm_inputs_cover_the_libfluxwebp_sources_and_headers() {
+        let app_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fluxer_app");
+        let inputs = gather_wasm_inputs(&app_dir).expect("gather wasm inputs");
+
+        for key in [
+            "rust/libfluxwebp/Cargo.toml",
+            "rust/libfluxwebp/Cargo.lock",
+            "rust/libfluxwebp/src/lib.rs",
+            "rust/libfluxwebp/shim/stdlib.h",
+            "rust/libfluxwebp/simd/emmintrin.h",
+        ] {
+            assert!(inputs.contains_key(key), "missing {key}");
+        }
+        assert!(inputs.keys().all(|key| !key.contains("/target/")));
     }
 
     #[test]

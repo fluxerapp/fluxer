@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
+import {getCachedNumberFormat} from '@app/features/i18n/utils/IntlCache';
+import {formatFileSize} from '@app/features/messaging/utils/FileUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {Button} from '@app/features/ui/button/Button';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
@@ -45,7 +47,7 @@ const PAUSE_SELECTION_DESCRIPTOR = msg({
 	comment: 'Button label in the trimmer modal that pauses preview playback.',
 });
 const SELECTION_TOO_SHORT_DESCRIPTOR = msg({
-	message: 'Selection must be at least {seconds} seconds.',
+	message: 'Selection must be at least {seconds, plural, one {# second} other {# seconds}}.',
 	comment: 'Error displayed when the trimmed entrance sound selection is below the minimum duration.',
 });
 const ENCODED_TOO_LARGE_DESCRIPTOR = msg({
@@ -74,19 +76,6 @@ export interface TrimmedAudioResult {
 interface EntranceSoundTrimmerModalProps {
 	sourceFile: File;
 	onConfirm: (result: TrimmedAudioResult) => Promise<void> | void;
-}
-
-function formatSeconds(value: number): string {
-	const safe = Math.max(0, value);
-	return `${safe.toFixed(2)}s`;
-}
-
-function formatBytes(bytes: number): string {
-	if (bytes >= 1024 * 1024) {
-		const mb = bytes / (1024 * 1024);
-		return `${mb % 1 === 0 ? mb.toFixed(0) : mb.toFixed(1)}MB`;
-	}
-	return `${Math.floor(bytes / 1024)}KB`;
 }
 
 export const EntranceSoundTrimmerModal: React.FC<EntranceSoundTrimmerModalProps> = observer(
@@ -227,6 +216,18 @@ export const EntranceSoundTrimmerModal: React.FC<EntranceSoundTrimmerModalProps>
 			}
 		}, [isPlaying, startPlayback, stopPlayback]);
 
+		const formatSeconds = useCallback(
+			(value: number) =>
+				getCachedNumberFormat(i18n.locale, {
+					style: 'unit',
+					unit: 'second',
+					unitDisplay: 'narrow',
+					minimumFractionDigits: 2,
+					maximumFractionDigits: 2,
+				}).format(Math.max(0, value)),
+			[i18n.locale],
+		);
+
 		const handleSelectionChange = useCallback(
 			(next: {startSeconds: number; endSeconds: number}) => {
 				stopPlayback();
@@ -245,7 +246,7 @@ export const EntranceSoundTrimmerModal: React.FC<EntranceSoundTrimmerModalProps>
 		const confirm = useCallback(async () => {
 			if (!audioBuffer) return;
 			if (selectionDuration < MIN_DURATION_SECONDS) {
-				setError(i18n._(SELECTION_TOO_SHORT_DESCRIPTOR, {seconds: MIN_DURATION_SECONDS.toFixed(2)}));
+				setError(i18n._(SELECTION_TOO_SHORT_DESCRIPTOR, {seconds: MIN_DURATION_SECONDS}));
 				return;
 			}
 			setError(null);
@@ -257,7 +258,9 @@ export const EntranceSoundTrimmerModal: React.FC<EntranceSoundTrimmerModalProps>
 					downmixToMono: true,
 				});
 				if (blob.size > ENTRANCE_SOUND_MAX_BYTES) {
-					setError(i18n._(ENCODED_TOO_LARGE_DESCRIPTOR, {limit: formatBytes(ENTRANCE_SOUND_MAX_BYTES)}));
+					setError(
+						i18n._(ENCODED_TOO_LARGE_DESCRIPTOR, {limit: formatFileSize(i18n.locale, ENTRANCE_SOUND_MAX_BYTES)}),
+					);
 					setSubmitting(false);
 					return;
 				}
@@ -341,7 +344,9 @@ export const EntranceSoundTrimmerModal: React.FC<EntranceSoundTrimmerModalProps>
 											) : (
 												<PlayIcon size={14} weight="fill" data-flx="voice.entrance-sound-trimmer-modal.play-icon" />
 											)}
-											{isPlaying ? i18n._(PAUSE_SELECTION_DESCRIPTOR) : i18n._(PLAY_SELECTION_DESCRIPTOR)}
+											<flx-i18n data-flx="voice.entrance-sound-trimmer-modal.flx-i18n">
+												{isPlaying ? i18n._(PAUSE_SELECTION_DESCRIPTOR) : i18n._(PLAY_SELECTION_DESCRIPTOR)}
+											</flx-i18n>
 										</span>
 									</Button>
 								</div>

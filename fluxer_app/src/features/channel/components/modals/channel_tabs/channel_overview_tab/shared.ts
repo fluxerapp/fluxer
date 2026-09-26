@@ -2,7 +2,8 @@
 
 import type {ChannelRtcRegion} from '@app/features/channel/commands/ChannelCommands';
 import type {ComboboxOption} from '@app/features/ui/components/form/FormCombobox';
-import {VOICE_CHANNEL_BITRATE_MAX, VOICE_CHANNEL_BITRATE_MIN} from '@fluxer/constants/src/LimitConstants';
+import {getMaxVoiceChannelBitrate} from '@fluxer/constants/src/GuildConstants';
+import {VOICE_CHANNEL_BITRATE_DEFAULT, VOICE_CHANNEL_BITRATE_MIN} from '@fluxer/constants/src/LimitConstants';
 
 export interface FormInputs {
 	name: string;
@@ -20,8 +21,17 @@ export interface FormInputs {
 
 export const CHANNEL_OVERVIEW_TAB_ID = 'overview';
 export const BITRATE_KBPS_MIN = VOICE_CHANNEL_BITRATE_MIN / 1000;
-export const BITRATE_KBPS_MAX = VOICE_CHANNEL_BITRATE_MAX / 1000;
-export const BITRATE_KBPS_MARKERS: ReadonlyArray<number> = [BITRATE_KBPS_MIN, 64, 128, 256, BITRATE_KBPS_MAX];
+export const BITRATE_KBPS_DEFAULT = VOICE_CHANNEL_BITRATE_DEFAULT / 1000;
+
+export function getMaxBitrateKbps(guildFeatures: Iterable<string> | null | undefined): number {
+	return getMaxVoiceChannelBitrate(guildFeatures) / 1000;
+}
+
+export function getBitrateKbpsMarkers(maxKbps: number): Array<number> {
+	const markers = [BITRATE_KBPS_MIN, BITRATE_KBPS_DEFAULT, 128, 256].filter((marker) => marker < maxKbps);
+	markers.push(maxKbps);
+	return markers;
+}
 export const MAX_TOPIC_LENGTH = 1024;
 
 export interface RtcRegionOption extends ComboboxOption<string | null> {

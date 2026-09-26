@@ -1,5 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ChannelID, GuildID, UserID} from '@app/api/BrandedTypes';
+import type {IChannelRepository} from '@app/api/channel/IChannelRepository';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
+import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
+import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
+import type {Channel} from '@app/api/models/Channel';
+import {getMessageSearchService} from '@app/api/SearchFactory';
+import {buildMessageSearchFilters} from '@app/api/search/BuildMessageSearchFilters';
+import {channelNeedsReindexing} from '@app/api/search/ChannelIndexingUtils';
+import {MessageSearchResponseMapper} from '@app/api/search/MessageSearchResponseMapper';
+import {searchExistingMessages} from '@app/api/search/MessageSearchResultReconciler';
+import {channelRequiresAgeVerification} from '@app/api/search/SearchNsfwUtils';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
+import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
+import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {ChannelTypes, Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {GuildNSFWLevel} from '@fluxer/constants/src/GuildConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
@@ -11,22 +27,6 @@ import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError
 import type {MessageSearchRequest} from '@fluxer/schema/src/domains/message/MessageRequestSchemas';
 import type {MessageSearchResponse} from '@fluxer/schema/src/domains/message/MessageResponseSchemas';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
-import type {ChannelID, GuildID, UserID} from '../../BrandedTypes';
-import type {IChannelRepository} from '../../channel/IChannelRepository';
-import type {IGatewayService} from '../../infrastructure/IGatewayService';
-import type {UserCacheService} from '../../infrastructure/UserCacheService';
-import type {RequestCache} from '../../middleware/RequestCacheMiddleware';
-import type {Channel} from '../../models/Channel';
-import {getMessageSearchService} from '../../SearchFactory';
-import {buildMessageSearchFilters} from '../../search/BuildMessageSearchFilters';
-import {channelNeedsReindexing} from '../../search/ChannelIndexingUtils';
-import {MessageSearchResponseMapper} from '../../search/MessageSearchResponseMapper';
-import {searchExistingMessages} from '../../search/MessageSearchResultReconciler';
-import {channelRequiresAgeVerification} from '../../search/SearchNsfwUtils';
-import type {IUserRepository} from '../../user/IUserRepository';
-import {canUserAccessNsfwContent} from '../../utils/AgeUtils';
-import {mapWithConcurrency} from '../../utils/ConcurrencyUtils';
-import type {WorkerTaskName} from '../../worker/WorkerLaneConfig';
 
 const GUILD_FANOUT_CONCURRENCY = 16;
 const PERMISSION_CHECK_CONCURRENCY = 64;
@@ -68,23 +68,10 @@ export class GuildSearchService {
 		const includeNsfwRequested = searchParams.include_nsfw ?? false;
 		const canUserAccessNsfw =
 			guildIsAgeRestricted || includeNsfwRequested ? await this.getCanUserAccessNsfw(userId) : false;
-		if (guildIsAgeRestricted) {
-			if (!canUserAccessNsfw) {
-				throw new NsfwContentRequiresAgeVerificationError();
-			}
-			if (!includeNsfwRequested) {
-				const hitsPerPage = searchParams.hits_per_page ?? 25;
-				const page = searchParams.page ?? 1;
-				return {
-					channels: [],
-					messages: [],
-					total: 0,
-					hits_per_page: hitsPerPage,
-					page,
-				};
-			}
+		if (guildIsAgeRestricted && !canUserAccessNsfw) {
+			throw new NsfwContentRequiresAgeVerificationError();
 		}
-		const canIncludeNsfw = includeNsfwRequested && canUserAccessNsfw;
+		const canIncludeNsfw = canUserAccessNsfw && (includeNsfwRequested || guildIsAgeRestricted);
 		const guildNsfw = guildData?.nsfw ?? false;
 		const channels = await this.channelRepository.listChannels(channelIds);
 		const channelMap = new Map<string, Channel>();
@@ -169,7 +156,7 @@ export class GuildSearchService {
 			page,
 			cursor,
 		});
-		const mappedResponses = await this.responseMapper.mapSearchResultToResponses(result, userId, requestCache);
+		const mappedResponses = await this.responseMapper.mapSearchResultToResponses(result.messages, userId, requestCache);
 		return {
 			messages: mappedResponses.messages,
 			channels: mappedResponses.channels,
@@ -251,7 +238,7 @@ export class GuildSearchService {
 			page,
 			cursor,
 		});
-		const mappedResponses = await this.responseMapper.mapSearchResultToResponses(result, userId, requestCache);
+		const mappedResponses = await this.responseMapper.mapSearchResultToResponses(result.messages, userId, requestCache);
 		return {
 			messages: mappedResponses.messages,
 			channels: mappedResponses.channels,

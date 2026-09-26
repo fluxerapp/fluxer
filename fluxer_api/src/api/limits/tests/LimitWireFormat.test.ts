@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import type {LimitKey} from '@fluxer/constants/src/LimitConfigMetadata';
 import {DEFAULT_FREE_LIMITS, DEFAULT_PREMIUM_LIMITS} from '@fluxer/limits/src/LimitDefaults';
 import {expandWireFormat} from '@fluxer/limits/src/LimitDiffer';
@@ -7,9 +10,6 @@ import {computeDefaultsHash} from '@fluxer/limits/src/LimitHashing';
 import {resolveLimits} from '@fluxer/limits/src/LimitResolver';
 import type {LimitConfigWireFormat, LimitMatchContext} from '@fluxer/limits/src/LimitTypes';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilderWithoutAuth} from '../../test/TestRequestBuilder';
 
 const WIRE_COMPATIBILITY_LIMIT_KEYS: ReadonlySet<LimitKey> = new Set<LimitKey>([
 	'max_guild_emojis',

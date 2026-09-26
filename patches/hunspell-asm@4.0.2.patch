@@ -1,0 +1,35 @@
+diff --git a/dist/cjs/hunspellLoader.js b/dist/cjs/hunspellLoader.js
+index 1d22158374fc508bf3e5a5ea4c352962da33557e..70d5f5e8f69792b4b4af3ef526aaf5e3c04a6baf 100644
+--- a/dist/cjs/hunspellLoader.js
++++ b/dist/cjs/hunspellLoader.js
+@@ -1,7 +1,7 @@
+ "use strict";
+ Object.defineProperty(exports, "__esModule", { value: true });
+ const emscripten_wasm_loader_1 = require("emscripten-wasm-loader");
+-const nanoid = require("nanoid");
++const { nanoid } = require("nanoid");
+ const logger_1 = require("./util/logger");
+ const wrapHunspellInterface_1 = require("./wrapHunspellInterface");
+ /**
+diff --git a/dist/esm/hunspellLoader.js b/dist/esm/hunspellLoader.js
+index 9673dcc391081c8a28ce8d81e3baf01309f52c33..9d0149211e5ef85b4b237e59f503de6a91133b67 100644
+--- a/dist/esm/hunspellLoader.js
++++ b/dist/esm/hunspellLoader.js
+@@ -1,5 +1,5 @@
+ import { mountBuffer, unmount } from 'emscripten-wasm-loader';
+-import * as nanoid from 'nanoid';
++import { nanoid } from 'nanoid';
+ import { log } from './util/logger';
+ import { wrapHunspellInterface } from './wrapHunspellInterface';
+ /**
+diff --git a/src/hunspellLoader.ts b/src/hunspellLoader.ts
+index 526bd375a270ad3fa9e453f0a034472e024e0143..55ee6d16ba3f5b00c548021bf8b4cebd67c34ca6 100644
+--- a/src/hunspellLoader.ts
++++ b/src/hunspellLoader.ts
+@@ -1,5 +1,5 @@
+ import { mountBuffer, unmount } from 'emscripten-wasm-loader';
+-import * as nanoid from 'nanoid';
++import { nanoid } from 'nanoid';
+ import { HunspellAsmModule } from './HunspellAsmModule';
+ import { HunspellFactory } from './HunspellFactory';
+ import { log } from './util/logger';

@@ -766,12 +766,6 @@
 				}
 			},
 			"watchedStreams": {},
-			"codecNegotiation": {
-				"overrides": {},
-				"localSupportedVideoCodecs": [],
-				"remoteSupportedVideoCodecs": {},
-				"streams": {}
-			},
 			"stats": {
 				"rttMs": 42,
 				"outbound": [

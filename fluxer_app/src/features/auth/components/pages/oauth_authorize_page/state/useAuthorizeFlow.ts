@@ -26,6 +26,7 @@ import {
 	selectAuthorizePhase,
 	transitionAuthorizeSnapshot,
 } from '@app/features/auth/components/pages/oauth_authorize_page/state/authorizeMachine';
+import {getDefaultLandingPath} from '@app/features/navigation/utils/DefaultLandingUtils';
 import type {BotPermissionOption} from '@app/features/permissions/utils/PermissionUtils';
 import {http} from '@app/features/platform/transport/RestTransport';
 import {failureMessage} from '@app/features/platform/utils/ResponseInspection';
@@ -425,7 +426,7 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 				window.location.href = url.toString();
 				return;
 			}
-			window.location.href = '/';
+			window.location.href = getDefaultLandingPath();
 		} catch (err) {
 			logger.error('Failed to redirect on cancel', err);
 			setSubmitting(null);

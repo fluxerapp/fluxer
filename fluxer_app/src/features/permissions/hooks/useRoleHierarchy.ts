@@ -25,9 +25,7 @@ export function useRoleHierarchy(guild: Guild | null | undefined) {
 			if (!guild || !currentUser) return false;
 			if (guild.isOwner(currentUser.id)) return true;
 			if (guild.isOwner(targetUserId)) return false;
-			const wireGuild = guild.toJSON();
-			const targetHighestRole = PermissionUtils.getHighestRole(wireGuild, targetUserId);
-			return PermissionUtils.isRoleHigher(wireGuild, currentUser.id, currentUserHighestRole, targetHighestRole);
+			return PermissionUtils.canManageTargetUser(guild.toJSON(), currentUser.id, currentUserHighestRole, targetUserId);
 		},
 		[guild, currentUser, currentUserHighestRole],
 	);

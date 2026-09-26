@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {generateSnowflake} from '@fluxer/snowflake/src/Snowflake';
-import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
-import type {ChannelID, MessageID} from '../../../BrandedTypes';
-import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '../../../database/CassandraQueryExecution';
-import {Db, type QueryTemplate} from '../../../database/CassandraTypes';
-import {buildPatchFromData, executeVersionedUpdate} from '../../../database/CassandraVersionedUpdate';
-import type {ChannelMessageBucketRow, ChannelStateRow, MessageRow} from '../../../database/types/MessageTypes';
-import {MESSAGE_COLUMNS} from '../../../database/types/MessageTypes';
-import {Logger} from '../../../Logger';
-import {Message} from '../../../models/Message';
+import type {ChannelID, MessageID} from '@app/api/BrandedTypes';
+import type {ListMessagesOptions} from '@app/api/channel/repositories/IMessageRepository';
+import {BucketScanDirection, scanBucketsWithIndex} from '@app/api/channel/repositories/message/BucketScanEngine';
+import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {Db, type QueryTemplate} from '@app/api/database/CassandraTypes';
+import {buildPatchFromData, executeVersionedUpdate} from '@app/api/database/CassandraVersionedUpdate';
+import type {ChannelMessageBucketRow, ChannelStateRow, MessageRow} from '@app/api/database/types/MessageTypes';
+import {MESSAGE_COLUMNS} from '@app/api/database/types/MessageTypes';
+import {Logger} from '@app/api/Logger';
+import {Message} from '@app/api/models/Message';
 import {
 	AttachmentLookup,
 	ChannelEmptyBuckets,
@@ -18,9 +18,9 @@ import {
 	ChannelState,
 	Messages,
 	MessagesByAuthorV2,
-} from '../../../Tables';
-import type {ListMessagesOptions} from '../IMessageRepository';
-import {BucketScanDirection, scanBucketsWithIndex} from './BucketScanEngine';
+} from '@app/api/Tables';
+import {generateSnowflake} from '@fluxer/snowflake/src/Snowflake';
+import * as BucketUtils from '@fluxer/snowflake/src/SnowflakeBuckets';
 
 function getLogger() {
 	return Logger.child({module: 'MessageDataRepository'});

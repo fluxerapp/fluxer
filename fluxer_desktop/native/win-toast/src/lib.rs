@@ -505,17 +505,17 @@ fn parse_rfc3339_utc_100ns(value: &str) -> Option<i64> {
 
     let year = parse_digits(bytes, 0, 4)? as i32;
     expect_byte(bytes, 4, b'-')?;
-    let month = parse_digits(bytes, 5, 2)? as u32;
+    let month = parse_digits(bytes, 5, 2)?;
     expect_byte(bytes, 7, b'-')?;
-    let day = parse_digits(bytes, 8, 2)? as u32;
+    let day = parse_digits(bytes, 8, 2)?;
     if bytes.get(10).copied()? != b'T' && bytes.get(10).copied()? != b't' {
         return None;
     }
-    let hour = parse_digits(bytes, 11, 2)? as u32;
+    let hour = parse_digits(bytes, 11, 2)?;
     expect_byte(bytes, 13, b':')?;
-    let minute = parse_digits(bytes, 14, 2)? as u32;
+    let minute = parse_digits(bytes, 14, 2)?;
     expect_byte(bytes, 16, b':')?;
-    let second = parse_digits(bytes, 17, 2)? as u32;
+    let second = parse_digits(bytes, 17, 2)?;
 
     if !valid_date(year, month, day) || hour > 23 || minute > 59 || second > 59 {
         return None;

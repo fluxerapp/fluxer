@@ -31,6 +31,7 @@ import {Logger} from '@app/features/platform/utils/AppLogger';
 import * as ReadStateCommands from '@app/features/read_state/commands/ReadStateCommands';
 import {ChangeFriendNicknameModal} from '@app/features/relationship/components/modals/ChangeFriendNicknameModal';
 import * as RelationshipActionUtils from '@app/features/relationship/utils/RelationshipActionUtils';
+import {INVITE_SENT_FOR_DESCRIPTOR} from '@app/features/ui/action_menu/items/dm_menu_data/shared';
 import * as LayoutCommands from '@app/features/ui/commands/LayoutCommands';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
@@ -57,10 +58,6 @@ const ARE_YOU_SURE_YOU_WANT_TO_CLOSE_THIS_DESCRIPTOR = msg({
 const ARE_YOU_SURE_YOU_WANT_TO_CLOSE_YOUR_DESCRIPTOR = msg({
 	message: 'Close your DM with {username}? You can reopen it anytime.',
 	comment: 'Body of the close confirmation alert for a one-on-one DM. username is the recipient display name.',
-});
-const INVITE_SENT_FOR_DESCRIPTOR = msg({
-	message: 'Invite sent for {name}',
-	comment: 'Toast confirmation shown after sending a community invite to the DM recipient. name is the community name.',
 });
 const FAILED_TO_SEND_INVITE_TITLE_DESCRIPTOR = msg({
 	message: "Couldn't send invite",
@@ -362,7 +359,7 @@ export function useDMListItemHandlers({
 				});
 				ToastCommands.createToast({
 					type: 'success',
-					children: i18n._(INVITE_SENT_FOR_DESCRIPTOR, {name: candidate.guild.name}),
+					children: i18n._(INVITE_SENT_FOR_DESCRIPTOR, {guildName: candidate.guild.name}),
 				});
 			} catch (error) {
 				logger.error('Failed to send invite via DM sheet:', error);

@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {beforeAll, beforeEach, describe, expect, it} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {
 	acceptInvite,
 	createChannel,
@@ -13,7 +9,11 @@ import {
 	deleteChannel,
 	getChannel,
 	updateChannel,
-} from './ChannelTestUtils';
+} from '@app/api/channel/tests/ChannelTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
 describe('Channel Operation Permissions', () => {
 	let harness: ApiTestHarness;
@@ -43,6 +43,18 @@ describe('Channel Operation Permissions', () => {
 		await acceptInvite(harness, member.token, invite.code);
 		await createBuilder(harness, nonmember.token)
 			.get(`/channels/${systemChannel.id}`)
+			.expect(HTTP_STATUS.FORBIDDEN)
+			.execute();
+	});
+	it('should let a minor manage a mature channel without reading it', async () => {
+		const owner = await createTestAccount(harness, {dateOfBirth: '2010-01-01'});
+		const guild = await createGuild(harness, owner.token, 'Mature Channel Guild');
+		const systemChannel = await getChannel(harness, owner.token, guild.system_channel_id!);
+		await updateChannel(harness, owner.token, systemChannel.id, {nsfw: true});
+		const renamed = await updateChannel(harness, owner.token, systemChannel.id, {name: 'still-manageable'});
+		expect(renamed.name).toBe('still-manageable');
+		await createBuilder(harness, owner.token)
+			.get(`/channels/${systemChannel.id}/messages`)
 			.expect(HTTP_STATUS.FORBIDDEN)
 			.execute();
 	});

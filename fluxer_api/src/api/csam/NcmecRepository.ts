@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {AttachmentID, UserID} from '../BrandedTypes';
-import {fetchOne, upsertOne} from '../database/CassandraQueryExecution';
-import type {NcmecAttachmentSubmissionRow, NcmecUserWorkflowRow} from '../database/types/CsamTypes';
-import {NcmecAttachmentSubmissions, NcmecUserWorkflows} from '../Tables';
+import type {AttachmentID, UserID} from '@app/api/BrandedTypes';
+import {fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import type {NcmecAttachmentSubmissionRow, NcmecUserWorkflowRow} from '@app/api/database/types/CsamTypes';
+import {NcmecAttachmentSubmissions, NcmecUserWorkflows} from '@app/api/Tables';
 
 const GET_ATTACHMENT_SUBMISSION_QUERY = NcmecAttachmentSubmissions.select({
 	where: NcmecAttachmentSubmissions.where.eq('attachment_id'),

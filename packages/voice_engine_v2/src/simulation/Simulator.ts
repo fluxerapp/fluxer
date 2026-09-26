@@ -1,23 +1,29 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
-import type {VoiceEngineV2Event} from '../protocol/events';
-import {createVoiceEngineV2MemoryEventLogSpillSink} from '../runtime/eventLogRing';
-import {type VoiceEngineV2EventLogEntry, VoiceEngineV2Runtime} from '../runtime/VoiceEngineV2Runtime';
-import {VoiceEngineV2TestImplementation} from '../testing/VoiceEngineV2TestImplementation';
+import type {VoiceEngineV2Event} from '@fluxer/voice_engine_v2/src/protocol/events';
+import {createVoiceEngineV2MemoryEventLogSpillSink} from '@fluxer/voice_engine_v2/src/runtime/eventLogRing';
+import {
+	type VoiceEngineV2EventLogEntry,
+	VoiceEngineV2Runtime,
+} from '@fluxer/voice_engine_v2/src/runtime/VoiceEngineV2Runtime';
 import {
 	type VoiceEngineV2FaultDecision,
 	VoiceEngineV2FaultInjector,
 	type VoiceEngineV2FaultPlan,
-} from './FaultInjector';
-import {collectVoiceEngineV2SafetyViolations, type VoiceEngineV2SafetyViolation} from './SafetyInvariants';
+} from '@fluxer/voice_engine_v2/src/simulation/FaultInjector';
+import {
+	collectVoiceEngineV2SafetyViolations,
+	type VoiceEngineV2SafetyViolation,
+} from '@fluxer/voice_engine_v2/src/simulation/SafetyInvariants';
 import {
 	createSimulatorClock,
 	type SimulatorDriverDeviceInventory,
 	type SimulatorDriverFaultPolicy,
 	VoiceEngineV2SimulatorDriver,
-} from './SimulatorPorts';
-import type {VoiceEngineV2Workload} from './Workload';
+} from '@fluxer/voice_engine_v2/src/simulation/SimulatorPorts';
+import type {VoiceEngineV2Workload} from '@fluxer/voice_engine_v2/src/simulation/Workload';
+import {VoiceEngineV2TestImplementation} from '@fluxer/voice_engine_v2/src/testing/VoiceEngineV2TestImplementation';
 
 export const SIMULATOR_TICK_MAX = 4096;
 const SIMULATOR_TICK_NS_DEFAULT = 16_666_666;

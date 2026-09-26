@@ -135,6 +135,7 @@ users_in_channel_test() ->
     ?assertNot(sets:is_element(3, Result)).
 
 permission_sync_disconnects_when_view_channel_lost_test() ->
+    ok = drain_mailbox(),
     ConnectOnly = constants:connect_permission(),
     {State, UserId, ChannelId, GuildId} = build_perm_sync_state(ConnectOnly),
     ok = guild_voice_permission_sync:sync_user_voice_permissions(UserId, State),
@@ -146,6 +147,7 @@ permission_sync_disconnects_when_view_channel_lost_test() ->
     end.
 
 permission_sync_does_not_disconnect_with_full_perms_test() ->
+    ok = drain_mailbox(),
     FullPerms =
         constants:view_channel_permission() bor
             constants:connect_permission() bor
@@ -159,6 +161,123 @@ permission_sync_does_not_disconnect_with_full_perms_test() ->
     after 200 ->
         ?assert(false)
     end.
+
+permission_sync_runs_on_role_permission_update_test() ->
+    ok = drain_mailbox(),
+    {State, UserId, ChannelId, GuildId, RoleId} = build_sync_wiring_state(),
+    _ = guild_state:update_state(
+        guild_role_update,
+        #{
+            <<"role">> => #{
+                <<"id">> => integer_to_binary(RoleId),
+                <<"permissions">> => <<"0">>
+            }
+        },
+        State
+    ),
+    receive
+        {synced, GuildId, ChannelId, UserId, <<"test-conn">>, Perms} ->
+            ?assertEqual(false, maps:get(can_speak, Perms)),
+            ?assertEqual(false, maps:get(can_stream, Perms))
+    after 200 ->
+        ?assert(false)
+    end.
+
+permission_sync_runs_on_channel_overwrite_update_test() ->
+    ok = drain_mailbox(),
+    {State, UserId, ChannelId, GuildId, RoleId} = build_sync_wiring_state(),
+    _ = guild_state:update_state(
+        channel_update,
+        #{
+            <<"id">> => integer_to_binary(ChannelId),
+            <<"type">> => 2,
+            <<"permission_overwrites">> => [
+                #{
+                    <<"id">> => integer_to_binary(RoleId),
+                    <<"type">> => 0,
+                    <<"allow">> => <<"0">>,
+                    <<"deny">> => integer_to_binary(constants:stream_permission())
+                }
+            ]
+        },
+        State
+    ),
+    receive
+        {synced, GuildId, ChannelId, UserId, <<"test-conn">>, Perms} ->
+            ?assertEqual(true, maps:get(can_speak, Perms)),
+            ?assertEqual(false, maps:get(can_stream, Perms))
+    after 200 ->
+        ?assert(false)
+    end.
+
+permission_sync_runs_on_member_role_removal_test() ->
+    ok = drain_mailbox(),
+    {State, UserId, ChannelId, GuildId, _RoleId} = build_sync_wiring_state(),
+    _ = guild_state:update_state(
+        guild_member_update,
+        #{
+            <<"user">> => #{<<"id">> => integer_to_binary(UserId)},
+            <<"roles">> => []
+        },
+        State
+    ),
+    receive
+        {synced, GuildId, ChannelId, UserId, <<"test-conn">>, Perms} ->
+            ?assertEqual(false, maps:get(can_speak, Perms)),
+            ?assertEqual(false, maps:get(can_stream, Perms))
+    after 200 ->
+        ?assert(false)
+    end.
+
+build_sync_wiring_state() ->
+    Self = self(),
+    TestFun = fun(GId, ChId, UId, ConnId, Perms) ->
+        Self ! {synced, GId, ChId, UId, ConnId, Perms}
+    end,
+    UserId = 10,
+    ChannelId = 500,
+    GuildId = 42,
+    RoleId = 999,
+    RoleIdBin = integer_to_binary(RoleId),
+    EveryonePerms = required_voice_perms(),
+    RolePerms = constants:speak_permission() bor constants:stream_permission(),
+    State = #{
+        id => GuildId,
+        voice_states => #{
+            <<"conn">> => #{
+                <<"user_id">> => integer_to_binary(UserId),
+                <<"channel_id">> => integer_to_binary(ChannelId),
+                <<"connection_id">> => <<"test-conn">>,
+                <<"deaf">> => false
+            }
+        },
+        member_list_subscriptions => guild_member_list_subs:new(),
+        test_permission_sync_fun => TestFun,
+        data => #{
+            <<"guild">> => #{<<"owner_id">> => <<"1">>},
+            <<"roles">> => [
+                #{<<"id">> => RoleIdBin, <<"permissions">> => integer_to_binary(RolePerms)},
+                #{
+                    <<"id">> => integer_to_binary(GuildId),
+                    <<"permissions">> => integer_to_binary(EveryonePerms)
+                }
+            ],
+            <<"members">> => [
+                #{
+                    <<"user">> => #{<<"id">> => integer_to_binary(UserId)},
+                    <<"roles">> => [RoleIdBin]
+                }
+            ],
+            <<"channels">> => [
+                #{
+                    <<"id">> => integer_to_binary(ChannelId),
+                    <<"type">> => 2,
+                    <<"permission_overwrites">> => []
+                }
+            ]
+        }
+    },
+    {State, UserId, ChannelId, GuildId, RoleId}.
 
 build_perm_sync_state(Permissions) ->
     Self = self(),
@@ -221,3 +340,10 @@ camera_limited_voice_states(Count, ChannelId) ->
         #{},
         lists:seq(1, Count)
     ).
+
+drain_mailbox() ->
+    receive
+        _ -> drain_mailbox()
+    after 0 ->
+        ok
+    end.

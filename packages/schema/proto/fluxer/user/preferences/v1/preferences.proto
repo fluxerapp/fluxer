@@ -49,6 +49,8 @@ message SyncedPreferences {
   KeybindSettings keybinds = 111;
   ChatInputSettings chat_input = 112;
   optional bool save_camera_uploads_to_device = 113;
+  ReactionEmoji double_tap_reaction = 114;
+  ChannelFrecencyState channel_frecency = 115;
 
 }
 
@@ -153,6 +155,8 @@ message NagbarDismissals {
   map<string, bool> pending_bulk_deletion = 15;
   map<string, bool> invites_disabled = 16;
   map<string, bool> guild_mfa_requirement = 17;
+  map<string, bool> price_announcement = 18;
+  map<string, bool> legacy_price_opt_in = 19;
 }
 
 message DismissedUpsells {
@@ -257,6 +261,20 @@ enum MfaMethod {
   MFA_METHOD_WEBAUTHN = 3;
 }
 
+message ChannelFrecencyEntry {
+  uint32 total_uses = 1;
+  repeated int64 recent_uses_ms = 2;
+}
+
+message ChannelFrecencyState {
+  map<string, ChannelFrecencyEntry> usage = 1;
+}
+
 message ChatInputSettings {
   optional bool convert_emoticons = 1;
+}
+
+message ReactionEmoji {
+  optional string id = 1;
+  string name = 2;
 }

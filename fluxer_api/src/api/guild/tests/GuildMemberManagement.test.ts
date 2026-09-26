@@ -1,17 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {Permissions} from '@fluxer/constants/src/ChannelConstants';
-import type {GuildBanResponse, GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
-import {afterEach, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {getPngDataUrl, getTooLargePngDataUrl} from '../../emoji/tests/EmojiTestUtils';
-import {ensureSessionStarted} from '../../message/tests/MessageTestUtils';
-import {profileSubstringBlocklistCache} from '../../middleware/ProfileSubstringBlocklistCache';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {grantPremium} from '../../user/tests/UserTestUtils';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {getPngDataUrl, getTooLargePngDataUrl} from '@app/api/emoji/tests/EmojiTestUtils';
 import {
 	addMemberRole,
 	createRole,
@@ -20,7 +10,18 @@ import {
 	setupTestGuildWithMembers,
 	updateMember,
 	updateRolePositions,
-} from './GuildTestUtils';
+} from '@app/api/guild/tests/GuildTestUtils';
+import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
+import {profileSubstringBlocklistCache} from '@app/api/middleware/ProfileSubstringBlocklistCache';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {grantPremium} from '@app/api/user/tests/UserTestUtils';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {Permissions} from '@fluxer/constants/src/ChannelConstants';
+import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';
+import type {GuildBanResponse, GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
+import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 describe('Guild Member Management', () => {
 	let harness: ApiTestHarness;
@@ -194,6 +195,30 @@ describe('Guild Member Management', () => {
 			.body({})
 			.expect(HTTP_STATUS.NO_CONTENT)
 			.execute();
+	});
+	test('should reject a ban body that is not valid JSON', async () => {
+		const {owner, members, guild} = await setupTestGuildWithMembers(harness, 1);
+		const member = members[0];
+		const {json} = await createBuilder<{
+			code: string;
+			errors: Array<{
+				path: string;
+				code: string;
+			}>;
+		}>(harness, owner.token)
+			.put(`/guilds/${guild.id}/bans/${member.userId}`)
+			.body('{not json')
+			.expect(HTTP_STATUS.BAD_REQUEST)
+			.executeWithResponse();
+		expect(json.code).toBe(APIErrorCodes.INVALID_FORM_BODY);
+		const bodyError = json.errors.find((entry) => entry.path === 'body');
+		expect(bodyError).toBeDefined();
+		expect(bodyError?.code).toBe(ValidationErrorCodes.INVALID_FORMAT);
+		const bans = await createBuilder<Array<GuildBanResponse>>(harness, owner.token)
+			.get(`/guilds/${guild.id}/bans`)
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(bans.find((entry) => entry.user.id === member.userId)).toBeUndefined();
 	});
 	test('should disallow banning nonexistent user from guild', async () => {
 		const {owner, guild} = await setupTestGuildWithMembers(harness, 1);
@@ -528,6 +553,66 @@ describe('Guild Member Management', () => {
 				.delete(`/guilds/${guild.id}/members/${member.userId}`)
 				.expect(HTTP_STATUS.NOT_FOUND)
 				.execute();
+		});
+	});
+	describe('Voice Mute and Deafen Permission Checks', () => {
+		test('should not allow member with MUTE_MEMBERS only to deafen a member', async () => {
+			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 2);
+			const [moderator, target] = members;
+			const modRole = await createRole(harness, owner.token, guild.id, {
+				name: 'Muter',
+				permissions: Permissions.MUTE_MEMBERS.toString(),
+			});
+			await addMemberRole(harness, owner.token, guild.id, moderator.userId, modRole.id);
+			await createBuilder(harness, moderator.token)
+				.patch(`/guilds/${guild.id}/members/${target.userId}`)
+				.body({deaf: true})
+				.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.MISSING_PERMISSIONS)
+				.execute();
+		});
+		test('should not allow member with DEAFEN_MEMBERS only to mute a member', async () => {
+			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 2);
+			const [moderator, target] = members;
+			const modRole = await createRole(harness, owner.token, guild.id, {
+				name: 'Deafener',
+				permissions: Permissions.DEAFEN_MEMBERS.toString(),
+			});
+			await addMemberRole(harness, owner.token, guild.id, moderator.userId, modRole.id);
+			await createBuilder(harness, moderator.token)
+				.patch(`/guilds/${guild.id}/members/${target.userId}`)
+				.body({mute: true})
+				.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.MISSING_PERMISSIONS)
+				.execute();
+		});
+		test('should allow member with DEAFEN_MEMBERS only to deafen a member', async () => {
+			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 2);
+			const [moderator, target] = members;
+			const modRole = await createRole(harness, owner.token, guild.id, {
+				name: 'Deafener',
+				permissions: Permissions.DEAFEN_MEMBERS.toString(),
+			});
+			await addMemberRole(harness, owner.token, guild.id, moderator.userId, modRole.id);
+			const updatedMember = await createBuilder<GuildMemberResponse>(harness, moderator.token)
+				.patch(`/guilds/${guild.id}/members/${target.userId}`)
+				.body({deaf: true})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(updatedMember.deaf).toBe(true);
+		});
+		test('should allow member with MUTE_MEMBERS only to mute a member', async () => {
+			const {owner, members, guild} = await setupTestGuildWithMembers(harness, 2);
+			const [moderator, target] = members;
+			const modRole = await createRole(harness, owner.token, guild.id, {
+				name: 'Muter',
+				permissions: Permissions.MUTE_MEMBERS.toString(),
+			});
+			await addMemberRole(harness, owner.token, guild.id, moderator.userId, modRole.id);
+			const updatedMember = await createBuilder<GuildMemberResponse>(harness, moderator.token)
+				.patch(`/guilds/${guild.id}/members/${target.userId}`)
+				.body({mute: true})
+				.expect(HTTP_STATUS.OK)
+				.execute();
+			expect(updatedMember.mute).toBe(true);
 		});
 	});
 	describe('Member Avatar Upload Validation', () => {

@@ -228,7 +228,7 @@ export const AuthMinimalRegisterFormCore = observer(function AuthMinimalRegister
 				placeholder={i18n._(WHAT_SHOULD_PEOPLE_CALL_YOU_DESCRIPTOR)}
 				value={globalNameValue}
 				onChange={(value) => setDraftedFormValue('global_name', value)}
-				error={form.getError('global_name') || fieldErrors?.global_name}
+				error={form.getError('global_name') || fieldErrors?.get('global_name')}
 				data-flx="auth.flow.auth-minimal-register-form-core.form-field.set-drafted-form-value.text"
 			/>
 			{collectDateOfBirth ? (
@@ -239,7 +239,7 @@ export const AuthMinimalRegisterFormCore = observer(function AuthMinimalRegister
 					onMonthChange={handleMonthChange}
 					onDayChange={handleDayChange}
 					onYearChange={handleYearChange}
-					error={fieldErrors?.date_of_birth}
+					error={fieldErrors?.get('date_of_birth')}
 					data-flx="auth.flow.auth-minimal-register-form-core.date-of-birth-field"
 				/>
 			) : null}

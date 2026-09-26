@@ -4,6 +4,7 @@ import type {GatewayHandlerContext} from '@app/features/gateway/events/EventRout
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import EntranceSoundPlaybackEngine from '@app/features/voice/engine/EntranceSoundPlaybackEngine';
 import MediaEngine from '@app/features/voice/engine/MediaEngineFacade';
+import {waitForVoiceJoinChimeSequence} from '@app/features/voice/engine/VoiceSelfJoinChime';
 
 const logger = new Logger('EntranceSoundPlay');
 
@@ -27,10 +28,17 @@ export function handleEntranceSoundPlay(data: EntranceSoundPlayPayload, _context
 		});
 		return;
 	}
-	void EntranceSoundPlaybackEngine.play({
+	void waitForVoiceJoinChimeSequence({
 		userId: data.user_id,
-		hash: data.hash,
-		url: data.url,
-		durationMs: data.duration_ms,
+		channelId: data.channel_id,
+	}).then((result) => {
+		if (result === 'expired-before-start') return;
+		if (!MediaEngine.connected || MediaEngine.channelId !== data.channel_id) return;
+		return EntranceSoundPlaybackEngine.play({
+			userId: data.user_id,
+			hash: data.hash,
+			url: data.url,
+			durationMs: data.duration_ms,
+		});
 	});
 }

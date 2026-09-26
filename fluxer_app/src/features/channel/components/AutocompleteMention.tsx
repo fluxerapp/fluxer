@@ -37,7 +37,7 @@ const NOTIFY_USERS_WITH_THIS_ROLE_WHO_HAVE_PERMISSION_DESCRIPTOR = msg({
 	comment: 'Description text in the channel and chat autocomplete mention. Keep the tone plain and specific.',
 });
 
-type RowRef = React.MutableRefObject<Array<HTMLButtonElement | null>> | undefined;
+type RowRef = React.RefObject<Array<HTMLButtonElement | null>> | undefined;
 type OptionIdGetter = ((index: number) => string) | undefined;
 
 function resolveOptionId(getOptionId: OptionIdGetter, index: number): string | undefined {
@@ -76,7 +76,7 @@ export const AutocompleteMention = observer(function AutocompleteMention({
 	options: Array<AutocompleteOption>;
 	onMouseEnter: (index: number) => void;
 	onMouseLeave: () => void;
-	rowRefs?: React.MutableRefObject<Array<HTMLButtonElement | null>>;
+	rowRefs?: React.RefObject<Array<HTMLButtonElement | null>>;
 	getOptionId?: (index: number) => string;
 }) {
 	const {i18n} = useLingui();

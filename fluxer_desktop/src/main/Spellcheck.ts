@@ -394,7 +394,7 @@ const NATIVE_AFF_PATH_TAG = '__native__';
 
 function loadFromSystemHunspell(tag: string): LoadedHunspell | null {
 	const mod = loadSystemHunspell();
-	if (!mod || !mod.Hunspell || !mod.discoverSystemDictionaries) return null;
+	if (!mod?.Hunspell || !mod.discoverSystemDictionaries) return null;
 	const wantedKey = norm(tag);
 	const wantedBase = languageBase(tag);
 	const installed = mod.discoverSystemDictionaries();

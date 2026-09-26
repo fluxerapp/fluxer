@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {VoiceEngineV2Snapshot} from '@fluxer/voice_engine_v2/src/core/state';
 import {
 	hasVoiceEngineV2NativeNvencEncoder,
 	hasVoiceEngineV2ZeroCopyNativeInput,
 	summarizeVoiceEngineV2Stats,
 	type VoiceEngineV2StatsNetworkSummary,
 	type VoiceEngineV2StatsSummary,
-} from '../policies';
+} from '@fluxer/voice_engine_v2/src/policies';
 import type {
 	VoiceEngineV2AudioInputDevice,
 	VoiceEngineV2AudioOutputDevice,
@@ -19,18 +20,15 @@ import type {
 	VoiceEngineV2Error,
 	VoiceEngineV2HardwareEncoderCapabilities,
 	VoiceEngineV2InboundVideoTrack,
-	VoiceEngineV2LocalStreamSource,
 	VoiceEngineV2MediaModel,
 	VoiceEngineV2Model,
 	VoiceEngineV2Participant,
 	VoiceEngineV2PermissionResult,
 	VoiceEngineV2Stats,
-	VoiceEngineV2StreamNegotiationProjection,
 	VoiceEngineV2Track,
 	VoiceEngineV2WatchedStream,
-} from '../protocol/types';
-import type {SourceLifecycleState} from '../source_isolation/SourceLifecycleState';
-import type {VoiceEngineV2Snapshot} from './state';
+} from '@fluxer/voice_engine_v2/src/protocol/types';
+import type {SourceLifecycleState} from '@fluxer/voice_engine_v2/src/source_isolation/SourceLifecycleState';
 
 export interface VoiceEngineV2ParticipantProjection {
 	participants: Array<VoiceEngineV2Participant>;
@@ -129,27 +127,6 @@ export function selectVoiceEngineV2ParticipantProjection(
 
 export function selectVoiceEngineV2WatchedStreams(snapshot: VoiceEngineV2Snapshot): Array<VoiceEngineV2WatchedStream> {
 	return Object.values(snapshot.watchedStreams);
-}
-
-export function selectVoiceEngineV2StreamNegotiation(
-	snapshot: VoiceEngineV2Snapshot,
-	source: VoiceEngineV2LocalStreamSource,
-): VoiceEngineV2StreamNegotiationProjection | null {
-	const stream = snapshot.codecNegotiation.streams[source];
-	if (!stream) return null;
-	const media = source === 'camera' ? snapshot.camera : snapshot.screen;
-	const publishedCodec = media.status === 'published' ? (media.published?.codec ?? null) : null;
-	const renegotiating =
-		media.status === 'publishing' || (publishedCodec !== null && publishedCodec !== stream.negotiatedCodec);
-	return {
-		source,
-		streamIdentity: stream.streamIdentity,
-		negotiatedCodec: stream.negotiatedCodec,
-		preferredCodec: stream.preferredCodec,
-		constrainedBy: stream.constrainedBy,
-		renegotiating,
-		viewerCount: Object.keys(stream.viewers).length,
-	};
 }
 
 export function selectVoiceEngineV2DeviceProjection(snapshot: VoiceEngineV2Snapshot): VoiceEngineV2DeviceProjection {

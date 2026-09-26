@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {APIWorkerLaneName, APIWorkerMode} from '../config/APIConfig';
+import type {APIWorkerLaneName, APIWorkerMode} from '@app/api/config/APIConfig';
 
 interface LaneSettings {
 	readonly consumerName: string;
 	readonly tasks: ReadonlyArray<string>;
+	readonly retiredTasks: ReadonlyArray<string>;
 	readonly concurrency: number;
 	readonly maxAckPending: number;
 	readonly ackWaitMs: number;
@@ -15,6 +16,7 @@ const LANE_CONFIG = {
 	realtime: {
 		consumerName: 'workers_realtime',
 		tasks: ['handleMentions', 'handleMentionChunk'] as const,
+		retiredTasks: [],
 		concurrency: 10,
 		maxAckPending: 50,
 		ackWaitMs: 15000,
@@ -23,6 +25,7 @@ const LANE_CONFIG = {
 	unfurl: {
 		consumerName: 'workers_unfurl',
 		tasks: ['extractEmbeds'] as const,
+		retiredTasks: [],
 		concurrency: 20,
 		maxAckPending: 200,
 		ackWaitMs: 30000,
@@ -32,7 +35,6 @@ const LANE_CONFIG = {
 		consumerName: 'workers_lifecycle',
 		tasks: [
 			'processStripeWebhook',
-			'sendScheduledMessage',
 			'sendSystemDm',
 			'userProcessPendingDeletion',
 			'userProcessPendingDeletions',
@@ -48,14 +50,15 @@ const LANE_CONFIG = {
 			'harvestUserData',
 			'batchGuildAuditLogMessageDeletes',
 			'reconcileUserPayments',
-			'revalidateUserConnections',
 			'bulkUpdateUserFlags',
 			'bulkUpdateSuspiciousActivityFlags',
 			'bulkScheduleUserDeletion',
 			'bulkUpdateGuildFeatures',
 			'bulkAddGuildMembers',
 			'bulkBanFileShas',
+			'bulkDeleteMessagesForUsers',
 		] as const,
+		retiredTasks: ['sendScheduledMessage'],
 		concurrency: 8,
 		maxAckPending: 50,
 		ackWaitMs: 60000,
@@ -65,15 +68,15 @@ const LANE_CONFIG = {
 		consumerName: 'workers_batch',
 		tasks: [
 			'expireAttachments',
+			'expireStaleJobs',
 			'indexChannelMessages',
 			'indexGuildMembers',
 			'processAssetDeletionQueue',
-			'processBunnyPurgeQueue',
+			'processCachePurgeQueue',
 			'processExpiredPremiumSweep',
 			'processInactivityDeletions',
 			'processPendingBulkMessageDeletions',
 			'processPremiumStateReconciliationQueue',
-			'processScheduledJobQueue',
 			'prunePostgresKvTtl',
 			'refreshSearchIndex',
 			'syncDiscoveryIndex',
@@ -82,6 +85,7 @@ const LANE_CONFIG = {
 			'syncFileShaBlocklists',
 			'flushUserActivityBuffer',
 		] as const,
+		retiredTasks: [],
 		concurrency: 12,
 		maxAckPending: 100,
 		ackWaitMs: 120000,
@@ -95,6 +99,7 @@ interface WorkerLaneDefinition {
 	name: APIWorkerLaneName;
 	consumerName: string;
 	taskTypes: ReadonlyArray<WorkerTaskName>;
+	retiredTaskTypes: ReadonlyArray<string>;
 	concurrency: number;
 	maxAckPending: number;
 	ackWaitMs: number;
@@ -114,6 +119,7 @@ function makeLane(name: APIWorkerLaneName): WorkerLaneDefinition {
 		name,
 		consumerName: config.consumerName,
 		taskTypes: config.tasks,
+		retiredTaskTypes: config.retiredTasks,
 		concurrency: config.concurrency,
 		maxAckPending: config.maxAckPending,
 		ackWaitMs: config.ackWaitMs,
@@ -163,6 +169,7 @@ function resolveSingleTaskLane(taskName: WorkerTaskName | undefined): WorkerLane
 		name: parentLane.name,
 		consumerName: `worker_${taskName}`,
 		taskTypes: [taskName],
+		retiredTaskTypes: [],
 		concurrency: parentLane.concurrency,
 		maxAckPending: parentLane.maxAckPending,
 		ackWaitMs: parentLane.ackWaitMs,
@@ -215,13 +222,6 @@ function resolveWorkerLanes(config: WorkerLaneRuntimeConfig): Array<WorkerLaneDe
 	});
 }
 
-const SCHEDULED_JOB_DRAIN_INTERVALS_PER_ACK_WAIT = 2;
-
-function resolveScheduledJobDrainIntervalSeconds(): number {
-	const minimumAckWaitMs = Math.min(...WORKER_LANES.map((lane) => lane.ackWaitMs));
-	return Math.max(1, Math.floor(minimumAckWaitMs / SCHEDULED_JOB_DRAIN_INTERVALS_PER_ACK_WAIT / 1000));
-}
-
 function resolveCronSchedulerEnabled(mode: APIWorkerMode, configuredValue: boolean | undefined): boolean {
 	if (configuredValue !== undefined) {
 		return configuredValue;
@@ -241,6 +241,12 @@ function validateLaneCompleteness(registeredTasks: Record<string, unknown>): voi
 	if (missingFromRegistry.length > 0) {
 		errors.push(`Lane tasks not found in registry: ${missingFromRegistry.join(', ')}`);
 	}
+	const retiredCollisions = WORKER_LANES.flatMap<string>((lane) => [...lane.retiredTaskTypes]).filter((task) =>
+		registeredTaskNames.has(task),
+	);
+	if (retiredCollisions.length > 0) {
+		errors.push(`Retired tasks registered again: ${retiredCollisions.join(', ')}`);
+	}
 	if (errors.length > 0) {
 		throw new Error(`Worker lane configuration mismatch:\n${errors.join('\n')}`);
 	}
@@ -254,10 +260,4 @@ export function findLaneForTask(taskName: string): APIWorkerLaneName | null {
 }
 
 export type {WorkerLaneDefinition};
-export {
-	resolveCronSchedulerEnabled,
-	resolveScheduledJobDrainIntervalSeconds,
-	resolveWorkerLanes,
-	validateLaneCompleteness,
-	WORKER_LANES,
-};
+export {resolveCronSchedulerEnabled, resolveWorkerLanes, validateLaneCompleteness, WORKER_LANES};

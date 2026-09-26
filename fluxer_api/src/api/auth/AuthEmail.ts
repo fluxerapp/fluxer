@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {ApiContext} from '@app/api/ApiContext';
+import {createEmailVerificationToken} from '@app/api/BrandedTypes';
+import type {User} from '@app/api/models/User';
+import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
+import * as RandomUtils from '@app/api/utils/RandomUtils';
 import {SuspiciousActivityFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {BotUserAuthEndpointAccessDeniedError} from '@fluxer/errors/src/domains/auth/BotUserAuthEndpointAccessDeniedError';
 import {RateLimitError} from '@fluxer/errors/src/domains/core/RateLimitError';
 import type {VerifyEmailRequest} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {ms} from 'itty-time';
-import type {ApiContext} from '../ApiContext';
-import {createEmailVerificationToken} from '../BrandedTypes';
-import {Logger} from '../Logger';
-import type {User} from '../models/User';
-import {getUserSearchService} from '../SearchFactory';
-import {mapUserToPrivateResponse} from '../user/UserMappers';
-import * as RandomUtils from '../utils/RandomUtils';
 
 export const EMAIL_CLEARABLE_SUSPICIOUS_ACTIVITY_FLAGS =
 	SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL |
@@ -38,7 +36,11 @@ export async function verifyEmail(ctx: ApiContext, data: VerifyEmailRequest): Pr
 		return false;
 	}
 	assertNonBotUser(user);
-	if (user.flags & UserFlags.DELETED) {
+	if (
+		user.flags & UserFlags.DELETED ||
+		!user.email ||
+		user.email.trim().toLowerCase() !== tokenData.email.trim().toLowerCase()
+	) {
 		return false;
 	}
 	const updates: {
@@ -57,12 +59,6 @@ export async function verifyEmail(ctx: ApiContext, data: VerifyEmailRequest): Pr
 	}
 	const updatedUser = await users.patchUpsert(user.id, updates, user.toRow());
 	await users.deleteEmailVerificationToken(data.token);
-	const userSearchService = getUserSearchService();
-	if (userSearchService && 'updateUser' in userSearchService) {
-		await userSearchService.updateUser(updatedUser).catch((error) => {
-			Logger.error({userId: user.id, error}, 'Failed to update user in search');
-		});
-	}
 	await gateway.dispatchPresence({
 		userId: user.id,
 		event: 'USER_UPDATE',

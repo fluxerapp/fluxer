@@ -2,22 +2,21 @@
 
 import assert from 'node:assert/strict';
 import Config from '@app/features/app/config/Config';
-import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
-import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import {getCachedDesktopTroubleshootingSettings} from '@app/features/devtools/utils/DesktopTroubleshootingUtils';
 import type {AppMetricsSnapshot, DesktopInfo, GpuInfo} from '@app/features/platform/types/Electron';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
-import AdaptiveScreenShareEngine from '@app/features/voice/engine/AdaptiveScreenShareEngine';
 import MediaEngine, {useMediaEngineVersion} from '@app/features/voice/engine/MediaEngineFacade';
 import ScreenShareCodecNegotiation, {
 	getScreenShareCodecPreferenceOrder,
 } from '@app/features/voice/engine/ScreenShareCodecNegotiation';
-import {getScreenShareAudioPumpDiagnostics} from '@app/features/voice/engine/v2/VoiceEngineV2AppScreenShareAudioPump';
+import {getPublishedScreenShareMaxBitrateBps} from '@app/features/voice/engine/voice_screen_share_manager/shared';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
 import {getNativeAudioCaptureDiagnosticState} from '@app/features/voice/utils/NativeAudioCaptureBridge';
-import {resolveStreamingModeSettings} from '@app/features/voice/utils/ScreenShareOptions';
+import {getScreenShareBitrateBps, resolveStreamingModeSettings} from '@app/features/voice/utils/ScreenShareOptions';
+import {hasHigherVideoQuality} from '@app/features/voice/utils/VideoQualityEntitlement';
 import {
 	buildVoiceStatsForNerdsPresentation,
+	collectScreenShareAudioPublicationDiagnostics,
 	type StatsForNerdsData,
 } from '@app/features/voice/utils/VoiceStatsForNerdsPresenter';
 import type {VoiceEngineV2PerTrackStats, VoiceEngineV2TransportInfo} from '@fluxer/voice_engine_v2';
@@ -75,7 +74,7 @@ function formatTransportSummary(transport: VoiceEngineV2TransportInfo | null): s
 }
 
 export function formatResolution(track: VoiceEngineV2PerTrackStats | null): string {
-	if (!track || !track.frameWidth || !track.frameHeight) return 'n/a';
+	if (!track?.frameWidth || !track.frameHeight) return 'n/a';
 	return `${track.frameWidth}x${track.frameHeight}`;
 }
 
@@ -102,18 +101,6 @@ function getSystemInfo(): StatsForNerdsData['system'] {
 		jsHeapTotalMB: mem ? Math.round((mem.totalJSHeapSize / 1048576) * 10) / 10 : null,
 		jsHeapLimitMB: mem ? Math.round((mem.jsHeapSizeLimit / 1048576) * 10) / 10 : null,
 	};
-}
-
-function hasHigherVideoQuality(): boolean {
-	return isLimitToggleEnabled(
-		{
-			feature_higher_video_quality: LimitResolver.resolve({
-				key: 'feature_higher_video_quality',
-				fallback: 0,
-			}),
-		},
-		'feature_higher_video_quality',
-	);
 }
 
 export function useStatsForNerds({enabled = true}: UseStatsForNerdsOptions = {}): StatsForNerdsData {
@@ -169,7 +156,6 @@ export function useStatsForNerds({enabled = true}: UseStatsForNerdsOptions = {})
 			clearInterval(id);
 		};
 	}, [enabled]);
-	const adaptiveQualitySnapshot = AdaptiveScreenShareEngine.qualitySnapshot;
 	const effectiveScreenShareSettings = resolveStreamingModeSettings(
 		VoiceSettings.getStreamingMode(),
 		VoiceSettings.getScreenshareResolution(),
@@ -214,28 +200,21 @@ export function useStatsForNerds({enabled = true}: UseStatsForNerdsOptions = {})
 			codecPreferenceOrder: [...getScreenShareCodecPreferenceOrder()],
 			contentHint: VoiceSettings.getScreenShareContentHint(),
 			encoderMode: VoiceSettings.getScreenShareEncoderMode(),
-			softwareQuality: VoiceSettings.getScreenShareSoftwareQuality(),
 			scalabilityMode: VoiceSettings.getScreenShareScalabilityMode(),
-			backupCodecMode: VoiceSettings.getScreenShareBackupCodecMode(),
-			maxBitrateMbps: VoiceSettings.getScreenShareMaxBitrateMbps(),
-			adaptiveQuality: VoiceSettings.getAdaptiveScreenShareQuality(),
-			adaptiveQualityAdapted: adaptiveQualitySnapshot.isAdapted,
-			adaptiveQualityConfiguredResolution: adaptiveQualitySnapshot.configuredResolution,
-			adaptiveQualityConfiguredFrameRate: adaptiveQualitySnapshot.configuredFrameRate,
-			adaptiveQualityEffectiveResolution: adaptiveQualitySnapshot.effectiveResolution,
-			adaptiveQualityEffectiveFrameRate: adaptiveQualitySnapshot.effectiveFrameRate,
-			adaptiveQualityLimitationReason: adaptiveQualitySnapshot.limitationReason,
+			maxBitrateMbps:
+				(getPublishedScreenShareMaxBitrateBps(localParticipant) ??
+					getScreenShareBitrateBps(effectiveScreenShareSettings.resolution, effectiveScreenShareSettings.frameRate)) /
+				1000000,
 			audioSourceMode: VoiceSettings.getScreenShareAudioSourceMode(),
 			audioIncludeSources: VoiceSettings.getScreenShareAudioIncludeSources(),
 			audioExcludeSources: VoiceSettings.getScreenShareAudioExcludeSources(),
 			shareDesktopAudio: VoiceSettings.getShareDesktopAudio(),
 			shareAppAudio: VoiceSettings.getShareAppAudio(),
 			muteStreamAudio: VoiceSettings.getMuteStreamAudio(),
-			openH264Enabled: VoiceSettings.getOpenH264Enabled(),
 		},
 		screenShareAudioCapture: {
-			pump: getScreenShareAudioPumpDiagnostics(),
 			nativeCapture: getNativeAudioCaptureDiagnosticState(),
+			publications: collectScreenShareAudioPublicationDiagnostics(localParticipant),
 		},
 		appInfo: {
 			appVersion: Config.PUBLIC_BUILD_VERSION ?? 'dev',

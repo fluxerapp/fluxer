@@ -135,8 +135,8 @@ export const LocalParticipantControls = observer(() => {
 			if (!isConnected || !isScreenShareEnabled) return;
 			event.preventDefault();
 			event.stopPropagation();
-			const shareContext = ActiveScreenShareSource.getSourceId()?.startsWith('window:') ? 'app' : 'display';
-			const shareContextResolved = ActiveScreenShareSource.getSourceId() != null;
+			const shareContext = ActiveScreenShareSource.getShareContext() ?? 'display';
+			const shareContextResolved = ActiveScreenShareSource.getPublishedSource() != null;
 			ContextMenuCommands.openFromEvent(event, ({onClose}) => (
 				<ActiveScreenShareMenu
 					onClose={onClose}

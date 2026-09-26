@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {GuildMember} from '@app/api/models/GuildMember';
+import type {User} from '@app/api/models/User';
 import type {SearchableGuildMember} from '@fluxer/schema/src/contracts/search/SearchDocumentTypes';
 import {extractTimestampFromSnowflake} from '@fluxer/snowflake/src/SnowflakeUtils';
-import type {GuildMember} from '../../models/GuildMember';
-import type {User} from '../../models/User';
 
 const MIN_USERNAME_SUFFIX_LENGTH = 2;
 

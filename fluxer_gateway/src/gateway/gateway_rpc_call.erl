@@ -19,10 +19,11 @@ execute_method(<<"call.update_region">>, #{
     <<"channel_id">> := ChannelIdBin, <<"region">> := Region
 }) ->
     handle_call_update_region(ChannelIdBin, Region);
-execute_method(<<"call.ring">>, #{
-    <<"channel_id">> := ChannelIdBin, <<"recipients">> := RecipientsBin
-}) ->
-    handle_call_ring(ChannelIdBin, RecipientsBin);
+execute_method(
+    <<"call.ring">>,
+    #{<<"channel_id">> := ChannelIdBin, <<"recipients">> := RecipientsBin} = Params
+) ->
+    handle_call_ring(ChannelIdBin, RecipientsBin, Params);
 execute_method(<<"call.stop_ringing">>, #{
     <<"channel_id">> := ChannelIdBin, <<"recipients">> := RecipientsBin
 }) ->
@@ -117,14 +118,31 @@ handle_call_create(Params) ->
     MessageId = validation:snowflake_or_throw(<<"message_id">>, MessageIdBin),
     Ringing = validation:snowflake_list_or_throw(<<"ringing">>, RingingBins),
     Recipients = validation:snowflake_list_or_throw(<<"recipients">>, RecipientsBins),
-    CallData = #{
-        channel_id => ChannelId,
-        message_id => MessageId,
-        region => Region,
-        ringing => Ringing,
-        recipients => Recipients
-    },
+    CallData = maps:merge(
+        #{
+            channel_id => ChannelId,
+            message_id => MessageId,
+            region => Region,
+            ringing => Ringing,
+            recipients => Recipients
+        },
+        caller_params(Params)
+    ),
     do_call_create(ChannelId, CallData).
+
+-spec caller_params(map()) -> map().
+caller_params(Params) ->
+    #{
+        caller_id => snowflake_id:parse_maybe(maps:get(<<"caller_id">>, Params, undefined)),
+        caller_name => optional_binary(maps:get(<<"caller_name">>, Params, undefined)),
+        caller_avatar => optional_binary(maps:get(<<"caller_avatar">>, Params, undefined))
+    }.
+
+-spec optional_binary(term()) -> binary() | undefined.
+optional_binary(Value) when is_binary(Value), byte_size(Value) > 0 ->
+    Value;
+optional_binary(_Value) ->
+    undefined.
 
 -spec handle_call_update_region(binary(), binary()) -> term().
 handle_call_update_region(ChannelIdBin, Region) ->
@@ -142,16 +160,18 @@ update_region(Pid, Region) ->
         _ -> gateway_rpc_error:raise(<<"update_region_error">>)
     end.
 
--spec handle_call_ring(binary(), list()) -> term().
-handle_call_ring(ChannelIdBin, RecipientsBin) ->
+-spec handle_call_ring(binary(), list(), map()) -> term().
+handle_call_ring(ChannelIdBin, RecipientsBin, Params) ->
     ChannelId = validation:snowflake_or_throw(<<"channel_id">>, ChannelIdBin),
     Recipients = validation:snowflake_list_or_throw(<<"recipients">>, RecipientsBin),
+    Caller = caller_params(Params),
     gateway_rpc_call_lookup:with_call(ChannelId, fun(Pid) ->
-        ring_recipients(Pid, Recipients)
+        ring_recipients(Pid, Recipients, Caller)
     end).
 
--spec ring_recipients(pid(), [integer()]) -> true.
-ring_recipients(Pid, Recipients) ->
+-spec ring_recipients(pid(), [integer()], map()) -> true.
+ring_recipients(Pid, Recipients, Caller) ->
+    ok = set_call_caller(Pid, Caller),
     case
         gateway_rpc_call_lookup:safe_gen_server_call(
             Pid, {ring_recipients, Recipients}, ?CALL_LOOKUP_TIMEOUT
@@ -160,6 +180,13 @@ ring_recipients(Pid, Recipients) ->
         {ok, ok} -> true;
         _ -> gateway_rpc_error:raise(<<"ring_recipients_error">>)
     end.
+
+-spec set_call_caller(pid(), map()) -> ok.
+set_call_caller(_Pid, #{caller_id := undefined}) ->
+    ok;
+set_call_caller(Pid, Caller) ->
+    gen_server:cast(Pid, {set_caller, Caller}),
+    ok.
 
 -spec handle_call_stop_ringing(binary(), list()) -> term().
 handle_call_stop_ringing(ChannelIdBin, RecipientsBin) ->

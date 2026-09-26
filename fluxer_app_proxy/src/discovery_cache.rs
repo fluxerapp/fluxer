@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::config::HttpEndpoint;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -12,6 +13,26 @@ const COLD_START_RETRY_COOLDOWN: Duration = Duration::from_secs(10);
 pub struct DiscoveryResponse {
     #[serde(flatten)]
     pub data: serde_json::Value,
+}
+
+pub fn discovery_endpoint(
+    discovery: &DiscoveryResponse,
+    key: &'static str,
+) -> Option<HttpEndpoint> {
+    let raw = discovery
+        .data
+        .get("endpoints")
+        .and_then(|endpoints| endpoints.get(key))
+        .and_then(|value| value.as_str())
+        .map(str::trim)
+        .filter(|value| !value.is_empty())?;
+    match HttpEndpoint::parse(key, raw) {
+        Ok(endpoint) => Some(endpoint),
+        Err(error) => {
+            tracing::warn!(%error, "ignoring invalid discovery endpoint");
+            None
+        }
+    }
 }
 
 pub struct DiscoveryCache {
@@ -89,6 +110,10 @@ impl DiscoveryCache {
         self.cached.read().await.clone()
     }
 
+    pub async fn has_snapshot(&self) -> bool {
+        self.cached.read().await.is_some()
+    }
+
     pub fn start_background_refresh(
         self: &Arc<Self>,
         client: reqwest::Client,
@@ -146,6 +171,15 @@ mod tests {
     async fn default_cache_starts_with_none() {
         let cache = DiscoveryCache::default();
         assert!(cache.get().await.is_none());
+    }
+
+    #[tokio::test]
+    async fn a_seeded_cache_reports_a_snapshot_without_cloning_it() {
+        let cache = DiscoveryCache::new();
+        assert!(!cache.has_snapshot().await);
+        *cache.cached.write().await =
+            Some(serde_json::from_str(r#"{"api_code_version":"v1"}"#).unwrap());
+        assert!(cache.has_snapshot().await);
     }
 
     #[tokio::test]

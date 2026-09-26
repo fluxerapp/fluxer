@@ -4,7 +4,7 @@ import {ConfirmModal} from '@app/features/app/components/dialogs/ConfirmModal';
 import {CANCEL_DESCRIPTOR, CLOSE_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import Users from '@app/features/user/state/Users';
 import {msg} from '@lingui/core/macro';
-import {Trans, useLingui} from '@lingui/react/macro';
+import {Plural, Trans, useLingui} from '@lingui/react/macro';
 import {observer} from 'mobx-react-lite';
 import {useMemo} from 'react';
 
@@ -84,13 +84,17 @@ export const UnaddableRecipientsConfirmModal = observer(
 				<ul data-flx="channel.unaddable-recipients-confirm-modal.ul">
 					{rows.map((row) => (
 						<li key={row.userId} data-flx="channel.unaddable-recipients-confirm-modal.li">
-							<strong data-flx="channel.unaddable-recipients-confirm-modal.strong">{row.name}</strong>: {row.reasonText}
+							<strong data-flx="channel.unaddable-recipients-confirm-modal.strong">{row.name}</strong>
+							<span data-flx="channel.unaddable-recipients-confirm-modal.span">{`: ${row.reasonText}`}</span>
 						</li>
 					))}
 				</ul>
 				{addableCount > 0 ? (
 					<p data-flx="channel.unaddable-recipients-confirm-modal.p--2">
-						<Trans>Create the group DM with the remaining {addableCount} recipient(s) and skip the others?</Trans>
+						<Trans>
+							Create the group DM with the remaining{' '}
+							<Plural value={addableCount} one="# recipient" other="# recipients" /> and skip the others?
+						</Trans>
 					</p>
 				) : (
 					<p data-flx="channel.unaddable-recipients-confirm-modal.p--3">

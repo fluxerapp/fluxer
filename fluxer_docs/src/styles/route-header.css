@@ -1,0 +1,112 @@
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+flx-route-header {
+	display: block;
+	margin: 0.25rem 0 0;
+}
+
+flx-route-line {
+	display: flex;
+	align-items: center;
+	flex-wrap: nowrap;
+	gap: 0;
+	max-width: 100%;
+	font-family: var(--__sl-font-mono);
+}
+
+flx-route-line .route-method {
+	display: inline-flex;
+	align-items: center;
+	flex: 0 0 auto;
+	margin: 0;
+	border: 2px solid var(--flx-method-border);
+	border-radius: 0.75rem;
+	padding: 0.25rem 0.5rem;
+	font-size: var(--sl-text-sm);
+	font-weight: 500;
+	line-height: 1.25rem;
+	text-transform: uppercase;
+	background-color: var(--flx-method-bg);
+	color: var(--flx-method-fg);
+}
+
+flx-route-line .route-method[data-method='GET'] {
+	--flx-method-bg: var(--flx-method-get-bg);
+	--flx-method-border: var(--flx-method-get-border);
+	--flx-method-fg: var(--flx-method-get-fg);
+}
+
+flx-route-line .route-method[data-method='POST'] {
+	--flx-method-bg: var(--flx-method-post-bg);
+	--flx-method-border: var(--flx-method-post-border);
+	--flx-method-fg: var(--flx-method-post-fg);
+}
+
+flx-route-line .route-method[data-method='PATCH'] {
+	--flx-method-bg: var(--flx-method-patch-bg);
+	--flx-method-border: var(--flx-method-patch-border);
+	--flx-method-fg: var(--flx-method-patch-fg);
+}
+
+flx-route-line .route-method[data-method='PUT'] {
+	--flx-method-bg: var(--flx-method-put-bg);
+	--flx-method-border: var(--flx-method-put-border);
+	--flx-method-fg: var(--flx-method-put-fg);
+}
+
+flx-route-line .route-method[data-method='DELETE'] {
+	--flx-method-bg: var(--flx-method-delete-bg);
+	--flx-method-border: var(--flx-method-delete-border);
+	--flx-method-fg: var(--flx-method-delete-fg);
+}
+
+flx-route-line .route-method[data-method='HEAD'] {
+	--flx-method-bg: var(--flx-method-head-bg);
+	--flx-method-border: var(--flx-method-head-border);
+	--flx-method-fg: var(--flx-method-head-fg);
+}
+
+flx-route-line .route-path {
+	display: block;
+	min-width: 0;
+	margin: 0;
+	padding: 0.5rem;
+	border-radius: 0;
+	background: transparent;
+	font-size: var(--sl-text-base);
+	line-height: 1.5rem;
+	color: var(--flx-content-text);
+	word-break: break-all;
+}
+
+flx-route-line .route-path [data-param] {
+	color: var(--flx-link);
+	font-style: normal;
+}
+
+flx-route-capabilities {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin-top: 0.5rem;
+}
+
+.route-capability {
+	display: inline-flex;
+	align-items: center;
+	border-radius: var(--flx-radius-pill);
+	padding: 0.125rem 0.625rem;
+	font-family: var(--__sl-font-mono);
+	font-size: var(--sl-text-xs);
+	font-weight: 500;
+	line-height: 1.6;
+	background-color: var(--flx-badge-bg);
+	color: var(--flx-badge-text);
+	text-decoration: none;
+	white-space: nowrap;
+}
+
+a.route-capability:hover {
+	background-color: var(--flx-sidebar-hover-bg);
+	color: var(--flx-sidebar-hover-text);
+}

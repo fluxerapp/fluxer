@@ -1,26 +1,26 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
-import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
-import {HttpResponse, http} from 'msw';
-import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {createUserID} from '../../BrandedTypes';
-import {Config} from '../../Config';
-import {clearDonationTestEmails, listDonationTestEmails} from '../../donation/tests/DonationTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createUserID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
+import {clearDonationTestEmails, listDonationTestEmails} from '@app/api/donation/tests/DonationTestUtils';
+import {ProductType} from '@app/api/stripe/ProductRegistry';
+import {setupSyncStripeWebhookWorker} from '@app/api/stripe/tests/StripeWebhookTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {
 	createCheckoutCompletedEvent,
 	createMockWebhookPayload,
 	createStripeApiHandlers,
 	type StripeApiHandlers,
 	type StripeWebhookEventData,
-} from '../../test/msw/handlers/StripeApiHandlers';
-import {server} from '../../test/msw/server';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {ProductType} from '../ProductRegistry';
-import {setupSyncStripeWebhookWorker} from './StripeWebhookTestUtils';
+} from '@app/api/test/msw/handlers/StripeApiHandlers';
+import {server} from '@app/api/test/msw/server';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
+import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
+import {HttpResponse, http} from 'msw';
+import {afterAll, afterEach, beforeAll, beforeEach, describe, expect, test} from 'vitest';
 
 const MOCK_PRICES = {
 	monthlyUsd: 'price_monthly_usd',
@@ -194,8 +194,8 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 		test('processes completed premium checkout session successfully', async () => {
 			const account = await createTestAccount(harness);
 			const sessionId = 'cs_premium_success_123';
-			const {PaymentRepository} = await import('../../user/repositories/PaymentRepository');
-			const {UserRepository} = await import('../../user/repositories/UserRepository');
+			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			await paymentRepository.createPayment({
@@ -229,8 +229,8 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 		test('allows localized BRL checkout when the card is issued in Brazil', async () => {
 			const account = await createTestAccount(harness);
 			const sessionId = 'cs_localized_brl_card_br';
-			const {PaymentRepository} = await import('../../user/repositories/PaymentRepository');
-			const {UserRepository} = await import('../../user/repositories/UserRepository');
+			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			await paymentRepository.createPayment({
@@ -268,8 +268,8 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 		test('allows localized BRL PIX subscription checkout when checkout.session.completed has no payment intent', async () => {
 			const account = await createTestAccount(harness);
 			const sessionId = 'cs_localized_brl_pix_subscription';
-			const {PaymentRepository} = await import('../../user/repositories/PaymentRepository');
-			const {UserRepository} = await import('../../user/repositories/UserRepository');
+			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			await paymentRepository.createPayment({
@@ -313,8 +313,8 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 		test('allows localized TRY card subscription checkout when checkout.session.completed has no payment intent', async () => {
 			const account = await createTestAccount(harness);
 			const sessionId = 'cs_localized_try_card_no_payment_intent';
-			const {PaymentRepository} = await import('../../user/repositories/PaymentRepository');
-			const {UserRepository} = await import('../../user/repositories/UserRepository');
+			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			await paymentRepository.createPayment({
@@ -413,8 +413,8 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 		test('rejects localized BRL checkout when the card is issued outside Brazil', async () => {
 			const account = await createTestAccount(harness);
 			const sessionId = 'cs_localized_brl_card_us';
-			const {PaymentRepository} = await import('../../user/repositories/PaymentRepository');
-			const {UserRepository} = await import('../../user/repositories/UserRepository');
+			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			await paymentRepository.createPayment({
@@ -580,8 +580,8 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 		test('updates user with Stripe customer ID on first purchase', async () => {
 			const account = await createTestAccount(harness);
 			const sessionId = 'cs_first_purchase_customer_123';
-			const {PaymentRepository} = await import('../../user/repositories/PaymentRepository');
-			const {UserRepository} = await import('../../user/repositories/UserRepository');
+			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			await paymentRepository.createPayment({
@@ -605,8 +605,8 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 		});
 		test('processes duplicate checkout delivery idempotently across concurrency and retry', async () => {
 			const account = await createTestAccount(harness);
-			const {PaymentRepository} = await import('../../user/repositories/PaymentRepository');
-			const {UserRepository} = await import('../../user/repositories/UserRepository');
+			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			await paymentRepository.createPayment({
@@ -666,8 +666,8 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 		test('skips already processed payment', async () => {
 			const account = await createTestAccount(harness);
 			const sessionId = 'cs_already_completed_123';
-			const {PaymentRepository} = await import('../../user/repositories/PaymentRepository');
-			const {UserRepository} = await import('../../user/repositories/UserRepository');
+			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			await paymentRepository.createPayment({
@@ -738,8 +738,8 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 		test('handles gift purchase correctly', async () => {
 			const account = await createTestAccount(harness);
 			const sessionId = 'cs_gift_purchase_123';
-			const {PaymentRepository} = await import('../../user/repositories/PaymentRepository');
-			const {UserRepository} = await import('../../user/repositories/UserRepository');
+			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			await paymentRepository.createPayment({
@@ -770,8 +770,8 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 		test('allows localized BRL gift checkout when the card is issued in Brazil', async () => {
 			const account = await createTestAccount(harness);
 			const sessionId = 'cs_gift_brl_card_br';
-			const {PaymentRepository} = await import('../../user/repositories/PaymentRepository');
-			const {UserRepository} = await import('../../user/repositories/UserRepository');
+			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			await paymentRepository.createPayment({
@@ -802,8 +802,8 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 		test('rejects localized BRL gift checkout when the card is issued outside Brazil', async () => {
 			const account = await createTestAccount(harness);
 			const sessionId = 'cs_gift_brl_card_us';
-			const {PaymentRepository} = await import('../../user/repositories/PaymentRepository');
-			const {UserRepository} = await import('../../user/repositories/UserRepository');
+			const {PaymentRepository} = await import('@app/api/user/repositories/PaymentRepository');
+			const {UserRepository} = await import('@app/api/user/repositories/UserRepository');
 			const paymentRepository = new PaymentRepository();
 			const userRepository = new UserRepository();
 			await paymentRepository.createPayment({
@@ -849,7 +849,7 @@ describe('StripeWebhookService - checkout.session.completed', () => {
 			});
 			const result = await sendWebhook(eventData);
 			expect(result.received).toBe(true);
-			const {DonationRepository} = await import('../../donation/DonationRepository');
+			const {DonationRepository} = await import('@app/api/donation/DonationRepository');
 			const donationRepository = new DonationRepository();
 			const donor = await donationRepository.findDonorByEmail(donationEmail);
 			expect(donor).not.toBeNull();

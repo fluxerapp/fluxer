@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
+import {HTTP_STATUS} from '@app/api/test/TestConstants';
+import {createBuilder} from '@app/api/test/TestRequestBuilder';
+import {fetchUser, fetchUserMe, updateUserProfile} from '@app/api/user/tests/UserTestUtils';
 import {PublicUserFlags, UserFlags} from '@fluxer/constants/src/UserConstants';
 import {afterAll, beforeAll, beforeEach, describe, expect, test} from 'vitest';
-import {createTestAccount} from '../../auth/tests/AuthTestUtils';
-import {type ApiTestHarness, createApiTestHarness} from '../../test/ApiTestHarness';
-import {HTTP_STATUS} from '../../test/TestConstants';
-import {createBuilder} from '../../test/TestRequestBuilder';
-import {fetchUser, fetchUserMe, updateUserProfile} from './UserTestUtils';
 
 async function setUserFlags(harness: ApiTestHarness, userId: string, flags: bigint): Promise<void> {
 	await createBuilder(harness, '')
@@ -84,12 +84,6 @@ describe('User flags in responses', () => {
 		await setUserFlags(harness, account.userId, UserFlags.SPAMMER | UserFlags.HAS_SESSION_STARTED);
 		const {json} = await fetchUserMe(harness, account.token);
 		expect(json.flags & PublicUserFlags.SPAMMER).toBe(PublicUserFlags.SPAMMER);
-	});
-	test('GET /users/@me includes CTP_MEMBER when set', async () => {
-		const account = await createTestAccount(harness);
-		await setUserFlags(harness, account.userId, UserFlags.CTP_MEMBER);
-		const {json} = await fetchUserMe(harness, account.token);
-		expect(json.flags & PublicUserFlags.CTP_MEMBER).toBe(PublicUserFlags.CTP_MEMBER);
 	});
 	test('PATCH /users/@me does not leak internal flags', async () => {
 		const account = await createTestAccount(harness);

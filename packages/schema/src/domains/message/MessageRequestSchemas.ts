@@ -219,9 +219,9 @@ export const MessageSearchRequest = z.object({
 		.number()
 		.int()
 		.min(1)
-		.max(Number.MAX_SAFE_INTEGER)
+		.max(400)
 		.default(1)
-		.describe('Page number for pagination (ignored when cursor is provided)'),
+		.describe('Page number for pagination (ignored when cursor is provided). Use cursor to page beyond this.'),
 	cursor: z
 		.array(z.string())
 		.optional()
@@ -314,7 +314,6 @@ export const MessageNonceRequest = z
 			.number()
 			.int()
 			.nonnegative()
-			.safe()
 			.transform((value) => value.toString()),
 	])
 	.pipe(createStringType(1, 32))
@@ -473,7 +472,7 @@ export const ChannelPinsQuerySchema = z.object({
 		.max(50)
 		.optional()
 		.describe('Maximum number of pinned messages to return (1-50)'),
-	before: z.coerce.date().optional().describe('Get pinned messages before this timestamp'),
+	before: z.string().pipe(z.coerce.date()).optional().describe('Get pinned messages before this timestamp'),
 });
 
 export type ChannelPinsQuerySchema = z.infer<typeof ChannelPinsQuerySchema>;

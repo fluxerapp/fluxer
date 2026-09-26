@@ -5,6 +5,7 @@ import Channels from '@app/features/channel/state/Channels';
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
 import Guilds from '@app/features/guild/state/Guilds';
 import {GuildMember} from '@app/features/member/models/GuildMember';
+import GuildMembers from '@app/features/member/state/GuildMembers';
 import {getHydratedMemberListRangesFromNormalized} from '@app/features/member/utils/MemberListHydration';
 import {deriveMemberListIdentity} from '@app/features/member/utils/MemberListIdentity';
 import {
@@ -29,7 +30,7 @@ import type {StatusType} from '@fluxer/constants/src/StatusConstants';
 import {StatusTypes} from '@fluxer/constants/src/StatusConstants';
 import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
-import {makeAutoObservable, observable} from 'mobx';
+import {makeAutoObservable, observableRef} from 'mobx';
 
 interface MemberListGroup {
 	id: string;
@@ -257,7 +258,7 @@ class MemberSidebar {
 		>(
 			this,
 			{
-				lists: observable.ref,
+				lists: observableRef,
 				wireListChannelIds: false,
 				listSubscribedChannelIds: false,
 				syncedMemberListGuildIds: false,
@@ -340,6 +341,50 @@ class MemberSidebar {
 		if (this.activeMemberListSubscription?.guildId === guildId) {
 			this.setActiveMemberListSubscription(null);
 		}
+	}
+
+	handleGuildStorageIdentityChange(guildId: string): void {
+		const subscribedChannels = this.listSubscribedChannelIds[guildId];
+		if (subscribedChannels == null) {
+			return;
+		}
+		const existingGuildLists = this.lists[guildId] ?? {};
+		const nextSubscribedChannels: Record<string, string> = {};
+		const changedStorageKeys = new Set<string>();
+		const rekeyedRequestedRanges = new Map<string, NormalizedMemberListRanges>();
+		for (const [previousStorageKey, channelId] of Object.entries(subscribedChannels)) {
+			const storageKey = this.resolveStorageKey(guildId, channelId);
+			nextSubscribedChannels[storageKey] = channelId;
+			if (storageKey === previousStorageKey) {
+				continue;
+			}
+			changedStorageKeys.add(previousStorageKey);
+			changedStorageKeys.add(storageKey);
+			rekeyedRequestedRanges.set(
+				storageKey,
+				existingGuildLists[previousStorageKey]?.requestedRanges ?? EMPTY_MEMBER_LIST_RANGES,
+			);
+		}
+		if (changedStorageKeys.size === 0) {
+			return;
+		}
+		for (const storageKey of changedStorageKeys) {
+			this.clearPendingListUpdateBatch(guildId, storageKey);
+		}
+		const guildLists: Record<string, MemberListState> = {...existingGuildLists};
+		for (const storageKey of changedStorageKeys) {
+			delete guildLists[storageKey];
+		}
+		for (const [storageKey, requestedRanges] of rekeyedRequestedRanges) {
+			guildLists[storageKey] = this.createEmptyListState(requestedRanges);
+		}
+		this.lists = {...this.lists, [guildId]: guildLists};
+		this.listSubscribedChannelIds = {...this.listSubscribedChannelIds, [guildId]: nextSubscribedChannels};
+		this.syncedMemberListGuildIds.delete(guildId);
+		if (this.sentMemberListGuildId === guildId) {
+			this.clearSentMemberListSubscription();
+		}
+		this.memberListSubscriptionGeneration += 1;
 	}
 
 	handleListUpdate(params: MemberListUpdateParams): void {
@@ -651,6 +696,7 @@ class MemberSidebar {
 			}
 			userIdRowCounts.set(userId, (userIdRowCounts.get(userId) ?? 0) + 1);
 			newMembersByUserId.set(userId, member);
+			GuildMembers.hydrateIfMissing(guildId, member);
 			const memberItem = this.convertItem(guildId, row);
 			if (memberItem) {
 				newItems.set(rowIndex, memberItem);

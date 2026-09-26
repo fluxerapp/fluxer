@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {createUserID} from '@app/api/BrandedTypes';
+import {User} from '@app/api/models/User';
+import {checkGuildVerificationWithResponse} from '@app/api/utils/GuildVerificationUtils';
 import {GuildFeatures, GuildVerificationLevel} from '@fluxer/constants/src/GuildConstants';
 import {ProfileFieldPrivacyFlags} from '@fluxer/constants/src/UserConstants';
 import {GuildEmailVerificationRequiredError} from '@fluxer/errors/src/domains/auth/EmailVerificationRequiredError';
@@ -7,9 +10,6 @@ import {GuildPhoneVerificationRequiredError} from '@fluxer/errors/src/domains/au
 import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {describe, expect, it} from 'vitest';
-import {createUserID} from '../BrandedTypes';
-import {User} from '../models/User';
-import {checkGuildVerificationWithResponse} from './GuildVerificationUtils';
 
 const TEST_USER_ID = createUserID(175928847299117063n);
 const TEST_OWNER_ID = createUserID(275928847299117063n);

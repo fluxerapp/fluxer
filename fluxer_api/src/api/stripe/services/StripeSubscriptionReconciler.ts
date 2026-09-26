@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import type {UserID} from '@app/api/BrandedTypes';
+import type {UserRow} from '@app/api/database/types/UserTypes';
+import {Logger} from '@app/api/Logger';
+import type {User} from '@app/api/models/User';
+import type {ProductInfo, ProductRegistry} from '@app/api/stripe/ProductRegistry';
+import {getPrimarySubscriptionItem, getSubscriptionStartDate} from '@app/api/stripe/StripeSubscriptionPeriod';
+import {extractId} from '@app/api/stripe/StripeUtils';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {StripeError} from '@fluxer/errors/src/domains/payment/StripeError';
 import type Stripe from 'stripe';
-import type {UserID} from '../../BrandedTypes';
-import type {UserRow} from '../../database/types/UserTypes';
-import {Logger} from '../../Logger';
-import type {User} from '../../models/User';
-import type {IUserRepository} from '../../user/IUserRepository';
-import type {ProductInfo, ProductRegistry} from '../ProductRegistry';
-import {getPrimarySubscriptionItem, getSubscriptionStartDate} from '../StripeSubscriptionPeriod';
-import {extractId} from '../StripeUtils';
 
 interface InvoiceRenewalContext {
 	userId: UserID;

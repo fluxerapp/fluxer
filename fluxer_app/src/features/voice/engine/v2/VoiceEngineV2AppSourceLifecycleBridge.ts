@@ -2,6 +2,7 @@
 
 import assert from 'node:assert/strict';
 import {Logger} from '@app/features/platform/utils/AppLogger';
+import {createVoiceEngineV2AppDiagnosticsAdapter} from '@app/features/voice/engine/v2/VoiceEngineV2AppDiagnosticsAdapter';
 import type {NativeScreenCaptureLifecycleMessage} from '@app/types/electron.d';
 import {
 	type DiagnosticsPort,
@@ -13,7 +14,6 @@ import {
 	type VoiceEngineV2Event,
 	type VoiceEngineV2SourceLifecycleTransitionedEvent,
 } from '@fluxer/voice_engine_v2';
-import {createVoiceEngineV2AppDiagnosticsAdapter} from './VoiceEngineV2AppDiagnosticsAdapter';
 
 const VALID_LIFECYCLE_KINDS: ReadonlySet<NativeScreenCaptureLifecycleMessage['kind']> = new Set([
 	'error',
@@ -172,12 +172,17 @@ export class VoiceEngineV2AppSourceLifecycleBridge {
 	unbind(captureId: string): boolean {
 		assert.ok(!this.disposed, 'bridge must not be disposed');
 		assertValidString('captureId', captureId, MAX_SOURCE_ID_LENGTH);
+		return this.removeBinding(captureId);
+	}
+
+	private removeBinding(captureId: string): boolean {
 		const binding = this.bindingsByCapture.get(captureId);
 		if (!binding) return false;
 		this.bindingsByCapture.delete(captureId);
 		this.closedCleanLastAtMs.delete(captureId);
 		const removed = this.registry.remove(binding.sourceId);
 		assert.equal(removed, true, 'unbind must remove the registry entry');
+		this.dispatch({type: 'sourceLifecycle.removed', sourceId: binding.sourceId});
 		return true;
 	}
 
@@ -238,15 +243,15 @@ export class VoiceEngineV2AppSourceLifecycleBridge {
 	}
 
 	dispose(): void {
-		const wasDisposed = this.disposed;
-		if (wasDisposed) return;
+		if (this.disposed) return;
 		this.disposed = true;
+		for (const captureId of [...this.bindingsByCapture.keys()]) {
+			this.removeBinding(captureId);
+		}
 		try {
 			this.unsubscribe();
 		} catch {}
-		this.bindingsByCapture.clear();
 		this.closedCleanLastAtMs.clear();
-		assert.equal(this.disposed, true, 'disposed flag must be true after dispose');
 		assert.equal(this.bindingsByCapture.size, 0, 'bindings must be cleared after dispose');
 	}
 

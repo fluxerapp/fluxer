@@ -4,6 +4,7 @@ import styles from '@app/features/ui/focus_ring/FocusRing.module.css';
 import FocusRingContext, {FocusRingContextManager} from '@app/features/ui/focus_ring/FocusRingContext';
 import FocusRingManager from '@app/features/ui/focus_ring/FocusRingManager';
 import {clsx} from 'clsx';
+import {Observer} from 'mobx-react-lite';
 import type * as React from 'react';
 import {useContext, useEffect, useReducer, useRef} from 'react';
 
@@ -55,12 +56,18 @@ function Ring() {
 			resizeObserver.disconnect();
 		};
 	}, [ringContext, targetElement]);
-	if (!FocusRingManager.ringsEnabled || !ringContext.visible) return null;
 	return (
-		<div
-			className={clsx(styles.focusRing, ringContext.className)}
-			style={ringContext.getStyle()}
-			data-flx="ui.focus-ring.focus-ring-scope.ring.focus-ring"
-		/>
+		<Observer data-flx="ui.focus-ring.focus-ring-scope.ring.observer">
+			{() => {
+				if (!FocusRingManager.ringsEnabled || !ringContext.visible) return null;
+				return (
+					<div
+						className={clsx(styles.focusRing, ringContext.className)}
+						style={ringContext.getStyle()}
+						data-flx="ui.focus-ring.focus-ring-scope.ring.focus-ring"
+					/>
+				);
+			}}
+		</Observer>
 	);
 }

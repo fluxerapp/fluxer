@@ -142,7 +142,6 @@ function createPreviewMessage(url: string, embeds: ReadonlyArray<MessageEmbedRes
 			embeds: embeds as Array<MessageEmbed>,
 			attachments: [],
 			stickers: [],
-			nsfw_emojis: [],
 			reactions: [],
 		},
 		{skipUserCache: true},
@@ -208,7 +207,7 @@ const EmbedDebuggerTab: React.FC = observer(() => {
 		() => (previewEmbeds ? createPreviewMessage(submittedUrl, previewEmbeds) : null),
 		[previewEmbeds, submittedUrl],
 	);
-	const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+	const handleSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		if (!trimmedUrl || isSubmitting) return;
 		setIsSubmitting(true);
