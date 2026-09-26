@@ -853,7 +853,7 @@ msgstr "Kanalas {channelName}"
 msgid "{characterCount, plural, one {# character} other {# characters}}"
 msgstr "{characterCount, plural, one {# simbolis} few {# simboliai} other {# simbolių}}"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:79
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:81
 msgid "{clientLabel} wants to connect"
 msgstr "{clientLabel} nori prisijungti"
 
@@ -22807,7 +22807,7 @@ msgstr "Spartusis klavišas nenustatytas"
 msgid "No shortcuts match that search."
 msgstr "Nėra sparčiųjų klavišų, atitinkančių paiešką."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:115
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:117
 msgid "No specific scopes requested."
 msgstr "Nepaprašyta jokių konkrečių prieigos teisių."
 
@@ -27265,7 +27265,7 @@ msgstr "Pirmiausia paprašykite patvirtinimo kodo."
 msgid "Request export"
 msgstr "Prašyti eksporto"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:106
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:108
 msgid "Requested scopes"
 msgstr "Prašomos leidimų sritys"
 
@@ -27967,7 +27967,7 @@ msgstr "Peržiūrėkite leidimus, kuriuos {productName} naudoja balsui, vaizdui,
 msgid "Review these files and try again with smaller or simpler images."
 msgstr "Peržiūrėkite šiuos failus ir bandykite dar kartą su mažesniais ar paprastesniais vaizdais."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:85
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:87
 msgid "Review what this app is asking for before you continue."
 msgstr "Prieš tęsdami peržiūrėkite, ko prašo ši programa."
 
@@ -35106,7 +35106,7 @@ msgstr "Išjungti"
 msgid "Turn off all device cameras"
 msgstr "Išjungti visų įrenginių kameras"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:109
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:111
 msgid "Turn off anything you're not comfortable with. Some features may stop working."
 msgstr "Išjunkite tai, kas jums nepriimtina. Kai kurios funkcijos gali nustoti veikti."
 
@@ -35165,6 +35165,10 @@ msgstr "Įjunkite kamerą arba bendrinkite ekraną šiame balso kanale."
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:172
 msgid "Turn on a camera or share a screen in voice channels."
 msgstr "Įjunkite kamerą arba bendrinkite ekraną balso kanaluose."
+
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:158
+msgid "Turn on at least one scope to authorize this app."
+msgstr "Įjunkite bent vieną sritį, kad galėtumėte įgalioti šią programą."
 
 #. Label for the automatic streaming privacy detection settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:19
@@ -35233,7 +35237,7 @@ msgstr "Įjungta atskirta reklamjuostė"
 msgid "Turned the member's microphone back on in this community"
 msgstr "Vėl įjungtas nario mikrofonas šioje bendruomenėje"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:156
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:163
 msgid "Turning off scopes may prevent the app from working correctly."
 msgstr "Išjungus leidimų sritis, programa gali veikti netinkamai."
 

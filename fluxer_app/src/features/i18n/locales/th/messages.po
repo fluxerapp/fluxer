@@ -853,7 +853,7 @@ msgstr "ช่อง {channelName}"
 msgid "{characterCount, plural, one {# character} other {# characters}}"
 msgstr "{characterCount, plural, one {# ตัวอักษร} other {# ตัวอักษร}}"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:79
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:81
 msgid "{clientLabel} wants to connect"
 msgstr "{clientLabel} ต้องการเชื่อมต่อ"
 
@@ -22807,7 +22807,7 @@ msgstr "ไม่ได้ตั้งค่าปุ่มลัด"
 msgid "No shortcuts match that search."
 msgstr "ไม่มีปุ่มลัดที่ตรงกับการค้นหานั้น"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:115
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:117
 msgid "No specific scopes requested."
 msgstr "ไม่ได้ร้องขอขอบเขตเฉพาะเจาะจง"
 
@@ -27265,7 +27265,7 @@ msgstr "โปรดขอรหัสยืนยันก่อน"
 msgid "Request export"
 msgstr "ขอส่งออกข้อมูล"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:106
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:108
 msgid "Requested scopes"
 msgstr "ขอบเขตที่ร้องขอ"
 
@@ -27967,7 +27967,7 @@ msgstr "ตรวจสอบสิทธิ์ที่ {productName} ใช้
 msgid "Review these files and try again with smaller or simpler images."
 msgstr "ตรวจสอบไฟล์เหล่านี้แล้วลองอีกครั้งด้วยรูปภาพที่เล็กลงหรือเรียบง่ายขึ้น"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:85
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:87
 msgid "Review what this app is asking for before you continue."
 msgstr "ตรวจสอบคำขอของแอปนี้ก่อนดำเนินการต่อ"
 
@@ -35106,7 +35106,7 @@ msgstr "ปิด"
 msgid "Turn off all device cameras"
 msgstr "ปิดกล้องของทุกอุปกรณ์"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:109
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:111
 msgid "Turn off anything you're not comfortable with. Some features may stop working."
 msgstr "ปิดสิ่งที่คุณไม่สบายใจได้ ฟีเจอร์บางอย่างอาจใช้งานไม่ได้"
 
@@ -35165,6 +35165,10 @@ msgstr "เปิดกล้องหรือแชร์หน้าจอใ
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:172
 msgid "Turn on a camera or share a screen in voice channels."
 msgstr "เปิดกล้องหรือแชร์หน้าจอในช่องเสียง"
+
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:158
+msgid "Turn on at least one scope to authorize this app."
+msgstr "เปิดใช้งานอย่างน้อยหนึ่งสโคปเพื่ออนุญาตแอปนี้"
 
 #. Label for the automatic streaming privacy detection settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:19
@@ -35233,7 +35237,7 @@ msgstr "เปิดใช้งานแบนเนอร์แยกส่ว
 msgid "Turned the member's microphone back on in this community"
 msgstr "เปิดไมโครโฟนของสมาชิกอีกครั้งในคอมมูนิตี้นี้แล้ว"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:156
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:163
 msgid "Turning off scopes may prevent the app from working correctly."
 msgstr "การปิดขอบเขตอาจทำให้แอปทำงานไม่ถูกต้อง"
 

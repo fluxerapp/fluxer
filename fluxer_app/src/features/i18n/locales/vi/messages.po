@@ -853,7 +853,7 @@ msgstr "Kênh {channelName}"
 msgid "{characterCount, plural, one {# character} other {# characters}}"
 msgstr "{characterCount, plural, one {# ký tự} other {# ký tự}}"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:79
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:81
 msgid "{clientLabel} wants to connect"
 msgstr "{clientLabel} muốn kết nối"
 
@@ -22807,7 +22807,7 @@ msgstr "Chưa đặt phím tắt"
 msgid "No shortcuts match that search."
 msgstr "Không có phím tắt nào khớp với tìm kiếm đó."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:115
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:117
 msgid "No specific scopes requested."
 msgstr "Không có phạm vi cụ thể nào được yêu cầu."
 
@@ -27265,7 +27265,7 @@ msgstr "Yêu cầu mã xác minh trước."
 msgid "Request export"
 msgstr "Yêu cầu xuất dữ liệu"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:106
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:108
 msgid "Requested scopes"
 msgstr "Phạm vi được yêu cầu"
 
@@ -27967,7 +27967,7 @@ msgstr "Xem lại các quyền mà {productName} sử dụng cho thoại, video,
 msgid "Review these files and try again with smaller or simpler images."
 msgstr "Xem lại các tệp này và thử lại với hình ảnh nhỏ hơn hoặc đơn giản hơn."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:85
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:87
 msgid "Review what this app is asking for before you continue."
 msgstr "Xem lại những gì ứng dụng này yêu cầu trước khi tiếp tục."
 
@@ -35106,7 +35106,7 @@ msgstr "Tắt"
 msgid "Turn off all device cameras"
 msgstr "Tắt camera trên tất cả thiết bị"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:109
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:111
 msgid "Turn off anything you're not comfortable with. Some features may stop working."
 msgstr "Tắt bất kỳ tính năng nào bạn không muốn. Một số tính năng có thể ngừng hoạt động."
 
@@ -35165,6 +35165,10 @@ msgstr "Bật camera hoặc chia sẻ màn hình trong kênh thoại này."
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:172
 msgid "Turn on a camera or share a screen in voice channels."
 msgstr "Bật camera hoặc chia sẻ màn hình trong các kênh thoại."
+
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:158
+msgid "Turn on at least one scope to authorize this app."
+msgstr "Bật ít nhất một phạm vi để cấp quyền cho ứng dụng này."
 
 #. Label for the automatic streaming privacy detection settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:19
@@ -35233,7 +35237,7 @@ msgstr "Đã bật ảnh bìa tách riêng"
 msgid "Turned the member's microphone back on in this community"
 msgstr "Đã bật lại micrô của thành viên trong cộng đồng này"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:156
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:163
 msgid "Turning off scopes may prevent the app from working correctly."
 msgstr "Việc tắt các phạm vi có thể khiến ứng dụng không hoạt động đúng cách."
 

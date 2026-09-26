@@ -853,7 +853,7 @@ msgstr "Kanál {channelName}"
 msgid "{characterCount, plural, one {# character} other {# characters}}"
 msgstr "{characterCount, plural, one {# znak} few {# znaky} many {# znaku} other {# znaků}}"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:79
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:81
 msgid "{clientLabel} wants to connect"
 msgstr "{clientLabel} se chce připojit"
 
@@ -22807,7 +22807,7 @@ msgstr "Zkratka nenastavena"
 msgid "No shortcuts match that search."
 msgstr "Žádné zkratky neodpovídají tomuto hledání."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:115
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:117
 msgid "No specific scopes requested."
 msgstr "Nebyly vyžádány žádné konkrétní rozsahy oprávnění."
 
@@ -27265,7 +27265,7 @@ msgstr "Nejprve si vyžádejte ověřovací kód."
 msgid "Request export"
 msgstr "Vyžádat export"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:106
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:108
 msgid "Requested scopes"
 msgstr "Požadovaná oprávnění"
 
@@ -27967,7 +27967,7 @@ msgstr "Zkontrolujte oprávnění, která {productName} používá pro hlas, vid
 msgid "Review these files and try again with smaller or simpler images."
 msgstr "Zkontrolujte tyto soubory a zkuste to znovu s menšími nebo jednoduššími obrázky."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:85
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:87
 msgid "Review what this app is asking for before you continue."
 msgstr "Než budete pokračovat, zkontrolujte, co tato aplikace požaduje."
 
@@ -35106,7 +35106,7 @@ msgstr "Vypnout"
 msgid "Turn off all device cameras"
 msgstr "Vypnout všechny kamery zařízení"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:109
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:111
 msgid "Turn off anything you're not comfortable with. Some features may stop working."
 msgstr "Vypněte vše, s čím nesouhlasíte. Některé funkce pak nemusí fungovat."
 
@@ -35165,6 +35165,10 @@ msgstr "Zapnout kameru nebo sdílet obrazovku v tomto hlasovém kanálu."
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:172
 msgid "Turn on a camera or share a screen in voice channels."
 msgstr "Zapnout kameru nebo sdílet obrazovku v hlasových kanálech."
+
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:158
+msgid "Turn on at least one scope to authorize this app."
+msgstr "Zapněte alespoň jeden rozsah platnosti pro autorizaci této aplikace."
 
 #. Label for the automatic streaming privacy detection settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:19
@@ -35233,7 +35237,7 @@ msgstr "Zapnut odpojený banner"
 msgid "Turned the member's microphone back on in this community"
 msgstr "Znovu zapnut mikrofon člena v této komunitě"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:156
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:163
 msgid "Turning off scopes may prevent the app from working correctly."
 msgstr "Vypnutí oprávnění může zabránit správnému fungování aplikace."
 

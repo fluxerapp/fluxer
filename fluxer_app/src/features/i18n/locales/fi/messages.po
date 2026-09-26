@@ -853,7 +853,7 @@ msgstr "Kanava {channelName}"
 msgid "{characterCount, plural, one {# character} other {# characters}}"
 msgstr "{characterCount, plural, one {# merkki} other {# merkkiä}}"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:79
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:81
 msgid "{clientLabel} wants to connect"
 msgstr "{clientLabel} haluaa muodostaa yhteyden"
 
@@ -22807,7 +22807,7 @@ msgstr "Pikanäppäintä ei ole asetettu"
 msgid "No shortcuts match that search."
 msgstr "Hakua vastaavia pikanäppäimiä ei löytynyt."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:115
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:117
 msgid "No specific scopes requested."
 msgstr "Erityisiä käyttöoikeuksia ei pyydetty."
 
@@ -27265,7 +27265,7 @@ msgstr "Pyydä ensin vahvistuskoodi."
 msgid "Request export"
 msgstr "Pyydä vientiä"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:106
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:108
 msgid "Requested scopes"
 msgstr "Pyydetyt käyttöoikeudet"
 
@@ -27967,7 +27967,7 @@ msgstr "Tarkista käyttöoikeudet, joita {productName} käyttää ääneen, vide
 msgid "Review these files and try again with smaller or simpler images."
 msgstr "Tarkista nämä tiedostot ja yritä uudelleen pienemmillä tai yksinkertaisemmilla kuvilla."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:85
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:87
 msgid "Review what this app is asking for before you continue."
 msgstr "Tarkista, mitä tämä sovellus pyytää, ennen kuin jatkat."
 
@@ -35106,7 +35106,7 @@ msgstr "Poista käytöstä"
 msgid "Turn off all device cameras"
 msgstr "Sammuta kaikkien laitteiden kamerat"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:109
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:111
 msgid "Turn off anything you're not comfortable with. Some features may stop working."
 msgstr "Poista käytöstä kaikki, mistä et pidä. Jotkin ominaisuudet eivät ehkä toimi."
 
@@ -35165,6 +35165,10 @@ msgstr "Käynnistä kamera tai jaa näyttö tässä äänikanavassa."
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:172
 msgid "Turn on a camera or share a screen in voice channels."
 msgstr "Käynnistä kamera tai jaa näyttö äänikanavilla."
+
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:158
+msgid "Turn on at least one scope to authorize this app."
+msgstr "Ota käyttöön vähintään yksi laajuus tämän sovelluksen valtuuttamiseksi."
 
 #. Label for the automatic streaming privacy detection settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:19
@@ -35233,7 +35237,7 @@ msgstr "Otettu irrotettu banneri käyttöön"
 msgid "Turned the member's microphone back on in this community"
 msgstr "Kytki jäsenen mikrofonin takaisin päälle tässä yhteisössä"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:156
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:163
 msgid "Turning off scopes may prevent the app from working correctly."
 msgstr "Käyttöoikeuksien poistaminen käytöstä voi estää sovellusta toimimasta oikein."
 

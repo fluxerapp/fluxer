@@ -306,7 +306,7 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 		() => destinations.options.find((option) => option.value === selectedDestinationKey) ?? null,
 		[destinations.options, selectedDestinationKey],
 	);
-	const cannotSubmit = hasBotScope && !selectedDestination;
+	const cannotSubmit = scopeSelection.selected.size === 0 || (hasBotScope && !selectedDestination);
 	const needsPermissionsStep =
 		hasBotScope && selectedDestination?.kind !== 'group_dm' && permissionSelection.requestedKeys.length > 0;
 	const hasRequestedBotPermissions =
@@ -350,9 +350,9 @@ export function useAuthorizeFlow(options: UseAuthorizeFlowOptions = {}): Authori
 		setSubmitError(null);
 		setSubmitting('approve');
 		try {
-			const scopeToSend = scopeSelection.toScopeString() || params.scope;
+			const scopeToSend = scopeSelection.toScopeString();
 			const sendsBotScope = scopeToSend.split(/[\s+]+/).includes('bot');
-			if (sendsBotScope && !selectedDestination) {
+			if (!scopeToSend || (sendsBotScope && !selectedDestination)) {
 				setSubmitting(null);
 				return;
 			}

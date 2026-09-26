@@ -853,7 +853,7 @@ msgstr "Канал «{channelName}»"
 msgid "{characterCount, plural, one {# character} other {# characters}}"
 msgstr "{characterCount, plural, one {# символ} few {# символа} many {# символов} other {# символа}}"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:79
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:81
 msgid "{clientLabel} wants to connect"
 msgstr "{clientLabel} хочет подключиться"
 
@@ -22807,7 +22807,7 @@ msgstr "Сочетание клавиш не задано"
 msgid "No shortcuts match that search."
 msgstr "Сочетания клавиш по этому запросу не найдены."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:115
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:117
 msgid "No specific scopes requested."
 msgstr "Запрашиваемые разрешения не указаны."
 
@@ -27265,7 +27265,7 @@ msgstr "Сначала запросите код подтверждения."
 msgid "Request export"
 msgstr "Запросить экспорт"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:106
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:108
 msgid "Requested scopes"
 msgstr "Запрашиваемые разрешения"
 
@@ -27967,7 +27967,7 @@ msgstr "Проверьте разрешения, которые {productName} и
 msgid "Review these files and try again with smaller or simpler images."
 msgstr "Проверьте эти файлы и повторите попытку с меньшими или более простыми изображениями."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:85
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:87
 msgid "Review what this app is asking for before you continue."
 msgstr "Проверьте, какие разрешения запрашивает это приложение, прежде чем продолжить."
 
@@ -35106,7 +35106,7 @@ msgstr "Выключить"
 msgid "Turn off all device cameras"
 msgstr "Выключить камеры на всех устройствах"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:109
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:111
 msgid "Turn off anything you're not comfortable with. Some features may stop working."
 msgstr "Отключите то, что вас не устраивает. Некоторые функции могут перестать работать."
 
@@ -35165,6 +35165,10 @@ msgstr "Включать камеру или демонстрировать эк
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:172
 msgid "Turn on a camera or share a screen in voice channels."
 msgstr "Включать камеру или демонстрировать экран в голосовых каналах."
+
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:158
+msgid "Turn on at least one scope to authorize this app."
+msgstr "Включите хотя бы одну область действия, чтобы авторизовать это приложение."
 
 #. Label for the automatic streaming privacy detection settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:19
@@ -35233,7 +35237,7 @@ msgstr "Включён откреплённый баннер"
 msgid "Turned the member's microphone back on in this community"
 msgstr "Снова включён микрофон участника в этом сообществе"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:156
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:163
 msgid "Turning off scopes may prevent the app from working correctly."
 msgstr "Отключение разрешений может привести к некорректной работе приложения."
 

@@ -853,7 +853,7 @@ msgstr "Κανάλι {channelName}"
 msgid "{characterCount, plural, one {# character} other {# characters}}"
 msgstr "{characterCount, plural, one {# χαρακτήρας} other {# χαρακτήρες}}"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:79
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:81
 msgid "{clientLabel} wants to connect"
 msgstr "Το {clientLabel} θέλει να συνδεθεί"
 
@@ -22807,7 +22807,7 @@ msgstr "Δεν έχει οριστεί συντόμευση"
 msgid "No shortcuts match that search."
 msgstr "Δεν βρέθηκαν συντομεύσεις που να ταιριάζουν με την αναζήτηση."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:115
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:117
 msgid "No specific scopes requested."
 msgstr "Δεν ζητήθηκαν συγκεκριμένα δικαιώματα."
 
@@ -27265,7 +27265,7 @@ msgstr "Ζητήστε πρώτα έναν κωδικό επαλήθευσης."
 msgid "Request export"
 msgstr "Αίτημα εξαγωγής δεδομένων"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:106
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:108
 msgid "Requested scopes"
 msgstr "Ζητούμενα δικαιώματα"
 
@@ -27967,7 +27967,7 @@ msgstr "Ελέγξτε τα δικαιώματα που χρησιμοποιεί
 msgid "Review these files and try again with smaller or simpler images."
 msgstr "Ελέγξτε αυτά τα αρχεία και δοκιμάστε ξανά με μικρότερες ή απλούστερες εικόνες."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:85
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:87
 msgid "Review what this app is asking for before you continue."
 msgstr "Έλεγξε τι ζητάει αυτή η εφαρμογή πριν συνεχίσεις."
 
@@ -35106,7 +35106,7 @@ msgstr "Απενεργοποίηση"
 msgid "Turn off all device cameras"
 msgstr "Απενεργοποίηση κάμερας σε όλες τις συσκευές"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:109
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:111
 msgid "Turn off anything you're not comfortable with. Some features may stop working."
 msgstr "Απενεργοποιήστε ό,τι δεν σας βολεύει. Ορισμένες λειτουργίες μπορεί να σταματήσουν να δουλεύουν."
 
@@ -35165,6 +35165,10 @@ msgstr "Ενεργοποιήστε μια κάμερα ή μοιραστείτε
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:172
 msgid "Turn on a camera or share a screen in voice channels."
 msgstr "Ενεργοποιήστε μια κάμερα ή μοιραστείτε την οθόνη σας σε φωνητικά κανάλια."
+
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:158
+msgid "Turn on at least one scope to authorize this app."
+msgstr "Ενεργοποιήστε τουλάχιστον ένα πεδίο για να εξουσιοδοτήσετε αυτήν την εφαρμογή."
 
 #. Label for the automatic streaming privacy detection settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:19
@@ -35233,7 +35237,7 @@ msgstr "Ενεργοποιήθηκε το ξεχωριστό banner"
 msgid "Turned the member's microphone back on in this community"
 msgstr "Ενεργοποιήθηκε ξανά το μικρόφωνο του μέλους σε αυτήν την κοινότητα"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:156
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:163
 msgid "Turning off scopes may prevent the app from working correctly."
 msgstr "Αν απενεργοποιήσετε πεδία εφαρμογής, η εφαρμογή ενδέχεται να μη λειτουργεί σωστά."
 

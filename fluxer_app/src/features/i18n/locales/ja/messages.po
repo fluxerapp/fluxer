@@ -853,7 +853,7 @@ msgstr "{channelName}チャンネル"
 msgid "{characterCount, plural, one {# character} other {# characters}}"
 msgstr "{characterCount, plural, one {#文字} other {#文字}}"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:79
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:81
 msgid "{clientLabel} wants to connect"
 msgstr "{clientLabel}が連携をリクエストしています"
 
@@ -22807,7 +22807,7 @@ msgstr "ショートカットは設定されていません"
 msgid "No shortcuts match that search."
 msgstr "検索条件に一致するショートカットはありません。"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:115
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:117
 msgid "No specific scopes requested."
 msgstr "特定のスコープはリクエストされていません。"
 
@@ -27265,7 +27265,7 @@ msgstr "まず認証コードをリクエストしてください。"
 msgid "Request export"
 msgstr "データエクスポートをリクエスト"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:106
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:108
 msgid "Requested scopes"
 msgstr "リクエストされたスコープ"
 
@@ -27967,7 +27967,7 @@ msgstr "{productName}が使用するボイス、ビデオ、画面共有、シ�
 msgid "Review these files and try again with smaller or simpler images."
 msgstr "これらのファイルを確認し、より小さい画像またはシンプルな画像でもう一度お試しください。"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:85
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:87
 msgid "Review what this app is asking for before you continue."
 msgstr "続行する前に、このアプリが要求している内容を確認してください。"
 
@@ -35106,7 +35106,7 @@ msgstr "オフにする"
 msgid "Turn off all device cameras"
 msgstr "すべてのデバイスのカメラをオフにする"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:109
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:111
 msgid "Turn off anything you're not comfortable with. Some features may stop working."
 msgstr "同意できない項目はオフにしてください。一部の機能が利用できなくなる場合があります。"
 
@@ -35165,6 +35165,10 @@ msgstr "このボイスチャンネルでカメラをオンにするか、画面
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:172
 msgid "Turn on a camera or share a screen in voice channels."
 msgstr "ボイスチャンネルでカメラをオンにするか、画面を共有します。"
+
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:158
+msgid "Turn on at least one scope to authorize this app."
+msgstr "このアプリを承認するには、少なくとも1つのスコープをオンにしてください。"
 
 #. Label for the automatic streaming privacy detection settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:19
@@ -35233,7 +35237,7 @@ msgstr "バナーの分離表示をオンにしました"
 msgid "Turned the member's microphone back on in this community"
 msgstr "このコミュニティでメンバーのマイクをオンに戻しました"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:156
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:163
 msgid "Turning off scopes may prevent the app from working correctly."
 msgstr "スコープをオフにすると、アプリが正常に動作しなくなる場合があります。"
 
