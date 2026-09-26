@@ -48,6 +48,11 @@ msgstr "(你)"
 msgid "{0, plural, one {# member} other {# members}}"
 msgstr "{0, plural, one {# 位成員} other {# 位成員}}"
 
+#. placeholder {0}: props.value
+#: src/features/personas/components/modals/PersonaImportModal.tsx:149
+msgid "{0} personas imported successfully"
+msgstr "{0} 個 Persona 已成功匯入"
+
 #: src/features/channel/components/TypingUsers.tsx:70
 msgid "{a} and {b} are typing..."
 msgstr "{a} 和 {b} 正在輸入中…"
@@ -1937,12 +1942,12 @@ msgid "A symphony of clacking keys is underway..."
 msgstr "正在輸入中…"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:59
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:73
 msgid "A trigger sends a message with its persona, but the active persona doesn't change."
 msgstr "觸發器會發送帶有其 Persona 的訊息，但當前使用中的 Persona 不會改變。"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:67
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:81
 msgid "A trigger sets its persona as active until the active persona is changed. This may also be called \"latching\"."
 msgstr "觸發器會將其 Persona 設為使用中，直到當前使用中的 Persona 被更改。這也可能被稱為「latching」。"
 
@@ -1974,6 +1979,7 @@ msgstr "關於 {appName}"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the user profile shared popout. Keep it concise.
 #: src/features/app/components/pages/YouPage.tsx:166
+#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx:726
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:26
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:783
 #: src/features/user/components/popouts/UserProfileShared.tsx:41
@@ -2631,7 +2637,7 @@ msgstr "新增翻譯服務供應商"
 msgid "Add translator"
 msgstr "新增翻譯工具"
 
-#: src/features/user/components/modals/PersonaEditorModal.tsx:476
+#: src/features/user/components/modals/PersonaEditorModal.tsx:518
 msgid "Add trigger"
 msgstr "新增觸發器"
 
@@ -3179,7 +3185,7 @@ msgid "Already set to cancel"
 msgstr "已設定為取消"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:85
+#: src/features/messaging/commands/MessageCommands.tsx:88
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "同時將此訊息回報給 {productName} 安全團隊"
 
@@ -3284,6 +3290,11 @@ msgstr "一律使用 {productName} 的 Hunspell 字典，並依需求下載。"
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:123
 msgid "Amount"
 msgstr "金額"
+
+#. Title of the import progress modal.
+#: src/features/personas/components/modals/PersonaImportModal.tsx:36
+msgid "An error occurred"
+msgstr "發生錯誤"
 
 #. Error message in the use channel search hook.
 #: src/features/channel/hooks/useChannelSearch.ts:33
@@ -8840,6 +8851,16 @@ msgstr "安裝損毀提示列"
 msgid "Could not decode this audio file."
 msgstr "無法解碼此音訊檔案。"
 
+#. Title of the import progress modal.
+#: src/features/personas/components/modals/PersonaImportModal.tsx:28
+msgid "Could not get avatars"
+msgstr "無法取得大頭貼"
+
+#. Title of the import progress modal.
+#: src/features/personas/components/modals/PersonaImportModal.tsx:32
+msgid "Could not import personas"
+msgstr "無法匯入 Personas"
+
 #. Error shown when the setup wizard fails to load the instance configuration.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:93
 msgid "Could not load the instance configuration. Try reloading the page."
@@ -8848,6 +8869,11 @@ msgstr "無法載入執行個體設定。請嘗試重新載入頁面。"
 #: src/features/auth/flow/AuthRouteLoadError.tsx:15
 msgid "Could not load this page"
 msgstr "無法載入此頁面"
+
+#. Title of the import progress modal.
+#: src/features/personas/components/modals/PersonaImportModal.tsx:24
+msgid "Could not read file"
+msgstr "無法讀取檔案"
 
 #. Body of the modal shown when a screen share attempt fails. Advises the user to try sharing the full screen.
 #: src/features/voice/components/alerts/ScreenShareFailedModal.tsx:12
@@ -9548,7 +9574,7 @@ msgstr "建立新連結"
 msgid "Create or join a community"
 msgstr "建立或加入社群"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:230
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:315
 msgid "Create Persona"
 msgstr "建立 Persona"
 
@@ -10453,11 +10479,11 @@ msgstr "為節省電力與數據用量，行動裝置預設為關閉。"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:204
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
-#: src/features/messaging/commands/MessageCommands.tsx:81
+#: src/features/messaging/commands/MessageCommands.tsx:84
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:109
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
-#: src/features/user/components/modals/PersonaEditorModal.tsx:236
-#: src/features/user/components/modals/PersonaEditorModal.tsx:544
+#: src/features/user/components/modals/PersonaEditorModal.tsx:245
+#: src/features/user/components/modals/PersonaEditorModal.tsx:586
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:117
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:290
@@ -10693,7 +10719,7 @@ msgid "Delete this message"
 msgstr "刪除此訊息"
 
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:77
+#: src/features/messaging/commands/MessageCommands.tsx:80
 msgid "Delete this message? Can't be undone."
 msgstr "要刪除這則訊息嗎？此動作無法復原。"
 
@@ -10839,6 +10865,10 @@ msgstr "說明至少需要 {discoveryDescriptionMinLength} 個字元。"
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:123
 msgid "Description must be no more than {discoveryDescriptionMaxLength} characters."
 msgstr "說明不得超過 {discoveryDescriptionMaxLength} 個字元。"
+
+#: src/features/personas/components/modals/PersonaImportModal.tsx:122
+msgid "Deselect all"
+msgstr "取消選取所有項目"
 
 #. Developer settings tab showing UI component examples.
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:153
@@ -12287,12 +12317,13 @@ msgid "Edit overwrites for roles and members in this channel."
 msgstr "編輯此頻道中身分組和成員的覆寫權限。"
 
 #. The title of the persona editor modal.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:47
+#: src/features/user/components/modals/PersonaEditorModal.tsx:50
 msgid "Edit Persona"
 msgstr "編輯 Persona"
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:743
 #: src/features/app/components/pages/YouPage.tsx:157
+#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx:706
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:682
 #: src/features/user/components/modals/UserProfileModal.tsx:587
 #: src/features/user/components/popouts/UserProfilePopout.tsx:450
@@ -14380,6 +14411,7 @@ msgid "Filter mentions"
 msgstr "篩選提及訊息"
 
 #: src/features/personas/components/popouts/PersonaPickerPopout.tsx:156
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:206
 msgid "Filter personas"
 msgstr "篩選 Personas"
 
@@ -16751,6 +16783,7 @@ msgstr "冒充或詐騙媒體內容"
 
 #. Primary button in the favorite GIF import modal. Starts importing pasted GIF URLs.
 #: src/features/channel/components/pickers/gif/ImportFavoriteGifsModal.tsx:62
+#: src/features/personas/components/modals/PersonaImportModal.tsx:165
 msgid "Import"
 msgstr "匯入"
 
@@ -16802,6 +16835,11 @@ msgstr "匯入主題庫"
 msgid "Import more"
 msgstr "匯入更多"
 
+#. Title of the import progress modal.
+#: src/features/personas/components/modals/PersonaImportModal.tsx:20
+msgid "Import progress"
+msgstr "匯入進度"
+
 #. Accessible label for the import-template form element. Used by assistive tech only.
 #: src/features/guild/components/modals/add_guild_modal/shared.ts:141
 msgid "Import template form"
@@ -16823,7 +16861,7 @@ msgstr "匯入主題"
 msgid "Import unavailable"
 msgstr "無法匯入"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:222
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:290
 msgid "Import..."
 msgstr "匯入..."
 
@@ -17275,7 +17313,7 @@ msgid "Interface size"
 msgstr "介面大小"
 
 #. Label in the persona editor for a private name for a persona.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:55
+#: src/features/user/components/modals/PersonaEditorModal.tsx:58
 msgid "Internal Name"
 msgstr "內部名稱"
 
@@ -18148,7 +18186,7 @@ msgid "Last used"
 msgstr "上次使用"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:63
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:77
 msgid "Last Used"
 msgstr "上次使用"
 
@@ -18902,12 +18940,12 @@ msgid "Make group owner"
 msgstr "設為群組擁有者"
 
 #. A tooltip for the button that activates a persona.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:29
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:35
 msgid "Make persona active"
 msgstr "將 Persona 設為使用中"
 
 #. A tooltip for the button that deactivates a persona.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:33
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:39
 msgid "Make persona not active"
 msgstr "將 Persona 設為非使用中"
 
@@ -19051,7 +19089,7 @@ msgid "Manage your subscription"
 msgstr "管理您的訂閱"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:55
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:69
 msgid "Manual"
 msgstr "手動"
 
@@ -19744,7 +19782,7 @@ msgstr "訊息"
 #: src/features/ui/action_menu/items/ActionsSubmenu.tsx:41
 #: src/features/ui/action_menu/items/MessageUserMenuItem.tsx:26
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:73
-#: src/features/user/components/modals/PersonaEditorModal.tsx:71
+#: src/features/user/components/modals/PersonaEditorModal.tsx:74
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:86
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:712
 #: src/features/user/components/modals/UserProfileModal.tsx:562
@@ -19798,7 +19836,7 @@ msgid "Message composer"
 msgstr "訊息輸入框"
 
 #. Label in the channel and chat reply preview.
-#: src/features/channel/components/ReplyPreview.tsx:41
+#: src/features/channel/components/ReplyPreview.tsx:42
 msgid "Message contains attached media"
 msgstr "訊息包含附加媒體"
 
@@ -20842,7 +20880,7 @@ msgid "My group"
 msgstr "我的群組"
 
 #. Slate message that shows in the Personas tab when there are no personas.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:41
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:47
 msgid "My name is Darth Vader. I am an extra-terrestrial from the planet Vulcan!"
 msgstr "我叫達斯·維德。我是來自行星 Vulcan 的外星生物！"
 
@@ -20934,8 +20972,8 @@ msgstr "名稱：{0}。"
 
 #. Placeholder text to hint at what can be used to filter personas in the list.
 #: src/features/personas/components/popouts/PersonaPickerPopout.tsx:32
-msgid "Names or pronouns"
-msgstr "名稱或代名詞"
+msgid "Names, pronouns, or triggers"
+msgstr "名稱、代名詞或觸發詞"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:271
@@ -21163,7 +21201,7 @@ msgid "New password"
 msgstr "新密碼"
 
 #. The title of the persona editor modal when it's being used to create a new persona.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:51
+#: src/features/user/components/modals/PersonaEditorModal.tsx:54
 msgid "New Persona"
 msgstr "新 Persona"
 
@@ -21614,8 +21652,13 @@ msgstr "找不到權限"
 msgid "No personal words yet."
 msgstr "還沒有個人詞彙喔。"
 
+#. Slate title that shows in the Personas tab when there are no personas when filtered.
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:52
+msgid "No personas found"
+msgstr "找不到 Personas"
+
 #. Slate title that shows in the Personas tab when there are no personas.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:37
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:43
 msgid "No personas yet"
 msgstr "尚無 Personas"
 
@@ -22115,7 +22158,7 @@ msgstr "物品"
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:97
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:139
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:128
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:47
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:61
 msgid "Off"
 msgstr "關閉"
 
@@ -22131,6 +22174,7 @@ msgid "Offline"
 msgstr "離線"
 
 #: src/features/guild/components/RoleManagement.tsx:401
+#: src/features/personas/components/modals/PersonaImportModal.tsx:155
 msgid "OK"
 msgstr "OK"
 
@@ -22935,12 +22979,12 @@ msgid "Ordered upload"
 msgstr "排序上傳"
 
 #. Error message in the channel and chat reply preview.
-#: src/features/channel/components/ReplyPreview.tsx:29
+#: src/features/channel/components/ReplyPreview.tsx:30
 msgid "Original message failed to load"
 msgstr "載入原始訊息失敗"
 
 #. Label in the channel and chat reply preview. Keep the tone plain and specific.
-#: src/features/channel/components/ReplyPreview.tsx:25
+#: src/features/channel/components/ReplyPreview.tsx:26
 msgid "Original message was deleted"
 msgstr "原始訊息已刪除"
 
@@ -23471,17 +23515,17 @@ msgid "Permissions for {0}"
 msgstr "{0} 的權限"
 
 #. Short label in the persona editor. Keep it concise.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:79
+#: src/features/user/components/modals/PersonaEditorModal.tsx:82
 msgid "Persona created"
 msgstr "已建立 Persona"
 
 #. Short label in the persona editor. Keep it concise.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:83
+#: src/features/user/components/modals/PersonaEditorModal.tsx:86
 msgid "Persona deleted"
 msgstr "已刪除 Persona"
 
 #. Short label in the persona editor. Keep it concise.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:75
+#: src/features/user/components/modals/PersonaEditorModal.tsx:78
 msgid "Persona updated"
 msgstr "Persona 已更新"
 
@@ -23509,7 +23553,7 @@ msgstr "個人記事已經是空的了"
 msgid "Personas"
 msgstr "Personas"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:181
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:243
 msgid "Personas are reusable profiles that you can attach to messages."
 msgstr "Personas 是可重複使用的身份，可附加至訊息。"
 
@@ -24028,7 +24072,7 @@ msgid "Prefers reduced motion"
 msgstr "偏好減少動態效果"
 
 #. Label in the persona editor for the message prefixes and suffixes that trigger a persona for a message.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:63
+#: src/features/user/components/modals/PersonaEditorModal.tsx:66
 msgid "Prefix"
 msgstr "前綴"
 
@@ -24086,6 +24130,10 @@ msgstr "付費方案類型"
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:157
 msgid "Premium until date"
 msgstr "Premium 服務至"
+
+#: src/features/personas/components/modals/PersonaImportModal.tsx:106
+msgid "Preparing avatars and banners..."
+msgstr "正在準備大頭貼和橫幅…"
 
 #. Setup wizard title while the instance configuration loads.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:72
@@ -24966,6 +25014,10 @@ msgstr "讀取社群的變更與管理操作活動紀錄。"
 #: src/features/user/components/modals/tabs/applications_tab/index.tsx:33
 msgid "Read the documentation ({domain})"
 msgstr "閱讀說明文件 ({domain})"
+
+#: src/features/personas/components/modals/PersonaImportModal.tsx:105
+msgid "Reading file..."
+msgstr "正在讀取檔案…"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:163
@@ -25879,12 +25931,12 @@ msgid "Reply"
 msgstr "回覆"
 
 #. Error message in the channel and chat reply preview. Keep the tone plain and specific.
-#: src/features/channel/components/ReplyPreview.tsx:33
+#: src/features/channel/components/ReplyPreview.tsx:34
 msgid "Reply hidden because the original author is blocked."
 msgstr "回覆已隱藏，因為您已封鎖原作者。"
 
 #. Description text in the channel and chat reply preview. Keep the tone plain and specific.
-#: src/features/channel/components/ReplyPreview.tsx:37
+#: src/features/channel/components/ReplyPreview.tsx:38
 msgid "Reply hidden because the original author is marked as a spammer."
 msgstr "回覆已隱藏，因為原作者被標記為垃圾訊息傳送者。"
 
@@ -27869,6 +27921,7 @@ msgstr "選擇帳號"
 
 #. Textarea right-click context menu item that selects all text in the textarea.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:58
+#: src/features/personas/components/modals/PersonaImportModal.tsx:128
 msgid "Select all"
 msgstr "全選"
 
@@ -27904,6 +27957,10 @@ msgstr "選擇介面語言"
 #: src/features/personas/components/PersonaPickerComposerButton.tsx:21
 msgid "Select persona"
 msgstr "選擇 Persona"
+
+#: src/features/personas/components/modals/PersonaImportModal.tsx:115
+msgid "Select personas to import"
+msgstr "選擇要匯入的 Personas"
 
 #. Button or menu action label in the o auth builder section. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:39
@@ -28100,10 +28157,12 @@ msgid "Send file messages in order"
 msgstr "依序傳送檔案訊息"
 
 #. Button or menu action label in the user profile mobile sheet. Keep it concise.
+#. Button or menu action label in the user profile mobile sheet. Keep it concise.
 #. Button or menu action label in the user profile modal. Keep it concise.
 #. Member actions sheet menu item. Sends a friend request to the target user.
 #: src/features/channel/components/direct_message/DMWelcomeSection.tsx:146
 #: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:93
+#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx:121
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:110
 #: src/features/user/components/modals/UserProfileModal.tsx:126
 msgid "Send friend request"
@@ -28587,7 +28646,7 @@ msgstr "設定語音區域"
 msgid "Set webhook type to {0}."
 msgstr "將 Webhook 類型設為 {0}。"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:189
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:251
 msgid "Set what happens when you send a message using a persona's trigger."
 msgstr "設定在使用 Persona 的觸發器發送訊息時會發生的事。"
 
@@ -30975,7 +31034,7 @@ msgid "Success"
 msgstr "成功"
 
 #. Label in the persona editor for the message prefixes and suffixes that trigger a persona for a message.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:67
+#: src/features/user/components/modals/PersonaEditorModal.tsx:70
 msgid "Suffix"
 msgstr "後綴"
 
@@ -32605,7 +32664,7 @@ msgstr "此訊息已遭刪除。"
 msgid "This message no longer exists."
 msgstr "此訊息已不存在。"
 
-#: src/features/user/components/modals/PersonaEditorModal.tsx:378
+#: src/features/user/components/modals/PersonaEditorModal.tsx:420
 msgid "This name stays private, and only appears in lists of your own personas."
 msgstr "此名稱將保密，僅顯示在您自己的 Personas 清單中。"
 
@@ -33360,7 +33419,7 @@ msgstr "在 Linux 上，系統匣圖示的變更只有在重新啟動後才會�
 msgid "Trending GIFs"
 msgstr "熱門 GIF"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:191
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:253
 msgid "Trigger Behavior"
 msgstr "觸發行為"
 
@@ -33369,12 +33428,12 @@ msgid "Trigger React crash"
 msgstr "觸發 React 當機"
 
 #. Label in the persona editor for the message prefixes and suffixes that trigger a persona for a message.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:59
+#: src/features/user/components/modals/PersonaEditorModal.tsx:62
 msgid "Triggers"
 msgstr "觸發器"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:51
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:65
 msgid "Triggers don't do anything."
 msgstr "觸發器不會執行任何操作。"
 
@@ -33467,6 +33526,11 @@ msgstr "請嘗試不同的搜尋查詢。"
 #: src/features/channel/components/pickers/memes/MemesPickerView.tsx:36
 msgid "Try a different search term or filter"
 msgstr "試試其他搜尋字詞或篩選條件"
+
+#. Slate message that shows in the Personas tab when there are no personas when filtered.
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:56
+msgid "Try a different search, or check your spelling."
+msgstr "試試其他搜尋，或檢查您的拼寫。"
 
 #. Label in the channel and chat mobile stickers picker.
 #: src/features/channel/components/MobileStickersPicker.tsx:63
@@ -33941,8 +34005,10 @@ msgid "Unblock them first to send a friend request."
 msgstr "請先解除封鎖，才能傳送好友邀請。"
 
 #. Button or menu action label in the user profile mobile sheet. Keep it concise. Keep the tone plain and specific.
+#. Button or menu action label in the user profile mobile sheet. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the user profile modal. Keep it concise. Keep the tone plain and specific.
 #. Title of the confirmation modal for unblocking a previously blocked user. Short command title.
+#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx:116
 #: src/features/relationship/utils/RelationshipActionUtils.tsx:95
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:105
 #: src/features/user/components/modals/UserProfileModal.tsx:118
@@ -34954,6 +35020,10 @@ msgstr "正在上傳 {emojiText}。這可能需要一些時間。"
 #: src/features/emoji/components/modals/EmojiUploadModal.tsx:26
 msgid "Uploading emojis"
 msgstr "正在上傳表情符號"
+
+#: src/features/personas/components/modals/PersonaImportModal.tsx:107
+msgid "Uploading to server..."
+msgstr "正在上傳至伺服器…"
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -36209,6 +36279,7 @@ msgstr "查看事件詳情"
 msgid "View incoming call"
 msgstr "查看來電"
 
+#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx:803
 #: src/features/user/components/profile/PersonaProfile.tsx:117
 msgid "View main profile"
 msgstr "檢視主要個人資料"
@@ -37594,6 +37665,11 @@ msgstr "您可以在 14 天內取消刪除程序"
 msgid "You can close this modal. The import will continue in the background."
 msgstr "您可以關閉此視窗。匯入作業將在背景繼續進行。"
 
+#. A list of supported import formats. The names of each format should remain untranslated since they are proper nouns.
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:86
+msgid "You can import JSON files exported from Pluralkit, Tupperbox, /plu/ral, Fishing Bucket, or anything that exports to a compatible format."
+msgstr "您可以匯入從 Pluralkit、Tupperbox、/plu/ral、Fishing Bucket 或任何匯出相容格式的服務匯出的 JSON 檔案。"
+
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:169
 msgid "You can now close this tab and return to the app."
 msgstr "您現在可以關閉此分頁並返回應用程式。"
@@ -37904,7 +37980,7 @@ msgid "You have refunded recently"
 msgstr "您最近曾申請退款"
 
 #: src/features/app/components/dialogs/shared/UnsavedChangesBannerContent.tsx:37
-#: src/features/user/components/modals/PersonaEditorModal.tsx:537
+#: src/features/user/components/modals/PersonaEditorModal.tsx:579
 msgid "You have unsaved changes."
 msgstr "您有未儲存的變更。"
 

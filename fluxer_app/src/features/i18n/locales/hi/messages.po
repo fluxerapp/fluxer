@@ -48,6 +48,11 @@ msgstr "(आप)"
 msgid "{0, plural, one {# member} other {# members}}"
 msgstr "{0, plural, one {# सदस्य} other {# सदस्य}}"
 
+#. placeholder {0}: props.value
+#: src/features/personas/components/modals/PersonaImportModal.tsx:149
+msgid "{0} personas imported successfully"
+msgstr "{0} personas सफलतापूर्वक आयात किए गए"
+
 #: src/features/channel/components/TypingUsers.tsx:70
 msgid "{a} and {b} are typing..."
 msgstr "{a} और {b} टाइप कर रहे हैं..."
@@ -1937,12 +1942,12 @@ msgid "A symphony of clacking keys is underway..."
 msgstr "टाइपिंग जारी है..."
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:59
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:73
 msgid "A trigger sends a message with its persona, but the active persona doesn't change."
 msgstr "एक ट्रिगर अपना Persona संलग्न करके संदेश भेजता है, लेकिन सक्रिय Persona नहीं बदलती।"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:67
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:81
 msgid "A trigger sets its persona as active until the active persona is changed. This may also be called \"latching\"."
 msgstr "एक ट्रिगर अपनी Persona को सक्रिय के रूप में सेट करता है जब तक सक्रिय Persona नहीं बदली जाती। इसे कभी-कभी \"latching\" भी कहा जाता है."
 
@@ -1974,6 +1979,7 @@ msgstr "{appName} के बारे में"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the user profile shared popout. Keep it concise.
 #: src/features/app/components/pages/YouPage.tsx:166
+#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx:726
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:26
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:783
 #: src/features/user/components/popouts/UserProfileShared.tsx:41
@@ -2631,7 +2637,7 @@ msgstr "अनुवाद प्रदाता जोड़ें"
 msgid "Add translator"
 msgstr "अनुवादक जोड़ें"
 
-#: src/features/user/components/modals/PersonaEditorModal.tsx:476
+#: src/features/user/components/modals/PersonaEditorModal.tsx:518
 msgid "Add trigger"
 msgstr "ट्रिगर जोड़ें"
 
@@ -3179,7 +3185,7 @@ msgid "Already set to cancel"
 msgstr "पहले से रद्द करने के लिए सेट है"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:85
+#: src/features/messaging/commands/MessageCommands.tsx:88
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "इस मैसेज को {productName} सुरक्षा टीम को भी रिपोर्ट करें"
 
@@ -3284,6 +3290,11 @@ msgstr "{productName} की हनस्पेल डिक्शनरी क�
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:123
 msgid "Amount"
 msgstr "राशि"
+
+#. Title of the import progress modal.
+#: src/features/personas/components/modals/PersonaImportModal.tsx:36
+msgid "An error occurred"
+msgstr "कोई गड़बड़ी हुई"
 
 #. Error message in the use channel search hook.
 #: src/features/channel/hooks/useChannelSearch.ts:33
@@ -8840,6 +8851,16 @@ msgstr "खराब इंस्टॉलेशन नागबार"
 msgid "Could not decode this audio file."
 msgstr "इस ऑडियो फ़ाइल को डीकोड नहीं किया जा सका."
 
+#. Title of the import progress modal.
+#: src/features/personas/components/modals/PersonaImportModal.tsx:28
+msgid "Could not get avatars"
+msgstr "अवतार प्राप्त नहीं किए जा सके"
+
+#. Title of the import progress modal.
+#: src/features/personas/components/modals/PersonaImportModal.tsx:32
+msgid "Could not import personas"
+msgstr "Personas आयात नहीं किए जा सके"
+
 #. Error shown when the setup wizard fails to load the instance configuration.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:93
 msgid "Could not load the instance configuration. Try reloading the page."
@@ -8848,6 +8869,11 @@ msgstr "इंस्टेंस कॉन्फ़िगरेशन लोड 
 #: src/features/auth/flow/AuthRouteLoadError.tsx:15
 msgid "Could not load this page"
 msgstr "यह पेज लोड नहीं हो सका"
+
+#. Title of the import progress modal.
+#: src/features/personas/components/modals/PersonaImportModal.tsx:24
+msgid "Could not read file"
+msgstr "फ़ाइल को पढ़ा नहीं जा सका"
 
 #. Body of the modal shown when a screen share attempt fails. Advises the user to try sharing the full screen.
 #: src/features/voice/components/alerts/ScreenShareFailedModal.tsx:12
@@ -9548,7 +9574,7 @@ msgstr "नया लिंक बनाएं"
 msgid "Create or join a community"
 msgstr "कम्युनिटी बनाएँ या उसमें शामिल हों"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:230
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:315
 msgid "Create Persona"
 msgstr "Persona बनाएँ"
 
@@ -10453,11 +10479,11 @@ msgstr "बैटरी लाइफ़ और डेटा बचाने क�
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:204
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
-#: src/features/messaging/commands/MessageCommands.tsx:81
+#: src/features/messaging/commands/MessageCommands.tsx:84
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:109
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
-#: src/features/user/components/modals/PersonaEditorModal.tsx:236
-#: src/features/user/components/modals/PersonaEditorModal.tsx:544
+#: src/features/user/components/modals/PersonaEditorModal.tsx:245
+#: src/features/user/components/modals/PersonaEditorModal.tsx:586
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:117
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:290
@@ -10693,7 +10719,7 @@ msgid "Delete this message"
 msgstr "यह मैसेज मिटाएँ"
 
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:77
+#: src/features/messaging/commands/MessageCommands.tsx:80
 msgid "Delete this message? Can't be undone."
 msgstr "यह मैसेज डिलीट करें? इसे अनडू नहीं किया जा सकता."
 
@@ -10839,6 +10865,10 @@ msgstr "विवरण कम से कम {discoveryDescriptionMinLength} व
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:123
 msgid "Description must be no more than {discoveryDescriptionMaxLength} characters."
 msgstr "विवरण {discoveryDescriptionMaxLength} वर्णों से अधिक नहीं होना चाहिए।"
+
+#: src/features/personas/components/modals/PersonaImportModal.tsx:122
+msgid "Deselect all"
+msgstr "सभी को हटाएँ"
 
 #. Developer settings tab showing UI component examples.
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:153
@@ -12287,12 +12317,13 @@ msgid "Edit overwrites for roles and members in this channel."
 msgstr "इस चैनल में भूमिकाओं और सदस्यों के लिए ओवरराइट संपादित करें।"
 
 #. The title of the persona editor modal.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:47
+#: src/features/user/components/modals/PersonaEditorModal.tsx:50
 msgid "Edit Persona"
 msgstr "Persona संपादित करें"
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:743
 #: src/features/app/components/pages/YouPage.tsx:157
+#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx:706
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:682
 #: src/features/user/components/modals/UserProfileModal.tsx:587
 #: src/features/user/components/popouts/UserProfilePopout.tsx:450
@@ -14380,6 +14411,7 @@ msgid "Filter mentions"
 msgstr "मेंशन फ़िल्टर करें"
 
 #: src/features/personas/components/popouts/PersonaPickerPopout.tsx:156
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:206
 msgid "Filter personas"
 msgstr "Personas फ़िल्टर करें"
 
@@ -16751,6 +16783,7 @@ msgstr "रूप धारण करना या भ्रामक मीड�
 
 #. Primary button in the favorite GIF import modal. Starts importing pasted GIF URLs.
 #: src/features/channel/components/pickers/gif/ImportFavoriteGifsModal.tsx:62
+#: src/features/personas/components/modals/PersonaImportModal.tsx:165
 msgid "Import"
 msgstr "इंपोर्ट करें"
 
@@ -16802,6 +16835,11 @@ msgstr "लाइब्रेरी इंपोर्ट करें"
 msgid "Import more"
 msgstr "और इंपोर्ट करें"
 
+#. Title of the import progress modal.
+#: src/features/personas/components/modals/PersonaImportModal.tsx:20
+msgid "Import progress"
+msgstr "इंपोर्ट प्रगति"
+
 #. Accessible label for the import-template form element. Used by assistive tech only.
 #: src/features/guild/components/modals/add_guild_modal/shared.ts:141
 msgid "Import template form"
@@ -16823,7 +16861,7 @@ msgstr "थीम इंपोर्ट करें"
 msgid "Import unavailable"
 msgstr "इंपोर्ट उपलब्ध नहीं है"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:222
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:290
 msgid "Import..."
 msgstr "आयात..."
 
@@ -17275,7 +17313,7 @@ msgid "Interface size"
 msgstr "इंटरफ़ेस का आकार"
 
 #. Label in the persona editor for a private name for a persona.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:55
+#: src/features/user/components/modals/PersonaEditorModal.tsx:58
 msgid "Internal Name"
 msgstr "आंतरिक नाम"
 
@@ -18148,7 +18186,7 @@ msgid "Last used"
 msgstr "अंतिम उपयोग"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:63
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:77
 msgid "Last Used"
 msgstr "अंतिम बार उपयोग"
 
@@ -18902,12 +18940,12 @@ msgid "Make group owner"
 msgstr "ग्रुप का मालिक बनाएं"
 
 #. A tooltip for the button that activates a persona.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:29
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:35
 msgid "Make persona active"
 msgstr "Persona सक्रिय करें"
 
 #. A tooltip for the button that deactivates a persona.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:33
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:39
 msgid "Make persona not active"
 msgstr "Persona निष्क्रिय करें"
 
@@ -19051,7 +19089,7 @@ msgid "Manage your subscription"
 msgstr "अपनी सदस्यता प्रबंधित करें"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:55
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:69
 msgid "Manual"
 msgstr "मैनुअल"
 
@@ -19744,7 +19782,7 @@ msgstr "मैसेज"
 #: src/features/ui/action_menu/items/ActionsSubmenu.tsx:41
 #: src/features/ui/action_menu/items/MessageUserMenuItem.tsx:26
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:73
-#: src/features/user/components/modals/PersonaEditorModal.tsx:71
+#: src/features/user/components/modals/PersonaEditorModal.tsx:74
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:86
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:712
 #: src/features/user/components/modals/UserProfileModal.tsx:562
@@ -19798,7 +19836,7 @@ msgid "Message composer"
 msgstr "मैसेज कंपोजर"
 
 #. Label in the channel and chat reply preview.
-#: src/features/channel/components/ReplyPreview.tsx:41
+#: src/features/channel/components/ReplyPreview.tsx:42
 msgid "Message contains attached media"
 msgstr "मैसेज में अटैच की गई मीडिया है"
 
@@ -20842,7 +20880,7 @@ msgid "My group"
 msgstr "मेरा ग्रुप"
 
 #. Slate message that shows in the Personas tab when there are no personas.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:41
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:47
 msgid "My name is Darth Vader. I am an extra-terrestrial from the planet Vulcan!"
 msgstr "मेरा नाम डार्थ वेडर है। मैं ग्रह वल्कन का एक एलियन हूँ!"
 
@@ -20934,8 +20972,8 @@ msgstr "नाम: {0}."
 
 #. Placeholder text to hint at what can be used to filter personas in the list.
 #: src/features/personas/components/popouts/PersonaPickerPopout.tsx:32
-msgid "Names or pronouns"
-msgstr "नाम या सर्वनाम"
+msgid "Names, pronouns, or triggers"
+msgstr "नाम, सर्वनाम, या ट्रिगर"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:271
@@ -21163,7 +21201,7 @@ msgid "New password"
 msgstr "नया पासवर्ड"
 
 #. The title of the persona editor modal when it's being used to create a new persona.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:51
+#: src/features/user/components/modals/PersonaEditorModal.tsx:54
 msgid "New Persona"
 msgstr "नया Persona"
 
@@ -21614,8 +21652,13 @@ msgstr "कोई अनुमति नहीं मिली"
 msgid "No personal words yet."
 msgstr "अभी तक कोई निजी शब्द नहीं हैं।"
 
+#. Slate title that shows in the Personas tab when there are no personas when filtered.
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:52
+msgid "No personas found"
+msgstr "कोई Personas नहीं मिले"
+
 #. Slate title that shows in the Personas tab when there are no personas.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:37
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:43
 msgid "No personas yet"
 msgstr "अभी तक कोई Personas नहीं"
 
@@ -22115,7 +22158,7 @@ msgstr "ऑब्जेक्ट"
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:97
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:139
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:128
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:47
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:61
 msgid "Off"
 msgstr "बंद"
 
@@ -22131,6 +22174,7 @@ msgid "Offline"
 msgstr "ऑफ़लाइन"
 
 #: src/features/guild/components/RoleManagement.tsx:401
+#: src/features/personas/components/modals/PersonaImportModal.tsx:155
 msgid "OK"
 msgstr "OK"
 
@@ -22935,12 +22979,12 @@ msgid "Ordered upload"
 msgstr "ऑर्डर किया गया अपलोड"
 
 #. Error message in the channel and chat reply preview.
-#: src/features/channel/components/ReplyPreview.tsx:29
+#: src/features/channel/components/ReplyPreview.tsx:30
 msgid "Original message failed to load"
 msgstr "मूल मैसेज लोड नहीं हो पाया"
 
 #. Label in the channel and chat reply preview. Keep the tone plain and specific.
-#: src/features/channel/components/ReplyPreview.tsx:25
+#: src/features/channel/components/ReplyPreview.tsx:26
 msgid "Original message was deleted"
 msgstr "मूल मैसेज मिटा दिया गया था"
 
@@ -23471,17 +23515,17 @@ msgid "Permissions for {0}"
 msgstr "{0} के लिए अनुमतियाँ"
 
 #. Short label in the persona editor. Keep it concise.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:79
+#: src/features/user/components/modals/PersonaEditorModal.tsx:82
 msgid "Persona created"
 msgstr "Persona बनाई गई"
 
 #. Short label in the persona editor. Keep it concise.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:83
+#: src/features/user/components/modals/PersonaEditorModal.tsx:86
 msgid "Persona deleted"
 msgstr "Persona हटा दी गई"
 
 #. Short label in the persona editor. Keep it concise.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:75
+#: src/features/user/components/modals/PersonaEditorModal.tsx:78
 msgid "Persona updated"
 msgstr "Persona अपडेट की गई"
 
@@ -23509,7 +23553,7 @@ msgstr "निजी नोट्स पहले से ही खाली थ
 msgid "Personas"
 msgstr "Personas"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:181
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:243
 msgid "Personas are reusable profiles that you can attach to messages."
 msgstr "Personas पुन: उपयोग योग्य सेटिंग्स हैं जिन्हें आप संदेशों से जोड़ सकते हैं।"
 
@@ -24028,7 +24072,7 @@ msgid "Prefers reduced motion"
 msgstr "कम गति पसंद करें"
 
 #. Label in the persona editor for the message prefixes and suffixes that trigger a persona for a message.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:63
+#: src/features/user/components/modals/PersonaEditorModal.tsx:66
 msgid "Prefix"
 msgstr "पूर्वसर्ग"
 
@@ -24086,6 +24130,10 @@ msgstr "प्रीमियम प्रकार"
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:157
 msgid "Premium until date"
 msgstr "इस तारीख तक प्रीमियम"
+
+#: src/features/personas/components/modals/PersonaImportModal.tsx:106
+msgid "Preparing avatars and banners..."
+msgstr "अवतार और बैनर तैयार हो रहे हैं..."
 
 #. Setup wizard title while the instance configuration loads.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:72
@@ -24966,6 +25014,10 @@ msgstr "समुदाय के बदलावों और मॉडरे�
 #: src/features/user/components/modals/tabs/applications_tab/index.tsx:33
 msgid "Read the documentation ({domain})"
 msgstr "डॉक्यूमेंटेशन पढ़ें ({domain})"
+
+#: src/features/personas/components/modals/PersonaImportModal.tsx:105
+msgid "Reading file..."
+msgstr "फ़ाइल पढ़ी जा रही है..."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:163
@@ -25879,12 +25931,12 @@ msgid "Reply"
 msgstr "रिप्लाई करें"
 
 #. Error message in the channel and chat reply preview. Keep the tone plain and specific.
-#: src/features/channel/components/ReplyPreview.tsx:33
+#: src/features/channel/components/ReplyPreview.tsx:34
 msgid "Reply hidden because the original author is blocked."
 msgstr "जवाब छिपा दिया गया है क्योंकि मूल लेखक ब्लॉक किया गया है।"
 
 #. Description text in the channel and chat reply preview. Keep the tone plain and specific.
-#: src/features/channel/components/ReplyPreview.tsx:37
+#: src/features/channel/components/ReplyPreview.tsx:38
 msgid "Reply hidden because the original author is marked as a spammer."
 msgstr "जवाब छिपा दिया गया है क्योंकि मूल लेखक को स्पैमर के तौर पर मार्क किया गया है।"
 
@@ -27869,6 +27921,7 @@ msgstr "खाता चुनें"
 
 #. Textarea right-click context menu item that selects all text in the textarea.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:58
+#: src/features/personas/components/modals/PersonaImportModal.tsx:128
 msgid "Select all"
 msgstr "सभी चुनें"
 
@@ -27904,6 +27957,10 @@ msgstr "इंटरफ़ेस भाषा चुनें"
 #: src/features/personas/components/PersonaPickerComposerButton.tsx:21
 msgid "Select persona"
 msgstr "Persona चुनें"
+
+#: src/features/personas/components/modals/PersonaImportModal.tsx:115
+msgid "Select personas to import"
+msgstr "इंपोर्ट करने के लिए Personas चुनें"
 
 #. Button or menu action label in the o auth builder section. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:39
@@ -28100,10 +28157,12 @@ msgid "Send file messages in order"
 msgstr "फ़ाइल संदेश क्रम में भेजें"
 
 #. Button or menu action label in the user profile mobile sheet. Keep it concise.
+#. Button or menu action label in the user profile mobile sheet. Keep it concise.
 #. Button or menu action label in the user profile modal. Keep it concise.
 #. Member actions sheet menu item. Sends a friend request to the target user.
 #: src/features/channel/components/direct_message/DMWelcomeSection.tsx:146
 #: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:93
+#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx:121
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:110
 #: src/features/user/components/modals/UserProfileModal.tsx:126
 msgid "Send friend request"
@@ -28587,7 +28646,7 @@ msgstr "वॉइस क्षेत्र सेट करें"
 msgid "Set webhook type to {0}."
 msgstr "वेबहुक प्रकार को {0} पर सेट करें।"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:189
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:251
 msgid "Set what happens when you send a message using a persona's trigger."
 msgstr "जब आप किसी Persona के ट्रिगर का उपयोग करके संदेश भेजते हैं तो क्या होगा, यह सेट करें।"
 
@@ -30975,7 +31034,7 @@ msgid "Success"
 msgstr "सफलता"
 
 #. Label in the persona editor for the message prefixes and suffixes that trigger a persona for a message.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:67
+#: src/features/user/components/modals/PersonaEditorModal.tsx:70
 msgid "Suffix"
 msgstr "उपसर्ग"
 
@@ -32605,7 +32664,7 @@ msgstr "यह मैसेज पहले ही डिलीट हो चु
 msgid "This message no longer exists."
 msgstr "यह मैसेज अब मौजूद नहीं है।"
 
-#: src/features/user/components/modals/PersonaEditorModal.tsx:378
+#: src/features/user/components/modals/PersonaEditorModal.tsx:420
 msgid "This name stays private, and only appears in lists of your own personas."
 msgstr "यह नाम निजी रहता है और केवल आपकी Personas की सूचियों में दिखाई देता है।"
 
@@ -33360,7 +33419,7 @@ msgstr "ट्रे आइकन में बदलाव Linux पर री�
 msgid "Trending GIFs"
 msgstr "ट्रेंडिंग GIF"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:191
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:253
 msgid "Trigger Behavior"
 msgstr "ट्रिगर व्यवहार"
 
@@ -33369,12 +33428,12 @@ msgid "Trigger React crash"
 msgstr "रिएक्ट क्रैश ट्रिगर करें"
 
 #. Label in the persona editor for the message prefixes and suffixes that trigger a persona for a message.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:59
+#: src/features/user/components/modals/PersonaEditorModal.tsx:62
 msgid "Triggers"
 msgstr "ट्रिगर"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:51
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:65
 msgid "Triggers don't do anything."
 msgstr "ट्रिगर कुछ नहीं करते।"
 
@@ -33467,6 +33526,11 @@ msgstr "कोई अलग खोज क्वेरी आज़माएँ�
 #: src/features/channel/components/pickers/memes/MemesPickerView.tsx:36
 msgid "Try a different search term or filter"
 msgstr "कोई दूसरा सर्च टर्म या फ़िल्टर आज़माएँ"
+
+#. Slate message that shows in the Personas tab when there are no personas when filtered.
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:56
+msgid "Try a different search, or check your spelling."
+msgstr "कोई दूसरी खोज आज़माएँ, या अपनी स्पेलिंग जांचें।"
 
 #. Label in the channel and chat mobile stickers picker.
 #: src/features/channel/components/MobileStickersPicker.tsx:63
@@ -33941,8 +34005,10 @@ msgid "Unblock them first to send a friend request."
 msgstr "मित्रता अनुरोध भेजने के लिए पहले उन्हें अनब्लॉक करें।"
 
 #. Button or menu action label in the user profile mobile sheet. Keep it concise. Keep the tone plain and specific.
+#. Button or menu action label in the user profile mobile sheet. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the user profile modal. Keep it concise. Keep the tone plain and specific.
 #. Title of the confirmation modal for unblocking a previously blocked user. Short command title.
+#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx:116
 #: src/features/relationship/utils/RelationshipActionUtils.tsx:95
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:105
 #: src/features/user/components/modals/UserProfileModal.tsx:118
@@ -34954,6 +35020,10 @@ msgstr "{emojiText} अपलोड किया जा रहा है। इ�
 #: src/features/emoji/components/modals/EmojiUploadModal.tsx:26
 msgid "Uploading emojis"
 msgstr "इमोजी अपलोड हो रहे हैं"
+
+#: src/features/personas/components/modals/PersonaImportModal.tsx:107
+msgid "Uploading to server..."
+msgstr "सर्वर पर अपलोड हो रहा है..."
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -36209,6 +36279,7 @@ msgstr "घटना का विवरण देखें"
 msgid "View incoming call"
 msgstr "इनकमिंग कॉल देखें"
 
+#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx:803
 #: src/features/user/components/profile/PersonaProfile.tsx:117
 msgid "View main profile"
 msgstr "मुख्य प्रोफ़ाइल दिखाएँ"
@@ -37594,6 +37665,11 @@ msgstr "आप 14 दिनों के अंदर डिलीट करन�
 msgid "You can close this modal. The import will continue in the background."
 msgstr "आप इस मोडल को बंद कर सकते हैं। इंपोर्ट बैकग्राउंड में जारी रहेगा।"
 
+#. A list of supported import formats. The names of each format should remain untranslated since they are proper nouns.
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:86
+msgid "You can import JSON files exported from Pluralkit, Tupperbox, /plu/ral, Fishing Bucket, or anything that exports to a compatible format."
+msgstr "आप Pluralkit, Tupperbox, /plu/ral, Fishing Bucket, या किसी भी संगत प्रारूप को निर्यात करने वाली चीज़ से निर्यात की गई JSON फ़ाइलें आयात कर सकते हैं।"
+
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:169
 msgid "You can now close this tab and return to the app."
 msgstr "अब आप यह टैब बंद करके ऐप पर वापस जा सकते हैं।"
@@ -37904,7 +37980,7 @@ msgid "You have refunded recently"
 msgstr "आपने हाल ही में रिफंड किया है"
 
 #: src/features/app/components/dialogs/shared/UnsavedChangesBannerContent.tsx:37
-#: src/features/user/components/modals/PersonaEditorModal.tsx:537
+#: src/features/user/components/modals/PersonaEditorModal.tsx:579
 msgid "You have unsaved changes."
 msgstr "आपके कुछ बदलाव सेव नहीं हुए हैं।"
 

@@ -48,6 +48,11 @@ msgstr "(自分)"
 msgid "{0, plural, one {# member} other {# members}}"
 msgstr "{0, plural, one {#人のメンバー} other {#人のメンバー}}"
 
+#. placeholder {0}: props.value
+#: src/features/personas/components/modals/PersonaImportModal.tsx:149
+msgid "{0} personas imported successfully"
+msgstr "{0}個の Persona が正常にインポートされました"
+
 #: src/features/channel/components/TypingUsers.tsx:70
 msgid "{a} and {b} are typing..."
 msgstr "{a}と{b}が入力中..."
@@ -1937,12 +1942,12 @@ msgid "A symphony of clacking keys is underway..."
 msgstr "入力中..."
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:59
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:73
 msgid "A trigger sends a message with its persona, but the active persona doesn't change."
 msgstr "トリガーは自分の Persona でメッセージを送信しますが、アクティブな Persona は変更されません。"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:67
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:81
 msgid "A trigger sets its persona as active until the active persona is changed. This may also be called \"latching\"."
 msgstr "トリガーは自分の Persona をアクティブに設定し、アクティブな Persona が変更されるまでそのままにします。これを「latching」と呼ぶこともあります。"
 
@@ -1974,6 +1979,7 @@ msgstr "{appName}について"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the user profile shared popout. Keep it concise.
 #: src/features/app/components/pages/YouPage.tsx:166
+#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx:726
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:26
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:783
 #: src/features/user/components/popouts/UserProfileShared.tsx:41
@@ -2631,7 +2637,7 @@ msgstr "翻訳プロバイダーを追加"
 msgid "Add translator"
 msgstr "翻訳者を追加"
 
-#: src/features/user/components/modals/PersonaEditorModal.tsx:476
+#: src/features/user/components/modals/PersonaEditorModal.tsx:518
 msgid "Add trigger"
 msgstr "トリガーを追加"
 
@@ -3179,7 +3185,7 @@ msgid "Already set to cancel"
 msgstr "キャンセル設定済み"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:85
+#: src/features/messaging/commands/MessageCommands.tsx:88
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "このメッセージを{productName}安全チームにも報告する"
 
@@ -3284,6 +3290,11 @@ msgstr "{productName}のHunspell辞書を常に使用し、必要に応じてダ
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:123
 msgid "Amount"
 msgstr "金額"
+
+#. Title of the import progress modal.
+#: src/features/personas/components/modals/PersonaImportModal.tsx:36
+msgid "An error occurred"
+msgstr "エラーが発生しました"
 
 #. Error message in the use channel search hook.
 #: src/features/channel/hooks/useChannelSearch.ts:33
@@ -8840,6 +8851,16 @@ msgstr "インストール破損のナグバー"
 msgid "Could not decode this audio file."
 msgstr "この音声ファイルをデコードできませんでした。"
 
+#. Title of the import progress modal.
+#: src/features/personas/components/modals/PersonaImportModal.tsx:28
+msgid "Could not get avatars"
+msgstr "アバターを取得できませんでした"
+
+#. Title of the import progress modal.
+#: src/features/personas/components/modals/PersonaImportModal.tsx:32
+msgid "Could not import personas"
+msgstr "Persona をインポートできませんでした"
+
 #. Error shown when the setup wizard fails to load the instance configuration.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:93
 msgid "Could not load the instance configuration. Try reloading the page."
@@ -8848,6 +8869,11 @@ msgstr "インスタンスの設定を読み込めませんでした。ページ
 #: src/features/auth/flow/AuthRouteLoadError.tsx:15
 msgid "Could not load this page"
 msgstr "このページを読み込めませんでした"
+
+#. Title of the import progress modal.
+#: src/features/personas/components/modals/PersonaImportModal.tsx:24
+msgid "Could not read file"
+msgstr "ファイルを読み込めませんでした"
 
 #. Body of the modal shown when a screen share attempt fails. Advises the user to try sharing the full screen.
 #: src/features/voice/components/alerts/ScreenShareFailedModal.tsx:12
@@ -9548,7 +9574,7 @@ msgstr "新しいリンクを作成"
 msgid "Create or join a community"
 msgstr "コミュニティを作成または参加"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:230
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:315
 msgid "Create Persona"
 msgstr "Persona を作成"
 
@@ -10453,11 +10479,11 @@ msgstr "バッテリーとデータ使用量を節約するため、モバイル
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:204
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
-#: src/features/messaging/commands/MessageCommands.tsx:81
+#: src/features/messaging/commands/MessageCommands.tsx:84
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:109
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
-#: src/features/user/components/modals/PersonaEditorModal.tsx:236
-#: src/features/user/components/modals/PersonaEditorModal.tsx:544
+#: src/features/user/components/modals/PersonaEditorModal.tsx:245
+#: src/features/user/components/modals/PersonaEditorModal.tsx:586
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:117
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:290
@@ -10693,7 +10719,7 @@ msgid "Delete this message"
 msgstr "このメッセージを削除"
 
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:77
+#: src/features/messaging/commands/MessageCommands.tsx:80
 msgid "Delete this message? Can't be undone."
 msgstr "このメッセージを削除しますか？元に戻すことはできません。"
 
@@ -10839,6 +10865,10 @@ msgstr "説明は{discoveryDescriptionMinLength}文字以上で入力してく�
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:123
 msgid "Description must be no more than {discoveryDescriptionMaxLength} characters."
 msgstr "説明は{discoveryDescriptionMaxLength}文字以内にする必要があります。"
+
+#: src/features/personas/components/modals/PersonaImportModal.tsx:122
+msgid "Deselect all"
+msgstr "すべて選択解除"
 
 #. Developer settings tab showing UI component examples.
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:153
@@ -12287,12 +12317,13 @@ msgid "Edit overwrites for roles and members in this channel."
 msgstr "このチャンネルでのロールとメンバーの上書き設定を編集."
 
 #. The title of the persona editor modal.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:47
+#: src/features/user/components/modals/PersonaEditorModal.tsx:50
 msgid "Edit Persona"
 msgstr "Persona を編集"
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:743
 #: src/features/app/components/pages/YouPage.tsx:157
+#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx:706
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:682
 #: src/features/user/components/modals/UserProfileModal.tsx:587
 #: src/features/user/components/popouts/UserProfilePopout.tsx:450
@@ -14380,6 +14411,7 @@ msgid "Filter mentions"
 msgstr "メンションを絞り込む"
 
 #: src/features/personas/components/popouts/PersonaPickerPopout.tsx:156
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:206
 msgid "Filter personas"
 msgstr "Personas をフィルタ"
 
@@ -16751,6 +16783,7 @@ msgstr "なりすましまたは誤解を招くメディア"
 
 #. Primary button in the favorite GIF import modal. Starts importing pasted GIF URLs.
 #: src/features/channel/components/pickers/gif/ImportFavoriteGifsModal.tsx:62
+#: src/features/personas/components/modals/PersonaImportModal.tsx:165
 msgid "Import"
 msgstr "インポート"
 
@@ -16802,6 +16835,11 @@ msgstr "ライブラリをインポート"
 msgid "Import more"
 msgstr "さらにインポート"
 
+#. Title of the import progress modal.
+#: src/features/personas/components/modals/PersonaImportModal.tsx:20
+msgid "Import progress"
+msgstr "インポート中"
+
 #. Accessible label for the import-template form element. Used by assistive tech only.
 #: src/features/guild/components/modals/add_guild_modal/shared.ts:141
 msgid "Import template form"
@@ -16823,7 +16861,7 @@ msgstr "テーマをインポート"
 msgid "Import unavailable"
 msgstr "インポートできません"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:222
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:290
 msgid "Import..."
 msgstr "インポート..."
 
@@ -17275,7 +17313,7 @@ msgid "Interface size"
 msgstr "インターフェースのサイズ"
 
 #. Label in the persona editor for a private name for a persona.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:55
+#: src/features/user/components/modals/PersonaEditorModal.tsx:58
 msgid "Internal Name"
 msgstr "内部名"
 
@@ -18148,7 +18186,7 @@ msgid "Last used"
 msgstr "最終使用"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:63
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:77
 msgid "Last Used"
 msgstr "最終使用"
 
@@ -18902,12 +18940,12 @@ msgid "Make group owner"
 msgstr "グループのオーナーにする"
 
 #. A tooltip for the button that activates a persona.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:29
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:35
 msgid "Make persona active"
 msgstr "Persona を有効にする"
 
 #. A tooltip for the button that deactivates a persona.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:33
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:39
 msgid "Make persona not active"
 msgstr "Persona を無効にする"
 
@@ -19051,7 +19089,7 @@ msgid "Manage your subscription"
 msgstr "サブスクリプションを管理"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:55
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:69
 msgid "Manual"
 msgstr "手動"
 
@@ -19744,7 +19782,7 @@ msgstr "メッセージ"
 #: src/features/ui/action_menu/items/ActionsSubmenu.tsx:41
 #: src/features/ui/action_menu/items/MessageUserMenuItem.tsx:26
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:73
-#: src/features/user/components/modals/PersonaEditorModal.tsx:71
+#: src/features/user/components/modals/PersonaEditorModal.tsx:74
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:86
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:712
 #: src/features/user/components/modals/UserProfileModal.tsx:562
@@ -19798,7 +19836,7 @@ msgid "Message composer"
 msgstr "メッセージ作成"
 
 #. Label in the channel and chat reply preview.
-#: src/features/channel/components/ReplyPreview.tsx:41
+#: src/features/channel/components/ReplyPreview.tsx:42
 msgid "Message contains attached media"
 msgstr "メディアが添付されています"
 
@@ -20842,7 +20880,7 @@ msgid "My group"
 msgstr "自分のグループ"
 
 #. Slate message that shows in the Personas tab when there are no personas.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:41
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:47
 msgid "My name is Darth Vader. I am an extra-terrestrial from the planet Vulcan!"
 msgstr "私の名前はダース・ベイダーです。惑星ヴァルカン出身の宇宙人です！"
 
@@ -20934,8 +20972,8 @@ msgstr "名前: {0}."
 
 #. Placeholder text to hint at what can be used to filter personas in the list.
 #: src/features/personas/components/popouts/PersonaPickerPopout.tsx:32
-msgid "Names or pronouns"
-msgstr "名前または代名詞"
+msgid "Names, pronouns, or triggers"
+msgstr "名前、代名詞、またはトリガー"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:271
@@ -21163,7 +21201,7 @@ msgid "New password"
 msgstr "新しいパスワード"
 
 #. The title of the persona editor modal when it's being used to create a new persona.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:51
+#: src/features/user/components/modals/PersonaEditorModal.tsx:54
 msgid "New Persona"
 msgstr "新しい Persona"
 
@@ -21614,8 +21652,13 @@ msgstr "権限が見つかりませんでした"
 msgid "No personal words yet."
 msgstr "まだ個人辞書に登録された単語はありません。"
 
+#. Slate title that shows in the Personas tab when there are no personas when filtered.
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:52
+msgid "No personas found"
+msgstr "Persona が見つかりません"
+
 #. Slate title that shows in the Personas tab when there are no personas.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:37
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:43
 msgid "No personas yet"
 msgstr "まだ Personas がありません"
 
@@ -22115,7 +22158,7 @@ msgstr "物"
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:97
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:139
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:128
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:47
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:61
 msgid "Off"
 msgstr "オフ"
 
@@ -22131,6 +22174,7 @@ msgid "Offline"
 msgstr "オフライン"
 
 #: src/features/guild/components/RoleManagement.tsx:401
+#: src/features/personas/components/modals/PersonaImportModal.tsx:155
 msgid "OK"
 msgstr "OK"
 
@@ -22935,12 +22979,12 @@ msgid "Ordered upload"
 msgstr "アップロード順"
 
 #. Error message in the channel and chat reply preview.
-#: src/features/channel/components/ReplyPreview.tsx:29
+#: src/features/channel/components/ReplyPreview.tsx:30
 msgid "Original message failed to load"
 msgstr "元のメッセージを読み込めませんでした"
 
 #. Label in the channel and chat reply preview. Keep the tone plain and specific.
-#: src/features/channel/components/ReplyPreview.tsx:25
+#: src/features/channel/components/ReplyPreview.tsx:26
 msgid "Original message was deleted"
 msgstr "元のメッセージは削除されました"
 
@@ -23471,17 +23515,17 @@ msgid "Permissions for {0}"
 msgstr "{0} の権限"
 
 #. Short label in the persona editor. Keep it concise.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:79
+#: src/features/user/components/modals/PersonaEditorModal.tsx:82
 msgid "Persona created"
 msgstr "Persona を作成しました"
 
 #. Short label in the persona editor. Keep it concise.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:83
+#: src/features/user/components/modals/PersonaEditorModal.tsx:86
 msgid "Persona deleted"
 msgstr "Persona を削除しました"
 
 #. Short label in the persona editor. Keep it concise.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:75
+#: src/features/user/components/modals/PersonaEditorModal.tsx:78
 msgid "Persona updated"
 msgstr "Persona を更新しました"
 
@@ -23509,7 +23553,7 @@ msgstr "個人用メモはすでに空です"
 msgid "Personas"
 msgstr "Personas"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:181
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:243
 msgid "Personas are reusable profiles that you can attach to messages."
 msgstr "Personas は再利用可能な設定で、メッセージに付与できます。"
 
@@ -24028,7 +24072,7 @@ msgid "Prefers reduced motion"
 msgstr "アニメーションを減らす"
 
 #. Label in the persona editor for the message prefixes and suffixes that trigger a persona for a message.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:63
+#: src/features/user/components/modals/PersonaEditorModal.tsx:66
 msgid "Prefix"
 msgstr "接頭辞"
 
@@ -24086,6 +24130,10 @@ msgstr "プレミアムタイプ"
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:157
 msgid "Premium until date"
 msgstr "プレミアム有効期限"
+
+#: src/features/personas/components/modals/PersonaImportModal.tsx:106
+msgid "Preparing avatars and banners..."
+msgstr "アバターとバナーを準備中..."
 
 #. Setup wizard title while the instance configuration loads.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:72
@@ -24966,6 +25014,10 @@ msgstr "コミュニティの変更履歴やモデレーション操作のログ
 #: src/features/user/components/modals/tabs/applications_tab/index.tsx:33
 msgid "Read the documentation ({domain})"
 msgstr "ドキュメントを読む（{domain}）"
+
+#: src/features/personas/components/modals/PersonaImportModal.tsx:105
+msgid "Reading file..."
+msgstr "ファイルを読み込み中..."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:163
@@ -25879,12 +25931,12 @@ msgid "Reply"
 msgstr "返信"
 
 #. Error message in the channel and chat reply preview. Keep the tone plain and specific.
-#: src/features/channel/components/ReplyPreview.tsx:33
+#: src/features/channel/components/ReplyPreview.tsx:34
 msgid "Reply hidden because the original author is blocked."
 msgstr "元の投稿者がブロックされているため、返信は非表示です。"
 
 #. Description text in the channel and chat reply preview. Keep the tone plain and specific.
-#: src/features/channel/components/ReplyPreview.tsx:37
+#: src/features/channel/components/ReplyPreview.tsx:38
 msgid "Reply hidden because the original author is marked as a spammer."
 msgstr "元の投稿者がスパムユーザーとしてマークされているため、返信は非表示になっています。"
 
@@ -27869,6 +27921,7 @@ msgstr "アカウントを選択"
 
 #. Textarea right-click context menu item that selects all text in the textarea.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:58
+#: src/features/personas/components/modals/PersonaImportModal.tsx:128
 msgid "Select all"
 msgstr "すべて選択"
 
@@ -27904,6 +27957,10 @@ msgstr "表示言語を選択"
 #: src/features/personas/components/PersonaPickerComposerButton.tsx:21
 msgid "Select persona"
 msgstr "Persona を選択"
+
+#: src/features/personas/components/modals/PersonaImportModal.tsx:115
+msgid "Select personas to import"
+msgstr "インポートする Persona を選択"
 
 #. Button or menu action label in the o auth builder section. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:39
@@ -28100,10 +28157,12 @@ msgid "Send file messages in order"
 msgstr "ファイルを順番に送信"
 
 #. Button or menu action label in the user profile mobile sheet. Keep it concise.
+#. Button or menu action label in the user profile mobile sheet. Keep it concise.
 #. Button or menu action label in the user profile modal. Keep it concise.
 #. Member actions sheet menu item. Sends a friend request to the target user.
 #: src/features/channel/components/direct_message/DMWelcomeSection.tsx:146
 #: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:93
+#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx:121
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:110
 #: src/features/user/components/modals/UserProfileModal.tsx:126
 msgid "Send friend request"
@@ -28587,7 +28646,7 @@ msgstr "音声リージョンを設定"
 msgid "Set webhook type to {0}."
 msgstr "ウェブフックの種類を「{0}」に設定."
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:189
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:251
 msgid "Set what happens when you send a message using a persona's trigger."
 msgstr "Persona のトリガーでメッセージを送信したときの動作を設定してください。"
 
@@ -30975,7 +31034,7 @@ msgid "Success"
 msgstr "成功"
 
 #. Label in the persona editor for the message prefixes and suffixes that trigger a persona for a message.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:67
+#: src/features/user/components/modals/PersonaEditorModal.tsx:70
 msgid "Suffix"
 msgstr "接尾辞"
 
@@ -32605,7 +32664,7 @@ msgstr "このメッセージはすでに削除されています。"
 msgid "This message no longer exists."
 msgstr "このメッセージはすでに削除されています。"
 
-#: src/features/user/components/modals/PersonaEditorModal.tsx:378
+#: src/features/user/components/modals/PersonaEditorModal.tsx:420
 msgid "This name stays private, and only appears in lists of your own personas."
 msgstr "この名前は非公開で、あなたの Persona 一覧にのみ表示されます。"
 
@@ -33360,7 +33419,7 @@ msgstr "Linuxでは、システムトレイプロトコルが実行時にアプ�
 msgid "Trending GIFs"
 msgstr "トレンドGIF"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:191
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:253
 msgid "Trigger Behavior"
 msgstr "トリガーの動作"
 
@@ -33369,12 +33428,12 @@ msgid "Trigger React crash"
 msgstr "Reactクラッシュをトリガー"
 
 #. Label in the persona editor for the message prefixes and suffixes that trigger a persona for a message.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:59
+#: src/features/user/components/modals/PersonaEditorModal.tsx:62
 msgid "Triggers"
 msgstr "トリガー"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:51
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:65
 msgid "Triggers don't do anything."
 msgstr "トリガーは何もしません。"
 
@@ -33467,6 +33526,11 @@ msgstr "別の検索クエリを試してください。"
 #: src/features/channel/components/pickers/memes/MemesPickerView.tsx:36
 msgid "Try a different search term or filter"
 msgstr "別の検索語句またはフィルターをお試しください"
+
+#. Slate message that shows in the Personas tab when there are no personas when filtered.
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:56
+msgid "Try a different search, or check your spelling."
+msgstr "別のキーワードで検索するか、スペルを確認してください。"
 
 #. Label in the channel and chat mobile stickers picker.
 #: src/features/channel/components/MobileStickersPicker.tsx:63
@@ -33941,8 +34005,10 @@ msgid "Unblock them first to send a friend request."
 msgstr "フレンドリクエストを送信するには、まずブロックを解除してください。"
 
 #. Button or menu action label in the user profile mobile sheet. Keep it concise. Keep the tone plain and specific.
+#. Button or menu action label in the user profile mobile sheet. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the user profile modal. Keep it concise. Keep the tone plain and specific.
 #. Title of the confirmation modal for unblocking a previously blocked user. Short command title.
+#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx:116
 #: src/features/relationship/utils/RelationshipActionUtils.tsx:95
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:105
 #: src/features/user/components/modals/UserProfileModal.tsx:118
@@ -34954,6 +35020,10 @@ msgstr "{emojiText}をアップロード中。しばらく時間がかかる場�
 #: src/features/emoji/components/modals/EmojiUploadModal.tsx:26
 msgid "Uploading emojis"
 msgstr "絵文字をアップロード中"
+
+#: src/features/personas/components/modals/PersonaImportModal.tsx:107
+msgid "Uploading to server..."
+msgstr "サーバーにアップロード中..."
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -36209,6 +36279,7 @@ msgstr "インシデントの詳細を表示"
 msgid "View incoming call"
 msgstr "着信を表示"
 
+#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx:803
 #: src/features/user/components/profile/PersonaProfile.tsx:117
 msgid "View main profile"
 msgstr "メインプロフィールを表示"
@@ -37594,6 +37665,11 @@ msgstr "14日以内であれば、削除処理をキャンセルできます"
 msgid "You can close this modal. The import will continue in the background."
 msgstr "この画面を閉じても、バックグラウンドでインポートが続行されます。"
 
+#. A list of supported import formats. The names of each format should remain untranslated since they are proper nouns.
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:86
+msgid "You can import JSON files exported from Pluralkit, Tupperbox, /plu/ral, Fishing Bucket, or anything that exports to a compatible format."
+msgstr "Pluralkit、Tupperbox、/plu/ral、Fishing Bucket、またはその他の互換形式でエクスポートされた JSON ファイルをインポートできます。"
+
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:169
 msgid "You can now close this tab and return to the app."
 msgstr "このタブを閉じてアプリに戻ることができます。"
@@ -37904,7 +37980,7 @@ msgid "You have refunded recently"
 msgstr "最近返金しました"
 
 #: src/features/app/components/dialogs/shared/UnsavedChangesBannerContent.tsx:37
-#: src/features/user/components/modals/PersonaEditorModal.tsx:537
+#: src/features/user/components/modals/PersonaEditorModal.tsx:579
 msgid "You have unsaved changes."
 msgstr "保存されていない変更があります。"
 

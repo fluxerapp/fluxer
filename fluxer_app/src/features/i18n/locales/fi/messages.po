@@ -48,6 +48,11 @@ msgstr "(sinä)"
 msgid "{0, plural, one {# member} other {# members}}"
 msgstr "{0, plural, one {# jäsen} other {# jäsentä}}"
 
+#. placeholder {0}: props.value
+#: src/features/personas/components/modals/PersonaImportModal.tsx:149
+msgid "{0} personas imported successfully"
+msgstr "{0} personaa tuotu onnistuneesti"
+
 #: src/features/channel/components/TypingUsers.tsx:70
 msgid "{a} and {b} are typing..."
 msgstr "{a} ja {b} kirjoittavat..."
@@ -1937,12 +1942,12 @@ msgid "A symphony of clacking keys is underway..."
 msgstr "Joku kirjoittaa..."
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:59
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:73
 msgid "A trigger sends a message with its persona, but the active persona doesn't change."
 msgstr "Trigger lähettää viestin, jossa näkyy Persona, mutta aktiivinen Persona ei muutu."
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:67
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:81
 msgid "A trigger sets its persona as active until the active persona is changed. This may also be called \"latching\"."
 msgstr "Trigger asettaa Persona-tilan aktiiviseksi, kunnes aktiivinen Persona vaihdetaan. Tätä voidaan kutsua myös \"latching\"."
 
@@ -1974,6 +1979,7 @@ msgstr "Tietoja sovelluksesta {appName}"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the user profile shared popout. Keep it concise.
 #: src/features/app/components/pages/YouPage.tsx:166
+#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx:726
 #: src/features/user/components/modals/tabs/my_profile_tab/BioEditor.tsx:26
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:783
 #: src/features/user/components/popouts/UserProfileShared.tsx:41
@@ -2631,7 +2637,7 @@ msgstr "Lisää käännöspalvelu"
 msgid "Add translator"
 msgstr "Lisää kääntäjä"
 
-#: src/features/user/components/modals/PersonaEditorModal.tsx:476
+#: src/features/user/components/modals/PersonaEditorModal.tsx:518
 msgid "Add trigger"
 msgstr "Lisää trigger"
 
@@ -3179,7 +3185,7 @@ msgid "Already set to cancel"
 msgstr "Peruutuksen ajoitus on jo tehty"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:85
+#: src/features/messaging/commands/MessageCommands.tsx:88
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "Ilmoita tämä viesti myös {productName}-turvatiimille"
 
@@ -3284,6 +3290,11 @@ msgstr "Käytä aina {productName}-sovelluksen Hunspell-sanakirjoja, jotka ladat
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:123
 msgid "Amount"
 msgstr "Määrä"
+
+#. Title of the import progress modal.
+#: src/features/personas/components/modals/PersonaImportModal.tsx:36
+msgid "An error occurred"
+msgstr "Tapahtui virhe"
 
 #. Error message in the use channel search hook.
 #: src/features/channel/hooks/useChannelSearch.ts:33
@@ -8840,6 +8851,16 @@ msgstr "Ilmoitus vioittuneesta asennuksesta"
 msgid "Could not decode this audio file."
 msgstr "Äänitiedoston dekoodaus epäonnistui."
 
+#. Title of the import progress modal.
+#: src/features/personas/components/modals/PersonaImportModal.tsx:28
+msgid "Could not get avatars"
+msgstr "Profiilipille ei voitu hakea"
+
+#. Title of the import progress modal.
+#: src/features/personas/components/modals/PersonaImportModal.tsx:32
+msgid "Could not import personas"
+msgstr "Personaa ei voitu tuoda"
+
 #. Error shown when the setup wizard fails to load the instance configuration.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:93
 msgid "Could not load the instance configuration. Try reloading the page."
@@ -8848,6 +8869,11 @@ msgstr "Konfiguraatiota ei voitu ladata. Yritä ladata sivu uudelleen."
 #: src/features/auth/flow/AuthRouteLoadError.tsx:15
 msgid "Could not load this page"
 msgstr "Sivua ei voitu ladata"
+
+#. Title of the import progress modal.
+#: src/features/personas/components/modals/PersonaImportModal.tsx:24
+msgid "Could not read file"
+msgstr "Tiedostoa ei voitu lukea"
 
 #. Body of the modal shown when a screen share attempt fails. Advises the user to try sharing the full screen.
 #: src/features/voice/components/alerts/ScreenShareFailedModal.tsx:12
@@ -9548,7 +9574,7 @@ msgstr "Luo uusi linkki"
 msgid "Create or join a community"
 msgstr "Luo yhteisö tai liity sellaiseen"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:230
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:315
 msgid "Create Persona"
 msgstr "Luo Persona"
 
@@ -10453,11 +10479,11 @@ msgstr "Oletuksena pois päältä mobiililaitteilla akun keston ja datan sääst
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:204
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
-#: src/features/messaging/commands/MessageCommands.tsx:81
+#: src/features/messaging/commands/MessageCommands.tsx:84
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:109
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
-#: src/features/user/components/modals/PersonaEditorModal.tsx:236
-#: src/features/user/components/modals/PersonaEditorModal.tsx:544
+#: src/features/user/components/modals/PersonaEditorModal.tsx:245
+#: src/features/user/components/modals/PersonaEditorModal.tsx:586
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:399
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:117
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:290
@@ -10693,7 +10719,7 @@ msgid "Delete this message"
 msgstr "Poista tämä viesti"
 
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:77
+#: src/features/messaging/commands/MessageCommands.tsx:80
 msgid "Delete this message? Can't be undone."
 msgstr "Poistetaanko tämä viesti? Toimintoa ei voi kumota."
 
@@ -10839,6 +10865,10 @@ msgstr "Kuvauksen on oltava vähintään {discoveryDescriptionMinLength} merkki�
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:123
 msgid "Description must be no more than {discoveryDescriptionMaxLength} characters."
 msgstr "Kuvauksen enimmäispituus on {discoveryDescriptionMaxLength} merkkiä."
+
+#: src/features/personas/components/modals/PersonaImportModal.tsx:122
+msgid "Deselect all"
+msgstr "Poista kaikkien valinta"
 
 #. Developer settings tab showing UI component examples.
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:153
@@ -12287,12 +12317,13 @@ msgid "Edit overwrites for roles and members in this channel."
 msgstr "Muokkaa roolien ja jäsenten ohituksia tällä kanavalla."
 
 #. The title of the persona editor modal.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:47
+#: src/features/user/components/modals/PersonaEditorModal.tsx:50
 msgid "Edit Persona"
 msgstr "Muokkaa Persona"
 
 #: src/features/app/components/floating/UserAreaPopout.tsx:743
 #: src/features/app/components/pages/YouPage.tsx:157
+#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx:706
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:682
 #: src/features/user/components/modals/UserProfileModal.tsx:587
 #: src/features/user/components/popouts/UserProfilePopout.tsx:450
@@ -14380,6 +14411,7 @@ msgid "Filter mentions"
 msgstr "Suodata mainintoja"
 
 #: src/features/personas/components/popouts/PersonaPickerPopout.tsx:156
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:206
 msgid "Filter personas"
 msgstr "Suodata Personas"
 
@@ -16751,6 +16783,7 @@ msgstr "Imitaatio tai harhaanjohtava media"
 
 #. Primary button in the favorite GIF import modal. Starts importing pasted GIF URLs.
 #: src/features/channel/components/pickers/gif/ImportFavoriteGifsModal.tsx:62
+#: src/features/personas/components/modals/PersonaImportModal.tsx:165
 msgid "Import"
 msgstr "Tuo"
 
@@ -16802,6 +16835,11 @@ msgstr "Tuo kirjasto"
 msgid "Import more"
 msgstr "Tuo lisää"
 
+#. Title of the import progress modal.
+#: src/features/personas/components/modals/PersonaImportModal.tsx:20
+msgid "Import progress"
+msgstr "Tuonnin edistyminen"
+
 #. Accessible label for the import-template form element. Used by assistive tech only.
 #: src/features/guild/components/modals/add_guild_modal/shared.ts:141
 msgid "Import template form"
@@ -16823,7 +16861,7 @@ msgstr "Tuo teemoja"
 msgid "Import unavailable"
 msgstr "Tuonti ei saatavilla"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:222
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:290
 msgid "Import..."
 msgstr "Tuo..."
 
@@ -17275,7 +17313,7 @@ msgid "Interface size"
 msgstr "Käyttöliittymän koko"
 
 #. Label in the persona editor for a private name for a persona.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:55
+#: src/features/user/components/modals/PersonaEditorModal.tsx:58
 msgid "Internal Name"
 msgstr "Sisäinen nimi"
 
@@ -18148,7 +18186,7 @@ msgid "Last used"
 msgstr "Viimeksi käytetty"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:63
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:77
 msgid "Last Used"
 msgstr "Viimeksi käytetty"
 
@@ -18902,12 +18940,12 @@ msgid "Make group owner"
 msgstr "Tee ryhmän omistajaksi"
 
 #. A tooltip for the button that activates a persona.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:29
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:35
 msgid "Make persona active"
 msgstr "Tee Persona aktiiviseksi"
 
 #. A tooltip for the button that deactivates a persona.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:33
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:39
 msgid "Make persona not active"
 msgstr "Tee Persona ei-aktiiviseksi"
 
@@ -19051,7 +19089,7 @@ msgid "Manage your subscription"
 msgstr "Hallinnoi tilaustasi"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:55
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:69
 msgid "Manual"
 msgstr "Manuaalinen"
 
@@ -19744,7 +19782,7 @@ msgstr "viesti"
 #: src/features/ui/action_menu/items/ActionsSubmenu.tsx:41
 #: src/features/ui/action_menu/items/MessageUserMenuItem.tsx:26
 #: src/features/ui/action_menu/items/voice_participant_menu_data/shared.ts:73
-#: src/features/user/components/modals/PersonaEditorModal.tsx:71
+#: src/features/user/components/modals/PersonaEditorModal.tsx:74
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabInputsTab.tsx:86
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:712
 #: src/features/user/components/modals/UserProfileModal.tsx:562
@@ -19798,7 +19836,7 @@ msgid "Message composer"
 msgstr "Viestikenttä"
 
 #. Label in the channel and chat reply preview.
-#: src/features/channel/components/ReplyPreview.tsx:41
+#: src/features/channel/components/ReplyPreview.tsx:42
 msgid "Message contains attached media"
 msgstr "Viesti sisältää liitteitä"
 
@@ -20842,7 +20880,7 @@ msgid "My group"
 msgstr "Oma ryhmä"
 
 #. Slate message that shows in the Personas tab when there are no personas.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:41
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:47
 msgid "My name is Darth Vader. I am an extra-terrestrial from the planet Vulcan!"
 msgstr "Nimeni on Darth Vader. Olen avaruusolento planeetalta Vulcan!"
 
@@ -20934,8 +20972,8 @@ msgstr "Nimi: {0}."
 
 #. Placeholder text to hint at what can be used to filter personas in the list.
 #: src/features/personas/components/popouts/PersonaPickerPopout.tsx:32
-msgid "Names or pronouns"
-msgstr "Nimet tai pronominit"
+msgid "Names, pronouns, or triggers"
+msgstr "Nimet, pronominit tai laukaisut"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:271
@@ -21163,7 +21201,7 @@ msgid "New password"
 msgstr "Uusi salasana"
 
 #. The title of the persona editor modal when it's being used to create a new persona.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:51
+#: src/features/user/components/modals/PersonaEditorModal.tsx:54
 msgid "New Persona"
 msgstr "Uusi Persona"
 
@@ -21614,8 +21652,13 @@ msgstr "Ei käyttöoikeuksia"
 msgid "No personal words yet."
 msgstr "Ei vielä henkilökohtaisia sanoja."
 
+#. Slate title that shows in the Personas tab when there are no personas when filtered.
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:52
+msgid "No personas found"
+msgstr "Personaa ei löytynyt"
+
 #. Slate title that shows in the Personas tab when there are no personas.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:37
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:43
 msgid "No personas yet"
 msgstr "Ei Personas vielä"
 
@@ -22115,7 +22158,7 @@ msgstr "Esineet"
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:97
 #: src/features/guild/components/modals/guild_tabs/GuildModerationTab.tsx:139
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:128
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:47
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:61
 msgid "Off"
 msgstr "Pois päältä"
 
@@ -22131,6 +22174,7 @@ msgid "Offline"
 msgstr "Poissa"
 
 #: src/features/guild/components/RoleManagement.tsx:401
+#: src/features/personas/components/modals/PersonaImportModal.tsx:155
 msgid "OK"
 msgstr "OK"
 
@@ -22935,12 +22979,12 @@ msgid "Ordered upload"
 msgstr "Järjestetty lataus"
 
 #. Error message in the channel and chat reply preview.
-#: src/features/channel/components/ReplyPreview.tsx:29
+#: src/features/channel/components/ReplyPreview.tsx:30
 msgid "Original message failed to load"
 msgstr "Alkuperäisen viestin lataus epäonnistui"
 
 #. Label in the channel and chat reply preview. Keep the tone plain and specific.
-#: src/features/channel/components/ReplyPreview.tsx:25
+#: src/features/channel/components/ReplyPreview.tsx:26
 msgid "Original message was deleted"
 msgstr "Alkuperäinen viesti poistettiin"
 
@@ -23471,17 +23515,17 @@ msgid "Permissions for {0}"
 msgstr "{0}:n oikeudet"
 
 #. Short label in the persona editor. Keep it concise.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:79
+#: src/features/user/components/modals/PersonaEditorModal.tsx:82
 msgid "Persona created"
 msgstr "Persona luotu"
 
 #. Short label in the persona editor. Keep it concise.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:83
+#: src/features/user/components/modals/PersonaEditorModal.tsx:86
 msgid "Persona deleted"
 msgstr "Persona poistettu"
 
 #. Short label in the persona editor. Keep it concise.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:75
+#: src/features/user/components/modals/PersonaEditorModal.tsx:78
 msgid "Persona updated"
 msgstr "Persona päivitetty"
 
@@ -23509,7 +23553,7 @@ msgstr "Omat muistiinpanot olivat jo tyhjiä"
 msgid "Personas"
 msgstr "Personas"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:181
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:243
 msgid "Personas are reusable profiles that you can attach to messages."
 msgstr "Personas ovat uudelleenkäytettäviä identiteettejä, joita voit liittää viesteihin."
 
@@ -24028,7 +24072,7 @@ msgid "Prefers reduced motion"
 msgstr "Suosii vähennettyä liikettä"
 
 #. Label in the persona editor for the message prefixes and suffixes that trigger a persona for a message.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:63
+#: src/features/user/components/modals/PersonaEditorModal.tsx:66
 msgid "Prefix"
 msgstr "Etuliite"
 
@@ -24086,6 +24130,10 @@ msgstr "Premium-tyyppi"
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:157
 msgid "Premium until date"
 msgstr "Premium voimassa tähän asti"
+
+#: src/features/personas/components/modals/PersonaImportModal.tsx:106
+msgid "Preparing avatars and banners..."
+msgstr "Valmistellaan profiilikuvia ja bannereja..."
 
 #. Setup wizard title while the instance configuration loads.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:72
@@ -24966,6 +25014,10 @@ msgstr "Lue yhteisön toimintaloki muutoksista ja moderointitoimista."
 #: src/features/user/components/modals/tabs/applications_tab/index.tsx:33
 msgid "Read the documentation ({domain})"
 msgstr "Lue dokumentaatio ({domain})"
+
+#: src/features/personas/components/modals/PersonaImportModal.tsx:105
+msgid "Reading file..."
+msgstr "Luetaan tiedostoa..."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:163
@@ -25879,12 +25931,12 @@ msgid "Reply"
 msgstr "Vastaa"
 
 #. Error message in the channel and chat reply preview. Keep the tone plain and specific.
-#: src/features/channel/components/ReplyPreview.tsx:33
+#: src/features/channel/components/ReplyPreview.tsx:34
 msgid "Reply hidden because the original author is blocked."
 msgstr "Vastaus piilotettu, koska alkuperäinen kirjoittaja on estetty."
 
 #. Description text in the channel and chat reply preview. Keep the tone plain and specific.
-#: src/features/channel/components/ReplyPreview.tsx:37
+#: src/features/channel/components/ReplyPreview.tsx:38
 msgid "Reply hidden because the original author is marked as a spammer."
 msgstr "Vastaus piilotettu, koska alkuperäinen kirjoittaja on merkitty roskapostittajaksi."
 
@@ -27869,6 +27921,7 @@ msgstr "Valitse tili"
 
 #. Textarea right-click context menu item that selects all text in the textarea.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:58
+#: src/features/personas/components/modals/PersonaImportModal.tsx:128
 msgid "Select all"
 msgstr "Valitse kaikki"
 
@@ -27904,6 +27957,10 @@ msgstr "Valitse käyttöliittymän kieli"
 #: src/features/personas/components/PersonaPickerComposerButton.tsx:21
 msgid "Select persona"
 msgstr "Valitse Persona"
+
+#: src/features/personas/components/modals/PersonaImportModal.tsx:115
+msgid "Select personas to import"
+msgstr "Valitse personaa tuotavaksi"
 
 #. Button or menu action label in the o auth builder section. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:39
@@ -28100,10 +28157,12 @@ msgid "Send file messages in order"
 msgstr "Lähetä tiedostoviestit järjestyksessä"
 
 #. Button or menu action label in the user profile mobile sheet. Keep it concise.
+#. Button or menu action label in the user profile mobile sheet. Keep it concise.
 #. Button or menu action label in the user profile modal. Keep it concise.
 #. Member actions sheet menu item. Sends a friend request to the target user.
 #: src/features/channel/components/direct_message/DMWelcomeSection.tsx:146
 #: src/features/guild/components/modals/guild_tabs/GuildMemberActionsSheet.tsx:93
+#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx:121
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:110
 #: src/features/user/components/modals/UserProfileModal.tsx:126
 msgid "Send friend request"
@@ -28587,7 +28646,7 @@ msgstr "Määritä puhepalvelun alue"
 msgid "Set webhook type to {0}."
 msgstr "WebHookin tyypiksi asetettu {0}."
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:189
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:251
 msgid "Set what happens when you send a message using a persona's trigger."
 msgstr "Aseta, mitä tapahtuu, kun lähetät viestin käyttäen Persona-triggeriä."
 
@@ -30975,7 +31034,7 @@ msgid "Success"
 msgstr "Onnistui"
 
 #. Label in the persona editor for the message prefixes and suffixes that trigger a persona for a message.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:67
+#: src/features/user/components/modals/PersonaEditorModal.tsx:70
 msgid "Suffix"
 msgstr "Jälkiliite"
 
@@ -32605,7 +32664,7 @@ msgstr "Tämä viesti on jo poistettu."
 msgid "This message no longer exists."
 msgstr "Tätä viestiä ei enää ole."
 
-#: src/features/user/components/modals/PersonaEditorModal.tsx:378
+#: src/features/user/components/modals/PersonaEditorModal.tsx:420
 msgid "This name stays private, and only appears in lists of your own personas."
 msgstr "Tämä nimi pysyy yksityisenä ja näkyy vain omien Personas-listoissasi."
 
@@ -33360,7 +33419,7 @@ msgstr "Ilmaisinalueen kuvakkeen muutokset tulevat voimaan vasta uudelleenkäynn
 msgid "Trending GIFs"
 msgstr "Suositut GIFit"
 
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:191
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:253
 msgid "Trigger Behavior"
 msgstr "Triggerin käyttäytyminen"
 
@@ -33369,12 +33428,12 @@ msgid "Trigger React crash"
 msgstr "Aiheuta React-kaatuminen"
 
 #. Label in the persona editor for the message prefixes and suffixes that trigger a persona for a message.
-#: src/features/user/components/modals/PersonaEditorModal.tsx:59
+#: src/features/user/components/modals/PersonaEditorModal.tsx:62
 msgid "Triggers"
 msgstr "Triggerit"
 
 #. A label for the latching modes (trigger behavior) setting.
-#: src/features/user/components/modals/tabs/PersonasTab.tsx:51
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:65
 msgid "Triggers don't do anything."
 msgstr "Triggerit eivät tee mitään."
 
@@ -33467,6 +33526,11 @@ msgstr "Kokeile toista hakua."
 #: src/features/channel/components/pickers/memes/MemesPickerView.tsx:36
 msgid "Try a different search term or filter"
 msgstr "Kokeile toista hakusanaa tai suodatinta"
+
+#. Slate message that shows in the Personas tab when there are no personas when filtered.
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:56
+msgid "Try a different search, or check your spelling."
+msgstr "Kokeile toista hakua tai tarkista kirjoituksesi."
 
 #. Label in the channel and chat mobile stickers picker.
 #: src/features/channel/components/MobileStickersPicker.tsx:63
@@ -33941,8 +34005,10 @@ msgid "Unblock them first to send a friend request."
 msgstr "Poista esto ensin, jotta voit lähettää kaveripyynnön."
 
 #. Button or menu action label in the user profile mobile sheet. Keep it concise. Keep the tone plain and specific.
+#. Button or menu action label in the user profile mobile sheet. Keep it concise. Keep the tone plain and specific.
 #. Button or menu action label in the user profile modal. Keep it concise. Keep the tone plain and specific.
 #. Title of the confirmation modal for unblocking a previously blocked user. Short command title.
+#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx:116
 #: src/features/relationship/utils/RelationshipActionUtils.tsx:95
 #: src/features/user/components/modals/UserProfileMobileSheet.tsx:105
 #: src/features/user/components/modals/UserProfileModal.tsx:118
@@ -34954,6 +35020,10 @@ msgstr "Ladataan emojia {emojiText}. Tämä voi kestää hetken."
 #: src/features/emoji/components/modals/EmojiUploadModal.tsx:26
 msgid "Uploading emojis"
 msgstr "Ladataan emojeita"
+
+#: src/features/personas/components/modals/PersonaImportModal.tsx:107
+msgid "Uploading to server..."
+msgstr "Lähetetään palvelimelle..."
 
 #. Channel overview settings tab label, control, or validation message (name, topic, slowmode, voice region, mature content gate).
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -36209,6 +36279,7 @@ msgstr "Näytä häiriön tiedot"
 msgid "View incoming call"
 msgstr "Näytä saapuva puhelu"
 
+#: src/features/personas/components/modals/PersonaProfileMobileSheet.tsx:803
 #: src/features/user/components/profile/PersonaProfile.tsx:117
 msgid "View main profile"
 msgstr "Näytä pääprofiili"
@@ -37594,6 +37665,11 @@ msgstr "Voit peruuttaa poistoprosessin 14 päivän kuluessa"
 msgid "You can close this modal. The import will continue in the background."
 msgstr "Voit sulkea tämän ikkunan. Tuonti jatkuu taustalla."
 
+#. A list of supported import formats. The names of each format should remain untranslated since they are proper nouns.
+#: src/features/user/components/modals/tabs/PersonasTab.tsx:86
+msgid "You can import JSON files exported from Pluralkit, Tupperbox, /plu/ral, Fishing Bucket, or anything that exports to a compatible format."
+msgstr "Voit tuoda JSON-tiedostoja, jotka on viety Pluralkitista, Tupperboxista, /plu/ralista, Fishing Bucketista tai mistä tahansa sovelluksesta, joka vie yhteensopivassa muodossa."
+
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:169
 msgid "You can now close this tab and return to the app."
 msgstr "Voit nyt sulkea tämän välilehden ja palata takaisin sovellukseen."
@@ -37904,7 +37980,7 @@ msgid "You have refunded recently"
 msgstr "Olet palauttanut rahaa äskettäin"
 
 #: src/features/app/components/dialogs/shared/UnsavedChangesBannerContent.tsx:37
-#: src/features/user/components/modals/PersonaEditorModal.tsx:537
+#: src/features/user/components/modals/PersonaEditorModal.tsx:579
 msgid "You have unsaved changes."
 msgstr "Sinulla on tallentamattomia muutoksia."
 
