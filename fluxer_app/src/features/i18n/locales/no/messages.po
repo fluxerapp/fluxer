@@ -853,7 +853,7 @@ msgstr "Kanalen {channelName}"
 msgid "{characterCount, plural, one {# character} other {# characters}}"
 msgstr "{characterCount, plural, one {# tegn} other {# tegn}}"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:79
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:81
 msgid "{clientLabel} wants to connect"
 msgstr "{clientLabel} vil koble til"
 
@@ -22807,7 +22807,7 @@ msgstr "Ingen snarvei angitt"
 msgid "No shortcuts match that search."
 msgstr "Ingen snarveier samsvarer med søket."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:115
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:117
 msgid "No specific scopes requested."
 msgstr "Ingen spesifikke tillatelser ble bedt om."
 
@@ -27265,7 +27265,7 @@ msgstr "Be om en bekreftelseskode først."
 msgid "Request export"
 msgstr "Be om eksport"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:106
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:108
 msgid "Requested scopes"
 msgstr "Forespurte tillatelser"
 
@@ -27967,7 +27967,7 @@ msgstr "Se gjennom tillatelsene {productName} bruker for tale, video, skjermdeli
 msgid "Review these files and try again with smaller or simpler images."
 msgstr "Gå gjennom disse filene og prøv igjen med mindre eller enklere bilder."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:85
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:87
 msgid "Review what this app is asking for before you continue."
 msgstr "Gå gjennom hva denne appen ber om før du fortsetter."
 
@@ -35106,7 +35106,7 @@ msgstr "Slå av"
 msgid "Turn off all device cameras"
 msgstr "Slå av kameraet på alle enheter"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:109
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:111
 msgid "Turn off anything you're not comfortable with. Some features may stop working."
 msgstr "Slå av det du ikke er komfortabel med. Enkelte funksjoner slutter kanskje å virke."
 
@@ -35165,6 +35165,10 @@ msgstr "Slå på et kamera eller del skjermen i denne talekanalen."
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:172
 msgid "Turn on a camera or share a screen in voice channels."
 msgstr "Slå på et kamera eller del skjermen i talekanaler."
+
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:158
+msgid "Turn on at least one scope to authorize this app."
+msgstr "Slå på minst ett omfang for å godkjenne denne appen."
 
 #. Label for the automatic streaming privacy detection settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:19
@@ -35233,7 +35237,7 @@ msgstr "Slo på det løsrevne banneret"
 msgid "Turned the member's microphone back on in this community"
 msgstr "Slo på mikrofonen til medlemmet igjen i dette fellesskapet"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:156
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:163
 msgid "Turning off scopes may prevent the app from working correctly."
 msgstr "Å slå av tillatelser kan hindre appen i å fungere korrekt."
 

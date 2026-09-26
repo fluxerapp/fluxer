@@ -853,7 +853,7 @@ msgstr "Kanalen {channelName}"
 msgid "{characterCount, plural, one {# character} other {# characters}}"
 msgstr "{characterCount, plural, one {# tecken} other {# tecken}}"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:79
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:81
 msgid "{clientLabel} wants to connect"
 msgstr "{clientLabel} vill ansluta"
 
@@ -22807,7 +22807,7 @@ msgstr "Ingen genväg inställd"
 msgid "No shortcuts match that search."
 msgstr "Inga genvägar matchar sökningen."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:115
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:117
 msgid "No specific scopes requested."
 msgstr "Inga specifika behörighetsomfång har begärts."
 
@@ -27265,7 +27265,7 @@ msgstr "Begär en verifieringskod först."
 msgid "Request export"
 msgstr "Begär export"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:106
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:108
 msgid "Requested scopes"
 msgstr "Begärda behörighetsomfång"
 
@@ -27967,7 +27967,7 @@ msgstr "Granska behörigheterna som {productName} använder för röst, video, s
 msgid "Review these files and try again with smaller or simpler images."
 msgstr "Granska filerna och försök igen med mindre eller enklare bilder."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:85
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:87
 msgid "Review what this app is asking for before you continue."
 msgstr "Granska vad den här appen begär innan du fortsätter."
 
@@ -35106,7 +35106,7 @@ msgstr "Stäng av"
 msgid "Turn off all device cameras"
 msgstr "Stäng av alla enhetskameror"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:109
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:111
 msgid "Turn off anything you're not comfortable with. Some features may stop working."
 msgstr "Stäng av det du inte är bekväm med. Vissa funktioner kanske slutar fungera."
 
@@ -35165,6 +35165,10 @@ msgstr "Starta en kamera eller dela en skärm i den här röstkanalen."
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:172
 msgid "Turn on a camera or share a screen in voice channels."
 msgstr "Aktivera en kamera eller dela en skärm i röstkanaler."
+
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:158
+msgid "Turn on at least one scope to authorize this app."
+msgstr "Aktivera minst ett behörighetsomfång för att auktorisera den här appen."
 
 #. Label for the automatic streaming privacy detection settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:19
@@ -35233,7 +35237,7 @@ msgstr "Aktiverade den fristående bannern"
 msgid "Turned the member's microphone back on in this community"
 msgstr "Slog på medlemmens mikrofon igen i den här communityn"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:156
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:163
 msgid "Turning off scopes may prevent the app from working correctly."
 msgstr "Om du inaktiverar behörighetsomfång kan appen sluta fungera korrekt."
 

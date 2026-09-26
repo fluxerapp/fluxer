@@ -853,7 +853,7 @@ msgstr "{channelName} channel"
 msgid "{characterCount, plural, one {# character} other {# characters}}"
 msgstr "{characterCount, plural, one {# character} other {# characters}}"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:79
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:81
 msgid "{clientLabel} wants to connect"
 msgstr "{clientLabel} wants to connect"
 
@@ -22807,7 +22807,7 @@ msgstr "No shortcut set"
 msgid "No shortcuts match that search."
 msgstr "No shortcuts match that search."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:115
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:117
 msgid "No specific scopes requested."
 msgstr "No specific scopes requested."
 
@@ -27265,7 +27265,7 @@ msgstr "Request a verification code first."
 msgid "Request export"
 msgstr "Request export"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:106
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:108
 msgid "Requested scopes"
 msgstr "Requested scopes"
 
@@ -27967,7 +27967,7 @@ msgstr "Review the permissions {productName} uses for voice, video, screen shari
 msgid "Review these files and try again with smaller or simpler images."
 msgstr "Review these files and try again with smaller or simpler images."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:85
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:87
 msgid "Review what this app is asking for before you continue."
 msgstr "Review what this app is asking for before you continue."
 
@@ -35106,7 +35106,7 @@ msgstr "Turn off"
 msgid "Turn off all device cameras"
 msgstr "Turn off all device cameras"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:109
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:111
 msgid "Turn off anything you're not comfortable with. Some features may stop working."
 msgstr "Turn off anything you're not comfortable with. Some features may stop working."
 
@@ -35165,6 +35165,10 @@ msgstr "Turn on a camera or share a screen in this voice channel."
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:172
 msgid "Turn on a camera or share a screen in voice channels."
 msgstr "Turn on a camera or share a screen in voice channels."
+
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:158
+msgid "Turn on at least one scope to authorize this app."
+msgstr "Turn on at least one scope to authorise this app."
 
 #. Label for the automatic streaming privacy detection settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:19
@@ -35233,7 +35237,7 @@ msgstr "Turned on the detached banner"
 msgid "Turned the member's microphone back on in this community"
 msgstr "Turned the member's microphone back on in this community"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:156
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:163
 msgid "Turning off scopes may prevent the app from working correctly."
 msgstr "Turning off scopes may prevent the app from working correctly."
 
@@ -40003,7 +40007,6 @@ msgstr "Your credit card has been checked. If the card is valid, mature content 
 msgid "Your device will ask you to save an updated passkey for {name}. It replaces the old one."
 msgstr "Your device will ask you to save an updated passkey for {name}. It replaces the old one."
 
-# auto-i18n: reviewed unchanged
 #. Body of the modal that asks the user to save an updated passkey when they signed in with a phone or security key. name is the name the user gave the passkey. Keep plain.
 #: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:33
 msgid "Your device will ask you to save an updated passkey for {name}. Use the same phone or security key you just used."

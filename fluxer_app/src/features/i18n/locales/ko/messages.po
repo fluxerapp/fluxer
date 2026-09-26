@@ -853,7 +853,7 @@ msgstr "{channelName} 채널"
 msgid "{characterCount, plural, one {# character} other {# characters}}"
 msgstr "{characterCount, plural, one {#자} other {#자}}"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:79
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:81
 msgid "{clientLabel} wants to connect"
 msgstr "{clientLabel} 연결 요청"
 
@@ -22807,7 +22807,7 @@ msgstr "설정된 단축키 없음"
 msgid "No shortcuts match that search."
 msgstr "검색 결과와 일치하는 단축키가 없습니다."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:115
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:117
 msgid "No specific scopes requested."
 msgstr "요청된 특정 범위가 없습니다."
 
@@ -27265,7 +27265,7 @@ msgstr "먼저 인증 코드를 요청하세요."
 msgid "Request export"
 msgstr "내보내기 요청"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:106
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:108
 msgid "Requested scopes"
 msgstr "요청된 범위"
 
@@ -27967,7 +27967,7 @@ msgstr "{productName}이(가) 음성, 영상, 화면 공유, 단축키에 사용
 msgid "Review these files and try again with smaller or simpler images."
 msgstr "이 파일을 검토하고 더 작거나 간단한 이미지로 다시 시도해 주세요."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:85
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:87
 msgid "Review what this app is asking for before you continue."
 msgstr "계속하기 전에 이 앱이 요청하는 권한을 검토하세요."
 
@@ -35106,7 +35106,7 @@ msgstr "끄기"
 msgid "Turn off all device cameras"
 msgstr "모든 기기 카메라 끄기"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:109
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:111
 msgid "Turn off anything you're not comfortable with. Some features may stop working."
 msgstr "원하지 않는 항목은 꺼 주세요. 일부 기능이 작동하지 않을 수 있습니다."
 
@@ -35165,6 +35165,10 @@ msgstr "이 음성 채널에서 카메라를 켜거나 화면을 공유하세요
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:172
 msgid "Turn on a camera or share a screen in voice channels."
 msgstr "음성 채널에서 카메라를 켜거나 화면을 공유합니다."
+
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:158
+msgid "Turn on at least one scope to authorize this app."
+msgstr "이 앱을 승인하려면 최소한 하나의 범위를 켜세요."
 
 #. Label for the automatic streaming privacy detection settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:19
@@ -35233,7 +35237,7 @@ msgstr "분리된 배너를 켰습니다"
 msgid "Turned the member's microphone back on in this community"
 msgstr "이 커뮤니티에서 멤버의 마이크를 다시 켰습니다"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:156
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:163
 msgid "Turning off scopes may prevent the app from working correctly."
 msgstr "범위 설정을 해제하면 앱이 제대로 작동하지 않을 수 있습니다."
 

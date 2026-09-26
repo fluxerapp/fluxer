@@ -853,7 +853,7 @@ msgstr "{channelName} चैनल"
 msgid "{characterCount, plural, one {# character} other {# characters}}"
 msgstr "{characterCount, plural, one {# वर्ण} other {# वर्ण}}"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:79
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:81
 msgid "{clientLabel} wants to connect"
 msgstr "{clientLabel} कनेक्ट करना चाहता है"
 
@@ -22807,7 +22807,7 @@ msgstr "कोई शॉर्टकट सेट नहीं है"
 msgid "No shortcuts match that search."
 msgstr "कोई शॉर्टकट इस खोज से मेल नहीं खाता।"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:115
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:117
 msgid "No specific scopes requested."
 msgstr "कोई खास स्कोप नहीं मांगा गया है।"
 
@@ -27265,7 +27265,7 @@ msgstr "पहले वेरिफ़िकेशन कोड का अन�
 msgid "Request export"
 msgstr "एक्सपोर्ट का अनुरोध करें"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:106
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:108
 msgid "Requested scopes"
 msgstr "अनुरोधित स्कोप"
 
@@ -27967,7 +27967,7 @@ msgstr "{productName} वॉइस, वीडियो, स्क्रीन �
 msgid "Review these files and try again with smaller or simpler images."
 msgstr "इन फ़ाइलों की समीक्षा करें और छोटी या सरल इमेज के साथ फिर से कोशिश करें।"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:85
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:87
 msgid "Review what this app is asking for before you continue."
 msgstr "जारी रखने से पहले देखें कि यह ऐप क्या माँग रहा है।"
 
@@ -35106,7 +35106,7 @@ msgstr "बंद करें"
 msgid "Turn off all device cameras"
 msgstr "सभी डिवाइस के कैमरे बंद करें"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:109
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:111
 msgid "Turn off anything you're not comfortable with. Some features may stop working."
 msgstr "जो भी आपको ठीक न लगे, उसे बंद कर दें। कुछ फ़ीचर काम करना बंद कर सकते हैं।"
 
@@ -35165,6 +35165,10 @@ msgstr "इस वॉइस चैनल में कैमरा चालू 
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:172
 msgid "Turn on a camera or share a screen in voice channels."
 msgstr "वॉइस चैनल में कैमरा चालू करें या स्क्रीन शेयर करें।"
+
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:158
+msgid "Turn on at least one scope to authorize this app."
+msgstr "इस ऐप को अधिकृत करने के लिए कम से कम एक स्कोप चालू करें।"
 
 #. Label for the automatic streaming privacy detection settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:19
@@ -35233,7 +35237,7 @@ msgstr "अलग बैनर चालू किया"
 msgid "Turned the member's microphone back on in this community"
 msgstr "इस कम्युनिटी में सदस्य का माइक्रोफ़ोन वापस चालू कर दिया"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:156
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:163
 msgid "Turning off scopes may prevent the app from working correctly."
 msgstr "स्कोप बंद करने से हो सकता है ऐप सही से काम न करे।"
 

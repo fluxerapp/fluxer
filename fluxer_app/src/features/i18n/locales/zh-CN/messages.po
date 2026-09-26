@@ -853,7 +853,7 @@ msgstr "{channelName} 频道"
 msgid "{characterCount, plural, one {# character} other {# characters}}"
 msgstr "{characterCount, plural, other {# 个字符}}"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:79
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:81
 msgid "{clientLabel} wants to connect"
 msgstr "{clientLabel} 想连接到你的账号"
 
@@ -22807,7 +22807,7 @@ msgstr "未设置快捷键"
 msgid "No shortcuts match that search."
 msgstr "没有匹配该搜索的快捷键。"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:115
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:117
 msgid "No specific scopes requested."
 msgstr "未请求特定权限范围。"
 
@@ -27265,7 +27265,7 @@ msgstr "请先请求验证码。"
 msgid "Request export"
 msgstr "申请导出"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:106
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:108
 msgid "Requested scopes"
 msgstr "请求的权限范围"
 
@@ -27967,7 +27967,7 @@ msgstr "查看 {productName} 用于语音、视频、屏幕共享和快捷键的
 msgid "Review these files and try again with smaller or simpler images."
 msgstr "请检查这些文件，然后尝试使用更小或更简单的图片。"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:85
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:87
 msgid "Review what this app is asking for before you continue."
 msgstr "继续前请查看此应用请求的权限。"
 
@@ -35106,7 +35106,7 @@ msgstr "关闭"
 msgid "Turn off all device cameras"
 msgstr "关闭所有设备摄像头"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:109
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:111
 msgid "Turn off anything you're not comfortable with. Some features may stop working."
 msgstr "关闭你不放心的任何项目。部分功能可能会因此无法使用。"
 
@@ -35165,6 +35165,10 @@ msgstr "在此语音频道中开启摄像头或共享屏幕。"
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:172
 msgid "Turn on a camera or share a screen in voice channels."
 msgstr "在语音频道中开启摄像头或共享屏幕。"
+
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:158
+msgid "Turn on at least one scope to authorize this app."
+msgstr "请至少开启一个权限以授权此应用。"
 
 #. Label for the automatic streaming privacy detection settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:19
@@ -35233,7 +35237,7 @@ msgstr "开启了独立横幅"
 msgid "Turned the member's microphone back on in this community"
 msgstr "已在此社区中为成员重新开启麦克风"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:156
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:163
 msgid "Turning off scopes may prevent the app from working correctly."
 msgstr "关闭权限范围可能导致应用无法正常运行。"
 

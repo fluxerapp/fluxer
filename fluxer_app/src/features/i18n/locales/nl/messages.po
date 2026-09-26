@@ -853,7 +853,7 @@ msgstr "Kanaal {channelName}"
 msgid "{characterCount, plural, one {# character} other {# characters}}"
 msgstr "{characterCount, plural, one {# teken} other {# tekens}}"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:79
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:81
 msgid "{clientLabel} wants to connect"
 msgstr "{clientLabel} wil verbinding maken"
 
@@ -22807,7 +22807,7 @@ msgstr "Geen sneltoets ingesteld"
 msgid "No shortcuts match that search."
 msgstr "Geen sneltoetsen komen overeen met de zoekopdracht."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:115
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:117
 msgid "No specific scopes requested."
 msgstr "Geen specifieke machtigingsbereiken aangevraagd."
 
@@ -27265,7 +27265,7 @@ msgstr "Vraag eerst een verificatiecode aan."
 msgid "Request export"
 msgstr "Export aanvragen"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:106
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:108
 msgid "Requested scopes"
 msgstr "Aangevraagde machtigingsbereiken"
 
@@ -27967,7 +27967,7 @@ msgstr "Controleer de machtigingen die {productName} gebruikt voor spraak, video
 msgid "Review these files and try again with smaller or simpler images."
 msgstr "Controleer deze bestanden en probeer het opnieuw met kleinere of eenvoudigere afbeeldingen."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:85
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:87
 msgid "Review what this app is asking for before you continue."
 msgstr "Controleer de machtigingen die deze app aanvraagt voordat je verdergaat."
 
@@ -35106,7 +35106,7 @@ msgstr "Uitschakelen"
 msgid "Turn off all device cameras"
 msgstr "Alle camera's uitschakelen"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:109
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:111
 msgid "Turn off anything you're not comfortable with. Some features may stop working."
 msgstr "Schakel alles uit waar je je niet prettig bij voelt. Sommige functies werken dan mogelijk niet meer."
 
@@ -35165,6 +35165,10 @@ msgstr "Schakel een camera in of deel je scherm in dit spraakkanaal."
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:172
 msgid "Turn on a camera or share a screen in voice channels."
 msgstr "Schakel een camera in of deel een scherm in spraakkanalen."
+
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:158
+msgid "Turn on at least one scope to authorize this app."
+msgstr "Schakel ten minste één scope in om deze app te autoriseren."
 
 #. Label for the automatic streaming privacy detection settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:19
@@ -35233,7 +35237,7 @@ msgstr "De losgekoppelde banner ingeschakeld"
 msgid "Turned the member's microphone back on in this community"
 msgstr "De microfoon van het lid in deze community weer ingeschakeld"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:156
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:163
 msgid "Turning off scopes may prevent the app from working correctly."
 msgstr "Als je machtigingsbereiken uitschakelt, werkt de app mogelijk niet correct."
 

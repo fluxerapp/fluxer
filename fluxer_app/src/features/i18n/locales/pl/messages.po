@@ -853,7 +853,7 @@ msgstr "Kanał {channelName}"
 msgid "{characterCount, plural, one {# character} other {# characters}}"
 msgstr "{characterCount, plural, one {# znak} few {# znaki} many {# znaków} other {# znaków}}"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:79
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:81
 msgid "{clientLabel} wants to connect"
 msgstr "{clientLabel} chce się połączyć"
 
@@ -22807,7 +22807,7 @@ msgstr "Brak skrótu"
 msgid "No shortcuts match that search."
 msgstr "Brak skrótów pasujących do wyszukiwania."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:115
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:117
 msgid "No specific scopes requested."
 msgstr "Nie zażądano żadnych konkretnych zakresów autoryzacji."
 
@@ -27265,7 +27265,7 @@ msgstr "Najpierw poproś o kod weryfikacyjny."
 msgid "Request export"
 msgstr "Poproś o eksport danych"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:106
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:108
 msgid "Requested scopes"
 msgstr "Żądane zakresy autoryzacji"
 
@@ -27967,7 +27967,7 @@ msgstr "Sprawdź uprawnienia, których {productName} używa do obsługi głosu, 
 msgid "Review these files and try again with smaller or simpler images."
 msgstr "Sprawdź te pliki i spróbuj ponownie z mniejszymi lub prostszymi obrazami."
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:85
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:87
 msgid "Review what this app is asking for before you continue."
 msgstr "Sprawdź, o co prosi ta aplikacja, zanim przejdziesz dalej."
 
@@ -35106,7 +35106,7 @@ msgstr "Wyłącz"
 msgid "Turn off all device cameras"
 msgstr "Wyłącz wszystkie kamery urządzeń"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:109
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:111
 msgid "Turn off anything you're not comfortable with. Some features may stop working."
 msgstr "Wyłącz wszystko, z czym nie czujesz się komfortowo. Niektóre funkcje mogą przestać działać."
 
@@ -35165,6 +35165,10 @@ msgstr "Włącz kamerę lub udostępnij ekran na tym kanale głosowym."
 #: src/features/permissions/utils/PermissionLabelDescriptors.ts:172
 msgid "Turn on a camera or share a screen in voice channels."
 msgstr "Włącz kamerę lub udostępnij ekran na kanałach głosowych."
+
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:158
+msgid "Turn on at least one scope to authorize this app."
+msgstr "Włącz co najmniej jeden zakres, aby autoryzować tę aplikację."
 
 #. Label for the automatic streaming privacy detection settings toggle.
 #: src/features/user/components/modals/tabs/appearance_tab/StreamerModeTab.tsx:19
@@ -35233,7 +35237,7 @@ msgstr "Włączono odłączony baner"
 msgid "Turned the member's microphone back on in this community"
 msgstr "Ponownie włączono mikrofon członka w tej społeczności"
 
-#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:156
+#: src/features/auth/components/pages/oauth_authorize_page/OAuthScopesStep.tsx:163
 msgid "Turning off scopes may prevent the app from working correctly."
 msgstr "Wyłączenie zakresów autoryzacji może uniemożliwić poprawne działanie aplikacji."
 
