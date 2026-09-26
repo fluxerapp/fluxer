@@ -36,6 +36,7 @@ interface PopoutWindowProps {
 	onRestore: () => void;
 	onClosed: (windowGeneration: number) => void;
 	onWindowOpened?: (childWindow: Window, windowGeneration: number) => void;
+	existingWindow?: Window | null;
 	children: React.ReactNode;
 }
 
@@ -82,6 +83,7 @@ export const PopoutWindow: React.FC<PopoutWindowProps> = ({
 	onRestore,
 	onClosed,
 	onWindowOpened,
+	existingWindow,
 	children,
 }) => {
 	const [childState, setChildState] = useState<PopoutChildState | null>(null);
@@ -89,11 +91,14 @@ export const PopoutWindow: React.FC<PopoutWindowProps> = ({
 	const onWindowOpenedRef = useRef(onWindowOpened);
 	const initialSizeRef = useRef({width, height});
 	const initialTitleRef = useRef(title);
+	const initialWindowRef = useRef(existingWindow);
 	onClosedRef.current = onClosed;
 	onWindowOpenedRef.current = onWindowOpened;
 	useEffect(() => {
 		const features = `width=${initialSizeRef.current.width},height=${initialSizeRef.current.height}`;
-		const childWindow = window.open('about:blank', windowKey, features);
+		const adoptedWindow = initialWindowRef.current;
+		const childWindow =
+			adoptedWindow && !adoptedWindow.closed ? adoptedWindow : window.open('about:blank', windowKey, features);
 		if (!childWindow) {
 			logger.warn('Failed to open popout window', {windowKey});
 			onClosedRef.current(windowGeneration);
