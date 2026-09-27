@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {APIConfig, BlueskyOAuthConfig} from '@app/api/config/APIConfig';
+import {parseIpBanEntry} from '@app/api/utils/IpRangeUtils';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import type {MasterConfig} from '@fluxer/config/src/MasterConfig';
 import {parseIpAddress} from '@fluxer/ip_utils/src/IpAddress';
@@ -82,6 +83,14 @@ function resolveTrustClientIpHeader(proxyConfig: object): boolean {
 function normalizeIpBanExemptIps(values: Array<string>): Array<string> {
 	const normalized = new Set<string>();
 	for (const value of values) {
+		if (value.includes('/')) {
+			const range = parseIpBanEntry(value);
+			if (range?.type !== 'range') {
+				throw new Error(`FLUXER_API_IP_BAN_EXEMPT_IPS contains an invalid CIDR range: ${value}`);
+			}
+			normalized.add(range.canonical);
+			continue;
+		}
 		const parsed = parseIpAddress(value);
 		if (!parsed) {
 			throw new Error(`FLUXER_API_IP_BAN_EXEMPT_IPS contains an invalid IP address: ${value}`);
