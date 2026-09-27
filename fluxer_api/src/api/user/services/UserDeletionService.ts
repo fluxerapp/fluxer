@@ -388,6 +388,27 @@ export async function processUserDeletion(
 			Logger.error({error, userId}, 'Failed to delete banner');
 		}
 	}
+	const personas = await personaRepository.listUserPersonas(userId);
+	for (const persona of personas) {
+		if (persona.avatarHash) {
+			try {
+				await storageService.deleteAvatar({prefix: 'avatars', key: `${persona.id}/${persona.avatarHash}`});
+				await purgeQueue.addUrls([`${Config.endpoints.media}/avatars/${persona.id}/${persona.avatarHash}`]);
+				Logger.debug({userId: persona.id, avatarHash: persona.avatarHash}, 'Deleted avatar');
+			} catch (error) {
+				Logger.error({error, userId: persona.id}, 'Failed to delete avatar');
+			}
+		}
+		if (persona.bannerHash) {
+			try {
+				await storageService.deleteAvatar({prefix: 'banners', key: `${persona.id}/${persona.bannerHash}`});
+				await purgeQueue.addUrls([`${Config.endpoints.media}/banners/${persona.id}/${persona.bannerHash}`]);
+				Logger.debug({userId: persona.id, bannerHash: persona.bannerHash}, 'Deleted banner');
+			} catch (error) {
+				Logger.error({error, userId: persona.id}, 'Failed to delete banner');
+			}
+		}
+	}
 	const favoriteMemes = await favoriteMemeRepository.findByUserId(userId);
 	for (const meme of favoriteMemes) {
 		try {
