@@ -21,6 +21,9 @@ const pushServiceDeliveryConfigFields = {
 	rollout_salt: z.string().trim().min(1).max(64).regex(PUSH_SERVICE_DELIVERY_SALT_PATTERN),
 	included_user_ids: PushServiceDeliveryTargetedUserIdsSchema,
 	excluded_user_ids: PushServiceDeliveryTargetedUserIdsSchema,
+	relay_consent_accepted: z.boolean(),
+	relay_consent_accepted_at: z.iso.datetime().nullable(),
+	relay_consent_accepted_by: PushServiceDeliveryTargetIdSchema.nullable(),
 };
 
 export const PushServiceDeliveryConfigSchema = z.object({
@@ -30,6 +33,9 @@ export const PushServiceDeliveryConfigSchema = z.object({
 	rollout_salt: pushServiceDeliveryConfigFields.rollout_salt.default(DEFAULT_PUSH_SERVICE_DELIVERY_SALT),
 	included_user_ids: pushServiceDeliveryConfigFields.included_user_ids.default([]),
 	excluded_user_ids: pushServiceDeliveryConfigFields.excluded_user_ids.default([]),
+	relay_consent_accepted: pushServiceDeliveryConfigFields.relay_consent_accepted.default(false),
+	relay_consent_accepted_at: pushServiceDeliveryConfigFields.relay_consent_accepted_at.default(null),
+	relay_consent_accepted_by: pushServiceDeliveryConfigFields.relay_consent_accepted_by.default(null),
 });
 
 export type PushServiceDeliveryConfig = z.infer<typeof PushServiceDeliveryConfigSchema>;
@@ -40,7 +46,7 @@ export const DEFAULT_PUSH_SERVICE_DELIVERY_CONFIG: PushServiceDeliveryConfig = P
 
 export const PushServiceDeliveryConfigUpdateRequest = z
 	.object(pushServiceDeliveryConfigFields)
-	.omit({config_version: true})
+	.omit({config_version: true, relay_consent_accepted_at: true, relay_consent_accepted_by: true})
 	.partial();
 
 export type PushServiceDeliveryConfigUpdateRequest = z.infer<typeof PushServiceDeliveryConfigUpdateRequest>;

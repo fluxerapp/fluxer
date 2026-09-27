@@ -680,6 +680,9 @@ fn build_push_service_delivery_update(
                     .unwrap_or_default(),
                 "Excluded user IDs",
             )?),
+            relay_consent_accepted: Some(
+                form.bool_value("push_service_delivery_relay_consent_accepted"),
+            ),
         }),
         ..Default::default()
     })
@@ -1729,6 +1732,30 @@ mod tests {
                 message
             );
         }
+    }
+
+    #[test]
+    fn build_push_service_delivery_update_reads_the_relay_consent_checkbox() {
+        let unchecked = MultiValueForm::parse(b"_csrf=token");
+        assert_eq!(
+            build_push_service_delivery_update(&unchecked)
+                .expect("valid form")
+                .push_service_delivery
+                .expect("push service delivery update")
+                .relay_consent_accepted,
+            Some(false)
+        );
+
+        let checked =
+            MultiValueForm::parse(b"_csrf=token&push_service_delivery_relay_consent_accepted=true");
+        assert_eq!(
+            build_push_service_delivery_update(&checked)
+                .expect("valid form")
+                .push_service_delivery
+                .expect("push service delivery update")
+                .relay_consent_accepted,
+            Some(true)
+        );
     }
 
     #[test]

@@ -37,7 +37,8 @@
     rollout_basis_points := non_neg_integer(),
     rollout_salt := binary(),
     included := user_id_set(),
-    excluded := user_id_set()
+    excluded := user_id_set(),
+    relay_consent_accepted := boolean()
 }.
 -type state() :: #{
     nats_subscription := term(),
@@ -170,7 +171,8 @@ default_config() ->
         rollout_basis_points => 0,
         rollout_salt => ?DEFAULT_SALT,
         included => #{},
-        excluded => #{}
+        excluded => #{},
+        relay_consent_accepted => false
     }.
 
 -spec fetch_config_from_api() -> store_result().
@@ -254,7 +256,8 @@ config_fields() ->
         {rollout_basis_points, <<"rollout_basis_points">>, fun validate_basis_points/1},
         {rollout_salt, <<"rollout_salt">>, fun validate_salt/1},
         {included, <<"included_user_ids">>, fun validate_user_ids/1},
-        {excluded, <<"excluded_user_ids">>, fun validate_user_ids/1}
+        {excluded, <<"excluded_user_ids">>, fun validate_user_ids/1},
+        {relay_consent_accepted, <<"relay_consent_accepted">>, fun validate_enabled/1}
     ].
 
 -spec validate_field(
@@ -419,7 +422,7 @@ result_index(rejected) -> 4.
 log_config_transitions(Previous, Current) ->
     lists:foreach(
         fun(Key) -> log_key_transition(Key, Previous, Current) end,
-        [enabled, rollout_basis_points, config_version]
+        [enabled, rollout_basis_points, config_version, relay_consent_accepted]
     ).
 
 -spec log_key_transition(atom(), config(), config()) -> ok.
@@ -435,3 +438,22 @@ log_key_transition(Key, Previous, Current) ->
                 [Key, PreviousValue, CurrentValue]
             )
     end.
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+an_accepted_relay_notice_is_read_off_the_wire_config_test() ->
+    {ok, Config} = validate_config(#{<<"relay_consent_accepted">> => true}),
+    ?assertEqual(true, maps:get(relay_consent_accepted, Config)).
+
+a_wire_config_without_a_relay_notice_has_not_been_accepted_test() ->
+    {ok, Config} = validate_config(#{<<"enabled">> => true}),
+    ?assertEqual(false, maps:get(relay_consent_accepted, Config)).
+
+a_relay_notice_that_is_not_a_boolean_is_refused_test() ->
+    ?assertMatch(
+        {error, {invalid_field, <<"relay_consent_accepted">>, _}},
+        validate_config(#{<<"relay_consent_accepted">> => <<"yes">>})
+    ).
+
+-endif.

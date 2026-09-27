@@ -19,6 +19,7 @@
 -type gateway_role() :: websocket | sessions | presence | guilds | calls | push | all.
 
 -define(MAX_CLUSTER_STATIC_PEERS, 256).
+-define(DEFAULT_MANAGED_RELAY_HOSTS, <<"push.fluxer.com">>).
 
 -spec load() -> config().
 load() ->
@@ -86,6 +87,12 @@ env_gateway_base_config() ->
         ),
         <<"push_endpoint_guard_enabled">> => env_bool(
             "FLUXER_GATEWAY_PUSH_ENDPOINT_GUARD_ENABLED", true
+        ),
+        <<"push_managed_relay_hosts">> => env_binary(
+            "FLUXER_GATEWAY_PUSH_MANAGED_RELAY_HOSTS", ?DEFAULT_MANAGED_RELAY_HOSTS
+        ),
+        <<"push_relay_consent_accepted">> => env_bool(
+            "FLUXER_GATEWAY_PUSH_RELAY_CONSENT_ACCEPTED", false
         ),
         <<"push_outbox_request_timeout_ms">> => env_int(
             "FLUXER_GATEWAY_PUSH_OUTBOX_REQUEST_TIMEOUT_MS", 100000
@@ -267,6 +274,12 @@ build_push_config(Service, Public) ->
         ),
         push_endpoint_guard_enabled => get_bool(
             Service, <<"push_endpoint_guard_enabled">>, true
+        ),
+        push_managed_relay_hosts => parse_host_list(
+            get_binary(Service, <<"push_managed_relay_hosts">>, ?DEFAULT_MANAGED_RELAY_HOSTS)
+        ),
+        push_relay_consent_accepted => get_bool(
+            Service, <<"push_relay_consent_accepted">>, false
         ),
         push_outbox_max_queue => get_int(Service, <<"push_outbox_max_queue">>, 10000),
         push_outbox_max_inflight => get_int(Service, <<"push_outbox_max_inflight">>, 64),
@@ -589,6 +602,24 @@ to_binary(Bin, _) when is_binary(Bin) -> Bin;
 to_binary(Str, _) when is_list(Str) -> list_to_binary(config_char_list(Str));
 to_binary(Atom, _) when is_atom(Atom) -> list_to_binary(atom_to_list(Atom));
 to_binary(_, Default) -> Default.
+
+-spec parse_host_list(binary()) -> [binary()].
+parse_host_list(Bin) ->
+    parse_host_list(string:lexemes(binary_to_list(Bin), ", \t"), []).
+
+-spec parse_host_list([string()], [binary()]) -> [binary()].
+parse_host_list([], Acc) ->
+    lists:reverse(Acc);
+parse_host_list([Host | Rest], Acc) ->
+    parse_host_list(Rest, [list_to_binary(lower_string(Host)) | Acc]).
+
+-spec lower_string(string()) -> string().
+lower_string(Value) ->
+    [lower_char(Char) || Char <- Value].
+
+-spec lower_char(char()) -> char().
+lower_char(Char) when Char >= $A, Char =< $Z -> Char + 32;
+lower_char(Char) -> Char.
 
 -spec parse_node_list(binary() | undefined) -> [node()].
 parse_node_list(undefined) ->

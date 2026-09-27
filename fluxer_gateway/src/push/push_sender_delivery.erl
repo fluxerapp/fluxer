@@ -21,6 +21,12 @@
 -define(OVERLOAD_MAX_DELAY_MS, 4000).
 -define(VAPID_TOKEN_TTL_SECONDS, 43200).
 -define(VAPID_TOKEN_SKEW_SECONDS, 60).
+-define(DEFAULT_MANAGED_RELAY_HOSTS, ["push.fluxer.com"]).
+-define(MANAGED_RELAY_PATH_PREFIXES, [
+    "/relay/v1/apns/",
+    "/relay/v1/apns-voip/",
+    "/relay/v1/fcm/"
+]).
 
 -type push_response() :: {ok, integer(), term(), binary()} | {error, term()}.
 
@@ -40,11 +46,93 @@ send_webpush_notification(UserId, Subscription, Payload) ->
 send_to_allowed_endpoint(UserId, Endpoint, P256dhKey, AuthKey, SubscriptionId, Payload) ->
     case push_endpoint_guard:check(Endpoint) of
         ok ->
-            send_with_vapid(UserId, Endpoint, P256dhKey, AuthKey, SubscriptionId, Payload);
+            send_to_consented_endpoint(
+                UserId, Endpoint, P256dhKey, AuthKey, SubscriptionId, Payload
+            );
         {error, Reason} ->
             log_endpoint_rejected(UserId, SubscriptionId, Reason),
             false
     end.
+
+-spec send_to_consented_endpoint(integer(), binary(), binary(), binary(), binary(), map()) ->
+    false | {true, map()}.
+send_to_consented_endpoint(UserId, Endpoint, P256dhKey, AuthKey, SubscriptionId, Payload) ->
+    case relay_consent_missing(Endpoint) of
+        false ->
+            send_with_vapid(UserId, Endpoint, P256dhKey, AuthKey, SubscriptionId, Payload);
+        true ->
+            log_endpoint_rejected(UserId, SubscriptionId, relay_consent_required),
+            false
+    end.
+
+-spec relay_consent_missing(binary()) -> boolean().
+relay_consent_missing(Endpoint) ->
+    not relay_consent_accepted() andalso is_managed_relay_endpoint(Endpoint).
+
+-spec relay_consent_accepted() -> boolean().
+relay_consent_accepted() ->
+    env_relay_consent_accepted() orelse instance_relay_consent_accepted().
+
+-spec env_relay_consent_accepted() -> boolean().
+env_relay_consent_accepted() ->
+    case fluxer_gateway_env:get(push_relay_consent_accepted) of
+        Accepted when is_boolean(Accepted) -> Accepted;
+        _ -> false
+    end.
+
+-spec instance_relay_consent_accepted() -> boolean().
+instance_relay_consent_accepted() ->
+    case maps:get(relay_consent_accepted, push_delivery_config:config(), false) of
+        Accepted when is_boolean(Accepted) -> Accepted;
+        _ -> false
+    end.
+
+-spec is_managed_relay_endpoint(binary()) -> boolean().
+is_managed_relay_endpoint(Endpoint) ->
+    case safe_parse_endpoint(Endpoint) of
+        {ok, Parsed} ->
+            Scheme = lower_string(to_string(maps:get(scheme, Parsed, ""))),
+            Host = lower_string(to_string(maps:get(host, Parsed, ""))),
+            Path = to_string(maps:get(path, Parsed, "")),
+            Scheme =:= "https" andalso
+                lists:member(Host, managed_relay_hosts()) andalso
+                is_managed_relay_path(Path);
+        error ->
+            false
+    end.
+
+-spec safe_parse_endpoint(binary()) -> {ok, map()} | error.
+safe_parse_endpoint(Endpoint) ->
+    try uri_string:parse(binary_to_list(Endpoint)) of
+        Parsed when is_map(Parsed) -> {ok, Parsed};
+        _ -> error
+    catch
+        _:_ -> error
+    end.
+
+-spec is_managed_relay_path(string()) -> boolean().
+is_managed_relay_path(Path) ->
+    lists:any(fun(Prefix) -> lists:prefix(Prefix, Path) end, ?MANAGED_RELAY_PATH_PREFIXES).
+
+-spec managed_relay_hosts() -> [string()].
+managed_relay_hosts() ->
+    case fluxer_gateway_env:get(push_managed_relay_hosts) of
+        Hosts when is_list(Hosts) -> [lower_string(to_string(Host)) || Host <- Hosts];
+        _ -> ?DEFAULT_MANAGED_RELAY_HOSTS
+    end.
+
+-spec to_string(term()) -> string().
+to_string(Value) when is_list(Value) -> Value;
+to_string(Value) when is_binary(Value) -> binary_to_list(Value);
+to_string(_Value) -> "".
+
+-spec lower_string(string()) -> string().
+lower_string(Value) ->
+    [lower_char(Char) || Char <- Value].
+
+-spec lower_char(char()) -> char().
+lower_char(Char) when Char >= $A, Char =< $Z -> Char + 32;
+lower_char(Char) -> Char.
 
 -spec log_endpoint_rejected(integer(), binary(), term()) -> ok.
 log_endpoint_rejected(UserId, SubscriptionId, Reason) ->
@@ -775,10 +863,100 @@ capture_web_push(Payload) ->
 vapid_env_meck(vapid_email) -> <<"ops@example.com">>;
 vapid_env_meck(vapid_public_key) -> <<"public-key">>;
 vapid_env_meck(vapid_private_key) -> <<"private-key">>;
+vapid_env_meck(push_relay_consent_accepted) -> true;
+vapid_env_meck(push_managed_relay_hosts) -> [<<"push.fluxer.com">>];
 vapid_env_meck(Key) -> meck:passthrough([Key]).
 
 capture_request_meck(push, post, _Endpoint, Headers, Body, _Opts) ->
     self() ! {captured_push, Headers, Body},
+    {ok, 201, [], <<>>}.
+
+a_managed_relay_endpoint_is_refused_without_operator_consent_test() ->
+    ?assertEqual(no_push_request, attempt_push(false, managed_relay_endpoint(<<"apns">>))).
+
+every_managed_relay_leg_is_refused_without_operator_consent_test() ->
+    lists:foreach(
+        fun(Leg) ->
+            ?assertEqual(no_push_request, attempt_push(false, managed_relay_endpoint(Leg)))
+        end,
+        [<<"apns">>, <<"apns-voip">>, <<"fcm">>]
+    ).
+
+a_managed_relay_endpoint_is_delivered_once_the_operator_consents_test() ->
+    Endpoint = managed_relay_endpoint(<<"apns">>),
+    ?assertEqual(Endpoint, attempt_push(true, Endpoint)).
+
+a_notice_accepted_in_the_instance_config_lets_the_managed_relay_send_through_test() ->
+    Endpoint = managed_relay_endpoint(<<"apns">>),
+    ?assertEqual(Endpoint, attempt_push(false, true, Endpoint)).
+
+a_unified_push_endpoint_is_delivered_whatever_the_operator_accepted_test() ->
+    Endpoint = <<"https://ntfy.sh/upZzH87cT9jJCc?up=1">>,
+    ?assertEqual(Endpoint, attempt_push(false, Endpoint)),
+    ?assertEqual(Endpoint, attempt_push(true, Endpoint)).
+
+a_relay_we_do_not_operate_is_delivered_without_consent_test() ->
+    Endpoint = <<"https://push.example.org/relay/v1/apns/stable/production/token">>,
+    ?assertEqual(Endpoint, attempt_push(false, Endpoint)).
+
+managed_relay_endpoint(Leg) ->
+    <<"https://push.fluxer.com/relay/v1/", Leg/binary, "/stable/production/",
+        (binary:copy(<<"a">>, 64))/binary>>.
+
+attempt_push(EnvConsent, Endpoint) ->
+    attempt_push(EnvConsent, false, Endpoint).
+
+attempt_push(EnvConsent, InstanceConsent, Endpoint) ->
+    {PeerPub, _PeerPriv} = crypto:generate_key(ecdh, prime256v1),
+    Subscription = #{
+        <<"endpoint">> => Endpoint,
+        <<"p256dh_key">> => push_utils:base64url_encode(PeerPub),
+        <<"auth_key">> => push_utils:base64url_encode(crypto:strong_rand_bytes(16)),
+        <<"subscription_id">> => <<"sub-1">>
+    },
+    ok = push_ets_cache:init(),
+    ok = meck:new(fluxer_gateway_env, [passthrough, no_link]),
+    ok = meck:new(push_utils, [passthrough, no_link]),
+    ok = meck:new(gateway_http_client, [passthrough, no_link]),
+    ok = meck:new(push_endpoint_guard, [passthrough, no_link]),
+    ok = meck:new(push_delivery_config, [passthrough, no_link]),
+    try
+        ok = meck:expect(push_endpoint_guard, check, fun(_Endpoint) -> ok end),
+        ok = meck:expect(push_delivery_config, config, fun() ->
+            #{relay_consent_accepted => InstanceConsent}
+        end),
+        ok = meck:expect(fluxer_gateway_env, get, consent_env_meck(EnvConsent)),
+        ok = meck:expect(push_utils, generate_vapid_token, fun(_Claims, _Public, _Private) ->
+            <<"vapid-token">>
+        end),
+        ok = meck:expect(gateway_http_client, request, fun requested_endpoint_meck/6),
+        ?assertEqual(
+            false, send_webpush_notification(42, Subscription, alert_payload(<<"Hello">>))
+        ),
+        receive
+            {push_requested, Requested} -> Requested
+        after 100 ->
+            no_push_request
+        end
+    after
+        meck:unload(push_delivery_config),
+        meck:unload(push_endpoint_guard),
+        meck:unload(gateway_http_client),
+        meck:unload(push_utils),
+        meck:unload(fluxer_gateway_env)
+    end.
+
+consent_env_meck(EnvConsent) ->
+    fun
+        (push_relay_consent_accepted) -> EnvConsent;
+        (push_managed_relay_hosts) -> [<<"push.fluxer.com">>];
+        (Key) -> vapid_env_meck(Key)
+    end.
+
+-spec requested_endpoint_meck(atom(), atom(), binary(), list(), binary(), term()) ->
+    {ok, non_neg_integer(), list(), binary()}.
+requested_endpoint_meck(push, post, Endpoint, _Headers, _Body, _Opts) ->
+    self() ! {push_requested, Endpoint},
     {ok, 201, [], <<>>}.
 
 -endif.

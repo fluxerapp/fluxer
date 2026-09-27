@@ -13,6 +13,7 @@ import {ColorPickerField} from '@app/features/ui/components/form/ColorPickerFiel
 import {Input} from '@app/features/ui/components/form/FormInput';
 import {Switch} from '@app/features/ui/components/form/FormSwitch';
 import {Spinner} from '@app/features/ui/components/Spinner';
+import FocusRing from '@app/features/ui/focus_ring/FocusRing';
 import {RadioGroup, type RadioOption} from '@app/features/ui/radio_group/RadioGroup';
 import {ThemeSelector} from '@app/features/user/components/modals/tabs/appearance_tab/theme/ThemeTabContent';
 import {LanguageSelector} from '@app/features/user/components/modals/tabs/LanguageTab';
@@ -26,6 +27,8 @@ import {AnimatePresence, motion, type Transition, useReducedMotion} from 'framer
 import {observer} from 'mobx-react-lite';
 import type React from 'react';
 import {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
+
+const PUSH_RELAY_NOTICE_URL = 'https://fluxer.com/push-relay';
 
 export type RegistrationMode = 'open' | 'approval' | 'closed';
 export type PremiumMode = 'mirror' | 'everyone';
@@ -263,6 +266,29 @@ const MEDIA_RENEW_WINDOW_LABEL_DESCRIPTOR = msg({
 	comment: 'Label for attachment decay renewal window.',
 });
 
+const PUSH_RELAY_TITLE_DESCRIPTOR = msg({
+	message: 'Mobile push notifications',
+	comment: 'Setup wizard push relay consent step title.',
+});
+const PUSH_RELAY_BODY_DESCRIPTOR = msg({
+	message:
+		"The official Fluxer mobile apps receive notifications through Fluxer's push relay, which hands them to Apple and Google. Self-hosted UnifiedPush and ntfy endpoints never reach the relay and need no agreement.",
+	comment: 'Setup wizard push relay consent step body.',
+});
+const PUSH_RELAY_ACCEPT_LABEL_DESCRIPTOR = msg({
+	message: 'Accept the push relay supplemental privacy notice',
+	comment: 'Label for the push relay consent switch during setup.',
+});
+const PUSH_RELAY_ACCEPT_DESC_DESCRIPTOR = msg({
+	message:
+		'Leaving this off keeps the relay unused and drops notifications to the official mobile apps. You can accept it later in the admin panel.',
+	comment: 'Description for the push relay consent switch during setup.',
+});
+const PUSH_RELAY_NOTICE_LINK_DESCRIPTOR = msg({
+	message: 'Read the supplemental privacy notice',
+	comment: 'Link to the push relay supplemental privacy notice shown during setup.',
+});
+
 const SERVICES_TITLE_DESCRIPTOR = msg({
 	message: 'Optional services',
 	comment: 'Setup wizard optional services step title.',
@@ -353,9 +379,21 @@ const SUMMARY_ATTACHMENT_EXPIRY_DESCRIPTOR = msg({
 	message: 'Attachment expiration',
 	comment: 'Summary row label for the attachment expiry choice in the setup wizard.',
 });
+const SUMMARY_PUSH_RELAY_DESCRIPTOR = msg({
+	message: 'Push relay notice',
+	comment: 'Summary row label for the push relay consent on the setup wizard finish step.',
+});
 const SUMMARY_PREMIUM_DESCRIPTOR = msg({
 	message: 'Premium model',
 	comment: 'Summary row label for the premium model in the setup wizard.',
+});
+const SUMMARY_ACCEPTED_DESCRIPTOR = msg({
+	message: 'Accepted',
+	comment: 'Summary value when the operator accepted the push relay notice.',
+});
+const SUMMARY_NOT_ACCEPTED_DESCRIPTOR = msg({
+	message: 'Not accepted',
+	comment: 'Summary value when the operator left the push relay notice unaccepted.',
 });
 const SUMMARY_ON_DESCRIPTOR = msg({
 	message: 'Enabled',
@@ -1531,6 +1569,40 @@ export const IntegrationStep = observer(
 	},
 );
 
+export const PushRelayConsentStep = observer(
+	({accepted, disabled, onChange}: {accepted: boolean; disabled: boolean; onChange: (value: boolean) => void}) => {
+		const {i18n} = useLingui();
+		return (
+			<section className={styles.step} data-flx="app.self-hosted-setup-wizard-gate.push-relay-consent-step">
+				<StepHeader
+					title={i18n._(PUSH_RELAY_TITLE_DESCRIPTOR)}
+					body={i18n._(PUSH_RELAY_BODY_DESCRIPTOR)}
+					data-flx="app.setup.setup-wizard-steps.push-relay-consent-step.step-header"
+				/>
+				<Switch
+					label={i18n._(PUSH_RELAY_ACCEPT_LABEL_DESCRIPTOR)}
+					description={i18n._(PUSH_RELAY_ACCEPT_DESC_DESCRIPTOR)}
+					value={accepted}
+					onChange={onChange}
+					disabled={disabled}
+					data-flx="app.self-hosted-setup-wizard-gate.push-relay-consent-switch"
+				/>
+				<FocusRing data-flx="app.setup.setup-wizard-steps.push-relay-consent-step.focus-ring">
+					<a
+						className={styles.noticeLink}
+						href={PUSH_RELAY_NOTICE_URL}
+						target="_blank"
+						rel="noreferrer"
+						data-flx="app.self-hosted-setup-wizard-gate.push-relay-notice-link"
+					>
+						{i18n._(PUSH_RELAY_NOTICE_LINK_DESCRIPTOR)}
+					</a>
+				</FocusRing>
+			</section>
+		);
+	},
+);
+
 export const ServicesStep = observer(
 	({
 		available,
@@ -1650,6 +1722,7 @@ export const FinishStep = observer(
 		singleCommunityEnabled,
 		directMessagesDisabled,
 		attachmentExpiryEnabled,
+		pushRelayConsentAccepted,
 		premiumMode,
 		submitError,
 	}: {
@@ -1658,6 +1731,7 @@ export const FinishStep = observer(
 		singleCommunityEnabled: boolean;
 		directMessagesDisabled: boolean;
 		attachmentExpiryEnabled: boolean;
+		pushRelayConsentAccepted: boolean;
 		premiumMode: PremiumMode;
 		submitError: string | null;
 	}) => {
@@ -1706,9 +1780,16 @@ export const FinishStep = observer(
 						data-flx="app.setup.setup-wizard-steps.finish-step.summary-row--5"
 					/>
 					<SummaryRow
+						label={i18n._(SUMMARY_PUSH_RELAY_DESCRIPTOR)}
+						value={
+							pushRelayConsentAccepted ? i18n._(SUMMARY_ACCEPTED_DESCRIPTOR) : i18n._(SUMMARY_NOT_ACCEPTED_DESCRIPTOR)
+						}
+						data-flx="app.setup.setup-wizard-steps.finish-step.summary-row--6"
+					/>
+					<SummaryRow
 						label={i18n._(SUMMARY_PREMIUM_DESCRIPTOR)}
 						value={premiumLabel}
-						data-flx="app.setup.setup-wizard-steps.finish-step.summary-row--6"
+						data-flx="app.setup.setup-wizard-steps.finish-step.summary-row--7"
 					/>
 				</div>
 				{submitError && (

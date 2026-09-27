@@ -30,6 +30,7 @@ import {
 	MediaExpiryStep,
 	type PremiumMode,
 	PremiumStep,
+	PushRelayConsentStep,
 	type RegistrationMode,
 	RegistrationStep,
 	type ServiceAvailability,
@@ -459,6 +460,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		youtube: false,
 		bluesky: false,
 	});
+	const [pushRelayConsentAccepted, setPushRelayConsentAccepted] = useState(false);
 	const [premiumMode, setPremiumMode] = useState<PremiumMode>('mirror');
 	const [assets, setAssets] = useState<ReadonlyArray<BrandingAssetState>>(() =>
 		BRANDING_ASSET_KINDS.map((kind) => ({kind, url: null, preview: null})),
@@ -549,6 +551,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		clearStepNavigationLock();
 		setIntegrationDraft({...DEFAULT_INTEGRATION_DRAFT});
 		setMediaExpiryDraft({...DEFAULT_MEDIA_EXPIRY_DRAFT});
+		setPushRelayConsentAccepted(false);
 		setSmtpTesting(false);
 		setSmtpTestResult(null);
 		try {
@@ -569,6 +572,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		setSingleCommunityEnabled(next.policy.single_community_enabled);
 		setDirectMessagesDisabled(next.policy.direct_messages_disabled);
 		setPremiumMode(next.policy.premium_mode);
+		setPushRelayConsentAccepted(next.push_service_delivery.relay_consent_accepted);
 		setServiceSelection({
 			gif: next.policy.services_resolved.gif_enabled,
 			youtube: next.policy.services_resolved.youtube_enabled,
@@ -677,6 +681,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		if (step === 'branding') return !productNameError;
 		if (step === 'community') return !singleCommunityNameError;
 		if (step === 'media_expiry') return isMediaExpiryStepValid(mediaExpiryDraft);
+		if (step === 'push_relay_consent') return true;
 		const integrationKind = wizardStepToIntegrationKind(step);
 		if (integrationKind) return isIntegrationStepValid(integrationKind, integrationDraft);
 		return true;
@@ -766,6 +771,10 @@ export const SelfHostedSetupWizardGate = observer(() => {
 			const nextConfig = await updateInstanceConfig({
 				integrations: buildIntegrationsPatch(integrationDraft),
 				media: buildMediaPatch(mediaExpiryDraft),
+				push_service_delivery:
+					config.push_service_delivery.relay_consent_accepted === pushRelayConsentAccepted
+						? undefined
+						: {relay_consent_accepted: pushRelayConsentAccepted},
 				registration: {mode: registrationMode},
 				app_public: {
 					branding: {
@@ -804,6 +813,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		singleCommunityEnabled,
 		singleCommunityNameTrimmed,
 		directMessagesDisabled,
+		pushRelayConsentAccepted,
 		premiumMode,
 		serviceAvailability,
 		serviceSelection,
@@ -972,6 +982,14 @@ export const SelfHostedSetupWizardGate = observer(() => {
 											data-flx="app.setup.self-hosted-setup-wizard-gate.integration-step"
 										/>
 									)}
+									{step === 'push_relay_consent' && (
+										<PushRelayConsentStep
+											accepted={pushRelayConsentAccepted}
+											disabled={submitting}
+											onChange={setPushRelayConsentAccepted}
+											data-flx="app.setup.self-hosted-setup-wizard-gate.push-relay-consent-step"
+										/>
+									)}
 									{step === 'services' && (
 										<ServicesStep
 											available={serviceAvailability}
@@ -996,6 +1014,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 											singleCommunityEnabled={singleCommunityEnabled}
 											directMessagesDisabled={directMessagesDisabled}
 											attachmentExpiryEnabled={mediaExpiryDraft.enabled}
+											pushRelayConsentAccepted={pushRelayConsentAccepted}
 											premiumMode={premiumMode}
 											submitError={submitError}
 											data-flx="app.setup.self-hosted-setup-wizard-gate.finish-step"

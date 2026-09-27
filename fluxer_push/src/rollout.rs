@@ -54,6 +54,7 @@ pub struct RolloutSnapshot {
     pub enabled: bool,
     pub config_version: u64,
     pub rollout_basis_points: u32,
+    pub relay_consent_accepted: bool,
 }
 
 impl RolloutConfig for RolloutSnapshot {
@@ -77,6 +78,7 @@ impl RolloutConfig for RolloutSnapshot {
             enabled: parse_enabled(config)?,
             config_version: parse_config_version(config)?,
             rollout_basis_points,
+            relay_consent_accepted: parse_flag(config, "relay_consent_accepted")?,
         })
     }
 
@@ -98,9 +100,13 @@ impl RolloutConfig for RolloutSnapshot {
 }
 
 pub fn parse_enabled(config: &Value) -> Option<bool> {
-    match config.get("enabled") {
+    parse_flag(config, "enabled")
+}
+
+fn parse_flag(config: &Value, key: &str) -> Option<bool> {
+    match config.get(key) {
         None | Some(Value::Null) => Some(false),
-        Some(Value::Bool(enabled)) => Some(*enabled),
+        Some(Value::Bool(flag)) => Some(*flag),
         Some(_) => None,
     }
 }
@@ -160,7 +166,7 @@ impl<C: RolloutConfig> RolloutStore<C> {
         self.update(config)
     }
 
-    fn update(&self, config: &Value) -> RolloutOutcome {
+    pub(crate) fn update(&self, config: &Value) -> RolloutOutcome {
         let Some(offered) = C::parse(config) else {
             warn!(config = C::NAME, "rollout config rejected as invalid");
             return RolloutOutcome::Rejected;
@@ -287,4 +293,34 @@ fn config_object<'a>(value: &'a Value, message_type: &str) -> Option<&'a Value> 
         return Some(config);
     }
     value.is_object().then_some(value)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    #[test]
+    fn the_operator_relay_consent_is_read_off_the_instance_config() {
+        let config = json!({
+            "enabled": true,
+            "config_version": 3,
+            "relay_consent_accepted": true,
+        });
+        let snapshot = RolloutSnapshot::parse(&config).expect("the config parses");
+        assert!(snapshot.relay_consent_accepted);
+    }
+
+    #[test]
+    fn an_instance_config_without_the_consent_field_has_not_consented() {
+        let config = json!({"enabled": true, "config_version": 3});
+        let snapshot = RolloutSnapshot::parse(&config).expect("the config parses");
+        assert!(!snapshot.relay_consent_accepted);
+    }
+
+    #[test]
+    fn a_consent_field_that_is_not_a_boolean_is_refused() {
+        let config = json!({"enabled": true, "relay_consent_accepted": "yes"});
+        assert!(RolloutSnapshot::parse(&config).is_none());
+    }
 }

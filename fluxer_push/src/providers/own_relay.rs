@@ -97,6 +97,10 @@ pub fn parse(endpoint: &str, hosts: &[String]) -> Option<Hop> {
     })
 }
 
+pub fn is_managed(endpoint: &str, hosts: &[String]) -> bool {
+    parse(endpoint, hosts).is_some()
+}
+
 fn decode(segment: &str) -> Option<String> {
     percent_encoding::percent_decode_str(segment)
         .decode_utf8()
@@ -183,6 +187,26 @@ mod tests {
             .is_none()
         );
         assert!(parse("https://ntfy.sh/upZzH87cT9jJCc?up=1", &ours()).is_none());
+    }
+
+    #[test]
+    fn every_managed_relay_leg_is_recognised_and_nothing_else_is() {
+        for path in [
+            format!("apns/canary/production/{TOKEN}"),
+            format!("apns-voip/canary/production/{TOKEN}"),
+            "fcm/canary/dYC_x9gXTjyyrG8_Aw3nUM%3AAPA91bExample".to_owned(),
+        ] {
+            let endpoint = format!("https://push.fluxer.com/relay/v1/{path}");
+            assert!(
+                is_managed(&endpoint, &ours()),
+                "{endpoint} must be a managed relay endpoint"
+            );
+        }
+        assert!(!is_managed("https://ntfy.sh/upZzH87cT9jJCc?up=1", &ours()));
+        assert!(!is_managed(
+            "https://updates.push.services.mozilla.com/wpush/v2/gAAAAA",
+            &ours()
+        ));
     }
 
     #[test]

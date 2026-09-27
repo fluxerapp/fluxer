@@ -552,6 +552,9 @@ pub struct PushServiceDeliveryConfigResponse {
     pub rollout_salt: String,
     pub included_user_ids: Vec<String>,
     pub excluded_user_ids: Vec<String>,
+    pub relay_consent_accepted: bool,
+    pub relay_consent_accepted_at: Option<String>,
+    pub relay_consent_accepted_by: Option<String>,
 }
 
 impl Default for PushServiceDeliveryConfigResponse {
@@ -563,6 +566,9 @@ impl Default for PushServiceDeliveryConfigResponse {
             rollout_salt: PUSH_SERVICE_DELIVERY_DEFAULT_SALT.to_owned(),
             included_user_ids: Vec::new(),
             excluded_user_ids: Vec::new(),
+            relay_consent_accepted: false,
+            relay_consent_accepted_at: None,
+            relay_consent_accepted_by: None,
         }
     }
 }
@@ -579,6 +585,8 @@ pub struct PushServiceDeliveryConfigUpdateRequest {
     pub included_user_ids: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub excluded_user_ids: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub relay_consent_accepted: Option<bool>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

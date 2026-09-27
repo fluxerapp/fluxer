@@ -415,7 +415,10 @@ fn deserialize_instance_config_response_with_unknown_keys() {
             "rollout_basis_points": 5000,
             "rollout_salt": "push-service-delivery-v1",
             "included_user_ids": ["1500000000000000002"],
-            "excluded_user_ids": []
+            "excluded_user_ids": [],
+            "relay_consent_accepted": true,
+            "relay_consent_accepted_at": "2026-09-27T10:11:12.000Z",
+            "relay_consent_accepted_by": "1130650140672000000"
         },
         "domain_migration": {
             "enabled": true,
@@ -564,6 +567,7 @@ fn deserialize_instance_config_response_with_unknown_keys() {
     assert_eq!(resp.domain_migration.included_user_ids.len(), 1);
     assert_eq!(resp.domain_migration.anonymous_rollout_basis_points, 100);
     assert!(resp.domain_migration.standalone_forwarding);
+    assert!(resp.push_service_delivery.relay_consent_accepted);
     assert_eq!(resp.experiment_delivery.poll_interval_seconds, 300);
     assert!(resp.policy.single_community_guild_id.is_none());
     assert_eq!(resp.policy.services.gif_enabled, Some(true));
@@ -593,6 +597,71 @@ fn deserialize_instance_config_response_with_unknown_keys() {
     assert_eq!(
         serde_json::to_value(&baseline).unwrap(),
         serde_json::to_value(&resp).unwrap()
+    );
+}
+
+#[test]
+fn deserialize_push_service_delivery_relay_consent() {
+    let accepted: types::PushServiceDeliveryConfigResponse = serde_json::from_str(
+        r#"{
+        "enabled": true,
+        "config_version": 3,
+        "rollout_basis_points": 5000,
+        "rollout_salt": "push-service-delivery-v1",
+        "included_user_ids": [],
+        "excluded_user_ids": [],
+        "relay_consent_accepted": true,
+        "relay_consent_accepted_at": "2026-09-27T10:11:12.000Z",
+        "relay_consent_accepted_by": "1130650140672000000"
+    }"#,
+    )
+    .expect("an accepted relay consent must deserialize");
+
+    assert!(accepted.relay_consent_accepted);
+    assert_eq!(
+        accepted.relay_consent_accepted_at.as_deref(),
+        Some("2026-09-27T10:11:12.000Z")
+    );
+    assert_eq!(
+        accepted.relay_consent_accepted_by.as_deref(),
+        Some("1130650140672000000")
+    );
+
+    let legacy: types::PushServiceDeliveryConfigResponse = serde_json::from_str(
+        r#"{
+        "enabled": true,
+        "config_version": 3,
+        "rollout_basis_points": 5000,
+        "rollout_salt": "push-service-delivery-v1",
+        "included_user_ids": [],
+        "excluded_user_ids": []
+    }"#,
+    )
+    .expect("a response written before relay consent must still deserialize");
+
+    assert!(!legacy.relay_consent_accepted);
+    assert!(legacy.relay_consent_accepted_at.is_none());
+    assert!(legacy.relay_consent_accepted_by.is_none());
+}
+
+#[test]
+fn serialize_push_service_delivery_update_omits_an_unset_relay_consent() {
+    let without = types::PushServiceDeliveryConfigUpdateRequest {
+        enabled: Some(true),
+        ..Default::default()
+    };
+    assert_eq!(
+        serde_json::to_value(&without).unwrap(),
+        serde_json::json!({"enabled": true})
+    );
+
+    let with = types::PushServiceDeliveryConfigUpdateRequest {
+        relay_consent_accepted: Some(true),
+        ..Default::default()
+    };
+    assert_eq!(
+        serde_json::to_value(&with).unwrap(),
+        serde_json::json!({"relay_consent_accepted": true})
     );
 }
 

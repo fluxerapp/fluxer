@@ -136,8 +136,13 @@ The instance rollout of push service delivery.
 | rollout_salt | string | Salt of the sampling hash (1-64 printable ASCII characters, default `push-service-delivery-v1`) |
 | included_user_ids | array[snowflake] | Accounts the rollout always selects, up to 1000 entries (default empty) |
 | excluded_user_ids | array[snowflake] | Accounts the rollout never selects, up to 1000 entries (default empty) |
+| relay_consent_accepted | boolean | Whether the operator accepted the push relay supplemental privacy notice (default false) |
+| relay_consent_accepted_at | ?string | ISO 8601 timestamp of that acceptance, or null when the notice stands unaccepted (default null) |
+| relay_consent_accepted_by | ?snowflake | Admin account that accepted the notice, or null when the notice stands unaccepted (default null) |
 
 Every field is present on read. An absent document or missing field uses the defaults above.
+
+The notice covers only the Fluxer-run relay that reaches Apple and Google for the official mobile apps. A subscription whose endpoint points at another distributor, such as a self-hosted UnifiedPush server or ntfy, never reaches that relay and needs no acceptance.
 
 ## Domain migration configuration object
 
@@ -591,7 +596,7 @@ The body has one optional object for each section. Fluxer leaves an absent secti
 
 `voice_noise_suppression` takes every [voice noise suppression configuration](#voice-noise-suppression-configuration-object) field except `config_version`, each bound as documented there. Fluxer raises `config_version` by one on each request that supplies at least one of them. A section that is absent, or present with no field set, writes nothing and leaves `config_version` alone.
 
-`push_service_delivery` works the same way, over the [push service delivery configuration](#push-service-delivery-configuration-object) fields and its own `config_version`.
+`push_service_delivery` works the same way, over the [push service delivery configuration](#push-service-delivery-configuration-object) fields and its own `config_version`. It also takes `relay_consent_accepted`. Fluxer sets `relay_consent_accepted_at` and `relay_consent_accepted_by` itself on the request that changes that flag, and accepts neither from a request: turning the flag on stamps the current time and the acting Admin account, and turning it off clears both to null. A request that repeats the flag it already holds leaves the stamp alone.
 
 `domain_migration` works the same way, over the [domain migration configuration](#domain-migration-configuration-object) fields and its own `config_version`.
 

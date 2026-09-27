@@ -36,7 +36,11 @@ import {
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {DomainMigrationConfigSchema} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {GatewayRolloutConfigSchema} from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
-import {PushServiceDeliveryConfigSchema} from '@fluxer/schema/src/domains/admin/PushServiceDeliverySchemas';
+import {
+	type PushServiceDeliveryConfig,
+	PushServiceDeliveryConfigSchema,
+	type PushServiceDeliveryConfigUpdateRequest,
+} from '@fluxer/schema/src/domains/admin/PushServiceDeliverySchemas';
 import {VoiceNoiseSuppressionConfigSchema} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
 import {UserIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {ExperimentDeliveryConfigSchema} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
@@ -194,6 +198,20 @@ async function grantSetupCompleterAdminACL(ctx: Context<HonoEnv>): Promise<boole
 	return true;
 }
 
+function relayConsentStamp(
+	current: PushServiceDeliveryConfig,
+	patch: Partial<PushServiceDeliveryConfigUpdateRequest>,
+	adminUserId: string,
+): Partial<PushServiceDeliveryConfig> {
+	const accepted = patch.relay_consent_accepted;
+	if (accepted === undefined || accepted === current.relay_consent_accepted) {
+		return {};
+	}
+	return accepted
+		? {relay_consent_accepted_at: new Date().toISOString(), relay_consent_accepted_by: adminUserId}
+		: {relay_consent_accepted_at: null, relay_consent_accepted_by: null};
+}
+
 function listSuppliedSections(data: InstanceConfigUpdateRequest): string | undefined {
 	const sections = Object.entries(data)
 		.filter(([, value]) => value != null)
@@ -276,10 +294,12 @@ export function InstanceConfigAdminController(app: HonoApp) {
 			if (data.push_service_delivery) {
 				const patch = omitUndefinedFields(data.push_service_delivery);
 				if (Object.keys(patch).length > 0) {
+					const adminUserId = ctx.get('adminUserId').toString();
 					const landed = await instanceConfigRepository.updatePushServiceDeliveryConfig((current) =>
 						PushServiceDeliveryConfigSchema.parse({
 							...current,
 							...patch,
+							...relayConsentStamp(current, patch, adminUserId),
 							config_version: current.config_version + 1,
 						}),
 					);

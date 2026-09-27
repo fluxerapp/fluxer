@@ -1191,6 +1191,14 @@ fn push_service_delivery_section(
     };
     let included_user_ids = push_service_delivery.included_user_ids.join("\n");
     let excluded_user_ids = push_service_delivery.excluded_user_ids.join("\n");
+    let relay_consent_stamp = match (
+        push_service_delivery.relay_consent_accepted_at.as_deref(),
+        push_service_delivery.relay_consent_accepted_by.as_deref(),
+    ) {
+        (Some(at), Some(by)) => Some(format!("Accepted {at} by user {by}")),
+        (Some(at), None) => Some(format!("Accepted {at}")),
+        _ => None,
+    };
     section_card_with_description(
         "Push Service Delivery",
         "Routes push notification delivery for the selected accounts through the push service. \
@@ -1217,6 +1225,28 @@ fn push_service_delivery_section(
                         "Off is the safe state. With this unchecked every notification keeps the \
                          current delivery path, so the rollout and targeting fields below have no \
                          effect at all."
+                    }
+
+                    h3 class="text-sm font-semibold text-neutral-900" { "Managed relay consent" }
+                    (checkbox(
+                        "push_service_delivery_relay_consent_accepted",
+                        "true",
+                        "Accept the push relay supplemental privacy notice",
+                        push_service_delivery.relay_consent_accepted,
+                        true,
+                    ))
+                    p class="text-xs text-neutral-500" {
+                        "Required only for the official mobile apps, whose notifications travel \
+                         through Fluxer's relay to Apple and Google. Until this is accepted those \
+                         notifications are dropped. Self-hosted UnifiedPush and ntfy endpoints \
+                         never reach the relay and are unaffected. "
+                        a href="https://fluxer.com/push-relay" target="_blank" rel="noreferrer"
+                            class="text-neutral-900 underline decoration-neutral-300 hover:text-neutral-600 hover:decoration-neutral-500" {
+                            "Read the notice"
+                        }
+                    }
+                    @if let Some(stamp) = relay_consent_stamp {
+                        p class="text-xs text-neutral-500" { (stamp) }
                     }
 
                     h3 class="text-sm font-semibold text-neutral-900" { "Rollout" }
@@ -2084,6 +2114,29 @@ mod tests {
         assert!(markup.contains("1 of 1000 stored"));
         assert!(markup.contains("2 of 1000 stored"));
         assert!(!markup.contains("at the cap"));
+    }
+
+    #[test]
+    fn push_service_delivery_section_shows_the_relay_consent_toggle() {
+        let accepted = PushServiceDeliveryConfigResponse {
+            relay_consent_accepted: true,
+            relay_consent_accepted_at: Some("2026-09-27T10:11:12.000Z".to_owned()),
+            relay_consent_accepted_by: Some("1130650140672000000".to_owned()),
+            ..PushServiceDeliveryConfigResponse::default()
+        };
+        let markup = push_service_delivery_section("/admin", "csrf", &accepted).into_string();
+        assert!(markup.contains("name=\"push_service_delivery_relay_consent_accepted\""));
+        assert!(markup.contains("https://fluxer.com/push-relay"));
+        assert!(markup.contains("Accepted 2026-09-27T10:11:12.000Z by user 1130650140672000000"));
+
+        let unaccepted = push_service_delivery_section(
+            "/admin",
+            "csrf",
+            &PushServiceDeliveryConfigResponse::default(),
+        )
+        .into_string();
+        assert!(unaccepted.contains("name=\"push_service_delivery_relay_consent_accepted\""));
+        assert!(!unaccepted.contains("Accepted "));
     }
 
     #[test]

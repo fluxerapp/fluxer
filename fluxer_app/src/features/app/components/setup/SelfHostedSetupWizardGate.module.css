@@ -233,6 +233,15 @@
 	text-align: center;
 }
 
+.noticeLink {
+	align-self: flex-start;
+	border-radius: 0.25rem;
+	color: var(--text-link);
+	font-size: 0.875rem;
+	line-height: 1.45;
+	text-decoration: underline;
+}
+
 .integrationFields {
 	display: flex;
 	flex-direction: column;

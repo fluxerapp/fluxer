@@ -17,6 +17,7 @@ export type WizardStep =
 	| 'integration_captcha'
 	| 'integration_email'
 	| 'integration_bluesky'
+	| 'push_relay_consent'
 	| 'services'
 	| 'premium'
 	| 'finish';
@@ -36,6 +37,7 @@ export const CONFIGURE_STEPS: ReadonlyArray<WizardStep> = [
 	'integration_captcha',
 	'integration_email',
 	'integration_bluesky',
+	'push_relay_consent',
 	'services',
 	'premium',
 	'finish',
