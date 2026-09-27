@@ -227,7 +227,7 @@ pub fn resolve_cloudflare_public_url(public_url_arg: Option<&str>) -> Result<Str
         }
     }
     bail!(
-        "Missing Cloudflare tunnel public URL. Run `pnpm dev:tunnel:configure -- --public-url https://...` or pass `pnpm dev -- --cloudflare-tunnel --public-url https://...`."
+        "Missing Cloudflare tunnel public URL. Run `pnpm dev:tunnel:configure --public-url https://...` or pass `pnpm dev --cloudflare-tunnel --public-url https://...`."
     );
 }
 
