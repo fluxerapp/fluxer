@@ -82,8 +82,8 @@ FLUXER_TAG_FILE='image-tag'
 FLUXER_DUMP_FILE='fluxer.dump'
 
 # Free space demanded before a volume copy, as a percentage of the measured
-# volume size. The tarball compresses, so this is generous on purpose. A backup
-# that fills the disk it writes to takes the instance down with it.
+# volume size. A backup that fills the disk it writes to takes the instance down
+# with it.
 FLUXER_VOLUME_HEADROOM=110
 
 # The keys .env carries, in the order they are written. The installer iterates
@@ -226,6 +226,7 @@ Options:
   --rollback               Restore the images and stack files of the last record.
   --backup-dir <path>      Where records go. Default <dir>/backups.
   --no-volume-backup       Take the database dump and skip the uploads copy.
+  --no-volume-compression  Copy the uploads as a plain .tar. Faster, larger.
   --skip-backup-accept-data-loss
                            Upgrade with no backup at all. Losable data is lost.
   --allow-root             Permit running as root.
@@ -298,6 +299,7 @@ opt_update=0
 opt_rollback=0
 opt_backup_dir=''
 opt_no_volume_backup=0
+opt_no_volume_compression=0
 opt_skip_backup=0
 opt_allow_root=0
 
@@ -370,6 +372,10 @@ while [ $# -gt 0 ]; do
 			;;
 		--no-volume-backup)
 			opt_no_volume_backup=1
+			shift
+			;;
+		--no-volume-compression)
+			opt_no_volume_compression=1
 			shift
 			;;
 		--skip-backup-accept-data-loss)
@@ -686,6 +692,12 @@ fluxer_validate_options() {
 	fi
 	if [ "$opt_skip_backup" -eq 1 ] && [ "$opt_no_volume_backup" -eq 1 ]; then
 		fluxer_bad_usage '--skip-backup-accept-data-loss already skips the volume copy.'
+	fi
+	if [ "$opt_no_volume_compression" -eq 1 ] && [ "$opt_update" -eq 0 ]; then
+		fluxer_bad_usage '--no-volume-compression belongs to --update.'
+	fi
+	if [ "$opt_no_volume_compression" -eq 1 ] && { [ "$opt_skip_backup" -eq 1 ] || [ "$opt_no_volume_backup" -eq 1 ]; }; then
+		fluxer_bad_usage '--no-volume-compression changes the volume copy, which this run skips.'
 	fi
 }
 
@@ -1566,6 +1578,13 @@ $(fluxer_volume_error '  ')" ;;
 	if [ "$fluxer_copy_any" -eq 0 ]; then
 		return 0
 	fi
+	if [ "$opt_no_volume_compression" -eq 1 ]; then
+		fluxer_tar_flags='cf'
+		fluxer_tar_ext='tar'
+	else
+		fluxer_tar_flags='czf'
+		fluxer_tar_ext='tgz'
+	fi
 	fluxer_say 'Stopping the stack for a consistent copy of the uploads.'
 	if ! $fluxer_engine compose stop; then
 		fluxer_fail 7 "$fluxer_engine compose stop failed in $opt_dir."
@@ -1574,7 +1593,7 @@ $(fluxer_volume_error '  ')" ;;
 		[ -n "$fluxer_volume" ] || continue
 		fluxer_full="${fluxer_project}_${fluxer_volume}"
 		fluxer_say "Copying $fluxer_full."
-		if ! $fluxer_engine run --rm -v "$fluxer_full:/data:ro" -v "$fluxer_record:/backup" "$FLUXER_HELPER_IMAGE" tar czf "/backup/$fluxer_volume.tgz" -C /data .; then
+		if ! $fluxer_engine run --rm -v "$fluxer_full:/data:ro" -v "$fluxer_record:/backup" "$FLUXER_HELPER_IMAGE" tar "$fluxer_tar_flags" "/backup/$fluxer_volume.$fluxer_tar_ext" -C /data .; then
 			$fluxer_engine compose up -d --remove-orphans || true
 			fluxer_fail 7 "Copying $fluxer_full failed. The stack is started again on the images it was running."
 		fi
@@ -1761,7 +1780,11 @@ fluxer_plan_update() {
 	elif [ "$opt_no_volume_backup" -eq 1 ]; then
 		fluxer_say '  backup        the database dump, .env, and the stack files'
 	else
-		fluxer_say '  backup        the database dump, the uploads volume, .env, and the stack files'
+		if [ "$opt_no_volume_compression" -eq 1 ]; then
+			fluxer_say '  backup        the database dump, the uploads volume uncompressed, .env, and the stack files'
+		else
+			fluxer_say '  backup        the database dump, the uploads volume, .env, and the stack files'
+		fi
 		fluxer_say '  downtime      the stack stops for the uploads copy, then again for the recreate'
 	fi
 	fluxer_fetch_stack

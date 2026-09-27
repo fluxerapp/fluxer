@@ -52,6 +52,7 @@ param(
 	[switch]$Update,
 	[switch]$Rollback,
 	[switch]$NoVolumeBackup,
+	[switch]$NoVolumeCompression,
 	[switch]$SkipBackupAcceptDataLoss,
 	[switch]$Help,
 	[Parameter(ValueFromRemainingArguments = $true)]
@@ -86,9 +87,8 @@ $FluxerImagesFile = 'images'
 $FluxerTagFile = 'image-tag'
 $FluxerDumpFile = 'fluxer.dump'
 
-# Free space demanded before a volume copy, as a percentage of the measured volume size. The
-# tarball compresses, so this is generous on purpose. A backup that fills the disk it writes to
-# takes the instance down with it.
+# Free space demanded before a volume copy, as a percentage of the measured volume size. A backup
+# that fills the disk it writes to takes the instance down with it.
 $FluxerVolumeHeadroomPercent = 110
 
 $FluxerExitUsage = 1
@@ -238,6 +238,7 @@ function Show-FluxerUsage {
 	Write-FluxerLine '  -Rollback               Restore the images and stack files of the last record.'
 	Write-FluxerLine '  -BackupDir <path>       Where records go. Default: the backups folder under -Dir.'
 	Write-FluxerLine '  -NoVolumeBackup         Take the database dump and skip the uploads copy.'
+	Write-FluxerLine '  -NoVolumeCompression    Copy the uploads as a plain .tar. Faster, larger.'
 	Write-FluxerLine '  -SkipBackupAcceptDataLoss'
 	Write-FluxerLine '                          Upgrade with no backup at all. Losable data is lost.'
 	Write-FluxerLine '  -Help                   Print this text.'
@@ -1413,6 +1414,12 @@ function Copy-FluxerVolumes([string]$Record, [string]$Project, [string]$TargetDi
 	if ($present.Count -eq 0) {
 		return
 	}
+	$tarFlags = 'czf'
+	$tarExtension = 'tgz'
+	if ($NoVolumeCompression) {
+		$tarFlags = 'cf'
+		$tarExtension = 'tar'
+	}
 	Write-FluxerLine 'Stopping the stack for a consistent copy of the uploads.'
 	if ((Invoke-FluxerDocker @('compose', 'stop')) -ne 0) {
 		Stop-Fluxer 'docker compose stop failed.' $FluxerExitBackup
@@ -1420,7 +1427,7 @@ function Copy-FluxerVolumes([string]$Record, [string]$Project, [string]$TargetDi
 	foreach ($volume in $present) {
 		$full = "${Project}_$volume"
 		Write-FluxerLine "Copying $full."
-		$code = Invoke-FluxerDocker @('run', '--rm', '-v', "${full}:/data:ro", '-v', "${Record}:/backup", $FluxerHelperImage, 'tar', 'czf', "/backup/$volume.tgz", '-C', '/data', '.')
+		$code = Invoke-FluxerDocker @('run', '--rm', '-v', "${full}:/data:ro", '-v', "${Record}:/backup", $FluxerHelperImage, 'tar', $tarFlags, "/backup/$volume.$tarExtension", '-C', '/data', '.')
 		if ($code -ne 0) {
 			[void](Invoke-FluxerDocker @('compose', 'up', '-d', '--remove-orphans'))
 			Stop-Fluxer "Copying $full failed. The stack is started again on the images it was running." $FluxerExitBackup
@@ -1529,7 +1536,11 @@ function Show-FluxerUpdatePlan([string]$TargetDir, [string]$EnvPath, [string]$Ba
 	} elseif ($NoVolumeBackup) {
 		Write-FluxerLine '  Backup:     the database dump, .env, and the stack files'
 	} else {
-		Write-FluxerLine '  Backup:     the database dump, the uploads volume, .env, and the stack files'
+		if ($NoVolumeCompression) {
+			Write-FluxerLine '  Backup:     the database dump, the uploads volume uncompressed, .env, and the stack files'
+		} else {
+			Write-FluxerLine '  Backup:     the database dump, the uploads volume, .env, and the stack files'
+		}
 		Write-FluxerLine '  Downtime:   the stack stops for the uploads copy, then again for the recreate'
 	}
 	# The dry run downloads into a temporary directory so it can name the files that actually
@@ -1924,6 +1935,12 @@ function Invoke-FluxerInstall {
 	}
 	if ($SkipBackupAcceptDataLoss -and $NoVolumeBackup) {
 		Stop-Fluxer '-SkipBackupAcceptDataLoss already skips the volume copy.' $FluxerExitUsage
+	}
+	if ($NoVolumeCompression -and -not $Update) {
+		Stop-Fluxer '-NoVolumeCompression belongs to -Update.' $FluxerExitUsage
+	}
+	if ($NoVolumeCompression -and ($SkipBackupAcceptDataLoss -or $NoVolumeBackup)) {
+		Stop-Fluxer '-NoVolumeCompression changes the volume copy, which this run skips.' $FluxerExitUsage
 	}
 
 	Invoke-FluxerPreflight
