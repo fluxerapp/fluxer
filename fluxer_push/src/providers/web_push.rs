@@ -2,7 +2,7 @@
 
 use crate::crypto;
 use crate::payload::{self, RecordKind};
-use crate::providers::SendOutcome;
+use crate::providers::{SendOutcome, own_relay};
 use crate::resolver;
 use crate::server::AppState;
 use crate::subscription::Subscription;
@@ -38,6 +38,8 @@ const AES128GCM: &str = "aes128gcm";
 const NOT_FOUND: u16 = 404;
 const GONE: u16 = 410;
 const INSUFFICIENT_STORAGE: u16 = 507;
+const TOO_MANY_REQUESTS: u16 = 429;
+const RELAY_RATE_LIMITED: &str = "relay_rate_limited";
 const MAX_HOSTNAME_BYTES: usize = 253;
 const MAX_LABEL_BYTES: usize = 63;
 
@@ -111,6 +113,9 @@ pub async fn send(state: &AppState, sub: &Subscription, envelope: &Value) -> Sen
                 continue;
             }
         };
+        if is_relay_quota_refusal(status, &sub.endpoint, &state.cfg.managed_relay_hosts) {
+            return SendOutcome::permanent(RELAY_RATE_LIMITED);
+        }
         if should_retry(status, attempt) {
             tokio::time::sleep(retry_delay(attempt)).await;
             attempt += 1;
@@ -126,6 +131,10 @@ fn delivery_headers(envelope: &Value) -> (&'static str, &'static str) {
         RecordKind::Clear => (CLEAR_TTL_SECONDS, CLEAR_URGENCY),
         RecordKind::Ring => (RING_TTL_SECONDS, ALERT_URGENCY),
     }
+}
+
+fn is_relay_quota_refusal(status: u16, endpoint: &str, managed_relay_hosts: &[String]) -> bool {
+    status == TOO_MANY_REQUESTS && own_relay::is_managed(endpoint, managed_relay_hosts)
 }
 
 fn should_retry(status: u16, attempt: u32) -> bool {
@@ -240,6 +249,39 @@ mod retry_tests {
     #[test]
     fn a_topic_with_no_listener_is_not_retried() {
         assert!(!should_retry(INSUFFICIENT_STORAGE, 0));
+    }
+
+    const TOKEN: &str = "3dbc5a5ef1a1c1666afc26f466e1b3ebaaf4c66d92dddeb0fd1b69c49641d4cd";
+
+    fn managed_hosts() -> Vec<String> {
+        vec!["push.fluxer.com".to_owned()]
+    }
+
+    #[test]
+    fn a_relay_over_its_device_quota_is_not_retried() {
+        let endpoint = format!("https://push.fluxer.com/relay/v1/fcm/stable/{TOKEN}");
+        assert!(is_relay_quota_refusal(
+            TOO_MANY_REQUESTS,
+            &endpoint,
+            &managed_hosts()
+        ));
+    }
+
+    #[test]
+    fn a_rate_limited_third_party_push_service_is_still_retried() {
+        let endpoint = "https://ntfy.sh/upZzH87cT9jJCc?up=1";
+        assert!(!is_relay_quota_refusal(
+            TOO_MANY_REQUESTS,
+            endpoint,
+            &managed_hosts()
+        ));
+        assert!(should_retry(TOO_MANY_REQUESTS, 0));
+    }
+
+    #[test]
+    fn an_unavailable_relay_is_still_retried() {
+        let endpoint = format!("https://push.fluxer.com/relay/v1/fcm/stable/{TOKEN}");
+        assert!(!is_relay_quota_refusal(503, &endpoint, &managed_hosts()));
     }
 
     #[test]
