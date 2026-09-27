@@ -33,9 +33,9 @@ Fluxer is a free and open source instant messaging and VoIP chat app built for f
 
 | Windows | macOS | Linux | Android | iOS |
 | --- | --- | --- | --- | --- |
-| [Installer (x64)][win-setup-x64] | [Disk image][mac-dmg] | [Flathub][flathub] | [APK][android-apk] | [TestFlight][ios-testflight] |
-| [Installer (ARM64)][win-setup-arm64] | | [deb (x64)][linux-deb-x64] | [Obtainium][obtainium] | |
-| [Portable (x64)][win-portable-x64] | | [deb (ARM64)][linux-deb-arm64] | | |
+| [Installer (x64)][win-setup-x64] | [Disk image][mac-dmg] | [Flathub][flathub] | [Google Play (beta)][android-play] | [TestFlight][ios-testflight] |
+| [Installer (ARM64)][win-setup-arm64] | | [deb (x64)][linux-deb-x64] | [APK (beta)][android-apk] | |
+| [Portable (x64)][win-portable-x64] | | [deb (ARM64)][linux-deb-arm64] | [Obtainium (beta)][obtainium] | |
 | [Portable (ARM64)][win-portable-arm64] | | [rpm (x64)][linux-rpm-x64] | | |
 | | | [rpm (ARM64)][linux-rpm-arm64] | | |
 | | | [AppImage (x64)][linux-appimage-x64] | | |
@@ -168,6 +168,7 @@ endorsement rights.
 [flatpak-ref]: https://pkgs.fluxer.com/flatpak/fluxer.flatpakref
 [flatpak-canary-ref]: https://pkgs.fluxer.com/flatpak/fluxer-canary.flatpakref
 [flathub]: https://flathub.org/apps/app.fluxer.Fluxer
+[android-play]: https://play.google.com/store/apps/details?id=com.fluxer
 [android-apk]: https://github.com/fluxerapp/flutter_client/releases
 [obtainium]: https://obtainium.imranr.dev/
 [ios-testflight]: https://testflight.apple.com/join/PKZR6pK9
