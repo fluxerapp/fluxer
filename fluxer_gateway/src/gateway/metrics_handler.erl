@@ -44,8 +44,6 @@ render_metrics() ->
         render_gateway_gauges(),
         render_cluster_counters(),
         render_process_counts(),
-        render_push_dispatcher_stats(),
-        render_push_delivery_gate_stats(),
         render_push_outbox_stats(safe_apply_map(fun push_outbox:stats/0)),
         render_vm_metrics()
     ].
@@ -254,97 +252,11 @@ count_registry_prefix(Prefix) ->
         error:badarg -> 0
     end.
 
--spec render_push_dispatcher_stats() -> iolist().
-render_push_dispatcher_stats() ->
-    Stats = safe_apply_map(fun push_dispatcher:stats/0),
-    case map_size(Stats) of
-        0 ->
-            [];
-        _ ->
-            Queued = maps:get(queued, Stats, 0),
-            Inflight = maps:get(inflight, Stats, 0),
-            [
-                format_metric(
-                    <<"fluxer_gateway_push_dispatcher_queued">>,
-                    <<"gauge">>,
-                    <<"Push dispatcher queued jobs">>,
-                    integer_to_binary(Queued)
-                ),
-                format_metric(
-                    <<"fluxer_gateway_push_dispatcher_inflight">>,
-                    <<"gauge">>,
-                    <<"Push dispatcher in-flight jobs">>,
-                    integer_to_binary(Inflight)
-                )
-            ]
-    end.
-
--spec render_push_delivery_gate_stats() -> iolist().
-render_push_delivery_gate_stats() ->
-    ConfigVersion = safe_apply_int(fun push_delivery_config:config_version/0),
-    [
-        format_metric(
-            <<"fluxer_gateway_push_delivery_config_version">>,
-            <<"gauge">>,
-            <<"Push delivery config version in effect">>,
-            integer_to_binary(ConfigVersion)
-        ),
-        render_push_delivery_config_updates(
-            safe_apply_map(fun push_delivery_config:update_counts/0)
-        ),
-        render_push_delivery_gate_counters(safe_apply_map(fun push:delivery_gate_counters/0))
-    ].
-
--spec render_push_delivery_config_updates(map()) -> iolist().
-render_push_delivery_config_updates(Counts) ->
-    format_labeled_series(
-        <<"fluxer_gateway_push_delivery_config_updates_total">>,
-        <<"counter">>,
-        <<"Push delivery config reads by outcome">>,
-        [
-            {<<"result=\"updated\"">>, gate_counter(updated, Counts)},
-            {<<"result=\"unchanged\"">>, gate_counter(unchanged, Counts)},
-            {<<"result=\"stale\"">>, gate_counter(stale, Counts)},
-            {<<"result=\"rejected\"">>, gate_counter(rejected, Counts)}
-        ]
-    ).
-
--spec render_push_delivery_gate_counters(map()) -> iolist().
-render_push_delivery_gate_counters(Counters) when map_size(Counters) =:= 0 ->
-    [];
-render_push_delivery_gate_counters(Counters) ->
-    [
-        format_metric(
-            <<"fluxer_gateway_push_delivery_service_users_total">>,
-            <<"counter">>,
-            <<"Recipients routed to the push service">>,
-            gate_counter(delivery_gate_service_users, Counters)
-        ),
-        format_metric(
-            <<"fluxer_gateway_push_delivery_gateway_users_total">>,
-            <<"counter">>,
-            <<"Recipients kept on the gateway push path">>,
-            gate_counter(delivery_gate_gateway_users, Counters)
-        ),
-        format_metric(
-            <<"fluxer_gateway_push_delivery_jobs_published_total">>,
-            <<"counter">>,
-            <<"Push jobs published to the push service">>,
-            gate_counter(delivery_gate_jobs_published, Counters)
-        ),
-        format_metric(
-            <<"fluxer_gateway_push_delivery_publish_failed_total">>,
-            <<"counter">>,
-            <<"Push job publishes that fell back to the gateway path">>,
-            gate_counter(delivery_gate_publish_failed, Counters)
-        )
-    ].
-
 -spec render_push_outbox_stats(map()) -> iolist().
 render_push_outbox_stats(Stats) when map_size(Stats) =:= 0 ->
     [];
 render_push_outbox_stats(Stats) ->
-    [render_push_outbox_queue_stats(Stats), render_push_outbox_hand_back_stats(Stats)].
+    [render_push_outbox_queue_stats(Stats), render_push_outbox_dropped(Stats)].
 
 -spec render_push_outbox_queue_stats(map()) -> iolist().
 render_push_outbox_queue_stats(Stats) ->
@@ -393,34 +305,25 @@ render_push_outbox_queue_stats(Stats) ->
         )
     ].
 
--spec render_push_outbox_hand_back_stats(map()) -> iolist().
-render_push_outbox_hand_back_stats(Stats) ->
-    [
-        format_metric(
-            <<"fluxer_gateway_push_outbox_fallbacks_total">>,
-            <<"counter">>,
-            <<"Push jobs handed back to the gateway push path">>,
-            gate_counter(fallbacks, Stats)
-        ),
-        format_metric(
-            <<"fluxer_gateway_push_outbox_lost_total">>,
-            <<"counter">>,
-            <<"Push job hand-backs whose gateway push path send crashed">>,
-            gate_counter(lost, Stats)
-        ),
-        format_metric(
-            <<"fluxer_gateway_push_outbox_fallback_backlog">>,
-            <<"gauge">>,
-            <<"Push job hand-backs waiting for a runner">>,
-            gate_counter(fallback_backlog, Stats)
-        ),
-        format_metric(
-            <<"fluxer_gateway_push_outbox_fallback_runners">>,
-            <<"gauge">>,
-            <<"Push job hand-backs running on the gateway push path">>,
-            gate_counter(fallback_runners, Stats)
-        )
-    ].
+-spec render_push_outbox_dropped(map()) -> iolist().
+render_push_outbox_dropped(Stats) ->
+    format_labeled_series(
+        <<"fluxer_gateway_push_outbox_dropped_total">>,
+        <<"counter">>,
+        <<"Push jobs dropped undelivered by kind and reason">>,
+        [
+            {push_outbox_dropped_label(Kind, Reason), integer_to_binary(Count)}
+         || {{Kind, Reason}, Count} <- lists:sort(maps:to_list(maps:get(dropped, Stats, #{}))),
+            is_atom(Kind),
+            is_atom(Reason),
+            is_integer(Count)
+        ]
+    ).
+
+-spec push_outbox_dropped_label(atom(), atom()) -> binary().
+push_outbox_dropped_label(Kind, Reason) ->
+    <<"kind=\"", (atom_to_binary(Kind))/binary, "\",reason=\"", (atom_to_binary(Reason))/binary,
+        "\"">>.
 
 -spec gate_counter(atom(), map()) -> binary().
 gate_counter(Key, Counters) ->
@@ -519,3 +422,32 @@ format_labeled_series(Name, Type, Help, LabelValues) ->
          || {Label, Value} <- LabelValues
         ]
     ].
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+push_outbox_drops_render_one_series_per_kind_and_reason_test() ->
+    Rendered = iolist_to_binary(
+        render_push_outbox_dropped(#{
+            dropped => #{{message, expired} => 3, {clear, outbox_unavailable} => 1}
+        })
+    ),
+    ?assertNotEqual(
+        nomatch,
+        binary:match(
+            Rendered,
+            <<"fluxer_gateway_push_outbox_dropped_total{kind=\"message\",reason=\"expired\"} 3\n">>
+        )
+    ),
+    ?assertNotEqual(
+        nomatch,
+        binary:match(
+            Rendered,
+            <<"fluxer_gateway_push_outbox_dropped_total{kind=\"clear\",reason=\"outbox_unavailable\"} 1\n">>
+        )
+    ).
+
+push_outbox_without_drops_renders_no_dropped_series_test() ->
+    ?assertEqual([], render_push_outbox_dropped(#{dropped => #{}})).
+
+-endif.

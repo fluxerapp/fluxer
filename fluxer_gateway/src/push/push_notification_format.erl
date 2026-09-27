@@ -10,7 +10,6 @@
     resolve_author_name/3,
     resolve_author_avatar_url/1,
     extract_image_url/1,
-    maybe_image_fields/1,
     build_url/3,
     truncate_bytes/2
 ]).
@@ -615,12 +614,6 @@ is_sensitive_media(true, _Flags) ->
     true;
 is_sensitive_media(_Nsfw, Flags) ->
     bitset:any(Flags, 16#18).
-
--spec maybe_image_fields(binary() | undefined) -> map().
-maybe_image_fields(undefined) ->
-    #{};
-maybe_image_fields(ImageUrl) when is_binary(ImageUrl) ->
-    #{<<"image_url">> => ImageUrl, <<"image">> => ImageUrl}.
 
 -spec build_url(integer(), integer(), integer()) -> binary().
 build_url(0, ChannelId, MessageId) ->

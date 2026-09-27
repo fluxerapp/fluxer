@@ -1115,7 +1115,7 @@ presence_is_offline(UserId, Presences) ->
 
 -spec grace_hold(map(), #{user_id() => boolean()}) -> grace_hold().
 grace_hold(Sessions, SessionEligibility) ->
-    case suppressed_enrolled_sessions(Sessions, SessionEligibility) of
+    case suppressed_sessions(Sessions, SessionEligibility) of
         Held when map_size(Held) =:= 0 ->
             none;
         Held ->
@@ -1126,8 +1126,8 @@ grace_hold(Sessions, SessionEligibility) ->
 held_sessions(none) -> #{};
 held_sessions({Held, _RecheckAt}) -> Held.
 
--spec suppressed_enrolled_sessions(map(), #{user_id() => boolean()}) -> grace_sessions().
-suppressed_enrolled_sessions(Sessions, SessionEligibility) ->
+-spec suppressed_sessions(map(), #{user_id() => boolean()}) -> grace_sessions().
+suppressed_sessions(Sessions, SessionEligibility) ->
     maps:fold(
         fun(_Sid, Session, Acc) -> maybe_hold_session(Session, SessionEligibility, Acc) end,
         #{},
@@ -1153,17 +1153,11 @@ hold_suppressed_session(UserId, Pid, SessionEligibility, Acc) when
 ->
     case maps:get(UserId, SessionEligibility, true) of
         false ->
-            hold_enrolled_session(push_delivery_config:is_enrolled(UserId), UserId, Pid, Acc);
+            Acc#{UserId => [Pid | maps:get(UserId, Acc, [])]};
         true ->
             Acc
     end;
 hold_suppressed_session(_UserId, _Pid, _SessionEligibility, Acc) ->
-    Acc.
-
--spec hold_enrolled_session(boolean(), user_id(), pid(), grace_sessions()) -> grace_sessions().
-hold_enrolled_session(true, UserId, Pid, Acc) ->
-    Acc#{UserId => [Pid | maps:get(UserId, Acc, [])]};
-hold_enrolled_session(false, _UserId, _Pid, Acc) ->
     Acc.
 
 -spec grace_recheck_ms() -> pos_integer().

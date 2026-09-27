@@ -811,17 +811,15 @@ For environment-based configuration, use `FLUXER_AUTH_BLUESKY_ENABLED`, `FLUXER_
 | FLUXER_VAPID_PRIVATE_KEY | `CHANGE_ME` | The VAPID private key. Base64url of the 32-byte scalar, and the matching half of the pair |
 | FLUXER_VAPID_EMAIL | unset | The VAPID contact address. Compose derives `admin@` followed by `FLUXER_DOMAIN` when it is unset |
 
-The Gateway reads the same names. A malformed pair, or a private key that does not derive the public point, does not stop it. It records the fault in its log at startup and then drops every web push notification.
-
-`FLUXER_GATEWAY_PUSH_ENABLED` is read by the Gateway alone, defaults to `true`, and skips that startup check on the VAPID pair when it is `false`.
+`FLUXER_GATEWAY_PUSH_ENABLED` is read by the Gateway alone and defaults to `true`. When it is `false`, the Gateway hands no message or clear notification to `push`.
 
 ## Mobile push
 
-`api`, `gateway`, and `push` read the APNs and FCM names. None appear in `.env.example` or in `docker-compose.yml`, so configuring mobile push means editing the Compose file. All are optional.
+`api` and `push` read the APNs and FCM names. None appear in `.env.example` or in `docker-compose.yml`, so configuring mobile push means editing the Compose file. All are optional.
 
 #### `FLUXER_PUSH_APNS_ENABLED`
 
-Default `false`. The APNs switch. Must be set on `api`, `gateway`, and `push`.
+Default `false`. The APNs switch. Must be set on `api` and `push`.
 
 #### `FLUXER_PUSH_APNS_TEAM_ID`
 
@@ -849,7 +847,7 @@ Default `[]`. Per-app APNs configuration. JSON array. An entry with no `app_id` 
 
 #### `FLUXER_PUSH_FCM_ENABLED`
 
-Default `false`. The FCM switch. Must be set on `api`, `gateway`, and `push`.
+Default `false`. The FCM switch. Must be set on `api` and `push`.
 
 #### `FLUXER_PUSH_FCM_PROJECT_ID`
 
@@ -906,6 +904,10 @@ No default. Replaces the APNs host in both environments. Set it only for a test 
 #### `FLUXER_PUSH_SERVICE_FCM_BASE_URL`
 
 Default `https://fcm.googleapis.com`. The FCM host. Set it only for a proxy or a test double.
+
+#### `FLUXER_PUSH_SERVICE_RELAY_CONSENT_ACCEPTED`
+
+Default `false`. Accepts the push relay supplemental privacy notice for this `push` process. `true`, `1`, or `yes` accepts it, and `false`, `0`, or `no` leaves the decision to the [push relay configuration](/admin-api/instance/#push-relay-configuration-object). Any other value fails startup. When it is `true`, `push` sends through the Fluxer-run relay even while the stored consent is off. Compose does not forward it.
 
 ## Payments
 
@@ -1711,7 +1713,7 @@ See [Bluesky connections](#bluesky-connections) for configuration.
 
 #### `FLUXER_PUSH_APNS_` and `FLUXER_PUSH_FCM_`
 
-Mobile push cannot be configured at all from the example. `api`, `gateway`, and `push` all read these names. An override has to reach all three.
+Mobile push cannot be configured at all from the example. `api` and `push` both read these names. An override has to reach both.
 
 #### `RUST_LOG`, `LOG_LEVEL` and `LOGGER_LEVEL`
 

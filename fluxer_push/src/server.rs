@@ -4,7 +4,7 @@ use crate::config::{Config, DeliveryConfig};
 use crate::delivery;
 use crate::metrics::Metrics;
 use crate::relay;
-use crate::rollout::{self, RolloutSnapshot, RolloutStore};
+use crate::relay_consent::{self, RelayConsentStore};
 use crate::rpc::RpcClient;
 use crate::secret::SecretString;
 use crate::tokens::TokenCache;
@@ -91,7 +91,7 @@ pub struct AppState {
     pub(crate) cfg: DeliveryConfig,
     pub(crate) metrics: Arc<Metrics>,
     pub(crate) sidecar: Arc<Sidecar>,
-    pub(crate) rollout: RolloutStore<RolloutSnapshot>,
+    pub(crate) relay_consent: RelayConsentStore,
     pub(crate) rpc: RpcClient,
     pub(crate) http: reqwest::Client,
     pub(crate) web_push_http: reqwest::Client,
@@ -103,10 +103,12 @@ pub struct AppState {
 impl AppState {
     pub(crate) fn try_new(cfg: DeliveryConfig) -> anyhow::Result<Self> {
         let metrics = Arc::new(Metrics::new());
+        let relay_consent = RelayConsentStore::new(cfg.relay_consent_accepted);
+        metrics.record_relay_consent_accepted(relay_consent.accepted());
         let http = vendor::http_client()?;
         Ok(Self {
             rpc: RpcClient::new(&cfg.rpc, http.clone(), Arc::clone(&metrics)),
-            rollout: RolloutStore::new(),
+            relay_consent,
             sidecar: Arc::new(Sidecar::new(Arc::clone(&metrics))),
             web_push_http: vendor::web_push_http_client()?,
             apns_http: vendor::apns_http_client()?,
@@ -144,12 +146,12 @@ async fn run_delivery(cfg: DeliveryConfig) -> anyhow::Result<()> {
         let transport = transport.clone();
         let state = Arc::clone(&state);
         async move {
-            rollout::run_rollout_subscriber(
+            relay_consent::run_subscriber(
                 transport,
                 &state.rpc,
-                &state.rollout,
+                &state.relay_consent,
                 &state.metrics,
-                rollout::RECONCILE_INTERVAL,
+                relay_consent::RECONCILE_INTERVAL,
             )
             .await
         }

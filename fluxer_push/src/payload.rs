@@ -605,7 +605,6 @@ mod tests {
     fn message_job(image_url: Option<&str>) -> MessageJob {
         MessageJob {
             v: 1,
-            config_version: 7,
             guild_id: "0".to_owned(),
             channel_id: CHANNEL_ID.to_owned(),
             message_id: MESSAGE_ID.to_owned(),
@@ -626,7 +625,6 @@ mod tests {
     fn clear_job() -> ClearJob {
         ClearJob {
             v: 1,
-            config_version: 7,
             user_id: USER_ID.to_owned(),
             channel_id: CHANNEL_ID.to_owned(),
             message_id: MESSAGE_ID.to_owned(),

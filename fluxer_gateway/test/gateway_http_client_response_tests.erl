@@ -25,7 +25,7 @@ allow_circuit_request_uses_recovery_timeout_test() ->
 update_circuit_state_uses_failure_threshold_test() ->
     cleanup_circuit_tables(),
     ensure_circuit_tables(),
-    Key = {push, <<"push.example.test">>},
+    Key = {rpc, <<"threshold.example.test">>},
     record(Key, failure(), 2),
     ?assertEqual(closed, circuit_state(Key)),
     record(Key, failure(), 1),
@@ -62,7 +62,7 @@ open_circuit_half_opens_then_recloses_on_success_test() ->
 circuit_window_is_kept_out_of_the_state_record_test() ->
     cleanup_circuit_tables(),
     ensure_circuit_tables(),
-    Key = {push, <<"window.example.test">>},
+    Key = {rpc, <<"window.example.test">>},
     record(Key, failure(), 1),
     ?assertMatch([{Key, closed, undefined, _}], ets:lookup(?CIRCUIT_TABLE, Key)),
     ?assertMatch([{Key, [{true, _}]}], ets:lookup(?CIRCUIT_WINDOW_TABLE, Key)),

@@ -80,15 +80,30 @@ cluster_static_peers_accepts_valid_node_names_test() ->
         maps:get(cluster_static_peers, Config)
     ).
 
-push_endpoint_guard_enabled_defaults_on_test() ->
-    Config = fluxer_gateway_config:load(),
-    ?assertEqual(true, maps:get(push_endpoint_guard_enabled, Config)).
-
-push_endpoint_guard_enabled_can_be_turned_off_test() ->
-    with_env("FLUXER_GATEWAY_PUSH_ENDPOINT_GUARD_ENABLED", "false", fun() ->
+push_clear_switch_reads_the_enrolled_env_name_test() ->
+    ?assertEqual(
+        true, maps:get(push_enrolled_clear_notifications_enabled, fluxer_gateway_config:load())
+    ),
+    with_env("FLUXER_GATEWAY_PUSH_ENROLLED_CLEAR_NOTIFICATIONS_ENABLED", "false", fun() ->
         Config = fluxer_gateway_config:load(),
-        ?assertEqual(false, maps:get(push_endpoint_guard_enabled, Config))
+        ?assertEqual(false, maps:get(push_enrolled_clear_notifications_enabled, Config))
     end).
+
+gateway_config_holds_no_direct_push_delivery_keys_test() ->
+    Config = fluxer_gateway_config:load(),
+    lists:foreach(
+        fun(Key) -> ?assertNot(maps:is_key(Key, Config)) end,
+        [
+            push_clear_notifications_enabled,
+            push_endpoint_guard_enabled,
+            push_managed_relay_hosts,
+            push_relay_consent_accepted,
+            vapid_public_key,
+            apns_enabled,
+            fcm_enabled,
+            gateway_http_push_max_concurrency
+        ]
+    ).
 
 presence_push_buffer_env_defaults_test() ->
     with_env("FLUXER_GATEWAY_PRESENCE_PUSH_BUFFER_MAX_ENTRIES", "7", fun() ->
@@ -99,55 +114,20 @@ presence_push_buffer_env_defaults_test() ->
         end)
     end).
 
-env_only_push_and_http_runtime_config_test() ->
-    ApnsAppsJson =
-        "[{\"app_id\":\"ios-stable\",\"topic\":\"app.fluxer\",\"environment\":\"production\"}]",
-    FcmAppsJson = "[{\"app_id\":\"android-stable\",\"project_id\":\"fluxer-fcm\"}]",
+env_only_http_runtime_config_test() ->
     with_envs(
         [
             {"FLUXER_GATEWAY_SHUTDOWN_DRAIN_WAIT_MS", "1234"},
             {"FLUXER_GATEWAY_HTTP_RPC_MAX_CONCURRENCY", "42"},
             {"FLUXER_GATEWAY_HTTP_FAILURE_THRESHOLD", "9"},
-            {"FLUXER_GATEWAY_HTTP_RECOVERY_TIMEOUT_MS", "6000"},
-            {"FLUXER_PUSH_APNS_ENABLED", "true"},
-            {"FLUXER_PUSH_APNS_TEAM_ID", "TEAMID"},
-            {"FLUXER_PUSH_APNS_KEY_ID", "KEYID"},
-            {"FLUXER_PUSH_APNS_PRIVATE_KEY_PATH", "/etc/fluxer/apns.p8"},
-            {"FLUXER_PUSH_APNS_DEFAULT_ENVIRONMENT", "development"},
-            {"FLUXER_PUSH_APNS_APPS", ApnsAppsJson},
-            {"FLUXER_PUSH_FCM_ENABLED", "true"},
-            {"FLUXER_PUSH_FCM_PROJECT_ID", "fluxer-fcm"},
-            {"FLUXER_PUSH_FCM_SERVICE_ACCOUNT_JSON_PATH", "/etc/fluxer/fcm.json"},
-            {"FLUXER_PUSH_FCM_TOKEN_URI", "https://oauth2.example/token"},
-            {"FLUXER_PUSH_FCM_APPS", FcmAppsJson}
+            {"FLUXER_GATEWAY_HTTP_RECOVERY_TIMEOUT_MS", "6000"}
         ],
         fun() ->
             Config = fluxer_gateway_config:load(),
             ?assertEqual(1234, maps:get(shutdown_drain_wait_ms, Config)),
             ?assertEqual(42, maps:get(gateway_http_rpc_max_concurrency, Config)),
             ?assertEqual(9, maps:get(gateway_http_failure_threshold, Config)),
-            ?assertEqual(6000, maps:get(gateway_http_recovery_timeout_ms, Config)),
-            ?assertEqual(true, maps:get(apns_enabled, Config)),
-            ?assertEqual(<<"TEAMID">>, maps:get(apns_team_id, Config)),
-            ?assertEqual(<<"KEYID">>, maps:get(apns_key_id, Config)),
-            ?assertEqual(<<"development">>, maps:get(apns_default_environment, Config)),
-            ?assertEqual(
-                [
-                    #{
-                        <<"app_id">> => <<"ios-stable">>,
-                        <<"topic">> => <<"app.fluxer">>,
-                        <<"environment">> => <<"production">>
-                    }
-                ],
-                maps:get(apns_apps, Config)
-            ),
-            ?assertEqual(true, maps:get(fcm_enabled, Config)),
-            ?assertEqual(<<"fluxer-fcm">>, maps:get(fcm_project_id, Config)),
-            ?assertEqual(<<"https://oauth2.example/token">>, maps:get(fcm_token_uri, Config)),
-            ?assertEqual(
-                [#{<<"app_id">> => <<"android-stable">>, <<"project_id">> => <<"fluxer-fcm">>}],
-                maps:get(fcm_apps, Config)
-            )
+            ?assertEqual(6000, maps:get(gateway_http_recovery_timeout_ms, Config))
         end
     ).
 

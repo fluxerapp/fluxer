@@ -141,13 +141,67 @@ fetch_settings(UserId, GuildId) ->
 
 -spec fetch_settings_rpc(integer(), integer()) -> map().
 fetch_settings_rpc(UserId, GuildId) ->
-    try push_subscriptions:fetch_and_cache_user_guild_settings(UserId, GuildId) of
+    try fetch_and_cache_user_guild_settings(UserId, GuildId) of
         S0 when is_map(S0) -> S0;
         _ -> #{}
     catch
         throw:_ -> #{};
         error:_ -> #{};
         exit:_ -> #{}
+    end.
+
+-spec fetch_and_cache_user_guild_settings(integer(), integer()) -> map() | null.
+fetch_and_cache_user_guild_settings(UserId, GuildId) ->
+    Req = #{
+        <<"type">> => <<"get_user_guild_settings">>,
+        <<"user_ids">> => [integer_to_binary(UserId)],
+        <<"guild_id">> => integer_to_binary(GuildId)
+    },
+    logger:debug(
+        "Push: fetching user guild settings via RPC",
+        #{user_id => UserId, guild_id => GuildId}
+    ),
+    Fill = push_ets_cache:reserve_user_guild_settings([UserId], GuildId),
+    try rpc_client:call(Req) of
+        {ok, Data} ->
+            cache_user_guild_settings(UserId, GuildId, Data, Fill);
+        {error, Reason} ->
+            logger:debug(
+                "Push: RPC failed to fetch user guild settings",
+                #{user_id => UserId, guild_id => GuildId, reason => Reason}
+            ),
+            null
+    after
+        push_ets_cache:release(Fill)
+    end.
+
+-spec cache_user_guild_settings(integer(), integer(), map(), push_ets_cache:fill()) -> map().
+cache_user_guild_settings(UserId, GuildId, Data, Fill) ->
+    SettingsData =
+        case maps:get(<<"user_guild_settings">>, Data, [null]) of
+            [First | _] -> First;
+            _ -> null
+        end,
+    case SettingsData of
+        null ->
+            logger:debug(
+                "Push: user guild settings returned null; caching empty sentinel",
+                #{user_id => UserId, guild_id => GuildId}
+            ),
+            push_ets_cache:put_user_guild_settings(UserId, GuildId, #{}, Fill),
+            #{};
+        Settings ->
+            logger:debug(
+                "Push: user guild settings fetched and cached",
+                #{
+                    user_id => UserId,
+                    guild_id => GuildId,
+                    muted => maps:get(muted, Settings, undefined),
+                    mobile_push => maps:get(mobile_push, Settings, undefined)
+                }
+            ),
+            push_ets_cache:put_user_guild_settings(UserId, GuildId, Settings, Fill),
+            Settings
     end.
 
 -spec prefetch_user_guild_settings([integer()], integer(), integer()) -> ok.

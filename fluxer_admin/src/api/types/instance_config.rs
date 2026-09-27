@@ -23,7 +23,7 @@ pub struct InstanceConfigResponse {
     #[serde(default)]
     pub voice_noise_suppression: VoiceNoiseSuppressionConfigResponse,
     #[serde(default)]
-    pub push_service_delivery: PushServiceDeliveryConfigResponse,
+    pub push_relay: PushRelayConfigResponse,
     #[serde(default)]
     pub domain_migration: DomainMigrationConfigResponse,
     #[serde(default)]
@@ -453,7 +453,6 @@ impl VoiceE2eeScope {
 }
 
 pub const EXPERIMENT_MAX_TARGETED_USERS: usize = 1_000;
-pub const PUSH_SERVICE_DELIVERY_DEFAULT_SALT: &str = "push-service-delivery-v1";
 pub const DOMAIN_MIGRATION_DEFAULT_SALT: &str = "domain-migration-v1";
 pub const ALTCHA_CAPTCHA_DEFAULT_SALT: &str = "altcha-captcha-v1";
 pub const ALTCHA_CAPTCHA_COST_RANGE: std::ops::RangeInclusive<u32> = 1_000..=100_000;
@@ -548,48 +547,16 @@ pub struct VoiceNoiseSuppressionConfigUpdateRequest {
     pub suppression_strength: Option<u32>,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(default)]
-pub struct PushServiceDeliveryConfigResponse {
-    pub enabled: bool,
-    pub config_version: u64,
-    pub rollout_basis_points: u32,
-    pub rollout_salt: String,
-    pub included_user_ids: Vec<String>,
-    pub excluded_user_ids: Vec<String>,
+pub struct PushRelayConfigResponse {
     pub relay_consent_accepted: bool,
     pub relay_consent_accepted_at: Option<String>,
     pub relay_consent_accepted_by: Option<String>,
 }
 
-impl Default for PushServiceDeliveryConfigResponse {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            config_version: 0,
-            rollout_basis_points: 0,
-            rollout_salt: PUSH_SERVICE_DELIVERY_DEFAULT_SALT.to_owned(),
-            included_user_ids: Vec::new(),
-            excluded_user_ids: Vec::new(),
-            relay_consent_accepted: false,
-            relay_consent_accepted_at: None,
-            relay_consent_accepted_by: None,
-        }
-    }
-}
-
 #[derive(Clone, Debug, Default, Serialize)]
-pub struct PushServiceDeliveryConfigUpdateRequest {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub enabled: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub rollout_basis_points: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub rollout_salt: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub included_user_ids: Option<Vec<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub excluded_user_ids: Option<Vec<String>>,
+pub struct PushRelayConfigUpdateRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub relay_consent_accepted: Option<bool>,
 }
@@ -806,7 +773,7 @@ pub struct InstanceConfigUpdateRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub voice_noise_suppression: Option<VoiceNoiseSuppressionConfigUpdateRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub push_service_delivery: Option<PushServiceDeliveryConfigUpdateRequest>,
+    pub push_relay: Option<PushRelayConfigUpdateRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub domain_migration: Option<DomainMigrationConfigUpdateRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]

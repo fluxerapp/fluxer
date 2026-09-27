@@ -155,27 +155,14 @@ flush_push_buffer(#{push_buffer := Buffer} = State) ->
 
 -spec maybe_update_push_eligibility(state()) -> state().
 maybe_update_push_eligibility(State) ->
-    update_push_eligibility(enrolled_in_push_delivery(State), State).
-
--spec update_push_eligibility(boolean(), state()) -> state().
-update_push_eligibility(true, State) ->
-    Eligible = no_session_holds_push(maps:get(sessions, State, #{})),
-    flush_when_eligible(Eligible, record_push_eligibility(Eligible, State));
-update_push_eligibility(false, State) ->
-    flush_when_eligible(is_push_eligible(maps:get(sessions, State, #{})), State).
+    Eligible = push_eligible(State),
+    flush_when_eligible(Eligible, record_push_eligibility(Eligible, State)).
 
 -spec flush_when_eligible(boolean(), state()) -> state().
 flush_when_eligible(Eligible, State) ->
     case {Eligible, maps:get(push_buffer, State, [])} of
         {true, [_ | _]} -> flush_push_buffer(State);
         _ -> State
-    end.
-
--spec enrolled_in_push_delivery(state()) -> boolean().
-enrolled_in_push_delivery(State) ->
-    case maps:get(user_id, State, undefined) of
-        UserId when is_integer(UserId) -> push_delivery_config:is_enrolled(UserId);
-        _ -> false
     end.
 
 -spec record_push_eligibility(boolean(), state()) -> state().
@@ -253,13 +240,7 @@ route_push_notification(Params, State) ->
 
 -spec push_eligible(state()) -> boolean().
 push_eligible(State) ->
-    push_eligible(enrolled_in_push_delivery(State), maps:get(sessions, State, #{})).
-
--spec push_eligible(boolean(), map()) -> boolean().
-push_eligible(true, Sessions) ->
-    no_session_holds_push(Sessions);
-push_eligible(false, Sessions) ->
-    is_push_eligible(Sessions).
+    no_session_holds_push(maps:get(sessions, State, #{})).
 
 -spec build_push_create_params(user_id(), map()) -> map() | undefined.
 build_push_create_params(UserId, Data) ->
@@ -406,17 +387,6 @@ build_buffer_entry(ChannelId, MessageId, Params) when
 build_buffer_entry(_, _, _) ->
     undefined.
 
--spec is_push_eligible(map()) -> boolean().
-is_push_eligible(Sessions) ->
-    case map_size(Sessions) of
-        0 -> true;
-        _ -> all_sessions_afk(Sessions)
-    end.
-
--spec all_sessions_afk(map()) -> boolean().
-all_sessions_afk(Sessions) ->
-    lists:all(fun(S) -> maps:get(afk, S, false) end, maps:values(Sessions)).
-
 -spec no_session_holds_push(map()) -> boolean().
 no_session_holds_push(Sessions) ->
     not lists:any(fun session_holds_push/1, maps:values(Sessions)).
@@ -439,12 +409,22 @@ parse_snowflake(FieldName, Value) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
-is_push_eligible_test() ->
-    ?assertEqual(true, is_push_eligible(#{})),
-    ?assertEqual(false, is_push_eligible(#{<<"s1">> => #{mobile => true, afk => false}})),
-    ?assertEqual(true, is_push_eligible(#{<<"s1">> => #{mobile => true, afk => true}})),
-    ?assertEqual(true, is_push_eligible(#{<<"s1">> => #{mobile => false, afk => true}})),
-    ?assertEqual(false, is_push_eligible(#{<<"s1">> => #{mobile => false, afk => false}})).
+no_session_holds_push_test() ->
+    ?assertEqual(true, no_session_holds_push(#{})),
+    ?assertEqual(false, no_session_holds_push(#{<<"s1">> => #{mobile => true, afk => false}})),
+    ?assertEqual(true, no_session_holds_push(#{<<"s1">> => #{mobile => true, afk => true}})),
+    ?assertEqual(true, no_session_holds_push(#{<<"s1">> => #{mobile => false, afk => true}})),
+    ?assertEqual(false, no_session_holds_push(#{<<"s1">> => #{mobile => false, afk => false}})),
+    ?assertEqual(
+        true, no_session_holds_push(#{<<"s1">> => #{afk => false, status => offline}})
+    ),
+    ?assertEqual(
+        false,
+        no_session_holds_push(#{
+            <<"s1">> => #{afk => true},
+            <<"s2">> => #{afk => false, status => online}
+        })
+    ).
 
 custom_status_comparator_test() ->
     Expected = #{

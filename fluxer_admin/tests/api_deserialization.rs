@@ -409,13 +409,7 @@ fn deserialize_instance_config_response_with_unknown_keys() {
             "future_object_knob": {"nested": true},
             "future_list_knob": ["a", "b"]
         },
-        "push_service_delivery": {
-            "enabled": true,
-            "config_version": 3,
-            "rollout_basis_points": 5000,
-            "rollout_salt": "push-service-delivery-v1",
-            "included_user_ids": ["1500000000000000002"],
-            "excluded_user_ids": [],
+        "push_relay": {
             "relay_consent_accepted": true,
             "relay_consent_accepted_at": "2026-09-27T10:11:12.000Z",
             "relay_consent_accepted_by": "1130650140672000000"
@@ -579,7 +573,7 @@ fn deserialize_instance_config_response_with_unknown_keys() {
     assert_eq!(resp.domain_migration.included_user_ids.len(), 1);
     assert_eq!(resp.domain_migration.anonymous_rollout_basis_points, 100);
     assert!(resp.domain_migration.standalone_forwarding);
-    assert!(resp.push_service_delivery.relay_consent_accepted);
+    assert!(resp.push_relay.relay_consent_accepted);
     assert!(resp.altcha_captcha.enabled);
     assert_eq!(resp.altcha_captcha.config_version, 3);
     assert!(resp.altcha_captcha.anonymous_enabled);
@@ -618,15 +612,9 @@ fn deserialize_instance_config_response_with_unknown_keys() {
 }
 
 #[test]
-fn deserialize_push_service_delivery_relay_consent() {
-    let accepted: types::PushServiceDeliveryConfigResponse = serde_json::from_str(
+fn deserialize_push_relay_config() {
+    let accepted: types::PushRelayConfigResponse = serde_json::from_str(
         r#"{
-        "enabled": true,
-        "config_version": 3,
-        "rollout_basis_points": 5000,
-        "rollout_salt": "push-service-delivery-v1",
-        "included_user_ids": [],
-        "excluded_user_ids": [],
         "relay_consent_accepted": true,
         "relay_consent_accepted_at": "2026-09-27T10:11:12.000Z",
         "relay_consent_accepted_by": "1130650140672000000"
@@ -644,37 +632,23 @@ fn deserialize_push_service_delivery_relay_consent() {
         Some("1130650140672000000")
     );
 
-    let legacy: types::PushServiceDeliveryConfigResponse = serde_json::from_str(
-        r#"{
-        "enabled": true,
-        "config_version": 3,
-        "rollout_basis_points": 5000,
-        "rollout_salt": "push-service-delivery-v1",
-        "included_user_ids": [],
-        "excluded_user_ids": []
-    }"#,
-    )
-    .expect("a response written before relay consent must still deserialize");
+    let empty: types::PushRelayConfigResponse =
+        serde_json::from_str("{}").expect("an empty push relay config must deserialize");
 
-    assert!(!legacy.relay_consent_accepted);
-    assert!(legacy.relay_consent_accepted_at.is_none());
-    assert!(legacy.relay_consent_accepted_by.is_none());
+    assert!(!empty.relay_consent_accepted);
+    assert!(empty.relay_consent_accepted_at.is_none());
+    assert!(empty.relay_consent_accepted_by.is_none());
 }
 
 #[test]
-fn serialize_push_service_delivery_update_omits_an_unset_relay_consent() {
-    let without = types::PushServiceDeliveryConfigUpdateRequest {
-        enabled: Some(true),
-        ..Default::default()
-    };
+fn serialize_push_relay_update_omits_an_unset_consent() {
     assert_eq!(
-        serde_json::to_value(&without).unwrap(),
-        serde_json::json!({"enabled": true})
+        serde_json::to_value(types::PushRelayConfigUpdateRequest::default()).unwrap(),
+        serde_json::json!({})
     );
 
-    let with = types::PushServiceDeliveryConfigUpdateRequest {
+    let with = types::PushRelayConfigUpdateRequest {
         relay_consent_accepted: Some(true),
-        ..Default::default()
     };
     assert_eq!(
         serde_json::to_value(&with).unwrap(),

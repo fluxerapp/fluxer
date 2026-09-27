@@ -8,9 +8,8 @@ use crate::{
         ExperimentDeliveryConfigResponse, GatewayRolloutConfigResponse, InstanceConfigResponse,
         InstanceIntegrationsResponse, InstanceMediaResponse, InstancePolicyResponse,
         InstanceRegistrationResponse, LimitConfigResponse, NoiseSuppressionBackend,
-        PUSH_SERVICE_DELIVERY_DEFAULT_SALT, PendingRegistrationResponse,
-        PushServiceDeliveryConfigResponse, RegistrationUrlResponse, SsoConfigResponse,
-        VOICE_NS_MAX_GUILD_OVERRIDES, VoiceNoiseSuppressionConfigResponse,
+        PendingRegistrationResponse, PushRelayConfigResponse, RegistrationUrlResponse,
+        SsoConfigResponse, VOICE_NS_MAX_GUILD_OVERRIDES, VoiceNoiseSuppressionConfigResponse,
     },
     config::AdminConfig,
     middleware::auth::AuthContext,
@@ -139,6 +138,13 @@ pub fn instance_config_page(
                     },
                 ))
                 (config_group(
+                    "Push notifications",
+                    "Consent for the relay that delivers official mobile app notifications.",
+                    html! {
+                        (push_relay_section(base, csrf_token, &instance_config.push_relay))
+                    },
+                ))
+                (config_group(
                     "Media & retention",
                     "Attachment expiry rules that can be changed without editing environment variables.",
                     html! {
@@ -151,7 +157,6 @@ pub fn instance_config_page(
                     html! {
                         (gateway_rollout_section(base, csrf_token, &instance_config.gateway_rollout))
                         (voice_noise_suppression_section(base, csrf_token, &instance_config.voice_noise_suppression))
-                        (push_service_delivery_section(base, csrf_token, &instance_config.push_service_delivery))
                         (domain_migration_section(base, csrf_token, &instance_config.domain_migration))
                         (altcha_captcha_section(base, csrf_token, &instance_config.altcha_captcha))
                         (experiment_delivery_section(base, csrf_token, &instance_config.experiment_delivery))
@@ -1182,138 +1187,69 @@ fn voice_noise_suppression_section(
     )
 }
 
-fn push_service_delivery_section(
+fn push_relay_section(
     base: &str,
     csrf_token: &str,
-    push_service_delivery: &PushServiceDeliveryConfigResponse,
+    push_relay: &PushRelayConfigResponse,
 ) -> Markup {
-    let status = if push_service_delivery.enabled {
-        ("Live", BadgeVariant::Success)
+    let status = if push_relay.relay_consent_accepted {
+        ("Accepted", BadgeVariant::Success)
     } else {
-        ("Inert", BadgeVariant::Default)
+        ("Not accepted", BadgeVariant::Default)
     };
-    let included_user_ids = push_service_delivery.included_user_ids.join("\n");
-    let excluded_user_ids = push_service_delivery.excluded_user_ids.join("\n");
-    let relay_consent_stamp = match (
-        push_service_delivery.relay_consent_accepted_at.as_deref(),
-        push_service_delivery.relay_consent_accepted_by.as_deref(),
-    ) {
-        (Some(at), Some(by)) => Some(format!("Accepted {at} by user {by}")),
-        (Some(at), None) => Some(format!("Accepted {at}")),
-        _ => None,
-    };
+    let accepted_at =
+        format_optional_admin_timestamp(push_relay.relay_consent_accepted_at.as_deref(), "Never");
+    let accepted_by = push_relay
+        .relay_consent_accepted_by
+        .as_deref()
+        .unwrap_or("Nobody");
     section_card_with_description(
-        "Push Service Delivery",
-        "Routes push notification delivery for the selected accounts through the push service. \
-         Accounts the rollout does not select keep the current path.",
+        "Push Relay",
+        "Official mobile app notifications travel through Fluxer's relay to Apple and Google. \
+         The relay delivers them only after an operator accepts its privacy notice.",
         html! {
-            form method="post" action={(base) "/instance-config?action=update_push_service_delivery"} {
+            form method="post" action={(base) "/instance-config?action=update_push_relay"} {
                 (csrf_input(csrf_token))
                 div class="space-y-6" {
                     div class="flex flex-wrap items-center gap-2" {
-                        h3 class="text-sm font-semibold text-neutral-900" { "Master switch" }
+                        h3 class="text-sm font-semibold text-neutral-900" { "Relay consent" }
                         (badge(status.0, status.1))
-                        span class="text-xs text-neutral-500" {
-                            "Config version " (push_service_delivery.config_version)
-                        }
                     }
                     (checkbox(
-                        "push_service_delivery_enabled",
-                        "true",
-                        "Hand push notifications to the push service",
-                        push_service_delivery.enabled,
-                        true,
-                    ))
-                    p class="text-xs text-neutral-500" {
-                        "Off is the safe state. With this unchecked every notification keeps the \
-                         current delivery path, so the rollout and targeting fields below have no \
-                         effect at all."
-                    }
-
-                    h3 class="text-sm font-semibold text-neutral-900" { "Managed relay consent" }
-                    (checkbox(
-                        "push_service_delivery_relay_consent_accepted",
+                        "push_relay_consent_accepted",
                         "true",
                         "Accept the push relay supplemental privacy notice",
-                        push_service_delivery.relay_consent_accepted,
+                        push_relay.relay_consent_accepted,
                         true,
                     ))
                     p class="text-xs text-neutral-500" {
-                        "Required only for the official mobile apps, whose notifications travel \
-                         through Fluxer's relay to Apple and Google. Until this is accepted those \
-                         notifications are dropped. Self-hosted UnifiedPush and ntfy endpoints \
-                         never reach the relay and are unaffected. "
+                        "Until this is accepted official mobile app notifications are dropped. \
+                         Self-hosted UnifiedPush and ntfy endpoints never reach the relay and are \
+                         unaffected. "
                         a href="https://fluxer.com/push-relay" target="_blank" rel="noreferrer"
                             class="text-neutral-900 underline decoration-neutral-300 hover:text-neutral-600 hover:decoration-neutral-500" {
                             "Read the notice"
                         }
                     }
-                    @if let Some(stamp) = relay_consent_stamp {
-                        p class="text-xs text-neutral-500" { (stamp) }
-                    }
-
-                    h3 class="text-sm font-semibold text-neutral-900" { "Rollout" }
-                    (number_field(
-                        "push_service_delivery_rollout_basis_points",
-                        "Rollout (basis points)",
-                        &push_service_delivery.rollout_basis_points.to_string(),
-                        Some(0), Some(10000), "1",
-                        Some("Share of users bucketed into the canary, in basis points: 0 is nobody, 100 is 1%, 10000 is everybody."),
-                    ))
-                    div class="flex flex-col gap-2" {
-                        (text_input(
-                            "push_service_delivery_rollout_salt",
-                            "Rollout Salt",
-                            &push_service_delivery.rollout_salt,
-                            PUSH_SERVICE_DELIVERY_DEFAULT_SALT,
+                    div class="grid grid-cols-1 gap-4 sm:grid-cols-2" {
+                        (form_field_group("Accepted at", "push_relay_consent_accepted_at", false, None, None,
+                            html! {
+                                input type="text" id="push_relay_consent_accepted_at"
+                                    value=(accepted_at)
+                                    disabled class=(FORM_INPUT_CLASS);
+                            },
                         ))
-                        p class="text-xs text-neutral-500" {
-                            "Seeds the bucketing hash. Changing it reshuffles which users fall \
-                             inside the percentage above. Leave it alone to keep the current \
-                             cohort stable."
-                        }
-                    }
-                    div class="flex flex-col gap-2" {
-                        (textarea_input(
-                            "push_service_delivery_included_user_ids",
-                            "Always-on User IDs",
-                            "1500000000000000001\n1500000000000000002",
-                            &included_user_ids,
-                            4,
-                            false,
+                        (form_field_group("Accepted by user ID", "push_relay_consent_accepted_by", false, None, None,
+                            html! {
+                                input type="text" id="push_relay_consent_accepted_by"
+                                    value=(accepted_by)
+                                    disabled class=(FORM_INPUT_CLASS);
+                            },
                         ))
-                        (entry_count_hint(
-                            push_service_delivery.included_user_ids.len(),
-                            EXPERIMENT_MAX_TARGETED_USERS,
-                        ))
-                        p class="text-xs text-neutral-500" {
-                            "One snowflake per line, or comma separated. These users are targeted \
-                             regardless of the percentage above. IDs must contain 1 to 20 decimal \
-                             digits. Invalid entries prevent the save. Blank entries and duplicate \
-                             IDs are ignored."
-                        }
-                    }
-                    div class="flex flex-col gap-2" {
-                        (textarea_input(
-                            "push_service_delivery_excluded_user_ids",
-                            "Never-on User IDs",
-                            "1500000000000000003\n1500000000000000004",
-                            &excluded_user_ids,
-                            4,
-                            false,
-                        ))
-                        (entry_count_hint(
-                            push_service_delivery.excluded_user_ids.len(),
-                            EXPERIMENT_MAX_TARGETED_USERS,
-                        ))
-                        p class="text-xs text-neutral-500" {
-                            "Same format. Exclusion wins over both the always-on list and the \
-                             percentage. This is the per-user kill switch."
-                        }
                     }
 
                     (form_actions(html! {
-                        (submit_button("Save Push Service Delivery Configuration"))
+                        (submit_button("Save Push Relay Settings"))
                     }))
                 }
             }
@@ -2259,26 +2195,28 @@ mod tests {
     }
 
     #[test]
-    fn push_service_delivery_section_shows_the_relay_consent_toggle() {
-        let accepted = PushServiceDeliveryConfigResponse {
+    fn push_relay_section_shows_the_consent_toggle() {
+        let accepted = PushRelayConfigResponse {
             relay_consent_accepted: true,
             relay_consent_accepted_at: Some("2026-09-27T10:11:12.000Z".to_owned()),
             relay_consent_accepted_by: Some("1130650140672000000".to_owned()),
-            ..PushServiceDeliveryConfigResponse::default()
         };
-        let markup = push_service_delivery_section("/admin", "csrf", &accepted).into_string();
-        assert!(markup.contains("name=\"push_service_delivery_relay_consent_accepted\""));
+        let markup = push_relay_section("/admin", "csrf", &accepted).into_string();
+        assert!(markup.contains("action=update_push_relay"));
+        assert!(markup.contains("name=\"push_relay_consent_accepted\""));
         assert!(markup.contains("https://fluxer.com/push-relay"));
-        assert!(markup.contains("Accepted 2026-09-27T10:11:12.000Z by user 1130650140672000000"));
+        assert!(markup.contains("value=\"Sep 27, 2026, 10:11 AM UTC\""));
+        assert!(markup.contains("value=\"1130650140672000000\""));
+        assert!(!markup.contains("name=\"push_relay_consent_accepted_at\""));
+        assert!(!markup.contains("name=\"push_relay_consent_accepted_by\""));
+        assert!(!markup.to_lowercase().contains("rollout"));
 
-        let unaccepted = push_service_delivery_section(
-            "/admin",
-            "csrf",
-            &PushServiceDeliveryConfigResponse::default(),
-        )
-        .into_string();
-        assert!(unaccepted.contains("name=\"push_service_delivery_relay_consent_accepted\""));
-        assert!(!unaccepted.contains("Accepted "));
+        let unaccepted =
+            push_relay_section("/admin", "csrf", &PushRelayConfigResponse::default()).into_string();
+        assert!(unaccepted.contains("name=\"push_relay_consent_accepted\""));
+        assert!(unaccepted.contains("Not accepted"));
+        assert!(unaccepted.contains("value=\"Never\""));
+        assert!(unaccepted.contains("value=\"Nobody\""));
     }
 
     #[test]

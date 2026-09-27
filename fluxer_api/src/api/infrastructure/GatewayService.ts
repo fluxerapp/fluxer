@@ -37,7 +37,6 @@ import type {GuildMemberResponse} from '@fluxer/schema/src/domains/guild/GuildMe
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {ms} from 'itty-time';
 
-const PUSH_BADGE_COUNT_BATCH_SIZE = 100;
 const USER_PERMISSIONS_BATCH_SIZE = 100;
 
 const GATEWAY_ERROR_TO_DOMAIN_ERROR: Record<string, () => Error> = {
@@ -65,18 +64,6 @@ interface DispatchPresenceParams {
 	userId: UserID;
 	event: GatewayDispatchEvent;
 	data: unknown;
-}
-
-interface InvalidatePushBadgeCountParams {
-	userId: UserID;
-}
-
-interface InvalidatePushBadgeCountsParams {
-	userIds: Array<UserID>;
-}
-
-interface InvalidatePushSubscriptionsParams {
-	userId: UserID;
 }
 
 interface ClearPushChannelNotificationsParams {
@@ -287,8 +274,6 @@ export class GatewayService {
 	private readonly MAX_BATCH_CONCURRENCY = 50;
 	private readonly PENDING_REQUEST_TIMEOUT_MS = ms('30 seconds');
 	private readonly AUTH_CONTEXT_FALLBACK_MS = ms('5 minutes');
-	private readonly BADGE_COUNTS_FALLBACK_MS = ms('5 minutes');
-	private badgeCountsUnsupportedUntil = 0;
 
 	constructor() {
 		this.rpcClient = GatewayRpcClient.getInstance();
@@ -701,48 +686,6 @@ export class GatewayService {
 			user_id: userId.toString(),
 			event,
 			data,
-		});
-	}
-
-	async invalidatePushBadgeCount({userId}: InvalidatePushBadgeCountParams): Promise<void> {
-		await this.call('push.invalidate_badge_count', {
-			user_id: userId.toString(),
-		});
-	}
-
-	async invalidatePushBadgeCounts({userIds}: InvalidatePushBadgeCountsParams): Promise<void> {
-		if (Date.now() < this.badgeCountsUnsupportedUntil) {
-			await this.invalidatePushBadgeCountsIndividually(userIds);
-			return;
-		}
-		const batches: Array<Array<UserID>> = [];
-		for (let index = 0; index < userIds.length; index += PUSH_BADGE_COUNT_BATCH_SIZE) {
-			batches.push(userIds.slice(index, index + PUSH_BADGE_COUNT_BATCH_SIZE));
-		}
-		try {
-			await Promise.all(
-				batches.map((batch) =>
-					this.call('push.invalidate_badge_counts', {user_ids: batch.map((userId) => userId.toString())}),
-				),
-			);
-		} catch (error) {
-			const transformedError = this.transformGatewayError(error);
-			if (!this.isAuthContextUnsupportedError(transformedError)) {
-				throw transformedError;
-			}
-			this.badgeCountsUnsupportedUntil = Date.now() + this.BADGE_COUNTS_FALLBACK_MS;
-			Logger.warn({error}, '[gateway-rpc] push.invalidate_badge_counts unavailable, falling back to per-user calls');
-			await this.invalidatePushBadgeCountsIndividually(userIds);
-		}
-	}
-
-	private async invalidatePushBadgeCountsIndividually(userIds: ReadonlyArray<UserID>): Promise<void> {
-		await Promise.all(userIds.map((userId) => this.invalidatePushBadgeCount({userId})));
-	}
-
-	async invalidatePushSubscriptions({userId}: InvalidatePushSubscriptionsParams): Promise<void> {
-		await this.call('push.invalidate_subscriptions', {
-			user_id: userId.toString(),
 		});
 	}
 

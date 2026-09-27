@@ -572,7 +572,7 @@ export const SelfHostedSetupWizardGate = observer(() => {
 		setSingleCommunityEnabled(next.policy.single_community_enabled);
 		setDirectMessagesDisabled(next.policy.direct_messages_disabled);
 		setPremiumMode(next.policy.premium_mode);
-		setPushRelayConsentAccepted(next.push_service_delivery.relay_consent_accepted);
+		setPushRelayConsentAccepted(next.push_relay.relay_consent_accepted);
 		setServiceSelection({
 			gif: next.policy.services_resolved.gif_enabled,
 			youtube: next.policy.services_resolved.youtube_enabled,
@@ -771,8 +771,8 @@ export const SelfHostedSetupWizardGate = observer(() => {
 			const nextConfig = await updateInstanceConfig({
 				integrations: buildIntegrationsPatch(integrationDraft),
 				media: buildMediaPatch(mediaExpiryDraft),
-				push_service_delivery:
-					config.push_service_delivery.relay_consent_accepted === pushRelayConsentAccepted
+				push_relay:
+					config.push_relay.relay_consent_accepted === pushRelayConsentAccepted
 						? undefined
 						: {relay_consent_accepted: pushRelayConsentAccepted},
 				registration: {mode: registrationMode},

@@ -292,12 +292,6 @@ export abstract class IGatewayService {
 
 	abstract dispatchPresence(params: {userId: UserID; event: GatewayDispatchEvent; data: unknown}): Promise<void>;
 
-	abstract invalidatePushBadgeCount(params: {userId: UserID}): Promise<void>;
-
-	abstract invalidatePushBadgeCounts(params: {userIds: Array<UserID>}): Promise<void>;
-
-	abstract invalidatePushSubscriptions(params: {userId: UserID}): Promise<void>;
-
 	abstract clearPushChannelNotifications(params: {
 		userId: UserID;
 		channelId: ChannelID;

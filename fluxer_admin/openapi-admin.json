@@ -10524,7 +10524,7 @@
 					},
 					"gateway_rollout": {"$ref": "#/components/schemas/GatewayRolloutConfigResponse"},
 					"voice_noise_suppression": {"$ref": "#/components/schemas/VoiceNoiseSuppressionConfigResponse"},
-					"push_service_delivery": {"$ref": "#/components/schemas/PushServiceDeliveryConfigResponse"},
+					"push_relay": {"$ref": "#/components/schemas/PushRelayConfigResponse"},
 					"domain_migration": {"$ref": "#/components/schemas/DomainMigrationConfigResponse"},
 					"altcha_captcha": {"$ref": "#/components/schemas/AltchaCaptchaConfigResponse"},
 					"experiment_delivery": {"$ref": "#/components/schemas/ExperimentDeliveryConfigResponse"},
@@ -10954,7 +10954,7 @@
 					"sso",
 					"gateway_rollout",
 					"voice_noise_suppression",
-					"push_service_delivery",
+					"push_relay",
 					"domain_migration",
 					"altcha_captcha",
 					"experiment_delivery",
@@ -11091,10 +11091,7 @@
 						"nullable": true,
 						"allOf": [{"$ref": "#/components/schemas/VoiceNoiseSuppressionConfigUpdateRequest"}]
 					},
-					"push_service_delivery": {
-						"nullable": true,
-						"allOf": [{"$ref": "#/components/schemas/PushServiceDeliveryConfigUpdateRequest"}]
-					},
+					"push_relay": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/PushRelayConfigUpdateRequest"}]},
 					"domain_migration": {
 						"nullable": true,
 						"allOf": [{"$ref": "#/components/schemas/DomainMigrationConfigUpdateRequest"}]
@@ -15237,25 +15234,7 @@
 					"standalone_forwarding": {"type": "boolean"}
 				}
 			},
-			"PushServiceDeliveryConfigUpdateRequest": {
-				"type": "object",
-				"properties": {
-					"enabled": {"type": "boolean"},
-					"rollout_basis_points": {"type": "integer", "minimum": 0, "maximum": 10000},
-					"rollout_salt": {"type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[\\x20-\\x7e]+$"},
-					"included_user_ids": {
-						"maxItems": 1000,
-						"type": "array",
-						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
-					},
-					"excluded_user_ids": {
-						"maxItems": 1000,
-						"type": "array",
-						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
-					},
-					"relay_consent_accepted": {"type": "boolean"}
-				}
-			},
+			"PushRelayConfigUpdateRequest": {"type": "object", "properties": {"relay_consent_accepted": {"type": "boolean"}}},
 			"VoiceNoiseSuppressionConfigUpdateRequest": {
 				"type": "object",
 				"properties": {
@@ -15403,31 +15382,9 @@
 				],
 				"additionalProperties": false
 			},
-			"PushServiceDeliveryConfigResponse": {
+			"PushRelayConfigResponse": {
 				"type": "object",
 				"properties": {
-					"enabled": {"default": false, "type": "boolean"},
-					"config_version": {"default": 0, "type": "integer", "minimum": 0, "maximum": 9007199254740991},
-					"rollout_basis_points": {"default": 0, "type": "integer", "minimum": 0, "maximum": 10000},
-					"rollout_salt": {
-						"default": "push-service-delivery-v1",
-						"type": "string",
-						"minLength": 1,
-						"maxLength": 64,
-						"pattern": "^[\\x20-\\x7e]+$"
-					},
-					"included_user_ids": {
-						"default": [],
-						"maxItems": 1000,
-						"type": "array",
-						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
-					},
-					"excluded_user_ids": {
-						"default": [],
-						"maxItems": 1000,
-						"type": "array",
-						"items": {"type": "string", "pattern": "^\\d{1,20}$"}
-					},
 					"relay_consent_accepted": {"default": false, "type": "boolean"},
 					"relay_consent_accepted_at": {
 						"default": null,
@@ -15438,17 +15395,7 @@
 					},
 					"relay_consent_accepted_by": {"default": null, "nullable": true, "type": "string", "pattern": "^\\d{1,20}$"}
 				},
-				"required": [
-					"enabled",
-					"config_version",
-					"rollout_basis_points",
-					"rollout_salt",
-					"included_user_ids",
-					"excluded_user_ids",
-					"relay_consent_accepted",
-					"relay_consent_accepted_at",
-					"relay_consent_accepted_by"
-				],
+				"required": ["relay_consent_accepted", "relay_consent_accepted_at", "relay_consent_accepted_by"],
 				"additionalProperties": false
 			},
 			"VoiceNoiseSuppressionConfigResponse": {

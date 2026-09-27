@@ -35,7 +35,7 @@ Missing settings use the defaults documented below. Invalid stored configuration
 | sso | [SSO configuration](#sso-configuration-object) object | Single sign-on settings |
 | gateway_rollout | [Gateway rollout configuration](#gateway-rollout-configuration-object) object | Gateway admission and dispatch tuning |
 | voice_noise_suppression | [voice noise suppression configuration](#voice-noise-suppression-configuration-object) object | Client-side noise suppression rollout |
-| push_service_delivery | [push service delivery configuration](#push-service-delivery-configuration-object) object | Push service delivery rollout |
+| push_relay | [push relay configuration](#push-relay-configuration-object) object | Operator consent to the Fluxer-run push relay |
 | domain_migration | [domain migration configuration](#domain-migration-configuration-object) object | Web domain migration rollout |
 | altcha_captcha | [ALTCHA captcha configuration](#altcha-captcha-configuration-object) object | ALTCHA proof-of-work captcha rollout |
 | experiment_delivery | [experiment delivery configuration](#experiment-delivery-configuration-object) object | Cadence every client polls the experiments route on |
@@ -123,23 +123,17 @@ Every field is present on read. An absent document or missing field uses the def
 
 How often a client revalidates this rollout is not set here. It is set once for every experiment in the [experiment delivery configuration](#experiment-delivery-configuration-object) below.
 
-## Push service delivery configuration object
+## Push relay configuration object
 
-The instance rollout of push service delivery.
+The operator's consent to the push relay supplemental privacy notice.
 
 ### Structure
 
 | Field | Type | Description |
 | --- | --- | --- |
-| enabled | boolean | Whether the rollout runs at all (default false) |
-| config_version | integer | Revision counter, raised by Fluxer and never accepted from a request |
-| rollout_basis_points | integer | Share of accounts the rollout selects, in basis points (0-10000, default 0) |
-| rollout_salt | string | Salt of the sampling hash (1-64 printable ASCII characters, default `push-service-delivery-v1`) |
-| included_user_ids | array[snowflake] | Accounts the rollout always selects, up to 1000 entries (default empty) |
-| excluded_user_ids | array[snowflake] | Accounts the rollout never selects, up to 1000 entries (default empty) |
 | relay_consent_accepted | boolean | Whether the operator accepted the push relay supplemental privacy notice (default false) |
 | relay_consent_accepted_at | ?string | ISO 8601 timestamp of that acceptance, or null when the notice stands unaccepted (default null) |
-| relay_consent_accepted_by | ?snowflake | Admin account that accepted the notice, or null when the notice stands unaccepted (default null) |
+| relay_consent_accepted_by | ?snowflake | Account that accepted the notice, or null when the notice stands unaccepted (default null) |
 
 Every field is present on read. An absent document or missing field uses the defaults above.
 
@@ -608,7 +602,7 @@ The body has one optional object for each section. Fluxer leaves an absent secti
 | sso?<sup>1</sup> | object | Every [SSO configuration](#sso-configuration-object) field except `client_secret_set` and `redirect_uri`, plus `client_secret` |
 | gateway_rollout? | object | Any subset of the [Gateway rollout configuration](#gateway-rollout-configuration-object) fields, each bound as documented there |
 | voice_noise_suppression? | object | Any subset of the [noise suppression](#voice-noise-suppression-configuration-object) fields |
-| push_service_delivery? | object | Any subset of the [push service delivery](#push-service-delivery-configuration-object) fields |
+| push_relay? | object | `relay_consent_accepted` from the [push relay configuration](#push-relay-configuration-object) |
 | domain_migration? | object | Any subset of the [domain migration](#domain-migration-configuration-object) fields |
 | altcha_captcha? | object | Any subset of the [ALTCHA captcha](#altcha-captcha-configuration-object) fields |
 | experiment_delivery? | object | Any subset of the [experiment delivery](#experiment-delivery-configuration-object) fields |
@@ -624,9 +618,9 @@ The body has one optional object for each section. Fluxer leaves an absent secti
 
 `voice_noise_suppression` takes every [voice noise suppression configuration](#voice-noise-suppression-configuration-object) field except `config_version`, each bound as documented there. Fluxer raises `config_version` by one on each request that supplies at least one of them. A section that is absent, or present with no field set, writes nothing and leaves `config_version` alone.
 
-`push_service_delivery` works the same way, over the [push service delivery configuration](#push-service-delivery-configuration-object) fields and its own `config_version`. It also takes `relay_consent_accepted`. Fluxer sets `relay_consent_accepted_at` and `relay_consent_accepted_by` itself on the request that changes that flag, and accepts neither from a request: turning the flag on stamps the current time and the acting Admin account, and turning it off clears both to null. A request that repeats the flag it already holds leaves the stamp alone.
+`push_relay` takes only `relay_consent_accepted`. Fluxer sets `relay_consent_accepted_at` and `relay_consent_accepted_by` itself on the request that changes that flag, and accepts neither from a request. Turning the flag on stamps the current time and the acting account, and turning it off clears both to null. A request that repeats the flag it already holds leaves the stamp alone.
 
-`domain_migration` works the same way, over the [domain migration configuration](#domain-migration-configuration-object) fields and its own `config_version`.
+`domain_migration` works the same way as `voice_noise_suppression`, over the [domain migration configuration](#domain-migration-configuration-object) fields and its own `config_version`.
 
 `altcha_captcha` works the same way, over the [ALTCHA captcha configuration](#altcha-captcha-configuration-object) fields and its own `config_version`.
 
@@ -666,12 +660,12 @@ Fluxer skips URL validation while the merged configuration leaves single sign-on
 | 400 | [error response](/admin-api/#error-response) | A policy transition is refused, returned as `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED` |
 
 :::caution[Sections are applied one after another]
-The order is `gateway_rollout`, `voice_noise_suppression`, `push_service_delivery`, `domain_migration`, `altcha_captcha`, `experiment_delivery`, `sso`, `registration`, `app_public` branding, legal, and registration fields, `integrations`, `media`, `policy`, and finally `app_public.setup`. A failure part way through leaves the earlier sections written.
+The order is `gateway_rollout`, `voice_noise_suppression`, `push_relay`, `domain_migration`, `altcha_captcha`, `experiment_delivery`, `sso`, `registration`, `app_public` branding, legal, and registration fields, `integrations`, `media`, `policy`, and finally `app_public.setup`. A failure part way through leaves the earlier sections written.
 :::
 
 ### Side effects
 
-Fluxer publishes a `gateway_rollout` change to the Gateway cluster. Premium mode changes affect the limits in force without replacing the saved limit configuration. On self-hosted deployments, `everyone` hides premium-filtered rules. Switching back to `mirror` restores them unless an Admin has replaced the limit configuration in the meantime. Enabling single community mode creates the community when none is designated, with the acting Admin as owner.
+Fluxer publishes a `gateway_rollout` change to the Gateway cluster. A `push_relay` change reaches the push service without a restart. Premium mode changes affect the limits in force without replacing the saved limit configuration. On self-hosted deployments, `everyone` hides premium-filtered rules. Switching back to `mirror` restores them unless an Admin has replaced the limit configuration in the meantime. Enabling single community mode creates the community when none is designated, with the acting Admin as owner.
 
 Initial setup completes on the first update that sets `app_public.setup.configured` to true from a session credential whose account holds neither `admin:authenticate` nor the wildcard. That update grants the account the wildcard Admin ACL and marks the deployment as bootstrapped.
 

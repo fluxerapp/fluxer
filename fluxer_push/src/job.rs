@@ -14,7 +14,6 @@ const DIRECT_MESSAGE_GUILD_ID: &str = "0";
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
 pub struct MessageJob {
     pub v: u8,
-    pub config_version: u64,
     pub guild_id: String,
     pub channel_id: String,
     pub message_id: String,
@@ -38,7 +37,6 @@ pub struct NotificationFields {
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
 pub struct ClearJob {
     pub v: u8,
-    pub config_version: u64,
     pub user_id: String,
     pub channel_id: String,
     pub message_id: String,
@@ -47,7 +45,6 @@ pub struct ClearJob {
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq)]
 pub struct RingJob {
     pub v: u8,
-    pub config_version: u64,
     pub user_id: String,
     pub channel_id: String,
     pub message_id: String,
@@ -98,4 +95,39 @@ fn supported(version: u8) -> Result<(), JobError> {
         return Ok(());
     }
     Err(JobError::UnsupportedVersion(version))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::{Value, json};
+
+    fn clear_job(config_version: Option<u64>) -> Vec<u8> {
+        let mut job = json!({
+            "v": 1,
+            "user_id": "1",
+            "channel_id": "2",
+            "message_id": "3",
+        });
+        if let Some(version) = config_version {
+            job["config_version"] = Value::from(version);
+        }
+        job.to_string().into_bytes()
+    }
+
+    #[test]
+    fn a_job_from_a_gateway_that_sends_a_config_version_decodes() {
+        assert_eq!(
+            decode_clear(&clear_job(Some(7))).expect("decodes").user_id,
+            "1"
+        );
+    }
+
+    #[test]
+    fn a_job_without_a_config_version_decodes() {
+        assert_eq!(
+            decode_clear(&clear_job(None)).expect("decodes").user_id,
+            "1"
+        );
+    }
 }

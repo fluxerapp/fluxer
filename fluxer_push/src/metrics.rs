@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::relay::reject::{REASON_COUNT, Reason};
-use crate::rollout::{RolloutOutcome, RolloutSnapshot};
+use crate::relay_consent::ConsentUpdate;
 use fluxer_svc::metrics::now_ms;
 use std::fmt::{self, Write as _};
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -343,7 +343,7 @@ const BUCKET_KEY_COUNT: usize = BucketKey::ALL.len();
 const PAYLOAD_SHRINK_COUNT: usize = PayloadShrink::ALL.len();
 const DELIVERY_ROUTE_COUNT: usize = DeliveryRoute::ALL.len();
 const RPC_OUTCOME_COUNT: usize = RpcOutcome::ALL.len();
-const ROLLOUT_OUTCOME_COUNT: usize = RolloutOutcome::ALL.len();
+const CONSENT_UPDATE_COUNT: usize = ConsentUpdate::ALL.len();
 
 pub struct Metrics {
     jobs_received: [AtomicU64; JOB_KIND_COUNT],
@@ -357,7 +357,7 @@ pub struct Metrics {
     own_relay_shortcuts: AtomicU64,
     auth_tokens_minted: [AtomicU64; AUTH_PROVIDER_COUNT],
     rpc_requests: [[AtomicU64; RPC_OUTCOME_COUNT]; RPC_METHOD_COUNT],
-    rollout_updates: [AtomicU64; ROLLOUT_OUTCOME_COUNT],
+    relay_consent_updates: [AtomicU64; CONSENT_UPDATE_COUNT],
     delivery_routes: [[AtomicU64; SEND_RESULT_COUNT]; DELIVERY_ROUTE_COUNT],
     relay_served: [[AtomicU64; RELAY_RESULT_COUNT]; RELAY_LEG_COUNT],
     relay_vendor_requests: [[AtomicU64; RELAY_RESULT_COUNT]; RELAY_LEG_COUNT],
@@ -368,9 +368,7 @@ pub struct Metrics {
     rpc_duration: [Histogram; RPC_METHOD_COUNT],
     send_duration: [Histogram; PROVIDER_COUNT],
     queue_depth: AtomicU64,
-    rollout_enabled: AtomicU64,
-    rollout_basis_points: AtomicU64,
-    rollout_config_version: AtomicU64,
+    relay_consent_accepted: AtomicU64,
     start_ms: i64,
 }
 
@@ -389,7 +387,7 @@ impl Metrics {
             auth_tokens_minted: [const { AtomicU64::new(0) }; AUTH_PROVIDER_COUNT],
             rpc_requests: [const { [const { AtomicU64::new(0) }; RPC_OUTCOME_COUNT] };
                 RPC_METHOD_COUNT],
-            rollout_updates: [const { AtomicU64::new(0) }; ROLLOUT_OUTCOME_COUNT],
+            relay_consent_updates: [const { AtomicU64::new(0) }; CONSENT_UPDATE_COUNT],
             delivery_routes: [const { [const { AtomicU64::new(0) }; SEND_RESULT_COUNT] };
                 DELIVERY_ROUTE_COUNT],
             relay_served: [const { [const { AtomicU64::new(0) }; RELAY_RESULT_COUNT] };
@@ -403,9 +401,7 @@ impl Metrics {
             rpc_duration: [const { Histogram::new() }; RPC_METHOD_COUNT],
             send_duration: [const { Histogram::new() }; PROVIDER_COUNT],
             queue_depth: AtomicU64::new(0),
-            rollout_enabled: AtomicU64::new(0),
-            rollout_basis_points: AtomicU64::new(0),
-            rollout_config_version: AtomicU64::new(0),
+            relay_consent_accepted: AtomicU64::new(0),
             start_ms: now_ms(),
         }
     }
@@ -457,17 +453,13 @@ impl Metrics {
         self.rpc_duration[method as usize].observe(duration_ms);
     }
 
-    pub fn record_rollout_update(&self, outcome: RolloutOutcome) {
-        self.rollout_updates[outcome as usize].fetch_add(1, ORDERING);
+    pub fn record_relay_consent_update(&self, outcome: ConsentUpdate) {
+        self.relay_consent_updates[outcome as usize].fetch_add(1, ORDERING);
     }
 
-    pub fn record_rollout_snapshot(&self, snapshot: &RolloutSnapshot) {
-        self.rollout_enabled
-            .store(u64::from(snapshot.enabled), ORDERING);
-        self.rollout_basis_points
-            .store(u64::from(snapshot.rollout_basis_points), ORDERING);
-        self.rollout_config_version
-            .store(snapshot.config_version, ORDERING);
+    pub fn record_relay_consent_accepted(&self, accepted: bool) {
+        self.relay_consent_accepted
+            .store(u64::from(accepted), ORDERING);
     }
 
     pub fn record_delivery_route(&self, route: DeliveryRoute, result: SendResult) {
@@ -575,10 +567,10 @@ impl Metrics {
 
         render_labelled_counter(
             out,
-            "fluxer_push_rollout_updates_total",
+            "fluxer_push_relay_consent_updates_total",
             "result",
-            RolloutOutcome::ALL.map(RolloutOutcome::label),
-            &self.rollout_updates,
+            ConsentUpdate::ALL.map(ConsentUpdate::label),
+            &self.relay_consent_updates,
         )?;
         render_labelled_histogram(
             out,
@@ -642,16 +634,10 @@ impl Metrics {
             &self.rings_suppressed,
         )?;
         render_gauge(out, "fluxer_push_queue_depth", &self.queue_depth)?;
-        render_gauge(out, "fluxer_push_rollout_enabled", &self.rollout_enabled)?;
         render_gauge(
             out,
-            "fluxer_push_rollout_basis_points",
-            &self.rollout_basis_points,
-        )?;
-        render_gauge(
-            out,
-            "fluxer_push_rollout_config_version",
-            &self.rollout_config_version,
+            "fluxer_push_relay_consent_accepted",
+            &self.relay_consent_accepted,
         )?;
 
         writeln!(out, "# TYPE fluxer_push_uptime_seconds gauge")?;

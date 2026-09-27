@@ -20,9 +20,9 @@ use crate::{
             InstancePolicyUpdateRequest, InstanceRegistrationConfigUpdateRequest,
             InstanceServicesUpdateRequest, InstanceYoutubeIntegrationUpdateRequest,
             LimitConfigUpdateRequest, LimitRule, LimitRuleFilters, NoiseSuppressionBackend,
-            PremiumMode, PushServiceDeliveryConfigUpdateRequest, RegistrationMode,
-            SsoConfigUpdateRequest, VOICE_NS_MAX_GUILD_OVERRIDES, VoiceE2eeScope,
-            VoiceNoiseSuppressionConfigUpdateRequest, VoiceNoiseSuppressionGuildOverride,
+            PremiumMode, PushRelayConfigUpdateRequest, RegistrationMode, SsoConfigUpdateRequest,
+            VOICE_NS_MAX_GUILD_OVERRIDES, VoiceE2eeScope, VoiceNoiseSuppressionConfigUpdateRequest,
+            VoiceNoiseSuppressionGuildOverride,
         },
     },
     config::AdminConfig,
@@ -209,10 +209,10 @@ pub async fn instance_config_post(
             Ok(update) => instance_config_result(client.update_instance_config(&update).await),
             Err(message) => FlashData::error(message),
         },
-        "update_push_service_delivery" => match build_push_service_delivery_update(&form) {
-            Ok(update) => instance_config_result(client.update_instance_config(&update).await),
-            Err(message) => FlashData::error(message),
-        },
+        "update_push_relay" => {
+            let update = build_push_relay_update(&form);
+            instance_config_result(client.update_instance_config(&update).await)
+        }
         "update_domain_migration" => match build_domain_migration_update(&form) {
             Ok(update) => instance_config_result(client.update_instance_config(&update).await),
             Err(message) => FlashData::error(message),
@@ -658,39 +658,13 @@ fn build_voice_noise_suppression_update(
     })
 }
 
-fn build_push_service_delivery_update(
-    form: &MultiValueForm,
-) -> Result<InstanceConfigUpdateRequest, String> {
-    Ok(InstanceConfigUpdateRequest {
-        push_service_delivery: Some(PushServiceDeliveryConfigUpdateRequest {
-            enabled: Some(form.bool_value("push_service_delivery_enabled")),
-            rollout_basis_points: parse_form_number(
-                form,
-                "push_service_delivery_rollout_basis_points",
-                "Rollout basis points",
-                0,
-                EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX,
-            )?,
-            rollout_salt: parse_ascii_experiment_rollout_salt(
-                form,
-                "push_service_delivery_rollout_salt",
-            )?,
-            included_user_ids: Some(parse_experiment_user_ids(
-                form.first("push_service_delivery_included_user_ids")
-                    .unwrap_or_default(),
-                "Included user IDs",
-            )?),
-            excluded_user_ids: Some(parse_experiment_user_ids(
-                form.first("push_service_delivery_excluded_user_ids")
-                    .unwrap_or_default(),
-                "Excluded user IDs",
-            )?),
-            relay_consent_accepted: Some(
-                form.bool_value("push_service_delivery_relay_consent_accepted"),
-            ),
+fn build_push_relay_update(form: &MultiValueForm) -> InstanceConfigUpdateRequest {
+    InstanceConfigUpdateRequest {
+        push_relay: Some(PushRelayConfigUpdateRequest {
+            relay_consent_accepted: Some(form.bool_value("push_relay_consent_accepted")),
         }),
         ..Default::default()
-    })
+    }
 }
 
 fn build_domain_migration_update(
@@ -1784,26 +1758,19 @@ mod tests {
     }
 
     #[test]
-    fn build_push_service_delivery_update_reads_the_relay_consent_checkbox() {
-        let unchecked = MultiValueForm::parse(b"_csrf=token");
+    fn build_push_relay_update_reads_the_consent_checkbox() {
+        let unchecked = build_push_relay_update(&MultiValueForm::parse(b"_csrf=token"));
         assert_eq!(
-            build_push_service_delivery_update(&unchecked)
-                .expect("valid form")
-                .push_service_delivery
-                .expect("push service delivery update")
-                .relay_consent_accepted,
-            Some(false)
+            serde_json::to_value(&unchecked).expect("serialize update"),
+            serde_json::json!({"push_relay": {"relay_consent_accepted": false}})
         );
 
-        let checked =
-            MultiValueForm::parse(b"_csrf=token&push_service_delivery_relay_consent_accepted=true");
+        let checked = build_push_relay_update(&MultiValueForm::parse(
+            b"_csrf=token&push_relay_consent_accepted=true",
+        ));
         assert_eq!(
-            build_push_service_delivery_update(&checked)
-                .expect("valid form")
-                .push_service_delivery
-                .expect("push service delivery update")
-                .relay_consent_accepted,
-            Some(true)
+            serde_json::to_value(&checked).expect("serialize update"),
+            serde_json::json!({"push_relay": {"relay_consent_accepted": true}})
         );
     }
 

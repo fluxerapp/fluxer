@@ -116,4 +116,31 @@ invalidate_badge_counts_rejects_invalid_snowflakes_test() ->
 invalidate_badge_counts_accepts_an_empty_batch_test() ->
     ?assert(execute_method(<<"push.invalidate_badge_counts">>, #{<<"user_ids">> => []})).
 
+invalidate_badge_counts_accepts_a_batch_test() ->
+    ?assert(
+        execute_method(<<"push.invalidate_badge_counts">>, #{
+            <<"user_ids">> => [<<"1001">>, <<"1002">>]
+        })
+    ).
+
+invalidate_badge_count_accepts_a_user_test() ->
+    ?assert(execute_method(<<"push.invalidate_badge_count">>, #{<<"user_id">> => <<"1001">>})).
+
+invalidate_badge_count_rejects_an_invalid_snowflake_test() ->
+    ?assertError(
+        {validation, _},
+        execute_method(<<"push.invalidate_badge_count">>, #{<<"user_id">> => <<"nope">>})
+    ).
+
+invalidate_subscriptions_accepts_a_user_test() ->
+    ?assert(
+        execute_method(<<"push.invalidate_subscriptions">>, #{<<"user_id">> => <<"1001">>})
+    ).
+
+invalidate_subscriptions_rejects_an_invalid_snowflake_test() ->
+    ?assertError(
+        {validation, _},
+        execute_method(<<"push.invalidate_subscriptions">>, #{<<"user_id">> => <<"nope">>})
+    ).
+
 -endif.

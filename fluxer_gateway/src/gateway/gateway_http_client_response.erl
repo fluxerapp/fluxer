@@ -187,18 +187,7 @@ retry_update_counter(Table, Key, Op) ->
 
 -spec is_countable_circuit_failure({atom(), binary()}, response()) -> boolean().
 is_countable_circuit_failure({rpc, _Host}, Result) ->
-    is_countable_failure_with_transport(Result);
-is_countable_circuit_failure({_Workload, _Host}, Result) ->
-    is_countable_failure_without_transport(Result).
-
--spec is_countable_failure_without_transport(response()) -> boolean().
-is_countable_failure_without_transport({error, nxdomain}) -> false;
-is_countable_failure_without_transport({error, {failed_connect, _}}) -> false;
-is_countable_failure_without_transport({error, timeout}) -> false;
-is_countable_failure_without_transport({error, {timeout, _}}) -> false;
-is_countable_failure_without_transport({error, _}) -> true;
-is_countable_failure_without_transport({ok, StatusCode, _, _}) when StatusCode >= 500 -> true;
-is_countable_failure_without_transport(_) -> false.
+    is_countable_failure_with_transport(Result).
 
 -spec is_countable_failure_with_transport(response()) -> boolean().
 is_countable_failure_with_transport({error, nxdomain}) -> true;
@@ -332,19 +321,6 @@ safe_delete(Table, Key) ->
 
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
-
-circuit_ignores_transport_failures_for_non_rpc_workloads_test() ->
-    ?assertEqual(false, is_countable_circuit_failure({push, <<"h">>}, {error, nxdomain})),
-    ?assertEqual(
-        false, is_countable_circuit_failure({push, <<"h">>}, {error, {failed_connect, []}})
-    ),
-    ?assertEqual(false, is_countable_circuit_failure({push, <<"h">>}, {error, timeout})),
-    ?assertEqual(
-        false, is_countable_circuit_failure({push, <<"h">>}, {error, {timeout, connect}})
-    ),
-    ?assertEqual(true, is_countable_circuit_failure({push, <<"h">>}, {error, closed})),
-    ?assertEqual(true, is_countable_circuit_failure({push, <<"h">>}, {ok, 500, [], <<>>})),
-    ?assertEqual(false, is_countable_circuit_failure({push, <<"h">>}, {ok, 200, [], <<>>})).
 
 circuit_counts_transport_failures_for_rpc_test() ->
     ?assertEqual(true, is_countable_circuit_failure({rpc, <<"h">>}, {error, nxdomain})),

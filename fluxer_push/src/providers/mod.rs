@@ -118,16 +118,8 @@ pub async fn send(state: &AppState, sub: &Subscription, envelope: &Value) -> Sen
 }
 
 fn relay_consent_missing(state: &AppState, endpoint: &str) -> bool {
-    !relay_consent_accepted(state)
+    !state.relay_consent.accepted()
         && own_relay::is_managed(endpoint, &state.cfg.managed_relay_hosts)
-}
-
-fn relay_consent_accepted(state: &AppState) -> bool {
-    state.cfg.relay_consent_accepted
-        || state
-            .rollout
-            .snapshot()
-            .is_some_and(|held| held.relay_consent_accepted)
 }
 
 fn in_process_hop(endpoint: &str, hosts: &[String]) -> Option<own_relay::Hop> {
@@ -276,8 +268,7 @@ mod consent_tests {
     #[tokio::test]
     async fn a_notice_accepted_in_the_instance_config_lets_the_send_through() {
         let state = state(false);
-        state.rollout.update(&serde_json::json!({
-            "enabled": true,
+        state.relay_consent.update(&serde_json::json!({
             "config_version": 1,
             "relay_consent_accepted": true,
         }));
@@ -290,8 +281,7 @@ mod consent_tests {
     #[tokio::test]
     async fn an_instance_config_that_has_not_accepted_still_refuses_the_send() {
         let state = state(false);
-        state.rollout.update(&serde_json::json!({
-            "enabled": true,
+        state.relay_consent.update(&serde_json::json!({
             "config_version": 1,
             "relay_consent_accepted": false,
         }));

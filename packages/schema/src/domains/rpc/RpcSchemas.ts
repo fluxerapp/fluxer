@@ -2,7 +2,7 @@
 
 import {RTC_REGION_ID_MAX_LENGTH, RTC_REGION_ID_MIN_LENGTH} from '@fluxer/constants/src/LimitConstants';
 import {GatewayRolloutConfigResponse} from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
-import {PushServiceDeliveryConfigResponse} from '@fluxer/schema/src/domains/admin/PushServiceDeliverySchemas';
+import {LegacyPushServiceDeliveryWire} from '@fluxer/schema/src/domains/admin/PushRelaySchemas';
 import {WebAuthnCredentialResponse} from '@fluxer/schema/src/domains/auth/AuthSchemas';
 import {ChannelResponse, RtcRegionResponse} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import {VoiceStateResponse} from '@fluxer/schema/src/domains/gateway/GatewaySchemas';
@@ -529,7 +529,7 @@ export const RpcResponse = z.discriminatedUnion('type', [
 			.describe('Response type for push service delivery configuration'),
 		data: z
 			.object({
-				config: PushServiceDeliveryConfigResponse.describe('Push service delivery configuration'),
+				config: LegacyPushServiceDeliveryWire.describe('Push service delivery configuration'),
 			})
 			.describe('Push service delivery config result'),
 	}),

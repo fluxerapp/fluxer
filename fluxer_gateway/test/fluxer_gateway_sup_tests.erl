@@ -176,7 +176,7 @@ init_push_role_includes_cluster_handoff_test() ->
     ),
     {ok, {_SupFlags, Children}} = fluxer_gateway_sup:init([]),
     Ids = child_ids(Children),
-    ?assert(lists:member(push_dispatcher, Ids)),
+    ?assert(lists:member(push_outbox, Ids)),
     ?assert(lists:member(push, Ids)),
     ?assert(lists:member(gateway_cluster_handoff, Ids)),
     ?assertNot(lists:member(session_manager, Ids)),

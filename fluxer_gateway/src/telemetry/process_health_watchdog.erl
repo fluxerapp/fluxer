@@ -118,7 +118,6 @@ singleton_pids() ->
         presence_manager,
         guild_manager,
         call_manager,
-        push_dispatcher,
         push,
         gateway_nats_rpc,
         gateway_nats_pool,

@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {PushServiceDeliveryConfig} from '@fluxer/schema/src/domains/admin/PushServiceDeliverySchemas';
+import type {LegacyPushServiceDeliveryWire} from '@fluxer/schema/src/domains/admin/PushRelaySchemas';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
 
 const textEncoder = new TextEncoder();
 
-export const PUSH_SERVICE_DELIVERY_CONFIG_NATS_SUBJECT = 'config.push.delivery';
+const PUSH_SERVICE_DELIVERY_CONFIG_NATS_SUBJECT = 'config.push.delivery';
 
 interface PushServiceDeliveryConfigNatsMessage {
 	type: 'push_service_delivery_config';
-	config: PushServiceDeliveryConfig;
+	config: LegacyPushServiceDeliveryWire;
 }
 
-export class PushServiceDeliveryConfigPublisher {
+export class PushRelayConfigPublisher {
 	constructor(private readonly connectionManager: INatsConnectionManager) {}
 
-	async publish(config: PushServiceDeliveryConfig): Promise<void> {
+	async publish(config: LegacyPushServiceDeliveryWire): Promise<void> {
 		if (this.connectionManager.isClosed()) {
 			await this.connectionManager.connect();
 		}

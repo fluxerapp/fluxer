@@ -43,7 +43,6 @@ async function revokeSessionTargets(
 			scope === 'all'
 				? users.deleteAllPushSubscriptions(userId)
 				: users.deletePushSubscriptionsForAuthSessions(userId, sessionIdHashes, {deleteUnboundSubscriptions: true}),
-		() => gateway.invalidatePushSubscriptions({userId}),
 	];
 	if (scope === 'selected' || targets.length > 0) {
 		steps.push(
