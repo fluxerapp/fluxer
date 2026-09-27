@@ -35,7 +35,9 @@ add_virtual_access(UserId, ChannelId, State) ->
     Updated = sets:add_element(ChannelId, UserChannels),
     State1 = State#{virtual_channel_access => VirtualAccess#{UserId => Updated}},
     State2 = update_user_session_view_cache(UserId, ChannelId, add, State1),
-    mark_pending_join(UserId, ChannelId, State2).
+    mark_pending_join(
+        UserId, ChannelId, guild_member_list_engine_inputs:mark_stale(ChannelId, State2)
+    ).
 
 -spec remove_virtual_access(user_id(), channel_id(), guild_state()) -> guild_state().
 remove_virtual_access(UserId, ChannelId, State) ->
@@ -49,8 +51,9 @@ remove_virtual_access(UserId, ChannelId, State) ->
 
 -spec remove_channel_from_user(user_id(), channel_id(), sets:set(), guild_state()) ->
     guild_state().
-remove_channel_from_user(UserId, ChannelId, UserChannels, State) ->
+remove_channel_from_user(UserId, ChannelId, UserChannels, State0) ->
     Updated = sets:del_element(ChannelId, UserChannels),
+    State = guild_member_list_engine_inputs:mark_stale(ChannelId, State0),
     case sets:size(Updated) of
         0 -> remove_all_user_virtual_access(UserId, State);
         _ -> update_user_virtual_access(UserId, ChannelId, Updated, State)

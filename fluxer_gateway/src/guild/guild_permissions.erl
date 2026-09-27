@@ -16,6 +16,7 @@
     find_member_by_user_id/2,
     find_role_by_id/2,
     find_channel_by_id/2,
+    view_inputs/2,
     aggregate_role_permissions_cached/4
 ]).
 
@@ -113,6 +114,10 @@ find_role_by_id(RoleId, Roles) ->
 -spec find_channel_by_id(integer(), guild_state()) -> map() | undefined.
 find_channel_by_id(ChannelId, State) ->
     guild_permissions_check:find_channel_by_id(ChannelId, State).
+
+-spec view_inputs(integer(), guild_state()) -> term().
+view_inputs(ChannelId, State) ->
+    guild_permissions_check:view_inputs(ChannelId, State).
 
 -spec compute_non_owner_permissions(
     user_id(), maybe_channel_id(), maybe_member(), guild_state(), guild_data()

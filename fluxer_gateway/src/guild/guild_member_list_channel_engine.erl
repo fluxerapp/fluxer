@@ -71,7 +71,7 @@ replace_engine(ListId, ChannelId, OldRef, State) ->
     NewRef = load_engine(ChannelId, State),
     State1 = put_engines(maps:put(ListId, NewRef, engines(State)), State),
     guild_member_list_engine:destroy(OldRef),
-    State1.
+    guild_member_list_engine_inputs:record(ListId, ChannelId, State, State1).
 
 -spec rebuild_all(guild_state()) -> guild_state().
 rebuild_all(State) ->
@@ -105,7 +105,9 @@ drop(ListId, State) ->
             State;
         Ref ->
             guild_member_list_engine:destroy(Ref),
-            put_engines(maps:remove(ListId, Engines), State)
+            guild_member_list_engine_inputs:forget(
+                ListId, put_engines(maps:remove(ListId, Engines), State)
+            )
     end.
 
 -spec destroy_all(guild_state()) -> guild_state().
@@ -114,7 +116,7 @@ destroy_all(State) ->
         fun(_ListId, Ref) -> guild_member_list_engine:destroy(Ref) end,
         engines(State)
     ),
-    put_engines(#{}, State).
+    guild_member_list_engine_inputs:forget_all(put_engines(#{}, State)).
 
 -spec sync_online(integer(), boolean(), guild_state()) -> ok.
 sync_online(UserId, IsOnline, State) ->
@@ -229,7 +231,12 @@ build(ListId, State) ->
             State;
         ChannelId ->
             Ref = load_engine(ChannelId, State),
-            put_engines(maps:put(ListId, Ref, engines(State)), State)
+            guild_member_list_engine_inputs:record(
+                ListId,
+                ChannelId,
+                State,
+                put_engines(maps:put(ListId, Ref, engines(State)), State)
+            )
     end.
 
 -spec load_engine(pos_integer(), guild_state()) -> engine_ref().

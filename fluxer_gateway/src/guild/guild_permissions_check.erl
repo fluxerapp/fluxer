@@ -12,7 +12,8 @@
     get_max_role_position/2,
     find_member_by_user_id/2,
     find_role_by_id/2,
-    find_channel_by_id/2
+    find_channel_by_id/2,
+    view_inputs/2
 ]).
 
 -export_type([
@@ -281,6 +282,51 @@ is_viewable_child(Channel, UserId, CategoryId, Member, State) ->
             can_view_channel_by_permissions(UserId, ResolvedChildId, Member, State);
         _ ->
             false
+    end.
+
+-spec view_inputs(channel_id(), guild_state()) -> term().
+view_inputs(ChannelId, State) ->
+    Data = map_utils:ensure_map(guild_permissions_common:resolve_data_map(State)),
+    Guild = map_utils:ensure_map(maps:get(<<"guild">>, Data, #{})),
+    Index = guild_data_index:channel_index(Data),
+    Cache = map_utils:ensure_map(maps:get(overwrite_perms_cache, Data, #{})),
+    {
+        maps:get(<<"owner_id">>, Guild, undefined),
+        maps:get(<<"roles">>, Data, undefined),
+        maps:get(<<"role_index">>, Data, undefined),
+        maps:get(role_perms_cache, Data, undefined),
+        channel_permission_inputs(ChannelId, Index, Cache),
+        child_permission_inputs(ChannelId, Index, Cache, Data)
+    }.
+
+-spec channel_permission_inputs(integer(), map(), map()) -> term().
+channel_permission_inputs(ChannelId, Index, Cache) ->
+    case maps:get(ChannelId, Index, undefined) of
+        Channel when is_map(Channel) ->
+            {
+                maps:get(<<"type">>, Channel, undefined),
+                maps:get(<<"permission_overwrites">>, Channel, undefined),
+                maps:get(ChannelId, Cache, undefined)
+            };
+        _ ->
+            missing
+    end.
+
+-spec child_permission_inputs(channel_id(), map(), map(), map()) -> [term()].
+child_permission_inputs(ChannelId, Index, Cache, Data) ->
+    case maps:get(ChannelId, Index, undefined) of
+        #{<<"type">> := 4} ->
+            [
+                {ChildId, channel_permission_inputs(ChildId, Index, Cache)}
+             || Child <- map_utils:ensure_list(maps:get(<<"channels">>, Data, [])),
+                is_map(Child),
+                snowflake_id:parse_maybe(maps:get(<<"parent_id">>, Child, undefined)) =:=
+                    ChannelId,
+                ChildId <- [snowflake_id:parse_maybe(maps:get(<<"id">>, Child, undefined))],
+                is_integer(ChildId)
+            ];
+        _ ->
+            []
     end.
 
 -spec role_position(role()) -> integer().
