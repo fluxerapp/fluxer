@@ -605,21 +605,18 @@ to_binary(_, Default) -> Default.
 
 -spec parse_host_list(binary()) -> [binary()].
 parse_host_list(Bin) ->
-    parse_host_list(string:lexemes(binary_to_list(Bin), ", \t"), []).
+    [
+        lower_ascii(Host)
+     || Host <- binary:split(Bin, [<<",">>, <<" ">>, <<"\t">>], [global, trim_all])
+    ].
 
--spec parse_host_list([string()], [binary()]) -> [binary()].
-parse_host_list([], Acc) ->
-    lists:reverse(Acc);
-parse_host_list([Host | Rest], Acc) ->
-    parse_host_list(Rest, [list_to_binary(lower_string(Host)) | Acc]).
+-spec lower_ascii(binary()) -> binary().
+lower_ascii(Bin) ->
+    <<<<(lower_byte(Byte))>> || <<Byte>> <= Bin>>.
 
--spec lower_string(string()) -> string().
-lower_string(Value) ->
-    [lower_char(Char) || Char <- Value].
-
--spec lower_char(char()) -> char().
-lower_char(Char) when Char >= $A, Char =< $Z -> Char + 32;
-lower_char(Char) -> Char.
+-spec lower_byte(byte()) -> byte().
+lower_byte(Byte) when Byte >= $A, Byte =< $Z -> Byte + 32;
+lower_byte(Byte) -> Byte.
 
 -spec parse_node_list(binary() | undefined) -> [node()].
 parse_node_list(undefined) ->
