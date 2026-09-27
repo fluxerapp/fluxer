@@ -878,7 +878,7 @@ export async function forward(
 					embed_indices: messageReference.embed_indices,
 					type: 1,
 				},
-				flags: 1,
+				flags: normalizedComment?.flags ?? 0,
 			});
 			if (!forwardedMessage) {
 				logger.warn(`Forward send failed in channel ${channelId}`);
