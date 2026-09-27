@@ -15,8 +15,9 @@ import {
 } from '@app/features/lexical/composer/nodes/ComposerStandardEmojiNode';
 import {$isSyntaxMarkerNode} from '@app/features/lexical/composer/nodes/SyntaxMarkerNode';
 import {findTypedEmojiShortcode, type TypedEmojiMatch} from '@app/features/messaging/utils/markdown/TypedEmojiMatch';
+import {isReactionShorthandText} from '@app/features/messaging/utils/ReactionShorthandUtils';
 import type {ResolvedTypedEmoji} from '@app/features/messaging/utils/TypedEmojiShortcodeUtils';
-import {type LexicalEditor, TextNode} from 'lexical';
+import {$getRoot, type LexicalEditor, TextNode} from 'lexical';
 
 export type ComposerEmojiResolver = (shortcodeName: string) => ResolvedTypedEmoji | null;
 
@@ -71,7 +72,7 @@ function isEscapedAt(text: string, index: number): boolean {
 }
 
 export function $convertEmojiShortcode(node: TextNode, resolve: ComposerEmojiResolver): void {
-	if ($isSyntaxMarkerNode(node) || node.hasFormat('code')) {
+	if ($isSyntaxMarkerNode(node) || node.hasFormat('code') || isReactionShorthandText($getRoot().getTextContent())) {
 		return;
 	}
 	const parent = node.getParent();

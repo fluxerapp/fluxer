@@ -465,7 +465,7 @@ export const useTextareaSubmit = ({
 		const replaceCommand = ReplaceCommandUtils.parseReplaceCommand(actualContent);
 		const reactionShorthand =
 			editingMessage === null && uploadAttachmentsLength === 0 && !hasPendingSticker
-				? parseReactionShorthand(resolvedContent)
+				? parseReactionShorthand(actualContent, Channels.getChannel(channelId) ?? null, guildId, i18n)
 				: null;
 		const reactionTargetId = reactionShorthand === null ? null : getReactionShorthandTargetId(channelId);
 		if (reactionShorthand !== null && reactionTargetId !== null) {
