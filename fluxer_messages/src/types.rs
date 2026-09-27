@@ -674,7 +674,7 @@ pub struct MessageSnapshot {
 pub struct ApiMessagePersonaSnapshotResponse {
 	pub id: Option<String>,
 	pub owner_id: Option<String>,
-	pub name: String,
+	pub name: Option<String>,
 	#[serde(skip_serializing_if = "Option::is_none")]
 	pub avatar: Option<String>,
 	#[serde(skip_serializing_if = "Option::is_none")]
@@ -702,7 +702,7 @@ pub struct ApiPersonaResponse {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MessagePersonaSnapshot {
 	pub id: Option<String>,
-	pub name: String,
+	pub name: Option<String>,
 	pub avatar: Option<String>,
 	pub pronouns: Option<String>
 }

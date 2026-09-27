@@ -180,6 +180,10 @@ export class PersonaService {
 	}
 
 	async updatePersona(userId: UserID, personaId: PersonaID, data: Partial<PersonaCreateRequest>): Promise<PersonaResponse> {
+		const oldPersona = await this.personaRepository.getPersona(userId, personaId);
+		if (!oldPersona) {
+			throw new Error("Persona not found");
+		}
 		// TODO: it looks like this is the right place to do data validation, screening, and snowflake generation
 		if (data.internal_name) contentModerationService.scanText(data.internal_name, {
 			userId: userId,
@@ -202,7 +206,7 @@ export class PersonaService {
 				assetType: 'avatar',
 				entityType: 'persona',
 				entityId: personaId,
-				previousHash: null,
+				previousHash: oldPersona.avatarHash,
 				base64Image: data.avatar,
 				errorPath: 'avatar',
 			});
@@ -214,7 +218,7 @@ export class PersonaService {
 				assetType: 'banner',
 				entityType: 'persona',
 				entityId: personaId,
-				previousHash: null,
+				previousHash: oldPersona.bannerHash,
 				base64Image: data.banner,
 				errorPath: 'banner',
 			});
@@ -240,6 +244,12 @@ export class PersonaService {
 	}
 
 	async deletePersona(userId: UserID, personaId: PersonaID): Promise<void> {
+		const oldPersona = await this.personaRepository.getPersona(userId, personaId);
+		if (!oldPersona) throw new Error("Persona not found");
+		await Promise.allSettled([
+			oldPersona?.avatarHash ? this.entityAssetService.queueAssetDeletion("avatar", "persona", personaId, oldPersona?.avatarHash, undefined, "Persona deletion") : Promise.resolve(),
+			oldPersona?.bannerHash ? this.entityAssetService.queueAssetDeletion("banner", "persona", personaId, oldPersona?.bannerHash, undefined, "Persona deletion") : Promise.resolve(),
+		]);
 		await this.personaRepository.deletePersona(userId, personaId);
 	}
 }

@@ -25,6 +25,9 @@ const DELETE_EXACT_PERSONA_TRIGGER_CQL = PersonaTriggers.deleteCql({
 const DELETE_PERSONA_TRIGGERS_BY_PERSONA_CQL = PersonaTriggers.deleteCql({
 	where: [PersonaTriggers.where.eq('owner_id'), PersonaTriggers.where.eq('persona_id')]
 });
+const DELETE_PERSONA_TRIGGERS_BY_OWNER_CQL = PersonaTriggers.deleteCql({
+	where: [PersonaTriggers.where.eq('owner_id')]
+});
 
 export class PersonaRepository {
 	async listUserPersonas(userId: UserID): Promise<Array<Persona>> {
@@ -92,5 +95,12 @@ export class PersonaRepository {
 			console.log("Data:", newData);
 			await upsertOne(Personas.insert(newData))
 		} else throw new Error("Persona didn't exist when attempting to update it");
+	}
+
+	async deleteAllPersonasByUserId(userId: UserID) {
+		await executeQuery(Personas.deleteCql({
+			where: Personas.where.eq("owner_id")
+		}), {owner_id: userId});
+		await executeQuery(DELETE_PERSONA_TRIGGERS_BY_OWNER_CQL, {owner_id: userId});
 	}
 }

@@ -62,10 +62,19 @@ export const PersonaPatchRequest = PersonaCreateRequest.partial(); // use .omit(
 export type PersonaPatchRequest = z.infer<typeof PersonaPatchRequest>;
 
 export const PersonaSnapshot = z.object({
-	id: SnowflakeStringType.nullable().describe('The unique identifier (snowflake) for this persona. THIS CAN BE NULL!'),
-	name: z.string().min(1).max(100).describe('The display name of the persona'),
+	id: SnowflakeStringType.nullish().describe('The unique identifier (snowflake) for this persona. THIS CAN BE NULL! In that case, the persona information in the snapshot is used as is.'),
+	name: z.string().min(1).max(100).nullish().describe('The display name of the persona'),
 	avatar: z.string().nullish().describe('The hash of the persona avatar'),
 	pronouns: z.string().nullish().describe('The preferred pronouns of the persona'),
+}).check((ctx) => {
+	if (!(ctx.value.name || ctx.value.id)) {
+		ctx.issues.push({
+			code: "custom",
+			input: null,
+			continue: false,
+			message: "Either an ID or a name for a persona must be specified."
+		})
+	}
 });
 
 export type PersonaSnapshot = z.infer<typeof PersonaSnapshot>;

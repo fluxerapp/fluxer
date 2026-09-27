@@ -94,9 +94,10 @@ export class Persona {
 	toSnapshot(): PersonaSnapshot {
 		return {
 			id: this.id,
-			name: this.display_name || this.internal_name!,
-			avatar: this.avatar,
-			pronouns: this.pronouns
+			// name: //this.display_name || this.internal_name!,
+			// avatar: this.avatar,
+			// pronouns: this.pronouns,
+			// ignore_deleted: false,
 		}
 	}
 }

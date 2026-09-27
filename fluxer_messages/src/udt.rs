@@ -205,7 +205,7 @@ pub struct MessageSnapshotUdt {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MessagePersonaSnapshotUdt {
 	pub id: Option<String>,
-	pub name: String,
+	pub name: Option<String>,
 	pub avatar: Option<String>,
 	pub pronouns: Option<String>
 }

@@ -118,6 +118,7 @@ import {VoiceReconciliationWorker} from '../voice/VoiceReconciliationWorker';
 import type {VoiceRepository} from '../voice/VoiceRepository';
 import type {VoiceTopology} from '../voice/VoiceTopology';
 import type {WorkerTaskName} from './WorkerLaneConfig';
+import { PersonaRepository } from '../personas/repositories/PersonaRepository';
 
 export interface WorkerDependencies {
 	kvClient: IKVProvider;
@@ -173,6 +174,7 @@ export interface WorkerDependencies {
 	donationRepository: IDonationRepository;
 	guildService: GuildService;
 	billingRepository: BillingRepository;
+	personaRepository: PersonaRepository;
 	stripe: Stripe | null;
 }
 
@@ -290,6 +292,7 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 		});
 		Logger.info('Stripe initialized');
 	}
+	const personaRepository = new PersonaRepository();
 	Logger.info('Worker dependencies initialized successfully');
 	return {
 		kvClient,
@@ -346,6 +349,7 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 		contactChangeLogService,
 		ncmecSubmissionService,
 		stripe,
+		personaRepository
 	};
 }
 

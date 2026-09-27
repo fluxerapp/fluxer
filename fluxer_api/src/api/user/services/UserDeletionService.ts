@@ -32,6 +32,7 @@ import type {ApplicationRepository} from '../../oauth/repositories/ApplicationRe
 import type {OAuth2TokenRepository} from '../../oauth/repositories/OAuth2TokenRepository';
 import type {WorkerTaskName} from '../../worker/WorkerLaneConfig';
 import type {UserRepository} from '../repositories/UserRepository';
+import type { PersonaRepository } from '@app/api/personas/repositories/PersonaRepository';
 
 const CHUNK_SIZE = 100;
 
@@ -49,6 +50,7 @@ interface UserDeletionDependencies {
 	discriminatorService: DiscriminatorService;
 	stripe: Stripe | null;
 	applicationRepository: ApplicationRepository;
+	personaRepository: PersonaRepository;
 	workerService: IWorkerService<WorkerTaskName>;
 }
 
@@ -70,6 +72,7 @@ export async function processUserDeletion(
 		snowflakeService,
 		stripe,
 		applicationRepository,
+		personaRepository,
 		workerService,
 	} = deps;
 	Logger.debug({userId, deletionReasonCode}, 'Starting user account deletion');
@@ -428,6 +431,7 @@ export async function processUserDeletion(
 		userRepository.deleteAllRecentMentions(userId),
 		userRepository.deleteAllAuthorizedIps(userId),
 		userRepository.deletePinnedDmsByUserId(userId),
+		personaRepository.deleteAllPersonasByUserId(userId),
 	]);
 	await userRepository.deleteUserSecondaryIndices(userId);
 	const userForAnonymization = await userRepository.findUniqueAssert(userId);

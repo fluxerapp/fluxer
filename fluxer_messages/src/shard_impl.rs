@@ -48,6 +48,7 @@ const FLUXER_SYSTEM_DISCRIMINATOR: &str = "0000";
 const USER_FLAG_STAFF: i64 = 1;
 const DELETED_USER_USERNAME: &str = "DeletedUser";
 const DELETED_USER_GLOBAL_NAME: &str = "Deleted User";
+const DELETED_PERSONA_GLOBAL_NAME: &str = "Deleted Persona";
 const BUCKET_SCAN_CONCURRENCY: usize = 16;
 const BUCKET_SCAN_WAVE: usize = 4;
 const ENRICHMENT_QUERY_CONCURRENCY: usize = 16;
@@ -1216,13 +1217,22 @@ impl<T: Transport> MessagesShard<T> {
             nonce: options.nonce.clone(),
             call: message.call.as_ref().map(map_call),
             referenced_message,
-						persona: persona.or(message.persona.as_ref().map(|v| ApiMessagePersonaSnapshotResponse {
-							id: v.id.clone(),
-							owner_id: None, // won't be returned from the API
-							name: v.name.clone(),
-							avatar: v.avatar.clone(),
-							pronouns: v.pronouns.clone(),
-						})),
+						persona: persona.or(message.persona.as_ref().and_then(|v| match v.name.as_ref().is_some() {
+							true => Some(ApiMessagePersonaSnapshotResponse {
+								id: v.id.clone(),
+								owner_id: None, // won't be returned from the API
+								name: v.name.clone(),
+								avatar: v.avatar.clone(),
+								pronouns: v.pronouns.clone(),
+							}),
+							false => Some(ApiMessagePersonaSnapshotResponse {
+								id: Some("0".to_string()),
+								owner_id: None, // won't be returned from the API
+								name: Some(DELETED_PERSONA_GLOBAL_NAME.to_string()),
+								avatar: None,
+								pronouns: None,
+							}),
+						}))
         }
     }
 
@@ -2425,7 +2435,7 @@ impl From<ApiPersonaResponse> for ApiMessagePersonaSnapshotResponse {
 				Self {
 						id: Some(value.id),
 						owner_id: value.owner_id,
-						name: value.display_name.or(value.internal_name).unwrap_or_default(),
+						name: value.display_name.or(value.internal_name),
 						avatar: value.avatar,
 						pronouns: value.pronouns
 				}

@@ -68,6 +68,7 @@ const FLUXER_SYSTEM_USER_ID: i64 = 0;
 const FLUXER_SYSTEM_USERNAME: &str = "Fluxer";
 const FLUXER_SYSTEM_DISCRIMINATOR: i32 = 0;
 const USER_FLAG_STAFF: i64 = 1;
+const DELETED_PERSONA_GLOBAL_NAME: &str = "Deleted Persona";
 
 pub struct UsersShard {
     storage: UsersStorage,
@@ -631,11 +632,11 @@ impl PostgresUsersStorage {
 		async fn fetch_partial_persona(&self, persona_id: i64) -> anyhow::Result<Option<PersonaPartial>> {
 				let rows = self.kv.query(r#"SELECT row_data FROM fluxer_kv WHERE table_name = 'personas' AND row_key LIKE format('%%"%s"%%', cast($1 as TEXT));"#, &[(&persona_id.to_string(), postgres_types::Type::TEXT)]).await?;
 				if rows.len() > 1 {
-					eprintln!("Persona ID collision detected");
-					return Ok(None);
+						eprintln!("Persona ID collision detected");
+						return Ok(Some(deleted_persona(0, 0)));
 				}
         let Some(row) = rows.first() else {
-            return Ok(None);
+          	return Ok(Some(deleted_persona(0, 0)));
         };
         decode_postgres_persona(row.get("row_data")).map(Some)
     }
@@ -760,6 +761,18 @@ fn fluxer_system_user() -> User {
         last_voice_activity_sharing_change_at: None,
         timezone: None,
         timezone_privacy_flags: None,
+    }
+}
+
+fn deleted_persona(user_id: i64, persona_id: i64) -> PersonaPartial {
+    PersonaPartial {
+        owner_id: user_id,
+				persona_id: persona_id,
+        display_name: Some(DELETED_PERSONA_GLOBAL_NAME.to_owned()),
+        avatar_hash: None,
+        accent_color: None,
+        internal_name: DELETED_PERSONA_GLOBAL_NAME.to_owned(),
+        pronouns: None,
     }
 }
 
