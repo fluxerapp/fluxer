@@ -1420,6 +1420,12 @@
         "msgid": "About me is too long"
       },
       {
+        "msgid": "Accept the push relay supplemental privacy notice"
+      },
+      {
+        "msgid": "Accepted"
+      },
+      {
         "msgid": "Add a Klipy API key to enable GIF search at runtime."
       },
       {
@@ -2239,6 +2245,9 @@
         "msgid": "No part of {query} could be applied. Fix the underlined value or add something to search for."
       },
       {
+        "msgid": "Not accepted"
+      },
+      {
         "msgid": "Nothing to search for"
       },
       {
@@ -2383,10 +2392,16 @@
         "msgid": "Public registration is closed."
       },
       {
+        "msgid": "Push relay notice"
+      },
+      {
         "msgid": "Read messages sent before they opened a channel. Without it, they only see messages that arrive while it is open."
       },
       {
         "msgid": "Read messages sent in this channel before they opened it. Without it, they only see messages that arrive while it is open."
+      },
+      {
+        "msgid": "Read the supplemental privacy notice"
       },
       {
         "msgid": "Reason (optional)."
@@ -3059,6 +3074,9 @@
       },
       {
         "msgid": "The new price is already scheduled for {effectiveDate}."
+      },
+      {
+        "msgid": "The official Fluxer mobile apps receive notifications through Fluxer's push relay, which hands them to Apple and Google. Self-hosted UnifiedPush and ntfy endpoints never reach the relay and need no agreement."
       },
       {
         "msgid": "The override allowed {permissions}."
