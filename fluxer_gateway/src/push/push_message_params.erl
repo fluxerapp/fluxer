@@ -8,6 +8,9 @@
 -export_type([context/0]).
 
 -define(MAX_GUILD_FEATURES, 64).
+-define(MESSAGE_TYPE_DEFAULT, 0).
+-define(MESSAGE_TYPE_REPLY, 19).
+-define(PUSHABLE_MESSAGE_TYPES, [?MESSAGE_TYPE_DEFAULT, ?MESSAGE_TYPE_REPLY]).
 
 -type context() :: #{
     message_data := map(),
@@ -110,7 +113,24 @@ validate(#{message_id := undefined}) ->
 validate(#{guild_default_notifications := undefined}) ->
     {error, invalid_guild_default_notifications};
 validate(Context) ->
-    {ok, Context}.
+    validate_message_type(message_type(Context), Context).
+
+-spec validate_message_type(integer(), context()) -> {ok, context()} | {error, term()}.
+validate_message_type(Type, Context) ->
+    case lists:member(Type, ?PUSHABLE_MESSAGE_TYPES) of
+        true -> {ok, Context};
+        false -> {error, {unpushable_message_type, Type}}
+    end.
+
+-spec message_type(context()) -> integer().
+message_type(#{message_data := MessageData}) ->
+    normalize_message_type(maps:get(<<"type">>, MessageData, ?MESSAGE_TYPE_DEFAULT)).
+
+-spec normalize_message_type(term()) -> integer().
+normalize_message_type(Type) when is_integer(Type) ->
+    Type;
+normalize_message_type(_Type) ->
+    ?MESSAGE_TYPE_DEFAULT.
 
 -spec owner_fallback_key(map()) -> term().
 owner_fallback_key(Params) ->
@@ -163,3 +183,51 @@ markdown_context(MessageData, GuildId, RoleNames, _RawContext) when
     push_notification_format:build_markdown_context(MessageData, GuildId, RoleNames, #{});
 markdown_context(_MessageData, _GuildId, _RoleNames, RawContext) ->
     optional_map(RawContext).
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+params_with_message_type(Type) ->
+    #{
+        message_data => #{
+            <<"channel_id">> => <<"1472201127385612376">>,
+            <<"id">> => <<"1472201127385612377">>,
+            <<"type">> => Type
+        },
+        user_ids => [<<"1474262819227156566">>],
+        guild_id => <<"1472200708085309475">>,
+        author_id => <<"1472583967301656587">>,
+        guild_default_notifications => 0
+    }.
+
+context_allows_a_default_message_test() ->
+    ?assertMatch({ok, _}, context(params_with_message_type(?MESSAGE_TYPE_DEFAULT))).
+
+context_allows_a_reply_test() ->
+    ?assertMatch({ok, _}, context(params_with_message_type(?MESSAGE_TYPE_REPLY))).
+
+context_rejects_a_call_system_message_test() ->
+    ?assertEqual(
+        {error, {unpushable_message_type, 3}}, context(params_with_message_type(3))
+    ).
+
+context_rejects_every_non_authored_message_type_test() ->
+    lists:foreach(
+        fun(Type) ->
+            ?assertEqual(
+                {error, {unpushable_message_type, Type}},
+                context(params_with_message_type(Type))
+            )
+        end,
+        [1, 2, 3, 4, 5, 6, 7, 99]
+    ).
+
+context_treats_a_missing_message_type_as_pushable_test() ->
+    Params = params_with_message_type(?MESSAGE_TYPE_DEFAULT),
+    MessageData = maps:remove(<<"type">>, maps:get(message_data, Params)),
+    ?assertMatch({ok, _}, context(Params#{message_data := MessageData})).
+
+context_treats_a_malformed_message_type_as_pushable_test() ->
+    ?assertMatch({ok, _}, context(params_with_message_type(<<"nonsense">>))).
+
+-endif.
