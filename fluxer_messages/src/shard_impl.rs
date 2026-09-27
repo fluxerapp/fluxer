@@ -2382,8 +2382,6 @@ fn decode_postgres_message(row: serde_json::Value) -> anyhow::Result<Message> {
         .get("pinned_timestamp")
         .is_some_and(|value| !value.is_null());
     row.insert("pinned".to_owned(), serde_json::Value::Bool(pinned));
-    default_i32_field(&mut row, "type", 0);
-    default_i32_field(&mut row, "version", 0);
     Ok(serde_json::from_value(serde_json::Value::Object(row))?)
 }
 
@@ -2413,16 +2411,6 @@ fn decode_postgres_attachment_decay(
     let expires_at = DateTime::<Utc>::from_timestamp_millis(row.expires_at)
         .ok_or_else(|| anyhow::anyhow!("invalid attachment decay timestamp"))?;
     Ok((row.attachment_id, expires_at))
-}
-
-fn default_i32_field(
-    row: &mut serde_json::Map<String, serde_json::Value>,
-    field: &str,
-    value: i32,
-) {
-    if row.get(field).is_none_or(serde_json::Value::is_null) {
-        row.insert(field.to_owned(), serde_json::Value::Number(value.into()));
-    }
 }
 
 #[cfg(feature = "scylla")]
@@ -3402,6 +3390,36 @@ mod tests {
             message.call.unwrap().participant_ids,
             vec![1_472_426_752_046_002_208]
         );
+    }
+
+    #[test]
+    fn build_responses_request_accepts_legacy_null_version_rows() {
+        let request: MessageRequest = serde_json::from_value(json!({
+            "op": "BuildResponses",
+            "messages": [{
+                "message_id": "1449544529132171273",
+                "channel_id": "1431572375251247158",
+                "bucket": 399,
+                "author_id": "1130650140672000000",
+                "type": null,
+                "version": null,
+                "content": ""
+            }],
+            "viewer_user_id": "1130650140672000000",
+            "source_guild_id": null,
+            "message_history_cutoff_ms": null,
+            "can_read_message_history": true,
+            "media_endpoint": "https://media.example",
+            "media_proxy_secret_key": "secret",
+            "include_reactions": true
+        }))
+        .unwrap();
+
+        let MessageRequest::BuildResponses { messages, .. } = request else {
+            panic!("expected BuildResponses");
+        };
+        assert_eq!(messages[0].message_type, 0);
+        assert_eq!(messages[0].version, 0);
     }
 
     #[test]

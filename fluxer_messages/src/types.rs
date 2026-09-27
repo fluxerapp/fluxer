@@ -58,6 +58,13 @@ mod serde_id {
             .map(StringOrI64::into_i64)
             .collect()
     }
+
+    pub fn i32_or_null_as_default<'de, D>(deserializer: D) -> Result<i32, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        Ok(Option::<i32>::deserialize(deserializer)?.unwrap_or_default())
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -164,7 +171,11 @@ pub struct Message {
     pub bucket: i32,
     #[serde(default, deserialize_with = "serde_id::opt_i64_from_string_or_number")]
     pub author_id: Option<i64>,
-    #[serde(rename = "type")]
+    #[serde(
+        rename = "type",
+        default,
+        deserialize_with = "serde_id::i32_or_null_as_default"
+    )]
     pub message_type: i32,
     #[serde(default, deserialize_with = "serde_id::opt_i64_from_string_or_number")]
     pub webhook_id: Option<i64>,
@@ -191,6 +202,7 @@ pub struct Message {
     )]
     pub mention_channels: Vec<i64>,
     pub has_reaction: Option<bool>,
+    #[serde(default, deserialize_with = "serde_id::i32_or_null_as_default")]
     pub version: i32,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub attachments: Option<Vec<MessageAttachment>>,
