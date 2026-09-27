@@ -797,8 +797,13 @@ msgstr "{altText} — предпросмотр в светлой теме"
 msgid "{appCount, plural, one {# app selected for access revocation} other {# apps selected for access revocation}}"
 msgstr "{appCount, plural, one {Выбрано # приложение для отзыва доступа} few {Выбрано # приложения для отзыва доступа} many {Выбрано # приложений для отзыва доступа} other {Выбрано # приложения для отзыва доступа}}"
 
+#. Body of the native dialog shown when the desktop app has repeatedly failed to load. {appName} is the desktop app name (typically Fluxer). The app keeps retrying on its own while the dialog is open.
+#: src/features/platform/utils/DesktopLocaleBridge.ts:295
+msgid "{appName} can't reach its servers. It will keep trying in the background."
+msgstr "{appName} не может подключиться к серверам. Попытки будут продолжаться в фоновом режиме."
+
 #. Title of the native error dialog shown when the desktop app cannot boot. {appName} is the desktop app name (typically Fluxer).
-#: src/features/platform/utils/DesktopLocaleBridge.ts:284
+#: src/features/platform/utils/DesktopLocaleBridge.ts:285
 msgid "{appName} failed to start"
 msgstr "Не удалось запустить {appName}"
 
@@ -2538,7 +2543,7 @@ msgid "About"
 msgstr "О себе"
 
 #. Desktop app menu item. Opens the About panel. {appName} is the desktop app name (typically Fluxer).
-#: src/features/platform/utils/DesktopLocaleBridge.ts:16
+#: src/features/platform/utils/DesktopLocaleBridge.ts:17
 msgid "About {appName}"
 msgstr "О приложении {appName}"
 
@@ -2860,7 +2865,7 @@ msgid "Activity threshold"
 msgstr "Порог активности"
 
 #. Native View menu item that resets zoom to 100%.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:108
+#: src/features/platform/utils/DesktopLocaleBridge.ts:109
 msgid "Actual size"
 msgstr "Реальный размер"
 
@@ -3066,7 +3071,7 @@ msgid "Add item"
 msgstr "Добавить элемент"
 
 #. Title of the native file picker that selects local theme files to add.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:266
+#: src/features/platform/utils/DesktopLocaleBridge.ts:267
 #: src/features/theme_studio/sections/AssetsSection.tsx:150
 msgid "Add local files"
 msgstr "Добавить локальные файлы"
@@ -4515,7 +4520,7 @@ msgid "Are you sure you want to remove <0>{engineName}</0>?"
 msgstr "Вы уверены, что хотите удалить <0>{engineName}</0>?"
 
 #. Confirm dialog message for the destructive reset action. Tone stays plain.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:178
+#: src/features/platform/utils/DesktopLocaleBridge.ts:179
 msgid "Are you sure you want to reset {appName}'s app data?"
 msgstr "Вы уверены, что хотите сбросить данные приложения {appName}?"
 
@@ -6342,6 +6347,11 @@ msgstr "Камеры отключены, если участников боль�
 msgid "Can't access that email?"
 msgstr "Нет доступа к этой почте?"
 
+#. Title of the native dialog shown when the desktop app has repeatedly failed to load because it cannot reach the servers.
+#: src/features/platform/utils/DesktopLocaleBridge.ts:290
+msgid "Can't connect"
+msgstr "Не удается подключиться"
+
 #. Error message in the attachment permission denied modal. Keep the tone plain and specific.
 #: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:12
 msgid "Can't paste image here"
@@ -7297,7 +7307,7 @@ msgid "Chat shortcuts"
 msgstr "Быстрые клавиши в чате"
 
 #. Tray menu item. Triggers the auto-updater to look for a new desktop build.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:224
+#: src/features/platform/utils/DesktopLocaleBridge.ts:225
 msgid "Check for updates"
 msgstr "Проверить обновления"
 
@@ -8109,7 +8119,7 @@ msgstr "Клонирование отключено"
 #. Aria-label / button text for dismissing a modal, sheet, popout, or overlay. Short.
 #. Native Window menu item that closes the focused desktop window.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:311
-#: src/features/platform/utils/DesktopLocaleBridge.ts:138
+#: src/features/platform/utils/DesktopLocaleBridge.ts:139
 msgid "Close"
 msgstr "Закрыть"
 
@@ -8773,7 +8783,7 @@ msgid "Completing your sign-in…"
 msgstr "Завершение входа…"
 
 #. Windows jump-list task description (tooltip text) for the New direct message action.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:253
+#: src/features/platform/utils/DesktopLocaleBridge.ts:254
 msgid "Compose a new direct message"
 msgstr "Написать новое личное сообщение"
 
@@ -9346,7 +9356,7 @@ msgstr "Ссылка скопирована в буфер обмена"
 #: src/features/auth/components/modals/BackupCodesModal.tsx:96
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:50
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:397
-#: src/features/platform/utils/DesktopLocaleBridge.ts:63
+#: src/features/platform/utils/DesktopLocaleBridge.ts:64
 #: src/features/theme_studio/sections/QuickCssSection.tsx:214
 #: src/features/ui/action_menu/MessageContextMenu.tsx:73
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:228
@@ -9391,7 +9401,7 @@ msgstr "Скопировать ссылку на баннер"
 
 #. Tray menu item. Copies build / version diagnostics to the clipboard for bug reports.
 #: src/features/app/components/floating/UserAreaPopout.tsx:707
-#: src/features/platform/utils/DesktopLocaleBridge.ts:228
+#: src/features/platform/utils/DesktopLocaleBridge.ts:229
 msgid "Copy build info"
 msgstr "Скопировать информацию о сборке"
 
@@ -10905,7 +10915,7 @@ msgstr "Для настройки аватара, баннера, акцентн
 #. Native Edit menu item that cuts the selection to the clipboard. Imperative verb, not the noun.
 #. Textarea right-click context menu item that cuts the selected text.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:46
-#: src/features/platform/utils/DesktopLocaleBridge.ts:59
+#: src/features/platform/utils/DesktopLocaleBridge.ts:60
 msgid "Cut"
 msgstr "Вырезать"
 
@@ -11308,7 +11318,7 @@ msgstr "Делавэр"
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
 #: src/features/messaging/commands/MessageCommands.tsx:79
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:109
-#: src/features/platform/utils/DesktopLocaleBridge.ts:76
+#: src/features/platform/utils/DesktopLocaleBridge.ts:77
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:517
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:117
@@ -12132,7 +12142,7 @@ msgid "Disable favorites"
 msgstr "Отключить избранное"
 
 #. Troubleshooting menu item. Turns off Chromium hardware acceleration and restarts the desktop app.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:158
+#: src/features/platform/utils/DesktopLocaleBridge.ts:159
 msgid "Disable hardware acceleration and restart"
 msgstr "Отключить аппаратное ускорение и перезапустить"
 
@@ -12275,14 +12285,14 @@ msgid "Disconnect device"
 msgstr "Отключить устройство"
 
 #. Tray menu item shown while in a voice call. {channel} is the voice channel name.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:216
+#: src/features/platform/utils/DesktopLocaleBridge.ts:217
 msgid "Disconnect from {channel}"
 msgstr "Отключиться от {channel}"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Tray menu item. Leaves the current voice call when the channel name is unavailable.
 #: src/features/input/state/input_keybind/shared.ts:317
-#: src/features/platform/utils/DesktopLocaleBridge.ts:220
+#: src/features/platform/utils/DesktopLocaleBridge.ts:221
 msgid "Disconnect from voice"
 msgstr "Отключиться от голосового чата"
 
@@ -12534,7 +12544,7 @@ msgstr "TXT-запись DNS"
 #. Short label in the app constants.
 #. Tray status menu item. User presence that suppresses notifications.
 #: src/features/app/constants/AppConstants.ts:33
-#: src/features/platform/utils/DesktopLocaleBridge.ts:200
+#: src/features/platform/utils/DesktopLocaleBridge.ts:201
 msgid "Do not disturb"
 msgstr "Не беспокоить"
 
@@ -12998,7 +13008,7 @@ msgstr "Эхоподавление"
 #. Button or menu action label in the search engines tab. Keep it concise.
 #. Top-level native menu bar title (Edit menu, holds cut/copy/paste).
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:43
-#: src/features/platform/utils/DesktopLocaleBridge.ts:47
+#: src/features/platform/utils/DesktopLocaleBridge.ts:48
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:35
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:51
 msgid "Edit"
@@ -13627,7 +13637,7 @@ msgid "Enable favorites"
 msgstr "Включить избранное"
 
 #. Troubleshooting menu item. Turns Chromium hardware acceleration back on and restarts the desktop app.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:162
+#: src/features/platform/utils/DesktopLocaleBridge.ts:163
 msgid "Enable hardware acceleration and restart"
 msgstr "Включить аппаратное ускорение и перезапустить"
 
@@ -14352,7 +14362,7 @@ msgstr "исключить часть имени файла вложения"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Windows / Linux File menu item that quits the desktop app. Imperative verb, no app name. Matches the platform wording for leaving an application.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:38
+#: src/features/platform/utils/DesktopLocaleBridge.ts:39
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:210
 msgid "Exit"
 msgstr "Выйти"
@@ -15074,7 +15084,7 @@ msgid "Fetch a URL and inspect the embed payload the chat renderer receives."
 msgstr "Загрузите URL и посмотрите данные встраивания, которые получает рендерер чата."
 
 #. Top-level native menu bar title (File menu).
-#: src/features/platform/utils/DesktopLocaleBridge.ts:43
+#: src/features/platform/utils/DesktopLocaleBridge.ts:44
 msgid "File"
 msgstr "Файл"
 
@@ -15546,7 +15556,7 @@ msgid "Force profile skeletons"
 msgstr "Принудительно показывать скелеты профилей"
 
 #. Native View menu item that reloads the window and ignores the cache. Imperative verb.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:100
+#: src/features/platform/utils/DesktopLocaleBridge.ts:101
 msgid "Force reload"
 msgstr "Принудительно перезагрузить"
 
@@ -16870,7 +16880,7 @@ msgid "Hello, {username}! Nice to have you here."
 msgstr "Привет, {username}! Хорошо, что вы здесь."
 
 #. Top-level native menu bar title (Help menu).
-#: src/features/platform/utils/DesktopLocaleBridge.ts:142
+#: src/features/platform/utils/DesktopLocaleBridge.ts:143
 msgid "Help"
 msgstr "Справка"
 
@@ -16950,7 +16960,7 @@ msgid "Hide"
 msgstr "Скрыть"
 
 #. macOS app menu / tray item. Hides the desktop app window.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:30
+#: src/features/platform/utils/DesktopLocaleBridge.ts:31
 msgid "Hide {appName}"
 msgstr "Скрыть {appName}"
 
@@ -17672,7 +17682,7 @@ msgid "Import favorite GIFs"
 msgstr "Импортировать избранные GIF"
 
 #. Title of the native folder picker that imports a directory of theme files.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:270
+#: src/features/platform/utils/DesktopLocaleBridge.ts:271
 #: src/features/theme_studio/sections/LibrarySection.tsx:349
 msgid "Import folder"
 msgstr "Импортировать папку"
@@ -18139,12 +18149,12 @@ msgid "Installing desktop update…"
 msgstr "Установка обновления для ПК…"
 
 #. Comment of the Linux .desktop entry. One-line app description shown as a tooltip in Linux launchers and software centres. VoIP is voice over IP; keep the term if it is used untranslated in your language.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:294
+#: src/features/platform/utils/DesktopLocaleBridge.ts:305
 msgid "Instant messaging and VoIP"
 msgstr "Обмен мгновенными сообщениями и VoIP"
 
 #. GenericName of the Linux .desktop entry. The category of app shown next to the name in GNOME Activities, KDE Kickoff and software centres. Use the generic term for a chat app in your language.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:289
+#: src/features/platform/utils/DesktopLocaleBridge.ts:300
 msgid "Instant Messenger"
 msgstr "Мессенджер"
 
@@ -18278,7 +18288,7 @@ msgstr "Нажата инвертированная кнопка."
 #. Short label in the app constants.
 #. Tray status menu item. User presence that appears offline to others.
 #: src/features/app/constants/AppConstants.ts:37
-#: src/features/platform/utils/DesktopLocaleBridge.ts:204
+#: src/features/platform/utils/DesktopLocaleBridge.ts:205
 msgid "Invisible"
 msgstr "Невидимый"
 
@@ -21068,7 +21078,7 @@ msgstr "24-часовой формат"
 #. Native Window menu item that minimizes the focused desktop window. Imperative verb.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:128
+#: src/features/platform/utils/DesktopLocaleBridge.ts:129
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:186
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:190
 msgid "Minimize"
@@ -21681,7 +21691,7 @@ msgstr "Отключать микрофон участникам"
 #. Short label in the app layout user area.
 #. Tray menu item shown while in a voice call. Mutes the local microphone.
 #: src/features/app/components/layout/UserArea.tsx:63
-#: src/features/platform/utils/DesktopLocaleBridge.ts:208
+#: src/features/platform/utils/DesktopLocaleBridge.ts:209
 msgid "Mute microphone"
 msgstr "Выключить микрофон"
 
@@ -22156,7 +22166,7 @@ msgid "New community muted"
 msgstr "Новое сообщество без уведомлений"
 
 #. Windows jump-list task title. Starts composing a new DM.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:249
+#: src/features/platform/utils/DesktopLocaleBridge.ts:250
 msgid "New direct message"
 msgstr "Новое личное сообщение"
 
@@ -23479,7 +23489,7 @@ msgstr "Непрозрачность"
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:21
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:159
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:429
-#: src/features/platform/utils/DesktopLocaleBridge.ts:261
+#: src/features/platform/utils/DesktopLocaleBridge.ts:262
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingRow.tsx:22
 msgid "Open"
 msgstr "Открыть"
@@ -23491,7 +23501,7 @@ msgid "Open"
 msgstr "Открытая"
 
 #. Windows jump-list task description (tooltip text) for the Open settings action.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:245
+#: src/features/platform/utils/DesktopLocaleBridge.ts:246
 msgid "Open {appName} settings"
 msgstr "Открыть настройки {appName}"
 
@@ -24430,7 +24440,7 @@ msgstr "Последние 7 дней"
 #. Native Edit menu item that pastes the clipboard contents. Imperative verb, not the noun.
 #. Textarea right-click context menu item that pastes clipboard contents.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:54
-#: src/features/platform/utils/DesktopLocaleBridge.ts:67
+#: src/features/platform/utils/DesktopLocaleBridge.ts:68
 msgid "Paste"
 msgstr "Вставить"
 
@@ -24439,7 +24449,7 @@ msgid "Paste a {theOtherPlatform} template URL to import its structure into a ne
 msgstr "Вставьте URL шаблона {theOtherPlatform}, чтобы импортировать его структуру в новое сообщество."
 
 #. Native macOS Edit menu item that pastes the clipboard contents using the formatting of the surrounding text. Imperative verb.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:71
+#: src/features/platform/utils/DesktopLocaleBridge.ts:72
 msgid "Paste and match style"
 msgstr "Вставить и согласовать стиль"
 
@@ -25216,12 +25226,12 @@ msgid "Prefer using SSO? Continue with {ssoDisplayName}."
 msgstr "Предпочитаете использовать SSO? Войдите через {ssoDisplayName}."
 
 #. macOS app menu submenu title. Keep "Preferences" to match the macOS HIG; in-app surfaces still use "settings".
-#: src/features/platform/utils/DesktopLocaleBridge.ts:25
+#: src/features/platform/utils/DesktopLocaleBridge.ts:26
 msgid "Preferences"
 msgstr "Настройки"
 
 #. macOS app menu item that opens app settings. Trailing ellipsis follows the macOS HIG convention. Keep "Preferences" here even though the in-app term is "settings".
-#: src/features/platform/utils/DesktopLocaleBridge.ts:20
+#: src/features/platform/utils/DesktopLocaleBridge.ts:21
 msgid "Preferences..."
 msgstr "Настройки..."
 
@@ -26043,7 +26053,7 @@ msgid "Quit"
 msgstr "Выйти"
 
 #. macOS / tray menu item that fully quits the desktop app.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:34
+#: src/features/platform/utils/DesktopLocaleBridge.ts:35
 msgid "Quit {appName}"
 msgstr "Выйти из {appName}"
 
@@ -26210,7 +26220,7 @@ msgid "Receive:"
 msgstr "Приём:"
 
 #. Windows jump-list category title. Groups recently opened DMs / communities.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:257
+#: src/features/platform/utils/DesktopLocaleBridge.ts:258
 msgid "Recent"
 msgstr "Недавние"
 
@@ -26368,7 +26378,7 @@ msgstr "URI перенаправления"
 #. Native Edit menu item that redoes the last undone edit. Imperative verb.
 #. Textarea right-click context menu item that redoes the last undone edit.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:42
-#: src/features/platform/utils/DesktopLocaleBridge.ts:55
+#: src/features/platform/utils/DesktopLocaleBridge.ts:56
 msgid "Redo"
 msgstr "Повторить"
 
@@ -26519,7 +26529,7 @@ msgstr "Подходящие"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Troubleshooting menu item. Reloads the renderer process. Keep short.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:166
+#: src/features/platform/utils/DesktopLocaleBridge.ts:167
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:90
 msgid "Reload"
 msgstr "Перезагрузить"
@@ -27210,7 +27220,7 @@ msgid "Report illegal content"
 msgstr "Пожаловаться на незаконный контент"
 
 #. Native Help submenu item. Opens the bug / issue reporting flow.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:150
+#: src/features/platform/utils/DesktopLocaleBridge.ts:151
 msgid "Report issue"
 msgstr "Сообщить о проблеме"
 
@@ -27485,7 +27495,7 @@ msgid "Reset all shortcuts?"
 msgstr "Сбросить все сочетания клавиш?"
 
 #. Destructive confirm button on the reset-app-data dialog.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:188
+#: src/features/platform/utils/DesktopLocaleBridge.ts:189
 msgid "Reset and restart"
 msgstr "Сбросить и перезапустить"
 
@@ -27494,12 +27504,12 @@ msgstr "Сбросить и перезапустить"
 #. Destructive button on the startup failure screen. Clears local app data except preserved drafts.
 #: src/features/app/components/BootstrapErrorScreen.tsx:75
 #: src/features/app/components/ErrorFallback.tsx:164
-#: src/features/platform/utils/DesktopLocaleBridge.ts:174
+#: src/features/platform/utils/DesktopLocaleBridge.ts:175
 msgid "Reset app data"
 msgstr "Сбросить данные приложения"
 
 #. Destructive troubleshooting menu item. Clears local app data, signs out, and restarts.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:170
+#: src/features/platform/utils/DesktopLocaleBridge.ts:171
 msgid "Reset app data and restart"
 msgstr "Сбросить данные приложения и перезапустить"
 
@@ -27775,7 +27785,7 @@ msgid "Respect the sender's intent, with no warning when they toggle the @mentio
 msgstr "Следовать выбору отправителя, без предупреждения при включении или отключении упоминания через @"
 
 #. Tray menu item that restarts the desktop app process.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:232
+#: src/features/platform/utils/DesktopLocaleBridge.ts:233
 msgid "Restart {appName}"
 msgstr "Перезапустить {appName}"
 
@@ -29184,7 +29194,7 @@ msgstr "Выбрать аккаунт"
 #. Native Edit menu item that selects everything in the focused field. Imperative verb.
 #. Textarea right-click context menu item that selects all text in the textarea.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:58
-#: src/features/platform/utils/DesktopLocaleBridge.ts:80
+#: src/features/platform/utils/DesktopLocaleBridge.ts:81
 msgid "Select all"
 msgstr "Выделить все"
 
@@ -30146,7 +30156,7 @@ msgid "Show"
 msgstr "Показывать"
 
 #. Tray menu item that brings the desktop app window to the foreground.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:192
+#: src/features/platform/utils/DesktopLocaleBridge.ts:193
 msgid "Show {appName}"
 msgstr "Показать {appName}"
 
@@ -31547,7 +31557,7 @@ msgstr "Зрители — {count}"
 
 #. Native macOS Edit submenu title for text-to-speech actions.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:84
+#: src/features/platform/utils/DesktopLocaleBridge.ts:85
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:142
 msgid "Speech"
 msgstr "Речь"
@@ -31715,7 +31725,7 @@ msgid "Start"
 msgstr "Начать"
 
 #. Reason shown by the Linux Flatpak background permission portal when enabling launch-at-login. {appName} is the desktop app name.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:236
+#: src/features/platform/utils/DesktopLocaleBridge.ts:237
 msgid "Start {appName} automatically when you sign in."
 msgstr "Запускать {appName} автоматически при входе в систему."
 
@@ -31785,7 +31795,7 @@ msgid "Start searches with <0>{peoplePrefix}</0> <1>{textChannelPrefix}</1> <2>{
 msgstr "Начните поиск с <0>{peoplePrefix}</0> <1>{textChannelPrefix}</1> <2>{voiceChannelPrefix}</2> <3>{communityPrefix}</3>, чтобы сузить область поиска."
 
 #. Native macOS Edit > Speech submenu item that starts reading the selected text aloud. Imperative verb.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:88
+#: src/features/platform/utils/DesktopLocaleBridge.ts:89
 msgid "Start speaking"
 msgstr "Начать озвучивание"
 
@@ -31829,7 +31839,7 @@ msgstr "Статичный Неко"
 #. Tray menu submenu title for the user presence status picker.
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:126
 #: src/features/app/components/dialogs/components/plutonium/PaymentMethodList.tsx:69
-#: src/features/platform/utils/DesktopLocaleBridge.ts:196
+#: src/features/platform/utils/DesktopLocaleBridge.ts:197
 msgid "Status"
 msgstr "Статус"
 
@@ -32079,7 +32089,7 @@ msgstr "Прекратить делиться голосовой активно�
 #. Message context menu item that stops the text-to-speech playback in progress.
 #. Native macOS Edit > Speech submenu item that stops reading text aloud. Imperative verb.
 #: src/features/channel/components/MessageActionMenu.tsx:94
-#: src/features/platform/utils/DesktopLocaleBridge.ts:92
+#: src/features/platform/utils/DesktopLocaleBridge.ts:93
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:74
 msgid "Stop speaking"
 msgstr "Остановить озвучивание"
@@ -32881,7 +32891,7 @@ msgid "Taskbar badge"
 msgstr "Значок на панели задач"
 
 #. Windows jump-list category title. Groups quick actions like open settings and new DM.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:241
+#: src/features/platform/utils/DesktopLocaleBridge.ts:242
 msgid "Tasks"
 msgstr "Задачи"
 
@@ -34413,7 +34423,7 @@ msgid "This will sign out the selected {sessionCount, plural, one {device} other
 msgstr "При этом будет выполнен выход из аккаунта на {sessionCount, plural, one {выбранном устройстве} few {выбранных устройствах} many {выбранных устройствах} other {выбранных устройствах}}. Вам потребуется снова войти в аккаунт на каждом устройстве."
 
 #. Confirm dialog detail text for the destructive reset action. appName is the desktop app name. Reassures users that server-side data is safe.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:182
+#: src/features/platform/utils/DesktopLocaleBridge.ts:183
 msgid "This will sign you out, clear cached files and stored sessions, and restart the desktop app. Your account, communities, and messages in {appName} are not affected."
 msgstr "Это приведет к выходу из аккаунта, очистке кэшированных файлов и сохраненных сессий, а также перезапуску настольного приложения. Ваш аккаунт, сообщества и сообщения в {appName} не будут затронуты."
 
@@ -34616,7 +34626,7 @@ msgid "Toggle deafen"
 msgstr "Включить/выключить звук"
 
 #. Native View menu item that opens or closes Chromium developer tools.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:104
+#: src/features/platform/utils/DesktopLocaleBridge.ts:105
 msgid "Toggle developer tools"
 msgstr "Показать/скрыть инструменты разработчика"
 
@@ -34626,7 +34636,7 @@ msgid "Toggle embed suppression"
 msgstr "Отключить/включить предпросмотр ссылок"
 
 #. Native View menu item that enters or leaves full screen. Imperative verb.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:120
+#: src/features/platform/utils/DesktopLocaleBridge.ts:121
 msgid "Toggle full screen"
 msgstr "Переключить полноэкранный режим"
 
@@ -34896,7 +34906,7 @@ msgid "Trimmed clip is over the {limit} size limit. Try a shorter selection."
 msgstr "Обрезанный клип превышает лимит в {limit}. Попробуйте выбрать более короткий фрагмент."
 
 #. Native Help submenu title that groups recovery actions like reload and reset.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:154
+#: src/features/platform/utils/DesktopLocaleBridge.ts:155
 msgid "Troubleshooting"
 msgstr "Устранение неполадок"
 
@@ -35579,7 +35589,7 @@ msgstr "Понятно"
 #. Native Edit menu item that undoes the last edit. Imperative verb.
 #. Textarea right-click context menu item that undoes the last edit.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:38
-#: src/features/platform/utils/DesktopLocaleBridge.ts:51
+#: src/features/platform/utils/DesktopLocaleBridge.ts:52
 msgid "Undo"
 msgstr "Отменить"
 
@@ -35922,7 +35932,7 @@ msgstr "Включить уведомления избранного"
 #. Short label in the app layout user area.
 #. Tray menu item shown while in a voice call. Unmutes the local microphone.
 #: src/features/app/components/layout/UserArea.tsx:59
-#: src/features/platform/utils/DesktopLocaleBridge.ts:212
+#: src/features/platform/utils/DesktopLocaleBridge.ts:213
 msgid "Unmute microphone"
 msgstr "Включить микрофон"
 
@@ -36094,12 +36104,12 @@ msgid "Unread message badge"
 msgstr "Значок непрочитанных сообщений"
 
 #. Accessibility description of the Windows taskbar overlay badge, read by screen readers, when there are unread messages but no exact count to show.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:274
+#: src/features/platform/utils/DesktopLocaleBridge.ts:275
 msgid "Unread messages"
 msgstr "Непрочитанные сообщения"
 
 #. Accessibility description of the Windows taskbar overlay badge, read by screen readers. {count} is the number of unread messages, already formatted for the locale.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:279
+#: src/features/platform/utils/DesktopLocaleBridge.ts:280
 msgid "Unread messages: {count}"
 msgstr "Непрочитанные сообщения: {count}"
 
@@ -37536,7 +37546,7 @@ msgid "Vietnamese"
 msgstr "Вьетнамский"
 
 #. Top-level native menu bar title (View menu, holds zoom and reload).
-#: src/features/platform/utils/DesktopLocaleBridge.ts:96
+#: src/features/platform/utils/DesktopLocaleBridge.ts:97
 msgid "View"
 msgstr "Вид"
 
@@ -38546,7 +38556,7 @@ msgid "Webhooks updated"
 msgstr "Вебхуки обновлены"
 
 #. Native Help submenu item that opens the Fluxer marketing website.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:146
+#: src/features/platform/utils/DesktopLocaleBridge.ts:147
 msgid "Website"
 msgstr "Сайт"
 
@@ -38830,7 +38840,7 @@ msgstr "Win"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Top-level native menu bar title (Window menu).
-#: src/features/platform/utils/DesktopLocaleBridge.ts:124
+#: src/features/platform/utils/DesktopLocaleBridge.ts:125
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:74
 msgid "Window"
 msgstr "Окно"
@@ -40329,7 +40339,7 @@ msgid "Zoom"
 msgstr "Масштаб"
 
 #. Native Window menu item that zooms the focused window, meaning maximize or restore it. Not image zoom and not UI zoom level.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:132
+#: src/features/platform/utils/DesktopLocaleBridge.ts:133
 msgctxt "window-menu"
 msgid "Zoom"
 msgstr "Изменить масштаб"
@@ -40340,7 +40350,7 @@ msgstr "Изменить масштаб"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:628
 #: src/features/input/state/input_keybind/shared.ts:253
-#: src/features/platform/utils/DesktopLocaleBridge.ts:112
+#: src/features/platform/utils/DesktopLocaleBridge.ts:113
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:82
 msgid "Zoom in"
 msgstr "Увеличить"
@@ -40351,7 +40361,7 @@ msgstr "Увеличить"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:624
 #: src/features/input/state/input_keybind/shared.ts:257
-#: src/features/platform/utils/DesktopLocaleBridge.ts:116
+#: src/features/platform/utils/DesktopLocaleBridge.ts:117
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:86
 msgid "Zoom out"
 msgstr "Уменьшить"

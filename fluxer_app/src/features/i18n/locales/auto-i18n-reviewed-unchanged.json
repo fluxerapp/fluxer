@@ -3871,6 +3871,9 @@
         "msgid": "{actor} updated {target}."
       },
       {
+        "msgid": "{appName} can't reach its servers. It will keep trying in the background."
+      },
+      {
         "msgid": "{channelHeading}, {mentionCount, plural, one {# mention} other {# mentions}}"
       },
       {

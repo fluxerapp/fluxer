@@ -302,6 +302,11 @@ if (launchConfigurationError) {
 			.then(() => app.whenReady())
 			.then(async () => {
 				log.info('App ready, initializing...');
+				try {
+					runStartupPhase('host-resolver', () => app.configureHostResolver({enableAdditionalDnsQueryTypes: false}));
+				} catch (error) {
+					log.error('[Init] Failed to configure the host resolver:', error);
+				}
 				await runStartupPhaseAsync('launch-net-log', startLaunchNetLog);
 				try {
 					await runStartupPhaseAsync('desktop-debug-info', async () => {

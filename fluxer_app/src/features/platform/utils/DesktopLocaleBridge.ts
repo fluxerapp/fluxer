@@ -5,6 +5,7 @@ import {
 	IDLE_DESCRIPTOR,
 	ONLINE_DESCRIPTOR,
 	OPEN_SETTINGS_DESCRIPTOR,
+	TRY_AGAIN_DESCRIPTOR,
 } from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {onLocaleChange} from '@app/features/i18n/utils/LocaleChangeListener';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -286,6 +287,16 @@ const FAILED_TO_START_DESCRIPTOR = msg({
 	comment:
 		'Title of the native error dialog shown when the desktop app cannot boot. {appName} is the desktop app name (typically Fluxer).',
 });
+const APP_LOAD_FAILED_TITLE_DESCRIPTOR = msg({
+	message: "Can't connect",
+	comment:
+		'Title of the native dialog shown when the desktop app has repeatedly failed to load because it cannot reach the servers.',
+});
+const APP_LOAD_FAILED_MESSAGE_DESCRIPTOR = msg({
+	message: "{appName} can't reach its servers. It will keep trying in the background.",
+	comment:
+		'Body of the native dialog shown when the desktop app has repeatedly failed to load. {appName} is the desktop app name (typically Fluxer). The app keeps retrying on its own while the dialog is open.',
+});
 const LINUX_ENTRY_GENERIC_NAME_DESCRIPTOR = msg({
 	message: 'Instant Messenger',
 	comment:
@@ -376,6 +387,9 @@ const NATIVE_MESSAGES: Record<string, NativeMessage> = {
 	'desktop.badge.unreadMessages': UNREAD_MESSAGES_DESCRIPTOR,
 	'desktop.badge.unreadMessagesCount': UNREAD_MESSAGES_COUNT_DESCRIPTOR,
 	'desktop.startup.failedTitle': FAILED_TO_START_DESCRIPTOR,
+	'desktop.appLoad.failedTitle': APP_LOAD_FAILED_TITLE_DESCRIPTOR,
+	'desktop.appLoad.failedMessage': APP_LOAD_FAILED_MESSAGE_DESCRIPTOR,
+	'desktop.appLoad.retry': TRY_AGAIN_DESCRIPTOR,
 	'desktop.linuxEntry.genericName': LINUX_ENTRY_GENERIC_NAME_DESCRIPTOR,
 	'desktop.linuxEntry.comment': LINUX_ENTRY_COMMENT_DESCRIPTOR,
 };

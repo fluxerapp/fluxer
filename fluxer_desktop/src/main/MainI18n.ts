@@ -85,6 +85,9 @@ const FALLBACK_STRINGS: Readonly<Record<string, string>> = Object.freeze({
 	'desktop.badge.unreadMessages': 'Unread messages',
 	'desktop.badge.unreadMessagesCount': 'Unread messages: {count}',
 	'desktop.startup.failedTitle': '{appName} failed to start',
+	'desktop.appLoad.failedTitle': "Can't connect",
+	'desktop.appLoad.failedMessage': "{appName} can't reach its servers. It will keep trying in the background.",
+	'desktop.appLoad.retry': 'Try again',
 	'desktop.linuxEntry.genericName': 'Instant Messenger',
 	'desktop.linuxEntry.comment': 'Instant messaging and VoIP',
 });

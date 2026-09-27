@@ -797,8 +797,13 @@ msgstr "{altText} — 밝은 테마 미리보기"
 msgid "{appCount, plural, one {# app selected for access revocation} other {# apps selected for access revocation}}"
 msgstr "{appCount, plural, one {액세스 권한을 취소할 앱 #개를 선택했습니다} other {액세스 권한을 취소할 앱 #개를 선택했습니다}}"
 
+#. Body of the native dialog shown when the desktop app has repeatedly failed to load. {appName} is the desktop app name (typically Fluxer). The app keeps retrying on its own while the dialog is open.
+#: src/features/platform/utils/DesktopLocaleBridge.ts:295
+msgid "{appName} can't reach its servers. It will keep trying in the background."
+msgstr "{appName} 서버에 연결할 수 없습니다. 백그라운드에서 계속 시도합니다."
+
 #. Title of the native error dialog shown when the desktop app cannot boot. {appName} is the desktop app name (typically Fluxer).
-#: src/features/platform/utils/DesktopLocaleBridge.ts:284
+#: src/features/platform/utils/DesktopLocaleBridge.ts:285
 msgid "{appName} failed to start"
 msgstr "{appName}을(를) 시작하지 못했습니다"
 
@@ -2538,7 +2543,7 @@ msgid "About"
 msgstr "정보"
 
 #. Desktop app menu item. Opens the About panel. {appName} is the desktop app name (typically Fluxer).
-#: src/features/platform/utils/DesktopLocaleBridge.ts:16
+#: src/features/platform/utils/DesktopLocaleBridge.ts:17
 msgid "About {appName}"
 msgstr "{appName} 정보"
 
@@ -2860,7 +2865,7 @@ msgid "Activity threshold"
 msgstr "활동 임계값"
 
 #. Native View menu item that resets zoom to 100%.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:108
+#: src/features/platform/utils/DesktopLocaleBridge.ts:109
 msgid "Actual size"
 msgstr "실제 크기"
 
@@ -3066,7 +3071,7 @@ msgid "Add item"
 msgstr "항목 추가"
 
 #. Title of the native file picker that selects local theme files to add.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:266
+#: src/features/platform/utils/DesktopLocaleBridge.ts:267
 #: src/features/theme_studio/sections/AssetsSection.tsx:150
 msgid "Add local files"
 msgstr "로컬 파일 추가"
@@ -4515,7 +4520,7 @@ msgid "Are you sure you want to remove <0>{engineName}</0>?"
 msgstr "<0>{engineName}</0>을(를) 정말 삭제하시겠어요?"
 
 #. Confirm dialog message for the destructive reset action. Tone stays plain.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:178
+#: src/features/platform/utils/DesktopLocaleBridge.ts:179
 msgid "Are you sure you want to reset {appName}'s app data?"
 msgstr "{appName} 앱 데이터를 초기화하시겠어요?"
 
@@ -6342,6 +6347,11 @@ msgstr "참여자가 {voiceChannelCameraUserLimit}명을 초과하면 카메라�
 msgid "Can't access that email?"
 msgstr "이메일에 접근할 수 없나요?"
 
+#. Title of the native dialog shown when the desktop app has repeatedly failed to load because it cannot reach the servers.
+#: src/features/platform/utils/DesktopLocaleBridge.ts:290
+msgid "Can't connect"
+msgstr "연결할 수 없음"
+
 #. Error message in the attachment permission denied modal. Keep the tone plain and specific.
 #: src/features/messaging/components/alerts/AttachmentPermissionDeniedModal.tsx:12
 msgid "Can't paste image here"
@@ -7297,7 +7307,7 @@ msgid "Chat shortcuts"
 msgstr "채팅 단축키"
 
 #. Tray menu item. Triggers the auto-updater to look for a new desktop build.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:224
+#: src/features/platform/utils/DesktopLocaleBridge.ts:225
 msgid "Check for updates"
 msgstr "업데이트 확인"
 
@@ -8109,7 +8119,7 @@ msgstr "복제가 꺼져 있습니다"
 #. Aria-label / button text for dismissing a modal, sheet, popout, or overlay. Short.
 #. Native Window menu item that closes the focused desktop window.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:311
-#: src/features/platform/utils/DesktopLocaleBridge.ts:138
+#: src/features/platform/utils/DesktopLocaleBridge.ts:139
 msgid "Close"
 msgstr "닫기"
 
@@ -8773,7 +8783,7 @@ msgid "Completing your sign-in…"
 msgstr "로그인 완료 중…"
 
 #. Windows jump-list task description (tooltip text) for the New direct message action.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:253
+#: src/features/platform/utils/DesktopLocaleBridge.ts:254
 msgid "Compose a new direct message"
 msgstr "새로운 DM 작성"
 
@@ -9346,7 +9356,7 @@ msgstr "URL이 클립보드에 복사되었습니다"
 #: src/features/auth/components/modals/BackupCodesModal.tsx:96
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:50
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:397
-#: src/features/platform/utils/DesktopLocaleBridge.ts:63
+#: src/features/platform/utils/DesktopLocaleBridge.ts:64
 #: src/features/theme_studio/sections/QuickCssSection.tsx:214
 #: src/features/ui/action_menu/MessageContextMenu.tsx:73
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:228
@@ -9391,7 +9401,7 @@ msgstr "배너 URL 복사"
 
 #. Tray menu item. Copies build / version diagnostics to the clipboard for bug reports.
 #: src/features/app/components/floating/UserAreaPopout.tsx:707
-#: src/features/platform/utils/DesktopLocaleBridge.ts:228
+#: src/features/platform/utils/DesktopLocaleBridge.ts:229
 msgid "Copy build info"
 msgstr "빌드 정보 복사"
 
@@ -10905,7 +10915,7 @@ msgstr "개별 커뮤니티에서 아바타, 배너, 강조 색상, 자기소개
 #. Native Edit menu item that cuts the selection to the clipboard. Imperative verb, not the noun.
 #. Textarea right-click context menu item that cuts the selected text.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:46
-#: src/features/platform/utils/DesktopLocaleBridge.ts:59
+#: src/features/platform/utils/DesktopLocaleBridge.ts:60
 msgid "Cut"
 msgstr "잘라내기"
 
@@ -11308,7 +11318,7 @@ msgstr "델라웨어"
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
 #: src/features/messaging/commands/MessageCommands.tsx:79
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:109
-#: src/features/platform/utils/DesktopLocaleBridge.ts:76
+#: src/features/platform/utils/DesktopLocaleBridge.ts:77
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
 #: src/features/user/components/modals/tabs/account_security_tab/SecurityTab.tsx:517
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:117
@@ -12132,7 +12142,7 @@ msgid "Disable favorites"
 msgstr "즐겨찾기 비활성화"
 
 #. Troubleshooting menu item. Turns off Chromium hardware acceleration and restarts the desktop app.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:158
+#: src/features/platform/utils/DesktopLocaleBridge.ts:159
 msgid "Disable hardware acceleration and restart"
 msgstr "하드웨어 가속 끄고 다시 시작"
 
@@ -12275,14 +12285,14 @@ msgid "Disconnect device"
 msgstr "기기 연결 해제"
 
 #. Tray menu item shown while in a voice call. {channel} is the voice channel name.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:216
+#: src/features/platform/utils/DesktopLocaleBridge.ts:217
 msgid "Disconnect from {channel}"
 msgstr "{channel}에서 연결 끊기"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Tray menu item. Leaves the current voice call when the channel name is unavailable.
 #: src/features/input/state/input_keybind/shared.ts:317
-#: src/features/platform/utils/DesktopLocaleBridge.ts:220
+#: src/features/platform/utils/DesktopLocaleBridge.ts:221
 msgid "Disconnect from voice"
 msgstr "음성 연결 끊기"
 
@@ -12534,7 +12544,7 @@ msgstr "DNS TXT 레코드"
 #. Short label in the app constants.
 #. Tray status menu item. User presence that suppresses notifications.
 #: src/features/app/constants/AppConstants.ts:33
-#: src/features/platform/utils/DesktopLocaleBridge.ts:200
+#: src/features/platform/utils/DesktopLocaleBridge.ts:201
 msgid "Do not disturb"
 msgstr "방해 금지"
 
@@ -12998,7 +13008,7 @@ msgstr "에코 제거"
 #. Button or menu action label in the search engines tab. Keep it concise.
 #. Top-level native menu bar title (Edit menu, holds cut/copy/paste).
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:43
-#: src/features/platform/utils/DesktopLocaleBridge.ts:47
+#: src/features/platform/utils/DesktopLocaleBridge.ts:48
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:35
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:51
 msgid "Edit"
@@ -13627,7 +13637,7 @@ msgid "Enable favorites"
 msgstr "즐겨찾기 사용"
 
 #. Troubleshooting menu item. Turns Chromium hardware acceleration back on and restarts the desktop app.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:162
+#: src/features/platform/utils/DesktopLocaleBridge.ts:163
 msgid "Enable hardware acceleration and restart"
 msgstr "하드웨어 가속 사용 및 다시 시작"
 
@@ -14352,7 +14362,7 @@ msgstr "첨부 파일 이름의 일부 제외"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Windows / Linux File menu item that quits the desktop app. Imperative verb, no app name. Matches the platform wording for leaving an application.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:38
+#: src/features/platform/utils/DesktopLocaleBridge.ts:39
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:210
 msgid "Exit"
 msgstr "종료"
@@ -15074,7 +15084,7 @@ msgid "Fetch a URL and inspect the embed payload the chat renderer receives."
 msgstr "URL을 가져와서 채팅 렌더러가 수신하는 임베드 페이로드를 검사합니다."
 
 #. Top-level native menu bar title (File menu).
-#: src/features/platform/utils/DesktopLocaleBridge.ts:43
+#: src/features/platform/utils/DesktopLocaleBridge.ts:44
 msgid "File"
 msgstr "파일"
 
@@ -15546,7 +15556,7 @@ msgid "Force profile skeletons"
 msgstr "프로필 스켈레톤 강제 적용"
 
 #. Native View menu item that reloads the window and ignores the cache. Imperative verb.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:100
+#: src/features/platform/utils/DesktopLocaleBridge.ts:101
 msgid "Force reload"
 msgstr "강제 새로고침"
 
@@ -16870,7 +16880,7 @@ msgid "Hello, {username}! Nice to have you here."
 msgstr "안녕하세요, {username}님! 만나서 반갑습니다."
 
 #. Top-level native menu bar title (Help menu).
-#: src/features/platform/utils/DesktopLocaleBridge.ts:142
+#: src/features/platform/utils/DesktopLocaleBridge.ts:143
 msgid "Help"
 msgstr "도움말"
 
@@ -16950,7 +16960,7 @@ msgid "Hide"
 msgstr "숨기기"
 
 #. macOS app menu / tray item. Hides the desktop app window.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:30
+#: src/features/platform/utils/DesktopLocaleBridge.ts:31
 msgid "Hide {appName}"
 msgstr "{appName} 가리기"
 
@@ -17672,7 +17682,7 @@ msgid "Import favorite GIFs"
 msgstr "즐겨찾는 GIF 가져오기"
 
 #. Title of the native folder picker that imports a directory of theme files.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:270
+#: src/features/platform/utils/DesktopLocaleBridge.ts:271
 #: src/features/theme_studio/sections/LibrarySection.tsx:349
 msgid "Import folder"
 msgstr "폴더 가져오기"
@@ -18139,12 +18149,12 @@ msgid "Installing desktop update…"
 msgstr "데스크톱 업데이트 설치 중…"
 
 #. Comment of the Linux .desktop entry. One-line app description shown as a tooltip in Linux launchers and software centres. VoIP is voice over IP; keep the term if it is used untranslated in your language.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:294
+#: src/features/platform/utils/DesktopLocaleBridge.ts:305
 msgid "Instant messaging and VoIP"
 msgstr "인스턴트 메시징 및 VoIP"
 
 #. GenericName of the Linux .desktop entry. The category of app shown next to the name in GNOME Activities, KDE Kickoff and software centres. Use the generic term for a chat app in your language.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:289
+#: src/features/platform/utils/DesktopLocaleBridge.ts:300
 msgid "Instant Messenger"
 msgstr "인스턴트 메신저"
 
@@ -18278,7 +18288,7 @@ msgstr "반전 버튼 클릭됨."
 #. Short label in the app constants.
 #. Tray status menu item. User presence that appears offline to others.
 #: src/features/app/constants/AppConstants.ts:37
-#: src/features/platform/utils/DesktopLocaleBridge.ts:204
+#: src/features/platform/utils/DesktopLocaleBridge.ts:205
 msgid "Invisible"
 msgstr "오프라인 표시"
 
@@ -21068,7 +21078,7 @@ msgstr "24시간제"
 #. Native Window menu item that minimizes the focused desktop window. Imperative verb.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:128
+#: src/features/platform/utils/DesktopLocaleBridge.ts:129
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:186
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:190
 msgid "Minimize"
@@ -21681,7 +21691,7 @@ msgstr "멤버 음소거"
 #. Short label in the app layout user area.
 #. Tray menu item shown while in a voice call. Mutes the local microphone.
 #: src/features/app/components/layout/UserArea.tsx:63
-#: src/features/platform/utils/DesktopLocaleBridge.ts:208
+#: src/features/platform/utils/DesktopLocaleBridge.ts:209
 msgid "Mute microphone"
 msgstr "마이크 음소거"
 
@@ -22156,7 +22166,7 @@ msgid "New community muted"
 msgstr "새로운 커뮤니티 음소거됨"
 
 #. Windows jump-list task title. Starts composing a new DM.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:249
+#: src/features/platform/utils/DesktopLocaleBridge.ts:250
 msgid "New direct message"
 msgstr "새로운 DM"
 
@@ -23479,7 +23489,7 @@ msgstr "불투명도"
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:21
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:159
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:429
-#: src/features/platform/utils/DesktopLocaleBridge.ts:261
+#: src/features/platform/utils/DesktopLocaleBridge.ts:262
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingRow.tsx:22
 msgid "Open"
 msgstr "열기"
@@ -23491,7 +23501,7 @@ msgid "Open"
 msgstr "공개"
 
 #. Windows jump-list task description (tooltip text) for the Open settings action.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:245
+#: src/features/platform/utils/DesktopLocaleBridge.ts:246
 msgid "Open {appName} settings"
 msgstr "{appName} 설정 열기"
 
@@ -24430,7 +24440,7 @@ msgstr "지난 7일"
 #. Native Edit menu item that pastes the clipboard contents. Imperative verb, not the noun.
 #. Textarea right-click context menu item that pastes clipboard contents.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:54
-#: src/features/platform/utils/DesktopLocaleBridge.ts:67
+#: src/features/platform/utils/DesktopLocaleBridge.ts:68
 msgid "Paste"
 msgstr "붙여넣기"
 
@@ -24439,7 +24449,7 @@ msgid "Paste a {theOtherPlatform} template URL to import its structure into a ne
 msgstr "새 커뮤니티로 구조를 가져오려면 {theOtherPlatform} 템플릿 URL을 붙여넣으세요."
 
 #. Native macOS Edit menu item that pastes the clipboard contents using the formatting of the surrounding text. Imperative verb.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:71
+#: src/features/platform/utils/DesktopLocaleBridge.ts:72
 msgid "Paste and match style"
 msgstr "붙여넣고 스타일 일치시키기"
 
@@ -25216,12 +25226,12 @@ msgid "Prefer using SSO? Continue with {ssoDisplayName}."
 msgstr "SSO를 사용하시겠어요? {ssoDisplayName}(으)로 계속하세요."
 
 #. macOS app menu submenu title. Keep "Preferences" to match the macOS HIG; in-app surfaces still use "settings".
-#: src/features/platform/utils/DesktopLocaleBridge.ts:25
+#: src/features/platform/utils/DesktopLocaleBridge.ts:26
 msgid "Preferences"
 msgstr "환경설정"
 
 #. macOS app menu item that opens app settings. Trailing ellipsis follows the macOS HIG convention. Keep "Preferences" here even though the in-app term is "settings".
-#: src/features/platform/utils/DesktopLocaleBridge.ts:20
+#: src/features/platform/utils/DesktopLocaleBridge.ts:21
 msgid "Preferences..."
 msgstr "환경설정..."
 
@@ -26043,7 +26053,7 @@ msgid "Quit"
 msgstr "앱 종료"
 
 #. macOS / tray menu item that fully quits the desktop app.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:34
+#: src/features/platform/utils/DesktopLocaleBridge.ts:35
 msgid "Quit {appName}"
 msgstr "{appName} 종료"
 
@@ -26210,7 +26220,7 @@ msgid "Receive:"
 msgstr "수신:"
 
 #. Windows jump-list category title. Groups recently opened DMs / communities.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:257
+#: src/features/platform/utils/DesktopLocaleBridge.ts:258
 msgid "Recent"
 msgstr "최근"
 
@@ -26368,7 +26378,7 @@ msgstr "리디렉션 URI"
 #. Native Edit menu item that redoes the last undone edit. Imperative verb.
 #. Textarea right-click context menu item that redoes the last undone edit.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:42
-#: src/features/platform/utils/DesktopLocaleBridge.ts:55
+#: src/features/platform/utils/DesktopLocaleBridge.ts:56
 msgid "Redo"
 msgstr "다시 실행"
 
@@ -26519,7 +26529,7 @@ msgstr "관련도순"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Troubleshooting menu item. Reloads the renderer process. Keep short.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:166
+#: src/features/platform/utils/DesktopLocaleBridge.ts:167
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:90
 msgid "Reload"
 msgstr "새로고침"
@@ -27210,7 +27220,7 @@ msgid "Report illegal content"
 msgstr "불법 콘텐츠 신고"
 
 #. Native Help submenu item. Opens the bug / issue reporting flow.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:150
+#: src/features/platform/utils/DesktopLocaleBridge.ts:151
 msgid "Report issue"
 msgstr "문제 신고"
 
@@ -27485,7 +27495,7 @@ msgid "Reset all shortcuts?"
 msgstr "모든 단축키를 재설정할까요?"
 
 #. Destructive confirm button on the reset-app-data dialog.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:188
+#: src/features/platform/utils/DesktopLocaleBridge.ts:189
 msgid "Reset and restart"
 msgstr "재설정 후 다시 시작"
 
@@ -27494,12 +27504,12 @@ msgstr "재설정 후 다시 시작"
 #. Destructive button on the startup failure screen. Clears local app data except preserved drafts.
 #: src/features/app/components/BootstrapErrorScreen.tsx:75
 #: src/features/app/components/ErrorFallback.tsx:164
-#: src/features/platform/utils/DesktopLocaleBridge.ts:174
+#: src/features/platform/utils/DesktopLocaleBridge.ts:175
 msgid "Reset app data"
 msgstr "앱 데이터 초기화"
 
 #. Destructive troubleshooting menu item. Clears local app data, signs out, and restarts.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:170
+#: src/features/platform/utils/DesktopLocaleBridge.ts:171
 msgid "Reset app data and restart"
 msgstr "앱 데이터 초기화 및 재시작"
 
@@ -27775,7 +27785,7 @@ msgid "Respect the sender's intent, with no warning when they toggle the @mentio
 msgstr "발신자의 선택을 그대로 따르고, @멘션을 켜거나 꺼도 경고하지 않습니다"
 
 #. Tray menu item that restarts the desktop app process.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:232
+#: src/features/platform/utils/DesktopLocaleBridge.ts:233
 msgid "Restart {appName}"
 msgstr "{appName} 재시작"
 
@@ -29184,7 +29194,7 @@ msgstr "계정 선택"
 #. Native Edit menu item that selects everything in the focused field. Imperative verb.
 #. Textarea right-click context menu item that selects all text in the textarea.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:58
-#: src/features/platform/utils/DesktopLocaleBridge.ts:80
+#: src/features/platform/utils/DesktopLocaleBridge.ts:81
 msgid "Select all"
 msgstr "모두 선택"
 
@@ -30146,7 +30156,7 @@ msgid "Show"
 msgstr "표시"
 
 #. Tray menu item that brings the desktop app window to the foreground.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:192
+#: src/features/platform/utils/DesktopLocaleBridge.ts:193
 msgid "Show {appName}"
 msgstr "{appName} 표시"
 
@@ -31547,7 +31557,7 @@ msgstr "관전자 {count}명"
 
 #. Native macOS Edit submenu title for text-to-speech actions.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:84
+#: src/features/platform/utils/DesktopLocaleBridge.ts:85
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:142
 msgid "Speech"
 msgstr "음성"
@@ -31715,7 +31725,7 @@ msgid "Start"
 msgstr "시작하기"
 
 #. Reason shown by the Linux Flatpak background permission portal when enabling launch-at-login. {appName} is the desktop app name.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:236
+#: src/features/platform/utils/DesktopLocaleBridge.ts:237
 msgid "Start {appName} automatically when you sign in."
 msgstr "로그인할 때 {appName}을(를) 자동으로 시작합니다."
 
@@ -31785,7 +31795,7 @@ msgid "Start searches with <0>{peoplePrefix}</0> <1>{textChannelPrefix}</1> <2>{
 msgstr "검색어 앞에 <0>{peoplePrefix}</0>, <1>{textChannelPrefix}</1>, <2>{voiceChannelPrefix}</2>, <3>{communityPrefix}</3> 기호를 붙이면 검색 범위를 좁힐 수 있습니다."
 
 #. Native macOS Edit > Speech submenu item that starts reading the selected text aloud. Imperative verb.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:88
+#: src/features/platform/utils/DesktopLocaleBridge.ts:89
 msgid "Start speaking"
 msgstr "말하기 시작"
 
@@ -31829,7 +31839,7 @@ msgstr "움직이지 않는 네코"
 #. Tray menu submenu title for the user presence status picker.
 #: src/features/app/components/dialogs/components/plutonium/InvoiceList.tsx:126
 #: src/features/app/components/dialogs/components/plutonium/PaymentMethodList.tsx:69
-#: src/features/platform/utils/DesktopLocaleBridge.ts:196
+#: src/features/platform/utils/DesktopLocaleBridge.ts:197
 msgid "Status"
 msgstr "상태"
 
@@ -32079,7 +32089,7 @@ msgstr "모든 친구와 음성 활동 공유를 중단할까요?"
 #. Message context menu item that stops the text-to-speech playback in progress.
 #. Native macOS Edit > Speech submenu item that stops reading text aloud. Imperative verb.
 #: src/features/channel/components/MessageActionMenu.tsx:94
-#: src/features/platform/utils/DesktopLocaleBridge.ts:92
+#: src/features/platform/utils/DesktopLocaleBridge.ts:93
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:74
 msgid "Stop speaking"
 msgstr "말하기 중지"
@@ -32881,7 +32891,7 @@ msgid "Taskbar badge"
 msgstr "작업 표시줄 배지"
 
 #. Windows jump-list category title. Groups quick actions like open settings and new DM.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:241
+#: src/features/platform/utils/DesktopLocaleBridge.ts:242
 msgid "Tasks"
 msgstr "작업"
 
@@ -34413,7 +34423,7 @@ msgid "This will sign out the selected {sessionCount, plural, one {device} other
 msgstr "선택한 {sessionCount, plural, one {기기} other {기기}}에서 계정이 로그아웃됩니다. 각 기기에서 다시 로그인해야 합니다."
 
 #. Confirm dialog detail text for the destructive reset action. appName is the desktop app name. Reassures users that server-side data is safe.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:182
+#: src/features/platform/utils/DesktopLocaleBridge.ts:183
 msgid "This will sign you out, clear cached files and stored sessions, and restart the desktop app. Your account, communities, and messages in {appName} are not affected."
 msgstr "로그아웃되고 캐시된 파일과 저장된 세션이 삭제되며 데스크톱 앱이 다시 시작됩니다. {appName}의 계정, 커뮤니티, 메시지는 영향을 받지 않습니다."
 
@@ -34616,7 +34626,7 @@ msgid "Toggle deafen"
 msgstr "소리 끄기/켜기"
 
 #. Native View menu item that opens or closes Chromium developer tools.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:104
+#: src/features/platform/utils/DesktopLocaleBridge.ts:105
 msgid "Toggle developer tools"
 msgstr "개발자 도구 전환"
 
@@ -34626,7 +34636,7 @@ msgid "Toggle embed suppression"
 msgstr "임베드 숨기기/보이기 전환"
 
 #. Native View menu item that enters or leaves full screen. Imperative verb.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:120
+#: src/features/platform/utils/DesktopLocaleBridge.ts:121
 msgid "Toggle full screen"
 msgstr "전체 화면 전환"
 
@@ -34896,7 +34906,7 @@ msgid "Trimmed clip is over the {limit} size limit. Try a shorter selection."
 msgstr "잘라낸 클립이 {limit} 크기 제한을 초과했습니다. 더 짧게 선택해 보세요."
 
 #. Native Help submenu title that groups recovery actions like reload and reset.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:154
+#: src/features/platform/utils/DesktopLocaleBridge.ts:155
 msgid "Troubleshooting"
 msgstr "문제 해결"
 
@@ -35579,7 +35589,7 @@ msgstr "확인"
 #. Native Edit menu item that undoes the last edit. Imperative verb.
 #. Textarea right-click context menu item that undoes the last edit.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:38
-#: src/features/platform/utils/DesktopLocaleBridge.ts:51
+#: src/features/platform/utils/DesktopLocaleBridge.ts:52
 msgid "Undo"
 msgstr "실행 취소"
 
@@ -35922,7 +35932,7 @@ msgstr "즐겨찾기 알림 켜기"
 #. Short label in the app layout user area.
 #. Tray menu item shown while in a voice call. Unmutes the local microphone.
 #: src/features/app/components/layout/UserArea.tsx:59
-#: src/features/platform/utils/DesktopLocaleBridge.ts:212
+#: src/features/platform/utils/DesktopLocaleBridge.ts:213
 msgid "Unmute microphone"
 msgstr "마이크 음소거 해제"
 
@@ -36094,12 +36104,12 @@ msgid "Unread message badge"
 msgstr "읽지 않은 메시지 배지"
 
 #. Accessibility description of the Windows taskbar overlay badge, read by screen readers, when there are unread messages but no exact count to show.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:274
+#: src/features/platform/utils/DesktopLocaleBridge.ts:275
 msgid "Unread messages"
 msgstr "읽지 않은 메시지"
 
 #. Accessibility description of the Windows taskbar overlay badge, read by screen readers. {count} is the number of unread messages, already formatted for the locale.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:279
+#: src/features/platform/utils/DesktopLocaleBridge.ts:280
 msgid "Unread messages: {count}"
 msgstr "읽지 않은 메시지: {count}개"
 
@@ -37536,7 +37546,7 @@ msgid "Vietnamese"
 msgstr "베트남어"
 
 #. Top-level native menu bar title (View menu, holds zoom and reload).
-#: src/features/platform/utils/DesktopLocaleBridge.ts:96
+#: src/features/platform/utils/DesktopLocaleBridge.ts:97
 msgid "View"
 msgstr "보기"
 
@@ -38546,7 +38556,7 @@ msgid "Webhooks updated"
 msgstr "웹훅 업데이트됨"
 
 #. Native Help submenu item that opens the Fluxer marketing website.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:146
+#: src/features/platform/utils/DesktopLocaleBridge.ts:147
 msgid "Website"
 msgstr "웹사이트"
 
@@ -38830,7 +38840,7 @@ msgstr "Win"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Top-level native menu bar title (Window menu).
-#: src/features/platform/utils/DesktopLocaleBridge.ts:124
+#: src/features/platform/utils/DesktopLocaleBridge.ts:125
 #: src/features/user/components/settings_utils/search_index/DesktopSettingsIndex.ts:74
 msgid "Window"
 msgstr "창"
@@ -40329,7 +40339,7 @@ msgid "Zoom"
 msgstr "확대/축소"
 
 #. Native Window menu item that zooms the focused window, meaning maximize or restore it. Not image zoom and not UI zoom level.
-#: src/features/platform/utils/DesktopLocaleBridge.ts:132
+#: src/features/platform/utils/DesktopLocaleBridge.ts:133
 msgctxt "window-menu"
 msgid "Zoom"
 msgstr "확대/축소"
@@ -40340,7 +40350,7 @@ msgstr "확대/축소"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:628
 #: src/features/input/state/input_keybind/shared.ts:253
-#: src/features/platform/utils/DesktopLocaleBridge.ts:112
+#: src/features/platform/utils/DesktopLocaleBridge.ts:113
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:82
 msgid "Zoom in"
 msgstr "확대"
@@ -40351,7 +40361,7 @@ msgstr "확대"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:624
 #: src/features/input/state/input_keybind/shared.ts:257
-#: src/features/platform/utils/DesktopLocaleBridge.ts:116
+#: src/features/platform/utils/DesktopLocaleBridge.ts:117
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:86
 msgid "Zoom out"
 msgstr "축소"
