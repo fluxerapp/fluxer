@@ -8,7 +8,9 @@ import Messages from '@app/features/messaging/state/MessagingMessages';
 import SavedMessages from '@app/features/messaging/state/SavedMessages';
 import type {ReactionEmoji} from '@app/features/messaging/utils/ReactionUtils';
 import MentionFeed from '@app/features/notification/state/MentionFeed';
+import {ReactionType} from '@fluxer/constants/src/EmojiConstants';
 import type {GuildMemberData} from '@fluxer/schema/src/domains/guild/GuildMemberSchemas';
+import PollVotes from '../state/PollVotes';
 
 interface ReactionEmojiPayload {
 	id?: string | null;
@@ -22,6 +24,7 @@ interface MessageReactionRemovePayload {
 	emoji: ReactionEmojiPayload;
 	guild_id?: string;
 	member?: GuildMemberData;
+	reaction_type?: ReactionType;
 }
 
 export function handleMessageReactionRemove(data: MessageReactionRemovePayload, _context: GatewayHandlerContext): void {
@@ -30,7 +33,9 @@ export function handleMessageReactionRemove(data: MessageReactionRemovePayload, 
 		GuildMembers.hydrateIfMissing(data.guild_id, data.member);
 	}
 	SavedMessages.handleMessageReactionRemove(data.message_id);
-	MessageReactions.handleReactionRemove(data.message_id, data.user_id, emoji);
+	if ((data.reaction_type ?? ReactionType.Emoji) === ReactionType.PollVote)
+		PollVotes.handlePollVoteRemove(data.message_id, data.user_id, Number(emoji.id));
+	else MessageReactions.handleReactionRemove(data.message_id, data.user_id, emoji);
 	ChannelPins.handleMessageReactionRemove(data.channel_id, data.message_id);
 	MentionFeed.handleMessageReactionRemove(data.message_id);
 	Messages.handleReaction({
@@ -40,5 +45,6 @@ export function handleMessageReactionRemove(data: MessageReactionRemovePayload, 
 		userId: data.user_id,
 		emoji,
 		skipReactionStore: true,
+		reactionType: data.reaction_type ?? ReactionType.Emoji,
 	});
 }

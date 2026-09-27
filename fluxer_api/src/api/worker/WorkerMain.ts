@@ -61,6 +61,7 @@ function registerCronJobs(cron: CronScheduler, jobsStreamMaxAgeMs: number): void
 	}
 	cron.upsert('processInactivityDeletions', 'processInactivityDeletions', {}, '0 0 */6 * * *', {ledger: false});
 	cron.upsert('expireAttachments', 'expireAttachments', {}, '0 0 */12 * * *', {ledger: false});
+	cron.upsert('finalizePolls', 'finalizePolls', {}, '*/10 * * * * *', {ledger: false});
 	if (jobsStreamMaxAgeMs > 0 && jobsStreamMaxAgeMs <= JOBS_STREAM_MAX_AGE_MS) {
 		cron.upsert('expireStaleJobs', 'expireStaleJobs', {}, '0 45 3 * * *', {ledger: false});
 	} else {

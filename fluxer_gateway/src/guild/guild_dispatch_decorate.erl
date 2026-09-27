@@ -64,6 +64,8 @@ is_message_event(_) -> false.
 is_user_event(typing_start) -> true;
 is_user_event(message_reaction_add) -> true;
 is_user_event(message_reaction_remove) -> true;
+is_user_event(message_poll_vote_add) -> true;
+is_user_event(message_poll_vote_remove) -> true;
 is_user_event(_) -> false.
 
 -spec extract_member_for_event(event(), event_data(), guild_state()) -> map() | undefined.
@@ -143,6 +145,9 @@ is_message_event_test() ->
 is_user_event_test() ->
     ?assertEqual(true, is_user_event(typing_start)),
     ?assertEqual(true, is_user_event(message_reaction_add)),
+    ?assertEqual(true, is_user_event(message_reaction_remove)),
+    ?assertEqual(true, is_user_event(message_poll_vote_add)),
+    ?assertEqual(true, is_user_event(message_poll_vote_remove)),
     ?assertEqual(false, is_user_event(message_reaction_remove_all)),
     ?assertEqual(false, is_user_event(message_reaction_remove_emoji)),
     ?assertEqual(false, is_user_event(message_create)).

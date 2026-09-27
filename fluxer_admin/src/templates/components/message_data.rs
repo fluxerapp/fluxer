@@ -17,6 +17,46 @@ pub struct Attachment {
     pub ncmec_failure_reason: Option<String>,
 }
 
+#[derive(Default, Debug, PartialEq)]
+pub struct PollEmoji {
+    pub id: Option<String>,
+    pub name: Option<String>,
+}
+
+#[derive(Default, Debug, PartialEq)]
+pub struct PollMedia {
+    pub emoji: Option<PollEmoji>,
+    pub text: Option<String>,
+}
+
+#[derive(Default, Debug, PartialEq)]
+pub struct PollAnswer {
+    pub answer_id: Option<i32>,
+    pub poll_media: Option<PollMedia>,
+}
+
+#[derive(Default, Debug, PartialEq)]
+pub struct PollAnswerCount {
+    pub id: Option<i32>,
+    pub count: Option<i32>,
+}
+
+#[derive(Default, Debug, PartialEq)]
+pub struct PollResults {
+    pub answer_counts: Option<Vec<PollAnswerCount>>,
+    pub is_finalized: Option<bool>,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct Poll {
+    pub question: Option<PollMedia>,
+    pub answers: Option<Vec<PollAnswer>>,
+    pub expiry: Option<String>,
+    pub allow_multiselect: Option<bool>,
+    pub layout_type: Option<i32>,
+    pub results: Option<PollResults>,
+}
+
 #[derive(Debug, PartialEq)]
 pub struct Message {
     pub id: String,
@@ -32,6 +72,7 @@ pub struct Message {
     pub channel_content_warning_level: Option<i32>,
     pub channel_content_warning_text: Option<String>,
     pub guild_nsfw: Option<bool>,
+    pub poll: Option<Poll>,
     pub attachments: Vec<Attachment>,
 }
 
@@ -70,7 +111,88 @@ fn message_from_value(value: &Value) -> Message {
             .as_str()
             .map(ToOwned::to_owned),
         guild_nsfw: value["guild_nsfw"].as_bool(),
+        poll: value.get("poll").map(poll_from_value),
         attachments,
+    }
+}
+
+pub fn poll_from_value(value: &Value) -> Poll {
+    Poll {
+        question: value.get("question").map(poll_media_from_value),
+        answers: value
+            .get("answers")
+            .and_then(Value::as_array)
+            .map(|answers| answers.iter().map(poll_answer_from_value).collect()),
+        expiry: value
+            .get("expiry")
+            .and_then(Value::as_str)
+            .map(ToOwned::to_owned),
+        allow_multiselect: value.get("allow_multiselect").and_then(Value::as_bool),
+        layout_type: value
+            .get("layout_type")
+            .and_then(Value::as_i64)
+            .and_then(|id| i32::try_from(id).ok()),
+        results: value.get("results").map(poll_results_from_value),
+    }
+}
+
+fn poll_media_from_value(value: &Value) -> PollMedia {
+    PollMedia {
+        emoji: value.get("emoji").map(poll_emoji_from_value),
+        text: value
+            .get("text")
+            .and_then(Value::as_str)
+            .map(ToOwned::to_owned),
+    }
+}
+
+fn poll_emoji_from_value(value: &Value) -> PollEmoji {
+    PollEmoji {
+        id: value
+            .get("id")
+            .and_then(Value::as_str)
+            .map(ToOwned::to_owned),
+        name: value
+            .get("name")
+            .and_then(Value::as_str)
+            .map(ToOwned::to_owned),
+    }
+}
+
+fn poll_answer_from_value(value: &Value) -> PollAnswer {
+    PollAnswer {
+        answer_id: value
+            .get("answer_id")
+            .and_then(Value::as_i64)
+            .and_then(|id| i32::try_from(id).ok()),
+        poll_media: value.get("poll_media").map(poll_media_from_value),
+    }
+}
+
+fn poll_results_from_value(value: &Value) -> PollResults {
+    PollResults {
+        answer_counts: value
+            .get("answer_counts")
+            .and_then(Value::as_array)
+            .map(|answer_counts| {
+                (answer_counts.iter())
+                    .map(poll_answer_count_from_value)
+                    .collect()
+            }),
+        is_finalized: value.get("is_finalized").and_then(Value::as_bool),
+    }
+}
+
+fn poll_answer_count_from_value(value: &Value) -> PollAnswerCount {
+    PollAnswerCount {
+        id: value
+            .get("id")
+            .and_then(Value::as_i64)
+            .and_then(|id| i32::try_from(id).ok()),
+        count: value
+            .get("count")
+            .and_then(Value::as_i64)
+            .and_then(|id| i32::try_from(id).ok()),
     }
 }
 
@@ -162,6 +284,7 @@ mod tests {
                 channel_content_warning_level: Some(2),
                 channel_content_warning_text: Some("Content warning".into()),
                 guild_nsfw: Some(true),
+                poll: None,
                 attachments: vec![Attachment {
                     id: "9007199254740993".into(),
                     url: "https://cdn.example.com/image.png".into(),

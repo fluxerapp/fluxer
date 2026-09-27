@@ -14,6 +14,11 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: Weblate 2026.7.dev0\n"
 
+#. Separator that goes between answer qualifiers that are only readable for screenreaders. Example: "Winning answer[, ]Selected answer".
+#: src/features/channel/components/Poll.tsx:88
+msgid ", "
+msgstr ", "
+
 #. Description text in the messages tab.
 #: src/features/user/components/modals/tabs/appearance_tab/MessagesTab.tsx:52
 msgid "... turn dense mode on. Nice!"
@@ -22,7 +27,7 @@ msgstr "... nyalakan mode rapat. Mantap!"
 #. Button or menu action label in the channel and chat user message. Keep it concise.
 #. Suffix after the message text in the forward modal preview when the forwarded message was edited.
 #: src/features/channel/components/MessageAttachments.tsx:375
-#: src/features/channel/components/UserMessage.tsx:62
+#: src/features/channel/components/UserMessage.tsx:64
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx:26
 msgid "(edited)"
 msgstr "(diedit)"
@@ -45,6 +50,21 @@ msgstr "(kamu)"
 #: src/features/discovery/discovery/DiscoveryGuildCard.tsx:184
 msgid "{0, plural, one {# member} other {# members}}"
 msgstr "{0, plural, one {# anggota} other {# anggota}}"
+
+#. placeholder {0}: Math.floor(secondsLeft / 86400)
+#: src/features/channel/components/Poll.tsx:191
+msgid "{0}d left"
+msgstr "{0}d left"
+
+#. placeholder {0}: Math.round(secondsLeft / 3600)
+#: src/features/channel/components/Poll.tsx:190
+msgid "{0}h left"
+msgstr "{0}h left"
+
+#. placeholder {0}: Math.round(secondsLeft / 60)
+#: src/features/channel/components/Poll.tsx:189
+msgid "{0}m left"
+msgstr "{0}m left"
 
 #. Screen reader announcement in the composer when two people are typing. {a} and {b} are their display names.
 #: src/features/typing/rolling/RollingTypingText.tsx:19
@@ -947,6 +967,11 @@ msgstr "{count, plural, one {# komunitas sementara tidak tersedia karena kerusak
 msgid "{count, plural, one {# connection} other {# connections}}"
 msgstr "{count, plural, one {# koneksi} other {# koneksi}}"
 
+#. Generic description for a duration option that is measured in days.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:73
+msgid "{count, plural, one {# day} other {# days}}"
+msgstr "{count, plural, one {# day} other {# days}}"
+
 #. Attachment summary in the forward modal message preview when the message has no images or videos. count is the number of attached files.
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx:40
 msgid "{count, plural, one {# file} other {# files}}"
@@ -957,6 +982,11 @@ msgstr "{count, plural, one {# file} other {# file}}"
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperOptionLabels.ts:40
 msgid "{count, plural, one {# gift} other {# gifts}}"
 msgstr "{count, plural, one {# hadiah} other {# hadiah}}"
+
+#. Generic description for a duration option that is measured in hours.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:77
+msgid "{count, plural, one {# hour} other {# hours}}"
+msgstr "{count, plural, one {# hour} other {# hours}}"
 
 #. Attachment summary in the forward modal message preview when the message has images and no videos. count is the number of images.
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx:30
@@ -1017,6 +1047,16 @@ msgstr "{count, plural, other {# saran tersedia}}"
 #: src/features/messaging/components/modals/ForwardMessagePreview.tsx:35
 msgid "{count, plural, one {# video} other {# videos}}"
 msgstr "{count, plural, one {# video} other {# video}}"
+
+#. Small text indicating the number of votes on the poll or on a specific answer of the poll.
+#: src/features/channel/components/Poll.tsx:76
+msgid "{count, plural, one {# vote} other {# votes}}"
+msgstr "{count, plural, one {# vote} other {# votes}}"
+
+#. Generic description for a duration option that is measured in weeks.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:69
+msgid "{count, plural, one {# week} other {# weeks}}"
+msgstr "{count, plural, one {# week} other {# weeks}}"
 
 #. Compact age label shown beside a list row (DM list, invite list). count is a number of days; the "d" is an abbreviation of "days". Keep it as short as possible; it sits in a narrow column.
 #: src/features/ui/utils/ShortRelativeTimeLabels.ts:26
@@ -1473,7 +1513,7 @@ msgid "{memberCount} {rawMemberCount, plural, one {member} other {members}}"
 msgstr "{memberCount} {rawMemberCount, plural, one {anggota} other {anggota}}"
 
 #. Generic aria-label for an unread-mentions badge. Preserve {mentionCount}.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:805
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:809
 msgid "{mentionCount, plural, one {# mention} other {# mentions}}"
 msgstr "{mentionCount, plural, other {# sebutan}}"
 
@@ -2109,6 +2149,10 @@ msgstr "<0/> memulai panggilan yang berlangsung selama {durationText}."
 msgid "<0/> started a call."
 msgstr "<0/> memulai panggilan."
 
+#: src/features/channel/components/PollClosedMessage.tsx:67
+msgid "<0/>'s poll <1/> has closed."
+msgstr "<0/>'s poll <1/> has closed."
+
 #: src/features/moderation/components/modals/TimeoutMemberSheet.tsx:130
 msgid "<0>{targetUserTag}</0> is currently timed out. You can update their timeout duration or remove the timeout."
 msgstr "<0>{targetUserTag}</0> saat ini sedang diberi batas waktu. Kamu dapat memperbarui durasi batas waktunya atau menghapus batas waktu tersebut."
@@ -2127,6 +2171,11 @@ msgstr "<0>Diteruskan dari</0>{sourceInfo}"
 #: src/features/user/components/modals/tabs/appearance_tab/InterfaceTab.tsx:63
 msgid "<0>Kenji</0>, <1>Amara</1> and <2>Mateo</2> are typing..."
 msgstr "<0>Kenji</0>, <1>Amara</1>, dan <2>Mateo</2> sedang mengetik..."
+
+#. Very short text informing the user that the poll ends in less than one minute.
+#: src/features/channel/components/Poll.tsx:64
+msgid "<1m left"
+msgstr "<1m left"
 
 #. Summary chip text in the mobile channel search sheet when exactly one channel is selected as a filter.
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:169
@@ -2490,6 +2539,11 @@ msgstr "Kode verifikasi baru telah dikirim."
 msgid "a poll"
 msgstr "polling"
 
+#. Placeholder text for each answer input.
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx:25
+msgid "A possible answer"
+msgstr "A possible answer"
+
 #. OAuth authorize page error shown when the bot scope requires a redirect_uri that is missing. Technical message; keep "redirect_uri" and "bot" untranslated.
 #: src/features/auth/components/pages/oauth_authorize_page/state/useAuthorizeFlow.ts:54
 msgid "A redirect_uri is required when the bot scope is not the only scope."
@@ -2807,7 +2861,7 @@ msgstr "Pelanggan bulanan aktif (pembatalan terjadwal)"
 #. Short label in the appearance tab. Keep it concise.
 #. Short label in the inline. Keep it concise.
 #. Status label indicating a user is currently active.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:749
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:753
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabInline.tsx:43
 #: src/features/user/components/modals/tabs/AppearanceTab.tsx:51
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:430
@@ -2990,6 +3044,11 @@ msgstr "Tambahkan pintasan khusus lainnya"
 msgid "Add another reaction"
 msgstr "Tambahkan reaksi lain"
 
+#. Label for the button that adds a new answer to the poll.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:40
+msgid "Add answer"
+msgstr "Add answer"
+
 #. Setup wizard body for Bluesky integration credentials.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:966
 msgid "Add Bluesky OAuth client metadata and a signing key."
@@ -3001,7 +3060,7 @@ msgid "Add bot to a destination"
 msgstr "Tambahkan bot ke tujuan"
 
 #. Generic action label that opens the create-channel flow from inside a category or sidebar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:515
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:519
 msgid "Add channel"
 msgstr "Tambah saluran"
 
@@ -3099,13 +3158,13 @@ msgstr "Tambahkan passkey"
 
 #. Generic action label that opens the reaction picker for a message.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:527
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:531
 #: src/features/input/state/input_keybind/shared.ts:17
 msgid "Add reaction"
 msgstr "Tambahkan reaksi"
 
 #. Permission name: allows adding reactions to messages.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:438
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:446
 msgid "Add reactions"
 msgstr "Tambahkan reaksi"
 
@@ -3287,7 +3346,7 @@ msgid "Added to favorite GIFs"
 msgstr "Ditambahkan ke GIF favorit"
 
 #. Toast confirming an item was added to the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:620
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:624
 msgid "Added to favorites"
 msgstr "Ditambahkan ke favorit"
 
@@ -3618,7 +3677,7 @@ msgstr "Izinkan siapa pun yang dapat melihat profil lengkapmu untuk melihat wakt
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:136
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:87
 msgid "Allow AV1 for screen sharing"
-msgstr "Izinkan AV1 untuk berbagi layar"
+msgstr "Allow AV1 for screen sharing"
 
 #. Toggle label that allows DMs from bots in this community.
 #: src/features/ui/action_menu/items/BulkSettingsMenuItems.tsx:81
@@ -3701,6 +3760,11 @@ msgstr "Izinkan sebutan untuk peran ini"
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:560
 msgid "Allow microphone"
 msgstr "Izinkan mikrofon"
+
+#. Label for the checkbox that allows users of the poll to select multiple answers.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:48
+msgid "Allow multiple answers"
+msgstr "Allow multiple answers"
 
 #. Settings search entry description. One-line summary of what the settings search entry controls.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:217
@@ -3806,7 +3870,7 @@ msgid "Already set to cancel"
 msgstr "Sudah diatur untuk dibatalkan"
 
 #. Toggle-switch label in the moderator delete-message confirmation dialog. When enabled, the message is reported (category: other) before being deleted. {productName} is the product name (e.g., Fluxer).
-#: src/features/messaging/commands/MessageCommands.tsx:83
+#: src/features/messaging/commands/MessageCommands.tsx:84
 msgid "Also report this message to the {productName} Safety Team"
 msgstr "Laporkan juga pesan ini ke Tim Keamanan {productName}"
 
@@ -4169,6 +4233,11 @@ msgstr "Pengumuman"
 msgid "Annual"
 msgstr "Tahunan"
 
+#. Label for the checkbox that makes the poll anonymous (only moderators/admins of the community can see who voted).
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:52
+msgid "Anonymous voting"
+msgstr "Anonymous voting"
+
 #: src/features/user/components/modals/tabs/component_gallery_tab/SelectionsTab.tsx:274
 msgid "Another checkbox"
 msgstr "Kotak centang lain"
@@ -4186,6 +4255,11 @@ msgstr "Kotak centang bulat lainnya"
 #: src/features/input/state/input_keybind/shared.ts:213
 msgid "Answer the incoming call"
 msgstr "Jawab panggilan masuk"
+
+#. Label for the answers section of the poll creation modal.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:36
+msgid "Answers"
+msgstr "Answers"
 
 #: src/features/user/components/modals/tabs/keybinds_tab/shared.ts:10
 msgid "Any key"
@@ -4286,7 +4360,7 @@ msgid "App zoom"
 msgstr "Zoom aplikasi"
 
 #. Setting label for the global UI zoom level.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:781
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:785
 msgid "App zoom level"
 msgstr "Tingkat zoom aplikasi"
 
@@ -5030,7 +5104,7 @@ msgstr "Otomatis"
 #. Option label for the screen-share codec select. codec is the automatically selected codec label.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:122
 msgid "Automatic ({codec})"
-msgstr "Otomatis ({codec})"
+msgstr "Automatic ({codec})"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Voice setting label for automatically evening out microphone volume.
@@ -5754,7 +5828,7 @@ msgstr "Batas bookmark tercapai"
 #. Generic action label that saves a message to the bookmarks list.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:531
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:535
 #: src/features/input/state/input_keybind/shared.ts:265
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:66
 msgid "Bookmark message"
@@ -6169,7 +6243,7 @@ msgid "Bypass mention suppression"
 msgstr "Lewati penekanan sebutan"
 
 #. Permission name: allows ignoring per-channel message rate limits.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:442
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:450
 msgid "Bypass slowmode"
 msgstr "Lewati mode lambat"
 
@@ -6233,7 +6307,7 @@ msgstr "Panggilan"
 #. Generic voice/video setting label for the active camera device.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the video tab. Keep it concise.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:725
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:729
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:98
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:162
 #: src/features/voice/utils/SettingsDeviceOptions.ts:24
@@ -6293,7 +6367,7 @@ msgstr "Kamera mati"
 
 #. Generic action label that enables the local camera.
 #. Notification sound setting label. Sound played when the user turns their camera on in a call.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:729
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:733
 #: src/features/notification/utils/SoundLabels.ts:52
 msgid "Camera on"
 msgstr "Kamera aktif"
@@ -6682,7 +6756,7 @@ msgid "Change emoji"
 msgstr "Ganti emoji"
 
 #. Generic action label that opens the friend-nickname edit flow.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:543
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:547
 msgid "Change friend nickname"
 msgstr "Ubah nama panggilan teman"
 
@@ -6726,7 +6800,7 @@ msgid "Change my group nickname"
 msgstr "Ubah nama panggilan grup saya"
 
 #. Action label for changing a user nickname in a community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:475
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:479
 msgid "Change nickname"
 msgstr "Ubah nama panggilan"
 
@@ -7082,7 +7156,7 @@ msgid "Channel actions"
 msgstr "Tindakan saluran"
 
 #. Toast confirming a channel was added to the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:797
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:801
 msgid "Channel added to favorites"
 msgstr "Saluran ditambahkan ke favorit"
 
@@ -7103,14 +7177,14 @@ msgid "Channel created"
 msgstr "Saluran dibuat"
 
 #. Title of the developer-mode channel debug modal (distinct from the action label that opens it).
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:551
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:555
 msgid "Channel debug"
 msgstr "Debug saluran"
 
 #. Audit log entry label. Past-tense action describing that a channel was deleted.
 #. Toast confirming a channel was successfully deleted.
 #: src/features/app/config/AuditLogConstants.ts:20
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:765
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:769
 msgid "Channel deleted"
 msgstr "Saluran dihapus"
 
@@ -7200,7 +7274,7 @@ msgid "Channel record"
 msgstr "Catatan saluran"
 
 #. Toast confirming a channel was removed from the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:793
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:797
 msgid "Channel removed from favorites"
 msgstr "Saluran dihapus dari favorit"
 
@@ -7855,7 +7929,7 @@ msgstr "Hapus lampiran tiruan"
 
 #. Accessible label for the button that clears the slash command being composed in the message box.
 #. Accessible label for the composer button that clears the slash command currently being composed.
-#: src/features/channel/components/LexicalChannelTextareaContent.tsx:135
+#: src/features/channel/components/LexicalChannelTextareaContent.tsx:140
 #: src/features/channel/components/SlashCommandParamBar.tsx:16
 msgid "Clear command"
 msgstr "Hapus perintah"
@@ -7869,7 +7943,7 @@ msgid "Clear custom status"
 msgstr "Hapus status kustom"
 
 #. Body of the confirmation alert shown when clearing every reaction on a message.
-#: src/features/channel/components/MessageActionUtils.tsx:71
+#: src/features/channel/components/MessageActionUtils.tsx:72
 msgid "Clear every reaction from this message?"
 msgstr "Hapus semua reaksi dari pesan ini?"
 
@@ -7907,7 +7981,7 @@ msgid "Clear quick CSS?"
 msgstr "Hapus CSS cepat?"
 
 #. Generic short button / icon label that clears the active search query.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:519
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:523
 #: src/features/theme_studio/sections/TokensSection.tsx:205
 msgid "Clear search"
 msgstr "Hapus pencarian"
@@ -8525,7 +8599,7 @@ msgid "Community debug"
 msgstr "Debug komunitas"
 
 #. Notification level option indicating the channel inherits the community default.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:769
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:773
 msgid "Community default"
 msgstr "Default komunitas"
 
@@ -8964,7 +9038,7 @@ msgstr "Sambungkan mikrofon dan coba lagi."
 
 #. Permission name: allows joining voice channels.
 #. Primary CTA in the mobile voice-channel lobby bottom sheet. Joins the voice channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:458
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:466
 #: src/features/voice/components/bottomsheets/VoiceLobbyBottomSheet.tsx:60
 msgid "Connect to voice"
 msgstr "Sambungkan ke suara"
@@ -9206,7 +9280,7 @@ msgstr "Menu konteks dapat dibuka dengan klik kiri (pada tombol) atau klik kanan
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:34
 #: src/features/auth/flow/HandoffApprovalFlow.tsx:109
 #: src/features/connection/components/modals/AddConnectionModal.tsx:384
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:717
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:721
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:397
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:182
 msgid "Continue"
@@ -9421,7 +9495,7 @@ msgid "Copy code"
 msgstr "Salin kode"
 
 #. Developer-mode action that copies a community snowflake/ID to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:733
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:737
 msgid "Copy community ID"
 msgstr "Salin ID komunitas"
 
@@ -9524,7 +9598,7 @@ msgid "Copy invite URL"
 msgstr "Salin URL undangan"
 
 #. Generic action label that copies a URL to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:745
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:749
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:330
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:145
 msgid "Copy link"
@@ -9551,13 +9625,13 @@ msgid "Copy media to clipboard"
 msgstr "Salin media ke papan klip"
 
 #. Message context menu item that copies the message text content to the clipboard.
-#: src/features/channel/components/MessageActionMenu.tsx:90
+#: src/features/channel/components/MessageActionMenu.tsx:91
 msgid "Copy message"
 msgstr "Salin pesan"
 
 #. Developer-mode action that copies a message snowflake/ID to the clipboard.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:737
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:741
 #: src/features/input/state/input_keybind/shared.ts:277
 msgid "Copy message ID"
 msgstr "Salin ID pesan"
@@ -9565,7 +9639,7 @@ msgstr "Salin ID pesan"
 #. Generic action label that copies a permalink to the selected message.
 #. IAR modal: quick-action card title.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:523
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:527
 #: src/features/input/state/input_keybind/shared.ts:273
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:389
 msgid "Copy message link"
@@ -9638,7 +9712,7 @@ msgid "Copy user ID"
 msgstr "Salin ID pengguna"
 
 #. Action that copies a user username (handle) to the clipboard.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:741
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:745
 msgid "Copy username"
 msgstr "Salin nama pengguna"
 
@@ -10060,7 +10134,7 @@ msgid "Couldn't ring this person"
 msgstr "Tidak dapat memanggil orang ini"
 
 #. Error message in the use textarea submit hook. Preserve {detail}; it is inserted by code.
-#: src/features/messaging/hooks/useTextareaSubmit.ts:48
+#: src/features/messaging/hooks/useTextareaSubmit.ts:49
 msgid "Couldn't run that command: {detail}"
 msgstr "Tidak dapat menjalankan perintah tersebut: {detail}"
 
@@ -10080,7 +10154,7 @@ msgid "Couldn't send invite"
 msgstr "Tidak dapat mengirim undangan"
 
 #. Toast shown when sending an invite (group DM or community) fails.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:709
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:713
 msgid "Couldn't send invite. Try again."
 msgstr "Tidak dapat mengirim undangan. Coba lagi."
 
@@ -10291,6 +10365,11 @@ msgstr "Buat komunitas baru atau gabung ke komunitas yang sudah ada."
 msgid "Create a new group with {userName}"
 msgstr "Buat grup baru dengan {userName}"
 
+#. Title of the poll creation modal.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:24
+msgid "Create a poll"
+msgstr "Create a poll"
+
 #. Generic authentication action label for starting or submitting account creation.
 #: src/features/auth/components/pages/RegisterPage.tsx:46
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:87
@@ -10336,7 +10415,7 @@ msgid "Create category"
 msgstr "Buat kategori"
 
 #. Action label that opens the create-channel flow.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:479
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:483
 msgid "Create channel"
 msgstr "Buat saluran"
 
@@ -10408,6 +10487,16 @@ msgstr "Buat tautan baru"
 #: src/features/input/state/input_keybind/shared.ts:121
 msgid "Create or join a community"
 msgstr "Buat atau gabung komunitas"
+
+#. Plus menu item that opens a form to create a poll.
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:31
+msgid "Create poll"
+msgstr "Create poll"
+
+#. Permission name: allows creating polls.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:426
+msgid "Create polls"
+msgstr "Create polls"
 
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/MobileRoleList.tsx:48
 #: src/features/guild/components/modals/guild_tabs/guild_roles_tab/RoleSidebar.tsx:215
@@ -10839,7 +10928,7 @@ msgid "Custom warning text"
 msgstr "Teks peringatan khusus"
 
 #. Last "Custom…" option in dropdown menus that opens a custom-value picker.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:773
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:777
 msgid "Custom…"
 msgstr "Kustom…"
 
@@ -10851,7 +10940,7 @@ msgid "Customer portal"
 msgstr "Portal pelanggan"
 
 #. Plus menu submenu label for visibility toggles on textarea adornment buttons.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:39
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:47
 msgid "Customize"
 msgstr "Sesuaikan"
 
@@ -11082,7 +11171,7 @@ msgid "Deafen device"
 msgstr "Bisukan suara masuk di perangkat"
 
 #. Permission name: allows moderators to deafen other voice participants.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:483
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:491
 msgid "Deafen members"
 msgstr "Bisukan suara masuk anggota"
 
@@ -11151,7 +11240,7 @@ msgstr "Debug anggota"
 #. Developer-mode item in the message action bar overflow menu. Opens the message debug modal.
 #. Developer-mode message context menu item that opens an internal debug view for the message.
 #: src/features/channel/components/MessageActionBar.tsx:81
-#: src/features/channel/components/MessageActionMenu.tsx:102
+#: src/features/channel/components/MessageActionMenu.tsx:107
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:66
 msgid "Debug message"
 msgstr "Pesan debug"
@@ -11159,7 +11248,7 @@ msgstr "Pesan debug"
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Developer-mode action that opens a user debug panel.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:167
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:547
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:551
 msgid "Debug user"
 msgstr "Debug pengguna"
 
@@ -11306,7 +11395,7 @@ msgstr "Delaware"
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:204
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:216
 #: src/features/emoji/components/stickers/StickerGridItem.tsx:35
-#: src/features/messaging/commands/MessageCommands.tsx:79
+#: src/features/messaging/commands/MessageCommands.tsx:80
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:109
 #: src/features/platform/utils/DesktopLocaleBridge.ts:76
 #: src/features/theme_studio/sections/LibrarySection.tsx:514
@@ -11377,6 +11466,11 @@ msgstr "Tindakan hapus."
 msgid "Delete all messages"
 msgstr "Hapus semua pesan"
 
+#. Tooltip text for the button that deletes an answer from the poll.
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx:33
+msgid "Delete answer"
+msgstr "Delete answer"
+
 #. Button or menu action label in the application detail. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:50
 #: src/features/user/components/modals/tabs/applications_tab/ApplicationDetail.tsx:721
@@ -11384,7 +11478,7 @@ msgid "Delete application"
 msgstr "Hapus aplikasi"
 
 #. Generic action label that removes an attachment from the upload tray / message.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:753
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:757
 msgid "Delete attachment"
 msgstr "Hapus lampiran"
 
@@ -11415,7 +11509,9 @@ msgid "Delete community"
 msgstr "Hapus komunitas"
 
 #. Confirmation modal title for deleting a custom emoji.
+#. Title of a context menu item to delete the emoji of a poll answer.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:196
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx:41
 msgid "Delete emoji"
 msgstr "Hapus emoji"
 
@@ -11555,7 +11651,7 @@ msgid "Delete this message"
 msgstr "Hapus pesan ini"
 
 #. Error message in the messaging commands. Keep the tone plain and specific.
-#: src/features/messaging/commands/MessageCommands.tsx:75
+#: src/features/messaging/commands/MessageCommands.tsx:76
 msgid "Delete this message? Can't be undone."
 msgstr "Hapus pesan ini? Tidak dapat dibatalkan."
 
@@ -11696,7 +11792,7 @@ msgstr "Jelaskan tentang komunitasmu"
 #. Generic form-field label for a free-form description.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:422
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:503
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:507
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:137
 msgid "Description"
 msgstr "Deskripsi"
@@ -12016,7 +12112,7 @@ msgstr "Input langsung"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:14
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:398
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:567
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:571
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:85
 msgid "Direct message"
 msgstr "Pesan langsung"
@@ -12304,7 +12400,7 @@ msgid "Disconnected"
 msgstr "Terputus"
 
 #. Label for a community that anyone can find through discovery. Used in the community badge and as the community subtitle in expression info cards. Keep it concise.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:684
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:688
 msgid "Discoverable community"
 msgstr "Komunitas yang bisa ditemukan"
 
@@ -12472,7 +12568,7 @@ msgstr "Pengaturan DM & permintaan pertemanan"
 #. Channel details bottom sheet label or action (channel type, settings, toast, confirmation, or notification option).
 #. Generic success-toast label confirming that a DM channel was closed.
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:87
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:563
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:567
 msgid "DM closed"
 msgstr "DM ditutup"
 
@@ -12602,7 +12698,7 @@ msgstr "Tidak memblokir. Kamu bisa membukanya lagi nanti."
 
 #. Generic form-field / table-column label for an internet domain.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:777
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:781
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:28
 msgid "Domain"
 msgstr "Domain"
@@ -12958,6 +13054,11 @@ msgstr "Duplikat saluran"
 msgid "Duplicate role"
 msgstr "Duplikat peran"
 
+#. Label for the duration input.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:44
+msgid "Duration"
+msgstr "Duration"
+
 #. Field label in the voice connection status popout. Shows how long the current voice session has been connected.
 #: src/features/voice/components/voice_connection_status/shared.ts:74
 msgid "Duration:"
@@ -13087,7 +13188,7 @@ msgstr "Edit pengaturan global seperti nama, deskripsi, dan ikon."
 
 #. Action label for editing a group DM (name, icon, members).
 #: src/features/channel/components/direct_message/GroupDMWelcomeSection.tsx:103
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:471
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:475
 msgid "Edit group"
 msgstr "Edit grup"
 
@@ -13118,7 +13219,7 @@ msgstr "Edit media"
 
 #. Generic action label that opens the message edit composer.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:713
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:717
 #: src/features/input/state/input_keybind/shared.ts:9
 msgid "Edit message"
 msgstr "Edit pesan"
@@ -13386,12 +13487,12 @@ msgid "Embeds"
 msgstr "Sematan"
 
 #. Toast confirmation after hiding link previews and embeds on a message.
-#: src/features/channel/components/MessageActionUtils.tsx:83
+#: src/features/channel/components/MessageActionUtils.tsx:84
 msgid "Embeds suppressed"
 msgstr "Sematan disembunyikan"
 
 #. Toast confirmation after re-enabling link previews and embeds on a message.
-#: src/features/channel/components/MessageActionUtils.tsx:79
+#: src/features/channel/components/MessageActionUtils.tsx:80
 msgid "Embeds unsuppressed"
 msgstr "Sematan ditampilkan lagi"
 
@@ -13675,7 +13776,7 @@ msgstr "Aktifkan notifikasi push seluler"
 
 #. Generic action label / toggle that turns on push or desktop notifications.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:785
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:789
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:127
 msgid "Enable notifications"
 msgstr "Aktifkan notifikasi"
@@ -13847,6 +13948,13 @@ msgstr "Akhiri masa tenggang"
 msgid "End grace period now?"
 msgstr "Akhiri masa tenggang sekarang?"
 
+#. Action label for ending a poll now.
+#. Message context menu item that ends the poll now. Only displayed on poll messages.
+#: src/features/channel/components/MessageActionMenu.tsx:95
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:471
+msgid "End poll now"
+msgstr "End poll now"
+
 #. Voice control menu action to stop sharing the screen.
 #: src/features/voice/components/VoiceControlBar.tsx:108
 msgid "End screen share"
@@ -13890,7 +13998,7 @@ msgid "English (US)"
 msgstr "Inggris (AS)"
 
 #. Generic radio / dropdown option label for an "enhanced" tier.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:789
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:793
 msgid "Enhanced"
 msgstr "Ditingkatkan"
 
@@ -14579,7 +14687,7 @@ msgid "Expression autocomplete"
 msgstr "Pelengkapan otomatis ekspresi"
 
 #. Aria label for the expression picker category nav.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:757
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:761
 msgid "Expression picker categories"
 msgstr "Kategori pemilih ekspresi"
 
@@ -14862,12 +14970,12 @@ msgid "Failed to send code. Try again."
 msgstr "Gagal mengirim kode. Coba lagi."
 
 #. Error message in the channel and chat user message.
-#: src/features/channel/components/UserMessage.tsx:70
+#: src/features/channel/components/UserMessage.tsx:72
 msgid "Failed to send message."
 msgstr "Gagal mengirim pesan."
 
 #. Error message in the channel and chat user message.
-#: src/features/channel/components/UserMessage.tsx:66
+#: src/features/channel/components/UserMessage.tsx:68
 msgid "Failed to send message. Hold for options."
 msgstr "Gagal mengirim pesan. Tahan untuk opsi."
 
@@ -15619,7 +15727,7 @@ msgstr "Formulir"
 #. Message context menu item that opens the forward-to-channel picker.
 #. Tooltip on the forward button in the inline message hover action bar.
 #: src/features/channel/components/MessageActionBar.tsx:85
-#: src/features/channel/components/MessageActionMenu.tsx:82
+#: src/features/channel/components/MessageActionMenu.tsx:83
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:54
 msgid "Forward"
 msgstr "Teruskan"
@@ -16066,7 +16174,7 @@ msgid "Germany"
 msgstr "Jerman"
 
 #. Generic upsell CTA button to start the Plutonium purchase flow. Preserve {premiumProductName}.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:801
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:805
 msgid "Get {premiumProductName}"
 msgstr "Dapatkan {premiumProductName}"
 
@@ -16379,6 +16487,11 @@ msgstr "Kembali dan masukkan email yang valid."
 msgid "Go back to {productName} to continue."
 msgstr "Kembali ke {productName} untuk melanjutkan."
 
+#. Label of the button to go back to vote when the user is looking at poll results.
+#: src/features/channel/components/Poll.tsx:35
+msgid "Go back to vote"
+msgstr "Go back to vote"
+
 #. Accessible label for the community row of an expression info card, which opens a community the viewer is already a member of. {communityName} is the community name.
 #: src/features/expressions/components/ExpressionInfoCard.tsx:89
 msgid "Go to {communityName}"
@@ -16689,7 +16802,7 @@ msgstr "Pengelompokan"
 #. Option label for the screen-share codec select while the HEVC opt-in is off and the option is disabled. H.265 is a codec name and should stay literal.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedVideoControls.tsx:131
 msgid "H.265 (requires opt-in)"
-msgstr "H.265 (perlu diaktifkan)"
+msgstr "H.265 (requires opt-in)"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the connection add connection modal.
@@ -16999,7 +17112,7 @@ msgid "Hide expiration footnotes"
 msgstr "Sembunyikan catatan kaki kedaluwarsa"
 
 #. Toggle / action label that collapses or hides the favorites section.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:701
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:705
 msgid "Hide favorites"
 msgstr "Sembunyikan favorit"
 
@@ -17363,7 +17476,7 @@ msgstr "Identitas"
 
 #. Generic presence-status label indicating the user is idle / AFK.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:644
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:648
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:46
 msgid "Idle"
 msgstr "Tidak aktif"
@@ -17823,7 +17936,7 @@ msgstr "Profil tidak pantas"
 
 #. Generic header / tab label for the unread / mentions / bookmarks inbox.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:491
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:495
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:21
 msgid "Inbox"
 msgstr "Kotak masuk"
@@ -17872,7 +17985,7 @@ msgstr "Sertakan ID komunitas."
 #. Generic label for an incoming voice or video call.
 #. Notification sound setting label. Ringtone for an incoming DM or group DM call.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:507
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:511
 #: src/features/notification/utils/SoundLabels.ts:48
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:172
 msgid "Incoming call"
@@ -18461,7 +18574,7 @@ msgstr "Pengundang:"
 #. Generic section / tab label for the invites list.
 #: src/features/channel/components/modals/channel_tabs/ChannelInvitesTab.tsx:191
 #: src/features/guild/components/modals/guild_tabs/GuildInvitesTab.tsx:53
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:689
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:693
 msgid "Invites"
 msgstr "Undangan"
 
@@ -18576,6 +18689,11 @@ msgstr "Mungkin emoji ini sudah dihapus. Namanya dikembalikan seperti semula."
 msgid "It may have left discovery or turned off new joins. Refresh the page and you won't see it again."
 msgstr "Mungkin komunitas ini sudah keluar dari Discovery atau tidak lagi menerima anggota baru. Segarkan halaman dan kamu tidak akan melihatnya lagi."
 
+#. Small explanatory text informing the user that the poll resulted in a draw.
+#: src/features/channel/components/PollClosedMessage.tsx:27
+msgid "It's a draw"
+msgstr "It's a draw"
+
 #. Label in the channel and chat active now sidebar.
 #: src/features/channel/components/active_now/ActiveNowSidebar.tsx:17
 msgid "It's quiet for now..."
@@ -18650,7 +18768,7 @@ msgid "Join call"
 msgstr "Gabung panggilan"
 
 #. Generic action label that accepts a community invite / joins a community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:680
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:684
 msgid "Join community"
 msgstr "Gabung komunitas"
 
@@ -18732,7 +18850,7 @@ msgid "Joined {productName}"
 msgstr "Bergabung dengan {productName}"
 
 #. Generic short action label that scrolls/navigates to a specific message.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:499
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:503
 #: src/features/messaging/components/popouts/RecentMentionsContent.tsx:204
 msgid "Jump"
 msgstr "Lompat"
@@ -18777,7 +18895,7 @@ msgid "Jump to message"
 msgstr "Lompat ke pesan"
 
 #. Label in the channel and chat user message. Preserve {displayName}, {formattedDate}; they are inserted by code.
-#: src/features/channel/components/UserMessage.tsx:57
+#: src/features/channel/components/UserMessage.tsx:59
 msgid "Jump to message from {displayName}, sent {formattedDate}"
 msgstr "Lompat ke pesan dari {displayName}, dikirim {formattedDate}"
 
@@ -18996,7 +19114,7 @@ msgid "Kick a member from this community."
 msgstr "Keluarkan anggota dari komunitas ini."
 
 #. Moderation action label that removes a member from a community without banning.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:676
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:680
 msgid "Kick member"
 msgstr "Keluarkan anggota"
 
@@ -19174,7 +19292,7 @@ msgid "Leave call"
 msgstr "Tinggalkan panggilan"
 
 #. Destructive action label that removes the current user from a community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:672
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:676
 msgid "Leave community"
 msgstr "Tinggalkan komunitas"
 
@@ -19890,7 +20008,7 @@ msgid "Manage blocked users"
 msgstr "Kelola pengguna yang diblokir"
 
 #. Channel-scoped permission name: allows editing this channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:495
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:503
 msgid "Manage channel"
 msgstr "Kelola saluran"
 
@@ -19938,7 +20056,7 @@ msgid "Manage payment methods"
 msgstr "Kelola metode pembayaran"
 
 #. Channel-scoped permission name: allows editing permission overwrites.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:499
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:507
 msgid "Manage permissions"
 msgstr "Kelola izin"
 
@@ -20026,7 +20144,7 @@ msgstr "Tandai sebagai spoiler"
 
 #. Generic action label that flips a channel back to unread.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:668
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:672
 #: src/features/input/state/input_keybind/shared.ts:33
 msgid "Mark as unread"
 msgstr "Tandai sebagai belum dibaca"
@@ -20261,6 +20379,11 @@ msgstr "Maks {maxSize}."
 msgid "Max number of uses"
 msgstr "Jumlah penggunaan maksimal"
 
+#. Short label in the max poll vote count reached modal.
+#: src/features/app/components/alerts/MaxPollVoteCountReachedModal.tsx:8
+msgid "Max poll vote count reached"
+msgstr "Max poll vote count reached"
+
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:57
 msgid "Max size: {BACKGROUND_MEDIA_MAX_SIZE_LABEL}."
 msgstr "Ukuran maks: {BACKGROUND_MEDIA_MAX_SIZE_LABEL}."
@@ -20297,7 +20420,7 @@ msgstr "Perlindungan maksimal untuk ruang yang ramah keluarga"
 #. Settings search entry description for the AV1 and H.265 screen-share opt-in toggles.
 #: src/features/user/components/settings_utils/search_index/VoiceVideoIndex.ts:96
 msgid "May cause compatibility issues for viewers. We’re working on improving this."
-msgstr "Dapat menyebabkan masalah kompatibilitas bagi penonton. Kami sedang berupaya memperbaikinya."
+msgstr "May cause compatibility issues for viewers. We’re working on improving this."
 
 #. Short label in the max favorite memes modal.
 #: src/features/app/components/alerts/MaxFavoriteMemesModal.tsx:36
@@ -20518,7 +20641,7 @@ msgstr "anggota"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/dialogs/shared/AddOverridePopout.tsx:190
 #: src/features/channel/components/bottomsheets/ChannelDetailsBottomSheet.tsx:591
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:495
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:499
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:346
 msgid "Members"
 msgstr "Anggota"
@@ -20621,7 +20744,7 @@ msgstr "Sebut peran ini?"
 #. Generic section / tab label for the mentions inbox.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:136
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:648
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:652
 #: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:166
 msgid "Mentions"
 msgstr "Sebutan"
@@ -20754,7 +20877,7 @@ msgstr "Pesan berisi media terlampir"
 #. Title of the developer-mode message debug modal opened from the message context menu.
 #. Title of the developer-mode message debug modal.
 #: src/features/channel/components/MessageActionBar.tsx:73
-#: src/features/channel/components/MessageActionMenu.tsx:70
+#: src/features/channel/components/MessageActionMenu.tsx:71
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:62
 msgid "Message debug"
 msgstr "Debug pesan"
@@ -21460,7 +21583,7 @@ msgid "Move item up"
 msgstr "Pindahkan item ke atas"
 
 #. Permission name: allows moving members between voice channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:487
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:495
 msgid "Move members"
 msgstr "Pindahkan anggota"
 
@@ -21622,7 +21745,7 @@ msgid "Mute calls"
 msgstr "Bisukan panggilan"
 
 #. Action label that mutes notifications for a channel category.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:580
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:584
 msgid "Mute category"
 msgstr "Bisukan kategori"
 
@@ -21637,7 +21760,7 @@ msgid "Mute communities"
 msgstr "Bisukan komunitas"
 
 #. Generic action label that mutes notifications for an entire community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:555
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:559
 msgid "Mute community"
 msgstr "Bisukan komunitas"
 
@@ -21669,12 +21792,12 @@ msgid "Mute entrance sound"
 msgstr "Bisukan suara saat masuk"
 
 #. Action label that mutes notifications for the favourites pseudo-guild.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:693
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:697
 msgid "Mute favorites"
 msgstr "Bisukan favorit"
 
 #. Permission name: allows moderators to mute other voice participants.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:479
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:487
 msgid "Mute members"
 msgstr "Bisukan anggota"
 
@@ -22089,7 +22212,7 @@ msgid "Nevada"
 msgstr "Nevada"
 
 #. Generic short option label for "never" in time / frequency dropdowns.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:652
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:656
 msgid "Never"
 msgstr "Tidak pernah"
 
@@ -22281,7 +22404,7 @@ msgstr "Terbaru dulu"
 #. Primary button in the required-action modal. Moves to the next carousel step.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:81
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:154
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:721
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:725
 msgid "Next"
 msgstr "Berikutnya"
 
@@ -22933,6 +23056,11 @@ msgstr "Belum ada yang bereaksi dengan ini."
 msgid "Nobody matches that search."
 msgstr "Tidak ada yang cocok dengan pencarian itu."
 
+#. Small explanatory text informing the user that nobody voted on the poll.
+#: src/features/channel/components/PollClosedMessage.tsx:23
+msgid "Nobody voted!"
+msgstr "Nobody voted!"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:114
 msgid "Noise"
@@ -23159,7 +23287,7 @@ msgstr "Volume notifikasi"
 #. Generic section header / tab label for the notifications area.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/app/components/layout/MobileBottomNav.tsx:136
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:705
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:709
 #: src/features/notification/components/pages/NotificationsPage.tsx:61
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:18
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:30
@@ -23255,7 +23383,7 @@ msgid "Off"
 msgstr "Nonaktif"
 
 #. Generic presence-status label indicating the user is offline.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:640
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:644
 msgid "Offline"
 msgstr "Offline"
 
@@ -23462,7 +23590,7 @@ msgstr "Hanya yang dipilih"
 msgid "Only Visionary members can join this community. Your access may have changed since this screen was opened."
 msgstr "Hanya anggota Visionary yang bisa bergabung dengan komunitas ini. Aksesmu mungkin sudah berubah sejak layar ini dibuka."
 
-#: src/features/channel/components/UserMessage.tsx:441
+#: src/features/channel/components/UserMessage.tsx:454
 msgid "Only you can see this message. <0>Dismiss</0>"
 msgstr "Hanya kamu yang bisa melihat pesan ini. <0>Tutup</0>"
 
@@ -24868,7 +24996,7 @@ msgstr "Gambar dalam gambar"
 
 #. Confirm button label on the pin message alert.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/MessageActionUtils.tsx:63
+#: src/features/channel/components/MessageActionUtils.tsx:64
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:70
 msgid "Pin"
 msgstr "Sematkan"
@@ -24886,8 +25014,8 @@ msgstr "Sematkan DM grup"
 #. Generic action label that pins a message to the channel pins.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Title of the confirmation alert shown when pinning a message.
-#: src/features/channel/components/MessageActionUtils.tsx:55
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:539
+#: src/features/channel/components/MessageActionUtils.tsx:56
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:543
 #: src/features/input/state/input_keybind/shared.ts:13
 msgid "Pin message"
 msgstr "Sematkan pesan"
@@ -24913,7 +25041,7 @@ msgid "Pin or unpin any message."
 msgstr "Sematkan atau batalkan sematan pesan apa pun."
 
 #. Body of the confirmation alert shown when pinning a message.
-#: src/features/channel/components/MessageActionUtils.tsx:59
+#: src/features/channel/components/MessageActionUtils.tsx:60
 msgid "Pin this message to the channel for everyone to see."
 msgstr "Sematkan pesan ini ke saluran agar semua orang bisa melihatnya."
 
@@ -24947,7 +25075,7 @@ msgid "pinned"
 msgstr "disematkan"
 
 #. Generic short toast / status label confirming a DM was pinned.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:656
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:660
 msgid "Pinned DM"
 msgstr "DM tersemat"
 
@@ -25113,6 +25241,16 @@ msgstr "Polandia"
 #: src/features/user/utils/LocaleUtils.ts:104
 msgid "Polish"
 msgstr "Polandia"
+
+#. Small text informing the user that the poll is closed.
+#: src/features/channel/components/Poll.tsx:68
+msgid "Poll closed"
+msgstr "Poll closed"
+
+#. Small text informing the user that the poll message has not been sent yet.
+#: src/features/channel/components/Poll.tsx:72
+msgid "Poll not sent"
+msgstr "Poll not sent"
 
 #. Button label in a popped-out voice window titlebar that restores the content into the main app window.
 #. Button label on the popped-out overlay that closes the popout window and restores the view in the app.
@@ -25519,7 +25657,7 @@ msgid "Prioritize speakers"
 msgstr "Prioritaskan pembicara"
 
 #. Permission name: allows a voice participant to be heard over others.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:475
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:483
 msgid "Priority speaker"
 msgstr "Pembicara prioritas"
 
@@ -25543,7 +25681,7 @@ msgid "Privacy policy"
 msgstr "Kebijakan privasi"
 
 #. Generic section heading / button label for the privacy settings area.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:664
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:668
 msgid "Privacy settings"
 msgstr "Pengaturan privasi"
 
@@ -25978,6 +26116,11 @@ msgstr "Push-to-talk hanya berfungsi saat tab browser sedang aktif."
 msgid "Push-to-talk won't unmute your microphone while you're deafened. Undeafen yourself to talk."
 msgstr "Push-to-talk tidak akan mengaktifkan mikrofonmu saat suara masuk dibisukan. Aktifkan lagi suara masukmu agar bisa bicara."
 
+#. Label for the question input.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:28
+msgid "Question"
+msgstr "Question"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Short label in the theme studio. Keep it concise.
 #: src/features/theme_studio/ThemeStudio.tsx:52
@@ -26097,7 +26240,7 @@ msgstr "Bereaksi dengan {emojiShortcode}"
 
 #. Generic short section / tab / aria label for emoji reactions.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:660
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:664
 #: src/features/messaging/components/modals/MessageReactionsModal.tsx:144
 #: src/features/user/components/settings_utils/section_registry/ChatSettingsSections.ts:13
 msgid "Reactions"
@@ -26126,7 +26269,7 @@ msgid "Read message aloud"
 msgstr "Baca pesan dengan lantang"
 
 #. Permission name: allows seeing earlier messages in a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:426
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:434
 msgid "Read message history"
 msgstr "Baca riwayat pesan"
 
@@ -26639,7 +26782,7 @@ msgid "Remove {userName} from your friends?"
 msgstr "Hapus {userName} dari daftar temanmu?"
 
 #. Confirm button label on the remove-all-reactions alert. Destructive.
-#: src/features/channel/components/MessageActionUtils.tsx:75
+#: src/features/channel/components/MessageActionUtils.tsx:76
 msgid "Remove all"
 msgstr "Hapus semua"
 
@@ -26651,8 +26794,8 @@ msgstr "Hapus semua reaksi {emojiNameWithColons} dari pesan ini?"
 #. Destructive message context menu item for moderators that clears every reaction on a message.
 #. Message action that removes every reaction from the selected message.
 #. Title of the confirmation alert shown when clearing every reaction on a message.
-#: src/features/channel/components/MessageActionMenu.tsx:78
-#: src/features/channel/components/MessageActionUtils.tsx:67
+#: src/features/channel/components/MessageActionMenu.tsx:79
+#: src/features/channel/components/MessageActionUtils.tsx:68
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:70
 msgid "Remove all reactions"
 msgstr "Hapus semua reaksi"
@@ -26683,7 +26826,7 @@ msgid "Remove banner"
 msgstr "Hapus banner"
 
 #. Action label that removes a saved bookmark.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:483
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:487
 msgid "Remove bookmark"
 msgstr "Hapus bookmark"
 
@@ -26837,6 +26980,11 @@ msgstr "Hapus batas waktu"
 msgid "Remove translator"
 msgstr "Hapus penerjemah"
 
+#. Label of the button to remove the user's vote.
+#: src/features/channel/components/Poll.tsx:39
+msgid "Remove vote"
+msgstr "Remove vote"
+
 #. Button or menu action label in the premium badge settings. Keep it concise. Preserve {premiumProductName}; it is inserted by code. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/my_profile_tab/PremiumBadgeSettings.tsx:31
 msgid "Remove when you first bought {premiumProductName} from your badge"
@@ -26863,7 +27011,7 @@ msgid "Removed from favorite GIFs"
 msgstr "Dihapus dari GIF favorit"
 
 #. Toast confirming an item was removed from the favorites list.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:616
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:620
 msgid "Removed from favorites"
 msgstr "Dihapus dari favorit"
 
@@ -27114,6 +27262,11 @@ msgstr "Ganti latar belakang"
 msgid "Replace background?"
 msgstr "Ganti latar belakang?"
 
+#. Title of a context menu item to replace the emoji of a poll answer.
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx:37
+msgid "Replace emoji"
+msgstr "Replace emoji"
+
 #. Button or menu action label in the background image gallery modal. Keep it concise.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:164
 msgid "Replace with a GIF"
@@ -27126,7 +27279,7 @@ msgstr "Balasan"
 
 #. Generic action label that opens the reply composer for a message.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:612
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:616
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:71
 msgid "Reply"
 msgstr "Balas"
@@ -27216,7 +27369,7 @@ msgstr "Laporkan masalah"
 
 #. Generic action label that opens the report flow targeting a specific message.
 #. Modal title for the IAR flow when reporting a specific message.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:535
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:539
 #: src/features/moderation/components/report_modal/IARModalContext.ts:22
 msgid "Report message"
 msgstr "Laporkan pesan"
@@ -27887,7 +28040,7 @@ msgstr "Gambar terbalik"
 
 #. Generic action label that runs a reverse-image search on the selected media.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:608
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:612
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:267
 msgid "Reverse image search"
 msgstr "Pencarian gambar terbalik"
@@ -28423,7 +28576,7 @@ msgstr "Cakupan"
 
 #. Section heading for screen-reader related accessibility settings.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:604
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:608
 #: src/features/user/components/settings_utils/section_registry/AccessibilitySections.ts:51
 msgid "Screen reader"
 msgstr "Pembaca layar"
@@ -29104,6 +29257,11 @@ msgstr "Lihat daftar anggota untuk saluran ini."
 msgid "See this channel. Denying it for {everyoneMention} makes the channel private."
 msgstr "Lihat saluran ini. Menolaknya untuk {everyoneMention} akan membuat saluran menjadi pribadi."
 
+#. Permission name: allows looking at votes on anonymous polls.
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:430
+msgid "See votes on anonymous polls"
+msgstr "See votes on anonymous polls"
+
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:121
 msgid "Seek preview"
@@ -29197,6 +29355,11 @@ msgstr "Pilih akun untuk melanjutkan, atau tambahkan akun lain."
 msgid "Select an option from the radio group"
 msgstr "Pilih salah satu opsi dari grup radio"
 
+#. Tooltip text for the emoji selection button on an answer.
+#: src/features/messaging/components/modals/poll_modal/PollAnswerInput.tsx:29
+msgid "Select emoji"
+msgstr "Select emoji"
+
 #. Button or menu action label in the add friends to group modal. Keep it concise.
 #. Button or menu action label in the create dm bottom sheet. Keep it concise.
 #. Button or menu action label in the create dm modal. Keep it concise.
@@ -29215,6 +29378,16 @@ msgstr "Pilih GIF {title}"
 #: src/features/user/components/modals/tabs/LanguageTab.tsx:78
 msgid "Select interface language"
 msgstr "Pilih bahasa antarmuka"
+
+#. Small explanatory text instructing the user to select one answer on the poll.
+#: src/features/channel/components/Poll.tsx:27
+msgid "Select one answer"
+msgstr "Select one answer"
+
+#. Small explanatory text instructing the user to select one or multiple answers on the poll.
+#: src/features/channel/components/Poll.tsx:31
+msgid "Select one or multiple answers"
+msgstr "Select one or multiple answers"
 
 #. Button or menu action label in the o auth builder section. Keep it concise. Keep the tone plain and specific.
 #: src/features/user/components/modals/tabs/applications_tab/application_detail/OAuthBuilderSection.tsx:39
@@ -29266,6 +29439,11 @@ msgstr "Teks yang bisa dipilih"
 #: src/features/channel/components/direct_message/DMListItem.tsx:67
 msgid "selected"
 msgstr "dipilih"
+
+#. Label showing the answer with the most votes on the poll.
+#: src/features/channel/components/Poll.tsx:84
+msgid "Selected answer"
+msgstr "Selected answer"
 
 #. Accessible label for the draggable end handle in an audio waveform trimmer.
 #: src/features/voice/components/AudioWaveform.tsx:15
@@ -29426,10 +29604,8 @@ msgid "Send GIF {title}"
 msgstr "Kirim GIF {title}"
 
 #. Action label for sending a gift to a friend.
-#. Button or menu action label in the channel and chat mobile textarea plus bottom sheet. Keep it concise.
 #. Plus menu item that opens the gift purchase flow.
-#: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx:21
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:31
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:39
 #: src/features/expressions/components/modals/GiftSendToFriendModal.tsx:30
 msgid "Send gift"
 msgstr "Kirim hadiah"
@@ -29523,7 +29699,7 @@ msgstr "Kirim kode verifikasi"
 #. Accessible label and tooltip for the send button after recording a voice message.
 #. Keyboard shortcut action label that opens the desktop voice message composer.
 #. Plus menu item that opens the desktop voice message composer to record and send a voice clip.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:35
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:43
 #: src/features/channel/components/VoiceMessageRecorder.tsx:69
 #: src/features/input/state/input_keybind/shared.ts:285
 msgid "Send voice message"
@@ -29596,7 +29772,7 @@ msgid "Sensitive media"
 msgstr "Media sensitif"
 
 #. Generic short status label confirming an item (invite, gift, theme link) was sent.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:809
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:813
 msgid "Sent"
 msgstr "Terkirim"
 
@@ -29858,7 +30034,7 @@ msgid "Set up later"
 msgstr "Siapkan nanti"
 
 #. Permission name: allows changing the voice service region.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:491
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:499
 msgid "Set voice region"
 msgstr "Atur wilayah suara"
 
@@ -30286,7 +30462,7 @@ msgstr "Tampilkan sematan dan pratinjau tautan situs web"
 
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:55
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:63
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:124
 msgid "Show emoji button"
 msgstr "Tampilkan tombol emoji"
@@ -30325,7 +30501,7 @@ msgstr "Tampilkan indikator GIF"
 
 #. Plus menu submenu toggle that shows the GIFs button next to the textarea.
 #. Short label for an advanced message input preference.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:43
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:51
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:104
 msgid "Show GIFs button"
 msgstr "Tampilkan tombol GIF"
@@ -30379,7 +30555,7 @@ msgstr "Tunjukkan caranya"
 
 #. Plus menu submenu toggle that shows the saved media (memes) button next to the textarea.
 #. Short label for an advanced message input preference.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:47
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:55
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:108
 msgid "Show media button"
 msgstr "Tampilkan tombol media"
@@ -30513,6 +30689,11 @@ msgstr "Tampilkan pengaturan zona waktu profil"
 msgid "Show quick reactions"
 msgstr "Tampilkan reaksi cepat"
 
+#. Label of the button to show poll answer results.
+#: src/features/channel/components/Poll.tsx:47
+msgid "Show results"
+msgstr "Show results"
+
 #. Description for the YouTube enrichment service toggle in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:290
 msgid "Show rich previews for YouTube links."
@@ -30527,7 +30708,7 @@ msgstr "Tampilkan media tersimpan di pelengkapan otomatis ekspresi"
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:102
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:59
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:67
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:128
 msgid "Show send button"
 msgstr "Tampilkan tombol kirim"
@@ -30539,7 +30720,7 @@ msgstr "Tampilkan konten spoiler saat diklik"
 
 #. Short label for an advanced message input preference.
 #. Short label in the channel and chat textarea plus menu. Keep it concise.
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:51
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:59
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:120
 msgid "Show stickers button"
 msgstr "Tampilkan tombol stiker"
@@ -30673,7 +30854,7 @@ msgstr "Masuk dengan penyedia single sign-on organisasimu."
 #: src/features/auth/utils/AccountSwitcherModalUtils.tsx:195
 #: src/features/auth/utils/AccountSwitcherModalUtils.tsx:256
 #: src/features/auth/utils/AccountSwitcherModalUtils.tsx:313
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:600
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:604
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:47
 msgid "Sign out"
 msgstr "Keluar"
@@ -31381,7 +31562,7 @@ msgstr "Volume suara"
 
 #. Section heading / tab label for the notification-sounds area.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:813
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:817
 #: src/features/user/components/settings_utils/section_registry/NotificationsSections.ts:135
 msgid "Sounds"
 msgstr "Suara"
@@ -31494,7 +31675,7 @@ msgid "Spanish (Spain)"
 msgstr "Spanyol (Spanyol)"
 
 #. Permission name: allows speaking in voice channels.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:462
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:470
 msgctxt "voice-permission"
 msgid "Speak"
 msgstr "Bicara"
@@ -31506,7 +31687,7 @@ msgstr "Ucapkan semua pesan dengan lantang"
 
 #. Message action that has the screen reader read the selected message aloud.
 #. Message context menu item that reads the message aloud via text-to-speech.
-#: src/features/channel/components/MessageActionMenu.tsx:98
+#: src/features/channel/components/MessageActionMenu.tsx:103
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:78
 msgid "Speak message"
 msgstr "Ucapkan pesan"
@@ -31795,7 +31976,7 @@ msgid "Start uploading attachments as soon as they are added to the message inpu
 msgstr "Mulai unggah lampiran segera setelah ditambahkan ke kotak pesan"
 
 #. Action label that initiates a video call (DM or group DM).
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:596
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:600
 msgid "Start video call"
 msgstr "Mulai panggilan video"
 
@@ -32078,7 +32259,7 @@ msgstr "Berhenti membagikan aktivitas suara dengan semua teman?"
 #. Message action that stops the screen reader from speaking the selected message.
 #. Message context menu item that stops the text-to-speech playback in progress.
 #. Native macOS Edit > Speech submenu item that stops reading text aloud. Imperative verb.
-#: src/features/channel/components/MessageActionMenu.tsx:94
+#: src/features/channel/components/MessageActionMenu.tsx:99
 #: src/features/platform/utils/DesktopLocaleBridge.ts:92
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:74
 msgid "Stop speaking"
@@ -32203,7 +32384,7 @@ msgid "Stream settings"
 msgstr "Pengaturan streaming"
 
 #. Permission name: allows video streaming or screen sharing in voice.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:467
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:475
 msgid "Stream video"
 msgstr "Streaming video"
 
@@ -32301,6 +32482,11 @@ msgstr "Gaya"
 msgid "Submenu"
 msgstr "Submenu"
 
+#. Label for the poll submit button.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:57
+msgid "Submit"
+msgstr "Submit"
+
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:631
 msgid "Submit application"
 msgstr "Kirim pengajuan"
@@ -32386,7 +32572,7 @@ msgid "Suppress all role mentions"
 msgstr "Sembunyikan semua sebutan peran"
 
 #. Action label on a message that hides link previews / embeds.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:592
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:596
 msgid "Suppress embeds"
 msgstr "Sembunyikan sematan"
 
@@ -33389,6 +33575,11 @@ msgstr "redirect_uri yang diberikan tidak terdaftar untuk aplikasi ini."
 msgid "The provided redirect_uri must use HTTP or HTTPS."
 msgstr "redirect_uri yang diberikan harus menggunakan HTTP atau HTTPS."
 
+#. Placeholder text for the question input.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:32
+msgid "The question you want to ask"
+msgstr "The question you want to ask"
+
 #. Activity log detail line under a deleted role, listing the permissions the role gave its members before it was deleted. The role is the subject. {permissions} is a list of permission names that the app joins with commas and the word for "and" in your language. When the list is long it ends with a count of the permissions not named, such as "3 more permissions". Use the same word for role as the rest of the app.
 #: src/features/guild/utils/guild_tabs/audit_log/AuditLogRoleMessages.ts:170
 msgid "The role granted {permissions}"
@@ -34186,6 +34377,16 @@ msgstr "Pemilih ini hanya tersedia di aplikasi desktop."
 msgid "This plan isn't available. Contact support."
 msgstr "Paket ini tidak tersedia. Hubungi dukungan."
 
+#. Small disclaimer explaining to the user that this poll is anonymous, but they can see votes because they have the permission for it.
+#: src/features/channel/components/Poll.tsx:55
+msgid "This poll is anonymous, but you can see votes."
+msgstr "This poll is anonymous, but you can see votes."
+
+#. Small disclaimer explaining to the user that this poll is anonymous.
+#: src/features/channel/components/Poll.tsx:51
+msgid "This poll is anonymous."
+msgstr "This poll is anonymous."
+
 #: src/features/app/components/dialogs/components/plutonium/SelfServeRefundSection.tsx:191
 msgid "This purchase is not eligible for a refund."
 msgstr "Pembelian ini tidak memenuhi syarat untuk pengembalian dana."
@@ -34230,7 +34431,7 @@ msgstr "Permintaan ini telah kedaluwarsa. Kembali dan coba lagi."
 
 #: src/features/auth/components/pages/ResetPasswordPage.tsx:132
 msgid "This reset link has expired. Reset links last 1 hour. Please request a new one."
-msgstr "Tautan setel ulang ini telah kedaluwarsa. Tautan setel ulang berlaku selama 1 jam. Silakan minta yang baru."
+msgstr "This reset link has expired. Reset links last 1 hour. Please request a new one."
 
 #. Label in the accessibility tab. Preserve {linkPreviewExampleUrl}; it is inserted by code.
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:37
@@ -34344,13 +34545,18 @@ msgid "This voice channel is no longer available."
 msgstr "Saluran suara ini tidak lagi tersedia."
 
 #. Description text in the channel and chat user message. Preserve {silentMention}; it is inserted by code.
-#: src/features/channel/components/UserMessage.tsx:74
+#: src/features/channel/components/UserMessage.tsx:76
 msgid "This was a {silentMention} message."
 msgstr "Ini adalah pesan {silentMention}."
 
 #: src/features/voice/components/dialogs/DisableScreenSharePiPConfirmModal.tsx:52
 msgid "This will close the current popout and stop screen share picture-in-picture popouts from opening automatically. You can turn them back on in {audioVideoSettingsPath}."
 msgstr "Ini akan menutup pop-out saat ini dan menghentikan pop-out gambar-dalam-gambar berbagi layar agar tidak terbuka secara otomatis. Kamu bisa mengaktifkannya kembali di {audioVideoSettingsPath}."
+
+#. Description of the action of ending a poll in a confirmation modal.
+#: src/features/messaging/commands/PollCommands.tsx:24
+msgid "This will close the poll now and show the results."
+msgstr "This will close the poll now and show the results."
 
 #: src/features/messaging/commands/FavoritesCommands.tsx:30
 msgid "This will hide all favorites-related UI elements including buttons and menu items. Your existing favorites will be preserved and can be re-enabled anytime from <0>{favoritesSettingsPath}</0>."
@@ -34496,7 +34702,7 @@ msgid "Time out {tag}"
 msgstr "Beri batas waktu {tag}"
 
 #. Permission name: allows temporarily restricting members.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:446
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:454
 msgid "Time out members"
 msgstr "Beri batas waktu anggota"
 
@@ -34830,7 +35036,7 @@ msgstr "Kepemilikan ditransfer ke {0}"
 
 #. Generic action label that translates a message body.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:588
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:592
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:255
 msgid "Translate"
 msgstr "Terjemahkan"
@@ -35116,7 +35322,7 @@ msgid "Turn off audio sharing for this source or try again in a moment."
 msgstr "Matikan berbagi audio untuk sumber ini atau coba lagi sebentar lagi."
 
 #. Voice / call action label that disables the local camera.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:511
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:515
 msgid "Turn off camera"
 msgstr "Matikan kamera"
 
@@ -35499,7 +35705,7 @@ msgid "Unblock user"
 msgstr "Buka blokir pengguna"
 
 #. Generic label for items that do not belong to a category.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:636
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:640
 msgid "Uncategorized"
 msgstr "Tanpa kategori"
 
@@ -35654,7 +35860,7 @@ msgstr "Cadangan universal. Kualitas terendah, tapi berfungsi di mana saja."
 #. Generic fallback label when a more specific value is unavailable.
 #. Short label in the invite list item. Keep it concise.
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:584
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:761
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:765
 #: src/features/invite/components/InviteListItem.tsx:36
 #: src/features/moderation/components/modals/BanDetailsModal.tsx:114
 #: src/features/updater/commands/UpdaterModalCommands.tsx:144
@@ -35730,7 +35936,7 @@ msgid "Unknown message type"
 msgstr "Jenis pesan tidak diketahui"
 
 #. Fallback label for a permission bit the client does not recognize.
-#: src/features/permissions/utils/PermissionUtils.ts:421
+#: src/features/permissions/utils/PermissionUtils.ts:423
 msgid "Unknown permission"
 msgstr "Izin tidak dikenal"
 
@@ -35880,7 +36086,7 @@ msgid "Unmute all devices"
 msgstr "Aktifkan mikrofon di semua perangkat"
 
 #. Action label that unmutes notifications for a channel category.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:584
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:588
 msgid "Unmute category"
 msgstr "Bunyikan kategori"
 
@@ -35895,7 +36101,7 @@ msgid "Unmute communities"
 msgstr "Bunyikan komunitas"
 
 #. Generic action label that unmutes notifications for an entire community.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:559
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:563
 msgid "Unmute community"
 msgstr "Bunyikan komunitas"
 
@@ -35915,7 +36121,7 @@ msgid "Unmute DMs"
 msgstr "Bunyikan DM"
 
 #. Action label that unmutes notifications for the favourites pseudo-guild.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:697
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:701
 msgid "Unmute favorites"
 msgstr "Bunyikan favorit"
 
@@ -35968,7 +36174,7 @@ msgid "Unordered"
 msgstr "Tanpa nomor"
 
 #. Confirm button label on the unpin message alert.
-#: src/features/channel/components/MessageActionUtils.tsx:51
+#: src/features/channel/components/MessageActionUtils.tsx:52
 msgid "Unpin"
 msgstr "Lepas sematan"
 
@@ -35993,12 +36199,12 @@ msgid "Unpin message"
 msgstr "Lepas sematan pesan"
 
 #. Body of the confirmation alert shown when unpinning a message.
-#: src/features/channel/components/MessageActionUtils.tsx:47
+#: src/features/channel/components/MessageActionUtils.tsx:48
 msgid "Unpin this message?"
 msgstr "Lepas sematan pesan ini?"
 
 #. Generic short toast / status label confirming a DM was unpinned.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:632
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:636
 msgid "Unpinned DM"
 msgstr "Sematan DM dilepas"
 
@@ -36141,7 +36347,7 @@ msgstr "File stiker tidak didukung"
 
 #. Message action that re-enables embeds on the selected message.
 #. Message context menu item that re-shows previously hidden link previews and embeds on the message.
-#: src/features/channel/components/MessageActionMenu.tsx:86
+#: src/features/channel/components/MessageActionMenu.tsx:87
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:58
 msgid "Unsuppress embeds"
 msgstr "Tampilkan sematan"
@@ -36343,9 +36549,7 @@ msgstr "Unggah langsung ke {displayName}"
 msgid "Upload emoji"
 msgstr "Unggah emoji"
 
-#. Button or menu action label in the channel and chat mobile textarea plus bottom sheet. Keep it concise.
 #. Plus menu item that opens the system file picker to attach a file.
-#: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx:13
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:23
 msgid "Upload file"
 msgstr "Unggah file"
@@ -36402,10 +36606,8 @@ msgstr "Unggah stiker"
 msgid "Upload to {displayName}"
 msgstr "Unggah ke {displayName}"
 
-#. Button or menu action label in the channel and chat mobile textarea plus bottom sheet. Keep it concise.
 #. Plus menu item that uploads the current textarea content as a .txt file when it exceeds the size limit.
-#: src/features/channel/components/textarea/MobileTextareaPlusBottomSheet.tsx:17
-#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:27
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:35
 msgid "Upload your message as a file"
 msgstr "Unggah pesanmu sebagai file"
 
@@ -36652,12 +36854,12 @@ msgid "Use emoji from other communities."
 msgstr "Gunakan emoji dari komunitas lain."
 
 #. Permission name: allows using emoji from other communities.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:430
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:438
 msgid "Use external emoji"
 msgstr "Gunakan emoji eksternal"
 
 #. Permission name: allows using stickers from other communities.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:434
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:442
 msgid "Use external stickers"
 msgstr "Gunakan stiker eksternal"
 
@@ -36831,7 +37033,7 @@ msgid "Use video and camera previews."
 msgstr "Gunakan pratinjau video dan kamera."
 
 #. Permission name: allows voice activation instead of requiring push-to-talk.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:471
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:479
 msgid "Use voice activity"
 msgstr "Gunakan aktivitas suara"
 
@@ -36910,7 +37112,7 @@ msgid "User controls"
 msgstr "Kontrol pengguna"
 
 #. Title of the developer-mode user debug modal.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:576
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:580
 msgid "User debug"
 msgstr "Debug pengguna"
 
@@ -36988,7 +37190,7 @@ msgstr "Volume pengguna"
 #. Label for SMTP username input.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:996
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:572
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:576
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:218
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx:56
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:53
@@ -37612,12 +37814,12 @@ msgid "View call controls"
 msgstr "Lihat kontrol panggilan"
 
 #. Permission name: allows seeing a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:450
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:458
 msgid "View channel"
 msgstr "Lihat saluran"
 
 #. Permission name: allows seeing the member list for a channel.
-#: src/features/permissions/utils/PermissionLabelDescriptors.ts:454
+#: src/features/permissions/utils/PermissionLabelDescriptors.ts:462
 msgid "View channel members"
 msgstr "Lihat anggota saluran"
 
@@ -37705,6 +37907,11 @@ msgstr "Lihat izin"
 msgid "View plans"
 msgstr "Lihat paket"
 
+#. Title of the button that redirects to the poll message.
+#: src/features/channel/components/PollClosedMessage.tsx:31
+msgid "View poll"
+msgstr "View poll"
+
 #. Action label that opens the user profile modal or sheet for the selected user.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:358
 msgid "View profile"
@@ -37718,7 +37925,7 @@ msgid "View profile for {displayName}"
 msgstr "Lihat profil {displayName}"
 
 #. Message context menu item that opens the reactions list sheet for the message.
-#: src/features/channel/components/MessageActionMenu.tsx:74
+#: src/features/channel/components/MessageActionMenu.tsx:75
 msgid "View reactions"
 msgstr "Lihat reaksi"
 
@@ -38123,6 +38330,11 @@ msgctxt "keyboard-key-name"
 msgid "Volume up"
 msgstr "Naikkan volume"
 
+#. Label of the vote button.
+#: src/features/channel/components/Poll.tsx:43
+msgid "Vote"
+msgstr "Vote"
+
 #. Description text in the message delete too quick modal. Keep the tone plain and specific.
 #: src/features/messaging/components/alerts/MessageDeleteTooQuickModal.tsx:12
 msgid "Wait a moment before deleting more messages."
@@ -38194,7 +38406,7 @@ msgid "Watch"
 msgstr "Tonton"
 
 #. Voice action label that starts watching a remote screen share.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:487
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:491
 msgid "Watch stream"
 msgstr "Tonton siaran"
 
@@ -38879,6 +39091,11 @@ msgstr "Jendela yang terpotong di bagian atas atau bawah layar, dan DevTools yan
 msgid "Windows default"
 msgstr "Windows (default)"
 
+#. Label showing or describing the answer with the most votes on the poll.
+#: src/features/channel/components/Poll.tsx:80
+msgid "Winning answer"
+msgstr "Winning answer"
+
 #. Switch description in the leave-community confirmation modal. Warns that deleting the caller's community messages is destructive.
 #. Switch description in the leave-group confirmation modal. Warns that deleting the caller's group messages is destructive.
 #: src/features/guild/hooks/useLeaveGroup.tsx:44
@@ -39191,6 +39408,11 @@ msgstr "Kamu tidak bisa berteman dengan diri sendiri"
 msgid "You can't change your nickname here"
 msgstr "Kamu tidak dapat mengubah nama panggilan di sini"
 
+#. Tooltip on the disabled create poll item when the user lacks Create Poll permission. Calm, factual tone.
+#: src/features/channel/components/textarea/TextareaPlusMenu.tsx:27
+msgid "You can't create polls in this channel."
+msgstr "You can't create polls in this channel."
+
 #. Title of the error modal shown when the user lacks permission to delete a channel or category.
 #: src/features/app/components/alerts/ChannelDeleteFailedModal.tsx:18
 msgid "You can't delete this"
@@ -39413,6 +39635,11 @@ msgstr "Kamu tidak memiliki izin untuk bergabung ke saluran suara ini"
 msgid "You don't have permission to rename this emoji. The name was reverted to what it was before."
 msgstr "Kamu tidak memiliki izin untuk mengganti nama emoji ini. Nama dikembalikan ke nama sebelumnya."
 
+#. Error message for when no question has been entered in the poll.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:61
+msgid "You forgot to enter a question."
+msgstr "You forgot to enter a question."
+
 #. Body of the error modal shown when the user is banned from a discovery community.
 #: src/features/discovery/commands/DiscoveryJoinCommands.tsx:42
 msgid "You have been banned from this community."
@@ -39583,6 +39810,11 @@ msgstr "Kamu perlu memverifikasi alamat emailmu sebelum bisa mengirim permintaan
 msgid "You need to verify your email address before you can start a direct message."
 msgstr "Kamu perlu memverifikasi alamat emailmu sebelum bisa memulai pesan langsung."
 
+#. Small disclaimer explaining to the user that email verification is necessary to vote on a poll.
+#: src/features/channel/components/Poll.tsx:60
+msgid "You need to verify your email address to vote on a poll."
+msgstr "You need to verify your email address to vote on a poll."
+
 #. Body of the error modal shown when the account email is unverified and the user tries to purchase Plutonium. Product name is interpolated.
 #: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:109
 msgid "You need to verify your email before you can purchase {premiumProductFullName}."
@@ -39596,6 +39828,11 @@ msgstr "Kamu perlu memverifikasi email untuk mengirim pesan di komunitas ini."
 #: src/features/app/components/alerts/DmActionErrorModal.tsx:60
 msgid "You or someone you're adding already has the maximum number of group DMs open. Leave one and try again."
 msgstr "Kamu atau orang yang kamu tambahkan sudah mencapai jumlah maksimum DM grup yang terbuka. Keluar dari salah satunya lalu coba lagi."
+
+#. Error message for when no answer has been entered in the poll.
+#: src/features/messaging/components/modals/poll_modal/CreatePollModal.tsx:65
+msgid "You should enter at least one answer."
+msgstr "You should enter at least one answer."
 
 #. Confirmation line in the required-action modal explaining that communities the user owns are kept rather than left. ownedNames is a comma-separated list inserted by code.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:327
@@ -39875,6 +40112,11 @@ msgstr "Kamu sudah mencapai jumlah emoji maksimum. Hapus beberapa emoji yang ada
 msgid "You've reached the maximum number of stickers. Delete some existing stickers to make room."
 msgstr "Kamu sudah mencapai jumlah stiker maksimum. Hapus beberapa stiker yang ada untuk memberi ruang."
 
+#. Modal body shown when the maximum vote count per answer has been reached on a poll. Keep plain.
+#: src/features/app/components/alerts/MaxPollVoteCountReachedModal.tsx:12
+msgid "You've reached the maximum number of votes per answer."
+msgstr "You've reached the maximum number of votes per answer."
+
 #. Description text in the background image gallery modal. Preserve {maxBackgroundImages}; it is inserted by code. Keep the tone plain and specific.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:109
 msgid "You've reached the maximum of {maxBackgroundImages} backgrounds. Remove one to add a new background."
@@ -40104,22 +40346,22 @@ msgid "Your last purchase is outside the refund window. Contact support for bill
 msgstr "Pembelian terakhirmu berada di luar jangka waktu pengembalian dana. Hubungi dukungan untuk masalah penagihan."
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:72
+#: src/features/messaging/state/MessageQueue.tsx:73
 msgid "Your message could not be delivered because it was flagged by our safety systems. If you believe this is a mistake, please contact support."
 msgstr "Pesanmu tidak dapat dikirim karena ditandai oleh sistem keamanan kami. Jika menurutmu ini keliru, silakan hubungi dukungan."
 
 #. Label in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:59
+#: src/features/messaging/state/MessageQueue.tsx:60
 msgid "Your message could not be delivered. This is usually because you don't share a community with the recipient or the recipient is only accepting direct messages from friends. You may also need to adjust your own direct message privacy settings in {directMessagePrivacySettingsPath}."
 msgstr "Pesanmu tidak dapat dikirim. Biasanya ini karena kamu tidak berada di komunitas yang sama dengan penerima atau penerima hanya menerima pesan langsung dari teman. Kamu mungkin juga perlu menyesuaikan pengaturan privasi pesan langsungmu di {directMessagePrivacySettingsPath}."
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:64
+#: src/features/messaging/state/MessageQueue.tsx:65
 msgid "Your message could not be delivered. You need to claim your account to send direct messages."
 msgstr "Pesanmu tidak dapat dikirim. Kamu perlu mengklaim akunmu untuk mengirim pesan langsung."
 
 #. Description text in the message queue state.
-#: src/features/messaging/state/MessageQueue.tsx:68
+#: src/features/messaging/state/MessageQueue.tsx:69
 msgid "Your message could not be delivered. You need to claim your account to send messages."
 msgstr "Pesanmu tidak dapat dikirim. Kamu perlu mengklaim akunmu untuk mengirim pesan."
 
@@ -40338,7 +40580,7 @@ msgstr "Zoom"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Native View menu item that increases UI zoom level.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:628
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:632
 #: src/features/input/state/input_keybind/shared.ts:253
 #: src/features/platform/utils/DesktopLocaleBridge.ts:112
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:82
@@ -40349,7 +40591,7 @@ msgstr "Perbesar"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Native View menu item that decreases UI zoom level.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/i18n/utils/CommonMessageDescriptors.ts:624
+#: src/features/i18n/utils/CommonMessageDescriptors.ts:628
 #: src/features/input/state/input_keybind/shared.ts:257
 #: src/features/platform/utils/DesktopLocaleBridge.ts:116
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:86

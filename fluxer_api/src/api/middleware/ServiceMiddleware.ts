@@ -759,6 +759,7 @@ class RequestServices implements RequestScopedServices {
 	get messageRequestService(): MessageRequestService {
 		this.cachedMessageRequestService ??= new MessageRequestService(
 			this.channelService,
+			this.channelRepository,
 			createMessageResponseDataService(),
 		);
 		return this.cachedMessageRequestService;

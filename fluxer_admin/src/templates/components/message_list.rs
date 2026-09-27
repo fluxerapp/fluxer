@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use std::collections::BTreeMap;
+
 use maud::{Markup, PreEscaped, html};
 
 use super::icons::paperclip_icon;
@@ -9,7 +11,7 @@ use super::user_display::format_user_display;
 use crate::config::AdminConfig;
 use crate::routes::auth::json_string;
 
-use super::message_data::{Attachment, Message};
+use super::message_data::{Attachment, Message, Poll};
 
 fn is_image(att: &Attachment) -> bool {
     att.content_type
@@ -140,6 +142,48 @@ fn render_other_attachments(msg: &Message, has_content_or_images: bool) -> Marku
     }
 }
 
+fn render_poll(poll: &Poll) -> Markup {
+    let mut answers = BTreeMap::new();
+    if let Some(poll_answers) = &poll.answers {
+        for answer in poll_answers {
+            let text = (answer.poll_media.as_ref())
+                .and_then(|pm| pm.text.as_deref())
+                .unwrap_or("");
+            answers.insert(answer.answer_id.unwrap_or_default(), (text, 0_i32));
+        }
+    }
+    if let Some(poll_results) = &poll.results
+        && let Some(answer_counts) = &poll_results.answer_counts
+    {
+        for answer_count in answer_counts {
+            let key = answer_count.id.unwrap_or_default();
+            if let Some((_text, count)) = answers.get_mut(&key) {
+                *count = answer_count.count.unwrap_or_default();
+            }
+        }
+    }
+
+    html! {
+        div class="flex flex-col items-stretch gap-2 max-w-xl rounded-xl border border-neutral-200 bg-neutral-50 p-4" {
+            p { (poll.question.as_ref().map(|question| question.text.as_deref().unwrap_or_default()).unwrap_or_default()) }
+            @for (answer_text, answer_count) in answers.values() {
+                div class="flex flex-row items-center gap-2 rounded-lg border border-neutral-300 bg-neutral-100 p-2" {
+                    p class="text-sm w-full" { (answer_text) }
+                    p class="text-xs" { (answer_count) " votes" }
+                }
+            }
+            p class="text-xs" {
+                "Expires at: "
+                (poll.expiry.as_deref().unwrap_or(""))
+                " — "
+                @if poll.allow_multiselect.unwrap_or_default() { "multiple answers" }
+                @else { "single answer" }
+            }
+
+        }
+    }
+}
+
 fn message_row(
     base_path: &str,
     avatar_url: &str,
@@ -174,6 +218,9 @@ fn message_row(
                     @if !msg.content.is_empty() {
                         div class="whitespace-pre-wrap break-words text-neutral-800 \
                                    text-sm leading-snug" { (msg.content) }
+                    }
+                    @if let Some(poll) = &msg.poll {
+                        (render_poll(poll))
                     }
                     @if !msg.attachments.is_empty() {
                         (render_image_attachments(msg, include_delete))
@@ -233,6 +280,9 @@ fn message_row(
                 @if !msg.content.is_empty() {
                     div class="mt-0.5 whitespace-pre-wrap break-words text-neutral-800 \
                                text-sm leading-snug" { (msg.content) }
+                }
+                @if let Some(poll) = &msg.poll {
+                    (render_poll(poll))
                 }
                 @if !msg.attachments.is_empty() {
                     (render_image_attachments(msg, include_delete))

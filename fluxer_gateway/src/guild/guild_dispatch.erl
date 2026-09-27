@@ -85,6 +85,10 @@ extract_session_id_if_needed(message_reaction_add, EventData) ->
     guild_dispatch_decorate:extract_and_remove_session_id(EventData);
 extract_session_id_if_needed(message_reaction_remove, EventData) ->
     guild_dispatch_decorate:extract_and_remove_session_id(EventData);
+extract_session_id_if_needed(message_poll_vote_add, EventData) ->
+    guild_dispatch_decorate:extract_and_remove_session_id(EventData);
+extract_session_id_if_needed(message_poll_vote_remove, EventData) ->
+    guild_dispatch_decorate:extract_and_remove_session_id(EventData);
 extract_session_id_if_needed(_, EventData) ->
     {undefined, EventData}.
 
@@ -126,6 +130,18 @@ extract_session_id_if_needed_other_test() ->
 extract_session_id_if_needed_reaction_remove_test() ->
     Data = #{<<"session_id">> => <<"sid">>, <<"emoji">> => #{}},
     {SessionId, CleanData} = extract_session_id_if_needed(message_reaction_remove, Data),
+    ?assertEqual(<<"sid">>, SessionId),
+    ?assertNot(maps:is_key(<<"session_id">>, CleanData)).
+
+extract_session_id_if_needed_poll_vote_test() ->
+    Data = #{<<"session_id">> => <<"sid">>, <<"answer_id">> => 1},
+    {SessionId, CleanData} = extract_session_id_if_needed(message_poll_vote_add, Data),
+    ?assertEqual(<<"sid">>, SessionId),
+    ?assertNot(maps:is_key(<<"session_id">>, CleanData)).
+
+extract_session_id_if_needed_poll_remove_test() ->
+    Data = #{<<"session_id">> => <<"sid">>, <<"answer_id">> => 1},
+    {SessionId, CleanData} = extract_session_id_if_needed(message_poll_vote_remove, Data),
     ?assertEqual(<<"sid">>, SessionId),
     ?assertNot(maps:is_key(<<"session_id">>, CleanData)).
 

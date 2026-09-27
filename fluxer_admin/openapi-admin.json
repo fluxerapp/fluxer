@@ -10408,6 +10408,10 @@
 							"max_guilds",
 							"max_attachment_file_size",
 							"max_message_length",
+							"max_poll_question_length",
+							"max_poll_answers",
+							"max_poll_answer_length",
+							"max_poll_votes_per_answer",
 							"max_private_channels_per_user",
 							"max_reactions_per_message",
 							"max_relationships",
@@ -13501,6 +13505,11 @@
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/MessageEmbedResponse"}
 					},
+					"poll": {
+						"description": "The poll attached to the message",
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/MessagePollResponse"}]
+					},
 					"attachments": {
 						"description": "The files attached to the message",
 						"nullable": true,
@@ -13645,6 +13654,11 @@
 								"nullable": true,
 								"type": "array",
 								"items": {"$ref": "#/components/schemas/MessageEmbedResponse"}
+							},
+							"poll": {
+								"description": "The poll attached to the message",
+								"nullable": true,
+								"allOf": [{"$ref": "#/components/schemas/MessagePollResponse"}]
 							},
 							"attachments": {
 								"description": "The files attached to the message",
@@ -13825,6 +13839,7 @@
 							"additionalProperties": false
 						}
 					},
+					"poll": {"allOf": [{"$ref": "#/components/schemas/MessagePollResponse"}]},
 					"user_prior_ncmec_report_ids": {
 						"maxItems": 100,
 						"type": "array",
@@ -13848,6 +13863,135 @@
 					"timestamp",
 					"attachments"
 				],
+				"additionalProperties": false
+			},
+			"MessagePollResponse": {
+				"type": "object",
+				"properties": {
+					"question": {
+						"description": "The question of the poll",
+						"nullable": true,
+						"type": "object",
+						"properties": {
+							"emoji": {
+								"description": "The emoji of the poll media",
+								"nullable": true,
+								"type": "object",
+								"properties": {
+									"id": {"description": "The ID of the emoji", "nullable": true, "type": "string"},
+									"name": {"description": "The name of the emoji", "nullable": true, "type": "string"}
+								},
+								"additionalProperties": false
+							},
+							"text": {"description": "The text of the poll media", "nullable": true, "type": "string"}
+						},
+						"additionalProperties": false
+					},
+					"answers": {
+						"description": "The possible answers of the poll",
+						"nullable": true,
+						"type": "array",
+						"items": {
+							"type": "object",
+							"properties": {
+								"answer_id": {
+									"description": "The ID of the poll answer (starts at 1)",
+									"nullable": true,
+									"type": "integer",
+									"minimum": -2147483648,
+									"maximum": 2147483647
+								},
+								"poll_media": {
+									"description": "The poll media of the answer (contains the text and emoji)",
+									"nullable": true,
+									"type": "object",
+									"properties": {
+										"emoji": {
+											"description": "The emoji of the poll media",
+											"nullable": true,
+											"type": "object",
+											"properties": {
+												"id": {"description": "The ID of the emoji", "nullable": true, "type": "string"},
+												"name": {"description": "The name of the emoji", "nullable": true, "type": "string"}
+											},
+											"additionalProperties": false
+										},
+										"text": {"description": "The text of the poll media", "nullable": true, "type": "string"}
+									},
+									"additionalProperties": false
+								}
+							},
+							"additionalProperties": false
+						}
+					},
+					"expiry": {
+						"description": "Expiration date of the poll as an ISO date",
+						"nullable": true,
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+					},
+					"anonymous_voting": {
+						"description": "Whether the votes are anonymous on this poll",
+						"nullable": true,
+						"type": "boolean"
+					},
+					"allow_multiselect": {
+						"description": "Whether the poll allows multiple answers",
+						"nullable": true,
+						"type": "boolean"
+					},
+					"layout_type": {
+						"description": "The layout type of the poll",
+						"nullable": true,
+						"type": "integer",
+						"minimum": -2147483648,
+						"maximum": 2147483647
+					},
+					"results": {
+						"description": "The results of the poll",
+						"nullable": true,
+						"type": "object",
+						"properties": {
+							"answer_counts": {
+								"description": "The answer counts of the poll results",
+								"nullable": true,
+								"type": "array",
+								"items": {
+									"type": "object",
+									"properties": {
+										"id": {
+											"description": "The ID of the poll answer",
+											"nullable": true,
+											"type": "integer",
+											"minimum": -2147483648,
+											"maximum": 2147483647
+										},
+										"count": {
+											"description": "The number of votes on this answer",
+											"nullable": true,
+											"type": "integer",
+											"minimum": -2147483648,
+											"maximum": 2147483647
+										},
+										"me_voted": {
+											"description": "Whether the requesting user voted on this answer",
+											"nullable": true,
+											"type": "boolean"
+										}
+									},
+									"additionalProperties": false
+								}
+							},
+							"is_finalized": {
+								"description": "Whether the poll results are finalized",
+								"nullable": true,
+								"type": "boolean"
+							}
+						},
+						"additionalProperties": false
+					}
+				},
 				"additionalProperties": false
 			},
 			"NonNegativeSafeIntegerType": {"type": "integer", "minimum": 0, "maximum": 9007199254740991},
@@ -14191,10 +14335,11 @@
 			"MessageType": {
 				"description": "The type of message",
 				"type": "integer",
-				"enum": [0, 1, 2, 3, 4, 5, 6, 7, 19],
+				"enum": [0, 46, 1, 2, 3, 4, 5, 6, 7, 19],
 				"format": "int32",
 				"x-enumNames": [
 					"DEFAULT",
+					"POLL_RESULT",
 					"RECIPIENT_ADD",
 					"RECIPIENT_REMOVE",
 					"CALL",
@@ -14206,6 +14351,7 @@
 				],
 				"x-enumDescriptions": [
 					"A regular message",
+					"A system message indicating a poll has closed",
 					"A system message indicating a user was added to the conversation",
 					"A system message indicating a user was removed from the conversation",
 					"A message representing a call",
@@ -14696,6 +14842,7 @@
 					},
 					{"name": "MODERATE_MEMBERS", "value": "1099511627776", "description": "Allows timing out users"},
 					{"name": "CREATE_EXPRESSIONS", "value": "8796093022208", "description": "Allows creating guild expressions"},
+					{"name": "SEND_POLLS", "value": "562949953421312", "description": "Allows sending polls"},
 					{"name": "PIN_MESSAGES", "value": "2251799813685248", "description": "Allows pinning messages"},
 					{"name": "BYPASS_SLOWMODE", "value": "4503599627370496", "description": "Allows bypassing slowmode"},
 					{"name": "UPDATE_RTC_REGION", "value": "9007199254740992", "description": "Allows updating the voice region"},
@@ -14703,6 +14850,11 @@
 						"name": "VIEW_CHANNEL_MEMBERS",
 						"value": "18014398509481984",
 						"description": "Allows viewing the member list in a channel"
+					},
+					{
+						"name": "SEE_VOTES_ON_ANONYMOUS_POLLS",
+						"value": "36028797018963968",
+						"description": "Allows seeing votes on anonymous polls"
 					}
 				]
 			},

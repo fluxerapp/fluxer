@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import assert from 'node:assert/strict';
+import type {MessagePoll} from '@app/api/database/types/PollTypes';
 import {AttachmentDecayService} from '@app/api/attachment/AttachmentDecayService';
 import type {ChannelID, GuildID, MessageID, RoleID, StickerID, UserID, WebhookID} from '@app/api/BrandedTypes';
 import {createAttachmentID, createGuildID} from '@app/api/BrandedTypes';
@@ -93,6 +94,7 @@ interface CreateMessageParams {
 	attachmentUploadUserId?: UserID;
 	processedAttachments?: Array<MessageAttachment>;
 	stickerIds?: Array<StickerID>;
+	poll?: MessagePoll;
 	messageReference?: MessageReference;
 	messageSnapshots?: Array<MessageSnapshot>;
 	guildId: GuildID | null;
@@ -229,6 +231,7 @@ export class MessagePersistenceService {
 			mention_channels: mentionData.mentionChannelIds.length > 0 ? new Set(mentionData.mentionChannelIds) : null,
 			attachments: messageAttachments.length > 0 ? messageAttachments : null,
 			embeds: allowEmbeds ? initialEmbeds : null,
+			poll: params.poll || null,
 			sticker_items: processedStickers.length > 0 ? processedStickers : null,
 			message_reference: params.messageReference || null,
 			message_snapshots:

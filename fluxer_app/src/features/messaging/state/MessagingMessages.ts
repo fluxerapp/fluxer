@@ -16,6 +16,7 @@ import Dimension from '@app/features/ui/state/Dimension';
 import Users from '@app/features/user/state/Users';
 import {FAVORITES_GUILD_ID, ME} from '@fluxer/constants/src/AppConstants';
 import {MessageStates} from '@fluxer/constants/src/ChannelConstants';
+import { ReactionType } from '@fluxer/constants/src/EmojiConstants';
 import {type JumpType, JumpTypes} from '@fluxer/constants/src/JumpConstants';
 import {MAX_MESSAGES_PER_CHANNEL} from '@fluxer/constants/src/LimitConstants';
 import type {ChannelId} from '@fluxer/schema/src/branded/WireIds';
@@ -717,6 +718,7 @@ class Messages {
 		emoji: ReactionEmoji;
 		optimistic?: boolean;
 		skipReactionStore?: boolean;
+		reactionType?: ReactionType;
 	}): boolean {
 		const existing = ChannelMessages.get(action.channelId);
 		if (!existing) return false;
@@ -724,12 +726,15 @@ class Messages {
 		const isCurrentUser = currentUser?.id === action.userId;
 		if (action.optimistic && !isCurrentUser) return false;
 		const updated = existing.update(action.messageId, (message) => {
-			if (action.skipReactionStore) {
-				return message.withUpdates({});
+			const add = action.type === 'MESSAGE_REACTION_ADD';
+			if (action.reactionType === ReactionType.PollVote) {
+				return message.withPollVote(Number(action.emoji.id), add, isCurrentUser);
+			} else {
+				if (action.skipReactionStore) {
+					return message.withUpdates({});
+				}
+				return message.withReaction(action.emoji, add, isCurrentUser);
 			}
-			return action.type === 'MESSAGE_REACTION_ADD'
-				? message.withReaction(action.emoji, true, isCurrentUser)
-				: message.withReaction(action.emoji, false, isCurrentUser);
 		});
 		this.commitMessages(updated);
 		this.notifyChange();
@@ -749,6 +754,27 @@ class Messages {
 		const existing = ChannelMessages.get(action.channelId);
 		if (!existing) return false;
 		const updated = existing.update(action.messageId, (message) => message.withoutReactionEmoji(action.emoji));
+		this.commitMessages(updated);
+		this.notifyChange();
+		return true;
+	}
+
+	handlePollVote(action: {
+		type: 'MESSAGE_POLE_VOTE_ADD' | 'MESSAGE_POLE_VOTE_REMOVE';
+		channelId: string;
+		messageId: string;
+		userId: string;
+		answerId: number;
+		optimistic?: boolean;
+	}): boolean {
+		const existing = ChannelMessages.get(action.channelId);
+		if (!existing) return false;
+		const currentUser = Users.getCurrentUser();
+		const isCurrentUser = currentUser?.id === action.userId;
+		if (action.optimistic && !isCurrentUser) return false;
+		const updated = existing.update(action.messageId, (message) => {
+			return message.withPollVote(action.answerId, action.type === 'MESSAGE_POLE_VOTE_ADD', isCurrentUser);
+		});
 		this.commitMessages(updated);
 		this.notifyChange();
 		return true;

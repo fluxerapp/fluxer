@@ -143,6 +143,7 @@ named_key_kind(<<"device_id">>) -> scalar;
 named_key_kind(<<"region_id">>) -> scalar;
 named_key_kind(<<"server_id">>) -> scalar;
 named_key_kind(<<"target_id">>) -> scalar;
+named_key_kind(<<"answer_id">>) -> scalar;
 named_key_kind(<<"mention_roles">>) -> scalar_list;
 named_key_kind(<<"participants">>) -> scalar_list;
 named_key_kind(<<"ringing">>) -> scalar_list;

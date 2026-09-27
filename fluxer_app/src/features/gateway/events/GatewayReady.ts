@@ -51,6 +51,7 @@ import RtcRegions from '@app/features/voice/state/RtcRegions';
 import type {RtcRegionResponse, Channel as WireChannel} from '@fluxer/schema/src/domains/channel/ChannelSchemas';
 import type {UserPrivate, User as WireUser} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {runInAction} from 'mobx';
+import PollVotes from '@app/features/messaging/state/PollVotes';
 
 const logger = new Logger('READY Handler');
 
@@ -165,6 +166,7 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext)
 		logger.warn('READY missing auth_session_id_hash; continuing without AuthSession init');
 	}
 	MessageReactions.handleGatewayReady();
+	PollVotes.handleGatewayReady();
 	Sticker.handleGatewayReady(guilds);
 	Emoji.handleGatewayReady({guilds});
 	Permission.handleGatewayReady();

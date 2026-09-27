@@ -11,6 +11,7 @@ import type {
 	UserID,
 	WebhookID,
 } from '@app/api/BrandedTypes';
+import type {MessagePollDb} from '@app/api/database/types/PollTypes';
 
 type Nullish<T> = T | null;
 
@@ -114,6 +115,7 @@ export interface MessageSnapshot {
 	mention_channels: Nullish<Set<ChannelID>>;
 	attachments: Nullish<Array<MessageAttachment>>;
 	embeds: Nullish<Array<MessageEmbed>>;
+	poll: Nullish<MessagePollDb>;
 	sticker_items: Nullish<Array<MessageStickerItem>>;
 	type: number;
 	flags: number;
@@ -143,6 +145,7 @@ export interface MessageRow {
 	mention_channels: Nullish<Set<ChannelID>>;
 	attachments: Nullish<Array<MessageAttachment>>;
 	embeds: Nullish<Array<MessageEmbed>>;
+	poll: Nullish<MessagePollDb>;
 	sticker_items: Nullish<Array<MessageStickerItem>>;
 	message_reference: Nullish<MessageReference>;
 	message_snapshots: Nullish<Array<MessageSnapshot>>;
@@ -170,6 +173,7 @@ export const MESSAGE_COLUMNS = [
 	'mention_channels',
 	'attachments',
 	'embeds',
+	'poll',
 	'sticker_items',
 	'message_reference',
 	'message_snapshots',

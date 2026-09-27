@@ -8,8 +8,9 @@ import {
 	fetchManyInChunks,
 	fetchOne,
 } from '@app/api/database/CassandraQueryExecution';
-import {AttachmentDecayByExpiry, AttachmentDecayById} from '@app/api/Tables';
+import {AttachmentDecayByExpiry, AttachmentDecayById, type AttachmentDecayByExpiryRow} from '@app/api/Tables';
 import type {AttachmentDecayRow} from '@app/api/types/AttachmentDecayTypes';
+import {getExpiryBucket} from '@app/api/utils/AttachmentDecay';
 
 interface AttachmentDecayExpiryRow {
 	expiry_bucket: number;
@@ -74,7 +75,11 @@ export class AttachmentDecayRepository {
 		return map;
 	}
 
-	async fetchExpiredByBucket(bucket: number, currentTime: Date, limit = 200): Promise<Array<AttachmentDecayExpiryRow>> {
+	async fetchExpiredByBucket(
+		bucket: number,
+		currentTime: Date,
+		limit = 200,
+	): Promise<Array<AttachmentDecayByExpiryRow>> {
 		const query = createFetchExpiredByBucketQuery(limit);
 		return fetchMany(query.bind({expiry_bucket: bucket, current_time: currentTime}));
 	}
@@ -106,12 +111,12 @@ export class AttachmentDecayRepository {
 		await batch.execute();
 	}
 
-	async fetchAllByBucket(bucket: number, limit = 200): Promise<Array<AttachmentDecayExpiryRow>> {
+	async fetchAllByBucket(bucket: number, limit = 200): Promise<Array<AttachmentDecayByExpiryRow>> {
 		const query = AttachmentDecayByExpiry.select({
 			where: [AttachmentDecayByExpiry.where.eq('expiry_bucket')],
 			limit,
 		});
-		return fetchMany<AttachmentDecayExpiryRow>(query.bind({expiry_bucket: bucket}));
+		return fetchMany<AttachmentDecayByExpiryRow>(query.bind({expiry_bucket: bucket}));
 	}
 
 	async deleteAllByBucket(bucket: number): Promise<number> {
@@ -137,10 +142,7 @@ export class AttachmentDecayRepository {
 		for (let i = 0; i < days; i++) {
 			const date = new Date();
 			date.setUTCDate(date.getUTCDate() - i);
-			const bucket = parseInt(
-				`${date.getUTCFullYear()}${String(date.getUTCMonth() + 1).padStart(2, '0')}${String(date.getUTCDate()).padStart(2, '0')}`,
-				10,
-			);
+			const bucket = getExpiryBucket(date);
 			const deletedInBucket = await this.deleteAllByBucket(bucket);
 			totalDeleted += deletedInBucket;
 		}
