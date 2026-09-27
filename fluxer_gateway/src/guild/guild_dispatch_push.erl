@@ -1077,8 +1077,14 @@ deliver_after_grace(Params, Sessions, RecheckAt, Presences) ->
     ok = apply_push_worker_priority(),
     LiveSessions = await_grace_recheck(monitor_grace_sessions(Sessions), RecheckAt),
     send_push_now(
-        users_left_offline(lists:usort(maps:values(LiveSessions)), Presences), Params
+        grace_recipients(maps:keys(Sessions), maps:values(LiveSessions), Presences), Params
     ).
+
+-spec grace_recipients([user_id()], [user_id()], term()) -> [user_id()].
+grace_recipients(HeldUserIds, LiveUserIds, Presences) ->
+    Live = lists:usort(LiveUserIds),
+    Gone = lists:usort(HeldUserIds) -- Live,
+    lists:usort(Gone ++ users_left_offline(Live, Presences)).
 
 -spec monitor_grace_sessions(grace_sessions()) -> #{reference() => user_id()}.
 monitor_grace_sessions(Sessions) ->
@@ -1314,6 +1320,57 @@ presence_eligibility_allows_when_presence_table_missing_test() ->
         #{1 => true},
         build_push_presence_eligibility(#{<<"s1">> => #{user_id => 1}}, #{})
     ).
+
+grace_recipients_push_a_user_whose_held_sessions_all_ended_test() ->
+    Presences = #{1 => #{<<"status">> => <<"online">>}},
+    ?assertEqual([1], grace_recipients([1], [], Presences)).
+
+grace_recipients_skip_a_user_still_online_on_a_held_session_test() ->
+    Presences = #{1 => #{<<"status">> => <<"online">>}},
+    ?assertEqual([], grace_recipients([1], [1], Presences)).
+
+grace_recipients_push_a_user_whose_live_session_went_offline_test() ->
+    Presences = #{1 => #{<<"status">> => <<"offline">>}},
+    ?assertEqual([1], grace_recipients([1], [1], Presences)).
+
+grace_recipients_skip_a_user_with_one_ended_and_one_live_online_session_test() ->
+    Presences = #{1 => #{<<"status">> => <<"online">>}},
+    ?assertEqual([], grace_recipients([1], [1], Presences)).
+
+grace_recipients_mix_users_test() ->
+    Presences = #{
+        1 => #{<<"status">> => <<"online">>},
+        2 => #{<<"status">> => <<"online">>},
+        3 => #{<<"status">> => <<"offline">>}
+    },
+    ?assertEqual([1, 3], grace_recipients([1, 2, 3], [2, 3, 3], Presences)).
+
+deliver_after_grace_pushes_a_user_whose_session_exits_inside_the_window_test() ->
+    Self = self(),
+    ok = meck:new(push, [passthrough, non_strict]),
+    try
+        ok = meck:expect(push, handle_message_create, fun(Params) ->
+            Self ! {pushed, maps:get(user_ids, Params)},
+            ok
+        end),
+        Session = spawn(fun() ->
+            receive
+                stop -> ok
+            end
+        end),
+        Held = #{42 => [Session]},
+        Presences = #{42 => #{<<"status">> => <<"online">>}},
+        RecheckAt = erlang:monotonic_time(millisecond) + 300,
+        _ = spawn(fun() -> deliver_after_grace(#{}, Held, RecheckAt, Presences) end),
+        timer:sleep(50),
+        Session ! stop,
+        receive
+            {pushed, UserIds} -> ?assertEqual([42], UserIds)
+        after 2000 -> erlang:error(no_push_after_session_exit)
+        end
+    after
+        meck:unload(push)
+    end.
 
 legacy_session_eligibility_suppresses_every_real_session_test() ->
     RealSession = #{
