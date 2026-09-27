@@ -5,7 +5,7 @@ export interface VerifyCaptchaParams {
 	remoteIp?: string;
 }
 
-export type CaptchaProviderType = 'hcaptcha' | 'recaptcha' | 'turnstile' | 'test' | 'unavailable';
+export type CaptchaProviderType = 'hcaptcha' | 'recaptcha' | 'turnstile' | 'altcha' | 'test' | 'unavailable';
 
 export interface ICaptchaProvider {
 	readonly type: CaptchaProviderType;

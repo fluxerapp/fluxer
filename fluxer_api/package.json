@@ -56,6 +56,7 @@
 		"@simplewebauthn/server": "catalog:",
 		"@types/node": "catalog:",
 		"@vvo/tzdb": "catalog:",
+		"altcha-lib": "catalog:",
 		"archiver": "catalog:",
 		"argon2": "catalog:",
 		"bowser": "catalog:",

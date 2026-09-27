@@ -8,6 +8,7 @@ import type {
 import {CaptchaMiddleware} from '@app/api/middleware/CaptchaMiddleware';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {AppErrorHandler} from '@fluxer/errors/src/domains/core/ErrorHandlers';
+import {DEFAULT_ALTCHA_CAPTCHA_CONFIG} from '@fluxer/schema/src/domains/admin/AltchaCaptchaSchemas';
 import {Hono} from 'hono';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
@@ -25,6 +26,7 @@ function createHarness(
 ): (headers: Record<string, string>) => Promise<Response> {
 	const repository = {
 		getEffectiveCaptchaConfig: async () => captcha,
+		getAltchaCaptchaConfig: async () => DEFAULT_ALTCHA_CAPTCHA_CONFIG,
 	} as unknown as InstanceConfigRepository;
 	const app = new Hono<HonoEnv>();
 	app.use(async (ctx, next) => {

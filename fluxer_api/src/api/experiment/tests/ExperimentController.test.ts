@@ -7,6 +7,10 @@ import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {
+	DEFAULT_ALTCHA_CAPTCHA_CONFIG,
+	INERT_ALTCHA_CAPTCHA_ASSIGNMENT,
+} from '@fluxer/schema/src/domains/admin/AltchaCaptchaSchemas';
+import {
 	DEFAULT_DOMAIN_MIGRATION_CONFIG,
 	INERT_DOMAIN_MIGRATION_ASSIGNMENT,
 } from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
@@ -57,6 +61,7 @@ describe('GET /experiments', () => {
 			assignments: {
 				voice_noise_suppression: INERT_VOICE_NOISE_SUPPRESSION_ASSIGNMENT,
 				domain_migration: INERT_DOMAIN_MIGRATION_ASSIGNMENT,
+				altcha_captcha: INERT_ALTCHA_CAPTCHA_ASSIGNMENT,
 			},
 		});
 	});
@@ -132,6 +137,62 @@ describe('GET /experiments', () => {
 		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, excluded.token).get(ENDPOINT).execute();
 
 		expect(body.assignments.domain_migration).toEqual({enabled: false});
+	});
+
+	it('resolves the altcha captcha caller through the allowlist and the exclusion list', async () => {
+		const targeted = await createTestAccount(harness);
+		const excluded = await createTestAccount(harness);
+		await getInstanceConfigRepository().setAltchaCaptchaConfig({
+			...DEFAULT_ALTCHA_CAPTCHA_CONFIG,
+			enabled: true,
+			rollout_basis_points: 10000,
+			anonymous_enabled: true,
+			included_user_ids: [targeted.userId],
+			excluded_user_ids: [excluded.userId],
+		});
+
+		const targetedBody = await createBuilder<ExperimentAssignmentsResponse>(harness, targeted.token)
+			.get(ENDPOINT)
+			.execute();
+		expect(targetedBody.assignments.altcha_captcha).toEqual({enabled: true});
+
+		const excludedBody = await createBuilder<ExperimentAssignmentsResponse>(harness, excluded.token)
+			.get(ENDPOINT)
+			.execute();
+		expect(excludedBody.assignments.altcha_captcha).toEqual({enabled: false});
+	});
+
+	it('bumps the altcha captcha config version on every admin update without the client sending one', async () => {
+		const admin = await setUserACLs(harness, await createTestAccount(harness), [
+			AdminACLs.AUTHENTICATE,
+			AdminACLs.INSTANCE_CONFIG_VIEW,
+			AdminACLs.INSTANCE_CONFIG_UPDATE,
+		]);
+
+		const afterFirst = await createBuilder<{altcha_captcha: {config_version: number; enabled: boolean}}>(
+			harness,
+			admin.token,
+		)
+			.patch('/admin/instance/config')
+			.body({altcha_captcha: {enabled: true, included_user_ids: [admin.userId]}})
+			.execute();
+		expect(afterFirst.altcha_captcha).toMatchObject({config_version: 1, enabled: true});
+
+		const afterSecond = await createBuilder<{
+			altcha_captcha: {config_version: number; anonymous_enabled: boolean; cost: number; max_counter: number};
+		}>(harness, admin.token)
+			.patch('/admin/instance/config')
+			.body({altcha_captcha: {anonymous_enabled: true, cost: 2000, max_counter: 400}})
+			.execute();
+		expect(afterSecond.altcha_captcha).toMatchObject({
+			config_version: 2,
+			anonymous_enabled: true,
+			cost: 2000,
+			max_counter: 400,
+		});
+
+		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, admin.token).get(ENDPOINT).execute();
+		expect(body.assignments.altcha_captcha).toEqual({enabled: true});
 	});
 
 	it('serves the delivery cadence from the delivery config and not from the voice config', async () => {

@@ -2,6 +2,8 @@
 
 import * as Modal from '@app/features/app/components/dialogs/Modal';
 import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
+import type {AltchaChallenge} from '@app/features/auth/altcha/AltchaSolver';
+import {AltchaVerification} from '@app/features/auth/components/AltchaVerification';
 import styles from '@app/features/auth/components/modals/CaptchaModal.module.css';
 import {TurnstileWidget} from '@app/features/auth/components/TurnstileWidget';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -18,7 +20,7 @@ const VERIFY_YOU_RE_HUMAN_DESCRIPTOR = msg({
 });
 const logger = new Logger('CaptchaModal');
 
-export type CaptchaType = 'turnstile' | 'hcaptcha';
+export type CaptchaType = 'turnstile' | 'hcaptcha' | 'altcha';
 
 interface HCaptchaComponentProps {
 	sitekey: string;
@@ -35,16 +37,26 @@ interface CaptchaModalProps {
 	onVerify: (token: string, captchaType: CaptchaType) => void;
 	onCancel?: () => void;
 	preferredType?: CaptchaType;
+	altchaChallenge?: AltchaChallenge | null;
 	error?: string | null;
 	isVerifying?: boolean;
 	closeOnVerify?: boolean;
 }
 
 export const CaptchaModal = observer(
-	({onVerify, onCancel, preferredType, error, isVerifying, closeOnVerify = true}: CaptchaModalProps) => {
+	({
+		onVerify,
+		onCancel,
+		preferredType,
+		altchaChallenge,
+		error,
+		isVerifying,
+		closeOnVerify = true,
+	}: CaptchaModalProps) => {
 		const {i18n} = useLingui();
 		const hcaptchaRef = useRef<HCaptcha>(null);
 		const [captchaType, setCaptchaType] = useState<CaptchaType>(() => {
+			if (altchaChallenge) return 'altcha';
 			if (preferredType) return preferredType;
 			if (RuntimeConfig.captchaProvider === 'turnstile' && RuntimeConfig.turnstileSiteKey) {
 				return 'turnstile';
@@ -123,7 +135,13 @@ export const CaptchaModal = observer(
 							</div>
 						)}
 						<div className={styles.captchaContainer} data-flx="auth.captcha-modal.captcha-container">
-							{captchaType === 'turnstile' ? (
+							{captchaType === 'altcha' && altchaChallenge ? (
+								<AltchaVerification
+									challenge={altchaChallenge}
+									onVerify={handleVerify}
+									data-flx="auth.captcha-modal.altcha-verification"
+								/>
+							) : captchaType === 'turnstile' ? (
 								<TurnstileWidget
 									sitekey={RuntimeConfig.turnstileSiteKey ?? ''}
 									onVerify={handleVerify}

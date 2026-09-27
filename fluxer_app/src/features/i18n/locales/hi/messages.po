@@ -6520,7 +6520,7 @@ msgid "Cannot delete account"
 msgstr "अकाउंट नहीं मिटाया जा सकता"
 
 #. Toast error shown when captcha verification fails inside the auth captcha interceptor.
-#: src/features/auth/components/CaptchaInterceptor.tsx:14
+#: src/features/auth/components/CaptchaInterceptor.tsx:15
 msgid "Captcha verification failed. Try again."
 msgstr "कैप्चा वेरिफ़िकेशन विफल रहा। फिर से कोशिश करें।"
 
@@ -7362,6 +7362,10 @@ msgstr "एक्सेस जाँचा जा रहा है..."
 #: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:23
 msgid "Checking screen recording permission..."
 msgstr "स्क्रीन रिकॉर्डिंग अनुमति की जाँच की जा रही है..."
+
+#: src/features/auth/components/AltchaVerification.tsx:62
+msgid "Checking your browser. This takes a few seconds."
+msgstr "आपके ब्राउज़र की जाँच हो रही है। इसमें कुछ सेकंड लगेंगे।"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:67
@@ -16803,7 +16807,7 @@ msgstr "नफ़रत फैलाने वाला भाषण"
 msgid "Having fun?"
 msgstr "मज़े कर रहे हैं?"
 
-#: src/features/auth/components/modals/CaptchaModal.tsx:157
+#: src/features/auth/components/modals/CaptchaModal.tsx:175
 msgid "Having issues? Try hCaptcha instead"
 msgstr "समस्या आ रही है? इसके बजाय hCaptcha आज़माएँ"
 
@@ -34996,6 +35000,7 @@ msgid "Try a different variable name or clear the search."
 msgstr "कोई दूसरा वैरिएबल नाम आज़माएँ या खोज साफ़ करें।"
 
 #. Generic action label for retrying a failed or interrupted operation.
+#: src/features/auth/components/AltchaVerification.tsx:53
 #: src/features/auth/flow/AuthRouteLoadError.tsx:22
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:75
 msgid "Try again"
@@ -35073,7 +35078,7 @@ msgstr "इसके बजाय सुरक्षा कुंजी/पा�
 msgid "Try sending your message again."
 msgstr "अपना मैसेज फिर से भेजने की कोशिश करें।"
 
-#: src/features/auth/components/modals/CaptchaModal.tsx:159
+#: src/features/auth/components/modals/CaptchaModal.tsx:177
 msgid "Try Turnstile instead"
 msgstr "इसके बजाय Turnstile आज़माएँ"
 
@@ -37279,7 +37284,7 @@ msgid "Verify phone number form"
 msgstr "फ़ोन नंबर वेरिफ़ाई करने का फ़ॉर्म"
 
 #. Short label in the authentication captcha modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/CaptchaModal.tsx:15
+#: src/features/auth/components/modals/CaptchaModal.tsx:17
 msgid "Verify you're human"
 msgstr "पुष्टि करें कि आप इंसान हैं"
 
@@ -38339,7 +38344,7 @@ msgstr "हमने ब्राज़ील में {premiumProductName} क
 msgid "We need one verification step before you continue. This helps protect accounts and keep spam off {productName}."
 msgstr "जारी रखने से पहले हमें एक वेरिफ़िकेशन चरण की ज़रूरत है। यह अकाउंट को सुरक्षित रखने और {productName} से स्पैम दूर रखने में मदद करता है।"
 
-#: src/features/auth/components/modals/CaptchaModal.tsx:116
+#: src/features/auth/components/modals/CaptchaModal.tsx:128
 msgid "We need to make sure you're not a bot. Complete the verification below."
 msgstr "हमें यह सुनिश्चित करना होगा कि आप बॉट नहीं हैं। नीचे दिया गया वेरिफ़िकेशन पूरा करें।"
 
@@ -39971,6 +39976,10 @@ msgstr "आपकी कार्रवाई पूरी नहीं हो �
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:409
 msgid "Your application is pending review. You can still update your listing details or withdraw the application."
 msgstr "आपका आवेदन समीक्षा के लिए लंबित है। आप अभी भी अपनी लिस्टिंग का विवरण अपडेट कर सकते हैं या आवेदन वापस ले सकते हैं।"
+
+#: src/features/auth/components/AltchaVerification.tsx:50
+msgid "Your browser couldn't finish the check."
+msgstr "आपका ब्राउज़र जाँच पूरी नहीं कर सका।"
 
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12

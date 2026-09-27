@@ -431,6 +431,18 @@ fn deserialize_instance_config_response_with_unknown_keys() {
             "anonymous_rollout_basis_points": 100,
             "standalone_forwarding": true
         },
+        "altcha_captcha": {
+            "enabled": true,
+            "config_version": 3,
+            "rollout_basis_points": 500,
+            "rollout_salt": "altcha-captcha-v1",
+            "included_user_ids": [],
+            "excluded_user_ids": ["1500000000000000003"],
+            "anonymous_enabled": true,
+            "cost": 5000,
+            "max_counter": 10000,
+            "future_altcha_knob": "argon2id"
+        },
         "experiment_delivery": {"poll_interval_seconds": 300, "poll_jitter_percent": 15},
         "registration": {
             "mode": "open",
@@ -568,6 +580,11 @@ fn deserialize_instance_config_response_with_unknown_keys() {
     assert_eq!(resp.domain_migration.anonymous_rollout_basis_points, 100);
     assert!(resp.domain_migration.standalone_forwarding);
     assert!(resp.push_service_delivery.relay_consent_accepted);
+    assert!(resp.altcha_captcha.enabled);
+    assert_eq!(resp.altcha_captcha.config_version, 3);
+    assert!(resp.altcha_captcha.anonymous_enabled);
+    assert_eq!(resp.altcha_captcha.excluded_user_ids.len(), 1);
+    assert_eq!(resp.altcha_captcha.max_counter, 10000);
     assert_eq!(resp.experiment_delivery.poll_interval_seconds, 300);
     assert!(resp.policy.single_community_guild_id.is_none());
     assert_eq!(resp.policy.services.gif_enabled, Some(true));

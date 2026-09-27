@@ -1720,6 +1720,9 @@
         "msgid": "Changed the voice region from {oldRegion} to {newRegion}."
       },
       {
+        "msgid": "Checking your browser. This takes a few seconds."
+      },
+      {
         "msgid": "Choices"
       },
       {
@@ -3326,6 +3329,9 @@
       },
       {
         "msgid": "Your account works normally again straight away and nothing is removed. We can ask for this check again later."
+      },
+      {
+        "msgid": "Your browser couldn't finish the check."
       },
       {
         "msgid": "Your capture device is sending {deliveredResolution} instead of {resolution}."

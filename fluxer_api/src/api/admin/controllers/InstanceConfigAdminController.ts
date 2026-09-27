@@ -34,6 +34,7 @@ import {
 	PendingRegistrationActionRequest,
 	RegistrationUrlIdParam,
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
+import {AltchaCaptchaConfigSchema} from '@fluxer/schema/src/domains/admin/AltchaCaptchaSchemas';
 import {DomainMigrationConfigSchema} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {GatewayRolloutConfigSchema} from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
 import {
@@ -71,6 +72,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		voiceNoiseSuppression,
 		pushServiceDelivery,
 		domainMigration,
+		altchaCaptcha,
 		experimentDelivery,
 		registrationConfig,
 		registrationUrls,
@@ -81,6 +83,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		instanceConfigRepository.getVoiceNoiseSuppressionConfig(),
 		instanceConfigRepository.getPushServiceDeliveryConfig(),
 		instanceConfigRepository.getDomainMigrationConfig(),
+		instanceConfigRepository.getAltchaCaptchaConfig(),
 		instanceConfigRepository.getExperimentDeliveryConfig(),
 		instanceConfigRepository.getRegistrationConfig(),
 		instanceConfigRepository.getRegistrationUrlsForAdmin(),
@@ -114,6 +117,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		voice_noise_suppression: voiceNoiseSuppression,
 		push_service_delivery: pushServiceDelivery,
 		domain_migration: domainMigration,
+		altcha_captcha: altchaCaptcha,
 		experiment_delivery: experimentDelivery,
 		registration: {
 			...registrationConfig,
@@ -311,6 +315,18 @@ export function InstanceConfigAdminController(app: HonoApp) {
 				if (Object.keys(patch).length > 0) {
 					await instanceConfigRepository.updateDomainMigrationConfig((current) =>
 						DomainMigrationConfigSchema.parse({
+							...current,
+							...patch,
+							config_version: current.config_version + 1,
+						}),
+					);
+				}
+			}
+			if (data.altcha_captcha) {
+				const patch = omitUndefinedFields(data.altcha_captcha);
+				if (Object.keys(patch).length > 0) {
+					await instanceConfigRepository.updateAltchaCaptchaConfig((current) =>
+						AltchaCaptchaConfigSchema.parse({
 							...current,
 							...patch,
 							config_version: current.config_version + 1,

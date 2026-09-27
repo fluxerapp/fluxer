@@ -37,6 +37,7 @@ Missing settings use the defaults documented below. Invalid stored configuration
 | voice_noise_suppression | [voice noise suppression configuration](#voice-noise-suppression-configuration-object) object | Client-side noise suppression rollout |
 | push_service_delivery | [push service delivery configuration](#push-service-delivery-configuration-object) object | Push service delivery rollout |
 | domain_migration | [domain migration configuration](#domain-migration-configuration-object) object | Web domain migration rollout |
+| altcha_captcha | [ALTCHA captcha configuration](#altcha-captcha-configuration-object) object | ALTCHA proof-of-work captcha rollout |
 | experiment_delivery | [experiment delivery configuration](#experiment-delivery-configuration-object) object | Cadence every client polls the experiments route on |
 | registration | [registration configuration](#registration-configuration-object) object | Registration policy, issued URLs, and pending registrations |
 | self_hosted | boolean | Whether the deployment runs in self-hosted mode |
@@ -172,6 +173,32 @@ Only the official web client acts on this configuration. On any other instance i
 :::caution[`enabled` is the kill switch]
 Setting `enabled` to false stops new migrations and also stops forwarding from the legacy origin for clients that already moved. Excluding an account only stops a migration that has not started yet.
 :::
+
+## ALTCHA captcha configuration object
+
+The instance rollout that replaces the configured captcha provider with an ALTCHA proof-of-work challenge the API issues and verifies itself. [Experiments](/http-api/experiments/#altcha-captcha-assignment-object) defines what a signed-in client resolves from it, and [CAPTCHA handling](/topics/captcha/#altcha-proof-of-work) defines the challenge exchange.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | boolean | Whether the rollout runs at all (default false) |
+| config_version | integer | Revision counter, raised by Fluxer and never accepted from a request |
+| rollout_basis_points | integer | Share of accounts the rollout selects, in basis points (0-10000, default 0) |
+| rollout_salt | string | Salt of the sampling hash (1-64 printable ASCII characters, default `altcha-captcha-v1`) |
+| included_user_ids | array[snowflake] | Accounts the rollout always selects, up to 1000 entries (default empty) |
+| excluded_user_ids | array[snowflake] | Accounts the rollout never selects, up to 1000 entries (default empty) |
+| anonymous_enabled | boolean | Whether logged-out requests get ALTCHA (default false) |
+| cost | integer | PBKDF2 iterations per solving attempt (1000-100000, default 5000) |
+| max_counter | integer | Upper bound of the hidden counter a client searches for (100-1000000, default 10000) |
+
+Every field is present on read. An absent document or missing field uses the defaults above.
+
+`excluded_user_ids` is applied before `included_user_ids`, so the rollout never selects an account in both. `anonymous_enabled` has no effect on signed-in requests, and the account rules have no effect on logged-out ones.
+
+Each challenge hides its counter between half of `max_counter` and `max_counter`, and a client tries counters from 0 upward. Solve time grows with `cost` times `max_counter`. Fluxer spends one attempt at `cost` to issue each challenge.
+
+The rollout only changes which provider answers a captcha that is already required. While the instance captcha provider is `none`, it has no effect.
 
 ## Experiment delivery configuration object
 
@@ -583,6 +610,7 @@ The body has one optional object for each section. Fluxer leaves an absent secti
 | voice_noise_suppression? | object | Any subset of the [noise suppression](#voice-noise-suppression-configuration-object) fields |
 | push_service_delivery? | object | Any subset of the [push service delivery](#push-service-delivery-configuration-object) fields |
 | domain_migration? | object | Any subset of the [domain migration](#domain-migration-configuration-object) fields |
+| altcha_captcha? | object | Any subset of the [ALTCHA captcha](#altcha-captcha-configuration-object) fields |
 | experiment_delivery? | object | Any subset of the [experiment delivery](#experiment-delivery-configuration-object) fields |
 | registration? | object | `mode` and `admin_registration_urls_enabled` |
 | app_public?<sup>2</sup> | object | `branding`, `setup`, `legal`, and `registration` sub-objects, each merged field by field |
@@ -599,6 +627,8 @@ The body has one optional object for each section. Fluxer leaves an absent secti
 `push_service_delivery` works the same way, over the [push service delivery configuration](#push-service-delivery-configuration-object) fields and its own `config_version`. It also takes `relay_consent_accepted`. Fluxer sets `relay_consent_accepted_at` and `relay_consent_accepted_by` itself on the request that changes that flag, and accepts neither from a request: turning the flag on stamps the current time and the acting Admin account, and turning it off clears both to null. A request that repeats the flag it already holds leaves the stamp alone.
 
 `domain_migration` works the same way, over the [domain migration configuration](#domain-migration-configuration-object) fields and its own `config_version`.
+
+`altcha_captcha` works the same way, over the [ALTCHA captcha configuration](#altcha-captcha-configuration-object) fields and its own `config_version`.
 
 `experiment_delivery` takes both [experiment delivery configuration](#experiment-delivery-configuration-object) fields, each bound as documented there. It is a section of its own, so a write to it changes no `config_version` and changes no assignment, only the cadence on which clients ask for one.
 
@@ -636,7 +666,7 @@ Fluxer skips URL validation while the merged configuration leaves single sign-on
 | 400 | [error response](/admin-api/#error-response) | A policy transition is refused, returned as `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED` |
 
 :::caution[Sections are applied one after another]
-The order is `gateway_rollout`, `voice_noise_suppression`, `push_service_delivery`, `domain_migration`, `experiment_delivery`, `sso`, `registration`, `app_public` branding, legal, and registration fields, `integrations`, `media`, `policy`, and finally `app_public.setup`. A failure part way through leaves the earlier sections written.
+The order is `gateway_rollout`, `voice_noise_suppression`, `push_service_delivery`, `domain_migration`, `altcha_captcha`, `experiment_delivery`, `sso`, `registration`, `app_public` branding, legal, and registration fields, `integrations`, `media`, `policy`, and finally `app_public.setup`. A failure part way through leaves the earlier sections written.
 :::
 
 ### Side effects

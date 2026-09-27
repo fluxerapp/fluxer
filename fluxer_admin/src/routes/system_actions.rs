@@ -4,24 +4,25 @@ use crate::{
     api::{
         client::AdminApiClient,
         types::{
-            AppBrandingConfigUpdateRequest, AppLegalConfigUpdateRequest,
-            AppPublicConfigUpdateRequest, AppRegistrationConfigUpdateRequest,
-            AppSetupConfigUpdateRequest, CreateRegistrationUrlRequest,
-            DeferredPhoneGateUpdateRequest, DomainMigrationConfigUpdateRequest,
-            EXPERIMENT_MAX_TARGETED_USERS, ExperimentDeliveryConfigUpdateRequest,
-            GatewayRolloutConfigUpdateRequest, GatewayRolloutMode,
-            InstanceAttachmentDecayUpdateRequest, InstanceBlueskyIntegrationUpdateRequest,
-            InstanceBlueskyKeyIntegrationUpdateRequest, InstanceCaptchaIntegrationUpdateRequest,
-            InstanceConfigUpdateRequest, InstanceEmailIntegrationUpdateRequest,
-            InstanceEmailSmtpIntegrationUpdateRequest, InstanceEmailSmtpTestRequest,
-            InstanceGifIntegrationUpdateRequest, InstanceIntegrationsUpdateRequest,
-            InstanceMediaUpdateRequest, InstancePolicyUpdateRequest,
-            InstanceRegistrationConfigUpdateRequest, InstanceServicesUpdateRequest,
-            InstanceYoutubeIntegrationUpdateRequest, LimitConfigUpdateRequest, LimitRule,
-            LimitRuleFilters, NoiseSuppressionBackend, PremiumMode,
-            PushServiceDeliveryConfigUpdateRequest, RegistrationMode, SsoConfigUpdateRequest,
-            VOICE_NS_MAX_GUILD_OVERRIDES, VoiceE2eeScope, VoiceNoiseSuppressionConfigUpdateRequest,
-            VoiceNoiseSuppressionGuildOverride,
+            ALTCHA_CAPTCHA_COST_RANGE, ALTCHA_CAPTCHA_MAX_COUNTER_RANGE,
+            AltchaCaptchaConfigUpdateRequest, AppBrandingConfigUpdateRequest,
+            AppLegalConfigUpdateRequest, AppPublicConfigUpdateRequest,
+            AppRegistrationConfigUpdateRequest, AppSetupConfigUpdateRequest,
+            CreateRegistrationUrlRequest, DeferredPhoneGateUpdateRequest,
+            DomainMigrationConfigUpdateRequest, EXPERIMENT_MAX_TARGETED_USERS,
+            ExperimentDeliveryConfigUpdateRequest, GatewayRolloutConfigUpdateRequest,
+            GatewayRolloutMode, InstanceAttachmentDecayUpdateRequest,
+            InstanceBlueskyIntegrationUpdateRequest, InstanceBlueskyKeyIntegrationUpdateRequest,
+            InstanceCaptchaIntegrationUpdateRequest, InstanceConfigUpdateRequest,
+            InstanceEmailIntegrationUpdateRequest, InstanceEmailSmtpIntegrationUpdateRequest,
+            InstanceEmailSmtpTestRequest, InstanceGifIntegrationUpdateRequest,
+            InstanceIntegrationsUpdateRequest, InstanceMediaUpdateRequest,
+            InstancePolicyUpdateRequest, InstanceRegistrationConfigUpdateRequest,
+            InstanceServicesUpdateRequest, InstanceYoutubeIntegrationUpdateRequest,
+            LimitConfigUpdateRequest, LimitRule, LimitRuleFilters, NoiseSuppressionBackend,
+            PremiumMode, PushServiceDeliveryConfigUpdateRequest, RegistrationMode,
+            SsoConfigUpdateRequest, VOICE_NS_MAX_GUILD_OVERRIDES, VoiceE2eeScope,
+            VoiceNoiseSuppressionConfigUpdateRequest, VoiceNoiseSuppressionGuildOverride,
         },
     },
     config::AdminConfig,
@@ -213,6 +214,10 @@ pub async fn instance_config_post(
             Err(message) => FlashData::error(message),
         },
         "update_domain_migration" => match build_domain_migration_update(&form) {
+            Ok(update) => instance_config_result(client.update_instance_config(&update).await),
+            Err(message) => FlashData::error(message),
+        },
+        "update_altcha_captcha" => match build_altcha_captcha_update(&form) {
             Ok(update) => instance_config_result(client.update_instance_config(&update).await),
             Err(message) => FlashData::error(message),
         },
@@ -723,6 +728,50 @@ fn build_domain_migration_update(
                 EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX,
             )?,
             standalone_forwarding: Some(form.bool_value("domain_migration_standalone_forwarding")),
+        }),
+        ..Default::default()
+    })
+}
+
+fn build_altcha_captcha_update(
+    form: &MultiValueForm,
+) -> Result<InstanceConfigUpdateRequest, String> {
+    Ok(InstanceConfigUpdateRequest {
+        altcha_captcha: Some(AltchaCaptchaConfigUpdateRequest {
+            enabled: Some(form.bool_value("altcha_captcha_enabled")),
+            rollout_basis_points: parse_form_number(
+                form,
+                "altcha_captcha_rollout_basis_points",
+                "Rollout basis points",
+                0,
+                EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX,
+            )?,
+            rollout_salt: parse_ascii_experiment_rollout_salt(form, "altcha_captcha_rollout_salt")?,
+            included_user_ids: Some(parse_experiment_user_ids(
+                form.first("altcha_captcha_included_user_ids")
+                    .unwrap_or_default(),
+                "Included user IDs",
+            )?),
+            excluded_user_ids: Some(parse_experiment_user_ids(
+                form.first("altcha_captcha_excluded_user_ids")
+                    .unwrap_or_default(),
+                "Excluded user IDs",
+            )?),
+            anonymous_enabled: Some(form.bool_value("altcha_captcha_anonymous_enabled")),
+            cost: parse_form_number(
+                form,
+                "altcha_captcha_cost",
+                "Cost",
+                *ALTCHA_CAPTCHA_COST_RANGE.start(),
+                *ALTCHA_CAPTCHA_COST_RANGE.end(),
+            )?,
+            max_counter: parse_form_number(
+                form,
+                "altcha_captcha_max_counter",
+                "Maximum counter",
+                *ALTCHA_CAPTCHA_MAX_COUNTER_RANGE.start(),
+                *ALTCHA_CAPTCHA_MAX_COUNTER_RANGE.end(),
+            )?,
         }),
         ..Default::default()
     })
@@ -1756,6 +1805,70 @@ mod tests {
                 .relay_consent_accepted,
             Some(true)
         );
+    }
+
+    #[test]
+    fn build_altcha_captcha_update_reads_the_rollout_and_difficulty_fields() {
+        let form = MultiValueForm::parse(
+            b"altcha_captcha_enabled=true&altcha_captcha_rollout_basis_points=%20500%20&altcha_captcha_rollout_salt=%20altcha-captcha-v2%20&altcha_captcha_included_user_ids=1500000000000000001&altcha_captcha_excluded_user_ids=1500000000000000002&altcha_captcha_anonymous_enabled=true&altcha_captcha_cost=2000&altcha_captcha_max_counter=%20400%20",
+        );
+        let update = build_altcha_captcha_update(&form)
+            .expect("valid form")
+            .altcha_captcha
+            .expect("altcha captcha update");
+        assert_eq!(update.enabled, Some(true));
+        assert_eq!(update.rollout_basis_points, Some(500));
+        assert_eq!(update.rollout_salt, Some("altcha-captcha-v2".to_owned()));
+        assert_eq!(
+            update.included_user_ids,
+            Some(vec!["1500000000000000001".to_owned()])
+        );
+        assert_eq!(
+            update.excluded_user_ids,
+            Some(vec!["1500000000000000002".to_owned()])
+        );
+        assert_eq!(update.anonymous_enabled, Some(true));
+        assert_eq!(update.cost, Some(2000));
+        assert_eq!(update.max_counter, Some(400));
+    }
+
+    #[test]
+    fn build_altcha_captcha_update_leaves_the_feature_inert_when_nothing_is_submitted() {
+        let form = MultiValueForm::parse(b"_csrf=token");
+        let request = build_altcha_captcha_update(&form).expect("valid form");
+        assert_eq!(
+            serde_json::to_value(request).expect("serializable update"),
+            serde_json::json!({"altcha_captcha": {
+                "enabled": false,
+                "included_user_ids": [],
+                "excluded_user_ids": [],
+                "anonymous_enabled": false,
+            }})
+        );
+    }
+
+    #[test]
+    fn build_altcha_captcha_update_rejects_difficulty_outside_the_supported_range() {
+        for (form, message) in [
+            (
+                "altcha_captcha_cost=999",
+                "Cost must be a whole number between 1000 and 100000",
+            ),
+            (
+                "altcha_captcha_max_counter=1000001",
+                "Maximum counter must be a whole number between 100 and 1000000",
+            ),
+            (
+                "altcha_captcha_rollout_basis_points=10001",
+                "Rollout basis points must be a whole number between 0 and 10000",
+            ),
+        ] {
+            let form = MultiValueForm::parse(form.as_bytes());
+            assert_eq!(
+                build_altcha_captcha_update(&form).expect_err("invalid field"),
+                message
+            );
+        }
     }
 
     #[test]

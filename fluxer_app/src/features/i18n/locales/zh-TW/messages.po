@@ -6520,7 +6520,7 @@ msgid "Cannot delete account"
 msgstr "無法刪除帳號"
 
 #. Toast error shown when captcha verification fails inside the auth captcha interceptor.
-#: src/features/auth/components/CaptchaInterceptor.tsx:14
+#: src/features/auth/components/CaptchaInterceptor.tsx:15
 msgid "Captcha verification failed. Try again."
 msgstr "驗證碼驗證失敗。請再試一次。"
 
@@ -7362,6 +7362,10 @@ msgstr "正在檢查存取權限…"
 #: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:23
 msgid "Checking screen recording permission..."
 msgstr "正在檢查螢幕錄製權限…"
+
+#: src/features/auth/components/AltchaVerification.tsx:62
+msgid "Checking your browser. This takes a few seconds."
+msgstr "正在檢查您的瀏覽器。這需要幾秒鐘的時間。"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:67
@@ -16803,7 +16807,7 @@ msgstr "仇恨言論"
 msgid "Having fun?"
 msgstr "玩得開心嗎？"
 
-#: src/features/auth/components/modals/CaptchaModal.tsx:157
+#: src/features/auth/components/modals/CaptchaModal.tsx:175
 msgid "Having issues? Try hCaptcha instead"
 msgstr "有問題嗎？改用 hCaptcha 試試"
 
@@ -34996,6 +35000,7 @@ msgid "Try a different variable name or clear the search."
 msgstr "請嘗試不同的變數名稱或清除搜尋。"
 
 #. Generic action label for retrying a failed or interrupted operation.
+#: src/features/auth/components/AltchaVerification.tsx:53
 #: src/features/auth/flow/AuthRouteLoadError.tsx:22
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:75
 msgid "Try again"
@@ -35073,7 +35078,7 @@ msgstr "改用安全金鑰或通行金鑰"
 msgid "Try sending your message again."
 msgstr "請再試一次傳送訊息。"
 
-#: src/features/auth/components/modals/CaptchaModal.tsx:159
+#: src/features/auth/components/modals/CaptchaModal.tsx:177
 msgid "Try Turnstile instead"
 msgstr "改用 Turnstile 驗證"
 
@@ -37279,7 +37284,7 @@ msgid "Verify phone number form"
 msgstr "驗證電話號碼表單"
 
 #. Short label in the authentication captcha modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/CaptchaModal.tsx:15
+#: src/features/auth/components/modals/CaptchaModal.tsx:17
 msgid "Verify you're human"
 msgstr "驗證您是真人"
 
@@ -38339,7 +38344,7 @@ msgstr "我們在巴西調降了 {premiumProductName} 的價格。現在每月�
 msgid "We need one verification step before you continue. This helps protect accounts and keep spam off {productName}."
 msgstr "在您繼續之前，我們需要一個驗證步驟。這有助於保護帳號並防止垃圾訊息出現在 {productName} 上。"
 
-#: src/features/auth/components/modals/CaptchaModal.tsx:116
+#: src/features/auth/components/modals/CaptchaModal.tsx:128
 msgid "We need to make sure you're not a bot. Complete the verification below."
 msgstr "我們需要確認您不是機器人。請完成下方的驗證。"
 
@@ -39971,6 +39976,10 @@ msgstr "您的操作未能完成，因為系統偵測到有安全疑慮。如果
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:409
 msgid "Your application is pending review. You can still update your listing details or withdraw the application."
 msgstr "您的申請正在審核中。您仍然可以更新刊登資訊或撤回申請。"
+
+#: src/features/auth/components/AltchaVerification.tsx:50
+msgid "Your browser couldn't finish the check."
+msgstr "您的瀏覽器無法完成驗證。"
 
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12

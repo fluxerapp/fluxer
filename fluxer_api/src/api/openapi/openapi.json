@@ -27953,7 +27953,8 @@
 						"type": "object",
 						"properties": {
 							"voice_noise_suppression": {"$ref": "#/components/schemas/VoiceNoiseSuppressionAssignmentResponse"},
-							"domain_migration": {"$ref": "#/components/schemas/DomainMigrationAssignmentResponse"}
+							"domain_migration": {"$ref": "#/components/schemas/DomainMigrationAssignmentResponse"},
+							"altcha_captcha": {"$ref": "#/components/schemas/AltchaCaptchaAssignmentResponse"}
 						},
 						"additionalProperties": false
 					}
@@ -31629,6 +31630,12 @@
 				"additionalProperties": false
 			},
 			"DonationCurrency": {"type": "string", "enum": ["usd", "eur", "brl", "inr", "pln", "try", "sek", "dkk", "nok"]},
+			"AltchaCaptchaAssignmentResponse": {
+				"type": "object",
+				"properties": {"enabled": {"type": "boolean"}},
+				"required": ["enabled"],
+				"additionalProperties": false
+			},
 			"DomainMigrationAssignmentResponse": {
 				"type": "object",
 				"properties": {"enabled": {"type": "boolean"}},

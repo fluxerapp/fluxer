@@ -12,6 +12,10 @@ import {AdminArchiveResponseSchema} from '@fluxer/schema/src/domains/admin/Admin
 import {GuildAdminResponse} from '@fluxer/schema/src/domains/admin/AdminGuildSchemas';
 import {UserAdminResponseSchema} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 import {
+	AltchaCaptchaConfigResponse,
+	AltchaCaptchaConfigUpdateRequest,
+} from '@fluxer/schema/src/domains/admin/AltchaCaptchaSchemas';
+import {
 	DomainMigrationConfigResponse,
 	DomainMigrationConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
@@ -654,6 +658,7 @@ export const InstanceConfigResponse = z.object({
 	voice_noise_suppression: VoiceNoiseSuppressionConfigResponse,
 	push_service_delivery: PushServiceDeliveryConfigResponse,
 	domain_migration: DomainMigrationConfigResponse,
+	altcha_captcha: AltchaCaptchaConfigResponse,
 	experiment_delivery: ExperimentDeliveryConfigResponse,
 	registration: InstanceRegistrationResponse,
 	self_hosted: z.boolean(),
@@ -692,6 +697,7 @@ export const InstanceConfigUpdateRequest = z.object({
 	voice_noise_suppression: VoiceNoiseSuppressionConfigUpdateRequest.nullish(),
 	push_service_delivery: PushServiceDeliveryConfigUpdateRequest.nullish(),
 	domain_migration: DomainMigrationConfigUpdateRequest.nullish(),
+	altcha_captcha: AltchaCaptchaConfigUpdateRequest.nullish(),
 	experiment_delivery: ExperimentDeliveryConfigUpdateRequest.nullish(),
 	registration: z
 		.object({

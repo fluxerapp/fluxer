@@ -6520,7 +6520,7 @@ msgid "Cannot delete account"
 msgstr "לא ניתן למחוק את החשבון"
 
 #. Toast error shown when captcha verification fails inside the auth captcha interceptor.
-#: src/features/auth/components/CaptchaInterceptor.tsx:14
+#: src/features/auth/components/CaptchaInterceptor.tsx:15
 msgid "Captcha verification failed. Try again."
 msgstr "אימות הקאפצ'ה נכשל. יש לנסות שוב."
 
@@ -7362,6 +7362,10 @@ msgstr "בודק גישה..."
 #: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:23
 msgid "Checking screen recording permission..."
 msgstr "בודק הרשאת הקלטת מסך..."
+
+#: src/features/auth/components/AltchaVerification.tsx:62
+msgid "Checking your browser. This takes a few seconds."
+msgstr "בודקים את הדפדפן שלך. זה לוקח כמה שניות."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:67
@@ -16803,7 +16807,7 @@ msgstr "דברי שטנה"
 msgid "Having fun?"
 msgstr "כיף לך?"
 
-#: src/features/auth/components/modals/CaptchaModal.tsx:157
+#: src/features/auth/components/modals/CaptchaModal.tsx:175
 msgid "Having issues? Try hCaptcha instead"
 msgstr "נתקלת בבעיות? נסה את hCaptcha במקום"
 
@@ -34996,6 +35000,7 @@ msgid "Try a different variable name or clear the search."
 msgstr "נסה שם משתנה אחר או נקה את החיפוש."
 
 #. Generic action label for retrying a failed or interrupted operation.
+#: src/features/auth/components/AltchaVerification.tsx:53
 #: src/features/auth/flow/AuthRouteLoadError.tsx:22
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:75
 msgid "Try again"
@@ -35073,7 +35078,7 @@ msgstr "נסה במקום זאת מפתח אבטחה / מפתח גישה"
 msgid "Try sending your message again."
 msgstr "נסה לשלוח את ההודעה שוב."
 
-#: src/features/auth/components/modals/CaptchaModal.tsx:159
+#: src/features/auth/components/modals/CaptchaModal.tsx:177
 msgid "Try Turnstile instead"
 msgstr "נסה במקום זאת את Turnstile"
 
@@ -37279,7 +37284,7 @@ msgid "Verify phone number form"
 msgstr "טופס אימות מספר טלפון"
 
 #. Short label in the authentication captcha modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/CaptchaModal.tsx:15
+#: src/features/auth/components/modals/CaptchaModal.tsx:17
 msgid "Verify you're human"
 msgstr "יש לוודא שאתה אנושי"
 
@@ -38339,7 +38344,7 @@ msgstr "הורדנו את המחיר של {premiumProductName} בברזיל. כ�
 msgid "We need one verification step before you continue. This helps protect accounts and keep spam off {productName}."
 msgstr "אנחנו צריכים שלב אימות אחד לפני שתוכל להמשיך. זה עוזר להגן על חשבונות ולמנוע ספאם ב-{productName}."
 
-#: src/features/auth/components/modals/CaptchaModal.tsx:116
+#: src/features/auth/components/modals/CaptchaModal.tsx:128
 msgid "We need to make sure you're not a bot. Complete the verification below."
 msgstr "אנחנו צריכים לוודא שאתה לא בוט. השלם את האימות למטה."
 
@@ -39971,6 +39976,10 @@ msgstr "הפעולה שלך לא הושלמה כי היא סומנה על ידי
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:409
 msgid "Your application is pending review. You can still update your listing details or withdraw the application."
 msgstr "הבקשה שלך ממתינה לבדיקה. עדיין באפשרותך לעדכן את פרטי הרישום או לבטל את הבקשה."
+
+#: src/features/auth/components/AltchaVerification.tsx:50
+msgid "Your browser couldn't finish the check."
+msgstr "הדפדפן שלך לא הצליח לסיים את הבדיקה."
 
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12

@@ -2,13 +2,15 @@
 
 use crate::{
     api::types::{
-        AppPublicConfigResponse, DOMAIN_MIGRATION_DEFAULT_SALT, DomainMigrationConfigResponse,
-        EXPERIMENT_MAX_TARGETED_USERS, ExperimentDeliveryConfigResponse,
-        GatewayRolloutConfigResponse, InstanceConfigResponse, InstanceIntegrationsResponse,
-        InstanceMediaResponse, InstancePolicyResponse, InstanceRegistrationResponse,
-        LimitConfigResponse, NoiseSuppressionBackend, PUSH_SERVICE_DELIVERY_DEFAULT_SALT,
-        PendingRegistrationResponse, PushServiceDeliveryConfigResponse, RegistrationUrlResponse,
-        SsoConfigResponse, VOICE_NS_MAX_GUILD_OVERRIDES, VoiceNoiseSuppressionConfigResponse,
+        ALTCHA_CAPTCHA_COST_RANGE, ALTCHA_CAPTCHA_DEFAULT_SALT, ALTCHA_CAPTCHA_MAX_COUNTER_RANGE,
+        AltchaCaptchaConfigResponse, AppPublicConfigResponse, DOMAIN_MIGRATION_DEFAULT_SALT,
+        DomainMigrationConfigResponse, EXPERIMENT_MAX_TARGETED_USERS,
+        ExperimentDeliveryConfigResponse, GatewayRolloutConfigResponse, InstanceConfigResponse,
+        InstanceIntegrationsResponse, InstanceMediaResponse, InstancePolicyResponse,
+        InstanceRegistrationResponse, LimitConfigResponse, NoiseSuppressionBackend,
+        PUSH_SERVICE_DELIVERY_DEFAULT_SALT, PendingRegistrationResponse,
+        PushServiceDeliveryConfigResponse, RegistrationUrlResponse, SsoConfigResponse,
+        VOICE_NS_MAX_GUILD_OVERRIDES, VoiceNoiseSuppressionConfigResponse,
     },
     config::AdminConfig,
     middleware::auth::AuthContext,
@@ -151,6 +153,7 @@ pub fn instance_config_page(
                         (voice_noise_suppression_section(base, csrf_token, &instance_config.voice_noise_suppression))
                         (push_service_delivery_section(base, csrf_token, &instance_config.push_service_delivery))
                         (domain_migration_section(base, csrf_token, &instance_config.domain_migration))
+                        (altcha_captcha_section(base, csrf_token, &instance_config.altcha_captcha))
                         (experiment_delivery_section(base, csrf_token, &instance_config.experiment_delivery))
                         @if let Some(limit_config) = limit_config {
                             (limit_config_section(base, limit_config))
@@ -1444,6 +1447,145 @@ fn domain_migration_section(
 
                     (form_actions(html! {
                         (submit_button("Save Domain Migration Configuration"))
+                    }))
+                }
+            }
+        },
+    )
+}
+
+fn altcha_captcha_section(
+    base: &str,
+    csrf_token: &str,
+    altcha_captcha: &AltchaCaptchaConfigResponse,
+) -> Markup {
+    let status = if altcha_captcha.enabled {
+        ("Live", BadgeVariant::Success)
+    } else {
+        ("Inert", BadgeVariant::Default)
+    };
+    let included_user_ids = altcha_captcha.included_user_ids.join("\n");
+    let excluded_user_ids = altcha_captcha.excluded_user_ids.join("\n");
+    section_card_with_description(
+        "ALTCHA Captcha",
+        "Replaces the configured captcha provider with an ALTCHA proof-of-work check for the \
+         selected requesters. The API issues and verifies every challenge itself, so no third \
+         party is involved. Requests only need a captcha where one is already required, so this \
+         does nothing while captcha is off for the instance.",
+        html! {
+            form method="post" action={(base) "/instance-config?action=update_altcha_captcha"} {
+                (csrf_input(csrf_token))
+                div class="space-y-6" {
+                    div class="flex flex-wrap items-center gap-2" {
+                        h3 class="text-sm font-semibold text-neutral-900" { "Master switch" }
+                        (badge(status.0, status.1))
+                        span class="text-xs text-neutral-500" {
+                            "Config version " (altcha_captcha.config_version)
+                        }
+                    }
+                    (checkbox(
+                        "altcha_captcha_enabled",
+                        "true",
+                        "Serve ALTCHA to the selected requesters",
+                        altcha_captcha.enabled,
+                        true,
+                    ))
+                    p class="text-xs text-neutral-500" {
+                        "Off is the safe state and the kill switch. With this unchecked every \
+                         requester gets the configured provider and ALTCHA answers are rejected."
+                    }
+
+                    h3 class="text-sm font-semibold text-neutral-900" { "Logged-out requests" }
+                    (checkbox(
+                        "altcha_captcha_anonymous_enabled",
+                        "true",
+                        "Serve ALTCHA to logged-out requests",
+                        altcha_captcha.anonymous_enabled,
+                        true,
+                    ))
+                    p class="text-xs text-neutral-500" {
+                        "Covers registration, login and password reset. These requests have no \
+                         account to bucket, so this switch applies to all of them at once."
+                    }
+
+                    h3 class="text-sm font-semibold text-neutral-900" { "Rollout" }
+                    (number_field(
+                        "altcha_captcha_rollout_basis_points",
+                        "Rollout (basis points)",
+                        &altcha_captcha.rollout_basis_points.to_string(),
+                        Some(0), Some(10000), "1",
+                        Some("Share of logged-in users bucketed into ALTCHA, in basis points: 0 is nobody, 100 is 1%, 10000 is everybody."),
+                    ))
+                    div class="flex flex-col gap-2" {
+                        (text_input(
+                            "altcha_captcha_rollout_salt",
+                            "Rollout Salt",
+                            &altcha_captcha.rollout_salt,
+                            ALTCHA_CAPTCHA_DEFAULT_SALT,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Seeds the bucketing hash. Changing it reshuffles which users fall \
+                             inside the percentage above."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "altcha_captcha_included_user_ids",
+                            "Always-on User IDs",
+                            "1500000000000000001\n1500000000000000002",
+                            &included_user_ids,
+                            4,
+                            false,
+                        ))
+                        (entry_count_hint(
+                            altcha_captcha.included_user_ids.len(),
+                            EXPERIMENT_MAX_TARGETED_USERS,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "One snowflake per line, or comma separated. These users get ALTCHA \
+                             regardless of the percentage above. Invalid entries prevent the save."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "altcha_captcha_excluded_user_ids",
+                            "Never-on User IDs",
+                            "1500000000000000003\n1500000000000000004",
+                            &excluded_user_ids,
+                            4,
+                            false,
+                        ))
+                        (entry_count_hint(
+                            altcha_captcha.excluded_user_ids.len(),
+                            EXPERIMENT_MAX_TARGETED_USERS,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Same format. Exclusion wins over both the always-on list and the percentage."
+                        }
+                    }
+
+                    h3 class="text-sm font-semibold text-neutral-900" { "Difficulty" }
+                    (number_field(
+                        "altcha_captcha_cost",
+                        "Cost (PBKDF2 iterations per attempt)",
+                        &altcha_captcha.cost.to_string(),
+                        Some(*ALTCHA_CAPTCHA_COST_RANGE.start()),
+                        Some(*ALTCHA_CAPTCHA_COST_RANGE.end()),
+                        "1",
+                        Some("The API spends one attempt at this cost to issue each challenge."),
+                    ))
+                    (number_field(
+                        "altcha_captcha_max_counter",
+                        "Maximum counter",
+                        &altcha_captcha.max_counter.to_string(),
+                        Some(*ALTCHA_CAPTCHA_MAX_COUNTER_RANGE.start()),
+                        Some(*ALTCHA_CAPTCHA_MAX_COUNTER_RANGE.end()),
+                        "1",
+                        Some("Each challenge hides its answer between half this value and this value. The client tries counters from 0 until it finds it, so solve time grows with cost times this value. At the defaults a recent laptop takes about 3 seconds."),
+                    ))
+
+                    (form_actions(html! {
+                        (submit_button("Save ALTCHA Configuration"))
                     }))
                 }
             }

@@ -37,11 +37,11 @@ Fluxer skips the check in three cases, and the operation then proceeds with no C
 | Field | Type | Description |
 | --- | --- | --- |
 | X-Captcha-Token?<sup>1</sup> | string | The solution issued by the provider widget |
-| X-Captcha-Type?<sup>2</sup> | string | The provider that produced the solution, accepting `hcaptcha` or `turnstile` |
+| X-Captcha-Type?<sup>2</sup> | string | The provider that produced the solution, accepting `hcaptcha`, `turnstile` or `altcha` |
 
 <sup>1</sup> An absent or empty value on a gated operation returns 400 `CAPTCHA_REQUIRED`
 
-<sup>2</sup> An absent value selects the instance's configured provider, and so does any value other than `hcaptcha` or `turnstile`. Naming a provider the instance holds no secret key for returns 400 `INVALID_CAPTCHA`.
+<sup>2</sup> An absent value selects the instance's configured provider, and so does any value other than `hcaptcha`, `turnstile` or `altcha`. Naming a provider the instance holds no secret key for returns 400 `INVALID_CAPTCHA`. The value `altcha` is accepted only from a requester the [ALTCHA rollout](#altcha-proof-of-work) selects.
 
 ## The retry handshake
 
@@ -52,6 +52,21 @@ An accepted solution allows the operation to proceed. A rejected solution return
 :::caution[A solution is single-use]
 The provider treats an already redeemed solution as invalid. A client obtains a new solution before retrying after `INVALID_CAPTCHA` and MUST NOT replay the previous `X-Captcha-Token` value.
 :::
+
+## ALTCHA proof-of-work
+
+An operator can move selected requesters from the configured provider to an [ALTCHA](https://altcha.org) proof-of-work challenge that the API issues and verifies itself. The [ALTCHA captcha configuration](/admin-api/instance/#altcha-captcha-configuration-object) selects signed-in accounts by rollout share and allowlist, and logged-out requests with one switch. The check applies only where a captcha is already required, so an instance whose `provider` is `none` never serves it.
+
+For a selected requester, the `CAPTCHA_REQUIRED` and `INVALID_CAPTCHA` bodies have two more fields.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| captcha_provider | string | Always `altcha` |
+| altcha_challenge | object | An ALTCHA v2 challenge, with `parameters` and `signature` |
+
+The challenge uses `PBKDF2/SHA-256` and expires 10 minutes after it is issued. Solve it with an ALTCHA v2 solver, then retry with `X-Captcha-Type` set to `altcha` and `X-Captcha-Token` set to the base64 encoding of the JSON object `{"challenge": <the challenge>, "solution": <the solution>}`. Each challenge is accepted once. A replayed, expired or wrong solution returns 400 `INVALID_CAPTCHA` with a new challenge.
+
+A selected requester can still answer with the configured provider, so a client that does not read these fields keeps working.
 
 ## Provider verification
 

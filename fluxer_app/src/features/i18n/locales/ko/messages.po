@@ -6520,7 +6520,7 @@ msgid "Cannot delete account"
 msgstr "계정을 삭제할 수 없습니다"
 
 #. Toast error shown when captcha verification fails inside the auth captcha interceptor.
-#: src/features/auth/components/CaptchaInterceptor.tsx:14
+#: src/features/auth/components/CaptchaInterceptor.tsx:15
 msgid "Captcha verification failed. Try again."
 msgstr "캡차 인증에 실패했습니다. 다시 시도해 주세요."
 
@@ -7362,6 +7362,10 @@ msgstr "접근 권한 확인 중..."
 #: src/features/voice/components/modals/screen_share_picker_modal/ScreenSharePickerDisplayPermissionPrompt.tsx:23
 msgid "Checking screen recording permission..."
 msgstr "화면 녹화 권한 확인 중..."
+
+#: src/features/auth/components/AltchaVerification.tsx:62
+msgid "Checking your browser. This takes a few seconds."
+msgstr "브라우저를 확인 중입니다. 몇 초 정도 걸립니다."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:67
@@ -16803,7 +16807,7 @@ msgstr "혐오 발언"
 msgid "Having fun?"
 msgstr "재밌게 보내고 계신가요?"
 
-#: src/features/auth/components/modals/CaptchaModal.tsx:157
+#: src/features/auth/components/modals/CaptchaModal.tsx:175
 msgid "Having issues? Try hCaptcha instead"
 msgstr "문제가 있으신가요? hCaptcha를 대신 사용해 보세요"
 
@@ -34996,6 +35000,7 @@ msgid "Try a different variable name or clear the search."
 msgstr "다른 변수 이름을 사용하거나 검색을 지워주세요."
 
 #. Generic action label for retrying a failed or interrupted operation.
+#: src/features/auth/components/AltchaVerification.tsx:53
 #: src/features/auth/flow/AuthRouteLoadError.tsx:22
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:75
 msgid "Try again"
@@ -35073,7 +35078,7 @@ msgstr "보안 키/패스키로 시도하기"
 msgid "Try sending your message again."
 msgstr "메시지를 다시 보내보세요."
 
-#: src/features/auth/components/modals/CaptchaModal.tsx:159
+#: src/features/auth/components/modals/CaptchaModal.tsx:177
 msgid "Try Turnstile instead"
 msgstr "대신 Turnstile을 시도해 보세요"
 
@@ -37279,7 +37284,7 @@ msgid "Verify phone number form"
 msgstr "전화번호 인증 양식"
 
 #. Short label in the authentication captcha modal. Keep the tone plain and specific.
-#: src/features/auth/components/modals/CaptchaModal.tsx:15
+#: src/features/auth/components/modals/CaptchaModal.tsx:17
 msgid "Verify you're human"
 msgstr "사람인지 확인"
 
@@ -38339,7 +38344,7 @@ msgstr "브라질에서 {premiumProductName} 가격을 인하했습니다. 이�
 msgid "We need one verification step before you continue. This helps protect accounts and keep spam off {productName}."
 msgstr "계속하기 전에 한 단계의 인증이 필요합니다. 이는 계정을 보호하고 {productName}에서 스팸을 방지하는 데 도움이 됩니다."
 
-#: src/features/auth/components/modals/CaptchaModal.tsx:116
+#: src/features/auth/components/modals/CaptchaModal.tsx:128
 msgid "We need to make sure you're not a bot. Complete the verification below."
 msgstr "로봇이 아님을 확인해야 합니다. 아래 인증을 완료해 주세요."
 
@@ -39971,6 +39976,10 @@ msgstr "요청하신 작업이 안전 시스템에 감지되어 완료되지 않
 #: src/features/guild/components/modals/guild_tabs/GuildDiscoveryTab.tsx:409
 msgid "Your application is pending review. You can still update your listing details or withdraw the application."
 msgstr "신청이 검토 대기 중입니다. 등록 정보를 업데이트하거나 신청을 철회할 수 있습니다."
+
+#: src/features/auth/components/AltchaVerification.tsx:50
+msgid "Your browser couldn't finish the check."
+msgstr "브라우저에서 확인을 완료할 수 없습니다."
 
 #. Body of the browser-audio-required modal explaining why the user must click before audio can play.
 #: src/features/voice/components/modals/AudioPlaybackPermissionModal.tsx:12

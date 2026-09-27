@@ -27,6 +27,8 @@ pub struct InstanceConfigResponse {
     #[serde(default)]
     pub domain_migration: DomainMigrationConfigResponse,
     #[serde(default)]
+    pub altcha_captcha: AltchaCaptchaConfigResponse,
+    #[serde(default)]
     pub experiment_delivery: ExperimentDeliveryConfigResponse,
 }
 
@@ -453,6 +455,9 @@ impl VoiceE2eeScope {
 pub const EXPERIMENT_MAX_TARGETED_USERS: usize = 1_000;
 pub const PUSH_SERVICE_DELIVERY_DEFAULT_SALT: &str = "push-service-delivery-v1";
 pub const DOMAIN_MIGRATION_DEFAULT_SALT: &str = "domain-migration-v1";
+pub const ALTCHA_CAPTCHA_DEFAULT_SALT: &str = "altcha-captcha-v1";
+pub const ALTCHA_CAPTCHA_COST_RANGE: std::ops::RangeInclusive<u32> = 1_000..=100_000;
+pub const ALTCHA_CAPTCHA_MAX_COUNTER_RANGE: std::ops::RangeInclusive<u32> = 100..=1_000_000;
 pub const VOICE_NS_MAX_GUILD_OVERRIDES: usize = 200;
 
 impl NoiseSuppressionBackend {
@@ -637,6 +642,56 @@ pub struct DomainMigrationConfigUpdateRequest {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(default)]
+pub struct AltchaCaptchaConfigResponse {
+    pub enabled: bool,
+    pub config_version: u64,
+    pub rollout_basis_points: u32,
+    pub rollout_salt: String,
+    pub included_user_ids: Vec<String>,
+    pub excluded_user_ids: Vec<String>,
+    pub anonymous_enabled: bool,
+    pub cost: u32,
+    pub max_counter: u32,
+}
+
+impl Default for AltchaCaptchaConfigResponse {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            config_version: 0,
+            rollout_basis_points: 0,
+            rollout_salt: ALTCHA_CAPTCHA_DEFAULT_SALT.to_owned(),
+            included_user_ids: Vec::new(),
+            excluded_user_ids: Vec::new(),
+            anonymous_enabled: false,
+            cost: 5_000,
+            max_counter: 10_000,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct AltchaCaptchaConfigUpdateRequest {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enabled: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rollout_basis_points: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub rollout_salt: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub included_user_ids: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub excluded_user_ids: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub anonymous_enabled: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub cost: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_counter: Option<u32>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[serde(default)]
 pub struct ExperimentDeliveryConfigResponse {
     pub poll_interval_seconds: u64,
     pub poll_jitter_percent: u32,
@@ -754,6 +809,8 @@ pub struct InstanceConfigUpdateRequest {
     pub push_service_delivery: Option<PushServiceDeliveryConfigUpdateRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub domain_migration: Option<DomainMigrationConfigUpdateRequest>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub altcha_captcha: Option<AltchaCaptchaConfigUpdateRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub experiment_delivery: Option<ExperimentDeliveryConfigUpdateRequest>,
 }
@@ -1094,17 +1151,24 @@ mod tests {
             .expect("default noise config");
         let domain_migration = serde_json::from_value::<DomainMigrationConfigResponse>(json!({}))
             .expect("default domain migration config");
+        let altcha_captcha = serde_json::from_value::<AltchaCaptchaConfigResponse>(json!({}))
+            .expect("default altcha captcha config");
         let delivery = serde_json::from_value::<ExperimentDeliveryConfigResponse>(json!({}))
             .expect("default delivery config");
         let noise = serde_json::to_value(noise).expect("serializable noise config");
         let domain_migration =
             serde_json::to_value(domain_migration).expect("serializable domain migration config");
+        let altcha_captcha =
+            serde_json::to_value(altcha_captcha).expect("serializable altcha captcha config");
         let delivery = serde_json::to_value(delivery).expect("serializable delivery config");
         let generated_noise: generated_types::VoiceNoiseSuppressionConfigResponse =
             serde_json::from_value(noise.clone()).expect("generated noise config contract");
         let generated_domain_migration: generated_types::DomainMigrationConfigResponse =
             serde_json::from_value(domain_migration.clone())
                 .expect("generated domain migration config contract");
+        let generated_altcha_captcha: generated_types::AltchaCaptchaConfigResponse =
+            serde_json::from_value(altcha_captcha.clone())
+                .expect("generated altcha captcha config contract");
         let generated_delivery: generated_types::ExperimentDeliveryConfigResponse =
             serde_json::from_value(delivery.clone()).expect("generated delivery config contract");
         assert_eq!(
@@ -1117,6 +1181,11 @@ mod tests {
             domain_migration
         );
         assert_eq!(
+            serde_json::to_value(generated_altcha_captcha)
+                .expect("serializable generated altcha captcha config"),
+            altcha_captcha
+        );
+        assert_eq!(
             serde_json::to_value(generated_delivery)
                 .expect("serializable generated delivery config"),
             delivery
@@ -1124,6 +1193,7 @@ mod tests {
         for (name, value) in [
             ("VoiceNoiseSuppressionConfigResponse", noise),
             ("DomainMigrationConfigResponse", domain_migration),
+            ("AltchaCaptchaConfigResponse", altcha_captcha),
             ("ExperimentDeliveryConfigResponse", delivery),
         ] {
             for (field, value) in value.as_object().expect("config object") {

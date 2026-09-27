@@ -201,6 +201,7 @@
 		"@sapphi-red/web-noise-suppressor": "catalog:",
 		"@simplewebauthn/browser": "catalog:",
 		"@tanstack/react-virtual": "^3.14.13",
+		"altcha-lib": "catalog:",
 		"animejs": "4.5.0",
 		"bowser": "catalog:",
 		"clsx": "catalog:",

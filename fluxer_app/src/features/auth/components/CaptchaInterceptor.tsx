@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {type AltchaChallenge, readAltchaChallenge} from '@app/features/auth/altcha/AltchaSolver';
 import {CaptchaModal, type CaptchaType} from '@app/features/auth/components/modals/CaptchaModal';
 import {http} from '@app/features/platform/transport/RestTransport';
 import type {RestResponse} from '@app/features/platform/types/TransportTypes';
@@ -69,7 +70,7 @@ class CaptchaInterceptorState {
 		return code === 'CAPTCHA_REQUIRED' || code === 'INVALID_CAPTCHA';
 	}
 
-	private showCaptchaModal(): Promise<CaptchaResult> {
+	private showCaptchaModal(altchaChallenge: AltchaChallenge | null): Promise<CaptchaResult> {
 		if (this.pendingPromise) {
 			this.pendingPromise.reject(new Error('Captcha cancelled'));
 			this.pendingPromise = null;
@@ -95,6 +96,7 @@ class CaptchaInterceptorState {
 			};
 			const CaptchaModalWrapper = observer(() => (
 				<CaptchaModal
+					altchaChallenge={altchaChallenge}
 					onVerify={handleVerify}
 					onCancel={handleCancel}
 					error={this.state.error}
@@ -119,7 +121,7 @@ class CaptchaInterceptorState {
 			const errorMessage = replyMessage(reply.body) || i18n._(CAPTCHA_VERIFICATION_FAILED_PLEASE_TRY_AGAIN_DESCRIPTOR);
 			this.state.setError(errorMessage);
 			this.state.setIsVerifying(false);
-			const promise = this.showCaptchaModal()
+			const promise = this.showCaptchaModal(readAltchaChallenge(reply.body))
 				.then((captchaResult) => {
 					this.state.setError(null);
 					this.state.setIsVerifying(false);

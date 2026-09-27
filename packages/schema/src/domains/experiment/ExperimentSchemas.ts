@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {AltchaCaptchaAssignmentResponse} from '@fluxer/schema/src/domains/admin/AltchaCaptchaSchemas';
 import {
 	DomainMigrationAssignmentResponse,
 	INERT_DOMAIN_MIGRATION_ASSIGNMENT,
@@ -47,6 +48,7 @@ export type ExperimentDeliveryConfigResponse = z.infer<typeof ExperimentDelivery
 const ExperimentAssignmentsSchema = z.object({
 	voice_noise_suppression: VoiceNoiseSuppressionAssignmentResponse.optional(),
 	domain_migration: DomainMigrationAssignmentResponse.optional(),
+	altcha_captcha: AltchaCaptchaAssignmentResponse.optional(),
 });
 
 export const ExperimentAssignmentsResponse = z.object({
