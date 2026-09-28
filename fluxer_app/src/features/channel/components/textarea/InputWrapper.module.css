@@ -53,7 +53,7 @@
 	--slowmode-indicator-height: var(--composer-status-line-height, 1.125rem);
 	position: absolute;
 	inset-inline: var(--composer-box-padding-inline, 0px);
-	bottom: calc(100% + var(--composer-status-safe-gap, 0.5rem));
+	bottom: 100%;
 	z-index: 3;
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) minmax(0, auto);
@@ -61,7 +61,7 @@
 	gap: 0.5rem;
 	min-width: 0;
 	max-width: 100%;
-	height: var(--composer-status-line-height, 1.125rem);
+	height: var(--composer-status-row-height, 1.5rem);
 	box-sizing: border-box;
 	pointer-events: none;
 }
