@@ -237,6 +237,7 @@ export const UserProfileTimezoneInfo: React.FC<{profile: Profile}> = observer(({
 	const localTime = getCachedDateTimeFormat(locale, {
 		hour: 'numeric',
 		minute: '2-digit',
+		hour12: DateUtils.shouldUse12HourFormat(locale),
 		timeZone: 'UTC',
 	}).format(getDateAtOffset(now, timezoneOffset));
 	const offsetDifference = timezoneOffset - getViewerOffsetMinutes();
