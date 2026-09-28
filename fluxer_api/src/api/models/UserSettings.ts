@@ -216,7 +216,7 @@ export class UserSettings {
 			friend_source_flags: friendSourceFlags,
 			incoming_call_flags: IncomingCallFlags.FRIENDS_ONLY,
 			group_dm_add_permission_flags: GroupDmAddPermissionFlags.FRIENDS_ONLY,
-			default_guilds_restricted: false,
+			default_guilds_restricted: true,
 			bot_default_guilds_restricted: false,
 			restricted_guilds: new Set(),
 			bot_restricted_guilds: new Set(),

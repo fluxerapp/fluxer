@@ -9,6 +9,7 @@ import {
 	createGroupDmChannel,
 	createGuild,
 	getChannel,
+	updateUserSettings,
 } from '@app/api/channel/tests/ChannelTestUtils';
 import {ensureSessionStarted} from '@app/api/message/tests/MessageTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
@@ -39,6 +40,8 @@ describe('Voice Call Ringing', () => {
 		const user2 = await createTestAccount(harness);
 		await ensureSessionStarted(harness, user1.token);
 		await ensureSessionStarted(harness, user2.token);
+		await updateUserSettings(harness, user1.token, {default_guilds_restricted: false});
+		await updateUserSettings(harness, user2.token, {default_guilds_restricted: false});
 		const guild = await createGuild(harness, user1.token, 'Mutual Guild');
 		const invite = await createChannelInvite(harness, user1.token, guild.system_channel_id!);
 		await acceptInvite(harness, user2.token, invite.code);
