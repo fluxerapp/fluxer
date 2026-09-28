@@ -115,15 +115,15 @@ export const SlowmodeIndicator = observer(({slowmodeRemaining, slowmodeDuration,
 				className={clsx(styles.container, onCooldown && styles.cooldown)}
 				data-flx="channel.slowmode-indicator.container"
 			>
-				<span className={styles.label} data-flx="channel.slowmode-indicator.label">
-					{statusLabel}
-				</span>
 				<ClockIcon
 					size={remFromPx(12)}
 					weight="fill"
 					className={styles.icon}
 					data-flx="channel.slowmode-indicator.clock-icon"
 				/>
+				<span className={styles.label} data-flx="channel.slowmode-indicator.label">
+					{statusLabel}
+				</span>
 			</div>
 		</Tooltip>
 	);

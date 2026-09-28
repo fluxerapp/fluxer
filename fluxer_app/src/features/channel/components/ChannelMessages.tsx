@@ -14,6 +14,7 @@ import styles from '@app/features/channel/components/ChannelMessages.module.css'
 import {ChannelWelcomeSection} from '@app/features/channel/components/ChannelWelcomeSection';
 import {CollapsedMessageVisibilityProvider} from '@app/features/channel/components/CollapsedMessageVisibilityContext';
 import {NewMessagesBar} from '@app/features/channel/components/NewMessagesBar';
+import {usePresentableTypingUsers} from '@app/features/channel/components/TypingUsers';
 import {UploadManager} from '@app/features/channel/components/UploadManager';
 import type {Channel} from '@app/features/channel/models/Channel';
 import GatewayConnection from '@app/features/gateway/transport/GatewayConnection';
@@ -637,6 +638,7 @@ export const Messages = observer(function Messages({
 		? i18n._(MESSAGE_LIST_FOR_DESCRIPTOR, {channelName: channel.name})
 		: i18n._(MESSAGE_LIST_DESCRIPTOR);
 	const messageListLiveMode = Accessibility.screenReaderAnnounceNewMessages && state.isAtBottom ? 'polite' : 'off';
+	const composerStatusVisible = usePresentableTypingUsers(channel).length > 0 || channel.rateLimitPerUser > 0;
 	const topFillerVisible = selectChannelMessagesFillerVisible({
 		reducedMotion: Accessibility.useReducedMotion,
 		scrollManagerInitialized: scrollManager.lifecycleIsInitialized(),
@@ -719,6 +721,15 @@ export const Messages = observer(function Messages({
 						</div>
 					</div>
 				</Scroller>
+				<div
+					className={clsx(
+						styles.bottomFade,
+						composerStatusVisible &&
+							(state.isAtBottom ? styles.bottomFadeStatusAtBottom : styles.bottomFadeStatusScrolled),
+					)}
+					aria-hidden="true"
+					data-flx="channel.messages.bottom-fade"
+				/>
 			</div>
 			{bottomBar}
 		</div>
