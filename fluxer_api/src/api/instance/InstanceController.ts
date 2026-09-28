@@ -12,6 +12,7 @@ import type {InstanceCaptchaEffectiveConfig} from '@app/api/instance/InstanceCon
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import {isBillingActive, isPremiumTieringActive, isStripeServiceable} from '@app/api/stripe/BillingConfigCache';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {API_CODE_VERSION} from '@fluxer/constants/src/AppConstants';
 import {buildDiscoveryResponse, type DiscoveryStaticInput} from '@fluxer/instance_bootstrap/src/BuildDiscovery';
@@ -66,7 +67,9 @@ function buildDiscoveryStaticInput(
 		},
 		features: {
 			voice_enabled: Config.voice.enabled,
-			stripe_enabled: Config.stripe.enabled,
+			stripe_enabled: isBillingActive(),
+			premium_enabled: isPremiumTieringActive(),
+			stripe_serviceable: isStripeServiceable(),
 			self_hosted: Config.instance.selfHosted,
 			presigned_attachment_uploads: Config.presignedAttachmentUploadsEnabled,
 			emails_enabled: runtime.emailEnabled,

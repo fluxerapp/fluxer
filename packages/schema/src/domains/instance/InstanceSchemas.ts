@@ -39,6 +39,8 @@ export const InstanceBrandingSchema = z
 			.string()
 			.nullable()
 			.describe('Optional public status page incident history URL'),
+		premium_product_name: z.string().describe('Name of the premium tier shown by client applications'),
+		premium_info_url: z.string().nullable().describe('Optional absolute URL of a page describing the premium tier'),
 	})
 	.describe('Branding values safe to expose to clients');
 export type InstanceBranding = z.infer<typeof InstanceBrandingSchema>;
@@ -104,7 +106,13 @@ export type InstanceCaptcha = z.infer<typeof InstanceCaptchaSchema>;
 export const InstanceFeaturesSchema = z
 	.object({
 		voice_enabled: z.boolean().describe('Whether voice/video calling is enabled'),
-		stripe_enabled: z.boolean().describe('Whether Stripe payments are enabled'),
+		stripe_enabled: z.boolean().describe('Whether premium purchases through Stripe are available'),
+		premium_enabled: z
+			.boolean()
+			.describe('Whether this instance has a premium tier, so premium status, gifts and perks apply'),
+		stripe_serviceable: z
+			.boolean()
+			.describe('Whether existing Stripe subscriptions can be managed, cancelled and billed on this instance'),
 		self_hosted: z.boolean().describe('Whether this is a self-hosted instance'),
 		presigned_attachment_uploads: z.boolean().describe('Whether clients can request presigned attachment upload URLs'),
 		emails_enabled: z.boolean().describe('Whether the instance sends emails (verification, password reset, etc.)'),

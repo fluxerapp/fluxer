@@ -2,6 +2,7 @@
 
 use serde::{Deserialize, Serialize};
 
+use super::{InstanceBillingResponse, InstanceBillingUpdateRequest};
 pub use crate::api::generated::types::VoiceNoiseSuppressionBackendSchema as NoiseSuppressionBackend;
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -32,6 +33,8 @@ pub struct InstanceConfigResponse {
     pub profile_timezone: ProfileTimezoneConfigResponse,
     #[serde(default)]
     pub experiment_delivery: ExperimentDeliveryConfigResponse,
+    #[serde(default)]
+    pub billing: InstanceBillingResponse,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -336,6 +339,9 @@ pub struct AppBrandingConfigResponse {
     pub theme_color: Option<String>,
     pub status_page_url: Option<String>,
     pub status_page_incident_history_url: Option<String>,
+    #[serde(default = "default_premium_product_name")]
+    pub premium_product_name: String,
+    pub premium_info_url: Option<String>,
 }
 
 impl Default for AppBrandingConfigResponse {
@@ -350,12 +356,18 @@ impl Default for AppBrandingConfigResponse {
             theme_color: None,
             status_page_url: None,
             status_page_incident_history_url: None,
+            premium_product_name: default_premium_product_name(),
+            premium_info_url: None,
         }
     }
 }
 
 fn default_product_name() -> String {
     "Fluxer".to_owned()
+}
+
+fn default_premium_product_name() -> String {
+    "Premium".to_owned()
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -855,6 +867,8 @@ pub struct InstanceConfigUpdateRequest {
     pub profile_timezone: Option<ProfileTimezoneConfigUpdateRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub experiment_delivery: Option<ExperimentDeliveryConfigUpdateRequest>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub billing: Option<InstanceBillingUpdateRequest>,
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
@@ -1063,6 +1077,10 @@ pub struct AppBrandingConfigUpdateRequest {
     pub status_page_url: Option<Option<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub status_page_incident_history_url: Option<Option<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub premium_product_name: Option<Option<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub premium_info_url: Option<Option<String>>,
 }
 
 #[derive(Clone, Debug, Default, Serialize)]

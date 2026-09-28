@@ -97,7 +97,7 @@ import type {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2Toke
 import type {ReadStateRepository} from '@app/api/read_state/ReadStateRepository';
 import type {ReadStateService} from '@app/api/read_state/ReadStateService';
 import type {ReportRepository} from '@app/api/report/ReportRepository';
-import {STRIPE_API_VERSION} from '@app/api/stripe/StripeApiVersion';
+import {getStripeClient} from '@app/api/stripe/StripeClient';
 import {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import type {UserContactChangeLogService} from '@app/api/user/services/UserContactChangeLogService';
@@ -113,7 +113,7 @@ import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
 import type {RateLimitService} from '@pkgs/rate_limit/src/RateLimitService';
 import type {IVirusScanService} from '@pkgs/virus_scan/src/IVirusScanService';
 import type {IWorkerService} from '@pkgs/worker/src/contracts/IWorkerService';
-import Stripe from 'stripe';
+import type Stripe from 'stripe';
 
 export interface WorkerDependencies {
 	kvClient: IKVProvider;
@@ -263,14 +263,6 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 		ipInfoService,
 	});
 	const billingRepository = new BillingRepository(snowflakeService, kvClient);
-	let stripe: Stripe | null = null;
-	if (Config.stripe.enabled && Config.stripe.secretKey) {
-		stripe = new Stripe(Config.stripe.secretKey, {
-			apiVersion: STRIPE_API_VERSION,
-			httpClient: Config.dev.testModeEnabled ? Stripe.createFetchHttpClient() : undefined,
-		});
-		Logger.info('Stripe initialized');
-	}
 	Logger.info('Worker dependencies initialized successfully');
 	return {
 		kvClient,
@@ -325,6 +317,8 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 		guildAuditLogService,
 		contactChangeLogService,
 		ncmecSubmissionService,
-		stripe,
+		get stripe() {
+			return getStripeClient();
+		},
 	};
 }

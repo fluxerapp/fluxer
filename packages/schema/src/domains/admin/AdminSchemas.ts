@@ -24,6 +24,10 @@ import {
 	GatewayRolloutConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
 import {
+	InstanceBillingResponse,
+	InstanceBillingUpdateRequest,
+} from '@fluxer/schema/src/domains/admin/InstanceBillingSchemas';
+import {
 	ProfileTimezoneConfigResponse,
 	ProfileTimezoneConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/admin/ProfileTimezoneSchemas';
@@ -67,6 +71,7 @@ import {
 	withOpenApiType,
 } from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {EmailType} from '@fluxer/schema/src/primitives/UserValidators';
+import {schemaMetadata} from '@fluxer/schema/src/SchemaMetadata';
 import {z} from 'zod';
 
 const ReportStatusSchema = withOpenApiType(
@@ -504,6 +509,8 @@ const AppPublicConfigResponse = z.object({
 		theme_color: z.string().nullable(),
 		status_page_url: z.string().nullable(),
 		status_page_incident_history_url: z.string().nullable(),
+		premium_product_name: z.string(),
+		premium_info_url: z.string().nullable(),
 	}),
 	setup: z.object({
 		configured: z.boolean(),
@@ -517,6 +524,15 @@ const AppPublicConfigResponse = z.object({
 	}),
 });
 
+function isAbsoluteHttpUrl(value: string): boolean {
+	try {
+		const url = new URL(value);
+		return (url.protocol === 'http:' || url.protocol === 'https:') && url.hostname.length > 0;
+	} catch {
+		return false;
+	}
+}
+
 const AppPublicConfigUpdateRequest = z.object({
 	branding: z
 		.object({
@@ -529,7 +545,10 @@ const AppPublicConfigUpdateRequest = z.object({
 			theme_color: z.string().trim().max(64).nullish(),
 			status_page_url: z.string().trim().max(2048).nullish(),
 			status_page_incident_history_url: z.string().trim().max(2048).nullish(),
+			premium_product_name: z.string().trim().min(1).max(40).nullable().optional(),
+			premium_info_url: z.string().trim().max(2048).refine(isAbsoluteHttpUrl).nullish(),
 		})
+		.register(schemaMetadata, {preserveNullFields: true})
 		.nullish(),
 	setup: z
 		.object({
@@ -668,6 +687,7 @@ export const InstanceConfigResponse = z.object({
 	policy: InstancePolicyResponse,
 	integrations: InstanceIntegrationsResponse,
 	media: InstanceMediaResponse,
+	billing: InstanceBillingResponse,
 });
 
 export type InstanceConfigResponse = z.infer<typeof InstanceConfigResponse>;
@@ -804,6 +824,7 @@ export const InstanceConfigUpdateRequest = z.object({
 		})
 		.nullish(),
 	policy: InstancePolicyUpdateSchema.nullish(),
+	billing: InstanceBillingUpdateRequest.nullish(),
 });
 
 export type InstanceConfigUpdateRequest = z.infer<typeof InstanceConfigUpdateRequest>;

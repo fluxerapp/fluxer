@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {PremiumModal} from '@app/features/premium/components/modals/PremiumModal';
+import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {modal} from '@app/features/ui/commands/ModalCommands';
 
@@ -10,7 +10,7 @@ interface OpenOptions {
 }
 
 export function open(optionsOrDefaultGiftMode: OpenOptions | boolean = {}): void {
-	if (RuntimeConfig.isSelfHosted()) {
+	if (!shouldShowPremiumFeatures()) {
 		return;
 	}
 	const options =

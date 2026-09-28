@@ -5,7 +5,7 @@ import {shouldShowClaimedAccountSettings} from '@app/features/user/components/se
 import type {SearchableSettingDescriptor} from '@app/features/user/components/settings_utils/search_index/SearchIndexTypes';
 import {
 	BACKGROUND_DESCRIPTOR,
-	PLUTONIUM_DESCRIPTOR,
+	PREMIUM_PRODUCT_NAME_KEYWORD,
 } from '@app/features/user/components/settings_utils/search_index/SharedDescriptors';
 import Users from '@app/features/user/state/Users';
 import {msg} from '@lingui/core/macro';
@@ -311,7 +311,7 @@ export const myProfileIndex: Array<SearchableSettingDescriptor> = [
 		id: 'profile-badge',
 		tabType: 'my_profile',
 		label: BADGE_DESCRIPTOR,
-		keywords: [BADGE_DESCRIPTOR, PREMIUM_BADGE_DESCRIPTOR, PLUTONIUM_DESCRIPTOR],
+		keywords: [BADGE_DESCRIPTOR, PREMIUM_BADGE_DESCRIPTOR, PREMIUM_PRODUCT_NAME_KEYWORD],
 		description: CONFIGURE_YOUR_PROFILE_BADGE_DESCRIPTOR,
 		isVisible: shouldShowPremiumBadgeSettings,
 	},

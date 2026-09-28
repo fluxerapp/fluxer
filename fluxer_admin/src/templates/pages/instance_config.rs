@@ -26,6 +26,7 @@ use crate::{
             section_card::{section_card_simple, section_card_with_description},
         },
         layout::admin_layout,
+        pages::instance_billing::premium_billing_section,
     },
     utils::timestamps::format_admin_timestamp,
 };
@@ -127,7 +128,25 @@ pub fn instance_config_page(
                         "Community & policy",
                         "Community shape, direct messaging, the premium model, and optional embed services.",
                         html! {
-                            (policy_config_section(base, csrf_token, &instance_config.policy))
+                            (policy_config_section(
+                                base,
+                                csrf_token,
+                                &instance_config.policy,
+                                &instance_config.app_public.branding.premium_product_name,
+                            ))
+                        },
+                    ))
+                    (config_group(
+                        "Premium & billing",
+                        "The premium tier's name, Stripe credentials and the prices members pay.",
+                        html! {
+                            (premium_billing_section(
+                                base,
+                                csrf_token,
+                                &instance_config.app_public.branding,
+                                &instance_config.billing,
+                                instance_config.policy.premium_mode,
+                            ))
                         },
                     ))
                 }
@@ -209,7 +228,12 @@ fn config_group(title: &str, description: &str, content: Markup) -> Markup {
     }
 }
 
-fn policy_config_section(base: &str, csrf_token: &str, policy: &InstancePolicyResponse) -> Markup {
+fn policy_config_section(
+    base: &str,
+    csrf_token: &str,
+    policy: &InstancePolicyResponse,
+    premium_name: &str,
+) -> Markup {
     section_card_with_description(
         "Community & Policy",
         "Control whether this instance runs as a single community, whether direct messages and \
@@ -219,7 +243,7 @@ fn policy_config_section(base: &str, csrf_token: &str, policy: &InstancePolicyRe
             div class="space-y-8" {
                 (single_community_form(base, csrf_token, policy))
                 (direct_messages_form(base, csrf_token, policy))
-                (premium_mode_form(base, csrf_token, policy))
+                (premium_mode_form(base, csrf_token, policy, premium_name))
                 (services_form(base, csrf_token, policy))
             }
         },
@@ -363,7 +387,14 @@ fn deferred_phone_gate_form(
     }
 }
 
-fn premium_mode_form(base: &str, csrf_token: &str, policy: &InstancePolicyResponse) -> Markup {
+fn premium_mode_form(
+    base: &str,
+    csrf_token: &str,
+    policy: &InstancePolicyResponse,
+    premium_name: &str,
+) -> Markup {
+    let mirror_label = format!("Mirror (Free and {premium_name} tiers)");
+    let everyone_label = format!("Everyone (every member gets {premium_name} limits)");
     html! {
         div class="space-y-4 border-t border-neutral-200 pt-6" {
             h3 class="text-sm font-semibold text-neutral-900" { "Premium model" }
@@ -371,8 +402,8 @@ fn premium_mode_form(base: &str, csrf_token: &str, policy: &InstancePolicyRespon
                 (csrf_input(csrf_token))
                 div class="space-y-4" {
                     (select_input("policy_premium_mode", "Premium model", &[
-                        ("mirror", "Mirror (Free and Premium tiers)"),
-                        ("everyone", "Everyone (every member gets Plutonium limits)"),
+                        ("mirror", mirror_label.as_str()),
+                        ("everyone", everyone_label.as_str()),
                     ], policy.premium_mode.as_str()))
                     (form_actions(html! {
                         (submit_button("Save premium model"))
@@ -2356,7 +2387,7 @@ fn sso_config_section(base: &str, csrf_token: &str, sso: &SsoConfigResponse) -> 
 
 fn limit_config_section(base: &str, limit_config: &LimitConfigResponse) -> Markup {
     let description = if limit_config.self_hosted.unwrap_or(false) {
-        "Self-hosted instance with all premium features enabled. Configure user and guild limits."
+        "Self-hosted instance with all premium features enabled by default. Configure user and guild limits."
     } else {
         "Configure limit rules that control user and guild restrictions based on traits and features."
     };
@@ -2452,6 +2483,16 @@ mod tests {
         assert!(unaccepted.contains("Not accepted"));
         assert!(unaccepted.contains("value=\"Never\""));
         assert!(unaccepted.contains("value=\"Nobody\""));
+    }
+
+    #[test]
+    fn premium_mode_options_use_the_configured_premium_name() {
+        let markup =
+            premium_mode_form("/admin", "csrf", &InstancePolicyResponse::default(), "Gold")
+                .into_string();
+        assert!(markup.contains("Mirror (Free and Gold tiers)"));
+        assert!(markup.contains("Everyone (every member gets Gold limits)"));
+        assert!(!markup.contains("Plutonium"));
     }
 
     #[test]

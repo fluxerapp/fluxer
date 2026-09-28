@@ -170,9 +170,9 @@ A 429 `RESOURCE_LOCKED` response has `Retry-After: 1`, and a 429 `IP_AUTHORIZATI
 
 A global denial has `Retry-After`, `X-RateLimit-Scope`, and `X-RateLimit-Global` alone.
 
-## Hosted-only routes
+## Conditional routes
 
-A small set of routes exists only on the hosted Fluxer deployment. A self-hosted deployment answers one of them with 404 `NOT_FOUND`. [Deployment availability](/http-api/deployment-availability/) lists every hosted-only route and states how a client resolves the deployment kind before authenticating.
+A small set of routes depends on the deployment. A self-hosted deployment serves some of them only while its operator runs a premium tier or sells it, never serves the rest, and answers an unserved one with 404 `NOT_FOUND`. [Deployment availability](/http-api/deployment-availability/) lists every such route and states how a client reads which ones a deployment serves before authenticating.
 
 ## Cross-origin requests
 

@@ -471,7 +471,9 @@ fn deserialize_instance_config_response_with_unknown_keys() {
                 "wordmark_url": "https://cdn.example.com/wordmark.svg",
                 "favicon_url": "https://cdn.example.com/favicon.ico",
                 "theme_color": "#5865f2",
-                "future_asset_url": "https://cdn.example.com/future.png"
+                "future_asset_url": "https://cdn.example.com/future.png",
+                "premium_product_name": "Gold",
+                "premium_info_url": "https://example.com/gold"
             },
             "setup": {"configured": true},
             "legal": {
@@ -569,6 +571,36 @@ fn deserialize_instance_config_response_with_unknown_keys() {
                 }
             }
         },
+        "billing": {
+            "enabled": true,
+            "effective_enabled": true,
+            "stripe_secret_key_set": true,
+            "stripe_webhook_secret_set": false,
+            "stripe_secret_key_stored": true,
+            "stripe_webhook_secret_stored": false,
+            "automatic_tax": null,
+            "tax_id_collection": true,
+            "terms_consent_required": false,
+            "effective_automatic_tax": false,
+            "effective_tax_id_collection": true,
+            "effective_terms_consent_required": false,
+            "default_currency": "GBP",
+            "prices": {
+                "GBP": {
+                    "monthly": "price_1GbpM",
+                    "yearly": "price_1GbpY",
+                    "gift_1_month": null,
+                    "gift_1_year": "price_1GbpG"
+                }
+            },
+            "country_currencies": {"GB": "GBP"},
+            "legacy_prices": {"monthly_GBP": ["price_1OldA"]},
+            "billing_active": true,
+            "stripe_serviceable": true,
+            "catalog_mode": "operator",
+            "webhook_url": "https://api.example.com/stripe/webhook",
+            "future_billing_knob": 1
+        },
         "future_section": {"enabled": true, "rollout_basis_points": 10000},
         "future_flag": 3
     }"##;
@@ -606,7 +638,35 @@ fn deserialize_instance_config_response_with_unknown_keys() {
     assert!(resp.policy.single_community_guild_id.is_none());
     assert_eq!(resp.policy.services.gif_enabled, Some(true));
     assert_eq!(resp.app_public.branding.product_name, "Fluxer");
+    assert_eq!(resp.app_public.branding.premium_product_name, "Gold");
+    assert!(resp.billing.billing_active);
     assert!(resp.media.attachment_decay.effective.enabled);
+
+    let ours: types::InstanceConfigResponse =
+        serde_json::from_str(json).expect("hand-written instance config");
+    assert_eq!(ours.app_public.branding.premium_product_name, "Gold");
+    assert!(ours.billing.stripe_secret_key_stored);
+    assert_eq!(ours.billing.tax_id_collection, Some(true));
+    assert!(ours.billing.effective_tax_id_collection);
+    assert_eq!(
+        ours.app_public.branding.premium_info_url.as_deref(),
+        Some("https://example.com/gold")
+    );
+    assert!(ours.billing.billing_active);
+    assert!(ours.billing.stripe_serviceable);
+    assert!(!ours.billing.stripe_webhook_secret_set);
+    assert_eq!(
+        ours.billing.catalog_mode,
+        types::BillingCatalogMode::Operator
+    );
+    assert_eq!(ours.billing.default_currency.as_deref(), Some("GBP"));
+    let gbp = &ours.billing.prices.as_ref().expect("prices")["GBP"];
+    assert_eq!(gbp.gift_1_year.as_deref(), Some("price_1GbpG"));
+    assert_eq!(gbp.gift_1_month, None);
+    assert_eq!(
+        ours.billing.legacy_prices.as_ref().expect("legacy")["monthly_GBP"],
+        vec!["price_1OldA".to_owned()]
+    );
 
     let without_unknown_keys = json
         .replace("\"future_rollout_knob\": 3,", "")
@@ -621,6 +681,7 @@ fn deserialize_instance_config_response_with_unknown_keys() {
         )
         .replace("\"future_service_enabled\": true,", "")
         .replace("\"future_curve\": 1.5,", "")
+        .replace(",\n            \"future_billing_knob\": 1", "")
         .replace(
             "\"future_section\": {\"enabled\": true, \"rollout_basis_points\": 10000},",
             "",

@@ -33,7 +33,12 @@ fn status_badge(user: &AdminUser) -> Markup {
     }
 }
 
-pub fn user_peek_fragment(config: &AdminConfig, user: &AdminUser, admin_acls: &[String]) -> Markup {
+pub fn user_peek_fragment(
+    config: &AdminConfig,
+    user: &AdminUser,
+    admin_acls: &[String],
+    premium_badge_name: Option<&str>,
+) -> Markup {
     let base = &config.base_path;
     let can_view_email = acl::has_permission(admin_acls, acl::USER_VIEW_EMAIL);
     let display = user
@@ -62,6 +67,7 @@ pub fn user_peek_fragment(config: &AdminConfig, user: &AdminUser, admin_acls: &[
                             user.premium_type,
                             user.premium_since.as_deref(),
                             config.self_hosted,
+                            premium_badge_name,
                             true,
                         ))
                     }

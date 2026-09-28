@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {useLocation} from '@app/features/platform/components/router/RouterReact';
 import * as PremiumCommands from '@app/features/premium/commands/PremiumCommands';
 import styles from '@app/features/premium/components/pages/PremiumCallbackPage.module.css';
+import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {Spinner} from '@app/features/ui/components/Spinner';
 import {msg} from '@lingui/core/macro';
 import {Trans, useLingui} from '@lingui/react/macro';
@@ -53,7 +53,7 @@ const PremiumCallbackPage = observer(() => {
 	const token = queryParams.get('token');
 	const [preapprovalState, setPreapprovalState] = useState<PreapprovalState>({status: 'pending'});
 	useEffect(() => {
-		if (RuntimeConfig.isSelfHosted()) {
+		if (!shouldShowPremiumFeatures()) {
 			window.location.replace('/');
 		}
 	}, []);
@@ -109,7 +109,7 @@ const PremiumCallbackPage = observer(() => {
 			}
 		};
 	}, [status, token]);
-	if (RuntimeConfig.isSelfHosted()) {
+	if (!shouldShowPremiumFeatures()) {
 		return null;
 	}
 	const isSuccess = status === 'success';

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Config} from '@app/api/Config';
 import {mapGuildMemberToResponse} from '@app/api/guild/GuildModel';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
@@ -9,6 +8,7 @@ import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {Logger} from '@app/api/Logger';
 import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {User} from '@app/api/models/User';
+import {isPremiumTieringActive} from '@app/api/stripe/BillingConfigCache';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {checkIsPremium, createPremiumClearPatch, shouldStripExpiredPremium} from '@app/api/user/UserHelpers';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
@@ -186,8 +186,8 @@ async function processExpiredPremiumSweepCore(deps: SweepDeps): Promise<SweepRes
 		skipped: 0,
 		failed: 0,
 	};
-	if (Config.instance.selfHosted) {
-		Logger.debug('Skipping expired premium sweep on a self-hosted instance');
+	if (!isPremiumTieringActive()) {
+		Logger.debug('Skipping expired premium sweep because premium tiering is not active');
 		return result;
 	}
 	Logger.debug('Starting expired premium sweep');

@@ -2743,7 +2743,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Create one-use Plutonium gift codes with an explicit positive duration and return their complete redemption links. Lifetime gifts are not supported. Not available on self-hosted instances. Requires GIFT_CODES_GENERATE permission.",
+				"description": "Create one-use premium gift codes with an explicit positive duration and return their complete redemption links. Lifetime gifts are not supported. On self-hosted instances the premium mode must be mirror. Requires GIFT_CODES_GENERATE permission.",
 				"security": [{"adminApiKey": []}],
 				"requestBody": {
 					"required": true,
@@ -10639,7 +10639,9 @@
 									"favicon_url": {"nullable": true, "type": "string"},
 									"theme_color": {"nullable": true, "type": "string"},
 									"status_page_url": {"nullable": true, "type": "string"},
-									"status_page_incident_history_url": {"nullable": true, "type": "string"}
+									"status_page_incident_history_url": {"nullable": true, "type": "string"},
+									"premium_product_name": {"type": "string"},
+									"premium_info_url": {"nullable": true, "type": "string"}
 								},
 								"required": [
 									"product_name",
@@ -10650,7 +10652,9 @@
 									"favicon_url",
 									"theme_color",
 									"status_page_url",
-									"status_page_incident_history_url"
+									"status_page_incident_history_url",
+									"premium_product_name",
+									"premium_info_url"
 								],
 								"additionalProperties": false
 							},
@@ -10949,7 +10953,8 @@
 						},
 						"required": ["attachment_decay"],
 						"additionalProperties": false
-					}
+					},
+					"billing": {"$ref": "#/components/schemas/InstanceBillingResponse"}
 				},
 				"required": [
 					"sso",
@@ -10965,7 +10970,8 @@
 					"app_public",
 					"policy",
 					"integrations",
-					"media"
+					"media",
+					"billing"
 				],
 				"additionalProperties": false
 			},
@@ -11153,7 +11159,9 @@
 									"favicon_url": {"nullable": true, "type": "string", "maxLength": 2048},
 									"theme_color": {"nullable": true, "type": "string", "maxLength": 64},
 									"status_page_url": {"nullable": true, "type": "string", "maxLength": 2048},
-									"status_page_incident_history_url": {"nullable": true, "type": "string", "maxLength": 2048}
+									"status_page_incident_history_url": {"nullable": true, "type": "string", "maxLength": 2048},
+									"premium_product_name": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 40},
+									"premium_info_url": {"nullable": true, "type": "string", "maxLength": 2048}
 								}
 							},
 							"setup": {"nullable": true, "type": "object", "properties": {"configured": {"type": "boolean"}}},
@@ -11321,7 +11329,8 @@
 								}
 							}
 						}
-					}
+					},
+					"billing": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/InstanceBillingUpdateRequest"}]}
 				}
 			},
 			"ListGuildStickersResponse": {
@@ -15180,6 +15189,28 @@
 					{"name": "BANNER_UNSET", "value": "2", "description": "Guild member banner is unset"}
 				]
 			},
+			"InstanceBillingUpdateRequest": {
+				"type": "object",
+				"properties": {
+					"enabled": {"nullable": true, "type": "boolean"},
+					"stripe_secret_key": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 4096},
+					"stripe_webhook_secret": {"nullable": true, "type": "string", "minLength": 1, "maxLength": 4096},
+					"automatic_tax": {"nullable": true, "type": "boolean"},
+					"tax_id_collection": {"nullable": true, "type": "boolean"},
+					"terms_consent_required": {"nullable": true, "type": "boolean"},
+					"default_currency": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/PremiumCurrency"}]},
+					"prices": {
+						"nullable": true,
+						"type": "object",
+						"additionalProperties": {"$ref": "#/components/schemas/BillingPriceSetUpdateRequest"}
+					},
+					"country_currencies": {
+						"nullable": true,
+						"allOf": [{"$ref": "#/components/schemas/BillingCountryCurrenciesSchema"}]
+					},
+					"legacy_prices": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/BillingLegacyPricesSchema"}]}
+				}
+			},
 			"InstanceCaptchaProviderSchema": {"type": "string", "enum": ["hcaptcha", "turnstile", "none"]},
 			"InstanceRegistrationModeSchema": {
 				"description": "Registration mode",
@@ -15338,6 +15369,85 @@
 			"VoiceNoiseSuppressionBackendSchema": {
 				"type": "string",
 				"enum": ["none", "standard", "gate", "speex", "rnnoise", "gtcrn", "deep_filter"]
+			},
+			"BillingLegacyPricesSchema": {
+				"type": "object",
+				"additionalProperties": {
+					"maxItems": 32,
+					"type": "array",
+					"items": {"$ref": "#/components/schemas/StripePriceIdSchema"}
+				}
+			},
+			"BillingCountryCurrenciesSchema": {
+				"type": "object",
+				"additionalProperties": {"$ref": "#/components/schemas/PremiumCurrency"}
+			},
+			"BillingPriceSetUpdateRequest": {
+				"type": "object",
+				"properties": {
+					"monthly": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/StripePriceIdSchema"}]},
+					"yearly": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/StripePriceIdSchema"}]},
+					"gift_1_month": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/StripePriceIdSchema"}]},
+					"gift_1_year": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/StripePriceIdSchema"}]}
+				}
+			},
+			"PremiumCurrency": {"type": "string", "pattern": "^[A-Z]{3}$"},
+			"StripePriceIdSchema": {"type": "string", "maxLength": 255, "pattern": "^price_[A-Za-z0-9]+$"},
+			"InstanceBillingResponse": {
+				"type": "object",
+				"properties": {
+					"enabled": {"nullable": true, "type": "boolean"},
+					"effective_enabled": {"type": "boolean"},
+					"stripe_secret_key_set": {"type": "boolean"},
+					"stripe_webhook_secret_set": {"type": "boolean"},
+					"stripe_secret_key_stored": {"type": "boolean"},
+					"stripe_webhook_secret_stored": {"type": "boolean"},
+					"automatic_tax": {"nullable": true, "type": "boolean"},
+					"tax_id_collection": {"nullable": true, "type": "boolean"},
+					"terms_consent_required": {"nullable": true, "type": "boolean"},
+					"effective_automatic_tax": {"type": "boolean"},
+					"effective_tax_id_collection": {"type": "boolean"},
+					"effective_terms_consent_required": {"type": "boolean"},
+					"default_currency": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/PremiumCurrency"}]},
+					"prices": {
+						"nullable": true,
+						"type": "object",
+						"additionalProperties": {"$ref": "#/components/schemas/BillingPriceSetResponse"}
+					},
+					"country_currencies": {"nullable": true, "type": "object", "additionalProperties": {"type": "string"}},
+					"legacy_prices": {
+						"nullable": true,
+						"type": "object",
+						"additionalProperties": {"type": "array", "items": {"type": "string"}}
+					},
+					"billing_active": {"type": "boolean"},
+					"stripe_serviceable": {"type": "boolean"},
+					"catalog_mode": {"$ref": "#/components/schemas/BillingCatalogModeSchema"},
+					"webhook_url": {"type": "string"}
+				},
+				"required": [
+					"enabled",
+					"effective_enabled",
+					"stripe_secret_key_set",
+					"stripe_webhook_secret_set",
+					"stripe_secret_key_stored",
+					"stripe_webhook_secret_stored",
+					"automatic_tax",
+					"tax_id_collection",
+					"terms_consent_required",
+					"effective_automatic_tax",
+					"effective_tax_id_collection",
+					"effective_terms_consent_required",
+					"default_currency",
+					"prices",
+					"country_currencies",
+					"legacy_prices",
+					"billing_active",
+					"stripe_serviceable",
+					"catalog_mode",
+					"webhook_url"
+				],
+				"additionalProperties": false
 			},
 			"ExperimentDeliveryConfigResponse": {
 				"type": "object",
@@ -15607,6 +15717,18 @@
 					"gateway_dispatch_relay_max_queue",
 					"voice_e2ee_scope"
 				],
+				"additionalProperties": false
+			},
+			"BillingCatalogModeSchema": {"type": "string", "enum": ["env", "operator"]},
+			"BillingPriceSetResponse": {
+				"type": "object",
+				"properties": {
+					"monthly": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/StripePriceIdSchema"}]},
+					"yearly": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/StripePriceIdSchema"}]},
+					"gift_1_month": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/StripePriceIdSchema"}]},
+					"gift_1_year": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/StripePriceIdSchema"}]}
+				},
+				"required": ["monthly", "yearly", "gift_1_month", "gift_1_year"],
 				"additionalProperties": false
 			},
 			"JobLedgerEntrySchema": {

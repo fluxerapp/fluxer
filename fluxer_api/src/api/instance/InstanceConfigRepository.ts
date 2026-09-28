@@ -15,6 +15,12 @@ import {normalizeSsoAllowedEmailDomains} from '@app/api/instance/SsoConfigValida
 import {Logger} from '@app/api/Logger';
 import {isLimitConfigSnapshot} from '@app/api/limits/LimitConfigValidation';
 import {resolveDeferredPhoneGateEnabled, setCachedDeferredPhoneGateEnabled} from '@app/api/risk/DeferredPhoneGateCache';
+import {
+	getEffectiveBillingConfig,
+	isBillingActive,
+	isStripeServiceable,
+	setStoredBillingConfig,
+} from '@app/api/stripe/BillingConfigCache';
 import {InstanceConfiguration} from '@app/api/Tables';
 import {DEFAULT_DECAY_CONSTANTS, DEFAULT_RENEWAL_CONSTANTS} from '@app/api/utils/AttachmentDecay';
 import {isJsonRecord} from '@app/api/utils/JsonBoundaryUtils';
@@ -40,6 +46,11 @@ import {
 	type GatewayRolloutConfig,
 	GatewayRolloutConfigSchema,
 } from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
+import {
+	type BillingCatalogMode,
+	type StoredBillingConfig,
+	StoredBillingConfigSchema,
+} from '@fluxer/schema/src/domains/admin/InstanceBillingSchemas';
 import {
 	type ProfileTimezoneConfig,
 	ProfileTimezoneConfigSchema,
@@ -90,6 +101,7 @@ const INSTANCE_POLICY_CONFIG_KEY = 'instance_policy_config';
 const LIMIT_CONFIG_KEY = 'limit_config';
 const INSTANCE_INTEGRATIONS_CONFIG_KEY = 'instance_integrations_config';
 const INSTANCE_MEDIA_CONFIG_KEY = 'instance_media_config';
+const INSTANCE_BILLING_CONFIG_KEY = 'instance_billing_config';
 export const INSTANCE_CONFIG_REFRESH_CHANNEL = 'instance-config-refresh';
 export const REGISTRATION_PENDING_APPROVAL_TRAIT = 'registration_pending_approval';
 export const REGISTRATION_REJECTED_TRAIT = 'registration_rejected';
@@ -114,6 +126,50 @@ export type InstanceRegistrationConfig = InstanceRegistration;
 
 interface InstanceAppPublicConfig extends Omit<InstanceAppPublic, 'setup'> {
 	setup: Pick<InstanceSetup, 'configured'>;
+}
+
+type InstanceBrandingPatch = Partial<Omit<InstanceBranding, 'premium_product_name'>> & {
+	premium_product_name?: string | null;
+};
+
+export type InstanceBillingConfig = StoredBillingConfig;
+
+export type InstanceBillingPriceSetPatch = Partial<NonNullable<StoredBillingConfig['prices']>[string]>;
+
+export interface InstanceBillingConfigPatch {
+	enabled?: boolean | null;
+	stripe_secret_key?: string | null;
+	stripe_webhook_secret?: string | null;
+	automatic_tax?: boolean | null;
+	tax_id_collection?: boolean | null;
+	terms_consent_required?: boolean | null;
+	default_currency?: string | null;
+	prices?: Record<string, InstanceBillingPriceSetPatch> | null;
+	country_currencies?: Record<string, string> | null;
+	legacy_prices?: Record<string, Array<string>> | null;
+}
+
+export interface InstanceBillingAdminConfig {
+	enabled: boolean | null;
+	effective_enabled: boolean;
+	stripe_secret_key_set: boolean;
+	stripe_webhook_secret_set: boolean;
+	stripe_secret_key_stored: boolean;
+	stripe_webhook_secret_stored: boolean;
+	automatic_tax: boolean | null;
+	tax_id_collection: boolean | null;
+	terms_consent_required: boolean | null;
+	effective_automatic_tax: boolean;
+	effective_tax_id_collection: boolean;
+	effective_terms_consent_required: boolean;
+	default_currency: string | null;
+	prices: StoredBillingConfig['prices'];
+	country_currencies: StoredBillingConfig['country_currencies'];
+	legacy_prices: StoredBillingConfig['legacy_prices'];
+	billing_active: boolean;
+	stripe_serviceable: boolean;
+	catalog_mode: BillingCatalogMode;
+	webhook_url: string;
 }
 
 export type InstancePremiumMode = 'mirror' | 'everyone';
@@ -356,6 +412,10 @@ function normalizeOptionalPublicString(value: string | null | undefined, fallbac
 	return value === undefined ? fallback : normalizeOptionalString(value);
 }
 
+export function getDefaultPremiumProductName(): string {
+	return Config.instance.selfHosted ? 'Premium' : 'Plutonium';
+}
+
 function getDefaultAppPublicConfig(): InstanceAppPublicConfig {
 	return {
 		branding: {
@@ -368,6 +428,8 @@ function getDefaultAppPublicConfig(): InstanceAppPublicConfig {
 			theme_color: normalizeOptionalString(Config.instance.branding.themeColor),
 			status_page_url: normalizeOptionalString(Config.instance.branding.statusPageUrl),
 			status_page_incident_history_url: normalizeOptionalString(Config.instance.branding.statusPageIncidentHistoryUrl),
+			premium_product_name: getDefaultPremiumProductName(),
+			premium_info_url: null,
 		},
 		setup: {
 			configured: !Config.instance.selfHosted || Config.instance.setup.configured,
@@ -394,6 +456,7 @@ type StoredConfigSection =
 	| 'instance policy'
 	| 'integrations'
 	| 'media'
+	| 'billing'
 	| 'registration'
 	| 'registration URLs'
 	| 'pending registrations'
@@ -577,7 +640,10 @@ function parseStoredCollection<T>(schema: z.ZodType<T>, raw: string | null, sect
 }
 
 const StoredInstanceAppPublicSchema = InstanceAppPublicSchema.extend({
-	branding: InstanceAppPublicSchema.shape.branding.partial().optional(),
+	branding: InstanceAppPublicSchema.shape.branding
+		.extend({premium_product_name: z.string().max(40).nullable()})
+		.partial()
+		.optional(),
 	setup: InstanceAppPublicSchema.shape.setup.pick({configured: true}).partial().optional(),
 	legal: InstanceAppPublicSchema.shape.legal.partial().optional(),
 	registration: InstanceAppPublicSchema.shape.registration.partial().optional(),
@@ -587,10 +653,6 @@ function parseStoredAppPublicConfig(raw: string | null): InstanceAppPublicConfig
 	return buildAppPublicConfig(
 		salvageStoredConfig(StoredInstanceAppPublicSchema, readStoredConfigValue(raw, 'app public'), 'app public'),
 	);
-}
-
-function decodeAppPublicConfig(value: unknown): InstanceAppPublicConfig {
-	return buildAppPublicConfig(validateStoredConfig(StoredInstanceAppPublicSchema, value, 'app public'));
 }
 
 function buildAppPublicConfig(config: z.infer<typeof StoredInstanceAppPublicSchema>): InstanceAppPublicConfig {
@@ -610,6 +672,9 @@ function buildAppPublicConfig(config: z.infer<typeof StoredInstanceAppPublicSche
 				branding.status_page_incident_history_url,
 				defaults.branding.status_page_incident_history_url,
 			),
+			premium_product_name:
+				normalizeOptionalString(branding.premium_product_name) ?? defaults.branding.premium_product_name,
+			premium_info_url: normalizeOptionalPublicString(branding.premium_info_url, defaults.branding.premium_info_url),
 		},
 		setup: {
 			configured: setup.configured ?? defaults.setup.configured,
@@ -731,6 +796,30 @@ function parseStoredInstanceIntegrationsConfig(raw: string | null): InstanceInte
 		readStoredConfigValue(raw, 'integrations'),
 		'integrations',
 	);
+}
+
+function decodeInstanceBillingConfig(value: unknown): InstanceBillingConfig {
+	return validateStoredConfig(StoredBillingConfigSchema, value, 'billing');
+}
+
+function parseStoredInstanceBillingConfig(raw: string | null): InstanceBillingConfig {
+	return salvageStoredConfig(StoredBillingConfigSchema, readStoredConfigValue(raw, 'billing'), 'billing');
+}
+
+function normalizeBillingPrices(
+	prices: Record<string, InstanceBillingPriceSetPatch> | null,
+): Record<string, InstanceBillingPriceSetPatch> | null {
+	if (prices === null) return null;
+	const entries = Object.entries(prices).map(([currency, set]): [string, InstanceBillingPriceSetPatch] => [
+		currency,
+		{
+			monthly: set.monthly ?? null,
+			yearly: set.yearly ?? null,
+			gift_1_month: set.gift_1_month ?? null,
+			gift_1_year: set.gift_1_year ?? null,
+		},
+	]);
+	return entries.length === 0 ? null : Object.fromEntries(entries);
 }
 
 function secretIsSet(value: unknown): boolean {
@@ -1239,6 +1328,7 @@ export class InstanceConfigRepository {
 			parseStoredInstanceIntegrationsConfig(snapshot.get(INSTANCE_INTEGRATIONS_CONFIG_KEY) ?? null),
 		);
 		checkStoredConfig('media', () => parseStoredInstanceMediaConfig(snapshot.get(INSTANCE_MEDIA_CONFIG_KEY) ?? null));
+		setStoredBillingConfig(parseStoredInstanceBillingConfig(snapshot.get(INSTANCE_BILLING_CONFIG_KEY) ?? null));
 		const appPublic = parseStoredAppPublicConfig(snapshot.get(APP_PUBLIC_CONFIG_KEY) ?? null);
 		setCachedDeferredPhoneGateEnabled(resolveDeferredPhoneGateEnabled(policy));
 		setCachedDateOfBirthCollection(appPublic.registration.collect_date_of_birth);
@@ -1433,32 +1523,49 @@ export class InstanceConfigRepository {
 	}
 
 	async setAppPublicConfig(config: {
-		branding?: Partial<InstanceBranding>;
+		branding?: InstanceBrandingPatch;
 		setup?: Partial<InstanceAppPublicConfig['setup']>;
 		legal?: Partial<InstanceAppPublicConfig['legal']>;
 		registration?: Partial<InstanceAppPublicConfig['registration']>;
 	}): Promise<InstanceAppPublicConfig> {
-		const next = await this.updateStoredConfig(APP_PUBLIC_CONFIG_KEY, (raw) => {
-			const current = parseStoredAppPublicConfig(raw);
-			return decodeAppPublicConfig({
-				branding: {
-					...current.branding,
-					...(config.branding ?? {}),
+		const cache = this.configCache;
+		const {result: next} = await this.compareAndSetStoredValue(cache, APP_PUBLIC_CONFIG_KEY, (raw) => {
+			const stored = salvageStoredConfig(
+				StoredInstanceAppPublicSchema,
+				readStoredConfigValue(raw, 'app public'),
+				'app public',
+			);
+			const current = buildAppPublicConfig(stored);
+			const premiumProductName =
+				config.branding?.premium_product_name !== undefined
+					? config.branding.premium_product_name
+					: normalizeOptionalString(stored.branding?.premium_product_name);
+			const merged = validateStoredConfig(
+				StoredInstanceAppPublicSchema,
+				{
+					branding: {
+						...current.branding,
+						...(config.branding ?? {}),
+						premium_product_name: premiumProductName,
+					},
+					setup: {
+						...current.setup,
+						...(config.setup ?? {}),
+					},
+					legal: {
+						...current.legal,
+						...(config.legal ?? {}),
+					},
+					registration: {
+						...current.registration,
+						...(config.registration ?? {}),
+					},
 				},
-				setup: {
-					...current.setup,
-					...(config.setup ?? {}),
-				},
-				legal: {
-					...current.legal,
-					...(config.legal ?? {}),
-				},
-				registration: {
-					...current.registration,
-					...(config.registration ?? {}),
-				},
-			});
+				'app public',
+			);
+			return {value: JSON.stringify(merged), result: buildAppPublicConfig(merged)};
 		});
+		await this.publishRefresh(cache.sourceId);
 		setCachedDateOfBirthCollection(next.registration.collect_date_of_birth);
 		return next;
 	}
@@ -1755,6 +1862,71 @@ export class InstanceConfigRepository {
 				policy_uri: bluesky.policy_uri || null,
 				key_count: bluesky.keys.length,
 			},
+		};
+	}
+
+	async getInstanceBillingConfig(): Promise<InstanceBillingConfig> {
+		const raw = await this.getConfig(INSTANCE_BILLING_CONFIG_KEY);
+		const config = parseStoredInstanceBillingConfig(raw);
+		setStoredBillingConfig(config);
+		return config;
+	}
+
+	async readStoredInstanceBillingConfig(): Promise<InstanceBillingConfig> {
+		const cache = this.configCache;
+		cache.assertActive();
+		const raw = await this.fetchConfigFromDatabase(INSTANCE_BILLING_CONFIG_KEY);
+		cache.assertActive();
+		return parseStoredInstanceBillingConfig(raw);
+	}
+
+	async setInstanceBillingConfig(patch: InstanceBillingConfigPatch): Promise<InstanceBillingConfig> {
+		const next = await this.updateStoredConfig(INSTANCE_BILLING_CONFIG_KEY, (raw) => {
+			const current = parseStoredInstanceBillingConfig(raw);
+			return decodeInstanceBillingConfig({
+				enabled: patch.enabled === undefined ? current.enabled : patch.enabled,
+				stripe_secret_key: patch.stripe_secret_key === undefined ? current.stripe_secret_key : patch.stripe_secret_key,
+				stripe_webhook_secret:
+					patch.stripe_webhook_secret === undefined ? current.stripe_webhook_secret : patch.stripe_webhook_secret,
+				automatic_tax: patch.automatic_tax === undefined ? current.automatic_tax : patch.automatic_tax,
+				tax_id_collection: patch.tax_id_collection === undefined ? current.tax_id_collection : patch.tax_id_collection,
+				terms_consent_required:
+					patch.terms_consent_required === undefined ? current.terms_consent_required : patch.terms_consent_required,
+				default_currency: patch.default_currency === undefined ? current.default_currency : patch.default_currency,
+				prices: patch.prices === undefined ? current.prices : normalizeBillingPrices(patch.prices),
+				country_currencies:
+					patch.country_currencies === undefined ? current.country_currencies : patch.country_currencies,
+				legacy_prices: patch.legacy_prices === undefined ? current.legacy_prices : patch.legacy_prices,
+			});
+		});
+		setStoredBillingConfig(next);
+		return next;
+	}
+
+	async getInstanceBillingAdminConfig(): Promise<InstanceBillingAdminConfig> {
+		const stored = await this.getInstanceBillingConfig();
+		const effective = getEffectiveBillingConfig();
+		return {
+			enabled: stored.enabled,
+			effective_enabled: effective.enabled,
+			stripe_secret_key_set: effective.secretKey !== null,
+			stripe_webhook_secret_set: effective.webhookSecret !== null,
+			stripe_secret_key_stored: secretIsSet(stored.stripe_secret_key),
+			stripe_webhook_secret_stored: secretIsSet(stored.stripe_webhook_secret),
+			automatic_tax: stored.automatic_tax,
+			tax_id_collection: stored.tax_id_collection,
+			terms_consent_required: stored.terms_consent_required,
+			effective_automatic_tax: effective.automaticTax,
+			effective_tax_id_collection: effective.taxIdCollection,
+			effective_terms_consent_required: effective.termsConsentRequired,
+			default_currency: stored.default_currency,
+			prices: stored.prices,
+			country_currencies: stored.country_currencies,
+			legacy_prices: stored.legacy_prices,
+			billing_active: isBillingActive(effective),
+			stripe_serviceable: isStripeServiceable(effective),
+			catalog_mode: effective.catalogMode,
+			webhook_url: `${Config.endpoints.apiPublic.replace(/\/+$/, '')}/stripe/webhook`,
 		};
 	}
 

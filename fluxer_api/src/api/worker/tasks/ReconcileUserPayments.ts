@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createUserID} from '@app/api/BrandedTypes';
-import {Config} from '@app/api/Config';
 import {Logger} from '@app/api/Logger';
 import {mapGiftDurationMonthsToFields} from '@app/api/models/GiftCode';
 import type {Payment} from '@app/api/models/Payment';
 import type {User} from '@app/api/models/User';
-import {ProductRegistry} from '@app/api/stripe/ProductRegistry';
+import {getProductRegistry} from '@app/api/stripe/ProductRegistry';
 import {extractId} from '@app/api/stripe/StripeUtils';
 import type {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
@@ -71,7 +70,7 @@ async function reconcileCompletedGiftWithoutCode(payment: Payment, purchaser: Us
 			return;
 		}
 	}
-	const productRegistry = new ProductRegistry();
+	const productRegistry = getProductRegistry();
 	const productInfo = payment.priceId ? productRegistry.getProduct(payment.priceId) : null;
 	if (!productInfo) {
 		Logger.warn(
@@ -159,7 +158,7 @@ async function reconcileStuckGiftPayment(payment: Payment, purchaser: User, stri
 		}
 	}
 	if (!giftCode) {
-		const productRegistry = new ProductRegistry();
+		const productRegistry = getProductRegistry();
 		const productInfo = payment.priceId ? productRegistry.getProduct(payment.priceId) : null;
 		if (!productInfo) {
 			Logger.warn(
@@ -314,9 +313,6 @@ const reconcileUserPayments: WorkerTaskHandler = async (payload, helpers) => {
 	const {paymentRepository, userRepository, stripe} = getWorkerDependencies();
 	if (!stripe) {
 		helpers.logger.debug('Stripe is disabled, skipping user payment reconciliation');
-		return;
-	}
-	if (!Config.stripe.enabled) {
 		return;
 	}
 	const userIdStr = payload.userId as string;

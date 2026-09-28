@@ -195,7 +195,9 @@ pub async fn instance_config_post(
         }
         "update_policy" => {
             let update = build_policy_update(&form);
-            instance_config_result(client.update_instance_config(&update).await)
+            let result = client.update_instance_config(&update).await;
+            remember_premium_branding(&state, &result);
+            instance_config_result(result)
         }
         "update_integrations" => {
             let update = build_integrations_update(&form);
@@ -207,6 +209,14 @@ pub async fn instance_config_post(
         }
         "update_voice_noise_suppression" => match build_voice_noise_suppression_update(&form) {
             Ok(update) => instance_config_result(client.update_instance_config(&update).await),
+            Err(message) => FlashData::error(message),
+        },
+        "update_billing" => match super::billing_actions::build_billing_update(&form) {
+            Ok(update) => {
+                let result = client.update_instance_config(&update).await;
+                remember_premium_branding(&state, &result);
+                super::billing_actions::billing_result(result)
+            }
             Err(message) => FlashData::error(message),
         },
         "update_push_relay" => {
@@ -350,6 +360,17 @@ pub async fn instance_config_post(
         return htmx::toast_response(&flash);
     }
     redirect_back_with_flash(base, "/instance-config", flash, config.secure_cookies())
+}
+
+fn remember_premium_branding(
+    state: &AppState,
+    result: &Result<crate::api::types::InstanceConfigResponse, crate::api::client::ApiError>,
+) {
+    if let Ok(instance_config) = result {
+        state.remember_premium_branding(crate::api::types::PremiumBranding::from_instance_config(
+            instance_config,
+        ));
+    }
 }
 
 fn render_registration_url_list_response(
@@ -867,6 +888,7 @@ fn build_app_public_update(form: &MultiValueForm) -> InstanceConfigUpdateRequest
                 theme_color: optional("app_theme_color"),
                 status_page_url: optional("app_status_page_url"),
                 status_page_incident_history_url: optional("app_status_page_incident_history_url"),
+                ..Default::default()
             }),
             setup: Some(AppSetupConfigUpdateRequest {
                 configured: Some(form.bool_value("app_setup_configured")),

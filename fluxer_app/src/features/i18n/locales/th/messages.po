@@ -1551,13 +1551,18 @@ msgstr "{optionName} ตัวเลือกแบบ {optionType} ที่ต
 msgid "{overrideCount, plural, one {# override} other {# overrides}}"
 msgstr "{overrideCount, plural, one {# การแทนที่} other {# การแทนที่}}"
 
+#. Purchase disclaimer on a self-hosted instance. {PAYMENT_PROVIDER_NAME} is the payment processor name.
+#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:87
+msgid "{PAYMENT_PROVIDER_NAME} handles payment securely."
+msgstr "{PAYMENT_PROVIDER_NAME} จัดการการชำระเงินอย่างปลอดภัย"
+
 #. Modal body for the mobile card verification confirmation. Explains the two-step flow and the return path.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:181
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:190
 msgid "{paymentProviderName} will first verify that your card is eligible for localized pricing, then take you to payment. Return to {productName} once you've completed it."
 msgstr "{paymentProviderName} จะตรวจสอบก่อนว่าบัตรของคุณมีสิทธิ์ได้ราคาแบบท้องถิ่นหรือไม่ จากนั้นจะพาคุณไปยังหน้าชำระเงิน กลับมาที่ {productName} เมื่อทำเสร็จแล้ว"
 
 #. Badge label with a date in the user profile badges popout. Preserve {premiumProductFullName}, {premiumSinceFormatted}; they are inserted by code. In English, keep "subscriber since" lowercase. Other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:51
+#: src/features/user/components/popouts/UserProfileBadges.tsx:53
 msgid "{premiumProductFullName} subscriber since {premiumSinceFormatted}"
 msgstr "สมาชิก {premiumProductFullName} ตั้งแต่ {premiumSinceFormatted}"
 
@@ -1639,7 +1644,7 @@ msgid "{productName} avoids sending push notifications to your mobile devices wh
 msgstr "{productName} จะไม่ส่งการแจ้งเตือนแบบพุชไปยังอุปกรณ์มือถือของคุณเมื่อคุณอยู่หน้าคอมพิวเตอร์ เลือกระยะเวลาที่ต้องไม่มีการใช้งานบนเดสก์ท็อป ก่อนที่คุณจะเริ่มได้รับการแจ้งเตือนแบบพุช"
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:36
+#: src/features/user/components/popouts/UserProfileBadges.tsx:38
 msgid "{productName} Bug Hunter"
 msgstr "นักล่าบั๊ก {productName}"
 
@@ -1768,7 +1773,7 @@ msgid "{productName} now lives at {host}. Install it from there."
 msgstr "{productName} ตอนนี้อยู่ที่ {host} แล้ว ติดตั้งจากที่นั่นได้เลย"
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:31
+#: src/features/user/components/popouts/UserProfileBadges.tsx:33
 msgid "{productName} Partner"
 msgstr "พาร์ทเนอร์ {productName}"
 
@@ -1793,7 +1798,7 @@ msgid "{productName} spotted a possible raid here. Invites are paused — try ag
 msgstr "{productName} ตรวจพบการโจมตีที่อาจเกิดขึ้นที่นี่ คำเชิญถูกหยุดชั่วคราว โปรดลองอีกครั้งในภายหลัง"
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:26
+#: src/features/user/components/popouts/UserProfileBadges.tsx:28
 msgid "{productName} Staff"
 msgstr "ทีมงาน {productName}"
 
@@ -1803,12 +1808,12 @@ msgid "{productName} uses push notifications when installed as a mobile PWA. Reg
 msgstr "{productName} ใช้การแจ้งเตือนแบบพุชเมื่อติดตั้งเป็น PWA บนมือถือ การลงทะเบียนจะช่วยให้เกตเวย์สามารถเข้าถึงอุปกรณ์ของคุณได้แม้ในขณะที่แอปทำงานอยู่เบื้องหลัง"
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:46
+#: src/features/user/components/popouts/UserProfileBadges.tsx:48
 msgid "{productName} Visionary"
 msgstr "{productName} Visionary"
 
 #. Badge title with a date in the user profile badges popout. Preserve {productName}, {premiumSinceFormatted}; they are inserted by code. English locales use Title Case for the badge title part; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:41
+#: src/features/user/components/popouts/UserProfileBadges.tsx:43
 msgid "{productName} Visionary since {premiumSinceFormatted}"
 msgstr "{productName} Visionary ตั้งแต่ {premiumSinceFormatted}"
 
@@ -2471,7 +2476,7 @@ msgid "A Linux desktop update is available. Choose the package format for this s
 msgstr "มีการอัปเดตเดสก์ท็อปสำหรับ Linux แล้ว เลือกรูปแบบแพ็กเกจสำหรับระบบนี้ แล้ว {productName} จะบันทึกไฟล์ไว้ในเครื่อง"
 
 #. Plutonium subscription card line offering a move to a lower price. {listPriceEffectiveDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:682
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:684
 msgid "A lower price is available. Switching takes effect on <0>{listPriceEffectiveDate}</0> and changes nothing else."
 msgstr "มีราคาที่ถูกกว่า การเปลี่ยนจะมีผลในวันที่ <0>{listPriceEffectiveDate}</0> และจะไม่เปลี่ยนแปลงสิ่งอื่นใด"
 
@@ -2616,7 +2621,7 @@ msgid "Accept the push relay supplemental privacy notice"
 msgstr "ยอมรับประกาศความเป็นส่วนตัวเพิ่มเติมเกี่ยวกับ Push Relay"
 
 #. Summary value when the operator accepted the push relay notice.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:390
+#: src/features/app/components/setup/SetupWizardSteps.tsx:391
 msgid "Accepted"
 msgstr "ยอมรับแล้ว"
 
@@ -2639,7 +2644,7 @@ msgstr "เข้าถึงข้อมูลโปรไฟล์พื้น
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. User settings tab for accessibility preferences (visual, motion, screen reader, etc.).
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:14
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:93
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:94
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:61
 msgid "Accessibility"
 msgstr "การช่วยสำหรับการเข้าถึง"
@@ -2776,7 +2781,7 @@ msgstr "การดำเนินการ"
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subscription status badge meaning the paid subscription is active.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:445
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:447
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:37
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:19
 msgid "Active"
@@ -2923,7 +2928,7 @@ msgid "Add a friend to get started."
 msgstr "เพิ่มเพื่อนเพื่อเริ่มต้นใช้งาน"
 
 #. Setup wizard body for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:972
+#: src/features/app/components/setup/SetupWizardSteps.tsx:973
 msgid "Add a Klipy API key to enable GIF search at runtime."
 msgstr "เพิ่มคีย์ API ของ Klipy เพื่อเปิดใช้งานการค้นหา GIF ขณะใช้งาน"
 
@@ -2960,7 +2965,7 @@ msgid "Add a working email"
 msgstr "เพิ่มอีเมลที่ใช้งานได้"
 
 #. Setup wizard body for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:980
+#: src/features/app/components/setup/SetupWizardSteps.tsx:981
 msgid "Add a YouTube Data API key to enrich YouTube links."
 msgstr "เพิ่มคีย์ YouTube Data API เพื่อปรับปรุงลิงก์ YouTube"
 
@@ -3006,7 +3011,7 @@ msgid "Add another reaction"
 msgstr "เพิ่มรีแอ็กชันอื่น"
 
 #. Setup wizard body for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1004
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1005
 msgid "Add Bluesky OAuth client metadata and a signing key."
 msgstr "เพิ่มข้อมูลเมตาไคลเอ็นต์ OAuth ของ Bluesky และคีย์การลงนาม"
 
@@ -3156,7 +3161,7 @@ msgid "Add shortcut"
 msgstr "เพิ่มปุ่มลัด"
 
 #. Setup wizard body for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:996
+#: src/features/app/components/setup/SetupWizardSteps.tsx:997
 msgid "Add SMTP credentials so the instance can send verification and notification email."
 msgstr "เพิ่มข้อมูลประจำตัว SMTP เพื่อให้อินสแตนซ์สามารถส่งอีเมลยืนยันและแจ้งเตือนได้"
 
@@ -3183,7 +3188,7 @@ msgid "Add stream"
 msgstr "เพิ่มสตรีม"
 
 #. Description for configuring an optional setup wizard integration now.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:964
+#: src/features/app/components/setup/SetupWizardSteps.tsx:965
 msgid "Add the credentials during setup."
 msgstr "เพิ่มข้อมูลประจำตัวระหว่างการตั้งค่า"
 
@@ -3487,19 +3492,19 @@ msgstr "การควบคุมการจัดเรียงมีให
 msgid "All"
 msgstr "ทั้งหมด"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:522
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:524
 msgid "All <0/> for <1>{effectiveMonthlyPrice}/month</1>."
 msgstr "<0/> ทั้งหมดในราคา <1>{effectiveMonthlyPrice}/เดือน</1>"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:544
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:546
 msgid "All <0/> for <1>{effectiveYearlyPrice}/year</1>."
 msgstr "<0/> ทั้งหมดในราคา <1>{effectiveYearlyPrice}/ปี</1>"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:565
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:567
 msgid "All <0/> included with your subscription."
 msgstr "<0/> ทั้งหมดรวมอยู่ในการสมัครสมาชิกของคุณ"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:512
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:514
 msgid "All <0/>, forever. No billing, no renewals."
 msgstr "<0/> ทั้งหมด ตลอดไป ไม่มีการเรียกเก็บเงิน ไม่มีการต่ออายุ"
 
@@ -4257,7 +4262,7 @@ msgid "Anyone can request an account, but an administrator must approve it."
 msgstr "ทุกคนสามารถขอบัญชีได้ แต่ผู้ดูแลระบบต้องอนุมัติ"
 
 #. Label for an integration API key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1017
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1018
 msgid "API key"
 msgstr "คีย์ API"
 
@@ -4381,7 +4386,7 @@ msgstr "อัปเดตแอปพลิเคชันแล้ว"
 #. Tab label in the screen-share picker. Lists shareable app windows.
 #: src/features/user/components/modals/tabs/applications_tab/index.tsx:90
 #: src/features/user/components/modals/tabs/applications_tab/index.tsx:129
-#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:29
+#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:27
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:66
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:65
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:185
@@ -4642,7 +4647,7 @@ msgstr "การดำเนินการไฟล์แนบ"
 #. Setup wizard media expiry step title.
 #. Summary row label for the attachment expiry choice in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:220
-#: src/features/app/components/setup/SetupWizardSteps.tsx:378
+#: src/features/app/components/setup/SetupWizardSteps.tsx:379
 msgid "Attachment expiration"
 msgstr "การหมดอายุของไฟล์แนบ"
 
@@ -4706,7 +4711,7 @@ msgstr "ไฟล์แนบ"
 #. Generic tab / section / category label for audio content or settings.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:255
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:170
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:171
 msgid "Audio"
 msgstr "เสียง"
 
@@ -4883,7 +4888,7 @@ msgid "Author"
 msgstr "ผู้สร้าง"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:33
+#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:31
 msgid "Authorization"
 msgstr "การอนุญาต"
 
@@ -5315,7 +5320,7 @@ msgstr "ปิดใช้งานสิทธิประโยชน์พร
 #. Button or menu action label in the background image gallery modal. Keep it concise.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:59
-#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:5
+#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:6
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:732
 msgid "Background"
 msgstr "พื้นหลัง"
@@ -5725,7 +5730,7 @@ msgid "Bluesky connections"
 msgstr "การเชื่อมต่อ Bluesky"
 
 #. Setup wizard title for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1000
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1001
 msgid "Bluesky OAuth"
 msgstr "Bluesky OAuth"
 
@@ -5893,7 +5898,7 @@ msgid "Bot profile"
 msgstr "โปรไฟล์บอท"
 
 #. Setup wizard title for CAPTCHA integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:984
+#: src/features/app/components/setup/SetupWizardSteps.tsx:985
 msgid "Bot protection"
 msgstr "การป้องกันบอท"
 
@@ -6158,13 +6163,33 @@ msgstr "ซื้อของขวัญ"
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "การสร้างคอมมูนิตี้แสดงว่าคุณยอมรับที่จะปฏิบัติตามและรักษา<0>หลักเกณฑ์คอมมูนิตี้ของ {PRODUCT_NAME}</0>"
 
-#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:32
+#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:72
 msgid "By purchasing, you agree to our {terms} and {privacy}."
 msgstr "เมื่อซื้อ คุณยอมรับ{terms}และ{privacy}ของเรา"
 
-#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:28
+#. Purchase disclaimer when the instance links only its privacy policy. The linked text is the privacy policy document.
+#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:56
+msgid "By purchasing, you agree to our <0>Privacy policy</0>."
+msgstr "เมื่อซื้อ คุณยอมรับ <0>นโยบายความเป็นส่วนตัว</0> ของเรา"
+
+#. Purchase disclaimer when the instance links only its terms of service. The linked text is the terms of service document.
+#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:37
+msgid "By purchasing, you agree to our <0>Terms of service</0>."
+msgstr "เมื่อซื้อ คุณยอมรับ<0>ข้อกำหนดในการให้บริการ</0>ของเรา"
+
+#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:68
 msgid "By purchasing, you agreed to our {terms} and {privacy}."
 msgstr "เมื่อซื้อสินค้า คุณได้ยอมรับ{terms}และ{privacy}ของเรา"
+
+#. Purchase disclaimer when the instance links only its privacy policy. The linked text is the privacy policy document.
+#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:48
+msgid "By purchasing, you agreed to our <0>Privacy policy</0>."
+msgstr "เมื่อซื้อ คุณยอมรับ <0>นโยบายความเป็นส่วนตัว</0> ของเราแล้ว"
+
+#. Purchase disclaimer when the instance links only its terms of service. The linked text is the terms of service document.
+#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:29
+msgid "By purchasing, you agreed to our <0>Terms of service</0>."
+msgstr "เมื่อซื้อ คุณยอมรับ<0>ข้อกำหนดในการให้บริการ</0>ของเราแล้ว"
 
 #. Legal notice in the updated policies modal. productName is the Fluxer product name.
 #: src/features/auth/components/modals/TermsAcceptanceModal.tsx:35
@@ -6195,7 +6220,7 @@ msgid "California"
 msgstr "แคลิฟอร์เนีย"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:150
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:151
 msgid "Call"
 msgstr "โทร"
 
@@ -6454,7 +6479,7 @@ msgid "Cancel import"
 msgstr "ยกเลิกการนำเข้า"
 
 #. Billing button that cancels a scheduled move to a lower subscription price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:819
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:821
 msgid "Cancel price change"
 msgstr "ยกเลิกการเปลี่ยนแปลงราคา"
 
@@ -6469,24 +6494,24 @@ msgid "Cancel request"
 msgstr "ยกเลิกคำขอ"
 
 #. Billing button that cancels a scheduled billing-cycle change.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:827
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:829
 msgid "Cancel scheduled switch"
 msgstr "ยกเลิกการเปลี่ยนที่กำหนดเวลาไว้"
 
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:842
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:127
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:844
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:140
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "ยกเลิกการสมัครสมาชิก"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:120
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:133
 msgid "Cancel subscription?"
 msgstr "ยกเลิกการสมัครสมาชิกใช่หรือไม่"
 
 #. Plutonium subscription card hint shown to a subscriber who could move to a lower price but has another billing change already scheduled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:645
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:647
 msgid "Cancel the scheduled change to move to the current price instead."
 msgstr "ยกเลิกการเปลี่ยนแปลงที่กำหนดไว้เพื่อเปลี่ยนไปใช้ราคาปัจจุบันแทน"
 
@@ -6496,7 +6521,7 @@ msgid "Cancel upload"
 msgstr "ยกเลิกการอัปโหลด"
 
 #. Billing button that cancels a scheduled yearly upgrade.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:823
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:825
 msgid "Cancel yearly upgrade"
 msgstr "ยกเลิกการอัปเกรดรายปี"
 
@@ -6506,7 +6531,7 @@ msgid "Cancel your friend request to {displayName}?"
 msgstr "ยกเลิกคำขอเป็นเพื่อนที่ส่งถึง {displayName} ใช่หรือไม่"
 
 #. Subscription status badge meaning cancellation is scheduled for the renewal date.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:433
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:435
 msgid "Canceling"
 msgstr "กำลังยกเลิก"
 
@@ -6515,7 +6540,7 @@ msgstr "กำลังยกเลิก"
 msgid "Cancellation"
 msgstr "การตัดเสียงสะท้อน"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:499
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:501
 msgid "Cancels on <0>{cancelDate}</0>. <1/> remain active until then."
 msgstr "จะยกเลิกในวันที่ <0>{cancelDate}</0> <1/> ยังคงใช้งานได้จนถึงวันนั้น"
 
@@ -6785,7 +6810,7 @@ msgid "Change password form"
 msgstr "แบบฟอร์มเปลี่ยนรหัสผ่าน"
 
 #. Subscription status badge meaning a future billing plan change is scheduled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:437
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:439
 msgid "Change scheduled"
 msgstr "กำหนดการเปลี่ยนแปลงแล้ว"
 
@@ -7168,7 +7193,7 @@ msgstr "คัดลอกลิงก์ช่องแล้ว"
 #. Short label in the inline. Keep it concise.
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabInline.tsx:39
 #: src/features/user/components/modals/tabs/AppearanceTab.tsx:47
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:25
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:26
 msgid "Channel list"
 msgstr "รายการช่อง"
 
@@ -7307,7 +7332,7 @@ msgid "Chat font size"
 msgstr "ขนาดตัวอักษรแชท"
 
 #. Settings search synonym. Refers to the message composer area.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:65
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:66
 msgid "chat input"
 msgstr "ช่องพิมพ์ข้อความ"
 
@@ -7382,13 +7407,18 @@ msgstr "กำลังตรวจสอบเบราว์เซอร์ข
 msgid "Checkout"
 msgstr "ชำระเงิน"
 
+#. Modal body for the generic "checkout blocked" state on a self-hosted instance.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:156
+msgid "Checkout is blocked for this account."
+msgstr "การชำระเงินถูกบล็อกสำหรับบัญชีนี้"
+
 #. Modal body for the generic "checkout blocked" state. Provides the support email.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:147
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:152
 msgid "Checkout is blocked for this account. Contact {supportEmail} if you need help."
 msgstr "บัญชีนี้ถูกบล็อกไม่ให้ชำระเงิน โปรดติดต่อ {supportEmail} หากคุณต้องการความช่วยเหลือ"
 
 #. Modal title for the generic "checkout blocked" state when no more specific reason is known.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:143
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:148
 msgid "Checkout unavailable"
 msgstr "ไม่สามารถชำระเงินได้"
 
@@ -7542,7 +7572,7 @@ msgid "Choose friends to message."
 msgstr "เลือกเพื่อนเพื่อส่งข้อความ"
 
 #. Setup wizard body for CAPTCHA integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:988
+#: src/features/app/components/setup/SetupWizardSteps.tsx:989
 msgid "Choose hCaptcha or Cloudflare Turnstile for signup challenges."
 msgstr "เลือก hCaptcha หรือ Cloudflare Turnstile สำหรับการยืนยันแคปต์ชาตอนสมัครสมาชิก"
 
@@ -7572,7 +7602,7 @@ msgid "Choose how times are displayed throughout the app"
 msgstr "เลือกวิธีแสดงเวลาในแอป"
 
 #. Plutonium subscription payment method picker description, generic fallback when no country-specific copy applies.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:57
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:58
 msgid "Choose how you'd like to pay for this subscription."
 msgstr "เลือกช่องทางชำระเงินสำหรับการสมัครสมาชิกนี้"
 
@@ -7591,7 +7621,7 @@ msgid "Choose one verification method. Either method can clear this check."
 msgstr "เลือกวิธียืนยันตัวตนหนึ่งวิธี ใช้วิธีใดก็ผ่านการตรวจสอบนี้ได้"
 
 #. Modal title for the payment method picker (local card vs alternative method).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:195
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:204
 msgid "Choose payment method"
 msgstr "เลือกช่องทางการชำระเงิน"
 
@@ -8070,7 +8100,7 @@ msgid "Client"
 msgstr "ไคลเอ็นต์"
 
 #. Label for Bluesky OAuth client name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1056
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1057
 msgid "Client name"
 msgstr "ชื่อไคลเอ็นต์"
 
@@ -8087,7 +8117,7 @@ msgid "Client secret regenerated. Update any code that uses the old secret."
 msgstr "สร้าง Client secret ใหม่แล้ว โปรดอัปเดตโค้ดที่ใช้ secret เก่า"
 
 #. Label for Bluesky OAuth client URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1060
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1061
 msgid "Client URL"
 msgstr "URL ไคลเอ็นต์"
 
@@ -8240,7 +8270,7 @@ msgid "Cloud upload"
 msgstr "อัปโหลดขึ้นคลาวด์"
 
 #. Cloudflare Turnstile provider option.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1013
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1014
 msgid "Cloudflare Turnstile"
 msgstr "Cloudflare Turnstile"
 
@@ -8307,7 +8337,7 @@ msgstr "โคเดก"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:17
+#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:15
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:76
 msgid "Codes"
 msgstr "รหัส"
@@ -8382,7 +8412,7 @@ msgstr "เติมคำอัตโนมัติด้วยโคลอน
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:161
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:13
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:14
 msgid "Color"
 msgstr "สี"
 
@@ -8417,7 +8447,7 @@ msgid "Colorado"
 msgstr "โคโลราโด"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:5
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:6
 msgid "Colors"
 msgstr "สี"
 
@@ -8765,7 +8795,7 @@ msgid "Complete one of the verification paths below to continue using {productNa
 msgstr "ดำเนินการยืนยันตัวตนวิธีใดวิธีหนึ่งด้านล่างเพื่อใช้งาน {productName} ต่อไป"
 
 #. Modal title for the mobile checkout confirmation when opening the payment provider in a browser.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:177
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:186
 msgid "Complete payment"
 msgstr "ชำระเงินให้เสร็จสมบูรณ์"
 
@@ -8850,7 +8880,7 @@ msgid "Configure keyboard shortcuts"
 msgstr "ตั้งค่าปุ่มลัด"
 
 #. Option for configuring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:960
+#: src/features/app/components/setup/SetupWizardSteps.tsx:961
 msgid "Configure now"
 msgstr "ตั้งค่าเลย"
 
@@ -9199,7 +9229,7 @@ msgstr "ด่านความปลอดภัยของเนื้อห
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/ui/action_menu/ContextMenu.tsx:23
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:225
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:154
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:155
 msgid "Context menu"
 msgstr "เมนูบริบท"
 
@@ -9238,7 +9268,7 @@ msgid "Continue"
 msgstr "ดำเนินการต่อ"
 
 #. Plutonium checkout pre-approval prompt secondary button. Continues straight to the standard checkout screen.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:88
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:89
 msgid "Continue to checkout"
 msgstr "ดำเนินการชำระเงิน"
 
@@ -9985,7 +10015,7 @@ msgstr "เปิดผลการค้นหาไม่ได้"
 #. Title of the error modal shown when opening the billing customer portal from the grace-period nagbar fails.
 #. Title of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Title of the generic fallback error modal shown when opening the billing customer portal fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:29
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:30
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:14
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:29
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:29
@@ -10132,7 +10162,7 @@ msgid "Couldn't start {blueskyProviderName} authorization"
 msgstr "ไม่สามารถเริ่มการอนุญาต {blueskyProviderName} ได้"
 
 #. Title of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:151
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:160
 msgid "Couldn't start checkout"
 msgstr "ไม่สามารถเริ่มชำระเงินได้"
 
@@ -10870,7 +10900,7 @@ msgstr "กำหนดเอง…"
 
 #. Billing button that opens the external customer portal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:748
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:750
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:39
 msgid "Customer portal"
 msgstr "พอร์ทัลลูกค้า"
@@ -11340,7 +11370,7 @@ msgstr "เดลาแวร์"
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:290
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:174
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:190
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:188
 msgid "Delete"
 msgstr "ลบ"
 
@@ -11625,7 +11655,7 @@ msgid "Deleted {duration} of the member's recent message history"
 msgstr "ลบประวัติข้อความล่าสุดของสมาชิกในช่วง {duration}"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:114
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:115
 msgid "Deleted text"
 msgstr "ข้อความที่ถูกลบ"
 
@@ -11891,7 +11921,7 @@ msgstr "ตรวจจับขณะพิมพ์"
 #. Advanced settings category tag.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:20
-#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:25
+#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:23
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:206
 msgid "Developer"
 msgstr "นักพัฒนา"
@@ -12027,7 +12057,7 @@ msgid "Different sizes & member counts"
 msgstr "ขนาดและจำนวนสมาชิกต่างกัน"
 
 #. Toggle label and settings search entry for slightly muting text formatted with Markdown strikethrough.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:97
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:98
 msgid "Dim strikethrough text"
 msgstr "หรี่ข้อความขีดทับ"
 
@@ -12042,7 +12072,7 @@ msgstr "อินพุตโดยตรง"
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:14
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:398
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:567
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:85
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:86
 msgid "Direct message"
 msgstr "ข้อความส่วนตัว"
 
@@ -12068,7 +12098,7 @@ msgstr "แสดงตัวอย่างข้อความส่วนต
 
 #. Generic section heading / label for the direct messages area.
 #. Summary row label for the direct messages choice in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:374
+#: src/features/app/components/setup/SetupWizardSteps.tsx:375
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:629
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:223
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:255
@@ -12224,7 +12254,7 @@ msgid "Disable video locally"
 msgstr "ปิดวิดีโอเฉพาะฉัน"
 
 #. Summary value when a setup option is disabled.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:402
+#: src/features/app/components/setup/SetupWizardSteps.tsx:403
 msgid "Disabled"
 msgstr "ปิดใช้งานแล้ว"
 
@@ -12479,7 +12509,7 @@ msgid "District of Columbia"
 msgstr "ดิสตริกต์ออฟโคลัมเบีย"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:182
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:180
 msgid "DM"
 msgstr "DM"
 
@@ -13295,7 +13325,7 @@ msgid "Email changed"
 msgstr "เปลี่ยนอีเมลแล้ว"
 
 #. Setup wizard title for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:992
+#: src/features/app/components/setup/SetupWizardSteps.tsx:993
 msgid "Email delivery"
 msgstr "การส่งอีเมล"
 
@@ -13427,7 +13457,7 @@ msgstr "เปิดการแสดงตัวอย่างแล้ว"
 #: src/features/app/config/AuditLogConstants.ts:167
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:337
 #: src/features/theme_studio/sections/TokenGroups.ts:114
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:162
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:163
 msgid "Emoji"
 msgstr "อิโมจิ"
 
@@ -13600,7 +13630,7 @@ msgid "Enable beta feature"
 msgstr "เปิดใช้ฟีเจอร์เบต้า"
 
 #. Label for enabling Bluesky OAuth in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1052
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1053
 msgid "Enable Bluesky OAuth"
 msgstr "เปิดใช้งาน Bluesky OAuth"
 
@@ -13633,7 +13663,7 @@ msgid "Enable developer mode"
 msgstr "เปิดโหมดนักพัฒนา"
 
 #. Label for enabling SMTP email delivery in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1020
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1021
 msgid "Enable email delivery"
 msgstr "เปิดใช้งานการส่งอีเมล"
 
@@ -13647,7 +13677,7 @@ msgid "Enable extra option"
 msgstr "เปิดตัวเลือกเพิ่มเติม"
 
 #. Toggle label and settings search entry for controlling whether favorites are visible throughout the app.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:57
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:58
 msgid "Enable favorites"
 msgstr "เปิดใช้งานรายการโปรด"
 
@@ -13816,7 +13846,7 @@ msgstr "เปิดใช้งานภาพตัวอย่างการ
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Summary value when a setup option is enabled.
 #. Toggle item in the textarea spellcheck submenu. Master enable for spellcheck.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:398
+#: src/features/app/components/setup/SetupWizardSteps.tsx:399
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:21
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:66
 msgid "Enabled"
@@ -13860,15 +13890,15 @@ msgid "End date"
 msgstr "วันที่สิ้นสุด"
 
 #. Billing button that ends premium grace period immediately.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:854
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:856
 msgid "End grace now"
 msgstr "สิ้นสุดช่วงผ่อนผันตอนนี้"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:149
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:162
 msgid "End grace period"
 msgstr "สิ้นสุดช่วงผ่อนผัน"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:142
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:155
 msgid "End grace period now?"
 msgstr "สิ้นสุดช่วงผ่อนผันตอนนี้ใช่ไหม"
 
@@ -14331,7 +14361,7 @@ msgid "Everyone"
 msgstr "ทุกคน"
 
 #. Premium model option that gives everyone the highest limits.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:345
+#: src/features/app/components/setup/SetupWizardSteps.tsx:346
 msgid "Everyone is premium"
 msgstr "ทุกคนเป็นพรีเมียม"
 
@@ -14472,7 +14502,7 @@ msgstr "หมดอายุใน"
 #. Error message in the invite list item.
 #. Short label in the authentication account row. Keep the tone plain and specific.
 #. Subscription status badge meaning premium access has fully expired.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:423
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:425
 #: src/features/auth/components/accounts/AccountRow.tsx:19
 #: src/features/invite/components/InviteListItem.tsx:32
 msgid "Expired"
@@ -14508,7 +14538,7 @@ msgstr "หมดอายุเมื่อ {date}"
 msgid "Expired on {earliest}"
 msgstr "หมดอายุเมื่อ {earliest}"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:454
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:456
 msgid "Expired on <0>{expiredDate}</0>. <1/> are no longer active. You can resubscribe at any time."
 msgstr "หมดอายุเมื่อ <0>{expiredDate}</0> <1/> ใช้งานไม่ได้แล้ว คุณสามารถสมัครใหม่ได้ทุกเมื่อ"
 
@@ -15291,7 +15321,7 @@ msgstr "ดำเนินการให้เสร็จในแท็บใ
 #. Button that saves the configuration and completes the setup wizard.
 #. Setup wizard finish step title.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:86
-#: src/features/app/components/setup/SetupWizardSteps.tsx:354
+#: src/features/app/components/setup/SetupWizardSteps.tsx:355
 msgid "Finish setup"
 msgstr "เสร็จสิ้นการตั้งค่า"
 
@@ -15431,7 +15461,7 @@ msgid "Font"
 msgstr "แบบอักษร"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:9
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:10
 msgid "Fonts"
 msgstr "แบบอักษร"
 
@@ -15794,7 +15824,7 @@ msgstr "บอทเป็นกันเอง"
 #: src/features/connection/components/modals/EditConnectionModal.tsx:86
 #: src/features/search/utils/QuickSwitcherModalUtils.tsx:50
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:63
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:89
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:90
 msgid "Friends"
 msgstr "เพื่อน"
 
@@ -15872,12 +15902,12 @@ msgid "from <0>{0}</0>"
 msgstr "จาก <0>{0}</0>"
 
 #. Label for SMTP from email input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1024
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1025
 msgid "From email"
 msgstr "อีเมลผู้ส่ง"
 
 #. Label for SMTP from name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1028
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1029
 msgid "From name"
 msgstr "ชื่อผู้ส่ง"
 
@@ -16139,7 +16169,7 @@ msgstr "รับแอป {productName} ใหม่"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Type label for GIF media.
 #: src/features/expressions/utils/FavoriteMemeUtils.ts:10
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:158
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:159
 msgid "GIF"
 msgstr "GIF"
 
@@ -16169,7 +16199,7 @@ msgid "GIF preview"
 msgstr "ตัวอย่าง GIF"
 
 #. Setup wizard title for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:968
+#: src/features/app/components/setup/SetupWizardSteps.tsx:969
 msgid "GIF search"
 msgstr "ค้นหา GIF"
 
@@ -16190,7 +16220,7 @@ msgstr "ไม่สามารถโหลด GIF ได้"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subscription status badge meaning premium access came from a gift.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:443
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:445
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx:294
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:79
 msgid "Gift"
@@ -16330,19 +16360,19 @@ msgstr "ของขวัญ: กำลังจะหมดอายุ"
 msgid "Gift: grace period (still have access)"
 msgstr "ของขวัญ: ช่วงผ่อนผัน (ยังคงเข้าถึงได้)"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:484
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:486
 msgid "Gifted <0/> until <1>{giftEndDate}</1>. Does not renew automatically. Redeem more gift codes to extend."
 msgstr "ได้รับของขวัญ <0/> จนถึง <1>{giftEndDate}</1> จะไม่ต่ออายุอัตโนมัติ แลกใช้รหัสของขวัญเพิ่มเพื่อขยายเวลา"
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. User settings tab for gift inventory and redemption codes.
-#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:37
+#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:35
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:94
 msgid "Gifts"
 msgstr "ของขวัญ"
 
 #. Description for the everyone-is-premium model.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:349
+#: src/features/app/components/setup/SetupWizardSteps.tsx:350
 msgid "Give everyone on this instance the highest premium limits."
 msgstr "ให้ทุกคนในอินสแตนซ์นี้ได้รับขีดจำกัดพรีเมียมสูงสุด"
 
@@ -16504,7 +16534,7 @@ msgid "Got it"
 msgstr "รับทราบ"
 
 #. Subscription status badge meaning access remains briefly after subscription end.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:425
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:427
 msgid "Grace period"
 msgstr "ช่วงผ่อนผัน"
 
@@ -16543,7 +16573,7 @@ msgid "Graphics"
 msgstr "กราฟิก"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:118
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:119
 msgid "Gray text"
 msgstr "ข้อความสีเทา"
 
@@ -16808,6 +16838,11 @@ msgstr "เคยซื้อ (ตั้งค่าเอง)"
 msgid "Hate speech"
 msgstr "คำพูดที่สร้างความเกลียดชัง"
 
+#. Premium page text shown on an instance where the premium tier cannot be bought, only redeemed. {PREMIUM_PRODUCT_NAME} is the premium tier name.
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:295
+msgid "Have a gift code? Redeem it to unlock {PREMIUM_PRODUCT_NAME}."
+msgstr "มีรหัสของขวัญไหม? ใช้แลกรับ {PREMIUM_PRODUCT_NAME}"
+
 #. Friendly tagline shown on a Fluxer-branded button or upsell.
 #: src/features/ui/state/Modal.ts:13
 msgid "Having fun?"
@@ -16824,7 +16859,7 @@ msgid "Hawaii"
 msgstr "ฮาวาย"
 
 #. hCaptcha provider option.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1012
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1013
 msgid "hCaptcha"
 msgstr "hCaptcha"
 
@@ -17844,7 +17879,7 @@ msgstr "โปรไฟล์ไม่เหมาะสม"
 #. Generic header / tab label for the unread / mentions / bookmarks inbox.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:491
-#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:21
+#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:19
 msgid "Inbox"
 msgstr "กล่องข้อความ"
 
@@ -17971,7 +18006,7 @@ msgid "Indiana"
 msgstr "อินเดียนา"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:37
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:38
 msgid "Indicator"
 msgstr "ตัวบ่งชี้"
 
@@ -18819,7 +18854,7 @@ msgid "Jump to page"
 msgstr "ข้ามไปที่หน้า"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:85
+#: src/features/channel/components/ChannelMessages.tsx:86
 msgid "Jump to present"
 msgstr "ไปยังข้อความล่าสุด"
 
@@ -18904,15 +18939,15 @@ msgstr "เก็บไฟล์แนบเมื่อล้างการแ
 
 #. Description for the mirror premium model.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:341
-msgid "Keep free and premium tiers. You can customize the tiers later."
-msgstr "คงระดับฟรีและระดับพรีเมียมไว้ คุณสามารถปรับแต่งระดับได้ในภายหลัง"
+msgid "Keep free and premium tiers. You can customize the tiers, sell premium through Stripe, or hand out gift codes later from the admin panel."
+msgstr "คงระดับฟรีและระดับพรีเมียมไว้ คุณสามารถปรับแต่งระดับต่างๆ ขายแบบพรีเมียมผ่าน Stripe หรือแจกโค้ดของขวัญในภายหลังจากแผงผู้ดูแลระบบ"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:151
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:164
 msgid "Keep grace period"
 msgstr "คงช่วงผ่อนผัน"
 
 #. Toggle label and settings search entry for stopping the Neko sprite from chasing the cursor.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:53
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:54
 msgid "Keep Neko still"
 msgstr "ตรึง Neko ไว้"
 
@@ -18921,7 +18956,7 @@ msgstr "ตรึง Neko ไว้"
 msgid "Keep running"
 msgstr "ทำงานเบื้องหลัง"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:129
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:142
 msgid "Keep subscription"
 msgstr "คงการสมัครสมาชิก"
 
@@ -18958,7 +18993,7 @@ msgstr "คีย์"
 #: src/features/user/components/modals/tabs/accessibility_tab/AccessibilityTabInline.tsx:23
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:91
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:26
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:41
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:42
 msgid "Keyboard"
 msgstr "แป้นพิมพ์"
 
@@ -18969,7 +19004,7 @@ msgid "Keyboard"
 msgstr "แป้นพิมพ์"
 
 #. Toggle label and settings search entry for controlling tooltip keyboard shortcut hints.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:45
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:46
 msgid "Keyboard hints"
 msgstr "คำแนะนำแป้นพิมพ์"
 
@@ -19278,8 +19313,8 @@ msgstr "ปุ่มซ้ายของเมาส์"
 msgid "Left tooltip"
 msgstr "คำแนะนำด้านซ้าย"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:537
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:559
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:539
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:561
 msgid "Legacy rate"
 msgstr "เรทราคาเดิม"
 
@@ -19366,7 +19401,7 @@ msgstr "คลัง: {count} จาก {max}"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Subscription status badge meaning permanent premium access.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:441
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:443
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:22
 msgid "Lifetime"
 msgstr "ตลอดชีพ"
@@ -19706,7 +19741,7 @@ msgid "Localization"
 msgstr "ภาษา"
 
 #. Error modal body shown when the localized card pre-approval session cannot be started.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:191
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:200
 msgid "Localized card verification is not available right now. Try again later."
 msgstr "ขณะนี้ไม่สามารถยืนยันบัตรแบบท้องถิ่นได้ โปรดลองอีกครั้งในภายหลัง"
 
@@ -19722,7 +19757,7 @@ msgstr "ออกจากระบบ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:13
+#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:11
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:28
 msgid "Login"
 msgstr "เข้าสู่ระบบ"
@@ -19733,7 +19768,7 @@ msgid "Logo"
 msgstr "โลโก้"
 
 #. Label for Bluesky OAuth logo URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1064
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1065
 msgid "Logo URL"
 msgstr "URL โลโก้"
 
@@ -20097,7 +20132,7 @@ msgstr "ทำเครื่องหมายช่องบนสุดใน
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:364
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:122
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:123
 msgid "Markdown"
 msgstr "มาร์กดาวน์"
 
@@ -20647,7 +20682,7 @@ msgstr "กล่าวถึงบทบาทนี้ใช่ไหม"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:136
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:648
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:166
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:167
 msgid "Mentions"
 msgstr "การกล่าวถึง"
 
@@ -20878,12 +20913,12 @@ msgid "Message link"
 msgstr "ลิงก์ข้อความ"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:77
+#: src/features/channel/components/ChannelMessages.tsx:78
 msgid "Message list"
 msgstr "รายการข้อความ"
 
 #. Label in the channel and chat messages. Preserve {channelName}; it is inserted by code.
-#: src/features/channel/components/ChannelMessages.tsx:73
+#: src/features/channel/components/ChannelMessages.tsx:74
 msgid "Message list for {channelName}"
 msgstr "รายการข้อความสำหรับ {channelName}"
 
@@ -20965,7 +21000,7 @@ msgstr "เลิกปักหมุดข้อความแล้ว"
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabInline.tsx:31
 #: src/features/user/components/modals/tabs/AppearanceTab.tsx:39
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultKeybindsList.tsx:27
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:17
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:18
 msgid "Messages"
 msgstr "ข้อความ"
 
@@ -20986,7 +21021,7 @@ msgid "Messages deleted"
 msgstr "ลบข้อความหลายรายการแล้ว"
 
 #. Error message in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:89
+#: src/features/channel/components/ChannelMessages.tsx:90
 msgid "Messages failed to load"
 msgstr "โหลดข้อความไม่สำเร็จ"
 
@@ -21320,11 +21355,11 @@ msgstr "รายเดือน"
 msgid "Monthly {monthlyPrice}"
 msgstr "รายเดือน {monthlyPrice}"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:629
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:631
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>."
 msgstr "การเรียกเก็บเงินรายเดือนจะเริ่มในวันที่ <0>{pendingChangeDate}</0>"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:622
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:624
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>. First monthly charge: {pendingInitialPriceLabel}. Future monthly renewals: {pendingRecurringPriceLabel}/month."
 msgstr "การเรียกเก็บเงินรายเดือนจะเริ่มในวันที่ <0>{pendingChangeDate}</0> ค่าบริการรายเดือนครั้งแรก: {pendingInitialPriceLabel} การต่ออายุรายเดือนในอนาคต: {pendingRecurringPriceLabel}/เดือน"
 
@@ -21759,7 +21794,7 @@ msgstr "ปิดเสียง"
 #. Status label indicating the surface is currently muted.
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:23
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:491
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:73
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:74
 #: src/lib/overlay/OverlayContextMenu.tsx:24
 msgid "Muted"
 msgstr "ปิดเสียง"
@@ -21782,7 +21817,7 @@ msgstr "ปิดไมโครโฟนโดยผู้ดูแล"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:495
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:69
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:70
 msgid "Muted channels"
 msgstr "ช่องที่ปิดเสียง"
 
@@ -21995,7 +22030,7 @@ msgid "Narrates only the channel you're viewing. Narration follows you between c
 msgstr "อ่านออกเสียงเฉพาะช่องที่คุณกำลังดูอยู่ การอ่านออกเสียงจะตามคุณไปเมื่อเปลี่ยนช่อง"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:146
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:147
 msgid "Narration"
 msgstr "การอ่านออกเสียง"
 
@@ -22039,7 +22074,7 @@ msgstr "เลื่อนดูข้อความและการดำเ
 #. Short label in the keybinds tab. Keep it concise.
 #: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:33
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultKeybindsList.tsx:31
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:29
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:30
 msgid "Navigation"
 msgstr "การนำทาง"
 
@@ -22060,7 +22095,7 @@ msgid "Need an account?"
 msgstr "ยังไม่มีบัญชีใช่ไหม"
 
 #. Settings search synonym. Proper name of the optional cat sprite that chases the cursor.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:61
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:62
 msgid "Neko"
 msgstr "เนโกะ"
 
@@ -22250,12 +22285,12 @@ msgid "New password"
 msgstr "รหัสผ่านใหม่"
 
 #. Plutonium subscription card line shown when a move to a lower price is scheduled but the new amount is unknown. {pendingChangeDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:593
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:595
 msgid "New price scheduled for <0>{pendingChangeDate}</0>."
 msgstr "ราคาใหม่จะเริ่มใช้ในวันที่ <0>{pendingChangeDate}</0>"
 
 #. Plutonium subscription card line shown when a move to a lower price is scheduled. {pendingChangeDate} is a date and {pendingTargetPriceLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:587
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:589
 msgid "New price scheduled for <0>{pendingChangeDate}</0>. Renewals will be {pendingTargetPriceLabel} from then on."
 msgstr "ราคาใหม่มีผลในวันที่ <0>{pendingChangeDate}</0> การต่ออายุจะเป็น {pendingTargetPriceLabel} ตั้งแต่นั้นเป็นต้นไป"
 
@@ -23046,7 +23081,7 @@ msgid "Not a whole number"
 msgstr "ไม่ใช่จำนวนเต็ม"
 
 #. Summary value when the operator left the push relay notice unaccepted.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:394
+#: src/features/app/components/setup/SetupWizardSteps.tsx:395
 msgid "Not accepted"
 msgstr "ไม่ยอมรับ"
 
@@ -23335,7 +23370,7 @@ msgid "On"
 msgstr "เปิด"
 
 #. Billing confirmation body for moving an active subscription down to the current price. {listPriceEffectiveDate} is a date, and {listPriceCurrentLabel} and {listPriceNewLabel} are currency amounts, all already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:372
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:374
 msgid "On <0>{listPriceEffectiveDate}</0> your subscription moves from {listPriceCurrentLabel} to {listPriceNewLabel}. Nothing is charged today, and the rest of your subscription stays exactly as it is."
 msgstr "ในวันที่ <0>{listPriceEffectiveDate}</0> การสมัครสมาชิกของคุณจะเปลี่ยนจาก {listPriceCurrentLabel} เป็น {listPriceNewLabel} จะยังไม่มีการเรียกเก็บเงินใดๆ ในวันนี้ และส่วนที่เหลือของการสมัครสมาชิกของคุณจะยังคงเหมือนเดิมทุกประการ"
 
@@ -24173,7 +24208,7 @@ msgid "Other devices"
 msgstr "อุปกรณ์อื่น"
 
 #. Plutonium checkout pre-approval prompt secondary button. Opens the alternative payment methods flow.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:72
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:73
 msgid "Other methods"
 msgstr "วิธีอื่น"
 
@@ -24395,7 +24430,7 @@ msgstr "พาสคีย์ต้องใช้บันเดิล macOS �
 
 #. Generic form-field label for a password.
 #. Label for SMTP password input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1035
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1036
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:215
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:146
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:183
@@ -24561,12 +24596,12 @@ msgid "Paused invites"
 msgstr "ระงับการเชิญ"
 
 #. Plutonium subscription payment method picker description for Brazil. Explains Pix recurring vs falling back to a card.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:37
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:38
 msgid "Pay with {pixPaymentMethod} Automático to authorize recurring charges directly from your Brazilian bank. Or choose \"Use card\" to enter a credit card on {paymentProviderName}'s next screen."
 msgstr "ชำระเงินด้วย {pixPaymentMethod} Automático เพื่ออนุมัติการเรียกเก็บเงินที่เกิดขึ้นประจำโดยตรงจากธนาคารในบราซิลของคุณ หรือเลือก \"ใช้บัตร\" เพื่อกรอกข้อมูลบัตรเครดิตในหน้าถัดไปของ {paymentProviderName}"
 
 #. Plutonium subscription payment method picker description for India. Explains UPI e-mandate vs falling back to a card.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:47
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:48
 msgid "Pay with {upiPaymentMethod} to set up an RBI-compliant e-mandate from your Indian bank. Or choose \"Use card\" to enter a credit card on {paymentProviderName}'s next screen."
 msgstr "ชำระเงินด้วย {upiPaymentMethod} เพื่อตั้งค่า e-mandate ที่เป็นไปตามข้อกำหนดของ RBI จากธนาคารอินเดียของคุณ หรือเลือก \"ใช้บัตร\" เพื่อกรอกข้อมูลบัตรเครดิตในหน้าถัดไปของ {paymentProviderName}"
 
@@ -24673,7 +24708,7 @@ msgid "Perks"
 msgstr "สิทธิประโยชน์"
 
 #. Subscription status badge meaning premium is paid but perks are temporarily disabled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:429
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:431
 msgid "Perks paused"
 msgstr "สิทธิประโยชน์ถูกพักชั่วคราว"
 
@@ -24952,7 +24987,7 @@ msgstr "ปักหมุดข้อความนี้ในช่องเ
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice stats field label (mobile lobby). Shows current latency in ms.
 #. Voice stats field label (mobile voice lobby). Shows current latency in ms.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:186
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:184
 #: src/features/voice/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:118
 #: src/features/voice/components/bottomsheets/VoiceLobbyBottomSheet.tsx:86
 msgid "Ping"
@@ -25129,13 +25164,6 @@ msgstr "โปรดรอสักครู่แล้วลองลบอี
 msgid "Please wait a moment and try renaming again."
 msgstr "โปรดรอสักครู่แล้วลองเปลี่ยนชื่ออีกครั้ง"
 
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:9
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:178
-msgid "Plutonium"
-msgstr "Plutonium"
-
 #. Country name. EU member state in the illegal-content report country dropdown.
 #: src/features/moderation/components/report/OptionDescriptors.ts:191
 msgid "Poland"
@@ -25179,12 +25207,12 @@ msgid "Popped out"
 msgstr "อยู่ในหน้าต่างแยก"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:198
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:196
 msgid "Popup"
 msgstr "ป๊อปอัป"
 
 #. Label for SMTP port input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1033
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1034
 msgid "Port"
 msgstr "พอร์ต"
 
@@ -25290,7 +25318,7 @@ msgid "Premium grace period nagbar"
 msgstr "แถบแจ้งเตือนช่วงผ่อนผันสำหรับสมาชิกพรีเมียม"
 
 #. Summary row label for the premium model in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:386
+#: src/features/app/components/setup/SetupWizardSteps.tsx:387
 msgid "Premium model"
 msgstr "โมเดลพรีเมียม"
 
@@ -25505,7 +25533,7 @@ msgid "Pricing"
 msgstr "ราคา"
 
 #. Error modal body shown when the user clicks a plan before price IDs have loaded.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:165
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:174
 msgid "Pricing is still loading."
 msgstr "กำลังโหลดราคา"
 
@@ -25570,7 +25598,7 @@ msgid "Privacy or impersonation"
 msgstr "ความเป็นส่วนตัวหรือการแอบอ้างเป็นบุคคลอื่น"
 
 #: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:444
-#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:19
+#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:24
 msgid "Privacy policy"
 msgstr "นโยบายความเป็นส่วนตัว"
 
@@ -25580,7 +25608,7 @@ msgid "Privacy settings"
 msgstr "การตั้งค่าความเป็นส่วนตัว"
 
 #. Label for Bluesky OAuth privacy URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1072
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1073
 msgid "Privacy URL"
 msgstr "URL ความเป็นส่วนตัว"
 
@@ -25605,7 +25633,7 @@ msgid "Private details"
 msgstr "ข้อมูลส่วนตัว"
 
 #. Label for Bluesky OAuth private key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1080
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1081
 msgid "Private key"
 msgstr "คีย์ส่วนตัว"
 
@@ -25631,7 +25659,7 @@ msgstr "กำลังดำเนินการ"
 #. Label for the product name input in the setup wizard.
 #. Summary row label for the product name in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:92
-#: src/features/app/components/setup/SetupWizardSteps.tsx:362
+#: src/features/app/components/setup/SetupWizardSteps.tsx:363
 msgid "Product name"
 msgstr "ชื่อผลิตภัณฑ์"
 
@@ -25815,7 +25843,7 @@ msgid "Provide your full legal name for the declaration."
 msgstr "ระบุชื่อ-นามสกุลตามกฎหมายของคุณสำหรับคำรับรองนี้"
 
 #. Label for an integration provider choice.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1008
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1009
 msgid "Provider"
 msgstr "ผู้ให้บริการ"
 
@@ -25880,13 +25908,18 @@ msgstr "ซื้อแล้ว {0}"
 msgid "Purchased gifts"
 msgstr "ของขวัญที่ซื้อแล้ว"
 
+#. Modal body shown on a self-hosted instance when purchases are disabled for the account.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:144
+msgid "Purchases are disabled for this account."
+msgstr "การซื้อถูกปิดใช้งานสำหรับบัญชีนี้"
+
 #. Modal body shown when purchases are disabled. Provides the support email for appeals.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:139
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:140
 msgid "Purchases are disabled for this account. Contact {supportEmail} if this looks wrong."
 msgstr "การซื้อถูกปิดใช้งานสำหรับบัญชีนี้ โปรดติดต่อ {supportEmail} หากคิดว่าไม่ถูกต้อง"
 
 #. Modal title shown when purchases are disabled on this account (server-side enforcement).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:135
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:136
 msgid "Purchases unavailable"
 msgstr "ไม่สามารถซื้อได้"
 
@@ -25931,7 +25964,7 @@ msgid "Push notification inactive timeout"
 msgstr "หมดเวลาการแจ้งเตือนแบบพุชเมื่อไม่ใช้งาน"
 
 #. Summary row label for the push relay consent on the setup wizard finish step.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:382
+#: src/features/app/components/setup/SetupWizardSteps.tsx:383
 msgid "Push relay notice"
 msgstr "การแจ้งเตือนการส่งต่อ"
 
@@ -26142,7 +26175,7 @@ msgstr "รีแอ็กชัน"
 
 #. Billing button that cancels a scheduled subscription cancellation.
 #. Button label on the premium-expired nagbar. Opens billing so the user can reactivate their subscription.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:744
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:746
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:25
 msgid "Reactivate"
 msgstr "เปิดใช้งานอีกครั้ง"
@@ -26153,7 +26186,7 @@ msgid "Reactivate subscription"
 msgstr "เปิดใช้งานการสมัครสมาชิกอีกครั้ง"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:130
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:131
 msgid "Read aloud"
 msgstr "อ่านออกเสียง"
 
@@ -26170,7 +26203,7 @@ msgstr "อ่านประวัติข้อความ"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:177
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:126
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:127
 msgid "Read messages"
 msgstr "อ่านข้อความ"
 
@@ -26364,7 +26397,9 @@ msgid "Redeem for yourself"
 msgstr "แลกให้ตัวเอง"
 
 #. Billing button for entering a premium gift code.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:717
+#. Billing button for entering a premium gift code.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:719
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:305
 msgid "Redeem gift code"
 msgstr "แลกรหัสของขวัญ"
 
@@ -26514,7 +26549,7 @@ msgid "Registered passkeys"
 msgstr "พาสคีย์ที่ลงทะเบียนแล้ว"
 
 #. Summary row label for the registration mode in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:366
+#: src/features/app/components/setup/SetupWizardSteps.tsx:367
 msgid "Registration"
 msgstr "การลงทะเบียน"
 
@@ -26642,7 +26677,7 @@ msgstr "จำขนาดและตำแหน่งหน้าต่าง
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:26
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:55
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:178
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:194
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:192
 #: src/features/webhook/components/WebhookListItem.tsx:277
 msgid "Remove"
 msgstr "ลบ"
@@ -27135,7 +27170,7 @@ msgstr "เกณฑ์การต่ออายุ (วัน)"
 msgid "Renew window (days)"
 msgstr "ช่วงเวลาต่ออายุ (วัน)"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:699
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:701
 msgid "Renews on <0>{renewalDate}.</0>"
 msgstr "ต่ออายุในวันที่ <0>{renewalDate}</0>"
 
@@ -27879,8 +27914,8 @@ msgstr "กู้คืนหน้าต่าง"
 
 #. Billing button for restarting a subscription during the grace period.
 #. Billing button for starting a new subscription after premium expired.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:736
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:740
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:738
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:742
 msgid "Resubscribe"
 msgstr "สมัครใหม่"
 
@@ -28014,7 +28049,7 @@ msgid "Review what this app is asking for before you continue."
 msgstr "ตรวจสอบคำขอของแอปนี้ก่อนดำเนินการต่อ"
 
 #. Setup wizard finish step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:358
+#: src/features/app/components/setup/SetupWizardSteps.tsx:359
 msgid "Review your choices below, then finish. This saves the configuration and opens the instance."
 msgstr "ตรวจสอบตัวเลือกของคุณด้านล่าง จากนั้นกดเสร็จสิ้น การดำเนินการนี้จะบันทึกการกำหนดค่าและเปิดอินสแตนซ์"
 
@@ -29064,7 +29099,7 @@ msgid "Secret"
 msgstr "รหัสลับ"
 
 #. Label for a CAPTCHA secret key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1019
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1020
 msgid "Secret key"
 msgstr "คีย์ลับ"
 
@@ -29366,7 +29401,7 @@ msgstr "โหมดโฮสต์เอง"
 msgid "Self-hosted mode override"
 msgstr "การแทนที่โหมดโฮสต์เอง"
 
-#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:36
+#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:91
 msgid "Self-serve refunds available within 3 days of payment, once every 30 days. Refunding a subscription cancels it. EU/EEA buyers waive the 14-day right of withdrawal at checkout to access content immediately. Use the in-app refund button instead of a chargeback. Chargebacks can permanently restrict your account. Stripe handles payment securely. We never see your full card number."
 msgstr "ขอคืนเงินด้วยตนเองได้ภายใน 3 วันหลังชำระเงิน และทำได้หนึ่งครั้งทุก 30 วัน การคืนเงินค่าสมัครสมาชิกจะเป็นการยกเลิกการสมัครสมาชิกด้วย ผู้ซื้อใน EU/EEA สละสิทธิ์ยกเลิกสัญญาภายใน 14 วันตอนชำระเงิน เพื่อเข้าถึงเนื้อหาได้ทันที โปรดใช้ปุ่มขอคืนเงินในแอปแทนการปฏิเสธการชำระเงินกับธนาคาร การปฏิเสธการชำระเงินอาจทำให้บัญชีของคุณถูกจำกัดอย่างถาวร Stripe เป็นผู้ดูแลการชำระเงินอย่างปลอดภัย เราไม่เห็นหมายเลขบัตรแบบเต็มของคุณ"
 
@@ -29890,7 +29925,7 @@ msgid "Set up authenticator app"
 msgstr "ตั้งค่าแอปยืนยันตัวตน"
 
 #. Option for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:952
+#: src/features/app/components/setup/SetupWizardSteps.tsx:953
 msgid "Set up later"
 msgstr "ตั้งค่าทีหลัง"
 
@@ -30492,7 +30527,7 @@ msgid "Show myself typing"
 msgstr "แสดงว่าฉันกำลังพิมพ์"
 
 #. Toggle label and settings search entry for showing the Neko sprite that chases the cursor.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:49
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:50
 msgid "Show Neko"
 msgstr "แสดง Neko"
 
@@ -30582,7 +30617,7 @@ msgid "Show stickers in expression autocomplete"
 msgstr "แสดงสติกเกอร์ในการเติมข้อความอัตโนมัติ"
 
 #. Description for a visual accessibility setting that mutes the color of text formatted with Markdown strikethrough.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:101
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:102
 msgid "Show strikethrough Markdown text in a slightly muted color."
 msgstr "แสดงข้อความ Markdown ที่ขีดฆ่าด้วยสีที่หม่นลงเล็กน้อย"
 
@@ -30661,7 +30696,7 @@ msgid "Shows the banner in its own section below the community header."
 msgstr "แสดงแบนเนอร์ในส่วนของตัวเองที่อยู่ใต้ส่วนหัวของคอมมูนิตี้"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:21
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:22
 msgid "Sidebar"
 msgstr "แถบด้านข้าง"
 
@@ -30785,7 +30820,7 @@ msgid "Signed-in devices"
 msgstr "อุปกรณ์ที่ลงชื่อเข้าใช้"
 
 #. Label for Bluesky OAuth signing key ID input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1076
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1077
 msgid "Signing key ID"
 msgstr "ID คีย์การลงนาม"
 
@@ -30852,7 +30887,7 @@ msgid "Single column"
 msgstr "คอลัมน์เดียว"
 
 #. Summary row label for the single community choice in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:370
+#: src/features/app/components/setup/SetupWizardSteps.tsx:371
 msgid "Single community"
 msgstr "คอมมูนิตี้เดียว"
 
@@ -30876,7 +30911,7 @@ msgid "Single user (all statuses)"
 msgstr "ผู้ใช้คนเดียว (ทุกสถานะ)"
 
 #. Label for a CAPTCHA site key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1018
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1019
 msgid "Site key"
 msgstr "คีย์ไซต์"
 
@@ -30929,7 +30964,7 @@ msgid "Skip the system leave notice — nobody gets pinged."
 msgstr "ข้ามข้อความระบบแจ้งการออกจากกลุ่ม ไม่มีใครได้รับการแจ้งเตือน"
 
 #. Description for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:956
+#: src/features/app/components/setup/SetupWizardSteps.tsx:957
 msgid "Skip this now and configure it from the admin panel."
 msgstr "ข้ามตอนนี้และกำหนดค่าจากแผงผู้ดูแลระบบ"
 
@@ -31177,17 +31212,17 @@ msgid "SMS verification is unavailable right now. Try again later or contact sup
 msgstr "ไม่สามารถยืนยัน SMS ได้ในขณะนี้ โปรดลองอีกครั้งในภายหลังหรือติดต่อฝ่ายสนับสนุน"
 
 #. Success message after validating SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1044
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1045
 msgid "SMTP connection verified."
 msgstr "ยืนยันการเชื่อมต่อ SMTP แล้ว"
 
 #. Label for SMTP host input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1032
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1033
 msgid "SMTP host"
 msgstr "โฮสต์ SMTP"
 
 #. Failure message after validating SMTP credentials when the server returns no error detail.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1048
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1049
 msgid "SMTP validation failed."
 msgstr "ตรวจสอบ SMTP ไม่สำเร็จ"
 
@@ -31289,7 +31324,7 @@ msgstr "เกิดข้อผิดพลาดขณะโหลดบัน
 #. Body of the error modal shown when opening the billing customer portal from the grace-period nagbar fails.
 #. Body of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Body of the generic fallback error modal shown when opening the billing customer portal fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:33
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:34
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:18
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:34
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:34
@@ -31324,7 +31359,7 @@ msgid "Something went wrong while sending your verification email. Please try ag
 msgstr "เกิดข้อผิดพลาดขณะส่งอีเมลยืนยันของคุณ โปรดลองอีกครั้งในภายหลัง"
 
 #. Body of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:155
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:164
 msgid "Something went wrong while starting checkout. Please try again in a moment."
 msgstr "เกิดข้อผิดพลาดขณะเริ่มต้นการชำระเงิน โปรดลองอีกครั้งในภายหลัง"
 
@@ -31581,7 +31616,7 @@ msgstr "ผู้ชม - {count}"
 #. Native macOS Edit submenu title for text-to-speech actions.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/platform/utils/DesktopLocaleBridge.ts:85
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:142
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:143
 msgid "Speech"
 msgstr "เสียงพูด"
 
@@ -32276,14 +32311,14 @@ msgid "Streaming privacy on"
 msgstr "ความเป็นส่วนตัวในการสตรีมเปิดอยู่"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:110
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:111
 msgid "Strike through"
 msgstr "ขีดทับ"
 
 #. Selection formatting toolbar button.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/lexical/composer/SelectionFormattingToolbar.tsx:72
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:106
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:107
 msgid "Strikethrough"
 msgstr "ขีดทับ"
 
@@ -32355,7 +32390,7 @@ msgid "Subscription"
 msgstr "การสมัครสมาชิก"
 
 #. Modal title shown when checkout is blocked because the account already has an active Plutonium subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:124
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:125
 msgid "Subscription already exists"
 msgstr "มีการสมัครสมาชิกอยู่แล้ว"
 
@@ -32512,7 +32547,7 @@ msgid "Switch price"
 msgstr "เปลี่ยนราคา"
 
 #. Billing button that opens confirmation to move the subscription down to the current price. {listPriceNewLabel} is the localized new price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:804
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:806
 msgid "Switch to {listPriceNewLabel}"
 msgstr "เปลี่ยนเป็น {listPriceNewLabel}"
 
@@ -32537,7 +32572,7 @@ msgstr "เปลี่ยนเป็นอินพุตโดยตรง"
 #. Billing button that opens confirmation to switch to monthly billing.
 #. Button confirming a change to monthly subscription billing.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:57
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:787
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:789
 msgid "Switch to monthly"
 msgstr "เปลี่ยนเป็นรายเดือน"
 
@@ -32606,7 +32641,7 @@ msgstr "เปลี่ยนเป็นสองคอลัมน์"
 #. Billing button that opens confirmation to switch to yearly billing.
 #. Button confirming a change to yearly subscription billing.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:53
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:783
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:785
 msgid "Switch to yearly"
 msgstr "เปลี่ยนเป็นรายปี"
 
@@ -32851,23 +32886,23 @@ msgstr "แท็ก ({tagCount}/{tagLimit})"
 msgid "Tags must be 2 to {maxLength} characters and alphanumeric."
 msgstr "แท็กต้องมีความยาว 2 ถึง {maxLength} ตัวอักษร และเป็นตัวอักษรหรือตัวเลขเท่านั้น"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:291
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:293
 msgid "Takes effect at your next renewal. We'll apply a {creditLabel} credit from your current monthly payment, so your first yearly charge will be <0>{firstRenewalPriceLabel}</0>. Future yearly renewals will be {renewalPrice}/year."
 msgstr "มีผลเมื่อถึงรอบการต่ออายุครั้งถัดไป เราจะใช้เครดิต {creditLabel} จากการชำระเงินรายเดือนปัจจุบันของคุณ ดังนั้นค่าบริการรายปีครั้งแรกของคุณจะอยู่ที่ <0>{firstRenewalPriceLabel}</0> การต่ออายุรายปีในอนาคตจะอยู่ที่ {renewalPrice}/ปี"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:300
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:302
 msgid "Takes effect at your next renewal. Your subscription stays monthly until then, and your next renewal will be <0>{renewalPrice}/year</0>."
 msgstr "มีผลเมื่อถึงรอบการต่ออายุครั้งถัดไป การสมัครสมาชิกของคุณจะยังคงเป็นรายเดือนจนถึงตอนนั้น และการต่ออายุครั้งถัดไปของคุณจะอยู่ที่ <0>{renewalPrice}/ปี</0>"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:309
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:311
 msgid "Takes effect at your next renewal. Your subscription stays yearly until then, and your next renewal will be <0>{renewalPrice}/month</0>."
 msgstr "มีผลเมื่อถึงรอบการต่ออายุครั้งถัดไป การสมัครสมาชิกของคุณจะยังคงเป็นรายปีจนถึงตอนนั้น และการต่ออายุครั้งถัดไปของคุณจะอยู่ที่ <0>{renewalPrice}/เดือน</0>"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:328
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:330
 msgid "Takes effect immediately. A prorated adjustment may apply via {PAYMENT_PROVIDER_NAME}. Your next renewal will be <0>{renewalPrice}/month</0>."
 msgstr "มีผลทันที อาจมีการปรับเปลี่ยนตามสัดส่วนผ่าน {PAYMENT_PROVIDER_NAME} การต่ออายุครั้งถัดไปของคุณจะอยู่ที่ <0>{renewalPrice}/เดือน</0>"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:319
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:321
 msgid "Takes effect immediately. A prorated charge may apply via {PAYMENT_PROVIDER_NAME}. Your next renewal will be <0>{renewalPrice}/year</0>."
 msgstr "มีผลทันที อาจมีการเรียกเก็บเงินตามสัดส่วนผ่าน {PAYMENT_PROVIDER_NAME} การต่ออายุครั้งถัดไปของคุณจะอยู่ที่ <0>{renewalPrice}/ปี</0>"
 
@@ -32978,12 +33013,12 @@ msgid "Terms acceptance nagbar"
 msgstr "แถบแจ้งเตือนการยอมรับข้อกำหนด"
 
 #: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:435
-#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:14
+#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:19
 msgid "Terms of service"
 msgstr "ข้อกำหนดในการให้บริการ"
 
 #. Label for Bluesky OAuth terms URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1068
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1069
 msgid "Terms URL"
 msgstr "URL ข้อกำหนด"
 
@@ -32993,7 +33028,7 @@ msgid "Terrorism or violent extremism"
 msgstr "การก่อการร้ายหรือแนวคิดสุดโต่งที่ใช้ความรุนแรง"
 
 #. Button that validates SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1040
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1041
 msgid "Test SMTP"
 msgstr "ทดสอบ SMTP"
 
@@ -33096,7 +33131,7 @@ msgstr "ส่งข้อความหาเราจากโทรศัพ
 #. Feature label / section heading for the text-to-speech feature.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:419
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:138
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:139
 msgid "Text-to-speech"
 msgstr "การอ่านออกเสียงข้อความ"
 
@@ -34220,7 +34255,7 @@ msgid "This picker is only available in the desktop app."
 msgstr "ตัวเลือกนี้ใช้ได้เฉพาะในแอปเดสก์ท็อปเท่านั้น"
 
 #. Error modal body shown when the selected Plutonium plan has no price ID configured.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:169
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:178
 msgid "This plan isn't available. Contact support."
 msgstr "แพ็กเกจนี้ไม่พร้อมใช้งาน โปรดติดต่อฝ่ายสนับสนุน"
 
@@ -35107,7 +35142,7 @@ msgid "Try Turnstile instead"
 msgstr "ลองใช้ Turnstile แทน"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:134
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:135
 msgid "TTS"
 msgstr "TTS"
 
@@ -35364,7 +35399,7 @@ msgid "Typed URL in the message text"
 msgstr "URL ที่พิมพ์ไว้ในเนื้อหาข้อความ"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:33
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:34
 msgid "Typing"
 msgstr "กำลังพิมพ์"
 
@@ -35861,7 +35896,7 @@ msgstr "ปลดล็อกอิโมจิแบบกำหนดเอง
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "ปลดล็อกการแชร์หน้าจอแบบ HD ด้วย {premiumProductName}"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:200
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:215
 msgid "Unlock higher limits and exclusive features while supporting an independent communication platform."
 msgstr "ปลดล็อกขีดจำกัดที่สูงขึ้นและฟีเจอร์พิเศษ พร้อมสนับสนุนแพลตฟอร์มการสื่อสารอิสระ"
 
@@ -36071,7 +36106,7 @@ msgstr "ยังไม่ได้อ่าน"
 #. Tab label in the inbox popout filtering to channels with unread messages.
 #: src/features/messaging/components/popouts/InboxPopout.tsx:30
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:10
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:77
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:78
 msgid "Unread"
 msgstr "ยังไม่ได้อ่าน"
 
@@ -36544,7 +36579,7 @@ msgid "Use {everyoneMention}/{hereMention} and {rolesMention}"
 msgstr "ใช้ {everyoneMention}/{hereMention} และ {rolesMention} ได้"
 
 #. Plutonium subscription payment method picker button. Selects Pix as the payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:43
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:44
 msgid "Use {pixPaymentMethod}"
 msgstr "ใช้ {pixPaymentMethod}"
 
@@ -36559,7 +36594,7 @@ msgid "Use {query} where the text to translate should be inserted."
 msgstr "ใช้ {query} ในตำแหน่งที่ต้องการแทรกข้อความเพื่อแปล"
 
 #. Plutonium subscription payment method picker button. Selects UPI as the payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:53
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:54
 msgid "Use {upiPaymentMethod}"
 msgstr "ใช้ {upiPaymentMethod}"
 
@@ -36593,7 +36628,7 @@ msgid "Use actual value"
 msgstr "ใช้ค่าจริง"
 
 #. Plutonium subscription payment method picker button. Selects the alternative (non-card) method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:62
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:63
 msgid "Use alternative method"
 msgstr "ใช้วิธีอื่น"
 
@@ -36629,7 +36664,7 @@ msgid "Use browser locale for time format"
 msgstr "ใช้รูปแบบเวลาตามภาษาของเบราว์เซอร์"
 
 #. Modal secondary button to fall back to standard card checkout instead of an alternative payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:203
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:212
 msgid "Use card"
 msgstr "ใช้บัตร"
 
@@ -36727,32 +36762,32 @@ msgid "Use light theme"
 msgstr "ใช้ธีมสว่าง"
 
 #. Modal primary button to start the localized card pre-approval verification flow.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:199
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:208
 msgid "Use local card"
 msgstr "ใช้บัตรในประเทศ"
 
 #. Plutonium checkout pre-approval prompt for Brazil. Explains the card verification flow and the Pix alternative.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:66
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:67
 msgid "Use local card to verify a card issued in Brazil before the paid BRL checkout. Choose other methods if you'd rather try {pixPaymentMethod} or another payment method {paymentProviderName} offers on the next screen."
 msgstr "ใช้บัตรในประเทศเพื่อยืนยันบัตรที่ออกในบราซิลก่อนชำระเงินเป็นสกุลเงิน BRL เลือกวิธีอื่นหากต้องการลอง {pixPaymentMethod} หรือวิธีการชำระเงินอื่นๆ ที่ {paymentProviderName} มีให้ในหน้าถัดไป"
 
 #. Plutonium checkout pre-approval prompt for India. Explains the card verification flow and the UPI alternative.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:76
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:77
 msgid "Use local card to verify a card issued in India before the paid INR checkout. Choose other methods if you'd rather try {upiPaymentMethod} or another payment method {paymentProviderName} offers on the next screen."
 msgstr "ใช้บัตรในประเทศเพื่อยืนยันบัตรที่ออกในอินเดียก่อนชำระเงินเป็นสกุลเงิน INR เลือกวิธีอื่นหากคุณต้องการลอง {upiPaymentMethod} หรือวิธีการชำระเงินอื่นๆ ที่ {paymentProviderName} มีให้ในหน้าถัดไป"
 
 #. Plutonium checkout pre-approval prompt for Poland. Explains that BLIK is not supported for subscriptions; user must continue to the standard checkout.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:82
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:83
 msgid "Use local card to verify a card issued in Poland before the paid PLN checkout. {blikPaymentMethod} does not support subscriptions in {paymentProviderName} checkout, so continue only if you want {paymentProviderName2}'s standard payment screen instead."
 msgstr "ใช้บัตรในประเทศเพื่อยืนยันบัตรที่ออกในโปแลนด์ก่อนชำระเงินเป็นสกุลเงิน PLN {blikPaymentMethod} ไม่รองรับการสมัครสมาชิกในการชำระเงินของ {paymentProviderName} ดังนั้นโปรดดำเนินการต่อเฉพาะในกรณีที่คุณต้องการหน้าจอการชำระเงินมาตรฐานของ {paymentProviderName2} แทน"
 
 #. Plutonium checkout pre-approval prompt for Türkiye. Explains there is no local wallet method; continuing goes to the standard checkout.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:93
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:94
 msgid "Use local card to verify a card issued in Türkiye before the paid TRY checkout. There isn't an app-based local subscription method here, so continuing will take you to {paymentProviderName}'s standard payment screen."
 msgstr "ใช้บัตรในประเทศเพื่อยืนยันบัตรที่ออกในตุรกีก่อนชำระเงินเป็นสกุลเงิน TRY ไม่มีวิธีการสมัครสมาชิกในประเทศแบบใช้แอปที่นี่ ดังนั้นการดำเนินการต่อจะนำคุณไปยังหน้าจอการชำระเงินมาตรฐานของ {paymentProviderName}"
 
 #. Plutonium checkout pre-approval prompt default. Generic description for countries without specific localized payment guidance.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:99
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:100
 msgid "Use local card to verify a card issued in your billing country before the paid checkout. Choose other methods for any other payment method {paymentProviderName} offers on the next screen."
 msgstr "ใช้บัตรในประเทศเพื่อยืนยันบัตรที่ออกในประเทศที่เรียกเก็บเงินของคุณก่อนชำระเงิน เลือกวิธีอื่นสำหรับวิธีการชำระเงินอื่นๆ ที่ {paymentProviderName} มีให้ในหน้าถัดไป"
 
@@ -36860,7 +36895,7 @@ msgid "Use this when troubleshooting the client or collecting logs. It may add v
 msgstr "ใช้เมื่อแก้ไขปัญหาไคลเอ็นต์หรือรวบรวมบันทึก อาจเพิ่มข้อความที่ละเอียดลงในคอนโซลเบราว์เซอร์สำหรับไคลเอ็นต์ปัจจุบัน"
 
 #. Label for SMTP TLS toggle.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1036
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1037
 msgid "Use TLS"
 msgstr "ใช้ TLS"
 
@@ -37026,7 +37061,7 @@ msgstr "ระดับเสียงของผู้ใช้"
 #. Generic form-field label for a username.
 #. Label for SMTP username input.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1034
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1035
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:572
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:218
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx:56
@@ -37262,7 +37297,7 @@ msgid "Verify"
 msgstr "ยืนยัน"
 
 #. Modal title for the mobile checkout confirmation when opening the localized card verification flow.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:173
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:182
 msgid "Verify card"
 msgstr "ยืนยันบัตร"
 
@@ -37366,7 +37401,7 @@ msgid "Verify your email before sending friend requests."
 msgstr "ยืนยันอีเมลของคุณก่อนส่งคำขอเป็นเพื่อน"
 
 #. Title of the error modal shown when an unverified account tries to purchase Plutonium.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:105
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:106
 msgid "Verify your email first"
 msgstr "ยืนยันอีเมลของคุณก่อน"
 
@@ -37827,7 +37862,7 @@ msgstr "เวอร์จิเนีย"
 msgid "Visibility"
 msgstr "การมองเห็น"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:416
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:418
 msgid "Visionary"
 msgstr "Visionary"
 
@@ -37847,7 +37882,7 @@ msgid "Visionary 2FA nagbar"
 msgstr "แถบแจ้งเตือน 2FA สำหรับ Visionary"
 
 #. Modal body shown when a Visionary user tries to subscribe. Reassures them and points out gift purchases stay available.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:118
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:119
 msgid "Visionary already includes permanent access, so a recurring subscription isn't needed. You can still buy gifts for others."
 msgstr "Visionary มีสิทธิ์เข้าถึงถาวรอยู่แล้ว จึงไม่จำเป็นต้องสมัครสมาชิกแบบต่ออายุอัตโนมัติ คุณยังสามารถซื้อของขวัญให้ผู้อื่นได้"
 
@@ -37862,7 +37897,7 @@ msgid "Visionary badge ID"
 msgstr "ID ของป้าย Visionary"
 
 #. Short label in the user profile badges popout. Keep it concise. Preserve {visionaryIdLabel}; it is inserted by code.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:56
+#: src/features/user/components/popouts/UserProfileBadges.tsx:58
 msgid "Visionary ID {visionaryIdLabel}"
 msgstr "Visionary ID {visionaryIdLabel}"
 
@@ -37898,7 +37933,7 @@ msgstr "ตัวบ่งชี้ภาพที่แสดงสถานะ
 #: src/features/app/components/layout/MobileBottomNav.tsx:123
 #: src/features/channel/utils/ChannelUtils.tsx:31
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:17
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:81
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:82
 msgid "Voice"
 msgstr "เสียง"
 
@@ -38131,7 +38166,7 @@ msgstr "เป็นโมฆะ"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:378
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:181
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:86
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:174
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:175
 msgid "Volume"
 msgstr "ระดับเสียง"
 
@@ -38354,7 +38389,7 @@ msgid "We don't send verification texts to this country. Try a mobile number fro
 msgstr "เราไม่ส่งข้อความยืนยันไปยังประเทศนี้ โปรดลองใช้หมายเลขโทรศัพท์มือถือจากประเทศอื่น หรือติดต่อฝ่ายสนับสนุน"
 
 #. Modal body for existing-subscription block. Directs the user to the billing portal and addresses the just-paid race case. Keep plain and reassuring.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:129
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:130
 msgid "We found an existing {premiumProductFullName} subscription for this account. Manage it in the secure billing portal to update payment details or check renewal status. If you just paid, wait a minute and reopen this page."
 msgstr "เราพบการสมัครสมาชิก {premiumProductFullName} สำหรับบัญชีนี้แล้ว จัดการได้ในพอร์ทัลการเรียกเก็บเงินที่ปลอดภัยเพื่ออัปเดตรายละเอียดการชำระเงินหรือตรวจสอบสถานะการต่ออายุ หากคุณเพิ่งชำระเงิน โปรดรอสักครู่แล้วเปิดหน้านี้อีกครั้ง"
 
@@ -39020,15 +39055,15 @@ msgstr "รายปี {yearlyPrice}"
 msgid "Yearly gift"
 msgstr "ของขวัญรายปี"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:616
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:618
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>."
 msgstr "กำหนดอัปเกรดเป็นรายปีในวันที่ <0>{pendingChangeDate}</0>"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:601
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:603
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel} after a {pendingCreditPriceLabel} credit. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "กำหนดอัปเกรดเป็นรายปีในวันที่ <0>{pendingChangeDate}</0> ค่าบริการรายปีครั้งแรก: {pendingInitialPriceLabel} หลังหักเครดิต {pendingCreditPriceLabel} การต่ออายุรายปีครั้งถัดไป: {pendingRecurringPriceLabel}/ปี"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:608
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:610
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel}. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "กำหนดอัปเกรดเป็นรายปีในวันที่ <0>{pendingChangeDate}</0> ค่าบริการรายปีครั้งแรก: {pendingInitialPriceLabel} การต่ออายุรายปีครั้งถัดไป: {pendingRecurringPriceLabel}/ปี"
 
@@ -39101,7 +39136,7 @@ msgid "You are now a developer!"
 msgstr "ตอนนี้คุณเป็นนักพัฒนาแล้ว!"
 
 #. Modal body for the mobile checkout confirmation. Explains that the user is leaving the app to pay.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:186
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:195
 msgid "You are now navigating to {paymentProviderName} to complete the payment. Return to {productName} once you've completed it."
 msgstr "คุณกำลังจะไปยัง {paymentProviderName} เพื่อดำเนินการชำระเงินให้เสร็จสมบูรณ์ โปรดกลับมาที่ {productName} เมื่อคุณชำระเงินเรียบร้อยแล้ว"
 
@@ -39497,11 +39532,11 @@ msgstr "คุณยังไม่ได้บล็อกใครเลย"
 msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {productName} without a mouse."
 msgstr "คุณเพิ่งกด Tab ตอนนี้เปิดโหมดแป้นพิมพ์แล้ว คุณจึงสามารถไปยังส่วนต่างๆ ของ {productName} ได้โดยไม่ต้องใช้เมาส์"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:122
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:135
 msgid "You keep your perks until your next renewal date, then have a 3-day grace period to resubscribe and keep your subscriber history."
 msgstr "คุณจะยังคงได้รับสิทธิประโยชน์จนถึงวันต่ออายุครั้งถัดไป จากนั้นจะมีระยะเวลาผ่อนผัน 3 วันในการสมัครสมาชิกอีกครั้งเพื่อรักษาประวัติการเป็นสมาชิกของคุณไว้"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:144
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:157
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "คุณจะสูญเสียสิทธิประโยชน์ทั้งหมดของ {PREMIUM_PRODUCT_NAME} ทันที และประวัติการเป็นสมาชิกของคุณจะถูกรีเซ็ต การดำเนินการนี้ไม่สามารถยกเลิกได้"
 
@@ -39623,7 +39658,7 @@ msgid "You need to verify your email address before you can start a direct messa
 msgstr "คุณต้องยืนยันอีเมลก่อนจึงจะสามารถเริ่มข้อความส่วนตัวได้"
 
 #. Body of the error modal shown when the account email is unverified and the user tries to purchase Plutonium. Product name is interpolated.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:109
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:110
 msgid "You need to verify your email before you can purchase {premiumProductFullName}."
 msgstr "คุณต้องยืนยันอีเมลก่อนจึงจะสามารถซื้อ {premiumProductFullName} ได้"
 
@@ -39715,7 +39750,7 @@ msgid "You're already friends with this user."
 msgstr "คุณเป็นเพื่อนกับผู้ใช้นี้อยู่แล้ว"
 
 #. Modal title shown when a lifetime Visionary tier user tries to start a recurring Plutonium subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:114
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:115
 msgid "You're already Visionary"
 msgstr "คุณเป็น Visionary อยู่แล้ว"
 
@@ -39755,7 +39790,7 @@ msgid "You're being rate limited. Wait {duration} before trying again."
 msgstr "คุณถูกจำกัดอัตราการใช้งาน โปรดรอ {duration} ก่อนลองอีกครั้ง"
 
 #. Error modal body shown when a gift-subscription user tries to start a recurring subscription. Explains the extension/redemption path.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:159
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:168
 msgid "You're currently on a gift subscription. It won't renew. You can redeem more gift codes to extend it. Recurring subscriptions can be started after your gift time ends."
 msgstr "คุณกำลังใช้การสมัครสมาชิกแบบของขวัญ ซึ่งจะไม่มีการต่ออายุ คุณสามารถแลกรหัสของขวัญเพิ่มเพื่อขยายระยะเวลาได้ การสมัครสมาชิกแบบต่ออายุอัตโนมัติจะสามารถเริ่มต้นได้หลังจากระยะเวลาของขวัญของคุณสิ้นสุดลง"
 
@@ -39843,7 +39878,7 @@ msgid "You're timed out. Messaging, reactions, and voice are paused until the ti
 msgstr "คุณถูกพักการใช้งานชั่วคราว การส่งข้อความ รีแอ็กชัน และเสียงจะถูกระงับจนกว่าการพักการใช้งานจะสิ้นสุดลง"
 
 #. Label in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:81
+#: src/features/channel/components/ChannelMessages.tsx:82
 msgid "You're viewing older messages"
 msgstr "คุณกำลังดูข้อความเก่า"
 
@@ -40261,7 +40296,7 @@ msgstr "สตรีมของคุณยังคงถ่ายทอดส
 msgid "Your subscription can't move to the new price right now."
 msgstr "ขณะนี้การสมัครใช้งานของคุณไม่สามารถเปลี่ยนเป็นราคาใหม่ได้"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:468
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:470
 msgid "Your subscription ended but <0/> stay active until <1>{graceDate}</1>. Resubscribe before then to keep your subscriber history."
 msgstr "การสมัครของคุณสิ้นสุดลงแล้ว แต่ <0/> ยังคงใช้งานได้จนถึง <1>{graceDate}</1> สมัครใหม่ก่อนถึงวันดังกล่าวเพื่อรักษาประวัติการเป็นสมาชิกของคุณ"
 
@@ -40290,7 +40325,7 @@ msgstr "เปลี่ยนการเรียกเก็บเงินเ
 msgid "Your subscription has been switched to yearly billing."
 msgstr "เปลี่ยนการเรียกเก็บเงินเป็นรายปีแล้ว"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:510
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:512
 msgid "Your subscription is active but perks are temporarily paused."
 msgstr "การสมัครของคุณใช้งานอยู่ แต่สิทธิประโยชน์ถูกระงับชั่วคราว"
 
@@ -40310,7 +40345,7 @@ msgid "Your subscription moves to the new price on {effectiveDate}."
 msgstr "การสมัครใช้งานของคุณจะเปลี่ยนไปใช้ราคาใหม่ในวันที่ {effectiveDate}"
 
 #. Plutonium subscription card line shown to a subscriber on a legacy price whose subscription is already set to cancel. {cancelDate} is a date and {listPriceNewLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:664
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:666
 msgid "Your subscription still ends on <0>{cancelDate}</0>. The current price is now {listPriceNewLabel}. If you reactivate, you can switch to it from here."
 msgstr "การสมัครของคุณจะสิ้นสุดในวันที่ <0>{cancelDate}</0> ขณะนี้ราคาอยู่ที่ {listPriceNewLabel} หากคุณเปิดใช้งานอีกครั้ง คุณสามารถเปลี่ยนไปใช้ราคานี้ได้จากที่นี่"
 
@@ -40356,7 +40391,7 @@ msgid "YouTube enrichment"
 msgstr "การเสริมข้อมูล YouTube"
 
 #. Setup wizard title for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:976
+#: src/features/app/components/setup/SetupWizardSteps.tsx:977
 msgid "YouTube previews"
 msgstr "ตัวอย่าง YouTube"
 

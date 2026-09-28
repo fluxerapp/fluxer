@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 Premium is the paid tier of a Fluxer account. A recurring subscription, a redeemed gift, or a lifetime Visionary purchase pays for it. The routes here read that entitlement and run the subscription self-service operations, while [Billing](/http-api/billing/) owns purchase creation, refunds and the payment provider webhook.
 
-Every route except [get price IDs](#get-price-ids) is user-only. A [self-hosted deployment](/http-api/deployment-availability/) serves only [get premium state](#get-premium-state) and [set premium perks disabled](#set-premium-perks-disabled).
+Every route except [get price IDs](#get-price-ids) is user-only. A [self-hosted deployment](/http-api/deployment-availability/) always serves [get premium state](#get-premium-state) and [set premium perks disabled](#set-premium-perks-disabled). It never serves [switch subscription to the list price](#switch-subscription-to-the-list-price) or [rejoin Visionary guild](#rejoin-visionary-guild), serves [get price IDs](#get-price-ids) only while billing is active, and serves the subscription management routes while Stripe is serviceable.
 
 | Object | Purpose |
 | --- | --- |
@@ -47,6 +47,8 @@ Every route except [get price IDs](#get-price-ids) is user-only. A [self-hosted 
 
 Every amount field is in the minor unit of the currency field its description names, and two amounts in one object can have different currencies.
 
+A hosted deployment uses the currencies below. A self-hosted deployment whose operator sets its own prices uses the three-letter ISO 4217 codes the operator configured.
+
 | Value | Description |
 | --- | --- |
 | USD | United States dollar |
@@ -76,11 +78,13 @@ The checkout prices resolved for one country: monthly and yearly recurring, and 
 | gift_1_month_amount_minor?<sup>2</sup> | ?integer | The one-month gift amount, in the minor unit of `gift_currency` |
 | gift_1_year_amount_minor?<sup>2</sup> | ?integer | The one-year gift amount, in the minor unit of `gift_currency` |
 | currency | string | [Display currency](#display-currencies) of the recurring prices |
-| gift_currency | string | [Display currency](#display-currencies) of the gift prices |
+| gift_currency<sup>3</sup> | ?string | [Display currency](#display-currencies) of the gift prices |
 
 <sup>1</sup> Fluxer resolves the recurring pair and the gift pair separately. Each pair takes the first currency for which both of its prices are configured, so the pairs can resolve to different currencies
 
 <sup>2</sup> Null when the amount is unavailable. Price changes can take up to one hour to appear
+
+<sup>3</sup> Null on a self-hosted deployment with no currency that has both gift prices. The gift price IDs and amounts are null too, and gift checkout is unavailable
 
 ### Example
 
@@ -269,7 +273,7 @@ The effective state decides whether premium features are available. It differs f
 | premium_lifetime_sequence<sup>3</sup> | ?integer | The Visionary sequence number, or null without lifetime entitlement |
 | premium_grace_ends_at<sup>3</sup> | ?ISO8601 timestamp | The time the post-cancellation grace access ends, or null when no grace is active |
 | premium_enabled_override<sup>4</sup> | boolean | Whether an operator premium override applies to the account |
-| premium_purchase_disabled<sup>4</sup> | boolean | Whether the account has the purchase-disabled flag |
+| premium_purchase_disabled<sup>4</sup> | boolean | Whether purchases are disabled for the account |
 | premium_perks_disabled<sup>4</sup> | boolean | Whether the account has the perks-disabled flag |
 | self_hosted<sup>5</sup> | boolean | Whether the deployment is self-hosted |
 | bot<sup>6</sup> | boolean | Whether the credential is a bot account with premium-equivalent service access |
@@ -280,7 +284,7 @@ The effective state decides whether premium features are available. It differs f
 
 <sup>3</sup> Copied from the [actual premium state](#actual-premium-state-object) unchanged, so the value does not react to `is_premium`
 
-<sup>4</sup> Reflects the matching [premium flag](/admin-api/users/#premium-flags) on the account
+<sup>4</sup> True when the account has the matching [premium flag](/admin-api/users/#premium-flags), or when the deployment has no active billing
 
 <sup>5</sup> `is_premium` follows this only while the instance [premium mode](/admin-api/instance/#premium-modes) is `everyone`
 

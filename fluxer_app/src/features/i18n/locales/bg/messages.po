@@ -1551,13 +1551,18 @@ msgstr "{optionName}, задължителен аргумент от тип {opt
 msgid "{overrideCount, plural, one {# override} other {# overrides}}"
 msgstr "{overrideCount, plural, one {# презаписване} other {# презаписвания}}"
 
+#. Purchase disclaimer on a self-hosted instance. {PAYMENT_PROVIDER_NAME} is the payment processor name.
+#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:87
+msgid "{PAYMENT_PROVIDER_NAME} handles payment securely."
+msgstr "{PAYMENT_PROVIDER_NAME} обработва плащанията сигурно."
+
 #. Modal body for the mobile card verification confirmation. Explains the two-step flow and the return path.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:181
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:190
 msgid "{paymentProviderName} will first verify that your card is eligible for localized pricing, then take you to payment. Return to {productName} once you've completed it."
 msgstr "{paymentProviderName} първо ще провери дали картата ти отговаря на условията за локализирани цени, след което ще те насочи към плащането. Върни се в {productName}, след като приключиш."
 
 #. Badge label with a date in the user profile badges popout. Preserve {premiumProductFullName}, {premiumSinceFormatted}; they are inserted by code. In English, keep "subscriber since" lowercase. Other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:51
+#: src/features/user/components/popouts/UserProfileBadges.tsx:53
 msgid "{premiumProductFullName} subscriber since {premiumSinceFormatted}"
 msgstr "Абонат на {premiumProductFullName} от {premiumSinceFormatted}"
 
@@ -1639,7 +1644,7 @@ msgid "{productName} avoids sending push notifications to your mobile devices wh
 msgstr "{productName} избягва да изпраща push известия до мобилните ти устройства, докато си пред компютъра. Избери колко време трябва да си неактивен на компютъра, преди да получаваш push известия."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:36
+#: src/features/user/components/popouts/UserProfileBadges.tsx:38
 msgid "{productName} Bug Hunter"
 msgstr "Ловец на бъгове в {productName}"
 
@@ -1768,7 +1773,7 @@ msgid "{productName} now lives at {host}. Install it from there."
 msgstr "{productName} вече се намира на {host}. Инсталирай го оттам."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:31
+#: src/features/user/components/popouts/UserProfileBadges.tsx:33
 msgid "{productName} Partner"
 msgstr "Партньор на {productName}"
 
@@ -1793,7 +1798,7 @@ msgid "{productName} spotted a possible raid here. Invites are paused — try ag
 msgstr "{productName} засече възможна атака тук. Поканите са на пауза, опитай отново по-късно."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:26
+#: src/features/user/components/popouts/UserProfileBadges.tsx:28
 msgid "{productName} Staff"
 msgstr "Екип на {productName}"
 
@@ -1803,12 +1808,12 @@ msgid "{productName} uses push notifications when installed as a mobile PWA. Reg
 msgstr "{productName} използва push известия, когато е инсталиран като мобилно PWA. Регистрацията гарантира, че шлюзът може да достигне до устройството ти дори когато приложението е във фонов режим."
 
 #. Short badge title in the user profile badges popout. Preserve {productName}; it is inserted by code. English locales use Title Case for official badge titles; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:46
+#: src/features/user/components/popouts/UserProfileBadges.tsx:48
 msgid "{productName} Visionary"
 msgstr "Визионер на {productName}"
 
 #. Badge title with a date in the user profile badges popout. Preserve {productName}, {premiumSinceFormatted}; they are inserted by code. English locales use Title Case for the badge title part; other locales should use natural local capitalization.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:41
+#: src/features/user/components/popouts/UserProfileBadges.tsx:43
 msgid "{productName} Visionary since {premiumSinceFormatted}"
 msgstr "Визионер на {productName} от {premiumSinceFormatted}"
 
@@ -2471,7 +2476,7 @@ msgid "A Linux desktop update is available. Choose the package format for this s
 msgstr "Налична е актуализация за настолното приложение на Linux. Избери формата на пакета за тази система и {productName} ще я запази локално."
 
 #. Plutonium subscription card line offering a move to a lower price. {listPriceEffectiveDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:682
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:684
 msgid "A lower price is available. Switching takes effect on <0>{listPriceEffectiveDate}</0> and changes nothing else."
 msgstr "Предлага се по-ниска цена. Преминаването влиза в сила на <0>{listPriceEffectiveDate}</0> и не променя нищо друго."
 
@@ -2616,7 +2621,7 @@ msgid "Accept the push relay supplemental privacy notice"
 msgstr "Приемам допълнителното уведомление за поверителност относно релето за известия"
 
 #. Summary value when the operator accepted the push relay notice.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:390
+#: src/features/app/components/setup/SetupWizardSteps.tsx:391
 msgid "Accepted"
 msgstr "Прието"
 
@@ -2639,7 +2644,7 @@ msgstr "Достъп до основната информация в профи�
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. User settings tab for accessibility preferences (visual, motion, screen reader, etc.).
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:14
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:93
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:94
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:61
 msgid "Accessibility"
 msgstr "Достъпност"
@@ -2776,7 +2781,7 @@ msgstr "Действия"
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subscription status badge meaning the paid subscription is active.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:445
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:447
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:37
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:19
 msgid "Active"
@@ -2923,7 +2928,7 @@ msgid "Add a friend to get started."
 msgstr "Добави приятел, за да започнеш."
 
 #. Setup wizard body for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:972
+#: src/features/app/components/setup/SetupWizardSteps.tsx:973
 msgid "Add a Klipy API key to enable GIF search at runtime."
 msgstr "Добави API ключ за Klipy, за да включиш търсенето на GIF по време на работа."
 
@@ -2960,7 +2965,7 @@ msgid "Add a working email"
 msgstr "Добави работещ имейл адрес"
 
 #. Setup wizard body for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:980
+#: src/features/app/components/setup/SetupWizardSteps.tsx:981
 msgid "Add a YouTube Data API key to enrich YouTube links."
 msgstr "Добави ключ за YouTube Data API, за да обогатиш линковете към YouTube."
 
@@ -3006,7 +3011,7 @@ msgid "Add another reaction"
 msgstr "Добавяне на друга реакция"
 
 #. Setup wizard body for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1004
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1005
 msgid "Add Bluesky OAuth client metadata and a signing key."
 msgstr "Добави метаданни за OAuth клиента на Bluesky и ключ за подписване."
 
@@ -3156,7 +3161,7 @@ msgid "Add shortcut"
 msgstr "Добавяне на клавишна комбинация"
 
 #. Setup wizard body for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:996
+#: src/features/app/components/setup/SetupWizardSteps.tsx:997
 msgid "Add SMTP credentials so the instance can send verification and notification email."
 msgstr "Добави SMTP идентификационни данни, за да може инстанцията да изпраща имейли за потвърждение и известия."
 
@@ -3183,7 +3188,7 @@ msgid "Add stream"
 msgstr "Добавяне на стрийм"
 
 #. Description for configuring an optional setup wizard integration now.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:964
+#: src/features/app/components/setup/SetupWizardSteps.tsx:965
 msgid "Add the credentials during setup."
 msgstr "Добави идентификационните данни по време на настройката."
 
@@ -3487,19 +3492,19 @@ msgstr "Контролите за подравняване са налични �
 msgid "All"
 msgstr "Всички"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:522
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:524
 msgid "All <0/> for <1>{effectiveMonthlyPrice}/month</1>."
 msgstr "Всички <0/> за <1>{effectiveMonthlyPrice}/месец</1>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:544
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:546
 msgid "All <0/> for <1>{effectiveYearlyPrice}/year</1>."
 msgstr "Всички <0/> за <1>{effectiveYearlyPrice}/година</1>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:565
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:567
 msgid "All <0/> included with your subscription."
 msgstr "Всички <0/> са включени в абонамента ти."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:512
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:514
 msgid "All <0/>, forever. No billing, no renewals."
 msgstr "Всички <0/>, завинаги. Без таксуване и подновявания."
 
@@ -4257,7 +4262,7 @@ msgid "Anyone can request an account, but an administrator must approve it."
 msgstr "Всеки може да поиска акаунт, но администратор трябва да го одобри."
 
 #. Label for an integration API key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1017
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1018
 msgid "API key"
 msgstr "API ключ"
 
@@ -4381,7 +4386,7 @@ msgstr "Приложението е актуализирано успешно"
 #. Tab label in the screen-share picker. Lists shareable app windows.
 #: src/features/user/components/modals/tabs/applications_tab/index.tsx:90
 #: src/features/user/components/modals/tabs/applications_tab/index.tsx:129
-#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:29
+#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:27
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:66
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:65
 #: src/features/voice/components/modals/ScreenSharePickerModal.tsx:185
@@ -4642,7 +4647,7 @@ msgstr "Действия с прикачен файл"
 #. Setup wizard media expiry step title.
 #. Summary row label for the attachment expiry choice in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:220
-#: src/features/app/components/setup/SetupWizardSteps.tsx:378
+#: src/features/app/components/setup/SetupWizardSteps.tsx:379
 msgid "Attachment expiration"
 msgstr "Изтичане на прикачените файлове"
 
@@ -4706,7 +4711,7 @@ msgstr "Прикачени файлове"
 #. Generic tab / section / category label for audio content or settings.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:255
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:170
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:171
 msgid "Audio"
 msgstr "Аудио"
 
@@ -4883,7 +4888,7 @@ msgid "Author"
 msgstr "Автор"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:33
+#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:31
 msgid "Authorization"
 msgstr "Оторизация"
 
@@ -5315,7 +5320,7 @@ msgstr "Премиум предимствата на бекенда са деа�
 #. Button or menu action label in the background image gallery modal. Keep it concise.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:59
-#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:5
+#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:6
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:732
 msgid "Background"
 msgstr "Фон"
@@ -5725,7 +5730,7 @@ msgid "Bluesky connections"
 msgstr "Връзки с Bluesky"
 
 #. Setup wizard title for Bluesky integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1000
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1001
 msgid "Bluesky OAuth"
 msgstr "Bluesky OAuth"
 
@@ -5893,7 +5898,7 @@ msgid "Bot profile"
 msgstr "Профил на бота"
 
 #. Setup wizard title for CAPTCHA integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:984
+#: src/features/app/components/setup/SetupWizardSteps.tsx:985
 msgid "Bot protection"
 msgstr "Защита от ботове"
 
@@ -6158,13 +6163,33 @@ msgstr "Купи подарък"
 msgid "By creating a community, you agree to follow and uphold the <0>{PRODUCT_NAME} community guidelines</0>."
 msgstr "Със създаването на общност се съгласяваш да спазваш и поддържаш <0>насоките на общността на {PRODUCT_NAME}</0>."
 
-#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:32
+#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:72
 msgid "By purchasing, you agree to our {terms} and {privacy}."
 msgstr "С покупката приемаш нашите {terms} и {privacy}."
 
-#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:28
+#. Purchase disclaimer when the instance links only its privacy policy. The linked text is the privacy policy document.
+#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:56
+msgid "By purchasing, you agree to our <0>Privacy policy</0>."
+msgstr "С покупката се съгласявате с нашата <0>Политика за поверителност</0>."
+
+#. Purchase disclaimer when the instance links only its terms of service. The linked text is the terms of service document.
+#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:37
+msgid "By purchasing, you agree to our <0>Terms of service</0>."
+msgstr "С покупката се съгласявате с нашите <0>Условия за ползване</0>."
+
+#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:68
 msgid "By purchasing, you agreed to our {terms} and {privacy}."
 msgstr "С покупката прие нашите {terms} и {privacy}."
+
+#. Purchase disclaimer when the instance links only its privacy policy. The linked text is the privacy policy document.
+#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:48
+msgid "By purchasing, you agreed to our <0>Privacy policy</0>."
+msgstr "С покупката се съгласявате с нашата <0>Политика за поверителност</0>."
+
+#. Purchase disclaimer when the instance links only its terms of service. The linked text is the terms of service document.
+#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:29
+msgid "By purchasing, you agreed to our <0>Terms of service</0>."
+msgstr "С покупката се съгласявате с нашите <0>Условия за ползване</0>."
 
 #. Legal notice in the updated policies modal. productName is the Fluxer product name.
 #: src/features/auth/components/modals/TermsAcceptanceModal.tsx:35
@@ -6195,7 +6220,7 @@ msgid "California"
 msgstr "Калифорния"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:150
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:151
 msgid "Call"
 msgstr "Обаждане"
 
@@ -6454,7 +6479,7 @@ msgid "Cancel import"
 msgstr "Отказ на импортирането"
 
 #. Billing button that cancels a scheduled move to a lower subscription price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:819
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:821
 msgid "Cancel price change"
 msgstr "Отказ на промяната на цената"
 
@@ -6469,24 +6494,24 @@ msgid "Cancel request"
 msgstr "Отмяна на поканата"
 
 #. Billing button that cancels a scheduled billing-cycle change.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:827
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:829
 msgid "Cancel scheduled switch"
 msgstr "Отказ на планираната промяна"
 
 #. Billing button that starts subscription cancellation.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:842
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:127
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:844
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:140
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:31
 msgid "Cancel subscription"
 msgstr "Отказ от абонамент"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:120
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:133
 msgid "Cancel subscription?"
 msgstr "Да откажеш ли абонамента?"
 
 #. Plutonium subscription card hint shown to a subscriber who could move to a lower price but has another billing change already scheduled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:645
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:647
 msgid "Cancel the scheduled change to move to the current price instead."
 msgstr "Отмени планираната промяна, за да преминеш към текущата цена вместо това."
 
@@ -6496,7 +6521,7 @@ msgid "Cancel upload"
 msgstr "Отказ на качването"
 
 #. Billing button that cancels a scheduled yearly upgrade.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:823
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:825
 msgid "Cancel yearly upgrade"
 msgstr "Отказ на годишното надграждане"
 
@@ -6506,7 +6531,7 @@ msgid "Cancel your friend request to {displayName}?"
 msgstr "Да отмениш ли поканата за приятелство до {displayName}?"
 
 #. Subscription status badge meaning cancellation is scheduled for the renewal date.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:433
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:435
 msgid "Canceling"
 msgstr "Анулиране"
 
@@ -6515,7 +6540,7 @@ msgstr "Анулиране"
 msgid "Cancellation"
 msgstr "Потискане на ехото"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:499
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:501
 msgid "Cancels on <0>{cancelDate}</0>. <1/> remain active until then."
 msgstr "Анулира се на <0>{cancelDate}</0>. <1/> остават активни дотогава."
 
@@ -6785,7 +6810,7 @@ msgid "Change password form"
 msgstr "Формуляр за смяна на парола"
 
 #. Subscription status badge meaning a future billing plan change is scheduled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:437
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:439
 msgid "Change scheduled"
 msgstr "Планирана промяна"
 
@@ -7168,7 +7193,7 @@ msgstr "Линкът към канала е копиран"
 #. Short label in the inline. Keep it concise.
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabInline.tsx:39
 #: src/features/user/components/modals/tabs/AppearanceTab.tsx:47
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:25
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:26
 msgid "Channel list"
 msgstr "Списък с канали"
 
@@ -7307,7 +7332,7 @@ msgid "Chat font size"
 msgstr "Размер на шрифта в чата"
 
 #. Settings search synonym. Refers to the message composer area.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:65
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:66
 msgid "chat input"
 msgstr "поле за въвеждане в чата"
 
@@ -7382,13 +7407,18 @@ msgstr "Проверяваме браузъра ви. Това отнема ня
 msgid "Checkout"
 msgstr "Плащане"
 
+#. Modal body for the generic "checkout blocked" state on a self-hosted instance.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:156
+msgid "Checkout is blocked for this account."
+msgstr "Плащането е блокирано за този акаунт."
+
 #. Modal body for the generic "checkout blocked" state. Provides the support email.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:147
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:152
 msgid "Checkout is blocked for this account. Contact {supportEmail} if you need help."
 msgstr "Плащането е блокирано за този акаунт. Свържи се с {supportEmail}, ако имаш нужда от помощ."
 
 #. Modal title for the generic "checkout blocked" state when no more specific reason is known.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:143
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:148
 msgid "Checkout unavailable"
 msgstr "Плащането е недостъпно"
 
@@ -7542,7 +7572,7 @@ msgid "Choose friends to message."
 msgstr "Избери приятели, на които да пишеш."
 
 #. Setup wizard body for CAPTCHA integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:988
+#: src/features/app/components/setup/SetupWizardSteps.tsx:989
 msgid "Choose hCaptcha or Cloudflare Turnstile for signup challenges."
 msgstr "Избери hCaptcha или Cloudflare Turnstile за проверките при регистрация."
 
@@ -7572,7 +7602,7 @@ msgid "Choose how times are displayed throughout the app"
 msgstr "Избери как да се показват часовете в приложението"
 
 #. Plutonium subscription payment method picker description, generic fallback when no country-specific copy applies.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:57
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:58
 msgid "Choose how you'd like to pay for this subscription."
 msgstr "Избери как искаш да платиш за този абонамент."
 
@@ -7591,7 +7621,7 @@ msgid "Choose one verification method. Either method can clear this check."
 msgstr "Избери един метод за потвърждение. Всеки от двата метода изпълнява тази проверка."
 
 #. Modal title for the payment method picker (local card vs alternative method).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:195
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:204
 msgid "Choose payment method"
 msgstr "Избери начин на плащане"
 
@@ -8070,7 +8100,7 @@ msgid "Client"
 msgstr "Клиент"
 
 #. Label for Bluesky OAuth client name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1056
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1057
 msgid "Client name"
 msgstr "Име на клиента"
 
@@ -8087,7 +8117,7 @@ msgid "Client secret regenerated. Update any code that uses the old secret."
 msgstr "Клиентската тайна е генерирана наново. Актуализирай всеки код, който използва старата тайна."
 
 #. Label for Bluesky OAuth client URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1060
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1061
 msgid "Client URL"
 msgstr "URL на клиента"
 
@@ -8240,7 +8270,7 @@ msgid "Cloud upload"
 msgstr "Качване в облака"
 
 #. Cloudflare Turnstile provider option.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1013
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1014
 msgid "Cloudflare Turnstile"
 msgstr "Cloudflare Turnstile"
 
@@ -8307,7 +8337,7 @@ msgstr "Кодек"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:17
+#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:15
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:76
 msgid "Codes"
 msgstr "Кодове"
@@ -8382,7 +8412,7 @@ msgstr "Автодовършване с двоеточие"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/MyProfileIndex.ts:161
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:13
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:14
 msgid "Color"
 msgstr "Цвят"
 
@@ -8417,7 +8447,7 @@ msgid "Colorado"
 msgstr "Колорадо"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:5
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:6
 msgid "Colors"
 msgstr "Цветове"
 
@@ -8765,7 +8795,7 @@ msgid "Complete one of the verification paths below to continue using {productNa
 msgstr "Завърши един от начините за потвърждение по-долу, за да продължиш да използваш {productName}."
 
 #. Modal title for the mobile checkout confirmation when opening the payment provider in a browser.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:177
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:186
 msgid "Complete payment"
 msgstr "Завършване на плащането"
 
@@ -8850,7 +8880,7 @@ msgid "Configure keyboard shortcuts"
 msgstr "Настройване на клавишните комбинации"
 
 #. Option for configuring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:960
+#: src/features/app/components/setup/SetupWizardSteps.tsx:961
 msgid "Configure now"
 msgstr "Конфигуриране сега"
 
@@ -9199,7 +9229,7 @@ msgstr "Предпазни мерки за съдържанието"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/ui/action_menu/ContextMenu.tsx:23
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:225
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:154
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:155
 msgid "Context menu"
 msgstr "Контекстно меню"
 
@@ -9238,7 +9268,7 @@ msgid "Continue"
 msgstr "Продължи"
 
 #. Plutonium checkout pre-approval prompt secondary button. Continues straight to the standard checkout screen.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:88
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:89
 msgid "Continue to checkout"
 msgstr "Продължи към плащане"
 
@@ -9985,7 +10015,7 @@ msgstr "Неуспешно отваряне на резултат от търс�
 #. Title of the error modal shown when opening the billing customer portal from the grace-period nagbar fails.
 #. Title of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Title of the generic fallback error modal shown when opening the billing customer portal fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:29
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:30
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:14
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:29
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:29
@@ -10132,7 +10162,7 @@ msgid "Couldn't start {blueskyProviderName} authorization"
 msgstr "Неуспешно стартиране на оторизацията за {blueskyProviderName}"
 
 #. Title of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:151
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:160
 msgid "Couldn't start checkout"
 msgstr "Неуспешно стартиране на плащането"
 
@@ -10870,7 +10900,7 @@ msgstr "По избор…"
 
 #. Billing button that opens the external customer portal.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:748
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:750
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:39
 msgid "Customer portal"
 msgstr "Клиентски портал"
@@ -11340,7 +11370,7 @@ msgstr "Делауер"
 #: src/features/user/components/modals/tabs/component_gallery_tab/ComponentGalleryTabButtonsTab.tsx:290
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:238
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:174
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:190
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:188
 msgid "Delete"
 msgstr "Изтриване"
 
@@ -11625,7 +11655,7 @@ msgid "Deleted {duration} of the member's recent message history"
 msgstr "Изтри {duration} от скорошната история на съобщенията на члена"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:114
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:115
 msgid "Deleted text"
 msgstr "Изтрит текст"
 
@@ -11891,7 +11921,7 @@ msgstr "Автоматично разпознаване по време на п�
 #. Advanced settings category tag.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:20
-#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:25
+#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:23
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:206
 msgid "Developer"
 msgstr "Разработчик"
@@ -12027,7 +12057,7 @@ msgid "Different sizes & member counts"
 msgstr "Различни размери и брой членове"
 
 #. Toggle label and settings search entry for slightly muting text formatted with Markdown strikethrough.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:97
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:98
 msgid "Dim strikethrough text"
 msgstr "Приглушаване на зачеркнатия текст"
 
@@ -12042,7 +12072,7 @@ msgstr "Директен вход"
 #: src/features/channel/components/bottomsheets/channel_details_bottom_sheet/ChannelDetailsBottomSheetShared.ts:14
 #: src/features/channel/components/channel_header_components/developer_tools/MockingMenu.tsx:398
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:567
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:85
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:86
 msgid "Direct message"
 msgstr "Директно съобщение"
 
@@ -12068,7 +12098,7 @@ msgstr "Визуализации на директни съобщения"
 
 #. Generic section heading / label for the direct messages area.
 #. Summary row label for the direct messages choice in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:374
+#: src/features/app/components/setup/SetupWizardSteps.tsx:375
 #: src/features/channel/components/direct_message/DirectMessageList.tsx:629
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:223
 #: src/features/user/components/modals/tabs/privacy_safety_tab/ConnectionsTab.tsx:255
@@ -12224,7 +12254,7 @@ msgid "Disable video locally"
 msgstr "Спиране на видеото локално"
 
 #. Summary value when a setup option is disabled.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:402
+#: src/features/app/components/setup/SetupWizardSteps.tsx:403
 msgid "Disabled"
 msgstr "Изключено"
 
@@ -12479,7 +12509,7 @@ msgid "District of Columbia"
 msgstr "Окръг Колумбия"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:182
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:180
 msgid "DM"
 msgstr "DM"
 
@@ -13295,7 +13325,7 @@ msgid "Email changed"
 msgstr "Имейлът е променен"
 
 #. Setup wizard title for SMTP integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:992
+#: src/features/app/components/setup/SetupWizardSteps.tsx:993
 msgid "Email delivery"
 msgstr "Доставка на имейли"
 
@@ -13427,7 +13457,7 @@ msgstr "Вградените елементи са видими"
 #: src/features/app/config/AuditLogConstants.ts:167
 #: src/features/emoji/components/emojis/EmojiListItem.tsx:337
 #: src/features/theme_studio/sections/TokenGroups.ts:114
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:162
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:163
 msgid "Emoji"
 msgstr "Емоджи"
 
@@ -13600,7 +13630,7 @@ msgid "Enable beta feature"
 msgstr "Включване на бета функция"
 
 #. Label for enabling Bluesky OAuth in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1052
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1053
 msgid "Enable Bluesky OAuth"
 msgstr "Активиране на Bluesky OAuth"
 
@@ -13633,7 +13663,7 @@ msgid "Enable developer mode"
 msgstr "Включване на режим за разработчици"
 
 #. Label for enabling SMTP email delivery in setup.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1020
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1021
 msgid "Enable email delivery"
 msgstr "Активиране на доставка на имейли"
 
@@ -13647,7 +13677,7 @@ msgid "Enable extra option"
 msgstr "Включване на допълнителна опция"
 
 #. Toggle label and settings search entry for controlling whether favorites are visible throughout the app.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:57
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:58
 msgid "Enable favorites"
 msgstr "Включване на любими"
 
@@ -13816,7 +13846,7 @@ msgstr "Активиране на миниатюри при превъртане
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Summary value when a setup option is enabled.
 #. Toggle item in the textarea spellcheck submenu. Master enable for spellcheck.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:398
+#: src/features/app/components/setup/SetupWizardSteps.tsx:399
 #: src/features/channel/components/channel_header_components/developer_tools/DeveloperToolsShared.ts:21
 #: src/features/channel/components/textarea/TextareaContextMenu.tsx:66
 msgid "Enabled"
@@ -13860,15 +13890,15 @@ msgid "End date"
 msgstr "Крайна дата"
 
 #. Billing button that ends premium grace period immediately.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:854
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:856
 msgid "End grace now"
 msgstr "Прекратяване сега"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:149
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:162
 msgid "End grace period"
 msgstr "Край на гратисния период"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:142
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:155
 msgid "End grace period now?"
 msgstr "Да се прекрати ли гратисният период сега?"
 
@@ -14331,7 +14361,7 @@ msgid "Everyone"
 msgstr "Всеки"
 
 #. Premium model option that gives everyone the highest limits.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:345
+#: src/features/app/components/setup/SetupWizardSteps.tsx:346
 msgid "Everyone is premium"
 msgstr "Всички са премиум"
 
@@ -14472,7 +14502,7 @@ msgstr "Изтича след"
 #. Error message in the invite list item.
 #. Short label in the authentication account row. Keep the tone plain and specific.
 #. Subscription status badge meaning premium access has fully expired.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:423
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:425
 #: src/features/auth/components/accounts/AccountRow.tsx:19
 #: src/features/invite/components/InviteListItem.tsx:32
 msgid "Expired"
@@ -14508,7 +14538,7 @@ msgstr "Изтече на {date}"
 msgid "Expired on {earliest}"
 msgstr "Изтече на {earliest}"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:454
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:456
 msgid "Expired on <0>{expiredDate}</0>. <1/> are no longer active. You can resubscribe at any time."
 msgstr "Изтече на <0>{expiredDate}</0>. <1/> вече не са активни. Можеш да се абонираш отново по всяко време."
 
@@ -15291,7 +15321,7 @@ msgstr "Завърши в новия раздел. Ако си го затвор
 #. Button that saves the configuration and completes the setup wizard.
 #. Setup wizard finish step title.
 #: src/features/app/components/setup/SelfHostedSetupWizardGate.tsx:86
-#: src/features/app/components/setup/SetupWizardSteps.tsx:354
+#: src/features/app/components/setup/SetupWizardSteps.tsx:355
 msgid "Finish setup"
 msgstr "Завърши настройката"
 
@@ -15431,7 +15461,7 @@ msgid "Font"
 msgstr "Шрифт"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:9
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:10
 msgid "Fonts"
 msgstr "Шрифтове"
 
@@ -15794,7 +15824,7 @@ msgstr "Приятелски бот"
 #: src/features/connection/components/modals/EditConnectionModal.tsx:86
 #: src/features/search/utils/QuickSwitcherModalUtils.tsx:50
 #: src/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings.tsx:63
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:89
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:90
 msgid "Friends"
 msgstr "Приятели"
 
@@ -15872,12 +15902,12 @@ msgid "from <0>{0}</0>"
 msgstr "от <0>{0}</0>"
 
 #. Label for SMTP from email input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1024
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1025
 msgid "From email"
 msgstr "Имейл на подател"
 
 #. Label for SMTP from name input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1028
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1029
 msgid "From name"
 msgstr "Име на подател"
 
@@ -16139,7 +16169,7 @@ msgstr "Вземи новото приложение {productName}"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Type label for GIF media.
 #: src/features/expressions/utils/FavoriteMemeUtils.ts:10
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:158
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:159
 msgid "GIF"
 msgstr "GIF"
 
@@ -16169,7 +16199,7 @@ msgid "GIF preview"
 msgstr "Преглед на GIF"
 
 #. Setup wizard title for GIF integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:968
+#: src/features/app/components/setup/SetupWizardSteps.tsx:969
 msgid "GIF search"
 msgstr "Търсене на GIF"
 
@@ -16190,7 +16220,7 @@ msgstr "GIF файловете не можаха да се заредят"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Subscription status badge meaning premium access came from a gift.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:443
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:445
 #: src/features/expressions/components/modals/GiftAcceptModal.tsx:294
 #: src/features/user/components/settings_utils/search_index/PlutoniumIndex.ts:79
 msgid "Gift"
@@ -16330,19 +16360,19 @@ msgstr "Подарък: изтича скоро"
 msgid "Gift: grace period (still have access)"
 msgstr "Подарък: гратисен период (все още имаш достъп)"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:484
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:486
 msgid "Gifted <0/> until <1>{giftEndDate}</1>. Does not renew automatically. Redeem more gift codes to extend."
 msgstr "Подарено <0/> до <1>{giftEndDate}</1>. Не се подновява автоматично. Осребри още кодове за подарък, за да удължиш."
 
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. User settings tab for gift inventory and redemption codes.
-#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:37
+#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:35
 #: src/features/user/components/settings_utils/SettingsConstants.tsx:94
 msgid "Gifts"
 msgstr "Подаръци"
 
 #. Description for the everyone-is-premium model.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:349
+#: src/features/app/components/setup/SetupWizardSteps.tsx:350
 msgid "Give everyone on this instance the highest premium limits."
 msgstr "Дай на всички в тази инстанция най-високите премиум лимити."
 
@@ -16504,7 +16534,7 @@ msgid "Got it"
 msgstr "Разбрах"
 
 #. Subscription status badge meaning access remains briefly after subscription end.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:425
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:427
 msgid "Grace period"
 msgstr "Гратисен период"
 
@@ -16543,7 +16573,7 @@ msgid "Graphics"
 msgstr "Графика"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:118
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:119
 msgid "Gray text"
 msgstr "Сив текст"
 
@@ -16808,6 +16838,11 @@ msgstr "Заместване на „Купувал е преди“"
 msgid "Hate speech"
 msgstr "Език на омразата"
 
+#. Premium page text shown on an instance where the premium tier cannot be bought, only redeemed. {PREMIUM_PRODUCT_NAME} is the premium tier name.
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:295
+msgid "Have a gift code? Redeem it to unlock {PREMIUM_PRODUCT_NAME}."
+msgstr "Имате код за подарък? Осребрете го, за да отключите {PREMIUM_PRODUCT_NAME}."
+
 #. Friendly tagline shown on a Fluxer-branded button or upsell.
 #: src/features/ui/state/Modal.ts:13
 msgid "Having fun?"
@@ -16824,7 +16859,7 @@ msgid "Hawaii"
 msgstr "Хаваи"
 
 #. hCaptcha provider option.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1012
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1013
 msgid "hCaptcha"
 msgstr "hCaptcha"
 
@@ -17844,7 +17879,7 @@ msgstr "Неподходящ профил"
 #. Generic header / tab label for the unread / mentions / bookmarks inbox.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:491
-#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:21
+#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:19
 msgid "Inbox"
 msgstr "Входящи"
 
@@ -17971,7 +18006,7 @@ msgid "Indiana"
 msgstr "Индиана"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:37
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:38
 msgid "Indicator"
 msgstr "Индикатор"
 
@@ -18819,7 +18854,7 @@ msgid "Jump to page"
 msgstr "Отиване на страница"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:85
+#: src/features/channel/components/ChannelMessages.tsx:86
 msgid "Jump to present"
 msgstr "Към най-новите"
 
@@ -18904,15 +18939,15 @@ msgstr "Запазване на прикачени файлове при изч�
 
 #. Description for the mirror premium model.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:341
-msgid "Keep free and premium tiers. You can customize the tiers later."
-msgstr "Запази безплатното и премиум нивото. Можеш да персонализираш нивата по-късно."
+msgid "Keep free and premium tiers. You can customize the tiers, sell premium through Stripe, or hand out gift codes later from the admin panel."
+msgstr "Запазете безплатни и премиум нива. Можете да персонализирате нивата, да продавате премиум чрез Stripe или по-късно да раздавате кодове за подаръци от административния панел."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:151
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:164
 msgid "Keep grace period"
 msgstr "Запазване на гратисния период"
 
 #. Toggle label and settings search entry for stopping the Neko sprite from chasing the cursor.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:53
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:54
 msgid "Keep Neko still"
 msgstr "Спиране на движението на Неко"
 
@@ -18921,7 +18956,7 @@ msgstr "Спиране на движението на Неко"
 msgid "Keep running"
 msgstr "Работа във фонов режим"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:129
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:142
 msgid "Keep subscription"
 msgstr "Запазване на абонамента"
 
@@ -18958,7 +18993,7 @@ msgstr "Клавиш"
 #: src/features/user/components/modals/tabs/accessibility_tab/AccessibilityTabInline.tsx:23
 #: src/features/user/components/modals/tabs/AccessibilityTab.tsx:91
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:26
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:41
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:42
 msgid "Keyboard"
 msgstr "Клавиатура"
 
@@ -18969,7 +19004,7 @@ msgid "Keyboard"
 msgstr "Клавиатура"
 
 #. Toggle label and settings search entry for controlling tooltip keyboard shortcut hints.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:45
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:46
 msgid "Keyboard hints"
 msgstr "Подсказки за клавиатурата"
 
@@ -19278,8 +19313,8 @@ msgstr "Ляв бутон на мишката"
 msgid "Left tooltip"
 msgstr "Подсказка отляво"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:537
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:559
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:539
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:561
 msgid "Legacy rate"
 msgstr "Стара цена"
 
@@ -19366,7 +19401,7 @@ msgstr "Библиотека: {count} от {max}"
 
 #. Developer tools debug menu label. Internal-only surface for developers; translators may keep this terse.
 #. Subscription status badge meaning permanent premium access.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:441
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:443
 #: src/features/channel/components/channel_header_components/developer_tools/OptionPresets.ts:22
 msgid "Lifetime"
 msgstr "Доживотен"
@@ -19706,7 +19741,7 @@ msgid "Localization"
 msgstr "Локализация"
 
 #. Error modal body shown when the localized card pre-approval session cannot be started.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:191
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:200
 msgid "Localized card verification is not available right now. Try again later."
 msgstr "Локализираната проверка на картата не е налична в момента. Опитай отново по-късно."
 
@@ -19722,7 +19757,7 @@ msgstr "Изход"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:13
+#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:11
 #: src/features/user/components/settings_utils/section_registry/AccountSecuritySections.ts:28
 msgid "Login"
 msgstr "Вход"
@@ -19733,7 +19768,7 @@ msgid "Logo"
 msgstr "Лого"
 
 #. Label for Bluesky OAuth logo URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1064
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1065
 msgid "Logo URL"
 msgstr "URL адрес на логото"
 
@@ -20097,7 +20132,7 @@ msgstr "Маркирай най-горния канал във входящит�
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/modals/tabs/component_gallery_tab/index.tsx:364
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:122
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:123
 msgid "Markdown"
 msgstr "Markdown"
 
@@ -20647,7 +20682,7 @@ msgstr "Да се спомене ли тази роля?"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/guild/components/modals/GuildNotificationSettingsModal.tsx:136
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:648
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:166
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:167
 msgid "Mentions"
 msgstr "Споменавания"
 
@@ -20878,12 +20913,12 @@ msgid "Message link"
 msgstr "Линк към съобщението"
 
 #. Short label in the channel and chat messages. Keep it concise.
-#: src/features/channel/components/ChannelMessages.tsx:77
+#: src/features/channel/components/ChannelMessages.tsx:78
 msgid "Message list"
 msgstr "Списък със съобщения"
 
 #. Label in the channel and chat messages. Preserve {channelName}; it is inserted by code.
-#: src/features/channel/components/ChannelMessages.tsx:73
+#: src/features/channel/components/ChannelMessages.tsx:74
 msgid "Message list for {channelName}"
 msgstr "Списък със съобщения за {channelName}"
 
@@ -20965,7 +21000,7 @@ msgstr "Съобщението е откачено"
 #: src/features/user/components/modals/tabs/appearance_tab/AppearanceTabInline.tsx:31
 #: src/features/user/components/modals/tabs/AppearanceTab.tsx:39
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultKeybindsList.tsx:27
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:17
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:18
 msgid "Messages"
 msgstr "Съобщения"
 
@@ -20986,7 +21021,7 @@ msgid "Messages deleted"
 msgstr "Съобщенията са изтрити"
 
 #. Error message in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:89
+#: src/features/channel/components/ChannelMessages.tsx:90
 msgid "Messages failed to load"
 msgstr "Съобщенията не можаха да се заредят"
 
@@ -21320,11 +21355,11 @@ msgstr "Месечно"
 msgid "Monthly {monthlyPrice}"
 msgstr "Месечно {monthlyPrice}"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:629
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:631
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>."
 msgstr "Месечното таксуване започва на <0>{pendingChangeDate}</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:622
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:624
 msgid "Monthly billing starts on <0>{pendingChangeDate}</0>. First monthly charge: {pendingInitialPriceLabel}. Future monthly renewals: {pendingRecurringPriceLabel}/month."
 msgstr "Месечното таксуване започва на <0>{pendingChangeDate}</0>. Първа месечна такса: {pendingInitialPriceLabel}. Бъдещи месечни подновявания: {pendingRecurringPriceLabel}/месец."
 
@@ -21759,7 +21794,7 @@ msgstr "заглушено"
 #. Status label indicating the surface is currently muted.
 #: src/features/app/components/layout/sidebar_nav/UseGuildListItemState.ts:23
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:491
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:73
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:74
 #: src/lib/overlay/OverlayContextMenu.tsx:24
 msgid "Muted"
 msgstr "Заглушено"
@@ -21782,7 +21817,7 @@ msgstr "Микрофонът е изключен от модератори"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/ChatSettingsIndex.ts:495
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:69
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:70
 msgid "Muted channels"
 msgstr "Заглушени канали"
 
@@ -21995,7 +22030,7 @@ msgid "Narrates only the channel you're viewing. Narration follows you between c
 msgstr "Чете само канала, който гледаш. Четенето те следва между каналите."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:146
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:147
 msgid "Narration"
 msgstr "Четене на глас"
 
@@ -22039,7 +22074,7 @@ msgstr "Придвижвай се между съобщенията и дейс�
 #. Short label in the keybinds tab. Keep it concise.
 #: src/features/input/components/modals/KeyboardShortcutsCheatsheetModal.tsx:33
 #: src/features/user/components/modals/tabs/keybinds_tab/DefaultKeybindsList.tsx:31
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:29
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:30
 msgid "Navigation"
 msgstr "Навигация"
 
@@ -22060,7 +22095,7 @@ msgid "Need an account?"
 msgstr "Нямаш акаунт?"
 
 #. Settings search synonym. Proper name of the optional cat sprite that chases the cursor.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:61
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:62
 msgid "Neko"
 msgstr "Неко"
 
@@ -22250,12 +22285,12 @@ msgid "New password"
 msgstr "Нова парола"
 
 #. Plutonium subscription card line shown when a move to a lower price is scheduled but the new amount is unknown. {pendingChangeDate} is a date already formatted and localized by code; never write a date into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:593
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:595
 msgid "New price scheduled for <0>{pendingChangeDate}</0>."
 msgstr "Нова цена е насрочена за <0>{pendingChangeDate}</0>."
 
 #. Plutonium subscription card line shown when a move to a lower price is scheduled. {pendingChangeDate} is a date and {pendingTargetPriceLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:587
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:589
 msgid "New price scheduled for <0>{pendingChangeDate}</0>. Renewals will be {pendingTargetPriceLabel} from then on."
 msgstr "Нова цена е насрочена за <0>{pendingChangeDate}</0>. След това подновяванията ще бъдат {pendingTargetPriceLabel}."
 
@@ -23046,7 +23081,7 @@ msgid "Not a whole number"
 msgstr "Не е цяло число"
 
 #. Summary value when the operator left the push relay notice unaccepted.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:394
+#: src/features/app/components/setup/SetupWizardSteps.tsx:395
 msgid "Not accepted"
 msgstr "Не е прието"
 
@@ -23335,7 +23370,7 @@ msgid "On"
 msgstr "Вкл"
 
 #. Billing confirmation body for moving an active subscription down to the current price. {listPriceEffectiveDate} is a date, and {listPriceCurrentLabel} and {listPriceNewLabel} are currency amounts, all already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:372
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:374
 msgid "On <0>{listPriceEffectiveDate}</0> your subscription moves from {listPriceCurrentLabel} to {listPriceNewLabel}. Nothing is charged today, and the rest of your subscription stays exactly as it is."
 msgstr "На <0>{listPriceEffectiveDate}</0> абонаментът ти ще се промени от {listPriceCurrentLabel} на {listPriceNewLabel}. Днес не се таксува нищо и останалата част от абонамента ти остава непроменена."
 
@@ -24173,7 +24208,7 @@ msgid "Other devices"
 msgstr "Други устройства"
 
 #. Plutonium checkout pre-approval prompt secondary button. Opens the alternative payment methods flow.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:72
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:73
 msgid "Other methods"
 msgstr "Други методи"
 
@@ -24395,7 +24430,7 @@ msgstr "Ключовете за достъп изискват подписан �
 
 #. Generic form-field label for a password.
 #. Label for SMTP password input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1035
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1036
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:215
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:146
 #: src/features/user/components/modals/tabs/account_security_tab/AccountTab.tsx:183
@@ -24561,12 +24596,12 @@ msgid "Paused invites"
 msgstr "Спря поканите"
 
 #. Plutonium subscription payment method picker description for Brazil. Explains Pix recurring vs falling back to a card.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:37
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:38
 msgid "Pay with {pixPaymentMethod} Automático to authorize recurring charges directly from your Brazilian bank. Or choose \"Use card\" to enter a credit card on {paymentProviderName}'s next screen."
 msgstr "Плати с {pixPaymentMethod} Automático, за да разрешиш повтарящи се такси директно от бразилската си банка. Или избери „Използване на карта“, за да въведеш кредитна карта на следващия екран на {paymentProviderName}."
 
 #. Plutonium subscription payment method picker description for India. Explains UPI e-mandate vs falling back to a card.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:47
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:48
 msgid "Pay with {upiPaymentMethod} to set up an RBI-compliant e-mandate from your Indian bank. Or choose \"Use card\" to enter a credit card on {paymentProviderName}'s next screen."
 msgstr "Плати с {upiPaymentMethod}, за да настроиш съвместим с RBI електронен мандат от индийската си банка. Или избери „Използване на карта“, за да въведеш кредитна карта на следващия екран на {paymentProviderName}."
 
@@ -24673,7 +24708,7 @@ msgid "Perks"
 msgstr "Предимства"
 
 #. Subscription status badge meaning premium is paid but perks are temporarily disabled.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:429
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:431
 msgid "Perks paused"
 msgstr "Предимствата са на пауза"
 
@@ -24952,7 +24987,7 @@ msgstr "Закачи това съобщение в канала, за да го
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Voice stats field label (mobile lobby). Shows current latency in ms.
 #. Voice stats field label (mobile voice lobby). Shows current latency in ms.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:186
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:184
 #: src/features/voice/components/bottomsheets/DirectCallLobbyBottomSheet.tsx:118
 #: src/features/voice/components/bottomsheets/VoiceLobbyBottomSheet.tsx:86
 msgid "Ping"
@@ -25129,13 +25164,6 @@ msgstr "Изчакай малко и опитай да изтриеш отнов
 msgid "Please wait a moment and try renaming again."
 msgstr "Изчакай малко и опитай да преименуваш отново."
 
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:9
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:178
-msgid "Plutonium"
-msgstr "Plutonium"
-
 #. Country name. EU member state in the illegal-content report country dropdown.
 #: src/features/moderation/components/report/OptionDescriptors.ts:191
 msgid "Poland"
@@ -25179,12 +25207,12 @@ msgid "Popped out"
 msgstr "В отделен прозорец"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:198
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:196
 msgid "Popup"
 msgstr "Изскачащ прозорец"
 
 #. Label for SMTP port input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1033
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1034
 msgid "Port"
 msgstr "Порт"
 
@@ -25290,7 +25318,7 @@ msgid "Premium grace period nagbar"
 msgstr "Лента за гратисен период на премиум"
 
 #. Summary row label for the premium model in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:386
+#: src/features/app/components/setup/SetupWizardSteps.tsx:387
 msgid "Premium model"
 msgstr "Премиум модел"
 
@@ -25505,7 +25533,7 @@ msgid "Pricing"
 msgstr "Цени"
 
 #. Error modal body shown when the user clicks a plan before price IDs have loaded.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:165
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:174
 msgid "Pricing is still loading."
 msgstr "Цените все още се зареждат."
 
@@ -25570,7 +25598,7 @@ msgid "Privacy or impersonation"
 msgstr "Поверителност или представяне под чужда самоличност"
 
 #: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:444
-#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:19
+#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:24
 msgid "Privacy policy"
 msgstr "Политика за поверителност"
 
@@ -25580,7 +25608,7 @@ msgid "Privacy settings"
 msgstr "Настройки за поверителност"
 
 #. Label for Bluesky OAuth privacy URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1072
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1073
 msgid "Privacy URL"
 msgstr "URL адрес за поверителност"
 
@@ -25605,7 +25633,7 @@ msgid "Private details"
 msgstr "Лични данни"
 
 #. Label for Bluesky OAuth private key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1080
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1081
 msgid "Private key"
 msgstr "Частен ключ"
 
@@ -25631,7 +25659,7 @@ msgstr "Обработва се"
 #. Label for the product name input in the setup wizard.
 #. Summary row label for the product name in the setup wizard.
 #: src/features/app/components/setup/SetupWizardSteps.tsx:92
-#: src/features/app/components/setup/SetupWizardSteps.tsx:362
+#: src/features/app/components/setup/SetupWizardSteps.tsx:363
 msgid "Product name"
 msgstr "Име на продукта"
 
@@ -25815,7 +25843,7 @@ msgid "Provide your full legal name for the declaration."
 msgstr "Посочи пълното си име по лична карта за декларацията."
 
 #. Label for an integration provider choice.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1008
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1009
 msgid "Provider"
 msgstr "Доставчик"
 
@@ -25880,13 +25908,18 @@ msgstr "Купен на {0}"
 msgid "Purchased gifts"
 msgstr "Закупени подаръци"
 
+#. Modal body shown on a self-hosted instance when purchases are disabled for the account.
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:144
+msgid "Purchases are disabled for this account."
+msgstr "Покупки за този акаунт са деактивирани."
+
 #. Modal body shown when purchases are disabled. Provides the support email for appeals.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:139
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:140
 msgid "Purchases are disabled for this account. Contact {supportEmail} if this looks wrong."
 msgstr "Покупките са деактивирани за този акаунт. Свържи се с {supportEmail}, ако това изглежда грешно."
 
 #. Modal title shown when purchases are disabled on this account (server-side enforcement).
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:135
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:136
 msgid "Purchases unavailable"
 msgstr "Покупките не са достъпни"
 
@@ -25931,7 +25964,7 @@ msgid "Push notification inactive timeout"
 msgstr "Време на неактивност преди push известия"
 
 #. Summary row label for the push relay consent on the setup wizard finish step.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:382
+#: src/features/app/components/setup/SetupWizardSteps.tsx:383
 msgid "Push relay notice"
 msgstr "Известие за Push релета"
 
@@ -26142,7 +26175,7 @@ msgstr "Реакции"
 
 #. Billing button that cancels a scheduled subscription cancellation.
 #. Button label on the premium-expired nagbar. Opens billing so the user can reactivate their subscription.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:744
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:746
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:25
 msgid "Reactivate"
 msgstr "Активиране отново"
@@ -26153,7 +26186,7 @@ msgid "Reactivate subscription"
 msgstr "Повторно активиране на абонамент"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:130
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:131
 msgid "Read aloud"
 msgstr "Прочитане на глас"
 
@@ -26170,7 +26203,7 @@ msgstr "Четене на историята на съобщенията"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/AccessibilityIndex.ts:177
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:126
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:127
 msgid "Read messages"
 msgstr "Четене на съобщения"
 
@@ -26364,7 +26397,9 @@ msgid "Redeem for yourself"
 msgstr "Осребри за себе си"
 
 #. Billing button for entering a premium gift code.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:717
+#. Billing button for entering a premium gift code.
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:719
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:305
 msgid "Redeem gift code"
 msgstr "Осребряване на код за подарък"
 
@@ -26514,7 +26549,7 @@ msgid "Registered passkeys"
 msgstr "Регистрирани ключове за достъп"
 
 #. Summary row label for the registration mode in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:366
+#: src/features/app/components/setup/SetupWizardSteps.tsx:367
 msgid "Registration"
 msgstr "Регистрация"
 
@@ -26642,7 +26677,7 @@ msgstr "Запомняне на размера и позицията на про
 #: src/features/user/components/modals/tabs/chat_settings_tab/SearchEnginesTab.tsx:26
 #: src/features/user/components/modals/tabs/LinkedAccountsTab.tsx:55
 #: src/features/user/components/settings_utils/search_index/AccountSecurityIndex.ts:178
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:194
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:192
 #: src/features/webhook/components/WebhookListItem.tsx:277
 msgid "Remove"
 msgstr "Премахване"
@@ -27135,7 +27170,7 @@ msgstr "Праг на подновяване (дни)"
 msgid "Renew window (days)"
 msgstr "Период за подновяване (дни)"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:699
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:701
 msgid "Renews on <0>{renewalDate}.</0>"
 msgstr "Подновява се на <0>{renewalDate}.</0>"
 
@@ -27879,8 +27914,8 @@ msgstr "Възстановяване на прозореца"
 
 #. Billing button for restarting a subscription during the grace period.
 #. Billing button for starting a new subscription after premium expired.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:736
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:740
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:738
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:742
 msgid "Resubscribe"
 msgstr "Абониране отново"
 
@@ -28014,7 +28049,7 @@ msgid "Review what this app is asking for before you continue."
 msgstr "Прегледай какво иска това приложение, преди да продължиш."
 
 #. Setup wizard finish step body.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:358
+#: src/features/app/components/setup/SetupWizardSteps.tsx:359
 msgid "Review your choices below, then finish. This saves the configuration and opens the instance."
 msgstr "Прегледай избора си по-долу и завърши. Това ще запази конфигурацията и ще отвори инстанцията."
 
@@ -29064,7 +29099,7 @@ msgid "Secret"
 msgstr "Тайна"
 
 #. Label for a CAPTCHA secret key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1019
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1020
 msgid "Secret key"
 msgstr "Секретен ключ"
 
@@ -29366,7 +29401,7 @@ msgstr "Режим на самостоятелно хостване"
 msgid "Self-hosted mode override"
 msgstr "Принудителен режим на самостоятелно хостване"
 
-#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:36
+#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:91
 msgid "Self-serve refunds available within 3 days of payment, once every 30 days. Refunding a subscription cancels it. EU/EEA buyers waive the 14-day right of withdrawal at checkout to access content immediately. Use the in-app refund button instead of a chargeback. Chargebacks can permanently restrict your account. Stripe handles payment securely. We never see your full card number."
 msgstr "Възстановяване на суми със самообслужване до 3 дни след плащането, веднъж на всеки 30 дни. Възстановяването на сумата за абонамент го анулира. Купувачите от ЕС/ЕИП се отказват от 14-дневното право на отказ при плащането, за да получат незабавен достъп до съдържанието. Използвай бутона за възстановяване в приложението вместо оспорване на трансакция. Оспорванията могат трайно да ограничат акаунта ти. Stripe обработва плащането сигурно. Никога не виждаме пълния номер на картата ти."
 
@@ -29890,7 +29925,7 @@ msgid "Set up authenticator app"
 msgstr "Настройване на приложение за удостоверяване"
 
 #. Option for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:952
+#: src/features/app/components/setup/SetupWizardSteps.tsx:953
 msgid "Set up later"
 msgstr "Настрой по-късно"
 
@@ -30492,7 +30527,7 @@ msgid "Show myself typing"
 msgstr "Покажи ме като пишещ"
 
 #. Toggle label and settings search entry for showing the Neko sprite that chases the cursor.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:49
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:50
 msgid "Show Neko"
 msgstr "Показване на Неко"
 
@@ -30582,7 +30617,7 @@ msgid "Show stickers in expression autocomplete"
 msgstr "Показване на стикери в автоматичното довършване на изрази"
 
 #. Description for a visual accessibility setting that mutes the color of text formatted with Markdown strikethrough.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:101
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:102
 msgid "Show strikethrough Markdown text in a slightly muted color."
 msgstr "Показване на зачеркнат Markdown текст в леко приглушен цвят."
 
@@ -30661,7 +30696,7 @@ msgid "Shows the banner in its own section below the community header."
 msgstr "Показва банера в собствен раздел под заглавката на общността."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:21
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:22
 msgid "Sidebar"
 msgstr "Странична лента"
 
@@ -30785,7 +30820,7 @@ msgid "Signed-in devices"
 msgstr "Устройства с активен вход"
 
 #. Label for Bluesky OAuth signing key ID input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1076
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1077
 msgid "Signing key ID"
 msgstr "ID на ключ за подписване"
 
@@ -30852,7 +30887,7 @@ msgid "Single column"
 msgstr "Една колона"
 
 #. Summary row label for the single community choice in the setup wizard.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:370
+#: src/features/app/components/setup/SetupWizardSteps.tsx:371
 msgid "Single community"
 msgstr "Една общност"
 
@@ -30876,7 +30911,7 @@ msgid "Single user (all statuses)"
 msgstr "Един потребител (всички статуси)"
 
 #. Label for a CAPTCHA site key input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1018
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1019
 msgid "Site key"
 msgstr "Ключ на сайта"
 
@@ -30929,7 +30964,7 @@ msgid "Skip the system leave notice — nobody gets pinged."
 msgstr "Пропускане на системното съобщение за напускане – никой няма да бъде уведомен."
 
 #. Description for deferring an optional setup wizard integration.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:956
+#: src/features/app/components/setup/SetupWizardSteps.tsx:957
 msgid "Skip this now and configure it from the admin panel."
 msgstr "Пропусни това сега и го конфигурирай от административния панел."
 
@@ -31177,17 +31212,17 @@ msgid "SMS verification is unavailable right now. Try again later or contact sup
 msgstr "Потвърждението по SMS не е достъпно в момента. Опитай отново по-късно или се свържи с поддръжката."
 
 #. Success message after validating SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1044
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1045
 msgid "SMTP connection verified."
 msgstr "SMTP връзката е проверена."
 
 #. Label for SMTP host input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1032
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1033
 msgid "SMTP host"
 msgstr "SMTP хост"
 
 #. Failure message after validating SMTP credentials when the server returns no error detail.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1048
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1049
 msgid "SMTP validation failed."
 msgstr "Проверката на SMTP е неуспешна."
 
@@ -31289,7 +31324,7 @@ msgstr "Възникна проблем при зареждането на дн�
 #. Body of the error modal shown when opening the billing customer portal from the grace-period nagbar fails.
 #. Body of the error modal shown when opening the billing customer portal from the premium-expired nagbar fails.
 #. Body of the generic fallback error modal shown when opening the billing customer portal fails.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:33
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:34
 #: src/features/app/components/dialogs/components/plutonium/hooks/useSubscriptionActions.ts:18
 #: src/features/app/components/layout/app_layout/nagbars/PremiumExpiredNagbar.tsx:34
 #: src/features/app/components/layout/app_layout/nagbars/PremiumGracePeriodNagbar.tsx:34
@@ -31324,7 +31359,7 @@ msgid "Something went wrong while sending your verification email. Please try ag
 msgstr "Нещо се обърка при изпращането на имейла за потвърждение. Опитай отново след малко."
 
 #. Body of the generic fallback error modal shown when creating a checkout session fails unexpectedly.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:155
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:164
 msgid "Something went wrong while starting checkout. Please try again in a moment."
 msgstr "Нещо се обърка при стартирането на плащането. Опитай отново след малко."
 
@@ -31581,7 +31616,7 @@ msgstr "Зрители - {count}"
 #. Native macOS Edit submenu title for text-to-speech actions.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/platform/utils/DesktopLocaleBridge.ts:85
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:142
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:143
 msgid "Speech"
 msgstr "Реч"
 
@@ -32276,14 +32311,14 @@ msgid "Streaming privacy on"
 msgstr "Поверителност при стрийминг: вкл"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:110
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:111
 msgid "Strike through"
 msgstr "Зачертаване"
 
 #. Selection formatting toolbar button.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/lexical/composer/SelectionFormattingToolbar.tsx:72
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:106
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:107
 msgid "Strikethrough"
 msgstr "Зачеркване"
 
@@ -32355,7 +32390,7 @@ msgid "Subscription"
 msgstr "Абонамент"
 
 #. Modal title shown when checkout is blocked because the account already has an active Plutonium subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:124
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:125
 msgid "Subscription already exists"
 msgstr "Вече имаш абонамент"
 
@@ -32512,7 +32547,7 @@ msgid "Switch price"
 msgstr "Смяна на цена"
 
 #. Billing button that opens confirmation to move the subscription down to the current price. {listPriceNewLabel} is the localized new price.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:804
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:806
 msgid "Switch to {listPriceNewLabel}"
 msgstr "Премини към {listPriceNewLabel}"
 
@@ -32537,7 +32572,7 @@ msgstr "Превключване към директен вход"
 #. Billing button that opens confirmation to switch to monthly billing.
 #. Button confirming a change to monthly subscription billing.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:57
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:787
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:789
 msgid "Switch to monthly"
 msgstr "Премини към месечно таксуване"
 
@@ -32606,7 +32641,7 @@ msgstr "Превключване към две колони"
 #. Billing button that opens confirmation to switch to yearly billing.
 #. Button confirming a change to yearly subscription billing.
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:53
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:783
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:785
 msgid "Switch to yearly"
 msgstr "Премини към годишно таксуване"
 
@@ -32851,23 +32886,23 @@ msgstr "Етикети ({tagCount}/{tagLimit})"
 msgid "Tags must be 2 to {maxLength} characters and alphanumeric."
 msgstr "Етикетите трябва да са от 2 до {maxLength} знака и да съдържат само букви и цифри."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:291
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:293
 msgid "Takes effect at your next renewal. We'll apply a {creditLabel} credit from your current monthly payment, so your first yearly charge will be <0>{firstRenewalPriceLabel}</0>. Future yearly renewals will be {renewalPrice}/year."
 msgstr "Влиза в сила при следващото ти подновяване. Ще приложим кредит от {creditLabel} от текущото ти месечно плащане, така че първата ти годишна такса ще бъде <0>{firstRenewalPriceLabel}</0>. Бъдещите годишни подновявания ще бъдат {renewalPrice}/година."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:300
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:302
 msgid "Takes effect at your next renewal. Your subscription stays monthly until then, and your next renewal will be <0>{renewalPrice}/year</0>."
 msgstr "Влиза в сила при следващото ти подновяване. Абонаментът ти остава месечен дотогава, а следващото ти подновяване ще бъде <0>{renewalPrice}/година</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:309
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:311
 msgid "Takes effect at your next renewal. Your subscription stays yearly until then, and your next renewal will be <0>{renewalPrice}/month</0>."
 msgstr "Влиза в сила при следващото ти подновяване. Абонаментът ти остава годишен дотогава, а следващото ти подновяване ще бъде <0>{renewalPrice}/месец</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:328
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:330
 msgid "Takes effect immediately. A prorated adjustment may apply via {PAYMENT_PROVIDER_NAME}. Your next renewal will be <0>{renewalPrice}/month</0>."
 msgstr "Влиза в сила веднага. Възможно е да бъде приложена пропорционална корекция чрез {PAYMENT_PROVIDER_NAME}. Следващото ти подновяване ще бъде <0>{renewalPrice}/месец</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:319
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:321
 msgid "Takes effect immediately. A prorated charge may apply via {PAYMENT_PROVIDER_NAME}. Your next renewal will be <0>{renewalPrice}/year</0>."
 msgstr "Влиза в сила веднага. Възможно е да бъде приложена пропорционална такса чрез {PAYMENT_PROVIDER_NAME}. Следващото ти подновяване ще бъде <0>{renewalPrice}/година</0>."
 
@@ -32978,12 +33013,12 @@ msgid "Terms acceptance nagbar"
 msgstr "Лента за приемане на условията"
 
 #: src/features/app/components/dialogs/components/DesktopSettingsView.tsx:435
-#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:14
+#: src/features/app/components/dialogs/components/PurchaseDisclaimer.tsx:19
 msgid "Terms of service"
 msgstr "Общи условия"
 
 #. Label for Bluesky OAuth terms URL input.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1068
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1069
 msgid "Terms URL"
 msgstr "URL на условията"
 
@@ -32993,7 +33028,7 @@ msgid "Terrorism or violent extremism"
 msgstr "Тероризъм или насилствен екстремизъм"
 
 #. Button that validates SMTP credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1040
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1041
 msgid "Test SMTP"
 msgstr "Тествай SMTP"
 
@@ -33096,7 +33131,7 @@ msgstr "Изпрати ни съобщение от телефона си"
 #. Feature label / section heading for the text-to-speech feature.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:419
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:138
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:139
 msgid "Text-to-speech"
 msgstr "Текст към говор"
 
@@ -34220,7 +34255,7 @@ msgid "This picker is only available in the desktop app."
 msgstr "Този инструмент за избор е наличен само в настолното приложение."
 
 #. Error modal body shown when the selected Plutonium plan has no price ID configured.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:169
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:178
 msgid "This plan isn't available. Contact support."
 msgstr "Този план не е наличен. Свържи се с поддръжката."
 
@@ -35107,7 +35142,7 @@ msgid "Try Turnstile instead"
 msgstr "Опитай с Turnstile вместо това"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:134
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:135
 msgid "TTS"
 msgstr "TTS"
 
@@ -35364,7 +35399,7 @@ msgid "Typed URL in the message text"
 msgstr "Въведен URL адрес в текста на съобщението"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:33
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:34
 msgid "Typing"
 msgstr "Писане"
 
@@ -35861,7 +35896,7 @@ msgstr "Отключи персонализирани емоджита в DM с 
 msgid "Unlock HD screen share with {premiumProductName}"
 msgstr "Отключи споделяне на екран в HD с {premiumProductName}"
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:200
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:215
 msgid "Unlock higher limits and exclusive features while supporting an independent communication platform."
 msgstr "Отключи по-високи лимити и ексклузивни функции, докато подкрепяш независима комуникационна платформа."
 
@@ -36071,7 +36106,7 @@ msgstr "непрочетени"
 #. Tab label in the inbox popout filtering to channels with unread messages.
 #: src/features/messaging/components/popouts/InboxPopout.tsx:30
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:10
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:77
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:78
 msgid "Unread"
 msgstr "Непрочетени"
 
@@ -36544,7 +36579,7 @@ msgid "Use {everyoneMention}/{hereMention} and {rolesMention}"
 msgstr "Използване на {everyoneMention}/{hereMention} и {rolesMention}"
 
 #. Plutonium subscription payment method picker button. Selects Pix as the payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:43
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:44
 msgid "Use {pixPaymentMethod}"
 msgstr "Използвай {pixPaymentMethod}"
 
@@ -36559,7 +36594,7 @@ msgid "Use {query} where the text to translate should be inserted."
 msgstr "Използвай {query} там, където трябва да се вмъкне текстът за превод."
 
 #. Plutonium subscription payment method picker button. Selects UPI as the payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:53
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:54
 msgid "Use {upiPaymentMethod}"
 msgstr "Използвай {upiPaymentMethod}"
 
@@ -36593,7 +36628,7 @@ msgid "Use actual value"
 msgstr "Използване на действителна стойност"
 
 #. Plutonium subscription payment method picker button. Selects the alternative (non-card) method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:62
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:63
 msgid "Use alternative method"
 msgstr "Използвай друг метод"
 
@@ -36629,7 +36664,7 @@ msgid "Use browser locale for time format"
 msgstr "Използване на езиковите настройки на браузъра за формат на часа"
 
 #. Modal secondary button to fall back to standard card checkout instead of an alternative payment method.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:203
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:212
 msgid "Use card"
 msgstr "Използвай карта"
 
@@ -36727,32 +36762,32 @@ msgid "Use light theme"
 msgstr "Използване на светла тема"
 
 #. Modal primary button to start the localized card pre-approval verification flow.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:199
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:208
 msgid "Use local card"
 msgstr "Използвай местна карта"
 
 #. Plutonium checkout pre-approval prompt for Brazil. Explains the card verification flow and the Pix alternative.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:66
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:67
 msgid "Use local card to verify a card issued in Brazil before the paid BRL checkout. Choose other methods if you'd rather try {pixPaymentMethod} or another payment method {paymentProviderName} offers on the next screen."
 msgstr "Използвай местна карта, за да провериш карта, издадена в Бразилия, преди плащането в BRL. Избери други методи, ако предпочиташ да опиташ {pixPaymentMethod} или друг метод на плащане, който {paymentProviderName} предлага на следващия екран."
 
 #. Plutonium checkout pre-approval prompt for India. Explains the card verification flow and the UPI alternative.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:76
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:77
 msgid "Use local card to verify a card issued in India before the paid INR checkout. Choose other methods if you'd rather try {upiPaymentMethod} or another payment method {paymentProviderName} offers on the next screen."
 msgstr "Използвай местна карта, за да провериш карта, издадена в Индия, преди плащането в INR. Избери други методи, ако предпочиташ да опиташ {upiPaymentMethod} или друг метод на плащане, който {paymentProviderName} предлага на следващия екран."
 
 #. Plutonium checkout pre-approval prompt for Poland. Explains that BLIK is not supported for subscriptions; user must continue to the standard checkout.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:82
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:83
 msgid "Use local card to verify a card issued in Poland before the paid PLN checkout. {blikPaymentMethod} does not support subscriptions in {paymentProviderName} checkout, so continue only if you want {paymentProviderName2}'s standard payment screen instead."
 msgstr "Използвай местна карта, за да провериш карта, издадена в Полша, преди плащането в PLN. {blikPaymentMethod} не поддържа абонаменти при плащане през {paymentProviderName}, така че продължи само ако вместо това искаш стандартния екран за плащане на {paymentProviderName2}."
 
 #. Plutonium checkout pre-approval prompt for Türkiye. Explains there is no local wallet method; continuing goes to the standard checkout.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:93
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:94
 msgid "Use local card to verify a card issued in Türkiye before the paid TRY checkout. There isn't an app-based local subscription method here, so continuing will take you to {paymentProviderName}'s standard payment screen."
 msgstr "Използвай местна карта, за да провериш карта, издадена в Турция, преди плащането в TRY. Тук няма локален метод за абонамент в приложение, така че продължаването ще те отведе до стандартния екран за плащане на {paymentProviderName}."
 
 #. Plutonium checkout pre-approval prompt default. Generic description for countries without specific localized payment guidance.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:99
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:100
 msgid "Use local card to verify a card issued in your billing country before the paid checkout. Choose other methods for any other payment method {paymentProviderName} offers on the next screen."
 msgstr "Използвай местна карта, за да провериш карта, издадена в държавата ти на фактуриране, преди плащането. Избери други методи за всеки друг начин на плащане, който {paymentProviderName} предлага на следващия екран."
 
@@ -36860,7 +36895,7 @@ msgid "Use this when troubleshooting the client or collecting logs. It may add v
 msgstr "Използвай това при отстраняване на неизправности на клиента или събиране на регистрационни файлове. Може да добави подробни съобщения в конзолата на браузъра за текущия клиент."
 
 #. Label for SMTP TLS toggle.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1036
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1037
 msgid "Use TLS"
 msgstr "Използване на TLS"
 
@@ -37026,7 +37061,7 @@ msgstr "Сила на звука на потребителя"
 #. Generic form-field label for a username.
 #. Label for SMTP username input.
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:1034
+#: src/features/app/components/setup/SetupWizardSteps.tsx:1035
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:572
 #: src/features/user/components/modals/FluxerTagChangeModal.tsx:218
 #: src/features/user/components/modals/tabs/my_profile_tab/MyProfileTabUsernameSection.tsx:56
@@ -37262,7 +37297,7 @@ msgid "Verify"
 msgstr "Потвърди"
 
 #. Modal title for the mobile checkout confirmation when opening the localized card verification flow.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:173
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:182
 msgid "Verify card"
 msgstr "Провери картата"
 
@@ -37366,7 +37401,7 @@ msgid "Verify your email before sending friend requests."
 msgstr "Потвърди имейла си, преди да изпращаш покани за приятелство."
 
 #. Title of the error modal shown when an unverified account tries to purchase Plutonium.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:105
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:106
 msgid "Verify your email first"
 msgstr "Първо потвърди имейла си"
 
@@ -37827,7 +37862,7 @@ msgstr "Вирджиния"
 msgid "Visibility"
 msgstr "Видимост"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:416
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:418
 msgid "Visionary"
 msgstr "Визионер"
 
@@ -37847,7 +37882,7 @@ msgid "Visionary 2FA nagbar"
 msgstr "Лента за Visionary 2FA"
 
 #. Modal body shown when a Visionary user tries to subscribe. Reassures them and points out gift purchases stay available.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:118
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:119
 msgid "Visionary already includes permanent access, so a recurring subscription isn't needed. You can still buy gifts for others."
 msgstr "Визионер вече включва постоянен достъп, така че не е необходим абонамент с периодично плащане. Все още можеш да купуваш подаръци за други."
 
@@ -37862,7 +37897,7 @@ msgid "Visionary badge ID"
 msgstr "Идент. номер на значка „Визионер“"
 
 #. Short label in the user profile badges popout. Keep it concise. Preserve {visionaryIdLabel}; it is inserted by code.
-#: src/features/user/components/popouts/UserProfileBadges.tsx:56
+#: src/features/user/components/popouts/UserProfileBadges.tsx:58
 msgid "Visionary ID {visionaryIdLabel}"
 msgstr "Visionary ID {visionaryIdLabel}"
 
@@ -37898,7 +37933,7 @@ msgstr "Визуални индикатори, показващи състоян
 #: src/features/app/components/layout/MobileBottomNav.tsx:123
 #: src/features/channel/utils/ChannelUtils.tsx:31
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedSettingsCategories.ts:17
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:81
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:82
 msgid "Voice"
 msgstr "Глас"
 
@@ -38131,7 +38166,7 @@ msgstr "Анулирана"
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:378
 #: src/features/user/components/modals/tabs/UserVoiceTab.tsx:181
 #: src/features/user/components/settings_utils/search_index/NotificationsIndex.ts:86
-#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:174
+#: src/features/user/components/settings_utils/section_registry/SharedDescriptors.ts:175
 msgid "Volume"
 msgstr "Сила на звука"
 
@@ -38354,7 +38389,7 @@ msgid "We don't send verification texts to this country. Try a mobile number fro
 msgstr "Не изпращаме текстови съобщения за потвърждение до тази държава. Опитай с мобилен номер от друга държава или се свържи с поддръжката."
 
 #. Modal body for existing-subscription block. Directs the user to the billing portal and addresses the just-paid race case. Keep plain and reassuring.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:129
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:130
 msgid "We found an existing {premiumProductFullName} subscription for this account. Manage it in the secure billing portal to update payment details or check renewal status. If you just paid, wait a minute and reopen this page."
 msgstr "Открихме съществуващ абонамент за {premiumProductFullName} за този акаунт. Управлявай го в защитения портал за плащане, за да актуализираш данните за плащане или да провериш състоянието на подновяването. Ако току-що плати, изчакай минута и отвори страницата отново."
 
@@ -39020,15 +39055,15 @@ msgstr "Годишно {yearlyPrice}"
 msgid "Yearly gift"
 msgstr "Годишен подарък"
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:616
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:618
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>."
 msgstr "Годишно надграждане, насрочено за <0>{pendingChangeDate}</0>."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:601
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:603
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel} after a {pendingCreditPriceLabel} credit. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "Годишно надграждане, насрочено за <0>{pendingChangeDate}</0>. Първо годишно таксуване: {pendingInitialPriceLabel} след кредит от {pendingCreditPriceLabel}. Бъдещи годишни подновявания: {pendingRecurringPriceLabel}/година."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:608
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:610
 msgid "Yearly upgrade scheduled for <0>{pendingChangeDate}</0>. First yearly charge: {pendingInitialPriceLabel}. Future yearly renewals: {pendingRecurringPriceLabel}/year."
 msgstr "Годишно надграждане, насрочено за <0>{pendingChangeDate}</0>. Първо годишно таксуване: {pendingInitialPriceLabel}. Бъдещи годишни подновявания: {pendingRecurringPriceLabel}/година."
 
@@ -39101,7 +39136,7 @@ msgid "You are now a developer!"
 msgstr "Вече си разработчик!"
 
 #. Modal body for the mobile checkout confirmation. Explains that the user is leaving the app to pay.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:186
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:195
 msgid "You are now navigating to {paymentProviderName} to complete the payment. Return to {productName} once you've completed it."
 msgstr "Прехвърляме те към {paymentProviderName}, за да завършиш плащането. Върни се във {productName}, след като приключиш."
 
@@ -39497,11 +39532,11 @@ msgstr "Все още нямаш блокирани потребители."
 msgid "You just pressed Tab. Keyboard mode is now on so you can navigate {productName} without a mouse."
 msgstr "Току-що натисна Tab. Режимът за навигация с клавиатура вече е включен, за да можеш да използваш {productName} без мишка."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:122
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:135
 msgid "You keep your perks until your next renewal date, then have a 3-day grace period to resubscribe and keep your subscriber history."
 msgstr "Запазваш предимствата си до следващата дата на подновяване, след което имаш 3-дневен гратисен период, за да се абонираш отново и да запазиш историята си като абонат."
 
-#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:144
+#: src/features/app/components/dialogs/components/PlutoniumContent.tsx:157
 msgid "You lose all {PREMIUM_PRODUCT_NAME} perks immediately and your subscriber history resets. This cannot be undone."
 msgstr "Веднага губиш всички предимства на {PREMIUM_PRODUCT_NAME} и историята ти като абонат се нулира. Това не може да бъде отменено."
 
@@ -39623,7 +39658,7 @@ msgid "You need to verify your email address before you can start a direct messa
 msgstr "Трябва да потвърдиш имейл адреса си, преди да можеш да започнеш директно съобщение."
 
 #. Body of the error modal shown when the account email is unverified and the user tries to purchase Plutonium. Product name is interpolated.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:109
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:110
 msgid "You need to verify your email before you can purchase {premiumProductFullName}."
 msgstr "Трябва да потвърдиш имейла си, преди да можеш да закупиш {premiumProductFullName}."
 
@@ -39715,7 +39750,7 @@ msgid "You're already friends with this user."
 msgstr "Вече сте приятели с този потребител."
 
 #. Modal title shown when a lifetime Visionary tier user tries to start a recurring Plutonium subscription.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:114
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:115
 msgid "You're already Visionary"
 msgstr "Вече си Визионер"
 
@@ -39755,7 +39790,7 @@ msgid "You're being rate limited. Wait {duration} before trying again."
 msgstr "Достигна лимита за заявки. Изчакай {duration}, преди да опиташ отново."
 
 #. Error modal body shown when a gift-subscription user tries to start a recurring subscription. Explains the extension/redemption path.
-#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:159
+#: src/features/app/components/dialogs/components/plutonium/hooks/useCheckoutActions.tsx:168
 msgid "You're currently on a gift subscription. It won't renew. You can redeem more gift codes to extend it. Recurring subscriptions can be started after your gift time ends."
 msgstr "В момента ползваш абонамент подарък. Той няма да се поднови. Можеш да осребриш още кодове за подарък, за да го удължиш. Можеш да започнеш редовен абонамент, след като подареното време изтече."
 
@@ -39843,7 +39878,7 @@ msgid "You're timed out. Messaging, reactions, and voice are paused until the ti
 msgstr "Наложено ти е време за изчакване. Съобщенията, реакциите и гласовият чат са на пауза, докато то изтече."
 
 #. Label in the channel and chat messages.
-#: src/features/channel/components/ChannelMessages.tsx:81
+#: src/features/channel/components/ChannelMessages.tsx:82
 msgid "You're viewing older messages"
 msgstr "Преглеждаш по-стари съобщения"
 
@@ -40261,7 +40296,7 @@ msgstr "Потокът ти все още е на живо"
 msgid "Your subscription can't move to the new price right now."
 msgstr "Абонаментът ти не може да премине към новата цена в момента."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:468
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:470
 msgid "Your subscription ended but <0/> stay active until <1>{graceDate}</1>. Resubscribe before then to keep your subscriber history."
 msgstr "Абонаментът ти приключи, но <0/> остават активни до <1>{graceDate}</1>. Абонирай се отново преди тази дата, за да запазиш историята си като абонат."
 
@@ -40290,7 +40325,7 @@ msgstr "Абонаментът ти е превключен към месечн�
 msgid "Your subscription has been switched to yearly billing."
 msgstr "Абонаментът ти е превключен към годишно таксуване."
 
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:510
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:512
 msgid "Your subscription is active but perks are temporarily paused."
 msgstr "Абонаментът ти е активен, но предимствата са временно на пауза."
 
@@ -40310,7 +40345,7 @@ msgid "Your subscription moves to the new price on {effectiveDate}."
 msgstr "Абонаментът ти преминава към новата цена на {effectiveDate}."
 
 #. Plutonium subscription card line shown to a subscriber on a legacy price whose subscription is already set to cancel. {cancelDate} is a date and {listPriceNewLabel} is a currency amount, both already formatted and localized by code; never write a date or an amount into the translation.
-#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:664
+#: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:666
 msgid "Your subscription still ends on <0>{cancelDate}</0>. The current price is now {listPriceNewLabel}. If you reactivate, you can switch to it from here."
 msgstr "Абонаментът ти все още приключва на <0>{cancelDate}</0>. Текущата цена вече е {listPriceNewLabel}. Ако го активираш отново, можеш да преминеш към нея оттук."
 
@@ -40356,7 +40391,7 @@ msgid "YouTube enrichment"
 msgstr "Обогатяване за YouTube"
 
 #. Setup wizard title for YouTube integration credentials.
-#: src/features/app/components/setup/SetupWizardSteps.tsx:976
+#: src/features/app/components/setup/SetupWizardSteps.tsx:977
 msgid "YouTube previews"
 msgstr "Визуализации за YouTube"
 

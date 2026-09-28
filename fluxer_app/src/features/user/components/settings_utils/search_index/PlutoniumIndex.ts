@@ -4,7 +4,7 @@ import type {SearchableSettingDescriptor} from '@app/features/user/components/se
 import {
 	CODES_DESCRIPTOR,
 	GIFTS_DESCRIPTOR,
-	PLUTONIUM_DESCRIPTOR,
+	PREMIUM_PRODUCT_NAME_KEYWORD,
 } from '@app/features/user/components/settings_utils/search_index/SharedDescriptors';
 import {msg} from '@lingui/core/macro';
 
@@ -157,7 +157,7 @@ export const plutoniumIndex: Array<SearchableSettingDescriptor> = [
 		tabType: 'plutonium',
 		label: SUBSCRIPTION_DESCRIPTOR,
 		keywords: [
-			PLUTONIUM_DESCRIPTOR,
+			PREMIUM_PRODUCT_NAME_KEYWORD,
 			PREMIUM_DESCRIPTOR,
 			SUBSCRIPTION_DESCRIPTOR,
 			UPGRADE_DESCRIPTOR,

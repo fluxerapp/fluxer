@@ -1,5 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {
+	type EffectiveBillingConfig,
+	getEffectiveBillingConfig,
+	getOperatorCurrencyPreferences,
+} from '@app/api/stripe/BillingConfigCache';
 import {isEuEeaCountryCode} from '@fluxer/constants/src/EuropeanEconomicArea';
 import type {PremiumCurrency} from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 
@@ -9,7 +14,17 @@ export function getCurrency(countryCode: string | null | undefined): Currency {
 	return getCurrencyPreferences(countryCode)[0];
 }
 
-export function getCurrencyPreferences(countryCode: string | null | undefined): Array<Currency> {
+export function getCurrencyPreferences(
+	countryCode: string | null | undefined,
+	config: EffectiveBillingConfig = getEffectiveBillingConfig(),
+): Array<Currency> {
+	if (config.catalogMode === 'operator') {
+		return getOperatorCurrencyPreferences(countryCode, config);
+	}
+	return getEnvCurrencyPreferences(countryCode);
+}
+
+function getEnvCurrencyPreferences(countryCode: string | null | undefined): Array<Currency> {
 	if (!countryCode) {
 		return ['USD', 'EUR'];
 	}
@@ -43,8 +58,42 @@ export function getCurrencyPreferences(countryCode: string | null | undefined): 
 
 const GIFT_ELIGIBLE_LOCALIZED_CURRENCIES = new Set<Currency>(['DKK', 'NOK', 'SEK']);
 
-export function getGiftCurrencyPreferences(countryCode: string | null | undefined): Array<Currency> {
-	return getCurrencyPreferences(countryCode).filter(
+const ENV_CATALOG_CURRENCIES = new Set<Currency>(['USD', 'EUR', 'BRL', 'DKK', 'INR', 'NOK', 'PLN', 'SEK', 'TRY']);
+
+const OPERATOR_CURRENCY_PATTERN = /^[A-Z]{3}$/;
+
+export function getGiftCurrencyPreferences(
+	countryCode: string | null | undefined,
+	config: EffectiveBillingConfig = getEffectiveBillingConfig(),
+): Array<Currency> {
+	if (config.catalogMode === 'operator') {
+		return getOperatorCurrencyPreferences(countryCode, config).filter((currency) => {
+			const set = config.prices[currency];
+			return set?.gift_1_month != null && set.gift_1_year != null;
+		});
+	}
+	return getEnvCurrencyPreferences(countryCode).filter(
 		(currency) => currency === 'USD' || currency === 'EUR' || GIFT_ELIGIBLE_LOCALIZED_CURRENCIES.has(currency),
 	);
+}
+
+export function isLocalizedCurrency(
+	currency: Currency,
+	config: EffectiveBillingConfig = getEffectiveBillingConfig(),
+): boolean {
+	return config.catalogMode === 'env' && currency !== 'USD' && currency !== 'EUR';
+}
+
+export function normalizeCatalogCurrency(
+	value: string | null | undefined,
+	config: EffectiveBillingConfig = getEffectiveBillingConfig(),
+): Currency | null {
+	const currency = value?.trim().toUpperCase();
+	if (!currency) {
+		return null;
+	}
+	if (config.catalogMode === 'operator') {
+		return OPERATOR_CURRENCY_PATTERN.test(currency) ? currency : null;
+	}
+	return ENV_CATALOG_CURRENCIES.has(currency) ? currency : null;
 }

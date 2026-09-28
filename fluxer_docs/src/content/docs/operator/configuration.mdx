@@ -911,11 +911,13 @@ Default `false`. Accepts the push relay supplemental privacy notice for this `pu
 
 ## Payments
 
-Stripe billing, which the shipped stack keeps off. All are optional.
+Stripe billing for a paid premium tier and gift purchases. All are optional. On a self-hosted instance, set billing in the admin dashboard's [Premium & billing](#runtime-settings-in-the-admin-dashboard) group instead. A value stored there wins over the matching variable below.
+
+A self-hosted instance sells premium only while its premium mode is `mirror`, billing is switched on, a Stripe secret key is set, and at least one currency has both a monthly and a yearly price. Instance discovery reports this as `stripe_enabled`. Existing subscribers can still manage, cancel and renew while the premium mode is `mirror` and a Stripe secret key is set, even after sales are switched off or the prices are removed. Instance discovery reports this as `stripe_serviceable`. Stripe sends events to `https://<FLUXER_DOMAIN>/api/stripe/webhook`, which the dashboard shows as the webhook URL to register in Stripe.
 
 #### `FLUXER_STRIPE_ENABLED`
 
-Default `false`. The Stripe switch. Compose hardcodes `false`, so a self-hosted instance cannot enable it from `.env`.
+Default `false`. The Stripe switch. Compose forwards it from `.env`.
 
 #### `FLUXER_STRIPE_SECRET_KEY`
 
@@ -927,15 +929,19 @@ Default empty. The webhook signing secret. Not forwarded by the shipped Compose 
 
 #### `FLUXER_STRIPE_PRICES`
 
-Default `{}`. Every price ID at once. JSON object. An individual price variable overrides the matching price in this object.
+Default `{}`. Every price ID at once. JSON object. An individual price variable overrides the matching price in this object. Not forwarded by the shipped Compose file.
 
-Individual price variables also exist, one per product and currency: `FLUXER_STRIPE_PRICE_MONTHLY_`, `FLUXER_STRIPE_PRICE_YEARLY_`, `FLUXER_STRIPE_PRICE_GIFT_1_MONTH_` and `FLUXER_STRIPE_PRICE_GIFT_1_YEAR_` in USD, EUR, BRL, DKK, INR, NOK, PLN, SEK, and TRY, plus `FLUXER_STRIPE_PRICE_VISIONARY_` and `FLUXER_STRIPE_PRICE_GIFT_VISIONARY_` in USD and EUR.
+Individual price variables also exist, one per product and currency: `FLUXER_STRIPE_PRICE_MONTHLY_`, `FLUXER_STRIPE_PRICE_YEARLY_`, `FLUXER_STRIPE_PRICE_GIFT_1_MONTH_` and `FLUXER_STRIPE_PRICE_GIFT_1_YEAR_` in USD, EUR, BRL, DKK, INR, NOK, PLN, SEK, and TRY.
+
+Prices saved in the dashboard replace this catalogue entirely. They take any three-letter currency code. A buyer gets the currency mapped to their country, then the default currency, then the first configured one. Fluxer's country checks for localised currencies apply only to prices set by these variables.
 
 #### `FLUXER_STRIPE_LEGACY_PRICES`
 
-Default `{}`. Retired price IDs, keyed by the same slot names `FLUXER_STRIPE_PRICES` uses, each mapped to a list: `{"monthly_brl": ["price_..."]}`. JSON object. Existing subscriptions on these prices keep renewing. The localised checkout catalogue uses `FLUXER_STRIPE_PRICES` alone.
+Default `{}`. Retired price IDs, keyed by the same slot names `FLUXER_STRIPE_PRICES` uses, each mapped to a list: `{"monthly_brl": ["price_..."]}`. JSON object. Existing subscriptions on these prices keep renewing. The localised checkout catalogue uses `FLUXER_STRIPE_PRICES` alone. Legacy prices saved in the dashboard replace this variable, and there the currency in a slot name is upper case, such as `monthly_GBP`.
 
 Repricing a slot has a fixed order. Doing the steps in another order leaves a price ID unknown to the API, and invoices on that price fail. Create the new price in Stripe, move the ID it replaces into this variable, roll the API, and only then point `FLUXER_STRIPE_PRICES` at the new price. A price ID that neither variable names is unknown to the API: a renewal invoice on it fails the webhook with `Unknown product for invoice renewal`, a checkout completing on it fails with `Unknown price ID for checkout session`, and both keep failing until the ID is registered. The API answers Stripe as soon as the signature verifies and hands the event to `worker`, so any retry comes from `worker` rerunning the `processStripeWebhook` job: the Stripe dashboard shows the delivery as succeeded and the error is in the `worker` logs. Keep a retired ID listed for as long as any subscription still bills on it, which for a yearly price is at least a year after the switch.
+
+With prices saved in the dashboard, add the retired ID to its legacy prices before you replace the price.
 
 ## Moderation and abuse
 
@@ -1151,7 +1157,7 @@ Default `development`. The runtime mode. `development`, `production`, or `test`.
 
 #### `FLUXER_SELF_HOSTED`
 
-Default `false`. The self-host switch. Compose sets `true`. It relaxes the production Postgres SSL requirement, seeds the limit tier, gates registration, billing and discovery controllers, and turns blocklist feeds off.
+Default `false`. The self-host switch. Compose sets `true`. It relaxes the production Postgres SSL requirement, seeds the limit tier, gates registration, donation and discovery controllers, keeps premium billing off until it is set up as [Payments](#payments) describes, and turns blocklist feeds off.
 
 `/_metrics` on `api`, `media-proxy`, `gateway`, and `push`, plus the Gateway's `/_health/ready`, `/_health/drain`, and `/_health/undrain`, are gated to loopback peers, so no proxy reaches them. The probes that work from outside are `/api/_health`, `/gateway/_health`, `/media/_health`, and the edge's own `/_health`.
 
@@ -1750,6 +1756,10 @@ Single-community mode, direct messages and friends, the premium model, and optio
 #### Instance Config, Runtime Integrations
 
 The Klipy GIF key, the YouTube Data API key, the CAPTCHA provider and its keys, email delivery with an SMTP connection test, and Bluesky OAuth.
+
+#### Instance Config, Premium & billing
+
+The premium tier name and information link, the billing switch, the Stripe secret key and webhook secret, the webhook URL to register in Stripe, and the price catalogue with its default currency, country currencies and legacy prices. See [Payments](#payments).
 
 #### Instance Config, Media Expiry
 

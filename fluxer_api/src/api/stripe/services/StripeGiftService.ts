@@ -8,6 +8,7 @@ import {Logger} from '@app/api/Logger';
 import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
 import {type GiftCode, mapGiftDurationMonthsToFields} from '@app/api/models/GiftCode';
 import type {User} from '@app/api/models/User';
+import {getBillingBranding} from '@app/api/stripe/BillingBranding';
 import type {ProductInfo} from '@app/api/stripe/ProductRegistry';
 import type {StripeCheckoutService} from '@app/api/stripe/services/StripeCheckoutService';
 import type {StripePremiumService} from '@app/api/stripe/services/StripePremiumService';
@@ -119,7 +120,7 @@ export class StripeGiftService {
 			Logger.debug({userId, giftCode: code}, 'Redeemer passed gift purchase validation');
 			if (user.premiumType === UserPremiumTypes.LIFETIME) {
 				Logger.debug({userId, giftCode: code}, 'Rejecting redemption for lifetime user');
-				throw new CannotRedeemPlutoniumWithVisionaryError();
+				throw new CannotRedeemPlutoniumWithVisionaryError((await getBillingBranding()).premiumName);
 			}
 			await this.userRepository.redeemGiftCode(code, userId);
 			Logger.debug({userId, giftCode: code}, 'Applied gift redemption row update');

@@ -10,8 +10,8 @@ Admin gift code generation issues [premium](/http-api/premium/) codes in bulk, e
 
 This resource has that one operation. No Admin operation lists, revokes, or redeems a code, or reports who redeemed one.
 
-:::caution[A self-hosted instance answers 403]
-The error code is `FEATURE_NOT_AVAILABLE_SELF_HOSTED`. Body validation runs first, so a self-hosted instance answers a body that fails validation with 400 `INVALID_FORM_BODY`.
+:::caution[A self-hosted instance needs the `mirror` premium mode]
+A self-hosted instance whose [premium mode](/admin-api/instance/#premium-modes) is `everyone` answers 403 `FEATURE_NOT_AVAILABLE_SELF_HOSTED`. Body validation runs first, so it answers a body that fails validation with 400 `INVALID_FORM_BODY`. Generated codes need no payment provider.
 :::
 
 ## Gift duration units
@@ -63,9 +63,9 @@ Generates the requested number of unredeemed gift codes. Requires `gift_codes:ge
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | response body | The codes were generated |
-| 403<sup>1</sup> | [error response](/admin-api/#error-response) | The account does not hold `admin:authenticate`, does not hold `gift_codes:generate`, or the instance is self-hosted |
+| 403<sup>1</sup> | [error response](/admin-api/#error-response) | The account lacks `admin:authenticate` or `gift_codes:generate`, or the instance is self-hosted in the `everyone` premium mode |
 
-<sup>1</sup> Returned as `MISSING_PERMISSIONS` without `admin:authenticate`, as `MISSING_ACL` with that but without `gift_codes:generate`, and as `FEATURE_NOT_AVAILABLE_SELF_HOSTED` on a self-hosted instance
+<sup>1</sup> Returned as `MISSING_PERMISSIONS` without `admin:authenticate`, as `MISSING_ACL` with that but without `gift_codes:generate`, and as `FEATURE_NOT_AVAILABLE_SELF_HOSTED` on a self-hosted instance in the `everyone` premium mode
 
 :::caution[The codes are returned once]
 Reading a code back requires presenting it to [Get gift](/http-api/gifts/#get-gift), so a lost response cannot be recovered.

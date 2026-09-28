@@ -139,12 +139,20 @@ Deployment-wide switches a client reads before it offers a feature, plus whether
 | Field | Type | Description |
 | --- | --- | --- |
 | voice_enabled | boolean | Whether voice and video calling is enabled |
-| stripe_enabled | boolean | Whether Stripe [billing](/http-api/billing/) is enabled |
+| stripe_enabled<sup>2</sup> | boolean | Whether premium purchases through Stripe [billing](/http-api/billing/) are available |
+| premium_enabled<sup>3</sup> | boolean | Whether the deployment has a premium tier, so premium state, gifts and perks apply |
+| stripe_serviceable<sup>4</sup> | boolean | Whether existing Stripe subscriptions can be managed, cancelled and billed |
 | self_hosted | boolean | Whether this deployment identifies itself as self-hosted |
 | presigned_attachment_uploads | boolean | Whether a client can request presigned attachment upload URLs |
 | emails_enabled<sup>1</sup> | boolean | Whether the deployment sends email |
 
 <sup>1</sup> The value is true only when email is switched on and the transport is completely configured
+
+<sup>2</sup> True only when billing is switched on, a Stripe secret key is set, at least one currency has both a monthly and a yearly price, and `premium_enabled` is true. It is computed on each request
+
+<sup>3</sup> Always true on a hosted deployment. A self-hosted deployment reports true only while its [premium mode](/admin-api/instance/#premium-modes) is `mirror`
+
+<sup>4</sup> On a hosted deployment, true while billing is switched on and a Stripe secret key is set. A self-hosted deployment reports true while a Stripe secret key is set and `premium_enabled` is true, even after billing is switched off
 
 A deployment that reports `emails_enabled` as false sends no verification, password recovery, or IP authorisation message, and the flows that depend on one are unusable there. [Deployment availability](/http-api/deployment-availability/) states which routes a self-hosted deployment does not serve at all.
 
@@ -375,7 +383,7 @@ Branding, setup state, legal documents, and registration fields a client reads b
 
 ## Public branding object
 
-The instance identity a client renders: its name, its images, its theme colour, and its status page links. The image URLs customise browser metadata, install metadata, and link previews.
+The instance identity a client renders: its name, its images, its theme colour, its status page links, and the name of its premium tier. The image URLs customise browser metadata, install metadata, and link previews.
 
 ### Structure
 
@@ -390,6 +398,8 @@ The instance identity a client renders: its name, its images, its theme colour, 
 | theme_color | ?string | Browser theme colour, or null |
 | status_page_url | ?string | Public status page URL, or null |
 | status_page_incident_history_url | ?string | Status page incident history URL, or null |
+| premium_product_name | string | Name of the premium tier a client displays. A self-hosted deployment reports `Premium` until the operator sets a name |
+| premium_info_url | ?string | Absolute URL of a page describing the premium tier, or null |
 
 ## Public setup state object
 

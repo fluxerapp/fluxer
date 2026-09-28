@@ -26131,7 +26131,10 @@
 						"anyOf": [{"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, {"type": "null"}]
 					},
 					"currency": {"description": "Currency for the prices", "$ref": "#/components/schemas/PremiumCurrency"},
-					"gift_currency": {"description": "Currency for gift prices", "$ref": "#/components/schemas/PremiumCurrency"}
+					"gift_currency": {
+						"anyOf": [{"$ref": "#/components/schemas/PremiumCurrency"}, {"type": "null"}],
+						"description": "Currency for gift prices, null when no gift prices are configured"
+					}
 				},
 				"required": ["currency", "gift_currency"],
 				"additionalProperties": false
@@ -29758,6 +29761,14 @@
 					"status_page_incident_history_url": {
 						"description": "Optional public status page incident history URL",
 						"type": ["string", "null"]
+					},
+					"premium_product_name": {
+						"type": "string",
+						"description": "Name of the premium tier shown by client applications"
+					},
+					"premium_info_url": {
+						"description": "Optional absolute URL of a page describing the premium tier",
+						"type": ["string", "null"]
 					}
 				},
 				"required": [
@@ -29769,7 +29780,9 @@
 					"favicon_url",
 					"theme_color",
 					"status_page_url",
-					"status_page_incident_history_url"
+					"status_page_incident_history_url",
+					"premium_product_name",
+					"premium_info_url"
 				],
 				"additionalProperties": false,
 				"description": "Branding values safe to expose to clients"
@@ -29866,7 +29879,18 @@
 				"type": "object",
 				"properties": {
 					"voice_enabled": {"type": "boolean", "description": "Whether voice/video calling is enabled"},
-					"stripe_enabled": {"type": "boolean", "description": "Whether Stripe payments are enabled"},
+					"stripe_enabled": {
+						"type": "boolean",
+						"description": "Whether premium purchases through Stripe are available"
+					},
+					"premium_enabled": {
+						"type": "boolean",
+						"description": "Whether this instance has a premium tier, so premium status, gifts and perks apply"
+					},
+					"stripe_serviceable": {
+						"type": "boolean",
+						"description": "Whether existing Stripe subscriptions can be managed, cancelled and billed on this instance"
+					},
 					"self_hosted": {"type": "boolean", "description": "Whether this is a self-hosted instance"},
 					"presigned_attachment_uploads": {
 						"type": "boolean",
@@ -29880,6 +29904,8 @@
 				"required": [
 					"voice_enabled",
 					"stripe_enabled",
+					"premium_enabled",
+					"stripe_serviceable",
 					"self_hosted",
 					"presigned_attachment_uploads",
 					"emails_enabled"
@@ -32897,7 +32923,7 @@
 				"enum": ["access_token", "refresh_token"],
 				"type": "string"
 			},
-			"PremiumCurrency": {"type": "string", "enum": ["USD", "EUR", "BRL", "DKK", "INR", "NOK", "PLN", "SEK", "TRY"]},
+			"PremiumCurrency": {"type": "string", "pattern": "^[A-Z]{3}$"},
 			"SelfServeRefundIneligibilityReason": {
 				"type": "string",
 				"enum": ["no_refundable_purchase", "outside_refund_window", "cooldown_active", "feature_unavailable"]

@@ -12,8 +12,10 @@ import type {
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
 import type {User} from '@app/api/models/User';
-import type {RecurringBillingCycle} from '@app/api/stripe/ProductRegistry';
-import {ProductRegistry} from '@app/api/stripe/ProductRegistry';
+import {isBillingActive} from '@app/api/stripe/BillingConfigCache';
+import {getProductRegistry, type RecurringBillingCycle} from '@app/api/stripe/ProductRegistry';
+import {getStripeClient} from '@app/api/stripe/StripeClient';
+import {getCachedStripePriceSummary} from '@app/api/stripe/StripePriceSummaryCache';
 import {getPrimarySubscriptionItem} from '@app/api/stripe/StripeSubscriptionPeriod';
 import {
 	SELF_SERVE_REFUND_COOLDOWN_DAYS,
@@ -22,7 +24,12 @@ import {
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {checkHasActivePaidPremium} from '@app/api/user/UserHelpers';
 import {mapUserToPrivateResponse} from '@app/api/user/UserMappers';
-import {type Currency, getCurrencyPreferences, getGiftCurrencyPreferences} from '@app/api/utils/CurrencyUtils';
+import {
+	type Currency,
+	getCurrencyPreferences,
+	getGiftCurrencyPreferences,
+	normalizeCatalogCurrency,
+} from '@app/api/utils/CurrencyUtils';
 import {PremiumFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
 import type {
@@ -39,6 +46,7 @@ import type {
 	SelfServeRefundEligibilityResponse,
 	SelfServeRefundIneligibilityReason,
 } from '@fluxer/schema/src/domains/premium/PremiumSchemas';
+import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type Stripe from 'stripe';
 
 const INVOICE_LIMIT = 12;
@@ -53,7 +61,7 @@ interface ResolvedPriceIds {
 	gift_1_month: string | null;
 	gift_1_year: string | null;
 	currency: Currency;
-	gift_currency: Currency;
+	gift_currency: Currency | null;
 }
 
 interface InvoiceResult {
@@ -102,21 +110,7 @@ function billingCycleFromInterval(value: string | null | undefined): RecurringBi
 }
 
 function normalizeCurrency(value: string | null | undefined): Currency | null {
-	const currency = value?.toUpperCase();
-	if (
-		currency === 'USD' ||
-		currency === 'EUR' ||
-		currency === 'BRL' ||
-		currency === 'DKK' ||
-		currency === 'INR' ||
-		currency === 'NOK' ||
-		currency === 'PLN' ||
-		currency === 'SEK' ||
-		currency === 'TRY'
-	) {
-		return currency;
-	}
-	return null;
+	return normalizeCatalogCurrency(value);
 }
 
 function compareNullableDatesDesc(left: Date | null | undefined, right: Date | null | undefined): number {
@@ -212,13 +206,14 @@ function mapPaymentMethod(row: BillingPaymentMethodRow): PremiumBillingPaymentMe
 }
 
 export class PremiumStateService {
-	private readonly productRegistry = new ProductRegistry();
+	private readonly productRegistry = getProductRegistry();
 
 	constructor(
 		private readonly userRepository: IUserRepository,
 		private readonly gatewayService: IGatewayService,
 		private readonly billingRepository: BillingRepository,
 		private readonly stripe: Stripe | null = null,
+		private readonly cacheService: ICacheService | null = null,
 	) {}
 
 	async getState(userId: UserID, countryCode?: string): Promise<PremiumStateResponse> {
@@ -294,7 +289,7 @@ export class PremiumStateService {
 				premium_lifetime_sequence: user.premiumLifetimeSequence,
 				premium_grace_ends_at: toIso(user.premiumGraceEndsAt),
 				premium_enabled_override: (user.premiumFlags & PremiumFlags.ENABLED_OVERRIDE) !== 0,
-				premium_purchase_disabled: (user.premiumFlags & PremiumFlags.PURCHASE_DISABLED) !== 0,
+				premium_purchase_disabled: (user.premiumFlags & PremiumFlags.PURCHASE_DISABLED) !== 0 || !isBillingActive(),
 				premium_perks_disabled: (user.premiumFlags & PremiumFlags.PERKS_DISABLED) !== 0,
 				self_hosted: Config.instance.selfHosted,
 				bot: user.isBot,
@@ -640,7 +635,7 @@ export class PremiumStateService {
 			billing_cycle: subscriptionPrice?.billing_cycle ?? null,
 			effective_at: toIso(subscription?.current_period_end),
 		};
-		if (Config.instance.selfHosted || !Config.stripe.enabled || !Config.stripe.secretKey) {
+		if (Config.instance.selfHosted || !isBillingActive()) {
 			return {...base, available: false, reason: 'feature_unavailable'};
 		}
 		if (!subscription) {
@@ -752,19 +747,39 @@ export class PremiumStateService {
 	private async resolvePriceIds(countryCode: string | null): Promise<PriceIdsResponse | null> {
 		const resolved = this.resolveConfiguredPriceIds(countryCode);
 		if (!resolved) return null;
-		const [monthlyPrice, yearlyPrice, gift1MonthPrice, gift1YearPrice] = await Promise.all([
-			resolved.monthly ? this.billingRepository.prices.findById(resolved.monthly) : null,
-			resolved.yearly ? this.billingRepository.prices.findById(resolved.yearly) : null,
-			resolved.gift_1_month ? this.billingRepository.prices.findById(resolved.gift_1_month) : null,
-			resolved.gift_1_year ? this.billingRepository.prices.findById(resolved.gift_1_year) : null,
+		const [monthlyAmount, yearlyAmount, gift1MonthAmount, gift1YearAmount] = await Promise.all([
+			this.resolvePriceAmountMinor(resolved.monthly),
+			this.resolvePriceAmountMinor(resolved.yearly),
+			this.resolvePriceAmountMinor(resolved.gift_1_month),
+			this.resolvePriceAmountMinor(resolved.gift_1_year),
 		]);
 		return {
 			...resolved,
-			monthly_amount_minor: nullableNumber(monthlyPrice?.unit_amount),
-			yearly_amount_minor: nullableNumber(yearlyPrice?.unit_amount),
-			gift_1_month_amount_minor: nullableNumber(gift1MonthPrice?.unit_amount),
-			gift_1_year_amount_minor: nullableNumber(gift1YearPrice?.unit_amount),
+			monthly_amount_minor: monthlyAmount,
+			yearly_amount_minor: yearlyAmount,
+			gift_1_month_amount_minor: gift1MonthAmount,
+			gift_1_year_amount_minor: gift1YearAmount,
 		};
+	}
+
+	private async resolvePriceAmountMinor(priceId: string | null): Promise<number | null> {
+		if (!priceId) {
+			return null;
+		}
+		const mirrored = await this.billingRepository.prices.findById(priceId);
+		if (mirrored) {
+			return nullableNumber(mirrored.unit_amount);
+		}
+		if (!Config.instance.selfHosted || !this.cacheService) {
+			return null;
+		}
+		const summary = await getCachedStripePriceSummary({
+			stripe: this.stripe,
+			cacheService: this.cacheService,
+			priceId,
+			mirror: this.billingRepository,
+		});
+		return summary?.unitAmountMinor ?? null;
 	}
 
 	private resolveConfiguredPriceIds(countryCode: string | null): ResolvedPriceIds | null {
@@ -772,14 +787,15 @@ export class PremiumStateService {
 		const giftCurrencyPreferences = getGiftCurrencyPreferences(countryCode);
 		const recurringPrices = this.resolveRecurringPriceIds(recurringCurrencyPreferences);
 		const giftPrices = this.resolveGiftPriceIds(giftCurrencyPreferences);
-		if (!recurringPrices || !giftPrices) return null;
+		if (!recurringPrices) return null;
+		if (!giftPrices && !Config.instance.selfHosted) return null;
 		return {
 			monthly: recurringPrices.monthly,
 			yearly: recurringPrices.yearly,
-			gift_1_month: giftPrices.gift_1_month,
-			gift_1_year: giftPrices.gift_1_year,
+			gift_1_month: giftPrices?.gift_1_month ?? null,
+			gift_1_year: giftPrices?.gift_1_year ?? null,
 			currency: recurringPrices.currency,
-			gift_currency: giftPrices.gift_currency,
+			gift_currency: giftPrices?.gift_currency ?? null,
 		};
 	}
 
@@ -826,7 +842,7 @@ export class PremiumStateService {
 		user: User,
 		invoices: Array<BillingInvoiceRow>,
 	): Promise<SelfServeRefundEligibilityResponse> {
-		if (Config.instance.selfHosted || !Config.stripe.enabled || !Config.stripe.secretKey) {
+		if (Config.instance.selfHosted || !getStripeClient()) {
 			return refundEligibility({reason: 'feature_unavailable'});
 		}
 		const cooldownExpiresAt = this.cooldownExpiresAt(user);

@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 The gift inventory lists the premium gift codes the current account created, with the redemption state of each. The [Gifts resource](/http-api/gifts/) has public gift lookup and redemption, and the [Billing resource](/http-api/billing/) has gift purchase.
 
-A self-hosted deployment returns 404 `NOT_FOUND` here, as [deployment availability](/http-api/deployment-availability/) describes.
+A self-hosted deployment returns 404 `NOT_FOUND` here unless its [premium mode](/admin-api/instance/#premium-modes) is `mirror`, as [deployment availability](/http-api/deployment-availability/) describes.
 
 A code enters this inventory only through a completed gift checkout with the payment provider. The Admin API records a code it issues against the system account, so that code never appears in any account's inventory.
 
@@ -91,7 +91,7 @@ A redeemed code that has dropped out of the listing still exists, still resolves
 | Status | Body | Condition |
 | --- | --- | --- |
 | 200 | array[[gift inventory](#gift-inventory-object) object] | The inventory was returned |
-| 404 | [error response](/http-api/#error-response) | The deployment is self-hosted and the request returns `NOT_FOUND` |
+| 404 | [error response](/http-api/#error-response) | The deployment is self-hosted in the `everyone` premium mode and the request returns `NOT_FOUND` |
 
 ### Rate limit
 

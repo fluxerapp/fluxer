@@ -9,6 +9,7 @@ import {setPathQueryParams} from '@app/features/messaging/utils/MessagingUrlUtil
 import * as RouterUtils from '@app/features/navigation/utils/RouterUtils';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {ComponentBus} from '@app/features/platform/utils/ComponentBus';
+import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import * as ModalCommands from '@app/features/ui/commands/ModalCommands';
 import {APP_PROTOCOL_SCHEME, isAppProtocolUrl} from '@app/features/ui/utils/AppProtocol';
 import {getElectronAPI} from '@app/features/ui/utils/NativeUtils';
@@ -133,7 +134,7 @@ function openUserSettingsDeepLink(target: UserSettingsDeepLinkTarget): void {
 
 const navigateForTarget = (target: DeepLinkTarget) => {
 	const isAuthenticated = Authentication.isAuthenticated;
-	if (target.type === 'gift' && RuntimeConfig.isSelfHosted()) {
+	if (target.type === 'gift' && !shouldShowPremiumFeatures()) {
 		return;
 	}
 	if (isAuthenticated) {

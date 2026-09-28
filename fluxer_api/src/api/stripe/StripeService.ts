@@ -9,8 +9,8 @@ import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {GiftCode} from '@app/api/models/GiftCode';
 import type {User} from '@app/api/models/User';
-import {ProductRegistry} from '@app/api/stripe/ProductRegistry';
-import {STRIPE_API_VERSION} from '@app/api/stripe/StripeApiVersion';
+import {getProductRegistry, type ProductRegistry} from '@app/api/stripe/ProductRegistry';
+import {getStripeClient} from '@app/api/stripe/StripeClient';
 import {PremiumStateService} from '@app/api/stripe/services/PremiumStateService';
 import type {
 	ContinueLocalizedCardPreapprovalResult,
@@ -32,10 +32,10 @@ import type {
 	SwitchToListPriceResponse,
 } from '@fluxer/schema/src/domains/premium/PremiumSchemas';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
-import Stripe from 'stripe';
+import type Stripe from 'stripe';
 
 export class StripeService {
-	private stripe: Stripe | null = null;
+	private stripe: Stripe | null;
 	private productRegistry: ProductRegistry;
 	private checkoutService: StripeCheckoutService;
 	private subscriptionService: StripeSubscriptionService;
@@ -52,13 +52,8 @@ export class StripeService {
 		private cacheService: ICacheService,
 		private billingRepository: BillingRepository,
 	) {
-		this.productRegistry = new ProductRegistry();
-		if (Config.stripe.enabled && Config.stripe.secretKey) {
-			this.stripe = new Stripe(Config.stripe.secretKey, {
-				apiVersion: STRIPE_API_VERSION,
-				httpClient: Config.dev.testModeEnabled ? Stripe.createFetchHttpClient() : undefined,
-			});
-		}
+		this.productRegistry = getProductRegistry();
+		this.stripe = getStripeClient();
 		this.premiumService = new StripePremiumService(
 			this.userRepository,
 			this.gatewayService,
@@ -70,6 +65,7 @@ export class StripeService {
 			this.gatewayService,
 			this.billingRepository,
 			this.stripe,
+			this.cacheService,
 		);
 		this.checkoutService = new StripeCheckoutService(
 			this.stripe,
@@ -164,7 +160,7 @@ export class StripeService {
 		gift_1_month: string | null;
 		gift_1_year: string | null;
 		currency: Currency;
-		gift_currency: Currency;
+		gift_currency: Currency | null;
 		monthly_amount_minor: number | null;
 		yearly_amount_minor: number | null;
 		gift_1_month_amount_minor: number | null;

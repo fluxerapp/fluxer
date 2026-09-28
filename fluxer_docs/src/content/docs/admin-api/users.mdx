@@ -587,7 +587,7 @@ The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-obje
 
 Replaces the username, allocates or claims a discriminator, and returns the resulting account. Requires `user:update:username`.
 
-A target account may hold a custom discriminator on every self-hosted instance, and on any other instance only when the `feature_custom_discriminator` limit resolves to a value above zero for that account.
+A target account may hold a custom discriminator on a self-hosted instance in the `everyone` [premium mode](/admin-api/instance/#premium-modes), and on any other instance only when the `feature_custom_discriminator` limit resolves to a value above zero for that account.
 
 ### Path parameters
 

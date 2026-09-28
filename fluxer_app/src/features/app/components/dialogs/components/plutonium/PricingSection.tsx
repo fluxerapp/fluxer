@@ -70,6 +70,7 @@ const MESSAGE_1_MONTH_GIFT_DESCRIPTOR = msg({
 
 interface PricingSectionProps {
 	isGiftMode: boolean;
+	giftPurchasesAvailable?: boolean;
 	setIsGiftMode: (value: boolean) => void;
 	monthlyPrice: string;
 	yearlyPrice: string;
@@ -84,6 +85,7 @@ interface PricingSectionProps {
 export const PricingSection: React.FC<PricingSectionProps> = observer(
 	({
 		isGiftMode,
+		giftPurchasesAvailable = true,
 		setIsGiftMode,
 		monthlyPrice,
 		yearlyPrice,
@@ -100,25 +102,27 @@ export const PricingSection: React.FC<PricingSectionProps> = observer(
 			i18n._(CLAIM_ACCOUNT_TO_PURCHASE_PREMIUM_DESCRIPTOR, {premiumProductFullName: PREMIUM_PRODUCT_FULL_NAME});
 		return (
 			<section className={styles.section} data-flx="app.plutonium.pricing-section.section">
-				<div
-					className={styles.toggleContainer}
-					role="group"
-					aria-label={i18n._(PURCHASE_MODE_DESCRIPTOR)}
-					data-flx="app.plutonium.pricing-section.toggle-container"
-				>
-					<ToggleButton
-						active={!isGiftMode}
-						onClick={() => setIsGiftMode(false)}
-						label={i18n._(FOR_ME_DESCRIPTOR)}
-						data-flx="app.plutonium.pricing-section.toggle-button.set-is-gift-mode"
-					/>
-					<ToggleButton
-						active={isGiftMode}
-						onClick={() => setIsGiftMode(true)}
-						label={i18n._(AS_A_GIFT_DESCRIPTOR)}
-						data-flx="app.plutonium.pricing-section.toggle-button.set-is-gift-mode--2"
-					/>
-				</div>
+				{giftPurchasesAvailable && (
+					<div
+						className={styles.toggleContainer}
+						role="group"
+						aria-label={i18n._(PURCHASE_MODE_DESCRIPTOR)}
+						data-flx="app.plutonium.pricing-section.toggle-container"
+					>
+						<ToggleButton
+							active={!isGiftMode}
+							onClick={() => setIsGiftMode(false)}
+							label={i18n._(FOR_ME_DESCRIPTOR)}
+							data-flx="app.plutonium.pricing-section.toggle-button.set-is-gift-mode"
+						/>
+						<ToggleButton
+							active={isGiftMode}
+							onClick={() => setIsGiftMode(true)}
+							label={i18n._(AS_A_GIFT_DESCRIPTOR)}
+							data-flx="app.plutonium.pricing-section.toggle-button.set-is-gift-mode--2"
+						/>
+					</div>
+				)}
 				<div className={gridStyles.gridWrapper} data-flx="app.plutonium.pricing-section.div">
 					<div className={gridStyles.gridTwoColumns} data-flx="app.plutonium.pricing-section.div--2">
 						{!isGiftMode ? (

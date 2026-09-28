@@ -8,12 +8,15 @@ use crate::{
         flash::{self, FlashData},
     },
     state::AppState,
-    templates::{self, pages::gift_codes::MAX_GIFT_CODES},
+    templates::{
+        self,
+        pages::gift_codes::{GiftCodesPremium, MAX_GIFT_CODES},
+    },
 };
 use axum::{
     Form, Router,
     extract::{FromRequest, Query, Request, State},
-    response::{Html, IntoResponse, Redirect, Response},
+    response::{Html, IntoResponse, Response},
     routing::get,
 };
 use serde::Deserialize;
@@ -46,10 +49,11 @@ async fn gift_codes_page(
     Query(query): Query<GiftCodesQuery>,
 ) -> Response {
     let config = state.config();
-
-    if config.self_hosted {
-        return Redirect::to(&format!("{}/dashboard", config.base_path)).into_response();
-    }
+    let client = AdminApiClient::new(state.http_client(), config, &auth.0.session);
+    let premium = GiftCodesPremium::from_branding(
+        config.self_hosted,
+        state.premium_branding(&client).await.as_ref(),
+    );
 
     let generated_codes: Option<Vec<String>> = query
         .codes
@@ -60,6 +64,7 @@ async fn gift_codes_page(
         config,
         &auth.0,
         &csrf.0.0,
+        &premium,
         generated_codes.as_deref(),
     );
     Html(markup.into_string()).into_response()
@@ -72,9 +77,6 @@ async fn gift_codes_post(
 ) -> Response {
     let config = state.config();
     let base = &config.base_path;
-    if config.self_hosted {
-        return Redirect::to(&format!("{base}/dashboard")).into_response();
-    }
     let form: GiftCodesForm = match Form::from_request(request, &state).await {
         Ok(Form(f)) => f,
         Err(error) => {

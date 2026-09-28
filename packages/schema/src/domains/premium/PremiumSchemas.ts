@@ -4,7 +4,7 @@ import {createStringType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {UserPremiumTypesSchema} from '@fluxer/schema/src/primitives/UserSettingsValidators';
 import {z} from 'zod';
 
-export const PremiumCurrency = z.enum(['USD', 'EUR', 'BRL', 'DKK', 'INR', 'NOK', 'PLN', 'SEK', 'TRY']);
+export const PremiumCurrency = z.string().regex(/^[A-Z]{3}$/);
 
 export type PremiumCurrency = z.infer<typeof PremiumCurrency>;
 
@@ -36,7 +36,9 @@ export const PriceIdsResponse = z.object({
 		.describe('Gift 1 month price amount in the currency minor unit'),
 	gift_1_year_amount_minor: z.number().int().nullish().describe('Gift 1 year price amount in the currency minor unit'),
 	currency: PremiumCurrency.describe('Currency for the prices'),
-	gift_currency: PremiumCurrency.describe('Currency for gift prices'),
+	gift_currency: PremiumCurrency.nullable().describe(
+		'Currency for gift prices, null when no gift prices are configured',
+	),
 });
 
 export type PriceIdsResponse = z.infer<typeof PriceIdsResponse>;

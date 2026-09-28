@@ -55,6 +55,10 @@ impl MultiValueForm {
         self.fields.contains_key(key)
     }
 
+    pub fn values(&self, key: &str) -> &[String] {
+        self.fields.get(key).map(Vec::as_slice).unwrap_or_default()
+    }
+
     pub fn first(&self, key: &str) -> Option<&str> {
         self.fields
             .get(key)

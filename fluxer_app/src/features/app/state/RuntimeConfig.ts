@@ -100,6 +100,8 @@ export function runtimeConfigSnapshotsAreSameInstance(
 const DEFAULT_INSTANCE_FEATURES: InstanceFeatures = {
 	voice_enabled: false,
 	stripe_enabled: false,
+	premium_enabled: false,
+	stripe_serviceable: false,
 	self_hosted: false,
 	presigned_attachment_uploads: false,
 	emails_enabled: false,
@@ -147,6 +149,8 @@ export const DEFAULT_APP_PUBLIC_CONFIG: InstanceAppPublic = {
 		theme_color: null,
 		status_page_url: null,
 		status_page_incident_history_url: null,
+		premium_product_name: 'Plutonium',
+		premium_info_url: null,
 	},
 	setup: {
 		configured: false,
@@ -398,6 +402,9 @@ class RuntimeConfig {
 			this.features = {
 				...this.features,
 				self_hosted: config.self_hosted,
+				premium_enabled: !config.self_hosted || config.policy.premium_mode === 'mirror',
+				stripe_enabled: config.billing.billing_active,
+				stripe_serviceable: config.billing.stripe_serviceable,
 			};
 			this.registration = normalizeInstanceRegistration(config.registration);
 			this.community = normalizeInstanceCommunity({
@@ -493,6 +500,28 @@ class RuntimeConfig {
 
 	isSelfHosted(): boolean {
 		return DeveloperOptions.selfHostedModeOverride || this.features.self_hosted;
+	}
+
+	get premiumEnabled(): boolean {
+		return this.features.premium_enabled;
+	}
+
+	get stripeEnabled(): boolean {
+		return this.features.stripe_enabled;
+	}
+
+	get stripeServiceable(): boolean {
+		return this.features.stripe_serviceable;
+	}
+
+	get premiumProductName(): string {
+		return (
+			this.appPublic.branding.premium_product_name?.trim() || DEFAULT_APP_PUBLIC_CONFIG.branding.premium_product_name
+		);
+	}
+
+	get premiumInfoUrl(): string | null {
+		return this.appPublic.branding.premium_info_url ?? null;
 	}
 
 	get emailsEnabled(): boolean {

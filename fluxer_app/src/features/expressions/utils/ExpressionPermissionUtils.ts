@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstants';
-import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
 import type {Channel} from '@app/features/channel/models/Channel';
@@ -9,6 +8,7 @@ import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import type {GuildSticker} from '@app/features/expressions/models/GuildSticker';
 import Permission from '@app/features/permissions/state/Permission';
 import {formatPermissionLabel} from '@app/features/permissions/utils/PermissionUtils';
+import {shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import type {I18n} from '@lingui/core';
 import {msg} from '@lingui/core/macro';
@@ -75,7 +75,7 @@ export function checkEmojiAvailabilityWithGuildFallback(
 	const channelGuildId = channel?.guildId ?? guildIdFallback;
 	if (!channelGuildId) {
 		if (!hasGlobalExpressions) {
-			if (!RuntimeConfig.isSelfHosted()) {
+			if (shouldShowPremiumFeatures()) {
 				return {
 					canUse: false,
 					isLockedByPremium: true,
@@ -117,7 +117,7 @@ export function checkEmojiAvailabilityWithGuildFallback(
 		};
 	}
 	if (!hasGlobalExpressions) {
-		if (!RuntimeConfig.isSelfHosted()) {
+		if (shouldShowPremiumFeatures()) {
 			return {
 				canUse: false,
 				isLockedByPremium: true,
@@ -158,7 +158,7 @@ export function checkStickerAvailability(
 	);
 	if (!channel?.guildId) {
 		if (!hasGlobalExpressions) {
-			if (!RuntimeConfig.isSelfHosted()) {
+			if (shouldShowPremiumFeatures()) {
 				return {
 					canUse: false,
 					isLockedByPremium: true,
@@ -208,7 +208,7 @@ export function checkStickerAvailability(
 		};
 	}
 	if (!hasGlobalExpressions) {
-		if (!RuntimeConfig.isSelfHosted()) {
+		if (shouldShowPremiumFeatures()) {
 			return {
 				canUse: false,
 				isLockedByPremium: true,
@@ -252,7 +252,7 @@ export function filterStickersForAutocomplete(
 }
 
 export function shouldShowEmojiPremiumUpsell(channel: Channel | null): boolean {
-	if (RuntimeConfig.isSelfHosted()) {
+	if (!shouldShowPremiumFeatures()) {
 		return false;
 	}
 	const hasGlobalExpressions = hasGlobalExpressionsEnabled();
@@ -270,7 +270,7 @@ export function shouldShowEmojiPremiumUpsell(channel: Channel | null): boolean {
 }
 
 export function shouldShowStickerPremiumUpsell(channel: Channel | null): boolean {
-	if (RuntimeConfig.isSelfHosted()) {
+	if (!shouldShowPremiumFeatures()) {
 		return false;
 	}
 	const hasGlobalExpressions = isLimitToggleEnabled(

@@ -8,7 +8,7 @@ import RouteHeader from '@/components/RouteHeader.astro';
 
 These routes take payment for premium, verify an account holder's age, and refund the most recent purchase. Checkout, card preapproval and age verification each finish on the payment provider's own pages, so those routes create the provider session and return its URL for the browser to open. [Receive Stripe webhook](#receive-stripe-webhook) takes the signed events the provider sends back. The [Premium resource](/http-api/premium/) owns entitlement state, mirrored billing data and subscription self-service.
 
-Every route here is hosted-only, as [deployment availability](/http-api/deployment-availability/) describes. All of them are user-only except [receive Stripe webhook](#receive-stripe-webhook) and [continue localised card preapproval](#continue-localised-card-preapproval).
+A self-hosted deployment never serves age verification or the refund routes, serves the checkout routes only while billing is active, and serves [receive Stripe webhook](#receive-stripe-webhook) while Stripe is serviceable, as [deployment availability](/http-api/deployment-availability/) describes. All of them are user-only except [receive Stripe webhook](#receive-stripe-webhook) and [continue localised card preapproval](#continue-localised-card-preapproval).
 
 :::note[Every response is a Fluxer object]
 The responses are Fluxer redirect, eligibility, refund and acknowledgement objects. They copy only a few payment provider values, such as the identifiers on a [refund](#refund-object) and the `invoice_id` of a [refund eligibility](#refund-eligibility-object) object.

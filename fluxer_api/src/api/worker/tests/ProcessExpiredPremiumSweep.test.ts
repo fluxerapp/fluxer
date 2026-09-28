@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {getConfig} from '@app/api/Config';
+import {getCachedInstancePremiumMode, setCachedInstancePremiumMode} from '@app/api/limits/InstancePremiumModeCache';
 import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import processExpiredPremiumSweep from '@app/api/worker/tasks/ProcessExpiredPremiumSweep';
@@ -31,14 +32,21 @@ function createHelpers(): WorkerTaskHelpers {
 	};
 }
 
-async function withSelfHosted(selfHosted: boolean, callback: () => Promise<void>): Promise<void> {
+async function withSelfHosted(
+	selfHosted: boolean,
+	callback: () => Promise<void>,
+	premiumMode: 'mirror' | 'everyone' = 'everyone',
+): Promise<void> {
 	const config = getConfig();
 	const originalSelfHosted = config.instance.selfHosted;
+	const originalPremiumMode = getCachedInstancePremiumMode();
 	try {
 		config.instance.selfHosted = selfHosted;
+		setCachedInstancePremiumMode(premiumMode);
 		await callback();
 	} finally {
 		config.instance.selfHosted = originalSelfHosted;
+		setCachedInstancePremiumMode(originalPremiumMode);
 	}
 }
 
@@ -47,7 +55,7 @@ describe('processExpiredPremiumSweep', () => {
 		clearWorkerDependencies();
 	});
 
-	test('scans no users on a self-hosted instance', async () => {
+	test('scans no users on a self-hosted instance where everyone is premium', async () => {
 		const harness = createHarness();
 
 		await withSelfHosted(true, async () => {
@@ -55,6 +63,20 @@ describe('processExpiredPremiumSweep', () => {
 		});
 
 		expect(harness.scanLimits).toEqual([]);
+	});
+
+	test('scans users on a self-hosted instance in mirror mode', async () => {
+		const harness = createHarness();
+
+		await withSelfHosted(
+			true,
+			async () => {
+				await processExpiredPremiumSweep({}, createHelpers());
+			},
+			'mirror',
+		);
+
+		expect(harness.scanLimits).toEqual([100]);
 	});
 
 	test('scans users on a hosted instance', async () => {

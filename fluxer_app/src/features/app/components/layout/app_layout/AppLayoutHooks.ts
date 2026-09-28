@@ -21,6 +21,7 @@ import * as NotificationUtils from '@app/features/notification/utils/Notificatio
 import NativePermission from '@app/features/permissions/system/state/NativePermission';
 import {resolvePriceAnnouncementCampaign} from '@app/features/premium/config/PriceAnnouncementCampaign';
 import PremiumState from '@app/features/premium/state/PremiumState';
+import {canServiceStripeSubscriptions, shouldShowPremiumFeatures} from '@app/features/premium/utils/PremiumUtils';
 import StreamerMode from '@app/features/streamer_mode/state/StreamerMode';
 import Nagbar from '@app/features/ui/state/Nagbar';
 import {hasUnavailableElectronNativeContext, isDesktop} from '@app/features/ui/utils/NativeUtils';
@@ -81,6 +82,10 @@ export const useNagbarConditions = (): NagbarConditions => {
 	const premiumWillCancel = user?.premiumWillCancel ?? false;
 	const isMockPremium = premiumOverrideType != null && premiumOverrideType > 0;
 	const isSelfHosted = RuntimeConfig.isSelfHosted();
+	const showPremium = shouldShowPremiumFeatures();
+	const canServiceSubscription =
+		!isSelfHosted ||
+		(canServiceStripeSubscriptions() && (user?.premiumBillingCycle != null || user?.hasEverPurchased === true));
 	const [startupVoiceSessionRestoreSnapshotKey, setStartupVoiceSessionRestoreSnapshotKey] = useState<
 		string | null | undefined
 	>(undefined);
@@ -109,7 +114,7 @@ export const useNagbarConditions = (): NagbarConditions => {
 		return true;
 	})();
 	const canShowPremiumGracePeriod = (() => {
-		if (isSelfHosted) return false;
+		if (!showPremium || !canServiceSubscription) return false;
 		if (nagbarState.forceHidePremiumGracePeriod) return false;
 		if (nagbarState.forcePremiumGracePeriod) return true;
 		if (!user?.premiumUntil || user.premiumType === 2 || premiumWillCancel) return false;
@@ -123,7 +128,7 @@ export const useNagbarConditions = (): NagbarConditions => {
 		return isInGracePeriod && !nagbarState.premiumGracePeriodDismissed;
 	})();
 	const canShowPremiumExpired = (() => {
-		if (isSelfHosted) return false;
+		if (!showPremium || !canServiceSubscription) return false;
 		if (nagbarState.forceHidePremiumExpired) return false;
 		if (nagbarState.forcePremiumExpired) return true;
 		if (!user?.premiumUntil || user.premiumType === 2 || premiumWillCancel) return false;
@@ -140,13 +145,13 @@ export const useNagbarConditions = (): NagbarConditions => {
 		return showExpiredState && !nagbarState.premiumExpiredDismissed;
 	})();
 	const canShowGiftInventory = (() => {
-		if (isSelfHosted) return false;
+		if (!showPremium) return false;
 		if (nagbarState.forceHideGiftInventory) return false;
 		if (nagbarState.forceGiftInventory) return true;
 		return Boolean(user?.hasUnreadGiftInventory && !nagbarState.giftInventoryDismissed);
 	})();
 	const canShowPremiumOnboarding = (() => {
-		if (isSelfHosted) return false;
+		if (!showPremium) return false;
 		if (nagbarState.forceHidePremiumOnboarding) return false;
 		if (nagbarState.forcePremiumOnboarding) return true;
 		if (isMockPremium) return false;

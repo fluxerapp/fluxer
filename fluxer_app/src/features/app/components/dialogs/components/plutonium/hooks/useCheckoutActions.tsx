@@ -11,6 +11,7 @@ import {
 	SUPPORT_EMAIL,
 	UPI_PAYMENT_METHOD,
 } from '@app/features/app/config/I18nDisplayConstants';
+import RuntimeConfig from '@app/features/app/state/RuntimeConfig';
 import {CANCEL_DESCRIPTOR, CLOSE_DESCRIPTOR, OKAY_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
 import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
@@ -140,6 +141,10 @@ const PURCHASES_DISABLED_BODY_DESCRIPTOR = msg({
 	message: 'Purchases are disabled for this account. Contact {supportEmail} if this looks wrong.',
 	comment: 'Modal body shown when purchases are disabled. Provides the support email for appeals.',
 });
+const PURCHASES_DISABLED_SELF_HOSTED_BODY_DESCRIPTOR = msg({
+	message: 'Purchases are disabled for this account.',
+	comment: 'Modal body shown on a self-hosted instance when purchases are disabled for the account.',
+});
 const CHECKOUT_BLOCKED_TITLE_DESCRIPTOR = msg({
 	message: 'Checkout unavailable',
 	comment: 'Modal title for the generic "checkout blocked" state when no more specific reason is known.',
@@ -147,6 +152,10 @@ const CHECKOUT_BLOCKED_TITLE_DESCRIPTOR = msg({
 const CHECKOUT_BLOCKED_BODY_DESCRIPTOR = msg({
 	message: 'Checkout is blocked for this account. Contact {supportEmail} if you need help.',
 	comment: 'Modal body for the generic "checkout blocked" state. Provides the support email.',
+});
+const CHECKOUT_BLOCKED_SELF_HOSTED_BODY_DESCRIPTOR = msg({
+	message: 'Checkout is blocked for this account.',
+	comment: 'Modal body for the generic "checkout blocked" state on a self-hosted instance.',
 });
 const CHECKOUT_START_FAILED_TITLE_DESCRIPTOR = msg({
 	message: "Couldn't start checkout",
@@ -234,7 +243,7 @@ function alternativePaymentMethodForCurrency(
 	isGift: boolean,
 	plan: Plan,
 ): CheckoutPaymentMethod | null {
-	if (isGift || (plan !== 'monthly' && plan !== 'yearly')) {
+	if (isGift || (plan !== 'monthly' && plan !== 'yearly') || RuntimeConfig.isSelfHosted()) {
 		return null;
 	}
 	if (currency === 'BRL') return 'pix';
@@ -404,9 +413,11 @@ export const useCheckoutActions = (
 								modal(() => (
 									<ConfirmModal
 										title={i18n._(PURCHASES_DISABLED_TITLE_DESCRIPTOR)}
-										description={i18n._(PURCHASES_DISABLED_BODY_DESCRIPTOR, {
-											supportEmail: SUPPORT_EMAIL,
-										})}
+										description={
+											RuntimeConfig.isSelfHosted()
+												? i18n._(PURCHASES_DISABLED_SELF_HOSTED_BODY_DESCRIPTOR)
+												: i18n._(PURCHASES_DISABLED_BODY_DESCRIPTOR, {supportEmail: SUPPORT_EMAIL})
+										}
 										secondaryText={i18n._(CLOSE_DESCRIPTOR)}
 										data-flx="app.plutonium.use-checkout-actions.handle-checkout-error.confirm-modal--3"
 									/>
@@ -418,9 +429,11 @@ export const useCheckoutActions = (
 							modal(() => (
 								<ConfirmModal
 									title={i18n._(CHECKOUT_BLOCKED_TITLE_DESCRIPTOR)}
-									description={i18n._(CHECKOUT_BLOCKED_BODY_DESCRIPTOR, {
-										supportEmail: SUPPORT_EMAIL,
-									})}
+									description={
+										RuntimeConfig.isSelfHosted()
+											? i18n._(CHECKOUT_BLOCKED_SELF_HOSTED_BODY_DESCRIPTOR)
+											: i18n._(CHECKOUT_BLOCKED_BODY_DESCRIPTOR, {supportEmail: SUPPORT_EMAIL})
+									}
 									secondaryText={i18n._(CLOSE_DESCRIPTOR)}
 									data-flx="app.plutonium.use-checkout-actions.handle-checkout-error.confirm-modal--4"
 								/>

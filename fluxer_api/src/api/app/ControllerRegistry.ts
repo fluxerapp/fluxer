@@ -81,8 +81,8 @@ export function registerControllers(routes: HonoApp, config: APIConfig): void {
 	PremiumController(routes);
 	if (!config.instance.selfHosted) {
 		DonationController(routes);
-		StripeController(routes);
 	}
+	StripeController(routes);
 }
 
 function registerInboundSmsWebhook(routes: HonoApp): void {

@@ -5,6 +5,7 @@ import {requireAdminACL} from '@app/api/middleware/AdminMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
+import {isPremiumTieringActive} from '@app/api/stripe/BillingConfigCache';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
@@ -25,14 +26,14 @@ export function CodesAdminController(app: HonoApp) {
 			operationId: 'create_admin_gift_codes',
 			summary: 'Issue gift codes',
 			description:
-				'Create one-use Plutonium gift codes with an explicit positive duration and return their complete redemption links. Lifetime gifts are not supported. Not available on self-hosted instances. Requires GIFT_CODES_GENERATE permission.',
+				'Create one-use premium gift codes with an explicit positive duration and return their complete redemption links. Lifetime gifts are not supported. On self-hosted instances the premium mode must be mirror. Requires GIFT_CODES_GENERATE permission.',
 			responseSchema: CodesResponse,
 			statusCode: 200,
 			security: 'adminApiKey',
 			tags: 'Admin',
 		}),
 		async (ctx) => {
-			if (Config.instance.selfHosted) {
+			if (!isPremiumTieringActive()) {
 				throw new FeatureNotAvailableSelfHostedError();
 			}
 			const adminService = ctx.get('adminService');

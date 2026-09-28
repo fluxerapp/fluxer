@@ -116,6 +116,7 @@ interface SubscriptionCardProps {
 	handleCommunityButtonClick: () => void;
 	purchaseDisabled?: boolean;
 	purchaseDisabledTooltip?: React.ReactNode;
+	billingUnavailable?: boolean;
 }
 
 function getStatusBadgeClass(args: {
@@ -180,6 +181,7 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 		handleCommunityButtonClick,
 		purchaseDisabled = false,
 		purchaseDisabledTooltip,
+		billingUnavailable = false,
 	}) => {
 		const {i18n} = useLingui();
 		const {loadingSwitchToListPrice, handleSwitchToListPrice} = useSubscriptionActions();
@@ -704,7 +706,7 @@ export const SubscriptionCard: React.FC<SubscriptionCardProps> = observer(
 							})()}
 					</div>
 					<div className={styles.actions} data-flx="app.plutonium.subscription-card.actions">
-						{isGiftSubscription ? (
+						{isGiftSubscription || billingUnavailable ? (
 							wrapIfDisabled(
 								<Button
 									variant="primary"

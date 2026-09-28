@@ -339,7 +339,8 @@ const PREMIUM_MIRROR_NAME_DESCRIPTOR = msg({
 	comment: 'Premium model option that mirrors free and premium tiers.',
 });
 const PREMIUM_MIRROR_DESC_DESCRIPTOR = msg({
-	message: 'Keep free and premium tiers. You can customize the tiers later.',
+	message:
+		'Keep free and premium tiers. You can customize the tiers, sell premium through Stripe, or hand out gift codes later from the admin panel.',
 	comment: 'Description for the mirror premium model.',
 });
 const PREMIUM_EVERYONE_NAME_DESCRIPTOR = msg({
