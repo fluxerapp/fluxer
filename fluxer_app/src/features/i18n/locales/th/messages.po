@@ -1591,19 +1591,19 @@ msgstr "การสมัครสมาชิก {premiumProductName}"
 msgid "{presenceCount} online"
 msgstr "ออนไลน์ {presenceCount} คน"
 
-#: src/features/app/components/BootstrapErrorScreen.tsx:39
+#: src/features/app/components/BootstrapErrorScreen.tsx:46
 msgid "{PRODUCT_NAME} failed to start properly. This could be due to corrupted data or a temporary issue."
 msgstr "{PRODUCT_NAME} เริ่มทำงานไม่สำเร็จ อาจเกิดจากข้อมูลเสียหายหรือปัญหาชั่วคราว"
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:196
+#: src/features/auth/state/NewDeviceMonitoring.tsx:208
 msgid "{PRODUCT_NAME} has found a new audio device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME} ตรวจพบอุปกรณ์เสียงใหม่ชื่อ <0>{deviceName}</0> คุณต้องการเปลี่ยนไปใช้อุปกรณ์นี้หรือไม่"
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:185
+#: src/features/auth/state/NewDeviceMonitoring.tsx:197
 msgid "{PRODUCT_NAME} has found a new audio input device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME} ตรวจพบอุปกรณ์อินพุตเสียงใหม่ชื่อ <0>{deviceName}</0> คุณต้องการเปลี่ยนไปใช้อุปกรณ์นี้หรือไม่"
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:190
+#: src/features/auth/state/NewDeviceMonitoring.tsx:202
 msgid "{PRODUCT_NAME} has found a new audio output device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME} ตรวจพบอุปกรณ์เอาต์พุตเสียงใหม่ชื่อ <0>{deviceName}</0> คุณต้องการเปลี่ยนไปใช้อุปกรณ์นี้หรือไม่"
 
@@ -1624,7 +1624,7 @@ msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware accelerati
 msgstr "{PRODUCT_NAME} ต้องรีสตาร์ทเพื่อปิดการเร่งฮาร์ดแวร์ของ Chromium ใช้ตัวเลือกนี้เฉพาะเมื่อคุณกำลังแก้ปัญหาภาพกราฟิกผิดปกติหรือการใช้งาน GPU สูง"
 
 #. Accessible label for the Fluxer application icon.
-#: src/features/ui/components/icons/FluxerIcon.tsx:10
+#: src/features/ui/components/icons/FluxerIconMark.tsx:6
 msgid "{productName} application icon"
 msgstr "ไอคอนแอปพลิเคชัน {productName}"
 
@@ -2913,7 +2913,7 @@ msgstr "เพิ่มความคิดเห็น (ไม่บังค�
 msgid "Add a community"
 msgstr "เพิ่มคอมมูนิตี้"
 
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:75
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:77
 msgid "Add a different account"
 msgstr "เพิ่มบัญชีอื่น"
 
@@ -2975,7 +2975,7 @@ msgid "Add action."
 msgstr "เพิ่มการดำเนินการ"
 
 #. OAuth authorization account step button. Opens the flow to sign in with another account.
-#: src/features/auth/components/accounts/AccountSelector.tsx:185
+#: src/features/auth/components/accounts/AccountSelector.tsx:186
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx:124
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:30
 msgid "Add an account"
@@ -5316,7 +5316,7 @@ msgstr "ปิดใช้งานสิทธิประโยชน์พร
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:59
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:5
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:731
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:732
 msgid "Background"
 msgstr "พื้นหลัง"
 
@@ -5743,7 +5743,7 @@ msgid "Blur"
 msgstr "เบลอ"
 
 #. Slider label in the camera preview modal controlling how strong the background blur effect is.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:81
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:82
 msgid "Blur strength"
 msgstr "ระดับความเบลอ"
 
@@ -6278,7 +6278,7 @@ msgstr "อุปกรณ์กล้อง"
 msgid "Camera effects"
 msgstr "เอฟเฟกต์กล้อง"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:809
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:810
 msgid "Camera error"
 msgstr "กล้องมีข้อผิดพลาด"
 
@@ -6321,7 +6321,7 @@ msgstr "ต้องมีสิทธิ์เข้าถึงกล้อง
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Title of the camera preview modal.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:186
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:63
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:64
 msgid "Camera preview"
 msgstr "ตัวอย่างกล้อง"
 
@@ -6429,7 +6429,7 @@ msgstr "อัปโหลดไฟล์ที่นี่ไม่ได้"
 #: src/features/user/components/modals/PhoneAddModal.tsx:401
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:174
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx:33
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:845
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:846
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:81
 msgid "Cancel"
 msgstr "ยกเลิก"
@@ -6671,7 +6671,7 @@ msgstr "จัดกึ่งกลาง"
 msgid "Change avatar"
 msgstr "เปลี่ยนรูปโปรไฟล์"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:744
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:745
 msgid "Change background"
 msgstr "เปลี่ยนพื้นหลัง"
 
@@ -7321,7 +7321,7 @@ msgstr "ปุ่มลัดแชท"
 msgid "Check for updates"
 msgstr "ตรวจหาอัปเดต"
 
-#: src/features/app/components/BootstrapErrorScreen.tsx:56
+#: src/features/app/components/BootstrapErrorScreen.tsx:63
 msgid "Check our <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0> for status updates."
 msgstr "ตรวจสอบ <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0> ของเราเพื่อดูการอัปเดตสถานะ"
 
@@ -7500,7 +7500,8 @@ msgstr "เลือกหน้าต่างจากตัวเลือก
 #. OAuth authorization step title. The user must choose which account to authorize with.
 #: src/features/auth/components/accounts/AccountSelector.tsx:61
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:17
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:68
+#: src/features/auth/flow/AuthLoginLayout.tsx:492
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:70
 msgid "Choose an account"
 msgstr "เลือกบัญชี"
 
@@ -9121,7 +9122,7 @@ msgstr "การเชื่อมต่อ: {connectionId}"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for external accounts and verified domains.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:415
-#: src/features/user/components/popouts/UserProfileShared.tsx:614
+#: src/features/user/components/popouts/UserProfileShared.tsx:615
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:8
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:30
 msgid "Connections"
@@ -9618,7 +9619,7 @@ msgid "Copy setup key"
 msgstr "คัดลอกคีย์สำหรับการตั้งค่า"
 
 #. Button on the crash screen that copies developer diagnostic text.
-#: src/features/app/components/ErrorFallback.tsx:152
+#: src/features/app/components/ErrorFallback.tsx:155
 msgid "Copy stack trace"
 msgstr "คัดลอก stack trace"
 
@@ -11225,7 +11226,7 @@ msgstr "ค่าเริ่มต้น"
 #. Default camera device option.
 #. Default device option label in the voice settings menu (alternate call site for the same concept as DEFAULT_DESCRIPTOR).
 #. Fallback device option shown before a microphone, speaker, or camera label is available.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:67
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:68
 #: src/features/voice/components/VoiceSettingsMenus.tsx:87
 #: src/features/voice/utils/SettingsDeviceOptions.ts:11
 msgctxt "device-option"
@@ -12683,7 +12684,7 @@ msgstr "ไม่ต้องแสดงอีก"
 msgid "Don't show typing indicators in the channel list"
 msgstr "ไม่แสดงสถานะกำลังพิมพ์ในรายการช่อง"
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:51
+#: src/features/auth/state/NewDeviceMonitoring.tsx:57
 msgid "Don't suggest {deviceName} again"
 msgstr "ไม่ต้องแนะนำ {deviceName} อีก"
 
@@ -14721,7 +14722,7 @@ msgid "Failed to delete channel"
 msgstr "ลบช่องไม่สำเร็จ"
 
 #. Toast / inline error in the camera preview modal when enabling the camera fails.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:59
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:60
 msgid "Failed to enable camera."
 msgstr "ไม่สามารถเปิดกล้องได้"
 
@@ -14736,7 +14737,7 @@ msgid "Failed to forward message"
 msgstr "ส่งต่อข้อความไม่สำเร็จ"
 
 #. Short label in the authentication desktop handoff account selector. Keep the tone plain and specific.
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:17
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:12
 msgid "Failed to generate token"
 msgstr "สร้างโทเค็นไม่สำเร็จ"
 
@@ -14900,12 +14901,12 @@ msgstr "ส่งรายงานไม่สำเร็จ ลองอี�
 msgid "Failed to send verification email. Try again later."
 msgstr "ส่งอีเมลยืนยันไม่สำเร็จ โปรดลองอีกครั้งในภายหลัง"
 
-#: src/features/app/components/BootstrapErrorScreen.tsx:36
+#: src/features/app/components/BootstrapErrorScreen.tsx:43
 msgid "Failed to start"
 msgstr "เริ่มต้นไม่สำเร็จ"
 
 #. Error text in the camera preview modal when the camera stream cannot be opened. Prompts user to check OS / browser permissions.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:54
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:55
 msgid "Failed to start camera preview. Check your camera permissions."
 msgstr "ไม่สามารถเริ่มแสดงตัวอย่างกล้องได้ โปรดตรวจสอบสิทธิ์การเข้าถึงกล้องของคุณ"
 
@@ -15251,7 +15252,7 @@ msgstr "การกรอง"
 msgid "Filtering by {language}"
 msgstr "กรองตาม{language}"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:788
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:789
 msgid "Finalizing camera..."
 msgstr "กำลังเตรียมกล้อง..."
 
@@ -18003,7 +18004,7 @@ msgstr "สืบทอดมา"
 msgid "Inherited from {inheritedFromLabel}"
 msgstr "สืบทอดจาก {inheritedFromLabel}"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:790
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:791
 msgid "Initializing camera..."
 msgstr "กำลังเริ่มต้นกล้อง..."
 
@@ -20510,7 +20511,7 @@ msgid "Member roles updated"
 msgstr "อัปเดตบทบาทสมาชิกแล้ว"
 
 #: src/features/channel/components/guild_members_page/MembersTableHeaderRow.tsx:83
-#: src/features/user/components/popouts/UserProfileShared.tsx:282
+#: src/features/user/components/popouts/UserProfileShared.tsx:283
 msgid "Member since"
 msgstr "สมาชิกตั้งแต่"
 
@@ -21133,7 +21134,7 @@ msgstr "ผู้เยาว์ตกอยู่ในความเสี่
 #. Switch label in the camera preview modal for flipping the local camera preview horizontally.
 #. Switch label in the video tab for flipping the local camera preview horizontally.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:106
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:72
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:73
 #: src/features/voice/components/VoiceSettingsMenus.tsx:114
 msgid "Mirror camera"
 msgstr "กลับด้านกล้อง"
@@ -22152,7 +22153,7 @@ msgid "New accounts can join up to 10 communities in the first 24 hours. Try aga
 msgstr "บัญชีใหม่สามารถเข้าร่วมคอมมูนิตี้ได้สูงสุด 10 แห่งภายใน 24 ชั่วโมงแรก ลองอีกครั้งในภายหลัง"
 
 #. Body text in the authentication new device monitoring. Keep the tone plain and specific.
-#: src/features/auth/state/NewDeviceMonitoring.tsx:23
+#: src/features/auth/state/NewDeviceMonitoring.tsx:26
 msgid "New audio device detected!"
 msgstr "ตรวจพบอุปกรณ์เสียงใหม่!"
 
@@ -22367,7 +22368,7 @@ msgstr "ไม่สามารถเข้าถึงได้"
 msgid "No accessible channels"
 msgstr "ไม่มีช่องที่เข้าถึงได้"
 
-#: src/features/auth/components/accounts/AccountSelector.tsx:148
+#: src/features/auth/components/accounts/AccountSelector.tsx:150
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx:88
 msgid "No accounts"
 msgstr "ไม่มีบัญชี"
@@ -23081,7 +23082,7 @@ msgstr "ไม่พบหน้า"
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:69
 #: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:35
 #: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:43
-#: src/features/auth/state/NewDeviceMonitoring.tsx:31
+#: src/features/auth/state/NewDeviceMonitoring.tsx:34
 msgid "Not now"
 msgstr "ไม่ใช่ตอนนี้"
 
@@ -24048,7 +24049,7 @@ msgstr "ระบบปฏิบัติการ"
 msgid "Opt into experimental per-community and per-channel unread badge controls"
 msgstr "เลือกเปิดใช้การควบคุมป้ายที่ยังไม่ได้อ่านแบบทดลองสำหรับแต่ละคอมมูนิตี้และแต่ละช่อง"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:786
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:787
 msgid "Optimizing camera..."
 msgstr "กำลังปรับแต่งกล้อง..."
 
@@ -26580,7 +26581,7 @@ msgid "Reload {productName} to use web update {version}"
 msgstr "โหลด {productName} ใหม่เพื่อใช้การอัปเดตจากเว็บ {version}"
 
 #. Button on the crash screen that reloads the current app.
-#: src/features/app/components/ErrorFallback.tsx:142
+#: src/features/app/components/ErrorFallback.tsx:145
 msgid "Reload app"
 msgstr "โหลดแอปใหม่"
 
@@ -26628,7 +26629,7 @@ msgstr "จำขนาดและตำแหน่งหน้าต่าง
 #. Short label in the shared app saved message missing card. Keep the tone plain and specific.
 #: src/features/app/components/shared/SavedMessageMissingCard.tsx:14
 #: src/features/auth/components/accounts/AccountSelector.tsx:78
-#: src/features/auth/components/accounts/AccountSelector.tsx:125
+#: src/features/auth/components/accounts/AccountSelector.tsx:128
 #: src/features/channel/components/MessageReactionsSheet.tsx:43
 #: src/features/expressions/components/modals/AddFavoriteChannelModal.tsx:52
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:156
@@ -27533,8 +27534,8 @@ msgstr "รีเซ็ตและเริ่มใหม่"
 #. Confirm dialog title for the destructive reset action.
 #. Destructive button on the crash screen. Clears local app data except preserved drafts.
 #. Destructive button on the startup failure screen. Clears local app data except preserved drafts.
-#: src/features/app/components/BootstrapErrorScreen.tsx:75
-#: src/features/app/components/ErrorFallback.tsx:164
+#: src/features/app/components/BootstrapErrorScreen.tsx:82
+#: src/features/app/components/ErrorFallback.tsx:167
 #: src/features/platform/utils/DesktopLocaleBridge.ts:175
 msgid "Reset app data"
 msgstr "รีเซ็ตข้อมูลแอป"
@@ -29218,7 +29219,7 @@ msgstr "เลือกสถานการณ์ที่จะใช้..."
 msgid "Select a violation category."
 msgstr "เลือกหมวดหมู่การละเมิด"
 
-#: src/features/auth/components/accounts/AccountSelector.tsx:114
+#: src/features/auth/components/accounts/AccountSelector.tsx:117
 msgid "Select account"
 msgstr "เลือกบัญชี"
 
@@ -29269,7 +29270,7 @@ msgstr "เลือกขอบเขต (และ URI การเปลี�
 msgid "Select text"
 msgstr "เลือกข้อความ"
 
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:69
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:71
 msgid "Select the account you want to sign in with on your new device."
 msgstr "เลือกบัญชีที่คุณต้องการลงชื่อเข้าใช้บนอุปกรณ์ใหม่ของคุณ"
 
@@ -29686,11 +29687,6 @@ msgstr "เซสชัน"
 #: src/features/auth/flow/AuthLoginLayout.tsx:58
 msgid "Session expired for {identifier}. Sign in again."
 msgstr "เซสชันของ {identifier} หมดอายุแล้ว โปรดลงชื่อเข้าใช้อีกครั้ง"
-
-#. Toast error shown in the desktop-handoff account picker when the session for the chosen account has expired.
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:12
-msgid "Session expired. Sign in again."
-msgstr "เซสชันหมดอายุแล้ว โปรดลงชื่อเข้าใช้อีกครั้ง"
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:15
@@ -30674,6 +30670,7 @@ msgstr "แถบด้านข้าง"
 msgid "Sign in"
 msgstr "ลงชื่อเข้าใช้"
 
+#: src/features/auth/components/accounts/AccountSelector.tsx:117
 #: src/features/auth/utils/AccountSwitcherModalUtils.tsx:274
 msgid "Sign in again"
 msgstr "ลงชื่อเข้าใช้อีกครั้ง"
@@ -31237,11 +31234,11 @@ msgstr "เพิ่มผู้ใช้บางคนไม่ได้"
 msgid "Something went wrong"
 msgstr "เกิดข้อผิดพลาด"
 
-#: src/features/app/components/ErrorFallback.tsx:126
+#: src/features/app/components/ErrorFallback.tsx:129
 msgid "Something went wrong and the app crashed. An update is available that may fix this issue."
 msgstr "เกิดข้อผิดพลาดและแอปขัดข้อง มีการอัปเดตที่อาจแก้ไขปัญหานี้ได้"
 
-#: src/features/app/components/ErrorFallback.tsx:128
+#: src/features/app/components/ErrorFallback.tsx:131
 msgid "Something went wrong and the app crashed. Try reloading or resetting the app."
 msgstr "เกิดข้อผิดพลาดและแอปขัดข้อง ลองโหลดซ้ำหรือรีเซ็ตแอป"
 
@@ -32505,7 +32502,7 @@ msgid "Switch between your global profile and per-community profiles"
 msgstr "สลับระหว่างโปรไฟล์ส่วนกลางและโปรไฟล์เฉพาะคอมมูนิตี้"
 
 #. Short label in the authentication new device monitoring. Keep the tone plain and specific.
-#: src/features/auth/state/NewDeviceMonitoring.tsx:27
+#: src/features/auth/state/NewDeviceMonitoring.tsx:30
 msgid "Switch device"
 msgstr "เปลี่ยนอุปกรณ์"
 
@@ -33222,11 +33219,11 @@ msgstr "แท็ก #0000 สงวนไว้สำหรับสมาช�
 msgid "The API is on a different origin than this page, so setup requests are sent without your session. Check the public origin and port this instance is configured with, then reload."
 msgstr "API อยู่คนละ origin กับหน้านี้ ทำให้คำขอตั้งค่าถูกส่งไปโดยไม่มีเซสชันของคุณ โปรดตรวจสอบ public origin และพอร์ตที่อินสแตนซ์นี้กำหนดค่าไว้ แล้วลองโหลดใหม่อีกครั้ง"
 
-#: src/features/app/components/ErrorFallback.tsx:120
+#: src/features/app/components/ErrorFallback.tsx:123
 msgid "The app crashed"
 msgstr "แอปขัดข้อง"
 
-#: src/features/app/components/ErrorFallback.tsx:124
+#: src/features/app/components/ErrorFallback.tsx:127
 msgid "The app has crashed. Checking for updates that might fix this issue…"
 msgstr "แอปขัดข้อง กำลังตรวจสอบการอัปเดตที่อาจแก้ไขปัญหานี้…"
 
@@ -33529,7 +33526,7 @@ msgstr "ไฟล์ธีม"
 msgid "Theme library"
 msgstr "คลังธีม"
 
-#: src/features/theme/components/pages/ThemeLoginPage.tsx:175
+#: src/features/theme/components/pages/ThemeLoginPage.tsx:176
 #: src/features/theme/components/pages/ThemeRegisterPage.tsx:70
 msgid "Theme not found"
 msgstr "ไม่พบธีม"
@@ -33935,7 +33932,7 @@ msgstr "ไฟล์นี้มีขนาด {fileSize} ซึ่งเกิ
 msgid "This friends list needs more power"
 msgstr "รายชื่อเพื่อนต้องการพลังเพิ่ม"
 
-#: src/features/expressions/components/pages/GiftLoginPage.tsx:177
+#: src/features/expressions/components/pages/GiftLoginPage.tsx:178
 #: src/features/expressions/components/pages/GiftRegisterPage.tsx:84
 msgid "This gift code has already been claimed."
 msgstr "รหัสของขวัญนี้ถูกรับไปแล้ว"
@@ -33947,7 +33944,7 @@ msgstr "รหัสของขวัญนี้ถูกรับไปแล
 msgid "This gift code is invalid or already claimed."
 msgstr "รหัสของขวัญนี้ไม่ถูกต้องหรือถูกรับไปแล้ว"
 
-#: src/features/expressions/components/pages/GiftLoginPage.tsx:166
+#: src/features/expressions/components/pages/GiftLoginPage.tsx:167
 #: src/features/expressions/components/pages/GiftRegisterPage.tsx:73
 msgid "This gift code may be invalid, expired, or already redeemed."
 msgstr "รหัสของขวัญนี้อาจไม่ถูกต้อง หมดอายุ หรือถูกใช้ไปแล้ว"
@@ -34317,7 +34314,7 @@ msgstr "ธีมนี้มีขนาดใหญ่เกินกว่า
 msgid "This theme link is missing data."
 msgstr "ลิงก์ธีมนี้ไม่มีข้อมูล"
 
-#: src/features/theme/components/pages/ThemeLoginPage.tsx:176
+#: src/features/theme/components/pages/ThemeLoginPage.tsx:177
 #: src/features/theme/components/pages/ThemeRegisterPage.tsx:71
 msgid "This theme may have been removed or the link is invalid."
 msgstr "ธีมนี้อาจถูกลบไปแล้วหรือลิงก์ไม่ถูกต้อง"
@@ -34331,7 +34328,7 @@ msgstr "ผู้ใช้รายนี้"
 msgid "This user has limited their profile. Some details are hidden from people who aren't their friends."
 msgstr "ผู้ใช้รายนี้จำกัดการแสดงโปรไฟล์ รายละเอียดบางอย่างจะถูกซ่อนจากผู้ที่ไม่ได้เป็นเพื่อนกับเขา"
 
-#: src/features/user/components/popouts/UserProfileShared.tsx:394
+#: src/features/user/components/popouts/UserProfileShared.tsx:395
 msgid "This user has no roles in this community."
 msgstr "ผู้ใช้รายนี้ไม่มีบทบาทในคอมมูนิตี้นี้"
 
@@ -35749,7 +35746,7 @@ msgstr "อุปกรณ์ที่ไม่รู้จัก"
 
 #. Fallback diagnostic text on the crash screen when an Error object has no message.
 #. Fallback error text shown when LaTeX rendering fails without an error message.
-#: src/features/app/components/ErrorFallback.tsx:25
+#: src/features/app/components/ErrorFallback.tsx:28
 #: src/features/messaging/components/markdown/renderers/common/CodeElements.tsx:37
 msgid "Unknown error"
 msgstr "เกิดข้อผิดพลาดที่ไม่รู้จัก"
@@ -36233,7 +36230,7 @@ msgid "Update {productName} to view this message."
 msgstr "อัปเดต {productName} เพื่อดูข้อความนี้"
 
 #. Button on the crash screen that applies a found app update.
-#: src/features/app/components/ErrorFallback.tsx:140
+#: src/features/app/components/ErrorFallback.tsx:143
 msgid "Update app"
 msgstr "อัปเดตแอป"
 
@@ -39330,7 +39327,7 @@ msgstr "คุณไม่สามารถพูดในช่องนี้
 #. Tooltip / error shown in the camera preview modal when the user lacks Video permission in the current channel. Tone stays plain.
 #. Tooltip in the voice control bar when the user lacks the Video permission in this channel. Tone stays plain.
 #. Tooltip shown when the user lacks the Video permission in the voice channel. Tone stays plain.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:76
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:77
 #: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:50
 #: src/features/voice/components/VoiceControlBar.tsx:127
 msgid "You can't turn on your camera in this channel"

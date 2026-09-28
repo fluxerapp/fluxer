@@ -221,7 +221,13 @@ describe('rewriteImportedAccount', () => {
 			userId: '1',
 			token: 'token',
 			localStorageData: {runtimeConfig: '{}', token: 'token'},
-			managedStorageData: {runtimeConfig: '{}', token: 'token', 'fluxer.theme': 'dark'},
+			managedStorageData: {
+				runtimeConfig: '{}',
+				token: 'token',
+				'fluxer.theme': 'dark',
+				'fluxer.lastPushEndpoint': 'https://push',
+				[core.DOMAIN_MIGRATION_MARKER_KEY]: '{}',
+			},
 			lastActive: NOW,
 			instance: {apiEndpoint: 'https://web.fluxer.app/api'} as RuntimeConfigSnapshot,
 		};
@@ -269,7 +275,7 @@ describe('migration gate', () => {
 		['assignment off', {assignmentEnabled: false}],
 		['kill switch', {discovery: {...ENABLED_DISCOVERY, enabled: false}}],
 		['no discovery', {discovery: null}],
-		['already completed', {marker: {state: 'completed', target: 'https://fluxer.com', at: NOW}}],
+		['already completed', {marker: {state: 'completed', target: 'https://fluxer.com', at: NOW, attempts: 1}}],
 		['failed recently', {marker: {state: 'failed', at: NOW - 60_000, attempts: 1}}],
 		['failed too often', {marker: {state: 'failed', at: NOW - 3 * 24 * 60 * 60 * 1000, attempts: 3}}],
 		['Android web app', {environment: environment('chromium-android')}],
@@ -315,9 +321,10 @@ describe('marker state', () => {
 			state: 'completed',
 			target: 'https://fluxer.com',
 			at: NOW + 2,
+			attempts: 2,
 		});
 		core.markDomainMigrationFailed(storage, NOW + 3);
-		expect(core.readDomainMigrationMarker(storage)).toEqual({state: 'failed', at: NOW + 3, attempts: 1});
+		expect(core.readDomainMigrationMarker(storage)).toEqual({state: 'failed', at: NOW + 3, attempts: 2});
 	});
 
 	it('ignores malformed markers', () => {
@@ -352,7 +359,12 @@ describe('forwarding', () => {
 	});
 
 	it('honours the kill switch', () => {
-		const completed: core.DomainMigrationMarker = {state: 'completed', target: 'https://fluxer.com', at: NOW};
+		const completed: core.DomainMigrationMarker = {
+			state: 'completed',
+			target: 'https://fluxer.com',
+			at: NOW,
+			attempts: 1,
+		};
 		const browser = environment('none');
 		expect(core.shouldForwardCompletedSource(ENABLED_DISCOVERY, completed, browser)).toBe(true);
 		expect(core.shouldForwardCompletedSource({...ENABLED_DISCOVERY, enabled: false}, completed, browser)).toBe(false);
@@ -361,7 +373,12 @@ describe('forwarding', () => {
 	});
 
 	it('forwards installed apps only when standalone forwarding is on', () => {
-		const completed: core.DomainMigrationMarker = {state: 'completed', target: 'https://fluxer.com', at: NOW};
+		const completed: core.DomainMigrationMarker = {
+			state: 'completed',
+			target: 'https://fluxer.com',
+			at: NOW,
+			attempts: 1,
+		};
 		const forwarding = {...ENABLED_DISCOVERY, standalone_forwarding: true};
 		const desktop = environment('chromium-desktop');
 		expect(core.shouldForwardCompletedSource(ENABLED_DISCOVERY, completed, desktop)).toBe(false);
@@ -488,7 +505,12 @@ describe('classifyDomainMigrationInstallKind', () => {
 
 describe('shouldShowDomainMovedNotice', () => {
 	const source = core.resolveDomainMigrationSide('https://web.fluxer.app');
-	const completed: core.DomainMigrationMarker = {state: 'completed', target: 'https://fluxer.com', at: NOW};
+	const completed: core.DomainMigrationMarker = {
+		state: 'completed',
+		target: 'https://fluxer.com',
+		at: NOW,
+		attempts: 1,
+	};
 
 	function notice(overrides: Partial<core.DomainMovedNoticeInput>): core.DomainMovedNoticeInput {
 		return {
@@ -632,10 +654,17 @@ describe('runDomainMigrationPreMount', () => {
 	});
 
 	it('forwards a migrated source tab with its hash', async () => {
-		visit('https://web.fluxer.app/reset#token=abc', ENABLED_DISCOVERY);
+		visit('https://web.fluxer.app/channels/1/2?a=1#b', ENABLED_DISCOVERY);
 		writeCompletedMarker();
 		expect(await runDomainMigrationPreMount()).toBe(true);
-		expect(replace).toHaveBeenCalledWith('https://fluxer.com/reset#token=abc');
+		expect(replace).toHaveBeenCalledWith('https://fluxer.com/channels/1/2?a=1#b');
+	});
+
+	it('keeps one-shot routes on the source', async () => {
+		visit('https://web.fluxer.app/reset#token=abc', ENABLED_DISCOVERY);
+		writeCompletedMarker();
+		expect(await runDomainMigrationPreMount()).toBe(false);
+		expect(replace).not.toHaveBeenCalled();
 	});
 
 	it('stays put when the kill switch is off', async () => {
@@ -703,10 +732,10 @@ describe('runDomainMigrationPreMount', () => {
 	it('resumes through the target when a migrated source still holds a session', async () => {
 		writeCompletedMarker();
 		window.localStorage.setItem('token', 'session-token');
-		visit('https://web.fluxer.app/reset#token=abc', ENABLED_DISCOVERY);
+		visit('https://web.fluxer.app/channels/1/2#x', ENABLED_DISCOVERY);
 		expect(await runDomainMigrationPreMount()).toBe(true);
 		expect(replace).toHaveBeenCalledWith(
-			`https://fluxer.com/migrate/begin?resume=1&next=${encodeURIComponent('/reset#token=abc')}`,
+			`https://fluxer.com/migrate/begin?resume=1&imported=1&next=${encodeURIComponent('/channels/1/2#x')}`,
 		);
 		expect(core.readDomainMigrationIntent(window.sessionStorage, Date.now())).not.toBeNull();
 	});
@@ -795,11 +824,14 @@ describe('runDomainMigrationPreMount', () => {
 		expect(replace.mock.calls[0]?.[0]).toMatch(/^https:\/\/web\.fluxer\.app\/migrate\/export\?n=[\w-]+$/u);
 	});
 
-	it('opens the target directly when the browser already migrated', async () => {
+	it('opens the target in place when the browser already migrated', async () => {
 		window.localStorage.setItem('token', 'session-token');
 		visit('https://fluxer.com/migrate/begin?start=1&next=%2Fapp', ENABLED_DISCOVERY);
-		expect(await runDomainMigrationPreMount()).toBe(true);
-		expect(replace).toHaveBeenCalledWith('https://fluxer.com/app');
+		const replaceState = vi.fn();
+		vi.stubGlobal('history', {state: null, replaceState});
+		expect(await runDomainMigrationPreMount()).toBe(false);
+		expect(replace).not.toHaveBeenCalled();
+		expect(replaceState).toHaveBeenCalledWith(null, '', '/app');
 	});
 
 	it('does not start a migration inside an installed Android app', async () => {
@@ -819,14 +851,24 @@ describe('runDomainMigrationPreMount', () => {
 		);
 	});
 
-	it('reports back to the source when the target already holds a session', async () => {
+	it('still imports into a target that already holds a session', async () => {
 		window.localStorage.setItem('token', 'session-token');
 		visit('https://fluxer.com/migrate/begin?next=%2Fchannels%2F1', ENABLED_DISCOVERY);
 		expect(await runDomainMigrationPreMount()).toBe(true);
-		expect(replace).toHaveBeenCalledWith('https://web.fluxer.app/migrate/done?next=%2Fchannels%2F1');
+		expect(replace.mock.calls[0]?.[0]).toMatch(/^https:\/\/web\.fluxer\.app\/migrate\/export\?n=[\w-]+$/u);
+		expect(window.sessionStorage.getItem(core.DOMAIN_MIGRATION_PENDING_KEY)).not.toBeNull();
 
+		window.localStorage.removeItem(core.DOMAIN_MIGRATION_IMPORT_KEY);
 		visit('https://fluxer.com/migrate/begin?resume=1&next=%2Fchannels%2F1', ENABLED_DISCOVERY);
 		expect(await runDomainMigrationPreMount()).toBe(true);
-		expect(replace).toHaveBeenCalledWith('https://fluxer.com/channels/1');
+		expect(replace.mock.calls[0]?.[0]).toMatch(/^https:\/\/web\.fluxer\.app\/migrate\/export\?n=[\w-]+$/u);
+
+		core.writeDomainMigrationImport(window.localStorage, {state: 'done', at: Date.now()});
+		visit('https://fluxer.com/migrate/begin?resume=1&next=%2Fchannels%2F1', ENABLED_DISCOVERY);
+		const replaceState = vi.fn();
+		vi.stubGlobal('history', {state: null, replaceState});
+		expect(await runDomainMigrationPreMount()).toBe(false);
+		expect(replace).not.toHaveBeenCalled();
+		expect(replaceState).toHaveBeenCalledWith(null, '', '/channels/1');
 	});
 });

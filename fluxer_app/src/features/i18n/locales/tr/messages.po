@@ -1591,19 +1591,19 @@ msgstr "{premiumProductName} aboneliği"
 msgid "{presenceCount} online"
 msgstr "{presenceCount} çevrimiçi"
 
-#: src/features/app/components/BootstrapErrorScreen.tsx:39
+#: src/features/app/components/BootstrapErrorScreen.tsx:46
 msgid "{PRODUCT_NAME} failed to start properly. This could be due to corrupted data or a temporary issue."
 msgstr "{PRODUCT_NAME} düzgün başlatılamadı. Bunun nedeni bozuk veriler veya geçici bir sorun olabilir."
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:196
+#: src/features/auth/state/NewDeviceMonitoring.tsx:208
 msgid "{PRODUCT_NAME} has found a new audio device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME}, <0>{deviceName}</0> adında yeni bir ses cihazı buldu. Buna geçmek ister misiniz?"
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:185
+#: src/features/auth/state/NewDeviceMonitoring.tsx:197
 msgid "{PRODUCT_NAME} has found a new audio input device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME}, <0>{deviceName}</0> adında yeni bir ses giriş cihazı buldu. Buna geçmek ister misiniz?"
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:190
+#: src/features/auth/state/NewDeviceMonitoring.tsx:202
 msgid "{PRODUCT_NAME} has found a new audio output device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME}, <0>{deviceName}</0> adında yeni bir ses çıkış cihazı buldu. Buna geçmek ister misiniz?"
 
@@ -1624,7 +1624,7 @@ msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware accelerati
 msgstr "Chromium'un donanım hızlandırmasını devre dışı bırakmak için {PRODUCT_NAME} uygulamasının yeniden başlatılması gerekiyor. Bunu yalnızca grafik hatalarını veya yüksek GPU kullanımını gideriyorsanız kullanın."
 
 #. Accessible label for the Fluxer application icon.
-#: src/features/ui/components/icons/FluxerIcon.tsx:10
+#: src/features/ui/components/icons/FluxerIconMark.tsx:6
 msgid "{productName} application icon"
 msgstr "{productName} uygulama simgesi"
 
@@ -2913,7 +2913,7 @@ msgstr "Yorum ekle (isteğe bağlı)"
 msgid "Add a community"
 msgstr "Topluluk ekle"
 
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:75
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:77
 msgid "Add a different account"
 msgstr "Farklı bir hesap ekle"
 
@@ -2975,7 +2975,7 @@ msgid "Add action."
 msgstr "Eylem ekle."
 
 #. OAuth authorization account step button. Opens the flow to sign in with another account.
-#: src/features/auth/components/accounts/AccountSelector.tsx:185
+#: src/features/auth/components/accounts/AccountSelector.tsx:186
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx:124
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:30
 msgid "Add an account"
@@ -5316,7 +5316,7 @@ msgstr "Arka uç premium avantajları devre dışı bırakıldı"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:59
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:5
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:731
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:732
 msgid "Background"
 msgstr "Arka plan"
 
@@ -5743,7 +5743,7 @@ msgid "Blur"
 msgstr "Bulanıklaştır"
 
 #. Slider label in the camera preview modal controlling how strong the background blur effect is.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:81
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:82
 msgid "Blur strength"
 msgstr "Bulanıklık şiddeti"
 
@@ -6278,7 +6278,7 @@ msgstr "Kamera cihazı"
 msgid "Camera effects"
 msgstr "Kamera efektleri"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:809
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:810
 msgid "Camera error"
 msgstr "Kamera hatası"
 
@@ -6321,7 +6321,7 @@ msgstr "Kamera izni gerekli"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Title of the camera preview modal.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:186
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:63
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:64
 msgid "Camera preview"
 msgstr "Kamera önizlemesi"
 
@@ -6429,7 +6429,7 @@ msgstr "Buraya dosya yüklenemiyor"
 #: src/features/user/components/modals/PhoneAddModal.tsx:401
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:174
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx:33
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:845
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:846
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:81
 msgid "Cancel"
 msgstr "İptal"
@@ -6671,7 +6671,7 @@ msgstr "Ortalanmış"
 msgid "Change avatar"
 msgstr "Avatarı değiştir"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:744
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:745
 msgid "Change background"
 msgstr "Arka planı değiştir"
 
@@ -7321,7 +7321,7 @@ msgstr "Sohbet kısayolları"
 msgid "Check for updates"
 msgstr "Güncellemeleri kontrol et"
 
-#: src/features/app/components/BootstrapErrorScreen.tsx:56
+#: src/features/app/components/BootstrapErrorScreen.tsx:63
 msgid "Check our <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0> for status updates."
 msgstr "Durum güncellemeleri için <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0> hesabımızı kontrol edin."
 
@@ -7500,7 +7500,8 @@ msgstr "Sistem seçicinizden bir pencere seçin"
 #. OAuth authorization step title. The user must choose which account to authorize with.
 #: src/features/auth/components/accounts/AccountSelector.tsx:61
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:17
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:68
+#: src/features/auth/flow/AuthLoginLayout.tsx:492
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:70
 msgid "Choose an account"
 msgstr "Bir hesap seçin"
 
@@ -9121,7 +9122,7 @@ msgstr "Bağlantı: {connectionId}"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for external accounts and verified domains.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:415
-#: src/features/user/components/popouts/UserProfileShared.tsx:614
+#: src/features/user/components/popouts/UserProfileShared.tsx:615
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:8
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:30
 msgid "Connections"
@@ -9618,7 +9619,7 @@ msgid "Copy setup key"
 msgstr "Kurulum anahtarını kopyala"
 
 #. Button on the crash screen that copies developer diagnostic text.
-#: src/features/app/components/ErrorFallback.tsx:152
+#: src/features/app/components/ErrorFallback.tsx:155
 msgid "Copy stack trace"
 msgstr "Yığın izini kopyala"
 
@@ -11225,7 +11226,7 @@ msgstr "Varsayılan"
 #. Default camera device option.
 #. Default device option label in the voice settings menu (alternate call site for the same concept as DEFAULT_DESCRIPTOR).
 #. Fallback device option shown before a microphone, speaker, or camera label is available.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:67
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:68
 #: src/features/voice/components/VoiceSettingsMenus.tsx:87
 #: src/features/voice/utils/SettingsDeviceOptions.ts:11
 msgctxt "device-option"
@@ -12683,7 +12684,7 @@ msgstr "Bunu bir daha gösterme"
 msgid "Don't show typing indicators in the channel list"
 msgstr "Kanal listesinde yazıyor göstergesini gösterme"
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:51
+#: src/features/auth/state/NewDeviceMonitoring.tsx:57
 msgid "Don't suggest {deviceName} again"
 msgstr "{deviceName} cihazını bir daha önerme"
 
@@ -14721,7 +14722,7 @@ msgid "Failed to delete channel"
 msgstr "Kanal silinemedi"
 
 #. Toast / inline error in the camera preview modal when enabling the camera fails.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:59
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:60
 msgid "Failed to enable camera."
 msgstr "Kamera etkinleştirilemedi."
 
@@ -14736,7 +14737,7 @@ msgid "Failed to forward message"
 msgstr "Mesaj iletilemedi"
 
 #. Short label in the authentication desktop handoff account selector. Keep the tone plain and specific.
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:17
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:12
 msgid "Failed to generate token"
 msgstr "Belirteç oluşturulamadı"
 
@@ -14900,12 +14901,12 @@ msgstr "Rapor gönderilemedi. Tekrar deneyin."
 msgid "Failed to send verification email. Try again later."
 msgstr "Doğrulama e-postası gönderilemedi. Daha sonra tekrar deneyin."
 
-#: src/features/app/components/BootstrapErrorScreen.tsx:36
+#: src/features/app/components/BootstrapErrorScreen.tsx:43
 msgid "Failed to start"
 msgstr "Başlatılamadı"
 
 #. Error text in the camera preview modal when the camera stream cannot be opened. Prompts user to check OS / browser permissions.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:54
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:55
 msgid "Failed to start camera preview. Check your camera permissions."
 msgstr "Kamera önizlemesi başlatılamadı. Kamera izinlerinizi kontrol edin."
 
@@ -15251,7 +15252,7 @@ msgstr "Filtreleme"
 msgid "Filtering by {language}"
 msgstr "{language} diline göre filtreleniyor"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:788
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:789
 msgid "Finalizing camera..."
 msgstr "Kamera hazırlanıyor..."
 
@@ -18003,7 +18004,7 @@ msgstr "Devralındı"
 msgid "Inherited from {inheritedFromLabel}"
 msgstr "{inheritedFromLabel} kaynağından devralındı"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:790
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:791
 msgid "Initializing camera..."
 msgstr "Kamera başlatılıyor..."
 
@@ -20510,7 +20511,7 @@ msgid "Member roles updated"
 msgstr "Üye rolleri güncellendi"
 
 #: src/features/channel/components/guild_members_page/MembersTableHeaderRow.tsx:83
-#: src/features/user/components/popouts/UserProfileShared.tsx:282
+#: src/features/user/components/popouts/UserProfileShared.tsx:283
 msgid "Member since"
 msgstr "Üye olma tarihi"
 
@@ -21133,7 +21134,7 @@ msgstr "Risk altındaki küçükler, yanlış yerdeki yetişkin içeriği veya i
 #. Switch label in the camera preview modal for flipping the local camera preview horizontally.
 #. Switch label in the video tab for flipping the local camera preview horizontally.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:106
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:72
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:73
 #: src/features/voice/components/VoiceSettingsMenus.tsx:114
 msgid "Mirror camera"
 msgstr "Kamerayı yansıt"
@@ -22152,7 +22153,7 @@ msgid "New accounts can join up to 10 communities in the first 24 hours. Try aga
 msgstr "Yeni hesaplar ilk 24 saat içinde en fazla 10 topluluğa katılabilir. Daha sonra tekrar deneyin."
 
 #. Body text in the authentication new device monitoring. Keep the tone plain and specific.
-#: src/features/auth/state/NewDeviceMonitoring.tsx:23
+#: src/features/auth/state/NewDeviceMonitoring.tsx:26
 msgid "New audio device detected!"
 msgstr "Yeni ses cihazı algılandı!"
 
@@ -22367,7 +22368,7 @@ msgstr "Erişim yok"
 msgid "No accessible channels"
 msgstr "Erişilebilir kanal yok"
 
-#: src/features/auth/components/accounts/AccountSelector.tsx:148
+#: src/features/auth/components/accounts/AccountSelector.tsx:150
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx:88
 msgid "No accounts"
 msgstr "Hesap yok"
@@ -23081,7 +23082,7 @@ msgstr "Bulunamadı"
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:69
 #: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:35
 #: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:43
-#: src/features/auth/state/NewDeviceMonitoring.tsx:31
+#: src/features/auth/state/NewDeviceMonitoring.tsx:34
 msgid "Not now"
 msgstr "Şimdi değil"
 
@@ -24048,7 +24049,7 @@ msgstr "İşletim sistemi"
 msgid "Opt into experimental per-community and per-channel unread badge controls"
 msgstr "Topluluk ve kanal bazında deneysel okunmamış rozet kontrollerini etkinleştirin"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:786
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:787
 msgid "Optimizing camera..."
 msgstr "Kamera optimize ediliyor..."
 
@@ -26580,7 +26581,7 @@ msgid "Reload {productName} to use web update {version}"
 msgstr "{version} web güncellemesini kullanmak için {productName} uygulamasını yeniden yükleyin"
 
 #. Button on the crash screen that reloads the current app.
-#: src/features/app/components/ErrorFallback.tsx:142
+#: src/features/app/components/ErrorFallback.tsx:145
 msgid "Reload app"
 msgstr "Uygulamayı yeniden yükle"
 
@@ -26628,7 +26629,7 @@ msgstr "Pencere boyutunu ve konumunu hatırla"
 #. Short label in the shared app saved message missing card. Keep the tone plain and specific.
 #: src/features/app/components/shared/SavedMessageMissingCard.tsx:14
 #: src/features/auth/components/accounts/AccountSelector.tsx:78
-#: src/features/auth/components/accounts/AccountSelector.tsx:125
+#: src/features/auth/components/accounts/AccountSelector.tsx:128
 #: src/features/channel/components/MessageReactionsSheet.tsx:43
 #: src/features/expressions/components/modals/AddFavoriteChannelModal.tsx:52
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:156
@@ -27533,8 +27534,8 @@ msgstr "Sıfırla ve yeniden başlat"
 #. Confirm dialog title for the destructive reset action.
 #. Destructive button on the crash screen. Clears local app data except preserved drafts.
 #. Destructive button on the startup failure screen. Clears local app data except preserved drafts.
-#: src/features/app/components/BootstrapErrorScreen.tsx:75
-#: src/features/app/components/ErrorFallback.tsx:164
+#: src/features/app/components/BootstrapErrorScreen.tsx:82
+#: src/features/app/components/ErrorFallback.tsx:167
 #: src/features/platform/utils/DesktopLocaleBridge.ts:175
 msgid "Reset app data"
 msgstr "Uygulama verilerini sıfırla"
@@ -29218,7 +29219,7 @@ msgstr "Uygulanacak bir senaryo seçin..."
 msgid "Select a violation category."
 msgstr "İhlal kategorisi seçin."
 
-#: src/features/auth/components/accounts/AccountSelector.tsx:114
+#: src/features/auth/components/accounts/AccountSelector.tsx:117
 msgid "Select account"
 msgstr "Hesap seçin"
 
@@ -29269,7 +29270,7 @@ msgstr "Kapsamları seçin (ve gerekirse yönlendirme URI'sini)"
 msgid "Select text"
 msgstr "Metin seç"
 
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:69
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:71
 msgid "Select the account you want to sign in with on your new device."
 msgstr "Yeni cihazınızda oturum açmak istediğiniz hesabı seçin."
 
@@ -29686,11 +29687,6 @@ msgstr "Oturum"
 #: src/features/auth/flow/AuthLoginLayout.tsx:58
 msgid "Session expired for {identifier}. Sign in again."
 msgstr "{identifier} için oturumunuzun süresi doldu. Tekrar oturum açın."
-
-#. Toast error shown in the desktop-handoff account picker when the session for the chosen account has expired.
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:12
-msgid "Session expired. Sign in again."
-msgstr "Oturumun süresi doldu. Tekrar oturum açın."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:15
@@ -30674,6 +30670,7 @@ msgstr "Kenar çubuğu"
 msgid "Sign in"
 msgstr "Giriş yap"
 
+#: src/features/auth/components/accounts/AccountSelector.tsx:117
 #: src/features/auth/utils/AccountSwitcherModalUtils.tsx:274
 msgid "Sign in again"
 msgstr "Tekrar giriş yap"
@@ -31237,11 +31234,11 @@ msgstr "Bazı kullanıcılar eklenemiyor"
 msgid "Something went wrong"
 msgstr "Bir şeyler ters gitti"
 
-#: src/features/app/components/ErrorFallback.tsx:126
+#: src/features/app/components/ErrorFallback.tsx:129
 msgid "Something went wrong and the app crashed. An update is available that may fix this issue."
 msgstr "Bir şeyler ters gitti ve uygulama çöktü. Bu sorunu çözebilecek bir güncelleme mevcut."
 
-#: src/features/app/components/ErrorFallback.tsx:128
+#: src/features/app/components/ErrorFallback.tsx:131
 msgid "Something went wrong and the app crashed. Try reloading or resetting the app."
 msgstr "Bir şeyler ters gitti ve uygulama çöktü. Yeniden yüklemeyi veya uygulamayı sıfırlamayı deneyin."
 
@@ -32505,7 +32502,7 @@ msgid "Switch between your global profile and per-community profiles"
 msgstr "Genel profiliniz ile topluluk profilleriniz arasında geçiş yapın"
 
 #. Short label in the authentication new device monitoring. Keep the tone plain and specific.
-#: src/features/auth/state/NewDeviceMonitoring.tsx:27
+#: src/features/auth/state/NewDeviceMonitoring.tsx:30
 msgid "Switch device"
 msgstr "Cihaz değiştir"
 
@@ -33222,11 +33219,11 @@ msgstr "#0000 etiketi Visionary abonelerine özeldir. Visionary artık satın al
 msgid "The API is on a different origin than this page, so setup requests are sent without your session. Check the public origin and port this instance is configured with, then reload."
 msgstr "API bu sayfadan farklı bir kaynakta olduğu için kurulum istekleri oturumunuz olmadan gönderiliyor. Bu kurulum için yapılandırılan genel kaynağı ve portu kontrol edin, ardından sayfayı yeniden yükleyin."
 
-#: src/features/app/components/ErrorFallback.tsx:120
+#: src/features/app/components/ErrorFallback.tsx:123
 msgid "The app crashed"
 msgstr "Uygulama çöktü"
 
-#: src/features/app/components/ErrorFallback.tsx:124
+#: src/features/app/components/ErrorFallback.tsx:127
 msgid "The app has crashed. Checking for updates that might fix this issue…"
 msgstr "Uygulama çöktü. Bu sorunu çözebilecek güncellemeler kontrol ediliyor…"
 
@@ -33529,7 +33526,7 @@ msgstr "Tema dosyaları"
 msgid "Theme library"
 msgstr "Tema kütüphanesi"
 
-#: src/features/theme/components/pages/ThemeLoginPage.tsx:175
+#: src/features/theme/components/pages/ThemeLoginPage.tsx:176
 #: src/features/theme/components/pages/ThemeRegisterPage.tsx:70
 msgid "Theme not found"
 msgstr "Tema bulunamadı"
@@ -33935,7 +33932,7 @@ msgstr "Bu dosya {fileSize} boyutunda ve {maxSize} sınırını aşıyor. Hareke
 msgid "This friends list needs more power"
 msgstr "Bu arkadaş listesi daha fazla güce ihtiyaç duyuyor"
 
-#: src/features/expressions/components/pages/GiftLoginPage.tsx:177
+#: src/features/expressions/components/pages/GiftLoginPage.tsx:178
 #: src/features/expressions/components/pages/GiftRegisterPage.tsx:84
 msgid "This gift code has already been claimed."
 msgstr "Bu hediye kodu zaten alınmış."
@@ -33947,7 +33944,7 @@ msgstr "Bu hediye kodu zaten alınmış."
 msgid "This gift code is invalid or already claimed."
 msgstr "Bu hediye kodu geçersiz veya zaten alınmış."
 
-#: src/features/expressions/components/pages/GiftLoginPage.tsx:166
+#: src/features/expressions/components/pages/GiftLoginPage.tsx:167
 #: src/features/expressions/components/pages/GiftRegisterPage.tsx:73
 msgid "This gift code may be invalid, expired, or already redeemed."
 msgstr "Bu hediye kodu geçersiz, süresi dolmuş veya zaten kullanılmış olabilir."
@@ -34317,7 +34314,7 @@ msgstr "Bu tema paylaşılamayacak kadar büyük"
 msgid "This theme link is missing data."
 msgstr "Bu tema bağlantısında veri eksik."
 
-#: src/features/theme/components/pages/ThemeLoginPage.tsx:176
+#: src/features/theme/components/pages/ThemeLoginPage.tsx:177
 #: src/features/theme/components/pages/ThemeRegisterPage.tsx:71
 msgid "This theme may have been removed or the link is invalid."
 msgstr "Bu tema kaldırılmış veya bağlantı geçersiz olabilir."
@@ -34331,7 +34328,7 @@ msgstr "bu kullanıcı"
 msgid "This user has limited their profile. Some details are hidden from people who aren't their friends."
 msgstr "Bu kullanıcı profilini sınırladı. Bazı ayrıntılar arkadaşı olmayan kişilerden gizlenir."
 
-#: src/features/user/components/popouts/UserProfileShared.tsx:394
+#: src/features/user/components/popouts/UserProfileShared.tsx:395
 msgid "This user has no roles in this community."
 msgstr "Bu kullanıcının bu toplulukta hiçbir rolü yok."
 
@@ -35749,7 +35746,7 @@ msgstr "Bilinmeyen cihaz"
 
 #. Fallback diagnostic text on the crash screen when an Error object has no message.
 #. Fallback error text shown when LaTeX rendering fails without an error message.
-#: src/features/app/components/ErrorFallback.tsx:25
+#: src/features/app/components/ErrorFallback.tsx:28
 #: src/features/messaging/components/markdown/renderers/common/CodeElements.tsx:37
 msgid "Unknown error"
 msgstr "Bilinmeyen hata"
@@ -36233,7 +36230,7 @@ msgid "Update {productName} to view this message."
 msgstr "Bu mesajı görüntülemek için {productName} uygulamasını güncelleyin."
 
 #. Button on the crash screen that applies a found app update.
-#: src/features/app/components/ErrorFallback.tsx:140
+#: src/features/app/components/ErrorFallback.tsx:143
 msgid "Update app"
 msgstr "Uygulamayı güncelle"
 
@@ -39330,7 +39327,7 @@ msgstr "Bu kanalda konuşamazsınız"
 #. Tooltip / error shown in the camera preview modal when the user lacks Video permission in the current channel. Tone stays plain.
 #. Tooltip in the voice control bar when the user lacks the Video permission in this channel. Tone stays plain.
 #. Tooltip shown when the user lacks the Video permission in the voice channel. Tone stays plain.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:76
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:77
 #: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:50
 #: src/features/voice/components/VoiceControlBar.tsx:127
 msgid "You can't turn on your camera in this channel"

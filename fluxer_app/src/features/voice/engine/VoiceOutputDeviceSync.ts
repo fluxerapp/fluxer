@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {isPendingMigratedDeviceId} from '@app/features/app/domain_migration/DomainMigrationDeviceRemap';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {VoiceTrackKind} from '@app/features/voice/engine/VoiceTrackSource';
 import VoiceSettings from '@app/features/voice/state/VoiceSettings';
@@ -83,11 +84,18 @@ async function resolveAvailableOutputDeviceId(deviceId: string): Promise<string>
 		return deviceId;
 	}
 	const state = await voiceDeviceManager.ensureDevices({requestPermissions: false});
+	const currentDeviceId = VoiceSettings.getOutputDeviceId();
+	if (currentDeviceId !== deviceId) {
+		return currentDeviceId;
+	}
 	if (state.outputDevices.length === 0) {
 		return deviceId;
 	}
 	if (state.outputDevices.some((device) => device.deviceId === deviceId)) {
 		return deviceId;
+	}
+	if (isPendingMigratedDeviceId(deviceId)) {
+		return 'default';
 	}
 	logger.warn('Selected audio output device no longer available; falling back to default', {deviceId});
 	VoiceSettings.updateSettings({outputDeviceId: 'default'});
@@ -106,7 +114,9 @@ async function applyOutputDeviceToWebAudioMixer(room: Room, deviceId: string): P
 		if (isDeviceMissingError(error)) {
 			logger.warn('Web Audio mixer sink no longer available', {deviceId});
 			if (deviceId !== 'default') {
-				VoiceSettings.updateSettings({outputDeviceId: 'default'});
+				if (VoiceSettings.getOutputDeviceId() === deviceId && !isPendingMigratedDeviceId(deviceId)) {
+					VoiceSettings.updateSettings({outputDeviceId: 'default'});
+				}
 				try {
 					await audioContext.setSinkId('');
 				} catch (fallbackError) {

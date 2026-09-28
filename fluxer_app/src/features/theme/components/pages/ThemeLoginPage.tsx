@@ -127,6 +127,7 @@ const ThemeLoginPageMFA = observer(function ThemeLoginPageMFA() {
 	const handleMfaSuccess = useCallback(
 		async ({token, userId}: LoginSuccessPayload) => {
 			if (isHandoff) {
+				await AccountManager.refreshStoredAccount(userId, token);
 				await handoff.start({token, userId});
 				return;
 			}

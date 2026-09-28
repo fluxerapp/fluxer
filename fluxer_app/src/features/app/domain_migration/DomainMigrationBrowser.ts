@@ -4,17 +4,23 @@ import {
 	classifyDomainMigrationInstallKind,
 	type DomainMigrationDisplayMode,
 	type DomainMigrationEnvironment,
+	type DomainMigrationGateInput,
 	type DomainMigrationInstallKind,
+	type DomainMigrationSide,
 	domainMovedBrowserMigrationUrl,
 	domainMovedInstallUrl,
 	domainMovedManifestId,
+	isDomainMigrationOneShotRoute,
+	markDomainMigrationFailed,
+	readDomainMigrationMarker,
+	writeDomainMigrationIntent,
 } from '@app/features/app/domain_migration/DomainMigrationCore';
 import {
 	AuthSessionStorageKey,
 	parseStoredSessionValue,
 } from '@app/features/platform/state/auth_session/AuthSessionStorage';
-import {getProtectedLocalStorage} from '@app/features/platform/state/ProtectedWebStorage';
-import {hasUnavailableElectronNativeContext, isElectron} from '@app/features/ui/utils/NativeUtils';
+import {getProtectedLocalStorage, getProtectedSessionStorage} from '@app/features/platform/state/ProtectedWebStorage';
+import {hasUnavailableElectronNativeContext, isElectron} from '@app/features/ui/utils/ElectronRuntime';
 import type {DomainMigrationDiscoveryResponse} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 
 interface NavigatorWithStandalone extends Navigator {
@@ -66,6 +72,29 @@ export function readDomainMigrationEnvironment(): DomainMigrationEnvironment {
 		electronMigrationVersion: window.electron?.domainMigration?.version ?? null,
 		electronPasskeyRpIds: window.electron?.passkeyRpIds ?? [],
 	};
+}
+
+export function readDomainMigrationGateInput(
+	assignmentEnabled: boolean,
+	voiceActive: boolean,
+): DomainMigrationGateInput {
+	return {
+		environment: readDomainMigrationEnvironment(),
+		assignmentEnabled,
+		discovery: readDomainMigrationDiscovery(),
+		marker: readDomainMigrationMarker(getProtectedLocalStorage()),
+		now: Date.now(),
+		voiceActive,
+		oneShotRoute: isDomainMigrationOneShotRoute(window.location.pathname),
+	};
+}
+
+export function startDomainMigrationFromSource(side: DomainMigrationSide): true {
+	markDomainMigrationFailed(getProtectedLocalStorage(), Date.now());
+	writeDomainMigrationIntent(getProtectedSessionStorage(), {at: Date.now()});
+	const next = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+	window.location.replace(`${side.target}/migrate/begin?next=${encodeURIComponent(next)}`);
+	return true;
 }
 
 export async function desktopPasskeysSupported(): Promise<boolean> {

@@ -1591,19 +1591,19 @@ msgstr "{premiumProductName} prenumerata"
 msgid "{presenceCount} online"
 msgstr "{presenceCount} prisijungę"
 
-#: src/features/app/components/BootstrapErrorScreen.tsx:39
+#: src/features/app/components/BootstrapErrorScreen.tsx:46
 msgid "{PRODUCT_NAME} failed to start properly. This could be due to corrupted data or a temporary issue."
 msgstr "„{PRODUCT_NAME}“ nepavyko tinkamai paleisti. Taip gali nutikti dėl sugadintų duomenų arba laikino sutrikimo."
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:196
+#: src/features/auth/state/NewDeviceMonitoring.tsx:208
 msgid "{PRODUCT_NAME} has found a new audio device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME} aptiko naują garso įrenginį pavadinimu <0>{deviceName}</0>. Ar norite prie jo perjungti?"
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:185
+#: src/features/auth/state/NewDeviceMonitoring.tsx:197
 msgid "{PRODUCT_NAME} has found a new audio input device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME} aptiko naują garso įvesties įrenginį pavadinimu <0>{deviceName}</0>. Ar norite prie jo perjungti?"
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:190
+#: src/features/auth/state/NewDeviceMonitoring.tsx:202
 msgid "{PRODUCT_NAME} has found a new audio output device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME} aptiko naują garso išvesties įrenginį pavadinimu <0>{deviceName}</0>. Ar norite prie jo perjungti?"
 
@@ -1624,7 +1624,7 @@ msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware accelerati
 msgstr "{PRODUCT_NAME} reikia paleisti iš naujo, kad būtų išjungtas „Chromium“ aparatinės įrangos spartinimas. Naudokite tai tik tada, kai sprendžiate grafikos trikdžių arba didelio GPU naudojimo problemas."
 
 #. Accessible label for the Fluxer application icon.
-#: src/features/ui/components/icons/FluxerIcon.tsx:10
+#: src/features/ui/components/icons/FluxerIconMark.tsx:6
 msgid "{productName} application icon"
 msgstr "{productName} programos piktograma"
 
@@ -2913,7 +2913,7 @@ msgstr "Pridėti komentarą (pasirinktinai)"
 msgid "Add a community"
 msgstr "Pridėti bendruomenę"
 
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:75
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:77
 msgid "Add a different account"
 msgstr "Pridėti kitą paskyrą"
 
@@ -2975,7 +2975,7 @@ msgid "Add action."
 msgstr "Pridėti veiksmą."
 
 #. OAuth authorization account step button. Opens the flow to sign in with another account.
-#: src/features/auth/components/accounts/AccountSelector.tsx:185
+#: src/features/auth/components/accounts/AccountSelector.tsx:186
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx:124
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:30
 msgid "Add an account"
@@ -5316,7 +5316,7 @@ msgstr "Serverio premium privilegijos išjungtos"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:59
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:5
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:731
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:732
 msgid "Background"
 msgstr "Fonas"
 
@@ -5743,7 +5743,7 @@ msgid "Blur"
 msgstr "Sulieti"
 
 #. Slider label in the camera preview modal controlling how strong the background blur effect is.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:81
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:82
 msgid "Blur strength"
 msgstr "Fono suliejimo stiprumas"
 
@@ -6278,7 +6278,7 @@ msgstr "Kameros įrenginys"
 msgid "Camera effects"
 msgstr "Kameros efektai"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:809
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:810
 msgid "Camera error"
 msgstr "Kameros klaida"
 
@@ -6321,7 +6321,7 @@ msgstr "Reikalingas leidimas naudoti kamerą"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Title of the camera preview modal.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:186
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:63
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:64
 msgid "Camera preview"
 msgstr "Kameros peržiūra"
 
@@ -6429,7 +6429,7 @@ msgstr "Čia negalima įkelti failų"
 #: src/features/user/components/modals/PhoneAddModal.tsx:401
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:174
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx:33
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:845
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:846
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:81
 msgid "Cancel"
 msgstr "Atšaukti"
@@ -6671,7 +6671,7 @@ msgstr "Centre"
 msgid "Change avatar"
 msgstr "Keisti avatarą"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:744
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:745
 msgid "Change background"
 msgstr "Keisti foną"
 
@@ -7321,7 +7321,7 @@ msgstr "Pokalbių spartieji klavišai"
 msgid "Check for updates"
 msgstr "Tikrinti, ar yra naujinimų"
 
-#: src/features/app/components/BootstrapErrorScreen.tsx:56
+#: src/features/app/components/BootstrapErrorScreen.tsx:63
 msgid "Check our <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0> for status updates."
 msgstr "Patikrinkite mūsų <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0>, kad gautumėte būsenos naujinių."
 
@@ -7500,7 +7500,8 @@ msgstr "Pasirinkite langą sistemos parinkiklyje"
 #. OAuth authorization step title. The user must choose which account to authorize with.
 #: src/features/auth/components/accounts/AccountSelector.tsx:61
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:17
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:68
+#: src/features/auth/flow/AuthLoginLayout.tsx:492
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:70
 msgid "Choose an account"
 msgstr "Pasirinkite paskyrą"
 
@@ -9121,7 +9122,7 @@ msgstr "Ryšys: {connectionId}"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for external accounts and verified domains.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:415
-#: src/features/user/components/popouts/UserProfileShared.tsx:614
+#: src/features/user/components/popouts/UserProfileShared.tsx:615
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:8
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:30
 msgid "Connections"
@@ -9618,7 +9619,7 @@ msgid "Copy setup key"
 msgstr "Kopijuoti sąrankos raktą"
 
 #. Button on the crash screen that copies developer diagnostic text.
-#: src/features/app/components/ErrorFallback.tsx:152
+#: src/features/app/components/ErrorFallback.tsx:155
 msgid "Copy stack trace"
 msgstr "Kopijuoti steko atsekimą"
 
@@ -11225,7 +11226,7 @@ msgstr "Numatytasis"
 #. Default camera device option.
 #. Default device option label in the voice settings menu (alternate call site for the same concept as DEFAULT_DESCRIPTOR).
 #. Fallback device option shown before a microphone, speaker, or camera label is available.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:67
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:68
 #: src/features/voice/components/VoiceSettingsMenus.tsx:87
 #: src/features/voice/utils/SettingsDeviceOptions.ts:11
 msgctxt "device-option"
@@ -12683,7 +12684,7 @@ msgstr "Daugiau nerodyti"
 msgid "Don't show typing indicators in the channel list"
 msgstr "Nerodyti rašymo indikatorių kanalų sąraše"
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:51
+#: src/features/auth/state/NewDeviceMonitoring.tsx:57
 msgid "Don't suggest {deviceName} again"
 msgstr "Daugiau nesiūlyti įrenginio „{deviceName}“"
 
@@ -14721,7 +14722,7 @@ msgid "Failed to delete channel"
 msgstr "Nepavyko ištrinti kanalo"
 
 #. Toast / inline error in the camera preview modal when enabling the camera fails.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:59
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:60
 msgid "Failed to enable camera."
 msgstr "Nepavyko įjungti kameros."
 
@@ -14736,7 +14737,7 @@ msgid "Failed to forward message"
 msgstr "Nepavyko persiųsti žinutės"
 
 #. Short label in the authentication desktop handoff account selector. Keep the tone plain and specific.
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:17
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:12
 msgid "Failed to generate token"
 msgstr "Nepavyko sugeneruoti žetono"
 
@@ -14900,12 +14901,12 @@ msgstr "Nepavyko išsiųsti pranešimo. Bandykite dar kartą."
 msgid "Failed to send verification email. Try again later."
 msgstr "Nepavyko išsiųsti patvirtinimo el. laiško. Bandykite dar kartą vėliau."
 
-#: src/features/app/components/BootstrapErrorScreen.tsx:36
+#: src/features/app/components/BootstrapErrorScreen.tsx:43
 msgid "Failed to start"
 msgstr "Nepavyko paleisti"
 
 #. Error text in the camera preview modal when the camera stream cannot be opened. Prompts user to check OS / browser permissions.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:54
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:55
 msgid "Failed to start camera preview. Check your camera permissions."
 msgstr "Nepavyko paleisti kameros peržiūros. Patikrinkite kameros leidimus."
 
@@ -15251,7 +15252,7 @@ msgstr "Filtravimas"
 msgid "Filtering by {language}"
 msgstr "Filtruojama pagal {language}"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:788
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:789
 msgid "Finalizing camera..."
 msgstr "Kamera ruošiama..."
 
@@ -18003,7 +18004,7 @@ msgstr "Paveldėta"
 msgid "Inherited from {inheritedFromLabel}"
 msgstr "Paveldėta iš {inheritedFromLabel}"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:790
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:791
 msgid "Initializing camera..."
 msgstr "Kamera paleidžiama..."
 
@@ -20510,7 +20511,7 @@ msgid "Member roles updated"
 msgstr "Nario vaidmenys atnaujinti"
 
 #: src/features/channel/components/guild_members_page/MembersTableHeaderRow.tsx:83
-#: src/features/user/components/popouts/UserProfileShared.tsx:282
+#: src/features/user/components/popouts/UserProfileShared.tsx:283
 msgid "Member since"
 msgstr "Narys nuo"
 
@@ -21133,7 +21134,7 @@ msgstr "Rizika nepilnamečiams, netinkamoje vietoje esantis suaugusiesiems skirt
 #. Switch label in the camera preview modal for flipping the local camera preview horizontally.
 #. Switch label in the video tab for flipping the local camera preview horizontally.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:106
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:72
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:73
 #: src/features/voice/components/VoiceSettingsMenus.tsx:114
 msgid "Mirror camera"
 msgstr "Veidrodinis kameros vaizdas"
@@ -22152,7 +22153,7 @@ msgid "New accounts can join up to 10 communities in the first 24 hours. Try aga
 msgstr "Naujos paskyros per pirmąsias 24 valandas gali prisijungti prie ne daugiau kaip 10 bendruomenių. Bandykite dar kartą vėliau."
 
 #. Body text in the authentication new device monitoring. Keep the tone plain and specific.
-#: src/features/auth/state/NewDeviceMonitoring.tsx:23
+#: src/features/auth/state/NewDeviceMonitoring.tsx:26
 msgid "New audio device detected!"
 msgstr "Aptiktas naujas garso įrenginys!"
 
@@ -22367,7 +22368,7 @@ msgstr "Nėra prieigos"
 msgid "No accessible channels"
 msgstr "Nėra pasiekiamų kanalų"
 
-#: src/features/auth/components/accounts/AccountSelector.tsx:148
+#: src/features/auth/components/accounts/AccountSelector.tsx:150
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx:88
 msgid "No accounts"
 msgstr "Nėra paskyrų"
@@ -23081,7 +23082,7 @@ msgstr "Nerasta"
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:69
 #: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:35
 #: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:43
-#: src/features/auth/state/NewDeviceMonitoring.tsx:31
+#: src/features/auth/state/NewDeviceMonitoring.tsx:34
 msgid "Not now"
 msgstr "Ne dabar"
 
@@ -24048,7 +24049,7 @@ msgstr "Operacinė sistema"
 msgid "Opt into experimental per-community and per-channel unread badge controls"
 msgstr "Įjunkite eksperimentines neskaitytų pranešimų ženklelių valdymo funkcijas atskiroms bendruomenėms ir kanalams"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:786
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:787
 msgid "Optimizing camera..."
 msgstr "Optimizuojama kamera..."
 
@@ -26580,7 +26581,7 @@ msgid "Reload {productName} to use web update {version}"
 msgstr "Įkelkite „{productName}“ iš naujo, kad pritaikytumėte žiniatinklio atnaujinimą {version}"
 
 #. Button on the crash screen that reloads the current app.
-#: src/features/app/components/ErrorFallback.tsx:142
+#: src/features/app/components/ErrorFallback.tsx:145
 msgid "Reload app"
 msgstr "Iš naujo įkelti programėlę"
 
@@ -26628,7 +26629,7 @@ msgstr "Prisiminti lango dydį ir padėtį"
 #. Short label in the shared app saved message missing card. Keep the tone plain and specific.
 #: src/features/app/components/shared/SavedMessageMissingCard.tsx:14
 #: src/features/auth/components/accounts/AccountSelector.tsx:78
-#: src/features/auth/components/accounts/AccountSelector.tsx:125
+#: src/features/auth/components/accounts/AccountSelector.tsx:128
 #: src/features/channel/components/MessageReactionsSheet.tsx:43
 #: src/features/expressions/components/modals/AddFavoriteChannelModal.tsx:52
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:156
@@ -27533,8 +27534,8 @@ msgstr "Atkurti ir paleisti iš naujo"
 #. Confirm dialog title for the destructive reset action.
 #. Destructive button on the crash screen. Clears local app data except preserved drafts.
 #. Destructive button on the startup failure screen. Clears local app data except preserved drafts.
-#: src/features/app/components/BootstrapErrorScreen.tsx:75
-#: src/features/app/components/ErrorFallback.tsx:164
+#: src/features/app/components/BootstrapErrorScreen.tsx:82
+#: src/features/app/components/ErrorFallback.tsx:167
 #: src/features/platform/utils/DesktopLocaleBridge.ts:175
 msgid "Reset app data"
 msgstr "Iš naujo nustatyti programos duomenis"
@@ -29218,7 +29219,7 @@ msgstr "Pasirinkite scenarijų, kurį norite taikyti..."
 msgid "Select a violation category."
 msgstr "Pasirinkite pažeidimo kategoriją."
 
-#: src/features/auth/components/accounts/AccountSelector.tsx:114
+#: src/features/auth/components/accounts/AccountSelector.tsx:117
 msgid "Select account"
 msgstr "Pasirinkti paskyrą"
 
@@ -29269,7 +29270,7 @@ msgstr "Pasirinkite leidimų sritis (ir nukreipimo URI, jei reikia)"
 msgid "Select text"
 msgstr "Pažymėti tekstą"
 
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:69
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:71
 msgid "Select the account you want to sign in with on your new device."
 msgstr "Pasirinkite paskyrą, su kuria norite prisijungti naujame įrenginyje."
 
@@ -29686,11 +29687,6 @@ msgstr "Seansas"
 #: src/features/auth/flow/AuthLoginLayout.tsx:58
 msgid "Session expired for {identifier}. Sign in again."
 msgstr "Seanso galiojimas baigėsi naudotojui „{identifier}“. Prisijunkite iš naujo."
-
-#. Toast error shown in the desktop-handoff account picker when the session for the chosen account has expired.
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:12
-msgid "Session expired. Sign in again."
-msgstr "Seanso galiojimas baigėsi. Prisijunkite iš naujo."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:15
@@ -30674,6 +30670,7 @@ msgstr "Šoninė juosta"
 msgid "Sign in"
 msgstr "Prisijungti"
 
+#: src/features/auth/components/accounts/AccountSelector.tsx:117
 #: src/features/auth/utils/AccountSwitcherModalUtils.tsx:274
 msgid "Sign in again"
 msgstr "Prisijungti iš naujo"
@@ -31237,11 +31234,11 @@ msgstr "Kai kurių naudotojų negalima pridėti"
 msgid "Something went wrong"
 msgstr "Kažkas nepavyko"
 
-#: src/features/app/components/ErrorFallback.tsx:126
+#: src/features/app/components/ErrorFallback.tsx:129
 msgid "Something went wrong and the app crashed. An update is available that may fix this issue."
 msgstr "Kažkas nepavyko ir programa nulūžo. Yra naujinys, kuris gali išspręsti šią problemą."
 
-#: src/features/app/components/ErrorFallback.tsx:128
+#: src/features/app/components/ErrorFallback.tsx:131
 msgid "Something went wrong and the app crashed. Try reloading or resetting the app."
 msgstr "Kažkas nepavyko ir programa nulūžo. Pabandykite iš naujo įkelti arba iš naujo nustatyti programą."
 
@@ -32505,7 +32502,7 @@ msgid "Switch between your global profile and per-community profiles"
 msgstr "Perjungti tarp visuotinio profilio ir profilių pagal bendruomenes"
 
 #. Short label in the authentication new device monitoring. Keep the tone plain and specific.
-#: src/features/auth/state/NewDeviceMonitoring.tsx:27
+#: src/features/auth/state/NewDeviceMonitoring.tsx:30
 msgid "Switch device"
 msgstr "Keisti įrenginį"
 
@@ -33222,11 +33219,11 @@ msgstr "Žyma #0000 skirta „Visionary“ prenumeratoriams. „Visionary“ neb
 msgid "The API is on a different origin than this page, so setup requests are sent without your session. Check the public origin and port this instance is configured with, then reload."
 msgstr "API veikia kitoje kilmėje nei šis puslapis, todėl sąrankos užklausos siunčiamos be jūsų seanso. Patikrinkite viešąją kilmę ir prievadą, su kuriais sukonfigūruota ši instancija, tada įkelkite puslapį iš naujo."
 
-#: src/features/app/components/ErrorFallback.tsx:120
+#: src/features/app/components/ErrorFallback.tsx:123
 msgid "The app crashed"
 msgstr "Programa nulūžo"
 
-#: src/features/app/components/ErrorFallback.tsx:124
+#: src/features/app/components/ErrorFallback.tsx:127
 msgid "The app has crashed. Checking for updates that might fix this issue…"
 msgstr "Programa nulūžo. Tikrinama, ar yra naujinimų, kurie galėtų išspręsti šią problemą…"
 
@@ -33529,7 +33526,7 @@ msgstr "Temos failai"
 msgid "Theme library"
 msgstr "Temų biblioteka"
 
-#: src/features/theme/components/pages/ThemeLoginPage.tsx:175
+#: src/features/theme/components/pages/ThemeLoginPage.tsx:176
 #: src/features/theme/components/pages/ThemeRegisterPage.tsx:70
 msgid "Theme not found"
 msgstr "Tema nerasta"
@@ -33935,7 +33932,7 @@ msgstr "Šis failas yra {fileSize}, viršijantis {maxSize} limitą. Animuoti lip
 msgid "This friends list needs more power"
 msgstr "Šiam draugų sąrašui reikia daugiau galios"
 
-#: src/features/expressions/components/pages/GiftLoginPage.tsx:177
+#: src/features/expressions/components/pages/GiftLoginPage.tsx:178
 #: src/features/expressions/components/pages/GiftRegisterPage.tsx:84
 msgid "This gift code has already been claimed."
 msgstr "Šis dovanos kodas jau panaudotas."
@@ -33947,7 +33944,7 @@ msgstr "Šis dovanos kodas jau panaudotas."
 msgid "This gift code is invalid or already claimed."
 msgstr "Šis dovanos kodas neteisingas arba jau panaudotas."
 
-#: src/features/expressions/components/pages/GiftLoginPage.tsx:166
+#: src/features/expressions/components/pages/GiftLoginPage.tsx:167
 #: src/features/expressions/components/pages/GiftRegisterPage.tsx:73
 msgid "This gift code may be invalid, expired, or already redeemed."
 msgstr "Šis dovanos kodas gali būti neteisingas, nebegaliojantis arba jau panaudotas."
@@ -34317,7 +34314,7 @@ msgstr "Ši tema per didelė, kad ją būtų galima bendrinti"
 msgid "This theme link is missing data."
 msgstr "Šioje temos nuorodoje trūksta duomenų."
 
-#: src/features/theme/components/pages/ThemeLoginPage.tsx:176
+#: src/features/theme/components/pages/ThemeLoginPage.tsx:177
 #: src/features/theme/components/pages/ThemeRegisterPage.tsx:71
 msgid "This theme may have been removed or the link is invalid."
 msgstr "Ši tema galėjo būti pašalinta arba nuoroda yra neteisinga."
@@ -34331,7 +34328,7 @@ msgstr "šis naudotojas"
 msgid "This user has limited their profile. Some details are hidden from people who aren't their friends."
 msgstr "Šis naudotojas apribojo savo profilį. Dalis informacijos nematoma žmonėms, kurie nėra jo draugai."
 
-#: src/features/user/components/popouts/UserProfileShared.tsx:394
+#: src/features/user/components/popouts/UserProfileShared.tsx:395
 msgid "This user has no roles in this community."
 msgstr "Šis naudotojas neturi vaidmenų šioje bendruomenėje."
 
@@ -35749,7 +35746,7 @@ msgstr "Nežinomas įrenginys"
 
 #. Fallback diagnostic text on the crash screen when an Error object has no message.
 #. Fallback error text shown when LaTeX rendering fails without an error message.
-#: src/features/app/components/ErrorFallback.tsx:25
+#: src/features/app/components/ErrorFallback.tsx:28
 #: src/features/messaging/components/markdown/renderers/common/CodeElements.tsx:37
 msgid "Unknown error"
 msgstr "Nežinoma klaida"
@@ -36233,7 +36230,7 @@ msgid "Update {productName} to view this message."
 msgstr "Atnaujinkite „{productName}“, kad galėtumėte peržiūrėti šią žinutę."
 
 #. Button on the crash screen that applies a found app update.
-#: src/features/app/components/ErrorFallback.tsx:140
+#: src/features/app/components/ErrorFallback.tsx:143
 msgid "Update app"
 msgstr "Atnaujinti programėlę"
 
@@ -39330,7 +39327,7 @@ msgstr "Negalite kalbėti šiame kanale"
 #. Tooltip / error shown in the camera preview modal when the user lacks Video permission in the current channel. Tone stays plain.
 #. Tooltip in the voice control bar when the user lacks the Video permission in this channel. Tone stays plain.
 #. Tooltip shown when the user lacks the Video permission in the voice channel. Tone stays plain.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:76
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:77
 #: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:50
 #: src/features/voice/components/VoiceControlBar.tsx:127
 msgid "You can't turn on your camera in this channel"

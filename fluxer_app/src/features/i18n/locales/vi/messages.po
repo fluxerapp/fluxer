@@ -1591,19 +1591,19 @@ msgstr "Gói đăng ký {premiumProductName}"
 msgid "{presenceCount} online"
 msgstr "{presenceCount} đang hoạt động"
 
-#: src/features/app/components/BootstrapErrorScreen.tsx:39
+#: src/features/app/components/BootstrapErrorScreen.tsx:46
 msgid "{PRODUCT_NAME} failed to start properly. This could be due to corrupted data or a temporary issue."
 msgstr "{PRODUCT_NAME} không khởi động được. Có thể do dữ liệu bị lỗi hoặc sự cố tạm thời."
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:196
+#: src/features/auth/state/NewDeviceMonitoring.tsx:208
 msgid "{PRODUCT_NAME} has found a new audio device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME} đã tìm thấy một thiết bị âm thanh mới có tên <0>{deviceName}</0>. Bạn có muốn chuyển sang thiết bị này không?"
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:185
+#: src/features/auth/state/NewDeviceMonitoring.tsx:197
 msgid "{PRODUCT_NAME} has found a new audio input device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME} đã tìm thấy một thiết bị đầu vào âm thanh mới có tên <0>{deviceName}</0>. Bạn có muốn chuyển sang thiết bị này không?"
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:190
+#: src/features/auth/state/NewDeviceMonitoring.tsx:202
 msgid "{PRODUCT_NAME} has found a new audio output device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME} đã tìm thấy một thiết bị đầu ra âm thanh mới có tên <0>{deviceName}</0>. Bạn có muốn chuyển sang thiết bị này không?"
 
@@ -1624,7 +1624,7 @@ msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware accelerati
 msgstr "{PRODUCT_NAME} cần khởi động lại để tắt tính năng tăng tốc phần cứng của Chromium. Chỉ sử dụng tùy chọn này nếu bạn đang khắc phục sự cố đồ họa hoặc mức sử dụng GPU cao."
 
 #. Accessible label for the Fluxer application icon.
-#: src/features/ui/components/icons/FluxerIcon.tsx:10
+#: src/features/ui/components/icons/FluxerIconMark.tsx:6
 msgid "{productName} application icon"
 msgstr "Biểu tượng ứng dụng {productName}"
 
@@ -2913,7 +2913,7 @@ msgstr "Thêm bình luận (tùy chọn)"
 msgid "Add a community"
 msgstr "Thêm cộng đồng"
 
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:75
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:77
 msgid "Add a different account"
 msgstr "Thêm tài khoản khác"
 
@@ -2975,7 +2975,7 @@ msgid "Add action."
 msgstr "Thêm hành động."
 
 #. OAuth authorization account step button. Opens the flow to sign in with another account.
-#: src/features/auth/components/accounts/AccountSelector.tsx:185
+#: src/features/auth/components/accounts/AccountSelector.tsx:186
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx:124
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:30
 msgid "Add an account"
@@ -5316,7 +5316,7 @@ msgstr "Đã tắt đặc quyền premium của backend"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:59
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:5
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:731
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:732
 msgid "Background"
 msgstr "Ảnh nền"
 
@@ -5743,7 +5743,7 @@ msgid "Blur"
 msgstr "Làm mờ"
 
 #. Slider label in the camera preview modal controlling how strong the background blur effect is.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:81
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:82
 msgid "Blur strength"
 msgstr "Độ mạnh của hiệu ứng làm mờ nền"
 
@@ -6278,7 +6278,7 @@ msgstr "Thiết bị camera"
 msgid "Camera effects"
 msgstr "Hiệu ứng camera"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:809
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:810
 msgid "Camera error"
 msgstr "Lỗi camera"
 
@@ -6321,7 +6321,7 @@ msgstr "Cần có quyền truy cập camera"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Title of the camera preview modal.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:186
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:63
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:64
 msgid "Camera preview"
 msgstr "Xem trước camera"
 
@@ -6429,7 +6429,7 @@ msgstr "Không thể tải tệp lên ở đây"
 #: src/features/user/components/modals/PhoneAddModal.tsx:401
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:174
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx:33
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:845
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:846
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:81
 msgid "Cancel"
 msgstr "Hủy"
@@ -6671,7 +6671,7 @@ msgstr "Căn giữa"
 msgid "Change avatar"
 msgstr "Đổi ảnh đại diện"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:744
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:745
 msgid "Change background"
 msgstr "Đổi hình nền"
 
@@ -7321,7 +7321,7 @@ msgstr "Phím tắt trò chuyện"
 msgid "Check for updates"
 msgstr "Kiểm tra cập nhật"
 
-#: src/features/app/components/BootstrapErrorScreen.tsx:56
+#: src/features/app/components/BootstrapErrorScreen.tsx:63
 msgid "Check our <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0> for status updates."
 msgstr "Kiểm tra <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0> của chúng tôi để biết thông tin cập nhật trạng thái."
 
@@ -7500,7 +7500,8 @@ msgstr "Chọn một cửa sổ trong trình chọn của hệ thống"
 #. OAuth authorization step title. The user must choose which account to authorize with.
 #: src/features/auth/components/accounts/AccountSelector.tsx:61
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:17
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:68
+#: src/features/auth/flow/AuthLoginLayout.tsx:492
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:70
 msgid "Choose an account"
 msgstr "Chọn một tài khoản"
 
@@ -9121,7 +9122,7 @@ msgstr "Kết nối: {connectionId}"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for external accounts and verified domains.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:415
-#: src/features/user/components/popouts/UserProfileShared.tsx:614
+#: src/features/user/components/popouts/UserProfileShared.tsx:615
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:8
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:30
 msgid "Connections"
@@ -9618,7 +9619,7 @@ msgid "Copy setup key"
 msgstr "Sao chép khóa thiết lập"
 
 #. Button on the crash screen that copies developer diagnostic text.
-#: src/features/app/components/ErrorFallback.tsx:152
+#: src/features/app/components/ErrorFallback.tsx:155
 msgid "Copy stack trace"
 msgstr "Sao chép dấu vết ngăn xếp"
 
@@ -11225,7 +11226,7 @@ msgstr "Mặc định"
 #. Default camera device option.
 #. Default device option label in the voice settings menu (alternate call site for the same concept as DEFAULT_DESCRIPTOR).
 #. Fallback device option shown before a microphone, speaker, or camera label is available.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:67
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:68
 #: src/features/voice/components/VoiceSettingsMenus.tsx:87
 #: src/features/voice/utils/SettingsDeviceOptions.ts:11
 msgctxt "device-option"
@@ -12683,7 +12684,7 @@ msgstr "Không hiển thị lại"
 msgid "Don't show typing indicators in the channel list"
 msgstr "Không hiển thị trạng thái đang nhập trong danh sách kênh"
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:51
+#: src/features/auth/state/NewDeviceMonitoring.tsx:57
 msgid "Don't suggest {deviceName} again"
 msgstr "Không gợi ý {deviceName} nữa"
 
@@ -14721,7 +14722,7 @@ msgid "Failed to delete channel"
 msgstr "Không thể xóa kênh"
 
 #. Toast / inline error in the camera preview modal when enabling the camera fails.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:59
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:60
 msgid "Failed to enable camera."
 msgstr "Không thể bật camera."
 
@@ -14736,7 +14737,7 @@ msgid "Failed to forward message"
 msgstr "Không thể chuyển tiếp tin nhắn"
 
 #. Short label in the authentication desktop handoff account selector. Keep the tone plain and specific.
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:17
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:12
 msgid "Failed to generate token"
 msgstr "Không tạo được mã thông báo"
 
@@ -14900,12 +14901,12 @@ msgstr "Không gửi được báo cáo. Vui lòng thử lại."
 msgid "Failed to send verification email. Try again later."
 msgstr "Không gửi được email xác minh. Vui lòng thử lại sau."
 
-#: src/features/app/components/BootstrapErrorScreen.tsx:36
+#: src/features/app/components/BootstrapErrorScreen.tsx:43
 msgid "Failed to start"
 msgstr "Không thể khởi động"
 
 #. Error text in the camera preview modal when the camera stream cannot be opened. Prompts user to check OS / browser permissions.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:54
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:55
 msgid "Failed to start camera preview. Check your camera permissions."
 msgstr "Không thể khởi chạy bản xem trước camera. Vui lòng kiểm tra quyền truy cập camera của bạn."
 
@@ -15251,7 +15252,7 @@ msgstr "Lọc"
 msgid "Filtering by {language}"
 msgstr "Lọc theo {language}"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:788
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:789
 msgid "Finalizing camera..."
 msgstr "Đang hoàn tất thiết lập camera..."
 
@@ -18003,7 +18004,7 @@ msgstr "Kế thừa"
 msgid "Inherited from {inheritedFromLabel}"
 msgstr "Kế thừa từ {inheritedFromLabel}"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:790
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:791
 msgid "Initializing camera..."
 msgstr "Đang khởi tạo camera..."
 
@@ -20510,7 +20511,7 @@ msgid "Member roles updated"
 msgstr "Đã cập nhật vai trò thành viên"
 
 #: src/features/channel/components/guild_members_page/MembersTableHeaderRow.tsx:83
-#: src/features/user/components/popouts/UserProfileShared.tsx:282
+#: src/features/user/components/popouts/UserProfileShared.tsx:283
 msgid "Member since"
 msgstr "Thành viên từ"
 
@@ -21133,7 +21134,7 @@ msgstr "Trẻ vị thành niên gặp rủi ro, nội dung người lớn không
 #. Switch label in the camera preview modal for flipping the local camera preview horizontally.
 #. Switch label in the video tab for flipping the local camera preview horizontally.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:106
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:72
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:73
 #: src/features/voice/components/VoiceSettingsMenus.tsx:114
 msgid "Mirror camera"
 msgstr "Phản chiếu camera"
@@ -22152,7 +22153,7 @@ msgid "New accounts can join up to 10 communities in the first 24 hours. Try aga
 msgstr "Tài khoản mới có thể tham gia tối đa 10 cộng đồng trong 24 giờ đầu tiên. Vui lòng thử lại sau."
 
 #. Body text in the authentication new device monitoring. Keep the tone plain and specific.
-#: src/features/auth/state/NewDeviceMonitoring.tsx:23
+#: src/features/auth/state/NewDeviceMonitoring.tsx:26
 msgid "New audio device detected!"
 msgstr "Đã phát hiện thiết bị âm thanh mới!"
 
@@ -22367,7 +22368,7 @@ msgstr "Không có quyền truy cập"
 msgid "No accessible channels"
 msgstr "Không có kênh nào truy cập được"
 
-#: src/features/auth/components/accounts/AccountSelector.tsx:148
+#: src/features/auth/components/accounts/AccountSelector.tsx:150
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx:88
 msgid "No accounts"
 msgstr "Không có tài khoản nào"
@@ -23081,7 +23082,7 @@ msgstr "Không tìm thấy trang"
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:69
 #: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:35
 #: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:43
-#: src/features/auth/state/NewDeviceMonitoring.tsx:31
+#: src/features/auth/state/NewDeviceMonitoring.tsx:34
 msgid "Not now"
 msgstr "Để sau"
 
@@ -24048,7 +24049,7 @@ msgstr "Hệ điều hành"
 msgid "Opt into experimental per-community and per-channel unread badge controls"
 msgstr "Bật các tùy chọn thử nghiệm kiểm soát huy hiệu chưa đọc cho từng cộng đồng và từng kênh"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:786
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:787
 msgid "Optimizing camera..."
 msgstr "Đang tối ưu hóa camera..."
 
@@ -26580,7 +26581,7 @@ msgid "Reload {productName} to use web update {version}"
 msgstr "Tải lại {productName} để sử dụng bản cập nhật web {version}"
 
 #. Button on the crash screen that reloads the current app.
-#: src/features/app/components/ErrorFallback.tsx:142
+#: src/features/app/components/ErrorFallback.tsx:145
 msgid "Reload app"
 msgstr "Tải lại ứng dụng"
 
@@ -26628,7 +26629,7 @@ msgstr "Ghi nhớ kích thước và vị trí cửa sổ"
 #. Short label in the shared app saved message missing card. Keep the tone plain and specific.
 #: src/features/app/components/shared/SavedMessageMissingCard.tsx:14
 #: src/features/auth/components/accounts/AccountSelector.tsx:78
-#: src/features/auth/components/accounts/AccountSelector.tsx:125
+#: src/features/auth/components/accounts/AccountSelector.tsx:128
 #: src/features/channel/components/MessageReactionsSheet.tsx:43
 #: src/features/expressions/components/modals/AddFavoriteChannelModal.tsx:52
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:156
@@ -27533,8 +27534,8 @@ msgstr "Đặt lại và khởi động lại"
 #. Confirm dialog title for the destructive reset action.
 #. Destructive button on the crash screen. Clears local app data except preserved drafts.
 #. Destructive button on the startup failure screen. Clears local app data except preserved drafts.
-#: src/features/app/components/BootstrapErrorScreen.tsx:75
-#: src/features/app/components/ErrorFallback.tsx:164
+#: src/features/app/components/BootstrapErrorScreen.tsx:82
+#: src/features/app/components/ErrorFallback.tsx:167
 #: src/features/platform/utils/DesktopLocaleBridge.ts:175
 msgid "Reset app data"
 msgstr "Đặt lại dữ liệu ứng dụng"
@@ -29218,7 +29219,7 @@ msgstr "Chọn một kịch bản để áp dụng..."
 msgid "Select a violation category."
 msgstr "Chọn danh mục vi phạm."
 
-#: src/features/auth/components/accounts/AccountSelector.tsx:114
+#: src/features/auth/components/accounts/AccountSelector.tsx:117
 msgid "Select account"
 msgstr "Chọn tài khoản"
 
@@ -29269,7 +29270,7 @@ msgstr "Chọn phạm vi (và URI chuyển hướng nếu cần)"
 msgid "Select text"
 msgstr "Chọn văn bản"
 
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:69
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:71
 msgid "Select the account you want to sign in with on your new device."
 msgstr "Chọn tài khoản bạn muốn đăng nhập trên thiết bị mới của mình."
 
@@ -29686,11 +29687,6 @@ msgstr "Phiên"
 #: src/features/auth/flow/AuthLoginLayout.tsx:58
 msgid "Session expired for {identifier}. Sign in again."
 msgstr "Phiên đăng nhập của {identifier} đã hết hạn. Hãy đăng nhập lại."
-
-#. Toast error shown in the desktop-handoff account picker when the session for the chosen account has expired.
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:12
-msgid "Session expired. Sign in again."
-msgstr "Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:15
@@ -30674,6 +30670,7 @@ msgstr "Thanh bên"
 msgid "Sign in"
 msgstr "Đăng nhập"
 
+#: src/features/auth/components/accounts/AccountSelector.tsx:117
 #: src/features/auth/utils/AccountSwitcherModalUtils.tsx:274
 msgid "Sign in again"
 msgstr "Đăng nhập lại"
@@ -31237,11 +31234,11 @@ msgstr "Không thể thêm một số người dùng"
 msgid "Something went wrong"
 msgstr "Đã xảy ra lỗi"
 
-#: src/features/app/components/ErrorFallback.tsx:126
+#: src/features/app/components/ErrorFallback.tsx:129
 msgid "Something went wrong and the app crashed. An update is available that may fix this issue."
 msgstr "Đã xảy ra lỗi khiến ứng dụng bị sập. Có bản cập nhật mới có thể khắc phục sự cố này."
 
-#: src/features/app/components/ErrorFallback.tsx:128
+#: src/features/app/components/ErrorFallback.tsx:131
 msgid "Something went wrong and the app crashed. Try reloading or resetting the app."
 msgstr "Đã xảy ra lỗi khiến ứng dụng bị sập. Hãy thử tải lại hoặc đặt lại ứng dụng."
 
@@ -32505,7 +32502,7 @@ msgid "Switch between your global profile and per-community profiles"
 msgstr "Chuyển đổi giữa hồ sơ chung và hồ sơ từng cộng đồng"
 
 #. Short label in the authentication new device monitoring. Keep the tone plain and specific.
-#: src/features/auth/state/NewDeviceMonitoring.tsx:27
+#: src/features/auth/state/NewDeviceMonitoring.tsx:30
 msgid "Switch device"
 msgstr "Đổi thiết bị"
 
@@ -33222,11 +33219,11 @@ msgstr "Thẻ #0000 được dành riêng cho người đăng ký Visionary. Vis
 msgid "The API is on a different origin than this page, so setup requests are sent without your session. Check the public origin and port this instance is configured with, then reload."
 msgstr "API đang ở một nguồn gốc khác với trang này, nên các yêu cầu thiết lập được gửi đi mà không có phiên của bạn. Hãy kiểm tra nguồn gốc và cổng công khai mà máy chủ này được cấu hình, sau đó tải lại."
 
-#: src/features/app/components/ErrorFallback.tsx:120
+#: src/features/app/components/ErrorFallback.tsx:123
 msgid "The app crashed"
 msgstr "Ứng dụng đã gặp sự cố"
 
-#: src/features/app/components/ErrorFallback.tsx:124
+#: src/features/app/components/ErrorFallback.tsx:127
 msgid "The app has crashed. Checking for updates that might fix this issue…"
 msgstr "Ứng dụng đã gặp sự cố. Đang kiểm tra bản cập nhật có thể khắc phục vấn đề này…"
 
@@ -33529,7 +33526,7 @@ msgstr "Tệp chủ đề"
 msgid "Theme library"
 msgstr "Thư viện chủ đề"
 
-#: src/features/theme/components/pages/ThemeLoginPage.tsx:175
+#: src/features/theme/components/pages/ThemeLoginPage.tsx:176
 #: src/features/theme/components/pages/ThemeRegisterPage.tsx:70
 msgid "Theme not found"
 msgstr "Không tìm thấy chủ đề"
@@ -33935,7 +33932,7 @@ msgstr "Tệp này có dung lượng {fileSize}, vượt quá giới hạn {maxS
 msgid "This friends list needs more power"
 msgstr "Danh sách bạn bè này cần thêm sức mạnh"
 
-#: src/features/expressions/components/pages/GiftLoginPage.tsx:177
+#: src/features/expressions/components/pages/GiftLoginPage.tsx:178
 #: src/features/expressions/components/pages/GiftRegisterPage.tsx:84
 msgid "This gift code has already been claimed."
 msgstr "Mã quà tặng này đã được nhận."
@@ -33947,7 +33944,7 @@ msgstr "Mã quà tặng này đã được nhận."
 msgid "This gift code is invalid or already claimed."
 msgstr "Mã quà tặng này không hợp lệ hoặc đã được nhận."
 
-#: src/features/expressions/components/pages/GiftLoginPage.tsx:166
+#: src/features/expressions/components/pages/GiftLoginPage.tsx:167
 #: src/features/expressions/components/pages/GiftRegisterPage.tsx:73
 msgid "This gift code may be invalid, expired, or already redeemed."
 msgstr "Mã quà tặng này có thể không hợp lệ, đã hết hạn hoặc đã được sử dụng."
@@ -34317,7 +34314,7 @@ msgstr "Chủ đề này quá lớn để chia sẻ"
 msgid "This theme link is missing data."
 msgstr "Liên kết chủ đề này bị thiếu dữ liệu."
 
-#: src/features/theme/components/pages/ThemeLoginPage.tsx:176
+#: src/features/theme/components/pages/ThemeLoginPage.tsx:177
 #: src/features/theme/components/pages/ThemeRegisterPage.tsx:71
 msgid "This theme may have been removed or the link is invalid."
 msgstr "Chủ đề này có thể đã bị gỡ hoặc liên kết không hợp lệ."
@@ -34331,7 +34328,7 @@ msgstr "người dùng này"
 msgid "This user has limited their profile. Some details are hidden from people who aren't their friends."
 msgstr "Người dùng này đã giới hạn hồ sơ của mình. Một số thông tin bị ẩn với những người không phải là bạn bè."
 
-#: src/features/user/components/popouts/UserProfileShared.tsx:394
+#: src/features/user/components/popouts/UserProfileShared.tsx:395
 msgid "This user has no roles in this community."
 msgstr "Người dùng này không có vai trò nào trong cộng đồng này."
 
@@ -35749,7 +35746,7 @@ msgstr "Thiết bị không xác định"
 
 #. Fallback diagnostic text on the crash screen when an Error object has no message.
 #. Fallback error text shown when LaTeX rendering fails without an error message.
-#: src/features/app/components/ErrorFallback.tsx:25
+#: src/features/app/components/ErrorFallback.tsx:28
 #: src/features/messaging/components/markdown/renderers/common/CodeElements.tsx:37
 msgid "Unknown error"
 msgstr "Lỗi không xác định"
@@ -36233,7 +36230,7 @@ msgid "Update {productName} to view this message."
 msgstr "Cập nhật {productName} để xem tin nhắn này."
 
 #. Button on the crash screen that applies a found app update.
-#: src/features/app/components/ErrorFallback.tsx:140
+#: src/features/app/components/ErrorFallback.tsx:143
 msgid "Update app"
 msgstr "Cập nhật ứng dụng"
 
@@ -39330,7 +39327,7 @@ msgstr "Bạn không thể nói trong kênh này"
 #. Tooltip / error shown in the camera preview modal when the user lacks Video permission in the current channel. Tone stays plain.
 #. Tooltip in the voice control bar when the user lacks the Video permission in this channel. Tone stays plain.
 #. Tooltip shown when the user lacks the Video permission in the voice channel. Tone stays plain.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:76
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:77
 #: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:50
 #: src/features/voice/components/VoiceControlBar.tsx:127
 msgid "You can't turn on your camera in this channel"

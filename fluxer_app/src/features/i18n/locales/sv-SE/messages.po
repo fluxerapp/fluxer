@@ -1591,19 +1591,19 @@ msgstr "{premiumProductName}-abonnemang"
 msgid "{presenceCount} online"
 msgstr "{presenceCount} online"
 
-#: src/features/app/components/BootstrapErrorScreen.tsx:39
+#: src/features/app/components/BootstrapErrorScreen.tsx:46
 msgid "{PRODUCT_NAME} failed to start properly. This could be due to corrupted data or a temporary issue."
 msgstr "{PRODUCT_NAME} kunde inte starta ordentligt. Detta kan bero på skadad data eller ett tillfälligt problem."
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:196
+#: src/features/auth/state/NewDeviceMonitoring.tsx:208
 msgid "{PRODUCT_NAME} has found a new audio device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME} har hittat en ny ljudenhet med namnet <0>{deviceName}</0>. Vill du byta till den?"
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:185
+#: src/features/auth/state/NewDeviceMonitoring.tsx:197
 msgid "{PRODUCT_NAME} has found a new audio input device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME} har hittat en ny ljudingångsenhet som heter <0>{deviceName}</0>. Vill du byta till den?"
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:190
+#: src/features/auth/state/NewDeviceMonitoring.tsx:202
 msgid "{PRODUCT_NAME} has found a new audio output device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME} har hittat en ny ljudutgångsenhet med namnet <0>{deviceName}</0>. Vill du byta till den?"
 
@@ -1624,7 +1624,7 @@ msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware accelerati
 msgstr "{PRODUCT_NAME} måste startas om för att inaktivera Chromiums hårdvaruacceleration. Använd detta endast om du felsöker grafikproblem eller hög GPU-användning."
 
 #. Accessible label for the Fluxer application icon.
-#: src/features/ui/components/icons/FluxerIcon.tsx:10
+#: src/features/ui/components/icons/FluxerIconMark.tsx:6
 msgid "{productName} application icon"
 msgstr "{productName}-appikon"
 
@@ -2913,7 +2913,7 @@ msgstr "Lägg till en kommentar (valfritt)"
 msgid "Add a community"
 msgstr "Lägg till en community"
 
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:75
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:77
 msgid "Add a different account"
 msgstr "Lägg till ett annat konto"
 
@@ -2975,7 +2975,7 @@ msgid "Add action."
 msgstr "Lägg till åtgärd."
 
 #. OAuth authorization account step button. Opens the flow to sign in with another account.
-#: src/features/auth/components/accounts/AccountSelector.tsx:185
+#: src/features/auth/components/accounts/AccountSelector.tsx:186
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx:124
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:30
 msgid "Add an account"
@@ -5316,7 +5316,7 @@ msgstr "Premiumförmåner är inaktiverade på servern"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:59
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:5
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:731
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:732
 msgid "Background"
 msgstr "Bakgrund"
 
@@ -5743,7 +5743,7 @@ msgid "Blur"
 msgstr "Gör suddigt"
 
 #. Slider label in the camera preview modal controlling how strong the background blur effect is.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:81
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:82
 msgid "Blur strength"
 msgstr "Oskärpans styrka"
 
@@ -6278,7 +6278,7 @@ msgstr "Kameraenhet"
 msgid "Camera effects"
 msgstr "Kameraeffekter"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:809
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:810
 msgid "Camera error"
 msgstr "Kamerafel"
 
@@ -6321,7 +6321,7 @@ msgstr "Kamerabehörighet krävs"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Title of the camera preview modal.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:186
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:63
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:64
 msgid "Camera preview"
 msgstr "Kameraförhandsvisning"
 
@@ -6429,7 +6429,7 @@ msgstr "Kan inte ladda upp filer här"
 #: src/features/user/components/modals/PhoneAddModal.tsx:401
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:174
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx:33
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:845
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:846
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:81
 msgid "Cancel"
 msgstr "Avbryt"
@@ -6671,7 +6671,7 @@ msgstr "Centrerad"
 msgid "Change avatar"
 msgstr "Ändra avatar"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:744
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:745
 msgid "Change background"
 msgstr "Ändra bakgrund"
 
@@ -7321,7 +7321,7 @@ msgstr "Chattgenvägar"
 msgid "Check for updates"
 msgstr "Sök efter uppdateringar"
 
-#: src/features/app/components/BootstrapErrorScreen.tsx:56
+#: src/features/app/components/BootstrapErrorScreen.tsx:63
 msgid "Check our <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0> for status updates."
 msgstr "Se <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0> för statusuppdateringar."
 
@@ -7500,7 +7500,8 @@ msgstr "Välj ett fönster i systemväljaren"
 #. OAuth authorization step title. The user must choose which account to authorize with.
 #: src/features/auth/components/accounts/AccountSelector.tsx:61
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:17
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:68
+#: src/features/auth/flow/AuthLoginLayout.tsx:492
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:70
 msgid "Choose an account"
 msgstr "Välj ett konto"
 
@@ -9121,7 +9122,7 @@ msgstr "Anslutning: {connectionId}"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for external accounts and verified domains.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:415
-#: src/features/user/components/popouts/UserProfileShared.tsx:614
+#: src/features/user/components/popouts/UserProfileShared.tsx:615
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:8
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:30
 msgid "Connections"
@@ -9618,7 +9619,7 @@ msgid "Copy setup key"
 msgstr "Kopiera konfigurationsnyckeln"
 
 #. Button on the crash screen that copies developer diagnostic text.
-#: src/features/app/components/ErrorFallback.tsx:152
+#: src/features/app/components/ErrorFallback.tsx:155
 msgid "Copy stack trace"
 msgstr "Kopiera stackspårning"
 
@@ -11225,7 +11226,7 @@ msgstr "Standard"
 #. Default camera device option.
 #. Default device option label in the voice settings menu (alternate call site for the same concept as DEFAULT_DESCRIPTOR).
 #. Fallback device option shown before a microphone, speaker, or camera label is available.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:67
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:68
 #: src/features/voice/components/VoiceSettingsMenus.tsx:87
 #: src/features/voice/utils/SettingsDeviceOptions.ts:11
 msgctxt "device-option"
@@ -12683,7 +12684,7 @@ msgstr "Visa inte igen"
 msgid "Don't show typing indicators in the channel list"
 msgstr "Visa inte skrivindikatorer i kanallistan"
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:51
+#: src/features/auth/state/NewDeviceMonitoring.tsx:57
 msgid "Don't suggest {deviceName} again"
 msgstr "Föreslå inte {deviceName} igen"
 
@@ -14721,7 +14722,7 @@ msgid "Failed to delete channel"
 msgstr "Kunde inte radera kanal"
 
 #. Toast / inline error in the camera preview modal when enabling the camera fails.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:59
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:60
 msgid "Failed to enable camera."
 msgstr "Kunde inte aktivera kameran."
 
@@ -14736,7 +14737,7 @@ msgid "Failed to forward message"
 msgstr "Kunde inte vidarebefordra meddelandet"
 
 #. Short label in the authentication desktop handoff account selector. Keep the tone plain and specific.
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:17
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:12
 msgid "Failed to generate token"
 msgstr "Kunde inte skapa token"
 
@@ -14900,12 +14901,12 @@ msgstr "Kunde inte skicka anmälan. Försök igen."
 msgid "Failed to send verification email. Try again later."
 msgstr "Det gick inte att skicka verifieringsmeddelandet. Försök igen senare."
 
-#: src/features/app/components/BootstrapErrorScreen.tsx:36
+#: src/features/app/components/BootstrapErrorScreen.tsx:43
 msgid "Failed to start"
 msgstr "Kunde inte starta"
 
 #. Error text in the camera preview modal when the camera stream cannot be opened. Prompts user to check OS / browser permissions.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:54
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:55
 msgid "Failed to start camera preview. Check your camera permissions."
 msgstr "Det gick inte att starta kameraförhandsvisningen. Kontrollera dina kamerabehörigheter."
 
@@ -15251,7 +15252,7 @@ msgstr "Filtrering"
 msgid "Filtering by {language}"
 msgstr "Filtrerar efter {language}"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:788
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:789
 msgid "Finalizing camera..."
 msgstr "Slutför kamerainställningen..."
 
@@ -18003,7 +18004,7 @@ msgstr "Ärvd"
 msgid "Inherited from {inheritedFromLabel}"
 msgstr "Ärvt från {inheritedFromLabel}"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:790
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:791
 msgid "Initializing camera..."
 msgstr "Initierar kamera..."
 
@@ -20510,7 +20511,7 @@ msgid "Member roles updated"
 msgstr "Medlemsroller uppdaterade"
 
 #: src/features/channel/components/guild_members_page/MembersTableHeaderRow.tsx:83
-#: src/features/user/components/popouts/UserProfileShared.tsx:282
+#: src/features/user/components/popouts/UserProfileShared.tsx:283
 msgid "Member since"
 msgstr "Medlem sedan"
 
@@ -21133,7 +21134,7 @@ msgstr "Minderåriga i riskzonen, vuxet innehåll på fel plats eller oönskat b
 #. Switch label in the camera preview modal for flipping the local camera preview horizontally.
 #. Switch label in the video tab for flipping the local camera preview horizontally.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:106
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:72
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:73
 #: src/features/voice/components/VoiceSettingsMenus.tsx:114
 msgid "Mirror camera"
 msgstr "Spegelvänd kamera"
@@ -22152,7 +22153,7 @@ msgid "New accounts can join up to 10 communities in the first 24 hours. Try aga
 msgstr "Nya konton kan gå med i upp till 10 communities under de första 24 timmarna. Försök igen senare."
 
 #. Body text in the authentication new device monitoring. Keep the tone plain and specific.
-#: src/features/auth/state/NewDeviceMonitoring.tsx:23
+#: src/features/auth/state/NewDeviceMonitoring.tsx:26
 msgid "New audio device detected!"
 msgstr "Ny ljudenhet upptäcktes!"
 
@@ -22367,7 +22368,7 @@ msgstr "Ingen åtkomst"
 msgid "No accessible channels"
 msgstr "Inga tillgängliga kanaler"
 
-#: src/features/auth/components/accounts/AccountSelector.tsx:148
+#: src/features/auth/components/accounts/AccountSelector.tsx:150
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx:88
 msgid "No accounts"
 msgstr "Inga konton"
@@ -23081,7 +23082,7 @@ msgstr "Sidan hittades inte"
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:69
 #: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:35
 #: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:43
-#: src/features/auth/state/NewDeviceMonitoring.tsx:31
+#: src/features/auth/state/NewDeviceMonitoring.tsx:34
 msgid "Not now"
 msgstr "Inte nu"
 
@@ -24048,7 +24049,7 @@ msgstr "Operativsystem"
 msgid "Opt into experimental per-community and per-channel unread badge controls"
 msgstr "Aktivera experimentella inställningar för märken för olästa meddelanden per community och kanal"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:786
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:787
 msgid "Optimizing camera..."
 msgstr "Optimerar kamera..."
 
@@ -26580,7 +26581,7 @@ msgid "Reload {productName} to use web update {version}"
 msgstr "Ladda om {productName} för att använda webbaserad uppdatering {version}"
 
 #. Button on the crash screen that reloads the current app.
-#: src/features/app/components/ErrorFallback.tsx:142
+#: src/features/app/components/ErrorFallback.tsx:145
 msgid "Reload app"
 msgstr "Ladda om appen"
 
@@ -26628,7 +26629,7 @@ msgstr "Kom ihåg fönsterstorlek och position"
 #. Short label in the shared app saved message missing card. Keep the tone plain and specific.
 #: src/features/app/components/shared/SavedMessageMissingCard.tsx:14
 #: src/features/auth/components/accounts/AccountSelector.tsx:78
-#: src/features/auth/components/accounts/AccountSelector.tsx:125
+#: src/features/auth/components/accounts/AccountSelector.tsx:128
 #: src/features/channel/components/MessageReactionsSheet.tsx:43
 #: src/features/expressions/components/modals/AddFavoriteChannelModal.tsx:52
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:156
@@ -27533,8 +27534,8 @@ msgstr "Återställ och starta om"
 #. Confirm dialog title for the destructive reset action.
 #. Destructive button on the crash screen. Clears local app data except preserved drafts.
 #. Destructive button on the startup failure screen. Clears local app data except preserved drafts.
-#: src/features/app/components/BootstrapErrorScreen.tsx:75
-#: src/features/app/components/ErrorFallback.tsx:164
+#: src/features/app/components/BootstrapErrorScreen.tsx:82
+#: src/features/app/components/ErrorFallback.tsx:167
 #: src/features/platform/utils/DesktopLocaleBridge.ts:175
 msgid "Reset app data"
 msgstr "Återställ appdata"
@@ -29218,7 +29219,7 @@ msgstr "Välj ett scenario att tillämpa..."
 msgid "Select a violation category."
 msgstr "Välj en kategori för överträdelsen."
 
-#: src/features/auth/components/accounts/AccountSelector.tsx:114
+#: src/features/auth/components/accounts/AccountSelector.tsx:117
 msgid "Select account"
 msgstr "Välj konto"
 
@@ -29269,7 +29270,7 @@ msgstr "Välj behörighetsomfång (och omdirigerings-URI om det behövs)"
 msgid "Select text"
 msgstr "Markera text"
 
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:69
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:71
 msgid "Select the account you want to sign in with on your new device."
 msgstr "Välj det konto du vill logga in med på din nya enhet."
 
@@ -29686,11 +29687,6 @@ msgstr "Session"
 #: src/features/auth/flow/AuthLoginLayout.tsx:58
 msgid "Session expired for {identifier}. Sign in again."
 msgstr "Sessionen har gått ut för {identifier}. Logga in igen."
-
-#. Toast error shown in the desktop-handoff account picker when the session for the chosen account has expired.
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:12
-msgid "Session expired. Sign in again."
-msgstr "Sessionen har upphört. Logga in igen."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:15
@@ -30674,6 +30670,7 @@ msgstr "Sidofält"
 msgid "Sign in"
 msgstr "Logga in"
 
+#: src/features/auth/components/accounts/AccountSelector.tsx:117
 #: src/features/auth/utils/AccountSwitcherModalUtils.tsx:274
 msgid "Sign in again"
 msgstr "Logga in igen"
@@ -31237,11 +31234,11 @@ msgstr "Vissa användare kan inte läggas till"
 msgid "Something went wrong"
 msgstr "Något gick fel"
 
-#: src/features/app/components/ErrorFallback.tsx:126
+#: src/features/app/components/ErrorFallback.tsx:129
 msgid "Something went wrong and the app crashed. An update is available that may fix this issue."
 msgstr "Något gick fel och appen kraschade. En uppdatering finns tillgänglig som kan lösa problemet."
 
-#: src/features/app/components/ErrorFallback.tsx:128
+#: src/features/app/components/ErrorFallback.tsx:131
 msgid "Something went wrong and the app crashed. Try reloading or resetting the app."
 msgstr "Något gick fel och appen kraschade. Försök att ladda om eller återställa appen."
 
@@ -32505,7 +32502,7 @@ msgid "Switch between your global profile and per-community profiles"
 msgstr "Växla mellan din globala profil och profiler per community"
 
 #. Short label in the authentication new device monitoring. Keep the tone plain and specific.
-#: src/features/auth/state/NewDeviceMonitoring.tsx:27
+#: src/features/auth/state/NewDeviceMonitoring.tsx:30
 msgid "Switch device"
 msgstr "Byt enhet"
 
@@ -33222,11 +33219,11 @@ msgstr "Taggen #0000 är reserverad för Visionary-medlemmar. Visionary kan inte
 msgid "The API is on a different origin than this page, so setup requests are sent without your session. Check the public origin and port this instance is configured with, then reload."
 msgstr "API:et har ett annat ursprung än den här sidan, så konfigurationsförfrågningar skickas utan din session. Kontrollera vilket offentligt ursprung och vilken port instansen är konfigurerad med och ladda sedan om."
 
-#: src/features/app/components/ErrorFallback.tsx:120
+#: src/features/app/components/ErrorFallback.tsx:123
 msgid "The app crashed"
 msgstr "Appen kraschade"
 
-#: src/features/app/components/ErrorFallback.tsx:124
+#: src/features/app/components/ErrorFallback.tsx:127
 msgid "The app has crashed. Checking for updates that might fix this issue…"
 msgstr "Appen har kraschat. Söker efter uppdateringar som kan lösa problemet…"
 
@@ -33529,7 +33526,7 @@ msgstr "Temafiler"
 msgid "Theme library"
 msgstr "Temabibliotek"
 
-#: src/features/theme/components/pages/ThemeLoginPage.tsx:175
+#: src/features/theme/components/pages/ThemeLoginPage.tsx:176
 #: src/features/theme/components/pages/ThemeRegisterPage.tsx:70
 msgid "Theme not found"
 msgstr "Tema hittades inte"
@@ -33935,7 +33932,7 @@ msgstr "Filen är {fileSize}, vilket är över gränsen på {maxSize}. Animerade
 msgid "This friends list needs more power"
 msgstr "Den här vänlistan behöver mer kraft"
 
-#: src/features/expressions/components/pages/GiftLoginPage.tsx:177
+#: src/features/expressions/components/pages/GiftLoginPage.tsx:178
 #: src/features/expressions/components/pages/GiftRegisterPage.tsx:84
 msgid "This gift code has already been claimed."
 msgstr "Den här presentkoden har redan lösts in."
@@ -33947,7 +33944,7 @@ msgstr "Den här presentkoden har redan lösts in."
 msgid "This gift code is invalid or already claimed."
 msgstr "Den här presentkoden är ogiltig eller har redan lösts in."
 
-#: src/features/expressions/components/pages/GiftLoginPage.tsx:166
+#: src/features/expressions/components/pages/GiftLoginPage.tsx:167
 #: src/features/expressions/components/pages/GiftRegisterPage.tsx:73
 msgid "This gift code may be invalid, expired, or already redeemed."
 msgstr "Den här presentkoden kan vara ogiltig, utgången eller redan inlöst."
@@ -34317,7 +34314,7 @@ msgstr "Temat är för stort för att dela"
 msgid "This theme link is missing data."
 msgstr "Temalänken saknar data."
 
-#: src/features/theme/components/pages/ThemeLoginPage.tsx:176
+#: src/features/theme/components/pages/ThemeLoginPage.tsx:177
 #: src/features/theme/components/pages/ThemeRegisterPage.tsx:71
 msgid "This theme may have been removed or the link is invalid."
 msgstr "Det här temat kan ha tagits bort eller så är länken ogiltig."
@@ -34331,7 +34328,7 @@ msgstr "den här användaren"
 msgid "This user has limited their profile. Some details are hidden from people who aren't their friends."
 msgstr "Den här användaren har begränsat sin profil. Vissa detaljer är dolda för personer som inte är deras vänner."
 
-#: src/features/user/components/popouts/UserProfileShared.tsx:394
+#: src/features/user/components/popouts/UserProfileShared.tsx:395
 msgid "This user has no roles in this community."
 msgstr "Den här användaren har inga roller i den här communityn."
 
@@ -35749,7 +35746,7 @@ msgstr "Okänd enhet"
 
 #. Fallback diagnostic text on the crash screen when an Error object has no message.
 #. Fallback error text shown when LaTeX rendering fails without an error message.
-#: src/features/app/components/ErrorFallback.tsx:25
+#: src/features/app/components/ErrorFallback.tsx:28
 #: src/features/messaging/components/markdown/renderers/common/CodeElements.tsx:37
 msgid "Unknown error"
 msgstr "Okänt fel"
@@ -36233,7 +36230,7 @@ msgid "Update {productName} to view this message."
 msgstr "Uppdatera {productName} för att se det här meddelandet."
 
 #. Button on the crash screen that applies a found app update.
-#: src/features/app/components/ErrorFallback.tsx:140
+#: src/features/app/components/ErrorFallback.tsx:143
 msgid "Update app"
 msgstr "Uppdatera appen"
 
@@ -39330,7 +39327,7 @@ msgstr "Du kan inte prata i den här kanalen"
 #. Tooltip / error shown in the camera preview modal when the user lacks Video permission in the current channel. Tone stays plain.
 #. Tooltip in the voice control bar when the user lacks the Video permission in this channel. Tone stays plain.
 #. Tooltip shown when the user lacks the Video permission in the voice channel. Tone stays plain.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:76
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:77
 #: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:50
 #: src/features/voice/components/VoiceControlBar.tsx:127
 msgid "You can't turn on your camera in this channel"

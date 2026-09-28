@@ -1591,19 +1591,19 @@ msgstr "اشتراك {premiumProductName}"
 msgid "{presenceCount} online"
 msgstr "{presenceCount} متصل"
 
-#: src/features/app/components/BootstrapErrorScreen.tsx:39
+#: src/features/app/components/BootstrapErrorScreen.tsx:46
 msgid "{PRODUCT_NAME} failed to start properly. This could be due to corrupted data or a temporary issue."
 msgstr "تعذر بدء تشغيل {PRODUCT_NAME} بشكل صحيح. قد يكون هذا بسبب بيانات تالفة أو مشكلة مؤقتة."
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:196
+#: src/features/auth/state/NewDeviceMonitoring.tsx:208
 msgid "{PRODUCT_NAME} has found a new audio device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "اكتشف {PRODUCT_NAME} جهازًا صوتيًا جديدًا باسم <0>{deviceName}</0>. هل تريد التبديل إليه؟"
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:185
+#: src/features/auth/state/NewDeviceMonitoring.tsx:197
 msgid "{PRODUCT_NAME} has found a new audio input device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "اكتشف {PRODUCT_NAME} جهاز إدخال صوتي جديدًا باسم <0>{deviceName}</0>. هل تريد التبديل إليه؟"
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:190
+#: src/features/auth/state/NewDeviceMonitoring.tsx:202
 msgid "{PRODUCT_NAME} has found a new audio output device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "اكتشف {PRODUCT_NAME} جهاز إخراج صوتي جديدًا باسم <0>{deviceName}</0>. هل تريد التبديل إليه؟"
 
@@ -1624,7 +1624,7 @@ msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware accelerati
 msgstr "يحتاج {PRODUCT_NAME} إلى إعادة التشغيل لتعطيل تسريع الأجهزة في Chromium. لا تستخدم هذا الخيار إلا عند معالجة مشكلات في الرسوميات أو ارتفاع استخدام وحدة معالجة الرسوميات (GPU)."
 
 #. Accessible label for the Fluxer application icon.
-#: src/features/ui/components/icons/FluxerIcon.tsx:10
+#: src/features/ui/components/icons/FluxerIconMark.tsx:6
 msgid "{productName} application icon"
 msgstr "أيقونة تطبيق {productName}"
 
@@ -2913,7 +2913,7 @@ msgstr "إضافة تعليق (اختياري)"
 msgid "Add a community"
 msgstr "إضافة مجتمع"
 
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:75
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:77
 msgid "Add a different account"
 msgstr "إضافة حساب آخر"
 
@@ -2975,7 +2975,7 @@ msgid "Add action."
 msgstr "إضافة إجراء."
 
 #. OAuth authorization account step button. Opens the flow to sign in with another account.
-#: src/features/auth/components/accounts/AccountSelector.tsx:185
+#: src/features/auth/components/accounts/AccountSelector.tsx:186
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx:124
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:30
 msgid "Add an account"
@@ -5316,7 +5316,7 @@ msgstr "مزايا Premium في الواجهة الخلفية معطلة"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:59
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:5
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:731
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:732
 msgid "Background"
 msgstr "الخلفية"
 
@@ -5743,7 +5743,7 @@ msgid "Blur"
 msgstr "تمويه"
 
 #. Slider label in the camera preview modal controlling how strong the background blur effect is.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:81
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:82
 msgid "Blur strength"
 msgstr "قوة التمويه"
 
@@ -6278,7 +6278,7 @@ msgstr "جهاز الكاميرا"
 msgid "Camera effects"
 msgstr "تأثيرات الكاميرا"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:809
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:810
 msgid "Camera error"
 msgstr "خطأ في الكاميرا"
 
@@ -6321,7 +6321,7 @@ msgstr "مطلوب إذن الكاميرا"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Title of the camera preview modal.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:186
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:63
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:64
 msgid "Camera preview"
 msgstr "معاينة الكاميرا"
 
@@ -6429,7 +6429,7 @@ msgstr "لا يمكن تحميل الملفات هنا"
 #: src/features/user/components/modals/PhoneAddModal.tsx:401
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:174
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx:33
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:845
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:846
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:81
 msgid "Cancel"
 msgstr "إلغاء"
@@ -6671,7 +6671,7 @@ msgstr "في المنتصف"
 msgid "Change avatar"
 msgstr "تغيير الصورة الرمزية"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:744
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:745
 msgid "Change background"
 msgstr "تغيير الخلفية"
 
@@ -7321,7 +7321,7 @@ msgstr "اختصارات الدردشة"
 msgid "Check for updates"
 msgstr "التحقق من وجود تحديثات"
 
-#: src/features/app/components/BootstrapErrorScreen.tsx:56
+#: src/features/app/components/BootstrapErrorScreen.tsx:63
 msgid "Check our <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0> for status updates."
 msgstr "تابع <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0> للاطلاع على تحديثات الحالة."
 
@@ -7500,7 +7500,8 @@ msgstr "اختر نافذة من منتقي النظام"
 #. OAuth authorization step title. The user must choose which account to authorize with.
 #: src/features/auth/components/accounts/AccountSelector.tsx:61
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:17
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:68
+#: src/features/auth/flow/AuthLoginLayout.tsx:492
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:70
 msgid "Choose an account"
 msgstr "اختر حسابًا"
 
@@ -9121,7 +9122,7 @@ msgstr "الاتصال: {connectionId}"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for external accounts and verified domains.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:415
-#: src/features/user/components/popouts/UserProfileShared.tsx:614
+#: src/features/user/components/popouts/UserProfileShared.tsx:615
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:8
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:30
 msgid "Connections"
@@ -9618,7 +9619,7 @@ msgid "Copy setup key"
 msgstr "نسخ مفتاح الإعداد"
 
 #. Button on the crash screen that copies developer diagnostic text.
-#: src/features/app/components/ErrorFallback.tsx:152
+#: src/features/app/components/ErrorFallback.tsx:155
 msgid "Copy stack trace"
 msgstr "نسخ تتبع المكدس"
 
@@ -11225,7 +11226,7 @@ msgstr "افتراضي"
 #. Default camera device option.
 #. Default device option label in the voice settings menu (alternate call site for the same concept as DEFAULT_DESCRIPTOR).
 #. Fallback device option shown before a microphone, speaker, or camera label is available.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:67
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:68
 #: src/features/voice/components/VoiceSettingsMenus.tsx:87
 #: src/features/voice/utils/SettingsDeviceOptions.ts:11
 msgctxt "device-option"
@@ -12683,7 +12684,7 @@ msgstr "عدم الإظهار مرة أخرى"
 msgid "Don't show typing indicators in the channel list"
 msgstr "عدم إظهار مؤشرات الكتابة في قائمة القنوات"
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:51
+#: src/features/auth/state/NewDeviceMonitoring.tsx:57
 msgid "Don't suggest {deviceName} again"
 msgstr "عدم اقتراح {deviceName} مرة أخرى"
 
@@ -14721,7 +14722,7 @@ msgid "Failed to delete channel"
 msgstr "تعذّر حذف القناة"
 
 #. Toast / inline error in the camera preview modal when enabling the camera fails.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:59
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:60
 msgid "Failed to enable camera."
 msgstr "تعذّر تشغيل الكاميرا."
 
@@ -14736,7 +14737,7 @@ msgid "Failed to forward message"
 msgstr "تعذّر إعادة توجيه الرسالة"
 
 #. Short label in the authentication desktop handoff account selector. Keep the tone plain and specific.
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:17
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:12
 msgid "Failed to generate token"
 msgstr "تعذّر إنشاء الرمز المميز"
 
@@ -14900,12 +14901,12 @@ msgstr "تعذّر إرسال البلاغ. حاول مرة أخرى."
 msgid "Failed to send verification email. Try again later."
 msgstr "تعذّر إرسال رسالة التحقق الإلكترونية. يُرجى المحاولة مرة أخرى لاحقًا."
 
-#: src/features/app/components/BootstrapErrorScreen.tsx:36
+#: src/features/app/components/BootstrapErrorScreen.tsx:43
 msgid "Failed to start"
 msgstr "تعذّر بدء التشغيل"
 
 #. Error text in the camera preview modal when the camera stream cannot be opened. Prompts user to check OS / browser permissions.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:54
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:55
 msgid "Failed to start camera preview. Check your camera permissions."
 msgstr "تعذّر بدء معاينة الكاميرا. تحقق من أذونات الكاميرا."
 
@@ -15251,7 +15252,7 @@ msgstr "تصفية"
 msgid "Filtering by {language}"
 msgstr "التصفية حسب {language}"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:788
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:789
 msgid "Finalizing camera..."
 msgstr "جارٍ إنهاء إعداد الكاميرا..."
 
@@ -18003,7 +18004,7 @@ msgstr "موروث"
 msgid "Inherited from {inheritedFromLabel}"
 msgstr "موروث من {inheritedFromLabel}"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:790
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:791
 msgid "Initializing camera..."
 msgstr "جارٍ تهيئة الكاميرا..."
 
@@ -20510,7 +20511,7 @@ msgid "Member roles updated"
 msgstr "تم تحديث أدوار العضو"
 
 #: src/features/channel/components/guild_members_page/MembersTableHeaderRow.tsx:83
-#: src/features/user/components/popouts/UserProfileShared.tsx:282
+#: src/features/user/components/popouts/UserProfileShared.tsx:283
 msgid "Member since"
 msgstr "عضو منذ"
 
@@ -21133,7 +21134,7 @@ msgstr "قُصَّر معرضون للخطر، أو محتوى للبالغين 
 #. Switch label in the camera preview modal for flipping the local camera preview horizontally.
 #. Switch label in the video tab for flipping the local camera preview horizontally.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:106
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:72
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:73
 #: src/features/voice/components/VoiceSettingsMenus.tsx:114
 msgid "Mirror camera"
 msgstr "عكس الكاميرا"
@@ -22152,7 +22153,7 @@ msgid "New accounts can join up to 10 communities in the first 24 hours. Try aga
 msgstr "يمكن للحسابات الجديدة الانضمام إلى 10 مجتمعات كحد أقصى خلال أول 24 ساعة. حاول مرة أخرى لاحقًا."
 
 #. Body text in the authentication new device monitoring. Keep the tone plain and specific.
-#: src/features/auth/state/NewDeviceMonitoring.tsx:23
+#: src/features/auth/state/NewDeviceMonitoring.tsx:26
 msgid "New audio device detected!"
 msgstr "تم اكتشاف جهاز صوتي جديد!"
 
@@ -22367,7 +22368,7 @@ msgstr "لا يمكن الوصول"
 msgid "No accessible channels"
 msgstr "لا توجد قنوات يمكن الوصول إليها"
 
-#: src/features/auth/components/accounts/AccountSelector.tsx:148
+#: src/features/auth/components/accounts/AccountSelector.tsx:150
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx:88
 msgid "No accounts"
 msgstr "لا توجد حسابات"
@@ -23081,7 +23082,7 @@ msgstr "الصفحة غير موجودة"
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:69
 #: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:35
 #: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:43
-#: src/features/auth/state/NewDeviceMonitoring.tsx:31
+#: src/features/auth/state/NewDeviceMonitoring.tsx:34
 msgid "Not now"
 msgstr "ليس الآن"
 
@@ -24048,7 +24049,7 @@ msgstr "نظام التشغيل"
 msgid "Opt into experimental per-community and per-channel unread badge controls"
 msgstr "فعّل خيار التحكم التجريبي في شارات الرسائل غير المقروءة لكل مجتمع ولكل قناة"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:786
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:787
 msgid "Optimizing camera..."
 msgstr "جارٍ تحسين الكاميرا..."
 
@@ -26580,7 +26581,7 @@ msgid "Reload {productName} to use web update {version}"
 msgstr "أعد تحميل {productName} لاستخدام تحديث الويب {version}"
 
 #. Button on the crash screen that reloads the current app.
-#: src/features/app/components/ErrorFallback.tsx:142
+#: src/features/app/components/ErrorFallback.tsx:145
 msgid "Reload app"
 msgstr "إعادة تحميل التطبيق"
 
@@ -26628,7 +26629,7 @@ msgstr "تذكر حجم النافذة وموضعها"
 #. Short label in the shared app saved message missing card. Keep the tone plain and specific.
 #: src/features/app/components/shared/SavedMessageMissingCard.tsx:14
 #: src/features/auth/components/accounts/AccountSelector.tsx:78
-#: src/features/auth/components/accounts/AccountSelector.tsx:125
+#: src/features/auth/components/accounts/AccountSelector.tsx:128
 #: src/features/channel/components/MessageReactionsSheet.tsx:43
 #: src/features/expressions/components/modals/AddFavoriteChannelModal.tsx:52
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:156
@@ -27533,8 +27534,8 @@ msgstr "إعادة تعيين وإعادة تشغيل"
 #. Confirm dialog title for the destructive reset action.
 #. Destructive button on the crash screen. Clears local app data except preserved drafts.
 #. Destructive button on the startup failure screen. Clears local app data except preserved drafts.
-#: src/features/app/components/BootstrapErrorScreen.tsx:75
-#: src/features/app/components/ErrorFallback.tsx:164
+#: src/features/app/components/BootstrapErrorScreen.tsx:82
+#: src/features/app/components/ErrorFallback.tsx:167
 #: src/features/platform/utils/DesktopLocaleBridge.ts:175
 msgid "Reset app data"
 msgstr "إعادة تعيين بيانات التطبيق"
@@ -29218,7 +29219,7 @@ msgstr "حدد سيناريو لتطبيقه..."
 msgid "Select a violation category."
 msgstr "اختر فئة انتهاك."
 
-#: src/features/auth/components/accounts/AccountSelector.tsx:114
+#: src/features/auth/components/accounts/AccountSelector.tsx:117
 msgid "Select account"
 msgstr "تحديد حساب"
 
@@ -29269,7 +29270,7 @@ msgstr "حدد النطاقات (وعنوان URI لإعادة التوجيه إ
 msgid "Select text"
 msgstr "تحديد النص"
 
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:69
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:71
 msgid "Select the account you want to sign in with on your new device."
 msgstr "اختر الحساب الذي تريد تسجيل الدخول به على جهازك الجديد."
 
@@ -29686,11 +29687,6 @@ msgstr "الجلسة"
 #: src/features/auth/flow/AuthLoginLayout.tsx:58
 msgid "Session expired for {identifier}. Sign in again."
 msgstr "انتهت جلسة {identifier}. سجّل الدخول مرة أخرى."
-
-#. Toast error shown in the desktop-handoff account picker when the session for the chosen account has expired.
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:12
-msgid "Session expired. Sign in again."
-msgstr "انتهت الجلسة. سجّل الدخول مرة أخرى."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:15
@@ -30674,6 +30670,7 @@ msgstr "الشريط الجانبي"
 msgid "Sign in"
 msgstr "تسجيل الدخول"
 
+#: src/features/auth/components/accounts/AccountSelector.tsx:117
 #: src/features/auth/utils/AccountSwitcherModalUtils.tsx:274
 msgid "Sign in again"
 msgstr "تسجيل الدخول مرة أخرى"
@@ -31237,11 +31234,11 @@ msgstr "لا يمكن إضافة بعض المستخدمين"
 msgid "Something went wrong"
 msgstr "حدث خطأ ما"
 
-#: src/features/app/components/ErrorFallback.tsx:126
+#: src/features/app/components/ErrorFallback.tsx:129
 msgid "Something went wrong and the app crashed. An update is available that may fix this issue."
 msgstr "حدث خطأ ما وتوقف التطبيق عن العمل. يتوفر تحديث قد يحل هذه المشكلة."
 
-#: src/features/app/components/ErrorFallback.tsx:128
+#: src/features/app/components/ErrorFallback.tsx:131
 msgid "Something went wrong and the app crashed. Try reloading or resetting the app."
 msgstr "حدث خطأ ما وتوقف التطبيق عن العمل. حاول إعادة تحميل التطبيق أو إعادة تعيينه."
 
@@ -32505,7 +32502,7 @@ msgid "Switch between your global profile and per-community profiles"
 msgstr "التبديل بين ملفك الشخصي العام والملفات الشخصية الخاصة بكل مجتمع"
 
 #. Short label in the authentication new device monitoring. Keep the tone plain and specific.
-#: src/features/auth/state/NewDeviceMonitoring.tsx:27
+#: src/features/auth/state/NewDeviceMonitoring.tsx:30
 msgid "Switch device"
 msgstr "تبديل الجهاز"
 
@@ -33222,11 +33219,11 @@ msgstr "علامة #0000 محجوزة لمشتركي Visionary. لم يعد Visi
 msgid "The API is on a different origin than this page, so setup requests are sent without your session. Check the public origin and port this instance is configured with, then reload."
 msgstr "واجهة برمجة التطبيقات على مصدر مختلف عن مصدر هذه الصفحة، لذا تُرسل طلبات الإعداد بدون جلستك. تحقق من المصدر العام والمنفذ اللذين تم تكوين هذا المثيل بهما، ثم أعد التحميل."
 
-#: src/features/app/components/ErrorFallback.tsx:120
+#: src/features/app/components/ErrorFallback.tsx:123
 msgid "The app crashed"
 msgstr "تعطل التطبيق"
 
-#: src/features/app/components/ErrorFallback.tsx:124
+#: src/features/app/components/ErrorFallback.tsx:127
 msgid "The app has crashed. Checking for updates that might fix this issue…"
 msgstr "تعطل التطبيق. جارٍ البحث عن تحديثات قد تُصلح هذه المشكلة…"
 
@@ -33529,7 +33526,7 @@ msgstr "ملفات السمات"
 msgid "Theme library"
 msgstr "مكتبة السمات"
 
-#: src/features/theme/components/pages/ThemeLoginPage.tsx:175
+#: src/features/theme/components/pages/ThemeLoginPage.tsx:176
 #: src/features/theme/components/pages/ThemeRegisterPage.tsx:70
 msgid "Theme not found"
 msgstr "السمة غير موجودة"
@@ -33935,7 +33932,7 @@ msgstr "حجم هذا الملف هو {fileSize}، وهو يتجاوز الحد 
 msgid "This friends list needs more power"
 msgstr "قائمة الأصدقاء هذه تحتاج إلى دفعة قوية"
 
-#: src/features/expressions/components/pages/GiftLoginPage.tsx:177
+#: src/features/expressions/components/pages/GiftLoginPage.tsx:178
 #: src/features/expressions/components/pages/GiftRegisterPage.tsx:84
 msgid "This gift code has already been claimed."
 msgstr "تم استلام رمز الهدية هذا بالفعل."
@@ -33947,7 +33944,7 @@ msgstr "تم استلام رمز الهدية هذا بالفعل."
 msgid "This gift code is invalid or already claimed."
 msgstr "رمز الهدية هذا غير صالح أو تم استلامه بالفعل."
 
-#: src/features/expressions/components/pages/GiftLoginPage.tsx:166
+#: src/features/expressions/components/pages/GiftLoginPage.tsx:167
 #: src/features/expressions/components/pages/GiftRegisterPage.tsx:73
 msgid "This gift code may be invalid, expired, or already redeemed."
 msgstr "قد يكون رمز الهدية هذا غير صالح، أو منتهي الصلاحية، أو تم استرداده بالفعل."
@@ -34317,7 +34314,7 @@ msgstr "هذه السمة أكبر من أن تتم مشاركتها"
 msgid "This theme link is missing data."
 msgstr "بيانات رابط السمة هذا ناقصة."
 
-#: src/features/theme/components/pages/ThemeLoginPage.tsx:176
+#: src/features/theme/components/pages/ThemeLoginPage.tsx:177
 #: src/features/theme/components/pages/ThemeRegisterPage.tsx:71
 msgid "This theme may have been removed or the link is invalid."
 msgstr "ربما تمت إزالة هذه السمة أو أن الرابط غير صالح."
@@ -34331,7 +34328,7 @@ msgstr "هذا المستخدم"
 msgid "This user has limited their profile. Some details are hidden from people who aren't their friends."
 msgstr "قام هذا المستخدم بتقييد ملفه الشخصي. بعض التفاصيل مخفية عن الأشخاص الذين ليسوا أصدقاءه."
 
-#: src/features/user/components/popouts/UserProfileShared.tsx:394
+#: src/features/user/components/popouts/UserProfileShared.tsx:395
 msgid "This user has no roles in this community."
 msgstr "ليس لدى هذا المستخدم أي أدوار في هذا المجتمع."
 
@@ -35749,7 +35746,7 @@ msgstr "جهاز غير معروف"
 
 #. Fallback diagnostic text on the crash screen when an Error object has no message.
 #. Fallback error text shown when LaTeX rendering fails without an error message.
-#: src/features/app/components/ErrorFallback.tsx:25
+#: src/features/app/components/ErrorFallback.tsx:28
 #: src/features/messaging/components/markdown/renderers/common/CodeElements.tsx:37
 msgid "Unknown error"
 msgstr "خطأ غير معروف"
@@ -36233,7 +36230,7 @@ msgid "Update {productName} to view this message."
 msgstr "حدّث {productName} لعرض هذه الرسالة."
 
 #. Button on the crash screen that applies a found app update.
-#: src/features/app/components/ErrorFallback.tsx:140
+#: src/features/app/components/ErrorFallback.tsx:143
 msgid "Update app"
 msgstr "تحديث التطبيق"
 
@@ -39330,7 +39327,7 @@ msgstr "لا يمكنك التحدث في هذه القناة"
 #. Tooltip / error shown in the camera preview modal when the user lacks Video permission in the current channel. Tone stays plain.
 #. Tooltip in the voice control bar when the user lacks the Video permission in this channel. Tone stays plain.
 #. Tooltip shown when the user lacks the Video permission in the voice channel. Tone stays plain.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:76
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:77
 #: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:50
 #: src/features/voice/components/VoiceControlBar.tsx:127
 msgid "You can't turn on your camera in this channel"

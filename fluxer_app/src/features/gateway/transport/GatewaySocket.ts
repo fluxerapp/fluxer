@@ -23,7 +23,10 @@ import {
 	type GatewayTimings,
 	type RpcTimings,
 } from '@app/features/gateway/transport/GatewayTimingsFormatter';
-import AppStorage, {PRESERVED_RESET_STORAGE_KEYS} from '@app/features/platform/state/PersistentStorage';
+import AppStorage, {
+	PRESERVED_RESET_STORAGE_KEY_PREFIXES,
+	PRESERVED_RESET_STORAGE_KEYS,
+} from '@app/features/platform/state/PersistentStorage';
 import {Logger, LogLevel} from '@app/features/platform/utils/AppLogger';
 import {ExponentialBackoff} from '@app/features/platform/utils/RetryScheduler';
 import LayerManager from '@app/features/ui/state/LayerManager';
@@ -1263,7 +1266,7 @@ export class GatewaySocket extends EventEmitter<GatewaySocketEvents> {
 	private handleAuthFailure(): void {
 		this.log.error('Authentication failed: clearing client state and logging out');
 		this.updateState(GatewayState.Disconnected);
-		AppStorage.clearExcept(PRESERVED_RESET_STORAGE_KEYS);
+		AppStorage.clearExcept(PRESERVED_RESET_STORAGE_KEYS, PRESERVED_RESET_STORAGE_KEY_PREFIXES);
 		LayerManager.closeAll();
 		GatewayConnection.logout();
 		Authentication.handleConnectionClosed({code: 4004});

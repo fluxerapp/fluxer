@@ -3,7 +3,10 @@
 import errorFallbackStyles from '@app/features/app/components/ErrorFallback.module.css';
 import {NativeTitlebar} from '@app/features/app/components/layout/NativeTitlebar';
 import {useNativePlatform} from '@app/features/app/hooks/useNativePlatform';
-import AppStorage, {PRESERVED_RESET_STORAGE_KEYS} from '@app/features/platform/state/PersistentStorage';
+import AppStorage, {
+	PRESERVED_RESET_STORAGE_KEY_PREFIXES,
+	PRESERVED_RESET_STORAGE_KEYS,
+} from '@app/features/platform/state/PersistentStorage';
 import {ensureLatestAssets} from '@app/features/platform/types/Versioning';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import {Button} from '@app/features/ui/button/Button';
@@ -154,7 +157,7 @@ export const ErrorFallback: React.FC<ErrorFallbackProps> = ({error}) => {
 				)}
 				<Button
 					onClick={() => {
-						AppStorage.clearExcept(PRESERVED_RESET_STORAGE_KEYS);
+						AppStorage.clearExcept(PRESERVED_RESET_STORAGE_KEYS, PRESERVED_RESET_STORAGE_KEY_PREFIXES);
 						location.reload();
 					}}
 					variant="danger"

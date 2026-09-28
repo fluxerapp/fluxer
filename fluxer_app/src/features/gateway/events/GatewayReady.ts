@@ -131,7 +131,7 @@ function handleReadyInternal(data: ReadyPayload, context: GatewayHandlerContext)
 	if (data.rtc_regions) {
 		RtcRegions.setRegions(data.rtc_regions);
 	}
-	ExperimentAssignments.start();
+	ExperimentAssignments.start(data.user.id);
 	Users.handleGatewayReady(data.user);
 	if (data.users && data.users.length > 0) {
 		Users.cacheUsers(data.users);

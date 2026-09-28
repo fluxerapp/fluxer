@@ -1591,19 +1591,19 @@ msgstr "Suscripción a {premiumProductName}"
 msgid "{presenceCount} online"
 msgstr "{presenceCount} en línea"
 
-#: src/features/app/components/BootstrapErrorScreen.tsx:39
+#: src/features/app/components/BootstrapErrorScreen.tsx:46
 msgid "{PRODUCT_NAME} failed to start properly. This could be due to corrupted data or a temporary issue."
 msgstr "{PRODUCT_NAME} no se inició correctamente. Esto podría deberse a datos dañados o a un problema temporal."
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:196
+#: src/features/auth/state/NewDeviceMonitoring.tsx:208
 msgid "{PRODUCT_NAME} has found a new audio device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME} ha detectado un nuevo dispositivo de audio llamado <0>{deviceName}</0>. ¿Quieres cambiar a este?"
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:185
+#: src/features/auth/state/NewDeviceMonitoring.tsx:197
 msgid "{PRODUCT_NAME} has found a new audio input device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME} ha detectado un nuevo dispositivo de entrada de audio llamado <0>{deviceName}</0>. ¿Quieres cambiar a este?"
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:190
+#: src/features/auth/state/NewDeviceMonitoring.tsx:202
 msgid "{PRODUCT_NAME} has found a new audio output device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME} ha encontrado un nuevo dispositivo de salida de audio llamado <0>{deviceName}</0>. ¿Quieres cambiar a él?"
 
@@ -1624,7 +1624,7 @@ msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware accelerati
 msgstr "{PRODUCT_NAME} debe reiniciarse para deshabilitar la aceleración de hardware de Chromium. Usa esto solo si estás solucionando problemas gráficos o un alto uso de la GPU."
 
 #. Accessible label for the Fluxer application icon.
-#: src/features/ui/components/icons/FluxerIcon.tsx:10
+#: src/features/ui/components/icons/FluxerIconMark.tsx:6
 msgid "{productName} application icon"
 msgstr "Icono de la aplicación {productName}"
 
@@ -2913,7 +2913,7 @@ msgstr "Agregar un comentario (opcional)"
 msgid "Add a community"
 msgstr "Agregar una comunidad"
 
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:75
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:77
 msgid "Add a different account"
 msgstr "Agregar otra cuenta"
 
@@ -2975,7 +2975,7 @@ msgid "Add action."
 msgstr "Agregar acción."
 
 #. OAuth authorization account step button. Opens the flow to sign in with another account.
-#: src/features/auth/components/accounts/AccountSelector.tsx:185
+#: src/features/auth/components/accounts/AccountSelector.tsx:186
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx:124
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:30
 msgid "Add an account"
@@ -5316,7 +5316,7 @@ msgstr "Beneficios premium del backend desactivados"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:59
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:5
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:731
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:732
 msgid "Background"
 msgstr "Fondo"
 
@@ -5743,7 +5743,7 @@ msgid "Blur"
 msgstr "Desenfocar"
 
 #. Slider label in the camera preview modal controlling how strong the background blur effect is.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:81
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:82
 msgid "Blur strength"
 msgstr "Intensidad del desenfoque"
 
@@ -6278,7 +6278,7 @@ msgstr "Dispositivo de cámara"
 msgid "Camera effects"
 msgstr "Efectos de cámara"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:809
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:810
 msgid "Camera error"
 msgstr "Error de cámara"
 
@@ -6321,7 +6321,7 @@ msgstr "Se requiere permiso para la cámara"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Title of the camera preview modal.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:186
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:63
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:64
 msgid "Camera preview"
 msgstr "Vista previa de la cámara"
 
@@ -6429,7 +6429,7 @@ msgstr "No se pueden subir archivos aquí"
 #: src/features/user/components/modals/PhoneAddModal.tsx:401
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:174
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx:33
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:845
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:846
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:81
 msgid "Cancel"
 msgstr "Cancelar"
@@ -6671,7 +6671,7 @@ msgstr "Centrado"
 msgid "Change avatar"
 msgstr "Cambiar avatar"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:744
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:745
 msgid "Change background"
 msgstr "Cambiar fondo"
 
@@ -7321,7 +7321,7 @@ msgstr "Atajos de chat"
 msgid "Check for updates"
 msgstr "Buscar actualizaciones"
 
-#: src/features/app/components/BootstrapErrorScreen.tsx:56
+#: src/features/app/components/BootstrapErrorScreen.tsx:63
 msgid "Check our <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0> for status updates."
 msgstr "Consulta nuestro <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0> para ver las actualizaciones de estado."
 
@@ -7500,7 +7500,8 @@ msgstr "Elige una ventana en el selector de tu sistema"
 #. OAuth authorization step title. The user must choose which account to authorize with.
 #: src/features/auth/components/accounts/AccountSelector.tsx:61
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:17
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:68
+#: src/features/auth/flow/AuthLoginLayout.tsx:492
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:70
 msgid "Choose an account"
 msgstr "Elige una cuenta"
 
@@ -9121,7 +9122,7 @@ msgstr "Conexión: {connectionId}"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for external accounts and verified domains.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:415
-#: src/features/user/components/popouts/UserProfileShared.tsx:614
+#: src/features/user/components/popouts/UserProfileShared.tsx:615
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:8
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:30
 msgid "Connections"
@@ -9618,7 +9619,7 @@ msgid "Copy setup key"
 msgstr "Copiar clave de configuración"
 
 #. Button on the crash screen that copies developer diagnostic text.
-#: src/features/app/components/ErrorFallback.tsx:152
+#: src/features/app/components/ErrorFallback.tsx:155
 msgid "Copy stack trace"
 msgstr "Copiar seguimiento de pila"
 
@@ -11225,7 +11226,7 @@ msgstr "Predeterminado"
 #. Default camera device option.
 #. Default device option label in the voice settings menu (alternate call site for the same concept as DEFAULT_DESCRIPTOR).
 #. Fallback device option shown before a microphone, speaker, or camera label is available.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:67
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:68
 #: src/features/voice/components/VoiceSettingsMenus.tsx:87
 #: src/features/voice/utils/SettingsDeviceOptions.ts:11
 msgctxt "device-option"
@@ -12683,7 +12684,7 @@ msgstr "No volver a mostrar"
 msgid "Don't show typing indicators in the channel list"
 msgstr "No mostrar indicadores de escritura en la lista de canales"
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:51
+#: src/features/auth/state/NewDeviceMonitoring.tsx:57
 msgid "Don't suggest {deviceName} again"
 msgstr "No volver a sugerir {deviceName}"
 
@@ -14721,7 +14722,7 @@ msgid "Failed to delete channel"
 msgstr "No se pudo eliminar el canal"
 
 #. Toast / inline error in the camera preview modal when enabling the camera fails.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:59
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:60
 msgid "Failed to enable camera."
 msgstr "No se pudo activar la cámara."
 
@@ -14736,7 +14737,7 @@ msgid "Failed to forward message"
 msgstr "No se pudo reenviar el mensaje"
 
 #. Short label in the authentication desktop handoff account selector. Keep the tone plain and specific.
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:17
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:12
 msgid "Failed to generate token"
 msgstr "No se pudo generar el token"
 
@@ -14900,12 +14901,12 @@ msgstr "No se pudo enviar el reporte. Intenta de nuevo."
 msgid "Failed to send verification email. Try again later."
 msgstr "No se pudo enviar el correo electrónico de verificación. Intenta de nuevo más tarde."
 
-#: src/features/app/components/BootstrapErrorScreen.tsx:36
+#: src/features/app/components/BootstrapErrorScreen.tsx:43
 msgid "Failed to start"
 msgstr "No se pudo iniciar"
 
 #. Error text in the camera preview modal when the camera stream cannot be opened. Prompts user to check OS / browser permissions.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:54
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:55
 msgid "Failed to start camera preview. Check your camera permissions."
 msgstr "No se pudo iniciar la vista previa de la cámara. Revisa los permisos de tu cámara."
 
@@ -15251,7 +15252,7 @@ msgstr "Filtrado"
 msgid "Filtering by {language}"
 msgstr "Filtrando por {language}"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:788
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:789
 msgid "Finalizing camera..."
 msgstr "Finalizando la configuración de la cámara..."
 
@@ -18003,7 +18004,7 @@ msgstr "Heredado"
 msgid "Inherited from {inheritedFromLabel}"
 msgstr "Heredado de {inheritedFromLabel}"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:790
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:791
 msgid "Initializing camera..."
 msgstr "Inicializando cámara..."
 
@@ -20510,7 +20511,7 @@ msgid "Member roles updated"
 msgstr "Roles de miembro actualizados"
 
 #: src/features/channel/components/guild_members_page/MembersTableHeaderRow.tsx:83
-#: src/features/user/components/popouts/UserProfileShared.tsx:282
+#: src/features/user/components/popouts/UserProfileShared.tsx:283
 msgid "Member since"
 msgstr "Miembro desde"
 
@@ -21133,7 +21134,7 @@ msgstr "Menores en riesgo, contenido para adultos en el lugar equivocado o condu
 #. Switch label in the camera preview modal for flipping the local camera preview horizontally.
 #. Switch label in the video tab for flipping the local camera preview horizontally.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:106
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:72
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:73
 #: src/features/voice/components/VoiceSettingsMenus.tsx:114
 msgid "Mirror camera"
 msgstr "Reflejar cámara"
@@ -22152,7 +22153,7 @@ msgid "New accounts can join up to 10 communities in the first 24 hours. Try aga
 msgstr "Las cuentas nuevas pueden unirse a un máximo de 10 comunidades en las primeras 24 horas. Intenta de nuevo más tarde."
 
 #. Body text in the authentication new device monitoring. Keep the tone plain and specific.
-#: src/features/auth/state/NewDeviceMonitoring.tsx:23
+#: src/features/auth/state/NewDeviceMonitoring.tsx:26
 msgid "New audio device detected!"
 msgstr "¡Se detectó un nuevo dispositivo de audio!"
 
@@ -22367,7 +22368,7 @@ msgstr "Sin acceso"
 msgid "No accessible channels"
 msgstr "No hay canales accesibles"
 
-#: src/features/auth/components/accounts/AccountSelector.tsx:148
+#: src/features/auth/components/accounts/AccountSelector.tsx:150
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx:88
 msgid "No accounts"
 msgstr "Ninguna cuenta"
@@ -23081,7 +23082,7 @@ msgstr "Página no encontrada"
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:69
 #: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:35
 #: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:43
-#: src/features/auth/state/NewDeviceMonitoring.tsx:31
+#: src/features/auth/state/NewDeviceMonitoring.tsx:34
 msgid "Not now"
 msgstr "Ahora no"
 
@@ -24048,7 +24049,7 @@ msgstr "Sistema operativo"
 msgid "Opt into experimental per-community and per-channel unread badge controls"
 msgstr "Activar los controles de insignias de mensajes no leídos por comunidad y canal, que están en fase experimental"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:786
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:787
 msgid "Optimizing camera..."
 msgstr "Optimizando cámara..."
 
@@ -26580,7 +26581,7 @@ msgid "Reload {productName} to use web update {version}"
 msgstr "Recarga {productName} para usar la actualización web {version}"
 
 #. Button on the crash screen that reloads the current app.
-#: src/features/app/components/ErrorFallback.tsx:142
+#: src/features/app/components/ErrorFallback.tsx:145
 msgid "Reload app"
 msgstr "Recargar la aplicación"
 
@@ -26628,7 +26629,7 @@ msgstr "Recordar tamaño y posición de la ventana"
 #. Short label in the shared app saved message missing card. Keep the tone plain and specific.
 #: src/features/app/components/shared/SavedMessageMissingCard.tsx:14
 #: src/features/auth/components/accounts/AccountSelector.tsx:78
-#: src/features/auth/components/accounts/AccountSelector.tsx:125
+#: src/features/auth/components/accounts/AccountSelector.tsx:128
 #: src/features/channel/components/MessageReactionsSheet.tsx:43
 #: src/features/expressions/components/modals/AddFavoriteChannelModal.tsx:52
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:156
@@ -27533,8 +27534,8 @@ msgstr "Restablecer y reiniciar"
 #. Confirm dialog title for the destructive reset action.
 #. Destructive button on the crash screen. Clears local app data except preserved drafts.
 #. Destructive button on the startup failure screen. Clears local app data except preserved drafts.
-#: src/features/app/components/BootstrapErrorScreen.tsx:75
-#: src/features/app/components/ErrorFallback.tsx:164
+#: src/features/app/components/BootstrapErrorScreen.tsx:82
+#: src/features/app/components/ErrorFallback.tsx:167
 #: src/features/platform/utils/DesktopLocaleBridge.ts:175
 msgid "Reset app data"
 msgstr "Restablecer datos de la app"
@@ -29218,7 +29219,7 @@ msgstr "Selecciona un escenario para aplicar..."
 msgid "Select a violation category."
 msgstr "Selecciona una categoría de infracción."
 
-#: src/features/auth/components/accounts/AccountSelector.tsx:114
+#: src/features/auth/components/accounts/AccountSelector.tsx:117
 msgid "Select account"
 msgstr "Selecciona una cuenta"
 
@@ -29269,7 +29270,7 @@ msgstr "Selecciona los ámbitos (y la URI de redirección si es necesaria)"
 msgid "Select text"
 msgstr "Seleccionar texto"
 
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:69
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:71
 msgid "Select the account you want to sign in with on your new device."
 msgstr "Selecciona la cuenta con la que quieres iniciar sesión en tu nuevo dispositivo."
 
@@ -29686,11 +29687,6 @@ msgstr "Sesión"
 #: src/features/auth/flow/AuthLoginLayout.tsx:58
 msgid "Session expired for {identifier}. Sign in again."
 msgstr "La sesión de {identifier} caducó. Inicia sesión de nuevo."
-
-#. Toast error shown in the desktop-handoff account picker when the session for the chosen account has expired.
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:12
-msgid "Session expired. Sign in again."
-msgstr "La sesión caducó. Inicia sesión de nuevo."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:15
@@ -30674,6 +30670,7 @@ msgstr "Barra lateral"
 msgid "Sign in"
 msgstr "Iniciar sesión"
 
+#: src/features/auth/components/accounts/AccountSelector.tsx:117
 #: src/features/auth/utils/AccountSwitcherModalUtils.tsx:274
 msgid "Sign in again"
 msgstr "Inicia sesión de nuevo"
@@ -31237,11 +31234,11 @@ msgstr "No se pueden agregar algunos usuarios"
 msgid "Something went wrong"
 msgstr "Algo salió mal"
 
-#: src/features/app/components/ErrorFallback.tsx:126
+#: src/features/app/components/ErrorFallback.tsx:129
 msgid "Something went wrong and the app crashed. An update is available that may fix this issue."
 msgstr "Algo salió mal y la aplicación se cerró. Hay una actualización disponible que podría solucionar este problema."
 
-#: src/features/app/components/ErrorFallback.tsx:128
+#: src/features/app/components/ErrorFallback.tsx:131
 msgid "Something went wrong and the app crashed. Try reloading or resetting the app."
 msgstr "Algo salió mal y la aplicación se cerró. Intenta recargar la aplicación o restablecer sus datos."
 
@@ -32505,7 +32502,7 @@ msgid "Switch between your global profile and per-community profiles"
 msgstr "Cambia entre tu perfil global y los perfiles de cada comunidad"
 
 #. Short label in the authentication new device monitoring. Keep the tone plain and specific.
-#: src/features/auth/state/NewDeviceMonitoring.tsx:27
+#: src/features/auth/state/NewDeviceMonitoring.tsx:30
 msgid "Switch device"
 msgstr "Cambiar de dispositivo"
 
@@ -33222,11 +33219,11 @@ msgstr "La etiqueta #0000 está reservada para suscriptores Visionary. Visionary
 msgid "The API is on a different origin than this page, so setup requests are sent without your session. Check the public origin and port this instance is configured with, then reload."
 msgstr "La API está en un origen diferente al de esta página, por lo que las solicitudes de configuración se envían sin tu sesión. Verifica el origen público y el puerto con los que está configurada esta instancia, y luego recarga."
 
-#: src/features/app/components/ErrorFallback.tsx:120
+#: src/features/app/components/ErrorFallback.tsx:123
 msgid "The app crashed"
 msgstr "La aplicación falló"
 
-#: src/features/app/components/ErrorFallback.tsx:124
+#: src/features/app/components/ErrorFallback.tsx:127
 msgid "The app has crashed. Checking for updates that might fix this issue…"
 msgstr "La app se cerró inesperadamente. Buscando actualizaciones que puedan solucionar este problema…"
 
@@ -33529,7 +33526,7 @@ msgstr "Archivos de tema"
 msgid "Theme library"
 msgstr "Biblioteca de temas"
 
-#: src/features/theme/components/pages/ThemeLoginPage.tsx:175
+#: src/features/theme/components/pages/ThemeLoginPage.tsx:176
 #: src/features/theme/components/pages/ThemeRegisterPage.tsx:70
 msgid "Theme not found"
 msgstr "Tema no encontrado"
@@ -33935,7 +33932,7 @@ msgstr "Este archivo es de {fileSize}, lo que supera el límite de {maxSize}. Lo
 msgid "This friends list needs more power"
 msgstr "Esta lista de amigos necesita más energía"
 
-#: src/features/expressions/components/pages/GiftLoginPage.tsx:177
+#: src/features/expressions/components/pages/GiftLoginPage.tsx:178
 #: src/features/expressions/components/pages/GiftRegisterPage.tsx:84
 msgid "This gift code has already been claimed."
 msgstr "Este código de regalo ya fue canjeado."
@@ -33947,7 +33944,7 @@ msgstr "Este código de regalo ya fue canjeado."
 msgid "This gift code is invalid or already claimed."
 msgstr "Este código de regalo no es válido o ya fue reclamado."
 
-#: src/features/expressions/components/pages/GiftLoginPage.tsx:166
+#: src/features/expressions/components/pages/GiftLoginPage.tsx:167
 #: src/features/expressions/components/pages/GiftRegisterPage.tsx:73
 msgid "This gift code may be invalid, expired, or already redeemed."
 msgstr "Este código de regalo puede ser inválido, haber vencido o haber sido canjeado."
@@ -34317,7 +34314,7 @@ msgstr "Este tema es demasiado grande para compartir"
 msgid "This theme link is missing data."
 msgstr "A este enlace de tema le faltan datos."
 
-#: src/features/theme/components/pages/ThemeLoginPage.tsx:176
+#: src/features/theme/components/pages/ThemeLoginPage.tsx:177
 #: src/features/theme/components/pages/ThemeRegisterPage.tsx:71
 msgid "This theme may have been removed or the link is invalid."
 msgstr "Es posible que se haya eliminado este tema o que el enlace no sea válido."
@@ -34331,7 +34328,7 @@ msgstr "este usuario"
 msgid "This user has limited their profile. Some details are hidden from people who aren't their friends."
 msgstr "Este usuario ha limitado su perfil. Algunos detalles están ocultos para quienes no son sus amigos."
 
-#: src/features/user/components/popouts/UserProfileShared.tsx:394
+#: src/features/user/components/popouts/UserProfileShared.tsx:395
 msgid "This user has no roles in this community."
 msgstr "Este usuario no tiene roles en esta comunidad."
 
@@ -35749,7 +35746,7 @@ msgstr "Dispositivo desconocido"
 
 #. Fallback diagnostic text on the crash screen when an Error object has no message.
 #. Fallback error text shown when LaTeX rendering fails without an error message.
-#: src/features/app/components/ErrorFallback.tsx:25
+#: src/features/app/components/ErrorFallback.tsx:28
 #: src/features/messaging/components/markdown/renderers/common/CodeElements.tsx:37
 msgid "Unknown error"
 msgstr "Error desconocido"
@@ -36233,7 +36230,7 @@ msgid "Update {productName} to view this message."
 msgstr "Actualiza {productName} para ver este mensaje."
 
 #. Button on the crash screen that applies a found app update.
-#: src/features/app/components/ErrorFallback.tsx:140
+#: src/features/app/components/ErrorFallback.tsx:143
 msgid "Update app"
 msgstr "Actualizar la app"
 
@@ -39330,7 +39327,7 @@ msgstr "No puedes hablar en este canal"
 #. Tooltip / error shown in the camera preview modal when the user lacks Video permission in the current channel. Tone stays plain.
 #. Tooltip in the voice control bar when the user lacks the Video permission in this channel. Tone stays plain.
 #. Tooltip shown when the user lacks the Video permission in the voice channel. Tone stays plain.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:76
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:77
 #: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:50
 #: src/features/voice/components/VoiceControlBar.tsx:127
 msgid "You can't turn on your camera in this channel"

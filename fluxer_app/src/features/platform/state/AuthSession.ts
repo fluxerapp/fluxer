@@ -26,8 +26,9 @@ import {
 	AuthSessionStorageKey,
 	parseStoredSessionValue,
 } from '@app/features/platform/state/auth_session/AuthSessionStorage';
-import AppStorage from '@app/features/platform/state/PersistentStorage';
+import AppStorage, {PRESERVED_RESET_STORAGE_KEY_PREFIXES} from '@app/features/platform/state/PersistentStorage';
 import {http} from '@app/features/platform/transport/RestTransport';
+import {HttpError} from '@app/features/platform/types/EndpointError';
 import {Logger} from '@app/features/platform/utils/AppLogger';
 import LocalPresence from '@app/features/presence/state/LocalPresence';
 import {actionBound, makeAutoObservable} from 'mobx';
@@ -61,14 +62,15 @@ interface AuthSessionAccountStorage {
 	): Promise<void>;
 	restoreAccountData(userId: string, expectedInstance: RuntimeConfigSnapshot): Promise<StoredAccount | null>;
 	deleteAccount(userId: string): Promise<void>;
-	updateAccountValidity(userId: string, isValid: boolean): Promise<void>;
+	updateAccountValidity(userId: string, isValid: boolean, expectedToken?: string): Promise<void>;
+	refreshAccountCredentials(userId: string, token: string, userData?: UserData): Promise<void>;
 }
 
 interface AuthSessionAppStorage {
 	getItem(key: string): string | null;
 	setItem(key: string, value: string): void;
 	removeItem(key: string): void;
-	clear(): void;
+	clearExcept(keysToKeep: ReadonlyArray<string>, prefixesToKeep?: ReadonlyArray<string>): void;
 }
 
 interface AuthSessionHttp {
@@ -402,17 +404,59 @@ export class AuthSessionManager {
 				headers: {Authorization: token},
 			});
 			return true;
-		} catch {
-			return false;
+		} catch (error) {
+			if (error instanceof HttpError && error.status === 401) {
+				return false;
+			}
+			throw error;
 		}
 	}
 
-	markAccountInvalid(userId: string): void {
-		if (!this._snapshot.context.accounts.has(userId)) {
+	markAccountInvalid(userId: string, expectedToken?: string): void {
+		const account = this._snapshot.context.accounts.get(userId);
+		if (!account || (expectedToken !== undefined && account.token !== expectedToken)) {
 			return;
 		}
 		this.send({type: 'account.markInvalid', userId});
-		void this.deps.accountStorage.updateAccountValidity(userId, false);
+		void this.deps.accountStorage.updateAccountValidity(userId, false, expectedToken);
+	}
+
+	private async adoptStoredAccountToken(account: Account): Promise<Account> {
+		const stored = (await this.deps.accountStorage.getAllAccounts()).find((record) => record.userId === account.userId);
+		if (!stored?.token || stored.token === account.token) {
+			return account;
+		}
+		const adopted: Account = {
+			...account,
+			token: stored.token,
+			userData: stored.userData ?? account.userData,
+			isValid: stored.isValid ?? true,
+		};
+		this.send({type: 'account.upsert', account: adopted});
+		return adopted;
+	}
+
+	async requireUsableAccount(userId: string): Promise<Account> {
+		await this.initialize();
+		const account = await this.adoptStoredAccountToken(this.requireAccountOnCurrentInstance(userId));
+		if (!(await this.validateToken(account.token))) {
+			this.markAccountInvalid(userId, account.token);
+			throw new SessionExpiredError();
+		}
+		return account;
+	}
+
+	async refreshStoredAccount(userId: string, token: string, userData?: UserData): Promise<void> {
+		await this.initialize();
+		const account = this.accounts.find((candidate) => candidate.userId === userId);
+		if (!account || userId === this.userId) {
+			return;
+		}
+		await this.deps.accountStorage.refreshAccountCredentials(userId, token, userData);
+		this.send({
+			type: 'account.upsert',
+			account: {...account, token, userData: userData ?? account.userData, isValid: true},
+		});
 	}
 
 	prepareForAccountTransition(reason: 'logout' | 'account-switch'): void {
@@ -472,7 +516,7 @@ export class AuthSessionManager {
 				logger.debug('Already on requested account');
 				return;
 			}
-			const account = this.requireAccountOnCurrentInstance(userId);
+			const account = await this.requireUsableAccount(userId);
 			if (!this.canSwitchAccount()) {
 				throw new Error(`Cannot switch from state: ${this.state}`);
 			}
@@ -482,11 +526,6 @@ export class AuthSessionManager {
 			try {
 				await this.stashCurrentAccount();
 				this.deps.cleanupGatewaySession('account-switch');
-				const isValid = await this.validateToken(account.token);
-				if (!isValid) {
-					this.markAccountInvalid(userId);
-					throw new SessionExpiredError();
-				}
 				const restored = await this.deps.accountStorage.restoreAccountData(userId, currentSnapshot);
 				if (!restored) {
 					throw new Error(`No data found for ${userId}`);
@@ -549,7 +588,7 @@ export class AuthSessionManager {
 						logger.warn('Failed to delete account', err);
 					}
 				}
-				this.deps.appStorage.clear();
+				this.deps.appStorage.clearExcept([], PRESERVED_RESET_STORAGE_KEY_PREFIXES);
 				this.deps.closeLayers();
 				this.deps.clearSudoToken();
 				this.send({type: 'logout.complete'});

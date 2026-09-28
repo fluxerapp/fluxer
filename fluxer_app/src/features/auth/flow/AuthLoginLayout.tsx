@@ -50,7 +50,7 @@ import {SteppedCarousel} from '@app/features/ui/stepped_carousel/SteppedCarousel
 import {isDesktop} from '@app/features/ui/utils/NativeUtils';
 import * as FormUtils from '@app/lib/forms';
 import {msg} from '@lingui/core/macro';
-import {useLingui} from '@lingui/react/macro';
+import {Trans, useLingui} from '@lingui/react/macro';
 import clsx from 'clsx';
 import {observer} from 'mobx-react-lite';
 import {cloneElement, type ReactElement, type ReactNode, useCallback, useEffect, useMemo, useState} from 'react';
@@ -151,14 +151,19 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 	const [switchError, setSwitchError] = useState<string | null>(null);
 	const [prefillEmail, setPrefillEmail] = useState<string | null>(() => initialEmail ?? null);
 	const ssoRedirectPath = desktopHandoff ? `${location.pathname}${location.search}` : redirectPath;
-	const showLoginFormForAccount = useCallback((account: Account, message?: string | null) => {
-		setShowAccountSelector(false);
-		setSwitchError(message ?? null);
-		setPrefillEmail(account.userData?.email ?? null);
-	}, []);
+	const showExpiredLoginForm = useCallback(
+		(account: Account) => {
+			const identifier = account.userData?.email ?? account.userData?.username ?? account.userId;
+			setShowAccountSelector(false);
+			setSwitchError(i18n._(SESSION_EXPIRED_SIGN_IN_AGAIN_DESCRIPTOR, {identifier}));
+			setPrefillEmail(account.userData?.email ?? null);
+		},
+		[i18n],
+	);
 	const handleLoginSuccess = useCallback(
 		async (payload: LoginSuccessPayload) => {
 			if (desktopHandoff) {
+				await AccountManager.refreshStoredAccount(payload.userId, payload.token, payload.userData);
 				await handoff.start(payload);
 				return;
 			}
@@ -235,20 +240,26 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 	}, [form.setValue, prefillEmail]);
 	const handleSelectExistingAccount = useCallback(
 		async (account: Account) => {
-			const identifier = account.userData?.email ?? account.userData?.username ?? account.userId;
-			const expiredMessage = i18n._(SESSION_EXPIRED_SIGN_IN_AGAIN_DESCRIPTOR, {identifier});
-			if (account.isValid === false || !AccountManager.canSwitchAccounts) {
-				showLoginFormForAccount(account, expiredMessage);
+			if (account.isValid === false) {
+				showExpiredLoginForm(account);
 				return;
 			}
 			setIsSwitching(true);
 			setSwitchError(null);
 			try {
-				await AccountManager.switchToAccount(account.userId);
+				if (AccountManager.canSwitchAccounts) {
+					await AccountManager.switchToAccount(account.userId);
+				} else {
+					const {token, userId} = await AccountManager.generateTokenForAccount(account.userId);
+					await handleLoginSuccess({token, userId, userData: account.userData});
+					if (redirectPath) {
+						RouterUtils.replaceWith(redirectPath);
+					}
+				}
 			} catch (error) {
 				const updatedAccount = AccountManager.accounts.get(account.userId);
 				if (error instanceof SessionExpiredError || updatedAccount?.isValid === false) {
-					showLoginFormForAccount(updatedAccount ?? account, expiredMessage);
+					showExpiredLoginForm(updatedAccount ?? account);
 					return;
 				}
 				setSwitchError(
@@ -260,8 +271,26 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 				setIsSwitching(false);
 			}
 		},
-		[i18n, showLoginFormForAccount],
+		[handleLoginSuccess, i18n, redirectPath, showExpiredLoginForm],
 	);
+	const handleHandoffReLogin = useCallback(
+		(account: Account) => {
+			showExpiredLoginForm(account);
+			handoff.switchToLogin();
+		},
+		[handoff, showExpiredLoginForm],
+	);
+	const canChooseSavedAccount = desktopHandoff ? hasHandoffAccounts : hasStoredAccounts;
+	const handleChooseSavedAccount = useCallback(() => {
+		setSwitchError(null);
+		setPrefillEmail(initialEmail ?? null);
+		form.setValue('email', initialEmail ?? '');
+		if (desktopHandoff) {
+			handoff.setMode('selecting');
+		} else {
+			setShowAccountSelector(true);
+		}
+	}, [desktopHandoff, form.setValue, handoff, initialEmail]);
 	const handleAddAnotherAccount = useCallback(() => {
 		setShowAccountSelector(false);
 		setSwitchError(null);
@@ -292,13 +321,21 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 		});
 	}, [registerLink]);
 	const authLoginStep: AuthLoginStep = useMemo(() => {
-		if (desktopHandoff && handoff.mode === 'selecting') return 'desktop_handoff_account';
+		if (desktopHandoff && handoff.mode === 'selecting' && hasHandoffAccounts) return 'desktop_handoff_account';
 		if (desktopHandoff && isApprovalFlowMode(handoff.mode)) return 'desktop_handoff_approval';
 		if (isSsoEnforced) return 'sso';
 		if (showAccountSelector && hasStoredAccounts && !desktopHandoff) return 'account';
 		if (ipAuthChallenge) return 'ip_authorization';
 		return 'credentials';
-	}, [desktopHandoff, handoff.mode, hasStoredAccounts, ipAuthChallenge, isSsoEnforced, showAccountSelector]);
+	}, [
+		desktopHandoff,
+		handoff.mode,
+		hasHandoffAccounts,
+		hasStoredAccounts,
+		ipAuthChallenge,
+		isSsoEnforced,
+		showAccountSelector,
+	]);
 	const hasExtraTopContent = extraTopContent !== undefined && extraTopContent !== null;
 	const startedFromAccountSelector = hasStoredAccounts && !desktopHandoff && !initialEmail;
 	const showSplitLogo =
@@ -316,6 +353,7 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 				<DesktopHandoffAccountSelector
 					excludeCurrentUser={excludeCurrentUser}
 					onSelectNewAccount={handoff.switchToLogin}
+					onReLoginAccount={handleHandoffReLogin}
 					onAccountSelected={handoff.start}
 					data-flx="auth.flow.auth-login-layout.desktop-handoff-account-selector"
 				/>
@@ -443,6 +481,18 @@ export const AuthLoginLayout = observer(function AuthLoginLayout({
 					data-flx="auth.flow.auth-login-layout.auth-login-passkey-actions"
 				/>
 				<div className={styles.footer} data-flx="auth.flow.auth-login-layout.footer">
+					{canChooseSavedAccount ? (
+						<div className={styles.footerText} data-flx="auth.flow.auth-login-layout.footer-text--choose-account">
+							<button
+								type="button"
+								className={styles.footerLink}
+								onClick={handleChooseSavedAccount}
+								data-flx="auth.flow.auth-login-layout.button.choose-saved-account"
+							>
+								<Trans>Choose an account</Trans>
+							</button>
+						</div>
+					) : null}
 					<div className={styles.footerText} data-flx="auth.flow.auth-login-layout.footer-text">
 						<span className={styles.footerLabel} data-flx="auth.flow.auth-login-layout.footer-label">
 							{i18n._(NEED_ACCOUNT_DESCRIPTOR)}{' '}

@@ -1591,19 +1591,19 @@ msgstr "{premiumProductName} 구독"
 msgid "{presenceCount} online"
 msgstr "온라인 {presenceCount}명"
 
-#: src/features/app/components/BootstrapErrorScreen.tsx:39
+#: src/features/app/components/BootstrapErrorScreen.tsx:46
 msgid "{PRODUCT_NAME} failed to start properly. This could be due to corrupted data or a temporary issue."
 msgstr "{PRODUCT_NAME}을(를) 시작하지 못했습니다. 데이터 손상 또는 일시적인 문제 때문일 수 있습니다."
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:196
+#: src/features/auth/state/NewDeviceMonitoring.tsx:208
 msgid "{PRODUCT_NAME} has found a new audio device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME}에서 이름이 <0>{deviceName}</0>인 새 오디오 기기를 찾았습니다. 이 기기로 전환하시겠어요?"
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:185
+#: src/features/auth/state/NewDeviceMonitoring.tsx:197
 msgid "{PRODUCT_NAME} has found a new audio input device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME}에서 이름이 <0>{deviceName}</0>인 새 오디오 입력 기기를 찾았습니다. 이 기기로 전환하시겠어요?"
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:190
+#: src/features/auth/state/NewDeviceMonitoring.tsx:202
 msgid "{PRODUCT_NAME} has found a new audio output device named <0>{deviceName}</0>. Do you want to switch to it?"
 msgstr "{PRODUCT_NAME}에서 이름이 <0>{deviceName}</0>인 새 오디오 출력 기기를 찾았습니다. 이 기기로 전환하시겠어요?"
 
@@ -1624,7 +1624,7 @@ msgid "{PRODUCT_NAME} needs to restart to disable Chromium's hardware accelerati
 msgstr "Chromium의 하드웨어 가속을 비활성화하려면 {PRODUCT_NAME}을(를) 다시 시작해야 합니다. 그래픽 오류나 GPU 사용량이 높은 문제를 해결할 때만 사용하세요."
 
 #. Accessible label for the Fluxer application icon.
-#: src/features/ui/components/icons/FluxerIcon.tsx:10
+#: src/features/ui/components/icons/FluxerIconMark.tsx:6
 msgid "{productName} application icon"
 msgstr "{productName} 애플리케이션 아이콘"
 
@@ -2913,7 +2913,7 @@ msgstr "코멘트 추가 (선택 사항)"
 msgid "Add a community"
 msgstr "커뮤니티 추가"
 
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:75
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:77
 msgid "Add a different account"
 msgstr "다른 계정 추가"
 
@@ -2975,7 +2975,7 @@ msgid "Add action."
 msgstr "작업 추가."
 
 #. OAuth authorization account step button. Opens the flow to sign in with another account.
-#: src/features/auth/components/accounts/AccountSelector.tsx:185
+#: src/features/auth/components/accounts/AccountSelector.tsx:186
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx:124
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:30
 msgid "Add an account"
@@ -5316,7 +5316,7 @@ msgstr "백엔드 프리미엄 혜택 비활성화됨"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/theme/components/modals/BackgroundImageGalleryModal.tsx:59
 #: src/features/user/components/settings_utils/search_index/SharedDescriptors.ts:5
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:731
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:732
 msgid "Background"
 msgstr "배경"
 
@@ -5743,7 +5743,7 @@ msgid "Blur"
 msgstr "흐리게"
 
 #. Slider label in the camera preview modal controlling how strong the background blur effect is.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:81
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:82
 msgid "Blur strength"
 msgstr "흐림 강도"
 
@@ -6278,7 +6278,7 @@ msgstr "카메라 기기"
 msgid "Camera effects"
 msgstr "카메라 효과"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:809
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:810
 msgid "Camera error"
 msgstr "카메라 오류"
 
@@ -6321,7 +6321,7 @@ msgstr "카메라 권한 필요"
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Title of the camera preview modal.
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:186
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:63
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:64
 msgid "Camera preview"
 msgstr "카메라 미리보기"
 
@@ -6429,7 +6429,7 @@ msgstr "여기에 파일을 올릴 수 없습니다"
 #: src/features/user/components/modals/PhoneAddModal.tsx:401
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:174
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx:33
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:845
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:846
 #: src/features/voice/components/VoiceMessageComposerModal.tsx:81
 msgid "Cancel"
 msgstr "취소"
@@ -6671,7 +6671,7 @@ msgstr "가운데 정렬"
 msgid "Change avatar"
 msgstr "프로필 사진 변경"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:744
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:745
 msgid "Change background"
 msgstr "배경 변경"
 
@@ -7321,7 +7321,7 @@ msgstr "채팅 단축키"
 msgid "Check for updates"
 msgstr "업데이트 확인"
 
-#: src/features/app/components/BootstrapErrorScreen.tsx:56
+#: src/features/app/components/BootstrapErrorScreen.tsx:63
 msgid "Check our <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0> for status updates."
 msgstr "상태 업데이트는 <0>{BLUESKY_PROVIDER_NAME} ({FLUXER_BLUESKY_HANDLE})</0>에서 확인하세요."
 
@@ -7500,7 +7500,8 @@ msgstr "시스템 선택기에서 창을 선택하세요"
 #. OAuth authorization step title. The user must choose which account to authorize with.
 #: src/features/auth/components/accounts/AccountSelector.tsx:61
 #: src/features/auth/components/pages/oauth_authorize_page/OAuthAccountStep.tsx:17
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:68
+#: src/features/auth/flow/AuthLoginLayout.tsx:492
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:70
 msgid "Choose an account"
 msgstr "계정 선택"
 
@@ -9121,7 +9122,7 @@ msgstr "연결: {connectionId}"
 #. Settings search entry label. Also used as a search synonym in the settings search bar.
 #. Settings section label for external accounts and verified domains.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:415
-#: src/features/user/components/popouts/UserProfileShared.tsx:614
+#: src/features/user/components/popouts/UserProfileShared.tsx:615
 #: src/features/user/components/settings_utils/search_index/LinkedAccountsIndex.ts:8
 #: src/features/user/components/settings_utils/section_registry/GeneralSettingsSections.ts:30
 msgid "Connections"
@@ -9618,7 +9619,7 @@ msgid "Copy setup key"
 msgstr "설정 키 복사"
 
 #. Button on the crash screen that copies developer diagnostic text.
-#: src/features/app/components/ErrorFallback.tsx:152
+#: src/features/app/components/ErrorFallback.tsx:155
 msgid "Copy stack trace"
 msgstr "스택 트레이스 복사"
 
@@ -11225,7 +11226,7 @@ msgstr "기본"
 #. Default camera device option.
 #. Default device option label in the voice settings menu (alternate call site for the same concept as DEFAULT_DESCRIPTOR).
 #. Fallback device option shown before a microphone, speaker, or camera label is available.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:67
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:68
 #: src/features/voice/components/VoiceSettingsMenus.tsx:87
 #: src/features/voice/utils/SettingsDeviceOptions.ts:11
 msgctxt "device-option"
@@ -12683,7 +12684,7 @@ msgstr "다시 보지 않기"
 msgid "Don't show typing indicators in the channel list"
 msgstr "채널 목록에서 입력 중 표시 안 함"
 
-#: src/features/auth/state/NewDeviceMonitoring.tsx:51
+#: src/features/auth/state/NewDeviceMonitoring.tsx:57
 msgid "Don't suggest {deviceName} again"
 msgstr "{deviceName} 다시 추천 안 함"
 
@@ -14721,7 +14722,7 @@ msgid "Failed to delete channel"
 msgstr "채널 삭제 실패"
 
 #. Toast / inline error in the camera preview modal when enabling the camera fails.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:59
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:60
 msgid "Failed to enable camera."
 msgstr "카메라를 켤 수 없습니다."
 
@@ -14736,7 +14737,7 @@ msgid "Failed to forward message"
 msgstr "메시지 전달 실패"
 
 #. Short label in the authentication desktop handoff account selector. Keep the tone plain and specific.
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:17
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:12
 msgid "Failed to generate token"
 msgstr "토큰 생성 실패"
 
@@ -14900,12 +14901,12 @@ msgstr "신고 전송에 실패했습니다. 다시 시도해 주세요."
 msgid "Failed to send verification email. Try again later."
 msgstr "인증 이메일 전송에 실패했습니다. 나중에 다시 시도해 주세요."
 
-#: src/features/app/components/BootstrapErrorScreen.tsx:36
+#: src/features/app/components/BootstrapErrorScreen.tsx:43
 msgid "Failed to start"
 msgstr "시작 실패"
 
 #. Error text in the camera preview modal when the camera stream cannot be opened. Prompts user to check OS / browser permissions.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:54
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:55
 msgid "Failed to start camera preview. Check your camera permissions."
 msgstr "카메라 미리보기를 시작하지 못했습니다. 카메라 권한을 확인해 주세요."
 
@@ -15251,7 +15252,7 @@ msgstr "필터링"
 msgid "Filtering by {language}"
 msgstr "{language}(으)로 필터링"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:788
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:789
 msgid "Finalizing camera..."
 msgstr "카메라 준비 중..."
 
@@ -18003,7 +18004,7 @@ msgstr "상속됨"
 msgid "Inherited from {inheritedFromLabel}"
 msgstr "{inheritedFromLabel}에서 상속됨"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:790
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:791
 msgid "Initializing camera..."
 msgstr "카메라 초기화 중..."
 
@@ -20510,7 +20511,7 @@ msgid "Member roles updated"
 msgstr "멤버 역할 업데이트됨"
 
 #: src/features/channel/components/guild_members_page/MembersTableHeaderRow.tsx:83
-#: src/features/user/components/popouts/UserProfileShared.tsx:282
+#: src/features/user/components/popouts/UserProfileShared.tsx:283
 msgid "Member since"
 msgstr "멤버 가입일"
 
@@ -21133,7 +21134,7 @@ msgstr "위험에 처한 미성년자, 부적절한 장소의 성인 콘텐츠, 
 #. Switch label in the camera preview modal for flipping the local camera preview horizontally.
 #. Switch label in the video tab for flipping the local camera preview horizontally.
 #: src/features/user/components/modals/tabs/UserVideoTab.tsx:106
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:72
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:73
 #: src/features/voice/components/VoiceSettingsMenus.tsx:114
 msgid "Mirror camera"
 msgstr "카메라 좌우 반전"
@@ -22152,7 +22153,7 @@ msgid "New accounts can join up to 10 communities in the first 24 hours. Try aga
 msgstr "새 계정은 처음 24시간 동안 최대 10개의 커뮤니티에 가입할 수 있습니다. 나중에 다시 시도해 주세요."
 
 #. Body text in the authentication new device monitoring. Keep the tone plain and specific.
-#: src/features/auth/state/NewDeviceMonitoring.tsx:23
+#: src/features/auth/state/NewDeviceMonitoring.tsx:26
 msgid "New audio device detected!"
 msgstr "새 오디오 기기가 감지되었습니다!"
 
@@ -22367,7 +22368,7 @@ msgstr "액세스 권한 없음"
 msgid "No accessible channels"
 msgstr "접근 가능한 채널 없음"
 
-#: src/features/auth/components/accounts/AccountSelector.tsx:148
+#: src/features/auth/components/accounts/AccountSelector.tsx:150
 #: src/features/auth/components/accounts/AccountSwitcherModal.tsx:88
 msgid "No accounts"
 msgstr "계정 없음"
@@ -23081,7 +23082,7 @@ msgstr "페이지를 찾을 수 없음"
 #: src/features/app/components/dialogs/components/plutonium/SubscriptionCard.tsx:69
 #: src/features/app/components/layout/app_layout/nagbars/VoiceSessionRestoreNagbar.tsx:35
 #: src/features/auth/passkey_migration/PasskeyUpdateModal.tsx:43
-#: src/features/auth/state/NewDeviceMonitoring.tsx:31
+#: src/features/auth/state/NewDeviceMonitoring.tsx:34
 msgid "Not now"
 msgstr "나중에"
 
@@ -24048,7 +24049,7 @@ msgstr "운영체제"
 msgid "Opt into experimental per-community and per-channel unread badge controls"
 msgstr "커뮤니티별 및 채널별 읽지 않은 배지 제어 실험 기능을 사용합니다"
 
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:786
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:787
 msgid "Optimizing camera..."
 msgstr "카메라 최적화 중..."
 
@@ -26580,7 +26581,7 @@ msgid "Reload {productName} to use web update {version}"
 msgstr "{version} 웹 업데이트를 적용하려면 {productName}을(를) 다시 로드하세요"
 
 #. Button on the crash screen that reloads the current app.
-#: src/features/app/components/ErrorFallback.tsx:142
+#: src/features/app/components/ErrorFallback.tsx:145
 msgid "Reload app"
 msgstr "앱 새로고침"
 
@@ -26628,7 +26629,7 @@ msgstr "창 크기 및 위치 기억"
 #. Short label in the shared app saved message missing card. Keep the tone plain and specific.
 #: src/features/app/components/shared/SavedMessageMissingCard.tsx:14
 #: src/features/auth/components/accounts/AccountSelector.tsx:78
-#: src/features/auth/components/accounts/AccountSelector.tsx:125
+#: src/features/auth/components/accounts/AccountSelector.tsx:128
 #: src/features/channel/components/MessageReactionsSheet.tsx:43
 #: src/features/expressions/components/modals/AddFavoriteChannelModal.tsx:52
 #: src/features/guild/components/modals/guild_tabs/guild_overview_tab/fields/GuildBannerUploadField.tsx:156
@@ -27533,8 +27534,8 @@ msgstr "재설정 후 다시 시작"
 #. Confirm dialog title for the destructive reset action.
 #. Destructive button on the crash screen. Clears local app data except preserved drafts.
 #. Destructive button on the startup failure screen. Clears local app data except preserved drafts.
-#: src/features/app/components/BootstrapErrorScreen.tsx:75
-#: src/features/app/components/ErrorFallback.tsx:164
+#: src/features/app/components/BootstrapErrorScreen.tsx:82
+#: src/features/app/components/ErrorFallback.tsx:167
 #: src/features/platform/utils/DesktopLocaleBridge.ts:175
 msgid "Reset app data"
 msgstr "앱 데이터 초기화"
@@ -29218,7 +29219,7 @@ msgstr "적용할 시나리오를 선택하세요..."
 msgid "Select a violation category."
 msgstr "위반 카테고리를 선택하세요."
 
-#: src/features/auth/components/accounts/AccountSelector.tsx:114
+#: src/features/auth/components/accounts/AccountSelector.tsx:117
 msgid "Select account"
 msgstr "계정 선택"
 
@@ -29269,7 +29270,7 @@ msgstr "범위 선택 (필요한 경우 리디렉션 URI 포함)"
 msgid "Select text"
 msgstr "텍스트 선택"
 
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:69
+#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:71
 msgid "Select the account you want to sign in with on your new device."
 msgstr "새 기기에서 로그인할 계정을 선택하세요."
 
@@ -29686,11 +29687,6 @@ msgstr "세션"
 #: src/features/auth/flow/AuthLoginLayout.tsx:58
 msgid "Session expired for {identifier}. Sign in again."
 msgstr "{identifier} 계정의 세션이 만료되었습니다. 다시 로그인하세요."
-
-#. Toast error shown in the desktop-handoff account picker when the session for the chosen account has expired.
-#: src/features/auth/flow/DesktopHandoffAccountSelector.tsx:12
-msgid "Session expired. Sign in again."
-msgstr "세션이 만료되었습니다. 다시 로그인하세요."
 
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/user/components/settings_utils/search_index/DevicesIndex.ts:15
@@ -30674,6 +30670,7 @@ msgstr "사이드바"
 msgid "Sign in"
 msgstr "로그인"
 
+#: src/features/auth/components/accounts/AccountSelector.tsx:117
 #: src/features/auth/utils/AccountSwitcherModalUtils.tsx:274
 msgid "Sign in again"
 msgstr "다시 로그인"
@@ -31237,11 +31234,11 @@ msgstr "일부 사용자는 추가할 수 없습니다"
 msgid "Something went wrong"
 msgstr "문제가 발생했습니다"
 
-#: src/features/app/components/ErrorFallback.tsx:126
+#: src/features/app/components/ErrorFallback.tsx:129
 msgid "Something went wrong and the app crashed. An update is available that may fix this issue."
 msgstr "문제가 발생하여 앱이 종료되었습니다. 이 문제를 해결할 수 있는 업데이트가 있습니다."
 
-#: src/features/app/components/ErrorFallback.tsx:128
+#: src/features/app/components/ErrorFallback.tsx:131
 msgid "Something went wrong and the app crashed. Try reloading or resetting the app."
 msgstr "문제가 발생하여 앱이 중단되었습니다. 앱을 다시 로드하거나 재설정해 보세요."
 
@@ -32505,7 +32502,7 @@ msgid "Switch between your global profile and per-community profiles"
 msgstr "글로벌 프로필과 커뮤니티별 프로필 간 전환"
 
 #. Short label in the authentication new device monitoring. Keep the tone plain and specific.
-#: src/features/auth/state/NewDeviceMonitoring.tsx:27
+#: src/features/auth/state/NewDeviceMonitoring.tsx:30
 msgid "Switch device"
 msgstr "기기 전환"
 
@@ -33222,11 +33219,11 @@ msgstr "#0000 태그는 Visionary 구독자 전용입니다. Visionary는 더 �
 msgid "The API is on a different origin than this page, so setup requests are sent without your session. Check the public origin and port this instance is configured with, then reload."
 msgstr "API가 이 페이지와 다른 출처에 있어 설정 요청이 세션 없이 전송됩니다. 이 인스턴스에 설정된 공개 출처와 포트를 확인한 후 새로고침하세요."
 
-#: src/features/app/components/ErrorFallback.tsx:120
+#: src/features/app/components/ErrorFallback.tsx:123
 msgid "The app crashed"
 msgstr "앱이 비정상적으로 종료되었습니다"
 
-#: src/features/app/components/ErrorFallback.tsx:124
+#: src/features/app/components/ErrorFallback.tsx:127
 msgid "The app has crashed. Checking for updates that might fix this issue…"
 msgstr "앱이 비정상적으로 종료되었습니다. 이 문제를 해결할 수 있는 업데이트를 확인하는 중…"
 
@@ -33529,7 +33526,7 @@ msgstr "테마 파일"
 msgid "Theme library"
 msgstr "테마 라이브러리"
 
-#: src/features/theme/components/pages/ThemeLoginPage.tsx:175
+#: src/features/theme/components/pages/ThemeLoginPage.tsx:176
 #: src/features/theme/components/pages/ThemeRegisterPage.tsx:70
 msgid "Theme not found"
 msgstr "테마를 찾을 수 없습니다"
@@ -33935,7 +33932,7 @@ msgstr "이 파일은 {fileSize}이며, 제한 크기인 {maxSize}를 초과합�
 msgid "This friends list needs more power"
 msgstr "친구 목록에 더 많은 친구가 필요해요"
 
-#: src/features/expressions/components/pages/GiftLoginPage.tsx:177
+#: src/features/expressions/components/pages/GiftLoginPage.tsx:178
 #: src/features/expressions/components/pages/GiftRegisterPage.tsx:84
 msgid "This gift code has already been claimed."
 msgstr "이미 사용된 선물 코드입니다."
@@ -33947,7 +33944,7 @@ msgstr "이미 사용된 선물 코드입니다."
 msgid "This gift code is invalid or already claimed."
 msgstr "선물 코드가 유효하지 않거나 이미 사용되었습니다."
 
-#: src/features/expressions/components/pages/GiftLoginPage.tsx:166
+#: src/features/expressions/components/pages/GiftLoginPage.tsx:167
 #: src/features/expressions/components/pages/GiftRegisterPage.tsx:73
 msgid "This gift code may be invalid, expired, or already redeemed."
 msgstr "선물 코드가 유효하지 않거나, 만료되었거나, 이미 사용되었을 수 있습니다."
@@ -34317,7 +34314,7 @@ msgstr "이 테마는 너무 커서 공유할 수 없습니다"
 msgid "This theme link is missing data."
 msgstr "테마 링크에 데이터가 없습니다."
 
-#: src/features/theme/components/pages/ThemeLoginPage.tsx:176
+#: src/features/theme/components/pages/ThemeLoginPage.tsx:177
 #: src/features/theme/components/pages/ThemeRegisterPage.tsx:71
 msgid "This theme may have been removed or the link is invalid."
 msgstr "테마가 삭제되었거나 링크가 유효하지 않습니다."
@@ -34331,7 +34328,7 @@ msgstr "이 사용자"
 msgid "This user has limited their profile. Some details are hidden from people who aren't their friends."
 msgstr "이 사용자는 프로필을 제한했습니다. 친구가 아닌 사람에게는 일부 세부 정보가 숨겨집니다."
 
-#: src/features/user/components/popouts/UserProfileShared.tsx:394
+#: src/features/user/components/popouts/UserProfileShared.tsx:395
 msgid "This user has no roles in this community."
 msgstr "이 사용자는 이 커뮤니티에서 역할이 없습니다."
 
@@ -35749,7 +35746,7 @@ msgstr "알 수 없는 기기"
 
 #. Fallback diagnostic text on the crash screen when an Error object has no message.
 #. Fallback error text shown when LaTeX rendering fails without an error message.
-#: src/features/app/components/ErrorFallback.tsx:25
+#: src/features/app/components/ErrorFallback.tsx:28
 #: src/features/messaging/components/markdown/renderers/common/CodeElements.tsx:37
 msgid "Unknown error"
 msgstr "알 수 없는 오류"
@@ -36233,7 +36230,7 @@ msgid "Update {productName} to view this message."
 msgstr "이 메시지를 보려면 {productName}을(를) 업데이트하세요."
 
 #. Button on the crash screen that applies a found app update.
-#: src/features/app/components/ErrorFallback.tsx:140
+#: src/features/app/components/ErrorFallback.tsx:143
 msgid "Update app"
 msgstr "앱 업데이트"
 
@@ -39330,7 +39327,7 @@ msgstr "이 채널에서는 말할 수 없습니다"
 #. Tooltip / error shown in the camera preview modal when the user lacks Video permission in the current channel. Tone stays plain.
 #. Tooltip in the voice control bar when the user lacks the Video permission in this channel. Tone stays plain.
 #. Tooltip shown when the user lacks the Video permission in the voice channel. Tone stays plain.
-#: src/features/voice/components/modals/CameraPreviewModal.tsx:76
+#: src/features/voice/components/modals/CameraPreviewModal.tsx:77
 #: src/features/voice/components/voice_connection_status/LocalParticipantControls.tsx:50
 #: src/features/voice/components/VoiceControlBar.tsx:127
 msgid "You can't turn on your camera in this channel"

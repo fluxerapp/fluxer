@@ -59,6 +59,12 @@ function isVirtualRouteDevice(device: MediaDeviceInfo): boolean {
 	return getVoiceAudioDeviceMetadata(device) !== null;
 }
 
+export function getRealDeviceIds(state: VoiceDeviceState): Array<string> {
+	return [...state.inputDevices, ...state.outputDevices]
+		.filter((device) => !isVirtualRouteDevice(device) && device.deviceId.trim().length > 0)
+		.map((device) => device.deviceId);
+}
+
 function isPromptableDevice(device: MediaDeviceInfo, context: PromptableDeviceContext): boolean {
 	if (isVirtualRouteDevice(device)) {
 		return false;

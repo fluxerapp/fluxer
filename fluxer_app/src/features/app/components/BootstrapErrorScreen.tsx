@@ -7,9 +7,12 @@ import {
 	PRODUCT_NAME,
 } from '@app/features/app/config/I18nDisplayConstants';
 import {TRY_AGAIN_DESCRIPTOR} from '@app/features/i18n/utils/CommonMessageDescriptors';
-import AppStorage, {PRESERVED_RESET_STORAGE_KEYS} from '@app/features/platform/state/PersistentStorage';
+import AppStorage, {
+	PRESERVED_RESET_STORAGE_KEY_PREFIXES,
+	PRESERVED_RESET_STORAGE_KEYS,
+} from '@app/features/platform/state/PersistentStorage';
 import {Button} from '@app/features/ui/button/Button';
-import {FluxerIcon} from '@app/features/ui/components/icons/FluxerIcon';
+import {APPLICATION_ICON_DESCRIPTOR, FluxerIconMark} from '@app/features/ui/components/icons/FluxerIconMark';
 import {ExternalUrls} from '@fluxer/constants/src/ExternalUrls';
 import {Trans, useLingui} from '@lingui/react/macro';
 import type React from 'react';
@@ -25,12 +28,16 @@ export const BootstrapErrorScreen: React.FC<BootstrapErrorScreenProps> = ({error
 		window.location.reload();
 	}, []);
 	const handleReset = useCallback(() => {
-		AppStorage.clearExcept(PRESERVED_RESET_STORAGE_KEYS);
+		AppStorage.clearExcept(PRESERVED_RESET_STORAGE_KEYS, PRESERVED_RESET_STORAGE_KEY_PREFIXES);
 		window.location.reload();
 	}, []);
 	return (
 		<div className={styles.errorFallbackContainer} data-flx="app.bootstrap-error-screen.error-fallback-container">
-			<FluxerIcon className={styles.errorFallbackIcon} data-flx="app.bootstrap-error-screen.error-fallback-icon" />
+			<FluxerIconMark
+				aria-label={i18n._(APPLICATION_ICON_DESCRIPTOR, {productName: PRODUCT_NAME})}
+				className={styles.errorFallbackIcon}
+				data-flx="app.bootstrap-error-screen.error-fallback-icon"
+			/>
 			<div className={styles.errorFallbackContent} data-flx="app.bootstrap-error-screen.error-fallback-content">
 				<h1 className={styles.errorFallbackTitle} data-flx="app.bootstrap-error-screen.error-fallback-title">
 					<Trans>Failed to start</Trans>

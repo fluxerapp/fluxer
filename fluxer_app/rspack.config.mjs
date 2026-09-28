@@ -508,6 +508,13 @@ export default () => {
 								priority: 43,
 								reuseExistingChunk: true,
 							},
+							i18n: {
+								test: /[\\/]node_modules[\\/]@lingui[\\/]/,
+								name: 'i18n',
+								priority: 42,
+								reuseExistingChunk: true,
+								enforce: true,
+							},
 							reactAria: {
 								test: /[\\/]node_modules[\\/]react-aria-components[\\/]/,
 								name: 'react-aria',
