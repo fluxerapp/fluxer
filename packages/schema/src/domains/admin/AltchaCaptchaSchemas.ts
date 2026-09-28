@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {EXPERIMENT_BUCKET_RESOLUTION, experimentBucket} from '@fluxer/schema/src/domains/experiment/ExperimentBucket';
+import {
+	EXPERIMENT_BUCKET_RESOLUTION,
+	type ExperimentTargeting,
+	experimentAudienceIncludes,
+	experimentBucket,
+} from '@fluxer/schema/src/domains/experiment/ExperimentBucket';
 import {z} from 'zod';
 
 const ALTCHA_CAPTCHA_ROLLOUT_BASIS_POINTS_MAX = EXPERIMENT_BUCKET_RESOLUTION;
@@ -23,6 +28,8 @@ const altchaCaptchaConfigFields = {
 	rollout_basis_points: z.number().int().min(0).max(ALTCHA_CAPTCHA_ROLLOUT_BASIS_POINTS_MAX),
 	rollout_salt: z.string().trim().min(1).max(64).regex(ALTCHA_CAPTCHA_SALT_PATTERN),
 	included_user_ids: AltchaCaptchaTargetedUserIdsSchema,
+	included_guild_ids: AltchaCaptchaTargetedUserIdsSchema,
+	include_premium_users: z.boolean(),
 	excluded_user_ids: AltchaCaptchaTargetedUserIdsSchema,
 	anonymous_enabled: z.boolean(),
 	cost: z.number().int().min(ALTCHA_CAPTCHA_MIN_COST).max(ALTCHA_CAPTCHA_MAX_COST),
@@ -35,6 +42,8 @@ export const AltchaCaptchaConfigSchema = z.object({
 	rollout_basis_points: altchaCaptchaConfigFields.rollout_basis_points.default(0),
 	rollout_salt: altchaCaptchaConfigFields.rollout_salt.default(DEFAULT_ALTCHA_CAPTCHA_SALT),
 	included_user_ids: altchaCaptchaConfigFields.included_user_ids.default([]),
+	included_guild_ids: altchaCaptchaConfigFields.included_guild_ids.default([]),
+	include_premium_users: altchaCaptchaConfigFields.include_premium_users.default(false),
 	excluded_user_ids: altchaCaptchaConfigFields.excluded_user_ids.default([]),
 	anonymous_enabled: altchaCaptchaConfigFields.anonymous_enabled.default(false),
 	cost: altchaCaptchaConfigFields.cost.default(5000),
@@ -69,14 +78,20 @@ export const INERT_ALTCHA_CAPTCHA_ASSIGNMENT: AltchaCaptchaAssignmentResponse = 
 export function resolveAltchaCaptchaAssignment(
 	config: AltchaCaptchaConfig,
 	userId: string,
+	targeting: ExperimentTargeting,
 ): AltchaCaptchaAssignmentResponse {
 	if (!config.enabled) return {...INERT_ALTCHA_CAPTCHA_ASSIGNMENT};
 	if (config.excluded_user_ids.includes(userId)) return {...INERT_ALTCHA_CAPTCHA_ASSIGNMENT};
 	if (config.included_user_ids.includes(userId)) return {enabled: true};
+	if (experimentAudienceIncludes(config, targeting)) return {enabled: true};
 	return {enabled: experimentBucket(userId, config.rollout_salt) < config.rollout_basis_points};
 }
 
-export function altchaCaptchaAppliesTo(config: AltchaCaptchaConfig, userId: string | null): boolean {
+export function altchaCaptchaAppliesTo(
+	config: AltchaCaptchaConfig,
+	userId: string | null,
+	targeting: ExperimentTargeting,
+): boolean {
 	if (userId === null) return config.enabled && config.anonymous_enabled;
-	return resolveAltchaCaptchaAssignment(config, userId).enabled;
+	return resolveAltchaCaptchaAssignment(config, userId, targeting).enabled;
 }

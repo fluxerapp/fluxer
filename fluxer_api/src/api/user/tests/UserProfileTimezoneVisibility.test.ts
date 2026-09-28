@@ -168,6 +168,21 @@ describe('User Profile Timezone Visibility', () => {
 		const updated = await updateProfileTimezone(harness, targetAccount.token, {timezone: TEST_TIMEZONE});
 		expect(updated.timezone).toBeNull();
 	});
+	it('lets members of an included guild set and show a timezone', async () => {
+		const targetAccount = await createTestAccount(harness);
+		const viewerAccount = await createTestAccount(harness);
+		const guild = await createGuild(harness, targetAccount.token, 'Timezone Rollout Guild');
+		await getInstanceConfigRepository().setProfileTimezoneConfig({
+			...DEFAULT_PROFILE_TIMEZONE_CONFIG,
+			enabled: true,
+			included_guild_ids: [guild.id],
+		});
+		const updated = await updateProfileTimezone(harness, targetAccount.token, {timezone: TEST_TIMEZONE});
+		expect(updated.timezone).toBe(TEST_TIMEZONE);
+		await createFriendship(harness, targetAccount, viewerAccount);
+		const profile = await getUserProfile(harness, viewerAccount.token, targetAccount.userId);
+		expect(profile.timezone_offset).toBe(TEST_TIMEZONE_OFFSET);
+	});
 	it('hides stored profile timezone after the user leaves the experiment', async () => {
 		const targetAccount = await createTestAccount(harness);
 		const viewerAccount = await createTestAccount(harness);

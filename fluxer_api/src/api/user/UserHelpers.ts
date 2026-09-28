@@ -2,6 +2,7 @@
 
 import {Config} from '@app/api/Config';
 import type {UserRow} from '@app/api/database/types/UserTypes';
+import {resolveExperimentTargeting} from '@app/api/experiment/ExperimentTargeting';
 import {getCachedInstancePremiumMode} from '@app/api/limits/InstancePremiumModeCache';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {User} from '@app/api/models/User';
@@ -291,7 +292,8 @@ export function isBugHunterBotUser(user: Pick<User, 'flags' | 'isBot'>): boolean
 	return user.isBot && (user.flags & UserFlags.BUG_HUNTER) !== 0n;
 }
 
-export async function canUseProfileTimezone(user: Pick<User, 'id'>): Promise<boolean> {
+export async function canUseProfileTimezone(user: User): Promise<boolean> {
 	const config = await getInstanceConfigRepository().getProfileTimezoneConfig();
-	return resolveProfileTimezoneAssignment(config, user.id.toString()).enabled;
+	const targeting = await resolveExperimentTargeting(user, [config]);
+	return resolveProfileTimezoneAssignment(config, user.id.toString(), targeting).enabled;
 }

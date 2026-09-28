@@ -85,7 +85,7 @@ The outcomes below set `user_targeted` to false, and they differ in what else th
 2. The operator has excluded the caller. `enabled` is true, and every other field is as in the first outcome.
 3. The caller was not drawn. `enabled` is true, and `enabled_backends`, `guild_overrides`, and `allow_user_override` all hold their configured values.
 
-A caller is drawn either by the operator's allowlist, which sets `source` to `user_rule`, or by the sampled share of the account population, which sets `source` to `canary`. A caller that is drawn while `backend` is absent from `enabled_backends` is reported as not drawn, with `user_targeted` false and both `backend` and `source` null.
+A caller is drawn by the operator's account or guild allowlist, by having premium when the operator includes premium users, or by the sampled share of the account population. The sampled share sets `source` to `canary`, and every other rule sets it to `user_rule`. A caller that is drawn while `backend` is absent from `enabled_backends` is reported as not drawn, with `user_targeted` false and both `backend` and `source` null.
 
 A client branches on `user_targeted` rather than on `enabled_backends`, because the third outcome keeps the array populated. A `guild_overrides` entry applies in its guild whether or not the caller was drawn.
 
@@ -114,7 +114,7 @@ One resolution of the instance web domain migration rollout against one account.
 | --- | --- | --- |
 | enabled | boolean | Whether the caller's web client moves to the new web origin |
 
-A caller is drawn either by the operator's allowlist or by the sampled share of the account population. `enabled` is false in every other case, the rollout being off included.
+A caller is drawn by the operator's account or guild allowlist, by having premium when the operator includes premium users, or by the sampled share of the account population. `enabled` is false in every other case, the rollout being off included.
 
 Only the official web client acts on this assignment, and only on its legacy origins. Every other client ignores it. The logged-out share and the instance-wide switch are published in the [instance discovery document](/http-api/instance/#domain-migration-object) instead, because a client that holds no credential cannot read this route.
 
@@ -128,7 +128,7 @@ One resolution of the instance ALTCHA captcha rollout against one account. This 
 | --- | --- | --- |
 | enabled | boolean | Whether the caller's captcha challenges are ALTCHA proof-of-work challenges |
 
-A caller is drawn either by the operator's allowlist or by the sampled share of the account population. `enabled` is false in every other case, the rollout being off included.
+A caller is drawn by the operator's account or guild allowlist, by having premium when the operator includes premium users, or by the sampled share of the account population. `enabled` is false in every other case, the rollout being off included.
 
 The assignment is informational. The server applies the same resolution to every request that needs a captcha and names the provider in the [captcha error](/topics/captcha/#altcha-proof-of-work), so a client needs no copy of this value to answer a challenge.
 
@@ -142,7 +142,7 @@ One resolution of the instance profile timezone rollout against one account. Thi
 | --- | --- | --- |
 | enabled | boolean | Whether the caller can set a profile timezone and show it on their profile |
 
-A caller is drawn either by the operator's allowlist or by the sampled share of the account population. `enabled` is false in every other case, the rollout being off included.
+A caller is drawn by the operator's account or guild allowlist, by having premium when the operator includes premium users, or by the sampled share of the account population. `enabled` is false in every other case, the rollout being off included.
 
 The server applies the same resolution on its own. [Modify current user](/http-api/users/current-user/#modify-current-user) drops `timezone` and `timezone_privacy_flags` for an account outside the rollout, and a [user profile](/http-api/users/#get-user-profile) reports `timezone_offset` as null for a target outside it.
 

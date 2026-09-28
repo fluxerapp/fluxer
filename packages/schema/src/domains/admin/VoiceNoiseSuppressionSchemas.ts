@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {EXPERIMENT_BUCKET_RESOLUTION, experimentBucket} from '@fluxer/schema/src/domains/experiment/ExperimentBucket';
+import {
+	EXPERIMENT_BUCKET_RESOLUTION,
+	type ExperimentTargeting,
+	experimentAudienceIncludes,
+	experimentBucket,
+} from '@fluxer/schema/src/domains/experiment/ExperimentBucket';
 import {z} from 'zod';
 
 export const VOICE_NOISE_SUPPRESSION_BACKENDS = [
@@ -39,6 +44,8 @@ const voiceConfigFields = {
 	rollout_basis_points: z.number().int().min(0).max(VOICE_NOISE_SUPPRESSION_ROLLOUT_BASIS_POINTS_MAX),
 	rollout_salt: z.string().trim().min(1).max(64),
 	included_user_ids: TargetedUserIdsSchema,
+	included_guild_ids: TargetedUserIdsSchema,
+	include_premium_users: z.boolean(),
 	excluded_user_ids: TargetedUserIdsSchema,
 	guild_overrides: z.array(VoiceNoiseSuppressionGuildOverrideSchema).max(VOICE_NOISE_SUPPRESSION_MAX_GUILD_OVERRIDES),
 	suppression_strength: z.number().int().min(0).max(100),
@@ -53,6 +60,8 @@ export const VoiceNoiseSuppressionConfigSchema = z.object({
 	rollout_basis_points: voiceConfigFields.rollout_basis_points.default(0),
 	rollout_salt: voiceConfigFields.rollout_salt.default(DEFAULT_VOICE_NOISE_SUPPRESSION_SALT),
 	included_user_ids: voiceConfigFields.included_user_ids.default([]),
+	included_guild_ids: voiceConfigFields.included_guild_ids.default([]),
+	include_premium_users: voiceConfigFields.include_premium_users.default(false),
 	excluded_user_ids: voiceConfigFields.excluded_user_ids.default([]),
 	guild_overrides: voiceConfigFields.guild_overrides.default([]),
 	suppression_strength: voiceConfigFields.suppression_strength.default(80),
@@ -107,6 +116,7 @@ export const INERT_VOICE_NOISE_SUPPRESSION_ASSIGNMENT: VoiceNoiseSuppressionAssi
 export function resolveVoiceNoiseSuppressionAssignment(
 	config: VoiceNoiseSuppressionConfig,
 	userId: string,
+	targeting: ExperimentTargeting,
 ): VoiceNoiseSuppressionAssignmentResponse {
 	if (!config.enabled) {
 		return {
@@ -136,7 +146,7 @@ export function resolveVoiceNoiseSuppressionAssignment(
 	const guildOverrides = config.guild_overrides.filter((override) =>
 		config.enabled_backends.includes(override.backend),
 	);
-	if (config.included_user_ids.includes(userId)) {
+	if (config.included_user_ids.includes(userId) || experimentAudienceIncludes(config, targeting)) {
 		return {
 			...shared,
 			user_targeted: backendIsUsable,

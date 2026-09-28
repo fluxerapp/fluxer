@@ -503,6 +503,8 @@ pub struct VoiceNoiseSuppressionConfigResponse {
     pub rollout_basis_points: u32,
     pub rollout_salt: String,
     pub included_user_ids: Vec<String>,
+    pub included_guild_ids: Vec<String>,
+    pub include_premium_users: bool,
     pub excluded_user_ids: Vec<String>,
     pub guild_overrides: Vec<VoiceNoiseSuppressionGuildOverride>,
     pub suppression_strength: u32,
@@ -519,6 +521,8 @@ impl Default for VoiceNoiseSuppressionConfigResponse {
             rollout_basis_points: 0,
             rollout_salt: "voice-ns-v1".to_owned(),
             included_user_ids: Vec::new(),
+            included_guild_ids: Vec::new(),
+            include_premium_users: false,
             excluded_user_ids: Vec::new(),
             guild_overrides: Vec::new(),
             suppression_strength: 80,
@@ -542,6 +546,10 @@ pub struct VoiceNoiseSuppressionConfigUpdateRequest {
     pub rollout_salt: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub included_user_ids: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub included_guild_ids: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub include_premium_users: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub excluded_user_ids: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -572,6 +580,8 @@ pub struct DomainMigrationConfigResponse {
     pub rollout_basis_points: u32,
     pub rollout_salt: String,
     pub included_user_ids: Vec<String>,
+    pub included_guild_ids: Vec<String>,
+    pub include_premium_users: bool,
     pub excluded_user_ids: Vec<String>,
     pub anonymous_rollout_basis_points: u32,
     pub standalone_forwarding: bool,
@@ -585,6 +595,8 @@ impl Default for DomainMigrationConfigResponse {
             rollout_basis_points: 0,
             rollout_salt: DOMAIN_MIGRATION_DEFAULT_SALT.to_owned(),
             included_user_ids: Vec::new(),
+            included_guild_ids: Vec::new(),
+            include_premium_users: false,
             excluded_user_ids: Vec::new(),
             anonymous_rollout_basis_points: 0,
             standalone_forwarding: false,
@@ -603,6 +615,10 @@ pub struct DomainMigrationConfigUpdateRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub included_user_ids: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub included_guild_ids: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub include_premium_users: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub excluded_user_ids: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub anonymous_rollout_basis_points: Option<u32>,
@@ -618,6 +634,8 @@ pub struct AltchaCaptchaConfigResponse {
     pub rollout_basis_points: u32,
     pub rollout_salt: String,
     pub included_user_ids: Vec<String>,
+    pub included_guild_ids: Vec<String>,
+    pub include_premium_users: bool,
     pub excluded_user_ids: Vec<String>,
     pub anonymous_enabled: bool,
     pub cost: u32,
@@ -632,6 +650,8 @@ impl Default for AltchaCaptchaConfigResponse {
             rollout_basis_points: 0,
             rollout_salt: ALTCHA_CAPTCHA_DEFAULT_SALT.to_owned(),
             included_user_ids: Vec::new(),
+            included_guild_ids: Vec::new(),
+            include_premium_users: false,
             excluded_user_ids: Vec::new(),
             anonymous_enabled: false,
             cost: 5_000,
@@ -651,6 +671,10 @@ pub struct AltchaCaptchaConfigUpdateRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub included_user_ids: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub included_guild_ids: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub include_premium_users: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub excluded_user_ids: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub anonymous_enabled: Option<bool>,
@@ -668,6 +692,8 @@ pub struct ProfileTimezoneConfigResponse {
     pub rollout_basis_points: u32,
     pub rollout_salt: String,
     pub included_user_ids: Vec<String>,
+    pub included_guild_ids: Vec<String>,
+    pub include_premium_users: bool,
     pub excluded_user_ids: Vec<String>,
 }
 
@@ -679,6 +705,8 @@ impl Default for ProfileTimezoneConfigResponse {
             rollout_basis_points: 0,
             rollout_salt: PROFILE_TIMEZONE_DEFAULT_SALT.to_owned(),
             included_user_ids: Vec::new(),
+            included_guild_ids: Vec::new(),
+            include_premium_users: false,
             excluded_user_ids: Vec::new(),
         }
     }
@@ -694,6 +722,10 @@ pub struct ProfileTimezoneConfigUpdateRequest {
     pub rollout_salt: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub included_user_ids: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub included_guild_ids: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub include_premium_users: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub excluded_user_ids: Option<Vec<String>>,
 }

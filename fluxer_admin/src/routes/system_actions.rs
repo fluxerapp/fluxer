@@ -643,6 +643,12 @@ fn build_voice_noise_suppression_update(
                 form.first("voice_ns_included_user_ids").unwrap_or_default(),
                 "Included user IDs",
             )?),
+            included_guild_ids: Some(parse_experiment_user_ids(
+                form.first("voice_ns_included_guild_ids")
+                    .unwrap_or_default(),
+                "Included guild IDs",
+            )?),
+            include_premium_users: Some(form.bool_value("voice_ns_include_premium_users")),
             excluded_user_ids: Some(parse_experiment_user_ids(
                 form.first("voice_ns_excluded_user_ids").unwrap_or_default(),
                 "Excluded user IDs",
@@ -693,6 +699,12 @@ fn build_domain_migration_update(
                     .unwrap_or_default(),
                 "Included user IDs",
             )?),
+            included_guild_ids: Some(parse_experiment_user_ids(
+                form.first("domain_migration_included_guild_ids")
+                    .unwrap_or_default(),
+                "Included guild IDs",
+            )?),
+            include_premium_users: Some(form.bool_value("domain_migration_include_premium_users")),
             excluded_user_ids: Some(parse_experiment_user_ids(
                 form.first("domain_migration_excluded_user_ids")
                     .unwrap_or_default(),
@@ -730,6 +742,12 @@ fn build_altcha_captcha_update(
                     .unwrap_or_default(),
                 "Included user IDs",
             )?),
+            included_guild_ids: Some(parse_experiment_user_ids(
+                form.first("altcha_captcha_included_guild_ids")
+                    .unwrap_or_default(),
+                "Included guild IDs",
+            )?),
+            include_premium_users: Some(form.bool_value("altcha_captcha_include_premium_users")),
             excluded_user_ids: Some(parse_experiment_user_ids(
                 form.first("altcha_captcha_excluded_user_ids")
                     .unwrap_or_default(),
@@ -777,6 +795,12 @@ fn build_profile_timezone_update(
                     .unwrap_or_default(),
                 "Included user IDs",
             )?),
+            included_guild_ids: Some(parse_experiment_user_ids(
+                form.first("profile_timezone_included_guild_ids")
+                    .unwrap_or_default(),
+                "Included guild IDs",
+            )?),
+            include_premium_users: Some(form.bool_value("profile_timezone_include_premium_users")),
             excluded_user_ids: Some(parse_experiment_user_ids(
                 form.first("profile_timezone_excluded_user_ids")
                     .unwrap_or_default(),
@@ -1431,6 +1455,8 @@ mod tests {
                 "allow_user_override": false,
                 "enabled_backends": [],
                 "included_user_ids": [],
+                "included_guild_ids": [],
+                "include_premium_users": false,
                 "excluded_user_ids": [],
                 "guild_overrides": [],
             }})
@@ -1747,6 +1773,8 @@ mod tests {
             serde_json::json!({"domain_migration": {
                 "enabled": false,
                 "included_user_ids": [],
+                "included_guild_ids": [],
+                "include_premium_users": false,
                 "excluded_user_ids": [],
                 "standalone_forwarding": false,
             }})
@@ -1844,6 +1872,8 @@ mod tests {
             serde_json::json!({"altcha_captcha": {
                 "enabled": false,
                 "included_user_ids": [],
+                "included_guild_ids": [],
+                "include_premium_users": false,
                 "excluded_user_ids": [],
                 "anonymous_enabled": false,
             }})
@@ -1877,7 +1907,7 @@ mod tests {
     #[test]
     fn build_profile_timezone_update_reads_the_rollout_fields() {
         let form = MultiValueForm::parse(
-            b"profile_timezone_enabled=true&profile_timezone_rollout_basis_points=%20500%20&profile_timezone_rollout_salt=%20profile-timezone-v2%20&profile_timezone_included_user_ids=1500000000000000001&profile_timezone_excluded_user_ids=1500000000000000002",
+            b"profile_timezone_enabled=true&profile_timezone_rollout_basis_points=%20500%20&profile_timezone_rollout_salt=%20profile-timezone-v2%20&profile_timezone_included_user_ids=1500000000000000001&profile_timezone_excluded_user_ids=1500000000000000002&profile_timezone_included_guild_ids=1500000000000000005%0A1500000000000000006%2C1500000000000000005&profile_timezone_include_premium_users=true",
         );
         let update = build_profile_timezone_update(&form)
             .expect("valid form")
@@ -1886,6 +1916,14 @@ mod tests {
         assert_eq!(update.enabled, Some(true));
         assert_eq!(update.rollout_basis_points, Some(500));
         assert_eq!(update.rollout_salt, Some("profile-timezone-v2".to_owned()));
+        assert_eq!(update.include_premium_users, Some(true));
+        assert_eq!(
+            update.included_guild_ids,
+            Some(vec![
+                "1500000000000000005".to_owned(),
+                "1500000000000000006".to_owned()
+            ])
+        );
         assert_eq!(
             update.included_user_ids,
             Some(vec!["1500000000000000001".to_owned()])
@@ -1905,9 +1943,34 @@ mod tests {
             serde_json::json!({"profile_timezone": {
                 "enabled": false,
                 "included_user_ids": [],
+                "included_guild_ids": [],
+                "include_premium_users": false,
                 "excluded_user_ids": [],
             }})
         );
+    }
+
+    #[test]
+    fn every_experiment_update_rejects_an_invalid_included_guild_id() {
+        for (prefix, build) in [
+            (
+                "voice_ns",
+                build_voice_noise_suppression_update
+                    as fn(&MultiValueForm) -> Result<InstanceConfigUpdateRequest, String>,
+            ),
+            ("domain_migration", build_domain_migration_update),
+            ("altcha_captcha", build_altcha_captcha_update),
+            ("profile_timezone", build_profile_timezone_update),
+        ] {
+            let form = MultiValueForm::parse(
+                format!("{prefix}_included_guild_ids=1500000000000000005%0Anot-a-guild").as_bytes(),
+            );
+            assert_eq!(
+                build(&form).expect_err("invalid guild id"),
+                "Included guild IDs entry 2 must contain 1 to 20 decimal digits",
+                "{prefix}"
+            );
+        }
     }
 
     #[test]

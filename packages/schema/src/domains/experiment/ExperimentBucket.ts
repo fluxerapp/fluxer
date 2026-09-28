@@ -14,3 +14,18 @@ export function experimentBucket(userId: string, salt: string): number {
 	}
 	return hash % EXPERIMENT_BUCKET_RESOLUTION;
 }
+
+export interface ExperimentTargeting {
+	readonly memberGuildIds: ReadonlySet<string>;
+	readonly premium: boolean;
+}
+
+interface ExperimentAudienceRules {
+	readonly included_guild_ids: ReadonlyArray<string>;
+	readonly include_premium_users: boolean;
+}
+
+export function experimentAudienceIncludes(rules: ExperimentAudienceRules, targeting: ExperimentTargeting): boolean {
+	if (rules.include_premium_users && targeting.premium) return true;
+	return rules.included_guild_ids.some((guildId) => targeting.memberGuildIds.has(guildId));
+}

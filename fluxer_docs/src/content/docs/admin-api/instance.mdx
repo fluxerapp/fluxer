@@ -114,13 +114,15 @@ The instance rollout of client-side noise suppression. [Experiments](/http-api/e
 | rollout_basis_points | integer | Share of accounts the rollout selects, in basis points (0-10000, default 0) |
 | rollout_salt | string | Salt of the sampling hash (1-64 characters, default `voice-ns-v1`) |
 | included_user_ids | array[snowflake] | Accounts the rollout always selects, up to 1000 entries (default empty) |
+| included_guild_ids | array[snowflake] | Guilds whose members the rollout always selects, up to 1000 entries (default empty) |
+| include_premium_users | boolean | Whether the rollout always selects accounts with active premium (default false) |
 | excluded_user_ids | array[snowflake] | Accounts the rollout never selects, up to 1000 entries (default empty) |
 | guild_overrides | array[[guild override](/http-api/experiments/#noise-suppression-guild-override-object) object] | Per-guild replacements, up to 200 entries (default empty) |
 | suppression_strength | integer | Suppression strength (0-100, default 80) |
 
 Every field is present on read. An absent document or missing field uses the defaults above.
 
-`excluded_user_ids` is applied before `included_user_ids`, so the rollout never selects an account in both. A `default_backend` or `guild_overrides` entry naming a backend outside `enabled_backends` is dropped from what a client is served, and the stored value is kept as written.
+`excluded_user_ids` wins over every other rule. Otherwise the rollout selects an account in `included_user_ids`, a member of a guild in `included_guild_ids`, or a premium account while `include_premium_users` is true, whatever `rollout_basis_points` says. A `default_backend` or `guild_overrides` entry naming a backend outside `enabled_backends` is dropped from what a client is served, and the stored value is kept as written.
 
 How often a client revalidates this rollout is not set here. It is set once for every experiment in the [experiment delivery configuration](#experiment-delivery-configuration-object) below.
 
@@ -153,13 +155,15 @@ The instance rollout that moves the official web client from its legacy origin t
 | rollout_basis_points | integer | Share of accounts the rollout selects, in basis points (0-10000, default 0) |
 | rollout_salt | string | Salt of the sampling hash (1-64 printable ASCII characters, default `domain-migration-v1`) |
 | included_user_ids | array[snowflake] | Accounts the rollout always selects, up to 1000 entries (default empty) |
+| included_guild_ids | array[snowflake] | Guilds whose members the rollout always selects, up to 1000 entries (default empty) |
+| include_premium_users | boolean | Whether the rollout always selects accounts with active premium (default false) |
 | excluded_user_ids | array[snowflake] | Accounts the rollout never selects, up to 1000 entries (default empty) |
 | anonymous_rollout_basis_points | integer | Share of logged-out devices the rollout moves, in basis points (0-10000, default 0) |
 | standalone_forwarding | boolean | Whether installed desktop web apps forward to the new origin once their data has moved (default false) |
 
 Every field is present on read. An absent document or missing field uses the defaults above.
 
-`excluded_user_ids` is applied before `included_user_ids`, so the rollout never selects an account in both.
+`excluded_user_ids` wins over every other rule. Otherwise the rollout selects an account in `included_user_ids`, a member of a guild in `included_guild_ids`, or a premium account while `include_premium_users` is true, whatever `rollout_basis_points` says.
 
 An installed Chromium desktop web app moves its data like a browser tab, then stays on the legacy origin and offers to install the app from the new one. Set `standalone_forwarding` once the web app manifest lists the new origin in `scope_extensions` and the new origin serves the matching association file. From then on the installed app forwards like a browser tab. Installed mobile and Safari web apps never forward, whatever the value.
 
@@ -182,6 +186,8 @@ The instance rollout that replaces the configured captcha provider with an ALTCH
 | rollout_basis_points | integer | Share of accounts the rollout selects, in basis points (0-10000, default 0) |
 | rollout_salt | string | Salt of the sampling hash (1-64 printable ASCII characters, default `altcha-captcha-v1`) |
 | included_user_ids | array[snowflake] | Accounts the rollout always selects, up to 1000 entries (default empty) |
+| included_guild_ids | array[snowflake] | Guilds whose members the rollout always selects, up to 1000 entries (default empty) |
+| include_premium_users | boolean | Whether the rollout always selects accounts with active premium (default false) |
 | excluded_user_ids | array[snowflake] | Accounts the rollout never selects, up to 1000 entries (default empty) |
 | anonymous_enabled | boolean | Whether logged-out requests get ALTCHA (default false) |
 | cost | integer | PBKDF2 iterations per solving attempt (1000-100000, default 5000) |
@@ -189,7 +195,7 @@ The instance rollout that replaces the configured captcha provider with an ALTCH
 
 Every field is present on read. An absent document or missing field uses the defaults above.
 
-`excluded_user_ids` is applied before `included_user_ids`, so the rollout never selects an account in both. `anonymous_enabled` has no effect on signed-in requests, and the account rules have no effect on logged-out ones.
+`excluded_user_ids` wins over every other rule. Otherwise the rollout selects an account in `included_user_ids`, a member of a guild in `included_guild_ids`, or a premium account while `include_premium_users` is true, whatever `rollout_basis_points` says. `anonymous_enabled` has no effect on signed-in requests, and the account rules have no effect on logged-out ones.
 
 Each challenge hides its counter between half of `max_counter` and `max_counter`, and a client tries counters from 0 upward. Solve time grows with `cost` times `max_counter`. Fluxer spends one attempt at `cost` to issue each challenge.
 
@@ -208,11 +214,13 @@ The instance rollout that lets an account set a profile timezone and show its lo
 | rollout_basis_points | integer | Share of accounts the rollout selects, in basis points (0-10000, default 0) |
 | rollout_salt | string | Salt of the sampling hash (1-64 printable ASCII characters, default `profile-timezone-v1`) |
 | included_user_ids | array[snowflake] | Accounts the rollout always selects, up to 1000 entries (default empty) |
+| included_guild_ids | array[snowflake] | Guilds whose members the rollout always selects, up to 1000 entries (default empty) |
+| include_premium_users | boolean | Whether the rollout always selects accounts with active premium (default false) |
 | excluded_user_ids | array[snowflake] | Accounts the rollout never selects, up to 1000 entries (default empty) |
 
 Every field is present on read. An absent document or missing field uses the defaults above.
 
-`excluded_user_ids` is applied before `included_user_ids`, so the rollout never selects an account in both.
+`excluded_user_ids` wins over every other rule. Otherwise the rollout selects an account in `included_user_ids`, a member of a guild in `included_guild_ids`, or a premium account while `include_premium_users` is true, whatever `rollout_basis_points` says.
 
 An account that leaves the rollout keeps its stored timezone, but Fluxer stops showing it on the profile and refuses changes to it until the account is selected again.
 

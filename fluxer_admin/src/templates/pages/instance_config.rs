@@ -1128,6 +1128,38 @@ fn voice_noise_suppression_section(
                         }
                     }
                     div class="flex flex-col gap-2" {
+                        (checkbox(
+                            "voice_ns_include_premium_users",
+                            "true",
+                            "Include premium users",
+                            voice_noise_suppression.include_premium_users,
+                            true,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Includes every account with active premium perks, regardless of the \
+                             percentage above. The never-on list still wins."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "voice_ns_included_guild_ids",
+                            "Always-on Guild IDs",
+                            "1500000000000000005\n1500000000000000006",
+                            &voice_noise_suppression.included_guild_ids.join("\n"),
+                            4,
+                            false,
+                        ))
+                        (entry_count_hint(
+                            voice_noise_suppression.included_guild_ids.len(),
+                            EXPERIMENT_MAX_TARGETED_USERS,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Same format, with guild IDs. Every member of a listed guild is \
+                             included regardless of the percentage above, unless the user is \
+                             in the never-on list."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
                         (textarea_input(
                             "voice_ns_excluded_user_ids",
                             "Never-on User IDs",
@@ -1364,6 +1396,38 @@ fn domain_migration_section(
                         }
                     }
                     div class="flex flex-col gap-2" {
+                        (checkbox(
+                            "domain_migration_include_premium_users",
+                            "true",
+                            "Include premium users",
+                            domain_migration.include_premium_users,
+                            true,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Includes every account with active premium perks, regardless of the \
+                             percentage above. The never-on list still wins."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "domain_migration_included_guild_ids",
+                            "Always-on Guild IDs",
+                            "1500000000000000005\n1500000000000000006",
+                            &domain_migration.included_guild_ids.join("\n"),
+                            4,
+                            false,
+                        ))
+                        (entry_count_hint(
+                            domain_migration.included_guild_ids.len(),
+                            EXPERIMENT_MAX_TARGETED_USERS,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Same format, with guild IDs. Every member of a listed guild is \
+                             included regardless of the percentage above, unless the user is \
+                             in the never-on list."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
                         (textarea_input(
                             "domain_migration_excluded_user_ids",
                             "Never-on User IDs",
@@ -1482,6 +1546,38 @@ fn altcha_captcha_section(
                         p class="text-xs text-neutral-500" {
                             "One snowflake per line, or comma separated. These users get ALTCHA \
                              regardless of the percentage above. Invalid entries prevent the save."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (checkbox(
+                            "altcha_captcha_include_premium_users",
+                            "true",
+                            "Include premium users",
+                            altcha_captcha.include_premium_users,
+                            true,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Includes every account with active premium perks, regardless of the \
+                             percentage above. The never-on list still wins."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "altcha_captcha_included_guild_ids",
+                            "Always-on Guild IDs",
+                            "1500000000000000005\n1500000000000000006",
+                            &altcha_captcha.included_guild_ids.join("\n"),
+                            4,
+                            false,
+                        ))
+                        (entry_count_hint(
+                            altcha_captcha.included_guild_ids.len(),
+                            EXPERIMENT_MAX_TARGETED_USERS,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Same format, with guild IDs. Every member of a listed guild is \
+                             included regardless of the percentage above, unless the user is \
+                             in the never-on list."
                         }
                     }
                     div class="flex flex-col gap-2" {
@@ -1607,6 +1703,38 @@ fn profile_timezone_section(
                         p class="text-xs text-neutral-500" {
                             "One snowflake per line, or comma separated. These users get profile \
                              timezone regardless of the percentage above. Invalid entries prevent the save."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (checkbox(
+                            "profile_timezone_include_premium_users",
+                            "true",
+                            "Include premium users",
+                            profile_timezone.include_premium_users,
+                            true,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Includes every account with active premium perks, regardless of the \
+                             percentage above. The never-on list still wins."
+                        }
+                    }
+                    div class="flex flex-col gap-2" {
+                        (textarea_input(
+                            "profile_timezone_included_guild_ids",
+                            "Always-on Guild IDs",
+                            "1500000000000000005\n1500000000000000006",
+                            &profile_timezone.included_guild_ids.join("\n"),
+                            4,
+                            false,
+                        ))
+                        (entry_count_hint(
+                            profile_timezone.included_guild_ids.len(),
+                            EXPERIMENT_MAX_TARGETED_USERS,
+                        ))
+                        p class="text-xs text-neutral-500" {
+                            "Same format, with guild IDs. Every member of a listed guild is \
+                             included regardless of the percentage above, unless the user is \
+                             in the never-on list."
                         }
                     }
                     div class="flex flex-col gap-2" {

@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {EXPERIMENT_BUCKET_RESOLUTION, experimentBucket} from '@fluxer/schema/src/domains/experiment/ExperimentBucket';
+import {
+	EXPERIMENT_BUCKET_RESOLUTION,
+	type ExperimentTargeting,
+	experimentAudienceIncludes,
+	experimentBucket,
+} from '@fluxer/schema/src/domains/experiment/ExperimentBucket';
 import {z} from 'zod';
 
 const DOMAIN_MIGRATION_ROLLOUT_BASIS_POINTS_MAX = EXPERIMENT_BUCKET_RESOLUTION;
@@ -20,6 +25,8 @@ const domainMigrationConfigFields = {
 	rollout_basis_points: z.number().int().min(0).max(DOMAIN_MIGRATION_ROLLOUT_BASIS_POINTS_MAX),
 	rollout_salt: z.string().trim().min(1).max(64).regex(DOMAIN_MIGRATION_SALT_PATTERN),
 	included_user_ids: DomainMigrationTargetedUserIdsSchema,
+	included_guild_ids: DomainMigrationTargetedUserIdsSchema,
+	include_premium_users: z.boolean(),
 	excluded_user_ids: DomainMigrationTargetedUserIdsSchema,
 	anonymous_rollout_basis_points: z.number().int().min(0).max(DOMAIN_MIGRATION_ROLLOUT_BASIS_POINTS_MAX),
 	standalone_forwarding: z.boolean(),
@@ -31,6 +38,8 @@ export const DomainMigrationConfigSchema = z.object({
 	rollout_basis_points: domainMigrationConfigFields.rollout_basis_points.default(0),
 	rollout_salt: domainMigrationConfigFields.rollout_salt.default(DEFAULT_DOMAIN_MIGRATION_SALT),
 	included_user_ids: domainMigrationConfigFields.included_user_ids.default([]),
+	included_guild_ids: domainMigrationConfigFields.included_guild_ids.default([]),
+	include_premium_users: domainMigrationConfigFields.include_premium_users.default(false),
 	excluded_user_ids: domainMigrationConfigFields.excluded_user_ids.default([]),
 	anonymous_rollout_basis_points: domainMigrationConfigFields.anonymous_rollout_basis_points.default(0),
 	standalone_forwarding: domainMigrationConfigFields.standalone_forwarding.default(false),
@@ -64,10 +73,12 @@ export const INERT_DOMAIN_MIGRATION_ASSIGNMENT: DomainMigrationAssignmentRespons
 export function resolveDomainMigrationAssignment(
 	config: DomainMigrationConfig,
 	userId: string,
+	targeting: ExperimentTargeting,
 ): DomainMigrationAssignmentResponse {
 	if (!config.enabled) return {...INERT_DOMAIN_MIGRATION_ASSIGNMENT};
 	if (config.excluded_user_ids.includes(userId)) return {...INERT_DOMAIN_MIGRATION_ASSIGNMENT};
 	if (config.included_user_ids.includes(userId)) return {enabled: true};
+	if (experimentAudienceIncludes(config, targeting)) return {enabled: true};
 	return {enabled: experimentBucket(userId, config.rollout_salt) < config.rollout_basis_points};
 }
 

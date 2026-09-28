@@ -403,6 +403,8 @@ fn deserialize_instance_config_response_with_unknown_keys() {
             "included_user_ids": [],
             "excluded_user_ids": [],
             "guild_overrides": [],
+            "included_guild_ids": ["1500000000000000005"],
+            "include_premium_users": true,
             "suppression_strength": 80,
             "future_presentation_knob": "verbose",
             "future_knob": 7,
@@ -421,6 +423,8 @@ fn deserialize_instance_config_response_with_unknown_keys() {
             "rollout_salt": "domain-migration-v1",
             "included_user_ids": ["1500000000000000001"],
             "excluded_user_ids": [],
+            "included_guild_ids": [],
+            "include_premium_users": false,
             "future_migration_knob": 9,
             "anonymous_rollout_basis_points": 100,
             "standalone_forwarding": true
@@ -435,6 +439,8 @@ fn deserialize_instance_config_response_with_unknown_keys() {
             "anonymous_enabled": true,
             "cost": 5000,
             "max_counter": 10000,
+            "included_guild_ids": [],
+            "include_premium_users": false,
             "future_altcha_knob": "argon2id"
         },
         "profile_timezone": {
@@ -444,6 +450,8 @@ fn deserialize_instance_config_response_with_unknown_keys() {
             "rollout_salt": "profile-timezone-v1",
             "included_user_ids": ["1500000000000000001"],
             "excluded_user_ids": [],
+            "included_guild_ids": ["1500000000000000005"],
+            "include_premium_users": true,
             "future_profile_timezone_knob": true
         },
         "experiment_delivery": {"poll_interval_seconds": 300, "poll_jitter_percent": 15},
@@ -591,6 +599,9 @@ fn deserialize_instance_config_response_with_unknown_keys() {
     assert!(resp.profile_timezone.enabled);
     assert_eq!(resp.profile_timezone.config_version, 2);
     assert_eq!(resp.profile_timezone.included_user_ids.len(), 1);
+    assert_eq!(resp.profile_timezone.included_guild_ids.len(), 1);
+    assert!(resp.profile_timezone.include_premium_users);
+    assert!(resp.voice_noise_suppression.include_premium_users);
     assert_eq!(resp.experiment_delivery.poll_interval_seconds, 300);
     assert!(resp.policy.single_community_guild_id.is_none());
     assert_eq!(resp.policy.services.gif_enabled, Some(true));

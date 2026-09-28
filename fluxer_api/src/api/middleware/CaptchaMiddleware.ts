@@ -2,6 +2,7 @@
 
 import {createHmac} from 'node:crypto';
 import {Config} from '@app/api/Config';
+import {ANONYMOUS_EXPERIMENT_TARGETING, resolveExperimentTargeting} from '@app/api/experiment/ExperimentTargeting';
 import type {InstanceCaptchaEffectiveConfig} from '@app/api/instance/InstanceConfigRepository';
 import {Logger} from '@app/api/Logger';
 import {getKVClient} from '@app/api/middleware/ServiceRegistry';
@@ -45,7 +46,8 @@ async function altchaChallengeData(altcha: AltchaProvider | null): Promise<Recor
 
 async function resolveAltchaProvider(ctx: Context<HonoEnv>, user: User | undefined): Promise<AltchaProvider | null> {
 	const config = await ctx.get('instanceConfigRepository').getAltchaCaptchaConfig();
-	if (!altchaCaptchaAppliesTo(config, user ? user.id.toString() : null)) return null;
+	const targeting = user ? await resolveExperimentTargeting(user, [config]) : ANONYMOUS_EXPERIMENT_TARGETING;
+	if (!altchaCaptchaAppliesTo(config, user ? user.id.toString() : null, targeting)) return null;
 	return createAltchaProvider(config);
 }
 

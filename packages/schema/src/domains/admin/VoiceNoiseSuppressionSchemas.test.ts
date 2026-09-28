@@ -11,8 +11,10 @@ import {
 	VoiceNoiseSuppressionConfigSchema,
 	VoiceNoiseSuppressionConfigUpdateRequest,
 } from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
-import {experimentBucket} from '@fluxer/schema/src/domains/experiment/ExperimentBucket';
+import {type ExperimentTargeting, experimentBucket} from '@fluxer/schema/src/domains/experiment/ExperimentBucket';
 import {describe, expect, test} from 'vitest';
+
+const NO_TARGETING: ExperimentTargeting = {memberGuildIds: new Set(), premium: false};
 
 const TARGETED_USER_ID = '1000000000000000001';
 const OTHER_USER_ID = '1000000000000000002';
@@ -95,7 +97,7 @@ function syntheticUserIds(count: number): Array<string> {
 function targetedUserIds(config: VoiceNoiseSuppressionConfig, userIds: ReadonlyArray<string>): Set<string> {
 	const targeted = new Set<string>();
 	for (const userId of userIds) {
-		if (resolveVoiceNoiseSuppressionAssignment(config, userId).user_targeted) {
+		if (resolveVoiceNoiseSuppressionAssignment(config, userId, NO_TARGETING).user_targeted) {
 			targeted.add(userId);
 		}
 	}
@@ -139,14 +141,14 @@ describe('resolveVoiceNoiseSuppressionAssignment', () => {
 			included_user_ids: [TARGETED_USER_ID],
 			guild_overrides: [{guild_id: GUILD_ID, backend: 'rnnoise'}],
 		});
-		expect(resolveVoiceNoiseSuppressionAssignment(config, TARGETED_USER_ID)).toEqual({
+		expect(resolveVoiceNoiseSuppressionAssignment(config, TARGETED_USER_ID, NO_TARGETING)).toEqual({
 			...INERT_VOICE_NOISE_SUPPRESSION_ASSIGNMENT,
 			config_version: 4,
 		});
 	});
 
 	test('returns the inert assignment for the default config', () => {
-		expect(resolveVoiceNoiseSuppressionAssignment(createConfig(), TARGETED_USER_ID)).toEqual(
+		expect(resolveVoiceNoiseSuppressionAssignment(createConfig(), TARGETED_USER_ID, NO_TARGETING)).toEqual(
 			INERT_VOICE_NOISE_SUPPRESSION_ASSIGNMENT,
 		);
 	});
@@ -157,7 +159,7 @@ describe('resolveVoiceNoiseSuppressionAssignment', () => {
 			included_user_ids: [TARGETED_USER_ID],
 			excluded_user_ids: [TARGETED_USER_ID],
 		});
-		const assignment = resolveVoiceNoiseSuppressionAssignment(config, TARGETED_USER_ID);
+		const assignment = resolveVoiceNoiseSuppressionAssignment(config, TARGETED_USER_ID, NO_TARGETING);
 		expect(assignment.user_targeted).toBe(false);
 		expect(assignment.backend).toBeNull();
 		expect(assignment.source).toBeNull();
@@ -169,10 +171,10 @@ describe('resolveVoiceNoiseSuppressionAssignment', () => {
 			rollout_basis_points: 10000,
 			excluded_user_ids: [TARGETED_USER_ID],
 		});
-		const assignment = resolveVoiceNoiseSuppressionAssignment(config, TARGETED_USER_ID);
+		const assignment = resolveVoiceNoiseSuppressionAssignment(config, TARGETED_USER_ID, NO_TARGETING);
 		expect(assignment.user_targeted).toBe(false);
 		expect(assignment.source).toBeNull();
-		expect(resolveVoiceNoiseSuppressionAssignment(config, OTHER_USER_ID).user_targeted).toBe(true);
+		expect(resolveVoiceNoiseSuppressionAssignment(config, OTHER_USER_ID, NO_TARGETING).user_targeted).toBe(true);
 	});
 
 	test('denylist strips guild overrides and the client-side knobs', () => {
@@ -183,7 +185,7 @@ describe('resolveVoiceNoiseSuppressionAssignment', () => {
 			excluded_user_ids: [TARGETED_USER_ID],
 			guild_overrides: [{guild_id: GUILD_ID, backend: 'rnnoise'}],
 		});
-		const assignment = resolveVoiceNoiseSuppressionAssignment(config, TARGETED_USER_ID);
+		const assignment = resolveVoiceNoiseSuppressionAssignment(config, TARGETED_USER_ID, NO_TARGETING);
 		expect(assignment.guild_overrides).toEqual([]);
 		expect(assignment.enabled_backends).toEqual([]);
 		expect(assignment.allow_user_override).toBe(false);
@@ -196,7 +198,7 @@ describe('resolveVoiceNoiseSuppressionAssignment', () => {
 			rollout_basis_points: 0,
 			included_user_ids: [TARGETED_USER_ID],
 		});
-		const assignment = resolveVoiceNoiseSuppressionAssignment(config, TARGETED_USER_ID);
+		const assignment = resolveVoiceNoiseSuppressionAssignment(config, TARGETED_USER_ID, NO_TARGETING);
 		expect(assignment.user_targeted).toBe(true);
 		expect(assignment.backend).toBe('gtcrn');
 		expect(assignment.source).toBe('user_rule');
@@ -208,7 +210,7 @@ describe('resolveVoiceNoiseSuppressionAssignment', () => {
 	])('canary at $basisPoints basis points targets $targeted', ({basisPoints, targeted}) => {
 		const config = createConfig({enabled: true, rollout_basis_points: basisPoints});
 		for (const userId of syntheticUserIds(200)) {
-			const assignment = resolveVoiceNoiseSuppressionAssignment(config, userId);
+			const assignment = resolveVoiceNoiseSuppressionAssignment(config, userId, NO_TARGETING);
 			expect(assignment.user_targeted).toBe(targeted);
 			expect(assignment.source).toBe(targeted ? 'canary' : null);
 		}
@@ -247,7 +249,7 @@ describe('resolveVoiceNoiseSuppressionAssignment', () => {
 			included_user_ids: [OTHER_USER_ID],
 		});
 		for (const userId of [TARGETED_USER_ID, OTHER_USER_ID]) {
-			const assignment = resolveVoiceNoiseSuppressionAssignment(config, userId);
+			const assignment = resolveVoiceNoiseSuppressionAssignment(config, userId, NO_TARGETING);
 			expect(assignment.user_targeted).toBe(false);
 			expect(assignment.backend).toBeNull();
 			expect(assignment.source).toBeNull();
@@ -265,7 +267,7 @@ describe('resolveVoiceNoiseSuppressionAssignment', () => {
 				{guild_id: OTHER_GUILD_ID, backend: 'deep_filter'},
 			],
 		});
-		expect(resolveVoiceNoiseSuppressionAssignment(config, TARGETED_USER_ID).guild_overrides).toEqual([
+		expect(resolveVoiceNoiseSuppressionAssignment(config, TARGETED_USER_ID, NO_TARGETING).guild_overrides).toEqual([
 			{guild_id: GUILD_ID, backend: 'rnnoise'},
 		]);
 	});
@@ -280,14 +282,14 @@ describe('resolveVoiceNoiseSuppressionAssignment', () => {
 				{guild_id: OTHER_GUILD_ID, backend: 'gtcrn'},
 			],
 		});
-		expect(resolveVoiceNoiseSuppressionAssignment(config, TARGETED_USER_ID).guild_overrides).toEqual([
+		expect(resolveVoiceNoiseSuppressionAssignment(config, TARGETED_USER_ID, NO_TARGETING).guild_overrides).toEqual([
 			{guild_id: GUILD_ID, backend: 'rnnoise'},
 		]);
 	});
 
 	test('echoes the config version on every path', () => {
 		const config = createConfig({enabled: true, config_version: 11, rollout_basis_points: 10000});
-		expect(resolveVoiceNoiseSuppressionAssignment(config, TARGETED_USER_ID).config_version).toBe(11);
+		expect(resolveVoiceNoiseSuppressionAssignment(config, TARGETED_USER_ID, NO_TARGETING).config_version).toBe(11);
 	});
 });
 
@@ -410,5 +412,48 @@ describe('resolveVoiceNoiseSuppressionForCall', () => {
 			suppressionStrength: 42,
 			configVersion: 19,
 		});
+	});
+});
+
+describe('resolveVoiceNoiseSuppressionAssignment guild targeting', () => {
+	const INCLUDED_GUILD_ID = '3000000000000000001';
+	const MEMBER_GUILDS: ExperimentTargeting = {
+		memberGuildIds: new Set(['3000000000000000009', INCLUDED_GUILD_ID]),
+		premium: false,
+	};
+
+	test('targets members of an included guild the way it targets included users', () => {
+		const config = createConfig({enabled: true, included_guild_ids: [INCLUDED_GUILD_ID]});
+		const assignment = resolveVoiceNoiseSuppressionAssignment(config, TARGETED_USER_ID, MEMBER_GUILDS);
+		expect(assignment.user_targeted).toBe(true);
+		expect(assignment.source).toBe('user_rule');
+		expect(assignment.backend).toBe(config.default_backend);
+		expect(resolveVoiceNoiseSuppressionAssignment(config, TARGETED_USER_ID, NO_TARGETING).user_targeted).toBe(false);
+	});
+
+	test('keeps user exclusions ahead of guild membership', () => {
+		const config = createConfig({
+			enabled: true,
+			included_guild_ids: [INCLUDED_GUILD_ID],
+			excluded_user_ids: [TARGETED_USER_ID],
+		});
+		const assignment = resolveVoiceNoiseSuppressionAssignment(config, TARGETED_USER_ID, MEMBER_GUILDS);
+		expect(assignment.user_targeted).toBe(false);
+		expect(assignment.source).toBeNull();
+	});
+});
+
+describe('resolveVoiceNoiseSuppressionAssignment premium targeting', () => {
+	const PREMIUM: ExperimentTargeting = {memberGuildIds: new Set(), premium: true};
+
+	test('targets premium users only when the switch is on', () => {
+		const on = createConfig({enabled: true, include_premium_users: true});
+		expect(resolveVoiceNoiseSuppressionAssignment(on, TARGETED_USER_ID, PREMIUM)).toMatchObject({
+			user_targeted: true,
+			source: 'user_rule',
+		});
+		expect(resolveVoiceNoiseSuppressionAssignment(on, TARGETED_USER_ID, NO_TARGETING).user_targeted).toBe(false);
+		const off = createConfig({enabled: true});
+		expect(resolveVoiceNoiseSuppressionAssignment(off, TARGETED_USER_ID, PREMIUM).user_targeted).toBe(false);
 	});
 });

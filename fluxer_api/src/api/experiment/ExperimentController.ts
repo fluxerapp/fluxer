@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {createHash} from 'node:crypto';
+import {resolveExperimentTargeting} from '@app/api/experiment/ExperimentTargeting';
 import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
 import {OpenAPI} from '@app/api/middleware/ResponseTypeMiddleware';
@@ -39,15 +40,22 @@ export function ExperimentController(app: HonoApp) {
 					instanceConfigRepository.getAltchaCaptchaConfig(),
 					instanceConfigRepository.getProfileTimezoneConfig(),
 				]);
-			const userId = ctx.get('user').id.toString();
+			const user = ctx.get('user');
+			const userId = user.id.toString();
+			const targeting = await resolveExperimentTargeting(user, [
+				voiceConfig,
+				domainMigrationConfig,
+				altchaCaptchaConfig,
+				profileTimezoneConfig,
+			]);
 			const body: ExperimentAssignmentsResponse = {
 				poll_interval_seconds: delivery.poll_interval_seconds,
 				poll_jitter_percent: delivery.poll_jitter_percent,
 				assignments: {
-					voice_noise_suppression: resolveVoiceNoiseSuppressionAssignment(voiceConfig, userId),
-					domain_migration: resolveDomainMigrationAssignment(domainMigrationConfig, userId),
-					altcha_captcha: resolveAltchaCaptchaAssignment(altchaCaptchaConfig, userId),
-					profile_timezone: resolveProfileTimezoneAssignment(profileTimezoneConfig, userId),
+					voice_noise_suppression: resolveVoiceNoiseSuppressionAssignment(voiceConfig, userId, targeting),
+					domain_migration: resolveDomainMigrationAssignment(domainMigrationConfig, userId, targeting),
+					altcha_captcha: resolveAltchaCaptchaAssignment(altchaCaptchaConfig, userId, targeting),
+					profile_timezone: resolveProfileTimezoneAssignment(profileTimezoneConfig, userId, targeting),
 				},
 			};
 			const etag = `"${createHash('sha256').update(JSON.stringify(body)).digest('hex')}"`;
