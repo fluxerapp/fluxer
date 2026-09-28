@@ -141,10 +141,6 @@ export class ReadStateService {
 		}
 	}
 
-	async deleteReadState({userId, channelId}: {userId: UserID; channelId: ChannelID}): Promise<void> {
-		await this.repository.deleteReadState(userId, channelId);
-	}
-
 	async incrementMentionCount({
 		userId,
 		channelId,

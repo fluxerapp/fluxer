@@ -35,8 +35,6 @@ export abstract class IReadStateRepository {
 		}>
 	>;
 
-	abstract deleteReadState(userId: UserID, channelId: ChannelID): Promise<void>;
-
 	abstract bulkAckMessages(
 		userId: UserID,
 		readStates: Array<{

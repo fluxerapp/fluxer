@@ -4,7 +4,6 @@ import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
 import {channelIdToMessageId} from '@app/api/BrandedTypes';
 import {
 	BatchBuilder,
-	deleteOneOrMany,
 	fetchMany,
 	fetchManyInChunks,
 	fetchOne,
@@ -197,15 +196,6 @@ export class ReadStateRepository implements IReadStateRepository {
 			await batch.executeChunked(BULK_READ_STATE_BATCH_QUERY_LIMIT, false);
 		}
 		return appliedUpdates;
-	}
-
-	async deleteReadState(userId: UserID, channelId: ChannelID): Promise<void> {
-		await deleteOneOrMany(
-			ReadStates.deleteByPk({
-				user_id: userId,
-				channel_id: channelId,
-			}),
-		);
 	}
 
 	async bulkAckMessages(

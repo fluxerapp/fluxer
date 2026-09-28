@@ -3030,7 +3030,8 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Clears all read state and acknowledgement records for a channel, marking all messages as unread. Returns 204 No Content on success.",
+				"description": "Deprecated. Has no effect on the read state. Returns 204 No Content.",
+				"deprecated": true,
 				"security": [{"botToken": []}, {"sessionToken": []}],
 				"parameters": [
 					{

@@ -333,13 +333,10 @@ export function MessageController(app: HonoApp) {
 			statusCode: 204,
 			security: ['botToken', 'bearerToken', 'sessionToken'],
 			tags: ['Channels', 'Messages'],
-			description:
-				'Clears all read state and acknowledgement records for a channel, marking all messages as unread. Returns 204 No Content on success.',
+			deprecated: true,
+			description: 'Deprecated. Has no effect on the read state. Returns 204 No Content.',
 		}),
 		async (ctx) => {
-			const userId = ctx.get('user').id;
-			const channelId = createChannelID(ctx.req.valid('param').channel_id);
-			await ctx.get('readStateService').deleteReadState({userId, channelId});
 			return ctx.body(null, 204);
 		},
 	);
