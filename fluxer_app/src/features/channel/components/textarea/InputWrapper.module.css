@@ -48,20 +48,25 @@
 	--composer-surface-fill: var(--composer-surface-color, var(--background-secondary-lighter));
 }
 
-.composerRoot:has(.statusTypingSlot)::before {
+.composerRoot:has(.statusTypingSlot, .statusSlowmodeSlot)::before {
 	content: '';
 	position: absolute;
 	bottom: 100%;
 	inset-inline: calc(-1 * var(--composer-box-inset-inline, 0px));
 	height: var(--composer-status-safe-area);
-	background: linear-gradient(
-		to bottom,
-		transparent 0%,
-		color-mix(in srgb, var(--composer-surface-fill) 48%, transparent) 26%,
-		color-mix(in srgb, var(--composer-surface-fill) 82%, transparent) 54%,
-		var(--composer-surface-fill) 78%,
-		var(--composer-surface-fill) 100%
-	);
+	background:
+		radial-gradient(farthest-side at 0% 100%, var(--composer-surface-fill) 55%, transparent 100%) left bottom /
+		min(28rem, 70%) 160% no-repeat,
+		radial-gradient(farthest-side at 100% 100%, var(--composer-surface-fill) 55%, transparent 100%) right bottom /
+		min(18rem, 50%) 160% no-repeat,
+		linear-gradient(
+			to bottom,
+			transparent 0%,
+			color-mix(in srgb, var(--composer-surface-fill) 64%, transparent) 20%,
+			color-mix(in srgb, var(--composer-surface-fill) 92%, transparent) 40%,
+			var(--composer-surface-fill) 60%,
+			var(--composer-surface-fill) 100%
+		);
 	pointer-events: none;
 }
 

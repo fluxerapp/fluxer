@@ -559,7 +559,7 @@ const SKELETON_SURFACE_INVARIANTS: ReadonlyArray<SkeletonSurfaceInvariant> = [
 	},
 	{
 		file: 'src/features/channel/components/textarea/InputWrapper.module.css',
-		requires: ['.composerRoot:has(.statusTypingSlot)::before'],
+		requires: ['.composerRoot:has(.statusTypingSlot, .statusSlowmodeSlot)::before'],
 	},
 	{
 		file: 'src/features/app/components/layout/GuildsLayout.module.css',
