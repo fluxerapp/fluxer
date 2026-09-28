@@ -127,10 +127,10 @@ export class UserAccountLookupService {
 			: await this.getProfileFieldPrivacyContext(userId, targetId);
 		const timezoneVisible =
 			!restrictProfile &&
-			canUseProfileTimezone(user) &&
 			user.timezone != null &&
 			profileFieldPrivacyContext != null &&
-			this.canViewProfileField(user.timezonePrivacyFlags, profileFieldPrivacyContext);
+			this.canViewProfileField(user.timezonePrivacyFlags, profileFieldPrivacyContext) &&
+			(await canUseProfileTimezone(user));
 		const [mutualFriends, mutualGuilds, connections] = await Promise.all([
 			withMutualFriends && userId !== targetId ? this.getMutualFriends(userId, targetId) : undefined,
 			withMutualGuilds && userId !== targetId ? this.getMutualGuilds(userId, targetId) : undefined,

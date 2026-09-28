@@ -203,12 +203,10 @@ export class User {
 		this.bannerColor = hasKey(user, 'banner_color') ? (user.banner_color ?? null) : undefined;
 		this.pronouns = hasKey(user, 'pronouns') ? (user.pronouns ?? null) : undefined;
 		this.accentColor = hasKey(user, 'accent_color') ? (user.accent_color ?? null) : undefined;
-		const hasProfileTimezoneAccess = this._isStaff ?? (this.flags & PublicUserFlags.STAFF) !== 0;
-		this.timezone = hasProfileTimezoneAccess && hasKey(user, 'timezone') ? (user.timezone ?? null) : undefined;
-		this.timezonePrivacyFlags =
-			hasProfileTimezoneAccess && hasKey(user, 'timezone_privacy_flags')
-				? (user.timezone_privacy_flags ?? ProfileFieldPrivacyFlags.EVERYONE)
-				: undefined;
+		this.timezone = hasKey(user, 'timezone') ? (user.timezone ?? null) : undefined;
+		this.timezonePrivacyFlags = hasKey(user, 'timezone_privacy_flags')
+			? (user.timezone_privacy_flags ?? ProfileFieldPrivacyFlags.EVERYONE)
+			: undefined;
 		this.mfaEnabled = hasKey(user, 'mfa_enabled') ? user.mfa_enabled : undefined;
 		this.hasVerifiedPhone = hasKey(user, 'has_verified_phone') ? user.has_verified_phone : undefined;
 		this.authenticatorTypes = hasKey(user, 'authenticator_types')
@@ -420,13 +418,10 @@ export class User {
 		if (pronouns !== undefined) result.pronouns = pronouns;
 		const accentColor = pickField(this.accentColor, u, 'accent_color', opts);
 		if (accentColor !== undefined) result.accent_color = accentColor;
-		const hasProfileTimezoneAccess = isStaff ?? (result.flags & PublicUserFlags.STAFF) !== 0;
-		if (hasProfileTimezoneAccess) {
-			const timezone = pickField(this.timezone, u, 'timezone', opts);
-			if (timezone !== undefined) result.timezone = timezone;
-			const timezonePrivacyFlags = pickField(this.timezonePrivacyFlags, u, 'timezone_privacy_flags', opts);
-			if (timezonePrivacyFlags !== undefined) result.timezone_privacy_flags = timezonePrivacyFlags;
-		}
+		const timezone = pickField(this.timezone, u, 'timezone', opts);
+		if (timezone !== undefined) result.timezone = timezone;
+		const timezonePrivacyFlags = pickField(this.timezonePrivacyFlags, u, 'timezone_privacy_flags', opts);
+		if (timezonePrivacyFlags !== undefined) result.timezone_privacy_flags = timezonePrivacyFlags;
 		const mfaEnabled = pickField(this.mfaEnabled, u, 'mfa_enabled', opts);
 		if (mfaEnabled !== undefined) result.mfa_enabled = mfaEnabled;
 		const hasVerifiedPhone = pickField(this.hasVerifiedPhone, u, 'has_verified_phone', opts);

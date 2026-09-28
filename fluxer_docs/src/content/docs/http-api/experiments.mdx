@@ -6,7 +6,7 @@ description: The experiment assignments envelope, the revalidation and polling c
 
 import RouteHeader from '@/components/RouteHeader.astro';
 
-An experiment is an instance-wide rollout that an operator configures. For each account, Fluxer works out from that configuration whether the account is in the rollout and which settings the account receives. The single route on this page resolves every experiment the server defines and returns them in one envelope, together with the polling cadence they share. This server defines `voice_noise_suppression`, whose placement protocol [Voice](/voice/) defines, `domain_migration` and `altcha_captcha`.
+An experiment is an instance-wide rollout that an operator configures. For each account, Fluxer works out from that configuration whether the account is in the rollout and which settings the account receives. The single route on this page resolves every experiment the server defines and returns them in one envelope, together with the polling cadence they share. This server defines `voice_noise_suppression`, whose placement protocol [Voice](/voice/) defines, `domain_migration`, `altcha_captcha` and `profile_timezone`.
 
 Every assignment is advice. A client that ignores one behaves as it does with the rollout off, and no route and no Gateway event reports what a client actually ran.
 
@@ -35,6 +35,7 @@ One entry per experiment. The envelope reports this object even when it is empty
 | voice_noise_suppression? | [noise suppression assignment](#noise-suppression-assignment-object) object | The caller's noise suppression assignment |
 | domain_migration? | [domain migration assignment](#domain-migration-assignment-object) object | The caller's web domain migration assignment |
 | altcha_captcha? | [ALTCHA captcha assignment](#altcha-captcha-assignment-object) object | The caller's captcha provider assignment |
+| profile_timezone? | [profile timezone assignment](#profile-timezone-assignment-object) object | The caller's profile timezone assignment |
 
 Ignore unknown experiments and treat a missing experiment as off.
 
@@ -130,6 +131,20 @@ One resolution of the instance ALTCHA captcha rollout against one account. This 
 A caller is drawn either by the operator's allowlist or by the sampled share of the account population. `enabled` is false in every other case, the rollout being off included.
 
 The assignment is informational. The server applies the same resolution to every request that needs a captcha and names the provider in the [captcha error](/topics/captcha/#altcha-proof-of-work), so a client needs no copy of this value to answer a challenge.
+
+## Profile timezone assignment object
+
+One resolution of the instance profile timezone rollout against one account. This server version writes the key on every response.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | boolean | Whether the caller can set a profile timezone and show it on their profile |
+
+A caller is drawn either by the operator's allowlist or by the sampled share of the account population. `enabled` is false in every other case, the rollout being off included.
+
+The server applies the same resolution on its own. [Modify current user](/http-api/users/current-user/#modify-current-user) drops `timezone` and `timezone_privacy_flags` for an account outside the rollout, and a [user profile](/http-api/users/#get-user-profile) reports `timezone_offset` as null for a target outside it.
 
 ## Get experiment assignments
 

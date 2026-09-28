@@ -437,6 +437,15 @@ fn deserialize_instance_config_response_with_unknown_keys() {
             "max_counter": 10000,
             "future_altcha_knob": "argon2id"
         },
+        "profile_timezone": {
+            "enabled": true,
+            "config_version": 2,
+            "rollout_basis_points": 0,
+            "rollout_salt": "profile-timezone-v1",
+            "included_user_ids": ["1500000000000000001"],
+            "excluded_user_ids": [],
+            "future_profile_timezone_knob": true
+        },
         "experiment_delivery": {"poll_interval_seconds": 300, "poll_jitter_percent": 15},
         "registration": {
             "mode": "open",
@@ -579,6 +588,9 @@ fn deserialize_instance_config_response_with_unknown_keys() {
     assert!(resp.altcha_captcha.anonymous_enabled);
     assert_eq!(resp.altcha_captcha.excluded_user_ids.len(), 1);
     assert_eq!(resp.altcha_captcha.max_counter, 10000);
+    assert!(resp.profile_timezone.enabled);
+    assert_eq!(resp.profile_timezone.config_version, 2);
+    assert_eq!(resp.profile_timezone.included_user_ids.len(), 1);
     assert_eq!(resp.experiment_delivery.poll_interval_seconds, 300);
     assert!(resp.policy.single_community_guild_id.is_none());
     assert_eq!(resp.policy.services.gif_enabled, Some(true));

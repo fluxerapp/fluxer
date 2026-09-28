@@ -10,7 +10,7 @@ import type {User} from '@app/api/models/User';
 import type {UserGuildSettings} from '@app/api/models/UserGuildSettings';
 import type {UserSettings} from '@app/api/models/UserSettings';
 import type {WebAuthnCredential} from '@app/api/models/WebAuthnCredential';
-import {canUseProfileTimezone, getRequiredActions} from '@app/api/user/UserHelpers';
+import {getRequiredActions} from '@app/api/user/UserHelpers';
 import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
 import type {ChannelMessageNotifications} from '@fluxer/constants/src/NotificationConstants';
 import {
@@ -121,7 +121,6 @@ export function mapUserToPrivateResponse(user: User): UserPrivateResponse {
 	const isStaff = (user.flags & UserFlags.STAFF) !== 0n;
 	const partialResponse = mapUserToPartialResponse(user);
 	const isActuallyPremium = user.isPremium();
-	const includeProfileTimezone = canUseProfileTimezone(user);
 	const traitSet = new Set<string>();
 	for (const trait of user.traits ?? []) {
 		if (trait && trait !== 'premium') {
@@ -147,12 +146,8 @@ export function mapUserToPrivateResponse(user: User): UserPrivateResponse {
 		bio: user.bio,
 		pronouns: user.pronouns,
 		accent_color: user.accentColor,
-		...(includeProfileTimezone
-			? {
-					timezone: user.timezone,
-					timezone_privacy_flags: user.timezonePrivacyFlags,
-				}
-			: {}),
+		timezone: user.timezone,
+		timezone_privacy_flags: user.timezonePrivacyFlags,
 		banner: stripBannerForUser(user),
 		banner_color: user.bannerColor,
 		mfa_enabled: authenticatorTypes.length > 0,

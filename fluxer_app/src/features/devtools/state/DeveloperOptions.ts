@@ -46,7 +46,6 @@ export type DeveloperOptionsState = Readonly<{
 	selfHostedModeOverride: boolean;
 	forceShowVanityURLDisclaimer: boolean;
 	forceShowVoiceConnection: boolean;
-	showProfileTimezoneSettings: boolean;
 	premiumScenarioOverride: PremiumScenarioOverride | null;
 	premiumTypeOverride: number | null;
 	premiumLifetimeSequenceOverride: number | null;
@@ -129,7 +128,6 @@ class DeveloperOptions implements DeveloperOptionsState {
 	selfHostedModeOverride = false;
 	forceShowVanityURLDisclaimer = false;
 	forceShowVoiceConnection = false;
-	showProfileTimezoneSettings = false;
 	premiumScenarioOverride: PremiumScenarioOverride | null = null;
 	premiumTypeOverride: number | null = null;
 	premiumLifetimeSequenceOverride: number | null = null;
@@ -215,7 +213,6 @@ class DeveloperOptions implements DeveloperOptionsState {
 			'selfHostedModeOverride',
 			'forceShowVanityURLDisclaimer',
 			'forceShowVoiceConnection',
-			'showProfileTimezoneSettings',
 			'premiumScenarioOverride',
 			'premiumTypeOverride',
 			'premiumLifetimeSequenceOverride',

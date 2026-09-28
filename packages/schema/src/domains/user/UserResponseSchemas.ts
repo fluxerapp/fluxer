@@ -90,11 +90,7 @@ export const UserPrivateResponse = UserPartialResponse.extend({
 	bio: z.string().nullable().describe('The user biography text'),
 	pronouns: z.string().nullable().describe('The preferred pronouns of the user'),
 	accent_color: Int32Type.nullable().describe('The user-selected accent color as an integer'),
-	timezone: z
-		.string()
-		.nullable()
-		.optional()
-		.describe('The IANA timezone identifier saved by the user. Omitted unless the user has staff access.'),
+	timezone: z.string().nullable().optional().describe('The IANA timezone identifier saved by the user'),
 	timezone_privacy_flags: createBitflagInt32Type(
 		ProfileFieldPrivacyFlags,
 		ProfileFieldPrivacyFlagsDescriptions,
@@ -102,7 +98,7 @@ export const UserPrivateResponse = UserPartialResponse.extend({
 		'ProfileFieldPrivacyFlags',
 	)
 		.optional()
-		.describe('Bitfield controlling who can see the profile timezone. Omitted unless the user has staff access.'),
+		.describe('Bitfield controlling who can see the profile timezone'),
 	banner: z.string().nullable().describe('The hash of the user profile banner image'),
 	banner_color: Int32Type.nullable().describe('The default banner color if no custom banner is set'),
 	mfa_enabled: z.boolean().describe('Whether multi-factor authentication is enabled'),

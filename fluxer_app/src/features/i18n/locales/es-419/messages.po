@@ -10084,7 +10084,7 @@ msgid "Couldn't ring this person"
 msgstr "No se pudo llamar a esta persona"
 
 #. Error message in the use textarea submit hook. Preserve {detail}; it is inserted by code.
-#: src/features/messaging/hooks/useTextareaSubmit.ts:48
+#: src/features/messaging/hooks/useTextareaSubmit.ts:53
 msgid "Couldn't run that command: {detail}"
 msgstr "No se pudo ejecutar el comando: {detail}"
 
@@ -14589,11 +14589,6 @@ msgstr "Exportar mis datos"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:110
 msgid "Export themes"
 msgstr "Exportar temas"
-
-#. Developer / debug surface — keep terse and technical. Tooltip / description for the profile timezone settings toggle.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:139
-msgid "Expose the staff-only time zone section in profile settings."
-msgstr "Mostrar la sección de zona horaria reservada para el personal en la configuración del perfil."
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -22951,7 +22946,7 @@ msgid "No webhooks"
 msgstr "No hay webhooks"
 
 #. Developer option label for short-circuiting the in-app reporting (IAR) flow. When enabled, submitting a report skips the network call.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:144
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:135
 msgid "No-op in-app reports"
 msgstr "Simular reportes en la aplicación sin enviarlos"
 
@@ -30549,11 +30544,6 @@ msgstr "Mostrar contraseña"
 msgid "Show per-device participant volume sliders in voice menus"
 msgstr "Mostrar controles deslizantes de volumen por participante y dispositivo en los menús de voz"
 
-#. Developer option label for exposing the staff-only profile timezone section in profile settings.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:135
-msgid "Show profile time zone settings"
-msgstr "Mostrar la configuración de zona horaria del perfil"
-
 #. Short label for an advanced message action bar preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:56
 msgid "Show quick reactions"
@@ -30932,7 +30922,7 @@ msgid "Skip the external link warning for all domains"
 msgstr "Omitir la advertencia de enlace externo para todos los dominios"
 
 #. Developer / debug surface — keep terse and technical. Tooltip / description for the no-op in-app reports toggle.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:149
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:140
 msgid "Skip the network call when an in-app report is submitted. The flow still advances to the success screen so you can exercise the UI, but nothing is actually sent to the safety team."
 msgstr "Omite la llamada de red cuando se envía un reporte en la aplicación. El flujo avanza a la pantalla de éxito para que puedas probar la interfaz de usuario, pero no se envía nada al equipo de seguridad."
 

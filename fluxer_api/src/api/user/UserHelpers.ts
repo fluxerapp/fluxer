@@ -3,6 +3,7 @@
 import {Config} from '@app/api/Config';
 import type {UserRow} from '@app/api/database/types/UserTypes';
 import {getCachedInstancePremiumMode} from '@app/api/limits/InstancePremiumModeCache';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {User} from '@app/api/models/User';
 import {accountPolicyContactHasCapability} from '@app/api/risk/AccountPolicyService';
 import {getCachedDeferredPhoneGateEnabled} from '@app/api/risk/DeferredPhoneGateCache';
@@ -13,6 +14,7 @@ import {
 	SuspiciousActivityFlags,
 	UserFlags,
 } from '@fluxer/constants/src/UserConstants';
+import {resolveProfileTimezoneAssignment} from '@fluxer/schema/src/domains/admin/ProfileTimezoneSchemas';
 import type {RequiredAction} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {ms} from 'itty-time';
 
@@ -289,6 +291,7 @@ export function isBugHunterBotUser(user: Pick<User, 'flags' | 'isBot'>): boolean
 	return user.isBot && (user.flags & UserFlags.BUG_HUNTER) !== 0n;
 }
 
-export function canUseProfileTimezone(user: Pick<PremiumCheckable, 'flags'>): boolean {
-	return (user.flags & UserFlags.STAFF) !== 0n;
+export async function canUseProfileTimezone(user: Pick<User, 'id'>): Promise<boolean> {
+	const config = await getInstanceConfigRepository().getProfileTimezoneConfig();
+	return resolveProfileTimezoneAssignment(config, user.id.toString()).enabled;
 }

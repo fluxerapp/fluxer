@@ -15,6 +15,10 @@ import {
 	INERT_DOMAIN_MIGRATION_ASSIGNMENT,
 } from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {
+	DEFAULT_PROFILE_TIMEZONE_CONFIG,
+	INERT_PROFILE_TIMEZONE_ASSIGNMENT,
+} from '@fluxer/schema/src/domains/admin/ProfileTimezoneSchemas';
+import {
 	DEFAULT_VOICE_NOISE_SUPPRESSION_CONFIG,
 	INERT_VOICE_NOISE_SUPPRESSION_ASSIGNMENT,
 } from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
@@ -62,6 +66,7 @@ describe('GET /experiments', () => {
 				voice_noise_suppression: INERT_VOICE_NOISE_SUPPRESSION_ASSIGNMENT,
 				domain_migration: INERT_DOMAIN_MIGRATION_ASSIGNMENT,
 				altcha_captcha: INERT_ALTCHA_CAPTCHA_ASSIGNMENT,
+				profile_timezone: INERT_PROFILE_TIMEZONE_ASSIGNMENT,
 			},
 		});
 	});
@@ -193,6 +198,56 @@ describe('GET /experiments', () => {
 
 		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, admin.token).get(ENDPOINT).execute();
 		expect(body.assignments.altcha_captcha).toEqual({enabled: true});
+	});
+
+	it('resolves the profile timezone caller through the allowlist and the exclusion list', async () => {
+		const targeted = await createTestAccount(harness);
+		const excluded = await createTestAccount(harness);
+		await getInstanceConfigRepository().setProfileTimezoneConfig({
+			...DEFAULT_PROFILE_TIMEZONE_CONFIG,
+			enabled: true,
+			rollout_basis_points: 10000,
+			included_user_ids: [targeted.userId],
+			excluded_user_ids: [excluded.userId],
+		});
+
+		const targetedBody = await createBuilder<ExperimentAssignmentsResponse>(harness, targeted.token)
+			.get(ENDPOINT)
+			.execute();
+		expect(targetedBody.assignments.profile_timezone).toEqual({enabled: true});
+
+		const excludedBody = await createBuilder<ExperimentAssignmentsResponse>(harness, excluded.token)
+			.get(ENDPOINT)
+			.execute();
+		expect(excludedBody.assignments.profile_timezone).toEqual({enabled: false});
+	});
+
+	it('bumps the profile timezone config version on every admin update without the client sending one', async () => {
+		const admin = await setUserACLs(harness, await createTestAccount(harness), [
+			AdminACLs.AUTHENTICATE,
+			AdminACLs.INSTANCE_CONFIG_VIEW,
+			AdminACLs.INSTANCE_CONFIG_UPDATE,
+		]);
+
+		const afterFirst = await createBuilder<{profile_timezone: {config_version: number; enabled: boolean}}>(
+			harness,
+			admin.token,
+		)
+			.patch('/admin/instance/config')
+			.body({profile_timezone: {enabled: true, included_user_ids: [admin.userId]}})
+			.execute();
+		expect(afterFirst.profile_timezone).toMatchObject({config_version: 1, enabled: true});
+
+		const afterSecond = await createBuilder<{
+			profile_timezone: {config_version: number; rollout_basis_points: number};
+		}>(harness, admin.token)
+			.patch('/admin/instance/config')
+			.body({profile_timezone: {rollout_basis_points: 2500}})
+			.execute();
+		expect(afterSecond.profile_timezone).toMatchObject({config_version: 2, rollout_basis_points: 2500});
+
+		const body = await createBuilder<ExperimentAssignmentsResponse>(harness, admin.token).get(ENDPOINT).execute();
+		expect(body.assignments.profile_timezone).toEqual({enabled: true});
 	});
 
 	it('serves the delivery cadence from the delivery config and not from the voice config', async () => {

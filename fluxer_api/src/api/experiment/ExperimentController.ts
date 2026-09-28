@@ -10,6 +10,7 @@ import {entityTagMatches} from '@app/api/utils/EntityTag';
 import {Headers as HttpHeaders} from '@fluxer/constants/src/Headers';
 import {resolveAltchaCaptchaAssignment} from '@fluxer/schema/src/domains/admin/AltchaCaptchaSchemas';
 import {resolveDomainMigrationAssignment} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
+import {resolveProfileTimezoneAssignment} from '@fluxer/schema/src/domains/admin/ProfileTimezoneSchemas';
 import {resolveVoiceNoiseSuppressionAssignment} from '@fluxer/schema/src/domains/admin/VoiceNoiseSuppressionSchemas';
 import {ExperimentAssignmentsResponse} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 
@@ -30,12 +31,14 @@ export function ExperimentController(app: HonoApp) {
 		}),
 		async (ctx) => {
 			const instanceConfigRepository = ctx.get('instanceConfigRepository');
-			const [delivery, voiceConfig, domainMigrationConfig, altchaCaptchaConfig] = await Promise.all([
-				instanceConfigRepository.getExperimentDeliveryConfig(),
-				instanceConfigRepository.getVoiceNoiseSuppressionConfig(),
-				instanceConfigRepository.getDomainMigrationConfig(),
-				instanceConfigRepository.getAltchaCaptchaConfig(),
-			]);
+			const [delivery, voiceConfig, domainMigrationConfig, altchaCaptchaConfig, profileTimezoneConfig] =
+				await Promise.all([
+					instanceConfigRepository.getExperimentDeliveryConfig(),
+					instanceConfigRepository.getVoiceNoiseSuppressionConfig(),
+					instanceConfigRepository.getDomainMigrationConfig(),
+					instanceConfigRepository.getAltchaCaptchaConfig(),
+					instanceConfigRepository.getProfileTimezoneConfig(),
+				]);
 			const userId = ctx.get('user').id.toString();
 			const body: ExperimentAssignmentsResponse = {
 				poll_interval_seconds: delivery.poll_interval_seconds,
@@ -44,6 +47,7 @@ export function ExperimentController(app: HonoApp) {
 					voice_noise_suppression: resolveVoiceNoiseSuppressionAssignment(voiceConfig, userId),
 					domain_migration: resolveDomainMigrationAssignment(domainMigrationConfig, userId),
 					altcha_captcha: resolveAltchaCaptchaAssignment(altchaCaptchaConfig, userId),
+					profile_timezone: resolveProfileTimezoneAssignment(profileTimezoneConfig, userId),
 				},
 			};
 			const etag = `"${createHash('sha256').update(JSON.stringify(body)).digest('hex')}"`;

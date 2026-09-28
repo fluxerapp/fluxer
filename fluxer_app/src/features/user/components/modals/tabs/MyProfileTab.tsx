@@ -8,7 +8,6 @@ import {PREMIUM_PRODUCT_NAME} from '@app/features/app/config/I18nDisplayConstant
 import {useFormSubmit} from '@app/features/app/hooks/useFormSubmit';
 import {LimitResolver} from '@app/features/app/utils/LimitResolverAdapter';
 import {isLimitToggleEnabled} from '@app/features/app/utils/LimitUtils';
-import DeveloperOptions from '@app/features/devtools/state/DeveloperOptions';
 import type {FlatEmoji} from '@app/features/emoji/types/EmojiTypes';
 import {ExpressionPickerSheet} from '@app/features/expressions/components/modals/ExpressionPickerSheet';
 import Guilds from '@app/features/guild/state/Guilds';
@@ -54,6 +53,7 @@ import {ProfileTypeSelector} from '@app/features/user/components/modals/tabs/my_
 import {TimezoneProfileSettings} from '@app/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings';
 import {ProfilePreview} from '@app/features/user/components/profile/ProfilePreview';
 import type {Profile} from '@app/features/user/models/Profile';
+import ProfileTimezoneRollout from '@app/features/user/state/ProfileTimezoneRollout';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {setMeaningfulFormValue} from '@app/lib/forms/MeaningfulFormValue';
@@ -411,7 +411,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 	);
 	const showPremiumFeatures = shouldShowPremiumFeatures();
 	const hasPremium = useMemo(() => showPremiumFeatures && (user?.isPremium() ?? false), [showPremiumFeatures, user]);
-	const hasProfileTimezoneAccess = (user?.isStaff() ?? false) && DeveloperOptions.showProfileTimezoneSettings;
+	const hasProfileTimezoneAccess = ProfileTimezoneRollout.enabled;
 	const hasPerGuildProfiles = useMemo(
 		() =>
 			isLimitToggleEnabled(

@@ -85,11 +85,14 @@ function hasProfileCustomizationUpdate(data: UserUpdatePayload): boolean {
 	return EMAIL_VERIFICATION_REQUIRED_PROFILE_UPDATE_FIELDS.some((field) => data[field] !== undefined);
 }
 
-function stripUnauthorizedProfileTimezoneUpdate(
+async function stripUnauthorizedProfileTimezoneUpdate(
 	user: User,
 	body: UserUpdateWithVerificationRequest,
-): UserUpdateWithVerificationRequest {
-	if (canUseProfileTimezone(user)) {
+): Promise<UserUpdateWithVerificationRequest> {
+	if (body.timezone === undefined && body.timezone_privacy_flags === undefined) {
+		return body;
+	}
+	if (await canUseProfileTimezone(user)) {
 		return body;
 	}
 	const {timezone: _timezone, timezone_privacy_flags: _timezonePrivacyFlags, ...rest} = body;
@@ -187,7 +190,7 @@ export class UserAccountRequestService {
 		const {ctx, body, authSession} = params;
 		let {user} = params;
 		const oldEmail = user.email;
-		const sanitizedBody = stripUnauthorizedProfileTimezoneUpdate(user, body);
+		const sanitizedBody = await stripUnauthorizedProfileTimezoneUpdate(user, body);
 		const {
 			mfa_method: _mfaMethod,
 			mfa_code: _mfaCode,

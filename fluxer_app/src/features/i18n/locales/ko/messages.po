@@ -10084,7 +10084,7 @@ msgid "Couldn't ring this person"
 msgstr "이 사람에게 전화를 걸 수 없습니다"
 
 #. Error message in the use textarea submit hook. Preserve {detail}; it is inserted by code.
-#: src/features/messaging/hooks/useTextareaSubmit.ts:48
+#: src/features/messaging/hooks/useTextareaSubmit.ts:53
 msgid "Couldn't run that command: {detail}"
 msgstr "명령을 실행할 수 없습니다: {detail}"
 
@@ -14589,11 +14589,6 @@ msgstr "내 데이터 내보내기"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:110
 msgid "Export themes"
 msgstr "테마 내보내기"
-
-#. Developer / debug surface — keep terse and technical. Tooltip / description for the profile timezone settings toggle.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:139
-msgid "Expose the staff-only time zone section in profile settings."
-msgstr "프로필 설정에서 직원 전용 시간대 섹션을 표시합니다."
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -22951,7 +22946,7 @@ msgid "No webhooks"
 msgstr "웹훅 없음"
 
 #. Developer option label for short-circuiting the in-app reporting (IAR) flow. When enabled, submitting a report skips the network call.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:144
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:135
 msgid "No-op in-app reports"
 msgstr "앱 내 신고 무효화"
 
@@ -30549,11 +30544,6 @@ msgstr "비밀번호 표시"
 msgid "Show per-device participant volume sliders in voice menus"
 msgstr "음성 메뉴에서 기기별 참여자 볼륨 슬라이더 표시"
 
-#. Developer option label for exposing the staff-only profile timezone section in profile settings.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:135
-msgid "Show profile time zone settings"
-msgstr "프로필 시간대 설정 표시"
-
 #. Short label for an advanced message action bar preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:56
 msgid "Show quick reactions"
@@ -30932,7 +30922,7 @@ msgid "Skip the external link warning for all domains"
 msgstr "모든 도메인에서 외부 링크 경고 건너뛰기"
 
 #. Developer / debug surface — keep terse and technical. Tooltip / description for the no-op in-app reports toggle.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:149
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:140
 msgid "Skip the network call when an in-app report is submitted. The flow still advances to the success screen so you can exercise the UI, but nothing is actually sent to the safety team."
 msgstr "앱 내 신고 제출 시 네트워크 호출을 건너뜁니다. UI를 테스트할 수 있도록 성공 화면으로 계속 진행되지만, 안전팀에는 아무것도 전송되지 않습니다."
 

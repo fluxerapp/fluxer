@@ -108,7 +108,7 @@ Modifies the current account and returns the resulting [user](/http-api/users/#u
 
 <sup>9</sup> The value is matched against the instance profile substring blocklist like `username`, `global_name`, and `bio`
 
-<sup>10</sup> The pair is staff-only. A request from an account without the [`STAFF`](/http-api/users/#public-user-flags) flag has both fields dropped before the update runs
+<sup>10</sup> A request from an account whose [profile timezone assignment](/http-api/experiments/#profile-timezone-assignment-object) is not enabled has both fields dropped before the update runs
 
 <sup>11</sup> An unrecognised identifier is rejected with `INVALID_TIMEZONE_IDENTIFIER`. Setting a first timezone without `timezone_privacy_flags` sets those flags to `EVERYONE`
 

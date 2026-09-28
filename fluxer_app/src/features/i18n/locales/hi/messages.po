@@ -10084,7 +10084,7 @@ msgid "Couldn't ring this person"
 msgstr "इस व्यक्ति को कॉल नहीं किया जा सका"
 
 #. Error message in the use textarea submit hook. Preserve {detail}; it is inserted by code.
-#: src/features/messaging/hooks/useTextareaSubmit.ts:48
+#: src/features/messaging/hooks/useTextareaSubmit.ts:53
 msgid "Couldn't run that command: {detail}"
 msgstr "वह कमांड नहीं चल सका: {detail}"
 
@@ -14589,11 +14589,6 @@ msgstr "मेरा डेटा एक्सपोर्ट करें"
 #: src/features/user/components/settings_utils/section_registry/AppearanceSections.ts:110
 msgid "Export themes"
 msgstr "थीम एक्सपोर्ट करें"
-
-#. Developer / debug surface — keep terse and technical. Tooltip / description for the profile timezone settings toggle.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:139
-msgid "Expose the staff-only time zone section in profile settings."
-msgstr "प्रोफ़ाइल सेटिंग्स में केवल कर्मचारियों के लिए समय क्षेत्र अनुभाग दिखाएँ।"
 
 #. Settings search entry label. Names the settings search entry in the settings UI.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
@@ -22951,7 +22946,7 @@ msgid "No webhooks"
 msgstr "कोई वेबहुक नहीं"
 
 #. Developer option label for short-circuiting the in-app reporting (IAR) flow. When enabled, submitting a report skips the network call.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:144
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:135
 msgid "No-op in-app reports"
 msgstr "इन-ऐप रिपोर्ट को नो-ऑप करें"
 
@@ -30549,11 +30544,6 @@ msgstr "पासवर्ड दिखाएं"
 msgid "Show per-device participant volume sliders in voice menus"
 msgstr "वॉइस मेन्यू में प्रति-डिवाइस प्रतिभागी वॉल्यूम स्लाइडर दिखाएं"
 
-#. Developer option label for exposing the staff-only profile timezone section in profile settings.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:135
-msgid "Show profile time zone settings"
-msgstr "प्रोफ़ाइल की समय क्षेत्र सेटिंग्स दिखाएं"
-
 #. Short label for an advanced message action bar preference.
 #: src/features/user/components/modals/tabs/advanced_settings_tab/AdvancedChatControls.tsx:56
 msgid "Show quick reactions"
@@ -30932,7 +30922,7 @@ msgid "Skip the external link warning for all domains"
 msgstr "सभी डोमेन के लिए बाहरी लिंक चेतावनी को छोड़ें"
 
 #. Developer / debug surface — keep terse and technical. Tooltip / description for the no-op in-app reports toggle.
-#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:149
+#: src/features/devtools/components/DeveloperOptionsToggleGroups.ts:140
 msgid "Skip the network call when an in-app report is submitted. The flow still advances to the success screen so you can exercise the UI, but nothing is actually sent to the safety team."
 msgstr "इन-ऐप रिपोर्ट सबमिट होने पर नेटवर्क कॉल छोड़ दें। फ़्लो फिर भी सफलता स्क्रीन तक बढ़ता है ताकि आप UI आज़मा सकें, लेकिन सुरक्षा टीम को असल में कुछ नहीं भेजा जाता।"
 

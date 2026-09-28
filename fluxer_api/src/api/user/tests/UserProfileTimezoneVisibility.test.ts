@@ -3,16 +3,16 @@
 import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createFriendship} from '@app/api/channel/tests/ChannelTestUtils';
 import {acceptInvite, createChannelInvite, createGuild, getChannel} from '@app/api/guild/tests/GuildTestUtils';
+import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
-import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {
 	ProfileFieldPrivacyFlags,
 	type ProfilePrivacyLevel,
 	ProfilePrivacyLevels,
-	UserFlags,
 } from '@fluxer/constants/src/UserConstants';
 import {getCurrentTimeZoneOffsetMinutes} from '@fluxer/date_utils/src/TimeZoneUtils';
+import {DEFAULT_PROFILE_TIMEZONE_CONFIG} from '@fluxer/schema/src/domains/admin/ProfileTimezoneSchemas';
 import type {UserPrivateResponse, UserProfileFullResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
 
@@ -31,12 +31,12 @@ async function updateProfileTimezone(
 	return createBuilder<UserPrivateResponse>(harness, token).patch('/users/@me').body(data).execute();
 }
 
-async function setUserFlags(harness: ApiTestHarness, userId: string, flags: bigint): Promise<void> {
-	await createBuilder(harness, '')
-		.patch(`/test/users/${userId}/flags`)
-		.body({flags: flags.toString()})
-		.expect(HTTP_STATUS.OK)
-		.execute();
+async function setProfileTimezoneUsers(userIds: Array<string>): Promise<void> {
+	await getInstanceConfigRepository().setProfileTimezoneConfig({
+		...DEFAULT_PROFILE_TIMEZONE_CONFIG,
+		enabled: true,
+		included_user_ids: userIds,
+	});
 }
 
 async function updateProfilePrivacy(
@@ -76,7 +76,7 @@ describe('User Profile Timezone Visibility', () => {
 	it('defaults timezone visibility to everyone when a timezone is set', async () => {
 		const targetAccount = await createTestAccount(harness);
 		const viewerAccount = await createTestAccount(harness);
-		await setUserFlags(harness, targetAccount.userId, UserFlags.STAFF);
+		await setProfileTimezoneUsers([targetAccount.userId]);
 		const updated = await updateProfileTimezone(harness, targetAccount.token, {timezone: TEST_TIMEZONE});
 		expect(updated.timezone).toBe(TEST_TIMEZONE);
 		expect(updated.timezone_privacy_flags).toBe(ProfileFieldPrivacyFlags.EVERYONE);
@@ -86,7 +86,7 @@ describe('User Profile Timezone Visibility', () => {
 	});
 	it('restores default timezone visibility when a timezone is set again without explicit flags', async () => {
 		const targetAccount = await createTestAccount(harness);
-		await setUserFlags(harness, targetAccount.userId, UserFlags.STAFF);
+		await setProfileTimezoneUsers([targetAccount.userId]);
 		await updateProfileTimezone(harness, targetAccount.token, {
 			timezone: TEST_TIMEZONE,
 			timezone_privacy_flags: 0,
@@ -97,7 +97,7 @@ describe('User Profile Timezone Visibility', () => {
 	});
 	it('hides timezone from the public profile when privacy flags are unset', async () => {
 		const targetAccount = await createTestAccount(harness);
-		await setUserFlags(harness, targetAccount.userId, UserFlags.STAFF);
+		await setProfileTimezoneUsers([targetAccount.userId]);
 		await updateProfileTimezone(harness, targetAccount.token, {
 			timezone: TEST_TIMEZONE,
 			timezone_privacy_flags: 0,
@@ -109,7 +109,7 @@ describe('User Profile Timezone Visibility', () => {
 		const targetAccount = await createTestAccount(harness);
 		const friendAccount = await createTestAccount(harness);
 		const guildMemberAccount = await createTestAccount(harness);
-		await setUserFlags(harness, targetAccount.userId, UserFlags.STAFF);
+		await setProfileTimezoneUsers([targetAccount.userId]);
 		await updateProfileTimezone(harness, targetAccount.token, {
 			timezone: TEST_TIMEZONE,
 			timezone_privacy_flags: ProfileFieldPrivacyFlags.FRIENDS,
@@ -125,7 +125,7 @@ describe('User Profile Timezone Visibility', () => {
 		const targetAccount = await createTestAccount(harness);
 		const friendAccount = await createTestAccount(harness);
 		const guildMemberAccount = await createTestAccount(harness);
-		await setUserFlags(harness, targetAccount.userId, UserFlags.STAFF);
+		await setProfileTimezoneUsers([targetAccount.userId]);
 		await updateProfileTimezone(harness, targetAccount.token, {
 			timezone: TEST_TIMEZONE,
 			timezone_privacy_flags: ProfileFieldPrivacyFlags.MUTUAL_GUILDS,
@@ -140,7 +140,7 @@ describe('User Profile Timezone Visibility', () => {
 	it('hides timezone when full profile privacy restricts the viewer', async () => {
 		const targetAccount = await createTestAccount(harness);
 		const guildMemberAccount = await createTestAccount(harness);
-		await setUserFlags(harness, targetAccount.userId, UserFlags.STAFF);
+		await setProfileTimezoneUsers([targetAccount.userId]);
 		await updateProfileTimezone(harness, targetAccount.token, {timezone: TEST_TIMEZONE});
 		await updateProfilePrivacy(harness, targetAccount.token, ProfilePrivacyLevels.FRIENDS_ONLY);
 		await createSharedGuild(harness, targetAccount.token, guildMemberAccount.token);
@@ -148,23 +148,32 @@ describe('User Profile Timezone Visibility', () => {
 		expect(profile.profile_limited).toBe(true);
 		expect(profile.timezone_offset).toBeNull();
 	});
-	it('ignores profile timezone updates from non-staff users', async () => {
+	it('ignores profile timezone updates from users outside the experiment', async () => {
 		const targetAccount = await createTestAccount(harness, {skipEmailVerification: true});
-		const updated = await updateProfileTimezone(harness, targetAccount.token, {timezone: TEST_TIMEZONE});
-		expect(updated).not.toHaveProperty('timezone');
-		expect(updated).not.toHaveProperty('timezone_privacy_flags');
+		const updated = await updateProfileTimezone(harness, targetAccount.token, {
+			timezone: TEST_TIMEZONE,
+			timezone_privacy_flags: ProfileFieldPrivacyFlags.FRIENDS,
+		});
+		expect(updated.timezone).toBeNull();
+		expect(updated.timezone_privacy_flags).toBe(ProfileFieldPrivacyFlags.EVERYONE);
 	});
-	it('hides stored profile timezone after the user no longer has the staff flag', async () => {
+	it('ignores profile timezone updates from users excluded from a full rollout', async () => {
+		const targetAccount = await createTestAccount(harness, {skipEmailVerification: true});
+		await getInstanceConfigRepository().setProfileTimezoneConfig({
+			...DEFAULT_PROFILE_TIMEZONE_CONFIG,
+			enabled: true,
+			rollout_basis_points: 10000,
+			excluded_user_ids: [targetAccount.userId],
+		});
+		const updated = await updateProfileTimezone(harness, targetAccount.token, {timezone: TEST_TIMEZONE});
+		expect(updated.timezone).toBeNull();
+	});
+	it('hides stored profile timezone after the user leaves the experiment', async () => {
 		const targetAccount = await createTestAccount(harness);
 		const viewerAccount = await createTestAccount(harness);
-		await setUserFlags(harness, targetAccount.userId, UserFlags.STAFF);
+		await setProfileTimezoneUsers([targetAccount.userId]);
 		await updateProfileTimezone(harness, targetAccount.token, {timezone: TEST_TIMEZONE});
-		await setUserFlags(harness, targetAccount.userId, 0n);
-		const currentUser = await createBuilder<UserPrivateResponse>(harness, targetAccount.token)
-			.get('/users/@me')
-			.execute();
-		expect(currentUser).not.toHaveProperty('timezone');
-		expect(currentUser).not.toHaveProperty('timezone_privacy_flags');
+		await setProfileTimezoneUsers([]);
 		await createFriendship(harness, targetAccount, viewerAccount);
 		const profile = await getUserProfile(harness, viewerAccount.token, targetAccount.userId);
 		expect(profile.timezone_offset).toBeNull();

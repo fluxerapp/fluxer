@@ -83,7 +83,8 @@ export class UserAccountProfileService {
 		if (data.accent_color !== undefined) {
 			await this.processAccentColorUpdate({user, accentColor: data.accent_color, updates});
 		}
-		const canUpdateProfileTimezone = canUseProfileTimezone(user);
+		const canUpdateProfileTimezone =
+			(data.timezone !== undefined || data.timezone_privacy_flags !== undefined) && (await canUseProfileTimezone(user));
 		if (canUpdateProfileTimezone && data.timezone !== undefined) {
 			const nextTimezone = this.processTimezoneUpdate({user, timezone: data.timezone, updates});
 			if (nextTimezone !== null && user.timezone === null && data.timezone_privacy_flags === undefined) {

@@ -77,13 +77,17 @@ export const UserUpdateRequest = z
 		accent_color: ColorType.nullish().describe('Profile accent color as integer'),
 		timezone: createStringType(1, 128)
 			.nullish()
-			.describe('Staff-only IANA timezone identifier saved for profile local time. Ignored for non-staff users.'),
+			.describe(
+				'IANA timezone identifier saved for profile local time. Ignored unless the profile_timezone experiment serves the user.',
+			),
 		timezone_privacy_flags: createBitflagInt32Type(
 			ProfileFieldPrivacyFlags,
 			ProfileFieldPrivacyFlagsDescriptions,
 			'Bitfield controlling who can see the profile timezone',
 			'ProfileFieldPrivacyFlags',
-		).describe('Staff-only bitfield controlling who can see the profile timezone. Ignored for non-staff users.'),
+		).describe(
+			'Bitfield controlling who can see the profile timezone. Ignored unless the profile_timezone experiment serves the user.',
+		),
 		premium_badge_hidden: z.boolean().describe('Whether to hide the premium badge'),
 		premium_badge_masked: z.boolean().describe('Whether to mask the premium badge'),
 		premium_badge_timestamp_hidden: z.boolean().describe('Whether to hide premium badge timestamp'),

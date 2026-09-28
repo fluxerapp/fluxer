@@ -22404,14 +22404,8 @@
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
 						"description": "The user-selected accent color as an integer"
 					},
-					"timezone": {
-						"description": "The IANA timezone identifier saved by the user. Omitted unless the user has staff access.",
-						"type": ["string", "null"]
-					},
-					"timezone_privacy_flags": {
-						"description": "Bitfield controlling who can see the profile timezone. Omitted unless the user has staff access.",
-						"$ref": "#/components/schemas/ProfileFieldPrivacyFlags"
-					},
+					"timezone": {"description": "The IANA timezone identifier saved by the user", "type": ["string", "null"]},
+					"timezone_privacy_flags": {"$ref": "#/components/schemas/ProfileFieldPrivacyFlags"},
 					"banner": {"description": "The hash of the user profile banner image", "type": ["string", "null"]},
 					"banner_color": {
 						"anyOf": [{"$ref": "#/components/schemas/Int32Type"}, {"type": "null"}],
@@ -25121,11 +25115,11 @@
 						"anyOf": [{"$ref": "#/components/schemas/ColorType"}, {"type": "null"}]
 					},
 					"timezone": {
-						"description": "Staff-only IANA timezone identifier saved for profile local time. Ignored for non-staff users.",
+						"description": "IANA timezone identifier saved for profile local time. Ignored unless the profile_timezone experiment serves the user.",
 						"type": ["string", "null"]
 					},
 					"timezone_privacy_flags": {
-						"description": "Staff-only bitfield controlling who can see the profile timezone. Ignored for non-staff users.",
+						"description": "Bitfield controlling who can see the profile timezone. Ignored unless the profile_timezone experiment serves the user.",
 						"$ref": "#/components/schemas/ProfileFieldPrivacyFlags"
 					},
 					"premium_badge_hidden": {"type": "boolean", "description": "Whether to hide the premium badge"},
@@ -27954,7 +27948,8 @@
 						"properties": {
 							"voice_noise_suppression": {"$ref": "#/components/schemas/VoiceNoiseSuppressionAssignmentResponse"},
 							"domain_migration": {"$ref": "#/components/schemas/DomainMigrationAssignmentResponse"},
-							"altcha_captcha": {"$ref": "#/components/schemas/AltchaCaptchaAssignmentResponse"}
+							"altcha_captcha": {"$ref": "#/components/schemas/AltchaCaptchaAssignmentResponse"},
+							"profile_timezone": {"$ref": "#/components/schemas/ProfileTimezoneAssignmentResponse"}
 						},
 						"additionalProperties": false
 					}
@@ -31630,6 +31625,12 @@
 				"additionalProperties": false
 			},
 			"DonationCurrency": {"type": "string", "enum": ["usd", "eur", "brl", "inr", "pln", "try", "sek", "dkk", "nok"]},
+			"ProfileTimezoneAssignmentResponse": {
+				"type": "object",
+				"properties": {"enabled": {"type": "boolean"}},
+				"required": ["enabled"],
+				"additionalProperties": false
+			},
 			"AltchaCaptchaAssignmentResponse": {
 				"type": "object",
 				"properties": {"enabled": {"type": "boolean"}},
