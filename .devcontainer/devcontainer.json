@@ -40,12 +40,17 @@
 			"settings": {
 				"editor.defaultFormatter": "biomejs.biome",
 				"erlang.includePaths": ["."],
+				"tailwindCSS.experimental.configFile": "fluxer_admin/src/styles/app.css",
+				"tailwindCSS.includeLanguages": {
+					"rust": "html"
+				},
 				"search.exclude": {
 					"**/_build/default/lib/fluxer_gateway": true
 				}
 			},
 			"extensions": [
 				"biomejs.biome",
+				"bradlc.vscode-tailwindcss",
 				"rust-lang.rust-analyzer",
 				"tamasfe.even-better-toml",
 				"TypeScriptTeam.native-preview",

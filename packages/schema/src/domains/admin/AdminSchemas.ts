@@ -547,6 +547,7 @@ const InstancePolicyResponse = z.object({
 	single_community_guild_id: z.string().nullable(),
 	direct_messages_disabled: z.boolean(),
 	direct_messages_locked: z.boolean(),
+	guild_create_access: z.boolean(),
 	premium_mode: z.enum(['mirror', 'everyone']),
 	services: z.object({
 		gif_enabled: z.boolean().nullable(),
@@ -656,6 +657,7 @@ const InstancePolicyUpdateSchema = z.object({
 	direct_messages_disabled: z.boolean().optional(),
 	direct_messages_locked: z.literal(false).optional(),
 	premium_mode: z.enum(['mirror', 'everyone']).optional(),
+	guild_create_access: z.boolean().optional(),
 	services: z
 		.object({
 			gif_enabled: z.boolean().nullish(),

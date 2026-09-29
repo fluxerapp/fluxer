@@ -124,6 +124,7 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 			single_community_guild_id: policy.single_community_guild_id,
 			direct_messages_disabled: policy.direct_messages_disabled,
 			direct_messages_locked: policy.direct_messages_locked,
+			guild_create_access: policy.guild_create_access,
 			premium_mode: policy.premium_mode,
 			services: {
 				gif_enabled: policy.gif_enabled,
@@ -830,6 +831,9 @@ function planInstancePolicyPatch(
 		if (!policy.direct_messages_disabled) {
 			patch.direct_messages_locked = true;
 		}
+	}
+	if (policy.guild_create_access !== undefined && policy.guild_create_access !== current.guild_create_access) {
+		patch.guild_create_access = policy.guild_create_access;
 	}
 	if (policy.services) {
 		if (policy.services.gif_enabled !== undefined) {

@@ -30259,9 +30259,18 @@
 					"direct_messages_disabled": {
 						"type": "boolean",
 						"description": "Whether direct messages and friend requests are disabled instance-wide"
+					},
+					"guild_create_access": {
+						"type": "boolean",
+						"description": "Whether this instance's users all have the capability to create new communities"
 					}
 				},
-				"required": ["single_community", "single_community_guild_id", "direct_messages_disabled"],
+				"required": [
+					"single_community",
+					"single_community_guild_id",
+					"direct_messages_disabled",
+					"guild_create_access"
+				],
 				"additionalProperties": false,
 				"description": "Community topology and direct-message policy for this instance"
 			},

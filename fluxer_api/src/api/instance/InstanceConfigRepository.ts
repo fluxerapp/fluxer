@@ -173,6 +173,7 @@ export interface InstancePolicyConfig {
 	direct_messages_disabled: boolean;
 	direct_messages_locked: boolean;
 	premium_mode: InstancePremiumMode;
+	guild_create_access: boolean;
 	gif_enabled: boolean | null;
 	youtube_enabled: boolean | null;
 	bluesky_enabled: boolean | null;
@@ -647,6 +648,7 @@ const StoredInstancePolicySchema = z.object({
 	direct_messages_disabled: InstancePolicyUpdateSchema.shape.direct_messages_disabled.default(false),
 	direct_messages_locked: z.boolean().default(false),
 	premium_mode: InstancePolicyUpdateSchema.shape.premium_mode.default('everyone'),
+	guild_create_access: InstancePolicyUpdateSchema.shape.guild_create_access.default(true),
 	gif_enabled: InstancePolicyServiceUpdateSchema.shape.gif_enabled.default(null),
 	youtube_enabled: InstancePolicyServiceUpdateSchema.shape.youtube_enabled.default(null),
 	bluesky_enabled: InstancePolicyServiceUpdateSchema.shape.bluesky_enabled.default(null),
@@ -1773,6 +1775,7 @@ export class InstanceConfigRepository {
 			single_community: policy.single_community_enabled,
 			single_community_guild_id: policy.single_community_enabled ? policy.single_community_guild_id : null,
 			direct_messages_disabled: policy.direct_messages_disabled,
+			guild_create_access: policy.guild_create_access,
 		};
 	}
 

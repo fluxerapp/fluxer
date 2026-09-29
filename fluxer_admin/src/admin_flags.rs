@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use crate::templates::components::tooltip::{Hint, HintLink};
+
 pub struct U64Flag {
     pub name: &'static str,
     pub value: u64,
@@ -17,6 +19,7 @@ pub mod user_flag_bits {
     pub const FRIENDLY_BOT: u64 = 1 << 4;
     pub const FRIENDLY_BOT_MANUAL_APPROVAL: u64 = 1 << 5;
     pub const SPAMMER: u64 = 1 << 6;
+    pub const GUILD_CREATE: u64 = 1 << 26;
     pub const HIGH_GLOBAL_RATE_LIMIT: u64 = 1 << 33;
     pub const DELETED: u64 = 1 << 34;
     pub const DISABLED_SUSPICIOUS_ACTIVITY: u64 = 1 << 35;
@@ -58,6 +61,10 @@ pub const USER_FLAGS: &[U64Flag] = &[
     U64Flag {
         name: "SPAMMER",
         value: user_flag_bits::SPAMMER,
+    },
+    U64Flag {
+        name: "GUILD_CREATE",
+        value: user_flag_bits::GUILD_CREATE,
     },
     U64Flag {
         name: "HIGH_GLOBAL_RATE_LIMIT",
@@ -198,3 +205,25 @@ pub const SUSPICIOUS_ACTIVITY_FLAGS: &[I32Flag] = &[
         value: 1 << 8,
     },
 ];
+
+pub fn u64_flag_hint(value: u64) -> Option<Hint<'static>> {
+    match value {
+        user_flag_bits::GUILD_CREATE => Some(Hint {
+            name: Some(
+                USER_FLAGS
+                    .iter()
+                    .find(|flag| flag.value == value)
+                    .map(|item: &U64Flag| item.name)
+                    .unwrap_or("Unknown"),
+            ),
+            body: "This flag is only relevant when community creation policy is disabled. \
+                   Admins with a wildcard ACL, and users with this flag, are permitted to \
+                   create communities.",
+            link: Some(HintLink::new(
+                "/instance-config#community-creation",
+                " Community Creation policy",
+            )),
+        }),
+        _ => None,
+    }
+}

@@ -110,13 +110,40 @@ pub fn select_chevron() -> Markup {
 }
 
 pub fn select_input(name: &str, label: &str, options: &[(&str, &str)], selected: &str) -> Markup {
+    select_input_impl(name, label, options, selected, None)
+}
+
+pub fn select_input_autosave(
+    name: &str,
+    label: &str,
+    options: &[(&str, &str)],
+    selected: &str,
+    action: &str,
+) -> Markup {
+    select_input_impl(name, label, options, selected, Some(action))
+}
+
+fn select_input_impl(
+    name: &str,
+    label: &str,
+    options: &[(&str, &str)],
+    selected: &str,
+    autosave_action: Option<&str>,
+) -> Markup {
     html! {
         div class="flex flex-col gap-2" {
             label for=(name) class=(FORM_LABEL_CLASS) {
                 (label)
             }
             div class="relative" {
-                select id=(name) name=(name) class={(FORM_CONTROL_CLASS) " " (FORM_SELECT_SIZE_CLASS)} {
+                select id=(name) name=(name)
+                    hx-post=[autosave_action]
+                    hx-trigger=[autosave_action.map(|_| "change")]
+                    hx-target=[autosave_action.map(|_| "#flash-container")]
+                    hx-swap=[autosave_action.map(|_| "none")]
+                    hx-include=[autosave_action.map(|_| "closest form")]
+                    hx-disabled-elt=[autosave_action.map(|_| "this")]
+                    class={(FORM_CONTROL_CLASS) " " (FORM_SELECT_SIZE_CLASS)} {
                     @for (value, display) in options {
                         option value=(value) selected[*value == selected] {
                             (display)

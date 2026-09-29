@@ -3,6 +3,7 @@
 import {requireEmailVerified} from '@app/api/auth/EmailVerificationUtils';
 import {requireSudoMode} from '@app/api/auth/services/SudoVerificationService';
 import {createGuildID} from '@app/api/BrandedTypes';
+import {Config} from '@app/api/Config';
 import {LoginRequired} from '@app/api/middleware/AuthMiddleware';
 import {requireOAuth2ScopeForBearer} from '@app/api/middleware/OAuth2ScopeMiddleware';
 import {RateLimitMiddleware} from '@app/api/middleware/RateLimitMiddleware';
@@ -11,6 +12,9 @@ import {SudoModeMiddleware} from '@app/api/middleware/SudoModeMiddleware';
 import {RateLimitConfigs} from '@app/api/RateLimitConfig';
 import type {HonoApp} from '@app/api/types/HonoEnv';
 import {Validator} from '@app/api/Validator';
+import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
+import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import {GuildCreationPermissionRequiredError} from '@fluxer/errors/src/domains/guild/GuildCreationPermissionRequiredError';
 import {SingleCommunityCannotCreateGuildsError} from '@fluxer/errors/src/domains/guild/SingleCommunityCannotCreateGuildsError';
 import {SingleCommunityCannotDeleteError} from '@fluxer/errors/src/domains/guild/SingleCommunityCannotDeleteError';
 import {SingleCommunityCannotLeaveError} from '@fluxer/errors/src/domains/guild/SingleCommunityCannotLeaveError';
@@ -55,6 +59,15 @@ export function GuildBaseController(app: HonoApp) {
 			}
 			if (!user.isUnclaimedAccount()) {
 				requireEmailVerified(user, 'guild_creation');
+			}
+			if (Config.instance.selfHosted) {
+				const wildcardCheck = user.acls.has(AdminACLs.WILDCARD)
+				const policyCheck = (await ctx.get('instanceConfigRepository').readStoredInstancePolicyConfig()).guild_create_access
+				const flagCheck = (user.flags & UserFlags.GUILD_CREATE) !== 0n;
+				const canCreateGuild = policyCheck || wildcardCheck || flagCheck
+				if (!canCreateGuild) {
+					throw new GuildCreationPermissionRequiredError({instanceEmail: Config.auth.vapid.email});
+				}
 			}
 			const auditLogReason = ctx.get('auditLogReason') ?? null;
 			const locale = ctx.get('requestLocale') ?? null;

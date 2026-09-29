@@ -17,8 +17,8 @@ use crate::{
             badge::{BadgeVariant, badge},
             form::{
                 FORM_INPUT_CLASS, checkbox, csrf_input, danger_button, form_actions,
-                form_field_group, secondary_button_link, select_input, submit_button, text_input,
-                textarea_input,
+                form_field_group, secondary_button_link, select_input, select_input_autosave,
+                submit_button, text_input, textarea_input,
             },
             page_container::page_header,
             section_card::{section_card_simple, section_card_with_description},
@@ -245,6 +245,7 @@ fn policy_config_section(
                 (single_community_form(base, csrf_token, policy))
                 (direct_messages_form(base, csrf_token, policy))
                 (premium_mode_form(base, csrf_token, policy, premium_name))
+								(guild_create_form(base, csrf_token, policy))
                 (services_form(base, csrf_token, policy))
             }
         },
@@ -358,6 +359,27 @@ fn premium_mode_form(
                     (form_actions(html! {
                         (submit_button("Save premium model"))
                     }))
+                }
+            }
+        }
+    }
+}
+
+//If more instance-wide default policies/flags end up here, their functions should be under a
+//section titled: Instance Defaults, and the boolean options turn to tickboxes.
+fn guild_create_form(base: &str, csrf_token: &str, policy: &InstancePolicyResponse) -> Markup {
+    let action = format!("{base}/instance-config?action=update_policy");
+    let action = action.as_str();
+    html! {
+        div id="community-creation" class="space-y-4 border-t border-neutral-200 pt-6" {
+            h3 class="text-sm font-semibold text-neutral-900" { "Community creation" }
+            form method="post" action=(action) {
+                (csrf_input(csrf_token))
+                div class="space-y-4" {
+                    (select_input_autosave("policy_guild_create_access", "Default access", &[
+                        ("true", "Enabled (everyone can create a community)"),
+                        ("false", "Disabled (restricted to individual user flags)"),
+                    ], &policy.guild_create_access.to_string(), action))
                 }
             }
         }

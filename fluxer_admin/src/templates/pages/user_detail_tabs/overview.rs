@@ -8,6 +8,7 @@ use crate::{
         badge::{BadgeVariant, badge},
         form::{checkbox, csrf_input, form_actions, submit_button},
         page_container::{card_with_header, detail_row},
+        tooltip,
     },
     utils::{
         bigint::format_discriminator,
@@ -343,13 +344,12 @@ fn u64_flag_form(
         required_acl,
         html! {
             @for flag in flags {
-                (flag_checkbox(
-                    input_name,
-                    flag.value.to_string(),
-                    flag.name,
-                    value & flag.value != 0,
-                    can_edit,
-                ))
+                div class="flex w-fit items-center gap-1" {
+                    (flag_checkbox(input_name, flag.value.to_string(), flag.name, value & flag.value != 0, can_edit))
+                    @if let Some(hint) = admin_flags::u64_flag_hint(flag.value) {
+                        (tooltip::info(&hint, &config.base_path))
+                    }
+                }
             }
         },
     )

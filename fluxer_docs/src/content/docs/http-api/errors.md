@@ -448,6 +448,10 @@ One or more selected users can't be added to this group DM
 
 Email verification is required for this action
 
+### `GUILD_CREATION_PERMISSION_REQUIRED`
+
+You don't have permission to create communities on this instance
+
 ### `GUILD_EMAIL_VERIFICATION_REQUIRED`
 
 Email verification is required for this action

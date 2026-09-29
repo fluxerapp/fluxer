@@ -734,6 +734,9 @@ fn build_policy_update(form: &MultiValueForm) -> InstanceConfigUpdateRequest {
     let direct_messages_disabled = form
         .first("policy_direct_messages_disabled")
         .map(|value| value == "true");
+    let guild_create_access = form
+        .first("policy_guild_create_access")
+        .map(|value| value == "true");
     let premium_mode = match form.first("policy_premium_mode") {
         Some("mirror") => Some(PremiumMode::Mirror),
         Some("everyone") => Some(PremiumMode::Everyone),
@@ -745,6 +748,7 @@ fn build_policy_update(form: &MultiValueForm) -> InstanceConfigUpdateRequest {
             single_community_enabled: None,
             single_community_name: None,
             direct_messages_disabled,
+            guild_create_access,
             premium_mode,
             services,
         }),
@@ -873,12 +877,10 @@ fn build_smtp_test_request(form: &MultiValueForm) -> Result<InstanceEmailSmtpTes
 
 fn build_single_community_update(enabled: bool) -> InstanceConfigUpdateRequest {
     InstanceConfigUpdateRequest {
+        //Replace duplicative fields with default
         policy: Some(InstancePolicyUpdateRequest {
             single_community_enabled: Some(enabled),
-            single_community_name: None,
-            direct_messages_disabled: None,
-            premium_mode: None,
-            services: None,
+            ..Default::default()
         }),
         ..Default::default()
     }

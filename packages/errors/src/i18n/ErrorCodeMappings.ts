@@ -20,6 +20,7 @@ export const ErrorCodeToI18nKey = {
 	[APIErrorCodes.ALREADY_FRIENDS]: 'friends_and_dms.already_friends',
 	[APIErrorCodes.DIRECT_MESSAGES_DISABLED]: 'friends_and_dms.direct_messages_disabled',
 	[APIErrorCodes.BOTS_CANNOT_CREATE_GUILDS]: 'channels_and_guilds.bots_cannot_create_guilds',
+	[APIErrorCodes.GUILD_CREATION_PERMISSION_REQUIRED]: 'channels_and_guilds.guild_creation_permission_required',
 	[APIErrorCodes.SINGLE_COMMUNITY_CANNOT_CREATE_GUILDS]: 'channels_and_guilds.single_community_cannot_create_guilds',
 	[APIErrorCodes.SINGLE_COMMUNITY_CANNOT_DELETE]: 'channels_and_guilds.single_community_cannot_delete',
 	[APIErrorCodes.SINGLE_COMMUNITY_CANNOT_LEAVE]: 'channels_and_guilds.single_community_cannot_leave',

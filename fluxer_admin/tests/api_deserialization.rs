@@ -461,6 +461,7 @@ fn deserialize_instance_config_response_with_unknown_keys() {
             "single_community_guild_id": null,
             "direct_messages_disabled": false,
             "direct_messages_locked": false,
+            "guild_create_access": false,
             "premium_mode": "mirror",
             "services": {
                 "gif_enabled": true,

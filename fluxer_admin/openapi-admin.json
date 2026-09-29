@@ -10966,6 +10966,7 @@
 							"single_community_guild_id": {"nullable": true, "type": "string"},
 							"direct_messages_disabled": {"type": "boolean"},
 							"direct_messages_locked": {"type": "boolean"},
+							"guild_create_access": {"type": "boolean"},
 							"premium_mode": {"type": "string", "enum": ["mirror", "everyone"]},
 							"services": {
 								"type": "object",
@@ -11003,6 +11004,7 @@
 							"single_community_guild_id",
 							"direct_messages_disabled",
 							"direct_messages_locked",
+							"guild_create_access",
 							"premium_mode",
 							"services",
 							"services_resolved",
@@ -11523,6 +11525,7 @@
 							"direct_messages_disabled": {"type": "boolean"},
 							"direct_messages_locked": {"type": "boolean", "enum": [false]},
 							"premium_mode": {"type": "string", "enum": ["mirror", "everyone"]},
+							"guild_create_access": {"type": "boolean"},
 							"services": {
 								"nullable": true,
 								"type": "object",
@@ -13587,6 +13590,11 @@
 						"description": "Bot requires manual approval for friend requests"
 					},
 					{"name": "SPAMMER", "value": "64", "description": "User is flagged as a spammer"},
+					{
+						"name": "GUILD_CREATE",
+						"value": "67108864",
+						"description": "Self-hosted user has permissions to create communities"
+					},
 					{"name": "DELETED", "value": "17179869184", "description": "User account has been deleted"},
 					{
 						"name": "DISABLED_SUSPICIOUS_ACTIVITY",

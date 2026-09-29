@@ -192,6 +192,8 @@ export const ERROR_I18N_MESSAGES = {
 		'Discoverable communities must have a verification level of at least Low.',
 	'channels_and_guilds.group_dm_recipients_not_addable': "One or more selected users can't be added to this group DM.",
 	'channels_and_guilds.guild_banner_requires_feature': 'Community banner requires BANNER feature.',
+	'channels_and_guilds.guild_creation_permission_required':
+		"You don't have permission to create communities on this instance. {hasContact, select, yes {Contact your instance administrators at {instanceEmail} to request access.} other {Contact your instance administrators to request access.}}",
 	'channels_and_guilds.guild_feature_not_toggleable': 'This feature cannot be toggled.',
 	'channels_and_guilds.guild_id_must_match_referenced_message':
 		'Community ID must match the community containing the channel the referenced message was fetched from.',
