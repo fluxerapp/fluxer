@@ -20,7 +20,9 @@ pub fn init_tracing() {
     tracing_subscriber::fmt()
         .json()
         .with_env_filter(
-            EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")),
+            config::optional_env("RUST_LOG")
+                .and_then(|filter| EnvFilter::try_new(filter).ok())
+                .unwrap_or_else(|| EnvFilter::new("info")),
         )
         .try_init()
         .ok();

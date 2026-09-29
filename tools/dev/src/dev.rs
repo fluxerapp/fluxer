@@ -542,7 +542,6 @@ pub fn task_table() -> Result<BTreeMap<&'static str, DevTask>> {
                 Some(format!("{public_url}/media")),
             ),
             ("FLUXER_STATIC_CDN_ENDPOINT".to_owned(), Some(public_url)),
-            ("RELEASE_CHANNEL".to_owned(), Some("canary".to_owned())),
         ],
     });
     insert(DevTask {

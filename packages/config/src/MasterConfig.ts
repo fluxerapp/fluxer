@@ -26,9 +26,7 @@ export interface MasterConfig {
 		base_domain: string;
 		public_origin: string;
 		public_scheme: PublicScheme;
-		internal_scheme: PublicScheme;
 		public_port: number;
-		internal_port: number;
 		static_cdn_domain: string;
 		invite_domain: string;
 		gift_domain: string;
@@ -37,12 +35,7 @@ export interface MasterConfig {
 	endpoints: DerivedEndpoints;
 	internal: {
 		kv: string;
-		kv_provider: 'redis';
 		kv_mode: 'standalone' | 'cluster';
-		kv_cluster_nodes: Array<{host: string; port: number}>;
-		kv_cluster_nat_map: Record<string, {host: string; port: number}>;
-		api: string;
-		gateway?: string;
 		media_proxy: string;
 	};
 	database: {
@@ -95,18 +88,6 @@ export interface MasterConfig {
 			presigned_harvest_downloads_enabled: boolean;
 			unfurl_ignored_hosts: Array<string>;
 			app_origin_aliases: Array<string>;
-			embeds: {
-				oembed_html_enabled: boolean;
-				oembed_html_allow_untrusted_on_self_hosted: boolean;
-				oembed_html_allowed_hosts: Array<string>;
-				cache_default_ttl_seconds: number;
-				cache_max_ttl_seconds: number;
-				cache_min_ttl_seconds: number;
-				cache_respect_remote_ttl: boolean;
-			};
-			content_moderation?: {
-				nsfw_threshold?: number;
-			};
 			worker?: {
 				mode?: 'all_lanes' | 'single_lane' | 'single_task';
 				lane?: 'realtime' | 'unfurl' | 'lifecycle' | 'batch';
@@ -131,10 +112,7 @@ export interface MasterConfig {
 			auth_token?: string;
 		};
 		media_proxy: {
-			host: string;
-			port: number;
 			secret_key: string;
-			mode: string;
 			upload_relay: {
 				endpoint: string;
 				secret_base64: string;
@@ -147,20 +125,11 @@ export interface MasterConfig {
 			};
 		};
 		gateway: {
-			port: number;
 			rpc_auth_token?: string;
-			media_proxy_endpoint?: string;
-			api_rpc_endpoint?: string;
 		};
 		admin: {
-			port: number;
-			base_path: string;
 			secret_key_base: string;
 			oauth_client_secret: string;
-		};
-		app_proxy: {
-			port: number;
-			assets_dir: string;
 		};
 	};
 	auth: {
@@ -213,7 +182,6 @@ export interface MasterConfig {
 			api_secret: string;
 			url: string;
 			internal_url: string;
-			webhook_url: string;
 			default_region?: {
 				id: string;
 				name: string;
@@ -280,27 +248,10 @@ export interface MasterConfig {
 				key_id?: string;
 				private_key?: string;
 				private_key_path?: string;
-				default_environment?: 'production' | 'development';
 				apps?: Array<{
 					app_id?: string;
 					topic?: string;
 					environment?: 'production' | 'development';
-					project_id?: string;
-				}>;
-			};
-			fcm: {
-				enabled: boolean;
-				project_id?: string;
-				client_email?: string;
-				private_key?: string;
-				private_key_path?: string;
-				service_account_json_path?: string;
-				token_uri?: string;
-				apps?: Array<{
-					app_id?: string;
-					topic?: string;
-					environment?: 'production' | 'development';
-					project_id?: string;
 				}>;
 			};
 		};

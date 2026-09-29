@@ -302,10 +302,8 @@ export class KVClient implements IKVProvider {
 	}
 
 	private createClusterClient(clusterConfig: ResolvedKVClientConfig): Cluster {
-		const {nodes, redisOptions} = resolveKVClusterConnection(clusterConfig.url, clusterConfig.clusterNodes);
-		const natMap = clusterConfig.clusterNatMap;
-		const hasNatMap = Object.keys(natMap).length > 0;
-		return new Cluster(nodes, {
+		const {node, redisOptions} = resolveKVClusterConnection(clusterConfig.url);
+		return new Cluster([node], {
 			clusterRetryStrategy: createRetryStrategy(),
 			redisOptions: {
 				...redisOptions,
@@ -315,7 +313,6 @@ export class KVClient implements IKVProvider {
 				protocol: 2,
 			},
 			scaleReads: 'master',
-			...(hasNatMap ? {natMap} : {}),
 		});
 	}
 
@@ -591,7 +588,6 @@ export class KVClient implements IKVProvider {
 		return new KVSubscription({
 			url: this.url,
 			mode: this.config.mode,
-			clusterNodes: this.config.clusterNodes,
 			timeoutMs: this.timeoutMs,
 			logger: this.logger,
 		});

@@ -20,7 +20,6 @@ pub struct ServiceConfig {
     pub nats_auth_token: Option<String>,
     pub cache_max_entries: u64,
     pub cache_ttl: Duration,
-    pub cache_hard_ttl: Duration,
     pub max_concurrent_requests: usize,
     pub scylla_hosts: Vec<String>,
     pub scylla_keyspace: String,
@@ -114,12 +113,6 @@ impl ServiceConfig {
             .transpose()?
             .unwrap_or(30_000);
 
-        let cache_hard_ttl_ms = optional_from(&get, "FLUXER_SVC_CACHE_HARD_TTL_MS")
-            .map(|v| v.parse::<u64>())
-            .transpose()?
-            .unwrap_or(600_000)
-            .max(cache_ttl_ms);
-
         let cassandra_port = optional_from(&get, "FLUXER_CASSANDRA_PORT")
             .map(|v| v.parse::<u16>())
             .transpose()?
@@ -175,7 +168,6 @@ impl ServiceConfig {
                 .transpose()?
                 .unwrap_or(100_000),
             cache_ttl: Duration::from_millis(cache_ttl_ms),
-            cache_hard_ttl: Duration::from_millis(cache_hard_ttl_ms),
             max_concurrent_requests,
             scylla_hosts,
             scylla_keyspace: optional_from(&get, "FLUXER_CASSANDRA_KEYSPACE")
@@ -218,7 +210,7 @@ fn optional_from<F>(get: &F, name: &str) -> Option<String>
 where
     F: Fn(&str) -> Option<String>,
 {
-    get(name).filter(|v| !v.is_empty())
+    get(name).filter(|v| !v.trim().is_empty())
 }
 
 pub fn parse_hosts(hosts: &str) -> Vec<String> {
@@ -356,6 +348,33 @@ mod tests {
         assert_eq!(None, cfg.postgres_ssl_ca);
         assert_eq!(20, cfg.postgres_max_connections);
         assert_eq!("fluxer_kv", cfg.postgres_kv_table);
+        assert!(cfg.postgres_prepared_statements);
+    }
+
+    #[test]
+    fn blank_values_fall_back_to_the_defaults() {
+        let cfg = config_from_pairs(&[
+            ("FLUXER_SVC_NAME", "messages"),
+            ("FLUXER_SVC_MODE", ""),
+            ("FLUXER_SVC_PORT", "  "),
+            ("FLUXER_SVC_MAX_CONCURRENT_REQUESTS", ""),
+            ("FLUXER_NATS_AUTH_TOKEN", " "),
+            ("FLUXER_POSTGRES_HOST", ""),
+            ("FLUXER_POSTGRES_PASSWORD", "  "),
+            ("FLUXER_POSTGRES_MAX_CONNECTIONS", ""),
+            ("FLUXER_POSTGRES_PREPARED_STATEMENTS", " "),
+        ]);
+
+        assert_eq!(Mode::Router, cfg.mode);
+        assert_eq!(8090, cfg.listen_addr.port());
+        assert_eq!(
+            MESSAGES_MAX_CONCURRENT_REQUESTS,
+            cfg.max_concurrent_requests
+        );
+        assert_eq!(None, cfg.nats_auth_token);
+        assert_eq!("127.0.0.1", cfg.postgres_host);
+        assert_eq!(Some("fluxer".to_owned()), cfg.postgres_password);
+        assert_eq!(20, cfg.postgres_max_connections);
         assert!(cfg.postgres_prepared_statements);
     }
 

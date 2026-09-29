@@ -11,7 +11,6 @@ export interface PushProviderAppConfig {
 	appId: string;
 	topic?: string;
 	environment?: PushProviderEnvironment;
-	projectId?: string;
 }
 
 export interface APICachePurgeConfig {
@@ -69,20 +68,8 @@ export interface APIConfig {
 		backend: 'cassandra' | 'postgres';
 	};
 	kv: {
-		provider: 'redis';
 		url: string;
 		mode: 'standalone' | 'cluster';
-		clusterNodes: Array<{
-			host: string;
-			port: number;
-		}>;
-		clusterNatMap: Record<
-			string,
-			{
-				host: string;
-				port: number;
-			}
-		>;
 	};
 	nats: {
 		coreUrl: string;
@@ -136,22 +123,12 @@ export interface APIConfig {
 		gift: string;
 	};
 	internal: {
-		gateway: string;
 		gatewayRpcAuthToken: string;
 		donationProxyKey: string;
 	};
 	hosts: {
 		marketing: string;
 		unfurlIgnored: Array<string>;
-	};
-	embeds: {
-		oEmbedHtmlEnabled: boolean;
-		oEmbedHtmlAllowUntrustedOnSelfHosted: boolean;
-		oEmbedHtmlAllowedHosts: Array<string>;
-		cacheDefaultTtlSeconds: number;
-		cacheMaxTtlSeconds: number;
-		cacheMinTtlSeconds: number;
-		cacheRespectRemoteTtl: boolean;
 	};
 	s3: {
 		endpoint: string;
@@ -191,14 +168,10 @@ export interface APIConfig {
 	breachedPasswordCheck: {
 		enabled: boolean;
 	};
-	contentModeration: {
-		nsfwThreshold: number;
-	};
 	voice: {
 		enabled: boolean;
 		apiKey?: string;
 		apiSecret?: string;
-		webhookUrl?: string;
 		url?: string;
 		internalUrl?: string;
 		defaultRegion?: {
@@ -261,7 +234,6 @@ export interface APIConfig {
 		failOpen: boolean;
 	};
 	admin: {
-		basePath: string;
 		oauthClientSecret?: string;
 	};
 	auth: {
@@ -306,9 +278,6 @@ export interface APIConfig {
 			configured: boolean;
 		};
 	};
-	domain: {
-		baseDomain: string;
-	};
 	discovery: {
 		enabled: boolean;
 		minMemberCount: number;
@@ -333,17 +302,6 @@ export interface APIConfig {
 			keyId?: string;
 			privateKey?: string;
 			privateKeyPath?: string;
-			defaultEnvironment: PushProviderEnvironment;
-			apps: Array<PushProviderAppConfig>;
-		};
-		fcm: {
-			enabled: boolean;
-			projectId?: string;
-			clientEmail?: string;
-			privateKey?: string;
-			privateKeyPath?: string;
-			serviceAccountJsonPath?: string;
-			tokenUri: string;
 			apps: Array<PushProviderAppConfig>;
 		};
 	};

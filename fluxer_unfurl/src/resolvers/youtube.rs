@@ -5,8 +5,8 @@ use crate::http_fetch;
 use crate::media_proxy::embed_media_flags;
 use crate::text_limits;
 use crate::types::{EmbedAuthor, EmbedMedia, EmbedProvider, MessageEmbed};
+use fluxer_svc::config::optional_env;
 use serde::Deserialize;
-use std::env;
 use std::future::Future;
 use std::pin::Pin;
 use std::time::Duration;
@@ -252,14 +252,7 @@ struct YouTubeThumbnail {
 }
 
 fn youtube_api_key() -> Option<String> {
-    env::var("FLUXER_YOUTUBE_API_KEY")
-        .ok()
-        .filter(|key| !key.is_empty())
-        .or_else(|| {
-            env::var("YOUTUBE_API_KEY")
-                .ok()
-                .filter(|key| !key.is_empty())
-        })
+    optional_env("FLUXER_YOUTUBE_API_KEY").or_else(|| optional_env("YOUTUBE_API_KEY"))
 }
 
 fn build_youtube_api_url(video_id: &str, api_key: &str) -> anyhow::Result<Url> {

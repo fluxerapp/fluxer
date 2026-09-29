@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use fluxer_svc::config::optional_env;
 use url::Url;
 
 #[derive(Clone)]
@@ -25,19 +26,17 @@ impl MediaProxyUrlBuilder {
     }
 
     pub fn from_env() -> anyhow::Result<Self> {
-        let endpoint = std::env::var("FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT")
-            .or_else(|_| std::env::var("FLUXER_MEDIA_ENDPOINT"))
-            .unwrap_or_default();
-        if endpoint.trim().is_empty() {
+        let Some(endpoint) = optional_env("FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT")
+            .or_else(|| optional_env("FLUXER_MEDIA_ENDPOINT"))
+        else {
             anyhow::bail!(
                 "gifs shard requires FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT or FLUXER_MEDIA_ENDPOINT"
             );
-        }
+        };
 
-        let secret_key = std::env::var("FLUXER_MEDIA_PROXY_SECRET_KEY").unwrap_or_default();
-        if secret_key.trim().is_empty() {
+        let Some(secret_key) = optional_env("FLUXER_MEDIA_PROXY_SECRET_KEY") else {
             anyhow::bail!("gifs shard requires FLUXER_MEDIA_PROXY_SECRET_KEY");
-        }
+        };
 
         let endpoint = fluxer_common::config::normalize_public_endpoint_from_env(
             endpoint.trim_end_matches('/'),

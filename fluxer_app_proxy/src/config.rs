@@ -434,27 +434,23 @@ fn read_csp_sources(name: &'static str) -> Vec<CspSource> {
 }
 
 fn read_csp_report_uri(name: &'static str) -> Option<CspReportUri> {
-    let value = cfg::non_empty_env(name)?;
-    CspReportUri::parse(name, &value)
+    let value = cfg::env_value(name)?;
+    CspReportUri::parse(name, value.trim())
         .inspect_err(warn_invalid)
         .ok()
 }
 
 impl AppProxyConfig {
     pub fn from_env() -> Self {
-        let release_channel = ReleaseChannel::from_env_value(&cfg::read_env_preferred(
-            &["RELEASE_CHANNEL"],
-            "stable",
-        ));
-        let geoip_source = cfg::parse_geoip_source_config(
-            &cfg::read_first_env(&["FLUXER_GEOIP_DB_PATH", "MAXMIND_DB_PATH"], ""),
-            "app_proxy",
-        );
+        let release_channel =
+            ReleaseChannel::from_env_value(&cfg::read_env("RELEASE_CHANNEL", "stable"));
+        let geoip_source =
+            cfg::parse_geoip_source_config(&cfg::read_env("FLUXER_GEOIP_DB_PATH", ""), "app_proxy");
         let geoip_s3_config = cfg::read_geoip_s3_config_from_env(&geoip_source);
 
         let s3_public_endpoint = parse_optional_http_endpoint(
             "FLUXER_S3_PUBLIC_ENDPOINT",
-            cfg::non_empty_env("FLUXER_S3_PUBLIC_ENDPOINT"),
+            cfg::env_value("FLUXER_S3_PUBLIC_ENDPOINT"),
         );
         let s3_uploads_bucket = cfg::read_env("FLUXER_S3_BUCKET_UPLOADS", "fluxer-uploads");
         let s3_uploads_endpoint = s3_public_endpoint.as_ref().and_then(|endpoint| {
@@ -474,11 +470,11 @@ impl AppProxyConfig {
             static_dir: cfg::read_env("FLUXER_STATIC_DIR", "./static"),
             index_upstream_url: parse_optional_http_url(
                 "FLUXER_APP_PROXY_INDEX_UPSTREAM_URL",
-                cfg::non_empty_env("FLUXER_APP_PROXY_INDEX_UPSTREAM_URL"),
+                cfg::env_value("FLUXER_APP_PROXY_INDEX_UPSTREAM_URL"),
             ),
             static_cdn_endpoint: parse_optional_http_endpoint(
                 "FLUXER_STATIC_CDN_ENDPOINT",
-                cfg::non_empty_env("FLUXER_STATIC_CDN_ENDPOINT"),
+                cfg::env_value("FLUXER_STATIC_CDN_ENDPOINT"),
             ),
             s3_public_endpoint,
             s3_uploads_endpoint,
@@ -489,7 +485,7 @@ impl AppProxyConfig {
                 60_000u64,
             ),
             release_channel,
-            build_version: cfg::read_env_preferred(
+            build_version: cfg::read_first_env(
                 &["BUILD_VERSION", "FLUXER_BUILD_VERSION"],
                 env!("CARGO_PKG_VERSION"),
             ),
@@ -498,21 +494,10 @@ impl AppProxyConfig {
             csp: CspConfig::from_env(),
             geoip_source,
             geoip_s3_config,
-            trust_client_ip_header: cfg::read_bool_env(
-                &["FLUXER_TRUST_CLIENT_IP_HEADER", "TRUST_CLIENT_IP_HEADER"],
-                false,
-            ),
-            client_ip_header_name: cfg::read_first_env(
-                &[
-                    "FLUXER_CLIENT_IP_HEADER_NAME",
-                    "FLUXER_CLIENT_IP_HEADER",
-                    "CLIENT_IP_HEADER_NAME",
-                    "CLIENT_IP_HEADER",
-                ],
-                "x-forwarded-for",
-            )
-            .trim()
-            .to_ascii_lowercase(),
+            trust_client_ip_header: cfg::read_bool_env("FLUXER_TRUST_CLIENT_IP_HEADER", false),
+            client_ip_header_name: cfg::read_env("FLUXER_CLIENT_IP_HEADER_NAME", "x-forwarded-for")
+                .trim()
+                .to_ascii_lowercase(),
             same_origin_hosts: parse_same_origin_hosts(
                 "FLUXER_APP_PROXY_SAME_ORIGIN_HOSTS",
                 &cfg::read_env("FLUXER_APP_PROXY_SAME_ORIGIN_HOSTS", ""),
@@ -609,12 +594,11 @@ fn parse_same_origin_host(
 }
 
 fn resolve_discovery_upstream_url_from_env() -> String {
-    resolve_discovery_upstream_url(|name| env::var(name).ok())
+    resolve_discovery_upstream_url(cfg::env_value)
 }
 
 fn resolve_bootstrap_api_public_endpoint_from_env() -> Option<String> {
-    resolve_bootstrap_api_public_endpoint(|name| env::var(name).ok())
-        .unwrap_or_else(|error| panic!("{error}"))
+    resolve_bootstrap_api_public_endpoint(cfg::env_value).unwrap_or_else(|error| panic!("{error}"))
 }
 
 fn resolve_bootstrap_api_public_endpoint<F>(mut read_var: F) -> anyhow::Result<Option<String>>

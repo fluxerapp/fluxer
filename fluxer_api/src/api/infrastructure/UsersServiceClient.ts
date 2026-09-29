@@ -5,7 +5,7 @@ import {Config} from '@app/api/Config';
 import {throwForSvcErrorReply} from '@app/api/infrastructure/SvcErrorReply';
 import {Logger} from '@app/api/Logger';
 import {awaitAll} from '@app/api/utils/ConcurrencyUtils';
-import {readOptionalIntegerEnv, requireIntegerInRange} from '@app/api/utils/IntegerOptions';
+import {readOptionalEnv, readOptionalIntegerEnv, requireIntegerInRange} from '@app/api/utils/IntegerOptions';
 import {isJsonRecord, parseJsonRecord, parseJsonWithGuard} from '@app/api/utils/JsonBoundaryUtils';
 import type {UserPartialResponse} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import type {INatsConnectionManager} from '@pkgs/nats/src/INatsConnectionManager';
@@ -14,7 +14,7 @@ import {NatsConnectionManager} from '@pkgs/nats/src/NatsConnectionManager';
 const textEncoder = new TextEncoder();
 const textDecoder = new TextDecoder();
 
-const USERS_SERVICE_SUBJECT = process.env.FLUXER_USERS_SERVICE_SUBJECT || 'svc.users';
+const USERS_SERVICE_SUBJECT = readOptionalEnv('FLUXER_USERS_SERVICE_SUBJECT') ?? 'svc.users';
 const DEFAULT_USERS_SERVICE_TIMEOUT_MS = 6000;
 const DEFAULT_USERS_SERVICE_INFLIGHT_MAX_ENTRIES = 10000;
 const MAX_REQUEST_TIMEOUT_MS = 2_147_483_647;
@@ -196,7 +196,7 @@ export function createUsersServiceClient(): IUsersServiceClient {
 	const manager = new NatsConnectionManager({
 		url: Config.nats.coreUrl,
 		token: Config.nats.authToken || undefined,
-		name: process.env.FLUXER_USERS_SERVICE_NATS_CLIENT_NAME || 'fluxer-api-users',
+		name: readOptionalEnv('FLUXER_USERS_SERVICE_NATS_CLIENT_NAME') ?? 'fluxer-api-users',
 	});
 	usersServiceClient = new NatsUsersServiceClient(
 		manager,

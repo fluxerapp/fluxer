@@ -117,14 +117,12 @@ presence_push_buffer_env_defaults_test() ->
 env_only_http_runtime_config_test() ->
     with_envs(
         [
-            {"FLUXER_GATEWAY_SHUTDOWN_DRAIN_WAIT_MS", "1234"},
             {"FLUXER_GATEWAY_HTTP_RPC_MAX_CONCURRENCY", "42"},
             {"FLUXER_GATEWAY_HTTP_FAILURE_THRESHOLD", "9"},
             {"FLUXER_GATEWAY_HTTP_RECOVERY_TIMEOUT_MS", "6000"}
         ],
         fun() ->
             Config = fluxer_gateway_config:load(),
-            ?assertEqual(1234, maps:get(shutdown_drain_wait_ms, Config)),
             ?assertEqual(42, maps:get(gateway_http_rpc_max_concurrency, Config)),
             ?assertEqual(9, maps:get(gateway_http_failure_threshold, Config)),
             ?assertEqual(6000, maps:get(gateway_http_recovery_timeout_ms, Config))
@@ -156,6 +154,32 @@ env_int_falls_back_to_the_default_for_an_empty_value_test() ->
     with_env("FLUXER_GATEWAY_HTTP_RPC_MAX_CONCURRENCY", "", fun() ->
         Config = fluxer_gateway_config:load(),
         ?assertEqual(512, maps:get(gateway_http_rpc_max_concurrency, Config))
+    end).
+
+blank_env_values_fall_back_to_the_defaults_test() ->
+    with_envs(
+        [
+            {"FLUXER_GATEWAY_HTTP_RPC_MAX_CONCURRENCY", "  "},
+            {"FLUXER_CLIENT_IP_HEADER_NAME", " "},
+            {"FLUXER_NATS_URL", "\t"},
+            {"FLUXER_GATEWAY_API_RPC_ENDPOINT", "   "},
+            {"FLUXER_GATEWAY_LOGGER_LEVEL", " "},
+            {"FLUXER_GATEWAY_PUSH_ENABLED", " "}
+        ],
+        fun() ->
+            Config = fluxer_gateway_config:load(),
+            ?assertEqual(512, maps:get(gateway_http_rpc_max_concurrency, Config)),
+            ?assertEqual(<<"x-forwarded-for">>, maps:get(client_ip_header, Config)),
+            ?assertEqual("nats://nats:4222", maps:get(nats_core_url, Config)),
+            ?assertEqual(undefined, maps:get(api_rpc_endpoint, Config)),
+            ?assertEqual(info, maps:get(logger_level, Config)),
+            ?assertEqual(true, maps:get(push_enabled, Config))
+        end
+    ).
+
+logger_level_env_test() ->
+    with_env("FLUXER_GATEWAY_LOGGER_LEVEL", "Debug", fun() ->
+        ?assertEqual(debug, maps:get(logger_level, fluxer_gateway_config:load()))
     end).
 
 rpc_concurrency_key_defaults_test() ->

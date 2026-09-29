@@ -7,6 +7,7 @@ import {IP_BAN_REFRESH_CHANNEL} from '@app/api/constants/IpBan';
 import {sharedListHas} from '@app/api/infrastructure/activity/SharedLists';
 import {Logger} from '@app/api/Logger';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
+import {readOptionalEnv} from '@app/api/utils/IntegerOptions';
 import {parseIpBanEntry, tryParseSingleIp} from '@app/api/utils/IpRangeUtils';
 import {RefreshSubscription} from '@app/api/utils/RefreshSubscription';
 import {getRequestClientIp} from '@app/api/utils/RequestClientIp';
@@ -70,7 +71,7 @@ class IpBanCache {
 		channels: [IP_BAN_REFRESH_CHANNEL],
 		refresh: () => this.refresh(),
 		periodicIntervalMs: () => {
-			const intervalMs = Number(process.env.FLUXER_IP_BAN_REFRESH_INTERVAL_MS ?? '300000');
+			const intervalMs = Number(readOptionalEnv('FLUXER_IP_BAN_REFRESH_INTERVAL_MS') ?? '300000');
 			return Number.isFinite(intervalMs) && intervalMs > 0 ? intervalMs : null;
 		},
 		onRefreshError: (err, trigger) => {

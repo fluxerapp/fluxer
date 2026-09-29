@@ -435,8 +435,8 @@ function Get-FluxerRefForTag([string]$Tag) {
 }
 
 # The images come from FLUXER_IMAGE_TAG and the stack files come from a git ref. A release tags its
-# images and its commit with the same CalVer string, so a pinned tag names the commit that carries
-# its compose files. The moving tags v1 and latest track main.
+# images and its commit with the same CalVer string, so a pinned tag names the commit that holds its
+# compose files. The moving tags v1 and latest map to main, which can run ahead of the v1 images.
 function Assert-FluxerDerivedRef([string]$Value, [string]$EnvPath) {
 	if ($Value.Length -eq 0) {
 		Stop-Fluxer "$EnvPath declares no FLUXER_IMAGE_TAG, so no ref can be derived. Pass -Ref." $FluxerExitRefused
@@ -631,8 +631,10 @@ function Remove-FluxerStagingDirectory([string]$Path) {
 #   Invoke-WebRequest -Uri https://raw.githubusercontent.com/fluxerapp/fluxer/main/deploy/self-hosting/docker-compose.yml -OutFile docker-compose.yml
 #
 # The files come from a git ref and the images come from FLUXER_IMAGE_TAG. The ref is derived from
-# the tag unless -Ref names one, which is the pairing rule that stops a compose file from asking for
-# a variable the running images do not read.
+# the tag unless -Ref names one. A pinned CalVer tag names the commit its images were built from, so
+# its compose file asks only for variables those images read. The moving tags v1 and latest map to
+# main, and main's compose file can run ahead of the v1 images until the image builds are dispatched
+# again.
 #
 # Everything lands in a staging directory first, so a failed download leaves the working directory
 # on the set it already had, and so the upgrade can compare old against new before replacing.
@@ -995,14 +997,33 @@ function Get-FluxerRunningImageId($Running, [string]$Reference) {
 	return ''
 }
 
-function Get-FluxerPostgresMajor([string]$Path) {
+function Get-FluxerPostgresMajor([string]$Path, [string]$EnvPath) {
 	if (-not (Test-Path -LiteralPath $Path)) {
 		return ''
 	}
+	$image = ''
 	foreach ($line in [System.IO.File]::ReadAllText($Path).Split("`n")) {
-		if ($line -match '^\s*image:\s*postgres:(\d+)') {
-			return $Matches[1]
+		if ($line -match '^\s*image:\s*(postgres:\S*)') {
+			$image = $Matches[1]
+			break
 		}
+	}
+	if ($image.Length -eq 0) {
+		foreach ($line in [System.IO.File]::ReadAllText($Path).Split("`n")) {
+			if ($line -match '^\s*image:\s*\$\{FLUXER_POSTGRES_IMAGE:-([^}]*)\}') {
+				$image = $Matches[1]
+				$configured = Get-FluxerComposeValue $EnvPath 'FLUXER_POSTGRES_IMAGE'
+				if ($configured.Length -gt 0) {
+					$image = $configured
+				}
+				break
+			}
+		}
+	}
+	$name = ($image -split '@')[0]
+	$name = ($name -split '/')[-1]
+	if ($name -match ':(\d+)[^:]*$') {
+		return $Matches[1]
 	}
 	return ''
 }
@@ -1297,9 +1318,12 @@ function Test-FluxerDumpHeader([string]$Path) {
 # schema change.
 #
 # By hand:
-#   docker compose exec -T postgres pg_dump -U fluxer -d fluxer --format=custom > backups\fluxer.dump
+#   docker compose exec -T postgres sh -c 'pg_dump -U $POSTGRES_USER -d $POSTGRES_DB --format=custom -f /tmp/fluxer.dump'
+#   docker compose cp postgres:/tmp/fluxer.dump backups\fluxer.dump
+#   docker compose exec -T postgres rm /tmp/fluxer.dump
 #
-# The database and the role are both named fluxer and are fixed in docker-compose.yml. Keep -T.
+# The postgres container's POSTGRES_USER and POSTGRES_DB follow FLUXER_POSTGRES_USERNAME and
+# FLUXER_POSTGRES_DATABASE, so the command needs no names. Keep -T.
 # Without it Docker attaches a terminal to the command and the dump arrives corrupted, which is
 # why the first five bytes are checked against the custom-format magic rather than only the size.
 #
@@ -1327,9 +1351,42 @@ function Test-FluxerStackDefinesService([string]$Name, [string]$TargetDir) {
 	return $script:FluxerStackServices -contains $Name
 }
 
+# The bundled postgres container takes POSTGRES_USER and POSTGRES_DB from FLUXER_POSTGRES_USERNAME
+# and FLUXER_POSTGRES_DATABASE, and the image applies them only to an empty data directory. When
+# those names point the apps at a database outside the stack, the bundled directory still holds the
+# role and database it was first started with, so a dump that reads the container env asks for a
+# role that is not there. The bundled service is idle in that shape and the dump skips it.
+function Test-FluxerPostgresExternal([string]$TargetDir) {
+	$envPath = Join-Path $TargetDir '.env'
+	$pgHost = Get-FluxerComposeValue $envPath 'FLUXER_POSTGRES_HOST'
+	if ($pgHost.Length -gt 0 -and $pgHost -ne 'postgres') {
+		return $true
+	}
+	$url = Get-FluxerComposeValue $envPath 'FLUXER_POSTGRES_URL'
+	if ($url.Length -eq 0) {
+		return $false
+	}
+	$urlHost = $url
+	$scheme = $urlHost.IndexOf('://')
+	if ($scheme -ge 0) {
+		$urlHost = $urlHost.Substring($scheme + 3)
+	}
+	$urlHost = ($urlHost -split '[/?]', 2)[0]
+	$at = $urlHost.LastIndexOf('@')
+	if ($at -ge 0) {
+		$urlHost = $urlHost.Substring($at + 1)
+	}
+	$urlHost = ($urlHost -split ':', 2)[0]
+	return $urlHost -ne 'postgres'
+}
+
 function Backup-FluxerDatabase([string]$Record, [string]$TargetDir) {
 	if (-not (Test-FluxerStackDefinesService 'postgres' $TargetDir)) {
 		Write-FluxerLine 'Skipping the database dump. This stack defines no postgres service, so its database runs outside the stack and only the operator of that database can dump it.'
+		return
+	}
+	if (Test-FluxerPostgresExternal $TargetDir) {
+		Write-FluxerLine 'Skipping the database dump. FLUXER_POSTGRES_HOST or FLUXER_POSTGRES_URL points the stack at a database outside it, so the bundled postgres service is idle and only the operator of that database can dump it.'
 		return
 	}
 	if (-not (Test-FluxerPostgresRunning)) {
@@ -1340,7 +1397,7 @@ function Backup-FluxerDatabase([string]$Record, [string]$TargetDir) {
 	}
 	$dump = Join-Path $Record $FluxerDumpFile
 	Write-FluxerLine 'Dumping the database.'
-	$code = Invoke-FluxerDockerToFile @('compose', 'exec', '-T', 'postgres', 'pg_dump', '-U', 'fluxer', '-d', 'fluxer', '--format=custom') $dump $TargetDir
+	$code = Invoke-FluxerDockerToFile @('compose', 'exec', '-T', 'postgres', 'sh', '-c', '"exec pg_dump -U $POSTGRES_USER -d $POSTGRES_DB --format=custom"') $dump $TargetDir
 	if ($code -ne 0) {
 		Remove-FluxerTemporary $dump
 		Stop-Fluxer 'pg_dump failed. The instance is untouched.' $FluxerExitBackup
@@ -1462,8 +1519,9 @@ function Backup-FluxerInstance([string]$Record, [string]$TargetDir, [string]$Pro
 # The refreshed file is still staged when this runs, so a refusal here leaves the instance exactly
 # as it was.
 function Assert-FluxerPostgresMajor([string]$TargetDir, [string]$StagingDir) {
-	$old = Get-FluxerPostgresMajor (Join-Path $TargetDir $script:FluxerComposeBase)
-	$new = Get-FluxerPostgresMajor (Join-Path $StagingDir 'docker-compose.yml')
+	$envPath = Join-Path $TargetDir '.env'
+	$old = Get-FluxerPostgresMajor (Join-Path $TargetDir $script:FluxerComposeBase) $envPath
+	$new = Get-FluxerPostgresMajor (Join-Path $StagingDir 'docker-compose.yml') $envPath
 	if ($old.Length -eq 0 -or $new.Length -eq 0 -or $old -eq $new) {
 		return
 	}
@@ -1569,8 +1627,8 @@ function Show-FluxerUpdatePlan([string]$TargetDir, [string]$EnvPath, [string]$Ba
 		if ($changed -eq 0) {
 			Write-FluxerLine "  Note:       ref $Ref moves no stack file"
 		}
-		$old = Get-FluxerPostgresMajor (Join-Path $TargetDir $script:FluxerComposeBase)
-		$new = Get-FluxerPostgresMajor (Join-Path $staging 'docker-compose.yml')
+		$old = Get-FluxerPostgresMajor (Join-Path $TargetDir $script:FluxerComposeBase) $EnvPath
+		$new = Get-FluxerPostgresMajor (Join-Path $staging 'docker-compose.yml') $EnvPath
 		if ($old.Length -gt 0 -and $new.Length -gt 0 -and $old -ne $new) {
 			Write-FluxerLine "  Refusal:    postgres moves from $old to $new, which this script does not do"
 			Write-FluxerLine '  Outcome:    the run stops at that refusal and changes nothing'
@@ -1821,6 +1879,14 @@ function Get-FluxerEnvScalar([string]$EnvPath, [string]$Name) {
 		}
 	}
 	return $raw
+}
+
+function Get-FluxerComposeValue([string]$EnvPath, [string]$Name) {
+	$value = [string][Environment]::GetEnvironmentVariable($Name)
+	if ($value.Length -eq 0 -and (Test-Path -LiteralPath $EnvPath)) {
+		$value = Get-FluxerEnvScalar $EnvPath $Name
+	}
+	return $value
 }
 
 function Get-FluxerComposeSetting([string]$EnvPath) {

@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {IKVSubscription} from '@pkgs/kv_client/src/IKVProvider';
-import type {IKVLogger, KVClientMode, KVClusterNode} from '@pkgs/kv_client/src/KVClientConfig';
+import type {IKVLogger, KVClientMode} from '@pkgs/kv_client/src/KVClientConfig';
 import {resolveKVClusterConnection} from '@pkgs/kv_client/src/KVClusterConnection';
 import Redis, {type RedisOptions} from 'ioredis';
 
 interface KVSubscriptionConfig {
 	url: string;
 	mode?: KVClientMode;
-	clusterNodes?: Array<KVClusterNode>;
 	timeoutMs: number;
 	logger: IKVLogger;
 }
@@ -21,7 +20,6 @@ interface KVSubscriptionConnect {
 export class KVSubscription implements IKVSubscription {
 	private readonly url: string;
 	private readonly mode: KVClientMode;
-	private readonly clusterNodes: Array<KVClusterNode>;
 	private readonly timeoutMs: number;
 	private readonly logger: IKVLogger;
 	private readonly desiredChannels = new Set<string>();
@@ -34,7 +32,6 @@ export class KVSubscription implements IKVSubscription {
 	constructor(config: KVSubscriptionConfig) {
 		this.url = config.url;
 		this.mode = config.mode ?? 'standalone';
-		this.clusterNodes = config.clusterNodes ?? [];
 		this.timeoutMs = config.timeoutMs;
 		this.logger = config.logger;
 	}
@@ -75,9 +72,9 @@ export class KVSubscription implements IKVSubscription {
 			protocol: 2,
 			retryStrategy: createRetryStrategy(),
 		};
-		const connection = this.mode === 'cluster' ? resolveKVClusterConnection(this.url, this.clusterNodes) : null;
+		const connection = this.mode === 'cluster' ? resolveKVClusterConnection(this.url) : null;
 		const client = connection
-			? new Redis({...connection.redisOptions, ...connection.nodes[0], db: 0, ...options})
+			? new Redis({...connection.redisOptions, ...connection.node, db: 0, ...options})
 			: new Redis(this.url, options);
 		client.on('message', (channel: string, message: string) => {
 			if (this.client !== client || this.closing !== null) {

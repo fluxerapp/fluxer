@@ -26,7 +26,7 @@ tokio = { version = "1.53.1", features = ["macros", "net", "rt-multi-thread", "s
 tower = { version = "0.5.3", features = ["util"] }
 tower-http = { version = "0.7.1", features = ["compression-gzip", "trace"] }
 tracing = "0.1.44"
-tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+tracing-subscriber = "0.3.23"
 url = "2.5"
 urlencoding = "2.1.3"
 progenitor-client = { version = "0.15.0", default-features = false }

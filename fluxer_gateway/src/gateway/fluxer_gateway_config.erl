@@ -3,7 +3,7 @@
 -module(fluxer_gateway_config).
 -typing([eqwalizer]).
 
--export([load/0, build_config/1, optional_string/1]).
+-export([load/0, build_config/1, optional_string/1, env_value/1]).
 -export_type([config/0]).
 
 -type config() :: map().
@@ -31,8 +31,7 @@ env_config() ->
         <<"internal">> => env_internal_config(),
         <<"public">> => env_public_config(),
         <<"proxy">> => env_proxy_config(),
-        <<"services">> => env_services_config(),
-        <<"telemetry">> => env_telemetry_config()
+        <<"services">> => env_services_config()
     }.
 
 -spec env_internal_config() -> map().
@@ -82,7 +81,7 @@ env_gateway_base_config() ->
         <<"push_outbox_request_timeout_ms">> => env_int(
             "FLUXER_GATEWAY_PUSH_OUTBOX_REQUEST_TIMEOUT_MS", 100000
         ),
-        <<"logger_level">> => env_binary("FLUXER_GATEWAY_LOGGER_LEVEL", <<"info">>),
+        <<"logger_level">> => env_optional_binary("FLUXER_GATEWAY_LOGGER_LEVEL"),
         <<"api_rpc_endpoint">> => env_optional_binary("FLUXER_GATEWAY_API_RPC_ENDPOINT"),
         <<"cluster_enabled">> => env_bool("FLUXER_GATEWAY_CLUSTER_ENABLED", false),
         <<"cluster_discovery_dns_name">> => env_optional_binary(
@@ -109,7 +108,6 @@ env_gateway_base_config() ->
         <<"presence_push_buffer_max_bytes">> => env_int(
             "FLUXER_GATEWAY_PRESENCE_PUSH_BUFFER_MAX_BYTES", 1048576
         ),
-        <<"shutdown_drain_wait_ms">> => env_int("FLUXER_GATEWAY_SHUTDOWN_DRAIN_WAIT_MS", 5000),
         <<"gateway_http_rpc_max_concurrency">> => env_int(
             "FLUXER_GATEWAY_HTTP_RPC_MAX_CONCURRENCY", 512
         ),
@@ -131,19 +129,11 @@ env_nats_config() ->
         <<"auth_token">> => env_string("FLUXER_NATS_AUTH_TOKEN", "")
     }.
 
--spec env_telemetry_config() -> map().
-env_telemetry_config() ->
-    #{
-        <<"enabled">> => env_bool("FLUXER_TELEMETRY_ENABLED", false),
-        <<"environment">> => env_string("FLUXER_ENV", "development")
-    }.
-
 -spec build_config(map()) -> config().
 build_config(RawConfig) ->
     Service = get_map(RawConfig, [<<"services">>, <<"gateway">>]),
     Internal = get_map(RawConfig, [<<"internal">>]),
     Nats = get_map(RawConfig, [<<"services">>, <<"nats">>]),
-    Telemetry = get_map(RawConfig, [<<"telemetry">>]),
     Proxy = get_map(RawConfig, [<<"proxy">>]),
     Public = get_map(RawConfig, [<<"public">>]),
     lists:foldl(fun maps:merge/2, #{}, [
@@ -152,7 +142,7 @@ build_config(RawConfig) ->
         build_sharding_config(Service),
         build_http_config(Service),
         build_cluster_config(Service, Public),
-        build_misc_config(Service, Telemetry)
+        build_misc_config(Service)
     ]).
 
 -spec build_core_config(map(), map(), map(), map()) -> config().
@@ -178,9 +168,6 @@ build_core_config(Service, Internal, Nats, Proxy) ->
 build_push_config(Service, Public) ->
     #{
         push_enabled => get_bool(Service, <<"push_enabled">>, true),
-        push_user_guild_settings_cache_mb =>
-            get_int(Service, <<"push_user_guild_settings_cache_mb">>, 1024),
-        push_blocked_ids_cache_mb => get_int(Service, <<"push_blocked_ids_cache_mb">>, 1024),
         static_cdn_endpoint => public_endpoint(
             get_binary(Service, <<"static_cdn_endpoint">>, <<"http://localhost:8088">>), Public
         ),
@@ -208,8 +195,7 @@ build_sharding_config(Service) ->
         guild_counts_cache_shards => get_optional_int(Service, <<"guild_counts_cache_shards">>),
         guild_shards => get_optional_int(Service, <<"guild_shards">>),
         session_shards => get_optional_int(Service, <<"session_shards">>),
-        session_connect_max_queue => get_int(Service, <<"session_connect_max_queue">>, 1024),
-        shutdown_drain_wait_ms => get_int(Service, <<"shutdown_drain_wait_ms">>, 5000)
+        session_connect_max_queue => get_int(Service, <<"session_connect_max_queue">>, 1024)
     }.
 
 -spec build_http_config(map()) -> config().
@@ -247,19 +233,15 @@ build_cluster_config(Service, Public) ->
         )
     }.
 
--spec build_misc_config(map(), map()) -> config().
-build_misc_config(Service, Telemetry) ->
+-spec build_misc_config(map()) -> config().
+build_misc_config(Service) ->
     #{
         handoff_enable_event_pause => get_bool(
             Service, <<"handoff_enable_event_pause">>, false
         ),
         voice_state_counts_sync_interval_ms =>
             get_int(Service, <<"voice_state_counts_sync_interval_ms">>, 30000),
-        logger_level => get_log_level(Service, <<"logger_level">>, warning),
-        telemetry => #{
-            enabled => get_bool(Telemetry, <<"enabled">>, true),
-            environment => get_string(Telemetry, <<"environment">>, "development")
-        }
+        logger_level => get_log_level(Service, <<"logger_level">>, info)
     }.
 
 -spec get_map(map(), [binary()]) -> map().
@@ -271,10 +253,23 @@ get_map(Map, Keys) ->
 
 -spec env_string(string(), string()) -> string().
 env_string(Name, Default) ->
-    case os:getenv(Name) of
-        false -> Default;
-        "" -> Default;
+    case env_value(Name) of
+        undefined -> Default;
         Value -> Value
+    end.
+
+-spec env_value(string()) -> string() | undefined.
+env_value(Name) ->
+    case os:getenv(Name) of
+        false -> undefined;
+        Value -> non_blank(Value)
+    end.
+
+-spec non_blank(string()) -> string() | undefined.
+non_blank(Value) ->
+    case string:trim(Value) of
+        "" -> undefined;
+        _ -> Value
     end.
 
 -spec env_binary(string(), binary()) -> binary().
@@ -283,9 +278,8 @@ env_binary(Name, Default) ->
 
 -spec env_optional_binary(string()) -> binary() | undefined.
 env_optional_binary(Name) ->
-    case os:getenv(Name) of
-        false -> undefined;
-        "" -> undefined;
+    case env_value(Name) of
+        undefined -> undefined;
         Value -> characters_to_binary_or_default(Value, undefined)
     end.
 
@@ -300,27 +294,17 @@ characters_to_binary_or_default(Value, Default) ->
 
 -spec env_int(string(), integer()) -> integer().
 env_int(Name, Default) ->
-    parse_env_int(Name, os:getenv(Name), Default).
+    case env_value(Name) of
+        undefined -> Default;
+        Value -> parse_int(Name, Value)
+    end.
 
--spec parse_env_int(string(), false | string(), integer()) -> integer().
-parse_env_int(_Name, false, Default) ->
-    Default;
-parse_env_int(_Name, "", Default) ->
-    Default;
-parse_env_int(Name, Value, Default) ->
-    parse_int(Name, Value, Default).
-
--spec parse_int(string(), string(), integer()) -> integer().
-parse_int(Name, Value, Default) ->
-    case string:trim(Value) of
-        "" ->
-            Default;
-        Trimmed ->
-            try list_to_integer(Trimmed) of
-                Parsed -> Parsed
-            catch
-                error:badarg -> erlang:error({invalid_integer_env, Name, Value})
-            end
+-spec parse_int(string(), string()) -> integer().
+parse_int(Name, Value) ->
+    try list_to_integer(string:trim(Value)) of
+        Parsed -> Parsed
+    catch
+        error:badarg -> erlang:error({invalid_integer_env, Name, Value})
     end.
 
 -spec env_bool(string(), boolean()) -> boolean().

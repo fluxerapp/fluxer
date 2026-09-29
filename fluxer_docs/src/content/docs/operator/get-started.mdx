@@ -238,12 +238,12 @@ The desktop client opens the hosted web app for its release channel, so reach yo
 
 Recovery requires `.env`, a database dump and a backup of `seaweedfs-data`, which holds uploads, avatars, reports and harvests. See [Volumes and buckets](/operator/configuration/#volumes-and-buckets) for everything that needs backing up.
 
-The dump costs no downtime, so run it on a schedule while the stack serves:
+The dump costs no downtime, so run it on a schedule while the stack serves. It runs inside the `postgres` container and takes the role and database from that container's environment, which follows `FLUXER_POSTGRES_USERNAME` and `FLUXER_POSTGRES_DATABASE`. It is for the bundled database. A database outside the stack is backed up with its own tools:
 
 ```bash
 cd ~/fluxer
 mkdir -p backups
-docker compose exec -T postgres pg_dump -U fluxer -d fluxer --format=custom \
+docker compose exec -T postgres sh -c 'pg_dump -U $POSTGRES_USER -d $POSTGRES_DB --format=custom' \
   > "backups/fluxer-$(date -u +%Y%m%dT%H%M%SZ).dump"
 ```
 
@@ -251,7 +251,7 @@ PowerShell writes UTF-16 through `>`, which corrupts a binary dump. On Windows, 
 
 ```powershell
 mkdir -Force backups
-docker compose exec -T postgres pg_dump -U fluxer -d fluxer --format=custom -f /tmp/fluxer.dump
+docker compose exec -T postgres sh -c 'pg_dump -U $POSTGRES_USER -d $POSTGRES_DB --format=custom -f /tmp/fluxer.dump'
 docker compose cp postgres:/tmp/fluxer.dump backups/fluxer.dump
 docker compose exec -T postgres rm /tmp/fluxer.dump
 ```

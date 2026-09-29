@@ -9,16 +9,9 @@ export interface IKVLogger {
 
 export type KVClientMode = 'standalone' | 'cluster';
 
-export interface KVClusterNode {
-	host: string;
-	port: number;
-}
-
 export interface KVClientConfig {
 	url: string;
 	mode?: KVClientMode;
-	clusterNodes?: Array<KVClusterNode>;
-	clusterNatMap?: Record<string, KVClusterNode>;
 	timeoutMs?: number;
 	logger?: IKVLogger;
 }
@@ -26,8 +19,6 @@ export interface KVClientConfig {
 export interface ResolvedKVClientConfig {
 	url: string;
 	mode: KVClientMode;
-	clusterNodes: Array<KVClusterNode>;
-	clusterNatMap: Record<string, KVClusterNode>;
 	timeoutMs: number;
 	logger: IKVLogger;
 }
@@ -42,8 +33,6 @@ export function resolveKVClientConfig(config: KVClientConfig | string): Resolved
 	return {
 		url: normalizeUrl(options.url),
 		mode: options.mode ?? 'standalone',
-		clusterNodes: options.clusterNodes ?? [],
-		clusterNatMap: options.clusterNatMap ?? {},
 		timeoutMs: options.timeoutMs ?? DEFAULT_KV_TIMEOUT_MS,
 		logger: options.logger ?? noopLogger,
 	};

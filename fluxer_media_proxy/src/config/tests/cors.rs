@@ -45,7 +45,7 @@ fn cors_mode_parses_every_variant_case_insensitively() {
 
 #[test]
 fn rejects_an_unknown_cors_mode() {
-    for raw in ["strict", "true", "1", ""] {
+    for raw in ["strict", "true", "1"] {
         let err = Config::load_from_iter(env_with(&[
             ("FLUXER_MEDIA_PROXY_CORS_MODE", raw),
             (ORIGINS_KEY, "https://web.fluxer.app"),

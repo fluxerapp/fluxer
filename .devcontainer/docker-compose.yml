@@ -23,7 +23,6 @@ services:
       FLUXER_S3_PUBLIC_ENDPOINT: "http://localhost:${FLUXER_DEV_PROXY_PORT:-8088}"
       FLUXER_LIVEKIT_URL: "ws://localhost:${FLUXER_DEV_PROXY_PORT:-8088}/livekit"
       FLUXER_LIVEKIT_INTERNAL_URL: "http://livekit:7880"
-      FLUXER_LIVEKIT_WEBHOOK_URL: "http://localhost:${FLUXER_DEV_PROXY_PORT:-8088}/api/webhooks/livekit"
       FLUXER_MEDIA_PROXY_UPLOAD_RELAY_ENDPOINT: "http://localhost:${FLUXER_DEV_PROXY_PORT:-8088}/media"
       FLUXER_GATEWAY_MEDIA_PROXY_ENDPOINT: "http://localhost:${FLUXER_DEV_PROXY_PORT:-8088}/media"
       FLUXER_GATEWAY_STATIC_CDN_ENDPOINT: "http://localhost:${FLUXER_DEV_PROXY_PORT:-8088}"

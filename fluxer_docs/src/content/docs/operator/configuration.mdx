@@ -16,7 +16,9 @@ The installer in [Get started](/operator/get-started/) writes `.env` for you and
 
 ## How configuration is loaded
 
-Compose passes only variables listed in `docker-compose.yml`. For an unlisted setting, add it to the service's environment through a local Compose override. Adding it to `.env` alone has no effect.
+Compose forwards every setting a self-hosted instance can change from `.env` to each service that reads it. A few names keep a fixed value or are not passed at all, and [Keys Compose does not forward](#keys-compose-does-not-forward) lists them with the reason. Setting one of those in `.env` has no effect, so add it through a local Compose override.
+
+Compose adds a default of its own only where the stack has to differ from the built-in default, and the entry below names it. Every other forwarded name reaches its service empty when `.env` leaves it out, and the service applies its built-in default.
 
 Single-quote values containing a literal `$` so Compose does not expand them as variable references:
 
@@ -32,7 +34,7 @@ Precedence, highest first:
 2. The environment variable.
 3. The built-in default.
 
-Use `true` or `false` for booleans, decimal integers for integer settings, and the specified object or array for JSON settings. Defaults and accepted values are listed below. Leave an unwanted override unset, since an empty value does not always restore the default.
+Use `true` or `false` for booleans, decimal integers for integer settings, and the specified object or array for JSON settings. Defaults and accepted values are listed below. Every service built from this version of the stack files or later reads an empty or blank value the same as an unset one, so an empty value restores the default. Older images do not, which [Match the images to the stack files](/operator/upgrading/#match-the-images-to-the-stack-files) covers.
 
 ## Core identity and public address
 
@@ -52,13 +54,9 @@ The API and worker require hostname-only domain settings: no scheme, port, crede
 
 `FLUXER_PUBLIC_ORIGIN` states the same public address as one string, and [The public origin](#the-public-origin) has it.
 
-#### `FLUXER_INTERNAL_SCHEME`
-
-Default `http`. The scheme for internal service URLs. Must be `http` or `https`, and anything else fails startup.
-
 ## Secrets you must generate
 
-Every value below ships as `CHANGE_ME`. Replace them all before the first start. Compose refuses to start when one is unset or empty, and names the variable. Generate each with `openssl rand -hex 32`, except the relay secret, the attachment URL secrets, and the VAPID pair, whose own entries name the command. The installer in [Get started](/operator/get-started/) generates them all, so come here to rotate one value later or to set them up by hand.
+Every value below ships as `CHANGE_ME`. Replace them all before the first start. Compose forwards each one from `.env`, and refuses to start when one is unset or empty, and names the variable. Generate each with `openssl rand -hex 32`, except the relay secret, the attachment URL secrets, and the VAPID pair, whose own entries name the command. The installer in [Get started](/operator/get-started/) generates them all, so come here to rotate one value later or to set them up by hand.
 
 #### `POSTGRES_PASSWORD`
 
@@ -96,7 +94,7 @@ Generate with `openssl rand -base64 32`. [Upload relay](/media-proxy/upload-rela
 
 Generate each entry with `openssl rand -base64 32`. Signs the [attachment URLs](/media-proxy/overview/#signed-attachment-urls) Fluxer returns. A comma-separated list, where each entry must be standard base64 decoding to at least 32 bytes. Spaces around an entry and empty entries are ignored. The first entry signs and every entry verifies. Must match on `api`, `worker`, and `media-proxy`, and must differ from `FLUXER_MEDIA_PROXY_SECRET_KEY`. `api` and `worker` refuse to start when an entry is invalid, and with no entry they return unsigned URLs. `media-proxy` reads it only when `FLUXER_MEDIA_PROXY_MODE` is `mp` or `upload`, and then refuses to start with an invalid entry, or with no entry when `FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE` is `report` or `enforce`.
 
-The Compose stack leaves it empty, so a self-hosted instance returns unsigned URLs until an operator sets one. Setting it alone changes nothing on the read side, because `FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE` stays `off` until it is set too.
+Compose forwards it from `.env` and passes it empty when unset, so a self-hosted instance returns unsigned URLs until an operator sets one. Setting it alone changes nothing on the read side, because `FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE` stays `off` until it is set too.
 
 Rotate it in three steps, and apply each one with `docker compose up -d` before starting the next:
 
@@ -142,7 +140,7 @@ The values below ship with a usable value. Both are required.
 
 ## Endpoint derivation from FLUXER_BASE_DOMAIN
 
-Fluxer builds its public endpoints from the scheme, the base domain, and the port. The docs endpoint is a fixed value. A port of `443` under `https` or `wss`, or `80` under `http` or `ws`, is omitted.
+Fluxer builds its public endpoints from the scheme, the base domain, and the port. A port of `443` under `https` or `wss`, or `80` under `http` or `ws`, is omitted.
 
 | Endpoint | Derived value |
 | --- | --- |
@@ -152,7 +150,6 @@ Fluxer builds its public endpoints from the scheme, the base domain, and the por
 | media | scheme, base domain, optional port, `/media` |
 | static_cdn | scheme, base domain, optional port. With `FLUXER_STATIC_CDN_DOMAIN` set it becomes `https://` and that domain, with no port |
 | admin | scheme, base domain, optional port, `/admin` |
-| docs | Always `https://fluxer.dev`. Not built from the domain settings |
 | marketing | scheme, base domain, optional port, `/marketing` |
 | invite | scheme, `FLUXER_INVITE_DOMAIN` or the base domain, optional port, `/invite` |
 | gift | scheme, `FLUXER_GIFT_DOMAIN` or the base domain, optional port, `/gift` |
@@ -177,97 +174,93 @@ The API and worker validate endpoint URLs at startup. The Gateway endpoint requi
 
 #### `FLUXER_STATIC_CDN_DOMAIN`
 
-Default empty. A separate host for static assets. When set, the static endpoint is forced to `https` with no port.
+Default empty. A separate host for static assets. When set, the static endpoint of `api` and `worker` is forced to `https` with no port. Only `api` and `worker` read it, so set `FLUXER_STATIC_CDN_ENDPOINT` to the same origin as well for `admin`, `app-proxy`, `gateway` and `unfurl`. Compose forwards it from `.env`.
 
 #### `FLUXER_INVITE_DOMAIN`
 
-Default empty. The host used in invite links. A hostname with no scheme and no path.
+Default empty. The host used in invite links. A hostname with no scheme and no path. Compose forwards it from `.env`.
 
 #### `FLUXER_GIFT_DOMAIN`
 
-Default empty. The host used in gift links. A hostname with no scheme and no path.
+Default empty. The host used in gift links. A hostname with no scheme and no path. Compose forwards it from `.env`.
 
 #### `FLUXER_API_ENDPOINT`
 
-Defaults to the derived endpoint. The public API base. The `admin` service reads the same name as its internal API target, which is why Compose sets it to `http://api:8080` for that container only.
+Defaults to the derived endpoint. The public API base. Compose forwards it from `.env` to the services on the shared block, which leaves out `app-proxy`. The `admin` service reads the same name as its internal API target, so Compose sets it to `http://api:8080` for that container.
 
 #### `FLUXER_API_CLIENT_ENDPOINT`
 
-Defaults to the derived endpoint. The API base handed to clients. Setting only one of the API endpoints splits what clients see from what the instance advertises.
+Defaults to the derived endpoint. The API base handed to clients. Setting only one of the API endpoints splits what clients see from what the instance advertises. Compose forwards it from `.env`.
 
 #### `FLUXER_APP_ENDPOINT`
 
-Defaults to the derived endpoint. The web app origin. Also one of the allowed CORS origins. Serving the client from another hostname requires setting this.
+Defaults to the derived endpoint. The web app origin. Also one of the allowed CORS origins. Serving the client from another hostname requires setting this. Compose forwards it from `.env`, and builds it from the public origin when it is unset.
 
 #### `FLUXER_APP_ORIGIN_ALIASES`
 
-Default empty. Further web app origins, comma separated. Each entry must be an HTTP or HTTPS origin, or the API refuses to start. The API treats each one like the `FLUXER_APP_ENDPOINT` origin. It allows it through CORS, reads invite links on its host, skips unfurling client routes on its host, and refuses webhook token calls from it. Set it when one instance serves the web app on more than one hostname.
+Default empty. Further web app origins, comma separated. Each entry must be an HTTP or HTTPS origin, or the API refuses to start. The API treats each one like the `FLUXER_APP_ENDPOINT` origin. It allows it through CORS, reads invite links on its host, skips unfurling client routes on its host, and refuses webhook token calls from it. Set it when one instance serves the web app on more than one hostname. Compose forwards it from `.env`.
 
 #### `FLUXER_GATEWAY_ENDPOINT`
 
-Defaults to the derived endpoint. The public Gateway WebSocket URL. Also the source of the internal Gateway URL when `FLUXER_INTERNAL_GATEWAY_ENDPOINT` is unset, with `ws` rewritten to `http`.
+Defaults to the derived endpoint. The public Gateway WebSocket URL. Compose forwards it from `.env`.
 
 #### `FLUXER_MEDIA_ENDPOINT`
 
-Defaults to the derived endpoint. The public Media Proxy URL. The `gifs` service accepts it as a fallback for `FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT`.
+Defaults to the derived endpoint. The public Media Proxy URL. The `gifs` service accepts it as a fallback for `FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT`. Compose forwards it from `.env`, and builds it from the public origin and `/media` when it is unset.
 
 #### `FLUXER_STATIC_CDN_ENDPOINT`
 
-Defaults to the derived endpoint. The static asset origin. Read by `api`, `worker`, `admin`, `app-proxy`, and `unfurl`.
+Defaults to the derived endpoint. The static asset origin. Read by `api`, `worker`, `admin`, `app-proxy`, and `unfurl`. Compose forwards it from `.env`. When it is unset, `admin` and `unfurl-shard` get the public origin, and every other service derives it itself.
 
 #### `FLUXER_ADMIN_ENDPOINT`
 
-Defaults to the derived endpoint. The admin origin. The API accepts exactly this value plus `/oauth2_callback` as the admin OAuth redirect URI.
+Defaults to the derived endpoint. The admin origin. The API accepts exactly this value plus `/oauth2_callback` as the admin OAuth redirect URI. Compose forwards it from `.env`, and builds it from the public origin and `FLUXER_ADMIN_BASE_PATH` when it is unset.
 
-The admin dashboard sets its cookie flags from the scheme of this value, which Compose builds from `FLUXER_PUBLIC_SCHEME`. Over HTTPS its CSRF cookie is named `__Host-csrf_token` and has `Secure`. Over HTTP it is named `csrf_token` without `Secure`.
+The admin dashboard sets its cookie flags from the scheme of this value. Over HTTPS its CSRF cookie is named `__Host-csrf_token` and has `Secure`. Over HTTP it is named `csrf_token` without `Secure`.
 
 #### `FLUXER_DOCS_ENDPOINT`
 
-Defaults to `https://fluxer.dev`. The docs origin. Never handed to a client.
+Defaults to an origin built from `FLUXER_PUBLIC_SCHEME`, `FLUXER_BASE_DOMAIN` and `FLUXER_PUBLIC_PORT`. The docs origin. Read by the docs server only, which the stack does not run, so Compose does not forward it.
 
 #### `FLUXER_MARKETING_ENDPOINT`
 
-Defaults to the derived endpoint. The marketing origin. The second allowed CORS origin. Its hostname is extracted and matched.
+Defaults to the derived endpoint. The marketing origin. The second allowed CORS origin. Its hostname is extracted and matched. Compose forwards it from `.env`, and uses the public origin with no path when it is unset.
 
 #### `FLUXER_INVITE_ENDPOINT`
 
-Defaults to the derived endpoint. The invite base. The API reads links on its hostname as invite links and does not unfurl them.
+Defaults to the derived endpoint. The invite base. The API reads links on its hostname as invite links and does not unfurl them. Compose forwards it from `.env`.
 
 #### `FLUXER_GIFT_ENDPOINT`
 
-Defaults to the derived endpoint. The gift base. The API does not unfurl links on its hostname.
+Defaults to the derived endpoint. The gift base. The API does not unfurl links on its hostname. Compose forwards it from `.env`.
 
 Internal endpoints address one container from another and never appear in a browser. `FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT` is required by `gifs`. The rest are optional.
 
 #### `FLUXER_INTERNAL_API_ENDPOINT`
 
-Default `http://127.0.0.1:8080`. The API address used by `worker` and `gateway`. Compose sets `http://api:8080`.
-
-#### `FLUXER_INTERNAL_GATEWAY_ENDPOINT`
-
-No default. The Gateway address the API calls. Falls back to the public Gateway URL with the scheme rewritten. Compose sets `http://gateway:8080`.
+Default `http://127.0.0.1:8080` in the Gateway. The API address used by `gateway` and `push`, and the discovery fallback of `app-proxy`. `push` refuses to start without it. Compose sets `http://api:8080`.
 
 #### `FLUXER_INTERNAL_MEDIA_PROXY_ENDPOINT`
 
-Default `http://127.0.0.1:8082`. The internal Media Proxy address for `api` and `worker`. `FLUXER_MEDIA_PROXY_ENDPOINT` is read as an alias when this name is unset.
+Default `http://127.0.0.1:8082`. The internal Media Proxy address for `api` and `worker`. `FLUXER_MEDIA_PROXY_ENDPOINT` is read as an alias when this name is unset or empty. Compose sets `http://media-proxy:8080`.
 
 #### `FLUXER_MEDIA_PROXY_ENDPOINT`
 
-No default. The internal Media Proxy address. `unfurl-shard` reads this name alone and exits without it. On `api` and `worker` it is an alias of `FLUXER_INTERNAL_MEDIA_PROXY_ENDPOINT`, read only when that name is unset.
+No default. The internal Media Proxy address. `unfurl-shard` reads this name alone and exits without it. On `api` and `worker` it is an alias of `FLUXER_INTERNAL_MEDIA_PROXY_ENDPOINT`, read only when that name is unset or empty. Compose sets `http://media-proxy:8080` on `unfurl-shard` only.
 
 #### `FLUXER_MEDIA_PROXY_PUBLIC_ENDPOINT`
 
-No default. The public Media Proxy URL used by `gifs`, `unfurl`, and `media-proxy`. `gifs` requires this or `FLUXER_MEDIA_ENDPOINT` to start. Set it on `media-proxy` so requests for its own assets use local storage instead of an HTTP round trip. For `api` and `worker`, use `FLUXER_MEDIA_ENDPOINT` instead.
+No default. The public Media Proxy URL used by `gifs`, `unfurl`, and `media-proxy`. `gifs` requires this or `FLUXER_MEDIA_ENDPOINT` to start. Set it on `media-proxy` so requests for its own assets use local storage instead of an HTTP round trip. For `api` and `worker`, use `FLUXER_MEDIA_ENDPOINT` instead. Compose forwards it from `.env` to every app service. When it is unset, they get `FLUXER_MEDIA_ENDPOINT`, or the public media URL when that is unset too.
 
 #### `FLUXER_UNFURL_STATIC_CDN_ENDPOINT`
 
-Falls back to `FLUXER_STATIC_CDN_ENDPOINT`. The static origin used by `unfurl`. Read only by `unfurl`.
+Falls back to `FLUXER_STATIC_CDN_ENDPOINT`. The static origin used by `unfurl`. Read only by `unfurl`. Compose forwards it from `.env` to `unfurl-shard`.
 
 ## The edge
 
 The `edge` container is the only HTTP entry point. Neither layout below needs a change to the edge settings.
 
-Bundled TLS is the default. `docker compose up -d` binds `80/tcp`, `443/tcp`, and `443/udp` and obtains its own certificate for `FLUXER_DOMAIN`. Point DNS at the host and set nothing else. The `443` publishes follow `FLUXER_PUBLIC_PORT`, so a non-default public port moves them with it.
+Bundled TLS is the default. `docker compose up -d` binds `80/tcp`, `443/tcp`, and `443/udp` and obtains its own certificate for `FLUXER_DOMAIN`. Point DNS at the host and set nothing else. The `443` publishes stay on `443` whatever `FLUXER_PUBLIC_PORT` says, and `FLUXER_HTTPS_PORT` moves them.
 
 Put your own reverse proxy in front by adding `docker-compose.proxy.yml`, a second Compose file that overrides parts of the first. Load it with `-f` twice, or set `COMPOSE_FILE=docker-compose.yml:docker-compose.proxy.yml` in `.env` once. The edge then serves plain HTTP on one port, and the proxy in front terminates TLS. [Behind your own reverse proxy](/operator/reverse-proxy/) has the steps to enable the overlay, the requirements, and the per-proxy configuration.
 
@@ -275,11 +268,15 @@ All are optional.
 
 #### `FLUXER_EDGE_SITE_ADDRESS`
 
-Defaults to the address Compose builds from `FLUXER_PUBLIC_SCHEME`, `FLUXER_DOMAIN` and `FLUXER_PUBLIC_PORT`. What the edge listens on, and the default keeps the listener on the address the instance advertises. Honoured in the bundled layout only, because `docker-compose.proxy.yml` sets the literal `:8080` and `tunnel.compose.yml` the literal `:80`, and either discards any `.env` value. A site address that lists more than one hostname therefore needs the bundled layout. Write the scheme into any value you set here, because a bare hostname means automatic HTTPS on `443` whatever `FLUXER_PUBLIC_SCHEME` says.
+Defaults to the address Compose builds from `FLUXER_PUBLIC_SCHEME` and `FLUXER_DOMAIN`, with no port, so the edge listens on `443` or `80` in the container and `FLUXER_HTTPS_PORT` or `FLUXER_HTTP_PORT` maps it on the host. What the edge listens on, and the default keeps the listener on the address the instance advertises. Honoured in the bundled layout only, because `docker-compose.proxy.yml` sets the literal `:8080` and `tunnel.compose.yml` the literal `:80`, and either discards any `.env` value. A site address that lists more than one hostname therefore needs the bundled layout. Write the scheme into any value you set here, because a bare hostname means automatic HTTPS on `443` whatever `FLUXER_PUBLIC_SCHEME` says. Compose forwards it from `.env` to `edge`.
 
 #### `FLUXER_EDGE_TRUSTED_PROXIES`
 
-Default `private_ranges`. The peer addresses whose `X-Forwarded-For` header the edge trusts. The default is `192.168.0.0/16`, `172.16.0.0/12`, `10.0.0.0/8`, `127.0.0.1/8`, `fd00::/8` and `::1`, which covers every same-host proxy. Narrow it to the proxy's own address when the proxy reaches the instance from a public address, or when clients reach the proxy from a range the default already covers.
+Default `private_ranges`. The peer addresses whose `X-Forwarded-For` header the edge trusts. The default is `192.168.0.0/16`, `172.16.0.0/12`, `10.0.0.0/8`, `127.0.0.1/8`, `fd00::/8` and `::1`, which covers every same-host proxy. Narrow it to the proxy's own address when the proxy reaches the instance from a public address, or when clients reach the proxy from a range the default already covers. Compose forwards it from `.env` to `edge`.
+
+#### `FLUXER_EDGE_ENCODE`
+
+Default `zstd gzip`. The response compression the edge offers, written as the arguments of the Caddy `encode` directive. `gzip` alone stops the edge offering zstd. Read by the edge container only, and it takes effect on `docker compose up -d edge`. Compose forwards it from `.env` to `edge`.
 
 #### `FLUXER_EDGE_BIND`
 
@@ -287,11 +284,11 @@ Default `127.0.0.1:8080`. Where the plain-HTTP port binds. Read only under the o
 
 #### `FLUXER_HTTP_PORT`
 
-Default `80`. The host side of the edge's HTTP publish, which serves the redirect to HTTPS and the ACME HTTP challenge under an `https` scheme and nothing at all under an `http` one. The container still listens on `80` inside. It takes an optional bind address in front of the port, so `127.0.0.1:80` keeps the publish off every public interface. Do not set it to the port `FLUXER_PUBLIC_PORT` already names, because that publishes one host port twice and the edge refuses to start. Not read under the overlay, which publishes `FLUXER_EDGE_BIND` instead.
+Default `80`. The host side of the edge's HTTP publish, which serves the redirect to HTTPS and the ACME HTTP challenge under an `https` scheme and nothing at all under an `http` one. The container still listens on `80` inside. It takes an optional bind address in front of the port, so `127.0.0.1:80` keeps the publish off every public interface. Do not set it to the same host port as `FLUXER_HTTPS_PORT`, because that publishes one host port twice and the edge refuses to start. `docker-compose.proxy.yml` ignores it and publishes `FLUXER_EDGE_BIND` instead. `tunnel.compose.yml` reads it with a default of `127.0.0.1:80`.
 
 #### `FLUXER_HTTPS_PORT`
 
-Defaults to `FLUXER_PUBLIC_PORT`. The host side of the edge's HTTPS publish, and the only thing it moves is that host side. Set it when the host already has something on the port the instance advertises. It moves the TCP and the UDP publish together, because HTTP/3 needs both on the same port. It takes the same optional bind address in front of the port. The overlay does not read it.
+Default `443`. The host side of the edge's HTTPS publish, and the only thing it moves is that host side. Set it when the host already has something on the port the instance advertises. It moves the TCP and the UDP publish together, because HTTP/3 needs both on the same port. It takes the same optional bind address in front of the port. The overlay does not read it.
 
 #### `COMPOSE_FILE`
 
@@ -307,29 +304,21 @@ All are optional.
 
 #### `FLUXER_TRUST_CLIENT_IP_HEADER`
 
-Default `false`. Whether the client-IP header is trusted. Compose sets `true` for every service that merges the shared environment block, which `app-proxy` does not. The API has no peer-address fallback, so `false` on `api` makes every non-exempt request a 403.
+Default `false`. Whether the client-IP header is trusted. Compose forwards it from `.env` with a default of `true`, because the edge sets the header on every upstream hop. It reaches every service that reads it, `app-proxy` included. The API has no peer-address fallback, so `false` on `api` makes every non-exempt request a 403.
 
 #### `FLUXER_CLIENT_IP_HEADER_NAME`
 
-Default `x-forwarded-for`. Which header has the client IP. Read by `api`, `worker`, `admin`, `app-proxy`, and `gateway`. It must match what the edge sets.
-
-#### `FLUXER_CLIENT_IP_HEADER`
-
-No default. Alias for `FLUXER_CLIENT_IP_HEADER_NAME`. Accepted only by `admin` and `app-proxy`.
-
-#### `CLIENT_IP_HEADER_NAME` and `CLIENT_IP_HEADER`
-
-No default. Legacy unprefixed aliases. Accepted only by `admin` and `app-proxy`, last in the preference chain.
+Default `x-forwarded-for`. Which header has the client IP. Read by `api`, `worker`, `admin`, `app-proxy`, and `gateway`. It must match what the edge sets. Compose forwards it from `.env`.
 
 #### `FLUXER_API_IP_BAN_EXEMPT_IPS`
 
-Default empty. Addresses and CIDR ranges exempt from IP bans. Comma separated. A bare IPv4 address exempts that address, a bare IPv6 address exempts its /64, and a CIDR range such as `2001:db8:1200::/56` exempts every address in it. Every entry must parse as an IP or a CIDR range or the API fails at boot.
+Default empty. Addresses and CIDR ranges exempt from IP bans. Comma separated. A bare IPv4 address exempts that address, a bare IPv6 address exempts its /64, and a CIDR range such as `2001:db8:1200::/56` exempts every address in it. Every entry must parse as an IP or a CIDR range or the API fails at boot. Compose forwards it from `.env`.
 
 The API returns 403 for any request whose client-IP header is missing, empty, or not a parsable address, and for every request while `FLUXER_TRUST_CLIENT_IP_HEADER` is `false`. The exceptions are `/_health`, `/webhooks/livekit`, `/test`, and the Bluesky client metadata and JWKS routes. The edge sets the header on every upstream hop, so a missing or unparsable header happens only in a layout that puts something other than the edge directly in front of `api`. A proxy in front of the edge that never sets the header passes the check, and every request then looks as though it came from the proxy.
 
 #### `FLUXER_API_DONATION_PROXY_KEY`
 
-Default empty, which keys donation rate limits on the caller. Set it to let a trusted front end, such as the marketing site, send the donor address the limits apply to. The key must be at least 32 characters or the API fails at boot. The front end sends the same value in `X-Fluxer-Internal-Key` and the donor address in `X-Fluxer-Donor-Ip`. The API ignores the address header unless the key matches, so a browser cannot set it. Self-hosters leave this empty.
+Default empty, which keys donation rate limits on the caller. Set it to let a trusted front end, such as the marketing site, send the donor address the limits apply to. The key must be at least 32 characters or the API fails at boot. The front end sends the same value in `X-Fluxer-Internal-Key` and the donor address in `X-Fluxer-Donor-Ip`. The API ignores the address header unless the key matches, so a browser cannot set it. Self-hosters leave this empty. Compose forwards it from `.env`.
 
 ## Images
 
@@ -343,7 +332,17 @@ These pick which container images Compose pulls. All are optional.
 
 `FLUXER_REGISTRY_OWNER` is the owner segment of the image names and falls back to `fluxerapp`. `FLUXER_REGISTRY` is the registry images are pulled from and falls back to `ghcr.io/` followed by the owner. `FLUXER_IMAGE_TAG` is the tag on every Fluxer image and falls back to `v1`.
 
-These affect only the Fluxer images. `docker-compose.yml` pins the `caddy`, `postgres`, `valkey`, `nats`, `meilisearch`, `seaweedfs`, and `livekit` images, and `.env` cannot change them.
+These affect only the Fluxer images. Each bundled third-party service has an image name of its own, which replaces the whole reference, registry and tag included. Set one to pull from a mirror or to move a service to another tag. All are optional.
+
+- `FLUXER_CADDY_IMAGE`: default `caddy:2.11-alpine`, for `edge`.
+- `FLUXER_POSTGRES_IMAGE`: default `postgres:16-alpine`, for `postgres`.
+- `FLUXER_VALKEY_IMAGE`: default `valkey/valkey:9.1-alpine`, for `valkey`.
+- `FLUXER_NATS_IMAGE`: default `nats:2.14-alpine`, for `nats`.
+- `FLUXER_MEILISEARCH_IMAGE`: default `getmeili/meilisearch:v1.53`, for `meilisearch`.
+- `FLUXER_SEAWEEDFS_IMAGE`: default `chrislusf/seaweedfs:4.47`, for `seaweedfs` and `seaweedfs-init`.
+- `FLUXER_LIVEKIT_IMAGE`: default `livekit/livekit-server:v1.12.0`, for `livekit`.
+
+A new Postgres major does not read the data directory an older one wrote. Move `FLUXER_POSTGRES_IMAGE` to another major only through [Move to a new Postgres major version](/operator/upgrading/#move-to-a-new-postgres-major-version). An upgrade refuses a refresh that would change the major the stack runs.
 
 ## Database
 
@@ -351,53 +350,69 @@ These affect only the Fluxer images. `docker-compose.yml` pins the `caddy`, `pos
 
 #### `FLUXER_DATABASE_BACKEND`
 
-Default `postgres`. Which backend is used. Node accepts only `postgres` or `cassandra`. The internal services also accept `postgresql`, `pg`, `scylla`, and `scylladb`. Every service rejects any other value at startup.
+Default `postgres`. Which backend is used. Node accepts only `postgres` or `cassandra`. The internal services also accept `postgresql`, `pg`, `scylla`, and `scylladb`. Every service rejects any other value at startup. Compose sets `postgres`.
 
 #### `FLUXER_POSTGRES_URL`
 
-Default empty. A full connection URL. When set, the discrete host, database, user, and password production checks are skipped.
+Default empty. A full connection URL. When set, the discrete host, database, user, and password production checks are skipped. Compose forwards it from `.env`.
 
 #### `FLUXER_POSTGRES_HOST`
 
-Default `127.0.0.1`. The database host. In production with `postgres` and no URL it must not be `127.0.0.1` or `localhost`.
+Default `127.0.0.1`. The database host. In production with `postgres` and no URL it must not be `127.0.0.1` or `localhost`. Compose forwards it from `.env` with a default of `postgres`, the bundled service.
 
 #### `FLUXER_POSTGRES_PORT`
 
-Default `5432`. The database port. Integer 1 to 65535.
+Default `5432`. The database port. Integer 1 to 65535. Compose forwards it from `.env`.
 
 #### `FLUXER_POSTGRES_DATABASE`
 
-Default `fluxer`. The database name. Must be non-empty.
+Default `fluxer`. The database name. Must be non-empty. Compose forwards it from `.env`, and passes the same value to the bundled `postgres` as `POSTGRES_DB`. The Postgres image creates that database only on its first start with an empty data directory, so set it before the first start. The installer's backup takes it from the `postgres` container's environment, as `POSTGRES_DB`, and skips the dump when `FLUXER_POSTGRES_HOST` or `FLUXER_POSTGRES_URL` points outside the stack.
 
 #### `FLUXER_POSTGRES_USERNAME`
 
-Default `fluxer`. The role. Must be non-empty.
+Default `fluxer`. The role. Must be non-empty. Compose forwards it from `.env`, and passes the same value to the bundled `postgres` as `POSTGRES_USER`, under the same first-start rule. The installer's backup takes it from the `postgres` container's environment, as `POSTGRES_USER`, and skips the dump when `FLUXER_POSTGRES_HOST` or `FLUXER_POSTGRES_URL` points outside the stack.
 
 #### `FLUXER_POSTGRES_PASSWORD`
 
-Default `fluxer`. The password. The literal `fluxer` is rejected in production. `CHANGE_ME` is not.
+Default `fluxer`. The password. The literal `fluxer` is rejected in production. `CHANGE_ME` is not. Compose fills it from `POSTGRES_PASSWORD`.
 
 #### `FLUXER_POSTGRES_SSL`
 
-Default `false`. TLS to the database. Must be `true` or `false`. In production it must be `true` unless `FLUXER_SELF_HOSTED=true`.
+Default `false`. TLS to the database. Must be `true` or `false`. In production it must be `true` unless `FLUXER_SELF_HOSTED=true`. Compose forwards it from `.env`.
 
 #### `FLUXER_POSTGRES_SSL_CA`
 
-Default empty. A CA certificate in PEM form. Used only when SSL is on.
+Default empty. A CA certificate in PEM form. Used only when SSL is on. Compose forwards it from `.env`.
 
 #### `FLUXER_POSTGRES_MAX_CONNECTIONS`
 
-Default `20`. Pool size. Integer 1 to 1000, per process. The total is the sum across every container. Compose sets 25 for `api` and `worker` and 20 for the database-backed shards.
+Default `20`. Pool size. Integer 1 to 1000, per process. The total is the sum across every container. Only `api`, `worker`, `users-shard` and `messages-shard` open a pool, and Compose sets it in each from the per-service name below.
+
+#### `FLUXER_API_POSTGRES_MAX_CONNECTIONS`
+
+Default `25`. The pool size of `api`. Read by Compose, which passes it to `api` as `FLUXER_POSTGRES_MAX_CONNECTIONS`.
+
+#### `FLUXER_WORKER_POSTGRES_MAX_CONNECTIONS`
+
+Default `25`. The pool size of `worker`, passed the same way.
+
+#### `FLUXER_USERS_SHARD_POSTGRES_MAX_CONNECTIONS`
+
+Default `20`. The pool size of `users-shard`, passed the same way.
+
+#### `FLUXER_MESSAGES_SHARD_POSTGRES_MAX_CONNECTIONS`
+
+Default `20`. The pool size of `messages-shard`, passed the same way.
 
 #### `FLUXER_POSTGRES_KV_TABLE`
 
-Default `fluxer_kv`. The key-value table name. Must match a safe Postgres identifier or startup fails.
+Default `fluxer_kv`. The key-value table name. Must match a safe Postgres identifier or startup fails. Compose forwards it from `.env`.
 
 #### `FLUXER_POSTGRES_PREPARED_STATEMENTS`
 
-Default `true`. Named prepared statements. Must be `true` or `false`. Compose passes it in the shared block, so one value governs `api`, `worker` and the Rust services at once. Set it to `false` behind a transaction-pooling pooler such as PgBouncer, where a named statement outlives the session that declared it.
+Default `true`. Named prepared statements. Must be `true` or `false`. Compose forwards it in the shared block, so one value governs `api`, `worker` and the Rust services at once. Set it to `false` behind a transaction-pooling pooler such as PgBouncer, where a named statement outlives the session that declared it.
 
-Cassandra or Scylla is an alternative backend, selected with `FLUXER_DATABASE_BACKEND=cassandra`. Supply a reachable database and configure the settings below when selecting it. The bundled stack uses Postgres and does not include a Cassandra or Scylla service.
+Cassandra or Scylla is an alternative backend, selected with `FLUXER_DATABASE_BACKEND=cassandra`. Supply a reachable database and configure the settings below when selecting it. The bundled stack uses Postgres, does not include a Cassandra or Scylla service, and forwards none of the names below.
 
 #### `FLUXER_CASSANDRA_HOSTS`
 
@@ -429,35 +444,27 @@ The bundled stack requires Valkey for shared cache, live updates and deletion qu
 
 #### `FLUXER_KV_URL`
 
-Default `redis://localhost:6379/0`. The Redis-compatible service address. The `admin` service defaults to empty instead. Compose sets `redis://valkey:6379/0`.
+Default `redis://localhost:6379/0`. The Redis-compatible service address. Read by `api` and `worker`. Compose forwards it from `.env` with a default of `redis://valkey:6379/0`, the bundled service.
 
 #### `FLUXER_KV_MODE`
 
-Default `standalone`. Use `standalone` for a single Valkey server or `cluster` for a Redis-compatible cluster.
-
-#### `FLUXER_KV_PROVIDER`
-
-Default `redis`, which is the only accepted value.
+Default `standalone`. Use `standalone` for a single Valkey server or `cluster` for a Redis-compatible cluster. Compose forwards it from `.env`.
 
 #### `FLUXER_SVC_CACHE_TTL_MS`
 
-Default `30000`. Soft cache lifetime in the internal services. Milliseconds. The `users` and `messages` routers ignore this setting because they keep no configurable response cache. Their shard caches still honour it.
-
-#### `FLUXER_SVC_CACHE_HARD_TTL_MS`
-
-Default `600000`. Hard cache lifetime. Clamped to at least the soft TTL.
+Default `30000`. Cache lifetime in the internal services, in milliseconds. The `users` and `messages` routers ignore this setting because they keep no configurable response cache. Their shard caches still honour it. Compose forwards it from `.env`.
 
 #### `FLUXER_SVC_CACHE_MAX_ENTRIES`
 
-Default `100000`. Cache entry ceiling. Per process. The `users` and `messages` routers ignore this setting because they keep no configurable response cache. Their shard caches still honour it.
+Default `100000`. Cache entry ceiling. Per process. The `users` and `messages` routers ignore this setting because they keep no configurable response cache. Their shard caches still honour it. Compose forwards it from `.env`.
 
 #### `FLUXER_GIFS_SHARD_CACHE_MAX_BYTES`
 
-Default `536870912`. GIF cache size. Must be at least 16777216. Set it to 134217728 to keep the cache inside the `256mb` ceiling `FLUXER_GIFS_SHARD_MEMORY_LIMIT` gives `gifs-shard`.
+Default `536870912`. GIF cache size. Must be at least 16777216. Set it to 134217728 to keep the cache inside the `256mb` ceiling `FLUXER_GIFS_SHARD_MEMORY_LIMIT` gives `gifs-shard`. Compose forwards it from `.env` to `gifs-shard`.
 
 #### `FLUXER_IP_BAN_REFRESH_INTERVAL_MS`
 
-Default `300000`. How often the API refreshes its IP-ban cache. A non-finite value or one at or below zero disables the timer.
+Default `300000`. How often the API refreshes its IP-ban cache. A non-finite value or one at or below zero, such as `0`, disables the timer. Compose forwards it from `.env`.
 
 Keep persistent storage and the bundled `noeviction` policy to protect deletion queues and other shared state. Back up `valkey-data`. See [Volumes and buckets](#volumes-and-buckets) for recovery implications.
 
@@ -467,71 +474,69 @@ Every uploaded file lands in an S3-compatible object store, which the stack prov
 
 #### `FLUXER_S3_ENDPOINT`
 
-Default `http://localhost:3900`. The S3 API address. `media-proxy` defaults to empty instead.
+Default `http://localhost:3900`. The S3 API address. `media-proxy` defaults to empty instead. Compose forwards it from `.env` with a default of `http://seaweedfs:8333`, the bundled store.
 
 #### `FLUXER_S3_PUBLIC_ENDPOINT`
 
-No default. The host substituted into presigned URLs, which are the only place it appears.
+No default. The host substituted into presigned URLs, which are the only place it appears. Compose forwards it from `.env`, and uses `FLUXER_S3_ENDPOINT` when it is unset, except on `app-proxy`, which gets only a value `.env` sets and adds it to its Content Security Policy.
 
 #### `FLUXER_S3_FORCE_PATH_STYLE`
 
-Default `false`. Path-style addressing. `media-proxy` defaults to `true` instead. Compose sets `true`.
+Default `false`. Path-style addressing. `media-proxy` defaults to `true` instead. Compose forwards it from `.env` with a default of `true`, which the bundled store needs.
 
 #### `FLUXER_S3_REGION`
 
-Default `local`. The region string. `media-proxy` defaults to `us-east-1`. Compose sets `us-east-1`.
+Default `local`. The region string. `media-proxy` defaults to `us-east-1`. Compose forwards it from `.env` with a default of `us-east-1`, so every service signs for the same region.
 
 #### `FLUXER_S3_ACCESS_KEY_ID`
 
-Default empty. The access key. Config validation requires it non-empty on `api` and `worker`. Optional for `media-proxy`.
+Default empty. The access key. Config validation requires it non-empty on `api` and `worker`. Optional for `media-proxy`. `app-proxy` reads it only to fetch an `s3://` GeoIP database. Compose fills it from `FLUXER_S3_ACCESS_KEY`.
 
 #### `FLUXER_S3_SECRET_ACCESS_KEY`
 
-Default empty. The secret key. Config validation requires it non-empty on `api` and `worker`. Optional for `media-proxy`.
+Default empty. The secret key. Config validation requires it non-empty on `api` and `worker`. Optional for `media-proxy`. Compose fills it from `FLUXER_S3_SECRET_KEY`.
 
 #### `FLUXER_S3_SESSION_TOKEN`
 
-Default empty. A temporary session token. Read by `media-proxy` only.
+Default empty. A temporary session token. Read by `media-proxy` only. Compose forwards it from `.env`.
 
 #### `FLUXER_S3_BUCKET_CDN`
 
-Default `fluxer`. Processed assets. `media-proxy` defaults to `cdn`.
+Default `fluxer`. Processed assets. `media-proxy` defaults to `cdn`. Compose forwards it from `.env` with a default of `fluxer`, so every service and `seaweedfs-init` name the same bucket.
 
 #### `FLUXER_S3_BUCKET_UPLOADS`
 
-Default `fluxer-uploads`. Raw uploads. `media-proxy` defaults to `uploads`, `app-proxy` to `fluxer-uploads`.
+Default `fluxer-uploads`. Raw uploads. `media-proxy` defaults to `uploads`, `app-proxy` to `fluxer-uploads`. Compose forwards it from `.env` with a default of `fluxer-uploads` for the same reason.
 
 #### `FLUXER_S3_BUCKET_REPORTS`
 
-Default `fluxer-reports`. Abuse report evidence. Read by `api` and `worker`.
+Default `fluxer-reports`. Abuse report evidence. Read by `api` and `worker`. Compose forwards it from `.env` with a default of `fluxer-reports`, so every service and `seaweedfs-init` name the same bucket.
 
 #### `FLUXER_S3_BUCKET_HARVESTS`
 
-Default `fluxer-harvests`. Data archives. Read by `api` and `worker`.
+Default `fluxer-harvests`. Data archives. Read by `api` and `worker`. Compose forwards it from `.env` with a default of `fluxer-harvests`, so every service and `seaweedfs-init` name the same bucket.
 
 #### `FLUXER_S3_BUCKET_STATIC`
 
-Default `static`. Static assets. Read by `media-proxy` only in `static` mode, which the stack does not use. `api` and `worker` never read it, and `seaweedfs-init` does not create this bucket.
+Default `static`. Static assets. Read by `media-proxy` only in `static` mode, which the stack does not use. `api` and `worker` never read it, and `seaweedfs-init` does not create this bucket. Compose does not forward it.
 
 The Media Proxy read path has overrides of its own. All are optional.
 
 #### `FLUXER_S3_READ_ENDPOINT`
 
-Falls back to `FLUXER_S3_ENDPOINT`. The read-side S3 address. Must be http or https with a host, and have no credentials, query string, or fragment.
+Falls back to `FLUXER_S3_ENDPOINT`. The read-side S3 address. Must be http or https with a host, and have no credentials, query string, or fragment. Compose forwards it from `.env` to `media-proxy`.
 
 #### `FLUXER_S3_READ_BUCKET`
 
-Falls back to `FLUXER_S3_BUCKET_CDN`. The read-side bucket. Read by `media-proxy` only.
+Falls back to `FLUXER_S3_BUCKET_CDN`. The read-side bucket. Read by `media-proxy` only. Compose forwards it from `.env`.
 
 #### `FLUXER_S3_READ_BUCKET_STYLE`
 
-Defaults to `path` when path style is on, else `virtual`. How the bucket appears in the URL. `path`, `virtual`, or `root`. Anything else is a startup error.
+Defaults to `path` when path style is on, else `virtual`. How the bucket appears in the URL. `path`, `virtual`, or `root`. Anything else is a startup error. Compose forwards it from `.env` to `media-proxy`.
 
 #### `FLUXER_S3_READ_SIGNED`
 
-Default `false`. Whether read requests are signed. Read by `media-proxy` only. Compose sets `true`, because `seaweedfs-init` installs an S3 identity and the store then refuses anonymous reads.
-
-Compose sets `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`, and `AWS_EC2_METADATA_DISABLED` for the AWS SDKs. No Fluxer code reads them directly.
+Default `false`. Whether read requests are signed. Read by `media-proxy` only. Compose forwards it from `.env` with a default of `true`, because `seaweedfs-init` installs an S3 identity and the store then refuses anonymous reads. Set `false` only for a public-read bucket.
 
 ## Search
 
@@ -539,43 +544,43 @@ The bundled stack provides Meilisearch for message search. These settings select
 
 #### `FLUXER_SEARCH_ENGINE`
 
-Default `elasticsearch`. Which engine is used. `elasticsearch` or `meilisearch`. Compose sets `meilisearch`.
+Default `elasticsearch`. Which engine is used. `elasticsearch` or `meilisearch`. Compose forwards it from `.env` with a default of `meilisearch`, the bundled engine.
 
 #### `FLUXER_SEARCH_URL`
 
-Default `http://127.0.0.1:9200`. The engine address. Compose sets `http://meilisearch:7700`.
+Default `http://127.0.0.1:9200`. The engine address. Compose forwards it from `.env` with a default of `http://meilisearch:7700`.
 
 #### `FLUXER_SEARCH_API_KEY`
 
-Default empty. The API key. Meilisearch uses it as the key. Elasticsearch uses it as an API key that takes precedence over the username and password.
+Default empty. The API key. Meilisearch uses it as the key. Elasticsearch uses it as an API key that takes precedence over the username and password. Compose fills it from `MEILI_MASTER_KEY`.
 
 #### `FLUXER_SEARCH_USERNAME`
 
-Default empty. Basic auth user. Elasticsearch only. Ignored under Meilisearch.
+Default empty. Basic auth user. Elasticsearch only. Ignored under Meilisearch. Compose forwards it from `.env`.
 
 #### `FLUXER_SEARCH_PASSWORD`
 
-Default empty. Basic auth password. Elasticsearch only.
+Default empty. Basic auth password. Elasticsearch only. Compose forwards it from `.env`.
 
 #### `FLUXER_SEARCH_TLS_REJECT_UNAUTHORIZED`
 
-Default `true`. Certificate verification. Elasticsearch only. Never passed to the Meilisearch client.
+Default `true`. Certificate verification. Elasticsearch only. Never passed to the Meilisearch client. Compose forwards it from `.env`.
 
 ## Message bus and internal services
 
-The bundled stack requires NATS for communication between services and JetStream for background jobs. Compose supplies the connection settings. Change them when using an external NATS service, which must have JetStream enabled for the worker connection.
+The bundled stack requires NATS for communication between services and JetStream for background jobs. Compose forwards the connection settings from `.env`, with the bundled service as the default. Change them when using an external NATS service, which must have JetStream enabled for the worker connection.
 
 #### `FLUXER_NATS_URL`
 
-Default `nats://127.0.0.1:4222`. The core NATS address for `api`, `worker`, and `gateway`. The Gateway defaults to `nats://nats:4222` instead.
+Default `nats://127.0.0.1:4222`. The core NATS address for `api`, `worker`, and `gateway`. The Gateway defaults to `nats://nats:4222` instead. Compose forwards it from `.env` with a default of `nats://nats:4222`.
 
 #### `FLUXER_NATS_CORE_URL`
 
-Alias of `FLUXER_NATS_URL` on `api` and `worker`, read only when that name is unset. The core NATS address. Not read by the Gateway.
+Alias of `FLUXER_NATS_URL` on `api` and `worker`, read only when that name is unset or empty. The core NATS address. Not read by the Gateway. Compose does not forward it, because it forwards `FLUXER_NATS_URL`.
 
 #### `FLUXER_NATS_JETSTREAM_URL`
 
-Default `nats://127.0.0.1:4222`. The JetStream address for `api` and `worker`. Compose uses `FLUXER_NATS_URL` unless this setting is supplied separately.
+Default `nats://127.0.0.1:4222`. The JetStream address for `api` and `worker`. Compose forwards it from `.env`, and uses `FLUXER_NATS_URL` when it is unset.
 
 #### `FLUXER_NATS_AUTH_TOKEN`
 
@@ -583,54 +588,51 @@ Default empty. NATS authentication. Read by `api`, `worker`, `gateway`, and the 
 
 #### `FLUXER_SVC_NATS_URL`
 
-Default `nats://127.0.0.1:4222`. The NATS address for the internal services. A separate variable from `FLUXER_NATS_URL`.
+Default `nats://127.0.0.1:4222`. The NATS address for the internal services and `push`. A separate variable from `FLUXER_NATS_URL`. Compose forwards it from `.env`, and uses `FLUXER_NATS_URL` when it is unset.
 
 #### `FLUXER_GATEWAY_API_RPC_ENDPOINT`
 
-No default. Where the Gateway calls the API. Read by the Gateway.
+No default. Where the Gateway calls the API. Read by the Gateway, which derives it from `FLUXER_INTERNAL_API_ENDPOINT` when it is unset. Compose does not forward it.
 
 Compose configures the internal services. Change the following settings only when customising their deployment.
 
 #### `FLUXER_SVC_NAME`
 
-Default `default`. The metrics prefix. It also selects the built-in default of `FLUXER_SVC_MAX_CONCURRENT_REQUESTS`. Changing it does not rename NATS subjects.
+Default `default`. The metrics prefix. It also selects the built-in default of `FLUXER_SVC_MAX_CONCURRENT_REQUESTS`. Changing it does not rename NATS subjects. Compose sets it per service.
 
 #### `FLUXER_SVC_MODE`
 
-Default `router`. Must be `router` or `shard`. Any other value prevents startup.
+Default `router`. Must be `router` or `shard`. Any other value prevents startup. Compose sets it per service.
 
 #### `FLUXER_SVC_SHARD_COUNT`
 
-Default `1`. How many shards exist. Fixed at 1 in the shipped stack.
+Default `1`. How many shards exist. Compose fixes it at `1`.
 
 #### `FLUXER_SVC_SHARD_ID`
 
-Derived from the numeric suffix of `POD_NAME`, else `0`. Which shard this process is. A shard ID at or above the shard count is a startup error.
+Derived from the numeric suffix of `POD_NAME`, else `0`. Which shard this process is. A shard ID at or above the shard count is a startup error. Compose sets `0` on every shard.
 
 #### `FLUXER_SVC_LISTEN_HOST`
 
-Default `0.0.0.0`. The bind address. Serves health and metrics only.
+Default `0.0.0.0`. The bind address. Serves health and metrics only. Compose does not forward it.
 
 #### `FLUXER_SVC_PORT`
 
-Default `8090`. The health and metrics port. Not published.
+Default `8090`. The health and metrics port. Not published. Compose does not forward it, because every internal service health check probes `8090`.
 
 #### `FLUXER_SVC_MAX_CONCURRENT_REQUESTS`
 
-Defaults to 192 for messages, 320 for snowflakes, 64 otherwise. In-flight request ceiling. The built-in defaults key off `FLUXER_SVC_NAME`. Compose forwards `FLUXER_SVC_MAX_CONCURRENT_REQUESTS` to `users`, `users-shard`, `messages`, and `messages-shard`, and leaves the other containers on the built-in defaults. Left unset, those four keep their built-in defaults too. Once set, the one value replaces the default on all four, so a value below 192 also lowers the messages ceiling. A router holds a slot for the whole round trip to its shard. A request over the ceiling is rejected at once. The API request behind it fails with a 503, and the API logs `shard rejected the request because it is at its concurrency limit`.
+Defaults to 192 for messages, 320 for snowflakes, 64 otherwise. In-flight request ceiling. The built-in defaults key off `FLUXER_SVC_NAME`. Compose forwards it from `.env` to every internal service router and shard. Left unset, each keeps its built-in default. Once set, the one value replaces the default on all of them, so a value below 320 also lowers the snowflakes ceiling. A router holds a slot for the whole round trip to its shard. A request over the ceiling is rejected at once. The API request behind it fails with a 503, and the API logs `shard rejected the request because it is at its concurrency limit`.
 
 #### `POD_NAME`
 
-No default. The shard ordinal source and node identity. Also read by the Gateway, and by the API as the `pod_name` in its RPC timing records.
+No default. The shard ordinal source and node identity. Also read by the Gateway, and by the API as the `pod_name` in its RPC timing records. Compose does not set it.
 
-For custom service routing, add these settings to the API container environment. The bundled Compose file does not forward them:
-
-- Snowflake service: `FLUXER_SNOWFLAKE_SERVICE_SUBJECT` and `FLUXER_SNOWFLAKE_SERVICE_NATS_CLIENT_NAME`.
-- Users service: `FLUXER_USERS_SERVICE_SUBJECT` and `FLUXER_USERS_SERVICE_NATS_CLIENT_NAME`.
-- GIF service: `FLUXER_GIF_SERVICE_SUBJECT` and `FLUXER_GIF_SERVICE_NATS_CLIENT_NAME`.
+The API reaches the internal services over NATS. Compose forwards the client names and the tuning values below from `.env`. It does not forward `FLUXER_SNOWFLAKE_SERVICE_SUBJECT`, `FLUXER_USERS_SERVICE_SUBJECT` or `FLUXER_GIF_SERVICE_SUBJECT`, because each has to match the subject its internal service listens on.
 
 Numeric settings require decimal safe integers. Surrounding whitespace is trimmed, and omitted or blank settings use the defaults. Explicit malformed or out-of-range values are rejected.
 
+- `FLUXER_SNOWFLAKE_SERVICE_NATS_CLIENT_NAME`, `FLUXER_USERS_SERVICE_NATS_CLIENT_NAME` and `FLUXER_GIF_SERVICE_NATS_CLIENT_NAME`: the name the API gives each NATS connection, as NATS monitoring shows it. Each defaults to a name for its service.
 - `FLUXER_SNOWFLAKE_SERVICE_BATCH_SIZE`: defaults to `128`. Accepts 1 to 512.
 - `FLUXER_SNOWFLAKE_SERVICE_LOW_WATERMARK`: defaults to `32`, capped below the batch size. Accepts 0 through batch size minus one.
 - `FLUXER_SNOWFLAKE_SERVICE_MAX_BUFFER_AGE_MS`: defaults to `5000`. Accepts 1 to 60000 milliseconds.
@@ -648,7 +650,7 @@ LiveKit is the media server for voice and video. `FLUXER_LIVEKIT_API_KEY` and `F
 
 #### `FLUXER_LIVEKIT_ENABLED`
 
-Default `false`. The master switch for all voice and video. Compose sets `true`.
+Default `false`. The master switch for all voice and video. Compose forwards it from `.env` with a default of `true`, because the stack ships LiveKit.
 
 #### `FLUXER_LIVEKIT_API_KEY`
 
@@ -660,7 +662,7 @@ Default empty. The LiveKit secret. Compose fills it from `LIVEKIT_API_SECRET`.
 
 #### `FLUXER_LIVEKIT_URL`
 
-Default empty. The client-facing LiveKit URL. Set it only when LiveKit is served from another host. `docker-compose.yml` never passes it empty: it builds the value from `FLUXER_PUBLIC_ORIGIN`, or from `FLUXER_PUBLIC_SCHEME`, `FLUXER_DOMAIN` and `FLUXER_PUBLIC_PORT` when the origin is unset, followed by `/livekit`. An empty value outside Compose has the API derive `wss://host/livekit` from the public API origin, or `ws://` under `http`, with a non-default port kept.
+Default empty. The client-facing LiveKit URL. Set it only when LiveKit is served from another host. `docker-compose.yml` never passes it empty: it builds the value from `FLUXER_PUBLIC_ORIGIN`, or from `FLUXER_PUBLIC_SCHEME`, `FLUXER_DOMAIN` and `FLUXER_PUBLIC_PORT` when the origin is unset, followed by `/livekit`, and forwards a value `.env` sets. An empty value outside Compose has the API derive `wss://host/livekit` from the public API origin, or `ws://` under `http`, with a non-default port kept.
 
 #### `FLUXER_LIVEKIT_USE_EXTERNAL_IP`
 
@@ -680,15 +682,15 @@ Default `stun1.l.google.com:19302`. The second STUN server, used the same way.
 
 #### `FLUXER_LIVEKIT_INTERNAL_URL`
 
-Default empty. The server-side LiveKit control API. Compose sets `http://livekit:7880`.
-
-#### `FLUXER_LIVEKIT_WEBHOOK_URL`
-
-Default empty. Where LiveKit posts webhooks. The API accepts requests on this route without user authentication and without a client-IP header.
+Default empty. The server-side LiveKit control API. Compose forwards it from `.env` with a default of `http://livekit:7880`, the bundled service.
 
 #### `FLUXER_LIVEKIT_DEFAULT_REGION`
 
-No default. The default voice region. JSON with `id`, `name`, `emoji`, `latitude`, and `longitude`.
+No default. The default voice region. JSON with `id`, `name`, `emoji`, `latitude`, and `longitude`. Compose forwards it from `.env`, with a default region named `Default` at latitude and longitude `0`.
+
+#### `FLUXER_LIVEKIT_LOG_LEVEL`
+
+Default `info`. How much LiveKit logs. Read by Compose only, which writes it into the LiveKit configuration as `log_level`.
 
 #### `FLUXER_LIVEKIT_TCP_PORT`
 
@@ -698,7 +700,7 @@ Default `7881`. The TCP media port. Read by Compose only. Compose publishes it o
 
 Default `7882`. The UDP media port, published and passed to LiveKit as `rtc.udp_port` the same way.
 
-LiveKit media does not go through the edge. Compose publishes both media ports directly, so both must stay open in the host firewall and be forwarded to the host when it sits behind NAT. Compose points LiveKit at the webhook target `http://api:8080/webhooks/livekit` and configures no TURN server. A client that cannot use UDP falls back to ICE-TCP on the TCP port.
+LiveKit media does not go through the edge. Compose publishes both media ports directly, so both must stay open in the host firewall and be forwarded to the host when it sits behind NAT. Compose points LiveKit at the webhook target `http://api:8080/webhooks/livekit` and configures no TURN server. The API accepts requests on that route without user authentication and without a client-IP header. A client that cannot use UDP falls back to ICE-TCP on the TCP port.
 
 Moving a media port is one line in `.env` followed by `docker compose up -d livekit`. Compose puts the same value on the host side of the mapping, on the container side, and on the `rtc` port LiveKit advertises in the ICE candidates it hands to clients.
 
@@ -714,45 +716,45 @@ The same conditions turn on a DNS check at registration. The check runs when ema
 
 #### `FLUXER_EMAIL_ENABLED`
 
-`.env.example` `false`. The delivery switch. The admin dashboard value wins over this.
+`.env.example` `false`. The delivery switch. The admin dashboard value wins over this. Compose forwards it from `.env`.
 
 #### `FLUXER_EMAIL_PROVIDER`
 
-`.env.example` `none`. The transport. `smtp` or `none`. Anything else fails startup.
+`.env.example` `none`. The transport. `smtp` or `none`. Anything else fails startup. Compose forwards it from `.env`.
 
 #### `FLUXER_EMAIL_FROM_EMAIL`
 
-`.env.example` `noreply@example.com`. The sender address. Compose falls back to `noreply@localhost`.
+`.env.example` `noreply@example.com`. The sender address. Default empty. Compose forwards it from `.env`, and uses `noreply@localhost` when it is unset.
 
 #### `FLUXER_EMAIL_FROM_NAME`
 
-`.env.example` `Fluxer`. The sender name. An empty value sets an empty sender name.
+`.env.example` `Fluxer`. The sender name. Default `Fluxer`, which an empty value also gives. Compose forwards it from `.env`.
 
 #### `FLUXER_EMAIL_APP_BASE_URL`
 
-`.env.example` empty. The base URL used in links. Must be http or https with no username, password, query, or fragment, or the API fails at boot. Falls back to the app endpoint.
+`.env.example` empty. The base URL used in links. Must be http or https with no username, password, query, or fragment, or the API fails at boot. Falls back to the app endpoint. Compose forwards it from `.env`.
 
 #### `FLUXER_EMAIL_SMTP_HOST`
 
-`.env.example` empty. The SMTP host. Setting any SMTP variable creates the whole SMTP block, which is absent by default.
+`.env.example` empty. The SMTP host. Setting any SMTP variable creates the whole SMTP block, which is absent by default. Compose forwards it from `.env`.
 
 #### `FLUXER_EMAIL_SMTP_PORT`
 
-`.env.example` `587`. The SMTP port. Falls back to 587.
+`.env.example` `587`. The SMTP port. Falls back to 587. Compose forwards it from `.env`.
 
 #### `FLUXER_EMAIL_SMTP_USERNAME`
 
-`.env.example` empty. The SMTP login. Part of the completeness check.
+`.env.example` empty. The SMTP login. Part of the completeness check. Compose forwards it from `.env`.
 
 #### `FLUXER_EMAIL_SMTP_PASSWORD`
 
-`.env.example` empty. The SMTP password. Part of the completeness check.
+`.env.example` empty. The SMTP password. Part of the completeness check. Compose forwards it from `.env`.
 
 #### `FLUXER_EMAIL_SMTP_SECURE`
 
-`.env.example` `true`. Implicit TLS. Defaults to `true` whenever the provider is `smtp`.
+`.env.example` `true`. Implicit TLS. Defaults to `true` whenever the provider is `smtp`. Compose forwards it from `.env`.
 
-The API reads `FLUXER_EMAIL_WEBHOOK_SECRET` for inbound delivery webhooks. Neither `.env.example` nor `docker-compose.yml` has it.
+The API reads `FLUXER_EMAIL_WEBHOOK_SECRET` for inbound delivery webhooks. Compose forwards it from `.env`, and `.env.example` lists it commented out.
 
 The API registers `POST /webhooks/sweego` on every deployment. The route authenticates the Standard Webhooks header triple `webhook-id`, `webhook-timestamp`, and `webhook-signature` against that secret, and answers 404 `Email not enabled` while email is off. The route sits outside the client-IP exempt list that covers `/webhooks/livekit`, so give the provider a delivery URL that goes through the edge, `https://chat.example.com/api/webhooks/sweego`.
 
@@ -768,19 +770,19 @@ All are optional.
 
 #### `FLUXER_SSO_ALLOW_PRIVATE_ADDRESSES`
 
-Default `false`. Whether the SSO provider URL may resolve to a private address. Off by default as SSRF protection. Turn it on only for split-horizon DNS or a LAN identity provider.
+Default `false`. Whether the SSO provider URL may resolve to a private address. Off by default as SSRF protection. Turn it on only for split-horizon DNS or a LAN identity provider. Compose forwards it from `.env`.
 
 #### `FLUXER_PASSKEY_RP_ID`
 
-Defaults to `FLUXER_BASE_DOMAIN`. The WebAuthn relying party identifier. Changing it invalidates every passkey already registered.
+Defaults to the host of `FLUXER_PUBLIC_ORIGIN` when that is set, and to `FLUXER_BASE_DOMAIN` otherwise. The WebAuthn relying party identifier. Changing it invalidates every passkey already registered. Compose forwards it from `.env` with a default of `FLUXER_DOMAIN`, so a public origin on another host leaves existing passkeys valid.
 
 #### `FLUXER_PASSKEY_RP_NAME`
 
-Default `Fluxer`. The relying party name browsers display. Does not follow `FLUXER_DOMAIN`.
+Default `Fluxer`. The relying party name browsers display. Does not follow `FLUXER_DOMAIN`. Compose forwards it from `.env`.
 
 #### `FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS`
 
-The complete accepted origin set, comma separated. Despite the name, an explicit value replaces the defaults and must list every origin clients use. Compose defaults it to the public web app origin. When the variable is omitted outside Compose, the API accepts the configured app origin alongside the built-in Fluxer web and Android origins. An empty list selects only the configured app origin.
+The complete accepted origin set, comma separated. Despite the name, an explicit value replaces the defaults and must list every origin clients use. Compose forwards it from `.env` with a default of the public web app origin, so a self-hosted instance accepts its own origin alone. When the variable is omitted or empty outside Compose, the API accepts the configured app origin alongside the built-in Fluxer web and Android origins. To accept only the app origin, list it alone.
 
 Each web entry must be an HTTP(S) origin with no credentials, path beyond an optional final slash, query, or fragment. Web origins are normalised to browser form using the configured public port unless the entry supplies one. Android entries must use `android:apk-key-hash:` followed by the signing certificate's SHA-256 fingerprint in canonical, unpadded base64url (43 characters). Invalid entries and control characters fail startup.
 
@@ -792,7 +794,7 @@ A passkey is bound to the `FLUXER_PASSKEY_RP_ID` it was registered under. Member
 
 Bluesky connections are off by default. Enable them in the admin dashboard's Runtime Integrations panel and supply an ES256 private signing key with a unique key identifier. The public API must serve the [client metadata and signing keys](/http-api/connections/#get-bluesky-client-metadata).
 
-For environment-based configuration, use `FLUXER_AUTH_BLUESKY_ENABLED`, `FLUXER_AUTH_BLUESKY_KEYS`, and the optional `FLUXER_AUTH_BLUESKY_CLIENT_NAME`, `FLUXER_AUTH_BLUESKY_CLIENT_URI`, `FLUXER_AUTH_BLUESKY_LOGO_URI`, `FLUXER_AUTH_BLUESKY_TOS_URI`, and `FLUXER_AUTH_BLUESKY_POLICY_URI` settings. Add them to the API container environment. The shipped Compose file does not forward them.
+For environment-based configuration, use `FLUXER_AUTH_BLUESKY_ENABLED`, `FLUXER_AUTH_BLUESKY_KEYS`, and the optional `FLUXER_AUTH_BLUESKY_CLIENT_NAME`, `FLUXER_AUTH_BLUESKY_CLIENT_URI`, `FLUXER_AUTH_BLUESKY_LOGO_URI`, `FLUXER_AUTH_BLUESKY_TOS_URI`, and `FLUXER_AUTH_BLUESKY_POLICY_URI` settings. Compose forwards every one from `.env`.
 
 ## Web push
 
@@ -802,105 +804,115 @@ For environment-based configuration, use `FLUXER_AUTH_BLUESKY_ENABLED`, `FLUXER_
 | --- | --- | --- |
 | FLUXER_VAPID_PUBLIC_KEY | `CHANGE_ME` | The VAPID public key. Base64url of the 65-byte uncompressed P-256 point |
 | FLUXER_VAPID_PRIVATE_KEY | `CHANGE_ME` | The VAPID private key. Base64url of the 32-byte scalar, and the matching half of the pair |
-| FLUXER_VAPID_EMAIL | unset | The VAPID contact address. Compose derives `admin@` followed by `FLUXER_DOMAIN` when it is unset |
+| FLUXER_VAPID_EMAIL | unset | The VAPID contact address. Compose forwards it from `.env`, with a default of `admin@` followed by `FLUXER_DOMAIN` |
 
-`FLUXER_GATEWAY_PUSH_ENABLED` is read by the Gateway alone and defaults to `true`. When it is `false`, the Gateway hands no message or clear notification to `push`.
+`FLUXER_GATEWAY_PUSH_ENABLED` is read by the Gateway alone and defaults to `true`. When it is `false`, the Gateway hands no message or clear notification to `push`. Compose forwards it from `.env`.
 
 ## Mobile push
 
-`api` and `push` read the APNs and FCM names. None appear in `.env.example` or in `docker-compose.yml`, so configuring mobile push means editing the Compose file. All are optional.
+`push` reads every name below. `api` also reads the APNs names, apart from `FLUXER_PUSH_APNS_DEFAULT_ENVIRONMENT`. Compose forwards the APNs names from `.env` to both, and `FLUXER_PUSH_APNS_DEFAULT_ENVIRONMENT` and the FCM names to `push` alone. All are optional.
 
 #### `FLUXER_PUSH_APNS_ENABLED`
 
-Default `false`. The APNs switch. Must be set on `api` and `push`.
+Default `false`. The APNs switch. Read by `api` and `push`. Compose forwards it from `.env`.
 
 #### `FLUXER_PUSH_APNS_TEAM_ID`
 
-No default. The Apple team. Paired with the key ID.
+No default. The Apple team. Paired with the key ID. Compose forwards it from `.env`.
 
 #### `FLUXER_PUSH_APNS_KEY_ID`
 
-No default. The signing key ID. Paired with the team ID.
+No default. The signing key ID. Paired with the team ID. Compose forwards it from `.env`.
 
 #### `FLUXER_PUSH_APNS_PRIVATE_KEY`
 
-No default. The signing key in PEM form. Set exactly one of this and the path.
+No default. The signing key in PEM form. Set exactly one of this and the path. Compose forwards it from `.env`.
 
 #### `FLUXER_PUSH_APNS_PRIVATE_KEY_PATH`
 
-No default. A path to the signing key. Must be readable inside the container.
+No default. A path to the signing key. Must be readable inside the container. Compose forwards it from `.env`.
 
 #### `FLUXER_PUSH_APNS_DEFAULT_ENVIRONMENT`
 
-Default `production`. Which APNs environment is used. `production` or `development`.
+Default `production`. Which APNs environment is used. `production` or `development`. Read by `push` only. Compose forwards it from `.env`.
 
 #### `FLUXER_PUSH_APNS_APPS`
 
-Default `[]`. Per-app APNs configuration. JSON array. An entry with no `app_id` fails startup.
+Default `[]`. Per-app APNs configuration. JSON array. An entry with no `app_id` fails startup. Compose forwards it from `.env`.
 
 #### `FLUXER_PUSH_FCM_ENABLED`
 
-Default `false`. The FCM switch. Must be set on `api` and `push`.
+Default `false`. The FCM switch. Read by `push` only, like every FCM name. Compose forwards it from `.env`.
 
 #### `FLUXER_PUSH_FCM_PROJECT_ID`
 
-No default. The Firebase project. Paired with the client email.
+No default. The Firebase project. Paired with the client email. Compose forwards it from `.env`.
 
 #### `FLUXER_PUSH_FCM_CLIENT_EMAIL`
 
-No default. The service account address. Paired with the project.
+No default. The service account address. Paired with the project. Compose forwards it from `.env`.
 
 #### `FLUXER_PUSH_FCM_PRIVATE_KEY`
 
-No default. The service account key. Set one of this, `FLUXER_PUSH_FCM_PRIVATE_KEY_PATH`, or `FLUXER_PUSH_FCM_SERVICE_ACCOUNT_JSON_PATH`.
+No default. The service account key. Set one of this, `FLUXER_PUSH_FCM_PRIVATE_KEY_PATH`, or `FLUXER_PUSH_FCM_SERVICE_ACCOUNT_JSON_PATH`. Compose forwards it from `.env`.
 
 #### `FLUXER_PUSH_FCM_PRIVATE_KEY_PATH`
 
-No default. A path to the key. Must be readable inside the container.
+No default. A path to the key. Must be readable inside the container. Compose forwards it from `.env`.
 
 #### `FLUXER_PUSH_FCM_SERVICE_ACCOUNT_JSON_PATH`
 
-No default. A path to the whole service account JSON. Must be readable inside the container.
+No default. A path to the whole service account JSON. Must be readable inside the container. Compose forwards it from `.env`.
 
 #### `FLUXER_PUSH_FCM_TOKEN_URI`
 
-Default `https://oauth2.googleapis.com/token`. The OAuth token endpoint. Change only for a proxy or a test double.
+Default `https://oauth2.googleapis.com/token`. The OAuth token endpoint. Change only for a proxy or a test double. Compose forwards it from `.env`.
 
 #### `FLUXER_PUSH_FCM_APPS`
 
-Default `[]`. Per-app FCM configuration. JSON array, under the same `app_id` rule as APNs.
+Default `[]`. Per-app FCM configuration. JSON array, under the same `app_id` rule as APNs. Compose forwards it from `.env`.
 
 ## Push service settings
 
-`push` is the push notification service in the bundled stack. It reads the VAPID pair from [Web push](#web-push), the APNs and FCM names from [Mobile push](#mobile-push), and `FLUXER_SVC_NATS_URL` with `FLUXER_NATS_AUTH_TOKEN` from [Message bus and internal services](#message-bus-and-internal-services). It refuses to start without `FLUXER_INTERNAL_API_ENDPOINT` and `FLUXER_GATEWAY_RPC_AUTH_TOKEN`. Compose supplies both. The names below belong to `push`. All are optional.
+`push` is the push notification service in the bundled stack. It reads the VAPID pair from [Web push](#web-push), the APNs and FCM names from [Mobile push](#mobile-push), and `FLUXER_SVC_NATS_URL` with `FLUXER_NATS_AUTH_TOKEN` from [Message bus and internal services](#message-bus-and-internal-services). It refuses to start without `FLUXER_INTERNAL_API_ENDPOINT` and `FLUXER_GATEWAY_RPC_AUTH_TOKEN`. Compose supplies both. The names below belong to `push`, and Compose forwards every one from `.env` except the bind address and port. All are optional.
 
 #### `FLUXER_PUSH_SERVICE_HOST`
 
-Default `0.0.0.0`. The bind address. It must parse as an IP address. Also settable with `--bind-host`. Compose sets `0.0.0.0`.
+Default `0.0.0.0`. The bind address. It must parse as an IP address. Also settable with `--bind-host`. Compose does not set it, so the default applies.
 
 #### `FLUXER_PUSH_SERVICE_PORT`
 
-Default `8126`. The listen port for the health and metrics endpoints. Also settable with `--port`. Compose sets `8126`.
+Default `8126`. The listen port for the health and metrics endpoints. Also settable with `--port`. Compose does not set it, so the default applies.
 
 #### `FLUXER_PUSH_SERVICE_QUEUE_CAPACITY`
 
-Default `10000`. Notification jobs `push` holds at once. Accepts 1 to 1000000. Compose passes it through from `.env`. An empty value keeps the default.
+Default `10000`. Notification jobs `push` holds at once. Accepts 1 to 1000000. Compose forwards it from `.env`.
 
 #### `FLUXER_PUSH_SERVICE_SEND_CONCURRENCY`
 
-Default `256`. Provider requests in flight at once, across every job. Accepts 1 to 65536. Compose passes it through from `.env`. An empty value keeps the default.
+Default `256`. Provider requests in flight at once, across every job. Accepts 1 to 65536. Compose forwards it from `.env`.
 
 #### `FLUXER_PUSH_SERVICE_APNS_BASE_URL`
 
-No default. Replaces the APNs host in both environments. Set it only for a test double.
+No default. Replaces the APNs host in both environments. Set it only for a test double. Compose forwards it from `.env`.
 
 #### `FLUXER_PUSH_SERVICE_FCM_BASE_URL`
 
-Default `https://fcm.googleapis.com`. The FCM host. Set it only for a proxy or a test double.
+Default `https://fcm.googleapis.com`. The FCM host. Set it only for a proxy or a test double. Compose forwards it from `.env`.
 
 #### `FLUXER_PUSH_SERVICE_RELAY_CONSENT_ACCEPTED`
 
-Default `false`. Accepts the push relay supplemental privacy notice for this `push` process. `true`, `1`, or `yes` accepts it, and `false`, `0`, or `no` leaves the decision to the [push relay configuration](/admin-api/instance/#push-relay-configuration-object). Any other value fails startup. When it is `true`, `push` sends through the Fluxer-run relay even while the stored consent is off. Compose does not forward it.
+Default `false`. Accepts the push relay supplemental privacy notice for this `push` process. `true`, `1`, or `yes` accepts it, and `false`, `0`, or `no` leaves the decision to the [push relay configuration](/admin-api/instance/#push-relay-configuration-object). Any other value fails startup. When it is `true`, `push` sends through the Fluxer-run relay even while the stored consent is off. Compose forwards it from `.env`.
+
+#### `FLUXER_PUSH_SERVICE_MANAGED_RELAY_HOSTS`
+
+Default `push.fluxer.com`. Hostnames, comma separated, of the Fluxer-run push relay. A browser push endpoint on one of them needs the relay consent above, and a refusal from it counts against the relay quota. Compose forwards it from `.env`.
+
+#### `FLUXER_PUSH_SERVICE_OWN_RELAY_HOSTS`
+
+Default empty. Hostnames, comma separated, of a push relay this instance runs itself. `push` delivers a browser push endpoint on one of them straight through its own APNs or FCM credentials, with no HTTP hop. Compose forwards it from `.env`.
+
+`push` also runs as a relay under `--mode relay`, which the stack does not use. Only that mode reads `FLUXER_PUSH_RELAY_MAX_CONCURRENT`, default `1024`, `FLUXER_PUSH_RELAY_MAX_BODY_BYTES`, default `2816`, `FLUXER_PUSH_RELAY_TRUSTED_PROXY_HOPS`, default `1`, and `FLUXER_PUSH_RELAY_SOURCE_BUCKET_ENABLED`, default `false`. Compose does not forward them, and [Names the stack has no use for](#names-the-stack-has-no-use-for) lists them.
 
 ## Payments
 
@@ -914,23 +926,23 @@ Default `false`. The Stripe switch. Compose forwards it from `.env`.
 
 #### `FLUXER_STRIPE_SECRET_KEY`
 
-Default empty. The Stripe secret key. Not forwarded by the shipped Compose file.
+Default empty. The Stripe secret key. Compose forwards it from `.env`.
 
 #### `FLUXER_STRIPE_WEBHOOK_SECRET`
 
-Default empty. The webhook signing secret. Not forwarded by the shipped Compose file.
+Default empty. The webhook signing secret. Compose forwards it from `.env`.
 
 #### `FLUXER_STRIPE_PRICES`
 
-Default `{}`. Every price ID at once. JSON object. An individual price variable overrides the matching price in this object. Not forwarded by the shipped Compose file.
+Default `{}`. Every price ID at once. JSON object. Compose forwards it from `.env`.
 
-Individual price variables also exist, one per product and currency: `FLUXER_STRIPE_PRICE_MONTHLY_`, `FLUXER_STRIPE_PRICE_YEARLY_`, `FLUXER_STRIPE_PRICE_GIFT_1_MONTH_` and `FLUXER_STRIPE_PRICE_GIFT_1_YEAR_` in USD, EUR, BRL, DKK, INR, NOK, PLN, SEK, and TRY.
+Individual price variables also exist, one per product and currency: `FLUXER_STRIPE_PRICE_MONTHLY_`, `FLUXER_STRIPE_PRICE_YEARLY_`, `FLUXER_STRIPE_PRICE_GIFT_1_MONTH_` and `FLUXER_STRIPE_PRICE_GIFT_1_YEAR_` in USD, EUR, BRL, DKK, INR, NOK, PLN, SEK, and TRY. Each overrides the matching price in this object. Compose does not forward them, so a self-hosted instance sets prices with this variable or in the admin dashboard.
 
 Prices saved in the dashboard replace this catalogue entirely. They take any three-letter currency code. A buyer gets the currency mapped to their country, then the default currency, then the first configured one. Fluxer's country checks for localised currencies apply only to prices set by these variables.
 
 #### `FLUXER_STRIPE_LEGACY_PRICES`
 
-Default `{}`. Retired price IDs, keyed by the same slot names `FLUXER_STRIPE_PRICES` uses, each mapped to a list: `{"monthly_brl": ["price_..."]}`. JSON object. Existing subscriptions on these prices keep renewing. The localised checkout catalogue uses `FLUXER_STRIPE_PRICES` alone. Legacy prices saved in the dashboard replace this variable, and there the currency in a slot name is upper case, such as `monthly_GBP`.
+Default `{}`. Retired price IDs, keyed by the same slot names `FLUXER_STRIPE_PRICES` uses, each mapped to a list: `{"monthly_brl": ["price_..."]}`. JSON object. Compose forwards it from `.env`. Existing subscriptions on these prices keep renewing. The localised checkout catalogue uses `FLUXER_STRIPE_PRICES` alone. Legacy prices saved in the dashboard replace this variable, and there the currency in a slot name is upper case, such as `monthly_GBP`.
 
 Repricing a slot has a fixed order. Doing the steps in another order leaves a price ID unknown to the API, and invoices on that price fail. Create the new price in Stripe, move the ID it replaces into this variable, roll the API, and only then point `FLUXER_STRIPE_PRICES` at the new price. A price ID that neither variable names is unknown to the API: a renewal invoice on it fails the webhook with `Unknown product for invoice renewal`, a checkout completing on it fails with `Unknown price ID for checkout session`, and both keep failing until the ID is registered. The API answers Stripe as soon as the signature verifies and hands the event to `worker`, so any retry comes from `worker` rerunning the `processStripeWebhook` job: the Stripe dashboard shows the delivery as succeeded and the error is in the `worker` logs. Keep a retired ID listed for as long as any subscription still bills on it, which for a yearly price is at least a year after the switch.
 
@@ -942,57 +954,53 @@ All are optional.
 
 #### `FLUXER_NCMEC_ENABLED`
 
-Default `false`. NCMEC reporting. Compose hardcodes `false`.
+Default `false`. NCMEC reporting. Compose forwards it from `.env`.
 
 #### `FLUXER_NCMEC_BASE_URL`
 
-Default empty. The reporting endpoint. Required when reporting is on.
+Default empty. The reporting endpoint, `https://report.cybertip.org/ispws` in production. Required when reporting is on. Compose forwards it from `.env`.
 
 #### `FLUXER_NCMEC_USERNAME`
 
-Default empty. The reporting login. Required when reporting is on.
+Default empty. The reporting login. Required when reporting is on. Compose forwards it from `.env`.
 
 #### `FLUXER_NCMEC_PASSWORD`
 
-Default empty. The reporting password. Required when reporting is on.
+Default empty. The reporting password. Required when reporting is on. Compose forwards it from `.env`.
 
 #### `FLUXER_NCMEC_REPORTER_EMAIL`
 
-Default empty. The contact address on reports. Required when reporting is on.
+Default empty. The contact address on reports. Required when reporting is on. Compose forwards it from `.env`.
 
 #### `FLUXER_CLAMAV_ENABLED`
 
-Default `false`. Upload virus scanning. Compose hardcodes `false`, and no ClamAV container ships.
+Default `false`. Upload virus scanning. Compose forwards it from `.env`, and no ClamAV container ships.
 
 #### `FLUXER_CLAMAV_HOST`
 
-Default `127.0.0.1`. The scanner host. Needs a reachable scanner.
+Default `127.0.0.1`. The scanner host. Needs a reachable scanner. Compose forwards it from `.env`.
 
 #### `FLUXER_CLAMAV_PORT`
 
-Default `3310`. The scanner port. Integer.
+Default `3310`. The scanner port. Integer. Compose forwards it from `.env`.
 
 #### `FLUXER_CLAMAV_FAIL_OPEN`
 
-Default `false`. Behaviour when the scanner is unreachable. With scanning on and this off, an unreachable scanner rejects every upload.
-
-#### `FLUXER_API_CONTENT_MODERATION_NSFW_THRESHOLD`
-
-Default `0.7`. The API-side NSFW score cutoff. No range check. Distinct from the Media Proxy threshold, which defaults to `0.85`.
+Default `false`. Behaviour when the scanner is unreachable. With scanning on and this off, an unreachable scanner rejects every upload. Compose forwards it from `.env`.
 
 #### `FLUXER_IPINFO_API_KEY`
 
-Default empty. The ipinfo key. Admin and guild IP bans use it to skip carrier-grade NAT and other shared addresses. Without it those checks treat every address as unknown. The previous name `FLUXER_RISK_IPINFO_API_KEY` is still read when this one is unset.
+Default empty. The ipinfo key. Admin and guild IP bans use it to skip carrier-grade NAT and other shared addresses. Without it those checks treat every address as unknown. The previous name `FLUXER_RISK_IPINFO_API_KEY` is still read when this one is unset or empty. Compose forwards this name from `.env`, and not the previous one.
 
 #### `FLUXER_BLOCKLIST_FEEDS_ENABLED`
 
 Defaults to the inverse of `FLUXER_SELF_HOSTED`. Off by default on a self-hosted instance. With feeds on, the worker downloads the URLhaus and PhishTank URL lists every six hours, and MalwareBazaar file hashes every twelve hours. Fluxer checks posted links against the URLs and uploads against the hashes.
 
-With feeds off, Fluxer checks none of this data. The first worker start with feeds off removes the URL feed file and every `malware_bazaar` file-SHA ban that no Admin added. File-SHA bans added through the Admin API stay. Turning feeds back on downloads the URLs within six hours and the hashes within twelve.
+With feeds off, Fluxer checks none of this data. The first worker start with feeds off removes the URL feed file and every `malware_bazaar` file-SHA ban that no Admin added. File-SHA bans added through the Admin API stay. Turning feeds back on downloads the URLs within six hours and the hashes within twelve. Compose forwards it from `.env`.
 
 #### `FLUXER_BREACHED_PASSWORD_CHECK_ENABLED`
 
-Defaults to the inverse of `FLUXER_SELF_HOSTED`. Breached password rejection. Sends the first five characters of the password's SHA-1 hash to `api.pwnedpasswords.com`. Off by default on a self-hosted instance.
+Defaults to the inverse of `FLUXER_SELF_HOSTED`. Breached password rejection. Sends the first five characters of the password's SHA-1 hash to `api.pwnedpasswords.com`. Off by default on a self-hosted instance. Compose forwards it from `.env`.
 
 ## Stored instance policy
 
@@ -1018,55 +1026,51 @@ Request concurrency is separate from instance limits, and each process sets its 
 
 #### `FLUXER_API_MAX_INFLIGHT_REQUESTS`
 
-Default `512`. The API in-flight ceiling. Integer 1 to 100000, checked at startup.
+Default `512`. The API in-flight ceiling. Integer 1 to 100000, checked at startup. Compose forwards it from `.env`.
 
 #### `FLUXER_GATEWAY_HTTP_RPC_MAX_CONCURRENCY`
 
-Default `512`. Gateway HTTP RPC concurrency.
+Default `512`. Gateway HTTP RPC concurrency. Compose forwards it from `.env` to `gateway`.
 
 #### `FLUXER_GATEWAY_NATS_RPC_MAX_HANDLERS`
 
-Default `512`. Gateway NATS handler count.
+Default `512`. Gateway NATS handler count. Compose forwards it from `.env` to `gateway`.
 
 #### `FLUXER_DISABLE_RATE_LIMITS`
 
-Default `false`. Turns rate limits off. Read by the API and by the Gateway. The Gateway turns rate limits off only for the values `1`, `true` and `TRUE`.
+Default `false`. Turns rate limits off. Read by the API and by the Gateway. The Gateway turns rate limits off only for the values `1`, `true` and `TRUE`. A test setting, which Compose does not forward.
 
 #### `FLUXER_RELAX_REGISTRATION_RATE_LIMITS`
 
-Default `false`. Loosens registration rate limits. Reaches production containers if set.
+Default `false`. Loosens registration rate limits. A test setting, which Compose does not forward.
 
-## Telemetry, logging and build metadata
+## Logging and build metadata
 
 All are optional.
 
 #### `LOG_LEVEL`
 
-Defaults to `debug` in development, `info` otherwise. The Node log level. Read by `api` and `worker`.
+Defaults to `debug` in development, `info` otherwise. The Node log level. Read by `api` and `worker`. Compose forwards it from `.env`.
 
 #### `RUST_LOG`
 
-Default `info`. The Rust log filter. Read by `media-proxy`, `app-proxy`, `admin`, `push`, and the internal services. Not in `.env.example` or the Compose file.
+Default `info`. The Rust log filter. Read by `media-proxy`, `app-proxy`, `admin`, `push`, and the internal services. An empty or invalid filter also gives `info`, and `off` silences them. Compose forwards it from `.env`.
 
 #### `FLUXER_GATEWAY_LOGGER_LEVEL`
 
-Default `info`. The Gateway log level. Compose sets `info`.
+Default `info`. The Gateway log level. An unrecognised level also gives `info`. Compose forwards it from `.env` to `gateway`.
 
 #### `LOGGER_LEVEL`
 
-Falls back to `FLUXER_GATEWAY_LOGGER_LEVEL`. The Gateway log level at runtime. Overrides the prefixed name.
+Falls back to `FLUXER_GATEWAY_LOGGER_LEVEL`. The Gateway log level at runtime. Overrides the prefixed name, and an unrecognised level falls back to it. Compose forwards it from `.env` to `gateway`.
 
 #### `BUILD_VERSION`
 
-Default `dev`. The reported build. Baked into the images. When `BUILD_VERSION` is unset or empty outside development, the process prints a warning.
+Default `dev`. The reported build. Baked into the images, so Compose does not set it. When `BUILD_VERSION` is unset or empty outside development, the process prints a warning.
 
 #### `RELEASE_CHANNEL`
 
-Default `stable`. The reported channel. Only `canary` is recognised as non-stable.
-
-#### `FLUXER_TELEMETRY_ENABLED`
-
-Defaults to `false` at the Gateway's environment layer. Gateway telemetry. Read only by the Gateway, and in neither `.env.example` nor the Compose file.
+Default `stable`. The reported channel. Only `canary` is recognised as non-stable. Read by `app-proxy` only. It describes the shipped build, so Compose does not set it.
 
 #### `HOSTNAME`
 
@@ -1088,151 +1092,135 @@ All are optional.
 
 #### `FLUXER_DISCOVERY_ENABLED`
 
-Default `true`. The public guild [discovery](/http-api/discovery/) surface. With it off, discovery search, discovery join, and the guild discovery application routes return 400 `DISCOVERY_DISABLED`.
+Default `true`. The public guild [discovery](/http-api/discovery/) surface. With it off, discovery search, discovery join, and the guild discovery application routes return 400 `DISCOVERY_DISABLED`. Compose forwards it from `.env`.
 
 #### `FLUXER_DISCOVERY_MIN_MEMBER_COUNT`
 
-Default `1`. Minimum members for discovery eligibility. Integer.
+Default `1`. Minimum members for discovery eligibility. Integer. Compose forwards it from `.env`.
 
 #### `FLUXER_DELETION_GRACE_PERIOD_HOURS`
 
-Default `336`. How long a deleted account is recoverable. Forced to 0.01 hours when `FLUXER_TEST_MODE_ENABLED` is on.
+Default `336`. How long a deleted account is recoverable. Forced to 0.01 hours when `FLUXER_TEST_MODE_ENABLED` is on. Compose forwards it from `.env`.
 
 #### `FLUXER_API_PRESIGNED_ATTACHMENT_UPLOADS_ENABLED`
 
-Default `false`. Presigned attachment uploads. Compose sets `true`.
+Default `false`. Presigned attachment uploads. Only `api` reads it. Compose forwards it from `.env` to `api` with a default of `true`.
 
 #### `FLUXER_API_PRESIGNED_HARVEST_DOWNLOADS_ENABLED`
 
-Default `true`. Presigned harvest downloads. Applies to the harvests bucket.
+Default `true`. Presigned harvest downloads. Applies to the harvests bucket. A presigned link points at `FLUXER_S3_PUBLIC_ENDPOINT`, which in the bundled stack is the internal `http://seaweedfs:8333` that no browser reaches. Compose therefore forwards it from `.env` with a default of `false`. Turn it on once `FLUXER_S3_PUBLIC_ENDPOINT` names an address browsers can reach.
 
-#### `FLUXER_API_EMBEDS_OEMBED_HTML_ENABLED`
+#### `FLUXER_API_STORAGE_CHANGE_FEED_ENABLED`
 
-Default `false`. oEmbed HTML in embeds.
+Default `false`. Whether `api` and `worker` publish a record of every object-store write and delete to a JetStream stream. Compose forwards it from `.env`.
 
-#### `FLUXER_API_EMBEDS_OEMBED_HTML_ALLOW_UNTRUSTED_ON_SELF_HOSTED`
+#### `FLUXER_API_STORAGE_CHANGE_FEED_STREAM`
 
-Default `false`. Untrusted oEmbed HTML on a self-hosted instance. Security relevant. Leave it off.
+Default `STORAGE_CHANGES`. The JetStream stream the feed publishes to. Letters, digits, underscores or hyphens, checked at startup only while the feed is on. Compose forwards it from `.env`.
 
-#### `FLUXER_API_EMBEDS_OEMBED_HTML_ALLOWED_HOSTS`
+#### `FLUXER_API_STORAGE_CHANGE_FEED_SKIP_BUCKETS`
 
-Default empty. Hosts allowed to supply oEmbed HTML. Comma separated.
-
-#### `FLUXER_API_EMBEDS_CACHE_DEFAULT_TTL_SECONDS`
-
-Default `86400`. Default embed cache lifetime. Seconds.
-
-#### `FLUXER_API_EMBEDS_CACHE_MAX_TTL_SECONDS`
-
-Default `604800`. Maximum embed cache lifetime. Seconds.
-
-#### `FLUXER_API_EMBEDS_CACHE_MIN_TTL_SECONDS`
-
-Default `300`. Minimum embed cache lifetime. Seconds.
-
-#### `FLUXER_API_EMBEDS_CACHE_RESPECT_REMOTE_TTL`
-
-Default `true`. Whether a remote cache header is honoured. Clamped by `FLUXER_API_EMBEDS_CACHE_MIN_TTL_SECONDS` and `FLUXER_API_EMBEDS_CACHE_MAX_TTL_SECONDS`.
+Defaults to the uploads bucket. Buckets the feed leaves out, comma separated. `none` leaves out no bucket. Compose forwards it from `.env`.
 
 #### `FLUXER_API_UNFURL_IGNORED_HOSTS`
 
-Default empty. Hosts never unfurled. Comma separated, unvalidated.
+Default empty. Hosts never unfurled. Comma separated, unvalidated. Compose forwards it from `.env`.
 
 #### `FLUXER_TEST_MODE_ENABLED`
 
-Default `false`. Test mode. Collapses the deletion grace period. Reaches production containers if set.
+Default `false`. Test mode. Collapses the deletion grace period. A test setting, which Compose does not forward.
 
 #### `FLUXER_TEST_HARNESS_TOKEN`
 
-No default. The test harness credential. Reaches production containers if set.
+No default. The test harness credential. A test setting, which Compose does not forward.
 
 #### `FLUXER_VALIDATE_RESPONSES`
 
-Defaults to on outside production. Response schema validation. Costs latency when forced on.
+Defaults to on outside production. Response schema validation. Costs latency when forced on. A development setting, which Compose does not forward.
 
 #### `FLUXER_KLIPY_API_KEY`
 
-Default empty. The Klipy GIF provider key. GIF search reports itself unavailable while this and the admin dashboard key are both empty. Also read by `unfurl`, which accepts `KLIPY_API_KEY` as a fallback.
+Default empty. The Klipy GIF provider key. GIF search reports itself unavailable while this and the admin dashboard key are both empty. Also read by `unfurl`, which accepts `KLIPY_API_KEY` as a fallback. Compose forwards this name from `.env`, and not the fallback.
 
 #### `FLUXER_YOUTUBE_API_KEY`
 
-Default empty. The YouTube Data API key. Also read by `unfurl`, which accepts `YOUTUBE_API_KEY` as a fallback.
+Default empty. The YouTube Data API key. Also read by `unfurl`, which accepts `YOUTUBE_API_KEY` as a fallback. Compose forwards this name from `.env`, and not the fallback.
 
 #### `FLUXER_CACHE_PURGE_ADAPTER`
 
-Default `none`. How cached copies of deleted or replaced media are purged. `none` or `http`. Anything else fails startup. With `none`, nothing is queued or sent.
+Default `none`. How cached copies of deleted or replaced media are purged. `none` or `http`. Anything else fails startup. With `none`, nothing is queued or sent. Compose forwards it from `.env`.
 
 #### `FLUXER_CACHE_PURGE_HTTP_ENDPOINT`
 
-Default empty. Required when the adapter is `http`. Must be an absolute `http` or `https` URL without credentials, or startup fails. While purges are queued, the worker posts JSON `{"exact": [...], "prefix": [...]}` here every 10 seconds. Redirects are not followed. Any 2xx marks the batch done. Your endpoint then purges those URLs from every proxy that caches media. A `400` or `422` makes the worker resend each URL alone, and a URL refused alone moves to the `cache_purge:rejected` key. Any other failure is retried on a later run.
+Default empty. Required when the adapter is `http`. Must be an absolute `http` or `https` URL without credentials, or startup fails. While purges are queued, the worker posts JSON `{"exact": [...], "prefix": [...]}` here every 10 seconds. Redirects are not followed. Any 2xx marks the batch done. Your endpoint then purges those URLs from every proxy that caches media. A `400` or `422` makes the worker resend each URL alone, and a URL refused alone moves to the `cache_purge:rejected` key. Any other failure is retried on a later run. Compose forwards it from `.env`.
 
 #### `FLUXER_CACHE_PURGE_HTTP_TOKEN`
 
-Default empty. The bearer token sent in the `Authorization` header of each purge request. Empty sends no header. When the adapter is `http`, a token with spaces, line breaks or non-ASCII characters fails startup.
+Default empty. The bearer token sent in the `Authorization` header of each purge request. Empty sends no header. When the adapter is `http`, a token with spaces, line breaks or non-ASCII characters fails startup. Compose forwards it from `.env`.
 
 #### `FLUXER_CACHE_PURGE_HTTP_TIMEOUT_MS`
 
-Default `10000`. Purge request timeout. Accepts 1000 to 10000. The range is checked only when the adapter is `http`.
+Default `10000`. Purge request timeout. Accepts 1000 to 10000. The range is checked only when the adapter is `http`. Compose forwards it from `.env`.
 
 #### `FLUXER_GEOIP_DB_PATH`
 
-Default empty. The GeoIP database. A filesystem path, or an `s3://bucket/key` URL whose `download_path` query parameter is mandatory and must be absolute. `app-proxy` also accepts `MAXMIND_DB_PATH`.
+Default empty. The GeoIP database. A filesystem path, or an `s3://bucket/key` URL whose `download_path` query parameter is mandatory and must be absolute. Read by `api`, `worker` and `app-proxy`. Compose forwards it from `.env`.
 
 ## Instance identity and branding
 
-None of these are in `.env.example` or in `docker-compose.yml`. Set branding from the admin dashboard instead. All are optional.
+Compose forwards every name below from `.env`. The admin dashboard also sets the product name and the brand assets, and a value saved there wins. All are optional.
 
 #### `FLUXER_APP_PRODUCT_NAME`
 
-Default `Fluxer`. The product name clients display. Also settable in the admin dashboard, which wins.
+Default `Fluxer`. The product name clients display. Also settable in the admin dashboard, which wins. Compose forwards it from `.env`.
 
 #### `FLUXER_APP_ICON_URL`
 
-Default empty. The client icon. Its origin is added to the CSP by `app-proxy`.
+Default empty. The client icon. Its origin is added to the CSP by `app-proxy`. Compose forwards it from `.env`.
 
 #### `FLUXER_APP_SYMBOL_URL`
 
-Default empty. The symbol mark. Its origin is added to the CSP by `app-proxy`.
+Default empty. The symbol mark. Its origin is added to the CSP by `app-proxy`. Compose forwards it from `.env`.
 
 #### `FLUXER_APP_LOGO_URL`
 
-Default empty. The logo. Its origin is added to the CSP by `app-proxy`.
+Default empty. The logo. Its origin is added to the CSP by `app-proxy`. Compose forwards it from `.env`.
 
 #### `FLUXER_APP_WORDMARK_URL`
 
-Default empty. The wordmark. Its origin is added to the CSP by `app-proxy`.
+Default empty. The wordmark. Its origin is added to the CSP by `app-proxy`. Compose forwards it from `.env`.
 
 #### `FLUXER_APP_FAVICON_URL`
 
-Default empty. The favicon. Its origin is added to the CSP by `app-proxy`.
+Default empty. The favicon. Its origin is added to the CSP by `app-proxy`. Compose forwards it from `.env`.
 
 #### `FLUXER_APP_THEME_COLOR`
 
-Default empty. The theme colour.
+Default empty. The theme colour. Compose forwards it from `.env`.
 
 #### `FLUXER_APP_STATUS_PAGE_URL`
 
-Default empty. The public status page. The web app links to it when loading stalls, and polls its Instatus `summary.json` and `components.json` for incidents and maintenance. Empty removes the link and stops the polling. `app-proxy` does not add this origin to the CSP, so a status page off `fluxerstatus.com` also needs it in `FLUXER_CSP_EXTRA_CONNECT_SRC`.
+Default empty. The public status page. The web app links to it when loading stalls, and polls its Instatus `summary.json` and `components.json` for incidents and maintenance. Empty removes the link and stops the polling. `app-proxy` does not add this origin to the CSP, so a status page off `fluxerstatus.com` also needs it in `FLUXER_CSP_EXTRA_CONNECT_SRC`. Compose forwards it from `.env`.
 
 #### `FLUXER_APP_STATUS_PAGE_INCIDENT_HISTORY_URL`
 
-Default empty. The incident history page of the status page.
+Default empty. The incident history page of the status page. Compose forwards it from `.env`.
 
 #### `FLUXER_INSTANCE_SETUP_CONFIGURED`
 
-Default `false`. Whether setup is marked complete. The stored `app_public_config` row wins whenever its `setup.configured` is a boolean. This variable supplies the default only while no such row exists, and only on a self-hosted instance. Off a self-hosted instance the state is always true whatever this says.
+Default `false`. Whether setup is marked complete. The stored `app_public_config` row wins whenever its `setup.configured` is a boolean. This variable supplies the default only while no such row exists, and only on a self-hosted instance. Off a self-hosted instance the state is always true whatever this says. Compose forwards it from `.env`.
 
 #### `FLUXER_AUTO_JOIN_INVITE_CODE`
 
-Default empty. An invite every new account joins. Must be a live invite code.
+Default empty. An invite every new account joins. Must be a live invite code. Compose forwards it from `.env`.
 
 #### `FLUXER_VISIONARIES_GUILD_ID`
 
-Default empty. The guild that grants the visionary role. Snowflake.
+Default empty. The guild that grants the visionary role. Snowflake. Compose forwards it from `.env`.
 
 #### `FLUXER_VISIONARIES_GUILD_VISIONARY_ROLE_ID`
 
-Default empty. The role granted there. Snowflake.
+Default empty. The role granted there. Snowflake. Compose forwards it from `.env`.
 
 Completing setup saves that state independently of the environment default. Later branding or legal updates preserve it. Setting `FLUXER_INSTANCE_SETUP_CONFIGURED` back to `false` does not reopen the wizard or restore the unauthenticated setup access and first-registration admin grant described in [Get started](/operator/get-started/).
 
@@ -1242,27 +1230,27 @@ Completing setup saves that state independently of the environment default. Late
 
 #### `FLUXER_API_PORT`
 
-Default `8080`. The API listen port. Compose sets `8080` and the edge proxies to it.
+Default `8080`. The API listen port. Compose sets `8080`, which the edge proxies to.
 
 #### `FLUXER_API_HEADERS_TIMEOUT_MS`
 
-Default `30000`. How long a client may take to send the request line and the headers. Integer 1000 to 3600000, checked at startup. It is clamped down to `FLUXER_API_REQUEST_TIMEOUT_MS`, so raising it alone does nothing.
+Default `30000`. How long a client may take to send the request line and the headers. Integer 1000 to 3600000, checked at startup. It is clamped down to `FLUXER_API_REQUEST_TIMEOUT_MS`, so raising it alone does nothing. Compose forwards it from `.env`.
 
 #### `FLUXER_API_REQUEST_TIMEOUT_MS`
 
-Default `120000`. How long a client may take over the whole request. Integer 1000 to 3600000, checked at startup. This is the one to raise for large uploads or high latency links.
+Default `120000`. How long a client may take over the whole request. Integer 1000 to 3600000, checked at startup. This is the one to raise for large uploads or high latency links. Compose forwards it from `.env`.
 
 #### `FLUXER_API_WORKER_MODE`
 
-Default `all_lanes`. Which lanes the worker runs. `all_lanes`, `single_lane`, or `single_task`. Anything else fails startup.
+Default `all_lanes`. Which lanes the worker runs. `all_lanes`, `single_lane`, or `single_task`. Anything else fails startup. Compose sets `all_lanes`, because the stack runs one `worker`.
 
 #### `FLUXER_API_WORKER_LANE`
 
-No default. Which lane, under `single_lane`. `realtime`, `unfurl`, `lifecycle`, or `batch`.
+No default. Which lane, under `single_lane`. `realtime`, `unfurl`, `lifecycle`, or `batch`. Compose does not forward it.
 
 #### `FLUXER_API_WORKER_TASK`
 
-No default. Which task, under `single_task`. Must name a known task.
+No default. Which task, under `single_task`. Must name a known task. Compose does not forward it.
 
 #### `FLUXER_API_WORKER_ENABLE_CRON_SCHEDULER`
 
@@ -1270,7 +1258,11 @@ No default. Whether the cron scheduler runs. Compose sets `true`. Without it no 
 
 #### `FLUXER_API_WORKER_LANE_CONCURRENCY_OVERRIDES`
 
-No default. Per-lane concurrency. JSON object keyed by lane. Each value must be an integer of at least 1 or startup fails. Built-in concurrency is realtime 10, unfurl 20, lifecycle 8, batch 12.
+No default. Per-lane concurrency. JSON object keyed by lane. Each value must be an integer of at least 1 or startup fails. Built-in concurrency is realtime 10, unfurl 20, lifecycle 8, batch 12. Compose forwards it from `.env`.
+
+#### `FLUXER_NODE_EXTRA_CA_CERTS`
+
+Default `/etc/ssl/certs/ca-certificates.crt`, the system bundle in the image. A PEM file of extra CA certificates that `api` and `worker` trust for every outbound TLS connection, such as SMTP, object storage, search and webhooks. Node trusts its own built-in roots plus this one file. A file you set replaces the system bundle, so append your CA to a copy of that bundle, mount it into both containers and point this at it. Compose passes it to `api` and `worker` as `NODE_EXTRA_CA_CERTS`, and keeps the image path when `.env` leaves it out. It reads the prefixed name so a `NODE_EXTRA_CA_CERTS` in the host shell does not reach the containers.
 
 ## Media Proxy settings
 
@@ -1278,125 +1270,131 @@ The Media Proxy takes uploads, transforms images, and serves media back. All are
 
 #### `FLUXER_MEDIA_PROXY_MODE`
 
-Default `mp`. Which routes are served. `mp`, `static`, `upload`, or `relay`. `relay` serves the upload relay and the operator and internal endpoints, and returns 404 for every read. Anything else is a startup error. Also settable with `--mode`. Compose sets `upload`.
+Default `mp`. Which routes are served. `mp`, `static`, `upload`, or `relay`. `relay` serves the upload relay and the operator and internal endpoints, and returns 404 for every read. Anything else is a startup error. Also settable with `--mode`. Compose sets `upload`, which the upload relay needs.
 
 #### `FLUXER_MEDIA_PROXY_HOST`
 
-Default `0.0.0.0`. The bind address. Also settable with `--bind-host`.
+Default `0.0.0.0`. The bind address. Also settable with `--bind-host`. Compose does not set it, so the default applies.
 
 #### `FLUXER_MEDIA_PROXY_PORT`
 
-Default `8080`. The listen port. Also settable with `--port`.
+Default `8080`. The listen port. Also settable with `--port`. Compose sets `8080`, which the edge proxies to.
 
 #### `FLUXER_MEDIA_PROXY_READ_ONLY`
 
-Default `false`. Refuses writes. `--read-only` can force it on.
+Default `false`. Refuses writes. `--read-only` can force it on. Compose forwards it from `.env`.
 
 #### `FLUXER_MEDIA_PROXY_STORAGE_BACKEND`
 
-Default `local`. Where objects live. `local` or `s3`. Compose sets `s3`.
+Default `local`. Where objects live. `local` or `s3`. Compose sets `s3`, the bundled object store.
 
 #### `FLUXER_MEDIA_PROXY_STORAGE_ROOT`
 
-Default `./media_proxy_storage`. The local storage directory. Used only by the local backend.
+Default `./media_proxy_storage`. The local storage directory. Used only by the local backend, so Compose does not forward it.
 
 #### `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES`
 
-Default `524288000`. The upload size cap on both sides. Rust accepts 1 byte to 5 GiB and refuses to start when the value is above `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES`. The effective cap is the smaller of the token's value and this.
+Default `524288000`. The upload size cap on both sides. Rust accepts 1 byte to 5 GiB and refuses to start when the value is above `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES`. The effective cap is the smaller of the token's value and this. Compose forwards it from `.env`.
 
 #### `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_TOKEN_TTL_SECS`
 
-Default `900`. Relay token lifetime. Read by the API alone.
+Default `900`. Relay token lifetime. Read by the API alone. Compose forwards it from `.env`.
 
 #### `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_ENDPOINT`
 
-Default `http://localhost:8088/media`. The relay URL handed to clients. Node side only. A trailing slash and a trailing `/v1/relay` are stripped.
+Default `http://localhost:8088/media`. The relay URL handed to clients. Node side only. A trailing slash and a trailing `/v1/relay` are stripped. Compose forwards it from `.env`, and builds it from the public origin and `/media` when it is unset.
 
 #### `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_KEEP_DIRECT_COUNTRIES`
 
-Default empty. Countries that upload directly to S3. Node side only. Empty means every client uses the relay, which is what keeps the internal S3 address out of browsers.
+Default empty. Countries that upload directly to S3. Node side only. Empty means every client uses the relay, which is what keeps the internal S3 address out of browsers. Compose forwards it from `.env`.
 
 #### `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_S3_TIMEOUT_MS`
 
-Default `900000`. Relay upload timeout. Accepts 1000 to 3600000.
+Default `900000`. Relay upload timeout. Accepts 1000 to 3600000. Compose forwards it from `.env`.
+
+#### `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_BUFFERED_RETRY_BYTES`
+
+Default `33554432`, 32 MiB. The largest declared upload the relay holds in memory so it can retry the S3 write. Accepts 0 to 268435456. A larger upload is streamed to S3 and gets no retry. Compose forwards it from `.env`.
+
+#### `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_BUFFERED_RETRY_TOTAL_BYTES`
+
+Default `536870912`, 512 MiB. The memory all buffered relay uploads may hold at once. Accepts 0 to 8589934592. An upload that would pass it is streamed instead. The default equals the `512mb` that `FLUXER_MEDIA_PROXY_MEMORY_LIMIT` gives `media-proxy`, so lower this or raise that limit when many uploads arrive at once. Compose forwards it from `.env`.
 
 #### `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_DIR`
 
-Defaults to the system temporary directory. Where relay bodies spool. Must be writable.
+Defaults to the system temporary directory. Where relay bodies spool. Must be writable. Compose forwards it from `.env`.
 
 #### `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_CHUNK_BYTES`
 
-Default `1048576`. Spool chunk size. Accepts 64 KiB to 64 MiB.
+Default `1048576`. Spool chunk size. Accepts 64 KiB to 64 MiB. Compose forwards it from `.env`.
 
 #### `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SPOOL_MAX_TOTAL_BYTES`
 
-Default `8589934592`. Total spool ceiling. Accepts 0 to 256 GiB, and must be at or above `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES`, which puts the usable floor at 500 MiB by default.
+Default `8589934592`. Total spool ceiling. Accepts 0 to 256 GiB, and must be at or above `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_MAX_BODY_BYTES`, which puts the usable floor at 500 MiB by default. Compose forwards it from `.env`.
 
 #### `FLUXER_MEDIA_PROXY_MAX_NATIVE_TRANSFORMS`
 
-Defaults to available parallelism, clamped to 2 to 8. Concurrent image transforms. Accepts 1 to 128.
+Defaults to available parallelism, clamped to 2 to 8. Concurrent image transforms. Accepts 1 to 128. Compose forwards it from `.env`.
 
 #### `FLUXER_MEDIA_PROXY_WORKER_QUEUE_CAPACITY`
 
-Defaults to eight times the transform limit. Transform queue depth. Accepts 1 to 8192.
+Defaults to eight times the transform limit. Transform queue depth. Accepts 1 to 8192. Compose forwards it from `.env`.
 
 #### `FLUXER_MEDIA_PROXY_TRANSFORM_CACHE_BYTES`
 
-Default `268435456`. Transform cache size. Accepts 0 to 4 GiB.
+Default `268435456`. Transform cache size. Accepts 0 to 4 GiB. Compose forwards it from `.env`.
 
 #### `FLUXER_MEDIA_PROXY_TRANSFORM_CACHE_MAX_ENTRY_BYTES`
 
-Default `67108864`. Largest cacheable result. Accepts 0 to 512 MiB.
+Default `67108864`. Largest cacheable result. Accepts 0 to 512 MiB. Compose forwards it from `.env`.
 
 #### `FLUXER_MEDIA_PROXY_TRANSFORM_CACHE_TTL_MS`
 
-Default `120000`. Transform cache lifetime. Accepts 0 to 3600000.
+Default `120000`. Transform cache lifetime. Accepts 0 to 3600000. Compose forwards it from `.env`.
 
 #### `FLUXER_MEDIA_PROXY_SOCKET_IO_TIMEOUT_MS`
 
-Default `30000`. Socket read and write timeout. Accepts 0 to 300000.
+Default `30000`. Socket read and write timeout. Accepts 0 to 300000. Compose forwards it from `.env`.
 
 #### `FLUXER_MEDIA_PROXY_SHUTDOWN_GRACE_MS`
 
-Default `30000`. Milliseconds allowed to finish requests and media transforms after SIGTERM or Ctrl-C. Accepts 0 to 300000. Exceeding the deadline exits the process with an error.
+Default `30000`. Milliseconds allowed to finish requests and media transforms after SIGTERM or Ctrl-C. Accepts 0 to 300000. Exceeding the deadline exits the process with an error. Compose forwards it from `.env`.
 
 #### `FLUXER_MEDIA_PROXY_TRANSFORM_TIMEOUT_MS`
 
-Default `15000`. Per-transform timeout. Accepts 1000 to 120000.
+Default `15000`. Per-transform timeout. Accepts 1000 to 120000. Compose forwards it from `.env`.
 
 #### `FLUXER_MEDIA_PROXY_MAX_ENCODE_FRAMES`
 
-Default `20000`. Animation frame ceiling. Accepts 1 to 100000.
+Default `20000`. Animation frame ceiling. Accepts 1 to 100000. Compose forwards it from `.env`.
 
 #### `FLUXER_MEDIA_PROXY_MAX_ENCODE_DURATION_MS`
 
-Default `30000`. Animation duration ceiling. Accepts 100 to 600000.
+Default `30000`. Animation duration ceiling. Accepts 100 to 600000. Compose forwards it from `.env`.
 
 #### `FLUXER_NSFW_SERVICE_ENDPOINT`
 
-Default empty. An external NSFW classifier. No such service ships with the stack.
+Default empty. An external NSFW classifier. No such service ships with the stack. Compose forwards it from `.env`.
 
 #### `FLUXER_MEDIA_PROXY_NSFW_THRESHOLD`
 
-Default `0.85`. The media-side NSFW cutoff. Accepts 0.0 to 1.0 and finite. Distinct from the API threshold.
+Default `0.85`. The media-side NSFW cutoff. Accepts 0.0 to 1.0 and finite. Compose forwards it from `.env`.
 
 #### `FLUXER_MEDIA_PROXY_CORS_MODE`
 
-Default `off`. The [cross-origin read policy](/media-proxy/overview/#cross-origin-reads). `off`, `report`, or `enforce`. Anything else is a startup error. `report` logs each read whose origin would be refused and changes no response. `enforce` refuses those reads with 403 and sets `Access-Control-Allow-Origin` to the request origin. When `FLUXER_MEDIA_PROXY_MODE` is `static` or `relay`, the Media Proxy ignores it, so a bad value is no startup error. Compose leaves it `off`.
+Default `off`. The [cross-origin read policy](/media-proxy/overview/#cross-origin-reads). `off`, `report`, or `enforce`. Anything else is a startup error. `report` logs each read whose origin would be refused and changes no response. `enforce` refuses those reads with 403 and sets `Access-Control-Allow-Origin` to the request origin. When `FLUXER_MEDIA_PROXY_MODE` is `static` or `relay`, the Media Proxy ignores it, so a bad value is no startup error. Compose forwards it from `.env`.
 
 #### `FLUXER_MEDIA_PROXY_CORS_ALLOWED_ORIGINS`
 
 Default empty. Comma-separated origins that may read media through CORS, such as `https://web.fluxer.app`. Spaces around an entry and empty entries are ignored. Each entry is parsed as a URL and must be `http` or `https` with no credentials, query, fragment, or path beyond `/`. Its host must be an IPv4 address, a bracketed IPv6 address, or a domain name whose labels are ASCII letters, digits, and hyphens after parsing. So a wildcard such as `https://*.fluxer.app`, a brace pattern, an underscore, a trailing dot on a domain name, or any non-ASCII character fails. Write an internationalised domain name in its punycode form. Any failing entry makes the process exit. An entry is compared in the form a browser sends. `https://Web.Fluxer.App:443/` matches `https://web.fluxer.app`. Required when `FLUXER_MEDIA_PROXY_CORS_MODE` is `report` or `enforce`. When the policy is `report` or `enforce`, the Media Proxy logs the parsed list once at startup. When `FLUXER_MEDIA_PROXY_MODE` is `static` or `relay`, the Media Proxy ignores it.
 
-Compose sets it to the public origin, built from `FLUXER_PUBLIC_ORIGIN`, or from `FLUXER_PUBLIC_SCHEME`, `FLUXER_DOMAIN`, and `FLUXER_PUBLIC_PORT`. That origin is the only entry, so the web app the instance serves reads its own media. The hosted web client and the desktop app run on `https://web.fluxer.app`. To let them read this instance's media through CORS, set the list in `.env` to the public origin and `https://web.fluxer.app`, such as `https://chat.example.com,https://web.fluxer.app`. A value set in `.env` replaces the Compose value, so it must name the public origin too.
+Compose forwards it from `.env`, and defaults it to the public origin, built from `FLUXER_PUBLIC_ORIGIN`, or from `FLUXER_PUBLIC_SCHEME`, `FLUXER_DOMAIN`, and `FLUXER_PUBLIC_PORT`. That origin is the only entry, so the web app the instance serves reads its own media. The hosted web client and the desktop app run on `https://web.fluxer.app`. To let them read this instance's media through CORS, set the list in `.env` to the public origin and `https://web.fluxer.app`, such as `https://chat.example.com,https://web.fluxer.app`. A value set in `.env` replaces the Compose value, so it must name the public origin too.
 
 #### `FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE`
 
-Default `off`. The [signed attachment URL policy](/media-proxy/overview/#signed-attachment-urls). `off`, `report`, or `enforce`. Anything else is a startup error, an empty value included. `report` logs each attachment read `enforce` would refuse and serves it. `enforce` refuses those reads with 404. Under both, a read whose signature is valid gets a `Cache-Control` that ends with the signature instead of the usual year. `report` and `enforce` require `FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64`, and the Media Proxy logs the mode and the number of secrets once at startup. When `FLUXER_MEDIA_PROXY_MODE` is `static` or `relay`, the Media Proxy ignores it and the secrets, so a bad value is no startup error. Compose leaves it `off`, so a self-hosted instance signs nothing until an operator turns it on.
+Default `off`. The [signed attachment URL policy](/media-proxy/overview/#signed-attachment-urls). `off`, `report`, or `enforce`. An empty value means `off`, and anything else is a startup error. `report` logs each attachment read `enforce` would refuse and serves it. `enforce` refuses those reads with 404. Under both, a read whose signature is valid gets a `Cache-Control` that ends with the signature instead of the usual year. `report` and `enforce` require `FLUXER_MEDIA_PROXY_ATTACHMENT_URL_SECRETS_BASE64`, and the Media Proxy logs the mode and the number of secrets once at startup. When `FLUXER_MEDIA_PROXY_MODE` is `static` or `relay`, the Media Proxy ignores it and the secrets, so a bad value is no startup error. A self-hosted instance leaves it `off`, and signs nothing, until an operator turns it on. Compose forwards it from `.env`.
 
 This variable is the whole switch, and moving between the three states needs nothing else changed. The Media Proxy reads it once at start, so apply a change with `docker compose up -d media-proxy`, which replaces the container. `docker compose restart media-proxy` reuses the old environment. A cache or proxy in front of the instance has a switch of its own, and [Turning the signature policy on](/operator/reverse-proxy/#turning-the-signature-policy-on) gives the order to move the two in and what each pairing serves.
-
-`media-proxy` range-checks these values at startup and then reads them nowhere: `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_BUFFERED_RETRY_BYTES` and `FLUXER_MEDIA_PROXY_UPLOAD_RELAY_BUFFERED_RETRY_TOTAL_BYTES`. A bad value still fails the boot.
 
 ## Gateway settings
 
@@ -1404,43 +1402,47 @@ The Gateway is the WebSocket service clients hold open for live events. All are 
 
 #### `FLUXER_GATEWAY_PORT`
 
-Default `8771`. The listen port. Compose sets `8080`.
+Default `8771`. The listen port. Compose sets `8080`, which the edge proxies to.
 
 #### `FLUXER_GATEWAY_ROLE`
 
-Default `all`. Which subsystems this node runs. `websocket`, `sessions`, `presence`, `guilds`, `calls`, `push`, or `all`. An unrecognised value also becomes `all`.
+Default `all`. Which subsystems this node runs. `websocket`, `sessions`, `presence`, `guilds`, `calls`, `push`, or `all`. An unrecognised value also becomes `all`. Compose does not forward it, because the stack runs one Gateway node.
 
 #### `FLUXER_GATEWAY_MEDIA_PROXY_ENDPOINT`
 
-Default `http://localhost:8088/media`. The public media URL used in payloads. Compose builds it from the public origin.
+Default `http://localhost:8088/media`. The public media URL used in payloads. Compose forwards it from `.env`, and uses `FLUXER_MEDIA_ENDPOINT` or the public media URL when it is unset.
 
 #### `FLUXER_GATEWAY_STATIC_CDN_ENDPOINT`
 
-Default `http://localhost:8088`. The public static origin used in payloads. Compose builds it from the public origin.
+Default `http://localhost:8088`. The public static origin used in payloads. Compose forwards it from `.env`, and uses `FLUXER_STATIC_CDN_ENDPOINT` or the public origin when it is unset.
 
 #### `FLUXER_GATEWAY_PRESENCE_PUSH_BUFFER_MAX_ENTRIES`
 
-Default `128`. Presence push buffer depth.
+Default `128`. Presence push buffer depth. Compose forwards it from `.env`.
 
 #### `FLUXER_GATEWAY_PRESENCE_PUSH_BUFFER_MAX_BYTES`
 
-Default `1048576`. Presence push buffer size.
+Default `1048576`. Presence push buffer size. Compose forwards it from `.env`.
 
-#### `FLUXER_GATEWAY_SHUTDOWN_DRAIN_WAIT_MS`
+#### `FLUXER_GATEWAY_PUSH_ENROLLED_CLEAR_NOTIFICATIONS_ENABLED`
 
-Default `5000`. Milliseconds. The Gateway parses it into its configuration at startup, and nothing reads it after that, so it controls no drain.
+Default `true`. Whether the Gateway asks `push` to clear a channel's notifications once the channel is read. Compose forwards it from `.env`.
+
+#### `FLUXER_GATEWAY_PUSH_OUTBOX_REQUEST_TIMEOUT_MS`
+
+Default `100000`. How long the Gateway waits on one push outbox request. Milliseconds. Compose forwards it from `.env`.
 
 #### `FLUXER_GATEWAY_HTTP_FAILURE_THRESHOLD`
 
-Default `6`. Failures before the API circuit opens. Integer.
+Default `6`. Failures before the API circuit opens. Integer. Compose forwards it from `.env`.
 
 #### `FLUXER_GATEWAY_HTTP_RECOVERY_TIMEOUT_MS`
 
-Default `15000`. How long the circuit stays open. Milliseconds.
+Default `15000`. How long the circuit stays open. Milliseconds. Compose forwards it from `.env`.
 
 #### `FLUXER_GATEWAY_CLUSTER_ENABLED`
 
-Default `false`. BEAM clustering. Single-node by default.
+Default `false`. BEAM clustering. Single-node by default. Compose forwards none of the clustering names, because the stack runs one Gateway node.
 
 #### `FLUXER_GATEWAY_CLUSTER_DISCOVERY_DNS_NAME`
 
@@ -1460,7 +1462,7 @@ Default empty. A fixed peer list. Comma separated Erlang node names, capped at 2
 
 #### `FLUXER_ERLANG_NODE_NAME`
 
-Default `fluxer_gateway@127.0.0.1`. The BEAM node name. Must be resolvable by peers when clustering.
+Default `fluxer_gateway@127.0.0.1`. The BEAM node name. Must be resolvable by peers when clustering. Compose does not forward it.
 
 #### `FLUXER_ERLANG_COOKIE`
 
@@ -1468,31 +1470,31 @@ No default. The BEAM distribution secret. The Gateway refuses to start without i
 
 #### `FLUXER_ERLANG_DIST_PORT`
 
-Default `8081`. The BEAM distribution port. Not published by Compose. Never expose it.
+Default `8081`. The BEAM distribution port. Not published or forwarded by Compose. Never expose it.
 
 #### `FLUXER_ERLANG_SCHEDULERS`
 
-Defaults to the container CPU count, clamped to 2 through 16. Normal scheduler count. Positive integer, passed to the BEAM as `+S N:N`. A value that is not a positive integer is ignored and the derivation runs instead.
+Defaults to the container CPU count, clamped to 2 through 16. Normal scheduler count. Positive integer, passed to the BEAM as `+S N:N`. A value that is not a positive integer is ignored and the derivation runs instead. Compose forwards it from `.env` to `gateway`.
 
 #### `FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS`
 
-Defaults to two thirds of the scheduler count, rounded up. Dirty CPU scheduler count. Positive integer, passed as `+SDcpu N:N`. Same fallback rule as `FLUXER_ERLANG_SCHEDULERS`.
+Defaults to two thirds of the scheduler count, rounded up. Dirty CPU scheduler count. Positive integer, passed as `+SDcpu N:N`. Same fallback rule as `FLUXER_ERLANG_SCHEDULERS`. Compose forwards it from `.env` to `gateway`.
 
 #### `FLUXER_ERLANG_SCHEDULERS_MIN`
 
-Default `2`. The floor of the scheduler clamp. Compose forwards it to `gateway`.
+Default `2`. The floor of the scheduler clamp. Compose forwards it from `.env` to `gateway`.
 
 #### `FLUXER_ERLANG_SCHEDULERS_MAX`
 
-Default `16`. The ceiling of the scheduler clamp. Compose forwards it to `gateway`, and `.env.example` ships both names commented out.
+Default `16`. The ceiling of the scheduler clamp. Compose forwards it from `.env` to `gateway`, and `.env.example` ships both names commented out.
 
 The Gateway entrypoint derives the scheduler counts before the BEAM starts. It reads the container CPU quota, clamps the result between `FLUXER_ERLANG_SCHEDULERS_MIN` and `FLUXER_ERLANG_SCHEDULERS_MAX`, exports the answer as `FLUXER_ERLANG_SCHEDULERS`, and derives `FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS` from it. `vm.args.src` then substitutes both into `+S` and `+SDcpu`.
 
-The clamp bounds reach the Gateway from `.env`. To pin the count, set `FLUXER_ERLANG_SCHEDULERS` on the `gateway` service in `docker-compose.yml`, which skips the clamp.
+The clamp bounds reach the Gateway from `.env`. To pin the count, set `FLUXER_ERLANG_SCHEDULERS` in `.env`, which skips the clamp.
 
 The Gateway protocol version is `1`. The Gateway answers any other value in `?v=` with 101, then a close frame reading `Invalid API version`. [Gateway overview](/gateway/overview/) has the close code.
 
-The Gateway reads every `FLUXER_GATEWAY_` name straight from the environment, so any of them works once it is in the `gateway` container environment. The bundled Compose file passes only the names it lists, so add any other name through a Compose override file.
+The Gateway reads every `FLUXER_GATEWAY_` name straight from the environment. Compose forwards each one a single-node stack can use. The role, the clustering names and `FLUXER_GATEWAY_API_RPC_ENDPOINT` need a Compose override file.
 
 ## App proxy settings
 
@@ -1500,19 +1502,19 @@ The Gateway reads every `FLUXER_GATEWAY_` name straight from the environment, so
 
 #### `FLUXER_APP_PROXY_HOST`
 
-Default `0.0.0.0`. The bind address. Compose sets it explicitly.
+Default `0.0.0.0`. The bind address. The image sets the same value, and Compose does not set it.
 
 #### `FLUXER_APP_PROXY_PORT`
 
-Default `8080`. The listen port. Compose sets it explicitly.
+Default `8080`. The listen port. Compose sets `8080`, which the edge proxies to.
 
 #### `FLUXER_STATIC_DIR`
 
-Default `./static`. Where the client's SPA bundle lives, unrelated to `static-proxy`.
+Default `./static`. Where the client's SPA bundle lives, unrelated to `static-proxy`. A path inside the image, so Compose does not forward it.
 
 #### `FLUXER_APP_PROXY_INDEX_UPSTREAM_URL`
 
-No default. An upstream to fetch `index.html` from. Leave unset for the shipped image.
+No default. An upstream to fetch `index.html` from. Leave unset for the shipped image. Compose forwards it from `.env`.
 
 #### `DISCOVERY_UPSTREAM_URL`
 
@@ -1520,51 +1522,51 @@ Default `http://localhost:8088/api/.well-known/fluxer`. Where the bootstrap disc
 
 #### `DISCOVERY_REFRESH_INTERVAL_MS`
 
-Default `60000`. How often discovery is refetched. Unprefixed name.
+Default `60000`. How often discovery is refetched. Unprefixed name. Compose forwards it from `.env`.
 
 #### `PUBLIC_BOOTSTRAP_API_ENDPOINT`
 
-Default `/api`. The API path put in the page bootstrap.
+Default `/api`. The API path put in the page bootstrap. Compose sets `/api`, the path the edge routes to the API.
 
 #### `PUBLIC_BOOTSTRAP_API_PUBLIC_ENDPOINT`
 
-No default. The absolute API URL in the bootstrap. Compose builds it from the public origin.
+No default. The absolute API URL in the bootstrap. Compose forwards it from `.env`, and builds it from the public origin when it is unset.
 
 #### `FLUXER_APP_PROXY_SAME_ORIGIN_HOSTS`
 
-Default empty. Hostnames, comma separated, without a scheme, port or path. When a request's `Host` is in the list, the page bootstrap points the web app and its API at that host, as `https://<host>` and `https://<host>/api`. Every other request gets the discovery values unchanged. Set it when the web app is served on more than one hostname and each hostname routes `/api` to the API. Invalid entries are logged and dropped.
+Default empty. Hostnames, comma separated, without a scheme, port or path. When a request's `Host` is in the list, the page bootstrap points the web app and its API at that host, as `https://<host>` and `https://<host>/api`. Every other request gets the discovery values unchanged. Set it when the web app is served on more than one hostname and each hostname routes `/api` to the API. Invalid entries are logged and dropped. Compose forwards it from `.env`.
 
 #### `FLUXER_APP_PROXY_MANIFEST_SCOPE_EXTENSIONS`
 
-Default empty. HTTPS origins, comma separated, without a path, query or credentials. `app-proxy` writes each one into the `scope_extensions` list of the web app manifest, so an installed web app keeps other origins inside its window. Empty leaves the list empty. Each listed origin must serve `/.well-known/web-app-origin-association` naming this web app, or browsers ignore the entry. Invalid entries are logged and dropped.
+Default empty. HTTPS origins, comma separated, without a path, query or credentials. `app-proxy` writes each one into the `scope_extensions` list of the web app manifest, so an installed web app keeps other origins inside its window. Empty leaves the list empty. Each listed origin must serve `/.well-known/web-app-origin-association` naming this web app, or browsers ignore the entry. Invalid entries are logged and dropped. Compose forwards it from `.env`.
 
 ## Admin settings
 
-`admin` serves the dashboard at `/admin`. All are optional.
+`admin` serves the dashboard at `FLUXER_ADMIN_BASE_PATH`, `/admin` by default. All are optional.
 
 #### `FLUXER_ADMIN_HOST`
 
-Default `0.0.0.0`. The bind address. Compose sets it explicitly.
+Default `0.0.0.0`. The bind address. Compose does not set it, so the default applies.
 
 #### `FLUXER_ADMIN_PORT`
 
-Default `3020`. The listen port. The image sets 8080 and Compose sets 8080.
+Default `3020`. The listen port. The image sets 8080 and Compose sets 8080, which the edge proxies to.
 
 #### `FLUXER_ADMIN_BASE_PATH`
 
-Defaults to empty in Rust, `/admin` in Node. The path the dashboard is mounted under. Normalised to a leading slash with no trailing slash. The service serves at root and re-prefixes every emitted URL with this.
+Default empty. The path the dashboard is mounted under. Write it with a leading slash and no trailing slash, such as `/panel`. The edge and the Compose-built `FLUXER_ADMIN_ENDPOINT` use the value as written, and only `admin` itself normalises it. The service serves at root and re-prefixes every emitted URL with this. Read by `admin` and the edge. Compose forwards it from `.env` with a default of `/admin`, hands the same value to the edge, which routes that path to `admin`, and builds the default `FLUXER_ADMIN_ENDPOINT` from it. A change moves the admin OAuth redirect with it, and takes `docker compose up -d`.
 
 #### `FLUXER_ADMIN_OAUTH_REDIRECT_URI`
 
-Defaults to the admin endpoint plus `/oauth2_callback`. The OAuth2 redirect. Must equal what the API derives from `FLUXER_ADMIN_ENDPOINT`. The API does not read this name.
+Defaults to the admin endpoint plus `/oauth2_callback`. The OAuth2 redirect. Must equal what the API derives from `FLUXER_ADMIN_ENDPOINT`, so Compose does not set it. The API does not read this name.
 
-#### `FLUXER_RELEASE_CHANNEL`
+#### `FLUXER_ADMIN_OAUTH_CLIENT_ID`
 
-Default `stable`. The reported channel. `RELEASE_CHANNEL` is preferred over it.
+Default `1234567890123456789`. The OAuth2 client id of `admin`. Must equal the admin application id built into the API, so Compose does not set it.
 
 #### `FLUXER_BUILD_VERSION`
 
-Defaults to the crate version. The reported build. `BUILD_VERSION` is preferred over it.
+Defaults to the crate version. The reported build of `admin` and `app-proxy`. `BUILD_VERSION` is preferred over it. Compose does not set it.
 
 ## Content Security Policy
 
@@ -1592,15 +1594,15 @@ Read by Docker Compose to select the proxy overlay.
 
 #### `FLUXER_EDGE_SITE_ADDRESS`
 
-Read by the edge container only, and only in the bundled layout. The overlay overwrites it with `:8080`.
+Read by the edge container only, and only in the bundled layout. Both overlays overwrite it, `docker-compose.proxy.yml` with `:8080` and `tunnel.compose.yml` with `:80`.
 
 #### `FLUXER_CADDY_SITE_ADDRESS`
 
 Read by Docker Compose as the default for `FLUXER_EDGE_SITE_ADDRESS` when that name is unset.
 
-#### `FLUXER_EDGE_TRUSTED_PROXIES`
+#### `FLUXER_EDGE_TRUSTED_PROXIES` and `FLUXER_EDGE_ENCODE`
 
-Read by the edge container only. It takes effect on `docker compose up -d edge`.
+Read by the edge container only. They take effect on `docker compose up -d edge`.
 
 #### `FLUXER_EDGE_BIND`
 
@@ -1614,6 +1616,10 @@ Used as the host side of the edge's published ports.
 
 Image name selection.
 
+#### The third-party image names
+
+Image name selection for the bundled services, listed under [Images](#images).
+
 #### `POSTGRES_PASSWORD`
 
 Becomes `FLUXER_POSTGRES_PASSWORD` and the Postgres image's own password.
@@ -1624,43 +1630,71 @@ Becomes `FLUXER_SEARCH_API_KEY` and the Meilisearch image's own key.
 
 #### `FLUXER_S3_ACCESS_KEY` and `FLUXER_S3_SECRET_KEY`
 
-Become `FLUXER_S3_ACCESS_KEY_ID` and `FLUXER_S3_SECRET_ACCESS_KEY`, and the `AWS_` pair.
+Become `FLUXER_S3_ACCESS_KEY_ID` and `FLUXER_S3_SECRET_ACCESS_KEY`, and the identity `seaweedfs-init` installs.
 
 #### `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET`
 
 Become `FLUXER_LIVEKIT_API_KEY` and `FLUXER_LIVEKIT_API_SECRET`, and LiveKit's own `LIVEKIT_KEYS`.
 
+#### The extra CA bundle
+
+`FLUXER_NODE_EXTRA_CA_CERTS` becomes `NODE_EXTRA_CA_CERTS` in `api` and `worker`.
+
+#### The LiveKit configuration names
+
+`FLUXER_LIVEKIT_LOG_LEVEL`, `FLUXER_LIVEKIT_TCP_PORT`, `FLUXER_LIVEKIT_UDP_PORT`, `FLUXER_LIVEKIT_USE_EXTERNAL_IP`, `FLUXER_LIVEKIT_NODE_IP`, `FLUXER_LIVEKIT_STUN_PRIMARY` and `FLUXER_LIVEKIT_STUN_SECONDARY` are written into `LIVEKIT_CONFIG`, and the two ports also into the published port mappings.
+
+#### The per-service pool sizes
+
+`FLUXER_API_POSTGRES_MAX_CONNECTIONS`, `FLUXER_WORKER_POSTGRES_MAX_CONNECTIONS`, `FLUXER_USERS_SHARD_POSTGRES_MAX_CONNECTIONS` and `FLUXER_MESSAGES_SHARD_POSTGRES_MAX_CONNECTIONS` each become `FLUXER_POSTGRES_MAX_CONNECTIONS` in their own service.
+
+#### Memory, tuning, health checks and restarts
+
+The names under [Resources](#resources) and [Health checks and restarts](#health-checks-and-restarts) are read by Docker Compose, which hands them to the engine or to the bundled services under their own names.
+
 ## Keys Compose does not forward
 
-`.env.example` lists the variables forwarded by `docker-compose.yml`. Add any setting below through a Compose override file that puts it in the relevant service's environment.
+Every other name on this page takes effect from `.env`, except the names Compose fills from another name, listed first below. The other names below stay out of it for the reason given. Add one through a Compose override file that puts it in the relevant service's environment, which [Keep a local compose change](/operator/upgrading/#keep-a-local-compose-change) describes.
 
-#### `FLUXER_AUTH_BLUESKY_` and the names under it
+#### Names Compose fills from another name
 
-See [Bluesky connections](#bluesky-connections) for configuration.
+Compose writes each of these from the `.env` name given, so setting the name itself in `.env` has no effect. `FLUXER_POSTGRES_PASSWORD` comes from `POSTGRES_PASSWORD`. `FLUXER_POSTGRES_MAX_CONNECTIONS` comes from `FLUXER_API_POSTGRES_MAX_CONNECTIONS`, `FLUXER_WORKER_POSTGRES_MAX_CONNECTIONS`, `FLUXER_USERS_SHARD_POSTGRES_MAX_CONNECTIONS` or `FLUXER_MESSAGES_SHARD_POSTGRES_MAX_CONNECTIONS`, one per service. `FLUXER_S3_ACCESS_KEY_ID` comes from `FLUXER_S3_ACCESS_KEY`, and `FLUXER_S3_SECRET_ACCESS_KEY` from `FLUXER_S3_SECRET_KEY`. `FLUXER_SEARCH_API_KEY` comes from `MEILI_MASTER_KEY`. `FLUXER_LIVEKIT_API_KEY` comes from `LIVEKIT_API_KEY`, and `FLUXER_LIVEKIT_API_SECRET` from `LIVEKIT_API_SECRET`. `FLUXER_BASE_DOMAIN` comes from `FLUXER_DOMAIN`.
 
-#### `FLUXER_PUSH_APNS_` and `FLUXER_PUSH_FCM_`
+#### Fixed wiring
 
-Mobile push cannot be configured at all from the example. `api` and `push` both read these names. An override has to reach both.
+`FLUXER_ENV`, `FLUXER_SELF_HOSTED`, `FLUXER_DATABASE_BACKEND`, the listen ports `FLUXER_API_PORT`, `FLUXER_GATEWAY_PORT`, `FLUXER_MEDIA_PROXY_PORT`, `FLUXER_APP_PROXY_PORT` and `FLUXER_ADMIN_PORT`, the internal endpoints `FLUXER_INTERNAL_API_ENDPOINT`, `FLUXER_INTERNAL_MEDIA_PROXY_ENDPOINT` and `FLUXER_MEDIA_PROXY_ENDPOINT`, the `FLUXER_API_ENDPOINT` of `admin`, `FLUXER_SVC_NAME`, `FLUXER_SVC_MODE`, `FLUXER_SVC_SHARD_ID`, `FLUXER_SVC_SHARD_COUNT`, `FLUXER_API_WORKER_MODE`, `FLUXER_API_WORKER_ENABLE_CRON_SCHEDULER`, `FLUXER_MEDIA_PROXY_MODE`, `FLUXER_MEDIA_PROXY_STORAGE_BACKEND`, `DISCOVERY_UPSTREAM_URL` and `PUBLIC_BOOTSTRAP_API_ENDPOINT`. Compose sets each to a fixed value that the edge, the health checks or another service depend on. A different value gives no working stack.
 
-#### `RUST_LOG`, `LOG_LEVEL` and `LOGGER_LEVEL`
+#### Names the stack has no use for
 
-The only way to change log verbosity.
+`FLUXER_MEDIA_PROXY_HOST`, `FLUXER_APP_PROXY_HOST`, `FLUXER_ADMIN_HOST` and `FLUXER_PUSH_SERVICE_HOST`, whose default already listens on every interface. `FLUXER_PUSH_SERVICE_PORT`, whose default the health check of `push` reads. `FLUXER_SVC_LISTEN_HOST` and `FLUXER_SVC_PORT`, which the health checks address. `FLUXER_API_WORKER_LANE` and `FLUXER_API_WORKER_TASK`, which only the single-lane worker modes read. `FLUXER_MEDIA_PROXY_STORAGE_ROOT`, which only the local backend reads. `FLUXER_S3_BUCKET_STATIC`, which only the `static` mode of `media-proxy` reads. `FLUXER_GATEWAY_ROLE`, the `FLUXER_GATEWAY_CLUSTER_` names, `FLUXER_ERLANG_NODE_NAME` and `FLUXER_ERLANG_DIST_PORT`, since the stack runs one Gateway node. `FLUXER_GATEWAY_API_RPC_ENDPOINT`, which the Gateway derives from the internal API address. `FLUXER_SNOWFLAKE_SERVICE_SUBJECT`, `FLUXER_USERS_SERVICE_SUBJECT` and `FLUXER_GIF_SERVICE_SUBJECT`, which have to match the subjects the internal services listen on. `FLUXER_ADMIN_OAUTH_REDIRECT_URI`, which has to match what the API derives. `FLUXER_ADMIN_OAUTH_CLIENT_ID`, which has to match the admin application id built into the API. The relay-mode names of `push`, `FLUXER_PUSH_RELAY_MAX_CONCURRENT`, `FLUXER_PUSH_RELAY_MAX_BODY_BYTES`, `FLUXER_PUSH_RELAY_TRUSTED_PROXY_HOPS`, `FLUXER_PUSH_RELAY_SOURCE_BUCKET_ENABLED` and the `_ENTRIES`, `_PER_MINUTE` and `_BURST` names under `FLUXER_PUSH_RELAY_TOKEN_BUCKET` and `FLUXER_PUSH_RELAY_SOURCE_BUCKET`, since the stack runs `push` in delivery mode. `FLUXER_STATIC_DIR`, a path inside the image. `FLUXER_DOCS_ENDPOINT`, which only the docs server reads.
 
-#### `FLUXER_APP_PRODUCT_NAME` and the branding URLs
+#### Allocator and image library tuning
 
-Branding is otherwise admin-dashboard only.
+`LD_PRELOAD` and `MALLOC_CONF` in `media-proxy` and `app-proxy`, and `VIPS_CONCURRENCY`, `VIPS_DISC_THRESHOLD` and `G_MESSAGES_DEBUG` in `media-proxy`. Each image sets them. `LD_PRELOAD` loads jemalloc and `MALLOC_CONF` tunes it. `VIPS_CONCURRENCY` stays at `1` on purpose, and `FLUXER_MEDIA_PROXY_MAX_NATIVE_TRANSFORMS` is the setting for image work in parallel. `VIPS_DISC_THRESHOLD`, `1g` in the image, is the image size above which libvips decodes to disk instead of memory. Lower it when a small `FLUXER_MEDIA_PROXY_MEMORY_LIMIT` runs out of memory.
 
-#### `FLUXER_INSTANCE_SETUP_CONFIGURED`
+#### Build and platform metadata
 
-Supplies the initial setup state on a self-hosted instance, until the first write of the stored `app_public_config` row takes over.
+`BUILD_VERSION`, `FLUXER_BUILD_VERSION` and `RELEASE_CHANNEL` describe the shipped build. `POD_NAME` and `HOSTNAME` come from the platform.
 
-#### Every Media Proxy performance knob
+#### Test and development switches
 
-No example coverage at all.
+`FLUXER_TEST_MODE_ENABLED`, `FLUXER_TEST_HARNESS_TOKEN`, `FLUXER_DISABLE_RATE_LIMITS`, `FLUXER_VALIDATE_RESPONSES` and `FLUXER_RELAX_REGISTRATION_RATE_LIMITS`. None of them belongs on a production instance.
+
+#### The Cassandra names
+
+Every `FLUXER_CASSANDRA_` name. The stack runs Postgres.
+
+#### Older names of a forwarded setting
+
+`FLUXER_NATS_CORE_URL`, `FLUXER_RISK_IPINFO_API_KEY`, `KLIPY_API_KEY` and `YOUTUBE_API_KEY`. A service reads each only when the name it replaces is unset or empty, and Compose forwards that name instead.
+
+#### Individual Stripe price names
+
+The `FLUXER_STRIPE_PRICE_MONTHLY_`, `FLUXER_STRIPE_PRICE_YEARLY_`, `FLUXER_STRIPE_PRICE_GIFT_1_MONTH_` and `FLUXER_STRIPE_PRICE_GIFT_1_YEAR_` names, one per currency. `FLUXER_STRIPE_PRICES` holds the same prices in one JSON object, and the admin dashboard can replace them.
 
 ## Runtime settings in the admin dashboard
 
-The admin dashboard at `/admin` stores these in the database. They apply without recreating containers, and a value set here wins over the matching environment variable.
+The admin dashboard at `FLUXER_ADMIN_BASE_PATH` stores these in the database. They apply without recreating containers, and a value set here wins over the matching environment variable.
 
 #### Instance Config, Public App Identity
 
@@ -1742,9 +1776,11 @@ The stack runs its containers on one Docker bridge network, which is private to 
 | seaweedfs-init | chrislusf/seaweedfs:4.47 | Creates the buckets and the S3 identity, then exits |
 | livekit | livekit/livekit-server:v1.12.0 | Voice and video |
 
+The third-party images above are the defaults of the names under [Images](#images).
+
 The edge and LiveKit are the only services that publish ports. The edge publishes 80/tcp, 443/tcp, 443/udp, or one plain-HTTP port under the overlay. LiveKit publishes 7881/tcp and 7882/udp. Everything else is reachable only over the bridge network.
 
-`api` is the one service an operator configures directly, through the shared environment block. `worker`, `gateway`, `app-proxy`, `media-proxy`, and `push` are touched rarely, `worker` for lane concurrency, `app-proxy` for CSP extras, `media-proxy` for transform limits, and `push` for queue capacity and send concurrency. The edge takes only the `FLUXER_EDGE_` variables, `postgres` only the password, `meilisearch` only the master key, `valkey` only the `FLUXER_VALKEY_` tuning values, and `livekit` only the key pair and the port variables. `static-proxy` reads no environment variables, and the remaining services need none.
+Most settings reach `api`, `worker`, `gateway`, `media-proxy`, `push`, `admin` and the internal services through one shared environment block, so one line in `.env` reaches every one of them that reads it. `app-proxy` takes its own list, since it reads the public address, the client IP settings, the GeoIP database and its own names. The edge takes the `FLUXER_EDGE_` variables and `FLUXER_ADMIN_BASE_PATH`. The third-party services take their image name, their memory limit, and their own tuning: `postgres` the password, database, role and `FLUXER_POSTGRES_` server settings, `meilisearch` the master key and `FLUXER_MEILISEARCH_` values, `valkey` the `FLUXER_VALKEY_` values, `seaweedfs` its heap ceiling and telemetry switch, and `livekit` the key pair, the port, STUN and log level variables. `static-proxy` reads no environment variables.
 
 The internal services each run a router, which takes requests and holds no state, and one shard, which holds the caches and the database connections. The shipped stack fixes `FLUXER_SVC_SHARD_COUNT` at `1`.
 
@@ -1782,6 +1818,14 @@ Default `768mb`. The ceiling for `meilisearch`. Must stay well above `FLUXER_MEI
 
 Default `384mb`. Becomes `MEILI_MAX_INDEXING_MEMORY`. The memory the indexer may use for one batch. Lower it whenever you lower `FLUXER_MEILISEARCH_MEMORY_LIMIT`.
 
+#### `FLUXER_MEILISEARCH_ENV`
+
+Default `production`. Becomes `MEILI_ENV`. `production` requires the master key on every request.
+
+#### `FLUXER_MEILISEARCH_NO_ANALYTICS`
+
+Default `true`. Becomes `MEILI_NO_ANALYTICS`, which keeps Meilisearch from sending usage data.
+
 #### `FLUXER_SEAWEEDFS_MEMORY_LIMIT`
 
 Default `2gb`. The ceiling for `seaweedfs`. One process runs the master, the volume server and the S3 gateway. The peak is the parts of one upload in flight at once, which the client uploads in parallel: a 500 MB attachment is 20 parts of 25 MB.
@@ -1789,6 +1833,10 @@ Default `2gb`. The ceiling for `seaweedfs`. One process runs the master, the vol
 #### `FLUXER_SEAWEEDFS_GOMEMLIMIT`
 
 Default `1536MiB`. The heap ceiling the Go runtime collects against. Go cannot see the container limit, so without this value an upload burst grows the heap past `FLUXER_SEAWEEDFS_MEMORY_LIMIT` and the kernel OOM-kills the container mid-upload with exit 137. Raising `FLUXER_SEAWEEDFS_MEMORY_LIMIT` on its own does not fix that, because the runtime grows to fill whatever it is given. Keep this near three quarters of the container limit and move the two together.
+
+#### `FLUXER_SEAWEEDFS_TELEMETRY`
+
+Default `false`. Becomes the `-master.telemetry` flag of `seaweedfs`, which reports usage to the SeaweedFS project when on.
 
 #### `FLUXER_SEAWEEDFS_INIT_MEMORY_LIMIT`
 
@@ -1898,6 +1946,14 @@ No default. The V8 old-space ceiling for `api`, in MB. Appended to `NODE_OPTIONS
 
 No default. The V8 old-space ceiling for `worker`, in MB. Same rule against `FLUXER_WORKER_MEMORY_LIMIT`.
 
+#### `FLUXER_API_NODE_OPTIONS`
+
+No default. Extra Node flags for `api`, such as `--dns-result-order=ipv4first`. Compose reads it from `.env` and appends it to `NODE_OPTIONS` after `--enable-source-maps` and the heap flag, only when non-empty.
+
+#### `FLUXER_WORKER_NODE_OPTIONS`
+
+No default. Extra Node flags for `worker`. Same rule as `FLUXER_API_NODE_OPTIONS`.
+
 The names on the Postgres command line tune the bundled server. Keep them consistent with `FLUXER_POSTGRES_MEMORY_LIMIT`. All are optional.
 
 #### `FLUXER_POSTGRES_SERVER_MAX_CONNECTIONS`
@@ -1928,9 +1984,28 @@ Default `128MB`. The budget for each autovacuum worker. Postgres runs three work
 
 Default `1gb`. The shared memory of the `postgres` container, used by parallel queries and parallel maintenance. Keep it well above `FLUXER_POSTGRES_MAINTENANCE_WORK_MEM`. A manual VACUUM sizes its shared memory from that budget, and fails with `could not resize shared memory segment` when it does not fit.
 
-The WAL settings `min_wal_size=512MB`, `max_wal_size=2GB` and `wal_buffers=16MB` are fixed on the command line, with no variable of their own.
+The rest of the Postgres command line has one variable per setting.
 
-The bundled Valkey uses persistent storage. These settings control its memory limit and behaviour when full.
+- `FLUXER_POSTGRES_RANDOM_PAGE_COST`: default `1.1`, sets `random_page_cost`.
+- `FLUXER_POSTGRES_EFFECTIVE_IO_CONCURRENCY`: default `200`, sets `effective_io_concurrency`.
+- `FLUXER_POSTGRES_DEFAULT_STATISTICS_TARGET`: default `200`, sets `default_statistics_target`.
+- `FLUXER_POSTGRES_JIT`: default `off`, sets `jit`.
+- `FLUXER_POSTGRES_MIN_WAL_SIZE`: default `512MB`, sets `min_wal_size`.
+- `FLUXER_POSTGRES_MAX_WAL_SIZE`: default `2GB`, sets `max_wal_size`.
+- `FLUXER_POSTGRES_CHECKPOINT_COMPLETION_TARGET`: default `0.9`, sets `checkpoint_completion_target`.
+- `FLUXER_POSTGRES_WAL_BUFFERS`: default `16MB`, sets `wal_buffers`.
+- `FLUXER_POSTGRES_WAL_COMPRESSION`: default `zstd`, sets `wal_compression`.
+- `FLUXER_POSTGRES_BGWRITER_DELAY`: default `50ms`, sets `bgwriter_delay`.
+- `FLUXER_POSTGRES_BGWRITER_LRU_MAXPAGES`: default `1000`, sets `bgwriter_lru_maxpages`.
+- `FLUXER_POSTGRES_AUTOVACUUM_VACUUM_SCALE_FACTOR`: default `0.05`, sets `autovacuum_vacuum_scale_factor`.
+- `FLUXER_POSTGRES_AUTOVACUUM_ANALYZE_SCALE_FACTOR`: default `0.02`, sets `autovacuum_analyze_scale_factor`.
+- `FLUXER_POSTGRES_AUTOVACUUM_VACUUM_COST_LIMIT`: default `2000`, sets `autovacuum_vacuum_cost_limit`.
+- `FLUXER_POSTGRES_TRACK_IO_TIMING`: default `on`, sets `track_io_timing`.
+- `FLUXER_POSTGRES_SHARED_PRELOAD_LIBRARIES`: default `pg_stat_statements`, sets `shared_preload_libraries`.
+
+`shared_preload_libraries` is read only when the server starts. Add a library only if the image ships it, or Postgres refuses to start.
+
+The bundled Valkey uses persistent storage. These settings control its memory limit, its behaviour when full, and how often it writes to disk.
 
 #### `FLUXER_VALKEY_MAXMEMORY`
 
@@ -1939,6 +2014,10 @@ Default `192mb`. The dataset ceiling. Bounds stored keys only. Client buffers, r
 #### `FLUXER_VALKEY_MAXMEMORY_POLICY`
 
 Default `noeviction`. An over-limit write returns an OOM error. Keep this policy to protect deletion queues and other shared state. See [Volumes and buckets](#volumes-and-buckets) for recovery implications.
+
+#### `FLUXER_VALKEY_APPENDFSYNC`
+
+Default `everysec`. How often Valkey flushes its append-only file to disk. `always`, `everysec` or `no`. `everysec` can lose the last second of writes in a crash.
 
 No service sets a CPU limit, a CPU reservation or `cpu_shares`, so every container sees the host's full CPU count. Bound the Gateway's scheduler count with `FLUXER_ERLANG_SCHEDULERS_MIN` and `FLUXER_ERLANG_SCHEDULERS_MAX`, or pin it with `FLUXER_ERLANG_SCHEDULERS` and `FLUXER_ERLANG_DIRTY_CPU_SCHEDULERS` from [Gateway settings](#gateway-settings).
 
@@ -1992,11 +2071,29 @@ FLUXER_GIFS_SHARD_CACHE_MAX_BYTES=67108864
 
 At 4 GB the api heap ceiling is 396 MB and the worker heap ceiling is 332 MB. That covers chat. A large attachment and a search reindex at the same time exceed those heap ceilings. Media transforms above roughly 20 MB start failing in `media-proxy`, Meilisearch indexes a backlog more slowly, and a busy voice room is the first thing to drop. Keep `FLUXER_POSTGRES_SERVER_MAX_CONNECTIONS` at or above 110.
 
+## Health checks and restarts
+
+Compose reads these, and no Fluxer service does. The health checks decide when a dependent service may start and when Docker marks a container unhealthy. All are optional.
+
+- `FLUXER_RESTART_POLICY`: default `unless-stopped`, for every long-running service. `seaweedfs-init` never restarts.
+- `FLUXER_HEALTHCHECK_INTERVAL`: default `10s`, for every check.
+- `FLUXER_HEALTHCHECK_TIMEOUT`: default `5s`, for every check.
+- `FLUXER_HEALTHCHECK_RETRIES`: default `10`, for `edge`, `postgres`, `valkey`, `nats`, `meilisearch`, `livekit` and `static-proxy`.
+- `FLUXER_APP_HEALTHCHECK_RETRIES`: default `30`, for the internal services, `api`, `gateway`, `push` and `admin`.
+- `FLUXER_APP_HEALTHCHECK_START_PERIOD`: default `90s`, for `api`, `worker` and `gateway`.
+- `FLUXER_SVC_HEALTHCHECK_START_PERIOD`: default `60s`, for the internal services, `push` and `admin`.
+- `FLUXER_WORKER_HEALTHCHECK_RETRIES`: default `3`, for `worker`. Its check reads a heartbeat file, and a stale one means the worker is stuck.
+- `FLUXER_SEAWEEDFS_HEALTHCHECK_RETRIES`: default `20`, for `seaweedfs`.
+- `FLUXER_SEAWEEDFS_HEALTHCHECK_START_PERIOD`: default `60s`, for `seaweedfs`. `api`, `worker` and `media-proxy` wait on `seaweedfs-init`, which waits on this check.
+- `FLUXER_SEAWEEDFS_INIT_ATTEMPTS`: default `60`. Compose forwards it from `.env` to `seaweedfs-init`, which checks and creates the buckets that many times, 2 seconds apart, before it gives up. Raise it when `docker compose up` fails on `seaweedfs-init` on a slow disk.
+
+Durations take the Compose form, such as `90s` or `2m`. Raise the retries or start period on a slow host where a service is still starting when its check gives up.
+
 ## Routing
 
 The edge is the only HTTP entry point, and every route is served from the one public hostname. It rewrites each path before handing it to an upstream. [What the single port routes](/operator/reverse-proxy/#what-the-single-port-routes) has the path table, and [What every proxy must do](/operator/reverse-proxy/#what-every-proxy-must-do) has the requirements for anything in front of the edge.
 
-None of the variables on this page change that routing. The `Caddyfile` is a bind mount, so an edit to it takes `docker compose restart edge`.
+`FLUXER_ADMIN_BASE_PATH` moves the admin path, and no other variable on this page changes that routing. The `Caddyfile` is a bind mount, so an edit to it takes `docker compose restart edge`.
 
 CORS origins are exactly the app endpoint, the `FLUXER_APP_ORIGIN_ALIASES` origins, and the marketing endpoint. Serving the client from a hostname other than `FLUXER_DOMAIN` requires overriding `FLUXER_APP_ENDPOINT`.
 
@@ -2020,14 +2117,13 @@ Startup refuses an existing `JOBS` or `JOBS_DLQ` stream with the wrong name, sub
 
 Volume names are prefixed with the Compose project name, so `postgres-data` is `fluxer_postgres-data` on the host.
 
-`seaweedfs-init` creates these buckets and exits.
+`seaweedfs-init` creates these buckets and exits. Each bucket takes its name from its variable in `.env`, and the table gives the default.
 
-| Bucket | Holds |
-| --- | --- |
-| fluxer | Avatars, guild and entity assets, themes, entrance sounds, memes, and processed attachments |
-| fluxer-uploads | Raw attachment uploads, before processing |
-| fluxer-downloads | Desktop client build artefacts |
-| fluxer-reports | Abuse report evidence, and NCMEC payloads where that integration is on |
-| fluxer-harvests | User and guild data archives |
+| Bucket | Set by | Holds |
+| --- | --- | --- |
+| fluxer | `FLUXER_S3_BUCKET_CDN` | Avatars, guild and entity assets, themes, entrance sounds, memes, and processed attachments |
+| fluxer-uploads | `FLUXER_S3_BUCKET_UPLOADS` | Raw attachment uploads, before processing |
+| fluxer-reports | `FLUXER_S3_BUCKET_REPORTS` | Abuse report evidence, and NCMEC payloads where that integration is on |
+| fluxer-harvests | `FLUXER_S3_BUCKET_HARVESTS` | User and guild data archives |
 
 `FLUXER_S3_BUCKET_STATIC` names an optional bucket. The shipped stack does not use or create it.

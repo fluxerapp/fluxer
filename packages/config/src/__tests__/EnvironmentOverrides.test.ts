@@ -1,44 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	buildNamedFluxerEnvOverrides,
-	parseEnvValue,
-	setNestedValue,
-} from '@fluxer/config/src/config_loader/EnvironmentOverrides';
+import {buildNamedFluxerEnvOverrides, setNestedValue} from '@fluxer/config/src/config_loader/EnvironmentOverrides';
 import {describe, expect, test} from 'vitest';
-
-describe('parseEnvValue', () => {
-	test('parses boolean true', () => {
-		expect(parseEnvValue('true')).toBe(true);
-		expect(parseEnvValue(' true ')).toBe(true);
-	});
-	test('parses boolean false', () => {
-		expect(parseEnvValue('false')).toBe(false);
-		expect(parseEnvValue(' false ')).toBe(false);
-	});
-	test('parses integers', () => {
-		expect(parseEnvValue('42')).toBe(42);
-		expect(parseEnvValue('-7')).toBe(-7);
-		expect(parseEnvValue('0')).toBe(0);
-	});
-	test('parses floats', () => {
-		expect(parseEnvValue('3.14')).toBe(3.14);
-		expect(parseEnvValue('-0.5')).toBe(-0.5);
-	});
-	test('parses JSON objects', () => {
-		expect(parseEnvValue('{"key": "value"}')).toEqual({key: 'value'});
-	});
-	test('parses JSON arrays', () => {
-		expect(parseEnvValue('[1, 2, 3]')).toEqual([1, 2, 3]);
-	});
-	test('rejects invalid JSON-like values', () => {
-		expect(() => parseEnvValue('{not json}')).toThrow('must be valid JSON');
-	});
-	test('returns raw string for plain strings', () => {
-		expect(parseEnvValue('hello')).toBe('hello');
-		expect(parseEnvValue('localhost')).toBe('localhost');
-	});
-});
 
 describe('setNestedValue', () => {
 	test('sets a top-level key', () => {
@@ -81,14 +44,13 @@ describe('setNestedValue', () => {
 });
 
 describe('buildNamedFluxerEnvOverrides', () => {
-	test('builds canonical split env overrides and preserves empty strings', () => {
+	test('builds canonical split env overrides', () => {
 		const overrides = buildNamedFluxerEnvOverrides({
 			FLUXER_BASE_DOMAIN: 'canonical.example',
 			FLUXER_API_ENDPOINT: 'https://canonical.example/api',
 			FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS: 'https://a.example, https://b.example',
 			FLUXER_S3_FORCE_PATH_STYLE: 'true',
 			FLUXER_AUTH_BLUESKY_KEYS: '[{"kid":"key-1","private_key_path":"/etc/fluxer/keys/bluesky.pem"}]',
-			FLUXER_ADMIN_BASE_PATH: '',
 			FLUXER_STRIPE_PRICE_MONTHLY_USD: 'price_monthly_usd',
 		});
 
@@ -100,17 +62,46 @@ describe('buildNamedFluxerEnvOverrides', () => {
 				bluesky: {keys: [{kid: 'key-1', private_key_path: '/etc/fluxer/keys/bluesky.pem'}]},
 			},
 			s3: {force_path_style: true},
-			services: {
-				admin: {base_path: ''},
-			},
 			integrations: {stripe: {prices: {monthly_usd: 'price_monthly_usd'}}},
 		});
 	});
 
-	test('maps the internal scheme and KV provider names', () => {
-		expect(buildNamedFluxerEnvOverrides({FLUXER_INTERNAL_SCHEME: 'https', FLUXER_KV_PROVIDER: 'redis'})).toMatchObject({
-			domain: {internal_scheme: 'https'},
-			internal: {kv_provider: 'redis'},
+	test.each(['', ' ', '\t\n'])('treats %j as unset for every value type', (blank) => {
+		expect(
+			buildNamedFluxerEnvOverrides({
+				FLUXER_BASE_DOMAIN: blank,
+				FLUXER_API_PORT: blank,
+				FLUXER_S3_FORCE_PATH_STYLE: blank,
+				FLUXER_API_IP_BAN_EXEMPT_IPS: blank,
+				FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS: blank,
+				FLUXER_LIVEKIT_DEFAULT_REGION: blank,
+				FLUXER_AUTH_BLUESKY_KEYS: blank,
+				FLUXER_EMAIL_FROM_NAME: blank,
+			}),
+		).toEqual({});
+	});
+
+	test('a blank canonical name falls through to its alias', () => {
+		expect(
+			buildNamedFluxerEnvOverrides({
+				FLUXER_NATS_URL: '',
+				FLUXER_NATS_CORE_URL: 'nats://alias',
+				FLUXER_IPINFO_API_KEY: ' ',
+				FLUXER_RISK_IPINFO_API_KEY: 'alias-key',
+			}),
+		).toMatchObject({
+			services: {nats: {core_url: 'nats://alias'}},
+			integrations: {ipinfo: {api_key: 'alias-key'}},
+		});
+	});
+
+	test('a blank alias is unset too', () => {
+		expect(buildNamedFluxerEnvOverrides({FLUXER_NATS_URL: '', FLUXER_NATS_CORE_URL: ' '})).toEqual({});
+	});
+
+	test('none clears the storage change feed skip list', () => {
+		expect(buildNamedFluxerEnvOverrides({FLUXER_API_STORAGE_CHANGE_FEED_SKIP_BUCKETS: ' None '})).toEqual({
+			services: {api: {storage_change_feed: {skip_buckets: []}}},
 		});
 	});
 
@@ -118,10 +109,6 @@ describe('buildNamedFluxerEnvOverrides', () => {
 		expect(() => buildNamedFluxerEnvOverrides({FLUXER_API_PORT: '80a'})).toThrow(
 			'FLUXER_API_PORT must be an integer, got "80a"',
 		);
-	});
-
-	test('leaves the default in place for a blank integer override', () => {
-		expect(buildNamedFluxerEnvOverrides({FLUXER_API_PORT: ''})).toEqual({});
 	});
 
 	test('the canonical name wins over its alias regardless of declaration order', () => {

@@ -711,8 +711,8 @@ fluxer_ref_for_tag() {
 
 # The images come from FLUXER_IMAGE_TAG and the stack files come from a git ref.
 # A release tags its images and its commit with the same CalVer string, so a
-# pinned tag names the commit that carries its compose files. The moving tags v1
-# and latest track main.
+# pinned tag names the commit that holds its compose files. The moving tags v1
+# and latest map to main, which can run ahead of the v1 images.
 fluxer_resolve_ref() {
 	[ -z "$opt_ref" ] || return 0
 	if [ "$opt_update" -eq 1 ] || [ "$opt_rollback" -eq 1 ]; then
@@ -763,9 +763,11 @@ fluxer_open_scratch() {
 #   curl -fsSL https://raw.githubusercontent.com/fluxerapp/fluxer/main/deploy/self-hosting/docker-compose.yml -o docker-compose.yml
 #
 # The files come from a git ref and the images come from FLUXER_IMAGE_TAG. The
-# ref is derived from the tag unless --ref names one, which is the pairing rule
-# that stops a compose file from asking for a variable the running images do not
-# read, or from pinning a service image the release never built.
+# ref is derived from the tag unless --ref names one. A pinned CalVer tag names
+# the commit its images were built from, so its compose file asks only for
+# variables those images read and pins only images the release built. The moving
+# tags v1 and latest map to main, and main's compose file can run ahead of the v1
+# images until the image builds are dispatched again.
 fluxer_fetch_stack() {
 	fluxer_say "Downloading the stack files from ref $opt_ref."
 	fluxer_stack_files > "$fluxer_scratch/files"
@@ -1237,6 +1239,14 @@ fluxer_env_scalar() {
 	printf '%s' "$fluxer_scalar"
 }
 
+fluxer_compose_value() {
+	eval "fluxer_cv=\${$1:-}"
+	if [ -z "$fluxer_cv" ]; then
+		fluxer_cv=$(fluxer_env_scalar "$1")
+	fi
+	printf '%s' "$fluxer_cv"
+}
+
 fluxer_read_compose_setting() {
 	fluxer_compose_file=${COMPOSE_FILE:-}
 	fluxer_compose_from="the environment"
@@ -1469,12 +1479,13 @@ fluxer_postgres_running() {
 # the pull is the only way back across a schema change.
 #
 # By hand:
-#   docker compose exec -T postgres pg_dump -U fluxer -d fluxer --format=custom > backups/fluxer.dump
+#   docker compose exec -T postgres sh -c 'exec pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --format=custom' > backups/fluxer.dump
 #
-# The database and the role are both named fluxer and are fixed in
-# docker-compose.yml. Keep -T. Without it Docker attaches a terminal to the
-# command and the dump arrives corrupted, which is why the first five bytes are
-# checked against the custom-format magic below rather than only the size.
+# The postgres container's POSTGRES_USER and POSTGRES_DB follow
+# FLUXER_POSTGRES_USERNAME and FLUXER_POSTGRES_DATABASE, so the command needs no
+# names. Keep -T. Without it Docker attaches a terminal to the command and the
+# dump arrives corrupted, which is why the first five bytes are checked against
+# the custom-format magic below rather than only the size.
 #
 # The dump runs against the live stack. pg_dump reads inside one transaction, so
 # it sees a consistent database without stopping anything. The volume copy below
@@ -1501,9 +1512,37 @@ $(fluxer_compose_error '  ')"
 	grep -qxF "$1" "$fluxer_scratch/all-services"
 }
 
+# The bundled postgres container takes POSTGRES_USER and POSTGRES_DB from
+# FLUXER_POSTGRES_USERNAME and FLUXER_POSTGRES_DATABASE, and the image applies
+# them only to an empty data directory. When those names point the apps at a
+# database outside the stack, the bundled directory still holds the role and
+# database it was first started with, so a dump that reads the container env asks
+# for a role that is not there. The bundled service is idle in that shape and the
+# dump skips it.
+#
+# By hand:
+#   grep -E '^FLUXER_POSTGRES_(HOST|URL)=' .env
+fluxer_postgres_external() {
+	fluxer_pg_host=$(fluxer_compose_value FLUXER_POSTGRES_HOST)
+	if [ -n "$fluxer_pg_host" ] && [ "$fluxer_pg_host" != postgres ]; then
+		return 0
+	fi
+	fluxer_pg_url=$(fluxer_compose_value FLUXER_POSTGRES_URL)
+	[ -n "$fluxer_pg_url" ] || return 1
+	fluxer_pg_url_host=${fluxer_pg_url#*://}
+	fluxer_pg_url_host=${fluxer_pg_url_host%%[/?]*}
+	fluxer_pg_url_host=${fluxer_pg_url_host##*@}
+	fluxer_pg_url_host=${fluxer_pg_url_host%%:*}
+	[ "$fluxer_pg_url_host" != postgres ]
+}
+
 fluxer_dump_postgres() {
 	if ! fluxer_stack_defines_service postgres; then
 		fluxer_say 'Skipping the database dump. This stack defines no postgres service, so its database runs outside the stack and only the operator of that database can dump it.'
+		return 0
+	fi
+	if fluxer_postgres_external; then
+		fluxer_say 'Skipping the database dump. FLUXER_POSTGRES_HOST or FLUXER_POSTGRES_URL points the stack at a database outside it, so the bundled postgres service is idle and only the operator of that database can dump it.'
 		return 0
 	fi
 	if ! fluxer_postgres_running; then
@@ -1514,7 +1553,7 @@ fluxer_dump_postgres() {
 	fi
 	fluxer_dump_path="$fluxer_record/$FLUXER_DUMP_FILE"
 	fluxer_say 'Dumping the database.'
-	if ! $fluxer_engine compose exec -T postgres pg_dump -U fluxer -d fluxer --format=custom > "$fluxer_dump_path"; then
+	if ! $fluxer_engine compose exec -T postgres sh -c 'exec pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --format=custom' > "$fluxer_dump_path"; then
 		rm -f "$fluxer_dump_path"
 		fluxer_fail 7 'pg_dump failed. The instance is untouched.'
 	fi
@@ -1627,7 +1666,17 @@ fluxer_backup() {
 }
 
 fluxer_postgres_major() {
-	sed -n 's/^[[:space:]]*image:[[:space:]]*postgres:\([0-9][0-9]*\).*/\1/p' "$1" | head -n 1
+	fluxer_pg_image=$(sed -n 's/^[[:space:]]*image:[[:space:]]*\(postgres:[^[:space:]]*\).*/\1/p' "$1" | head -n 1)
+	if [ -z "$fluxer_pg_image" ]; then
+		fluxer_pg_image=$(sed -n 's/^[[:space:]]*image:[[:space:]]*${FLUXER_POSTGRES_IMAGE:-\([^}]*\)}.*/\1/p' "$1" | head -n 1)
+		if [ -n "$fluxer_pg_image" ] && [ -n "$(fluxer_compose_value FLUXER_POSTGRES_IMAGE)" ]; then
+			fluxer_pg_image=$(fluxer_compose_value FLUXER_POSTGRES_IMAGE)
+		fi
+	fi
+	fluxer_pg_image=${fluxer_pg_image%%@*}
+	case ${fluxer_pg_image##*/} in
+		*:*) printf '%s\n' "${fluxer_pg_image##*:}" | sed -n 's/^\([0-9][0-9]*\).*/\1/p' ;;
+	esac
 }
 
 # A newer Postgres major does not read the data directory an older major wrote,

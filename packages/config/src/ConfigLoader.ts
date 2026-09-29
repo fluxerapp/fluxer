@@ -2,7 +2,7 @@
 
 import {createECDH} from 'node:crypto';
 import {isConfigObject} from '@fluxer/config/src/config_loader/ConfigObject';
-import {buildNamedFluxerEnvOverrides} from '@fluxer/config/src/config_loader/EnvironmentOverrides';
+import {buildNamedFluxerEnvOverrides, readEnvValue} from '@fluxer/config/src/config_loader/EnvironmentOverrides';
 import {
 	buildUrl,
 	type DerivedEndpoints,
@@ -31,9 +31,7 @@ function defaultConfig(): MasterConfig {
 			base_domain: '',
 			public_origin: '',
 			public_scheme: 'http',
-			internal_scheme: 'http',
 			public_port: 8088,
-			internal_port: 8088,
 			static_cdn_domain: '',
 			invite_domain: '',
 			gift_domain: '',
@@ -46,18 +44,13 @@ function defaultConfig(): MasterConfig {
 			media: '',
 			static_cdn: '',
 			admin: '',
-			docs: '',
 			marketing: '',
 			invite: '',
 			gift: '',
 		},
 		internal: {
 			kv: 'redis://localhost:6379/0',
-			kv_provider: 'redis',
 			kv_mode: 'standalone',
-			kv_cluster_nodes: [],
-			kv_cluster_nat_map: {},
-			api: 'http://127.0.0.1:8080',
 			media_proxy: 'http://127.0.0.1:8082',
 		},
 		database: {
@@ -109,18 +102,6 @@ function defaultConfig(): MasterConfig {
 				presigned_harvest_downloads_enabled: true,
 				unfurl_ignored_hosts: [],
 				app_origin_aliases: [],
-				embeds: {
-					oembed_html_enabled: false,
-					oembed_html_allow_untrusted_on_self_hosted: false,
-					oembed_html_allowed_hosts: [],
-					cache_default_ttl_seconds: 86_400,
-					cache_max_ttl_seconds: 604_800,
-					cache_min_ttl_seconds: 300,
-					cache_respect_remote_ttl: true,
-				},
-				content_moderation: {
-					nsfw_threshold: 0.7,
-				},
 				storage_change_feed: {
 					enabled: false,
 					stream: 'STORAGE_CHANGES',
@@ -132,10 +113,7 @@ function defaultConfig(): MasterConfig {
 				auth_token: '',
 			},
 			media_proxy: {
-				host: '0.0.0.0',
-				port: 8082,
 				secret_key: '',
-				mode: 'upload',
 				upload_relay: {
 					endpoint: 'http://localhost:8088/media',
 					secret_base64: '',
@@ -148,18 +126,11 @@ function defaultConfig(): MasterConfig {
 				},
 			},
 			gateway: {
-				port: 8771,
 				rpc_auth_token: '',
 			},
 			admin: {
-				port: 3020,
-				base_path: '/admin',
 				secret_key_base: '',
 				oauth_client_secret: '',
-			},
-			app_proxy: {
-				port: 8773,
-				assets_dir: 'fluxer_app/dist',
 			},
 		},
 		auth: {
@@ -200,7 +171,6 @@ function defaultConfig(): MasterConfig {
 				api_secret: '',
 				url: '',
 				internal_url: '',
-				webhook_url: '',
 			},
 			search: {
 				engine: 'elasticsearch',
@@ -250,10 +220,6 @@ function defaultConfig(): MasterConfig {
 			},
 			push: {
 				apns: {
-					enabled: false,
-					apps: [],
-				},
-				fcm: {
 					enabled: false,
 					apps: [],
 				},
@@ -314,13 +280,10 @@ function requireString(value: string | undefined, envName: string): void {
 	}
 }
 
-function validateUploadRelaySecret(value: string, mode: string): void {
+function validateUploadRelaySecret(value: string): void {
 	const trimmed = value.trim();
 	if (trimmed.length === 0) {
-		if (mode === 'upload') {
-			throw new Error('FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 is required in upload mode');
-		}
-		return;
+		throw new Error('FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 is required');
 	}
 	if (!/^[A-Za-z0-9+/]+={0,2}$/u.test(trimmed)) {
 		throw new Error('FLUXER_MEDIA_PROXY_UPLOAD_RELAY_SECRET_BASE64 must be base64');
@@ -537,9 +500,7 @@ function validatePublicEndpoints(endpoints: DerivedEndpoints): void {
 function normalizeConfig(config: MasterConfig): MasterConfig {
 	assertOneOf(config.env, ['development', 'production', 'test'], 'FLUXER_ENV');
 	assertOneOf(config.domain.public_scheme, ['http', 'https'], 'FLUXER_PUBLIC_SCHEME');
-	assertOneOf(config.domain.internal_scheme, ['http', 'https'], 'FLUXER_INTERNAL_SCHEME');
 	assertOneOf(config.database.backend, ['postgres', 'cassandra'], 'FLUXER_DATABASE_BACKEND');
-	assertOneOf(config.internal.kv_provider, ['redis'], 'FLUXER_KV_PROVIDER');
 	assertOneOf(config.internal.kv_mode, ['standalone', 'cluster'], 'FLUXER_KV_MODE');
 	assertOneOf(config.integrations.email.provider, ['smtp', 'none'], 'FLUXER_EMAIL_PROVIDER');
 	assertOneOf(config.integrations.search.engine, ['elasticsearch', 'meilisearch'], 'FLUXER_SEARCH_ENGINE');
@@ -563,7 +524,7 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	requireString(config.s3?.access_key_id, 'FLUXER_S3_ACCESS_KEY_ID');
 	requireString(config.s3?.secret_access_key, 'FLUXER_S3_SECRET_ACCESS_KEY');
 	requireString(config.services.media_proxy.secret_key, 'FLUXER_MEDIA_PROXY_SECRET_KEY');
-	validateUploadRelaySecret(config.services.media_proxy.upload_relay.secret_base64, config.services.media_proxy.mode);
+	validateUploadRelaySecret(config.services.media_proxy.upload_relay.secret_base64);
 	validateAttachmentUrlSecrets(config.services.media_proxy.attachment_urls.secrets_base64);
 	requireString(config.services.admin.secret_key_base, 'FLUXER_ADMIN_SECRET_KEY_BASE');
 	requireString(config.services.admin.oauth_client_secret, 'FLUXER_ADMIN_OAUTH_CLIENT_SECRET');
@@ -621,10 +582,6 @@ function applyPublicPort(config: MasterConfig, endpoints: DerivedEndpoints): Mas
 					...config.services.media_proxy.upload_relay,
 					endpoint: normalize(config.services.media_proxy.upload_relay.endpoint),
 				},
-			},
-			gateway: {
-				...config.services.gateway,
-				media_proxy_endpoint: normalizeOptional(config.services.gateway.media_proxy_endpoint),
 			},
 		},
 		auth: {
@@ -703,7 +660,10 @@ export async function loadConfig(): Promise<MasterConfig> {
 	const endpoints = {...derived, ...(normalized.endpoint_overrides ?? {})};
 	validatePublicEndpoints(endpoints);
 	const withPublicPort = applyPublicPort(normalized, endpoints);
-	normalizePasskeys(withPublicPort, process.env.FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS === undefined);
+	normalizePasskeys(
+		withPublicPort,
+		readEnvValue(process.env, 'FLUXER_PASSKEY_ADDITIONAL_ALLOWED_ORIGINS') === undefined,
+	);
 	cachedConfig = withPublicPort;
 	return cachedConfig;
 }

@@ -99,10 +99,6 @@ pub fn public_url_env(public_url: &str) -> Result<Vec<(String, String)>> {
             format!("{gateway_base}/livekit"),
         ),
         (
-            "FLUXER_LIVEKIT_WEBHOOK_URL".to_owned(),
-            format!("{base}/api/webhooks/livekit"),
-        ),
-        (
             "FLUXER_MEDIA_PROXY_UPLOAD_RELAY_ENDPOINT".to_owned(),
             format!("{base}/media"),
         ),

@@ -1026,15 +1026,9 @@ importers:
 
   fluxer_api/pkgs/worker:
     dependencies:
-      '@fluxer/constants':
-        specifier: workspace:*
-        version: link:../../../packages/constants
       '@fluxer/logger':
         specifier: workspace:*
         version: link:../../../packages/logger
-      itty-time:
-        specifier: 'catalog:'
-        version: 2.0.2
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -1969,9 +1963,6 @@ importers:
 
   packages/errors:
     dependencies:
-      '@fluxer/config':
-        specifier: workspace:*
-        version: link:../config
       '@fluxer/constants':
         specifier: workspace:*
         version: link:../constants

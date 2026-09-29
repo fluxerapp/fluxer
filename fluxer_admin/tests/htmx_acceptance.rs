@@ -1298,12 +1298,10 @@ fn test_config(api_endpoint: String) -> AdminConfig {
         static_cdn_endpoint: "https://static.example.test".to_owned(),
         admin_endpoint: "https://admin.example.test".to_owned(),
         web_app_endpoint: "https://app.example.test".to_owned(),
-        kv_url: String::new(),
         oauth_client_id: "admin-client".to_owned(),
         oauth_client_secret: "admin-secret".to_owned(),
         oauth_redirect_uri: "https://admin.example.test/callback".to_owned(),
         build_version: "test".to_owned(),
-        release_channel: "test".to_owned(),
         self_hosted: false,
         proxy: ProxyConfig {
             trust_client_ip_header: false,

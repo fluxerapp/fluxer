@@ -49,7 +49,7 @@ thiserror = "2.0.20"
 tokio = {version = "1.53.1", features = ["fs", "io-util", "macros", "net", "rt-multi-thread", "signal", "sync", "time"]}
 tokio-util = {version = "0.7.19", features = ["io"]}
 tracing = "0.1.44"
-tracing-subscriber = {version = "0.3.23", features = ["env-filter", "fmt", "json"]}
+tracing-subscriber = {version = "0.3.23", features = ["fmt", "json"]}
 url = "2.5.8"
 wyhash = "0.6.0"
 

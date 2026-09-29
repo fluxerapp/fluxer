@@ -28,7 +28,6 @@ fn env_with<'a>(extra: &[(&'a str, &'a str)]) -> Vec<(&'a str, &'a str)> {
 
 fn with_shared_runtime_env(release: &[(&str, &str)]) -> Vec<(String, String)> {
     [
-        ("NODE_ENV", "production"),
         ("FLUXER_ENV", "production"),
         ("FLUXER_MEDIA_PROXY_SECRET_KEY", "shared-runtime-secret"),
         ("FLUXER_S3_ENDPOINT", "https://ewr1.vultrobjects.com"),
@@ -66,6 +65,36 @@ fn default_config_matches_media_service() {
         cfg.media.max_native_transforms * 8,
         cfg.media.worker_queue_capacity
     );
+}
+
+#[test]
+fn blank_values_fall_back_to_the_defaults() {
+    let cfg = Config::load_from_iter(env_with(&[
+        ("FLUXER_MEDIA_PROXY_MODE", ""),
+        ("FLUXER_MEDIA_PROXY_HOST", " "),
+        ("FLUXER_MEDIA_PROXY_PORT", ""),
+        ("FLUXER_MEDIA_PROXY_READ_ONLY", ""),
+        ("FLUXER_MEDIA_PROXY_STORAGE_BACKEND", ""),
+        ("FLUXER_MEDIA_PROXY_NSFW_THRESHOLD", "  "),
+        ("FLUXER_MEDIA_PROXY_CORS_MODE", ""),
+        ("FLUXER_MEDIA_PROXY_ATTACHMENT_SIGNATURE_MODE", " "),
+        ("FLUXER_S3_REGION", ""),
+        ("FLUXER_S3_BUCKET_CDN", ""),
+    ]))
+    .unwrap();
+    assert_eq!(DeploymentMode::Mp, cfg.mode);
+    assert_eq!("0.0.0.0", cfg.bind_host);
+    assert_eq!(8080, cfg.port);
+    assert!(!cfg.read_only);
+    assert_eq!(StorageBackend::Local, cfg.storage.backend);
+    assert_eq!(0.85, cfg.media.nsfw_threshold);
+    assert_eq!(PolicyMode::Off, cfg.cors.mode);
+    assert_eq!(PolicyMode::Off, cfg.attachment_signature.mode);
+    assert_eq!("us-east-1", cfg.storage.s3_region);
+    assert_eq!("cdn", cfg.storage.bucket_cdn);
+
+    let err = Config::load_from_iter([("FLUXER_MEDIA_PROXY_SECRET_KEY", " ")]).unwrap_err();
+    assert!(err.to_string().contains("FLUXER_MEDIA_PROXY_SECRET_KEY"));
 }
 
 #[test]
@@ -282,7 +311,6 @@ fn production_media_proxy_release_env_loads() {
     ]))
     .unwrap();
 
-    assert_eq!("production", cfg.node_env);
     assert_eq!(DeploymentMode::Mp, cfg.mode);
     assert_eq!(PolicyMode::Enforce, cfg.cors.mode);
     assert_eq!(
