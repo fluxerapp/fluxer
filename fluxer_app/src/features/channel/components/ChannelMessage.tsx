@@ -46,6 +46,7 @@ import { PersonaPickerPopout } from '@app/features/personas/components/popouts/P
 import { buildExistingAttachmentEditReferences } from '@app/features/messaging/utils/MessageEditContentUtils';
 import * as MessageCommands from '@app/features/messaging/commands/MessageCommands';
 import Personas from '@app/features/user/state/Personas';
+import PersonaPickerMobile from '@app/features/personas/state/PersonaPickerMobile';
 
 const ATTACHMENT_DESCRIPTOR = msg({
 	message: 'attachment',
@@ -405,42 +406,52 @@ export const Message: React.FC<MessageProps> = observer((props) => {
 			}),
 		[message.content],
 	);
+	const isMobile = MobileLayout.isEnabled();
 	useEffect(() => {
 		if (!isChangingPersona) return;
 		if (!messageRef.current) return;
+		const applyEdit = (p: string | null) => void MessageCommands.edit(
+			channel.id,
+			message.id,
+			undefined,
+			undefined,
+			undefined,
+			buildExistingAttachmentEditReferences(message),
+			p === null || p === "" ? null : (() => {
+				const persona = Personas.getPersona(p);
+				if (!persona) return null;
+				return persona.toSnapshot();
+			})()
+		);
 		const popoutKey = `message-change-persona::${message.id}`;
-		openPopout(messageRef.current, {
-			position: "bottom-start",
-			offsetCrossAxis: 8,
-			offsetMainAxis: 4,
-			render: () => <PersonaPickerPopout
-				channel={channel}
-				selectedId={message.persona?.id || ""}
-				onSelect={(p) => {
-					void MessageCommands.edit(
-						channel.id,
-						message.id,
-						undefined,
-						undefined,
-						undefined,
-						buildExistingAttachmentEditReferences(message),
-						p === null || p === "" ? null : (() => {
-							const persona = Personas.getPersona(p);
-							if (!persona) return null;
-							return {
-								id: persona.id,
-								name: persona.display_name || persona.internal_name || "",
-								avatar: persona.avatar,
-								pronouns: persona.pronouns
-							}
-						})()
-					);
-					PopoutCommands.close(popoutKey);
-				}}
-			/>,
-			shouldAutoUpdate: false,
-			onClose: () => PersonaChange.stopEditing(channel.id),
-		}, popoutKey);
+		if (isMobile) {
+			PersonaPickerMobile.open({
+				channel: props.channel,
+				selectedId: message.persona?.id || "",
+				onSelect: (p) => {
+					applyEdit(p);
+					PersonaPickerMobile.close();
+				},
+				messageId: message.id,
+				onClose: () => PersonaChange.stopEditing(channel.id),
+			});
+		} else {
+			openPopout(messageRef.current, {
+				position: "bottom-start",
+				offsetCrossAxis: 8,
+				offsetMainAxis: 4,
+				render: () => <PersonaPickerPopout
+					channel={channel}
+					selectedId={message.persona?.id || ""}
+					onSelect={(p: string | null) => {
+						applyEdit(p);
+						PopoutCommands.close(popoutKey);
+					}}
+				/>,
+				shouldAutoUpdate: false,
+				onClose: () => PersonaChange.stopEditing(channel.id),
+			}, popoutKey);
+		}
 	}, [isChangingPersona]);
 	const messageAriaLabel = useMemo(() => {
 		const timeLabel = DateUtils.getFormattedDateTime(message.timestamp);

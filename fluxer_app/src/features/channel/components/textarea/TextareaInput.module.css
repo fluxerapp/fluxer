@@ -140,6 +140,13 @@
 	min-width: 0;
 	flex-shrink: 1;
 }
+.uploadAndPersonasRow {
+	display: flex;
+	flex-direction: row;
+	align-items: start;
+	justify-content: center;
+	gap: var(--composer-action-gap);
+}
 
 .sideButtonPadding {
 	padding-inline: var(--textarea-side-button-padding);

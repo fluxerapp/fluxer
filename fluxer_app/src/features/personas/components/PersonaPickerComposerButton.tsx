@@ -17,6 +17,8 @@ import { msg } from "@lingui/core/macro";
 import UserSettings from "@app/features/user/state/UserSettings";
 import * as PersonaCommands from "../commands/Personas";
 import { runInAction } from "mobx";
+import MobileLayout from "@app/features/ui/state/MobileLayout";
+import PersonaPickerMobile from "../state/PersonaPickerMobile";
 
 const SELECT_PERSONA_DESCRIPTOR = msg({
 	message: 'Select persona',
@@ -34,6 +36,7 @@ export const PersonaPickerComposerButton = observer<PersonaPickerComposerButtonP
 	const getActivePersona = useCallback(() => Personas.getGlobalActivePersona(), []);
 	const [hasPersonas, setHasPersonas] = useState(() => !!Personas.getOwnPersonas().length);
 	const [selectedPersona, setSelectedPersona] = useState(getActivePersona);
+	const isMobile = MobileLayout.isEnabled();
 
 	useEffect(() => {
 		void PersonaCommands.fetchUserPersonas().then((personas) => {
@@ -57,16 +60,23 @@ export const PersonaPickerComposerButton = observer<PersonaPickerComposerButtonP
 			compact
 			variant="ghost"
 			onClick={(_: React.MouseEvent) => {
-				openPopout(personaPickerRef.current!, {
-					position: "top-start",
-					render: () => <PersonaPickerPopout
-						channel={props.channel}
-						onSelect={(p) => Personas.setGlobalActivePersona(p || "")}
-					/>,
-					shouldAutoUpdate: false,
-					onOpen: () => setPersonaPickerOpen(true),
-					onClose: () => setPersonaPickerOpen(false),
-				}, 0);
+				if (isMobile) {
+					PersonaPickerMobile.open({
+						channel: props.channel,
+						onSelect: (p) => Personas.setGlobalActivePersona(p || ""),
+					});
+				} else {
+					openPopout(personaPickerRef.current!, {
+						position: "top-start",
+						render: () => <PersonaPickerPopout
+							channel={props.channel}
+							onSelect={(p) => Personas.setGlobalActivePersona(p || "")}
+						/>,
+						shouldAutoUpdate: false,
+						onOpen: () => setPersonaPickerOpen(true),
+						onClose: () => setPersonaPickerOpen(false),
+					}, 0);
+				}
 			}}
 			className={clsx(buttonStyles.button, buttonStyles.buttonCompact, styles.personaAvatar, styles.buttonMarker, personaPickerOpen && styles.contextMenuHover)}
 			icon={<div className={clsx(styles.personaAvatar, personaPickerOpen && styles.contextMenuHover)}>{

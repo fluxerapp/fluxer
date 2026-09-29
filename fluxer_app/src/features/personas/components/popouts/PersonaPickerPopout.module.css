@@ -1,16 +1,23 @@
 .root {
-	width: 32ch;
-	max-height: min(50vh, 20lh);
-	background: var(--form-surface-background);
 	display: flex;
 	flex-direction: column;
-	gap: var(--spacing-3);
-	border: 1px solid var(--background-modifier-accent) / 100%;
-	clip-path: border-box;
-	border-radius: var(--popout-radius, 0.5rem);
+	&.mobile {
+		gap: var(--spacing-3);
+	}
+	&:not(.mobile) {
+		width: 32ch;
+		max-height: min(50vh, 20lh);
+		background: var(--form-surface-background);
+
+		border: 1px solid var(--background-modifier-accent) / 100%;
+		clip-path: border-box;
+		border-radius: var(--popout-radius, 0.5rem);
+	}
+}
+.root:not(.mobile) .scrollingArea {
+	padding: var(--spacing-3);
 }
 .scrollingArea {
-	padding: var(--spacing-3);
 	overflow-y: auto;
 	position: relative;
 	display: flex;
@@ -18,7 +25,7 @@
 	gap: var(--spacing-1);
 }
 
-.footer {
+.root:not(.mobile) .footer {
 	padding: var(--spacing-2);
 	border-block-start: 0.0625rem solid var(--background-modifier-accent);
 	background-color: var(--background-primary);
@@ -26,17 +33,21 @@
 	border-end-start-radius: var(--popout-radius, 0.5rem);
 }
 
-.header {
+.root:not(.mobile) .header {
+	margin-block-end: 0;
+	border-block-end: 0.0625rem solid var(--background-modifier-accent);
+	border-start-end-radius: var(--popout-radius, 0.5rem);
+	border-start-start-radius: var(--popout-radius, 0.5rem);
 	display: flex;
 	flex-direction: column;
 	gap: var(--spacing-2);
 	padding: var(--spacing-3);
-	margin: calc(var(--spacing-3) * -1);
-	margin-block-end: 0;
-	border-block-end: 0.0625rem solid var(--background-modifier-accent);
 	background-color: var(--background-primary);
-	border-start-end-radius: var(--popout-radius, 0.5rem);
-	border-start-start-radius: var(--popout-radius, 0.5rem);
+}
+.root.mobile .header {
+	gap: var(--spacing-2);
+	padding-block-end: var(--spacing-2);
+	border-block-end: 0.0625rem solid var(--background-modifier-accent);
 }
 
 .item {

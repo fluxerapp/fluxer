@@ -24,6 +24,8 @@ import { Trans } from "@lingui/react/macro";
 import { SensitiveContentChoiceRow } from "@app/features/user/components/modals/tabs/privacy_safety_tab/SensitiveContentTab";
 import { PersonaSettings_LatchMode } from "@fluxer/schema/src/gen/fluxer/user/preferences/v1/preferences_pb.js";
 import { LATCH_MANUAL_DESCRIPTOR, LATCH_OFF_DESCRIPTOR, LATCH_TRIGGER_SWITCHING_DESCRIPTOR } from "@app/features/user/components/modals/tabs/PersonasTab";
+import { clsx } from "clsx";
+import PersonaPickerMobile from "../../state/PersonaPickerMobile";
 
 const MAIN_ACCOUNT_DESCRIPTOR = msg({
 	message: "This is your account.",
@@ -34,10 +36,11 @@ export const PERSONA_FILTER_PLACEHOLDER_DESCRIPTOR = msg({
 	comment: "Placeholder text to hint at what can be used to filter personas in the list."
 });
 
-interface PersonaPickerPopoutProps {
+export interface PersonaPickerPopoutProps {
 	channel: Channel;
 	selectedId?: string;
 	onSelect: (persona_id: string | null) => void;
+	isMobile?: boolean;
 }
 
 interface PersonaPickerItemProps {
@@ -49,7 +52,7 @@ interface PersonaPickerItemProps {
 export const PersonaPickerPopout = observer<PersonaPickerPopoutProps>(({ channel, onSelect, ...props }) => {
 	const i18n = useLingui();
 	const guild = useMemo(() => channel.guildId ? Guilds.getGuild(channel.guildId) : null, [channel.guildId]);
-	const partner = useMemo(() => channel.isDM() ? channel.getRecipientId() || null : null, [channel.id]);
+	//const partner = useMemo(() => channel.isDM() ? channel.getRecipientId() || null : null, [channel.id]);
 	const user = useMemo(() => Users.getCurrentUser(), []);
 	const member = useMemo(() => guild && user && GuildMembers.getMember(guild.id, user.id), [guild, user]);
 	if (!user) return;
@@ -65,7 +68,7 @@ export const PersonaPickerPopout = observer<PersonaPickerPopoutProps>(({ channel
 	}), [user]);
 	const [globalPersonas, setGlobalPersonas] = useState(() => Personas.getOwnPersonas());
 	const [filter, setFilter] = useState("");
-	const selectedPersonaId = props.selectedId || Personas.getGlobalActivePersona()?.id || "";
+	const selectedPersonaId = props.selectedId ?? Personas.getGlobalActivePersona()?.id ?? "";
 	const filteredPersonas = useMemo(() => {
 		const sources = new Map([rootPersona, ...globalPersonas].map((v) => [v.id, v]));
 		if (filter === "") return [...sources.values()];
@@ -128,38 +131,38 @@ export const PersonaPickerPopout = observer<PersonaPickerPopoutProps>(({ channel
 		</FocusRing>;
 	}, [globalPersonas]);
 
-	return <div className={styles.root}>
+	return <div className={clsx(styles.root, props.isMobile && styles.mobile)}>
+		<div className={styles.header}>
+			<SensitiveContentChoiceRow
+				className={styles.latchModes}
+				dataFlx="persona-picker.latch-mode-choice-row"
+				label="Trigger Behavior"
+				value={Personas.latchMode}
+				onChange={(v) => Personas.latchMode = v}
+				options={[
+					{
+						value: PersonaSettings_LatchMode.OFF,
+						label: i18n._(LATCH_OFF_DESCRIPTOR),
+					},
+					{
+						value: PersonaSettings_LatchMode.MANUAL,
+						label: i18n._(LATCH_MANUAL_DESCRIPTOR),
+					},
+					{
+						value: PersonaSettings_LatchMode.TRIGGER_SWITCHING,
+						label: i18n._(LATCH_TRIGGER_SWITCHING_DESCRIPTOR),
+					},
+				]}
+			/>
+			<Input
+				label={<Trans>Filter personas</Trans>}
+				placeholder={i18n._(PERSONA_FILTER_PLACEHOLDER_DESCRIPTOR)}
+				value={filter}
+				type="text"
+				onChange={(e) => setFilter(e.target.value)}
+			/>
+		</div>
 		<div className={styles.scrollingArea}>
-			<div className={styles.header}>
-				<SensitiveContentChoiceRow
-					className={styles.latchModes}
-					dataFlx="persona-picker.latch-mode-choice-row"
-					label="Trigger Behavior"
-					value={Personas.latchMode}
-					onChange={(v) => Personas.latchMode = v}
-					options={[
-						{
-							value: PersonaSettings_LatchMode.OFF,
-							label: i18n._(LATCH_OFF_DESCRIPTOR),
-						},
-						{
-							value: PersonaSettings_LatchMode.MANUAL,
-							label: i18n._(LATCH_MANUAL_DESCRIPTOR),
-						},
-						{
-							value: PersonaSettings_LatchMode.TRIGGER_SWITCHING,
-							label: i18n._(LATCH_TRIGGER_SWITCHING_DESCRIPTOR),
-						},
-					]}
-				/>
-				<Input
-					label={<Trans>Filter personas</Trans>}
-					placeholder={i18n._(PERSONA_FILTER_PLACEHOLDER_DESCRIPTOR)}
-					value={filter}
-					type="text"
-					onChange={(e) => setFilter(e.target.value)}
-				/>
-			</div>
 			{filteredPersonas.map((v) => <Item
 				key={v.id}
 				persona={v}
@@ -167,13 +170,22 @@ export const PersonaPickerPopout = observer<PersonaPickerPopoutProps>(({ channel
 				onSelect={() => onSelect(v.id)}
 			/>)}
 		</div>
-		<div className={styles.footer}>
+		{props.isMobile ? <Button
+				fitContainer
+				variant="secondary"
+				onClick={() => {
+					handleDeepLinkUrl("fluxer://settings/user?tab=personas");
+					PersonaPickerMobile.close();
+				}}
+				leftIcon={<PencilIcon />}
+			>Manage Personas</Button>
+		: <div className={styles.footer}>
 			<Button
 				compact
 				variant="ghost"
 				onClick={() => {handleDeepLinkUrl("fluxer://settings/user?tab=personas")}}
 				leftIcon={<PencilIcon />}
 			>Manage Personas</Button>
-		</div>
+		</div>}
 	</div>
 });

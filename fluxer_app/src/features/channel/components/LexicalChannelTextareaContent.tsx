@@ -1399,22 +1399,27 @@ export const LexicalChannelTextareaContent = observer(
 								className={flxElementClassName(styles.uploadButtonColumn, styles.sideButtonPadding)}
 								data-flx="channel.lexical-channel-textarea-content.upload-button-column"
 							>
-								<TextareaButton
-									iconProps={PLUS_ICON_PROPS}
-									icon={slashCommandState.hasSlots ? SlashCommandIcon : PlusIcon}
-									label={slashCommandState.hasSlots ? i18n._(CLEAR_COMMAND_DESCRIPTOR) : i18n._(OPEN_MENU_DESCRIPTOR)}
-									disabled={textareaInputDisabled}
-									aria-hidden={textareaInputDisabled ? true : undefined}
-									onMouseDown={slashCommandState.hasSlots ? undefined : handlePlusMenuMouseDown}
-									onClick={slashCommandState.hasSlots ? handleClearSlashCommand : handlePlusMenuClick}
-									forceHover={!slashCommandState.hasSlots && plusContextMenuOpen}
-									className={plusContextMenuOpen ? styles.plusButtonAboveBackdrop : undefined}
-									ref={plusButtonRef}
-									data-flx="channel.lexical-channel-textarea-content.plus-button-above-backdrop.clear-slash-command"
-								/>
-								<PersonaPickerComposerButton
-									channel={channel}
-								/>
+								<flx-channel-textarea-upload-row
+									className={flxElementClassName(styles.uploadAndPersonasRow)}
+									data-flx="channel.lexical-channel-textarea-content.upload-column-row"
+								>
+									<TextareaButton
+										iconProps={PLUS_ICON_PROPS}
+										icon={slashCommandState.hasSlots ? SlashCommandIcon : PlusIcon}
+										label={slashCommandState.hasSlots ? i18n._(CLEAR_COMMAND_DESCRIPTOR) : i18n._(OPEN_MENU_DESCRIPTOR)}
+										disabled={textareaInputDisabled}
+										aria-hidden={textareaInputDisabled ? true : undefined}
+										onMouseDown={slashCommandState.hasSlots ? undefined : handlePlusMenuMouseDown}
+										onClick={slashCommandState.hasSlots ? handleClearSlashCommand : handlePlusMenuClick}
+										forceHover={!slashCommandState.hasSlots && plusContextMenuOpen}
+										className={plusContextMenuOpen ? styles.plusButtonAboveBackdrop : undefined}
+										ref={plusButtonRef}
+										data-flx="channel.lexical-channel-textarea-content.plus-button-above-backdrop.clear-slash-command"
+									/>
+									<PersonaPickerComposerButton
+										channel={channel}
+									/>
+								</flx-channel-textarea-upload-row>
 							</flx-channel-textarea-upload-column>
 							<flx-channel-textarea-content
 								ref={contentAreaRef}
