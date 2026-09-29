@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {ChannelID, GuildID, MessageID, RoleID, UserID} from '@app/api/BrandedTypes';
-import {createChannelID, createRoleID, createUserID} from '@app/api/BrandedTypes';
+import {createChannelID, createGuildID, createRoleID, createUserID} from '@app/api/BrandedTypes';
 import {SYSTEM_USER_ID} from '@app/api/constants/Core';
 import type {GatewayDispatchEvent} from '@app/api/constants/Gateway';
 import {GatewayRpcClient} from '@app/api/infrastructure/GatewayRpcClient';
@@ -710,11 +710,29 @@ export class GatewayService {
 		guildId: GuildID;
 		settings: unknown;
 	}): Promise<void> {
-		await this.call('push.sync_user_guild_settings', {
-			user_id: userId.toString(),
-			guild_id: guildId.toString(),
-			user_guild_settings: settings,
-		});
+		try {
+			await this.rpcClient.call('push.sync_user_guild_settings', {
+				user_id: userId.toString(),
+				guild_id: guildId.toString(),
+				user_guild_settings: settings,
+			});
+		} catch (error) {
+			if (!this.isPrivateScopeSyncUnsupportedError(guildId, error)) {
+				throw this.transformGatewayError(error);
+			}
+			Logger.warn(
+				{userId: userId.toString()},
+				'[gateway-rpc] push.sync_user_guild_settings rejected the private scope, gateway predates it',
+			);
+		}
+	}
+
+	private isPrivateScopeSyncUnsupportedError(guildId: GuildID, error: unknown): boolean {
+		return (
+			guildId === createGuildID(0n) &&
+			error instanceof GatewayRpcMethodError &&
+			error.code === GatewayRpcMethodErrorCodes.INVALID_PARAMS
+		);
 	}
 
 	async getGuildCounts(guildId: GuildID): Promise<{

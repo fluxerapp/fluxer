@@ -54,13 +54,11 @@ export class UserAccountUpdatePropagator extends BaseUserUpdatePropagator {
 			event: 'USER_GUILD_SETTINGS_UPDATE',
 			data: payload,
 		});
-		if (payload.guild_id !== null) {
-			await this.deps.gatewayService.syncPushUserGuildSettings({
-				userId,
-				guildId: settings.guildId,
-				settings: payload,
-			});
-		}
+		await this.deps.gatewayService.syncPushUserGuildSettings({
+			userId,
+			guildId: settings.guildId,
+			settings: payload,
+		});
 	}
 
 	async dispatchUserNoteUpdate(params: {userId: UserID; targetId: UserID; note: string}): Promise<void> {

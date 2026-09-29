@@ -3,6 +3,7 @@
 use crate::crypto;
 use crate::payload::{self, RecordKind};
 use crate::providers::{SendOutcome, own_relay};
+use crate::relay;
 use crate::resolver;
 use crate::server::AppState;
 use crate::subscription::Subscription;
@@ -44,19 +45,10 @@ const MAX_HOSTNAME_BYTES: usize = 253;
 const MAX_LABEL_BYTES: usize = 63;
 
 pub async fn send(state: &AppState, sub: &Subscription, envelope: &Value) -> SendOutcome {
-    if !endpoint_is_allowed(&sub.endpoint) {
-        return SendOutcome::permanent("endpoint_rejected");
-    }
-    let (Some(p256dh), Some(auth)) = (sub.p256dh_key.as_deref(), sub.auth_key.as_deref()) else {
-        return SendOutcome::permanent("missing_keys");
+    let record = match seal(state, sub, envelope) {
+        Ok(record) => record,
+        Err(outcome) => return outcome,
     };
-    let (Ok(p256dh), Ok(auth)) = (
-        crypto::decode_subscription_key(p256dh),
-        crypto::decode_subscription_key(auth),
-    ) else {
-        return SendOutcome::permanent("invalid_keys");
-    };
-
     let vapid = &state.cfg.vapid;
     let token = match state
         .tokens
@@ -67,41 +59,72 @@ pub async fn send(state: &AppState, sub: &Subscription, envelope: &Value) -> Sen
         Err(error) => return SendOutcome::permanent(format!("vapid_token: {error}")),
     };
     let authorization = format!("vapid t={token}, k={}", vapid.public_key);
+    deliver(state, sub, &record, &Hop::Network(&authorization)).await
+}
+
+pub async fn send_to_own_fcm_relay(
+    state: &AppState,
+    sub: &Subscription,
+    envelope: &Value,
+    target: relay::FcmTarget<'_>,
+) -> SendOutcome {
+    let record = match seal(state, sub, envelope) {
+        Ok(record) => record,
+        Err(outcome) => return outcome,
+    };
+    deliver(state, sub, &record, &Hop::OwnFcmRelay(target)).await
+}
+
+enum Hop<'a> {
+    Network(&'a str),
+    OwnFcmRelay(relay::FcmTarget<'a>),
+}
+
+struct Record {
+    body: Vec<u8>,
+    ttl_seconds: &'static str,
+    urgency: &'static str,
+}
+
+fn seal(state: &AppState, sub: &Subscription, envelope: &Value) -> Result<Record, SendOutcome> {
+    if !endpoint_is_allowed(&sub.endpoint) {
+        return Err(SendOutcome::permanent("endpoint_rejected"));
+    }
+    let (Some(p256dh), Some(auth)) = (sub.p256dh_key.as_deref(), sub.auth_key.as_deref()) else {
+        return Err(SendOutcome::permanent("missing_keys"));
+    };
+    let (Ok(p256dh), Ok(auth)) = (
+        crypto::decode_subscription_key(p256dh),
+        crypto::decode_subscription_key(auth),
+    ) else {
+        return Err(SendOutcome::permanent("invalid_keys"));
+    };
 
     let (plaintext, shrunk) = payload::fit(envelope, PLAINTEXT_BUDGET);
     if let Some(step) = shrunk {
         state.metrics.record_payload_shrink(step);
     }
-    let body = match crypto::encrypt_aes128gcm(&plaintext, &p256dh, &auth, RECORD_SIZE) {
-        Ok(body) => body,
-        Err(error) => return SendOutcome::permanent(format!("encrypt: {error}")),
-    };
+    let body = crypto::encrypt_aes128gcm(&plaintext, &p256dh, &auth, RECORD_SIZE)
+        .map_err(|error| SendOutcome::permanent(format!("encrypt: {error}")))?;
     let (ttl_seconds, urgency) = delivery_headers(envelope);
+    Ok(Record {
+        body,
+        ttl_seconds,
+        urgency,
+    })
+}
 
+async fn deliver(
+    state: &AppState,
+    sub: &Subscription,
+    record: &Record,
+    hop: &Hop<'_>,
+) -> SendOutcome {
     let mut attempt: u32 = 0;
     loop {
-        let response = state
-            .web_push_http
-            .post(&sub.endpoint)
-            .header(TTL_HEADER, ttl_seconds)
-            .header(URGENCY_HEADER, urgency)
-            .header(CONTENT_TYPE, OCTET_STREAM)
-            .header(CONTENT_ENCODING, AES128GCM)
-            .header(AUTHORIZATION, &authorization)
-            .body(body.clone())
-            .send()
-            .await;
-
-        let status = match response {
-            Ok(response) => response.status().as_u16(),
-            Err(error) => {
-                let unreachable = Unreachable::of(&error);
-                warn!(
-                    error = %error.without_url(),
-                    kind = unreachable.label(),
-                    endpoint = %origin_of(&sub.endpoint),
-                    "web push request did not complete"
-                );
+        let status = match post(state, sub, record, hop).await {
+            Ok(status) => status,
+            Err(unreachable) => {
                 if unreachable.is_permanent() {
                     return SendOutcome::permanent(unreachable.label());
                 }
@@ -123,6 +146,52 @@ pub async fn send(state: &AppState, sub: &Subscription, envelope: &Value) -> Sen
         }
         return classify(status);
     }
+}
+
+async fn post(
+    state: &AppState,
+    sub: &Subscription,
+    record: &Record,
+    hop: &Hop<'_>,
+) -> Result<u16, Unreachable> {
+    let authorization = match hop {
+        Hop::Network(authorization) => authorization,
+        Hop::OwnFcmRelay(target) => {
+            return Ok(relay::forward_fcm(
+                &state.http,
+                &state.tokens,
+                &state.metrics,
+                target,
+                &record.body,
+                record.urgency,
+                record.ttl_seconds,
+            )
+            .await);
+        }
+    };
+    let response = state
+        .web_push_http
+        .post(&sub.endpoint)
+        .header(TTL_HEADER, record.ttl_seconds)
+        .header(URGENCY_HEADER, record.urgency)
+        .header(CONTENT_TYPE, OCTET_STREAM)
+        .header(CONTENT_ENCODING, AES128GCM)
+        .header(AUTHORIZATION, *authorization)
+        .body(record.body.clone())
+        .send()
+        .await;
+    response
+        .map(|response| response.status().as_u16())
+        .map_err(|error| {
+            let unreachable = Unreachable::of(&error);
+            warn!(
+                error = %error.without_url(),
+                kind = unreachable.label(),
+                endpoint = %origin_of(&sub.endpoint),
+                "web push request did not complete"
+            );
+            unreachable
+        })
 }
 
 fn delivery_headers(envelope: &Value) -> (&'static str, &'static str) {

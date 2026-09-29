@@ -629,6 +629,16 @@ export class RpcService {
 					data: {channel},
 				};
 			}
+			case 'get_read_state': {
+				const readState = await this.readStateService.getReadState(
+					createUserID(request.user_id),
+					createChannelID(request.channel_id),
+				);
+				return {
+					type: 'get_read_state',
+					data: {last_message_id: readState?.lastMessageId?.toString() ?? null},
+				};
+			}
 			case 'get_gateway_rollout_config': {
 				const rolloutConfig = await this.instanceConfigRepository.getGatewayRolloutConfig();
 				return {
@@ -1978,7 +1988,7 @@ export class RpcService {
 							channelId,
 							messageId: createMessageID(messageId),
 							mentionCount: 0,
-							silent: true,
+							implicit: {unreadThrough: createMessageID(messageId)},
 						})
 						.catch((error) => {
 							Logger.error(

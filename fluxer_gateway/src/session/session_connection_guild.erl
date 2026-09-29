@@ -449,6 +449,7 @@ finalize_guild_connection(GuildId, GuildPid, State, ReadyFun) ->
 finalize_guild_monitor(GuildId, GuildPid, Guilds0, State, ReadyFun) ->
     MonitorRef = monitor(process, GuildPid),
     Guilds = Guilds0#{GuildId => {GuildPid, MonitorRef}},
+    ok = session_lifecycle:send_guild_push_hold({GuildPid, MonitorRef}, State),
     apply_ready_fun(GuildId, GuildPid, ReadyFun, State#{guilds => Guilds}).
 
 -spec apply_ready_fun(

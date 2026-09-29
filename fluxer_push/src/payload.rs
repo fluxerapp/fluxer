@@ -628,6 +628,7 @@ mod tests {
             user_id: USER_ID.to_owned(),
             channel_id: CHANNEL_ID.to_owned(),
             message_id: MESSAGE_ID.to_owned(),
+            after_message_id: None,
         }
     }
 

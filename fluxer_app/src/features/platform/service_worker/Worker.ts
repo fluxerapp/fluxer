@@ -19,6 +19,7 @@ import {
 	getBadgeCount,
 	getPushNotificationClientState,
 	isNotificationClearPayload,
+	isPushNotificationReadThrough,
 	matchesPushChannelNotification,
 	normalizePushPayload,
 	resolvePushChannelId,
@@ -227,7 +228,10 @@ const getShownPushNotifications = async (tag: string): Promise<ReadonlyArray<Not
 		return [];
 	}
 };
-const closePushNotificationsForChannel = async (channelId: string): Promise<number> => {
+const closePushNotificationsForChannel = async (
+	channelId: string,
+	readThroughMessageId: string | undefined,
+): Promise<number> => {
 	if (typeof self.registration.getNotifications !== 'function') {
 		return 0;
 	}
@@ -235,7 +239,10 @@ const closePushNotificationsForChannel = async (channelId: string): Promise<numb
 		const notifications = await self.registration.getNotifications();
 		let closedCount = 0;
 		for (const notification of notifications) {
-			if (matchesPushChannelNotification(notification, channelId)) {
+			if (
+				matchesPushChannelNotification(notification, channelId) &&
+				isPushNotificationReadThrough(notification, readThroughMessageId)
+			) {
 				notification.close();
 				closedCount++;
 			}
@@ -340,7 +347,7 @@ self.addEventListener('push', (event: PushEvent) => {
 			if (isNotificationClearPayload(payload)) {
 				const channelId = resolvePushChannelId(payload);
 				const closedCount = channelId
-					? await closePushNotificationsForChannel(channelId)
+					? await closePushNotificationsForChannel(channelId, resolvePushMessageId(payload))
 					: await closePushNotifications(tag);
 				await updateAppBadge(badgeCount);
 				await log('info', 'push clear received', {tag, channelId, closedCount, badgeCount});

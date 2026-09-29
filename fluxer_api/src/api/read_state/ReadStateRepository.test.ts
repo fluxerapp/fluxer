@@ -65,7 +65,7 @@ describe('ReadStateRepository row storage', () => {
 		const channelId = createChannelID(10n);
 		await seedReadState(userId, channelId, 100n, 3);
 		const repository = new ReadStateRepository();
-		const readState = await repository.upsertReadState(userId, channelId, createMessageID(90n), 0);
+		const {readState} = await repository.upsertReadState(userId, channelId, createMessageID(90n), 0);
 		expect(readState.lastMessageId).toBe(createMessageID(100n));
 		expect(await loadReadState(userId, channelId)).toMatchObject({
 			message_id: createMessageID(100n),
@@ -77,7 +77,7 @@ describe('ReadStateRepository row storage', () => {
 		const channelId = createChannelID(10n);
 		await seedReadState(userId, channelId, 100n, 0);
 		const repository = new ReadStateRepository();
-		const readState = await repository.upsertReadState(userId, channelId, createMessageID(90n), 2, undefined, true);
+		const {readState} = await repository.upsertReadState(userId, channelId, createMessageID(90n), 2, undefined, true);
 		expect(readState.lastMessageId).toBe(createMessageID(90n));
 		expect(readState.mentionCount).toBe(2);
 		expect(await loadReadState(userId, channelId)).toMatchObject({

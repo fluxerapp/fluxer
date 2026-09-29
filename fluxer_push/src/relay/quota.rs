@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+use super::envelope::Urgency;
 use super::reject::{Reason, Rejection};
 use crate::config::BucketConfig;
 use crate::metrics::{BucketKey, Metrics};
@@ -23,6 +24,7 @@ type Key = [u8; KEY_BYTES];
 pub struct Quota {
     admissions: Semaphore,
     device_tokens: Buckets,
+    background_device_tokens: Buckets,
     sources: Option<Buckets>,
 }
 
@@ -35,6 +37,7 @@ impl Quota {
         Self {
             admissions: Semaphore::new(max_concurrent),
             device_tokens: Buckets::new(device_tokens),
+            background_device_tokens: Buckets::new(device_tokens),
             sources: sources.map(Buckets::new),
         }
     }
@@ -49,13 +52,21 @@ impl Quota {
         &self,
         metrics: &Metrics,
         device_token: &str,
+        urgency: Urgency,
         client_ip: IpAddr,
         now: Instant,
     ) -> Result<(), Rejection> {
+        let (which, device_tokens) = match urgency {
+            Urgency::Alert => (BucketKey::DeviceToken, &self.device_tokens),
+            Urgency::Background => (
+                BucketKey::BackgroundDeviceToken,
+                &self.background_device_tokens,
+            ),
+        };
         self.check(
             metrics,
-            BucketKey::DeviceToken,
-            &self.device_tokens,
+            which,
+            device_tokens,
             device_token_key(device_token),
             now,
         )?;

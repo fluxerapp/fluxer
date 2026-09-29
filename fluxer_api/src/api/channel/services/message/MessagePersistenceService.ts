@@ -353,7 +353,7 @@ export class MessagePersistenceService {
 						channelId: params.channelId,
 						messageId: params.messageId,
 						mentionCount: 0,
-						silent: true,
+						implicit: {unreadThrough: params.user ? (params.channel?.lastMessageId ?? null) : null},
 						emitGateway: false,
 					}),
 				);

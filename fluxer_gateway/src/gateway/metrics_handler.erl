@@ -302,6 +302,12 @@ render_push_outbox_queue_stats(Stats) ->
             <<"counter">>,
             <<"Queued recipients skipped because they became active">>,
             gate_counter(skipped_active, Stats)
+        ),
+        format_metric(
+            <<"fluxer_gateway_push_outbox_followup_clears_total">>,
+            <<"counter">>,
+            <<"Clears queued after an in-flight push job whose recipient read the channel">>,
+            gate_counter(followup_clears, Stats)
         )
     ].
 

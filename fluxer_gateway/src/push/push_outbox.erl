@@ -11,7 +11,8 @@
     note_session_active/1,
     record_dropped/2,
     stats/0,
-    request_timeout_ms/0
+    request_timeout_ms/0,
+    max_age_ms/0
 ]).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 -export_type([job/0, kind/0]).
@@ -54,11 +55,13 @@
     | sheds
     | truncations
     | skipped_active
+    | followup_clears
     | enqueued.
 -type state() :: #{
     jobs := gb_trees:tree(non_neg_integer(), entry()),
     ready := queue:queue(non_neg_integer()),
     inflight := #{pid() => {reference(), reference(), entry()}},
+    followups => #{pid() => #{integer() => integer()}},
     next_seq := non_neg_integer(),
     reads := #{{integer(), integer()} => {integer(), integer()}},
     active := #{integer() => {non_neg_integer(), integer()}},
@@ -108,6 +111,10 @@ stats() ->
 request_timeout_ms() ->
     env_pos_integer(push_outbox_request_timeout_ms, ?DEFAULT_REQUEST_TIMEOUT_MS).
 
+-spec max_age_ms() -> pos_integer().
+max_age_ms() ->
+    env_pos_integer(push_outbox_max_age_ms, ?DEFAULT_MAX_AGE_MS).
+
 -spec init([]) -> {ok, state()}.
 init([]) ->
     erlang:process_flag(fullsweep_after, 10),
@@ -116,6 +123,7 @@ init([]) ->
         jobs => gb_trees:empty(),
         ready => queue:new(),
         inflight => #{},
+        followups => #{},
         next_seq => 0,
         reads => #{},
         active => #{},
@@ -124,7 +132,7 @@ init([]) ->
         max_queue => env_pos_integer(push_outbox_max_queue, ?DEFAULT_MAX_QUEUE),
         max_inflight => env_pos_integer(push_outbox_max_inflight, ?DEFAULT_MAX_INFLIGHT),
         request_timeout_ms => request_timeout_ms(),
-        max_age_ms => env_pos_integer(push_outbox_max_age_ms, ?DEFAULT_MAX_AGE_MS),
+        max_age_ms => max_age_ms(),
         retry_base_ms => app_pos_integer(push_outbox_retry_base_ms, ?DEFAULT_RETRY_BASE_MS)
     }}.
 
@@ -298,13 +306,52 @@ apply_read(UserId, ChannelId, MessageId, #{reads := Reads, jobs := Jobs} = State
             error -> MessageId
         end,
     State1 = State#{reads := Reads#{Key => {Watermark, now_ms()}}},
-    lists:foldl(
+    State2 = lists:foldl(
         fun({Seq, Entry}, Acc) ->
             truncate_entry(Seq, Entry, UserId, ChannelId, MessageId, Acc)
         end,
         State1,
         gb_trees:to_list(Jobs)
+    ),
+    note_inflight_read(UserId, ChannelId, MessageId, State2).
+
+-spec note_inflight_read(integer(), integer(), integer(), state()) -> state().
+note_inflight_read(UserId, ChannelId, MessageId, #{inflight := Inflight} = State) ->
+    maps:fold(
+        fun(Pid, {_MRef, _TRef, Entry}, Acc) ->
+            note_followup(Pid, Entry, UserId, ChannelId, MessageId, Acc)
+        end,
+        State,
+        Inflight
     ).
+
+-spec note_followup(pid(), entry(), integer(), integer(), integer(), state()) -> state().
+note_followup(
+    Pid,
+    #{
+        kind := message,
+        channel_id := ChannelId,
+        message_id := JobMessageId,
+        user_ids := UserIds
+    },
+    UserId,
+    ChannelId,
+    MessageId,
+    State
+) when JobMessageId =< MessageId ->
+    case lists:member(UserId, UserIds) of
+        false -> State;
+        true -> record_followup(Pid, UserId, MessageId, State)
+    end;
+note_followup(_Pid, _Entry, _UserId, _ChannelId, _MessageId, State) ->
+    State.
+
+-spec record_followup(pid(), integer(), integer(), state()) -> state().
+record_followup(Pid, UserId, MessageId, State) ->
+    Followups = maps:get(followups, State, #{}),
+    Reads = maps:get(Pid, Followups, #{}),
+    Watermark = max(MessageId, maps:get(UserId, Reads, MessageId)),
+    State#{followups => Followups#{Pid => Reads#{UserId => Watermark}}}.
 
 -spec truncate_entry(non_neg_integer(), entry(), integer(), integer(), integer(), state()) ->
     state().
@@ -374,9 +421,61 @@ finish_worker(Pid, Result, #{inflight := Inflight} = State) ->
         {{MRef, TRef, Entry}, Rest} ->
             erlang:demonitor(MRef, [flush]),
             _ = erlang:cancel_timer(TRef, [{async, true}, {info, false}]),
-            handle_result(Result, Entry, State#{inflight := Rest});
+            Followups = maps:get(followups, State, #{}),
+            Reads = maps:get(Pid, Followups, #{}),
+            State1 = State#{inflight := Rest, followups => maps:remove(Pid, Followups)},
+            follow_up_clears(Entry, Reads, handle_result(Result, Entry, State1));
         error ->
             State
+    end.
+
+-spec follow_up_clears(entry(), #{integer() => integer()}, state()) -> state().
+follow_up_clears(_Entry, Reads, State) when map_size(Reads) =:= 0 ->
+    State;
+follow_up_clears(#{channel_id := ChannelId, message_id := AfterMessageId}, Reads, State) ->
+    case push:clear_notifications_enabled() of
+        true ->
+            maps:fold(
+                fun(UserId, MessageId, Acc) ->
+                    follow_up_clear(UserId, ChannelId, MessageId, AfterMessageId, Acc)
+                end,
+                State,
+                Reads
+            );
+        false ->
+            State
+    end.
+
+-spec follow_up_clear(integer(), integer(), integer(), integer(), state()) -> state().
+follow_up_clear(UserId, ChannelId, MessageId, AfterMessageId, State) ->
+    case pending_followup(UserId, ChannelId, State) of
+        {ok, Pid} ->
+            record_followup(Pid, UserId, MessageId, State);
+        none ->
+            Job = push_job_publisher:clear_job(UserId, ChannelId, MessageId, AfterMessageId),
+            bump(followup_clears, 1, admit(Job, State))
+    end.
+
+-spec pending_followup(integer(), integer(), state()) -> {ok, pid()} | none.
+pending_followup(UserId, ChannelId, #{inflight := Inflight} = State) ->
+    Pending = maps:filter(
+        fun(Pid, Reads) ->
+            is_map_key(UserId, Reads) andalso
+                inflight_channel(Pid, Inflight) =:= {ok, ChannelId}
+        end,
+        maps:get(followups, State, #{})
+    ),
+    case maps:keys(Pending) of
+        [Pid | _] -> {ok, Pid};
+        [] -> none
+    end.
+
+-spec inflight_channel(pid(), #{pid() => {reference(), reference(), entry()}}) ->
+    {ok, integer()} | error.
+inflight_channel(Pid, Inflight) ->
+    case maps:find(Pid, Inflight) of
+        {ok, {_MRef, _TRef, #{channel_id := ChannelId}}} -> {ok, ChannelId};
+        error -> error
     end.
 
 -spec reply_result(term()) -> ok | {error, term()}.
@@ -466,6 +565,7 @@ build_stats(#{jobs := Jobs, inflight := Inflight, counters := Counters, dropped 
             sheds => 0,
             truncations => 0,
             skipped_active => 0,
+            followup_clears => 0,
             enqueued => 0
         },
         Counters#{
@@ -569,6 +669,7 @@ test_state(Reads) ->
         jobs => gb_trees:empty(),
         ready => queue:new(),
         inflight => #{},
+        followups => #{},
         next_seq => 1,
         reads => Reads,
         active => #{},

@@ -155,14 +155,14 @@ mod tests {
     }
 
     #[test]
-    fn only_the_apns_alert_leg_is_taken_in_process() {
+    fn only_the_alert_legs_are_taken_in_process() {
         let shortcut = |path: &str| {
             parse(&format!("https://push.fluxer.com/relay/v1/{path}"), &ours())
-                .filter(|hop| matches!(hop.leg, Leg::Apns))
+                .filter(|hop| matches!(hop.leg, Leg::Apns | Leg::Fcm))
         };
         assert!(shortcut(&format!("apns/canary/production/{TOKEN}")).is_some());
         assert!(shortcut(&format!("apns-voip/canary/production/{TOKEN}")).is_none());
-        assert!(shortcut("fcm/canary/dYC_x9gXTjyyrG8_Aw3nUM%3AAPA91bExample").is_none());
+        assert!(shortcut("fcm/canary/dYC_x9gXTjyyrG8_Aw3nUM%3AAPA91bExample").is_some());
     }
 
     #[test]

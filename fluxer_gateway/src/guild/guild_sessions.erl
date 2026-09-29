@@ -23,6 +23,8 @@
     refresh_user_session_cache/2,
     refresh_all_viewable_channels/1,
     handle_set_typing_override/3,
+    set_session_push_hold/3,
+    released_push_holds/2,
     handle_send_guild_sync/2,
     handle_send_members_chunk/3,
     build_viewable_channel_map/1
@@ -213,6 +215,25 @@ is_session_active(SessionId, State) ->
 -spec handle_set_typing_override(session_id(), boolean(), guild_state()) -> guild_state().
 handle_set_typing_override(SessionId, TypingFlag, State) ->
     guild_sessions_passive:handle_set_typing_override(SessionId, TypingFlag, State).
+
+-spec set_session_push_hold(session_id(), boolean(), guild_state()) -> guild_state().
+set_session_push_hold(SessionId, Hold, State) ->
+    Sessions = maps:get(sessions, State, #{}),
+    case maps:get(SessionId, Sessions, undefined) of
+        SessionData when is_map(SessionData) ->
+            State#{sessions => Sessions#{SessionId => SessionData#{push_hold => Hold}}};
+        _ ->
+            State
+    end.
+
+-spec released_push_holds([session_id()], guild_state()) -> [session_id()].
+released_push_holds(SessionIds, State) ->
+    Sessions = maps:get(sessions, State, #{}),
+    [
+        SessionId
+     || SessionId <- SessionIds,
+        maps:get(push_hold, maps:get(SessionId, Sessions, #{}), undefined) =:= false
+    ].
 
 -spec handle_send_guild_sync(session_id(), guild_state()) -> guild_state().
 handle_send_guild_sync(SessionId, State) ->

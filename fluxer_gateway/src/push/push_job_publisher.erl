@@ -3,7 +3,7 @@
 -module(push_job_publisher).
 -typing([eqwalizer]).
 
--export([publish_message/8, publish_clear/3]).
+-export([publish_message/8, publish_clear/3, clear_job/4]).
 -export([publish_ring/6, request/3]).
 
 -define(SUBJECT_MESSAGE, <<"push.job.message">>).
@@ -85,19 +85,37 @@ first_error({error, Reason}, _Second) ->
 
 -spec publish_clear(integer(), integer(), integer()) -> ok | {error, term()}.
 publish_clear(UserId, ChannelId, MessageId) ->
-    Job = #{
+    publish(
+        ?SUBJECT_CLEAR,
+        clear_fields(UserId, ChannelId, MessageId),
+        clear_meta(UserId, ChannelId, MessageId)
+    ).
+
+-spec clear_job(integer(), integer(), integer(), integer()) -> push_outbox:job().
+clear_job(UserId, ChannelId, MessageId, AfterMessageId) ->
+    Job = (clear_fields(UserId, ChannelId, MessageId))#{
+        <<"after_message_id">> => integer_to_binary(AfterMessageId)
+    },
+    outbox_job(
+        ?SUBJECT_CLEAR,
+        Job,
+        iolist_to_binary(json:encode(Job)),
+        clear_meta(UserId, ChannelId, MessageId)
+    ).
+
+-spec clear_fields(integer(), integer(), integer()) -> map().
+clear_fields(UserId, ChannelId, MessageId) ->
+    #{
         <<"v">> => ?JOB_VERSION,
         <<"config_version">> => ?LEGACY_CONFIG_VERSION,
         <<"user_id">> => integer_to_binary(UserId),
         <<"channel_id">> => integer_to_binary(ChannelId),
         <<"message_id">> => integer_to_binary(MessageId)
-    },
-    publish(?SUBJECT_CLEAR, Job, #{
-        kind => clear,
-        user_ids => [UserId],
-        channel_id => ChannelId,
-        message_id => MessageId
-    }).
+    }.
+
+-spec clear_meta(integer(), integer(), integer()) -> meta().
+clear_meta(UserId, ChannelId, MessageId) ->
+    #{kind => clear, user_ids => [UserId], channel_id => ChannelId, message_id => MessageId}.
 
 -spec publish_ring(integer(), integer(), integer(), integer(), integer(), map()) ->
     ok | {error, term()}.

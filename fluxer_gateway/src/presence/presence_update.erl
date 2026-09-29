@@ -19,11 +19,12 @@
 -type user_id() :: integer().
 -type state() :: map().
 -type push_buffer_entry() :: #{
-    channel_id := integer(), message_id := integer(), params := map()
+    channel_id := integer(), message_id := integer(), params := map(), buffered_at => integer()
 }.
 
 -define(DEFAULT_PUSH_BUFFER_MAX_ENTRIES, 128).
 -define(DEFAULT_PUSH_BUFFER_MAX_BYTES, 1048576).
+-define(PUSH_READ_MARKS_MAX_CHANNELS, 32).
 -define(PUSH_BUFFER_MAX_ENTRIES_CONFIG_KEY, presence_push_buffer_max_entries).
 -define(PUSH_BUFFER_MAX_BYTES_CONFIG_KEY, presence_push_buffer_max_bytes).
 -define(PUSH_BUFFER_COUNTERS, presence_push_buffer_counters).
@@ -133,8 +134,26 @@ handle_message_create_event(Data, State) ->
     UserId = maps:get(user_id, State),
     case build_push_create_params(UserId, Data) of
         undefined -> State;
-        Params -> route_push_notification(Params, State)
+        #{author_id := UserId} -> ack_own_message(Data, State);
+        Params -> route_unread_push_notification(Data, Params, State)
     end.
+
+-spec route_unread_push_notification(map(), map(), state()) -> state().
+route_unread_push_notification(Data, Params, State) ->
+    ChannelId = extract_snowflake(<<"channel_id">>, Data),
+    MessageId = extract_snowflake(<<"id">>, Data),
+    ReadMarks = maps:get(push_read_marks, State, #{}),
+    Read = is_integer(MessageId) andalso MessageId =< maps:get(ChannelId, ReadMarks, 0),
+    case Read orelse push_message_params:suppresses_notifications(Data) of
+        true -> State;
+        false -> route_push_notification(Params, State)
+    end.
+
+-spec ack_own_message(map(), state()) -> state().
+ack_own_message(Data, State) ->
+    ChannelId = extract_snowflake(<<"channel_id">>, Data),
+    MessageId = extract_snowflake(<<"id">>, Data),
+    maybe_ack_push_buffer(ChannelId, MessageId, State).
 
 -spec handle_message_ack_event(map(), state()) -> state().
 handle_message_ack_event(Data, State) ->
@@ -146,11 +165,10 @@ handle_message_ack_event(Data, State) ->
 flush_push_buffer(#{push_buffer := []} = State) ->
     State;
 flush_push_buffer(#{push_buffer := Buffer} = State) ->
-    Entries = lists:reverse(Buffer),
-    lists:foreach(
-        fun(Entry) -> push:handle_message_create(maps:get(params, Entry)) end,
-        Entries
-    ),
+    ok = push:handle_buffered_message_creates([
+        (maps:get(params, Entry))#{buffered_at => maps:get(buffered_at, Entry, undefined)}
+     || Entry <- lists:reverse(Buffer)
+    ]),
     State#{push_buffer := []}.
 
 -spec maybe_update_push_eligibility(state()) -> state().
@@ -362,9 +380,22 @@ maybe_ack_push_buffer(_, _, State) ->
 ack_push_buffer(ChannelId, MessageId, State) when ChannelId > 0, MessageId > 0 ->
     Buffer = maps:get(push_buffer, State, []),
     FilteredBuffer = [E || E <- Buffer, not should_drop_buffer_entry(E, ChannelId, MessageId)],
-    State#{push_buffer := FilteredBuffer};
+    record_read_mark(ChannelId, MessageId, State#{push_buffer := FilteredBuffer});
 ack_push_buffer(_, _, State) ->
     State.
+
+-spec record_read_mark(integer(), integer(), state()) -> state().
+record_read_mark(ChannelId, MessageId, State) ->
+    ReadMarks = maps:get(push_read_marks, State, #{}),
+    ReadMark = max(MessageId, maps:get(ChannelId, ReadMarks, 0)),
+    State#{push_read_marks => cap_read_marks(ReadMarks#{ChannelId => ReadMark})}.
+
+-spec cap_read_marks(#{integer() => integer()}) -> #{integer() => integer()}.
+cap_read_marks(ReadMarks) when map_size(ReadMarks) > ?PUSH_READ_MARKS_MAX_CHANNELS ->
+    {_, OldestChannelId} = lists:min([{Mark, Id} || {Id, Mark} <- maps:to_list(ReadMarks)]),
+    maps:remove(OldestChannelId, ReadMarks);
+cap_read_marks(ReadMarks) ->
+    ReadMarks.
 
 -spec should_drop_buffer_entry(push_buffer_entry(), integer(), integer()) -> boolean().
 should_drop_buffer_entry(Entry, ChannelId, MessageId) ->
@@ -383,7 +414,12 @@ make_push_buffer_entry(Params) ->
 build_buffer_entry(ChannelId, MessageId, Params) when
     is_integer(ChannelId), is_integer(MessageId)
 ->
-    #{channel_id => ChannelId, message_id => MessageId, params => Params};
+    #{
+        channel_id => ChannelId,
+        message_id => MessageId,
+        params => Params,
+        buffered_at => erlang:system_time(millisecond)
+    };
 build_buffer_entry(_, _, _) ->
     undefined.
 
@@ -511,6 +547,61 @@ buffer_push_notification_caps_bytes_test() ->
             ?assertEqual([], maps:get(push_buffer, State))
         end
     ).
+
+private_message(MessageId, ChannelType, Flags) ->
+    #{
+        <<"id">> => integer_to_binary(MessageId),
+        <<"channel_id">> => <<"5">>,
+        <<"channel_type">> => ChannelType,
+        <<"flags">> => Flags,
+        <<"author">> => #{<<"id">> => <<"20">>}
+    }.
+
+pushed_private_message_ids(Sessions, Messages) ->
+    Self = self(),
+    ok = meck:new(push, [passthrough, no_link]),
+    try
+        ok = meck:expect(push, handle_message_create, fun(Params) ->
+            Self ! {pushed, maps:get(<<"id">>, maps:get(message_data, Params))},
+            ok
+        end),
+        State = lists:foldl(
+            fun(Message, Acc) -> handle_message_create_event(Message, Acc) end,
+            #{user_id => 10, sessions => Sessions, push_buffer => []},
+            Messages
+        ),
+        Buffered = [maps:get(message_id, Entry) || Entry <- maps:get(push_buffer, State)],
+        {pushed_ids(), lists:sort(Buffered)}
+    after
+        meck:unload(push)
+    end.
+
+pushed_ids() ->
+    receive
+        {pushed, Id} -> [binary_to_integer(Id) | pushed_ids()]
+    after 0 -> []
+    end.
+
+silent_dms_and_group_dms_are_not_pushed_test() ->
+    Messages = [
+        private_message(1, 1, 4096),
+        private_message(2, 3, 4096 bor 4),
+        private_message(3, 1, 0),
+        private_message(4, 3, 4)
+    ],
+    ?assertEqual({[3, 4], []}, pushed_private_message_ids(#{}, Messages)).
+
+silent_dms_and_group_dms_are_not_buffered_behind_an_active_desktop_test() ->
+    Desktop = #{<<"desktop">> => #{status => online, afk => false, mobile => false}},
+    Messages = [
+        private_message(1, 1, 4096),
+        private_message(2, 3, 4096),
+        private_message(3, 1, 0),
+        private_message(4, 3, 0)
+    ],
+    with_gateway_config(#{}, fun() ->
+        ?assertEqual({[], [3, 4]}, pushed_private_message_ids(Desktop, Messages))
+    end).
 
 push_params(ChannelId, MessageId) ->
     #{

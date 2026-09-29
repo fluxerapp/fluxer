@@ -59,6 +59,8 @@ handle_call({reload, NewData}, _From, State) ->
     handle_reload_call(NewData, State);
 handle_call(get_voice_server_pid, _From, State) ->
     guild_voice_lifecycle:reply_voice_server_pid(State);
+handle_call({released_push_holds, SessionIds}, _From, State) when is_list(SessionIds) ->
+    {reply, guild_sessions:released_push_holds(SessionIds, State), State};
 handle_call({terminate}, _From, State) ->
     {stop, normal, ok, State};
 handle_call(Msg, From, State) when is_tuple(Msg) ->
@@ -158,6 +160,10 @@ handle_cast({drop_session_member_lists, SessionId}, State) when is_binary(Sessio
     {noreply, guild_member_list:unsubscribe_session(SessionId, State)};
 handle_cast({set_session_typing_override, SessionId, TypingFlag}, State) ->
     handle_set_session_typing_override_cast(SessionId, TypingFlag, State);
+handle_cast({set_session_push_hold, SessionId, Hold}, State) when
+    is_binary(SessionId), is_boolean(Hold)
+->
+    {noreply, guild_sessions:set_session_push_hold(SessionId, Hold, State)};
 handle_cast({send_guild_sync, SessionId}, State) ->
     handle_send_guild_sync_cast(SessionId, State);
 handle_cast({send_members_chunk, SessionId, ChunkData}, State) ->

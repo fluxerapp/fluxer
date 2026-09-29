@@ -5,7 +5,8 @@ pub mod fcm;
 pub mod own_relay;
 pub mod web_push;
 
-use crate::metrics::{DeliveryRoute, Provider, SendResult, elapsed_ms};
+use crate::metrics::{DeliveryRoute, Provider, RelayLeg, SendResult, elapsed_ms};
+use crate::relay;
 use crate::server::AppState;
 use crate::subscription::{Platform, Subscription};
 use crate::vendor::VendorOutcome;
@@ -96,10 +97,23 @@ pub async fn send(state: &AppState, sub: &Subscription, envelope: &Value) -> Sen
     } else {
         let direct = in_process_hop(&sub.endpoint, &state.cfg.own_relay_hosts);
         match (route, direct) {
-            (Route::WebPush, Some(hop)) => {
+            (Route::WebPush, Some(hop)) if hop.leg == own_relay::Leg::Apns => {
                 let hopped = hop.as_subscription(sub);
-                state.metrics.record_own_relay_shortcut();
+                state.metrics.record_own_relay_shortcut(RelayLeg::Apns);
                 apns::send(state, &hopped, envelope).await
+            }
+            (Route::WebPush, Some(hop)) => {
+                match relay::FcmTarget::resolve(
+                    state.cfg.fcm.as_ref(),
+                    &hop.app_id,
+                    &hop.device_token,
+                ) {
+                    Some(target) => {
+                        state.metrics.record_own_relay_shortcut(RelayLeg::Fcm);
+                        web_push::send_to_own_fcm_relay(state, sub, envelope, target).await
+                    }
+                    None => web_push::send(state, sub, envelope).await,
+                }
             }
             (Route::WebPush, None) => web_push::send(state, sub, envelope).await,
             (Route::LegacyApns, _) => apns::send(state, sub, envelope).await,
@@ -123,7 +137,8 @@ fn relay_consent_missing(state: &AppState, endpoint: &str) -> bool {
 }
 
 fn in_process_hop(endpoint: &str, hosts: &[String]) -> Option<own_relay::Hop> {
-    own_relay::parse(endpoint, hosts).filter(|hop| matches!(hop.leg, own_relay::Leg::Apns))
+    own_relay::parse(endpoint, hosts)
+        .filter(|hop| matches!(hop.leg, own_relay::Leg::Apns | own_relay::Leg::Fcm))
 }
 
 fn route_label(route: Route) -> DeliveryRoute {
@@ -164,15 +179,15 @@ mod hop_tests {
     }
 
     #[test]
-    fn only_the_plain_apns_leg_is_delivered_in_process() {
+    fn the_plain_apns_leg_is_delivered_in_process() {
         let apns = format!("https://push.fluxer.com/relay/v1/apns/canary/production/{TOKEN}");
         assert!(in_process_hop(&apns, &ours()).is_some());
     }
 
     #[test]
-    fn an_fcm_relay_endpoint_keeps_its_encrypted_network_hop() {
+    fn an_fcm_relay_endpoint_is_delivered_in_process() {
         let fcm = "https://push.fluxer.com/relay/v1/fcm/canary/tok%3AAPA91bExample";
-        assert!(in_process_hop(fcm, &ours()).is_none());
+        assert!(in_process_hop(fcm, &ours()).is_some());
     }
 
     #[test]

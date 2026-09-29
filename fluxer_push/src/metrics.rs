@@ -277,15 +277,17 @@ impl DeliveryRoute {
 #[repr(usize)]
 pub enum BucketKey {
     DeviceToken,
+    BackgroundDeviceToken,
     Source,
 }
 
 impl BucketKey {
-    pub const ALL: [Self; 2] = [Self::DeviceToken, Self::Source];
+    pub const ALL: [Self; 3] = [Self::DeviceToken, Self::BackgroundDeviceToken, Self::Source];
 
     pub fn label(self) -> &'static str {
         match self {
             Self::DeviceToken => "device_token",
+            Self::BackgroundDeviceToken => "background_device_token",
             Self::Source => "source",
         }
     }
@@ -354,7 +356,7 @@ pub struct Metrics {
     sends: [[AtomicU64; SEND_RESULT_COUNT]; PROVIDER_COUNT],
     token_deletions: [AtomicU64; PROVIDER_COUNT],
     payload_shrinks: [AtomicU64; PAYLOAD_SHRINK_COUNT],
-    own_relay_shortcuts: AtomicU64,
+    own_relay_shortcuts: [AtomicU64; RELAY_LEG_COUNT],
     auth_tokens_minted: [AtomicU64; AUTH_PROVIDER_COUNT],
     rpc_requests: [[AtomicU64; RPC_OUTCOME_COUNT]; RPC_METHOD_COUNT],
     relay_consent_updates: [AtomicU64; CONSENT_UPDATE_COUNT],
@@ -383,7 +385,7 @@ impl Metrics {
             sends: [const { [const { AtomicU64::new(0) }; SEND_RESULT_COUNT] }; PROVIDER_COUNT],
             token_deletions: [const { AtomicU64::new(0) }; PROVIDER_COUNT],
             payload_shrinks: [const { AtomicU64::new(0) }; PAYLOAD_SHRINK_COUNT],
-            own_relay_shortcuts: AtomicU64::new(0),
+            own_relay_shortcuts: [const { AtomicU64::new(0) }; RELAY_LEG_COUNT],
             auth_tokens_minted: [const { AtomicU64::new(0) }; AUTH_PROVIDER_COUNT],
             rpc_requests: [const { [const { AtomicU64::new(0) }; RPC_OUTCOME_COUNT] };
                 RPC_METHOD_COUNT],
@@ -436,8 +438,8 @@ impl Metrics {
         self.token_deletions[provider as usize].fetch_add(1, ORDERING);
     }
 
-    pub fn record_own_relay_shortcut(&self) {
-        self.own_relay_shortcuts.fetch_add(1, ORDERING);
+    pub fn record_own_relay_shortcut(&self, leg: RelayLeg) {
+        self.own_relay_shortcuts[leg as usize].fetch_add(1, ORDERING);
     }
 
     pub fn record_payload_shrink(&self, step: PayloadShrink) {
@@ -537,9 +539,11 @@ impl Metrics {
             Provider::ALL.map(Provider::label),
             &self.token_deletions,
         )?;
-        render_counter(
+        render_labelled_counter(
             out,
             "fluxer_push_own_relay_shortcuts_total",
+            "leg",
+            RelayLeg::ALL.map(RelayLeg::label),
             &self.own_relay_shortcuts,
         )?;
         render_labelled_counter(

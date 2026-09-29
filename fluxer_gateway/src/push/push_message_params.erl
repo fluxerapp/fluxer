@@ -3,7 +3,7 @@
 -module(push_message_params).
 -typing([eqwalizer]).
 
--export([context/1, owner_key/1]).
+-export([context/1, owner_key/1, suppresses_notifications/1]).
 
 -export_type([context/0]).
 
@@ -11,6 +11,7 @@
 -define(MESSAGE_TYPE_DEFAULT, 0).
 -define(MESSAGE_TYPE_REPLY, 19).
 -define(PUSHABLE_MESSAGE_TYPES, [?MESSAGE_TYPE_DEFAULT, ?MESSAGE_TYPE_REPLY]).
+-define(MESSAGE_FLAG_SUPPRESS_NOTIFICATIONS, 4096).
 
 -type context() :: #{
     message_data := map(),
@@ -118,9 +119,22 @@ validate(Context) ->
 -spec validate_message_type(integer(), context()) -> {ok, context()} | {error, term()}.
 validate_message_type(Type, Context) ->
     case lists:member(Type, ?PUSHABLE_MESSAGE_TYPES) of
-        true -> {ok, Context};
+        true -> validate_notifications(Context);
         false -> {error, {unpushable_message_type, Type}}
     end.
+
+-spec validate_notifications(context()) -> {ok, context()} | {error, term()}.
+validate_notifications(#{message_data := MessageData} = Context) ->
+    case suppresses_notifications(MessageData) of
+        true -> {error, suppressed_notifications};
+        false -> {ok, Context}
+    end.
+
+-spec suppresses_notifications(map()) -> boolean().
+suppresses_notifications(#{<<"flags">> := Flags}) when is_integer(Flags) ->
+    Flags band ?MESSAGE_FLAG_SUPPRESS_NOTIFICATIONS =/= 0;
+suppresses_notifications(_MessageData) ->
+    false.
 
 -spec message_type(context()) -> integer().
 message_type(#{message_data := MessageData}) ->
@@ -229,5 +243,38 @@ context_treats_a_missing_message_type_as_pushable_test() ->
 
 context_treats_a_malformed_message_type_as_pushable_test() ->
     ?assertMatch({ok, _}, context(params_with_message_type(<<"nonsense">>))).
+
+params_with_flags(Flags, ChannelType, GuildId) ->
+    Params = params_with_message_type(?MESSAGE_TYPE_DEFAULT),
+    MessageData = maps:get(message_data, Params),
+    Params#{
+        message_data := MessageData#{<<"flags">> => Flags, <<"channel_type">> => ChannelType},
+        guild_id := GuildId
+    }.
+
+context_rejects_a_silent_dm_test() ->
+    ?assertEqual(
+        {error, suppressed_notifications}, context(params_with_flags(4096, 1, 0))
+    ).
+
+context_rejects_a_silent_group_dm_test() ->
+    ?assertEqual(
+        {error, suppressed_notifications}, context(params_with_flags(4096, 3, 0))
+    ).
+
+context_rejects_a_silent_guild_message_that_mentions_the_recipient_test() ->
+    Params = params_with_flags(4096 bor 4, 0, <<"1472200708085309475">>),
+    MessageData = maps:get(message_data, Params),
+    Mentioned = MessageData#{
+        <<"mentions">> => [#{<<"id">> => <<"1474262819227156566">>}],
+        <<"mention_everyone">> => true
+    },
+    ?assertEqual(
+        {error, suppressed_notifications}, context(Params#{message_data := Mentioned})
+    ).
+
+context_allows_a_message_with_other_flags_test() ->
+    ?assertMatch({ok, _}, context(params_with_flags(4 bor 8192, 1, 0))),
+    ?assertMatch({ok, _}, context(params_with_flags(0, 3, 0))).
 
 -endif.

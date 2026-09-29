@@ -19,7 +19,16 @@ impl JobKey {
     }
 
     pub fn of_clear(job: &ClearJob) -> Self {
-        Self::digest(&["clear", &job.user_id, &job.channel_id, &job.message_id])
+        match &job.after_message_id {
+            Some(after_message_id) => Self::digest(&[
+                "clear",
+                &job.user_id,
+                &job.channel_id,
+                &job.message_id,
+                after_message_id,
+            ]),
+            None => Self::digest(&["clear", &job.user_id, &job.channel_id, &job.message_id]),
+        }
     }
 
     pub fn of_ring(job: &RingJob) -> Self {

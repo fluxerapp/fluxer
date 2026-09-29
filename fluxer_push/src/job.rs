@@ -40,6 +40,8 @@ pub struct ClearJob {
     pub user_id: String,
     pub channel_id: String,
     pub message_id: String,
+    #[serde(default)]
+    pub after_message_id: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq)]

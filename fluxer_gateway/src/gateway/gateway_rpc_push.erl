@@ -28,11 +28,17 @@ do_sync_user_guild_settings(#{
     <<"user_guild_settings">> := Settings
 }) ->
     UserId = validation:snowflake_or_throw(<<"user_id">>, UBin),
-    GuildId = validation:snowflake_or_throw(<<"guild_id">>, GBin),
+    GuildId = settings_guild_id(GBin),
     fanout_local_cache_mutation(push, sync_user_guild_settings_local, [
         UserId, GuildId, Settings
     ]),
     true.
+
+-spec settings_guild_id(term()) -> non_neg_integer().
+settings_guild_id(<<"0">>) ->
+    0;
+settings_guild_id(GBin) ->
+    validation:snowflake_or_throw(<<"guild_id">>, GBin).
 
 -spec do_sync_user_blocked_ids(map()) -> true.
 do_sync_user_blocked_ids(#{<<"user_id">> := UBin, <<"blocked_user_ids">> := BlockedRaw}) ->
@@ -136,6 +142,47 @@ invalidate_subscriptions_accepts_a_user_test() ->
     ?assert(
         execute_method(<<"push.invalidate_subscriptions">>, #{<<"user_id">> => <<"1001">>})
     ).
+
+sync_user_guild_settings_caches_the_private_scope_test() ->
+    push_ets_cache:init(),
+    Settings = #{<<"channel_overrides">> => #{<<"5">> => #{<<"muted">> => true}}},
+    try
+        with_registered_push(fun() ->
+            ?assert(
+                execute_method(<<"push.sync_user_guild_settings">>, #{
+                    <<"user_id">> => <<"1001">>,
+                    <<"guild_id">> => <<"0">>,
+                    <<"user_guild_settings">> => Settings
+                })
+            )
+        end),
+        ?assertEqual(Settings, push_ets_cache:get_user_guild_settings(1001, 0))
+    after
+        push_ets_cache:delete_user_guild_settings(1001, 0)
+    end.
+
+sync_user_guild_settings_rejects_an_invalid_guild_id_test() ->
+    ?assertError(
+        {validation, _},
+        execute_method(<<"push.sync_user_guild_settings">>, #{
+            <<"user_id">> => <<"1001">>,
+            <<"guild_id">> => <<"nope">>,
+            <<"user_guild_settings">> => #{}
+        })
+    ).
+
+with_registered_push(Fun) ->
+    case whereis(push) of
+        undefined ->
+            register(push, self()),
+            try
+                Fun()
+            after
+                unregister(push)
+            end;
+        _Pid ->
+            Fun()
+    end.
 
 invalidate_subscriptions_rejects_an_invalid_snowflake_test() ->
     ?assertError(

@@ -8,6 +8,7 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 -export([
     handle_message_create/1,
+    handle_buffered_message_creates/1,
     sync_user_guild_settings/3,
     sync_user_guild_settings_local/3,
     sync_user_blocked_ids/2,
@@ -15,7 +16,8 @@
     invalidate_user_subscriptions_local/1,
     invalidate_user_badge_count_local/1,
     invalidate_user_badge_counts_local/1,
-    clear_channel_notifications/3
+    clear_channel_notifications/3,
+    clear_notifications_enabled/0
 ]).
 -export([get_cache_stats/0]).
 -export([push_owner_key/1]).
@@ -29,7 +31,14 @@
 -define(CNT_FETCH_FAILURES, push_blocked_ids_fetch_failures).
 -define(CNT_SUPPRESSED, push_blocked_ids_suppressed).
 -define(CNT_BUDGET_EXHAUSTED, push_blocked_ids_budget_exhausted).
+-define(CNT_READ_STATE_SUPPRESSED, push_read_state_suppressed).
+-define(CNT_READ_STATE_FAILURES, push_read_state_fetch_failures).
+-define(CNT_READ_STATE_SKIPPED, push_read_state_fetch_skipped).
 -define(MAX_FETCH_RPCS, 8).
+-define(READ_STATE_FETCH_TIMEOUT_MS, 2000).
+-define(READ_STATE_FETCH_MAX_POOL_PCT, 50).
+-define(READ_STATE_FETCH_SLOTS, read_state_fetches_in_flight).
+-define(MAX_READ_STATE_FETCHES, 64).
 -define(DEFAULT_FETCH_USERS, 2000).
 -define(MAX_FETCH_USERS, 5000).
 -define(DEFAULT_FETCH_CHUNK, 500).
@@ -39,6 +48,8 @@
 -type state() :: #{
     max_entries := non_neg_integer()
 }.
+-type read_key() :: {integer(), integer(), integer()}.
+-type read_marks() :: #{{integer(), integer()} => non_neg_integer()}.
 
 -spec start_link() -> {ok, pid()} | {error, term()} | ignore.
 start_link() ->
@@ -113,6 +124,17 @@ handle_message_create(Params) ->
     case is_push_active() of
         true -> cast_to_push_owner(push_owner_key(Params), {handle_message_create, Params});
         false -> ok
+    end.
+
+-spec handle_buffered_message_creates([map()]) -> ok.
+handle_buffered_message_creates(ParamsList) ->
+    case is_push_active() of
+        true ->
+            {Stale, Fresh} = split_stale_buffered(ParamsList),
+            lists:foreach(fun handle_message_create/1, Fresh),
+            spawn_read_state_check(Stale);
+        false ->
+            ok
     end.
 
 -spec sync_user_guild_settings(integer(), integer(), map()) -> ok.
@@ -253,6 +275,149 @@ do_handle_message_create(Params) ->
             logger:debug("Push: skipping malformed message create", #{reason => Reason}),
             ok
     end.
+
+-spec split_stale_buffered([map()]) -> {[{read_key(), map()}], [map()]}.
+split_stale_buffered(ParamsList) ->
+    lists:foldr(
+        fun(Params, {Stale, Fresh}) ->
+            Unbuffered = maps:remove(buffered_at, Params),
+            case stale_read_key(Params) of
+                {ok, Key} -> {[{Key, Unbuffered} | Stale], Fresh};
+                none -> {Stale, [Unbuffered | Fresh]}
+            end
+        end,
+        {[], []},
+        ParamsList
+    ).
+
+-spec stale_read_key(map()) -> {ok, read_key()} | none.
+stale_read_key(#{buffered_at := BufferedAt} = Params) when is_integer(BufferedAt) ->
+    case
+        erlang:system_time(millisecond) - BufferedAt >= push_outbox:max_age_ms() andalso
+            push_message_params:context(Params)
+    of
+        {ok, #{user_ids := [UserId], channel_id := ChannelId, message_id := MessageId}} ->
+            {ok, {UserId, ChannelId, MessageId}};
+        _ ->
+            none
+    end;
+stale_read_key(_Params) ->
+    none.
+
+-spec spawn_read_state_check([{read_key(), map()}]) -> ok.
+spawn_read_state_check([]) ->
+    ok;
+spawn_read_state_check(Stale) ->
+    Channels = lists:usort([{UserId, ChannelId} || {{UserId, ChannelId, _}, _Params} <- Stale]),
+    case read_state_fetch_allowed(length(Channels)) of
+        true ->
+            _ = spawn(fun() -> publish_unread(Channels, Stale) end),
+            ok;
+        false ->
+            lists:foreach(fun(Entry) -> publish_unless_read(#{}, Entry) end, Stale)
+    end.
+
+-spec publish_unread([{integer(), integer()}], [{read_key(), map()}]) -> ok.
+publish_unread(Channels, Stale) ->
+    try
+        ReadMarks =
+            try
+                fetch_each_read_mark(Channels, #{})
+            catch
+                _:_ -> #{}
+            end,
+        lists:foreach(fun(Entry) -> publish_unless_read(ReadMarks, Entry) end, Stale)
+    after
+        release_read_state_fetch_slot()
+    end.
+
+-spec publish_unless_read(read_marks(), {read_key(), map()}) -> ok.
+publish_unless_read(ReadMarks, {{UserId, ChannelId, MessageId}, Params}) ->
+    case MessageId =< maps:get({UserId, ChannelId}, ReadMarks, 0) of
+        true -> bump_counter(?CNT_READ_STATE_SUPPRESSED);
+        false -> handle_message_create(Params)
+    end.
+
+-spec read_state_fetch_allowed(non_neg_integer()) -> boolean().
+read_state_fetch_allowed(Fetches) ->
+    case
+        push_worker_pool:utilization_pct() < ?READ_STATE_FETCH_MAX_POOL_PCT andalso
+            acquire_read_state_fetch_slot()
+    of
+        true ->
+            true;
+        false ->
+            bump_counter(?CNT_READ_STATE_SKIPPED, Fetches),
+            false
+    end.
+
+-spec acquire_read_state_fetch_slot() -> boolean().
+acquire_read_state_fetch_slot() ->
+    try
+        ets:update_counter(
+            ?PUSH_COUNTER_TABLE, ?READ_STATE_FETCH_SLOTS, {2, 1}, {?READ_STATE_FETCH_SLOTS, 0}
+        )
+    of
+        InFlight when InFlight > ?MAX_READ_STATE_FETCHES ->
+            release_read_state_fetch_slot(),
+            false;
+        _InFlight ->
+            true
+    catch
+        error:badarg -> false
+    end.
+
+-spec release_read_state_fetch_slot() -> ok.
+release_read_state_fetch_slot() ->
+    try ets:update_counter(?PUSH_COUNTER_TABLE, ?READ_STATE_FETCH_SLOTS, {2, -1, 0, 0}) of
+        _InFlight -> ok
+    catch
+        error:badarg -> ok
+    end.
+
+-spec fetch_each_read_mark([{integer(), integer()}], read_marks()) -> read_marks().
+fetch_each_read_mark([], ReadMarks) ->
+    ReadMarks;
+fetch_each_read_mark([{UserId, ChannelId} = Key | Rest], ReadMarks) ->
+    case fetch_read_message_id(UserId, ChannelId) of
+        {ok, ReadMessageId} ->
+            fetch_each_read_mark(Rest, ReadMarks#{Key => ReadMessageId});
+        error ->
+            bump_counter(?CNT_READ_STATE_SKIPPED, length(Rest)),
+            ReadMarks
+    end.
+
+-spec fetch_read_message_id(integer(), integer()) -> {ok, non_neg_integer()} | error.
+fetch_read_message_id(UserId, ChannelId) ->
+    Request = #{
+        <<"type">> => <<"get_read_state">>,
+        <<"user_id">> => integer_to_binary(UserId),
+        <<"channel_id">> => integer_to_binary(ChannelId)
+    },
+    case read_state_call(Request) of
+        {ok, #{<<"last_message_id">> := LastMessageId}} ->
+            {ok, read_message_id(snowflake_id:parse_maybe(LastMessageId))};
+        {ok, _Data} ->
+            {ok, 0};
+        {error, Reason} ->
+            bump_counter(?CNT_READ_STATE_FAILURES),
+            logger:debug("Push: read state fetch failed", #{
+                reason => Reason, user_id => UserId, channel_id => ChannelId
+            }),
+            error
+    end.
+
+-spec read_state_call(map()) -> {ok, term()} | {error, term()}.
+read_state_call(Request) ->
+    try
+        rpc_client:call(Request, ?READ_STATE_FETCH_TIMEOUT_MS)
+    catch
+        Class:Reason -> {error, {Class, Reason}}
+    end.
+
+-spec read_message_id(integer() | undefined) -> non_neg_integer().
+read_message_id(MessageId) when is_integer(MessageId), MessageId > 0 -> MessageId;
+read_message_id(_MessageId) -> 0.
 
 -spec do_handle_message_create_context(push_message_params:context()) -> ok.
 do_handle_message_create_context(Context) ->
@@ -625,7 +790,11 @@ cache_stats_with_counters() ->
 push_loss_counters() ->
     #{
         counters => counter_table_status(),
-        worker_pool_dropped => read_counter(?CNT_WORKER_POOL)
+        worker_pool_dropped => read_counter(?CNT_WORKER_POOL),
+        read_state_suppressed => read_counter(?CNT_READ_STATE_SUPPRESSED),
+        read_state_fetch_failures => read_counter(?CNT_READ_STATE_FAILURES),
+        read_state_fetch_skipped => read_counter(?CNT_READ_STATE_SKIPPED),
+        read_state_fetches_in_flight => read_counter(?READ_STATE_FETCH_SLOTS)
     }.
 
 -spec counter_table_status() -> live | unavailable.
@@ -824,6 +993,207 @@ filter_eligible_users_fetches_large_metadata_once_test() ->
             fun(UserId) -> push_ets_cache:delete_user_guild_settings(UserId, 42) end,
             [1, 2, 3]
         )
+    end.
+
+a_dm_buffered_past_the_outbox_window_and_read_since_is_not_published_test() ->
+    Suppressed = read_counter_value(?CNT_READ_STATE_SUPPRESSED),
+    Published = with_buffered_dms(
+        [{stale_buffered_at(), 123, 456}], read_through(#{123 => <<"456">>})
+    ),
+    ?assertEqual({0, 1}, Published),
+    ?assertEqual(Suppressed + 1, read_counter_value(?CNT_READ_STATE_SUPPRESSED)).
+
+a_dm_buffered_past_the_outbox_window_and_still_unread_is_published_test() ->
+    Published = with_buffered_dms(
+        [{stale_buffered_at(), 123, 456}], read_through(#{123 => <<"455">>})
+    ),
+    ?assertEqual({1, 1}, Published).
+
+a_dm_buffered_past_the_outbox_window_without_a_read_state_is_published_test() ->
+    Published = with_buffered_dms(
+        [{stale_buffered_at(), 123, 456}], fun(_ChannelId) ->
+            {ok, #{<<"last_message_id">> => null}}
+        end
+    ),
+    ?assertEqual({1, 1}, Published).
+
+a_dm_buffered_past_the_outbox_window_is_published_when_the_read_state_fetch_fails_test() ->
+    Published = with_buffered_dms(
+        [{stale_buffered_at(), 123, 456}], fun(_ChannelId) -> {error, timeout} end
+    ),
+    ?assertEqual({1, 1}, Published).
+
+a_dm_buffered_within_the_outbox_window_is_published_without_a_read_state_fetch_test() ->
+    Published = with_buffered_dms(
+        [{erlang:system_time(millisecond), 123, 456}], fun(_ChannelId) ->
+            {error, unexpected}
+        end
+    ),
+    ?assertEqual({1, 0}, Published).
+
+a_buffered_dm_without_a_buffer_time_is_published_without_a_read_state_fetch_test() ->
+    Published = with_buffered_dms(
+        [{undefined, 123, 456}], fun(_ChannelId) -> {error, unexpected} end
+    ),
+    ?assertEqual({1, 0}, Published).
+
+a_dm_buffered_past_the_outbox_window_is_published_without_a_fetch_when_the_pool_is_busy_test() ->
+    Skipped = read_counter_value(?CNT_READ_STATE_SKIPPED),
+    ok = meck:new(push_worker_pool, [passthrough, no_link]),
+    try
+        ok = meck:expect(push_worker_pool, utilization_pct, fun() ->
+            ?READ_STATE_FETCH_MAX_POOL_PCT
+        end),
+        Published = with_buffered_dms(
+            [{stale_buffered_at(), 123, 456}], read_through(#{123 => <<"456">>})
+        ),
+        ?assertEqual({1, 0}, Published)
+    after
+        meck:unload(push_worker_pool)
+    end,
+    ?assertEqual(Skipped + 1, read_counter_value(?CNT_READ_STATE_SKIPPED)).
+
+a_full_buffer_of_read_dms_is_not_published_by_its_own_flush_test() ->
+    Entries = [{stale_buffered_at(), 123, 1000 + N} || N <- lists:seq(1, 128)],
+    Published = with_buffered_dms(Entries, fun(123) ->
+        timer:sleep(50),
+        {ok, #{<<"last_message_id">> => <<"999999">>}}
+    end),
+    ?assertEqual({0, 1}, Published).
+
+a_flush_fetches_each_channel_read_state_once_test() ->
+    Entries = [
+        {stale_buffered_at(), 123, 456},
+        {stale_buffered_at(), 124, 460},
+        {stale_buffered_at(), 123, 470}
+    ],
+    Published = with_buffered_dms(Entries, read_through(#{123 => <<"456">>, 124 => <<"459">>})),
+    ?assertEqual({2, 2}, Published).
+
+a_failed_read_state_fetch_publishes_the_rest_of_the_flush_without_fetching_test() ->
+    Entries = [
+        {stale_buffered_at(), 123, 456},
+        {stale_buffered_at(), 124, 460},
+        {stale_buffered_at(), 125, 470}
+    ],
+    Skipped = read_counter_value(?CNT_READ_STATE_SKIPPED),
+    Published = with_buffered_dms(Entries, fun(_ChannelId) -> {error, timeout} end),
+    ?assertEqual({3, 1}, Published),
+    ?assertEqual(Skipped + 2, read_counter_value(?CNT_READ_STATE_SKIPPED)).
+
+a_flush_publishes_fresh_and_unread_stale_dms_and_drops_read_ones_test() ->
+    Stale = stale_buffered_at(),
+    Params = [
+        buffered_dm_params(erlang:system_time(millisecond), 123, 500),
+        buffered_dm_params(Stale, 124, 456),
+        buffered_dm_params(Stale, 125, 470)
+    ],
+    {Published, Requests} = with_buffered_dm_push(
+        read_through(#{124 => <<"456">>, 125 => <<"469">>}),
+        fun() ->
+            ok = handle_buffered_message_creates(Params),
+            lists:sort(published_message_ids(1000))
+        end
+    ),
+    ?assertEqual([470, 500], Published),
+    ?assertEqual(2, Requests).
+
+stale_buffered_at() ->
+    erlang:system_time(millisecond) - push_outbox:max_age_ms() - 1000.
+
+read_through(ReadMessageIds) ->
+    fun(ChannelId) -> {ok, #{<<"last_message_id">> => maps:get(ChannelId, ReadMessageIds)}} end.
+
+read_counter_value(Key) ->
+    ok = push_worker_pool:init_counter(),
+    case read_counter(Key) of
+        Value when is_integer(Value) -> Value;
+        unavailable -> 0
+    end.
+
+with_buffered_dms(Entries, ReadStateReply) ->
+    with_buffered_dm_push(ReadStateReply, fun() ->
+        {Stale, Fresh} = split_stale_buffered([
+            buffered_dm_params(BufferedAt, ChannelId, MessageId)
+         || {BufferedAt, ChannelId, MessageId} <- Entries
+        ]),
+        lists:foreach(fun handle_message_create/1, Fresh),
+        ok = spawn_read_state_check(Stale),
+        ok = wait_for_read_state_fetches(100),
+        length(published_message_ids(0))
+    end).
+
+wait_for_read_state_fetches(0) ->
+    erlang:error(read_state_fetch_still_in_flight);
+wait_for_read_state_fetches(Attempts) ->
+    case read_counter(?READ_STATE_FETCH_SLOTS) of
+        InFlight when is_integer(InFlight), InFlight > 0 ->
+            timer:sleep(20),
+            wait_for_read_state_fetches(Attempts - 1);
+        _ ->
+            ok
+    end.
+
+with_buffered_dm_push(ReadStateReply, Fun) ->
+    ok = push_worker_pool:init_counter(),
+    Self = self(),
+    Modules = [fluxer_gateway_env, gateway_node_router, rpc_client],
+    lists:foreach(fun(Module) -> ok = meck:new(Module, [passthrough, no_link]) end, Modules),
+    try
+        ok = meck:expect(fluxer_gateway_env, get, fun
+            (push_enabled) -> true;
+            (Key) -> meck:passthrough([Key])
+        end),
+        ok = meck:expect(gateway_node_router, owner_node_result, fun(_Key, push) ->
+            {ok, node()}
+        end),
+        ok = meck:expect(rpc_client, call, fun(Request, ?READ_STATE_FETCH_TIMEOUT_MS) ->
+            Self ! {read_state_request, Request},
+            ReadStateReply(binary_to_integer(maps:get(<<"channel_id">>, Request)))
+        end),
+        Published = with_registered_push(Fun),
+        Requests = meck:num_calls(rpc_client, call, ['_', '_']),
+        assert_read_state_requests(Requests),
+        {Published, Requests}
+    after
+        lists:foreach(fun meck:unload/1, Modules)
+    end.
+
+published_message_ids(Timeout) ->
+    receive
+        {'$gen_cast', {handle_message_create, Params}} ->
+            ?assertNot(maps:is_key(buffered_at, Params)),
+            MessageData = maps:get(message_data, Params),
+            [
+                binary_to_integer(maps:get(<<"id">>, MessageData))
+                | published_message_ids(Timeout)
+            ]
+    after Timeout -> []
+    end.
+
+buffered_dm_params(BufferedAt, ChannelId, MessageId) ->
+    #{
+        message_data => #{
+            <<"channel_id">> => integer_to_binary(ChannelId),
+            <<"id">> => integer_to_binary(MessageId),
+            <<"channel_type">> => 1
+        },
+        user_ids => [71],
+        guild_id => 0,
+        author_id => 7,
+        buffered_at => BufferedAt
+    }.
+
+assert_read_state_requests(0) ->
+    ok;
+assert_read_state_requests(Count) ->
+    receive
+        {read_state_request, Request} ->
+            ?assertMatch(
+                #{<<"type">> := <<"get_read_state">>, <<"user_id">> := <<"71">>}, Request
+            ),
+            assert_read_state_requests(Count - 1)
+    after 0 -> erlang:error(no_read_state_request)
     end.
 
 blocked_ids_fetch_defaults_are_bounded_test() ->

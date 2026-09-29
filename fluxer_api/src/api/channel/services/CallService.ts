@@ -243,7 +243,7 @@ export class CallService {
 				channelId,
 				messageId,
 				mentionCount: 0,
-				silent: true,
+				implicit: {unreadThrough: channel.lastMessageId},
 				emitGateway: false,
 			});
 		}

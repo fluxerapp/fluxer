@@ -14,7 +14,7 @@ import {Db, type DbOp} from '@app/api/database/CassandraTypes';
 import type {ReadStateRow} from '@app/api/database/types/ChannelTypes';
 import {READ_STATE_COLUMNS} from '@app/api/database/types/ChannelTypes';
 import {ReadState} from '@app/api/models/ReadState';
-import type {IReadStateRepository} from '@app/api/read_state/IReadStateRepository';
+import type {IReadStateRepository, ReadStateUpsert} from '@app/api/read_state/IReadStateRepository';
 
 const ReadStates = defineTable<ReadStateRow, 'user_id' | 'channel_id'>({
 	name: 'read_states',
@@ -39,6 +39,14 @@ export class ReadStateRepository implements IReadStateRepository {
 		return rows.map((row) => new ReadState(row));
 	}
 
+	async getReadState(userId: UserID, channelId: ChannelID): Promise<ReadState | null> {
+		const row = await fetchOne<ReadStateRow>(FETCH_READ_STATE_BY_USER_AND_CHANNEL_CQL, {
+			user_id: userId,
+			channel_id: channelId,
+		});
+		return row ? new ReadState(row) : null;
+	}
+
 	async upsertReadState(
 		userId: UserID,
 		channelId: ChannelID,
@@ -46,7 +54,7 @@ export class ReadStateRepository implements IReadStateRepository {
 		mentionCount = 0,
 		lastPinTimestamp?: Date,
 		manual = false,
-	): Promise<ReadState> {
+	): Promise<ReadStateUpsert> {
 		return this.upsertReadStateRow(userId, channelId, messageId, mentionCount, lastPinTimestamp, manual);
 	}
 
@@ -57,13 +65,14 @@ export class ReadStateRepository implements IReadStateRepository {
 		mentionCount = 0,
 		lastPinTimestamp?: Date,
 		manual = false,
-	): Promise<ReadState> {
+	): Promise<ReadStateUpsert> {
 		const currentReadState = await fetchOne<ReadStateRow>(FETCH_READ_STATE_BY_USER_AND_CHANNEL_CQL, {
 			user_id: userId,
 			channel_id: channelId,
 		});
-		if (!manual && currentReadState?.message_id != null && currentReadState.message_id > messageId) {
-			return new ReadState(currentReadState);
+		const previous = currentReadState ? new ReadState(currentReadState) : null;
+		if (!manual && previous?.lastMessageId != null && previous.lastMessageId > messageId) {
+			return {readState: previous, previous};
 		}
 		const patch: Record<string, DbOp<unknown>> = {
 			message_id: Db.set(messageId),
@@ -73,13 +82,14 @@ export class ReadStateRepository implements IReadStateRepository {
 			patch['last_pin_timestamp'] = Db.set(lastPinTimestamp);
 		}
 		await upsertOne(ReadStates.patchByPk({user_id: userId, channel_id: channelId}, patch));
-		return new ReadState({
+		const readState = new ReadState({
 			user_id: userId,
 			channel_id: channelId,
 			message_id: messageId,
 			mention_count: mentionCount,
 			last_pin_timestamp: lastPinTimestamp ?? currentReadState?.last_pin_timestamp ?? null,
 		});
+		return {readState, previous};
 	}
 
 	async incrementReadStateMentions(
@@ -106,7 +116,7 @@ export class ReadStateRepository implements IReadStateRepository {
 			if (baselineMessageId >= messageId) {
 				return null;
 			}
-			return this.upsertReadStateRow(userId, channelId, baselineMessageId, incrementBy);
+			return (await this.upsertReadStateRow(userId, channelId, baselineMessageId, incrementBy)).readState;
 		}
 		if (currentReadState.message_id != null && currentReadState.message_id >= messageId) {
 			return null;

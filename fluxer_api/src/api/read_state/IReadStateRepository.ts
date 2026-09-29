@@ -3,8 +3,15 @@
 import type {ChannelID, MessageID, UserID} from '@app/api/BrandedTypes';
 import type {ReadState} from '@app/api/models/ReadState';
 
+export interface ReadStateUpsert {
+	readState: ReadState;
+	previous: ReadState | null;
+}
+
 export abstract class IReadStateRepository {
 	abstract listReadStates(userId: UserID): Promise<Array<ReadState>>;
+
+	abstract getReadState(userId: UserID, channelId: ChannelID): Promise<ReadState | null>;
 
 	abstract upsertReadState(
 		userId: UserID,
@@ -13,7 +20,7 @@ export abstract class IReadStateRepository {
 		mentionCount?: number,
 		lastPinTimestamp?: Date,
 		manual?: boolean,
-	): Promise<ReadState>;
+	): Promise<ReadStateUpsert>;
 
 	abstract incrementReadStateMentions(
 		userId: UserID,
