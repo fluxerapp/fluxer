@@ -136,7 +136,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1 -Domain chat.example.com 
 
 The run prints one line per phase and ends with the URL to open.
 
-`~/fluxer` then holds `docker-compose.yml`, `docker-compose.proxy.yml`, `tunnel.compose.yml`, `Caddyfile` and `.env.example`, plus a `.env` readable only by you. Every value that ships as `CHANGE_ME` in `.env.example` is a fresh random value. Every command from here on runs in that directory.
+`~/fluxer` then holds `docker-compose.yml`, `docker-compose.proxy.yml`, `tunnel.compose.yml`, `external-object-store.compose.yml`, `Caddyfile` and `.env.example`, plus a `.env` readable only by you. Every value that ships as `CHANGE_ME` in `.env.example` is a fresh random value. Every command from here on runs in that directory.
 
 ### Serving on another port
 

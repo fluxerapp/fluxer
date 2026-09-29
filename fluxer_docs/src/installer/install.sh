@@ -58,9 +58,9 @@ FLUXER_MIN_ENGINE='24.0.0'
 # as written, healthcheck conditions and all.
 FLUXER_MIN_PODMAN='5.0.0'
 FLUXER_MIN_COMPOSE='2.20.2'
-# Both overlays this script downloads use the !override tag, which Compose learned
-# in 2.24.4. A stack that loads neither runs on the lower minimum, so the higher
-# one is required only once COMPOSE_FILE names more than one file.
+# Every overlay this script downloads uses the !override or !reset tag, which
+# Compose 2.24.4 reads. A stack that loads none runs on the lower minimum, so the
+# higher one is required only once COMPOSE_FILE names more than one file.
 FLUXER_MIN_COMPOSE_OVERLAY='2.24.4'
 FLUXER_READY_TIMEOUT=600
 FLUXER_READY_INTERVAL=5
@@ -127,6 +127,7 @@ fluxer_stack_files() {
 docker-compose.yml
 docker-compose.proxy.yml
 tunnel.compose.yml
+external-object-store.compose.yml
 Caddyfile
 .env.example
 FILES
@@ -949,6 +950,7 @@ fluxer_stack_ready() {
 	fluxer_service_count=0
 	while read -r fluxer_service fluxer_status fluxer_health fluxer_code; do
 		[ -n "$fluxer_service" ] || continue
+		fluxer_stack_defines_service "$fluxer_service" || continue
 		fluxer_service_count=$((fluxer_service_count + 1))
 		case $fluxer_status in
 			running)
@@ -1276,6 +1278,13 @@ fluxer_resolve_compose_base() {
 	esac
 }
 
+fluxer_overlay_absence() {
+	case $1 in
+		external-object-store.compose.yml) printf '%s' 'Without it the bundled seaweedfs starts again and api, worker and media-proxy wait for it.' ;;
+		*) printf '%s' "Without $1 the edge container binds 80 and 443 and requests its own certificate." ;;
+	esac
+}
+
 fluxer_require_compose_files() {
 	fluxer_read_compose_setting
 	[ -n "$fluxer_compose_file" ] || return 0
@@ -1302,13 +1311,13 @@ fluxer_require_compose_files() {
 		if fluxer_stack_files | grep -qxF "$fluxer_name"; then
 			fluxer_fail 2 "COMPOSE_FILE from $fluxer_compose_from names $fluxer_name and $fluxer_path is not there, so every $fluxer_engine compose command in $opt_dir fails and this run stops before it changes anything. This script downloads $fluxer_name, and an instance set up before it existed does not hold that file yet. Put it in place and run this again:
   curl -fsSL --proto '=https' --tlsv1.2 -o $fluxer_path $FLUXER_RAW_BASE/$opt_ref/$FLUXER_STACK_PATH/$fluxer_name
-Leave the COMPOSE_FILE line as it is. Without $fluxer_name the edge container binds 80 and 443 and requests its own certificate."
+Leave the COMPOSE_FILE line as it is. $(fluxer_overlay_absence "$fluxer_name")"
 		fi
 		fluxer_fail 2 "COMPOSE_FILE from $fluxer_compose_from names $fluxer_name and $fluxer_path is not there, so every $fluxer_engine compose command in $opt_dir fails. This script does not download $fluxer_name. Put that file back, or take it out of the COMPOSE_FILE line."
 	done
 	if [ "$fluxer_compose_count" -gt 1 ] &&
 		! fluxer_version_ge "$fluxer_compose_version" "$FLUXER_MIN_COMPOSE_OVERLAY"; then
-		fluxer_fail 2 "COMPOSE_FILE from $fluxer_compose_from loads $fluxer_compose_count files and this host runs Compose $fluxer_compose_version. Every overlay this script downloads uses the !override tag, which needs Compose $FLUXER_MIN_COMPOSE_OVERLAY or newer. Upgrade Compose, or load only $fluxer_compose_base."
+		fluxer_fail 2 "COMPOSE_FILE from $fluxer_compose_from loads $fluxer_compose_count files and this host runs Compose $fluxer_compose_version. Every overlay this script downloads uses the !override or !reset tag, which needs Compose $FLUXER_MIN_COMPOSE_OVERLAY or newer. Upgrade Compose, or load only $fluxer_compose_base."
 	fi
 }
 

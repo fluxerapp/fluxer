@@ -463,7 +463,7 @@ Keep persistent storage and the bundled `noeviction` policy to protect deletion 
 
 ## Object storage
 
-Every uploaded file lands in an S3-compatible object store, which the stack provides with SeaweedFS. `FLUXER_S3_ACCESS_KEY_ID` and `FLUXER_S3_SECRET_ACCESS_KEY` are required. The rest are optional.
+Every uploaded file lands in an S3-compatible object store, which the stack provides with SeaweedFS. `FLUXER_S3_ACCESS_KEY_ID` and `FLUXER_S3_SECRET_ACCESS_KEY` are required. The rest are optional. [Run a data store outside the stack](/operator/upgrading/#run-a-data-store-outside-the-stack) has the overlay that stops the bundled SeaweedFS once the stack points at another store.
 
 #### `FLUXER_S3_ENDPOINT`
 

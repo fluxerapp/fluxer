@@ -104,6 +104,7 @@ $FluxerStackFiles = @(
 	'docker-compose.yml'
 	'docker-compose.proxy.yml'
 	'tunnel.compose.yml'
+	'external-object-store.compose.yml'
 	'Caddyfile'
 	'.env.example'
 )
@@ -670,6 +671,7 @@ function Move-FluxerStackFiles([string]$StagingDir, [string]$TargetDir) {
 	foreach ($name in $FluxerStackFiles) {
 		Move-Item -LiteralPath (Join-Path $StagingDir $name) -Destination (Join-Path $TargetDir (Get-FluxerPlacedName $name)) -Force
 	}
+	$script:FluxerStackServices = $null
 }
 
 # The same file by hand, which is what the caller of this function does in one pass:
@@ -785,7 +787,7 @@ function Wait-FluxerStack([string]$Lead) {
 	$deadline = (Get-Date).AddSeconds($FluxerReadyTimeoutSeconds)
 	$reportAt = (Get-Date).AddSeconds($FluxerReadyReportSeconds)
 	while ((Get-Date) -lt $deadline) {
-		$rows = @(Get-FluxerComposeRows)
+		$rows = @(Get-FluxerComposeRows | Where-Object { Test-FluxerStackDefinesService (Get-FluxerProperty $_ 'Service') (Get-Location).Path })
 		if ($rows.Count -gt 0) {
 			$ready = Measure-FluxerReadyRows $rows
 			if ($ready -eq $rows.Count) {
@@ -1877,6 +1879,13 @@ function Resolve-FluxerComposeBase([string]$TargetDir, [string]$EnvPath) {
 	}
 }
 
+function Get-FluxerOverlayAbsence([string]$Name) {
+	if ($Name -eq 'external-object-store.compose.yml') {
+		return 'Without it the bundled seaweedfs starts again and api, worker and media-proxy wait for it.'
+	}
+	return "Without $Name the edge container binds 80 and 443 and requests its own certificate."
+}
+
 function Assert-FluxerComposeFiles([string]$TargetDir, [string]$EnvPath) {
 	$setting = Get-FluxerComposeSetting $EnvPath
 	$value = $setting.Value
@@ -1897,7 +1906,7 @@ function Assert-FluxerComposeFiles([string]$TargetDir, [string]$EnvPath) {
 			continue
 		}
 		if ($FluxerStackFiles -contains $name) {
-			Stop-Fluxer "COMPOSE_FILE from $source names $name and $path is not there, so every docker compose command in $TargetDir fails and this run stops before it changes anything. This script downloads $name, and an instance set up before it existed does not hold that file yet. Put it in place and run this again:`n  Invoke-WebRequest -Uri $FluxerRawBase/$Ref/$FluxerStackPath/$name -OutFile $path -UseBasicParsing`nLeave the COMPOSE_FILE line as it is. Without $name the edge container binds 80 and 443 and requests its own certificate." $FluxerExitPrerequisite
+			Stop-Fluxer "COMPOSE_FILE from $source names $name and $path is not there, so every docker compose command in $TargetDir fails and this run stops before it changes anything. This script downloads $name, and an instance set up before it existed does not hold that file yet. Put it in place and run this again:`n  Invoke-WebRequest -Uri $FluxerRawBase/$Ref/$FluxerStackPath/$name -OutFile $path -UseBasicParsing`nLeave the COMPOSE_FILE line as it is. $(Get-FluxerOverlayAbsence $name)" $FluxerExitPrerequisite
 		}
 		Stop-Fluxer "COMPOSE_FILE from $source names $name and $path is not there, so every docker compose command in $TargetDir fails. This script does not download $name. Put that file back, or take it out of the COMPOSE_FILE line." $FluxerExitPrerequisite
 	}

@@ -12,7 +12,7 @@ An upgrade moves an instance to a newer release. `install.sh --update` does all 
 
 | Requirement | Value |
 | --- | --- |
-| Working directory | The one holding `.env`, `docker-compose.yml`, `docker-compose.proxy.yml`, `tunnel.compose.yml` and `Caddyfile` |
+| Working directory | The one holding `.env` and the stack files |
 | Compose commands | Behind your own reverse proxy, set `COMPOSE_FILE` in `.env` once and every command picks up the overlay |
 | Free disk | Room for one database dump, one copy of the uploads, and the new images beside the old ones |
 | Downtime | A minute or two for the recreate, plus however long the uploads copy takes with the stack stopped |
@@ -79,7 +79,7 @@ Read the [Linux and macOS installer](https://fluxer.dev/install.sh) or [Windows 
 
 ## Keep a local compose change
 
-An upgrade replaces the stack files, including direct edits to `docker-compose.yml`, `docker-compose.proxy.yml`, `tunnel.compose.yml` or the `Caddyfile`. Use `--dry-run` to see which files will change.
+An upgrade replaces the stack files, including direct edits to `docker-compose.yml`, `docker-compose.proxy.yml`, `tunnel.compose.yml`, `external-object-store.compose.yml` or the `Caddyfile`. Use `--dry-run` to see which files will change.
 
 The supported way to hold a local choice is a separate file, listed in `COMPOSE_FILE` in `.env`:
 
@@ -251,7 +251,23 @@ FLUXER_S3_FORCE_PATH_STYLE=false
 
 `FLUXER_KV_URL`, `FLUXER_NATS_URL`, `FLUXER_SEARCH_URL` and `FLUXER_LIVEKIT_INTERNAL_URL` move the other bundled services the same way, and `FLUXER_NATS_JETSTREAM_URL` and `FLUXER_SVC_NATS_URL` follow `FLUXER_NATS_URL` when they are not set on their own.
 
-Pointing the stack elsewhere leaves the bundled service defined and running with nothing reading it. Take it out with an override file listed in `COMPOSE_FILE`, which [Keep a local compose change](#keep-a-local-compose-change) describes, rather than by editing `docker-compose.yml`, which the Place step replaces on every upgrade.
+Pointing the stack elsewhere leaves the bundled service defined and running with nothing reading it. The object store has a shipped overlay for that. `external-object-store.compose.yml` keeps `seaweedfs` and `seaweedfs-init` from starting, and `api`, `worker` and `media-proxy` stop waiting for `seaweedfs-init`. Add it to `COMPOSE_FILE` in `.env`, after any other overlay:
+
+```ini
+COMPOSE_FILE=docker-compose.yml:external-object-store.compose.yml
+```
+
+Behind a reverse proxy the line is `docker-compose.yml:docker-compose.proxy.yml:external-object-store.compose.yml`. The overlay needs Compose 2.24.4 or newer. An upgrade refreshes it with the other stack files, skips the uploads copy and does not wait for `seaweedfs-init`.
+
+Compose leaves containers that already exist in place, so remove the two old ones once after the switch:
+
+```bash
+docker compose rm -sf seaweedfs seaweedfs-init
+```
+
+The `seaweedfs-data` volume stays until you delete it. Copy its objects to the new store before you delete it.
+
+The other bundled services have no shipped overlay. Take one out with an override file listed in `COMPOSE_FILE`, which [Keep a local compose change](#keep-a-local-compose-change) describes, rather than by editing `docker-compose.yml`, which the Place step replaces on every upgrade.
 
 The installer backs up only the bundled database and object store. Arrange separate backups for external stores before upgrading, and keep them with the release's backup record.
 
