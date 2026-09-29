@@ -14,7 +14,7 @@ const LIMITER_KNEE_DB = 0;
 const LIMITER_RATIO = 20;
 const LIMITER_ATTACK_SEC = 0.003;
 const LIMITER_RELEASE_SEC = 0.05;
-const DEEP_FILTER_NOISE_REDUCTION_LEVEL = 80;
+const DEEP_FILTER_NOISE_REDUCTION_LEVEL = 30;
 
 function createDeepFilterProcessor(): DeepFilterNoiseFilterProcessor {
 	return new DeepFilterNoiseFilterProcessor({
