@@ -370,11 +370,12 @@ Resolves one report and returns a [report resolution](#report-resolution-object)
 | --- | --- | --- |
 | status | resolved | The status to move the report to |
 | public_comment?<sup>1</sup> | string | The comment shown to the reporter (0-512 characters) |
+| notify_reporter? | boolean | Whether to notify the reporter by system DM and email (default true) |
 
 <sup>1</sup> Stored as null when it is omitted or empty, and shown to the reporter in the resolution notice otherwise
 
 :::caution[Resolution is terminal]
-Resolving a report notifies the reporter. A resolved report never returns to PENDING, and a second update against it returns 400 `REPORT_ALREADY_RESOLVED` without changing the stored public comment.
+Resolving a report notifies the reporter unless `notify_reporter` is false. A resolved report never returns to PENDING, and a second update against it returns 400 `REPORT_ALREADY_RESOLVED` without changing the stored public comment.
 :::
 
 ### Response
@@ -389,9 +390,9 @@ Resolving a report notifies the reporter. A resolved report never returns to PEN
 
 The report moves to RESOLVED and records `resolved_at`, `resolved_by_admin_id`, and the public comment.
 
-Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with target type `report`, target ID equal to the report ID, and action `resolve_report`. The metadata is `report_id` and `report_type`.
+Fluxer records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with target type `report`, target ID equal to the report ID, and action `resolve_report`. The metadata is `report_id`, `report_type`, `notify_reporter`, `reporter_dm_sent`, and `reporter_email_sent`.
 
-Fluxer notifies the reporter when the report has a reporter account that still exists. The reporter receives a system direct message, and an email when the account has an address. An anonymous Digital Services Act notice has no reporter account and is resolved with no notification.
+Unless `notify_reporter` is false, Fluxer notifies the reporter when the report has a reporter account that still exists. The reporter receives a system direct message, and an email when the account has an address. An anonymous Digital Services Act notice has no reporter account and is resolved with no notification.
 
 A reporter who does not already have the system channel open receives [Channel Create](/gateway/events/#channel-create), and every session of the reporter receives [Message Create](/gateway/events/#message-create). Fluxer logs a delivery failure, and the request still succeeds.
 
