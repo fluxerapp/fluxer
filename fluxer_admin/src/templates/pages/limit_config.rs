@@ -2,6 +2,7 @@
 
 use crate::{
     acl::{self, INSTANCE_LIMIT_CONFIG_UPDATE},
+    admin_hints,
     api::types::{LimitConfigResponse, LimitKeyMetadata, LimitRule},
     config::AdminConfig,
     middleware::auth::AuthContext,
@@ -9,6 +10,7 @@ use crate::{
         components::{
             form::{FORM_INPUT_CLASS, csrf_input, danger_button, form_actions, submit_button},
             page_container::{card_with_header, page_header},
+            tooltip,
         },
         layout::admin_layout,
     },
@@ -421,6 +423,9 @@ fn field_label_row(key: &str, metadata: &LimitKeyMetadata, modified: bool) -> Ma
     html! {
         div class="flex flex-wrap items-center gap-2" {
             label for=(key) class="font-medium text-neutral-900 text-sm" { (metadata.label) }
+            @if let Some(hint) = admin_hints::limit_key_hint(key) {
+                (tooltip::info(&hint))
+            }
             span class=(scope_class(&metadata.scope)) { (scope_label(&metadata.scope)) }
             @if modified {
                 span class="rounded bg-neutral-100 px-1.5 py-0.5 text-neutral-700 text-xs" { "Modified" }

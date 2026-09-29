@@ -9,10 +9,16 @@ import {HTTP_STATUS} from '@app/api/test/TestConstants';
 import {createBuilder} from '@app/api/test/TestRequestBuilder';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
-import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import type {LimitConfigSnapshot} from '@fluxer/limits/src/LimitTypes';
 import type {InstanceConfigResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import type {GuildResponse} from '@fluxer/schema/src/domains/guild/GuildResponseSchemas';
 import {afterAll, beforeAll, beforeEach, describe, expect, it} from 'vitest';
+
+const COMMUNITY_CREATOR_TRAIT = 'community_creator';
+
+interface LimitConfigReadResponse {
+	limit_config: LimitConfigSnapshot;
+}
 
 describe('guild creation access on a self-hosted instance', () => {
 	let harness: ApiTestHarness;
@@ -45,6 +51,8 @@ describe('guild creation access on a self-hosted instance', () => {
 			AdminACLs.AUTHENTICATE,
 			AdminACLs.INSTANCE_CONFIG_VIEW,
 			AdminACLs.INSTANCE_CONFIG_UPDATE,
+			AdminACLs.INSTANCE_LIMIT_CONFIG_VIEW,
+			AdminACLs.INSTANCE_LIMIT_CONFIG_UPDATE,
 		]);
 
 	// Create members so that they start with no ACLs
@@ -65,10 +73,30 @@ describe('guild creation access on a self-hosted instance', () => {
 	const createGuild = (account: TestAccount, name: string) =>
 		createBuilder<GuildResponse>(harness, account.token).post('/guilds').body({name});
 
-	const grantGuildCreateFlag = async (account: TestAccount): Promise<void> => {
+	const grantGuildCreateToTrait = async (admin: TestAccount, trait: string): Promise<void> => {
+		const current = await createBuilder<LimitConfigReadResponse>(harness, admin.token)
+			.get('/admin/limit-config')
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		await createBuilder(harness, admin.token)
+			.put('/admin/limit-config')
+			.body({
+				limit_config: {
+					traitDefinitions: [...current.limit_config.traitDefinitions, trait],
+					rules: [
+						...current.limit_config.rules,
+						{id: `grant_${trait}`, filters: {traits: [trait]}, limits: {feature_guild_create: 1}},
+					],
+				},
+			})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+	};
+
+	const grantTrait = async (account: TestAccount, trait: string): Promise<void> => {
 		await createBuilder(harness, '')
-			.patch(`/test/users/${account.userId}/flags`)
-			.body({flags: (UserFlags.HAS_SESSION_STARTED | UserFlags.GUILD_CREATE).toString()})
+			.patch(`/test/users/${account.userId}/traits`)
+			.body({traits: [trait]})
 			.expect(HTTP_STATUS.OK)
 			.execute();
 	};
@@ -84,7 +112,7 @@ describe('guild creation access on a self-hosted instance', () => {
 		});
 	});
 
-	it('stores a disabled policy and rejects guild creation for a member without the flag', async () => {
+	it('stores a disabled policy and rejects guild creation for a member without a grant', async () => {
 		const admin = await createAdmin();
 		await setGuildCreateAccess(admin, false);
 		expect((await readInstanceConfig(admin)).policy.guild_create_access).toBe(false);
@@ -97,14 +125,21 @@ describe('guild creation access on a self-hosted instance', () => {
 		});
 	});
 
-	it('allows guild creation for a member holding the GUILD_CREATE flag while the policy is disabled', async () => {
+	it('allows guild creation only once a member holds the trait the grant rule targets', async () => {
 		const admin = await createAdmin();
 		await setGuildCreateAccess(admin, false);
+		await grantGuildCreateToTrait(admin, COMMUNITY_CREATOR_TRAIT);
 
 		const member = await createMember();
-		await grantGuildCreateFlag(member);
 		await asSelfHosted(async () => {
-			const guild = await createGuild(member, 'Flagged community').execute();
+			await createGuild(member, 'Ungranted community')
+				.expect(HTTP_STATUS.FORBIDDEN, APIErrorCodes.GUILD_CREATION_PERMISSION_REQUIRED)
+				.execute();
+		});
+
+		await grantTrait(member, COMMUNITY_CREATOR_TRAIT);
+		await asSelfHosted(async () => {
+			const guild = await createGuild(member, 'Granted community').execute();
 			expect(guild.id).toBeTruthy();
 		});
 	});

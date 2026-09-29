@@ -10659,6 +10659,7 @@
 							"feature_custom_notification_sounds",
 							"feature_early_access",
 							"feature_global_expressions",
+							"feature_guild_create",
 							"feature_higher_video_quality",
 							"feature_per_guild_profiles",
 							"feature_voice_entrance_sounds",
@@ -13590,11 +13591,6 @@
 						"description": "Bot requires manual approval for friend requests"
 					},
 					{"name": "SPAMMER", "value": "64", "description": "User is flagged as a spammer"},
-					{
-						"name": "GUILD_CREATE",
-						"value": "67108864",
-						"description": "Self-hosted user has permissions to create communities"
-					},
 					{"name": "DELETED", "value": "17179869184", "description": "User account has been deleted"},
 					{
 						"name": "DISABLED_SUSPICIOUS_ACTIVITY",
