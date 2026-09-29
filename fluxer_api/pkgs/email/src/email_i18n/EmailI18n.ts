@@ -14,6 +14,33 @@ const DEFAULT_EMAIL_TEMPLATE_VARIABLES = {
 	appeals_email: 'appeals@fluxer.app',
 	safety_email: 'safety@fluxer.app',
 } satisfies Record<string, string>;
+
+function formatEmailDate(value: unknown, locale: string, style: string | null): string {
+	const options: Intl.DateTimeFormatOptions = {timeZone: 'UTC', day: 'numeric', month: 'short', year: 'numeric'};
+	if (style === 'full') {
+		options.weekday = 'long';
+		options.month = 'long';
+	} else if (style === 'long') {
+		options.month = 'long';
+	} else if (style === 'short') {
+		options.month = 'numeric';
+	}
+	return new Date(value as string | number | Date).toLocaleDateString(locale, options);
+}
+
+function formatEmailTime(value: unknown, locale: string, style: string | null): string {
+	const options: Intl.DateTimeFormatOptions = {
+		timeZone: 'UTC',
+		timeZoneName: 'short',
+		hour: 'numeric',
+		minute: 'numeric',
+	};
+	if (style === 'full' || style === 'long') {
+		options.second = 'numeric';
+	}
+	return new Date(value as string | number | Date).toLocaleTimeString(locale, options);
+}
+
 const emailI18n = createStaticI18n<EmailTemplateKey, EmailTemplate, Record<string, unknown>>(
 	{
 		defaultLocale: DEFAULT_LOCALE,
@@ -32,6 +59,7 @@ const emailI18n = createStaticI18n<EmailTemplateKey, EmailTemplate, Record<strin
 		validateVariables: (_key, template, variables) =>
 			validateMessageTemplateVariables(template.subject, variables) ??
 			validateMessageTemplateVariables(template.body, variables),
+		messageFormatOptions: {customFormatters: {date: formatEmailDate, time: formatEmailTime}},
 	},
 	(template, variables, mf) => {
 		const compiledSubject = String(mf.compile(template.subject)(variables));

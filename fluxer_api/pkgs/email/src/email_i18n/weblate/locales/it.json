@@ -1,4 +1,16 @@
 {
+	"account_deletion_cancelled": {
+		"subject": "L'eliminazione del tuo account {product_name} è stata annullata",
+		"body": "Ciao {username},\n\nL'eliminazione programmata del tuo account {product_name} è stata annullata. Il tuo account non verrà eliminato.\n\nPer qualsiasi domanda, contatta {safety_email}.\n\n– Il team di {product_name}"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "Il tuo account {product_name} verrà eliminato per inattività",
+		"body": "Ciao {username},\n\nIl tuo account {product_name} è inattivo da molto tempo, quindi verrà eliminato definitivamente in questa data:\n\n{deletionDate, date, full} alle {deletionDate, time, short}{reason, select, null {} other {\n\nMotivo: {reason}}}\n\nSe vuoi mantenere il tuo account, contatta {safety_email} da questo indirizzo email prima di tale data.\n\n– Il team di {product_name}"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "L'eliminazione del tuo account {product_name} è programmata",
+		"body": "Ciao {username},\n\nCome da tua richiesta, il tuo account {product_name} verrà eliminato definitivamente in questa data:\n\n{deletionDate, date, full} alle {deletionDate, time, short}{reason, select, null {} other {\n\nMotivo: {reason}}}\n\nFino ad allora il tuo account è bloccato. Se non hai richiesto l'eliminazione o se vuoi mantenere il tuo account, contatta {safety_email} da questo indirizzo email prima di tale data.\n\n– Il team di {product_name}"
+	},
 	"account_disabled_suspicious": {
 		"subject": "Il tuo account {product_name} è stato temporaneamente disabilitato",
 		"body": "Ciao {username},\n\nAbbiamo temporaneamente disabilitato il tuo account {product_name} perché abbiamo rilevato attività sospette.\n\n{reason, select,\n  null {}\n  other {Motivo: {reason}}\n}\n\nPer riottenere l'accesso al tuo account, dovrai reimpostare la password:\n\n{forgotUrl}\n\nDopo aver reimpostato la password, potrai accedere di nuovo.\n\nSe ritieni che ciò sia stato fatto per errore, contatta il nostro team di assistenza.\n\n– Il team per la sicurezza di {product_name}"
@@ -61,7 +73,7 @@
 	},
 	"password_change_verification": {
 		"subject": "Conferma la modifica della password di {product_name}",
-		"body": "Ciao {username},\n\nAbbiamo ricevuto una richiesta di modifica della password del tuo account {product_name}.\n\nPer confermare questa modifica, inserisci questo codice nell'app:\n\n{code}\n\nQuesto codice scade alle {expiresAt}.\n\nSe non hai richiesto questa modifica, qualcuno potrebbe avere accesso al tuo account. Cambia immediatamente la password e abilita l'autenticazione a due fattori.\n\n– Il team di {product_name}"
+		"body": "Ciao {username},\n\nAbbiamo ricevuto una richiesta di modifica della password del tuo account {product_name}.\n\nPer confermare questa modifica, inserisci questo codice nell'app:\n\n{code}\n\nQuesto codice scade il {expiresAt, date, full} alle {expiresAt, time, short}.\n\nSe non hai richiesto questa modifica, qualcuno potrebbe avere accesso al tuo account. Cambia immediatamente la password e abilita l'autenticazione a due fattori.\n\n– Il team di {product_name}"
 	},
 	"password_reset": {
 		"subject": "Reimposta la password di {product_name}",

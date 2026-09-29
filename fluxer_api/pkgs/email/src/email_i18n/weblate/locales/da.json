@@ -1,4 +1,16 @@
 {
+	"account_deletion_cancelled": {
+		"subject": "Sletningen af din {product_name}-konto er annulleret",
+		"body": "Hej {username},\n\nDen planlagte sletning af din {product_name}-konto er annulleret. Din konto bliver ikke slettet.\n\nHvis du har spørgsmål, kan du kontakte {safety_email}.\n\n– Teamet bag {product_name}"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "Din {product_name}-konto slettes på grund af inaktivitet",
+		"body": "Hej {username},\n\nDin {product_name}-konto har været inaktiv i lang tid, så den slettes permanent den:\n\n{deletionDate, date, full} kl. {deletionDate, time, short}{reason, select, null {} other {\n\nÅrsag: {reason}}}\n\nHvis du vil beholde din konto, skal du kontakte {safety_email} fra denne e-mailadresse inden denne dato.\n\n– Teamet bag {product_name}"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "Sletningen af din {product_name}-konto er planlagt",
+		"body": "Hej {username},\n\nSom du har anmodet om, slettes din {product_name}-konto permanent den:\n\n{deletionDate, date, full} kl. {deletionDate, time, short}{reason, select, null {} other {\n\nÅrsag: {reason}}}\n\nDin konto er låst indtil da. Hvis du ikke har anmodet om dette, eller hvis du vil beholde din konto, skal du kontakte {safety_email} fra denne e-mailadresse inden denne dato.\n\n– Teamet bag {product_name}"
+	},
 	"account_disabled_suspicious": {
 		"subject": "Din {product_name}-konto er midlertidigt deaktiveret",
 		"body": "Hej {username},\n\nVi har midlertidigt deaktiveret din {product_name}-konto, fordi vi har registreret mistænkelig aktivitet.\n\n{reason, select,\n  null {}\n  other {Årsag: {reason}}\n}\n\nFor at få adgang til din konto igen skal du nulstille din adgangskode:\n\n{forgotUrl}\n\nNår du har nulstillet din adgangskode, kan du logge ind igen.\n\nHvis du mener, at dette er sket ved en fejl, kan du kontakte vores supportteam.\n\n– Sikkerhedsteamet hos {product_name}"
@@ -61,7 +73,7 @@
 	},
 	"password_change_verification": {
 		"subject": "Bekræft ændringen af din adgangskode til {product_name}",
-		"body": "Hej {username},\n\nVi har modtaget en anmodning om at ændre adgangskoden på din {product_name}-konto.\n\nFor at bekræfte denne ændring skal du indtaste denne kode i appen:\n\n{code}\n\nDenne kode udløber kl. {expiresAt}.\n\nHvis du ikke har anmodet om dette, har nogen muligvis adgang til din konto. Skift din adgangskode med det samme, og aktiver tofaktorgodkendelse.\n\n– Teamet bag {product_name}"
+		"body": "Hej {username},\n\nVi har modtaget en anmodning om at ændre adgangskoden på din {product_name}-konto.\n\nFor at bekræfte denne ændring skal du indtaste denne kode i appen:\n\n{code}\n\nDenne kode udløber den {expiresAt, date, full} kl. {expiresAt, time, short}.\n\nHvis du ikke har anmodet om dette, har nogen muligvis adgang til din konto. Skift din adgangskode med det samme, og aktiver tofaktorgodkendelse.\n\n– Teamet bag {product_name}"
 	},
 	"password_reset": {
 		"subject": "Nulstil din {product_name}-adgangskode",

@@ -318,7 +318,11 @@ export const TempBanUserRequest = z.object({
 		.min(0)
 		.max(8760)
 		.describe('Duration of the ban in hours. Use 0 for a permanent ban (until manually unbanned).'),
-	reason: createStringType(0, 512).optional().describe('Reason for the temporary ban'),
+	reason: createStringType(0, 512).optional().describe('Reason shown to the user in the ban email'),
+	notify_user: z
+		.boolean()
+		.default(true)
+		.describe('Whether to email the user about a temporary ban. Permanent bans (duration_hours 0) are never emailed'),
 });
 
 export type TempBanUserRequest = z.infer<typeof TempBanUserRequest>;
@@ -346,6 +350,7 @@ export const ScheduleAccountDeletionRequest = z.object({
 		.describe(
 			'pending_deletion_at of the deletion this request replaces. Required when a deletion is already scheduled for the account',
 		),
+	notify_user: z.boolean().default(true).describe('Whether to email the user about the scheduled deletion'),
 });
 
 export type ScheduleAccountDeletionRequest = z.infer<typeof ScheduleAccountDeletionRequest>;
@@ -400,6 +405,7 @@ export const DisableForSuspiciousActivityRequest = z.object({
 		'Bitmask of suspicious activity flags that triggered the disable',
 		'SuspiciousActivityFlags',
 	),
+	notify_user: z.boolean().default(true).describe('Whether to email the user that the account was disabled'),
 });
 
 export type DisableForSuspiciousActivityRequest = z.infer<typeof DisableForSuspiciousActivityRequest>;
@@ -652,6 +658,15 @@ export const AdminUserDeletionCancelRequest = z.object({
 });
 
 export type AdminUserDeletionCancelRequest = z.infer<typeof AdminUserDeletionCancelRequest>;
+
+export const AdminUserUnbanRequest = z.object({
+	notify_user: z.boolean().default(true).describe('Whether to email the user that the suspension was lifted'),
+	public_reason: createStringType(0, 512)
+		.optional()
+		.describe('Reason shown to the user in the unban email. The audit log reason is never emailed'),
+});
+
+export type AdminUserUnbanRequest = z.infer<typeof AdminUserUnbanRequest>;
 
 export const AdminUserBanNoteRequest = z.object({
 	ban_audit_log_id: SnowflakeType.describe('Audit log entry of the current ban that the note refers to'),

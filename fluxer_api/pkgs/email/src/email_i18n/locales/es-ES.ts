@@ -3,6 +3,18 @@
 import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18nMessages';
 
 const EMAIL_I18N_ES_ES_MESSAGES = defineEmailI18nLocaleMessages({
+	"account_deletion_cancelled": {
+		"subject": "Se ha cancelado la eliminación de tu cuenta de {product_name}",
+		"body": "Hola {username}:\n\nSe ha cancelado la eliminación programada de tu cuenta de {product_name}. Tu cuenta no se eliminará.\n\nSi tienes alguna pregunta, ponte en contacto con {safety_email}.\n\n– Equipo de {product_name}"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "Tu cuenta de {product_name} será eliminada debido a la inactividad",
+		"body": "Hola {username}:\n\nTu cuenta de {product_name} lleva mucho tiempo inactiva, por lo que su eliminación permanente está programada para el:\n\n{deletionDate, date, full} a las {deletionDate, time, short}{reason, select, null {} other {\n\nMotivo: {reason}}}\n\nSi quieres conservar tu cuenta, ponte en contacto con {safety_email} desde esta dirección de correo electrónico antes de esa fecha.\n\n– Equipo de {product_name}"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "La eliminación de tu cuenta de {product_name} está programada",
+		"body": "Hola {username}:\n\nTal y como solicitaste, la eliminación permanente de tu cuenta de {product_name} está programada para el:\n\n{deletionDate, date, full} a las {deletionDate, time, short}{reason, select, null {} other {\n\nMotivo: {reason}}}\n\nTu cuenta permanecerá bloqueada hasta entonces. Si no solicitaste esto, o si quieres conservar tu cuenta, ponte en contacto con {safety_email} desde esta dirección de correo electrónico antes de esa fecha.\n\n– Equipo de {product_name}"
+	},
 	"account_disabled_suspicious": {
 		"subject": "Tu cuenta de {product_name} ha sido deshabilitada temporalmente",
 		"body": "Hola {username}:\n\nHemos deshabilitado temporalmente tu cuenta de {product_name} porque hemos detectado actividad sospechosa.\n\n{reason, select,\n  null {}\n  other {Motivo: {reason}}\n}\n\nPara recuperar el acceso a tu cuenta, tendrás que restablecer tu contraseña:\n\n{forgotUrl}\n\nDespués de restablecer tu contraseña, podrás iniciar sesión de nuevo.\n\nSi crees que esto ha sido un error, ponte en contacto con nuestro equipo de soporte.\n\n– Equipo de seguridad de {product_name}"
@@ -65,7 +77,7 @@ const EMAIL_I18N_ES_ES_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"password_change_verification": {
 		"subject": "Confirma tu cambio de contraseña en {product_name}",
-		"body": "Hola {username}:\n\nHemos recibido una solicitud para cambiar la contraseña de tu cuenta de {product_name}.\n\nPara confirmar este cambio, introduce este código en la aplicación:\n\n{code}\n\nEste código caduca el {expiresAt}.\n\nSi no solicitaste esto, alguien podría tener acceso a tu cuenta. Cambia tu contraseña inmediatamente y activa la autenticación de dos factores.\n\n– Equipo de {product_name}"
+		"body": "Hola {username}:\n\nHemos recibido una solicitud para cambiar la contraseña de tu cuenta de {product_name}.\n\nPara confirmar este cambio, introduce este código en la aplicación:\n\n{code}\n\nEste código caduca el {expiresAt, date, full} a las {expiresAt, time, short}.\n\nSi no solicitaste esto, alguien podría tener acceso a tu cuenta. Cambia tu contraseña inmediatamente y activa la autenticación de dos factores.\n\n– Equipo de {product_name}"
 	},
 	"password_reset": {
 		"subject": "Restablece tu contraseña en {product_name}",

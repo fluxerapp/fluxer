@@ -43,6 +43,21 @@ export interface IEmailService {
 		deletionDate: Date,
 		locale?: string | null,
 	): Promise<boolean>;
+	sendAccountDeletionRequestedEmail(
+		email: string,
+		username: string,
+		reason: string | null,
+		deletionDate: Date,
+		locale?: string | null,
+	): Promise<boolean>;
+	sendAccountDeletionInactivityEmail(
+		email: string,
+		username: string,
+		reason: string | null,
+		deletionDate: Date,
+		locale?: string | null,
+	): Promise<boolean>;
+	sendAccountDeletionCancelledEmail(email: string, username: string, locale?: string | null): Promise<boolean>;
 	sendUnbanNotification(
 		email: string,
 		username: string,
@@ -53,7 +68,7 @@ export interface IEmailService {
 		email: string,
 		username: string,
 		deletionDate: Date,
-		reason: string,
+		reason: string | null,
 		locale?: string | null,
 	): Promise<boolean>;
 	sendInactivityWarningEmail(

@@ -1,4 +1,16 @@
 {
+	"account_deletion_cancelled": {
+		"subject": "تم إلغاء حذف حسابك في {product_name}",
+		"body": "مرحبًا {username}،\n\nتم إلغاء الحذف المجدول لحسابك في {product_name}. لن يتم حذف حسابك.\n\nإذا كانت لديك أي أسئلة، يرجى الاتصال بـ{safety_email}.\n\n– فريق {product_name}"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "سيتم حذف حسابك في {product_name} بسبب عدم النشاط",
+		"body": "مرحبًا {username}،\n\nلم يكن حسابك في {product_name} نشطًا لفترة طويلة، لذا تمت جدولته للحذف الدائم في:\n\n{deletionDate, date, full} الساعة {deletionDate, time, short}{reason, select, null {} other {\n\nالسبب: {reason}}}\n\nإذا كنت ترغب في الاحتفاظ بحسابك، فاتصل بـ{safety_email} من عنوان البريد الإلكتروني هذا قبل ذلك التاريخ.\n\n– فريق {product_name}"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "تمت جدولة حذف حسابك في {product_name}",
+		"body": "مرحبًا {username}،\n\nبناءً على طلبك، تمت جدولة حسابك في {product_name} للحذف الدائم في:\n\n{deletionDate, date, full} الساعة {deletionDate, time, short}{reason, select, null {} other {\n\nالسبب: {reason}}}\n\nسيظل حسابك مقفلًا حتى ذلك الحين. إذا لم تطلب هذا، أو كنت ترغب في الاحتفاظ بحسابك، فاتصل بـ{safety_email} من عنوان البريد الإلكتروني هذا قبل ذلك التاريخ.\n\n– فريق {product_name}"
+	},
 	"account_disabled_suspicious": {
 		"subject": "تم تعطيل حسابك في {product_name} مؤقتًا",
 		"body": "مرحبًا {username}،\n\nلقد قمنا بتعطيل حسابك في {product_name} مؤقتًا لأننا اكتشفنا نشاطًا مشبوهًا.\n\n{reason, select,\n  null {}\n  other {السبب: {reason}}\n}\n\nلاستعادة الوصول إلى حسابك، ستحتاج إلى إعادة تعيين كلمة المرور الخاصة بك:\n\n{forgotUrl}\n\nبعد إعادة تعيين كلمة المرور الخاصة بك، ستتمكن من تسجيل الدخول مرة أخرى.\n\nإذا كنت تعتقد أن هذا حدث عن طريق الخطأ، يرجى الاتصال بفريق الدعم لدينا.\n\n– فريق أمان {product_name}"
@@ -61,7 +73,7 @@
 	},
 	"password_change_verification": {
 		"subject": "تأكيد تغيير كلمة المرور في {product_name}",
-		"body": "مرحبًا {username}،\n\nلقد تلقينا طلبًا لتغيير كلمة المرور لحسابك في {product_name}.\n\nلتأكيد هذا التغيير، أدخل هذا الرمز في التطبيق:\n\n{code}\n\nتنتهي صلاحية هذا الرمز في {expiresAt}.\n\nإذا لم تطلب هذا، فقد يكون شخص ما قادرًا على الوصول إلى حسابك. قم بتغيير كلمة المرور الخاصة بك على الفور وقم بتمكين المصادقة الثنائية.\n\n– فريق {product_name}"
+		"body": "مرحبًا {username}،\n\nلقد تلقينا طلبًا لتغيير كلمة المرور لحسابك في {product_name}.\n\nلتأكيد هذا التغيير، أدخل هذا الرمز في التطبيق:\n\n{code}\n\nتنتهي صلاحية هذا الرمز في {expiresAt, date, full} الساعة {expiresAt, time, short}.\n\nإذا لم تطلب هذا، فقد يكون شخص ما قادرًا على الوصول إلى حسابك. قم بتغيير كلمة المرور الخاصة بك على الفور وقم بتمكين المصادقة الثنائية.\n\n– فريق {product_name}"
 	},
 	"password_reset": {
 		"subject": "إعادة تعيين كلمة المرور في {product_name}",

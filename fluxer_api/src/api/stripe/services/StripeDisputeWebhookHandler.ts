@@ -113,10 +113,9 @@ export class StripeDisputeWebhookHandler {
 			});
 			await this.userCacheService.setUserPartialResponseFromUser(updatedUser);
 			if (updatedUser.email) {
-				await this.emailService.sendUnbanNotification(
+				await this.emailService.sendAccountDeletionCancelledEmail(
 					updatedUser.email,
 					updatedUser.username,
-					'chargeback withdrawal',
 					updatedUser.locale,
 				);
 			}

@@ -1,4 +1,16 @@
 {
+	"account_deletion_cancelled": {
+		"subject": "Lịch xóa tài khoản {product_name} của bạn đã được hủy",
+		"body": "Xin chào {username},\n\nLịch xóa tài khoản {product_name} của bạn đã được hủy. Tài khoản của bạn sẽ không bị xóa.\n\nNếu bạn có bất kỳ câu hỏi nào, vui lòng liên hệ {safety_email}.\n\n– Đội ngũ {product_name}"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "Tài khoản {product_name} của bạn sẽ bị xóa do không hoạt động",
+		"body": "Xin chào {username},\n\nTài khoản {product_name} của bạn đã không hoạt động trong thời gian dài, vì vậy tài khoản được lên lịch xóa vĩnh viễn vào:\n\n{deletionDate, date, full} lúc {deletionDate, time, short}{reason, select, null {} other {\n\nLý do: {reason}}}\n\nNếu bạn muốn giữ tài khoản, hãy liên hệ {safety_email} từ địa chỉ email này trước ngày đó.\n\n– Đội ngũ {product_name}"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "Tài khoản {product_name} của bạn đã được lên lịch xóa",
+		"body": "Xin chào {username},\n\nTheo yêu cầu của bạn, tài khoản {product_name} của bạn được lên lịch xóa vĩnh viễn vào:\n\n{deletionDate, date, full} lúc {deletionDate, time, short}{reason, select, null {} other {\n\nLý do: {reason}}}\n\nTài khoản của bạn sẽ bị khóa cho đến lúc đó. Nếu bạn không yêu cầu điều này, hoặc bạn muốn giữ tài khoản, hãy liên hệ {safety_email} từ địa chỉ email này trước ngày đó.\n\n– Đội ngũ {product_name}"
+	},
 	"account_disabled_suspicious": {
 		"subject": "Tài khoản {product_name} của bạn đã bị tạm thời vô hiệu hóa",
 		"body": "Xin chào {username},\n\nChúng tôi đã tạm thời vô hiệu hóa tài khoản {product_name} của bạn vì phát hiện hoạt động đáng ngờ.\n\n{reason, select,\n  null {}\n  other {Lý do: {reason}}\n}\n\nĐể truy cập lại tài khoản, bạn cần đặt lại mật khẩu:\n\n{forgotUrl}\n\nSau khi đặt lại mật khẩu, bạn sẽ có thể đăng nhập lại.\n\nNếu bạn cho rằng đây là nhầm lẫn, vui lòng liên hệ đội ngũ hỗ trợ của chúng tôi.\n\n– Đội ngũ An toàn {product_name}"
@@ -61,7 +73,7 @@
 	},
 	"password_change_verification": {
 		"subject": "Xác nhận thay đổi mật khẩu của bạn trên {product_name}",
-		"body": "Xin chào {username},\n\nChúng tôi đã nhận được yêu cầu thay đổi mật khẩu trên tài khoản {product_name} của bạn.\n\nĐể xác nhận thay đổi này, hãy nhập mã này vào ứng dụng:\n\n{code}\n\nMã này hết hạn lúc {expiresAt}.\n\nNếu bạn không yêu cầu thay đổi này, ai đó có thể đang có quyền truy cập vào tài khoản của bạn. Hãy đổi mật khẩu ngay lập tức và bật xác thực hai yếu tố.\n\n– Đội ngũ {product_name}"
+		"body": "Xin chào {username},\n\nChúng tôi đã nhận được yêu cầu thay đổi mật khẩu trên tài khoản {product_name} của bạn.\n\nĐể xác nhận thay đổi này, hãy nhập mã này vào ứng dụng:\n\n{code}\n\nMã này hết hạn vào {expiresAt, date, full} lúc {expiresAt, time, short}.\n\nNếu bạn không yêu cầu thay đổi này, ai đó có thể đang có quyền truy cập vào tài khoản của bạn. Hãy đổi mật khẩu ngay lập tức và bật xác thực hai yếu tố.\n\n– Đội ngũ {product_name}"
 	},
 	"password_reset": {
 		"subject": "Đặt lại mật khẩu của bạn trên {product_name}",

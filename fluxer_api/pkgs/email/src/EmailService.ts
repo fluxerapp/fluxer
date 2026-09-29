@@ -17,6 +17,10 @@ function formatMinorUnitAmount(amountMinor: number, currency: string, locale: st
 	return formatter.format(amountMinor / 10 ** fractionDigits);
 }
 
+function optionalReason(reason: string | null): string | null {
+	return reason?.trim() || null;
+}
+
 export class EmailService implements IEmailService {
 	private readonly config: EmailConfig;
 	private readonly emailI18n: IEmailI18nService;
@@ -83,7 +87,7 @@ export class EmailService implements IEmailService {
 	): Promise<boolean> {
 		return this.sendTemplatedEmail(email, 'account_disabled_suspicious', locale, {
 			username,
-			reason,
+			reason: optionalReason(reason),
 			forgotUrl: `${this.config.appBaseUrl}/forgot`,
 		});
 	}
@@ -98,7 +102,7 @@ export class EmailService implements IEmailService {
 	): Promise<boolean> {
 		return this.sendTemplatedEmail(email, 'account_temp_banned', locale, {
 			username,
-			reason,
+			reason: optionalReason(reason),
 			durationHours,
 			bannedUntil,
 			termsUrl: `${this.config.marketingBaseUrl}/terms`,
@@ -115,7 +119,7 @@ export class EmailService implements IEmailService {
 	): Promise<boolean> {
 		return this.sendTemplatedEmail(email, 'account_scheduled_deletion', locale, {
 			username,
-			reason,
+			reason: optionalReason(reason),
 			deletionDate,
 			termsUrl: `${this.config.marketingBaseUrl}/terms`,
 			guidelinesUrl: `${this.config.marketingBaseUrl}/guidelines`,
@@ -131,23 +135,63 @@ export class EmailService implements IEmailService {
 		return this.sendTemplatedEmail(email, 'self_deletion_scheduled', locale, {username, deletionDate});
 	}
 
+	async sendAccountDeletionRequestedEmail(
+		email: string,
+		username: string,
+		reason: string | null,
+		deletionDate: Date,
+		locale: string | null = null,
+	): Promise<boolean> {
+		return this.sendTemplatedEmail(email, 'account_deletion_scheduled_requested', locale, {
+			username,
+			reason: optionalReason(reason),
+			deletionDate,
+		});
+	}
+
+	async sendAccountDeletionInactivityEmail(
+		email: string,
+		username: string,
+		reason: string | null,
+		deletionDate: Date,
+		locale: string | null = null,
+	): Promise<boolean> {
+		return this.sendTemplatedEmail(email, 'account_deletion_scheduled_inactivity', locale, {
+			username,
+			reason: optionalReason(reason),
+			deletionDate,
+		});
+	}
+
+	async sendAccountDeletionCancelledEmail(
+		email: string,
+		username: string,
+		locale: string | null = null,
+	): Promise<boolean> {
+		return this.sendTemplatedEmail(email, 'account_deletion_cancelled', locale, {username});
+	}
+
 	async sendUnbanNotification(
 		email: string,
 		username: string,
 		reason: string | null,
 		locale: string | null = null,
 	): Promise<boolean> {
-		return this.sendTemplatedEmail(email, 'unban_notification', locale, {username, reason});
+		return this.sendTemplatedEmail(email, 'unban_notification', locale, {username, reason: optionalReason(reason)});
 	}
 
 	async sendScheduledDeletionNotification(
 		email: string,
 		username: string,
 		deletionDate: Date,
-		reason: string,
+		reason: string | null,
 		locale: string | null = null,
 	): Promise<boolean> {
-		return this.sendTemplatedEmail(email, 'scheduled_deletion_notification', locale, {username, deletionDate, reason});
+		return this.sendTemplatedEmail(email, 'scheduled_deletion_notification', locale, {
+			username,
+			deletionDate,
+			reason: optionalReason(reason),
+		});
 	}
 
 	async sendInactivityWarningEmail(

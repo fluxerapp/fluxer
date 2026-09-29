@@ -318,7 +318,13 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 					action: 'temp_ban',
 					targetType: 'user',
 					targetId: target.userId,
-					metadata: {duration_hours: '24', reason: 'Coverage ban', banned_until: expect.any(String)},
+					metadata: {
+						duration_hours: '24',
+						reason: 'Coverage ban',
+						banned_until: expect.any(String),
+						notify_user: 'true',
+						notification_sent: 'true',
+					},
 				},
 			};
 		},
@@ -335,7 +341,7 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 					action: 'unban',
 					targetType: 'user',
 					targetId: target.userId,
-					metadata: {},
+					metadata: {notify_user: 'true', notification_sent: 'true', public_reason: 'null'},
 				},
 			};
 		},
@@ -386,6 +392,9 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 						days: '30',
 						reason_code: DeletionReasons.USER_REQUESTED.toString(),
 						pending_deletion_at: expect.any(String),
+						notify_user: 'true',
+						notification_sent: 'true',
+						notification_template: 'account_deletion_scheduled_requested',
 					},
 				},
 			};
@@ -416,6 +425,7 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 						cancelled_scheduled_at: expect.any(String),
 						cancelled_reason_code: DeletionReasons.USER_REQUESTED.toString(),
 						notify_user: 'false',
+						notification_sent: 'false',
 					},
 				},
 			};
@@ -596,7 +606,7 @@ export const UserWriteAdminAuditCases: ReadonlyArray<AdminAuditCoverageCase> = [
 					action: 'disable_suspicious_activity',
 					targetType: 'user',
 					targetId: target.userId,
-					metadata: {flags: flags.toString()},
+					metadata: {flags: flags.toString(), notify_user: 'true', notification_sent: 'true'},
 				},
 			};
 		},

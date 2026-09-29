@@ -86,6 +86,7 @@ impl AdminApiClient {
         reason_code: u32,
         days_until_deletion: u32,
         public_reason: Option<&str>,
+        notify_user: bool,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<BulkJobResponse> {
         let body = generated_types::AdminBulkJobCreateRequest::ScheduleUserDeletion {
@@ -95,6 +96,7 @@ impl AdminApiClient {
             )
             .map_err(ApiError::Parse)?
             .into(),
+            notify_user,
             public_reason: public_reason.map(std::borrow::ToOwned::to_owned),
             reason_code: crate::api::generated::deletion_reason_code(
                 i32::try_from(reason_code).map_err(|e| ApiError::Parse(e.to_string()))?,

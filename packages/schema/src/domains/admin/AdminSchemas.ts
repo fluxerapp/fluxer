@@ -227,6 +227,7 @@ export type ListReportsQuery = z.infer<typeof ListReportsQuery>;
 export const UpdateReportRequest = z.object({
 	status: z.literal('resolved').describe('The status to move the report to'),
 	public_comment: createStringType(0, 512).optional().describe('Public comment to include with the resolution'),
+	notify_reporter: z.boolean().default(true).describe('Whether to notify the reporter by system DM and email'),
 });
 
 export type UpdateReportRequest = z.infer<typeof UpdateReportRequest>;

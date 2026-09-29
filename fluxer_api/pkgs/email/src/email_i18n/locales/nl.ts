@@ -3,6 +3,18 @@
 import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18nMessages';
 
 const EMAIL_I18N_NL_MESSAGES = defineEmailI18nLocaleMessages({
+	"account_deletion_cancelled": {
+		"subject": "De verwijdering van je {product_name}-account is geannuleerd",
+		"body": "Hallo {username},\n\nDe geplande verwijdering van je {product_name}-account is geannuleerd. Je account wordt niet verwijderd.\n\nAls je vragen hebt, neem dan contact op met {safety_email}.\n\n– Het team van {product_name}"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "Je {product_name}-account wordt verwijderd wegens inactiviteit",
+		"body": "Hallo {username},\n\nJe {product_name}-account is al lange tijd inactief en staat daarom gepland voor permanente verwijdering op:\n\n{deletionDate, date, full} om {deletionDate, time, short}{reason, select, null {} other {\n\nReden: {reason}}}\n\nAls je je account wilt behouden, neem dan vóór die datum vanaf dit e-mailadres contact op met {safety_email}.\n\n– Het team van {product_name}"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "De verwijdering van je {product_name}-account staat gepland",
+		"body": "Hallo {username},\n\nZoals je hebt verzocht, staat je {product_name}-account gepland voor permanente verwijdering op:\n\n{deletionDate, date, full} om {deletionDate, time, short}{reason, select, null {} other {\n\nReden: {reason}}}\n\nJe account is tot die tijd vergrendeld. Als je dit niet hebt aangevraagd of je account wilt behouden, neem dan vóór die datum vanaf dit e-mailadres contact op met {safety_email}.\n\n– Het team van {product_name}"
+	},
 	"account_disabled_suspicious": {
 		"subject": "Je {product_name}-account is tijdelijk uitgeschakeld",
 		"body": "Hallo {username},\n\nWe hebben je {product_name}-account tijdelijk uitgeschakeld omdat we verdachte activiteit hebben gedetecteerd.\n\n{reason, select,\n  null {}\n  other {Reden: {reason}}\n}\n\nOm weer toegang te krijgen tot je account, moet je je wachtwoord opnieuw instellen:\n\n{forgotUrl}\n\nNadat je je wachtwoord opnieuw hebt ingesteld, kun je weer inloggen.\n\nAls je denkt dat dit een fout is, neem dan contact op met ons supportteam.\n\n– Het veiligheidsteam van {product_name}"
@@ -65,7 +77,7 @@ const EMAIL_I18N_NL_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"password_change_verification": {
 		"subject": "Bevestig de wijziging van je wachtwoord op {product_name}",
-		"body": "Hallo {username},\n\nWe hebben een verzoek ontvangen om het wachtwoord van je {product_name}-account te wijzigen.\n\nOm deze wijziging te bevestigen, voer je deze code in de app in:\n\n{code}\n\nDeze code verloopt om {expiresAt}.\n\nAls je dit niet hebt aangevraagd, heeft iemand mogelijk toegang tot je account. Wijzig onmiddellijk je wachtwoord en schakel tweefactorauthenticatie in.\n\n– Het team van {product_name}"
+		"body": "Hallo {username},\n\nWe hebben een verzoek ontvangen om het wachtwoord van je {product_name}-account te wijzigen.\n\nOm deze wijziging te bevestigen, voer je deze code in de app in:\n\n{code}\n\nDeze code verloopt op {expiresAt, date, full} om {expiresAt, time, short}.\n\nAls je dit niet hebt aangevraagd, heeft iemand mogelijk toegang tot je account. Wijzig onmiddellijk je wachtwoord en schakel tweefactorauthenticatie in.\n\n– Het team van {product_name}"
 	},
 	"password_reset": {
 		"subject": "Stel je {product_name}-wachtwoord opnieuw in",

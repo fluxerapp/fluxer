@@ -393,12 +393,14 @@ impl AdminApiClient {
         user_id: &str,
         duration_hours: u32,
         reason: Option<&str>,
+        notify_user: bool,
         private_reason: Option<&str>,
     ) -> ApiResult<AdminUser> {
         let body = generated_types::AdminUserBanRequest {
             duration_hours: i32::try_from(duration_hours)
                 .map_err(|e| ApiError::Parse(e.to_string()))?
                 .into(),
+            notify_user,
             reason: reason.map(std::borrow::ToOwned::to_owned),
         };
         let resp: UserMutationResponse = self
@@ -411,10 +413,20 @@ impl AdminApiClient {
         Ok(resp.user)
     }
 
-    pub async fn unban_user(&self, user_id: &str) -> ApiResult<AdminUser> {
+    pub async fn unban_user(
+        &self,
+        user_id: &str,
+        public_reason: Option<&str>,
+        notify_user: bool,
+        private_reason: Option<&str>,
+    ) -> ApiResult<AdminUser> {
+        let body = generated_types::AdminUserUnbanRequest {
+            notify_user,
+            public_reason: public_reason.map(std::borrow::ToOwned::to_owned),
+        };
         let response = self
-            .generated()
-            .unban_admin_user(&snowflake(user_id))
+            .generated_with_reason(private_reason)?
+            .unban_admin_user(&snowflake(user_id), &body)
             .await
             .map_err(|e| self.generated_error(e))?;
         let resp: UserMutationResponse = self.generated_value(response.into_inner())?;
@@ -427,6 +439,7 @@ impl AdminApiClient {
         reason_code: i32,
         public_reason: Option<&str>,
         days_until_deletion: u32,
+        notify_user: bool,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<AdminUser> {
         let body = generated_types::AdminUserDeletionScheduleRequest {
@@ -436,6 +449,7 @@ impl AdminApiClient {
             )
             .map_err(ApiError::Parse)?
             .into(),
+            notify_user,
             public_reason: public_reason.map(std::borrow::ToOwned::to_owned),
             reason_code: crate::api::generated::deletion_reason_code(reason_code, "reason_code")
                 .map_err(ApiError::Parse)?,

@@ -380,7 +380,7 @@ describe('Admin Deletion Queue', () => {
 				.expect(HTTP_STATUS.OK)
 				.execute();
 			expect(
-				findLastTestEmail(await listTestEmails(harness, {recipient: target.email}), 'unban_notification'),
+				findLastTestEmail(await listTestEmails(harness, {recipient: target.email}), 'account_deletion_cancelled'),
 			).toBeNull();
 			const logs = await getAdminRepository().listAllAuditLogsPaginated(1000);
 			const log = logs.find(
@@ -390,6 +390,7 @@ describe('Admin Deletion Queue', () => {
 			expect(log?.metadata.get('cancelled_scheduled_by')).toBe(scheduler.userId);
 			expect(log?.metadata.get('cancelled_reason_code')).toBe(DeletionReasons.SPAM.toString());
 			expect(log?.metadata.get('notify_user')).toBe('false');
+			expect(log?.metadata.get('notification_sent')).toBe('false');
 			const rescheduled = await scheduleAs(scheduler, target, DeletionReasons.SPAM, 'Review again');
 			await createBuilder(harness, canceller.token)
 				.delete(`/admin/users/${target.userId}/deletion`)
@@ -397,9 +398,11 @@ describe('Admin Deletion Queue', () => {
 				.body({expected_pending_deletion_at: rescheduled.user.pending_deletion_at, notify_user: true})
 				.expect(HTTP_STATUS.OK)
 				.execute();
-			const email = findLastTestEmail(await listTestEmails(harness, {recipient: target.email}), 'unban_notification');
+			const emails = await listTestEmails(harness, {recipient: target.email});
+			const email = findLastTestEmail(emails, 'account_deletion_cancelled');
 			expect(email).not.toBeNull();
 			expect(JSON.stringify(email)).not.toContain('Private cancel note');
+			expect(findLastTestEmail(emails, 'unban_notification')).toBeNull();
 		});
 	});
 });

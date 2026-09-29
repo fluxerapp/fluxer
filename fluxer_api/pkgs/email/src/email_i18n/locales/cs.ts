@@ -3,6 +3,18 @@
 import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18nMessages';
 
 const EMAIL_I18N_CS_MESSAGES = defineEmailI18nLocaleMessages({
+	"account_deletion_cancelled": {
+		"subject": "Smazání vašeho účtu {product_name} bylo zrušeno",
+		"body": "Dobrý den, {username},\n\nNaplánované smazání vašeho účtu {product_name} bylo zrušeno. Váš účet nebude smazán.\n\nMáte-li jakékoli dotazy, kontaktujte {safety_email}.\n\n– Tým {product_name}"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "Váš účet {product_name} bude smazán kvůli neaktivitě",
+		"body": "Dobrý den, {username},\n\nVáš účet {product_name} byl dlouho neaktivní, a proto je jeho trvalé smazání naplánováno na:\n\n{deletionDate, date, full} v {deletionDate, time, short}{reason, select, null {} other {\n\nDůvod: {reason}}}\n\nPokud si chcete účet ponechat, kontaktujte před tímto datem {safety_email} z této e-mailové adresy.\n\n– Tým {product_name}"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "Smazání vašeho účtu {product_name} je naplánováno",
+		"body": "Dobrý den, {username},\n\nNa vaši žádost je trvalé smazání vašeho účtu {product_name} naplánováno na:\n\n{deletionDate, date, full} v {deletionDate, time, short}{reason, select, null {} other {\n\nDůvod: {reason}}}\n\nDo té doby je váš účet uzamčen. Pokud jste o smazání nežádali nebo si chcete účet ponechat, kontaktujte před tímto datem {safety_email} z této e-mailové adresy.\n\n– Tým {product_name}"
+	},
 	"account_disabled_suspicious": {
 		"subject": "Váš účet {product_name} byl dočasně deaktivován",
 		"body": "Dobrý den, {username},\n\nDočasně jsme deaktivovali váš účet {product_name}, protože jsme zaznamenali podezřelou aktivitu.\n\n{reason, select,\n  null {}\n  other {Důvod: {reason}}\n}\n\nAbyste znovu získali přístup k účtu, musíte si nastavit nové heslo:\n\n{forgotUrl}\n\nPo změně hesla se budete moci znovu přihlásit.\n\nPokud se domníváte, že jde o chybu, kontaktujte náš tým podpory.\n\n– Bezpečnostní tým {product_name}"
@@ -65,7 +77,7 @@ const EMAIL_I18N_CS_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"password_change_verification": {
 		"subject": "Potvrďte změnu hesla k účtu {product_name}",
-		"body": "Dobrý den, {username},\n\nObdrželi jsme žádost o změnu hesla k vašemu účtu {product_name}.\n\nZměnu potvrďte zadáním tohoto kódu v aplikaci:\n\n{code}\n\nPlatnost tohoto kódu vyprší v {expiresAt}.\n\nPokud jste o to nežádali, někdo může mít přístup k vašemu účtu. Okamžitě si změňte heslo a zapněte dvoufaktorové ověřování.\n\n– Tým {product_name}"
+		"body": "Dobrý den, {username},\n\nObdrželi jsme žádost o změnu hesla k vašemu účtu {product_name}.\n\nZměnu potvrďte zadáním tohoto kódu v aplikaci:\n\n{code}\n\nPlatnost tohoto kódu vyprší dne {expiresAt, date, full} v {expiresAt, time, short}.\n\nPokud jste o to nežádali, někdo může mít přístup k vašemu účtu. Okamžitě si změňte heslo a zapněte dvoufaktorové ověřování.\n\n– Tým {product_name}"
 	},
 	"password_reset": {
 		"subject": "Obnovte své heslo k účtu {product_name}",

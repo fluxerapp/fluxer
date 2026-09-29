@@ -4,6 +4,7 @@ import type {ApiContext} from '@app/api/ApiContext';
 import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import type {AdminBanManagementService} from '@app/api/admin/services/AdminBanManagementService';
+import {trySendAdminNotification} from '@app/api/admin/services/AdminNotification';
 import type {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserUpdatePropagator';
 import * as AuthSession from '@app/api/auth/AuthSession';
 import {createReportID, createUserID, type UserID} from '@app/api/BrandedTypes';
@@ -65,6 +66,25 @@ export function resolveDeletionDays(reasonCode: number, requestedDays: number): 
 	return Math.max(requestedDays, minDays);
 }
 
+type ScheduledDeletionEmailTemplate =
+	| 'account_deletion_scheduled_requested'
+	| 'account_deletion_scheduled_inactivity'
+	| 'scheduled_deletion_notification'
+	| 'account_scheduled_deletion';
+
+export function scheduledDeletionEmailTemplate(reasonCode: number): ScheduledDeletionEmailTemplate {
+	switch (reasonCode) {
+		case DeletionReasons.USER_REQUESTED:
+			return 'account_deletion_scheduled_requested';
+		case DeletionReasons.INACTIVITY:
+			return 'account_deletion_scheduled_inactivity';
+		case DeletionReasons.OTHER:
+			return 'scheduled_deletion_notification';
+		default:
+			return 'account_scheduled_deletion';
+	}
+}
+
 export class AdminUserDeletionService {
 	constructor(private readonly deps: AdminUserDeletionServiceDeps) {}
 
@@ -86,7 +106,7 @@ export class AdminUserDeletionService {
 		adminUserId: UserID,
 		auditLogReason: string | null,
 	): Promise<User> {
-		const {users: userRepository, email: emailService} = this.deps.apiContext.services;
+		const {users: userRepository} = this.deps.apiContext.services;
 		const {auditService, updatePropagator} = this.deps;
 		const userId = createUserID(data.user_id);
 		const user = await userRepository.findUnique(userId);
@@ -186,6 +206,23 @@ export class AdminUserDeletionService {
 				);
 			}
 		}
+		const email = user.email;
+		const notificationTemplate = scheduledDeletionEmailTemplate(data.reason_code);
+		const notificationAttempted = Boolean(data.notify_user && email);
+		const notificationSent =
+			data.notify_user && email
+				? await trySendAdminNotification(
+						() =>
+							this.sendScheduledDeletionEmail(notificationTemplate, {
+								email,
+								username: user.username,
+								reason: data.public_reason ?? null,
+								deletionDate: pendingDeletionAt,
+								locale: user.locale,
+							}),
+						{action: 'schedule_deletion', targetId: userId.toString()},
+					)
+				: false;
 		await auditService.createAuditLog({
 			adminUserId,
 			targetType: 'user',
@@ -197,6 +234,9 @@ export class AdminUserDeletionService {
 				['reason_code', data.reason_code.toString()],
 				['pending_deletion_at', pendingDeletionAt.toISOString()],
 				...describePendingDeletion(user, 'replaced'),
+				['notify_user', data.notify_user ? 'true' : 'false'],
+				['notification_sent', notificationSent ? 'true' : 'false'],
+				...(notificationAttempted ? [['notification_template', notificationTemplate] as [string, string]] : []),
 			]),
 		});
 		let knownIps: ReadonlySet<string> = new Set();
@@ -206,23 +246,25 @@ export class AdminUserDeletionService {
 		}
 		await emitAdminAction(adminUserId, userId, 'schedule_deletion', {reasonCode: data.reason_code, ips: knownIps});
 		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
-		if (user.email) {
-			try {
-				await emailService.sendAccountScheduledForDeletionEmail(
-					user.email,
-					user.username,
-					data.public_reason ?? null,
-					pendingDeletionAt,
-					user.locale,
-				);
-			} catch (error) {
-				Logger.warn(
-					{error, userId: userId.toString()},
-					'Failed to send scheduled deletion email after the deletion was scheduled',
-				);
-			}
-		}
 		return updatedUser;
+	}
+
+	private sendScheduledDeletionEmail(
+		template: ScheduledDeletionEmailTemplate,
+		params: {email: string; username: string; reason: string | null; deletionDate: Date; locale: string | null},
+	): Promise<boolean> {
+		const {email: emailService} = this.deps.apiContext.services;
+		const {email, username, reason, deletionDate, locale} = params;
+		switch (template) {
+			case 'account_deletion_scheduled_requested':
+				return emailService.sendAccountDeletionRequestedEmail(email, username, reason, deletionDate, locale);
+			case 'account_deletion_scheduled_inactivity':
+				return emailService.sendAccountDeletionInactivityEmail(email, username, reason, deletionDate, locale);
+			case 'scheduled_deletion_notification':
+				return emailService.sendScheduledDeletionNotification(email, username, deletionDate, reason, locale);
+			case 'account_scheduled_deletion':
+				return emailService.sendAccountScheduledForDeletionEmail(email, username, reason, deletionDate, locale);
+		}
 	}
 
 	async cancelAccountDeletion(
@@ -261,9 +303,14 @@ export class AdminUserDeletionService {
 			deletionQueue: this.deps.kvDeletionQueue,
 		});
 		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
-		if (data.notify_user && user.email) {
-			await emailService.sendUnbanNotification(user.email, user.username, null, user.locale);
-		}
+		const email = user.email;
+		const notificationSent =
+			data.notify_user && email
+				? await trySendAdminNotification(
+						() => emailService.sendAccountDeletionCancelledEmail(email, user.username, user.locale),
+						{action: 'cancel_deletion', targetId: userId.toString()},
+					)
+				: false;
 		await auditService.createAuditLog({
 			adminUserId,
 			targetType: 'user',
@@ -273,6 +320,7 @@ export class AdminUserDeletionService {
 			metadata: new Map([
 				...describePendingDeletion(user, 'cancelled'),
 				['notify_user', data.notify_user ? 'true' : 'false'],
+				['notification_sent', notificationSent ? 'true' : 'false'],
 			]),
 		});
 		await emitAdminAction(adminUserId, userId, 'cancel_deletion');

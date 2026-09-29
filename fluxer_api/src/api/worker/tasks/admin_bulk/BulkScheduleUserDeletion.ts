@@ -13,6 +13,7 @@ interface Payload {
 	reason_code: ScheduleAccountDeletionRequest['reason_code'];
 	days_until_deletion: number;
 	public_reason: string | null;
+	notify_user: boolean;
 	admin_user_id: string;
 	audit_log_reason: string | null;
 }
@@ -23,6 +24,7 @@ const handler: WorkerTaskHandler = async (rawPayload, helpers) => {
 		reason_code: rawPayload.reason_code as ScheduleAccountDeletionRequest['reason_code'],
 		days_until_deletion: rawPayload.days_until_deletion as number,
 		public_reason: (rawPayload.public_reason as string | null) ?? null,
+		notify_user: rawPayload.notify_user !== false,
 		admin_user_id: rawPayload.admin_user_id as string,
 		audit_log_reason: (rawPayload.audit_log_reason as string | null) ?? null,
 	};
@@ -43,6 +45,7 @@ const handler: WorkerTaskHandler = async (rawPayload, helpers) => {
 					reason_code: payload.reason_code,
 					public_reason: payload.public_reason ?? undefined,
 					days_until_deletion: payload.days_until_deletion,
+					notify_user: payload.notify_user,
 				},
 				adminUserId,
 				payload.audit_log_reason,
@@ -57,6 +60,7 @@ const handler: WorkerTaskHandler = async (rawPayload, helpers) => {
 				['user_count', total.toString()],
 				['reason_code', payload.reason_code.toString()],
 				['days', daysUntilDeletion.toString()],
+				['notify_user', payload.notify_user ? 'true' : 'false'],
 			],
 		},
 	});

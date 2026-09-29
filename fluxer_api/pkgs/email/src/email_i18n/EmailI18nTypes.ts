@@ -1,6 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 export interface EmailTemplateVariables {
+	account_deletion_cancelled: {
+		username: string;
+	};
+	account_deletion_scheduled_inactivity: {
+		username: string;
+		reason: string | null;
+		deletionDate: Date;
+	};
+	account_deletion_scheduled_requested: {
+		username: string;
+		reason: string | null;
+		deletionDate: Date;
+	};
 	account_disabled_suspicious: {
 		username: string;
 		reason: string | null;
@@ -103,7 +116,7 @@ export interface EmailTemplateVariables {
 	scheduled_deletion_notification: {
 		username: string;
 		deletionDate: Date;
-		reason: string;
+		reason: string | null;
 	};
 	self_deletion_scheduled: {
 		username: string;

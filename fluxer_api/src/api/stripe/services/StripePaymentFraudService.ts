@@ -219,15 +219,6 @@ export class StripePaymentFraudService {
 				await this.deps.oauth2Tokens.deleteAllRefreshTokensForUser(userId);
 				await this.deps.userCacheService.setUserPartialResponseFromUser(updatedUser);
 				await this.dispatchUser(updatedUser);
-				if (updatedUser.email) {
-					await this.deps.emailService.sendScheduledDeletionNotification(
-						updatedUser.email,
-						updatedUser.username,
-						pendingDeletionAt,
-						auditReason,
-						updatedUser.locale,
-					);
-				}
 				const metadata = new Map<string, string>([
 					['days', '60'],
 					['source', source],
@@ -259,6 +250,19 @@ export class StripePaymentFraudService {
 					auditLogReason: auditReason,
 					metadata,
 				});
+				if (updatedUser.email) {
+					try {
+						await this.deps.emailService.sendScheduledDeletionNotification(
+							updatedUser.email,
+							updatedUser.username,
+							pendingDeletionAt,
+							updatedUser.deletionPublicReason ?? null,
+							updatedUser.locale,
+						);
+					} catch (error) {
+						Logger.warn({error, userId: userId.toString()}, 'Failed to send payment fraud deletion email');
+					}
+				}
 				Logger.info(
 					{
 						chargeId,

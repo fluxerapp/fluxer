@@ -3,6 +3,7 @@
 import type {ApiContext} from '@app/api/ApiContext';
 import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {trySendAdminNotification} from '@app/api/admin/services/AdminNotification';
 import type {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserUpdatePropagator';
 import * as AuthEmail from '@app/api/auth/AuthEmail';
 import * as AuthMfa from '@app/api/auth/AuthMfa';
@@ -508,16 +509,25 @@ export class AdminUserSecurityService {
 		);
 		await AuthSession.terminateAllUserSessions(this.deps.apiContext, userId);
 		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
-		if (user.email) {
-			await emailService.sendAccountDisabledForSuspiciousActivityEmail(user.email, user.username, null, user.locale);
-		}
+		const email = user.email;
+		const notificationSent =
+			data.notify_user && email
+				? await trySendAdminNotification(
+						() => emailService.sendAccountDisabledForSuspiciousActivityEmail(email, user.username, null, user.locale),
+						{action: 'disable_suspicious_activity', targetId: userId.toString()},
+					)
+				: false;
 		await auditService.createAuditLog({
 			adminUserId,
 			targetType: 'user',
 			targetId: BigInt(userId),
 			action: 'disable_suspicious_activity',
 			auditLogReason,
-			metadata: new Map([['flags', data.flags.toString()]]),
+			metadata: new Map([
+				['flags', data.flags.toString()],
+				['notify_user', data.notify_user ? 'true' : 'false'],
+				['notification_sent', notificationSent ? 'true' : 'false'],
+			]),
 		});
 		await emitAdminAction(adminUserId, userId, 'disable_suspicious');
 		return {

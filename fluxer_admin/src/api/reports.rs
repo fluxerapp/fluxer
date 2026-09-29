@@ -56,12 +56,14 @@ impl AdminApiClient {
         &self,
         report_id: &str,
         public_comment: Option<&str>,
+        notify_reporter: bool,
         audit_log_reason: Option<&str>,
     ) -> ApiResult<ResolveReportResponse> {
         let mut body = serde_json::json!({"status": "resolved"});
         if let Some(public_comment) = public_comment {
             body["public_comment"] = serde_json::Value::from(public_comment);
         }
+        body["notify_reporter"] = serde_json::Value::from(notify_reporter);
         self.patch_with_reason(
             &format!("/admin/reports/{}", urlencoding::encode(report_id)),
             Some(&body),

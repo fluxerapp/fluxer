@@ -3,6 +3,18 @@
 import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18nMessages';
 
 const EMAIL_I18N_PT_BR_MESSAGES = defineEmailI18nLocaleMessages({
+	"account_deletion_cancelled": {
+		"subject": "A exclusão da sua conta do {product_name} foi cancelada",
+		"body": "Olá, {username},\n\nA exclusão agendada da sua conta do {product_name} foi cancelada. Sua conta não será excluída.\n\nSe tiver alguma dúvida, entre em contato com {safety_email}.\n\n– Equipe do {product_name}"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "A sua conta do {product_name} será excluída devido à inatividade",
+		"body": "Olá, {username},\n\nSua conta do {product_name} está inativa há muito tempo, por isso está agendada para exclusão permanente em:\n\n{deletionDate, date, full} às {deletionDate, time, short}{reason, select, null {} other {\n\nMotivo: {reason}}}\n\nSe quiser manter sua conta, entre em contato com {safety_email} usando este endereço de e-mail antes dessa data.\n\n– Equipe do {product_name}"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "A exclusão da sua conta do {product_name} está agendada",
+		"body": "Olá, {username},\n\nConforme solicitado, sua conta do {product_name} está agendada para exclusão permanente em:\n\n{deletionDate, date, full} às {deletionDate, time, short}{reason, select, null {} other {\n\nMotivo: {reason}}}\n\nSua conta permanecerá bloqueada até lá. Se você não solicitou isso, ou se quiser manter sua conta, entre em contato com {safety_email} usando este endereço de e-mail antes dessa data.\n\n– Equipe do {product_name}"
+	},
 	"account_disabled_suspicious": {
 		"subject": "Sua conta do {product_name} foi desativada temporariamente",
 		"body": "Olá, {username},\n\nDesativamos temporariamente sua conta do {product_name} porque detectamos atividades suspeitas.\n\n{reason, select,\n  null {}\n  other {Motivo: {reason}}\n}\n\nPara acessar sua conta novamente, você precisará redefinir sua senha:\n\n{forgotUrl}\n\nDepois de redefinir sua senha, você poderá entrar novamente.\n\nSe você acredita que isso foi um erro, entre em contato com nossa equipe de suporte.\n\n– equipe de segurança do {product_name}"
@@ -65,7 +77,7 @@ const EMAIL_I18N_PT_BR_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"password_change_verification": {
 		"subject": "Confirme a alteração da senha da sua conta do {product_name}",
-		"body": "Olá, {username},\n\nRecebemos uma solicitação para alterar a senha da sua conta do {product_name}.\n\nPara confirmar esta alteração, insira este código no aplicativo:\n\n{code}\n\nEste código expira em {expiresAt}.\n\nSe você não solicitou isso, alguém pode ter acesso à sua conta. Altere sua senha imediatamente e ative a autenticação de dois fatores.\n\n– Equipe do {product_name}"
+		"body": "Olá, {username},\n\nRecebemos uma solicitação para alterar a senha da sua conta do {product_name}.\n\nPara confirmar esta alteração, insira este código no aplicativo:\n\n{code}\n\nEste código expira em {expiresAt, date, full} às {expiresAt, time, short}.\n\nSe você não solicitou isso, alguém pode ter acesso à sua conta. Altere sua senha imediatamente e ative a autenticação de dois fatores.\n\n– Equipe do {product_name}"
 	},
 	"password_reset": {
 		"subject": "Redefina a senha da sua conta do {product_name}",

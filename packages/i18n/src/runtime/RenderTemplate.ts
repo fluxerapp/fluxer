@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {I18nResult, TemplateCompiler} from '@fluxer/i18n/src/runtime/I18nTypes';
-import MessageFormat from '@messageformat/core';
+import MessageFormat, {type MessageFormatOptions} from '@messageformat/core';
 
 interface TemplateRenderOptions<TKey extends string, TValue, TVariables> {
 	key: TKey;
@@ -10,6 +10,7 @@ interface TemplateRenderOptions<TKey extends string, TValue, TVariables> {
 	variables: TVariables;
 	compile: TemplateCompiler<TValue, TVariables>;
 	messageFormatCache: Map<string, MessageFormat>;
+	messageFormatOptions?: MessageFormatOptions<'string'>;
 }
 
 export function renderTemplate<TKey extends string, TValue, TVariables>({
@@ -19,11 +20,12 @@ export function renderTemplate<TKey extends string, TValue, TVariables>({
 	variables,
 	compile,
 	messageFormatCache,
+	messageFormatOptions,
 }: TemplateRenderOptions<TKey, TValue, TVariables>): I18nResult<TKey, TValue> {
 	try {
 		let messageFormat = messageFormatCache.get(locale);
 		if (!messageFormat) {
-			messageFormat = new MessageFormat(locale);
+			messageFormat = new MessageFormat(locale, messageFormatOptions);
 			messageFormatCache.set(locale, messageFormat);
 		}
 		return {

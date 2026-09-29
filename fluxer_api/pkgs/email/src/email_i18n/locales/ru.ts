@@ -3,6 +3,18 @@
 import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18nMessages';
 
 const EMAIL_I18N_RU_MESSAGES = defineEmailI18nLocaleMessages({
+	"account_deletion_cancelled": {
+		"subject": "Удаление твоего аккаунта {product_name} отменено",
+		"body": "Привет, {username},\n\nЗапланированное удаление твоего аккаунта {product_name} отменено. Твой аккаунт не будет удалён.\n\nЕсли у тебя есть вопросы, напиши на {safety_email}.\n\n– Команда {product_name}"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "Твой аккаунт {product_name} будет удалён из-за неактивности",
+		"body": "Привет, {username},\n\nТвой аккаунт {product_name} долгое время был неактивен, поэтому его безвозвратное удаление запланировано на:\n\n{deletionDate, date, full} в {deletionDate, time, short}{reason, select, null {} other {\n\nПричина: {reason}}}\n\nЕсли хочешь сохранить аккаунт, напиши на {safety_email} с этого адреса электронной почты до этой даты.\n\n– Команда {product_name}"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "Запланировано удаление твоего аккаунта {product_name}",
+		"body": "Привет, {username},\n\nПо твоему запросу безвозвратное удаление аккаунта {product_name} запланировано на:\n\n{deletionDate, date, full} в {deletionDate, time, short}{reason, select, null {} other {\n\nПричина: {reason}}}\n\nДо этого момента твой аккаунт заблокирован. Если ты не запрашивал удаление или хочешь сохранить аккаунт, напиши на {safety_email} с этого адреса электронной почты до этой даты.\n\n– Команда {product_name}"
+	},
 	"account_disabled_suspicious": {
 		"subject": "Твой аккаунт {product_name} временно отключён",
 		"body": "Привет, {username},\n\nМы временно отключили твой аккаунт {product_name}, так как обнаружили подозрительную активность.\n\n{reason, select,\n  null {}\n  other {Причина: {reason}}\n}\n\nЧтобы восстановить доступ к аккаунту, тебе нужно сбросить пароль:\n\n{forgotUrl}\n\nПосле сброса пароля ты сможешь снова войти в аккаунт.\n\nЕсли ты считаешь, что это ошибка, пожалуйста, свяжись с нашей службой поддержки.\n\n– Команда безопасности {product_name}"
@@ -65,7 +77,7 @@ const EMAIL_I18N_RU_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"password_change_verification": {
 		"subject": "Подтверди смену пароля для {product_name}",
-		"body": "Привет, {username},\n\nМы получили запрос на изменение пароля твоего аккаунта {product_name}.\n\nЧтобы подтвердить это изменение, введи этот код в приложении:\n\n{code}\n\nСрок действия кода истекает {expiresAt}.\n\nЕсли ты не запрашивал это, возможно, кто-то получил доступ к твоему аккаунту. Немедленно смени пароль и включи двухфакторную аутентификацию.\n\n– Команда {product_name}"
+		"body": "Привет, {username},\n\nМы получили запрос на изменение пароля твоего аккаунта {product_name}.\n\nЧтобы подтвердить это изменение, введи этот код в приложении:\n\n{code}\n\nСрок действия кода истекает {expiresAt, date, full} в {expiresAt, time, short}.\n\nЕсли ты не запрашивал это, возможно, кто-то получил доступ к твоему аккаунту. Немедленно смени пароль и включи двухфакторную аутентификацию.\n\n– Команда {product_name}"
 	},
 	"password_reset": {
 		"subject": "Сбрось свой пароль для {product_name}",

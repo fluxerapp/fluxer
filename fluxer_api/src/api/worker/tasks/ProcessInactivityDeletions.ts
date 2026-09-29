@@ -16,6 +16,7 @@ import {mapWithConcurrency} from '@app/api/utils/ConcurrencyUtils';
 import {getWorkerDependencies} from '@app/api/worker/WorkerContext';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import {snowflakeToDate} from '@fluxer/snowflake/src/Snowflake';
 import type {IEmailService} from '@pkgs/email/src/IEmailService';
 import {TestEmailService} from '@pkgs/email/src/TestEmailService';
 import type {IKVProvider} from '@pkgs/kv_client/src/IKVProvider';
@@ -146,7 +147,7 @@ async function processUser(
 			user.email,
 			user.username,
 			deletionDate,
-			lastActivity || new Date(0),
+			lastActivity ?? snowflakeToDate(BigInt(userId)),
 			user.locale,
 		);
 		if (sent) {

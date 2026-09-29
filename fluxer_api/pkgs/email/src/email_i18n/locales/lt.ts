@@ -3,6 +3,18 @@
 import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18nMessages';
 
 const EMAIL_I18N_LT_MESSAGES = defineEmailI18nLocaleMessages({
+	"account_deletion_cancelled": {
+		"subject": "Tavo {product_name} paskyros ištrynimas atšauktas",
+		"body": "Sveiki, {username},\n\nNumatytas tavo {product_name} paskyros ištrynimas atšauktas. Tavo paskyra nebus ištrinta.\n\nJei turi klausimų, rašyk adresu {safety_email}.\n\n– {product_name} komanda"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "Tavo {product_name} paskyra bus ištrinta dėl neaktyvumo",
+		"body": "Sveiki, {username},\n\nTavo {product_name} paskyra ilgą laiką buvo neaktyvi, todėl ją numatyta visam laikui ištrinti:\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\nPriežastis: {reason}}}\n\nJei nori išsaugoti paskyrą, iki šios datos parašyk adresu {safety_email} iš šio el. pašto adreso.\n\n– {product_name} komanda"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "Tavo {product_name} paskyros ištrynimas numatytas",
+		"body": "Sveiki, {username},\n\nTavo prašymu {product_name} paskyrą numatyta visam laikui ištrinti:\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\nPriežastis: {reason}}}\n\nIki tol tavo paskyra užrakinta. Jei to neprašei arba nori išsaugoti paskyrą, iki šios datos parašyk adresu {safety_email} iš šio el. pašto adreso.\n\n– {product_name} komanda"
+	},
 	"account_disabled_suspicious": {
 		"subject": "Tavo {product_name} paskyra laikinai išjungta",
 		"body": "Sveiki, {username},\n\nLaikinai išjungėme tavo {product_name} paskyrą, nes aptikome įtartiną veiklą.\n\n{reason, select,\n  null {}\n  other {Priežastis: {reason}}\n}\n\nKad atgautum prieigą prie paskyros, turėsi iš naujo nustatyti slaptažodį:\n\n{forgotUrl}\n\nKai iš naujo nustatysi slaptažodį, galėsi vėl prisijungti.\n\nJei manai, kad tai įvyko per klaidą, susisiek su mūsų palaikymo komanda.\n\n– {product_name} saugos komanda"
@@ -65,7 +77,7 @@ const EMAIL_I18N_LT_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"password_change_verification": {
 		"subject": "Patvirtink savo {product_name} slaptažodžio keitimą",
-		"body": "Sveiki, {username},\n\nGavome prašymą pakeisti tavo {product_name} paskyros slaptažodį.\n\nKad patvirtintum šį pakeitimą, įvesk šį kodą programėlėje:\n\n{code}\n\nŠis kodas galioja iki {expiresAt}.\n\nJei to neprašei, kažkas gali turėti prieigą prie tavo paskyros. Nedelsiant pakeisk slaptažodį ir įjunk dviejų veiksnių autentifikavimą.\n\n– {product_name} komanda"
+		"body": "Sveiki, {username},\n\nGavome prašymą pakeisti tavo {product_name} paskyros slaptažodį.\n\nKad patvirtintum šį pakeitimą, įvesk šį kodą programėlėje:\n\n{code}\n\nŠis kodas galioja iki {expiresAt, date, full} {expiresAt, time, short}.\n\nJei to neprašei, kažkas gali turėti prieigą prie tavo paskyros. Nedelsiant pakeisk slaptažodį ir įjunk dviejų veiksnių autentifikavimą.\n\n– {product_name} komanda"
 	},
 	"password_reset": {
 		"subject": "Iš naujo nustatyk savo {product_name} slaptažodį",

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import crypto from 'node:crypto';
-import {createTestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {createTestAccount, findLastTestEmail, listTestEmails} from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {
@@ -498,6 +498,9 @@ describe('Stripe Webhook Dispute Events', () => {
 			expect(userAfterWin.has_deleted_flag).toBe(false);
 			expect(userAfterWin.deletion_reason_code).toBeNull();
 			expect(userAfterWin.pending_deletion_at).toBeNull();
+			const emails = await listTestEmails(harness, {recipient: purchaser.email});
+			expect(findLastTestEmail(emails, 'account_deletion_cancelled')).not.toBeNull();
+			expect(findLastTestEmail(emails, 'unban_notification')).toBeNull();
 		});
 		test('does not unsuspend when chargeback is lost', async () => {
 			const purchaser = await createTestAccount(harness);

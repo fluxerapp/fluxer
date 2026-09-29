@@ -3,6 +3,18 @@
 import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18nMessages';
 
 const EMAIL_I18N_PL_MESSAGES = defineEmailI18nLocaleMessages({
+	"account_deletion_cancelled": {
+		"subject": "Usunięcie Twojego konta {product_name} zostało anulowane",
+		"body": "Witaj {username},\n\nZaplanowane usunięcie Twojego konta {product_name} zostało anulowane. Twoje konto nie zostanie usunięte.\n\nJeśli masz pytania, skontaktuj się z {safety_email}.\n\n– Zespół {product_name}"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "Twoje konto {product_name} zostanie usunięte z powodu braku aktywności",
+		"body": "Witaj {username},\n\nTwoje konto {product_name} od dawna jest nieaktywne, dlatego zostało zaplanowane do trwałego usunięcia. Termin usunięcia:\n\n{deletionDate, date, full} o {deletionDate, time, short}{reason, select, null {} other {\n\nPowód: {reason}}}\n\nJeśli chcesz zachować konto, skontaktuj się z {safety_email} z tego adresu e-mail przed tym terminem.\n\n– Zespół {product_name}"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "Usunięcie Twojego konta {product_name} zostało zaplanowane",
+		"body": "Witaj {username},\n\nZgodnie z Twoją prośbą zaplanowaliśmy trwałe usunięcie konta {product_name}. Termin usunięcia:\n\n{deletionDate, date, full} o {deletionDate, time, short}{reason, select, null {} other {\n\nPowód: {reason}}}\n\nDo tego czasu Twoje konto jest zablokowane. Jeśli nie prosiłeś o to lub chcesz zachować konto, skontaktuj się z {safety_email} z tego adresu e-mail przed tym terminem.\n\n– Zespół {product_name}"
+	},
 	"account_disabled_suspicious": {
 		"subject": "Twoje konto {product_name} zostało tymczasowo wyłączone",
 		"body": "Witaj {username},\n\nTymczasowo wyłączyliśmy Twoje konto {product_name}, ponieważ wykryliśmy podejrzaną aktywność.\n\n{reason, select,\n  null {}\n  other {Powód: {reason}}\n}\n\nAby odzyskać dostęp do konta, musisz zresetować hasło:\n\n{forgotUrl}\n\nPo zresetowaniu hasła możesz ponownie się zalogować.\n\nJeśli uważasz, że to błąd, skontaktuj się z naszym zespołem wsparcia.\n\n– Zespół ds. bezpieczeństwa {product_name}"
@@ -65,7 +77,7 @@ const EMAIL_I18N_PL_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"password_change_verification": {
 		"subject": "Potwierdź zmianę hasła w {product_name}",
-		"body": "Witaj {username},\n\nOtrzymaliśmy prośbę o zmianę hasła do Twojego konta {product_name}.\n\nAby potwierdzić tę zmianę, wprowadź ten kod w aplikacji:\n\n{code}\n\nTen kod wygasa: {expiresAt}.\n\nJeśli nie prosiłeś o to, ktoś może mieć dostęp do Twojego konta. Natychmiast zmień hasło i włącz uwierzytelnianie dwuskładnikowe.\n\n– Zespół {product_name}"
+		"body": "Witaj {username},\n\nOtrzymaliśmy prośbę o zmianę hasła do Twojego konta {product_name}.\n\nAby potwierdzić tę zmianę, wprowadź ten kod w aplikacji:\n\n{code}\n\nTen kod wygasa {expiresAt, date, full} o {expiresAt, time, short}.\n\nJeśli nie prosiłeś o to, ktoś może mieć dostęp do Twojego konta. Natychmiast zmień hasło i włącz uwierzytelnianie dwuskładnikowe.\n\n– Zespół {product_name}"
 	},
 	"password_reset": {
 		"subject": "Zresetuj hasło w {product_name}",

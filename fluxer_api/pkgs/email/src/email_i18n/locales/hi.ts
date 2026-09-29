@@ -3,6 +3,18 @@
 import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18nMessages';
 
 const EMAIL_I18N_HI_MESSAGES = defineEmailI18nLocaleMessages({
+	"account_deletion_cancelled": {
+		"subject": "आपके {product_name} अकाउंट का डिलीशन रद्द कर दिया गया है",
+		"body": "नमस्ते {username},\n\nआपके {product_name} अकाउंट का शेड्यूल किया गया डिलीशन रद्द कर दिया गया है। आपका अकाउंट डिलीट नहीं किया जाएगा।\n\nअगर आपके कोई सवाल हैं, तो कृपया {safety_email} पर संपर्क करें।\n\n– {product_name} टीम"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "आपका {product_name} अकाउंट इनएक्टिविटी के कारण डिलीट कर दिया जाएगा",
+		"body": "नमस्ते {username},\n\nआपका {product_name} अकाउंट लंबे समय से इनएक्टिव है, इसलिए इसे हमेशा के लिए डिलीट करने के लिए शेड्यूल कर दिया गया है:\n\n{deletionDate, date, full} को {deletionDate, time, short} पर{reason, select, null {} other {\n\nवजह: {reason}}}\n\nअगर आप अपना अकाउंट रखना चाहते हैं, तो उस तारीख से पहले इसी ईमेल पते से {safety_email} पर संपर्क करें।\n\n– {product_name} टीम"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "आपके {product_name} अकाउंट का डिलीशन शेड्यूल कर दिया गया है",
+		"body": "नमस्ते {username},\n\nआपके अनुरोध के अनुसार, आपके {product_name} अकाउंट को हमेशा के लिए डिलीट करने के लिए शेड्यूल कर दिया गया है:\n\n{deletionDate, date, full} को {deletionDate, time, short} पर{reason, select, null {} other {\n\nवजह: {reason}}}\n\nतब तक आपका अकाउंट लॉक रहेगा। अगर आपने इसका अनुरोध नहीं किया था, या आप अपना अकाउंट रखना चाहते हैं, तो उस तारीख से पहले इसी ईमेल पते से {safety_email} पर संपर्क करें।\n\n– {product_name} टीम"
+	},
 	"account_disabled_suspicious": {
 		"subject": "आपका {product_name} अकाउंट अस्थायी रूप से डिसेबल कर दिया गया है",
 		"body": "नमस्ते {username},\n\nहमने आपके {product_name} अकाउंट को अस्थायी रूप से डिसेबल कर दिया है क्योंकि हमने संदिग्ध एक्टिविटी देखी है।\n\n{reason, select,\n  null {}\n  other {वजह: {reason}}\n}\n\nअपने अकाउंट का एक्सेस फिर से पाने के लिए, आपको अपना पासवर्ड रीसेट करना होगा:\n\n{forgotUrl}\n\nअपना पासवर्ड रीसेट करने के बाद, आप फिर से लॉगिन कर पाएँगे।\n\nअगर आपको लगता है कि यह गलती से हुआ है, तो कृपया हमारी सपोर्ट टीम से संपर्क करें।\n\n– {product_name} सेफ्टी टीम"
@@ -65,7 +77,7 @@ const EMAIL_I18N_HI_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"password_change_verification": {
 		"subject": "अपने {product_name} पासवर्ड में बदलाव की पुष्टि करें",
-		"body": "नमस्ते {username},\n\nहमें आपके {product_name} अकाउंट पर पासवर्ड बदलने का अनुरोध मिला है।\n\nइस बदलाव की पुष्टि करने के लिए, ऐप में यह कोड एंटर करें:\n\n{code}\n\nयह कोड {expiresAt} पर एक्सपायर हो जाएगा।\n\nअगर आपने इसका अनुरोध नहीं किया था, तो हो सकता है कि किसी और के पास आपके अकाउंट का एक्सेस हो। तुरंत अपना पासवर्ड बदलें और टू-फ़ैक्टर ऑथेंटिकेशन इनेबल करें।\n\n– {product_name} टीम"
+		"body": "नमस्ते {username},\n\nहमें आपके {product_name} अकाउंट पर पासवर्ड बदलने का अनुरोध मिला है।\n\nइस बदलाव की पुष्टि करने के लिए, ऐप में यह कोड एंटर करें:\n\n{code}\n\nयह कोड {expiresAt, date, full} को {expiresAt, time, short} पर एक्सपायर हो जाएगा।\n\nअगर आपने इसका अनुरोध नहीं किया था, तो हो सकता है कि किसी और के पास आपके अकाउंट का एक्सेस हो। तुरंत अपना पासवर्ड बदलें और टू-फ़ैक्टर ऑथेंटिकेशन इनेबल करें।\n\n– {product_name} टीम"
 	},
 	"password_reset": {
 		"subject": "अपना {product_name} पासवर्ड रीसेट करें",

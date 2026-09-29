@@ -40,6 +40,7 @@ import {
 	AdminUserSystemStatusRequest,
 	AdminUsersMeResponse,
 	AdminUserTraitsRequest,
+	AdminUserUnbanRequest,
 	AdminUserUsernameUpdateRequest,
 	AdminUserWebAuthnCredentialParam,
 	ListUserChangeLogResponseSchema,
@@ -825,7 +826,7 @@ export function UserAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Apply temporary ban to user account for specified duration, or permanently with a duration of zero. Prevents login and guild operations. Automatically lifts after expiry. Creates audit log entry. Requires USER_TEMP_BAN permission.',
+				'Apply temporary ban to user account for specified duration, or permanently with a duration of zero. Prevents login and guild operations. Automatically lifts after expiry. Creates audit log entry. Requires USER_TEMP_BAN permission. Emails the user for temporary bans unless notify_user is false. Permanent bans are never emailed.',
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
@@ -848,6 +849,7 @@ export function UserAdminController(app: HonoApp) {
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
 		requireAdminACL(AdminACLs.USER_TEMP_BAN),
 		Validator('param', UserIdParam),
+		Validator('json', AdminUserUnbanRequest),
 		OpenAPI({
 			operationId: 'unban_admin_user',
 			summary: 'Unban user',
@@ -856,7 +858,7 @@ export function UserAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Immediately remove temporary ban from user account. User can log in and access guilds again. Creates audit log entry. Requires USER_TEMP_BAN permission.',
+				'Immediately remove the ban from the user account. Emails the user only when notify_user is true, the ban was still in force and the account is not closed or pending deletion. The email shows public_reason and never the audit log reason. Creates audit log entry. Requires USER_TEMP_BAN permission.',
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
@@ -866,7 +868,7 @@ export function UserAdminController(app: HonoApp) {
 			const {user_id: userId} = ctx.req.valid('param');
 			return ctx.json(
 				await adminService.userService.banService.unbanUser(
-					{user_id: userId},
+					{user_id: userId, ...ctx.req.valid('json')},
 					adminUserId,
 					auditLogReason,
 					adminUserAcls,
@@ -912,7 +914,7 @@ export function UserAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Schedule user account for deletion after grace period. Account will be fully deleted with all content unless cancellation is executed. When a deletion is already scheduled, the request must name it in replace_pending_deletion_at or it returns 409. Records who scheduled the deletion. Creates audit log entry. Requires USER_DELETE permission.',
+				'Schedule user account for deletion after grace period. Account will be fully deleted with all content unless cancellation is executed. When a deletion is already scheduled, the request must name it in replace_pending_deletion_at or it returns 409. Records who scheduled the deletion. Creates audit log entry. Requires USER_DELETE permission. Emails the user unless notify_user is false. The email depends on reason_code: user requested and inactivity get neutral wording, other codes get enforcement wording with an appeal path.',
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
@@ -1237,7 +1239,7 @@ export function UserAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Disable user account due to suspicious activity or abuse. Account is locked pending review. User cannot access services. Creates audit log entry. Requires USER_DISABLE_SUSPICIOUS permission.',
+				'Disable user account due to suspicious activity or abuse. Account is locked pending review. User cannot access services. Emails the user unless notify_user is false. Creates audit log entry. Requires USER_DISABLE_SUSPICIOUS permission.',
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');

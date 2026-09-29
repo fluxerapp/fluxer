@@ -2,9 +2,15 @@
 
 import {AdminRepository} from '@app/api/admin/AdminRepository';
 import type {AdminAuditLog} from '@app/api/admin/IAdminRepository';
-import {createTestAccount, setUserACLs, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
+import {
+	clearTestEmails,
+	createTestAccount,
+	listTestEmails,
+	setUserACLs,
+	type TestAccount,
+} from '@app/api/auth/tests/AuthTestUtils';
 import {createReportID, createUserID} from '@app/api/BrandedTypes';
-import {getGatewayService, getSnowflakeService} from '@app/api/middleware/ServiceRegistry';
+import {getGatewayService, getSnowflakeService, setInjectedWorkerService} from '@app/api/middleware/ServiceRegistry';
 import {
 	createUserCacheService,
 	getAdminRepository,
@@ -26,6 +32,7 @@ import {clearWorkerDependencies, setWorkerDependenciesForTest} from '@app/api/wo
 import {DeletionReasons} from '@fluxer/constants/src/Core';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import type {WorkerTaskHelpers, WorkerTaskResult} from '@pkgs/worker/src/contracts/WorkerTask';
+import type {WorkerJobPayload} from '@pkgs/worker/src/contracts/WorkerTypes';
 import {afterEach, beforeEach, describe, expect, test} from 'vitest';
 
 interface ReportResponse {
@@ -70,6 +77,7 @@ async function runBulkJob(
 	userIds: Array<string>,
 	adminUserId: string,
 	reasonCode: number = DeletionReasons.SPAM,
+	extraPayload: Record<string, unknown> = {},
 ): Promise<BulkJobResult> {
 	installWorkerDependencies();
 	const result = (await bulkScheduleUserDeletion(
@@ -80,6 +88,7 @@ async function runBulkJob(
 			public_reason: null,
 			admin_user_id: adminUserId,
 			audit_log_reason: AUDIT_LOG_REASON,
+			...extraPayload,
 		},
 		createHelpers(),
 	)) as WorkerTaskResult;
@@ -211,6 +220,65 @@ describe('bulkScheduleUserDeletion', () => {
 		expect(await new AdminRepository().isEmailBanned(target.email)).toBe(false);
 		const perUserLogs = await listAuditLogs('schedule_deletion');
 		expect(perUserLogs.filter((log) => log.targetId === BigInt(target.userId))).toHaveLength(1);
+	});
+	test('a payload with notify_user false emails nobody and records it in the summary', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'bulk:delete:users']);
+		const first = await createTestAccount(harness);
+		const second = await createTestAccount(harness);
+		await clearTestEmails(harness);
+		const result = await runBulkJob([first.userId, second.userId], admin.userId, DeletionReasons.SPAM, {
+			notify_user: false,
+		});
+		expect(result.successful_count).toBe(2);
+		expect(await listTestEmails(harness, {recipient: first.email})).toEqual([]);
+		expect(await listTestEmails(harness, {recipient: second.email})).toEqual([]);
+		const perUserLogs = await listAuditLogs('schedule_deletion');
+		expect(perUserLogs.every((log) => log.metadata.get('notify_user') === 'false')).toBe(true);
+		const summaryLogs = await listAuditLogs('bulk_schedule_deletion');
+		expect(summaryLogs[0]!.metadata.get('notify_user')).toBe('false');
+	});
+	test('a payload queued without notify_user emails every user', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'bulk:delete:users']);
+		const first = await createTestAccount(harness);
+		const second = await createTestAccount(harness);
+		await clearTestEmails(harness);
+		const result = await runBulkJob([first.userId, second.userId], admin.userId);
+		expect(result.successful_count).toBe(2);
+		for (const target of [first, second]) {
+			const emails = await listTestEmails(harness, {recipient: target.email});
+			expect(emails.map((email) => email.type)).toEqual(['account_scheduled_deletion']);
+		}
+		const summaryLogs = await listAuditLogs('bulk_schedule_deletion');
+		expect(summaryLogs[0]!.metadata.get('notify_user')).toBe('true');
+	});
+	test('the bulk job route queues notify_user in the payload', async () => {
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'bulk:delete:users']);
+		const target = await createTestAccount(harness);
+		const queued: Array<{task: string; payload: WorkerJobPayload}> = [];
+		setInjectedWorkerService({
+			addJob: async (task, payload) => {
+				queued.push({task, payload});
+				return 1n;
+			},
+			cancelJob: async () => false,
+			retryDeadLetterJob: async () => false,
+		});
+		await createBuilder(harness, admin.token)
+			.post('/admin/bulk-jobs')
+			.body({
+				task: 'schedule_user_deletion',
+				user_ids: [target.userId],
+				reason_code: DeletionReasons.SPAM,
+				notify_user: false,
+			})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		expect(queued).toHaveLength(1);
+		expect(queued[0]!.task).toBe('bulkScheduleUserDeletion');
+		expect(queued[0]!.payload.notify_user).toBe(false);
 	});
 	test('leaves a deletion another admin already scheduled in place and reports the user as not scheduled', async () => {
 		const scheduler = await createTestAccount(harness);

@@ -1,4 +1,16 @@
 {
+	"account_deletion_cancelled": {
+		"subject": "Your {product_name} account is no longer scheduled for deletion",
+		"body": "Hello {username},\n\nThe scheduled deletion of your {product_name} account has been cancelled. Your account will not be deleted.\n\nIf you have any questions, contact {safety_email}.\n\n– {product_name} Team"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "Your {product_name} account will be deleted due to inactivity",
+		"body": "Hello {username},\n\nYour {product_name} account has been inactive for a long time, so it is scheduled for permanent deletion on:\n\n{deletionDate, date, full} at {deletionDate, time, short}{reason, select, null {} other {\n\nReason: {reason}}}\n\nIf you want to keep your account, contact {safety_email} from this email address before that date.\n\n– {product_name} Team"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "Your {product_name} account deletion is scheduled",
+		"body": "Hello {username},\n\nAs you requested, your {product_name} account is scheduled for permanent deletion on:\n\n{deletionDate, date, full} at {deletionDate, time, short}{reason, select, null {} other {\n\nReason: {reason}}}\n\nYour account is locked until then. If you didn't request this, or you want to keep your account, contact {safety_email} from this email address before that date.\n\n– {product_name} Team"
+	},
 	"account_disabled_suspicious": {
 		"subject": "Your {product_name} account has been temporarily disabled",
 		"body": "Hello {username},\n\nWe temporarily disabled your {product_name} account because we detected suspicious activity.\n\n{reason, select,\n  null {}\n  other {Reason: {reason}}\n}\n\nTo regain access to your account, you'll need to reset your password:\n\n{forgotUrl}\n\nAfter you reset your password, you'll be able to log in again.\n\nIf you believe this was done in error, please contact our support team.\n\n– {product_name} Safety Team"

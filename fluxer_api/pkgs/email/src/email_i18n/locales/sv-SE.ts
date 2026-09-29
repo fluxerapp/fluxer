@@ -3,6 +3,18 @@
 import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18nMessages';
 
 const EMAIL_I18N_SV_SE_MESSAGES = defineEmailI18nLocaleMessages({
+	"account_deletion_cancelled": {
+		"subject": "Raderingen av ditt {product_name}-konto har avbrutits",
+		"body": "Hej {username},\n\nDen schemalagda raderingen av ditt {product_name}-konto har avbrutits. Ditt konto kommer inte att raderas.\n\nOm du har några frågor, kontakta {safety_email}.\n\n– {product_name}-teamet"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "Ditt {product_name}-konto kommer att raderas på grund av inaktivitet",
+		"body": "Hej {username},\n\nDitt {product_name}-konto har varit inaktivt länge, så permanent radering av kontot är planerad till följande tidpunkt:\n\n{deletionDate, date, full} kl. {deletionDate, time, short}{reason, select, null {} other {\n\nAnledning: {reason}}}\n\nOm du vill behålla ditt konto, kontakta {safety_email} från den här e-postadressen före det datumet.\n\n– {product_name}-teamet"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "Raderingen av ditt {product_name}-konto är schemalagd",
+		"body": "Hej {username},\n\nSom du har begärt är permanent radering av ditt {product_name}-konto planerad till följande tidpunkt:\n\n{deletionDate, date, full} kl. {deletionDate, time, short}{reason, select, null {} other {\n\nAnledning: {reason}}}\n\nDitt konto är låst fram till dess. Om du inte begärde detta, eller om du vill behålla ditt konto, kontakta {safety_email} från den här e-postadressen före det datumet.\n\n– {product_name}-teamet"
+	},
 	"account_disabled_suspicious": {
 		"subject": "Ditt {product_name}-konto har tillfälligt inaktiverats",
 		"body": "Hej {username},\n\nVi har tillfälligt inaktiverat ditt {product_name}-konto eftersom vi upptäckte misstänkt aktivitet.\n\n{reason, select,\n  null {}\n  other {Anledning: {reason}}\n}\n\nFör att återfå åtkomst till ditt konto måste du återställa ditt lösenord:\n\n{forgotUrl}\n\nEfter att du har återställt ditt lösenord kan du logga in igen.\n\nOm du anser att detta har skett av misstag, kontakta vårt supportteam.\n\n– Säkerhetsteamet på {product_name}"
@@ -65,7 +77,7 @@ const EMAIL_I18N_SV_SE_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"password_change_verification": {
 		"subject": "Bekräfta ändringen av ditt lösenord på {product_name}",
-		"body": "Hej {username},\n\nVi har fått en begäran om att ändra lösenordet för ditt {product_name}-konto.\n\nBekräfta ändringen genom att ange den här koden i appen:\n\n{code}\n\nDen här koden upphör att gälla {expiresAt}.\n\nOm du inte begärde detta kan någon ha åtkomst till ditt konto. Ändra ditt lösenord omedelbart och aktivera tvåfaktorsautentisering.\n\n– {product_name}-teamet"
+		"body": "Hej {username},\n\nVi har fått en begäran om att ändra lösenordet för ditt {product_name}-konto.\n\nBekräfta ändringen genom att ange den här koden i appen:\n\n{code}\n\nDen här koden upphör att gälla {expiresAt, date, full} kl. {expiresAt, time, short}.\n\nOm du inte begärde detta kan någon ha åtkomst till ditt konto. Ändra ditt lösenord omedelbart och aktivera tvåfaktorsautentisering.\n\n– {product_name}-teamet"
 	},
 	"password_reset": {
 		"subject": "Återställ ditt lösenord på {product_name}",

@@ -261,12 +261,14 @@ pub(crate) async fn bulk_actions_post(
                 );
             };
             let public_reason = form.clean("public_reason");
+            let notify_user = form.opt_out_value("notify_user");
             client
                 .bulk_schedule_user_deletion(
                     &user_ids,
                     reason_code.unwrap_or(2),
                     days.unwrap_or(14),
                     public_reason.as_deref(),
+                    notify_user,
                     audit_log_reason.as_deref(),
                 )
                 .await

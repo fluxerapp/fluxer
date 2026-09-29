@@ -244,12 +244,14 @@ pub async fn dispatch(
             };
             let reason = get("reason");
             let private = get("private_reason");
+            let notify_user = form.opt_out_value("notify_user");
             DispatchOutcome::from_result(
                 client
                     .temp_ban_user(
                         user_id,
                         duration.unwrap_or(24),
                         reason.as_deref(),
+                        notify_user,
                         private.as_deref(),
                     )
                     .await,
@@ -257,11 +259,23 @@ pub async fn dispatch(
                 "Failed to temporarily ban user",
             )
         }
-        "unban" => DispatchOutcome::from_result(
-            client.unban_user(user_id).await,
-            "User unbanned successfully",
-            "Failed to unban user",
-        ),
+        "unban" => {
+            let public_reason = get("public_reason");
+            let private_reason = get("private_reason");
+            let notify_user = form.opt_out_value("notify_user");
+            DispatchOutcome::from_result(
+                client
+                    .unban_user(
+                        user_id,
+                        public_reason.as_deref(),
+                        notify_user,
+                        private_reason.as_deref(),
+                    )
+                    .await,
+                "User unbanned successfully",
+                "Failed to unban user",
+            )
+        }
         "ban_ip" => {
             let Some(ip) = get("ip") else {
                 return DispatchOutcome::error("IP address is required");
@@ -291,6 +305,7 @@ pub async fn dispatch(
             let Ok(days) = form.parse_value_any::<u32>(&["days_until_deletion", "days"]) else {
                 return DispatchOutcome::error("Invalid deletion delay");
             };
+            let notify_user = form.opt_out_value("notify_user");
             DispatchOutcome::from_result(
                 client
                     .schedule_deletion(
@@ -298,6 +313,7 @@ pub async fn dispatch(
                         reason_code.unwrap_or(0),
                         public_reason.as_deref(),
                         days.unwrap_or(60),
+                        notify_user,
                         private_reason.as_deref(),
                     )
                     .await,

@@ -5205,7 +5205,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Moves a report to the resolved status with an optional public comment shown to the reporter. Marks the report as handled, notifies the reporter, and creates an audit log entry. Requires REPORT_RESOLVE permission.",
+				"description": "Moves a report to the resolved status with an optional public comment shown to the reporter. Marks the report as handled, notifies the reporter by system DM and email unless notify_reporter is false, and creates an audit log entry. Requires REPORT_RESOLVE permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -5993,7 +5993,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Apply temporary ban to user account for specified duration, or permanently with a duration of zero. Prevents login and guild operations. Automatically lifts after expiry. Creates audit log entry. Requires USER_TEMP_BAN permission.",
+				"description": "Apply temporary ban to user account for specified duration, or permanently with a duration of zero. Prevents login and guild operations. Automatically lifts after expiry. Creates audit log entry. Requires USER_TEMP_BAN permission. Emails the user for temporary bans unless notify_user is false. Permanent bans are never emailed.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -6057,7 +6057,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Immediately remove temporary ban from user account. User can log in and access guilds again. Creates audit log entry. Requires USER_TEMP_BAN permission.",
+				"description": "Immediately remove the ban from the user account. Emails the user only when notify_user is true, the ban was still in force and the account is not closed or pending deletion. The email shows public_reason and never the audit log reason. Creates audit log entry. Requires USER_TEMP_BAN permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -6067,7 +6067,11 @@
 						"schema": {"description": "The ID of the user", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
 						"description": "The ID of the user"
 					}
-				]
+				],
+				"requestBody": {
+					"required": false,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminUserUnbanRequest"}}}
+				}
 			}
 		},
 		"/admin/users/{user_id}/ban/notes": {
@@ -6392,7 +6396,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Schedule user account for deletion after grace period. Account will be fully deleted with all content unless cancellation is executed. When a deletion is already scheduled, the request must name it in replace_pending_deletion_at or it returns 409. Records who scheduled the deletion. Creates audit log entry. Requires USER_DELETE permission.",
+				"description": "Schedule user account for deletion after grace period. Account will be fully deleted with all content unless cancellation is executed. When a deletion is already scheduled, the request must name it in replace_pending_deletion_at or it returns 409. Records who scheduled the deletion. Creates audit log entry. Requires USER_DELETE permission. Emails the user unless notify_user is false. The email depends on reason_code: user requested and inactivity get neutral wording, other codes get enforcement wording with an appeal path.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -7772,7 +7776,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Disable user account due to suspicious activity or abuse. Account is locked pending review. User cannot access services. Creates audit log entry. Requires USER_DISABLE_SUSPICIOUS permission.",
+				"description": "Disable user account due to suspicious activity or abuse. Account is locked pending review. User cannot access services. Emails the user unless notify_user is false. Creates audit log entry. Requires USER_DISABLE_SUSPICIOUS permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -9394,6 +9398,11 @@
 					"flags": {
 						"description": "Bitmask of suspicious activity flags that triggered the disable",
 						"allOf": [{"$ref": "#/components/schemas/SuspiciousActivityFlags"}]
+					},
+					"notify_user": {
+						"default": true,
+						"description": "Whether to email the user that the account was disabled",
+						"type": "boolean"
 					}
 				},
 				"required": ["flags"]
@@ -9806,6 +9815,11 @@
 						"type": "string",
 						"format": "date-time",
 						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+					},
+					"notify_user": {
+						"default": true,
+						"description": "Whether to email the user about the scheduled deletion",
+						"type": "boolean"
 					}
 				},
 				"required": ["reason_code"]
@@ -9860,6 +9874,20 @@
 				},
 				"required": ["ban_audit_log_id", "note"]
 			},
+			"AdminUserUnbanRequest": {
+				"type": "object",
+				"properties": {
+					"notify_user": {
+						"default": true,
+						"description": "Whether to email the user that the suspension was lifted",
+						"type": "boolean"
+					},
+					"public_reason": {
+						"description": "Reason shown to the user in the unban email. The audit log reason is never emailed",
+						"type": "string"
+					}
+				}
+			},
 			"AdminUserBanRequest": {
 				"type": "object",
 				"properties": {
@@ -9869,7 +9897,12 @@
 						"maximum": 8760,
 						"description": "Duration of the ban in hours. Use 0 for a permanent ban (until manually unbanned)."
 					},
-					"reason": {"description": "Reason for the temporary ban", "type": "string"}
+					"reason": {"description": "Reason shown to the user in the ban email", "type": "string"},
+					"notify_user": {
+						"default": true,
+						"description": "Whether to email the user about a temporary ban. Permanent bans (duration_hours 0) are never emailed",
+						"type": "boolean"
+					}
 				},
 				"required": ["duration_hours"]
 			},
@@ -10059,7 +10092,12 @@
 				"type": "object",
 				"properties": {
 					"status": {"type": "string", "enum": ["resolved"], "description": "The status to move the report to"},
-					"public_comment": {"description": "Public comment to include with the resolution", "type": "string"}
+					"public_comment": {"description": "Public comment to include with the resolution", "type": "string"},
+					"notify_reporter": {
+						"default": true,
+						"description": "Whether to notify the reporter by system DM and email",
+						"type": "boolean"
+					}
 				},
 				"required": ["status"]
 			},
@@ -12317,6 +12355,11 @@
 								"type": "integer",
 								"minimum": 1,
 								"maximum": 365
+							},
+							"notify_user": {
+								"default": true,
+								"description": "Whether to email the user about the scheduled deletion",
+								"type": "boolean"
 							},
 							"user_ids": {
 								"maxItems": 1000,

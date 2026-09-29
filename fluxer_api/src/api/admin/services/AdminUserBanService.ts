@@ -3,16 +3,22 @@
 import type {ApiContext} from '@app/api/ApiContext';
 import {mapUserToAdminResponse} from '@app/api/admin/models/UserTypes';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
+import {trySendAdminNotification} from '@app/api/admin/services/AdminNotification';
 import type {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserUpdatePropagator';
 import * as AuthSession from '@app/api/auth/AuthSession';
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import {emitAdminAction} from '@app/api/infrastructure/activity/AccountChangeEvents';
+import {isAccountClosed, isTemporarilyBanned} from '@app/api/user/UserHelpers';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
 import {ConflictError} from '@fluxer/errors/src/domains/core/ConflictError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
-import type {AdminUserBanNoteRequest, TempBanUserRequest} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
+import type {
+	AdminUserBanNoteRequest,
+	AdminUserUnbanRequest,
+	TempBanUserRequest,
+} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 
 interface AdminUserBanServiceDeps {
 	apiContext: ApiContext;
@@ -52,16 +58,22 @@ export class AdminUserBanService {
 		);
 		await AuthSession.terminateAllUserSessions(this.deps.apiContext, userId);
 		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
-		if (user.email && data.duration_hours > 0) {
-			await emailService.sendAccountTempBannedEmail(
-				user.email,
-				user.username,
-				data.reason ?? null,
-				data.duration_hours,
-				tempBannedUntil,
-				user.locale,
-			);
-		}
+		const email = user.email;
+		const notificationSent =
+			data.notify_user && email && data.duration_hours > 0
+				? await trySendAdminNotification(
+						() =>
+							emailService.sendAccountTempBannedEmail(
+								email,
+								user.username,
+								data.reason ?? null,
+								data.duration_hours,
+								tempBannedUntil,
+								user.locale,
+							),
+						{action: 'temp_ban', targetId: userId.toString()},
+					)
+				: false;
 		await auditService.createAuditLog({
 			adminUserId,
 			targetType: 'user',
@@ -72,6 +84,8 @@ export class AdminUserBanService {
 				['duration_hours', data.duration_hours.toString()],
 				['reason', data.reason ?? 'null'],
 				['banned_until', tempBannedUntil.toISOString()],
+				['notify_user', data.notify_user ? 'true' : 'false'],
+				['notification_sent', notificationSent ? 'true' : 'false'],
 			]),
 		});
 		await emitAdminAction(adminUserId, userId, 'temp_ban', {durationHours: data.duration_hours});
@@ -118,9 +132,7 @@ export class AdminUserBanService {
 	}
 
 	async unbanUser(
-		data: {
-			user_id: bigint;
-		},
+		data: AdminUserUnbanRequest & {user_id: bigint},
 		adminUserId: UserID,
 		auditLogReason: string | null,
 		acls: ReadonlySet<string>,
@@ -132,6 +144,7 @@ export class AdminUserBanService {
 		if (!user) {
 			throw new UnknownUserError();
 		}
+		const wasTempBanned = isTemporarilyBanned(user) && !isAccountClosed(user);
 		const updatedUser = await userRepository.patchUpsert(
 			userId,
 			{
@@ -141,16 +154,25 @@ export class AdminUserBanService {
 			user.toRow(),
 		);
 		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
-		if (user.email) {
-			await emailService.sendUnbanNotification(user.email, user.username, auditLogReason || null, user.locale);
-		}
+		const email = user.email;
+		const notificationSent =
+			data.notify_user && email && wasTempBanned
+				? await trySendAdminNotification(
+						() => emailService.sendUnbanNotification(email, user.username, data.public_reason ?? null, user.locale),
+						{action: 'unban', targetId: userId.toString()},
+					)
+				: false;
 		await auditService.createAuditLog({
 			adminUserId,
 			targetType: 'user',
 			targetId: BigInt(userId),
 			action: 'unban',
 			auditLogReason,
-			metadata: new Map(),
+			metadata: new Map([
+				['notify_user', data.notify_user ? 'true' : 'false'],
+				['notification_sent', notificationSent ? 'true' : 'false'],
+				['public_reason', data.public_reason ?? 'null'],
+			]),
 		});
 		await emitAdminAction(adminUserId, userId, 'unban');
 		return {

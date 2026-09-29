@@ -2,6 +2,7 @@
 
 import crypto from 'node:crypto';
 import {AdminRepository} from '@app/api/admin/AdminRepository';
+import {findLastTestEmail, listTestEmails} from '@app/api/auth/tests/AuthTestUtils';
 import {createApplicationID, createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
@@ -174,6 +175,12 @@ describe('Stripe Webhook Early Fraud Warning', () => {
 		expect(matchingLogs[0]!.auditLogReason).toContain('Stripe early fraud warning');
 		expect(matchingLogs[0]!.metadata.get('days')).toBe('60');
 		expect(matchingLogs[0]!.metadata.get('charge_id')).toBe(chargeId);
+		const email = findLastTestEmail(
+			await listTestEmails(harness, {recipient: account.email}),
+			'scheduled_deletion_notification',
+		);
+		expect(email?.metadata.reason).toBe('Payment fraud');
+		expect(JSON.stringify(email)).not.toContain('made_with_stolen_card');
 	});
 	test('does nothing for non-actionable early fraud warnings', async () => {
 		const chargeId = 'ch_test_efw_noop';

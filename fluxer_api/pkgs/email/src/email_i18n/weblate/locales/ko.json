@@ -1,4 +1,16 @@
 {
+	"account_deletion_cancelled": {
+		"subject": "{product_name} 계정 삭제 예정이 취소되었어요",
+		"body": "안녕하세요, {username}님.\n\n{product_name} 계정의 삭제 예정이 취소되었어요. 계정은 삭제되지 않아요.\n\n궁금한 점이 있다면 {safety_email}으로 문의해 주세요.\n\n– {product_name} 팀"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "장기간 미접속으로 {product_name} 계정이 삭제될 예정이에요",
+		"body": "안녕하세요, {username}님.\n\n{product_name} 계정이 오랫동안 사용되지 않아 다음 날짜에 영구적으로 삭제될 예정이에요:\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n사유: {reason}}}\n\n계정을 유지하고 싶다면 해당 날짜 전에 이 이메일 주소에서 {safety_email}으로 문의해 주세요.\n\n– {product_name} 팀"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "{product_name} 계정 삭제가 예정되었어요",
+		"body": "안녕하세요, {username}님.\n\n요청하신 대로 {product_name} 계정이 다음 날짜에 영구적으로 삭제될 예정이에요:\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n사유: {reason}}}\n\n그때까지 계정은 잠겨 있어요. 요청하지 않으셨거나 계정을 유지하고 싶다면 해당 날짜 전에 이 이메일 주소에서 {safety_email}으로 문의해 주세요.\n\n– {product_name} 팀"
+	},
 	"account_disabled_suspicious": {
 		"subject": "{product_name} 계정이 일시적으로 비활성화되었어요",
 		"body": "안녕하세요, {username}님.\n\n의심스러운 활동이 감지되어 {product_name} 계정을 일시적으로 비활성화했어요.\n\n{reason, select,\n  null {}\n  other {사유: {reason}}\n}\n\n계정에 다시 액세스하려면 비밀번호를 재설정해야 해요:\n\n{forgotUrl}\n\n비밀번호를 재설정한 후 다시 로그인할 수 있어요.\n\n실수로 비활성화되었다고 생각되면 고객지원팀에 문의해 주세요.\n\n– {product_name} 안전팀"
@@ -61,7 +73,7 @@
 	},
 	"password_change_verification": {
 		"subject": "{product_name} 비밀번호 변경 확인",
-		"body": "안녕하세요, {username}님.\n\n{product_name} 계정의 비밀번호 변경 요청이 접수되었어요.\n\n이 변경을 확인하려면 앱에 이 코드를 입력해 주세요:\n\n{code}\n\n이 코드는 {expiresAt}에 만료돼요.\n\n요청하지 않으셨다면 누군가 계정에 액세스했을 수 있어요. 즉시 비밀번호를 변경하고 2단계 인증을 활성화하세요.\n\n– {product_name} 팀"
+		"body": "안녕하세요, {username}님.\n\n{product_name} 계정의 비밀번호 변경 요청이 접수되었어요.\n\n이 변경을 확인하려면 앱에 이 코드를 입력해 주세요:\n\n{code}\n\n이 코드는 {expiresAt, date, full} {expiresAt, time, short}에 만료돼요.\n\n요청하지 않으셨다면 누군가 계정에 액세스했을 수 있어요. 즉시 비밀번호를 변경하고 2단계 인증을 활성화하세요.\n\n– {product_name} 팀"
 	},
 	"password_reset": {
 		"subject": "{product_name} 비밀번호 재설정",

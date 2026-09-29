@@ -86,6 +86,7 @@ async function queueBulkJob(
 					reason_code: body.reason_code,
 					days_until_deletion: body.days_until_deletion,
 					public_reason: body.public_reason ?? null,
+					notify_user: body.notify_user,
 					admin_user_id: adminUserId.toString(),
 					audit_log_reason: auditLogReason,
 				},

@@ -109,6 +109,54 @@ export function extractMessageTemplateVariables(template: string): Set<string> {
 	return variables;
 }
 
+function collectMessageTemplatePlaceholders(tokens: ReadonlyArray<Token>, placeholders: Set<string>): void {
+	for (const token of tokens) {
+		switch (token.type) {
+			case 'argument': {
+				placeholders.add(token.arg);
+				break;
+			}
+			case 'function': {
+				const param = (token.param ?? [])
+					.map((paramToken) => (paramToken.type === 'content' ? paramToken.value : ''))
+					.join('')
+					.trim();
+				placeholders.add(`${token.arg},${token.key},${param}`);
+				if (token.param) {
+					collectMessageTemplatePlaceholders(token.param, placeholders);
+				}
+				break;
+			}
+			case 'select': {
+				const keys = token.cases.map((selectCase) => selectCase.key).sort();
+				placeholders.add(`${token.arg},select[${keys.join(',')}]`);
+				for (const selectCase of token.cases) {
+					collectMessageTemplatePlaceholders(selectCase.tokens, placeholders);
+				}
+				break;
+			}
+			case 'plural':
+			case 'selectordinal': {
+				placeholders.add(`${token.arg},plural`);
+				for (const selectCase of token.cases) {
+					collectMessageTemplatePlaceholders(selectCase.tokens, placeholders);
+				}
+				break;
+			}
+			case 'content':
+			case 'octothorpe': {
+				break;
+			}
+		}
+	}
+}
+
+export function extractMessageTemplatePlaceholders(template: string): Array<string> {
+	const placeholders = new Set<string>();
+	collectMessageTemplatePlaceholders(parse(template), placeholders);
+	return [...placeholders].sort();
+}
+
 export function validateMessageTemplateVariables(
 	template: string,
 	variables: Record<string, unknown> | undefined,

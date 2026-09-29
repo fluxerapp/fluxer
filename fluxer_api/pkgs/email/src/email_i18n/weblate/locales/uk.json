@@ -1,4 +1,16 @@
 {
+	"account_deletion_cancelled": {
+		"subject": "Видалення твого акаунта {product_name} скасовано",
+		"body": "Привіт, {username},\n\nЗаплановане видалення твого акаунта {product_name} скасовано. Твій акаунт не буде видалено.\n\nЯкщо у тебе є запитання, напиши на {safety_email}.\n\n– Команда {product_name}"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "Твій акаунт {product_name} буде видалено через неактивність",
+		"body": "Привіт, {username},\n\nТвій акаунт {product_name} тривалий час був неактивним, тому його остаточне видалення заплановано на:\n\n{deletionDate, date, full} о {deletionDate, time, short}{reason, select, null {} other {\n\nПричина: {reason}}}\n\nЯкщо хочеш зберегти акаунт, напиши на {safety_email} з цієї електронної адреси до цієї дати.\n\n– Команда {product_name}"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "Видалення акаунта {product_name} заплановано",
+		"body": "Привіт, {username},\n\nНа твій запит остаточне видалення акаунта {product_name} заплановано на:\n\n{deletionDate, date, full} о {deletionDate, time, short}{reason, select, null {} other {\n\nПричина: {reason}}}\n\nДо того часу твій акаунт заблоковано. Якщо цей запит не від тебе або ти хочеш зберегти акаунт, напиши на {safety_email} з цієї електронної адреси до цієї дати.\n\n– Команда {product_name}"
+	},
 	"account_disabled_suspicious": {
 		"subject": "Твій акаунт {product_name} тимчасово деактивовано",
 		"body": "Привіт, {username},\n\nМи тимчасово деактивували твій акаунт {product_name}, оскільки виявили підозрілу активність.\n\n{reason, select,\n  null {}\n  other {Причина: {reason}}\n}\n\nЩоб відновити доступ до акаунта, тобі потрібно скинути пароль:\n\n{forgotUrl}\n\nПісля скидання пароля ти зможеш знову увійти.\n\nЯкщо ти вважаєш, що це помилка, будь ласка, зв'яжися з нашою службою підтримки.\n\n– Команда безпеки {product_name}"
@@ -61,7 +73,7 @@
 	},
 	"password_change_verification": {
 		"subject": "Підтвердь зміну пароля для {product_name}",
-		"body": "Привіт, {username},\n\nМи отримали запит на зміну пароля для твого акаунта {product_name}.\n\nЩоб підтвердити цю зміну, введи цей код у застосунку:\n\n{code}\n\nЦей код діє до {expiresAt}.\n\nЯкщо цей запит не від тебе, хтось може мати доступ до твого акаунта. Негайно зміни свій пароль та увімкни двофакторну автентифікацію.\n\n– Команда {product_name}"
+		"body": "Привіт, {username},\n\nМи отримали запит на зміну пароля для твого акаунта {product_name}.\n\nЩоб підтвердити цю зміну, введи цей код у застосунку:\n\n{code}\n\nЦей код діє до {expiresAt, date, full} о {expiresAt, time, short}.\n\nЯкщо цей запит не від тебе, хтось може мати доступ до твого акаунта. Негайно зміни свій пароль та увімкни двофакторну автентифікацію.\n\n– Команда {product_name}"
 	},
 	"password_reset": {
 		"subject": "Скинь свій пароль для {product_name}",

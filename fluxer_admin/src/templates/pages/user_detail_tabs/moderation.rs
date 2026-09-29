@@ -8,7 +8,9 @@ use crate::{
     },
     config::AdminConfig,
     templates::components::{
-        form::{checkbox, csrf_input, danger_button, form_actions, submit_button},
+        form::{
+            checkbox, csrf_input, danger_button, form_actions, opt_out_checkbox, submit_button,
+        },
         page_container::card_with_header,
     },
     utils::timestamps::format_admin_timestamp,
@@ -142,9 +144,26 @@ fn ban_actions_card(
                 form method="post"
                     action={(base) "/users/" (user.id) "?action=unban&tab=moderation"} {
                     (csrf_input(csrf_token))
-                    (form_actions(html! {
-                        (submit_button("Unban User"))
-                    }))
+                    div class="space-y-3" {
+                        (form_label("Public Reason (optional, shown to the user)"))
+                        input type="text" name="public_reason"
+                            placeholder="Enter public unban reason..." maxlength="512"
+                            class="block w-full rounded-md border border-neutral-300 \
+                                   px-3 py-2 text-sm shadow-sm \
+                                   focus:border-brand-primary focus:outline-none \
+                                   focus:ring-1 focus:ring-brand-primary";
+                        (form_label("Private Reason (optional, audit log)"))
+                        input type="text" name="private_reason"
+                            placeholder="Enter private unban reason (audit log)..."
+                            class="block w-full rounded-md border border-neutral-300 \
+                                   px-3 py-2 text-sm shadow-sm \
+                                   focus:border-brand-primary focus:outline-none \
+                                   focus:ring-1 focus:ring-brand-primary";
+                        (opt_out_checkbox("notify_user", "Email the user that the suspension was lifted"))
+                        (form_actions(html! {
+                            (submit_button("Unban User"))
+                        }))
+                    }
                 }
             } @else {
                 form method="post"
@@ -163,7 +182,7 @@ fn ban_actions_card(
                         }
                         (form_label("Public Reason (optional)"))
                         input type="text" name="reason"
-                            placeholder="Enter public ban reason..."
+                            placeholder="Enter public ban reason..." maxlength="512"
                             class="block w-full rounded-md border border-neutral-300 \
                                    px-3 py-2 text-sm shadow-sm \
                                    focus:border-brand-primary focus:outline-none \
@@ -175,6 +194,7 @@ fn ban_actions_card(
                                    px-3 py-2 text-sm shadow-sm \
                                    focus:border-brand-primary focus:outline-none \
                                    focus:ring-1 focus:ring-brand-primary";
+                        (opt_out_checkbox("notify_user", "Email the user about this suspension (temporary bans only)"))
                         (form_actions(html! {
                             (submit_button("Ban/Suspend User"))
                         }))
@@ -365,7 +385,7 @@ fn deletion_card(
                         }
                         (form_label("Public Reason (optional)"))
                         input type="text" name="public_reason"
-                            placeholder="Enter public reason..."
+                            placeholder="Enter public reason..." maxlength="512"
                             class="block w-full rounded-md border border-neutral-300 \
                                    px-3 py-2 text-sm shadow-sm \
                                    focus:border-brand-primary focus:outline-none \
@@ -377,6 +397,7 @@ fn deletion_card(
                                    px-3 py-2 text-sm shadow-sm \
                                    focus:border-brand-primary focus:outline-none \
                                    focus:ring-1 focus:ring-brand-primary";
+                        (opt_out_checkbox("notify_user", "Email the user about the scheduled deletion"))
                         (form_actions(html! {
                             (submit_button("Schedule Deletion"))
                         }))
@@ -776,6 +797,33 @@ mod tests {
         assert!(markup.contains(r#"<option value="" disabled selected>Choose a reason</option>"#));
         assert!(!markup.contains(r#"<option value="1" selected>"#));
         assert!(!markup.contains("replace_pending_deletion_at"));
+    }
+
+    #[test]
+    fn schedule_form_emails_the_user_by_default() {
+        let markup = deletion_card("/admin", &user(json!({})), "csrf", None).into_string();
+        assert!(markup.contains(r#"name="notify_user" value="true" checked"#));
+        assert!(markup.contains(r#"name="notify_user_present" value="1""#));
+    }
+
+    #[test]
+    fn temp_ban_form_emails_the_user_by_default() {
+        let markup = ban_actions_card("/admin", &user(json!({})), "csrf", None).into_string();
+        assert!(markup.contains(r#"name="notify_user" value="true" checked"#));
+        assert!(markup.contains(r#"name="notify_user_present" value="1""#));
+    }
+
+    #[test]
+    fn unban_form_separates_the_public_and_private_reasons() {
+        let target = user(json!({"temp_banned_until": "2026-10-01T00:00:00.000Z"}));
+        let markup = ban_actions_card("/admin", &target, "csrf", None).into_string();
+        assert!(markup.contains("?action=unban&amp;tab=moderation"));
+        assert!(markup.contains(r#"name="notify_user" value="true" checked"#));
+        assert!(markup.contains(r#"name="notify_user_present" value="1""#));
+        assert!(markup.contains(
+            r#"name="public_reason" placeholder="Enter public unban reason..." maxlength="512""#
+        ));
+        assert!(markup.contains(r#"name="private_reason""#));
     }
 
     #[test]

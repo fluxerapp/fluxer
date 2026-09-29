@@ -1,4 +1,16 @@
 {
+	"account_deletion_cancelled": {
+		"subject": "Dein {product_name}-Account ist nicht mehr zur Löschung vorgemerkt",
+		"body": "Hallo {username},\n\ndie geplante Löschung deines {product_name}-Accounts wurde abgebrochen. Dein Account wird nicht gelöscht.\n\nWenn du Fragen hast, kontaktiere {safety_email}.\n\n– {product_name}-Team"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "Dein {product_name}-Account wird wegen Inaktivität gelöscht",
+		"body": "Hallo {username},\n\ndein {product_name}-Account war lange inaktiv und wird deshalb an folgendem Termin dauerhaft gelöscht:\n\n{deletionDate, date, full} um {deletionDate, time, short}{reason, select, null {} other {\n\nGrund: {reason}}}\n\nWenn du deinen Account behalten möchtest, kontaktiere vor diesem Termin {safety_email} von dieser E-Mail-Adresse aus.\n\n– {product_name}-Team"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "Die Löschung deines {product_name}-Accounts ist geplant",
+		"body": "Hallo {username},\n\nwie von dir beantragt, wird dein {product_name}-Account an folgendem Termin dauerhaft gelöscht:\n\n{deletionDate, date, full} um {deletionDate, time, short}{reason, select, null {} other {\n\nGrund: {reason}}}\n\nDein Account ist bis dahin gesperrt. Wenn du das nicht beantragt hast oder deinen Account behalten möchtest, kontaktiere vor diesem Termin {safety_email} von dieser E-Mail-Adresse aus.\n\n– {product_name}-Team"
+	},
 	"account_disabled_suspicious": {
 		"subject": "Dein {product_name}-Account wurde vorübergehend deaktiviert",
 		"body": "Hallo {username},\n\nwir haben deinen {product_name}-Account vorübergehend deaktiviert, da wir verdächtige Aktivitäten festgestellt haben.\n\n{reason, select,\n  null {}\n  other {Grund: {reason}}\n}\n\nUm wieder Zugriff auf deinen Account zu erhalten, musst du dein Passwort zurücksetzen:\n\n{forgotUrl}\n\nNachdem du dein Passwort zurückgesetzt hast, kannst du dich wieder anmelden.\n\nWenn du glaubst, dass dies ein Fehler war, kontaktiere bitte unser Support-Team.\n\n– {product_name}-Sicherheitsteam"
@@ -61,7 +73,7 @@
 	},
 	"password_change_verification": {
 		"subject": "Bestätige deine {product_name}-Passwortänderung",
-		"body": "Hallo {username},\n\nwir haben eine Anfrage zur Änderung des Passworts deines {product_name}-Accounts erhalten.\n\nUm diese Änderung zu bestätigen, gib diesen Code in der App ein:\n\n{code}\n\nDieser Code läuft um {expiresAt} ab.\n\nWenn du diese Änderung nicht angefordert hast, könnte jemand Zugriff auf deinen Account haben. Ändere dein Passwort sofort und aktiviere die Zwei-Faktor-Authentifizierung.\n\n– {product_name}-Team"
+		"body": "Hallo {username},\n\nwir haben eine Anfrage zur Änderung des Passworts deines {product_name}-Accounts erhalten.\n\nUm diese Änderung zu bestätigen, gib diesen Code in der App ein:\n\n{code}\n\nDieser Code läuft am {expiresAt, date, full} um {expiresAt, time, short} ab.\n\nWenn du diese Änderung nicht angefordert hast, könnte jemand Zugriff auf deinen Account haben. Ändere dein Passwort sofort und aktiviere die Zwei-Faktor-Authentifizierung.\n\n– {product_name}-Team"
 	},
 	"password_reset": {
 		"subject": "Setze dein {product_name}-Passwort zurück",

@@ -1,4 +1,16 @@
 {
+	"account_deletion_cancelled": {
+		"subject": "Изтриването на акаунта ти във {product_name} е отменено",
+		"body": "Здравей, {username},\n\nНасроченото изтриване на акаунта ти във {product_name} е отменено. Акаунтът ти няма да бъде изтрит.\n\nАко имаш въпроси, свържи се с {safety_email}.\n\n– Екип на {product_name}"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "Акаунтът ти във {product_name} ще бъде изтрит поради неактивност",
+		"body": "Здравей, {username},\n\nАкаунтът ти във {product_name} е неактивен от дълго време, затова е насрочен за постоянно изтриване на:\n\n{deletionDate, date, full} в {deletionDate, time, short}{reason, select, null {} other {\n\nПричина: {reason}}}\n\nАко искаш да запазиш акаунта си, свържи се с {safety_email} от този имейл адрес преди тази дата.\n\n– Екип на {product_name}"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "Изтриването на акаунта ти във {product_name} е насрочено",
+		"body": "Здравей, {username},\n\nКакто поиска, акаунтът ти във {product_name} е насрочен за постоянно изтриване на:\n\n{deletionDate, date, full} в {deletionDate, time, short}{reason, select, null {} other {\n\nПричина: {reason}}}\n\nДотогава акаунтът ти е заключен. Ако не си поискал това или искаш да запазиш акаунта си, свържи се с {safety_email} от този имейл адрес преди тази дата.\n\n– Екип на {product_name}"
+	},
 	"account_disabled_suspicious": {
 		"subject": "Акаунтът ти във {product_name} е временно деактивиран",
 		"body": "Здравей, {username},\n\nВременно деактивирахме акаунта ти във {product_name}, защото открихме подозрителна активност.\n\n{reason, select,\n  null {}\n  other {Причина: {reason}}\n}\n\nЗа да възстановиш достъпа до акаунта си, трябва да нулираш паролата си:\n\n{forgotUrl}\n\nСлед като нулираш паролата си, ще можеш да влезеш отново.\n\nАко смяташ, че това е грешка, свържи се с нашия екип за поддръжка.\n\n– Екип за безопасност на {product_name}"
@@ -61,7 +73,7 @@
 	},
 	"password_change_verification": {
 		"subject": "Потвърди промяната на паролата си във {product_name}",
-		"body": "Здравей, {username},\n\nПолучихме искане за промяна на паролата на акаунта ти във {product_name}.\n\nЗа да потвърдиш тази промяна, въведи този код в приложението:\n\n{code}\n\nТози код изтича в {expiresAt}.\n\nАко не си го поискал, някой може да има достъп до акаунта ти. Смени паролата си незабавно и активирай двуфакторно удостоверяване.\n\n– Екип на {product_name}"
+		"body": "Здравей, {username},\n\nПолучихме искане за промяна на паролата на акаунта ти във {product_name}.\n\nЗа да потвърдиш тази промяна, въведи този код в приложението:\n\n{code}\n\nТози код изтича на {expiresAt, date, full} в {expiresAt, time, short}.\n\nАко не си го поискал, някой може да има достъп до акаунта ти. Смени паролата си незабавно и активирай двуфакторно удостоверяване.\n\n– Екип на {product_name}"
 	},
 	"password_reset": {
 		"subject": "Нулирай паролата си във {product_name}",

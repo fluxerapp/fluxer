@@ -3,6 +3,18 @@
 import {defineEmailI18nLocaleMessages} from '@pkgs/email/src/email_i18n/EmailI18nMessages';
 
 const EMAIL_I18N_JA_MESSAGES = defineEmailI18nLocaleMessages({
+	"account_deletion_cancelled": {
+		"subject": "{product_name}アカウントの削除予定は取り消されました",
+		"body": "こんにちは、{username}さん\n\n{product_name}アカウントの削除予定は取り消されました。アカウントは削除されません。\n\nご質問がございましたら、{safety_email}までお問い合わせください。\n\n– {product_name}チーム"
+	},
+	"account_deletion_scheduled_inactivity": {
+		"subject": "{product_name}アカウントは非アクティブのため削除されます",
+		"body": "こんにちは、{username}さん\n\n{product_name}アカウントは長期間利用されていないため、以下の日時に完全に削除される予定です。\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n理由: {reason}}}\n\nアカウントを維持したい場合は、この日時までにこのメールアドレスから{safety_email}へご連絡ください。\n\n– {product_name}チーム"
+	},
+	"account_deletion_scheduled_requested": {
+		"subject": "{product_name}アカウントの削除が予定されています",
+		"body": "こんにちは、{username}さん\n\nリクエストに基づき、{product_name}アカウントは以下の日時に完全に削除される予定です。\n\n{deletionDate, date, full} {deletionDate, time, short}{reason, select, null {} other {\n\n理由: {reason}}}\n\nそれまでアカウントはロックされます。ご自身でリクエストしていない場合、またはアカウントを維持したい場合は、この日時までにこのメールアドレスから{safety_email}へご連絡ください。\n\n– {product_name}チーム"
+	},
 	"account_disabled_suspicious": {
 		"subject": "{product_name}アカウントが一時的に無効になりました",
 		"body": "こんにちは、{username}さん\n\n不審なアクティビティが検出されたため、{product_name}アカウントを一時的に無効にしました。\n\n{reason, select,\n  null {}\n  other {理由: {reason}}\n}\n\nアカウントに再度アクセスするには、パスワードをリセットする必要があります。\n\n{forgotUrl}\n\nパスワードをリセットすると、再度ログインできるようになります。\n\nこの措置が誤りであると思われる場合は、サポートチームにお問い合わせください。\n\n– {product_name}安全チーム"
@@ -65,7 +77,7 @@ const EMAIL_I18N_JA_MESSAGES = defineEmailI18nLocaleMessages({
 	},
 	"password_change_verification": {
 		"subject": "{product_name}のパスワード変更を確認",
-		"body": "こんにちは、{username}さん\n\n{product_name}アカウントのパスワード変更リクエストを受け付けました。\n\nこの変更を確認するには、アプリでこのコードを入力してください。\n\n{code}\n\nこのコードの有効期限は{expiresAt}です。\n\nご自身でリクエストしていない場合は、誰かがあなたのアカウントにアクセスしている可能性があります。すぐにパスワードを変更し、2段階認証を有効にしてください。\n\n– {product_name}チーム"
+		"body": "こんにちは、{username}さん\n\n{product_name}アカウントのパスワード変更リクエストを受け付けました。\n\nこの変更を確認するには、アプリでこのコードを入力してください。\n\n{code}\n\nこのコードの有効期限は{expiresAt, date, full} {expiresAt, time, short}です。\n\nご自身でリクエストしていない場合は、誰かがあなたのアカウントにアクセスしている可能性があります。すぐにパスワードを変更し、2段階認証を有効にしてください。\n\n– {product_name}チーム"
 	},
 	"password_reset": {
 		"subject": "{product_name}のパスワードをリセット",

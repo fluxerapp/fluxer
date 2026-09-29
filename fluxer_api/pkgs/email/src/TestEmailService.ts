@@ -123,6 +123,43 @@ export class TestEmailService implements ITestEmailService {
 		return this.record(email, 'self_deletion_scheduled', {deletion_date: deletionDate.toISOString()});
 	}
 
+	async sendAccountDeletionRequestedEmail(
+		email: string,
+		username: string,
+		reason: string | null,
+		deletionDate: Date,
+		_locale?: string | null,
+	): Promise<boolean> {
+		this.logger.info(
+			`Requested deletion email sent to ${email} for user ${username}, date: ${deletionDate.toISOString()}`,
+		);
+		return this.record(email, 'account_deletion_scheduled_requested', {
+			reason: reason ?? '',
+			deletion_date: deletionDate.toISOString(),
+		});
+	}
+
+	async sendAccountDeletionInactivityEmail(
+		email: string,
+		username: string,
+		reason: string | null,
+		deletionDate: Date,
+		_locale?: string | null,
+	): Promise<boolean> {
+		this.logger.info(
+			`Inactivity deletion email sent to ${email} for user ${username}, date: ${deletionDate.toISOString()}`,
+		);
+		return this.record(email, 'account_deletion_scheduled_inactivity', {
+			reason: reason ?? '',
+			deletion_date: deletionDate.toISOString(),
+		});
+	}
+
+	async sendAccountDeletionCancelledEmail(email: string, username: string, _locale?: string | null): Promise<boolean> {
+		this.logger.info(`Deletion cancelled email sent to ${email} for user ${username}`);
+		return this.record(email, 'account_deletion_cancelled');
+	}
+
 	async sendUnbanNotification(
 		email: string,
 		username: string,
@@ -137,13 +174,16 @@ export class TestEmailService implements ITestEmailService {
 		email: string,
 		username: string,
 		deletionDate: Date,
-		reason: string,
+		reason: string | null,
 		_locale?: string | null,
 	): Promise<boolean> {
 		this.logger.info(
 			`Scheduled deletion notification sent to ${email} for user ${username}, date: ${deletionDate.toISOString()}`,
 		);
-		return this.record(email, 'scheduled_deletion_notification', {deletion_date: deletionDate.toISOString(), reason});
+		return this.record(email, 'scheduled_deletion_notification', {
+			deletion_date: deletionDate.toISOString(),
+			reason: reason ?? '',
+		});
 	}
 
 	async sendInactivityWarningEmail(
