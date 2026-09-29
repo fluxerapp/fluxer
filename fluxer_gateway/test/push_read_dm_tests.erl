@@ -85,15 +85,16 @@ a_dm_older_than_the_reply_arriving_after_it_is_not_pushed_test() ->
     end),
     ?assertEqual([?REPLY_MSG + 1], Pushed).
 
-a_buffered_dm_without_a_buffer_time_is_still_pushed_test() ->
+a_recent_buffered_dm_without_a_buffer_time_is_pushed_test() ->
+    Recent = recent_message_id(),
     Pushed = with_desktop_presence(fun(PresencePid, _SessionPid) ->
         sys:replace_state(PresencePid, fun(State) ->
             State#{
                 push_buffer := [
                     #{
                         channel_id => ?DM,
-                        message_id => ?PARTNER_MSG,
-                        params => #{message_data => dm_message(?PARTNER_MSG, ?PARTNER)}
+                        message_id => Recent,
+                        params => #{message_data => dm_message(Recent, ?PARTNER)}
                     }
                 ]
             }
@@ -102,7 +103,7 @@ a_buffered_dm_without_a_buffer_time_is_still_pushed_test() ->
         sync(PresencePid),
         pushed_message_ids([])
     end),
-    ?assertEqual([?PARTNER_MSG], Pushed).
+    ?assertEqual([Recent], Pushed).
 
 a_message_ack_drops_the_buffered_dm_push_test() ->
     Pushed = with_desktop_presence(fun(PresencePid, _SessionPid) ->
@@ -198,12 +199,113 @@ stale_read_state_fetches_are_capped_per_node_and_fail_open_past_the_cap_test() -
     ?assertEqual(64, InFlight),
     ?assertEqual(Flushes - 64, Published),
     ?assertEqual(0, Late),
-    ?assertEqual(0, read_state_fetches_in_flight()).
+    ?assertEqual(0, read_state_fetches_in_flight()),
+    ?assertEqual(undefined, ets:whereis(push_worker_counter)).
+
+a_read_dm_buffered_past_the_outbox_window_is_not_pushed_by_a_presence_node_test() ->
+    Self = self(),
+    {Fetches, Published, Suppressed} = with_presence_node(fun() ->
+        with_desktop_presence(fun(PresencePid, _SessionPid) ->
+            ok = meck:expect(push, handle_buffered_message_creates, fun(ParamsList) ->
+                meck:passthrough([ParamsList])
+            end),
+            ok = meck:expect(rpc_client, call, fun(Request, _Timeout) ->
+                Self ! {fetching, maps:get(<<"channel_id">>, Request)},
+                {ok, #{<<"last_message_id">> => integer_to_binary(?PARTNER_MSG)}}
+            end),
+            dispatch(PresencePid, message_create, dm_message(?PARTNER_MSG, ?PARTNER)),
+            sys:replace_state(PresencePid, fun(#{push_buffer := Buffer} = State) ->
+                State#{
+                    push_buffer := [
+                        Entry#{buffered_at => erlang:system_time(millisecond) - 600000}
+                     || Entry <- Buffer
+                    ]
+                }
+            end),
+            gen_server:cast(PresencePid, {presence_update, desktop_request(true)}),
+            sync(PresencePid),
+            {Blocked, Immediate} = collect_read_state_traffic(1, [], 0),
+            Late = collect_published(0),
+            {Blocked, Immediate + Late, read_state_counters(push_read_state_suppressed)}
+        end)
+    end),
+    ?assertEqual([integer_to_binary(?DM)], Fetches),
+    ?assertEqual(0, Published),
+    ?assertEqual([{push_read_state_suppressed, 1}], Suppressed),
+    ?assertEqual(undefined, ets:whereis(push_worker_counter)).
+
+a_read_dm_buffered_before_buffer_times_existed_is_aged_from_its_id_test() ->
+    Self = self(),
+    {Fetches, Published, Suppressed} = with_presence_node(fun() ->
+        with_desktop_presence(fun(PresencePid, _SessionPid) ->
+            ok = meck:expect(push, handle_buffered_message_creates, fun(ParamsList) ->
+                meck:passthrough([ParamsList])
+            end),
+            ok = meck:expect(rpc_client, call, fun(Request, _Timeout) ->
+                Self ! {fetching, maps:get(<<"channel_id">>, Request)},
+                {ok, #{<<"last_message_id">> => integer_to_binary(?PARTNER_MSG)}}
+            end),
+            dispatch(PresencePid, message_create, dm_message(?PARTNER_MSG, ?PARTNER)),
+            sys:replace_state(PresencePid, fun(#{push_buffer := Buffer} = State) ->
+                State#{push_buffer := [maps:remove(buffered_at, Entry) || Entry <- Buffer]}
+            end),
+            gen_server:cast(PresencePid, {presence_update, desktop_request(true)}),
+            sync(PresencePid),
+            {Blocked, Immediate} = collect_read_state_traffic(1, [], 0),
+            Late = collect_published(0),
+            {Blocked, Immediate + Late, read_state_counters(push_read_state_suppressed)}
+        end)
+    end),
+    ?assertEqual([integer_to_binary(?DM)], Fetches),
+    ?assertEqual(0, Published),
+    ?assertEqual([{push_read_state_suppressed, 1}], Suppressed).
+
+recent_message_id() ->
+    (erlang:system_time(millisecond) - 1420070400000) bsl 22.
+
+with_presence_node(Fun) ->
+    Self = self(),
+    ok = delete_table(push_worker_counter),
+    ok = delete_table(push_read_state_counters),
+    ok = meck:new(fluxer_gateway_env, [passthrough, no_link]),
+    ok = meck:new(gateway_node_router, [passthrough, no_link]),
+    ok = meck:new(rpc_client, [passthrough, no_link]),
+    try
+        ok = meck:expect(fluxer_gateway_env, get, fun
+            (push_enabled) -> true;
+            (Key) -> meck:passthrough([Key])
+        end),
+        ok = meck:expect(gateway_node_router, owner_node_result, fun(_Key, push) ->
+            Self ! published,
+            {error, test}
+        end),
+        with_ets_owner(Fun)
+    after
+        meck:unload(rpc_client),
+        meck:unload(gateway_node_router),
+        meck:unload(fluxer_gateway_env)
+    end.
+
+with_ets_owner(Fun) ->
+    {ok, Owner} = guild_ets_owner:start_link(),
+    unlink(Owner),
+    try
+        Fun()
+    after
+        stop_quietly(Owner)
+    end.
+
+delete_table(Table) ->
+    try ets:delete(Table) of
+        true -> ok
+    catch
+        error:badarg -> ok
+    end.
 
 with_stale_read_state_mocks(Fun) ->
     Self = self(),
-    ok = push_worker_pool:init_counter(),
-    true = ets:delete(push_worker_counter, read_state_fetches_in_flight),
+    ok = delete_table(push_worker_counter),
+    ok = delete_table(push_read_state_counters),
     ok = meck:new(fluxer_gateway_env, [passthrough, no_link]),
     ok = meck:new(gateway_node_router, [passthrough, no_link]),
     ok = meck:new(rpc_client, [passthrough, no_link]),
@@ -224,7 +326,7 @@ with_stale_read_state_mocks(Fun) ->
                 {error, timeout}
             end
         end),
-        Fun()
+        with_ets_owner(Fun)
     after
         meck:unload(rpc_client),
         meck:unload(gateway_node_router),
@@ -271,9 +373,16 @@ wait_for_released_fetch_slots(Attempts) ->
     end.
 
 read_state_fetches_in_flight() ->
-    case ets:lookup(push_worker_counter, read_state_fetches_in_flight) of
+    case read_state_counters(read_state_fetches_in_flight) of
         [{_, InFlight}] -> InFlight;
         [] -> 0
+    end.
+
+read_state_counters(Key) ->
+    try
+        ets:lookup(push_read_state_counters, Key)
+    catch
+        error:badarg -> []
     end.
 
 an_outbox_read_watermark_filters_a_later_job_for_the_read_message_test() ->

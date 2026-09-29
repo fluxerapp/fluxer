@@ -36,7 +36,7 @@
 -define(CNT_READ_STATE_SKIPPED, push_read_state_fetch_skipped).
 -define(MAX_FETCH_RPCS, 8).
 -define(READ_STATE_FETCH_TIMEOUT_MS, 2000).
--define(READ_STATE_FETCH_MAX_POOL_PCT, 50).
+-define(READ_STATE_TABLE, push_read_state_counters).
 -define(READ_STATE_FETCH_SLOTS, read_state_fetches_in_flight).
 -define(MAX_READ_STATE_FETCHES, 64).
 -define(DEFAULT_FETCH_USERS, 2000).
@@ -334,28 +334,26 @@ publish_unread(Channels, Stale) ->
 -spec publish_unless_read(read_marks(), {read_key(), map()}) -> ok.
 publish_unless_read(ReadMarks, {{UserId, ChannelId, MessageId}, Params}) ->
     case MessageId =< maps:get({UserId, ChannelId}, ReadMarks, 0) of
-        true -> bump_counter(?CNT_READ_STATE_SUPPRESSED);
+        true -> bump_read_state_counter(?CNT_READ_STATE_SUPPRESSED, 1);
         false -> handle_message_create(Params)
     end.
 
 -spec read_state_fetch_allowed(non_neg_integer()) -> boolean().
 read_state_fetch_allowed(Fetches) ->
-    case
-        push_worker_pool:utilization_pct() < ?READ_STATE_FETCH_MAX_POOL_PCT andalso
-            acquire_read_state_fetch_slot()
-    of
+    case acquire_read_state_fetch_slot() of
         true ->
             true;
         false ->
-            bump_counter(?CNT_READ_STATE_SKIPPED, Fetches),
+            bump_read_state_counter(?CNT_READ_STATE_SKIPPED, Fetches),
             false
     end.
 
 -spec acquire_read_state_fetch_slot() -> boolean().
 acquire_read_state_fetch_slot() ->
+    ok = ensure_read_state_table(),
     try
         ets:update_counter(
-            ?PUSH_COUNTER_TABLE, ?READ_STATE_FETCH_SLOTS, {2, 1}, {?READ_STATE_FETCH_SLOTS, 0}
+            ?READ_STATE_TABLE, ?READ_STATE_FETCH_SLOTS, {2, 1}, {?READ_STATE_FETCH_SLOTS, 0}
         )
     of
         InFlight when InFlight > ?MAX_READ_STATE_FETCHES ->
@@ -369,10 +367,39 @@ acquire_read_state_fetch_slot() ->
 
 -spec release_read_state_fetch_slot() -> ok.
 release_read_state_fetch_slot() ->
-    try ets:update_counter(?PUSH_COUNTER_TABLE, ?READ_STATE_FETCH_SLOTS, {2, -1, 0, 0}) of
+    try ets:update_counter(?READ_STATE_TABLE, ?READ_STATE_FETCH_SLOTS, {2, -1, 0, 0}) of
         _InFlight -> ok
     catch
         error:badarg -> ok
+    end.
+
+-spec bump_read_state_counter(atom(), non_neg_integer()) -> ok.
+bump_read_state_counter(Key, Increment) ->
+    ok = ensure_read_state_table(),
+    try ets:update_counter(?READ_STATE_TABLE, Key, {2, Increment}, {Key, 0}) of
+        _Value -> ok
+    catch
+        error:badarg -> ok
+    end.
+
+-spec ensure_read_state_table() -> ok.
+ensure_read_state_table() ->
+    case ets:whereis(?READ_STATE_TABLE) of
+        undefined ->
+            guild_ets_utils:ensure_table(?READ_STATE_TABLE, [
+                named_table, public, set, {write_concurrency, true}
+            ]);
+        _Table ->
+            ok
+    end.
+
+-spec read_state_counter(atom()) -> non_neg_integer() | unavailable.
+read_state_counter(Key) ->
+    try ets:lookup(?READ_STATE_TABLE, Key) of
+        [{Key, Value}] when is_integer(Value), Value >= 0 -> Value;
+        _ -> unavailable
+    catch
+        error:badarg -> unavailable
     end.
 
 -spec fetch_each_read_mark([{integer(), integer()}], read_marks()) -> read_marks().
@@ -383,7 +410,7 @@ fetch_each_read_mark([{UserId, ChannelId} = Key | Rest], ReadMarks) ->
         {ok, ReadMessageId} ->
             fetch_each_read_mark(Rest, ReadMarks#{Key => ReadMessageId});
         error ->
-            bump_counter(?CNT_READ_STATE_SKIPPED, length(Rest)),
+            bump_read_state_counter(?CNT_READ_STATE_SKIPPED, length(Rest)),
             ReadMarks
     end.
 
@@ -400,7 +427,7 @@ fetch_read_message_id(UserId, ChannelId) ->
         {ok, _Data} ->
             {ok, 0};
         {error, Reason} ->
-            bump_counter(?CNT_READ_STATE_FAILURES),
+            bump_read_state_counter(?CNT_READ_STATE_FAILURES, 1),
             logger:debug("Push: read state fetch failed", #{
                 reason => Reason, user_id => UserId, channel_id => ChannelId
             }),
@@ -791,10 +818,10 @@ push_loss_counters() ->
     #{
         counters => counter_table_status(),
         worker_pool_dropped => read_counter(?CNT_WORKER_POOL),
-        read_state_suppressed => read_counter(?CNT_READ_STATE_SUPPRESSED),
-        read_state_fetch_failures => read_counter(?CNT_READ_STATE_FAILURES),
-        read_state_fetch_skipped => read_counter(?CNT_READ_STATE_SKIPPED),
-        read_state_fetches_in_flight => read_counter(?READ_STATE_FETCH_SLOTS)
+        read_state_suppressed => read_state_counter(?CNT_READ_STATE_SUPPRESSED),
+        read_state_fetch_failures => read_state_counter(?CNT_READ_STATE_FAILURES),
+        read_state_fetch_skipped => read_state_counter(?CNT_READ_STATE_SKIPPED),
+        read_state_fetches_in_flight => read_state_counter(?READ_STATE_FETCH_SLOTS)
     }.
 
 -spec counter_table_status() -> live | unavailable.
@@ -1037,19 +1064,21 @@ a_buffered_dm_without_a_buffer_time_is_published_without_a_read_state_fetch_test
     ),
     ?assertEqual({1, 0}, Published).
 
-a_dm_buffered_past_the_outbox_window_is_published_without_a_fetch_when_the_pool_is_busy_test() ->
+a_dm_buffered_past_the_outbox_window_is_published_without_a_fetch_when_all_slots_are_taken_test() ->
     Skipped = read_counter_value(?CNT_READ_STATE_SKIPPED),
-    ok = meck:new(push_worker_pool, [passthrough, no_link]),
+    ok = ensure_read_state_table(),
+    true = ets:insert(?READ_STATE_TABLE, {?READ_STATE_FETCH_SLOTS, ?MAX_READ_STATE_FETCHES}),
     try
-        ok = meck:expect(push_worker_pool, utilization_pct, fun() ->
-            ?READ_STATE_FETCH_MAX_POOL_PCT
+        Published = with_buffered_dm_push(read_through(#{123 => <<"456">>}), fun() ->
+            ok = handle_buffered_message_creates([
+                buffered_dm_params(stale_buffered_at(), 123, 456)
+            ]),
+            length(published_message_ids(0))
         end),
-        Published = with_buffered_dms(
-            [{stale_buffered_at(), 123, 456}], read_through(#{123 => <<"456">>})
-        ),
-        ?assertEqual({1, 0}, Published)
+        ?assertEqual({1, 0}, Published),
+        ?assertEqual(?MAX_READ_STATE_FETCHES, read_state_counter(?READ_STATE_FETCH_SLOTS))
     after
-        meck:unload(push_worker_pool)
+        true = ets:insert(?READ_STATE_TABLE, {?READ_STATE_FETCH_SLOTS, 0})
     end,
     ?assertEqual(Skipped + 1, read_counter_value(?CNT_READ_STATE_SKIPPED)).
 
@@ -1105,8 +1134,7 @@ read_through(ReadMessageIds) ->
     fun(ChannelId) -> {ok, #{<<"last_message_id">> => maps:get(ChannelId, ReadMessageIds)}} end.
 
 read_counter_value(Key) ->
-    ok = push_worker_pool:init_counter(),
-    case read_counter(Key) of
+    case read_state_counter(Key) of
         Value when is_integer(Value) -> Value;
         unavailable -> 0
     end.
@@ -1126,7 +1154,7 @@ with_buffered_dms(Entries, ReadStateReply) ->
 wait_for_read_state_fetches(0) ->
     erlang:error(read_state_fetch_still_in_flight);
 wait_for_read_state_fetches(Attempts) ->
-    case read_counter(?READ_STATE_FETCH_SLOTS) of
+    case read_state_counter(?READ_STATE_FETCH_SLOTS) of
         InFlight when is_integer(InFlight), InFlight > 0 ->
             timer:sleep(20),
             wait_for_read_state_fetches(Attempts - 1);

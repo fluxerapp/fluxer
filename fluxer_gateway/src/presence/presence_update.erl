@@ -166,10 +166,16 @@ flush_push_buffer(#{push_buffer := []} = State) ->
     State;
 flush_push_buffer(#{push_buffer := Buffer} = State) ->
     ok = push:handle_buffered_message_creates([
-        (maps:get(params, Entry))#{buffered_at => maps:get(buffered_at, Entry, undefined)}
+        (maps:get(params, Entry))#{buffered_at => entry_buffered_at(Entry)}
      || Entry <- lists:reverse(Buffer)
     ]),
     State#{push_buffer := []}.
+
+-spec entry_buffered_at(push_buffer_entry()) -> integer() | undefined.
+entry_buffered_at(#{buffered_at := BufferedAt}) ->
+    BufferedAt;
+entry_buffered_at(#{message_id := MessageId}) ->
+    snowflake_util:extract_timestamp(MessageId).
 
 -spec maybe_update_push_eligibility(state()) -> state().
 maybe_update_push_eligibility(State) ->
