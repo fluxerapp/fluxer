@@ -2,11 +2,11 @@
 
 import type {GuildID, RoleID, UserID} from '@app/api/BrandedTypes';
 import {guildIdToRoleId} from '@app/api/BrandedTypes';
+import {getIpBanBlastRadiusVerdict, isSingleIpBanCandidate} from '@app/api/ban/IpBanCgnatGuard';
+import {isIpBanExempt} from '@app/api/ban/IpBanExemptions';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
 import {Logger} from '@app/api/Logger';
 import type {GuildMember} from '@app/api/models/GuildMember';
-import {getIpBanBlastRadiusVerdict, isSingleIpBanCandidate} from '@app/api/risk/IpBanCgnatGuard';
-import {isIpBanExempt} from '@app/api/risk/IpBanExemptions';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import {Permissions} from '@fluxer/constants/src/ChannelConstants';
 import {ValidationErrorCodes} from '@fluxer/constants/src/ValidationErrorCodes';

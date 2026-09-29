@@ -2,15 +2,27 @@
 
 import {randomUUID} from 'node:crypto';
 import {ensureDeletionQueueState} from '@app/api/app/DeletionQueueStartup';
+import {renderPhoneRpcMetrics, setPhoneRpcConnection} from '@app/api/auth/PhoneVerificationClient';
 import type {APIConfig} from '@app/api/config/APIConfig';
 import {hasDatabaseQueryExecutor, setDatabaseQueryExecutor} from '@app/api/database/CassandraQueryExecution';
 import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from '@app/api/database/PostgresKvQueryExecutor';
 import {GuildDataRepository} from '@app/api/guild/repositories/GuildDataRepository';
 import type {ILogger} from '@app/api/ILogger';
+import {
+	jetStreamActivityPublisher,
+	renderActivityMetrics,
+	shutdownActivityEvents,
+	startActivityEvents,
+} from '@app/api/infrastructure/activity/ActivityEvents';
+import {
+	renderSharedListMetrics,
+	startSharedListWatch,
+	stopSharedListWatch,
+} from '@app/api/infrastructure/activity/SharedLists';
 import {shutdownStorageChangeFeed} from '@app/api/infrastructure/StorageServiceFactory';
 import {JobLedgerRepository} from '@app/api/jobs/JobLedgerRepository';
-import {startAbuseReplicationSubscriber, stopAbuseReplicationSubscriber} from '@app/api/middleware/AbusiveIpAutoBanner';
 import {ipBanCache} from '@app/api/middleware/IpBanMiddleware';
+import {startRequestErrorTelemetry, stopRequestErrorTelemetry} from '@app/api/middleware/RequestErrorTelemetry';
 import {initializeServiceSingletons, shutdownReportService} from '@app/api/middleware/ServiceMiddleware';
 import {
 	closeOwnedKVClient,
@@ -29,7 +41,6 @@ import {
 	shutdownInstanceConfigRepository,
 	shutdownServiceSingletons,
 } from '@app/api/middleware/ServiceSingletons';
-import {torExitListCache} from '@app/api/middleware/TorExitListCache';
 import {ensureApnsSigningKey} from '@app/api/push/ApnsPushService';
 import {initializeSearch, shutdownSearch} from '@app/api/SearchFactory';
 import {warmupAdminSearchIndexes} from '@app/api/search/SearchWarmup';
@@ -37,12 +48,20 @@ import {VisionarySlotInitializer} from '@app/api/stripe/VisionarySlotInitializer
 import {VoiceDataInitializer} from '@app/api/voice/VoiceDataInitializer';
 import {JetStreamWorkerQueue} from '@app/api/worker/JetStreamWorkerQueue';
 import {WorkerService} from '@app/api/worker/WorkerService';
+import {registerMetricsSection} from '@fluxer/hono/src/middleware/Metrics';
+import type {JetStreamClient} from '@nats-io/jetstream';
 import {initCassandra, shutdownCassandra} from '@pkgs/cassandra/src/Client';
 import {ensureGeoipDatabaseOnStartup} from '@pkgs/geoip/src/GeoipStartup';
 import {JetStreamConnectionManager} from '@pkgs/nats/src/JetStreamConnectionManager';
 import {getDefaultPostgresClient, initPostgres, shutdownPostgres} from '@pkgs/postgres/src/Client';
 
 let jsConnectionManager: JetStreamConnectionManager | null = null;
+const unregisterMetricsSections: Array<() => void> = [];
+
+export function getActivityJetStream(): JetStreamClient | null {
+	if (!jsConnectionManager || jsConnectionManager.isClosed()) return null;
+	return jsConnectionManager.getJetStreamClient();
+}
 
 interface RefreshCacheLifecycle {
 	initialize(): Promise<void>;
@@ -103,11 +122,10 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 					{
 						maxmind_db_path: geoipStartupResult.maxmindDbPath,
 						city: geoipStartupResult.city,
-						asn: geoipStartupResult.asn,
 						s3_bucket: geoipStartupResult.bucket,
 						s3_key: geoipStartupResult.key,
 					},
-					'GeoIP databases downloaded from S3',
+					'GeoIP database downloaded from S3',
 				);
 			}
 			if (config.database.backend === 'postgres' && !hasDatabaseQueryExecutor()) {
@@ -135,13 +153,6 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 			const kvClient = getKVClient();
 			ipBanCache.setRefreshSubscriber(kvClient);
 			await initializeRefreshCache(ipBanCache, 'IP ban cache', logger);
-			await startAbuseReplicationSubscriber(kvClient);
-			logger.info('Abusive-IP auto-banner replication started');
-			if (config.torExitList.enabled) {
-				torExitListCache.setKvClient(kvClient);
-				await torExitListCache.initialize();
-				logger.info('Tor exit list cache initialized');
-			}
 			const {urlBlocklistCache} = await import('@app/api/middleware/UrlBlocklistCache');
 			urlBlocklistCache.setRefreshSubscriber(kvClient);
 			const {getStorageService} = await import('@app/api/middleware/ServiceSingletons');
@@ -172,6 +183,22 @@ export function createInitializer(config: APIConfig, logger: ILogger): () => Pro
 				await workerQueue.ensureStream();
 				setInjectedWorkerService(new WorkerService(workerQueue, getSnowflakeService(), new JobLedgerRepository()));
 				logger.info('JetStream worker service initialized');
+				const connection = jsConnectionManager;
+				await startActivityEvents({
+					publisher: jetStreamActivityPublisher(connection.getJetStreamClient()),
+					kv: kvClient,
+					jsm: await connection.getJetStreamManager(),
+					spoolWhileMissing: !config.instance.selfHosted,
+				});
+				startRequestErrorTelemetry();
+				startSharedListWatch(connection.getJetStreamClient());
+				setPhoneRpcConnection(() => (connection.isClosed() ? null : connection.getConnection()));
+				unregisterMetricsSections.push(
+					registerMetricsSection(renderActivityMetrics),
+					registerMetricsSection(renderSharedListMetrics),
+					registerMetricsSection(renderPhoneRpcMetrics),
+				);
+				logger.info('Activity events initialized');
 			}
 			await ensureDeletionQueueState(getKVAccountDeletionQueue(), logger);
 			logger.info('Initializing search indexes...');
@@ -253,6 +280,11 @@ export function createShutdown(config: APIConfig, logger: ILogger): () => Promis
 		} catch (error) {
 			logger.error({error}, 'Error shutting down voice resources');
 		}
+		stopRequestErrorTelemetry();
+		stopSharedListWatch();
+		setPhoneRpcConnection(null);
+		for (const unregister of unregisterMetricsSections.splice(0)) unregister();
+		await shutdownActivityEvents();
 		if (jsConnectionManager) {
 			try {
 				await jsConnectionManager.drain();
@@ -269,12 +301,6 @@ export function createShutdown(config: APIConfig, logger: ILogger): () => Promis
 		} catch (error) {
 			logger.error({error}, 'Error shutting down search service');
 		}
-		try {
-			await stopAbuseReplicationSubscriber();
-			logger.info('Abusive-IP auto-banner replication stopped');
-		} catch (error) {
-			logger.error({error}, 'Error stopping abusive-IP auto-banner replication');
-		}
 		await Promise.all([
 			shutdownRefreshCaches(logger),
 			shutdownServiceSingletons()
@@ -285,12 +311,6 @@ export function createShutdown(config: APIConfig, logger: ILogger): () => Promis
 					logger.error({error}, 'Error shutting down service singletons');
 				}),
 		]);
-		try {
-			await torExitListCache.shutdown();
-			logger.info('Tor exit list cache shut down');
-		} catch (error) {
-			logger.error({error}, 'Error shutting down Tor exit list cache');
-		}
 		try {
 			await shutdownInstanceConfigRepository();
 			logger.info('Instance config repository shut down');

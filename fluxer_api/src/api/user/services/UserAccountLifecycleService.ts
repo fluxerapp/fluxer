@@ -5,27 +5,22 @@ import * as AuthSession from '@app/api/auth/AuthSession';
 import type {UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
-import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
 import {Logger} from '@app/api/Logger';
-import type {Guild} from '@app/api/models/Guild';
 import type {User} from '@app/api/models/User';
-import {
-	canEscapePhoneGate,
-	type DeferredPhoneGateStatus,
-	getDeferredPhoneGateConfig,
-	guildTriggersPhoneGate,
-	PHONE_GATE_ESCAPE_MAX_GUILDS,
-	restorePhoneGateDeferral,
-} from '@app/api/risk/DeferredPhoneGate';
 import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccountRepository';
 import {reschedulePendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
 import type {UserAccountUpdatePropagator} from '@app/api/user/services/UserAccountUpdatePropagator';
 import {getEffectiveSuspiciousFlags} from '@app/api/user/UserHelpers';
 import {hasPartialUserFieldsChanged} from '@app/api/user/UserMappers';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
-import {DEFERRABLE_PHONE_FLAGS, DEFERRED_PHONE_ON_COMMUNITY_JOIN, UserFlags} from '@fluxer/constants/src/UserConstants';
-import {UnknownGuildMemberError} from '@fluxer/errors/src/domains/guild/UnknownGuildMemberError';
+import {
+	DEFERRABLE_PHONE_FLAGS,
+	DEFERRED_PHONE_ON_COMMUNITY_JOIN,
+	NEVER_DEFERRABLE_PHONE_FLAGS,
+	PHONE_GATE_PROMOTED_FROM_DEFERRAL,
+	UserFlags,
+} from '@fluxer/constants/src/UserConstants';
 import {UserOwnsGuildsError} from '@fluxer/errors/src/domains/guild/UserOwnsGuildsError';
 import {PhoneGateEscapeUnavailableError} from '@fluxer/errors/src/domains/user/PhoneGateEscapeUnavailableError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
@@ -35,34 +30,29 @@ import {ms} from 'itty-time';
 
 const WRITE_RESTORED_DEFERRAL_ATTEMPTS = 3;
 
+function holdsPromotedDeferral(user: User): boolean {
+	const flagBits = user.suspiciousActivityFlags ?? 0;
+	return (
+		!user.hasVerifiedPhone &&
+		(flagBits & PHONE_GATE_PROMOTED_FROM_DEFERRAL) !== 0 &&
+		(flagBits & DEFERRED_PHONE_ON_COMMUNITY_JOIN) === 0 &&
+		(flagBits & DEFERRABLE_PHONE_FLAGS) !== 0 &&
+		(flagBits & NEVER_DEFERRABLE_PHONE_FLAGS) === 0 &&
+		getEffectiveSuspiciousFlags(user) !== 0
+	);
+}
+
+function restorePhoneGateDeferral(flagBits: number): number {
+	return (flagBits | DEFERRED_PHONE_ON_COMMUNITY_JOIN) & ~PHONE_GATE_PROMOTED_FROM_DEFERRAL;
+}
+
 interface UserAccountLifecycleServiceDeps {
 	apiContext: ApiContext;
 	userAccountRepository: IUserAccountRepository;
 	guildRepository: IGuildRepositoryAggregate;
-	guildService: GuildService;
 	emailService: IEmailService;
 	updatePropagator: UserAccountUpdatePropagator;
 	kvDeletionQueue: KVAccountDeletionQueueService;
-}
-
-interface PhoneGateEscapePlan {
-	available: boolean;
-	leavable: Array<Guild>;
-	owned: Array<Guild>;
-	gateStatus: DeferredPhoneGateStatus;
-	threshold: number;
-	refusedReason: 'ineligible' | 'not_locked' | null;
-}
-
-interface PhoneGateEscapePreview {
-	available: boolean;
-	guilds: Array<Guild>;
-	ownedGuilds: Array<Guild>;
-}
-
-interface PhoneGateEscapeResult {
-	user: User;
-	remainingGuildCount: number;
 }
 
 export class UserAccountLifecycleService {
@@ -104,6 +94,8 @@ export class UserAccountLifecycleService {
 			flags: user.flags | UserFlags.SELF_DELETED,
 			pending_deletion_at: pendingDeletionAt,
 			deletion_reason_code: DeletionReasons.USER_REQUESTED,
+			deletion_scheduled_by: userId,
+			deletion_scheduled_at: new Date(),
 		});
 		await reschedulePendingDeletion({
 			userId,
@@ -113,6 +105,7 @@ export class UserAccountLifecycleService {
 			userRepository: this.deps.userAccountRepository,
 			deletionQueue: this.deps.kvDeletionQueue,
 		});
+		await AuthSession.terminateAllUserSessions(this.deps.apiContext, userId);
 		if (user.email) {
 			await this.deps.emailService.sendSelfDeletionScheduledEmail(
 				user.email,
@@ -121,7 +114,6 @@ export class UserAccountLifecycleService {
 				user.locale,
 			);
 		}
-		await AuthSession.terminateAllUserSessions(this.deps.apiContext, userId);
 		if (updatedUser) {
 			await this.deps.updatePropagator.dispatchUserUpdate(updatedUser);
 			if (hasPartialUserFieldsChanged(user, updatedUser)) {
@@ -130,127 +122,38 @@ export class UserAccountLifecycleService {
 		}
 	}
 
-	private async buildPhoneGateEscapePlan(user: User): Promise<PhoneGateEscapePlan> {
-		const {status, config} = await getDeferredPhoneGateConfig();
-		const refused = {
-			available: false,
-			leavable: [],
-			owned: [],
-			gateStatus: status,
-			threshold: config.memberThreshold,
-		};
-		if (!canEscapePhoneGate(user, status)) {
-			return {...refused, refusedReason: 'ineligible'};
-		}
-		if (getEffectiveSuspiciousFlags(user) === 0) {
-			return {...refused, refusedReason: 'not_locked'};
-		}
-		const guilds = await this.deps.guildRepository.listUserGuilds(user.id);
-		const qualifying = guilds.filter((guild) => guildTriggersPhoneGate(guild, config.memberThreshold));
-		return {
-			available: true,
-			leavable: qualifying.filter((guild) => guild.ownerId !== user.id),
-			owned: qualifying.filter((guild) => guild.ownerId === user.id),
-			gateStatus: status,
-			threshold: config.memberThreshold,
-			refusedReason: null,
-		};
-	}
-
-	async previewPhoneGateEscape(userId: UserID): Promise<PhoneGateEscapePreview> {
+	async previewPhoneGateEscape(userId: UserID): Promise<boolean> {
 		const user = await this.deps.userAccountRepository.findUnique(userId);
 		if (!user) {
 			throw new UnknownUserError();
 		}
-		const plan = await this.buildPhoneGateEscapePlan(user);
-		Logger.debug(
-			{
-				userId: userId.toString(),
-				available: plan.available,
-				refusedReason: plan.refusedReason,
-				gateStatus: plan.gateStatus,
-				qualifyingCount: plan.leavable.length + plan.owned.length,
-			},
-			'deferred_phone_gate.escape_previewed',
-		);
-		return {available: plan.available, guilds: plan.leavable, ownedGuilds: plan.owned};
+		return holdsPromotedDeferral(user);
 	}
 
-	async executePhoneGateEscape(userId: UserID): Promise<PhoneGateEscapeResult> {
-		const startedAt = Date.now();
+	async executePhoneGateEscape(userId: UserID): Promise<User> {
 		const user = await this.deps.userAccountRepository.findUnique(userId);
 		if (!user) {
 			throw new UnknownUserError();
 		}
-		const plan = await this.buildPhoneGateEscapePlan(user);
-		const baseContext = {
+		const context = {
 			userId: userId.toString(),
 			accountAgeMs: Date.now() - snowflakeToDate(BigInt(user.id)).getTime(),
-			gateStatus: plan.gateStatus,
-			threshold: plan.threshold,
 		};
-		if (!plan.available) {
-			Logger.info({...baseContext, reason: plan.refusedReason}, 'deferred_phone_gate.escape_refused');
+		if (!holdsPromotedDeferral(user)) {
+			Logger.info(context, 'deferred_phone_gate.escape_refused');
 			throw new PhoneGateEscapeUnavailableError();
 		}
-		const batch = plan.leavable.slice(0, PHONE_GATE_ESCAPE_MAX_GUILDS);
-		const remainingGuildCount = plan.leavable.length - batch.length;
-		const leftGuildIds: Array<string> = [];
-		const skippedGuildIds: Array<string> = [];
-		for (const guild of batch) {
-			try {
-				await this.deps.guildService.members.leaveGuild({userId: user.id, guildId: guild.id});
-				leftGuildIds.push(guild.id.toString());
-			} catch (error) {
-				if (error instanceof UnknownGuildMemberError) {
-					skippedGuildIds.push(guild.id.toString());
-					continue;
-				}
-				Logger.warn(
-					{
-						...baseContext,
-						leftGuildIds,
-						skippedGuildIds,
-						unattemptedCount: batch.length - leftGuildIds.length - skippedGuildIds.length,
-						error,
-					},
-					'deferred_phone_gate.escape_failed',
-				);
-				throw error;
-			}
-		}
-		if (remainingGuildCount > 0) {
-			Logger.info(
-				{...baseContext, leftGuildIds, skippedGuildIds, remainingGuildCount},
-				'deferred_phone_gate.escape_batch_completed',
-			);
-			return {user, remainingGuildCount};
-		}
 		const updated = await this.writeRestoredDeferral(userId);
-		if ((getEffectiveSuspiciousFlags(updated) & DEFERRABLE_PHONE_FLAGS) !== 0) {
-			Logger.warn(
-				{...baseContext, flagsAfter: updated.suspiciousActivityFlags ?? 0},
-				'deferred_phone_gate.escape_ineffective',
-			);
-		}
 		try {
 			await this.deps.updatePropagator.dispatchUserUpdate(updated);
 		} catch (error) {
-			Logger.warn({...baseContext, error}, 'deferred_phone_gate.escape_dispatch_failed');
+			Logger.warn({...context, error}, 'deferred_phone_gate.escape_dispatch_failed');
 		}
 		Logger.info(
-			{
-				...baseContext,
-				leftGuildIds,
-				skippedGuildIds,
-				keptOwnedGuildIds: plan.owned.map((guild) => guild.id.toString()),
-				flagsBefore: user.suspiciousActivityFlags ?? 0,
-				flagsAfter: updated.suspiciousActivityFlags ?? 0,
-				durationMs: Date.now() - startedAt,
-			},
+			{...context, flagsBefore: user.suspiciousActivityFlags ?? 0, flagsAfter: updated.suspiciousActivityFlags ?? 0},
 			'deferred_phone_gate.escaped',
 		);
-		return {user: updated, remainingGuildCount: 0};
+		return updated;
 	}
 
 	private async writeRestoredDeferral(userId: UserID): Promise<User> {

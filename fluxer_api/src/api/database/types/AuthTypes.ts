@@ -36,13 +36,6 @@ export interface AuthSessionTombstoneRow {
 	version: number;
 }
 
-export interface UserCountryHistoryRow {
-	user_id: UserID;
-	country: string;
-	first_seen_at: Date;
-	last_seen_at: Date;
-}
-
 export interface MfaBackupCodeRow {
 	user_id: UserID;
 	code: MfaBackupCode;
@@ -154,12 +147,6 @@ export const AUTH_SESSION_TOMBSTONE_COLUMNS = [
 	'deleted_at',
 	'version',
 ] as const satisfies ReadonlyArray<keyof AuthSessionTombstoneRow>;
-export const USER_COUNTRY_HISTORY_COLUMNS = [
-	'user_id',
-	'country',
-	'first_seen_at',
-	'last_seen_at',
-] as const satisfies ReadonlyArray<keyof UserCountryHistoryRow>;
 export const MFA_BACKUP_CODE_COLUMNS = ['user_id', 'code', 'consumed'] as const satisfies ReadonlyArray<
 	keyof MfaBackupCodeRow
 >;
@@ -198,14 +185,6 @@ export const WEBAUTHN_CREDENTIAL_COLUMNS = [
 	'rp_id',
 	'superseded_by',
 ] as const satisfies ReadonlyArray<keyof WebAuthnCredentialRow>;
-
-export interface PhoneTokenRow {
-	token_: string;
-	phone: string;
-	user_id: Nullish<UserID>;
-}
-
-export const PHONE_TOKEN_COLUMNS = ['token_', 'phone', 'user_id'] as const satisfies ReadonlyArray<keyof PhoneTokenRow>;
 
 export interface PasswordChangeTicketRow {
 	ticket: string;

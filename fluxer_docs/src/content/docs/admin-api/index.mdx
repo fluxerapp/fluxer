@@ -228,9 +228,8 @@ An entry has no request method, request path, status, duration, IP address, or f
 | system<sup>2</sup> | API process that served the request |
 | voice_region<sup>2</sup> | Voice region |
 | voice_server<sup>2</sup> | Voice server registration |
-| ip<sup>2</sup> | IP blocklist entry or suspicious IP marker |
+| ip<sup>2</sup> | IP blocklist entry |
 | email<sup>2</sup> | Exact email blocklist entry |
-| email_domain<sup>2</sup> | Suspicious email domain entry |
 | phrase<sup>2</sup> | Phrase blocklist entry |
 | url<sup>2</sup> | Exact URL blocklist entry |
 | url_domain<sup>2</sup> | URL domain blocklist entry |
@@ -312,7 +311,6 @@ An entry with any other action has `access` set to `write`.
 | Value | Description |
 | --- | --- |
 | NCMEC Report | An attachment was submitted through the NCMEC reporting integration |
-| add_suspicious_email_domain | A domain was added to the suspicious email domain list |
 | approve_discovery_application | A discovery application was approved |
 | approve_registration | A pending registration was approved |
 | auto_resolve_reports_on_deletion | Reports against an account were resolved automatically as part of its deletion |
@@ -357,11 +355,6 @@ An entry with any other action has `access` set to `write`.
 | force_add_to_guild | An account was added to a guild while bypassing the ban check |
 | generate_gift_codes | Gift codes were generated |
 | kick_member | A member was removed from a guild |
-| mark_suspicious_ip | An IP address was marked as suspicious |
-| mark_suspicious_ip_skipped_high_blast_radius | IP intelligence reports the address as a mobile, anycast, satellite, or education network, so no marker was written |
-| mark_suspicious_ip_skipped_invalid | The address could not be parsed, so no marker was written |
-| mark_suspicious_ip_skipped_ipinfo_unavailable | IP intelligence was unavailable, so no marker was written |
-| mark_suspicious_ip_skipped_trusted_commercial_privacy_provider | The address belongs to a trusted commercial privacy provider, so no marker was written |
 | purge_asset | A stored media asset was purged |
 | purge_guild_emoji_asset | A guild emoji asset was purged |
 | purge_guild_sticker_asset | A guild sticker asset was purged |
@@ -375,7 +368,6 @@ An entry with any other action has `access` set to `write`.
 | remove_discovery_listing | A guild was removed from discovery |
 | remove_relationship | One relationship was removed from an account |
 | remove_relationships_by_category | Every relationship in one category was removed from an account |
-| remove_suspicious_email_domain | A domain was removed from the suspicious email domain list |
 | resend_verification_email | An email verification message was requested again for an account |
 | resolve_report | A report was updated or resolved |
 | revoke_admin_api_key | An Admin API key was revoked |
@@ -530,9 +522,6 @@ The registry is returned in this order by [List ACLs](#list-acls). A value outsi
 | ban:email:add | Adds and updates `email` [blocklist](/admin-api/blocklists/) entries |
 | ban:email:check | Reads the `email` blocklist |
 | ban:email:remove | Removes `email` blocklist entries |
-| suspicious_email_domain:add | Adds and updates `email-domain-suspicious` blocklist entries |
-| suspicious_email_domain:check | Reads the `email-domain-suspicious` blocklist |
-| suspicious_email_domain:remove | Removes `email-domain-suspicious` blocklist entries |
 | ban:phrase:add | Adds and updates `phrase` blocklist entries |
 | ban:phrase:check | Reads the `phrase` blocklist |
 | ban:phrase:remove | Removes `phrase` blocklist entries |

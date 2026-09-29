@@ -110,7 +110,7 @@ Fluxer answers an unrecognised failure with 500 `INTERNAL_SERVER_ERROR` and a ge
 
 ## Client errors as an abuse signal
 
-Repeated invalid requests or credentials can trigger a temporary IP ban. A `4xx` answer to a request with no authenticated user adds to that signal, weighted by status. A 429 weighs 3, a 401 weighs 0.75, a 403 weighs 0.5, and every other 4xx weighs 0.25. One request adds at most one signal, and a request from a private or exempt address adds none. Stop using a rejected credential. Change a rejected request before sending it again, and after a 429 wait `retry_after` before the next attempt.
+Repeated invalid requests or credentials can trigger a temporary IP ban. Stop using a rejected credential. Change a rejected request before sending it again, and after a 429 wait `retry_after` before the next attempt.
 
 :::caution[An automatic ban answers every request for 24 hours]
 A temporary ban lasts 24 hours by default. Requests from the banned address return 403 `GLOBAL_IP_TEMPORARILY_BANNED`. Use `expires_at` from the response when available.

@@ -3,6 +3,7 @@
 import {createHash, randomBytes} from 'node:crypto';
 import type {ApiContext} from '@app/api/ApiContext';
 import * as AuthSession from '@app/api/auth/AuthSession';
+import {assertEmailNotBlocklisted} from '@app/api/auth/EmailBlocklist';
 import {SsoIdentityRepository} from '@app/api/auth/services/SsoIdentityRepository';
 import {
 	parseTokenEndpointResponse,
@@ -11,6 +12,7 @@ import {
 } from '@app/api/auth/services/SsoUtils';
 import type {UserID} from '@app/api/BrandedTypes';
 import type {ILogger} from '@app/api/ILogger';
+import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {IDiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {KVActivityTracker} from '@app/api/infrastructure/KVActivityTracker';
 import {
@@ -381,6 +383,7 @@ export class SsoService {
 		if (registrationConfig.mode === 'closed') {
 			throw new RegistrationClosedError();
 		}
+		await assertEmailNotBlocklisted(emailLower, 'email');
 		const pendingApproval = registrationConfig.mode === 'approval';
 		const user = await this.provisionUserFromClaims(claims, config, {pendingApproval});
 		if (pendingApproval) {
@@ -552,6 +555,25 @@ export class SsoService {
 			void this.kvActivityTracker.updateActivity(user.id, now).catch((error: unknown) => {
 				getLogger().warn({error, userId: user.id}, 'Failed to update real-time user activity');
 			});
+			await emitActivity(
+				'registration',
+				user.id.toString(),
+				{
+					user_id: user.id.toString(),
+					method: 'oauth',
+					email: user.email,
+					username: user.username,
+					username_user_chosen: false,
+					global_name: user.globalName,
+					locale: user.locale,
+					timezone: null,
+					invite_code: null,
+					suspicious_flags: user.suspiciousActivityFlags ?? 0,
+					flags: user.flags.toString(),
+				},
+				null,
+				user.id.toString(),
+			);
 			return user;
 		} catch (error) {
 			if (!userCreated) {

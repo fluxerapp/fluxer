@@ -44,15 +44,16 @@ async function revokeSessionTargets(
 				? users.deleteAllPushSubscriptions(userId)
 				: users.deletePushSubscriptionsForAuthSessions(userId, sessionIdHashes, {deleteUnboundSubscriptions: true}),
 	];
-	if (scope === 'selected' || targets.length > 0) {
-		steps.push(
-			() =>
-				users.deleteAuthSessions(
+	steps.push(() =>
+		scope === 'all'
+			? users.deleteAllAuthSessions(userId)
+			: users.deleteAuthSessions(
 					userId,
 					targets.map((target) => target.sessionIdHash),
 				),
-			() => gateway.terminateSession({userId, sessionIdHashes}),
-		);
+	);
+	if (targets.length > 0) {
+		steps.push(() => gateway.terminateSession({userId, sessionIdHashes}));
 	}
 	await runAllInOrder(steps, 'Failed to revoke auth sessions');
 }

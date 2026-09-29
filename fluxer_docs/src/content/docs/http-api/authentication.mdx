@@ -536,7 +536,7 @@ Registration verifies [CAPTCHA](/topics/captcha/) when CAPTCHA is enabled. It pe
 | registration_url_code?<sup>6</sup> | ?string | The administrator-issued registration URL code (1-256 characters) |
 | theme? | string | The initial theme preference, one of `dark`, `dark_legacy`, `coal`, `light`, or `system` |
 
-<sup>1</sup> Omitting the email address creates an unclaimed account, which has no recovery path until it is claimed. An address whose domain has no usable DNS records, or whose top-level domain is blocked by account policy, returns the field code `INVALID_EMAIL_ADDRESS`, and an address already in use returns `EMAIL_ALREADY_IN_USE`
+<sup>1</sup> Omitting the email address creates an unclaimed account, which has no recovery path until it is claimed. An address whose domain has no usable DNS records, or whose top-level domain the instance blocks, returns the field code `INVALID_EMAIL_ADDRESS`, and an address already in use returns `EMAIL_ALREADY_IN_USE`
 
 <sup>2</sup> Omitting the username derives one from `global_name` when that value produces a permitted username, and otherwise allocates a generated username, in both cases with a server-allocated discriminator
 
@@ -548,7 +548,7 @@ Registration verifies [CAPTCHA](/topics/captcha/) when CAPTCHA is enabled. It pe
 
 <sup>6</sup> A code supplied on an instance with administrator registration URLs disabled, and a code that does not resolve, both return 400 `REGISTRATION_URL_INVALID`. A valid code overrides the closed registration mode and replaces the instance approval mode with its own approval setting
 
-Fluxer resolves the region from the client IP address, and an age below the minimum for that region returns the field code `MUST_BE_MINIMUM_AGE`. That minimum is 13 years unless account policy sets a different minimum for the region, and the applied minimum appears only in the localised message.
+Fluxer resolves the region from the client IP address, and an age below the minimum for that region returns the field code `MUST_BE_MINIMUM_AGE`. That minimum is 13 years unless the region sets a different minimum, and the applied minimum appears only in the localised message.
 
 Registration returns 403 `REGISTRATION_CLOSED` when the instance is closed and no valid registration URL was supplied. A username whose discriminator space is exhausted returns the field code `TOO_MANY_USERS_WITH_THIS_USERNAME`. A username or display name containing a blocked substring returns 403 `CONTENT_BLOCKED`.
 
@@ -573,9 +573,9 @@ There is no retry key. A repeated request with the same values creates a second 
 
 ### Side effects
 
-The operation applies the instance's registration, email-domain, breached-password, and regional policies before creating the account, and its risk policy can set suspicious activity flags on the created account. It records the accepted terms and privacy policy, authorises the registering client IP address, and sends an email verification message when the instance sends email. An instance that sends no email marks the address verified at creation instead.
+The operation applies the instance's registration, email-domain, breached-password, and regional policies before creating the account. It records the accepted terms and privacy policy, authorises the registering client IP address, and sends an email verification message when the instance sends email. An instance that sends no email marks the address verified at creation instead.
 
-Registration accepts the `invite_code` from the body, or the instance's configured auto-join invite when the body has none. On an instance with single-community mode enabled, the account also joins the community guild. Each join emits [Guild Member Add](/gateway/events/#guild-member-add) to the affected guild's sessions. Registration policy can suppress invite admission.
+Registration accepts the `invite_code` from the body, or the instance's configured auto-join invite when the body has none. On an instance with single-community mode enabled, the account also joins the community guild. Each join emits [Guild Member Add](/gateway/events/#guild-member-add) to the affected guild's sessions.
 
 Approval mode registration creates no guild membership and no authentication session, and the account cannot sign in until an administrator approves it. Every other successful registration creates one session and returns its token.
 

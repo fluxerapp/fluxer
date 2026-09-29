@@ -2396,7 +2396,7 @@ msgid "7 days"
 msgstr "7일"
 
 #. Required-action error when the API requires a captcha for phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:581
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:576
 msgid "A browser check is required before phone verification. Try again from the sign-in page or contact support."
 msgstr "전화번호 인증 전에 브라우저 확인이 필요합니다. 로그인 페이지에서 다시 시도하거나 고객지원팀에 문의하세요."
 
@@ -5240,8 +5240,8 @@ msgstr "지금은 부재중"
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:396
 #: src/features/moderation/components/report_modal/IARModal.tsx:86
 #: src/features/moderation/components/report/ReportStepDetails.tsx:312
-#: src/features/user/components/modals/PhoneAddModal.tsx:420
-#: src/features/user/components/modals/PhoneAddModal.tsx:439
+#: src/features/user/components/modals/PhoneAddModal.tsx:417
+#: src/features/user/components/modals/PhoneAddModal.tsx:436
 msgid "Back"
 msgstr "뒤로"
 
@@ -6451,7 +6451,7 @@ msgstr "여기에 파일을 올릴 수 없습니다"
 #: src/features/user/components/modals/PasswordChangeModal.tsx:226
 #: src/features/user/components/modals/PasswordChangeModal.tsx:237
 #: src/features/user/components/modals/PasswordChangeModal.tsx:255
-#: src/features/user/components/modals/PhoneAddModal.tsx:401
+#: src/features/user/components/modals/PhoneAddModal.tsx:398
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:174
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx:33
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:846
@@ -8294,7 +8294,7 @@ msgstr "석탄 테마"
 #. Label for an inbound phone verification code shown in the required-action modal.
 #: src/features/auth/components/modals/MfaTotpDisableModal.tsx:26
 #: src/features/auth/components/modals/MfaTotpEnableModal.tsx:36
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:466
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:462
 #: src/features/invite/components/InviteListItem.tsx:77
 #: src/features/moderation/components/report/ReportBreadcrumbs.tsx:29
 msgid "Code"
@@ -10299,7 +10299,7 @@ msgstr "카운트다운 타이머"
 #. Form field label for the country selector in the phone verification step.
 #. Short label in the phone add modal. Keep it concise.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:92
-#: src/features/user/components/modals/PhoneAddModal.tsx:59
+#: src/features/user/components/modals/PhoneAddModal.tsx:57
 msgid "Country"
 msgstr "국가"
 
@@ -13350,7 +13350,7 @@ msgid "Email unavailable"
 msgstr "이메일 사용 불가"
 
 #. Required-action error shown when email update cannot continue.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:522
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:518
 msgid "Email update is unavailable right now. Try again later or contact support."
 msgstr "지금은 이메일을 업데이트할 수 없습니다. 나중에 다시 시도하거나 고객지원팀에 문의하세요."
 
@@ -13999,7 +13999,7 @@ msgstr "유효한 {theOtherPlatform} 템플릿 URL 또는 코드를 입력하세
 
 #. Inline validation error on the email step of the DSA report flow when the email is malformed.
 #. Required-action form error for an invalid email address.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:510
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:506
 #: src/features/moderation/components/pages/ReportPage.tsx:59
 msgid "Enter a valid email address."
 msgstr "유효한 이메일 주소를 입력하세요."
@@ -14010,14 +14010,14 @@ msgid "Enter a valid message link."
 msgstr "유효한 메시지 링크를 입력하세요."
 
 #. Required-action form error for an invalid phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:526
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:522
 msgid "Enter a valid mobile phone number."
 msgstr "유효한 휴대폰 번호를 입력하세요."
 
 #. Form validation error shown when the entered phone number cannot be parsed.
 #. Label in the phone add modal.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:108
-#: src/features/user/components/modals/PhoneAddModal.tsx:47
+#: src/features/user/components/modals/PhoneAddModal.tsx:45
 msgid "Enter a valid phone number"
 msgstr "유효한 전화번호를 입력하세요"
 
@@ -14101,7 +14101,7 @@ msgid "Enter the {digitCount}-digit code sent to {phoneNumber}."
 msgstr "{phoneNumber}(으)로 전송된 {digitCount}자리 코드를 입력하세요."
 
 #. placeholder {0}: getE164PhoneNumber(phoneNumber, selectedCountry) ?? formattedPhone
-#: src/features/user/components/modals/PhoneAddModal.tsx:376
+#: src/features/user/components/modals/PhoneAddModal.tsx:373
 msgid "Enter the {MFA_CODE_DIGIT_COUNT}-digit code sent to {0}."
 msgstr "{0}(으)로 전송된 {MFA_CODE_DIGIT_COUNT}자리 코드를 입력하세요."
 
@@ -16137,7 +16137,7 @@ msgstr "태그를 맞춤 설정하거나 사용자 이름을 변경할 때 현�
 
 #. Button in the required-action modal. Requests a new inbound SMS challenge code.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:202
-#: src/features/user/components/modals/PhoneAddModal.tsx:427
+#: src/features/user/components/modals/PhoneAddModal.tsx:424
 msgid "Get new code"
 msgstr "새 코드 받기"
 
@@ -24039,7 +24039,7 @@ msgid "Open your browser, sign in, then enter the code below to link your accoun
 msgstr "브라우저를 열고 로그인한 다음 아래 코드를 입력하여 계정을 연결하세요."
 
 #. Required-action modal carousel step title for the first inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:450
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:446
 msgid "Open your messages"
 msgstr "메시지 열기"
 
@@ -24047,12 +24047,12 @@ msgstr "메시지 열기"
 msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
 msgstr "기존 {PRODUCT_NAME} 앱을 열고 새 기기 연결을 선택한 다음 아래 코드를 입력하세요."
 
-#: src/features/user/components/modals/PhoneAddModal.tsx:327
+#: src/features/user/components/modals/PhoneAddModal.tsx:324
 msgid "Open your phone's messaging app and create a new text message."
 msgstr "휴대폰 메시지 앱을 열고 새 문자 메시지를 작성해 주세요."
 
 #. Required-action modal body for the first inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:454
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:450
 msgid "Open your phone's messaging app and start a new text message."
 msgstr "휴대폰 메시지 앱을 열고 새 문자 메시지를 시작하세요."
 
@@ -24223,7 +24223,7 @@ msgid "OTP"
 msgstr "OTP"
 
 #. Required-action form error when our own phone lookup provider is unavailable and we fail closed. Must blame us, not the number, and must invite retrying the same number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:558
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:554
 msgid "Our phone number check is down right now. This is on us, not your number. Wait a few minutes and try the same number again."
 msgstr "전화번호 확인 시스템에 일시적으로 문제가 발생했습니다. 고객님의 번호가 아닌 저희 시스템 문제입니다. 몇 분 후에 같은 번호로 다시 시도해 주세요."
 
@@ -24810,21 +24810,21 @@ msgstr "전화번호"
 #. Form field label for the phone number input.
 #. Short label in the phone add modal. Keep it concise.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:100
-#: src/features/user/components/modals/PhoneAddModal.tsx:67
+#: src/features/user/components/modals/PhoneAddModal.tsx:65
 msgid "Phone number"
 msgstr "전화번호"
 
 #. Form validation error shown when the phone number field is empty.
 #. Label in the phone add modal.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:116
-#: src/features/user/components/modals/PhoneAddModal.tsx:43
+#: src/features/user/components/modals/PhoneAddModal.tsx:41
 msgid "Phone number is required"
 msgstr "전화번호를 입력해 주세요"
 
 #. Toast shown after phone verification succeeds.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:486
-#: src/features/user/components/modals/PhoneAddModal.tsx:180
-#: src/features/user/components/modals/PhoneAddModal.tsx:185
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:482
+#: src/features/user/components/modals/PhoneAddModal.tsx:178
+#: src/features/user/components/modals/PhoneAddModal.tsx:183
 msgid "Phone number verified"
 msgstr "전화번호 인증 완료"
 
@@ -24839,7 +24839,7 @@ msgid "Phone step"
 msgstr "전화번호 단계"
 
 #. Required-action error when the account is not eligible to add phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:542
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:538
 msgid "Phone verification is not available for this account. Use another method or contact support."
 msgstr "이 계정에서는 전화 인증을 사용할 수 없습니다. 다른 방법을 사용하거나 고객지원팀에 문의하세요."
 
@@ -27319,7 +27319,7 @@ msgid "Reposts: <0>{countLabel}</0>"
 msgstr "재게시: <0>{countLabel}</0>"
 
 #. Required-action form error when the user submits before a code exists.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:498
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:494
 msgid "Request a new code first."
 msgstr "먼저 새 코드를 요청하세요."
 
@@ -28793,7 +28793,7 @@ msgid "Search communities"
 msgstr "커뮤니티 검색"
 
 #. Button or menu action label in the phone add modal. Keep it concise.
-#: src/features/user/components/modals/PhoneAddModal.tsx:63
+#: src/features/user/components/modals/PhoneAddModal.tsx:61
 msgid "Search countries..."
 msgstr "국가 검색..."
 
@@ -29559,17 +29559,17 @@ msgstr "/tts로 텍스트 음성 변환 메시지를 보낼 수 있습니다. �
 
 #. placeholder {0}: inboundChallenge.challenge_code
 #. placeholder {1}: inboundChallenge.our_number
-#: src/features/user/components/modals/PhoneAddModal.tsx:335
+#: src/features/user/components/modals/PhoneAddModal.tsx:332
 msgid "Send the code <0>{0}</0> to <1>{1}</1>"
 msgstr "코드 <0>{0}</0>을(를) <1>{1}</1>(으)로 보내기"
 
 #. Required-action modal body for the second inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:462
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:458
 msgid "Send the code to the phone number below."
 msgstr "아래 전화번호로 코드를 보내주세요."
 
 #. Required-action modal carousel step title for the second inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:458
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:454
 msgid "Send this code"
 msgstr "코드 전송"
 
@@ -29579,7 +29579,7 @@ msgid "Send this pin back in time?"
 msgstr "이 핀을 과거로 돌려보낼까요?"
 
 #. Label for the destination phone number in an inbound phone verification challenge.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:470
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:466
 msgid "Send to"
 msgstr "다음으로 전송"
 
@@ -29606,16 +29606,11 @@ msgstr "음성 메시지 보내기"
 msgid "Send:"
 msgstr "송신:"
 
-#. Required-action modal explanation for an inbound phone verification challenge due to SMS cost.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:442
-msgid "Sending an SMS to this number is expensive, so we need you to text us instead."
-msgstr "이 번호로 SMS를 보내는 데 비용이 많이 들기 때문에 대신 문자를 보내주셔야 합니다."
-
-#: src/features/user/components/modals/PhoneAddModal.tsx:304
+#: src/features/user/components/modals/PhoneAddModal.tsx:301
 msgid "Sending an SMS to this phone number is too expensive for {PRODUCT_NAME}, so we need you to send us an SMS instead. We know this isn't ideal. You can also ask the administrators of this instance to lift this requirement from your account."
 msgstr "{PRODUCT_NAME}에서 이 전화번호로 SMS를 보내는 비용이 너무 비싸서, 대신 고객님께서 저희에게 SMS를 보내주셔야 합니다. 불편하시겠지만, 이 인스턴스의 관리자에게 요청하여 이 요구 사항을 해제할 수도 있습니다."
 
-#: src/features/user/components/modals/PhoneAddModal.tsx:310
+#: src/features/user/components/modals/PhoneAddModal.tsx:307
 msgid "Sending an SMS to this phone number is too expensive for {PRODUCT_NAME}, so we need you to send us an SMS instead. We know this isn't ideal. You can also contact <0>{SUPPORT_EMAIL}</0> to have us lift this requirement from your account."
 msgstr "{PRODUCT_NAME}에서 이 전화번호로 SMS를 보내는 비용이 너무 비싸서, 대신 고객님께서 저희에게 SMS를 보내주셔야 합니다. 불편하시겠지만, <0>{SUPPORT_EMAIL}</0>로 문의하여 이 요구 사항을 해제할 수도 있습니다."
 
@@ -31202,7 +31197,7 @@ msgid "Smoother video"
 msgstr "더 부드러운 영상"
 
 #. Required-action error when the SMS provider cannot send or verify a code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:538
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:534
 msgid "SMS verification is unavailable right now. Try again later or contact support."
 msgstr "지금은 SMS 인증을 이용할 수 없습니다. 나중에 다시 시도하거나 고객지원팀에 문의하세요."
 
@@ -31397,7 +31392,7 @@ msgstr "문제가 발생했습니다. 나중에 다시 시도해 주세요."
 #. Inline error in the web deep-link prompt when opening the desktop app fails.
 #. Toast error shown when the mature content check request fails unexpectedly.
 #: src/features/auth/components/modals/MatureContentCheckModal.tsx:18
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:585
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:580
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:31
 msgid "Something went wrong. Try again."
 msgstr "문제가 발생했습니다. 다시 시도해 주세요."
@@ -31737,7 +31732,7 @@ msgid "Staff controls"
 msgstr "직원 도구"
 
 #. Required-action modal notice for inbound phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:482
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:478
 msgid "Standard messaging rates from your carrier may apply."
 msgstr "이동통신사의 표준 메시지 요금이 부과될 수 있습니다."
 
@@ -33165,12 +33160,12 @@ msgid "Thank you for helping keep {productName} safe. We'll review your report a
 msgstr "{productName}을(를) 안전하게 유지하는 데 도움을 주셔서 감사합니다. 최대한 빨리 신고 내용을 검토하겠습니다."
 
 #. Required-action form error for an invalid verification code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:490
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:486
 msgid "That code didn't work. Check it and try again."
 msgstr "코드가 올바르지 않습니다. 다시 확인하고 시도해 주세요."
 
 #. Required-action form error for an expired verification code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:494
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:490
 msgid "That code expired. Request a new code."
 msgstr "코드가 만료되었습니다. 새 코드를 요청해 주세요."
 
@@ -33198,7 +33193,7 @@ msgid "That doesn't look like a valid URL."
 msgstr "유효한 URL이 아닌 것 같아요."
 
 #. Required-action form error when a new email is already used by another account.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:514
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:510
 msgid "That email is already in use."
 msgstr "이미 사용 중인 이메일입니다."
 
@@ -34118,8 +34113,8 @@ msgstr "이것이 마지막 패스키이며, 패스키가 두 번째 인증 수�
 msgid "This is your last passkey. Once it's gone you won't be able to use a passkey as your second factor."
 msgstr "이것이 마지막 패스키입니다. 삭제하고 나면 패스키를 두 번째 인증 수단으로 사용할 수 없습니다."
 
-#. Required-action form error for landline, toll-free, premium, shared-cost, UAN, voicemail and pager lines. Do not name which line type the provider returned.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:570
+#. Required-action form error when the number is not a mobile line. Do not name the line type.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:566
 msgid "This isn't a mobile number, so it can't receive our text. Try a mobile number, or contact support if you think that's wrong."
 msgstr "이 번호는 휴대폰 번호가 아니어서 문자를 받을 수 없습니다. 휴대폰 번호를 입력하거나, 잘못되었다고 생각되면 고객지원팀에 문의하세요."
 
@@ -34200,12 +34195,12 @@ msgid "This nickname will only be visible in this community"
 msgstr "이 닉네임은 이 커뮤니티에서만 표시됩니다"
 
 #. Required-action form error when a number must use the inbound text-in challenge and the current step cannot start one. Do not say why the number was routed there.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:552
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:548
 msgid "This number is verified by texting us instead. Go back and start phone verification again to get the code and the number to text."
 msgstr "이 번호는 직접 문자를 보내서 인증합니다. 코드와 문자를 보낼 번호를 받으려면 뒤로 가서 전화 인증을 다시 시작하세요."
 
 #. Required-action modal explanation for an inbound phone verification challenge.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:446
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:442
 msgid "This number needs text-in verification instead of an SMS from us."
 msgstr "이 번호는 SMS를 받는 대신 직접 문자를 보내 인증해야 합니다."
 
@@ -34230,12 +34225,12 @@ msgid "This participant was deafened by moderators"
 msgstr "이 참가자는 모더레이터가 소리를 껐습니다"
 
 #. Required-action form error when the backend rejects a phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:530
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:526
 msgid "This phone number cannot be used. Try another mobile number or contact support."
 msgstr "이 전화번호는 사용할 수 없습니다. 다른 휴대폰 번호를 사용해 보거나 고객지원팀에 문의하세요."
 
 #. Required-action form error when the backend rejects a reused phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:534
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:530
 msgid "This phone number has already been used. Try another number or contact support."
 msgstr "이 전화번호는 이미 사용 중입니다. 다른 번호를 사용해 보거나 고객지원팀에 문의하세요."
 
@@ -34387,7 +34382,7 @@ msgid "This verification session expired. Return to {productName} and start chec
 msgstr "인증 세션이 만료되었습니다. {productName}으로 돌아가서 다시 결제를 시작해 주세요."
 
 #. Required-action form error when an email-change ticket or proof is invalid or expired.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:502
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:498
 msgid "This verification session expired. Start again."
 msgstr "인증 세션이 만료되었습니다. 다시 시작해 주세요."
 
@@ -34485,7 +34480,7 @@ msgid "This will trust all external links and skip the warning for every domain.
 msgstr "모든 외부 링크를 신뢰하고 모든 도메인에 대한 경고를 건너뜁니다. 기존 신뢰 도메인은 교체됩니다. 보안 수준이 낮아집니다."
 
 #. Required-action modal body after the user sends an inbound phone verification text.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:478
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:474
 msgid "This window updates automatically after we receive your message."
 msgstr "메시지를 받으면 이 창이 자동으로 업데이트됩니다."
 
@@ -34792,7 +34787,7 @@ msgid "Tone-map HDR images to standard range, reducing peak brightness."
 msgstr "HDR 이미지를 표준 범위로 톤 매핑하여 최고 밝기를 줄입니다."
 
 #. Required-action error shown for rate limits.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:506
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:502
 msgid "Too many attempts. Wait a bit, then try again."
 msgstr "시도 횟수가 너무 많습니다. 잠시 기다린 후 다시 시도해 주세요."
 
@@ -36632,7 +36627,7 @@ msgid "Use an email address you can access. We will send a code there."
 msgstr "본인이 확인할 수 있는 이메일 주소를 사용하세요. 해당 주소로 인증 코드를 보내드립니다."
 
 #. Required-action form error when the new email matches the current account email.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:518
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:514
 msgid "Use an email that is different from your current one."
 msgstr "현재 이메일과 다른 이메일을 사용하세요."
 
@@ -37318,17 +37313,17 @@ msgstr "본인 인증하기"
 #. Primary button in the required-action modal. Sends or submits phone verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:178
 #: src/features/channel/components/barriers/BarrierComponents.tsx:269
-#: src/features/user/components/modals/PhoneAddModal.tsx:408
+#: src/features/user/components/modals/PhoneAddModal.tsx:405
 msgid "Verify phone"
 msgstr "전화번호 인증"
 
 #. Short label in the phone add modal. Keep it concise.
-#: src/features/user/components/modals/PhoneAddModal.tsx:55
+#: src/features/user/components/modals/PhoneAddModal.tsx:53
 msgid "Verify phone number"
 msgstr "전화번호 인증"
 
 #. Label in the phone add modal.
-#: src/features/user/components/modals/PhoneAddModal.tsx:51
+#: src/features/user/components/modals/PhoneAddModal.tsx:49
 msgid "Verify phone number form"
 msgstr "전화번호 인증 양식"
 
@@ -38192,7 +38187,7 @@ msgstr "볼륨 높이기"
 msgid "Wait a moment before deleting more messages."
 msgstr "메시지를 더 삭제하기 전에 잠시 기다려 주세요."
 
-#: src/features/user/components/modals/PhoneAddModal.tsx:352
+#: src/features/user/components/modals/PhoneAddModal.tsx:349
 msgid "Wait a moment. This window will close automatically once we receive your message."
 msgstr "잠시만 기다려 주세요. 메시지 수신 시 이 창은 자동으로 닫힙니다."
 
@@ -38202,7 +38197,7 @@ msgid "Wait between messages. Members with \"{bypassSlowmodePermissionLabel}\" c
 msgstr "메시지를 보낸 후 다음 메시지까지 기다려야 합니다. \"{bypassSlowmodePermissionLabel}\" 권한이 있는 멤버는 이 제한을 건너뛸 수 있습니다."
 
 #. Required-action modal carousel step title after the user sends an inbound phone verification text.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:474
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:470
 msgid "Wait here"
 msgstr "잠시만 기다려 주세요"
 
@@ -38368,13 +38363,13 @@ msgstr "테마를 읽을 수 없습니다. 파일이 손상되었거나 유효�
 msgid "We couldn't remove that account. Try again."
 msgstr "계정을 삭제할 수 없습니다. 다시 시도해 주세요."
 
-#. Required-action form error for phone attempts blocked by a fraud signal. Deliberately non-specific. Never name the signal, the score or the threshold.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:576
+#. Required-action form error when a phone attempt cannot be verified automatically and needs a support review. Keep it non-specific.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:571
 msgid "We couldn't verify this number automatically. Contact support and a person will review your account."
 msgstr "이 번호는 자동으로 인증할 수 없습니다. 고객지원팀에 문의하시면 담당자가 계정을 검토해 드립니다."
 
 #. Required-action form error when the phone number's country is on the SMS send ban list. Must not imply the number itself is invalid.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:546
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:542
 msgid "We don't send verification texts to this country. Try a mobile number from another country, or contact support."
 msgstr "이 국가로는 인증 문자를 보내지 않습니다. 다른 국가의 휴대폰 번호를 사용하거나 고객지원팀에 문의하세요."
 
@@ -38469,9 +38464,9 @@ msgstr "비밀번호 변경 전, 이메일로 인증 코드를 보내드립니�
 msgid "We'll send a verification code to your email before you can view your backup codes."
 msgstr "백업 코드를 확인하기 전에 이메일로 인증 코드를 보내드립니다."
 
-#: src/features/user/components/modals/PhoneAddModal.tsx:286
-msgid "We'll send an SMS code when available. Your number is not linked to your account. We keep only an encrypted marker, with no user ID, to allow at most {PHONE_VERIFICATION_LIMIT} verifications in about {PHONE_VERIFICATION_WINDOW_DAYS} days."
-msgstr "가능한 경우 SMS 코드를 보내드립니다. 회원님의 전화번호는 계정에 연결되어 있지 않습니다. 사용자 ID 없이 암호화된 마커만 보관하며, 약 {PHONE_VERIFICATION_WINDOW_DAYS}일 이내에 최대 {PHONE_VERIFICATION_LIMIT}회 인증만 허용됩니다."
+#: src/features/user/components/modals/PhoneAddModal.tsx:284
+msgid "We'll send an SMS code when available. Your number is not linked to your account. We keep only an encrypted marker, with no user ID, for a limited time."
+msgstr "코드가 준비되면 SMS로 보내드립니다. 전화번호는 계정에 연결되지 않습니다. 사용자 ID 없이 암호화된 마커만 제한된 시간 동안 보관합니다."
 
 #: src/features/user/components/modals/EmailChangeModal.tsx:189
 msgid "We'll verify your current email and then your new email with one-time codes."
@@ -39976,10 +39971,10 @@ msgstr "{productName} 세션이 만료되었습니다. 이 애플리케이션의
 msgid "Your account"
 msgstr "내 계정"
 
-#. First line of the set-aside confirmation in the required-action modal. Always shown. Says can rather than will, because whether the check returns depends on account age and instance settings the user cannot see.
+#. First line of the set-aside confirmation in the required-action modal. Always shown. Says can rather than will, because the check may or may not come back.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:316
-msgid "Your account goes back to normal right away and you will not need a phone number now. This is not a permanent exemption. Joining a large or public community can bring this check back."
-msgstr "계정이 즉시 정상으로 돌아가며 지금은 전화번호가 필요하지 않습니다. 이는 영구적인 면제가 아닙니다. 규모가 크거나 공개된 커뮤니티에 참여하면 이 확인 절차가 다시 나타날 수 있습니다."
+msgid "Your account goes back to normal right away and you will not need a phone number now. This is not a permanent exemption, and we can ask for this check again later."
+msgstr "계정이 즉시 정상으로 돌아가며, 지금은 전화번호가 필요하지 않습니다. 이는 영구적인 면제는 아니며, 나중에 다시 인증을 요청할 수 있습니다."
 
 #: src/features/connection/components/pages/ConnectionCallbackPage.tsx:29
 msgid "Your account has been linked successfully. You can now close this tab and return to the app."
@@ -40044,7 +40039,7 @@ msgid "Your card is eligible. Redirecting you to the payment page now."
 msgstr "카드 사용이 가능합니다. 지금 결제 페이지로 이동합니다."
 
 #. Required-action form error when the carrier lookup says the number does not exist. Leaves room for the lookup to be wrong.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:564
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:560
 msgid "Your carrier says this number isn't in service. Check it and try again, or contact support if it's correct."
 msgstr "이동통신사에서 이 번호가 사용되지 않는 번호라고 확인했습니다. 번호를 확인하고 다시 시도하거나, 번호가 정확하다면 고객지원팀에 문의하세요."
 
@@ -40216,10 +40211,10 @@ msgstr "새 이메일 주소"
 msgid "Your new nickname, or leave blank to reset it."
 msgstr "새로운 닉네임입니다. 비워두면 초기화됩니다."
 
-#. Required-action modal privacy note for phone verification. limit and duration are inserted by code.
+#. Required-action modal privacy note for phone verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:421
-msgid "Your number is not linked to your account. We keep only an encrypted marker, with no user ID, for at most {limit} verifications in about {duration} days."
-msgstr "회원님의 전화번호는 계정에 연결되어 있지 않습니다. 사용자 ID 없이 암호화된 마커만 보관하며, 약 {duration}일 동안 최대 {limit}회 인증에 사용됩니다."
+msgid "Your number is not linked to your account. We keep only an encrypted marker, with no user ID, for a limited time."
+msgstr "전화번호가 계정에 연결되어 있지 않습니다. 사용자 ID 없이 암호화된 마커만 제한된 시간 동안 보관합니다."
 
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:152
 msgid "Your payment was canceled. You can now close this tab and return to the app."

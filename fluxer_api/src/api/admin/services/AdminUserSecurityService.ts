@@ -11,10 +11,9 @@ import * as AuthUtility from '@app/api/auth/AuthUtility';
 import {visibleWebAuthnCredentials} from '@app/api/auth/services/PasskeyRelyingParty';
 import {createPasswordResetToken, createUserID, type UserID} from '@app/api/BrandedTypes';
 import type {UserRow} from '@app/api/database/types/UserTypes';
+import {emitAdminAction} from '@app/api/infrastructure/activity/AccountChangeEvents';
 import {Logger} from '@app/api/Logger';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
-import type {IRiskHistoryRepository} from '@app/api/risk/HistoricalOutcomeRepository';
-import type {HistoricalOutcomeCode} from '@app/api/risk/RiskHistoryTypes';
 import {mapWebAuthnCredentialToResponse} from '@app/api/user/UserMappers';
 import {resolveAssignedTraits} from '@app/api/user/UserTraits';
 import {getIpAddressReverse, getLocationLabelFromIp} from '@app/api/utils/IpUtils';
@@ -23,7 +22,6 @@ import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {
 	ADMIN_PHONE_TOGGLE_CLEARABLE_FLAGS,
-	ALL_SUSPICIOUS_ACTIVITY_FLAGS,
 	DEFERRABLE_PHONE_FLAGS,
 	DEFERRED_PHONE_ON_COMMUNITY_JOIN,
 	PHONE_GATE_PROMOTED_FROM_DEFERRAL,
@@ -54,7 +52,6 @@ interface AdminUserSecurityServiceDeps {
 	apiContext: ApiContext;
 	auditService: AdminAuditService;
 	updatePropagator: AdminUserUpdatePropagator;
-	riskHistoryRepository: Pick<IRiskHistoryRepository, 'recordOutcomeForUser'>;
 }
 
 interface FlagAuditMetadataParams {
@@ -158,6 +155,7 @@ export class AdminUserSecurityService {
 				newFlags,
 			}),
 		});
+		await emitAdminAction(adminUserId, userId, 'update_flags');
 		return {
 			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
 		};
@@ -433,6 +431,7 @@ export class AdminUserSecurityService {
 						],
 			),
 		});
+		await emitAdminAction(adminUserId, userId, 'set_phone_verified');
 		return {
 			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
 		};
@@ -471,12 +470,6 @@ export class AdminUserSecurityService {
 			user.toRow(),
 		);
 		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
-		if (
-			(currentFlags & ALL_SUSPICIOUS_ACTIVITY_FLAGS) !== (newFlags & ALL_SUSPICIOUS_ACTIVITY_FLAGS) &&
-			(newFlags & ALL_SUSPICIOUS_ACTIVITY_FLAGS) !== 0
-		) {
-			await this.recordRiskOutcomes(userId, ['challenged'], 'admin_update_suspicious_activity_flags');
-		}
 		await auditService.createAuditLog({
 			adminUserId,
 			targetType: 'user',
@@ -485,6 +478,7 @@ export class AdminUserSecurityService {
 			auditLogReason,
 			metadata: new Map([['flags', data.flags.toString()]]),
 		});
+		await emitAdminAction(adminUserId, userId, 'set_suspicious_flags');
 		return {
 			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
 		};
@@ -514,11 +508,6 @@ export class AdminUserSecurityService {
 		);
 		await AuthSession.terminateAllUserSessions(this.deps.apiContext, userId);
 		await updatePropagator.propagateUserUpdate({userId, oldUser: user, updatedUser: updatedUser});
-		await this.recordRiskOutcomes(
-			userId,
-			data.flags !== 0 ? ['challenged', 'disabled_suspicious'] : ['disabled_suspicious'],
-			'admin_disable_suspicious_activity',
-		);
 		if (user.email) {
 			await emailService.sendAccountDisabledForSuspiciousActivityEmail(user.email, user.username, null, user.locale);
 		}
@@ -530,6 +519,7 @@ export class AdminUserSecurityService {
 			auditLogReason,
 			metadata: new Map([['flags', data.flags.toString()]]),
 		});
+		await emitAdminAction(adminUserId, userId, 'disable_suspicious');
 		return {
 			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
 		};
@@ -719,25 +709,5 @@ export class AdminUserSecurityService {
 				};
 			}),
 		};
-	}
-
-	private async recordRiskOutcomes(
-		userId: UserID,
-		outcomeCodes: ReadonlyArray<HistoricalOutcomeCode>,
-		source: string,
-	): Promise<void> {
-		if (outcomeCodes.length === 0) {
-			return;
-		}
-		try {
-			await this.deps.riskHistoryRepository.recordOutcomeForUser({
-				userId: userId.toString(),
-				occurredAt: new Date(),
-				source,
-				outcomeCodes,
-			});
-		} catch (error) {
-			Logger.warn({error, userId, source}, 'Failed to persist admin risk history outcome');
-		}
 	}
 }

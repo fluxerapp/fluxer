@@ -44,7 +44,6 @@ export class AdminGuildMembershipService {
 			throw new UnknownUserError();
 		}
 		await guildService.members.addUserToGuild({
-			skipRiskGate: true,
 			userId,
 			guildId,
 			sendJoinMessage,

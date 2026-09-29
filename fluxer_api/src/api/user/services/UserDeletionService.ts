@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {randomInt} from 'node:crypto';
+import {revokeAllAuthSessions} from '@app/api/auth/AuthSessionRevocation';
 import {createMessageID, createUserID, type MessageID, type UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
 import {mapChannelToResponse} from '@app/api/channel/ChannelMappers';
@@ -8,6 +9,7 @@ import type {ChannelRepository} from '@app/api/channel/ChannelRepository';
 import type {IConnectionRepository} from '@app/api/connection/IConnectionRepository';
 import type {FavoriteMemeRepository} from '@app/api/favorite_meme/FavoriteMemeRepository';
 import type {GuildRepository} from '@app/api/guild/repositories/GuildRepository';
+import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
 import type {IPurgeQueue} from '@app/api/infrastructure/CachePurgeQueue';
 import type {DiscriminatorService} from '@app/api/infrastructure/DiscriminatorService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
@@ -439,7 +441,7 @@ export async function processUserDeletion(
 		userRepository.deleteAllNotes(userId),
 		userRepository.deleteAllReadStates(userId),
 		userRepository.deleteAllSavedMessages(userId),
-		userRepository.deleteAllAuthSessions(userId),
+		revokeAllAuthSessions({users: userRepository, gateway: gatewayService}, userId),
 		userRepository.deleteAllMfaBackupCodes(userId),
 		userRepository.deleteAllWebAuthnCredentials(userId),
 		userRepository.deleteAllPushSubscriptions(userId),
@@ -478,5 +480,6 @@ export async function processUserDeletion(
 	await userRepository.removePendingDeletion(userId, pendingDeletionAt);
 	await userCacheService.setUserPartialResponseFromUser(anonymisedUser);
 	await userRepository.completeDeletion(anonymisedUser);
+	await emitActivity('account_deleted', userId.toString(), {user_id: userId.toString()}, null, userId.toString());
 	Logger.debug({userId, deletionReasonCode}, 'User account anonymization completed successfully');
 }

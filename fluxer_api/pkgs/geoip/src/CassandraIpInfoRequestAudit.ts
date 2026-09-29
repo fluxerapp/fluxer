@@ -85,7 +85,7 @@ export function createCassandraIpInfoRequestAuditLogger(
 						http_status: event.httpStatus,
 						outcome: event.outcome,
 						available: event.available,
-						risk_note: event.riskNote,
+						risk_note: event.note,
 						latency_ms: event.latencyMs,
 						response_ip: event.responseIp,
 						country_code: event.countryCode,

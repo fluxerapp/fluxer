@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {
-	MFA_CODE_DIGIT_COUNT,
-	PHONE_VERIFICATION_LIMIT,
-	PHONE_VERIFICATION_WINDOW_DAYS,
-} from '@app/features/app/config/I18nDisplayConstants';
+import {MFA_CODE_DIGIT_COUNT} from '@app/features/app/config/I18nDisplayConstants';
 import styles from '@app/features/auth/components/modals/RequiredActionModal.module.css';
 import {
 	COUNTRY_DESCRIPTOR,
@@ -14,7 +10,6 @@ import {
 	INBOUND_PHONE_CODE_LABEL_DESCRIPTOR,
 	INBOUND_PHONE_DEFAULT_REASON_DESCRIPTOR,
 	INBOUND_PHONE_DESTINATION_LABEL_DESCRIPTOR,
-	INBOUND_PHONE_EXPENSIVE_REASON_DESCRIPTOR,
 	INBOUND_PHONE_PREPARE_DESCRIPTION_DESCRIPTOR,
 	INBOUND_PHONE_PREPARE_TITLE_DESCRIPTOR,
 	INBOUND_PHONE_SEND_DESCRIPTION_DESCRIPTOR,
@@ -44,7 +39,6 @@ import {
 	type CodeFormInputs,
 	normalizeVerificationCode,
 	type PhoneFormInputs,
-	type PhoneInboundChallengeReason,
 	type PhoneScreen,
 	type SubmitCallback,
 } from '@app/features/auth/components/modals/required_action/RequiredActionTypes';
@@ -65,7 +59,6 @@ import {
 	getE164PhoneNumber,
 	getPhoneNumberPlaceholder,
 } from '@app/media/data/CountryCodes';
-import type {I18n} from '@lingui/core';
 import {useLingui} from '@lingui/react/macro';
 import type React from 'react';
 import {useCallback, useEffect, useMemo, useState} from 'react';
@@ -145,12 +138,6 @@ const renderCountryValue = (option: CountrySelectOption | null) => {
 	);
 };
 
-function getInboundReasonText(i18n: I18n, reason: PhoneInboundChallengeReason | null): string {
-	return reason === 'expensive_destination'
-		? i18n._(INBOUND_PHONE_EXPENSIVE_REASON_DESCRIPTOR)
-		: i18n._(INBOUND_PHONE_DEFAULT_REASON_DESCRIPTOR);
-}
-
 interface InboundPhoneStartStepProps {
 	requiresInboundPhone: boolean;
 }
@@ -179,7 +166,7 @@ export const InboundPhoneInstructionStep: React.FC<InboundPhoneInstructionStepPr
 			<StepShell
 				title={i18n._(INBOUND_PHONE_PREPARE_TITLE_DESCRIPTOR)}
 				description={i18n._(INBOUND_PHONE_PREPARE_DESCRIPTION_DESCRIPTOR)}
-				notice={getInboundReasonText(i18n, challenge.reason)}
+				notice={i18n._(INBOUND_PHONE_DEFAULT_REASON_DESCRIPTOR)}
 				data-flx="auth.required-action.required-action-phone.inbound-phone-instruction-step.step-shell"
 			/>
 		);
@@ -249,10 +236,7 @@ export const PhoneNumberStep: React.FC<PhoneNumberFormProps> = ({
 			<StepShell
 				title={i18n._(PHONE_NUMBER_TITLE_DESCRIPTOR)}
 				description={i18n._(PHONE_NUMBER_DESCRIPTION_DESCRIPTOR)}
-				notice={i18n._(PHONE_PRIVACY_DESCRIPTOR, {
-					limit: PHONE_VERIFICATION_LIMIT,
-					duration: PHONE_VERIFICATION_WINDOW_DAYS,
-				})}
+				notice={i18n._(PHONE_PRIVACY_DESCRIPTOR)}
 				data-flx="auth.required-action.required-action-phone.phone-number-step.step-shell"
 			>
 				<div
@@ -346,7 +330,7 @@ export interface PhoneVerificationController {
 	onCodeFormSubmit: SubmitCallback;
 	onCountryChange: (country: CountryCode) => void;
 	onPhoneInput: (event: React.ChangeEvent<HTMLInputElement>) => void;
-	onRefreshInboundChallenge: () => Promise<'inbound-challenge' | 'phone-code' | null>;
+	onRefreshInboundChallenge: () => Promise<boolean>;
 	onBackToPhone: () => void;
 }
 
@@ -397,12 +381,7 @@ export const usePhoneVerification = ({
 			setIsStartingInbound(true);
 			try {
 				const challenge = await UserCommands.startInboundPhoneChallenge();
-				setScreen({
-					kind: 'phone-inbound-challenge',
-					code: challenge.challenge_code,
-					ourNumber: challenge.our_number,
-					reason: null,
-				});
+				setScreen({kind: 'phone-inbound-challenge', code: challenge.challenge_code, ourNumber: challenge.our_number});
 			} finally {
 				setIsStartingInbound(false);
 			}
@@ -423,7 +402,6 @@ export const usePhoneVerification = ({
 				kind: 'phone-inbound-challenge',
 				code: verification.challenge_code,
 				ourNumber: verification.our_number,
-				reason: verification.reason,
 			});
 			return;
 		}
@@ -445,42 +423,17 @@ export const usePhoneVerification = ({
 		},
 		[getCurrentE164PhoneNumber, returnToPhoneStepWithError, i18n],
 	);
-	const onRefreshInboundChallenge = useCallback(async (): Promise<'inbound-challenge' | 'phone-code' | null> => {
-		if (screen.kind !== 'phone-inbound-challenge') return null;
-		const currentReason = screen.reason;
+	const onRefreshInboundChallenge = useCallback(async (): Promise<boolean> => {
+		if (screen.kind !== 'phone-inbound-challenge') return false;
 		setIsStartingInbound(true);
 		try {
-			if (currentReason === 'expensive_destination') {
-				const e164Phone = getCurrentE164PhoneNumber();
-				if (!e164Phone) {
-					returnToPhoneStepWithError();
-					return null;
-				}
-				const verification = await UserCommands.sendPhoneVerification(e164Phone);
-				if (verification.channel === 'inbound_challenge') {
-					setScreen({
-						kind: 'phone-inbound-challenge',
-						code: verification.challenge_code,
-						ourNumber: verification.our_number,
-						reason: verification.reason,
-					});
-					return 'inbound-challenge';
-				}
-				setScreen({kind: 'phone-code', recipient: e164Phone});
-				return 'phone-code';
-			}
 			const challenge = await UserCommands.startInboundPhoneChallenge();
-			setScreen({
-				kind: 'phone-inbound-challenge',
-				code: challenge.challenge_code,
-				ourNumber: challenge.our_number,
-				reason: null,
-			});
-			return 'inbound-challenge';
+			setScreen({kind: 'phone-inbound-challenge', code: challenge.challenge_code, ourNumber: challenge.our_number});
+			return true;
 		} finally {
 			setIsStartingInbound(false);
 		}
-	}, [getCurrentE164PhoneNumber, screen, returnToPhoneStepWithError]);
+	}, [screen]);
 	const {handleSubmit: onPhoneFormSubmit, isSubmitting: isPhoneSubmitting} = useRequiredActionFormSubmit(
 		phoneForm,
 		onStartInbound,

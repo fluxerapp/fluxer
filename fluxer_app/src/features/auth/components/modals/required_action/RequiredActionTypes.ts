@@ -22,18 +22,9 @@ export interface VerificationTab {
 	label: string;
 }
 
-export type PhoneInboundChallengeReason =
-	| 'voip'
-	| 'canadian'
-	| 'unknown_line_type'
-	| 'expensive_destination'
-	| 'account_forced'
-	| 'behavioural_risk';
-
 export interface ActiveInboundChallenge {
 	code: string;
 	ourNumber: string;
-	reason: PhoneInboundChallengeReason | null;
 }
 
 export type EmailScreen =
@@ -46,7 +37,7 @@ export type PhoneScreen =
 	| {kind: 'phone-number'}
 	| {kind: 'phone-code'; recipient: string}
 	| {kind: 'phone-inbound-start'}
-	| {kind: 'phone-inbound-challenge'; code: string; ourNumber: string; reason: PhoneInboundChallengeReason | null};
+	| {kind: 'phone-inbound-challenge'; code: string; ourNumber: string};
 
 export const EMAIL_SCREEN_ORDER: ReadonlyArray<EmailScreen['kind']> = [
 	'email-instructions',

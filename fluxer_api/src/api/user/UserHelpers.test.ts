@@ -1,19 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {Config} from '@app/api/Config';
+import {applySharedListUpdate, resetSharedListsForTests} from '@app/api/infrastructure/activity/SharedLists';
 import type {User} from '@app/api/models/User';
-import {setInjectedAccountPolicyEvaluator} from '@app/api/risk/AccountPolicyService';
-import {setCachedDeferredPhoneGateEnabled} from '@app/api/risk/DeferredPhoneGateCache';
 import {
-	createCurrentBehaviorTestAccountPolicyEvaluator,
-	TEST_POLICY_CONTACT_DOMAIN,
-	TEST_POLICY_CONTACT_SUBDOMAIN,
-} from '@app/api/test/AccountPolicyTestEvaluator';
-import {
+	canOwnerRunBots,
 	checkIsPremium,
 	getEffectivePremiumUntil,
 	getEffectiveSuspiciousFlags,
 	getRequiredActions,
+	isSignInRefused,
+	isTemporarilyBanned,
 } from '@app/api/user/UserHelpers';
 import {
 	DEFERRED_PHONE_ON_COMMUNITY_JOIN,
@@ -21,6 +17,7 @@ import {
 	PHONE_GATE_PROMOTED_FROM_DEFERRAL,
 	PremiumFlags,
 	SuspiciousActivityFlags,
+	UserFlags,
 	UserPremiumTypes,
 } from '@fluxer/constants/src/UserConstants';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
@@ -38,35 +35,6 @@ function createUser(
 }
 
 describe('deferred phone gate marker', () => {
-	beforeEach(() => {
-		setInjectedAccountPolicyEvaluator(createCurrentBehaviorTestAccountPolicyEvaluator());
-		setCachedDeferredPhoneGateEnabled(true);
-	});
-	afterEach(() => {
-		setInjectedAccountPolicyEvaluator(undefined);
-		setCachedDeferredPhoneGateEnabled(false);
-	});
-	it('does not suppress anything until a policy read has proven the gate is on', () => {
-		setCachedDeferredPhoneGateEnabled(false);
-		const user = createUser({
-			suspiciousActivityFlags: SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE | DEFERRED_PHONE_ON_COMMUNITY_JOIN,
-		});
-		expect(getRequiredActions(user)).toEqual(['REQUIRE_VERIFIED_PHONE']);
-	});
-	it('keeps a deferral suppressed when the gate reads off but phone flagging is disabled', () => {
-		setCachedDeferredPhoneGateEnabled(false);
-		const original = {...Config.abusePolicy.phoneFlagging};
-		Config.abusePolicy.phoneFlagging = {enabled: false, exemptCountryCodes: []};
-		try {
-			const user = createUser({
-				suspiciousActivityFlags: SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE | DEFERRED_PHONE_ON_COMMUNITY_JOIN,
-			});
-			expect(getRequiredActions(user)).toEqual([]);
-			expect(getEffectiveSuspiciousFlags(user)).toBe(0);
-		} finally {
-			Config.abusePolicy.phoneFlagging = original;
-		}
-	});
 	it('suppresses a deferred phone requirement so the account is not locked out', () => {
 		const user = createUser({
 			suspiciousActivityFlags: SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE | DEFERRED_PHONE_ON_COMMUNITY_JOIN,
@@ -102,14 +70,6 @@ describe('deferred phone gate marker', () => {
 		const user = createUser({suspiciousActivityFlags: DEFERRED_PHONE_ON_COMMUNITY_JOIN});
 		expect(getRequiredActions(user)).toEqual([]);
 		expect(getEffectiveSuspiciousFlags(user)).toBe(0);
-	});
-	it('re-arms stored phone requirements as soon as the gate is switched off', () => {
-		const user = createUser({
-			suspiciousActivityFlags: SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE | DEFERRED_PHONE_ON_COMMUNITY_JOIN,
-		});
-		expect(getRequiredActions(user)).toEqual([]);
-		setCachedDeferredPhoneGateEnabled(false);
-		expect(getRequiredActions(user)).toEqual(['REQUIRE_VERIFIED_PHONE']);
 	});
 	it('stops suppressing once another subsystem imposes the phone requirement directly', () => {
 		const deferred = SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE | DEFERRED_PHONE_ON_COMMUNITY_JOIN;
@@ -170,10 +130,10 @@ describe('deferred phone gate marker', () => {
 
 describe('getRequiredActions', () => {
 	beforeEach(() => {
-		setInjectedAccountPolicyEvaluator(createCurrentBehaviorTestAccountPolicyEvaluator());
+		applySharedListUpdate('email_domain_exempt', 'exempt.example\n');
 	});
 	afterEach(() => {
-		setInjectedAccountPolicyEvaluator(undefined);
+		resetSharedListsForTests();
 	});
 	it('keeps verified-email requirements active when the account email is unverified', () => {
 		const user = createUser({
@@ -219,9 +179,9 @@ describe('getRequiredActions', () => {
 		expect(getRequiredActions(user)).toEqual([]);
 		expect(getEffectiveSuspiciousFlags(user)).toBe(0);
 	});
-	it('masks all suspicious activity requirements for policy-exempt contact domains', () => {
+	it('masks all suspicious activity requirements for exempt contact domains', () => {
 		const user = createUser({
-			email: `builder@${TEST_POLICY_CONTACT_DOMAIN}`,
+			email: 'builder@exempt.example',
 			suspiciousActivityFlags:
 				SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL |
 				SuspiciousActivityFlags.REQUIRE_REVERIFIED_PHONE |
@@ -232,11 +192,19 @@ describe('getRequiredActions', () => {
 	});
 	it('does not mask suspicious activity requirements for non-matching subdomains', () => {
 		const user = createUser({
-			email: `builder@${TEST_POLICY_CONTACT_SUBDOMAIN}`,
+			email: 'builder@sub.exempt.example',
 			suspiciousActivityFlags: SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL,
 		});
 		expect(getRequiredActions(user)).toEqual(['REQUIRE_REVERIFIED_EMAIL']);
 		expect(getEffectiveSuspiciousFlags(user)).toBe(SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL);
+	});
+	it('keeps requirements while the exempt list is missing', () => {
+		resetSharedListsForTests();
+		const user = createUser({
+			email: 'builder@exempt.example',
+			suspiciousActivityFlags: SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL,
+		});
+		expect(getRequiredActions(user)).toEqual(['REQUIRE_VERIFIED_EMAIL']);
 	});
 });
 
@@ -286,5 +254,38 @@ describe('checkIsPremium', () => {
 			premiumFlags: PremiumFlags.ENABLED_OVERRIDE | PremiumFlags.PERKS_DISABLED,
 		};
 		expect(checkIsPremium(user)).toBe(false);
+	});
+});
+
+describe('account standing', () => {
+	const hour = 3_600_000;
+	function standing(flags: bigint, tempBannedUntil: Date | null = null, deletionStartedAt: Date | null = null) {
+		return {flags, tempBannedUntil, deletionStartedAt};
+	}
+	it('treats an active temporary ban as a refused sign-in', () => {
+		const banned = standing(UserFlags.DISABLED, new Date(Date.now() + hour));
+		expect(isTemporarilyBanned(banned)).toBe(true);
+		expect(isSignInRefused(banned)).toBe(true);
+		expect(canOwnerRunBots(banned)).toBe(false);
+	});
+	it('lets an expired temporary ban through', () => {
+		const expired = standing(UserFlags.DISABLED, new Date(Date.now() - hour));
+		expect(isTemporarilyBanned(expired)).toBe(false);
+		expect(isSignInRefused(expired)).toBe(false);
+		expect(canOwnerRunBots(expired)).toBe(true);
+	});
+	it('keeps a self-disabled account able to sign in but stops its bots', () => {
+		const disabled = standing(UserFlags.DISABLED);
+		expect(isSignInRefused(disabled)).toBe(false);
+		expect(canOwnerRunBots(disabled)).toBe(false);
+	});
+	it('refuses closed accounts', () => {
+		expect(isSignInRefused(standing(UserFlags.DELETED))).toBe(true);
+		expect(isSignInRefused(standing(0n, null, new Date()))).toBe(true);
+		expect(canOwnerRunBots(standing(UserFlags.DELETED))).toBe(false);
+	});
+	it('accepts an account in good standing', () => {
+		expect(isSignInRefused(standing(0n))).toBe(false);
+		expect(canOwnerRunBots(standing(0n))).toBe(true);
 	});
 });

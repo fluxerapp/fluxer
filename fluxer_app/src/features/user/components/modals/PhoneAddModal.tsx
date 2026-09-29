@@ -4,8 +4,6 @@ import * as Modal from '@app/features/app/components/dialogs/Modal';
 import {ExternalLink} from '@app/features/app/components/shared/ExternalLink';
 import {
 	MFA_CODE_DIGIT_COUNT,
-	PHONE_VERIFICATION_LIMIT,
-	PHONE_VERIFICATION_WINDOW_DAYS,
 	PRODUCT_NAME,
 	SUPPORT_EMAIL,
 	SUPPORT_EMAIL_MAILTO,
@@ -285,8 +283,7 @@ export const PhoneAddModal = observer(() => {
 						<p className={styles.footerText} data-flx="user.phone-add-modal.footer-text">
 							<Trans>
 								We'll send an SMS code when available. Your number is not linked to your account. We keep only an
-								encrypted marker, with no user ID, to allow at most {PHONE_VERIFICATION_LIMIT} verifications in about{' '}
-								{PHONE_VERIFICATION_WINDOW_DAYS} days.
+								encrypted marker, with no user ID, for a limited time.
 							</Trans>
 						</p>
 					}

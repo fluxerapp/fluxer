@@ -89,10 +89,8 @@ export const UserFlagsDescriptions: Record<keyof typeof UserFlags, string> = {
 	APP_STORE_REVIEWER: 'User is an app store reviewer',
 	STAFF_HIDDEN: 'User staff status is hidden from public flags',
 	AGE_VERIFIED_ADULT: 'User has verified their age as an adult via credit card verification',
-	FORCE_INBOUND_PHONE_VERIFICATION:
-		'User is forced through inbound (expensive-destination) phone verification regardless of phone prefix, for debugging',
-	NOT_SUSPICIOUS:
-		'User is permanently exempt from automatic suspicious-activity flagging on RPC session start (does not require a prior payment)',
+	FORCE_INBOUND_PHONE_VERIFICATION: 'User is forced through inbound phone verification, for debugging',
+	NOT_SUSPICIOUS: 'User is permanently exempt from automatic suspicious-activity flagging',
 };
 export const PremiumFlags = {
 	DISCRIMINATOR: 1 << 0,
@@ -200,7 +198,6 @@ export const PHONE_GATE_PROMOTED_FROM_DEFERRAL = 1 << 17;
 export const DEFERRABLE_PHONE_FLAGS =
 	SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE | SuspiciousActivityFlags.REQUIRE_REVERIFIED_PHONE;
 export const NEVER_DEFERRABLE_PHONE_FLAGS = SuspiciousActivityFlags.REQUIRE_INBOUND_PHONE_VERIFICATION;
-export const PHONE_REQUIREMENT_FLAGS = DEFERRABLE_PHONE_FLAGS | NEVER_DEFERRABLE_PHONE_FLAGS;
 export function imposePhoneRequirements(currentFlags: number, addedFlags: number): number {
 	const nextFlags = currentFlags | addedFlags;
 	if ((addedFlags & DEFERRABLE_PHONE_FLAGS) === 0) {
@@ -212,16 +209,6 @@ export const ADMIN_PHONE_TOGGLE_CLEARABLE_FLAGS =
 	DEFERRED_PHONE_ON_COMMUNITY_JOIN |
 	PHONE_GATE_PROMOTED_FROM_DEFERRAL |
 	SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE |
-	SuspiciousActivityFlags.REQUIRE_INBOUND_PHONE_VERIFICATION;
-export const PHONE_ADD_CLEARABLE_FLAGS =
-	DEFERRED_PHONE_ON_COMMUNITY_JOIN |
-	PHONE_GATE_PROMOTED_FROM_DEFERRAL |
-	SuspiciousActivityFlags.REQUIRE_VERIFIED_PHONE |
-	SuspiciousActivityFlags.REQUIRE_REVERIFIED_PHONE |
-	SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL_OR_VERIFIED_PHONE |
-	SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL_OR_VERIFIED_PHONE |
-	SuspiciousActivityFlags.REQUIRE_VERIFIED_EMAIL_OR_REVERIFIED_PHONE |
-	SuspiciousActivityFlags.REQUIRE_REVERIFIED_EMAIL_OR_REVERIFIED_PHONE |
 	SuspiciousActivityFlags.REQUIRE_INBOUND_PHONE_VERIFICATION;
 export const ThemeTypes = {
 	DARK: 'dark',

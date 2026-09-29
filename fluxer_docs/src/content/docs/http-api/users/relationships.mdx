@@ -171,13 +171,13 @@ A target the caller has blocked returns 400 `CANNOT_SEND_FRIEND_REQUEST_TO_BLOCK
 <sup>1</sup> The friend source evaluation is skipped when the target has no stored settings, which admits the request as though the target permitted requests from anyone
 
 :::caution[A flagged caller receives an indistinguishable success]
-A caller with the `SPAMMER` [public user flag](/http-api/users/#public-user-flags), or one whose send triggers the deployment's direct contact spam policy, gets a one-sided request. Fluxer writes only the caller's `OUTGOING_REQUEST` record. [Relationship Add](/gateway/events/#relationship-add) reaches the caller alone. The response is an ordinary `OUTGOING_REQUEST` object.
+A caller with the `SPAMMER` [public user flag](/http-api/users/#public-user-flags) gets a one-sided request. Fluxer writes only the caller's `OUTGOING_REQUEST` record. [Relationship Add](/gateway/events/#relationship-add) reaches the caller alone. The response is an ordinary `OUTGOING_REQUEST` object.
 :::
 
-The one-sided request path also skips the rules that follow it: the target's block of the caller, the target's [friend source flags](/http-api/users/#friend-source-flags), the app store reviewer rule, the [relationship limit](#relationship-limit), and friendly bot auto-acceptance. The caller's own block of the target is still enforced and still returns 400 `CANNOT_SEND_FRIEND_REQUEST_TO_BLOCKED_USER`. When the direct contact spam policy suppresses a send and its action is `flag_spammer`, Fluxer also sets the `SPAMMER` flag on the caller, which makes every later send one-sided.
+The one-sided request path also skips the rules that follow it: the target's block of the caller, the target's [friend source flags](/http-api/users/#friend-source-flags), the app store reviewer rule, the [relationship limit](#relationship-limit), and friendly bot auto-acceptance. The caller's own block of the target is still enforced and still returns 400 `CANNOT_SEND_FRIEND_REQUEST_TO_BLOCKED_USER`.
 
 :::note[The suppression entries enter at different points]
-Fluxer checks for the `SPAMMER` flag before it looks for a pending request from the target. A caller that already has the flag gets a one-sided request even when the target has a pending request, so it can hold both an `INCOMING_REQUEST` and an `OUTGOING_REQUEST` record for one account. Fluxer applies the direct contact spam policy after that lookup, so a caller without the flag accepts a pending request from the target normally.
+Fluxer checks for the `SPAMMER` flag before it looks for a pending request from the target. A caller that already has the flag gets a one-sided request even when the target has a pending request, so it can hold both an `INCOMING_REQUEST` and an `OUTGOING_REQUEST` record for one account. A caller without the flag accepts a pending request from the target normally.
 :::
 
 ### Path parameters

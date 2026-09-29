@@ -47,7 +47,6 @@ import {
 	BulkBanFileShasRequest,
 	BulkJobResponse,
 	CheckAvatarHashRequest,
-	SuspiciousEmailDomainRequest,
 } from '@fluxer/schema/src/domains/admin/AdminSchemas';
 import {UserIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import type {ZodType} from 'zod';
@@ -70,17 +69,6 @@ const BLOCKLIST_CATALOG = [
 		list_type: 'email' as const,
 		description: 'Email addresses that cannot be used to register or be set on an account.',
 		value_field: 'email',
-		fields: [],
-		scoped: false,
-		supports_bulk_create: false,
-		supports_bulk_delete: false,
-		supports_update: false,
-	},
-	{
-		list_type: 'email-domain-suspicious' as const,
-		description:
-			'Email domains flagged as suspicious. Registration is not blocked, but new accounts using the domain must verify a phone number before they can act on the platform. The list itself is not exposed to users.',
-		value_field: 'domain',
 		fields: [],
 		scoped: false,
 		supports_bulk_create: false,
@@ -154,11 +142,6 @@ const BLOCKLIST_CATALOG = [
 const BLOCKLIST_TYPE_ACLS: Record<AdminBlocklistListType, {add: string; check: string; remove: string}> = {
 	ip: {add: AdminACLs.BAN_IP_ADD, check: AdminACLs.BAN_IP_CHECK, remove: AdminACLs.BAN_IP_REMOVE},
 	email: {add: AdminACLs.BAN_EMAIL_ADD, check: AdminACLs.BAN_EMAIL_CHECK, remove: AdminACLs.BAN_EMAIL_REMOVE},
-	'email-domain-suspicious': {
-		add: AdminACLs.SUSPICIOUS_EMAIL_DOMAIN_ADD,
-		check: AdminACLs.SUSPICIOUS_EMAIL_DOMAIN_CHECK,
-		remove: AdminACLs.SUSPICIOUS_EMAIL_DOMAIN_REMOVE,
-	},
 	phrase: {add: AdminACLs.BAN_PHRASE_ADD, check: AdminACLs.BAN_PHRASE_CHECK, remove: AdminACLs.BAN_PHRASE_REMOVE},
 	url: {add: AdminACLs.BAN_URL_ADD, check: AdminACLs.BAN_URL_CHECK, remove: AdminACLs.BAN_URL_REMOVE},
 	'url-domain': {
@@ -186,7 +169,6 @@ const BLOCKLIST_TYPE_ACLS: Record<AdminBlocklistListType, {add: string; check: s
 const BLOCKLIST_AUDIT_TARGET_TYPES: Record<AdminBlocklistListType, string> = {
 	ip: 'ip',
 	email: 'email',
-	'email-domain-suspicious': 'email_domain',
 	phrase: 'phrase',
 	url: 'url',
 	'url-domain': 'url_domain',
@@ -255,8 +237,6 @@ async function checkBlocklistEntry(
 			return bans.checkIpBan({ip: entryValue});
 		case 'email':
 			return bans.checkEmailBan({email: entryValue});
-		case 'email-domain-suspicious':
-			return bans.checkSuspiciousEmailDomain({domain: entryValue});
 		case 'phrase':
 			return bans.checkPhraseBan({phrase: entryValue});
 		case 'url':
@@ -374,13 +354,6 @@ export function BanAdminController(app: HonoApp) {
 					break;
 				case 'email':
 					await bans.banEmail(await parseBlocklistBody(BanEmailRequest, raw), adminUserId, auditLogReason);
-					break;
-				case 'email-domain-suspicious':
-					await bans.addSuspiciousEmailDomain(
-						await parseBlocklistBody(SuspiciousEmailDomainRequest, raw),
-						adminUserId,
-						auditLogReason,
-					);
 					break;
 				case 'phrase':
 					await bans.banPhrase(await parseBlocklistBody(BanPhraseRequest, raw), adminUserId, auditLogReason);
@@ -623,9 +596,6 @@ export function BanAdminController(app: HonoApp) {
 					break;
 				case 'email':
 					await bans.unbanEmail({email: entryValue}, adminUserId, auditLogReason);
-					break;
-				case 'email-domain-suspicious':
-					await bans.removeSuspiciousEmailDomain({domain: entryValue}, adminUserId, auditLogReason);
 					break;
 				case 'phrase':
 					await bans.unbanPhrase({phrase: entryValue}, adminUserId, auditLogReason);

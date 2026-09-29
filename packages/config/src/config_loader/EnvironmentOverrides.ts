@@ -233,13 +233,6 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 	FLUXER_EMAIL_SMTP_USERNAME: {path: ['integrations', 'email', 'smtp', 'username']},
 	FLUXER_EMAIL_SMTP_PASSWORD: {path: ['integrations', 'email', 'smtp', 'password']},
 	FLUXER_EMAIL_SMTP_SECURE: {path: ['integrations', 'email', 'smtp', 'secure'], parse: parseBoolean},
-	FLUXER_SMS_ENABLED: {path: ['integrations', 'sms', 'enabled'], parse: parseBoolean},
-	FLUXER_SMS_ACCOUNT_SID: {path: ['integrations', 'sms', 'account_sid']},
-	FLUXER_SMS_AUTH_TOKEN: {path: ['integrations', 'sms', 'auth_token']},
-	FLUXER_SMS_VERIFY_SERVICE_SID: {path: ['integrations', 'sms', 'verify_service_sid']},
-	FLUXER_SMS_INBOUND_CHALLENGE_NUMBER: {path: ['integrations', 'sms', 'inbound_challenge_number']},
-	FLUXER_SMS_INBOUND_WEBHOOK_AUTH_TOKEN: {path: ['integrations', 'sms', 'inbound_webhook_auth_token']},
-	FLUXER_SMS_INBOUND_WEBHOOK_PUBLIC_URL: {path: ['integrations', 'sms', 'inbound_webhook_public_url']},
 	FLUXER_CAPTCHA_ENABLED: {path: ['integrations', 'captcha', 'enabled'], parse: parseBoolean},
 	FLUXER_CAPTCHA_PROVIDER: {path: ['integrations', 'captcha', 'provider']},
 	FLUXER_CAPTCHA_HCAPTCHA_SITE_KEY: {path: ['integrations', 'captcha', 'hcaptcha', 'site_key']},
@@ -326,17 +319,11 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 		parse: parseInteger,
 	},
 	FLUXER_BLOCKLIST_FEEDS_ENABLED: {path: ['integrations', 'blocklist_feeds', 'enabled'], parse: parseBoolean},
-	FLUXER_TOR_EXIT_LIST_ENABLED: {path: ['integrations', 'tor_exit_list', 'enabled'], parse: parseBoolean},
 	FLUXER_BREACHED_PASSWORD_CHECK_ENABLED: {
 		path: ['integrations', 'breached_password_check', 'enabled'],
 		parse: parseBoolean,
 	},
-	FLUXER_RISK_INTEGRATION_ENABLED: {path: ['integrations', 'risk_integration', 'enabled'], parse: parseBoolean},
-	FLUXER_RISK_IPINFO_API_KEY: {path: ['integrations', 'risk_integration', 'ipinfo_api_key']},
-	FLUXER_ACCOUNT_POLICY_DSL: {
-		path: ['integrations', 'risk_integration', 'account_policy_dsl'],
-		parse: parseEnvValue,
-	},
+	FLUXER_IPINFO_API_KEY: {path: ['integrations', 'ipinfo', 'api_key']},
 	FLUXER_PUSH_APNS_ENABLED: {path: ['integrations', 'push', 'apns', 'enabled'], parse: parseBoolean},
 	FLUXER_PUSH_APNS_TEAM_ID: {path: ['integrations', 'push', 'apns', 'team_id']},
 	FLUXER_PUSH_APNS_KEY_ID: {path: ['integrations', 'push', 'apns', 'key_id']},
@@ -366,41 +353,6 @@ const NAMED_FLUXER_ENV_OVERRIDES: Record<string, NamedEnvOverride> = {
 	FLUXER_APP_STATUS_PAGE_URL: {path: ['instance', 'branding', 'status_page_url']},
 	FLUXER_APP_STATUS_PAGE_INCIDENT_HISTORY_URL: {path: ['instance', 'branding', 'status_page_incident_history_url']},
 	FLUXER_INSTANCE_SETUP_CONFIGURED: {path: ['instance', 'setup', 'configured'], parse: parseBoolean},
-	FLUXER_ABUSE_INBOUND_PHONE_COUNTRY_CODES: {
-		path: ['instance', 'abuse_policy', 'inbound_phone_country_codes'],
-		parse: parseCsv,
-	},
-	FLUXER_ABUSE_PHONE_FLAGGING_ENABLED: {
-		path: ['instance', 'abuse_policy', 'phone_flagging', 'enabled'],
-		parse: parseBoolean,
-	},
-	FLUXER_ABUSE_PHONE_FLAGGING_EXEMPT_COUNTRY_CODES: {
-		path: ['instance', 'abuse_policy', 'phone_flagging', 'exempt_country_codes'],
-		parse: parseCsv,
-	},
-	FLUXER_ABUSE_PHONE_INBOUND_REQUIRED_PREFIXES: {
-		path: ['instance', 'abuse_policy', 'phone_verification', 'inbound_required_prefixes'],
-		parse: parseCsv,
-	},
-	FLUXER_ABUSE_DIRECT_CONTACT_SPAM_ENABLED: {
-		path: ['instance', 'abuse_policy', 'direct_contact_spam', 'enabled'],
-		parse: parseBoolean,
-	},
-	FLUXER_ABUSE_DIRECT_CONTACT_SPAM_COUNTRY_CODES: {
-		path: ['instance', 'abuse_policy', 'direct_contact_spam', 'country_codes'],
-		parse: parseCsv,
-	},
-	FLUXER_ABUSE_DIRECT_CONTACT_SPAM_DISTINCT_TARGET_THRESHOLD: {
-		path: ['instance', 'abuse_policy', 'direct_contact_spam', 'distinct_target_threshold'],
-		parse: parseInteger,
-	},
-	FLUXER_ABUSE_DIRECT_CONTACT_SPAM_TARGET_WINDOW_MS: {
-		path: ['instance', 'abuse_policy', 'direct_contact_spam', 'target_window_ms'],
-		parse: parseInteger,
-	},
-	FLUXER_ABUSE_DIRECT_CONTACT_SPAM_ACTION: {
-		path: ['instance', 'abuse_policy', 'direct_contact_spam', 'action'],
-	},
 	FLUXER_DISCOVERY_ENABLED: {path: ['discovery', 'enabled'], parse: parseBoolean},
 	FLUXER_DISCOVERY_MIN_MEMBER_COUNT: {path: ['discovery', 'min_member_count'], parse: parseInteger},
 	FLUXER_DELETION_GRACE_PERIOD_HOURS: {path: ['deletion_grace_period_hours'], parse: parseInteger},
@@ -537,6 +489,7 @@ export function setNestedValue(target: ConfigContainer, keys: Array<ConfigPathKe
 const NAMED_FLUXER_ENV_ALIASES: Record<string, string | undefined> = {
 	FLUXER_INTERNAL_MEDIA_PROXY_ENDPOINT: 'FLUXER_MEDIA_PROXY_ENDPOINT',
 	FLUXER_NATS_URL: 'FLUXER_NATS_CORE_URL',
+	FLUXER_IPINFO_API_KEY: 'FLUXER_RISK_IPINFO_API_KEY',
 };
 
 export function buildNamedFluxerEnvOverrides(env: NodeJS.ProcessEnv): ConfigObject {

@@ -21,7 +21,6 @@ function createProductionApp(): Hono<HonoEnv> {
 		trustClientIpHeader: true,
 		clientIpHeaderName: CLIENT_IP_HEADER_NAME,
 		maxInflightRequests: 100,
-		torExitBlockingEnabled: false,
 	});
 	routes.onError(AppErrorHandler);
 	routes.notFound(AppNotFoundHandler);

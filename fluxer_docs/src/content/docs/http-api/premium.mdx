@@ -835,7 +835,7 @@ The route requires a lifetime entitlement, so an account whose premium type is n
 
 A join emits [Guild Create](/gateway/events/#guild-create), [Guild Member Add](/gateway/events/#guild-member-add) and, when the guild has a system channel and does not suppress join notifications, [Message Create](/gateway/events/#message-create). The role grant that follows emits [Guild Member Update](/gateway/events/#guild-member-update). An account that already belongs to the guild produces that Dispatch alone.
 
-The operation is idempotent. For an account that already belongs to the guild, Fluxer grants the Visionary role again and changes nothing else. The join bypasses the guild ban check and the join risk gate, so a banned account is added anyway.
+The operation is idempotent. For an account that already belongs to the guild, Fluxer grants the Visionary role again and changes nothing else. The join bypasses the guild ban check, so a banned account is added anyway.
 
 Both size ceilings still apply. An account already at its maximum number of guilds receives 400 `MAX_GUILDS`, and a Visionary guild at its member ceiling receives 400 `MAX_GUILD_MEMBERS`. Neither check runs for an account that already belongs to the guild.
 

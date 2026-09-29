@@ -132,7 +132,6 @@ export class UserAccountService {
 			apiContext: this.apiContext,
 			userAccountRepository,
 			guildRepository,
-			guildService,
 			emailService,
 			updatePropagator: this.updatePropagator,
 			kvDeletionQueue,

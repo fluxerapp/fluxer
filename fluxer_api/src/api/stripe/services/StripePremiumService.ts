@@ -303,7 +303,6 @@ export class StripePremiumService {
 		const existingMember = await this.guildRepository.getMember(visionariesGuildId, userId);
 		if (!existingMember) {
 			await this.guildService.members.addUserToGuild({
-				skipRiskGate: true,
 				userId,
 				guildId: visionariesGuildId,
 				sendJoinMessage: true,

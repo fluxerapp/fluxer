@@ -51,12 +51,15 @@ When the caller lacks `user:view:email`, `user:view:dob`, or `user:view:ip`, Flu
 | premium_grace_ends_at | ?ISO8601 timestamp | The time the payment grace period ends, or null when no grace period is running |
 | premium_lifetime_sequence | ?integer | The sequence number of the lifetime purchase, or null when the account holds none |
 | suspicious_activity_flags | integer | [Suspicious activity flags](#suspicious-activity-flags) |
-| phone_verification_deferred<sup>5</sup> | boolean | Whether a stored phone requirement is deferred until the account joins a discoverable or large community |
+| phone_verification_deferred<sup>5</sup> | boolean | Whether a stored phone requirement is deferred and not enforced |
 | temp_banned_until<sup>6</sup> | ?ISO8601 timestamp | The time the ban expires, or null when no ban stands |
 | pending_deletion_at | ?ISO8601 timestamp | The time the scheduled deletion runs, or null when none is scheduled |
 | pending_bulk_message_deletion_at<sup>7</sup> | ?ISO8601 timestamp | The time the account's own scheduled bulk message deletion runs |
 | deletion_reason_code | ?integer | [Deletion reason](#deletion-reasons) |
 | deletion_public_reason | ?string | The reason shown to the account holder, or null when none was supplied |
+| deletion_audit_log_reason | ?string | The private reason stored with the pending deletion, and null without `audit_log:view` |
+| deletion_scheduled_by | ?snowflake | The ID of the account that scheduled the pending deletion, or null when it was not recorded |
+| deletion_scheduled_at | ?ISO8601 timestamp | The time the pending deletion was scheduled, or null when it was not recorded |
 | acls<sup>8</sup> | array[string] | Effective [Admin ACLs](/admin-api/#acl-registry), with at most 111 entries |
 | traits<sup>9</sup> | array[string] | The free-form operator labels set on the account, with at most 100 entries |
 | has_totp<sup>10</sup> | boolean | Whether a TOTP authenticator is registered |
@@ -151,7 +154,7 @@ The `flags` field of the [Admin user object](#admin-user-object) is a 64-bit bit
 | 1 &lt;&lt; 53 | APP_STORE_REVIEWER | Account belongs to an app store reviewer |
 | 1 &lt;&lt; 57 | STAFF_HIDDEN | Staff status is hidden from public flags |
 | 1 &lt;&lt; 60 | AGE_VERIFIED_ADULT | Account has verified its age as an adult through card verification |
-| 1 &lt;&lt; 61 | FORCE_INBOUND_PHONE_VERIFICATION | Account is forced through inbound phone verification regardless of prefix |
+| 1 &lt;&lt; 61 | FORCE_INBOUND_PHONE_VERIFICATION | Account is forced through inbound phone verification |
 | 1 &lt;&lt; 62 | NOT_SUSPICIOUS | Account is permanently exempt from automatic suspicious activity flagging |
 
 ## Premium flags
@@ -198,7 +201,7 @@ A 32-bit bitfield of verification requirements applied to an account. [Update su
 
 <sup>3</sup> Deferrable alongside `REQUIRE_VERIFIED_PHONE`. [Update user phone verification](#update-user-phone-verification) leaves it set
 
-Bit `1 << 16` sits outside this registry. It defers a phone requirement until the account joins a discoverable or large community, and the [Admin user object](#admin-user-object) reports it as `phone_verification_deferred`. [Update suspicious activity flags](#update-suspicious-activity-flags) and [Disable user for suspicious activity](#disable-user-for-suspicious-activity) bound `flags` only as a non-negative 32-bit integer, and neither masks the submitted value, so a request with that bit sets it directly.
+Bit `1 << 16` sits outside this registry. It defers a phone requirement so it is stored but not enforced, and the [Admin user object](#admin-user-object) reports it as `phone_verification_deferred`. [Update suspicious activity flags](#update-suspicious-activity-flags) and [Disable user for suspicious activity](#disable-user-for-suspicious-activity) bound `flags` only as a non-negative 32-bit integer, and neither masks the submitted value, so a request with that bit sets it directly.
 
 ## Deletion reasons
 
@@ -1258,13 +1261,13 @@ The operation sets verification requirements without disabling the account. [Dis
 | 200 | response body | Flags were replaced |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
 
-The stored deferral bit `1 << 16` is preserved only when it was already set and the submitted value sets the same `REQUIRE_VERIFIED_PHONE` and `REQUIRE_REVERIFIED_PHONE` bits as the stored value, with at least one of them set. Any other submitted value clears the deferral bit, so any phone requirement in the submitted value stops waiting for a guild join.
+The stored deferral bit `1 << 16` is preserved only when it was already set and the submitted value sets the same `REQUIRE_VERIFIED_PHONE` and `REQUIRE_REVERIFIED_PHONE` bits as the stored value, with at least one of them set. Any other submitted value clears the deferral bit, so any phone requirement in the submitted value is enforced immediately.
 
 [Bulk jobs](/admin-api/bulk-jobs/) applies the same change to up to 1,000 accounts as a queued `update_suspicious_activity_flags` task.
 
 ### Side effects
 
-[User Update](/gateway/events/#user-update) is emitted to the account's own sessions. Fluxer records a `challenged` risk outcome against the account when the write changes the set and leaves at least one registry flag set.
+[User Update](/gateway/events/#user-update) is emitted to the account's own sessions.
 
 The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `update_suspicious_activity_flags`, target type `user`, and a metadata key `flags` with the submitted value. A preserved deferral bit makes that value differ from the flags the account ends up with.
 
@@ -1315,7 +1318,7 @@ Fluxer adds the `DISABLED_SUSPICIOUS_ACTIVITY` [account flag](#account-flags), s
 
 The account is marked with `DISABLED_SUSPICIOUS_ACTIVITY`, its suspicious activity flags are replaced, and its password hash is set to null. Every authentication session is then deleted, so the account is signed out on every device.
 
-Fluxer records a `disabled_suspicious` risk outcome, together with a `challenged` outcome when the submitted `flags` is non-zero. Fluxer emails the account holder when the account has an email address.
+Fluxer emails the account holder when the account has an email address.
 
 [User Update](/gateway/events/#user-update) is emitted after the sessions have already been deleted, so no connection of the account remains to receive it. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `disable_suspicious_activity`, target type `user`, and a metadata key `flags`.
 
@@ -1426,11 +1429,49 @@ The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-obje
 
 100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
 
+## Add a note to a user ban
+
+<RouteHeader method="POST" path="/v1/admin/users/{user_id}/ban/notes" />
+
+Appends a note to the ban that currently stands on the account. Requires `user:temp_ban`. The ban entry and earlier notes are never changed.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user_id | snowflake | The ID of the target account |
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| ban_audit_log_id<sup>1</sup> | snowflake | The ID of the `temp_ban` audit entry of the current ban |
+| note | string | The note (1-512 characters) |
+
+<sup>1</sup> The entry must target this account, and its `banned_until` metadata must equal the current `temp_banned_until`
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | none | The note was recorded |
+| 400 | [error response](/admin-api/#error-response) | `INVALID_FORM_BODY`, because `ban_audit_log_id` does not name a ban of this account |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 409 | [error response](/admin-api/#error-response) | `CONFLICT`, because the named ban is no longer the current ban |
+
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `annotate_ban`, target type `user`, the note as `audit_log_reason`, and a metadata key `ban_audit_log_id`. The `X-Audit-Log-Reason` header is not read.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+
 ## Schedule user deletion
 
 <RouteHeader method="PUT" path="/v1/admin/users/{user_id}/deletion" auditReason />
 
-Creates or replaces an account deletion schedule and returns the resulting account. Requires `user:delete`. A schedule cannot be changed once erasure starts.
+Creates an account deletion schedule and returns the resulting account. Requires `user:delete`. A pending schedule is replaced only when the request names it in `replace_pending_deletion_at`, and a schedule cannot be changed once erasure starts.
 
 Fluxer raises the submitted delay to the minimum for the [deletion reason](#deletion-reasons), so a request for one day under any reason other than `USER_REQUESTED` is stored as 60 days.
 
@@ -1449,12 +1490,15 @@ The `X-Audit-Log-Reason` value is also stored on the account as the private dele
 | reason_code<sup>1</sup> | integer | [Deletion reason](#deletion-reasons) |
 | public_reason?<sup>2</sup> | string | Statement of reasons shown to the account holder (at most 512 characters) |
 | days_until_deletion?<sup>3</sup> | integer | Requested whole-day delay (1-365, default 60) |
+| replace_pending_deletion_at?<sup>4</sup> | ISO8601 timestamp | The `pending_deletion_at` of the schedule this request replaces |
 
 <sup>1</sup> Required, and validated against the [deletion reason](#deletion-reasons) registry. `USER_REQUESTED` selects the 14-day minimum, and every other value selects the 60-day minimum
 
 <sup>2</sup> Stored on the account and included in the deletion email. Omitting it stores null
 
 <sup>3</sup> The stored deadline is the request instant plus the greater of this value and the minimum for the reason code. There is no absolute-timestamp field
+
+<sup>4</sup> Required when the account already has a pending deletion, including one the caller scheduled. It must equal the current `pending_deletion_at`
 
 ### Response body
 
@@ -1468,21 +1512,21 @@ The `X-Audit-Log-Reason` value is also stored on the account as the private dele
 | --- | --- | --- |
 | 200 | response body | The deletion schedule was stored |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
-| 409 | [error response](/admin-api/#error-response) | `CONFLICT`, because erasure has started or the deletion state changed during the request |
+| 409 | [error response](/admin-api/#error-response) | `CONFLICT`, because a pending deletion was not named, erasure has started, or the deletion state changed |
 
 `user:delete` also allows scheduling deletion of the acting Admin or an account with broader permissions.
 
 ### Side effects
 
-The account can no longer authenticate, and its existing authentication sessions are deleted. Erasure is scheduled for the resulting deadline.
+The account can no longer authenticate, and its existing authentication sessions and OAuth2 access and refresh tokens are deleted. The acting Admin and the time are stored as `deletion_scheduled_by` and `deletion_scheduled_at`. Erasure is scheduled for the resulting deadline.
 
 Fluxer cancels a Stripe subscription on the account without proration and refunds the charge behind its latest invoice as fraudulent. When the cancellation or refund fails, Fluxer logs the failure and still keeps the deletion schedule.
 
 The account holder is emailed the deadline and the supplied `public_reason` when the account has an email address.
 
-For every reason other than `USER_REQUESTED`, Fluxer also blocks the account's email address. It marks the account's last active IP address, its authorised IP addresses, and the IP addresses of its active and terminated sessions as suspicious, and it resolves the pending reports against the account. These enforcement steps are best-effort and can fail without cancelling the deletion schedule.
+For every reason other than `USER_REQUESTED`, Fluxer also blocks the account's email address and resolves the pending reports against the account. These enforcement steps are best-effort and can fail without cancelling the deletion schedule.
 
-[User Update](/gateway/events/#user-update) is emitted after the sessions have already been deleted. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `schedule_deletion`, target type `user`, and the metadata keys `days` and `reason_code`. The identifier bans record their own blocklist entries, and when Fluxer resolves at least one report, it records a second entry with action `auto_resolve_reports_on_deletion` and a metadata key `resolved_count`.
+[User Update](/gateway/events/#user-update) is emitted after the sessions have already been deleted. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `schedule_deletion`, target type `user`, and the metadata keys `days`, `reason_code`, and `pending_deletion_at`. A replacement adds `replaced_pending_deletion_at`, `replaced_scheduled_by`, `replaced_scheduled_at`, and `replaced_reason_code` for the schedule it replaced. The identifier bans record their own blocklist entries, and when Fluxer resolves at least one report, it records a second entry with action `auto_resolve_reports_on_deletion` and a metadata key `resolved_count`.
 
 ### Rate limit
 
@@ -1492,7 +1536,7 @@ For every reason other than `USER_REQUESTED`, Fluxer also blocks the account's e
 
 <RouteHeader method="DELETE" path="/v1/admin/users/{user_id}/deletion" auditReason />
 
-Cancels a scheduled deletion and returns the resulting account. Requires `user:delete`. Erasure cannot be cancelled once it starts.
+Cancels the scheduled deletion named in the request and returns the resulting account. Requires `user:delete`. Erasure cannot be cancelled once it starts.
 
 :::caution[Cancellation does not undo enforcement]
 Clearing the deadline permits the account to authenticate again, but it does not restore deleted sessions, reinstate a cancelled subscription, lift the email and IP blocklist entries the schedule wrote, or reopen the reports it resolved.
@@ -1504,6 +1548,15 @@ Clearing the deadline permits the account to authenticate again, but it does not
 | --- | --- | --- |
 | user_id | snowflake | The ID of the target account |
 
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| expected_pending_deletion_at<sup>1</sup> | ISO8601 timestamp | The `pending_deletion_at` of the deletion being cancelled |
+| notify_user? | boolean | Whether to email the account holder (default false) |
+
+<sup>1</sup> Required. It must equal the current `pending_deletion_at`, so a cancel written against one schedule never clears a different one
+
 ### Response body
 
 | Field | Type | Description |
@@ -1514,17 +1567,18 @@ Clearing the deadline permits the account to authenticate again, but it does not
 
 | Status | Body | Condition |
 | --- | --- | --- |
-| 200 | response body | The deletion was cancelled, or no deletion was scheduled |
+| 200 | response body | The deletion was cancelled |
+| 400 | [error response](/admin-api/#error-response) | `NO_PENDING_DELETION`, because no deletion is scheduled |
 | 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
-| 409 | [error response](/admin-api/#error-response) | `CONFLICT`, because erasure has started or the deletion state changed during the request |
+| 409 | [error response](/admin-api/#error-response) | `CONFLICT`, because a different deletion is pending, erasure has started, or the deletion state changed |
 
 ### Side effects
 
-The deletion schedule and reasons are cleared, allowing the account to authenticate again unless another restriction applies.
+The deletion schedule, its reasons, and the recorded scheduler are cleared, allowing the account to authenticate again unless another restriction applies.
 
-Fluxer emails the account holder when the account has an email address. The email quotes the `X-Audit-Log-Reason` value verbatim and falls back to the literal text `deletion canceled` when the header is absent or resolves to null.
+When `notify_user` is true and the account has an email address, Fluxer emails the account holder. The email never includes the `X-Audit-Log-Reason` value.
 
-[User Update](/gateway/events/#user-update) is emitted to the account's own sessions. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `cancel_deletion`, target type `user`, and no metadata.
+[User Update](/gateway/events/#user-update) is emitted to the account's own sessions. The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `cancel_deletion`, target type `user`, the metadata keys `cancelled_pending_deletion_at`, `cancelled_scheduled_by`, `cancelled_scheduled_at`, and `cancelled_reason_code` for the cancelled schedule, and `notify_user`.
 
 ### Rate limit
 

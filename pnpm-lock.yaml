@@ -635,9 +635,6 @@ importers:
       '@pkgs/rate_limit':
         specifier: workspace:*
         version: link:pkgs/rate_limit
-      '@pkgs/sms':
-        specifier: workspace:*
-        version: link:pkgs/sms
       '@pkgs/virus_scan':
         specifier: workspace:*
         version: link:pkgs/virus_scan
@@ -1016,28 +1013,6 @@ importers:
       typescript:
         specifier: catalog:ts7
         version: 7.0.2
-
-  fluxer_api/pkgs/sms:
-    dependencies:
-      '@fluxer/constants':
-        specifier: workspace:*
-        version: link:../../../packages/constants
-      '@fluxer/errors':
-        specifier: workspace:*
-        version: link:../../../packages/errors
-      '@fluxer/logger':
-        specifier: workspace:*
-        version: link:../../../packages/logger
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.6.1
-      typescript:
-        specifier: catalog:ts7
-        version: 7.0.2
-      vitest:
-        specifier: 'catalog:'
-        version: 5.0.1(@opentelemetry/api@1.9.1)(@types/node@26.6.1)(@vitest/coverage-v8@5.0.1)(happy-dom@20.14.5)(msw@2.15.0(@types/node@26.6.1)(typescript@7.0.2))(vite@8.3.0(@types/node@26.6.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.13)(yaml@2.9.1))
 
   fluxer_api/pkgs/virus_scan:
     dependencies:

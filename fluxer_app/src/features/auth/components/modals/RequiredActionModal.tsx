@@ -170,15 +170,6 @@ function isPhoneView(kind: RequiredActionViewKind): boolean {
 	);
 }
 
-function isPhoneInboundView(kind: RequiredActionViewKind): boolean {
-	return (
-		kind === 'phone-inbound-start' ||
-		kind === 'phone-inbound-prepare' ||
-		kind === 'phone-inbound-send' ||
-		kind === 'phone-inbound-wait'
-	);
-}
-
 function getIntroDescription(flow: RequiredActionFlow | null, isEmailBounced: boolean): MessageDescriptor {
 	if (isEmailBounced) return STEP_INTRO_BOUNCED_EMAIL_DESCRIPTION_DESCRIPTOR;
 	if (flow?.mode === 'email_and_phone') return STEP_INTRO_EMAIL_AND_PHONE_DESCRIPTION_DESCRIPTOR;
@@ -287,18 +278,6 @@ const RequiredActionModal: React.FC<{mock?: boolean}> = observer(({mock = false}
 			setView(previous ?? fallbackView);
 			return previous ? current.slice(0, -1) : current;
 		});
-	}, []);
-	const goToPhoneCodeFromInbound = useCallback(() => {
-		setCarouselDirection(1);
-		setActionError(null);
-		setHistory((current) => {
-			const retainedHistory = current.filter((entry) => !isPhoneInboundView(entry.kind));
-			if (retainedHistory.at(-1)?.kind === 'phone-number') {
-				return retainedHistory;
-			}
-			return [...retainedHistory, {kind: 'phone-number'}];
-		});
-		setView({kind: 'phone-code'});
 	}, []);
 	const switchToPhonePath = useCallback(() => {
 		setSelectedVerificationType('phone');
@@ -462,7 +441,6 @@ const RequiredActionModal: React.FC<{mock?: boolean}> = observer(({mock = false}
 			? {
 					code: phoneVerification.screen.code,
 					ourNumber: phoneVerification.screen.ourNumber,
-					reason: phoneVerification.screen.reason,
 				}
 			: null;
 	const renderView = (): React.ReactNode => {
@@ -831,11 +809,9 @@ const RequiredActionModal: React.FC<{mock?: boolean}> = observer(({mock = false}
 						/>
 						<Button
 							onClick={() =>
-								void runPhoneAction(phoneVerification.onRefreshInboundChallenge, 'general').then((result) => {
-									if (result === 'inbound-challenge') {
+								void runPhoneAction(phoneVerification.onRefreshInboundChallenge, 'general').then((refreshed) => {
+									if (refreshed) {
 										goBackToFallback({kind: 'phone-inbound-send'});
-									} else if (result === 'phone-code') {
-										goToPhoneCodeFromInbound();
 									}
 								})
 							}

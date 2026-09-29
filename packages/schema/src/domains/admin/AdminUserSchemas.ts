@@ -63,14 +63,20 @@ export const UserAdminResponseSchema = z.object({
 		'Suspicious activity indicators',
 		'SuspiciousActivityFlags',
 	),
-	phone_verification_deferred: z
-		.boolean()
-		.describe('Whether a stored phone requirement is deferred until the user joins a discoverable or large community'),
+	phone_verification_deferred: z.boolean().describe('Whether a stored phone requirement is deferred and not enforced'),
 	temp_banned_until: z.string().nullable(),
 	pending_deletion_at: z.string().nullable(),
 	pending_bulk_message_deletion_at: z.string().nullable(),
 	deletion_reason_code: Int32Type.nullable(),
 	deletion_public_reason: z.string().nullable(),
+	deletion_audit_log_reason: z
+		.string()
+		.nullable()
+		.describe('Private reason recorded with the pending deletion, null without the audit log view permission'),
+	deletion_scheduled_by: SnowflakeStringType.nullable().describe(
+		'ID of the account that scheduled the pending deletion, null when it was not recorded',
+	),
+	deletion_scheduled_at: z.string().nullable().describe('ISO 8601 timestamp when the pending deletion was scheduled'),
 	acls: z.array(z.string()).max(ADMIN_ACL_COUNT),
 	traits: z.array(z.string()).max(100),
 	has_totp: z.boolean(),
@@ -334,6 +340,12 @@ export const ScheduleAccountDeletionRequest = z.object({
 		.max(365)
 		.default(60)
 		.describe('Number of days until the account is deleted'),
+	replace_pending_deletion_at: z.iso
+		.datetime()
+		.optional()
+		.describe(
+			'pending_deletion_at of the deletion this request replaces. Required when a deletion is already scheduled for the account',
+		),
 });
 
 export type ScheduleAccountDeletionRequest = z.infer<typeof ScheduleAccountDeletionRequest>;
@@ -420,7 +432,10 @@ export const BulkUpdateUserFlagsRequest = z.object({
 
 export type BulkUpdateUserFlagsRequest = z.infer<typeof BulkUpdateUserFlagsRequest>;
 
-export const BulkScheduleUserDeletionRequest = ScheduleAccountDeletionRequest.omit({user_id: true}).extend({
+export const BulkScheduleUserDeletionRequest = ScheduleAccountDeletionRequest.omit({
+	user_id: true,
+	replace_pending_deletion_at: true,
+}).extend({
 	user_ids: z.array(SnowflakeType).max(1000).describe('List of user IDs to schedule deletion for'),
 	days_until_deletion: ScheduleAccountDeletionRequest.shape.days_until_deletion.describe(
 		'Number of days until the accounts are deleted',
@@ -628,6 +643,22 @@ export type AdminUserBanRequest = z.infer<typeof AdminUserBanRequest>;
 export const AdminUserDeletionScheduleRequest = ScheduleAccountDeletionRequest.omit({user_id: true});
 
 export type AdminUserDeletionScheduleRequest = z.infer<typeof AdminUserDeletionScheduleRequest>;
+
+export const AdminUserDeletionCancelRequest = z.object({
+	expected_pending_deletion_at: z.iso
+		.datetime()
+		.describe('pending_deletion_at of the deletion being cancelled, as shown on the account'),
+	notify_user: z.boolean().default(false).describe('Whether to email the user that the deletion was cancelled'),
+});
+
+export type AdminUserDeletionCancelRequest = z.infer<typeof AdminUserDeletionCancelRequest>;
+
+export const AdminUserBanNoteRequest = z.object({
+	ban_audit_log_id: SnowflakeType.describe('Audit log entry of the current ban that the note refers to'),
+	note: createStringType(1, 512).describe('Note to append to the ban. Recorded as the reason of a new audit log entry'),
+});
+
+export type AdminUserBanNoteRequest = z.infer<typeof AdminUserBanNoteRequest>;
 
 export const AdminUserAclsRequest = SetUserAclsRequest.omit({user_id: true});
 

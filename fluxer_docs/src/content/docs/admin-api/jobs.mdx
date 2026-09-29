@@ -11,7 +11,7 @@ These routes list recorded background jobs and request cancellation. Create jobs
 Reads require `jobs:view` and cancellation requires `jobs:cancel`. Every operation on this page shares the `admin:jobs:view` bucket. The three reads record no [Admin audit entry](/admin-api/#admin-audit-entry-object), and cancellation records one.
 
 :::note[Job updates vary by task]
-Mention processing, link previews, message delete audit log batching, payment reconciliation when a user connects, and every scheduled task except `syncDisposableEmailDomains`, `syncUrlBlocklists` and `syncFileShaBlocklists` run with no job record and never appear here. Fluxer deletes a job record about 90 days after the job was queued. A job also runs with no record when Fluxer fails to write that record. When a later write of status, progress or attempts fails, Fluxer logs the failure and the job continues, so the stored values can be behind the real run. Use the [archive routes](/admin-api/archives/) to track archive progress and failures.
+Mention processing, link previews, message delete audit log batching, payment reconciliation when a user connects, and every scheduled task except `syncUrlBlocklists` and `syncFileShaBlocklists` run with no job record and never appear here. Fluxer deletes a job record about 90 days after the job was queued. A job also runs with no record when Fluxer fails to write that record. When a later write of status, progress or attempts fails, Fluxer logs the failure and the job continues, so the stored values can be behind the real run. Use the [archive routes](/admin-api/archives/) to track archive progress and failures.
 :::
 
 ## Admin job object
@@ -261,7 +261,7 @@ Returns false for a missing or terminal job. Repeating a request for a queued or
 
 ### Side effects
 
-Sets `cancel_requested` to true for a queued or running job. `sendSystemDm`, `syncDisposableEmailDomains`, `bulkBanFileShas`, `bulkDeleteMessagesForUsers`, and the tasks queued by [Bulk jobs](/admin-api/bulk-jobs/) check for the request while they run and stop at the next check. Other tasks run to the end. Completed work is not undone. A status of `cancelled` means the task stopped because of the request.
+Sets `cancel_requested` to true for a queued or running job. `sendSystemDm`, `bulkBanFileShas`, `bulkDeleteMessagesForUsers`, and the tasks queued by [Bulk jobs](/admin-api/bulk-jobs/) check for the request while they run and stop at the next check. Other tasks run to the end. Completed work is not undone. A status of `cancelled` means the task stopped because of the request.
 
 The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `cancel_job`, target type `bulk_job`, target ID equal to `job_id`, and metadata key `cancelled`. The entry uses target type `bulk_job` for every task type, and Fluxer records it when `cancelled` is false too.
 

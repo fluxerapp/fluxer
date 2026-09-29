@@ -17,9 +17,6 @@ pub const JOBS_CANCEL: &str = "jobs:cancel";
 pub const BAN_EMAIL_ADD: &str = "ban:email:add";
 pub const BAN_EMAIL_CHECK: &str = "ban:email:check";
 pub const BAN_EMAIL_REMOVE: &str = "ban:email:remove";
-pub const SUSPICIOUS_EMAIL_DOMAIN_ADD: &str = "suspicious_email_domain:add";
-pub const SUSPICIOUS_EMAIL_DOMAIN_CHECK: &str = "suspicious_email_domain:check";
-pub const SUSPICIOUS_EMAIL_DOMAIN_REMOVE: &str = "suspicious_email_domain:remove";
 pub const BAN_PHRASE_ADD: &str = "ban:phrase:add";
 pub const BAN_PHRASE_CHECK: &str = "ban:phrase:check";
 pub const BAN_PHRASE_REMOVE: &str = "ban:phrase:remove";
@@ -129,9 +126,6 @@ pub const ALL_ACLS: &[&str] = &[
     BAN_EMAIL_ADD,
     BAN_EMAIL_CHECK,
     BAN_EMAIL_REMOVE,
-    SUSPICIOUS_EMAIL_DOMAIN_ADD,
-    SUSPICIOUS_EMAIL_DOMAIN_CHECK,
-    SUSPICIOUS_EMAIL_DOMAIN_REMOVE,
     BAN_PHRASE_ADD,
     BAN_PHRASE_CHECK,
     BAN_PHRASE_REMOVE,

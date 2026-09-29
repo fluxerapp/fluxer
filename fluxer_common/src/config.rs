@@ -9,10 +9,8 @@ pub enum GeoipSourceConfig {
     },
     S3 {
         maxmind_db_path: String,
-        maxmind_asn_db_path: Option<String>,
         s3_bucket: String,
         s3_key: String,
-        s3_asn_key: Option<String>,
     },
 }
 
@@ -82,33 +80,10 @@ fn parse_geoip_s3_source_config(raw_value: &str, service_name: &str) -> GeoipSou
     }
     let maxmind_db_path =
         geoip_runtime_path(&resolve_geoip_download_path(&url, raw_value), service_name);
-    let s3_asn_key = url
-        .query_pairs()
-        .find(|(key, _)| key == "asn_key")
-        .map(|(_, value)| value.into_owned());
-    let maxmind_asn_db_path = s3_asn_key.as_ref().map(|asn_key| {
-        let configured_path = url
-            .query_pairs()
-            .find(|(key, _)| key == "asn_download_path")
-            .map(|(_, value)| require_absolute_path(value.as_ref(), "asn_download_path", raw_value))
-            .unwrap_or_else(|| {
-                let directory = Path::new(&maxmind_db_path)
-                    .parent()
-                    .map(Path::to_path_buf)
-                    .unwrap_or_default();
-                directory
-                    .join(Path::new(asn_key).file_name().unwrap_or_default())
-                    .to_string_lossy()
-                    .into_owned()
-            });
-        geoip_runtime_path(&configured_path, service_name)
-    });
     GeoipSourceConfig::S3 {
         maxmind_db_path,
-        maxmind_asn_db_path,
         s3_bucket,
         s3_key,
-        s3_asn_key,
     }
 }
 
@@ -357,19 +332,15 @@ mod tests {
     #[test]
     fn parses_s3_geoip_source() {
         let source = parse_geoip_source_config(
-            "s3://geoip/GeoLite2-City.mmdb?download_path=/tmp/city.mmdb&asn_key=GeoLite2-ASN.mmdb",
+            "s3://geoip/GeoLite2-City.mmdb?download_path=/tmp/city.mmdb",
             "test_svc",
         );
         assert_eq!(
             source,
             GeoipSourceConfig::S3 {
                 maxmind_db_path: "/tmp/fluxer/geoip/test_svc/city.mmdb".to_owned(),
-                maxmind_asn_db_path: Some(
-                    "/tmp/fluxer/geoip/test_svc/GeoLite2-ASN.mmdb".to_owned()
-                ),
                 s3_bucket: "geoip".to_owned(),
                 s3_key: "GeoLite2-City.mmdb".to_owned(),
-                s3_asn_key: Some("GeoLite2-ASN.mmdb".to_owned()),
             }
         );
     }

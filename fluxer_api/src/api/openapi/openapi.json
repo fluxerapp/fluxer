@@ -18339,7 +18339,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "For very-high-risk registrations the platform requires the user to text a one-time code to the platform's number, instead of receiving a code from the platform. This endpoint generates the code and the destination number to display.",
+				"description": "When an account must verify its phone number inbound, the user texts a one-time code to the platform's number instead of receiving one. This endpoint generates the code and the destination number to display.",
 				"security": [{"sessionToken": []}]
 			}
 		},
@@ -19262,7 +19262,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Reports whether this account can set a deferred phone verification requirement aside, and which communities would be left if it did. Returns available false with empty lists for any account outside that state.",
+				"description": "Reports whether this account can set a due phone verification requirement aside. The community lists are always empty.",
 				"security": [{"sessionToken": []}]
 			},
 			"post": {
@@ -19313,7 +19313,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Leaves the communities that trigger the deferred phone verification check and restores the deferral, so the account works normally again. Communities the user owns are kept, and a run that hits the per-call community limit leaves what it can and can be repeated. Returns the updated private user object.",
+				"description": "Defers a due phone verification requirement again, so the account works normally without leaving any community. Returns the updated private user object.",
 				"security": [{"sessionToken": []}],
 				"requestBody": {
 					"required": false,
@@ -22482,7 +22482,7 @@
 						"description": "Whether premium perks are temporarily disabled for this account"
 					},
 					"force_inbound_phone_verification": {
-						"description": "Whether this account is forced through the inbound (expensive-destination) phone verification flow regardless of prefix, for debugging",
+						"description": "Whether this account is forced through the inbound phone verification flow, for debugging",
 						"type": "boolean"
 					},
 					"password_last_changed_at": {
@@ -23001,7 +23001,7 @@
 				"properties": {
 					"available": {
 						"type": "boolean",
-						"description": "Whether this account can set the deferred phone verification check aside right now"
+						"description": "Whether this account can set a due phone verification requirement aside right now"
 					},
 					"guilds": {
 						"type": "array",
@@ -23017,7 +23017,7 @@
 							"required": ["id", "name"],
 							"additionalProperties": false
 						},
-						"description": "Communities that trigger the phone check and will be left when the escape runs"
+						"description": "Always empty, the escape leaves no community"
 					},
 					"owned_guilds": {
 						"type": "array",
@@ -23033,7 +23033,7 @@
 							"required": ["id", "name"],
 							"additionalProperties": false
 						},
-						"description": "Communities that trigger the phone check but are owned by this user, so they are kept"
+						"description": "Always empty, the escape leaves no community"
 					}
 				},
 				"required": ["available", "guilds", "owned_guilds"],
@@ -23298,15 +23298,8 @@
 							},
 							"reason": {
 								"type": "string",
-								"enum": [
-									"voip",
-									"canadian",
-									"unknown_line_type",
-									"expensive_destination",
-									"account_forced",
-									"behavioural_risk"
-								],
-								"description": "Why inbound verification is required"
+								"enum": ["verification_required"],
+								"description": "Always verification_required"
 							}
 						},
 						"required": ["channel", "challenge_code", "our_number", "expires_at", "reason"],

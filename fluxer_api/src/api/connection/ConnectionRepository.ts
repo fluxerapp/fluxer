@@ -18,7 +18,12 @@ import {
 	IConnectionRepository,
 	type UpdateConnectionParams,
 } from '@app/api/connection/IConnectionRepository';
-import {BatchBuilder, executeConditional, fetchMany, fetchOne} from '@app/api/database/CassandraQueryExecution';
+import {
+	executeConditional,
+	executeGroupedBatches,
+	fetchMany,
+	fetchOne,
+} from '@app/api/database/CassandraQueryExecution';
 import {type ConditionalWriteEntry, Db, type DbOp} from '@app/api/database/CassandraTypes';
 import {
 	type RevisionedUserConnectionRow,
@@ -270,17 +275,15 @@ export class ConnectionRepository extends IConnectionRepository {
 			const rows = await fetchMany<UserConnectionStorageRow>(FETCH_DELETION_CONNECTIONS_CQL, {user_id: userId});
 			const remaining = rows.filter((row) => !isConnectionMembershipRow(row));
 			if (remaining.length === 0) return;
-			const batch = new BatchBuilder();
-			for (const row of remaining) {
-				batch.addPrepared(
+			await executeGroupedBatches(
+				remaining.map((row) => [
 					UserConnections.deleteByPk({
 						user_id: userId,
 						connection_type: row.connection_type,
 						connection_id: row.connection_id,
 					}),
-				);
-			}
-			await batch.execute();
+				]),
+			);
 		}
 	}
 

@@ -101,6 +101,24 @@ class Gauge {
 	}
 }
 
+const registeredSections = new Set<() => string>();
+
+export function registerMetricsSection(render: () => string): () => void {
+	registeredSections.add(render);
+	return () => {
+		registeredSections.delete(render);
+	};
+}
+
+function renderRegisteredSections(): Array<string> {
+	const rendered: Array<string> = [];
+	for (const render of registeredSections) {
+		const text = render().trim();
+		if (text !== '') rendered.push(text);
+	}
+	return rendered;
+}
+
 interface MetricsState {
 	requestsTotal: Counter;
 	errorsTotal: Counter;
@@ -156,6 +174,7 @@ export function createMetricsMiddleware(serviceName: string): MetricsResult {
 			requestDuration.render(`${prefix}_http_request_duration_seconds`, 'HTTP request duration in seconds'),
 			errorsTotal.render(`${prefix}_http_errors_total`, 'Total HTTP 5xx errors'),
 			uptime.render(`${prefix}_uptime_seconds`, 'Process uptime in seconds'),
+			...renderRegisteredSections(),
 		];
 		return c.text(`${sections.join('\n\n')}\n`, 200, {
 			'Content-Type': 'text/plain; version=0.0.4; charset=utf-8',

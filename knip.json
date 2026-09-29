@@ -20,6 +20,7 @@
 		"fluxer_app/scripts/build/Config.tsx": ["exports"],
 		"fluxer_app/scripts/build/rspack/static-files.mjs": ["exports"],
 		"fluxer_app/src/index.tsx": ["unlisted"],
+		"fluxer_api/src/api/infrastructure/activity/Contract.generated.ts": ["exports", "types"],
 		"fluxer_desktop/native/mac-app-audio/index.test.mjs": ["unlisted"],
 		"fluxer_desktop/src/common/DesktopConfig.ts": ["types"],
 		"fluxer_desktop/src/common/Types.ts": ["types"],

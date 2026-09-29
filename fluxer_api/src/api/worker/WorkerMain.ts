@@ -1,8 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {Config} from '@app/api/Config';
+import {createApiContext} from '@app/api/CreateApiContext';
 import {setDatabaseQueryExecutor} from '@app/api/database/CassandraQueryExecution';
 import {ensurePostgresKvSchema, PostgresKvQueryExecutor} from '@app/api/database/PostgresKvQueryExecutor';
+import {
+	jetStreamActivityPublisher,
+	shutdownActivityEvents,
+	startActivityEvents,
+} from '@app/api/infrastructure/activity/ActivityEvents';
+import {setActivityProcessChannel} from '@app/api/infrastructure/activity/ActivityMeta';
+import {startSharedListWatch, stopSharedListWatch} from '@app/api/infrastructure/activity/SharedLists';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
 import {shutdownStorageChangeFeed} from '@app/api/infrastructure/StorageServiceFactory';
 import type {InstanceConfigRepository} from '@app/api/instance/InstanceConfigRepository';
@@ -17,12 +25,15 @@ import {
 	shutdownVoiceResources,
 } from '@app/api/middleware/ServiceRegistry';
 import {
+	getAdminRepository,
 	getCacheService,
 	getInstanceConfigRepository,
 	getLimitConfigService,
 } from '@app/api/middleware/ServiceSingletons';
 import {initializeSearch, shutdownSearch} from '@app/api/SearchFactory';
+import {accountStateDepsFromContext} from '@app/api/user/services/AccountStateApplier';
 import {awaitAll} from '@app/api/utils/ConcurrencyUtils';
+import {startAccountActionConsumer, stopAccountActionConsumer} from '@app/api/worker/AccountActionConsumer';
 import {queueBlocklistFeedStartupJobs} from '@app/api/worker/BlocklistFeedStartup';
 import {CronScheduler} from '@app/api/worker/CronScheduler';
 import {JetStreamWorkerQueue, JOBS_STREAM_MAX_AGE_MS} from '@app/api/worker/JetStreamWorkerQueue';
@@ -70,11 +81,11 @@ function registerCronJobs(cron: CronScheduler, jobsStreamMaxAgeMs: number): void
 	cron.upsert('prunePostgresKvTtl', 'prunePostgresKvTtl', {}, '0 */5 * * * *', {ledger: false});
 	cron.upsert('syncDiscoveryIndex', 'syncDiscoveryIndex', {}, '0 */15 * * * *', {ledger: false});
 	if (Config.blocklistFeeds.enabled) {
-		cron.upsert('syncDisposableEmailDomains', 'syncDisposableEmailDomains', {}, '0 0 */6 * * *', {ledger: true});
 		cron.upsert('syncUrlBlocklists', 'syncUrlBlocklists', {}, '0 0 */6 * * *', {ledger: true});
 		cron.upsert('syncFileShaBlocklists', 'syncFileShaBlocklists', {}, '0 0 */12 * * *', {ledger: true});
 	}
 	cron.upsert('flushUserActivityBuffer', 'flushUserActivityBuffer', {}, '*/10 * * * * *', {ledger: false});
+	cron.upsert('drainActivitySpool', 'drainActivitySpool', {}, '*/5 * * * * *', {ledger: false});
 	Logger.info(
 		{
 			blocklistFeeds: Config.blocklistFeeds.enabled,
@@ -113,6 +124,7 @@ export async function startWorkerMain(): Promise<void> {
 		const voiceShutdown = cleanupStep('voice resources', shutdownVoiceResources);
 		await cleanupStep('heartbeat', () => heartbeat.stop());
 		await cleanupStep('cron', () => cron?.stop());
+		await cleanupStep('account actions', stopAccountActionConsumer);
 		await cleanupStep('runners', async () => {
 			await awaitAll(
 				runners.map((runner) => runner.stop()),
@@ -121,6 +133,8 @@ export async function startWorkerMain(): Promise<void> {
 		});
 		await voiceShutdown;
 		await cleanupStep('storage change feed', shutdownStorageChangeFeed);
+		await cleanupStep('shared lists', stopSharedListWatch);
+		await cleanupStep('activity events', () => shutdownActivityEvents());
 		await cleanupStep('jetstream', async () => {
 			await jsConnectionManager?.drain();
 			jsConnectionManager = null;
@@ -246,6 +260,21 @@ export async function startWorkerMain(): Promise<void> {
 		dependencies = await initializeWorkerDependencies(snowflakeService);
 		setWorkerDependencies(dependencies);
 		await queueBlocklistFeedStartupJobs(dependencies.kvClient, workerService, Config.blocklistFeeds.enabled);
+		setActivityProcessChannel('worker');
+		await startActivityEvents({
+			publisher: jetStreamActivityPublisher(jsConnectionManager.getJetStreamClient()),
+			kv: dependencies.kvClient,
+			jsm: await jsConnectionManager.getJetStreamManager(),
+			spoolWhileMissing: !Config.instance.selfHosted,
+		});
+		startSharedListWatch(jsConnectionManager.getJetStreamClient());
+		if (activeWorkerLanes.some((lane) => lane.name === 'lifecycle')) {
+			startAccountActionConsumer({
+				js: jsConnectionManager.getJetStreamClient(),
+				state: accountStateDepsFromContext(createApiContext(), getAdminRepository()),
+			});
+			Logger.info('Account action consumer started');
+		}
 		cron = new CronScheduler(workerService, Logger, dependencies.kvClient, heartbeat);
 		registerCronJobs(cron, queue.getJobsStreamMaxAgeMs());
 		for (const lane of activeWorkerLanes) {

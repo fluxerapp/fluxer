@@ -5,10 +5,9 @@ import type {IAdminRepository} from '@app/api/admin/IAdminRepository';
 import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService';
 import {AdminBanManagementService} from '@app/api/admin/services/AdminBanManagementService';
 import {createUserID} from '@app/api/BrandedTypes';
+import {resetIpBanExemptionsForTesting} from '@app/api/ban/IpBanExemptions';
 import {getConfig} from '@app/api/Config';
 import {ipBanCache} from '@app/api/middleware/IpBanMiddleware';
-import {resetIpBanExemptionsForTesting} from '@app/api/risk/IpBanExemptions';
-import type {ISuspiciousIpRepository} from '@app/api/risk/SuspiciousIpRepository';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
 import type {IpInfoLookupResult, IpInfoService} from '@pkgs/geoip/src/IpInfoService';
@@ -28,7 +27,7 @@ function ipInfoResult(overrides: Partial<IpInfoLookupResult> = {}): IpInfoLookup
 	return {
 		ip: CARRIER_IP,
 		available: true,
-		riskNote: 'test',
+		note: 'test',
 		geo: {
 			countryCode: 'US',
 			countryName: 'United States',
@@ -101,7 +100,6 @@ function createBanManagementService(lookup: (ip: string) => Promise<IpInfoLookup
 		adminRepository: adminRepository as unknown as IAdminRepository,
 		auditService: auditService as unknown as AdminAuditService,
 		ipInfoService: ipInfoService as unknown as IpInfoService,
-		suspiciousIpRepository: {} as unknown as ISuspiciousIpRepository,
 	});
 	return {service, bannedIps, auditCalls};
 }

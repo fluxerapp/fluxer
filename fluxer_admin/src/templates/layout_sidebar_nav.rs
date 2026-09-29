@@ -115,16 +115,6 @@ pub const NAV_SECTIONS: &[NavSection] = &[
                 ]
             ),
             item!(
-                "Suspicious Email Domains",
-                "/suspicious-email-domains",
-                "suspicious-email-domains",
-                [
-                    acl::SUSPICIOUS_EMAIL_DOMAIN_CHECK,
-                    acl::SUSPICIOUS_EMAIL_DOMAIN_ADD,
-                    acl::SUSPICIOUS_EMAIL_DOMAIN_REMOVE,
-                ]
-            ),
-            item!(
                 "Phrase Bans",
                 "/phrase-bans",
                 "phrase-bans",

@@ -987,91 +987,19 @@ Default `false`. Behaviour when the scanner is unreachable. With scanning on and
 
 Default `0.7`. The API-side NSFW score cutoff. No range check. Distinct from the Media Proxy threshold, which defaults to `0.85`.
 
-#### `FLUXER_RISK_INTEGRATION_ENABLED`
+#### `FLUXER_IPINFO_API_KEY`
 
-Default `false`. IP intelligence. Needs an ipinfo key to do anything.
-
-#### `FLUXER_RISK_IPINFO_API_KEY`
-
-Default empty. The ipinfo key. Paired with `FLUXER_RISK_INTEGRATION_ENABLED`.
-
-#### `FLUXER_ACCOUNT_POLICY_DSL`
-
-No default. The account risk policy. JSON. Malformed JSON fails startup, and an unknown key in a well-formed policy surfaces when the policy runs.
-
-#### `FLUXER_ABUSE_INBOUND_PHONE_COUNTRY_CODES`
-
-Default empty. Allowed inbound phone countries. Comma separated, passed through unvalidated.
-
-#### `FLUXER_ABUSE_PHONE_FLAGGING_ENABLED`
-
-Default `true`. Automatic phone requirements. With this off, registration, setting an email and gateway session start never add a requirement that offers phone verification. An email or phone requirement becomes its email only form. A deferred phone requirement stays dormant on a community join. Requirements already on an account and flags set by an Admin are untouched.
-
-#### `FLUXER_ABUSE_PHONE_FLAGGING_EXEMPT_COUNTRY_CODES`
-
-Default empty. Countries that never get an automatic phone requirement, matched against the request's GeoIP country. An email or phone requirement becomes its email only form. Comma separated, unvalidated.
-
-#### `FLUXER_ABUSE_PHONE_INBOUND_REQUIRED_PREFIXES`
-
-Default empty. Required inbound prefixes. Comma separated.
-
-#### `FLUXER_ABUSE_DIRECT_CONTACT_SPAM_ENABLED`
-
-Default `false`. Direct contact spam detection.
-
-#### `FLUXER_ABUSE_DIRECT_CONTACT_SPAM_COUNTRY_CODES`
-
-Default empty. Countries the rule applies to. Comma separated, unvalidated.
-
-#### `FLUXER_ABUSE_DIRECT_CONTACT_SPAM_DISTINCT_TARGET_THRESHOLD`
-
-Default `25`. Distinct targets before the rule fires. Integer.
-
-#### `FLUXER_ABUSE_DIRECT_CONTACT_SPAM_TARGET_WINDOW_MS`
-
-Default `7200000`. The observation window. Milliseconds, two hours by default.
-
-#### `FLUXER_ABUSE_DIRECT_CONTACT_SPAM_ACTION`
-
-Default `flag_spammer`. What happens when it fires. `flag_spammer` or `suppress_delivery`. Anything else fails startup.
+Default empty. The ipinfo key. Admin and guild IP bans use it to skip carrier-grade NAT and other shared addresses. Without it those checks treat every address as unknown. The previous name `FLUXER_RISK_IPINFO_API_KEY` is still read when this one is unset.
 
 #### `FLUXER_BLOCKLIST_FEEDS_ENABLED`
 
-Defaults to the inverse of `FLUXER_SELF_HOSTED`. Off by default on a self-hosted instance. With feeds on, the worker downloads disposable email domains and the URLhaus and PhishTank URL lists every six hours, and MalwareBazaar file hashes every twelve hours. Fluxer checks registrations and email changes against the domains, posted links against the URLs, and uploads against the hashes.
+Defaults to the inverse of `FLUXER_SELF_HOSTED`. Off by default on a self-hosted instance. With feeds on, the worker downloads the URLhaus and PhishTank URL lists every six hours, and MalwareBazaar file hashes every twelve hours. Fluxer checks posted links against the URLs and uploads against the hashes.
 
-With feeds off, Fluxer checks none of this data. The first worker start with feeds off removes every disposable email domain, the URL feed file, and every `malware_bazaar` file-SHA ban that no Admin added. File-SHA bans added through the Admin API stay. Turning feeds back on downloads the disposable domains at the next worker start, the URLs within six hours, and the hashes within twelve.
-
-#### `FLUXER_TOR_EXIT_LIST_ENABLED`
-
-Defaults to the inverse of `FLUXER_SELF_HOSTED`. Tor exit blocking. The API fetches the exit relay list from `onionoo.torproject.org` at startup and every 30 minutes. Off by default on a self-hosted instance.
+With feeds off, Fluxer checks none of this data. The first worker start with feeds off removes the URL feed file and every `malware_bazaar` file-SHA ban that no Admin added. File-SHA bans added through the Admin API stay. Turning feeds back on downloads the URLs within six hours and the hashes within twelve.
 
 #### `FLUXER_BREACHED_PASSWORD_CHECK_ENABLED`
 
 Defaults to the inverse of `FLUXER_SELF_HOSTED`. Breached password rejection. Sends the first five characters of the password's SHA-1 hash to `api.pwnedpasswords.com`. Off by default on a self-hosted instance.
-
-A second family, unrelated to the rules above, tunes the IP auto-banner: `FLUXER_ABUSE_WINDOW_MS`, the `FLUXER_ABUSE_THRESHOLD_` names, the `FLUXER_ABUSE_TOKEN_DIVERSITY_` names, `FLUXER_ABUSE_BAN_TTL_SEC`, `FLUXER_ABUSE_BATCH_FLUSH_MS`, `FLUXER_ABUSE_MAX_BATCH_TICKS`, `FLUXER_ABUSE_MAX_NEW_TOKENS_PER_TICK`, `FLUXER_ABUSE_MAX_TRACKED_IPS`, `FLUXER_ABUSE_MAX_TOKEN_HASHES_PER_IP`, `FLUXER_ABUSE_MIN_SCORE_FOR_LOOKUP`, `FLUXER_ABUSE_MIN_TOKENS_FOR_LOOKUP`, and `FLUXER_ABUSE_REQUIRED_SCORE_WINDOWS_FOR_AUTO_BAN`. All are read directly from the environment, none are in `.env.example` or the Compose file, and a non-finite value or one at or below zero falls back to the default.
-
-`FLUXER_ABUSE_EXEMPT_ASNS` takes comma-separated ASN numbers that the auto-banner never bans. Non-numeric entries are dropped. Before it buys a classification the auto-banner resolves the IP against the local MaxMind ASN database, and an IP on a listed ASN is neither classified nor banned. With no MaxMind ASN database the list has no effect. It does not change admin or guild IP bans, and `FLUXER_API_IP_BAN_EXEMPT_IPS` remains the way to exempt single addresses and ranges from every kind of IP ban.
-
-Other names in that family limit how often the auto-banner buys an IP classification from ipinfo. A shared claim lets one replica do the lookup for the others. With the claim off, every API replica looks up the same attacking IP at the same moment, so one IP costs one lookup per replica.
-
-- `FLUXER_ABUSE_IP_CLASS_CLAIM_ENABLED` defaults to `1` and gates the shared claim. It is read as a string, and only `0` turns the claim off.
-- `FLUXER_ABUSE_IP_CLASS_CLAIM_TTL_SEC` defaults to `15` seconds and sets how long a replica holds that claim.
-- `FLUXER_ABUSE_IP_CLASS_PENDING_TTL_MS` defaults to `20000` milliseconds and sets how long a replica that lost the claim waits before it tries again.
-- `FLUXER_ABUSE_IP_CLASS_NEGATIVE_TTL_MS` defaults to `300000` milliseconds and sets how long a failed classification is remembered.
-- `FLUXER_ABUSE_IP_CLASS_HINT_TTL_MS` defaults to `600000` milliseconds and sets how long a class sent by another replica stays usable.
-
-For these numeric settings, a non-finite value or one at or below zero falls back to the default.
-
-A `FLUXER_IPINFO_BUDGET_` family caps what the instance spends at ipinfo. `FLUXER_IPINFO_BUDGET_ENABLED` defaults to `1`, and `0` turns off all shedding. `FLUXER_IPINFO_BUDGET_MONTHLY_MAX` defaults to `140000` and is the ceiling for one UTC calendar month. Lookups run at the priorities below, each with a share of that ceiling and a token bucket for bursts refilled once a minute.
-
-- Admin IP bans and scheduled deletion checks are critical. They reach the full ceiling, with a burst of `60` from `FLUXER_IPINFO_BUDGET_CRITICAL_BURST` refilled at `60` a minute by `FLUXER_IPINFO_BUDGET_CRITICAL_REFILL_PER_MIN`.
-- Registration risk is standard. It stops at `FLUXER_IPINFO_BUDGET_STANDARD_MONTHLY_PCT` percent of the ceiling, default `90`, with a burst of `240` from `FLUXER_IPINFO_BUDGET_STANDARD_BURST` refilled at `120` a minute by `FLUXER_IPINFO_BUDGET_STANDARD_REFILL_PER_MIN`.
-- The IP auto-banner is background. It stops at `FLUXER_IPINFO_BUDGET_BACKGROUND_MONTHLY_PCT` percent, default `60`, with a burst of `120` from `FLUXER_IPINFO_BUDGET_BACKGROUND_BURST` refilled at `30` a minute by `FLUXER_IPINFO_BUDGET_BACKGROUND_REFILL_PER_MIN`.
-
-Background lookups stop first and critical lookups stop last. A denied lookup returns an unavailable result. If the key-value store fails, lookups remain allowed at every priority, so an outage can increase usage beyond these budgets.
-
-Local MaxMind data can reduce registration-risk lookups. Set `FLUXER_RISK_IPINFO_PRESCREEN_ENABLED` to `1` or `true`, in any letter case, and fill `FLUXER_RISK_IPINFO_PRESCREEN_ALLOW_ASNS` with comma-separated ASN numbers. Non-numeric entries are dropped. An IP skips ipinfo only when MaxMind supplies its country and an allowed ASN, and the organisation is not a commercial privacy provider, education network or cellular network.
 
 ## Stored instance policy
 
@@ -1149,7 +1077,7 @@ Defaults to `false` at the Gateway's environment layer. Gateway telemetry. Read 
 
 #### `HOSTNAME`
 
-Set by Docker. Node identity in metrics and logs. Also used by the IP auto-banner.
+Set by Docker. Node identity in metrics and logs.
 
 #### `FLUXER_ENV`
 
@@ -1255,7 +1183,7 @@ Default `10000`. Purge request timeout. Accepts 1000 to 10000. The range is chec
 
 #### `FLUXER_GEOIP_DB_PATH`
 
-Default empty. The GeoIP database. A filesystem path, or an `s3://bucket/key` URL whose `download_path` query parameter is mandatory and must be absolute. `app-proxy` also accepts `MAXMIND_DB_PATH`. The API also reads an ASN database. On a filesystem path it looks for `GeoLite2-ASN.mmdb` in the same directory. On an `s3://` URL it needs an `asn_key` query parameter, and takes an optional absolute `asn_download_path` next to it. A missing ASN database is not an error, and the API falls back to ipinfo for ASN data.
+Default empty. The GeoIP database. A filesystem path, or an `s3://bucket/key` URL whose `download_path` query parameter is mandatory and must be absolute. `app-proxy` also accepts `MAXMIND_DB_PATH`.
 
 ## Instance identity and branding
 
@@ -1733,7 +1661,7 @@ Branding is otherwise admin-dashboard only.
 
 Supplies the initial setup state on a self-hosted instance, until the first write of the stored `app_public_config` row takes over.
 
-#### Every `FLUXER_ABUSE_` auto-banner name, every `FLUXER_IPINFO_` budget name, and every Media Proxy performance knob
+#### Every Media Proxy performance knob
 
 No example coverage at all.
 

@@ -3,10 +3,15 @@
 import type {ApplicationID, UserID} from '@app/api/BrandedTypes';
 import {generateOAuthTokenSecret} from '@app/api/oauth/OAuthTokenSecret';
 import type {IApplicationRepository} from '@app/api/oauth/repositories/IApplicationRepository';
+import type {IUserRepository} from '@app/api/user/IUserRepository';
+import {canOwnerRunBots} from '@app/api/user/UserHelpers';
 import {hashPassword, verifyPassword} from '@app/api/utils/PasswordUtils';
 
 export class BotAuthService {
-	constructor(private readonly applicationRepository: IApplicationRepository) {}
+	constructor(
+		private readonly applicationRepository: IApplicationRepository,
+		private readonly users: Pick<IUserRepository, 'findUnique'>,
+	) {}
 
 	private parseBotToken(token: string): {
 		applicationId: ApplicationID;
@@ -38,12 +43,12 @@ export class BotAuthService {
 		if (!application?.hasBotUser() || !application.botTokenHash) {
 			return null;
 		}
-		try {
-			const isValid = await verifyPassword({password: secret, passwordHash: application.botTokenHash});
-			return isValid ? application.getBotUserId() : null;
-		} catch {
-			return null;
-		}
+		const [isValid, owner] = await Promise.all([
+			verifyPassword({password: secret, passwordHash: application.botTokenHash}).catch(() => false),
+			this.users.findUnique(application.ownerUserId),
+		]);
+		if (!isValid || (owner && !canOwnerRunBots(owner))) return null;
+		return application.getBotUserId();
 	}
 
 	async generateBotToken(applicationId: ApplicationID): Promise<{

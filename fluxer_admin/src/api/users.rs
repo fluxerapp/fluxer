@@ -439,6 +439,7 @@ impl AdminApiClient {
             public_reason: public_reason.map(std::borrow::ToOwned::to_owned),
             reason_code: crate::api::generated::deletion_reason_code(reason_code, "reason_code")
                 .map_err(ApiError::Parse)?,
+            replace_pending_deletion_at: None,
         };
         let response = self
             .generated_with_reason(audit_log_reason)?
@@ -449,14 +450,42 @@ impl AdminApiClient {
         Ok(resp.user)
     }
 
-    pub async fn cancel_deletion(&self, user_id: &str) -> ApiResult<AdminUser> {
-        let response = self
-            .generated()
-            .cancel_admin_user_deletion(&snowflake(user_id))
-            .await
-            .map_err(|e| self.generated_error(e))?;
-        let resp: UserMutationResponse = self.generated_value(response.into_inner())?;
+    pub async fn cancel_deletion(
+        &self,
+        user_id: &str,
+        expected_pending_deletion_at: &str,
+        notify_user: bool,
+        audit_log_reason: Option<&str>,
+    ) -> ApiResult<AdminUser> {
+        let body = serde_json::json!({
+            "expected_pending_deletion_at": expected_pending_deletion_at,
+            "notify_user": notify_user,
+        });
+        let resp: UserMutationResponse = self
+            .delete_with_reason(
+                &format!("/admin/users/{}/deletion", urlencoding::encode(user_id)),
+                Some(&body),
+                audit_log_reason,
+            )
+            .await?;
         Ok(resp.user)
+    }
+
+    pub async fn annotate_ban(
+        &self,
+        user_id: &str,
+        ban_audit_log_id: &str,
+        note: &str,
+    ) -> ApiResult<()> {
+        let body = serde_json::json!({
+            "ban_audit_log_id": ban_audit_log_id,
+            "note": note,
+        });
+        self.post_void(
+            &format!("/admin/users/{}/ban/notes", urlencoding::encode(user_id)),
+            Some(&body),
+        )
+        .await
     }
 
     pub async fn change_dob(&self, user_id: &str, dob: &str) -> ApiResult<AdminUser> {

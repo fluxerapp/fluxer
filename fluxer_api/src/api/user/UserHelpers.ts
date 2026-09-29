@@ -3,11 +3,11 @@
 import {Config} from '@app/api/Config';
 import type {UserRow} from '@app/api/database/types/UserTypes';
 import {resolveExperimentTargeting} from '@app/api/experiment/ExperimentTargeting';
+import {sharedListHas} from '@app/api/infrastructure/activity/SharedLists';
 import {getCachedInstancePremiumMode} from '@app/api/limits/InstancePremiumModeCache';
 import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {User} from '@app/api/models/User';
-import {accountPolicyContactHasCapability} from '@app/api/risk/AccountPolicyService';
-import {getCachedDeferredPhoneGateEnabled} from '@app/api/risk/DeferredPhoneGateCache';
+import {extractEmailDomain} from '@app/api/utils/EmailDomainUtils';
 import {
 	DEFERRABLE_PHONE_FLAGS,
 	DEFERRED_PHONE_ON_COMMUNITY_JOIN,
@@ -137,9 +137,6 @@ function suppressDeferredPhoneFlags(rawFlags: number): number {
 	if ((rawFlags & DEFERRED_PHONE_ON_COMMUNITY_JOIN) === 0) {
 		return rawFlags;
 	}
-	if (getCachedDeferredPhoneGateEnabled() === false && Config.abusePolicy.phoneFlagging.enabled) {
-		return rawFlags & ~DEFERRED_PHONE_ON_COMMUNITY_JOIN;
-	}
 	return rawFlags & ~DEFERRABLE_PHONE_FLAGS;
 }
 
@@ -151,7 +148,7 @@ export function getRequiredActions(user: User): ReadonlyArray<RequiredAction> {
 	if (!user.email) {
 		return [];
 	}
-	if (accountPolicyContactHasCapability(user.email, 'required_actions_exempt')) {
+	if (sharedListHas('email_domain_exempt', extractEmailDomain(user.email))) {
 		return [];
 	}
 	const activeClauses = buildRequiredActionClauses(flags).filter(
@@ -172,6 +169,33 @@ export function getRequiredActions(user: User): ReadonlyArray<RequiredAction> {
 	}
 	requiredActions.sort((left, right) => getRequiredActionSortIndex(left) - getRequiredActionSortIndex(right));
 	return requiredActions;
+}
+
+export function isAccountClosed(user: Pick<User, 'flags' | 'deletionStartedAt'>): boolean {
+	return (user.flags & UserFlags.DELETED) !== 0n || user.deletionStartedAt != null;
+}
+
+export function isTemporarilyBanned(user: Pick<User, 'flags' | 'tempBannedUntil'>, now = Date.now()): boolean {
+	return (
+		(user.flags & UserFlags.DISABLED) !== 0n && user.tempBannedUntil != null && user.tempBannedUntil.getTime() > now
+	);
+}
+
+function isAccountDisabled(user: Pick<User, 'flags' | 'tempBannedUntil'>, now = Date.now()): boolean {
+	if ((user.flags & UserFlags.DISABLED) === 0n) return false;
+	return user.tempBannedUntil == null || user.tempBannedUntil.getTime() > now;
+}
+
+export function isSignInRefused(user: Pick<User, 'flags' | 'deletionStartedAt' | 'tempBannedUntil'>): boolean {
+	return isAccountClosed(user) || isTemporarilyBanned(user);
+}
+
+export function canOwnerRunBots(owner: Pick<User, 'flags' | 'deletionStartedAt' | 'tempBannedUntil'>): boolean {
+	return !isAccountClosed(owner) && !isAccountDisabled(owner);
+}
+
+export function isDirectDeliverySuppressed(user: Pick<User, 'isBot' | 'flags'>): boolean {
+	return !user.isBot && (user.flags & UserFlags.SPAMMER) === UserFlags.SPAMMER;
 }
 
 export function getEffectiveSuspiciousFlags(user: User): number {

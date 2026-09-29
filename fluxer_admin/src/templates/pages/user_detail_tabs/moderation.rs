@@ -4,13 +4,14 @@ use crate::{
     acl,
     api::{
         client::{ApiError, ApiResult},
-        types::{AdminUser, MessageShredStatusResponse},
+        types::{AdminUser, AuditLogEntry, MessageShredStatusResponse},
     },
     config::AdminConfig,
     templates::components::{
-        form::{csrf_input, danger_button, form_actions, submit_button},
+        form::{checkbox, csrf_input, danger_button, form_actions, submit_button},
         page_container::card_with_header,
     },
+    utils::timestamps::format_admin_timestamp,
 };
 use maud::{Markup, html};
 
@@ -51,11 +52,60 @@ const DELETION_REASONS: &[(&str, &str)] = &[
     ("22", "Impersonation or fake identity"),
 ];
 
+pub struct CurrentBan<'a> {
+    pub entry: &'a AuditLogEntry,
+    pub notes: Vec<&'a AuditLogEntry>,
+}
+
+#[derive(Default)]
+pub struct ModerationContext<'a> {
+    pub deletion_scheduler: Option<&'a AdminUser>,
+    pub current_ban: Option<CurrentBan<'a>>,
+}
+
+pub fn find_current_ban<'a>(user: &AdminUser, logs: &'a [AuditLogEntry]) -> Option<CurrentBan<'a>> {
+    let banned_until = user.temp_banned_until.as_deref()?;
+    let entry = logs.iter().find(|log| {
+        log.action == "temp_ban"
+            && log.target_id == user.id
+            && log.metadata.get("banned_until").map(String::as_str) == Some(banned_until)
+    })?;
+    let mut notes: Vec<&AuditLogEntry> = logs
+        .iter()
+        .filter(|log| {
+            log.action == "annotate_ban"
+                && log.metadata.get("ban_audit_log_id") == Some(&entry.log_id)
+        })
+        .collect();
+    notes.sort_by(|a, b| a.created_at.cmp(&b.created_at));
+    Some(CurrentBan { entry, notes })
+}
+
+fn deletion_reason_label(code: i32) -> String {
+    let value = code.to_string();
+    DELETION_REASONS
+        .iter()
+        .find(|(candidate, _)| *candidate == value)
+        .map_or_else(
+            || format!("Reason {code}"),
+            |(_, label)| (*label).to_owned(),
+        )
+}
+
+fn admin_name(entry: &AuditLogEntry) -> String {
+    entry.admin_user.as_ref().map_or_else(
+        || entry.admin_user_id.clone(),
+        |admin| admin.username.clone(),
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
 pub fn moderation_tab(
     config: &AdminConfig,
     user: &AdminUser,
     csrf_token: &str,
     admin_acls: &[String],
+    context: &ModerationContext<'_>,
     message_shred_job_id: Option<&str>,
     message_shred_status: Option<&ApiResult<MessageShredStatusResponse>>,
     delete_all_messages_dry_run: Option<(u64, u64)>,
@@ -66,8 +116,8 @@ pub fn moderation_tab(
     html! {
         div class="space-y-6" {
             div class="grid grid-cols-1 gap-6 md:grid-cols-2" {
-                (ban_actions_card(base, user, csrf_token))
-                (deletion_card(base, user, csrf_token))
+                (ban_actions_card(base, user, csrf_token, context.current_ban.as_ref()))
+                (deletion_card(base, user, csrf_token, context.deletion_scheduler))
             }
             @if can_delete_all_messages {
                 (delete_all_messages_card(base, user, csrf_token, delete_all_messages_dry_run))
@@ -79,10 +129,16 @@ pub fn moderation_tab(
     }
 }
 
-fn ban_actions_card(base: &str, user: &AdminUser, csrf_token: &str) -> Markup {
+fn ban_actions_card(
+    base: &str,
+    user: &AdminUser,
+    csrf_token: &str,
+    current_ban: Option<&CurrentBan<'_>>,
+) -> Markup {
     html! {
         (card_with_header("Ban Actions", html! {
             @if user.temp_banned_until.is_some() {
+                (current_ban_details(base, user, csrf_token, current_ban))
                 form method="post"
                     action={(base) "/users/" (user.id) "?action=unban&tab=moderation"} {
                     (csrf_input(csrf_token))
@@ -129,16 +185,160 @@ fn ban_actions_card(base: &str, user: &AdminUser, csrf_token: &str) -> Markup {
     }
 }
 
-fn deletion_card(base: &str, user: &AdminUser, csrf_token: &str) -> Markup {
+fn current_ban_details(
+    base: &str,
+    user: &AdminUser,
+    csrf_token: &str,
+    current_ban: Option<&CurrentBan<'_>>,
+) -> Markup {
+    let Some(ban) = current_ban else {
+        return html! {
+            p class="mb-4 text-sm text-neutral-500" {
+                "The audit log entry of this ban could not be loaded, so notes cannot be added here."
+            }
+        };
+    };
+    html! {
+        div class="mb-4 space-y-3" {
+            dl class="space-y-1 text-sm text-neutral-700" {
+                div {
+                    dt class="inline font-medium" { "Banned by: " }
+                    dd class="inline" {
+                        a href={(base) "/users/" (ban.entry.admin_user_id)} class="underline" {
+                            (admin_name(ban.entry))
+                        }
+                        " on " (format_admin_timestamp(&ban.entry.created_at))
+                    }
+                }
+                div {
+                    dt class="inline font-medium" { "Reason: " }
+                    dd class="inline" { (ban.entry.audit_log_reason.as_deref().unwrap_or("None recorded")) }
+                }
+            }
+            @if !ban.notes.is_empty() {
+                ul class="space-y-1 text-sm text-neutral-700" {
+                    @for note in &ban.notes {
+                        li {
+                            span class="font-medium" { (admin_name(note)) }
+                            " (" (format_admin_timestamp(&note.created_at)) "): "
+                            (note.audit_log_reason.as_deref().unwrap_or(""))
+                        }
+                    }
+                }
+            }
+            form method="post"
+                action={(base) "/users/" (user.id) "?action=annotate_ban&tab=moderation"} {
+                (csrf_input(csrf_token))
+                input type="hidden" name="ban_audit_log_id" value=(ban.entry.log_id);
+                div class="space-y-3" {
+                    (form_label("Add a note to this ban"))
+                    textarea name="note" rows="2" required maxlength="512"
+                        placeholder="Appended to the ban. The original reason is kept."
+                        class="block w-full rounded-md border border-neutral-300 \
+                               px-3 py-2 text-sm shadow-sm \
+                               focus:border-brand-primary focus:outline-none \
+                               focus:ring-1 focus:ring-brand-primary" {}
+                    (form_actions(html! {
+                        (submit_button("Add Note"))
+                    }))
+                }
+            }
+        }
+    }
+}
+
+fn pending_deletion_summary(
+    base: &str,
+    user: &AdminUser,
+    scheduler: Option<&AdminUser>,
+) -> (String, Markup) {
+    let scheduler_name = match (user.deletion_scheduled_by.as_deref(), scheduler) {
+        (None, _) => "an unrecorded source".to_owned(),
+        (Some(id), _) if id == user.id => "the user".to_owned(),
+        (Some(_), Some(scheduler)) => scheduler.username.clone(),
+        (Some(id), None) => id.to_owned(),
+    };
+    let reason = user
+        .deletion_reason_code
+        .map_or_else(|| "no reason code".to_owned(), deletion_reason_label);
+    let due = user
+        .pending_deletion_at
+        .as_deref()
+        .map(format_admin_timestamp)
+        .unwrap_or_default();
+    let markup = html! {
+        dl class="mb-4 space-y-1 text-sm text-neutral-700" {
+            div {
+                dt class="inline font-medium" { "Scheduled by: " }
+                dd class="inline" {
+                    @match user.deletion_scheduled_by.as_deref() {
+                        Some(id) => {
+                            a href={(base) "/users/" (id)} class="underline" { (scheduler_name) }
+                        }
+                        None => { (scheduler_name) }
+                    }
+                    @if let Some(at) = user.deletion_scheduled_at.as_deref() {
+                        " on " (format_admin_timestamp(at))
+                    }
+                }
+            }
+            div {
+                dt class="inline font-medium" { "Due: " }
+                dd class="inline" { (due) }
+            }
+            div {
+                dt class="inline font-medium" { "Reason: " }
+                dd class="inline" { (reason) }
+            }
+            @if let Some(public_reason) = &user.deletion_public_reason {
+                div {
+                    dt class="inline font-medium" { "Public reason: " }
+                    dd class="inline" { (public_reason) }
+                }
+            }
+            @if let Some(private_reason) = &user.deletion_audit_log_reason {
+                div {
+                    dt class="inline font-medium" { "Private reason: " }
+                    dd class="inline" { (private_reason) }
+                }
+            }
+        }
+    };
+    (
+        format!("Cancel {scheduler_name}'s deletion ({reason}, due {due})"),
+        markup,
+    )
+}
+
+fn deletion_card(
+    base: &str,
+    user: &AdminUser,
+    csrf_token: &str,
+    scheduler: Option<&AdminUser>,
+) -> Markup {
     html! {
         (card_with_header("Account Deletion", html! {
-            @if user.pending_deletion_at.is_some() {
+            @if let Some(pending) = &user.pending_deletion_at {
+                @let (confirmation, summary) = pending_deletion_summary(base, user, scheduler);
+                (summary)
                 form method="post"
                     action={(base) "/users/" (user.id) "?action=cancel_deletion&tab=moderation"} {
                     (csrf_input(csrf_token))
-                    (form_actions(html! {
-                        (submit_button("Cancel Deletion"))
-                    }))
+                    input type="hidden" name="expected_pending_deletion_at" value=(pending);
+                    div class="space-y-3" {
+                        (form_label("Private Reason"))
+                        input type="text" name="private_reason" required
+                            placeholder="Why this deletion is being cancelled (audit log)..."
+                            class="block w-full rounded-md border border-neutral-300 \
+                                   px-3 py-2 text-sm shadow-sm \
+                                   focus:border-brand-primary focus:outline-none \
+                                   focus:ring-1 focus:ring-brand-primary";
+                        (checkbox("notify_user", "true", "Email the user that the deletion was cancelled", false, true))
+                        (checkbox("confirm", "true", &confirmation, false, true))
+                        (form_actions(html! {
+                            (danger_button("Cancel Deletion"))
+                        }))
+                    }
                 }
             } @else {
                 form method="post"
@@ -153,11 +353,12 @@ fn deletion_card(base: &str, user: &AdminUser, csrf_token: &str) -> Markup {
                                    focus:border-brand-primary focus:outline-none \
                                    focus:ring-1 focus:ring-brand-primary";
                         (form_label("Reason"))
-                        select name="reason_code"
+                        select name="reason_code" required
                             class="block w-full rounded-md border border-neutral-300 \
                                    px-3 py-2 text-sm shadow-sm \
                                    focus:border-brand-primary focus:outline-none \
                                    focus:ring-1 focus:ring-brand-primary" {
+                            option value="" disabled selected { "Choose a reason" }
                             @for &(value, label) in DELETION_REASONS {
                                 option value=(value) { (label) }
                             }
@@ -513,3 +714,112 @@ const MESSAGE_SHRED_FORM_SCRIPT: &str = r#"
 	});
 })();
 "#;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::{Value, json};
+
+    fn user(extra: Value) -> AdminUser {
+        let mut value =
+            json!({"id": "1500000000000000001", "username": "target", "discriminator": "0001"});
+        if let (Some(target), Some(fields)) = (value.as_object_mut(), extra.as_object()) {
+            target.extend(fields.clone());
+        }
+        serde_json::from_value(value).expect("valid admin user")
+    }
+
+    fn entry(log_id: &str, action: &str, reason: &str, metadata: Value) -> AuditLogEntry {
+        serde_json::from_value(json!({
+            "log_id": log_id,
+            "admin_user_id": "1400000000000000001",
+            "admin_user": {"id": "1400000000000000001", "username": "lilith", "discriminator": "0001", "global_name": null},
+            "action": action,
+            "target_id": "1500000000000000001",
+            "target_type": "user",
+            "audit_log_reason": reason,
+            "metadata": metadata,
+            "created_at": "2026-09-01T10:00:00.000Z"
+        }))
+        .expect("valid audit log entry")
+    }
+
+    #[test]
+    fn pending_deletion_card_names_the_scheduler_and_the_deletion_it_cancels() {
+        let target = user(json!({
+            "pending_deletion_at": "2026-10-30T17:40:29.690Z",
+            "deletion_reason_code": 3,
+            "deletion_public_reason": "Spam",
+            "deletion_audit_log_reason": "Report batch 12",
+            "deletion_scheduled_by": "1400000000000000001",
+            "deletion_scheduled_at": "2026-08-31T17:40:29.690Z"
+        }));
+        let scheduler = user(json!({"id": "1400000000000000001", "username": "lilith"}));
+        let markup = deletion_card("/admin", &target, "csrf", Some(&scheduler)).into_string();
+        assert!(markup.contains(r#"href="/admin/users/1400000000000000001""#));
+        assert!(markup.contains("lilith"));
+        assert!(markup.contains("Report batch 12"));
+        assert!(
+            markup.contains(
+                r#"name="expected_pending_deletion_at" value="2026-10-30T17:40:29.690Z""#
+            )
+        );
+        assert!(markup.contains(r#"name="notify_user" value="true""#));
+        assert!(!markup.contains(r#"name="notify_user" value="true" checked"#));
+        assert!(markup.contains("Cancel lilith's deletion (Spam, due"));
+        assert!(markup.contains(r#"name="private_reason" required"#));
+    }
+
+    #[test]
+    fn schedule_form_makes_the_reason_an_explicit_choice() {
+        let markup = deletion_card("/admin", &user(json!({})), "csrf", None).into_string();
+        assert!(markup.contains(r#"<option value="" disabled selected>Choose a reason</option>"#));
+        assert!(!markup.contains(r#"<option value="1" selected>"#));
+        assert!(!markup.contains("replace_pending_deletion_at"));
+    }
+
+    #[test]
+    fn current_ban_is_the_entry_matching_the_ban_end_and_notes_attach_to_it() {
+        let target = user(json!({"temp_banned_until": "2026-10-01T00:00:00.000Z"}));
+        let logs = vec![
+            entry(
+                "3",
+                "annotate_ban",
+                "Also sent links",
+                json!({"ban_audit_log_id": "2"}),
+            ),
+            entry(
+                "2",
+                "temp_ban",
+                "Regel § 3",
+                json!({"banned_until": "2026-10-01T00:00:00.000Z"}),
+            ),
+            entry(
+                "1",
+                "temp_ban",
+                "Older ban",
+                json!({"banned_until": "2026-01-01T00:00:00.000Z"}),
+            ),
+            entry(
+                "4",
+                "annotate_ban",
+                "Old note",
+                json!({"ban_audit_log_id": "1"}),
+            ),
+        ];
+        let ban = find_current_ban(&target, &logs).expect("current ban");
+        assert_eq!(ban.entry.log_id, "2");
+        assert_eq!(
+            ban.notes
+                .iter()
+                .map(|note| note.log_id.as_str())
+                .collect::<Vec<_>>(),
+            ["3"]
+        );
+        let markup = ban_actions_card("/admin", &target, "csrf", Some(&ban)).into_string();
+        assert!(markup.contains("Regel § 3"));
+        assert!(markup.contains("Also sent links"));
+        assert!(markup.contains(r#"name="ban_audit_log_id" value="2""#));
+        assert!(markup.contains("?action=annotate_ban&amp;tab=moderation"));
+    }
+}

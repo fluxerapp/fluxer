@@ -315,9 +315,9 @@ export const ESCAPE_CONFIRM_TITLE_WITH_GUILDS_DESCRIPTOR = msg({
 });
 export const ESCAPE_CONFIRM_OUTCOME_DESCRIPTOR = msg({
 	message:
-		'Your account goes back to normal right away and you will not need a phone number now. This is not a permanent exemption. Joining a large or public community can bring this check back.',
+		'Your account goes back to normal right away and you will not need a phone number now. This is not a permanent exemption, and we can ask for this check again later.',
 	comment:
-		'First line of the set-aside confirmation in the required-action modal. Always shown. Says can rather than will, because whether the check returns depends on account age and instance settings the user cannot see.',
+		'First line of the set-aside confirmation in the required-action modal. Always shown. Says can rather than will, because the check may or may not come back.',
 });
 export const ESCAPE_CONFIRM_LEAVE_DESCRIPTOR = msg({
 	message: 'You will leave {guildNames}. Nothing you posted is deleted, and you can join again later.',
@@ -420,8 +420,8 @@ export const PHONE_NUMBER_DESCRIPTION_DESCRIPTOR = msg({
 });
 export const PHONE_PRIVACY_DESCRIPTOR = msg({
 	message:
-		'Your number is not linked to your account. We keep only an encrypted marker, with no user ID, for at most {limit} verifications in about {duration} days.',
-	comment: 'Required-action modal privacy note for phone verification. limit and duration are inserted by code.',
+		'Your number is not linked to your account. We keep only an encrypted marker, with no user ID, for a limited time.',
+	comment: 'Required-action modal privacy note for phone verification.',
 });
 export const ENTER_PHONE_CODE_TITLE_DESCRIPTOR = msg({
 	message: 'Enter the SMS code',
@@ -438,10 +438,6 @@ export const INBOUND_PHONE_START_TITLE_DESCRIPTOR = msg({
 export const INBOUND_PHONE_START_DESCRIPTION_DESCRIPTOR = msg({
 	message: 'For this check, you send us a text message instead of receiving one from us.',
 	comment: 'Required-action modal body for starting an inbound phone verification challenge.',
-});
-export const INBOUND_PHONE_EXPENSIVE_REASON_DESCRIPTOR = msg({
-	message: 'Sending an SMS to this number is expensive, so we need you to text us instead.',
-	comment: 'Required-action modal explanation for an inbound phone verification challenge due to SMS cost.',
 });
 export const INBOUND_PHONE_DEFAULT_REASON_DESCRIPTOR = msg({
 	message: 'This number needs text-in verification instead of an SMS from us.',
@@ -570,13 +566,12 @@ export const PHONE_NOT_IN_SERVICE_DESCRIPTOR = msg({
 export const PHONE_NOT_MOBILE_DESCRIPTOR = msg({
 	message:
 		"This isn't a mobile number, so it can't receive our text. Try a mobile number, or contact support if you think that's wrong.",
-	comment:
-		'Required-action form error for landline, toll-free, premium, shared-cost, UAN, voicemail and pager lines. Do not name which line type the provider returned.',
+	comment: 'Required-action form error when the number is not a mobile line. Do not name the line type.',
 });
 export const PHONE_NEEDS_REVIEW_DESCRIPTOR = msg({
 	message: "We couldn't verify this number automatically. Contact support and a person will review your account.",
 	comment:
-		'Required-action form error for phone attempts blocked by a fraud signal. Deliberately non-specific. Never name the signal, the score or the threshold.',
+		'Required-action form error when a phone attempt cannot be verified automatically and needs a support review. Keep it non-specific.',
 });
 export const CAPTCHA_REQUIRED_DESCRIPTOR = msg({
 	message: 'A browser check is required before phone verification. Try again from the sign-in page or contact support.',

@@ -126,7 +126,7 @@ const OUT_OF_BAND_CREDENTIAL = new Map<string, OutOfBandRoute>([
 		'POST /webhooks/twilio/sms',
 		{
 			reason:
-				'installed only when config.sms.enabled, and then only when the inbound webhook token and public URL are both set, so a default or self-hosted instance never registers it',
+				'a provider callback that is forwarded untouched to the internal event bus and answers 500 while that bus is unavailable',
 			documentedIn: null,
 		},
 	],
@@ -208,7 +208,7 @@ const EXEMPTION_RULES: ReadonlyArray<ExemptionRule> = [
 		name: 'out-of-band credential',
 		justification:
 			'no ordinary client holds the credential. Each entry states its guard, and three are covered in prose',
-		anchors: [{file: 'fluxer_api/src/api/app/ControllerRegistry.ts', anchor: 'if (config.sms.enabled) {'}],
+		anchors: [{file: 'fluxer_api/src/api/app/ControllerRegistry.ts', anchor: 'installSmsWebhookForwarder(routes'}],
 		covers: (shape) => OUT_OF_BAND_CREDENTIAL.has(shape),
 	},
 ];
@@ -1699,7 +1699,7 @@ console.log('unthrottled routes and global bucket claims');
 	failures += section('rate limit prose disagreements', problems);
 }
 
-console.log('error registry and abuse signal weights');
+console.log('error registry');
 {
 	const errorsPage = await readFile(path.join(DOCS_ROOT, 'http-api/errors.md'), 'utf8');
 	const documentedCodes = new Set<string>();
@@ -1732,20 +1732,6 @@ console.log('error registry and abuse signal weights');
 		}
 	}
 
-	const banner = await readFile(path.join(REPO_ROOT, 'fluxer_api/src/api/middleware/AbusiveIpAutoBanner.ts'), 'utf8');
-	const weights = new Map<string, string>();
-	for (const rule of banner.matchAll(/if \(status === (\d{3})\) return ([\d.]+);/gu)) {
-		weights.set(rule[1], rule[2]);
-	}
-	for (const [status, weight] of weights) {
-		if (status === '404') {
-			continue;
-		}
-		if (!errorsPage.includes(`A ${status} weighs ${weight}`) && !errorsPage.includes(`a ${status} weighs ${weight}`)) {
-			problems.push(`errors.md does not state that a ${status} weighs ${weight}`);
-		}
-	}
-
 	const documentedRegistryCodes = [...registryCodes].filter((c) => documentedCodes.has(c)).length;
 	const UNDOCUMENTED_VALIDATION_CODES = new Set(['EMAIL_DOMAIN_CANNOT_RECEIVE_MAIL']);
 	const expectedEntries = registryCodes.size + validationCodes.size - UNDOCUMENTED_VALIDATION_CODES.size;
@@ -1765,7 +1751,6 @@ console.log('error registry and abuse signal weights');
 		);
 	}
 	console.log(`  registry codes: ${registryCodes.size.toString()}, documented: ${documentedRegistryCodes.toString()}`);
-	console.log(`  abuse signal weights compared: ${weights.size.toString()}`);
 	failures += section('error registry disagreements', problems);
 }
 

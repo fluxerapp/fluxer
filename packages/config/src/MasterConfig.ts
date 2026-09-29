@@ -207,15 +207,6 @@ export interface MasterConfig {
 				secure: boolean;
 			};
 		};
-		sms: {
-			enabled: boolean;
-			account_sid?: string;
-			auth_token?: string;
-			verify_service_sid?: string;
-			inbound_challenge_number?: string;
-			inbound_webhook_auth_token?: string;
-			inbound_webhook_public_url?: string;
-		};
 		captcha: {
 			enabled: boolean;
 			provider: 'hcaptcha' | 'turnstile' | 'none';
@@ -288,16 +279,11 @@ export interface MasterConfig {
 		blocklist_feeds: {
 			enabled?: boolean;
 		};
-		tor_exit_list: {
-			enabled?: boolean;
-		};
 		breached_password_check: {
 			enabled?: boolean;
 		};
-		risk_integration: {
-			enabled: boolean;
-			ipinfo_api_key: string;
-			account_policy_dsl?: unknown;
+		ipinfo: {
+			api_key: string;
 		};
 		push: {
 			apns: {
@@ -339,23 +325,6 @@ export interface MasterConfig {
 		branding: InstanceBrandingConfig;
 		setup: {
 			configured: boolean;
-		};
-		abuse_policy: {
-			inbound_phone_country_codes: Array<string>;
-			phone_flagging: {
-				enabled: boolean;
-				exempt_country_codes: Array<string>;
-			};
-			phone_verification: {
-				inbound_required_prefixes: Array<string>;
-			};
-			direct_contact_spam: {
-				enabled: boolean;
-				country_codes: Array<string>;
-				distinct_target_threshold: number;
-				target_window_ms: number;
-				action: 'flag_spammer' | 'suppress_delivery';
-			};
 		};
 	};
 	dev: {

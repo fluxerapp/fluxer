@@ -220,7 +220,6 @@ Accepting an exhausted invite returns 404 `UNKNOWN_INVITE` and makes the code st
 | 403 | [error response](/http-api/#error-response) | Instant invites are temporarily disabled for the guild and the request returns `FEATURE_TEMPORARILY_DISABLED` |
 | 403 | [error response](/http-api/#error-response) | The caller is banned by account or email address and the request returns `USER_BANNED_FROM_GUILD` |
 | 403 | [error response](/http-api/#error-response) | The caller is banned by network address and the request returns `USER_IP_BANNED_FROM_GUILD` |
-| 403 | [error response](/http-api/#error-response) | A deferred phone verification requirement becomes due and the request returns `ACCOUNT_SUSPICIOUS_ACTIVITY` |
 | 404 | [error response](/http-api/#error-response) | The named guild no longer exists and the request returns `UNKNOWN_GUILD` |
 | 404 | [error response](/http-api/#error-response) | The target channel no longer exists and the request returns `UNKNOWN_CHANNEL` |
 | 404 | [error response](/http-api/#error-response) | The code resolves to no record, the record is exhausted, a guild invite names no guild, or a group direct message invite names no channel or a channel that no longer exists, each returning `UNKNOWN_INVITE` |

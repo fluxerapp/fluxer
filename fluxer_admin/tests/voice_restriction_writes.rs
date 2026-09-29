@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+#![recursion_limit = "256"]
+
 use axum::{
     Json, Router,
     body::{Body, to_bytes},
@@ -302,6 +304,9 @@ fn admin_user() -> Value {
         "pending_bulk_message_deletion_at": null,
         "deletion_reason_code": null,
         "deletion_public_reason": null,
+        "deletion_audit_log_reason": null,
+        "deletion_scheduled_by": null,
+        "deletion_scheduled_at": null,
         "last_active_at": null,
         "last_active_ip": null,
         "last_active_ip_reverse": null,

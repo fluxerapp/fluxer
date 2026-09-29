@@ -31,7 +31,7 @@ fn filter_bar(base: &str, p: &JobsListParams) -> Markup {
                     div class="flex flex-col gap-2" {
                         label for="task_type" class=(FORM_LABEL_CLASS) { "Task type" }
                         input type="text" id="task_type" name="task_type"
-                            value=(p.task_type_filter) placeholder="syncDisposableEmailDomains"
+                            value=(p.task_type_filter) placeholder="syncUrlBlocklists"
                             class=(FORM_INPUT_CLASS);
                     }
                     div class="flex flex-col gap-2" {

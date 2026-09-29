@@ -112,8 +112,25 @@ export class UserAccountRepository {
 		return this.patchAccount(userId, patchData, oldData);
 	}
 
+	async compareAndSetSuspiciousFlags(user: User, suspiciousFlags: number): Promise<User | null> {
+		const result = await this.dataRepo.compareAndSetSuspiciousFlags(user, suspiciousFlags);
+		if (!result) return null;
+		const updatedUser = new User(result.updatedData);
+		await this.searchRepo.updateUser(updatedUser);
+		return updatedUser;
+	}
+
 	async updateDeletionSchedule(user: User, patch: UserDeletionScheduleUpdate): Promise<User> {
-		return this.patchAccount(user.id, patch, user.toRow(), 'schedule');
+		return this.patchAccount(
+			user.id,
+			{
+				...patch,
+				deletion_scheduled_by: patch.deletion_scheduled_by ?? null,
+				deletion_scheduled_at: patch.deletion_scheduled_at ?? null,
+			},
+			user.toRow(),
+			'schedule',
+		);
 	}
 
 	async startDeletion(userId: UserID, pendingDeletionAt: Date): Promise<User | null> {

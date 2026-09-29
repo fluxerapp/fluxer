@@ -15,6 +15,7 @@ import type {MessageRequest, MessageUpdateRequest} from '@app/api/channel/Messag
 import type {IChannelRepositoryAggregate} from '@app/api/channel/repositories/IChannelRepositoryAggregate';
 import type {AttachmentUploadTraceRepository} from '@app/api/channel/repositories/message/AttachmentUploadTraceRepository';
 import type {AuthenticatedChannel} from '@app/api/channel/services/AuthenticatedChannel';
+import {emitMessageCreated} from '@app/api/channel/services/message/MessageActivity';
 import type {MessageChannelAuthService} from '@app/api/channel/services/message/MessageChannelAuthService';
 import type {DmNsfwContext} from '@app/api/channel/services/message/MessageContentService';
 import type {MessageDispatchService} from '@app/api/channel/services/message/MessageDispatchService';
@@ -46,7 +47,7 @@ import type {MessageSnapshot} from '@app/api/models/MessageSnapshot';
 import type {User} from '@app/api/models/User';
 import type {Webhook} from '@app/api/models/Webhook';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
-import type {DirectMessageSpamMitigationService} from '@app/api/user/services/DirectMessageSpamMitigationService';
+import {isDirectDeliverySuppressed} from '@app/api/user/UserHelpers';
 import {assertGuildMemberCanCommunicate} from '@app/api/utils/GuildCommunicationUtils';
 import {
 	ChannelTypes,
@@ -96,7 +97,6 @@ interface MessageSendServiceDeps {
 	embedAttachmentResolver: MessageEmbedAttachmentResolver;
 	attachmentUploadTraceRepository: AttachmentUploadTraceRepository;
 	limitConfigService: LimitConfigService;
-	directMessageSpamMitigationService: DirectMessageSpamMitigationService;
 }
 
 interface SendMessageResult {
@@ -946,14 +946,8 @@ export class MessageSendService {
 			}
 		}
 		const dmRecipientId = this.getOneToOneDmRecipientId(channel, user.id);
-		let suppressDmRecipientDelivery = false;
-		if (dmRecipientId && !user.isBot) {
-			const spamDecision = await this.deps.directMessageSpamMitigationService.recordOneToOneDmSend({
-				sender: user,
-				recipientId: dmRecipientId,
-			});
-			suppressDmRecipientDelivery = spamDecision.shouldSuppressRecipientDelivery;
-		}
+		const suppressDmRecipientDelivery = dmRecipientId !== null && isDirectDeliverySuppressed(user);
+		const channelHadMessages = channel.lastMessageId !== null;
 		const {message, enqueueDeferredEmbeds} = await this.deps.persistenceService.createMessage({
 			messageId,
 			channelId,
@@ -1034,6 +1028,17 @@ export class MessageSendService {
 			},
 		]);
 		await this.cacheMessageNonceIfPresent({userId: user.id, nonce: data.nonce, channelId, messageId});
+		emitMessageCreated({
+			user,
+			message,
+			channel,
+			guildId: guild?.id ? createGuildID(BigInt(guild.id)) : null,
+			guildOwnerId: guild?.owner_id ? createUserID(BigInt(guild.owner_id)) : null,
+			dmRecipientId,
+			channelHadMessages,
+			delivered: !suppressDmRecipientDelivery,
+			userRepository: this.deps.userRepository,
+		});
 		void enqueueDeferredEmbeds().catch((error) => {
 			Logger.warn({error, messageId: messageId.toString()}, 'Failed to enqueue deferred embed extraction');
 		});

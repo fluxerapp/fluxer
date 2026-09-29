@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {GuildID, UserID} from '@app/api/BrandedTypes';
+import {getIpBanBlastRadiusVerdict, isSingleIpBanCandidate} from '@app/api/ban/IpBanCgnatGuard';
+import {isIpBanExempt} from '@app/api/ban/IpBanExemptions';
 import type {GuildAuditLogService} from '@app/api/guild/GuildAuditLogService';
 import type {GuildAuditLogChange} from '@app/api/guild/GuildAuditLogTypes';
 import {mapGuildBansToResponse} from '@app/api/guild/GuildModel';
@@ -12,8 +14,6 @@ import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {Logger} from '@app/api/Logger';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import type {GuildBan} from '@app/api/models/GuildBan';
-import {getIpBanBlastRadiusVerdict, isSingleIpBanCandidate} from '@app/api/risk/IpBanCgnatGuard';
-import {isIpBanExempt} from '@app/api/risk/IpBanExemptions';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import {AuditLogActionType} from '@fluxer/constants/src/AuditLogActionType';

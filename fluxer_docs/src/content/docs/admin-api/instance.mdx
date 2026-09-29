@@ -338,7 +338,6 @@ Community, direct message, premium and gating policy for the whole deployment.
 | services | object | Operator overrides for `gif_enabled`, `youtube_enabled`, and `bluesky_enabled`. Each is nullable, and null means no override |
 | services_resolved<sup>2</sup> | object | The same keys as concrete booleans, resolved from the override and the provider's own availability |
 | services_available<sup>3</sup> | object | Provider availability for `gif`, `youtube`, and `bluesky`, with no operator override applied |
-| deferred_phone_gate | [deferred phone gate](#deferred-phone-gate-object) object | Delayed phone verification policy |
 
 <sup>1</sup> The lock is set each time direct messages are re-enabled. [Update instance configuration](#update-instance-configuration) clears it when the policy object has `direct_messages_locked` set to false
 
@@ -354,18 +353,6 @@ Community, direct message, premium and gating policy for the whole deployment.
 | everyone | Grant premium access to every account on a self-hosted deployment |
 
 A self-hosted deployment issues gift codes and sells premium only in `mirror`.
-
-## Deferred phone gate object
-
-A rule for accounts whose phone verification requirement was deferred. When such an account joins a guild within `window_hours` of registration, and the guild has the `DISCOVERABLE` feature or more than `member_threshold` members, Fluxer refuses the join until the account verifies a phone.
-
-### Structure
-
-| Field | Type | Description |
-| --- | --- | --- |
-| enabled | boolean | Whether the delayed phone requirement is applied (default false) |
-| window_hours | number | Hours after registration in which the requirement can be applied (default 6) |
-| member_threshold | number | Guild member count above which the requirement is applied (default 50) |
 
 ## Instance integrations object
 
@@ -701,13 +688,10 @@ Fluxer skips URL validation while the merged configuration leaves single sign-on
 | direct_messages_locked?<sup>2</sup> | boolean | Whether the direct message setting stays locked |
 | premium_mode? | string | [Premium mode](#premium-modes) |
 | services? | object | Nullable `gif_enabled`, `youtube_enabled`, and `bluesky_enabled` overrides |
-| deferred_phone_gate?<sup>3</sup> | object | `enabled`, `window_hours`, and `member_threshold` |
 
 <sup>1</sup> Setting `single_community_enabled` to true adopts the already designated guild when one still exists. When none is designated or the designated guild was deleted, it creates a community using `single_community_name` or the configured product name. When the stored guild ID is not a valid ID, or the guild lookup fails for a reason other than an unknown guild, the operation fails and Fluxer creates no community. On a deployment whose setup is already complete, enabling it while no guild is designated fails with 400 `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED`, as does enabling it when the acting Admin account cannot be resolved. Setting it to false only clears the flag and leaves the guild in place
 
 <sup>2</sup> The setting can be changed only while `direct_messages_locked` is false, and a change attempted after the lock is set fails with 400 `INSTANCE_POLICY_TRANSITION_NOT_ALLOWED` unless the same request sets `direct_messages_locked` to false. Re-enabling direct messages sets the lock again
-
-<sup>3</sup> `window_hours` is a positive number up to 8760 and `member_threshold` is a positive integer up to 1000000. An omitted key keeps its stored value
 
 `direct_messages_locked` accepts only false, and a body that sets it to true fails with 400 `INVALID_FORM_BODY`.
 

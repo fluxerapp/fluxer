@@ -6070,6 +6070,69 @@
 				]
 			}
 		},
+		"/admin/users/{user_id}/ban/notes": {
+			"post": {
+				"operationId": "annotate_admin_user_ban",
+				"summary": "Add a note to a user ban",
+				"tags": ["Admin"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Append a note to the current ban of a user. The note is recorded as the reason of a new annotate_ban audit log entry whose metadata names the ban audit log entry. Earlier entries are never changed. Requires USER_TEMP_BAN permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the user", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
+						"description": "The ID of the user"
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminUserBanNoteRequest"}}}
+				}
+			}
+		},
 		"/admin/users/{user_id}/bot-status": {
 			"put": {
 				"operationId": "set_admin_user_bot_status",
@@ -6329,7 +6392,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Schedule user account for deletion after grace period. Account will be fully deleted with all content unless cancellation is executed. Creates audit log entry. Requires USER_DELETE permission.",
+				"description": "Schedule user account for deletion after grace period. Account will be fully deleted with all content unless cancellation is executed. When a deletion is already scheduled, the request must name it in replace_pending_deletion_at or it returns 409. Records who scheduled the deletion. Creates audit log entry. Requires USER_DELETE permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -6393,7 +6456,7 @@
 						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
 					}
 				},
-				"description": "Cancel a scheduled account deletion. User account restoration prevents data loss. Creates audit log entry. Requires USER_DELETE permission.",
+				"description": "Cancel the scheduled account deletion named by expected_pending_deletion_at. Returns 409 when a different deletion is pending and 400 when none is. The user is emailed only when notify_user is true, and the email never includes the audit log reason. Creates audit log entry recording the cancelled deletion. Requires USER_DELETE permission.",
 				"security": [{"adminApiKey": []}],
 				"parameters": [
 					{
@@ -6403,7 +6466,11 @@
 						"schema": {"description": "The ID of the user", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
 						"description": "The ID of the user"
 					}
-				]
+				],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminUserDeletionCancelRequest"}}}
+				}
 			}
 		},
 		"/admin/users/{user_id}/dm-channels": {
@@ -9702,6 +9769,23 @@
 					}
 				]
 			},
+			"AdminUserDeletionCancelRequest": {
+				"type": "object",
+				"properties": {
+					"expected_pending_deletion_at": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "pending_deletion_at of the deletion being cancelled, as shown on the account"
+					},
+					"notify_user": {
+						"default": false,
+						"description": "Whether to email the user that the deletion was cancelled",
+						"type": "boolean"
+					}
+				},
+				"required": ["expected_pending_deletion_at"]
+			},
 			"AdminUserDeletionScheduleRequest": {
 				"type": "object",
 				"properties": {
@@ -9716,6 +9800,12 @@
 						"type": "integer",
 						"minimum": 1,
 						"maximum": 365
+					},
+					"replace_pending_deletion_at": {
+						"description": "pending_deletion_at of the deletion this request replaces. Required when a deletion is already scheduled for the account",
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
 					}
 				},
 				"required": ["reason_code"]
@@ -9755,6 +9845,20 @@
 				"type": "object",
 				"properties": {"bot": {"type": "boolean", "description": "Whether the user should be marked as a bot"}},
 				"required": ["bot"]
+			},
+			"AdminUserBanNoteRequest": {
+				"type": "object",
+				"properties": {
+					"ban_audit_log_id": {
+						"description": "Audit log entry of the current ban that the note refers to",
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]
+					},
+					"note": {
+						"description": "Note to append to the ban. Recorded as the reason of a new audit log entry",
+						"type": "string"
+					}
+				},
+				"required": ["ban_audit_log_id", "note"]
 			},
 			"AdminUserBanRequest": {
 				"type": "object",
@@ -9837,7 +9941,7 @@
 				"type": "object",
 				"properties": {
 					"acls": {
-						"maxItems": 111,
+						"maxItems": 108,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"},
 						"description": "List of access control permissions to assign"
@@ -10719,16 +10823,6 @@
 								},
 								"required": ["gif", "youtube", "bluesky"],
 								"additionalProperties": false
-							},
-							"deferred_phone_gate": {
-								"type": "object",
-								"properties": {
-									"enabled": {"type": "boolean"},
-									"window_hours": {"type": "number"},
-									"member_threshold": {"type": "number"}
-								},
-								"required": ["enabled", "window_hours", "member_threshold"],
-								"additionalProperties": false
 							}
 						},
 						"required": [
@@ -10739,8 +10833,7 @@
 							"premium_mode",
 							"services",
 							"services_resolved",
-							"services_available",
-							"deferred_phone_gate"
+							"services_available"
 						],
 						"additionalProperties": false
 					},
@@ -11311,15 +11404,6 @@
 									"gif_enabled": {"nullable": true, "type": "boolean"},
 									"youtube_enabled": {"nullable": true, "type": "boolean"},
 									"bluesky_enabled": {"nullable": true, "type": "boolean"}
-								}
-							},
-							"deferred_phone_gate": {
-								"nullable": true,
-								"type": "object",
-								"properties": {
-									"enabled": {"type": "boolean"},
-									"window_hours": {"type": "number", "minimum": 0, "exclusiveMinimum": true, "maximum": 8760},
-									"member_threshold": {"type": "integer", "minimum": 0, "exclusiveMinimum": true, "maximum": 1000000}
 								}
 							}
 						}
@@ -12323,17 +12407,7 @@
 			},
 			"AdminBlocklistListType": {
 				"type": "string",
-				"enum": [
-					"ip",
-					"email",
-					"email-domain-suspicious",
-					"phrase",
-					"url",
-					"url-domain",
-					"file-sha",
-					"avatar-hash",
-					"profile-substring"
-				],
+				"enum": ["ip", "email", "phrase", "url", "url-domain", "file-sha", "avatar-hash", "profile-substring"],
 				"description": "The blocklist an entry belongs to"
 			},
 			"AdminBlocklistEntryUpdateRequest": {
@@ -12376,7 +12450,6 @@
 				"anyOf": [
 					{"$ref": "#/components/schemas/BanIpRequest"},
 					{"$ref": "#/components/schemas/BanEmailRequest"},
-					{"$ref": "#/components/schemas/SuspiciousEmailDomainRequest"},
 					{"$ref": "#/components/schemas/BanPhraseRequest"},
 					{"$ref": "#/components/schemas/BanUrlRequest"},
 					{"$ref": "#/components/schemas/BanUrlDomainRequest"},
@@ -12753,7 +12826,7 @@
 					},
 					"acls": {
 						"description": "Replacement list of access control permissions for the key",
-						"maxItems": 111,
+						"maxItems": 108,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"}
 					}
@@ -12771,7 +12844,7 @@
 						"type": "string"
 					},
 					"acls": {
-						"maxItems": 111,
+						"maxItems": 108,
 						"type": "array",
 						"items": {"type": "string"},
 						"description": "List of access control permissions for the key"
@@ -12801,7 +12874,7 @@
 						"maximum": 365
 					},
 					"acls": {
-						"maxItems": 111,
+						"maxItems": 108,
 						"type": "array",
 						"items": {"$ref": "#/components/schemas/AdminAclType"},
 						"description": "List of access control permissions for the key"
@@ -12822,7 +12895,7 @@
 						"type": "string"
 					},
 					"acls": {
-						"maxItems": 111,
+						"maxItems": 108,
 						"type": "array",
 						"items": {"type": "string"},
 						"description": "List of access control permissions for the key"
@@ -12835,7 +12908,7 @@
 				"type": "object",
 				"properties": {
 					"acls": {
-						"maxItems": 111,
+						"maxItems": 108,
 						"type": "array",
 						"items": {"type": "string", "minLength": 1, "maxLength": 64},
 						"description": "Every admin access control permission the admin API recognises"
@@ -12864,9 +12937,6 @@
 					"ban:email:add",
 					"ban:email:check",
 					"ban:email:remove",
-					"suspicious_email_domain:add",
-					"suspicious_email_domain:check",
-					"suspicious_email_domain:remove",
 					"ban:phrase:add",
 					"ban:phrase:check",
 					"ban:phrase:remove",
@@ -13179,19 +13249,6 @@
 				},
 				"required": ["phrase"]
 			},
-			"SuspiciousEmailDomainRequest": {
-				"type": "object",
-				"properties": {
-					"domain": {
-						"type": "string",
-						"minLength": 1,
-						"maxLength": 253,
-						"pattern": "^[a-zA-Z0-9][a-zA-Z0-9\\-.]*\\.[a-zA-Z]{2,}$",
-						"description": "Email domain to flag as suspicious (e.g. mail.ru). Registrants from this domain will be required to verify a phone number."
-					}
-				},
-				"required": ["domain"]
-			},
 			"BanEmailRequest": {
 				"type": "object",
 				"properties": {
@@ -13434,12 +13491,12 @@
 					{
 						"name": "FORCE_INBOUND_PHONE_VERIFICATION",
 						"value": "2305843009213693952",
-						"description": "User is forced through inbound (expensive-destination) phone verification regardless of phone prefix, for debugging"
+						"description": "User is forced through inbound phone verification, for debugging"
 					},
 					{
 						"name": "NOT_SUSPICIOUS",
 						"value": "4611686018427387904",
-						"description": "User is permanently exempt from automatic suspicious-activity flagging on RPC session start (does not require a prior payment)"
+						"description": "User is permanently exempt from automatic suspicious-activity flagging"
 					}
 				]
 			},
@@ -15703,14 +15760,29 @@
 					"suspicious_activity_flags": {"allOf": [{"$ref": "#/components/schemas/SuspiciousActivityFlags"}]},
 					"phone_verification_deferred": {
 						"type": "boolean",
-						"description": "Whether a stored phone requirement is deferred until the user joins a discoverable or large community"
+						"description": "Whether a stored phone requirement is deferred and not enforced"
 					},
 					"temp_banned_until": {"nullable": true, "type": "string"},
 					"pending_deletion_at": {"nullable": true, "type": "string"},
 					"pending_bulk_message_deletion_at": {"nullable": true, "type": "string"},
 					"deletion_reason_code": {"nullable": true, "allOf": [{"$ref": "#/components/schemas/Int32Type"}]},
 					"deletion_public_reason": {"nullable": true, "type": "string"},
-					"acls": {"maxItems": 111, "type": "array", "items": {"type": "string"}},
+					"deletion_audit_log_reason": {
+						"nullable": true,
+						"description": "Private reason recorded with the pending deletion, null without the audit log view permission",
+						"type": "string"
+					},
+					"deletion_scheduled_by": {
+						"nullable": true,
+						"description": "ID of the account that scheduled the pending deletion, null when it was not recorded",
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+					},
+					"deletion_scheduled_at": {
+						"nullable": true,
+						"description": "ISO 8601 timestamp when the pending deletion was scheduled",
+						"type": "string"
+					},
+					"acls": {"maxItems": 108, "type": "array", "items": {"type": "string"}},
 					"traits": {"maxItems": 100, "type": "array", "items": {"type": "string"}},
 					"has_totp": {"type": "boolean"},
 					"authenticator_types": {"maxItems": 10, "type": "array", "items": {"$ref": "#/components/schemas/Int32Type"}},
@@ -15751,6 +15823,9 @@
 					"pending_bulk_message_deletion_at",
 					"deletion_reason_code",
 					"deletion_public_reason",
+					"deletion_audit_log_reason",
+					"deletion_scheduled_by",
+					"deletion_scheduled_at",
 					"acls",
 					"traits",
 					"has_totp",

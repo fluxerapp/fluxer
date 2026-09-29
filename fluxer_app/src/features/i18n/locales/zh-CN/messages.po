@@ -2396,7 +2396,7 @@ msgid "7 days"
 msgstr "7 天"
 
 #. Required-action error when the API requires a captcha for phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:581
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:576
 msgid "A browser check is required before phone verification. Try again from the sign-in page or contact support."
 msgstr "电话验证前需要进行浏览器检查。请从登录页面重试，或联系支持团队。"
 
@@ -5240,8 +5240,8 @@ msgstr "当前离开"
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:396
 #: src/features/moderation/components/report_modal/IARModal.tsx:86
 #: src/features/moderation/components/report/ReportStepDetails.tsx:312
-#: src/features/user/components/modals/PhoneAddModal.tsx:420
-#: src/features/user/components/modals/PhoneAddModal.tsx:439
+#: src/features/user/components/modals/PhoneAddModal.tsx:417
+#: src/features/user/components/modals/PhoneAddModal.tsx:436
 msgid "Back"
 msgstr "返回"
 
@@ -6451,7 +6451,7 @@ msgstr "无法在此上传文件"
 #: src/features/user/components/modals/PasswordChangeModal.tsx:226
 #: src/features/user/components/modals/PasswordChangeModal.tsx:237
 #: src/features/user/components/modals/PasswordChangeModal.tsx:255
-#: src/features/user/components/modals/PhoneAddModal.tsx:401
+#: src/features/user/components/modals/PhoneAddModal.tsx:398
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:174
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx:33
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:846
@@ -8294,7 +8294,7 @@ msgstr "煤炭主题"
 #. Label for an inbound phone verification code shown in the required-action modal.
 #: src/features/auth/components/modals/MfaTotpDisableModal.tsx:26
 #: src/features/auth/components/modals/MfaTotpEnableModal.tsx:36
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:466
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:462
 #: src/features/invite/components/InviteListItem.tsx:77
 #: src/features/moderation/components/report/ReportBreadcrumbs.tsx:29
 msgid "Code"
@@ -10299,7 +10299,7 @@ msgstr "倒计时"
 #. Form field label for the country selector in the phone verification step.
 #. Short label in the phone add modal. Keep it concise.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:92
-#: src/features/user/components/modals/PhoneAddModal.tsx:59
+#: src/features/user/components/modals/PhoneAddModal.tsx:57
 msgid "Country"
 msgstr "国家/地区"
 
@@ -13350,7 +13350,7 @@ msgid "Email unavailable"
 msgstr "邮箱不可用"
 
 #. Required-action error shown when email update cannot continue.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:522
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:518
 msgid "Email update is unavailable right now. Try again later or contact support."
 msgstr "暂时无法更新邮箱。请稍后重试或联系支持团队。"
 
@@ -13999,7 +13999,7 @@ msgstr "请输入有效的 {theOtherPlatform} 模板网址或代码。"
 
 #. Inline validation error on the email step of the DSA report flow when the email is malformed.
 #. Required-action form error for an invalid email address.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:510
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:506
 #: src/features/moderation/components/pages/ReportPage.tsx:59
 msgid "Enter a valid email address."
 msgstr "请输入有效的电子邮件地址。"
@@ -14010,14 +14010,14 @@ msgid "Enter a valid message link."
 msgstr "请输入有效的消息链接。"
 
 #. Required-action form error for an invalid phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:526
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:522
 msgid "Enter a valid mobile phone number."
 msgstr "请输入有效的手机号码。"
 
 #. Form validation error shown when the entered phone number cannot be parsed.
 #. Label in the phone add modal.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:108
-#: src/features/user/components/modals/PhoneAddModal.tsx:47
+#: src/features/user/components/modals/PhoneAddModal.tsx:45
 msgid "Enter a valid phone number"
 msgstr "请输入有效的电话号码"
 
@@ -14101,7 +14101,7 @@ msgid "Enter the {digitCount}-digit code sent to {phoneNumber}."
 msgstr "输入发送到 {phoneNumber} 的 {digitCount} 位验证码。"
 
 #. placeholder {0}: getE164PhoneNumber(phoneNumber, selectedCountry) ?? formattedPhone
-#: src/features/user/components/modals/PhoneAddModal.tsx:376
+#: src/features/user/components/modals/PhoneAddModal.tsx:373
 msgid "Enter the {MFA_CODE_DIGIT_COUNT}-digit code sent to {0}."
 msgstr "输入发送至 {0} 的 {MFA_CODE_DIGIT_COUNT} 位验证码。"
 
@@ -16137,7 +16137,7 @@ msgstr "获取 {premiumProductName} 以自定义你的标签，或在更改用�
 
 #. Button in the required-action modal. Requests a new inbound SMS challenge code.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:202
-#: src/features/user/components/modals/PhoneAddModal.tsx:427
+#: src/features/user/components/modals/PhoneAddModal.tsx:424
 msgid "Get new code"
 msgstr "获取新验证码"
 
@@ -24039,7 +24039,7 @@ msgid "Open your browser, sign in, then enter the code below to link your accoun
 msgstr "打开浏览器，登录后输入以下代码以关联你的账号。"
 
 #. Required-action modal carousel step title for the first inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:450
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:446
 msgid "Open your messages"
 msgstr "打开短信应用"
 
@@ -24047,12 +24047,12 @@ msgstr "打开短信应用"
 msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
 msgstr "打开你的旧版 {PRODUCT_NAME} 应用，选择“关联新设备”，然后输入下方的验证码。"
 
-#: src/features/user/components/modals/PhoneAddModal.tsx:327
+#: src/features/user/components/modals/PhoneAddModal.tsx:324
 msgid "Open your phone's messaging app and create a new text message."
 msgstr "打开手机短信应用，创建一条新短信。"
 
 #. Required-action modal body for the first inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:454
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:450
 msgid "Open your phone's messaging app and start a new text message."
 msgstr "打开手机短信应用，然后开始一条新短信。"
 
@@ -24223,7 +24223,7 @@ msgid "OTP"
 msgstr "OTP"
 
 #. Required-action form error when our own phone lookup provider is unavailable and we fail closed. Must blame us, not the number, and must invite retrying the same number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:558
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:554
 msgid "Our phone number check is down right now. This is on us, not your number. Wait a few minutes and try the same number again."
 msgstr "我们的电话号码验证服务暂时不可用。这是我们的问题，与你的号码无关。请等几分钟后用同一个号码重试。"
 
@@ -24810,21 +24810,21 @@ msgstr "手机"
 #. Form field label for the phone number input.
 #. Short label in the phone add modal. Keep it concise.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:100
-#: src/features/user/components/modals/PhoneAddModal.tsx:67
+#: src/features/user/components/modals/PhoneAddModal.tsx:65
 msgid "Phone number"
 msgstr "手机号"
 
 #. Form validation error shown when the phone number field is empty.
 #. Label in the phone add modal.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:116
-#: src/features/user/components/modals/PhoneAddModal.tsx:43
+#: src/features/user/components/modals/PhoneAddModal.tsx:41
 msgid "Phone number is required"
 msgstr "需要手机号"
 
 #. Toast shown after phone verification succeeds.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:486
-#: src/features/user/components/modals/PhoneAddModal.tsx:180
-#: src/features/user/components/modals/PhoneAddModal.tsx:185
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:482
+#: src/features/user/components/modals/PhoneAddModal.tsx:178
+#: src/features/user/components/modals/PhoneAddModal.tsx:183
 msgid "Phone number verified"
 msgstr "手机号已验证"
 
@@ -24839,7 +24839,7 @@ msgid "Phone step"
 msgstr "手机步骤"
 
 #. Required-action error when the account is not eligible to add phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:542
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:538
 msgid "Phone verification is not available for this account. Use another method or contact support."
 msgstr "此账号无法进行手机验证。请使用其他方式或联系支持团队。"
 
@@ -27319,7 +27319,7 @@ msgid "Reposts: <0>{countLabel}</0>"
 msgstr "转发：<0>{countLabel}</0>"
 
 #. Required-action form error when the user submits before a code exists.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:498
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:494
 msgid "Request a new code first."
 msgstr "请先请求新验证码。"
 
@@ -28793,7 +28793,7 @@ msgid "Search communities"
 msgstr "搜索社区"
 
 #. Button or menu action label in the phone add modal. Keep it concise.
-#: src/features/user/components/modals/PhoneAddModal.tsx:63
+#: src/features/user/components/modals/PhoneAddModal.tsx:61
 msgid "Search countries..."
 msgstr "搜索国家/地区…"
 
@@ -29559,17 +29559,17 @@ msgstr "使用 /tts 发送文本转语音消息。开启了文本转语音的成
 
 #. placeholder {0}: inboundChallenge.challenge_code
 #. placeholder {1}: inboundChallenge.our_number
-#: src/features/user/components/modals/PhoneAddModal.tsx:335
+#: src/features/user/components/modals/PhoneAddModal.tsx:332
 msgid "Send the code <0>{0}</0> to <1>{1}</1>"
 msgstr "将验证码 <0>{0}</0> 发送到 <1>{1}</1>"
 
 #. Required-action modal body for the second inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:462
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:458
 msgid "Send the code to the phone number below."
 msgstr "将验证码发送到以下手机号。"
 
 #. Required-action modal carousel step title for the second inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:458
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:454
 msgid "Send this code"
 msgstr "发送此验证码"
 
@@ -29579,7 +29579,7 @@ msgid "Send this pin back in time?"
 msgstr "要把这条置顶消息送回过去吗？"
 
 #. Label for the destination phone number in an inbound phone verification challenge.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:470
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:466
 msgid "Send to"
 msgstr "发送至"
 
@@ -29606,16 +29606,11 @@ msgstr "发送语音消息"
 msgid "Send:"
 msgstr "发送："
 
-#. Required-action modal explanation for an inbound phone verification challenge due to SMS cost.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:442
-msgid "Sending an SMS to this number is expensive, so we need you to text us instead."
-msgstr "向此号码发送短信费用较高，因此需要你改为向我们发送短信。"
-
-#: src/features/user/components/modals/PhoneAddModal.tsx:304
+#: src/features/user/components/modals/PhoneAddModal.tsx:301
 msgid "Sending an SMS to this phone number is too expensive for {PRODUCT_NAME}, so we need you to send us an SMS instead. We know this isn't ideal. You can also ask the administrators of this instance to lift this requirement from your account."
 msgstr "向此手机号发送短信对 {PRODUCT_NAME} 来说费用太高，因此需要你改为向我们发送短信。我们知道这不太理想。你也可以请此实例的管理员为你的账号取消此项要求。"
 
-#: src/features/user/components/modals/PhoneAddModal.tsx:310
+#: src/features/user/components/modals/PhoneAddModal.tsx:307
 msgid "Sending an SMS to this phone number is too expensive for {PRODUCT_NAME}, so we need you to send us an SMS instead. We know this isn't ideal. You can also contact <0>{SUPPORT_EMAIL}</0> to have us lift this requirement from your account."
 msgstr "向此手机号发送短信对 {PRODUCT_NAME} 来说费用太高，因此需要你改为向我们发送短信。我们知道这不太理想。你也可以联系 <0>{SUPPORT_EMAIL}</0>，让我们为你的账号取消此项要求。"
 
@@ -31202,7 +31197,7 @@ msgid "Smoother video"
 msgstr "更流畅的视频"
 
 #. Required-action error when the SMS provider cannot send or verify a code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:538
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:534
 msgid "SMS verification is unavailable right now. Try again later or contact support."
 msgstr "短信验证暂时不可用。请稍后重试或联系支持团队。"
 
@@ -31397,7 +31392,7 @@ msgstr "出错了。请稍后重试。"
 #. Inline error in the web deep-link prompt when opening the desktop app fails.
 #. Toast error shown when the mature content check request fails unexpectedly.
 #: src/features/auth/components/modals/MatureContentCheckModal.tsx:18
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:585
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:580
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:31
 msgid "Something went wrong. Try again."
 msgstr "出错了。请重试。"
@@ -31737,7 +31732,7 @@ msgid "Staff controls"
 msgstr "员工工具"
 
 #. Required-action modal notice for inbound phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:482
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:478
 msgid "Standard messaging rates from your carrier may apply."
 msgstr "你的运营商可能会收取标准短信费用。"
 
@@ -33165,12 +33160,12 @@ msgid "Thank you for helping keep {productName} safe. We'll review your report a
 msgstr "感谢你帮助维护 {productName} 的安全。我们会尽快审核你的举报。"
 
 #. Required-action form error for an invalid verification code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:490
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:486
 msgid "That code didn't work. Check it and try again."
 msgstr "验证码无效。请检查后重试。"
 
 #. Required-action form error for an expired verification code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:494
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:490
 msgid "That code expired. Request a new code."
 msgstr "验证码已过期。请申请新验证码。"
 
@@ -33198,7 +33193,7 @@ msgid "That doesn't look like a valid URL."
 msgstr "网址格式不正确。"
 
 #. Required-action form error when a new email is already used by another account.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:514
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:510
 msgid "That email is already in use."
 msgstr "该邮箱已被占用。"
 
@@ -34118,8 +34113,8 @@ msgstr "这是你的最后一个通行密钥，而通行密钥是你的第二重
 msgid "This is your last passkey. Once it's gone you won't be able to use a passkey as your second factor."
 msgstr "这是你的最后一个通行密钥。删除后，你将无法再使用通行密钥作为第二重验证。"
 
-#. Required-action form error for landline, toll-free, premium, shared-cost, UAN, voicemail and pager lines. Do not name which line type the provider returned.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:570
+#. Required-action form error when the number is not a mobile line. Do not name the line type.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:566
 msgid "This isn't a mobile number, so it can't receive our text. Try a mobile number, or contact support if you think that's wrong."
 msgstr "这不是手机号码，无法接收我们的短信。请改用手机号码。如果你认为这是误判，请联系支持团队。"
 
@@ -34200,12 +34195,12 @@ msgid "This nickname will only be visible in this community"
 msgstr "此昵称仅在此社区内可见"
 
 #. Required-action form error when a number must use the inbound text-in challenge and the current step cannot start one. Do not say why the number was routed there.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:552
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:548
 msgid "This number is verified by texting us instead. Go back and start phone verification again to get the code and the number to text."
 msgstr "此号码需要改为由你发短信给我们来验证。请返回并重新开始手机验证，以获取验证码和接收短信的号码。"
 
 #. Required-action modal explanation for an inbound phone verification challenge.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:446
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:442
 msgid "This number needs text-in verification instead of an SMS from us."
 msgstr "此号码需要由你主动发短信来验证，而不是接收我们发送的短信。"
 
@@ -34230,12 +34225,12 @@ msgid "This participant was deafened by moderators"
 msgstr "该参与者已被管理员设为拒听"
 
 #. Required-action form error when the backend rejects a phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:530
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:526
 msgid "This phone number cannot be used. Try another mobile number or contact support."
 msgstr "此电话号码无法使用。请尝试其他手机号码或联系支持团队。"
 
 #. Required-action form error when the backend rejects a reused phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:534
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:530
 msgid "This phone number has already been used. Try another number or contact support."
 msgstr "此电话号码已被使用。请尝试其他号码或联系支持团队。"
 
@@ -34387,7 +34382,7 @@ msgid "This verification session expired. Return to {productName} and start chec
 msgstr "验证会话已过期。请返回 {productName} 重新开始结账。"
 
 #. Required-action form error when an email-change ticket or proof is invalid or expired.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:502
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:498
 msgid "This verification session expired. Start again."
 msgstr "此验证会话已过期。请重新开始。"
 
@@ -34485,7 +34480,7 @@ msgid "This will trust all external links and skip the warning for every domain.
 msgstr "这将信任所有外部链接，并跳过所有域名的警告。你现有的受信任域名将被替换。这样安全性较低。"
 
 #. Required-action modal body after the user sends an inbound phone verification text.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:478
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:474
 msgid "This window updates automatically after we receive your message."
 msgstr "收到你的消息后，此窗口会自动更新。"
 
@@ -34792,7 +34787,7 @@ msgid "Tone-map HDR images to standard range, reducing peak brightness."
 msgstr "将 HDR 图像色调映射到标准范围，降低峰值亮度。"
 
 #. Required-action error shown for rate limits.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:506
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:502
 msgid "Too many attempts. Wait a bit, then try again."
 msgstr "尝试次数过多。请稍等片刻，然后重试。"
 
@@ -36632,7 +36627,7 @@ msgid "Use an email address you can access. We will send a code there."
 msgstr "请使用你可以正常接收邮件的邮箱。我们会向该邮箱发送验证码。"
 
 #. Required-action form error when the new email matches the current account email.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:518
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:514
 msgid "Use an email that is different from your current one."
 msgstr "请使用与当前邮箱不同的地址。"
 
@@ -37318,17 +37313,17 @@ msgstr "验证你的身份"
 #. Primary button in the required-action modal. Sends or submits phone verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:178
 #: src/features/channel/components/barriers/BarrierComponents.tsx:269
-#: src/features/user/components/modals/PhoneAddModal.tsx:408
+#: src/features/user/components/modals/PhoneAddModal.tsx:405
 msgid "Verify phone"
 msgstr "验证手机号"
 
 #. Short label in the phone add modal. Keep it concise.
-#: src/features/user/components/modals/PhoneAddModal.tsx:55
+#: src/features/user/components/modals/PhoneAddModal.tsx:53
 msgid "Verify phone number"
 msgstr "验证手机号"
 
 #. Label in the phone add modal.
-#: src/features/user/components/modals/PhoneAddModal.tsx:51
+#: src/features/user/components/modals/PhoneAddModal.tsx:49
 msgid "Verify phone number form"
 msgstr "验证手机号表单"
 
@@ -38192,7 +38187,7 @@ msgstr "提高音量"
 msgid "Wait a moment before deleting more messages."
 msgstr "请稍后再删除其他消息。"
 
-#: src/features/user/components/modals/PhoneAddModal.tsx:352
+#: src/features/user/components/modals/PhoneAddModal.tsx:349
 msgid "Wait a moment. This window will close automatically once we receive your message."
 msgstr "请稍候。收到你的消息后，此窗口将自动关闭。"
 
@@ -38202,7 +38197,7 @@ msgid "Wait between messages. Members with \"{bypassSlowmodePermissionLabel}\" c
 msgstr "消息之间的等待时间。拥有“{bypassSlowmodePermissionLabel}”权限的成员可以绕过此限制。"
 
 #. Required-action modal carousel step title after the user sends an inbound phone verification text.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:474
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:470
 msgid "Wait here"
 msgstr "请稍候"
 
@@ -38368,13 +38363,13 @@ msgstr "无法读取此主题。它可能已损坏或无效。"
 msgid "We couldn't remove that account. Try again."
 msgstr "无法移除该账号。请重试。"
 
-#. Required-action form error for phone attempts blocked by a fraud signal. Deliberately non-specific. Never name the signal, the score or the threshold.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:576
+#. Required-action form error when a phone attempt cannot be verified automatically and needs a support review. Keep it non-specific.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:571
 msgid "We couldn't verify this number automatically. Contact support and a person will review your account."
 msgstr "我们无法自动验证此号码。请联系支持团队，我们会安排专人审核你的账号。"
 
 #. Required-action form error when the phone number's country is on the SMS send ban list. Must not imply the number itself is invalid.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:546
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:542
 msgid "We don't send verification texts to this country. Try a mobile number from another country, or contact support."
 msgstr "我们不向该国家发送验证短信。请尝试使用其他国家的手机号码，或联系支持团队。"
 
@@ -38469,9 +38464,9 @@ msgstr "修改密码前，我们会向你的邮箱发送验证码。"
 msgid "We'll send a verification code to your email before you can view your backup codes."
 msgstr "查看备用码前，我们会向你的邮箱发送验证码。"
 
-#: src/features/user/components/modals/PhoneAddModal.tsx:286
-msgid "We'll send an SMS code when available. Your number is not linked to your account. We keep only an encrypted marker, with no user ID, to allow at most {PHONE_VERIFICATION_LIMIT} verifications in about {PHONE_VERIFICATION_WINDOW_DAYS} days."
-msgstr "可用时，我们会发送短信验证码。你的号码不会关联到你的账号。我们仅保留一个加密标记，其中不含用户 ID，以便在大约 {PHONE_VERIFICATION_WINDOW_DAYS} 天内最多允许 {PHONE_VERIFICATION_LIMIT} 次验证。"
+#: src/features/user/components/modals/PhoneAddModal.tsx:284
+msgid "We'll send an SMS code when available. Your number is not linked to your account. We keep only an encrypted marker, with no user ID, for a limited time."
+msgstr "代码将在可用时通过短信发送。您的号码不会与您的账户关联。我们仅在有限时间内保留一个加密标记，不包含用户 ID。"
 
 #: src/features/user/components/modals/EmailChangeModal.tsx:189
 msgid "We'll verify your current email and then your new email with one-time codes."
@@ -39976,10 +39971,10 @@ msgstr "你的 {productName} 会话已过期。请重新登录以继续授权此
 msgid "Your account"
 msgstr "你的账号"
 
-#. First line of the set-aside confirmation in the required-action modal. Always shown. Says can rather than will, because whether the check returns depends on account age and instance settings the user cannot see.
+#. First line of the set-aside confirmation in the required-action modal. Always shown. Says can rather than will, because the check may or may not come back.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:316
-msgid "Your account goes back to normal right away and you will not need a phone number now. This is not a permanent exemption. Joining a large or public community can bring this check back."
-msgstr "你的账号会立即恢复正常，现在也不需要提供手机号。这不是永久豁免。加入大型或公开社区可能会再次触发此检查。"
+msgid "Your account goes back to normal right away and you will not need a phone number now. This is not a permanent exemption, and we can ask for this check again later."
+msgstr "您的账号会立即恢复正常，届时您将不再需要手机号。这不是永久豁免，我们之后仍可能要求进行此验证。"
 
 #: src/features/connection/components/pages/ConnectionCallbackPage.tsx:29
 msgid "Your account has been linked successfully. You can now close this tab and return to the app."
@@ -40044,7 +40039,7 @@ msgid "Your card is eligible. Redirecting you to the payment page now."
 msgstr "你的银行卡符合条件。正在将你跳转到付款页面。"
 
 #. Required-action form error when the carrier lookup says the number does not exist. Leaves room for the lookup to be wrong.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:564
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:560
 msgid "Your carrier says this number isn't in service. Check it and try again, or contact support if it's correct."
 msgstr "你的运营商称此号码未开通。请检查后重试，如果号码无误，请联系支持团队。"
 
@@ -40216,10 +40211,10 @@ msgstr "你的新邮箱"
 msgid "Your new nickname, or leave blank to reset it."
 msgstr "你的新昵称，留空则重置。"
 
-#. Required-action modal privacy note for phone verification. limit and duration are inserted by code.
+#. Required-action modal privacy note for phone verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:421
-msgid "Your number is not linked to your account. We keep only an encrypted marker, with no user ID, for at most {limit} verifications in about {duration} days."
-msgstr "你的手机号不会关联到你的账号。我们只保留一个加密标记，不含用户 ID，用于在大约 {duration} 天内最多 {limit} 次验证。"
+msgid "Your number is not linked to your account. We keep only an encrypted marker, with no user ID, for a limited time."
+msgstr "您的号码未关联到您的账号。我们仅在有限时间内保留一个加密标记，不包含用户 ID。"
 
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:152
 msgid "Your payment was canceled. You can now close this tab and return to the app."

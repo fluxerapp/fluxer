@@ -9,7 +9,10 @@ use crate::{
         form::{checkbox, csrf_input, form_actions, submit_button},
         page_container::{card_with_header, detail_row},
     },
-    utils::{bigint::format_discriminator, timestamps::snowflake_creation_date},
+    utils::{
+        bigint::format_discriminator,
+        timestamps::{format_admin_timestamp, snowflake_creation_date},
+    },
 };
 use maud::{Markup, html};
 
@@ -69,6 +72,22 @@ fn render_overview_tab(
                         }
                         @if let Some(reason) = &user.deletion_public_reason {
                             div class="mt-1" { "Public reason: " (reason) }
+                        }
+                        @if let Some(reason) = &user.deletion_audit_log_reason {
+                            div class="mt-1" { "Private reason: " (reason) }
+                        }
+                        div class="mt-1" {
+                            "Scheduled by "
+                            @match user.deletion_scheduled_by.as_deref() {
+                                Some(id) if id == user.id => { "the user" }
+                                Some(id) => {
+                                    a href={(config.base_path) "/users/" (id)} class="underline" { (id) }
+                                }
+                                None => { "an unrecorded source" }
+                            }
+                            @if let Some(at) = user.deletion_scheduled_at.as_deref() {
+                                " on " (format_admin_timestamp(at))
+                            }
                         }
                     }
                 }
@@ -293,7 +312,7 @@ fn flags_card(
             ))
             @if user.phone_verification_deferred {
                 p class="text-sm text-amber-700 dark:text-amber-400" {
-                    "Phone verification is deferred: the requirement above is stored but not enforced until this user joins a discoverable or large community within the deferral window."
+                    "Phone verification is deferred: the requirement above is stored but not enforced."
                 }
             }
         }

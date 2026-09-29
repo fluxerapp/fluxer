@@ -122,6 +122,12 @@ pub struct AdminUser {
     pub pending_bulk_message_deletion_at: Option<String>,
     pub deletion_reason_code: Option<i32>,
     pub deletion_public_reason: Option<String>,
+    #[serde(default)]
+    pub deletion_audit_log_reason: Option<String>,
+    #[serde(default)]
+    pub deletion_scheduled_by: Option<String>,
+    #[serde(default)]
+    pub deletion_scheduled_at: Option<String>,
     pub last_active_at: Option<String>,
     pub last_active_ip: Option<String>,
     pub last_active_ip_reverse: Option<String>,

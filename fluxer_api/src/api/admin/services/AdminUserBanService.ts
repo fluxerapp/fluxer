@@ -6,9 +6,13 @@ import type {AdminAuditService} from '@app/api/admin/services/AdminAuditService'
 import type {AdminUserUpdatePropagator} from '@app/api/admin/services/AdminUserUpdatePropagator';
 import * as AuthSession from '@app/api/auth/AuthSession';
 import {createUserID, type UserID} from '@app/api/BrandedTypes';
+import {emitAdminAction} from '@app/api/infrastructure/activity/AccountChangeEvents';
+import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
+import {BadRequestError} from '@fluxer/errors/src/domains/core/BadRequestError';
+import {ConflictError} from '@fluxer/errors/src/domains/core/ConflictError';
 import {UnknownUserError} from '@fluxer/errors/src/domains/user/UnknownUserError';
-import type {TempBanUserRequest} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
+import type {AdminUserBanNoteRequest, TempBanUserRequest} from '@fluxer/schema/src/domains/admin/AdminUserSchemas';
 
 interface AdminUserBanServiceDeps {
 	apiContext: ApiContext;
@@ -70,9 +74,47 @@ export class AdminUserBanService {
 				['banned_until', tempBannedUntil.toISOString()],
 			]),
 		});
+		await emitAdminAction(adminUserId, userId, 'temp_ban', {durationHours: data.duration_hours});
 		return {
 			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
 		};
+	}
+
+	async annotateBan(data: AdminUserBanNoteRequest & {user_id: bigint}, adminUserId: UserID): Promise<void> {
+		const {users: userRepository} = this.deps.apiContext.services;
+		const {auditService} = this.deps;
+		const userId = createUserID(data.user_id);
+		const user = await userRepository.findUnique(userId);
+		if (!user) {
+			throw new UnknownUserError();
+		}
+		const banLog = await auditService.findAuditLog(data.ban_audit_log_id);
+		if (banLog?.action !== 'temp_ban' || banLog.targetType !== 'user' || banLog.targetId !== BigInt(userId)) {
+			throw new BadRequestError({
+				code: APIErrorCodes.INVALID_FORM_BODY,
+				message: 'ban_audit_log_id does not name a ban of this user',
+			});
+		}
+		const bannedUntil = user.tempBannedUntil;
+		if (
+			(user.flags & UserFlags.DISABLED) === 0n ||
+			!bannedUntil ||
+			bannedUntil.getTime() <= Date.now() ||
+			banLog.metadata.get('banned_until') !== bannedUntil.toISOString()
+		) {
+			throw new ConflictError({
+				code: APIErrorCodes.CONFLICT,
+				message: 'ban_audit_log_id does not name the current ban of this user',
+			});
+		}
+		await auditService.createAuditLog({
+			adminUserId,
+			targetType: 'user',
+			targetId: BigInt(userId),
+			action: 'annotate_ban',
+			auditLogReason: data.note,
+			metadata: new Map([['ban_audit_log_id', data.ban_audit_log_id.toString()]]),
+		});
 	}
 
 	async unbanUser(
@@ -110,6 +152,7 @@ export class AdminUserBanService {
 			auditLogReason,
 			metadata: new Map(),
 		});
+		await emitAdminAction(adminUserId, userId, 'unban');
 		return {
 			user: await mapUserToAdminResponse(updatedUser, cacheService, acls),
 		};

@@ -29,7 +29,6 @@ import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import type {LimitConfigService} from '@app/api/limits/LimitConfigService';
 import type {ReadStateService} from '@app/api/read_state/ReadStateService';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
-import type {DirectMessageSpamMitigationService} from '@app/api/user/services/DirectMessageSpamMitigationService';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
 import type {ICacheService} from '@pkgs/cache/src/ICacheService';
 import type {IRateLimitService} from '@pkgs/rate_limit/src/IRateLimitService';
@@ -69,7 +68,6 @@ export class MessageService {
 		persistenceService: MessagePersistenceService,
 		attachmentUploadTraceRepository: AttachmentUploadTraceRepository,
 		limitConfigService: LimitConfigService,
-		directMessageSpamMitigationService: DirectMessageSpamMitigationService,
 	) {
 		this.validation = new MessageValidationService(cacheService, limitConfigService);
 		this.mention = new MessageMentionService(
@@ -130,7 +128,6 @@ export class MessageService {
 			attachmentUploadTraceRepository,
 			operationsHelpers,
 			limitConfigService,
-			directMessageSpamMitigationService,
 		});
 		this.edit = new MessageEditService({
 			channelRepository,

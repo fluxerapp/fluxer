@@ -50,7 +50,6 @@
 		"@pkgs/nats": "workspace:*",
 		"@pkgs/postgres": "workspace:*",
 		"@pkgs/rate_limit": "workspace:*",
-		"@pkgs/sms": "workspace:*",
 		"@pkgs/virus_scan": "workspace:*",
 		"@pkgs/worker": "workspace:*",
 		"@simplewebauthn/server": "catalog:",

@@ -3,12 +3,13 @@
 import {createHmac} from 'node:crypto';
 import {Config} from '@app/api/Config';
 import {ANONYMOUS_EXPERIMENT_TARGETING, resolveExperimentTargeting} from '@app/api/experiment/ExperimentTargeting';
+import {sharedListHas} from '@app/api/infrastructure/activity/SharedLists';
 import type {InstanceCaptchaEffectiveConfig} from '@app/api/instance/InstanceConfigRepository';
 import {Logger} from '@app/api/Logger';
 import {getKVClient} from '@app/api/middleware/ServiceRegistry';
 import type {User} from '@app/api/models/User';
-import {accountPolicyContactHasCapability} from '@app/api/risk/AccountPolicyService';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
+import {extractEmailDomain} from '@app/api/utils/EmailDomainUtils';
 import {Headers} from '@fluxer/constants/src/Headers';
 import {UserFlags} from '@fluxer/constants/src/UserConstants';
 import {CaptchaRequiredError, InvalidCaptchaError} from '@fluxer/errors/src/CaptchaErrors';
@@ -91,7 +92,7 @@ export async function verifyCaptchaToken(ctx: Context<HonoEnv>): Promise<void> {
 	const captchaConfig = await ctx.get('instanceConfigRepository').getEffectiveCaptchaConfig();
 	if (!captchaConfig.enabled && !(Config.dev.testModeEnabled && Config.captcha.enabled)) return;
 	const user = ctx.get('user') as User | undefined;
-	if (accountPolicyContactHasCapability(user?.email, 'captcha_exempt')) return;
+	if (sharedListHas('email_domain_exempt', extractEmailDomain(user?.email))) return;
 	if (userHasCaptchaExemptFlag(user)) return;
 	if (await requestUserHasCaptchaExemptFlag(ctx)) return;
 	const altcha = await resolveAltchaProvider(ctx, user);

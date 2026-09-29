@@ -65,6 +65,10 @@ export class AdminAuditService {
 		}
 	}
 
+	async findAuditLog(logId: bigint): Promise<AdminAuditLog | null> {
+		return this.adminRepository.getAuditLog(logId);
+	}
+
 	async getAuditLog(logId: bigint): Promise<AdminAuditLogResponse | null> {
 		const log = await this.adminRepository.getAuditLog(logId);
 		if (!log) {

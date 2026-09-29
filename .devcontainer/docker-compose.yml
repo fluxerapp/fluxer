@@ -203,11 +203,6 @@ services:
         volume:
           nocopy: true
       - type: volume
-        source: fluxer-api-sms-node-modules
-        target: /workspaces/fluxer/fluxer_api/pkgs/sms/node_modules
-        volume:
-          nocopy: true
-      - type: volume
         source: fluxer-api-virus-scan-node-modules
         target: /workspaces/fluxer/fluxer_api/pkgs/virus_scan/node_modules
         volume:
@@ -384,7 +379,6 @@ volumes:
   fluxer-api-mime-utils-node-modules:
   fluxer-api-nats-node-modules:
   fluxer-api-rate-limit-node-modules:
-  fluxer-api-sms-node-modules:
   fluxer-api-virus-scan-node-modules:
   fluxer-api-worker-node-modules:
   fluxer-app-list-utils-node-modules:

@@ -7,14 +7,10 @@ import {
 	resetCassandraQueryExecutorForTesting,
 	setCassandraQueryExecutorForTesting,
 } from '@app/api/database/CassandraQueryExecution';
+import {resetSharedListsForTests} from '@app/api/infrastructure/activity/SharedLists';
 import {NullSearchProvider} from '@app/api/infrastructure/NullSearchProvider';
-import {resetAbuseTrackingForTests} from '@app/api/middleware/AbusiveIpAutoBanner';
 import {ipBanCache} from '@app/api/middleware/IpBanMiddleware';
-import {
-	setInjectedAccountPolicyEvaluator,
-	setInjectedIpInfoService,
-	setInjectedRegistrationRiskEvaluator,
-} from '@app/api/middleware/ServiceMiddleware';
+import {setInjectedIpInfoService} from '@app/api/middleware/ServiceMiddleware';
 import {
 	setInjectedBlueskyOAuthService,
 	setInjectedGatewayService,
@@ -28,10 +24,8 @@ import {
 	setInjectedStorageService,
 	setInjectedUnfurlerService,
 } from '@app/api/middleware/ServiceSingletons';
-import {torExitListCache} from '@app/api/middleware/TorExitListCache';
 import type {ISearchProvider} from '@app/api/search/ISearchProvider';
 import {drainSearchTasks} from '@app/api/search/SearchTaskTracker';
-import {createCurrentBehaviorTestAccountPolicyEvaluator} from '@app/api/test/AccountPolicyTestEvaluator';
 import {InMemoryCassandraQueryExecutor} from '@app/api/test/InMemoryCassandraQueryExecutor';
 import {MockBlueskyOAuthService} from '@app/api/test/mocks/MockBlueskyOAuthService';
 import {MockKVProvider} from '@app/api/test/mocks/MockKVProvider';
@@ -91,7 +85,6 @@ export async function createApiTestHarness(options: CreateApiTestHarnessOptions 
 	setInjectedUnfurlerService(new NoopUnfurlerService());
 	const mockBlueskyOAuthService = new MockBlueskyOAuthService();
 	setInjectedBlueskyOAuthService(mockBlueskyOAuthService);
-	setInjectedAccountPolicyEvaluator(createCurrentBehaviorTestAccountPolicyEvaluator());
 	await resetServiceStateForTesting();
 	const {
 		app,
@@ -114,11 +107,8 @@ export async function createApiTestHarness(options: CreateApiTestHarnessOptions 
 		kvProvider.reset();
 		mockBlueskyOAuthService.reset();
 		setInjectedIpInfoService(undefined);
-		setInjectedAccountPolicyEvaluator(createCurrentBehaviorTestAccountPolicyEvaluator());
-		setInjectedRegistrationRiskEvaluator(undefined);
 		setInjectedUnfurlerService(undefined);
-		resetAbuseTrackingForTests();
-		torExitListCache.clearForTesting();
+		resetSharedListsForTests();
 	}
 	async function resetData(): Promise<void> {
 		resetApiServicesForTesting();
@@ -145,10 +135,8 @@ export async function createApiTestHarness(options: CreateApiTestHarnessOptions 
 		setInjectedGatewayService(new NoopGatewayService());
 		setInjectedKVProvider(new MockKVProvider());
 		setInjectedIpInfoService(undefined);
-		setInjectedAccountPolicyEvaluator(createCurrentBehaviorTestAccountPolicyEvaluator());
-		setInjectedRegistrationRiskEvaluator(undefined);
 		setInjectedUnfurlerService(undefined);
-		resetAbuseTrackingForTests();
+		resetSharedListsForTests();
 		const fallbackStorageService = new MockStorageService();
 		setInjectedStorageService(fallbackStorageService);
 		setInjectedMediaService(new TestMediaService(fallbackStorageService));
@@ -202,5 +190,5 @@ export async function createApiTestHarness(options: CreateApiTestHarnessOptions 
 
 async function clearBannedIpsState(): Promise<void> {
 	ipBanCache.resetCaches();
-	resetAbuseTrackingForTests();
+	resetSharedListsForTests();
 }

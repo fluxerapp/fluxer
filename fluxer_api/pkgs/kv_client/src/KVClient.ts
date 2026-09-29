@@ -555,6 +555,14 @@ export class KVClient implements IKVProvider {
 		return await this.execute('llen', async () => this.client.llen(key));
 	}
 
+	async lrange(key: string, start: number, stop: number): Promise<Array<string>> {
+		return await this.execute('lrange', async () => this.client.lrange(key, start, stop));
+	}
+
+	async ltrim(key: string, start: number, stop: number): Promise<void> {
+		await this.execute('ltrim', async () => this.client.ltrim(key, start, stop));
+	}
+
 	async hset(key: string, field: string, value: string): Promise<number> {
 		return await this.execute('hset', async () => this.client.hset(key, field, value));
 	}

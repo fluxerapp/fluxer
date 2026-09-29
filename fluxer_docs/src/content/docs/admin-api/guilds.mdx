@@ -527,7 +527,7 @@ Fluxer checks only the Admin ACL. The acting account needs no membership and no 
 
 ### Side effects
 
-Fluxer creates the membership with the Admin force-add join source and restores a communication timeout still in force from a previous membership. The guild ban list is not checked, so a banned user can be admitted. The [deferred phone gate](/admin-api/instance/#deferred-phone-gate-object) does not run. The per-user guild limit and the guild member limit are still enforced.
+Fluxer creates the membership with the Admin force-add join source and restores a communication timeout still in force from a previous membership. The guild ban list is not checked, so a banned user can be admitted. The per-user guild limit and the guild member limit are still enforced.
 
 [Guild Member Add](/gateway/events/#guild-member-add) fires to the guild, and the user's sessions are joined to the guild on the main Gateway. When the guild's members are already indexed for search, Fluxer adds the new member to guild member search. The ordinary join system message is created, and with it a [Message Create](/gateway/events/#message-create) Dispatch, unless the guild sets `SUPPRESS_JOIN_NOTIFICATIONS` or has no `system_channel_id`, or its `system_channel_id` names a channel that no longer exists. A bot target also records a `BOT_ADD` entry in the guild's own [audit log](/http-api/guild-audit-logs/#audit-actions).
 

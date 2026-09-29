@@ -299,7 +299,6 @@ describe('ConfigLoader', () => {
 			FLUXER_POSTGRES_PREPARED_STATEMENTS: 'false',
 			FLUXER_API_WORKER_MODE: 'single_task',
 			FLUXER_API_WORKER_TASK: 'processStripeWebhook',
-			FLUXER_ACCOUNT_POLICY_DSL: '{"version":1,"id":"env_policy","rules":[]}',
 			FLUXER_LIVEKIT_ENABLED: 'true',
 			FLUXER_LIVEKIT_DEFAULT_REGION:
 				'{"id":"local","name":"Local","emoji":"LC","latitude":59.3293,"longitude":18.0686}',
@@ -316,11 +315,6 @@ describe('ConfigLoader', () => {
 		expect(config.database.postgres.prepared_statements).toBe(false);
 		expect(config.services.api.worker?.mode).toBe('single_task');
 		expect(config.services.api.worker?.task).toBe('processStripeWebhook');
-		expect(config.integrations.risk_integration.account_policy_dsl).toEqual({
-			version: 1,
-			id: 'env_policy',
-			rules: [],
-		});
 		expect(config.integrations.voice.default_region?.id).toBe('local');
 	});
 
@@ -475,7 +469,7 @@ describe('ConfigLoader', () => {
 		await expect(loadConfig()).rejects.toThrow('FLUXER_POSTGRES_SSL must be true');
 	});
 
-	test('parses self-host branding, setup, abuse policy, and search engine environment variables', async () => {
+	test('parses self-host branding, setup, and search engine environment variables', async () => {
 		stubMinimalEnv({
 			FLUXER_SEARCH_ENGINE: 'meilisearch',
 			FLUXER_SEARCH_URL: 'http://meilisearch:7700',
@@ -491,15 +485,6 @@ describe('ConfigLoader', () => {
 			FLUXER_APP_STATUS_PAGE_URL: 'https://status.example',
 			FLUXER_APP_STATUS_PAGE_INCIDENT_HISTORY_URL: 'https://status.example/history',
 			FLUXER_INSTANCE_SETUP_CONFIGURED: 'true',
-			FLUXER_ABUSE_INBOUND_PHONE_COUNTRY_CODES: 'AA,BB',
-			FLUXER_ABUSE_PHONE_FLAGGING_ENABLED: 'false',
-			FLUXER_ABUSE_PHONE_FLAGGING_EXEMPT_COUNTRY_CODES: 'CC,DD',
-			FLUXER_ABUSE_PHONE_INBOUND_REQUIRED_PREFIXES: '+101,+202',
-			FLUXER_ABUSE_DIRECT_CONTACT_SPAM_ENABLED: 'true',
-			FLUXER_ABUSE_DIRECT_CONTACT_SPAM_COUNTRY_CODES: 'AA,BB',
-			FLUXER_ABUSE_DIRECT_CONTACT_SPAM_DISTINCT_TARGET_THRESHOLD: '9',
-			FLUXER_ABUSE_DIRECT_CONTACT_SPAM_TARGET_WINDOW_MS: '12345',
-			FLUXER_ABUSE_DIRECT_CONTACT_SPAM_ACTION: 'suppress_delivery',
 		});
 
 		const config = await loadConfig();
@@ -520,23 +505,6 @@ describe('ConfigLoader', () => {
 			status_page_incident_history_url: 'https://status.example/history',
 		});
 		expect(config.instance.setup.configured).toBe(true);
-		expect(config.instance.abuse_policy).toEqual({
-			inbound_phone_country_codes: ['AA', 'BB'],
-			phone_flagging: {
-				enabled: false,
-				exempt_country_codes: ['CC', 'DD'],
-			},
-			phone_verification: {
-				inbound_required_prefixes: ['+101', '+202'],
-			},
-			direct_contact_spam: {
-				enabled: true,
-				country_codes: ['AA', 'BB'],
-				distinct_target_threshold: 9,
-				target_window_ms: 12345,
-				action: 'suppress_delivery',
-			},
-		});
 	});
 
 	test('rejects an enabled captcha with no keys for the selected provider', async () => {
@@ -677,20 +645,25 @@ describe('ConfigLoader', () => {
 
 		const config = await loadConfig();
 
-		expect(config.integrations.tor_exit_list.enabled).toBeUndefined();
 		expect(config.integrations.breached_password_check.enabled).toBeUndefined();
 	});
 
 	test('reads the optional outbound lookup switches from the environment', async () => {
 		stubMinimalEnv({
-			FLUXER_TOR_EXIT_LIST_ENABLED: 'true',
 			FLUXER_BREACHED_PASSWORD_CHECK_ENABLED: 'false',
 		});
 
 		const config = await loadConfig();
 
-		expect(config.integrations.tor_exit_list.enabled).toBe(true);
 		expect(config.integrations.breached_password_check.enabled).toBe(false);
+	});
+
+	test('reads the IPinfo key from its current name before the previous one', async () => {
+		stubMinimalEnv({FLUXER_RISK_IPINFO_API_KEY: 'previous'});
+		expect((await loadConfig()).integrations.ipinfo.api_key).toBe('previous');
+		resetConfig();
+		stubMinimalEnv({FLUXER_IPINFO_API_KEY: 'current', FLUXER_RISK_IPINFO_API_KEY: 'previous'});
+		expect((await loadConfig()).integrations.ipinfo.api_key).toBe('current');
 	});
 
 	test('leaves Bluesky login off with no legal URLs by default', async () => {
@@ -823,7 +796,6 @@ describe('ConfigLoader', () => {
 			FLUXER_GATEWAY_MEDIA_PROXY_ENDPOINT: 'http://localhost/media',
 			FLUXER_S3_PUBLIC_ENDPOINT: 'http://localhost/s3',
 			FLUXER_EMAIL_APP_BASE_URL: 'http://localhost',
-			FLUXER_SMS_INBOUND_WEBHOOK_PUBLIC_URL: 'http://localhost/webhooks/sms',
 			FLUXER_AUTH_BLUESKY_CLIENT_URI: 'http://localhost',
 			FLUXER_AUTH_BLUESKY_TOS_URI: 'http://localhost/terms',
 			FLUXER_APP_ICON_URL: 'http://localhost/icon.png',
@@ -835,7 +807,6 @@ describe('ConfigLoader', () => {
 		expect(config.services.gateway.media_proxy_endpoint).toBe('http://localhost:8088/media');
 		expect(config.s3?.presigned_url_base).toBe('http://localhost:8088/s3');
 		expect(config.integrations.email.app_base_url).toBe('http://localhost:8088');
-		expect(config.integrations.sms.inbound_webhook_public_url).toBe('http://localhost:8088/webhooks/sms');
 		expect(config.auth.bluesky.client_uri).toBe('http://localhost:8088');
 		expect(config.auth.bluesky.tos_uri).toBe('http://localhost:8088/terms');
 		expect(config.instance.branding.icon_url).toBe('http://localhost:8088/icon.png');

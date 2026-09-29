@@ -71,6 +71,10 @@ export class UserAccountRepository implements IUserAccountRepository {
 		return this.accountRepo.patchUpsert(userId, patchData, oldData);
 	}
 
+	async compareAndSetSuspiciousFlags(user: User, suspiciousFlags: number): Promise<User | null> {
+		return this.accountRepo.compareAndSetSuspiciousFlags(user, suspiciousFlags);
+	}
+
 	async updateDeletionSchedule(user: User, patch: UserDeletionScheduleUpdate): Promise<User> {
 		return this.accountRepo.updateDeletionSchedule(user, patch);
 	}

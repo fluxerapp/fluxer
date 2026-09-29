@@ -10,6 +10,8 @@ export interface UserDeletionScheduleUpdate {
 	deletion_reason_code?: number | null;
 	deletion_public_reason?: string | null;
 	deletion_audit_log_reason?: string | null;
+	deletion_scheduled_by?: UserID | null;
+	deletion_scheduled_at?: Date | null;
 	temp_banned_until?: Date | null;
 	first_refund_at?: Date | null;
 }
@@ -18,6 +20,7 @@ export interface IUserAccountRepository {
 	create(data: UserRow): Promise<User>;
 	upsert(data: UserRow, oldData?: UserRow | null): Promise<User>;
 	patchUpsert(userId: UserID, patchData: Partial<UserRow>, oldData?: UserRow | null): Promise<User>;
+	compareAndSetSuspiciousFlags(user: User, suspiciousFlags: number): Promise<User | null>;
 	updateDeletionSchedule(user: User, patch: UserDeletionScheduleUpdate): Promise<User>;
 	startDeletion(userId: UserID, pendingDeletionAt: Date): Promise<User | null>;
 	anonymizeForDeletion(user: User, patch: Partial<UserRow>): Promise<User>;

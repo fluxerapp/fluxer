@@ -309,19 +309,6 @@ export const BanEmailRequest = z.object({
 
 export type BanEmailRequest = z.infer<typeof BanEmailRequest>;
 
-export const SuspiciousEmailDomainRequest = z.object({
-	domain: z
-		.string()
-		.min(1)
-		.max(253)
-		.regex(/^[a-zA-Z0-9][a-zA-Z0-9\-.]*\.[a-zA-Z]{2,}$/, 'Must be a valid domain name (e.g. example.com)')
-		.describe(
-			'Email domain to flag as suspicious (e.g. mail.ru). Registrants from this domain will be required to verify a phone number.',
-		),
-});
-
-export type SuspiciousEmailDomainRequest = z.infer<typeof SuspiciousEmailDomainRequest>;
-
 export const BanPhraseRequest = z.object({
 	phrase: createStringType(1, 500).describe(
 		'Phrase to ban. Matching is case-insensitive and also normalizes common bypass tricks such as inserted whitespace, punctuation, invisible characters, and compatibility glyphs.',
@@ -585,11 +572,6 @@ const InstancePolicyResponse = z.object({
 		youtube: z.boolean(),
 		bluesky: z.boolean(),
 	}),
-	deferred_phone_gate: z.object({
-		enabled: z.boolean(),
-		window_hours: z.number(),
-		member_threshold: z.number(),
-	}),
 });
 
 const EmailProviderSchema = z.enum(['smtp', 'none']);
@@ -698,13 +680,6 @@ const InstancePolicyUpdateSchema = z.object({
 			gif_enabled: z.boolean().nullish(),
 			youtube_enabled: z.boolean().nullish(),
 			bluesky_enabled: z.boolean().nullish(),
-		})
-		.nullish(),
-	deferred_phone_gate: z
-		.object({
-			enabled: z.boolean().optional(),
-			window_hours: z.number().positive().max(8760).optional(),
-			member_threshold: z.number().int().positive().max(1_000_000).optional(),
 		})
 		.nullish(),
 });

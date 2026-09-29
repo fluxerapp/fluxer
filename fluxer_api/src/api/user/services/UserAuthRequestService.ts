@@ -140,7 +140,7 @@ export class UserAuthRequestService {
 				challenge_code: result.challengeCode,
 				our_number: result.ourNumber,
 				expires_at: result.expiresAt.toISOString(),
-				reason: result.reason,
+				reason: 'verification_required',
 			};
 		}
 		return {channel: result.channel};

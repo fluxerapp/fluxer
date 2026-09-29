@@ -37,6 +37,9 @@ fn deserialize_admin_users_me_response() {
             "pending_bulk_message_deletion_at": null,
             "deletion_reason_code": null,
             "deletion_public_reason": null,
+            "deletion_audit_log_reason": null,
+            "deletion_scheduled_by": null,
+            "deletion_scheduled_at": null,
             "acls": ["super_admin"],
             "traits": ["beta_tester"],
             "has_totp": true,
@@ -81,7 +84,8 @@ fn deserialize_flags_as_string_and_number() {
             "premium_grace_ends_at": null, "premium_lifetime_sequence": null,
             "suspicious_activity_flags": 0, "temp_banned_until": null,
             "pending_deletion_at": null, "pending_bulk_message_deletion_at": null,
-            "deletion_reason_code": null, "deletion_public_reason": null,
+            "deletion_reason_code": null, "deletion_public_reason": null, "deletion_audit_log_reason": null,
+            "deletion_scheduled_by": null, "deletion_scheduled_at": null,
             "acls": [], "traits": [], "has_totp": false, "authenticator_types": [],
             "last_active_at": null, "last_active_ip": null,
             "last_active_ip_reverse": null, "last_active_location": null
@@ -113,7 +117,8 @@ fn deserialize_discriminator_int_and_string() {
             "premium_lifetime_sequence": null, "suspicious_activity_flags": 0,
             "temp_banned_until": null, "pending_deletion_at": null,
             "pending_bulk_message_deletion_at": null, "deletion_reason_code": null,
-            "deletion_public_reason": null, "acls": [], "traits": [],
+            "deletion_public_reason": null, "deletion_audit_log_reason": null,
+            "deletion_scheduled_by": null, "deletion_scheduled_at": null, "acls": [], "traits": [],
             "has_totp": false, "authenticator_types": [],
             "last_active_at": null, "last_active_ip": null,
             "last_active_ip_reverse": null, "last_active_location": null
@@ -170,6 +175,9 @@ fn deserialize_search_users_response() {
                 "pending_bulk_message_deletion_at": null,
                 "deletion_reason_code": null,
                 "deletion_public_reason": null,
+                "deletion_audit_log_reason": null,
+                "deletion_scheduled_by": null,
+                "deletion_scheduled_at": null,
                 "acls": [],
                 "traits": [],
                 "has_totp": false,
@@ -484,12 +492,7 @@ fn deserialize_instance_config_response_with_unknown_keys() {
                 "youtube_enabled": true,
                 "bluesky_enabled": false
             },
-            "services_available": {"gif": true, "youtube": true, "bluesky": false},
-            "deferred_phone_gate": {
-                "enabled": false,
-                "window_hours": 24,
-                "member_threshold": 100
-            }
+            "services_available": {"gif": true, "youtube": true, "bluesky": false}
         },
         "integrations": {
             "gif": {"klipy_api_key_set": true, "effective_available": true},
@@ -899,7 +902,8 @@ fn deserialize_user_mutation_response() {
             "premium_grace_ends_at": null, "premium_lifetime_sequence": null,
             "suspicious_activity_flags": 0, "temp_banned_until": null,
             "pending_deletion_at": null, "pending_bulk_message_deletion_at": null,
-            "deletion_reason_code": null, "deletion_public_reason": null,
+            "deletion_reason_code": null, "deletion_public_reason": null, "deletion_audit_log_reason": null,
+            "deletion_scheduled_by": null, "deletion_scheduled_at": null,
             "acls": [], "traits": [], "has_totp": false, "authenticator_types": [],
             "last_active_at": null, "last_active_ip": null,
             "last_active_ip_reverse": null, "last_active_location": null

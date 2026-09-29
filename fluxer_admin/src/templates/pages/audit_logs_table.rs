@@ -25,7 +25,9 @@ pub fn action_badge_variant(action: &str) -> BadgeVariant {
         | "ban_ip"
         | "ban_email" => BadgeVariant::Danger,
         "unban" | "cancel_deletion" | "unban_ip" | "unban_email" => BadgeVariant::Success,
-        "update_flags" | "update_features" | "set_acls" | "update_settings" => BadgeVariant::Info,
+        "update_flags" | "update_features" | "set_acls" | "update_settings" | "annotate_ban" => {
+            BadgeVariant::Info
+        }
         "delete_message" => BadgeVariant::Warning,
         _ => BadgeVariant::Default,
     }

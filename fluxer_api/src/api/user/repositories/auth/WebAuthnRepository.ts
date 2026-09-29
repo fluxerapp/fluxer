@@ -1,7 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {UserID} from '@app/api/BrandedTypes';
-import {BatchBuilder, deleteOneOrMany, fetchMany, fetchOne, upsertOne} from '@app/api/database/CassandraQueryExecution';
+import {
+	deleteOneOrMany,
+	executeGroupedBatches,
+	fetchMany,
+	fetchOne,
+	upsertOne,
+} from '@app/api/database/CassandraQueryExecution';
 import {Db} from '@app/api/database/CassandraTypes';
 import type {WebAuthnCredentialRow} from '@app/api/database/types/AuthTypes';
 import {WebAuthnCredential} from '@app/api/models/WebAuthnCredential';
@@ -145,20 +151,11 @@ export class WebAuthnRepository {
 		}>(FETCH_WEBAUTHN_CREDENTIALS_FOR_USER_CQL, {
 			user_id: userId,
 		});
-		const batch = new BatchBuilder();
-		for (const cred of credentials) {
-			batch.addPrepared(
-				WebAuthnCredentials.deleteByPk({
-					user_id: userId,
-					credential_id: cred.credential_id,
-				}),
-			);
-			batch.addPrepared(
-				WebAuthnCredentialLookup.deleteByPk({
-					credential_id: cred.credential_id,
-				}),
-			);
-		}
-		await batch.execute();
+		await executeGroupedBatches(
+			credentials.map((cred) => [
+				WebAuthnCredentials.deleteByPk({user_id: userId, credential_id: cred.credential_id}),
+				WebAuthnCredentialLookup.deleteByPk({credential_id: cred.credential_id}),
+			]),
+		);
 	}
 }

@@ -11,6 +11,7 @@ import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAcco
 import type {PremiumStateReconciliationQueueService} from '@app/api/infrastructure/PremiumStateReconciliationQueueService';
 import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {Logger} from '@app/api/Logger';
+import {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
 import {getAcceptedWebhookSecrets} from '@app/api/stripe/BillingConfigCache';
 import type {ProductRegistry} from '@app/api/stripe/ProductRegistry';
 import type {AgeVerificationService} from '@app/api/stripe/services/AgeVerificationService';
@@ -94,6 +95,7 @@ export class StripeWebhookService {
 			cacheService,
 			auditService,
 			kvDeletionQueue,
+			oauth2Tokens: new OAuth2TokenRepository(),
 		});
 		this.subscriptionHandler = new StripeSubscriptionWebhookHandler(
 			userRepository,

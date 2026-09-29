@@ -2,8 +2,9 @@
 
 import crypto from 'node:crypto';
 import {AdminRepository} from '@app/api/admin/AdminRepository';
-import {createUserID} from '@app/api/BrandedTypes';
+import {createApplicationID, createUserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
+import {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
 import {
 	createTestPayment,
 	createTestUserWithPremium,
@@ -107,6 +108,23 @@ describe('Stripe Webhook Early Fraud Warning', () => {
 			paymentIntentId,
 			subscriptionId,
 		});
+		const accountUserId = createUserID(BigInt(account.userId));
+		const oauthTokens = new OAuth2TokenRepository();
+		const applicationId = createApplicationID(1234567890123456789n);
+		await oauthTokens.createAccessToken({
+			token_: `access-${account.userId}`,
+			application_id: applicationId,
+			user_id: accountUserId,
+			scope: new Set(['identify']),
+			created_at: new Date(),
+		});
+		await oauthTokens.createRefreshToken({
+			token_: `refresh-${account.userId}`,
+			application_id: applicationId,
+			user_id: accountUserId,
+			scope: new Set(['identify']),
+			created_at: new Date(),
+		});
 		await sendWebhook({
 			type: 'radar.early_fraud_warning.created',
 			data: {
@@ -129,6 +147,8 @@ describe('Stripe Webhook Early Fraud Warning', () => {
 		expect(updatedUser!.deletionReasonCode).toBe(DeletionReasons.BILLING_DISPUTE_OR_ABUSE);
 		expect(updatedUser!.stripeSubscriptionId).toBeNull();
 		expect(updatedUser!.pendingDeletionAt).not.toBeNull();
+		expect(await oauthTokens.getAccessToken(`access-${account.userId}`)).toBeNull();
+		expect(await oauthTokens.listRefreshTokensForUser(accountUserId)).toHaveLength(0);
 		const daysDifference = (updatedUser!.pendingDeletionAt!.getTime() - Date.now()) / (24 * 60 * 60 * 1000);
 		expect(daysDifference).toBeGreaterThan(58);
 		expect(daysDifference).toBeLessThan(62);

@@ -24,14 +24,12 @@ const configuredMaxConcurrency = parseParallelInteger(process.env.API_TEST_MAX_C
 
 const MODULE_REGISTRY_TEST_FILES = [
 	'src/api/gif/GifRequestCountry.test.ts',
-	'src/api/risk/__tests__/AccountPolicyService.test.ts',
 	'src/api/stripe/tests/StripeCheckoutCountryEnforcement.test.ts',
 	'src/api/stripe/tests/StripeNordicCurrencies.test.ts',
 ];
 
 const INSTANCE_POLICY_TEST_FILES = [
 	'src/api/admin/tests/InstanceConfigPendingRegistrationApproval.test.ts',
-	'src/api/auth/tests/DeferredPhoneGate.test.ts',
 	'src/api/instance/tests/SingleCommunityService.test.ts',
 ];
 

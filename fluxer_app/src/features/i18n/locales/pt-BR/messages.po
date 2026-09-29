@@ -2396,7 +2396,7 @@ msgid "7 days"
 msgstr "7 dias"
 
 #. Required-action error when the API requires a captcha for phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:581
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:576
 msgid "A browser check is required before phone verification. Try again from the sign-in page or contact support."
 msgstr "É necessária uma verificação no navegador antes da verificação por telefone. Tente novamente na página de login ou entre em contato com o suporte."
 
@@ -5240,8 +5240,8 @@ msgstr "Ausente no momento"
 #: src/features/guild/components/modals/add_guild_modal/TemplateImportForm.tsx:396
 #: src/features/moderation/components/report_modal/IARModal.tsx:86
 #: src/features/moderation/components/report/ReportStepDetails.tsx:312
-#: src/features/user/components/modals/PhoneAddModal.tsx:420
-#: src/features/user/components/modals/PhoneAddModal.tsx:439
+#: src/features/user/components/modals/PhoneAddModal.tsx:417
+#: src/features/user/components/modals/PhoneAddModal.tsx:436
 msgid "Back"
 msgstr "Voltar"
 
@@ -6451,7 +6451,7 @@ msgstr "Não é possível enviar arquivos aqui"
 #: src/features/user/components/modals/PasswordChangeModal.tsx:226
 #: src/features/user/components/modals/PasswordChangeModal.tsx:237
 #: src/features/user/components/modals/PasswordChangeModal.tsx:255
-#: src/features/user/components/modals/PhoneAddModal.tsx:401
+#: src/features/user/components/modals/PhoneAddModal.tsx:398
 #: src/features/user/components/modals/tabs/AuthorizedAppsTab.tsx:174
 #: src/features/voice/components/EntranceSoundTrimmerModal.tsx:33
 #: src/features/voice/components/modals/CameraPreviewModal.tsx:846
@@ -8294,7 +8294,7 @@ msgstr "Tema carvão"
 #. Label for an inbound phone verification code shown in the required-action modal.
 #: src/features/auth/components/modals/MfaTotpDisableModal.tsx:26
 #: src/features/auth/components/modals/MfaTotpEnableModal.tsx:36
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:466
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:462
 #: src/features/invite/components/InviteListItem.tsx:77
 #: src/features/moderation/components/report/ReportBreadcrumbs.tsx:29
 msgid "Code"
@@ -10299,7 +10299,7 @@ msgstr "Contagem regressiva"
 #. Form field label for the country selector in the phone verification step.
 #. Short label in the phone add modal. Keep it concise.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:92
-#: src/features/user/components/modals/PhoneAddModal.tsx:59
+#: src/features/user/components/modals/PhoneAddModal.tsx:57
 msgid "Country"
 msgstr "País"
 
@@ -13350,7 +13350,7 @@ msgid "Email unavailable"
 msgstr "E-mail indisponível"
 
 #. Required-action error shown when email update cannot continue.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:522
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:518
 msgid "Email update is unavailable right now. Try again later or contact support."
 msgstr "A atualização de e-mail não está disponível no momento. Tente novamente mais tarde ou entre em contato com o suporte."
 
@@ -13999,7 +13999,7 @@ msgstr "Insira uma URL ou um código de modelo válido do {theOtherPlatform}."
 
 #. Inline validation error on the email step of the DSA report flow when the email is malformed.
 #. Required-action form error for an invalid email address.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:510
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:506
 #: src/features/moderation/components/pages/ReportPage.tsx:59
 msgid "Enter a valid email address."
 msgstr "Insira um endereço de e-mail válido."
@@ -14010,14 +14010,14 @@ msgid "Enter a valid message link."
 msgstr "Insira um link de mensagem válido."
 
 #. Required-action form error for an invalid phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:526
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:522
 msgid "Enter a valid mobile phone number."
 msgstr "Insira um número de celular válido."
 
 #. Form validation error shown when the entered phone number cannot be parsed.
 #. Label in the phone add modal.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:108
-#: src/features/user/components/modals/PhoneAddModal.tsx:47
+#: src/features/user/components/modals/PhoneAddModal.tsx:45
 msgid "Enter a valid phone number"
 msgstr "Insira um número de telefone válido"
 
@@ -14101,7 +14101,7 @@ msgid "Enter the {digitCount}-digit code sent to {phoneNumber}."
 msgstr "Insira o código de {digitCount} dígitos enviado para {phoneNumber}."
 
 #. placeholder {0}: getE164PhoneNumber(phoneNumber, selectedCountry) ?? formattedPhone
-#: src/features/user/components/modals/PhoneAddModal.tsx:376
+#: src/features/user/components/modals/PhoneAddModal.tsx:373
 msgid "Enter the {MFA_CODE_DIGIT_COUNT}-digit code sent to {0}."
 msgstr "Insira o código de {MFA_CODE_DIGIT_COUNT} dígitos enviado para {0}."
 
@@ -16137,7 +16137,7 @@ msgstr "Obtenha o {premiumProductName} para personalizar sua tag ou mantê-la ao
 
 #. Button in the required-action modal. Requests a new inbound SMS challenge code.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:202
-#: src/features/user/components/modals/PhoneAddModal.tsx:427
+#: src/features/user/components/modals/PhoneAddModal.tsx:424
 msgid "Get new code"
 msgstr "Obter novo código"
 
@@ -24039,7 +24039,7 @@ msgid "Open your browser, sign in, then enter the code below to link your accoun
 msgstr "Abra seu navegador, faça login e insira o código abaixo para vincular sua conta."
 
 #. Required-action modal carousel step title for the first inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:450
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:446
 msgid "Open your messages"
 msgstr "Abra suas mensagens"
 
@@ -24047,12 +24047,12 @@ msgstr "Abra suas mensagens"
 msgid "Open your old {PRODUCT_NAME} app and choose Link a new device, then enter the code below."
 msgstr "Abra seu app antigo do {PRODUCT_NAME} e escolha \"Vincular um novo dispositivo\", depois insira o código abaixo."
 
-#: src/features/user/components/modals/PhoneAddModal.tsx:327
+#: src/features/user/components/modals/PhoneAddModal.tsx:324
 msgid "Open your phone's messaging app and create a new text message."
 msgstr "Abra o app de mensagens do seu celular e crie uma nova mensagem de texto."
 
 #. Required-action modal body for the first inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:454
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:450
 msgid "Open your phone's messaging app and start a new text message."
 msgstr "Abra o aplicativo de mensagens do celular e comece uma nova mensagem de texto."
 
@@ -24223,7 +24223,7 @@ msgid "OTP"
 msgstr "OTP"
 
 #. Required-action form error when our own phone lookup provider is unavailable and we fail closed. Must blame us, not the number, and must invite retrying the same number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:558
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:554
 msgid "Our phone number check is down right now. This is on us, not your number. Wait a few minutes and try the same number again."
 msgstr "Nosso serviço de verificação de número de telefone está indisponível no momento. A falha é nossa, não do seu número. Aguarde alguns minutos e tente o mesmo número novamente."
 
@@ -24810,21 +24810,21 @@ msgstr "Telefone"
 #. Form field label for the phone number input.
 #. Short label in the phone add modal. Keep it concise.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:100
-#: src/features/user/components/modals/PhoneAddModal.tsx:67
+#: src/features/user/components/modals/PhoneAddModal.tsx:65
 msgid "Phone number"
 msgstr "Número de telefone"
 
 #. Form validation error shown when the phone number field is empty.
 #. Label in the phone add modal.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:116
-#: src/features/user/components/modals/PhoneAddModal.tsx:43
+#: src/features/user/components/modals/PhoneAddModal.tsx:41
 msgid "Phone number is required"
 msgstr "Número de telefone é obrigatório"
 
 #. Toast shown after phone verification succeeds.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:486
-#: src/features/user/components/modals/PhoneAddModal.tsx:180
-#: src/features/user/components/modals/PhoneAddModal.tsx:185
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:482
+#: src/features/user/components/modals/PhoneAddModal.tsx:178
+#: src/features/user/components/modals/PhoneAddModal.tsx:183
 msgid "Phone number verified"
 msgstr "Número de telefone verificado"
 
@@ -24839,7 +24839,7 @@ msgid "Phone step"
 msgstr "Etapa do telefone"
 
 #. Required-action error when the account is not eligible to add phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:542
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:538
 msgid "Phone verification is not available for this account. Use another method or contact support."
 msgstr "A verificação por telefone não está disponível para esta conta. Use outro método ou entre em contato com o suporte."
 
@@ -27319,7 +27319,7 @@ msgid "Reposts: <0>{countLabel}</0>"
 msgstr "Republicações: <0>{countLabel}</0>"
 
 #. Required-action form error when the user submits before a code exists.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:498
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:494
 msgid "Request a new code first."
 msgstr "Primeiro, solicite um novo código."
 
@@ -28793,7 +28793,7 @@ msgid "Search communities"
 msgstr "Buscar comunidades"
 
 #. Button or menu action label in the phone add modal. Keep it concise.
-#: src/features/user/components/modals/PhoneAddModal.tsx:63
+#: src/features/user/components/modals/PhoneAddModal.tsx:61
 msgid "Search countries..."
 msgstr "Pesquisar países..."
 
@@ -29559,17 +29559,17 @@ msgstr "Enviar mensagens de texto para fala com /tts. Os membros que ativaram es
 
 #. placeholder {0}: inboundChallenge.challenge_code
 #. placeholder {1}: inboundChallenge.our_number
-#: src/features/user/components/modals/PhoneAddModal.tsx:335
+#: src/features/user/components/modals/PhoneAddModal.tsx:332
 msgid "Send the code <0>{0}</0> to <1>{1}</1>"
 msgstr "Enviar o código <0>{0}</0> para <1>{1}</1>"
 
 #. Required-action modal body for the second inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:462
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:458
 msgid "Send the code to the phone number below."
 msgstr "Envie o código para o número de telefone abaixo."
 
 #. Required-action modal carousel step title for the second inbound phone verification instruction.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:458
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:454
 msgid "Send this code"
 msgstr "Enviar este código"
 
@@ -29579,7 +29579,7 @@ msgid "Send this pin back in time?"
 msgstr "Enviar este item fixado de volta no tempo?"
 
 #. Label for the destination phone number in an inbound phone verification challenge.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:470
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:466
 msgid "Send to"
 msgstr "Enviar para"
 
@@ -29606,16 +29606,11 @@ msgstr "Enviar mensagem de voz"
 msgid "Send:"
 msgstr "Enviar:"
 
-#. Required-action modal explanation for an inbound phone verification challenge due to SMS cost.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:442
-msgid "Sending an SMS to this number is expensive, so we need you to text us instead."
-msgstr "Enviar um SMS para este número é caro, então precisamos que você nos envie uma mensagem de texto."
-
-#: src/features/user/components/modals/PhoneAddModal.tsx:304
+#: src/features/user/components/modals/PhoneAddModal.tsx:301
 msgid "Sending an SMS to this phone number is too expensive for {PRODUCT_NAME}, so we need you to send us an SMS instead. We know this isn't ideal. You can also ask the administrators of this instance to lift this requirement from your account."
 msgstr "Enviar um SMS para este número de telefone é muito caro para o {PRODUCT_NAME}, então precisamos que você nos envie um SMS. Sabemos que isso não é o ideal. Você também pode pedir aos administradores desta instância que removam essa exigência da sua conta."
 
-#: src/features/user/components/modals/PhoneAddModal.tsx:310
+#: src/features/user/components/modals/PhoneAddModal.tsx:307
 msgid "Sending an SMS to this phone number is too expensive for {PRODUCT_NAME}, so we need you to send us an SMS instead. We know this isn't ideal. You can also contact <0>{SUPPORT_EMAIL}</0> to have us lift this requirement from your account."
 msgstr "Enviar um SMS para este número de telefone é muito caro para o {PRODUCT_NAME}, então precisamos que você nos envie um SMS. Sabemos que isso não é o ideal. Você também pode entrar em contato com <0>{SUPPORT_EMAIL}</0> para que removamos essa exigência da sua conta."
 
@@ -31202,7 +31197,7 @@ msgid "Smoother video"
 msgstr "Vídeo mais fluido"
 
 #. Required-action error when the SMS provider cannot send or verify a code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:538
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:534
 msgid "SMS verification is unavailable right now. Try again later or contact support."
 msgstr "A verificação por SMS está indisponível no momento. Tente novamente mais tarde ou entre em contato com o suporte."
 
@@ -31397,7 +31392,7 @@ msgstr "Algo deu errado. Tente novamente mais tarde."
 #. Inline error in the web deep-link prompt when opening the desktop app fails.
 #. Toast error shown when the mature content check request fails unexpectedly.
 #: src/features/auth/components/modals/MatureContentCheckModal.tsx:18
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:585
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:580
 #: src/features/auth/flow/DesktopDeepLinkPrompt.tsx:31
 msgid "Something went wrong. Try again."
 msgstr "Algo deu errado. Tente novamente."
@@ -31737,7 +31732,7 @@ msgid "Staff controls"
 msgstr "Controles da equipe"
 
 #. Required-action modal notice for inbound phone verification.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:482
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:478
 msgid "Standard messaging rates from your carrier may apply."
 msgstr "Sua operadora pode cobrar as tarifas habituais de mensagens."
 
@@ -33165,12 +33160,12 @@ msgid "Thank you for helping keep {productName} safe. We'll review your report a
 msgstr "Obrigado por ajudar a manter o {productName} seguro. Analisaremos sua denúncia o mais rápido possível."
 
 #. Required-action form error for an invalid verification code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:490
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:486
 msgid "That code didn't work. Check it and try again."
 msgstr "Esse código não funcionou. Verifique e tente novamente."
 
 #. Required-action form error for an expired verification code.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:494
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:490
 msgid "That code expired. Request a new code."
 msgstr "Esse código expirou. Solicite um novo código."
 
@@ -33198,7 +33193,7 @@ msgid "That doesn't look like a valid URL."
 msgstr "Parece que este não é um URL válido."
 
 #. Required-action form error when a new email is already used by another account.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:514
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:510
 msgid "That email is already in use."
 msgstr "Este e-mail já está em uso."
 
@@ -34118,8 +34113,8 @@ msgstr "Esta é sua última chave de acesso, e as chaves de acesso são seu segu
 msgid "This is your last passkey. Once it's gone you won't be able to use a passkey as your second factor."
 msgstr "Esta é sua última chave de acesso. Depois que ela for removida, você não poderá mais usar uma chave de acesso como seu segundo fator."
 
-#. Required-action form error for landline, toll-free, premium, shared-cost, UAN, voicemail and pager lines. Do not name which line type the provider returned.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:570
+#. Required-action form error when the number is not a mobile line. Do not name the line type.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:566
 msgid "This isn't a mobile number, so it can't receive our text. Try a mobile number, or contact support if you think that's wrong."
 msgstr "Este não é um número de celular, então não pode receber nossos SMS. Tente um número de celular ou entre em contato com o suporte se achar que isso está incorreto."
 
@@ -34200,12 +34195,12 @@ msgid "This nickname will only be visible in this community"
 msgstr "Este apelido só ficará visível nesta comunidade"
 
 #. Required-action form error when a number must use the inbound text-in challenge and the current step cannot start one. Do not say why the number was routed there.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:552
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:548
 msgid "This number is verified by texting us instead. Go back and start phone verification again to get the code and the number to text."
 msgstr "Este número é verificado enviando uma mensagem de texto para nós. Volte e inicie a verificação por telefone novamente para obter o código e o número para enviar a mensagem."
 
 #. Required-action modal explanation for an inbound phone verification challenge.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:446
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:442
 msgid "This number needs text-in verification instead of an SMS from us."
 msgstr "Para verificar este número, você precisa nos enviar um SMS em vez de receber um nosso."
 
@@ -34230,12 +34225,12 @@ msgid "This participant was deafened by moderators"
 msgstr "Os moderadores desativaram o áudio deste participante"
 
 #. Required-action form error when the backend rejects a phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:530
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:526
 msgid "This phone number cannot be used. Try another mobile number or contact support."
 msgstr "Este número de telefone não pode ser usado. Tente outro número de celular ou entre em contato com o suporte."
 
 #. Required-action form error when the backend rejects a reused phone number.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:534
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:530
 msgid "This phone number has already been used. Try another number or contact support."
 msgstr "Este número de telefone já foi usado. Tente outro número ou entre em contato com o suporte."
 
@@ -34387,7 +34382,7 @@ msgid "This verification session expired. Return to {productName} and start chec
 msgstr "Esta sessão de verificação expirou. Volte para o {productName} e inicie a compra novamente."
 
 #. Required-action form error when an email-change ticket or proof is invalid or expired.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:502
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:498
 msgid "This verification session expired. Start again."
 msgstr "Esta sessão de verificação expirou. Comece novamente."
 
@@ -34485,7 +34480,7 @@ msgid "This will trust all external links and skip the warning for every domain.
 msgstr "Isso fará com que todos os links externos sejam confiáveis e pulará o aviso para todos os domínios. Seus domínios confiáveis existentes serão substituídos. Isso é menos seguro."
 
 #. Required-action modal body after the user sends an inbound phone verification text.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:478
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:474
 msgid "This window updates automatically after we receive your message."
 msgstr "Esta janela é atualizada automaticamente depois que recebemos sua mensagem."
 
@@ -34792,7 +34787,7 @@ msgid "Tone-map HDR images to standard range, reducing peak brightness."
 msgstr "Mapeie imagens HDR para o intervalo padrão, reduzindo o pico de brilho."
 
 #. Required-action error shown for rate limits.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:506
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:502
 msgid "Too many attempts. Wait a bit, then try again."
 msgstr "Muitas tentativas. Espere um pouco e tente novamente."
 
@@ -36632,7 +36627,7 @@ msgid "Use an email address you can access. We will send a code there."
 msgstr "Use um endereço de e-mail ao qual você tenha acesso. Enviaremos um código para ele."
 
 #. Required-action form error when the new email matches the current account email.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:518
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:514
 msgid "Use an email that is different from your current one."
 msgstr "Use um e-mail diferente do seu atual."
 
@@ -37318,17 +37313,17 @@ msgstr "Verifique sua identidade"
 #. Primary button in the required-action modal. Sends or submits phone verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:178
 #: src/features/channel/components/barriers/BarrierComponents.tsx:269
-#: src/features/user/components/modals/PhoneAddModal.tsx:408
+#: src/features/user/components/modals/PhoneAddModal.tsx:405
 msgid "Verify phone"
 msgstr "Verificar telefone"
 
 #. Short label in the phone add modal. Keep it concise.
-#: src/features/user/components/modals/PhoneAddModal.tsx:55
+#: src/features/user/components/modals/PhoneAddModal.tsx:53
 msgid "Verify phone number"
 msgstr "Verificar número de telefone"
 
 #. Label in the phone add modal.
-#: src/features/user/components/modals/PhoneAddModal.tsx:51
+#: src/features/user/components/modals/PhoneAddModal.tsx:49
 msgid "Verify phone number form"
 msgstr "Formulário de verificação do número de telefone"
 
@@ -38192,7 +38187,7 @@ msgstr "Aumentar volume"
 msgid "Wait a moment before deleting more messages."
 msgstr "Aguarde um momento antes de excluir mais mensagens."
 
-#: src/features/user/components/modals/PhoneAddModal.tsx:352
+#: src/features/user/components/modals/PhoneAddModal.tsx:349
 msgid "Wait a moment. This window will close automatically once we receive your message."
 msgstr "Aguarde um momento. Esta janela fechará automaticamente assim que recebermos sua mensagem."
 
@@ -38202,7 +38197,7 @@ msgid "Wait between messages. Members with \"{bypassSlowmodePermissionLabel}\" c
 msgstr "Intervalo entre mensagens. Membros com a permissão \"{bypassSlowmodePermissionLabel}\" podem ignorá-lo."
 
 #. Required-action modal carousel step title after the user sends an inbound phone verification text.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:474
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:470
 msgid "Wait here"
 msgstr "Aguarde"
 
@@ -38368,13 +38363,13 @@ msgstr "Não conseguimos ler este tema. Ele pode estar corrompido ou ser inváli
 msgid "We couldn't remove that account. Try again."
 msgstr "Não foi possível remover essa conta. Tente novamente."
 
-#. Required-action form error for phone attempts blocked by a fraud signal. Deliberately non-specific. Never name the signal, the score or the threshold.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:576
+#. Required-action form error when a phone attempt cannot be verified automatically and needs a support review. Keep it non-specific.
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:571
 msgid "We couldn't verify this number automatically. Contact support and a person will review your account."
 msgstr "Não foi possível verificar este número automaticamente. Entre em contato com o suporte e uma pessoa analisará sua conta."
 
 #. Required-action form error when the phone number's country is on the SMS send ban list. Must not imply the number itself is invalid.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:546
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:542
 msgid "We don't send verification texts to this country. Try a mobile number from another country, or contact support."
 msgstr "Não enviamos SMS de verificação para este país. Tente um número de celular de outro país ou entre em contato com o suporte."
 
@@ -38469,9 +38464,9 @@ msgstr "Enviaremos um código de verificação para seu e-mail antes que você p
 msgid "We'll send a verification code to your email before you can view your backup codes."
 msgstr "Enviaremos um código de verificação para seu e-mail antes que você possa ver seus códigos de recuperação."
 
-#: src/features/user/components/modals/PhoneAddModal.tsx:286
-msgid "We'll send an SMS code when available. Your number is not linked to your account. We keep only an encrypted marker, with no user ID, to allow at most {PHONE_VERIFICATION_LIMIT} verifications in about {PHONE_VERIFICATION_WINDOW_DAYS} days."
-msgstr "Enviaremos um código por SMS quando disponível. Seu número não está vinculado à sua conta. Mantemos apenas um marcador criptografado, sem ID de usuário, para permitir no máximo {PHONE_VERIFICATION_LIMIT} verificações em cerca de {PHONE_VERIFICATION_WINDOW_DAYS} dias."
+#: src/features/user/components/modals/PhoneAddModal.tsx:284
+msgid "We'll send an SMS code when available. Your number is not linked to your account. We keep only an encrypted marker, with no user ID, for a limited time."
+msgstr "Enviaremos um código por SMS quando estiver disponível. Seu número não está vinculado à sua conta. Mantemos apenas um marcador criptografado, sem ID de usuário, por tempo limitado."
 
 #: src/features/user/components/modals/EmailChangeModal.tsx:189
 msgid "We'll verify your current email and then your new email with one-time codes."
@@ -39976,10 +39971,10 @@ msgstr "Sua sessão do {productName} expirou. Faça login novamente para continu
 msgid "Your account"
 msgstr "Sua conta"
 
-#. First line of the set-aside confirmation in the required-action modal. Always shown. Says can rather than will, because whether the check returns depends on account age and instance settings the user cannot see.
+#. First line of the set-aside confirmation in the required-action modal. Always shown. Says can rather than will, because the check may or may not come back.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:316
-msgid "Your account goes back to normal right away and you will not need a phone number now. This is not a permanent exemption. Joining a large or public community can bring this check back."
-msgstr "Sua conta volta ao normal imediatamente e você não precisará de um número de telefone agora. Esta não é uma isenção permanente. Entrar em uma comunidade grande ou pública pode trazer essa verificação de volta."
+msgid "Your account goes back to normal right away and you will not need a phone number now. This is not a permanent exemption, and we can ask for this check again later."
+msgstr "Sua conta volta ao normal imediatamente e você não precisará de um número de telefone agora. Esta não é uma isenção permanente e podemos solicitar essa verificação novamente mais tarde."
 
 #: src/features/connection/components/pages/ConnectionCallbackPage.tsx:29
 msgid "Your account has been linked successfully. You can now close this tab and return to the app."
@@ -40044,7 +40039,7 @@ msgid "Your card is eligible. Redirecting you to the payment page now."
 msgstr "Seu cartão é elegível. Redirecionando para a página de pagamento."
 
 #. Required-action form error when the carrier lookup says the number does not exist. Leaves room for the lookup to be wrong.
-#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:564
+#: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:560
 msgid "Your carrier says this number isn't in service. Check it and try again, or contact support if it's correct."
 msgstr "Sua operadora informa que este número não está em serviço. Verifique-o e tente novamente, ou entre em contato com o suporte se estiver correto."
 
@@ -40216,10 +40211,10 @@ msgstr "seu novo e-mail"
 msgid "Your new nickname, or leave blank to reset it."
 msgstr "Seu novo apelido, ou deixe em branco para redefinir."
 
-#. Required-action modal privacy note for phone verification. limit and duration are inserted by code.
+#. Required-action modal privacy note for phone verification.
 #: src/features/auth/components/modals/required_action/RequiredActionDescriptors.ts:421
-msgid "Your number is not linked to your account. We keep only an encrypted marker, with no user ID, for at most {limit} verifications in about {duration} days."
-msgstr "Seu número não está vinculado à sua conta. Mantemos apenas um marcador criptografado, sem ID de usuário, para no máximo {limit} verificações em cerca de {duration} dias."
+msgid "Your number is not linked to your account. We keep only an encrypted marker, with no user ID, for a limited time."
+msgstr "Seu número não está vinculado à sua conta. Mantemos apenas um marcador criptografado, sem ID de usuário, por tempo limitado."
 
 #: src/features/premium/components/pages/PremiumCallbackPage.tsx:152
 msgid "Your payment was canceled. You can now close this tab and return to the app."

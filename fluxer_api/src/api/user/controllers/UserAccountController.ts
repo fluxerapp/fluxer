@@ -1197,17 +1197,13 @@ export function UserAccountController(app: HonoApp) {
 			security: ['bearerToken', 'sessionToken'],
 			tags: ['Users'],
 			description:
-				'Reports whether this account can set a deferred phone verification requirement aside, and which communities would be left if it did. Returns available false with empty lists for any account outside that state.',
+				'Reports whether this account can set a due phone verification requirement aside. The community lists are always empty.',
 		}),
 		async (ctx) => {
-			const {available, guilds, ownedGuilds} = await ctx
+			const available = await ctx
 				.get('userService')
 				.accountService.lifecycleService.previewPhoneGateEscape(ctx.get('user').id);
-			return ctx.json({
-				available,
-				guilds: guilds.map((guild) => ({id: guild.id.toString(), name: guild.name})),
-				owned_guilds: ownedGuilds.map((guild) => ({id: guild.id.toString(), name: guild.name})),
-			});
+			return ctx.json({available, guilds: [], owned_guilds: []});
 		},
 	);
 	app.post(
@@ -1224,10 +1220,10 @@ export function UserAccountController(app: HonoApp) {
 			security: ['bearerToken', 'sessionToken'],
 			tags: ['Users'],
 			description:
-				'Leaves the communities that trigger the deferred phone verification check and restores the deferral, so the account works normally again. Communities the user owns are kept, and a run that hits the per-call community limit leaves what it can and can be repeated. Returns the updated private user object.',
+				'Defers a due phone verification requirement again, so the account works normally without leaving any community. Returns the updated private user object.',
 		}),
 		async (ctx) => {
-			const {user} = await ctx
+			const user = await ctx
 				.get('userService')
 				.accountService.lifecycleService.executePhoneGateEscape(ctx.get('user').id);
 			return ctx.json(mapUserToPrivateResponse(user));

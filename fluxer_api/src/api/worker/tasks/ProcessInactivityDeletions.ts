@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+import {revokeAllAuthSessions} from '@app/api/auth/AuthSessionRevocation';
 import type {UserID} from '@app/api/BrandedTypes';
 import {Config} from '@app/api/Config';
+import {SYSTEM_USER_ID} from '@app/api/constants/Core';
+import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {KVAccountDeletionQueueService} from '@app/api/infrastructure/KVAccountDeletionQueueService';
 import type {KVActivityTracker} from '@app/api/infrastructure/KVActivityTracker';
 import {Logger} from '@app/api/Logger';
@@ -31,6 +34,7 @@ interface InactivityCheckResult {
 async function scheduleDeletion(
 	userRepository: UserRepository,
 	deletionQueueService: KVAccountDeletionQueueService,
+	gatewayService: IGatewayService,
 	user: User,
 	userId: UserID,
 ): Promise<void> {
@@ -40,6 +44,8 @@ async function scheduleDeletion(
 		flags: user.flags | UserFlags.SELF_DELETED,
 		pending_deletion_at: pendingDeletionAt,
 		deletion_reason_code: DeletionReasons.INACTIVITY,
+		deletion_scheduled_by: SYSTEM_USER_ID,
+		deletion_scheduled_at: new Date(),
 	});
 	await reschedulePendingDeletion({
 		userId,
@@ -49,12 +55,14 @@ async function scheduleDeletion(
 		userRepository,
 		deletionQueue: deletionQueueService,
 	});
+	await revokeAllAuthSessions({users: userRepository, gateway: gatewayService}, userId);
 	Logger.debug({userId, pendingDeletionAt, reason: 'INACTIVITY'}, 'Scheduled inactive user for deletion');
 }
 
 interface ProcessUserDeps {
 	userRepository: UserRepository;
 	deletionQueueService: KVAccountDeletionQueueService;
+	gatewayService: IGatewayService;
 	emailService: IEmailService;
 	isEmailEnabled: () => Promise<boolean>;
 	activityTracker: KVActivityTracker;
@@ -82,6 +90,7 @@ async function processUser(
 	const {
 		userRepository,
 		deletionQueueService,
+		gatewayService,
 		emailService,
 		isEmailEnabled,
 		activityTracker,
@@ -118,7 +127,7 @@ async function processUser(
 		const hasGracePeriodExpired = await deletionEligibilityService.hasWarningGracePeriodExpired(userId);
 		if (hasGracePeriodExpired) {
 			Logger.debug({userId}, 'Warning grace period expired, scheduling deletion');
-			await scheduleDeletion(userRepository, deletionQueueService, user, userId);
+			await scheduleDeletion(userRepository, deletionQueueService, gatewayService, user, userId);
 			result.deletionsScheduled++;
 		} else {
 			Logger.debug({userId}, 'Warning grace period still active, skipping (idempotency check)');
@@ -155,6 +164,7 @@ interface ProcessInactivityDeletionsDeps {
 	kvClient: IKVProvider;
 	userRepository: UserRepository;
 	deletionQueueService: KVAccountDeletionQueueService;
+	gatewayService: IGatewayService;
 	emailService: IEmailService;
 	isEmailEnabled: () => Promise<boolean>;
 	activityTracker: KVActivityTracker;
@@ -167,6 +177,7 @@ export async function processInactivityDeletionsCore(
 	const {
 		userRepository,
 		deletionQueueService,
+		gatewayService,
 		emailService,
 		isEmailEnabled,
 		activityTracker,
@@ -186,6 +197,7 @@ export async function processInactivityDeletionsCore(
 	const userDeps: ProcessUserDeps = {
 		userRepository,
 		deletionQueueService,
+		gatewayService,
 		emailService,
 		isEmailEnabled,
 		activityTracker,
@@ -233,6 +245,7 @@ const processInactivityDeletions: WorkerTaskHandler = async (_payload, helpers) 
 		kvClient,
 		userRepository,
 		deletionQueueService,
+		gatewayService,
 		emailService,
 		instanceConfigRepository,
 		activityTracker,
@@ -242,6 +255,7 @@ const processInactivityDeletions: WorkerTaskHandler = async (_payload, helpers) 
 		kvClient,
 		userRepository,
 		deletionQueueService,
+		gatewayService,
 		emailService,
 		isEmailEnabled: () => instanceConfigRepository.isEmailEnabled(),
 		activityTracker,

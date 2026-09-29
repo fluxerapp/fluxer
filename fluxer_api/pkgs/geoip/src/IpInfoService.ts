@@ -13,7 +13,6 @@ const FAILURE_TTL_REQUEST_FAILED_SECONDS = 60;
 const FAILURE_TTL_HTTP_ERROR_SECONDS = 300;
 const FAILURE_TTL_QUOTA_SECONDS = 900;
 const FAILURE_TTL_SCHEMA_MISMATCH_SECONDS = 600;
-const FAILURE_TTL_BACKGROUND_CAP_SECONDS = 120;
 
 export interface IpInfoGeoBlock {
 	countryCode: string | null;
@@ -65,7 +64,7 @@ export interface IpInfoFlags {
 export interface IpInfoLookupResult {
 	ip: string;
 	available: boolean;
-	riskNote: string;
+	note: string;
 	geo: IpInfoGeoBlock;
 	asn: IpInfoAsnBlock;
 	mobile: IpInfoMobileBlock;
@@ -78,12 +77,6 @@ export interface IpInfoCache {
 	set<T>(key: string, value: T, ttlSeconds?: number): Promise<void>;
 }
 
-export type IpInfoLookupPriority = 'critical' | 'standard' | 'background';
-
-export interface IpInfoLookupBudget {
-	tryConsume(priority: IpInfoLookupPriority): Promise<boolean>;
-}
-
 export interface CachedIpInfoFailure extends IpInfoLookupResult {
 	cachedFailure: true;
 	failureOutcome: 'http_error' | 'request_failed' | 'schema_mismatch';
@@ -91,26 +84,15 @@ export interface CachedIpInfoFailure extends IpInfoLookupResult {
 	cachedAtMs: number;
 }
 
-export function resolveIpInfoLookupPriority(source: string | undefined): IpInfoLookupPriority {
-	if (source === 'admin.ip_ban' || source === 'admin.scheduled_deletion_suspicious_ip') return 'critical';
-	if (source === 'AbusiveIpAutoBanner') return 'background';
-	return 'standard';
-}
-
 export function isCachedIpInfoFailure(value: unknown): value is CachedIpInfoFailure {
 	return typeof value === 'object' && value !== null && (value as {available?: unknown}).available === false;
 }
 
-function failureCacheTtlSeconds(
-	outcome: CachedIpInfoFailure['failureOutcome'],
-	httpStatus: number | null,
-	priority: IpInfoLookupPriority,
-): number {
-	let ttl = FAILURE_TTL_HTTP_ERROR_SECONDS;
-	if (outcome === 'request_failed') ttl = FAILURE_TTL_REQUEST_FAILED_SECONDS;
-	else if (outcome === 'schema_mismatch') ttl = FAILURE_TTL_SCHEMA_MISMATCH_SECONDS;
-	else if (httpStatus === 402 || httpStatus === 403 || httpStatus === 429) ttl = FAILURE_TTL_QUOTA_SECONDS;
-	return priority === 'background' ? Math.min(ttl, FAILURE_TTL_BACKGROUND_CAP_SECONDS) : ttl;
+function failureCacheTtlSeconds(outcome: CachedIpInfoFailure['failureOutcome'], httpStatus: number | null): number {
+	if (outcome === 'request_failed') return FAILURE_TTL_REQUEST_FAILED_SECONDS;
+	if (outcome === 'schema_mismatch') return FAILURE_TTL_SCHEMA_MISMATCH_SECONDS;
+	if (httpStatus === 402 || httpStatus === 403 || httpStatus === 429) return FAILURE_TTL_QUOTA_SECONDS;
+	return FAILURE_TTL_HTTP_ERROR_SECONDS;
 }
 
 export interface IpInfoLookupContext {
@@ -126,10 +108,10 @@ export interface IpInfoRequestAuditEvent {
 	source: string;
 	reason: string | null;
 	metadata?: Record<string, string | number | boolean | null>;
-	outcome: 'http_success' | 'http_error' | 'request_failed' | 'schema_mismatch' | 'budget_shed';
+	outcome: 'http_success' | 'http_error' | 'request_failed' | 'schema_mismatch';
 	httpStatus: number | null;
 	available: boolean;
-	riskNote: string;
+	note: string;
 	latencyMs: number;
 	requestUrl: string;
 	responseIp: string | null;
@@ -150,7 +132,6 @@ interface IpInfoServiceContext {
 	apiKey: string;
 	cache: IpInfoCache;
 	auditLogger?: IpInfoRequestAuditLogger;
-	budget?: IpInfoLookupBudget;
 }
 
 export interface IpInfoService {
@@ -218,11 +199,10 @@ export function createIpInfoService(ctx: IpInfoServiceContext): IpInfoService {
 	return {
 		async lookup(ip: string, context?: IpInfoLookupContext): Promise<IpInfoLookupResult> {
 			const cacheKey = `${CACHE_KEY_PREFIX}${getSameIpDecisionKey(ip) ?? ip}`;
-			const priority = resolveIpInfoLookupPriority(context?.source);
 			const cached = await ctx.cache.get<IpInfoLookupResult>(cacheKey);
 			if (cached !== null) {
 				if (isCachedIpInfoFailure(cached)) {
-					return unavailable(ip, cached.riskNote);
+					return unavailable(ip, cached.note);
 				}
 				return {...cached, ip};
 			}
@@ -251,7 +231,7 @@ export function createIpInfoService(ctx: IpInfoServiceContext): IpInfoService {
 						outcome: params.outcome,
 						httpStatus: params.httpStatus,
 						available: params.result.available,
-						riskNote: params.result.riskNote,
+						note: params.result.note,
 						latencyMs: Date.now() - startedAt,
 						requestUrl,
 						responseIp: params.result.available ? params.result.ip : null,
@@ -267,13 +247,6 @@ export function createIpInfoService(ctx: IpInfoServiceContext): IpInfoService {
 				return params.result;
 			};
 			const performLookup = async (): Promise<IpInfoLookupResult> => {
-				if (ctx.budget && !(await ctx.budget.tryConsume(priority))) {
-					return finalize({
-						result: unavailable(ip, `IPInfo lookup shed (budget exhausted, priority: ${priority})`),
-						outcome: 'budget_shed',
-						httpStatus: null,
-					});
-				}
 				const finalizeFailure = async (params: {
 					result: IpInfoLookupResult;
 					outcome: CachedIpInfoFailure['failureOutcome'];
@@ -287,7 +260,7 @@ export function createIpInfoService(ctx: IpInfoServiceContext): IpInfoService {
 						cachedAtMs: Date.now(),
 					};
 					await ctx.cache
-						.set(cacheKey, entry, failureCacheTtlSeconds(params.outcome, params.httpStatus, priority))
+						.set(cacheKey, entry, failureCacheTtlSeconds(params.outcome, params.httpStatus))
 						.catch(() => {});
 					return finalize(params);
 				};
@@ -361,7 +334,7 @@ function unavailable(ip: string, reason: string): IpInfoLookupResult {
 	return {
 		ip,
 		available: false,
-		riskNote: reason,
+		note: reason,
 		geo: emptyGeo(),
 		asn: emptyAsn(),
 		mobile: emptyMobile(),
@@ -425,7 +398,7 @@ function parseIpInfoResponse(raw: RawIpInfoResponse): IpInfoLookupResult {
 	return {
 		ip: raw.ip,
 		available: true,
-		riskNote: buildRiskNote(isAnonymous, anon),
+		note: describeAnonymity(isAnonymous, anon),
 		geo: {
 			countryCode: normalizeCountryCode(geo.country_code),
 			countryName: geo.country ?? null,
@@ -486,7 +459,7 @@ function parseAsnBlock(as: RawIpInfoResponse['as']): IpInfoAsnBlock {
 	};
 }
 
-function buildRiskNote(isAnonymous: boolean, anon: RawIpInfoResponse['anonymous']): string {
+function describeAnonymity(isAnonymous: boolean, anon: RawIpInfoResponse['anonymous']): string {
 	if (!isAnonymous) {
 		return 'IPInfo: IP is not anonymous';
 	}

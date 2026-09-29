@@ -262,7 +262,7 @@ export function UserAuthController(app: HonoApp) {
 			security: ['bearerToken', 'sessionToken'],
 			tags: ['Users'],
 			description:
-				"For very-high-risk registrations the platform requires the user to text a one-time code to the platform's number, instead of receiving a code from the platform. This endpoint generates the code and the destination number to display.",
+				"When an account must verify its phone number inbound, the user texts a one-time code to the platform's number instead of receiving one. This endpoint generates the code and the destination number to display.",
 		}),
 		async (ctx) => {
 			return ctx.json(await ctx.get('userAuthRequestService').startInboundPhoneChallenge(ctx.get('user')));

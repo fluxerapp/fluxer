@@ -9,12 +9,11 @@ impl AdminApiClient {
     pub async fn ban_email(&self, email: &str, audit_log_reason: Option<&str>) -> ApiResult<()> {
         self.create_blocklist_entry(
             "email",
-            generated_types::AdminBlocklistEntryCreateRequest {
-                subtype_1: Some(generated_types::BanEmailRequest {
+            generated_types::AdminBlocklistEntryCreateRequest::from(
+                generated_types::BanEmailRequest {
                     email: generated_types::EmailType::from(email.to_owned()),
-                }),
-                ..Default::default()
-            },
+                },
+            ),
             audit_log_reason,
         )
         .await
@@ -32,10 +31,9 @@ impl AdminApiClient {
     pub async fn ban_ip(&self, ip: &str, audit_log_reason: Option<&str>) -> ApiResult<()> {
         self.create_blocklist_entry(
             "ip",
-            generated_types::AdminBlocklistEntryCreateRequest {
-                subtype_0: Some(generated_types::BanIpRequest { ip: ip.to_owned() }),
-                ..Default::default()
-            },
+            generated_types::AdminBlocklistEntryCreateRequest::from(
+                generated_types::BanIpRequest { ip: ip.to_owned() },
+            ),
             audit_log_reason,
         )
         .await
@@ -50,45 +48,14 @@ impl AdminApiClient {
         self.check_blocklist_entry("ip", ip, None).await
     }
 
-    pub async fn add_suspicious_email_domain(
-        &self,
-        domain: &str,
-        audit_log_reason: Option<&str>,
-    ) -> ApiResult<()> {
-        self.create_blocklist_entry(
-            SUSPICIOUS_EMAIL_DOMAIN_LIST,
-            generated_types::AdminBlocklistEntryCreateRequest {
-                subtype_2: Some(suspicious_email_domain_request(domain)?),
-                ..Default::default()
-            },
-            audit_log_reason,
-        )
-        .await
-    }
-
-    pub async fn remove_suspicious_email_domain(
-        &self,
-        domain: &str,
-        audit_log_reason: Option<&str>,
-    ) -> ApiResult<()> {
-        self.delete_blocklist_entry(SUSPICIOUS_EMAIL_DOMAIN_LIST, domain, None, audit_log_reason)
-            .await
-    }
-
-    pub async fn check_suspicious_email_domain(&self, domain: &str) -> ApiResult<BanCheckResult> {
-        self.check_blocklist_entry(SUSPICIOUS_EMAIL_DOMAIN_LIST, domain, None)
-            .await
-    }
-
     pub async fn ban_phrase(&self, phrase: &str, audit_log_reason: Option<&str>) -> ApiResult<()> {
         self.create_blocklist_entry(
             "phrase",
-            generated_types::AdminBlocklistEntryCreateRequest {
-                subtype_3: Some(generated_types::BanPhraseRequest {
+            generated_types::AdminBlocklistEntryCreateRequest::from(
+                generated_types::BanPhraseRequest {
                     phrase: phrase.to_owned(),
-                }),
-                ..Default::default()
-            },
+                },
+            ),
             audit_log_reason,
         )
         .await
@@ -110,16 +77,15 @@ impl AdminApiClient {
     pub async fn ban_url(&self, url: &str, audit_log_reason: Option<&str>) -> ApiResult<()> {
         self.create_blocklist_entry(
             "url",
-            generated_types::AdminBlocklistEntryCreateRequest {
-                subtype_4: Some(generated_types::BanUrlRequest {
+            generated_types::AdminBlocklistEntryCreateRequest::from(
+                generated_types::BanUrlRequest {
                     category: None,
                     notes: None,
                     severity: None,
                     source_url: None,
                     url: url.to_owned(),
-                }),
-                ..Default::default()
-            },
+                },
+            ),
             audit_log_reason,
         )
         .await
@@ -142,17 +108,16 @@ impl AdminApiClient {
     ) -> ApiResult<()> {
         self.create_blocklist_entry(
             "url-domain",
-            generated_types::AdminBlocklistEntryCreateRequest {
-                subtype_5: Some(generated_types::BanUrlDomainRequest {
+            generated_types::AdminBlocklistEntryCreateRequest::from(
+                generated_types::BanUrlDomainRequest {
                     category: None,
                     domain: domain.to_owned(),
                     match_subdomains,
                     notes: None,
                     severity: None,
                     source_url: None,
-                }),
-                ..Default::default()
-            },
+                },
+            ),
             audit_log_reason,
         )
         .await
@@ -178,17 +143,16 @@ impl AdminApiClient {
     ) -> ApiResult<()> {
         self.create_blocklist_entry(
             "file-sha",
-            generated_types::AdminBlocklistEntryCreateRequest {
-                subtype_6: Some(generated_types::BanFileShaRequest {
+            generated_types::AdminBlocklistEntryCreateRequest::from(
+                generated_types::BanFileShaRequest {
                     category: None,
                     content_type: None,
                     notes: None,
                     severity: None,
                     sha256_hex: sha256_hex.to_owned(),
                     source_url: None,
-                }),
-                ..Default::default()
-            },
+                },
+            ),
             audit_log_reason,
         )
         .await
@@ -231,17 +195,16 @@ impl AdminApiClient {
     ) -> ApiResult<()> {
         self.create_blocklist_entry(
             "avatar-hash",
-            generated_types::AdminBlocklistEntryCreateRequest {
-                subtype_7: Some(generated_types::BanAvatarHashRequest {
+            generated_types::AdminBlocklistEntryCreateRequest::from(
+                generated_types::BanAvatarHashRequest {
                     category: None,
                     hashes: vec![hash_short.to_owned()],
                     notes: None,
                     reason: None,
                     severity: None,
                     source_url: None,
-                }),
-                ..Default::default()
-            },
+                },
+            ),
             audit_log_reason,
         )
         .await
@@ -279,10 +242,9 @@ impl AdminApiClient {
     ) -> ApiResult<()> {
         self.create_blocklist_entry(
             PROFILE_SUBSTRING_LIST,
-            generated_types::AdminBlocklistEntryCreateRequest {
-                subtype_8: Some(profile_substring_request(scope, substring)?),
-                ..Default::default()
-            },
+            generated_types::AdminBlocklistEntryCreateRequest::from(profile_substring_request(
+                scope, substring,
+            )?),
             audit_log_reason,
         )
         .await
@@ -359,8 +321,6 @@ impl AdminApiClient {
     }
 }
 
-const SUSPICIOUS_EMAIL_DOMAIN_LIST: &str = "email-domain-suspicious";
-
 const PROFILE_SUBSTRING_LIST: &str = "profile-substring";
 
 fn blocklist_list_type(list_type: &str) -> ApiResult<generated_types::AdminBlocklistListType> {
@@ -378,15 +338,6 @@ fn blocklist_delete_scope(
 ) -> ApiResult<generated_types::DeleteAdminBlocklistEntryScope> {
     generated_types::DeleteAdminBlocklistEntryScope::try_from(scope)
         .map_err(|e| ApiError::Parse(e.to_string()))
-}
-
-fn suspicious_email_domain_request(
-    domain: &str,
-) -> ApiResult<generated_types::SuspiciousEmailDomainRequest> {
-    Ok(generated_types::SuspiciousEmailDomainRequest {
-        domain: generated_types::SuspiciousEmailDomainRequestDomain::try_from(domain)
-            .map_err(|e| ApiError::Parse(e.to_string()))?,
-    })
 }
 
 fn profile_substring_request(

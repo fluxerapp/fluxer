@@ -10,6 +10,7 @@ import {
 	REGISTRATION_REJECTED_TRAIT,
 } from '@app/api/instance/InstanceConfigRepository';
 import {Logger} from '@app/api/Logger';
+import {getKVAccountDeletionQueue} from '@app/api/middleware/ServiceSingletons';
 import type {AuthSession} from '@app/api/models/AuthSession';
 import type {User} from '@app/api/models/User';
 import {lookupGeoip} from '@app/api/utils/IpUtils';
@@ -87,6 +88,7 @@ export async function createAuthSession(
 	if (user.traits.has(REGISTRATION_PENDING_APPROVAL_TRAIT)) throw new RegistrationPendingApprovalError();
 	if (user.traits.has(REGISTRATION_REJECTED_TRAIT)) throw new RegistrationRejectedError();
 	user = await AuthUtility.handleBanStatus(ctx, user);
+	user = await AuthUtility.reactivateOnSignIn(ctx, user, getKVAccountDeletionQueue());
 	const now = new Date();
 	const token = await AuthUtility.generateAuthToken(ctx);
 	let clientCountry: string | null = null;

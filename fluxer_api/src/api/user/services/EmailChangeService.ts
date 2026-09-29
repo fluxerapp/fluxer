@@ -4,6 +4,7 @@ import {randomUUID} from 'node:crypto';
 import type {ApiContext} from '@app/api/ApiContext';
 import {EMAIL_CLEARABLE_SUSPICIOUS_ACTIVITY_FLAGS} from '@app/api/auth/AuthEmail';
 import * as AuthPassword from '@app/api/auth/AuthPassword';
+import {assertEmailNotBlocklisted} from '@app/api/auth/EmailBlocklist';
 import type {User} from '@app/api/models/User';
 import type {EmailChangeRepository} from '@app/api/user/repositories/auth/EmailChangeRepository';
 import {
@@ -176,6 +177,7 @@ export class EmailChangeService {
 		if (row.original_email && trimmedEmail.toLowerCase() === row.original_email.toLowerCase()) {
 			throw InputValidationError.fromCode('new_email', ValidationErrorCodes.NEW_EMAIL_MUST_BE_DIFFERENT);
 		}
+		await assertEmailNotBlocklisted(trimmedEmail, 'new_email');
 		const hasValidDns = await emailDnsValidation.hasValidDnsRecords(trimmedEmail);
 		if (!hasValidDns) {
 			throw InputValidationError.fromCode('new_email', ValidationErrorCodes.EMAIL_DOMAIN_CANNOT_RECEIVE_MAIL);

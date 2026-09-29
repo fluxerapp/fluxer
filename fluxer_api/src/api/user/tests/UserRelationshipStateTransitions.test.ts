@@ -228,7 +228,7 @@ describe('UserRelationshipStateTransitions', () => {
 			await markUserDeleted(harness, alice.userId);
 			await createBuilder(harness, alice.token)
 				.post(`/users/@me/relationships/${bob.userId}`)
-				.expect(HTTP_STATUS.BAD_REQUEST, 'FRIEND_REQUEST_BLOCKED')
+				.expect(HTTP_STATUS.UNAUTHORIZED)
 				.execute();
 		});
 		test('can accept a friend request from a user scheduled for deletion', async () => {
@@ -337,7 +337,7 @@ describe('UserRelationshipStateTransitions', () => {
 			await createBuilder(harness, bob.token)
 				.put(`/users/@me/relationships/${alice.userId}`)
 				.body({})
-				.expect(HTTP_STATUS.BAD_REQUEST, 'FRIEND_REQUEST_BLOCKED')
+				.expect(HTTP_STATUS.UNAUTHORIZED)
 				.execute();
 		});
 	});

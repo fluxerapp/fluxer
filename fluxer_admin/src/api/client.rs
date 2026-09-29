@@ -90,10 +90,7 @@ impl AdminApiClient {
     fn headers_with_reason(&self, audit_log_reason: Option<&str>) -> ApiResult<HeaderMap> {
         let mut headers = self.generated.inner().clone();
         if let Some(reason) = audit_log_reason {
-            let mut value = HeaderValue::from_str(reason)
-                .map_err(|_| ApiError::Parse("invalid audit log reason header".to_owned()))?;
-            value.set_sensitive(true);
-            headers.insert("x-audit-log-reason", value);
+            headers.insert("x-audit-log-reason", audit_log_reason_header(reason)?);
         }
         Ok(headers)
     }
@@ -422,10 +419,26 @@ impl std::fmt::Display for ApiError {
     }
 }
 
+fn audit_log_reason_header(reason: &str) -> ApiResult<HeaderValue> {
+    let mut value = HeaderValue::from_bytes(reason.as_bytes())
+        .map_err(|_| ApiError::Parse("invalid audit log reason header".to_owned()))?;
+    value.set_sensitive(true);
+    Ok(value)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use serde_json::{Value, json};
+
+    #[test]
+    fn audit_log_reason_header_carries_utf8_bytes() {
+        let reason = "§ 3 Regel – wiederholt 日本";
+        let value = audit_log_reason_header(reason).expect("valid reason header");
+        assert_eq!(value.as_bytes(), reason.as_bytes());
+        assert!(value.is_sensitive());
+        assert!(audit_log_reason_header("line one\nline two").is_err());
+    }
 
     fn response(status: u16, body: &'static str) -> reqwest::Response {
         axum::http::Response::builder()

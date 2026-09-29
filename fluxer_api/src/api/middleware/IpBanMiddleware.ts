@@ -2,9 +2,10 @@
 
 import {AdminRepository} from '@app/api/admin/AdminRepository';
 import type {BannedIpEntry, BannedIpKind} from '@app/api/admin/IAdminRepository';
+import {isIpBanExempt} from '@app/api/ban/IpBanExemptions';
 import {IP_BAN_REFRESH_CHANNEL} from '@app/api/constants/IpBan';
+import {sharedListHas} from '@app/api/infrastructure/activity/SharedLists';
 import {Logger} from '@app/api/Logger';
-import {isIpBanExempt} from '@app/api/risk/IpBanExemptions';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
 import {parseIpBanEntry, tryParseSingleIp} from '@app/api/utils/IpRangeUtils';
 import {RefreshSubscription} from '@app/api/utils/RefreshSubscription';
@@ -327,6 +328,9 @@ export const IpBanMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => {
 			kind: match.kind,
 			expiresAt: match.expiresAt,
 		});
+	}
+	if (clientIp && !isIpBanExempt(clientIp) && sharedListHas('ip_blocked', clientIp)) {
+		throw new IpBannedError({ipAddress: clientIp, kind: 'permanent'});
 	}
 	await next();
 });

@@ -26,16 +26,13 @@ export interface APICachePurgeConfig {
 interface APIGeoipFilesystemConfig {
 	mode: 'filesystem';
 	maxmindDbPath?: string;
-	maxmindAsnDbPath?: string;
 }
 
 interface APIGeoipS3Config {
 	mode: 's3';
 	maxmindDbPath: string;
-	maxmindAsnDbPath?: string;
 	s3Bucket: string;
 	s3Key: string;
-	s3AsnKey?: string;
 }
 
 export type APIGeoipConfig = APIGeoipFilesystemConfig | APIGeoipS3Config;
@@ -185,24 +182,10 @@ export interface APIConfig {
 			secure: boolean;
 		};
 	};
-	sms: {
-		enabled: boolean;
-		accountSid?: string;
-		authToken?: string;
-		verifyServiceSid?: string;
-		inboundChallengeNumber?: string;
-		inboundWebhookAuthToken?: string;
-		inboundWebhookPublicUrl?: string;
-	};
-	risk: {
-		enabled: boolean;
-		ipinfoApiKey?: string;
-		accountPolicyDsl?: unknown;
+	ipinfo: {
+		apiKey?: string;
 	};
 	blocklistFeeds: {
-		enabled: boolean;
-	};
-	torExitList: {
 		enabled: boolean;
 	};
 	breachedPasswordCheck: {
@@ -333,23 +316,6 @@ export interface APIConfig {
 		};
 		setup: {
 			configured: boolean;
-		};
-	};
-	abusePolicy: {
-		inboundPhoneCountryCodes: Array<string>;
-		phoneFlagging: {
-			enabled: boolean;
-			exemptCountryCodes: Array<string>;
-		};
-		phoneVerification: {
-			inboundRequiredPrefixes: Array<string>;
-		};
-		directContactSpam: {
-			enabled: boolean;
-			countryCodes: Array<string>;
-			distinctTargetThreshold: number;
-			targetWindowMs: number;
-			action: 'flag_spammer' | 'suppress_delivery';
 		};
 	};
 	domain: {

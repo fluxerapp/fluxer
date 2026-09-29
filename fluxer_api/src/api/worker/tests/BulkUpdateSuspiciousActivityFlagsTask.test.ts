@@ -3,7 +3,6 @@
 import {AdminRepository} from '@app/api/admin/AdminRepository';
 import {createTestAccount, type TestAccount} from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
-import {getHistoricalOutcomeRepository} from '@app/api/middleware/ServiceMiddleware';
 import {getGatewayService, getSnowflakeService} from '@app/api/middleware/ServiceRegistry';
 import {
 	createUserCacheService,
@@ -39,7 +38,6 @@ interface BulkJobResult {
 const ADMIN_USER_ID = 4000000000000000000n;
 const JOB_ID = 7200000000000000000n;
 const MISSING_USER_ID = 4200000000000000002n;
-const RISK_CONTEXT_IP = '203.0.113.77';
 
 function createHelpers(): WorkerTaskHelpers {
 	return {
@@ -97,17 +95,9 @@ describe('bulkUpdateSuspiciousActivityFlags task', () => {
 		return user!.suspiciousActivityFlags ?? 0;
 	}
 
-	test('writes a per-user audit row with the admin reason, records the risk outcome, and reports failures', async () => {
+	test('writes a per-user audit row with the admin reason and reports failures', async () => {
 		const account = await createTestAccount(harness);
 		await setSuspiciousFlags(account, 0);
-		await getHistoricalOutcomeRepository().upsertLatestContext({
-			userId: account.userId,
-			ip: RISK_CONTEXT_IP,
-			subnet: null,
-			emailDomain: null,
-			asn: null,
-			updatedAt: new Date(),
-		});
 
 		const result = (await bulkUpdateSuspiciousActivityFlags(
 			{
@@ -143,11 +133,6 @@ describe('bulkUpdateSuspiciousActivityFlags task', () => {
 		expect(summaryLogs[0]!.metadata.has('remove_flags')).toBe(false);
 		expect(summaryLogs[0]!.metadata.get('successful')).toBe('1');
 		expect(summaryLogs[0]!.metadata.get('failed')).toBe('1');
-
-		const outcomes = await getHistoricalOutcomeRepository().listByIp(RISK_CONTEXT_IP, new Date(0), 50);
-		expect(outcomes.map((outcome) => [outcome.outcomeCode, outcome.source])).toEqual([
-			['challenged', 'admin_update_suspicious_activity_flags'],
-		]);
 	});
 
 	test('removing a phone requirement clears the deferral bookkeeping bits', async () => {

@@ -331,7 +331,7 @@ RETURNING updated_at::text`,
 		await seed('recent_mentions', 'rm-week', '8 days');
 		await seed('attachment_upload_traces_by_key', 'at-31', '31 days');
 		await seed('attachment_upload_traces_by_key', 'at-29', '29 days');
-		await seed('phone_lookup_cache', 'pl-8', '8 days');
+		await seed('oauth2_access_tokens', 'oa-8', '8 days');
 		await seed('donor_magic_link_tokens', 'dm-hour', '1 hour');
 		await seed('ipinfo_requests_by_hour', 'ip-day', '1 day');
 		await seed('jobs_by_id', 'job', '100 days');

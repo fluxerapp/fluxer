@@ -52,17 +52,8 @@ export interface InboundPhoneChallengeResponse {
 	expires_at: string;
 }
 
-export type PhoneInboundChallengeReason =
-	| 'voip'
-	| 'canadian'
-	| 'unknown_line_type'
-	| 'expensive_destination'
-	| 'account_forced'
-	| 'behavioural_risk';
-
 export interface PhoneSendVerificationInboundChallengeResponse extends InboundPhoneChallengeResponse {
 	channel: 'inbound_challenge';
-	reason: PhoneInboundChallengeReason;
 }
 
 export type PhoneVerificationSendChannel = 'sms' | 'inbound_challenge';

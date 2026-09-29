@@ -212,4 +212,24 @@ describe('bulkScheduleUserDeletion', () => {
 		const perUserLogs = await listAuditLogs('schedule_deletion');
 		expect(perUserLogs.filter((log) => log.targetId === BigInt(target.userId))).toHaveLength(1);
 	});
+	test('leaves a deletion another admin already scheduled in place and reports the user as not scheduled', async () => {
+		const scheduler = await createTestAccount(harness);
+		await setUserACLs(harness, scheduler, ['admin:authenticate', 'user:delete']);
+		const admin = await createTestAccount(harness);
+		await setUserACLs(harness, admin, ['admin:authenticate', 'bulk:delete:users']);
+		const scheduled = await createTestAccount(harness);
+		const fresh = await createTestAccount(harness);
+		await createBuilder(harness, scheduler.token)
+			.put(`/admin/users/${scheduled.userId}/deletion`)
+			.body({reason_code: DeletionReasons.SPAM, days_until_deletion: 90})
+			.expect(HTTP_STATUS.OK)
+			.execute();
+		const before = await getUserRepository().findUnique(createUserID(BigInt(scheduled.userId)));
+		const result = await runBulkJob([scheduled.userId, fresh.userId], admin.userId);
+		expect(result.successful_count).toBe(1);
+		expect(result.failed).toEqual([{id: scheduled.userId, error: 'A deletion is already scheduled for this account'}]);
+		const after = await getUserRepository().findUnique(createUserID(BigInt(scheduled.userId)));
+		expect(after?.pendingDeletionAt?.getTime()).toBe(before?.pendingDeletionAt?.getTime());
+		expect(after?.deletionScheduledBy?.toString()).toBe(scheduler.userId);
+	});
 });

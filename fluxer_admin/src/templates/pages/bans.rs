@@ -46,17 +46,6 @@ pub const BAN_CONFIGS: &[BanConfig] = &[
         show_bulk_tools: false,
     },
     BanConfig {
-        title: "Suspicious Email Domains",
-        route: "/suspicious-email-domains",
-        input_label: "Email Domain",
-        input_name: "domain",
-        input_type: "text",
-        placeholder: "mail.ru",
-        entity_name: "Domain",
-        active_page: "suspicious-email-domains",
-        show_bulk_tools: false,
-    },
-    BanConfig {
         title: "Phrase Bans",
         route: "/phrase-bans",
         input_label: "Phrase",

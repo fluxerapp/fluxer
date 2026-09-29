@@ -10,11 +10,7 @@ import {ms} from 'itty-time';
 const INITIAL_SYNC_KEY = 'sync:email_domains:initialized';
 const PURGE_KEY = 'sync:blocklist_feeds:purged';
 const CLAIM_TTL_SECONDS = ms('6 hours') / 1000;
-const FEED_TASKS = [
-	'syncDisposableEmailDomains',
-	'syncUrlBlocklists',
-	'syncFileShaBlocklists',
-] as const satisfies ReadonlyArray<WorkerTaskName>;
+const FEED_TASKS = ['syncUrlBlocklists', 'syncFileShaBlocklists'] as const satisfies ReadonlyArray<WorkerTaskName>;
 
 export async function queueBlocklistFeedStartupJobs(
 	kvClient: Pick<IKVProvider, 'setnx' | 'del'>,
@@ -22,10 +18,7 @@ export async function queueBlocklistFeedStartupJobs(
 	enabled: boolean,
 ): Promise<void> {
 	if (enabled) {
-		if (await kvClient.setnx(INITIAL_SYNC_KEY, '1', CLAIM_TTL_SECONDS)) {
-			Logger.info('Triggering initial disposable email domain sync');
-			await queueJobs(workerService, ['syncDisposableEmailDomains']);
-		}
+		await kvClient.setnx(INITIAL_SYNC_KEY, '1', CLAIM_TTL_SECONDS);
 		return;
 	}
 	const wasEnabled = (await kvClient.del(INITIAL_SYNC_KEY)) > 0;

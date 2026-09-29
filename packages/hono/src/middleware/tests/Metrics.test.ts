@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createMetricsMiddleware} from '@fluxer/hono/src/middleware/Metrics';
+import {createMetricsMiddleware, registerMetricsSection} from '@fluxer/hono/src/middleware/Metrics';
 import {Hono} from 'hono';
 import {describe, expect, test} from 'vitest';
 
@@ -253,6 +253,16 @@ describe('Metrics Middleware', () => {
 			expect(body).toContain('fluxer_gateway_http_request_duration_seconds');
 			expect(body).toContain('fluxer_gateway_http_errors_total');
 			expect(body).toContain('fluxer_gateway_uptime_seconds');
+		});
+	});
+
+	describe('registered sections', () => {
+		test('appends registered sections until they are unregistered', async () => {
+			const {app} = createTestApp();
+			const unregister = registerMetricsSection(() => '# TYPE fluxer_test_extra gauge\nfluxer_test_extra 7');
+			expect(await (await requestMetrics(app)).text()).toContain('fluxer_test_extra 7');
+			unregister();
+			expect(await (await requestMetrics(app)).text()).not.toContain('fluxer_test_extra');
 		});
 	});
 });

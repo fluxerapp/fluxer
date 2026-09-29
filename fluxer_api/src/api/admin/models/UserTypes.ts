@@ -20,6 +20,7 @@ export async function mapUserToAdminResponse(
 	const canViewEmail = !acls || hasAcl(acls, AdminACLs.USER_VIEW_EMAIL);
 	const canViewDob = !acls || hasAcl(acls, AdminACLs.USER_VIEW_DOB);
 	const canViewIp = !acls || hasAcl(acls, AdminACLs.USER_VIEW_IP);
+	const canViewAuditLog = !acls || hasAcl(acls, AdminACLs.AUDIT_LOG_VIEW);
 	const lastActiveIpReverse =
 		canViewIp && user.lastActiveIp ? await getIpAddressReverse(user.lastActiveIp, cacheService) : null;
 	let lastActiveLocation: string | null = null;
@@ -65,6 +66,9 @@ export async function mapUserToAdminResponse(
 		pending_bulk_message_deletion_at: user.pendingBulkMessageDeletionAt?.toISOString() ?? null,
 		deletion_reason_code: user.deletionReasonCode,
 		deletion_public_reason: user.deletionPublicReason,
+		deletion_audit_log_reason: canViewAuditLog ? user.deletionAuditLogReason : null,
+		deletion_scheduled_by: user.deletionScheduledBy?.toString() ?? null,
+		deletion_scheduled_at: user.deletionScheduledAt?.toISOString() ?? null,
 		acls: user.acls ? Array.from(user.acls) : [],
 		traits: Array.from(user.traits).sort(),
 		has_totp: user.totpSecret !== null,

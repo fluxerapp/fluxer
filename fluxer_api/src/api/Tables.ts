@@ -13,7 +13,6 @@ import {
 	BANNED_EMAIL_COLUMNS,
 	BANNED_FILE_SHA_COLUMNS,
 	BANNED_IP_COLUMNS,
-	BANNED_PHONE_PREFIX_COLUMNS,
 	BANNED_PHRASE_COLUMNS,
 	BANNED_PROFILE_SUBSTRING_COLUMNS,
 	BANNED_URL_COLUMNS,
@@ -22,15 +21,10 @@ import {
 	type BannedEmailRow,
 	type BannedFileShaRow,
 	type BannedIpRow,
-	type BannedPhonePrefixRow,
 	type BannedPhraseRow,
 	type BannedProfileSubstringRow,
 	type BannedUrlDomainRow,
 	type BannedUrlRow,
-	DISPOSABLE_EMAIL_DOMAIN_COLUMNS,
-	type DisposableEmailDomainRow,
-	SUSPICIOUS_EMAIL_DOMAIN_COLUMNS,
-	type SuspiciousEmailDomainRow,
 } from '@app/api/database/types/AdminArchiveTypes';
 import {
 	ADMIN_API_KEY_BY_CREATOR_COLUMNS,
@@ -69,11 +63,7 @@ import {
 	PASSWORD_RESET_TOKEN_COLUMNS,
 	type PasswordChangeTicketRow,
 	type PasswordResetTokenRow,
-	PHONE_TOKEN_COLUMNS,
-	type PhoneTokenRow,
-	USER_COUNTRY_HISTORY_COLUMNS,
 	USER_SSO_IDENTITY_COLUMNS,
-	type UserCountryHistoryRow,
 	type UserSsoIdentityRow,
 	WEBAUTHN_CREDENTIAL_COLUMNS,
 	type WebAuthnCredentialRow,
@@ -260,40 +250,6 @@ import {
 	MESSAGE_REPORT_SUBMISSION_BY_REPORTER_COLUMNS,
 	type MessageReportSubmissionByReporterRow,
 } from '@app/api/database/types/ReportTypes';
-import {
-	INBOUND_SMS_CHALLENGE_BY_USER_COLUMNS,
-	INBOUND_SMS_CHALLENGE_COLUMNS,
-	type InboundSmsChallengeByUserRow,
-	type InboundSmsChallengeRow,
-	LATEST_RISK_CONTEXT_BY_USER_COLUMNS,
-	type LatestRiskContextByUserRow,
-	PHONE_LOOKUP_CACHE_COLUMNS,
-	PHONE_VERIFICATION_ATTEMPT_COLUMNS,
-	type PhoneLookupCacheRow,
-	type PhoneVerificationAttemptRow,
-	REGISTRATION_EVENT_BY_EMAIL_DOMAIN_COLUMNS,
-	REGISTRATION_EVENT_BY_IP_COLUMNS,
-	REGISTRATION_EVENT_BY_PLUS_ADDRESS_BASE_COLUMNS,
-	REGISTRATION_EVENT_BY_SUBNET_COLUMNS,
-	type RegistrationEventByEmailDomainRow,
-	type RegistrationEventByIpRow,
-	type RegistrationEventByPlusAddressBaseRow,
-	type RegistrationEventBySubnetRow,
-	RISK_ASSESSMENT_BY_USER_COLUMNS,
-	RISK_ASSESSMENT_COLUMNS,
-	RISK_OUTCOME_BY_ASN_COLUMNS,
-	RISK_OUTCOME_BY_EMAIL_DOMAIN_COLUMNS,
-	RISK_OUTCOME_BY_IP_COLUMNS,
-	RISK_OUTCOME_BY_SUBNET_COLUMNS,
-	type RiskAssessmentByUserRow,
-	type RiskAssessmentRow,
-	type RiskOutcomeByAsnRow,
-	type RiskOutcomeByEmailDomainRow,
-	type RiskOutcomeByIpRow,
-	type RiskOutcomeBySubnetRow,
-	SUSPICIOUS_IP_COLUMNS,
-	type SuspiciousIpRow,
-} from '@app/api/database/types/RiskTypes';
 import {
 	FAVORITE_MEME_COLUMNS,
 	type FavoriteMemeRow,
@@ -788,21 +744,6 @@ export const BannedEmails = defineTable<BannedEmailRow, 'email_lower'>({
 	columns: BANNED_EMAIL_COLUMNS,
 	primaryKey: ['email_lower'],
 });
-export const BannedPhonePrefixes = defineTable<BannedPhonePrefixRow, 'prefix'>({
-	name: 'banned_phone_prefixes',
-	columns: BANNED_PHONE_PREFIX_COLUMNS,
-	primaryKey: ['prefix'],
-});
-export const SuspiciousEmailDomains = defineTable<SuspiciousEmailDomainRow, 'domain'>({
-	name: 'suspicious_email_domains',
-	columns: SUSPICIOUS_EMAIL_DOMAIN_COLUMNS,
-	primaryKey: ['domain'],
-});
-export const DisposableEmailDomains = defineTable<DisposableEmailDomainRow, 'domain'>({
-	name: 'disposable_email_domains',
-	columns: DISPOSABLE_EMAIL_DOMAIN_COLUMNS,
-	primaryKey: ['domain'],
-});
 export const BannedPhrases = defineTable<BannedPhraseRow, 'phrase'>({
 	name: 'banned_phrases',
 	columns: BANNED_PHRASE_COLUMNS,
@@ -888,12 +829,6 @@ export const EmailRevertTokens = defineTable<EmailRevertTokenRow, 'token_' | 'us
 	primaryKey: ['token_', 'user_id'],
 	defaultTtlSeconds: seconds('48 hours'),
 });
-export const PhoneTokens = defineTable<PhoneTokenRow, 'token_'>({
-	name: 'phone_tokens',
-	columns: PHONE_TOKEN_COLUMNS,
-	primaryKey: ['token_'],
-	defaultTtlSeconds: seconds('30 days'),
-});
 export const AuthSessions = defineTable<AuthSessionRow, 'session_id_hash'>({
 	name: 'auth_sessions',
 	columns: AUTH_SESSION_COLUMNS,
@@ -915,12 +850,6 @@ export const AuthSessionTombstones = defineTable<AuthSessionTombstoneRow, 'user_
 	columns: AUTH_SESSION_TOMBSTONE_COLUMNS,
 	primaryKey: ['user_id', 'session_id_hash'],
 	defaultTtlSeconds: seconds('30 days'),
-});
-export const UserCountryHistory = defineTable<UserCountryHistoryRow, 'user_id' | 'country'>({
-	name: 'user_country_history',
-	columns: USER_COUNTRY_HISTORY_COLUMNS,
-	primaryKey: ['user_id', 'country'],
-	defaultTtlSeconds: seconds('365 days'),
 });
 export const MfaBackupCodes = defineTable<MfaBackupCodeRow, 'user_id' | 'code'>({
 	name: 'mfa_backup_codes',
@@ -1173,139 +1102,6 @@ export const NcmecUserWorkflows = defineTable<NcmecUserWorkflowRow, 'user_id'>({
 	name: 'ncmec_user_workflows',
 	columns: NCMEC_USER_WORKFLOW_COLUMNS,
 	primaryKey: ['user_id'],
-});
-export const RegistrationEventsByIp = defineTable<RegistrationEventByIpRow, 'ip' | 'created_at' | 'user_id', 'ip'>({
-	name: 'registration_events_by_ip',
-	columns: REGISTRATION_EVENT_BY_IP_COLUMNS,
-	primaryKey: ['ip', 'created_at', 'user_id'],
-	partitionKey: ['ip'],
-	defaultTtlSeconds: seconds('30 days'),
-});
-export const RegistrationEventsBySubnet = defineTable<
-	RegistrationEventBySubnetRow,
-	'subnet' | 'created_at' | 'user_id',
-	'subnet'
->({
-	name: 'registration_events_by_subnet',
-	columns: REGISTRATION_EVENT_BY_SUBNET_COLUMNS,
-	primaryKey: ['subnet', 'created_at', 'user_id'],
-	partitionKey: ['subnet'],
-	defaultTtlSeconds: seconds('30 days'),
-});
-export const RegistrationEventsByEmailDomain = defineTable<
-	RegistrationEventByEmailDomainRow,
-	'email_domain' | 'created_at' | 'user_id',
-	'email_domain'
->({
-	name: 'registration_events_by_email_domain',
-	columns: REGISTRATION_EVENT_BY_EMAIL_DOMAIN_COLUMNS,
-	primaryKey: ['email_domain', 'created_at', 'user_id'],
-	partitionKey: ['email_domain'],
-	defaultTtlSeconds: seconds('30 days'),
-});
-export const RegistrationEventsByPlusAddressBase = defineTable<
-	RegistrationEventByPlusAddressBaseRow,
-	'plus_address_base' | 'created_at' | 'user_id',
-	'plus_address_base'
->({
-	name: 'registration_events_by_plus_address_base',
-	columns: REGISTRATION_EVENT_BY_PLUS_ADDRESS_BASE_COLUMNS,
-	primaryKey: ['plus_address_base', 'created_at', 'user_id'],
-	partitionKey: ['plus_address_base'],
-	defaultTtlSeconds: seconds('30 days'),
-});
-export const LatestRiskContextByUser = defineTable<LatestRiskContextByUserRow, 'user_id'>({
-	name: 'latest_risk_context_by_user',
-	columns: LATEST_RISK_CONTEXT_BY_USER_COLUMNS,
-	primaryKey: ['user_id'],
-});
-export const SuspiciousIps = defineTable<SuspiciousIpRow, 'ip'>({
-	name: 'suspicious_ips',
-	columns: SUSPICIOUS_IP_COLUMNS,
-	primaryKey: ['ip'],
-	defaultTtlSeconds: seconds('180 days'),
-});
-export const RiskOutcomesByIp = defineTable<RiskOutcomeByIpRow, 'ip' | 'created_at' | 'user_id' | 'outcome_code', 'ip'>(
-	{
-		name: 'risk_outcomes_by_ip',
-		columns: RISK_OUTCOME_BY_IP_COLUMNS,
-		primaryKey: ['ip', 'created_at', 'user_id', 'outcome_code'],
-		partitionKey: ['ip'],
-		defaultTtlSeconds: seconds('180 days'),
-	},
-);
-export const RiskOutcomesBySubnet = defineTable<
-	RiskOutcomeBySubnetRow,
-	'subnet' | 'created_at' | 'user_id' | 'outcome_code',
-	'subnet'
->({
-	name: 'risk_outcomes_by_subnet',
-	columns: RISK_OUTCOME_BY_SUBNET_COLUMNS,
-	primaryKey: ['subnet', 'created_at', 'user_id', 'outcome_code'],
-	partitionKey: ['subnet'],
-	defaultTtlSeconds: seconds('180 days'),
-});
-export const RiskOutcomesByEmailDomain = defineTable<
-	RiskOutcomeByEmailDomainRow,
-	'email_domain' | 'created_at' | 'user_id' | 'outcome_code',
-	'email_domain'
->({
-	name: 'risk_outcomes_by_email_domain',
-	columns: RISK_OUTCOME_BY_EMAIL_DOMAIN_COLUMNS,
-	primaryKey: ['email_domain', 'created_at', 'user_id', 'outcome_code'],
-	partitionKey: ['email_domain'],
-	defaultTtlSeconds: seconds('180 days'),
-});
-export const RiskOutcomesByAsn = defineTable<
-	RiskOutcomeByAsnRow,
-	'asn' | 'created_at' | 'user_id' | 'outcome_code',
-	'asn'
->({
-	name: 'risk_outcomes_by_asn',
-	columns: RISK_OUTCOME_BY_ASN_COLUMNS,
-	primaryKey: ['asn', 'created_at', 'user_id', 'outcome_code'],
-	partitionKey: ['asn'],
-	defaultTtlSeconds: seconds('180 days'),
-});
-export const RiskAssessments = defineTable<RiskAssessmentRow, 'assessment_id'>({
-	name: 'risk_assessments',
-	columns: RISK_ASSESSMENT_COLUMNS,
-	primaryKey: ['assessment_id'],
-});
-export const RiskAssessmentsByUser = defineTable<RiskAssessmentByUserRow, 'user_id' | 'created_at', 'user_id'>({
-	name: 'risk_assessments_by_user',
-	columns: RISK_ASSESSMENT_BY_USER_COLUMNS,
-	primaryKey: ['user_id', 'created_at'],
-	partitionKey: ['user_id'],
-});
-export const InboundSmsChallenges = defineTable<InboundSmsChallengeRow, 'challenge_code'>({
-	name: 'inbound_sms_challenges',
-	columns: INBOUND_SMS_CHALLENGE_COLUMNS,
-	primaryKey: ['challenge_code'],
-	defaultTtlSeconds: seconds('15 minutes'),
-});
-export const InboundSmsChallengesByUser = defineTable<
-	InboundSmsChallengeByUserRow,
-	'user_id' | 'created_at',
-	'user_id'
->({
-	name: 'inbound_sms_challenges_by_user',
-	columns: INBOUND_SMS_CHALLENGE_BY_USER_COLUMNS,
-	primaryKey: ['user_id', 'created_at'],
-	partitionKey: ['user_id'],
-	defaultTtlSeconds: seconds('15 minutes'),
-});
-export const PhoneLookupCache = defineTable<PhoneLookupCacheRow, 'phone'>({
-	name: 'phone_lookup_cache',
-	columns: PHONE_LOOKUP_CACHE_COLUMNS,
-	primaryKey: ['phone'],
-	defaultTtlSeconds: seconds('7 days'),
-});
-export const PhoneVerificationAttempts = defineTable<PhoneVerificationAttemptRow, 'attempt_id'>({
-	name: 'phone_verification_attempts',
-	columns: PHONE_VERIFICATION_ATTEMPT_COLUMNS,
-	primaryKey: ['attempt_id'],
-	defaultTtlSeconds: seconds('90 days'),
 });
 export const BillingCustomers = defineTable<BillingCustomerRow, 'provider_id'>({
 	name: 'billing_customers',

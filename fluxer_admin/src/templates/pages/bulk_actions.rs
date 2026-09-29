@@ -410,6 +410,9 @@ fn bulk_schedule_deletion_section(base: &str, csrf_token: &str) -> Markup {
                             }
                         },
                     ))
+                    p class="text-neutral-500 text-sm" {
+                        "Users that already have a pending deletion are skipped and listed as failed with the reason already scheduled. Cancel those from the user page first to schedule them again."
+                    }
                     (text_input("public_reason", "Public Reason (optional)", "", "Terms of service violation"))
                     (form_field_group("Days Until Deletion", "days_until_deletion", true, None,
                         Some("Moderation reasons are held for at least 60 days. Only User requested allows 14."),

@@ -25,6 +25,8 @@ import {
 import type {MessageAttachment} from '@app/api/database/types/MessageTypes';
 import type {DSAReportTicketRow} from '@app/api/database/types/ReportTypes';
 import type {IGuildRepositoryAggregate} from '@app/api/guild/repositories/IGuildRepositoryAggregate';
+import {emitActivity} from '@app/api/infrastructure/activity/ActivityEvents';
+import type {ReportTarget} from '@app/api/infrastructure/activity/Contract.generated';
 import type {IEmailDnsValidationService} from '@app/api/infrastructure/IEmailDnsValidationService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {ISnowflakeService} from '@app/api/infrastructure/ISnowflakeService';
@@ -92,6 +94,27 @@ const DSA_CODE_CHARSET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 const DSA_CODE_SEGMENT_LENGTH = 4;
 const DSA_CODE_SEPARATOR = '-';
 const DSA_TICKET_BYTES = 32;
+
+async function emitReportFiled(row: IARSubmissionRow, target: ReportTarget): Promise<void> {
+	const key = row.reported_user_id ?? row.reporter_id;
+	if (key === null) return;
+	await emitActivity(
+		'report_filed',
+		key.toString(),
+		{
+			report_id: row.report_id.toString(),
+			reporter_id: (row.reporter_id ?? 0n).toString(),
+			category: row.category,
+			target_type: target,
+			reported_user_id: row.reported_user_id?.toString() ?? null,
+			guild_id: row.reported_guild_id?.toString() ?? null,
+			message_id: row.reported_message_id?.toString() ?? null,
+			channel_id: row.reported_channel_id?.toString() ?? null,
+		},
+		null,
+		row.report_id.toString(),
+	);
+}
 
 export class ReportService {
 	private readonly messageChannelAuthService: MessageChannelAuthService;
@@ -193,6 +216,7 @@ export class ReportService {
 		try {
 			await this.consumeMessageReportRateLimits({reporter, channel, message});
 			const report = await this.reportRepository.createReport(reportData);
+			await emitReportFiled(reportData, 'message');
 			if (this.reportSearchService && 'indexReport' in this.reportSearchService) {
 				await this.reportSearchService.indexReport(report).catch((error) => {
 					Logger.error({error, reportId: report.reportId}, 'Failed to index message report in search');
@@ -262,6 +286,7 @@ export class ReportService {
 		};
 		await this.ensureReportRateLimit(this.createReportRateLimitIdentifier(reporterKey), REPORT_RATE_LIMIT_MAX, true);
 		const report = await this.reportRepository.createReport(reportData);
+		await emitReportFiled(reportData, 'user');
 		if (this.reportSearchService && 'indexReport' in this.reportSearchService) {
 			await this.reportSearchService.indexReport(report).catch((error) => {
 				Logger.error({error, reportId: report.reportId}, 'Failed to index user report in search');
@@ -319,6 +344,7 @@ export class ReportService {
 		};
 		await this.ensureReportRateLimit(this.createReportRateLimitIdentifier(reporterKey), REPORT_RATE_LIMIT_MAX, true);
 		const report = await this.reportRepository.createReport(reportData);
+		await emitReportFiled(reportData, 'guild');
 		if (this.reportSearchService && 'indexReport' in this.reportSearchService) {
 			await this.reportSearchService.indexReport(report).catch((error) => {
 				Logger.error({error, reportId: report.reportId}, 'Failed to index guild report in search');
@@ -397,6 +423,7 @@ export class ReportService {
 		await this.ensureReportRateLimit(this.createReportRateLimitIdentifier(reporterKey), REPORT_RATE_LIMIT_MAX, true);
 		await this.reportRepository.deleteDsaTicket(report.ticket);
 		const createdReport = await this.reportRepository.createReport(reportRow);
+		await emitReportFiled(reportRow, 'dsa');
 		if (this.reportSearchService && 'indexReport' in this.reportSearchService) {
 			await this.reportSearchService.indexReport(createdReport).catch((error) => {
 				Logger.error({error, reportId: createdReport.reportId}, 'Failed to index DSA report in search');

@@ -5,16 +5,8 @@ import type {ApiContext} from '@app/api/ApiContext';
 import {AdminService} from '@app/api/admin/AdminService';
 import {AuthRequestService} from '@app/api/auth/AuthRequestService';
 import {DesktopHandoffService} from '@app/api/auth/services/DesktopHandoffService';
-import {
-	CassandraInboundSmsChallengeRepository,
-	InboundSmsChallengeService,
-} from '@app/api/auth/services/InboundSmsChallengeService';
-import type {IRegistrationRiskEvaluator} from '@app/api/auth/services/IRegistrationRiskEvaluator';
-import {
-	noopRegistrationRiskEvaluator,
-	RegistrationRiskEvaluator,
-} from '@app/api/auth/services/RegistrationRiskEvaluator';
 import {SsoService} from '@app/api/auth/services/SsoService';
+import {buildIpInfoCache, buildIpInfoRequestAuditLogger} from '@app/api/ban/IpInfoCacheFactory';
 import type {IBlueskyOAuthService} from '@app/api/bluesky/IBlueskyOAuthService';
 import {Config} from '@app/api/Config';
 import {createApiContext} from '@app/api/CreateApiContext';
@@ -43,7 +35,6 @@ import {VoiceRoomStore} from '@app/api/infrastructure/VoiceRoomStore';
 import {SingleCommunityService} from '@app/api/instance/SingleCommunityService';
 import {InviteRequestService} from '@app/api/invite/InviteRequestService';
 import {JobLedgerRepository} from '@app/api/jobs/JobLedgerRepository';
-import {Logger} from '@app/api/Logger';
 import {createGuildStackServices, type GuildStackServices} from '@app/api/middleware/GuildStackServiceFactory';
 import {installLazyServices, type RequestScopedServices} from '@app/api/middleware/LazyServiceProvider';
 import type {RequestCache} from '@app/api/middleware/RequestCacheMiddleware';
@@ -125,33 +116,12 @@ import {OAuth2RequestService} from '@app/api/oauth/OAuth2RequestService';
 import {OAuth2Service} from '@app/api/oauth/OAuth2Service';
 import {ReportRequestService} from '@app/api/report/ReportRequestService';
 import {ReportService} from '@app/api/report/ReportService';
-import type {IAccountPolicyEvaluator} from '@app/api/risk/AccountPolicyEvaluator';
-import {
-	getAccountPolicyEvaluator,
-	setInjectedAccountPolicyEvaluator as setInjectedAccountPolicyEvaluatorInService,
-} from '@app/api/risk/AccountPolicyService';
-import {createIpInfoChecker} from '@app/api/risk/adapters/IpInfoAdapter';
-import {createReverseDnsLookup} from '@app/api/risk/adapters/ReverseDnsAdapter';
-import {DeterministicRiskEngine} from '@app/api/risk/DeterministicRiskEngine';
-import {CassandraHistoricalOutcomeRepository} from '@app/api/risk/HistoricalOutcomeRepository';
-import {createKvIpInfoLookupBudget} from '@app/api/risk/IpInfoBudget';
-import {buildIpInfoCache, buildIpInfoRequestAuditLogger} from '@app/api/risk/IpInfoCacheFactory';
-import {CassandraRegistrationEventsRepository} from '@app/api/risk/RegistrationEventsRepository';
-import {
-	type IpInfoPrescreenVerdict,
-	ipInfoPrescreenOptionsFromEnv,
-	prescreenIpInfoLookup,
-} from '@app/api/risk/RegistrationIpPrescreen';
-import {CassandraRiskAssessmentRepository} from '@app/api/risk/RiskAssessmentRepository';
-import {createRiskToolbox} from '@app/api/risk/RiskToolboxFactory';
-import {CassandraSuspiciousIpRepository} from '@app/api/risk/SuspiciousIpRepository';
 import {RpcService} from '@app/api/rpc/RpcService';
 import {getReportSearchService} from '@app/api/SearchFactory';
 import {SearchService} from '@app/api/search/SearchService';
 import {StripeService} from '@app/api/stripe/StripeService';
 import {AgeVerificationService} from '@app/api/stripe/services/AgeVerificationService';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
-import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {EmailChangeService} from '@app/api/user/services/EmailChangeService';
 import {MfaBackupCodesChallengeService} from '@app/api/user/services/MfaBackupCodesChallengeService';
 import {PasswordChangeService} from '@app/api/user/services/PasswordChangeService';
@@ -165,7 +135,6 @@ import {getRequestClientIp} from '@app/api/utils/RequestClientIp';
 import {VoiceService} from '@app/api/voice/VoiceService';
 import {WebhookRequestService} from '@app/api/webhook/WebhookRequestService';
 import {WebhookService} from '@app/api/webhook/WebhookService';
-import {lookupAsnByIp, lookupGeoipByIp} from '@pkgs/geoip/src/GeoipLookup';
 import {createIpInfoService, createUnavailableIpInfoService, type IpInfoService} from '@pkgs/geoip/src/IpInfoService';
 import {createMiddleware} from 'hono/factory';
 
@@ -200,60 +169,6 @@ export function shutdownReportService(): void {
 	}
 }
 
-let _inboundSmsChallengeService: InboundSmsChallengeService | null = null;
-
-function getInboundSmsChallengeService(): InboundSmsChallengeService {
-	if (!_inboundSmsChallengeService) {
-		_inboundSmsChallengeService = new InboundSmsChallengeService(
-			new CassandraInboundSmsChallengeRepository(),
-			getKVClient(),
-		);
-	}
-	return _inboundSmsChallengeService;
-}
-
-export function getInboundSmsChallengeServiceInstance(): InboundSmsChallengeService {
-	return getInboundSmsChallengeService();
-}
-
-export function getUserRepositoryInstance(): UserRepository {
-	return getUserRepository();
-}
-
-let _registrationEventsRepository: CassandraRegistrationEventsRepository | null = null;
-
-function getRegistrationEventsRepository(): CassandraRegistrationEventsRepository {
-	if (!_registrationEventsRepository) {
-		_registrationEventsRepository = new CassandraRegistrationEventsRepository();
-	}
-	return _registrationEventsRepository;
-}
-
-let _riskAssessmentRepository: CassandraRiskAssessmentRepository | null = null;
-
-function getRiskAssessmentRepository(): CassandraRiskAssessmentRepository {
-	if (!_riskAssessmentRepository) {
-		_riskAssessmentRepository = new CassandraRiskAssessmentRepository();
-	}
-	return _riskAssessmentRepository;
-}
-
-let _historicalOutcomeRepository: CassandraHistoricalOutcomeRepository | null = null;
-
-export function getHistoricalOutcomeRepository(): CassandraHistoricalOutcomeRepository {
-	if (_historicalOutcomeRepository) return _historicalOutcomeRepository;
-	_historicalOutcomeRepository = new CassandraHistoricalOutcomeRepository();
-	return _historicalOutcomeRepository;
-}
-
-let _suspiciousIpRepository: CassandraSuspiciousIpRepository | null = null;
-
-export function getSuspiciousIpRepository(): CassandraSuspiciousIpRepository {
-	if (_suspiciousIpRepository) return _suspiciousIpRepository;
-	_suspiciousIpRepository = new CassandraSuspiciousIpRepository();
-	return _suspiciousIpRepository;
-}
-
 let _ipInfoService: IpInfoService | null = null;
 let _injectedIpInfoService: IpInfoService | undefined;
 
@@ -266,7 +181,7 @@ export function getIpInfoService(): IpInfoService {
 		return _injectedIpInfoService;
 	}
 	if (_ipInfoService) return _ipInfoService;
-	if (!Config.risk.ipinfoApiKey) {
+	if (!Config.ipinfo.apiKey) {
 		_ipInfoService = createUnavailableIpInfoService('IPInfo API key not configured');
 		return _ipInfoService;
 	}
@@ -274,63 +189,11 @@ export function getIpInfoService(): IpInfoService {
 		hot: getCacheService(),
 	});
 	_ipInfoService = createIpInfoService({
-		apiKey: Config.risk.ipinfoApiKey,
+		apiKey: Config.ipinfo.apiKey,
 		cache,
 		auditLogger: buildIpInfoRequestAuditLogger(),
-		budget: createKvIpInfoLookupBudget({getKvClient: getKVClient}),
 	});
 	return _ipInfoService;
-}
-
-let _registrationRiskEvaluator: IRegistrationRiskEvaluator | null = null;
-
-export function setInjectedRegistrationRiskEvaluator(evaluator: IRegistrationRiskEvaluator | undefined): void {
-	_registrationRiskEvaluator = evaluator ?? null;
-}
-
-export function setInjectedAccountPolicyEvaluator(evaluator: IAccountPolicyEvaluator | undefined): void {
-	setInjectedAccountPolicyEvaluatorInService(evaluator);
-}
-
-function getRegistrationRiskEvaluator(): IRegistrationRiskEvaluator {
-	if (_registrationRiskEvaluator) return _registrationRiskEvaluator;
-	if (!Config.risk.enabled) {
-		Logger.info(
-			{},
-			'[ServiceMiddleware] integrations.risk_integration.enabled is false — account risk scoring is disabled',
-		);
-		_registrationRiskEvaluator = noopRegistrationRiskEvaluator;
-		return _registrationRiskEvaluator;
-	}
-	const ipInfoService = getIpInfoService();
-	const lookupLocalCity = (ip: string) => lookupGeoipByIp(ip, Config.geoip.maxmindDbPath);
-	const lookupLocalAsn = (ip: string) => lookupAsnByIp(ip, Config.geoip.maxmindAsnDbPath);
-	const prescreenOptions = ipInfoPrescreenOptionsFromEnv();
-	const prescreen = async (ip: string): Promise<IpInfoPrescreenVerdict> => {
-		const [city, asn] = await Promise.all([lookupLocalCity(ip), lookupLocalAsn(ip)]);
-		return prescreenIpInfoLookup({countryIso: city.countryCode, asn: asn.asn, asnOrg: asn.asnOrg}, prescreenOptions);
-	};
-	const ipInfoChecker = Config.risk.ipinfoApiKey ? createIpInfoChecker({ipInfoService, prescreen}) : undefined;
-	const cacheService = getCacheService();
-	const reverseDnsLookup = createReverseDnsLookup({cacheService});
-	const toolbox = createRiskToolbox({
-		adminRepository: getAdminRepository(),
-		ipInfoChecker,
-		reverseDnsLookup,
-		ipInfoService,
-		registrationEventsRepository: getRegistrationEventsRepository(),
-		historicalOutcomeRepository: getHistoricalOutcomeRepository(),
-		suspiciousIpRepository: getSuspiciousIpRepository(),
-		cacheService,
-		lookupLocalCity,
-		lookupLocalAsn,
-	});
-	const engine = new DeterministicRiskEngine(toolbox, {
-		logger: Logger,
-	});
-	const evaluator = new RegistrationRiskEvaluator(engine);
-	_registrationRiskEvaluator = evaluator;
-	return _registrationRiskEvaluator;
 }
 
 let _liveKitWebhookService: LiveKitWebhookService | null = null;
@@ -676,10 +539,8 @@ class RequestServices implements RequestScopedServices {
 			getKVBulkMessageDeletionQueue(),
 			getApplicationRepository(),
 			this.stripeService.getStripe(),
-			getHistoricalOutcomeRepository(),
 			new JobLedgerRepository(),
 			getIpInfoService(),
-			getSuspiciousIpRepository(),
 		);
 		return this.cachedAdminService;
 	}
@@ -713,8 +574,6 @@ class RequestServices implements RequestScopedServices {
 
 	get authRequestService(): AuthRequestService {
 		if (!this.cachedAuthRequestService) {
-			const adminRepository = getAdminRepository();
-			const registrationRiskEvaluator = getRegistrationRiskEvaluator();
 			this.cachedAuthRequestService = new AuthRequestService(
 				this.context,
 				this.ssoService,
@@ -725,13 +584,6 @@ class RequestServices implements RequestScopedServices {
 					singleCommunityService: this.singleCommunityService,
 					discriminatorService: getDiscriminatorService(),
 					kvActivityTracker: getKVActivityTracker(),
-					registrationRiskEvaluator: registrationRiskEvaluator ?? noopRegistrationRiskEvaluator,
-					accountPolicyEvaluator: getAccountPolicyEvaluator(),
-					isEmailDomainSuspicious: adminRepository.isEmailDomainSuspicious.bind(adminRepository),
-					isEmailDomainDisposable: adminRepository.isEmailDomainDisposable.bind(adminRepository),
-					registrationEventsRepository: getRegistrationEventsRepository(),
-					riskAssessmentRepository: getRiskAssessmentRepository(),
-					riskHistoryRepository: getHistoricalOutcomeRepository(),
 				},
 				{
 					inviteService: this.inviteService,
@@ -969,20 +821,12 @@ class RequestServices implements RequestScopedServices {
 
 	get userAccountRequestService(): UserAccountRequestService {
 		if (!this.cachedUserAccountRequestService) {
-			const adminRepository = getAdminRepository();
 			this.cachedUserAccountRequestService = new UserAccountRequestService(
 				this.emailChangeService,
 				this.userService.accountService,
 				this.userService.channelService,
 				getUserRepository(),
 				getUserCacheService(),
-				adminRepository.isEmailDomainSuspicious.bind(adminRepository),
-				adminRepository.isEmailDomainDisposable.bind(adminRepository),
-				getRegistrationRiskEvaluator(),
-				getAccountPolicyEvaluator(),
-				getRegistrationEventsRepository(),
-				getRiskAssessmentRepository(),
-				getHistoricalOutcomeRepository(),
 			);
 		}
 		return this.cachedUserAccountRequestService;
@@ -1068,12 +912,6 @@ export const ServiceMiddleware = createMiddleware<HonoEnv>(async (ctx, next) => 
 
 export function resetServiceMiddlewareForTesting(): void {
 	shutdownReportService();
-	_inboundSmsChallengeService = null;
-	_registrationEventsRepository = null;
-	_riskAssessmentRepository = null;
-	_historicalOutcomeRepository = null;
-	_suspiciousIpRepository = null;
 	_ipInfoService = null;
-	_registrationRiskEvaluator = null;
 	_liveKitWebhookService = null;
 }

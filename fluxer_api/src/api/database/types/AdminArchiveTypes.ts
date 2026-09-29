@@ -93,28 +93,6 @@ export interface BannedEmailRow {
 
 export const BANNED_EMAIL_COLUMNS = ['email_lower'] as const satisfies ReadonlyArray<keyof BannedEmailRow>;
 
-export interface BannedPhonePrefixRow {
-	prefix: string;
-}
-
-export const BANNED_PHONE_PREFIX_COLUMNS = ['prefix'] as const satisfies ReadonlyArray<keyof BannedPhonePrefixRow>;
-
-export interface SuspiciousEmailDomainRow {
-	domain: string;
-}
-
-export const SUSPICIOUS_EMAIL_DOMAIN_COLUMNS = ['domain'] as const satisfies ReadonlyArray<
-	keyof SuspiciousEmailDomainRow
->;
-
-export interface DisposableEmailDomainRow {
-	domain: string;
-}
-
-export const DISPOSABLE_EMAIL_DOMAIN_COLUMNS = ['domain'] as const satisfies ReadonlyArray<
-	keyof DisposableEmailDomainRow
->;
-
 export interface BannedPhraseRow {
 	phrase: string;
 }

@@ -68,6 +68,8 @@ export class User {
 	readonly deletionReasonCode: number | null;
 	readonly deletionPublicReason: string | null;
 	readonly deletionAuditLogReason: string | null;
+	readonly deletionScheduledBy: UserID | null;
+	readonly deletionScheduledAt: Date | null;
 	readonly acls: Set<string>;
 	private readonly _traits: Set<string>;
 	readonly firstRefundAt: Date | null;
@@ -132,6 +134,8 @@ export class User {
 		this.deletionReasonCode = row.deletion_reason_code ?? null;
 		this.deletionPublicReason = row.deletion_public_reason ?? null;
 		this.deletionAuditLogReason = row.deletion_audit_log_reason ?? null;
+		this.deletionScheduledBy = row.deletion_scheduled_by ?? null;
+		this.deletionScheduledAt = row.deletion_scheduled_at ?? null;
 		this.acls = row.acls ?? new Set();
 		this._traits = row.traits ?? new Set();
 		this.firstRefundAt = row.first_refund_at ?? null;
@@ -223,6 +227,8 @@ export class User {
 			deletion_reason_code: this.deletionReasonCode,
 			deletion_public_reason: this.deletionPublicReason,
 			deletion_audit_log_reason: this.deletionAuditLogReason,
+			deletion_scheduled_by: this.deletionScheduledBy,
+			deletion_scheduled_at: this.deletionScheduledAt,
 			acls: this.acls.size > 0 ? this.acls : null,
 			traits: this._traits.size > 0 ? this._traits : null,
 			first_refund_at: this.firstRefundAt,

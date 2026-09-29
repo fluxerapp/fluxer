@@ -13,8 +13,8 @@ import {
 } from '@app/api/auth/tests/AuthTestUtils';
 import {createUserID} from '@app/api/BrandedTypes';
 import {getConfig} from '@app/api/Config';
+import {applySharedListUpdate, resetSharedListsForTests} from '@app/api/infrastructure/activity/SharedLists';
 import {getInstanceConfigRepository, getUserRepository} from '@app/api/middleware/ServiceSingletons';
-import {torExitListCache} from '@app/api/middleware/TorExitListCache';
 import type {ApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {createBuilder, createBuilderWithoutAuth} from '@app/api/test/TestRequestBuilder';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
@@ -298,15 +298,15 @@ describe('Auth registration', () => {
 		expect(login.token.length).toBeGreaterThan(0);
 		expect(login.user_id).toBe(reg.user_id);
 	});
-	it('blocks any request from a Tor exit at the edge', async () => {
-		torExitListCache.seedForTesting(['127.0.0.1']);
+	it('blocks any request from an address on the shared blocked list', async () => {
+		applySharedListUpdate('ip_blocked', '127.0.0.1\n');
 		try {
 			await createBuilderWithoutAuth(harness)
 				.post('/auth/register')
 				.body({
-					email: createUniqueEmail('tor-register'),
-					username: createUniqueUsername('torregister'),
-					global_name: 'Tor Register',
+					email: createUniqueEmail('blocked-register'),
+					username: createUniqueUsername('blockedregister'),
+					global_name: 'Blocked Register',
 					password: 'a-strong-password',
 					date_of_birth: '2000-01-01',
 					consent: true,
@@ -314,7 +314,7 @@ describe('Auth registration', () => {
 				.expect(403, 'GLOBAL_IP_BANNED')
 				.execute();
 		} finally {
-			torExitListCache.clearForTesting();
+			resetSharedListsForTests();
 		}
 	});
 	it('treats email as case-insensitive across auth flows', async () => {

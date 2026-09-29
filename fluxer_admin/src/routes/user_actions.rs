@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 use crate::{
-    admin_flags, api::client::AdminApiClient, middleware::flash::FlashData,
+    admin_flags,
+    api::client::{AdminApiClient, ApiError},
+    middleware::flash::FlashData,
     utils::forms::MultiValueForm,
 };
 use std::collections::HashSet;
@@ -303,11 +305,53 @@ pub async fn dispatch(
                 "Failed to schedule user deletion",
             )
         }
-        "cancel_deletion" => DispatchOutcome::from_result(
-            client.cancel_deletion(user_id).await,
-            "User deletion cancelled successfully",
-            "Failed to cancel user deletion",
-        ),
+        "cancel_deletion" => {
+            let Some(expected) = get("expected_pending_deletion_at") else {
+                return DispatchOutcome::error(
+                    "The pending deletion is missing from the form. Reload and review.",
+                );
+            };
+            if !form.bool_value("confirm") {
+                return DispatchOutcome::error(
+                    "Confirm whose deletion you are cancelling before submitting",
+                );
+            }
+            let Some(private_reason) = get("private_reason") else {
+                return DispatchOutcome::error("A private reason is required to cancel a deletion");
+            };
+            let notify_user = form.bool_value("notify_user");
+            match client
+                .cancel_deletion(user_id, &expected, notify_user, Some(&private_reason))
+                .await
+            {
+                Ok(_) => DispatchOutcome::success("User deletion cancelled successfully"),
+                Err(ApiError::Http { status: 409, .. }) => DispatchOutcome::error(
+                    "The pending deletion changed since this page loaded. Reload and review.",
+                ),
+                Err(error) => {
+                    tracing::warn!(%error, user_id, "admin API request failed: cancel user deletion");
+                    DispatchOutcome::error("Failed to cancel user deletion")
+                }
+            }
+        }
+        "annotate_ban" => {
+            let Some(ban_audit_log_id) = get("ban_audit_log_id") else {
+                return DispatchOutcome::error("The ban audit log entry is missing from the form");
+            };
+            let Some(note) = get("note") else {
+                return DispatchOutcome::error("Note is required");
+            };
+            match client.annotate_ban(user_id, &ban_audit_log_id, &note).await {
+                Ok(()) => DispatchOutcome::success("Note added to the ban"),
+                Err(ApiError::Http { status: 409, .. }) => DispatchOutcome::error(
+                    "The ban changed since this page loaded. Reload and review.",
+                ),
+                Err(error) => {
+                    tracing::warn!(%error, user_id, "admin API request failed: annotate ban");
+                    DispatchOutcome::error("Failed to add the note to the ban")
+                }
+            }
+        }
         "change_dob" => {
             let Some(dob) = get("date_of_birth") else {
                 return DispatchOutcome::error("Date of birth is required");

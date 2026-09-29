@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import type {PhoneVerificationToken, UserID} from '@app/api/BrandedTypes';
+import type {UserID} from '@app/api/BrandedTypes';
 import type {
 	AuthSessionRow,
 	EmailRevertTokenRow,
 	EmailVerificationTokenRow,
 	PasswordResetTokenRow,
-	PhoneTokenRow,
 } from '@app/api/database/types/AuthTypes';
 import type {AuthSession, AuthSessionTombstone} from '@app/api/models/AuthSession';
 import type {EmailRevertToken} from '@app/api/models/EmailRevertToken';
@@ -67,14 +66,6 @@ export class UserAuthRepository implements IUserAuthRepository {
 		return this.authSessionRepository.deleteAllAuthSessions(userId);
 	}
 
-	async recordCountrySighting(userId: UserID, country: string): Promise<void> {
-		return this.authSessionRepository.recordCountrySighting(userId, country);
-	}
-
-	async hasCountrySightingOutsideSet(userId: UserID, countryCodes: Iterable<string>): Promise<boolean> {
-		return this.authSessionRepository.hasCountrySightingOutsideSet(userId, countryCodes);
-	}
-
 	async listMfaBackupCodes(userId: UserID): Promise<Array<MfaBackupCode>> {
 		return this.mfaBackupCodeRepository.listMfaBackupCodes(userId);
 	}
@@ -133,18 +124,6 @@ export class UserAuthRepository implements IUserAuthRepository {
 
 	async deleteEmailRevertToken(token: string): Promise<void> {
 		return this.tokenRepository.deleteEmailRevertToken(token);
-	}
-
-	async createPhoneToken(token: PhoneVerificationToken, phone: string, userId: UserID | null): Promise<void> {
-		return this.tokenRepository.createPhoneToken(token, phone, userId);
-	}
-
-	async getPhoneToken(token: PhoneVerificationToken): Promise<PhoneTokenRow | null> {
-		return this.tokenRepository.getPhoneToken(token);
-	}
-
-	async deletePhoneToken(token: PhoneVerificationToken): Promise<void> {
-		return this.tokenRepository.deletePhoneToken(token);
 	}
 
 	async checkIpAuthorized(userId: UserID, ip: string): Promise<boolean> {

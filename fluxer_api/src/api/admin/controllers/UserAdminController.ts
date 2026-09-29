@@ -17,10 +17,12 @@ import {SearchUsersResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas
 import {
 	AdminAclListResponse,
 	AdminUserAclsRequest,
+	AdminUserBanNoteRequest,
 	AdminUserBanRequest,
 	AdminUserBotStatusRequest,
 	AdminUserChangeLogQuery,
 	AdminUserClearFieldsRequest,
+	AdminUserDeletionCancelRequest,
 	AdminUserDeletionScheduleRequest,
 	AdminUserDmChannelListQuery,
 	AdminUserDmChannelListResponse,
@@ -872,6 +874,30 @@ export function UserAdminController(app: HonoApp) {
 			);
 		},
 	);
+	app.post(
+		'/admin/users/:user_id/ban/notes',
+		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
+		requireAdminACL(AdminACLs.USER_TEMP_BAN),
+		Validator('param', UserIdParam),
+		Validator('json', AdminUserBanNoteRequest),
+		OpenAPI({
+			operationId: 'annotate_admin_user_ban',
+			summary: 'Add a note to a user ban',
+			responseSchema: null,
+			statusCode: 204,
+			security: 'adminApiKey',
+			tags: 'Admin',
+			description:
+				'Append a note to the current ban of a user. The note is recorded as the reason of a new annotate_ban audit log entry whose metadata names the ban audit log entry. Earlier entries are never changed. Requires USER_TEMP_BAN permission.',
+		}),
+		async (ctx) => {
+			const adminService = ctx.get('adminService');
+			const adminUserId = ctx.get('adminUserId');
+			const {user_id: userId} = ctx.req.valid('param');
+			await adminService.userService.banService.annotateBan({user_id: userId, ...ctx.req.valid('json')}, adminUserId);
+			return ctx.body(null, 204);
+		},
+	);
 	app.put(
 		'/admin/users/:user_id/deletion',
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
@@ -886,7 +912,7 @@ export function UserAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Schedule user account for deletion after grace period. Account will be fully deleted with all content unless cancellation is executed. Creates audit log entry. Requires USER_DELETE permission.',
+				'Schedule user account for deletion after grace period. Account will be fully deleted with all content unless cancellation is executed. When a deletion is already scheduled, the request must name it in replace_pending_deletion_at or it returns 409. Records who scheduled the deletion. Creates audit log entry. Requires USER_DELETE permission.',
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
@@ -909,6 +935,7 @@ export function UserAdminController(app: HonoApp) {
 		RateLimitMiddleware(RateLimitConfigs.ADMIN_USER_MODIFY),
 		requireAdminACL(AdminACLs.USER_DELETE),
 		Validator('param', UserIdParam),
+		Validator('json', AdminUserDeletionCancelRequest),
 		OpenAPI({
 			operationId: 'cancel_admin_user_deletion',
 			summary: 'Cancel user deletion',
@@ -917,7 +944,7 @@ export function UserAdminController(app: HonoApp) {
 			security: 'adminApiKey',
 			tags: 'Admin',
 			description:
-				'Cancel a scheduled account deletion. User account restoration prevents data loss. Creates audit log entry. Requires USER_DELETE permission.',
+				'Cancel the scheduled account deletion named by expected_pending_deletion_at. Returns 409 when a different deletion is pending and 400 when none is. The user is emailed only when notify_user is true, and the email never includes the audit log reason. Creates audit log entry recording the cancelled deletion. Requires USER_DELETE permission.',
 		}),
 		async (ctx) => {
 			const adminService = ctx.get('adminService');
@@ -927,7 +954,7 @@ export function UserAdminController(app: HonoApp) {
 			const {user_id: userId} = ctx.req.valid('param');
 			return ctx.json(
 				await adminService.userService.deletionService.cancelAccountDeletion(
-					{user_id: userId},
+					{user_id: userId, ...ctx.req.valid('json')},
 					adminUserId,
 					auditLogReason,
 					adminUserAcls,

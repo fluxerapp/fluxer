@@ -80,7 +80,6 @@ describe('service level guards for synthetic accounts', () => {
 					guildId: GUILD_ID,
 					skipBanCheck: true,
 					skipGuildLimitCheck: true,
-					skipRiskGate: true,
 					requestCache: new Map(),
 				} as never,
 				unusableDependency() as never,
