@@ -214,6 +214,7 @@ Creates a recurring premium checkout session and returns a [redirect URL](#redir
 - An unverified email address returns 403 `PURCHASE_EMAIL_VERIFICATION_REQUIRED`.
 - The purchase-disabled premium flag returns 403 `PREMIUM_PURCHASE_BLOCKED` with the reason `purchase_disabled`.
 - A lifetime Visionary account cannot buy a recurring subscription and returns 403 `PREMIUM_PURCHASE_BLOCKED` with the reason `lifetime`.
+- An account with an active [in-app purchase](/http-api/in-app-purchases/) subscription returns the same code with the reason `existing_subscription` and the store in the top-level `provider` member. Fluxer never converts this refusal.
 - An account whose payment provider customer already holds a subscription in the `active`, `trialing`, `past_due`, `unpaid`, `incomplete` or `paused` state returns the same code with the reason `existing_subscription`, unless Fluxer converts the purchase into a scheduled billing cycle change, as described below.
 
 `reason` is a top-level member of the error response, and an `existing_subscription` refusal also has the blocking status in the top-level `subscription_status` member.

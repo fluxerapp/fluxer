@@ -12,6 +12,7 @@ import {MiscRateLimitConfigs} from '@app/api/rate_limit_configs/MiscRateLimitCon
 import {OAuthRateLimitConfigs} from '@app/api/rate_limit_configs/OAuthRateLimitConfig';
 import type {RateLimitSection} from '@app/api/rate_limit_configs/RateLimitHelpers';
 import {mergeRateLimitSections} from '@app/api/rate_limit_configs/RateLimitHelpers';
+import {StoreBillingRateLimitConfigs} from '@app/api/rate_limit_configs/StoreBillingRateLimitConfig';
 import {UserRateLimitConfigs} from '@app/api/rate_limit_configs/UserRateLimitConfig';
 import {WebhookRateLimitConfigs} from '@app/api/rate_limit_configs/WebhookRateLimitConfig';
 
@@ -26,6 +27,7 @@ const rateLimitSections = [
 	InviteRateLimitConfigs,
 	WebhookRateLimitConfigs,
 	IntegrationRateLimitConfigs,
+	StoreBillingRateLimitConfigs,
 	AdminRateLimitConfigs,
 	MiscRateLimitConfigs,
 ] satisfies ReadonlyArray<RateLimitSection>;

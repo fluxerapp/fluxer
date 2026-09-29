@@ -8,6 +8,7 @@ import type {UserRow} from '@app/api/database/types/UserTypes';
 import {Logger} from '@app/api/Logger';
 import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
 import type {User} from '@app/api/models/User';
+import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import {getBillingBranding} from '@app/api/stripe/BillingBranding';
 import {getEffectiveBillingConfig, isCurrentCatalogPriceId} from '@app/api/stripe/BillingConfigCache';
 import type {ProductInfo, ProductRegistry} from '@app/api/stripe/ProductRegistry';
@@ -168,6 +169,7 @@ export class StripeCheckoutService {
 		private userRepository: IUserRepository,
 		private productRegistry: ProductRegistry,
 		private cacheService: ICacheService,
+		private storeEntitlementService: StoreEntitlementService | null = null,
 	) {}
 
 	async createCheckoutSession({
@@ -592,6 +594,12 @@ export class StripeCheckoutService {
 			throw new PremiumPurchaseBlockedError('lifetime');
 		}
 		this.validateUserCanPurchase(user);
+		if (isRecurringSubscription) {
+			const storeEntitlement = await this.storeEntitlementService?.getActiveStoreEntitlement(user.id);
+			if (storeEntitlement) {
+				throw new PremiumPurchaseBlockedError('existing_subscription', {provider: storeEntitlement.provider});
+			}
+		}
 		const customerUser = await this.ensureStripeCustomer(user);
 		const customerId = customerUser.stripeCustomerId;
 		if (!customerId) {

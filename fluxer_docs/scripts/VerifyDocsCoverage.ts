@@ -146,6 +146,22 @@ const OUT_OF_BAND_CREDENTIAL = new Map<string, OutOfBandRoute>([
 		},
 	],
 	[
+		'POST /webhooks/app-store',
+		{
+			reason:
+				'an App Store Server Notification whose signedPayload must verify against the pinned Apple root before it is queued. The route is hosted-only',
+			documentedIn: {file: 'http-api/in-app-purchases.mdx', anchor: 'POST /webhooks/app-store'},
+		},
+	],
+	[
+		'POST /webhooks/google-play',
+		{
+			reason:
+				'a Pub/Sub push whose Google-signed OIDC token must match the configured audience and service account before it is queued. The route is hosted-only',
+			documentedIn: {file: 'http-api/in-app-purchases.mdx', anchor: 'POST /webhooks/google-play'},
+		},
+	],
+	[
 		'GET /connections/bluesky/callback',
 		{
 			reason:
@@ -207,7 +223,7 @@ const EXEMPTION_RULES: ReadonlyArray<ExemptionRule> = [
 	{
 		name: 'out-of-band credential',
 		justification:
-			'no ordinary client holds the credential. Each entry states its guard, and three are covered in prose',
+			'no ordinary client holds the credential. Each entry states its guard, and five are covered in prose',
 		anchors: [{file: 'fluxer_api/src/api/app/ControllerRegistry.ts', anchor: 'installSmsWebhookForwarder(routes'}],
 		covers: (shape) => OUT_OF_BAND_CREDENTIAL.has(shape),
 	},

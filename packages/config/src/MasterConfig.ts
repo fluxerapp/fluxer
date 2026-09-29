@@ -7,6 +7,8 @@ export type DatabaseBackend = 'postgres' | 'cassandra';
 export type PublicScheme = 'http' | 'https';
 export const CACHE_PURGE_ADAPTER_NAMES = ['none', 'http'] as const;
 export type CachePurgeAdapterName = (typeof CACHE_PURGE_ADAPTER_NAMES)[number];
+export const STORE_PRODUCT_SLOT_NAMES = ['monthly', 'yearly', 'gift_1_month', 'gift_1_year'] as const;
+export type StoreProductSlotName = (typeof STORE_PRODUCT_SLOT_NAMES)[number];
 
 export interface InstanceBrandingConfig {
 	product_name: string;
@@ -254,6 +256,34 @@ export interface MasterConfig {
 					environment?: 'production' | 'development';
 				}>;
 			};
+		};
+		app_store: {
+			enabled: boolean;
+			issuer_id?: string;
+			key_id?: string;
+			private_key?: string;
+			private_key_path?: string;
+			apps?: Array<{
+				bundle_id: string;
+				app_apple_id: number;
+			}>;
+			products?: Record<string, StoreProductSlotName>;
+		};
+		google_play: {
+			enabled: boolean;
+			packages?: Array<string>;
+			client_email?: string;
+			private_key?: string;
+			private_key_path?: string;
+			service_account_json_path?: string;
+			token_uri?: string;
+			products?: Record<string, StoreProductSlotName>;
+			push_audience?: string;
+			push_service_account_email?: string;
+		};
+		store_billing: {
+			sandbox_user_ids?: Array<string>;
+			sandbox_entitles_all: boolean;
 		};
 	};
 	instance: {

@@ -22,7 +22,14 @@ import type {WorkerTaskHandler} from '@pkgs/worker/src/contracts/WorkerTask';
 import type Stripe from 'stripe';
 
 interface ReconcileResult {
-	status: 'patched' | 'no_change' | 'skipped' | 'no_active_subscription' | 'stripped_no_subscription' | 'missing_user';
+	status:
+		| 'patched'
+		| 'no_change'
+		| 'skipped'
+		| 'no_active_subscription'
+		| 'stripped_no_subscription'
+		| 'store_entitled'
+		| 'missing_user';
 	patchedFields: Array<string>;
 }
 
@@ -274,6 +281,11 @@ async function reconcileUserPremiumStateFromStripe(params: {userId: UserID; stri
 		user,
 	);
 	if (!subscription) {
+		const {storeEntitlementService} = getWorkerDependencies();
+		if (await storeEntitlementService.getActiveStoreEntitlement(user.id)) {
+			await storeEntitlementService.applyStoreEntitlementToUser(user.id);
+			return {status: 'store_entitled', patchedFields: []};
+		}
 		const hasStalePremium = user.premiumType === UserPremiumTypes.SUBSCRIPTION;
 		const hasNonStripePremium =
 			(Config.instance.selfHosted && !isBillingActive()) || (user.premiumFlags & PremiumFlags.ENABLED_OVERRIDE) !== 0;
@@ -355,6 +367,7 @@ const processPremiumStateReconciliationQueue: WorkerTaskHandler = async (_payloa
 	let skippedCount = 0;
 	let noActiveSubscriptionCount = 0;
 	let strippedNoSubscriptionCount = 0;
+	let storeEntitledCount = 0;
 	let failedCount = 0;
 	let requeuedCount = 0;
 	let claimedElsewhereCount = 0;
@@ -393,6 +406,8 @@ const processPremiumStateReconciliationQueue: WorkerTaskHandler = async (_payloa
 					},
 					'Stripped expired premium with no active Stripe subscription via worker queue',
 				);
+			} else if (result.status === 'store_entitled') {
+				storeEntitledCount += 1;
 			} else if (result.status === 'no_change') {
 				noChangeCount += 1;
 			} else if (result.status === 'no_active_subscription') {
@@ -426,6 +441,7 @@ const processPremiumStateReconciliationQueue: WorkerTaskHandler = async (_payloa
 			skippedCount,
 			noActiveSubscriptionCount,
 			strippedNoSubscriptionCount,
+			storeEntitledCount,
 			failedCount,
 			requeuedCount,
 			claimedElsewhereCount,

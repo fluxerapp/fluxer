@@ -68,6 +68,15 @@ function registerCronJobs(cron: CronScheduler, jobsStreamMaxAgeMs: number): void
 		ledger: false,
 	});
 	cron.upsert('processExpiredPremiumSweep', 'processExpiredPremiumSweep', {}, '0 0 * * * *', {ledger: false});
+	if (!Config.instance.selfHosted) {
+		cron.upsert('processStorePurchaseRefreshQueue', 'processStorePurchaseRefreshQueue', {}, '0 */5 * * * *', {
+			ledger: false,
+		});
+		cron.upsert('pollGooglePlayVoidedPurchases', 'pollGooglePlayVoidedPurchases', {}, '0 30 4 * * *', {ledger: false});
+		cron.upsert('pollAppStoreNotificationHistory', 'pollAppStoreNotificationHistory', {}, '0 45 4 * * *', {
+			ledger: false,
+		});
+	}
 	cron.upsert('processInactivityDeletions', 'processInactivityDeletions', {}, '0 0 */6 * * *', {ledger: false});
 	cron.upsert('expireAttachments', 'expireAttachments', {}, '0 0 */12 * * *', {ledger: false});
 	if (jobsStreamMaxAgeMs > 0 && jobsStreamMaxAgeMs <= JOBS_STREAM_MAX_AGE_MS) {

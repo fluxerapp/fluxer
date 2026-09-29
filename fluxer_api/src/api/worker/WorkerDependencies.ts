@@ -97,6 +97,8 @@ import type {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2Toke
 import type {ReadStateRepository} from '@app/api/read_state/ReadStateRepository';
 import type {ReadStateService} from '@app/api/read_state/ReadStateService';
 import type {ReportRepository} from '@app/api/report/ReportRepository';
+import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
+import {createStoreEntitlementService} from '@app/api/store_billing/StoreEntitlementServiceFactory';
 import {getStripeClient} from '@app/api/stripe/StripeClient';
 import {PaymentRepository} from '@app/api/user/repositories/PaymentRepository';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
@@ -168,6 +170,7 @@ export interface WorkerDependencies {
 	donationRepository: IDonationRepository;
 	guildService: GuildService;
 	billingRepository: BillingRepository;
+	storeEntitlementService: StoreEntitlementService;
 	stripe: Stripe | null;
 }
 
@@ -263,6 +266,14 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 		ipInfoService,
 	});
 	const billingRepository = new BillingRepository(snowflakeService, kvClient);
+	const storeEntitlementService = createStoreEntitlementService({
+		userRepository,
+		userCacheService,
+		gatewayService,
+		kvClient,
+		snowflakeService,
+		premiumStateReconciliationQueueService,
+	});
 	Logger.info('Worker dependencies initialized successfully');
 	return {
 		kvClient,
@@ -314,6 +325,7 @@ export async function initializeWorkerDependencies(snowflakeService: ISnowflakeS
 		guildService,
 		donationRepository,
 		billingRepository,
+		storeEntitlementService,
 		guildAuditLogService,
 		contactChangeLogService,
 		ncmecSubmissionService,

@@ -434,6 +434,88 @@ One recorded change to the account's email address, phone verification state, or
 }
 ```
 
+## Admin store purchase object
+
+One [in-app purchase](/http-api/in-app-purchases/) with the store state behind it. It has more fields than the public [store purchase](/http-api/in-app-purchases/#store-purchase-object) object, and still never exposes a purchase token or the account token.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the store purchase |
+| user_id | ?snowflake | The ID of the linked account, or null when unlinked |
+| provider | string | Either `app_store` or `google_play` |
+| kind | string | Either `subscription` or `gift` |
+| slot | string | [Store slot](/http-api/in-app-purchases/#store-slots) |
+| environment | string | Either `production` or `sandbox` |
+| app_id | string | Bundle ID or package name of the purchasing app |
+| product_id | string | Store product ID |
+| base_plan_id | ?string | Google Play base plan ID, or null |
+| latest_transaction_id<sup>1</sup> | ?string | Latest store transaction or order ID |
+| ownership_type<sup>2</sup> | ?string | Store ownership type, or null |
+| state | string | [Store purchase state](/http-api/in-app-purchases/#store-purchase-states) |
+| store_state<sup>3</sup> | ?string | Raw state the store reported, or null |
+| entitled | boolean | Whether the purchase grants premium now |
+| expires_at | ?ISO8601 timestamp | End of the paid period |
+| grace_ends_at | ?ISO8601 timestamp | End of the store grace period |
+| auto_renew | ?boolean | Whether the subscription renews |
+| started_at | ?ISO8601 timestamp | The time the subscription or purchase started |
+| purchased_at | ?ISO8601 timestamp | The time of the latest payment |
+| revoked_at | ?ISO8601 timestamp | The time the store refunded or revoked it |
+| revocation_reason | ?string | Reason recorded for the revocation, or null |
+| superseded | boolean | Whether a newer Google Play purchase replaced it |
+| acknowledged<sup>4</sup> | boolean | Whether Fluxer acknowledged it with the store |
+| gift_code | ?string | Gift code minted by a gift purchase, or null |
+| bound_at | ?ISO8601 timestamp | The time the purchase was linked to its account |
+| last_event_at | ?ISO8601 timestamp | Time of the latest store event applied |
+| synced_at | ?ISO8601 timestamp | The time Fluxer last read it from the store |
+| created_at | ISO8601 timestamp | The time Fluxer first saw the purchase |
+| updated_at | ISO8601 timestamp | The time the record last changed |
+
+<sup>1</sup> The App Store transaction ID, or the Google Play order ID
+
+<sup>2</sup> The App Store value, such as `PURCHASED` or `FAMILY_SHARED`. Null for Google Play
+
+<sup>3</sup> The App Store subscription status number as a string, or the Google Play state name. Null for an App Store gift that was never revoked
+
+<sup>4</sup> Always true for the App Store. For a Google Play gift, true once the purchase was consumed
+
+### Example
+
+```json
+{
+  "id": "1501203318237184000",
+  "user_id": "1489200013322551296",
+  "provider": "app_store",
+  "kind": "subscription",
+  "slot": "monthly",
+  "environment": "production",
+  "app_id": "com.fluxer",
+  "product_id": "com.fluxer.plutonium.monthly",
+  "base_plan_id": null,
+  "latest_transaction_id": "2000000712345678",
+  "ownership_type": "PURCHASED",
+  "state": "active",
+  "store_state": "1",
+  "entitled": true,
+  "expires_at": "2026-10-29T09:00:00.000Z",
+  "grace_ends_at": null,
+  "auto_renew": true,
+  "started_at": "2026-09-29T09:00:00.000Z",
+  "purchased_at": "2026-09-29T09:00:00.000Z",
+  "revoked_at": null,
+  "revocation_reason": null,
+  "superseded": false,
+  "acknowledged": true,
+  "gift_code": null,
+  "bound_at": "2026-09-29T09:00:02.000Z",
+  "last_event_at": "2026-09-29T09:00:00.000Z",
+  "synced_at": "2026-09-29T09:00:02.000Z",
+  "created_at": "2026-09-29T09:00:02.000Z",
+  "updated_at": "2026-09-29T09:00:02.000Z"
+}
+```
+
 ## Message shred entry object
 
 ### Structure
@@ -1176,6 +1258,75 @@ Premium flags control badge display, the premium override, the purchase block, a
 Premium badge display reflects the new flags. [User Update](/gateway/events/#user-update) is emitted to the account's own sessions.
 
 The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `update_premium_flags`, target type `user`, and the metadata keys `add_flags`, `remove_flags`, and `new_flags`.
+
+### Rate limit
+
+100 requests per minute for each authenticated user, on the `admin:user:modify` bucket.
+
+## List user store purchases
+
+<RouteHeader method="GET" path="/v1/admin/users/{user_id}/store-purchases" auditReason />
+
+Lists the [in-app purchases](/http-api/in-app-purchases/) linked to an account, newest first. Requires `user:lookup`. A self-hosted instance never serves this route.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user_id | snowflake | The ID of the target account |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| purchases | array[[Admin store purchase](#admin-store-purchase-object) object] | The linked purchases |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The purchases were listed |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+
+### Side effects
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `list_user_store_purchases`, target type `user`, and the metadata key `result_count`.
+
+### Rate limit
+
+200 requests per minute for each authenticated user, on the `admin:lookup` bucket.
+
+## Refresh user store purchases
+
+<RouteHeader method="POST" path="/v1/admin/users/{user_id}/store-purchases/refresh" auditReason />
+
+Reads every purchase linked to an account again from its store, applies the result to the account, and returns the updated purchases. Requires `user:update:flags`, the same ACL as [Update user premium flags](#update-user-premium-flags). A self-hosted instance never serves this route.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| user_id | snowflake | The ID of the target account |
+
+### Response body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| purchases | array[[Admin store purchase](#admin-store-purchase-object) object] | The linked purchases after the refresh |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | response body | The purchases were refreshed |
+| 404 | [error response](/admin-api/#error-response) | `UNKNOWN_USER`, because the account does not exist |
+| 503 | [error response](/admin-api/#error-response) | `STORE_BILLING_UNAVAILABLE`, because a store could not be reached |
+
+### Side effects
+
+A subscription the store no longer recognises becomes `expired` and stops granting premium. A changed premium state sends [User Update](/gateway/events/#user-update) to the account's own sessions.
+
+The operation records one [Admin audit entry](/admin-api/#admin-audit-entry-object) with action `refresh_store_purchases`, target type `user`, and the metadata key `purchase_count`.
 
 ### Rate limit
 

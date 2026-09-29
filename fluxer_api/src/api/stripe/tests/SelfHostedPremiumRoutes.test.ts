@@ -94,7 +94,7 @@ async function generateGiftCode(harness: ApiTestHarness): Promise<string> {
 async function expectRoutesNotFound(
 	harness: ApiTestHarness,
 	token: string,
-	routes: ReadonlyArray<readonly ['GET' | 'POST', string]>,
+	routes: ReadonlyArray<readonly [RouteMethod, string]>,
 ): Promise<void> {
 	for (const [method, path] of routes) {
 		expect({path, ...(await readRouteStatus(harness, token, method, path))}).toEqual({
@@ -108,7 +108,7 @@ async function expectRoutesNotFound(
 async function expectRoutesRegistered(
 	harness: ApiTestHarness,
 	token: string,
-	routes: ReadonlyArray<readonly ['GET' | 'POST', string]>,
+	routes: ReadonlyArray<readonly [RouteMethod, string]>,
 ): Promise<void> {
 	for (const [method, path] of routes) {
 		const result = await readRouteStatus(harness, token, method, path);
@@ -130,16 +130,19 @@ async function postSignedWebhook(harness: ApiTestHarness, secret: string): Promi
 async function readRouteStatus(
 	harness: ApiTestHarness,
 	token: string | null,
-	method: 'GET' | 'POST',
+	method: RouteMethod,
 	path: string,
 ): Promise<{status: number; code: string | undefined}> {
 	const builder = token === null ? createBuilderWithoutAuth(harness) : createBuilder(harness, token);
-	const request = method === 'GET' ? builder.get(path) : builder.post(path).body({});
+	const request =
+		method === 'GET' ? builder.get(path) : method === 'DELETE' ? builder.delete(path) : builder.post(path).body({});
 	const {response, json} = await request.executeRaw();
 	return {status: response.status, code: (json as {code?: string} | undefined)?.code};
 }
 
-const PURCHASE_ROUTES: ReadonlyArray<['GET' | 'POST', string]> = [
+type RouteMethod = 'GET' | 'POST' | 'DELETE';
+
+const PURCHASE_ROUTES: ReadonlyArray<[RouteMethod, string]> = [
 	['POST', '/stripe/checkout/subscription'],
 	['POST', '/stripe/checkout/subscription/preapproval'],
 	['POST', '/stripe/checkout/subscription/preapproval/continue'],
@@ -147,7 +150,7 @@ const PURCHASE_ROUTES: ReadonlyArray<['GET' | 'POST', string]> = [
 	['GET', '/premium/price-ids'],
 ];
 
-const SERVICING_ROUTES: ReadonlyArray<['GET' | 'POST', string]> = [
+const SERVICING_ROUTES: ReadonlyArray<[RouteMethod, string]> = [
 	['GET', '/premium/current-subscription-price'],
 	['POST', '/premium/customer-portal'],
 	['POST', '/premium/grace/end'],
@@ -157,20 +160,32 @@ const SERVICING_ROUTES: ReadonlyArray<['GET' | 'POST', string]> = [
 	['POST', '/premium/cancel-pending-subscription-change'],
 ];
 
-const BILLING_ROUTES: ReadonlyArray<['GET' | 'POST', string]> = [...PURCHASE_ROUTES, ...SERVICING_ROUTES];
+const BILLING_ROUTES: ReadonlyArray<[RouteMethod, string]> = [...PURCHASE_ROUTES, ...SERVICING_ROUTES];
 
-const GIFT_ROUTES: ReadonlyArray<['GET' | 'POST', string]> = [
+const GIFT_ROUTES: ReadonlyArray<[RouteMethod, string]> = [
 	['GET', '/gifts/somegiftcode'],
 	['POST', '/gifts/somegiftcode/redeem'],
 	['GET', '/users/@me/gifts'],
 ];
 
-const HOSTED_ONLY_ROUTES: ReadonlyArray<['GET' | 'POST', string]> = [
+const HOSTED_ONLY_ROUTES: ReadonlyArray<[RouteMethod, string]> = [
 	['POST', '/users/@me/age-verification'],
 	['GET', '/premium/refund-eligibility'],
 	['POST', '/premium/refund-latest'],
 	['POST', '/premium/switch-to-list-price'],
 	['POST', '/premium/visionary/rejoin'],
+];
+
+const STORE_BILLING_ROUTES: ReadonlyArray<[RouteMethod, string]> = [
+	['GET', '/premium/store'],
+	['POST', '/premium/store/app-store/transactions'],
+	['POST', '/premium/store/google-play/purchases'],
+	['GET', '/premium/store/purchases'],
+	['DELETE', '/premium/store/purchases/1234567890123456789'],
+	['POST', '/webhooks/app-store'],
+	['POST', '/webhooks/google-play'],
+	['GET', '/admin/users/1234567890123456789/store-purchases'],
+	['POST', '/admin/users/1234567890123456789/store-purchases/refresh'],
 ];
 
 describe('self-hosted premium routes', () => {
@@ -208,6 +223,7 @@ describe('self-hosted premium routes', () => {
 				...BILLING_ROUTES,
 				...GIFT_ROUTES,
 				...HOSTED_ONLY_ROUTES,
+				...STORE_BILLING_ROUTES,
 				['POST', '/stripe/webhook'] as const,
 			]) {
 				expect({path, ...(await readRouteStatus(harness, account.token, method, path))}).toEqual({
@@ -270,7 +286,11 @@ describe('self-hosted premium routes', () => {
 
 		test('keeps purchase and hosted-only routes unavailable', async () => {
 			const account = await createTestAccount(harness);
-			await expectRoutesNotFound(harness, account.token, [...PURCHASE_ROUTES, ...HOSTED_ONLY_ROUTES]);
+			await expectRoutesNotFound(harness, account.token, [
+				...PURCHASE_ROUTES,
+				...HOSTED_ONLY_ROUTES,
+				...STORE_BILLING_ROUTES,
+			]);
 		});
 
 		test('keeps servicing routes and the webhook available while a Stripe key is configured', async () => {
@@ -373,7 +393,7 @@ describe('self-hosted premium routes', () => {
 		test('keeps hosted-only routes unavailable', async () => {
 			getConfig().stripe.prices = {...USD_PRICES};
 			const account = await createTestAccount(harness);
-			for (const [method, path] of HOSTED_ONLY_ROUTES) {
+			for (const [method, path] of [...HOSTED_ONLY_ROUTES, ...STORE_BILLING_ROUTES]) {
 				expect({path, ...(await readRouteStatus(harness, account.token, method, path))}).toEqual({
 					path,
 					status: HTTP_STATUS.NOT_FOUND,
@@ -407,7 +427,7 @@ describe('hosted premium routes', () => {
 	test('keeps every Stripe and gift route registered regardless of premium mode', async () => {
 		setCachedInstancePremiumMode('everyone');
 		const account = await createTestAccount(harness);
-		const routes = [...BILLING_ROUTES, ...GIFT_ROUTES, ...HOSTED_ONLY_ROUTES].filter(
+		const routes = [...BILLING_ROUTES, ...GIFT_ROUTES, ...HOSTED_ONLY_ROUTES, ...STORE_BILLING_ROUTES].filter(
 			([, path]) => path !== '/users/@me/age-verification',
 		);
 		for (const [method, path] of routes) {

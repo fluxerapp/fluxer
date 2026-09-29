@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import {type ChannelID, createChannelID, createMessageID, createUserID, type MessageID} from '@app/api/BrandedTypes';
-import {harvestMessages} from '@app/api/worker/tasks/HarvestUserData';
+import {EMPTY_USER_ROW} from '@app/api/database/types/UserTypes';
+import {User} from '@app/api/models/User';
+import {mapStorePurchaseToResponse} from '@app/api/store_billing/StoreBillingMappers';
+import {buildStorePurchaseRow} from '@app/api/store_billing/tests/StoreBillingTestUtils';
+import {buildUserDataJson, harvestMessages} from '@app/api/worker/tasks/HarvestUserData';
 import {describe, expect, it} from 'vitest';
 
 const AUTHOR = createUserID(1000000000000000000n);
@@ -64,5 +68,37 @@ describe('harvestMessages', () => {
 		const result = await harvestMessages(repo, AUTHOR, Date.now(), null);
 		expect(result.totalMessages).toBe(0);
 		expect(result.channelMessagesMap.size).toBe(0);
+	});
+});
+
+describe('buildUserDataJson', () => {
+	it('exports the store purchases in their public shape', () => {
+		const purchase = buildStorePurchaseRow({user_id: AUTHOR});
+		const data = buildUserDataJson({
+			user: new User({...EMPTY_USER_ROW, user_id: AUTHOR, username: 'exporter', discriminator: 1}),
+			userId: AUTHOR,
+			productName: 'Fluxer',
+			authSessions: [],
+			relationships: [],
+			userNotes: new Map(),
+			userSettings: null,
+			guildMemberships: [],
+			guildSettings: [],
+			savedMessages: [],
+			privateChannels: [],
+			favoriteMemes: [],
+			pushSubscriptions: [],
+			webAuthnCredentials: [],
+			mfaBackupCodes: [],
+			createdGiftCodes: [],
+			payments: [],
+			storePurchases: [purchase],
+			oauthClients: [],
+			connections: [],
+			pinnedDms: [],
+			authorizedIps: [],
+			activityData: {last_active_at: null, last_active_ip: null},
+		});
+		expect(data.store_purchases).toEqual([mapStorePurchaseToResponse(purchase)]);
 	});
 });

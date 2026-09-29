@@ -23,6 +23,7 @@ Every route except [get price IDs](#get-price-ids) is user-only. A [self-hosted 
 | [Billing invoice](#billing-invoice-object) | One mirrored invoice |
 | [Billing payment method](#billing-payment-method-object) | One mirrored payment method |
 | [Premium pricing state](#premium-pricing-state-object) | The resolved checkout catalogue |
+| [Store subscription](#store-subscription-object) | The active [in-app purchase](/http-api/in-app-purchases/) subscription |
 
 :::note[Manage billing through the customer portal]
 [Get premium state](#get-premium-state) returns invoices, payment methods and subscription details. Use [Create customer portal](#create-customer-portal) to open the billing interface.
@@ -211,6 +212,106 @@ A client gates a premium feature on `effective.is_premium`.
 | effective | [effective premium state](#effective-premium-state-object) object | The entitlement every premium feature check reads |
 | billing | [premium billing state](#premium-billing-state-object) object | The mirrored payment provider data for the account |
 | pricing | [premium pricing state](#premium-pricing-state-object) object | The resolved checkout prices for the requested country |
+| store<sup>1</sup> | ?[store subscription](#store-subscription-object) object | The active App Store or Google Play subscription, or null |
+| subscription_provider<sup>2</sup> | ?string | The billing platform that owns the current recurring subscription, one of `stripe`, `app_store` or `google_play`, or null |
+
+<sup>1</sup> Always null on a self-hosted deployment. When the account has more than one active store subscription, this is the one whose access ends last
+
+<sup>2</sup> Null for a gift, a lifetime Visionary entitlement, or no subscription. `stripe` needs a Stripe subscription with a billing cycle and a paid period that has not ended. An account can hold an active Stripe subscription and an active store subscription at once, and then this names the one paid through later. A self-hosted deployment reports only `stripe` or null. A client sends a `stripe` subscriber to [create customer portal](#create-customer-portal) and a store subscriber to `store.manage_url`
+
+### Example
+
+```json
+{
+  "actual": {
+    "premium_type": 1,
+    "premium_since": "2026-09-19T09:00:00.000Z",
+    "premium_until": "2026-10-19T09:00:00.000Z",
+    "premium_will_cancel": false,
+    "premium_billing_cycle": null,
+    "premium_lifetime_sequence": null,
+    "premium_grace_ends_at": null,
+    "has_active_paid_premium": true,
+    "is_visionary": false,
+    "has_ever_purchased": true
+  },
+  "effective": {
+    "is_premium": true,
+    "premium_type": 1,
+    "premium_since": "2026-09-19T09:00:00.000Z",
+    "premium_until": "2026-10-19T09:00:00.000Z",
+    "premium_will_cancel": false,
+    "premium_billing_cycle": null,
+    "premium_lifetime_sequence": null,
+    "premium_grace_ends_at": null,
+    "premium_enabled_override": false,
+    "premium_purchase_disabled": false,
+    "premium_perks_disabled": false,
+    "self_hosted": false,
+    "bot": false
+  },
+  "billing": {
+    "stripe_customer_id": null,
+    "current_subscription_price": null,
+    "pending_subscription_change": null,
+    "list_price_switch": {
+      "available": false,
+      "reason": "no_active_subscription",
+      "pending": false,
+      "current_price_id": null,
+      "current_amount_minor": null,
+      "list_price_id": null,
+      "list_amount_minor": null,
+      "currency": null,
+      "billing_cycle": null,
+      "effective_at": null
+    },
+    "subscription": null,
+    "invoices": [],
+    "invoices_has_more": false,
+    "payment_methods": [],
+    "refund_eligibility": {
+      "eligible": false,
+      "reason": "no_refundable_purchase",
+      "invoice_id": null,
+      "invoice_amount_paid_cents": null,
+      "currency": null,
+      "paid_at": null,
+      "refund_window_expires_at": null,
+      "cooldown_expires_at": null,
+      "cancels_subscription": false
+    }
+  },
+  "pricing": {
+    "country_code": "US",
+    "localized": {
+      "monthly": "price_1QaMonthlyUsd",
+      "yearly": "price_1QaYearlyUsd",
+      "gift_1_month": "price_1QaGift1MonthUsd",
+      "gift_1_year": "price_1QaGift1YearUsd",
+      "monthly_amount_minor": 499,
+      "yearly_amount_minor": 4999,
+      "gift_1_month_amount_minor": 499,
+      "gift_1_year_amount_minor": 4999,
+      "currency": "USD",
+      "gift_currency": "USD"
+    }
+  },
+  "store": {
+    "provider": "app_store",
+    "purchase_id": "1501203318237184000",
+    "slot": "monthly",
+    "billing_cycle": "monthly",
+    "state": "active",
+    "expires_at": "2026-10-19T09:00:00.000Z",
+    "grace_ends_at": null,
+    "will_renew": true,
+    "manage_url": "https://apps.apple.com/account/subscriptions",
+    "environment": "production"
+  },
+  "subscription_provider": "app_store"
+}
+```
 
 ## Actual premium state object
 
@@ -451,6 +552,48 @@ The checkout catalogue resolved for the request. A client can render prices with
 <sup>2</sup> Null unless the deployment configures a complete recurring pair and a complete gift pair for a currency in the currency preference order of `country_code`, which is the default order when `country_code` is null, so one missing gift price nulls the whole catalogue. The amounts come from the mirrored price rows
 
 Fluxer reports an unresolvable catalogue as null here, and the request still succeeds. [Get price IDs](#get-price-ids) answers 400 `STRIPE_ERROR` for the same condition.
+
+## Store subscription object
+
+The App Store or Google Play subscription that grants the account premium. The [store purchase](/http-api/in-app-purchases/#store-purchase-object) it comes from is listed by [list in-app purchases](/http-api/in-app-purchases/#list-in-app-purchases).
+
+While no Stripe subscription is active, a store subscription leaves `actual.premium_billing_cycle` null. A client reads the cycle here and sends the subscriber to `manage_url`, since [create customer portal](#create-customer-portal) cannot manage a store subscription.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| provider | string | Either `app_store` or `google_play` |
+| purchase_id | snowflake | The ID of the store purchase |
+| slot | string | Either `monthly` or `yearly` |
+| billing_cycle | string | [Billing cycle](#billing-cycles) |
+| state<sup>1</sup> | string | [Store purchase state](/http-api/in-app-purchases/#store-purchase-states) |
+| expires_at | ISO8601 timestamp | End of the paid period |
+| grace_ends_at | ?ISO8601 timestamp | End of the store grace period, or null outside grace |
+| will_renew | boolean | Whether the subscription renews |
+| manage_url<sup>2</sup> | string | Store page where the subscriber manages or cancels it |
+| environment | string | Either `production` or `sandbox` |
+
+<sup>1</sup> One of `active`, `grace` or `canceled`
+
+<sup>2</sup> The App Store subscriptions page, or the Google Play subscriptions page for the product and package
+
+### Example
+
+```json
+{
+  "provider": "google_play",
+  "purchase_id": "1501203318237184000",
+  "slot": "yearly",
+  "billing_cycle": "yearly",
+  "state": "active",
+  "expires_at": "2027-09-29T09:00:00.000Z",
+  "grace_ends_at": null,
+  "will_renew": true,
+  "manage_url": "https://play.google.com/store/account/subscriptions?sku=plutonium&package=com.fluxer",
+  "environment": "production"
+}
+```
 
 ## Get price IDs
 

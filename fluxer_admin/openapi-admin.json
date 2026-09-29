@@ -7727,6 +7727,130 @@
 				]
 			}
 		},
+		"/admin/users/{user_id}/store-purchases": {
+			"get": {
+				"operationId": "list_admin_user_store_purchases",
+				"summary": "List user store purchases",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminStorePurchaseListResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Lists the App Store and Google Play purchases bound to a user, newest first, with their store state. Only available on hosted instances. Requires USER_LOOKUP permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the user", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
+						"description": "The ID of the user"
+					}
+				]
+			}
+		},
+		"/admin/users/{user_id}/store-purchases/refresh": {
+			"post": {
+				"operationId": "refresh_admin_user_store_purchases",
+				"summary": "Refresh user store purchases",
+				"tags": ["Admin"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/AdminStorePurchaseListResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Reads every store purchase bound to a user again from the App Store or Google Play, applies the result to the account and returns the updated purchases. Creates audit log entry. Only available on hosted instances. Requires USER_UPDATE_FLAGS permission.",
+				"security": [{"adminApiKey": []}],
+				"parameters": [
+					{
+						"name": "user_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the user", "allOf": [{"$ref": "#/components/schemas/SnowflakeType"}]},
+						"description": "The ID of the user"
+					}
+				]
+			}
+		},
 		"/admin/users/{user_id}/suspicious-activity-disablement": {
 			"put": {
 				"operationId": "disable_admin_user_suspicious",
@@ -9406,6 +9530,18 @@
 					}
 				},
 				"required": ["flags"]
+			},
+			"AdminStorePurchaseListResponse": {
+				"type": "object",
+				"properties": {
+					"purchases": {
+						"type": "array",
+						"items": {"$ref": "#/components/schemas/AdminStorePurchaseResponse"},
+						"description": "Store purchases bound to the user"
+					}
+				},
+				"required": ["purchases"],
+				"additionalProperties": false
 			},
 			"TerminateSessionsResponse": {
 				"type": "object",
@@ -15788,6 +15924,176 @@
 					}
 				},
 				"required": ["target_user_id", "category", "nickname", "since", "target"],
+				"additionalProperties": false
+			},
+			"AdminStorePurchaseResponse": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"description": "The unique identifier (snowflake) for this store purchase",
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+					},
+					"user_id": {
+						"nullable": true,
+						"description": "ID of the user the purchase is bound to, null when unbound",
+						"allOf": [{"$ref": "#/components/schemas/SnowflakeStringType"}]
+					},
+					"provider": {
+						"type": "string",
+						"enum": ["app_store", "google_play"],
+						"description": "Store the purchase was made in"
+					},
+					"kind": {
+						"type": "string",
+						"enum": ["subscription", "gift"],
+						"description": "Whether the purchase is a subscription or a gift"
+					},
+					"slot": {
+						"type": "string",
+						"enum": ["monthly", "yearly", "gift_1_month", "gift_1_year"],
+						"description": "Fluxer product the purchase is for"
+					},
+					"environment": {
+						"type": "string",
+						"enum": ["production", "sandbox"],
+						"description": "Whether the purchase was real or a test purchase"
+					},
+					"app_id": {
+						"type": "string",
+						"description": "Bundle identifier or package name of the app that made the purchase"
+					},
+					"product_id": {"type": "string", "description": "Store product identifier"},
+					"base_plan_id": {
+						"nullable": true,
+						"description": "Google Play base plan identifier, null otherwise",
+						"type": "string"
+					},
+					"latest_transaction_id": {
+						"nullable": true,
+						"description": "Latest App Store transaction ID or Google Play order ID for the purchase",
+						"type": "string"
+					},
+					"ownership_type": {
+						"nullable": true,
+						"description": "Store ownership type, such as PURCHASED or FAMILY_SHARED",
+						"type": "string"
+					},
+					"state": {"type": "string", "description": "Normalized state of the purchase"},
+					"store_state": {"nullable": true, "description": "Raw state reported by the store", "type": "string"},
+					"entitled": {"type": "boolean", "description": "Whether the purchase currently grants Plutonium"},
+					"expires_at": {
+						"nullable": true,
+						"description": "When the paid period ends",
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+					},
+					"grace_ends_at": {
+						"nullable": true,
+						"description": "When the billing grace period ends",
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+					},
+					"auto_renew": {
+						"nullable": true,
+						"description": "Whether the subscription renews automatically",
+						"type": "boolean"
+					},
+					"started_at": {
+						"nullable": true,
+						"description": "When the subscription or purchase started",
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+					},
+					"purchased_at": {
+						"nullable": true,
+						"description": "When the latest payment was made",
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+					},
+					"revoked_at": {
+						"nullable": true,
+						"description": "When the store revoked or refunded the purchase",
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+					},
+					"revocation_reason": {
+						"nullable": true,
+						"description": "Reason the store gave for the revocation",
+						"type": "string"
+					},
+					"superseded": {"type": "boolean", "description": "Whether a newer purchase replaced this one"},
+					"acknowledged": {"type": "boolean", "description": "Whether the purchase was acknowledged with the store"},
+					"gift_code": {"nullable": true, "description": "Gift code minted by a gift purchase", "type": "string"},
+					"bound_at": {
+						"nullable": true,
+						"description": "When the purchase was bound to its user",
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+					},
+					"last_event_at": {
+						"nullable": true,
+						"description": "Time of the latest store event applied to the purchase",
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+					},
+					"synced_at": {
+						"nullable": true,
+						"description": "When the purchase was last synced with the store",
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+					},
+					"created_at": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "When Fluxer first saw the purchase"
+					},
+					"updated_at": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "When the purchase record last changed"
+					}
+				},
+				"required": [
+					"id",
+					"user_id",
+					"provider",
+					"kind",
+					"slot",
+					"environment",
+					"app_id",
+					"product_id",
+					"base_plan_id",
+					"latest_transaction_id",
+					"ownership_type",
+					"state",
+					"store_state",
+					"entitled",
+					"expires_at",
+					"grace_ends_at",
+					"auto_renew",
+					"started_at",
+					"purchased_at",
+					"revoked_at",
+					"revocation_reason",
+					"superseded",
+					"acknowledged",
+					"gift_code",
+					"bound_at",
+					"last_event_at",
+					"synced_at",
+					"created_at",
+					"updated_at"
+				],
 				"additionalProperties": false
 			},
 			"DiscriminatorType": {"anyOf": [{"type": "string"}, {"type": "number"}]},

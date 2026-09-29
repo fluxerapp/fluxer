@@ -43,6 +43,7 @@ export function createAdminBulkServices(deps: WorkerDependencies): AdminBulkServ
 		bulkMessageDeletionQueue: deps.bulkMessageDeletionQueueService,
 		stripe: deps.stripe,
 		reportService: getReportServiceInstance(),
+		storeEntitlementService: deps.storeEntitlementService,
 	});
 	const guildService = new AdminGuildService({
 		guildRepository: deps.guildRepository,

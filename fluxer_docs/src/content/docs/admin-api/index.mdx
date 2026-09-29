@@ -295,6 +295,7 @@ An entry with one of these actions has `access` set to `read`.
 | list_user_guilds | The guild memberships of an account were read |
 | list_user_relationships | The relationships of an account were read |
 | list_user_sessions | An account's login sessions were read |
+| list_user_store_purchases | The in-app purchases of an account were read |
 | list_voice_regions | Voice regions were listed |
 | list_voice_servers | The voice servers of a region were listed |
 | list_webauthn_credentials | An account's WebAuthn credentials were read |
@@ -361,6 +362,7 @@ An entry with any other action has `access` set to `write`.
 | queue_bulk_job | A bulk job was queued |
 | queue_message_shred | A message shred job was queued |
 | queue_refresh_index | A search index rebuild was requested |
+| refresh_store_purchases | The in-app purchases of an account were read again from their stores |
 | reject_discovery_application | A discovery application was rejected |
 | reject_registration | A pending registration was rejected |
 | reload_guild | One guild was reloaded on the main Gateway |
@@ -598,7 +600,7 @@ The registry is returned in this order by [List ACLs](#list-acls). A value outsi
 | user:update:bot_status | Updates bot and system account state |
 | user:update:dob | Updates dates of birth |
 | user:update:email | Updates the email address, marks the address verified, resends verification, and sends a password reset |
-| user:update:flags | Updates account flags and premium flags, and ends every login session of an account |
+| user:update:flags | Updates account flags and premium flags, refreshes in-app purchases, and ends every login session of an account |
 | user:update:mfa | Reads and removes a user's WebAuthn credentials, and removes MFA state |
 | user:update:phone | Updates verified phone state |
 | user:update:profile | Clears profile fields |

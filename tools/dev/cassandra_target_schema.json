@@ -4844,6 +4844,14 @@
 					"type": "text"
 				},
 				{
+					"name": "revoked_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "premium_reversed_seconds",
+					"type": "int"
+				},
+				{
 					"name": "duration_type",
 					"type": "text"
 				},
@@ -7257,6 +7265,222 @@
 			],
 			"primary_key": "((user_id), message_id)",
 			"options": "CLUSTERING ORDER BY (message_id DESC)"
+		},
+		{
+			"name": "store_account_tokens",
+			"columns": [
+				{
+					"name": "token_",
+					"type": "text"
+				},
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((token_))",
+			"options": ""
+		},
+		{
+			"name": "store_account_tokens_by_user",
+			"columns": [
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "token_",
+					"type": "text"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((user_id))",
+			"options": ""
+		},
+		{
+			"name": "store_purchases",
+			"columns": [
+				{
+					"name": "store_key",
+					"type": "text"
+				},
+				{
+					"name": "id",
+					"type": "bigint"
+				},
+				{
+					"name": "provider",
+					"type": "text"
+				},
+				{
+					"name": "kind",
+					"type": "text"
+				},
+				{
+					"name": "slot",
+					"type": "text"
+				},
+				{
+					"name": "environment",
+					"type": "text"
+				},
+				{
+					"name": "app_id",
+					"type": "text"
+				},
+				{
+					"name": "product_id",
+					"type": "text"
+				},
+				{
+					"name": "base_plan_id",
+					"type": "text"
+				},
+				{
+					"name": "store_reference",
+					"type": "text"
+				},
+				{
+					"name": "latest_transaction_id",
+					"type": "text"
+				},
+				{
+					"name": "app_transaction_id",
+					"type": "text"
+				},
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "bound_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "released_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "account_token",
+					"type": "text"
+				},
+				{
+					"name": "ownership_type",
+					"type": "text"
+				},
+				{
+					"name": "state",
+					"type": "text"
+				},
+				{
+					"name": "store_state",
+					"type": "text"
+				},
+				{
+					"name": "entitled",
+					"type": "boolean"
+				},
+				{
+					"name": "expires_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "grace_ends_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "auto_renew",
+					"type": "boolean"
+				},
+				{
+					"name": "auto_renew_product_id",
+					"type": "text"
+				},
+				{
+					"name": "started_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "purchased_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "revoked_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "revocation_reason",
+					"type": "text"
+				},
+				{
+					"name": "linked_store_key",
+					"type": "text"
+				},
+				{
+					"name": "superseded_by_store_key",
+					"type": "text"
+				},
+				{
+					"name": "acknowledged",
+					"type": "boolean"
+				},
+				{
+					"name": "gift_code",
+					"type": "text"
+				},
+				{
+					"name": "region",
+					"type": "text"
+				},
+				{
+					"name": "last_event_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "synced_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "updated_at",
+					"type": "timestamp"
+				},
+				{
+					"name": "version",
+					"type": "int"
+				}
+			],
+			"primary_key": "((store_key))",
+			"options": ""
+		},
+		{
+			"name": "store_purchases_by_user",
+			"columns": [
+				{
+					"name": "user_id",
+					"type": "bigint"
+				},
+				{
+					"name": "store_key",
+					"type": "text"
+				},
+				{
+					"name": "created_at",
+					"type": "timestamp"
+				}
+			],
+			"primary_key": "((user_id), store_key)",
+			"options": ""
 		},
 		{
 			"name": "user_connections",

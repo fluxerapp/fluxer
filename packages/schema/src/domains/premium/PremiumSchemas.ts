@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createStringType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
+import {PremiumStoreSubscriptionState} from '@fluxer/schema/src/domains/premium/StoreBillingSchemas';
+import {createStringType, withOpenApiType} from '@fluxer/schema/src/primitives/SchemaPrimitives';
 import {UserPremiumTypesSchema} from '@fluxer/schema/src/primitives/UserSettingsValidators';
 import {z} from 'zod';
 
@@ -362,11 +363,24 @@ export const PremiumPricingState = z.object({
 
 export type PremiumPricingState = z.infer<typeof PremiumPricingState>;
 
+export const PremiumSubscriptionProvider = withOpenApiType(
+	z.enum(['stripe', 'app_store', 'google_play']),
+	'PremiumSubscriptionProvider',
+);
+
+export type PremiumSubscriptionProvider = z.infer<typeof PremiumSubscriptionProvider>;
+
 export const PremiumStateResponse = z.object({
 	actual: PremiumActualState,
 	effective: PremiumEffectiveState,
 	billing: PremiumBillingState,
 	pricing: PremiumPricingState,
+	store: PremiumStoreSubscriptionState.nullish().describe(
+		'Active App Store or Google Play subscription, null when no store subscription is active',
+	),
+	subscription_provider: PremiumSubscriptionProvider.nullable().describe(
+		'Billing platform that owns the current recurring subscription, null for gift, lifetime or no subscription. When a Stripe and a store subscription are both active, the one paid through later',
+	),
 });
 
 export type PremiumStateResponse = z.infer<typeof PremiumStateResponse>;

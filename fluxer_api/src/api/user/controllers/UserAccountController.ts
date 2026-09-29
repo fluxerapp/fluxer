@@ -1276,6 +1276,7 @@ export function UserAccountController(app: HonoApp) {
 			if (!(user.flags & UserFlags.STAFF)) {
 				throw new MissingAccessError();
 			}
+			await ctx.get('storeEntitlementService').unbindAllForUser(user.id);
 			await ctx.get('userService').accountService.resetCurrentUserPremiumState(user);
 			return ctx.body(null, 204);
 		},

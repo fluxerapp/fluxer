@@ -44,6 +44,7 @@ export const AdminAuditReadActions = {
 	LIST_USER_GUILDS: 'list_user_guilds',
 	LIST_USER_RELATIONSHIPS: 'list_user_relationships',
 	LIST_USER_SESSIONS: 'list_user_sessions',
+	LIST_USER_STORE_PURCHASES: 'list_user_store_purchases',
 	LIST_VOICE_REGIONS: 'list_voice_regions',
 	LIST_VOICE_SERVERS: 'list_voice_servers',
 	LIST_WEBAUTHN_CREDENTIALS: 'list_webauthn_credentials',

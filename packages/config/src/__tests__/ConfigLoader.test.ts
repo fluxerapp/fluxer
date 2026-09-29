@@ -524,6 +524,86 @@ describe('ConfigLoader', () => {
 		expect(config.instance.setup.configured).toBe(true);
 	});
 
+	test('leaves both stores off with no apps, packages or products by default', async () => {
+		stubMinimalEnv();
+		const config = await loadConfig();
+		expect(config.integrations.app_store).toEqual({enabled: false, apps: [], products: {}});
+		expect(config.integrations.google_play).toEqual({
+			enabled: false,
+			packages: [],
+			token_uri: 'https://oauth2.googleapis.com/token',
+			products: {},
+		});
+		expect(config.integrations.store_billing).toEqual({sandbox_user_ids: [], sandbox_entitles_all: false});
+	});
+
+	test('loads a valid store catalogue', async () => {
+		stubMinimalEnv({
+			FLUXER_APP_STORE_ENABLED: 'true',
+			FLUXER_APP_STORE_APPS: '[{"bundle_id":"com.fluxer","app_apple_id":1234567890}]',
+			FLUXER_APP_STORE_PRODUCTS: '{"com.fluxer.plutonium.monthly":"monthly","com.fluxer.gift.1month":"gift_1_month"}',
+			FLUXER_GOOGLE_PLAY_ENABLED: 'true',
+			FLUXER_GOOGLE_PLAY_PACKAGES: 'com.fluxer',
+			FLUXER_GOOGLE_PLAY_PRODUCTS: '{"plutonium:yearly":"yearly","gift_1_year":"gift_1_year"}',
+			FLUXER_STORE_BILLING_SANDBOX_USER_IDS: '1234567890123456',
+		});
+		const config = await loadConfig();
+		expect(config.integrations.app_store.apps).toEqual([{bundle_id: 'com.fluxer', app_apple_id: 1234567890}]);
+		expect(config.integrations.google_play.products).toEqual({
+			'plutonium:yearly': 'yearly',
+			gift_1_year: 'gift_1_year',
+		});
+		expect(config.integrations.store_billing.sandbox_user_ids).toEqual(['1234567890123456']);
+	});
+
+	test('rejects an App Store app without a numeric app_apple_id', async () => {
+		for (const apps of [
+			'[{"bundle_id":"com.fluxer"}]',
+			'[{"bundle_id":"com.fluxer","app_apple_id":"1234567890"}]',
+			'[{"bundle_id":"com.fluxer","app_apple_id":0}]',
+		]) {
+			resetConfig();
+			stubMinimalEnv({FLUXER_APP_STORE_APPS: apps});
+			await expect(loadConfig()).rejects.toThrow('FLUXER_APP_STORE_APPS entry 1 must have a numeric app_apple_id');
+		}
+	});
+
+	test('rejects an App Store app without a bundle id', async () => {
+		stubMinimalEnv({FLUXER_APP_STORE_APPS: '[{"app_apple_id":1234567890}]'});
+		await expect(loadConfig()).rejects.toThrow('FLUXER_APP_STORE_APPS entry 1 must have a bundle_id');
+	});
+
+	test('rejects an App Store product mapped to an unknown slot', async () => {
+		stubMinimalEnv({FLUXER_APP_STORE_PRODUCTS: '{"com.fluxer.visionary":"visionary"}'});
+		await expect(loadConfig()).rejects.toThrow(
+			'Invalid FLUXER_APP_STORE_PRODUCTS slot for com.fluxer.visionary: visionary',
+		);
+	});
+
+	test('rejects a Google Play product mapped to an unknown slot', async () => {
+		stubMinimalEnv({FLUXER_GOOGLE_PLAY_PRODUCTS: '{"plutonium:weekly":"weekly"}'});
+		await expect(loadConfig()).rejects.toThrow('Invalid FLUXER_GOOGLE_PLAY_PRODUCTS slot for plutonium:weekly: weekly');
+	});
+
+	test('rejects a Google Play product key that does not fit its slot kind', async () => {
+		stubMinimalEnv({FLUXER_GOOGLE_PLAY_PRODUCTS: '{"plutonium":"monthly"}'});
+		await expect(loadConfig()).rejects.toThrow(
+			'FLUXER_GOOGLE_PLAY_PRODUCTS key plutonium does not match its monthly slot',
+		);
+		resetConfig();
+		stubMinimalEnv({FLUXER_GOOGLE_PLAY_PRODUCTS: '{"gift:one":"gift_1_month"}'});
+		await expect(loadConfig()).rejects.toThrow(
+			'FLUXER_GOOGLE_PLAY_PRODUCTS key gift:one does not match its gift_1_month slot',
+		);
+	});
+
+	test('rejects a sandbox user id that is not a snowflake', async () => {
+		stubMinimalEnv({FLUXER_STORE_BILLING_SANDBOX_USER_IDS: '123,abc'});
+		await expect(loadConfig()).rejects.toThrow(
+			'FLUXER_STORE_BILLING_SANDBOX_USER_IDS must be a comma separated list of user ids',
+		);
+	});
+
 	test('defaults the cache purge adapter to none', async () => {
 		stubMinimalEnv();
 		expect((await loadConfig()).integrations.cache_purge).toEqual({

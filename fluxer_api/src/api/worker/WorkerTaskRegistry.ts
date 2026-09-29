@@ -26,16 +26,22 @@ import harvestUserData from '@app/api/worker/tasks/HarvestUserData';
 import indexChannelMessages from '@app/api/worker/tasks/IndexChannelMessages';
 import indexGuildMembers from '@app/api/worker/tasks/IndexGuildMembers';
 import messageShred from '@app/api/worker/tasks/MessageShred';
+import pollAppStoreNotificationHistory from '@app/api/worker/tasks/PollAppStoreNotificationHistory';
+import pollGooglePlayVoidedPurchases from '@app/api/worker/tasks/PollGooglePlayVoidedPurchases';
+import processAppStoreNotification from '@app/api/worker/tasks/ProcessAppStoreNotification';
 import processAssetDeletionQueue from '@app/api/worker/tasks/ProcessAssetDeletionQueue';
 import processCachePurgeQueue from '@app/api/worker/tasks/ProcessCachePurgeQueue';
 import processExpiredPremiumSweep from '@app/api/worker/tasks/ProcessExpiredPremiumSweep';
+import processGooglePlayNotification from '@app/api/worker/tasks/ProcessGooglePlayNotification';
 import processInactivityDeletions from '@app/api/worker/tasks/ProcessInactivityDeletions';
 import processPendingBulkMessageDeletions from '@app/api/worker/tasks/ProcessPendingBulkMessageDeletions';
 import processPremiumStateReconciliationQueue from '@app/api/worker/tasks/ProcessPremiumStateReconciliationQueue';
+import processStorePurchaseRefreshQueue from '@app/api/worker/tasks/ProcessStorePurchaseRefreshQueue';
 import processStripeWebhook from '@app/api/worker/tasks/ProcessStripeWebhook';
 import prunePostgresKvTtl from '@app/api/worker/tasks/PrunePostgresKvTtl';
 import reconcileUserPayments from '@app/api/worker/tasks/ReconcileUserPayments';
 import refreshSearchIndex from '@app/api/worker/tasks/RefreshSearchIndex';
+import refreshStorePurchase from '@app/api/worker/tasks/RefreshStorePurchase';
 import {sendSystemDm} from '@app/api/worker/tasks/SendSystemDm';
 import syncDiscoveryIndex from '@app/api/worker/tasks/SyncDiscoveryIndex';
 import syncFileShaBlocklists from '@app/api/worker/tasks/SyncFileShaBlocklists';
@@ -79,6 +85,12 @@ export const workerTasks: Record<WorkerTaskName, WorkerTaskHandler> = {
 	processPendingBulkMessageDeletions,
 	processPremiumStateReconciliationQueue,
 	reconcileUserPayments,
+	processAppStoreNotification,
+	processGooglePlayNotification,
+	refreshStorePurchase,
+	processStorePurchaseRefreshQueue,
+	pollGooglePlayVoidedPurchases,
+	pollAppStoreNotificationHistory,
 	prunePostgresKvTtl,
 	refreshSearchIndex,
 	sendSystemDm,

@@ -57,6 +57,7 @@ import type {ReportRequestService} from '@app/api/report/ReportRequestService';
 import type {ReportService} from '@app/api/report/ReportService';
 import type {RpcService} from '@app/api/rpc/RpcService';
 import type {SearchService} from '@app/api/search/SearchService';
+import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import type {StripeService} from '@app/api/stripe/StripeService';
 import type {AgeVerificationService} from '@app/api/stripe/services/AgeVerificationService';
 import type {ThemeService} from '@app/api/theme/ThemeService';
@@ -176,6 +177,7 @@ export interface HonoEnv {
 		webhookRequestService: WebhookRequestService;
 		workerService: IWorkerService<WorkerTaskName>;
 		stripeService: StripeService;
+		storeEntitlementService: StoreEntitlementService;
 		ageVerificationService: AgeVerificationService;
 		applicationService: ApplicationService;
 		oauth2Service: OAuth2Service;

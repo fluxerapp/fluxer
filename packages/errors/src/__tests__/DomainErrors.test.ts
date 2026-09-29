@@ -17,6 +17,14 @@ import {ForbiddenError} from '@fluxer/errors/src/domains/core/ForbiddenError';
 import {InputValidationError} from '@fluxer/errors/src/domains/core/InputValidationError';
 import {InternalServerError} from '@fluxer/errors/src/domains/core/InternalServerError';
 import {NotFoundError} from '@fluxer/errors/src/domains/core/NotFoundError';
+import {ServiceUnavailableError} from '@fluxer/errors/src/domains/core/ServiceUnavailableError';
+import {PremiumPurchaseBlockedError} from '@fluxer/errors/src/domains/payment/PremiumPurchaseBlockedError';
+import {StoreBillingUnavailableError} from '@fluxer/errors/src/domains/payment/StoreBillingUnavailableError';
+import {StoreNotificationUnauthorizedError} from '@fluxer/errors/src/domains/payment/StoreNotificationUnauthorizedError';
+import {StorePurchaseInvalidError} from '@fluxer/errors/src/domains/payment/StorePurchaseInvalidError';
+import {StorePurchaseOwnedByOtherAccountError} from '@fluxer/errors/src/domains/payment/StorePurchaseOwnedByOtherAccountError';
+import {StorePurchaseSandboxNotEntitledError} from '@fluxer/errors/src/domains/payment/StorePurchaseSandboxNotEntitledError';
+import {UnknownStorePurchaseError} from '@fluxer/errors/src/domains/payment/UnknownStorePurchaseError';
 import {FluxerError} from '@fluxer/errors/src/FluxerError';
 import {describe, expect, it} from 'vitest';
 
@@ -82,6 +90,32 @@ describe.each([
 	],
 	[APIErrorCodes.UNKNOWN_CHANNEL, UnknownChannelError, NotFoundError, HttpStatus.NOT_FOUND],
 	[APIErrorCodes.UNKNOWN_MESSAGE, UnknownMessageError, NotFoundError, HttpStatus.NOT_FOUND],
+	[APIErrorCodes.STORE_PURCHASE_INVALID, StorePurchaseInvalidError, BadRequestError, HttpStatus.BAD_REQUEST],
+	[
+		APIErrorCodes.STORE_PURCHASE_OWNED_BY_OTHER_ACCOUNT,
+		StorePurchaseOwnedByOtherAccountError,
+		ForbiddenError,
+		HttpStatus.FORBIDDEN,
+	],
+	[
+		APIErrorCodes.STORE_PURCHASE_SANDBOX_NOT_ENTITLED,
+		StorePurchaseSandboxNotEntitledError,
+		ForbiddenError,
+		HttpStatus.FORBIDDEN,
+	],
+	[
+		APIErrorCodes.STORE_BILLING_UNAVAILABLE,
+		StoreBillingUnavailableError,
+		ServiceUnavailableError,
+		HttpStatus.SERVICE_UNAVAILABLE,
+	],
+	[APIErrorCodes.UNKNOWN_STORE_PURCHASE, UnknownStorePurchaseError, NotFoundError, HttpStatus.NOT_FOUND],
+	[
+		APIErrorCodes.STORE_NOTIFICATION_UNAUTHORIZED,
+		StoreNotificationUnauthorizedError,
+		FluxerError,
+		HttpStatus.UNAUTHORIZED,
+	],
 ] as const)('%s', (code, ErrorClass, BaseClass, status) => {
 	it('preserves the domain inheritance and response contract', async () => {
 		const error = new ErrorClass();
@@ -159,6 +193,39 @@ describe('InputValidationError', () => {
 					message: ValidationErrorCodes.STRING_LENGTH_INVALID,
 				},
 			],
+		});
+	});
+});
+
+describe('PremiumPurchaseBlockedError', () => {
+	it('keeps the reason and extra data of existing callers', () => {
+		const error = new PremiumPurchaseBlockedError('existing_subscription', {subscription_status: 'active'});
+
+		expect(error.status).toBe(HttpStatus.FORBIDDEN);
+		expect(error.toJSON()).toEqual({
+			code: APIErrorCodes.PREMIUM_PURCHASE_BLOCKED,
+			message: APIErrorCodes.PREMIUM_PURCHASE_BLOCKED,
+			subscription_status: 'active',
+			reason: 'existing_subscription',
+		});
+	});
+
+	it('carries the blocking provider when one is given', () => {
+		const error = new PremiumPurchaseBlockedError('existing_subscription', {provider: 'app_store'});
+
+		expect(error.toJSON()).toEqual({
+			code: APIErrorCodes.PREMIUM_PURCHASE_BLOCKED,
+			message: APIErrorCodes.PREMIUM_PURCHASE_BLOCKED,
+			provider: 'app_store',
+			reason: 'existing_subscription',
+		});
+	});
+
+	it('defaults to the purchase_disabled reason with no provider', () => {
+		expect(new PremiumPurchaseBlockedError().toJSON()).toEqual({
+			code: APIErrorCodes.PREMIUM_PURCHASE_BLOCKED,
+			message: APIErrorCodes.PREMIUM_PURCHASE_BLOCKED,
+			reason: 'purchase_disabled',
 		});
 	});
 });

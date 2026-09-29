@@ -9,6 +9,8 @@ import type {GuildService} from '@app/api/guild/services/GuildService';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {GiftCode} from '@app/api/models/GiftCode';
 import type {User} from '@app/api/models/User';
+import type {StoreBillingRepository} from '@app/api/store_billing/StoreBillingRepository';
+import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import {getProductRegistry, type ProductRegistry} from '@app/api/stripe/ProductRegistry';
 import {getStripeClient} from '@app/api/stripe/StripeClient';
 import {PremiumStateService} from '@app/api/stripe/services/PremiumStateService';
@@ -51,6 +53,8 @@ export class StripeService {
 		private guildService: GuildService,
 		private cacheService: ICacheService,
 		private billingRepository: BillingRepository,
+		private storeBillingRepository: StoreBillingRepository | null = null,
+		private storeEntitlementService: StoreEntitlementService | null = null,
 	) {
 		this.productRegistry = getProductRegistry();
 		this.stripe = getStripeClient();
@@ -66,12 +70,14 @@ export class StripeService {
 			this.billingRepository,
 			this.stripe,
 			this.cacheService,
+			this.storeBillingRepository,
 		);
 		this.checkoutService = new StripeCheckoutService(
 			this.stripe,
 			this.userRepository,
 			this.productRegistry,
 			this.cacheService,
+			this.storeEntitlementService,
 		);
 		this.subscriptionService = new StripeSubscriptionService(
 			this.stripe,
@@ -79,6 +85,7 @@ export class StripeService {
 			this.productRegistry,
 			this.cacheService,
 			this.gatewayService,
+			this.storeEntitlementService,
 		);
 		this.giftService = new StripeGiftService(
 			this.stripe,
@@ -88,6 +95,7 @@ export class StripeService {
 			this.checkoutService,
 			this.premiumService,
 			this.subscriptionService,
+			this.storeEntitlementService,
 		);
 		this.refundService = new StripeRefundService(this.stripe, this.userRepository, this.subscriptionService);
 	}

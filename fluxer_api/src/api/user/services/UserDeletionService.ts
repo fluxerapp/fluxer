@@ -21,6 +21,7 @@ import {createRequestCache} from '@app/api/middleware/RequestCacheMiddleware';
 import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
 import type {ApplicationRepository} from '@app/api/oauth/repositories/ApplicationRepository';
 import type {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
+import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import type {UserRepository} from '@app/api/user/repositories/UserRepository';
 import {isPendingDeletionBlocked} from '@app/api/user/services/PendingDeletionCoordinator';
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
@@ -55,6 +56,7 @@ interface UserDeletionDependencies {
 	applicationRepository: ApplicationRepository;
 	workerService: IWorkerService<WorkerTaskName>;
 	connectionRepository: IConnectionRepository;
+	storeEntitlementService: StoreEntitlementService;
 }
 
 export async function processUserDeletion(
@@ -78,6 +80,7 @@ export async function processUserDeletion(
 		applicationRepository,
 		workerService,
 		connectionRepository,
+		storeEntitlementService,
 	} = deps;
 	Logger.debug({userId, deletionReasonCode}, 'Starting user account deletion');
 	const scheduledUser = await userRepository.findUnique(userId);
@@ -155,6 +158,7 @@ export async function processUserDeletion(
 		Logger.info({userId, pendingDeletionAt}, 'Account deletion schedule is no longer eligible');
 		return;
 	}
+	await storeEntitlementService.stopBillingForDeletedUser(userId);
 	await connectionRepository.sealAndDeleteForUser(userId);
 	const deletedUserId = createUserID(await snowflakeService.generate());
 	Logger.debug({userId, deletedUserId}, 'Creating dedicated deleted user record');

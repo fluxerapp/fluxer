@@ -9,9 +9,17 @@ import type {
 	BillingRefundRow,
 	BillingSubscriptionRow,
 } from '@app/api/database/types/BillingTypes';
+import type {StorePurchaseRow} from '@app/api/database/types/StoreBillingTypes';
 import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import {Logger} from '@app/api/Logger';
 import type {User} from '@app/api/models/User';
+import {
+	mapPremiumStoreSubscriptionState,
+	resolveStoreAccessEnd,
+	selectActiveStoreSubscription,
+} from '@app/api/store_billing/StoreBillingMappers';
+import type {StoreBillingRepository} from '@app/api/store_billing/StoreBillingRepository';
+import {isStripeSubscriptionActive} from '@app/api/store_billing/StoreEntitlementWriter';
 import {isBillingActive} from '@app/api/stripe/BillingConfigCache';
 import {getProductRegistry, type RecurringBillingCycle} from '@app/api/stripe/ProductRegistry';
 import {getStripeClient} from '@app/api/stripe/StripeClient';
@@ -42,6 +50,7 @@ import type {
 	PremiumBillingSubscriptionResponse,
 	PremiumPricingState,
 	PremiumStateResponse,
+	PremiumSubscriptionProvider,
 	PriceIdsResponse,
 	SelfServeRefundEligibilityResponse,
 	SelfServeRefundIneligibilityReason,
@@ -176,6 +185,23 @@ function refundEligibility({
 	};
 }
 
+function resolveSubscriptionProvider(
+	user: User,
+	stripeSubscription: BillingSubscriptionRow | null,
+	storeRow: StorePurchaseRow | null,
+	now: Date,
+): PremiumSubscriptionProvider | null {
+	if (user.premiumType === UserPremiumTypes.LIFETIME) return null;
+	const stripePeriodEnd =
+		stripeSubscription?.provider_id === user.stripeSubscriptionId ? stripeSubscription?.current_period_end : null;
+	const stripeEnd = isStripeSubscriptionActive(user, now) ? (stripePeriodEnd ?? user.premiumUntil) : null;
+	const storeEnd = storeRow ? resolveStoreAccessEnd(storeRow) : null;
+	if (storeRow && storeEnd && (!stripeEnd || storeEnd.getTime() >= stripeEnd.getTime())) {
+		return storeRow.provider;
+	}
+	return stripeEnd ? 'stripe' : null;
+}
+
 function mapInvoice(row: BillingInvoiceRow): PremiumBillingInvoiceResponse {
 	return {
 		id: row.provider_id,
@@ -214,6 +240,7 @@ export class PremiumStateService {
 		private readonly billingRepository: BillingRepository,
 		private readonly stripe: Stripe | null = null,
 		private readonly cacheService: ICacheService | null = null,
+		private readonly storeBillingRepository: StoreBillingRepository | null = null,
 	) {}
 
 	async getState(userId: UserID, countryCode?: string): Promise<PremiumStateResponse> {
@@ -259,6 +286,8 @@ export class PremiumStateService {
 			this.resolvePendingSubscriptionChange(user),
 			this.resolvePricing(countryCode),
 		]);
+		const storeRow = await this.resolveActiveStoreSubscription(user);
+		const store = storeRow ? mapPremiumStoreSubscriptionState(storeRow) : null;
 		const refundEligibilityState = await this.resolveRefundEligibility(user, invoices.allRows);
 		const listPriceSwitch = this.resolveListPriceSwitch(subscription, subscriptionPrice, pendingSubscriptionChange);
 		const pendingBillingCycleChange =
@@ -306,7 +335,17 @@ export class PremiumStateService {
 				refund_eligibility: refundEligibilityState,
 			},
 			pricing,
+			store,
+			subscription_provider: resolveSubscriptionProvider(user, subscription, store ? storeRow : null, new Date()),
 		};
+	}
+
+	private async resolveActiveStoreSubscription(user: User): Promise<StorePurchaseRow | null> {
+		if (!this.storeBillingRepository || Config.instance.selfHosted) {
+			return null;
+		}
+		const rows = await this.storeBillingRepository.listPurchasesForUser(user.id);
+		return selectActiveStoreSubscription(rows, new Date());
 	}
 
 	private async resolveCustomerIds(user: User): Promise<Array<string>> {

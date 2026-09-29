@@ -11,7 +11,7 @@ import {
 	parsePublicOrigin,
 	parseWebOrigin,
 } from '@fluxer/config/src/EndpointDerivation';
-import {CACHE_PURGE_ADAPTER_NAMES, type MasterConfig} from '@fluxer/config/src/MasterConfig';
+import {CACHE_PURGE_ADAPTER_NAMES, type MasterConfig, STORE_PRODUCT_SLOT_NAMES} from '@fluxer/config/src/MasterConfig';
 
 let cachedConfig: MasterConfig | null = null;
 
@@ -223,6 +223,21 @@ function defaultConfig(): MasterConfig {
 					enabled: false,
 					apps: [],
 				},
+			},
+			app_store: {
+				enabled: false,
+				apps: [],
+				products: {},
+			},
+			google_play: {
+				enabled: false,
+				packages: [],
+				token_uri: 'https://oauth2.googleapis.com/token',
+				products: {},
+			},
+			store_billing: {
+				sandbox_user_ids: [],
+				sandbox_entitles_all: false,
 			},
 		},
 		instance: {
@@ -449,6 +464,50 @@ function validateCachePurgeConfig(config: MasterConfig): void {
 	assertIntegerInRange(cachePurge.http.timeout_ms, 'FLUXER_CACHE_PURGE_HTTP_TIMEOUT_MS', 1_000, 10_000);
 }
 
+function validateStoreProductSlots(
+	products: Record<string, string> | undefined,
+	envName: string,
+	isValidKey: (productKey: string, slot: string) => boolean,
+): void {
+	for (const [productKey, slot] of Object.entries(products ?? {})) {
+		assertOneOf(slot, STORE_PRODUCT_SLOT_NAMES, `${envName} slot for ${productKey}`);
+		if (!isValidKey(productKey, slot)) {
+			throw new Error(`${envName} key ${productKey} does not match its ${slot} slot`);
+		}
+	}
+}
+
+function validateStoreBillingConfig(config: MasterConfig): void {
+	const appStore = config.integrations.app_store;
+	for (const [index, app] of (appStore.apps ?? []).entries()) {
+		if (!isConfigObject(app) || typeof app.bundle_id !== 'string' || app.bundle_id.trim().length === 0) {
+			throw new Error(`FLUXER_APP_STORE_APPS entry ${index + 1} must have a bundle_id`);
+		}
+		if (typeof app.app_apple_id !== 'number' || !Number.isSafeInteger(app.app_apple_id) || app.app_apple_id <= 0) {
+			throw new Error(`FLUXER_APP_STORE_APPS entry ${index + 1} must have a numeric app_apple_id`);
+		}
+	}
+	validateStoreProductSlots(appStore.products, 'FLUXER_APP_STORE_PRODUCTS', (productKey) => productKey.length > 0);
+	validateStoreProductSlots(
+		config.integrations.google_play.products,
+		'FLUXER_GOOGLE_PLAY_PRODUCTS',
+		(productKey, slot) => {
+			const parts = productKey.split(':');
+			const isSubscription = slot === 'monthly' || slot === 'yearly';
+			if (isSubscription) {
+				return parts.length === 2 && parts.every((part) => part.length > 0);
+			}
+			return parts.length === 1 && productKey.length > 0;
+		},
+	);
+	for (const userId of config.integrations.store_billing.sandbox_user_ids ?? []) {
+		if (!/^\d+$/.test(userId)) {
+			throw new Error('FLUXER_STORE_BILLING_SANDBOX_USER_IDS must be a comma separated list of user ids');
+		}
+	}
+	assertBoolean(config.integrations.store_billing.sandbox_entitles_all, 'FLUXER_STORE_BILLING_SANDBOX_ENTITLES_ALL');
+}
+
 function validateDomain(value: string, envName: string): void {
 	if (value === '') return;
 	const parsed = URL.parse(`http://${value}/`);
@@ -509,6 +568,7 @@ function normalizeConfig(config: MasterConfig): MasterConfig {
 	validateApiWorkerConfig(config);
 	validateStorageChangeFeedConfig(config);
 	validateCachePurgeConfig(config);
+	validateStoreBillingConfig(config);
 	normalizeAppOriginAliases(config);
 	assertIntegerInRange(config.services.api.max_inflight_requests, 'FLUXER_API_MAX_INFLIGHT_REQUESTS', 1, 100_000);
 	assertIntegerInRange(config.services.api.headers_timeout_ms, 'FLUXER_API_HEADERS_TIMEOUT_MS', 1_000, 3_600_000);

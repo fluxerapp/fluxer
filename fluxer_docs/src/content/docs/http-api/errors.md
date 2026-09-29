@@ -920,6 +920,26 @@ Service unavailable
 
 Invalid request
 
+### `STORE_BILLING_UNAVAILABLE`
+
+In-app purchases are unavailable right now
+
+### `STORE_NOTIFICATION_UNAUTHORIZED`
+
+The notification signature is invalid
+
+### `STORE_PURCHASE_INVALID`
+
+This purchase could not be verified
+
+### `STORE_PURCHASE_OWNED_BY_OTHER_ACCOUNT`
+
+This purchase is linked to a different account
+
+### `STORE_PURCHASE_SANDBOX_NOT_ENTITLED`
+
+Test purchases cannot be applied to this account
+
 ### `STREAM_KEY_CHANNEL_MISMATCH`
 
 Stream key channel mismatch
@@ -1131,6 +1151,10 @@ Role wasn't found
 ### `UNKNOWN_STICKER`
 
 Unknown sticker
+
+### `UNKNOWN_STORE_PURCHASE`
+
+Unknown store purchase
 
 ### `UNKNOWN_SUSPICIOUS_FLAG`
 

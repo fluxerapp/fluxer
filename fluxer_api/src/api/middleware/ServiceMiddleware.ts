@@ -98,6 +98,7 @@ import {
 	getReadStateService,
 	getReportRepository,
 	getStorageService,
+	getStoreBillingRepository,
 	getStreamPreviewService,
 	getSweegoWebhookService,
 	getThemeService,
@@ -119,6 +120,8 @@ import {ReportService} from '@app/api/report/ReportService';
 import {RpcService} from '@app/api/rpc/RpcService';
 import {getReportSearchService} from '@app/api/SearchFactory';
 import {SearchService} from '@app/api/search/SearchService';
+import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
+import {createStoreEntitlementService} from '@app/api/store_billing/StoreEntitlementServiceFactory';
 import {StripeService} from '@app/api/stripe/StripeService';
 import {AgeVerificationService} from '@app/api/stripe/services/AgeVerificationService';
 import type {HonoEnv} from '@app/api/types/HonoEnv';
@@ -254,6 +257,7 @@ class RequestServices implements RequestScopedServices {
 	private cachedRpcService: RpcService | undefined;
 	private cachedSearchService: SearchService | undefined;
 	private cachedStripeService: StripeService | undefined;
+	private cachedStoreEntitlementService: StoreEntitlementService | undefined;
 	private cachedAgeVerificationService: AgeVerificationService | undefined;
 	private cachedDonationService: DonationService | undefined;
 	private cachedUserService: UserService | undefined;
@@ -541,6 +545,7 @@ class RequestServices implements RequestScopedServices {
 			this.stripeService.getStripe(),
 			new JobLedgerRepository(),
 			getIpInfoService(),
+			this.storeEntitlementService,
 		);
 		return this.cachedAdminService;
 	}
@@ -767,8 +772,22 @@ class RequestServices implements RequestScopedServices {
 			this.guildService,
 			getCacheService(),
 			getBillingRepository(),
+			getStoreBillingRepository(),
+			this.storeEntitlementService,
 		);
 		return this.cachedStripeService;
+	}
+
+	get storeEntitlementService(): StoreEntitlementService {
+		this.cachedStoreEntitlementService ??= createStoreEntitlementService({
+			userRepository: getUserRepository(),
+			userCacheService: getUserCacheService(),
+			gatewayService: this.gatewayService,
+			kvClient: getKVClient(),
+			snowflakeService: getSnowflakeService(),
+			premiumStateReconciliationQueueService: getPremiumStateReconciliationQueueService(),
+		});
+		return this.cachedStoreEntitlementService;
 	}
 
 	get ageVerificationService(): AgeVerificationService | undefined {

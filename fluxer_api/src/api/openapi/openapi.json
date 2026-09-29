@@ -11641,6 +11641,289 @@
 				]
 			}
 		},
+		"/premium/store": {
+			"get": {
+				"operationId": "get_store_billing_context",
+				"summary": "Get in-app purchase context",
+				"tags": ["Premium"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/StoreBillingContextResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns the account token and the App Store and Google Play products the mobile apps may sell, plus the reason a new subscription is blocked, if any.",
+				"security": [{"sessionToken": []}]
+			}
+		},
+		"/premium/store/app-store/transactions": {
+			"post": {
+				"operationId": "claim_app_store_transaction",
+				"summary": "Claim App Store transaction",
+				"tags": ["Premium"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/StorePurchaseClaimResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Verifies a StoreKit 2 signed transaction, links the purchase to the authenticated account and applies it. Calling it again for the same purchase returns the same result. Finish the transaction after a 200 or a 400 or 403 error. Leave it unfinished after a 429, a 5xx or a network failure.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ClaimAppStoreTransactionRequest"}}}
+				}
+			}
+		},
+		"/premium/store/google-play/purchases": {
+			"post": {
+				"operationId": "claim_google_play_purchase",
+				"summary": "Claim Google Play purchase",
+				"tags": ["Premium"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/StorePurchaseClaimResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Verifies a Google Play purchase token, links the purchase to the authenticated account, acknowledges it and applies it. Calling it again for the same purchase returns the same result.",
+				"security": [{"sessionToken": []}],
+				"requestBody": {
+					"required": true,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ClaimGooglePlayPurchaseRequest"}}}
+				}
+			}
+		},
+		"/premium/store/purchases": {
+			"get": {
+				"operationId": "list_store_purchases",
+				"summary": "List in-app purchases",
+				"tags": ["Premium"],
+				"responses": {
+					"200": {
+						"description": "Success",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/StorePurchaseListResponse"}}}
+					},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Returns the App Store and Google Play purchases linked to the authenticated account.",
+				"security": [{"sessionToken": []}]
+			}
+		},
+		"/premium/store/purchases/{purchase_id}": {
+			"delete": {
+				"operationId": "release_store_purchase",
+				"summary": "Release in-app subscription",
+				"tags": ["Premium"],
+				"responses": {
+					"204": {"description": "No Content"},
+					"400": {
+						"description": "Bad Request - The request was malformed or contained invalid data",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"401": {
+						"description": "Unauthorized - Authentication is required or the token is invalid",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"403": {
+						"description": "Forbidden - You do not have permission to perform this action",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					},
+					"429": {
+						"description": "Too Many Requests - You are being rate limited",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/ThrottledError"}}},
+						"headers": {
+							"Retry-After": {
+								"description": "Number of seconds to wait before retrying (only on 429)",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Limit": {
+								"description": "The number of requests that can be made in the current window",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Remaining": {
+								"description": "The number of remaining requests that can be made",
+								"schema": {"type": "integer"}
+							},
+							"X-RateLimit-Reset": {
+								"description": "Unix timestamp when the rate limit resets",
+								"schema": {"type": "integer"}
+							}
+						}
+					},
+					"500": {
+						"description": "Internal Server Error - An unexpected error occurred",
+						"content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+					}
+				},
+				"description": "Unlinks an App Store or Google Play subscription from the authenticated account so another account can claim it. Requires sudo mode.",
+				"security": [{"sessionToken": []}],
+				"parameters": [
+					{
+						"name": "purchase_id",
+						"in": "path",
+						"required": true,
+						"schema": {"description": "The ID of the store purchase", "$ref": "#/components/schemas/SnowflakeType"},
+						"description": "The ID of the store purchase"
+					}
+				],
+				"requestBody": {
+					"required": false,
+					"content": {"application/json": {"schema": {"$ref": "#/components/schemas/SudoVerificationSchema"}}}
+				}
+			}
+		},
 		"/premium/switch-to-list-price": {
 			"post": {
 				"operationId": "switch_subscription_to_list_price",
@@ -25837,6 +26120,162 @@
 					{"$ref": "#/components/schemas/IneligibleSwitchToListPriceResponse"}
 				]
 			},
+			"StorePurchaseListResponse": {"type": "array", "items": {"$ref": "#/components/schemas/StorePurchaseResponse"}},
+			"ClaimGooglePlayPurchaseRequest": {
+				"type": "object",
+				"properties": {
+					"purchase_token": {"description": "Purchase token from Google Play Billing", "type": "string"},
+					"product_id": {"description": "Google Play product identifier of the purchase", "type": "string"},
+					"package_name": {
+						"description": "Package name of the app that made the purchase. Must be one of the accepted package names",
+						"type": "string"
+					}
+				},
+				"required": ["purchase_token", "product_id"]
+			},
+			"StorePurchaseClaimResponse": {
+				"type": "object",
+				"properties": {
+					"purchase": {
+						"properties": {
+							"id": {
+								"description": "The unique identifier (snowflake) for this store purchase",
+								"$ref": "#/components/schemas/SnowflakeStringType"
+							},
+							"provider": {
+								"description": "Store the purchase was made in",
+								"$ref": "#/components/schemas/StoreProvider"
+							},
+							"kind": {
+								"description": "Whether the purchase is a subscription or a gift",
+								"$ref": "#/components/schemas/StorePurchaseKind"
+							},
+							"slot": {"description": "Fluxer product the purchase is for", "$ref": "#/components/schemas/StoreSlot"},
+							"product_id": {"type": "string", "description": "Store product identifier"},
+							"environment": {
+								"description": "Whether the purchase was a real purchase or a test purchase",
+								"$ref": "#/components/schemas/StoreEnvironment"
+							},
+							"state": {
+								"description": "Current state of the purchase",
+								"$ref": "#/components/schemas/StorePurchaseState"
+							},
+							"entitled": {"type": "boolean", "description": "Whether the purchase currently grants Plutonium"},
+							"expires_at": {
+								"anyOf": [
+									{
+										"type": "string",
+										"format": "date-time",
+										"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+									},
+									{"type": "null"}
+								],
+								"description": "When the paid period ends, null for gifts"
+							},
+							"entitled_until": {
+								"anyOf": [
+									{
+										"type": "string",
+										"format": "date-time",
+										"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+									},
+									{"type": "null"}
+								],
+								"description": "When access from this purchase ends, including any grace period, null when not entitled"
+							},
+							"will_renew": {
+								"description": "Whether the subscription renews automatically, null for gifts",
+								"type": ["boolean", "null"]
+							},
+							"gift_code": {
+								"description": "Gift code minted by a gift purchase, null otherwise",
+								"type": ["string", "null"]
+							},
+							"created_at": {
+								"type": "string",
+								"format": "date-time",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+								"description": "When Fluxer first saw the purchase"
+							}
+						},
+						"description": "The claimed purchase",
+						"$ref": "#/components/schemas/StorePurchaseResponse"
+					},
+					"gift_code": {
+						"description": "Gift code minted by a gift purchase, null otherwise",
+						"type": ["string", "null"]
+					}
+				},
+				"required": ["purchase", "gift_code"],
+				"additionalProperties": false
+			},
+			"ClaimAppStoreTransactionRequest": {
+				"type": "object",
+				"properties": {
+					"signed_transaction": {
+						"description": "JWS signed transaction from StoreKit 2 (Transaction.jwsRepresentation)",
+						"type": "string"
+					}
+				},
+				"required": ["signed_transaction"]
+			},
+			"StoreBillingContextResponse": {
+				"type": "object",
+				"properties": {
+					"app_account_token": {
+						"type": "string",
+						"description": "Lowercase UUID for this account. Pass it as appAccountToken on App Store purchases and as obfuscatedAccountId on Google Play purchases"
+					},
+					"app_store": {
+						"type": "object",
+						"properties": {
+							"enabled": {"type": "boolean", "description": "Whether App Store purchases are accepted"},
+							"bundle_ids": {
+								"type": "array",
+								"items": {"type": "string"},
+								"description": "App bundle identifiers whose purchases are accepted"
+							},
+							"products": {
+								"type": "array",
+								"items": {"$ref": "#/components/schemas/StoreBillingAppStoreProductResponse"},
+								"description": "App Store products on sale"
+							}
+						},
+						"required": ["enabled", "bundle_ids", "products"],
+						"additionalProperties": false,
+						"description": "App Store purchase settings"
+					},
+					"google_play": {
+						"type": "object",
+						"properties": {
+							"enabled": {"type": "boolean", "description": "Whether Google Play purchases are accepted"},
+							"package_names": {
+								"type": "array",
+								"items": {"type": "string"},
+								"description": "App package names whose purchases are accepted"
+							},
+							"products": {
+								"type": "array",
+								"items": {"$ref": "#/components/schemas/StoreBillingGooglePlayProductResponse"},
+								"description": "Google Play products on sale"
+							}
+						},
+						"required": ["enabled", "package_names", "products"],
+						"additionalProperties": false,
+						"description": "Google Play purchase settings"
+					},
+					"purchase_blocked_reason": {
+						"anyOf": [{"$ref": "#/components/schemas/StorePurchaseBlockedReason"}, {"type": "null"}],
+						"description": "Why this account cannot buy a subscription right now, null when it can"
+					},
+					"blocking_provider": {
+						"anyOf": [{"$ref": "#/components/schemas/StoreBlockingProvider"}, {"type": "null"}],
+						"description": "Provider of the active subscription that blocks a new one, null when nothing blocks"
+					}
+				},
+				"required": ["app_account_token", "app_store", "google_play", "purchase_blocked_reason", "blocking_provider"],
+				"additionalProperties": false
+			},
 			"PremiumStateResponse": {
 				"type": "object",
 				"properties": {
@@ -26008,9 +26447,17 @@
 						],
 						"additionalProperties": false
 					},
-					"pricing": {"$ref": "#/components/schemas/PremiumPricingState"}
+					"pricing": {"$ref": "#/components/schemas/PremiumPricingState"},
+					"store": {
+						"description": "Active App Store or Google Play subscription, null when no store subscription is active",
+						"anyOf": [{"$ref": "#/components/schemas/PremiumStoreSubscriptionState"}, {"type": "null"}]
+					},
+					"subscription_provider": {
+						"anyOf": [{"$ref": "#/components/schemas/PremiumSubscriptionProvider"}, {"type": "null"}],
+						"description": "Billing platform that owns the current recurring subscription, null for gift, lifetime or no subscription. When a Stripe and a store subscription are both active, the one paid through later"
+					}
 				},
-				"required": ["actual", "effective", "billing", "pricing"],
+				"required": ["actual", "effective", "billing", "pricing", "subscription_provider"],
 				"additionalProperties": false
 			},
 			"SelfServeRefundResponse": {
@@ -32852,6 +33299,68 @@
 				"type": "string",
 				"enum": ["no_refundable_purchase", "outside_refund_window", "cooldown_active", "feature_unavailable"]
 			},
+			"PremiumSubscriptionProvider": {"type": "string", "enum": ["stripe", "app_store", "google_play"]},
+			"PremiumStoreSubscriptionState": {
+				"type": "object",
+				"properties": {
+					"provider": {
+						"description": "Store that bills the subscription",
+						"$ref": "#/components/schemas/StoreProvider"
+					},
+					"purchase_id": {
+						"description": "ID of the store purchase that grants the subscription",
+						"$ref": "#/components/schemas/SnowflakeStringType"
+					},
+					"slot": {"description": "Fluxer subscription product", "$ref": "#/components/schemas/StoreSubscriptionSlot"},
+					"billing_cycle": {
+						"description": "Billing cycle of the subscription",
+						"$ref": "#/components/schemas/StoreBillingCycle"
+					},
+					"state": {
+						"description": "Current state of the store subscription",
+						"$ref": "#/components/schemas/StorePurchaseState"
+					},
+					"expires_at": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "When the paid period ends"
+					},
+					"grace_ends_at": {
+						"anyOf": [
+							{
+								"type": "string",
+								"format": "date-time",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+							},
+							{"type": "null"}
+						],
+						"description": "When the billing grace period ends, null outside grace"
+					},
+					"will_renew": {"type": "boolean", "description": "Whether the subscription renews automatically"},
+					"manage_url": {
+						"type": "string",
+						"description": "Store page where the subscription can be managed or canceled"
+					},
+					"environment": {
+						"description": "Whether the subscription is a real purchase or a test purchase",
+						"$ref": "#/components/schemas/StoreEnvironment"
+					}
+				},
+				"required": [
+					"provider",
+					"purchase_id",
+					"slot",
+					"billing_cycle",
+					"state",
+					"expires_at",
+					"grace_ends_at",
+					"will_renew",
+					"manage_url",
+					"environment"
+				],
+				"additionalProperties": false
+			},
 			"PremiumPricingState": {
 				"type": "object",
 				"properties": {
@@ -33117,6 +33626,137 @@
 					"switch_in_progress"
 				]
 			},
+			"StoreEnvironment": {"type": "string", "enum": ["production", "sandbox"]},
+			"StorePurchaseState": {
+				"type": "string",
+				"enum": [
+					"pending",
+					"active",
+					"grace",
+					"billing_retry",
+					"on_hold",
+					"paused",
+					"canceled",
+					"expired",
+					"revoked",
+					"superseded",
+					"purchased",
+					"fulfilled",
+					"refunded"
+				]
+			},
+			"StoreBillingCycle": {"type": "string", "enum": ["monthly", "yearly"]},
+			"StoreSubscriptionSlot": {"type": "string", "enum": ["monthly", "yearly"]},
+			"StoreProvider": {"type": "string", "enum": ["app_store", "google_play"]},
+			"StoreBlockingProvider": {"type": "string", "enum": ["stripe", "app_store", "google_play"]},
+			"StorePurchaseBlockedReason": {
+				"type": "string",
+				"enum": ["lifetime", "existing_subscription", "purchase_disabled"]
+			},
+			"StoreBillingGooglePlayProductResponse": {
+				"type": "object",
+				"properties": {
+					"product_id": {"type": "string", "description": "Google Play product identifier"},
+					"base_plan_id": {
+						"description": "Google Play base plan identifier, null for one-time products",
+						"type": ["string", "null"]
+					},
+					"slot": {
+						"description": "Fluxer product this Google Play product sells",
+						"$ref": "#/components/schemas/StoreSlot"
+					}
+				},
+				"required": ["product_id", "base_plan_id", "slot"],
+				"additionalProperties": false
+			},
+			"StoreBillingAppStoreProductResponse": {
+				"type": "object",
+				"properties": {
+					"product_id": {"type": "string", "description": "App Store product identifier"},
+					"slot": {
+						"description": "Fluxer product this App Store product sells",
+						"$ref": "#/components/schemas/StoreSlot"
+					}
+				},
+				"required": ["product_id", "slot"],
+				"additionalProperties": false
+			},
+			"StoreSlot": {"type": "string", "enum": ["monthly", "yearly", "gift_1_month", "gift_1_year"]},
+			"StorePurchaseResponse": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"description": "The unique identifier (snowflake) for this store purchase",
+						"$ref": "#/components/schemas/SnowflakeStringType"
+					},
+					"provider": {"description": "Store the purchase was made in", "$ref": "#/components/schemas/StoreProvider"},
+					"kind": {
+						"description": "Whether the purchase is a subscription or a gift",
+						"$ref": "#/components/schemas/StorePurchaseKind"
+					},
+					"slot": {"description": "Fluxer product the purchase is for", "$ref": "#/components/schemas/StoreSlot"},
+					"product_id": {"type": "string", "description": "Store product identifier"},
+					"environment": {
+						"description": "Whether the purchase was a real purchase or a test purchase",
+						"$ref": "#/components/schemas/StoreEnvironment"
+					},
+					"state": {"description": "Current state of the purchase", "$ref": "#/components/schemas/StorePurchaseState"},
+					"entitled": {"type": "boolean", "description": "Whether the purchase currently grants Plutonium"},
+					"expires_at": {
+						"anyOf": [
+							{
+								"type": "string",
+								"format": "date-time",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+							},
+							{"type": "null"}
+						],
+						"description": "When the paid period ends, null for gifts"
+					},
+					"entitled_until": {
+						"anyOf": [
+							{
+								"type": "string",
+								"format": "date-time",
+								"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+							},
+							{"type": "null"}
+						],
+						"description": "When access from this purchase ends, including any grace period, null when not entitled"
+					},
+					"will_renew": {
+						"description": "Whether the subscription renews automatically, null for gifts",
+						"type": ["boolean", "null"]
+					},
+					"gift_code": {
+						"description": "Gift code minted by a gift purchase, null otherwise",
+						"type": ["string", "null"]
+					},
+					"created_at": {
+						"type": "string",
+						"format": "date-time",
+						"pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+						"description": "When Fluxer first saw the purchase"
+					}
+				},
+				"required": [
+					"id",
+					"provider",
+					"kind",
+					"slot",
+					"product_id",
+					"environment",
+					"state",
+					"entitled",
+					"expires_at",
+					"entitled_until",
+					"will_renew",
+					"gift_code",
+					"created_at"
+				],
+				"additionalProperties": false
+			},
+			"StorePurchaseKind": {"type": "string", "enum": ["subscription", "gift"]},
 			"IneligibleSwitchToListPriceResponse": {
 				"type": "object",
 				"properties": {

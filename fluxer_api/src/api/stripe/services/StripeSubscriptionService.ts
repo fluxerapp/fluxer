@@ -8,6 +8,7 @@ import {Logger} from '@app/api/Logger';
 import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
 import {addGiftCodeDuration} from '@app/api/models/GiftCode';
 import type {User} from '@app/api/models/User';
+import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import type {ProductInfo, RecurringBillingCycle} from '@app/api/stripe/ProductRegistry';
 import {
 	getPrimarySubscriptionItem,
@@ -116,6 +117,7 @@ export class StripeSubscriptionService {
 		},
 		private cacheService: ICacheService,
 		private gatewayService: IGatewayService,
+		private storeEntitlementService: StoreEntitlementService | null = null,
 	) {}
 
 	async cancelSubscriptionAtPeriodEnd(userId: UserID): Promise<void> {
@@ -250,6 +252,7 @@ export class StripeSubscriptionService {
 			const message = error instanceof Error ? error.message : 'Failed to cancel subscription immediately';
 			throw new StripeError(message);
 		}
+		await this.storeEntitlementService?.reapplyAfterStripeChange(userId);
 	}
 
 	async reactivateSubscription(userId: UserID): Promise<void> {

@@ -37,6 +37,7 @@ import {
 } from '@app/api/middleware/ServiceSingletons';
 import type {IApplicationRepository} from '@app/api/oauth/repositories/IApplicationRepository';
 import type {ReportService} from '@app/api/report/ReportService';
+import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import type {UserService} from '@app/api/user/services/UserService';
 import type {VoiceRepository} from '@app/api/voice/VoiceRepository';
 import type {SendSystemDmResponse} from '@fluxer/schema/src/domains/admin/AdminSchemas';
@@ -81,6 +82,7 @@ export class AdminService {
 		private readonly stripe: Stripe | null = null,
 		private readonly jobLedger: IJobLedgerRepository,
 		private readonly ipInfoService: IpInfoService,
+		private readonly storeEntitlementService: StoreEntitlementService,
 	) {
 		const {users, gateway, worker, snowflake} = this.apiContext.services;
 		this.auditService = new AdminAuditService(this.adminRepository, snowflake, {
@@ -107,6 +109,7 @@ export class AdminService {
 			bulkMessageDeletionQueue: this.bulkMessageDeletionQueue,
 			stripe: this.stripe,
 			reportService: this.reportService,
+			storeEntitlementService: this.storeEntitlementService,
 		});
 		this.guildServiceAggregate = new AdminGuildService({
 			guildRepository: this.guildRepository,

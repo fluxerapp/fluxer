@@ -9,6 +9,7 @@ import type {IGatewayService} from '@app/api/infrastructure/IGatewayService';
 import type {PremiumStateReconciliationQueueService} from '@app/api/infrastructure/PremiumStateReconciliationQueueService';
 import {Logger} from '@app/api/Logger';
 import type {User} from '@app/api/models/User';
+import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import type {ProductInfo} from '@app/api/stripe/ProductRegistry';
 import {
 	canProvisionPremiumFromSubscriptionStatus,
@@ -59,6 +60,7 @@ export class StripeSubscriptionWebhookHandler {
 		private premiumStateReconciliationQueueService: PremiumStateReconciliationQueueService,
 		private reconciler: StripeSubscriptionReconciler,
 		private billingRepository: BillingRepository,
+		private storeEntitlementService: StoreEntitlementService | null = null,
 	) {}
 
 	async handleInvoicePaymentSucceeded(eventId: string, invoice: Stripe.Invoice): Promise<void> {
@@ -568,6 +570,7 @@ export class StripeSubscriptionWebhookHandler {
 			throw new StripeError('Updated user not found for subscription update');
 		}
 		await this.dispatchUser(updatedUser);
+		await this.restoreStoreEntitlement(updatedUser.id);
 		await this.enqueuePremiumStateReconciliation(updatedUser.id, {
 			reason: 'subscription_updated',
 			subscriptionId: canonicalSubscription.id,
@@ -670,6 +673,7 @@ export class StripeSubscriptionWebhookHandler {
 		}
 		const updatedUser = await this.userRepository.patchUpsert(targetUser.id, updates, targetUser.toRow());
 		await this.dispatchUser(updatedUser);
+		await this.restoreStoreEntitlement(updatedUser.id);
 		await this.enqueuePremiumStateReconciliation(updatedUser.id, {
 			reason: 'subscription_deleted',
 			subscriptionId: subscription.id,
@@ -771,7 +775,7 @@ export class StripeSubscriptionWebhookHandler {
 		}
 		const updatedUser = await this.userRepository.patchUpsert(user.id, patch, user.toRow());
 		await this.dispatchUser(updatedUser);
-		return updatedUser;
+		return (await this.restoreStoreEntitlement(updatedUser.id)) ?? updatedUser;
 	}
 
 	private getInvoiceServicePeriod(invoice: Stripe.Invoice): {
@@ -820,6 +824,13 @@ export class StripeSubscriptionWebhookHandler {
 				'Failed to refresh billing subscription mirror from Stripe snapshot',
 			);
 		}
+	}
+
+	private async restoreStoreEntitlement(userId: UserID): Promise<User | null> {
+		if (!(await this.storeEntitlementService?.reapplyAfterStripeChange(userId))) {
+			return null;
+		}
+		return this.userRepository.findUnique(userId);
 	}
 
 	private async dispatchUser(user: User): Promise<void> {

@@ -17,6 +17,7 @@ import type {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2Toke
 import {ReportStatus} from '@app/api/report/IReportRepository';
 import type {ReportService} from '@app/api/report/ReportService';
 import {getReportSearchService} from '@app/api/SearchFactory';
+import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import {clearPendingDeletion, reschedulePendingDeletion} from '@app/api/user/services/PendingDeletionCoordinator';
 import {APIErrorCodes} from '@fluxer/constants/src/ApiErrorCodes';
 import {DeletionReasons} from '@fluxer/constants/src/Core';
@@ -41,6 +42,7 @@ interface AdminUserDeletionServiceDeps {
 	stripe: Stripe | null;
 	billingRepository: BillingRepository;
 	oauth2Tokens: Pick<OAuth2TokenRepository, 'deleteAllAccessTokensForUser' | 'deleteAllRefreshTokensForUser'>;
+	storeEntitlementService: StoreEntitlementService;
 }
 
 const minUserRequestedDeletionDays = 14;
@@ -206,6 +208,7 @@ export class AdminUserDeletionService {
 				);
 			}
 		}
+		await this.deps.storeEntitlementService.revokeForBannedUser(userId);
 		const email = user.email;
 		const notificationTemplate = scheduledDeletionEmailTemplate(data.reason_code);
 		const notificationAttempted = Boolean(data.notify_user && email);

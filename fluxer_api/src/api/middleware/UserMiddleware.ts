@@ -18,7 +18,13 @@ interface ParsedAuthHeader {
 	type: TokenType;
 }
 
-const SKIP_PATHS = new Set(['/_health', '/webhooks/livekit', '/webhooks/sweego']);
+const SKIP_PATHS = new Set([
+	'/_health',
+	'/webhooks/livekit',
+	'/webhooks/sweego',
+	'/webhooks/app-store',
+	'/webhooks/google-play',
+]);
 const SESSION_TOKEN_PATTERN = /^flx_[A-Za-z0-9]{36}$/;
 
 function parseAuthHeader(authHeader?: string | null): ParsedAuthHeader | null {

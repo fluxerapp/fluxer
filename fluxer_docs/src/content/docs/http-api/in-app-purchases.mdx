@@ -1,0 +1,455 @@
+---
+# SPDX-License-Identifier: AGPL-3.0-or-later
+title: In-app purchases
+description: App Store and Google Play purchases, the claim routes the mobile apps call, and the store notification webhooks.
+---
+
+import RouteHeader from '@/components/RouteHeader.astro';
+
+The mobile apps sell premium through the App Store and Google Play. The store takes the payment, and the app then hands the purchase to Fluxer through a claim route. Fluxer verifies the purchase with the store, links it to the account, and applies it to the account's premium state. The stores also send [notifications](#store-notification-webhooks) for renewals, expiries and refunds, so a purchase stays current without the app.
+
+A subscription purchase grants the same premium as a [Stripe subscription](/http-api/billing/#create-subscription-checkout). A gift purchase mints one [gift](/http-api/gifts/#gift-object) code. [Get premium state](/http-api/premium/#get-premium-state) reports the active store subscription in `store`, and names the platform that owns the account's recurring subscription in `subscription_provider`. A client manages the subscription only on that platform, so an app does not offer its own management for a `stripe` subscriber.
+
+Every route on this page except the store notification webhooks is user-only. A self-hosted deployment never serves any of them, as [deployment availability](/http-api/deployment-availability/) describes.
+
+| Object | Purpose |
+| --- | --- |
+| [In-app purchase context](#in-app-purchase-context-object) | The account token and the products the apps may sell |
+| [Store purchase](#store-purchase-object) | One App Store or Google Play purchase linked to the account |
+| [Store purchase claim](#store-purchase-claim-object) | The result of a claim |
+
+## Store providers
+
+| Value | Description |
+| --- | --- |
+| app_store | Apple App Store, with StoreKit 2 in the app |
+| google_play | Google Play, with Play Billing in the app |
+
+## Store slots
+
+Each configured store product sells one Fluxer product, called its slot.
+
+| Value | Description |
+| --- | --- |
+| monthly | Premium subscription billed every month |
+| yearly | Premium subscription billed every year |
+| gift_1_month | One gift code for one month of premium |
+| gift_1_year | One gift code for one year of premium |
+
+## Store purchase states
+
+| Value | Description |
+| --- | --- |
+| pending | The store has not taken the payment yet |
+| active | The subscription is paid and renews |
+| grace | The renewal payment failed and the store grace period is running |
+| billing_retry | The renewal payment failed and the store is retrying without grace |
+| on_hold | Google Play has suspended the subscription after a failed payment |
+| paused | The subscriber paused the subscription in Google Play |
+| canceled | The subscription is paid until `expires_at` and will not renew |
+| expired | The subscription has ended |
+| revoked | The store refunded or revoked the subscription |
+| superseded | A newer Google Play purchase replaced this one |
+| purchased | The gift is paid and its code is not minted yet |
+| fulfilled | The gift code is minted |
+| refunded | The store refunded the gift |
+
+Only `active`, `grace` and `canceled` can grant premium.
+
+## Purchase blocked reasons
+
+| Value | Description |
+| --- | --- |
+| lifetime | The account holds lifetime Visionary premium |
+| existing_subscription | The account already has an active subscription |
+| purchase_disabled | Purchases are disabled for the account |
+
+## In-app purchase context object
+
+What an app needs before it shows a paywall. [Get in-app purchase context](#get-in-app-purchase-context) returns it.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| app_account_token<sup>1</sup> | string | The account token, a lowercase UUID |
+| app_store | [App Store settings](#app-store-settings-object) object | App Store purchase settings |
+| google_play | [Google Play settings](#google-play-settings-object) object | Google Play purchase settings |
+| purchase_blocked_reason<sup>2</sup> | ?string | [Purchase blocked reason](#purchase-blocked-reasons), or null |
+| blocking_provider<sup>3</sup> | ?string | Provider of the blocking subscription, or null |
+
+<sup>1</sup> Stable for the account. An App Store purchase passes it as `appAccountToken`, and a Google Play purchase passes it as `obfuscatedAccountId`. Fluxer links a purchase that has the token to the account even when the store notification arrives before the claim
+
+<sup>2</sup> Null when the account can buy a subscription. Gift products stay on sale whatever the value is
+
+<sup>3</sup> Either `stripe`, `app_store` or `google_play`. It has a value only when the reason is `existing_subscription`
+
+### Example
+
+```json
+{
+  "app_account_token": "0f7c2a1e-5b3d-4c8e-9a61-2d4f8b7e3c10",
+  "app_store": {
+    "enabled": true,
+    "bundle_ids": ["com.fluxer"],
+    "products": [
+      {"product_id": "com.fluxer.plutonium.monthly", "slot": "monthly"},
+      {"product_id": "com.fluxer.gift.1month", "slot": "gift_1_month"}
+    ]
+  },
+  "google_play": {
+    "enabled": true,
+    "package_names": ["com.fluxer"],
+    "products": [
+      {"product_id": "plutonium", "base_plan_id": "monthly", "slot": "monthly"},
+      {"product_id": "gift_1_month", "base_plan_id": null, "slot": "gift_1_month"}
+    ]
+  },
+  "purchase_blocked_reason": null,
+  "blocking_provider": null
+}
+```
+
+## App Store settings object
+
+The App Store purchases the deployment accepts. When the App Store is not set up, `enabled` is false and both arrays are empty.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | boolean | Whether App Store purchases are accepted |
+| bundle_ids | array[string] | App bundle IDs whose purchases are accepted |
+| products | array[[App Store product](#app-store-product-object) object] | Products on sale |
+
+## App Store product object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| product_id | string | App Store product ID |
+| slot | string | [Store slot](#store-slots) |
+
+## Google Play settings object
+
+The Google Play purchases the deployment accepts. When Google Play is not set up, `enabled` is false and both arrays are empty.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| enabled | boolean | Whether Google Play purchases are accepted |
+| package_names | array[string] | App package names whose purchases are accepted |
+| products | array[[Google Play product](#google-play-product-object) object] | Products on sale |
+
+## Google Play product object
+
+A subscription product has one entry for each base plan on sale.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| product_id | string | Google Play product ID |
+| base_plan_id | ?string | Base plan ID, or null for a one-time product |
+| slot | string | [Store slot](#store-slots) |
+
+## Store purchase object
+
+One purchase as Fluxer last read it from the store. It never exposes purchase tokens, transaction IDs or the account token.
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| id | snowflake | The ID of the store purchase |
+| provider | string | [Store provider](#store-providers) |
+| kind | string | Either `subscription` or `gift` |
+| slot | string | [Store slot](#store-slots) |
+| product_id | string | Store product ID |
+| environment<sup>1</sup> | string | Either `production` or `sandbox` |
+| state | string | [Store purchase state](#store-purchase-states) |
+| entitled<sup>2</sup> | boolean | Whether the purchase grants premium now |
+| expires_at | ?ISO8601 timestamp | End of the paid period, or null for a gift |
+| entitled_until<sup>3</sup> | ?ISO8601 timestamp | End of access from this purchase |
+| will_renew | ?boolean | Whether the subscription renews, or null for a gift |
+| gift_code | ?string | Gift code minted by a gift purchase, or null |
+| created_at | ISO8601 timestamp | The time Fluxer first saw the purchase |
+
+<sup>1</sup> `sandbox` is an App Store sandbox purchase or a Google Play license test purchase
+
+<sup>2</sup> A `sandbox` purchase is false unless the account is allowed test purchases on the deployment
+
+<sup>3</sup> The grace period end while `state` is `grace`, otherwise `expires_at`. Null for a gift and for a purchase that grants nothing
+
+### Example
+
+```json
+{
+  "id": "1501203318237184000",
+  "provider": "app_store",
+  "kind": "subscription",
+  "slot": "monthly",
+  "product_id": "com.fluxer.plutonium.monthly",
+  "environment": "production",
+  "state": "active",
+  "entitled": true,
+  "expires_at": "2026-10-29T09:00:00.000Z",
+  "entitled_until": "2026-10-29T09:00:00.000Z",
+  "will_renew": true,
+  "gift_code": null,
+  "created_at": "2026-09-29T09:00:00.000Z"
+}
+```
+
+## Store purchase claim object
+
+### Structure
+
+| Field | Type | Description |
+| --- | --- | --- |
+| purchase | [store purchase](#store-purchase-object) object | The claimed purchase |
+| gift_code<sup>1</sup> | ?string | Gift code minted by a gift purchase, or null |
+
+<sup>1</sup> The same value as `purchase.gift_code`. Null for a subscription and for a gift the store has not finished charging
+
+### Example
+
+```json
+{
+  "purchase": {
+    "id": "1501203318237184001",
+    "provider": "google_play",
+    "kind": "gift",
+    "slot": "gift_1_month",
+    "product_id": "gift_1_month",
+    "environment": "production",
+    "state": "fulfilled",
+    "entitled": true,
+    "expires_at": null,
+    "entitled_until": null,
+    "will_renew": null,
+    "gift_code": "q7Xr2mPz9LkT4vBn8cWd3HsYf6JaE1Gu",
+    "created_at": "2026-09-29T09:00:00.000Z"
+  },
+  "gift_code": "q7Xr2mPz9LkT4vBn8cWd3HsYf6JaE1Gu"
+}
+```
+
+## Get in-app purchase context
+
+<RouteHeader method="GET" path="/v1/premium/store" />
+
+Returns the [in-app purchase context](#in-app-purchase-context-object) object for the authenticated account.
+
+The blocked reason is decided in a fixed order. A lifetime Visionary account reports `lifetime`, then the purchase-disabled premium flag reports `purchase_disabled`, then an active store subscription reports `existing_subscription` with that store, and then an active Stripe subscription reports `existing_subscription` with `stripe`.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [in-app purchase context](#in-app-purchase-context-object) object | The context was returned |
+
+### Side effects
+
+The first read creates the account token.
+
+### Rate limit
+
+30 requests per 10 seconds for each authenticated user, on the `store:context` bucket.
+
+## Claim App Store transaction
+
+<RouteHeader method="POST" path="/v1/premium/store/app-store/transactions" />
+
+Verifies a StoreKit 2 signed transaction, links the purchase to the authenticated account, applies it, and returns a [store purchase claim](#store-purchase-claim-object) object. Repeating the claim for the same purchase returns the same result.
+
+The app finishes the transaction after a 200 response or any 400 or 403 error listed under limitations. It leaves the transaction unfinished after a 429, a 503 `STORE_BILLING_UNAVAILABLE`, another 5xx or a network failure. StoreKit then delivers the transaction again, so the claim can be retried later.
+
+### Limitations
+
+- A transaction that fails verification, is for an unknown product or app, or comes from Xcode or local testing returns 400 `STORE_PURCHASE_INVALID`.
+- A gift bought in a quantity above one mints no gift code and returns 400 `STORE_PURCHASE_INVALID`.
+- A purchase already linked to another live account returns 403 `STORE_PURCHASE_OWNED_BY_OTHER_ACCOUNT`. So does a purchase whose account token belongs to another live account.
+- A sandbox purchase on an account that is not allowed test purchases returns 403 `STORE_PURCHASE_SANDBOX_NOT_ENTITLED`.
+- A subscription claimed by a lifetime Visionary account returns 403 `PREMIUM_PURCHASE_BLOCKED` with the reason `lifetime` and the store in the top-level `provider` member.
+- A deployment without the App Store set up, or an App Store that cannot be reached, returns 503 `STORE_BILLING_UNAVAILABLE`.
+
+After a test purchase or lifetime refusal the purchase is still linked to the account. It grants nothing.
+
+A purchase shared through Family Sharing is linked only through this route.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| signed_transaction | string | The signed transaction from StoreKit 2 (1-32768 characters) |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [store purchase claim](#store-purchase-claim-object) object | The purchase was verified and linked |
+| 400 | [error response](/http-api/#error-response) | The transaction was not accepted |
+| 403 | [error response](/http-api/#error-response) | The purchase belongs to another account, or it cannot grant premium to this account |
+| 503 | [error response](/http-api/#error-response) | The App Store is unavailable |
+
+### Side effects
+
+Fluxer reads the purchase from the App Store. A subscription that grants premium updates the account's premium state, and a gift purchase mints its gift code once. A changed premium state sends [User Update](/gateway/events/#user-update) to every account session.
+
+When the purchase has no account token, or has one that belongs to no live account, Fluxer sets the claiming account's token on it.
+
+### Rate limit
+
+20 requests per minute for each authenticated user, on the `store:claim:app_store` bucket.
+
+## Claim Google Play purchase
+
+<RouteHeader method="POST" path="/v1/premium/store/google-play/purchases" />
+
+Verifies a Google Play purchase token, links the purchase to the authenticated account, applies it, and returns a [store purchase claim](#store-purchase-claim-object) object. Repeating the claim for the same purchase returns the same result.
+
+Fluxer acknowledges the purchase with Google Play. The app does not need to acknowledge it.
+
+### Limitations
+
+- A token that Google Play does not recognise, a product that is not on sale, a product that does not match the token, and a package name that is not accepted all return 400 `STORE_PURCHASE_INVALID`.
+- The ownership, test purchase and lifetime refusals of [claim App Store transaction](#claim-app-store-transaction) apply unchanged, with the same codes.
+- A deployment without Google Play set up, or a Google Play that cannot be reached, returns 503 `STORE_BILLING_UNAVAILABLE`.
+
+A lifetime Visionary account that buys a subscription through Google Play is refunded. So is a gift bought through Google Play in a quantity above one.
+
+### JSON body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| purchase_token | string | Purchase token from Play Billing (1-1024 characters) |
+| product_id | string | Google Play product ID of the purchase (1-256 characters) |
+| package_name?<sup>1</sup> | string | Package name of the app that made the purchase (1-256 characters) |
+
+<sup>1</sup> One of `google_play.package_names` from the [in-app purchase context](#in-app-purchase-context-object). Defaults to the first accepted package
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | [store purchase claim](#store-purchase-claim-object) object | The purchase was verified and linked |
+| 400 | [error response](/http-api/#error-response) | The purchase was not accepted |
+| 403 | [error response](/http-api/#error-response) | The purchase belongs to another account, or it cannot grant premium to this account |
+| 503 | [error response](/http-api/#error-response) | Google Play is unavailable |
+
+### Side effects
+
+Fluxer reads the purchase from Google Play. A subscription that grants premium updates the account's premium state, and a gift purchase mints its gift code once and is then consumed. A changed premium state sends [User Update](/gateway/events/#user-update) to every account session.
+
+A purchase that replaces an earlier subscription, such as an upgrade, takes over that subscription's account link. The earlier purchase becomes `superseded`.
+
+### Rate limit
+
+20 requests per minute for each authenticated user, on the `store:claim:google_play` bucket.
+
+## List in-app purchases
+
+<RouteHeader method="GET" path="/v1/premium/store/purchases" />
+
+Returns an array of the [store purchase](#store-purchase-object) objects linked to the authenticated account, newest first.
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 200 | array[[store purchase](#store-purchase-object) object] | The purchases were returned |
+
+### Rate limit
+
+30 requests per 10 seconds for each authenticated user, on the `store:purchases:list` bucket.
+
+## Release in-app subscription
+
+<RouteHeader method="DELETE" path="/v1/premium/store/purchases/{purchase_id}" mfa />
+
+Unlinks a store subscription from the authenticated account and returns 204 with an empty body. Requires sudo mode. Another account can then claim the subscription.
+
+Releasing does not cancel the subscription. The subscriber cancels it in the store.
+
+### Limitations
+
+- A purchase that is not linked to the account returns 404 `UNKNOWN_STORE_PURCHASE`.
+- A gift purchase cannot be released and returns 400 `STORE_PURCHASE_INVALID`.
+
+### Path parameters
+
+| Field | Type | Description |
+| --- | --- | --- |
+| purchase_id | snowflake | The ID of the store purchase |
+
+### Request headers
+
+| Field | Type | Description |
+| --- | --- | --- |
+| X-Fluxer-Sudo-Mode-JWT? | string | Existing sudo mode proof |
+
+### JSON body
+
+The body is the [sudo verification fields](/http-api/guilds/#sudo-verification-fields). A request that already has a valid proof can omit it.
+
+| Field | Type | Description |
+| --- | --- | --- |
+| password? | string | Current account password |
+| mfa_method? | string | MFA method, either `totp` or `webauthn` |
+| mfa_code? | string | Authenticator code or unconsumed backup code when the method is `totp` (1-32 characters) |
+| webauthn_response? | [WebAuthn assertion](/http-api/authentication/#webauthn-assertion) object | Assertion when the method is `webauthn` |
+| webauthn_challenge? | string | Challenge bound to the WebAuthn assertion |
+
+### Response
+
+| Status | Body | Condition |
+| --- | --- | --- |
+| 204 | empty | The subscription was released |
+| 400 | [error response](/http-api/#error-response) | The purchase is a gift, or the sudo proof was rejected |
+| 403 | [error response](/http-api/#error-response) | Sudo mode is required and returns `SUDO_MODE_REQUIRED` |
+| 404 | [error response](/http-api/#error-response) | The purchase is not linked to the account |
+
+### Side effects
+
+The account stops receiving premium from the subscription, and a changed premium state sends [User Update](/gateway/events/#user-update) to every account session.
+
+### Rate limit
+
+5 requests per minute for each authenticated user, on the `store:purchases:release` bucket.
+
+## Store notification webhooks
+
+The stores call these two routes. No client calls them, and they have no OpenAPI entry. Both routes are served only on the hosted deployment, and both answer 503 `STORE_BILLING_UNAVAILABLE` while their store is not set up.
+
+Fluxer reads the purchase from the store again after each notification, and a redelivered notification is applied once. A Google Play voided purchase is the one notification that changes a purchase by itself. It marks a gift `refunded`, or a subscription `revoked` when the voided order is its latest order.
+
+When a gift is refunded, Fluxer revokes its gift code and takes the gift time back from the account that redeemed it. When the store reverses the refund, the gift code and its gift time come back.
+
+Fluxer also reads the App Store notification history and the Google Play voided purchases once a day, so a notification that was missed is still applied.
+
+### App Store Server Notifications
+
+`POST /webhooks/app-store` receives App Store Server Notifications V2. The body is `{"signedPayload": "..."}`, signed by Apple. Fluxer verifies the signature before it answers.
+
+| Status | Condition |
+| --- | --- |
+| 200 | The notification was verified and queued |
+| 401 | The body or its signature was rejected and returns `STORE_NOTIFICATION_UNAUTHORIZED` |
+| 503 | The App Store is not set up |
+
+300 requests per minute for each client IP address, on the `store:webhook:app_store` bucket. The bucket is exempt from the global bucket.
+
+### Google Play real-time developer notifications
+
+`POST /webhooks/google-play` receives real-time developer notifications as Pub/Sub push messages. Each message is authenticated by a Google-signed token in the `Authorization` header, whose audience and service account the deployment configures.
+
+| Status | Condition |
+| --- | --- |
+| 204 | The message was queued, or it was not a Pub/Sub message and was dropped |
+| 401 | The token was rejected and returns `STORE_NOTIFICATION_UNAUTHORIZED` |
+| 503 | Google Play is not set up |
+
+300 requests per minute for each client IP address, on the `store:webhook:google_play` bucket. The bucket is exempt from the global bucket.

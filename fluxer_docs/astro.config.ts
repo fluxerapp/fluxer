@@ -237,7 +237,13 @@ export default defineConfig({
 				},
 				{
 					label: 'Commerce',
-					items: ['http-api/billing', 'http-api/premium', 'http-api/gifts', 'http-api/donations'],
+					items: [
+						'http-api/billing',
+						'http-api/premium',
+						'http-api/in-app-purchases',
+						'http-api/gifts',
+						'http-api/donations',
+					],
 				},
 				{
 					label: 'Client surfaces',

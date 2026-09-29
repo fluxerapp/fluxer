@@ -28,6 +28,11 @@ const API_SETTINGS_NOT_FORWARDED: Record<string, string> = {
 			]),
 		),
 	),
+	...Object.fromEntries(
+		NAMED_FLUXER_ENV_NAMES.filter((name) =>
+			['FLUXER_APP_STORE_', 'FLUXER_GOOGLE_PLAY_', 'FLUXER_STORE_BILLING_'].some((prefix) => name.startsWith(prefix)),
+		).map((name) => [name, 'in-app purchases are sold only by the hosted service']),
+	),
 };
 
 const INPUT_NAMES: Record<string, string> = {

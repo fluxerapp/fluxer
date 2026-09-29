@@ -251,6 +251,16 @@ import {
 	type MessageReportSubmissionByReporterRow,
 } from '@app/api/database/types/ReportTypes';
 import {
+	STORE_ACCOUNT_TOKEN_BY_USER_COLUMNS,
+	STORE_ACCOUNT_TOKEN_COLUMNS,
+	STORE_PURCHASE_BY_USER_COLUMNS,
+	STORE_PURCHASE_COLUMNS,
+	type StoreAccountTokenByUserRow,
+	type StoreAccountTokenRow,
+	type StorePurchaseByUserRow,
+	type StorePurchaseRow,
+} from '@app/api/database/types/StoreBillingTypes';
+import {
 	FAVORITE_MEME_COLUMNS,
 	type FavoriteMemeRow,
 	NOTE_COLUMNS,
@@ -702,6 +712,27 @@ export const GiftCodesByRedeemer = defineTable<GiftCodeByRedeemerRow, 'redeemed_
 	name: 'gift_codes_by_redeemer',
 	columns: GIFT_CODE_BY_REDEEMER_COLUMNS,
 	primaryKey: ['redeemed_by_user_id', 'code'],
+});
+export const StorePurchases = defineTable<StorePurchaseRow, 'store_key'>({
+	name: 'store_purchases',
+	columns: STORE_PURCHASE_COLUMNS,
+	primaryKey: ['store_key'],
+});
+export const StorePurchasesByUser = defineTable<StorePurchaseByUserRow, 'user_id' | 'store_key', 'user_id'>({
+	name: 'store_purchases_by_user',
+	columns: STORE_PURCHASE_BY_USER_COLUMNS,
+	primaryKey: ['user_id', 'store_key'],
+	partitionKey: ['user_id'],
+});
+export const StoreAccountTokens = defineTable<StoreAccountTokenRow, 'token_'>({
+	name: 'store_account_tokens',
+	columns: STORE_ACCOUNT_TOKEN_COLUMNS,
+	primaryKey: ['token_'],
+});
+export const StoreAccountTokensByUser = defineTable<StoreAccountTokenByUserRow, 'user_id'>({
+	name: 'store_account_tokens_by_user',
+	columns: STORE_ACCOUNT_TOKEN_BY_USER_COLUMNS,
+	primaryKey: ['user_id'],
 });
 export const AdminArchivesBySubject = defineTable<AdminArchiveRow, 'subject_type' | 'subject_id' | 'archive_id'>({
 	name: 'admin_archives_by_subject',

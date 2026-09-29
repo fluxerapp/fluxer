@@ -223,4 +223,94 @@ describe('buildNamedFluxerEnvOverrides', () => {
 			yearly_brl: 'price_blob_yearly_brl',
 		});
 	});
+
+	test('maps the App Store variables onto integrations.app_store', () => {
+		const overrides = buildNamedFluxerEnvOverrides({
+			FLUXER_APP_STORE_ENABLED: 'true',
+			FLUXER_APP_STORE_ISSUER_ID: 'issuer-1',
+			FLUXER_APP_STORE_KEY_ID: 'KEY123',
+			FLUXER_APP_STORE_PRIVATE_KEY: '-----BEGIN PRIVATE KEY-----\\nabc\\n-----END PRIVATE KEY-----',
+			FLUXER_APP_STORE_PRIVATE_KEY_PATH: '/etc/fluxer/keys/app-store.p8',
+			FLUXER_APP_STORE_APPS: '[{"bundle_id":"com.fluxer","app_apple_id":1234567890}]',
+			FLUXER_APP_STORE_PRODUCTS: '{"com.fluxer.plutonium.monthly":"monthly","com.fluxer.gift.1year":"gift_1_year"}',
+		});
+
+		expect(overrides).toEqual({
+			integrations: {
+				app_store: {
+					enabled: true,
+					issuer_id: 'issuer-1',
+					key_id: 'KEY123',
+					private_key: '-----BEGIN PRIVATE KEY-----\\nabc\\n-----END PRIVATE KEY-----',
+					private_key_path: '/etc/fluxer/keys/app-store.p8',
+					apps: [{bundle_id: 'com.fluxer', app_apple_id: 1234567890}],
+					products: {'com.fluxer.plutonium.monthly': 'monthly', 'com.fluxer.gift.1year': 'gift_1_year'},
+				},
+			},
+		});
+	});
+
+	test('maps the Google Play variables onto integrations.google_play', () => {
+		const overrides = buildNamedFluxerEnvOverrides({
+			FLUXER_GOOGLE_PLAY_ENABLED: 'true',
+			FLUXER_GOOGLE_PLAY_PACKAGES: 'com.fluxer, com.fluxer.canary',
+			FLUXER_GOOGLE_PLAY_CLIENT_EMAIL: 'billing@fluxer.iam.gserviceaccount.com',
+			FLUXER_GOOGLE_PLAY_PRIVATE_KEY: 'pem',
+			FLUXER_GOOGLE_PLAY_PRIVATE_KEY_PATH: '/etc/fluxer/keys/play.pem',
+			FLUXER_GOOGLE_PLAY_SERVICE_ACCOUNT_JSON_PATH: '/etc/fluxer/keys/play.json',
+			FLUXER_GOOGLE_PLAY_TOKEN_URI: 'https://oauth2.example/token',
+			FLUXER_GOOGLE_PLAY_PRODUCTS: '{"plutonium:monthly":"monthly","gift_1_month":"gift_1_month"}',
+			FLUXER_GOOGLE_PLAY_PUSH_AUDIENCE: 'https://api.fluxer.app/webhooks/google-play',
+			FLUXER_GOOGLE_PLAY_PUSH_SERVICE_ACCOUNT_EMAIL: 'rtdn@fluxer.iam.gserviceaccount.com',
+		});
+
+		expect(overrides).toEqual({
+			integrations: {
+				google_play: {
+					enabled: true,
+					packages: ['com.fluxer', 'com.fluxer.canary'],
+					client_email: 'billing@fluxer.iam.gserviceaccount.com',
+					private_key: 'pem',
+					private_key_path: '/etc/fluxer/keys/play.pem',
+					service_account_json_path: '/etc/fluxer/keys/play.json',
+					token_uri: 'https://oauth2.example/token',
+					products: {'plutonium:monthly': 'monthly', gift_1_month: 'gift_1_month'},
+					push_audience: 'https://api.fluxer.app/webhooks/google-play',
+					push_service_account_email: 'rtdn@fluxer.iam.gserviceaccount.com',
+				},
+			},
+		});
+	});
+
+	test('maps the store billing sandbox variables onto integrations.store_billing', () => {
+		expect(
+			buildNamedFluxerEnvOverrides({
+				FLUXER_STORE_BILLING_SANDBOX_USER_IDS: '1234, 5678',
+				FLUXER_STORE_BILLING_SANDBOX_ENTITLES_ALL: 'true',
+			}),
+		).toEqual({
+			integrations: {store_billing: {sandbox_user_ids: ['1234', '5678'], sandbox_entitles_all: true}},
+		});
+	});
+
+	test('rejects a store enabled flag that is not a boolean', () => {
+		expect(() => buildNamedFluxerEnvOverrides({FLUXER_APP_STORE_ENABLED: 'yes'})).toThrow(
+			'FLUXER_APP_STORE_ENABLED must be true or false',
+		);
+		expect(() => buildNamedFluxerEnvOverrides({FLUXER_GOOGLE_PLAY_ENABLED: '1'})).toThrow(
+			'FLUXER_GOOGLE_PLAY_ENABLED must be true or false',
+		);
+	});
+
+	test('rejects a store app list or product map with the wrong JSON shape', () => {
+		expect(() => buildNamedFluxerEnvOverrides({FLUXER_APP_STORE_APPS: '{"bundle_id":"com.fluxer"}'})).toThrow(
+			'FLUXER_APP_STORE_APPS must be a JSON array',
+		);
+		expect(() => buildNamedFluxerEnvOverrides({FLUXER_APP_STORE_PRODUCTS: '["monthly"]'})).toThrow(
+			'FLUXER_APP_STORE_PRODUCTS must be a JSON object',
+		);
+		expect(() => buildNamedFluxerEnvOverrides({FLUXER_GOOGLE_PLAY_PRODUCTS: '{bad'})).toThrow(
+			'FLUXER_GOOGLE_PLAY_PRODUCTS must be valid JSON',
+		);
+	});
 });

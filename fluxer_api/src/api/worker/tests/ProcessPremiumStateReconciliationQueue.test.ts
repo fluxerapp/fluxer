@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-import {createUserID} from '@app/api/BrandedTypes';
+import {createUserID, type UserID} from '@app/api/BrandedTypes';
 import type {UserRow} from '@app/api/database/types/UserTypes';
 import {EMPTY_USER_ROW} from '@app/api/database/types/UserTypes';
 import {PremiumStateReconciliationQueueService} from '@app/api/infrastructure/PremiumStateReconciliationQueueService';
@@ -91,11 +91,16 @@ function createStripeStub(subscription: Stripe.Subscription, invoices: Array<Str
 	} as unknown as Stripe;
 }
 
-function createCapturingDeps(user: User): {
+function createCapturingDeps(
+	user: User,
+	storeEntitlement: {expiresAt: Date} | null = null,
+): {
 	userRepository: UserRepository;
 	patches: Array<Partial<UserRow>>;
+	storeApplications: Array<UserID>;
 	extras: Record<string, unknown>;
 } {
+	const storeApplications: Array<UserID> = [];
 	const patches: Array<Partial<UserRow>> = [];
 	const userRepository = {
 		findUnique: async () => user,
@@ -107,8 +112,25 @@ function createCapturingDeps(user: User): {
 	const extras = {
 		userCacheService: {setUserPartialResponseFromUserInBackground: () => {}},
 		gatewayService: {dispatchPresence: async () => {}},
+		storeEntitlementService: {
+			getActiveStoreEntitlement: async () =>
+				storeEntitlement
+					? {
+							provider: 'app_store',
+							storePurchaseId: 1n,
+							entitledUntil: storeEntitlement.expiresAt,
+							expiresAt: storeEntitlement.expiresAt,
+							graceEndsAt: null,
+							autoRenew: true,
+							slot: 'monthly',
+						}
+					: null,
+			applyStoreEntitlementToUser: async (userId: UserID) => {
+				storeApplications.push(userId);
+			},
+		},
 	};
-	return {userRepository, patches, extras};
+	return {userRepository, patches, storeApplications, extras};
 }
 
 function createHelpers(): WorkerTaskHelpers {
@@ -322,6 +344,36 @@ describe('processPremiumStateReconciliationQueue', () => {
 		expect(patches[0].premium_until).toBeNull();
 		expect(patches[0].premium_since).toBeNull();
 	});
+	test('hands a user with an active App Store subscription and a stale Stripe customer to the store', async () => {
+		const queueService = createQueueService();
+		await queueService.enqueueUser(USER_ID, new Date(Date.now() - 1000));
+
+		const endedAtMs = Date.now() - 40 * ONE_DAY_MS;
+		const storeExpiresAt = new Date(Date.now() + 20 * ONE_DAY_MS);
+		const user = createPremiumUser({
+			premium_until: storeExpiresAt,
+			premium_billing_cycle: null,
+			premium_will_cancel: false,
+			stripe_subscription_id: null,
+		});
+		const {userRepository, patches, storeApplications, extras} = createCapturingDeps(user, {
+			expiresAt: storeExpiresAt,
+		});
+
+		setWorkerDependenciesForTest({
+			premiumStateReconciliationQueueService: queueService,
+			stripe: createStripeStub(createCancelledSubscription(endedAtMs), [createPaidInvoice(endedAtMs)]),
+			userRepository,
+			...extras,
+		});
+
+		await processPremiumStateReconciliationQueue({}, createHelpers());
+
+		expect(patches).toEqual([]);
+		expect(storeApplications).toEqual([USER_ID]);
+		expect(await queueService.getQueueSize()).toBe(0);
+	});
+
 	test('clears the perks-sanitized latch once the subscription is active again', async () => {
 		const queueService = createQueueService();
 		await queueService.enqueueUser(USER_ID, new Date(Date.now() - 1000));

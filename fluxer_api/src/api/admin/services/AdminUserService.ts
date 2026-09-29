@@ -21,6 +21,7 @@ import type {UserCacheService} from '@app/api/infrastructure/UserCacheService';
 import {getBillingRepository} from '@app/api/middleware/ServiceRegistry';
 import {OAuth2TokenRepository} from '@app/api/oauth/repositories/OAuth2TokenRepository';
 import type {ReportService} from '@app/api/report/ReportService';
+import type {StoreEntitlementService} from '@app/api/store_billing/StoreEntitlementService';
 import type {IUserRepository} from '@app/api/user/IUserRepository';
 import type {UserContactChangeLogService} from '@app/api/user/services/UserContactChangeLogService';
 import {AdminACLs} from '@fluxer/constants/src/AdminACLs';
@@ -47,6 +48,7 @@ interface AdminUserServiceDeps {
 	bulkMessageDeletionQueue: KVBulkMessageDeletionQueueService;
 	stripe: Stripe | null;
 	reportService: ReportService;
+	storeEntitlementService: StoreEntitlementService;
 }
 
 export class AdminUserService {
@@ -109,6 +111,7 @@ export class AdminUserService {
 			stripe: deps.stripe,
 			billingRepository: getBillingRepository(),
 			oauth2Tokens: new OAuth2TokenRepository(),
+			storeEntitlementService: deps.storeEntitlementService,
 		});
 		this.contactChangeLogService = contactChangeLog;
 	}

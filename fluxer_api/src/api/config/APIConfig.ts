@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {WorkerTaskName} from '@app/api/worker/WorkerLaneConfig';
-import type {CachePurgeAdapterName} from '@fluxer/config/src/MasterConfig';
+import type {CachePurgeAdapterName, StoreProductSlotName} from '@fluxer/config/src/MasterConfig';
 
 export type APIWorkerMode = 'all_lanes' | 'single_lane' | 'single_task';
 export type APIWorkerLaneName = 'realtime' | 'unfurl' | 'lifecycle' | 'batch';
@@ -11,6 +11,11 @@ export interface PushProviderAppConfig {
 	appId: string;
 	topic?: string;
 	environment?: PushProviderEnvironment;
+}
+
+export interface AppStoreAppConfig {
+	bundleId: string;
+	appAppleId: number;
 }
 
 export interface APICachePurgeConfig {
@@ -304,6 +309,31 @@ export interface APIConfig {
 			privateKeyPath?: string;
 			apps: Array<PushProviderAppConfig>;
 		};
+	};
+	appStore: {
+		enabled: boolean;
+		issuerId?: string;
+		keyId?: string;
+		privateKey?: string;
+		privateKeyPath?: string;
+		apps: Array<AppStoreAppConfig>;
+		products: Record<string, StoreProductSlotName>;
+	};
+	googlePlay: {
+		enabled: boolean;
+		packages: Array<string>;
+		clientEmail?: string;
+		privateKey?: string;
+		privateKeyPath?: string;
+		serviceAccountJsonPath?: string;
+		tokenUri: string;
+		products: Record<string, StoreProductSlotName>;
+		pushAudience?: string;
+		pushServiceAccountEmail?: string;
+	};
+	storeBilling: {
+		sandboxUserIds: Array<string>;
+		sandboxEntitlesAll: boolean;
 	};
 	worker: {
 		mode: APIWorkerMode;

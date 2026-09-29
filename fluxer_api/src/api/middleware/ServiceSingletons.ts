@@ -72,6 +72,11 @@ import {ReadStateRequestService} from '@app/api/read_state/ReadStateRequestServi
 import {ReadStateService} from '@app/api/read_state/ReadStateService';
 import {ReportRepository} from '@app/api/report/ReportRepository';
 import {getGuildSearchService} from '@app/api/SearchFactory';
+import {AppStoreServerApiClient} from '@app/api/store_billing/app_store/AppStoreServerApiClient';
+import {GooglePlayAccessTokenProvider} from '@app/api/store_billing/google_play/GooglePlayAccessTokenProvider';
+import {GooglePlayDeveloperApiClient} from '@app/api/store_billing/google_play/GooglePlayDeveloperApiClient';
+import {GooglePlayPushVerifier} from '@app/api/store_billing/google_play/GooglePlayPushVerifier';
+import {StoreBillingRepository} from '@app/api/store_billing/StoreBillingRepository';
 import {ThemeService} from '@app/api/theme/ThemeService';
 import {EntranceSoundPlayService} from '@app/api/user/entrance_sound/EntranceSoundPlayService';
 import {EntranceSoundRepository} from '@app/api/user/entrance_sound/EntranceSoundRepository';
@@ -119,6 +124,13 @@ export const getEmailChangeRepository = singleton(() => new EmailChangeRepositor
 export const getPasswordChangeRepository = singleton(() => new PasswordChangeRepository());
 const getUserContactChangeLogRepository = singleton(() => new UserContactChangeLogRepository());
 export const getDonationRepository = singleton(() => new DonationRepository());
+export const getStoreBillingRepository = singleton(() => new StoreBillingRepository());
+export const getAppStoreServerApiClient = singleton(() => new AppStoreServerApiClient());
+const getGooglePlayAccessTokenProvider = singleton(() => new GooglePlayAccessTokenProvider());
+export const getGooglePlayDeveloperApiClient = singleton(
+	() => new GooglePlayDeveloperApiClient({accessTokenProvider: getGooglePlayAccessTokenProvider()}),
+);
+export const getGooglePlayPushVerifier = singleton(() => new GooglePlayPushVerifier());
 const getAdminApiKeyRepository = singleton(() => new AdminApiKeyRepository());
 let instanceConfigRepositoryInstance: InstanceConfigRepository | null = null;
 export const getInstanceConfigRepository = singleton(

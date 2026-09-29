@@ -23,6 +23,7 @@ import {
 import {ReportStatus} from '@app/api/report/IReportRepository';
 import {ReportRepository} from '@app/api/report/ReportRepository';
 import {drainSearchTasks} from '@app/api/search/SearchTaskTracker';
+import {createTestStoreEntitlementService} from '@app/api/store_billing/tests/StoreBillingTestUtils';
 import {type ApiTestHarness, createApiTestHarness} from '@app/api/test/ApiTestHarness';
 import {NoopLogger} from '@app/api/test/mocks/NoopLogger';
 import {HTTP_STATUS} from '@app/api/test/TestConstants';
@@ -70,6 +71,7 @@ function installWorkerDependencies(): void {
 		deletionQueueService: getKVAccountDeletionQueue(),
 		bulkMessageDeletionQueueService: getKVBulkMessageDeletionQueue(),
 		stripe: null,
+		storeEntitlementService: createTestStoreEntitlementService(),
 	});
 }
 
