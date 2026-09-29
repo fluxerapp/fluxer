@@ -38,7 +38,6 @@ import {
 import {AltchaCaptchaConfigSchema} from '@fluxer/schema/src/domains/admin/AltchaCaptchaSchemas';
 import {DomainMigrationConfigSchema} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {GatewayRolloutConfigSchema} from '@fluxer/schema/src/domains/admin/GatewayRolloutSchemas';
-import {ProfileTimezoneConfigSchema} from '@fluxer/schema/src/domains/admin/ProfileTimezoneSchemas';
 import type {PushRelayConfig, PushRelayConfigUpdateRequest} from '@fluxer/schema/src/domains/admin/PushRelaySchemas';
 import {UserIdParam} from '@fluxer/schema/src/domains/common/CommonParamSchemas';
 import {ExperimentDeliveryConfigSchema} from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
@@ -69,7 +68,6 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		pushRelay,
 		domainMigration,
 		altchaCaptcha,
-		profileTimezone,
 		experimentDelivery,
 		registrationConfig,
 		registrationUrls,
@@ -80,7 +78,6 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		instanceConfigRepository.getPushRelayConfig(),
 		instanceConfigRepository.getDomainMigrationConfig(),
 		instanceConfigRepository.getAltchaCaptchaConfig(),
-		instanceConfigRepository.getProfileTimezoneConfig(),
 		instanceConfigRepository.getExperimentDeliveryConfig(),
 		instanceConfigRepository.getRegistrationConfig(),
 		instanceConfigRepository.getRegistrationUrlsForAdmin(),
@@ -115,7 +112,6 @@ async function buildInstanceConfigResponse(): Promise<InstanceConfigResponse> {
 		push_relay: pushRelay,
 		domain_migration: domainMigration,
 		altcha_captcha: altchaCaptcha,
-		profile_timezone: profileTimezone,
 		experiment_delivery: experimentDelivery,
 		registration: {
 			...registrationConfig,
@@ -397,18 +393,6 @@ export function InstanceConfigAdminController(app: HonoApp) {
 				if (Object.keys(patch).length > 0) {
 					await instanceConfigRepository.updateAltchaCaptchaConfig((current) =>
 						AltchaCaptchaConfigSchema.parse({
-							...current,
-							...patch,
-							config_version: current.config_version + 1,
-						}),
-					);
-				}
-			}
-			if (data.profile_timezone) {
-				const patch = omitUndefinedFields(data.profile_timezone);
-				if (Object.keys(patch).length > 0) {
-					await instanceConfigRepository.updateProfileTimezoneConfig((current) =>
-						ProfileTimezoneConfigSchema.parse({
 							...current,
 							...patch,
 							config_version: current.config_version + 1,

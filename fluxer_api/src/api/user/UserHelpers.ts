@@ -2,10 +2,8 @@
 
 import {Config} from '@app/api/Config';
 import type {UserRow} from '@app/api/database/types/UserTypes';
-import {resolveExperimentTargeting} from '@app/api/experiment/ExperimentTargeting';
 import {sharedListHas} from '@app/api/infrastructure/activity/SharedLists';
 import {getCachedInstancePremiumMode} from '@app/api/limits/InstancePremiumModeCache';
-import {getInstanceConfigRepository} from '@app/api/middleware/ServiceSingletons';
 import type {User} from '@app/api/models/User';
 import {extractEmailDomain} from '@app/api/utils/EmailDomainUtils';
 import {
@@ -15,7 +13,6 @@ import {
 	SuspiciousActivityFlags,
 	UserFlags,
 } from '@fluxer/constants/src/UserConstants';
-import {resolveProfileTimezoneAssignment} from '@fluxer/schema/src/domains/admin/ProfileTimezoneSchemas';
 import type {RequiredAction} from '@fluxer/schema/src/domains/user/UserResponseSchemas';
 import {ms} from 'itty-time';
 
@@ -314,10 +311,4 @@ export function isProfileSubstringExempt(user: Pick<PremiumCheckable, 'flags'>):
 
 export function isBugHunterBotUser(user: Pick<User, 'flags' | 'isBot'>): boolean {
 	return user.isBot && (user.flags & UserFlags.BUG_HUNTER) !== 0n;
-}
-
-export async function canUseProfileTimezone(user: User): Promise<boolean> {
-	const config = await getInstanceConfigRepository().getProfileTimezoneConfig();
-	const targeting = await resolveExperimentTargeting(user, [config]);
-	return resolveProfileTimezoneAssignment(config, user.id.toString(), targeting).enabled;
 }

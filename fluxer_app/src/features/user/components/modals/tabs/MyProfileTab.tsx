@@ -53,7 +53,6 @@ import {ProfileTypeSelector} from '@app/features/user/components/modals/tabs/my_
 import {TimezoneProfileSettings} from '@app/features/user/components/modals/tabs/my_profile_tab/TimezoneProfileSettings';
 import {ProfilePreview} from '@app/features/user/components/profile/ProfilePreview';
 import type {Profile} from '@app/features/user/models/Profile';
-import ProfileTimezoneRollout from '@app/features/user/state/ProfileTimezoneRollout';
 import Users from '@app/features/user/state/Users';
 import * as NicknameUtils from '@app/features/user/utils/NicknameUtils';
 import {setMeaningfulFormValue} from '@app/lib/forms/MeaningfulFormValue';
@@ -411,7 +410,6 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 	);
 	const showPremiumFeatures = shouldShowPremiumFeatures();
 	const hasPremium = useMemo(() => showPremiumFeatures && (user?.isPremium() ?? false), [showPremiumFeatures, user]);
-	const hasProfileTimezoneAccess = ProfileTimezoneRollout.enabled;
 	const hasPerGuildProfiles = useMemo(
 		() =>
 			isLimitToggleEnabled(
@@ -537,10 +535,8 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 				};
 				assignProfileAssetUploadPatch(updateData, 'avatar', avatarAsset);
 				assignProfileAssetUploadPatch(updateData, 'banner', bannerAsset);
-				if (hasProfileTimezoneAccess) {
-					updateData.timezone = data.timezone;
-					updateData.timezone_privacy_flags = data.timezone_privacy_flags;
-				}
+				updateData.timezone = data.timezone;
+				updateData.timezone_privacy_flags = data.timezone_privacy_flags;
 				if (data.premium_badge_hidden !== undefined) {
 					updateData.premium_badge_hidden = data.premium_badge_hidden;
 				}
@@ -591,7 +587,6 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 			commitProfileFormValues,
 			isPerGuildProfile,
 			isProfileCustomizationLocked,
-			hasProfileTimezoneAccess,
 			selectedGuildId,
 			user,
 			activeProfileData,
@@ -701,12 +696,10 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 		!bannerAsset.hasCleared &&
 		(bannerAsset.hasAsset || (!bannerAsset.isDirty && Boolean(profileRemoteValues?.banner.hasCustomAsset)));
 	const profileFallbackDisplayName = NicknameUtils.getDisplayName(user);
-	const watchedTimezone = hasProfileTimezoneAccess ? (form.watch('timezone') ?? null) : null;
-	const watchedTimezonePrivacyFlags = hasProfileTimezoneAccess
-		? (form.watch('timezone_privacy_flags') ?? ProfileFieldPrivacyFlags.EVERYONE)
-		: ProfileFieldPrivacyFlags.EVERYONE;
+	const watchedTimezone = form.watch('timezone') ?? null;
+	const watchedTimezonePrivacyFlags = form.watch('timezone_privacy_flags') ?? ProfileFieldPrivacyFlags.EVERYONE;
 	const previewTimezoneOffset =
-		hasProfileTimezoneAccess && !isPerGuildProfile && watchedTimezone !== null && watchedTimezonePrivacyFlags !== 0
+		!isPerGuildProfile && watchedTimezone !== null && watchedTimezonePrivacyFlags !== 0
 			? getCurrentTimeZoneOffsetMinutes(watchedTimezone)
 			: null;
 	return (
@@ -756,7 +749,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 							>
 								{isPerGuildProfile
 									? i18n._(VERIFY_YOUR_EMAIL_BEFORE_CHANGING_YOUR_COMMUNITY_NICKNAME_DESCRIPTOR)
-									: hasProfileTimezoneAccess && showPremiumFeatures
+									: showPremiumFeatures
 										? i18n._(VERIFY_YOUR_EMAIL_BEFORE_CHANGING_YOUR_USERNAME_DISPLAY_DESCRIPTOR, {
 												premiumProductName: PREMIUM_PRODUCT_NAME,
 											})
@@ -832,7 +825,7 @@ const MyProfileTabComponent = observer(function MyProfileTabComponent({
 											disabled={isPronounsDisabled}
 										/>
 									</div>
-									{!isPerGuildProfile && hasProfileTimezoneAccess && (
+									{!isPerGuildProfile && (
 										<TimezoneProfileSettings
 											timezone={watchedTimezone}
 											timezonePrivacyFlags={watchedTimezonePrivacyFlags}

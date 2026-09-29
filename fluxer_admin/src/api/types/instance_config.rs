@@ -27,8 +27,6 @@ pub struct InstanceConfigResponse {
     #[serde(default)]
     pub altcha_captcha: AltchaCaptchaConfigResponse,
     #[serde(default)]
-    pub profile_timezone: ProfileTimezoneConfigResponse,
-    #[serde(default)]
     pub experiment_delivery: ExperimentDeliveryConfigResponse,
     #[serde(default)]
     pub billing: InstanceBillingResponse,
@@ -445,7 +443,6 @@ pub const DOMAIN_MIGRATION_DEFAULT_SALT: &str = "domain-migration-v1";
 pub const ALTCHA_CAPTCHA_DEFAULT_SALT: &str = "altcha-captcha-v1";
 pub const ALTCHA_CAPTCHA_COST_RANGE: std::ops::RangeInclusive<u32> = 1_000..=100_000;
 pub const ALTCHA_CAPTCHA_MAX_COUNTER_RANGE: std::ops::RangeInclusive<u32> = 100..=1_000_000;
-pub const PROFILE_TIMEZONE_DEFAULT_SALT: &str = "profile-timezone-v1";
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[serde(default)]
@@ -575,52 +572,6 @@ pub struct AltchaCaptchaConfigUpdateRequest {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(default)]
-pub struct ProfileTimezoneConfigResponse {
-    pub enabled: bool,
-    pub config_version: u64,
-    pub rollout_basis_points: u32,
-    pub rollout_salt: String,
-    pub included_user_ids: Vec<String>,
-    pub included_guild_ids: Vec<String>,
-    pub include_premium_users: bool,
-    pub excluded_user_ids: Vec<String>,
-}
-
-impl Default for ProfileTimezoneConfigResponse {
-    fn default() -> Self {
-        Self {
-            enabled: false,
-            config_version: 0,
-            rollout_basis_points: 0,
-            rollout_salt: PROFILE_TIMEZONE_DEFAULT_SALT.to_owned(),
-            included_user_ids: Vec::new(),
-            included_guild_ids: Vec::new(),
-            include_premium_users: false,
-            excluded_user_ids: Vec::new(),
-        }
-    }
-}
-
-#[derive(Clone, Debug, Default, Serialize)]
-pub struct ProfileTimezoneConfigUpdateRequest {
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub enabled: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub rollout_basis_points: Option<u32>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub rollout_salt: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub included_user_ids: Option<Vec<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub included_guild_ids: Option<Vec<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub include_premium_users: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub excluded_user_ids: Option<Vec<String>>,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize)]
-#[serde(default)]
 pub struct ExperimentDeliveryConfigResponse {
     pub poll_interval_seconds: u64,
     pub poll_jitter_percent: u32,
@@ -738,8 +689,6 @@ pub struct InstanceConfigUpdateRequest {
     pub domain_migration: Option<DomainMigrationConfigUpdateRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub altcha_captcha: Option<AltchaCaptchaConfigUpdateRequest>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub profile_timezone: Option<ProfileTimezoneConfigUpdateRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub experiment_delivery: Option<ExperimentDeliveryConfigUpdateRequest>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -1057,16 +1006,12 @@ mod tests {
             .expect("default domain migration config");
         let altcha_captcha = serde_json::from_value::<AltchaCaptchaConfigResponse>(json!({}))
             .expect("default altcha captcha config");
-        let profile_timezone = serde_json::from_value::<ProfileTimezoneConfigResponse>(json!({}))
-            .expect("default profile timezone config");
         let delivery = serde_json::from_value::<ExperimentDeliveryConfigResponse>(json!({}))
             .expect("default delivery config");
         let domain_migration =
             serde_json::to_value(domain_migration).expect("serializable domain migration config");
         let altcha_captcha =
             serde_json::to_value(altcha_captcha).expect("serializable altcha captcha config");
-        let profile_timezone =
-            serde_json::to_value(profile_timezone).expect("serializable profile timezone config");
         let delivery = serde_json::to_value(delivery).expect("serializable delivery config");
         let generated_domain_migration: generated_types::DomainMigrationConfigResponse =
             serde_json::from_value(domain_migration.clone())
@@ -1074,9 +1019,6 @@ mod tests {
         let generated_altcha_captcha: generated_types::AltchaCaptchaConfigResponse =
             serde_json::from_value(altcha_captcha.clone())
                 .expect("generated altcha captcha config contract");
-        let generated_profile_timezone: generated_types::ProfileTimezoneConfigResponse =
-            serde_json::from_value(profile_timezone.clone())
-                .expect("generated profile timezone config contract");
         let generated_delivery: generated_types::ExperimentDeliveryConfigResponse =
             serde_json::from_value(delivery.clone()).expect("generated delivery config contract");
         assert_eq!(
@@ -1090,11 +1032,6 @@ mod tests {
             altcha_captcha
         );
         assert_eq!(
-            serde_json::to_value(generated_profile_timezone)
-                .expect("serializable generated profile timezone config"),
-            profile_timezone
-        );
-        assert_eq!(
             serde_json::to_value(generated_delivery)
                 .expect("serializable generated delivery config"),
             delivery
@@ -1102,7 +1039,6 @@ mod tests {
         for (name, value) in [
             ("DomainMigrationConfigResponse", domain_migration),
             ("AltchaCaptchaConfigResponse", altcha_captcha),
-            ("ProfileTimezoneConfigResponse", profile_timezone),
             ("ExperimentDeliveryConfigResponse", delivery),
         ] {
             for (field, value) in value.as_object().expect("config object") {

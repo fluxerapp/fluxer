@@ -13,7 +13,6 @@ import type {IUserAccountRepository} from '@app/api/user/repositories/IUserAccou
 import type {IUserChannelRepository} from '@app/api/user/repositories/IUserChannelRepository';
 import type {IUserRelationshipRepository} from '@app/api/user/repositories/IUserRelationshipRepository';
 import type {IUserSettingsRepository} from '@app/api/user/repositories/IUserSettingsRepository';
-import {canUseProfileTimezone} from '@app/api/user/UserHelpers';
 import {ChannelTypes} from '@fluxer/constants/src/ChannelConstants';
 import {
 	PremiumFlags,
@@ -129,8 +128,7 @@ export class UserAccountLookupService {
 			!restrictProfile &&
 			user.timezone != null &&
 			profileFieldPrivacyContext != null &&
-			this.canViewProfileField(user.timezonePrivacyFlags, profileFieldPrivacyContext) &&
-			(await canUseProfileTimezone(user));
+			this.canViewProfileField(user.timezonePrivacyFlags, profileFieldPrivacyContext);
 		const [mutualFriends, mutualGuilds, connections] = await Promise.all([
 			withMutualFriends && userId !== targetId ? this.getMutualFriends(userId, targetId) : undefined,
 			withMutualGuilds && userId !== targetId ? this.getMutualGuilds(userId, targetId) : undefined,

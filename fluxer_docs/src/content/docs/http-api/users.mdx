@@ -161,7 +161,7 @@ The private representation of the current account, returned by [Get current user
 
 <sup>6</sup> Always null
 
-<sup>7</sup> This server version writes the pair for every account. Whether the account can change it is decided by the [profile timezone assignment](/http-api/experiments/#profile-timezone-assignment-object)
+<sup>7</sup> This server version writes the pair for every account
 
 <sup>8</sup> The banner hash is not returned at all while the account lacks the animated banner entitlement, which every profile banner requires
 
@@ -565,7 +565,7 @@ The profile read returned by [Get user profile](#get-user-profile) for one targe
 
 <sup>4</sup> The array is empty when the profile is restricted. It otherwise holds only verified connections whose [profile field privacy flags](#profile-field-privacy-flags) admit the caller
 
-<sup>5</sup> The value is null unless the profile is unrestricted, the [profile timezone assignment](/http-api/experiments/#profile-timezone-assignment-object) of the target is enabled, the target has stored a timezone, and its [profile field privacy flags](#profile-field-privacy-flags) admit the caller
+<sup>5</sup> The value is null unless the profile is unrestricted, the target has stored a timezone, and its [profile field privacy flags](#profile-field-privacy-flags) admit the caller
 
 <sup>6</sup> The field is present only on a restricted read
 

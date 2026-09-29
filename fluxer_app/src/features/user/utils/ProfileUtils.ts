@@ -2,7 +2,6 @@
 
 import {Profile} from '@app/features/user/models/Profile';
 import type {User} from '@app/features/user/models/User';
-import ProfileTimezoneRollout from '@app/features/user/state/ProfileTimezoneRollout';
 import {ProfileFieldPrivacyFlags, UserPremiumTypes} from '@fluxer/constants/src/UserConstants';
 import {getCurrentTimeZoneOffsetMinutes} from '@fluxer/date_utils/src/TimeZoneUtils';
 
@@ -97,7 +96,7 @@ export function createMockProfile(
 		timezone_offset:
 			options?.previewTimezoneOffset !== undefined
 				? options.previewTimezoneOffset
-				: ProfileTimezoneRollout.enabled && (user.timezonePrivacyFlags ?? ProfileFieldPrivacyFlags.EVERYONE) !== 0
+				: (user.timezonePrivacyFlags ?? ProfileFieldPrivacyFlags.EVERYONE) !== 0
 					? getCurrentTimeZoneOffsetMinutes(user.timezone)
 					: null,
 		premium_type: visiblePremiumData.premiumType ?? undefined,

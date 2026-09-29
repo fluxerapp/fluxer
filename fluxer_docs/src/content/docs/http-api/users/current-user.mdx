@@ -74,17 +74,17 @@ Modifies the current account and returns the resulting [user](/http-api/users/#u
 | bio?<sup>8</sup> | ?string | Biography (1-320 characters), or null to clear |
 | pronouns?<sup>9</sup> | ?string | Pronouns (1-40 characters), or null to clear |
 | accent_color? | ?integer | Packed 24-bit RGB colour (0-16777215), or null to clear |
-| timezone?<sup>10</sup> <sup>11</sup> | ?string | Supported IANA timezone identifier (1-128 characters), or null to clear |
-| timezone_privacy_flags?<sup>10</sup> | integer | [Profile field privacy flags](/http-api/users/#profile-field-privacy-flags) applied to the profile timezone |
+| timezone?<sup>10</sup> | ?string | Supported IANA timezone identifier (1-128 characters), or null to clear |
+| timezone_privacy_flags? | integer | [Profile field privacy flags](/http-api/users/#profile-field-privacy-flags) applied to the profile timezone |
 | premium_badge_hidden? | boolean | Whether to hide the premium badge from the public profile |
 | premium_badge_masked? | boolean | Whether to present a lifetime badge as an ordinary subscription badge |
 | premium_badge_timestamp_hidden? | boolean | Whether to hide the premium activation time |
 | premium_badge_sequence_hidden? | boolean | Whether to hide the lifetime premium sequence |
-| premium_enabled_override?<sup>12</sup> | boolean | Whether a staff override grants premium entitlements |
-| has_dismissed_premium_onboarding?<sup>13</sup> | boolean | Whether the premium onboarding flow has been dismissed |
-| has_unread_gift_inventory?<sup>14</sup> | boolean | Whether the gift inventory still holds unread items |
+| premium_enabled_override?<sup>11</sup> | boolean | Whether a staff override grants premium entitlements |
+| has_dismissed_premium_onboarding?<sup>12</sup> | boolean | Whether the premium onboarding flow has been dismissed |
+| has_unread_gift_inventory?<sup>13</sup> | boolean | Whether the gift inventory still holds unread items |
 | mention_flags? | integer | [Reply mention preference](/http-api/users/#reply-mention-preferences), one of `0`, `1`, or `2` |
-| email_token?<sup>15</sup> | string | Email token (1-256 characters) issued by [verify new email](/http-api/users/email-and-password/#verify-new-email) |
+| email_token?<sup>14</sup> | string | Email token (1-256 characters) issued by [verify new email](/http-api/users/email-and-password/#verify-new-email) |
 | mfa_method? | string | [Sudo verification](/http-api/users/mfa/#sudo-mode) method, either `totp` or `webauthn` |
 | mfa_code? | string | [Sudo verification](/http-api/users/mfa/#sudo-mode) authenticator or backup code (1-32 characters) |
 | webauthn_response? | [WebAuthn assertion](/http-api/users/mfa/#webauthn-assertion-object) object | [Sudo verification](/http-api/users/mfa/#sudo-mode) WebAuthn assertion |
@@ -108,17 +108,15 @@ Modifies the current account and returns the resulting [user](/http-api/users/#u
 
 <sup>9</sup> The value is matched against the instance profile substring blocklist like `username`, `global_name`, and `bio`
 
-<sup>10</sup> A request from an account whose [profile timezone assignment](/http-api/experiments/#profile-timezone-assignment-object) is not enabled has both fields dropped before the update runs
+<sup>10</sup> An unrecognised identifier is rejected with `INVALID_TIMEZONE_IDENTIFIER`. Setting a first timezone without `timezone_privacy_flags` sets those flags to `EVERYONE`
 
-<sup>11</sup> An unrecognised identifier is rejected with `INVALID_TIMEZONE_IDENTIFIER`. Setting a first timezone without `timezone_privacy_flags` sets those flags to `EVERYONE`
+<sup>11</sup> The field requires the [`STAFF`](/http-api/users/#public-user-flags) flag, and a caller without it is rejected with 403 [`MISSING_ACCESS`](/http-api/errors/)
 
-<sup>12</sup> The field requires the [`STAFF`](/http-api/users/#public-user-flags) flag, and a caller without it is rejected with 403 [`MISSING_ACCESS`](/http-api/errors/)
+<sup>12</sup> Only `true` has an effect, recording the current time as the dismissal moment. `false` is accepted and does nothing
 
-<sup>13</sup> Only `true` has an effect, recording the current time as the dismissal moment. `false` is accepted and does nothing
+<sup>13</sup> Only `false` has an effect, advancing the gift inventory read cursor to the current sequence. `true` is accepted and does nothing
 
-<sup>14</sup> Only `false` has an effect, advancing the gift inventory read cursor to the current sequence. `true` is accepted and does nothing
-
-<sup>15</sup> Supplying the field applies the verified address the token stands for, and the token is deleted once the update lands
+<sup>14</sup> Supplying the field applies the verified address the token stands for, and the token is deleted once the update lands
 
 An omitted field leaves its stored value untouched, and an explicit `null` clears a nullable field. `has_dismissed_premium_onboarding` acts only on `true` and `has_unread_gift_inventory` only on `false`, so neither can be reversed through this route.
 

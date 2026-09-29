@@ -5,10 +5,6 @@ import {
 	DomainMigrationAssignmentResponse,
 	INERT_DOMAIN_MIGRATION_ASSIGNMENT,
 } from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
-import {
-	INERT_PROFILE_TIMEZONE_ASSIGNMENT,
-	ProfileTimezoneAssignmentResponse,
-} from '@fluxer/schema/src/domains/admin/ProfileTimezoneSchemas';
 import {z} from 'zod';
 
 export const EXPERIMENT_MIN_POLL_INTERVAL_SECONDS = 60;
@@ -48,7 +44,6 @@ export type ExperimentDeliveryConfigResponse = z.infer<typeof ExperimentDelivery
 const ExperimentAssignmentsSchema = z.object({
 	domain_migration: DomainMigrationAssignmentResponse.optional(),
 	altcha_captcha: AltchaCaptchaAssignmentResponse.optional(),
-	profile_timezone: ProfileTimezoneAssignmentResponse.optional(),
 });
 
 export const ExperimentAssignmentsResponse = z.object({
@@ -69,10 +64,4 @@ export function readDomainMigrationAssignment(
 	response: ExperimentAssignmentsResponse,
 ): DomainMigrationAssignmentResponse {
 	return response.assignments.domain_migration ?? INERT_DOMAIN_MIGRATION_ASSIGNMENT;
-}
-
-export function readProfileTimezoneAssignment(
-	response: ExperimentAssignmentsResponse,
-): ProfileTimezoneAssignmentResponse {
-	return response.assignments.profile_timezone ?? INERT_PROFILE_TIMEZONE_ASSIGNMENT;
 }

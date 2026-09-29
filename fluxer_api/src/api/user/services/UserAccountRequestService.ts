@@ -19,7 +19,6 @@ import type {UserAccountService} from '@app/api/user/services/UserAccountService
 import type {UserChannelService} from '@app/api/user/services/UserChannelService';
 import {mapUserToPartialResponseWithCache} from '@app/api/user/UserCacheHelpers';
 import {
-	canUseProfileTimezone,
 	createPremiumClearPatch,
 	getEffectiveSuspiciousFlags,
 	shouldStripExpiredPremium,
@@ -67,20 +66,6 @@ const EMAIL_VERIFICATION_REQUIRED_PROFILE_UPDATE_FIELDS: ReadonlyArray<keyof Use
 
 function hasProfileCustomizationUpdate(data: UserUpdatePayload): boolean {
 	return EMAIL_VERIFICATION_REQUIRED_PROFILE_UPDATE_FIELDS.some((field) => data[field] !== undefined);
-}
-
-async function stripUnauthorizedProfileTimezoneUpdate(
-	user: User,
-	body: UserUpdateWithVerificationRequest,
-): Promise<UserUpdateWithVerificationRequest> {
-	if (body.timezone === undefined && body.timezone_privacy_flags === undefined) {
-		return body;
-	}
-	if (await canUseProfileTimezone(user)) {
-		return body;
-	}
-	const {timezone: _timezone, timezone_privacy_flags: _timezonePrivacyFlags, ...rest} = body;
-	return rest;
 }
 
 function hasDefinedUserUpdatePayload(data: UserUpdatePayload): boolean {
@@ -158,7 +143,6 @@ export class UserAccountRequestService {
 		const {ctx, body, authSession} = params;
 		const {user} = params;
 		const oldEmail = user.email;
-		const sanitizedBody = await stripUnauthorizedProfileTimezoneUpdate(user, body);
 		const {
 			mfa_method: _mfaMethod,
 			mfa_code: _mfaCode,
@@ -166,13 +150,13 @@ export class UserAccountRequestService {
 			webauthn_challenge: _webauthnChallenge,
 			email_token: emailToken,
 			...userUpdateDataRest
-		} = sanitizedBody;
+		} = body;
 		let userUpdateData: UserUpdatePayload = userUpdateDataRest;
 		const emailTokenProvided = emailToken !== undefined;
 		if (!emailTokenProvided && !hasDefinedUserUpdatePayload(userUpdateData)) {
 			return mapUserToPrivateResponse(user);
 		}
-		this.enforceSuspiciousSelfUpdateAllowance(user, sanitizedBody);
+		this.enforceSuspiciousSelfUpdateAllowance(user, body);
 		if (userUpdateData.email !== undefined) {
 			throw InputValidationError.fromCode('email', ValidationErrorCodes.EMAIL_MUST_BE_CHANGED_VIA_TOKEN);
 		}
@@ -198,7 +182,7 @@ export class UserAccountRequestService {
 		const needsVerification = this.requiresSensitiveUserVerification(user, userUpdateData, emailTokenProvided);
 		let sudoResult: SudoVerificationResult | null = null;
 		if (needsVerification) {
-			sudoResult = await requireSudoMode(ctx, user, sanitizedBody);
+			sudoResult = await requireSudoMode(ctx, user, body);
 		}
 		if (emailTokenProvided && emailToken) {
 			emailFromToken = await this.emailChangeService.getTokenEmail(user.id, emailToken);

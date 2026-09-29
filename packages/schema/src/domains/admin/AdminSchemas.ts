@@ -27,10 +27,6 @@ import {
 	InstanceBillingResponse,
 	InstanceBillingUpdateRequest,
 } from '@fluxer/schema/src/domains/admin/InstanceBillingSchemas';
-import {
-	ProfileTimezoneConfigResponse,
-	ProfileTimezoneConfigUpdateRequest,
-} from '@fluxer/schema/src/domains/admin/ProfileTimezoneSchemas';
 import {PushRelayConfigResponse, PushRelayConfigUpdateRequest} from '@fluxer/schema/src/domains/admin/PushRelaySchemas';
 import {
 	ExperimentDeliveryConfigResponse,
@@ -656,7 +652,6 @@ export const InstanceConfigResponse = z.object({
 	push_relay: PushRelayConfigResponse,
 	domain_migration: DomainMigrationConfigResponse,
 	altcha_captcha: AltchaCaptchaConfigResponse,
-	profile_timezone: ProfileTimezoneConfigResponse,
 	experiment_delivery: ExperimentDeliveryConfigResponse,
 	registration: InstanceRegistrationResponse,
 	self_hosted: z.boolean(),
@@ -689,7 +684,6 @@ export const InstanceConfigUpdateRequest = z.object({
 	push_relay: PushRelayConfigUpdateRequest.nullish(),
 	domain_migration: DomainMigrationConfigUpdateRequest.nullish(),
 	altcha_captcha: AltchaCaptchaConfigUpdateRequest.nullish(),
-	profile_timezone: ProfileTimezoneConfigUpdateRequest.nullish(),
 	experiment_delivery: ExperimentDeliveryConfigUpdateRequest.nullish(),
 	registration: z
 		.object({

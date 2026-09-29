@@ -7,9 +7,8 @@ use crate::{
         DomainMigrationConfigResponse, EXPERIMENT_MAX_TARGETED_USERS,
         ExperimentDeliveryConfigResponse, GatewayRolloutConfigResponse, InstanceConfigResponse,
         InstanceIntegrationsResponse, InstanceMediaResponse, InstancePolicyResponse,
-        InstanceRegistrationResponse, LimitConfigResponse, PROFILE_TIMEZONE_DEFAULT_SALT,
-        PendingRegistrationResponse, ProfileTimezoneConfigResponse, PushRelayConfigResponse,
-        RegistrationUrlResponse, SsoConfigResponse,
+        InstanceRegistrationResponse, LimitConfigResponse, PendingRegistrationResponse,
+        PushRelayConfigResponse, RegistrationUrlResponse, SsoConfigResponse,
     },
     config::AdminConfig,
     middleware::auth::AuthContext,
@@ -176,7 +175,6 @@ pub fn instance_config_page(
                         (gateway_rollout_section(base, csrf_token, &instance_config.gateway_rollout))
                         (domain_migration_section(base, csrf_token, &instance_config.domain_migration))
                         (altcha_captcha_section(base, csrf_token, &instance_config.altcha_captcha))
-                        (profile_timezone_section(base, csrf_token, &instance_config.profile_timezone))
                         (experiment_delivery_section(base, csrf_token, &instance_config.experiment_delivery))
                         @if let Some(limit_config) = limit_config {
                             (limit_config_section(base, limit_config))
@@ -1369,143 +1367,6 @@ fn altcha_captcha_section(
 
                     (form_actions(html! {
                         (submit_button("Save ALTCHA Configuration"))
-                    }))
-                }
-            }
-        },
-    )
-}
-
-fn profile_timezone_section(
-    base: &str,
-    csrf_token: &str,
-    profile_timezone: &ProfileTimezoneConfigResponse,
-) -> Markup {
-    let status = if profile_timezone.enabled {
-        ("Live", BadgeVariant::Success)
-    } else {
-        ("Inert", BadgeVariant::Default)
-    };
-    let included_user_ids = profile_timezone.included_user_ids.join("\n");
-    let excluded_user_ids = profile_timezone.excluded_user_ids.join("\n");
-    section_card_with_description(
-        "Profile Timezone",
-        "Lets the selected users save a time zone in profile settings and show their local time \
-         on their profile. Users outside the rollout cannot change it, and a saved time zone \
-         stays hidden from everyone while its owner is outside the rollout.",
-        html! {
-            form method="post" action={(base) "/instance-config?action=update_profile_timezone"} {
-                (csrf_input(csrf_token))
-                div class="space-y-6" {
-                    div class="flex flex-wrap items-center gap-2" {
-                        h3 class="text-sm font-semibold text-neutral-900" { "Master switch" }
-                        (badge(status.0, status.1))
-                        span class="text-xs text-neutral-500" {
-                            "Config version " (profile_timezone.config_version)
-                        }
-                    }
-                    (checkbox(
-                        "profile_timezone_enabled",
-                        "true",
-                        "Serve profile timezone to the selected users",
-                        profile_timezone.enabled,
-                        true,
-                    ))
-                    p class="text-xs text-neutral-500" {
-                        "Off is the safe state and the kill switch. With this unchecked nobody \
-                         sees the setting and every saved time zone is hidden."
-                    }
-
-                    h3 class="text-sm font-semibold text-neutral-900" { "Rollout" }
-                    (number_field(
-                        "profile_timezone_rollout_basis_points",
-                        "Rollout (basis points)",
-                        &profile_timezone.rollout_basis_points.to_string(),
-                        Some(0), Some(10000), "1",
-                        Some("Share of users bucketed into profile timezone, in basis points: 0 is nobody, 100 is 1%, 10000 is everybody."),
-                    ))
-                    div class="flex flex-col gap-2" {
-                        (text_input(
-                            "profile_timezone_rollout_salt",
-                            "Rollout Salt",
-                            &profile_timezone.rollout_salt,
-                            PROFILE_TIMEZONE_DEFAULT_SALT,
-                        ))
-                        p class="text-xs text-neutral-500" {
-                            "Seeds the bucketing hash. Changing it reshuffles which users fall \
-                             inside the percentage above."
-                        }
-                    }
-                    div class="flex flex-col gap-2" {
-                        (textarea_input(
-                            "profile_timezone_included_user_ids",
-                            "Always-on User IDs",
-                            "1500000000000000001\n1500000000000000002",
-                            &included_user_ids,
-                            4,
-                            false,
-                        ))
-                        (entry_count_hint(
-                            profile_timezone.included_user_ids.len(),
-                            EXPERIMENT_MAX_TARGETED_USERS,
-                        ))
-                        p class="text-xs text-neutral-500" {
-                            "One snowflake per line, or comma separated. These users get profile \
-                             timezone regardless of the percentage above. Invalid entries prevent the save."
-                        }
-                    }
-                    div class="flex flex-col gap-2" {
-                        (checkbox(
-                            "profile_timezone_include_premium_users",
-                            "true",
-                            "Include premium users",
-                            profile_timezone.include_premium_users,
-                            true,
-                        ))
-                        p class="text-xs text-neutral-500" {
-                            "Includes every account with active premium perks, regardless of the \
-                             percentage above. The never-on list still wins."
-                        }
-                    }
-                    div class="flex flex-col gap-2" {
-                        (textarea_input(
-                            "profile_timezone_included_guild_ids",
-                            "Always-on Guild IDs",
-                            "1500000000000000005\n1500000000000000006",
-                            &profile_timezone.included_guild_ids.join("\n"),
-                            4,
-                            false,
-                        ))
-                        (entry_count_hint(
-                            profile_timezone.included_guild_ids.len(),
-                            EXPERIMENT_MAX_TARGETED_USERS,
-                        ))
-                        p class="text-xs text-neutral-500" {
-                            "Same format, with guild IDs. Every member of a listed guild is \
-                             included regardless of the percentage above, unless the user is \
-                             in the never-on list."
-                        }
-                    }
-                    div class="flex flex-col gap-2" {
-                        (textarea_input(
-                            "profile_timezone_excluded_user_ids",
-                            "Never-on User IDs",
-                            "1500000000000000003\n1500000000000000004",
-                            &excluded_user_ids,
-                            4,
-                            false,
-                        ))
-                        (entry_count_hint(
-                            profile_timezone.excluded_user_ids.len(),
-                            EXPERIMENT_MAX_TARGETED_USERS,
-                        ))
-                        p class="text-xs text-neutral-500" {
-                            "Same format. Exclusion wins over both the always-on list and the percentage."
-                        }
-                    }
-
-                    (form_actions(html! {
-                        (submit_button("Save Profile Timezone Configuration"))
                     }))
                 }
             }

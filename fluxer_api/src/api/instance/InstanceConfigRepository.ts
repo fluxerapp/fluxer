@@ -51,10 +51,6 @@ import {
 	StoredBillingConfigSchema,
 } from '@fluxer/schema/src/domains/admin/InstanceBillingSchemas';
 import {
-	type ProfileTimezoneConfig,
-	ProfileTimezoneConfigSchema,
-} from '@fluxer/schema/src/domains/admin/ProfileTimezoneSchemas';
-import {
 	type LegacyPushServiceDeliveryWire,
 	type PushRelayConfig,
 	PushRelayConfigSchema,
@@ -84,7 +80,6 @@ const GATEWAY_ROLLOUT_CONFIG_KEY = 'gateway_rollout_config';
 const PUSH_RELAY_CONFIG_KEY = 'push_service_delivery_config';
 const DOMAIN_MIGRATION_CONFIG_KEY = 'domain_migration_config';
 const ALTCHA_CAPTCHA_CONFIG_KEY = 'altcha_captcha_config';
-const PROFILE_TIMEZONE_CONFIG_KEY = 'profile_timezone_config';
 const EXPERIMENT_DELIVERY_CONFIG_KEY = 'experiment_delivery_config';
 const REGISTRATION_CONFIG_KEY = 'registration_config';
 const REGISTRATION_URLS_KEY = 'registration_urls';
@@ -441,7 +436,6 @@ type StoredConfigSection =
 	| 'push relay'
 	| 'domain migration'
 	| 'altcha captcha'
-	| 'profile timezone'
 	| 'experiment delivery'
 	| 'instance policy'
 	| 'integrations'
@@ -604,10 +598,6 @@ function parseStoredDomainMigrationConfig(raw: string | null): DomainMigrationCo
 
 function parseStoredAltchaCaptchaConfig(raw: string | null): AltchaCaptchaConfig {
 	return parseStoredConfigOrDefault(AltchaCaptchaConfigSchema, raw, 'altcha captcha');
-}
-
-function parseStoredProfileTimezoneConfig(raw: string | null): ProfileTimezoneConfig {
-	return parseStoredConfigOrDefault(ProfileTimezoneConfigSchema, raw, 'profile timezone');
 }
 
 function parseStoredExperimentDeliveryConfig(raw: string | null): ExperimentDeliveryConfig {
@@ -1281,7 +1271,6 @@ export class InstanceConfigRepository {
 		parseStoredPushRelayConfig(snapshot.get(PUSH_RELAY_CONFIG_KEY) ?? null);
 		parseStoredDomainMigrationConfig(snapshot.get(DOMAIN_MIGRATION_CONFIG_KEY) ?? null);
 		parseStoredAltchaCaptchaConfig(snapshot.get(ALTCHA_CAPTCHA_CONFIG_KEY) ?? null);
-		parseStoredProfileTimezoneConfig(snapshot.get(PROFILE_TIMEZONE_CONFIG_KEY) ?? null);
 		parseStoredExperimentDeliveryConfig(snapshot.get(EXPERIMENT_DELIVERY_CONFIG_KEY) ?? null);
 		parseStoredInstancePolicyConfig(snapshot.get(INSTANCE_POLICY_CONFIG_KEY) ?? null);
 		checkStoredConfig('registration', () =>
@@ -1409,27 +1398,6 @@ export class InstanceConfigRepository {
 	): Promise<AltchaCaptchaConfig> {
 		return this.updateStoredConfig(ALTCHA_CAPTCHA_CONFIG_KEY, (raw) =>
 			validateStoredConfig(AltchaCaptchaConfigSchema, update(parseStoredAltchaCaptchaConfig(raw)), 'altcha captcha'),
-		);
-	}
-
-	async getProfileTimezoneConfig(): Promise<ProfileTimezoneConfig> {
-		const raw = await this.getConfig(PROFILE_TIMEZONE_CONFIG_KEY);
-		return parseStoredProfileTimezoneConfig(raw);
-	}
-
-	async setProfileTimezoneConfig(config: ProfileTimezoneConfig): Promise<void> {
-		await this.updateProfileTimezoneConfig(() => config);
-	}
-
-	updateProfileTimezoneConfig(
-		update: (current: ProfileTimezoneConfig) => ProfileTimezoneConfig,
-	): Promise<ProfileTimezoneConfig> {
-		return this.updateStoredConfig(PROFILE_TIMEZONE_CONFIG_KEY, (raw) =>
-			validateStoredConfig(
-				ProfileTimezoneConfigSchema,
-				update(parseStoredProfileTimezoneConfig(raw)),
-				'profile timezone',
-			),
 		);
 	}
 

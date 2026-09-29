@@ -19,8 +19,8 @@ use crate::{
             InstanceMediaUpdateRequest, InstancePolicyUpdateRequest,
             InstanceRegistrationConfigUpdateRequest, InstanceServicesUpdateRequest,
             InstanceYoutubeIntegrationUpdateRequest, LimitConfigUpdateRequest, LimitRule,
-            LimitRuleFilters, PremiumMode, ProfileTimezoneConfigUpdateRequest,
-            PushRelayConfigUpdateRequest, RegistrationMode, SsoConfigUpdateRequest, VoiceE2eeScope,
+            LimitRuleFilters, PremiumMode, PushRelayConfigUpdateRequest, RegistrationMode,
+            SsoConfigUpdateRequest, VoiceE2eeScope,
         },
     },
     config::AdminConfig,
@@ -222,10 +222,6 @@ pub async fn instance_config_post(
             Err(message) => FlashData::error(message),
         },
         "update_altcha_captcha" => match build_altcha_captcha_update(&form) {
-            Ok(update) => instance_config_result(client.update_instance_config(&update).await),
-            Err(message) => FlashData::error(message),
-        },
-        "update_profile_timezone" => match build_profile_timezone_update(&form) {
             Ok(update) => instance_config_result(client.update_instance_config(&update).await),
             Err(message) => FlashData::error(message),
         },
@@ -659,41 +655,6 @@ fn build_altcha_captcha_update(
                 *ALTCHA_CAPTCHA_MAX_COUNTER_RANGE.start(),
                 *ALTCHA_CAPTCHA_MAX_COUNTER_RANGE.end(),
             )?,
-        }),
-        ..Default::default()
-    })
-}
-
-fn build_profile_timezone_update(
-    form: &MultiValueForm,
-) -> Result<InstanceConfigUpdateRequest, String> {
-    Ok(InstanceConfigUpdateRequest {
-        profile_timezone: Some(ProfileTimezoneConfigUpdateRequest {
-            enabled: Some(form.bool_value("profile_timezone_enabled")),
-            rollout_basis_points: parse_form_number(
-                form,
-                "profile_timezone_rollout_basis_points",
-                "Rollout basis points",
-                0,
-                EXPERIMENT_ROLLOUT_BASIS_POINTS_MAX,
-            )?,
-            rollout_salt: parse_experiment_rollout_salt(form, "profile_timezone_rollout_salt")?,
-            included_user_ids: Some(parse_experiment_user_ids(
-                form.first("profile_timezone_included_user_ids")
-                    .unwrap_or_default(),
-                "Included user IDs",
-            )?),
-            included_guild_ids: Some(parse_experiment_user_ids(
-                form.first("profile_timezone_included_guild_ids")
-                    .unwrap_or_default(),
-                "Included guild IDs",
-            )?),
-            include_premium_users: Some(form.bool_value("profile_timezone_include_premium_users")),
-            excluded_user_ids: Some(parse_experiment_user_ids(
-                form.first("profile_timezone_excluded_user_ids")
-                    .unwrap_or_default(),
-                "Excluded user IDs",
-            )?),
         }),
         ..Default::default()
     })
@@ -1341,7 +1302,7 @@ mod tests {
     #[test]
     fn build_domain_migration_update_reads_the_rollout_fields() {
         let form = MultiValueForm::parse(
-            b"domain_migration_enabled=true&domain_migration_rollout_basis_points=%20250%20&domain_migration_rollout_salt=%20domain-migration-v2%20&domain_migration_included_user_ids=1500000000000000001%0A1500000000000000002&domain_migration_excluded_user_ids=1500000000000000003%2C%201500000000000000004&domain_migration_anonymous_rollout_basis_points=%20100%20&domain_migration_standalone_forwarding=true",
+            b"domain_migration_enabled=true&domain_migration_rollout_basis_points=%20250%20&domain_migration_rollout_salt=%20domain-migration-v2%20&domain_migration_included_user_ids=1500000000000000001%0A1500000000000000002&domain_migration_excluded_user_ids=1500000000000000003%2C%201500000000000000004&domain_migration_anonymous_rollout_basis_points=%20100%20&domain_migration_standalone_forwarding=true&domain_migration_included_guild_ids=1500000000000000005%0A1500000000000000006%2C1500000000000000005&domain_migration_include_premium_users=true",
         );
         let update = build_domain_migration_update(&form)
             .expect("valid form")
@@ -1366,6 +1327,14 @@ mod tests {
         );
         assert_eq!(update.anonymous_rollout_basis_points, Some(100));
         assert_eq!(update.standalone_forwarding, Some(true));
+        assert_eq!(update.include_premium_users, Some(true));
+        assert_eq!(
+            update.included_guild_ids,
+            Some(vec![
+                "1500000000000000005".to_owned(),
+                "1500000000000000006".to_owned()
+            ])
+        );
     }
 
     #[test]
@@ -1513,52 +1482,6 @@ mod tests {
     }
 
     #[test]
-    fn build_profile_timezone_update_reads_the_rollout_fields() {
-        let form = MultiValueForm::parse(
-            b"profile_timezone_enabled=true&profile_timezone_rollout_basis_points=%20500%20&profile_timezone_rollout_salt=%20profile-timezone-v2%20&profile_timezone_included_user_ids=1500000000000000001&profile_timezone_excluded_user_ids=1500000000000000002&profile_timezone_included_guild_ids=1500000000000000005%0A1500000000000000006%2C1500000000000000005&profile_timezone_include_premium_users=true",
-        );
-        let update = build_profile_timezone_update(&form)
-            .expect("valid form")
-            .profile_timezone
-            .expect("profile timezone update");
-        assert_eq!(update.enabled, Some(true));
-        assert_eq!(update.rollout_basis_points, Some(500));
-        assert_eq!(update.rollout_salt, Some("profile-timezone-v2".to_owned()));
-        assert_eq!(update.include_premium_users, Some(true));
-        assert_eq!(
-            update.included_guild_ids,
-            Some(vec![
-                "1500000000000000005".to_owned(),
-                "1500000000000000006".to_owned()
-            ])
-        );
-        assert_eq!(
-            update.included_user_ids,
-            Some(vec!["1500000000000000001".to_owned()])
-        );
-        assert_eq!(
-            update.excluded_user_ids,
-            Some(vec!["1500000000000000002".to_owned()])
-        );
-    }
-
-    #[test]
-    fn build_profile_timezone_update_leaves_the_feature_inert_when_nothing_is_submitted() {
-        let form = MultiValueForm::parse(b"_csrf=token");
-        let request = build_profile_timezone_update(&form).expect("valid form");
-        assert_eq!(
-            serde_json::to_value(request).expect("serializable update"),
-            serde_json::json!({"profile_timezone": {
-                "enabled": false,
-                "included_user_ids": [],
-                "included_guild_ids": [],
-                "include_premium_users": false,
-                "excluded_user_ids": [],
-            }})
-        );
-    }
-
-    #[test]
     fn every_experiment_update_rejects_an_invalid_included_guild_id() {
         for (prefix, build) in [
             (
@@ -1567,7 +1490,6 @@ mod tests {
                     as fn(&MultiValueForm) -> Result<InstanceConfigUpdateRequest, String>,
             ),
             ("altcha_captcha", build_altcha_captcha_update),
-            ("profile_timezone", build_profile_timezone_update),
         ] {
             let form = MultiValueForm::parse(
                 format!("{prefix}_included_guild_ids=1500000000000000005%0Anot-a-guild").as_bytes(),
@@ -1578,15 +1500,6 @@ mod tests {
                 "{prefix}"
             );
         }
-    }
-
-    #[test]
-    fn build_profile_timezone_update_rejects_a_rollout_above_everybody() {
-        let form = MultiValueForm::parse(b"profile_timezone_rollout_basis_points=10001");
-        assert_eq!(
-            build_profile_timezone_update(&form).expect_err("invalid field"),
-            "Rollout basis points must be a whole number between 0 and 10000"
-        );
     }
 
     #[test]

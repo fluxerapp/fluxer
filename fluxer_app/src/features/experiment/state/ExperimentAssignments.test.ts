@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 import type {RestResponse} from '@app/features/platform/types/TransportTypes';
-import type {ProfileTimezoneAssignmentResponse} from '@fluxer/schema/src/domains/admin/ProfileTimezoneSchemas';
+import type {DomainMigrationAssignmentResponse} from '@fluxer/schema/src/domains/admin/DomainMigrationSchemas';
 import {
 	type ExperimentAssignmentsResponse,
 	INERT_EXPERIMENT_ASSIGNMENTS_RESPONSE,
-	readProfileTimezoneAssignment,
+	readDomainMigrationAssignment,
 } from '@fluxer/schema/src/domains/experiment/ExperimentSchemas';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
@@ -26,14 +26,14 @@ vi.mock('@app/features/platform/transport/RestTransport', () => ({
 const {http} = await import('@app/features/platform/transport/RestTransport');
 const {ExperimentAssignments} = await import('@app/features/experiment/state/ExperimentAssignments');
 
-const CANARY_ASSIGNMENT: ProfileTimezoneAssignmentResponse = {
+const CANARY_ASSIGNMENT: DomainMigrationAssignmentResponse = {
 	enabled: true,
 };
 
 const CANARY_ENVELOPE: ExperimentAssignmentsResponse = {
 	poll_interval_seconds: 300,
 	poll_jitter_percent: 15,
-	assignments: {profile_timezone: CANARY_ASSIGNMENT},
+	assignments: {domain_migration: CANARY_ASSIGNMENT},
 };
 
 let visibility: DocumentVisibilityState = 'visible';
@@ -68,8 +68,8 @@ function subscribe(listener: () => void): () => void {
 	return unsubscribe;
 }
 
-function timezoneEnabled(): boolean {
-	return readProfileTimezoneAssignment(ExperimentAssignments.response).enabled;
+function migrationEnabled(): boolean {
+	return readDomainMigrationAssignment(ExperimentAssignments.response).enabled;
 }
 
 function deferredReply(): {resolve: (response: RestResponse<unknown>) => void} {
@@ -111,7 +111,7 @@ describe('ExperimentAssignments cold start', () => {
 		ExperimentAssignments.start();
 		await settle();
 		expect(ExperimentAssignments.response).toBe(INERT_EXPERIMENT_ASSIGNMENTS_RESPONSE);
-		expect(ExperimentAssignments.response.assignments.profile_timezone).toBeUndefined();
+		expect(ExperimentAssignments.response.assignments.domain_migration).toBeUndefined();
 	});
 
 	it('keeps the inert envelope while unauthenticated and retries later', async () => {
@@ -129,7 +129,7 @@ describe('ExperimentAssignments response handling', () => {
 	it('adopts a valid envelope', async () => {
 		await adopt(CANARY_ENVELOPE);
 		expect(ExperimentAssignments.response).toEqual(CANARY_ENVELOPE);
-		expect(readProfileTimezoneAssignment(ExperimentAssignments.response)).toEqual(CANARY_ASSIGNMENT);
+		expect(readDomainMigrationAssignment(ExperimentAssignments.response)).toEqual(CANARY_ASSIGNMENT);
 	});
 
 	it('requests the shared experiment endpoint', async () => {
@@ -142,7 +142,7 @@ describe('ExperimentAssignments response handling', () => {
 		vi.mocked(http.get).mockResolvedValue(
 			reply(200, {
 				...CANARY_ENVELOPE,
-				assignments: {profile_timezone: {enabled: 'yes'}},
+				assignments: {domain_migration: {enabled: 'yes'}},
 			}),
 		);
 		await vi.advanceTimersByTimeAsync(400_000);
@@ -157,9 +157,9 @@ describe('ExperimentAssignments response handling', () => {
 		expect(ExperimentAssignments.response).toEqual(CANARY_ENVELOPE);
 	});
 
-	it('accepts an envelope that carries no profile timezone assignment', async () => {
+	it('accepts an envelope that carries no domain migration assignment', async () => {
 		await adopt({poll_interval_seconds: 600, poll_jitter_percent: 0, assignments: {}});
-		expect(ExperimentAssignments.response.assignments.profile_timezone).toBeUndefined();
+		expect(ExperimentAssignments.response.assignments.domain_migration).toBeUndefined();
 		expect(lastScheduledDelayMs()).toBe(600_000);
 	});
 
@@ -416,14 +416,14 @@ describe('ExperimentAssignments lifecycle', () => {
 describe('ExperimentAssignments subscribe', () => {
 	it('fires once per envelope change and stops after unsubscribe', async () => {
 		const seen: Array<boolean> = [];
-		const unsubscribe = subscribe(() => seen.push(timezoneEnabled()));
+		const unsubscribe = subscribe(() => seen.push(migrationEnabled()));
 		await adopt(CANARY_ENVELOPE);
 		expect(seen).toEqual([true]);
 		vi.mocked(http.get).mockResolvedValue(reply(304, undefined));
 		await vi.advanceTimersByTimeAsync(400_000);
 		expect(seen).toEqual([true]);
 		vi.mocked(http.get).mockResolvedValue(
-			reply(200, {...CANARY_ENVELOPE, assignments: {profile_timezone: {enabled: false}}}, {etag: 'W/"v8"'}),
+			reply(200, {...CANARY_ENVELOPE, assignments: {domain_migration: {enabled: false}}}, {etag: 'W/"v8"'}),
 		);
 		await vi.advanceTimersByTimeAsync(400_000);
 		expect(seen).toEqual([true, false]);
