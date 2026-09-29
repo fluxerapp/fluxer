@@ -78,7 +78,7 @@ import {
 	mapUserToPrivateResponse,
 	mapWebAuthnCredentialToResponse,
 } from '@app/api/user/UserMappers';
-import {isUserAdult} from '@app/api/utils/AgeUtils';
+import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
 import {deriveDominantAvatarColor} from '@app/api/utils/AvatarColorUtils';
 import {calculateDistance, parseCoordinate} from '@app/api/utils/GeoUtils';
 import {lookupGeoip} from '@app/api/utils/IpUtils';
@@ -1564,7 +1564,7 @@ export class RpcService {
 			const needsIncomingCallRepair = settings.incomingCallFlags === 0;
 			const needsGroupDmRepair = settings.groupDmAddPermissionFlags === 0;
 			if (needsIncomingCallRepair || needsGroupDmRepair) {
-				const isAdult = isUserAdult(user.dateOfBirth);
+				const isAdult = canUserAccessNsfwContent({isBot: false, dateOfBirth: user.dateOfBirth});
 				const updatedRow = {
 					...settings.toRow(),
 					...(needsIncomingCallRepair && {

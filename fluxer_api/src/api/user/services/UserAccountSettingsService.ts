@@ -25,7 +25,7 @@ import type {UserAccountUpdatePropagator} from '@app/api/user/services/UserAccou
 import {getCachedUserPartialResponse} from '@app/api/user/UserCacheHelpers';
 import {mapRelationshipToResponse} from '@app/api/user/UserMappers';
 import {dedupeGuildFolders} from '@app/api/user/utils/GuildFolderUtils';
-import {isUserAdult} from '@app/api/utils/AgeUtils';
+import {canUserAccessNsfwContent} from '@app/api/utils/AgeUtils';
 import {
 	DEFAULT_GUILD_FOLDER_ICON,
 	GroupDmAddPermissionFlags,
@@ -200,7 +200,7 @@ export class UserAccountSettingsService {
 		if (data.default_hide_muted_channels !== undefined) {
 			updatedRowData.default_hide_muted_channels = data.default_hide_muted_channels;
 		}
-		const userIsAdult = isUserAdult(dateOfBirth);
+		const userIsAdult = canUserAccessNsfwContent({isBot: false, dateOfBirth});
 		if (userIsAdult) {
 			if (data.sensitive_content_friend_dm_filter !== undefined) {
 				updatedRowData.sensitive_content_friend_dm_filter = data.sensitive_content_friend_dm_filter;
