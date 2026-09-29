@@ -1933,6 +1933,9 @@
         "msgid": "Duplicate role"
       },
       {
+        "msgid": "Edit your messages above or below"
+      },
+      {
         "msgid": "Email us and a person will review your account. Tell us you cannot verify by SMS and we will take it from there. Replies come by email, so this is not instant."
       },
       {
@@ -2549,6 +2552,9 @@
       },
       {
         "msgid": "Renamed the community from {oldName} to {newName}."
+      },
+      {
+        "msgid": "Reply to messages above or below"
       },
       {
         "msgid": "Require a passkey as your second factor"

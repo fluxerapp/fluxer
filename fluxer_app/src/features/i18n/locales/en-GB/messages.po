@@ -3120,7 +3120,7 @@ msgstr "Add passkey"
 #. Generic action label that opens the reaction picker for a message.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:527
-#: src/features/input/state/input_keybind/shared.ts:17
+#: src/features/input/state/input_keybind/shared.ts:21
 msgid "Add reaction"
 msgstr "Add reaction"
 
@@ -4203,7 +4203,7 @@ msgid "Another round checkbox"
 msgstr "Another round checkbox"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:213
+#: src/features/input/state/input_keybind/shared.ts:221
 msgid "Answer the incoming call"
 msgstr "Answer the incoming call"
 
@@ -5775,7 +5775,7 @@ msgstr "Bookmark limit reached"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:531
-#: src/features/input/state/input_keybind/shared.ts:265
+#: src/features/input/state/input_keybind/shared.ts:273
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:66
 msgid "Bookmark message"
 msgstr "Bookmark message"
@@ -6431,7 +6431,7 @@ msgstr "Can't upload files here"
 #: src/features/expressions/components/modals/EditGuildStickerModal.tsx:116
 #: src/features/guild/components/modals/TransferOwnershipModal.tsx:91
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:103
-#: src/features/input/state/input_keybind/shared.ts:137
+#: src/features/input/state/input_keybind/shared.ts:145
 #: src/features/invite/components/modals/InviteModal.tsx:552
 #: src/features/messaging/components/modals/AttachmentEditModal.tsx:133
 #: src/features/messaging/components/modals/EditAltTextModal.tsx:190
@@ -7924,7 +7924,7 @@ msgid "Clear custom status"
 msgstr "Clear custom status"
 
 #. Body of the confirmation alert shown when clearing every reaction on a message.
-#: src/features/channel/components/MessageActionUtils.tsx:71
+#: src/features/channel/components/MessageActionUtils.tsx:74
 msgid "Clear every reaction from this message?"
 msgstr "Clear every reaction from this message?"
 
@@ -9464,7 +9464,7 @@ msgstr "Copy channel ID"
 
 #. Action that copies a deep link to the selected channel.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:205
+#: src/features/input/state/input_keybind/shared.ts:213
 #: src/features/ui/action_menu/items/ChannelMenuData.tsx:132
 msgid "Copy channel link"
 msgstr "Copy channel link"
@@ -9613,7 +9613,7 @@ msgstr "Copy message"
 #. Developer-mode action that copies a message snowflake/ID to the clipboard.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:737
-#: src/features/input/state/input_keybind/shared.ts:277
+#: src/features/input/state/input_keybind/shared.ts:285
 msgid "Copy message ID"
 msgstr "Copy message ID"
 
@@ -9621,7 +9621,7 @@ msgstr "Copy message ID"
 #. IAR modal: quick-action card title.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:523
-#: src/features/input/state/input_keybind/shared.ts:273
+#: src/features/input/state/input_keybind/shared.ts:281
 #: src/features/moderation/components/report_modal/IARModalCopy.ts:389
 msgid "Copy message link"
 msgstr "Copy message link"
@@ -10460,7 +10460,7 @@ msgstr "Create new link"
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Short label in the sidebar navigation add guild button.
 #: src/features/app/components/layout/sidebar_nav/AddGuildButton.tsx:32
-#: src/features/input/state/input_keybind/shared.ts:121
+#: src/features/input/state/input_keybind/shared.ts:129
 msgid "Create or join a community"
 msgstr "Create or join a community"
 
@@ -11229,7 +11229,7 @@ msgid "Decide whether replies @mention you by default"
 msgstr "Decide whether replies @mention you by default"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:217
+#: src/features/input/state/input_keybind/shared.ts:225
 msgid "Decline the incoming call"
 msgstr "Decline the incoming call"
 
@@ -12336,7 +12336,7 @@ msgstr "Disconnect from {channel}"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Tray menu item. Leaves the current voice call when the channel name is unavailable.
-#: src/features/input/state/input_keybind/shared.ts:317
+#: src/features/input/state/input_keybind/shared.ts:325
 #: src/features/platform/utils/DesktopLocaleBridge.ts:221
 msgid "Disconnect from voice"
 msgstr "Disconnect from voice"
@@ -12966,7 +12966,7 @@ msgid "Drop images, fonts, or other files here to use them inside your custom CS
 msgstr "Drop images, fonts, or other files here to use them inside your custom CSS."
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:133
+#: src/features/input/state/input_keybind/shared.ts:141
 msgid "Drop item"
 msgstr "Drop item"
 
@@ -13256,6 +13256,12 @@ msgstr "Edit the bot avatar, tag, bio, banner, and friend request behaviour"
 msgid "Edit translation provider"
 msgstr "Edit translation provider"
 
+# auto-i18n: reviewed unchanged
+#. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
+#: src/features/input/state/input_keybind/shared.ts:13
+msgid "Edit your messages above or below"
+msgstr "Edit your messages above or below"
+
 #. Button or menu action label in the my profile tab. Keep it concise.
 #: src/features/user/components/modals/tabs/MyProfileTab.tsx:93
 msgid "Edit your profile appearance and see a live preview"
@@ -13441,12 +13447,12 @@ msgid "Embeds"
 msgstr "Embeds"
 
 #. Toast confirmation after hiding link previews and embeds on a message.
-#: src/features/channel/components/MessageActionUtils.tsx:83
+#: src/features/channel/components/MessageActionUtils.tsx:86
 msgid "Embeds suppressed"
 msgstr "Embeds suppressed"
 
 #. Toast confirmation after re-enabling link previews and embeds on a message.
-#: src/features/channel/components/MessageActionUtils.tsx:79
+#: src/features/channel/components/MessageActionUtils.tsx:82
 msgid "Embeds unsuppressed"
 msgstr "Embeds unsuppressed"
 
@@ -14463,7 +14469,7 @@ msgid "Expand channel topic"
 msgstr "Expand channel topic"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:229
+#: src/features/input/state/input_keybind/shared.ts:237
 msgid "Expand or collapse compact call view"
 msgstr "Expand or collapse compact call view"
 
@@ -15385,12 +15391,12 @@ msgid "Focus ring"
 msgstr "Focus ring"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:37
+#: src/features/input/state/input_keybind/shared.ts:45
 msgid "Focus text area"
 msgstr "Focus text area"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:197
+#: src/features/input/state/input_keybind/shared.ts:205
 msgid "Focus the text area"
 msgstr "Focus the text area"
 
@@ -15686,7 +15692,7 @@ msgstr "Forward media"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Title of the forward message modal.
-#: src/features/input/state/input_keybind/shared.ts:25
+#: src/features/input/state/input_keybind/shared.ts:33
 #: src/features/messaging/components/modals/ForwardModal.tsx:83
 msgid "Forward message"
 msgstr "Forward message"
@@ -16447,27 +16453,27 @@ msgid "Go to community"
 msgstr "Go to community"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:81
+#: src/features/input/state/input_keybind/shared.ts:89
 msgid "Go to direct messages"
 msgstr "Go to direct messages"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:113
+#: src/features/input/state/input_keybind/shared.ts:121
 msgid "Go to eighth community"
 msgstr "Go to eighth community"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:101
+#: src/features/input/state/input_keybind/shared.ts:109
 msgid "Go to fifth community"
 msgstr "Go to fifth community"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:85
+#: src/features/input/state/input_keybind/shared.ts:93
 msgid "Go to first community"
 msgstr "Go to first community"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:97
+#: src/features/input/state/input_keybind/shared.ts:105
 msgid "Go to fourth community"
 msgstr "Go to fourth community"
 
@@ -16498,12 +16504,12 @@ msgid "Go to page {pageItem}"
 msgstr "Go to page {pageItem}"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:89
+#: src/features/input/state/input_keybind/shared.ts:97
 msgid "Go to second community"
 msgstr "Go to second community"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:109
+#: src/features/input/state/input_keybind/shared.ts:117
 msgid "Go to seventh community"
 msgstr "Go to seventh community"
 
@@ -16514,12 +16520,12 @@ msgid "Go to sign-in"
 msgstr "Go to sign-in"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:105
+#: src/features/input/state/input_keybind/shared.ts:113
 msgid "Go to sixth community"
 msgstr "Go to sixth community"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:93
+#: src/features/input/state/input_keybind/shared.ts:101
 msgid "Go to third community"
 msgstr "Go to third community"
 
@@ -18788,12 +18794,12 @@ msgid "Jump"
 msgstr "Jump"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:57
+#: src/features/input/state/input_keybind/shared.ts:65
 msgid "Jump between unread channels"
 msgstr "Jump between unread channels"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:61
+#: src/features/input/state/input_keybind/shared.ts:69
 msgid "Jump between unread channels with mentions"
 msgstr "Jump between unread channels with mentions"
 
@@ -18864,7 +18870,7 @@ msgid "Jump to previous unread channel with mentions"
 msgstr "Jump to previous unread channel with mentions"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:65
+#: src/features/input/state/input_keybind/shared.ts:73
 msgid "Jump to the current call"
 msgstr "Jump to the current call"
 
@@ -18889,7 +18895,7 @@ msgid "Jump to the message in {labelText}"
 msgstr "Jump to the message in {labelText}"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:193
+#: src/features/input/state/input_keybind/shared.ts:201
 msgid "Jump to the oldest unread message"
 msgstr "Jump to the oldest unread message"
 
@@ -20050,7 +20056,7 @@ msgstr "Mark all DMs as read"
 
 #. Accessible label and tooltip for the mark-all-as-read button in the inbox popout.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:165
+#: src/features/input/state/input_keybind/shared.ts:173
 #: src/features/messaging/components/popouts/InboxPopout.tsx:46
 msgid "Mark all inbox channels as read"
 msgstr "Mark all inbox channels as read"
@@ -20082,19 +20088,19 @@ msgstr "Mark as spoiler"
 #. Generic action label that flips a channel back to unread.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:668
-#: src/features/input/state/input_keybind/shared.ts:33
+#: src/features/input/state/input_keybind/shared.ts:41
 msgid "Mark as unread"
 msgstr "Mark as unread"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/input/state/input_keybind/shared.ts:145
+#: src/features/input/state/input_keybind/shared.ts:153
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:58
 msgid "Mark channel as read"
 msgstr "Mark channel as read"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:141
+#: src/features/input/state/input_keybind/shared.ts:149
 msgid "Mark community as read"
 msgstr "Mark community as read"
 
@@ -20121,7 +20127,7 @@ msgid "Mark read"
 msgstr "Mark read"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:161
+#: src/features/input/state/input_keybind/shared.ts:169
 msgid "Mark top inbox channel as read"
 msgstr "Mark top inbox channel as read"
 
@@ -21470,7 +21476,7 @@ msgid "Mouse forward button"
 msgstr "Mouse forward button"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:129
+#: src/features/input/state/input_keybind/shared.ts:137
 msgid "Move"
 msgstr "Move"
 
@@ -21485,7 +21491,7 @@ msgid "Move back through page history"
 msgstr "Move back through page history"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:49
+#: src/features/input/state/input_keybind/shared.ts:57
 msgid "Move back through viewed channel history"
 msgstr "Move back through viewed channel history"
 
@@ -21502,7 +21508,7 @@ msgid "Move forward through page history"
 msgstr "Move forward through page history"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:53
+#: src/features/input/state/input_keybind/shared.ts:61
 msgid "Move forward through viewed channel history"
 msgstr "Move forward through viewed channel history"
 
@@ -23809,7 +23815,7 @@ msgid "Open group details for {groupDMName}"
 msgstr "Open group details for {groupDMName}"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:233
+#: src/features/input/state/input_keybind/shared.ts:241
 msgid "Open help"
 msgstr "Open help"
 
@@ -23962,7 +23968,7 @@ msgid "Open the ban dialog for this community."
 msgstr "Open the ban dialog for this community."
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:241
+#: src/features/input/state/input_keybind/shared.ts:249
 msgid "Open the context menu"
 msgstr "Open the context menu"
 
@@ -23995,7 +24001,7 @@ msgid "Open the verification email and use the link inside. This window updates 
 msgstr "Open the verification email and use the link inside. This window updates after the link opens."
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:249
+#: src/features/input/state/input_keybind/shared.ts:257
 msgid "Open theme studio popout"
 msgstr "Open theme studio popout"
 
@@ -24057,7 +24063,7 @@ msgid "Open your phone's messaging app and start a new text message."
 msgstr "Open your phone's messaging app and start a new text message."
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:245
+#: src/features/input/state/input_keybind/shared.ts:253
 msgid "Open your settings"
 msgstr "Open your settings"
 
@@ -24930,7 +24936,7 @@ msgstr "Picture-in-picture"
 
 #. Confirm button label on the pin message alert.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/channel/components/MessageActionUtils.tsx:63
+#: src/features/channel/components/MessageActionUtils.tsx:66
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:70
 msgid "Pin"
 msgstr "Pin"
@@ -24948,9 +24954,9 @@ msgstr "Pin group DM"
 #. Generic action label that pins a message to the channel pins.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Title of the confirmation alert shown when pinning a message.
-#: src/features/channel/components/MessageActionUtils.tsx:55
+#: src/features/channel/components/MessageActionUtils.tsx:58
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:539
-#: src/features/input/state/input_keybind/shared.ts:13
+#: src/features/input/state/input_keybind/shared.ts:17
 msgid "Pin message"
 msgstr "Pin message"
 
@@ -24975,7 +24981,7 @@ msgid "Pin or unpin any message."
 msgstr "Pin or unpin any message."
 
 #. Body of the confirmation alert shown when pinning a message.
-#: src/features/channel/components/MessageActionUtils.tsx:59
+#: src/features/channel/components/MessageActionUtils.tsx:62
 msgid "Pin this message to the channel for everyone to see."
 msgstr "Pin this message to the channel for everyone to see."
 
@@ -25979,21 +25985,21 @@ msgid "Push timeout"
 msgstr "Push timeout"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:297
+#: src/features/input/state/input_keybind/shared.ts:305
 msgid "Push to mute"
 msgstr "Push to mute"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/input/state/input_keybind/shared.ts:289
+#: src/features/input/state/input_keybind/shared.ts:297
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:162
 #: src/features/user/components/settings_utils/section_registry/VoiceVideoSections.ts:86
 msgid "Push to talk"
 msgstr "Push to talk"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:293
+#: src/features/input/state/input_keybind/shared.ts:301
 msgid "Push to talk (priority)"
 msgstr "Push to talk (priority)"
 
@@ -26186,7 +26192,7 @@ msgid "Read aloud"
 msgstr "Read aloud"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:29
+#: src/features/input/state/input_keybind/shared.ts:37
 msgid "Read message aloud"
 msgstr "Read message aloud"
 
@@ -26711,7 +26717,7 @@ msgid "Remove {userName} from your friends?"
 msgstr "Remove {userName} from your friends?"
 
 #. Confirm button label on the remove-all-reactions alert. Destructive.
-#: src/features/channel/components/MessageActionUtils.tsx:75
+#: src/features/channel/components/MessageActionUtils.tsx:78
 msgid "Remove all"
 msgstr "Remove all"
 
@@ -26724,7 +26730,7 @@ msgstr "Remove all {emojiNameWithColons} reactions from this message?"
 #. Message action that removes every reaction from the selected message.
 #. Title of the confirmation alert shown when clearing every reaction on a message.
 #: src/features/channel/components/MessageActionMenu.tsx:78
-#: src/features/channel/components/MessageActionUtils.tsx:67
+#: src/features/channel/components/MessageActionUtils.tsx:70
 #: src/features/ui/action_menu/items/MessageMenuItems.tsx:70
 msgid "Remove all reactions"
 msgstr "Remove all reactions"
@@ -27232,10 +27238,16 @@ msgstr "Reply mention preference for this community"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Tooltip on the media viewer button that closes the viewer and replies to the message containing the media.
-#: src/features/input/state/input_keybind/shared.ts:21
+#: src/features/input/state/input_keybind/shared.ts:25
 #: src/features/messaging/components/modals/media_modal/shared.ts:105
 msgid "Reply to message"
 msgstr "Reply to message"
+
+# auto-i18n: reviewed unchanged
+#. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
+#: src/features/input/state/input_keybind/shared.ts:29
+msgid "Reply to messages above or below"
+msgstr "Reply to messages above or below"
 
 #. TTS sentence spoken for a reply message. {replyAuthorName} is the original author, {authorName} is the replier, {formatted} is the speakable message body.
 #: src/features/voice/utils/TtsTextFormatter.ts:47
@@ -27668,7 +27680,7 @@ msgstr "Reset to defaults"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Label for controls that reset app zoom to 100%, including the app zoom slider button.
-#: src/features/input/state/input_keybind/shared.ts:261
+#: src/features/input/state/input_keybind/shared.ts:269
 #: src/features/user/components/modals/tabs/appearance_tab/ScalingTab.tsx:38
 msgid "Reset zoom"
 msgstr "Reset zoom"
@@ -28684,12 +28696,12 @@ msgid "Scroll animation"
 msgstr "Scroll animation"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:189
+#: src/features/input/state/input_keybind/shared.ts:197
 msgid "Scroll chat down"
 msgstr "Scroll chat down"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:185
+#: src/features/input/state/input_keybind/shared.ts:193
 msgid "Scroll chat up"
 msgstr "Scroll chat up"
 
@@ -28876,7 +28888,7 @@ msgstr "Search languages…"
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:137
 #: src/features/channel/components/bottomsheets/ChannelSearchBottomSheet.tsx:480
 #: src/features/channel/components/message_search_bar/MessageSearchBar.tsx:56
-#: src/features/input/state/input_keybind/shared.ts:237
+#: src/features/input/state/input_keybind/shared.ts:245
 msgid "Search messages"
 msgstr "Search messages"
 
@@ -29597,7 +29609,7 @@ msgstr "Send verification code"
 #. Plus menu item that opens the desktop voice message composer to record and send a voice clip.
 #: src/features/channel/components/textarea/TextareaPlusMenu.tsx:35
 #: src/features/channel/components/VoiceMessageRecorder.tsx:69
-#: src/features/input/state/input_keybind/shared.ts:285
+#: src/features/input/state/input_keybind/shared.ts:293
 msgid "Send voice message"
 msgstr "Send voice message"
 
@@ -31778,12 +31790,12 @@ msgid "Start {appName} automatically when you sign in."
 msgstr "Start {appName} automatically when you sign in."
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:221
+#: src/features/input/state/input_keybind/shared.ts:229
 msgid "Start a call in a DM or group"
 msgstr "Start a call in a DM or group"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:149
+#: src/features/input/state/input_keybind/shared.ts:157
 msgid "Start a group DM"
 msgstr "Start a group DM"
 
@@ -31819,7 +31831,7 @@ msgid "Start date must be earlier than end date."
 msgstr "Start date must be earlier than end date."
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:125
+#: src/features/input/state/input_keybind/shared.ts:133
 msgid "Start drag and drop"
 msgstr "Start drag and drop"
 
@@ -32507,12 +32519,12 @@ msgid "Switch accounts"
 msgstr "Switch accounts"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:45
+#: src/features/input/state/input_keybind/shared.ts:53
 msgid "Switch between channels"
 msgstr "Switch between channels"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:41
+#: src/features/input/state/input_keybind/shared.ts:49
 msgid "Switch between communities"
 msgstr "Switch between communities"
 
@@ -32577,7 +32589,7 @@ msgid "Switch to next community"
 msgstr "Switch to next community"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:77
+#: src/features/input/state/input_keybind/shared.ts:85
 msgid "Switch to next community or DMs"
 msgstr "Switch to next community or DMs"
 
@@ -32592,7 +32604,7 @@ msgid "Switch to previous community"
 msgstr "Switch to previous community"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:73
+#: src/features/input/state/input_keybind/shared.ts:81
 msgid "Switch to previous community or DMs"
 msgstr "Switch to previous community or DMs"
 
@@ -32641,7 +32653,7 @@ msgid "Switch to…"
 msgstr "Switch to…"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:313
+#: src/features/input/state/input_keybind/shared.ts:321
 msgid "Switch voice channel"
 msgstr "Switch voice channel"
 
@@ -34654,12 +34666,12 @@ msgid "Today at {timeString}"
 msgstr "Today at {timeString}"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:69
+#: src/features/input/state/input_keybind/shared.ts:77
 msgid "Toggle between last community and DMs"
 msgstr "Toggle between last community and DMs"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:309
+#: src/features/input/state/input_keybind/shared.ts:317
 msgid "Toggle camera"
 msgstr "Toggle camera"
 
@@ -34679,7 +34691,7 @@ msgid "Toggle developer tools"
 msgstr "Toggle developer tools"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:269
+#: src/features/input/state/input_keybind/shared.ts:277
 msgid "Toggle embed suppression"
 msgstr "Toggle embed suppression"
 
@@ -34695,23 +34707,23 @@ msgstr "Toggle hardware acceleration"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
-#: src/features/input/state/input_keybind/shared.ts:209
+#: src/features/input/state/input_keybind/shared.ts:217
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:183
 msgid "Toggle mute"
 msgstr "Toggle mute"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:153
+#: src/features/input/state/input_keybind/shared.ts:161
 msgid "Toggle pinned messages"
 msgstr "Toggle pinned messages"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:117
+#: src/features/input/state/input_keybind/shared.ts:125
 msgid "Toggle quick switcher"
 msgstr "Toggle quick switcher"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:281
+#: src/features/input/state/input_keybind/shared.ts:289
 msgid "Toggle saved media"
 msgstr "Toggle saved media"
 
@@ -34720,17 +34732,17 @@ msgid "Toggle switches on and off to see state changes."
 msgstr "Toggle switches on and off to see state changes."
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:173
+#: src/features/input/state/input_keybind/shared.ts:181
 msgid "Toggle the emoji picker"
 msgstr "Toggle the emoji picker"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:177
+#: src/features/input/state/input_keybind/shared.ts:185
 msgid "Toggle the GIF picker"
 msgstr "Toggle the GIF picker"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:157
+#: src/features/input/state/input_keybind/shared.ts:165
 msgid "Toggle the inbox"
 msgstr "Toggle the inbox"
 
@@ -34740,22 +34752,22 @@ msgid "Toggle the kinds of conversations you want included."
 msgstr "Toggle the kinds of conversations you want included."
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:169
+#: src/features/input/state/input_keybind/shared.ts:177
 msgid "Toggle the member list or voice chat"
 msgstr "Toggle the member list or voice chat"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:225
+#: src/features/input/state/input_keybind/shared.ts:233
 msgid "Toggle the soundboard"
 msgstr "Toggle the soundboard"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:181
+#: src/features/input/state/input_keybind/shared.ts:189
 msgid "Toggle the sticker picker"
 msgstr "Toggle the sticker picker"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:305
+#: src/features/input/state/input_keybind/shared.ts:313
 msgid "Toggle voice activity"
 msgstr "Toggle voice activity"
 
@@ -36027,7 +36039,7 @@ msgid "Unordered"
 msgstr "Unordered"
 
 #. Confirm button label on the unpin message alert.
-#: src/features/channel/components/MessageActionUtils.tsx:51
+#: src/features/channel/components/MessageActionUtils.tsx:54
 msgid "Unpin"
 msgstr "Unpin"
 
@@ -36052,7 +36064,7 @@ msgid "Unpin message"
 msgstr "Unpin message"
 
 #. Body of the confirmation alert shown when unpinning a message.
-#: src/features/channel/components/MessageActionUtils.tsx:47
+#: src/features/channel/components/MessageActionUtils.tsx:50
 msgid "Unpin this message?"
 msgstr "Unpin this message?"
 
@@ -36358,7 +36370,7 @@ msgstr "Upload a custom sound that plays automatically when you join a voice cha
 #. Card label in the asset source modal for uploading an image from the device. Keep it concise.
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
 #: src/features/expressions/components/modals/AssetSourceModal.tsx:19
-#: src/features/input/state/input_keybind/shared.ts:201
+#: src/features/input/state/input_keybind/shared.ts:209
 msgid "Upload a file"
 msgstr "Upload a file"
 
@@ -37962,7 +37974,7 @@ msgid "Voice activity on active now"
 msgstr "Voice activity on active now"
 
 #. Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.
-#: src/features/input/state/input_keybind/shared.ts:301
+#: src/features/input/state/input_keybind/shared.ts:309
 msgid "Voice activity priority"
 msgstr "Voice activity priority"
 
@@ -40402,7 +40414,7 @@ msgstr "Zoom"
 #. Native View menu item that increases UI zoom level.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:628
-#: src/features/input/state/input_keybind/shared.ts:253
+#: src/features/input/state/input_keybind/shared.ts:261
 #: src/features/platform/utils/DesktopLocaleBridge.ts:113
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:82
 msgid "Zoom in"
@@ -40413,7 +40425,7 @@ msgstr "Zoom in"
 #. Native View menu item that decreases UI zoom level.
 #. Settings search synonym. Used to match this term when the user types it in the settings search bar.
 #: src/features/i18n/utils/CommonMessageDescriptors.ts:624
-#: src/features/input/state/input_keybind/shared.ts:257
+#: src/features/input/state/input_keybind/shared.ts:265
 #: src/features/platform/utils/DesktopLocaleBridge.ts:117
 #: src/features/user/components/settings_utils/search_index/KeybindsIndex.ts:86
 msgid "Zoom out"

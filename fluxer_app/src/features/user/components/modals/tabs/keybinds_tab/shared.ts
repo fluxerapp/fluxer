@@ -40,7 +40,11 @@ export const DEFAULT_KEYBIND_SECTIONS: ReadonlyArray<KeybindSection> = [
 export const SECTION_DISPLAY_ORDER: Partial<Record<KeybindSection, ReadonlyArray<KeybindCommand>>> = {
 	messages: [
 		'message_reply',
+		'message_reply_prev',
+		'message_reply_next',
 		'message_edit',
+		'message_edit_prev',
+		'message_edit_next',
 		'message_delete',
 		'message_react',
 		'message_forward',
@@ -99,6 +103,8 @@ export const SECTION_DISPLAY_ORDER: Partial<Record<KeybindSection, ReadonlyArray
 	misc: ['misc_search', 'misc_open_context_menu', 'misc_help'],
 };
 export const SHORTCUT_MERGE_PAIRS: ReadonlyArray<readonly [KeybindCommand, KeybindCommand]> = [
+	['message_reply_prev', 'message_reply_next'],
+	['message_edit_prev', 'message_edit_next'],
 	['nav_guild_prev', 'nav_guild_next'],
 	['nav_channel_prev', 'nav_channel_next'],
 	['nav_history_back', 'nav_history_forward'],

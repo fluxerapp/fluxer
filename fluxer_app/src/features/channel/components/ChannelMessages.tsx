@@ -40,7 +40,7 @@ import {
 	createChannelStream,
 	getCollapsedMessageGroupKey,
 } from '@app/features/messaging/utils/MessageGroupingUtils';
-import {getMessageSelector} from '@app/features/messaging/utils/MessageNodeSelectors';
+import {findMessageElement, getMessageSelector} from '@app/features/messaging/utils/MessageNodeSelectors';
 import LocalUserSpamOverride from '@app/features/moderation/state/LocalUserSpamOverride';
 import SelectedChannel from '@app/features/navigation/state/SelectedChannel';
 import Permission from '@app/features/permissions/state/Permission';
@@ -281,6 +281,25 @@ export const Messages = observer(function Messages({
 		});
 		lastStateSnapshotRef.current = snapshot;
 	}, [channel.id, state]);
+	const revealMessageNode = useCallback(
+		(targetNode: HTMLElement) => {
+			const scrollerNode = scrollManager.ref.current?.getViewportElement();
+			if (!scrollerNode) return;
+			const targetRect = targetNode.getBoundingClientRect();
+			const scrollerRect = scrollerNode.getBoundingClientRect();
+			const isAbove = targetRect.top < scrollerRect.top;
+			const isBelow = targetRect.bottom > scrollerRect.bottom;
+			if (isAbove || isBelow) {
+				scrollManager.ref.current?.revealElement({
+					node: targetNode,
+					padding: 80,
+					animate: false,
+				});
+				scrollManager.scrollHandle();
+			}
+		},
+		[scrollManager],
+	);
 	const onMessageEdit = useCallback(
 		(targetNode: HTMLElement) => {
 			const scrollerNode = scrollManager.ref.current?.getViewportElement();
@@ -296,20 +315,9 @@ export const Messages = observer(function Messages({
 					return;
 				}
 			}
-			const targetRect = targetNode.getBoundingClientRect();
-			const scrollerRect = scrollerNode.getBoundingClientRect();
-			const isAbove = targetRect.top < scrollerRect.top;
-			const isBelow = targetRect.bottom > scrollerRect.bottom;
-			if (isAbove || isBelow) {
-				scrollManager.ref.current?.revealElement({
-					node: targetNode,
-					padding: 80,
-					animate: false,
-				});
-				scrollManager.scrollHandle();
-			}
+			revealMessageNode(targetNode);
 		},
-		[scrollManager, channel.id],
+		[scrollManager, channel.id, revealMessageNode],
 	);
 	const onReveal = useCallback(
 		(messageId: string | null) => {
@@ -432,6 +440,22 @@ export const Messages = observer(function Messages({
 			dispatchUnsubs.forEach((u) => u());
 		};
 	}, [channel.id, updateFromState, onScrollToPresent, onMessageSent, onEscapePressed, scrollManager]);
+	useEffect(() => {
+		return ComponentBus.subscribe('MESSAGE_REVEAL', (payload?: unknown) => {
+			const data = (payload ?? {}) as {channelId?: string; messageId?: string};
+			if (data.channelId !== channel.id || !data.messageId) return;
+			const messageId = data.messageId;
+			window.requestAnimationFrame(() => {
+				const node = findMessageElement(
+					document,
+					scrollManager.ref.current?.getViewportElement(),
+					channel.id,
+					messageId,
+				);
+				if (node) revealMessageNode(node);
+			});
+		});
+	}, [channel.id, scrollManager, revealMessageNode]);
 	useEffect(() => {
 		const editingMessageId = state.editingMessageId;
 		if (editingMessageId) {

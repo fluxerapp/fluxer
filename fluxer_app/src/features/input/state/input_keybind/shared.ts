@@ -10,6 +10,10 @@ export const EDIT_MESSAGE_DESCRIPTOR = msg({
 	message: 'Edit message',
 	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
 });
+export const EDIT_YOUR_MESSAGES_ABOVE_OR_BELOW_DESCRIPTOR = msg({
+	message: 'Edit your messages above or below',
+	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
+});
 export const PIN_MESSAGE_DESCRIPTOR = msg({
 	message: 'Pin message',
 	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
@@ -20,6 +24,10 @@ export const ADD_REACTION_DESCRIPTOR = msg({
 });
 export const REPLY_TO_MESSAGE_DESCRIPTOR = msg({
 	message: 'Reply to message',
+	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
+});
+export const REPLY_TO_MESSAGES_ABOVE_OR_BELOW_DESCRIPTOR = msg({
+	message: 'Reply to messages above or below',
 	comment: 'Keyboard shortcut action label shown in the shortcuts list and keybind editor. Keep short, sentence case.',
 });
 export const FORWARD_MESSAGE_DESCRIPTOR = msg({
